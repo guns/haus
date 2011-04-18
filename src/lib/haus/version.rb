@@ -1,5 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-module Haus
+class Haus
   VERSION = '0.7.0'
 end
