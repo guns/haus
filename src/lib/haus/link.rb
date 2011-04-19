@@ -5,7 +5,7 @@ require 'haus/task'
 class Haus
   class Link < Task
     desc 'Symlink user dotfiles'
-    banner %Q{Create home dotfile symlinks to #{File.expand_path '../../../../etc/', __FILE__}/*}
+    banner %Q{Create home dotfile symlinks to #{haus_root}/etc/*}
 
     def options
       super.tap do |opt|

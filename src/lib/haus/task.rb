@@ -29,22 +29,35 @@ class Haus
         list[base.command] = { :class => base, :desc => '', :banner => '' }
       end
 
-      def desc msg = ''
+      def desc msg
         list[command][:desc] = msg
       end
 
-      def banner msg = ''
+      def banner msg
         list[command][:banner] = msg
       end
 
       def summary
         list.map { |k,v| '    %-10s%s' % [k, v[:desc]] }.join "\n"
       end
+
+      def haus_root
+        @haus_root ||= File.expand_path '../../..', '__FILE__'
+      end
     end
 
     # Accesses Task::List entry for the current subclass
     def meta
       self.class.list[self.class.command]
+    end
+
+    def haus_root
+      self.class.haus_root
+    end
+
+    # all user dotfiles in etc/, except for the ssh directory
+    def dotfiles
+      @dotfiles ||= Dir[haus_root + '/etc/*'].reject { |f| f =~ %r{/ssh\z} }
     end
 
     # Common options for all tasks
