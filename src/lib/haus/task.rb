@@ -3,6 +3,19 @@
 require 'haus/options'
 
 class Haus
+  #
+  # Superclass for all Haus commands.
+  #
+  # Subclasses must define Task#execute and should call Task::desc and
+  # Task::banner in the class definition.
+  #
+  # The Options class can be extended via Options#tap
+  #
+  # Commands can also be invoked directly:
+  #
+  #   require 'haus/link'
+  #   Haus::Link.new.call %w[--force]
+  #
   class Task
     class << self
       def list
@@ -16,7 +29,6 @@ class Haus
         list[base.command] = { :class => base, :desc => '', :banner => '' }
       end
 
-      # One line description
       def desc msg = ''
         list[command][:desc] = msg
       end
@@ -30,11 +42,12 @@ class Haus
       end
     end
 
+    # Accesses Task::List entry for the current subclass
     def meta
       self.class.list[self.class.command]
     end
 
-    # default options for all tasks; subclasses should call super.tap
+    # Common options for all tasks
     def options
       @options ||= Options.new do |opt|
         opt.summary_width = 20
@@ -46,13 +59,17 @@ class Haus
           Options:
         }.gsub /^ +/, ''
 
+        opt.on_tail '-f', '--force', 'Suppress all prompts and answer affirmatively' do
+          opt.force = true
+        end
+
         opt.on_tail '-n', '--dry-run', "Don't make any changes, but report on what would have been done" do
           opt.dry_run = true
           opt.force   = true
         end
 
-        opt.on_tail '-f', '--force', 'Suppress all prompts and answer affirmatively' do
-          opt.force = true
+        opt.on_tail '-q', '--quiet' do
+          opt.quiet = true
         end
 
         opt.on_tail '-h', '--help' do
@@ -61,7 +78,9 @@ class Haus
       end
     end
 
-    # Subclasses must define #options and #execute
+    def execute args = []
+    end
+
     def call args = []
       execute options.parse(args)
     end

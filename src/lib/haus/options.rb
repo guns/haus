@@ -4,7 +4,10 @@ require 'optparse'
 require 'ostruct'
 
 class Haus
-  # A hybrid OptionParser / OpenStruct object. Mu ha ha ha ha ha
+  #
+  # A hybrid OptionParser / OpenStruct class.
+  # Mu ha ha ha ha ha...
+  #
   class Options < OptionParser
     def initialize
       super
