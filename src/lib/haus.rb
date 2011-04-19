@@ -14,7 +14,7 @@ class Haus
       Usage: haus [--help|--version] COMMAND [options]
 
       Commands:
-      #{Task.list.map { |k,v| '    %-12s%s' % [k, v[:desc]] }}
+      #{Task.summary}
 
       See `haus COMMAND --help' for more information on each command\
     }.gsub /^ {6}/, ''
@@ -24,7 +24,7 @@ class Haus
   def options
     OptionParser.new do |opt|
       opt.on '-h', '--help' do
-        puts opt; exit
+        puts help; exit
       end
 
       opt.on '-v', '--version' do

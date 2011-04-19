@@ -11,8 +11,13 @@ class Haus
         list[cmdstr base] = { :class => base }
       end
 
+      # One line description
       def desc msg
         list[cmdstr self][:desc] = msg
+      end
+
+      def summary
+        list.map { |k,v| '    %-10s%s' % [k, v[:desc]] }.join "\n"
       end
 
       private
