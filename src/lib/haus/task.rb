@@ -1,12 +1,13 @@
 # -*- encoding: utf-8 -*-
 
 require 'haus/options'
+require 'haus/queue'
 
 class Haus
   #
   # Superclass for all Haus commands.
   #
-  # Subclasses must define Task#execute and should call Task::desc and
+  # Subclasses must define Task#call and should call Task::desc and
   # Task::banner in the class definition.
   #
   # The Options class can be extended via Options#tap
@@ -91,13 +92,10 @@ class Haus
       end
     end
 
-    def execute args = []
-    end
-
-    # command line interface; ruby libraries should directly call Task#execute
+    # command line interface; ruby libraries should directly call Task#call
     def run args = []
       options.cli = true
-      execute options.parse(args)
+      call options.parse(args)
     end
   end
 end

@@ -39,6 +39,6 @@ class Haus
     abort help if task.nil?
 
     # NOTE: Enumerable#drop introduced in 1.8.7
-    task[:class].new.call args[1..-1]
+    task[:class].new.run args[1..-1]
   end
 end
