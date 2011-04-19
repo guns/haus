@@ -94,7 +94,9 @@ class Haus
     def execute args = []
     end
 
-    def call args = []
+    # command line interface; ruby libraries should directly call Task#execute
+    def run args = []
+      options.cli = true
       execute options.parse(args)
     end
   end
