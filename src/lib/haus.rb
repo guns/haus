@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
-require 'optparse'
 require 'haus/version'
+require 'haus/options'
 require 'haus/link'
 
 class Haus
@@ -22,7 +22,7 @@ class Haus
 
   # top level command has few options
   def options
-    OptionParser.new do |opt|
+    Options.new do |opt|
       opt.on '-h', '--help' do
         puts help; exit
       end
@@ -35,6 +35,10 @@ class Haus
 
   def run
     args = options.order @args
-    abort help if args.empty?
+    task = Task.list[args.first]
+    abort help if task.nil?
+
+    # NOTE: Enumerable#drop introduced in 1.8.7
+    task[:class].new.call args[1..-1]
   end
 end
