@@ -10,7 +10,7 @@ class Haus
     def options
       super.tap do |opt|
         opt.on '-u', '--users A,B,C', Array,
-               "Install to specified users' home directories;",
+               'Install to specified user home directories;',
                'only the root user may use this option' do |arg|
           opt.users = arg
         end

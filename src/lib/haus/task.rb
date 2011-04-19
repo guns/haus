@@ -61,6 +61,10 @@ class Haus
       @dotfiles ||= Dir[haus_root + '/etc/*'].reject { |f| f =~ %r{/ssh\z} }
     end
 
+    def queue
+      @queue ||= Queue.new
+    end
+
     # Common options for all tasks
     def options
       @options ||= Options.new do |opt|
