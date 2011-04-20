@@ -56,14 +56,14 @@ class Haus
       @args = args
     end
 
-    # Accesses Task::List entry for the current subclass
+    # Accesses Task::list entry for the current subclass
     def meta
       self.class.list[self.class.command]
     end
 
     # all user dotfiles in etc/, except for the ssh directory
     def dotfiles
-      @dotfiles ||= Dir[options.path + '/etc/*'].reject { |f| f =~ %r{/ssh\z} }
+      Dir["#{options.path.chomp '/'}/etc/*"].reject { |f| f =~ %r{/ssh\z} }
     end
 
     def queue

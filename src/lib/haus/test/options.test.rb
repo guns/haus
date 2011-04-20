@@ -33,18 +33,10 @@ describe Haus::Options do
   end
 
   describe :path do
-    it 'should always return a Pathname object' do
+    it 'should always return a path string' do
       opt = Haus::Options.new
-      opt.path.must_be_kind_of Pathname
-      opt.path.must_equal Pathname.new(File.expand_path '../../../../..', __FILE__)
-    end
-  end
-
-  describe :path= do
-    it 'should always set :@path as a Pathname object' do
-      opt = Haus::Options.new
-      opt.path = '/opt/haus'
-      opt.path.must_equal Pathname.new('/opt/haus')
+      opt.path.must_be_kind_of String
+      opt.path.must_equal File.expand_path('../../../../..', __FILE__)
     end
   end
 end

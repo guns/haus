@@ -39,7 +39,7 @@ describe Haus do
     it 'should set options.path via --path' do
       h = Haus.new %w[--path /opt/haus noop]
       h.run
-      h.options.path.must_equal Pathname.new('/opt/haus')
+      h.options.path.must_equal '/opt/haus'
     end
   end
 

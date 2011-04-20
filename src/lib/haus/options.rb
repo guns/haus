@@ -24,16 +24,9 @@ class Haus
       @ostruct.send method, *args
     end
 
-    #
-    # Special attribute accessors for HAUS_ROOT
-    #
-
+    # provides default value for HAUS_PATH
     def path
-      @ostruct.path || Pathname.new(File.expand_path '../../../..', __FILE__)
-    end
-
-    def path= arg
-      @ostruct.path = Pathname.new arg
+      @ostruct.path || File.expand_path('../../../..', __FILE__)
     end
   end
 end
