@@ -48,7 +48,7 @@ class Haus
       end
 
       def summary
-        list.map { |k,v| '    %-10s%s' % [k, v[:desc]] }.join "\n"
+        list.map { |k,v| ' '*4 + '%-10s%s' % [k, v[:desc]] }.join "\n"
       end
     end
 
@@ -59,11 +59,6 @@ class Haus
     # Accesses Task::list entry for the current subclass
     def meta
       self.class.list[self.class.command]
-    end
-
-    # all user dotfiles in etc/, except for the ssh directory
-    def dotfiles
-      Dir["#{options.path.chomp '/'}/etc/*"].reject { |f| f =~ %r{/ssh\z} }
     end
 
     def queue

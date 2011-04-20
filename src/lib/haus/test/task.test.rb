@@ -76,15 +76,6 @@ describe Haus::Task do
     end
   end
 
-  describe :dotfiles do
-    it 'should return a list of the Haus dotfiles in HAUS_PATH/etc/' do
-      h = Haus::Noop.new
-      h.dotfiles.must_equal Dir["#{h.options.path}/etc/*"]
-      h.options.path = '/'
-      h.dotfiles.must_equal Dir['/etc/*']
-    end
-  end
-
   describe :queue do
     it 'should always return a Queue instance' do
       h = Haus::Noop.new
