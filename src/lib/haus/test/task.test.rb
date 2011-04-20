@@ -57,4 +57,11 @@ describe Haus::Task do
       end
     end
   end
+
+  describe :initialize do
+    it 'should accept an optional arguments Array' do
+      Haus::Pony.method(:initialize).arity.must_equal -1
+      Haus::Pony.new(%w[-f noprocrast]).instance_variable_get(:@args).must_equal %w[-f noprocrast]
+    end
+  end
 end

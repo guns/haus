@@ -15,7 +15,16 @@ class Haus
   # Commands can also be invoked directly:
   #
   #   require 'haus/link'
-  #   Haus::Link.new.call %w[--force]
+  #   Haus::Link.new(%w[--dry-run]).run
+  #
+  # OR
+  #
+  #   require 'haus/link'
+  #   h = Haus::Link.new
+  #   h.options.dry_run = true
+  #   h.call
+  #
+  # NOTE: Task#call does not parse arguments passed to Task#initialize
   #
   class Task
     class << self
@@ -41,10 +50,10 @@ class Haus
       def summary
         list.map { |k,v| '    %-10s%s' % [k, v[:desc]] }.join "\n"
       end
+    end
 
-      def haus_root
-        @haus_root ||= File.expand_path '../../../../..', '__FILE__'
-      end
+    def initialize args = []
+      @args = args
     end
 
     # Accesses Task::List entry for the current subclass
@@ -52,13 +61,9 @@ class Haus
       self.class.list[self.class.command]
     end
 
-    def haus_root
-      self.class.haus_root
-    end
-
     # all user dotfiles in etc/, except for the ssh directory
     def dotfiles
-      @dotfiles ||= Dir[haus_root + '/etc/*'].reject { |f| f =~ %r{/ssh\z} }
+      @dotfiles ||= Dir[options.path + '/etc/*'].reject { |f| f =~ %r{/ssh\z} }
     end
 
     def queue
@@ -72,16 +77,16 @@ class Haus
 
         opt.banner = %Q{\
           #{meta[:banner] + "\n\n" unless meta[:banner].empty?}\
-          Usage: haus [--help|--version] #{self.class.command} [options]
+          Usage: haus [--path PATH] #{self.class.command} [options]
 
           Options:
         }.gsub /^ +/, ''
 
-        opt.on_tail '-f', '--force', 'Suppress all prompts and answer affirmatively' do
+        opt.on_tail '-f', '--force' do
           opt.force = true
         end
 
-        opt.on_tail '-n', '--dry-run', "Don't make any changes, but report on what would have been done" do
+        opt.on_tail '-n', '--dry-run' do
           opt.dry_run = true
           opt.force   = true
         end
@@ -96,10 +101,14 @@ class Haus
       end
     end
 
+    # empty method for completeness
+    def call args = []
+    end
+
     # command line interface; ruby libraries should directly call Task#call
-    def run args = []
+    def run
       options.cli = true
-      call options.parse(args)
+      call options.parse(@args)
     end
   end
 end

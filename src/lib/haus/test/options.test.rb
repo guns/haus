@@ -12,17 +12,39 @@ describe Haus::Options do
     Haus::Options.new.must_be_kind_of OptionParser
   end
 
-  it 'should respond to #tap' do
-    Haus::Options.new.must_respond_to :tap
+  describe :tap do
+    it 'should respond to #tap, which should behave like Ruby 1.9 Object#tap' do
+      Haus::Options.new.must_respond_to :tap
+      hopts = Haus::Options.new
+      hopts.tap { |opt| opt.must_equal hopts }.must_equal hopts
+    end
   end
 
-  it 'should otherwise act like an OpenStruct object' do
-    opt = Haus::Options.new
-    opt.force = true
-    opt.force.must_equal true
-    opt.horse = 'of course'
-    opt.horse.must_equal 'of course'
-    opt.norse = 'Viking'
-    opt.norse.must_equal 'Viking'
+  describe :method_missing do
+    it 'should otherwise act like an OpenStruct object' do
+      opt = Haus::Options.new
+      opt.force = true
+      opt.force.must_equal true
+      opt.horse = 'of course'
+      opt.horse.must_equal 'of course'
+      opt.norse = 'Viking'
+      opt.norse.must_equal 'Viking'
+    end
+  end
+
+  describe :path do
+    it 'should always return a Pathname object' do
+      opt = Haus::Options.new
+      opt.path.must_be_kind_of Pathname
+      opt.path.must_equal Pathname.new(File.expand_path '../../../../..', __FILE__)
+    end
+  end
+
+  describe :path= do
+    it 'should always set :@path as a Pathname object' do
+      opt = Haus::Options.new
+      opt.path = '/opt/haus'
+      opt.path.must_equal Pathname.new('/opt/haus')
+    end
   end
 end

@@ -19,3 +19,10 @@ module HausHelper
     [out_rd.read, err_rd.read]
   end
 end
+
+class Haus
+  class Noop < Task
+    desc 'This class does nothing'
+    banner "This class does nothing; it's purpose is to ease automated testing."
+  end
+end

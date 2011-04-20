@@ -4,6 +4,11 @@ require 'haus/version'
 require 'haus/options'
 require 'haus/link'
 
+#
+# CLI interface, intended to be run as Haus.new(ARGV).run
+#
+# Library interface is exposed through instances of Haus::Task subclasses
+#
 class Haus
   def initialize args = []
     @args = args
@@ -11,7 +16,13 @@ class Haus
 
   def help
     %Q{\
-      Usage: haus [--help|--version] COMMAND [options]
+      Usage: haus [--path PATH] COMMAND [command-options]
+
+      Options:
+          -p, --path /path/to/your/Haus
+                    Override the location of HAUS_PATH, which is otherwise
+                    determined through the location of this script.
+                    Default: #{options.path}
 
       Commands:
       #{Task.summary}
@@ -20,9 +31,13 @@ class Haus
     }.gsub /^ {6}/, ''
   end
 
-  # top level command has few options
+  # options for top level command
   def options
-    Options.new do |opt|
+    @options ||= Options.new do |opt|
+      opt.on '-p', '--path PATH' do |arg|
+        opt.path = arg
+      end
+
       opt.on '-h', '--help' do
         puts help; exit
       end
@@ -39,6 +54,8 @@ class Haus
     abort help if task.nil?
 
     # NOTE: Enumerable#drop introduced in 1.8.7
-    task[:class].new.run args[1..-1]
+    t = task[:class].new args[1..-1]
+    t.options.path = options.path if options.path
+    t.run
   end
 end

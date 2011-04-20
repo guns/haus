@@ -35,6 +35,12 @@ describe Haus do
       capture_fork_io { Haus.new.options.parse '--version' }.join.chomp.must_equal Haus::VERSION
       capture_fork_io { Haus.new.options.parse '--help' }.join.chomp.must_equal Haus.new.help
     end
+
+    it 'should set options.path via --path' do
+      h = Haus.new %w[--path /opt/haus noop]
+      h.run
+      h.options.path.must_equal Pathname.new('/opt/haus')
+    end
   end
 
   describe :run do
