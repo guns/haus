@@ -43,7 +43,7 @@ class Haus
       end
 
       def haus_root
-        @haus_root ||= File.expand_path '../../..', '__FILE__'
+        @haus_root ||= File.expand_path '../../../../..', '__FILE__'
       end
     end
 
