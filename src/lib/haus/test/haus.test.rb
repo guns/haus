@@ -8,8 +8,6 @@ require 'minitest/autorun'
 require 'haus'
 require 'haus/test/helper'
 
-include HausHelper
-
 describe Haus do
   describe :initialize do
     it 'should accept an optional arguments array' do
