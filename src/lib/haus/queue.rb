@@ -108,10 +108,10 @@ class Haus
 
     def archive_path
       @archive_path ||= begin
-        time = Time.now.strftime '%s'
-        chrs = ('a'..'z').to_a + ('A'..'Z').to_a
-        salt = (0..3).map { chrs[rand chrs.size] }
-        "/tmp/haus-#{salt}-#{time}.tar.gz"
+        time  = Time.now.strftime '%s'
+        chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
+        salt  = (1..4).map { chars[rand chars.size] }
+        "/tmp/haus-#{time}-#{salt}.tar.gz"
       end
     end
   end

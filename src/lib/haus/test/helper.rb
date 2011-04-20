@@ -31,7 +31,26 @@ module MiniTest
 end
 
 class Haus
+  #
+  # Don't call TestUser#new, rather:
+  #
+  #   before do
+  #     @user = Haus::TestUser[__FILE__]
+  #   end
+  #
+  # Certain methods trigger filesystem modifications, which are then scheduled
+  # to be removed via Kernel::at_exit.
+  #
   class TestUser < Struct::Passwd
+    class << self
+      attr_reader :list
+
+      def [] key
+        @list      ||= {}
+        @list[key] ||= self.new
+      end
+    end
+
     def initialize
       unless $warned
         puts %Q{\
@@ -67,11 +86,13 @@ class Haus
       File.join haus, 'etc'
     end
 
+    # list of files in HAUS_PATH/etc/*
     def hausfiles
       @hausfiles ||= begin
         files = []
         mkdir_p etc
 
+        # create random files + directories
         Dir.chdir etc do
           4.times { f = str 8; touch f; files << File.expand_path(f) }
           4.times { f = [str(8), str(8)].join '/'; mkdir File.dirname(f); touch f; files << File.expand_path(f) }

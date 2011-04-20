@@ -9,6 +9,10 @@ require 'haus/user'
 require 'haus/test/helper'
 
 describe Haus::User do
+  before do
+    @user = Haus::TestUser[__FILE__]
+  end
+
   it 'should be a subclass of Struct::Passwd' do
     Haus::User.new.must_be_kind_of Struct::Passwd
   end
@@ -23,11 +27,11 @@ describe Haus::User do
     end
 
     it 'should accept the name of a user as a string' do
-      Haus::User.new('root').uid.must_equal 0
+      Haus::User.new(@user.name).uid.must_equal @user.uid
     end
 
     it 'should accept the UID of a user' do
-      Haus::User.new(0).name.must_equal 'root'
+      Haus::User.new(@user.uid).name.must_equal @user.name
     end
   end
 end
