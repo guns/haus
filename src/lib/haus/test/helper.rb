@@ -45,9 +45,8 @@ class Haus
         $warned = true
       end
 
-      name = ENV['TEST_USER'] || 'test'
+      name  = ENV['TEST_USER'] || 'test'
       entry = Etc.getpwnam name
-
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
@@ -78,14 +77,14 @@ class Haus
           4.times { f = [str(8), str(8)].join '/'; mkdir File.dirname(f); touch f; files << File.expand_path(f) }
         end
 
-        Kernel.at_exit { clean_haus }
+        Kernel.at_exit { clean }
 
         files
       end
     end
 
-    def clean_haus
-      rm_rf haus, :verbose => true
+    def clean
+      rm_rf haus
       @haus, @hausfiles = nil, nil
     end
   end
