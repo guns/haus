@@ -21,8 +21,5 @@ module HausHelper
 end
 
 class Haus
-  class Noop < Task
-    desc 'This class does nothing'
-    banner "This class does nothing; it's purpose is to ease automated testing."
-  end
+  class Noop < Task; end
 end

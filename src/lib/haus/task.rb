@@ -76,7 +76,7 @@ class Haus
         opt.summary_width = 20
 
         opt.banner = %Q{\
-          #{meta[:banner] + "\n\n" unless meta[:banner].empty?}\
+          #{meta[:banner] + "\n\n" unless meta.nil? or meta[:banner].empty?}\
           Usage: haus [--path PATH] #{self.class.command} [options]
 
           Options:
