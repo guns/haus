@@ -15,13 +15,13 @@ class Haus
   # Commands can also be invoked directly:
   #
   #   require 'haus/link'
-  #   Haus::Link.new(%w[--dry-run]).run
+  #   Haus::Link.new(%w[--noop]).run
   #
   # OR
   #
   #   require 'haus/link'
   #   h = Haus::Link.new
-  #   h.options.dry_run = true
+  #   h.options.noop = true
   #   h.call
   #
   # NOTE: Task#call does not parse arguments passed to Task#initialize
@@ -86,9 +86,9 @@ class Haus
           opt.force = true
         end
 
-        opt.on_tail '-n', '--dry-run' do
-          opt.dry_run = true
-          opt.force   = true
+        opt.on_tail '-n', '--noop' do
+          opt.noop  = true
+          opt.force = true
         end
 
         opt.on_tail '-q', '--quiet' do

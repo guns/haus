@@ -18,7 +18,6 @@ class Haus
     end
 
     def call args
-      queue.tty_confirm?
     end
   end
 end

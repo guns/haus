@@ -104,8 +104,8 @@ describe Haus::Task do
     it 'should prove the default options for all Task subclasses' do
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
       runoptions.call(%w[--force]).force.must_equal true
-      runoptions.call(%w[--dry-run]).dry_run.must_equal true
-      runoptions.call(%w[--dry-run]).force.must_equal true
+      runoptions.call(%w[--noop]).noop.must_equal true
+      runoptions.call(%w[--noop]).force.must_equal true
       runoptions.call(%w[--quiet]).quiet.must_equal true
       capture_fork_io { Haus::Noop.new(%w[--help]).run }.join.must_equal Haus::Noop.new.options.to_s
     end
