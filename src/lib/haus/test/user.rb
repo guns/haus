@@ -19,7 +19,7 @@ EOM
   col_sep = CSV.const_get(:VERSION) < '2.0.0' ? ':' : { :col_sep => ':' }
   $user = ENV['TEST_USER'] || 'TEST'
   $home = case RUBY_PLATFORM
-  when /darwins/
+  when /darwin/
     # OS X's handy `id -P' appeared in 10.3
     entry = CSV.parse(%x(id -P #{$user} 2>/dev/null), col_sep).first
     entry[-2] if entry
