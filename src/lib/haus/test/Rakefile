@@ -1,0 +1,10 @@
+# -*- encoding: utf-8 -*-
+
+$:.unshift File.expand_path('../../..', __FILE__)
+
+task :default => :test
+
+desc 'Run all tests'
+task :test do
+  Dir['**/*.test.rb'].each { |f| load f }
+end
