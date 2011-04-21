@@ -28,11 +28,11 @@ class Haus
   #
   class Task
     class << self
+      attr_accessor :command
+
       def list
         @@list ||= {}
       end
-
-      attr_accessor :command
 
       def inherited base
         base.command = base.to_s.downcase.split('::').last
