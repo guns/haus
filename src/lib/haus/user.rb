@@ -1,7 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-require 'etc'
-
 class Haus
   class User < Struct::Passwd
     # `user' can either be a username or UID
