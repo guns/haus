@@ -2,7 +2,6 @@
 
 require 'haus/version'
 require 'haus/options'
-require 'haus/link'
 
 #
 # CLI interface, intended to be run as Haus.new(ARGV).run
