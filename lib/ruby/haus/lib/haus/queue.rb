@@ -80,8 +80,8 @@ class Haus
     end
 
     # Ask user for confirmation;
-    # returns false if input is not a tty or the `stty' program is not available;
-    # returns true if no changes will be made
+    # Returns false if input is not a tty or the `stty' program is not available;
+    # Returns true if no changes will be made
     def tty_confirm?
       return false if not $stdin.tty? or not system 'command -v stty &>/dev/null'
       return true if targets.empty?
@@ -95,7 +95,7 @@ class Haus
       puts "\nAll original links and files will be archived to:\n    #{archive_path}\n"
       print 'Permission to continue? [Y/n] '
 
-      # hack to get a single character from the terminal
+      # Hack to get a single character from the terminal
       begin
         system 'stty raw -echo'
         puts (c = $stdin.getc.chr)

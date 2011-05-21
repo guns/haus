@@ -6,7 +6,6 @@ require 'ostruct'
 class Haus
   #
   # A hybrid OptionParser / OpenStruct class.
-  # Mu ha ha ha ha ha...
   #
   class Options < OptionParser
     def initialize
@@ -23,7 +22,7 @@ class Haus
       @ostruct.send method, *args
     end
 
-    # provides default value for HAUS_PATH
+    # Provides default value for HAUS_PATH
     def path
       @ostruct.path || File.expand_path('../../../..', __FILE__)
     end

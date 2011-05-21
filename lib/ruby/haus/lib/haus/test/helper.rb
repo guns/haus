@@ -86,13 +86,13 @@ class Haus
       File.join haus, 'etc'
     end
 
-    # list of files in HAUS_PATH/etc/*
+    # List of files in HAUS_PATH/etc/*
     def hausfiles
       @hausfiles ||= begin
         files = []
         mkdir_p etc
 
-        # create random files + directories
+        # Create random files + directories
         Dir.chdir etc do
           4.times { f = str 8; touch f; files << File.expand_path(f) }
           4.times { f = [str(8), str(8)].join '/'; mkdir File.dirname(f); touch f; files << File.expand_path(f) }

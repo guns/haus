@@ -18,7 +18,7 @@ class Haus
       Usage: haus [--path PATH] COMMAND [command-options]
 
       Options:
-          -p, --path /path/to/your/Haus
+          -p, --path /path/to/your/haus
                     Override the location of HAUS_PATH, which is otherwise
                     determined through the location of this script.
                     Default: #{options.path}
@@ -30,7 +30,7 @@ class Haus
     }.gsub /^ {6}/, ''
   end
 
-  # options for top level command
+  # Options for top level command
   def options
     @options ||= Options.new do |opt|
       opt.on '-p', '--path PATH' do |arg|

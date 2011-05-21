@@ -96,11 +96,11 @@ class Haus
       end
     end
 
-    # empty method for completeness
+    # Empty method for completeness
     def call args = []
     end
 
-    # command line interface; ruby libraries should directly call Task#call
+    # Command line interface; ruby libraries should directly call Task#call
     def run
       options.cli = true
       call options.parse(@args)
