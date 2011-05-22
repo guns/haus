@@ -79,7 +79,7 @@ class Haus
     # Returns false if input is not a tty or the `stty' program is not available;
     # Returns true if no changes will be made
     def tty_confirm?
-      return false if not $stdin.tty? or not system 'command -v stty &>/dev/null'
+      return false if not $stdin.tty?
       return true if targets.empty?
 
       [:create, :modify, :overwrite, :delete].each do |action|
@@ -88,17 +88,21 @@ class Haus
         puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
       end
 
-      puts "\nAll original links and files will be archived to:\n    #{archive_path}\n"
+      puts "\nAll original links and files will be archived to:\n    #{archive_path}"
       print 'Permission to continue? [Y/n] '
 
       # Hack to get a single character from the terminal
-      begin
-        system 'stty raw -echo'
-        puts (c = $stdin.getc.chr)
-        c =~ /y|\s/i # [Y|y|\r|\n]
-      ensure
-        system 'stty -raw echo'
-        puts
+      if system 'command -v stty &>/dev/null'
+        begin
+          system 'stty raw -echo'
+          puts (c = $stdin.getc.chr) # Old ruby returns integer
+          c =~ /y|\n/i
+        ensure
+          system 'stty -raw echo'
+          puts
+        end
+      else
+        $stdin.readline =~ /\n|y\n|ye\n|yes\n/i rescue nil
       end
     end
   end
