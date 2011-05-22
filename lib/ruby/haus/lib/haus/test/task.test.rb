@@ -66,6 +66,13 @@ describe Haus::Task do
     end
   end
 
+  describe :queue do
+    it 'should always return a Queue instance' do
+      h = Haus::Noop.new
+      h.queue.must_be_kind_of Haus::Queue
+    end
+  end
+
   describe :meta do
     it 'should access the Task::list entry for the current subclass' do
       h = Haus::Noop.new
@@ -73,13 +80,6 @@ describe Haus::Task do
       h.meta[:class].must_equal Haus::Noop
       h.meta[:desc].must_equal Haus::Task.list['noop'][:desc]
       h.meta[:banner].must_equal Haus::Task.list['noop'][:banner]
-    end
-  end
-
-  describe :queue do
-    it 'should always return a Queue instance' do
-      h = Haus::Noop.new
-      h.queue.must_be_kind_of Haus::Queue
     end
   end
 
@@ -102,8 +102,9 @@ describe Haus::Task do
   end
 
   describe :call do
-    it 'should at least exist here' do
-      Haus::Task.new.must_respond_to :call
+    it 'should accept an optional argument' do
+      m = Haus::Task.new.method :call
+      m.arity.must_equal -1
     end
   end
 
