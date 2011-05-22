@@ -8,16 +8,20 @@ class Haus
   # register actions via Queue#add_*, which can then be executed after user
   # confirmation.
   #
-  # Any files that would be overwritten, modified, or removed are saved
-  # to a tarball in /tmp/
+  # Any files that would be overwritten, modified, or removed are saved to a
+  # tarball in /tmp/
   #
   class Queue
     include FileUtils
 
-    attr_reader :links, :copies, :modifications, :deletions
+    attr_reader :links, :copies, :modifications, :deletions, :archive_path
 
     def initialize
       @links, @copies, @modifications, @deletions = [], [], [], []
+
+      # NOTE: Array#shuffle and Enumerable#take introduced in 1.8.7
+      time, salt = Time.now.strftime('%s'), ('a'..'z').sort_by { rand }[0..7].join
+      @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz"
     end
 
     # Add symlinking operation;
@@ -103,15 +107,6 @@ class Haus
       ensure
         system 'stty -raw echo'
         puts
-      end
-    end
-
-    def archive_path
-      @archive_path ||= begin
-        time  = Time.now.strftime '%s'
-        chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
-        salt  = (1..4).map { chars[rand chars.size] }
-        "/tmp/haus-#{time}-#{salt}.tar.gz"
       end
     end
   end

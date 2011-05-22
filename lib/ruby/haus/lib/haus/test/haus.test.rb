@@ -47,7 +47,5 @@ describe Haus do
       capture_fork_io { Haus.new.run }.join.chomp.must_equal help
       capture_fork_io { Haus.new(%w[foo]).run }.join.chomp.must_equal help
     end
-
-    # TODO: High level tests for the command could go here
   end
 end

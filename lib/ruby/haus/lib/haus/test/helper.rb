@@ -51,10 +51,14 @@ class Haus
       end
     end
 
+    attr_reader :haus
+
     def initialize
       name  = ENV['TEST_USER'] || 'test'
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
+
+      @haus = File.join dir, ".haus-#{str 8}"
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -73,10 +77,6 @@ class Haus
     def str len
       chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
       (1..len).map { chars[rand chars.size] }.join
-    end
-
-    def haus
-      @haus ||= File.join dir, '.haus-' + str(8)
     end
 
     def etc

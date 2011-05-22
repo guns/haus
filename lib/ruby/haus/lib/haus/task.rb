@@ -30,8 +30,9 @@ class Haus
     class << self
       attr_accessor :command
 
+      @@list = {}
       def list
-        @@list ||= {}
+        @@list
       end
 
       def inherited base
@@ -52,17 +53,16 @@ class Haus
       end
     end
 
+    attr_reader :queue
+
     def initialize args = []
-      @args = args
+      @args  = args
+      @queue = Queue.new
     end
 
     # Accesses Task::list entry for the current subclass
     def meta
       self.class.list[self.class.command]
-    end
-
-    def queue
-      @queue ||= Queue.new
     end
 
     # Common options for all tasks

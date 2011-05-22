@@ -12,11 +12,13 @@ describe Haus::Options do
     Haus::Options.new.must_be_kind_of OptionParser
   end
 
-  describe :tap do
-    it 'should respond to #tap, which should behave like Ruby 1.9 Object#tap' do
-      Haus::Options.new.must_respond_to :tap
-      hopts = Haus::Options.new
-      hopts.tap { |opt| opt.must_equal hopts }.must_equal hopts
+  describe :initialize do
+    it 'should set @ostruct.path' do
+      opt = Haus::Options.new
+      ostruct = opt.instance_variable_get :@ostruct
+      ostruct.must_be_kind_of OpenStruct
+      ostruct.path.must_be_kind_of String
+      ostruct.path.must_equal File.expand_path('../../../../..', __FILE__)
     end
   end
 
@@ -32,11 +34,11 @@ describe Haus::Options do
     end
   end
 
-  describe :path do
-    it 'should always return a path string' do
+  describe :tap do
+    it 'should respond to #tap, which should behave like Ruby 1.9 Object#tap' do
+      Haus::Options.new.must_respond_to :tap
       opt = Haus::Options.new
-      opt.path.must_be_kind_of String
-      opt.path.must_equal File.expand_path('../../../../..', __FILE__)
+      opt.tap { |o| o.must_equal opt }.must_equal opt
     end
   end
 end
