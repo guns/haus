@@ -11,6 +11,7 @@ class Haus
     def initialize
       super
       @ostruct = OpenStruct.new
+      @ostruct.path = File.expand_path '../../../..', __FILE__ # HAUS_PATH
     end
 
     def tap
@@ -20,11 +21,6 @@ class Haus
 
     def method_missing method, *args
       @ostruct.send method, *args
-    end
-
-    # Provides default value for HAUS_PATH
-    def path
-      @ostruct.path || File.expand_path('../../../..', __FILE__)
     end
   end
 end
