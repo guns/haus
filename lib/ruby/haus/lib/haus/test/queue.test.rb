@@ -19,6 +19,7 @@ describe Haus::Queue do
       q.copies.must_equal []
       q.modifications.must_equal []
       q.deletions.must_equal []
+      q.archive_path.must_match %r{/tmp/haus-\d+-[a-z]+\.tar\.gz}
     end
   end
 
@@ -28,18 +29,15 @@ describe Haus::Queue do
   describe :add_copy do
   end
 
-  describe :add_modification do
+  describe :add_deletion do
   end
 
-  describe :add_deletion do
+  describe :add_modification do
   end
 
   describe :targets do
   end
 
   describe :tty_confirm? do
-  end
-
-  describe :archive_path do
   end
 end

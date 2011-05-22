@@ -8,6 +8,9 @@ class Haus
   # register actions via Queue#add_*, which can then be executed after user
   # confirmation.
   #
+  # Though the action lists are not frozen, mutating these resources are
+  # not recommended.
+  #
   # Any files that would be overwritten, modified, or removed are saved to a
   # tarball in /tmp/
   #
@@ -27,56 +30,45 @@ class Haus
     # Add symlinking operation;
     # noop if src does not exist or dst already points to src
     def add_link src, dst
-      if not File.exists? src
-        self
-      elsif File.symlink? dst and File.expand_path(File.readlink dst) == File.expand_path(src)
-        self
-      else
-        links << [src, dst].map { |f| File.expand_path f }
-        self
-      end
+      return nil unless File.exists? src
+      return nil if File.symlink? dst and File.expand_path(File.readlink dst) == File.expand_path(src)
+      links << [src, dst].map { |f| File.expand_path f }
     end
 
-    # Add copy operation; noop if src and dst contain the same bits
+    # Add copy operation;
+    # noop if src does not exist or src and dst contain the same bits
     def add_copy src, dst
-      if not File.exists? src
-        self
-      elsif File.exists? dst and cmp src, dst
-        self
-      else
-        copies << [src, dst].map { |f| File.expand_path f }
-        self
-      end
+      return nil unless File.exists? src
+      return nil if File.exists? dst and cmp src, dst
+      copies << [src, dst].map { |f| File.expand_path f }
     end
 
-    # Add modification operation; first paramater is a Proc object that
-    # takes one file, dst, as a parameter:
+    # Add deletion operation;
+    # noop if dst does not exist
+    def add_deletion dst
+      return nil unless File.exists? dst
+      deletions << File.expand_path(dst)
+    end
+
+    # Add modification operation;
+    # Parameter is the file to be modified, block is the actual operation, which
+    # in turn takes the file to be modified as an argument.
     #
     #   q = Queue.new
-    #   add_smiley = lambda { |f| File.open(f, 'a') { |f| f.puts ':)' } }
-    #   q.add_modification add_smiley, 'smilies.txt'
+    #   q.add_modification 'smilies.txt' do |file|
+    #     File.open(file, 'a') { |f| f.puts ':)' }
+    #   end
     #
-    # NOTE: The Proc handler should not assume that the passed file exists.
+    # NOTE: The passed block should not assume that the passed file exists.
     #
-    def add_modification prc, dst
-      modifications << [prc, File.expand_path(dst)]
-      self
-    end
-
-    # Add deletion operation; noop if dst does not exist
-    def add_deletion dst
-      if not File.exists? dst
-        self
-      else
-        deletions << File.expand_path(dst)
-        self
-      end
+    def add_modification dst, &block
+      modifications << [block, File.expand_path(dst)]
     end
 
     def targets action = :all
       case action
       when :all       then (links + copies + modifications).map { |s,d| d } + deletions
-      when :create    then targets.select { |f| not File.exists? f }
+      when :create    then targets.reject { |f| File.exists? f }
       when :modify    then modifications.map { |p,d| d } - targets(:create)
       when :overwrite then (links + copies).map { |s,d| d }.select { |f| File.file? f }
       when :delete    then deletions
