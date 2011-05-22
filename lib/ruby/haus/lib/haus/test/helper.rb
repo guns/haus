@@ -52,25 +52,22 @@ class Haus
     end
 
     def initialize
-      unless $warned
-        puts %Q{\
-          WARNING: This test suite requires a real Unix user account with a home
-          WARNING: directory writable by the current user. The name of the testing user
-          WARNING: is `test' by default, and can be changed by setting ENV['TEST_USER']
-          WARNING:
-          WARNING: All the files in the test user's home directory are at risk of being
-          WARNING: modified or destroyed.\n
-        }.gsub(/^ +/, '')
-        $warned = true
-      end
-
       name  = ENV['TEST_USER'] || 'test'
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
-      abort "No such user #{name.inspect}"
+      abort %Q{\
+        FAILURE: No such user #{name.inspect}
+        FAILURE:
+        FAILURE: This test suite requires a real Unix user account with a home
+        FAILURE: directory writable by the current user. The name of the testing user
+        FAILURE: is `test' by default, and can be changed by setting ENV['TEST_USER']
+        FAILURE:
+        FAILURE: All the files in the test user's home directory are at risk of being
+        FAILURE: modified or destroyed.
+      }.gsub(/^ +/, '')
     end
 
     def str len
