@@ -62,7 +62,7 @@ class Haus
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
-      abort %Q{\
+      abort %Q{
         FAILURE: No such user #{name.inspect}
         FAILURE:
         FAILURE: This test suite requires a real Unix user account with a home
