@@ -14,13 +14,14 @@ class Haus
       @ostruct.path = File.expand_path '../../../..', __FILE__ # HAUS_PATH
     end
 
+    def method_missing *args
+      @ostruct.send *args
+    end
+
+    # Ruby 1.9 has Object#tap
     def tap
       yield self
       self
-    end
-
-    def method_missing method, *args
-      @ostruct.send method, *args
-    end
+    end unless respond_to? :tap
   end
 end
