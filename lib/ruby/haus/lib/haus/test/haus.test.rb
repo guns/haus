@@ -3,7 +3,7 @@
 $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and RUBY_VERSION > '1.8.6'
+require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus'
 require 'haus/test/helper'
