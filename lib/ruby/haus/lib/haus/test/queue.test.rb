@@ -5,7 +5,7 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 require 'fileutils'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
-require 'minitest/autorun'
+require 'minitest/spec'
 require 'haus/queue'
 require 'haus/test/helper'
 

@@ -98,14 +98,13 @@ class Haus
           4.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
         end
 
+        at_exit { clean }
+
         files
       end
     end
 
     def clean
-      puts %q{
-        ### CLEANING! ###
-      }
       rm_rf haus
       @haus, @hausfiles = nil, nil
     end
