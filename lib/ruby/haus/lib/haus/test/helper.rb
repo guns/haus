@@ -35,7 +35,7 @@ class Haus
   # Don't call TestUser#new, rather:
   #
   #   before do
-  #     @user = Haus::TestUser[__FILE__]
+  #     @user = Haus::TestUser[$$]
   #   end
   #
   # Certain methods trigger filesystem modifications, which are then scheduled

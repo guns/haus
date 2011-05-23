@@ -10,7 +10,7 @@ require 'haus/test/helper'
 
 describe Haus::User do
   before do
-    @user = Haus::TestUser[__FILE__]
+    @user = Haus::TestUser[$$]
   end
 
   it 'should be a subclass of Struct::Passwd' do
