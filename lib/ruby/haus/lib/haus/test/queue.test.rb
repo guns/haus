@@ -74,10 +74,22 @@ describe Haus::Queue do
     end
 
     it 'should push and return @copies when src exists and dst does not equal src' do
+      args = %W[/etc/passwd #{$user.dir}/.passwd]
+      @q.add_link(*args).must_equal [args]
+      @q.links.must_equal [args]
     end
   end
 
   describe :add_deletion do
+    it 'should noop and return nil when dst does not exist' do
+      @q.add_deletion('/magical/pony/with/sparkle/action').must_be_nil
+      @q.deletions.empty?.must_equal true
+    end
+
+    it 'should push and return @deletions when dst exists' do
+      @q.add_deletion($user.hausfiles.first).must_equal [$user.hausfiles.first]
+      @q.deletions.must_equal [$user.hausfiles.first]
+    end
   end
 
   describe :add_modification do
