@@ -89,7 +89,7 @@ class Haus
     # List of files in HAUS_PATH/etc/*
     def hausfiles
       @hausfiles ||= begin
-        files = []
+        pid, files = $$, []
         mkdir_p etc
 
         # Create random files + directories
@@ -98,7 +98,8 @@ class Haus
           4.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
         end
 
-        at_exit { clean }
+        # Don't let forks clean up before we're ready
+        at_exit { clean if $$ == pid }
 
         files
       end

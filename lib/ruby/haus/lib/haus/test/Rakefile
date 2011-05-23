@@ -5,14 +5,7 @@ verbose false
 
 task :default => :test
 
-desc 'Run tests; optionally supply regexp patterns for filenames; eats ARGV!'
+desc 'Run all tests'
 task :test do
-  ARGV.shift  if ARGV.first == 'test'
-  ARGV << '.' if ARGV.empty?
-
-  tests = Dir['**/*.test.rb']
-  ARGV.map { |arg| tests.grep Regexp.new(arg) }.flatten.each { |f| load f }
-
-  MiniTest::Unit.new.run ARGV
-  exit # Explicitly break rake task chaining
+  Dir['**/*.test.rb'].each { |f| load f }
 end
