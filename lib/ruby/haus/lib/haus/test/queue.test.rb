@@ -2,17 +2,18 @@
 
 $:.unshift File.expand_path('../../lib', __FILE__)
 
+require 'fileutils'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
-require 'fileutils'
 require 'haus/queue'
 require 'haus/test/helper'
 
+$user = Haus::TestUser[$$]
+
 describe Haus::Queue do
   before do
-    @q    = Haus::Queue.new
-    @user = Haus::TestUser[$$]
+    @q = Haus::Queue.new
   end
 
   it 'should have included FileUtils' do
@@ -31,14 +32,14 @@ describe Haus::Queue do
 
   describe :add_link do
     it 'should noop and return nil when src does not exist' do
-      @q.add_link('/magic/pony/with/sparkles', "#{@user.dir}/sparkles").must_be_nil
+      @q.add_link('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
       @q.links.empty?.must_equal true
     end
 
     it 'should noop and return nil when dst points to src' do
       begin
-        src = @user.hausfiles.first
-        dst = "#{@user.dir}/.#{File.basename src}"
+        src = $user.hausfiles.first
+        dst = "#{$user.dir}/.#{File.basename src}"
         FileUtils.ln_s src, dst
         @q.add_link(src, dst).must_be_nil
         @q.links.empty?.must_equal true
@@ -48,7 +49,7 @@ describe Haus::Queue do
     end
 
     it 'should push and return @links when src does exist and dst does not point to src' do
-      args = %W[/etc/passwd #{@user.dir}/.passwd]
+      args = %W[/etc/passwd #{$user.dir}/.passwd]
       @q.add_link(*args).must_equal [args]
       @q.links.must_equal [args]
     end
@@ -56,20 +57,23 @@ describe Haus::Queue do
 
   describe :add_copy do
     it 'should noop and return nil when src does not exist' do
-      @q.add_copy('/magic/pony/with/sparkles', "#{@user.dir}/sparkles").must_be_nil
+      @q.add_copy('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
       @q.copies.empty?.must_equal true
     end
 
     it 'should noop and return nil when src and dst equal' do
       begin
-        src = @user.hausfiles.first
-        dst = "#{@user.dir}/.#{File.basename src}"
+        src = $user.hausfiles.first
+        dst = "#{$user.dir}/.#{File.basename src}"
         FileUtils.cp src, dst
         @q.add_copy(src, dst).must_be_nil
         @q.copies.empty?.must_equal true
       ensure
         FileUtils.rm_f dst
       end
+    end
+
+    it 'should push and return @copies when src exists and dst does not equal src' do
     end
   end
 
