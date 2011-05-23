@@ -29,25 +29,28 @@ class Haus
 
     # Add symlinking operation;
     # noop if src does not exist or dst already points to src
-    def add_link src, dst
+    def add_link source, destination
+      src, dst = [source, destination].map { |f| File.expand_path f }
       return nil unless File.exists? src
       return nil if File.symlink? dst and File.expand_path(File.readlink dst) == File.expand_path(src)
-      links << [src, dst].map { |f| File.expand_path f }
+      links << [src, dst]
     end
 
     # Add copy operation;
     # noop if src does not exist or src and dst contain the same bits
-    def add_copy src, dst
+    def add_copy source, destination
+      src, dst = [source, destination].map { |f| File.expand_path f }
       return nil unless File.exists? src
       return nil if File.exists? dst and cmp src, dst
-      copies << [src, dst].map { |f| File.expand_path f }
+      copies << [src, dst]
     end
 
     # Add deletion operation;
     # noop if dst does not exist
-    def add_deletion dst
+    def add_deletion destination
+      dst = File.expand_path destination
       return nil unless File.exists? dst
-      deletions << File.expand_path(dst)
+      deletions << dst
     end
 
     # Add modification operation;
@@ -61,8 +64,8 @@ class Haus
     #
     # NOTE: The passed block should not assume that the passed file exists.
     #
-    def add_modification dst, &block
-      modifications << [block, File.expand_path(dst)]
+    def add_modification destination, &block
+      modifications << [block, File.expand_path(destination)]
     end
 
     def targets action = :all
