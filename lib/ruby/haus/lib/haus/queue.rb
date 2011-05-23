@@ -65,6 +65,7 @@ class Haus
     # NOTE: The passed block should not assume that the passed file exists.
     #
     def add_modification destination, &block
+      return nil if block.nil?
       modifications << [block, File.expand_path(destination)]
     end
 

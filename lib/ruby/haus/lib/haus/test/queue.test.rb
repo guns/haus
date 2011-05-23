@@ -93,6 +93,16 @@ describe Haus::Queue do
   end
 
   describe :add_modification do
+    it 'should noop and return nil when no block is given' do
+      @q.add_modification("#{$user.dir}/.ponies").must_be_nil
+      @q.modifications.empty?.must_equal true
+    end
+
+    it 'should push and return @modifications when a file and block are given' do
+      @q.add_modification("#{$user.dir}/.ponies") { |f| touch f }.size.must_equal 1
+      @q.modifications.first[0].respond_to?(:call).must_equal true # TODO: must_respond_to, Y U NO WORK?
+      @q.modifications.first[1].must_equal "#{$user.dir}/.ponies"
+    end
   end
 
   describe :targets do
