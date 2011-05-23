@@ -42,6 +42,9 @@ class Haus
   # to be removed via Kernel::at_exit.
   #
   class TestUser < Struct::Passwd
+    include FileUtils
+    verbose false
+
     class << self
       attr_reader :list
 
@@ -58,7 +61,7 @@ class Haus
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
-      @haus = File.join dir, ".haus-#{str 8}"
+      @haus = File.join dir, ".#{str 8}"
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -76,7 +79,7 @@ class Haus
 
     def str len
       chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
-      (1..len).map { chars[rand chars.size] }.join
+      'haus-' + (1..len).map { chars[rand chars.size] }.join
     end
 
     def etc
