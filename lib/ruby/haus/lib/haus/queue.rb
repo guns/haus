@@ -32,7 +32,7 @@ class Haus
     def add_link source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
       return nil unless File.exists? src
-      return nil if File.symlink? dst and File.expand_path(File.readlink dst) == File.expand_path(src)
+      return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
       links << [src, dst]
     end
 
