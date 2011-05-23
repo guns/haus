@@ -48,9 +48,9 @@ describe Haus::Queue do
     end
 
     it 'should push and return @links when src does exist and dst does not point to src' do
-      ary = %W[/etc/passwd #{@user.dir}/.passwd]
-      @q.add_link(*ary).must_equal [ary]
-      @q.links.must_equal [ary]
+      args = %W[/etc/passwd #{@user.dir}/.passwd]
+      @q.add_link(*args).must_equal [args]
+      @q.links.must_equal [args]
     end
   end
 
