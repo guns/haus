@@ -17,6 +17,8 @@ class Haus
   # is extracted in an attempt to restore the previous state.
   #
   class Queue
+    class MultipleJobError < RuntimeError; end
+
     include FileUtils
 
     attr_reader :links, :copies, :modifications, :deletions, :archive_path
@@ -33,8 +35,11 @@ class Haus
     # noop if src does not exist or dst already points to src
     def add_link source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
+
+      raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
       return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
+
       @links = (links.dup << [src,dst]).freeze
     end
 
@@ -42,8 +47,11 @@ class Haus
     # noop if src does not exist or src and dst contain the same bits
     def add_copy source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
+
+      raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
       return nil if File.exists? dst and cmp src, dst
+
       @copies = (copies.dup << [src, dst]).freeze
     end
 
@@ -51,7 +59,10 @@ class Haus
     # noop if dst does not exist
     def add_deletion destination
       dst = File.expand_path destination
+
+      raise MultipleJobError if targets.include? dst
       return nil unless File.exists? dst
+
       @deletions = (deletions.dup << dst).freeze
     end
 
@@ -67,8 +78,12 @@ class Haus
     # NOTE: The passed block should not assume that the passed file exists.
     #
     def add_modification destination, &block
+      dst = File.expand_path destination
+
+      raise MultipleJobError if targets.include? dst
       return nil if block.nil?
-      @modifications = (modifications.dup << [block, File.expand_path(destination)]).freeze
+
+      @modifications = (modifications.dup << [block, dst]).freeze
     end
 
     def targets action = :all

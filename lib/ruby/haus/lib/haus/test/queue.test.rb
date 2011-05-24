@@ -50,12 +50,19 @@ describe Haus::Queue do
     end
 
     it 'should push and refreeze @links when src does exist and dst does not point to src' do
-      args = %W[/etc/passwd #{$user.dir}/.passwd]
+      args = %W[#{$user.hausfiles.first} #{$user.dir}/.dest]
       res = @q.add_link *args
       res.must_equal [args]
       res.frozen?.must_equal true
       @q.links.must_equal [args]
       @q.links.frozen?.must_equal true
+    end
+
+    it 'should raise an error when a job for dst already exists' do
+      @q.add_link *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      assert_raises Haus::Queue::MultipleJobError do
+        @q.add_link *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      end
     end
   end
 
@@ -78,12 +85,19 @@ describe Haus::Queue do
     end
 
     it 'should push and refreeze @copies when src exists and dst does not equal src' do
-      args = %W[/etc/passwd #{$user.dir}/.passwd]
+      args = %W[#{$user.hausfiles.first} #{$user.dir}/.dest]
       res = @q.add_copy *args
       res.must_equal [args]
       res.frozen?.must_equal true
       @q.copies.must_equal [args]
       @q.copies.frozen?.must_equal true
+    end
+
+    it 'should raise an error when a job for dst already exists' do
+      @q.add_copy *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      assert_raises Haus::Queue::MultipleJobError do
+        @q.add_copy *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      end
     end
   end
 
@@ -99,6 +113,13 @@ describe Haus::Queue do
       res.frozen?.must_equal true
       @q.deletions.must_equal [$user.hausfiles.first]
       @q.deletions.frozen?.must_equal true
+    end
+
+    it 'should raise an error when a job for dst already exists' do
+      @q.add_deletion $user.hausfiles.first
+      assert_raises Haus::Queue::MultipleJobError do
+        @q.add_deletion $user.hausfiles.first
+      end
     end
   end
 
@@ -116,6 +137,13 @@ describe Haus::Queue do
       @q.modifications.first[1].must_equal "#{$user.dir}/.ponies"
       @q.modifications.frozen?.must_equal true
     end
+
+    it 'should raise an error when a job for dst already exists' do
+      @q.add_modification($user.hausfiles.first) { |f| touch f }
+      assert_raises Haus::Queue::MultipleJobError do
+        @q.add_modification($user.hausfiles.first) { |f| touch f }
+      end
+    end
   end
 
   describe :targets do
@@ -124,3 +152,4 @@ describe Haus::Queue do
   describe :tty_confirm? do
   end
 end
+
