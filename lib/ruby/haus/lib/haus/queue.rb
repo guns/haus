@@ -5,14 +5,16 @@ require 'fileutils'
 class Haus
   #
   # Instead of executing filesystem calls immediately, Haus::Task instances
-  # register actions via Queue#add_*, which can then be executed after user
-  # confirmation.
+  # register jobs via Queue#add_*, which can then be executed after optional
+  # user confirmation.
   #
-  # Though the action lists are not frozen, mutating these resources are
-  # not recommended.
+  # For safety, the individual job queues are frozen; jobs can be removed from
+  # the queue via Queue#remove. In addition, multiple jobs are not allowed to be
+  # queued for a single destination.
   #
-  # Any files that would be overwritten, modified, or removed are saved to a
-  # tarball in /tmp/
+  # Before execution, any files that would be overwritten, modified, or removed
+  # are saved to an archive. If an error is raised during execution, the archive
+  # is extracted in an attempt to restore the previous state.
   #
   class Queue
     include FileUtils
@@ -20,11 +22,11 @@ class Haus
     attr_reader :links, :copies, :modifications, :deletions, :archive_path
 
     def initialize
-      @links, @copies, @modifications, @deletions = [], [], [], []
+      @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 
       # NOTE: Array#shuffle and Enumerable#take introduced in 1.8.7
       time, salt = Time.now.strftime('%s'), ('a'..'z').sort_by { rand }[0..7].join
-      @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz"
+      @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
     # Add symlinking operation;
@@ -33,7 +35,7 @@ class Haus
       src, dst = [source, destination].map { |f| File.expand_path f }
       return nil unless File.exists? src
       return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
-      links << [src, dst]
+      @links = (links.dup << [src,dst]).freeze
     end
 
     # Add copy operation;
@@ -42,7 +44,7 @@ class Haus
       src, dst = [source, destination].map { |f| File.expand_path f }
       return nil unless File.exists? src
       return nil if File.exists? dst and cmp src, dst
-      copies << [src, dst]
+      @copies = (copies.dup << [src, dst]).freeze
     end
 
     # Add deletion operation;
@@ -50,7 +52,7 @@ class Haus
     def add_deletion destination
       dst = File.expand_path destination
       return nil unless File.exists? dst
-      deletions << dst
+      @deletions = (deletions.dup << dst).freeze
     end
 
     # Add modification operation;
@@ -66,7 +68,7 @@ class Haus
     #
     def add_modification destination, &block
       return nil if block.nil?
-      modifications << [block, File.expand_path(destination)]
+      @modifications = (modifications.dup << [block, File.expand_path(destination)]).freeze
     end
 
     def targets action = :all

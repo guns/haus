@@ -21,12 +21,13 @@ describe Haus::Queue do
   end
 
   describe :initialize do
-    it 'should initialize the attr_readers' do
-      @q.links.must_equal []
-      @q.copies.must_equal []
-      @q.modifications.must_equal []
-      @q.deletions.must_equal []
+    it 'should initialize the attr_readers, which should be frozen' do
+      %w[links copies modifications deletions].each do |m|
+        @q.send(m).must_equal []
+        @q.send(m).frozen?.must_equal true
+      end
       @q.archive_path.must_match %r{\A/tmp/haus-\d+-[a-z]+\.tar\.gz\z}
+      @q.archive_path.frozen?.must_equal true
     end
   end
 
@@ -48,10 +49,13 @@ describe Haus::Queue do
       end
     end
 
-    it 'should push and return @links when src does exist and dst does not point to src' do
+    it 'should push and refreeze @links when src does exist and dst does not point to src' do
       args = %W[/etc/passwd #{$user.dir}/.passwd]
-      @q.add_link(*args).must_equal [args]
+      res = @q.add_link *args
+      res.must_equal [args]
+      res.frozen?.must_equal true
       @q.links.must_equal [args]
+      @q.links.frozen?.must_equal true
     end
   end
 
@@ -73,10 +77,13 @@ describe Haus::Queue do
       end
     end
 
-    it 'should push and return @copies when src exists and dst does not equal src' do
+    it 'should push and refreeze @copies when src exists and dst does not equal src' do
       args = %W[/etc/passwd #{$user.dir}/.passwd]
-      @q.add_link(*args).must_equal [args]
-      @q.links.must_equal [args]
+      res = @q.add_copy *args
+      res.must_equal [args]
+      res.frozen?.must_equal true
+      @q.copies.must_equal [args]
+      @q.copies.frozen?.must_equal true
     end
   end
 
@@ -86,9 +93,12 @@ describe Haus::Queue do
       @q.deletions.empty?.must_equal true
     end
 
-    it 'should push and return @deletions when dst exists' do
-      @q.add_deletion($user.hausfiles.first).must_equal [$user.hausfiles.first]
+    it 'should push and refreeze @deletions when dst exists' do
+      res = @q.add_deletion($user.hausfiles.first)
+      res.must_equal [$user.hausfiles.first]
+      res.frozen?.must_equal true
       @q.deletions.must_equal [$user.hausfiles.first]
+      @q.deletions.frozen?.must_equal true
     end
   end
 
@@ -99,9 +109,12 @@ describe Haus::Queue do
     end
 
     it 'should push and return @modifications when a file and block are given' do
-      @q.add_modification("#{$user.dir}/.ponies") { |f| touch f }.size.must_equal 1
+      res = @q.add_modification("#{$user.dir}/.ponies") { |f| touch f }
+      res.size.must_equal 1
+      res.frozen?.must_equal true
       @q.modifications.first[0].respond_to?(:call).must_equal true # TODO: must_respond_to, Y U NO WORK?
       @q.modifications.first[1].must_equal "#{$user.dir}/.ponies"
+      @q.modifications.frozen?.must_equal true
     end
   end
 
