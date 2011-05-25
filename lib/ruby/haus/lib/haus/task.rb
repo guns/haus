@@ -101,7 +101,6 @@ class Haus
 
     # Command line interface; ruby libraries should directly call Task#call
     def run
-      options.cli = true
       call options.parse(@args)
     end
   end

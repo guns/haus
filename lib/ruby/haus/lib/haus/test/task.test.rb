@@ -109,13 +109,6 @@ describe Haus::Task do
   end
 
   describe :run do
-    it 'should set options.cli' do
-      h = Haus::Noop.new
-      h.options.cli.must_equal nil
-      h.run
-      h.options.cli.must_equal true
-    end
-
     it 'should call Haus::Task#call' do
       h = Haus::Noop.new
       h.instance_eval do
