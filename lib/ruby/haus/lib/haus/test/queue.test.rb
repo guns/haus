@@ -3,6 +3,7 @@
 $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'fileutils'
+require 'ostruct'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
@@ -21,6 +22,14 @@ describe Haus::Queue do
   end
 
   describe :initialize do
+    it 'should optionally accept an options object' do
+      @q.method(:initialize).arity.must_equal -1
+      @q.options.must_be_nil
+      q = Haus::Queue.new(OpenStruct.new :force => true)
+      q.options.must_equal OpenStruct.new(:force => true)
+      q.options.frozen?.must_equal true
+    end
+
     it 'should initialize the attr_readers, which should be frozen' do
       %w[links copies modifications deletions].each do |m|
         @q.send(m).must_equal []
@@ -28,6 +37,20 @@ describe Haus::Queue do
       end
       @q.archive_path.must_match %r{\A/tmp/haus-\d+-[a-z]+\.tar\.gz\z}
       @q.archive_path.frozen?.must_equal true
+    end
+  end
+
+  describe :options= do
+    it 'should dup and freeze the passed object' do
+      opts = OpenStruct.new :force => true, :noop => true
+      @q.options = opts
+      @q.options.must_equal opts
+      opts.force = false
+      @q.options.force.must_equal true
+      @q.options.frozen?.must_equal true
+      assert_raises TypeError do
+        @q.options.force = false
+      end
     end
   end
 
@@ -221,6 +244,9 @@ describe Haus::Queue do
   end
 
   describe :execute do
+  end
+
+  describe :execute! do
   end
 
   describe :tty_confirm? do

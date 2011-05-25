@@ -21,14 +21,22 @@ class Haus
 
     include FileUtils
 
-    attr_reader :links, :copies, :modifications, :deletions, :archive_path
+    attr_reader :options, :archive_path
+    attr_reader :links, :copies, :modifications, :deletions
 
-    def initialize
+    def initialize opts = nil
+      self.options = opts
+
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 
       # NOTE: Array#shuffle and Enumerable#take introduced in 1.8.7
       time, salt = Time.now.strftime('%s'), ('a'..'z').sort_by { rand }[0..7].join
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
+    end
+
+    # Dups and freezes object for safety
+    def options= opts
+      @options = opts.dup.freeze if opts
     end
 
     # Add symlinking operation;
@@ -118,22 +126,25 @@ class Haus
       hash != h
     end
 
-    # Pull the trigger. Jobs are processed in this order:
-    #
-    #   1) Deletions
-    #   2) Copies
-    #   3) Links
-    #   3) Modifications
-    #
+    # Execute jobs after user confirmation.
     def execute
+      execute! if tty_confirm?
     end
 
-    # Ask user for confirmation;
-    # Returns false if input is not a tty or the `stty' program is not available;
-    # Returns true if no changes will be made
+    # Execute jobs immediately.
+    #
+    # Modifications are processed last.
+    def execute!
+    end
+
+    # Ask user for confirmation.
+    # Returns true if the `force' or `noop' options are set.
+    # Returns true if no jobs are queued.
+    # Returns false if input is not a tty.
     def tty_confirm?
-      return false if not $stdin.tty?
+      return true if options.force or options.noop
       return true if targets.empty?
+      return false if not $stdin.tty?
 
       [:create, :modify, :overwrite, :delete].each do |action|
         fs = targets action
