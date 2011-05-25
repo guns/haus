@@ -141,6 +141,16 @@ class Haus
       @executed = true.freeze
 
       archive
+
+      begin
+        opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
+        deletions.each     { |d|   rm_rf d, opts.merge(:secure => true) }
+        links.each         { |s,d| ln_sf s, d, opts }
+        copies.each        { |s,d| cp_r  s, d, opts.merge(:preserve => true, :remove_destination => true) }
+        modifications.each { |p,d| p.call d }
+      rescue
+        restore
+      end
     end
 
     def executed?

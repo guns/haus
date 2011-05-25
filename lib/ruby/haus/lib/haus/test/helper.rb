@@ -128,10 +128,22 @@ class Haus
 
         # Create random files + directories
         Dir.chdir etc do
-          8.times { f = str 8; touch f; files << File.expand_path(f) }
-          8.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
-          ln_s files[8..15], '.'
-          files.concat files[8..15].map { |f| File.expand_path File.basename(f) }
+          8.times do
+            f = str 8
+            touch f
+            files << File.expand_path(f)
+          end
+
+          8.times do
+            d = str 8
+            f = File.join d, str(8)
+            mkdir d
+            touch f
+            ln_s f, '.'
+            files << File.expand_path(d)
+          end
+
+          files.concat Dir['*'].select { |f| File.symlink? f }.map { |f| File.expand_path f }
           chmod 0700, files[20..23]
         end
 

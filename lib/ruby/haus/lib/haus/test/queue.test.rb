@@ -247,6 +247,20 @@ describe Haus::Queue do
   end
 
   describe :execute! do
+    before do
+      files = $user.hausfiles.all.map { |f| "#{$user.dir}/.#{File.basename f}" }
+      # files.size.times do |n|
+      #   case n
+      #   when 7..3 then add_link $user.hausfiles[n], files[n]
+      #   when 4..7 then add_copy $user.hausfiles[n], files[]
+      #   when
+      #   end
+      # end
+    end
+
+    after do
+      rm_rf files, :secure => true
+    end
   end
 
   describe :executed? do
@@ -305,9 +319,11 @@ describe Haus::Queue do
 
     it 'should restore the current archive' do
       @q.archive
-      list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n")
+      list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n").reject do |f|
+        f =~ %r{haus-\w+/haus-\w+\z}
+      end.map { |f| f.chomp '/' }
       list.sort.must_equal $user.hausfiles[8..23].map { |f| f.sub %r{\A/}, '' }.sort
-      FileUtils.rm_f $user.hausfiles[8..23]
+      FileUtils.rm_rf $user.hausfiles[8..23]
       $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [false]
       @q.restore
       $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [true]

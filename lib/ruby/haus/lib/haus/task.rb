@@ -85,6 +85,10 @@ class Haus
           opt.noop = true
         end
 
+        opt.on_tail '-v', '--verbose' do
+          opt.verbose = true
+        end
+
         opt.on_tail '-q', '--quiet' do
           opt.quiet = true
         end
