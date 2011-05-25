@@ -277,6 +277,9 @@ describe Haus::Queue do
       @q.add_copy '/etc/passwd', $user.hausfiles[1]
       @q.add_modification($user.hausfiles[2]) { |f| f }
       @q.add_deletion $user.hausfiles[3]
+      @q.add_link '/etc/passwd', '/magical/pony/with/sparkles'
+      @q.add_copy '/etc/passwd', '/magical/pony/with/flying/action'
+      @q.add_modification('/magical/pony/in/the/sky') { |f| f }
     end
 
     after do
@@ -295,11 +298,11 @@ describe Haus::Queue do
       end
     end
 
-    it 'should create an archive of all targets' do
+    it 'should create an archive of all extant targets' do
       @q.archive
       File.exists?(@q.archive_path).must_equal true
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
-      list.sort.must_equal @q.targets.map { |f| f.sub /\A\//, '' }.sort
+      list.sort.must_equal((@q.targets - @q.targets(:create)).map { |f| f.sub /\A\//, '' }.sort)
     end
 
     it 'should return the archive path on success' do

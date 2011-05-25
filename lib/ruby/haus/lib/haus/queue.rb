@@ -163,7 +163,8 @@ class Haus
       end
 
       chdir '/' do
-        unless system *(%W[tar zcf #{archive_path}] + targets.map { |f| f.sub %r{\A/}, '' })
+        files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+        unless system *(%W[tar zcf #{archive_path}] + files)
           raise "Archive to #{archive_path.inspect} failed"
         end
       end
