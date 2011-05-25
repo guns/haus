@@ -250,6 +250,11 @@ describe Haus::Queue do
   end
 
   describe :executed? do
+    it 'should return @executed' do
+      @q.executed?.must_equal nil
+      @q.instance_variable_set :@executed, true
+      @q.executed?.must_equal true
+    end
   end
 
   describe :archive do
@@ -258,6 +263,10 @@ describe Haus::Queue do
       @q.add_copy '/etc/passwd', $user.hausfiles[1]
       @q.add_modification($user.hausfiles[2]) { |f| f }
       @q.add_deletion $user.hausfiles[3]
+    end
+
+    after do
+      FileUtils.rm_f @q.archive_path
     end
 
     it 'should raise an error if tar or gzip are not available' do
@@ -273,14 +282,10 @@ describe Haus::Queue do
     end
 
     it 'should create an archive of all targets' do
-      begin
-        @q.archive
-        File.exists?(@q.archive_path).must_equal true
-        list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
-        list.sort.must_equal @q.targets.map { |f| f.sub /\A\//, '' }.sort
-      ensure
-        FileUtils.rm_f @q.archive_path
-      end
+      @q.archive
+      File.exists?(@q.archive_path).must_equal true
+      list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
+      list.sort.must_equal @q.targets.map { |f| f.sub /\A\//, '' }.sort
     end
 
     it 'should return the archive path on success' do
@@ -290,9 +295,22 @@ describe Haus::Queue do
 
   describe :restore do
     before do
+      @q.instance_variable_set :@deletions, $user.hausfiles[8..23]
+      @q.options = OpenStruct.new :quiet => true
+    end
+
+    after do
+      FileUtils.rm_f @q.archive_path
     end
 
     it 'should restore the current archive' do
+      @q.archive
+      list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n")
+      list.sort.must_equal $user.hausfiles[8..23].map { |f| f.sub %r{\A/}, '' }.sort
+      FileUtils.rm_f $user.hausfiles[8..23]
+      $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [false]
+      @q.restore
+      $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [true]
     end
   end
 

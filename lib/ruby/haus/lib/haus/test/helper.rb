@@ -129,7 +129,10 @@ class Haus
         # Create random files + directories
         Dir.chdir etc do
           8.times { f = str 8; touch f; files << File.expand_path(f) }
-          4.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
+          8.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
+          ln_s files[8..15], '.'
+          files.concat files[8..15].map { |f| File.expand_path File.basename(f) }
+          chmod 0700, files[20..23]
         end
 
         # Don't let forks clean up before we're ready

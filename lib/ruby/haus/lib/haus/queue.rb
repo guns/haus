@@ -161,10 +161,10 @@ class Haus
       archive_path
     end
 
-    def restore path = nil
-      file = path || archive_path
+    def restore
       chdir '/' do
-        system *%W[tar z#{'v' unless options.quiet}xf #{file}]
+        # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
+        system *%W[tar z#{options.quiet ? '' : 'v'}xpf #{archive_path}]
       end
     end
 
