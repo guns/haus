@@ -184,9 +184,10 @@ describe Haus::Queue do
         when 6..7 then @q.add_modification(@files[n]) { |io| io.puts 'MODIFY' }
         end
       end
+    end
 
-      pid = $$
-      at_exit { rm_f @files if $$ == pid }
+    after do
+      rm_f @files
     end
 
     it 'should return all targets by default' do
