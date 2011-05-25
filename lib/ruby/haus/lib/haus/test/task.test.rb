@@ -20,12 +20,12 @@ describe Haus::Task do
     describe :command do
       it "should return the current subclass's command name" do
         Haus::Noop.command.must_equal 'noop'
+        Haus::Noop2.command.must_equal 'noop2'
       end
     end
 
     describe :inherited do
       it 'should create a Task::list entry for the new subclass' do
-        class Haus::Noop2 < Haus::Task; end
         Haus::Task.list['noop2'].must_be_kind_of Hash
         Haus::Task.list['noop2'][:class].must_equal Haus::Noop2
         Haus::Task.list['noop2'][:desc].must_equal ''
