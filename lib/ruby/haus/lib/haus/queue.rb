@@ -136,6 +136,36 @@ class Haus
     #
     # Modifications are processed last.
     def execute!
+      # Guard against multiple executions
+      return nil if executed?
+      @executed = true.freeze
+
+      archive
+    end
+
+    def executed?
+      @executed
+    end
+
+    def archive
+      %w[tar gzip].each do |cmd|
+        raise "#{cmd.inspect} not found" unless system "command -v #{cmd} &>/dev/null"
+      end
+
+      chdir '/' do
+        unless system *(%W[tar zcf #{archive_path}] + targets.map { |f| f.sub %r{\A/}, '' })
+          raise "Archive to #{archive_path.inspect} failed"
+        end
+      end
+
+      archive_path
+    end
+
+    def restore path = nil
+      file = path || archive_path
+      chdir '/' do
+        system *%W[tar z#{'v' unless options.quiet}xf #{file}]
+      end
     end
 
     # Ask user for confirmation.

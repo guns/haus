@@ -249,6 +249,53 @@ describe Haus::Queue do
   describe :execute! do
   end
 
+  describe :executed? do
+  end
+
+  describe :archive do
+    before do
+      @q.add_link '/etc/passwd', $user.hausfiles[0]
+      @q.add_copy '/etc/passwd', $user.hausfiles[1]
+      @q.add_modification($user.hausfiles[2]) { |f| f }
+      @q.add_deletion $user.hausfiles[3]
+    end
+
+    it 'should raise an error if tar or gzip are not available' do
+      begin
+        path = ENV['PATH'].dup
+        assert_raises RuntimeError do
+          ENV['PATH'] = ''
+          @q.archive
+        end
+      ensure
+        ENV['PATH'] = path
+      end
+    end
+
+    it 'should create an archive of all targets' do
+      begin
+        @q.archive
+        File.exists?(@q.archive_path).must_equal true
+        list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
+        list.sort.must_equal @q.targets.map { |f| f.sub /\A\//, '' }.sort
+      ensure
+        FileUtils.rm_f @q.archive_path
+      end
+    end
+
+    it 'should return the archive path on success' do
+      @q.archive.must_equal @q.archive_path
+    end
+  end
+
+  describe :restore do
+    before do
+    end
+
+    it 'should restore the current archive' do
+    end
+  end
+
   describe :tty_confirm? do
     before do
       @q.add_link $user.hausfiles.first, "#{$user.dir}/.#{File.basename $user.hausfiles.first}"
