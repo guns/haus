@@ -86,14 +86,46 @@ class Haus
       @modifications = (modifications.dup << [block, dst]).freeze
     end
 
+    # Return list of destinations that are queued to be visited
     def targets action = :all
       case action
       when :all       then (links + copies + modifications).map { |s,d| d } + deletions
-      when :create    then targets.reject { |f| File.exists? f }
-      when :modify    then modifications.map { |p,d| d } - targets(:create)
-      when :overwrite then (links + copies).map { |s,d| d }.select { |f| File.file? f }
       when :delete    then deletions
+      # Links, copies, and modifications may create files
+      when :create    then (targets - targets(:delete)).reject { |f| File.exists? f }
+      # Modifications to files that already exist
+      when :modify    then modifications.map { |s,d| d } - targets(:create)
+      # Left over: extant files that will be wholly replaced by links and copies
+      when :overwrite then targets - targets(:create) - targets(:modify) - targets(:delete)
+      else raise ArgumentError
       end
+    end
+
+    def hash
+      (links + copies + modifications + deletions).hash
+    end
+
+    # Remove jobs by destination path; boolean return
+    def remove destination
+      h = hash
+
+      dst            = File.expand_path destination
+      @links         = links.dup.reject { |s,d| d == dst }.freeze
+      @copies        = copies.dup.reject { |s,d| d == dst }.freeze
+      @modifications = modifications.dup.reject { |s,d| d == dst }.freeze
+      @deletions     = deletions.dup.reject { |d| d == dst }.freeze
+
+      hash != h
+    end
+
+    # Pull the trigger. Jobs are processed in this order:
+    #
+    #   1) Deletions
+    #   2) Copies
+    #   3) Links
+    #   3) Modifications
+    #
+    def execute
     end
 
     # Ask user for confirmation;

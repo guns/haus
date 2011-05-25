@@ -94,7 +94,7 @@ class Haus
 
         # Create random files + directories
         Dir.chdir etc do
-          4.times { f = str 8; touch f; files << File.expand_path(f) }
+          8.times { f = str 8; touch f; files << File.expand_path(f) }
           4.times { f = File.join str(8), str(8); mkdir File.dirname(f); touch f; files << File.expand_path(f) }
         end
 
