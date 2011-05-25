@@ -248,18 +248,87 @@ describe Haus::Queue do
 
   describe :execute! do
     before do
-      files = $user.hausfiles.all.map { |f| "#{$user.dir}/.#{File.basename f}" }
-      # files.size.times do |n|
-      #   case n
-      #   when 7..3 then add_link $user.hausfiles[n], files[n]
-      #   when 4..7 then add_copy $user.hausfiles[n], files[]
-      #   when
-      #   end
-      # end
+      @files = $user.hausfiles.map { |f| "#{$user.dir}/.#{File.basename f}" }
+      @files.size.times do |n|
+        case n
+        when 8..9   then @q.add_link $user.hausfiles[n], @files[n]
+        when 10     then @q.add_copy $user.hausfiles[n], @files[n]
+        when 11     then FileUtils.cp '/etc/passwd', @files[n] and @q.add_copy $user.hausfiles[n], @files[n]
+        when 12..13 then FileUtils.touch @files[n] and @q.add_deletion @files[n]
+        when 14..15 then @q.add_modification(@files[n]) { |f| File.open(f, 'a') { |io| io.puts 'MODIFIED' } }
+        end
+      end
     end
 
     after do
-      rm_rf files, :secure => true
+      rm_f @q.archive_path
+      rm_rf @files, :secure => true
+    end
+
+    it 'should return nil if already executed' do
+      @q.execute!
+      @q.executed?.must_equal true
+      @q.execute!.must_equal nil
+    end
+
+    it 'should create an archive before execution' do
+      @q.execute!
+      File.exists?(@q.archive_path).must_equal true
+    end
+
+    it 'should rollback changes on signals' do
+      %w[INT TERM QUIT].each do |sig|
+        capture_fork_io do
+          @q.add_modification @files[16] do |f|
+            rm_rf @files, :secure => true
+            print 'foo' if File.exists? @files[12]
+            print 'bar'
+            kill sig, $$
+            sleep 1
+            print 'baz'
+          end
+          @q.execute!
+        end.first.must_equal 'bar'
+
+        @files.find { |f| File.exists? f }.must_equal @files[12]
+      end
+    end
+
+    it 'should rollback changes on StandardError' do
+      capture_fork_io do
+        @q.add_modification @files[16] do |f|
+          rm_rf @files, :secure => true
+          print 'foo' if File.exists? @files[12]
+          print 'bar'
+          raise StandardError
+        end
+        @q.execute!
+      end.first.must_equal 'bar'
+
+      File.exists?(@files[12]).must_equal true
+    end
+
+    it 'should delete files' do
+      [12,13].each { |n| File.exists?(@files[n]).must_equal true }
+      @q.execute!
+      [12,13].each { |n| File.exists?(@files[n]).must_equal false }
+    end
+
+    it 'should link files' do
+      [8,9].each { |n| File.symlink?(@files[n]).must_equal false }
+      @q.execute!
+      [8,9].each do |n|
+        File.symlink?(@files[n]).must_equal true
+        File.readlink(@files[n]).must_equal $user.hausfiles[n]
+      end
+    end
+
+    it 'should copy files' do
+      File.exists?(@files[10]).must_equal false
+      File.exists?(@files[11]).must_equal true
+      (File.basename(@files[11]) == File.basename($user.hausfiles[11])).must_equal false
+      @q.execute!
+      File.exists?(@files[10]).must_equal true
     end
   end
 

@@ -138,18 +138,32 @@ class Haus
     def execute!
       # Guard against multiple executions
       return nil if executed?
-      @executed = true.freeze
+      @executed = true
 
       archive
 
       begin
+        # Rollback on signals
+        %w[INT TERM QUIT].each do |sig|
+          trap(sig) { raise "Caught signal SIG#{sig}" }
+        end
+
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
         deletions.each     { |d|   rm_rf d, opts.merge(:secure => true) }
         links.each         { |s,d| ln_sf s, d, opts }
         copies.each        { |s,d| cp_r  s, d, opts.merge(:preserve => true, :remove_destination => true) }
         modifications.each { |p,d| p.call d }
-      rescue
+
+      rescue StandardError => e
+        warn "!! Rolling back to archive #{archive_path.inspect}"
         restore
+        raise e
+
+      ensure
+        # Restore default signal handlers
+        %w[INT TERM QUIT].each do |sig|
+          trap sig, 'DEFAULT'
+        end
       end
     end
 
