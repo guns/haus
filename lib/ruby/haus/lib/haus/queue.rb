@@ -157,17 +157,17 @@ class Haus
       print 'Permission to continue? [Y/n] '
 
       # Hack to get a single character from the terminal
-      if system 'command -v stty &>/dev/null'
+      if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
         begin
           system 'stty raw -echo'
-          puts (c = $stdin.getc.chr) # Old ruby returns integer
-          c =~ /y|\n/i
+          puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
+          !!(c =~ /y|\n/i)
         ensure
           system 'stty -raw echo'
           puts
         end
       else
-        $stdin.readline =~ /\n|y\n|ye\n|yes\n/i rescue nil
+        !!($stdin.readline =~ /\A(\n|y\n|ye\n|yes\n)\z/i) rescue false
       end
     end
   end

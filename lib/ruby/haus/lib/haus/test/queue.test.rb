@@ -250,5 +250,45 @@ describe Haus::Queue do
   end
 
   describe :tty_confirm? do
+    before do
+      @q.add_link $user.hausfiles.first, "#{$user.dir}/.#{File.basename $user.hausfiles.first}"
+    end
+
+    it 'should return true when force is set' do
+      with_no_stdin do
+        @q.tty_confirm?.must_equal false
+        @q.options = OpenStruct.new :force => true
+        @q.tty_confirm?.must_equal true
+      end
+    end
+
+    it 'should return true when noop is set' do
+      with_no_stdin do
+        @q.tty_confirm?.must_equal false
+        @q.options = OpenStruct.new :noop => true
+        @q.tty_confirm?.must_equal true
+      end
+    end
+
+    it 'should return true when queue is clear' do
+      with_no_stdin do
+        @q.tty_confirm?.must_equal false
+        @q.remove @q.targets.first
+        @q.tty_confirm?.must_equal true
+      end
+    end
+
+    it 'should request user input from $stdin when from a terminal' do
+      # TODO: Would be nice to thread this loop
+      %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n].each do |str|
+        with_filetty do
+          $stdout.expect 'continue? [Y/n] ', 1 do
+            $stdin.write str
+            $stdin.rewind
+          end
+          @q.tty_confirm?.must_equal !(str =~ /\An/i)
+        end
+      end
+    end
   end
 end
