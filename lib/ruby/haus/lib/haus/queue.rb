@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 require 'fileutils'
+require 'ostruct'
 
 class Haus
   #
@@ -25,7 +26,7 @@ class Haus
     attr_reader :links, :copies, :modifications, :deletions
 
     def initialize opts = nil
-      self.options = opts
+      self.options = opts || OpenStruct.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 

@@ -24,7 +24,7 @@ describe Haus::Queue do
   describe :initialize do
     it 'should optionally accept an options object' do
       @q.method(:initialize).arity.must_equal -1
-      @q.options.must_be_nil
+      @q.options.must_equal OpenStruct.new
       q = Haus::Queue.new(OpenStruct.new :force => true)
       q.options.must_equal OpenStruct.new(:force => true)
       q.options.frozen?.must_equal true
@@ -225,7 +225,7 @@ describe Haus::Queue do
       @q.add_copy $user.hausfiles[1], files[1]
       @q.add_modification(files[2]) { |f| f }
       @q.add_deletion '/etc/passwd'
-      @q.hash.must_equal ((@q.links + @q.copies + @q.modifications + ['/etc/passwd']).hash)
+      @q.hash.must_equal((@q.links + @q.copies + @q.modifications + ['/etc/passwd']).hash)
     end
   end
 
