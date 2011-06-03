@@ -387,28 +387,30 @@ describe Haus::Queue do
     end
   end
 
-  # describe :restore do
-  #   before do
-  #     @q.instance_variable_set :@deletions, $user.hausfiles[8..23]
-  #     @q.options = OpenStruct.new :quiet => true
-  #   end
+  describe :restore do
+    before do
+      @targets = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| d }
+      FileUtils.touch @targets
+      @q.instance_variable_set :@deletions, @targets
+      @q.options = OpenStruct.new :quiet => true
+    end
 
-  #   after do
-  #     FileUtils.rm_f @q.archive_path
-  #   end
+    after do
+      FileUtils.rm_f @q.archive_path
+    end
 
-  #   it 'should restore the current archive' do
-  #     @q.archive
-  #     list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n").reject do |f|
-  #       f =~ %r{haus-\w+/haus-\w+\z}
-  #     end.map { |f| f.chomp '/' }
-  #     list.sort.must_equal $user.hausfiles[8..23].map { |f| f.sub %r{\A/}, '' }.sort
-  #     FileUtils.rm_rf $user.hausfiles[8..23]
-  #     $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [false]
-  #     @q.restore
-  #     $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [true]
-  #   end
-  # end
+    it 'should restore the current archive' do
+      @q.archive
+      list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n").reject do |f|
+        f =~ %r{haus-\w+/haus-\w+\z}
+      end.map { |f| f.chomp '/' }
+      list.sort.must_equal @targets.map { |f| f.sub %r{\A/}, '' }.sort
+      FileUtils.rm_rf @targets
+      @targets.map { |f| File.exists? f }.uniq.must_equal [false]
+      @q.restore
+      @targets.map { |f| File.exists? f }.uniq.must_equal [true]
+    end
+  end
 
   describe :tty_confirm? do
     before do
