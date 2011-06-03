@@ -166,54 +166,52 @@ describe Haus::Queue do
     end
   end
 
-  # describe :targets do
-  #   # Fill up a queue
-  #   before do
-  #     @files = (0..7).map { |n| "#{$user.dir}/.#{File.basename $user.hausfiles[n]}" }
+  describe :targets do
+    # Fill up a queue
+    before do
+      @files   = (0..7).map { $user.hausfile }
+      @targets = @files.map { |s,d| d }
 
-  #     [1,3,4,5,7].each { |n| File.open(@files[n], 'w') { |f| f.puts 'EXTANT' } }
+      # Pre-create targets for some
+      [1,3,4,5,7].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
 
-  #     8.times do |n|
-  #       case n
-  #       when 0..1 then @q.add_link $user.hausfiles[n], @files[n]
-  #       when 2..3 then @q.add_copy $user.hausfiles[n], @files[n]
-  #       when 4..5 then @q.add_deletion @files[n]
-  #       when 6..7 then @q.add_modification(@files[n]) { |io| io.puts 'MODIFY' }
-  #       end
-  #     end
-  #   end
+      8.times do |n|
+        case n
+        when 0..1 then @q.add_link *@files[n]
+        when 2..3 then @q.add_copy *@files[n]
+        when 4..5 then @q.add_deletion @targets[n]
+        when 6..7 then @q.add_modification(@targets[n]) { |io| io.puts 'MODIFY' }
+        end
+      end
+    end
 
-  #   after do
-  #     rm_f @files
-  #   end
+    it 'should return all targets by default' do
+      @q.targets.sort.must_equal @targets.sort
+      @q.targets(:all).sort.must_equal @targets.sort
+    end
 
-  #   it 'should return all targets by default' do
-  #     @q.targets.sort.must_equal @files.sort
-  #     @q.targets(:all).sort.must_equal @files.sort
-  #   end
+    it 'should return all files to be removed on :delete' do
+      @q.targets(:delete).must_equal @targets.values_at(4,5)
+    end
 
-  #   it 'should return all files to be removed on :delete' do
-  #     @q.targets(:delete).must_equal @files.values_at(4,5)
-  #   end
+    it 'should return all new files on :create' do
+      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6).sort
+    end
 
-  #   it 'should return all new files on :create' do
-  #     @q.targets(:create).sort.must_equal @files.values_at(0,2,6).sort
-  #   end
+    it 'should return all files to be modified on :modify' do
+      @q.targets(:modify).must_equal @targets.values_at(7)
+    end
 
-  #   it 'should return all files to be modified on :modify' do
-  #     @q.targets(:modify).must_equal @files.values_at(7)
-  #   end
+    it 'should return all files that will be overwritten on :overwrite' do
+      @q.targets(:overwrite).must_equal @targets.values_at(1,3)
+    end
 
-  #   it 'should return all files that will be overwritten on :overwrite' do
-  #     @q.targets(:overwrite).must_equal @files.values_at(1,3)
-  #   end
-
-  #   it 'should be a complete list of targets with no overlapping entries' do
-  #     [:delete, :create, :modify, :overwrite].inject [] do |a,m|
-  #       a + @q.targets(m)
-  #     end.sort.must_equal @files.sort
-  #   end
-  # end
+    it 'should be a complete list of targets with no overlapping entries' do
+      [:delete, :create, :modify, :overwrite].inject [] do |a,m|
+        a + @q.targets(m)
+      end.sort.must_equal @targets.sort
+    end
+  end
 
   describe :hash do
     it 'should return a hash of the concatenation of all job queues' do
@@ -260,7 +258,6 @@ describe Haus::Queue do
 
   #   after do
   #     rm_f @q.archive_path
-  #     rm_rf @files, :secure => true
   #   end
 
   #   it 'should return nil if already executed' do
