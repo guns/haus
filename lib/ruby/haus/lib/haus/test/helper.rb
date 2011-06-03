@@ -130,7 +130,7 @@ class Haus
     def hausfile type = :file
       mkdir_p etc
 
-      pair = Dir.chdir etc do
+      src_dst = Dir.chdir etc do
         case type
         when :file
           f = str 8
@@ -150,7 +150,7 @@ class Haus
         end
       end
 
-      (@hausfiles ||= []).concat pair
+      (@hausfiles ||= []).concat src_dst
 
       unless @exit_hook_installed
         pid = $$
@@ -158,7 +158,7 @@ class Haus
         @exit_hook_installed = true
       end
 
-      pair
+      src_dst
     end
 
     def clean
