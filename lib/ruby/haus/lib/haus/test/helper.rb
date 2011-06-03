@@ -120,41 +120,49 @@ class Haus
       File.join haus, 'etc'
     end
 
-    # List of files in HAUS_PATH/etc/*
-    def hausfiles
-      @hausfiles ||= begin
-        pid, files = $$, []
-        mkdir_p etc
+    def dotfile path
+      File.join dir, ".#{File.basename path}"
+    end
 
-        # Create random files + directories
-        Dir.chdir etc do
-          8.times do
-            f = str 8
-            touch f
-            files << File.expand_path(f)
-          end
+    # Creates source file in HAUS_PATH/etc/* and returns [src, dotfile(src)]
+    #
+    # Installs Kernel#at_exit hook for cleaning up sources and dotfiles
+    def hausfile type = :file
+      mkdir_p etc
 
-          8.times do
-            d = str 8
-            f = File.join d, str(8)
-            mkdir d
-            touch f
-            ln_s f, '.'
-            files << File.expand_path(d)
-          end
-
-          files.concat Dir['*'].select { |f| File.symlink? f }.map { |f| File.expand_path f }
-          chmod 0700, files[20..23]
+      pair = Dir.chdir etc do
+        case type
+        when :file
+          f = str 8
+          touch f
+          [File.expand_path(f), dotfile(f)]
+        when :dir
+          d = str 8
+          f = File.join d, str(8)
+          mkdir d
+          touch f
+          [File.expand_path(d), dotfile(d)]
+        when :link
+          f = str 8
+          ln_s Dir['/etc/*'][n], f
+          [File.expand_path(f), dotfile(f)]
+        else raise ArgumentError
         end
-
-        # Don't let forks clean up before we're ready
-        at_exit { clean if $$ == pid }
-
-        files
       end
+
+      (@hausfiles ||= []).concat pair
+
+      unless @exit_hook_installed
+        pid = $$
+        at_exit { clean if $$ == pid }
+        @exit_hook_installed = true
+      end
+
+      pair
     end
 
     def clean
+      rm_rf @hausfiles
       rm_rf haus
       @haus, @hausfiles = nil, nil
     end
