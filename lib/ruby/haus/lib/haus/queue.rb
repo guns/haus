@@ -80,8 +80,8 @@ class Haus
     # in turn takes the file to be modified as an argument.
     #
     #   q = Queue.new
-    #   q.add_modification 'smilies.txt' do |file|
-    #     File.open(file, 'a') { |f| f.puts ':)' }
+    #   q.add_modification 'smilies.txt' do |path|
+    #     File.open(path, 'a') { |f| f.puts ':)' }
     #   end
     #
     # NOTE: The passed block should not assume that the passed file exists.
