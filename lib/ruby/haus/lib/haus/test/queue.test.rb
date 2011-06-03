@@ -4,11 +4,13 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'fileutils'
 require 'ostruct'
+require 'expect'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/queue'
-require 'haus/test/helper'
+require 'haus/test/helper/minitest'
+require 'haus/test/helper/test_user'
 
 $user = Haus::TestUser[$$]
 
