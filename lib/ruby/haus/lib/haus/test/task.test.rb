@@ -3,7 +3,7 @@
 $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and RUBY_VERSION > '1.8.6'
+require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/task'
 require 'haus/test/helper'
@@ -20,12 +20,12 @@ describe Haus::Task do
     describe :command do
       it "should return the current subclass's command name" do
         Haus::Noop.command.must_equal 'noop'
+        Haus::Noop2.command.must_equal 'noop2'
       end
     end
 
     describe :inherited do
       it 'should create a Task::list entry for the new subclass' do
-        class Haus::Noop2 < Haus::Task; end
         Haus::Task.list['noop2'].must_be_kind_of Hash
         Haus::Task.list['noop2'][:class].must_equal Haus::Noop2
         Haus::Task.list['noop2'][:desc].must_equal ''
@@ -66,6 +66,13 @@ describe Haus::Task do
     end
   end
 
+  describe :queue do
+    it 'should always return a Queue instance' do
+      h = Haus::Noop.new
+      h.queue.must_be_kind_of Haus::Queue
+    end
+  end
+
   describe :meta do
     it 'should access the Task::list entry for the current subclass' do
       h = Haus::Noop.new
@@ -73,13 +80,6 @@ describe Haus::Task do
       h.meta[:class].must_equal Haus::Noop
       h.meta[:desc].must_equal Haus::Task.list['noop'][:desc]
       h.meta[:banner].must_equal Haus::Task.list['noop'][:banner]
-    end
-  end
-
-  describe :queue do
-    it 'should always return a Queue instance' do
-      h = Haus::Noop.new
-      h.queue.must_be_kind_of Haus::Queue
     end
   end
 
@@ -102,19 +102,13 @@ describe Haus::Task do
   end
 
   describe :call do
-    it 'should at least exist here' do
-      Haus::Task.new.must_respond_to :call
+    it 'should accept an optional argument' do
+      m = Haus::Task.new.method :call
+      m.arity.must_equal -1
     end
   end
 
   describe :run do
-    it 'should set options.cli' do
-      h = Haus::Noop.new
-      h.options.cli.must_equal nil
-      h.run
-      h.options.cli.must_equal true
-    end
-
     it 'should call Haus::Task#call' do
       h = Haus::Noop.new
       h.instance_eval do

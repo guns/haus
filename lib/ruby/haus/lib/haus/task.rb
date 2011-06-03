@@ -85,6 +85,10 @@ class Haus
           opt.noop = true
         end
 
+        opt.on_tail '-v', '--verbose' do
+          opt.verbose = true
+        end
+
         opt.on_tail '-q', '--quiet' do
           opt.quiet = true
         end
@@ -101,7 +105,6 @@ class Haus
 
     # Command line interface; ruby libraries should directly call Task#call
     def run
-      options.cli = true
       call options.parse(@args)
     end
   end

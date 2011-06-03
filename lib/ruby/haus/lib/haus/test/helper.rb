@@ -2,10 +2,13 @@
 
 require 'fileutils'
 require 'etc'
+require 'expect'
+require 'minitest/unit'
 require 'haus/task'
 
 class Haus
   class Noop < Task; end
+  class Noop2 < Task; end
 end
 
 module MiniTest
@@ -27,6 +30,38 @@ module MiniTest
       Process.wait pid
       [out_rd.read, err_rd.read]
     end
+
+    def with_no_stdin
+      $stdin.reopen '/dev/null'
+      yield
+    ensure
+      $stdin.reopen STDIN
+    end
+
+    def with_filetty
+      fin, fout = [rand, rand].map do |n|
+        f = File.open "/tmp/haus-filetty-#{n}", 'w+'
+        f.instance_eval do
+          def tty?
+            true
+          end
+          alias :isatty :tty?
+
+          # FileUtils calls to_str, which is undefined on Ruby 1.8.7 and below
+          def to_str
+            path
+          end unless respond_to? :to_str
+        end
+        f
+      end
+      $stdin = fin
+      $stdout = fout
+      yield
+    ensure
+      $stdin = STDIN
+      $stdout = STDOUT
+      FileUtils.rm_f [fin, fout]
+    end
   end
 end
 
@@ -35,13 +70,15 @@ class Haus
   # Don't call TestUser#new, rather:
   #
   #   before do
-  #     @user = Haus::TestUser[__FILE__]
+  #     @user = Haus::TestUser[$$]
   #   end
   #
   # Certain methods trigger filesystem modifications, which are then scheduled
   # to be removed via Kernel::at_exit.
   #
   class TestUser < Struct::Passwd
+    include FileUtils
+
     class << self
       attr_reader :list
 
@@ -58,7 +95,7 @@ class Haus
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
-      @haus = File.join dir, ".haus-#{str 8}"
+      @haus = File.join dir, ".#{str 8}"
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -76,7 +113,7 @@ class Haus
 
     def str len
       chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
-      (1..len).map { chars[rand chars.size] }.join
+      'haus-' + (1..len).map { chars[rand chars.size] }.join
     end
 
     def etc
@@ -86,16 +123,32 @@ class Haus
     # List of files in HAUS_PATH/etc/*
     def hausfiles
       @hausfiles ||= begin
-        files = []
+        pid, files = $$, []
         mkdir_p etc
 
         # Create random files + directories
         Dir.chdir etc do
-          4.times { f = str 8; touch f; files << File.expand_path(f) }
-          4.times { f = [str(8), str(8)].join '/'; mkdir File.dirname(f); touch f; files << File.expand_path(f) }
+          8.times do
+            f = str 8
+            touch f
+            files << File.expand_path(f)
+          end
+
+          8.times do
+            d = str 8
+            f = File.join d, str(8)
+            mkdir d
+            touch f
+            ln_s f, '.'
+            files << File.expand_path(d)
+          end
+
+          files.concat Dir['*'].select { |f| File.symlink? f }.map { |f| File.expand_path f }
+          chmod 0700, files[20..23]
         end
 
-        Kernel.at_exit { clean }
+        # Don't let forks clean up before we're ready
+        at_exit { clean if $$ == pid }
 
         files
       end
