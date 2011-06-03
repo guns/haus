@@ -180,7 +180,7 @@ describe Haus::Queue do
         when 0..1 then @q.add_link *@files[n]
         when 2..3 then @q.add_copy *@files[n]
         when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then @q.add_modification(@targets[n]) { |io| io.puts 'MODIFY' }
+        when 6..7 then @q.add_modification(@targets[n]) { |f| f }
         end
       end
     end
@@ -242,90 +242,101 @@ describe Haus::Queue do
   describe :execute do
   end
 
-  # describe :execute! do
-  #   before do
-  #     @files = $user.hausfiles.map { |f| "#{$user.dir}/.#{File.basename f}" }
-  #     @files.size.times do |n|
-  #       case n
-  #       when 8..9   then @q.add_link $user.hausfiles[n], @files[n]
-  #       when 10     then @q.add_copy $user.hausfiles[n], @files[n]
-  #       when 11     then FileUtils.cp '/etc/passwd', @files[n] and @q.add_copy $user.hausfiles[n], @files[n]
-  #       when 12..13 then FileUtils.touch @files[n] and @q.add_deletion @files[n]
-  #       when 14..15 then @q.add_modification(@files[n]) { |f| File.open(f, 'a') { |io| io.puts 'MODIFIED' } }
-  #       end
-  #     end
-  #   end
+  describe :execute! do
+    before do
+      @files   = (0..7).map { $user.hausfile }
+      @sources = @files.map { |s,d| s }
+      @targets = @files.map { |s,d| d }
 
-  #   after do
-  #     rm_f @q.archive_path
-  #   end
+      # Pre-create targets for some
+      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
 
-  #   it 'should return nil if already executed' do
-  #     @q.execute!
-  #     @q.executed?.must_equal true
-  #     @q.execute!.must_equal nil
-  #   end
+      8.times do |n|
+        case n
+        when 0..1 then @q.add_link *@files[n]
+        when 2..3 then @q.add_copy *@files[n]
+        when 4..5 then @q.add_deletion @targets[n]
+        when 6..7 then @q.add_modification(@targets[n]) { |f| File.open(f, 'w') { |io| io.puts 'MODIFY' } }
+        end
+      end
+    end
 
-  #   it 'should create an archive before execution' do
-  #     @q.execute!
-  #     File.exists?(@q.archive_path).must_equal true
-  #   end
+    after do
+      rm_f @q.archive_path
+    end
 
-  #   it 'should rollback changes on signals' do
-  #     %w[INT TERM QUIT].each do |sig|
-  #       capture_fork_io do
-  #         @q.add_modification @files[16] do |f|
-  #           rm_rf @files, :secure => true
-  #           print 'foo' if File.exists? @files[12]
-  #           print 'bar'
-  #           kill sig, $$
-  #           sleep 1
-  #           print 'baz'
-  #         end
-  #         @q.execute!
-  #       end.first.must_equal 'bar'
+    it 'should return nil if already executed' do
+      @q.execute!
+      @q.executed?.must_equal true
+      @q.execute!.must_equal nil
+    end
 
-  #       @files.find { |f| File.exists? f }.must_equal @files[12]
-  #     end
-  #   end
+    it 'should create an archive before execution' do
+      @q.execute!
+      File.exists?(@q.archive_path).must_equal true
+    end
 
-  #   it 'should rollback changes on StandardError' do
-  #     capture_fork_io do
-  #       @q.add_modification @files[16] do |f|
-  #         rm_rf @files, :secure => true
-  #         print 'foo' if File.exists? @files[12]
-  #         print 'bar'
-  #         raise StandardError
-  #       end
-  #       @q.execute!
-  #     end.first.must_equal 'bar'
+    it 'should rollback changes on signals' do
+      # Yes, this is a torturous way of testing the rollback function
+      %w[INT TERM QUIT].each do |sig|
+        capture_fork_io do
+          @q.add_modification $user.hausfile.last do |f|
+            # Delete extant files
+            rm_rf @targets, :secure => true
+            # This shouldn't print if they're really gone
+            print 'foo' if File.exists? @targets[3]
+            print 'bar'
+            kill sig, $$
+            sleep 1
+            # Should not print due to signal
+            print 'baz'
+          end
+          @q.execute!
+        end.first.must_equal 'bar'
 
-  #     File.exists?(@files[12]).must_equal true
-  #   end
+        # But the rollback should have restored previously extant files
+        @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
+      end
+    end
 
-  #   it 'should delete files' do
-  #     [12,13].each { |n| File.exists?(@files[n]).must_equal true }
-  #     @q.execute!
-  #     [12,13].each { |n| File.exists?(@files[n]).must_equal false }
-  #   end
+    it 'should rollback changes on StandardError' do
+      capture_fork_io do
+        @q.add_modification $user.hausfile.last do |f|
+          rm_rf @targets, :secure => true
+          print 'foo' if File.exists? @targets[3]
+          print 'bar'
+          raise StandardError
+          print 'baz'
+        end
+        @q.execute!
+      end.first.must_equal 'bar'
 
-  #   it 'should link files' do
-  #     [8,9].each { |n| File.symlink?(@files[n]).must_equal false }
-  #     @q.execute!
-  #     [8,9].each do |n|
-  #       File.symlink?(@files[n]).must_equal true
-  #       File.readlink(@files[n]).must_equal $user.hausfiles[n]
-  #     end
-  #   end
+      @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
+    end
 
-  #   it 'should copy files' do
-  #     File.exists?(@files[10]).must_equal false
-  #     File.exists?(@files[11]).must_equal true
-  #     (File.basename(@files[11]) == File.basename($user.hausfiles[11])).must_equal false
-  #     @q.execute!
-  #     File.exists?(@files[10]).must_equal true
-  #   end
-  # end
+    it 'should delete files' do
+      [4,5].each { |n| File.exists?(@targets[n]).must_equal true }
+      @q.execute!
+      [4,5].each { |n| File.exists?(@targets[n]).must_equal false }
+    end
+
+    it 'should link files' do
+      [0,1].each { |n| File.symlink?(@targets[n]).must_equal false }
+      @q.execute!
+      [0,1].each do |n|
+        File.symlink?(@targets[n]).must_equal true
+        File.readlink(@targets[n]).must_equal @sources[n]
+      end
+    end
+
+    it 'should copy files' do
+      File.exists?(@targets[2]).must_equal false
+      File.exists?(@targets[3]).must_equal true
+      FileUtils.cmp(@sources[3], @targets[3]).must_equal false
+      @q.execute!
+      [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
+    end
+  end
 
   describe :executed? do
     it 'should return @executed' do
