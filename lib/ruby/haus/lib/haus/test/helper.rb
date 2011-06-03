@@ -162,8 +162,8 @@ class Haus
     end
 
     def clean
-      rm_rf @hausfiles
-      rm_rf haus
+      rm_rf @hausfiles, :secure => true
+      rm_rf haus, :secure => true
       @haus, @hausfiles = nil, nil
     end
   end
