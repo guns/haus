@@ -6,7 +6,7 @@ require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/user'
-require 'haus/test/helper'
+require 'haus/test/helper/test_user'
 
 $user = Haus::TestUser[$$]
 

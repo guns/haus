@@ -6,7 +6,8 @@ require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/task'
-require 'haus/test/helper'
+require 'haus/test/helper/minitest'
+require 'haus/test/helper/noop_tasks'
 
 describe Haus::Task do
   describe :self do

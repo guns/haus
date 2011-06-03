@@ -4,11 +4,13 @@ $:.unshift File.expand_path('../../lib', __FILE__)
 
 require 'fileutils'
 require 'ostruct'
+require 'expect'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/queue'
-require 'haus/test/helper'
+require 'haus/test/helper/minitest'
+require 'haus/test/helper/test_user'
 
 $user = Haus::TestUser[$$]
 
@@ -61,19 +63,14 @@ describe Haus::Queue do
     end
 
     it 'should noop and return nil when dst points to src' do
-      begin
-        src = $user.hausfiles.first
-        dst = "#{$user.dir}/.#{File.basename src}"
-        FileUtils.ln_s src, dst
-        @q.add_link(src, dst).must_be_nil
-        @q.links.empty?.must_equal true
-      ensure
-        FileUtils.rm_f dst
-      end
+      src, dst = $user.hausfile
+      FileUtils.ln_s src, dst
+      @q.add_link(src, dst).must_be_nil
+      @q.links.empty?.must_equal true
     end
 
     it 'should push and refreeze @links when src does exist and dst does not point to src' do
-      args = %W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      args = $user.hausfile
       res = @q.add_link *args
       res.must_equal [args]
       res.frozen?.must_equal true
@@ -82,9 +79,10 @@ describe Haus::Queue do
     end
 
     it 'should raise an error when a job for dst already exists' do
-      @q.add_link *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      args = $user.hausfile
+      @q.add_link *args
       assert_raises Haus::Queue::MultipleJobError do
-        @q.add_link *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+        @q.add_link *args
       end
     end
   end
@@ -96,19 +94,14 @@ describe Haus::Queue do
     end
 
     it 'should noop and return nil when src and dst equal' do
-      begin
-        src = $user.hausfiles.first
-        dst = "#{$user.dir}/.#{File.basename src}"
-        FileUtils.cp src, dst
-        @q.add_copy(src, dst).must_be_nil
-        @q.copies.empty?.must_equal true
-      ensure
-        FileUtils.rm_f dst
-      end
+      src, dst = $user.hausfile
+      FileUtils.cp src, dst
+      @q.add_copy(src, dst).must_be_nil
+      @q.copies.empty?.must_equal true
     end
 
     it 'should push and refreeze @copies when src exists and dst does not equal src' do
-      args = %W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      args = $user.hausfile
       res = @q.add_copy *args
       res.must_equal [args]
       res.frozen?.must_equal true
@@ -117,9 +110,10 @@ describe Haus::Queue do
     end
 
     it 'should raise an error when a job for dst already exists' do
-      @q.add_copy *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+      args = $user.hausfile
+      @q.add_copy *args
       assert_raises Haus::Queue::MultipleJobError do
-        @q.add_copy *%W[#{$user.hausfiles.first} #{$user.dir}/.dest]
+        @q.add_copy *args
       end
     end
   end
@@ -131,17 +125,19 @@ describe Haus::Queue do
     end
 
     it 'should push and refreeze @deletions when dst exists' do
-      res = @q.add_deletion($user.hausfiles.first)
-      res.must_equal [$user.hausfiles.first]
+      src = $user.hausfile.first
+      res = @q.add_deletion src
+      res.must_equal [src]
       res.frozen?.must_equal true
-      @q.deletions.must_equal [$user.hausfiles.first]
+      @q.deletions.must_equal [src]
       @q.deletions.frozen?.must_equal true
     end
 
     it 'should raise an error when a job for dst already exists' do
-      @q.add_deletion $user.hausfiles.first
+      src = $user.hausfile.first
+      @q.add_deletion src
       assert_raises Haus::Queue::MultipleJobError do
-        @q.add_deletion $user.hausfiles.first
+        @q.add_deletion src
       end
     end
   end
@@ -162,9 +158,10 @@ describe Haus::Queue do
     end
 
     it 'should raise an error when a job for dst already exists' do
-      @q.add_modification($user.hausfiles.first) { |f| touch f }
+      src = $user.hausfile.first
+      @q.add_modification(src) { |f| touch f }
       assert_raises Haus::Queue::MultipleJobError do
-        @q.add_modification($user.hausfiles.first) { |f| touch f }
+        @q.add_modification(src) { |f| touch f }
       end
     end
   end
@@ -172,74 +169,72 @@ describe Haus::Queue do
   describe :targets do
     # Fill up a queue
     before do
-      @files = (0..7).map { |n| "#{$user.dir}/.#{File.basename $user.hausfiles[n]}" }
+      @files   = (0..7).map { $user.hausfile }
+      @targets = @files.map { |s,d| d }
 
-      [1,3,4,5,7].each { |n| File.open(@files[n], 'w') { |f| f.puts 'EXTANT' } }
+      # Pre-create targets for some
+      [1,3,4,5,7].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
 
       8.times do |n|
         case n
-        when 0..1 then @q.add_link $user.hausfiles[n], @files[n]
-        when 2..3 then @q.add_copy $user.hausfiles[n], @files[n]
-        when 4..5 then @q.add_deletion @files[n]
-        when 6..7 then @q.add_modification(@files[n]) { |io| io.puts 'MODIFY' }
+        when 0..1 then @q.add_link *@files[n]
+        when 2..3 then @q.add_copy *@files[n]
+        when 4..5 then @q.add_deletion @targets[n]
+        when 6..7 then @q.add_modification(@targets[n]) { |f| f }
         end
       end
     end
 
-    after do
-      rm_f @files
-    end
-
     it 'should return all targets by default' do
-      @q.targets.sort.must_equal @files.sort
-      @q.targets(:all).sort.must_equal @files.sort
+      @q.targets.sort.must_equal @targets.sort
+      @q.targets(:all).sort.must_equal @targets.sort
     end
 
     it 'should return all files to be removed on :delete' do
-      @q.targets(:delete).must_equal @files.values_at(4,5)
+      @q.targets(:delete).must_equal @targets.values_at(4,5)
     end
 
     it 'should return all new files on :create' do
-      @q.targets(:create).sort.must_equal @files.values_at(0,2,6).sort
+      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6).sort
     end
 
     it 'should return all files to be modified on :modify' do
-      @q.targets(:modify).must_equal @files.values_at(7)
+      @q.targets(:modify).must_equal @targets.values_at(7)
     end
 
     it 'should return all files that will be overwritten on :overwrite' do
-      @q.targets(:overwrite).must_equal @files.values_at(1,3)
+      @q.targets(:overwrite).must_equal @targets.values_at(1,3)
     end
 
     it 'should be a complete list of targets with no overlapping entries' do
       [:delete, :create, :modify, :overwrite].inject [] do |a,m|
         a + @q.targets(m)
-      end.sort.must_equal @files.sort
+      end.sort.must_equal @targets.sort
     end
   end
 
   describe :hash do
     it 'should return a hash of the concatenation of all job queues' do
-      files = (0..2).map { |n| "#{$user.dir}/.#{File.basename $user.hausfiles[n]}" }
+      files = (0..3).map { $user.hausfile }
       @q.hash.must_equal [].hash
-      @q.add_link $user.hausfiles[0], files[0]
-      @q.add_copy $user.hausfiles[1], files[1]
-      @q.add_modification(files[2]) { |f| f }
-      @q.add_deletion '/etc/passwd'
-      @q.hash.must_equal((@q.links + @q.copies + @q.modifications + ['/etc/passwd']).hash)
+      @q.add_link *files[0]
+      @q.add_copy *files[1]
+      @q.add_modification(files[2].last) { |f| f }
+      @q.add_deletion files[3].first
+      @q.hash.must_equal((@q.links + @q.copies + @q.modifications + @q.deletions).hash)
     end
   end
 
   describe :remove do
     it 'should remove jobs by destination path' do
-      files = (0..2).map { |n| "#{$user.dir}/.#{File.basename $user.hausfiles[n]}" }
-      @q.add_link $user.hausfiles[0], files[0]
-      @q.add_copy $user.hausfiles[1], files[1]
-      @q.add_modification(files[2]) { |f| puts f }
-      @q.targets.sort.must_equal [0,1,2].map { |n| files[n] }.sort
+      files = (0..2).map { $user.hausfile }
+      @q.add_link *files[0]
+      @q.add_copy *files[1]
+      @q.add_modification(files[2].last) { |f| puts f }
+      @q.targets.sort.must_equal files.map { |s,d| d }.sort
       @q.remove('/etc/passwd').must_equal false
-      @q.remove(files[1]).must_equal true
-      @q.targets.sort.must_equal [0,2].map { |n| files[n] }.sort
+      @q.remove(files[1].last).must_equal true
+      @q.targets.sort.must_equal files.values_at(0,2).map { |s,d| d }.sort
       @q.copies.frozen?.must_equal true
     end
   end
@@ -249,21 +244,25 @@ describe Haus::Queue do
 
   describe :execute! do
     before do
-      @files = $user.hausfiles.map { |f| "#{$user.dir}/.#{File.basename f}" }
-      @files.size.times do |n|
+      @files   = (0..7).map { $user.hausfile }
+      @sources = @files.map { |s,d| s }
+      @targets = @files.map { |s,d| d }
+
+      # Pre-create targets for some
+      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
+
+      8.times do |n|
         case n
-        when 8..9   then @q.add_link $user.hausfiles[n], @files[n]
-        when 10     then @q.add_copy $user.hausfiles[n], @files[n]
-        when 11     then FileUtils.cp '/etc/passwd', @files[n] and @q.add_copy $user.hausfiles[n], @files[n]
-        when 12..13 then FileUtils.touch @files[n] and @q.add_deletion @files[n]
-        when 14..15 then @q.add_modification(@files[n]) { |f| File.open(f, 'a') { |io| io.puts 'MODIFIED' } }
+        when 0..1 then @q.add_link *@files[n]
+        when 2..3 then @q.add_copy *@files[n]
+        when 4..5 then @q.add_deletion @targets[n]
+        when 6..7 then @q.add_modification(@targets[n]) { |f| File.open(f, 'w') { |io| io.puts 'MODIFY' } }
         end
       end
     end
 
     after do
       rm_f @q.archive_path
-      rm_rf @files, :secure => true
     end
 
     it 'should return nil if already executed' do
@@ -278,58 +277,64 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on signals' do
+      # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
         capture_fork_io do
-          @q.add_modification @files[16] do |f|
-            rm_rf @files, :secure => true
-            print 'foo' if File.exists? @files[12]
+          @q.add_modification $user.hausfile.last do |f|
+            # Delete extant files
+            rm_rf @targets, :secure => true
+            # This shouldn't print if they're really gone
+            print 'foo' if File.exists? @targets[3]
             print 'bar'
             kill sig, $$
             sleep 1
+            # Should not print due to signal
             print 'baz'
           end
           @q.execute!
         end.first.must_equal 'bar'
 
-        @files.find { |f| File.exists? f }.must_equal @files[12]
+        # But the rollback should have restored previously extant files
+        @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
       end
     end
 
     it 'should rollback changes on StandardError' do
       capture_fork_io do
-        @q.add_modification @files[16] do |f|
-          rm_rf @files, :secure => true
-          print 'foo' if File.exists? @files[12]
+        @q.add_modification $user.hausfile.last do |f|
+          rm_rf @targets, :secure => true
+          print 'foo' if File.exists? @targets[3]
           print 'bar'
           raise StandardError
+          print 'baz'
         end
         @q.execute!
       end.first.must_equal 'bar'
 
-      File.exists?(@files[12]).must_equal true
+      @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
     end
 
     it 'should delete files' do
-      [12,13].each { |n| File.exists?(@files[n]).must_equal true }
+      [4,5].each { |n| File.exists?(@targets[n]).must_equal true }
       @q.execute!
-      [12,13].each { |n| File.exists?(@files[n]).must_equal false }
+      [4,5].each { |n| File.exists?(@targets[n]).must_equal false }
     end
 
     it 'should link files' do
-      [8,9].each { |n| File.symlink?(@files[n]).must_equal false }
+      [0,1].each { |n| File.symlink?(@targets[n]).must_equal false }
       @q.execute!
-      [8,9].each do |n|
-        File.symlink?(@files[n]).must_equal true
-        File.readlink(@files[n]).must_equal $user.hausfiles[n]
+      [0,1].each do |n|
+        File.symlink?(@targets[n]).must_equal true
+        File.readlink(@targets[n]).must_equal @sources[n]
       end
     end
 
     it 'should copy files' do
-      File.exists?(@files[10]).must_equal false
-      File.exists?(@files[11]).must_equal true
-      (File.basename(@files[11]) == File.basename($user.hausfiles[11])).must_equal false
+      File.exists?(@targets[2]).must_equal false
+      File.exists?(@targets[3]).must_equal true
+      FileUtils.cmp(@sources[3], @targets[3]).must_equal false
       @q.execute!
-      File.exists?(@files[10]).must_equal true
+      [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
     end
   end
 
@@ -343,10 +348,12 @@ describe Haus::Queue do
 
   describe :archive do
     before do
-      @q.add_link '/etc/passwd', $user.hausfiles[0]
-      @q.add_copy '/etc/passwd', $user.hausfiles[1]
-      @q.add_modification($user.hausfiles[2]) { |f| f }
-      @q.add_deletion $user.hausfiles[3]
+      @targets = (0..3).map { $user.hausfile.last }
+      touch @targets
+      @q.add_link '/etc/passwd', @targets[0]
+      @q.add_copy '/etc/passwd', @targets[1]
+      @q.add_modification(@targets[2]) { |f| f }
+      @q.add_deletion @targets[3]
       @q.add_link '/etc/passwd', '/magical/pony/with/sparkles'
       @q.add_copy '/etc/passwd', '/magical/pony/with/flying/action'
       @q.add_modification('/magical/pony/in/the/sky') { |f| f }
@@ -372,7 +379,7 @@ describe Haus::Queue do
       @q.archive
       File.exists?(@q.archive_path).must_equal true
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
-      list.sort.must_equal((@q.targets - @q.targets(:create)).map { |f| f.sub /\A\//, '' }.sort)
+      list.sort.must_equal @targets.map { |f| f.sub /\A\//, '' }.sort
     end
 
     it 'should return the archive path on success' do
@@ -382,7 +389,9 @@ describe Haus::Queue do
 
   describe :restore do
     before do
-      @q.instance_variable_set :@deletions, $user.hausfiles[8..23]
+      @targets = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| d }
+      FileUtils.touch @targets
+      @q.instance_variable_set :@deletions, @targets
       @q.options = OpenStruct.new :quiet => true
     end
 
@@ -395,17 +404,17 @@ describe Haus::Queue do
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n").reject do |f|
         f =~ %r{haus-\w+/haus-\w+\z}
       end.map { |f| f.chomp '/' }
-      list.sort.must_equal $user.hausfiles[8..23].map { |f| f.sub %r{\A/}, '' }.sort
-      FileUtils.rm_rf $user.hausfiles[8..23]
-      $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [false]
+      list.sort.must_equal @targets.map { |f| f.sub %r{\A/}, '' }.sort
+      FileUtils.rm_rf @targets
+      @targets.map { |f| File.exists? f }.uniq.must_equal [false]
       @q.restore
-      $user.hausfiles[8..23].map { |f| File.exists? f }.uniq.must_equal [true]
+      @targets.map { |f| File.exists? f }.uniq.must_equal [true]
     end
   end
 
   describe :tty_confirm? do
     before do
-      @q.add_link $user.hausfiles.first, "#{$user.dir}/.#{File.basename $user.hausfiles.first}"
+      @q.add_link *$user.hausfile
     end
 
     it 'should return true when force is set' do

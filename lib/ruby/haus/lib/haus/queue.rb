@@ -176,18 +176,24 @@ class Haus
         raise "#{cmd.inspect} not found" unless system "command -v #{cmd} &>/dev/null"
       end
 
-      chdir '/' do
-        files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
-        unless system *(%W[tar zcf #{archive_path}] + files)
-          raise "Archive to #{archive_path.inspect} failed"
+      files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+
+      if files.empty?
+        touch archive_path
+      else
+        Dir.chdir '/' do
+          unless system *(%W[tar zcf #{archive_path}] + files)
+            raise "Archive to #{archive_path.inspect} failed"
+          end
         end
       end
+
 
       archive_path
     end
 
     def restore
-      chdir '/' do
+      Dir.chdir '/' do
         # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
         system *%W[tar z#{options.quiet ? '' : 'v'}xpf #{archive_path}]
       end
