@@ -16,7 +16,7 @@ $user = Haus::TestUser[$$]
 
 describe Haus::Queue do
   before do
-    @q = Haus::Queue.new
+    @q = Haus::Queue.new :quiet => true
   end
 
   it 'should have included FileUtils' do
@@ -26,8 +26,8 @@ describe Haus::Queue do
   describe :initialize do
     it 'should optionally accept an options object' do
       @q.method(:initialize).arity.must_equal -1
-      @q.options.must_equal OpenStruct.new
-      q = Haus::Queue.new(OpenStruct.new :force => true)
+      Haus::Queue.new.options.must_equal OpenStruct.new
+      q = Haus::Queue.new OpenStruct.new(:force => true)
       q.options.must_equal OpenStruct.new(:force => true)
       q.options.frozen?.must_equal true
     end
@@ -48,6 +48,19 @@ describe Haus::Queue do
       @q.options = opts
       @q.options.must_equal opts
       opts.force = false
+      @q.options.force.must_equal true
+      @q.options.frozen?.must_equal true
+      assert_raises TypeError do
+        @q.options.force = false
+      end
+    end
+
+    it 'should accept a Hash as an argument' do
+      opts = { :force => true, :noop => true }
+      @q.options = opts
+      @q.options.must_equal OpenStruct.new(opts)
+      opts.must_equal :force => true, :noop => true
+      opts[:force] = false
       @q.options.force.must_equal true
       @q.options.frozen?.must_equal true
       assert_raises TypeError do
@@ -293,13 +306,12 @@ describe Haus::Queue do
     end
 
     it 'should not create an archive if options.noop is specified' do
-      @q.options = OpenStruct.new :noop => true
+      @q.options = { :noop => true, :quiet => true }
       @q.execute!
       File.exists?(@q.archive_path).must_equal false
     end
 
     it 'should rollback changes on signals' do
-      @q.options = OpenStruct.new :quiet => true
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
         target = $user.hausfile.last
@@ -324,8 +336,7 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on StandardError' do
-      @q.options = OpenStruct.new :quiet => true
-      target     = $user.hausfile.last
+      target = $user.hausfile.last
 
       capture_fork_io do
         @q.add_modification target do |f|
@@ -443,6 +454,17 @@ describe Haus::Queue do
     it 'should return the archive path on success' do
       @q.archive.must_equal @q.archive_path
     end
+
+    it 'should return nil when no files are needed to backup' do
+      begin
+        q = Haus::Queue.new
+        q.add_link *$user.hausfile
+        q.targets.size.must_equal 1
+        q.archive.must_be_nil
+      ensure
+        FileUtils.rm_f q.archive_path
+      end
+    end
   end
 
   describe :restore do
@@ -450,7 +472,6 @@ describe Haus::Queue do
       @targets = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| d }
       FileUtils.touch @targets
       @q.instance_variable_set :@deletions, @targets
-      @q.options = OpenStruct.new :quiet => true
     end
 
     after do
@@ -470,6 +491,37 @@ describe Haus::Queue do
     end
   end
 
+  describe :log do
+    it 'should write a single file message to $stdout' do
+      @q.options = {}
+      pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
+      capture_io { @q.log 'DELETING', '/etc/passwd' }.join.must_match pattern
+    end
+
+    it 'should write a two file message to $stdout' do
+      @q.options = {}
+      pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
+      capture_io { @q.log 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
+    end
+
+    it 'should not produce any output when options.quiet is set' do
+      @q.options = { :quiet => true }
+      capture_io { @q.log 'QUIET', '/etc/passwd' }.join.must_equal ''
+    end
+  end
+
+  describe :logwarn do
+    it 'should write a warning message to $stdout' do
+      @q.options = {}
+      capture_io { @q.logwarn 'WARNING' }.join.must_equal "!! WARNING\n"
+    end
+
+    it 'should not produce any output when options.quiet is set' do
+      @q.options = { :quiet => true }
+      capture_io { @q.logwarn 'QUIET' }.join.must_equal ''
+    end
+  end
+
   describe :tty_confirm? do
     before do
       @q.add_link *$user.hausfile
@@ -478,7 +530,7 @@ describe Haus::Queue do
     it 'should return true when force is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
-        @q.options = OpenStruct.new :force => true
+        @q.options = { :force => true }
         @q.tty_confirm?.must_equal true
       end
     end
@@ -486,7 +538,7 @@ describe Haus::Queue do
     it 'should return true when noop is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
-        @q.options = OpenStruct.new :noop => true
+        @q.options = { :noop => true }
         @q.tty_confirm?.must_equal true
       end
     end

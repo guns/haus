@@ -37,7 +37,10 @@ class Haus
 
     # Dups and freezes object for safety
     def options= opts
-      @options = opts.dup.freeze if opts
+      @options = case opts
+      when Hash then OpenStruct.new(opts).freeze
+      else opts.dup.freeze
+      end if opts
     end
 
     # Add symlinking operation;
@@ -141,7 +144,7 @@ class Haus
       return nil if executed?
       @executed = true
 
-      archive unless options.noop
+      archive_successful = archive unless options.noop
 
       begin
         # Rollback on signals
@@ -152,28 +155,34 @@ class Haus
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
         deletions.each do |d|
+          log 'DELETING', d
           rm_rf d, opts.merge(:secure => true)
         end
 
         links.each do |s,d|
+          log 'LINKING', s, d
           mkdir_p File.dirname(d)
           ln_sf s, d, opts
         end
 
         copies.each do |s,d|
+          log 'COPYING', s, d
           mkdir_p File.dirname(d)
           cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
         end
 
         modifications.each do |p,d|
+          log 'MODIFYING', d
           mkdir_p File.dirname(d)
           touch d
           p.call d
         end
 
       rescue StandardError => e
-        warn "!! Rolling back to archive #{archive_path.inspect}"
-        restore
+        if archive_successful
+          logwarn "Rolling back to archive #{archive_path.inspect}"
+          restore
+        end
         raise e
 
       ensure
@@ -194,14 +203,11 @@ class Haus
       end
 
       files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+      return nil if files.empty?
 
-      if files.empty?
-        touch archive_path
-      else
-        Dir.chdir '/' do
-          unless system *(%W[tar zcf #{archive_path}] + files)
-            raise "Archive to #{archive_path.inspect} failed"
-          end
+      Dir.chdir '/' do
+        unless system *(%W[tar zcf #{archive_path}] + files)
+          raise "Archive to #{archive_path.inspect} failed"
         end
       end
 
@@ -213,6 +219,17 @@ class Haus
         # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
         system *%W[tar z#{options.quiet ? '' : 'v'}xpf #{archive_path}]
       end
+    end
+
+    def log *args
+      case args.size
+      when 2 then puts ':: %-9s %s' % args
+      when 3 then puts ':: %-9s %s -> %s' % args
+      end unless options.quiet
+    end
+
+    def logwarn msg
+      puts "!! #{msg}" unless options.quiet
     end
 
     # Ask user for confirmation.
