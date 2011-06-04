@@ -8,8 +8,8 @@ class Haus
     banner "Create dotfile symlinks from #{Options.new.path}/etc/*"
 
     def enqueue
-      options.users.each do |user|
-        options.etcfiles.each do |src|
+      users.each do |user|
+        etcfiles.each do |src|
           queue.add_link src, user.dotfile(src)
         end
       end

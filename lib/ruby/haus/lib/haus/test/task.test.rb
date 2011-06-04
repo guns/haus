@@ -8,6 +8,9 @@ require 'minitest/autorun'
 require 'haus/task'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
+require 'haus/test/helper/test_user'
+
+$user = Haus::TestUser[$$]
 
 describe Haus::Task do
   describe :self do
@@ -102,6 +105,42 @@ describe Haus::Task do
       h.meta[:class].must_equal Haus::Noop
       h.meta[:desc].must_equal Haus::Task.list['noop'][:desc]
       h.meta[:banner].must_equal Haus::Task.list['noop'][:banner]
+    end
+  end
+
+  describe :users do
+    it 'should return Haus::Task#options.users' do
+      h = Haus::Noop.new
+      h.users.must_equal h.options.users
+      h.options.users = [0]
+      h.users.must_equal [Haus::User.new(0)]
+      h.users.must_equal h.options.users
+    end
+  end
+
+  describe :etc do
+    it 'should return HAUS_PATH/etc' do
+      h = Haus::Noop.new
+      h.etc.must_equal File.join(h.options.path, 'etc')
+      h.options.path = '/tmp/haus'
+      h.etc.must_equal '/tmp/haus/etc'
+    end
+  end
+
+  describe :etcfiles do
+    it 'should return all files in HAUS_PATH/etc/*' do
+      h, files = Haus::Noop.new, []
+      $user.hausfile :file
+      $user.hausfile :dir
+      $user.hausfile :link
+
+      # Awkward select via each_with_index courtesy of Ruby 1.8.6
+      $user.hausfiles.each_with_index do |f, i|
+        files << f if (i % 2).zero?
+      end
+
+      h.options.path = $user.haus
+      h.etcfiles.sort.must_equal files.sort
     end
   end
 

@@ -28,31 +28,6 @@ describe Haus::Options do
     end
   end
 
-  describe :etc do
-    it 'should return HAUS_PATH/etc' do
-      @opt.etc.must_equal File.join(@opt.path, 'etc')
-      @opt.path = '/tmp/haus'
-      @opt.etc.must_equal '/tmp/haus/etc'
-    end
-  end
-
-  describe :etcfiles do
-    it 'should return all files in HAUS_PATH/etc/*' do
-      files = []
-      $user.hausfile :file
-      $user.hausfile :dir
-      $user.hausfile :link
-
-      # Awkward select via each_with_index courtesy of Ruby 1.8.6
-      $user.hausfiles.each_with_index do |f, i|
-        files << f if (i % 2).zero?
-      end
-
-      @opt.path = $user.haus
-      @opt.etcfiles.sort.must_equal files.sort
-    end
-  end
-
   describe :method_missing do
     it 'should otherwise act like an OpenStruct object' do
       @opt.force = true

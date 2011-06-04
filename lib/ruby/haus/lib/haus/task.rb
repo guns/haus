@@ -78,6 +78,21 @@ class Haus
       self.class.list[self.class.command]
     end
 
+    # List of Haus::User targets; shortcut to Task#options.users
+    def users
+      options.users
+    end
+
+    # HAUS_PATH/etc
+    def etc
+      File.join options.path, 'etc'
+    end
+
+    # HAUS_PATH/etc/*
+    def etcfiles
+      Dir["#{etc}/*"].map { |f| File.expand_path f }
+    end
+
     # Common options for all tasks
     def options
       @options ||= TaskOptions.new do |opt|
