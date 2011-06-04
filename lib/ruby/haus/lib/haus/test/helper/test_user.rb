@@ -25,7 +25,7 @@ class Haus
       end
     end
 
-    attr_reader :haus
+    attr_reader :haus, :hausfiles
 
     def initialize
       name = ENV['TEST_USER'] || 'test'
@@ -106,7 +106,7 @@ class Haus
     end
 
     def clean
-      rm_rf @hausfiles, :secure => true
+      rm_rf hausfiles, :secure => true
       rm_rf haus, :secure => true
       @haus, @hausfiles = nil, nil
     end

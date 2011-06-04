@@ -44,7 +44,7 @@ describe Haus::Options do
       $user.hausfile :link
 
       # Awkward select via each_with_index courtesy of Ruby 1.8.6
-      $user.instance_variable_get(:@hausfiles).each_with_index do |f, i|
+      $user.hausfiles.each_with_index do |f, i|
         files << f if (i % 2).zero?
       end
 
