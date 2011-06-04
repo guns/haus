@@ -16,7 +16,7 @@ $user = Haus::TestUser[$$]
 
 describe Haus::Queue do
   before do
-    @q = Haus::Queue.new OpenStruct.new(:quiet => true)
+    @q = Haus::Queue.new :quiet => true
   end
 
   it 'should have included FileUtils' do
@@ -48,6 +48,19 @@ describe Haus::Queue do
       @q.options = opts
       @q.options.must_equal opts
       opts.force = false
+      @q.options.force.must_equal true
+      @q.options.frozen?.must_equal true
+      assert_raises TypeError do
+        @q.options.force = false
+      end
+    end
+
+    it 'should accept a Hash as an argument' do
+      opts = { :force => true, :noop => true }
+      @q.options = opts
+      @q.options.must_equal OpenStruct.new(opts)
+      opts.must_equal :force => true, :noop => true
+      opts[:force] = false
       @q.options.force.must_equal true
       @q.options.frozen?.must_equal true
       assert_raises TypeError do
@@ -293,7 +306,7 @@ describe Haus::Queue do
     end
 
     it 'should not create an archive if options.noop is specified' do
-      @q.options = OpenStruct.new :noop => true, :quiet => true
+      @q.options = { :noop => true, :quiet => true }
       @q.execute!
       File.exists?(@q.archive_path).must_equal false
     end
@@ -480,31 +493,31 @@ describe Haus::Queue do
 
   describe :log do
     it 'should write a single file message to $stdout' do
-      @q.options = OpenStruct.new
+      @q.options = {}
       pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
       capture_io { @q.log 'DELETING', '/etc/passwd' }.join.must_match pattern
     end
 
     it 'should write a two file message to $stdout' do
-      @q.options = OpenStruct.new
+      @q.options = {}
       pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
       capture_io { @q.log 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
     end
 
     it 'should not produce any output when options.quiet is set' do
-      @q.options = OpenStruct.new :quiet => true
+      @q.options = { :quiet => true }
       capture_io { @q.log 'QUIET', '/etc/passwd' }.join.must_equal ''
     end
   end
 
   describe :logwarn do
     it 'should write a warning message to $stdout' do
-      @q.options = OpenStruct.new
+      @q.options = {}
       capture_io { @q.logwarn 'WARNING' }.join.must_equal "!! WARNING\n"
     end
 
     it 'should not produce any output when options.quiet is set' do
-      @q.options = OpenStruct.new :quiet => true
+      @q.options = { :quiet => true }
       capture_io { @q.logwarn 'QUIET' }.join.must_equal ''
     end
   end
@@ -517,7 +530,7 @@ describe Haus::Queue do
     it 'should return true when force is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
-        @q.options = OpenStruct.new :force => true
+        @q.options = { :force => true }
         @q.tty_confirm?.must_equal true
       end
     end
@@ -525,7 +538,7 @@ describe Haus::Queue do
     it 'should return true when noop is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
-        @q.options = OpenStruct.new :noop => true
+        @q.options = { :noop => true }
         @q.tty_confirm?.must_equal true
       end
     end

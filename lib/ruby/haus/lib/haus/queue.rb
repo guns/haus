@@ -37,7 +37,10 @@ class Haus
 
     # Dups and freezes object for safety
     def options= opts
-      @options = opts.dup.freeze if opts
+      @options = case opts
+      when Hash then OpenStruct.new(opts).freeze
+      else opts.dup.freeze
+      end if opts
     end
 
     # Add symlinking operation;
