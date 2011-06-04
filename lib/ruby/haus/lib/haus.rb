@@ -56,7 +56,7 @@ class Haus
 
     # NOTE: Enumerable#drop introduced in 1.8.7
     t = task[:class].new args[1..-1]
-    t.options.path = options.path if options.path
+    t.options.path = options.path
     t.run
   end
 end

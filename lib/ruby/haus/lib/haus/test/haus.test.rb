@@ -36,9 +36,9 @@ describe Haus do
     end
 
     it 'should set options.path via --path' do
-      h = Haus.new %w[--path /opt/haus noop]
+      h = Haus.new %w[--path /opt/testhaus noop]
       h.run
-      h.options.path.must_equal '/opt/haus'
+      h.options.path.must_equal '/opt/testhaus'
     end
   end
 
@@ -47,6 +47,13 @@ describe Haus do
       help = Haus.new.help
       capture_fork_io { Haus.new.run }.join.chomp.must_equal help
       capture_fork_io { Haus.new(%w[foo]).run }.join.chomp.must_equal help
+    end
+
+    it 'should pass options.path to the task' do
+      t1 = Haus.new(%w[noopself]).run
+      t1.options.path.must_equal Haus::Options.new.path
+      t2 = Haus.new(%w[--path /opt/testhaus noopself]).run
+      t2.options.path.must_equal '/opt/testhaus'
     end
   end
 end
