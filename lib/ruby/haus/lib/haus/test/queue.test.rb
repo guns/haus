@@ -240,6 +240,19 @@ describe Haus::Queue do
   end
 
   describe :execute do
+    it 'should confirm then call execute!' do
+      @q.instance_eval do
+        def tty_confirm?
+          @_confirmed = true
+          super
+        end
+      end
+
+      @q.instance_variable_get(:@_confirmed).must_equal nil
+      @q.add_link *$user.hausfile
+      with_no_stdin { @q.execute }
+      @q.instance_variable_get(:@_confirmed).must_equal true
+    end
   end
 
   describe :execute! do
