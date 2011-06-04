@@ -141,7 +141,7 @@ class Haus
       return nil if executed?
       @executed = true
 
-      archive unless options.noop
+      archive_successful = archive unless options.noop
 
       begin
         # Rollback on signals
@@ -176,8 +176,10 @@ class Haus
         end
 
       rescue StandardError => e
-        warn "!! Rolling back to archive #{archive_path.inspect}"
-        restore
+        if archive_successful
+          warn "!! Rolling back to archive #{archive_path.inspect}"
+          restore
+        end
         raise e
 
       ensure
@@ -198,14 +200,11 @@ class Haus
       end
 
       files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+      return nil if files.empty?
 
-      if files.empty?
-        touch archive_path
-      else
-        Dir.chdir '/' do
-          unless system *(%W[tar zcf #{archive_path}] + files)
-            raise "Archive to #{archive_path.inspect} failed"
-          end
+      Dir.chdir '/' do
+        unless system *(%W[tar zcf #{archive_path}] + files)
+          raise "Archive to #{archive_path.inspect} failed"
         end
       end
 

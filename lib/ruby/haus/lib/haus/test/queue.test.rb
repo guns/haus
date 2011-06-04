@@ -441,6 +441,17 @@ describe Haus::Queue do
     it 'should return the archive path on success' do
       @q.archive.must_equal @q.archive_path
     end
+
+    it 'should return nil when no files are needed to backup' do
+      begin
+        q = Haus::Queue.new
+        q.add_link *$user.hausfile
+        q.targets.size.must_equal 1
+        q.archive.must_be_nil
+      ensure
+        FileUtils.rm_f q.archive_path
+      end
+    end
   end
 
   describe :restore do
