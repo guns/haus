@@ -28,7 +28,14 @@ class Haus
     attr_reader :haus
 
     def initialize
-      name  = ENV['TEST_USER'] || 'test'
+      name = ENV['TEST_USER'] || 'test'
+
+      if name == Etc.getlogin
+        raise 'FAILURE: Using your user account for testing would be extremely stupid.'
+      elsif name == 'root'
+        raise 'FAILURE: Using the root account for testing would be extremely stupid'
+      end
+
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
