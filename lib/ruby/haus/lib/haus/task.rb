@@ -2,7 +2,6 @@
 
 require 'haus/options'
 require 'haus/queue'
-require 'haus/user'
 
 class Haus
   #
@@ -80,7 +79,8 @@ class Haus
 
         opt.on '-u', '--users a,b,c', Array,
                 'Apply changes to given users instead of the current user;',
-                'Can also be UIDs; only the root user may use this option' do |arg|
+                'users can be specified as usernames or UIDs' do |arg|
+          # Cast before sending to Options#users=
           opt.users = arg.map { |a| a =~ /\A\d+\z/ ? a.to_i : a.to_s }
         end
 

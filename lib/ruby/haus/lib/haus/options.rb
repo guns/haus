@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'ostruct'
+require 'haus/user'
 
 class Haus
   #
@@ -12,6 +13,17 @@ class Haus
       super
       @ostruct = OpenStruct.new
       @ostruct.path = File.expand_path '../../../../../..', __FILE__ # HAUS_PATH
+      @ostruct.users = [User.new]
+    end
+
+    def users= ary
+      @ostruct.users = ary.map do |a|
+        u = User.new a
+        if not File.directory? u.dir
+          raise "#{u.name}'s home directory, #{u.dir.inspect}, does not exist"
+        end
+        u
+      end
     end
 
     def method_missing *args
