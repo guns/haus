@@ -249,14 +249,14 @@ describe Haus::Queue do
       @targets = @files.map { |s,d| d }
 
       # Pre-create targets for some
-      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
+      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.write 'EXTANT' } }
 
       8.times do |n|
         case n
         when 0..1 then @q.add_link *@files[n]
         when 2..3 then @q.add_copy *@files[n]
         when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then @q.add_modification(@targets[n]) { |f| File.open(f, 'w') { |io| io.puts 'MODIFY' } }
+        when 6..7 then @q.add_modification(@targets[n]) { |f| File.open(f, 'w') { |io| io.write 'MODIFIED' } }
         end
       end
     end
@@ -335,6 +335,12 @@ describe Haus::Queue do
       FileUtils.cmp(@sources[3], @targets[3]).must_equal false
       @q.execute!
       [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
+    end
+
+    it 'should modify files' do
+      [6,7].each { |n| File.open(@targets[n], 'w') { |f| f.write 'CREATED' } }
+      @q.execute!
+      [6,7].each { |n| File.read(@targets[n]).must_equal 'MODIFIED' }
     end
   end
 
