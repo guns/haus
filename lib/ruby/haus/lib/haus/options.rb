@@ -11,7 +11,7 @@ class Haus
     def initialize
       super
       @ostruct = OpenStruct.new
-      @ostruct.path = File.expand_path '../../../..', __FILE__ # HAUS_PATH
+      @ostruct.path = File.expand_path '../../../../../..', __FILE__ # HAUS_PATH
     end
 
     def method_missing *args

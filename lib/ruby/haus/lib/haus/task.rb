@@ -2,6 +2,7 @@
 
 require 'haus/options'
 require 'haus/queue'
+require 'haus/user'
 
 class Haus
   #
@@ -76,6 +77,12 @@ class Haus
 
           Options:
         }.gsub /^ +/, ''
+
+        opt.on '-u', '--users a,b,c', Array,
+                'Apply changes to given users instead of the current user;',
+                'Can also be UIDs; only the root user may use this option' do |arg|
+          opt.users = arg.map { |a| a =~ /\A\d+\z/ ? a.to_i : a.to_s }
+        end
 
         opt.on_tail '-f', '--force' do
           opt.force = true
