@@ -25,7 +25,7 @@ class Haus
       end
     end
 
-    attr_reader :haus
+    attr_reader :haus, :hausfiles
 
     def initialize
       name = ENV['TEST_USER'] || 'test'
@@ -39,7 +39,7 @@ class Haus
       entry = Etc.getpwnam name
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
-      @haus = File.join dir, ".#{str 8}"
+      @haus = File.join dir, ".#{randstr}"
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -55,7 +55,7 @@ class Haus
       }.gsub(/^ +/, '')
     end
 
-    def str len
+    def randstr len = 8
       chars = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
       'haus-' + (1..len).map { chars[rand chars.size] }.join
     end
@@ -77,17 +77,17 @@ class Haus
       src_dst = Dir.chdir etc do
         case type
         when :file
-          f = str 8
+          f = randstr
           touch f
           [File.expand_path(f), dotfile(f)]
         when :dir
-          d = str 8
-          f = File.join d, str(8)
+          d = randstr
+          f = File.join d, randstr
           mkdir d
           touch f
           [File.expand_path(d), dotfile(d)]
         when :link
-          f = str 8
+          f = randstr
           ln_s Dir['/etc/*'].sort_by { rand }.first, f
           [File.expand_path(f), dotfile(f)]
         else raise ArgumentError
@@ -106,7 +106,7 @@ class Haus
     end
 
     def clean
-      rm_rf @hausfiles, :secure => true
+      rm_rf hausfiles, :secure => true
       rm_rf haus, :secure => true
       @haus, @hausfiles = nil, nil
     end

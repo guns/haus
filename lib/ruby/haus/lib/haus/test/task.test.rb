@@ -8,6 +8,9 @@ require 'minitest/autorun'
 require 'haus/task'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
+require 'haus/test/helper/test_user'
+
+$user = Haus::TestUser[$$]
 
 describe Haus::Task do
   describe :self do
@@ -60,6 +63,27 @@ describe Haus::Task do
     end
   end
 
+  describe :TaskOptions do
+    before do
+      @opt = Haus::Task::TaskOptions.new
+    end
+
+    it 'should be a subclass of Haus::Options' do
+      @opt.class.ancestors[1].must_equal Haus::Options
+    end
+
+    describe :users= do
+      it 'should set the users option' do
+        users     = [0, Etc.getlogin]
+        haususers = users.map { |u| Haus::User.new u }
+
+        @opt.users = users
+        @opt.instance_variable_get(:@ostruct).users.must_equal haususers
+        @opt.users.must_equal haususers
+      end
+    end
+  end
+
   describe :initialize do
     it 'should accept an optional arguments Array' do
       Haus::Noop.method(:initialize).arity.must_equal -1
@@ -84,19 +108,68 @@ describe Haus::Task do
     end
   end
 
+  describe :users do
+    it 'should return Haus::Task#options.users' do
+      h = Haus::Noop.new
+      h.users.must_equal h.options.users
+      h.options.users = [0]
+      h.users.must_equal [Haus::User.new(0)]
+      h.users.must_equal h.options.users
+    end
+  end
+
+  describe :etc do
+    it 'should return HAUS_PATH/etc' do
+      h = Haus::Noop.new
+      h.etc.must_equal File.join(h.options.path, 'etc')
+      h.options.path = '/tmp/haus'
+      h.etc.must_equal '/tmp/haus/etc'
+    end
+  end
+
+  describe :etcfiles do
+    it 'should return all files in HAUS_PATH/etc/*' do
+      h, files = Haus::Noop.new, []
+      $user.hausfile :file
+      $user.hausfile :dir
+      $user.hausfile :link
+
+      # Awkward select via each_with_index courtesy of Ruby 1.8.6
+      $user.hausfiles.each_with_index do |f, i|
+        files << f if (i % 2).zero?
+      end
+
+      h.options.path = $user.haus
+      h.etcfiles.sort.must_equal files.sort
+    end
+  end
+
   describe :options do
-    it 'should be an instance of Haus::Options' do
-      Haus::Noop.new.options.must_be_kind_of Haus::Options
+    it 'should be an instance of Haus::Task::TaskOptions' do
+      Haus::Noop.new.options.must_be_kind_of Haus::Task::TaskOptions
     end
 
     it 'should have its own help message' do
       Haus::Noop.new.options.to_s.must_match /^Usage:.+ noop/
     end
 
-    it 'should prove the default options for all Task subclasses' do
+    it 'should provide the default users list' do
+      h = Haus::Noop.new
+      ostruct = h.options.instance_variable_get :@ostruct
+      ostruct.users.must_be_kind_of Array
+      ostruct.users.first.must_be_kind_of Haus::User
+      ostruct.users.must_equal [Haus::User.new]
+      h.options.users.must_equal [Haus::User.new]
+    end
+
+    it 'should provide the default command line options for all Task subclasses' do
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
+      users = [0, ENV['TEST_USER'] || 'test', Etc.getlogin]
+
+      runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true
       runoptions.call(%w[--noop]).noop.must_equal true
+      runoptions.call(%w[--verbose]).verbose.must_equal true
       runoptions.call(%w[--quiet]).quiet.must_equal true
       capture_fork_io { Haus::Noop.new(%w[--help]).run }.join.must_equal Haus::Noop.new.options.to_s
     end

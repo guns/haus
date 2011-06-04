@@ -7,11 +7,17 @@ class Haus
   #
   # A hybrid OptionParser / OpenStruct class.
   #
+  # Options#path provides default value of HAUS_PATH
+  #
   class Options < OptionParser
     def initialize
-      super
       @ostruct = OpenStruct.new
-      @ostruct.path = File.expand_path '../../../..', __FILE__ # HAUS_PATH
+      @ostruct.path = File.expand_path '../../../../../..', __FILE__ # HAUS_PATH
+      super
+    end
+
+    def path= arg
+      @ostruct.path = File.expand_path arg
     end
 
     def method_missing *args

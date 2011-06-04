@@ -3,6 +3,7 @@
 require 'haus/version'
 require 'haus/options'
 require 'haus/task'
+require 'haus/link'
 
 #
 # CLI interface, intended to be run as Haus.new(ARGV).run
@@ -55,7 +56,7 @@ class Haus
 
     # NOTE: Enumerable#drop introduced in 1.8.7
     t = task[:class].new args[1..-1]
-    t.options.path = options.path if options.path
+    t.options.path = options.path
     t.run
   end
 end

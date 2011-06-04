@@ -28,8 +28,20 @@ describe Haus::User do
       Haus::User.new($user.name).uid.must_equal $user.uid
     end
 
-    it 'should accept the UID of a user' do
+    it 'should accept the UID of a user as a fixnum' do
       Haus::User.new($user.uid).name.must_equal $user.name
+    end
+
+    it 'should raise an error otherwise' do
+      assert_raises ArgumentError do
+        Haus::User.new /root/
+      end
+    end
+  end
+
+  describe :dotfile do
+    it 'should return a path as a home dotfile path' do
+      Haus::User.new($user.name).dotfile('/etc/passwd').must_equal "#{$user.dir}/.passwd"
     end
   end
 end
