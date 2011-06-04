@@ -292,6 +292,12 @@ describe Haus::Queue do
       File.exists?(@q.archive_path).must_equal true
     end
 
+    it 'should not create an archive if options.noop is specified' do
+      @q.options = OpenStruct.new :noop => true
+      @q.execute!
+      File.exists?(@q.archive_path).must_equal false
+    end
+
     it 'should rollback changes on signals' do
       @q.options = OpenStruct.new :quiet => true
       # Yes, this is a torturous way of testing the rollback function

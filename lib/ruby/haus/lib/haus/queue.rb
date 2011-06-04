@@ -141,7 +141,7 @@ class Haus
       return nil if executed?
       @executed = true
 
-      archive
+      archive unless options.noop
 
       begin
         # Rollback on signals
