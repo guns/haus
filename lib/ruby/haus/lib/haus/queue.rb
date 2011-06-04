@@ -152,24 +152,24 @@ class Haus
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
         deletions.each do |d|
-          puts ':: %-9s %s' % ['DELETING', d] unless options.quiet
+          log 'DELETING', d
           rm_rf d, opts.merge(:secure => true)
         end
 
         links.each do |s,d|
-          puts ':: %-9s %s -> %s' % ['LINKING', s, d] unless options.quiet
+          log 'LINKING', s, d
           mkdir_p File.dirname(d)
           ln_sf s, d, opts
         end
 
         copies.each do |s,d|
-          puts ':: %-9s %s -> %s' % ['COPYING', s, d] unless options.quiet
+          log 'COPYING', s, d
           mkdir_p File.dirname(d)
           cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
         end
 
         modifications.each do |p,d|
-          puts ':: %-9s %s' % ['MODIFYING', d] unless options.quiet
+          log 'MODIFYING', d
           mkdir_p File.dirname(d)
           touch d
           p.call d
@@ -177,7 +177,7 @@ class Haus
 
       rescue StandardError => e
         if archive_successful
-          warn "!! Rolling back to archive #{archive_path.inspect}"
+          logwarn "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
@@ -216,6 +216,17 @@ class Haus
         # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
         system *%W[tar z#{options.quiet ? '' : 'v'}xpf #{archive_path}]
       end
+    end
+
+    def log *args
+      case args.size
+      when 2 then puts ':: %-9s %s' % args
+      when 3 then puts ':: %-9s %s -> %s' % args
+      end unless options.quiet
+    end
+
+    def logwarn msg
+      puts "!! #{msg}" unless options.quiet
     end
 
     # Ask user for confirmation.
