@@ -7,6 +7,7 @@ require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus'
 require 'haus/test/helper/minitest'
+require 'haus/test/helper/noop_tasks'
 
 describe Haus do
   describe :initialize do

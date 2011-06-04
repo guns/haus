@@ -240,6 +240,19 @@ describe Haus::Queue do
   end
 
   describe :execute do
+    it 'should confirm then call execute!' do
+      @q.instance_eval do
+        def tty_confirm?
+          @_confirmed = true
+          super
+        end
+      end
+
+      @q.instance_variable_get(:@_confirmed).must_equal nil
+      @q.add_link *$user.hausfile
+      with_no_stdin { @q.execute }
+      @q.instance_variable_get(:@_confirmed).must_equal true
+    end
   end
 
   describe :execute! do
@@ -249,20 +262,23 @@ describe Haus::Queue do
       @targets = @files.map { |s,d| d }
 
       # Pre-create targets for some
-      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
+      [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.write 'EXTANT' } }
 
       8.times do |n|
         case n
         when 0..1 then @q.add_link *@files[n]
         when 2..3 then @q.add_copy *@files[n]
         when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then @q.add_modification(@targets[n]) { |f| File.open(f, 'w') { |io| io.puts 'MODIFY' } }
+        when 6..7 then
+          @q.add_modification @targets[n] do |f|
+            File.open(f, 'w') { |io| io.write 'MODIFIED' }
+          end
         end
       end
     end
 
     after do
-      rm_f @q.archive_path
+      FileUtils.rm_f @q.archive_path
     end
 
     it 'should return nil if already executed' do
@@ -279,10 +295,11 @@ describe Haus::Queue do
     it 'should rollback changes on signals' do
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
+        target = $user.hausfile.last
         capture_fork_io do
-          @q.add_modification $user.hausfile.last do |f|
+          @q.add_modification target do |f|
             # Delete extant files
-            rm_rf @targets, :secure => true
+            FileUtils.rm_rf @targets, :secure => true
             # This shouldn't print if they're really gone
             print 'foo' if File.exists? @targets[3]
             print 'bar'
@@ -300,9 +317,10 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on StandardError' do
+      target = $user.hausfile.last
       capture_fork_io do
-        @q.add_modification $user.hausfile.last do |f|
-          rm_rf @targets, :secure => true
+        @q.add_modification target do |f|
+          FileUtils.rm_rf @targets, :secure => true
           print 'foo' if File.exists? @targets[3]
           print 'bar'
           raise StandardError
@@ -336,6 +354,37 @@ describe Haus::Queue do
       @q.execute!
       [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
     end
+
+    it 'should modify files' do
+      [6,7].each { |n| File.open(@targets[n], 'w') { |f| f.write 'CREATED' } }
+      @q.execute!
+      [6,7].each { |n| File.read(@targets[n]).must_equal 'MODIFIED' }
+    end
+
+    it 'should touch files before calling modification proc' do
+      target = $user.hausfile.last
+      File.exists?(target).must_equal false
+      @q.add_modification $user.hausfile.last do |f|
+        File.exists?(f).must_equal true
+      end
+      @q.execute!
+    end
+
+    it 'should create parent directories before file creation' do
+      begin
+        sources = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| s }
+        targets = sources.map { |f| File.join $user.dir, File.basename(f).reverse, File.basename(f) }
+        @q.add_link sources[0], targets[0]
+        @q.add_copy sources[1], targets[1]
+        @q.add_modification targets[2] do |f|
+          File.open(f, 'w') { |io| io.write 'MODIFIED' }
+        end
+        @q.execute!
+        targets.each { |f| File.exists?(f).must_equal true }
+      ensure
+        FileUtils.rm_rf targets.map { |f| File.dirname f }
+      end
+    end
   end
 
   describe :executed? do
@@ -349,7 +398,7 @@ describe Haus::Queue do
   describe :archive do
     before do
       @targets = (0..3).map { $user.hausfile.last }
-      touch @targets
+      FileUtils.touch @targets
       @q.add_link '/etc/passwd', @targets[0]
       @q.add_copy '/etc/passwd', @targets[1]
       @q.add_modification(@targets[2]) { |f| f }

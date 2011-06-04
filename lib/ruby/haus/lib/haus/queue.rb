@@ -84,7 +84,8 @@ class Haus
     #     File.open(path, 'a') { |f| f.puts ':)' }
     #   end
     #
-    # NOTE: The passed block should not assume that the passed file exists.
+    # NOTE: The passed file will be created/updated with FileUtils#touch before
+    #       block is called
     #
     def add_modification destination, &block
       dst = File.expand_path destination
@@ -149,10 +150,26 @@ class Haus
         end
 
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
-        deletions.each     { |d|   rm_rf d, opts.merge(:secure => true) }
-        links.each         { |s,d| ln_sf s, d, opts }
-        copies.each        { |s,d| cp_r  s, d, opts.merge(:preserve => true, :remove_destination => true) }
-        modifications.each { |p,d| p.call d }
+
+        deletions.each do |d|
+          rm_rf d, opts.merge(:secure => true)
+        end
+
+        links.each do |s,d|
+          mkdir_p File.dirname(d)
+          ln_sf s, d, opts
+        end
+
+        copies.each do |s,d|
+          mkdir_p File.dirname(d)
+          cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
+        end
+
+        modifications.each do |p,d|
+          mkdir_p File.dirname(d)
+          touch d
+          p.call d
+        end
 
       rescue StandardError => e
         warn "!! Rolling back to archive #{archive_path.inspect}"
@@ -187,7 +204,6 @@ class Haus
           end
         end
       end
-
 
       archive_path
     end
