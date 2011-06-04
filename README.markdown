@@ -10,7 +10,7 @@
 ### TODO
 
 - ruby 1.8.6+ compatibility ✓
-- haus link
+- haus link ✓
 - haus copy
 - haus clean
 - haus ssh ls
