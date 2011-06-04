@@ -152,20 +152,24 @@ class Haus
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
         deletions.each do |d|
+          puts ':: %-9s %s' % ['DELETING', d] unless options.quiet
           rm_rf d, opts.merge(:secure => true)
         end
 
         links.each do |s,d|
+          puts ':: %-9s %s -> %s' % ['LINKING', s, d] unless options.quiet
           mkdir_p File.dirname(d)
           ln_sf s, d, opts
         end
 
         copies.each do |s,d|
+          puts ':: %-9s %s -> %s' % ['COPYING', s, d] unless options.quiet
           mkdir_p File.dirname(d)
           cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
         end
 
         modifications.each do |p,d|
+          puts ':: %-9s %s' % ['MODIFYING', d] unless options.quiet
           mkdir_p File.dirname(d)
           touch d
           p.call d

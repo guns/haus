@@ -13,6 +13,7 @@ describe Haus::Link do
   before do
     @link = Haus::Link.new
     @link.options.force = true
+    @link.options.quiet = true
   end
 
   after do

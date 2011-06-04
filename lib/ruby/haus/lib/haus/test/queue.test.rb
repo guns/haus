@@ -16,7 +16,7 @@ $user = Haus::TestUser[$$]
 
 describe Haus::Queue do
   before do
-    @q = Haus::Queue.new
+    @q = Haus::Queue.new OpenStruct.new(:quiet => true)
   end
 
   it 'should have included FileUtils' do
@@ -26,8 +26,8 @@ describe Haus::Queue do
   describe :initialize do
     it 'should optionally accept an options object' do
       @q.method(:initialize).arity.must_equal -1
-      @q.options.must_equal OpenStruct.new
-      q = Haus::Queue.new(OpenStruct.new :force => true)
+      Haus::Queue.new.options.must_equal OpenStruct.new
+      q = Haus::Queue.new OpenStruct.new(:force => true)
       q.options.must_equal OpenStruct.new(:force => true)
       q.options.frozen?.must_equal true
     end
@@ -293,13 +293,12 @@ describe Haus::Queue do
     end
 
     it 'should not create an archive if options.noop is specified' do
-      @q.options = OpenStruct.new :noop => true
+      @q.options = OpenStruct.new :noop => true, :quiet => true
       @q.execute!
       File.exists?(@q.archive_path).must_equal false
     end
 
     it 'should rollback changes on signals' do
-      @q.options = OpenStruct.new :quiet => true
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
         target = $user.hausfile.last
@@ -324,8 +323,7 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on StandardError' do
-      @q.options = OpenStruct.new :quiet => true
-      target     = $user.hausfile.last
+      target = $user.hausfile.last
 
       capture_fork_io do
         @q.add_modification target do |f|
@@ -450,7 +448,6 @@ describe Haus::Queue do
       @targets = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| d }
       FileUtils.touch @targets
       @q.instance_variable_set :@deletions, @targets
-      @q.options = OpenStruct.new :quiet => true
     end
 
     after do
