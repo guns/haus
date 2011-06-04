@@ -33,7 +33,7 @@ describe Haus::Task do
         Haus::Task.list['noop2'].must_be_kind_of Hash
         Haus::Task.list['noop2'][:class].must_equal Haus::Noop2
         Haus::Task.list['noop2'][:desc].must_equal ''
-        Haus::Task.list['noop2'][:banner].must_equal ''
+        Haus::Task.list['noop2'][:help].must_equal ''
       end
     end
 
@@ -45,11 +45,11 @@ describe Haus::Task do
       end
     end
 
-    describe :banner do
+    describe :help do
       it 'should set the help output header' do
         msg = 'This class does nothing; its purpose is to ease automated testing.'
-        Haus::Noop.banner msg
-        Haus::Task.list['noop'][:banner].must_equal msg
+        Haus::Noop.help msg
+        Haus::Task.list['noop'][:help].must_equal msg
       end
     end
 
@@ -104,7 +104,7 @@ describe Haus::Task do
       h.meta.must_be_kind_of Hash
       h.meta[:class].must_equal Haus::Noop
       h.meta[:desc].must_equal Haus::Task.list['noop'][:desc]
-      h.meta[:banner].must_equal Haus::Task.list['noop'][:banner]
+      h.meta[:help].must_equal Haus::Task.list['noop'][:help]
     end
   end
 
@@ -164,7 +164,7 @@ describe Haus::Task do
 
     it 'should provide the default command line options for all Task subclasses' do
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
-      users = [0, ENV['TEST_USER'] || 'test', Etc.getlogin]
+      users = [0, $user.name, Etc.getlogin]
 
       runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true

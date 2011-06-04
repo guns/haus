@@ -9,7 +9,7 @@ class Haus
   # Superclass for all Haus commands.
   #
   # Subclasses must define Task#call and should call Task::desc and
-  # Task::banner in the class definition.
+  # Task::help in the class definition.
   #
   # The Options class can be extended via Options#tap
   #
@@ -38,15 +38,15 @@ class Haus
 
       def inherited base
         base.command = base.to_s.downcase.split('::').last
-        list[base.command] = { :class => base, :desc => '', :banner => '' }
+        list[base.command] = { :class => base, :desc => '', :help => '' }
       end
 
       def desc msg
         list[command][:desc] = msg
       end
 
-      def banner msg
-        list[command][:banner] = msg
+      def help msg
+        list[command][:help] = msg
       end
 
       def summary
@@ -100,7 +100,7 @@ class Haus
         opt.summary_width = 20     # Lines up with Haus#help
 
         opt.banner = %Q{\
-          #{meta[:banner] + "\n\n" unless meta.nil? or meta[:banner].empty?}\
+          #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
           Usage: haus [--path PATH] #{self.class.command} [options]
 
           Options:

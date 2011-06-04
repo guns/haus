@@ -21,7 +21,7 @@ describe Haus::User do
     end
 
     it 'should default to the current user' do
-      Haus::User.new.name.must_equal ENV['USER']
+      Haus::User.new.name.must_equal Etc.getlogin
     end
 
     it 'should accept the name of a user as a string' do

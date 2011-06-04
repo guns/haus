@@ -5,7 +5,7 @@ require 'haus/task'
 class Haus
   class Link < Task
     desc 'Create dotfile symlinks'
-    banner "Create dotfile symlinks from #{Options.new.path}/etc/*"
+    help "Create dotfile symlinks from #{Options.new.path}/etc/*"
 
     def enqueue
       users.each do |user|
