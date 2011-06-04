@@ -164,7 +164,7 @@ describe Haus::Task do
 
     it 'should provide the default command line options for all Task subclasses' do
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
-      users = [0, ENV['TEST_USER'] || 'test', Etc.getlogin]
+      users = [0, $user.name, Etc.getlogin]
 
       runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true
