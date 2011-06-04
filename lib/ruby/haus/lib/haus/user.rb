@@ -4,7 +4,7 @@ require 'etc'
 
 class Haus
   class User < Struct::Passwd
-    # `user' can either be a username or UID
+    # Argument can either be a username or UID
     def initialize user = Etc.getlogin
       entry = case user
       when Fixnum then Etc.getpwuid user
@@ -12,6 +12,11 @@ class Haus
       else raise ArgumentError
       end
       entry.members.each { |m| send "#{m}=", entry.send(m) }
+    end
+
+    # Return path as a home dotfile
+    def dotfile src
+      File.join dir, ".#{File.basename src}"
     end
   end
 end
