@@ -348,10 +348,26 @@ describe Haus::Queue do
       [6,7].each { |n| File.read(@targets[n]).must_equal 'MODIFIED' }
     end
 
+    it 'should touch files before calling modification proc' do
+      target = $user.hausfile.last
+      File.exists?(target).must_equal false
+      @q.add_modification $user.hausfile.last do |f|
+        File.exists?(f).must_equal true
+      end
+      @q.execute!
+    end
+
     it 'should create parent directories before file creation' do
       begin
         sources = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| s }
-        targets = sources.map { |f| File.join $user.dir, File.basename(f.reverse), File.basename(f) }
+        targets = sources.map { |f| File.join $user.dir, File.basename(f).reverse, File.basename(f) }
+        @q.add_link sources[0], targets[0]
+        @q.add_copy sources[1], targets[1]
+        @q.add_modification targets[2] do |f|
+          File.open(f, 'w') { |io| io.write 'MODIFIED' }
+        end
+        @q.execute!
+        targets.each { |f| File.exists?(f).must_equal true }
       ensure
         FileUtils.rm_rf targets.map { |f| File.dirname f }
       end

@@ -205,7 +205,6 @@ class Haus
         end
       end
 
-
       archive_path
     end
 
