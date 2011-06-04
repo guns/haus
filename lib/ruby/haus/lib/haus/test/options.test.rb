@@ -28,6 +28,15 @@ describe Haus::Options do
     end
   end
 
+  describe :path do
+    it 'should always return an absolute path' do
+      ostruct = @opt.instance_variable_get :@ostruct
+      ostruct.path.must_match %r{\A/}
+      @opt.path = '..'
+      ostruct.path.must_match %r{\A/}
+    end
+  end
+
   describe :method_missing do
     it 'should otherwise act like an OpenStruct object' do
       @opt.force = true

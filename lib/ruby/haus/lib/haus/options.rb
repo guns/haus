@@ -16,6 +16,10 @@ class Haus
       super
     end
 
+    def path= arg
+      @ostruct.path = File.expand_path arg
+    end
+
     def method_missing *args
       @ostruct.send *args
     end
