@@ -293,6 +293,7 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on signals' do
+      @q.options = OpenStruct.new :quiet => true
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
         target = $user.hausfile.last
@@ -317,7 +318,9 @@ describe Haus::Queue do
     end
 
     it 'should rollback changes on StandardError' do
-      target = $user.hausfile.last
+      @q.options = OpenStruct.new :quiet => true
+      target     = $user.hausfile.last
+
       capture_fork_io do
         @q.add_modification target do |f|
           FileUtils.rm_rf @targets, :secure => true
