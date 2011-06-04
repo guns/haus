@@ -6,6 +6,9 @@ require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/options'
+require 'haus/test/helper/test_user'
+
+$user = Haus::TestUser[$$]
 
 describe Haus::Options do
   before do
@@ -22,6 +25,31 @@ describe Haus::Options do
       ostruct.must_be_kind_of OpenStruct
       ostruct.path.must_be_kind_of String
       ostruct.path.must_equal File.expand_path('../../../../../../..', __FILE__)
+    end
+  end
+
+  describe :etc do
+    it 'should return HAUS_PATH/etc' do
+      @opt.etc.must_equal File.join(@opt.path, 'etc')
+      @opt.path = '/tmp/haus'
+      @opt.etc.must_equal '/tmp/haus/etc'
+    end
+  end
+
+  describe :etcfiles do
+    it 'should return all files in HAUS_PATH/etc/*' do
+      files = []
+      $user.hausfile :file
+      $user.hausfile :dir
+      $user.hausfile :link
+
+      # Awkward select via each_with_index courtesy of Ruby 1.8.6
+      $user.instance_variable_get(:@hausfiles).each_with_index do |f, i|
+        files << f if (i % 2).zero?
+      end
+
+      @opt.path = $user.haus
+      @opt.etcfiles.sort.must_equal files.sort
     end
   end
 

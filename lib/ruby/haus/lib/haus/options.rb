@@ -16,6 +16,16 @@ class Haus
       super
     end
 
+    # HAUS_PATH/etc
+    def etc
+      File.join path, 'etc'
+    end
+
+    # HAUS_PATH/etc/*
+    def etcfiles
+      Dir["#{etc}/*"].map { |f| File.expand_path f }
+    end
+
     def method_missing *args
       @ostruct.send *args
     end
