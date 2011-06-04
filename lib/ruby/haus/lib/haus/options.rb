@@ -2,28 +2,18 @@
 
 require 'optparse'
 require 'ostruct'
-require 'haus/user'
 
 class Haus
   #
   # A hybrid OptionParser / OpenStruct class.
   #
+  # Options#path provides default value of HAUS_PATH
+  #
   class Options < OptionParser
     def initialize
-      super
       @ostruct = OpenStruct.new
       @ostruct.path = File.expand_path '../../../../../..', __FILE__ # HAUS_PATH
-      @ostruct.users = [User.new]
-    end
-
-    def users= ary
-      @ostruct.users = ary.map do |a|
-        u = User.new a
-        if not File.directory? u.dir
-          raise "#{u.name}'s home directory, #{u.dir.inspect}, does not exist"
-        end
-        u
-      end
+      super
     end
 
     def method_missing *args

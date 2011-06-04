@@ -22,21 +22,6 @@ describe Haus::Options do
       ostruct.must_be_kind_of OpenStruct
       ostruct.path.must_be_kind_of String
       ostruct.path.must_equal File.expand_path('../../../../../../..', __FILE__)
-      ostruct.users.must_be_kind_of Array
-      ostruct.users.first.must_be_kind_of Haus::User
-      ostruct.users.must_equal [Haus::User.new]
-    end
-  end
-
-  describe :users= do
-    it 'should set the users option' do
-      assert_raises(NoMethodError) { @opt.users = 'root' }
-      users     = [0, Etc.getlogin]
-      haususers = users.map { |u| Haus::User.new u }
-
-      @opt.users = users
-      @opt.instance_variable_get(:@ostruct).users.must_equal haususers
-      @opt.users.must_equal haususers
     end
   end
 

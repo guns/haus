@@ -2,6 +2,7 @@
 
 require 'haus/options'
 require 'haus/queue'
+require 'haus/user'
 
 class Haus
   #
@@ -53,6 +54,18 @@ class Haus
       end
     end
 
+    class TaskOptions < Options
+      def users= ary
+        users = ary.map { |a| User.new a }
+        users.each do |u|
+          if not File.directory? u.dir
+            raise "#{u.name}'s home directory, #{u.dir.inspect}, does not exist"
+          end
+        end
+        super users
+      end
+    end
+
     attr_reader :queue
 
     def initialize args = []
@@ -67,8 +80,9 @@ class Haus
 
     # Common options for all tasks
     def options
-      @options ||= Options.new do |opt|
-        opt.summary_width = 20
+      @options ||= TaskOptions.new do |opt|
+        opt.users = [Process.euid] # Default value for users array
+        opt.summary_width = 20     # Lines up with Haus#help
 
         opt.banner = %Q{\
           #{meta[:banner] + "\n\n" unless meta.nil? or meta[:banner].empty?}\
@@ -78,9 +92,9 @@ class Haus
         }.gsub /^ +/, ''
 
         opt.on '-u', '--users a,b,c', Array,
-                'Apply changes to given users instead of the current user;',
-                'users can be specified as usernames or UIDs' do |arg|
-          # Cast before sending to Options#users=
+               'Apply changes to given users instead of the current user;',
+               'users can be specified as usernames or UIDs' do |arg|
+          # Cast before sending
           opt.users = arg.map { |a| a =~ /\A\d+\z/ ? a.to_i : a.to_s }
         end
 
