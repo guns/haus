@@ -9,7 +9,7 @@
 
 ### TODO
 
-- ruby 1.8.6+ compatibility
+- ruby 1.8.6+ compatibility ✓
 - haus link
 - haus copy
 - haus clean
