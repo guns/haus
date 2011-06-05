@@ -11,7 +11,7 @@
 
 - ruby 1.8.6+ compatibility ✓
 - haus link ✓
-- haus copy
+- haus copy ✓
 - haus clean
 - haus ssh ls
 - haus ssh add
