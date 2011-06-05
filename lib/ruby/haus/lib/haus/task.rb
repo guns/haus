@@ -50,7 +50,7 @@ class Haus
       end
 
       def summary
-        list.map { |k,v| ' '*4 + '%-10s%s' % [k, v[:desc]] }.join "\n"
+        list.map { |k,v| '    %-8s%s' % [k, v[:desc]] }.join "\n"
       end
     end
 
@@ -97,7 +97,7 @@ class Haus
     def options
       @options ||= TaskOptions.new do |opt|
         opt.users = [Process.euid] # Default value for users array
-        opt.summary_width = 20     # Lines up with Haus#help
+        opt.summary_width = 18
 
         opt.banner = %Q{\
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\

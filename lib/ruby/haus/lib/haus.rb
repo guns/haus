@@ -22,9 +22,9 @@ class Haus
 
       Options:
           -p, --path /path/to/your/haus
-                    Override the location of HAUS_PATH, which is otherwise
-                    determined through the location of this script.
-                    Default: #{options.path}
+                  Override the location of HAUS_PATH, which is otherwise
+                  determined through the location of this script.
+                  Default: #{options.path}
 
       Commands:
       #{Task.summary}
