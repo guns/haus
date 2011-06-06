@@ -165,7 +165,7 @@ describe Haus::Queue do
       res = @q.add_modification("#{$user.dir}/.ponies") { |f| touch f }
       res.size.must_equal 1
       res.frozen?.must_equal true
-      @q.modifications.first[0].respond_to?(:call).must_equal true # TODO: must_respond_to, Y U NO WORK?
+      @q.modifications.first[0].respond_to?(:call).must_equal true # must_respond_to, Y U NO WORK?
       @q.modifications.first[1].must_equal "#{$user.dir}/.ponies"
       @q.modifications.frozen?.must_equal true
     end
@@ -513,7 +513,7 @@ describe Haus::Queue do
   describe :logwarn do
     it 'should write a warning message to $stdout' do
       @q.options = {}
-      capture_io { @q.logwarn 'WARNING' }.join.must_equal "!! WARNING\n"
+      capture_io { @q.logwarn 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
     end
 
     it 'should not produce any output when options.quiet is set' do
@@ -552,7 +552,7 @@ describe Haus::Queue do
     end
 
     it 'should request user input from $stdin when from a terminal' do
-      # TODO: Would be nice to thread this loop
+      # Would be nice to thread this loop
       %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n].each do |str|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do
