@@ -217,7 +217,8 @@ class Haus
     def restore
       Dir.chdir '/' do
         # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
-        system *%W[tar z#{options.quiet ? '' : 'v'}xpf #{archive_path}]
+        v = (options.verbose and not options.quiet) ? 'v' : ''
+        system *%W[tar z#{v}xpf #{archive_path}]
       end
     end
 
