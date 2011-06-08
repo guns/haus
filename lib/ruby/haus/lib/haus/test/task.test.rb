@@ -10,7 +10,7 @@ require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
 require 'haus/test/helper/test_user'
 
-$user = Haus::TestUser[$$]
+$user ||= Haus::TestUser[$$]
 
 describe Haus::Task do
   describe :self do

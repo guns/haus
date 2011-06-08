@@ -12,7 +12,7 @@ require 'haus/queue'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
 
-$user = Haus::TestUser[$$]
+$user ||= Haus::TestUser[$$]
 
 describe Haus::Queue do
   before do

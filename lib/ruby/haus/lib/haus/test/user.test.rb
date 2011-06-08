@@ -8,7 +8,7 @@ require 'minitest/autorun'
 require 'haus/user'
 require 'haus/test/helper/test_user'
 
-$user = Haus::TestUser[$$]
+$user ||= Haus::TestUser[$$]
 
 describe Haus::User do
   it 'should be a subclass of Struct::Passwd' do

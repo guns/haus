@@ -8,7 +8,7 @@ require 'minitest/autorun'
 require 'haus/options'
 require 'haus/test/helper/test_user'
 
-$user = Haus::TestUser[$$]
+$user ||= Haus::TestUser[$$]
 
 describe Haus::Options do
   before do
