@@ -234,9 +234,9 @@ class Haus
     end
 
     # Ask user for confirmation.
-    # Returns true if the `force' or `noop' options are set.
-    # Returns true if no jobs are queued.
-    # Returns false if input is not a tty.
+    # Returns true without prompting if the `force' or `noop' options are set.
+    # Returns true without prompting if no jobs are queued.
+    # Returns false without prompting if input is not a tty.
     def tty_confirm?
       return true if options.force or options.noop
       return true if targets.empty?
