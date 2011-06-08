@@ -32,7 +32,7 @@ module MiniTest
 
     def with_filetty
       fin, fout = [rand, rand].map do |n|
-        f = File.open "/tmp/haus-filetty-#{n}", 'w+'
+        f = File.open "/tmp/haus-filetty-#{rand 2**16}-#{n}", 'w+'
         f.instance_eval do
           def tty?
             true
