@@ -56,7 +56,7 @@ class Haus
     end
 
     # Add copy operation;
-    # noop if src does not exist or src and dst contain the same bits
+    # noop if src does not exist or src and dst are copies
     def add_copy source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
 

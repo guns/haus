@@ -4,12 +4,14 @@
     |       |       |   |   |__     |
     |___|___|___|___|_______|_______|
 
-       * guns <self@sungpae.com> *
+        * -=-=-=-=-=-=-=-=-=-=- *
 
 
 ### TODO
 
-- ruby 1.8.6+ compatibility ✓
+- Ruby 1.8.6+ compatibility ✓
+- Proper handling of non-regular files (sources and destinations)
+- Issues with permissions/ownership
 - haus link ✓
 - haus copy ✓
 - haus clean
