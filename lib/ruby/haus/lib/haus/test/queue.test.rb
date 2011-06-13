@@ -43,16 +43,22 @@ describe Haus::Queue do
   end
 
   describe :options= do
+    before do
+      @assertion = lambda do
+        @q.options.force.must_equal true
+        @q.options.frozen?.must_equal true
+        assert_raises TypeError do
+          @q.options.force = false
+        end
+      end
+    end
+
     it 'should dup and freeze the passed object' do
       opts = OpenStruct.new :force => true, :noop => true
       @q.options = opts
       @q.options.must_equal opts
       opts.force = false
-      @q.options.force.must_equal true
-      @q.options.frozen?.must_equal true
-      assert_raises TypeError do
-        @q.options.force = false
-      end
+      @assertion.call
     end
 
     it 'should accept a Hash as an argument' do
@@ -61,11 +67,7 @@ describe Haus::Queue do
       @q.options.must_equal OpenStruct.new(opts)
       opts.must_equal :force => true, :noop => true
       opts[:force] = false
-      @q.options.force.must_equal true
-      @q.options.frozen?.must_equal true
-      assert_raises TypeError do
-        @q.options.force = false
-      end
+      @assertion.call
     end
   end
 
