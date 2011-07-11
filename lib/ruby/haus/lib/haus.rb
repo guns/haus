@@ -55,7 +55,7 @@ class Haus
     task = Task.list[args.first]
     abort help if task.nil?
 
-    # NOTE: Enumerable#drop introduced in 1.8.7
+    # Enumerable#drop introduced in 1.8.7
     t = task[:class].new args[1..-1]
     t.options.path = options.path
     t.run
