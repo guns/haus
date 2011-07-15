@@ -44,21 +44,21 @@ describe Haus::Queue do
 
   describe :options= do
     before do
-      @assertion = lambda do
-        @q.options.force.must_equal true
-        @q.options.frozen?.must_equal true
+      @assertion = lambda do |q|
+        q.options.force.must_equal true
+        q.options.frozen?.must_equal true
         assert_raises TypeError do
-          @q.options.force = false
+          q.options.force = false
         end
       end
     end
 
-    it 'should dup and freeze the passed object' do
+    it 'should dup and freeze the passed OpenStruct object' do
       opts = OpenStruct.new :force => true, :noop => true
       @q.options = opts
       @q.options.must_equal opts
       opts.force = false
-      @assertion.call
+      @assertion.call @q.dup
     end
 
     it 'should accept a Hash as an argument' do
@@ -67,7 +67,7 @@ describe Haus::Queue do
       @q.options.must_equal OpenStruct.new(opts)
       opts.must_equal :force => true, :noop => true
       opts[:force] = false
-      @assertion.call
+      @assertion.call @q.dup
     end
   end
 
@@ -84,20 +84,38 @@ describe Haus::Queue do
       @q.links.empty?.must_equal true
     end
 
-    it 'should push and refreeze @links when src does exist and dst does not point to src' do
-      args = $user.hausfile
-      res = @q.add_link *args
-      res.must_equal [args]
-      res.frozen?.must_equal true
-      @q.links.must_equal [args]
-      @q.links.frozen?.must_equal true
-    end
-
     it 'should raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_link *args
       assert_raises Haus::Queue::MultipleJobError do
         @q.add_link *args
+      end
+    end
+
+    describe :success do
+      before do
+        # Since we cannot pass a block to a Proc, explicitly pass a Proc instead
+        @assertion = lambda do |prc|
+          q = Haus::Queue.new
+          src, dst = $user.hausfile
+          prc.call src, dst
+          res = q.add_link src, dst
+          res.must_equal [[src, dst]]
+          res.frozen?.must_equal true
+          q.links.must_equal [[src, dst]]
+          q.links.frozen?.must_equal true
+        end
+      end
+
+      it 'should push and refreeze @links when src does exist and dst does not point to src' do
+        @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }
+      end
+
+      it 'should remove the destination before linking' do
+        @assertion.call lambda { |src, dst|
+          FileUtils.mkdir_p File.join(dst, 'sparkle')
+          FileUtils.touch File.join(dst, 'sparkle', 'pony')
+        }
       end
     end
   end
@@ -115,20 +133,64 @@ describe Haus::Queue do
       @q.copies.empty?.must_equal true
     end
 
-    it 'should push and refreeze @copies when src exists and dst does not equal src' do
-      args = $user.hausfile
-      res = @q.add_copy *args
-      res.must_equal [args]
-      res.frozen?.must_equal true
-      @q.copies.must_equal [args]
-      @q.copies.frozen?.must_equal true
-    end
-
     it 'should raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_copy *args
       assert_raises Haus::Queue::MultipleJobError do
         @q.add_copy *args
+      end
+    end
+
+    describe :success do
+      before do
+        @assertion = lambda do |prc|
+          q = Haus::Queue.new
+          src, dst = $user.hausfile
+          prc.call src, dst
+          res = q.add_copy src, dst
+          res.must_equal [[src, dst]]
+          res.frozen?.must_equal true
+          q.copies.must_equal [[src, dst]]
+          q.copies.frozen?.must_equal true
+        end
+      end
+
+      it 'should push and refreeze @copies when src exists and dst does not equal src' do
+        @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }
+        @assertion.call lambda { |src, dst|
+          File.open(src, 'w') { |f| f.write 'foo' }
+          File.open(dst, 'w') { |f| f.write 'bar' }
+        }
+      end
+
+      it 'should push and refreeze @copies when src and dst are of different types' do
+        @assertion.call lambda { |src, dst| FileUtils.mkdir_p dst }
+      end
+
+      ### FIXME
+      # it 'should break hard links' do
+      #   @assertion.call lambda { |src, dst|
+      #     File.open(src, 'w') { |f| f.write 'hard' }
+      #     FileUtils.ln src, dst
+      #   }
+      # end
+
+      ### FIXME
+      # it 'should recurse and compare directory contents of dst to determine whether to copy' do
+      #   @assertion.call lambda { |src, dst|
+      #     FileUtils.rm_f src
+      #     FileUtils.mkdir_p [src, dst]
+      #     File.open("#{src}/pony", 'w') { |f| f.write 'PONY!' }
+      #     File.open("#{dst}/pony", 'w') { |f| f.write 'HORSE!' }
+      #   }
+      # end
+
+      it 'should remove destination before copying' do
+        @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }
+        @assertion.call lambda { |src, dst|
+          FileUtils.mkdir_p File.join(dst, 'sparkle')
+          FileUtils.touch File.join(dst, 'sparkle', 'pony')
+        }
       end
     end
   end

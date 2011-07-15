@@ -22,8 +22,7 @@ class Haus
 
     include FileUtils
 
-    attr_reader :options, :archive_path
-    attr_reader :links, :copies, :modifications, :deletions
+    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
@@ -49,7 +48,7 @@ class Haus
       return nil unless File.exists? src
       return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
 
-      @links = (links.dup << [src,dst]).freeze
+      @links = (links.dup << [src, dst]).freeze
     end
 
     # Add copy operation;
@@ -158,14 +157,16 @@ class Haus
 
         links.each do |s,d|
           log 'LINKING', s, d
+          rm_rf d
           mkdir_p File.dirname(d)
-          ln_sf s, d, opts
+          ln_s s, d, opts
         end
 
         copies.each do |s,d|
           log 'COPYING', s, d
+          rm_rf d
           mkdir_p File.dirname(d)
-          cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
+          cp_r s, d, opts.merge(:preserve => true)
         end
 
         modifications.each do |p,d|
