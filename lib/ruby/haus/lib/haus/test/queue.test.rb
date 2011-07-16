@@ -94,7 +94,8 @@ describe Haus::Queue do
 
     describe :success do
       before do
-        # Since we cannot pass a block to a Proc, explicitly pass a Proc instead
+        # NOTE: We cannot pass a block (implicitly or explicitly) to a Proc in
+        #       1.8.6, so we pass a Proc instead
         @assertion = lambda do |prc|
           q = Haus::Queue.new
           src, dst = $user.hausfile
