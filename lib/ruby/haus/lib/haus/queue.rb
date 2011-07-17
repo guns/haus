@@ -2,6 +2,7 @@
 
 require 'fileutils'
 require 'ostruct'
+require 'pathname'
 
 class Haus
   #
@@ -187,16 +188,20 @@ class Haus
 
         opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
-        deletions.each do |d|
-          log 'DELETING', d
-          rm_rf d, opts.merge(:secure => true)
+        deletions.each do |dst|
+          log 'DELETING', dst
+          rm_rf dst, opts.merge(:secure => true)
         end
 
-        links.each do |s,d|
-          log 'LINKING', s, d
-          rm_rf d
-          mkdir_p File.dirname(d)
-          ln_s s, d, opts
+        links.each do |src, dst|
+          basedir = File.dirname dst
+          srcpath = options.relative ? Pathname.new(src).relative_path_from(Pathname.new basedir) : src
+
+          log 'LINKING', src, dst
+          rm_rf dst
+          mkdir_p basedir
+
+          ln_s srcpath, dst, opts
         end
 
         copies.each do |s,d|

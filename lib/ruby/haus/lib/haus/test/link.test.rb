@@ -20,6 +20,14 @@ describe Haus::Link do
     FileUtils.rm_f @link.queue.archive_path
   end
 
+  describe :options do
+    it 'should provide a --relative option' do
+      h = Haus::Link.new %w[--relative]
+      h.run
+      h.options.relative.must_equal true
+    end
+  end
+
   describe :enqueue do
     it 'should add link jobs to the queue' do
       user = Haus::TestUser[:link_enqueue]
