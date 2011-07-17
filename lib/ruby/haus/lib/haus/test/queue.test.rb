@@ -339,19 +339,19 @@ describe Haus::Queue do
 
   describe :execute! do
     before do
-      @files   = (0..7).map { $user.hausfile }
+      @files   = (0..9).map { $user.hausfile }
       @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
 
       # Pre-create targets for some
       [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.write 'EXTANT' } }
 
-      8.times do |n|
+      10.times do |n|
         case n
-        when 0..1 then @q.add_link *@files[n]
-        when 2..3 then @q.add_copy *@files[n]
-        when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then
+        when 0..1, 8..9 then @q.add_link *@files[n]
+        when 2..3       then @q.add_copy *@files[n]
+        when 4..5       then @q.add_deletion @targets[n]
+        when 6..7       then
           @q.add_modification @targets[n] do |f|
             File.open(f, 'w') { |io| io.write 'MODIFIED' }
           end
@@ -433,6 +433,20 @@ describe Haus::Queue do
       [0,1].each do |n|
         File.symlink?(@targets[n]).must_equal true
         File.readlink(@targets[n]).must_equal @sources[n]
+      end
+    end
+
+    it 'should link files with relative source paths when specified' do
+      [8,9].each { |n| File.symlink?(@targets[n]).must_equal false }
+      opts = @q.options.dup
+      opts.relative = true
+      @q.options = opts
+      @q.execute!
+      [8,9].each do |n|
+        File.symlink?(@targets[n]).must_equal true
+        relpath = Pathname.new(@sources[n]).relative_path_from(Pathname.new File.dirname(@targets[n])).to_s
+        File.readlink(@targets[n]).must_equal relpath
+        File.expand_path(File.readlink(@targets[n]), File.dirname(@targets[n])).must_equal @sources[n]
       end
     end
 
