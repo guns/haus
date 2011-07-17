@@ -168,23 +168,21 @@ describe Haus::Queue do
         @assertion.call lambda { |src, dst| FileUtils.mkdir_p dst }
       end
 
-      ### FIXME
-      # it 'should break hard links' do
-      #   @assertion.call lambda { |src, dst|
-      #     File.open(src, 'w') { |f| f.write 'hard' }
-      #     FileUtils.ln src, dst
-      #   }
-      # end
+      it 'should break hard links' do
+        @assertion.call lambda { |src, dst|
+          File.open(src, 'w') { |f| f.write 'hard' }
+          FileUtils.ln src, dst
+        }
+      end
 
-      ### FIXME
-      # it 'should recurse and compare directory contents of dst to determine whether to copy' do
-      #   @assertion.call lambda { |src, dst|
-      #     FileUtils.rm_f src
-      #     FileUtils.mkdir_p [src, dst]
-      #     File.open("#{src}/pony", 'w') { |f| f.write 'PONY!' }
-      #     File.open("#{dst}/pony", 'w') { |f| f.write 'HORSE!' }
-      #   }
-      # end
+      it 'should recurse and compare directory contents of dst to determine whether to copy' do
+        @assertion.call lambda { |src, dst|
+          FileUtils.rm_f src
+          FileUtils.mkdir_p [src, dst]
+          File.open("#{src}/pony", 'w') { |f| f.write 'PONY!' }
+          File.open("#{dst}/pony", 'w') { |f| f.write 'HORSE!' }
+        }
+      end
 
       it 'should remove destination before copying' do
         @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }

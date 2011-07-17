@@ -58,7 +58,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
-      return nil if File.exists? dst and cmp src, dst
+      return nil if File.exists? dst and duplicates? src, dst
 
       @copies = (copies.dup << [src, dst]).freeze
     end
@@ -112,6 +112,40 @@ class Haus
 
     def hash
       (links + copies + modifications + deletions).hash
+    end
+
+    # Compare two files:
+    # Returns false if both files have the same inode
+    # Returns false if files are of different types
+    # Returns false if both are symlinks and have different sources
+    # Returns false if both are directories and have different contents
+    # Returns false if both are regular files and have different bits
+    # Returns true otherwise
+    def duplicates? a, b
+      astat, bstat = File.lstat(a), File.lstat(b)
+
+      return false if astat.ino == bstat.ino
+      return false if astat.ftype != bstat.ftype
+
+      case astat.ftype
+      when 'link'
+        File.readlink(a) == File.readlink(b)
+      when 'directory'
+        # Dir::entries just calls readdir(3), so we filter the dot directories
+        as, bs = [a, b].map do |dir|
+          Dir.entries(dir).sort.reject { |f| f == '.' || f == '..' }.map { |f| File.join dir, f }
+        end
+
+        as.zip(bs).each do |a1, b1|
+          # File stream must match in name as well as content
+          return false if File.basename(a1) != File.basename(b1)
+          return false if not duplicates? a1, b1
+        end
+
+        true
+      else
+        identical? a, b
+      end
     end
 
     # Remove jobs by destination path; boolean return
