@@ -574,37 +574,6 @@ describe Haus::Queue do
     end
   end
 
-  describe :log do
-    it 'should write a single file message to $stdout' do
-      @q.options = {}
-      pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
-      capture_io { @q.log 'DELETING', '/etc/passwd' }.join.must_match pattern
-    end
-
-    it 'should write a two file message to $stdout' do
-      @q.options = {}
-      pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
-      capture_io { @q.log 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
-    end
-
-    it 'should not produce any output when options.quiet is set' do
-      @q.options = { :quiet => true }
-      capture_io { @q.log 'QUIET', '/etc/passwd' }.join.must_equal ''
-    end
-  end
-
-  describe :logwarn do
-    it 'should write a warning message to $stdout' do
-      @q.options = {}
-      capture_io { @q.logwarn 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
-    end
-
-    it 'should not produce any output when options.quiet is set' do
-      @q.options = { :quiet => true }
-      capture_io { @q.logwarn 'QUIET' }.join.must_equal ''
-    end
-  end
-
   describe :tty_confirm? do
     before do
       @q.add_link *$user.hausfile
@@ -644,6 +613,39 @@ describe Haus::Queue do
           end
           @q.tty_confirm?.must_equal !(str =~ /\An/i)
         end
+      end
+    end
+  end
+
+  describe :private do
+    describe :log do
+      it 'should write a single file message to $stdout' do
+        @q.options = {}
+        pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
+        capture_io { @q.send :log, 'DELETING', '/etc/passwd' }.join.must_match pattern
+      end
+
+      it 'should write a two file message to $stdout' do
+        @q.options = {}
+        pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
+        capture_io { @q.send :log, 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
+      end
+
+      it 'should not produce any output when options.quiet is set' do
+        @q.options = { :quiet => true }
+        capture_io { @q.send :log, 'QUIET', '/etc/passwd' }.join.must_equal ''
+      end
+    end
+
+    describe :logwarn do
+      it 'should write a warning message to $stdout' do
+        @q.options = {}
+        capture_io { @q.send :logwarn, 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
+      end
+
+      it 'should not produce any output when options.quiet is set' do
+        @q.options = { :quiet => true }
+        capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
       end
     end
   end

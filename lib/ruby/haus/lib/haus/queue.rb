@@ -262,17 +262,6 @@ class Haus
       end
     end
 
-    def log *args
-      case args.size
-      when 2 then puts ':: %-9s %s' % args
-      when 3 then puts ':: %-9s %s -> %s' % args
-      end unless options.quiet
-    end
-
-    def logwarn msg
-      puts "!! #{msg}" unless options.quiet
-    end
-
     # Ask user for confirmation.
     # Returns true without prompting if the `force' or `noop' options are set.
     # Returns true without prompting if no jobs are queued.
@@ -304,6 +293,19 @@ class Haus
       else
         !!($stdin.readline =~ /\A(\n|y\n|ye\n|yes\n)\z/i) rescue false
       end
+    end
+
+    private
+
+    def log *args
+      case args.size
+      when 2 then puts ':: %-9s %s' % args
+      when 3 then puts ':: %-9s %s -> %s' % args
+      end unless options.quiet
+    end
+
+    def logwarn msg
+      puts "!! #{msg}" unless options.quiet
     end
   end
 end
