@@ -22,25 +22,21 @@ class Haus
 
     include FileUtils
 
-    attr_reader :options, :archive_path
-    attr_reader :links, :copies, :modifications, :deletions
+    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 
-      # NOTE: Array#shuffle and Enumerable#take introduced in 1.8.7
+      # Array#shuffle and Enumerable#take introduced in 1.8.7
       time, salt = Time.now.strftime('%s'), ('a'..'z').sort_by { rand }[0..7].join
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
     # Dups and freezes object for safety
     def options= opts
-      @options = case opts
-      when Hash then OpenStruct.new(opts).freeze
-      else opts.dup.freeze
-      end if opts
+      @options = (opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup).freeze
     end
 
     # Add symlinking operation;
@@ -52,7 +48,7 @@ class Haus
       return nil unless File.exists? src
       return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
 
-      @links = (links.dup << [src,dst]).freeze
+      @links = (links.dup << [src, dst]).freeze
     end
 
     # Add copy operation;
@@ -62,7 +58,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
-      return nil if File.exists? dst and cmp src, dst
+      return nil if File.exists? dst and duplicates? src, dst
 
       @copies = (copies.dup << [src, dst]).freeze
     end
@@ -87,6 +83,8 @@ class Haus
     #     File.open(path, 'a') { |f| f.puts ':)' }
     #   end
     #
+    # Raises ArgumentError if passed path is a directory.
+    #
     # NOTE: The passed file will be created/updated with FileUtils#touch before
     #       block is called
     #
@@ -94,6 +92,7 @@ class Haus
       dst = File.expand_path destination
 
       raise MultipleJobError if targets.include? dst
+      raise ArgumentError if File.directory? dst
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
@@ -116,6 +115,40 @@ class Haus
 
     def hash
       (links + copies + modifications + deletions).hash
+    end
+
+    # Compare two files:
+    # Returns false if both files have the same inode
+    # Returns false if files are of different types
+    # Returns false if both are symlinks and have different sources
+    # Returns false if both are directories and have different contents
+    # Returns false if both are regular files and have different bits
+    # Returns true otherwise
+    def duplicates? a, b
+      astat, bstat = File.lstat(a), File.lstat(b)
+
+      return false if astat.ino == bstat.ino
+      return false if astat.ftype != bstat.ftype
+
+      case astat.ftype
+      when 'link'
+        File.readlink(a) == File.readlink(b)
+      when 'directory'
+        # Dir::entries just calls readdir(3), so we filter the dot directories
+        as, bs = [a, b].map do |dir|
+          Dir.entries(dir).sort.reject { |f| f == '.' || f == '..' }.map { |f| File.join dir, f }
+        end
+
+        as.zip(bs).each do |a1, b1|
+          # File stream must match in name as well as content
+          return false if File.basename(a1) != File.basename(b1)
+          return false if not duplicates? a1, b1
+        end
+
+        true
+      else
+        identical? a, b
+      end
     end
 
     # Remove jobs by destination path; boolean return
@@ -161,14 +194,16 @@ class Haus
 
         links.each do |s,d|
           log 'LINKING', s, d
+          rm_rf d
           mkdir_p File.dirname(d)
-          ln_sf s, d, opts
+          ln_s s, d, opts
         end
 
         copies.each do |s,d|
           log 'COPYING', s, d
+          rm_rf d
           mkdir_p File.dirname(d)
-          cp_r s, d, opts.merge(:preserve => true, :remove_destination => true)
+          cp_r s, d, opts.merge(:preserve => true)
         end
 
         modifications.each do |p,d|

@@ -9,3 +9,49 @@ desc 'Run all tests'
 task :test do
   Dir['**/*.test.rb'].each { |f| load f }
 end
+
+namespace :test do
+  desc 'Watch and run tests on FS changes'
+  task :watch do
+    require 'fssm'
+
+    # Backport missing features for FSSM (ruby 1.8.6)
+    unless String.new.respond_to? :start_with?
+      class String
+        def start_with? *args
+          args.any? { |s| self =~ Regexp.new('\A' + s) }
+        end
+      end
+    end
+
+    FSSM.monitor File.expand_path('../../..', __FILE__), '**/*.rb' do
+      update do |base, path|
+        system 'clear'
+        system $0, 'test'
+      end
+    end
+  end
+end
+
+desc 'Setup a four-pane development window in tmux'
+task :tmux do
+  if ENV['TMUX'].nil?
+    warn '$TMUX not defined!'
+  elsif %x(tmux list-panes).lines.count > 1
+    warn 'More than one pane exists in this window!'
+  else
+    system *%W[tmux rename-window haus]
+    system *%W[tmux set-option default-path #{Dir.pwd}]
+
+    system *%W[tmux split-window -d -h -p75]
+    system *%W[tmux split-window -d -v -p33]
+    system *%W[tmux split-window -d -v -p50]
+
+    system *%W[tmux send-keys -t0 #{"rake19 test:watch\n"}]
+    system *%W[tmux send-keys -t1 #{"rake18 test:watch\n"}]
+    system *%W[tmux send-keys -t2 #{"rake186 test:watch\n"}]
+    system *%W[tmux send-keys -t3 #{"cd #{File.expand_path '../../..', __FILE__}\n"}]
+
+    system *%W[tmux select-pane -t3]
+  end
+end
