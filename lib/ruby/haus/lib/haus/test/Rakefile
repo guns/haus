@@ -25,12 +25,25 @@ namespace :test do
       end
     end
 
-    FSSM.monitor File.expand_path('../../..', __FILE__), '**/*.rb' do
-      update do |base, path|
-        system 'clear'
-        system $0, 'test'
+    %w[INT TERM QUIT].each do |sig|
+      trap(sig) { abort "Caught SIG#{sig}!" }
+    end
+
+    # TODO: Does FSSM have an API for ignoring fs events?
+    loop do
+      catch :restart do
+
+        FSSM.monitor File.expand_path('../../..', __FILE__), '**/*.rb' do
+          update do |base, path|
+            system 'clear'
+            system $0, 'test'
+            throw :restart
+          end
+        end
+
       end
     end
+
   end
 end
 
