@@ -240,6 +240,12 @@ describe Haus::Queue do
         @q.add_modification(src) { |f| touch f }
       end
     end
+
+    it 'should raise an error if argument is a directory' do
+      assert_raises ArgumentError do
+        @q.add_modification($user.dir) { |f| nil }
+      end
+    end
   end
 
   describe :targets do

@@ -83,6 +83,8 @@ class Haus
     #     File.open(path, 'a') { |f| f.puts ':)' }
     #   end
     #
+    # Raises ArgumentError if passed path is a directory.
+    #
     # NOTE: The passed file will be created/updated with FileUtils#touch before
     #       block is called
     #
@@ -90,6 +92,7 @@ class Haus
       dst = File.expand_path destination
 
       raise MultipleJobError if targets.include? dst
+      raise ArgumentError if File.directory? dst
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
