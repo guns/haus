@@ -37,7 +37,7 @@ describe Haus::Queue do
         @q.send(m).must_equal []
         @q.send(m).frozen?.must_equal true
       end
-      @q.archive_path.must_match %r{\A/tmp/haus-\d+-[a-z]+\.tar\.gz\z}
+      @q.archive_path.must_match %r{\A/tmp/haus-\d+-\d+-\d+-[a-z]+\.tar\.gz\z}
       @q.archive_path.frozen?.must_equal true
     end
   end

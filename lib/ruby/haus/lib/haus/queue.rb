@@ -31,7 +31,8 @@ class Haus
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 
       # Array#shuffle and Enumerable#take introduced in 1.8.7
-      time, salt = Time.now.strftime('%s'), ('a'..'z').sort_by { rand }[0..7].join
+      time = Time.now.strftime '%Y-%m-%d'
+      salt = ('a'..'z').sort_by { rand }[0..7].join
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
