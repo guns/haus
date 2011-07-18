@@ -42,7 +42,7 @@ class Haus
     end
 
     # Add symlinking operation;
-    # noop if src does not exist or dst already points to src
+    # noop if source does not exist or destination already points to source
     def add_link source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
 
@@ -54,7 +54,7 @@ class Haus
     end
 
     # Add copy operation;
-    # noop if src does not exist or src and dst are copies
+    # noop if source does not exist or source and destination are copies
     def add_copy source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
 
@@ -66,7 +66,7 @@ class Haus
     end
 
     # Add deletion operation;
-    # noop if dst does not exist
+    # noop if destination does not exist
     def add_deletion destination
       dst = File.expand_path destination
 
