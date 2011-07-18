@@ -47,9 +47,7 @@ describe Haus::Queue do
       @assertion = lambda do |q|
         q.options.force.must_equal true
         q.options.frozen?.must_equal true
-        assert_raises TypeError do
-          q.options.force = false
-        end
+        lambda { q.options.force = false }.must_raise TypeError
       end
     end
 
@@ -87,9 +85,7 @@ describe Haus::Queue do
     it 'should raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_link *args
-      assert_raises Haus::Queue::MultipleJobError do
-        @q.add_link *args
-      end
+      lambda { @q.add_link *args }.must_raise Haus::Queue::MultipleJobError
     end
 
     describe :success do
@@ -137,9 +133,7 @@ describe Haus::Queue do
     it 'should raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_copy *args
-      assert_raises Haus::Queue::MultipleJobError do
-        @q.add_copy *args
-      end
+      lambda { @q.add_copy *args }.must_raise Haus::Queue::MultipleJobError
     end
 
     describe :success do
@@ -212,9 +206,7 @@ describe Haus::Queue do
     it 'should raise an error when a job for dst already exists' do
       src = $user.hausfile.first
       @q.add_deletion src
-      assert_raises Haus::Queue::MultipleJobError do
-        @q.add_deletion src
-      end
+      lambda { @q.add_deletion src }.must_raise Haus::Queue::MultipleJobError
     end
   end
 
@@ -236,15 +228,11 @@ describe Haus::Queue do
     it 'should raise an error when a job for dst already exists' do
       src = $user.hausfile.first
       @q.add_modification(src) { |f| touch f }
-      assert_raises Haus::Queue::MultipleJobError do
-        @q.add_modification(src) { |f| touch f }
-      end
+      lambda { @q.add_modification(src) {} }.must_raise Haus::Queue::MultipleJobError
     end
 
     it 'should raise an error if argument is a directory' do
-      assert_raises ArgumentError do
-        @q.add_modification($user.dir) { |f| nil }
-      end
+      lambda { @q.add_modification($user.dir) {} }.must_raise ArgumentError
     end
   end
 
@@ -518,10 +506,7 @@ describe Haus::Queue do
     it 'should raise an error if tar or gzip are not available' do
       begin
         path = ENV['PATH'].dup
-        assert_raises RuntimeError do
-          ENV['PATH'] = ''
-          @q.archive
-        end
+        lambda { ENV['PATH'] = ''; @q.archive }.must_raise RuntimeError
       ensure
         ENV['PATH'] = path
       end

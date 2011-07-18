@@ -33,9 +33,7 @@ describe Haus::User do
     end
 
     it 'should raise an error otherwise' do
-      assert_raises ArgumentError do
-        Haus::User.new /root/
-      end
+      lambda { Haus::User.new /root/ }.must_raise ArgumentError
     end
   end
 
