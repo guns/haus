@@ -604,16 +604,14 @@ describe Haus::Queue do
 
   describe :private do
     describe :log do
-      it 'should write a single file message to $stdout' do
-        @q.options = {}
+      it 'should accept one to three arguments' do
+        lambda { Haus::Queue.new.send :log }.must_raise ArgumentError
+        capture_io { Haus::Queue.new.send :log, 'WARNING' }.join.must_match "WARNING\n"
         pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
-        capture_io { @q.send :log, 'DELETING', '/etc/passwd' }.join.must_match pattern
-      end
-
-      it 'should write a two file message to $stdout' do
-        @q.options = {}
+        capture_io { Haus::Queue.new.send :log, 'DELETING', '/etc/passwd' }.join.must_match pattern
         pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
-        capture_io { @q.send :log, 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
+        capture_io { Haus::Queue.new.send :log, 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
+        lambda { Haus::Queue.new.send :log, '1', '2', '3', '4' }.must_raise ArgumentError
       end
 
       it 'should not produce any output when options.quiet is set' do

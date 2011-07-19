@@ -300,8 +300,10 @@ class Haus
 
     def log *args
       case args.size
+      when 1 then puts ':: %s' % args
       when 2 then puts ':: %-9s %s' % args
       when 3 then puts ':: %-9s %s -> %s' % args
+      else raise ArgumentError
       end unless options.quiet
     end
 
