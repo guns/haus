@@ -492,7 +492,7 @@ describe Haus::Queue do
       FileUtils.touch @targets
       @q.add_link '/etc/passwd', @targets[0]
       @q.add_copy '/etc/passwd', @targets[1]
-      @q.add_modification(@targets[2]) { |f| f }
+      @q.add_modification(@targets[2]) {}
       @q.add_deletion @targets[3]
       @q.add_link '/etc/passwd', '/magical/pony/with/sparkles'
       @q.add_copy '/etc/passwd', '/magical/pony/with/flying/action'
