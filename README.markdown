@@ -9,11 +9,13 @@
 
 ### TODO
 
-- Ruby 1.8.6+ compatibility ✓
+- ✓ Ruby 1.8.6+ compatibility
+- ✓ haus link
+- ✓ haus copy
+- No answer should be affirmative in Queue#tty_confirm?
 - Proper handling of non-regular files (sources and destinations)
 - Issues with permissions/ownership
-- haus link ✓
-- haus copy ✓
+- Nested dotfiles (%dir)
 - haus clean
 - haus ssh ls
 - haus ssh add
