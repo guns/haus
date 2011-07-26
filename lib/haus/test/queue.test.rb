@@ -635,5 +635,32 @@ describe Haus::Queue do
         capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
       end
     end
+
+    describe :relpath do
+      it 'should return a relative path to a source' do
+        @q.send(:relpath, '/magic/pony/ride', '/magic/sparkle/action').must_equal '../pony/ride'
+      end
+    end
+
+    describe :linked? do
+      it 'should compare src to the link source' do
+        src, dst = $user.hausfile
+        FileUtils.ln_s '/etc/passwd', dst
+        @q.send(:linked?, src, dst).must_equal false
+        FileUtils.rm_f dst
+        FileUtils.ln_s src, dst
+        @q.send(:linked?, src, dst).must_equal true
+      end
+
+      it 'should return false if the link source style differs from options.relative' do
+        src, dst = $user.hausfile
+        FileUtils.ln_s src, dst
+        @q.options = { :relative => true }
+        @q.send(:linked?, src, dst).must_equal false
+        FileUtils.rm_f dst
+        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s, dst
+        @q.send(:linked?, src, dst).must_equal true
+      end
+    end
   end
 end

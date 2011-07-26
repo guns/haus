@@ -48,7 +48,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
-      return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
+      return nil if File.symlink? dst and linked? src, dst
 
       @links = (links.dup << [src, dst]).freeze
     end
@@ -313,6 +313,14 @@ class Haus
 
     def logwarn msg
       puts "!! #{msg}" unless options.quiet
+    end
+
+    def relpath src, dst
+      Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s
+    end
+
+    def linked? src, dst
+      File.readlink(dst) == (options.relative ? relpath(src, dst) : src)
     end
   end
 end
