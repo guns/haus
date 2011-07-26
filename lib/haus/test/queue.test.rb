@@ -662,5 +662,8 @@ describe Haus::Queue do
         @q.send(:linked?, src, dst).must_equal true
       end
     end
+
+    describe :duplicates? do
+    end
   end
 end
