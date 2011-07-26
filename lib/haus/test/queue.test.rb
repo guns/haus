@@ -276,6 +276,10 @@ describe Haus::Queue do
       @q.targets(:overwrite).must_equal @targets.values_at(1,3)
     end
 
+    it 'should return all files that should be archived on :archive' do
+      @q.targets(:archive).sort.must_equal @targets.select { |f| File.exists? f }.sort
+    end
+
     it 'should be a complete list of targets with no overlapping entries' do
       [:delete, :create, :modify, :overwrite].inject [] do |a,m|
         a + @q.targets(m)

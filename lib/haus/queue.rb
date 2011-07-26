@@ -109,8 +109,10 @@ class Haus
       when :create    then (targets - targets(:delete)).reject { |f| File.exists? f }
       # Modifications to files that already exist
       when :modify    then modifications.map { |s,d| d } - targets(:create)
-      # Left over: extant files that will be wholly replaced by links and copies
+      # Extant files that will be wholly replaced by links and copies
       when :overwrite then targets - targets(:create) - targets(:modify) - targets(:delete)
+      # Extant targets that should be archived
+      when :archive   then targets - targets(:create)
       else raise ArgumentError
       end
     end
@@ -213,7 +215,7 @@ class Haus
         raise "#{cmd.inspect} not found" unless system "command -v #{cmd} &>/dev/null"
       end
 
-      files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+      files = targets(:archive).map { |f| f.sub %r{\A/}, '' }
       return nil if files.empty?
 
       Dir.chdir '/' do
@@ -248,8 +250,11 @@ class Haus
         puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
       end
 
-      puts "\nAll original links and files will be archived to:\n    #{archive_path}"
-      print 'Permission to continue? [Y/n] '
+      unless targets(:archive).empty?
+        puts "\nAll original links and files will be archived to:\n    #{archive_path}"
+      end
+
+      print "\nPermission to continue? [Y/n] "
 
       # Hack to get a single character from the terminal
       if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
