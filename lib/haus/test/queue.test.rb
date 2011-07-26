@@ -368,6 +368,10 @@ describe Haus::Queue do
       File.exists?(@q.archive_path).must_equal false
     end
 
+    it 'should not modify the filesystem if options.noop is specified' do
+      q = Haus::Queue.new :noop => true, :quiet => true
+    end
+
     it 'should rollback changes on signals' do
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|

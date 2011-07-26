@@ -187,36 +187,40 @@ class Haus
           trap(sig) { raise "Caught signal SIG#{sig}" }
         end
 
-        opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
+        fopts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
         deletions.each do |dst|
           log 'DELETING', dst
-          rm_rf dst, opts.merge(:secure => true)
+          rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
-          basedir = File.dirname dst
-          srcpath = options.relative ? Pathname.new(src).relative_path_from(Pathname.new basedir) : src
+          srcpath = options.relative ? relpath(src, dst) : src
 
-          log 'LINKING', src, dst
-          rm_rf dst
-          mkdir_p basedir
+          log 'LINKING', srcpath, dst
+          rm_rf dst, fopts.merge(:secure => true)
+          mkdir_p File.dirname(dst), fopts
 
-          ln_s srcpath, dst, opts
+          ln_s srcpath, dst, fopts
         end
 
         copies.each do |s,d|
           log 'COPYING', s, d
-          rm_rf d
-          mkdir_p File.dirname(d)
-          cp_r s, d, opts.merge(:preserve => true)
+          rm_rf d, fopts.merge(:secure => true)
+          mkdir_p File.dirname(d), fopts
+          cp_r s, d, fopts.merge(:preserve => true)
         end
 
         modifications.each do |p,d|
           log 'MODIFYING', d
-          mkdir_p File.dirname(d)
-          touch d
-          p.call d
+          mkdir_p File.dirname(d), fopts
+          touch d, fopts
+          # No simple way to prevent FS access to the proc
+          if options.noop
+            log "Skipping modification procedure for #{d}"
+          else
+            p.call d
+          end
         end
 
       rescue StandardError => e
