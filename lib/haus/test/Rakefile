@@ -64,7 +64,7 @@ task :tmux do
     system *%W[tmux send-keys -t0 #{"rake19 test:watch\n"}]
     system *%W[tmux send-keys -t1 #{"rake18 test:watch\n"}]
     system *%W[tmux send-keys -t2 #{"rake186 test:watch\n"}]
-    system *%W[tmux send-keys -t3 #{"cd #{File.expand_path '../../..', __FILE__}\n"}]
+    system *%W[tmux send-keys -t3 #{"cd #{File.expand_path '../../../..', __FILE__}\n"}]
 
     system *%W[tmux select-pane -t3]
   end
