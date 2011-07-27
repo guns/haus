@@ -219,7 +219,9 @@ class Haus
       return nil if files.empty?
 
       Dir.chdir '/' do
-        if not system *(%W[tar zcf #{archive_path}] + files)
+        if system *(%W[tar zcf #{archive_path}] + files)
+          chmod 0600, archive_path
+        else
           raise "Archive to #{archive_path.inspect} failed"
         end
       end

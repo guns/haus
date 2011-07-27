@@ -541,6 +541,11 @@ describe Haus::Queue do
         FileUtils.rm_f q.archive_path
       end
     end
+
+    it 'should create a regular file with owner-only privileges' do
+      @q.archive
+      File.lstat(@q.archive_path).mode.must_equal 0100600
+    end
   end
 
   describe :restore do
