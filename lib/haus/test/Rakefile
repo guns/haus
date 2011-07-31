@@ -49,22 +49,24 @@ end
 
 desc 'Setup a four-pane development window in tmux'
 task :tmux do
+  require 'shellwords'
+
   if ENV['TMUX'].nil?
     warn '$TMUX not defined!'
   elsif %x(tmux list-panes).lines.count > 1
     warn 'More than one pane exists in this window!'
   else
     system *%W[tmux rename-window haus]
-    system *%W[tmux set-option default-path #{Dir.pwd}]
 
     system *%W[tmux split-window -d -h -p75]
     system *%W[tmux split-window -d -v -p33]
     system *%W[tmux split-window -d -v -p50]
 
-    system *%W[tmux send-keys -t0 #{"rake19 test:watch\n"}]
-    system *%W[tmux send-keys -t1 #{"rake18 test:watch\n"}]
-    system *%W[tmux send-keys -t2 #{"rake186 test:watch\n"}]
-    system *%W[tmux send-keys -t3 #{"cd #{File.expand_path '../../../..', __FILE__}\n"}]
+    test = Dir.pwd.shellescape
+    system *%W[tmux send-keys -t0 #{"cd #{test}; clear\nrake19 test:watch\n"}]
+    system *%W[tmux send-keys -t1 #{"cd #{test}; clear\nrake18 test:watch\n"}]
+    system *%W[tmux send-keys -t2 #{"cd #{test}; clear\nrake186 test:watch\n"}]
+    system *%W[tmux send-keys -t3 #{"cd #{File.join test, '../../..'}; clear\n"}]
 
     system *%W[tmux select-pane -t3]
   end
