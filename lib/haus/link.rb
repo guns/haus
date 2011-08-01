@@ -24,8 +24,8 @@ class Haus
     end
 
     def call args = []
-      enqueue
       queue.options = options
+      enqueue
       queue.execute
     end
   end

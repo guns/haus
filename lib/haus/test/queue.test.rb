@@ -92,8 +92,8 @@ describe Haus::Queue do
       before do
         # NOTE: We cannot pass a block (implicitly or explicitly) to a Proc in
         #       1.8.6, so we pass a Proc instead
-        @assertion = lambda do |prc|
-          q = Haus::Queue.new
+        @assertion = lambda do |prc, qopts|
+          q = Haus::Queue.new qopts || {}
           src, dst = $user.hausfile
           prc.call src, dst
           res = q.add_link src, dst
@@ -105,14 +105,26 @@ describe Haus::Queue do
       end
 
       it 'should push and refreeze @links when src does exist and dst does not point to src' do
-        @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }
+        @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }, nil
+      end
+
+      it 'should add existing links if relative/absolute prefs do not match' do
+        relpath = lambda { |src, dst| Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s }
+
+        @assertion.call lambda { |src, dst|
+          FileUtils.ln_sf relpath.call(src, dst), dst
+        }, nil
+
+        @assertion.call lambda { |src, dst|
+          FileUtils.ln_sf src, dst
+        }, { :relative => true }
       end
 
       it 'should remove the destination before linking' do
         @assertion.call lambda { |src, dst|
           FileUtils.mkdir_p File.join(dst, 'sparkle')
           FileUtils.touch File.join(dst, 'sparkle', 'pony')
-        }
+        }, nil
       end
     end
   end
