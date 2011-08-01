@@ -92,8 +92,8 @@ describe Haus::Queue do
       before do
         # NOTE: We cannot pass a block (implicitly or explicitly) to a Proc in
         #       1.8.6, so we pass a Proc instead
-        @assertion = lambda do |prc|
-          q = Haus::Queue.new
+        @assertion = lambda do |prc, qopts|
+          q = Haus::Queue.new qopts || {}
           src, dst = $user.hausfile
           prc.call src, dst
           res = q.add_link src, dst
@@ -105,14 +105,26 @@ describe Haus::Queue do
       end
 
       it 'should push and refreeze @links when src does exist and dst does not point to src' do
-        @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }
+        @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }, nil
+      end
+
+      it 'should add existing links if relative/absolute prefs do not match' do
+        relpath = lambda { |src, dst| Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s }
+
+        @assertion.call lambda { |src, dst|
+          FileUtils.ln_sf relpath.call(src, dst), dst
+        }, nil
+
+        @assertion.call lambda { |src, dst|
+          FileUtils.ln_sf src, dst
+        }, { :relative => true }
       end
 
       it 'should remove the destination before linking' do
         @assertion.call lambda { |src, dst|
           FileUtils.mkdir_p File.join(dst, 'sparkle')
           FileUtils.touch File.join(dst, 'sparkle', 'pony')
-        }
+        }, nil
       end
     end
   end
@@ -276,6 +288,10 @@ describe Haus::Queue do
       @q.targets(:overwrite).must_equal @targets.values_at(1,3)
     end
 
+    it 'should return all files that should be archived on :archive' do
+      @q.targets(:archive).sort.must_equal @targets.select { |f| File.exists? f }.sort
+    end
+
     it 'should be a complete list of targets with no overlapping entries' do
       [:delete, :create, :modify, :overwrite].inject [] do |a,m|
         a + @q.targets(m)
@@ -366,6 +382,10 @@ describe Haus::Queue do
       @q.options = { :noop => true, :quiet => true }
       @q.execute!
       File.exists?(@q.archive_path).must_equal false
+    end
+
+    it 'should not modify the filesystem if options.noop is specified' do
+      q = Haus::Queue.new :noop => true, :quiet => true
     end
 
     it 'should rollback changes on signals' do
@@ -533,6 +553,11 @@ describe Haus::Queue do
         FileUtils.rm_f q.archive_path
       end
     end
+
+    it 'should create a regular file with owner-only privileges' do
+      @q.archive
+      File.lstat(@q.archive_path).mode.must_equal 0100600
+    end
   end
 
   describe :restore do
@@ -630,6 +655,36 @@ describe Haus::Queue do
         @q.options = { :quiet => true }
         capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
       end
+    end
+
+    describe :relpath do
+      it 'should return a relative path to a source' do
+        @q.send(:relpath, '/magic/pony/ride', '/magic/sparkle/action').must_equal '../pony/ride'
+      end
+    end
+
+    describe :linked? do
+      it 'should compare src to the link source' do
+        src, dst = $user.hausfile
+        FileUtils.ln_s '/etc/passwd', dst
+        @q.send(:linked?, src, dst).must_equal false
+        FileUtils.rm_f dst
+        FileUtils.ln_s src, dst
+        @q.send(:linked?, src, dst).must_equal true
+      end
+
+      it 'should return false if the link source style differs from options.relative' do
+        src, dst = $user.hausfile
+        FileUtils.ln_s src, dst
+        @q.options = { :relative => true }
+        @q.send(:linked?, src, dst).must_equal false
+        FileUtils.rm_f dst
+        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s, dst
+        @q.send(:linked?, src, dst).must_equal true
+      end
+    end
+
+    describe :duplicates? do
     end
   end
 end

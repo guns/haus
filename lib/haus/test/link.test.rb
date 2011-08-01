@@ -42,7 +42,27 @@ describe Haus::Link do
   end
 
   describe :call do
+    it 'should pass options to queue before enqueueing files' do
+      @link.instance_eval do
+        def enqueue *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
+      @link.options.cow = 'MOOCOW'
+      @link.call
+      @link.queue.options.cow.must_equal 'MOOCOW'
+    end
+
     it 'should pass options to queue before execution' do
+      @link.instance_eval do
+        def execute *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
       @link.options.cow = 'MOOCOW'
       @link.call
       @link.queue.options.cow.must_equal 'MOOCOW'

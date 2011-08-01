@@ -12,7 +12,7 @@ class Haus
   class Options < OptionParser
     def initialize
       @ostruct = OpenStruct.new
-      @ostruct.path = File.expand_path '../../../../../..', __FILE__ # HAUS_PATH
+      @ostruct.path = File.expand_path '../../..', __FILE__ # HAUS_PATH
       super
     end
 

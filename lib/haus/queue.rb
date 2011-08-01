@@ -48,7 +48,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless File.exists? src
-      return nil if File.symlink? dst and File.expand_path(File.readlink dst) == src
+      return nil if File.symlink? dst and linked? src, dst
 
       @links = (links.dup << [src, dst]).freeze
     end
@@ -109,48 +109,16 @@ class Haus
       when :create    then (targets - targets(:delete)).reject { |f| File.exists? f }
       # Modifications to files that already exist
       when :modify    then modifications.map { |s,d| d } - targets(:create)
-      # Left over: extant files that will be wholly replaced by links and copies
+      # Extant files that will be wholly replaced by links and copies
       when :overwrite then targets - targets(:create) - targets(:modify) - targets(:delete)
+      # Extant targets that should be archived
+      when :archive   then targets - targets(:create)
       else raise ArgumentError
       end
     end
 
     def hash
       (links + copies + modifications + deletions).hash
-    end
-
-    # Compare two files:
-    # Returns false if both files have the same inode
-    # Returns false if files are of different types
-    # Returns false if both are symlinks and have different sources
-    # Returns false if both are directories and have different contents
-    # Returns false if both are regular files and have different bits
-    # Returns true otherwise
-    def duplicates? a, b
-      astat, bstat = File.lstat(a), File.lstat(b)
-
-      return false if astat.ino == bstat.ino
-      return false if astat.ftype != bstat.ftype
-
-      case astat.ftype
-      when 'link'
-        File.readlink(a) == File.readlink(b)
-      when 'directory'
-        # Dir::entries just calls readdir(3), so we filter the dot directories
-        as, bs = [a, b].map do |dir|
-          Dir.entries(dir).sort.reject { |f| f == '.' || f == '..' }.map { |f| File.join dir, f }
-        end
-
-        as.zip(bs).each do |a1, b1|
-          # File stream must match in name as well as content
-          return false if File.basename(a1) != File.basename(b1)
-          return false if not duplicates? a1, b1
-        end
-
-        true
-      else
-        identical? a, b
-      end
     end
 
     # Remove jobs by destination path; boolean return
@@ -187,36 +155,40 @@ class Haus
           trap(sig) { raise "Caught signal SIG#{sig}" }
         end
 
-        opts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
+        fopts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
 
         deletions.each do |dst|
           log 'DELETING', dst
-          rm_rf dst, opts.merge(:secure => true)
+          rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
-          basedir = File.dirname dst
-          srcpath = options.relative ? Pathname.new(src).relative_path_from(Pathname.new basedir) : src
+          srcpath = options.relative ? relpath(src, dst) : src
 
-          log 'LINKING', src, dst
-          rm_rf dst
-          mkdir_p basedir
+          log 'LINKING', srcpath, dst
+          rm_rf dst, fopts.merge(:secure => true)
+          mkdir_p File.dirname(dst), fopts
 
-          ln_s srcpath, dst, opts
+          ln_s srcpath, dst, fopts
         end
 
         copies.each do |s,d|
           log 'COPYING', s, d
-          rm_rf d
-          mkdir_p File.dirname(d)
-          cp_r s, d, opts.merge(:preserve => true)
+          rm_rf d, fopts.merge(:secure => true)
+          mkdir_p File.dirname(d), fopts
+          cp_r s, d, fopts.merge(:preserve => true)
         end
 
         modifications.each do |p,d|
           log 'MODIFYING', d
-          mkdir_p File.dirname(d)
-          touch d
-          p.call d
+          mkdir_p File.dirname(d), fopts
+          touch d, fopts
+          # No simple way to prevent FS access to the proc
+          if options.noop
+            log "Skipping modification procedure for #{d}"
+          else
+            p.call d
+          end
         end
 
       rescue StandardError => e
@@ -243,11 +215,13 @@ class Haus
         raise "#{cmd.inspect} not found" unless system "command -v #{cmd} &>/dev/null"
       end
 
-      files = (targets - targets(:create)).map { |f| f.sub %r{\A/}, '' }
+      files = targets(:archive).map { |f| f.sub %r{\A/}, '' }
       return nil if files.empty?
 
       Dir.chdir '/' do
-        if not system *(%W[tar zcf #{archive_path}] + files)
+        if system *(%W[tar zcf #{archive_path}] + files)
+          chmod 0600, archive_path
+        else
           raise "Archive to #{archive_path.inspect} failed"
         end
       end
@@ -278,8 +252,11 @@ class Haus
         puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
       end
 
-      puts "\nAll original links and files will be archived to:\n    #{archive_path}"
-      print 'Permission to continue? [Y/n] '
+      unless targets(:archive).empty?
+        puts "\nAll original links and files will be archived to:\n    #{archive_path}"
+      end
+
+      print "\nPermission to continue? [Y/n] "
 
       # Hack to get a single character from the terminal
       if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
@@ -309,6 +286,48 @@ class Haus
 
     def logwarn msg
       puts "!! #{msg}" unless options.quiet
+    end
+
+    def relpath src, dst
+      Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s
+    end
+
+    def linked? src, dst
+      File.readlink(dst) == (options.relative ? relpath(src, dst) : src)
+    end
+
+    # Compare two files:
+    # Returns false if both files have the same inode
+    # Returns false if files are of different types
+    # Returns false if both are symlinks and have different sources
+    # Returns false if both are directories and have different contents
+    # Returns false if both are regular files and have different bits
+    # Returns true otherwise
+    def duplicates? a, b
+      astat, bstat = File.lstat(a), File.lstat(b)
+
+      return false if astat.ino == bstat.ino
+      return false if astat.ftype != bstat.ftype
+
+      case astat.ftype
+      when 'link'
+        File.readlink(a) == File.readlink(b)
+      when 'directory'
+        # Dir::entries just calls readdir(3), so we filter the dot directories
+        as, bs = [a, b].map do |dir|
+          Dir.entries(dir).sort.reject { |f| f == '.' || f == '..' }.map { |f| File.join dir, f }
+        end
+
+        as.zip(bs).each do |a1, b1|
+          # File stream must match in name as well as content
+          return false if File.basename(a1) != File.basename(b1)
+          return false if not duplicates? a1, b1
+        end
+
+        true
+      else
+        identical? a, b
+      end
     end
   end
 end
