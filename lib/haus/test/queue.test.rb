@@ -615,13 +615,13 @@ describe Haus::Queue do
 
     it 'should request user input from $stdin when from a terminal' do
       # Would be nice to thread this loop
-      %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n].each do |str|
+      %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n \r \r\n].each do |str|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do
             $stdin.write str
             $stdin.rewind
           end
-          @q.tty_confirm?.must_equal !(str =~ /\An/i)
+          @q.tty_confirm?.must_equal !!(str =~ /\A(y|\r|\n)/i)
         end
       end
     end

@@ -7,20 +7,23 @@
         * -=-=-=-=-=-=-=-=-=-=- *
 
 
-### TODO
+### FEATURES
 
 - ✓ Ruby 1.8.6+ compatibility
 - ✓ haus link
 - ✓ haus copy
-- No answer should be affirmative in Queue#tty_confirm?
-- Proper handling of non-regular files (sources and destinations)
-- umask 0700 for sensitve files?
-- Nested dotfiles (%dir)
 - haus clean
 - haus ssh ls
 - haus ssh add
 - haus ssh rm
 - haus ssh clean
+
+
+### TODO
+
+- Proper handling of non-regular files (sources and destinations)
+- umask 0700 for sensitve files?
+- Nested dotfiles (%dir)
 
 
 ### LICENSE

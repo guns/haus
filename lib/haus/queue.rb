@@ -263,13 +263,13 @@ class Haus
         begin
           system 'stty raw -echo'
           puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
-          !!(c =~ /y|\n/i)
+          !!(c =~ /y|\r|\n/i)
         ensure
           system 'stty -raw echo'
           puts
         end
       else
-        !!($stdin.readline =~ /\A(\n|y\n|ye\n|yes\n)\z/i) rescue false
+        !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
       end
     end
 
