@@ -21,10 +21,9 @@ class Haus
       Usage: haus [--path PATH] COMMAND [command-options]
 
       Options:
-          -p, --path /path/to/your/haus
+          -p, --path #{options.path}
                   Override the location of HAUS_PATH, which is otherwise
                   determined through the location of this script.
-                  Default: #{options.path}
 
       Commands:
       #{Task.summary}
