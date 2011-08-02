@@ -106,9 +106,7 @@ class Haus
           Options:
         }.gsub /^ +/, ''
 
-        opt.on '-u', '--users a,b,c', Array,
-               'Apply changes to given users instead of the current user;',
-               'users can be specified as usernames or UIDs' do |arg|
+        opt.on '-u', '--users a,b,c', Array, 'Usernames or UIDs; current user by default' do |arg|
           # Cast before sending
           opt.users = arg.map { |a| a =~ /\A\d+\z/ ? a.to_i : a.to_s }
         end
