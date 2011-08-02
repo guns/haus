@@ -169,7 +169,6 @@ describe Haus::Task do
       runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true
       runoptions.call(%w[--noop]).noop.must_equal true
-      runoptions.call(%w[--verbose]).verbose.must_equal true
       runoptions.call(%w[--quiet]).quiet.must_equal true
       capture_fork_io { Haus::Noop.new(%w[--help]).run }.join.must_equal Haus::Noop.new.options.to_s
     end

@@ -39,6 +39,7 @@ class Haus
         opt.path = arg
       end
 
+      # Suppress regular OptionParser help output
       opt.on '-h', '--help' do
         puts help; exit
       end

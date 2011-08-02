@@ -155,7 +155,7 @@ class Haus
           trap(sig) { raise "Caught signal SIG#{sig}" }
         end
 
-        fopts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
+        fopts = { :noop => options.noop }
 
         deletions.each do |dst|
           log 'DELETING', dst
@@ -232,7 +232,7 @@ class Haus
     def restore
       Dir.chdir '/' do
         # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
-        v = (options.verbose and not options.quiet) ? 'v' : ''
+        v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
       end
     end
