@@ -5,7 +5,7 @@ require 'haus/task'
 class Haus
   class Copy < Task
     desc 'Copy dotfiles'
-    help "#{Options.new.path}/etc/*"
+    help "Copy dotfiles from #{Options.new.path}/etc/*"
 
     def enqueue
       users.each do |user|
