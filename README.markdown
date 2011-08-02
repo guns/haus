@@ -13,6 +13,7 @@
 - ✓ haus link
 - ✓ haus copy
 - haus clean
+- haus restore
 - haus ssh ls
 - haus ssh add
 - haus ssh rm
@@ -22,8 +23,9 @@
 ### TODO
 
 - Proper handling of non-regular files (sources and destinations)
-- umask 0700 for sensitve files?
+- umask 0700 for sensitive files?
 - Nested dotfiles (%dir)
+- Recovery restore also deletes created targets
 
 
 ### LICENSE
