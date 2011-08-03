@@ -9,20 +9,21 @@
 
 ### FEATURES
 
-- ✓ Ruby 1.8.6+ compatibility
-- ✓ haus link
-- ✓ haus copy
-- haus clean
-- haus restore
-- haus ssh ls
-- haus ssh add
-- haus ssh rm
-- haus ssh clean
+ - ✓ Ruby 1.8.6+ compatibility
+ - ✓ haus link
+ - ✓ haus copy
+ - haus clean
+ - haus restore
+ - haus ssh ls
+ - haus ssh add
+ - haus ssh rm
+ - haus ssh clean
 
 
 ### TODO
 
-- Nested dotfiles (%dir)
+ - Nested dotfiles (%dir)
+ - Better `--help` documentation
 
 
 ### LICENSE
