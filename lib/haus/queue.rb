@@ -147,7 +147,7 @@ class Haus
       return nil if executed?
       @executed = true
 
-      archive_successful = archive unless options.noop
+      did_archive = archive unless options.noop
 
       begin
         # Rollback on signals
@@ -192,7 +192,7 @@ class Haus
         end
 
       rescue StandardError => e
-        if archive_successful
+        if did_archive
           logwarn "Rolling back to archive #{archive_path.inspect}"
           restore
         end
@@ -293,7 +293,7 @@ class Haus
     end
 
     def linked? src, dst
-      File.readlink(dst) == (options.relative ? relpath(src, dst) : src)
+      (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
     end
 
     # Compare two files:
