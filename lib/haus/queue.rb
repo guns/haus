@@ -155,7 +155,7 @@ class Haus
           trap(sig) { raise "Caught signal SIG#{sig}" }
         end
 
-        fopts = { :noop => options.noop, :verbose => options.quiet ? false : options.verbose }
+        fopts = { :noop => options.noop }
 
         deletions.each do |dst|
           log 'DELETING', dst
@@ -231,20 +231,20 @@ class Haus
 
     def restore
       Dir.chdir '/' do
-        # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
-        v = (options.verbose and not options.quiet) ? 'v' : ''
+        # NOTE: `tar xp` is not POSIX; we'll see how that shakes out
+        v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
       end
     end
 
     # Ask user for confirmation.
-    # Returns true without prompting if the `force' or `noop' options are set.
+    # Returns true without prompting if the `force` or `noop` options are set.
     # Returns true without prompting if no jobs are queued.
+    # Returns false without prompting if the `quiet` option is set
     # Returns false without prompting if input is not a tty.
     def tty_confirm?
-      return true if options.force or options.noop
-      return true if targets.empty?
-      return false if not $stdin.tty?
+      return true if options.force or options.noop or targets.empty?
+      return false if options.quiet or not $stdin.tty?
 
       [:create, :modify, :overwrite, :delete].each do |action|
         fs = targets action

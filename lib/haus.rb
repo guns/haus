@@ -28,7 +28,7 @@ class Haus
       Commands:
       #{Task.summary}
 
-      See `haus COMMAND --help' for more information on each command\
+      See `haus COMMAND --help` for more information on each command\
     }.gsub /^ {6}/, ''
   end
 
@@ -39,6 +39,7 @@ class Haus
         opt.path = arg
       end
 
+      # Suppress regular OptionParser help output
       opt.on '-h', '--help' do
         puts help; exit
       end

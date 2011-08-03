@@ -613,8 +613,39 @@ describe Haus::Queue do
       end
     end
 
+    it 'should return false when options.quiet is set' do
+      with_confirmation = lambda do |prc|
+        with_filetty do
+          $stdout.expect 'continue? [Y/n] ', 1 do
+            $stdin.write "Y\n"
+            $stdin.rewind
+          end
+          prc.call
+        end
+      end
+
+      with_confirmation.call lambda { @q.options = {};                 @q.tty_confirm?.must_equal true }
+      with_confirmation.call lambda { @q.options = { :quiet => true }; @q.tty_confirm?.must_equal false }
+    end
+
+    it 'should return false when $stdin is not a tty' do
+      with_filetty do
+        $stdout.expect 'continue? [Y/n] ', 1 do
+          $stdin.write "Y\n"
+          $stdin.rewind
+        end
+        @q.options = {}
+        @q.tty_confirm?.must_equal true
+        $stdin.instance_eval do
+          def tty?; false end
+          def isatty?; false end
+        end
+        @q.tty_confirm?.must_equal false
+      end
+    end
+
     it 'should request user input from $stdin when from a terminal' do
-      # Would be nice to thread this loop
+      @q.options = {}
       %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n \r \r\n].each do |str|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do

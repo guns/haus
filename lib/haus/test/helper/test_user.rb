@@ -48,7 +48,7 @@ class Haus
         FAILURE:
         FAILURE: This test suite requires a real Unix user account with a home
         FAILURE: directory writable by the current user. The name of the testing user
-        FAILURE: is `test' by default, and can be changed by setting ENV['TEST_USER']
+        FAILURE: is `test` by default, and can be changed by setting ENV['TEST_USER']
         FAILURE:
         FAILURE: All the files in the test user's home directory are at risk of being
         FAILURE: modified or destroyed.
