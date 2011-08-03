@@ -184,7 +184,7 @@ class Haus
           log 'MODIFYING', d
           mkdir_p File.dirname(d), fopts
           touch d, fopts
-          # No simple way to prevent FS access to the proc
+          # No simple way to deny FS access to the proc
           if options.noop
             log "Skipping modification procedure for #{d}"
           else
