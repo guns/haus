@@ -147,9 +147,10 @@ class Haus
       return nil if executed?
       @executed = true
 
-      archive_successful = archive unless options.noop
-
       begin
+        did_archive = archive unless options.noop
+        old_umask = File.umask 0077
+
         # Rollback on signals
         %w[INT TERM QUIT].each do |sig|
           trap(sig) { raise "Caught signal SIG#{sig}" }
@@ -176,14 +177,14 @@ class Haus
           log 'COPYING', s, d
           rm_rf d, fopts.merge(:secure => true)
           mkdir_p File.dirname(d), fopts
-          cp_r s, d, fopts.merge(:preserve => true)
+          cp_r s, d, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
         modifications.each do |p,d|
           log 'MODIFYING', d
           mkdir_p File.dirname(d), fopts
           touch d, fopts
-          # No simple way to prevent FS access to the proc
+          # No simple way to deny FS access to the proc
           if options.noop
             log "Skipping modification procedure for #{d}"
           else
@@ -192,13 +193,16 @@ class Haus
         end
 
       rescue StandardError => e
-        if archive_successful
+        if did_archive
           logwarn "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
 
       ensure
+        # Restore original umask
+        File.umask old_umask
+
         # Restore default signal handlers
         %w[INT TERM QUIT].each do |sig|
           trap sig, 'DEFAULT'
@@ -293,7 +297,7 @@ class Haus
     end
 
     def linked? src, dst
-      File.readlink(dst) == (options.relative ? relpath(src, dst) : src)
+      (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
     end
 
     # Compare two files:
