@@ -231,14 +231,14 @@ class Haus
 
     def restore
       Dir.chdir '/' do
-        # NOTE: `tar xp' is not POSIX; we'll see how that shakes out
+        # NOTE: `tar xp` is not POSIX; we'll see how that shakes out
         v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
       end
     end
 
     # Ask user for confirmation.
-    # Returns true without prompting if the `force' or `noop' options are set.
+    # Returns true without prompting if the `force` or `noop` options are set.
     # Returns true without prompting if no jobs are queued.
     # Returns false without prompting if the `quiet` option is set
     # Returns false without prompting if input is not a tty.
