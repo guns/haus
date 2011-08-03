@@ -177,7 +177,7 @@ class Haus
           log 'COPYING', s, d
           rm_rf d, fopts.merge(:secure => true)
           mkdir_p File.dirname(d), fopts
-          cp_r s, d, fopts.merge(:preserve => true)
+          cp_r s, d, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
         modifications.each do |p,d|

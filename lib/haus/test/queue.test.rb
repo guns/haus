@@ -466,6 +466,16 @@ describe Haus::Queue do
       [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
     end
 
+    it 'should copy links, not their sources' do
+      src, dst = $user.hausfile :link
+      q = Haus::Queue.new :quiet => true, :force => true
+      File.lstat(src).ftype.must_equal 'link'
+      q.add_copy src, dst
+      q.copies.must_equal [[src, dst]]
+      q.execute!
+      File.lstat(dst).ftype.must_equal 'link'
+    end
+
     it 'should modify files' do
       [6,7].each { |n| File.open(@targets[n], 'w') { |f| f.write 'CREATED' } }
       @q.execute!
