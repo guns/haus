@@ -147,9 +147,10 @@ class Haus
       return nil if executed?
       @executed = true
 
-      did_archive = archive unless options.noop
-
       begin
+        did_archive = archive unless options.noop
+        old_umask = File.umask 0077
+
         # Rollback on signals
         %w[INT TERM QUIT].each do |sig|
           trap(sig) { raise "Caught signal SIG#{sig}" }
@@ -199,6 +200,9 @@ class Haus
         raise e
 
       ensure
+        # Restore original umask
+        File.umask old_umask
+
         # Restore default signal handlers
         %w[INT TERM QUIT].each do |sig|
           trap sig, 'DEFAULT'

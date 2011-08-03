@@ -496,6 +496,14 @@ describe Haus::Queue do
         FileUtils.rm_rf targets.map { |f| File.dirname f }
       end
     end
+
+    it 'should create files with owner-only privileges, but should not change the process umask' do
+      @q.execute!
+      @targets.values_at(0..3, 6..9).each do |f|
+        File.lstat(f).mode.to_s(8)[/.{2}\z/].must_equal '00'
+      end
+      File.umask.to_s(8)[/.{2}\z/].wont_equal '77'
+    end
   end
 
   describe :executed? do
