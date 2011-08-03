@@ -33,15 +33,15 @@ describe Haus::Copy do
     end
   end
 
-  describe :call do
+  describe :run do
     it 'should copy all sources as dotfiles' do
-      user = Haus::TestUser[:copy_call]
+      user = Haus::TestUser[:copy_run]
       jobs = [:file, :dir].map { |m| user.hausfile m }
       jobs.each { |s,d| File.exists?(d).must_equal false }
 
       @copy.options.path = user.haus
       @copy.options.users = [user.name]
-      @copy.call
+      @copy.run
 
       s0, d0 = jobs[0]
       FileUtils.cmp(s0, d0).must_equal true

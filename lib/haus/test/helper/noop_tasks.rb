@@ -7,20 +7,14 @@ class Haus
   class Noop2 < Task; end
 
   class NoopTrue < Task
-    def call args = []
+    def run
       true
     end
   end
 
   class NoopFalse < Task
-    def call args = []
+    def run
       false
-    end
-  end
-
-  class NoopSelf < Task
-    def call args = []
-      self
     end
   end
 end

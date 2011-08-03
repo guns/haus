@@ -50,10 +50,12 @@ describe Haus do
     end
 
     it 'should pass options.path to the task' do
-      t1 = Haus.new(%w[noopself]).run
-      t1.options.path.must_equal Haus::Options.new.path
-      t2 = Haus.new(%w[--path /opt/testhaus noopself]).run
-      t2.options.path.must_equal '/opt/testhaus'
+      h1 = Haus.new %w[noop]
+      h1.run
+      h1.options.path.must_equal Haus::Options.new.path
+      h2 = Haus.new %w[--path /opt/testhaus noop]
+      h2.run
+      h2.options.path.must_equal '/opt/testhaus'
     end
 
     it 'should parse options in order' do

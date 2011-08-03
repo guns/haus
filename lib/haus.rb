@@ -7,9 +7,7 @@ require 'haus/link'
 require 'haus/copy'
 
 #
-# CLI interface, intended to be run as Haus.new(ARGV).run
-#
-# Library interface is exposed through instances of Haus::Task subclasses
+# Command line interface, intended to be run as Haus.new(ARGV).run
 #
 class Haus
   def initialize args = []

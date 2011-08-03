@@ -23,7 +23,9 @@ class Haus
       end
     end
 
-    def call args = []
+    def run
+      args = super
+      abort options.to_s if args.size > 0
       queue.options = options
       enqueue
       queue.execute

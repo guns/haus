@@ -153,34 +153,10 @@ describe Haus::Task do
     end
   end
 
-  describe :call do
-    it 'should accept an optional argument' do
-      m = Haus::Task.new.method :call
-      m.arity.must_equal -1
-    end
-  end
-
   describe :run do
-    it 'should call Haus::Task#call' do
-      h = Haus::Noop.new
-      h.instance_eval do
-        def call args = []
-          @call_method_called = true
-        end
-      end
-      h.run
-      h.instance_variable_get(:@call_method_called).must_equal true
-    end
-
-    it 'should pass Haus::Task#call the remaining ARGV after options parsing' do
+    it 'should return the remaining ARGV after options parsing' do
       h = Haus::Noop.new %w[--force --quiet magic pony]
-      h.instance_eval do
-        def call args = []
-          @call_args = args
-        end
-      end
-      h.run
-      h.instance_variable_get(:@call_args).must_equal %w[magic pony]
+      h.run.must_equal %w[magic pony]
     end
   end
 end
