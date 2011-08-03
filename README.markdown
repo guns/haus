@@ -22,7 +22,6 @@
 
 ### TODO
 
-- Proper handling of non-regular files (sources and destinations)
 - Nested dotfiles (%dir)
 
 
