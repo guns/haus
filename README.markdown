@@ -25,7 +25,6 @@
 - Proper handling of non-regular files (sources and destinations)
 - umask 0700 for sensitive files?
 - Nested dotfiles (%dir)
-- Recovery restore also deletes created targets
 
 
 ### LICENSE
