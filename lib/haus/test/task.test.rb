@@ -63,27 +63,6 @@ describe Haus::Task do
     end
   end
 
-  describe :TaskOptions do
-    before do
-      @opt = Haus::Task::TaskOptions.new
-    end
-
-    it 'should be a subclass of Haus::Options' do
-      @opt.class.ancestors[1].must_equal Haus::Options
-    end
-
-    describe :users= do
-      it 'should set the users option' do
-        users     = [0, Etc.getlogin]
-        haususers = users.map { |u| Haus::User.new u }
-
-        @opt.users = users
-        @opt.instance_variable_get(:@ostruct).users.must_equal haususers
-        @opt.users.must_equal haususers
-      end
-    end
-  end
-
   describe :initialize do
     it 'should accept an optional arguments Array' do
       Haus::Noop.method(:initialize).arity.must_equal -1
@@ -146,7 +125,7 @@ describe Haus::Task do
 
   describe :options do
     it 'should be an instance of Haus::Task::TaskOptions' do
-      Haus::Noop.new.options.must_be_kind_of Haus::Task::TaskOptions
+      Haus::Noop.new.options.must_be_kind_of Haus::TaskOptions
     end
 
     it 'should have its own help message' do

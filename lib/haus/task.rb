@@ -1,8 +1,7 @@
 # -*- encoding: utf-8 -*-
 
-require 'haus/options'
+require 'haus/task_options'
 require 'haus/queue'
-require 'haus/user'
 
 class Haus
   #
@@ -54,18 +53,6 @@ class Haus
       end
     end
 
-    class TaskOptions < Options
-      def users= ary
-        users = ary.map { |a| User.new a }
-        users.each do |u|
-          if not File.directory? u.dir
-            raise "#{u.name}'s home directory, #{u.dir.inspect}, does not exist"
-          end
-        end
-        super users
-      end
-    end
-
     attr_reader :queue
 
     def initialize args = []
@@ -93,7 +80,6 @@ class Haus
       Dir["#{etc}/*"].map { |f| File.expand_path f }
     end
 
-    # Common options for all tasks
     def options
       @options ||= TaskOptions.new do |opt|
         opt.users = [Process.euid] # Default value for users array
