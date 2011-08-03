@@ -34,6 +34,38 @@ describe Haus::Copy do
   end
 
   describe :run do
+    it 'should pass options to queue before enqueueing files' do
+      @copy.instance_eval do
+        def enqueue *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
+      @copy.options.cow = 'MOOCOW'
+      @copy.run
+      @copy.queue.options.cow.must_equal 'MOOCOW'
+    end
+
+    it 'should pass options to queue before execution' do
+      @copy.instance_eval do
+        def execute *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
+      @copy.options.cow = 'MOOCOW'
+      @copy.run
+      @copy.queue.options.cow.must_equal 'MOOCOW'
+    end
+
+    it 'should execute the queue' do
+      @copy.queue.executed?.must_equal nil
+      @copy.run
+      @copy.queue.executed?.must_equal true
+    end
+
     it 'should copy all sources as dotfiles' do
       user = Haus::TestUser[:copy_run]
       jobs = [:file, :dir].map { |m| user.hausfile m }

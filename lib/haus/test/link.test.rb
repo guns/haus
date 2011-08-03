@@ -82,6 +82,7 @@ describe Haus::Link do
       @link.options.path = user.haus
       @link.options.users = [user.name]
       @link.run
+
       jobs.values.each do |f|
         # Ruby 1.9 has Hash#key
         File.readlink(f).must_equal jobs.find { |s,d| d == f }.first
