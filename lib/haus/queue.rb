@@ -240,11 +240,11 @@ class Haus
     # Ask user for confirmation.
     # Returns true without prompting if the `force' or `noop' options are set.
     # Returns true without prompting if no jobs are queued.
+    # Returns false without prompting if the `quiet` option is set
     # Returns false without prompting if input is not a tty.
     def tty_confirm?
-      return true if options.force or options.noop
-      return true if targets.empty?
-      return false if not $stdin.tty?
+      return true if options.force or options.noop or targets.empty?
+      return false if options.quiet or not $stdin.tty?
 
       [:create, :modify, :overwrite, :delete].each do |action|
         fs = targets action
