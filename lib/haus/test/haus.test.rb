@@ -55,5 +55,11 @@ describe Haus do
       t2 = Haus.new(%w[--path /opt/testhaus noopself]).run
       t2.options.path.must_equal '/opt/testhaus'
     end
+
+    it 'should parse options in order' do
+      help = Haus.new.help
+      capture_fork_io { Haus.new(%w[--help link]).run }.join.chomp.must_equal help
+      capture_fork_io { Haus.new(%w[link --help]).run }.join.chomp.wont_equal help
+    end
   end
 end
