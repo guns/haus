@@ -6,9 +6,15 @@ class Haus
   class Noop < Task; end
   class Noop2 < Task; end
 
-  class NoopSelf < Task
-    def call args = []
-      self
+  class NoopTrue < Task
+    def run
+      true
+    end
+  end
+
+  class NoopNil < Task
+    def run
+      nil
     end
   end
 end

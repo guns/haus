@@ -33,15 +33,47 @@ describe Haus::Copy do
     end
   end
 
-  describe :call do
+  describe :run do
+    it 'should pass options to queue before enqueueing files' do
+      @copy.instance_eval do
+        def enqueue *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
+      @copy.options.cow = 'MOOCOW'
+      @copy.run
+      @copy.queue.options.cow.must_equal 'MOOCOW'
+    end
+
+    it 'should pass options to queue before execution' do
+      @copy.instance_eval do
+        def execute *args
+          queue.options.cow.must_equal 'MOOCOW'
+          super
+        end
+      end
+
+      @copy.options.cow = 'MOOCOW'
+      @copy.run
+      @copy.queue.options.cow.must_equal 'MOOCOW'
+    end
+
+    it 'should execute the queue' do
+      @copy.queue.executed?.must_equal nil
+      @copy.run
+      @copy.queue.executed?.must_equal true
+    end
+
     it 'should copy all sources as dotfiles' do
-      user = Haus::TestUser[:copy_call]
+      user = Haus::TestUser[:copy_run]
       jobs = [:file, :dir].map { |m| user.hausfile m }
       jobs.each { |s,d| File.exists?(d).must_equal false }
 
       @copy.options.path = user.haus
       @copy.options.users = [user.name]
-      @copy.call
+      @copy.run
 
       s0, d0 = jobs[0]
       FileUtils.cmp(s0, d0).must_equal true
@@ -49,6 +81,14 @@ describe Haus::Copy do
       Dir[s1 + '/*'].zip(Dir[d1 + '/*']).each do |s,d|
         FileUtils.cmp(s,d).must_equal true
       end
+    end
+
+    it 'should return true or nil' do
+      @copy.options.quiet = true
+      @copy.options.force = true
+      @copy.run.must_equal true
+      @copy.options.force = false
+      @copy.run.must_equal nil
     end
   end
 end

@@ -7,8 +7,8 @@ class Haus
   #
   # Superclass for all Haus commands.
   #
-  # Subclasses must define Task#call and should call Task::desc and
-  # Task::help in the class definition.
+  # Subclasses must define Task#run and should call Task::desc and Task::help in
+  # the class definition.
   #
   # The Options class can be extended via Options#tap
   #
@@ -22,9 +22,7 @@ class Haus
   #   require 'haus/link'
   #   h = Haus::Link.new
   #   h.options.noop = true
-  #   h.call
-  #
-  # NOTE: Task#call does not parse arguments passed to Task#initialize
+  #   h.run
   #
   class Task
     class << self
@@ -111,13 +109,9 @@ class Haus
       end
     end
 
-    # Empty method for completeness
-    def call args = []
-    end
-
-    # Command line interface; ruby libraries should directly call Task#call
+    # Subclasses should run super, which returns any non-option arguments
     def run
-      call options.parse(@args)
+      options.parse @args
     end
   end
 end

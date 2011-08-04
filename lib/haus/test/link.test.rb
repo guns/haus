@@ -41,7 +41,7 @@ describe Haus::Link do
     end
   end
 
-  describe :call do
+  describe :run do
     it 'should pass options to queue before enqueueing files' do
       @link.instance_eval do
         def enqueue *args
@@ -51,7 +51,7 @@ describe Haus::Link do
       end
 
       @link.options.cow = 'MOOCOW'
-      @link.call
+      @link.run
       @link.queue.options.cow.must_equal 'MOOCOW'
     end
 
@@ -64,28 +64,37 @@ describe Haus::Link do
       end
 
       @link.options.cow = 'MOOCOW'
-      @link.call
+      @link.run
       @link.queue.options.cow.must_equal 'MOOCOW'
     end
 
     it 'should execute the queue' do
       @link.queue.executed?.must_equal nil
-      @link.call
+      @link.run
       @link.queue.executed?.must_equal true
     end
 
     it 'should link all sources as dotfiles' do
-      user = Haus::TestUser[:link_call]
+      user = Haus::TestUser[:link_run]
       jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge Hash[*user.hausfile(m)] } # Ruby 1.8.6
       jobs.values.each { |f| File.exists?(f).must_equal false }
 
       @link.options.path = user.haus
       @link.options.users = [user.name]
-      @link.call
+      @link.run
+
       jobs.values.each do |f|
         # Ruby 1.9 has Hash#key
         File.readlink(f).must_equal jobs.find { |s,d| d == f }.first
       end
+    end
+
+    it 'should return true or nil' do
+      @link.options.quiet = true
+      @link.options.force = true
+      @link.run.must_equal true
+      @link.options.force = false
+      @link.run.must_equal nil
     end
   end
 end
