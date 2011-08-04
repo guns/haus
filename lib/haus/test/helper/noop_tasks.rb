@@ -12,9 +12,9 @@ class Haus
     end
   end
 
-  class NoopFalse < Task
+  class NoopNil < Task
     def run
-      false
+      nil
     end
   end
 end

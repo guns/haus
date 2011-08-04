@@ -64,9 +64,9 @@ describe Haus do
       capture_fork_io { Haus.new(%w[link --help]).run }.join.chomp.wont_equal help
     end
 
-    it 'should return a boolean value' do
-      capture_fork_io { print Haus.new(%w[nooptrue]).run.to_s }.join.must_equal 'true'
-      capture_fork_io { print Haus.new(%w[noopfalse]).run.to_s }.join.must_equal 'false'
+    it 'should return true or nil' do
+      capture_fork_io { print Haus.new(%w[nooptrue]).run.inspect }.join.must_equal 'true'
+      capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.join.must_equal 'nil'
     end
   end
 end

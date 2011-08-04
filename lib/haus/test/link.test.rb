@@ -88,5 +88,13 @@ describe Haus::Link do
         File.readlink(f).must_equal jobs.find { |s,d| d == f }.first
       end
     end
+
+    it 'should return true or nil' do
+      @link.options.quiet = true
+      @link.options.force = true
+      @link.run.must_equal true
+      @link.options.force = false
+      @link.run.must_equal nil
+    end
   end
 end

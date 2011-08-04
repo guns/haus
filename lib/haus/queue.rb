@@ -192,6 +192,8 @@ class Haus
           end
         end
 
+        true
+
       rescue StandardError => e
         if did_archive
           logwarn "Rolling back to archive #{archive_path.inspect}"

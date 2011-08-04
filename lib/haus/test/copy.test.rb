@@ -82,5 +82,13 @@ describe Haus::Copy do
         FileUtils.cmp(s,d).must_equal true
       end
     end
+
+    it 'should return true or nil' do
+      @copy.options.quiet = true
+      @copy.options.force = true
+      @copy.run.must_equal true
+      @copy.options.force = false
+      @copy.run.must_equal nil
+    end
   end
 end
