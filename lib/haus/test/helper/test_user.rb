@@ -64,7 +64,7 @@ class Haus
       File.join haus, 'etc'
     end
 
-    def dotfile path
+    def dot path
       File.join dir, ".#{File.basename path}"
     end
 
@@ -79,17 +79,17 @@ class Haus
         when :file
           f = randstr
           touch f
-          [File.expand_path(f), dotfile(f)]
+          [File.expand_path(f), dot(f)]
         when :dir
           d = randstr
           f = File.join d, randstr
           mkdir d
           touch f
-          [File.expand_path(d), dotfile(d)]
+          [File.expand_path(d), dot(d)]
         when :link
           f = randstr
           ln_s Dir['/etc/*'].sort_by { rand }.first, f
-          [File.expand_path(f), dotfile(f)]
+          [File.expand_path(f), dot(f)]
         else raise ArgumentError
         end
       end

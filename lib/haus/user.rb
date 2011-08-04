@@ -15,7 +15,7 @@ class Haus
     end
 
     # Return path as a home dotfile
-    def dotfile src
+    def dot src
       File.join dir, ".#{File.basename src}"
     end
   end

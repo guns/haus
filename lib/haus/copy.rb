@@ -10,7 +10,7 @@ class Haus
     def enqueue
       users.each do |user|
         etcfiles.each do |src|
-          queue.add_copy src, user.dotfile(src)
+          queue.add_copy src, user.dot(src)
         end
       end
     end

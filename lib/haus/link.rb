@@ -18,7 +18,7 @@ class Haus
     def enqueue
       users.each do |user|
         etcfiles.each do |src|
-          queue.add_link src, user.dotfile(src)
+          queue.add_link src, user.dot(src)
         end
       end
     end

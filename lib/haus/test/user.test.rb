@@ -37,9 +37,9 @@ describe Haus::User do
     end
   end
 
-  describe :dotfile do
+  describe :dot do
     it 'should return a path as a home dotfile path' do
-      Haus::User.new($user.name).dotfile('/etc/passwd').must_equal "#{$user.dir}/.passwd"
+      Haus::User.new($user.name).dot('/etc/passwd').must_equal "#{$user.dir}/.passwd"
     end
   end
 end
