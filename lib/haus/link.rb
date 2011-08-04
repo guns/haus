@@ -9,7 +9,7 @@ class Haus
 
     def options
       super.tap do |opt|
-        opt.on '--relative', 'Create relative links instead of absolute links' do
+        opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
           opt.relative = true
         end
       end
