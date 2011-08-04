@@ -14,7 +14,7 @@ require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
-describe Haus::Queue do
+class Haus::QueueSpec < MiniTest::Spec
   before do
     @q = Haus::Queue.new :quiet => true
   end

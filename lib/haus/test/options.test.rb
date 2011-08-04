@@ -10,7 +10,7 @@ require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
-describe Haus::Options do
+class Haus::OptionsSpec < MiniTest::Spec
   before do
     @opt = Haus::Options.new
   end

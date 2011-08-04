@@ -10,7 +10,7 @@ require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
-describe Haus::User do
+class Haus::UserSpec < MiniTest::Spec
   it 'should be a subclass of Struct::Passwd' do
     Haus::User.new.must_be_kind_of Struct::Passwd
   end

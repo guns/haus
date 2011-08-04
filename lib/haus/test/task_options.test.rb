@@ -8,7 +8,7 @@ require 'minitest/autorun'
 require 'haus/task_options'
 require 'haus/test/helper/minitest'
 
-describe :TaskOptions do
+class Haus::TaskOptionsSpec < MiniTest::Spec
   before do
     @opt = Haus::TaskOptions.new
   end

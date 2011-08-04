@@ -9,7 +9,7 @@ require 'minitest/autorun'
 require 'haus/copy'
 require 'haus/test/helper/test_user'
 
-describe Haus::Copy do
+class Haus::CopySpec < MiniTest::Spec
   before do
     @copy = Haus::Copy.new
     @copy.options.force = true

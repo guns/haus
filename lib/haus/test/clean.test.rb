@@ -9,5 +9,5 @@ require 'minitest/autorun'
 require 'haus/clean'
 require 'haus/test/helper/test_user'
 
-describe Haus::Clean do
+class Haus::CleanSpec < MiniTest::Spec
 end

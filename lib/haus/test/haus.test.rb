@@ -9,7 +9,7 @@ require 'haus'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
 
-describe Haus do
+class HausSpec < MiniTest::Spec
   describe :initialize do
     it 'should accept an optional arguments array' do
       Haus.method(:initialize).arity.must_equal -1

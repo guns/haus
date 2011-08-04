@@ -12,7 +12,7 @@ require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
-describe Haus::Task do
+class Haus::TaskSpec < MiniTest::Spec
   describe :self do
     describe :list do
       # http://stackoverflow.com/questions/3434884/accessing-ruby-class-variables-with-class-eval-and-instance-eval

@@ -9,7 +9,7 @@ require 'minitest/autorun'
 require 'haus/link'
 require 'haus/test/helper/test_user'
 
-describe Haus::Link do
+class Haus::LinkSpec < MiniTest::Spec
   before do
     @link = Haus::Link.new
     @link.options.force = true
