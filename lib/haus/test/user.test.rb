@@ -42,4 +42,11 @@ describe Haus::User do
       Haus::User.new($user.name).dot('/etc/passwd').must_equal "#{$user.dir}/.passwd"
     end
   end
+
+  describe :dotfiles do
+    it 'should return all dotfiles in user home directory' do
+      my_dotfiles = Dir[File.expand_path '~/.*'].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
+      Haus::User.new(Etc.getlogin).dotfiles.sort.must_equal my_dotfiles.sort
+    end
+  end
 end
