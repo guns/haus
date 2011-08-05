@@ -5,11 +5,14 @@ require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/test/helper/test_user'
 
+$user ||= Haus::TestUser[$$]
+
 class DotfileSpec < MiniTest::Spec
   def create_task klass
     @task = klass.new
     @task.options.force = true
     @task.options.quiet = true
+    @task.options.users = [$user.uid]
   end
 
   def remove_task_archive
@@ -21,10 +24,7 @@ class DotfileSpec < MiniTest::Spec
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
 
     @task.options.path = user.haus
-    @task.options.users = [user.name]
-
     yield jobs if block_given?
-
     @task.enqueue
 
     # Queue#deletions is a flat list
@@ -81,7 +81,6 @@ class DotfileSpec < MiniTest::Spec
     jobs.each_value { |s,d| File.exists?(d).must_equal false }
 
     @task.options.path = user.haus
-    @task.options.users = [user.name]
     @task.run
 
     yield jobs
