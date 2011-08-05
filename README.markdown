@@ -24,6 +24,7 @@
 
  - Nested dotfiles (%dir)
  - Better `--help` documentation
+ - Allow environment to set HAUS_PATH
 
 
 ### LICENSE
