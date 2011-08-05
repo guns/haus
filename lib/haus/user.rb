@@ -21,7 +21,7 @@ class Haus
 
     # Returns user dotfiles as absolute paths
     def dotfiles
-      Dir[File.expand_path '~/.*'].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
+      Dir[File.expand_path "#{dir}/.*"].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
     end
   end
 end

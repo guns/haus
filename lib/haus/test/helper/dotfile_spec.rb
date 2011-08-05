@@ -24,6 +24,7 @@ class DotfileSpec < MiniTest::Spec
       t = @task.class.new [sw].flatten
       t.options.force = true
       t.options.quiet = true
+      t.options.users = [$user.uid]
       t.run
       t.options.send(option).must_equal value
     end
@@ -33,8 +34,9 @@ class DotfileSpec < MiniTest::Spec
     user = Haus::TestUser[@task.class.to_s + '_enqueue']
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
 
-    @task.options.path = user.haus
     yield jobs if block_given?
+
+    @task.options.path = user.haus
     @task.enqueue
 
     # Queue#deletions is a flat list

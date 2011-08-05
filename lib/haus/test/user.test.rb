@@ -47,6 +47,9 @@ class Haus::UserSpec < MiniTest::Spec
     it 'must return all dotfiles in user home directory' do
       my_dotfiles = Dir[File.expand_path '~/.*'].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
       Haus::User.new(Etc.getlogin).dotfiles.sort.must_equal my_dotfiles.sort
+
+      her_dotfiles = Dir[File.expand_path File.join("#{$user.dir}/.*")].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
+      Haus::User.new($user.name).dotfiles.sort.must_equal her_dotfiles.sort
     end
   end
 end
