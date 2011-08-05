@@ -21,10 +21,15 @@ class Haus
       users.each do |user|
         user.dotfiles.each do |dot|
 
-          if options.all
-            queue.add_deletion dot if etcnames.include? File.basename(dot)
-          elsif File.lstat(dot).ftype == 'link'
-            queue.add_deletion dot if etcfiles.include? File.expand_path(File.readlink dot)
+          begin
+            if options.all
+              queue.add_deletion dot if etcnames.include? File.basename(dot)
+            elsif File.lstat(dot).ftype == 'link'
+              queue.add_deletion dot if etcfiles.include? File.expand_path(File.readlink dot)
+            end
+          rescue Errno::EACCES, Errno::ENOENT => e # Catch syscall errors
+            # FIXME: logger!
+            warn e.to_s
           end
 
         end

@@ -6,6 +6,8 @@ require 'fileutils'
 require 'haus/clean'
 require 'haus/test/helper/dotfile_spec'
 
+$user ||= Haus::TestUser[$$]
+
 class Haus::CleanSpec < DotfileSpec
   before do
     create_task Haus::Clean
@@ -26,6 +28,16 @@ class Haus::CleanSpec < DotfileSpec
       must_add_task_jobs_to_queue :deletions do |jobs|
         jobs.each_value { |s,d| FileUtils.ln_s s, d }
       end
+    end
+
+    it 'should not blow up on syscall errors' do
+      class CleanSpecError < RuntimeError; end
+
+      src, dst = $user.hausfile
+      FileUtils.ln_s src, dst
+      File.lchmod 0200, dst
+      @task.options.path = $user.haus
+      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
     end
 
     it 'must add all conflicting dotfiles to the queue when options.all' do
