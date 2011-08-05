@@ -88,7 +88,7 @@ class Haus
           [File.expand_path(d), dot(d)]
         when :link
           f = randstr
-          ln_s Dir['/etc/*'].select { |e| File.file? e }.sort_by { rand }.first, f
+          ln_s Dir['/etc/*'].select { |e| File.file? e and File.readable? e }.sort_by { rand }.first, f
           [File.expand_path(f), dot(f)]
         else raise ArgumentError
         end
