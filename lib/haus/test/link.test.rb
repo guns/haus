@@ -17,9 +17,7 @@ class Haus::LinkSpec < DotfileSpec
 
   describe :options do
     it 'must provide a --relative option' do
-      h = Haus::Link.new %w[--relative]
-      h.run
-      h.options.relative.must_equal true
+      must_provide_option :relative, %w[-r --relative], true
     end
   end
 

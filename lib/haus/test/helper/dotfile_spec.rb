@@ -19,6 +19,16 @@ class DotfileSpec < MiniTest::Spec
     FileUtils.rm_f @task.queue.archive_path
   end
 
+  def must_provide_option option, switches, value
+    switches.each do |sw|
+      t = @task.class.new [sw].flatten
+      t.options.force = true
+      t.options.quiet = true
+      t.run
+      t.options.send(option).must_equal value
+    end
+  end
+
   def must_add_task_jobs_to_queue type
     user = Haus::TestUser[@task.class.to_s + '_enqueue']
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking

@@ -17,9 +17,7 @@ class Haus::CleanSpec < DotfileSpec
 
   describe :options do
     it 'must provide a --all option' do
-      h = Haus::Clean.new %w[--all]
-      h.run
-      h.options.all.must_equal true
+      must_provide_option :all, %w[-a --all], true
     end
   end
 
