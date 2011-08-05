@@ -10,17 +10,17 @@ require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
-describe Haus::Options do
+class Haus::OptionsSpec < MiniTest::Spec
   before do
     @opt = Haus::Options.new
   end
 
-  it 'should be a subclass of OptionParser' do
+  it 'must be a subclass of OptionParser' do
     @opt.must_be_kind_of OptionParser
   end
 
   describe :initialize do
-    it 'should initialize @ostruct' do
+    it 'must initialize @ostruct' do
       ostruct = @opt.instance_variable_get :@ostruct
       ostruct.must_be_kind_of OpenStruct
       ostruct.path.must_be_kind_of String
@@ -29,7 +29,7 @@ describe Haus::Options do
   end
 
   describe :path do
-    it 'should always return an absolute path' do
+    it 'must always return an absolute path' do
       ostruct = @opt.instance_variable_get :@ostruct
       ostruct.path.must_match %r{\A/}
       @opt.path = '..'
@@ -38,7 +38,7 @@ describe Haus::Options do
   end
 
   describe :method_missing do
-    it 'should otherwise act like an OpenStruct object' do
+    it 'must otherwise act like an OpenStruct object' do
       @opt.force = true
       @opt.force.must_equal true
       @opt.horse = 'of course'
@@ -49,7 +49,7 @@ describe Haus::Options do
   end
 
   describe :tap do
-    it 'should respond to #tap, which should behave like Ruby 1.9 Object#tap' do
+    it 'must respond to #tap, which should behave like Ruby 1.9 Object#tap' do
       @opt.must_respond_to :tap
       @opt.tap { |o| o.must_equal @opt }.must_equal @opt
     end

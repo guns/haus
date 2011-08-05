@@ -9,7 +9,7 @@ class Haus
 
     def options
       super.tap do |opt|
-        opt.on '--relative', 'Create relative links instead of absolute links' do
+        opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
           opt.relative = true
         end
       end
@@ -18,7 +18,7 @@ class Haus
     def enqueue
       users.each do |user|
         etcfiles.each do |src|
-          queue.add_link src, user.dotfile(src)
+          queue.add_link src, user.dot(src)
         end
       end
     end

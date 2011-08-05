@@ -15,8 +15,13 @@ class Haus
     end
 
     # Return path as a home dotfile
-    def dotfile src
+    def dot src
       File.join dir, ".#{File.basename src}"
+    end
+
+    # Returns user dotfiles as absolute paths
+    def dotfiles
+      Dir[File.expand_path "#{dir}/.*"].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
     end
   end
 end

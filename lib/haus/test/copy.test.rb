@@ -3,92 +3,54 @@
 $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'fileutils'
-require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
-require 'minitest/autorun'
 require 'haus/copy'
-require 'haus/test/helper/test_user'
+require 'haus/test/helper/dotfile_spec'
 
-describe Haus::Copy do
+class Haus::CopySpec < DotfileSpec
   before do
-    @copy = Haus::Copy.new
-    @copy.options.force = true
-    @copy.options.quiet = true
+    create_task Haus::Copy
   end
 
   after do
-    FileUtils.rm_f @copy.queue.archive_path
+    remove_task_archive
   end
 
   describe :enqueue do
-    it 'should add copy jobs to the queue' do
-      user = Haus::TestUser[:copy_enqueue]
-      jobs = [:file, :dir].inject({}) { |h,m| h.merge Hash[*user.hausfile(m)] } # Ruby 1.8.6
-
-      @copy.options.path = user.haus
-      @copy.options.users = [user.name]
-      @copy.enqueue
-      @copy.queue.copies.map { |s,d| s }.sort.must_equal jobs.keys.sort
-      @copy.queue.targets.sort.must_equal jobs.values.sort
+    it 'must add copy jobs to the queue' do
+      must_add_task_jobs_to_queue :copies
     end
   end
 
   describe :run do
-    it 'should pass options to queue before enqueueing files' do
-      @copy.instance_eval do
-        def enqueue *args
-          queue.options.cow.must_equal 'MOOCOW'
-          super
+    it 'must pass options to queue before enqueueing files' do
+      must_pass_options_to_queue_before_enqueueing
+    end
+
+    it 'must pass options to queue before execution' do
+      must_pass_options_to_queue_before_execution
+    end
+
+    it 'must execute the queue' do
+      must_execute_the_queue
+    end
+
+    it 'must return true or nil' do
+      must_return_true_or_nil
+    end
+
+    it 'must copy all sources as dotfiles' do
+      must_result_in_dotfiles do |jobs|
+        sf, df = jobs[:file]
+        FileUtils.cmp(sf, df).must_equal true
+
+        sd, dd = jobs[:dir]
+        Dir[sd + '/*'].zip(Dir[dd + '/*']).each do |s,d|
+          FileUtils.cmp(s,d).must_equal true
         end
+
+        sl, dl = jobs[:link]
+        FileUtils.cmp(File.readlink(sl), File.readlink(dl)).must_equal true
       end
-
-      @copy.options.cow = 'MOOCOW'
-      @copy.run
-      @copy.queue.options.cow.must_equal 'MOOCOW'
-    end
-
-    it 'should pass options to queue before execution' do
-      @copy.instance_eval do
-        def execute *args
-          queue.options.cow.must_equal 'MOOCOW'
-          super
-        end
-      end
-
-      @copy.options.cow = 'MOOCOW'
-      @copy.run
-      @copy.queue.options.cow.must_equal 'MOOCOW'
-    end
-
-    it 'should execute the queue' do
-      @copy.queue.executed?.must_equal nil
-      @copy.run
-      @copy.queue.executed?.must_equal true
-    end
-
-    it 'should copy all sources as dotfiles' do
-      user = Haus::TestUser[:copy_run]
-      jobs = [:file, :dir].map { |m| user.hausfile m }
-      jobs.each { |s,d| File.exists?(d).must_equal false }
-
-      @copy.options.path = user.haus
-      @copy.options.users = [user.name]
-      @copy.run
-
-      s0, d0 = jobs[0]
-      FileUtils.cmp(s0, d0).must_equal true
-      s1, d1 = jobs[1]
-      Dir[s1 + '/*'].zip(Dir[d1 + '/*']).each do |s,d|
-        FileUtils.cmp(s,d).must_equal true
-      end
-    end
-
-    it 'should return true or nil' do
-      @copy.options.quiet = true
-      @copy.options.force = true
-      @copy.run.must_equal true
-      @copy.options.force = false
-      @copy.run.must_equal nil
     end
   end
 end

@@ -8,17 +8,17 @@ require 'minitest/autorun'
 require 'haus/task_options'
 require 'haus/test/helper/minitest'
 
-describe :TaskOptions do
+class Haus::TaskOptionsSpec < MiniTest::Spec
   before do
     @opt = Haus::TaskOptions.new
   end
 
-  it 'should be a subclass of Haus::Options' do
+  it 'must be a subclass of Haus::Options' do
     @opt.class.ancestors[1].must_equal Haus::Options
   end
 
   describe :users= do
-    it 'should set the users option' do
+    it 'must set the users option' do
       users     = [0, Etc.getlogin]
       haususers = users.map { |u| Haus::User.new u }
 
