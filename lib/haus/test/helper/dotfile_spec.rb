@@ -16,7 +16,7 @@ class DotfileSpec < MiniTest::Spec
     FileUtils.rm_f @task.queue.archive_path
   end
 
-  def add_task_jobs_to_queue type
+  def must_add_task_jobs_to_queue type
     user = Haus::TestUser[@task.class.to_s + '_enqueue']
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge Hash[*user.hausfile(m)] } # Ruby 1.8.6
 
@@ -27,7 +27,7 @@ class DotfileSpec < MiniTest::Spec
     @task.queue.targets.sort.must_equal jobs.values.sort
   end
 
-  def pass_options_to_queue_before_enqueueing
+  def must_pass_options_to_queue_before_enqueueing
     @task.instance_eval do
       def enqueue *args
         queue.options.cow.must_equal 'MOOCOW'
@@ -40,7 +40,7 @@ class DotfileSpec < MiniTest::Spec
     @task.queue.options.cow.must_equal 'MOOCOW'
   end
 
-  def pass_options_to_queue_before_execution
+  def must_pass_options_to_queue_before_execution
     @task.instance_eval do
       def execute *args
         queue.options.cow.must_equal 'MOOCOW'
@@ -53,13 +53,13 @@ class DotfileSpec < MiniTest::Spec
     @task.queue.options.cow.must_equal 'MOOCOW'
   end
 
-  def execute_the_queue
+  def must_execute_the_queue
     @task.queue.executed?.must_equal nil
     @task.run
     @task.queue.executed?.must_equal true
   end
 
-  def return_true_or_nil
+  def must_return_true_or_nil
     @task.options.quiet = true
     @task.options.force = true
     @task.run.must_equal true
@@ -67,7 +67,7 @@ class DotfileSpec < MiniTest::Spec
     @task.run.must_equal nil
   end
 
-  def should_result_in_dotfiles
+  def must_result_in_dotfiles
     user = Haus::TestUser[@test.class.to_s + '_dotfiles']
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] does not like 2D arrays
     jobs.each_value { |s,d| File.exists?(d).must_equal false }

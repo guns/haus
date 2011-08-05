@@ -16,7 +16,7 @@ class Haus::LinkSpec < DotfileSpec
   end
 
   describe :options do
-    it 'should provide a --relative option' do
+    it 'must provide a --relative option' do
       h = Haus::Link.new %w[--relative]
       h.run
       h.options.relative.must_equal true
@@ -24,30 +24,30 @@ class Haus::LinkSpec < DotfileSpec
   end
 
   describe :enqueue do
-    it 'should add link jobs to the queue' do
-      add_task_jobs_to_queue :links
+    it 'must add link jobs to the queue' do
+      must_add_task_jobs_to_queue :links
     end
   end
 
   describe :run do
-    it 'should pass options to queue before enqueueing files' do
-      pass_options_to_queue_before_enqueueing
+    it 'must pass options to queue before enqueueing files' do
+      must_pass_options_to_queue_before_enqueueing
     end
 
-    it 'should pass options to queue before execution' do
-      pass_options_to_queue_before_execution
+    it 'must pass options to queue before execution' do
+      must_pass_options_to_queue_before_execution
     end
 
-    it 'should execute the queue' do
-      execute_the_queue
+    it 'must execute the queue' do
+      must_execute_the_queue
     end
 
-    it 'should return true or nil' do
-      return_true_or_nil
+    it 'must return true or nil' do
+      must_return_true_or_nil
     end
 
-    it 'should link all sources as dotfiles' do
-      should_result_in_dotfiles do |jobs|
+    it 'must link all sources as dotfiles' do
+      must_result_in_dotfiles do |jobs|
         jobs.each_value do |s,d|
           File.readlink(d).must_equal s
         end

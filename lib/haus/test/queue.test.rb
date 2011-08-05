@@ -19,12 +19,12 @@ class Haus::QueueSpec < MiniTest::Spec
     @q = Haus::Queue.new :quiet => true
   end
 
-  it 'should have included FileUtils' do
+  it 'must have included FileUtils' do
     Haus::Queue.included_modules.must_include FileUtils
   end
 
   describe :initialize do
-    it 'should optionally accept an options object' do
+    it 'must optionally accept an options object' do
       @q.method(:initialize).arity.must_equal -1
       Haus::Queue.new.options.must_equal OpenStruct.new
       q = Haus::Queue.new OpenStruct.new(:force => true)
@@ -32,7 +32,7 @@ class Haus::QueueSpec < MiniTest::Spec
       q.options.frozen?.must_equal true
     end
 
-    it 'should initialize the attr_readers, which should be frozen' do
+    it 'must initialize the attr_readers, which should be frozen' do
       %w[links copies modifications deletions].each do |m|
         @q.send(m).must_equal []
         @q.send(m).frozen?.must_equal true
@@ -51,7 +51,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should dup and freeze the passed OpenStruct object' do
+    it 'must dup and freeze the passed OpenStruct object' do
       opts = OpenStruct.new :force => true, :noop => true
       @q.options = opts
       @q.options.must_equal opts
@@ -59,7 +59,7 @@ class Haus::QueueSpec < MiniTest::Spec
       @assertion.call @q.dup
     end
 
-    it 'should accept a Hash as an argument' do
+    it 'must accept a Hash as an argument' do
       opts = { :force => true, :noop => true }
       @q.options = opts
       @q.options.must_equal OpenStruct.new(opts)
@@ -70,19 +70,19 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :add_link do
-    it 'should noop and return nil when src does not exist' do
+    it 'must noop and return nil when src does not exist' do
       @q.add_link('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
       @q.links.empty?.must_equal true
     end
 
-    it 'should noop and return nil when dst points to src' do
+    it 'must noop and return nil when dst points to src' do
       src, dst = $user.hausfile
       FileUtils.ln_s src, dst
       @q.add_link(src, dst).must_be_nil
       @q.links.empty?.must_equal true
     end
 
-    it 'should raise an error when a job for dst already exists' do
+    it 'must raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_link *args
       lambda { @q.add_link *args }.must_raise Haus::Queue::MultipleJobError
@@ -104,11 +104,11 @@ class Haus::QueueSpec < MiniTest::Spec
         end
       end
 
-      it 'should push and refreeze @links when src does exist and dst does not point to src' do
+      it 'must push and refreeze @links when src does exist and dst does not point to src' do
         @assertion.call lambda { |src, dst| FileUtils.ln_s '/etc/passwd', dst }, nil
       end
 
-      it 'should add existing links if relative/absolute prefs do not match' do
+      it 'must add existing links if relative/absolute prefs do not match' do
         relpath = lambda { |src, dst| Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s }
 
         @assertion.call lambda { |src, dst|
@@ -120,7 +120,7 @@ class Haus::QueueSpec < MiniTest::Spec
         }, { :relative => true }
       end
 
-      it 'should remove the destination before linking' do
+      it 'must remove the destination before linking' do
         @assertion.call lambda { |src, dst|
           FileUtils.mkdir_p File.join(dst, 'sparkle')
           FileUtils.touch File.join(dst, 'sparkle', 'pony')
@@ -130,19 +130,19 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :add_copy do
-    it 'should noop and return nil when src does not exist' do
+    it 'must noop and return nil when src does not exist' do
       @q.add_copy('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
       @q.copies.empty?.must_equal true
     end
 
-    it 'should noop and return nil when src and dst equal' do
+    it 'must noop and return nil when src and dst equal' do
       src, dst = $user.hausfile
       FileUtils.cp src, dst
       @q.add_copy(src, dst).must_be_nil
       @q.copies.empty?.must_equal true
     end
 
-    it 'should raise an error when a job for dst already exists' do
+    it 'must raise an error when a job for dst already exists' do
       args = $user.hausfile
       @q.add_copy *args
       lambda { @q.add_copy *args }.must_raise Haus::Queue::MultipleJobError
@@ -162,7 +162,7 @@ class Haus::QueueSpec < MiniTest::Spec
         end
       end
 
-      it 'should push and refreeze @copies when src exists and dst does not equal src' do
+      it 'must push and refreeze @copies when src exists and dst does not equal src' do
         @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }
         @assertion.call lambda { |src, dst|
           File.open(src, 'w') { |f| f.write 'foo' }
@@ -170,18 +170,18 @@ class Haus::QueueSpec < MiniTest::Spec
         }
       end
 
-      it 'should push and refreeze @copies when src and dst are of different types' do
+      it 'must push and refreeze @copies when src and dst are of different types' do
         @assertion.call lambda { |src, dst| FileUtils.mkdir_p dst }
       end
 
-      it 'should break hard links' do
+      it 'must break hard links' do
         @assertion.call lambda { |src, dst|
           File.open(src, 'w') { |f| f.write 'hard' }
           FileUtils.ln src, dst
         }
       end
 
-      it 'should recurse and compare directory contents of dst to determine whether to copy' do
+      it 'must recurse and compare directory contents of dst to determine whether to copy' do
         @assertion.call lambda { |src, dst|
           FileUtils.rm_f src
           FileUtils.mkdir_p [src, dst]
@@ -190,7 +190,7 @@ class Haus::QueueSpec < MiniTest::Spec
         }
       end
 
-      it 'should remove destination before copying' do
+      it 'must remove destination before copying' do
         @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }
         @assertion.call lambda { |src, dst|
           FileUtils.mkdir_p File.join(dst, 'sparkle')
@@ -201,12 +201,12 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :add_deletion do
-    it 'should noop and return nil when dst does not exist' do
+    it 'must noop and return nil when dst does not exist' do
       @q.add_deletion('/magical/pony/with/sparkle/action').must_be_nil
       @q.deletions.empty?.must_equal true
     end
 
-    it 'should push and refreeze @deletions when dst exists' do
+    it 'must push and refreeze @deletions when dst exists' do
       src = $user.hausfile.first
       res = @q.add_deletion src
       res.must_equal [src]
@@ -215,7 +215,7 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.deletions.frozen?.must_equal true
     end
 
-    it 'should raise an error when a job for dst already exists' do
+    it 'must raise an error when a job for dst already exists' do
       src = $user.hausfile.first
       @q.add_deletion src
       lambda { @q.add_deletion src }.must_raise Haus::Queue::MultipleJobError
@@ -223,12 +223,12 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :add_modification do
-    it 'should noop and return nil when no block is given' do
+    it 'must noop and return nil when no block is given' do
       @q.add_modification("#{$user.dir}/.ponies").must_be_nil
       @q.modifications.empty?.must_equal true
     end
 
-    it 'should push and return @modifications when a file and block are given' do
+    it 'must push and return @modifications when a file and block are given' do
       res = @q.add_modification("#{$user.dir}/.ponies") { |f| touch f }
       res.size.must_equal 1
       res.frozen?.must_equal true
@@ -237,13 +237,13 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.modifications.frozen?.must_equal true
     end
 
-    it 'should raise an error when a job for dst already exists' do
+    it 'must raise an error when a job for dst already exists' do
       src = $user.hausfile.first
       @q.add_modification(src) { |f| touch f }
       lambda { @q.add_modification(src) {} }.must_raise Haus::Queue::MultipleJobError
     end
 
-    it 'should raise an error if argument is a directory' do
+    it 'must raise an error if argument is a directory' do
       lambda { @q.add_modification($user.dir) {} }.must_raise ArgumentError
     end
   end
@@ -267,32 +267,32 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should return all targets by default' do
+    it 'must return all targets by default' do
       @q.targets.sort.must_equal @targets.sort
       @q.targets(:all).sort.must_equal @targets.sort
     end
 
-    it 'should return all files to be removed on :delete' do
+    it 'must return all files to be removed on :delete' do
       @q.targets(:delete).must_equal @targets.values_at(4,5)
     end
 
-    it 'should return all new files on :create' do
+    it 'must return all new files on :create' do
       @q.targets(:create).sort.must_equal @targets.values_at(0,2,6).sort
     end
 
-    it 'should return all files to be modified on :modify' do
+    it 'must return all files to be modified on :modify' do
       @q.targets(:modify).must_equal @targets.values_at(7)
     end
 
-    it 'should return all files that will be overwritten on :overwrite' do
+    it 'must return all files that will be overwritten on :overwrite' do
       @q.targets(:overwrite).must_equal @targets.values_at(1,3)
     end
 
-    it 'should return all files that should be archived on :archive' do
+    it 'must return all files that should be archived on :archive' do
       @q.targets(:archive).sort.must_equal @targets.select { |f| File.exists? f }.sort
     end
 
-    it 'should be a complete list of targets with no overlapping entries' do
+    it 'must be a complete list of targets with no overlapping entries' do
       [:delete, :create, :modify, :overwrite].inject [] do |a,m|
         a + @q.targets(m)
       end.sort.must_equal @targets.sort
@@ -300,7 +300,7 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :hash do
-    it 'should return a hash of the concatenation of all job queues' do
+    it 'must return a hash of the concatenation of all job queues' do
       files = (0..3).map { $user.hausfile }
       @q.hash.must_equal [].hash
       @q.add_link *files[0]
@@ -312,7 +312,7 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :remove do
-    it 'should remove jobs by destination path' do
+    it 'must remove jobs by destination path' do
       files = (0..2).map { $user.hausfile }
       @q.add_link *files[0]
       @q.add_copy *files[1]
@@ -326,7 +326,7 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :execute do
-    it 'should confirm then call execute!' do
+    it 'must confirm then call execute!' do
       @q.instance_eval do
         def tty_confirm?
           @_confirmed = true
@@ -367,28 +367,28 @@ class Haus::QueueSpec < MiniTest::Spec
       FileUtils.rm_f @q.archive_path
     end
 
-    it 'should return nil if already executed' do
+    it 'must return nil if already executed' do
       @q.execute!
       @q.executed?.must_equal true
       @q.execute!.must_equal nil
     end
 
-    it 'should create an archive before execution' do
+    it 'must create an archive before execution' do
       @q.execute!
       File.exists?(@q.archive_path).must_equal true
     end
 
-    it 'should not create an archive if options.noop is specified' do
+    it 'must not create an archive if options.noop is specified' do
       @q.options = { :noop => true, :quiet => true }
       @q.execute!
       File.exists?(@q.archive_path).must_equal false
     end
 
-    it 'should not modify the filesystem if options.noop is specified' do
+    it 'must not modify the filesystem if options.noop is specified' do
       q = Haus::Queue.new :noop => true, :quiet => true
     end
 
-    it 'should rollback changes on signals' do
+    it 'must rollback changes on signals' do
       # Yes, this is a torturous way of testing the rollback function
       %w[INT TERM QUIT].each do |sig|
         target = $user.hausfile.last
@@ -412,7 +412,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should rollback changes on StandardError' do
+    it 'must rollback changes on StandardError' do
       target = $user.hausfile.last
 
       capture_fork_io do
@@ -429,13 +429,13 @@ class Haus::QueueSpec < MiniTest::Spec
       @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
     end
 
-    it 'should delete files' do
+    it 'must delete files' do
       [4,5].each { |n| File.exists?(@targets[n]).must_equal true }
       @q.execute!
       [4,5].each { |n| File.exists?(@targets[n]).must_equal false }
     end
 
-    it 'should link files' do
+    it 'must link files' do
       [0,1].each { |n| File.symlink?(@targets[n]).must_equal false }
       @q.execute!
       [0,1].each do |n|
@@ -444,7 +444,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should link files with relative source paths when specified' do
+    it 'must link files with relative source paths when specified' do
       [8,9].each { |n| File.symlink?(@targets[n]).must_equal false }
       opts = @q.options.dup
       opts.relative = true
@@ -458,7 +458,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should copy files' do
+    it 'must copy files' do
       File.exists?(@targets[2]).must_equal false
       File.exists?(@targets[3]).must_equal true
       FileUtils.cmp(@sources[3], @targets[3]).must_equal false
@@ -466,7 +466,7 @@ class Haus::QueueSpec < MiniTest::Spec
       [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
     end
 
-    it 'should copy links, not their sources' do
+    it 'must copy links, not their sources' do
       src, dst = $user.hausfile :link
       q = Haus::Queue.new :quiet => true, :force => true
       File.lstat(src).ftype.must_equal 'link'
@@ -476,13 +476,13 @@ class Haus::QueueSpec < MiniTest::Spec
       File.lstat(dst).ftype.must_equal 'link'
     end
 
-    it 'should modify files' do
+    it 'must modify files' do
       [6,7].each { |n| File.open(@targets[n], 'w') { |f| f.write 'CREATED' } }
       @q.execute!
       [6,7].each { |n| File.read(@targets[n]).must_equal 'MODIFIED' }
     end
 
-    it 'should touch files before calling modification proc' do
+    it 'must touch files before calling modification proc' do
       target = $user.hausfile.last
       File.exists?(target).must_equal false
       @q.add_modification $user.hausfile.last do |f|
@@ -491,7 +491,7 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.execute!
     end
 
-    it 'should create parent directories before file creation' do
+    it 'must create parent directories before file creation' do
       begin
         sources = [$user.hausfile, $user.hausfile(:dir), $user.hausfile(:link)].map { |s,d| s }
         targets = sources.map { |f| File.join $user.dir, File.basename(f).reverse, File.basename(f) }
@@ -507,7 +507,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should create files with owner-only privileges, but should not change the process umask' do
+    it 'must create files with owner-only privileges, but should not change the process umask' do
       @q.execute!
       @targets.values_at(0..3, 6..9).each do |f|
         File.lstat(f).mode.to_s(8)[/.{2}\z/].must_equal '00'
@@ -517,7 +517,7 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :executed? do
-    it 'should return @executed' do
+    it 'must return @executed' do
       @q.executed?.must_equal nil
       @q.instance_variable_set :@executed, true
       @q.executed?.must_equal true
@@ -541,7 +541,7 @@ class Haus::QueueSpec < MiniTest::Spec
       FileUtils.rm_f @q.archive_path
     end
 
-    it 'should raise an error if tar or gzip are not available' do
+    it 'must raise an error if tar or gzip are not available' do
       begin
         path = ENV['PATH'].dup
         lambda { ENV['PATH'] = ''; @q.archive }.must_raise RuntimeError
@@ -550,18 +550,18 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should create an archive of all extant targets' do
+    it 'must create an archive of all extant targets' do
       @q.archive
       File.exists?(@q.archive_path).must_equal true
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
       list.sort.must_equal @targets.map { |f| f.sub /\A\//, '' }.sort
     end
 
-    it 'should return the archive path on success' do
+    it 'must return the archive path on success' do
       @q.archive.must_equal @q.archive_path
     end
 
-    it 'should return nil when no files are needed to backup' do
+    it 'must return nil when no files are needed to backup' do
       begin
         q = Haus::Queue.new
         q.add_link *$user.hausfile
@@ -572,7 +572,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should create a regular file with owner-only privileges' do
+    it 'must create a regular file with owner-only privileges' do
       @q.archive
       File.lstat(@q.archive_path).mode.must_equal 0100600
     end
@@ -589,7 +589,7 @@ class Haus::QueueSpec < MiniTest::Spec
       FileUtils.rm_f @q.archive_path
     end
 
-    it 'should restore the current archive' do
+    it 'must restore the current archive' do
       @q.archive
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split("\n").reject do |f|
         f =~ %r{haus-\w+/haus-\w+\z}
@@ -607,7 +607,7 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.add_link *$user.hausfile
     end
 
-    it 'should return true when force is set' do
+    it 'must return true when force is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
         @q.options = { :force => true }
@@ -615,7 +615,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should return true when noop is set' do
+    it 'must return true when noop is set' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
         @q.options = { :noop => true }
@@ -623,7 +623,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should return true when queue is clear' do
+    it 'must return true when queue is clear' do
       with_no_stdin do
         @q.tty_confirm?.must_equal false
         @q.remove @q.targets.first
@@ -631,7 +631,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should return false when options.quiet is set' do
+    it 'must return false when options.quiet is set' do
       with_confirmation = lambda do |prc|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do
@@ -646,7 +646,7 @@ class Haus::QueueSpec < MiniTest::Spec
       with_confirmation.call lambda { @q.options = { :quiet => true }; @q.tty_confirm?.must_equal false }
     end
 
-    it 'should return false when $stdin is not a tty' do
+    it 'must return false when $stdin is not a tty' do
       with_filetty do
         $stdout.expect 'continue? [Y/n] ', 1 do
           $stdin.write "Y\n"
@@ -662,7 +662,7 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'should request user input from $stdin when from a terminal' do
+    it 'must request user input from $stdin when from a terminal' do
       @q.options = {}
       %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n \r \r\n].each do |str|
         with_filetty do
@@ -678,7 +678,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :private do
     describe :log do
-      it 'should accept one to three arguments' do
+      it 'must accept one to three arguments' do
         lambda { Haus::Queue.new.send :log }.must_raise ArgumentError
         capture_io { Haus::Queue.new.send :log, 'WARNING' }.join.must_match "WARNING\n"
         pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
@@ -688,32 +688,32 @@ class Haus::QueueSpec < MiniTest::Spec
         lambda { Haus::Queue.new.send :log, '1', '2', '3', '4' }.must_raise ArgumentError
       end
 
-      it 'should not produce any output when options.quiet is set' do
+      it 'must not produce any output when options.quiet is set' do
         @q.options = { :quiet => true }
         capture_io { @q.send :log, 'QUIET', '/etc/passwd' }.join.must_equal ''
       end
     end
 
     describe :logwarn do
-      it 'should write a warning message to $stdout' do
+      it 'must write a warning message to $stdout' do
         @q.options = {}
         capture_io { @q.send :logwarn, 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
       end
 
-      it 'should not produce any output when options.quiet is set' do
+      it 'must not produce any output when options.quiet is set' do
         @q.options = { :quiet => true }
         capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
       end
     end
 
     describe :relpath do
-      it 'should return a relative path to a source' do
+      it 'must return a relative path to a source' do
         @q.send(:relpath, '/magic/pony/ride', '/magic/sparkle/action').must_equal '../pony/ride'
       end
     end
 
     describe :linked? do
-      it 'should compare src to the link source' do
+      it 'must compare src to the link source' do
         src, dst = $user.hausfile
         FileUtils.ln_s '/etc/passwd', dst
         @q.send(:linked?, src, dst).must_equal false
@@ -722,7 +722,7 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.send(:linked?, src, dst).must_equal true
       end
 
-      it 'should return false if the link source style differs from options.relative' do
+      it 'must return false if the link source style differs from options.relative' do
         src, dst = $user.hausfile
         FileUtils.ln_s src, dst
         @q.options = { :relative => true }

@@ -16,30 +16,30 @@ class Haus::CopySpec < DotfileSpec
   end
 
   describe :enqueue do
-    it 'should add copy jobs to the queue' do
-      add_task_jobs_to_queue :copies
+    it 'must add copy jobs to the queue' do
+      must_add_task_jobs_to_queue :copies
     end
   end
 
   describe :run do
-    it 'should pass options to queue before enqueueing files' do
-      pass_options_to_queue_before_enqueueing
+    it 'must pass options to queue before enqueueing files' do
+      must_pass_options_to_queue_before_enqueueing
     end
 
-    it 'should pass options to queue before execution' do
-      pass_options_to_queue_before_execution
+    it 'must pass options to queue before execution' do
+      must_pass_options_to_queue_before_execution
     end
 
-    it 'should execute the queue' do
-      execute_the_queue
+    it 'must execute the queue' do
+      must_execute_the_queue
     end
 
-    it 'should return true or nil' do
-      return_true_or_nil
+    it 'must return true or nil' do
+      must_return_true_or_nil
     end
 
-    it 'should copy all sources as dotfiles' do
-      should_result_in_dotfiles do |jobs|
+    it 'must copy all sources as dotfiles' do
+      must_result_in_dotfiles do |jobs|
         sf, df = jobs[:file]
         FileUtils.cmp(sf, df).must_equal true
 
