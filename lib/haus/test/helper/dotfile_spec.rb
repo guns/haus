@@ -18,13 +18,21 @@ class DotfileSpec < MiniTest::Spec
 
   def must_add_task_jobs_to_queue type
     user = Haus::TestUser[@task.class.to_s + '_enqueue']
-    jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge Hash[*user.hausfile(m)] } # Ruby 1.8.6
+    jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
 
     @task.options.path = user.haus
     @task.options.users = [user.name]
+
+    yield jobs if block_given?
+
     @task.enqueue
-    @task.queue.send(type).map { |s,d| s }.sort.must_equal jobs.keys.sort
-    @task.queue.targets.sort.must_equal jobs.values.sort
+
+    # Queue#deletions is a flat list
+    if (list = @task.queue.send type).first.kind_of? Array
+      list.map { |s,d| s }.sort.must_equal jobs.values.map { |s,d| s }.sort
+    end
+
+    @task.queue.targets.sort.must_equal jobs.values.map { |s,d| d }.sort
   end
 
   def must_pass_options_to_queue_before_enqueueing
