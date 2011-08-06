@@ -17,4 +17,10 @@ class Haus
       nil
     end
   end
+
+  class NoopRaise < Task
+    def run
+      raise StandardError, 'NoopRaise'
+    end
+  end
 end

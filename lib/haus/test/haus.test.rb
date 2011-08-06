@@ -68,5 +68,9 @@ class HausSpec < MiniTest::Spec
       capture_fork_io { print Haus.new(%w[nooptrue]).run.inspect }.first.must_equal 'true'
       capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.first.must_equal 'nil'
     end
+
+    it 'must rescue StandardError exceptions and abort' do
+      capture_fork_io { Haus.new(%w[noopraise]).run }[1].must_equal "NoopRaise\n"
+    end
   end
 end

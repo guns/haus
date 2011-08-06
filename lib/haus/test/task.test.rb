@@ -2,6 +2,7 @@
 
 $:.unshift File.expand_path('../../..', __FILE__)
 
+require 'stringio'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
@@ -94,6 +95,16 @@ class Haus::TaskSpec < MiniTest::Spec
       h.options.users = [0]
       h.users.must_equal [Haus::User.new(0)]
       h.users.must_equal h.options.users
+    end
+  end
+
+  describe :log do
+    it "must be a shortcut to the logger's :log method" do
+      h, buf = Haus::Noop.new, StringIO.new
+      h.options.logger.io = buf
+      h.log 'MooMooMoo'
+      buf.rewind
+      buf.read.must_equal "MooMooMoo\n"
     end
   end
 

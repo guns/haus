@@ -10,6 +10,9 @@ require 'haus/clean'
 #
 # Command line interface, intended to be run as Haus.new(ARGV).run
 #
+# Haus::Task subclasses never call Kernel#exit or Kernel#abort, and always log
+# to the specified logger, so Ruby libraries should invoke those instead.
+#
 class Haus
   def initialize args = []
     @args = args
@@ -58,5 +61,7 @@ class Haus
     t = task[:class].new args[1..-1]
     t.options.path = options.path
     t.run
+  rescue StandardError => e
+    abort e.to_s
   end
 end

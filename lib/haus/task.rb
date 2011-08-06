@@ -69,6 +69,11 @@ class Haus
       options.users
     end
 
+    # Shortcut to logger method
+    def log *args
+      options.logger.log *args
+    end
+
     # HAUS_PATH/etc
     def etc
       File.join options.path, 'etc'
