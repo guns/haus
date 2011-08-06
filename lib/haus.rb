@@ -20,12 +20,7 @@ class Haus
 
   def help
     %Q{\
-      Usage: haus [--path PATH] COMMAND [command-options]
-
-      Options:
-          -p, --path #{options.path}
-                  Override the location of HAUS_PATH, which is otherwise
-                  determined through the location of this script.
+      Usage: haus COMMAND [options]
 
       Commands:
       #{Task.summary}
@@ -37,10 +32,6 @@ class Haus
   # Options for top level command
   def options
     @options ||= Options.new do |opt|
-      opt.on '-p', '--path PATH' do |arg|
-        opt.path = arg
-      end
-
       # Suppress regular OptionParser help output
       opt.on '-h', '--help' do
         puts help; exit
@@ -58,9 +49,7 @@ class Haus
     abort help if task.nil?
 
     # Enumerable#drop introduced in 1.8.7
-    t = task[:class].new args[1..-1]
-    t.options.path = options.path
-    t.run
+    task[:class].new(args[1..-1]).run
   rescue StandardError => e
     abort e.to_s
   end

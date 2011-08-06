@@ -34,12 +34,6 @@ class HausSpec < MiniTest::Spec
       capture_fork_io { Haus.new.options.parse '--version' }.first.chomp.must_equal Haus::VERSION
       capture_fork_io { Haus.new.options.parse '--help' }.first.chomp.must_equal Haus.new.help
     end
-
-    it 'must set options.path via --path' do
-      h = Haus.new %w[--path /opt/testhaus noop]
-      h.run
-      h.options.path.must_equal '/opt/testhaus'
-    end
   end
 
   describe :run do
@@ -47,15 +41,6 @@ class HausSpec < MiniTest::Spec
       help = Haus.new.help
       capture_fork_io { Haus.new.run }[1].chomp.must_equal help
       capture_fork_io { Haus.new(%w[foo]).run }[1].chomp.must_equal help
-    end
-
-    it 'must pass options.path to the task' do
-      h1 = Haus.new %w[noop]
-      h1.run
-      h1.options.path.must_equal Haus::Options.new.path
-      h2 = Haus.new %w[--path /opt/testhaus noop]
-      h2.run
-      h2.options.path.must_equal '/opt/testhaus'
     end
 
     it 'must parse options in order' do

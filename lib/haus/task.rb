@@ -107,10 +107,14 @@ class Haus
         opt.summary_width = 18
         opt.banner = %Q{\
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
-          Usage: haus [--path PATH] #{self.class.command} [options]
+          Usage: haus #{self.class.command} [options]
 
           Options:
         }.gsub /^ +/, ''
+
+        opt.on '-p', '--path PATH', "Override the location of HAUS_PATH. Currently: #{opt.path}" do |arg|
+          opt.path = arg
+        end
 
         opt.on '-u', '--users a,b,c', Array, 'Usernames or UIDs; current user by default' do |arg|
           # Cast before sending

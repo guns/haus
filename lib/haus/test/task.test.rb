@@ -168,6 +168,7 @@ class Haus::TaskSpec < MiniTest::Spec
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
       users = [0, $user.name, Etc.getlogin]
 
+      runoptions.call(%w[--path /opt/testhaus]).path.must_equal '/opt/testhaus'
       runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true
       runoptions.call(%w[--noop]).noop.must_equal true
