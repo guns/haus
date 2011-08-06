@@ -25,6 +25,7 @@ class Haus::OptionsSpec < MiniTest::Spec
       ostruct.must_be_kind_of OpenStruct
       ostruct.path.must_be_kind_of String
       ostruct.path.must_equal File.expand_path('../../../..', __FILE__)
+      ostruct.logger.must_be_kind_of Haus::Logger
     end
   end
 

@@ -2,17 +2,20 @@
 
 require 'optparse'
 require 'ostruct'
+require 'haus/logger'
 
 class Haus
   #
   # A hybrid OptionParser / OpenStruct class.
   #
   # Options#path provides default value of HAUS_PATH
+  # Options#logger provides default logger
   #
   class Options < OptionParser
     def initialize
       @ostruct = OpenStruct.new
       @ostruct.path = File.expand_path '../../..', __FILE__ # HAUS_PATH
+      @ostruct.logger = Haus::Logger.new
       super
     end
 
