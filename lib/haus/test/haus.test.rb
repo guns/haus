@@ -31,8 +31,8 @@ class HausSpec < MiniTest::Spec
     end
 
     it 'must respond to --version and --help' do
-      capture_fork_io { Haus.new.options.parse '--version' }.join.chomp.must_equal Haus::VERSION
-      capture_fork_io { Haus.new.options.parse '--help' }.join.chomp.must_equal Haus.new.help
+      capture_fork_io { Haus.new.options.parse '--version' }.first.chomp.must_equal Haus::VERSION
+      capture_fork_io { Haus.new.options.parse '--help' }.first.chomp.must_equal Haus.new.help
     end
 
     it 'must set options.path via --path' do
@@ -45,8 +45,8 @@ class HausSpec < MiniTest::Spec
   describe :run do
     it 'must return help if a proper task is not passed' do
       help = Haus.new.help
-      capture_fork_io { Haus.new.run }.join.chomp.must_equal help
-      capture_fork_io { Haus.new(%w[foo]).run }.join.chomp.must_equal help
+      capture_fork_io { Haus.new.run }[1].chomp.must_equal help
+      capture_fork_io { Haus.new(%w[foo]).run }[1].chomp.must_equal help
     end
 
     it 'must pass options.path to the task' do
@@ -60,13 +60,13 @@ class HausSpec < MiniTest::Spec
 
     it 'must parse options in order' do
       help = Haus.new.help
-      capture_fork_io { Haus.new(%w[--help link]).run }.join.chomp.must_equal help
-      capture_fork_io { Haus.new(%w[link --help]).run }.join.chomp.wont_equal help
+      capture_fork_io { Haus.new(%w[--help link]).run }.first.chomp.must_equal help
+      capture_fork_io { Haus.new(%w[link --help]).run }.first.chomp.wont_equal help
     end
 
     it 'must return true or nil' do
-      capture_fork_io { print Haus.new(%w[nooptrue]).run.inspect }.join.must_equal 'true'
-      capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.join.must_equal 'nil'
+      capture_fork_io { print Haus.new(%w[nooptrue]).run.inspect }.first.must_equal 'true'
+      capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.first.must_equal 'nil'
     end
   end
 end

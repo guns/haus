@@ -161,7 +161,7 @@ class Haus::TaskSpec < MiniTest::Spec
       runoptions.call(%w[--force]).force.must_equal true
       runoptions.call(%w[--noop]).noop.must_equal true
       runoptions.call(%w[--quiet]).quiet.must_equal true
-      capture_fork_io { Haus::Noop.new(%w[--help]).run }.join.must_equal Haus::Noop.new.options.to_s
+      capture_fork_io { Haus::Noop.new(%w[--help]).run }.first.must_equal Haus::Noop.new.options.to_s
     end
   end
 
