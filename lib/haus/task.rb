@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
-require 'haus/task_options'
+require 'haus/options'
+require 'haus/user'
 require 'haus/queue'
 
 class Haus
@@ -78,11 +79,27 @@ class Haus
       Dir["#{etc}/*"].map { |f| File.expand_path f }
     end
 
+    #
+    # Provides common options for all tasks
+    #
     def options
-      @options ||= TaskOptions.new do |opt|
+      @options ||= Options.new do |opt|
+        opt.instance_eval do
+          def users= ary
+            users = ary.map { |a| User.new a }
+
+            users.each do |u|
+              if not File.directory? u.dir
+                raise "#{u.name}'s home directory, #{u.dir.inspect}, does not exist"
+              end
+            end
+
+            super users
+          end
+        end
+
         opt.users = [Process.euid] # Default value for users array
         opt.summary_width = 18
-
         opt.banner = %Q{\
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
           Usage: haus [--path PATH] #{self.class.command} [options]

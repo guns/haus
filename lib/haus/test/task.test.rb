@@ -124,8 +124,20 @@ class Haus::TaskSpec < MiniTest::Spec
   end
 
   describe :options do
-    it 'must be an instance of Haus::Task::TaskOptions' do
-      Haus::Noop.new.options.must_be_kind_of Haus::TaskOptions
+    describe :users= do
+      it 'must set the users option' do
+        users     = [0, Etc.getlogin]
+        haususers = users.map { |u| Haus::User.new u }
+
+        opt = Haus::Noop.new.options
+        opt.users = users
+        opt.instance_variable_get(:@ostruct).users.must_equal haususers
+        opt.users.must_equal haususers
+      end
+    end
+
+    it 'must be an instance of Haus::Options' do
+      Haus::Noop.new.options.must_be_kind_of Haus::Options
     end
 
     it 'must have its own help message' do
