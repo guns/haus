@@ -71,7 +71,7 @@ class Haus::LoggerSpec < MiniTest::Spec
       it 'must SGR escape Array arguments and pass through others' do
         with_filetty do
           l = Haus::Logger.new
-          l.fmt(['¡¡', :red], ' WARNING! ', ['!!', :red]).must_equal "\e[31m¡¡\e[0m WARNING! \e[31m!!\e[0m"
+          l.fmt(['¡¡', :red], ' DANGER! ', ['!!', :red]).must_equal "\e[31m¡¡\e[0m DANGER! \e[31m!!\e[0m"
         end
       end
     end

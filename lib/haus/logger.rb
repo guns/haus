@@ -58,7 +58,7 @@ class Haus
     # Parameters are either strings, or lists that begin with a string and are
     # followed by SGR codes.
     #
-    #   fmt ['!!', :red], ' WARNING!' # => "\e[31m!!\e[0m WARNING!"
+    #   fmt ['!!', :red], ' DANGER!' # => "\e[31m!!\e[0m DANGER!"
     #
     def fmt *args
       args.map { |arg| arg.is_a?(Array) ? sgr(*arg) : arg }.join

@@ -25,6 +25,7 @@
  - Nested dotfiles (%dir)
  - Better `--help` documentation
  - Allow environment to set HAUS_PATH
+ - --path option should be a task option
 
 
 ### LICENSE

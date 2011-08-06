@@ -734,7 +734,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :duplicates? do
-      # TODO: Implement test
+      # TODO
     end
   end
 end
