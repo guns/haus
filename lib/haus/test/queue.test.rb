@@ -5,6 +5,7 @@ $:.unshift File.expand_path('../../..', __FILE__)
 require 'fileutils'
 require 'ostruct'
 require 'expect'
+require 'stringio'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
 require 'minitest/autorun'
@@ -677,32 +678,25 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :private do
-    describe :log do
-      it 'must accept one to three arguments' do
-        lambda { Haus::Queue.new.send :log }.must_raise ArgumentError
-        capture_io { Haus::Queue.new.send :log, 'WARNING' }.join.must_match "WARNING\n"
-        pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
-        capture_io { Haus::Queue.new.send :log, 'DELETING', '/etc/passwd' }.join.must_match pattern
-        pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
-        capture_io { Haus::Queue.new.send :log, 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
-        lambda { Haus::Queue.new.send :log, '1', '2', '3', '4' }.must_raise ArgumentError
-      end
-
-      it 'must not produce any output when options.quiet is set' do
-        @q.options = { :quiet => true }
-        capture_io { @q.send :log, 'QUIET', '/etc/passwd' }.join.must_equal ''
-      end
+    before do
+      @buf = StringIO.new
+      @q.options = { :logger => Haus::Logger.new(@buf) }
     end
 
-    describe :logwarn do
-      it 'must write a warning message to $stdout' do
-        @q.options = {}
-        capture_io { @q.send :logwarn, 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
+    describe :log do
+      it "must be a shortcut to the logger's :log method" do
+        @q.send :log, 'Open season on Kirkland Bourbon'
+        @buf.rewind
+        @buf.read.must_equal "Open season on Kirkland Bourbon\n"
       end
 
-      it 'must not produce any output when options.quiet is set' do
-        @q.options = { :quiet => true }
-        capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
+      it 'must not write to the io object when options.quiet is set' do
+        opts = @q.options.dup
+        opts.quiet = true
+        @q.options = opts
+        @q.send :log, 'SHHH'
+        @buf.rewind
+        @buf.read.must_equal ''
       end
     end
 

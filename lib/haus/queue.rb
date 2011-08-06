@@ -159,36 +159,36 @@ class Haus
         fopts = { :noop => options.noop }
 
         deletions.each do |dst|
-          log 'DELETING', dst
+          log [':: ', :green, :bold], ['DELETING ', :italic], dst
           rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
           srcpath = options.relative ? relpath(src, dst) : src
 
-          log 'LINKING', srcpath, dst
+          log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ')
           rm_rf dst, fopts.merge(:secure => true)
           mkdir_p File.dirname(dst), fopts
 
           ln_s srcpath, dst, fopts
         end
 
-        copies.each do |s,d|
-          log 'COPYING', s, d
-          rm_rf d, fopts.merge(:secure => true)
-          mkdir_p File.dirname(d), fopts
-          cp_r s, d, fopts.merge(:dereference_root => false) # Copy symlinks as is
+        copies.each do |src, dst|
+          log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ')
+          rm_rf dst, fopts.merge(:secure => true)
+          mkdir_p File.dirname(dst), fopts
+          cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
-        modifications.each do |p,d|
-          log 'MODIFYING', d
-          mkdir_p File.dirname(d), fopts
-          touch d, fopts
+        modifications.each do |prc, dst|
+          log [':: ', :green, :bold], ['MODIFYING ', :italic], dst
+          mkdir_p File.dirname(dst), fopts
+          touch dst, fopts
           # No simple way to deny FS access to the proc
           if options.noop
-            log "Skipping modification procedure for #{d}"
+            log "Skipping modification procedure for #{dst}"
           else
-            p.call d
+            prc.call dst
           end
         end
 
@@ -196,7 +196,7 @@ class Haus
 
       rescue StandardError => e
         if did_archive
-          logwarn "Rolling back to archive #{archive_path.inspect}"
+          log ['!! ', :red, :bold], "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
@@ -282,16 +282,7 @@ class Haus
     private
 
     def log *args
-      case args.size
-      when 1 then puts ':: %s' % args
-      when 2 then puts ':: %-9s %s' % args
-      when 3 then puts ':: %-9s %s -> %s' % args
-      else raise ArgumentError
-      end unless options.quiet
-    end
-
-    def logwarn msg
-      puts "!! #{msg}" unless options.quiet
+      options.logger.log *args unless options.quiet
     end
 
     def relpath src, dst
