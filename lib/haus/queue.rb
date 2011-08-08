@@ -16,7 +16,8 @@ class Haus
   #
   # Before execution, any files that would be overwritten, modified, or removed
   # are saved to an archive. If an error is raised during execution, the archive
-  # is extracted in an attempt to restore the previous state.
+  # is extracted in an attempt to restore the previous state (however, no
+  # attempt is made to remove any newly created files).
   #
   class Queue
     class MultipleJobError < RuntimeError; end
