@@ -26,6 +26,8 @@
  - Better `--help` documentation
  - Allow environment to set HAUS_PATH
  - Accept `haus help COMMAND` invocation
+ - Unfreeze Queue#options; either fully allow or deny write access to
+   the options object
 
 
 ### LICENSE
