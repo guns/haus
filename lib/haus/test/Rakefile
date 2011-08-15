@@ -47,11 +47,6 @@ namespace :test do
   end
 end
 
-desc 'Bundle install with different rubies'
-task :bundle do
-  %w[1.9 1.8 1.8.6].each { |v| system *%W[/opt/ruby/#{v}/bin/bundle install] }
-end
-
 desc 'Setup a four-pane development window in tmux'
 task :tmux do
   require 'shellwords'
