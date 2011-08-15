@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'ostruct'
 require 'pathname'
+require 'haus/logger'
 
 class Haus
   #
@@ -26,6 +27,7 @@ class Haus
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
+      options.logger ||= Haus::Logger.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 

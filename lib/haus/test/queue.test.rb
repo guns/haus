@@ -22,12 +22,20 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :initialize do
-    it 'must optionally accept an options object' do
+    it 'must optionally accept an OpenStruct or Hash object and create the options object' do
+      logger = Haus::Logger.new
       @q.method(:initialize).arity.must_equal -1
-      Haus::Queue.new.options.must_equal OpenStruct.new
-      q = Haus::Queue.new OpenStruct.new(:force => true)
-      q.options.must_equal OpenStruct.new(:force => true)
-      q.options.frozen?.must_equal true
+
+      queue = Haus::Queue.new
+      queue.options.must_be_kind_of OpenStruct
+      queue.options.logger.must_be_kind_of Haus::Logger
+      queue.options.frozen?.must_equal false
+
+      [Haus::Queue.new(OpenStruct.new :force => true), Haus::Queue.new(:force => true)].each do |q|
+        q.options.must_be_kind_of OpenStruct
+        q.options.force.must_equal true
+        q.options.logger.must_be_kind_of Haus::Logger
+      end
     end
 
     it 'must initialize the attr_readers, which should be frozen' do
