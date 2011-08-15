@@ -6,6 +6,7 @@ require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/logger'
+require 'haus/test/helper/minitest'
 
 class Haus::LoggerSpec < MiniTest::Spec
   describe :SGR do
