@@ -37,9 +37,9 @@ class Haus
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
-    # Dups and freezes object for safety
+    # Parameter can be a Hash or an OpenStruct
     def options= opts
-      @options = (opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup).freeze
+      @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
     # Add symlinking operation;

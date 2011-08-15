@@ -49,29 +49,23 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :options= do
-    before do
-      @assertion = lambda do |q|
-        q.options.force.must_equal true
-        q.options.frozen?.must_equal true
-        lambda { q.options.force = false }.must_raise TypeError
-      end
+    it 'must dup and store an OpenStruct parameter' do
+      os = OpenStruct.new :foo => 'foo', :bar => 'bar'
+      @q.options = os
+      @q.options.must_be_kind_of OpenStruct
+      @q.options.foo.must_equal 'foo'
+      os.foo = 'MOO'
+      os.foo.must_equal 'MOO'
+      @q.options.foo.must_equal 'foo'
     end
 
-    it 'must dup and freeze the passed OpenStruct object' do
-      opts = OpenStruct.new :force => true, :noop => true
-      @q.options = opts
-      @q.options.must_equal opts
-      opts.force = false
-      @assertion.call @q.dup
-    end
-
-    it 'must accept a Hash as an argument' do
-      opts = { :force => true, :noop => true }
-      @q.options = opts
-      @q.options.must_equal OpenStruct.new(opts)
-      opts.must_equal :force => true, :noop => true
-      opts[:force] = false
-      @assertion.call @q.dup
+    it 'must accept a Hash parameter' do
+      h = { :sniffy => 'nose', :stinky => 'butt' }
+      @q.options = h
+      @q.options.must_be_kind_of OpenStruct
+      @q.options.sniffy.must_equal 'nose'
+      h[:sniffy] = 'toes'
+      @q.options.sniffy.must_equal 'nose'
     end
   end
 
