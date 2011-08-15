@@ -22,8 +22,6 @@ class Haus
   class Queue
     class MultipleJobError < RuntimeError; end
 
-    include FileUtils
-
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
     def initialize opts = nil
@@ -161,30 +159,30 @@ class Haus
 
         deletions.each do |dst|
           log [':: ', :green, :bold], ['DELETING ', :italic], dst
-          rm_rf dst, fopts.merge(:secure => true)
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
           srcpath = options.relative ? relpath(src, dst) : src
 
           log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ')
-          rm_rf dst, fopts.merge(:secure => true)
-          mkdir_p File.dirname(dst), fopts
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
+          FileUtils.mkdir_p File.dirname(dst), fopts
 
-          ln_s srcpath, dst, fopts
+          FileUtils.ln_s srcpath, dst, fopts
         end
 
         copies.each do |src, dst|
           log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ')
-          rm_rf dst, fopts.merge(:secure => true)
-          mkdir_p File.dirname(dst), fopts
-          cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
+          FileUtils.mkdir_p File.dirname(dst), fopts
+          FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
         modifications.each do |prc, dst|
           log [':: ', :green, :bold], ['MODIFYING ', :italic], dst
-          mkdir_p File.dirname(dst), fopts
-          touch dst, fopts
+          FileUtils.mkdir_p File.dirname(dst), fopts
+          FileUtils.touch dst, fopts
           # No simple way to deny FS access to the proc
           if options.noop
             log "Skipping modification procedure for #{dst}"
@@ -227,7 +225,7 @@ class Haus
 
       Dir.chdir '/' do
         if system *(%W[tar zcf #{archive_path}] + files)
-          chmod 0600, archive_path
+          FileUtils.chmod 0600, archive_path
         else
           raise "Archive to #{archive_path.inspect} failed"
         end
@@ -324,7 +322,7 @@ class Haus
 
         true
       else
-        identical? a, b
+        FileUtils.identical? a, b
       end
     end
   end

@@ -21,10 +21,6 @@ class Haus::QueueSpec < MiniTest::Spec
     @q = Haus::Queue.new :quiet => true
   end
 
-  it 'must have included FileUtils' do
-    Haus::Queue.included_modules.must_include FileUtils
-  end
-
   describe :initialize do
     it 'must optionally accept an options object' do
       @q.method(:initialize).arity.must_equal -1
