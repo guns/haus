@@ -11,17 +11,19 @@ class Haus
   # register jobs via Queue#add_*, which can then be executed after optional
   # user confirmation.
   #
-  # For safety, the individual job queues are frozen; jobs can be removed from
-  # the queue via Queue#remove. In addition, multiple jobs are not allowed to be
-  # queued for a single destination.
+  # For safety, the individual job queues are frozen; jobs should be removed
+  # from the queue via Queue#remove. In addition, multiple jobs are not
+  # allowed to be queued for a single destination, and options cannot be
+  # modified while the queue is being executed.
   #
-  # Before execution, any files that would be overwritten, modified, or removed
-  # are saved to an archive. If an error is raised during execution, the archive
-  # is extracted in an attempt to restore the previous state (however, no
-  # attempt is made to remove any newly created files).
+  # Before execution, any files that would be overwritten, modified, or
+  # removed are saved to an archive. If an error is raised during execution,
+  # the archive is extracted in an attempt to restore the previous state
+  # (however, no attempt is made to remove any newly created files).
   #
   class Queue
     class MultipleJobError < RuntimeError; end
+    class FrozenOptionsError < RuntimeError; end
 
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
@@ -37,8 +39,10 @@ class Haus
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
-    # Parameter can be a Hash or an OpenStruct
+    # Parameter can be a Hash or an OpenStruct;
+    # Raises FrozenOptionsError if options is frozen
     def options= opts
+      raise FrozenOptionsError if options.frozen?
       @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
@@ -149,6 +153,9 @@ class Haus
       @executed = true
 
       begin
+        # Freeze options for safety
+        options.freeze
+
         did_archive = archive unless options.noop
         old_umask = File.umask 0077
 
@@ -203,6 +210,9 @@ class Haus
         raise e
 
       ensure
+        # Unfreeze options
+        @options = options.dup
+
         # Restore original umask
         File.umask old_umask
 

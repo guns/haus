@@ -17,6 +17,10 @@ require 'haus/test/helper/test_user'
 $user ||= Haus::TestUser[$$]
 
 class Haus::QueueSpec < MiniTest::Spec
+  it 'must contain some error classes' do
+    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[FrozenOptionsError MultipleJobError]
+  end
+
   before do
     @q = Haus::Queue.new :quiet => true
   end
@@ -66,6 +70,12 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.options.sniffy.must_equal 'nose'
       h[:sniffy] = 'toes'
       @q.options.sniffy.must_equal 'nose'
+    end
+
+    it 'must raise FrozenOptionsError if the options object is frozen' do
+      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise RuntimeError
+      @q.options.freeze
+      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise Haus::Queue::FrozenOptionsError
     end
   end
 
@@ -513,6 +523,18 @@ class Haus::QueueSpec < MiniTest::Spec
         File.lstat(f).mode.to_s(8)[/.{2}\z/].must_equal '00'
       end
       File.umask.to_s(8)[/.{2}\z/].wont_equal '77'
+    end
+
+    it 'must freeze the options object during execution and unfreeze afterwards' do
+      q = Haus::Queue.new :quiet => true
+      q.options.frozen?.must_equal false
+      opts = q.options.dup
+      q.add_modification $user.hausfile[1] do
+        q.options.frozen?.must_equal true
+      end
+      q.options.frozen?.must_equal false
+      q.execute!
+      q.options.must_equal opts
     end
   end
 
