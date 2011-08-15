@@ -56,4 +56,3 @@ module MiniTest
     end
   end
 end
-

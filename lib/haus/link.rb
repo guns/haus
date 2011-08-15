@@ -25,7 +25,7 @@ class Haus
 
     def run
       args = super
-      abort options.to_s if args.size > 0
+      raise options.to_s if args.size > 0
       queue.options = options
       enqueue
       queue.execute

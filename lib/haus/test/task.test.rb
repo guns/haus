@@ -2,8 +2,9 @@
 
 $:.unshift File.expand_path('../../..', __FILE__)
 
+require 'stringio'
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
+require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/task'
 require 'haus/test/helper/minitest'
@@ -97,6 +98,16 @@ class Haus::TaskSpec < MiniTest::Spec
     end
   end
 
+  describe :log do
+    it "must be a shortcut to the logger's :log method" do
+      h, buf = Haus::Noop.new, StringIO.new
+      h.options.logger.io = buf
+      h.log 'MooMooMoo'
+      buf.rewind
+      buf.read.must_equal "MooMooMoo\n"
+    end
+  end
+
   describe :etc do
     it 'must return HAUS_PATH/etc' do
       h = Haus::Noop.new
@@ -157,11 +168,12 @@ class Haus::TaskSpec < MiniTest::Spec
       runoptions = lambda { |args| h = Haus::Noop.new args; h.run; h.options }
       users = [0, $user.name, Etc.getlogin]
 
+      runoptions.call(%w[--path /opt/testhaus]).path.must_equal '/opt/testhaus'
       runoptions.call(%W[--users #{users.join ','}]).users.must_equal users.map { |u| Haus::User.new u }
       runoptions.call(%w[--force]).force.must_equal true
       runoptions.call(%w[--noop]).noop.must_equal true
       runoptions.call(%w[--quiet]).quiet.must_equal true
-      capture_fork_io { Haus::Noop.new(%w[--help]).run }.join.must_equal Haus::Noop.new.options.to_s
+      capture_fork_io { Haus::Noop.new(%w[--help]).run }.first.must_equal Haus::Noop.new.options.to_s
     end
   end
 

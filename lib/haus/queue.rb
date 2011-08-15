@@ -3,6 +3,7 @@
 require 'fileutils'
 require 'ostruct'
 require 'pathname'
+require 'haus/logger'
 
 class Haus
   #
@@ -10,23 +11,25 @@ class Haus
   # register jobs via Queue#add_*, which can then be executed after optional
   # user confirmation.
   #
-  # For safety, the individual job queues are frozen; jobs can be removed from
-  # the queue via Queue#remove. In addition, multiple jobs are not allowed to be
-  # queued for a single destination.
+  # For safety, the individual job queues are frozen; jobs should be removed
+  # from the queue via Queue#remove. In addition, multiple jobs are not
+  # allowed to be queued for a single destination, and options cannot be
+  # modified while the queue is being executed.
   #
-  # Before execution, any files that would be overwritten, modified, or removed
-  # are saved to an archive. If an error is raised during execution, the archive
-  # is extracted in an attempt to restore the previous state.
+  # Before execution, any files that would be overwritten, modified, or
+  # removed are saved to an archive. If an error is raised during execution,
+  # the archive is extracted in an attempt to restore the previous state
+  # (however, no attempt is made to remove any newly created files).
   #
   class Queue
     class MultipleJobError < RuntimeError; end
-
-    include FileUtils
+    class FrozenOptionsError < RuntimeError; end
 
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
+      options.logger ||= Haus::Logger.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
 
@@ -36,9 +39,11 @@ class Haus
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
     end
 
-    # Dups and freezes object for safety
+    # Parameter can be a Hash or an OpenStruct;
+    # Raises FrozenOptionsError if options is frozen
     def options= opts
-      @options = (opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup).freeze
+      raise FrozenOptionsError if options.frozen?
+      @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
     # Add symlinking operation;
@@ -148,6 +153,9 @@ class Haus
       @executed = true
 
       begin
+        # Freeze options for safety
+        options.freeze
+
         did_archive = archive unless options.noop
         old_umask = File.umask 0077
 
@@ -159,36 +167,36 @@ class Haus
         fopts = { :noop => options.noop }
 
         deletions.each do |dst|
-          log 'DELETING', dst
-          rm_rf dst, fopts.merge(:secure => true)
+          log [':: ', :green, :bold], ['DELETING ', :italic], dst
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
           srcpath = options.relative ? relpath(src, dst) : src
 
-          log 'LINKING', srcpath, dst
-          rm_rf dst, fopts.merge(:secure => true)
-          mkdir_p File.dirname(dst), fopts
+          log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
+          FileUtils.mkdir_p File.dirname(dst), fopts
 
-          ln_s srcpath, dst, fopts
+          FileUtils.ln_s srcpath, dst, fopts
         end
 
-        copies.each do |s,d|
-          log 'COPYING', s, d
-          rm_rf d, fopts.merge(:secure => true)
-          mkdir_p File.dirname(d), fopts
-          cp_r s, d, fopts.merge(:dereference_root => false) # Copy symlinks as is
+        copies.each do |src, dst|
+          log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+          FileUtils.rm_rf dst, fopts.merge(:secure => true)
+          FileUtils.mkdir_p File.dirname(dst), fopts
+          FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
-        modifications.each do |p,d|
-          log 'MODIFYING', d
-          mkdir_p File.dirname(d), fopts
-          touch d, fopts
+        modifications.each do |prc, dst|
+          log [':: ', :green, :bold], ['MODIFYING ', :italic], dst
+          FileUtils.mkdir_p File.dirname(dst), fopts
+          FileUtils.touch dst, fopts
           # No simple way to deny FS access to the proc
           if options.noop
-            log "Skipping modification procedure for #{d}"
+            log "Skipping modification procedure for #{dst}"
           else
-            p.call d
+            prc.call dst
           end
         end
 
@@ -196,12 +204,15 @@ class Haus
 
       rescue StandardError => e
         if did_archive
-          logwarn "Rolling back to archive #{archive_path.inspect}"
+          log ['!! ', :red, :bold], "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
 
       ensure
+        # Unfreeze options
+        @options = options.dup
+
         # Restore original umask
         File.umask old_umask
 
@@ -226,7 +237,7 @@ class Haus
 
       Dir.chdir '/' do
         if system *(%W[tar zcf #{archive_path}] + files)
-          chmod 0600, archive_path
+          FileUtils.chmod 0600, archive_path
         else
           raise "Archive to #{archive_path.inspect} failed"
         end
@@ -282,16 +293,7 @@ class Haus
     private
 
     def log *args
-      case args.size
-      when 1 then puts ':: %s' % args
-      when 2 then puts ':: %-9s %s' % args
-      when 3 then puts ':: %-9s %s -> %s' % args
-      else raise ArgumentError
-      end unless options.quiet
-    end
-
-    def logwarn msg
-      puts "!! #{msg}" unless options.quiet
+      options.logger.log *args unless options.quiet
     end
 
     def relpath src, dst
@@ -332,7 +334,7 @@ class Haus
 
         true
       else
-        identical? a, b
+        FileUtils.identical? a, b
       end
     end
   end

@@ -3,7 +3,7 @@
 $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
+require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/options'
 require 'haus/test/helper/test_user'
@@ -25,6 +25,7 @@ class Haus::OptionsSpec < MiniTest::Spec
       ostruct.must_be_kind_of OpenStruct
       ostruct.path.must_be_kind_of String
       ostruct.path.must_equal File.expand_path('../../../..', __FILE__)
+      ostruct.logger.must_be_kind_of Haus::Logger
     end
   end
 

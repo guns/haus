@@ -5,31 +5,41 @@ $:.unshift File.expand_path('../../..', __FILE__)
 require 'fileutils'
 require 'ostruct'
 require 'expect'
+require 'stringio'
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
+require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/queue'
+require 'haus/logger'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
 
 class Haus::QueueSpec < MiniTest::Spec
+  it 'must contain some error classes' do
+    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[FrozenOptionsError MultipleJobError]
+  end
+
   before do
     @q = Haus::Queue.new :quiet => true
   end
 
-  it 'must have included FileUtils' do
-    Haus::Queue.included_modules.must_include FileUtils
-  end
-
   describe :initialize do
-    it 'must optionally accept an options object' do
+    it 'must optionally accept an OpenStruct or Hash object and create the options object' do
+      logger = Haus::Logger.new
       @q.method(:initialize).arity.must_equal -1
-      Haus::Queue.new.options.must_equal OpenStruct.new
-      q = Haus::Queue.new OpenStruct.new(:force => true)
-      q.options.must_equal OpenStruct.new(:force => true)
-      q.options.frozen?.must_equal true
+
+      queue = Haus::Queue.new
+      queue.options.must_be_kind_of OpenStruct
+      queue.options.logger.must_be_kind_of Haus::Logger
+      queue.options.frozen?.must_equal false
+
+      [Haus::Queue.new(OpenStruct.new :force => true), Haus::Queue.new(:force => true)].each do |q|
+        q.options.must_be_kind_of OpenStruct
+        q.options.force.must_equal true
+        q.options.logger.must_be_kind_of Haus::Logger
+      end
     end
 
     it 'must initialize the attr_readers, which should be frozen' do
@@ -43,29 +53,29 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :options= do
-    before do
-      @assertion = lambda do |q|
-        q.options.force.must_equal true
-        q.options.frozen?.must_equal true
-        lambda { q.options.force = false }.must_raise TypeError
-      end
+    it 'must dup and store an OpenStruct parameter' do
+      os = OpenStruct.new :foo => 'foo', :bar => 'bar'
+      @q.options = os
+      @q.options.must_be_kind_of OpenStruct
+      @q.options.foo.must_equal 'foo'
+      os.foo = 'MOO'
+      os.foo.must_equal 'MOO'
+      @q.options.foo.must_equal 'foo'
     end
 
-    it 'must dup and freeze the passed OpenStruct object' do
-      opts = OpenStruct.new :force => true, :noop => true
-      @q.options = opts
-      @q.options.must_equal opts
-      opts.force = false
-      @assertion.call @q.dup
+    it 'must accept a Hash parameter' do
+      h = { :sniffy => 'nose', :stinky => 'butt' }
+      @q.options = h
+      @q.options.must_be_kind_of OpenStruct
+      @q.options.sniffy.must_equal 'nose'
+      h[:sniffy] = 'toes'
+      @q.options.sniffy.must_equal 'nose'
     end
 
-    it 'must accept a Hash as an argument' do
-      opts = { :force => true, :noop => true }
-      @q.options = opts
-      @q.options.must_equal OpenStruct.new(opts)
-      opts.must_equal :force => true, :noop => true
-      opts[:force] = false
-      @assertion.call @q.dup
+    it 'must raise FrozenOptionsError if the options object is frozen' do
+      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise RuntimeError
+      @q.options.freeze
+      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise Haus::Queue::FrozenOptionsError
     end
   end
 
@@ -514,6 +524,18 @@ class Haus::QueueSpec < MiniTest::Spec
       end
       File.umask.to_s(8)[/.{2}\z/].wont_equal '77'
     end
+
+    it 'must freeze the options object during execution and unfreeze afterwards' do
+      q = Haus::Queue.new :quiet => true
+      q.options.frozen?.must_equal false
+      opts = q.options.dup
+      q.add_modification $user.hausfile[1] do
+        q.options.frozen?.must_equal true
+      end
+      q.options.frozen?.must_equal false
+      q.execute!
+      q.options.must_equal opts
+    end
   end
 
   describe :executed? do
@@ -677,32 +699,25 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :private do
-    describe :log do
-      it 'must accept one to three arguments' do
-        lambda { Haus::Queue.new.send :log }.must_raise ArgumentError
-        capture_io { Haus::Queue.new.send :log, 'WARNING' }.join.must_match "WARNING\n"
-        pattern = %r{\A:: DELETING\s+/etc/passwd\n\z}
-        capture_io { Haus::Queue.new.send :log, 'DELETING', '/etc/passwd' }.join.must_match pattern
-        pattern = %r{\A:: LINKING\s+/etc/passwd -> /tmp/passwd\n\z}
-        capture_io { Haus::Queue.new.send :log, 'LINKING', '/etc/passwd', '/tmp/passwd' }.join.must_match pattern
-        lambda { Haus::Queue.new.send :log, '1', '2', '3', '4' }.must_raise ArgumentError
-      end
-
-      it 'must not produce any output when options.quiet is set' do
-        @q.options = { :quiet => true }
-        capture_io { @q.send :log, 'QUIET', '/etc/passwd' }.join.must_equal ''
-      end
+    before do
+      @buf = StringIO.new
+      @q.options = { :logger => Haus::Logger.new(@buf) }
     end
 
-    describe :logwarn do
-      it 'must write a warning message to $stdout' do
-        @q.options = {}
-        capture_io { @q.send :logwarn, 'LOGWARN' }.join.must_equal "!! LOGWARN\n"
+    describe :log do
+      it "must be a shortcut to the logger's :log method" do
+        @q.send :log, 'Open season on Kirkland Bourbon'
+        @buf.rewind
+        @buf.read.must_equal "Open season on Kirkland Bourbon\n"
       end
 
-      it 'must not produce any output when options.quiet is set' do
-        @q.options = { :quiet => true }
-        capture_io { @q.send :logwarn, 'QUIET' }.join.must_equal ''
+      it 'must not write to the io object when options.quiet is set' do
+        opts = @q.options.dup
+        opts.quiet = true
+        @q.options = opts
+        @q.send :log, 'SHHH'
+        @buf.rewind
+        @buf.read.must_equal ''
       end
     end
 
@@ -734,7 +749,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :duplicates? do
-      # TODO: Implement test
+      # TODO
     end
   end
 end

@@ -8,7 +8,6 @@ task :default => :test
 
 desc 'Run all tests'
 task :test do
-  require 'bundler/setup'
   Dir['**/*.test.rb'].each { |f| load f }
 end
 

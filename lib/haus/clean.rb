@@ -28,8 +28,7 @@ class Haus
               queue.add_deletion dot if etcfiles.include? File.expand_path(File.readlink dot)
             end
           rescue Errno::EACCES, Errno::ENOENT => e # Catch syscall errors
-            # FIXME: logger!
-            warn e.to_s
+            log ['!! ', :red, :bold], e.to_s
           end
 
         end
@@ -38,7 +37,7 @@ class Haus
 
     def run
       args = super
-      abort options.to_s if args.size > 0
+      raise options.to_s if args.size > 0
       queue.options = options
       enqueue
       queue.execute
