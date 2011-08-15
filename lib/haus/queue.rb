@@ -165,7 +165,7 @@ class Haus
         links.each do |src, dst|
           srcpath = options.relative ? relpath(src, dst) : src
 
-          log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ')
+          log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
           FileUtils.rm_rf dst, fopts.merge(:secure => true)
           FileUtils.mkdir_p File.dirname(dst), fopts
 
@@ -173,7 +173,7 @@ class Haus
         end
 
         copies.each do |src, dst|
-          log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ')
+          log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
           FileUtils.rm_rf dst, fopts.merge(:secure => true)
           FileUtils.mkdir_p File.dirname(dst), fopts
           FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
