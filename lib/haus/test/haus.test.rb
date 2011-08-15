@@ -49,9 +49,10 @@ class HausSpec < MiniTest::Spec
       capture_fork_io { Haus.new(%w[link --help]).run }.first.chomp.wont_equal help
     end
 
-    it 'must return true or nil' do
+    it 'must exit(0) if true and exit(1) otherwise' do
       capture_fork_io { print Haus.new(%w[nooptrue]).run.inspect }.first.must_equal 'true'
-      capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.first.must_equal 'nil'
+      capture_fork_io { print Haus.new(%w[noopnil]).run.inspect }.first.must_equal ''
+      $?.exitstatus.must_equal 1
     end
 
     it 'must rescue StandardError exceptions and abort' do

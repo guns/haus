@@ -49,7 +49,7 @@ class Haus
     abort help if task.nil?
 
     # Enumerable#drop introduced in 1.8.7
-    task[:class].new(args[1..-1]).run
+    task[:class].new(args[1..-1]).run or exit 1
   rescue StandardError => e
     abort e.to_s
   end
