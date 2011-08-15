@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if $stdout.tty? and [].respond_to? :cycle
+require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/test/helper/test_user'
 
