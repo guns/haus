@@ -288,18 +288,22 @@ class Haus::QueueSpec < MiniTest::Spec
   describe :targets do
     # Fill up a queue
     before do
-      @files   = (0..7).map { $user.hausfile }
+      @files   = (0..8).map { $user.hausfile }
+      @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
+
+      # Alter some source files
+      FileUtils.ln_sf '/nonextant/source', @sources[8]
 
       # Pre-create targets for some
       [1,3,4,5,7].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
 
-      8.times do |n|
+      @files.size.times do |n|
         case n
-        when 0..1 then @q.add_link *@files[n]
-        when 2..3 then @q.add_copy *@files[n]
-        when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then @q.add_modification(@targets[n]) { |f| f }
+        when 0..1    then @q.add_link *@files[n]
+        when 2..3, 8 then @q.add_copy *@files[n]
+        when 4..5    then @q.add_deletion @targets[n]
+        when 6..7    then @q.add_modification(@targets[n]) { |f| f }
         end
       end
     end
@@ -314,7 +318,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must return all new files on :create' do
-      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6).sort
+      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6,8).sort
     end
 
     it 'must return all files to be modified on :modify' do
