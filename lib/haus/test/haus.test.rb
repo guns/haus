@@ -56,7 +56,8 @@ class HausSpec < MiniTest::Spec
     end
 
     it 'must rescue StandardError exceptions and abort' do
-      capture_fork_io { Haus.new(%w[noopraise]).run }[1].must_equal "NoopRaise\n"
+      capture_fork_io { Haus.new(%w[noopraise]).run }.first.must_match /NoopRaise\n\z/
+      $?.exitstatus.must_equal 1
     end
   end
 end

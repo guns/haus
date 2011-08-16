@@ -204,7 +204,7 @@ class Haus
 
       rescue StandardError => e
         if did_archive
-          log ['!! ', :red, :bold], "Rolling back to archive #{archive_path.inspect}"
+          log ["\n!! ", :red, :bold], "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
