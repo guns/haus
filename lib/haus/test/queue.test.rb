@@ -784,5 +784,21 @@ class Haus::QueueSpec < MiniTest::Spec
     describe :duplicates? do
       # TODO
     end
+
+    describe :execute_deletions do
+      # TODO
+    end
+
+    describe :execute_links do
+      # TODO
+    end
+
+    describe :execute_copies do
+      # TODO
+    end
+
+    describe :execute_modifications do
+      # TODO
+    end
   end
 end

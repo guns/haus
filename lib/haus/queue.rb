@@ -156,49 +156,19 @@ class Haus
         # Freeze options for safety
         options.freeze
 
-        did_archive = archive unless options.noop
-        old_umask = File.umask 0077
-
         # Rollback on signals
         %w[INT TERM QUIT].each do |sig|
           trap(sig) { raise "Caught signal SIG#{sig}" }
         end
 
-        fopts = { :noop => options.noop }
+        did_archive = archive unless options.noop
+        old_umask   = File.umask 0077
+        fopts       = { :noop => options.noop }
 
-        deletions.each do |dst|
-          log [':: ', :white, :bold], ['DELETING ', :italic], dst
-          FileUtils.rm_rf dst, fopts.merge(:secure => true)
-        end
-
-        links.each do |src, dst|
-          srcpath = options.relative ? relpath(src, dst) : src
-
-          log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
-          FileUtils.rm_rf dst, fopts.merge(:secure => true)
-          FileUtils.mkdir_p File.dirname(dst), fopts
-
-          FileUtils.ln_s srcpath, dst, fopts
-        end
-
-        copies.each do |src, dst|
-          log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
-          FileUtils.rm_rf dst, fopts.merge(:secure => true)
-          FileUtils.mkdir_p File.dirname(dst), fopts
-          FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
-        end
-
-        modifications.each do |prc, dst|
-          log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
-          FileUtils.mkdir_p File.dirname(dst), fopts
-          FileUtils.touch dst, fopts
-          # No simple way to deny FS access to the proc
-          if options.noop
-            log "Skipping modification procedure for #{dst}"
-          else
-            prc.call dst
-          end
-        end
+        execute_deletions     fopts.dup
+        execute_links         fopts.dup
+        execute_copies        fopts.dup
+        execute_modifications fopts.dup
 
         true
 
@@ -350,6 +320,57 @@ class Haus
         true
       else
         FileUtils.identical? a, b
+      end
+    end
+
+    def execute_deletions fopts
+      deletions.each do |dst|
+        log [':: ', :white, :bold], ['DELETING ', :italic], dst
+        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+      end
+    end
+
+    def execute_links fopts
+      links.each do |src, dst|
+        srcpath = options.relative ? relpath(src, dst) : src
+
+        log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.mkdir_p File.dirname(dst), fopts
+
+        FileUtils.ln_s srcpath, dst, fopts
+      end
+    end
+
+    def execute_copies fopts
+      copies.each do |src, dst|
+        log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.mkdir_p File.dirname(dst), fopts
+        # The copy implementation breaks on broken symlinks
+        if File.ftype(src) == 'link'
+          lsrc = File.readlink src
+          # Leave absolute paths alone, but recalculate relative paths
+          srcpath = lsrc =~ %r{\A/} ? lsrc : relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
+          FileUtils.ln_s srcpath, dst, fopts
+        else
+          # NOTE: Explicit :dereference_root option required for 1.8.6
+          FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false)
+        end
+      end
+    end
+
+    def execute_modifications fopts
+      modifications.each do |prc, dst|
+        log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
+        FileUtils.mkdir_p File.dirname(dst), fopts
+        FileUtils.touch dst, fopts
+        # No simple way to deny FS access to the proc
+        if options.noop
+          log "Skipping modification procedure for #{dst}"
+        else
+          prc.call dst
+        end
       end
     end
   end
