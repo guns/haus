@@ -170,6 +170,15 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.copies.must_be_empty
     end
 
+    it 'must not add relative links that resolve to the same location' do
+      src, dst = $user.hausfile
+      linksrc  = $user.hausfile.first
+      FileUtils.ln_sf relpath(linksrc, src), src
+      FileUtils.ln_sf relpath(linksrc, dst), dst
+      @q.add_copy(src, dst).must_be_nil
+      @q.copies.must_be_empty
+    end
+
     describe :success do
       before do
         @assertion = lambda do |prc|
@@ -384,19 +393,24 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :execute! do
     before do
-      @files   = (0..9).map { $user.hausfile }
+      @files   = (0..12).map { $user.hausfile }
       @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
+
+      # Alter sources for some
+      FileUtils.ln_sf relpath('/etc/passwd', @sources[10]), @sources[10] # Local relative link
+      FileUtils.ln_sf File.expand_path(@sources[9]), @sources[11]        # Absolute link
+      FileUtils.ln_sf '/yo/yo/ma', @sources[12]                          # Broken link
 
       # Pre-create targets for some
       [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.write 'EXTANT' } }
 
-      10.times do |n|
+      @files.size.times do |n|
         case n
-        when 0..1, 8..9 then @q.add_link *@files[n]
-        when 2..3       then @q.add_copy *@files[n]
-        when 4..5       then @q.add_deletion @targets[n]
-        when 6..7       then
+        when 0..1, 8..9   then @q.add_link *@files[n]
+        when 2..3, 10..12 then @q.add_copy *@files[n]
+        when 4..5         then @q.add_deletion @targets[n]
+        when 6..7         then
           @q.add_modification @targets[n] do |f|
             File.open(f, 'w') { |io| io.write 'MODIFIED' }
           end
@@ -515,6 +529,27 @@ class Haus::QueueSpec < MiniTest::Spec
       q.copies.must_equal [[src, dst]]
       q.execute!
       File.lstat(dst).ftype.must_equal 'link'
+    end
+
+    it 'must copy relative links, but recalculate their paths' do
+      @q.execute!
+      File.lstat(@targets[10]).ftype.must_equal 'link'
+      File.readlink(@targets[10]).wont_equal File.readlink(@sources[10])
+      File.readlink(@targets[10]).must_equal relpath(File.expand_path(File.readlink(@targets[10]), $user.etc), @sources[10])
+    end
+
+    it 'must copy absolute links as is' do
+      @q.execute!
+      File.lstat(@targets[11]).ftype.must_equal 'link'
+      File.readlink(@targets[11]).must_equal File.readlink(@sources[11])
+    end
+
+    it 'must copy broken symlinks' do
+      extant?(@sources[12]).must_equal true
+      @q.copies.must_include @files[12]
+      @q.execute!
+      File.lstat(@targets[12]).ftype.must_equal 'link'
+      File.readlink(@targets[12]).must_equal File.readlink(@sources[12])
     end
 
     it 'must modify files' do
