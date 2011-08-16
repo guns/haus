@@ -167,14 +167,14 @@ class Haus
         fopts = { :noop => options.noop }
 
         deletions.each do |dst|
-          log [':: ', :green, :bold], ['DELETING ', :italic], dst
+          log [':: ', :white, :bold], ['DELETING ', :italic], dst
           FileUtils.rm_rf dst, fopts.merge(:secure => true)
         end
 
         links.each do |src, dst|
           srcpath = options.relative ? relpath(src, dst) : src
 
-          log [':: ', :green, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+          log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
           FileUtils.rm_rf dst, fopts.merge(:secure => true)
           FileUtils.mkdir_p File.dirname(dst), fopts
 
@@ -182,14 +182,14 @@ class Haus
         end
 
         copies.each do |src, dst|
-          log [':: ', :green, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+          log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
           FileUtils.rm_rf dst, fopts.merge(:secure => true)
           FileUtils.mkdir_p File.dirname(dst), fopts
           FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false) # Copy symlinks as is
         end
 
         modifications.each do |prc, dst|
-          log [':: ', :green, :bold], ['MODIFYING ', :italic], dst
+          log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
           FileUtils.mkdir_p File.dirname(dst), fopts
           FileUtils.touch dst, fopts
           # No simple way to deny FS access to the proc
@@ -259,6 +259,8 @@ class Haus
     # Returns true without prompting if no jobs are queued.
     # Returns false without prompting if the `quiet` option is set
     # Returns false without prompting if input is not a tty.
+    #
+    # NOTE: Output is to $stdout, not through the logger.
     def tty_confirm?
       return true if options.force or options.noop or targets.empty?
       return false if options.quiet or not $stdin.tty?
@@ -266,28 +268,33 @@ class Haus
       [:create, :modify, :overwrite, :delete].each do |action|
         fs = targets action
         next if fs.empty?
-        puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
+        $stdout.puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
       end
 
       unless targets(:archive).empty?
-        puts "\nAll original links and files will be archived to:\n    #{archive_path}"
+        $stdout.puts "\nAll original links and files will be archived to:\n    #{archive_path}"
       end
 
-      print "\nPermission to continue? [Y/n] "
+      $stdout.print "\nPermission to continue? [Y/n] "
 
-      # Hack to get a single character from the terminal
-      if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
+      response = if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
+        # Hack to get a single character from the terminal
         begin
           system 'stty raw -echo'
-          puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
+          $stdout.puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
           !!(c =~ /y|\r|\n/i)
         ensure
           system 'stty -raw echo'
-          puts
+          print "\r" # Return cursor to first column
         end
       else
         !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
       end
+
+      # Insert a newline if we have confirmation
+      $stdout.puts if response
+
+      response
     end
 
     private
