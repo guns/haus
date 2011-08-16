@@ -71,7 +71,7 @@ class Haus
 
     # Shortcut to logger method
     def log *args
-      options.logger.log *args
+      options.logger.log *args unless options.quiet
     end
 
     # HAUS_PATH/etc

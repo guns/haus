@@ -106,6 +106,15 @@ class Haus::TaskSpec < MiniTest::Spec
       buf.rewind
       buf.read.must_equal "MooMooMoo\n"
     end
+
+    it 'must not write to the io object when options.quiet is set' do
+      h, buf = Haus::Noop.new, StringIO.new
+      h.options.logger.io = buf
+      h.options.quiet = true
+      h.log 'QUIET!'
+      buf.rewind
+      buf.read.must_equal ''
+    end
   end
 
   describe :etc do

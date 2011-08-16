@@ -765,12 +765,12 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :private do
-    before do
-      @buf = StringIO.new
-      @q.options = { :logger => Haus::Logger.new(@buf) }
-    end
-
     describe :log do
+      before do
+        @buf = StringIO.new
+        @q.options = { :logger => Haus::Logger.new(@buf) }
+      end
+
       it "must be a shortcut to the logger's :log method" do
         @q.send :log, 'Open season on Kirkland Bourbon'
         @buf.rewind
