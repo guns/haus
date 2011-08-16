@@ -67,3 +67,18 @@ module MiniTest
     end
   end
 end
+
+# Just for fun
+if defined? PrideIO and MiniTest::Unit.output.kind_of? PrideIO
+  require 'haus/logger'
+
+  if Haus::Logger.new.colors256?
+    xterm_colors = 16.step(196, 36).inject [] do |ary, base|
+      ary + (base..base+5).map do |n|
+        6.times.map { |k| '38;5;%d' % (n + 6*k) }
+      end
+    end.shuffle.first
+    MiniTest::Unit.output.instance_variable_set :@colors, xterm_colors
+    MiniTest::Unit.output.instance_variable_set :@size,   xterm_colors.size
+  end
+end
