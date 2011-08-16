@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 require 'fileutils'
+require 'pathname'
 require 'minitest/unit'
 
 module MiniTest
@@ -59,6 +60,10 @@ module MiniTest
       File.lstat(file) ? true : false
     rescue Errno::ENOENT
       false
+    end
+
+    def relpath src, dst
+      Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s
     end
   end
 end

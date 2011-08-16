@@ -119,10 +119,8 @@ class Haus::QueueSpec < MiniTest::Spec
       end
 
       it 'must add existing links if relative/absolute prefs do not match' do
-        relpath = lambda { |src, dst| Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s }
-
         @assertion.call lambda { |src, dst|
-          FileUtils.ln_sf relpath.call(src, dst), dst
+          FileUtils.ln_sf relpath(src, dst), dst
         }, nil
 
         @assertion.call lambda { |src, dst|
@@ -491,8 +489,8 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.execute!
       [8,9].each do |n|
         File.symlink?(@targets[n]).must_equal true
-        relpath = Pathname.new(@sources[n]).relative_path_from(Pathname.new File.dirname(@targets[n])).to_s
-        File.readlink(@targets[n]).must_equal relpath
+        tgtpath = relpath(@sources[n], @targets[n])
+        File.readlink(@targets[n]).must_equal tgtpath
         File.expand_path(File.readlink(@targets[n]), File.dirname(@targets[n])).must_equal @sources[n]
       end
     end
@@ -772,7 +770,7 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.options = { :relative => true }
         @q.send(:linked?, src, dst).must_equal false
         FileUtils.rm_f dst
-        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s, dst
+        FileUtils.ln_s relpath(src, dst), dst
         @q.send(:linked?, src, dst).must_equal true
       end
     end
