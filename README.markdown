@@ -26,7 +26,6 @@
  - Better `--help` documentation
  - Allow environment to set HAUS_PATH
  - Accept `haus help COMMAND` invocation
- - Fix sporadic filesystem collision in tests
 
 
 ### LICENSE
