@@ -52,7 +52,7 @@ class Haus
       src, dst = [source, destination].map { |f| File.expand_path f }
 
       raise MultipleJobError if targets.include? dst
-      return nil unless File.exists? src
+      return nil unless extant? src
       return nil if File.symlink? dst and linked? src, dst
 
       @links = (links.dup << [src, dst]).freeze
@@ -64,8 +64,8 @@ class Haus
       src, dst = [source, destination].map { |f| File.expand_path f }
 
       raise MultipleJobError if targets.include? dst
-      return nil unless File.exists? src
-      return nil if File.exists? dst and duplicates? src, dst
+      return nil unless extant? src
+      return nil if extant? dst and duplicates? src, dst
 
       @copies = (copies.dup << [src, dst]).freeze
     end
@@ -76,7 +76,7 @@ class Haus
       dst = File.expand_path destination
 
       raise MultipleJobError if targets.include? dst
-      return nil unless File.exists? dst
+      return nil unless extant? dst
 
       @deletions = (deletions.dup << dst).freeze
     end
@@ -302,6 +302,13 @@ class Haus
 
     def linked? src, dst
       (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
+    end
+
+    # Checks to see if file exists, even broken symlinks
+    def extant? path
+      File.lstat(path) ? true : false
+    rescue Errno::ENOENT
+      false
     end
 
     # Compare two files:

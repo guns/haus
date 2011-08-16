@@ -136,6 +136,12 @@ class Haus::QueueSpec < MiniTest::Spec
           FileUtils.touch File.join(dst, 'sparkle', 'pony')
         }, nil
       end
+
+      it 'must add links that point to non-extant files' do
+        @assertion.call lambda { |src, dst|
+          FileUtils.ln_sf '/magic/pony/land', src # Change source to broken symlink
+        }, nil
+      end
     end
   end
 
@@ -156,6 +162,14 @@ class Haus::QueueSpec < MiniTest::Spec
       args = $user.hausfile
       @q.add_copy *args
       lambda { @q.add_copy *args }.must_raise Haus::Queue::MultipleJobError
+    end
+
+    it 'must not add broken but identical symlinks' do
+      fs = $user.hausfile
+      fs.each { |f| FileUtils.ln_sf '/new/world/pony', f }
+      res = @q.add_copy *fs
+      res.must_be_nil
+      @q.copies.must_be_empty
     end
 
     describe :success do
@@ -207,6 +221,11 @@ class Haus::QueueSpec < MiniTest::Spec
           FileUtils.touch File.join(dst, 'sparkle', 'pony')
         }
       end
+
+      it 'must copy symlinks as is' do
+        @assertion.call lambda { |src, dst| FileUtils.ln_sf '/etc/passwd', src }
+        @assertion.call lambda { |src, dst| FileUtils.ln_sf '/magic/pony/rides', src }
+      end
     end
   end
 
@@ -218,6 +237,16 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must push and refreeze @deletions when dst exists' do
       src = $user.hausfile.first
+      res = @q.add_deletion src
+      res.must_equal [src]
+      res.frozen?.must_equal true
+      @q.deletions.must_equal [src]
+      @q.deletions.frozen?.must_equal true
+    end
+
+    it 'must push and refreeze @deletions when dst is a broken symlink' do
+      src = $user.hausfile[1]
+      FileUtils.ln_sf '/broken/link', src
       res = @q.add_deletion src
       res.must_equal [src]
       res.frozen?.must_equal true
@@ -746,6 +775,10 @@ class Haus::QueueSpec < MiniTest::Spec
         FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s, dst
         @q.send(:linked?, src, dst).must_equal true
       end
+    end
+
+    describe :extant? do
+      # TODO
     end
 
     describe :duplicates? do
