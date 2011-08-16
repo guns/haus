@@ -54,5 +54,11 @@ module MiniTest
       $stdout = STDOUT
       FileUtils.rm_f [fin, fout]
     end
+
+    def extant? file
+      File.lstat(file) ? true : false
+    rescue Errno::ENOENT
+      false
+    end
   end
 end

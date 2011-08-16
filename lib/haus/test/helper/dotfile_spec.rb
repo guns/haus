@@ -5,6 +5,7 @@ $:.unshift File.expand_path('../../../..', __FILE__)
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
+require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]
@@ -92,7 +93,7 @@ class DotfileSpec < MiniTest::Spec
   def must_result_in_dotfiles
     user = Haus::TestUser[@test.class.to_s + '_dotfiles']
     jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] does not like 2D arrays
-    jobs.each_value { |s,d| File.exists?(d).must_equal false }
+    jobs.each_value { |s,d| extant?(d).must_equal false }
 
     @task.options.path = user.haus
     @task.run

@@ -299,7 +299,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must return all files that should be archived on :archive' do
-      @q.targets(:archive).sort.must_equal @targets.select { |f| File.exists? f }.sort
+      @q.targets(:archive).sort.must_equal @targets.select { |f| extant? f }.sort
     end
 
     it 'must be a complete list of targets with no overlapping entries' do
@@ -407,7 +407,7 @@ class Haus::QueueSpec < MiniTest::Spec
             # Delete extant files
             FileUtils.rm_rf @targets, :secure => true
             # This shouldn't print if they're really gone
-            print 'foo' if File.exists? @targets[3]
+            print 'foo' if extant? @targets[3]
             print 'bar'
             kill sig, $$
             sleep 1
@@ -418,7 +418,7 @@ class Haus::QueueSpec < MiniTest::Spec
         end.first.must_equal 'bar'
 
         # But the rollback should have restored previously extant files
-        @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
+        @targets.select { |f| extant? f }.must_equal @targets.values_at(3,4,5)
       end
     end
 
@@ -428,7 +428,7 @@ class Haus::QueueSpec < MiniTest::Spec
       capture_fork_io do
         @q.add_modification target do |f|
           FileUtils.rm_rf @targets, :secure => true
-          print 'foo' if File.exists? @targets[3]
+          print 'foo' if extant? @targets[3]
           print 'bar'
           raise StandardError
           print 'baz'
@@ -436,13 +436,13 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.execute!
       end.first.must_equal 'bar'
 
-      @targets.select { |f| File.exists? f }.must_equal @targets.values_at(3,4,5)
+      @targets.select { |f| extant? f }.must_equal @targets.values_at(3,4,5)
     end
 
     it 'must delete files' do
-      [4,5].each { |n| File.exists?(@targets[n]).must_equal true }
+      [4,5].each { |n| extant?(@targets[n]).must_equal true }
       @q.execute!
-      [4,5].each { |n| File.exists?(@targets[n]).must_equal false }
+      [4,5].each { |n| extant?(@targets[n]).must_equal false }
     end
 
     it 'must link files' do
@@ -469,8 +469,8 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must copy files' do
-      File.exists?(@targets[2]).must_equal false
-      File.exists?(@targets[3]).must_equal true
+      extant?(@targets[2]).must_equal false
+      extant?(@targets[3]).must_equal true
       FileUtils.cmp(@sources[3], @targets[3]).must_equal false
       @q.execute!
       [2,3].each { |n| FileUtils.cmp(@sources[n], @targets[n]).must_equal true }
@@ -494,9 +494,9 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must touch files before calling modification proc' do
       target = $user.hausfile.last
-      File.exists?(target).must_equal false
+      extant?(target).must_equal false
       @q.add_modification $user.hausfile.last do |f|
-        File.exists?(f).must_equal true
+        extant?(f).must_equal true
       end
       @q.execute!
     end
@@ -511,7 +511,7 @@ class Haus::QueueSpec < MiniTest::Spec
           File.open(f, 'w') { |io| io.write 'MODIFIED' }
         end
         @q.execute!
-        targets.each { |f| File.exists?(f).must_equal true }
+        targets.each { |f| extant?(f).must_equal true }
       ensure
         FileUtils.rm_rf targets.map { |f| File.dirname f }
       end
@@ -618,9 +618,9 @@ class Haus::QueueSpec < MiniTest::Spec
       end.map { |f| f.chomp '/' }
       list.sort.must_equal @targets.map { |f| f.sub %r{\A/}, '' }.sort
       FileUtils.rm_rf @targets
-      @targets.map { |f| File.exists? f }.uniq.must_equal [false]
+      @targets.map { |f| extant? f }.uniq.must_equal [false]
       @q.restore
-      @targets.map { |f| File.exists? f }.uniq.must_equal [true]
+      @targets.map { |f| extant? f }.uniq.must_equal [true]
     end
   end
 
