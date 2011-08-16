@@ -144,7 +144,7 @@ class Haus
       execute! if tty_confirm?
     end
 
-    # Execute jobs immediately.
+    # Execute jobs immediately. Returns true, or raises exceptions.
     #
     # Modifications are processed last.
     def execute!
@@ -204,7 +204,7 @@ class Haus
 
       rescue StandardError => e
         if did_archive
-          log ["\n!! ", :red, :bold], "Rolling back to archive #{archive_path.inspect}"
+          log ["!! ", :red, :bold], "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
@@ -251,6 +251,7 @@ class Haus
         # NOTE: `tar xp` is not POSIX; we'll see how that shakes out
         v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
+        log unless options.quiet # \n for clarity
       end
     end
 
@@ -343,7 +344,7 @@ class Haus
         as.zip(bs).each do |a1, b1|
           # File stream must match in name as well as content
           return false if File.basename(a1) != File.basename(b1)
-          return false if not duplicates? a1, b1
+          return false if not duplicates? a1, b1 # Recurse!
         end
 
         true

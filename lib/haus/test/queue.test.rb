@@ -127,7 +127,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
         @assertion.call lambda { |src, dst|
           FileUtils.ln_sf src, dst
-        }, { :relative => true }
+        }, :relative => true
       end
 
       it 'must remove the destination before linking' do
