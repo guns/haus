@@ -119,10 +119,8 @@ class Haus::QueueSpec < MiniTest::Spec
       end
 
       it 'must add existing links if relative/absolute prefs do not match' do
-        relpath = lambda { |src, dst| Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s }
-
         @assertion.call lambda { |src, dst|
-          FileUtils.ln_sf relpath.call(src, dst), dst
+          FileUtils.ln_sf relpath(src, dst), dst
         }, nil
 
         @assertion.call lambda { |src, dst|
@@ -169,6 +167,15 @@ class Haus::QueueSpec < MiniTest::Spec
       fs.each { |f| FileUtils.ln_sf '/new/world/pony', f }
       res = @q.add_copy *fs
       res.must_be_nil
+      @q.copies.must_be_empty
+    end
+
+    it 'must not add relative links that resolve to the same location' do
+      src, dst = $user.hausfile
+      linksrc  = $user.hausfile.first
+      FileUtils.ln_sf relpath(linksrc, src), src
+      FileUtils.ln_sf relpath(linksrc, dst), dst
+      @q.add_copy(src, dst).must_be_nil
       @q.copies.must_be_empty
     end
 
@@ -290,18 +297,22 @@ class Haus::QueueSpec < MiniTest::Spec
   describe :targets do
     # Fill up a queue
     before do
-      @files   = (0..7).map { $user.hausfile }
+      @files   = (0..8).map { $user.hausfile }
+      @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
+
+      # Alter some source files
+      FileUtils.ln_sf '/nonextant/source', @sources[8]
 
       # Pre-create targets for some
       [1,3,4,5,7].each { |n| File.open(@targets[n], 'w') { |f| f.puts 'EXTANT' } }
 
-      8.times do |n|
+      @files.size.times do |n|
         case n
-        when 0..1 then @q.add_link *@files[n]
-        when 2..3 then @q.add_copy *@files[n]
-        when 4..5 then @q.add_deletion @targets[n]
-        when 6..7 then @q.add_modification(@targets[n]) { |f| f }
+        when 0..1    then @q.add_link *@files[n]
+        when 2..3, 8 then @q.add_copy *@files[n]
+        when 4..5    then @q.add_deletion @targets[n]
+        when 6..7    then @q.add_modification(@targets[n]) { |f| f }
         end
       end
     end
@@ -316,7 +327,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must return all new files on :create' do
-      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6).sort
+      @q.targets(:create).sort.must_equal @targets.values_at(0,2,6,8).sort
     end
 
     it 'must return all files to be modified on :modify' do
@@ -382,19 +393,24 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :execute! do
     before do
-      @files   = (0..9).map { $user.hausfile }
+      @files   = (0..12).map { $user.hausfile }
       @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
+
+      # Alter sources for some
+      FileUtils.ln_sf relpath('/etc/passwd', @sources[10]), @sources[10] # Local relative link
+      FileUtils.ln_sf File.expand_path(@sources[9]), @sources[11]        # Absolute link
+      FileUtils.ln_sf '/yo/yo/ma', @sources[12]                          # Broken link
 
       # Pre-create targets for some
       [3,4,5].each { |n| File.open(@targets[n], 'w') { |f| f.write 'EXTANT' } }
 
-      10.times do |n|
+      @files.size.times do |n|
         case n
-        when 0..1, 8..9 then @q.add_link *@files[n]
-        when 2..3       then @q.add_copy *@files[n]
-        when 4..5       then @q.add_deletion @targets[n]
-        when 6..7       then
+        when 0..1, 8..9   then @q.add_link *@files[n]
+        when 2..3, 10..12 then @q.add_copy *@files[n]
+        when 4..5         then @q.add_deletion @targets[n]
+        when 6..7         then
           @q.add_modification @targets[n] do |f|
             File.open(f, 'w') { |io| io.write 'MODIFIED' }
           end
@@ -491,8 +507,8 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.execute!
       [8,9].each do |n|
         File.symlink?(@targets[n]).must_equal true
-        relpath = Pathname.new(@sources[n]).relative_path_from(Pathname.new File.dirname(@targets[n])).to_s
-        File.readlink(@targets[n]).must_equal relpath
+        tgtpath = relpath(@sources[n], @targets[n])
+        File.readlink(@targets[n]).must_equal tgtpath
         File.expand_path(File.readlink(@targets[n]), File.dirname(@targets[n])).must_equal @sources[n]
       end
     end
@@ -513,6 +529,27 @@ class Haus::QueueSpec < MiniTest::Spec
       q.copies.must_equal [[src, dst]]
       q.execute!
       File.lstat(dst).ftype.must_equal 'link'
+    end
+
+    it 'must copy relative links, but recalculate their paths' do
+      @q.execute!
+      File.lstat(@targets[10]).ftype.must_equal 'link'
+      File.readlink(@targets[10]).wont_equal File.readlink(@sources[10])
+      File.readlink(@targets[10]).must_equal relpath(File.expand_path(File.readlink(@targets[10]), $user.etc), @sources[10])
+    end
+
+    it 'must copy absolute links as is' do
+      @q.execute!
+      File.lstat(@targets[11]).ftype.must_equal 'link'
+      File.readlink(@targets[11]).must_equal File.readlink(@sources[11])
+    end
+
+    it 'must copy broken symlinks' do
+      extant?(@sources[12]).must_equal true
+      @q.copies.must_include @files[12]
+      @q.execute!
+      File.lstat(@targets[12]).ftype.must_equal 'link'
+      File.readlink(@targets[12]).must_equal File.readlink(@sources[12])
     end
 
     it 'must modify files' do
@@ -772,7 +809,7 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.options = { :relative => true }
         @q.send(:linked?, src, dst).must_equal false
         FileUtils.rm_f dst
-        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s, dst
+        FileUtils.ln_s relpath(src, dst), dst
         @q.send(:linked?, src, dst).must_equal true
       end
     end

@@ -174,7 +174,7 @@ class Haus
 
       rescue StandardError => e
         if did_archive
-          log ["!! ", :red, :bold], "Rolling back to archive #{archive_path.inspect}"
+          log ['!! ', :red, :bold], "Rolling back to archive #{archive_path.inspect}"
           restore
         end
         raise e
@@ -296,25 +296,28 @@ class Haus
     # Returns false if both are directories and have different contents
     # Returns false if both are regular files and have different bits
     # Returns true otherwise
-    def duplicates? a, b
-      astat, bstat = File.lstat(a), File.lstat(b)
+    def duplicates? alpha, beta
+      a,     b     = File.expand_path(alpha), File.expand_path(beta)
+      astat, bstat = File.lstat(a),           File.lstat(b)
 
       return false if astat.ino == bstat.ino
       return false if astat.ftype != bstat.ftype
 
       case astat.ftype
       when 'link'
-        File.readlink(a) == File.readlink(b)
+        # Expand relative links before comparing
+        asrc, bsrc = [a, b].map { |f| File.expand_path File.readlink(f), File.join(f, '..') }
+        asrc == bsrc
       when 'directory'
         # Dir::entries just calls readdir(3), so we filter the dot directories
         as, bs = [a, b].map do |dir|
           Dir.entries(dir).sort.reject { |f| f == '.' || f == '..' }.map { |f| File.join dir, f }
         end
 
-        as.zip(bs).each do |a1, b1|
+        as.zip(bs).each do |af, bf|
           # File stream must match in name as well as content
-          return false if File.basename(a1) != File.basename(b1)
-          return false if not duplicates? a1, b1 # Recurse!
+          return false if File.basename(af) != File.basename(bf)
+          return false if not duplicates? af, bf # Recurse!
         end
 
         true
@@ -347,7 +350,7 @@ class Haus
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
         FileUtils.rm_rf dst, fopts.merge(:secure => true)
         FileUtils.mkdir_p File.dirname(dst), fopts
-        # The copy implementation breaks on broken symlinks
+        # Ruby 1.9's copy implementation breaks on broken symlinks
         if File.ftype(src) == 'link'
           lsrc = File.readlink src
           # Leave absolute paths alone, but recalculate relative paths
