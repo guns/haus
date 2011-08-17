@@ -39,8 +39,8 @@ class HausSpec < MiniTest::Spec
   describe :run do
     it 'must return help if a proper task is not passed' do
       help = Haus.new.help
-      capture_fork_io { Haus.new.run }[1].chomp.must_equal help
-      capture_fork_io { Haus.new(%w[foo]).run }[1].chomp.must_equal help
+      capture_fork_io { Haus.new.run }.first.chomp.must_equal help
+      capture_fork_io { Haus.new(%w[foo]).run }.first.chomp.must_equal help
     end
 
     it 'must parse options in order' do

@@ -10,8 +10,8 @@ require 'haus/clean'
 #
 # Command line interface, intended to be run as Haus.new(ARGV).run
 #
-# Haus::Task subclasses never call Kernel#exit or Kernel#abort, and always log
-# to the specified logger, so Ruby libraries should invoke those instead.
+# Haus::Task subclasses never call Kernel#exit and always log to the specified
+# logger, so Ruby libraries should invoke those instead.
 #
 class Haus
   def initialize args = []
@@ -34,11 +34,11 @@ class Haus
     @options ||= Options.new do |opt|
       # Suppress regular OptionParser help output
       opt.on '-h', '--help' do
-        puts help; exit
+        options.logger.log help; exit
       end
 
       opt.on '-v', '--version' do
-        puts VERSION; exit
+        options.logger.log VERSION; exit
       end
     end
   end
@@ -46,7 +46,11 @@ class Haus
   def run
     args = options.order @args
     task = Task.list[args.first]
-    abort help if task.nil?
+
+    if task.nil?
+      options.logger.log help
+      exit 1
+    end
 
     # Enumerable#drop introduced in 1.8.7
     task[:class].new(args[1..-1]).run or exit 1

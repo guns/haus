@@ -256,7 +256,7 @@ class Haus
           !!(c =~ /y|\r|\n/i)
         ensure
           system 'stty -raw echo'
-          print "\r" # Return cursor to first column
+          $stdout.print "\r" # Return cursor to first column
         end
       else
         !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
