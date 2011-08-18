@@ -290,7 +290,11 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must raise an error if argument is a directory' do
-      lambda { @q.add_modification($user.dir) {} }.must_raise ArgumentError
+      lambda { @q.add_modification($user.hausfile(:dir).first) {} }.must_raise RuntimeError
+    end
+
+    it 'must raise an error if argument has a blocking path' do
+      lambda { @q.add_modification(File.join $user.hausfile.first, 'illegal') {} }.must_raise RuntimeError
     end
   end
 

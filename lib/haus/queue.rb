@@ -96,9 +96,11 @@ class Haus
     #
     def add_modification destination, &block
       dst = File.expand_path destination
+      bp  = blocking_path dst
 
       raise MultipleJobError if targets.include? dst
-      raise ArgumentError if File.directory? dst
+      raise "#{dst.inspect} must not be a directory" if File.directory? dst
+      raise "#{bp.inspect} is blocking the creation of #{dst.inspect}" if bp
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
