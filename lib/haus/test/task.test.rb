@@ -150,7 +150,7 @@ class Haus::TaskSpec < MiniTest::Spec
       user.hausfile :dir
       user.hausfile :link
 
-      hierdir = user.hausfile(:hier).first
+      hierdir = File.dirname user.hausfile(:hier).first
       FileUtils.rm_rf Dir["#{hierdir}/*"]
 
       %w[foorc %foo.d/myfoorc %foo.d/config node/barrc].each do |rel|
@@ -170,7 +170,7 @@ class Haus::TaskSpec < MiniTest::Spec
     end
 
     it 'must return false when argument is not a directory' do
-      src, dst = $user.hausfile :hier
+      src = File.dirname $user.hausfile(:hier).first
       @task.hierdir?(src).must_equal true
       FileUtils.rm_rf src
       FileUtils.touch src

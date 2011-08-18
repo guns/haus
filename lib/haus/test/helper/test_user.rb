@@ -91,7 +91,7 @@ class Haus
           f = File.join d, randstr
           mkdir d
           touch f
-          [File.expand_path(d), File.join(dir, d.sub(/\A%/, '.'))]
+          [File.expand_path(f), File.join(dir, d.sub(/\A%/, '.'), File.basename(f))]
         when :link
           f = randstr
           ln_s Dir['/etc/*'].select { |e| File.file? e and File.readable? e }.sort_by { rand }.first, f
