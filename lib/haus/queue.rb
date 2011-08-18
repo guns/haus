@@ -354,6 +354,7 @@ class Haus
         srcpath = options.relative ? relpath(src, dst) : src
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+
         FileUtils.rm_rf dst, fopts.merge(:secure => true)
         FileUtils.mkdir_p File.dirname(dst), fopts
 
@@ -364,8 +365,10 @@ class Haus
     def execute_copies fopts
       copies.each do |src, dst|
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+
         FileUtils.rm_rf dst, fopts.merge(:secure => true)
         FileUtils.mkdir_p File.dirname(dst), fopts
+
         # Ruby 1.9's copy implementation breaks on broken symlinks
         if File.ftype(src) == 'link'
           lsrc = File.readlink src
@@ -382,8 +385,10 @@ class Haus
     def execute_modifications fopts
       modifications.each do |prc, dst|
         log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
+
         FileUtils.mkdir_p File.dirname(dst), fopts
         FileUtils.touch dst, fopts
+
         # No simple way to deny FS access to the proc
         if options.noop
           log "Skipping modification procedure for #{dst}"
