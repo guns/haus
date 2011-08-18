@@ -26,6 +26,7 @@
  - Better `--help` documentation
  - Allow environment to set HAUS_PATH
  - Accept `haus help COMMAND` invocation
+ - All logged files should be colorized according to LS_?COLORS
 
 
 ### LICENSE
