@@ -18,7 +18,7 @@ $user ||= Haus::TestUser[$$]
 
 class Haus::QueueSpec < MiniTest::Spec
   it 'must contain some error classes' do
-    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[FrozenOptionsError MultipleJobError]
+    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[MultipleJobError]
   end
 
   before do
@@ -72,10 +72,10 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.options.sniffy.must_equal 'nose'
     end
 
-    it 'must raise FrozenOptionsError if the options object is frozen' do
-      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise RuntimeError
+    it 'must raise RuntimeError if the options object is frozen' do
+      lambda { @q.options = { :foo => 'foo' }; raise StandardError }.must_raise StandardError
       @q.options.freeze
-      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise Haus::Queue::FrozenOptionsError
+      lambda { @q.options = { :foo => 'foo' } }.must_raise RuntimeError
     end
   end
 

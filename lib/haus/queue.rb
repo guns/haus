@@ -23,7 +23,6 @@ class Haus
   #
   class Queue
     class MultipleJobError < RuntimeError; end
-    class FrozenOptionsError < RuntimeError; end
 
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
@@ -40,9 +39,9 @@ class Haus
     end
 
     # Parameter can be a Hash or an OpenStruct;
-    # Raises FrozenOptionsError if options is frozen
+    # Raises RuntimeError if options is frozen
     def options= opts
-      raise FrozenOptionsError if options.frozen?
+      raise "can't modify frozen array" if options.frozen?
       @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
