@@ -829,7 +829,9 @@ class Haus::QueueSpec < MiniTest::Spec
       end
 
       it 'must return true when passed broken symlinks' do
-        FileUtils.ln_sf '/my/child/is/a/prodigy/with/no/issues', "#{@user.haus}/lies"
+        src = @user.hausfile.first
+        FileUtils.ln_sf src, "#{@user.haus}/lies"
+        FileUtils.rm_f src
         File.exists?("#{@user.haus}/lies").must_equal false
         @q.send(:extant?, "#{@user.haus}/lies").must_equal true
       end
@@ -839,18 +841,18 @@ class Haus::QueueSpec < MiniTest::Spec
       # TODO
     end
 
-    describe :path_available? do
+    describe :blocking_path do
       before do
-        @user = Haus::TestUser[:queue_path_available?]
+        @user = Haus::TestUser[:queue_blocking_path]
       end
 
-      it 'must return true when path nodes are non-extant' do
-        @q.send(:path_available?, '/everlasting/gobstopper').must_equal true
+      it 'must return nil when path nodes are non-extant' do
+        @q.send(:blocking_path, '/everlasting/gobstopper').must_equal nil
         path = @user.hausfile(:dir).first
-        @q.send(:path_available?, File.join(path, 'foo/bar')).must_equal true
+        @q.send(:blocking_path, File.join(path, 'foo/bar')).must_equal nil
       end
 
-      it 'must return false when path nodes exist, but are not directories' do
+      it 'must return the extant tree nodes which are not directories or links to one' do
         dir   = @user.hausfile(:dir).first
         file  = @user.hausfile.first
         ldir  = File.join $user.etc, 'dir'
@@ -859,10 +861,10 @@ class Haus::QueueSpec < MiniTest::Spec
         FileUtils.ln_sf dir, ldir
         FileUtils.ln_sf file, lfile
 
-        @q.send(:path_available?, File.join(dir,   'bar/baz')).must_equal true
-        @q.send(:path_available?, File.join(file,  'bar/baz')).must_equal false
-        @q.send(:path_available?, File.join(ldir,  'bar/baz')).must_equal true
-        @q.send(:path_available?, File.join(lfile, 'bar/baz')).must_equal false
+        @q.send(:blocking_path, File.join(dir,   'bar/baz')).must_equal nil
+        @q.send(:blocking_path, File.join(file,  'bar/baz')).must_equal file
+        @q.send(:blocking_path, File.join(ldir,  'bar/baz')).must_equal nil
+        @q.send(:blocking_path, File.join(lfile, 'bar/baz')).must_equal lfile
       end
     end
 

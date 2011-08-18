@@ -326,20 +326,19 @@ class Haus
       end
     end
 
-    # Checks to see if given path is valid: i.e. all extant nodes in the path
-    # must be directories, else Errno::ENOTDIR errors will be raised during
-    # filesystem calls.
-    def path_available? path
+    # Returns the subpath of a path that is assumed to be a tree node, but is
+    # not actually a directory or a link to one. Returns nil otherwise.
+    def blocking_path path
       nodes = File.expand_path(path).sub(%r{\A/}, '').split '/'
 
       (nodes.size - 1).times do |n|
         # We want the absolute path, but strip leading slash before splitting
         dir = '/' + nodes[0..n].join('/')
-        return true  if not extant? dir
-        return false if not File.directory? dir
+        return nil if not extant? dir
+        return dir if not File.directory? dir
       end
 
-      true
+      nil
     end
 
     def execute_deletions fopts
