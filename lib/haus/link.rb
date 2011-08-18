@@ -20,6 +20,10 @@ class Haus
         etcfiles.each do |src|
           queue.add_link src, user.dot(src)
         end
+
+        hierfiles.each do |src|
+          queue.add_link src, user.hier(src, etc)
+        end
       end
     end
 
