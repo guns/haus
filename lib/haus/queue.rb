@@ -251,13 +251,13 @@ class Haus
       response = if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
         # Hack to get a single character from the terminal
         begin
-          system 'stty raw -echo'
+          system 'stty raw'
           $stdout.puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
-          !!(c =~ /y|\r|\n/i)
         ensure
-          system 'stty -raw echo'
+          system 'stty -raw'
           $stdout.print "\r" # Return cursor to first column
         end
+        !!(c =~ /y|\r|\n/i)
       else
         !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
       end
