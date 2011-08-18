@@ -815,11 +815,55 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :extant? do
-      # TODO
+      before do
+        @user = Haus::TestUser[:queue_extant?]
+      end
+
+      it 'must return true when regular files and directories exist' do
+        [:file, :link, :dir].each do |s|
+          @q.send(:extant?, @user.hausfile(s).first).must_equal true
+        end
+
+        FileUtils.mkdir_p File.join(@user.haus, '.tmp/foo')
+        @q.send(:extant?, File.join(@user.haus, '.tmp/foo/bar')).must_equal false
+      end
+
+      it 'must return true when passed broken symlinks' do
+        FileUtils.ln_sf '/my/child/is/a/prodigy/with/no/issues', "#{@user.haus}/lies"
+        File.exists?("#{@user.haus}/lies").must_equal false
+        @q.send(:extant?, "#{@user.haus}/lies").must_equal true
+      end
     end
 
     describe :duplicates? do
       # TODO
+    end
+
+    describe :path_available? do
+      before do
+        @user = Haus::TestUser[:queue_path_available?]
+      end
+
+      it 'must return true when path nodes are non-extant' do
+        @q.send(:path_available?, '/everlasting/gobstopper').must_equal true
+        path = @user.hausfile(:dir).first
+        @q.send(:path_available?, File.join(path, 'foo/bar')).must_equal true
+      end
+
+      it 'must return false when path nodes exist, but are not directories' do
+        dir   = @user.hausfile(:dir).first
+        file  = @user.hausfile.first
+        ldir  = File.join $user.etc, 'dir'
+        lfile = File.join $user.etc, 'file'
+
+        FileUtils.ln_sf dir, ldir
+        FileUtils.ln_sf file, lfile
+
+        @q.send(:path_available?, File.join(dir,   'bar/baz')).must_equal true
+        @q.send(:path_available?, File.join(file,  'bar/baz')).must_equal false
+        @q.send(:path_available?, File.join(ldir,  'bar/baz')).must_equal true
+        @q.send(:path_available?, File.join(lfile, 'bar/baz')).must_equal false
+      end
     end
 
     describe :execute_deletions do
