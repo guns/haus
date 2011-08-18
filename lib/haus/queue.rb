@@ -52,6 +52,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless extant? src
+      raise_if_blocking_path dst
       return nil if File.symlink? dst and linked? src, dst
 
       @links = (links.dup << [src, dst]).freeze
@@ -64,6 +65,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless extant? src
+      raise_if_blocking_path dst
       return nil if extant? dst and duplicates? src, dst
 
       @copies = (copies.dup << [src, dst]).freeze
@@ -96,11 +98,10 @@ class Haus
     #
     def add_modification destination, &block
       dst = File.expand_path destination
-      bp  = blocking_path dst
 
       raise MultipleJobError if targets.include? dst
       raise "#{dst.inspect} must not be a directory" if File.directory? dst
-      raise "#{bp.inspect} is blocking the creation of #{dst.inspect}" if bp
+      raise_if_blocking_path dst
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
@@ -340,6 +341,11 @@ class Haus
       end
 
       nil
+    end
+
+    def raise_if_blocking_path path
+      bp = blocking_path path
+      raise "#{bp.inspect} would block the creation of #{path.inspect}" if bp
     end
 
     def execute_deletions fopts

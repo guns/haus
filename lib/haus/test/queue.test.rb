@@ -98,6 +98,12 @@ class Haus::QueueSpec < MiniTest::Spec
       lambda { @q.add_link *args }.must_raise Haus::Queue::MultipleJobError
     end
 
+    it 'must raise an error if argument has a blocking path' do
+      assert_raises RuntimeError do
+        @q.add_copy File.join($user.etc), File.join($user.hausfile.first, 'illegal')
+      end
+    end
+
     describe :success do
       before do
         # NOTE: We cannot pass a block (implicitly or explicitly) to a Proc in
@@ -177,6 +183,12 @@ class Haus::QueueSpec < MiniTest::Spec
       FileUtils.ln_sf relpath(linksrc, dst), dst
       @q.add_copy(src, dst).must_be_nil
       @q.copies.must_be_empty
+    end
+
+    it 'must raise an error if argument has a blocking path' do
+      assert_raises RuntimeError do
+        @q.add_copy File.join($user.etc), File.join($user.hausfile.first, 'illegal')
+      end
     end
 
     describe :success do
@@ -869,6 +881,14 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.send(:blocking_path, File.join(file,  'bar/baz')).must_equal file
         @q.send(:blocking_path, File.join(ldir,  'bar/baz')).must_equal nil
         @q.send(:blocking_path, File.join(lfile, 'bar/baz')).must_equal lfile
+      end
+    end
+
+    describe :raise_if_blocking_path do
+      it 'must raise an error if there is a blocking path' do
+        assert_raises RuntimeError do
+          @q.send :raise_if_blocking_path, File.join($user.hausfile.first, 'foo')
+        end
       end
     end
 
