@@ -618,6 +618,28 @@ class Haus::QueueSpec < MiniTest::Spec
       q.execute!
       q.options.must_equal opts
     end
+
+    it 'must pass :verbose => true to FileUtils ops when options.debug' do
+      capture_fork_io do
+        $stderr.reopen '/dev/null'
+        @q.options.debug = true
+        @q.instance_eval do
+          def execute_deletions fopts
+            puts "Verbose is #{fopts[:verbose].inspect}"
+            super
+          end
+        end
+        @q.execute!
+      end.first.must_match /\AVerbose is true/
+    end
+
+    it 'must raise Errno::EPERM when trying to remove privileged files' do
+      # TODO: How can we test this?
+    end
+
+    it 'must change the ownership of newly created files to that of its parent' do
+      # TODO: How can we test this?
+    end
   end
 
   describe :executed? do
@@ -890,6 +912,30 @@ class Haus::QueueSpec < MiniTest::Spec
           @q.send :raise_if_blocking_path, File.join($user.hausfile.first, 'foo')
         end
       end
+    end
+
+    describe :create_path_to do
+      it 'must create all parent directories' do
+        path = File.join $user.haus, 'create/path/to'
+        extant?(path).must_equal false
+        @q.send :create_path_to, path, {}
+        extant?(path).must_equal false
+        File.directory?(File.dirname path).must_equal true
+      end
+
+      it 'must change ownership of all created directories as that of its parent' do
+        # TODO: This is how we'd test this
+        # path = File.join $user.dir, '.haus-owner/mustbe/test'
+        # $user.hausfiles.push "#{$user.dir}/.haus-owner"
+        # extant?(path).must_equal false
+        # @q.send :create_path_to, path, {}
+        # File.stat("#{$user.dir}/.haus-owner").uid.must_equal $user.uid
+        # File.stat("#{$user.dir}/.haus-owner").gid.must_equal $user.gid
+      end
+    end
+
+    describe :adopt do
+      # TODO
     end
 
     describe :execute_deletions do

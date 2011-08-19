@@ -27,6 +27,14 @@ class Haus::OptionsSpec < MiniTest::Spec
       ostruct.path.must_equal File.expand_path('../../../..', __FILE__)
       ostruct.logger.must_be_kind_of Haus::Logger
     end
+
+    it 'must set @ostruct.debug to true if ENV["DEBUG"]' do
+      capture_fork_io do
+        puts Haus::Options.new.debug == false
+        ENV['DEBUG'] = '1'
+        puts Haus::Options.new.debug == true
+      end.first.must_equal "true\ntrue\n"
+    end
   end
 
   describe :path do

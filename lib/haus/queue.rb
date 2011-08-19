@@ -165,7 +165,7 @@ class Haus
 
         did_archive = archive unless options.noop
         old_umask   = File.umask 0077
-        fopts       = { :noop => options.noop }
+        fopts       = { :noop => options.noop, :verbose => options.debug }
 
         execute_deletions     fopts.dup
         execute_links         fopts.dup
@@ -348,10 +348,38 @@ class Haus
       raise "#{bp.inspect} would block the creation of #{path.inspect}" if bp
     end
 
+    def create_path_to file, fopts
+      parent = File.dirname file
+      if not extant? parent
+        create_path_to parent, fopts # Recurse!
+        FileUtils.mkdir parent, fopts
+        adopt parent, fopts
+      end
+    end
+
+    # Change the uid and gid of the file to match its parent directory.
+    # Parent directory must exist.
+    def adopt file, fopts
+      if fopts[:noop] and fopts[:verbose]
+        $stderr.puts '(chown) %s' % file
+        return
+      end
+
+      p = File.lstat File.dirname(file)
+
+      case File.lstat(file).ftype
+      when 'directory'
+        FileUtils.chown_R p.uid, p.gid, file, fopts
+      else
+        $stderr.puts 'chown -h %d:%d %s' % [p.uid, p.gid, file] if fopts[:verbose]
+        File.lchown p.uid, p.gid, file unless fopts[:noop]
+      end
+    end
+
     def execute_deletions fopts
       deletions.each do |dst|
         log [':: ', :white, :bold], ['DELETING ', :italic], dst
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.rm_r dst, fopts.merge(:secure => true)
       end
     end
 
@@ -361,10 +389,11 @@ class Haus
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
 
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
+        create_path_to dst, fopts
 
         FileUtils.ln_s srcpath, dst, fopts
+        adopt dst, fopts
       end
     end
 
@@ -372,8 +401,8 @@ class Haus
       copies.each do |src, dst|
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
 
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
+        create_path_to dst, fopts
 
         # Ruby 1.9's copy implementation breaks on broken symlinks
         if File.ftype(src) == 'link'
@@ -385,6 +414,8 @@ class Haus
           # NOTE: Explicit :dereference_root option required for 1.8.6
           FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false)
         end
+
+        adopt dst, fopts
       end
     end
 
@@ -392,8 +423,10 @@ class Haus
       modifications.each do |prc, dst|
         log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
 
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        create_path_to dst, fopts
+        new = extant? dst
         FileUtils.touch dst, fopts
+        adopt dst, fopts if new
 
         # No simple way to deny FS access to the proc
         if options.noop
