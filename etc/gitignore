@@ -1,0 +1,20 @@
+### Global gitignore
+
+# OS X
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Vim
+*.swp
+*.swo
+.tags
+.types_*.vim
+
+# Ruby
+.bundle/
+
+# Python
+*.pyc
+*.pyo

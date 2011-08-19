@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+require 'optparse'
+require 'rational'
+
+class Gridcalc
+  def initialize args = []
+    @args, @opts = args, { :ratio => Rational(2,1) }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 20
+      opt.banner = %Q{\
+        Calculate all possible horizontal grid measurements for a given
+        pixel width.
+
+        Usage: #{File.basename __FILE__} [options] width
+
+        Options:
+      }.gsub /^ +/,''
+
+      opt.on '-n', '--num-cols N',
+             'Show solutions that have N columns, where N is an',
+             "Integer or Range: `-n 24' or `-n 12..24'" do |arg|
+        @opts[:cols] = case arg
+        when /^\d+$/        then arg.to_i
+        when /^\d+\.\.\d+$/ then Range.new *arg.split('..').map(&:to_i)
+        else raise ArgumentError, 'must be an Integer or Range'
+        end
+      end
+
+      opt.on '-r', '--ratio N',
+             'Show solutions that have a minumum column:gutter width ratio',
+             "expressed as a ratio `-r 3:1' or a number `-r 3'",
+             "Default: #{@opts[:ratio].to_s.tr '/',':'}" do |arg|
+        @opts[:ratio] = case arg
+        when /^\d+$/     then Rational arg
+        when /^\d+:\d+$/ then Rational *arg.split(':')
+        else raise ArgumentError, 'must be in the form of /\d+:\d+/'
+        end
+      end
+    end
+  end
+
+  # width = n*colw + (n-1)*gutw
+  # width + gutw = n*(colw + gutw)
+  def calculate width
+    r, solutions       = @opts[:ratio], []
+    min_colw, min_gutw = r.numerator, r.denominator
+    max_num_cols       = (width + min_gutw)/(min_colw + min_gutw)
+
+    num_cols = case @opts[:cols]
+    when Range    then @opts[:cols]
+    when Integer  then [@opts[:cols]]
+    when NilClass then 2..max_num_cols
+    end
+
+    # Iterate and find solutions for n columns
+    num_cols.each do |n|
+      max_colw = width / n
+      max_colw.downto min_colw do |colw|
+        gutters = width - (n*colw)
+        next unless (gutters % (n-1)).zero? # Only whole pixels
+        gutw = gutters/(n-1)
+        break if not gutw.zero? and (colw/gutw) < r # this is below our threshold
+        solutions << [n, colw, gutw]
+      end
+    end
+    solutions
+  end
+
+  def verbalize solutions
+    solutions.each do |n, colw, gutw|
+      puts "#{n} #{colw}px columns#{" with #{gutw}px gutters" if !gutw.zero?}"
+    end
+    size = solutions.size
+    puts "--\n#{size} solution#{'s' if size != 1} found"
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.size != 1
+    verbalize calculate(args.first.to_i)
+  end
+end
+
+Gridcalc.new(ARGV).run if __FILE__ == $0

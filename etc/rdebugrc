@@ -1,0 +1,18 @@
+# set annotate 1                # Set annotation level
+# set args 1                    # Set argument list to give program being debugged when it is started
+set autoeval 1                  # Evaluate every unrecognized command
+set autolist 1                  # Execute 'list' command on every breakpoint
+# set autoirb 1                 # Invoke IRB on every stop
+set autoreload 1                # Reload source code when changed
+# set basename 1                # Report file basename only showing file names
+# set callstyle 1               # Set how you want call parameters displayed
+# set debuggertesting 1         # Used when testing the debugger
+set forcestep 1                 # Make sure 'next/step' commands always move to a new line
+# set fullpath 1                # Display full file names in frames
+# set history 1                 # Generic command for setting command history parameters
+# set keep-frame-bindings 1     # Save frame binding on each call
+# set linetrace+ 1              # Set line execution tracing to show different lines
+# set linetrace 1               # Set line execution tracing
+# set listsize 1                # Set number of source lines to list by default
+# set trace 1                   # Display stack trace when 'eval' raises exception
+# set width 1                   # Number of characters the debugger thinks are in a line

@@ -1,0 +1,73 @@
+# =========================
+# NERV user bash_completion
+# =========================
+
+# This file should not be edited. User bash_completion scripts should be placed
+# in NERV_ROOT/etc/bash_completion.d, which this file sources.
+#
+# This file, in turn is sourced by the bash_completion script, or alternately
+# directly by you, in your nerv_profile.
+
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+# We should not assume that we know the circumstances of this file's evaluation
+[[ -d "$NERV_ROOT" && -e "$NERV_ROOT/core/bin/nerv" ]] || {
+    echo >&2 'NERV_ROOT is unset or incorrect!'; return 1
+}
+
+# If BASH_COMPLETION is not in the environment, we aren't likely being sourced
+# by the bash_completion script, but instead by the user.
+#
+# As a convenience then, source the bash_completion script distributed with NERV
+[[ $BASH_COMPLETION ]] || {
+    NERV_BASH_COMPLETION="${NERV_ROOT:-NERV_ROOT}/core/etc/bash_completion"
+    if [[ -r $NERV_BASH_COMPLETION ]]; then
+        . "$NERV_BASH_COMPLETION"
+    else
+        echo >&2 "Error sourcing $NERV_BASH_COMPLETION!"
+        return 1
+    fi
+    unset NERV_BASH_COMPLETION
+
+    # no completion directories have been loaded, so we place common locations
+    # in the load path
+    NERV_COMP_DIRS=(
+        /usr/local/etc/bash_completion.d
+        /etc/bash_completion.d
+        /opt/brew/etc/bash_completion.d
+        /opt/local/etc/bash_completion.d
+    )
+}
+
+# Recreate the state present in the bash_completion script
+have() { PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin type $1 &>/dev/null; }
+UNAME=$(uname -s)
+UNAME=${UNAME/CYGWIN_*/Cygwin}
+case ${UNAME} in
+    Linux|GNU|GNU/*) USERLAND=GNU ;;
+    *) USERLAND=${UNAME} ;;
+esac
+
+# Unshift the load path with the NERV completion directories
+NERV_COMP='' NERV_COMP_DIRS=(
+    "$NERV_ROOT"/{,core/}etc/bash_completion.d
+    "${NERV_COMP_DIRS[@]}"
+)
+
+# iterate through the load path and source the first instance of each script
+for dir in "${NERV_COMP_DIRS[@]}"; do
+    if [[ -d "$dir" && -r "$dir" && -x "$dir" ]]; then
+        for file in "$dir"/*; do
+            basename="${file##*/}"
+            if [[ -r "$file" && "$NERV_COMP" != *::"$basename"::* ]]; then
+                # TODO: in bash4 we can simply use the hash[value] feature
+                NERV_COMP="$NERV_COMP::$basename::"
+                . "$file"
+            fi
+        done
+    fi
+done
+
+unset have UNAME USERLAND NERV_COMP NERV_COMP_DIRS dir file basename

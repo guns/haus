@@ -1,0 +1,7 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3167
+
+|regbuf| is handy |:reg| buffer.
+
+1. Yank/Paste register
+2. Edit register on buffer
+3. etc.

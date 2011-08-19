@@ -1,0 +1,112 @@
+### VIMSCRIPT ###
+
+snippet once "once guard"
+if exists('g:${1:did_${2:`!v expand('%:r')`}}')
+	finish
+endif
+let g:$1 = 1
+endsnippet
+
+snippet l "let"
+let $0
+endsnippet
+
+snippet letg "let g:var = var if exists"
+if !exists('g:${1:var}')
+	let g:$1 = $2
+endif
+endsnippet
+
+snippet ex "exists"
+exists('$1')
+endsnippet
+
+snippet em "empty"
+empty('$1')
+endsnippet
+
+snippet exe "execute"
+execute '$1'
+endsnippet
+
+snippet f "function"
+function! ${1:<SID>}${2:function_name}($3)
+	$0
+endfunction
+endsnippet
+
+snippet c "command"
+command! $1${2: call <SID>$1($3)}
+endsnippet
+
+snippet h "has"
+has('$1')
+endsnippet
+
+snippet for "for in loop"
+for ${1:var} in ${2:list}
+	$0
+endfor
+endsnippet
+
+snippet wh "while loop"
+while $1
+	$0
+endwhile
+endsnippet
+
+snippet if "if"
+if $1
+	$0
+endif
+endsnippet
+
+snippet sl "setlocal"
+setlocal $0
+endsnippet
+
+snippet ft "filetype"
+filetype
+endsnippet
+
+snippet au "autocmd"
+autocmd ${1:Event} ${2:Type}
+	\ $0
+endsnippet
+
+snippet aug "augroup"
+augroup ${1:NAME}
+	autocmd!
+	$0
+augroup END
+endsnippet
+
+snippet tw "textwidth"
+textwidth
+endsnippet
+
+snippet ts "tabstop"
+tabstop
+endsnippet
+
+snippet sw "shiftwidth"
+shiftwidth
+endsnippet
+
+snippet sts "softtabstop"
+softtabstop
+endsnippet
+
+snippet et "expandtab"
+${1:no}expandtab
+endsnippet
+
+snippet r "return"
+return
+endsnippet
+
+snippet try "try"
+try
+$0
+endtry
+endsnippet

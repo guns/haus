@@ -1,0 +1,35 @@
+# jar(1) completion
+
+have jar || return
+
+_jar()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    if [[ $cword -eq 1 ]]; then
+        COMPREPLY=( $( compgen -W 'c t x u' -- "$cur" ) )
+        return 0
+    fi
+
+    case ${words[1]} in
+        *c*f)
+            _filedir
+            ;;
+        *f)
+            _filedir '@([ejw]ar|zip|apk)'
+            ;;
+        *)
+            _filedir
+            ;;
+    esac
+} &&
+complete -F _jar jar
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh

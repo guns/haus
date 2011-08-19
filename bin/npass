@@ -1,0 +1,114 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'digest/sha1'
+
+class Npass
+  attr_reader :length
+  attr_writer :length, :version, :buffer
+
+  def initialize args = []
+    @args = args
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-l', '--length N', Integer do |arg|
+        @length = arg
+      end
+
+      opt.on '-v', '--version N', Integer do |arg|
+        @version = arg
+      end
+
+      opt.on '-s', '--secret STRING' do |arg|
+        @secret = arg
+      end
+
+      opt.on '-b', '--buffer STRING' do |arg|
+        @buffer = arg
+      end
+    end
+  end
+
+  def version
+    @version || 1
+  end
+
+  def secret
+    @secret || if $stdin.tty?
+      begin
+        $stderr.print 'Secret:'
+        system 'stty -echo'
+        $stdin.readline.chomp rescue ''
+      ensure
+        system 'stty echo'
+        warn '####'
+      end
+    else
+      ''
+    end
+  end
+
+  def buffer
+    @buffer || ($stdin.gets nil if $stdin.tty?) || ''
+  end
+
+  def version_valid? ver
+    (0..1).include? ver
+  end
+
+  def version_0 sec, buf
+    [sec, buf].map { |s| Digest::SHA1.hexdigest s }.join
+  end
+
+  def version_1 sec, buf
+    # Create salt by least occurrence and last appearance
+    salt = (sec + buf).split('').inject({}) do |h, ch|
+      next h if ch =~ /\s/
+      h[ch] ||= 0
+      h[ch]  += 1
+      h
+    end.sort_by { |ch, n| n }.take(8).map(&:first).join
+
+    # Create password from different permutations of sec, buf, and salt
+    [sec + buf, buf + sec, salt.reverse + sec + buf].map do |str|
+      Digest::SHA1.base64digest(str + salt).chomp '='
+    end.join
+  end
+
+  def call opts = {}
+    ver = opts[:version] || version
+    raise ArgumentError, "Invalid version: #{ver}" unless version_valid? ver
+
+    sec = opts[:secret] || secret
+    buf = opts[:buffer] || buffer
+
+    pw = send "version_#{ver}", sec, buf
+
+    if len = opts[:length] || length
+      pw *= 2 until pw.length > len
+      pw[/.{#{len}}/]
+    else
+      pw
+    end
+  end
+
+  def run
+    args = options.parse @args
+    puts call
+  end
+end
+
+Npass.new(ARGV).run if $0 == __FILE__

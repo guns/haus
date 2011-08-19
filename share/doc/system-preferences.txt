@@ -1,0 +1,74 @@
+### SUDO ###
+
+# User whitelist only
+guns ALL=(ALL) ALL
+
+# Disable timeouts and force passwords every time
+Defaults timestamp_timeout = 0
+
+# Convenient environment variables
+Defaults env_reset
+Defaults env_keep += "SSH_AUTH_SOCK"
+Defaults env_keep += "DISPLAY XAUTHORIZATION XAUTHORITY WINDOWID"
+Defaults env_keep += "WINDOW TMUX TMUX_PANE"
+
+
+### X ###
+
+# Allow root to connect to user's X server
+ln -s ~guns/.Xauthority ~
+
+
+### MAC OS X Lion 10.7 ###
+
+# Set verbose boot
+nvram boot-args='-v'
+
+# Disable hibernate mode for speed and security
+pmset -a hibernatemode 0
+ln -svf /dev/null /var/vm/sleepimage
+# Tweak some power settings
+pmset -c womp 0
+pmset -b displaysleep 10
+
+# Get rid of that terrible 3D dock
+defaults write com.apple.dock no-glass -boolean YES
+
+# Turn on full path in Finder Title Bars
+defaults write com.apple.finder _FXShowPosixPathInTitle -bool YES
+
+# Enable Mail Bundles
+defaults write com.apple.mail EnableBundles 1
+
+# Disable multiple windows in Dictionary.app
+defaults write com.apple.Dictionary ProhibitNewWindowForRequest -bool TRUE
+
+# Disable Safari web snapshots (Top Sites, History, etc)
+defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
+
+# Disable Safari PubSubAgent
+defaults write com.apple.Safari DebugSyndicationEnabled 0
+
+# Disable Time Machine nag
+defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool YES
+
+# Increase the edge-spaces transition time
+defaults write com.apple.dock workspaces-edge-delay -float 5.0
+
+# Add custom domains to /etc/resolver
+mkdir /etc/resolver; echo 'nameserver 127.0.0.1' > /etc/resolver/dev
+
+# Disable Dashboard
+defaults write com.apple.dashboard mcx-disabled -boolean YES
+
+# Non-floating help windows
+defaults write com.apple.helpviewer DevMode -bool true
+
+# Keyboard press and hold behavior
+defaults write -g ApplePressAndHoldEnabled -boolean NO
+
+# Show unsupported networks in Disk Utility
+defaults write com.apple.DiskUtility DUShowUnsupportedNetworks -boolean YES
+
+# Crash Dialog
+defaults write com.apple.CrashReporter DialogType -string None

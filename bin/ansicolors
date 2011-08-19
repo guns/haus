@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'optparse'
+
+class Ansicolors
+  include NervUtils
+
+  ANSI_NAME = {
+    0 => :normal,           1 => :bold,             2 => :dark,
+    3 => :italic,           4 => :underline,        5 => :blink,
+    6 => :BLINK,            7 => :reverse,          8 => :conceal,
+    9 => :strikethrough
+  }
+
+  def initialize args = []
+    @args = args
+    @opts = { :cell => 12 }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 28
+      opt.banner = %Q{\
+        A table of ANSI color escapes. Shows eight colors and two effects by
+        default: normal and bold.
+
+        Usage: #{File.basename __FILE__} [options] [effects]
+
+        Options:
+      }.gsub /^ +/,''
+
+      opt.on '-a', '--all', 'Attempt to show all effects.' do
+        @opts[:all] = true
+      end
+
+      opt.on '-c', '--cell-width INTEGER', Integer,
+             'Set color cell width to INTEGER; ',
+             "#{@opts[:cell]} by default" do |w|
+        @opts[:cell] = w
+      end
+
+      opt.separator "\nEffects:\n    " + ANSI_NAME.map { |k,v| v }.join(' ')
+    end
+  end
+
+  def run
+    args = options.parse @args
+    w = @opts[:cell]
+
+    if    @opts[:all]   then effects = ANSI_NAME.map { |k,v| v }
+    elsif args.empty?   then effects = [:normal, :bold]
+    else                     effects = args.map { |e| e.to_sym }
+    end
+
+    # header
+    table  =   '    ' << (40..47).inject('') { |s,i| s << "%-#{w}s" % i }
+    table << "\n   +" << ('-' * (w * 8)) << "\n"
+
+    # foreground
+    30.upto 37 do |fg|
+      # effects
+      effects.each_with_index do |e, i|
+        table << (i.zero? ? "#{fg} |" : '   |')
+        name = ANSI_NAME[ANSI::ESCAPE[e]].to_s[0..w-3].capitalize.center(w)
+        # background
+        40.upto 47 do |bg|
+          table << color(name, ANSI::ESCAPE[e], fg, bg)
+        end
+        table << "\n"
+      end
+      table << ('   +' << ('-' * (w * 8)) << "\n") if effects.count > 3
+    end
+
+    puts table
+  end
+end
+
+Ansicolors.new(ARGV).run if __FILE__ == $0

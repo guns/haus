@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Pltoggle
+  def initialize args = []
+    @args = args
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q{\
+        Toggle Apple property lists between binary and plain text format.
+        Converts files in place.
+
+        Usage: #{File.basename __FILE__} file ...
+      }.gsub /^ +/, ''
+    end
+  end
+
+  def plutil
+    return @plutil if @plutil
+    abort 'missing plutil!' unless system 'command -v plutil &>/dev/null'
+    @plutil = %x(command -v plutil).chomp
+  end
+
+  def typeof file
+    File.read(file, 6) == 'bplist' ? :binary : :xml
+  end
+
+  def toggle file
+    case typeof file
+    when :binary
+      system plutil, '-convert', 'xml1', file or raise 'XML conversion failed!'
+      :xml
+    when :xml
+      system plutil, '-convert', 'binary1', file or raise 'Binary conversion failed!'
+      :binary
+    end
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.empty?
+    abort 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+
+    args.each { |f| warn "#{f} -> #{toggle f}" }
+  end
+end
+
+Pltoggle.new(ARGV).run if $0 == __FILE__

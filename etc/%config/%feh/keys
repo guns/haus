@@ -1,0 +1,26 @@
+
+#    ___       __
+#  .'  _|-----|  |--.  Themes
+#  |   _|  -__|     |
+#  |__| |_____|__|__|  guns <self@sungpae.com>
+#
+
+# Navigation
+next_img            j               l               space
+prev_img            k               h
+jump_fwd            C-f
+jump_back           C-b
+quit                Q               q               Escape
+
+# Viewing
+toggle_fullscreen   v               f
+zoom_fit            equal
+zoom_default        0
+zoom_in             J               bracketright
+zoom_out            K               bracketleft
+
+# Files
+remove              BackSpace
+delete              C-BackSpace
+save_image          S
+save_filelist

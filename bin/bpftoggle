@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'optparse'
+require 'fileutils'
+
+class BpfToggle
+  include NervUtils
+  include FileUtils::Verbose
+
+  def initialize args = []
+    @args = args
+  end
+
+  def options
+    OptionParser.new "Toggle staff read privileges on OS X's /dev/bpf*"
+  end
+
+  def bpf
+    @bpf ||= Dir['/dev/bpf*']
+  end
+
+  def toggle
+    raise 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+
+    if File::Stat.new(bpf.first).gid.zero?
+      puts '### Adding staff read privileges', :yellow, :bold
+      chown 0, 'staff', bpf
+      chmod 0640, bpf
+    else
+      puts '### Restoring original privileges', :green, :bold
+      chown 0, 0, bpf
+      chmod 0600, bpf
+    end
+  end
+
+  def run
+    options.parse @args
+    toggle
+  end
+end
+
+BpfToggle.new(ARGV).run if __FILE__ == $0

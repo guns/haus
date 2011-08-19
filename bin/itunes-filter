@@ -1,0 +1,159 @@
+#!/usr/bin/ruby
+# encoding: utf-8
+# Note that we are using OS X's native ruby, which includes RubyCocoa
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'optparse'
+require 'uri'
+require 'find'
+require 'osx/cocoa'
+
+class ITunesFilter
+  include NervUtils
+
+  def initialize args = []
+    @args         = args
+    @library_file = /\/?iTunes( Music)? Library\.xml\z/
+    @ignore       = /\/?(\.iTunes Preferences\.plist|\.DS_Store)\z/
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q{\
+        Find files in an iTunes folder that are not being tracked by the iTunes
+        Library file, and hence are uselessly taking up space on the disk. This
+        often happens when a library file is not saved properly before quitting.
+
+        Usage: #{File.basename __FILE__} itunes-directory|itunes-library
+      }.gsub /^ +/,''
+    end
+  end
+
+  def itunes_is_running
+    %x(ps axo ucomm).split("\n").map(&:strip).include? 'iTunes'
+  end
+
+  # returns [lib, [base_files]]
+  def itunes_assets arg
+    if File.file? arg
+      if arg =~ @library_file
+        return arg
+      else
+        raise "#{arg} doesn't look like an iTunes library file!"
+      end
+    elsif File.directory? arg
+      lib = Dir.glob(File.expand_path(arg) + '/*').grep @library_file
+
+      case lib.size
+      when 0 then raise 'No iTunes Library file found!'
+      when 1 then true
+      else raise 'More than one iTunes Library file found!'
+      end
+
+      return lib.first
+    end
+
+    raise 'Error determining iTunes library file!'
+  end
+
+  # greps, not parses, the file for the media folder location
+  def grep_media_folder file
+    File.open(file, 'r') do |f|
+      while line = f.gets
+        if dir = line[%r{^.*<key>Music Folder</key><string>(.*)</string>}, 1]
+          return dir
+        end
+      end
+    end
+    raise "Failed to grep media folder location in #{file}!"
+  end
+
+  def itunes_media file
+    dir = URI.unescape URI.parse(grep_media_folder(file)).path.chomp('/')
+    raise "#{dir} does not exist!" unless File.directory? dir
+    media = []
+
+    $stderr.print "Building file list for #{dir}... "
+    Find.find(dir) { |f| media << f if File.file? f }
+    media.reject! { |f| f =~ @ignore }
+    warn "#{media.size} found", :green
+
+    [dir, media.sort]
+  end
+
+  def itunes_library file
+    $stderr.print "Parsing #{file}... "
+    plist = OSX.load_plist File.read(file)
+    warn "OK", :green
+
+    list = []
+
+    $stderr.print "Extracting file paths from library... "
+    plist['Tracks'].each do |id, data|
+      list << URI.unescape(URI.parse(data['Location']).path)
+    end
+    warn "#{list.size} found", :green
+
+    list.sort
+  end
+
+  # HFS+ is awkwardly case-insensitive. Array#- doesn't work as a regex routine,
+  # so we implement our own version here.
+  def idiff first, second
+    diff = []
+    first.each do |a|
+      diff << a if second.select { |b| b.casecmp(a).zero? }.empty?
+    end
+    diff
+  end
+
+  def results library, media, media_dir
+    $stderr.print 'Calculating differences... '
+    lm = library - media
+    ml = media - library
+    # diff the diffs, except with the slower casecmp algorithm
+    missing_in_media = idiff lm, ml
+    not_in_library   = idiff ml, lm
+    warn 'OK', :green
+
+    coloropts :io => $stderr
+    warn '%s tracks from the library are missing from %s' %
+         [color(missing_in_media.size, :red), color(media_dir, :green)]
+    warn "%s files in %s are not being tracked in the library.\n" %
+         [color(not_in_library.size, :red), color(media_dir, :green)]
+    coloropts :io => $stdout
+
+    puts "# Missing tracks (#{missing_in_media.size}):"
+    puts missing_in_media.join("\n") unless missing_in_media.empty?
+    puts "\n# Untracked files in #{media_dir} (#{not_in_library.size}):"
+    puts not_in_library.join("\n") unless not_in_library.empty?
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.size > 1
+    raise 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+
+    # gather asset locations; grep the library file for the `Music Folder'
+    # location, so we can check if it's here before doing expensive parsing
+    itunes = args.size.zero? ? File.expand_path('~/Music/iTunes') : args.first.chomp('/')
+    library_file = itunes_assets itunes
+    media_dir, media = itunes_media library_file
+
+    # now we parse the library file and extract a list of files
+    library = itunes_library library_file
+
+    # print the lists
+    results library, media, media_dir
+  rescue Interrupt
+    raise Interrupt, color('Abort!', :red), File.basename($0)
+  rescue
+    abort $!.to_s, :red
+  end
+end
+
+ITunesFilter.new(ARGV).run if __FILE__ == $0

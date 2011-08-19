@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Simple tmux wrapper
+
+EXEC=''
+while getopts :x opt; do
+    case $opt in
+    x) EXEC='exec';;
+    *) echo "USAGE: ${0##*/} [-x]" >&2; exit
+    esac
+done
+shift $((OPTIND-1))
+
+if [[ $TMUX ]]; then
+    echo '$TMUX is already set!' >&2
+    exit 1
+elif command tmux has-session &>/dev/null; then
+    command $EXEC tmux attach
+else
+    command $EXEC tmux new
+fi

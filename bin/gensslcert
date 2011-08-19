@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+require 'optparse'
+require 'fileutils'
+
+class Gensslcert
+  def initialize args = []
+    @args = args
+    @opts = { :length => 2048 }
+    @time = Time.now
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q{\
+        Generate a Certificate Signing Request, and optionally a
+        self-signed certificate.
+
+        http://wiki.nginx.org/NginxHttpSslModule#Generate_Certificates
+
+        Usage: #{File.basename __FILE__} [options] basename
+
+        Options:
+      }.gsub /^ +/, ''
+
+      opt.on '-o', '--output-directory PATH',
+             'Output directory; current working directory by default' do |arg|
+        @opts[:output_directory] = arg
+      end
+
+      opt.on '-l', '--length NUM', Integer,
+             "Length of private key; #{@opts[:length]} by default" do |arg|
+        @opts[:length] = arg
+      end
+
+      opt.on '-d', '--decrypt-private-key',
+             'Create an unencrypted version of the private key' do |arg|
+        @opts[:decrypt_private_key] = true
+      end
+
+      opt.on '--sign', 'Create a self-signed certificate' do
+        @opts[:sign] = true
+      end
+
+      opt.on '--openssl PATH', 'Specify an openssl binary' do |arg|
+        @opts[:openssl] = arg
+      end
+    end
+  end
+
+  # returns path to openssl binary
+  def openssl
+    return @openssl if @openssl
+    @openssl = @opts[:openssl] || %x(which openssl).chomp
+    raise 'No suitable openssl binary found' unless File.executable? @openssl
+    @openssl
+  end
+
+  # openssl does exit(0) even on error, so we check the files instead
+  def created? file
+    File.exists? file and File.mtime(file) > @time and File.size(file) > 0
+  end
+
+  def generate_private_key! key, nopass = nil
+    system openssl, 'genrsa', '-des3', '-out', key, @opts[:length].to_s
+    raise 'failed to generate private key' unless created? key
+
+    if nopass
+      puts "\nDecrypting private key"
+
+      system openssl, 'rsa', '-in', key, '-out', nopass
+      raise 'failed to decrypt private key' unless created? nopass
+    end
+
+    nopass || key
+  end
+
+  def generate_certificate_signing_request! key, csr
+    puts "\nGenerating certificate signing request"
+
+    system openssl, 'req', '-new', '-key', key, '-out', csr
+    raise 'failed to create CSR' unless created? csr
+
+    csr
+  end
+
+  def generate_self_signed_certificate! key, csr, crt
+    puts "\nGenerating self-signed certificate"
+
+    system openssl, 'x509', '-req', '-days', '365',
+                    '-in', csr, '-signkey', key, '-out', crt
+    raise 'failed to create certificate' unless created? crt
+
+    crt
+  end
+
+  def generate! basename
+    dir = File.expand_path @opts[:output_directory] || '.'
+    key = "#{dir}/#{basename}.key"
+    npw = "#{dir}/#{basename}.key.nopass"
+    csr = "#{dir}/#{basename}.csr"
+    crt = "#{dir}/#{basename}.crt"
+
+    FileUtils.mkdir_p dir, :verbose => true unless File.directory? dir
+
+    keyfile = generate_private_key! key, (npw if @opts[:decrypt_private_key])
+    generate_certificate_signing_request! keyfile, csr
+    generate_self_signed_certificate! keyfile, csr, crt if @opts[:sign]
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.length != 1
+    abort 'STDIN must be a tty!' if not $stdin.tty? # it's all interactive
+
+    generate! args.first
+  end
+end
+
+Gensslcert.new(ARGV).run if __FILE__ == $0

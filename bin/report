@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Report
+  class << self
+    def report msg, opts = {}
+      r = self.new
+      r.opts = opts
+      r.report msg
+    end
+  end
+
+  attr_accessor :opts
+
+  def initialize args = []
+    @args = args
+    @opts = { :title => __FILE__, :default_message => 'Attention!' }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 20
+      opt.banner = %Q(\
+        Display / speak a message to the user using platform-specific notifiers.
+
+        Usage: #{File.basename __FILE__} [options] [msg]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-t', '--title TITLE', 'Title for notification, if applicable' do |arg|
+        @opts[:title] = arg
+      end
+
+      opt.on '-s', '--sticky', 'Set notification to sticky, if applicable' do
+        @opts[:sticky] = true
+      end
+    end
+  end
+
+  def darwin_report msg
+    if system 'command -v say &>/dev/null'
+      Process.detach fork { exec 'say', msg }
+    end
+
+    if system 'command -v growlnotify &>/dev/null'
+      Process.detach fork {
+        $stderr.reopen '/dev/null'
+        cmd  = %W[growlnotify -m #{msg}]
+        cmd += %w[--sticky]                 if @opts[:sticky]
+        cmd += %W[--title #{@opts[:title]}] if @opts[:title]
+        exec *cmd
+      }
+    end
+  end
+
+  def unix_report msg
+    if system 'command -v espeak &>/dev/null'
+      Process.detach fork { exec 'espeak', '-ven-us', msg }
+    end
+
+    if system 'command -v notify-send &>/dev/null'
+      Process.detach fork {
+        $stderr.reopen '/dev/null'
+        exec 'notify-send', @opts[:title], msg
+      }
+    end
+  end
+
+  def report msg
+    case RUBY_PLATFORM
+    when /darwin/ then darwin_report msg
+    else               unix_report msg
+    end
+  end
+
+  def run
+    args = options.parse @args
+    report args.empty? ? @opts[:default_message] : args.join(' ')
+  end
+end
+
+Report.new(ARGV).run if $0 == __FILE__

@@ -1,0 +1,53 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# http://coderrr.wordpress.com/2008/05/28/get-your-local-ip-address/
+
+require 'optparse'
+require 'socket'
+require 'ipaddr'
+
+class Getlip
+  def initialize args = []
+    @args = args
+  end
+
+  def options
+    OptionParser.new %Q{\
+      Return the local IP address via a udp socket. Does not do a DNS lookup if
+      host is an IP address or not given.
+
+      Usage: #{File.basename __FILE__} [host]
+    }.gsub(/^ +/,'')
+  end
+
+  def ipaddr? str
+    IPAddr.new str
+  rescue ArgumentError
+    nil
+  end
+
+  def local_ip host = nil
+    host ||= '1.1.1.1'
+    orig = Socket.do_not_reverse_lookup
+
+    # turn off name resolution for IP addresses
+    Socket.do_not_reverse_lookup = true if ipaddr? host
+
+    # connect, but do not #send
+    UDPSocket.open do |s|
+      s.connect host, 80
+      s.addr.last
+    end
+  ensure
+    Socket.do_not_reverse_lookup = orig
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.size > 1
+    puts local_ip(args.first)
+  end
+end
+
+Getlip.new(ARGV).run if __FILE__ == $0

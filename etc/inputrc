@@ -1,0 +1,122 @@
+
+#   _______ _______ _______   ______                __ __ __
+#  |     __|    |  |   |   | |   __ \-----.---.-.--|  |  |__|-----.-----.
+#  |    |  |       |   |   | |      <  -__|  _  |  _  |  |  |     |  -__|
+#  |_______|__|____|_______| |___|__|_____|___._|_____|__|__|__|__|_____|
+#
+#                                          guns <self@sungpae.com>
+
+# Case insensitivity for completions
+set completion-ignore-case on
+
+# Append a slash to symlinked dirs
+set mark-symlinked-directories on
+
+# Turn off pager for completion replies
+set page-completions off
+
+# One tab for completions instead of two
+set show-all-if-ambiguous on
+
+# Returned completions show file types
+set visible-stats on
+
+# http://www.shallowsky.com/blog/linux/bash-word-erase.html
+set bind-tty-special-chars off
+
+
+### Global Macros ###
+
+# unix-word-rubout breaks on \S, backward-kill-word on \W
+"\C-w":         backward-kill-word
+"\C-]":         kill-whole-line
+
+# Unicode characters
+"\e*":          "°"
+"\e7":          "·"
+"\e8":          "•"
+"\e<":          "←"
+"\e>":          "→"
+"\el":          "λ"
+"\ev":          "✓"
+"\ex":          "×"
+
+
+### Application Macros ###
+
+$if Bash
+    # Reload Xdefaults and xset settings instead of reloading this file
+    "\C-x\C-r":     "\C-] xreload \n"
+
+    # Exchange `exchange-point-and-mark' with reloading the shell
+    "\C-x\C-x":     "\C-] exec $SHELL \n"
+
+    # Quick redirects
+    "\C-x0":        " &>/dev/null "
+    "\C-x1":        " >/dev/null "
+    "\C-x2":        " 2>/dev/null "
+    "\C-x3":        " 2>&1 "
+
+    # Repurpose editor macro to open frequently edited files
+    "\C-x\C-e":     "\C-] vim \n"
+    "\C-xe ":       "\C-]vim "
+    "\C-xea":       "\C-] vimautocommands \n"
+    "\C-xec":       "\C-] vimcommands \n"
+    "\C-xem":       "\C-] vimmappings \n"
+    "\C-xeo":       "\C-] vimorg \n"
+    "\C-xep":       "\C-] vimprofile \n"
+    "\C-xes":       "\C-] vimscratch \n"
+    "\C-xet":       "\C-] vimtodo \n"
+    "\C-xev":       "\C-] vimrc \n"
+    "\C-xf":        "\C-]vimfind "
+
+    # Git shortcuts
+    "\C-x\C-g":     "\C-] vimgit \n"
+    "\C-xg ":       "\C-]git "
+    "\C-xg%":       "\C-]git di "
+    "\C-xgaa":      "\C-] git aa \n"
+    "\C-xgac":      "\C-] git acv \n"
+    "\C-xgap":      "\C-] git ap \n"
+    "\C-xgc":       "\C-] git cv \n"
+    "\C-xgd":       "\C-] git di \n"
+    "\C-xgf":       "\C-] git f \n"
+    "\C-xgg":       "\C-]git gi "
+    "\C-xgl":       "\C-] git lp \n"
+    "\C-xgr":       "\C-] git rs \n"
+    "\C-xgv":       "\C-] gitv \n"
+    "\C-xgV":       "\C-]gitv "
+
+    # tmux
+    "\C-x\C-t":     "\C-] tmuxinit \n"
+    "\C-xt ":       "\C-]tmux "
+    "\C-xtc":       "\C-] tmuxchdir \n"
+
+    # Directories
+    "\C-x\C-_":     "\C-] cd - \n"
+    "\C-x\C-n":     "\C-] cdnerv \n"
+    "\C-xn":        "\C-]cdnerv "
+    "\C-xL":        "\C-] cdlocal \n"
+    "\C-xl":        "\C-]cdlocal "
+    "\C-xS":        "\C-] cdsrc \n"
+    "\C-xs":        "\C-]cdsrc "
+    "\C-xO":        "\C-] cdopt \n"
+    "\C-xo":        "\C-]cdopt "
+
+    # Directories and Job control
+    "\C-x\C-p":     "\C-] popd \n"
+    "\C-x\C-f":     "\C-] fg \n"
+    "\C-x\C-b":     "\C-] bg \n"
+
+    # Man
+    "\C-xm":        "\C-]man "
+$endif
+
+
+$if Ruby
+    # Re-exec (see above)
+    "\C-x\C-x":     "\C-] exec $0 \n"
+
+    # interactive_editor
+    "\C-x\C-e":     "\C-] vim \n"
+    "\C-xe":        "\C-]vim "
+$endif

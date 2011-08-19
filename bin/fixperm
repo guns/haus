@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'fileutils'
+require 'optparse'
+require 'find'
+
+class Fixperm
+  include NervUtils
+  include FileUtils
+
+  def initialize args = []
+    @args, @opts = args, {}
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+      opt.banner = %Q{\
+        Changes permissions of directories to 0755 and files to 0644. All other
+        file types are skipped. If the recursive option is specified and the
+        argument is a directory, it recurses and normalizes all children
+        as well.
+
+        *Be careful*
+
+        Usage: #{File.basename __FILE__} [options] path ...
+
+        Options:
+      }.gsub(/^ +/,'')
+
+      opt.on '-r', '--recursive', 'Normalize all children files' do
+        @opts[:recursive] = true
+      end
+
+      opt.on '-f', '--force' do
+        @opts[:force] = true
+      end
+    end
+  end
+
+  def normalize file, expect = '', *styles
+    mode = File.stat(file).mode.to_s(8)[/.{4}$/]
+    return true if mode == expect
+    puts "chmod #{mode} -> #{expect} on #{color file, *styles}"
+    chmod expect.to_i(8), file
+  end
+
+  def process files
+    files.each do |item|
+      Find.find item do |f|
+        case ftype = File.ftype(f)
+        when 'directory'  then normalize f, '0755', :blue, :bold
+        when 'file'       then normalize f, '0644'
+        else
+          puts "Skipping #{ftype} #{f}", :magenta, :bold
+        end
+
+        # Move to next file if not traversing directories
+        break unless @opts[:recursive]
+      end
+    end
+  end
+
+  def user_is_warned list
+    return true if !@opts[:recursive] or @opts[:force]
+    return true if list.size == 1 and File.ftype(list.first) != 'directory'
+    $stderr.print 'Are you sure you want to recursively normalize files? [y/N] '
+    $stdin.readline.chomp =~ /^y$/i
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.empty?
+    process args if user_is_warned args
+  end
+end
+
+Fixperm.new(ARGV).run if __FILE__ == $0

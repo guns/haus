@@ -1,0 +1,166 @@
+### PREPROCESSOR ###
+
+snippet def "#define" b
+#define $0
+endsnippet
+
+snippet Def "#ifndef … #define … #endif" b
+#ifndef ${1/([A-Za-z0-9_]+).*/$1/}
+#define ${1:SYMBOL} ${2:value}
+#endif
+endsnippet
+
+snippet ifdef "#ifdef" b
+#ifdef ${1:SYMBOL}
+#endif
+endsnippet
+
+snippet inc "#include <>" b
+#include <${2:${1:stdio}.h}>
+endsnippet
+
+snippet Inc "#include" b
+#include "${2:${1:`!p snip.rv = snip.basename`}.h}"
+endsnippet
+
+
+### DECLARATIONS ###
+
+snippet main "int main(int argc, char const *argv[])" b
+int main(int argc, char const *argv[])
+{
+	$0
+	return 0;
+}
+endsnippet
+
+snippet mainv "int main(void)" b
+int main(void)
+{
+	$0
+	return 0;
+}
+endsnippet
+
+snippet f "Function" b
+${1:type} ${2:function}($3)
+{
+	$0
+}
+endsnippet
+
+snippet fd "Function declaration" b
+${1:type} ${2:function}($3);
+endsnippet
+
+snippet td "typedef" b
+typedef ${1:int} ${2:MyCustomType};
+endsnippet
+
+snippet st "struct" b
+struct ${1:`!p snip.rv = (snip.basename or "name") + "_t"`} {
+	$0
+};
+endsnippet
+
+snippet tds "typedef struct" b
+typedef struct ${1:`!p snip.rv = (snip.basename or "name") + "_t"`} {
+	$0
+} $1;
+endsnippet
+
+snippet tde "typedef enum" b
+typedef enum {
+	$0
+} ${1:`!p snip.rv = (snip.basename or "name") + "_e"`};
+endsnippet
+
+snippet un "unsigned"
+unsigned $0
+endsnippet
+
+snippet c "char"
+char $0
+endsnippet
+
+snippet i "int8_t"
+int${1:8}_t $0
+endsnippet
+
+snippet u "uint8_t"
+uint${1:8}_t $0
+endsnippet
+
+snippet s "sizeof"
+sizeof $0
+endsnippet
+
+
+### CONDITIONALS ###
+
+snippet if "if" w
+if ($1)
+endsnippet
+
+snippet el "else" w
+else
+endsnippet
+
+snippet ? "Ternary conditional" w
+${1:cond} ? ${2:true} : ${0:false}
+endsnippet
+
+snippet sw "switch" w
+switch ($1) {
+case $2:
+	$0
+	break;
+default:
+}
+endsnippet
+
+snippet case "case" w
+case $1:
+	$0
+	break;
+endsnippet
+
+
+### LOOPS ###
+
+snippet for "for loop"
+for (${1:i} = 0; $1 < ${2:count}; ${3:++$1})
+endsnippet
+
+snippet for- "reverse for loop" w
+for (${1:i} = ${2:count}; $1 >= 0; ${3:--$1})
+endsnippet
+
+snippet wh "while loop" b
+while ($1)
+endsnippet
+
+snippet do "do {} while" b
+do {
+	$0
+} while ($1)
+endsnippet
+
+
+### STATEMENTS ###
+
+snippet r "return" w
+return $1;
+endsnippet
+
+snippet pr "printf" w
+printf("${1:%s}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
+endsnippet
+
+snippet fpr "fprintf" w
+fprintf(${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%%)*(%.)?.*/(?2:\);)/}
+endsnippet
+
+snippet deb "call debugger" w
+raise(SIGTRAP);
+endsnippet

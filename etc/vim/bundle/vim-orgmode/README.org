@@ -1,0 +1,21 @@
+* Description
+  Text outlining and task management for Vim based on Emacs' Org-Mode
+  ([[http://orgmode.org/]]).
+
+  The idea for this plugin was born by listening to the Floss Weekly podcast
+  introducing Emacs Org-Mode (http://twit.tv/floss136). Org-Mode has a lot of
+  strong features like folding, views (sparse tree) and scheduling of tasks.
+  These are completed by hyperlinks, tags, todo states, priorities aso.
+
+  Vim-orgmode aims at providing the same functionality for Vim and for command
+  line tools*.
+
+  *for command line tools and other programs a library named liborgmode is
+   provided. It encapsulates all functionality for parsing and modifying
+   Org-Mode files.
+
+* License
+  Information about the license are found in the file LICENSE.
+
+* Installation
+  Installation and usage instructions are found in file [[vim-orgmode/blob/master/doc/org.txt][doc/org.txt]].

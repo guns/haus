@@ -1,0 +1,60 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'shellwords'
+require 'nokogiri'
+
+# http://stackoverflow.com/questions/747075/how-to-git-svn-clone-the-last-n-revisions-from-a-subversion-repository
+class GitSvnshallowclone
+  def initialize args = []
+    @args = args.freeze
+    @opts = { :depth => 5 }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+      opt.banner = %Q(\
+        Do a shallow clone of a svn repository.
+
+        Usage: #{File.basename __FILE__} [options] url [basedir]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-d', '--depth N', Integer, 'Checkout last N revisions; default: %d' % @opts[:depth] do |arg|
+        @opts[:depth] = arg
+      end
+
+      opt.on '-s', '--stdlayout', 'Assume SVN standard layout' do
+        @opts[:stdlayout] = true
+      end
+    end
+  end
+
+  def head_rev url
+    Nokogiri::XML(%x(svn log --xml --limit 1 #{url.shellescape})).css('logentry').first.attr('revision').to_i
+  end
+
+  def clone url, basedir = nil
+    cmd  = %w[git svn clone]
+    cmd << '--stdlayout' if @opts[:stdlayout]
+    cmd += %W[--revision #{head_rev(url) - @opts[:depth]}:HEAD]
+    cmd += [url, basedir || File.basename(url)]
+    puts cmd.shelljoin
+    system *cmd
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s unless [1, 2].include? args.size
+    clone *args
+  end
+end
+
+GitSvnshallowclone.new(ARGV).run if $0 == __FILE__

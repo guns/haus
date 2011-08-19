@@ -1,0 +1,173 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+
+class Lninstall
+  include FileUtils
+
+  def initialize args = []
+    @args  = args
+    @opts  = {}
+    @fopts = { :verbose => true }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      program = File.basename __FILE__
+      opt.summary_width = 16
+
+      opt.banner = %Q(\
+        Link the program executables and man pages of an installation to another
+        directory tree. Also works in reverse.
+
+        For instance:
+
+            #{program} /opt/bash /usr/local
+
+        is functionally equivalent to:
+
+            mkdir -p /usr/local/bin /usr/local/share/man/man1
+            ln -s /opt/bash/bin/bash /usr/local/bin/bash
+            ln -s /opt/bash/share/man/man1/bash.1 /usr/local/share/man/man1/bash.1
+
+        Usage: #{program} [options] src dst
+
+        Options:\
+      ).gsub /^ {8}/, ''
+
+      opt.on '-u', '--uninstall',
+             "Unlink files in `dst' that link to `src';",
+             "only unlinks hard links when `--hard' is specified" do
+        @opts[:uninstall] = true
+      end
+
+      opt.on '-f', '--force', 'Overwrite all files without prompting' do
+        @opts[:force] = true
+      end
+
+      opt.on '-n', '--noop', 'Make no changes, but show what would have been done' do
+        @fopts[:noop] = true
+      end
+
+      opt.on '-q', '--quiet', 'Produce no output' do
+        @fopts[:verbose] = false
+      end
+
+      opt.on '-h', '--hard', 'Create hard links instead of symbolic links' do
+        @opts[:hard] = true
+      end
+
+      opt.on '--help' do
+        puts opt; exit
+      end
+    end
+  end
+
+  attr_reader :src, :dst
+
+  def src= path
+    @src = File.expand_path path
+  end
+
+  def dst= path
+    @dst = File.expand_path path
+  end
+
+  def bin base
+    Dir[File.join base, '/{,s}bin/*']
+  end
+
+  def man base
+    Dir[File.join base, '/share/man/**/*']
+  end
+
+  def src_files
+    @src_files ||= begin
+      bin(src).select { |f| File.executable? f or File.symlink? f } +
+      man(src).select { |f| File.file? f or File.symlink? f }
+    end
+  end
+
+  def src_inodes
+    @src_inodes ||= src_files.map { |f| File.stat(f).ino }
+  end
+
+  # returns a list of all files in @dst that link to files in @src;
+  # the files returned may have different basenames than their sources
+  def dst_files
+    @dst_files ||= begin
+      # TODO: this could be made faster if it becomes an issue
+      (bin(dst) + man(dst)).select do |f|
+        if File.symlink? f
+          src_files.include? File.readlink(f)
+        elsif @opts[:hard] and File.file? f
+          src_inodes.include? File.stat(f).ino
+        end
+      end
+    end
+  end
+
+  def confirm msg, list
+    return true  if list.empty? or @opts[:force] or @fopts[:noop]
+    return false if not $stdin.tty?
+
+    warn list.join("\n")
+    $stderr.print "\n#{msg} [Y/n] "
+    $stdin.gets =~ /ye?s?/i
+  end
+
+  def linked? sf, df
+    if File.symlink? df
+      File.readlink(df) == sf
+    elsif @opts[:hard] and File.file? df
+      File.stat(sf).ino == File.stat(df).ino
+    end
+  end
+
+  def link sf, df
+    send (@opts[:hard] ? :ln : :ln_s), sf, df, @fopts
+  end
+
+  def install
+    list = src_files.map do |sf|
+      [sf, sf.sub(%r(\A#{src}(.*)), dst + '\1')]
+    end
+
+    difflist = list.select { |s,d| File.exists? d and not linked? s, d }.map &:last
+    return unless confirm 'Overwrite listed files?', difflist
+
+    list.each do |sf, df|
+      next if linked? sf, df
+
+      dd = File.dirname df
+
+      rm_f    df, @fopts if File.exists? df
+      mkdir_p dd, @fopts unless File.directory? dd
+      link    sf, df
+    end
+  end
+
+  def uninstall
+    dst_files.each do |f|
+      d = File.dirname f
+      rm_f  f, @fopts
+      rmdir d, @fopts if Dir[d + '/*'].empty? # just remove immediate parent
+    end
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s unless args.size == 2
+
+    self.src, self.dst = args
+    @opts[:uninstall] ? uninstall : install
+  end
+end
+
+Lninstall.new(ARGV).run if $0 == __FILE__

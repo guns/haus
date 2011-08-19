@@ -1,0 +1,111 @@
+### TEMPLATES ###
+
+snippet APP "jQuery app template" w
+/*global jQuery */
+
+jQuery.noConflict();
+jQuery(document).ready((function($) {
+	'use strict';
+
+	$0
+
+	return function() {};
+})(jQuery));
+endsnippet
+
+
+### STATEMENTS ###
+
+snippet req "require (node.js)" b
+require('$1')
+endsnippet
+
+snippet f "function"
+function($1) {$0}
+endsnippet
+
+snippet if "if"
+if ($1)
+endsnippet
+
+snippet e "else"
+else
+endsnippet
+
+snippet r "return"
+return $1;
+endsnippet
+
+snippet l "console.log"
+console.log($1)
+endsnippet
+
+snippet .l ".length" w
+.length
+endsnippet
+
+snippet w "window"
+window.
+endsnippet
+
+snippet d "document"
+document.
+endsnippet
+
+snippet t "this"
+this.
+endsnippet
+
+snippet this "this"
+$(this)
+endsnippet
+
+snippet $ "jQuery $"
+$($1)
+endsnippet
+
+snippet .hop "hasOwnProperty" w
+.hasOwnProperty($1)
+endsnippet
+
+snippet sett "setTimeout"
+setTimeout($0)
+endsnippet
+
+snippet seti "setInterval"
+setInterval($0)
+endsnippet
+
+snippet forin "for in loop"
+for (${1:property} in ${2:object}) {
+	if ($2.hasOwnProperty($1)) {
+		$0
+	}
+}
+endsnippet
+
+snippet tp "typeof"
+typeof $0
+endsnippet
+
+snippet : "key: value"
+${1:key}: ${0:value}
+endsnippet
+
+snippet get "Get Elements"
+getElement${1/(T)|.*/(?1:s)/}By${1:T}${1/(T)|(I)|.*/(?1:agName)(?2:d)/}('$2')
+endsnippet
+
+snippet proto "Prototype (proto)"
+${1:class_name}.prototype.${2:method_name} = function($3) {
+	$0
+};
+endsnippet
+
+snippet for "for loop"
+for (${1:i} = 0; $1 < ${2:count}; ${3:++$1})
+endsnippet
+
+snippet for- "reverse for loop" w
+for (${1:i} = ${2:count}; $1 >= 0; ${3:--$1})
+endsnippet

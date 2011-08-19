@@ -1,0 +1,40 @@
+
+#   _______ _______ _______   _______
+#  |     __|    |  |   |   | |     __|----.----.-----.-----.-----.
+#  |    |  |       |   |   | |__     |  __|   _|  -__|  -__|     |
+#  |_______|__|____|_______| |_______|____|__| |_____|_____|__|__|
+#
+#                                     guns <sung@metablu.com>
+
+
+### Options
+
+altscreen on            # allows alternate buffers for pagers, etc.
+autodetach on           # detach on signal hangup, instead of killing sessions
+defscrollback 1024      # define a bigger scrollback, default is 100 lines
+defutf8 on              # utf-8 + rxvt-unicode == <3
+msgwait 2.0             # message duration
+nethack on              # Help! I'm trapped in a fortune cookie factory!
+startup_message off     # we don't need a lecture on startup
+vbell off               # don't make faces
+verbose on              # shows us the :screen commands as they are executed
+defbce on               # background-color-erase
+defnonblock 5           # non-blocking mode for flaky connections
+hardstatus on           # send screen messages to the hardstatus line
+hardstatus string   '[screen] %Lw' # string to display in terminal title
+hardstatus lastline '[screen] %Lw' # or last line if terminal doesn't support it
+term screen-256color    # use a 256-color terminfo
+
+
+### Keybindings
+
+escape ^@\040           # rebind command key to C-Space so we can use C-a as God intended
+bind + resize +3        # quick region resize commands
+bind ^_ resize -3
+bind = resize =
+
+bind ^r eval 'source "$HOME/.screenrc"' 'wall "Reloading $HOME/.screenrc"'
+bind ^t eval 'register t "^n screen -X title \"$(basename \"\$PWD\")\"^M"' 'process t'
+bind ^m eval 'register m "^n screeninit^M"' 'process m'
+bind ^n eval 'register n "^@:number "' 'process n'
+bind ^u eval 'register u "^@:multiuser off"' 'process u'

@@ -1,0 +1,73 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'optparse'
+require 'shellwords'
+
+class Defread
+  include NervUtils
+
+  def initialize(args = [])
+    @args = args
+    @pb   = '/usr/libexec/PlistBuddy'
+  end
+
+  def options
+    OptionParser.new %Q{\
+      A wrapper around `defaults' and `PlistBuddy' for printing property lists,
+      which is surprisingly inconvenient.
+
+      Usage: #{File.basename __FILE__} [plist|domain] ...
+    }.gsub(/^ +/,'')
+  end
+
+  def puts(msg) super(msg, :green, :bold) end
+  def warn(msg) super(msg, :red, :bold) end
+  def test(cmd) system(cmd + ' &>/dev/null') end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.empty?
+    raise 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+
+    errors = false
+    args.map { |f| File.expand_path f }.each do |path|
+      # first try `defaults read' with user domains
+      if test(cmd = "defaults read #{File.basename(path,'.plist').shellescape}")
+        puts "# #{cmd}"
+        system cmd
+      # next make sure we have read privileges on the file
+      elsif !File.readable?(path)
+        warn "Could not read #{path}!"
+        errors = true
+        next
+      # defaults read will read files only when we give it an absolute path
+      elsif test(cmd = "defaults read #{path.chomp('.plist').shellescape}")
+        puts "# #{cmd}"
+        system cmd
+      # try PlistBuddy as a last resort
+      elsif !File.executable?(@pb)
+        warn "Error executing #{@pb}!"
+        errors = true
+        next
+      elsif test(cmd = "#{@pb} -c Print #{path.shellescape}")
+        puts "# #{cmd}"
+        system cmd
+      else
+        warn "Failed to print #{path}!"
+        errors = true
+      end
+    end
+
+    abort if errors
+  rescue
+    abort $!.to_s, :red
+  end
+end
+
+Defread.new(ARGV).run if __FILE__ == $0

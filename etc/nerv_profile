@@ -1,0 +1,1411 @@
+
+#     ______  _________________________   ____
+#    \      \ \_   _____/\______   \   \ /   /
+#    /   |   \ |    __)_  |       _/\   Y   /
+#   /    |    \|        \ |    |   \ \     /
+#   \____|__  /_______  / |____|_  /  \___/    guns <sung@metablu.com>
+#           \/        \/         \/
+
+
+### PATHs
+
+path=(
+    "$HOME/bin"                         # user programs
+    /usr/local/{,s}bin                  # local administrator's programs
+    /opt/ruby/{1.9,1.8,1.8.6}/bin       # Ruby installations
+    "$NERV_ROOT/{core/,}bin"            # NERV user programs
+    "$PATH"                             # existing PATH
+    /{,usr/}{,s}bin                     # canonical Unix PATH
+    /opt/brew/{,s}bin                   # Homebrew (OS X)
+    /opt/passenger/bin                  # Phusion Passenger
+    /usr/{local/,}games                 # games
+) && PATH "${path[@]}" && unset path
+
+
+### ENVIRONMENT
+
+# Bash history
+HISTSIZE='65536'                        # 500 is the default
+HISTIGNORE='&:cd:..*(.):ls:lc: *'       # ignore dups and common commands
+
+# Locales
+export LANG='en_US.UTF-8'               # or let your terminal set this
+export LC_CTYPE='en_US.UTF-8'           # rxvt-unicode needs this set explicitly
+export LC_COLLATE='C'                   # traditional ASCII sorting
+
+# Editors and pagers
+export EDITOR='vim'                     # vim ftw
+export VISUAL="$EDITOR"
+export PAGER='less'
+
+# Less
+export LESSSECURE=1                     # More secure, that is
+export LESSHISTFILE='-'                 # no ~/.lesshst
+export LESS='--clear-screen --ignore-case --long-prompt --RAW-CONTROL-CHARS --chop-long-lines --tilde --shift 8'
+
+# Ruby
+VAR -x RUBYLIB="$NERV_ROOT/core/lib/ruby"
+VAR -x BUNDLE_PATH="$HOME/.bundle"
+[[ $SSH_TTY ]] && export RAILS_ENV='production' RACK_ENV='production'
+
+
+### PROMPTS
+
+# show non-zero exit status of last command before prompt
+PROMPT_COMMAND='__exitstatus'
+__exitstatus() {
+    local s=$?
+    (($s)) && echo -ne "\033[3;31m($s)\033[0m "
+}
+
+# arguments are sed expressions: 's/\\u/\\u is a luser/'
+__ps1_toggle() {
+    # seed array if unset
+    declare -p __ps1ary &>/dev/null || __ps1ary=("$PS1")
+
+    # check for existing transformation
+    local i count=${#__ps1ary[@]} exists
+    for ((i=1; i<count; ++i)); do
+        [[ "$*" == "${__ps1ary[i]}" ]] && exists=1 && break
+    done
+
+    # push new pattern, or slice existing pattern
+    if [[ $exists ]]; then
+        __ps1ary=("${__ps1ary[@]:0:i}" "${__ps1ary[@]:i+1}")
+    else
+        __ps1ary=("${__ps1ary[@]}" "$*")
+    fi
+
+    # replay transformations
+    local expr
+    PS1="${__ps1ary[0]}"
+    for expr in "${__ps1ary[@]:1}"; do
+        PS1="$(command sed -e "$expr" <<< "$PS1")"
+    done
+
+    # reparse %(color) sequences
+    PS1="$(__expand_colors "$PS1")"
+}
+
+
+### ALIASES, FUNCTIONS, && COMPLETIONS ###
+
+# source the NERV bash_completion script
+[[ -r "$HOME/.bash_completion" ]] && . "$HOME/.bash_completion"
+
+# what flags are available for certain core commands?
+ls "$HOME" --color &>/dev/null && VAR GNU_COLOR_OPT='--color'
+grep -P 1 <<< 1 &>/dev/null    && VAR GREP_PCRE_OPT='-P'
+
+# show all defined functions
+showfunctions() { set | grep '^[a-zA-Z0-9_-]* ()'; }
+
+# cache EXPAND_COLORS() from bash_profile
+eval "__expand_colors() $(type EXPAND_COLORS | command sed 1,2d)"
+
+
+### Bash Builtins
+
+alias ..='cd ../'
+alias ...='cd ../../'
+alias ....='cd ../../../'
+alias .....='cd ../../../../'
+alias ......='cd ../../../../../'
+alias .......='cd ../../../../../../'
+alias -e j='jobs'
+alias -e x='exec'
+alias -e rehash='hash -r'
+
+alias -e comp='complete -p' &&
+comp_transfer() { eval $({ complete -p "$1" || echo :; } 2>/dev/null) "$2"; }
+
+alias -e p='pushd .' && {
+    alias -e d='dirs'
+    alias -e pp='popd'
+}
+
+alias -e t='type' && {
+    alias -e ta='t -a'
+    alias -e tp='t -P'
+    alias -e wh='tp'
+    alias -e wha='tp -a'
+}
+
+alias -e cv='command -v'
+
+alias -e h='history' && {
+    nohist() {
+        if [[ $HISTIGNORE_ORIGINAL ]]; then
+            HISTIGNORE="$HISTIGNORE_ORIGINAL" && unset HISTIGNORE_ORIGINAL
+        else
+            HISTIGNORE_ORIGINAL="$HISTIGNORE" && HISTIGNORE='*'
+        fi
+        __ps1_toggle 's:\\H:\[nohist\] \\H:'; echo "HISTIGNORE='$HISTIGNORE'"
+    }
+}
+
+alias -e o='echo' && {
+    echorun() {
+        echo -e "$(__expand_colors -n "%(green.bold)${*//\'/\\\'}")" >&2
+        "$@"
+    } && comp_transfer exec echorun
+    bgrun() {
+        echo -e "$(__expand_colors -n "%(yellow.bold)${*//\'/\\\'} &>/dev/null &")" >&2
+        "$@" &>/dev/null &
+    } && comp_transfer exec bgrun
+}
+
+alias wrld='while read l; do' && {
+    comp_transfer exec wrld
+    alias loop='while sleep 1;'
+    comp_transfer exec loop
+}
+
+
+### Directories
+
+cdfunc cdetc        /etc
+cdfunc cdtmp        /tmp
+cdfunc cdvar        /var
+cdfunc cdabs        /var/abs
+cdfunc cdnerv       "$NERV_ROOT"
+cdfunc cdopt        /opt
+cdfunc cdrcd        /usr/local/etc/rc.d
+cdfunc cdrcd        /etc/rc.d
+cdfunc cdlocal      /usr/local
+cdfunc cdsrc        /usr/local/src
+cdfunc cdsrc        "$HOME/src"
+cdfunc cdnginx      /usr/local/etc/nginx
+cdfunc cdnginx      /opt/nginx/etc
+cdfunc cddnsmasq    /usr/local/etc
+cdfunc cddnsmasq    /opt/dnsmasq/etc
+cdfunc cdbrew       /opt/brew
+cdfunc cdhttp       "$HOME/Sites"
+cdfunc cdhttp       /srv/www
+cdfunc cdhttp       /srv/http
+cdfunc cddownloads  "$HOME/Downloads"
+cdfunc cdappprefs   "$HOME/Library/Preferences"
+cdfunc cdappsupport "$HOME/Library/Application Support"
+cdfunc cdsubtle     "$NERV_ROOT/etc/user.subtle"
+
+
+### Init Scripts
+
+initfunc() {
+    local name="$1" dir="$2"
+    [[ -d "$dir" ]] || return
+
+    # shell function
+    eval "$name() { [[ -x "$dir/\$1" ]] && echorun "$dir/\$1" \${@:2}; }"
+
+    # completion function
+    eval "__$name() {
+        local cur=\${COMP_WORDS[COMP_CWORD]}
+        local prev=\${COMP_WORDS[COMP_CWORD-1]}
+        local words
+
+        if [[ \$prev == \${COMP_WORDS[0]} ]]; then
+            words=\"\$(command ls -1 \"$dir/\")\"
+        else
+            words='start stop restart'
+        fi
+
+        COMPREPLY=(\$(compgen -W \"\$words\" -- \$cur))
+    }"
+
+    complete -F __$name $name
+}; VAR -f initfunc
+
+initfunc rcd    /usr/local/etc/rc.d
+initfunc rcd    /etc/rc.d
+initfunc initd  /etc/init.d
+
+
+### Readline
+
+# rlwrap
+rlwrapper() { :; }
+type rlwrap &>/dev/null && {
+    alias -e rlwrap="rlwrap --ansi-colour-aware \
+                            --complete-filenames \
+                            --case-insensitive \
+                            --history-no-dupes 2 \
+                            --prompt-colour=green"
+    comp_transfer exec rlwrap
+    rlwrapper() { alias "$1"="rlwrap $1"; }
+}
+
+
+### Files and Disks
+
+# ls
+alias -e ls="command ls -Ahl $GNU_COLOR_OPT"
+alias -e lc='ls -C'
+alias -e lsr='ls -R' && lsrl() { ls -R "${@:-.}" | $PAGER; }
+alias -e lst='ls -t' && lstl() { ls -t "${@:-.}" | $PAGER; }
+alias l1='command ls -1'
+alias l1g='l1 | g'
+alias lsg='ls | g'
+alias l1gv='l1g -v'
+alias lsgv='lsg -v'
+alias ls.='ls -d .*'
+alias lsd='ls | grep ^d'
+alias lsl='ls | grep ^l'
+alias lss='ls -s'
+
+# cat / less / tail
+alias -e c='cat'
+alias -e l='less'
+alias -e L='less +S'  # softwrap
+alias -e lf='less +F' # follow-forever (tail)
+alias -e tf='tail -f' && {
+    [[ -e /var/log/system.log ]] && {
+        alias tfsystem='echorun tail -f /var/log/system.log'
+        alias lfsystem='echorun less +F /var/log/system.log'
+    }
+    [[ -e /var/log/everything.log ]] && {
+        alias tfeverything='echorun tail -f /var/log/everything.log'
+        alias lfeverything='echorun less +F /var/log/everything.log'
+    }
+}
+
+# hexdump
+alias -e hex='hexdump -C' && hexl() { hexdump -C "$@" | $PAGER; }
+
+# strings
+type strings &>/dev/null &&
+lstrings() { strings -t x - "$@" | $PAGER; }
+
+# grep / ack
+alias -e g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
+alias -e g3='g -C3'
+alias -e gv='g -v'
+alias -e wcl='grep -c .'
+alias -e ack='ack-grep' # Debian
+todo() {
+    local dir="$1" words='TODO|FIXME|NOTE|WARNING|DEBUG|HACK'
+    [[ -d "$dir" ]] && local chdir=1 && pushd . &>/dev/null && cd "$dir"
+
+    if type git &>/dev/null && git rev-parse --git-dir &>/dev/null; then
+        echorun git grep -Ew "$words"
+    elif type ack &>/dev/null; then
+        echorun ack -aw "$words"
+    else
+        echorun grep -ri $GREP_PCRE_OPT $GNU_COLOR_OPT "$words" .
+    fi
+
+    [[ $chdir ]] && popd &>/dev/null
+    :
+}
+
+# find
+type find &>/dev/null && {
+    f() {
+        local args=() pattern
+
+        if [[ -d "$1" ]]; then
+            args+=("$1")
+            shift
+        else
+            args+=(.)
+        fi
+
+        if (($#)); then
+            if [[ "$1" == -* || "$1" == '(' ]]; then
+                args+=("$@")
+            else
+                case $1 in
+                ^*) pattern="${1#^}*";;
+                *$) pattern="*${1%$}";;
+                *)  pattern="*$1*"
+                esac
+                args+=(-iname "$pattern" "${@:2}")
+            fi
+        fi
+
+        echorun find "${args[@]}"
+    } && comp_transfer find f
+    f1() { f "$@" -maxdepth 1; } && comp_transfer find f1
+    ff() { f "$@" \( -type f -o -type l \); } && comp_transfer find ff
+    fl() { f "$@" -type l; } && comp_transfer find fl
+    fd() { f "$@" -type d; } && comp_transfer find fd
+    cdf() { cd "$(f "$@" -type d -print0 | ruby -e 'print $stdin.gets("\0") || "."' 2>/dev/null)"; } && comp_transfer find cdf
+    fnewer() { f "$@" -newer /tmp/timestamp; } && comp_transfer find fnewer
+}
+
+# cp / mv
+alias -e cp='cp -v'
+alias -e cpr='cp -r'
+alias -e mv='mv -v'
+swap-files() {
+    [[ $# -eq 2 && -w $1 && -w $2 ]] || { echo >&2 'Exactly two writable files expected!'; return 1; }
+
+    local tmp=".${1##*/}-SWAPTMP-$RANDOM"
+    {   echorun command mv -- "$1"   "$tmp"
+        echorun command mv -- "$2"   "$1"
+        echorun command mv -- "$tmp" "$2"
+        echo -e "\nSwapped files: $1 <-> $2"
+    } || return 1
+}
+
+# rm
+alias -e rm='rm -v'
+alias -e rmf='rm -f'
+alias -e rmrf='rm -rf'
+rmr() {
+    local reply
+    read -p 'Are you sure? [y/N] ' reply
+    [[ $reply == [Yy] ]] && echorun command rm -rvf "$@"
+} && comp_transfer rm rmr
+rm-craplets() {
+    echorun find "${1:-.}" \
+        \( -name '.DS_Store' -o -name 'Thumbs.db' \) \
+        -type f -print -delete
+}
+
+# ln
+alias -e ln='ln -v'
+alias -e lns='ln -s'
+alias -e lnsf='lns -f'
+lnnull() {
+    if [[ -e "$1" ]]; then
+        local reply
+        read -p "Are you sure you want to replace ${1%/}? [y/N] " reply
+
+        if [[ $reply != [Yy] ]]; then
+            return
+        else
+            echorun command rm -vrf -v "${1%/}"
+        fi
+    fi
+    echorun command ln -sf /dev/null "${1%/}"
+}
+
+# chmod / chown
+alias -e chmod='chmod -v'
+alias -e chmodr='chmod -R'
+alias -e chmodx='chmod +x'
+alias -e chown='chown -v'
+alias -e chownr='chown -R'
+
+# mkdir
+alias -e mkdir='mkdir -v'
+alias -e mkdirp='mkdir -p'
+
+# df / du
+alias -e df='df -h'
+alias -e du='du -h'
+alias -e dus='du -s'
+dusort() {
+    echo >&2 'Calculating sorted file size...'
+    local buf line
+    if (($#)); then
+        buf="$(f "$@" -print0 | xargs -0 du -s)"
+    else
+        buf="$(f1 \( ! -name . \) -print0 | xargs -0 du -s)"
+    fi
+    echo -e "$buf" | sort -n | cut -f2 | while read line; do command du -sh -- "$line"; done
+} && comp_transfer f dusort
+
+# mount
+alias -e mt='mount -v'
+
+# touch
+stamp() { echorun touch /tmp/timestamp; }
+
+# tar
+alias -e star='tar --strip-components=1' && {
+    alias gtar='tar zcv'
+    alias btar='tar jcv'
+    alias lstar='tar tvf'
+    # Generic `tar x' function for pipes and files
+    untar() {
+        local strip=() f
+        [[ $1 == '-S' ]] && { strip+=(--strip-components=1); shift; }
+        [[ -f "$1" ]] && f='f';
+
+        echorun tar xv$f "$@" "${strip[@]}"
+    }
+    suntar() { untar -S "$@"; }
+}
+
+# pax
+alias -e gpax='pax -z' && {
+    lspax() {
+        local zip
+        [[ "$1" == *.gz ]] && zip='-z'
+        pax "$zip" < "$1"
+    }
+
+    unpax() {
+        ruby -r fileutils -r shellwords -e '
+            abort "Usage: unpax archive basedir" unless ARGV.size == 2
+
+            include FileUtils::Verbose
+
+            archive, basedir = ARGV.take(2).map { |f| File.expand_path f }
+            zip = "-z" if File.extname(archive) == ".gz"
+            cmd = "pax -r #{zip} < #{archive.shellescape}"
+
+            mkdir_p basedir
+            chdir basedir
+            puts cmd
+            system cmd
+        ' "$@"
+    }
+}
+
+# rsync
+alias -e rsync='rsync --human-readable --progress' && {
+    # Backup mode is more expensive
+    alias -e rsync-mirror='rsync --archive --delete --partial --exclude=.git'
+    alias -e rsync-backup='rsync --archive --delete --partial --sparse --hard-links'
+}
+
+# dd alternatives
+alias -e dd3='dc3dd'
+alias -e ddc='dcfldd'
+
+
+### Processes
+
+# kill / killall
+alias -e k='kill' && {
+    alias -e k9='k -9'
+    alias -e khup='k -HUP'
+    alias -e kint='k -INT'
+    alias -e kusr1='k -USR1'
+    alias -e kquit='k -QUIT'
+}
+alias -e ka='killall -v' && {
+    alias -e ka9='ka -9'
+    alias -e kahup='ka -HUP'
+    alias -e kaint='ka -INT'
+    alias -e kausr1='ka -USR1'
+    alias -e kaquit='ka -QUIT'
+}
+
+# ps (traditional BSD / SysV flags seem to be the most portable)
+alias -e p1='ps axo comm' && {
+    alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,user,group,command'
+    alias psg='psa | grep -v "grep -i" | g'
+
+    # BSD-style ps supports -r and -m
+    if ps ax -r &>/dev/null; then
+        alias psr='psa -r | sed 11q'
+        alias psm='psa -m | sed 11q'
+    # Linux ps supports `k' and `--sort'
+    elif ps ax kpid &>/dev/null; then
+        alias psr='psa k-pcpu | sed 11q'
+        # unsure why kpmem doesn't work here, so use rss
+        alias psm='psa k-rss | sed 11q'
+    fi
+
+    alias -e psal="psa | $PAGER"
+    alias -e psrl="psr | $PAGER"
+    alias -e psml="psm | $PAGER"
+
+    # pid completions for ps
+    comp_transfer kill ps
+}
+
+# report on interesting daemons
+services() {
+    # we're actually just going to grep the process list
+    local processes=(
+        apache2 httpd nginx
+        php-cgi php-fpm
+        mysqld postgres
+        named unbound dnsmasq
+        exim sendmail
+        smbd nmbd nfsd
+        sshd
+        urxvtd
+        wicd
+    )
+
+    local p list="$(ps axo ucomm)" retval=1
+    for p in "${processes[@]}"; do
+        echo "$list" | grep -qw "$p" && echo "$p is ALIVE." && retval=0
+    done
+    return $retval
+}
+
+
+### Switch User
+
+alias -e s='sudo' && type xecho &>/dev/null &&
+root() { xecho title root; echorun exec sudo su; }
+
+type su &>/dev/null &&
+alias xsu='exec su'
+
+
+### Network
+
+alias -e ic='ifconfig'
+alias -e arplan='arp -lan'
+
+# cURL
+alias -e get='curl -#L'
+
+# DNS
+alias -e digx='dig -x'
+
+# netcat
+type nc   &>/dev/null && comp_transfer host nc   && rlwrapper nc
+type ncat &>/dev/null && comp_transfer host ncat && rlwrapper ncat
+
+# ssh / scp; cf. http://blog.urfix.com/25-ssh-commands-tricks/
+alias -e ssh='ssh -C -2' && {
+    alias -e sshx='ssh -XY' # WARNING: trusted forwarding!
+    alias -e ssh-shell="exec ssh-agent \"$SHELL\""
+    alias -e ssh-master='ssh -Nn -M' # ControlMaster connection
+    alias -e ssh-tunnel='ssh -Nn -M -D 22222'
+    alias -e ssh-password='ssh -o "PreferredAuthentications password"'
+    alias -e ssh-nocompression='ssh -o "Compression no"'
+    type ssh-proxy &>/dev/null && comp_transfer ssh ssh-proxy
+
+    alias -e scp='scp -C -2' && {
+        alias -e scpr='scp -r'
+    }
+}
+
+# lsof -i
+alias -e lsif='lsof -Pni' && {
+    alias lsifudp='lsof -Pni | grep UDP'
+    alias lsiflisten='lsof -Pni | grep LISTEN'
+    alias lsifconnect='lsof -Pni | grep -- "->"'
+}
+
+# get commands
+type getlip &>/dev/null &&
+comp_transfer host getlip
+
+# nmap
+type nmap &>/dev/null && {
+    type getlip &>/dev/null &&
+    nmapsweep() { echorun nmap -sP -PPERM $(getlip)/24; }
+    nmapscan() { echorun nmap -sS -A "$@"; }
+    comp_transfer nmap nmapscan
+}
+
+# list resolver targets
+resolv() {
+    if type scutil &>/dev/null; then
+        echorun scutil --dns
+    elif [[ -r /etc/resolv.conf ]]; then
+        echorun grep -v '^#' /etc/resolv.conf
+    else
+        echo 'No resolvers file.'; return 1
+    fi
+}
+
+
+### Editors
+
+# Ctags
+alias -e ctags='ctags -f .tags' && {
+    alias -e ctagsr='ctags -R'
+}
+
+# Vim
+alias -e vim='vim -p' && {
+    alias -e v='vim'
+    alias -e vi='command vim -u NONE'
+    alias -e vimtag='vim -t'
+    alias -e vimlog='vim -V/tmp/vim.log'
+    vimfind() {
+        local files=()
+        (($#)) && {
+            local IFS=$'\n'
+            files=($(ff "$@" 2>/dev/null))
+            unset IFS
+        }
+
+        if ((${#files[@]})); then
+            vim -p "${files[@]}"
+        else
+            vim -c 'CommandT'
+        fi
+    } && comp_transfer find vimfind
+
+    # explore man pages in vim
+    alias -e mman='command man'
+    man() {
+        local i sec page pages=0 args=()
+
+        for ((i=1; i<=$#; ++i)); do
+            page="${@:i:1}"
+            sec=''
+
+            if [[ $page == +([0-9]) ]]; then
+                sec="$page"
+                ((++i))
+                page="${@:i:1}"
+            fi
+
+            command man -w "$page" || continue
+
+            if ((pages++)); then
+                args+=(-c "tabedit | OMan $sec $page")
+            else
+                args+=(-c "OMan $sec $page")
+            fi
+        done
+
+        (( ${#args[@]} )) && echorun vim -p "${args[@]}"
+    }
+
+    # Open fugitive straight from command line
+    vimgit() { vim -c 'Gstatus' .; }
+
+    # Git[vV] wrapper
+    gitv() {
+        if [[ -f "$1" ]]; then
+            vim -c "Gitv!" "$1"
+        else
+            vim -c 'Gitv' -c 'tabonly' .
+        fi
+    }
+
+    # open in REPL mode with the screen.vim plugin
+    vimrepl() {
+        case $# in
+        2) local file="$1" cmd="$2";;
+        1) local file="$1";;
+        0) local file='vimrepl';;
+        *) return 1
+        esac
+
+        echorun vim -c "Screen $cmd" "$file"
+    }
+
+    # server / client functions
+    # (be careful; vim clientserver is a huge security hole)
+    [[ $EUID -ne 0 ]] && {
+        vimserver() {
+            local name='editserver'
+            if (($# == 0)); then
+                vim --servername $name
+            elif [[ $1 == -w ]]; then
+                vim --servername $name --remote-tab-wait "${@:1}"
+            else
+                vim --servername $name --remote-tab "$@"
+            fi
+        }
+
+        vimstartuptime() {
+            (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') & ) &
+            vim --servername 'editserver' --startuptime '.vimstartuptime' "$@"
+        }
+    }
+
+    # frequently edited files
+    [[ -d "$cdnerv" ]] && {
+        alias vimrc='(cdnerv; exec vim etc/user.vimrc)'
+        alias vimautocommands='(cdnerv; exec vim etc/user.vim/local/autocommands.vim)'
+        alias vimcommands='(cdnerv; exec vim etc/user.vim/local/commands.vim)'
+        alias vimmappings='(cdnerv; exec vim etc/user.vim/local/mappings.vim)'
+        alias vimprofile='(cdnerv; exec vim etc/nerv_profile)'
+        alias vimsubtle='(cdnerv etc/user.subtle; exec vim subtle.rb)'
+    }
+    [[ -d "$cdnginx" ]] && alias vimnginx='(cdnginx; exec vim nginx.conf)'
+    alias vimscratch='vim -c Scratch'
+    alias vimorg='vim -c Org!'
+    alias vimtodo='vim -c "Org! TODO"'
+}
+
+
+### Terminal Multiplexers
+
+# tmux
+type tmux &>/dev/null && {
+    tmuxinit() {
+        if [[ $TMUX ]]; then
+            echorun tmux new-window -d; root
+        else
+            echorun exec tmuxlaunch -x
+        fi
+    }
+    tmuxchdir() { echorun tmux set-option default-path "$(expand_path ${1:-$PWD})"; }
+}
+
+# GNU screen
+type screen &>/dev/null && {
+    alias screenr='screen -R'
+    alias xscreenr='exec screen -R'
+
+    # launch contextual screen sessions
+    [[ $WINDOW ]] && screeninit() {
+        # chdir to argument and set title to directory
+        cd "${1:-.}"; screen -X chdir .
+        screen -t "$(basename "$PWD")"
+
+        # Rails
+        [[ -e log/development.log ]] && {
+            screen -t 'development.log'
+            screen -X eval 'split' 'focus down' 'select 2'
+            screen -X eval 'register a "less +F -R log/development.log^M"'
+            screen -X eval 'process a' 'focus up'
+        }
+
+        # root shell in 0
+        screen -X eval 'select 0'
+        root
+    }
+}
+
+
+### Compilers
+
+# make
+alias -e mk='make' && {
+    alias mkinstall='make install'
+    alias -e mkj2='make -j2'
+    alias -e mkj4='make -j4'
+    alias -e mkj8='make -j8'
+    alias -e mkj16='make -j16'
+}
+
+
+### SCMs
+
+# diff/patch
+alias -e diff='diff -U3' && {
+    alias -e diffw='diff -w'
+    alias -e diffr='diff -r'
+    alias -e diffq='diff -q'
+    alias -e diffrq='diff -rq'
+}
+alias -e patch='patch --version-control never'
+
+# git
+type git &>/dev/null && {
+    # slightly shorter versions of git commands
+    for a in $(git config -l | sed -ne 's/^alias\.\([a-zA-Z0-9]*\)=.*/\1/p'); do
+        alias "git$a=git $a"
+    done
+    unset a
+
+    # Github
+    githubclone() {
+        (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
+        local user="$1" repo="$2" branch
+        [[ $3 ]] && branch="-b $3"
+        echorun git clone $branch "https://github.com/$user/$repo"
+    }
+    githubget() {
+        (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
+        local user="$1" repo="$2" branch="${3:-master}"
+        echorun curl -#L "https://github.com/$user/$repo/tarball/$branch"
+    }
+
+    # PS1 git status
+    type __git_ps1 &>/dev/null && {
+        gitps1() {
+            [[ $1 == toggle ]] && {
+                __ps1_toggle 's:\\w:\\w\$(__git_ps1 " → %(italic)%s%(noitalic)"):'
+                echo "$PS1"
+                return
+            }
+
+            # maps make life easier
+            [[ ${BASH_VERSINFO[0]} -ge 4 ]] || return 1;
+
+            local -A var
+            var[dirty]='GIT_PS1_SHOWDIRTYSTATE'
+            var[stash]='GIT_PS1_SHOWSTASHSTATE'
+            var[upstream]='GIT_PS1_SHOWUPSTREAM'
+            var[untracked]='GIT_PS1_SHOWUNTRACKEDFILES'
+
+            local names=(dirty untracked stash upstream) name value
+            case $1 in
+            dirty|untracked|stash|upstream)
+                if [[ $(eval echo \$${var[$1]}) ]]; then
+                    value=''
+                else
+                    value=auto
+                fi
+                eval "${var[$1]}=$value"
+                echo "${var[$1]}=$value"
+                ;;
+            ++)
+                for name in ${names[@]}; do
+                    [[ $(eval echo \$${var[$name]}) ]] || $FUNCNAME $name
+                done
+                ;;
+            --)
+                for name in ${names[@]}; do
+                    [[ $(eval echo \$${var[$name]}) ]] && $FUNCNAME $name
+                done
+                ;;
+            *)
+                for name in ${names[@]}; do
+                    echo "${var[$name]}=$(eval echo \$${var[$name]})"
+                done
+            esac
+        }
+        _gitps1() { COMPREPLY=($(compgen -W 'toggle dirty untracked stash upstream ++ --' -- ${COMP_WORDS[COMP_CWORD]})); }
+        complete -F _gitps1 gitps1
+
+        gitps1 toggle &>/dev/null # turn it on now
+    }
+}
+
+
+### Ruby
+
+type ruby &>/dev/null && {
+    alias -e rii='ri -i'
+
+    # Rubygems
+    type gem &>/dev/null && {
+        alias gems='echorun gem search -r'
+        alias gemg='echorun gem list | g'
+        alias gemq='echorun gem specification -r'
+        alias gemi='echorun gem install'
+        alias gemu='echorun gem uninstall'
+
+        # create a private version of a gem; pass directory containing gemspec
+        gem-private-build() {
+            ruby -rubygems -r fileutils -e '
+                file, dst = Dir["*.gempspec"].first, ARGV.first
+                abort unless file and File.readable? file and File.writable? dst
+                spec = Gem::Specification.load file
+                spec.version = "#{spec.version}.private"
+                pkg = Gem::Builder.new(spec).build
+                FileUtils.mv pkg, dst unless File.expand_path(dst) == Dir.pwd
+            ' "${1:-.}"
+        }
+    }
+
+    # Ruby versions (Ugly escaping for eval in cdfunc())
+    rubycdfunc() { cdfunc -f "cdruby$1" "ruby$1 -r mkmf -e puts\ RbConfig::CONFIG[\"rubylibdir\"]"; }
+    gemscdfunc() { cdfunc -f "cdgems$1" "ruby$1 -rubygems -e puts\ Gem.dir\ \+\ \"/gems\""; }
+    rubycdfunc; gemscdfunc
+    alias -e ruby19='/opt/ruby/1.9/bin/ruby' && {
+        alias -e gem19='/opt/ruby/1.9/bin/gem'
+        alias -e irb19='/opt/ruby/1.9/bin/irb'
+        alias -e rake19='/opt/ruby/1.9/bin/rake'
+        alias -e bundle19='/opt/ruby/1.9/bin/bundle'
+        rubycdfunc 19; gemscdfunc 19
+    }
+    alias -e ruby18='/opt/ruby/1.8/bin/ruby' && {
+        alias -e gem18='/opt/ruby/1.8/bin/gem'
+        alias -e irb18='/opt/ruby/1.8/bin/irb'
+        alias -e rake18='/opt/ruby/1.8/bin/rake'
+        alias -e bundle18='/opt/ruby/1.8/bin/bundle'
+        rubycdfunc 18; gemscdfunc 18
+    }
+    alias -e ruby186='/opt/ruby/1.8.6/bin/ruby' && {
+        alias -e gem186='/opt/ruby/1.8.6/bin/gem'
+        alias -e irb186='/opt/ruby/1.8.6/bin/irb'
+        alias -e rake186='/opt/ruby/1.8.6/bin/rake'
+        alias -e bundle186='/opt/ruby/1.8.6/bin/bundle'
+        rubycdfunc 186; gemscdfunc 186
+    }
+    unset -f rubycdfunc gemscdfunc
+
+    # Rake
+    alias -e rk='rake' && {
+        alias -e rk19='rake19'
+        alias -e rk18='rake18'
+        alias -e rk186='rake186'
+        alias rkt='rk -T'
+    }
+
+    # rails
+    alias -e ra='rails'
+
+    # ruby-debug
+    type rdebug &>/dev/null && {
+        comp_transfer exec rdebug
+        alias -e rdb='rdebug'
+        alias -e rdbc='rdb -c'
+    }
+
+    # expand_path
+    expand_path() { ruby -e 'print File.expand_path ARGV.first' "$1"; }
+
+    # sdoc
+    type sdoc &>/dev/null && {
+        SDOC_HTTP_BASE='/srv/http/api'
+
+        genapi() {
+            ruby -r fileutils -r optparse -e '
+                include FileUtils::Verbose
+
+                http_base       = ARGV.first
+                $0, flags, opts = "api", [], {}
+
+                args = OptionParser.new do |opt|
+                    opt.on "-j", "--jobs N", "--threads N", Integer do |arg|
+                        flags << "--threads=#{arg}"
+                    end
+
+                    opt.on "-t", "--title TITLE" do |arg|
+                        flags << "--title=#{arg}"
+                    end
+
+                    opt.on "-o", "--output", "--op DIR" do |arg|
+                        opts[:out] = File.expand_path arg
+                    end
+
+                    opt.on "-f", "--force" do
+                        opts[:force] = true
+                    end
+                end.parse ARGV.drop(1)
+
+                args.each do |dir|
+                    abort "Not a directory: #{dir}" unless File.directory? dir
+
+                    Dir.chdir dir do
+                        title = File.basename Dir.pwd
+                        out   = opts[:out]
+                        out ||= File.join http_base, (title[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || title)
+                        main  = Dir["*"].grep(%r{\AREADME(\..+)?\z}i).first
+
+                        if Dir.exists? out
+                            opts[:force] ? rm_rf(out) : abort("#{out} already exists!")
+                        end
+
+                        cmd = %W[sdoc --all --charset=utf-8 --title=#{title}
+                                      --output=#{out} --main=#{main}] + flags
+                        puts cmd.join(" ")
+                        system *cmd
+                    end
+                end
+            ' -- "$SDOC_HTTP_BASE" "$@"
+        }
+
+        type chrome &>/dev/null && {
+            api() {
+                local dir
+                for dir in "$@"; do
+                    chrome "http://${SDOC_HTTP_BASE##*/}/$dir"
+                done
+            }
+            _api() { COMPREPLY=($(compgen -W "$(command ls -1 $SDOC_HTTP_BASE)" -- ${COMP_WORDS[COMP_CWORD]})); }
+            complete -F _api api
+        }
+    }
+
+    # bundler
+    alias -e bx='bundle exec' && {
+        alias -e bshow='bundle show'
+    }
+
+    # prepend colon-delimited path envvars
+    __prepend_path() {
+        (($# == 1)) && {
+            ruby -e 'puts ARGV[0] + "=" + ENV[ARGV[0]]' "$1"
+            return
+        }
+
+        local envvar="$1" dir path
+        for dir in "${@:2}"; do
+            path="$(ruby -e '
+                dir, paths = File.expand_path(ARGV[0]), ENV[ARGV[1]].split(":")
+                abort unless File.directory? dir
+                puts paths.reject { |d| d == dir }.unshift(dir).join(":")
+            ' "$dir" "$envvar")"
+            if [[ $path ]]; then
+                export $envvar="$path"
+                echo $envvar="$path"
+            fi
+            unset path
+        done
+    }
+    rubylib() { __prepend_path RUBYLIB "$@"; }
+    path()    { __prepend_path PATH "$@"; }
+    gempath() { rubylib "${@:-.}/lib"; path "${@:-.}/bin"; }
+
+    # Simple fs event loop for execution in current shell
+    alias watch='while read path <<< $(ruby -r fssm -e "
+        FSSM.monitor Dir.pwd, %q{**/*} do
+            create { |base, path| puts %Q{\e[1;32m++ #{path}\e[0m}; raise Interrupt }
+            update { |base, path| puts %Q{\e[1;34m:: #{path}\e[0m}; raise Interrupt }
+            delete { |base, path| puts %Q{\e[1;31m-- #{path}\e[0m}; raise Interrupt }
+        end
+    " 2>/dev/null) && echo -e "$path";'
+
+    alias -e r='report'
+}
+
+### Perl
+
+alias -e perlpe='perl -pe' && {
+    alias -e perlne='perl -ne'
+    alias -e perlpie='perl -i -pe'
+}
+
+
+### JavaScript
+
+type node &>/dev/null && {
+    # jslint via node + vim plugin
+    [[ -x "$HOME/.vim/bundle/jslint.vim/bin/jslint" ]] && {
+        export JS_CMD='node'
+        alias -e jslint="$HOME/.vim/bundle/jslint.vim/bin/jslint"
+    }
+
+    # npm package manager
+    alias -e npm='npm --global' && {
+        alias npms='echorun npm search'
+        alias npmg='npm ls | g'
+        alias npmq='echorun npm  view'
+        alias npmi='echorun npm install --global'
+        alias npmu='echorun npm rm --global'
+        # alias npmsync # It's all network all the time
+    }
+}
+
+
+### Databases
+
+alias -e mysql='mysql -p' && {
+    alias -e mysqldump='mysqldump -p'
+    alias -e mysqladmin='mysqladmin -p'
+    rlwrapper mysql
+}
+
+type sqlite3 &>/dev/null &&
+sqlite3schema() {
+    {   sqlite3 "$1" <<< .schema
+        local t tables=($(sqlite3 "$1" <<< .table))
+        for t in "${tables[@]}"; do
+            echo -e "\n$t:"
+            local q1="SELECT * FROM $t ORDER BY id DESC LIMIT 1;"
+            local q2="SELECT * FROM $t LIMIT 1;"
+            local sql="$(sqlite3 "$1" <<< "$q1")"
+            [[ "$sql" =~ "SQL error near line 1: no such column: id" ]] &&
+                local sql="$(sqlite3 "$1" <<< "$q2")"
+            echo "$sql"
+        done
+    } 2>/dev/null | $PAGER
+}
+
+
+### Encryption
+
+# Truecrypt
+alias -e tcrypt='truecrypt --text' && {
+    alias tcryptautomount='tcrypt --auto-mount=favorites'
+    alias truecryptautomount='truecrypt --auto-mount=favorites'
+}
+
+
+### Media
+
+# Imagemagick
+alias -e geometry='identify -format "%w %h"'
+
+# feh
+type feh &>/dev/null && {
+    # Work around feh not finding font paths
+    feh() {
+        local p="$(type -P feh)"
+        command feh --fontpath "${p%/feh}/../share/feh/fonts" "$@";
+    }
+    fehbg() { feh --bg-fill "$(expand_path "$1")"; }
+    fshow() { feh --recursive "${@:-.}"; }
+    frand() { feh --recursive --randomize "${@:-.}"; }
+    ftime() {
+        if [[ "$1" == -r ]]; then
+            local pattern='**/*'
+        else
+            local pattern='*'
+        fi
+
+        local IFS=$'\n'
+        local fs=($(ruby -e '
+            puts Dir[ARGV.first].reject { |f| File.directory? f }.sort_by { |f| File.mtime f }.reverse
+        ' "$pattern"));
+        unset IFS
+        feh "${fs[@]}"
+    }
+}
+
+type itunes-switch &>/dev/null &&
+_itunes-switch() {
+    [[ -r ~/Music/.itunes.yml ]] || return
+    local words="$(awk -F: '{print $1}' < ~/Music/.itunes.yml)"
+    COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
+} && complete -F _itunes-switch itunes-switch
+
+
+### X
+
+type xecho &>/dev/null && {
+    for cmd in left center right cursor width title; do
+        alias "x$cmd=xecho $cmd"
+    done
+    unset cmd
+}
+
+alias xreload='echorun xset r rate 200 50; echorun xrdb ~/.Xdefaults'
+
+
+### Games
+
+type nethack &>/dev/null && {
+    alias nethack="NETHACKOPTIONS='@~guns/src/nethack/etc/nethackrc' command nethack -u-u"
+    alias nethackwiz='nethack -u guns -D'
+    type rxvt &>/dev/null &&
+    nethackterm() {(
+        cd ~guns/src/nethack/source &&
+        echorun xset +fp ~guns/src/nethack/etc &&
+        echorun xset fp rehash &&
+        bgrun rxvt -fn vga11x19 -geometry 115x39 -fg white -cr white -title NetHack --meta8
+    )}
+}
+
+
+### Platform Specific
+
+VAR UNAME="$(uname -s)"
+
+if [[ $UNAME == Darwin ]]; then
+    # some commands read this to ignore OS X specific metadata
+    export COPYFILE_DISABLE=1
+    export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
+
+    alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'
+    comp_transfer rsync applersync
+
+    alias -e ls@='ls -Ahl@'
+    alias -e lse='ls -Ahle'
+    alias -e op='open'
+    alias -e flushdns='echorun dscacheutil -flushcache'
+    alias -e pstree='pstree -g2'
+
+    # pkgutil
+    pkgexpand() {
+        (($# == 2)) || { echo "Usage: $FUNCNAME pkg dir"; return 1; }
+        echorun pkgutil --expand "$1" "$2";
+    }
+
+    # networksetup
+    computername() {
+        if [[ $* ]]; then
+            networksetup -setcomputername "$*"
+            hostname "$*"
+            $FUNCNAME
+        else
+            echo "computername: $(networksetup -getcomputername)"
+            echo "hostname:     $(hostname)"
+        fi
+    }
+
+    # pmset
+    pmset() {
+        if (($#)); then
+            echorun command pmset "$@"
+        else
+            echorun command pmset -g custom
+        fi
+    }
+    nohibernate() {
+        local image='/var/vm/sleepimage'
+        pmset hibernatefile "$image"
+        echorun command rm -f "$image"
+        echorun command ln -s /dev/null "$image"
+        pmset hibernatemode 0
+    }
+    alias -e noidle='pmset noidle'
+
+    # LaunchBar
+    [[ -d /Applications/LaunchBar.app ]] && {
+        alias lb='open -a /Applications/LaunchBar.app'
+        lbt() {
+            ruby -e '
+                system "osascript", "-e",
+                       %Q(tell application "Launchbar" to display in large type #{ARGV.join.inspect})
+            ' "$*"
+        }
+    }
+
+    [[ -d "/Applications/Hex Fiend.app" ]] &&
+    alias hexfiend='open -a "/Applications/Hex Fiend.app"'
+
+    # genpw
+    type genpw &>/dev/null &&
+    pw() { genpw "$@" | pbcopy; }
+
+    # VMWare
+    alias -e vmrun='/Library/Application Support/VMware Fusion/vmrun'
+    alias -e vmboot='/Library/Application Support/VMware Fusion/boot.sh'
+    alias -e vmware-vdiskmanager='/Library/Application Support/VMware Fusion/vmware-vdiskmanager'
+
+    # http://osxdaily.com/2007/03/23/create-a-ram-disk-in-mac-os-x/
+    ramdisk() {
+        (($# == 2)) || { echo >&2 "Usage: $FUNCNAME size name"; return 1; }
+
+        local size="$1" name="$2"
+        local disk="$(echorun hdiutil attach -nomount ram://$(ruby -e '
+            puts ARGV.first.scan(/([\d\.]+)(\D*)/).inject(0) { |sum, (num, unit)|
+                sum + case unit
+                when /\Ag\z/i    then num.to_f * 2**30
+                when /\Am\z/i,"" then num.to_f * 2**20
+                when /\Ak\z/i    then num.to_f * 2**10
+                else 0
+                end
+            }.round / 512
+        ' "$size"))"
+
+        echorun diskutil eraseVolume HFS+ "$name" $disk # unquoted!
+    }
+
+    # remove logs and caches
+    flushcache() {
+        local dir cachedirs=(
+            "$HOME/Library/Caches"
+            "$HOME/Library/Logs"
+            "$HOME/Library/Preferences/Macromedia"
+            "$HOME/Library/Application Support/Microsoft/Silverlight"
+        )
+
+        for dir in "${cachedirs[@]}"; do
+            [[ -d "$dir" ]] || continue
+
+            if [[ -w "$dir" ]]; then
+                echorun command rm -vrf "$dir"
+            else
+                echo "No permissions to write \`$dir'"
+            fi
+        done
+
+        if [[ $EUID -eq 0 ]]; then
+            echorun find /var/log           -type f -print -delete
+            echorun find /opt/nginx/var/log -type f -print -delete
+        fi
+    }
+
+    # hdiutil / diskutil
+    alias -e disklist='diskutil list'
+    alias -ne hdetach='hdiutil detach' && {
+        alias hmount='hdiutil mount'
+        alias hcompact='hdiutil compact'
+        alias hresize='hdiutil resize'
+        hcreate() {
+            (($# == 2)) || { echo >&2 "Usage: $FUNCNAME size name"; return 1; }
+
+            local size="$1" name="$2"
+            echorun hdiutil create \
+                            -size "$size" \
+                            -type SPARSEBUNDLE \
+                            -fs HFS+J \
+                            -encryption AES-128 \
+                            -volname "${name##*/}" \
+                            "$name"
+        }
+
+        # hdiutil does not report on encryption levels for sparsebundles
+        type xxd &>/dev/null &&
+        henclevel() {
+            [[ -r $1/token ]] || { echo >&2 "\`$1' is not a sparsebundle!"; return 1; }
+            xxd "$1/token" | sed '2q;1d' | awk '{print "ibase=16;"$7}' | bc
+        }
+    }
+
+    # MacPorts package manager
+    alias -e port='port -c' && {
+        porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
+        alias portg='echorun port -c installed | g'
+        alias porti='echorun port -c install'
+        alias portq='echorun port -c info'
+        alias ports='echorun port -c search'
+        alias portu='echorun port -c uninstall'
+        alias portsync='echorun port -c selfupdate'
+        # alias portoutdated
+    }
+
+    # Homebrew package manager
+    type brew &>/dev/null && {
+        alias brewe='echorun brew edit'
+        alias brewg='echorun brew list | g'
+        alias brewi='echorun brew install'
+        alias brewq='echorun brew info'
+        alias brews='echorun brew search'
+        alias brewu='echorun brew uninstall'
+        alias brewsync='echorun sh -c "cd \"$(brew --prefix)\" && git co master && git remote update && brew update && git co guns && git merge master"'
+        alias brewoutdated='brew outdated'
+    }
+
+    # System executables
+    alias -e plistbuddy='/usr/libexec/PlistBuddy'
+    alias -e screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
+    alias -e backupd-helper='/System/Library/CoreServices/backupd.bundle/Contents/Resources/backupd-helper'
+    alias -e lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
+    alias -e dotmacsyncclient='/System/Library/PrivateFrameworks/DotMacSyncManager.framework/Versions/A/Resources/dotmacsyncclient'
+    alias -e resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/resetsync.pl'
+    alias -e airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' && {
+        alias ap='airport'
+    }
+
+    # get a .app version string
+    type defread &>/dev/null &&
+    appvers() {
+        while (($#)); do
+            [[ -e "$1/Contents/Info.plist" ]] || continue
+            defread "$1/Contents/Info.plist" | awk -F= '/CFBundleShortVersionString/{print $2}' | command sed 's/[ ";]//g'
+            shift
+        done
+    }
+elif [[ $UNAME == Linux ]]; then
+    alias -e free='free -m'
+    alias -e iw='iwconfig'
+    alias -e pstree='pstree -U'
+    alias -e cal='cal -3'
+
+    # espeak
+    type espeak &>/dev/null &&
+    say() { espeak -ven-us "$*"; }
+
+    # IPTables
+    type iptables &>/dev/null && {
+        alias -e iptload='/etc/iptables/iptables.sh'
+        iptlist() { echo -e "$(iptables -L -v $*)\n\n### IPv6 ###\n\n$(ip6tables -L -v $* 2>/dev/null)" | $PAGER; }
+        iptsave() {
+            local ipt cmd
+            for ipt in iptables ip6tables; do
+                if type ${ipt}-save &>/dev/null; then
+                    echo "${ipt}-save > /etc/iptables/$ipt.rules"
+                    ${ipt}-save > /etc/iptables/$ipt.rules
+                fi
+            done
+        }
+    }
+
+    # Aptitude package manager
+    alias -e aptf='apt-file'
+    alias -e apt='aptitude' && {
+        # alias apte
+        alias aptg='echorun aptitude search ~i | g'
+        alias apti='echorun aptitude install'
+        alias aptq='echorun aptitude show'
+        alias apts='echorun aptitude search'
+        alias aptu='echorun aptitude remove'
+        alias aptsync='echorun aptitude update'
+        # alias aptoutdated
+    }
+
+    # Pacman package manager
+    alias -e pac='pacman' && {
+        # alias pace
+        alias pacg='echorun pacman -Qs'
+        alias paci='echorun pacman -S'
+        alias pacq='echorun pacman -Si'
+        alias pacs='echorun pacman -Ss'
+        alias pacu='echorun pacman -R'
+        alias pacsync='echorun pacman -Sy'
+        alias pacoutdated='echorun pacman -Qu'
+    }
+
+    # Subtle WM
+    alias -e subtlewm='subtle --config ~/.subtle/subtle.rb --sublets ~/.subtle/sublets'
+    alias -e subtlecheck='subtlewm --check'
+fi
+
+: # explicitly return true

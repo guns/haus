@@ -1,0 +1,241 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+load File.expand_path('../report', __FILE__)
+require 'optparse'
+require 'fileutils'
+require 'shellwords'
+require 'set'
+require 'net/http'
+
+class Chrome
+  include FileUtils::Verbose
+
+  def initialize args = []
+    @args = args
+    @signal = '-TERM'
+    @chromeargs = []
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+
+      opt.banner = %Q{\
+        Launch Google Chrome / Chromium. Behavior varies by platform.
+
+        Usage: #{opt.program_name} [options] -- [url-or-argument ...]
+
+        Options:
+      }.gsub(/^ +/, '')
+
+      opt.on '-n', '--no-sandbox', 'Disable the renderer sandbox' do
+        @no_sandbox = true
+      end
+
+      opt.on '-i', '--incognito', 'Launch in incognito mode' do
+        @incognito = true
+      end
+
+      opt.on '-r', '--relaunch', 'Relaunch all instances of chrome' do
+        @action = :relaunch
+      end
+
+      opt.on '-u', '--update', 'Update chrome to latest dev release' do
+        @action = :update
+      end
+
+      opt.on '-f', '--force', 'Force action where there would have been a prompt' do
+        @force = true
+      end
+
+      opt.on '-9', '--kill', 'When terminating application, send sigkill' do
+        @signal = '-KILL'
+      end
+    end
+  end
+
+  %w[killall diff].each do |cmd|
+    class_eval <<-EVAL
+      def #{cmd}
+        @#{cmd} ||= %x(which #{cmd}).chomp
+        raise %q(Command #{cmd.inspect} not found!) unless File.executable? @#{cmd}
+        @#{cmd}
+      end
+    EVAL
+  end
+
+  def platform
+    @platform ||= case RUBY_PLATFORM
+    when /darwin/ then :darwin
+    when /linux/  then :linux
+    end
+  end
+
+  def chrome_is_running
+    %x(ps axo ucomm).split("\n").map(&:strip).include?(File.basename chrome)
+  end
+
+  def kill_chrome
+    return unless chrome_is_running
+
+    cmd = [killall, @signal, File.basename(chrome)]
+    $stderr.print cmd.join(' ')
+    system *cmd
+    (sleep 1 and $stderr.print '.') while chrome_is_running
+    $stderr.puts
+  end
+
+  def chrome
+    @chrome ||= case platform
+    when :darwin then '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    when :linux  then %x(which chromium).chomp
+    end
+  end
+
+  # http://src.chromium.org/svn/trunk/src/chrome/common/chrome_switches.cc
+  def chromeopts
+    opts = [
+      '--activate-on-launch',            # Application focus
+      '--enable-extension-timeline-api', # For Speed Tracer
+      '--disable-crash-reporter'         # Don't send crash reports
+    ]
+    opts << '--no-sandbox' if @no_sandbox
+    opts << '--incognito' if @incognito
+    opts
+  end
+
+  def version dir
+    File.basename Dir["#{dir}/Contents/Versions/*"].select { |f| Dir.exists? f }.join
+  end
+
+  def chromediff old, new
+    [old, new].each { |d| warn "# #{version d}: #{d}" }
+
+    base = %x(#{[diff, '-qr', old, new].shelljoin}).split("\n")
+    vers = %x(#{[diff, '-qr', "#{old}/Contents/Versions/#{version old}/",
+                              "#{new}/Contents/Versions/#{version new}/"].shelljoin}).split("\n")
+
+    warn (base.reject { |l| l =~ %r(\AOnly.*Contents/Versions:.*) } + vers).select { |l| l =~ %r(\AOnly) }.join("\n")
+  end
+
+  def user_wants_to msg
+    return @force if @force
+    return false if not $stdin.tty?
+
+    begin
+      Report.report 'Attention!'
+      $stderr.print "Would you like to #{msg} [y/N] "
+      system 'stty raw -echo'
+      puts (c = $stdin.getc)
+      c =~ /y/i
+    ensure
+      system 'stty -raw echo'
+      $stderr.puts
+    end
+  end
+
+  def install src, dst
+    if user_wants_to 'install this update?'
+      kill_chrome
+
+      if File.exists? dst
+        # swap-files
+        tmp = ".#{File.basename __FILE__}-tmp-#{(1..10).map { rand 10 }.join}"
+        mv dst, tmp
+        mv src, dst
+        mv tmp, src
+      else
+        mv src, dst
+      end
+
+      # relink flash-plugin
+      flash   = Dir[dst + '/**/Flash Player Plugin for Chrome.plugin'].first
+      plugins = File.expand_path '~/Library/Internet Plug-Ins/Flash Player.plugin'
+      ln_sf flash, plugins
+
+      launch
+    end
+  end
+
+  def fetch_update file
+    url = 'http://dl.google.com/chrome/mac/dev/GoogleChrome.dmg'
+
+    $stderr.print 'Fetching ' + url
+    waiter = Thread.new { loop { sleep 1 and print '.' } }
+
+    File.open(file, 'w') { |f| f.write Net::HTTP.get(URI.parse url) }
+
+    waiter.kill
+    $stderr.puts
+
+    file
+  end
+
+  def hmount dmg, mounted_path
+    $stderr.print 'Opening ' + dmg
+    system 'open', dmg
+    (sleep 1 and $stderr.print '.') until Dir.exists? mounted_path
+    $stderr.puts
+  end
+
+  # straight adaptation from bash function
+  def update
+    raise 'OS X only!' unless platform == :darwin
+    raise 'Do not update as root user!' if Process.euid.zero?
+
+    dmg = fetch_update '/tmp/GoogleChrome.dmg'
+    new = '/Volumes/Google Chrome/Google Chrome.app'
+    old = '/Applications/Google Chrome.app'
+    tmp = '/tmp/Google Chrome.app'
+
+    Dir.chdir '/tmp/' do
+      hmount     dmg, new
+      rm_rf      tmp
+      cp_r       new, tmp, :preserve => true
+      rm_rf      Dir["#{tmp}/**/KeystoneRegistration.framework"]
+      chromediff old, tmp if File.exists? old
+      install    File.join(tmp, 'Contents'), File.join(old, 'Contents')
+      system     'hdiutil', 'detach', File.dirname(new)
+      rm_f       dmg
+    end
+  end
+
+  def relaunch
+    kill_chrome
+    launch
+  end
+
+  def launch
+    if platform == :darwin and chrome_is_running
+      warn ([chrome] + @chromeargs).shelljoin
+      system 'open', '-a', chrome, *@chromeargs
+    else
+      warn(([chrome] + chromeopts + @chromeargs).map(&:shellescape).join(" \\\n    "))
+      pid = fork do
+        $stdin.reopen '/dev/null'
+        $stdout.reopen '/dev/null'
+        $stderr.reopen '/dev/null'
+        Dir.chdir '/'
+        exec *([chrome] + chromeopts + @chromeargs)
+      end
+      Process.detach pid
+    end
+  end
+
+  def run
+    @chromeargs = options.parse @args
+
+    case @action
+    when :relaunch then relaunch
+    when :update   then update
+    else launch
+    end
+  end
+end
+
+Chrome.new(ARGV).run if $0 == __FILE__

@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# git-summary, inspired by TJ Holowaychuk's git-extras
+
+require 'optparse'
+
+class GitSummary
+  def initialize args = []
+    @args = args.freeze
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} [options] [path]
+      ).gsub /^ +/, ''
+    end
+  end
+
+  def project_name
+    File.basename %x(git rev-parse --show-toplevel).chomp
+  end
+
+  def commit_count
+    %x(git log --oneline).lines.count
+  end
+
+  def file_count
+    %x(git ls-files).lines.count
+  end
+
+  def authors
+    %x(git shortlog --numbered --summary)
+  end
+
+  def summary
+    [ 'Project : %s' % project_name,
+      'Commits : %d' % commit_count,
+      'Files   : %d' % file_count,
+      "Authors :\n%s" % authors
+    ].join "\n"
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.size > 0
+    puts summary
+  end
+end
+
+GitSummary.new(ARGV).run if $0 == __FILE__

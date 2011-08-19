@@ -1,0 +1,703 @@
+
+#     ______  _________________________   ____
+#    \      \ \_   _____/\______   \   \ /   /
+#    /   |   \ |    __)_  |       _/\   Y   /
+#   /    |    \|        \ |    |   \ \     /
+#   \____|__  /_______  / |____|_  /  \___/    guns <sung@metablu.com>
+#         \/        \/         \/
+
+
+# Written in bash v3.0 + POSIX subset of:
+#   awk, ls, and sometimes readlink
+
+# This file should not be edited. Per-user preferences are sourced from
+# ~/.nerv_profile, which by default is a symlink to NERV_ROOT/etc/nerv_profile
+
+# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+
+### INITIALIZE
+
+# Reject non-interactive shells
+[ -z "$PS1" ] && return 1
+
+# Notable features:
+#   * [[                    bash-2.02-alpha1
+#   * shopt -s extglob      bash-2.02-alpha1
+#   * type -P               bash-2.05b-alpha1
+#   * $((intmax_t))         bash-2.05b-alpha1
+#   * trap - ERR            bash-2.05a-alpha1
+#   * <<<                   bash-2.05b-alpha1
+#   * {1..10}               bash-3.0-alpha
+#   * =~                    bash-3.0-alpha
+#   * caller                bash-3.0-alpha
+#   * BASH_SOURCE           bash-3.0-alpha
+#   ----------------------------------------> NERV bash support
+#   * +=                    bash-3.1-alpha1
+#   * printf -v             bash-3.1-alpha1
+#   * ary[foo]=bar          bash-4.0-alpha
+#   * coproc                bash-4.0-alpha
+#   * mapfile               bash-4.0-alpha
+#   * declare -[lu]         bash-4.0-alpha
+#   * **/*                  bash-4.0-alpha
+#   * &>>                   bash-4.0-alpha
+#   * |&                    bash-4.0-alpha
+[ ${BASH_VERSINFO[0]} -ge 3 ] || {
+    echo >&2 'NERV requires bash v3.0 or above! Aborting login sequence.'
+    return 1
+}
+
+# Reset aliases
+unalias -a
+
+# Trap on bash ERR and terminate early; unsets itself after firing
+readonly NERV_LOGIN_TRAP='trap - ERR
+                          echo -e >&2 "\nAborting login sequence.\n"
+                          return 1'
+trap "$NERV_LOGIN_TRAP" ERR
+
+# SEC_LIST is a list of files that should be checked for proper privileges.
+# GC_FUNCS is a list of shell functions to be unset after login.
+# GC_VARS is a list of all the variable names to be unset after login.
+#
+# VAR() declares variables, but also adds values to SEC_LIST and GC_* as
+# appropriate; this should be used faithfully during login to declare
+# non-function-local variables
+SEC_LIST=() GC_FUNCS=() GC_VARS=(SEC_LIST GC_FUNCS GC_VARS)
+VAR() # [-fnx] name[=value] ...
+{
+    local OPTIND opt    # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=47849
+    local func keep exp # declare these now so we can freely use $func
+    while getopts :fnx opt; do
+        case $opt in
+        f ) local func='-f';;       # arguments are function names
+        n ) local keep=1;;          # don't garbage collect
+        x ) local keep=1 exp=1;;    # don't gc and export
+        * ) echo -e >&2 "Invalid option to \`$FUNCNAME' on line $(caller)"
+            return 1;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    local arg
+    for arg in "$@"; do
+        # set name and value (if exists)
+        local name="${arg%%=*}" && [[ $arg == *=* ]] && local value="${arg#*=}"
+
+        # declare variable and set attributes;
+        # eval is necessary to set in global scope without exporting
+        [[ $value ]] && eval $name=\'${value//\'/\\\'}\'
+        [[ $exp ]] && export $func "$name"
+
+        # add to garbage collection list unless marked as keep
+        if [[ ! $keep ]]; then
+            if [[ $func ]]; then
+                GC_FUNCS=("${GC_FUNCS[@]}" "$name")
+            else
+                GC_VARS=("${GC_VARS[@]}" "$name")
+            fi
+        fi
+
+        # mark if we're root and the value is a file of some kind
+        [[ $EUID -eq 0 && ! "$func" && -e "$value" ]] &&
+            SEC_LIST=("${SEC_LIST[@]}" "$value")
+    done
+
+    return 0 # explicitly return true so we don't raise ERR
+}; VAR -f VAR
+
+# Track our external command dependencies here
+VAR AWK="$(type -P awk)" LS="$(type -P ls)" READLINK="$(type -P readlink)"
+# readlink is preferable, but optional
+[[ $AWK && $LS ]] || {
+    echo >&2 "Missing awk and/or ls!"
+    false
+}
+
+# Returns absolute path for given file.
+# Dereferences symlinks via readlink or POSIX `ls' output.
+ABS_PATH() # file
+{
+    local file="$1"
+
+    pushd . &>/dev/null
+    while true; do
+        # Dereference symlinks
+        if [[ -L "$file" ]]; then
+            # chdir to the link's parent so we can trace relative links
+            if [[ $file == */* ]]; then
+                cd "${file%/*}/" &>/dev/null
+                file="${file##*/}"
+            fi
+
+            # readlink is best
+            if [[ $READLINK ]]; then
+                file="$("$READLINK" "$file")"
+            # but we'll fallback on POSIX ls output
+            else
+                local listing="$("$LS" -l -d "$file")" # -d for dir not dir/*
+                file="${listing#* -> }"
+            fi
+        fi
+
+        # chdir to the file's parent dir
+        [[ $file == */* ]] && cd "${file%/*}/" &>/dev/null
+
+        # we should now be at the parent directory; pwd + basename should do it
+        file="$([[ $PWD != / ]] && pwd -P)/${file##*/}"
+
+        # redo if this file is a symlink
+        [[ -L "$file" ]] || break
+    done
+    popd &>/dev/null
+
+    echo "$file"
+}; VAR -f ABS_PATH
+
+# Ensures that root owns and has sole write privileges on all files currently in
+# SEC_LIST. This is intended as a security measure -- administrators have good
+# reason for worry if this test fails where it did not before.
+#
+# Clears SEC_LIST on exit
+ROOT_SECURITY_CHECK()
+{
+    [[ $EUID -eq 0 ]] || return 0
+
+    local file
+    for file in "${SEC_LIST[@]}"; do
+        [[ -e "$file" ]] || continue
+
+        # Dereference any symlinks
+        file="$(ABS_PATH "$file")"
+
+        # root should own all files in this list
+        [[ -O "$file" ]] || {
+            echo >&2 "\`$file' is not owned by root, but is trusted by root!"
+            echo >&2 "Ensure that it has not been compromised."
+            return 1
+        }
+
+        # TODO: check ACLs for systems that support them
+        # we are relying on the standard file mode string: crwxrwxrwx;
+        # this seems brittle, but is surprisingly portable
+        local stat="$("$LS" -l -d "$file")"
+        if [[ ${stat:8:1} != - ]]; then
+            echo >&2 "\`$file' is trusted by root, but it is world writable!"
+            echo >&2 "Your system may have been compromised."
+            return 1
+        elif [[ $NERV_ABORT_ON_GROUP_WRITABLE_FILES && ${stat:5:1} != - ]]; then
+            local group="$("$AWK" '{print $4}' <<< "$stat")"
+            echo >&2 "\`$file' is trusted by root, but it is writable by users in group \`$group'."
+
+            echo >&2 "This is generally a security risk, but it may be an intentional decision of"
+            echo >&2 "your operating system."
+
+            echo >&2 "Add \`unset NERV_ABORT_ON_GROUP_WRITABLE_FILES' to your ~/.nerv_profile"
+            echo >&2 "to disable this check if you are comfortable with root not having sole"
+            echo >&2 "write privileges on trusted files."
+            return 1
+        fi
+    done
+
+    SEC_LIST=() # empty the list
+}; VAR -f ROOT_SECURITY_CHECK
+
+# Helper for pruning and setting the PATH variable
+shopt -s extglob # turn this on now for the eager bash3 parser
+PATH() # dir[:dir] ...
+{
+    local IFS=':'
+    local path_ary=($@)
+    unset IFS
+
+    # prepend with NERV bin dirs unless they are already there
+    [[ "${path_ary[*]}" == *"$NERV_ROOT/core/bin"* ]] ||
+        path_ary=("$NERV_ROOT/bin" "$NERV_ROOT/core/bin" "${path_ary[@]}")
+
+    # fold array conditionally into path (permissions drx and not a dup)
+    local p path
+    for p in "${path_ary[@]}"; do
+        if [[ -d "$p" && -r "$p" && -x "$p" && "$path" != *:"$p"?(:*) ]]; then
+            if [[ $EUID -eq 0 ]]; then
+                # if we're root, skip paths we don't own
+                [[ -O "$p" ]] || continue
+                # we should still check write privileges
+                SEC_LIST=("${SEC_LIST[@]}" "$p")
+            fi
+            path="$path:$p"
+        fi
+    done
+
+    # export to environment, stripping leading `:'
+    VAR -x PATH="${path#:}"
+
+    # remember this path string for later
+    VAR NERV_PATH="$PATH"
+}; VAR -f PATH
+
+# Parse and replace `%(effect.foreground.BACKGROUND)' sequences;
+# pass `-n' to prevent wrapping with `\[\]' (Readline non-printing delimiters)
+EXPAND_COLORS() # [-n] str
+{
+    if [[ $1 == -n ]]; then
+        shift
+    else
+        local lb='\[' rb='\]'
+    fi
+
+    local buf="$1"
+
+    # ANSI colors and effects.
+    #     effects               cancels
+    local normal=0
+    local reset=0
+    local clear=0
+    local bold=1                nobold=22
+    local dark=2                nodark=22
+    local faint=2               nofaint=22
+    local italic=3              noitalic=23
+    local underline=4           nounderline=24
+    local blink=5               noblink=25
+    local BLINK=6
+    local reverse=7             noreverse=27
+    local inverse=7             noinverse=27
+    local conceal=8
+    local strikethrough=9
+    #     foreground            background
+    local black=30              BLACK=40
+    local red=31                RED=41
+    local green=32              GREEN=42
+    local yellow=33             YELLOW=43
+    local brown=33              BROWN=43
+    local blue=34               BLUE=44
+    local magenta=35            MAGENTA=45
+    local pink=35               PINK=45
+    local violet=35             VIOLET=45
+    local purple=35             PURPLE=45
+    local cyan=36               CYAN=46
+    local white=37              WHITE=47
+
+    # expands left to right; restates color sequences after newlines
+    while [[ "$buf" == *%\(*\)* ]]; do
+        # extract first %(color.string)
+        local colors="${buf#*%(}"
+        colors="${colors%%)*}"
+
+        # strip all invalid chars for eval
+        colors="${colors//[^a-zA-Z.]}"
+
+        # build escape codes
+        local esc='' clr=''
+        for clr in ${colors//./ }; do
+            esc="$esc;$(eval echo \$$clr)"
+        done
+
+        # wrap codes in escape sequences (and strip leading semicolon)
+        esc="$lb\\033[${esc#;}m$rb"
+
+        # split buf on %(
+        local head="${buf%%\%(*}" tail="${buf:${#head}}"
+
+        # non-greedy consume the first %(*)
+        tail="${tail#*%(}"; tail="${tail#*)}"
+
+        # cat string with value
+        buf="$head$esc$tail"
+    done
+
+    echo -n "$buf"
+
+    # terminate string with reset sequence if necessary
+    [[ $buf == *"$lb\\033[0m$rb" ]] || echo -n "$lb\\033[0m$rb"
+
+    :
+}; VAR -f EXPAND_COLORS
+
+# NERV status string
+NERV_GREETING() {
+    local nerv="NERV $("$AWK" '
+        /STRING/{ gsub(/[^0-9.]/,""); print; exit }
+    ' 2>/dev/null < "$NERV_ROOT/core/bin/nerv.d/nerv_version.rb")"
+    local bash="bash $BASH_VERSION"
+    local time="$(date '+%H:%M:%S %Z' 2>/dev/null)"
+    local hour="${time%%:*}"; hour="${hour#0}"
+
+    # time for hackers
+    if   ((hour < 7 || hour > 21)); then local color='bold.blue'    # night
+    elif ((hour < 10));             then local color='bold.cyan'    # morning
+    elif ((hour < 18));             then local color='bold.yellow'  # day
+    else                                 local color='bold.violet'  # evening
+    fi
+
+    echo -e "\n$(EXPAND_COLORS -n "%(bold.green)$nerv") ($bash)" \
+            "-- $(EXPAND_COLORS -n "%($color)$time")\n"
+}; VAR -f NERV_GREETING
+
+# Function to be called at the end of the login sequence;
+# Unset or redefine as desired
+LOGIN_GREETING() {
+    NERV_GREETING
+    [[ $EUID -ne 0 ]] && fortune 2>/dev/null && echo
+}; VAR -f LOGIN_GREETING
+
+# Expanded aliasing function:
+#
+# Adds `-e' option to alias, which has these effects:
+#   * Replaces commands with their absolute paths:
+#       alias -e ls='ls -Ahl' => ls='/bin/ls -Ahl'
+#
+#   * Skips alias if command or file does not exist:
+#       alias -e pony='/bin/magic-pony'           => no alias!
+#       alias -e unicorn='magic-pony --with-horn' => no alias!
+#
+#   * Transfers any existing completions for a command to the alias
+#     (you can disable this feature with `-n')
+#       complete -p which                   => complete -c which
+#       alias -e wh=which && complete -p wh => complete -c wh
+#       alias -ne apts='aptitude search'    => completion is not transferred
+#
+#   * returns false if command is not found, or an error occurs:
+#       alias -e foo='bar --baz' || echo 'bar is missing!'
+#
+alias() # [-enp] [name[=value] ...]
+{
+    # short-circuit if args don't lead with new flags
+    [[ "$1" == -[en]* ]] || {
+        builtin alias "$@"
+        return
+    }
+
+    local OPTIND opt
+    while getopts :en opt; do
+        case $opt in
+        e ) local expression=1;;
+        n ) local nocomplete=1;;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    local arg retval=0
+    for arg in "$@"; do
+        # if there's no value, we are just printing the alias
+        [[ $arg == *=* ]] || {
+            builtin alias "$arg" || retval=1
+            continue
+        }
+
+        # break into name and value array;
+        # note that the array doesn't respect shell grouping - to get that we
+        # would have to play with eval, IFS, and a subshell
+        local name="${arg%%=*}" val=(${arg#*=})
+        local line="${val[*]}"  cmd="${val[0]}"  opts="${val[*]:1}"
+
+        # cmd is a path, or the whole value is a path (perhaps with spaces);
+        # aliasing a path with spaces and options doesn't work because of the
+        # limitation described above.
+        if [[ -f "$cmd" ]]; then
+            builtin alias "$name=\"$cmd\" $opts"
+        elif [[ -f "$line" ]]; then
+            builtin alias "$name=\"$line\""
+        # cmd is in PATH; replace cmd with the absolute path of the executable
+        elif local cmdtype=$(type -t "$cmd") && [[ $cmdtype == file ]]; then
+            builtin alias "$name=\"$(type -P "$cmd")\" $opts"
+        # if type -t returned anything else than `file', do a straight alias
+        elif [[ $cmdtype ]]; then
+            builtin alias "$name=$line"
+        # cmd doesn't exist; skip this alias and set retval to false
+        else
+            retval=1
+            continue
+        fi
+
+        # If we've made it this far, the alias has succeded;
+        # transfer existing completions to the new alias
+        [[ $nocomplete ]] ||
+            eval $({ complete -p "$cmd" || echo :; } 2>/dev/null) "$name"
+    done
+
+    return $retval
+}; VAR -f alias
+
+# Magic `cd' wrapper creation:
+#
+# cdfunc cdfoo /path/to/foo
+#
+#   * Creates shell variable $cdfoo, suitable for use as an argument:
+#
+#       $ cp bar $cdfoo/subdir
+#
+#   * Creates shell function cdfoo():
+#
+#       $ cdfoo           # changes working directory to `/path/to/foo'
+#
+#   * Creates completion function __cdfoo() and completes cdfoo():
+#
+#       $ cdfoo <TAB>     # returns all directories in `/path/to/foo/*'
+#       $ cdfoo bar/baz   # changes working directory to `/path/to/foo/bar/baz'
+#
+#   * Does nothing if /path/to/foo does not exist or is not a directory
+#
+# cdfunc -f cdgems 'ruby -rubygems -e "puts Gem.dir"'
+#
+#   * Shell variable $cdgems only created after first invocation
+#
+#   * Late evaluation; avoids costly invocations at shell startup
+#
+cdfunc() # name dir
+{
+    if [[ $1 == -f ]]; then
+        local name="$2" func="$3" dir=''
+
+        # set shell variable on first call
+        eval "$name() {
+            cd \"\$(${func//\"/\\\"})/\$1\";
+            [[ \$$name ]] || $name="\$PWD"
+        }"
+
+    else
+        local name="$1" dir="$2" func=''
+        [[ -d "$dir" ]] || return
+
+        # Shell variable and function
+        eval "$name=\"$dir\""
+        eval "$name() { cd \"$dir/\$1\"; }"
+    fi
+
+    # completion function for cdfoo()
+    eval "__$name() {
+        local cur=\${COMP_WORDS[COMP_CWORD]}
+        local words=\"\$(
+            local dir line
+            # Change to our directory
+            $name
+
+            # if the current word has a slash, we've already done one completion
+            if [[ \$cur == */* ]]; then
+                # strip the trailing slash, if any
+                dir=\"\${cur%/}\"
+
+                # if this directory does not exist, try its parent
+                [[ -d \"\$dir\" ]] || dir=\"\${dir%/*}\"
+
+                # list the directory, and return directories with trailing slashes
+                $LS -A1 \"\$dir\" 2>/dev/null | while read line; do
+                    [[ -d \"\$dir/\$line\" ]] && echo \"\$dir/\$line/\"
+                done
+            else
+                # first completion
+                $LS -A1 | while read line; do
+                    [[ -d \"\$line\" ]] && echo \"\$line/\"
+                done
+            fi
+        )\"
+
+        local IFS=$'\n'
+        COMPREPLY=(\$(compgen -W \"\$words\" -- \$cur))
+        unset IFS
+    }"
+
+    complete -o nospace -o filenames -F __$name $name
+}; VAR -f cdfunc
+
+# Turn on all NERV login features by default
+VAR NERV_ABORT_ON_GROUP_WRITABLE_FILES=1 NERV_COLORS=1
+
+# Check shell initialization files
+if [[ $EUID -eq 0 ]]; then
+    SEC_LIST=(
+        "${SEC_LIST[@]}"
+        /etc/profile                    # system login shell rc
+        /etc/bashrc                     # often used as system bashrc
+        /etc/bash.bashrc                # bash4 system interactive rc
+        /etc/bash.bash.logout           # bash4 system bash_logout
+        "$HOME/.bash_profile"           # bash login rc: 1st
+        "$HOME/.bash_login"             # bash login rc: 2nd
+        "$HOME/.profile"                # sh login rc: 3rd
+        "$HOME/.bashrc"                 # bash interactive rc
+        "$HOME/.bash_logout"            # shell cleanup rc
+        "$HOME/.inputrc"                # user readline settings
+    )
+    ROOT_SECURITY_CHECK
+fi
+
+
+### SHELL OPTIONS
+
+# Set default shell options now so the user can override;
+# options marked `+' are on by default, and `-' off by default
+
+# POSIX shell options. No changes from defaults, just listed for documentation;
+# `history' and `xtrace' should not be declared here
+# ON
+set -o braceexpand                      #+ perform brace expansion
+set -o emacs                            #+ emacs editing mode
+set -o hashall                          #+ hash commands for faster lookup
+set -o histexpand                       #+ !-style history expansion
+set -o interactive-comments             #+ allow comments in interactive shell
+set -o monitor                          #+ enable job control
+# OFF
+set +o allexport                        #- automatically export all vars/funcs
+set +o errexit                          #- exit on simple command failure
+set +o errtrace                         #- funcs/subshells inherit errexit
+set +o functrace                        #- funcs/subshells inherit DEBUG/TRACE
+set +o ignoreeof                        #- require 10 EOFs to exit shell
+set +o keyword                          #- allow var assignments after a command
+set +o noclobber                        #- don't truncate files via redirection
+set +o noexec                           #- non-interactive only dry-run mode
+set +o noglob                           #- disable pathname expansion
+set +o nolog                            #- `currently ignored'
+set +o notify                           #- allow job reports to interrupt prompt
+set +o nounset                          #- disallow use of undeclared variables
+set +o onecmd                           #- exit after one command
+set +o physical                         #- traverse `real' dirs, not symlinks
+set +o pipefail                         #- return errors in pipeline, notjust $?
+set +o posix                            #- strict POSIX mode
+set +o privileged                       #- run under more secure shell env
+set +o verbose                          #- print input lines as they are read
+set +o vi                               #- vi editing mode
+
+# Bash shell options. Turn on some nice interactive features;
+# `login_shell' and `restricted_shell' should not be declared here
+# ON
+shopt -s cdspell                        #- enable `cd' spelling correction
+shopt -s checkhash                      #- check the command hashtable
+shopt -s checkwinsize                   #- update LINES/COLUMNS after every cmd
+shopt -s cmdhist                        #+ collapse multi-line commands in hist
+shopt -s dotglob                        #- glob filenames with leading dot
+shopt -s expand_aliases                 #+ enable command aliasing
+shopt -s extglob                        #- enable [?*+@!]() pattern matching
+shopt -s extquote                       #+ allow $'char' in ${var} expansion
+shopt -s force_fignore                  #+ glob exceptions specified by FIGNORE
+shopt -s histappend                     #- append, don't clobber history file
+shopt -s histreedit                     #- allow editing of failed history subst
+shopt -s histverify                     #- expand history subst on command line
+shopt -s hostcomplete                   #+ complete hosts when word contains `@'
+shopt -s interactive_comments           #+ allow comments in interactive shells
+shopt -s mailwarn                       #- "Please Mister Postman, look and see"
+shopt -s no_empty_cmd_completion        #- don't attempt cmd completion on empty
+shopt -s progcomp                       #+ enable programmable completion
+shopt -s promptvars                     #+ do variable expansion in PS* prompts
+shopt -s sourcepath                     #+ prepend PWD to filename when sourcing
+if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
+    shopt -s autocd                     #- vars and dir aliases become cd args
+    shopt -s checkjobs                  #- ensure there are no jobs before exit
+    shopt -s dirspell                   #- interactive dir name spell correction
+    shopt -s globstar                   #- allow recursive glob with **
+fi
+# OFF
+shopt -u cdable_vars                    #- enable variable arguments to `cd'
+shopt -u execfail                       #- do not exit if exec fails
+shopt -u extdebug                       #- extended debug mode
+shopt -u failglob                       #- notify on filename expansion error
+shopt -u gnu_errfmt                     #- use standard GNU error format
+shopt -u huponexit                      #- send SIGHUP to all jobs on exit
+shopt -u lithist                        #- save history in multi-line format
+shopt -u nocaseglob                     #- case insensitive path globbing
+shopt -u nocasematch                    #- case insensitive `case' or `[['
+shopt -u nullglob                       #- failed globs expand to null strings
+shopt -u shift_verbose                  #- whiny shift failures
+shopt -u xpg_echo                       #- builtin echo sets `-e' opt by default
+
+
+### PROMPTS
+
+# Set a nicer default prompt
+if [[ $SSH_TTY ]]; then
+    VAR PS_DELIM='■'
+    if [[ $EUID -eq 0 ]]; then
+        PS_COLOR="${PS_COLOR:-red}"
+    else
+        PS_COLOR="${PS_COLOR:-cyan}"
+    fi
+else
+    VAR PS_DELIM='§'
+    if [[ $EUID -eq 0 ]]; then
+        PS_COLOR="${PS_COLOR:-magenta}"
+    else
+        PS_COLOR="${PS_COLOR:-white}"
+    fi
+fi
+PS1="%(reset.${PS_COLOR//[^a-z.]/})\\H %(bold)$PS_DELIM%(nobold) \\w\\n%(reset.$PS_COLOR)\\u\\$ "
+PS2="%(reset.${PS_COLOR//[^a-z.]/})${USER//?/░}░ "
+
+
+### USER SETTINGS
+
+# Set and test NERV_PROFILE
+VAR NERV_PROFILE="$HOME/.nerv_profile"
+if [[ ! -e "$NERV_PROFILE" ]]; then
+    echo >&2 "$NERV_PROFILE does not exist"
+    false
+elif [[ ! -r "$NERV_PROFILE" ]]; then
+    echo >&2 "Could not read $NERV_PROFILE!"
+    false
+fi
+ROOT_SECURITY_CHECK
+
+# Set NERV_ROOT before sourcing NERV_PROFILE.
+#
+# Optimally NERV_ROOT is determined by dereferencing ~/.nerv_profile. If this is
+# not possible because NERV_PROFILE is not a link, or reliable dereferencing
+# is not available, NERV_ROOT must be declared in NERV_PROFILE
+[[ -L "$NERV_PROFILE" ]] && NERV_ROOT="$(ABS_PATH "$NERV_PROFILE")" &&
+    NERV_ROOT="${NERV_ROOT%/etc/nerv_profile}"
+
+# Source NERV_PROFILE
+trap - ERR                    # suspend ERR trap while sourcing
+. "$NERV_PROFILE" || return 1 # dutifully abort the login if sourcing failed
+trap "$NERV_LOGIN_TRAP" ERR   # NERV_LOGIN_TRAP is marked readonly
+
+# Filter PATH through PATH() if necessary, and run the security check
+[[ "$NERV_PATH" == "$PATH" ]] || PATH "$PATH"
+ROOT_SECURITY_CHECK
+
+# Ensure that NERV_ROOT has been set properly
+VAR -x NERV_ROOT="${NERV_ROOT%/}"
+if [[ ! $NERV_ROOT ]]; then
+    echo >&2 "Unable to determine NERV_ROOT!"
+    echo >&2
+    echo >&2 "If $NERV_PROFILE is not a symlink to NERV_ROOT/etc/nerv_profile,"
+    echo >&2 "NERV_ROOT must be set explicitly in $NERV_PROFILE"
+    false
+elif ! [[ -d "$NERV_ROOT" && -x "$NERV_ROOT" && -f "$NERV_ROOT/core/bin/nerv" ]]; then
+    echo >&2 "$NERV_ROOT is either unreadable or an invalid NERV repository."
+    false
+fi
+
+
+### COLORS
+
+if [[ $NERV_COLORS ]]; then
+    # TODO: create an interface for setting LS_?COLORS
+    # Turn on BSD and GNU style colors
+    [[ $CLICOLOR ]]  || VAR -x CLICOLOR=1
+    [[ $LSCOLORS ]]  || VAR -x LSCOLORS='ExFxCxDxbxegedabagacad'
+    [[ $LS_COLORS ]] || VAR -x LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
+
+    # `less' pager colors
+    [[ $LESS_TERMCAP_md ]] || {
+        VAR -x LESS_TERMCAP_md=$'\033[37m'   # begin bold
+        VAR -x LESS_TERMCAP_so=$'\033[36m'   # begin standout-mode
+        VAR -x LESS_TERMCAP_us=$'\033[4;35m' # begin underline
+        VAR -x LESS_TERMCAP_mb=$'\033[5m'    # begin blink
+        VAR -x LESS_TERMCAP_se=$'\033[0m'    # end standout-mode
+        VAR -x LESS_TERMCAP_ue=$'\033[0m'    # end underline
+        VAR -x LESS_TERMCAP_me=$'\033[0m'    # end mode
+    }
+
+    # parse %(color) sequences
+    VAR -n PS1="$(EXPAND_COLORS "$PS1")" PS2="$(EXPAND_COLORS "$PS2")"
+fi
+
+
+### CLEANUP
+
+ROOT_SECURITY_CHECK # one last check
+trap - ERR          # unset the login trap
+[[ $(type -t LOGIN_GREETING) == 'function' ]] && LOGIN_GREETING
+
+# Sweep our GC lists
+unset -f "${GC_FUNCS[@]}"
+unset "${GC_VARS[@]}"

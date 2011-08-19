@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# http://rtfm.etla.org/xterm/ctlseq.html
+
+USAGE() {
+    echo "Usage: ${0##*/} [left|center|right] [cursor COLOR] [width CHARS] [title STRING]"
+    echo
+    echo 'Provides easy wrappers around xterm escape sequences;'
+    echo 'Also works in GNU Screen and tmux v1.5+'
+    echo
+    echo 'See http://rtfm.etla.org/xterm/ctlseq.html for details.'
+}
+
+RAW() {
+    # tmux 1.5 will support raw terminal passthrough
+    if [[ $TMUX ]]; then
+        echo -ne "\033Ptmux;\033$*\033\\"
+    elif [[ $TERM == screen* ]]; then
+        echo -ne "\033P$*\033\\"
+    else
+        echo -ne "$*"
+    fi
+}
+
+MAX_HORIZONTAL() {
+    local xwidth=$(xwininfo -id $WINDOWID | \awk -F': ' '/Width: /{ print $2 }')
+    local screen=$(xrandr 2>&1            | \awk        '/current/{ print $8 }')
+    echo $((screen - xwidth))
+}
+
+TITLE()  {
+    if [[ $TMUX ]]; then
+        tmux rename-window "$*"
+    elif [[ $TERM == screen* ]]; then
+        screen -X title "$*"
+    else
+        RAW "\033]2;$*\007"
+    fi
+}
+
+
+### MAIN
+
+CMD="$1"
+shift
+
+case "$CMD" in
+left)   RAW "\033[3;0;0t";;
+center) RAW "\033[3;$(($(MAX_HORIZONTAL) / 2));0t";;
+right)  RAW "\033[3;$(MAX_HORIZONTAL);0t";;
+width)  RAW "\033[8;0;$*t";;
+cursor) RAW "\033]12;$*\007";;
+title)  TITLE "$*";;
+*)      USAGE
+esac

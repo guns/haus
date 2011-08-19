@@ -1,0 +1,133 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class RxvtUnicode
+  class Geometry < Struct.new(:width, :height, :x, :y)
+    REGEXP = /(\d+)x(?:(\d+)(?:\+(\d+)(?:\+(\d+))?)?)?/
+
+    attr_accessor :char, :border
+
+    # FIXME: I don't know of a way to calculate a terminal's window size without
+    #        creating a window and using xwininfo or echoing escape sequences;
+    #        border size and pixels per column must be explicitly passed for now
+    def initialize file = nil, char = 8, border = 4
+      if file and File.exists? file
+        parse! File.read(file).scan(/\*geometry:(.*)$/i).last.first
+      end
+      self.char, self.border = char, border
+    rescue ArgumentError
+      warn "Error parsing geometry string in #{file.inspect}"
+    end
+
+    def parse! str
+      if m = str.match(REGEXP)
+        self.width, self.height, self.x, self.y = m[1..4].map &:to_i
+      else
+        raise ArgumentError, 'Invalid geometry argument'
+      end
+
+      self
+    end
+
+    def x= arg
+      super case arg
+      when Fixnum   then arg
+      when 'left'   then 0
+      when 'center' then xright / 2
+      when 'right'  then xright
+      else raise ArgumentError
+      end
+    end
+
+    [:width=, :height=, :y=].each do |m|
+      define_method m do |arg|
+        super arg.to_i
+      end
+    end
+
+    def xright
+      screen = %x(xrandr --query 2>/dev/null).match(REGEXP)[1].to_i
+      screen - (width * char) - border
+    end
+
+    def to_s
+      "#{width || 80}x#{height || 24}+#{x || 0}+#{y || 0}"
+    end
+  end
+
+  def initialize args = []
+    @args = args
+    @opts = {}
+    @geom = Geometry.new File.expand_path('~/.Xdefaults')
+
+    # NOTE: We can pass a custom env to Ruby 1.9's Kernel#system, but for 1.8,
+    #       it is much simpler to munge ENV
+    ENV['PATH']        = ENV['PATH'].split(':').unshift('/usr/local/bin').uniq.select { |d| File.directory? d }.join ':'
+    ENV['LC_CTYPE']    = 'en_US.UTF-8'
+    ENV['RXVT_SOCKET'] = File.expand_path '~/.rxvt-unicode.sock'
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+
+      opt.banner = %Q(\
+        Launch you an rxvt-unicode.
+
+        Usage: #{File.basename __FILE__} [options] -- [urxvt-args]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-g', '--geometry HEIGHTxWIDTH[+XOFFSET[+YOFFSET]]', 'standard xterm geometry argument' do |arg|
+        @geom.parse! arg
+      end
+
+      opt.on '-c', '--client', 'Launch in client mode (launches server if nonexistant)' do
+        @opts[:client] = true
+      end
+
+      %w[left center right].each do |pos|
+        instance_eval do
+          opt.on "--#{pos}" do
+            @opts[:late_eval] = lambda { @geom.x = pos }
+          end
+        end
+      end
+    end
+  end
+
+  def execute args = [], opts = {}
+    puts args.join(' ')
+    send (opts[:exec] ? :exec : :system), *args
+  end
+
+  def urxvt args = []
+    params = %W[-geometry #{@geom} --perl-lib #{File.expand_path '~/.urxvt'}] + args
+
+    if @opts[:client]
+      # from urxvtc(1) man page
+      execute %w[urxvtc] + params
+      if $?.exitstatus == 2
+        execute %w[urxvtd -q -o -f]
+        execute %w[urxvtc] + params
+      end
+    else
+      execute %w[urxvt] + params, :exec => true
+    end
+  end
+
+  def run
+    args = options.parse @args
+    @opts[:late_eval].call if @opts[:late_eval]
+    urxvt args
+  end
+end
+
+RxvtUnicode.new(ARGV).run if $0 == __FILE__

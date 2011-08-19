@@ -1,0 +1,77 @@
+### LOREM ###
+
+snippet lorem "Lorem Ipsum"
+$0Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+endsnippet
+
+
+### HEADERS ###
+
+snippet c) "Copyright" b
+`!p snip.comment(0)`Copyright (c) `date +%Y` ${1:Sung Pae} <${2:self@sungpae.com}>`!p snip.comment(1)`
+endsnippet
+
+snippet MIT "MIT License" b
+`!p snip.comment(0)`Distributed under the MIT license.`!p snip.comment(1)`
+`!p snip.comment(0)`http://www.opensource.org/licenses/mit-license.php`!p snip.comment(1)`
+endsnippet
+
+snippet GPL "GPL License" b
+`!p snip.comment(0)`Distributed under the terms of the GNU General Public License v2.0.`!p snip.comment(1)`
+`!p snip.comment(0)`http://www.gnu.org/licenses/gpl-2.0.html`!p snip.comment(1)`
+endsnippet
+
+
+### GLOBAL CODE ###
+
+snippet # "### HEADER ###" b
+### $1 ###
+endsnippet
+
+snippet cc "C Comment"
+/* $1 */
+endsnippet
+
+snippet N "N>/dev/null"
+${1:&}>/dev/null
+endsnippet
+
+snippet date "day month year"
+`date "+%d %B %Y"`
+endsnippet
+
+snippet vf "Vim fold marker"
+{{{
+endsnippet
+
+
+### BRACKET PAIRS (assuming delimitMate) ###
+
+# NOTE: The following could be reduced to a single regex match, but it breaks
+#       the overwrite! feature
+
+snippet { "Brace pair"
+{
+	$0
+
+endsnippet
+
+snippet ({ "Paren brace pair" w
+({
+	$0
+
+endsnippet
+
+snippet [ "Bracket pair"
+[
+	$0
+
+endsnippet
+
+snippet ([ "Paren Bracket pair" w
+([
+	$0
+
+endsnippet
+
+# vim:ft=snippets:

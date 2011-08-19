@@ -1,0 +1,61 @@
+
+!  ____  ___         _
+!  \   \/  /   _| __|__.   |_|_ _
+!   \     /   (_|(/_|(_||_|| |__>
+!   /     \
+!  /___/\  \  guns <sung@metablu.com>
+!        \_/
+
+
+*background:      rgb:00/00/00
+*foreground:      rgb:FF/F5/9B
+*pointerColor:    rgb:DD/DD/DD
+*cursorBlink:     off
+*geometry:        84x44
+*loginShell:      on
+*ptySttySize:     on
+*saveLines:       1024
+*scrollBar:       off
+*scrollBar_right: on
+*visualBell:      on
+
+
+!!! XFT
+
+Xft*antialias: on
+Xft*hinting:   on
+Xft*hintstyle: hintslight
+
+
+!!! RXVT-UNICODE
+
+URxvt*font:              xft:Consolas:pixelsize=14
+URxvt*pointerBlank:      on
+URxvt*pointerBlankDelay: 65535
+URxvt*scrollTtyKeypress: on
+
+! Super + Character           <Esc-Space-char>
+! Super + Arrow keys          <Esc-Space-BEL-char>
+URxvt.keysym.Mod4-0x20:       list\033\040 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+URxvt.keysym.Mod4-Return:     \033\040\015
+URxvt.keysym.Mod4-Backspace:  \033\040\177
+URxvt.keysym.Mod4-Left:       list:\033\040\007:dacb:
+URxvt.keysym.Mod4-Shift-Left: list:\033\040\007:DACB:
+
+! Perl extensions
+URxvt.perl-ext-common: selection,readline,clipboard,keyboard-select,url-select
+URxvt.keysym.Mod4-c:   perl:clipboard:copy
+URxvt.keysym.Mod4-v:   perl:clipboard:paste
+URxvt.keysym.M-s:      perl:keyboard-select:activate
+URxvt.keysym.M-u:      perl:url-select:select_next
+URxvt.urlLauncher:     open
+URxvt.urlButton:       3
+
+
+!!! XTERM
+
+! Remove SetSelection from blacklist
+XTerm*disallowedWindowOps: 20,21,SetXprop
+XTerm*faceName:            Consolas:pixelsize=14
+XTerm*utf8:                1
+XTerm*metaSendsEscape:     on

@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'nervutils'
+require 'optparse'
+
+class Plookup
+  include NervUtils
+
+  def initialize(args = [])
+    @args     = args
+    @services = %W[/etc/services]
+    @opts     = {}
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 20
+      opt.banner = %Q{\
+        Grep the services file by port number or regular expression.
+
+        Usage: #{File.basename __FILE__} [options] [port-number|regex] ...
+
+        Options:
+      }.gsub(/^ +/,'')
+
+      opt.on '-f', '--file SERVICES',
+             "Services file to grep. By default this is set to the first of: ",
+             @services.join(', ') do |arg|
+        @opts[:services] = arg
+      end
+
+      opt.on '-i', '--ignore-case','Ignore case when pattern matching' do
+        @opts[:ignore_case] = true
+      end
+
+      opt.on '-p', '--pattern', 'Force regex pattern matching' do
+        @opts[:pattern_match] = true
+      end
+    end
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.empty?
+
+    # choose and slurp services file
+    @opts[:services] ||= @services.select { |f| File.readable? f }.first
+    buf = File.readlines @opts[:services]
+
+    args.each do |arg|
+      # search for port numbers
+      if !@opts[:pattern_match] && arg =~ /^\d+$/
+        print buf.grep(/\s#{arg}\/\w+/).join
+      # search for patterns
+      else
+        print buf.grep(Regexp.new(arg, @opts[:ignore_case])).join
+      end
+    end
+  rescue
+    abort $!.to_s, :red
+  end
+end
+
+Plookup.new(ARGV).run if __FILE__ == $0

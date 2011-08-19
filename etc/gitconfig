@@ -1,0 +1,139 @@
+
+#                 /  _/
+#       _/_/_/      _/_/_/
+#    _/    _/  _/  _/
+#   _/    _/  _/  _/
+#    _/_/_/  _/    _/_/
+#       _/
+#  _/_/     guns <self@sungpae.com>
+
+
+# NOTE: In general we want to only change interactive functionality
+
+
+[user]
+    name  = guns
+    email = self@sungpae.com
+
+[core]
+    whitespace   = trailing-space,space-before-tab
+    excludesfile = ~/.gitignore
+
+[color]
+    ui = auto
+
+[color.diff]
+    meta           = blue
+    mnemonicprefix = true
+
+[diff]
+    renames = copies
+
+[interactive]
+    singlekey = true
+
+[merge]
+    tool = vimdiff
+
+[push]
+    default = tracking
+
+[rerere]
+    enabled = true
+
+[alias]
+    # index operations
+    a      = add
+    aa     = add .
+    ai     = add --interactive
+    ap     = add --patch
+    ac     = !git add . && git commit -a
+    acv    = !git add . && git commit -a -v
+    acm    = !git add . && git commit -a -m
+    rs     = reset
+    rshard = reset --hard
+
+    # committing
+    c   = commit
+    cv  = commit -v
+    cm  = commit -m
+    ca  = commit -a
+    cav = commit -a -v
+    cam = commit -a -m
+
+    # merging and rebasing
+    m   = merge --no-ff
+    mf  = merge
+    rb  = rebase
+    rbi = rebase -i
+    cp  = cherry-pick
+
+    # log
+    l     = log --relative-date --decorate --graph
+    lstat = log --relative-date --decorate --graph --stat
+
+    lp    = log --relative-date --decorate --patch --stat
+    lpw   = log --relative-date --decorate --patch --stat -w
+    wlp   = log --relative-date --decorate --patch --stat --word-diff=color
+
+    l1    = log --relative-date --decorate --patch --stat -1
+    l1w   = log --relative-date --decorate --patch --stat -1 -w
+    wl1   = log --relative-date --decorate --patch --stat -1 --word-diff=color
+
+    f     = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
+    fa    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
+
+    # branches
+    br   = branch
+    bra  = branch -a
+    brd  = branch -d
+    brdd = branch -D
+    brm  = branch -m
+    co   = checkout
+    cob  = checkout -b
+    cot  = checkout -t
+    sb   = show-branch --color
+
+    # tags
+    tagd = tag -d
+    tagf = tag -f
+
+    # diff && patch
+    di   = diff
+    diw  = diff -w
+    wdi  = diff --word-diff=color
+
+    dih  = diff HEAD
+    dihw = diff HEAD -w
+    wdih = diff HEAD --word-diff=color
+
+    dis  = diff --summary --stat
+
+    fp   = format-patch
+    fps  = format-patch --stdout
+
+    # remote
+    r      = remote -v
+    up     = remote update
+    sclone = clone --depth=1
+
+    # stash
+    sta     = stash
+    stap    = stash -p
+    stal    = stash list
+    stalp   = stash list -p
+    stapop  = stash pop
+    stashow = stash show -p
+    stasnap = !git stash && git stash apply
+
+    # grep
+    g   = grep -P
+    gi  = grep -Pi
+    gw  = grep -Pw
+    giw = grep -Piw
+
+    # misc
+    ls  = ls-files
+    lso = ls-files -o
+    st  = status --short
+    fdx = clean -fdx

@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+#
+# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'yaml'
+require 'fileutils'
+
+class ITunesSwitch
+  def initialize args = []
+    @args       = args
+    @opts       = {}
+    @itunes     = File.expand_path '~/Music/iTunes'
+    @prefs_file = File.expand_path '~/Music/.itunes.yml'
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+
+      opt.banner = %Q{\
+        Switch the location of the iTunes Library. Reads from #{@prefs_file.inspect},
+        or you can pass a path as an argument. The yaml file is a simple set of
+        `key: directory' pairs.
+
+        Usage: #{File.basename __FILE__} [options] [key|path]
+
+        Options:
+      }.gsub /^ +/, ''
+
+      opt.on '-l', '--list', "List locations specified in #{@prefs_file.inspect}" do
+        @opts[:list] = true
+      end
+    end
+  end
+
+  def itunes_is_running
+    %x(ps axo ucomm).split("\n").map { |p| p.strip }.include?('iTunes')
+  end
+
+  def prefs
+    @prefs ||= YAML.load_file @prefs_file
+  rescue
+    raise "Problem loading #{@prefs_file.inspect}!"
+  end
+
+  def remove_link link
+    raise "#{link.inspect} is not a symbolic link!" unless File.symlink? link
+    FileUtils.rm_f link, :verbose => true
+  end
+
+  def source arg
+    if prefs[arg]
+      prefs[arg]
+    elsif File.directory? arg
+      File.expand_path arg
+    else
+      raise "#{arg.inspect} is not a directory or key."
+    end
+  end
+
+  def switch_source_to arg
+    src = source arg
+    remove_link @itunes
+    FileUtils.ln_s src, @itunes, :verbose => true
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.count != 1
+
+    raise 'iTunes is running!' if itunes_is_running
+
+    switch_source_to args.first
+  end
+end
+
+ITunesSwitch.new(ARGV).run if __FILE__ == $0
