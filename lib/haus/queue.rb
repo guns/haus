@@ -165,7 +165,7 @@ class Haus
 
         did_archive = archive unless options.noop
         old_umask   = File.umask 0077
-        fopts       = { :noop => options.noop }
+        fopts       = { :noop => options.noop, :verbose => options.debug }
 
         execute_deletions     fopts.dup
         execute_links         fopts.dup

@@ -618,6 +618,20 @@ class Haus::QueueSpec < MiniTest::Spec
       q.execute!
       q.options.must_equal opts
     end
+
+    it 'must pass :verbose => true to FileUtils ops when options.debug' do
+      capture_fork_io do
+        $stderr.reopen '/dev/null'
+        @q.options.debug = true
+        @q.instance_eval do
+          def execute_deletions fopts
+            puts "Verbose is #{fopts[:verbose].inspect}"
+            super
+          end
+        end
+        @q.execute!
+      end.first.must_match /\AVerbose is true/
+    end
   end
 
   describe :executed? do

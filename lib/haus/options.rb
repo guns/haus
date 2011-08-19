@@ -15,6 +15,7 @@ class Haus
     def initialize
       @ostruct = OpenStruct.new
       @ostruct.path = File.expand_path '../../..', __FILE__ # HAUS_PATH
+      @ostruct.debug = !!ENV['DEBUG']
       @ostruct.logger = Haus::Logger.new
       super
     end

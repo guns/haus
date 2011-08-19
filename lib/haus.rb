@@ -15,8 +15,7 @@ require 'haus/clean'
 #
 class Haus
   def initialize args = []
-    @args         = args
-    options.debug = !!ENV['DEBUG']
+    @args = args
   end
 
   def help
@@ -40,10 +39,6 @@ class Haus
 
       opt.on '-v', '--version' do
         options.logger.log VERSION; exit
-      end
-
-      opt.on '-d', '--debug' do
-        options.debug = true
       end
     end
   end
