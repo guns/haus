@@ -351,7 +351,7 @@ class Haus
     def execute_deletions fopts
       deletions.each do |dst|
         log [':: ', :white, :bold], ['DELETING ', :italic], dst
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.rm_r dst, fopts.merge(:secure => true)
       end
     end
 
@@ -361,7 +361,7 @@ class Haus
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
 
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         FileUtils.mkdir_p File.dirname(dst), fopts
 
         FileUtils.ln_s srcpath, dst, fopts
@@ -372,7 +372,7 @@ class Haus
       copies.each do |src, dst|
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
 
-        FileUtils.rm_rf dst, fopts.merge(:secure => true)
+        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         FileUtils.mkdir_p File.dirname(dst), fopts
 
         # Ruby 1.9's copy implementation breaks on broken symlinks

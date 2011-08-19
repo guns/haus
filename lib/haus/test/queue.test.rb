@@ -632,6 +632,10 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.execute!
       end.first.must_match /\AVerbose is true/
     end
+
+    it 'must raise Errno::EPERM when trying to remove privileged files' do
+      # TODO: How can we test this?
+    end
   end
 
   describe :executed? do
