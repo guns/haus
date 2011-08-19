@@ -7,6 +7,7 @@ require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
+require 'haus/test/helper/noop_tasks'
 
 $user ||= Haus::TestUser[$$]
 
@@ -96,6 +97,7 @@ class DotfileSpec < MiniTest::Spec
     jobs.each_value { |s,d| extant?(d).must_equal false }
 
     @task.options.path = user.haus
+    @task.queue.extend Haus::Unadoptable
     @task.run
 
     yield jobs

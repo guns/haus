@@ -13,6 +13,7 @@ require 'haus/queue'
 require 'haus/logger'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
+require 'haus/test/helper/noop_tasks'
 
 $user ||= Haus::TestUser[$$]
 
@@ -409,6 +410,8 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :execute! do
     before do
+      @q.extend Haus::Unadoptable
+
       @files   = (0..12).map { $user.hausfile }
       @sources = @files.map { |s,d| s }
       @targets = @files.map { |s,d| d }
@@ -540,6 +543,7 @@ class Haus::QueueSpec < MiniTest::Spec
     it 'must copy links, not their sources' do
       src, dst = $user.hausfile :link
       q = Haus::Queue.new :quiet => true, :force => true
+      q.extend Haus::Unadoptable
       File.lstat(src).ftype.must_equal 'link'
       q.add_copy src, dst
       q.copies.must_equal [[src, dst]]

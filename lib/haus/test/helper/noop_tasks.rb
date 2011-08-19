@@ -23,4 +23,9 @@ class Haus
       raise StandardError, 'NoopRaise'
     end
   end
+
+  module Unadoptable
+    def adopt *args
+    end
+  end
 end
