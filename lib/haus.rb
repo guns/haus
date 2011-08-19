@@ -15,7 +15,8 @@ require 'haus/clean'
 #
 class Haus
   def initialize args = []
-    @args = args
+    @args         = args
+    options.debug = !!ENV['DEBUG']
   end
 
   def help
@@ -40,6 +41,10 @@ class Haus
       opt.on '-v', '--version' do
         options.logger.log VERSION; exit
       end
+
+      opt.on '-d', '--debug' do
+        options.debug = true
+      end
     end
   end
 
@@ -56,6 +61,7 @@ class Haus
     task[:class].new(args[1..-1]).run or exit 1
   rescue StandardError => e
     options.logger.log ["[#{e.class}] ", :red, :bold], e.to_s
+    options.logger.log e.backtrace.join("\n") if options.debug
     exit 1
   end
 end
