@@ -910,6 +910,30 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
+    describe :create_path_to do
+      it 'must create all parent directories' do
+        path = File.join $user.haus, 'create/path/to'
+        extant?(path).must_equal false
+        @q.send :create_path_to, path, {}
+        extant?(path).must_equal false
+        File.directory?(File.dirname path).must_equal true
+      end
+
+      it 'must change ownership of all created directories as that of its parent' do
+        # TODO: This is how we'd test this
+        # path = File.join $user.dir, '.haus-owner/mustbe/test'
+        # $user.hausfiles.push "#{$user.dir}/.haus-owner"
+        # extant?(path).must_equal false
+        # @q.send :create_path_to, path, {}
+        # File.stat("#{$user.dir}/.haus-owner").uid.must_equal $user.uid
+        # File.stat("#{$user.dir}/.haus-owner").gid.must_equal $user.gid
+      end
+    end
+
+    describe :adopt do
+      # TODO
+    end
+
     describe :execute_deletions do
       # TODO
     end

@@ -348,6 +348,34 @@ class Haus
       raise "#{bp.inspect} would block the creation of #{path.inspect}" if bp
     end
 
+    def create_path_to file, fopts
+      parent = File.dirname file
+      if not extant? parent
+        create_path_to parent, fopts # Recurse!
+        FileUtils.mkdir parent, fopts
+        adopt parent, fopts
+      end
+    end
+
+    # Change the uid and gid of the file to match its parent directory.
+    # Parent directory must exist.
+    def adopt file, fopts
+      if fopts[:noop] and fopts[:verbose]
+        $stderr.puts '(chown) %s' % file
+        return
+      end
+
+      p = File.lstat File.dirname(file)
+
+      case File.lstat(file).ftype
+      when 'directory'
+        FileUtils.chown_R p.uid, p.gid, file, fopts
+      else
+        $stderr.puts 'chown -h %d:%d %s' % [p.uid, p.gid, file] if fopts[:verbose]
+        File.lchown p.uid, p.gid, file unless fopts[:noop]
+      end
+    end
+
     def execute_deletions fopts
       deletions.each do |dst|
         log [':: ', :white, :bold], ['DELETING ', :italic], dst
