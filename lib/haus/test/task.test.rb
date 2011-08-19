@@ -127,19 +127,66 @@ class Haus::TaskSpec < MiniTest::Spec
   end
 
   describe :etcfiles do
-    it 'must return all files in HAUS_PATH/etc/*' do
-      h, files = Haus::Noop.new, []
-      $user.hausfile :file
-      $user.hausfile :dir
-      $user.hausfile :link
+    it 'must return all non-hierdir files in HAUS_PATH/etc/*' do
+      h, user, files = Haus::Noop.new, Haus::TestUser[:task_etcfiles], []
+      h.options.path = user.haus
 
-      # Awkward select via each_with_index courtesy of Ruby 1.8.6
-      $user.hausfiles.each_with_index do |f, i|
-        files << f if (i % 2).zero?
+      files << user.hausfile(:file).first
+      files << user.hausfile(:dir).first
+      files << user.hausfile(:link).first
+      user.hausfile :hier # Not an etcfile!
+
+      h.etcfiles.sort.must_equal files.sort
+    end
+  end
+
+  describe :hierfiles do
+    it 'must return all file nodes within hierdirs within HAUS_PATH/etc' do
+      h, user, files = Haus::Noop.new, Haus::TestUser[:task_hierfiles], []
+      h.options.path = user.haus
+
+      # Not hierfiles!
+      user.hausfile :file
+      user.hausfile :dir
+      user.hausfile :link
+
+      hierdir = File.dirname user.hausfile(:hier).first
+      FileUtils.rm_rf Dir["#{hierdir}/*"]
+
+      %w[foorc %foo.d/myfoorc %foo.d/config node/barrc].each do |rel|
+        path = File.join hierdir, rel
+        FileUtils.mkdir_p File.dirname(path)
+        FileUtils.touch path
+        files << (rel =~ /\Anode/ ? File.dirname(path) : path)
       end
 
-      h.options.path = $user.haus
-      h.etcfiles.sort.must_equal files.sort
+      h.hierfiles.sort.must_equal files.sort
+    end
+  end
+
+  describe :hierdir? do
+    before do
+      @task = Haus::Noop.new
+    end
+
+    it 'must return false when argument is not a directory' do
+      src = File.dirname $user.hausfile(:hier).first
+      @task.hierdir?(src).must_equal true
+      FileUtils.rm_rf src
+      FileUtils.touch src
+      @task.hierdir?(src).must_equal false
+    end
+
+    it 'must return false when argument does not begin with a `%` character' do
+      begin
+        testdir  = $user.hausfile(:dir).first
+        testhier = File.join File.dirname(testdir), '%' + File.basename(testdir)
+        FileUtils.mkdir_p [testdir, testhier]
+        @task.hierdir?(testdir).must_equal false
+        @task.hierdir?(testhier).must_equal true
+      ensure
+        FileUtils.rm_rf [testdir, testhier]
+      end
     end
   end
 

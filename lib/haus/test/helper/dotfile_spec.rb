@@ -34,10 +34,10 @@ class DotfileSpec < MiniTest::Spec
   end
 
   def must_add_task_jobs_to_queue type
-    user = Haus::TestUser[@task.class.to_s + '_enqueue']
-    jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
+    user = Haus::TestUser.new
+    jobs = [:file, :dir, :link, :hier].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
 
-    yield jobs if block_given?
+    yield @task, jobs if block_given?
 
     @task.options.path = user.haus
     @task.enqueue

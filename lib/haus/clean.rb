@@ -16,21 +16,22 @@ class Haus
     end
 
     def enqueue
-      etcnames = etcfiles.map { |f| '.' + File.basename(f) } if options.all
-
       users.each do |user|
-        user.dotfiles.each do |dot|
+        etcs  = etcfiles.map { |f| [f, user.dot(f)] }
+        hiers = hierfiles.map { |f| [f, user.hier(f, etc)] }
 
+        (etcs + hiers).each do |src, dst|
           begin
             if options.all
-              queue.add_deletion dot if etcnames.include? File.basename(dot)
-            elsif File.lstat(dot).ftype == 'link'
-              queue.add_deletion dot if etcfiles.include? File.expand_path(File.readlink dot)
+              queue.add_deletion dst
+            elsif File.lstat(dst).ftype == 'link'
+              queue.add_deletion dst if File.expand_path(File.readlink dst) == src
             end
-          rescue Errno::EACCES, Errno::ENOENT => e # Catch syscall errors
+          rescue Errno::ENOENT
+            # We're not filtering non-extant files, so do nothing here
+          rescue Errno::EACCES, Errno::ENOTDIR => e
             log ['!! ', :red, :bold], e.to_s
           end
-
         end
       end
     end

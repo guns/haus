@@ -43,22 +43,10 @@ class Haus::UserSpec < MiniTest::Spec
     end
   end
 
-  describe :dotfiles do
-    it 'must return all dotfiles in user home directory' do
-      # Thread to minimize the time window for filesystem changes
-      pool, data = [], {}
-
-      pool << Thread.new do
-        data[:user] = Dir[File.expand_path '~/.*'].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
-      end
-
-      pool << Thread.new do
-        data[:user_list] = Haus::User.new(Etc.getlogin).dotfiles
-      end
-
-      pool.each { |t| t.join }
-
-      data[:user].sort.must_equal data[:user_list].sort
+  describe :hier do
+    it 'must return a hierfile path as a home dotfile path' do
+      feh_themes = Haus::User.new($user.name).hier "#{$user.etc}/%config/%feh/themes", $user.etc
+      feh_themes.must_equal "#{$user.dir}/.config/feh/themes"
     end
   end
 end

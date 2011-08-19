@@ -72,6 +72,7 @@ class Haus
     #
     # Installs Kernel#at_exit hook for cleaning up sources and dotfiles
     def hausfile type = :file
+      @hausfiles ||= []
       mkdir_p etc
 
       src_dst = Dir.chdir etc do
@@ -86,6 +87,14 @@ class Haus
           mkdir d
           touch f
           [File.expand_path(d), dot(d)]
+        when :hier
+          d = '%' + randstr
+          f = File.join d, randstr
+          mkdir d
+          touch f
+          dst = File.join dir, d.sub(/\A%/, '.'), File.basename(f)
+          @hausfiles.push File.dirname(dst) # We want to remove the whole dir
+          [File.expand_path(f), dst]
         when :link
           f = randstr
           ln_s Dir['/etc/*'].select { |e| File.file? e and File.readable? e }.sort_by { rand }.first, f
@@ -94,7 +103,7 @@ class Haus
         end
       end
 
-      (@hausfiles ||= []).concat src_dst
+      @hausfiles.concat src_dst
 
       unless @exit_hook_installed
         pid = $$

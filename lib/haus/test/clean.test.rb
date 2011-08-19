@@ -25,23 +25,44 @@ class Haus::CleanSpec < DotfileSpec
 
   describe :enqueue do
     it 'must add linked dotfiles to the queue' do
-      must_add_task_jobs_to_queue :deletions do |jobs|
-        jobs.each_value { |s,d| FileUtils.ln_s s, d }
+      must_add_task_jobs_to_queue :deletions do |task, jobs|
+        jobs.each_value do |s,d|
+          FileUtils.mkdir_p File.dirname(d)
+          FileUtils.ln_s s, d
+        end
+      end
+    end
+
+    it 'must add dotfiles that share the same name when options.all' do
+      must_add_task_jobs_to_queue :deletions do |task, jobs|
+        @task.options.all = true
+        jobs.each_value do |s,d|
+          FileUtils.mkdir_p File.dirname(d)
+          FileUtils.touch d
+        end
       end
     end
 
     it 'should not blow up on syscall errors' do
       class CleanSpecError < RuntimeError; end
 
+      # EACCES
       src, dst = $user.hausfile
       FileUtils.ln_s src, dst
       File.lchmod 0200, dst
       @task.options.path = $user.haus
       lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
-    end
+      FileUtils.rm_f dst
 
-    it 'must add all conflicting dotfiles to the queue when options.all' do
-      # TODO
+      # ENOENT
+      FileUtils.touch File.join($user.etc, 'moozoo')
+      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
+
+      # ENOTDIR
+      src, dst = $user.hausfile :hier
+      FileUtils.rm_rf File.dirname(dst)
+      FileUtils.ln_s src, File.dirname(dst)
+      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
     end
   end
 

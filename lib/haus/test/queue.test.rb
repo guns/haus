@@ -18,7 +18,7 @@ $user ||= Haus::TestUser[$$]
 
 class Haus::QueueSpec < MiniTest::Spec
   it 'must contain some error classes' do
-    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[FrozenOptionsError MultipleJobError]
+    Haus::Queue.constants.map { |c| c.to_s }.sort.must_equal %w[MultipleJobError]
   end
 
   before do
@@ -72,10 +72,10 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.options.sniffy.must_equal 'nose'
     end
 
-    it 'must raise FrozenOptionsError if the options object is frozen' do
-      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise RuntimeError
+    it 'must raise RuntimeError if the options object is frozen' do
+      lambda { @q.options = { :foo => 'foo' }; raise StandardError }.must_raise StandardError
       @q.options.freeze
-      lambda { @q.options = { :foo => 'foo' }; raise RuntimeError }.must_raise Haus::Queue::FrozenOptionsError
+      lambda { @q.options = { :foo => 'foo' } }.must_raise RuntimeError
     end
   end
 
@@ -96,6 +96,12 @@ class Haus::QueueSpec < MiniTest::Spec
       args = $user.hausfile
       @q.add_link *args
       lambda { @q.add_link *args }.must_raise Haus::Queue::MultipleJobError
+    end
+
+    it 'must raise an error if argument has a blocking path' do
+      assert_raises RuntimeError do
+        @q.add_copy File.join($user.etc), File.join($user.hausfile.first, 'illegal')
+      end
     end
 
     describe :success do
@@ -177,6 +183,12 @@ class Haus::QueueSpec < MiniTest::Spec
       FileUtils.ln_sf relpath(linksrc, dst), dst
       @q.add_copy(src, dst).must_be_nil
       @q.copies.must_be_empty
+    end
+
+    it 'must raise an error if argument has a blocking path' do
+      assert_raises RuntimeError do
+        @q.add_copy File.join($user.etc), File.join($user.hausfile.first, 'illegal')
+      end
     end
 
     describe :success do
@@ -290,7 +302,11 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must raise an error if argument is a directory' do
-      lambda { @q.add_modification($user.dir) {} }.must_raise ArgumentError
+      lambda { @q.add_modification($user.hausfile(:dir).first) {} }.must_raise RuntimeError
+    end
+
+    it 'must raise an error if argument has a blocking path' do
+      lambda { @q.add_modification(File.join $user.hausfile.first, 'illegal') {} }.must_raise RuntimeError
     end
   end
 
@@ -815,11 +831,65 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :extant? do
-      # TODO
+      before do
+        @user = Haus::TestUser[:queue_extant?]
+      end
+
+      it 'must return true when regular files and directories exist' do
+        [:file, :link, :dir].each do |s|
+          @q.send(:extant?, @user.hausfile(s).first).must_equal true
+        end
+
+        FileUtils.mkdir_p File.join(@user.haus, '.tmp/foo')
+        @q.send(:extant?, File.join(@user.haus, '.tmp/foo/bar')).must_equal false
+      end
+
+      it 'must return true when passed broken symlinks' do
+        src = @user.hausfile.first
+        FileUtils.ln_sf src, "#{@user.haus}/lies"
+        FileUtils.rm_f src
+        File.exists?("#{@user.haus}/lies").must_equal false
+        @q.send(:extant?, "#{@user.haus}/lies").must_equal true
+      end
     end
 
     describe :duplicates? do
       # TODO
+    end
+
+    describe :blocking_path do
+      before do
+        @user = Haus::TestUser[:queue_blocking_path]
+      end
+
+      it 'must return nil when path nodes are non-extant' do
+        @q.send(:blocking_path, '/everlasting/gobstopper').must_equal nil
+        path = @user.hausfile(:dir).first
+        @q.send(:blocking_path, File.join(path, 'foo/bar')).must_equal nil
+      end
+
+      it 'must return the extant tree nodes which are not directories or links to one' do
+        dir   = @user.hausfile(:dir).first
+        file  = @user.hausfile.first
+        ldir  = File.join $user.etc, 'dir'
+        lfile = File.join $user.etc, 'file'
+
+        FileUtils.ln_sf dir, ldir
+        FileUtils.ln_sf file, lfile
+
+        @q.send(:blocking_path, File.join(dir,   'bar/baz')).must_equal nil
+        @q.send(:blocking_path, File.join(file,  'bar/baz')).must_equal file
+        @q.send(:blocking_path, File.join(ldir,  'bar/baz')).must_equal nil
+        @q.send(:blocking_path, File.join(lfile, 'bar/baz')).must_equal lfile
+      end
+    end
+
+    describe :raise_if_blocking_path do
+      it 'must raise an error if there is a blocking path' do
+        assert_raises RuntimeError do
+          @q.send :raise_if_blocking_path, File.join($user.hausfile.first, 'foo')
+        end
+      end
     end
 
     describe :execute_deletions do

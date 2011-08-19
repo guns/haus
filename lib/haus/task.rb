@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+require 'find'
 require 'haus/options'
 require 'haus/user'
 require 'haus/queue'
@@ -79,9 +80,48 @@ class Haus
       File.join options.path, 'etc'
     end
 
-    # HAUS_PATH/etc/*
+    # Returns non-hierdir files in HAUS_PATH/etc/*
     def etcfiles
-      Dir["#{etc}/*"].map { |f| File.expand_path f }
+      Dir["#{etc}/*"].reject { |f| hierdir? f }.map { |f| File.expand_path f }
+    end
+
+    # Returns hierfiles (files and directories within directories that begin
+    # with `%`) in HAUS_PATH/etc/*
+    #
+    # Only the nodes of the tree are returned.
+    #
+    # e.g.
+    #
+    #   FileUtils.touch %w[/opt/haus/etc/%config/ponyrc
+    #                      /opt/haus/etc/%config/pony.d/myponyrc
+    #                      /opt/haus/etc/%super/%awesome/pony.conf]
+    #
+    #   Haus::Task.new(%w[--path /opt/haus]).hierfiles
+    #   => ["/opt/haus/etc/%config/ponyrc",
+    #       "/opt/haus/etc/%config/pony.d",
+    #       "/opt/haus/etc/%super/%awesome/pony.conf"]
+    #
+    def hierfiles
+      paths = []
+
+      Dir["#{etc}/*"].select { |f| hierdir? f }.each do |hier|
+        Find.find hier do |f|
+          # Move on if the file is itself a hier dir
+          next if File.basename(f) =~ /\A%/
+
+          # This is a non-hier node
+          paths.push f
+
+          # Don't recurse into a non-hier dir
+          Find.prune if File.directory? f
+        end
+      end
+
+      paths
+    end
+
+    def hierdir? path
+      !!(File.directory? path and File.basename(path) =~ /\A%/)
     end
 
     #

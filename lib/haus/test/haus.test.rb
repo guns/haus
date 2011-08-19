@@ -15,6 +15,14 @@ class HausSpec < MiniTest::Spec
       Haus.method(:initialize).arity.must_equal -1
       Haus.new(%w[-h foo]).instance_variable_get(:@args).must_equal %w[-h foo]
     end
+
+    it 'must set options.debug to true if ENV["DEBUG"]' do
+      capture_fork_io do
+        puts Haus.new.options.debug == false
+        ENV['DEBUG'] = '1'
+        puts Haus.new.options.debug == true
+      end.first.must_equal "true\ntrue\n"
+    end
   end
 
   describe :help do
@@ -30,9 +38,10 @@ class HausSpec < MiniTest::Spec
       Haus.new.options.must_be_kind_of Haus::Options
     end
 
-    it 'must respond to --version and --help' do
+    it 'must respond to --version, --help, and --debug' do
       capture_fork_io { Haus.new.options.parse '--version' }.first.chomp.must_equal Haus::VERSION
       capture_fork_io { Haus.new.options.parse '--help' }.first.chomp.must_equal Haus.new.help
+      lambda { Haus.new.options.parse '--debug'; raise StandardError }.must_raise StandardError
     end
   end
 
@@ -58,6 +67,13 @@ class HausSpec < MiniTest::Spec
     it 'must rescue StandardError exceptions and abort' do
       capture_fork_io { Haus.new(%w[noopraise]).run }.first.must_match /NoopRaise\n\z/
       $?.exitstatus.must_equal 1
+    end
+
+    it 'must print the error backtrace if options.debug' do
+      capture_fork_io do
+        ENV['DEBUG'] = '1'
+        Haus.new(%w[noopraise]).run
+      end.first.lines.to_a.size.wont_equal 1
     end
   end
 end

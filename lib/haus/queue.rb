@@ -23,7 +23,6 @@ class Haus
   #
   class Queue
     class MultipleJobError < RuntimeError; end
-    class FrozenOptionsError < RuntimeError; end
 
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
 
@@ -40,9 +39,9 @@ class Haus
     end
 
     # Parameter can be a Hash or an OpenStruct;
-    # Raises FrozenOptionsError if options is frozen
+    # Raises RuntimeError if options is frozen
     def options= opts
-      raise FrozenOptionsError if options.frozen?
+      raise "can't modify frozen array" if options.frozen?
       @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
@@ -53,6 +52,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless extant? src
+      raise_if_blocking_path dst
       return nil if File.symlink? dst and linked? src, dst
 
       @links = (links.dup << [src, dst]).freeze
@@ -65,6 +65,7 @@ class Haus
 
       raise MultipleJobError if targets.include? dst
       return nil unless extant? src
+      raise_if_blocking_path dst
       return nil if extant? dst and duplicates? src, dst
 
       @copies = (copies.dup << [src, dst]).freeze
@@ -99,7 +100,8 @@ class Haus
       dst = File.expand_path destination
 
       raise MultipleJobError if targets.include? dst
-      raise ArgumentError if File.directory? dst
+      raise "#{dst.inspect} must not be a directory" if File.directory? dst
+      raise_if_blocking_path dst
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
@@ -251,13 +253,13 @@ class Haus
       response = if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
         # Hack to get a single character from the terminal
         begin
-          system 'stty raw -echo'
+          system 'stty raw'
           $stdout.puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
-          !!(c =~ /y|\r|\n/i)
         ensure
-          system 'stty -raw echo'
+          system 'stty -raw'
           $stdout.print "\r" # Return cursor to first column
         end
+        !!(c =~ /y|\r|\n/i)
       else
         !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
       end
@@ -326,6 +328,26 @@ class Haus
       end
     end
 
+    # Returns the subpath of a path that is assumed to be a tree node, but is
+    # not actually a directory or a link to one. Returns nil otherwise.
+    def blocking_path path
+      nodes = File.expand_path(path).sub(%r{\A/}, '').split '/'
+
+      (nodes.size - 1).times do |n|
+        # We want the absolute path, but strip leading slash before splitting
+        dir = '/' + nodes[0..n].join('/')
+        return nil if not extant? dir
+        return dir if not File.directory? dir
+      end
+
+      nil
+    end
+
+    def raise_if_blocking_path path
+      bp = blocking_path path
+      raise "#{bp.inspect} would block the creation of #{path.inspect}" if bp
+    end
+
     def execute_deletions fopts
       deletions.each do |dst|
         log [':: ', :white, :bold], ['DELETING ', :italic], dst
@@ -338,6 +360,7 @@ class Haus
         srcpath = options.relative ? relpath(src, dst) : src
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+
         FileUtils.rm_rf dst, fopts.merge(:secure => true)
         FileUtils.mkdir_p File.dirname(dst), fopts
 
@@ -348,8 +371,10 @@ class Haus
     def execute_copies fopts
       copies.each do |src, dst|
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+
         FileUtils.rm_rf dst, fopts.merge(:secure => true)
         FileUtils.mkdir_p File.dirname(dst), fopts
+
         # Ruby 1.9's copy implementation breaks on broken symlinks
         if File.ftype(src) == 'link'
           lsrc = File.readlink src
@@ -366,8 +391,10 @@ class Haus
     def execute_modifications fopts
       modifications.each do |prc, dst|
         log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
+
         FileUtils.mkdir_p File.dirname(dst), fopts
         FileUtils.touch dst, fopts
+
         # No simple way to deny FS access to the proc
         if options.noop
           log "Skipping modification procedure for #{dst}"

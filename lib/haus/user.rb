@@ -19,9 +19,10 @@ class Haus
       File.join dir, ".#{File.basename src}"
     end
 
-    # Returns user dotfiles as absolute paths
-    def dotfiles
-      Dir[File.expand_path "#{dir}/.*"].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
+    # Return hierfile as a home dotfile
+    def hier src, prefix
+      suffix = src.sub(%r{\A#{prefix}/?}, '').split('/').map { |d| d.sub /\A%/, '' }.join '/'
+      "#{dir}/.#{suffix}"
     end
   end
 end
