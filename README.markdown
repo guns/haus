@@ -12,7 +12,7 @@
  - ✓ Ruby 1.8.6+ compatibility
  - ✓ haus link
  - ✓ haus copy
- - haus clean
+ - ✓ haus clean
  - haus restore
  - haus ssh ls
  - haus ssh add
@@ -22,7 +22,6 @@
 
 ### TODO
 
- - Nested dotfiles (%dir)
  - Better `--help` documentation
  - Allow environment to set HAUS_PATH
  - Accept `haus help COMMAND` invocation
