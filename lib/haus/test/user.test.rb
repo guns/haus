@@ -49,23 +49,4 @@ class Haus::UserSpec < MiniTest::Spec
       feh_themes.must_equal "#{$user.dir}/.config/feh/themes"
     end
   end
-
-  describe :dotfiles do
-    it 'must return all dotfiles in user home directory' do
-      # Thread to minimize the time window for filesystem changes
-      pool, data = [], {}
-
-      pool << Thread.new do
-        data[:user] = Dir[File.expand_path '~/.*'].reject { |f| File.basename(f) =~ /\A\.{1,2}\z/ }
-      end
-
-      pool << Thread.new do
-        data[:user_list] = Haus::User.new(Etc.getlogin).dotfiles
-      end
-
-      pool.each { |t| t.join }
-
-      data[:user].sort.must_equal data[:user_list].sort
-    end
-  end
 end
