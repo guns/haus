@@ -390,9 +390,10 @@ class Haus
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        create_path_to dst, fopts
 
         FileUtils.ln_s srcpath, dst, fopts
+        adopt dst, fopts
       end
     end
 
@@ -401,7 +402,7 @@ class Haus
         log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        create_path_to dst, fopts
 
         # Ruby 1.9's copy implementation breaks on broken symlinks
         if File.ftype(src) == 'link'
@@ -413,6 +414,8 @@ class Haus
           # NOTE: Explicit :dereference_root option required for 1.8.6
           FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false)
         end
+
+        adopt dst, fopts
       end
     end
 
@@ -420,8 +423,10 @@ class Haus
       modifications.each do |prc, dst|
         log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
 
-        FileUtils.mkdir_p File.dirname(dst), fopts
+        create_path_to dst, fopts
+        new = extant? dst
         FileUtils.touch dst, fopts
+        adopt dst, fopts if new
 
         # No simple way to deny FS access to the proc
         if options.noop

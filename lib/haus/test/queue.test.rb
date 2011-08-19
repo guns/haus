@@ -636,6 +636,10 @@ class Haus::QueueSpec < MiniTest::Spec
     it 'must raise Errno::EPERM when trying to remove privileged files' do
       # TODO: How can we test this?
     end
+
+    it 'must change the ownership of newly created files to that of its parent' do
+      # TODO: How can we test this?
+    end
   end
 
   describe :executed? do
