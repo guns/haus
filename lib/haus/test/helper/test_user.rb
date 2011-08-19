@@ -40,6 +40,7 @@ class Haus
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
       @haus = File.join dir, ".#{randstr}"
+      @hausfiles = []
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -72,7 +73,6 @@ class Haus
     #
     # Installs Kernel#at_exit hook for cleaning up sources and dotfiles
     def hausfile type = :file
-      @hausfiles ||= []
       mkdir_p etc
 
       src_dst = Dir.chdir etc do

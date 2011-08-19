@@ -47,19 +47,24 @@ class Haus::CleanSpec < DotfileSpec
       class CleanSpecError < RuntimeError; end
 
       # EACCES
-      src, dst = $user.hausfile
+      user0 = Haus::TestUser.new
+      @task.options.path = user0.haus
+      src, dst = user0.hausfile
       FileUtils.ln_s src, dst
       File.lchmod 0200, dst
-      @task.options.path = $user.haus
       lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
       FileUtils.rm_f dst
 
       # ENOENT
-      FileUtils.touch File.join($user.etc, 'moozoo')
+      user1 = Haus::TestUser.new
+      @task.options.path = user1.haus
+      user1.hausfile
       lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
 
       # ENOTDIR
-      src, dst = $user.hausfile :hier
+      user2 = Haus::TestUser.new
+      @task.options.path = user2.haus
+      src, dst = user2.hausfile :hier
       FileUtils.rm_rf File.dirname(dst)
       FileUtils.ln_s src, File.dirname(dst)
       lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError

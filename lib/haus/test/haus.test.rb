@@ -73,7 +73,7 @@ class HausSpec < MiniTest::Spec
       capture_fork_io do
         ENV['DEBUG'] = '1'
         Haus.new(%w[noopraise]).run
-      end.first.lines.to_a.size.wont_equal 1
+      end.first.split("\n").size.wont_equal 1 # 1.8.6 doesn't have String#lines
     end
   end
 end
