@@ -1,0 +1,149 @@
+
+#   _______ _______ _______   ______             __
+#  |     __|    |  |   |   | |   __ \---.-.-----|  |--.
+#  |    |  |       |   |   | |   __ <  _  |__ --|     |
+#  |_______|__|____|_______| |______/___._|_____|__|__|
+#
+#    guns <self@sungpae.com>
+
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+
+### INITIALIZE ###
+
+# Reject non-interactive shells (just in case)
+test -n "$PS1" || return 1
+
+# Interesting features by version:
+#
+#   $""                                 2.0
+#   $''                                 2.0
+#   $(( ))                              2.0
+#   ${!var}                             2.0
+#   ${var//pat/sub}                     2.0
+#   ${var:off:len}                      2.0
+#   DEBUG trap                          2.0
+#   GLOBIGNORE                          2.0
+#   HISTIGNORE                          2.0
+#   HOSTNAME                            2.0
+#   LANG LC_*                           2.0
+#   SHELLOPTS                           2.0
+#   MACHTYPE                            2.0-alpha3
+#   test -o, ==, <, >                   2.0-alpha4
+#   BASH_VERSINFO                       2.0-beta1
+#   (( ))                               2.0-beta2
+#   GROUPS                              2.01-alpha1
+#   $'\0nnn'                            2.02-alpha1
+#   $'\xnn'                             2.02-alpha1
+#   $(< FILE)                           2.02-alpha1
+#   [[ ]]                               2.02-alpha1
+#   printf                              2.02-alpha1
+#   shopt -s extglob                    2.02-alpha1
+#   shopt -s nocaseglob                 2.02-alpha1
+#   test -N                             2.02-alpha1
+#   ARY=(*.txt)                         2.03-alpha
+#   $'...\'...'                         2.04-devel
+#   ${!PREFIX*}                         2.04-devel
+#   /dev/fd/*                           2.04-devel
+#   /dev/std{in,out,err}                2.04-devel
+#   /dev/{tcp,udp}/                     2.04-devel
+#   FUNCNAME                            2.04-devel
+#   set (reusable output)               2.05-beta1
+#   ERR trap                            2.05a-alpha1
+#   printf %x \'a                       2.05a-alpha1
+#   $'\cg'                              2.05b-alpha1
+#   ((intmax_t))                        2.05b-alpha1
+#   <<<                                 2.05b-alpha1
+#   TMOUT                               2.05b-alpha1
+#   [:class:]                           2.05b-alpha1
+#   [n]<&word- [n]>&word-               2.05b-alpha1
+#   multibyte char support              2.05b-alpha1
+#   read -u fd                          2.05b-alpha1
+#   type -P                             2.05b-alpha1
+#   ${!ARRAY[@]}                        3.0-alpha
+#   BASH_REMATCH                        3.0-alpha
+#   BASH_SOURCE                         3.0-alpha
+#   COMP_WORDBREAKS                     3.0-alpha
+#   HISTTIMEFORMAT                      3.0-alpha
+#   RETURN trap                         3.0-alpha
+#   [[ =~ ]]                            3.0-alpha
+#   caller                              3.0-alpha
+#   {1..10}                             3.0-alpha
+#   {x..y}                              3.0-alpha
+#   +=                                  3.1-alpha1
+#   printf -v var                       3.1-alpha1
+#   shopt -s nocasematch                3.1-alpha1
+#   [[ 2stars =~ '**' ]]                3.2-alpha
+#   ${@:0:x} includes $0                4.0-alpha
+#   &>>                                 4.0-alpha
+#   BASHPID                             4.0-alpha
+#   PROMPT_DIRTRIM                      4.0-alpha
+#   ary[key]                            4.0-alpha
+#   case ;;& and ;&                     4.0-alpha
+#   command_not_found_handle()          4.0-alpha
+#   coproc                              4.0-alpha
+#   declare -[lu]                       4.0-alpha
+#   mapfile                             4.0-alpha
+#   read -t 0.1                         4.0-alpha
+#   shopt -s autocd                     4.0-alpha
+#   shopt -s checkjobs                  4.0-alpha
+#   shopt -s dirspell                   4.0-alpha
+#   shopt -s globstar (**/*)            4.0-alpha
+#   {0x..0y}                            4.0-alpha
+#   |&                                  4.0-alpha
+#   ACL perm support                    4.1-alpha
+#   BASHOPTS                            4.1-alpha
+#   BASH_XTRACEFD                       4.1-alpha
+#   [[ < ]] with LOCALE                 4.1-alpha
+#   [[ ]] (( )) trigger ERR             4.1-alpha
+#   printf -v ary[var]                  4.1-alpha
+#   {named} file descriptors            4.1-alpha
+# -------------------------------------------------
+#   $'\unnnn[nnnn]'                     4.2-alpha
+#   ${var:0:-1}                         4.2-alpha
+#   FUNCNEST                            4.2-alpha
+#   ary[-1]                             4.2-alpha
+#   declare -g GLOBAL                   4.2-alpha
+#   printf %(%Y-%m-%d)T                 4.2-alpha
+#   test -v, [ -v ], [[ -v ]]           4.2-alpha
+#
+# http://tiswww.case.edu/php/chet/bash/CHANGES
+# http://wiki.bash-hackers.org/scripting/bashchanges
+#
+if test "${BASH_VERSINFO[0]}" -lt 4 || {
+   test "${BASH_VERSINFO[0]}" -eq 4 &&
+   test "${BASH_VERSINFO[1]}" -lt 1; }; then
+    # Load a minimal bash environment
+    . ~/.bashrc.d/minimal.bash
+    return
+fi
+
+# Clear any extant aliases
+unalias -a
+
+# Load init functions
+. ~/.bashrc.d/functions.bash
+
+# Check shell init files before continuing
+require ~/.bashrc.d/check-init-files.bash
+
+
+### SHELL CONFIGURATION ###
+
+# Set POSIX and Bash shell options
+require ~/.bashrc.d/options.bash
+
+# Set prompts
+require ~/.bashrc.d/prompts.bash
+
+# Variables, aliases, and functions
+# require ~/.bashrc.d/local.bash
+
+
+### CLEANUP ###
+
+require ~/.bashrc.d/greet.bash
+__CLEANUP__
+trap - ERR
