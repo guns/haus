@@ -2,7 +2,6 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-verbose false
 task :default => :configure
 
 desc 'Configure Ruby'
@@ -36,6 +35,5 @@ task :configure do
     end
   end
 
-  puts cmd.join(' ')
-  system *cmd
+  sh *cmd
 end
