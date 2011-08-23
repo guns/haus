@@ -5,15 +5,14 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'nervutils'
+load File.expand_path('../../lib/haus/logger.rb', __FILE__)
 require 'optparse'
 
 class Mem
-  include NervUtils
-
   def initialize(args = [])
     @args = args
     @opts = {}
+    @logger = Haus::Logger.new
   end
 
   def options
@@ -31,7 +30,7 @@ class Mem
       end
 
       opt.on('-W', '--total-width', 'Set output to terminal width') do
-        @opts[:width] = Terminal.cols || 80
+        @opts[:width] = (ENV['COLUMNS'] || 80).to_i
       end
 
       opt.on_tail('-h', '--help') { puts opt.to_s; exit }
@@ -101,7 +100,7 @@ class Mem
     buf  = ''
     mbuf = "Mem [%s] #{mem[:used]}/#{mem[:total]} MB"
     sbuf = "Swp [%s] #{mem[:swap][:used]}/#{mem[:swap][:total]} MB"
-    cols = @opts[:width] || Terminal.cols || 80
+    cols = @opts[:width] || (ENV['COLUMNS'] || (%x(stty size).scan(/\d+/).last rescue nil) || 80).to_i
     glen = natural(cols - [mbuf.length, sbuf.length].max + 2)
 
     #
@@ -175,8 +174,6 @@ class Mem
     args = options.parse @args
     abort options.to_s unless args.empty?
     puts memgraph
-  rescue
-    abort $!.to_s, :red
   end
 
   private
@@ -188,9 +185,9 @@ class Mem
   def graph(fstr, glen, mtotal, ary)
     scale = glen.to_f / mtotal
     gbuf = ary.inject('') do |str, a|
-      str << color('|' * (a.shift * scale), *a)
+      str << @logger.fmt(['|' * (a.shift * scale), *a])
     end
-    gbuf << ' ' * natural(glen - uncolor(gbuf).length)
+    gbuf << ' ' * natural(glen - gbuf.gsub(/\e\[[\d;]*m/, '').length)
     fstr % gbuf
   end
 
@@ -203,7 +200,10 @@ class Mem
       tbuf << "%-#{left}s" % row.shift
       until row.empty?
         cell = row.shift
-        tbuf << color("%#{width}s" % cell.shift, *cell)
+        tbuf << case cell.size
+        when 1 then "%#{width}s" % cell.shift.to_s
+        else @logger.fmt(["%#{width}s" % cell.shift, *cell])
+        end
       end
       tbuf << "\n"
     end

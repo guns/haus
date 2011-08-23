@@ -6,19 +6,18 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'nervutils'
+load File.expand_path('../../lib/haus/logger.rb', __FILE__)
 require 'optparse'
 require 'uri'
 require 'find'
 require 'osx/cocoa'
 
 class ITunesFilter
-  include NervUtils
-
   def initialize args = []
     @args         = args
     @library_file = /\/?iTunes( Music)? Library\.xml\z/
     @ignore       = /\/?(\.iTunes Preferences\.plist|\.DS_Store)\z/
+    @logger       = Haus::Logger.new $stderr
   end
 
   def options
@@ -80,7 +79,7 @@ class ITunesFilter
     $stderr.print "Building file list for #{dir}... "
     Find.find(dir) { |f| media << f if File.file? f }
     media.reject! { |f| f =~ @ignore }
-    warn "#{media.size} found", :green
+    @logger.log ["#{media.size} found", :green]
 
     [dir, media.sort]
   end
@@ -88,7 +87,7 @@ class ITunesFilter
   def itunes_library file
     $stderr.print "Parsing #{file}... "
     plist = OSX.load_plist File.read(file)
-    warn "OK", :green
+    @logger.log ["OK", :green]
 
     list = []
 
@@ -96,7 +95,7 @@ class ITunesFilter
     plist['Tracks'].each do |id, data|
       list << URI.unescape(URI.parse(data['Location']).path)
     end
-    warn "#{list.size} found", :green
+    @logger.log ["#{list.size} found", :green]
 
     list.sort
   end
@@ -118,14 +117,10 @@ class ITunesFilter
     # diff the diffs, except with the slower casecmp algorithm
     missing_in_media = idiff lm, ml
     not_in_library   = idiff ml, lm
-    warn 'OK', :green
+    @logger.log ['OK', :green]
 
-    coloropts :io => $stderr
-    warn '%s tracks from the library are missing from %s' %
-         [color(missing_in_media.size, :red), color(media_dir, :green)]
-    warn "%s files in %s are not being tracked in the library.\n" %
-         [color(not_in_library.size, :red), color(media_dir, :green)]
-    coloropts :io => $stdout
+    @logger.log [missing_in_media.size.to_s, :red], ' tracks from the library are missing from ', [media_dir, :green]
+    @logger.log [not_in_library.size.to_s, :red], " files in ", [media_dir, :green], " are not being tracked in the library.\n"
 
     puts "# Missing tracks (#{missing_in_media.size}):"
     puts missing_in_media.join("\n") unless missing_in_media.empty?
@@ -149,10 +144,6 @@ class ITunesFilter
 
     # print the lists
     results library, media, media_dir
-  rescue Interrupt
-    raise Interrupt, color('Abort!', :red), File.basename($0)
-  rescue
-    abort $!.to_s, :red
   end
 end
 

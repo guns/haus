@@ -5,12 +5,9 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'nervutils'
 require 'optparse'
 
 class Plookup
-  include NervUtils
-
   def initialize(args = [])
     @args     = args
     @services = %W[/etc/services]
@@ -61,8 +58,6 @@ class Plookup
         print buf.grep(Regexp.new(arg, @opts[:ignore_case])).join
       end
     end
-  rescue
-    abort $!.to_s, :red
   end
 end
 

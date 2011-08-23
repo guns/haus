@@ -5,17 +5,17 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'nervutils'
+load File.expand_path('../../lib/haus/logger.rb', __FILE__)
 require 'fileutils'
 require 'optparse'
 require 'find'
 
 class Fixperm
-  include NervUtils
   include FileUtils
 
   def initialize args = []
     @args, @opts = args, {}
+    @logger = Haus::Logger.new
   end
 
   def options
@@ -47,7 +47,7 @@ class Fixperm
   def normalize file, expect = '', *styles
     mode = File.stat(file).mode.to_s(8)[/.{4}$/]
     return true if mode == expect
-    puts "chmod #{mode} -> #{expect} on #{color file, *styles}"
+    @logger.log "chmod #{mode} -> #{expect} on ", [file, *styles]
     chmod expect.to_i(8), file
   end
 
@@ -58,7 +58,7 @@ class Fixperm
         when 'directory'  then normalize f, '0755', :blue, :bold
         when 'file'       then normalize f, '0644'
         else
-          puts "Skipping #{ftype} #{f}", :magenta, :bold
+          @logger.log "Skipping #{ftype} ", [f, :magenta, :bold]
         end
 
         # Move to next file if not traversing directories
