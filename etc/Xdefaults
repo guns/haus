@@ -43,13 +43,13 @@ URxvt.keysym.Mod4-Left:       list:\033\040\007:dacb:
 URxvt.keysym.Mod4-Shift-Left: list:\033\040\007:DACB:
 
 ! Perl extensions
-URxvt.perl-ext-common: selection,readline,clipboard,keyboard-select,url-select
-URxvt.keysym.Mod4-c:   perl:clipboard:copy
-URxvt.keysym.Mod4-v:   perl:clipboard:paste
-URxvt.keysym.M-s:      perl:keyboard-select:activate
-URxvt.keysym.M-u:      perl:url-select:select_next
-URxvt.urlLauncher:     open
-URxvt.urlButton:       3
+URxvt.perl-ext-common:    selection,readline,clipboard,keyboard-select,url-select
+URxvt.keysym.Mod4-c:      perl:clipboard:copy
+URxvt.keysym.Mod4-v:      perl:clipboard:paste
+URxvt.keysym.Mod4-Meta-i: perl:keyboard-select:activate
+URxvt.keysym.Mod4-Meta-u: perl:url-select:select_next
+URxvt.urlLauncher:        open
+URxvt.urlButton:          3
 
 
 !!! XTERM
