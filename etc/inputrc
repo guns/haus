@@ -24,12 +24,21 @@ set visible-stats on
 # http://www.shallowsky.com/blog/linux/bash-word-erase.html
 set bind-tty-special-chars off
 
+# Smarter inword completions
+set skip-completed-text on
+
 
 ### Global Macros ###
 
-# unix-word-rubout breaks on \S, backward-kill-word on \W
+# `unix-word-rubout` breaks on \S
+# `backward-kill-word` breaks on \W
+# `shell-backward-kill-word` breaks on shell metacharacters
 "\C-w":         backward-kill-word
+
+# \C-] defaults to `character-search`
 "\C-]":         kill-whole-line
+"\eF":          character-search
+"\eB":          character-search-backward
 
 # Unicode characters
 "\e*":          "°"
@@ -45,11 +54,9 @@ set bind-tty-special-chars off
 ### Application Macros ###
 
 $if Bash
-    # Reload Xdefaults and xset settings instead of reloading this file
-    "\C-x\C-r":     "\C-] xreload \n"
-
-    # Exchange `exchange-point-and-mark' with reloading the shell
+    # Exchange `exchange-point-and-mark` with reloading the shell
     "\C-x\C-x":     "\C-] exec $SHELL \n"
+    "\C-xr":        "\C-] xreload \n"
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
@@ -57,21 +64,51 @@ $if Bash
     "\C-x2":        " 2>/dev/null "
     "\C-x3":        " 2>&1 "
 
+    # Directories
+    "\C-x\C-a":     "\C-] cdapi \n"
+    "\C-xa":        "\C-]cdapi "
+    "\C-x\C-b":     "\C-] cdbrew \n"
+    "\C-xb":        "\C-]cdbrew "
+    "\C-x\C-d":     "\C-] cddownloads \n"
+    "\C-xd":        "\C-]cddownloads "
+    "\C-x\C-h":     "\C-] cdhaus \n"
+    "\C-xh":        "\C-]cdhaus "
+    "\C-x\C-l":     "\C-] cdlocal \n"
+    "\C-xl":        "\C-]cdlocal "
+    "\C-x\C-n":     "\C-] cdnginx \n"
+    "\C-xn":        "\C-]cdnginx "
+    "\C-x\C-v":     "\C-] cdvar \n"
+    "\C-xv":        "\C-]cdvar "
+    "\C-x\C-w":     "\C-] cdwww \n"
+    "\C-xw":        "\C-]cdwww "
+    "\C-x\C-_":     "\C-] cd - \n"
+    "\C-xo":        "\C-]cdopt "
+    "\C-xs":        "\C-]cdsrc "
+
+    # Job control
+    "\C-xp":        "\C-] pushd . \n"
+    "\C-x\C-p":     "\C-] popd \n"
+    "\C-x\C-f":     "\C-] fg \n"
+    "\C-x\C-b":     "\C-] bg \n"
+
     # Repurpose editor macro to open frequently edited files
     "\C-x\C-e":     "\C-] vim \n"
     "\C-xe ":       "\C-]vim "
     "\C-xea":       "\C-] vimautocommands \n"
+    "\C-xeb":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
+    "\C-xel":       "\C-] vimlocalbash \n"
     "\C-xem":       "\C-] vimmappings \n"
+    "\C-xen":       "\C-] vimnginx \n"
     "\C-xeo":       "\C-] vimorg \n"
-    "\C-xep":       "\C-] vimprofile \n"
     "\C-xes":       "\C-] vimscratch \n"
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xf":        "\C-]vimfind "
+    "\C-x\C-g":     "\C-] vimgit \n"
+    "\C-xm":        "\C-]man "
 
     # Git shortcuts
-    "\C-x\C-g":     "\C-] vimgit \n"
     "\C-xg ":       "\C-]git "
     "\C-xg%":       "\C-]git di "
     "\C-xgaa":      "\C-] git aa \n"
@@ -90,25 +127,6 @@ $if Bash
     "\C-x\C-t":     "\C-] tmuxinit \n"
     "\C-xt ":       "\C-]tmux "
     "\C-xtc":       "\C-] tmuxchdir \n"
-
-    # Directories
-    "\C-x\C-_":     "\C-] cd - \n"
-    "\C-x\C-n":     "\C-] cdnerv \n"
-    "\C-xn":        "\C-]cdnerv "
-    "\C-xL":        "\C-] cdlocal \n"
-    "\C-xl":        "\C-]cdlocal "
-    "\C-xS":        "\C-] cdsrc \n"
-    "\C-xs":        "\C-]cdsrc "
-    "\C-xO":        "\C-] cdopt \n"
-    "\C-xo":        "\C-]cdopt "
-
-    # Directories and Job control
-    "\C-x\C-p":     "\C-] popd \n"
-    "\C-x\C-f":     "\C-] fg \n"
-    "\C-x\C-b":     "\C-] bg \n"
-
-    # Man
-    "\C-xm":        "\C-]man "
 $endif
 
 
