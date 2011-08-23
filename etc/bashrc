@@ -124,26 +124,39 @@ fi
 unalias -a
 
 # Load init functions
-. ~/.bashrc.d/functions.bash
+source ~/.bashrc.d/functions.bash
 
-# Check shell init files before continuing
-require ~/.bashrc.d/check-init-files.bash
+# Check shell init files before proceeding
+REQUIRE ~/.bashrc.d/check-init-files.bash
 
 
 ### SHELL CONFIGURATION ###
 
 # Set POSIX and Bash shell options
-require ~/.bashrc.d/options.bash
+REQUIRE ~/.bashrc.d/options.bash
 
 # Set prompts
-require ~/.bashrc.d/prompts.bash
+REQUIRE ~/.bashrc.d/prompts.bash
 
-# Variables, aliases, and functions
-# require ~/.bashrc.d/local.bash
+# Load completions
+BASH_COMPLETION_DIRS=(
+    /usr/local/etc/bash_completion.d
+    /etc/bash_completion.d
+    /opt/brew/etc/bash_completion.d
+    ~/.bash_completion.d
+); REQUIRE ~/.bash_completion
+
+# Load functions, aliases, and variables
+REQUIRE ~/.bashrc.d/local.bash
 
 
-### CLEANUP ###
+### DENOUEMENT ###
 
-require ~/.bashrc.d/greet.bash
-__CLEANUP__
-trap - ERR
+# One last check
+CHECK_SECLIST
+
+# Greets
+REQUIRE ~/.bashrc.d/greet.bash
+
+# Cleanup
+CLEANUP

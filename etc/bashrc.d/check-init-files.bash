@@ -1,17 +1,17 @@
 ### SHELL INITIALIZATION FILES PERMISSIONS TEST ###
 
 SECLIST+=(
-    /etc/profile                        # System shell init
+    /etc/profile                        # System POSIX init
     /etc/bash.bashrc                    # System interactive bash init
-    /etc/bash.bash.logout               # System bash logout file
-    /etc/inputrc                        # System readline settings
-    ~/.bash_profile                     # Bash login init file: 1st
-    ~/.bash_login                       # Bash login init file: 2nd
-    ~/.profile                          # Shell login init file: 3rd
-    ~/.bashrc                           # Bash interactive init file
-    ~/.bash_logout                      # Bash logout file
-    ~/.inputrc                          # User readline settings
-    "$INPUTRC"                          # ENV readline override
+    /etc/bash.bash.logout               # System bash logout
+    /etc/inputrc                        # System readline
+    ~/.bash_profile                     # Bash login init (1)
+    ~/.bash_login                       # Bash login init (2)
+    ~/.profile                          # POSIX login init (3)
+    ~/.bashrc                           # Bash interactive init
+    ~/.bash_logout                      # Bash logout
+    ~/.inputrc                          # User readline
+    "$INPUTRC"                          # Readline override
     "$BASH_ENV"                         # Bash init override
-    "$ENV"                              # POSIX Bash init override
+    "$ENV"                              # POSIX init override
 ); CHECK_SECLIST

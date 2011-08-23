@@ -10,9 +10,9 @@ GREETINGS() {
     else                                 color='35' # evening
     fi
 
-    echo -e "\n\e[1;38;5;$((RANDOM % 256))mGNU Bash\e[0;3m ($BASH_VERSION)\e[0m ♣ \e[1;${color}m$time\e[0m\n"
+    echo -e "\n\e[1;32mGNU Bash\e[0;3m ($BASH_VERSION)\e[0m ♣ \e[1;${color}m$time\e[0m\n"
 
-    if (($EUID)) && type fortune &>/dev/null; then
+    if ((EUID)) && type fortune &>/dev/null; then
         fortune && echo
     fi
 }

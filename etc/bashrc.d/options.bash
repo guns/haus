@@ -51,7 +51,6 @@ shopt -s dotglob                        # Glob filenames with leading dot
 shopt -s expand_aliases                 # Enable aliasing
 shopt -s extglob                        # Enable [?*+@!]() pattern matching
 shopt -s extquote                       # Allow $'' and $"" in "${var}" expansions
-shopt -s failglob                       # Notify on filename expansion error
 shopt -s force_fignore                  # Always ignore FIGNORE
 shopt -s globstar                       # Allow recursive glob with **
 shopt -s histappend                     # Append, don't clobber history file
@@ -73,6 +72,7 @@ shopt -u compat40                       # Revert to 4.0 behavior of interrupting
 shopt -u compat41                       # Use funky POSIX rules regarding "''"
 shopt -u execfail                       # Do not exit if exec fails
 shopt -u extdebug                       # Extended debug mode
+shopt -u failglob                       # Notify on filename expansion error
 shopt -u gnu_errfmt                     # Use standard GNU error format
 shopt -u huponexit                      # Send SIGHUP to all jobs on exit
 shopt -u lastpipe                       # Run last command of pipeline in current shell
@@ -80,6 +80,6 @@ shopt -u lithist                        # Save history in multi-line format
 shopt -u nocaseglob                     # Case insensitive path globbing
 shopt -u nocasematch                    # Case insensitive `case` or `[[`
 shopt -u nullglob                       # Failed globs expand to null strings
-#shopt -u restricted_shell
+#shopt -u restricted_shell              # DO NOT SET HERE!
 shopt -u shift_verbose                  # Whiny shift failures
 shopt -u xpg_echo                       # `echo -e` by default
