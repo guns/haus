@@ -1,0 +1,43 @@
+# bash completion for ntpdate
+
+have ntpdate || return
+
+_ntpdate()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    case $prev in
+        -k)
+            _filedir
+            return 0
+            ;;
+        -U)
+            COMPREPLY=( $( compgen -u "$cur" ) )
+            return 0
+            ;;
+        -p)
+            COMPREPLY=( $( compgen -W '{1..8}' -- "$cur" ) )
+            return 0
+            ;;
+            
+        -a|-e|-o|-t)
+            return 0
+            ;;
+    esac
+
+    if [[ "$cur" == -* ]]; then
+        COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
+    else
+        _known_hosts_real "$cur"
+    fi
+} &&
+complete -F _ntpdate ntpdate
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh
