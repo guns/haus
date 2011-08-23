@@ -58,10 +58,12 @@ snoremap <C-c> <Esc><C-c>
 noremap! <C-b> <Left>
 noremap! <C-f> <Right>
 
-" word left/right
+" Word movement, character search
 Mapall   <M-b> <C-o> b
+Mapall   <M-B> <C-o> F
 cnoremap <M-b> <S-Left>
 Mapall   <M-f> <C-o> w
+Mapall   <M-F> <C-o> f
 cnoremap <M-f> <S-Right>
 
 " bol/eol
@@ -113,7 +115,6 @@ cnoremap <Down> <Down>
 
 " -- ;
 noremap ;          :
-noremap q;         q:
 Mapall  <4-;>      q:
 noremap /          /\v
 noremap ?          ?\v
@@ -142,7 +143,7 @@ noremap <Leader>sw<Space> :SetWhitespace<Space>
 noremap <Leader>~     :setlocal spell!<CR>:setlocal spell?<CR>
 noremap <Leader>sa?   :SetAutowrap<CR>
 noremap <Leader><C-a> :SetAutowrap!<CR>
-noremap <Leader><C-d> :setlocal scrollbind!<CR>:setlocal scrollbind?<CR>
+noremap <Leader><C-b> :setlocal scrollbind!<CR>:setlocal scrollbind?<CR>
 noremap <Leader><C-e> :set expandtab!<CR>:set expandtab?<CR>
 noremap <Leader><C-h> :set hlsearch!<CR>:set hlsearch?<CR>
 noremap <Leader><C-l> :setlocal list!<CR>:setlocal list?<CR>
@@ -260,15 +261,17 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 " Open Files
 noremap <Leader>e<Space> :tabedit<Space>
 noremap <Leader>ee       :edit<Space>
-noremap <Leader>ev       :execute 'tabedit ' . resolve(expand($MYVIMRC))<CR>
-noremap <Leader>ea       :execute 'tabedit ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
-noremap <Leader>ec       :execute 'tabedit ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
-noremap <Leader>em       :execute 'tabedit ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
-noremap <Leader>ep       :execute 'tabedit ' . resolve(expand('~/.nerv_profile'))<CR>
+noremap <Leader>ea       :execute 'tabedit ' . expand('~/.vim/local/autocommands.vim')<CR>
+noremap <Leader>eb       :execute 'tabedit ' . expand('~/.bashrc')<CR>
+noremap <Leader>ec       :execute 'tabedit ' . expand('~/.vim/local/commands.vim')<CR>
+noremap <Leader>el       :execute 'tabedit ' . expand('~/.bashrc.d/local.bash')<CR>
+noremap <Leader>em       :execute 'tabedit ' . expand('~/.vim/local/mappings.vim')<CR>
+noremap <Leader>en       :execute 'tabedit /opt/nginx/etc/nginx.conf'<CR>
+noremap <Leader>eo       :Org<CR>
 noremap <Leader>es       :tabnew<CR>:Scratch<CR>
 noremap <Leader>eS       :vnew<CR>:wincmd L<CR>:Scratch<CR>
-noremap <Leader>eo       :Org<CR>
 noremap <Leader>et       :Org TODO<CR>
+noremap <Leader>ev       :execute 'tabedit ' . expand($MYVIMRC)<CR>
 
 " Set Filetypes
 noremap <Leader>f<Space> :setlocal filetype=
@@ -321,16 +324,19 @@ noremap! <M-*> °
 noremap! >   →
 noremap! <   ←
 
-" Add numbers in selection
-" -- +
-vnoremap + "ey:ruby
-    \ e = VIM.evaluate('@e').scan(/(\d+(\.\d+)?)/).flatten.map(&:to_f).inject(:+);
-    \ VIM.command("let @e = '#{e}'");
-    \ print e<CR>
+" Character macros
+noremap  <M-CR> i\n<Esc><Right>
+noremap! <M-CR> \n
+noremap  <4-CR> A;<Esc>
+noremap! <4-CR> <C-o>A;
 
 " Center on next match
 nnoremap n nzz
 nnoremap N Nzz
+
+" Change case
+Mapall <M-u> <C-o> guWW
+Mapall <M-U> <C-o> gUWW
 
 " Join lines
 Mapall <Leader><C-j> <C-o> J
@@ -341,13 +347,7 @@ noremap <4-a> maggVG
 " Kill trailing whitespace
 noremap <Leader><C-k> :let b:_reg_slash = @/<CR>m`:%s/[ \t\r]\+$//e<CR>:let @/ = b:_reg_slash<CR>``
 
-" Insert common characters
-noremap  <M-CR> i\n<Esc><Right>
-noremap! <M-CR> \n
-noremap  <4-CR> A;<Esc>
-noremap! <4-CR> <C-o>A;
-
-" hashrocket
+" Hashrocket
 noremap! <C-l> <Space>=><Space>
 
 " Indent lines a la TextMate
@@ -369,6 +369,13 @@ vnoremap <M-k> :m-2<CR>gv=gv
 " http://vim.wikia.com/wiki/Drag_words_with_Ctrl-left/right
 vnoremap <M-h> <Esc>`<<Left>i_<Esc>mz"_xgvx`zPgv<Left>o<Left>o
 vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
+
+" Add numbers in selection
+" -- +
+vnoremap + "ey:ruby
+    \ e = VIM.evaluate('@e').scan(/(\d+(\.\d+)?)/).flatten.map(&:to_f).inject(:+);
+    \ VIM.command("let @e = '#{e}'");
+    \ print e<CR>
 
 " Plugin: surround.vim - visual surround shortcuts (a la TextMate)
 " -- ( '

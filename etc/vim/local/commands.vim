@@ -229,7 +229,7 @@ function! <SID>Org(bang, ...)
 endfunction
 
 
-" A sometimes useful command for interleaving lines of a diff {{{1
+" A sometimes useful command for interleaving an even number of lines {{{1
 command! -range Interleave
     \ '<,'>! ruby -e 'l = STDIN.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
 
