@@ -449,6 +449,7 @@ ALIAS free='free -m'
 
 # Plist dumper
 ALIAS plistbuddy='/usr/libexec/PlistBuddy' && {
+    plistprint='plistbuddy -c Print'
     appvers() {
         while (($#)); do
             local base="$1"
