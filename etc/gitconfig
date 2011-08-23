@@ -113,9 +113,9 @@
     fps  = format-patch --stdout
 
     # remote
-    r      = remote -v
-    up     = remote update
-    sclone = clone --depth=1
+    r            = remote -v
+    up           = remote update
+    shallowclone = clone --depth=1
 
     # stash
     sta     = stash
