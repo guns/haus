@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+require 'rubygems'
+require 'sdoc'
+
+class Genapi
+  def initialize args = [], opts = {}
+    @args = args.freeze
+    @opts = opts
+    @opts[:apidir] ||= ENV['cdapi']
+    @sdoc = RDoc::RDoc.new
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} [options] dir ...
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-j', '--jobs N', '--threads N', Integer do |arg|
+        @opts[:jobs] = arg
+      end
+
+      opt.on '-t', '--title TITLE' do |arg|
+        @opts[:title] = arg
+      end
+
+      opt.on '-o', '--outdir DIR' do |arg|
+        @opts[:outdir] = File.expand_path arg
+      end
+
+      opt.on '-f', '--force' do
+        @opts[:force] = true
+      end
+    end
+  end
+
+  def generate dirs
+    dirs.each do |dir|
+      Dir.chdir dir do
+        project  = File.basename Dir.pwd
+        title    = @opts[:title] || project
+        main     = Dir['*'].grep(%r/\AREADME(\..+)?\z/i).first
+        outdir   = @opts[:outdir]
+        outdir ||= if @opts[:apidir]
+          File.join @opts[:apidir], (project[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || project)
+        else
+          abort 'API dir not set! Set environment variable `$cdapi` or specify `--outdir`'
+        end
+
+        if File.directory? outdir
+          @opts[:force] ? FileUtils.rm_rf(outdir) : abort("#{outdir.inspect} already exists!")
+        end
+
+        args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
+        args.push "--main=#{main}" if main
+        args.push "--threads=#{@opts[:jobs]}" if @opts[:jobs]
+
+        puts 'Generating with `%s`' % args.join(' ')
+        @sdoc.document args
+      end
+    end
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.size.zero?
+    generate args
+  end
+end
+
+$0 = 'genapi' and Genapi.new(ARGV).run if $0 == __FILE__
