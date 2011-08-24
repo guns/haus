@@ -47,7 +47,8 @@ module IRBHelper
 
   def pp *args
     require 'pp'
-    super; nil
+    super
+    nil
   end
 
   def ap *args
@@ -70,6 +71,34 @@ module IRBHelper
     Benchmark.bm do |test|
       test.report { n.times &block }
     end; nil
+  end
+
+  # Toggle number inspect style
+  def toggle_verbose_numbers
+    Integer.module_eval do
+      class << self
+        attr_accessor :verbose_inspect
+      end
+
+      if self.verbose_inspect = !verbose_inspect
+        alias_method :native_inspect, :inspect
+        def inspect
+          lines = ['', '']
+
+          [%w[%-d dec], %w[%08b bin], %w[0%03o oct], %w[0x%02x hex]].each do |fmt, label|
+            str = fmt % self
+            len = [str, label].map(&:length).max + 1
+            lines[0] << "%-#{len}s" % label
+            lines[1] << "%-#{len}s" % str
+          end
+
+          lines.join "\n"
+        end
+      else
+        remove_method :inspect
+        alias_method :inspect, :native_inspect
+      end
+    end
   end
 end
 
