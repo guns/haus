@@ -32,6 +32,8 @@ augroup GUNS
     " Shell
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
         \ setlocal filetype=sh
+    autocmd FileType sh
+        \ setlocal iskeyword+=-
 
     " Lisp
     autocmd Filetype lisp,scheme
@@ -136,7 +138,7 @@ augroup GUNS
         \ SetAutowrap on
 
     " tmux
-    autocmd BufRead,BufNewFile *.tmux.conf
+    autocmd BufRead,BufNewFile *tmux.conf
         \ setlocal filetype=tmux |
         \ SetWhitespace 4
 
@@ -183,6 +185,7 @@ augroup GUNS
 
     " vim-orgmode
     autocmd FileType org
+        \ setlocal foldlevel=0 |
         \ SetWhitespace 2 8
 
 augroup END
