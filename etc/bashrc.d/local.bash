@@ -73,7 +73,7 @@ if __OSX__; then
 fi
 
 
-### Meta
+### Meta Utility Functions
 
 # List all defined functions
 showfunctions() { set | grep '^[^ ]* ()'; }
@@ -84,6 +84,9 @@ tcomp() { eval $({ complete -p "$1" || echo :; } 2>/dev/null) "$2"; }
 # Verbose execution
 run()   { echo >&2 -e "\e[1;32m$*\e[0m"; "$@"; };                            tcomp exec run
 bgrun() { echo >&2 -e "\e[1;33m$* &>/dev/null &\e[0m"; "$@" &>/dev/null & }; tcomp exec bgrun
+
+# Chop lines to $COLUMNS
+choplines() { ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'"; }
 
 # Return absolute path
 expand_path() { ruby -e 'print File.expand_path(ARGV.first)' "$1"; }
@@ -114,16 +117,6 @@ __prepend_path__() {
 path()    { __prepend_path__ PATH "$@"; }
 rubylib() { __prepend_path__ RUBYLIB "$@"; }
 gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
-
-# Toggle history
-nohist() {
-    if [[ "$SHELLOPTS" =~ :?history:? ]]; then
-        set +o history
-    else
-        set -o history
-    fi
-    __PS1TOGGLE__ '/\\w/\\w [nohist]'
-}
 
 
 ### Directories and Init scripts
@@ -166,11 +159,30 @@ alias o='echo'
 alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
-ALIAS t='type'
-ALIAS ta='type -a'
-ALIAS tp='type -P'
+t() { type "$@"; }; tcomp type t
+ALIAS ta='t -a' \
+      tp='t -P'
 ALIAS x='exec'
 alias wrld='while read l; do'; tcomp exec wrld
+
+# Toggle xtrace mode
+setx() {
+    if [[ "$SHELLOPTS" =~ :?xtrace:? ]]; then
+        set +x
+    else
+        set -x
+    fi
+}
+
+# Toggle history
+nohist() {
+    if [[ "$SHELLOPTS" =~ :?history:? ]]; then
+        set +o history
+    else
+        set -o history
+    fi
+    __PS1TOGGLE__ '/\\w/\\w [nohist]'
+}
 
 # report remind
 ALIAS r='report'
@@ -193,11 +205,29 @@ alias g3='g -C3'
 alias gv='g -v'
 alias wcl='grep -c .'
 
+# cat less tail
+alias c='cat'
+alias l='less'
+alias L='l +S' # Soft-wrap
+alias lf='l +F' # Follow-forever
+ALIAS tf='tail -f'
+# Logfiles
+if [[ -r /var/log/system.log ]]; then
+    ALIAS tfsystem='tf /var/log/system.log'
+    alias lfsystem='lf /var/log/system.log'
+fi
+if [[ -r /var/log/everything.log ]]; then
+    ALIAS tfeverything='tf /var/log/everything.log'
+    alias lfeverything='lf /var/log/everything.log'
+fi
+# An eager-to-exit `less`
+pager() { less -+c --quit-if-one-screen "$@"; }
+
 # ls
 alias ls="ls -Ahl $GNU_COLOR_OPT"
 alias lc='ls -C'
-alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | less; }
-alias lst='ls -t'; lstl() { ls -t "${@:-.}" | less; }
+alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
+alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
 alias l1='ls -1'
 alias l1g='l1 | g'
 alias lsg='ls | g'
@@ -218,24 +248,9 @@ ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsd() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 
-# cat less tail
-alias c='cat'
-alias l='less'
-alias L='less +S' # Softwrap
-alias lf='less +F' # Follow-forever
-ALIAS tf='tail -f'
-if [[ -r /var/log/system.log ]]; then
-    ALIAS tfsystem='tf /var/log/system.log'
-    alias lfsystem='lf /var/log/system.log'
-fi
-if [[ -r /var/log/everything.log ]]; then
-    ALIAS tfeverything='tf /var/log/everything.log'
-    alias lfeverything='lf /var/log/everything.log'
-fi
-
 # hexdump strings hexfiend
-ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | less; }
-ALIAS strings='strings -t x -' && lstrings() { strings -t x - "$@" | less; }
+ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
+ALIAS strings='strings -t x -' && lstrings() { strings -t x - "$@" | pager; }
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
@@ -534,10 +549,10 @@ elif ps ax kpid &>/dev/null; then
     alias __psr__='psa k-cpu'
     alias __psm__='psa k-rss'
 fi
-psr() { __psr__ | ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'; exit if \$. > $LINES-2"; }
-psm() { __psm__ | ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'; exit if \$. > $LINES-2"; }
-alias psrl='__psr__ | less'
-alias psml='__psm__ | less'
+psr() { __psr__ | choplines | sed "$((LINES-2))"q; }
+psm() { __psm__ | choplines | sed "$((LINES-2))"q; }
+alias psrl='__psr__ | pager'
+alias psml='__psm__ | pager'
 
 # Report on interesting daemons
 daemons() {
@@ -607,10 +622,12 @@ ALIAS scp='scp -C -2' \
       scpr='scp -r'
 
 # lsof
-ALIAS lsif='lsof -Pni' && {
-      alias lsifudp='lsof -Pni | grep UDP'
-      alias lsiflisten='lsof -Pni | grep LISTEN'
-      alias lsifconnect='lsof -Pni | grep -- "->"'
+ALIAS lsof='lsof -Pn +fg' && {
+    alias lsif='lsof -i'
+    alias lsifudp='lsif | grep UDP'
+    alias lsiflisten='lsif | grep LISTEN'
+    alias lsifconnect='lsif | grep -- "->"'
+    alias lsuf='lsof -U'
 }
 
 # nmap
@@ -642,7 +659,7 @@ ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/
 # IPTables
 HAVE iptables && {
     ALIAS iptload='/etc/iptables/iptables.sh'
-    iptlist() { echo -e "$(iptables -L -v $*)\n\n### IPv6 ###\n\n$(ip6tables -L -v $* 2>/dev/null)" | $PAGER; }
+    iptlist() { echo -e "$(iptables -L -v $*)\n\n### IPv6 ###\n\n$(ip6tables -L -v $* 2>/dev/null)" | pager; }
     iptsave() {
         local ipt cmd
         for ipt in iptables ip6tables; do
@@ -949,7 +966,7 @@ HAVE sqlite3 && {
                 fi
                 echo "$sql"
             done
-        } 2>/dev/null | less
+        } 2>/dev/null | pager
     }
 }
 
@@ -1104,7 +1121,7 @@ HAVE xecho && {
 }
 
 HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 50; run xrdb ~/.Xdefaults'
+    alias xreload='run xset r rate 200 60; run xrdb ~/.Xdefaults'
 }
 
 # Subtle WM
