@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 
 #     ____     __                   __  _          ___       ___
 #    /  _/__  / /____ _______ _____/ /_(_)  _____ / _ \__ __/ _ )__ __
@@ -33,6 +34,11 @@ IRB.conf.merge!({
   :SAVE_HISTORY => 2**16,
   :USE_READLINE => true
 })
+
+
+### Aliases
+
+alias :λ :lambda unless defined? λ
 
 
 ### Helpers
