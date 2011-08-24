@@ -35,8 +35,19 @@ command ls ~ --color &>/dev/null && export GNU_COLOR_OPT='--color'
 grep -P . <<< . &>/dev/null      && export GREP_PCRE_OPT='-P'
 
 # Pager
-export PAGER='less'
-export LESS='--clear-screen --ignore-case --long-prompt --RAW-CONTROL-CHARS --chop-long-lines --tilde --shift 8'
+LESS_ARY=(
+    --clear-screen                      # Print buffer from top of screen
+    --dumb                              # Don't complain about terminfo errors
+    --ignore-case                       # Like vim ignorecase + smartcase
+    --no-lessopen                       # Ignore LESSOPEN preprocessor
+    --long-prompt                       # Show position percentage
+    --RAW-CONTROL-CHARS                 # Only interpret SGR escape sequences
+    --chop-long-lines                   # Disable soft wrapping
+    --no-init                           # Prevent use of alternate screen
+    --tilde                             # Do not show nonextant lines as `~`
+    --shift 8                           # Horizontal movement in columns
+); GC_VARS LESSARY
+export LESS="${LESS_ARY[@]}"
 export LESSSECURE=1                     # ++secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
 export LESS_TERMCAP_md=$'\e[37m'        # Begin bold
@@ -46,6 +57,7 @@ export LESS_TERMCAP_mb=$'\e[5m'         # Begin blink
 export LESS_TERMCAP_se=$'\e[0m'         # End standout-mode
 export LESS_TERMCAP_ue=$'\e[0m'         # End underline
 export LESS_TERMCAP_me=$'\e[0m'         # End mode
+export PAGER='less'                     # Should be a single word to avoid quoting problems
 
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
