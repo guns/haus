@@ -248,6 +248,7 @@ __lstype__() {
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsd() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
+lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
 
 # hexdump strings hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
@@ -651,6 +652,24 @@ HAVE networksetup && {
         fi
     }
 }
+
+# Metasploit Framework
+HAVE cdmetasploit && {
+    msf() {
+        if (($#)); then
+            local cmd="$cdmetasploit/msf$1"
+            [[ -x "$cmd" ]] || cmd="$cdmetasploit/$1"
+        else
+            local cmd="$cdmetasploit/msfconsole"
+        fi
+        run "$cmd"
+    }
+    _msf() {
+        local words="$(lsx "$cdmetasploit" | sed 's/^msf//')"
+        COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
+    }; complete -F _msf msf
+}
+
 
 # OS X Sync
 ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/resetsync.pl'
