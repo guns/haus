@@ -946,6 +946,21 @@ ALIAS perlpe='perl -pe' \
       perlpie='perl -i -pe'
 
 
+### Haskell
+
+# cabal package manager
+HAVE cabal && {
+    # alias cabale
+    alias cabalg='run cabal list installed'
+    alias cabali='run cabal install --global'
+    alias cabalq='run cabal info'
+    alias cabals='run cabal list'
+    alias cabalu='run ghc-pkg unregister'
+    alias cabalsync='run cabal update'
+    # alias cabaloutdated
+}
+
+
 ### Databases
 
 ALIAS mysql='mysql -p' \
