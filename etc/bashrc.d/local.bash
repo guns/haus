@@ -944,11 +944,13 @@ type ruby &>/dev/null && {
     }
 
     # Local api server @ `$cdapi`
-    api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
-    _api() {
-        local words="$(command ls -1 "$cdapi")"
-        COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
-    }; complete -F _api api
+    HAVE cdapi && {
+        api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
+        _api() {
+            local words="$(lsd "$cdapi")"
+            COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
+        }; complete -F _api api
+    }
 }
 
 
