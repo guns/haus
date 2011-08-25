@@ -97,6 +97,7 @@ $if Bash
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeb":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
+    "\C-xei":       "\C-] viminputrc \n"
     "\C-xel":       "\C-] vimlocalbash \n"
     "\C-xem":       "\C-] vimmappings \n"
     "\C-xen":       "\C-] vimnginx \n"

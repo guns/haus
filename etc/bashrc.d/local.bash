@@ -798,6 +798,7 @@ HAVE vim && {
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
+    alias viminputrc='(cdhaus && exec vim etc/inputrc)'
     alias vimlocalbash='(cdhaus && exec vim etc/bashrc.d/local.bash)'
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
