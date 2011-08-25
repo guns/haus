@@ -37,7 +37,6 @@ augroup GUNS
 
     " Lisp
     autocmd Filetype lisp,scheme
-        \ setlocal equalprg=~/.vim/bundle/scmindent/bin/lispindent.lisp |
         \ SetWhitespace 2 8
 
     " Ruby
@@ -47,6 +46,10 @@ augroup GUNS
         \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |
         \ execute 'noremap <buffer> <Leader><C-b> :B<CR>' |
         \ SetWhitespace 2 8
+    " Metasploit doesn't follow community conventions
+    autocmd BufRead,BufNewFile $cdmetasploit/*
+        \ setlocal noexpandtab |
+        \ SetWhitespace 4
 
     " Python
     autocmd FileType python
@@ -194,17 +197,17 @@ augroup END
 augroup ScreenShellEnter
     autocmd!
     autocmd User *
-        \ execute 'vmap <Leader><Leader> :ScreenSend<CR>' |
-        \ execute 'nmap <Leader><Leader> m`vip<Leader><Leader>``' |
-        \ execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>'
+        \ silent! execute 'vmap <Leader><Leader> :ScreenSend<CR>' |
+        \ silent! execute 'nmap <Leader><Leader> m`vip<Leader><Leader>``' |
+        \ silent! execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>'
 augroup END
 
 augroup ScreenShellExit
     autocmd!
     autocmd User *
         \ if !g:ScreenShellActive |
-        \   execute 'vunmap <Leader><Leader>' |
-        \   execute 'nunmap <Leader><Leader>' |
-        \   execute 'iunmap <Leader><Leader>' |
+        \   silent! execute 'vunmap <Leader><Leader>' |
+        \   silent! execute 'nunmap <Leader><Leader>' |
+        \   silent! execute 'iunmap <Leader><Leader>' |
         \ endif
 augroup END
