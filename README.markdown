@@ -29,6 +29,7 @@ Dotfile and ssh key management system.
  - haus ssh add
  - haus ssh rm
  - haus ssh clean
+ - `Haus::Link` should relative link by default
  - `Haus::Clean` should offer a mode for sweeping broken dotfile symlinks
  - `Haus::Link` should complain when user tries to link to dotfiles that
    they do not own and are not owned by the system
