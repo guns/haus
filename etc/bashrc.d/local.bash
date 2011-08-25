@@ -81,10 +81,6 @@ showfunctions() { set | grep '^[^ ]* ()'; }
 # Transfer completions from src -> dst
 tcomp() { eval $({ complete -p "$1" || echo :; } 2>/dev/null) "$2"; }
 
-# Verbose execution
-run()   { echo >&2 -e "\e[1;32m$*\e[0m"; "$@"; };                            tcomp exec run
-bgrun() { echo >&2 -e "\e[1;33m$* &>/dev/null &\e[0m"; "$@" &>/dev/null & }; tcomp exec bgrun
-
 # Chop lines to $COLUMNS
 choplines() { ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'"; }
 
@@ -186,6 +182,10 @@ nohist() {
 
 # report remind
 ALIAS r='report'
+
+# run bgrun
+HAVE run   && tcomp exec run
+HAVE bgrun && tcomp exec bgrun
 
 # Simple fs event loop for execution in current shell
 alias watch='while read path <<< "$(ruby -r fssm -e "
@@ -325,7 +325,7 @@ rm-craplets() {
 alias ln='ln -v'
 alias lns='ln -s'
 alias lnsf='lns -f'
-lnnull() { run command rm -rf "${1%/}" && run command ln -sf /dev/null "${1%/}"; }
+lnnull() { run rm -rf "${1%/}" && run ln -sf /dev/null "${1%/}"; }
 
 # chmod chown touch
 alias chmod='chmod -v'
@@ -579,7 +579,8 @@ daemons() {
 
 ### Switch User
 
-ALIAS s='sudo' && root() { run exec sudo su; }
+ALIAS s='sudo' \
+      root='sudo su'
 HAVE su && {
     alias xsu='exec su'
     tcomp su xsu
@@ -797,7 +798,7 @@ HAVE tmux && {
             run tmux rename-window root
             root
         else
-            run exec tmuxlaunch -x
+            exec run tmuxlaunch -x
         fi
     }
     tmuxchdir() { run tmux set-option default-path "$(expand_path "${1:-$PWD}")"; }
