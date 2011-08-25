@@ -1,0 +1,51 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+
+class Rakehauslink
+  def initialize args = []
+    @args    = args.freeze
+    @opts    = {}
+    @rakedir = File.expand_path '../../share/rake', __FILE__
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q(\
+        Link Haus Rakefile of given name to basedir.
+
+        Usage: #{File.basename __FILE__} filename [basedir]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-f', '--force' do
+        @opts[:force] = true
+      end
+    end
+  end
+
+  def link name, base = Dir.pwd
+    dst  = File.join base, 'Rakefile'
+    stat = File.lstat dst rescue nil
+
+    abort "#{dst.inspect} already exists!" if stat and not @opts[:force]
+
+    FileUtils.rm dst, :verbose => true if stat
+    FileUtils.ln_s File.join(@rakedir, name), dst, :verbose => true
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s unless args.size == 1 or args.size == 2
+    link *args
+  end
+end
+
+Rakehauslink.new(ARGV).run if $0 == __FILE__
