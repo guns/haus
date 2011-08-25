@@ -16,7 +16,11 @@ task :configure do
     cmd << '--prefix=' + ENV['PREFIX']
   else
     ver = File.read('version.h')[/RUBY_VERSION\W*(\d\.\d\.\d)/, 1].split '.'
-    cmd << '--prefix=/opt/ruby/%d.%d' % ver[0..1]
+    if ver == %w[1 8 6]
+      cmd << '--prefix=/opt/ruby/%d.%d.%d' % ver
+    else
+      cmd << '--prefix=/opt/ruby/%d.%d' % ver[0..1]
+    end
   end
 
   if RUBY_PLATFORM[/darwin/]
