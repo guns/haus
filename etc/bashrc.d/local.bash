@@ -190,9 +190,9 @@ ALIAS r='report'
 # Simple fs event loop for execution in current shell
 alias watch='while read path <<< "$(ruby -r fssm -e "
     FSSM.monitor Dir.pwd, %q{**/*} do
-        create { |base, path| puts %Q{\e[1;32m++ #{path}\e[0m}; raise Interrupt }
-        update { |base, path| puts %Q{\e[1;34m:: #{path}\e[0m}; raise Interrupt }
-        delete { |base, path| puts %Q{\e[1;31m-- #{path}\e[0m}; raise Interrupt }
+        create { |base, path| puts %Q{\e[1;32m++\e[0m #{path}}; raise Interrupt }
+        update { |base, path| puts %Q{\e[1;34m::\e[0m #{path}}; raise Interrupt }
+        delete { |base, path| puts %Q{\e[1;31m--\e[0m #{path}}; raise Interrupt }
     end
 " 2>/dev/null)" && echo -e "$path";' # do ...; done
 
@@ -538,7 +538,7 @@ ALIAS ka='killall -v' \
 
 # ps (traditional BSD / SysV flags seem to be the most portable)
 alias p1='ps caxo comm'
-alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,nice,user,tty,start,command'
+alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,nice,user,tt,start,command'
 alias psg='psa | grep -v "grep -i" | g'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
@@ -886,12 +886,18 @@ type ruby &>/dev/null && {
                alias "gem${suf}outdated=run ${bin}/gem outdated"
             }
 
-            ALIAS "irb${suf}=${bin}/irb"
+            # Core ruby programs
+            if [[ "$suf" == 18* ]]; then
+                ALIAS "irb${suf}=${bin}/irb -Ku"
+            else
+                ALIAS "irb${suf}=${bin}/irb"
+            fi
             ALIAS "ri${suf}=${bin}/ri"
             ALIAS "rake${suf}=${bin}/rake" \
                   "rk${suf}=rake${suf}" \
                   "rk${suf}t=rake${suf} -T"
 
+            # Useful gem executables
             ALIAS "sdoc${suf}=${bin}/sdoc"
             ALIAS "bundle${suf}=${bin}/bundle"
             HAVE "${bin}/rdebug" && {
@@ -931,7 +937,7 @@ ALIAS npm='npm --global' && {
     # alias npme
     alias npmg='run npm ls | g'
     alias npmi='run npm install --global'
-    alias npmq='run npm  view'
+    alias npmq='run npm view'
     alias npms='run npm search'
     alias npmu='run npm rm --global'
     # alias npmsync
