@@ -103,14 +103,7 @@ class Haus
       class Haus::NoopApp
         include Haus::Loggable
       end
-
       @app = Haus::NoopApp.new
-    end
-
-    describe :initialize do
-      it 'must create the logger object on initialize' do
-        @app.instance_variable_get(:@__haus_logger__).must_be_kind_of Haus::Logger
-      end
     end
 
     describe :log do
@@ -142,6 +135,18 @@ class Haus
     describe :logger do
       it 'must return the logger object' do
         @app.logger.must_equal @app.instance_variable_get(:@__haus_logger__)
+      end
+
+      it 'must create the logger object if it does not exist' do
+        @app.instance_variable_get(:@__haus_logger__).must_be_nil
+        @app.logger
+        @app.instance_variable_get(:@__haus_logger__).must_be_kind_of Haus::Logger
+      end
+    end
+
+    describe :__logger__ do
+      it 'must be an alias to :logger' do
+        @app.method(:__logger__).must_equal @app.method(:logger)
       end
     end
   end
