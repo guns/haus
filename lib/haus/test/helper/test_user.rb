@@ -4,11 +4,10 @@ require 'fileutils'
 
 class Haus
   #
-  # Don't call TestUser#new, rather:
+  # Each new TestUser instance creates a new Haus directory, so when possible,
+  # create TestUsers like this:
   #
-  #   before do
-  #     @user = Haus::TestUser[$$]
-  #   end
+  #     user = Haus::TestUser[$$]
   #
   # Certain methods trigger filesystem modifications, which are then scheduled
   # to be removed via Kernel::at_exit.
