@@ -21,8 +21,20 @@ class Haus
 
     # Return hierfile as a home dotfile
     def hier src, prefix
-      suffix = src.sub(%r{\A#{prefix}/?}, '').split('/').map { |d| d.sub /\A%/, '' }.join '/'
-      "#{dir}/.#{suffix}"
+      dir + '/.' + src.sub(%r{\A#{prefix}/?}, '').split('/').map { |d| d.sub /\A%/, '' }.join('/')
+    end
+
+    # Returns true if path is owned by the user or by root and is writeable
+    # only by the owner.
+    #
+    # This is a narrow definition of trust, but expanding this is rather
+    # complicated, and complexity is the enemy of security.
+    #
+    # FIXME: Check ACLs, the damn things. A file with mode 0400 can be made
+    #        world writable via one of three slightly different ACL systems!
+    def trusts? path
+      stat = File.stat path # Not :lstat! The real McCoy
+      (stat.uid == uid or stat.uid.zero?) and (stat.mode & 0022).zero?
     end
   end
 end

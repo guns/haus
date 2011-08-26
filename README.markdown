@@ -29,6 +29,8 @@ Dotfile and ssh key management system.
  - haus ssh add
  - haus ssh rm
  - haus ssh clean
+ - `Haus::Link` should relative link by default
+ - `Haus::Clean` should offer a mode for sweeping broken dotfile symlinks
  - `Haus::Link` should complain when user tries to link to dotfiles that
    they do not own and are not owned by the system
  - Shouldn't touch `File.umask`; just `lchmod` and `install`
@@ -37,6 +39,7 @@ Dotfile and ssh key management system.
  - `HAUS_PATH` environment variable
  - Accept `haus help COMMAND` invocation
  - All logged files should be colorized according to `LS_?COLORS`
+ - Perhaps more of the tests should be using `Tempfile`
 
 
 ### LICENSE ###

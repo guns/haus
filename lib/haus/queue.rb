@@ -360,17 +360,13 @@ class Haus
     # Change the uid and gid of the file to match its parent directory.
     # Parent directory must exist.
     def adopt file, fopts
-      if fopts[:noop] and fopts[:verbose]
-        $stderr.puts '(chown) %s' % file
-        return
-      end
-
       p = File.lstat File.dirname(file)
 
       case File.lstat(file).ftype
       when 'directory'
         FileUtils.chown_R p.uid, p.gid, file, fopts
       else
+        # FileUtils logs to $stderr when verbose
         $stderr.puts 'chown -h %d:%d %s' % [p.uid, p.gid, file] if fopts[:verbose]
         File.lchown p.uid, p.gid, file unless fopts[:noop]
       end
