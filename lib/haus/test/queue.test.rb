@@ -48,6 +48,10 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.send(m).must_equal []
         @q.send(m).frozen?.must_equal true
       end
+
+      @q.annotations.must_equal Hash.new
+      @q.annotations.frozen?.must_equal true
+
       @q.archive_path.must_match %r{\A/tmp/haus-\d+-\d+-\d+-[a-z]+\.tar\.gz\z}
       @q.archive_path.frozen?.must_equal true
     end
@@ -308,6 +312,14 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must raise an error if argument has a blocking path' do
       lambda { @q.add_modification(File.join $user.hausfile.first, 'illegal') {} }.must_raise RuntimeError
+    end
+  end
+
+  describe :annotate do
+    it 'must add the annotation for the file to the internal table and refreeze' do
+      @q.annotate('/foo/bar/baz', ['FUBAR', :red]).must_equal @q.annotations
+      @q.annotations['/foo/bar/baz'].must_equal [['FUBAR', :red]]
+      @q.annotations.frozen?.must_equal true
     end
   end
 
@@ -827,6 +839,10 @@ class Haus::QueueSpec < MiniTest::Spec
         @buf.rewind
         @buf.read.must_equal ''
       end
+    end
+
+    describe :fmt do
+      # TODO
     end
 
     describe :relpath do

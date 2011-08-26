@@ -24,13 +24,14 @@ class Haus
   class Queue
     class MultipleJobError < RuntimeError; end
 
-    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
+    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions, :annotations
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
       options.logger ||= Haus::Logger.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
+      @annotations = {}.freeze
 
       # Array#shuffle and Enumerable#take unavailable in 1.8.6
       time = Time.now.strftime '%Y-%m-%d'
@@ -105,6 +106,15 @@ class Haus
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
+    end
+
+    # Add a one-line annotation for a destination to be displayed during
+    # `tty_confirm?`; overwrites any previous annotations for the same file.
+    #
+    # Message arguments are passed directly to Haus::Logger#fmt
+    def annotate destination, *args
+      dst = File.expand_path destination
+      @annotations = annotations.merge(dst => args).freeze
     end
 
     # Return list of destinations that are queued to be visited
