@@ -309,7 +309,7 @@ class Haus
     end
 
     def linked? src, dst
-      (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
+      (options.absolute ? src : relpath(src, dst)) == File.readlink(dst)
     end
 
     # Checks to see if file exists, even broken symlinks
@@ -409,7 +409,7 @@ class Haus
 
     def execute_links fopts
       links.each do |src, dst|
-        srcpath = options.relative ? relpath(src, dst) : src
+        srcpath = options.absolute ? src : relpath(src, dst)
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
 
