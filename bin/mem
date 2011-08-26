@@ -9,10 +9,11 @@ load File.expand_path('../../lib/haus/logger.rb', __FILE__)
 require 'optparse'
 
 class Mem
+  include Haus::Loggable
+
   def initialize(args = [])
     @args = args
     @opts = {}
-    @logger = Haus::Logger.new
   end
 
   def options
@@ -185,7 +186,7 @@ class Mem
   def graph(fstr, glen, mtotal, ary)
     scale = glen.to_f / mtotal
     gbuf = ary.inject('') do |str, a|
-      str << @logger.fmt(['|' * (a.shift * scale), *a])
+      str << fmt(['|' * (a.shift * scale), *a])
     end
     gbuf << ' ' * natural(glen - gbuf.gsub(/\e\[[\d;]*m/, '').length)
     fstr % gbuf
@@ -202,7 +203,7 @@ class Mem
         cell = row.shift
         tbuf << case cell.size
         when 1 then "%#{width}s" % cell.shift.to_s
-        else @logger.fmt(["%#{width}s" % cell.shift, *cell])
+        else fmt(["%#{width}s" % cell.shift, *cell])
         end
       end
       tbuf << "\n"

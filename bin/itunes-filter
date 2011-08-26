@@ -13,11 +13,13 @@ require 'find'
 require 'osx/cocoa'
 
 class ITunesFilter
+  include Haus::Loggable
+
   def initialize args = []
     @args         = args
     @library_file = /\/?iTunes( Music)? Library\.xml\z/
     @ignore       = /\/?(\.iTunes Preferences\.plist|\.DS_Store)\z/
-    @logger       = Haus::Logger.new $stderr
+    logger.io     = $stderr
   end
 
   def options
@@ -79,7 +81,7 @@ class ITunesFilter
     $stderr.print "Building file list for #{dir}... "
     Find.find(dir) { |f| media << f if File.file? f }
     media.reject! { |f| f =~ @ignore }
-    @logger.log ["#{media.size} found", :green]
+    log ["#{media.size} found", :green]
 
     [dir, media.sort]
   end
@@ -87,7 +89,7 @@ class ITunesFilter
   def itunes_library file
     $stderr.print "Parsing #{file}... "
     plist = OSX.load_plist File.read(file)
-    @logger.log ["OK", :green]
+    log ["OK", :green]
 
     list = []
 
@@ -95,7 +97,7 @@ class ITunesFilter
     plist['Tracks'].each do |id, data|
       list << URI.unescape(URI.parse(data['Location']).path)
     end
-    @logger.log ["#{list.size} found", :green]
+    log ["#{list.size} found", :green]
 
     list.sort
   end
@@ -117,10 +119,10 @@ class ITunesFilter
     # diff the diffs, except with the slower casecmp algorithm
     missing_in_media = idiff lm, ml
     not_in_library   = idiff ml, lm
-    @logger.log ['OK', :green]
+    log ['OK', :green]
 
-    @logger.log [missing_in_media.size.to_s, :red], ' tracks from the library are missing from ', [media_dir, :green]
-    @logger.log [not_in_library.size.to_s, :red], " files in ", [media_dir, :green], " are not being tracked in the library.\n"
+    log [missing_in_media.size.to_s, :red], ' tracks from the library are missing from ', [media_dir, :green]
+    log [not_in_library.size.to_s, :red], " files in ", [media_dir, :green], " are not being tracked in the library.\n"
 
     puts "# Missing tracks (#{missing_in_media.size}):"
     puts missing_in_media.join("\n") unless missing_in_media.empty?

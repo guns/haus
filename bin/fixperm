@@ -12,10 +12,10 @@ require 'find'
 
 class Fixperm
   include FileUtils
+  include Haus::Loggable
 
   def initialize args = []
     @args, @opts = args, {}
-    @logger = Haus::Logger.new
   end
 
   def options
@@ -47,7 +47,7 @@ class Fixperm
   def normalize file, expect = '', *styles
     mode = File.stat(file).mode.to_s(8)[/.{4}$/]
     return true if mode == expect
-    @logger.log "chmod #{mode} -> #{expect} on ", [file, *styles]
+    log "chmod #{mode} -> #{expect} on ", [file, *styles]
     chmod expect.to_i(8), file
   end
 
@@ -58,7 +58,7 @@ class Fixperm
         when 'directory'  then normalize f, '0755', :blue, :bold
         when 'file'       then normalize f, '0644'
         else
-          @logger.log "Skipping #{ftype} ", [f, :magenta, :bold]
+          log "Skipping #{ftype} ", [f, :magenta, :bold]
         end
 
         # Move to next file if not traversing directories
