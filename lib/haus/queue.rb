@@ -24,15 +24,16 @@ class Haus
   class Queue
     class MultipleJobError < RuntimeError; end
 
-    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions
+    attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions, :annotations
 
     def initialize opts = nil
       self.options = opts || OpenStruct.new
       options.logger ||= Haus::Logger.new
 
       @links, @copies, @modifications, @deletions = (1..4).map { [].freeze }
+      @annotations = {}.freeze
 
-      # Array#shuffle and Enumerable#take introduced in 1.8.7
+      # Array#shuffle and Enumerable#take unavailable in 1.8.6
       time = Time.now.strftime '%Y-%m-%d'
       salt = ('a'..'z').sort_by { rand }[0..7].join
       @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
@@ -105,6 +106,15 @@ class Haus
       return nil if block.nil?
 
       @modifications = (modifications.dup << [block, dst]).freeze
+    end
+
+    # Add a one-line annotation for a destination to be displayed during
+    # `tty_confirm?`; overwrites any previous annotations for the same file.
+    #
+    # Message arguments are passed directly to Haus::Logger#fmt
+    def annotate destination, *args
+      dst = File.expand_path destination
+      @annotations = annotations.merge(dst => args).freeze
     end
 
     # Return list of destinations that are queued to be visited
@@ -238,12 +248,26 @@ class Haus
       return true if options.force or options.noop or targets.empty?
       return false if options.quiet or not $stdin.tty?
 
-      [:create, :modify, :overwrite, :delete].each do |action|
-        fs = targets action
-        next if fs.empty?
-        $stdout.puts "#{action.to_s.upcase}:\n" + fs.map { |f| ' '*4 + f }.join("\n")
+      # Create a summary table
+      actions = [:create, :modify, :overwrite, :delete].map do |type|
+        [type, targets(type)]
       end
 
+      # Construct an optimal format (Enumerable#max_by unavailable in 1.8.6)
+      flen   = actions.map { |a| a[1].length }.max
+      format = "    %-#{flen}s\n        %s"
+
+      # Print the summary with annotations
+      actions.each do |verb, files|
+        next if files.empty?
+        $stdout.puts verb.to_s.upcase + ':'
+        files.each do |f|
+          note = fmt *annotations[f] if annotations.has_key? f
+          $stdout.puts((format % [f, note || '']).rstrip) # Extra parens required for 1.8.6
+        end
+      end
+
+      # Reassure the user
       unless targets(:archive).empty?
         $stdout.puts "\nAll original links and files will be archived to:\n    #{archive_path}"
       end
@@ -274,6 +298,10 @@ class Haus
 
     def log *args
       options.logger.log *args unless options.quiet
+    end
+
+    def fmt *args
+      options.logger.fmt *args
     end
 
     def relpath src, dst

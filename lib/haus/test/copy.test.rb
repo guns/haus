@@ -19,6 +19,10 @@ class Haus::CopySpec < DotfileSpec
     it 'must add copy jobs to the queue' do
       must_add_task_jobs_to_queue :copies
     end
+
+    it 'must annotate files with untrusted sources' do
+      must_annotate_files_with_untrusted_sources
+    end
   end
 
   describe :run do

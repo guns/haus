@@ -4,11 +4,10 @@ require 'fileutils'
 
 class Haus
   #
-  # Don't call TestUser#new, rather:
+  # Each new TestUser instance creates a new Haus directory, so when possible,
+  # create TestUsers like this:
   #
-  #   before do
-  #     @user = Haus::TestUser[$$]
-  #   end
+  #     user = Haus::TestUser[$$]
   #
   # Certain methods trigger filesystem modifications, which are then scheduled
   # to be removed via Kernel::at_exit.
@@ -93,7 +92,7 @@ class Haus
           mkdir d
           touch f
           dst = File.join dir, d.sub(/\A%/, '.'), File.basename(f)
-          @hausfiles.push File.dirname(dst) # We want to remove the whole dir
+          # The parent dir will disappear with the haus directory
           [File.expand_path(f), dst]
         when :link
           f = randstr

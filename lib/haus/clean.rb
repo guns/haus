@@ -17,10 +17,7 @@ class Haus
 
     def enqueue
       users.each do |user|
-        etcs  = etcfiles.map { |f| [f, user.dot(f)] }
-        hiers = hierfiles.map { |f| [f, user.hier(f, etc)] }
-
-        (etcs + hiers).each do |src, dst|
+        hausfiles user do |src, dst|
           begin
             if options.all
               queue.add_deletion dst
