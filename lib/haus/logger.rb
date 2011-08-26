@@ -5,6 +5,16 @@ class Haus
   # Homegrown simple logging class.
   #
   class Logger
+    class << self
+      def italics?
+        system '{ command -v tput && tput sitm; } &>/dev/null'
+      end
+
+      def colors256?
+        system '{ command -v tput && [ $(tput colors) -eq 256 ]; } &>/dev/null'
+      end
+    end
+
     # ANSI SGR codes
     # http://www.inwap.com/pdp10/ansicode.txt
     # http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
@@ -40,14 +50,6 @@ class Haus
 
     def initialize io = $stdout
       @io = io
-    end
-
-    def italics?
-      system '{ command -v tput && tput sitm; } &>/dev/null'
-    end
-
-    def colors256?
-      system '{ command -v tput && [ $(tput colors) -eq 256 ]; } &>/dev/null'
     end
 
     def sgr msg, *styles

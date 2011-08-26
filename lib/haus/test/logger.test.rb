@@ -9,6 +9,16 @@ require 'haus/logger'
 require 'haus/test/helper/minitest'
 
 class Haus::LoggerSpec < MiniTest::Spec
+  describe :self do
+    describe :italics? do
+      # TODO
+    end
+
+    describe :colors256? do
+      # TODO
+    end
+  end
+
   describe :SGR do
     it 'must be hash of Symbol keys' do
       Haus::Logger::SGR.keys.map { |k| k.class == Symbol }.all?.must_equal true
@@ -30,14 +40,6 @@ class Haus::LoggerSpec < MiniTest::Spec
     it 'must set @io to $stdout by default' do
       Haus::Logger.new.io.must_equal $stdout
     end
-  end
-
-  describe :italics? do
-    # TODO
-  end
-
-  describe :colors256? do
-    # TODO
   end
 
   describe :sgr do

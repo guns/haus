@@ -72,7 +72,7 @@ end
 if defined? PrideIO and MiniTest::Unit.output.kind_of? PrideIO
   require 'haus/logger'
 
-  if Haus::Logger.new.colors256?
+  if Haus::Logger.colors256?
     xterm_colors = 16.step(196, 36).inject [] do |ary, base|
       ary + (base..base+5).map do |n|
         6.times.map { |k| '38;5;%d' % (n + 6*k) }
