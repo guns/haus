@@ -93,7 +93,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must noop and return nil when dst points to src' do
       src, dst = $user.hausfile
-      FileUtils.ln_s relpath(src, dst), dst
+      FileUtils.ln_s src, dst
       @q.add_link(src, dst).must_be_nil
       @q.links.empty?.must_equal true
     end
@@ -132,7 +132,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
       it 'must add existing links if relative/absolute prefs do not match' do
         @assertion.call lambda { |src, dst|
-          FileUtils.ln_sf src, dst
+          FileUtils.ln_sf relpath(src, dst), dst
         }, nil
 
         @assertion.call lambda { |src, dst|
@@ -527,7 +527,7 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.execute!
       [0,1].each do |n|
         File.symlink?(@targets[n]).must_equal true
-        File.readlink(@targets[n]).must_equal relpath(@sources[n], @targets[n])
+        File.readlink(@targets[n]).must_equal @sources[n]
       end
     end
 
@@ -895,7 +895,7 @@ class Haus::QueueSpec < MiniTest::Spec
         FileUtils.ln_s '/etc/passwd', dst
         @q.send(:linked?, src, dst).must_equal false
         FileUtils.rm_f dst
-        FileUtils.ln_s relpath(src, dst), dst
+        FileUtils.ln_s src, dst
         @q.send(:linked?, src, dst).must_equal true
       end
 
