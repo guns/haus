@@ -6,6 +6,7 @@ require 'fileutils'
 require 'ostruct'
 require 'expect'
 require 'stringio'
+require 'tempfile'
 require 'rubygems' # 1.8.6 compat
 require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
@@ -48,6 +49,10 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.send(m).must_equal []
         @q.send(m).frozen?.must_equal true
       end
+
+      @q.annotations.must_equal Hash.new
+      @q.annotations.frozen?.must_equal true
+
       @q.archive_path.must_match %r{\A/tmp/haus-\d+-\d+-\d+-[a-z]+\.tar\.gz\z}
       @q.archive_path.frozen?.must_equal true
     end
@@ -308,6 +313,14 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must raise an error if argument has a blocking path' do
       lambda { @q.add_modification(File.join $user.hausfile.first, 'illegal') {} }.must_raise RuntimeError
+    end
+  end
+
+  describe :annotate do
+    it 'must add the annotation for the file to the internal table and refreeze' do
+      @q.annotate('/foo/bar/baz', ['FUBAR', :red]).must_equal @q.annotations
+      @q.annotations['/foo/bar/baz'].must_equal [['FUBAR', :red]]
+      @q.annotations.frozen?.must_equal true
     end
   end
 
@@ -804,6 +817,43 @@ class Haus::QueueSpec < MiniTest::Spec
         end
       end
     end
+
+    it 'must print a list of all targets, along with annotations' do
+      with_negation = lambda do |prc|
+        with_filetty do
+          $stdout.expect 'continue? [Y/n] ', 1 do
+            $stdin.write "n\n"
+            $stdin.rewind
+          end
+          prc.call
+        end
+      end
+
+      user, q = Haus::TestUser.new, Haus::Queue.new
+      files   = (0..5).map { |n| Tempfile.new(n.to_s).path }
+
+      FileUtils.rm_f files[1]
+      File.open(files[3], 'w') { |f| f.puts ':)' }
+
+      q.add_link *files[0..1]
+      q.annotate files[1], 'this-is-a-new-file'
+      q.add_copy *files[2..3]
+      q.add_modification(files[4]) {}
+      q.add_deletion files[5]
+      q.annotate files[5], ['WARNING', :red], ' deletion'
+
+      with_negation.call lambda {
+        q.options.logger.io = $stdout
+        q.tty_confirm?
+        $stdout.rewind
+        $stdout.read.must_match %r{
+          CREATE:     .+   #{files[1]}   .+   this-is-a-new-file    .+
+          MODIFY:     .+   #{files[4]}   .+
+          OVERWRITE:  .+   #{files[3]}   .+
+          DELETE:     .+   #{files[5]}   .+   \e\[31mWARNING\e\[0m\sdeletion
+        }mx
+      }
+    end
   end
 
   describe :private do
@@ -827,6 +877,10 @@ class Haus::QueueSpec < MiniTest::Spec
         @buf.rewind
         @buf.read.must_equal ''
       end
+    end
+
+    describe :fmt do
+      # TODO
     end
 
     describe :relpath do

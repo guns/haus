@@ -40,7 +40,7 @@ module MiniTest
           end
           alias :isatty :tty?
 
-          # FileUtils calls to_str, which is undefined on Ruby 1.8.7 and below
+          # FileUtils calls to_str, which is undefined on Ruby 1.8.6
           def to_str
             path
           end unless respond_to? :to_str

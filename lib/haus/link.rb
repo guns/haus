@@ -17,12 +17,11 @@ class Haus
 
     def enqueue
       users.each do |user|
-        etcfiles.each do |src|
-          queue.add_link src, user.dot(src)
-        end
-
-        hierfiles.each do |src|
-          queue.add_link src, user.hier(src, etc)
+        hausfiles user do |src, dst|
+          if reason = user.distrusts(src)
+            queue.annotate dst, ["WARNING: #{reason}", :red, :bold]
+          end
+          queue.add_link src, dst
         end
       end
     end

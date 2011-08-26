@@ -52,7 +52,7 @@ class Haus
       exit 1
     end
 
-    # Enumerable#drop introduced in 1.8.7
+    # Enumerable#drop unavailable in 1.8.6
     task[:class].new(args[1..-1]).run or exit 1
   rescue StandardError => e
     options.logger.log ["[#{e.class}] ", :red, :bold], e.to_s

@@ -25,6 +25,10 @@ class Haus::LinkSpec < DotfileSpec
     it 'must add link jobs to the queue' do
       must_add_task_jobs_to_queue :links
     end
+
+    it 'must annotate files with untrusted sources' do
+      must_annotate_files_with_untrusted_sources
+    end
   end
 
   describe :run do
