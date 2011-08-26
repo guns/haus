@@ -36,7 +36,8 @@ class DotfileSpec < MiniTest::Spec
 
   def must_add_task_jobs_to_queue type
     user = Haus::TestUser.new
-    jobs = [:file, :dir, :link, :hier].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] is lacking
+    # Ruby 1.8.6 Hash[] is lacking
+    jobs = [:file, :dir, :link, :hier].inject({}) { |h,m| h.merge m => user.hausfile(m) }
 
     yield @task, jobs if block_given?
 
@@ -93,7 +94,8 @@ class DotfileSpec < MiniTest::Spec
 
   def must_result_in_dotfiles
     user = Haus::TestUser[@test.class.to_s + '_dotfiles']
-    jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) } # Ruby 1.8.6 Hash[] does not like 2D arrays
+    # Ruby 1.8.6 Hash[] does not like 2D arrays
+    jobs = [:file, :dir, :link].inject({}) { |h,m| h.merge m => user.hausfile(m) }
     jobs.each_value { |s,d| extant?(d).must_equal false }
 
     @task.options.path = user.haus
