@@ -103,45 +103,50 @@ class Haus
       class Haus::NoopApp
         include Haus::Loggable
       end
-
       @app = Haus::NoopApp.new
-    end
-
-    describe :initialize do
-      it 'must create the logger object on initialize' do
-        @app.instance_variable_get(:@__haus_logger__).must_be_kind_of Haus::Logger
-      end
     end
 
     describe :log do
       it "must call the logger's :log method" do
-        @app.instance_eval do
+        @app.instance_variable_set :@__haus_logger__, Class.new {
           def log *args
-            @logargs = args
+            @args = args
           end
-        end
+        }.new
 
         @app.log 'foo', 'bar'
-        @app.instance_variable_get(:@logargs).must_equal %w[foo bar]
+        @app.logger.instance_variable_get(:@args).must_equal %w[foo bar]
       end
     end
 
     describe :fmt do
       it "must call the logger's :fmt method" do
-        @app.instance_eval do
+        @app.instance_variable_set :@__haus_logger__, Class.new {
           def fmt *args
-            @fmtargs = args
+            @args = args
           end
-        end
+        }.new
 
         @app.fmt 'moo', 'car'
-        @app.instance_variable_get(:@fmtargs).must_equal %w[moo car]
+        @app.logger.instance_variable_get(:@args).must_equal %w[moo car]
       end
     end
 
     describe :logger do
       it 'must return the logger object' do
         @app.logger.must_equal @app.instance_variable_get(:@__haus_logger__)
+      end
+
+      it 'must create the logger object if it does not exist' do
+        @app.instance_variable_get(:@__haus_logger__).must_be_nil
+        @app.logger
+        @app.instance_variable_get(:@__haus_logger__).must_be_kind_of Haus::Logger
+      end
+    end
+
+    describe :__logger__ do
+      it 'must be an alias to :logger' do
+        @app.method(:__logger__).must_equal @app.method(:logger)
       end
     end
   end

@@ -91,21 +91,17 @@ class Haus
   #   end
   #
   module Loggable
-    def initialize *args
-      @__haus_logger__ = Haus::Logger.new
-      super
+    def logger
+      @__haus_logger__ ||= Haus::Logger.new
     end
+    alias :__logger__ :logger
 
     def log *args
-      @__haus_logger__.__send__ :log, *args
+      logger.__send__ :log, *args
     end
 
     def fmt *args
-      @__haus_logger__.__send__ :fmt, *args
-    end
-
-    def logger
-      @__haus_logger__
+      logger.__send__ :fmt, *args
     end
   end
 end
