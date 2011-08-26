@@ -924,7 +924,7 @@ type ruby &>/dev/null && {
             ALIAS "bundle${suf}=${bin}/bundle"
             HAVE "${bin}/rdebug" && {
                 ALIAS "rdb${suf}=${bin}/rdebug" \
-                      "rdb${suf}c=${bin}/rdebug"
+                      "rdb${suf}c=${bin}/rdebug -c"
                 tcomp exec "rdebug${suf}"
             }
         }
