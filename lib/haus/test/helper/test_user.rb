@@ -93,7 +93,7 @@ class Haus
           mkdir d
           touch f
           dst = File.join dir, d.sub(/\A%/, '.'), File.basename(f)
-          @hausfiles.push File.dirname(dst) # We want to remove the whole dir
+          # The parent dir will disappear with the haus directory
           [File.expand_path(f), dst]
         when :link
           f = randstr

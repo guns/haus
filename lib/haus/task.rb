@@ -80,6 +80,20 @@ class Haus
       File.join options.path, 'etc'
     end
 
+    # Iterate over both dotfiles and hierfiles in HAUS_PATH/etc and the
+    # corresponding user's home directory targets.
+    #
+    # Returns the table of sources and destinations.
+    def hausfiles user
+      # Ensure the passed object does what we need
+      u = (user.respond_to? :dot and user.respond_to? :hier) ? user : Haus::User.new(user)
+
+      # Construct, iterate, and return the file table
+      table = dotfiles.map { |f| [f, u.dot(f)] } + hierfiles.map { |f| [f, u.hier(f, etc)] }
+      table.each { |src, dst| yield src, dst } if block_given?
+      table
+    end
+
     # Returns non-hierdir files in HAUS_PATH/etc/*
     def dotfiles
       Dir["#{etc}/*"].reject { |f| hierdir? f }.map { |f| File.expand_path f }

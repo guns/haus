@@ -4,6 +4,7 @@ $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'stringio'
 require 'rubygems' # 1.8.6 compat
+require 'enumerator' # 1.8.6 compat
 require 'minitest/pride' if [].respond_to? :cycle
 require 'minitest/autorun'
 require 'haus/task'
@@ -123,6 +124,43 @@ class Haus::TaskSpec < MiniTest::Spec
       h.etc.must_equal File.join(h.options.path, 'etc')
       h.options.path = '/tmp/haus'
       h.etc.must_equal '/tmp/haus/etc'
+    end
+  end
+
+  describe :hausfiles do
+    before do
+      @task = Haus::Noop.new
+    end
+
+    it 'must accept a single user name, uid, or Haus::User object' do
+      @task.method(:hausfiles).arity.must_equal 1
+      assert_raises StandardError do
+        @task.hausfiles $user.uid
+        @task.hausfiles $user.name
+        @task.hausfiles Haus::User.new($user.uid)
+        raise StandardError
+      end
+    end
+
+    it 'must return a table of [[src, user-dst], ...] given a specific user' do
+      user = Haus::TestUser[:task_hausfiles]
+      @task.options.path = user.haus
+      [:file, :link, :dir, :hier].each { |t| user.hausfile t }
+
+      # Ruby 1.8.6 can't do flat_ary.each_slice(2).to_a
+      ary = []
+      user.hausfiles.each_slice(2) { |a| ary.push a }
+      @task.hausfiles(user.uid).sort.must_equal ary.sort
+    end
+
+    it 'must accept a block to iterate over the [src, user-dst] pairs' do
+      user = Haus::TestUser[:task_hausfiles_yield]
+      @task.options.path = user.haus
+      [:file, :link, :dir, :hier].each { |t| user.hausfile t }
+
+      ary = []
+      @task.hausfiles(user.uid) { |s, d| ary.push [s, d] }
+      @task.hausfiles(user.uid).sort.must_equal ary.sort
     end
   end
 
