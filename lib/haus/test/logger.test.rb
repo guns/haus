@@ -115,27 +115,27 @@ class Haus
 
     describe :log do
       it "must call the logger's :log method" do
-        @app.instance_eval do
+        @app.instance_variable_set :@__haus_logger__, Class.new {
           def log *args
-            @logargs = args
+            @args = args
           end
-        end
+        }.new
 
         @app.log 'foo', 'bar'
-        @app.instance_variable_get(:@logargs).must_equal %w[foo bar]
+        @app.logger.instance_variable_get(:@args).must_equal %w[foo bar]
       end
     end
 
     describe :fmt do
       it "must call the logger's :fmt method" do
-        @app.instance_eval do
+        @app.instance_variable_set :@__haus_logger__, Class.new {
           def fmt *args
-            @fmtargs = args
+            @args = args
           end
-        end
+        }.new
 
         @app.fmt 'moo', 'car'
-        @app.instance_variable_get(:@fmtargs).must_equal %w[moo car]
+        @app.logger.instance_variable_get(:@args).must_equal %w[moo car]
       end
     end
 
