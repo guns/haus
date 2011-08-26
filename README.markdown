@@ -30,7 +30,6 @@ Dotfile and ssh key management system.
  - haus ssh rm
  - haus ssh clean
  - `Haus::Clean` should offer a mode for sweeping broken dotfile symlinks
- - `Haus::Loggable` module with `included` hook
  - Shouldn't touch `File.umask`; just `lchmod` and `install`
  - Finish `Haus::Clean` tests
  - Better `--help` documentation

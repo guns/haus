@@ -2,7 +2,7 @@
 
 class Haus
   #
-  # Homegrown simple logging class.
+  # Simple terminal-oriented logging class.
   #
   class Logger
     class << self
@@ -60,7 +60,7 @@ class Haus
     # Parameters are either strings, or lists that begin with a string and are
     # followed by SGR codes.
     #
-    #   fmt ['!!', :red], ' DANGER!' # => "\e[31m!!\e[0m DANGER!"
+    #   fmt ['!!', :red, :bold], ' DANGER!' # => "\e[31;1m!!\e[0m DANGER!"
     #
     def fmt *args
       args.map { |arg| arg.is_a?(Array) ? sgr(*arg) : arg }.join
@@ -68,6 +68,44 @@ class Haus
 
     def log *args
       io.puts fmt(*args)
+    end
+  end
+
+  #
+  # Example:
+  #
+  #   class MyApp
+  #     include Haus::Loggable
+  #
+  #     def initialize
+  #       logger.io = $stderr
+  #     end
+  #
+  #     def info msg
+  #       log [msg, :italic]
+  #     end
+  #
+  #     def colorize msg, *styles
+  #       fmt [msg, *styles]
+  #     end
+  #   end
+  #
+  module Loggable
+    def initialize *args
+      @__haus_logger__ = Haus::Logger.new
+      super
+    end
+
+    def log *args
+      @__haus_logger__.__send__ :log, *args
+    end
+
+    def fmt *args
+      @__haus_logger__.__send__ :fmt, *args
+    end
+
+    def logger
+      @__haus_logger__
     end
   end
 end
