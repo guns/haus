@@ -114,7 +114,7 @@ class Update
     end
 
     def pathogen_path
-      "etc/user.vim/bundle/#{File.basename @base}"
+      "etc/vim/bundle/#{File.basename @base}"
     end
 
     def fire_callback name
@@ -248,14 +248,14 @@ class Update
             :base   => "#{vimdir}/Command-T",
             :update => %w[master guns],
             :files  => :git,
-            :dst    => 'etc/user.vim/bundle/Command-T',
+            :dst    => 'etc/vim/bundle/Command-T',
             :after_update => proc { system *%w[/opt/ruby/1.8/bin/rake commandt] }
           },
 
           {
             :base   => "#{vimdir}/vim-pathogen",
             :update => %w[master],
-            :files  => { 'autoload/pathogen.vim' => 'etc/user.vim/autoload/pathogen.vim' }
+            :files  => { 'autoload/pathogen.vim' => 'etc/vim/autoload/pathogen.vim' }
           },
 
           # FIXME: Do not sync snippets directory!
@@ -267,10 +267,10 @@ class Update
 
           {
             :base   => "#{project}/tmux",
-            :files  => { 'examples/tmux.vim' => 'etc/user.vim/bundle/tmux/syntax/tmux.vim' },
+            :files  => { 'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim' },
             :before_update => proc { |obj|
               # ensure the bundle directory exists
-              mkdir_p obj.nerv_path('etc/user.vim/bundle/tmux')
+              mkdir_p obj.nerv_path('etc/vim/bundle/tmux')
             }
           }
         ]
@@ -282,7 +282,7 @@ class Update
             :base   => "#{project}/urxvt-perls",
             :update => %w[master guns],
             :files  => :git,
-            :dst    => 'etc/user.urxvt'
+            :dst    => 'etc/urxvt'
           }
         ]
       end # dotfiles
@@ -291,7 +291,7 @@ class Update
         tracked = vimfiles.map { |h| File.basename h[:base] }
         case type
         when :projects then Dir[File.expand_path '~guns/src/vimfiles/*']
-        when :bundles  then Dir['etc/user.vim/bundle/*']
+        when :bundles  then Dir['etc/vim/bundle/*']
         end.select { |f| not tracked.include? File.basename(f) }
       end # untracked
 
@@ -404,7 +404,7 @@ end
 
 desc 'Compile the Vim Command-T bundle'
 task :commandt do
-  Dir.chdir 'etc/user.vim/bundle/Command-T/ruby/command-t' do
+  Dir.chdir 'etc/vim/bundle/Command-T/ruby/command-t' do
     ruby = File.join RbConfig::CONFIG['bindir'], 'ruby'
     system ruby, 'extconf.rb'
     system 'make'
