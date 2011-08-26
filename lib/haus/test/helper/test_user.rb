@@ -24,7 +24,7 @@ class Haus
       end
     end
 
-    attr_reader :haus, :hausfiles
+    attr_reader :haus, :hausfiles, :garbage
 
     def initialize
       name = ENV['TEST_USER'] || 'test'
@@ -39,7 +39,7 @@ class Haus
       entry.members.each { |m| send "#{m}=", entry.send(m) }
 
       @haus = File.join dir, ".#{randstr}"
-      @hausfiles = []
+      @hausfiles, @garbage = [], []
 
       abort "No privileges to write #{dir.inspect}" unless File.writable? dir
     rescue ArgumentError
@@ -92,7 +92,7 @@ class Haus
           mkdir d
           touch f
           dst = File.join dir, d.sub(/\A%/, '.'), File.basename(f)
-          # The parent dir will disappear with the haus directory
+          garbage.push File.dirname(dst) # Explicitly remove parent
           [File.expand_path(f), dst]
         when :link
           f = randstr
@@ -114,9 +114,12 @@ class Haus
     end
 
     def clean
-      rm_rf hausfiles, :secure => true
       rm_rf haus, :secure => true
-      @haus, @hausfiles = nil, nil
+      rm_rf hausfiles, :secure => true
+      rm_rf garbage, :secure => true
+      @haus = nil
+      @hausfiles.clear
+      @garbage.clear
     end
   end
 end

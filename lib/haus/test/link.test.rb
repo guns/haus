@@ -17,7 +17,7 @@ class Haus::LinkSpec < DotfileSpec
 
   describe :options do
     it 'must provide a --relative option' do
-      must_provide_option :relative, %w[-r --relative], true
+      must_provide_option :absolute, %w[-a --absolute], true
     end
   end
 
@@ -51,7 +51,7 @@ class Haus::LinkSpec < DotfileSpec
     it 'must link all sources as dotfiles' do
       must_result_in_dotfiles do |jobs|
         jobs.each_value do |s,d|
-          File.readlink(d).must_equal s
+          File.readlink(d).must_equal relpath(s,d)
         end
       end
     end
