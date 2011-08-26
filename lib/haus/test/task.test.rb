@@ -126,7 +126,7 @@ class Haus::TaskSpec < MiniTest::Spec
     end
   end
 
-  describe :etcfiles do
+  describe :dotfiles do
     it 'must return all non-hierdir files in HAUS_PATH/etc/*' do
       h, user, files = Haus::Noop.new, Haus::TestUser[:task_etcfiles], []
       h.options.path = user.haus
@@ -136,7 +136,7 @@ class Haus::TaskSpec < MiniTest::Spec
       files << user.hausfile(:link).first
       user.hausfile :hier # Not an etcfile!
 
-      h.etcfiles.sort.must_equal files.sort
+      h.dotfiles.sort.must_equal files.sort
     end
   end
 

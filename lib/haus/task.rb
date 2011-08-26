@@ -81,7 +81,7 @@ class Haus
     end
 
     # Returns non-hierdir files in HAUS_PATH/etc/*
-    def etcfiles
+    def dotfiles
       Dir["#{etc}/*"].reject { |f| hierdir? f }.map { |f| File.expand_path f }
     end
 
