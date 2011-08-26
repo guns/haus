@@ -249,19 +249,18 @@ class Haus
       return false if options.quiet or not $stdin.tty?
 
       # Create a summary table
-      # (Hash[] does not work very well in Ruby 1.8.6, so we use inject)
-      actions = [:create, :modify, :overwrite, :delete].inject Hash.new do |h, type|
-        h.merge type => targets(type)
+      actions = [:create, :modify, :overwrite, :delete].map do |type|
+        [type, targets(type)]
       end
 
       # Construct an optimal format (Enumerable#max_by unavailable in 1.8.6)
-      flen   = actions.values.flatten.map { |f| f.length }.max
+      flen   = actions.map { |a| a[1].length }.max
       format = "    %-#{flen}s\n        %s"
 
       # Print the summary with annotations
-      actions.each do |key, files|
+      actions.each do |verb, files|
         next if files.empty?
-        $stdout.puts key.to_s.upcase + ':'
+        $stdout.puts verb.to_s.upcase + ':'
         files.each do |f|
           note = fmt *annotations[f] if annotations.has_key? f
           $stdout.puts((format % [f, note || '']).rstrip) # Extra parens required for 1.8.6
