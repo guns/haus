@@ -305,7 +305,8 @@ Mapall  <4-Bar>    :q!<CR>
 noremap <Leader><C-r>
     \ :source ~/.vim/local/mappings.vim<CR>
     \ :source ~/.vim/local/commands.vim<CR>
-    \ :echo 'Mappings and Commands reloaded!'<CR>
+    \ :source ~/.vim/local/abbreviations.vim<CR>
+    \ :echo 'Mappings, Commands, and Abbreviations reloaded!'<CR>
 noremap <Leader>r
     \ :if &filetype == 'vim'<CR>
     \   :source %<CR>

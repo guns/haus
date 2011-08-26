@@ -219,7 +219,7 @@ let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 120
 
 
-""" MAPPINGS, COMMANDS, and AUTOCOMMANDS """
+""" MAPPINGS, AUTOCOMMANDS and ABBREVIATIONS """
 
 " Set modifiers and load modifier mapping functions
 source ~/.vim/local/modifiers.vim
@@ -229,6 +229,9 @@ source ~/.vim/local/mappings.vim
 
 " Autocommands
 source ~/.vim/local/autocommands.vim
+
+" Command abbreviations
+source ~/.vim/local/abbreviations.vim
 
 
 """ TERMINAL and GUI SETTINGS """
