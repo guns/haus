@@ -52,6 +52,16 @@ class DotfileSpec < MiniTest::Spec
     @task.queue.targets.sort.must_equal jobs.values.map { |s,d| d }.sort
   end
 
+  def must_annotate_files_with_untrusted_sources
+    user   = Haus::TestUser.new
+    ownerf = user.hausfile
+    @task.options.path = user.haus
+    @task.enqueue
+    notes = @task.queue.annotations
+    notes.size.must_equal 1
+    (@task.options.logger.fmt *notes[ownerf.last]).must_match /not owned by/
+  end
+
   def must_pass_options_to_queue_before_enqueueing
     @task.instance_eval do
       def enqueue *args
