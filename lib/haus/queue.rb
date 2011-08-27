@@ -377,13 +377,12 @@ class Haus
     # Returns the subpath of a path that is assumed to be a tree node, but is
     # not actually a directory or a link to one. Returns nil otherwise.
     def blocking_path path
-      nodes = File.expand_path(path).sub(%r{\A/}, '').split '/'
+      Pathname.new(path).descend do |p|
+        # Don't evaluate the leaf
+        break if p.to_s == path
 
-      (nodes.size - 1).times do |n|
-        # We want the absolute path, but strip leading slash before splitting
-        dir = '/' + nodes[0..n].join('/')
-        return nil if not extant? dir
-        return dir if not File.directory? dir
+        return nil    if not extant? p.to_s
+        return p.to_s if not p.directory?
       end
 
       nil
