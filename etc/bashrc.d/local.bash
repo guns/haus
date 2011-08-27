@@ -1170,8 +1170,7 @@ HAVE xset xrdb && {
 }
 
 # Subtle WM
-ALIAS subtlewm='subtle --config ~/.subtle/subtle.rb --sublets ~/.subtle/sublets' \
-      subtlecheck='subtlewm --check'
+ALIAS subtlecheck='subtle --check'
 
 
 ### Games
