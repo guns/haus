@@ -887,6 +887,20 @@ class Haus::QueueSpec < MiniTest::Spec
       it 'must return a relative path to a source' do
         @q.send(:relpath, '/magic/pony/ride', '/magic/sparkle/action').must_equal '../pony/ride'
       end
+
+      it 'must follow the `physical` directory structure, without following symlinks' do
+        # /home/test/.haus/one/two/three
+        # /home/test/.haus/bridge
+        # /home/test/.haus/etc
+        three  = File.join $user.haus, *%w[one two three]
+        bridge = File.join $user.haus, 'bridge'
+        FileUtils.mkdir_p three
+        FileUtils.ln_s three, bridge
+
+        src = $user.hausfile.first
+        dst = File.join bridge, 'dst'
+        @q.send(:relpath, src, dst).must_equal "../../../etc/#{File.basename src}"
+      end
     end
 
     describe :linked? do
