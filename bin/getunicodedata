@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'net/http'
+
+class Getunicodedata
+  UnicodeDataURL = 'http://www.unicode.org/Public/UNIDATA/UnicodeData.txt'
+
+  # http://www.unicode.org/Public/5.1.0/ucd/UCD.html#UnicodeData.txt
+  class UnicodeTable
+    attr_reader :data
+
+    def initialize buf
+      @data = parse buf
+    end
+
+    def parse buf
+      buf.lines.map do |line|
+        row = line.chomp.split ';'
+        {
+          :Char                       => [row[0].to_i(16)].pack('U'),
+          :Code_Point                 => row[0],
+          :Name                       => row[1],
+          :General_Category           => row[2],
+          :Canonical_Combining_Class  => row[3],
+          :Bidi_Class                 => row[4],
+          :Decomposition              => row[5],
+          :Numeric_Type_Decimal_Digit => row[6],
+          :Numeric_Type_Digit         => row[7],
+          :Numeric_Type_Numeric       => row[8],
+          :Bidi_Mirrored              => row[9],
+          :Unicode_1_Name             => row[10],
+          :ISO_Comment                => row[11],
+          :Simple_Uppercase_Mapping   => row[12],
+          :Simple_Lowercase_Mapping   => row[13],
+          :Simple_Titlecase_Mapping   => row[14]
+        }
+      end
+    end
+
+    def to_s
+      data.map do |row|
+        buf  = row[:General_Category] == 'Cc' ? row[:Char].inspect.delete('"') : row[:Char]
+        buf << "\tU+%s" % row[:Code_Point]
+        buf << "\t%s"   % row[:Name]
+        buf << "\t(%s)" % row[:Unicode_1_Name] if row[:Unicode_1_Name] and not row[:Unicode_1_Name].empty?
+        buf
+      end.join "\n"
+    end
+  end
+
+  def initialize args = []
+    @args = args.freeze
+    @opts = {}
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.banner = %Q(\
+        Download, parse, and print Unicode data from #{UnicodeDataURL}
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-f', '--file PATH', 'Read Unicode data from PATH' do |arg|
+        @opts[:file] = arg
+      end
+
+      opt.on '-r', '--raw', 'Print raw unparsed data' do
+        @opts[:raw] = true
+      end
+    end
+  end
+
+  def raw
+    @raw ||= if @opts[:file]
+      File.read @opts[:file]
+    else
+      Net::HTTP.get URI.parse(UnicodeDataURL)
+    end
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s unless args.empty?
+    return raw if @opts[:raw]
+    puts UnicodeTable.new(raw).to_s
+  end
+end
+
+Getunicodedata.new(ARGV).run if $0 == __FILE__
