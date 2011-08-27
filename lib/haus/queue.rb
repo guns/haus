@@ -249,8 +249,11 @@ class Haus
       return false if options.quiet or not $stdin.tty?
 
       # Create a summary table
-      actions = [:create, :modify, :overwrite, :delete].map do |type|
-        [type, targets(type)]
+      actions = [[:create,    :green],
+                 [:modify,    :yellow],
+                 [:overwrite, :magenta],
+                 [:delete,    :red]].map do |type, color|
+        [type.to_s.capitalize + ':', targets(type), color]
       end
 
       # Construct an optimal format (Enumerable#max_by unavailable in 1.8.6)
@@ -258,9 +261,9 @@ class Haus
       format = "    %-#{flen}s\n        %s"
 
       # Print the summary with annotations
-      actions.each do |verb, files|
+      actions.each do |verb, files, color|
         next if files.empty?
-        $stdout.puts verb.to_s.upcase + ':'
+        $stdout.puts fmt([verb, color, :bold, :italic])
         files.each do |f|
           note = fmt *annotations[f] if annotations.has_key? f
           $stdout.puts((format % [f, note || '']).rstrip) # Extra parens required for 1.8.6
