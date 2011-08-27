@@ -478,7 +478,7 @@ ALIAS free='free -m'
 
 # Plist dumper
 ALIAS plistbuddy='/usr/libexec/PlistBuddy' && {
-    plistprint='plistbuddy -c Print'
+    alias plistprint='plistbuddy -c Print'
     appvers() {
         while (($#)); do
             local base="$1"
@@ -604,7 +604,7 @@ ALIAS get='curl -#L'
 # DNS
 ALIAS digx='dig -x'
 if __OSX__; then
-    flushdns='run dscacheutil -flushcache'
+    alias flushdns='run dscacheutil -flushcache'
 fi
 
 # netcat
