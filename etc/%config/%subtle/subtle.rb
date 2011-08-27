@@ -43,7 +43,7 @@ set :resize, false
 set :tiling, false
 
 # Font string either take from e.g. xfontsel or use xft
-set :font, 'xft:Droid Sans Mono:pixelsize=12'
+set :font, 'xft:Menlo:pixelsize=12'
 
 # Separator between sublets
 set :separator, '|'
