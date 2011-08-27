@@ -582,7 +582,7 @@ daemons() {
 ### Switch User
 
 ALIAS s='sudo' \
-      root='sudo su'
+      root='exec sudo su'
 HAVE su && {
     alias xsu='exec su'
     tcomp su xsu
@@ -1054,7 +1054,9 @@ ALIAS tcrypt='truecrypt --text' \
 
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' \
-      vmboot='/Library/Application\ Support/VMware\ Fusion/boot.sh' \
+      vmnetstart='/Library/Application\ Support/VMware\ Fusion/boot.sh --start' \
+      vmnetstop='/Library/Application\ Support/VMware\ Fusion/boot.sh --stop' \
+      vmnetrestart='/Library/Application\ Support/VMware\ Fusion/boot.sh --restart' \
       vmware-vdiskmanager='/Library/Application\ Support/VMware\ Fusion/vmware-vdiskmanager'
 
 
