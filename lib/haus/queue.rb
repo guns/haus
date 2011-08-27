@@ -304,12 +304,30 @@ class Haus
       options.logger.fmt *args
     end
 
-    def relpath src, dst
-      Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s
+    # Returns the relative path between the `physical` (non-link-traversed)
+    # paths of given files.
+    def relpath source, destination
+      # We don't need the destination leaf
+      src, dst = [source, File.dirname(destination)].map do |file|
+        base = nil
+
+        # Find the deepest existing node (not :extant?; we are avoiding links)
+        Pathname.new(file).ascend do |p|
+          if p.exist?
+            base = p
+            break
+          end
+        end
+
+        # Rebase if necessary
+        Pathname.new base ? file.sub(/\A#{base}/, base.realpath.to_s) : file
+      end
+
+      src.relative_path_from(dst).to_s
     end
 
     def linked? src, dst
-      (options.absolute ? src : relpath(src, dst)) == File.readlink(dst)
+      (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
     end
 
     # Checks to see if file exists, even broken symlinks
@@ -359,13 +377,12 @@ class Haus
     # Returns the subpath of a path that is assumed to be a tree node, but is
     # not actually a directory or a link to one. Returns nil otherwise.
     def blocking_path path
-      nodes = File.expand_path(path).sub(%r{\A/}, '').split '/'
+      Pathname.new(path).descend do |p|
+        # Don't evaluate the leaf
+        break if p.to_s == path
 
-      (nodes.size - 1).times do |n|
-        # We want the absolute path, but strip leading slash before splitting
-        dir = '/' + nodes[0..n].join('/')
-        return nil if not extant? dir
-        return dir if not File.directory? dir
+        return nil    if not extant? p.to_s
+        return p.to_s if not p.directory?
       end
 
       nil
@@ -409,7 +426,7 @@ class Haus
 
     def execute_links fopts
       links.each do |src, dst|
-        srcpath = options.absolute ? src : relpath(src, dst)
+        srcpath = options.relative ? relpath(src, dst) : src
 
         log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
 

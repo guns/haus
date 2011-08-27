@@ -146,7 +146,8 @@ class Haus
 
     describe :__logger__ do
       it 'must be an alias to :logger' do
-        @app.method(:__logger__).must_equal @app.method(:logger)
+        # Method#== doesn't work for aliases in 1.8.6
+        @app.__logger__.must_equal @app.logger
       end
     end
   end
