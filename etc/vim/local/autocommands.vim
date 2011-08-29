@@ -50,6 +50,8 @@ augroup GUNS
     autocmd BufRead,BufNewFile $cdmetasploit/*
         \ setlocal noexpandtab |
         \ SetWhitespace 4
+    autocmd BufRead,BufNewFile subtle.rb
+        \ setlocal foldmethod=marker foldlevel=0
 
     " Python
     autocmd FileType python
