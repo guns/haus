@@ -582,7 +582,7 @@ daemons() {
 ### Switch User
 
 ALIAS s='sudo' \
-      root='sudo su'
+      root='exec sudo su'
 HAVE su && {
     alias xsu='exec su'
     tcomp su xsu
@@ -619,7 +619,7 @@ ALIAS ssh='ssh -C -2' \
       ssh-tunnel='ssh -Nn -M -D 22222' \
       ssh-password='ssh -o "PreferredAuthentications password"' \
       ssh-nocompression='ssh -o "Compression no"'
-HAVE ssh-agent && alias ssh-shell="exec ssh-agent \"$SHELL\""
+HAVE ssh-agent && alias ssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec ssh-agent \"$SHELL\""
 HAVE ssh-proxy && tcomp ssh ssh-proxy
 ALIAS scp='scp -C -2' \
       scpr='scp -r'
@@ -1054,7 +1054,9 @@ ALIAS tcrypt='truecrypt --text' \
 
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' \
-      vmboot='/Library/Application\ Support/VMware\ Fusion/boot.sh' \
+      vmnetstart='/Library/Application\ Support/VMware\ Fusion/boot.sh --start' \
+      vmnetstop='/Library/Application\ Support/VMware\ Fusion/boot.sh --stop' \
+      vmnetrestart='/Library/Application\ Support/VMware\ Fusion/boot.sh --restart' \
       vmware-vdiskmanager='/Library/Application\ Support/VMware\ Fusion/vmware-vdiskmanager'
 
 
