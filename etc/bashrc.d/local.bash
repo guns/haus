@@ -229,7 +229,7 @@ alias ls="ls -Ahl $GNU_COLOR_OPT"
 alias lc='ls -C'
 alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
 alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
-alias l1='ls -1'
+alias l1='command ls -1'
 alias l1g='l1 | g'
 alias lsg='ls | g'
 if __OSX__; then
