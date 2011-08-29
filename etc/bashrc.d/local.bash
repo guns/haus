@@ -619,10 +619,13 @@ ALIAS ssh='ssh -C -2' \
       ssh-tunnel='ssh -Nn -M -D 22222' \
       ssh-password='ssh -o "PreferredAuthentications password"' \
       ssh-nocompression='ssh -o "Compression no"'
-HAVE ssh-agent && alias ssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec ssh-agent \"$SHELL\""
-HAVE ssh-proxy && tcomp ssh ssh-proxy
 ALIAS scp='scp -C -2' \
       scpr='scp -r'
+HAVE ssh-agent && {
+    alias ssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec ssh-agent \"$SHELL\""
+    HAVE sudo && alias rootssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec sudo ssh-agent \"$SHELL\""
+}
+HAVE ssh-proxy && tcomp ssh ssh-proxy
 
 # lsof
 ALIAS lsof='lsof -Pn +fg' && {
