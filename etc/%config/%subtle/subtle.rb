@@ -8,9 +8,11 @@
 
 # == Initialize {{{1
 
-$:.push File.expand_path('../lib', __FILE__)
+$:.push File.expand_path('../contrib', __FILE__)
 
 require 'launcher'
+
+Subtle::Contrib::Launcher.paths = ENV['PATH']
 
 def config_valid?
   config  = File.expand_path __FILE__
