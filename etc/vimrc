@@ -91,7 +91,7 @@ set ttimeout                    " but timeout otherwise
 set lazyredraw                  " Don't redraw while in macros
 set nostartofline               " leave my cursor position alone!
 set visualbell t_vb=            " don't make faces
-set listchars=tab:▸\ ,trail:·   " Nice UI UTF-8 chars
+set listchars=tab:‣\ ,trail:·   " Nice UI UTF-8 chars
 set fillchars=fold:\ ,diff:·,vert:│
 set sessionoptions+=globals,localoptions
 

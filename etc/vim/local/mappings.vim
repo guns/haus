@@ -198,17 +198,15 @@ Mapall <4-l>     :wincmd\ l<CR> | Mapall <4-L>       :wincmd\ L<CR>
 " Window capturing
 Mapall  <4-O>  :execute\ winnr('$')\ ==\ 1\ ?\ 'tabonly'\ :\ 'only'<CR>
 noremap <C-w>! :wincmd T<CR>
-noremap <C-w>@ :let g:closed_bufnr = bufnr('%')<CR>:close<CR>:execute 'sbuffer '.g:closed_bufnr<CR>:wincmd L<CR>
+noremap <C-w>@ :CapturePane<CR>
 
 " Tabs
-" -- gt
 Mapall  <4-t> :tabnew<CR>
 Mapall  <4-T> :tabnew<CR>
 Mapall  <4-{> :tabprevious<CR>
 Mapall  <4-}> :tabnext<CR>
 Mapall  <4-_> :execute\ 'tabmove\ '.(tabpagenr()-2)<CR>
 Mapall  <4-+> :execute\ 'tabmove\ '.tabpagenr()<CR>
-noremap gt    :wincmd gf<CR>
 
 " Quickfix window
 Mapall <4-x> :copen<CR>
@@ -317,14 +315,18 @@ noremap <Leader>r
 
 """ Text editing
 
-" Characters
-noremap! <M-v> ✓
-noremap! <M-x> ×
-noremap! <M-l> λ
+" Unicode characters
+noremap! <M-6> §
 noremap! <M-8> •
-noremap! <M-*> °
-noremap! >   →
+noremap! <M-(> ·
+noremap! <M-;> …
+noremap! <M-h> ❤
+noremap! <M-l> λ
+noremap! <M-v> ✓
+noremap! <M-V> ⚡
+noremap! <M-x> ✖
 noremap! <   ←
+noremap! >   →
 
 " Character macros
 noremap  <M-CR> i\n<Esc><Right>

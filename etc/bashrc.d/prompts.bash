@@ -2,18 +2,16 @@
 
 EXPORT_PROMPTS() {
     local delim color
+
     if [[ $SSH_TTY ]]; then
-        delim='■'
+        delim='■' # Tunnel
         if ((EUID)); then
             color="${PS_COLOR:-36}"
         else
             color="${PS_COLOR:-31}"
         fi
-    elif [[ "$USER" == test ]]; then
-        delim='§'
-        color="${PS_COLOR:-36}"
     else
-        local delim='§'
+        delim='§' # Section
         if ((EUID)); then
             color="${PS_COLOR:-37}"
         else
@@ -21,8 +19,13 @@ EXPORT_PROMPTS() {
         fi
     fi
 
+    if [[ "$USER" == test ]]; then
+        color="${PS_COLOR:-36}"
+    fi
+
     export PS1="\[\e[0;${color}m\]\\H \[\e[1m\]${delim}\[\e[22m\] \\w\\n\[\e[0;${color}m\]\\u\\$\[\e[0m\] "
     export PS2="\[\e[0;${color}m\]${USER//?/░}░\[\e[0m\] "
+    export PS4='━ '
 }
 
 # Show exit status of last command if non-zero

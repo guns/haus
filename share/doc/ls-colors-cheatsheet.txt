@@ -48,7 +48,7 @@ no  NORMAL, NORM                Global default, although everything should
                                 be something
 fi  FILE                        Normal file
 di  DIR                         Directory
-ln  SYMLINK, LINK, LNK          Symbolic link. If you set this to ‘target’
+ln  SYMLINK, LINK, LNK          Symbolic link. If you set this to `target`
                                 instead of a numerical value, the color is as
                                 for the file pointed to
 pi  FIFO, PIPE                  Named pipe
@@ -65,7 +65,7 @@ ow  OTHER_WRITABLE              Directory that is other-writable (o+w) and
                                 not sticky
 st  STICKY                      Directory with the sticky bit set (+t) and
                                 not other-writable
-ex  EXEC                        Executable file (i.e. has ‘x’ set
+ex  EXEC                        Executable file (i.e. has `x` set
                                 in permissions)
 mi  MISSING                     Non-existent file pointed to by a symbolic link
                                 (visible when you type ls -l)

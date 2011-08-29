@@ -29,10 +29,14 @@ Xft*hintstyle: hintslight
 
 !!! RXVT-UNICODE
 
-URxvt*font:              xft:Consolas:pixelsize=14
 URxvt*pointerBlank:      on
 URxvt*pointerBlankDelay: 65535
 URxvt*scrollTtyKeypress: on
+
+! Explicit multiple fonts for code point search
+URxvt*font: xft:Consolas:pixelsize=14, \
+            xft:Menlo:pixelsize=14, \
+            xft:Bitstream Vera Sans Mono:pixelsize=14
 
 ! Super + Character           <Esc-Space-char>
 ! Super + Arrow keys          <Esc-Space-BEL-char>

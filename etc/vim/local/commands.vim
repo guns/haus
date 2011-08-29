@@ -180,6 +180,18 @@ function! <SID>RubyFold()
 endfunction
 
 
+" Tmux-esque capture-pane {{{1
+command! -nargs=? -bar CapturePane call <SID>CapturePane()
+function! <SID>CapturePane()
+    let buf = bufnr('%')
+    let tab = len(tabpagebuflist()) > 1
+    wincmd q
+    if tab | execute 'normal gT' | endif
+    execute buf . 'sbuffer'
+    wincmd L
+endfunction
+
+
 " Exuberant Ctags {{{1
 command! Ctags silent ! ctags -R -f .tags
 

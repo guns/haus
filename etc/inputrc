@@ -41,14 +41,17 @@ set skip-completed-text on
 "\eB":          character-search-backward
 
 # Unicode characters
-"\e*":          "°"
-"\e7":          "·"
+"\e6":          "§"
 "\e8":          "•"
-"\e<":          "←"
-"\e>":          "→"
+"\e(":          "·"
+"\e;":          "…"
+"\eh":          "❤"
 "\el":          "λ"
 "\ev":          "✓"
-"\ex":          "×"
+"\eV":          "⚡"
+"\ex":          "✖"
+"\e<":          "←"
+"\e>":          "→"
 
 
 ### Application Macros ###
