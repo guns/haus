@@ -14,6 +14,7 @@ configure :inet do |s|
 end
 
 on :run do |s|
+  # Find the gateway interface
   route = File.read('/proc/net/route').lines.drop(1).map(&:split).find do |l|
     # /usr/include/linux/route.h
     # Flags & RTF_GATEWAY
