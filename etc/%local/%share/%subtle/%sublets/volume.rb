@@ -186,10 +186,9 @@ configure :volume do |s| # {{{
   s.interval = 240
   s.step     = s.config[:step] || 5
   s.mixer    = Mixer.new
-  s.iconify  = lambda { |f| Subtlext::Icon.new File.expand_path("../icons/#{f}", __FILE__) }
   s.icons    = {
-    :on  => s.iconify.call("spkr_01.xbm"),
-    :off => s.iconify.call("spkr_02.xbm")
+    :on  => Subtlext::Icon.new("spkr_01.xbm"),
+    :off => Subtlext::Icon.new("spkr_02.xbm")
   }
 end # }}}
 

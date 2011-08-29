@@ -6,11 +6,10 @@
 
 configure :inet do |s|
   s.interval = s.config[:interval] || 60
-  s.iconify = lambda { |f| Subtlext::Icon.new File.expand_path("../icons/#{f}", __FILE__) }
   s.icons = {
-    :down => s.iconify.call('down.xbm'),
-    :wifi => s.iconify.call('wifi.xbm'),
-    :wire => s.iconify.call('wire.xbm')
+    :down => Subtlext::Icon.new('down.xbm'),
+    :wifi => Subtlext::Icon.new('wifi.xbm'),
+    :wire => Subtlext::Icon.new('wire.xbm')
   }
 end
 

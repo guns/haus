@@ -15,9 +15,7 @@ require 'launcher'
 Subtle::Contrib::Launcher.paths = ENV['PATH']
 
 def config_valid?
-  config  = File.expand_path __FILE__
-  sublets = File.expand_path '../sublets', __FILE__
-  system *%W[/opt/subtle/bin/subtle --check --config=#{config} --sublets=#{sublets}]
+  system *%W[/opt/subtle/bin/subtle --check --config=#{__FILE__}]
 end
 
 
@@ -100,7 +98,7 @@ set :separator, '|'
 screen 1 do
   top [
     :views, :title, :spacer,
-    :center, :time, :notify, :center,
+    :center, :time, :center,
     :tray, :volume, :battery, :inet
   ]
 end
@@ -160,6 +158,7 @@ end
 # Style for sublets
 style :sublets do
   foreground  "#757575"
+  padding     0, 5
 end
 
 # Style for separator

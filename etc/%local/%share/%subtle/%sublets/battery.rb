@@ -1,22 +1,39 @@
 # Battery sublet file
 # Created with sur-0.1
-configure :battery do |s|
+configure :battery do |s| # {{{
   s.interval = 60
   s.full     = 0
+  s.color    = ""
 
   # Path
   s.now      = ""
   s.status   = ""
 
   # Icons
-  s.iconify = lambda { |f| Subtlext::Icon.new File.expand_path("../icons/#{f}", __FILE__) }
   s.icons = {
-    :ac      => s.iconify.call("ac.xbm"),
-    :full    => s.iconify.call("bat_full_02.xbm"),
-    :low     => s.iconify.call("bat_low_02.xbm"),
-    :empty   => s.iconify.call("bat_empty_02.xbm"),
-    :unknown => s.iconify.call("ac.xbm")
+    :ac      => Subtlext::Icon.new("ac.xbm"),
+    :full    => Subtlext::Icon.new("bat_full_02.xbm"),
+    :low     => Subtlext::Icon.new("bat_low_02.xbm"),
+    :empty   => Subtlext::Icon.new("bat_empty_02.xbm"),
+    :unknown => Subtlext::Icon.new("ac.xbm")
   }
+
+  # Options
+  s.color_text = true  == s.config[:color_text]
+  s.color_icon = false == s.config[:color_icon] ? false : true
+  s.color_def  = Subtlext::Subtle.colors[:sublets_fg]
+
+  # Collect colors
+  if(s.config[:colors].is_a?(Hash))
+    s.colors = {}
+
+    s.config[:colors].each do |k, v|
+      s.colors[k] = Subtlext::Color.new(v)
+    end
+
+    # Just sort once
+    s.color_keys = s.colors.keys.sort.reverse
+  end
 
   # Find battery slot and capacity
   begin
@@ -42,15 +59,24 @@ configure :battery do |s|
     puts err, err.backtrace
     raise "Could't find any battery"
   end
-end
+end # }}}
 
-on :run do |s|
+on :run do |s| # {{{
   begin
     now     = IO.readlines(s.now).first.to_i
     state   = IO.readlines(s.status).first.chop
     percent = (now * 100 / s.full).to_i
 
-    # Select icon
+    # Select color
+    unless(s.colors.nil?)
+      # Find start color from top
+      s.color_keys.each do |k|
+        break if(k < percent)
+        s.color = s.colors[k] if(k >= percent)
+      end
+    end
+
+    # Select icon for state
     icon = case state
       when "Charging"  then :ac
       when "Discharging"
@@ -63,9 +89,12 @@ on :run do |s|
       else                  :unknown
     end
 
-    s.data = "%s%d%%" % [ s.icons[icon], percent ]
+    s.data = "%s%s%s%d%%" % [
+      s.color_icon ? s.color : s.color_def, s.icons[icon],
+      s.color_text ? s.color : s.color_def, percent
+    ]
   rescue => err # Sanitize to prevent unloading
     s.data = "subtle"
     p err
   end
-end
+end # }}}
