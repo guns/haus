@@ -10,13 +10,22 @@
 #
 # Graviton is a helper to create custom gravities
 #
-# http://subforge.org/wiki/subtle-contrib/Wiki#Graviton
+# http://subforge.org/projects/subtle-contrib/wiki/Graviton
 #
 
 begin
   require "subtle/subtlext"
 rescue LoadError
   puts ">>> ERROR: Couldn't find subtlext"
+  exit
+end
+
+# Check for subtlext version
+major, minor, teeny = Subtlext::VERSION.split(".").map(&:to_i)
+if(major == 0 and minor == 9 and 2829 > teeny)
+  puts ">>> ERROR: launcher needs at least subtle `0.9.2829' (found: %s)" % [
+    Subtlext::VERSION
+   ]
   exit
 end
 
@@ -56,7 +65,15 @@ module Subtle # {{{
     class Rectangle # {{{
       attr_accessor :x, :y, :width, :height, :color
 
-      def initialize(x, y, width, height, color) # {{{
+      ## initialize {{{
+      # Create a new rectangle
+      # @param  [Fixnum]  x       X position
+      # @param  [Fixnum]  y       Y position
+      # @param  [Fixnum]  width   Rectangle width
+      # @param  [Fixnum]  height  Rectangle height
+      ##
+
+      def initialize(x, y, width, height, color)
         @x      = x
         @y      = y
         @width  = width
@@ -64,7 +81,30 @@ module Subtle # {{{
         @color  = color
       end # }}}
 
-      def is_edge?(x, y) # {{{
+      ## normalize # {{{
+      # Normalize width/height and set left top border to origin
+      ##
+
+      def normalize
+        if(0 > @width)
+          @width *= -1
+          @x      -= @width
+        end
+
+        if(0 > @height)
+          @height *= -1
+          @y      -= @height
+        end
+      end # }}}
+
+      ## is_edge? {{{
+      # Check if x/y is edge of rectangle
+      # @param  [Fixnum]  x  X position
+      # @param  [Fixnum]  y  Y position
+      # @return [Symbol, nil] Selected edge or nil
+      ##
+
+      def is_edge?(x, y)
         if(x == @x and y == @y)
           :top_left
         elsif(x == (@x + @width) and y == @y)
@@ -78,23 +118,37 @@ module Subtle # {{{
         end
       end # }}}
 
-      def to_gravity(width, height) # {{{
-        w = @width * 100 / width
-        h = @height * 100 / height
-        x = @x * 100 / (width - w) % 100
-        y = @y * 100 / (height - h) % 100
+      ## to_gravity {{{
+      # Calculate gravity from rectangle values for given width/height
+      # @param  [Fixnum]  width   Width for calculation
+      # @param  [Fixnum]  height  Height for calculation
+
+      def to_gravity(width, height)
+        x = ratio(@x,      width)
+        y = ratio(@y,      height)
+        w = ratio(@width,  width)
+        h = ratio(@height, height)
 
         "gravity :%s, [ %d, %d, %d, %d ]" % [ @color, x, y, w, h ]
       end # }}}
 
-      def to_s # {{{
+      ## to_s {{{
+      # Convert rectable to string
+      ##
+
+      def to_s
         "x=%d, y=%d, width=%d, height=%d" % [ @x, @y, @width, @height ]
+      end # }}}
+
+      private
+
+      def ratio(value, ratio) # {{{
+        (value.to_f * 100.0 / ratio).to_i
       end # }}}
     end # }}}
 
     # Graviton class
     class Graviton < Gtk::Window # {{{
-
 
       ## initialize {{{
       # Init window
@@ -108,14 +162,15 @@ module Subtle # {{{
         @gridsize      = 20
         @panel_x       = 7
         @panel_y       = 7
-        @panel_width   = @geom.width / 2
-        @panel_height  = @geom.height / 2
+        @panel_width   = @geom.width / 3
+        @panel_height  = @geom.height / 3
 
-        @offset_width  = @panel_width % @gridsize
-        @offset_height = @panel_height % @gridsize
+        # Shrink grid
+        @panel_width  -= @panel_width % @gridsize
+        @panel_height -= @panel_height % @gridsize
 
-        @panel_width  -= @offset_width
-        @panel_height -= @offset_height
+        @grid_x = @panel_width / @gridsize
+        @grid_y = @panel_height / @gridsize
 
         @window_width  = @panel_width + 14
         @window_height = @panel_height + 44
@@ -170,7 +225,8 @@ module Subtle # {{{
           Gdk::Event::POINTER_MOTION_MASK|
           Gdk::Event::BUTTON1_MOTION_MASK|
           Gdk::Event::BUTTON_PRESS_MASK|
-          Gdk::Event::BUTTON_RELEASE_MASK
+          Gdk::Event::BUTTON_RELEASE_MASK|
+          Gdk::Event::POINTER_MOTION_HINT_MASK
         )
         frame.add(@area)
 
@@ -231,14 +287,6 @@ module Subtle # {{{
 
       private
 
-      def GCD(num1, num2) # {{{
-        if(0 == num1 % num2)
-          return num2
-        else
-          return GCD(num2, num1 % num2)
-        end
-      end # }}}
-
       def expose_event(widget, event) # {{{
         # Clear
         @ctxt.set_source_rgba(0.0, 0.0, 0.0, 1.0)
@@ -249,20 +297,31 @@ module Subtle # {{{
         @ctxt.set_line_width(1)
         @ctxt.set_source_rgba(0.6, 0.6, 0.6, 0.4)
 
-        (0..@panel_width - 1).step(@gridsize) do |x|
+        # Vertical lines
+        (0..@panel_width).step(@grid_x) do |x|
           @ctxt.move_to(x, 0)
-          @ctxt.line_to(x, @panel_width)
-          @ctxt.move_to(0, x)
-          @ctxt.line_to(@panel_width, x)
+          @ctxt.line_to(x, @panel_height)
+        end
+
+        # Horizontal lines
+        (0..@panel_height).step(@grid_y) do |y|
+          @ctxt.move_to(0, y)
+          @ctxt.line_to(@panel_width, y)
         end
         @ctxt.stroke
 
         # Center
         @ctxt.set_source_rgba(0.6, 0.0, 0.0, 0.4)
-        @ctxt.move_to((@panel_width / 2) / @gridsize, 0)
-        @ctxt.line_to((@panel_width / 2) / @gridsize, @panel_height)
-        @ctxt.move_to(0, @panel_width / @gridsize)
-        @ctxt.line_to(@panel_width, @panel_width / @gridsize)
+        x = @grid_x * (@gridsize / 2)
+        y = @grid_y * (@gridsize / 2)
+
+        # Vertical line
+        @ctxt.move_to(x, 0)
+        @ctxt.line_to(x, @panel_height)
+
+        # Horizontal line
+        @ctxt.move_to(0, y)
+        @ctxt.line_to(@panel_width, y)
         @ctxt.stroke
 
         # Rectangles
@@ -294,11 +353,11 @@ module Subtle # {{{
 
       def motion_event(widget, event) # {{{
         # Snap to closest grid knot
-        modx = event.x % @gridsize
-        mody = event.y % @gridsize
+        modx = event.x % @grid_x
+        mody = event.y % @grid_y
 
-        @x = @gridsize / 2 < modx ? event.x - modx + @gridsize : event.x - modx
-        @y = @gridsize / 2 < mody ? event.y - mody + @gridsize : event.y - mody
+        @x = @grid_x / 2 < modx ? event.x - modx + @grid_x : event.x - modx
+        @y = @grid_y / 2 < mody ? event.y - mody + @grid_y : event.y - mody
 
         # Calculate new width/height
         unless(@cur_rect.nil?)
@@ -390,6 +449,7 @@ module Subtle # {{{
 
       def release_event(widget, event) # {{{
         if(1 == event.button)
+          @cur_rect.normalize unless(@cur_rect.nil?)
           @cur_rect = nil
           @cur_edge = nil
           @sx       = 0
@@ -398,9 +458,14 @@ module Subtle # {{{
       end # }}}
 
       def button_print(widget) # {{{
+        puts
+
+        # Print rectangles
         @rectangles.each do |r|
-          puts r.to_gravity(@geom.width, @geom.height)
+          puts r.to_gravity(@panel_width, @panel_height)
         end
+
+        puts
       end # }}}
     end # }}}
   end # }}}

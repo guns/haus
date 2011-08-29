@@ -8,12 +8,16 @@
 # This program can be distributed under the terms of the GNU GPLv2.
 # See the file COPYING for details.
 #
-# Launcher that combines modes/tagging of subtle and a browser search bar
+# Launcher that combines modes/tagging of subtle and a browser search bar.
+#
+# It opens uris with your default browser via xdg-open. Easiest way to set
+# it is to define $BROWSER in your shell rc files.
 #
 # Thanks, fauno, for your initial work!
 #
 # Examples:
 #
+# :urxvt                - Call methods defined in the config
 # g subtle wm           - Change to browser view and search for 'subtle wm' via Google
 # urxvt @editor         - Open urxvt on view @editor with random tag
 # urxvt @editor #work   - Open urxvt on view @editor with tag #work
@@ -22,6 +26,7 @@
 # +urxvt                - Open urxvt and set full mode
 # ^urxvt                - Open urxvt and set floating mode
 # *urxvt                - Open urxvt and set sticky mode
+# =urxvt                - Open urxvt and set zaphod mode
 # urx<Tab>              - Open urxvt (tab completion)
 #
 # http://subforge.org/projects/subtle-contrib/wiki/Launcher
@@ -57,13 +62,12 @@ end
 module Subtle # {{{
   module Contrib # {{{
     # Precompile regexps
-    RE_COMMAND  = Regexp.new(/^([+\^\*]*[A-Za-z0-9_\-\/'"\s]+)(\s[@#][A-Za-z0-9_-]+)*$/)
-    RE_MODES    = Regexp.new(/^([+\^\*]*)([A-Za-z0-9_\-\/'"\s]+)/)
-    RE_SEARCH   = Regexp.new(/^[gs]\s.*/)
-    RE_URI      = Regexp.new(/^(http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$/ix)
-    RE_CHROME   = Regexp.new(/chrom[e|ium]|iron/i)
-    RE_FIREFOX  = Regexp.new(/navigator/i)
-    RE_OPERA    = Regexp.new(/opera/i)
+    RE_COMMAND = Regexp.new(/^([+\^\*]*[A-Za-z0-9_\-\/'"\s]+)(\s[@#][A-Za-z0-9_-]+)*$/)
+    RE_MODES   = Regexp.new(/^([+\^\*]*)([A-Za-z0-9_\-\/'"\s]+)/)
+    RE_SEARCH  = Regexp.new(/^[gs]\s+(.*)/)
+    RE_METHOD  = Regexp.new(/^[:]\s*(.*)/)
+    RE_URI     = Regexp.new(/^(http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$/ix)
+    RE_BROWSER = Regexp.new(/(chrom[e|ium]|iron|navigator|firefox|opera)/i)
 
     # Launcher class
     class Launcher # {{{
@@ -72,7 +76,8 @@ module Subtle # {{{
       # Default values
       @@font_big   = "-*-*-medium-*-*-*-40-*-*-*-*-*-*-*"
       @@font_small = "-*-*-medium-*-*-*-14-*-*-*-*-*-*-*"
-      @@paths      = ENV['PATH']
+      @@paths      = "/usr/bin"
+      @@screen_num = 0
 
       # Singleton methods
 
@@ -101,12 +106,22 @@ module Subtle # {{{
         end
       end # }}}
 
-      ## run {{{
-      # Run the launcher
+      ## browser_screen_num {{{
+      # Set screen num to show browser view
+      # @param [Fixnum]  num  Screen number
       ##
 
-      def self.run
-        self.instance.run
+      def self.browser_screen_num=(num)
+        @screen_num = num if(num.is_a?(Fixnum))
+      end # }}}
+
+      ## run {{{
+      # Run the launcher
+      # @param [String]  command  Command
+      ##
+
+      def self.run(command = nil)
+        self.instance.run(command)
       end # }}}
 
       # Instance methods
@@ -131,9 +146,17 @@ module Subtle # {{{
         @parsed_modes = ""
 
         # Cached data
-        @cached_tags  = Subtlext::Tag.all.map(&:name)
-        @cached_views = Subtlext::View.all.map(&:name)
-        @cached_apps  = {}
+        @cached_tags   = Subtlext::Tag.all.map(&:name)
+        @cached_views  = Subtlext::View.all.map(&:name)
+        @cached_apps   = {}
+
+        # FIXME: Find config instance
+        if(defined?(Subtle::Config))
+          ObjectSpace.each_object(Subtle::Config) do |c|
+            @cached_sender  = c
+            @cached_methods = c.methods(false).map(&:to_s)
+          end
+        end
 
         # Something close to a skiplist
         @@paths.split(":").each do |path|
@@ -178,7 +201,7 @@ module Subtle # {{{
         # Input handler
         @input.input do |string|
           begin
-            Launcher.instance.input(string)
+            Launcher.instance.parse(string)
           rescue => err
             puts err, err.backtrace
           end
@@ -187,7 +210,7 @@ module Subtle # {{{
         # Completion handler
         @input.completion do |string, guess|
           begin
-            Launcher.instance.completion(string, guess)
+            Launcher.instance.complete(string, guess)
           rescue => err
             puts err, err.backtrace
           end
@@ -211,12 +234,13 @@ module Subtle # {{{
         info
       end # }}}
 
-      ## input {{{
-      # Handle input
-      # @param  [String]]  string  Input string
+      ## parse {{{
+      # Parse input
+      # @param  [String]  string  Input string
+      # @param  [Bool]    notify  Show info messages
       ##
 
-      def input(string)
+      def parse(string, notify = true)
         # Clear info field
         if(string.empty? or string.nil?)
           info
@@ -227,13 +251,17 @@ module Subtle # {{{
         if(RE_URI.match(string))
           @candidate = URI.parse(string)
 
-          info("Goto %s" % [ @candidate.to_s ])
+          info("Goto %s" % [ @candidate.to_s ]) if(notify)
         elsif(RE_SEARCH.match(string))
-          @candidate = URI.parse("http://www.google.com/#q=%s" % [
-            URI.escape(string.gsub(/^[gs]\s/, ''))
-          ])
+          @candidate = URI.parse(
+            "http://www.google.com/#q=%s" % [ URI.escape($1) ]
+          )
 
-          info("Goto %s" % [ @candidate.to_s ])
+          info("Goto %s" % [ @candidate.to_s ]) if(notify)
+        elsif(RE_METHOD.match(string))
+          @candidate = $1.to_sym
+
+          info("Call :%s" % [ @candidate ])
         elsif(RE_COMMAND.match(string))
           @candidate    = string
           @parsed_tags  = []
@@ -263,32 +291,34 @@ module Subtle # {{{
             @parsed_tags << "tag_%d" % [ rand(1337) ]
           end
 
-          if(@parsed_views.any?)
-            info("Launch %s%s on %s (via %s)" % [
-              modes2text(@parsed_modes),
-              @parsed_app,
-              @parsed_views.join(", "),
-              @parsed_tags.join(", ")
-            ])
-          elsif(@parsed_tags.any?)
-            info("Launch %s%s (via %s)" % [
-              modes2text(@parsed_modes),
-              @parsed_app,
-              @parsed_tags.join(", ")
-            ])
-          else
-            info("Launch %s%s" % [ modes2text(@parsed_modes), @parsed_app ])
+          if(notify)
+            if(@parsed_views.any?)
+              info("Launch %s%s on %s (via %s)" % [
+                modes2text(@parsed_modes),
+                @parsed_app,
+                @parsed_views.join(", "),
+                @parsed_tags.join(", ")
+              ])
+            elsif(@parsed_tags.any?)
+              info("Launch %s%s (via %s)" % [
+                modes2text(@parsed_modes),
+                @parsed_app,
+                @parsed_tags.join(", ")
+              ])
+            else
+              info("Launch %s%s" % [ modes2text(@parsed_modes), @parsed_app ])
+            end
           end
         end
       end # }}}
 
-      ## completion {{{
+      ## complete {{{
       # Complete string
       # @param  [String]  string  String to match
       # @param  [Fixnum]  guess   Number of guess
       ##
 
-      def completion(string, guess)
+      def complete(string, guess)
         begin
           guesses = []
           lookup = nil
@@ -308,6 +338,9 @@ module Subtle # {{{
             when "@"
               lookup = @cached_views
               prefix = "@"
+            when ":"
+              lookup = @cached_methods
+              prefix = ":"
             when "+", "^", "*"
               lookup = @cached_apps[last[@parsed_modes.size].to_sym]
               prefix = @parsed_modes
@@ -321,14 +354,19 @@ module Subtle # {{{
             lookup.each do |l|
               guesses << [
                 "%s%s" %[ prefix, l ],
-                Levenshtein::distance(last.gsub(/^[@#]/, ""),
+                Levenshtein::distance(last.gsub(/^[@#:]/, ""),
                   l, 1, 5, 5, @array1, @array2)
               ]
             end
 
             guesses.sort! { |a, b| a[1] <=> b[1] } # Sort by distance
 
-            @candidate = guesses[guess].first
+            @candidate = retval = guesses[guess].first
+
+            # Convert to symbol if methods are guessed
+            @candidate = @candidate.delete(":").to_sym if(":" == prefix)
+
+            retval
           end
         rescue => err
           puts err, err.backtrace
@@ -374,16 +412,24 @@ module Subtle # {{{
 
       ## run {{{
       # Show and run launcher
+      # @param [String]  command  Command
       ##
 
-      def run
-        show
-        ret = @input.read(2, @font_y1, @width / 45)
-        hide
+      def run(command = nil)
+        # Run launcher when no command is given
+        if(command.nil?)
+          show
+          command = @input.read(2, @font_y1, @width / 45)
+          hide
+        else
+          parse(command)
+        end
 
         # Check if input returns a value
-        unless(ret.nil?)
+        unless(command.nil?)
           case @candidate
+            when Symbol #{{{
+              @cached_sender.send(@candidate) # }}}
             when String # {{{
               # Find or create tags
               @parsed_tags.map! do |t|
@@ -415,6 +461,7 @@ module Subtle # {{{
                       when "+" then flags << :full
                       when "^" then flags << :float
                       when "*" then flags << :stick
+                      when "=" then flags << :zaphod
                     end
                   end
 
@@ -423,21 +470,11 @@ module Subtle # {{{
               end # }}}
             when URI # {{{
               find_browser
-              unless(@browser.nil?)
-                @view.jump
 
-                # Select browser
-                case @browser
-                  when :chrome
-                    system *%W[chrome -- #{@candidate}]
-                  when :firefox
-                    system("firefox -new-tab '%s'" % [ @candidate.to_s ])
-                  when :opera
-                    system("opera -remote 'openURL(%s)'" % [ @candidate.to_s ])
-                  else
-                    puts ">>> ERROR: Unsupported browser"
-                    return
-                end
+              unless(@browser.nil?)
+                Subtlext::Screen[@@screen_num].view = @view
+                system("xdg-open '%s' &>/dev/null" % [ @candidate.to_s ])
+                @browser.focus
               end # }}}
           end
         end
@@ -456,6 +493,7 @@ module Subtle # {{{
             when "+" then ret << "full"
             when "^" then ret << "floating"
             when "*" then ret << "sticky"
+            when "=" then ret << "zaphod"
           end
         end
 
@@ -466,19 +504,10 @@ module Subtle # {{{
         begin
           if(@browser.nil?)
             Subtlext::Client.all.each do |c|
-              case c.instance
-                when RE_CHROME
-                  @browser = :chrome
-                  @view    = c.views.first
-                  return
-                when RE_FIREFOX
-                  @browser = :firefox
-                  @view    = c.views.first
-                  return
-                when RE_OPERA
-                  @browser = :opera
-                  @view    = c.views.first
-                  return
+              if(c.klass.match(RE_BROWSER))
+                @browser = c
+                @view    = c.views.first
+                return
               end
             end
 
@@ -509,6 +538,9 @@ if(__FILE__ == $0)
 
   # Set paths
   # Subtle::Contrib::Launcher.paths = [ "/usr/bin", "~/bin" ]
+
+  # Set browser screen
+  Subtle::Contrib::Launcher.browser_screen_num = 0
 
   Subtle::Contrib::Launcher.run
 end

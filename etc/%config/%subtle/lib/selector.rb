@@ -9,9 +9,9 @@
 #
 # Colors:
 #
-# Focus    - Currently selected client
-# Occupied - Visible clients on current views
-# View     - Currently not visible clients
+# Focus      - Currently selected client
+# Occupied   - Visible clients on current views
+# Unoccupied - Currently no visible clients
 #
 # Keys:
 #
@@ -37,8 +37,8 @@ end
 
 # Check for subtlext version
 major, minor, teeny = Subtlext::VERSION.split(".").map(&:to_i)
-if(major == 0 and minor == 9 and 2577 > teeny)
-  puts ">>> ERROR: selector needs at least subtle `0.9.2577' (found: %s)" % [
+if(major == 0 and minor == 10 and 3006 > teeny)
+  puts ">>> ERROR: selector needs at least subtle `0.10.3005' (found: %s)" % [
     Subtlext::VERSION
    ]
   exit
@@ -84,7 +84,6 @@ module Subtle # {{{
       def initialize
         # Values
         @colors   = Subtlext::Subtle.colors
-        @wins     = []
         @expanded = false
         @buffer   = ""
         @x        = 0
@@ -104,6 +103,10 @@ module Subtle # {{{
         # Font metrics
         @font_height = @win.font_height + 6
         @font_y      = @win.font_y
+
+        # Handler
+        @win.on :key_down, method(:key_down)
+        @win.on :draw, method(:redraw)
       end # }}}
 
       ## run {{{
@@ -111,102 +114,94 @@ module Subtle # {{{
       ##
 
       def run
-        update
-        arrange
-        recolor
-        show
-
         @buffer = ""
 
-        # Listen to key press events
-        @win.listen do |key|
-          ret = true
-
-          case key
-            when :left, :up # {{{
-              idx       = @clients.index(@current)
-              idx      -= 1 if(0 < idx)
-              @current  = @clients[idx]
-
-              recolor # }}}
-            when :right, :down # {{{
-              idx       = @clients.index(@current)
-              idx      += 1 if(idx < (@clients.size - 1))
-              @current  = @clients[idx]
-
-              recolor # }}}
-            when :return # {{{
-              @current.focus
-
-              ret = false # }}}
-            when :escape # {{{
-              if(@expanded)
-                @buffer = ""
-                expand
-              else
-                ret = false
-              end # }}}
-            when :backspace # {{{
-              if(@expanded)
-                @buffer.chop!
-                @win.write(2, @height - @font_height + @font_y + 3, "Input: %s" % [ @buffer ])
-                @win.redraw
-                expand
-              end # }}}
-            when :tab # {{{
-              if(@buffer.empty?)
-                clients = @clients
-              else
-                # Select matching clients
-                clients = @clients.select do |c|
-                  c.instance.downcase.start_with?(@buffer)
-                end
-              end
-
-              unless((idx = clients.index(@current)).nil?)
-                # Cycle between clients
-                if(idx < (clients.size - 1))
-                  idx += 1
-                else
-                  idx = 0
-                end
-
-                @current = clients[idx]
-
-                recolor
-              end # }}}
-            else
-              str = key.to_s
-
-              if(!(idx = LETTERS.index(str)).nil? and idx < @clients.size)
-                @clients[idx].focus
-
-                ret = false
-              elsif(!str.empty?)
-                @buffer << str.downcase
-
-                @clients.each do |c|
-                  if(c.instance.downcase.start_with?(@buffer))
-                    @current = c
-                    recolor
-
-                    break
-                  end
-                end
-
-                expand
-                @win.write(6, @height - @font_height + @font_y + 3, "Input: %s" % [ @buffer ])
-                @win.redraw
-              end
-          end
-
-          ret
-        end
-
+        update
+        show
         hide
       end # }}}
 
       private
+
+      ## key_down {{{
+      # Key down handler
+      # @param [String]  key  Pressed key
+      ##
+
+      def key_down(key)
+        ret = true
+
+        case key
+          when :left, :up # {{{
+            idx       = @clients.index(@current)
+            idx      -= 1 if(0 < idx)
+            @current  = @clients[idx] # }}}
+          when :right, :down # {{{
+            idx       = @clients.index(@current)
+            idx      += 1 if(idx < (@clients.size - 1))
+            @current  = @clients[idx] # }}}
+          when :return # {{{
+            @current.focus
+
+            ret = false # }}}
+          when :escape # {{{
+            if(@expanded)
+              @buffer = ""
+              @expand = false
+            else
+              ret = false
+            end
+            arrange # }}}
+          when :backspace # {{{
+            if(@expanded)
+              @buffer.chop!
+            end # }}}
+          when :tab # {{{
+            if(@buffer.empty?)
+              clients = @clients
+            else
+              # Select matching clients
+              clients = @clients.select do |c|
+                c.instance.downcase.start_with?(@buffer)
+              end
+            end
+
+            unless((idx = clients.index(@current)).nil?)
+              # Cycle between clients
+              if(idx < (clients.size - 1))
+                idx += 1
+              else
+                idx = 0
+              end
+
+              @current = clients[idx]
+            end # }}}
+          else
+            str = key.to_s
+
+            if(!(idx = LETTERS.index(str)).nil? and idx < @clients.size)
+              @clients[idx].focus
+
+              ret = false
+            elsif(!str.empty?)
+              @buffer << str.downcase
+
+              @clients.each do |c|
+                if(c.instance.downcase.start_with?(@buffer))
+                  @current = c
+
+                  break
+                end
+              end
+
+              arrange
+            end
+        end
+
+        redraw(@win) if(ret)
+
+        ret
+      end # }}}
 
       ## update # {{{
       # Update clients and windows
@@ -216,23 +211,11 @@ module Subtle # {{{
         @clients = Subtlext::Client.all
         @visible = Subtlext::Client.visible
         @current = Subtlext::Client.current
-
-        # Check window count
-        if(@clients.size > @wins.size)
-          (@clients.size - @wins.size).times do |i|
-            @wins << @win.subwindow(:x => 0, :y => 0, :width => 1, :height => 1) do |w|
-              w.name        = "Selector client"
-              w.font        = @@font
-              w.foreground  = @colors[:views_fg]
-              w.background  = @colors[:views_bg]
-              w.border_size = 0
-            end
-          end
-        end
+        arrange
       end # }}}
 
       ## arrange {{{
-      # Move expose windows to current screen
+      # Arrange window
       ##
 
       def arrange
@@ -244,12 +227,19 @@ module Subtle # {{{
         len     = 0
         wwidth  = 0
 
-        # Arrange client windows
+        # Toggle expand
+        if(@buffer.empty?)
+          @height   = @font_height
+          @expanded = false
+        else
+          @height   += @font_height
+          @expanded  = true
+        end
+
+        # Calculate window width
         @clients.each_with_index do |c, i|
-          w   = @wins[i]
-          len = w.write(6, @font_y + 3, "%s:%s" % [
-            LETTERS[i], c.instance ]
-          ) + 6
+          str  = "%s:%s" % [ LETTERS[i], c.instance ]
+          len  = @win.font_width(str) + 6
 
           # Wrap lines
           if(wx + len > @width)
@@ -258,12 +248,10 @@ module Subtle # {{{
             wy     += @font_height
           end
 
-          w.geometry = [ wx, wy, len, @font_height ]
-
           wx += len
         end
 
-        # Update geometries
+        # Update window geometry
         @width   = 0 == wwidth ? wx : wwidth
         @height += wy
         @x       = geo.x + ((geo.width - @width) / 2)
@@ -272,43 +260,52 @@ module Subtle # {{{
         @win.geometry = [ @x , @y, @width, @height ]
       end # }}}
 
-      ## expand {{{
-      # Expand selector
+      ## redraw {{{
+      # Redraw window content
+      # @param [Window]  w  Window instance
       ##
 
-      def expand
-        if(@buffer.empty? and @expanded)
-          @height   -= @font_height
-          @expanded  = false
+      def redraw(w)
+        @win.clear
 
-          @win.geometry = [ @x , @y, @width, @height ]
-        elsif(!@expanded)
-          @height   += @font_height
-          @expanded  = true
+        wx  = 0
+        wy  = 0
+        len = 0
 
-          @win.geometry = [ @x , @y, @width, @height ]
-        end
-      end # }}}
+        # Render window
+        @clients.each_with_index do |c, i|
+          str  = "%s:%s" % [ LETTERS[i], c.instance ]
+          len  = @win.font_width(str) + 6
 
-      ## recolor {{{
-      # Update colors of subwindos
-      ##
-
-      def recolor
-        @wins.each_with_index do |w, i|
-          # Highlight current and visible clients
-          if(@clients[i] == @current)
-            w.foreground = @colors[:focus_fg]
-            w.background = @colors[:focus_bg]
-          elsif(@visible.include?(@clients[i]))
-            w.foreground = @colors[:occupied_fg]
-            w.background = @colors[:occupied_bg]
-          else
-            w.foreground = @colors[:views_fg]
-            w.background = @colors[:views_bg]
+          # Wrap lines
+          if(wx + len > @width)
+            wwidth  = wx if(wx > wwidth)
+            wx      = 0
+            wy     += @font_height
           end
 
-          w.redraw
+          # Select color
+          if(@clients[i] == @current)
+            fg = @colors[:focus_fg]
+            bg = @colors[:focus_bg]
+          elsif(@visible.include?(@clients[i]))
+            fg = @colors[:occupied_fg]
+            bg = @colors[:occupied_bg]
+          else
+            fg = @colors[:unoccupied_fg]
+            bg = @colors[:unoccupied_bg]
+          end
+
+          @win.draw_rect(wx, wy, len, @font_height, bg, true)
+          @win.draw_text(wx + 3, wy + @font_y + 3, str, fg)
+
+          wx += len
+        end
+
+        # Draw input buffer
+        unless(@buffer.empty?)
+          @win.draw_text(6, @height - @font_height + @font_y + 3,
+            "Input: %s" % [ @buffer ])
         end
       end # }}}
 
@@ -318,11 +315,6 @@ module Subtle # {{{
 
       def show
         @win.show
-
-        # Show used windows only
-        @wins.each_with_index do |w, i|
-          w.show if(i < @clients.size)
-        end
       end # }}}
 
       ## hide # {{{
@@ -331,7 +323,6 @@ module Subtle # {{{
 
       def hide
         @win.hide
-        @wins.map(&:hide)
       end # }}}
 
     end # }}}

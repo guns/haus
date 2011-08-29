@@ -29,7 +29,7 @@ module Subtle # {{{
       WINDOW_HEIGHT = 420
       AREA_WIDTH    = 404
       AREA_HEIGHT   = 365
-      REGEXP        = Regexp.new("^[^!#]*(color[0-9]+|foreground|background):\s*(#[0-9a-zA-Z]*)")
+      REGEXP        = Regexp.new("^[^!#]*(color[0-9]+|foreground|background)\s*:\s*(#[0-9a-zA-Z]*)")
 
       ## initialize {{{
       # Init window

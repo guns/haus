@@ -39,8 +39,8 @@ end
 
 # Check for subtlext version
 major, minor, teeny = Subtlext::VERSION.split(".").map(&:to_i)
-if(major == 0 and minor == 9 and 2602 > teeny)
-  puts ">>> ERROR: merger needs at least subtle `0.9.2602' (found: %s)" % [
+if(major == 0 and minor == 10 and 3006 > teeny)
+  puts ">>> ERROR: merger needs at least subtle `0.10.3006' (found: %s)" % [
     Subtlext::VERSION
    ]
   exit
@@ -83,7 +83,6 @@ module Subtle # {{{
       def initialize
         # Values
         @colors = Subtlext::Subtle.colors
-        @wins   = []
 
         # Create main window
         @win = Subtlext::Window.new(:x => 0, :y => 0, :width => 1, :height => 1) do |w|
@@ -97,6 +96,10 @@ module Subtle # {{{
         # Font metrics
         @font_height = @win.font_height + 6
         @font_y      = @win.font_y
+
+        # Handler
+        @win.on :key_down, method(:key_down)
+        @win.on :draw, method(:redraw)
       end # }}}
 
       ## run {{{
@@ -105,65 +108,63 @@ module Subtle # {{{
 
       def run
         update
-        arrange
-        recolor
         show
-
-        # Listen to key press events
-        @win.listen do |key|
-          ret = true
-
-          case key
-            when :left, :up # {{{
-              idx       = @views.index(@cur_sel)
-              idx      -= 1 if(0 < idx)
-              @cur_sel  = @views[idx]
-
-              recolor # }}}
-            when :right, :down # {{{
-              idx       = @views.index(@cur_sel)
-              idx      += 1 if(idx < (@views.size - 1))
-              @cur_sel  = @views[idx]
-
-              recolor # }}}
-            when :space # {{{
-              if(@selected.include?(@cur_sel))
-                @selected.delete(@cur_sel)
-              else
-                @selected << @cur_sel
-              end
-              recolor # }}}
-            when :return # {{{
-              tags = @cur_client.tags
-
-              @selected.each do |sel|
-                # Untag or tag
-                if(@cur_views.include?(sel))
-                  # Remove common tags
-                  tags -= (@cur_client.tags - sel.tags)
-                else
-                  # Find or create tag
-                  tag = Subtlext::Tag[sel.name] || Subtlext::Tag.new(sel.name)
-                  tag.save
-
-                  tags << tag
-                end
-              end
-
-              @cur_client.tags = tags
-
-              ret = false # }}}
-            when :escape # {{{
-              ret = false # }}}
-          end
-
-          ret
-        end
-
         hide
       end # }}}
 
       private
+
+      ## key_down {{{
+      # Key down handler
+      # @param [String]  key  Pressed key
+      ##
+
+      def key_down(key)
+        ret = true
+
+        case key
+          when :left, :up # {{{
+            idx       = @views.index(@cur_sel)
+            idx      -= 1 if(0 < idx)
+            @cur_sel  = @views[idx] # }}}
+          when :right, :down # {{{
+            idx       = @views.index(@cur_sel)
+            idx      += 1 if(idx < (@views.size - 1))
+            @cur_sel  = @views[idx] # }}}
+          when :space # {{{
+            if(@selected.include?(@cur_sel))
+              @selected.delete(@cur_sel)
+            else
+              @selected << @cur_sel
+            end # }}}
+          when :return # {{{
+            tags = @cur_client.tags
+
+            @selected.each do |sel|
+              # Untag or tag
+              if(@cur_views.include?(sel))
+                # Remove common tags
+                tags -= (@cur_client.tags - sel.tags)
+              else
+                # Find or create tag
+                tag = Subtlext::Tag[sel.name] || Subtlext::Tag.new(sel.name)
+                tag.save
+
+                tags << tag
+              end
+            end
+
+            @cur_client.tags = tags
+
+            ret = false # }}}
+          when :escape # {{{
+            ret = false # }}}
+        end
+
+        redraw(@win) if(ret)
+
+        ret
+      end
 
       ## update # {{{
       # Update clients and windows
@@ -175,19 +176,7 @@ module Subtle # {{{
         @cur_client = Subtlext::Client.current
         @cur_views  = @cur_client.views
         @cur_sel    = Subtlext::View.current
-
-        # Check window count
-        if(@views.size > @wins.size)
-          (@views.size - @wins.size).times do |i|
-            @wins << @win.subwindow(:x => 0, :y => 0, :width => 1, :height => 1) do |w|
-              w.name       = "Positioner window"
-              w.font       = @@font
-              w.foreground = @colors[:views_fg]
-              w.background = @colors[:views_bg]
-              w.border_size = 0
-            end
-          end
-        end
+        arrange
       end # }}}
 
       ## arrange {{{
@@ -205,8 +194,7 @@ module Subtle # {{{
 
         # Arrange client windows
         @views.each_with_index do |v, i|
-          w   = @wins[i]
-          len = w.write(6, @font_y + 3, v.name) + 6
+          len = @win.font_width(v.name) + 6
 
           # Wrap lines
           if(wx + len > width)
@@ -214,8 +202,6 @@ module Subtle # {{{
             wx      = 0
             wy     += @font_height
           end
-
-          w.geometry = [ wx, wy, len, @font_height ]
 
           wx += len
         end
@@ -229,28 +215,41 @@ module Subtle # {{{
         @win.geometry = [ x , y, width, height ]
       end # }}}
 
-      ## recolor {{{
-      # Update colors of subwindows
+      ## redraw {{{
+      # Redraw window content
+      # @param [Window]  w  Window instance
       ##
 
-      def recolor
-        @wins.each_with_index do |w, i|
+      def redraw(w)
+        @win.clear
+
+        wx  = 0
+        wy  = 0
+        len = 0
+
+        @views.each_with_index do |v, i|
+          len = @win.font_width(v.name) + 6
+
+          # Select color
           if(@views[i] == @cur_sel)
-            w.foreground = @colors[:focus_fg]
-            w.background = @colors[:focus_bg]
+            fg = @colors[:focus_fg]
+            bg = @colors[:focus_bg]
           elsif(@cur_views.include?(@views[i]))
-            w.foreground = @colors[:occupied_fg]
-            w.background = @colors[:occupied_bg]
+            fg = @colors[:occupied_fg]
+            bg = @colors[:occupied_bg]
           else
-            w.foreground = @colors[:views_fg]
-            w.background = @colors[:views_bg]
+            fg = @colors[:unoccupied_fg]
+            bg = @colors[:unoccupied_bg]
           end
 
           if(@selected.include?(@views[i]))
-            w.foreground = @colors[:urgent_fg]
+            fg = @colors[:urgent_fg]
           end
 
-          w.redraw
+          @win.draw_rect(wx, wy, len, @font_height, bg, true)
+          @win.draw_text(wx + 3, wy + @font_y + 3, v.name, fg)
+
+          wx += len
         end
       end # }}}
 
@@ -260,11 +259,6 @@ module Subtle # {{{
 
       def show
         @win.show
-
-        # Show used windows only
-        @wins.each_with_index do |w, i|
-          w.show if(i < @views.size)
-        end
       end # }}}
 
       ## hide # {{{
@@ -273,7 +267,6 @@ module Subtle # {{{
 
       def hide
         @win.hide
-        @wins.map(&:hide)
       end # }}}
 
     end # }}}
