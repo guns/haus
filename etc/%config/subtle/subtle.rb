@@ -364,12 +364,6 @@ grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
 grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
 grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
 
-# Select adjacent views
-grab 'W-C-h', :ViewPrev
-grab 'W-C-j', :ViewNext
-grab 'W-C-k', :ViewPrev
-grab 'W-C-l', :ViewNext
-
 # Switch window focus in current view
 %w[W-Tab W-S-Tab].each_with_index do |key, direction|
   grab key do |this|
