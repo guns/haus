@@ -6,6 +6,8 @@
 #   guns <self@sungpae.com>
 
 
+# == Initialize {{{1
+
 $:.push File.expand_path('../lib', __FILE__)
 
 require 'launcher'
@@ -355,25 +357,26 @@ grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
 grab 'W-C-w', [ :top,          :top66,          :top33          ]
 grab 'W-C-e', [ :top_right,    :top_right66,    :top_right33    ]
 grab 'W-C-a', [ :left,         :left66,         :left33         ]
-grab 'W-C-s', [ :center,       :center66,       :center33       ]
+grab 'W-C-s', [ :center,       :middle                          ]
 grab 'W-C-d', [ :right,        :right66,        :right33        ]
 grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
 grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
 grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
 
-# Select adjacent windows
+# Select adjacent views
 grab 'W-C-h', :ViewPrev
 grab 'W-C-j', :ViewNext
 grab 'W-C-k', :ViewPrev
 grab 'W-C-l', :ViewNext
 
 # Switch window focus in current view
-%w[W-Tab W-S-Tab].each_with_index do |key, i|
+%w[W-Tab W-S-Tab].each_with_index do |key, direction|
   grab key do |this|
-    clients = Subtlext::Client.visible + Subtlext::Client.all.select(&:is_stick?)
-    methods = i.zero? ? %w[to_a > first] : %w[reverse < last]
-    window  = eval %Q(clients.%s.find { |c| c.id %s this.id } || clients.%s) % methods
-    window.focus
+    clients = Subtlext::View.current.clients.sort_by &:win
+    thisidx = clients.index { |c| c.win == this.win }
+    index   = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
+    clients[index].focus
+    clients[index].raise
   end
 end
 
@@ -675,8 +678,8 @@ end
 # Windows default to showing in every view
 view '1', /1|default|dialog|media|term/
 view '2', /2|default|dialog|media|browser/
-view '3', /3|default|dialog|media|bgapp/
-view '4', /4|default|dialog|media/
+view '3', /3|default|dialog|media/
+view '4', /4|default|dialog|media|bgapp/
 
 #
 # == Sublets {{{1
@@ -762,15 +765,10 @@ view '4', /4|default|dialog|media/
 # http://subforge.org/projects/subtle/wiki/Hooks
 #
 
-# Set wallpaper with feh
-on :reload do
+# Redraw desktop wallpaper
+on :tile do
   fehbg = File.expand_path '~/.fehbg'
   Process.detach spawn('sh', fehbg) if File.readable? fehbg
-end
-
-# Trigger views update as a workaround to occupied window bug
-on :client_kill do
-  Subtlext::View.current.jump
 end
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker
