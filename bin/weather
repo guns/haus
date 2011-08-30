@@ -62,13 +62,13 @@ class Weather
 
     def condition str
       case str
-      when /sunny|clear/i  then '☀ '
-      when /cloud/i        then '☁ '
-      when /overcast/i     then '▩ '
-      when /rain|showers/i then '☔ '
-      when /storm/i        then '☈ '
-      when /hail/i         then '☄ '
-      when /snow/i         then '❄ '
+      when /sunny|clear/i    then '☀ '
+      when /cloud|overcast/i then '☁ '
+      when /fog/i            then '░ '
+      when /rain|showers/i   then '☔ '
+      when /storm/i          then '☈ '
+      when /hail/i           then '☄ '
+      when /snow/i           then '❄ '
       else ''
       end + str
     end
