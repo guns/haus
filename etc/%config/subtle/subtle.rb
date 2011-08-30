@@ -762,7 +762,7 @@ view '4', /4|default|dialog|media|bgapp/
 # Redraw desktop wallpaper
 on :tile do
   fehbg = File.expand_path '~/.fehbg'
-  Process.detach spawn('sh', fehbg) if File.readable? fehbg
+  system '/bin/sh', fehbg if File.readable? fehbg
 end
 
 # Trigger views update
