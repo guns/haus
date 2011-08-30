@@ -760,7 +760,7 @@ view '4', /4|default|dialog|media|bgapp/
 #
 
 # Redraw desktop wallpaper
-on :tile do
+on :reload do
   fehbg = File.expand_path '~/.fehbg'
   system '/bin/sh', fehbg if File.readable? fehbg
 end
