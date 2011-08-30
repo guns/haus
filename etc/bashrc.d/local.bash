@@ -361,7 +361,9 @@ dusort() {
 }
 
 # mount
-ALIAS mt='mount -v'
+ALIAS mt='mount -v' \
+      mtext4='mt -t ext4' \
+      mthfs='mt -t hfs'
 
 # tar
 alias star='tar --strip-components=1'
