@@ -358,7 +358,7 @@ grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
 grab 'W-C-w', [ :top,          :top66,          :top33          ]
 grab 'W-C-e', [ :top_right,    :top_right66,    :top_right33    ]
 grab 'W-C-a', [ :left,         :left66,         :left33         ]
-grab 'W-C-s', [ :center,       :middle                          ]
+grab 'W-C-s', [ :center,       :center66,       :center33       ]
 grab 'W-C-d', [ :right,        :right66,        :right33        ]
 grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
 grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
@@ -411,8 +411,7 @@ grab 'F9',    'rxvt-unicode --client'
 grab 'W-F9',  'rxvt-unicode --client -- -e vim'
 grab 'A-F9',  'rxvt-unicode --client -- -e tmuxlaunch -x'
 grab 'F10',   'chrome'
-grab 'W-F10', 'firefox'
-grab 'A-F10', 'chrome --incognito'
+grab 'W-F10', 'chrome --incognito'
 
 
 ### Sublets
@@ -600,7 +599,7 @@ tag 'term' do
 end
 
 tag 'browser' do
-  match   /chrom(e|ium)|firefox/i
+  match   /chrom(e|ium)|firefox|namoroka/i
   gravity :center
 end
 
@@ -764,6 +763,11 @@ view '4', /4|default|dialog|media|bgapp/
 on :tile do
   fehbg = File.expand_path '~/.fehbg'
   Process.detach spawn('sh', fehbg) if File.readable? fehbg
+end
+
+# Trigger views update
+on :client_kill do
+  Subtlext::View.current.jump
 end
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker
