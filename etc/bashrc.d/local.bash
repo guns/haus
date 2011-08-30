@@ -1163,15 +1163,17 @@ HAVE itunes-switch && {
 
 ### X
 
+HAVE startx && alias xstartx='exec startx'
+
+HAVE xset xrdb && {
+    alias xreload='run xset r rate 200 60; run xrdb ~/.Xdefaults'
+}
+
 HAVE xecho && {
     for XCMD in left center right cursor width title; do
         alias "x$XCMD=xecho $XCMD"
     done
     GC_VARS XCMD
-}
-
-HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 60; run xrdb ~/.Xdefaults'
 }
 
 # Subtle WM
