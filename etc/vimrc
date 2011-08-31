@@ -200,6 +200,7 @@ let g:UltiSnipsListSnippets = '<4-f>'
 let g:UltiSnipsExpandTrigger = '<Tab>'
 let g:UltiSnipsJumpForwardTrigger = '<Tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<S-tab>'
+let g:UltiSnipsRemoveSelectModeMappings = 0
 
 " Plugin: ManPageView
 let g:manpageview_winopen = 'vsplit='
