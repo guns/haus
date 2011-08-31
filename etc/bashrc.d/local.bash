@@ -548,9 +548,9 @@ alias psg='psa | grep -v "grep -i" | g'
 if ps ax -r &>/dev/null; then
     alias __psr__='psa -r'
     alias __psm__='psa -m'
-# GNU ps supports `k` and `--sort`
-elif ps ax kpid &>/dev/null; then
-    alias __psr__='psa k-cpu'
+# GNU/Linux ps supports `k` and `--sort`
+else
+    alias __psr__='psa k-pcpu'
     alias __psm__='psa k-rss'
 fi
 psr() { __psr__ | choplines | sed "$((LINES-2))"q; }
