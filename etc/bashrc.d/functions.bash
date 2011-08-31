@@ -193,7 +193,8 @@ ALIAS() {
 #   * Lazy evaluation; avoids costly invocations at shell init
 #
 CD_FUNC() {
-    local OPTIND OPTARG opt isfunc checkdir=1
+    local isfunc=0 checkdir=1
+    local OPTIND OPTARG opt
     while getopts :fn opt; do
         case $opt in
         f) isfunc=1;;

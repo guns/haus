@@ -1,21 +1,22 @@
 ### BASH PROMPTS ###
 
 EXPORT_PROMPTS() {
-    local delim color
+    # Environment overrides
+    local delim="$PS_DELIM" color="$PS_COLOR"
 
-    if [[ $SSH_TTY ]]; then
-        delim='■' # Tunnel
+    if [[ "$SSH_TTY" ]]; then
+        delim="${delim:-■}" # Tunnel
         if ((EUID)); then
-            color="${PS_COLOR:-36}"
+            color="${color:-36}"
         else
-            color="${PS_COLOR:-31}"
+            color="${color:-31}"
         fi
     else
-        delim='§' # Section
+        delim="${delim:-§}" # Section
         if ((EUID)); then
-            color="${PS_COLOR:-37}"
+            color="${color:-37}"
         else
-            color="${PS_COLOR:-35}"
+            color="${color:-35}"
         fi
     fi
 
@@ -23,6 +24,8 @@ EXPORT_PROMPTS() {
         color="${PS_COLOR:-36}"
     fi
 
+    # Interactive prompts need to surround escapes with RL_PROMPT_*_IGNORE,
+    # which have special escapes in Bash: \[ \]
     export PS1="\[\e[0;${color}m\]\\H \[\e[1m\]${delim}\[\e[22m\] \\w\\n\[\e[0;${color}m\]\\u\\$\[\e[0m\] "
     export PS2="\[\e[0;${color}m\]${USER//?/░}░\[\e[0m\] "
     export PS4='━ '
