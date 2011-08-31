@@ -127,17 +127,17 @@ noremap <Leader>co :colorscheme<Space>
 noremap <C-l> :let @/ = ''<CR>:redraw!<CR>
 
 " Settings
-noremap <Leader>s<Space>  :setlocal<Space>
-noremap <Leader>sc?       :set clipboard?<CR>
-noremap <Leader>sc<Space> :setlocal clipboard=unnamedplus
-noremap <Leader>sf?       :set foldmethod?<CR>
-noremap <Leader>sf<Space> :setlocal foldmethod=indent
-noremap <Leader>sm?       :set synmaxcol?<CR>
-noremap <Leader>sm<Space> :setlocal synmaxcol=1000
-noremap <Leader>st?       :SetTextwidth<CR>
-noremap <Leader>st<Space> :SetTextwidth<Space>
-noremap <Leader>sw?       :SetWhitespace<CR>
-noremap <Leader>sw<Space> :SetWhitespace<Space>
+noremap <Leader>s<Space> :setlocal<Space>
+noremap <Leader>sc       :setlocal clipboard=unnamedplus
+noremap <Leader>?sc      :set clipboard?<CR>
+noremap <Leader>sf       :setlocal foldmethod=indent
+noremap <Leader>?sf      :set foldmethod?<CR>
+noremap <Leader>sm       :setlocal synmaxcol=1000
+noremap <Leader>?sm      :set synmaxcol?<CR>
+noremap <Leader>st       :SetTextwidth<Space>
+noremap <Leader>?st      :SetTextwidth<CR>
+noremap <Leader>sw       :SetWhitespace<Space>
+noremap <Leader>?sw      :SetWhitespace<CR>
 
 " Toggles
 noremap <Leader>~     :setlocal spell!<CR>:setlocal spell?<CR>
