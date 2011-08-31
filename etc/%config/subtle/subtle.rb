@@ -760,9 +760,11 @@ view '4', /4|default|dialog|media|bgapp/
 #
 
 # Redraw desktop wallpaper
-on :reload do
-  fehbg = File.expand_path '~/.fehbg'
-  system '/bin/sh', fehbg if File.readable? fehbg
+[:start, :reload].each do |hook|
+  on hook do
+    fehbg = File.expand_path '~/.fehbg'
+    system '/bin/sh', fehbg if File.readable? fehbg
+  end
 end
 
 # Trigger views update
