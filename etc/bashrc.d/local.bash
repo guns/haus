@@ -305,11 +305,11 @@ alias cp='cp -v'
 alias cpr='cp -r'
 alias mv='mv -v'
 swap-files() {
-    ruby -r fileutils -r tempfile -e '
+    ruby -r fileutils -r tempfile -e "
         include FileUtils::Verbose
 
-        abort "Usage: swap-files f1 f2" unless ARGV.size == 2
-        ARGV.each { |f| raise "No permissions to write #{f.inspect}" unless File.lstat(f).writable? }
+        abort 'Usage: $FUNCNAME f1 f2' unless ARGV.size == 2
+        ARGV.each { |f| raise %Q(No permissions to write #{f.inspect}) unless File.lstat(f).writable? }
 
         f1, f2 = ARGV
         tmp    = Tempfile.new(File.basename f1).path
@@ -317,7 +317,7 @@ swap-files() {
         mv f1,  tmp
         mv f2,  f1
         mv tmp, f1
-    ' "$@"
+    " "$@"
 }
 
 # rm
