@@ -46,6 +46,7 @@ set skip-completed-text on
 "\e(":          "·"
 "\e;":          "…"
 "\eh":          "❤"
+"\eH":          "❦"
 "\el":          "λ"
 "\ev":          "✓"
 "\eV":          "⚡"

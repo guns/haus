@@ -321,6 +321,7 @@ noremap! <M-8> •
 noremap! <M-(> ·
 noremap! <M-;> …
 noremap! <M-h> ❤
+noremap! <M-H> ❦
 noremap! <M-l> λ
 noremap! <M-v> ✓
 noremap! <M-V> ⚡
