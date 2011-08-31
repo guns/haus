@@ -352,7 +352,7 @@ alias df='df -h'
 alias du='du -h'
 alias dus='du -s'
 dusort() {
-    echo 'Calculating sorted file size...' >&2
+    echo >&2 'Calculating sorted file size...'
 
     local buf line
 

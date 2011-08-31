@@ -6,13 +6,13 @@ EXEC=''
 while getopts :x opt; do
     case $opt in
     x) EXEC='exec';;
-    *) echo "USAGE: ${0##*/} [-x]" >&2; exit
+    *) echo >&2 "USAGE: ${0##*/} [-x]"; exit
     esac
 done
 shift $((OPTIND-1))
 
 if [[ "$TMUX" ]]; then
-    echo '$TMUX is already set!' >&2
+    echo >&2 '$TMUX is already set!'
     exit 1
 elif command tmux has-session &>/dev/null; then
     command $EXEC tmux attach

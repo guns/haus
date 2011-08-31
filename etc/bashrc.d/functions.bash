@@ -25,17 +25,17 @@ CLEANUP() {
 # Abort the login process with an optional message
 ABORT() {
     # Explain
-    (($#)) && echo -e "$*\n" >&2
+    (($#)) && echo -e >&2 "$*\n"
 
     # Stack trace
     local i
     for ((i = 0; i < ${#BASH_SOURCE[@]} - 1; ++i)); do
-        echo "-> ${BASH_SOURCE[i+1]}:${BASH_LINENO[i]}:${FUNCNAME[i]}" >&2
+        echo >&2 "-> ${BASH_SOURCE[i+1]}:${BASH_LINENO[i]}:${FUNCNAME[i]}"
     done
 
     # Clean up, send interrupt signal, and suspend execution
     CLEANUP
-    echo -e "\n\e[1;3;31mAborting shell initialization.\e[0m\n" >&2
+    echo -e >&2 "\n\e[1;3;31mAborting shell initialization.\e[0m\n"
     kill -INT $$
     while true; do sleep 60; done
 }; GC_FUNC ABORT
