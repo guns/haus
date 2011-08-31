@@ -8,11 +8,11 @@ command! -nargs=+ Setmap call <SID>Setmap(<f-args>)
 function! <SID>Setmap(map, seq)
     " Some named values can be `set'
     try
-        execute 'set '.a:map.'='.a:seq
+        execute 'set ' . a:map . '=' . a:seq
     " but the rest can simply be mapped
     catch
-        execute 'map  <special> '.a:seq.' '.a:map
-        execute 'map! <special> '.a:seq.' '.a:map
+        execute 'map  <special> ' . a:seq . ' ' . a:map
+        execute 'map! <special> ' . a:seq . ' ' . a:map
     endtry
 endfunction
 
@@ -31,7 +31,7 @@ for n in range(0x20, 0x7e)
 
     if has_key(g:named_keycode, char)
         let char = g:named_keycode[char]
-        let key  = '<'.char.'>'
+        let key  = '<' . char . '>'
     endif
 
     " Option / Alt as Meta
@@ -39,12 +39,12 @@ for n in range(0x20, 0x7e)
     "  * M-" doesn't work
     "  * M-O is escape for arrow keys
     if char !=# '[' && char !=# '"' && char !=# 'O'
-        execute 'Setmap <M-'.char.'> '.key
+        execute 'Setmap <M-' . char . '> ' . key
     endif
 
     " Super / Mod4
     "  * Assumes terminal sends <Esc><Space> as Mod4 prefix
-    execute 'Setmap <4-'.char.'> \ '.key
+    execute 'Setmap <4-' . char . '> \ ' . key
 endfor
 
 
