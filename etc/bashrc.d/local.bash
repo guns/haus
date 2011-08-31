@@ -249,6 +249,13 @@ ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsd() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
+if [[ -d /dev/disk ]]; then
+    alias lsdisk='ls /dev/disk/by-path'
+    alias lsdiskid='ls /dev/disk/by-id/'
+    alias lsdisklabel='ls /dev/disk/by-label'
+    alias lsdiskpath='ls /dev/disk/by-path'
+    alias lsdiskuuid='ls /dev/disk/by-uuid'
+fi
 
 # hexdump strings hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
