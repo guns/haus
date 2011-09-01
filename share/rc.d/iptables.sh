@@ -114,4 +114,3 @@ $IPTABLES -A INPUT -p icmp --icmp-type timestamp-reply         -m state --state 
 # $IPTABLES -A INPUT -s 127.0.0.0/8     -j DROP
 
 echo 'OK'
-
