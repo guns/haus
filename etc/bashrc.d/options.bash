@@ -9,6 +9,7 @@ set -o braceexpand                      # Perform brace expansion
 set -o emacs                            # Emacs editing mode
 set -o hashall                          # Hash commands for faster lookup
 set -o histexpand                       # ! history expansions
+#set -o history                         # DO NOT SET HERE!
 set -o interactive-comments             # Allow comments in interactive shell
 set -o monitor                          # Enable job control
 set -o notify                           # Allow job reports to interrupt prompt
@@ -17,7 +18,6 @@ set +o allexport                        # Automatically export all vars/funcs
 set +o errexit                          # Exit on non-conditional command failures
 set +o errtrace                         # Functions/subshells inherit errexit
 set +o functrace                        # Functions/subshells inherit DEBUG/TRACE
-#set +o history                         # DO NOT SET HERE!
 set +o ignoreeof                        # Require 10 EOFs to exit shell
 set +o keyword                          # Allow var assignments after a command
 set +o noclobber                        # Don't truncate files via redirection
@@ -58,7 +58,6 @@ shopt -s histreedit                     # Allow editing of failed history subst
 shopt -s histverify                     # Expand history subst on command line
 shopt -s hostcomplete                   # Complete hosts when word contains `@`
 shopt -s interactive_comments           # Allow comments in interactive shells
-#shopt -s login_shell                   # DO NOT SET HERE!
 shopt -s mailwarn                       # "Please Mister Postman, look and see"
 shopt -s no_empty_cmd_completion        # Don't attempt cmd completion on empty line
 shopt -s progcomp                       # Enable programmable completion
@@ -77,6 +76,7 @@ shopt -u gnu_errfmt                     # Use standard GNU error format
 shopt -u huponexit                      # Send SIGHUP to all jobs on exit
 shopt -u lastpipe                       # Run last command of pipeline in current shell
 shopt -u lithist                        # Save history in multi-line format
+#shopt -u login_shell                   # DO NOT SET HERE!
 shopt -u nocaseglob                     # Case insensitive path globbing
 shopt -u nocasematch                    # Case insensitive `case` or `[[`
 shopt -u nullglob                       # Failed globs expand to null strings

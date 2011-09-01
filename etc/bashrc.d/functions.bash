@@ -52,7 +52,7 @@ REQUIRE() {
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 # Simple platform checks
 __OSX__()   { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OSX__
-__LINUX__() { [[ "$MACHTYPE" == *linux* ]]; }; GC_FUNC __LINUX__
+__LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
 
 
 # Check to see if current user or root owns and has sole write privileges on
@@ -277,7 +277,7 @@ CD_FUNC() {
 
 # Init script wrapper creation:
 #
-# INIT_FUNC rcd /etc/rc.d ...
+# RC_FUNC rcd /etc/rc.d ...
 #
 #   * Creates shell function rcd():
 #
@@ -292,7 +292,7 @@ CD_FUNC() {
 #     arguments are given, each argument is tested until an extant directory
 #     is found. Otherwise does nothing and returns false.
 #
-INIT_FUNC() {
+RC_FUNC() {
     local name="$1" arg dir
     for arg in "${@:2}"; do
         if [[ -d "$arg" ]]; then
@@ -322,4 +322,4 @@ INIT_FUNC() {
 
     # Complete the shell function
     complete -F __${name}__ $name
-}; GC_FUNC INIT_FUNC
+}; GC_FUNC RC_FUNC

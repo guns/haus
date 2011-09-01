@@ -15,7 +15,6 @@ PATH_ARY=(
 ); EXPORT_PATH
 
 # Bash history
-export HISTSIZE='65535'                 # Default: 500
 export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
 
 # Editor
@@ -141,8 +140,8 @@ CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdappsupport    ~/Library/Application\ Support
 CD_FUNC cdprefs         ~/Library/Preferences
 
-INIT_FUNC rcd           /etc/rc.d /usr/local/etc/rc.d
-INIT_FUNC initd         /etc/init.d /usr/local/etc/init.d
+RC_FUNC rcd             /etc/rc.d /usr/local/etc/rc.d
+RC_FUNC initd           /etc/init.d /usr/local/etc/init.d
 
 
 ### Bash builtins and Haus commands
@@ -357,15 +356,15 @@ alias dus='du -s'
 dusort() {
     echo >&2 'Calculating sorted file size...'
 
-    local buf line
+    local buf f line
 
     if (($#)); then
-        buf="$(f "$@" -print0 | xargs -0 du -s)"
+        buf="$(for f in "$@"; do du -s "$f"; done)"
     else
         buf="$(f1 \( ! -name . \) -print0 | xargs -0 du -s)"
     fi
 
-    echo -e "$buf" | sort -n | cut -f2 | while read line; do
+    echo -e "$buf" | sort -n | awk '{print $2}' | while read line; do
         command du -sh -- "$line"
     done
 }
