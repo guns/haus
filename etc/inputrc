@@ -6,60 +6,164 @@
 #
 #                                          guns <self@sungpae.com>
 
+
+### Readline Variables ###
+
+# Let your terminal convert to `visible`; don't set here
+# set bell-style audible
+
+# Do not try to sync terminal bindings with equivalent readline bindings
+# http://www.shallowsky.com/blog/linux/bash-word-erase.html
+set bind-tty-special-chars off
+
+# This must be explicitly set here to activate
+set blink-matching-paren on
+
+# Force strict 8-bit character mode
+# set byte-oriented off
+
+# Comment character
+# set comment-begin #
+
+# Number of completion columns; -1 for auto
+# set completion-display-width -1
+
 # Case insensitivity for completions
 set completion-ignore-case on
 
-# Append a slash to symlinked dirs
+# Case-insensitive mode treats `-` and `_` as equivalent
+# set completion-map-case off
+
+# Replace common beginnings of completions with ... when length is over value
+# set completion-prefix-display-length 0
+
+# Number of completions before user is prompted
+set completion-query-items 300
+
+# Convert ASCII high bit into \e
+# Useful when running a terminal in meta8 mode for legacy applications
+# set convert-meta off
+
+# Don't complete, insert literal tab
+# set disable-completion off
+
+# Show control characters from stdin
+# set echo-control-characters on
+
+# Emacs/Vi mode
+# set editing-mode emacs
+
+# Try to enable "application keypad"
+# set enable-keypad off
+
+# Allow use of meta key
+# set enable-meta-key on
+
+# Expand `~` inline during completion
+set expand-tilde off
+
+# Preserve cursor position with history
+# set history-preserve-point off
+
+# Maximum number of history entries
+set history-size 65535
+
+# Scroll long lines, not wrap
+# set horizontal-scroll-mode off
+
+# Allow 8-bit characters (regardless of their use)
+# set input-meta on
+# set meta-flag on
+
+# Binding convention style
+# set keymap emacs
+
+# Completed directory names have trailing slash
+# set mark-directories on
+
+# Mark modified history lines with `*`
+# set mark-modified-lines off
+
+# Mark symlinks to directories like regular directories for completion
 set mark-symlinked-directories on
+
+# Complete hidden files (otherwise suppressed until user supplies leading `.`)
+# set match-hidden-files on
+
+# Complete common prefix before cycling in menu-complete mode
+# set menu-complete-display-prefix off
+
+# Output 8-bit characters directly instead of as an escape prefix
+# set output-meta on
 
 # Turn off pager for completion replies
 set page-completions off
 
+# Undocumented preference that sometimes diverts the bell method
+# set prefer-visible-bell on
+
+# Print completions alphabetically left to right, instead of by columns
+# set print-completions-horizontally off
+
+# Revert all changes to history lines before accept-line
+# set revert-all-at-newline off
+
 # One tab for completions instead of two
 set show-all-if-ambiguous on
 
-# Returned completions show file types
-set visible-stats on
-
-# http://www.shallowsky.com/blog/linux/bash-word-erase.html
-set bind-tty-special-chars off
+# One tab for completions that don't share a common prefix
+set show-all-if-unmodified on
 
 # Smarter inword completions
 set skip-completed-text on
 
+# Completions show file types
+set visible-stats on
+
 
 ### Global Macros ###
 
-# `unix-word-rubout` breaks on \S
-# `backward-kill-word` breaks on \W
-# `shell-backward-kill-word` breaks on shell metacharacters
-"\C-w":         backward-kill-word
-
-# \C-] defaults to `character-search`
-"\C-]":         kill-whole-line
-"\eF":          character-search
+# Text editing
+"\C-]":         kill-whole-line             (- character-search)
 "\eB":          character-search-backward
+"\eF":          character-search
+"\eR":          overwrite-mode
+"\eu":          downcase-word               (- upcase-word)
+"\eU":          upcase-word
+
+# History
+"\C-n":         history-search-forward      (- next-history)
+"\eOB":         history-search-forward      (- next-history)
+"\e[B":         history-search-forward      (- next-history)
+"\C-p":         history-search-backward     (- previous-history)
+"\eOA":         history-search-backward     (- previous-history)
+"\e[A":         history-search-backward     (- previous-history)
 
 # Unicode characters
-"\e6":          "§"
-"\e8":          "•"
-"\e(":          "·"
-"\e;":          "…"
-"\eh":          "❤"
-"\eH":          "❦"
-"\el":          "λ"
-"\ev":          "✓"
-"\eV":          "⚡"
-"\ex":          "✖"
-"\e<":          "←"
-"\e>":          "→"
+"\e6":          "§"         U+00A7          (- digit-argument)
+"\e8":          "•"         U+2022          (- digit-argument)
+"\e(":          "·"         U+00B7
+"\ec":          "ç"         U+00E7          (- capitalize-word)
+"\ea":          "á"         U+00E1
+"\eA":          "à"         U+00E0
+"\ee":          "é"         U+00E9
+"\eE":          "è"         U+00E8
+"\eh":          "❤"         U+2764
+"\eH":          "❦"         U+2766
+"\el":          "λ"         U+03BB          (- downcase-word)
+"\ev":          "✔"         U+2714
+"\eV":          "⚡"         U+26A1
+"\ex":          "✖"         U+2716
+"\e>":          "…"         U+2026          (- end-of-history)
+"\e;":          "←"         U+2190
+"\e'":          "→"         U+2192
 
 
 ### Application Macros ###
 
 $if Bash
-    # Exchange `exchange-point-and-mark` with reloading the shell
-    "\C-x\C-x":     "\C-] exec $SHELL \n"
+    # Reloads
+    "\C-x\C-x":     "\C-] exec $SHELL \n"   (- exchange-point-and-mark)
     "\C-xr":        "\C-] xreload \n"
 
     # Quick redirects
@@ -71,8 +175,6 @@ $if Bash
     # Directories
     "\C-x\C-a":     "\C-] cdapi \n"
     "\C-xa":        "\C-]cdapi "
-    "\C-x\C-b":     "\C-] cdbrew \n"
-    "\C-xb":        "\C-]cdbrew "
     "\C-x\C-d":     "\C-] cddownloads \n"
     "\C-xd":        "\C-]cddownloads "
     "\C-x\C-h":     "\C-] cdhaus \n"
@@ -81,7 +183,7 @@ $if Bash
     "\C-xl":        "\C-]cdlocal "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
-    "\C-x\C-v":     "\C-] cdvar \n"
+    "\C-x\C-v":     "\C-] cdvar \n"         (- display-shell-version)
     "\C-xv":        "\C-]cdvar "
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
@@ -95,12 +197,14 @@ $if Bash
     "\C-x\C-f":     "\C-] fg \n"
     "\C-x\C-b":     "\C-] bg \n"
 
-    # Repurpose editor macro to open frequently edited files
-    "\C-x\C-e":     "\C-] vim \n"
-    "\C-xe ":       "\C-]vim "
+    # Vim
+    "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
+    "\C-xe ":       "\C-]vim "              (* call-last-kbd-macro)
     "\C-xea":       "\C-] vimautocommands \n"
+    "\C-xeA":       "\C-] vimabbreviations \n"
     "\C-xeb":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
+    "\C-xee":       edit-and-execute-command
     "\C-xei":       "\C-] viminputrc \n"
     "\C-xel":       "\C-] vimlocalbash \n"
     "\C-xem":       "\C-] vimmappings \n"
@@ -110,11 +214,11 @@ $if Bash
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xf":        "\C-]vimfind "
-    "\C-x\C-g":     "\C-] vimgit \n"
+    "\C-x\C-g":     "\C-] vimgit \n"        (- abort)
     "\C-xm":        "\C-]man "
 
-    # Git shortcuts
-    "\C-xg ":       "\C-]git "
+    # Git
+    "\C-xg ":       "\C-]git "              (* glob-list-expansions)
     "\C-xg%":       "\C-]git di "
     "\C-xgaa":      "\C-] git aa \n"
     "\C-xgac":      "\C-] git acv \n"
@@ -128,7 +232,7 @@ $if Bash
     "\C-xgv":       "\C-] gitv \n"
     "\C-xgV":       "\C-]gitv "
 
-    # tmux
+    # Tmux
     "\C-x\C-t":     "\C-] tmuxinit \n"
     "\C-xt ":       "\C-]tmux "
     "\C-xtc":       "\C-] tmuxchdir \n"
@@ -137,9 +241,10 @@ $endif
 
 $if Ruby
     # Re-exec (see above)
-    "\C-x\C-x":     "\C-] exec $0 \n"
+    "\C-x\C-x":     "\C-] exec $0 \n"       (- exchange-point-and-mark)
 
     # interactive_editor
-    "\C-x\C-e":     "\C-] vim \n"
-    "\C-xe":        "\C-]vim "
+    "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
+    "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
+    "\C-xee":       edit-and-execute-command
 $endif
