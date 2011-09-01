@@ -35,6 +35,10 @@ augroup GUNS
     autocmd FileType sh
         \ setlocal iskeyword+=-
 
+    " Readline
+    autocmd FileType readline
+        \ setlocal foldmethod=marker
+
     " Lisp
     autocmd Filetype lisp,scheme
         \ SetWhitespace 2 8
@@ -50,6 +54,7 @@ augroup GUNS
     autocmd BufRead,BufNewFile $cdmetasploit/*
         \ setlocal noexpandtab |
         \ SetWhitespace 4
+    " Subtle WM config is a really long file
     autocmd BufRead,BufNewFile subtle.rb
         \ setlocal foldmethod=marker foldlevel=0
 

@@ -7,7 +7,7 @@
 #                                          guns <self@sungpae.com>
 
 
-### Readline Variables ###
+### Readline Variables ### {{{1
 
 # Let your terminal convert to `visible`; don't set here
 # set bell-style audible
@@ -121,7 +121,7 @@ set skip-completed-text on
 set visible-stats on
 
 
-### Global Macros ###
+### Global Macros ### {{{1
 
 # Text editing
 "\C-]":         kill-whole-line             (- character-search)
@@ -159,7 +159,7 @@ set visible-stats on
 "\e'":          "→"         U+2192
 
 
-### Application Macros ###
+### Application Macros ###  {{{1
 
 $if Bash
     # Reloads
