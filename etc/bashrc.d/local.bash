@@ -155,6 +155,7 @@ alias o='echo'
 alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
+alias rmhist='rm ~/.bash_history && unset HISTFILE && exec $SHELL'
 t() { type "$@"; }; tcomp type t
 ALIAS ta='t -a' \
       tp='t -P'
