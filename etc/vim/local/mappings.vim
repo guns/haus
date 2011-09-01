@@ -130,7 +130,7 @@ noremap <C-l> :let @/ = ''<CR>:redraw!<CR>
 noremap <Leader>s<Space> :setlocal<Space>
 noremap <Leader>sc       :setlocal clipboard=unnamedplus
 noremap <Leader>?sc      :set clipboard?<CR>
-noremap <Leader>sf       :setlocal foldmethod=indent
+noremap <Leader>sf       :setlocal foldmethod=manual
 noremap <Leader>?sf      :set foldmethod?<CR>
 noremap <Leader>sm       :setlocal synmaxcol=1000
 noremap <Leader>?sm      :set synmaxcol?<CR>
@@ -330,8 +330,10 @@ nnoremap n nzz
 nnoremap N Nzz
 
 " Change case
-Mapall <M-u> <C-o> guWW
-Mapall <M-U> <C-o> gUWW
+noremap  <M-u> guWW
+noremap! <M-u> <C-o>guW<C-o>W
+noremap  <M-U> gUWW
+noremap! <M-U> <C-o>gUW<C-o>W
 
 " Join lines
 Mapall <Leader><C-j> <C-o> J
