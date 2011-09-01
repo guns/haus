@@ -11,6 +11,7 @@ GC_FUNC=(SECLIST GC_FUNC GC_VARS)
 GC_VARS=(SECLIST GC_FUNC GC_VARS)
 
 # Corresponding accumulation functions for convenience
+# Param: $@ List of file/function/variable names
 SECLIST() { SECLIST+=("$@"); }
 GC_FUNC() { GC_FUNC+=("$@"); }
 GC_VARS() { GC_VARS+=("$@"); }
@@ -22,7 +23,8 @@ CLEANUP() {
 }; GC_FUNC CLEANUP
 
 
-# Abort the login process with an optional message
+# Abort the login process.
+# Param: [$*] Error message
 ABORT() {
     # Explain
     (($#)) && echo -e >&2 "$*\n"
@@ -42,6 +44,7 @@ ABORT() {
 
 
 # Source file and abort on failure
+# Param: $1 Filename
 REQUIRE() {
     [[ -e "$1" ]] || ABORT "\"$1\" does not exist!"
     [[ -r "$1" ]] || ABORT "No permissions to read \"$1\""
@@ -49,7 +52,9 @@ REQUIRE() {
 }; GC_FUNC REQUIRE
 
 # Simple wrapper around `type`
+# Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
+
 # Simple platform checks
 __OSX__()   { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OSX__
 __LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
@@ -93,6 +98,8 @@ CHECK_SECLIST() {
 # PATH_ARY may consist of directories or colon-delimited PATH strings.
 # Duplicate, non-searchable, and non-extant directories are pruned, as well
 # directories that are not owned by the current user or root.
+#
+# Valid paths are added to SECLIST and reviewed.
 EXPORT_PATH() {
     export PATH="$(ruby -e '
         print ARGV.map { |e| e.split ":" }.flatten.uniq.select do |path|
@@ -134,9 +141,9 @@ EXPORT_PATH() {
 #       ALIAS mp='magic-pony' ls='ls -Ahl'      => `ls` remains unaliased
 #
 # NOTE: In order to attain acceptable performance, this function is not
-#       parameter compatible with the `alias` builtin! All arguments MUST be
-#       in the form `name=value`
+#       parameter compatible with the `alias` builtin!
 #
+# Param: $@ name=value ...
 ALIAS() {
     local arg
     for arg in "$@"; do
@@ -192,6 +199,10 @@ ALIAS() {
 #
 #   * Lazy evaluation; avoids costly invocations at shell init
 #
+# Option: -n     Do not check if directory exists
+# Option: -f     Parameter $2 is a shell function
+# Param:  $1     Name of created function/variable
+# Param:  ${@:2} List of directories
 CD_FUNC() {
     local isfunc=0 checkdir=1
     local OPTIND OPTARG opt
@@ -279,7 +290,7 @@ CD_FUNC() {
 #
 # RC_FUNC rcd /etc/rc.d ...
 #
-#   * Creates shell function rcd():
+#   * Creates shell function rcd(), which executes scripts in `/etc/rc.d`:
 #
 #       $ rcd sshd restart
 #
@@ -292,6 +303,8 @@ CD_FUNC() {
 #     arguments are given, each argument is tested until an extant directory
 #     is found. Otherwise does nothing and returns false.
 #
+# Param: $1     Name of created function
+# Param: ${@:2} List of rc/init directories
 RC_FUNC() {
     local name="$1" arg dir
     for arg in "${@:2}"; do

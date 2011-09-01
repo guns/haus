@@ -77,16 +77,20 @@ fi
 # List all defined functions
 showfunctions() { set | grep '^[^ ]* ()'; }
 
-# Transfer completions from src -> dst
+# Transfer completions
+# Param: $1 Source command
+# Param: $2 Target command
 tcomp() { eval $({ complete -p "$1" || echo :; } 2>/dev/null) "$2"; }
 
 # Chop lines to $COLUMNS
 choplines() { ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'"; }
 
 # Return absolute path
+# Param: $1 Filename
 expand_path() { ruby -e 'print File.expand_path(ARGV.first)' "$1"; }
 
-# PATH accessors
+# Param: $1       PATH-style envvar name
+# Param: [${@:2}] List of directories to prepend
 __prepend_path__() {
     local var="$1"
 
@@ -109,9 +113,36 @@ __prepend_path__() {
         fi
     done
 }
-path()    { __prepend_path__ PATH "$@"; }
-rubylib() { __prepend_path__ RUBYLIB "$@"; }
-gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
+
+# Toggle PS1 transformations
+# Param: $* Interior of bash parameter expansion: '/\\u/\\u is a luser'
+__ps1toggle__() {
+    # Seed PS1 stack variable if unset
+    declare -p __ps1stack__ &>/dev/null || __ps1stack__=("$PS1")
+
+    # Check for existing transformation
+    local idx count=${#__ps1stack__[@]} exists
+    for ((idx = 1; idx < count; ++idx)); do
+        if [[ "$*" == "${__ps1stack__[idx]}" ]]; then
+            exists=1
+            break
+        fi
+    done
+
+    # Remove existing pattern, or push new one
+    if ((exists)); then
+        __ps1stack__=("${__ps1stack__[@]:0:idx}" "${__ps1stack__[@]:idx+1}")
+    else
+        __ps1stack__+=("$*")
+    fi
+
+    # Replay transformations
+    local expr
+    PS1="${__ps1stack__[0]}"
+    for expr in "${__ps1stack__[@]:1}"; do
+        eval "PS1=\"\${PS1$expr}\""
+    done
+}
 
 
 ### Directories and Init scripts
@@ -162,6 +193,9 @@ ALIAS ta='t -a' \
 ALIAS x='exec'
 alias wrld='while read l; do'; tcomp exec wrld
 
+# PATH prefixer
+path() { __prepend_path__ PATH "$@"; }
+
 # Toggle xtrace mode
 setx() {
     if [[ "$SHELLOPTS" =~ :?xtrace:? ]]; then
@@ -178,7 +212,7 @@ nohist() {
     else
         set -o history
     fi
-    __PS1TOGGLE__ '/\\w/\\w [nohist]'
+    __ps1toggle__ '/\\w/\\w [nohist]'
 }
 
 # report remind
@@ -246,6 +280,8 @@ fi
 if [[ -d /dev/mapper ]]; then
     alias lsmapper='ls /dev/mapper'
 fi
+# Param: $1 Directory to list
+# Param: $2 Interior of Ruby block with filename `f`
 __lstype__() {
     ruby -e '
         Dir.chdir ARGV.first do
@@ -268,6 +304,8 @@ HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
 }
 
 # find
+# Param: [$1] Directory to search, if extant
+# Param: [$@] Options to find
 f() {
     local args=() pattern
 
@@ -328,9 +366,7 @@ alias rm='rm -v'
 alias rmf='rm -f'
 alias rmrf='rm -rf'
 rm-craplets() {
-    run find "${1:-.}" \
-        \( -name '.DS_Store' -o -name 'Thumbs.db' \) \
-        -type f -print -delete
+    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' \) -type f -print -delete
 }
 
 # ln
@@ -354,6 +390,7 @@ alias mkdirp='mkdir -p'
 alias df='df -h'
 alias du='du -h'
 alias dus='du -s'
+# Param: [$@] Files to list
 dusort() {
     echo >&2 'Calculating sorted file size...'
 
@@ -380,6 +417,8 @@ alias star='tar --strip-components=1'
 alias gtar='tar zcv'
 alias btar='tar jcv'
 alias lstar='tar tvf'
+# Option: -S Strip one level of directories
+# Param:  $@ Arguments to `tar`
 untar() {
     local opts=() f
     [[ "$1" == '-S' ]] && { opts+=(--strip-components=1); shift; }
@@ -395,6 +434,7 @@ fi
 
 # pax
 ALIAS gpax='pax -z' && {
+    # Param: $1 pax archive
     lspax() {
         local zip
         [[ "$1" == *.gz ]] && zip='-z'
@@ -402,25 +442,29 @@ ALIAS gpax='pax -z' && {
     }
 
     unpax() {
-        ruby -r fileutils -r shellwords -e '
-            abort "Usage: unpax archive basedir" unless ARGV.size == 2
+        # Param: $1 pax archive
+        # Param: $2 Directory to extract to
+        ruby -r fileutils -r shellwords -e "
+            abort 'Usage: $FUNCNAME archive basedir' unless ARGV.size == 2
 
             include FileUtils::Verbose
 
-            archive, basedir = ARGV.take(2).map { |f| File.expand_path f }
-            zip = "-z" if File.extname(archive) == ".gz"
-            cmd = "pax -r #{zip} < #{archive.shellescape}"
+            archive, basedir = ARGV.map { |f| File.expand_path f }
+            zip = '-z' if File.extname(archive) == '.gz'
+            cmd = %Q(pax -r #{zip} < #{archive.shellescape})
 
             mkdir_p basedir
             chdir basedir
             puts cmd
             system cmd
-        ' "$@"
+        " "$@"
     }
 }
 
 # pkgutil
 HAVE pkgutil && {
+    # Param: $1 Package file
+    # Param: $2 Directory to extract to
     pkgexpand() {
         (($# == 2)) || { echo "Usage: $FUNCNAME pkg dir"; return 1; }
         run pkgutil --expand "$1" "$2";
@@ -434,6 +478,8 @@ HAVE hdiutil diskutil && {
     alias hmount='hdiutil mount'
     alias hcompact='hdiutil compact'
     alias hresize='hdiutil resize'
+    # Param: $1 Size specification
+    # Param: $2 Name of file and volume
     hcreate() {
         (($# == 2)) || { echo >&2 "Usage: $FUNCNAME size name"; return 1; }
 
@@ -447,6 +493,8 @@ HAVE hdiutil diskutil && {
     }
 
     # http://osxdaily.com/2007/03/23/create-a-ram-disk-in-mac-os-x/
+    # Param: $1 Size specification
+    # Param: $2 Volume name
     ramdisk() {
         (($# == 2)) || { echo "Usage: $FUNCNAME size name"; return 1; }
 
@@ -491,6 +539,7 @@ ALIAS free='free -m'
 # Plist dumper
 ALIAS plistbuddy='/usr/libexec/PlistBuddy' && {
     alias plistprint='plistbuddy -c Print'
+    # Param: $1 Application directory
     appvers() {
         while (($#)); do
             local base="$1"
@@ -563,8 +612,8 @@ else
     alias __psr__='psa k-pcpu'
     alias __psm__='psa k-rss'
 fi
-psr() { __psr__ | choplines | sed "$((LINES-2))"q; }
-psm() { __psm__ | choplines | sed "$((LINES-2))"q; }
+psr() { __psr__ | choplines | sed "$((LINES-2))q"; }
+psm() { __psm__ | choplines | sed "$((LINES-2))q"; }
 alias psrl='__psr__ | pager'
 alias psml='__psm__ | pager'
 
@@ -649,13 +698,13 @@ ALIAS lsof='lsof -Pn +fg' && {
 }
 
 # nmap
-HAVE nmap && {
+ALIAS nmapscan='nmap -sS -A' && {
     nmapsweep() { run nmap -sP -PPERM $(getlip)/24; }
-    nmapscan() { run nmap -sS -A "$@"; }
 }
 
 # networksetup
 HAVE networksetup && {
+    # Param: [$*] New hostname
     computername() {
         if (($#)); then
             networksetup -setcomputername "$*"
@@ -670,14 +719,17 @@ HAVE networksetup && {
 
 # Metasploit Framework
 HAVE cdmetasploit && {
+    # Param: [$1]     msf($1) command
+    # Param: [${@:2}] Arguments to $1
     msf() {
         if (($#)); then
             local cmd="$cdmetasploit/msf$1"
             [[ -x "$cmd" ]] || cmd="$cdmetasploit/$1"
+            shift
         else
             local cmd="$cdmetasploit/msfconsole"
         fi
-        run "$cmd"
+        run "$cmd" "$@"
     }
     _msf() {
         local words="$(lsx "$cdmetasploit" | sed 's/^msf//')"
@@ -694,7 +746,7 @@ ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/
 
 # IPTables
 HAVE iptables && {
-    ALIAS iptload='/etc/iptables/iptables.sh'
+    ALIAS iptables.sh='/etc/iptables/iptables.sh'
     iptlist() { echo -e "$(iptables -L -v $*)\n\n### IPv6 ###\n\n$(ip6tables -L -v $* 2>/dev/null)" | pager; }
     iptsave() {
         local ipt cmd
@@ -722,6 +774,7 @@ HAVE vim && {
     alias vim='vim -p'
     alias vimtag='vim -t'
     alias vimlog='vim -V/tmp/vim.log'
+    # Param: [$@] Arguments to `ff()`
     vimfind() {
         local files=()
         if (($#)); then
@@ -740,6 +793,7 @@ HAVE vim && {
     # Vim-ManPage
     alias mman='command man'
     tcomp man mman
+    # Param: $@ [[section] command] ...
     man() {
         local i sec page pages=0 args=()
 
@@ -767,6 +821,7 @@ HAVE vim && {
 
     # vim-fugitive
     alias vimgit='vim -c Gstatus .'
+    # Param: [$1] File to browse
     gitv() {
         if [[ -f "$1" ]]; then
             vim -c "Gitv!" "$1"
@@ -776,6 +831,8 @@ HAVE vim && {
     }
 
     # Open in REPL mode with the screen.vim plugin
+    # Param: [$1] Filename
+    # Param: [$2] Interpreter to run
     vimrepl() {
         local file cmd
 
@@ -792,6 +849,8 @@ HAVE vim && {
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)
     if ((EUID)); then
+        # Option: -w   Wait for file to close
+        # Param:  [$@] Arguments to vim
         vimserver() {
             local name='editserver'
             if ((!$#)); then
@@ -803,6 +862,7 @@ HAVE vim && {
             fi
         }
 
+        # Param: [$@] Arguments to vim
         vimstartuptime() {
             (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') & ) &
             vim --servername 'editserver' --startuptime '.vimstartuptime' "$@"
@@ -838,6 +898,7 @@ HAVE tmux && {
             exec run tmuxlaunch -x
         fi
     }
+    # Param: [$1] Directory
     tmuxchdir() { run tmux set-option default-path "$(expand_path "${1:-$PWD}")"; }
 }
 
@@ -881,6 +942,9 @@ HAVE git && {
     GC_VARS A
 
     # Github
+    # Param: $1   User name
+    # Param: $2   Repository name
+    # Param: [$3] Branch name
     githubclone() {
         (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
         local user="$1" repo="$2" branch
@@ -896,7 +960,7 @@ HAVE git && {
     # PS1 git status
     HAVE __git_ps1 && {
         gitps1() {
-            __PS1TOGGLE__ '/\\w/\\w\$(__git_ps1 " → \[\e[3m\]%s\[\e[23m\]")'
+            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\e[3m\]%s\[\e[23m\]")'
         }; gitps1 # Turn it on now!
     }
 }
@@ -906,6 +970,8 @@ HAVE git && {
 
 type ruby &>/dev/null && {
     # Ruby versions
+    # Param: $1 Alias suffix
+    # Param: $2 Ruby bin directory
     RUBY_VERSION_SETUP() {
         local suf="$1" bin="$2"
         ALIAS "ruby${suf}=${bin}/ruby" && {
@@ -951,16 +1017,22 @@ type ruby &>/dev/null && {
     RUBY_VERSION_SETUP 18  /opt/ruby/1.8/bin
     RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
 
+    # PATH variables
+    rubylib() { __prepend_path__ RUBYLIB "$@"; }
+    gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
+
     # Rails
     ALIAS ra='rails'
 
     # SDoc isn't quite Ruby 1.9 compatible
     HAVE genapi ruby18 && {
+        # Param: $@ Arguments to `genapi`
         genapi() { /opt/ruby/1.8/bin/ruby -KU "$(type -P genapi)" "$@"; }
     }
 
     # Local api server @ `$cdapi`
     HAVE cdapi && {
+        # Param: $@ API Site names
         api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
         _api() {
             local words="$(lsd "$cdapi")"
@@ -1014,6 +1086,7 @@ ALIAS mysql='mysql -p' \
       mysqladmin='mysqladmin -p'
 
 HAVE sqlite3 && {
+    # Param: $1 SQLite db
     sqlite3schema() {
         {   sqlite3 "$1" <<< .schema
             local t tables=($(sqlite3 "$1" <<< .table))
@@ -1036,6 +1109,7 @@ HAVE sqlite3 && {
 
 if __OSX__; then
     # Show all pmset settings by default
+    # Param: [$@] Arguments to `pmset`
     pmset() {
         if (($#)); then
             run command pmset "$@"
@@ -1166,6 +1240,7 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
 # iTunes
 HAVE itunes-switch && {
+    # Param: $1 Key name
     _itunes-switch() {
         [[ -r ~/Music/.itunes.yml ]] || return
         local words="$(awk -F: '{print $1}' < ~/Music/.itunes.yml)"
@@ -1215,6 +1290,7 @@ if __OSX__; then
     # LaunchBar
     HAVE /Applications/LaunchBar.app/Contents/MacOS/LaunchBar && {
         alias lb='open -a /Applications/LaunchBar.app'
+        # Param: $* Text to display
         largetext() {
             ruby -e '
             input = ARGV.first.empty? ? $stdin.read : ARGV.first
