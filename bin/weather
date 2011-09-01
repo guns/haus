@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'httparty'
+require 'nokogiri'
 
 class Weather
   class GoogleWeather
@@ -73,9 +74,21 @@ class Weather
     end
   end # GoogleWeather
 
+  class CheckIP
+    attr_reader :info
+
+    def initialize
+      html  = Nokogiri::HTML HTTParty.get('http://www.checkip.org/').to_s
+      @info = Hash[html.css('#feature-list li').map { |n| n.children.text.split(':').map &:strip }]
+    end
+
+    def location
+      info.values_at('City', 'State', 'Country').compact.join ' '
+    end
+  end
+
   def initialize args = []
     @args = args
-    @opts = {}
   end
 
   def options
@@ -94,10 +107,27 @@ class Weather
     GoogleWeather.new(loc).to_s
   end
 
+  def current_location
+    CheckIP.new.location
+  end
+
   def run
     args = options.parse @args
-    puts report(args.empty? ? 'Chicago' : args.join(' '))
+    puts report(args.empty? ? current_location : args.join(' '))
   end
 end
 
-Weather.new(ARGV).run if $0 == __FILE__
+if $0 == __FILE__
+  # https://github.com/jnunemaker/crack/pull/16
+  if defined? Encoding
+    Crack::XML.singleton_class.class_eval do
+      alias_method :__parse__, :parse
+
+      def parse xml
+        __parse__ xml.force_encoding('iso-8859-1').encode 'utf-8'
+      end
+    end
+  end
+
+  Weather.new(ARGV).run
+end
