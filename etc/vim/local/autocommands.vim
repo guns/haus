@@ -19,8 +19,6 @@ augroup GUNS
         \ if !empty(getqflist()) | cwindow | end
 
     " Vimscript
-    autocmd FileType vim
-        \ setlocal foldmethod=marker
     autocmd FileType help
         \ setlocal iskeyword+=-
 
@@ -34,10 +32,6 @@ augroup GUNS
         \ setlocal filetype=sh
     autocmd FileType sh
         \ setlocal iskeyword+=-
-
-    " Readline
-    autocmd FileType readline
-        \ setlocal foldmethod=marker
 
     " Lisp
     autocmd Filetype lisp,scheme
@@ -56,7 +50,7 @@ augroup GUNS
         \ SetWhitespace 4
     " Subtle WM config is a really long file
     autocmd BufRead,BufNewFile subtle.rb
-        \ setlocal foldmethod=marker foldlevel=0
+        \ setlocal foldlevel=0
 
     " Python
     autocmd FileType python

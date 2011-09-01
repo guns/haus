@@ -67,7 +67,7 @@ if exists('&wildignorecase')
 endif
 
 " Folding
-set foldmethod=manual           " Use manual folding by default (fastest)
+set foldmethod=marker           " Default to vim's marker folding
 set foldlevelstart=99           " But don't fold anything at the outset
 
 " Gutter / Status line
