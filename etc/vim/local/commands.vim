@@ -223,6 +223,26 @@ command! CaptureMaps
     \ endwhile
 
 
+" Parse and map Readline's Unicode character bindings {{{1
+command! MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings()
+function! <SID>MapReadlineUnicodeBindings()
+    if filereadable(expand('~/.inputrc'))
+        for line in readfile(expand('~/.inputrc'))
+            if line =~# '\v<U\+\x{4,6}>'
+                " Example: "\el": "λ" # U+03BB
+                let toks = split(line)
+                let key  = substitute(toks[0], '\v.*\\e(.).*', '\1', '')
+                let char = substitute(toks[1], '\v.*"(.+)".*', '\1', '')
+
+                " By convention, we'll always map as Meta-.
+                let bind = key =~# '\v[<>]' ? '' . key : '<M-' . key . '>'
+                execute 'noremap! ' . bind . ' ' . char
+            endif
+        endfor
+    endif
+endfunction
+
+
 " Open ORG-mode files {{{1
 command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>)
 function! <SID>Org(bang, ...)

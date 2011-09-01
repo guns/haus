@@ -315,19 +315,8 @@ noremap <Leader>r
 
 """ Text editing
 
-" Unicode characters
-noremap! <M-6> §
-noremap! <M-8> •
-noremap! <M-(> ·
-noremap! <M-;> …
-noremap! <M-h> ❤
-noremap! <M-H> ❦
-noremap! <M-l> λ
-noremap! <M-v> ✓
-noremap! <M-V> ⚡
-noremap! <M-x> ✖
-noremap! <   ←
-noremap! >   →
+" Map readline's Unicode character bindings
+MapReadlineUnicodeBindings
 
 " Character macros
 noremap  <M-CR> i\n<Esc><Right>
