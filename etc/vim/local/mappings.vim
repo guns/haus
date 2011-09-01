@@ -87,7 +87,7 @@ noremap! <M-BS> <C-w>
 " -- Ctrl-D i_Ctrl-D c_Ctrl-K i_Ctrl-K
 noremap  <C-d> x
 noremap! <C-d> <Del>
-Mapall   <M-d> <C-o> dw
+Mapall   <M-d> <C-o> de
 cnoremap <M-d> <S-Right><C-w>
 Mapall   <C-k> <C-o> D
 cnoremap <C-k> <C-n>
@@ -260,6 +260,7 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 noremap <Leader>e<Space> :tabedit<Space>
 noremap <Leader>ee       :edit<Space>
 noremap <Leader>ea       :execute 'tabedit ' . expand('~/.vim/local/autocommands.vim')<CR>
+noremap <Leader>eA       :execute 'tabedit ' . expand('~/.vim/local/abbreviations.vim')<CR>
 noremap <Leader>eb       :execute 'tabedit ' . expand('~/.bashrc')<CR>
 noremap <Leader>ec       :execute 'tabedit ' . expand('~/.vim/local/commands.vim')<CR>
 noremap <Leader>ei       :execute 'tabedit ' . expand('~/.inputrc')<CR>
@@ -339,7 +340,7 @@ Mapall <Leader><C-j> <C-o> J
 noremap <4-a> maggVG
 
 " Kill trailing whitespace
-noremap <Leader><C-k> :let b:_reg_slash = @/<CR>m`:%s/[ \t\r]\+$//e<CR>:let @/ = b:_reg_slash<CR>``
+noremap <Leader><C-k> :let b:_reg_slash = @/<CR>m`:%s/[ \t\r]\+$//e<CR>:let @/ = b:_reg_slash<CR>:unlet b:_reg_slash<CR>``
 
 " Hashrocket
 noremap! <C-l> <Space>=><Space>

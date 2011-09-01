@@ -247,7 +247,7 @@ endfunction
 command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>)
 function! <SID>Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
-    let orgdir = expand('~/Documents/Notes/Org')
+    let orgdir = expand('~/Documents/Org')
 
     if a:0
         for f in a:000
