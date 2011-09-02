@@ -271,11 +271,10 @@ if __OSX__; then
     alias lse='ls -e'
 fi
 if [[ -d /dev/disk ]]; then
-    alias lsdisk='ls /dev/disk/by-path'
-    alias lsdiskid='ls /dev/disk/by-id/'
-    alias lsdisklabel='ls /dev/disk/by-label'
-    alias lsdiskpath='ls /dev/disk/by-path'
-    alias lsdiskuuid='ls /dev/disk/by-uuid'
+    alias lsid='ls /dev/disk/by-id/'
+    alias lslabel='ls /dev/disk/by-label'
+    alias lspath='ls /dev/disk/by-path'
+    alias lsuuid='ls /dev/disk/by-uuid'
 fi
 if [[ -d /dev/mapper ]]; then
     alias lsmapper='ls /dev/mapper'
