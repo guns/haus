@@ -540,8 +540,8 @@ ALIAS rsync='rsync --human-readable --progress' \
 }
 
 # dd
-ALIAS dd3='dc3dd'
-ALIAS ddc='dcfldd'
+ALIAS dd3='dc3dd'  && tcomp dd dd3
+ALIAS ddc='dcfldd' && tcomp dd ddc
 
 # free
 ALIAS free='free -m'
