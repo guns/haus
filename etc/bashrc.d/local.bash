@@ -649,6 +649,14 @@ daemons() {
     '
 }
 
+# htop
+HAVE htop && {
+    # htop writes its config file on exit
+    [[ -d "$cdhaus/share/conf" ]] && htopsave() {
+        (cd && gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz")
+    }
+}
+
 
 ### Switch User
 
