@@ -755,6 +755,27 @@ HAVE cdmetasploit && {
     }; complete -F _msf msf
 }
 
+# Weechat
+ALIAS irc='weechat-curses' && [[ -d "$cdhaus/share/conf" ]] && {
+    weechatsave() { (cd ~guns/.weechat && tar zcv *.conf perl ruby ssl > "$cdhaus/share/conf/weechat.tar.gz") }
+    weechatrestore() { (cd ~guns/.weechat && tar zxvf "$cdhaus/share/conf/weechat.tar.gz") }
+    HAVE npass && {
+        ircpw() {
+            local fifo=(~guns/.weechat/weechat_fifo_*)
+            if ((${#fifo[@]} > 1)); then
+                echo 'Multitple weechat fifo writers!'
+                return 1
+            fi
+
+            if local pw="$(npass --length 30)"; then
+                echo "irc.server.freenode */msg NickServ identify guns $pw" > "${fifo[0]}"
+            else
+                echo 'FAIL'
+                return 1
+            fi
+        }
+    }
+}
 
 # OS X Sync
 ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/resetsync.pl'
