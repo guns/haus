@@ -186,7 +186,7 @@ alias o='echo'
 alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
-alias rmhist='rm ~/.bash_history && unset HISTFILE && exec $SHELL'
+alias rmhist='rm -f ~/.bash_history ~/.viminfo && unset HISTFILE && exec $SHELL'
 t() { type "$@"; }; tcomp type t
 ALIAS ta='t -a' \
       tp='t -P'
@@ -408,6 +408,7 @@ dusort() {
 
 # mount
 ALIAS mt='mount -v' \
+      umt='umount -v' \
       mtext4='mt -t ext4' \
       mthfs='mt -t hfs'
 
@@ -650,11 +651,9 @@ daemons() {
 }
 
 # htop
-HAVE htop && {
+HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
     # htop writes its config file on exit
-    [[ -d "$cdhaus/share/conf" ]] && htopsave() {
-        (cd && gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz")
-    }
+    htopsave() { (cd && gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
 }
 
 
@@ -1172,11 +1171,6 @@ fi
 
 
 ### Encryption
-
-# Truecrypt
-ALIAS tcrypt='truecrypt --text' \
-      tcryptautomount='tcrypt --auto-mount=favorites' \
-      truecryptautomount='truecrypt --auto-mount=favorites'
 
 # dm-crypt
 ALIAS cs='cryptsetup' && {
