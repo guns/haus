@@ -2,7 +2,7 @@
 
 # Requires ~/.bashrc.d/functions.bash
 
-### Environment Variables
+### Environment Variables {{{1
 
 # Bash history
 export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
@@ -62,7 +62,7 @@ if __OSX__; then
 fi
 
 
-### Meta Utility Functions
+### Meta Utility Functions {{{1
 
 # List all defined functions
 showfunctions() { set | grep '^[^ ]* ()'; }
@@ -135,7 +135,7 @@ __ps1toggle__() {
 }
 
 
-### Directories and Init scripts
+### Directories and Init scripts {{{1
 
 CD_FUNC -n ..           ..
 CD_FUNC -n ...          ../..
@@ -165,7 +165,7 @@ RC_FUNC rcd             /etc/rc.d /usr/local/etc/rc.d
 RC_FUNC initd           /etc/init.d /usr/local/etc/init.d
 
 
-### Bash builtins and Haus commands
+### Bash builtins and Haus commands {{{1
 
 ALIAS comp='complete -p'
 ALIAS cv='command -v'
@@ -222,7 +222,7 @@ alias watch='while read path <<< "$(ruby -r fssm -e "
 " 2>/dev/null)" && echo -e "$path";' # do ...; done
 
 
-### Files, Disks, and Memory
+### Files, Disks, and Memory {{{1
 
 # grep
 alias g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
@@ -586,7 +586,7 @@ fi
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
 
-### Processes
+### Processes {{{1
 
 # kill killall
 ALIAS k='kill' \
@@ -649,7 +649,7 @@ HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
 }
 
 
-### Switch User
+### Switch User {{{1
 
 ALIAS s='sudo' \
       root='exec sudo su'
@@ -659,7 +659,7 @@ HAVE su && {
 }
 
 
-### Network
+### Network {{{1
 
 ALIAS ic='ifconfig'
 ALIAS iw='iwconfig'
@@ -772,7 +772,7 @@ ALIAS irc='weechat-curses' && [[ -d "$cdhaus/share/conf" ]] && {
 ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/resetsync.pl'
 
 
-### Firewalls
+### Firewalls {{{1
 
 # IPTables
 HAVE iptables && {
@@ -791,7 +791,7 @@ HAVE iptables && {
 
 
 
-### Editors
+### Editors {{{1
 
 # Exuberant ctags
 ALIAS ctags='ctags -f .tags' \
@@ -915,7 +915,7 @@ HAVE vim && {
 }
 
 
-### Terminal Multiplexers
+### Terminal Multiplexers {{{1
 
 # GNU screen
 HAVE screen && {
@@ -925,7 +925,7 @@ HAVE screen && {
 }
 
 
-### Compilers
+### Compilers {{{1
 
 # make
 ALIAS mk='make' \
@@ -938,7 +938,7 @@ ALIAS mk='make' \
       mkj16='make -j16'
 
 
-### SCM
+### SCM {{{1
 
 # diff patch
 ALIAS diff='diff -U3' \
@@ -981,7 +981,7 @@ HAVE git && {
 }
 
 
-### Ruby
+### Ruby {{{1
 
 type ruby &>/dev/null && {
     # Ruby versions
@@ -1057,7 +1057,7 @@ type ruby &>/dev/null && {
 }
 
 
-### JavaScript
+### JavaScript {{{1
 
 # node package manager
 ALIAS npm='npm --global' && {
@@ -1072,14 +1072,14 @@ ALIAS npm='npm --global' && {
 }
 
 
-### Perl
+### Perl {{{1
 
 ALIAS perlpe='perl -pe' \
       perlne='perl -ne' \
       perlpie='perl -i -pe'
 
 
-### Haskell
+### Haskell {{{1
 
 # cabal package manager
 HAVE cabal && {
@@ -1094,7 +1094,7 @@ HAVE cabal && {
 }
 
 
-### Databases
+### Databases {{{1
 
 ALIAS mysql='mysql -p' \
       mysqldump='mysqldump -p' \
@@ -1120,7 +1120,7 @@ HAVE sqlite3 && {
 }
 
 
-### Hardware control
+### Hardware control {{{1
 
 if __OSX__; then
     # Show all pmset settings by default
@@ -1147,7 +1147,7 @@ if __OSX__; then
 fi
 
 
-### Encryption
+### Encryption {{{1
 
 # dm-crypt
 ALIAS cs='cryptsetup' && {
@@ -1218,7 +1218,7 @@ ALIAS cs='cryptsetup' && {
 }
 
 
-### Virtual Machines
+### Virtual Machines {{{1
 
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' \
@@ -1228,7 +1228,7 @@ ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' \
       vmware-vdiskmanager='/Library/Application\ Support/VMware\ Fusion/vmware-vdiskmanager'
 
 
-### Package Managers
+### Package Managers {{{1
 
 if __OSX__; then
     # MacPorts package manager
@@ -1281,7 +1281,7 @@ elif __LINUX__; then
 fi
 
 
-### Media
+### Media {{{1
 
 # Imagemagick
 ALIAS geometry='identify -format "%w %h"'
@@ -1327,7 +1327,7 @@ HAVE itunes-switch && {
 }
 
 
-### X
+### X {{{1
 
 HAVE startx && alias xstartx='exec startx'
 
@@ -1346,7 +1346,7 @@ HAVE xecho && {
 ALIAS subtlecheck='subtle --check'
 
 
-### Games
+### Games {{{1
 
 HAVE nethack && {
     alias nethack='env NETHACKOPTIONS="@~guns/src/nethack/etc/nethackrc" command nethack -u-u'
@@ -1362,7 +1362,7 @@ HAVE nethack && {
 }
 
 
-### GUI programs
+### GUI programs {{{1
 
 if __OSX__; then
     # LaunchBar
@@ -1380,6 +1380,5 @@ if __OSX__; then
 
     ALIAS screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
 fi
-
 
 : # Return true
