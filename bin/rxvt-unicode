@@ -68,7 +68,7 @@ class RxvtUnicode
 
     # NOTE: We can pass a custom env to Ruby 1.9's Kernel#system, but for 1.8,
     #       it is much simpler to munge ENV
-    ENV['PATH']        = ENV['PATH'].split(':').unshift('/usr/local/bin').uniq.select { |d| File.directory? d }.join ':'
+    ENV['PATH']        = %x(bash ~/.bashpath).chomp
     ENV['LC_CTYPE']    = 'en_US.UTF-8'
     ENV['RXVT_SOCKET'] = File.expand_path '~/.rxvt-unicode.sock'
   end
