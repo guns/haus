@@ -233,9 +233,7 @@ $if Bash
     "\C-xgV":       "\C-]gitv "
 
     # Tmux
-    "\C-x\C-t":     "\C-] tmuxinit \n"
-    "\C-xt ":       "\C-]tmux "
-    "\C-xtc":       "\C-] tmuxchdir \n"
+    "\C-x\C-t":     "\C-] [[ $TMUX ]] || exec tmuxlaunch -x \n"
 $endif
 
 

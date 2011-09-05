@@ -915,21 +915,6 @@ HAVE vim && {
 
 ### Terminal Multiplexers
 
-# tmux
-HAVE tmux && {
-    tmuxinit() {
-        if [[ "$TMUX" ]]; then
-            run tmux new-window -d
-            run tmux rename-window root
-            root
-        else
-            exec run tmuxlaunch -x
-        fi
-    }
-    # Param: [$1] Directory
-    tmuxchdir() { run tmux set-option default-path "$(expand_path "${1:-$PWD}")"; }
-}
-
 # GNU screen
 HAVE screen && {
     alias screenr='screen -R'
