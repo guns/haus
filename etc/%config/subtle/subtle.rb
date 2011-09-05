@@ -604,7 +604,7 @@ tag 'browser' do
 end
 
 tag 'bgapp' do
-  match   /wireshark/i
+  match   /wireshark|transmission-gtk/i
   gravity :center
 end
 
