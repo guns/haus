@@ -546,7 +546,9 @@ ALIAS plistbuddy='/usr/libexec/PlistBuddy' && {
             local base="$1"
             shift
             [[ -e "$base/Contents/Info.plist" ]] || continue
-            /usr/libexec/PlistBuddy -c Print "$base/Contents/Info.plist" | awk -F= '/CFBundleShortVersionString/{print $2}' | sed 's/[ ";]//g'
+            /usr/libexec/PlistBuddy -c Print "$base/Contents/Info.plist" |
+                awk -F= '/CFBundleShortVersionString/{print $2}' |
+                sed 's/[ ";]//g'
         done
     }
 }
@@ -1159,6 +1161,7 @@ ALIAS cs='cryptsetup' && {
         # Set cipher
         local usage="Usage: $FUNCNAME [-c cipher] device [keyfile]"
         local cipher='serpent-xts-plain64'
+
         local OPTIND OPTARG opt
         while getopts :hc: opt; do
             case $opt in
@@ -1187,6 +1190,7 @@ ALIAS cs='cryptsetup' && {
     csmount() {
         local usage="Usage: $FUNCNAME [-f keyfile] [-t fstype] device mountpoint"
         local keyfile=() fstype='ext4'
+
         local OPTIND OPTARG opt
         while getopts :f:t: opt "$@"; do
             case $opt in
@@ -1199,7 +1203,10 @@ ALIAS cs='cryptsetup' && {
 
         (($# == 2)) || { echo "$usage"; return 1; }
         local mapname="${2%/}"; mapname="${mapname##*/}"
-        run cryptsetup "${keyfile[@]}" luksOpen "$1" "$mapname" && run mount -t "$fstype" "/dev/mapper/$mapname" "$2"
+
+        if run cryptsetup "${keyfile[@]}" luksOpen "$1" "$mapname"; then
+            run mount -t "$fstype" "/dev/mapper/$mapname" "$2"
+        fi
     }; tcomp mount csmount
 
     # Param: $1 Device/mountpoint (basename is also mapper name)

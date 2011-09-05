@@ -107,7 +107,8 @@ class Npass
 
   def run
     args = options.parse @args
-    puts call
+    print call
+    puts if $stdout.tty?
   end
 end
 
