@@ -1,18 +1,8 @@
 ### BASH FUNCTIONS, ALIASES, and VARIABLES ###
 
-### Environment Variables
+# Requires ~/.bashrc.d/functions.bash
 
-PATH_ARY=(
-    ~/bin                               # User programs
-    /usr/local/{,s}bin                  # Local administrator's programs
-    /opt/ruby/{1.9,1.8,1.8.6}/bin       # Ruby installations
-    {~/.haus,/opt/haus/bin}             # Haus programs
-    "$PATH"                             # Existing PATH
-    /{,usr/}{,s}bin                     # Canonical Unix PATH
-    /opt/brew/{,s}bin                   # Homebrew (OS X)
-    /opt/passenger/bin                  # Phusion Passenger
-    /usr/{local/,}games                 # Games
-); EXPORT_PATH
+### Environment Variables
 
 # Bash history
 export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces

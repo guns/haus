@@ -132,6 +132,9 @@ REQUIRE ~/.bashrc.d/check-init-files.bash
 
 ### SHELL CONFIGURATION ###
 
+# Set shell path
+REQUIRE ~/.bashrc.d/path.bash
+
 # Set POSIX and Bash shell options
 REQUIRE ~/.bashrc.d/options.bash
 
