@@ -2,28 +2,29 @@
 
 # Helper functions for defining a bash environment.
 # All functions and variables can be unset by calling `CLEANUP`.
+# Bash 3.1+ compatible.
 
-# SECLIST contains files that should be checked for loose privileges.
-# GC_FUNC contains functions to be unset after shell init.
-# GC_VARS contains variables to be unset after shell init.
-SECLIST=()
-GC_FUNC=(SECLIST GC_FUNC GC_VARS)
-GC_VARS=(SECLIST GC_FUNC GC_VARS)
+# __SECLIST__ contains files that should be checked for loose privileges. {{{1
+# __GC_FUNC__ contains functions to be unset after shell init.
+# __GC_VARS__ contains variables to be unset after shell init.
+__SECLIST__=()
+__GC_FUNC__=(__SECLIST__ __GC_FUNC__ __GC_VARS__)
+__GC_VARS__=(__SECLIST__ __GC_FUNC__ __GC_VARS__)
 
 # Corresponding accumulation functions for convenience
 # Param: $@ List of file/function/variable names
-SECLIST() { SECLIST+=("$@"); }
-GC_FUNC() { GC_FUNC+=("$@"); }
-GC_VARS() { GC_VARS+=("$@"); }
+SECLIST() { __SECLIST__+=("$@"); }
+GC_FUNC() { __GC_FUNC__+=("$@"); }
+GC_VARS() { __GC_VARS__+=("$@"); }
 
 # Sweep garbage collection lists
 CLEANUP() {
-    unset -f "${GC_FUNC[@]}"
-    unset "${GC_VARS[@]}"
+    unset -f "${__GC_FUNC__[@]}"
+    unset "${__GC_VARS__[@]}"
 }; GC_FUNC CLEANUP
 
 
-# Abort the login process.
+# Abort the login process. {{{1
 # Param: [$*] Error message
 ABORT() {
     # Explain
@@ -38,12 +39,11 @@ ABORT() {
     # Clean up, send interrupt signal, and suspend execution
     CLEANUP
     echo -e >&2 "\n\e[1;3;31mAborting shell initialization.\e[0m\n"
-    kill -INT $$
-    while true; do sleep 60; done
+    while true; do kill -INT $$; sleep 60; done
 }; GC_FUNC ABORT
 
 
-# Source file and abort on failure
+# Source file and abort on failure {{{1
 # Param: $1 Filename
 REQUIRE() {
     [[ -e "$1" ]] || ABORT "\"$1\" does not exist!"
@@ -51,7 +51,8 @@ REQUIRE() {
     source "$1"   || ABORT "\`source $1\` returned false!"
 }; GC_FUNC REQUIRE
 
-# Simple wrapper around `type`
+
+# Simple wrapper around `type` {{{1
 # Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
@@ -60,13 +61,13 @@ __OSX__()   { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OSX__
 __LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
 
 
-# Check to see if current user or root owns and has sole write privileges on
-# all files in SECLIST.
+# Check to see if current user or root owns and has sole write privileges {{{1
+# on all files in SECLIST.
 #
 # Clears SECLIST on success and aborts on failure.
 CHECK_SECLIST() {
     # Don't spin up a ruby interpreter if we don't have to
-    (( ${#SECLIST[@]} )) || return
+    (( ${#__SECLIST__[@]} )) || return
 
     if ruby -e '
         ARGV.each do |file|
@@ -85,21 +86,21 @@ CHECK_SECLIST() {
                 abort "%s is trusted, but is group writable!" % path.inspect
             end
         end
-    ' "${SECLIST[@]}"; then
-        SECLIST=()
+    ' "${__SECLIST__[@]}"; then
+        __SECLIST__=()
     else
         ABORT "\nYour shell is at risk of being compromised."
     fi
 }; GC_FUNC CHECK_SECLIST
 
 
-# Processes array variable PATH_ARY and exports PATH.
+# Processes array variable PATH_ARY and exports PATH. {{{1
 #
 # PATH_ARY may consist of directories or colon-delimited PATH strings.
 # Duplicate, non-searchable, and non-extant directories are pruned, as well
 # directories that are not owned by the current user or root.
 #
-# Valid paths are added to SECLIST and reviewed.
+# Valid paths are added to __SECLIST__ and reviewed.
 EXPORT_PATH() {
     export PATH="$(ruby -e '
         print ARGV.map { |e| e.split ":" }.flatten.uniq.select do |path|
@@ -115,13 +116,13 @@ EXPORT_PATH() {
 
     # We also want to check permissions before proceeding
     local IFS=$':'
-    SECLIST+=($PATH)
+    __SECLIST__+=($PATH)
     unset IFS
     CHECK_SECLIST
 }; GC_FUNC EXPORT_PATH
 
 
-# Smarter aliasing function:
+# Smarter aliasing function: {{{1
 #
 #   * Transfers any existing completions for a command to the alias:
 #
@@ -167,7 +168,7 @@ ALIAS() {
 }; GC_FUNC ALIAS
 
 
-# `cd` wrapper creation:
+# `cd` wrapper creation: {{{1
 #
 # CD_FUNC foo /usr/local/foo ...
 #
@@ -286,7 +287,7 @@ CD_FUNC() {
 }; GC_FUNC CD_FUNC
 
 
-# Init script wrapper creation:
+# Init script wrapper creation: {{{1
 #
 # RC_FUNC rcd /etc/rc.d ...
 #

@@ -13,8 +13,8 @@
 
 ### INITIALIZE ###
 
-# Reject non-interactive shells (just in case)
-test -n "$PS1" || return 1
+# Reject non-interactive shells and shells that don't understand [[
+[[ $- == *i* ]] || return 1
 
 # Interesting features by version:
 #
@@ -112,9 +112,8 @@ test -n "$PS1" || return 1
 # http://tiswww.case.edu/php/chet/bash/CHANGES
 # http://wiki.bash-hackers.org/scripting/bashchanges
 #
-if test "${BASH_VERSINFO[0]}" -lt 4 || {
-   test "${BASH_VERSINFO[0]}" -eq 4 &&
-   test "${BASH_VERSINFO[1]}" -lt 1; }; then
+if ((${BASH_VERSINFO[0]} < 4)) ||
+   ((${BASH_VERSINFO[0]} == 4 && ${BASH_VERSINFO[1]} < 1)); then
     # Load a minimal bash environment
     . ~/.bashrc.d/minimal.bash
     return

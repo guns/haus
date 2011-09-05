@@ -1,6 +1,8 @@
 ### SHELL INITIALIZATION FILES PERMISSIONS TEST ###
 
-SECLIST+=(
+# Requires ~/.bashrc.d/functions.bash
+
+__SECLIST__+=(
     /etc/profile                        # System POSIX init
     /etc/bash.bashrc                    # System interactive bash init
     /etc/bash.bash.logout               # System bash logout
@@ -14,4 +16,6 @@ SECLIST+=(
     "$INPUTRC"                          # Readline override
     "$BASH_ENV"                         # Bash init override
     "$ENV"                              # POSIX init override
-); CHECK_SECLIST
+)
+
+CHECK_SECLIST
