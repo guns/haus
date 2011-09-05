@@ -3,10 +3,11 @@
 # Simple tmux wrapper
 
 EXEC=''
+
 while getopts :x opt; do
     case $opt in
     x) EXEC='exec';;
-    *) echo >&2 "USAGE: ${0##*/} [-x]"; exit
+    *) echo >&2 "Usage: ${0##*/} [-x]"; exit 1
     esac
 done
 shift $((OPTIND-1))
