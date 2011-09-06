@@ -231,9 +231,6 @@ $if Bash
     "\C-xgr":       "\C-] git rs \n"
     "\C-xgv":       "\C-] gitv \n"
     "\C-xgV":       "\C-]gitv "
-
-    # Tmux
-    "\C-x\C-t":     "\C-] [[ $TMUX ]] || exec tmuxlaunch -x \n"
 $endif
 
 

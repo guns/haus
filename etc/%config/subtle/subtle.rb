@@ -409,7 +409,7 @@ grab 'W-B3', :WindowResize
 # Applications
 grab 'F9',    'rxvt-unicode --client'
 grab 'W-F9',  'rxvt-unicode --client -- -e vim'
-grab 'A-F9',  'rxvt-unicode --client -- -e tmuxlaunch -x'
+grab 'A-F9',  'rxvt-unicode --client -- -e tmuxlaunch'
 grab 'F10',   'chrome'
 grab 'W-F10', 'chrome --incognito'
 

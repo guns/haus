@@ -585,6 +585,9 @@ fi
 # MIME type handlers
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
+# File browsers
+ALIAS rr='ranger'
+
 
 ### Processes {{{1
 
@@ -916,6 +919,9 @@ HAVE vim && {
 
 
 ### Terminal Multiplexers {{{1
+
+# Tmux
+HAVE tmux tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
 
 # GNU screen
 HAVE screen && {

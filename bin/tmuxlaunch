@@ -2,12 +2,10 @@
 #
 # Simple tmux wrapper
 
-EXEC=''
-
 while getopts :x opt; do
     case $opt in
-    x) EXEC='exec';;
-    *) echo >&2 "Usage: ${0##*/} [-x]"; exit 1
+    x) echo >&2 '`-x` option is DEPRECATED; exec is now the default';;
+    *) echo >&2 "Usage: ${0##*/}"; exit 1
     esac
 done
 shift $((OPTIND-1))
@@ -16,7 +14,7 @@ if [[ "$TMUX" ]]; then
     echo >&2 '$TMUX is already set!'
     exit 1
 elif command tmux has-session &>/dev/null; then
-    command $EXEC tmux attach
+    exec tmux attach
 else
-    command $EXEC tmux new
+    exec tmux new
 fi
