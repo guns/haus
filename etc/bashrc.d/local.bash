@@ -1298,11 +1298,6 @@ ALIAS geometry='identify -format "%w %h"'
 
 # feh
 HAVE feh && {
-    # Work around feh not finding font paths
-    feh() {
-        local p="$(type -P feh)"
-        command feh --fontpath "${p%/feh}/../share/feh/fonts" "$@";
-    }
     fehbg() { feh --bg-fill "$(expand_path "$1")"; }
     fshow() { feh --recursive "${@:-.}"; }
     frand() { feh --recursive --randomize "${@:-.}"; }
