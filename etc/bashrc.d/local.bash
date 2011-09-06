@@ -1153,28 +1153,30 @@ fi
 ALIAS cs='cryptsetup' && {
     alias csopen='cryptsetup luksOpen'
     alias csclose='cryptsetup luksClose'
+    alias csdump='cryptsetup luksDump'
 
     # Option: -c   Cipher string
+    # Option: -i   Iteration time in milliseconds
     # Param:  $1   Device
     # Param:  [$2] Key file
     csformat() {
-        # Set cipher
-        local usage="Usage: $FUNCNAME [-c cipher] device [keyfile]"
-        local cipher='serpent-xts-plain64'
+        local usage="Usage: $FUNCNAME [-c cipher] [-i iter-time] device [keyfile]"
+        local opts=(--verbose) cipher='serpent-xts-plain64'
 
         local OPTIND OPTARG opt
-        while getopts :hc: opt; do
+        while getopts :hc:i: opt; do
             case $opt in
             c) cipher="$OPTARG";;
+            i) opts+=(--iter-time "$OPTARG");;
             *) echo "$usage"; return 1
             esac
         done
         shift $((OPTIND-1))
 
-        # Set key type
-        local opts=(--verbose --cipher "$cipher" --key-size 512)
+        # Set cipher and key type
+        opts+=(--cipher "$cipher")
         case $# in
-        1) opts+=(--verify-passphrase);;
+        1) opts+=(--verify-passphrase --key-size 512);;
         2) opts+=(--key-file "$2");;
         *) echo "$usage"; return 1
         esac
@@ -1183,18 +1185,20 @@ ALIAS cs='cryptsetup' && {
         run cryptsetup "${opts[@]}" luksFormat "$1"
     }
 
-    # Option: -t Filesystem type
+    # Option: -d Debug mode
     # Option: -f Key file
+    # Option: -t Filesystem type
     # Param:  $1 Device
     # Param:  $2 Mountpoint (basename is also mapper name)
     csmount() {
-        local usage="Usage: $FUNCNAME [-f keyfile] [-t fstype] device mountpoint"
-        local keyfile=() fstype='ext4'
+        local usage="Usage: $FUNCNAME [-d] [-f keyfile] [-t fstype] device mountpoint"
+        local opts=(--verbose) fstype='ext4'
 
         local OPTIND OPTARG opt
-        while getopts :f:t: opt "$@"; do
+        while getopts :df:t: opt "$@"; do
             case $opt in
-            f) keyfile=(--key-file "$OPTARG");;
+            d) opts+=(--debug);;
+            f) opts+=(--key-file "$OPTARG");;
             t) fstype="$OPTARG";;
             *) echo "$usage"; return 1
             esac
@@ -1204,7 +1208,7 @@ ALIAS cs='cryptsetup' && {
         (($# == 2)) || { echo "$usage"; return 1; }
         local mapname="${2%/}"; mapname="${mapname##*/}"
 
-        if run cryptsetup "${keyfile[@]}" luksOpen "$1" "$mapname"; then
+        if run cryptsetup "${opts[@]}" luksOpen "$1" "$mapname"; then
             run mount -t "$fstype" "/dev/mapper/$mapname" "$2"
         fi
     }; tcomp mount csmount
