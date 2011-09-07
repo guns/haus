@@ -1025,5 +1025,9 @@ class Haus::QueueSpec < MiniTest::Spec
     describe :execute_modifications do
       # TODO
     end
+
+    describe :tty_getchar do
+      # TODO
+    end
   end
 end

@@ -245,7 +245,7 @@ class Haus
     #
     # NOTE: Output is to $stdout, not through the logger.
     def tty_confirm?
-      return true if options.force or options.noop or targets.empty?
+      return true  if options.force or options.noop or targets.empty?
       return false if options.quiet or not $stdin.tty?
 
       # Create a summary table
@@ -274,21 +274,9 @@ class Haus
         $stdout.puts "\nAll original links and files will be archived to:\n    #{archive_path}"
       end
 
+      # Prompt and read input
       $stdout.print "\nPermission to continue? [Y/n] "
-
-      response = if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
-        # Hack to get a single character from the terminal
-        begin
-          system 'stty raw'
-          $stdout.puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
-        ensure
-          system 'stty -raw'
-          $stdout.print "\r" # Return cursor to first column
-        end
-        !!(c =~ /y|\r|\n/i)
-      else
-        !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
-      end
+      response = !!(tty_getchar =~ /\A(y|ye|yes\s*)?\z/i)
 
       # Insert a newline if we have confirmation
       $stdout.puts if response
@@ -477,6 +465,28 @@ class Haus
         else
           prc.call dst
         end
+      end
+    end
+
+    # Get a single char (or line if unsupported) from $stdin; input is sent
+    # String#chomp before being returned.
+    #
+    # Returns nil on error.
+    def tty_getchar
+      # `stty -a` will return non-zero when not run from a terminal
+      if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
+        begin
+          # `stty` man page says that toggling the raw bit is not guaranteed
+          # to restore previous state, so we should do that explicitly
+          state = %x(stty -g).chomp
+          system 'stty raw'
+          char = $stdin.getc.chr.chomp rescue nil # Ruby 1.8.* returns Integer
+        ensure
+          system 'stty ' + state
+          $stdout.puts char
+        end
+      else
+        $stdin.readline.chomp rescue nil
       end
     end
   end
