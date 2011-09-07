@@ -648,7 +648,7 @@ daemons() {
 # htop
 HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
     # htop writes its config file on exit
-    htopsave() { (cd && gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
+    htopsave() { (cd && exec gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
 }
 
 
@@ -750,9 +750,17 @@ HAVE cdmetasploit && {
 }
 
 # Weechat
-ALIAS irc='weechat-curses' && [[ -d "$cdhaus/share/conf" ]] && {
-    weechatsave() { (cd ~guns/.weechat && tar zcv *.conf perl ruby ssl > "$cdhaus/share/conf/weechat.tar.gz") }
-    weechatrestore() { (cd ~guns/.weechat && tar zxvf "$cdhaus/share/conf/weechat.tar.gz") }
+ALIAS irc='weechat-curses' && {
+    # Edit configuration
+    alias weechatedit="(cd ~guns/.weechat && exec vim weechat.conf)"
+
+    # Save/restore configuration
+    [[ -d "$cdhaus/share/conf" ]] && {
+        alias weechatsave="(cd ~guns/.weechat && exec tar zcv *.conf perl ruby ssl > \"$cdhaus/share/conf/weechat.tar.gz\")"
+        alias weechatrestore="(cd ~guns/.weechat && exec tar zxvf \"$cdhaus/share/conf/weechat.tar.gz\")"
+    }
+
+    # Authenticate via weechat fifo feature
     HAVE npass && {
         ircpw() {
             local fifo=(~guns/.weechat/weechat_fifo_*)
