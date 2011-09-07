@@ -1321,6 +1321,9 @@ HAVE feh && {
 # espeak
 HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
+# VLC
+ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
+
 # iTunes
 HAVE itunes-switch && {
     # Param: $1 Key name
