@@ -256,9 +256,8 @@ class Haus
         [type.to_s.capitalize + ':', targets(type), color]
       end
 
-      # Construct an optimal format (Enumerable#max_by unavailable in 1.8.6)
-      flen   = actions.map { |a| a[1].length }.max
-      format = "    %-#{flen}s\n        %s"
+      # Construct an optimal format
+      format = "    %-#{actions.map { |a| a[1].length }.max}s\n        %s"
 
       # Print the summary with annotations
       actions.each do |verb, files, color|
