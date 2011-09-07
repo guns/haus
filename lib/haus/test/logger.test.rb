@@ -30,9 +30,9 @@ class Haus
         Haus::Logger::SGR.values.map { |v| v =~ /\A[\d;]+\z/ }.all?.must_equal true
       end
 
-      it 'must return the key itself if the key is not a Symbol' do
+      it 'must return the key as String if the key is not a Symbol' do
         sgr = Haus::Logger::SGR
-        sgr[0].must_equal 0
+        sgr[0].must_equal '0'
         sgr[:reset].must_equal '0'
         sgr['reset'].must_equal 'reset'
       end
