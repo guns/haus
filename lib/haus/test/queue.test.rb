@@ -785,8 +785,8 @@ class Haus::QueueSpec < MiniTest::Spec
         end
       end
 
-      with_confirmation.call lambda { @q.options = {};                 @q.tty_confirm?.must_equal true }
-      with_confirmation.call lambda { @q.options = { :quiet => true }; @q.tty_confirm?.must_equal false }
+      with_confirmation.call lambda { @q.options.quiet = false; @q.tty_confirm?.must_equal true }
+      with_confirmation.call lambda { @q.options.quiet = true; @q.tty_confirm?.must_equal false }
     end
 
     it 'must return false when $stdin is not a tty' do
@@ -795,7 +795,7 @@ class Haus::QueueSpec < MiniTest::Spec
           $stdin.write "Y\n"
           $stdin.rewind
         end
-        @q.options = {}
+        @q.options.quiet = false
         @q.tty_confirm?.must_equal true
         $stdin.instance_eval do
           def tty?; false end
@@ -806,7 +806,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must request user input from $stdin when from a terminal' do
-      @q.options = {}
+      @q.options.quiet = false
       %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n \r \r\n].each do |str|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do
@@ -847,10 +847,10 @@ class Haus::QueueSpec < MiniTest::Spec
         q.tty_confirm?
         $stdout.rewind
         $stdout.read.must_match %r{
-          CREATE:     .+   #{files[1]}   .+   this-is-a-new-file    .+
-          MODIFY:     .+   #{files[4]}   .+
-          OVERWRITE:  .+   #{files[3]}   .+
-          DELETE:     .+   #{files[5]}   .+   \e\[31mWARNING\e\[0m\sdeletion
+          Create:     .+   #{files[1]}   .+   this-is-a-new-file    .+
+          Modify:     .+   #{files[4]}   .+
+          Overwrite:  .+   #{files[3]}   .+
+          Delete:     .+   #{files[5]}   .+   \e\[31mWARNING\e\[0m\sdeletion
         }mx
       }
     end
