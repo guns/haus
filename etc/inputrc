@@ -12,9 +12,10 @@
 # Let your terminal convert to `visible`; don't set here
 # set bell-style audible
 
-# Do not try to sync terminal bindings with equivalent readline bindings
+# Do not try to sync terminal bindings with equivalent readline bindings. This
+# is necessary when trying to remap something like \C-w
 # http://www.shallowsky.com/blog/linux/bash-word-erase.html
-set bind-tty-special-chars off
+# set bind-tty-special-chars on
 
 # This must be explicitly set here to activate
 set blink-matching-paren on
