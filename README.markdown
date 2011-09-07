@@ -24,6 +24,8 @@ Dotfile and ssh key management system.
 
 ### TODO ###
 
+ - Allow tasks to operate on specific files
+ - haus rm file (unlinks / deletes file)
  - haus restore
  - haus ssh ls
  - haus ssh add
