@@ -248,24 +248,13 @@ class Haus
       return true  if options.force or options.noop or targets.empty?
       return false if options.quiet or not $stdin.tty?
 
-      # Create a summary table
-      actions = [[:create,    :green],
-                 [:modify,    :yellow],
-                 [:overwrite, :magenta],
-                 [:delete,    :red]].map do |type, color|
-        [type.to_s.capitalize + ':', targets(type), color]
-      end
-
-      # Construct an optimal format
-      format = "    %-#{actions.map { |a| a[1].length }.max}s\n        %s"
-
-      # Print the summary with annotations
-      actions.each do |verb, files, color|
-        next if files.empty?
-        $stdout.puts fmt([verb, color, :bold, :italic])
-        files.each do |f|
-          note = fmt *annotations[f] if annotations.has_key? f
-          $stdout.puts((format % [f, note || '']).rstrip) # Extra parens required for 1.8.6
+      # Summarize actions
+      summary_table.each do |job|
+        next if job[:files].empty?
+        $stdout.puts fmt(job[:title])
+        job[:files].each do |f, note|
+          $stdout.puts fmt(' '*4, *f)
+          $stdout.puts fmt(' '*8, *note) if note
         end
       end
 
@@ -278,10 +267,25 @@ class Haus
       $stdout.print "\nPermission to continue? [Y/n] "
       response = !!(tty_getchar =~ /\A(y|ye|yes\s*)?\z/i)
 
-      # Insert a newline if we have confirmation
+      # Pad output with a newline if we have confirmation
       $stdout.puts if response
 
       response
+    end
+
+    # Returns a table of actions with annotated targets
+    def summary_table
+      [
+        [:create,    :green],
+        [:modify,    :yellow],
+        [:overwrite, :magenta],
+        [:delete,    :red]
+      ].map do |type, color|
+        {
+          :title => [type.to_s.capitalize + ':', color, :bold, :italic],
+          :files => targets(type).map { |f| [f, annotations[f]] }
+        }
+      end
     end
 
     private

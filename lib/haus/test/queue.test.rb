@@ -856,6 +856,10 @@ class Haus::QueueSpec < MiniTest::Spec
     end
   end
 
+  describe :summary_table do
+    # TODO
+  end
+
   describe :private do
     describe :log do
       before do
