@@ -761,24 +761,6 @@ ALIAS irc='weechat-curses' && {
         alias weechatsave="(cd ~guns/.weechat && exec tar zcv *.conf perl ruby ssl > \"$cdhaus/share/conf/weechat.tar.gz\")"
         alias weechatrestore="(cd ~guns/.weechat && exec tar zxvf \"$cdhaus/share/conf/weechat.tar.gz\")"
     }
-
-    # Authenticate via weechat fifo feature
-    HAVE npass && {
-        ircpw() {
-            local fifo=(~guns/.weechat/weechat_fifo_*)
-            if ((${#fifo[@]} > 1)); then
-                echo 'Multitple weechat fifo writers!'
-                return 1
-            fi
-
-            if local pw="$(npass --length 30)"; then
-                echo "irc.server.freenode */msg NickServ identify guns $pw" > "${fifo[0]}"
-            else
-                echo 'FAIL'
-                return 1
-            fi
-        }
-    }
 }
 
 # OS X Sync
