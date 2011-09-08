@@ -20,7 +20,7 @@ export LC_COLLATE='C'                   # Traditional ASCII sorting
 export CLICOLOR=1
 export LSCOLORS='ExFxCxDxbxegedabagacad'
 export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
-command ls ~ --color &>/dev/null && export GNU_COLOR_OPT='--color'
+command ls --color ~ &>/dev/null && export GNU_COLOR_OPT='--color'
 grep -P . <<< . &>/dev/null      && export GREP_PCRE_OPT='-P'
 
 # Pager
