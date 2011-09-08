@@ -344,9 +344,10 @@ swap-files() {
         f1, f2 = ARGV
         tmp    = Tempfile.new(File.basename f1).path
 
-        mv f1,  tmp
-        mv f2,  f1
-        mv tmp, f1
+        rm_f tmp
+        mv   f1,  tmp
+        mv   f2,  f1
+        mv   tmp, f1
     " "$@"
 }
 
@@ -649,6 +650,7 @@ daemons() {
 HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
     # htop writes its config file on exit
     htopsave() { (cd && exec gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
+    htoprestore() { (cd && exec gunzip -c "$cdhaus/share/conf/htoprc.gz" > .htoprc) }
 }
 
 
