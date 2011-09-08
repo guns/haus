@@ -18,7 +18,8 @@ class Remind
       str = arg.to_s
 
       @time = case str
-      when /:|am\z|pm\z/ then parse str
+      when /:|am\z|pm\z/
+        parse str
       when /^@/
         parse (str =~ /:|am\z|pm\z/ ? str : str + ':00').sub(/^@/, '')
       else
