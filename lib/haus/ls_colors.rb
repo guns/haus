@@ -12,6 +12,35 @@ class Haus
         @colors[type] || ''
       end
 
+      # Returns key suitable for use with Haus::LSColors#[]
+      def ftype file
+        stat = File.lstat file
+
+        case stat.ftype
+        when 'directory'
+          if not (stat.mode & 0002).zero?
+            stat.sticky? ? 'stickyOtherWritable' : 'otherWritable'
+          else
+            'directory'
+          end
+        when 'file'
+          if stat.executable?
+            if stat.setuid?
+              'setuid'
+            elsif stat.setgid?
+              'setgid'
+            else
+              'executable'
+            end
+          else
+            'file'
+          end
+        else
+          # File::Stat#ftype returns valid keys otherwise
+          stat.ftype
+        end
+      end
+
       # Redefine internal color table with given string or from environment
       def parse str = nil, type = nil
         type ||= if str                       then str =~ /=/ ? :gnu : :bsd

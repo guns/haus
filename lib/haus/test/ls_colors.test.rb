@@ -4,6 +4,9 @@ $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'haus/ls_colors'
 require 'haus/test/helper/minitest'
+require 'haus/test/helper/test_user'
+
+$user ||= Haus::TestUser[$$]
 
 class Haus::LSColorsSpec < MiniTest::Spec
   it 'must contain default LSCOLORS and LS_COLORS values' do
@@ -20,6 +23,35 @@ class Haus::LSColorsSpec < MiniTest::Spec
         Haus::LSColors[0].must_equal ''
         Haus::LSColors['unicorn'].must_equal ''
         Haus::LSColors['directory'].must_be_kind_of String
+      end
+    end
+
+    describe :ftype do
+      it 'must correctly detect directory types' do
+        dir = $user.hausfile(:dir).first
+        Haus::LSColors.ftype(dir).must_equal 'directory'
+        File.chmod 0777, dir
+        Haus::LSColors.ftype(dir).must_equal 'otherWritable'
+        File.chmod 01777, dir
+        Haus::LSColors.ftype(dir).must_equal 'stickyOtherWritable'
+      end
+
+      it 'must correctly detect executable types' do
+        file = $user.hausfile(:file).first
+        Haus::LSColors.ftype(file).must_equal 'file'
+        File.chmod 0755, file
+        Haus::LSColors.ftype(file).must_equal 'executable'
+        File.chmod 04755, file
+        Haus::LSColors.ftype(file).must_equal 'setuid'
+        File.chmod 02755, file
+        Haus::LSColors.ftype(file).must_equal 'setgid'
+      end
+
+      it 'must otherwise return the file type' do
+        Haus::LSColors.ftype($user.hausfile(:link).first).must_equal 'link'
+        Haus::LSColors.ftype('/dev/null').must_equal 'characterSpecial'
+        Haus::LSColors.ftype(%x(mount).split("\n").grep(%r{\b/\b}).first[/\S+/]).must_equal 'blockSpecial'
+        # TODO: FIFOs and sockets
       end
     end
 
