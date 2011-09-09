@@ -4,6 +4,7 @@ require 'fileutils'
 require 'ostruct'
 require 'pathname'
 require 'haus/logger'
+require 'haus/ls_colors'
 
 class Haus
   #
@@ -245,25 +246,16 @@ class Haus
     #
     # NOTE: Output is to $stdout, not through the logger.
     def tty_confirm?
-      return true if options.force or options.noop or targets.empty?
+      return true  if options.force or options.noop or targets.empty?
       return false if options.quiet or not $stdin.tty?
 
-      # Create a summary table
-      actions = [:create, :modify, :overwrite, :delete].map do |type|
-        [type, targets(type)]
-      end
-
-      # Construct an optimal format (Enumerable#max_by unavailable in 1.8.6)
-      flen   = actions.map { |a| a[1].length }.max
-      format = "    %-#{flen}s\n        %s"
-
-      # Print the summary with annotations
-      actions.each do |verb, files|
-        next if files.empty?
-        $stdout.puts verb.to_s.upcase + ':'
-        files.each do |f|
-          note = fmt *annotations[f] if annotations.has_key? f
-          $stdout.puts((format % [f, note || '']).rstrip) # Extra parens required for 1.8.6
+      # Summarize actions
+      summary_table.each do |job|
+        next if job[:files].empty?
+        $stdout.puts fmt(job[:title])
+        job[:files].each do |f, note|
+          $stdout.puts fmt(' '*4, *f)
+          $stdout.puts fmt(' '*7, *note) if note
         end
       end
 
@@ -272,26 +264,47 @@ class Haus
         $stdout.puts "\nAll original links and files will be archived to:\n    #{archive_path}"
       end
 
+      # Prompt and read input
       $stdout.print "\nPermission to continue? [Y/n] "
+      response = !!(tty_getchar =~ /\A(y|ye|yes\s*)?\z/i)
 
-      response = if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
-        # Hack to get a single character from the terminal
-        begin
-          system 'stty raw'
-          $stdout.puts (c = $stdin.getc.chr rescue false) # Old ruby returns integer
-        ensure
-          system 'stty -raw'
-          $stdout.print "\r" # Return cursor to first column
-        end
-        !!(c =~ /y|\r|\n/i)
-      else
-        !!($stdin.readline.chomp =~ /\A(y|ye|yes)?\z/i) rescue false
-      end
-
-      # Insert a newline if we have confirmation
+      # Pad output with a newline if we have confirmation
       $stdout.puts if response
 
       response
+    end
+
+    # Returns a table of actions with annotated targets
+    def summary_table
+      [
+        [:create,    :green,  '++ '],
+        [:modify,    :cyan,   '+- '],
+        [:overwrite, :yellow, '-+ '],
+        [:delete,    :red,    '-- ']
+      ].map do |type, color, prefix|
+        files = targets(type).map do |f|
+          ft = if type == :create
+            if links.any? { |s,d| d == f }
+              :link
+            else
+              job = (copies + modifications).find { |s,d| d == f }
+              job ? Haus::LSColors.ftype(job.first) : :unknown
+            end
+          else
+            Haus::LSColors.ftype f
+          end
+
+          [
+            [[prefix, color, :bold], [f, Haus::LSColors[ft]]],
+            annotations[f]
+          ]
+        end
+
+        {
+          :title => [type.to_s.upcase + ':', color, :bold],
+          :files => files
+        }
+      end
     end
 
     private
@@ -419,7 +432,7 @@ class Haus
 
     def execute_deletions fopts
       deletions.each do |dst|
-        log [':: ', :white, :bold], ['DELETING ', :italic], dst
+        log ['-- DELETING ', :red, :italic], [dst, Haus::LSColors[dst]]
         FileUtils.rm_r dst, fopts.merge(:secure => true)
       end
     end
@@ -428,7 +441,11 @@ class Haus
       links.each do |src, dst|
         srcpath = options.relative ? relpath(src, dst) : src
 
-        log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+        # NOTE: utf8 char
+        prefix = extant?(dst) ? ['-+ LINKING ', :yellow, :italic] : ['++ LINKING ', :green, :italic]
+        srcfmt = [srcpath, Haus::LSColors[src]]
+        dstfmt = [dst, Haus::LSColors[:link]]
+        log prefix, srcfmt, ' → ', dstfmt
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
@@ -440,7 +457,11 @@ class Haus
 
     def execute_copies fopts
       copies.each do |src, dst|
-        log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+        prefix   = extant?(dst) ? ['-+ COPYING ', :yellow, :italic] : ['++ COPYING ', :green, :italic]
+        srcstyle = Haus::LSColors[src]
+        srcfmt   = [src, srcstyle]
+        dstfmt   = [dst, srcstyle]
+        log prefix, srcfmt, ' → ', dstfmt
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
@@ -462,7 +483,11 @@ class Haus
 
     def execute_modifications fopts
       modifications.each do |prc, dst|
-        log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
+        if extant? dst
+          log ['+- MODIFYING ', :cyan, :italic], [dst, Haus::LSColors[dst]]
+        else
+          log ['++ CREATING ', :green, :italic], dst
+        end
 
         create_path_to dst, fopts
         new = extant? dst
@@ -475,6 +500,28 @@ class Haus
         else
           prc.call dst
         end
+      end
+    end
+
+    # Get a single char (or line if unsupported) from $stdin; input is sent
+    # String#chomp before being returned.
+    #
+    # Returns nil on error.
+    def tty_getchar
+      # `stty -a` will return non-zero when not run from a terminal
+      if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
+        begin
+          # `stty` man page says that toggling the raw bit is not guaranteed
+          # to restore previous state, so we should do that explicitly
+          state = %x(stty -g).chomp
+          system 'stty raw'
+          char = $stdin.getc.chr.chomp rescue nil # Ruby 1.8.* returns Integer
+        ensure
+          system 'stty ' + state
+          $stdout.puts char
+        end
+      else
+        $stdin.readline.chomp rescue nil
       end
     end
   end

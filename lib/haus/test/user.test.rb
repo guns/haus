@@ -3,10 +3,8 @@
 $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'tempfile'
-require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if [].respond_to? :cycle
-require 'minitest/autorun'
 require 'haus/user'
+require 'haus/test/helper/minitest'
 require 'haus/test/helper/test_user'
 
 $user ||= Haus::TestUser[$$]

@@ -7,9 +7,6 @@ require 'ostruct'
 require 'expect'
 require 'stringio'
 require 'tempfile'
-require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if [].respond_to? :cycle
-require 'minitest/autorun'
 require 'haus/queue'
 require 'haus/logger'
 require 'haus/test/helper/minitest'
@@ -785,8 +782,8 @@ class Haus::QueueSpec < MiniTest::Spec
         end
       end
 
-      with_confirmation.call lambda { @q.options = {};                 @q.tty_confirm?.must_equal true }
-      with_confirmation.call lambda { @q.options = { :quiet => true }; @q.tty_confirm?.must_equal false }
+      with_confirmation.call lambda { @q.options.quiet = false; @q.tty_confirm?.must_equal true }
+      with_confirmation.call lambda { @q.options.quiet = true; @q.tty_confirm?.must_equal false }
     end
 
     it 'must return false when $stdin is not a tty' do
@@ -795,7 +792,7 @@ class Haus::QueueSpec < MiniTest::Spec
           $stdin.write "Y\n"
           $stdin.rewind
         end
-        @q.options = {}
+        @q.options.quiet = false
         @q.tty_confirm?.must_equal true
         $stdin.instance_eval do
           def tty?; false end
@@ -806,7 +803,7 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     it 'must request user input from $stdin when from a terminal' do
-      @q.options = {}
+      @q.options.quiet = false
       %W[\n y\n ye\n yes\n YeS\n n\n no\n nO\n \r \r\n].each do |str|
         with_filetty do
           $stdout.expect 'continue? [Y/n] ', 1 do
@@ -854,6 +851,10 @@ class Haus::QueueSpec < MiniTest::Spec
         }mx
       }
     end
+  end
+
+  describe :summary_table do
+    # TODO
   end
 
   describe :private do
@@ -1023,6 +1024,10 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :execute_modifications do
+      # TODO
+    end
+
+    describe :tty_getchar do
       # TODO
     end
   end
