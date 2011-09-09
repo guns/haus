@@ -4,6 +4,7 @@ require 'fileutils'
 require 'ostruct'
 require 'pathname'
 require 'haus/logger'
+require 'haus/ls_colors'
 
 class Haus
   #
@@ -254,7 +255,7 @@ class Haus
         $stdout.puts fmt(job[:title])
         job[:files].each do |f, note|
           $stdout.puts fmt(' '*4, *f)
-          $stdout.puts fmt(' '*8, *note) if note
+          $stdout.puts fmt(' '*7, *note) if note
         end
       end
 
@@ -276,14 +277,32 @@ class Haus
     # Returns a table of actions with annotated targets
     def summary_table
       [
-        [:create,    :green],
-        [:modify,    :yellow],
-        [:overwrite, :magenta],
-        [:delete,    :red]
-      ].map do |type, color|
+        [:create,    :green,  '++ '],
+        [:modify,    :cyan,   '+- '],
+        [:overwrite, :yellow, '-+ '],
+        [:delete,    :red,    '-- ']
+      ].map do |type, color, prefix|
+        files = targets(type).map do |f|
+          ft = if type == :create
+            if links.any? { |s,d| d == f }
+              'link'
+            else
+              job = (copies + modifications).find { |s,d| d == f }
+              job ? Haus::LSColors.ftype(job.first) : 'unknown'
+            end
+          else
+            Haus::LSColors.ftype f
+          end
+
+          [
+            [[prefix, color, :bold], [f, Haus::LSColors[ft]]],
+            annotations[f]
+          ]
+        end
+
         {
-          :title => [type.to_s.capitalize + ':', color, :bold, :italic],
-          :files => targets(type).map { |f| [f, annotations[f]] }
+          :title => [type.to_s.upcase + ':', color, :bold],
+          :files => files
         }
       end
     end
@@ -413,7 +432,7 @@ class Haus
 
     def execute_deletions fopts
       deletions.each do |dst|
-        log [':: ', :white, :bold], ['DELETING ', :italic], dst
+        log ['-- DELETING ', :red, :italic], [dst, Haus::LSColors[Haus::LSColors.ftype dst]]
         FileUtils.rm_r dst, fopts.merge(:secure => true)
       end
     end
@@ -422,7 +441,11 @@ class Haus
       links.each do |src, dst|
         srcpath = options.relative ? relpath(src, dst) : src
 
-        log [':: ', :white, :bold], ['LINKING ', :italic], [srcpath, dst].join(' → ') # NOTE: utf8 char
+        # NOTE: utf8 char
+        prefix = extant?(dst) ? ['-+ LINKING ', :yellow, :italic] : ['++ LINKING ', :green, :italic]
+        srcfmt = [srcpath, Haus::LSColors[Haus::LSColors.ftype src]]
+        dstfmt = [dst, Haus::LSColors['link']]
+        log prefix, srcfmt, ' → ', dstfmt
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
@@ -434,7 +457,11 @@ class Haus
 
     def execute_copies fopts
       copies.each do |src, dst|
-        log [':: ', :white, :bold], ['COPYING ', :italic], [src, dst].join(' → ') # NOTE: utf8 char
+        prefix   = extant?(dst) ? ['-+ COPYING ', :yellow, :italic] : ['++ COPYING ', :green, :italic]
+        srcstyle = Haus::LSColors[Haus::LSColors.ftype src]
+        srcfmt   = [src, srcstyle]
+        dstfmt   = [dst, srcstyle]
+        log prefix, srcfmt, ' → ', dstfmt
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
@@ -456,7 +483,11 @@ class Haus
 
     def execute_modifications fopts
       modifications.each do |prc, dst|
-        log [':: ', :white, :bold], ['MODIFYING ', :italic], dst
+        if extant? dst
+          log ['+- MODIFYING ', :cyan, :italic], [dst, Haus::LSColors[Haus::LSColors.ftype dst]]
+        else
+          log ['++ CREATING ', :green, :italic], dst
+        end
 
         create_path_to dst, fopts
         new = extant? dst

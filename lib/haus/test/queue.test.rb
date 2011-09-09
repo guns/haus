@@ -844,10 +844,10 @@ class Haus::QueueSpec < MiniTest::Spec
         q.tty_confirm?
         $stdout.rewind
         $stdout.read.must_match %r{
-          Create:     .+   #{files[1]}   .+   this-is-a-new-file    .+
-          Modify:     .+   #{files[4]}   .+
-          Overwrite:  .+   #{files[3]}   .+
-          Delete:     .+   #{files[5]}   .+   \e\[31mWARNING\e\[0m\sdeletion
+          CREATE:     .+   #{files[1]}   .+   this-is-a-new-file    .+
+          MODIFY:     .+   #{files[4]}   .+
+          OVERWRITE:  .+   #{files[3]}   .+
+          DELETE:     .+   #{files[5]}   .+   \e\[31mWARNING\e\[0m\sdeletion
         }mx
       }
     end

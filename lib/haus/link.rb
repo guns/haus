@@ -19,7 +19,7 @@ class Haus
       users.each do |user|
         hausfiles user do |src, dst|
           if reason = user.distrusts(src)
-            queue.annotate dst, ["WARNING: #{reason}", :red, :bold]
+            queue.annotate dst, ["WARNING: Source #{reason}", :red]
           end
           queue.add_link src, dst
         end
