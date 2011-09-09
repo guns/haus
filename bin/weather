@@ -12,9 +12,10 @@ require 'nokogiri'
 class Weather
   class GoogleWeather
     attr_reader   :data
-    attr_accessor :info, :current, :forecast
+    attr_accessor :location, :info, :current, :forecast
 
-    def initialize location
+    def initialize loc
+      self.location = loc
       self.data     = HTTParty.get('http://www.google.com/ig/api', :query => { :weather => location })['xml_api_reply']['weather']
       self.info     = data[:forecast_information]
       self.current  = data[:current_conditions]
@@ -40,6 +41,8 @@ class Weather
     end
 
     def to_s
+      return 'No forecast available for %s' % location.inspect if info.nil?
+
       lines, cell = [], '%-26s'
 
       # Current conditions
