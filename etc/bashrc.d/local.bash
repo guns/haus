@@ -674,7 +674,8 @@ ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A
       ap='airport'
 
 # cURL
-ALIAS get='curl -#L'
+ALIAS get='curl -#L' \
+      geto='curl -#LO'
 
 # DNS
 ALIAS digx='dig -x'
