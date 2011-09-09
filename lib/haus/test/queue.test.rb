@@ -7,9 +7,6 @@ require 'ostruct'
 require 'expect'
 require 'stringio'
 require 'tempfile'
-require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if [].respond_to? :cycle
-require 'minitest/autorun'
 require 'haus/queue'
 require 'haus/logger'
 require 'haus/test/helper/minitest'

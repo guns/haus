@@ -2,7 +2,9 @@
 
 require 'fileutils'
 require 'pathname'
-require 'minitest/unit'
+require 'rubygems' # 1.8.6 compat
+require 'minitest/pride' if [].respond_to? :cycle
+require 'minitest/autorun'
 
 module MiniTest
   module Assertions
@@ -84,7 +86,7 @@ module MiniTest
   end
 end
 
-# Just for fun
+# 256 color output, just for fun
 if defined? PrideIO and MiniTest::Unit.output.kind_of? PrideIO
   require 'haus/logger'
 

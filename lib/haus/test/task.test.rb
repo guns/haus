@@ -3,10 +3,7 @@
 $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'stringio'
-require 'rubygems' # 1.8.6 compat
 require 'enumerator' # 1.8.6 compat
-require 'minitest/pride' if [].respond_to? :cycle
-require 'minitest/autorun'
 require 'haus/task'
 require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
