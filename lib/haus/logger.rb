@@ -18,7 +18,7 @@ class Haus
     # ANSI SGR codes
     # http://www.inwap.com/pdp10/ansicode.txt
     # http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
-    SGR = Hash.new { |h,k| k.is_a?(Symbol) ? h.fetch(k) : k }.merge({
+    SGR = Hash.new { |h,k| k.is_a?(Symbol) ? h.fetch(k) : k.to_s }.merge({
       :reset     => '0',  :clear       => '0',
       :bold      => '1',  :nobold      => '22',
       :dim       => '2',  :nodim       => '22',
