@@ -166,6 +166,17 @@ function! <SID>Qfdo(expr)
 endfunction
 
 
+" Source or run current file {{{1
+command! RunCurrentFile call <SID>RunCurrentFile()
+function! <SID>RunCurrentFile()
+    if &filetype == 'vim'
+        source %
+    elseif &filetype == 'ruby'
+        silent execute '! ruby % | $PAGER' | redraw!
+    endif
+endfunction
+
+
 " Create folds for Ruby method definitions using the ruby text object {{{1
 command! RubyFold call <SID>RubyFold()
 function! <SID>RubyFold()
@@ -177,6 +188,23 @@ function! <SID>RubyFold()
     endwhile
 
     normal `r
+endfunction
+
+
+" Run a single MiniTest::Spec test case {{{1
+command! RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase()
+function! <SID>RunCurrentMiniTestCase()
+    " Get the line number for the last assertion
+    let line = search('\vit .* do', 'bcnW')
+    if !line | return | endif
+
+    " Construct the test name
+    let rbstr = matchlist(getline(line), '\vit (.*) do')[1]
+    execute 'ruby VIM.command(%q(let @r = "%s") % ' . rbstr . '.gsub(/\W+/, %q(_)).downcase)'
+    let name = @r
+
+    " Run the test
+    silent execute '! ruby % --name /test.*' . name . '/ | $PAGER' | redraw!
 endfunction
 
 
