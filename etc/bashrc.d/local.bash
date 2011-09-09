@@ -759,7 +759,7 @@ ALIAS irc='weechat-curses' && {
 
     # Save/restore configuration
     [[ -d "$cdhaus/share/conf" ]] && {
-        alias weechatsave="(cd ~guns/.weechat && exec tar zcv *.conf perl ruby ssl > \"$cdhaus/share/conf/weechat.tar.gz\")"
+        alias weechatsave="(cd ~guns/.weechat && exec tar zcv .gitignore *.conf perl ruby ssl > \"$cdhaus/share/conf/weechat.tar.gz\")"
         alias weechatrestore="(cd ~guns/.weechat && exec tar zxvf \"$cdhaus/share/conf/weechat.tar.gz\")"
     }
 }
