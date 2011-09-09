@@ -7,9 +7,14 @@ class Haus
     LS_COLORS = 'di=01;34:ln=01;36:pi=40;33:so=01;35:bd=40;33;01:cd=40;33;01:su=37;41:sg=30;43:tw=30;42:ow=34;42:ex=01;32'
 
     class << self
-      # Look up color information; returns empty string when not found.
-      def [] type
-        @colors[type] || ''
+      # Look up color information; symbol argument is interpreted as color
+      # key, string argument is interpreted as a file path.
+      def [] arg
+        case arg
+        when Symbol then @colors[arg]
+        when String then @colors[ftype arg]
+        else raise ArgumentError, 'Symbol or String key required'
+        end || ''
       end
 
       # Returns key suitable for use with Haus::LSColors#[]
@@ -19,33 +24,36 @@ class Haus
         case stat.ftype
         when 'directory'
           if not (stat.mode & 0002).zero?
-            stat.sticky? ? 'stickyOtherWritable' : 'otherWritable'
+            stat.sticky? ? :stickyOtherWritable : :otherWritable
           else
-            'directory'
+            :directory
           end
         when 'file'
           if stat.executable?
             if stat.setuid?
-              'setuid'
+              :setuid
             elsif stat.setgid?
-              'setgid'
+              :setgid
             else
-              'executable'
+              :executable
             end
           else
-            'file'
+            :file
           end
         else
-          # File::Stat#ftype returns valid keys otherwise
-          stat.ftype
+          # File::Stat#ftype otherwise returns valid keys
+          stat.ftype.to_sym
         end
       end
 
       # Redefine internal color table with given string or from environment
       def parse str = nil, type = nil
-        type ||= if str                       then str =~ /=/ ? :gnu : :bsd
-        elsif system 'ls --color &>/dev/null' then :gnu
-        else                                       :bsd
+        type ||= if str
+          str =~ /=/ ? :gnu : :bsd
+        elsif system 'ls --color &>/dev/null'
+          :gnu
+        else
+          :bsd
         end
 
         case type
@@ -61,17 +69,17 @@ class Haus
 
         # Camel case keys to match File#ftype
         @colors = {
-          'directory'           => pos[ 0] || mask[ 0],
-          'link'                => pos[ 1] || mask[ 1],
-          'socket'              => pos[ 2] || mask[ 2],
-          'fifo'                => pos[ 3] || mask[ 3],
-          'executable'          => pos[ 4] || mask[ 4],
-          'blockSpecial'        => pos[ 5] || mask[ 5],
-          'characterSpecial'    => pos[ 6] || mask[ 6],
-          'setuid'              => pos[ 7] || mask[ 7],
-          'setgid'              => pos[ 8] || mask[ 8],
-          'stickyOtherWritable' => pos[ 9] || mask[ 9],
-          'otherWritable'       => pos[10] || mask[10]
+          :directory           => pos[ 0] || mask[ 0],
+          :link                => pos[ 1] || mask[ 1],
+          :socket              => pos[ 2] || mask[ 2],
+          :fifo                => pos[ 3] || mask[ 3],
+          :executable          => pos[ 4] || mask[ 4],
+          :blockSpecial        => pos[ 5] || mask[ 5],
+          :characterSpecial    => pos[ 6] || mask[ 6],
+          :setuid              => pos[ 7] || mask[ 7],
+          :setgid              => pos[ 8] || mask[ 8],
+          :stickyOtherWritable => pos[ 9] || mask[ 9],
+          :otherWritable       => pos[10] || mask[10]
         }
       end
 

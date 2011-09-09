@@ -285,10 +285,10 @@ class Haus
         files = targets(type).map do |f|
           ft = if type == :create
             if links.any? { |s,d| d == f }
-              'link'
+              :link
             else
               job = (copies + modifications).find { |s,d| d == f }
-              job ? Haus::LSColors.ftype(job.first) : 'unknown'
+              job ? Haus::LSColors.ftype(job.first) : :unknown
             end
           else
             Haus::LSColors.ftype f
@@ -432,7 +432,7 @@ class Haus
 
     def execute_deletions fopts
       deletions.each do |dst|
-        log ['-- DELETING ', :red, :italic], [dst, Haus::LSColors[Haus::LSColors.ftype dst]]
+        log ['-- DELETING ', :red, :italic], [dst, Haus::LSColors[dst]]
         FileUtils.rm_r dst, fopts.merge(:secure => true)
       end
     end
@@ -443,8 +443,8 @@ class Haus
 
         # NOTE: utf8 char
         prefix = extant?(dst) ? ['-+ LINKING ', :yellow, :italic] : ['++ LINKING ', :green, :italic]
-        srcfmt = [srcpath, Haus::LSColors[Haus::LSColors.ftype src]]
-        dstfmt = [dst, Haus::LSColors['link']]
+        srcfmt = [srcpath, Haus::LSColors[src]]
+        dstfmt = [dst, Haus::LSColors[:link]]
         log prefix, srcfmt, ' → ', dstfmt
 
         FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
@@ -458,7 +458,7 @@ class Haus
     def execute_copies fopts
       copies.each do |src, dst|
         prefix   = extant?(dst) ? ['-+ COPYING ', :yellow, :italic] : ['++ COPYING ', :green, :italic]
-        srcstyle = Haus::LSColors[Haus::LSColors.ftype src]
+        srcstyle = Haus::LSColors[src]
         srcfmt   = [src, srcstyle]
         dstfmt   = [dst, srcstyle]
         log prefix, srcfmt, ' → ', dstfmt
@@ -484,7 +484,7 @@ class Haus
     def execute_modifications fopts
       modifications.each do |prc, dst|
         if extant? dst
-          log ['+- MODIFYING ', :cyan, :italic], [dst, Haus::LSColors[Haus::LSColors.ftype dst]]
+          log ['+- MODIFYING ', :cyan, :italic], [dst, Haus::LSColors[dst]]
         else
           log ['++ CREATING ', :green, :italic], dst
         end
