@@ -204,7 +204,7 @@ function! <SID>RunCurrentMiniTestCase()
     let name = @r
 
     " Run the test
-    silent execute '! ruby % --verbose --name /test.*' . name . '/ | $PAGER' | redraw!
+    silent execute '! ruby % --name /test.*' . name . '/ | $PAGER' | redraw!
 endfunction
 
 
