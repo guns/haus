@@ -17,7 +17,7 @@
 "   and what builtin mappings it is introducing
 
 
-""" Preservations
+""" Preservations {{{1
 
 " -- i_Ctrl-T (insert mode shift right)
 " ++ i_Ctrl-X (insert mode completions)
@@ -36,7 +36,7 @@ PreserveMap <4-e> <C-e>
 PreserveMap <4-y> <C-y>
 
 
-""" Metamappings
+""" Metamappings {{{1
 
 " Mapleader:
 "   * breaks out of insert mode for universal availability
@@ -51,7 +51,7 @@ vnoremap <C-c> <Esc>
 snoremap <C-c> <Esc><C-c>
 
 
-""" Editing / Movement like Emacs
+""" Editing / Movement like Emacs {{{1
 
 " char left/right (insert only)
 " -- i_Ctrl-B i_Ctrl-F
@@ -97,7 +97,7 @@ cnoremap <C-k> <C-n>
 Mapall   <C-_> u
 
 
-""" Editing / Movement with modifiers
+""" Editing / Movement with modifiers {{{1
 
 " Page up / down
 " -- Ctrl-F Ctrl-B
@@ -111,7 +111,7 @@ Mapall   <Down> <C-o> gj
 cnoremap <Down> <Down>
 
 
-""" Command line / Search shortcuts
+""" Command line / Search shortcuts {{{1
 
 " -- ;
 noremap ;          :
@@ -183,7 +183,7 @@ noremap <4-g>            :Gstatus<CR>
 noremap <4-G>            q:iGgrep! -P<Space>
 
 
-""" Window / Tab Management
+""" Window / Tab Management {{{1
 
 " window focus / position
 Mapall <4-Left>  :wincmd\ h<CR> | Mapall <4-S-Left>  :wincmd\ H<CR>
@@ -254,7 +254,7 @@ noremap <Leader>m :Man<Space>
 nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 
-""" Buffer commands
+""" Buffer commands {{{1
 
 " Open Files
 noremap <Leader>e<Space> :tabedit<Space>
@@ -306,15 +306,11 @@ noremap <Leader><C-r>
     \ :source ~/.vim/local/commands.vim<CR>
     \ :source ~/.vim/local/abbreviations.vim<CR>
     \ :echo 'Mappings, Commands, and Abbreviations reloaded!'<CR>
-noremap <Leader>r
-    \ :if &filetype == 'vim'<CR>
-    \   :source %<CR>
-    \ :elseif &filetype == 'ruby'<CR>
-    \   :! ruby % \| $PAGER<CR>
-    \ :endif<CR><CR>
+noremap <Leader>r :RunCurrentFile<CR>
+noremap <Leader>R :RunCurrentMiniTestCase<CR>
 
 
-""" Text editing
+""" Text editing {{{1
 
 " Map readline's Unicode character bindings
 MapReadlineUnicodeBindings
@@ -369,10 +365,10 @@ vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 
 " Add numbers in selection
 " -- +
-vnoremap + "ey:ruby
-    \ e = VIM.evaluate('@e').scan(/(\d+(\.\d+)?)/).flatten.map(&:to_f).inject(:+);
-    \ VIM.command("let @e = '#{e}'");
-    \ print e<CR>
+vnoremap + "ry:ruby
+    \ r = VIM.evaluate('@r').scan(/(\d+(\.\d+)?)/).flatten.map(&:to_f).inject(:+);
+    \ VIM.command(%q(let @r = "%s") % r);
+    \ print r<CR>
 
 " Plugin: surround.vim - visual surround shortcuts (a la TextMate)
 " -- ( '
