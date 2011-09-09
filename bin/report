@@ -25,7 +25,7 @@ class Report
 
   def options
     OptionParser.new do |opt|
-      opt.summary_width = 20
+      opt.summary_width = 24
       opt.banner = %Q(\
         Display / speak a message to the user using platform-specific notifiers.
 
@@ -41,12 +41,18 @@ class Report
       opt.on '-s', '--sticky', 'Set notification to sticky, if applicable' do
         @opts[:sticky] = true
       end
+
+      opt.on '-f', '--file SOUND-FILE', 'Play given file instead of speaking message' do |arg|
+        @opts[:file] = File.expand_path arg
+      end
     end
   end
 
   def darwin_report msg
-    if system 'command -v say &>/dev/null'
-      Process.detach fork { exec 'say', msg }
+    if @opts[:file]
+      Process.detach fork { exec 'afplay', @opts[:file] } if system 'command -v afplay &>/dev/null'
+    else
+      Process.detach fork { exec 'say', msg } if system 'command -v say &>/dev/null'
     end
 
     if system 'command -v growlnotify &>/dev/null'
@@ -60,9 +66,11 @@ class Report
     end
   end
 
-  def unix_report msg
-    if system 'command -v espeak &>/dev/null'
-      Process.detach fork { exec 'espeak', '-ven-us', msg }
+  def linux_report msg
+    if @opts[:file]
+      Process.detach fork { exec 'play', '-q', @opts[:file] } if system 'command -v play &>/dev/null'
+    else
+      Process.detach fork { exec 'espeak', '-ven-us', msg } if system 'command -v espeak &>/dev/null'
     end
 
     if system 'command -v notify-send &>/dev/null'
@@ -74,15 +82,16 @@ class Report
   end
 
   def report msg
+    buf = msg.empty? ? @opts[:default_message] : msg.dup
     case RUBY_PLATFORM
-    when /darwin/ then darwin_report msg
-    else               unix_report msg
+    when /darwin/ then darwin_report buf
+    else               linux_report buf
     end
   end
 
   def run
     args = options.parse @args
-    report args.empty? ? @opts[:default_message] : args.join(' ')
+    report args.join(' ')
   end
 end
 
