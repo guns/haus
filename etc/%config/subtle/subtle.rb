@@ -594,7 +594,7 @@ end
 
 tag 'term' do
   match      /u?rxvt|xterm/i
-  gravity    :middle
+  gravity    :center
   borderless true
 end
 
