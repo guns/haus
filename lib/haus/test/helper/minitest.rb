@@ -3,8 +3,12 @@
 require 'fileutils'
 require 'pathname'
 require 'rubygems' # 1.8.6 compat
-require 'minitest/pride' if [].respond_to? :cycle
+begin
+  require 'minitest/pride' # MiniTest versions < 2.4 break Ruby 1.8.6
+rescue NoMethodError
+end
 require 'minitest/autorun'
+require 'haus/logger'
 
 module MiniTest
   module Assertions
@@ -86,17 +90,21 @@ module MiniTest
   end
 end
 
-# 256 color output, just for fun
-if defined? PrideIO and MiniTest::Unit.output.kind_of? PrideIO
-  require 'haus/logger'
+if defined? PrideLOL and Haus::Logger.colors256?
+  require 'enumerator' # 1.8.6 compat
 
-  if Haus::Logger.colors256?
-    xterm_colors = 16.step(196, 36).inject [] do |ary, base|
-      ary + (base..base+5).map do |n|
-        6.times.map { |k| '38;5;%d' % (n + 6*k) }
-      end
-    end.shuffle.first
-    MiniTest::Unit.output.instance_variable_set :@colors, xterm_colors
-    MiniTest::Unit.output.instance_variable_set :@size,   xterm_colors.size
+  class PrideSwatch < PrideLOL
+    def initialize *args
+      super
+
+      # Ruby 1.8.6 lacks syntax for chainable enumerators and Array#shuffle
+      @colors = 16.to_enum(:step, 244, 12).map { |n|
+        (n..n+5).to_a + (-n-11..-n-6).map { |i| -i }
+      }.sort_by { rand }.first
+
+      @size = @colors.size
+    end
   end
+
+  MiniTest::Unit.output = (rand(10).zero? ? PrideLOL : PrideSwatch).new MiniTest::Unit.output
 end
