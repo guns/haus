@@ -36,7 +36,6 @@ Dotfile and ssh key management system.
  - Better `--help` documentation
  - `HAUS_PATH` environment variable
  - Accept `haus help COMMAND` invocation
- - All logged files should be colorized according to `LS_?COLORS`
  - Perhaps more of the tests should be using `Tempfile`
 
 
