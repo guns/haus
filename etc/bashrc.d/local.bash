@@ -230,6 +230,9 @@ alias g3='g -C3'
 alias gv='g -v'
 alias wcl='grep -c .'
 
+# ack
+ALIAS acki='ack -i'
+
 # cat less tail
 alias c='cat'
 alias l='less'
