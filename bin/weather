@@ -9,17 +9,22 @@ require 'optparse'
 require 'httparty'
 require 'nokogiri'
 
-class Weather
-  class GoogleWeather
+class Weather # {{{1
+  class GoogleWeather # {{{2
     attr_reader   :data
-    attr_accessor :location, :info, :current, :forecast
+    attr_accessor :location, :info, :current, :forecast, :days
 
-    def initialize loc
+    def initialize loc, opts = {}
       self.location = loc
       self.data     = HTTParty.get('http://www.google.com/ig/api', :query => { :weather => location })['xml_api_reply']['weather']
       self.info     = data[:forecast_information]
       self.current  = data[:current_conditions]
       self.forecast = data[:forecast_conditions]
+      self.days     = opts[:days] || nil
+    end
+
+    def data= hash
+      @data = rekey hash
     end
 
     def rekey hash
@@ -28,16 +33,12 @@ class Weather
       old.each do |key, val|
         new[key.to_sym] = case val
         when Hash  then val.keys == ['data'] ? val['data'] : rekey(val) # Recurse!
-        when Array then val.map { |v| h = rekey v }
+        when Array then val.map { |v| h = rekey v } # Recurse!
         else val
         end
       end
 
       new
-    end
-
-    def data= hash
-      @data = rekey hash
     end
 
     def to_s
@@ -53,7 +54,7 @@ class Weather
       lines[4] = cell % condition(current[:condition])
 
       # Upcoming
-      forecast.each do |h|
+      forecast.take(days || forecast.count).each do |h|
         lines[1] << cell % h[:day_of_week]
         lines[2] << cell % "High: #{h[:high]}°F"
         lines[3] << cell % "Low:  #{h[:low]}°F"
@@ -75,9 +76,9 @@ class Weather
       else ''
       end + str
     end
-  end # GoogleWeather
+  end
 
-  class CheckIP
+  class CheckIP # {{{2
     attr_reader :info
 
     def initialize
@@ -88,10 +89,11 @@ class Weather
     def location
       info.values_at('City', 'State', 'Country').compact.join ' '
     end
-  end
+  end # }}}
 
   def initialize args = []
     @args = args
+    @opts = {}
   end
 
   def options
@@ -102,12 +104,18 @@ class Weather
         Weather forecast from undocumented iGoogle API
 
         Usage: #{File.basename __FILE__} [options] [location]
+
+        Options:
       ).gsub /^ +/, ''
+
+      opt.on '-d', '--days N', Integer, 'Number of days to show' do |arg|
+        @opts[:days] = arg
+      end
     end
   end
 
   def report loc
-    GoogleWeather.new(loc).to_s
+    GoogleWeather.new(loc, :days => @opts[:days]).to_s
   end
 
   def current_location
@@ -121,6 +129,7 @@ class Weather
 end
 
 if $0 == __FILE__
+  # Fix encoding issue in Crack
   # https://github.com/jnunemaker/crack/pull/16
   if defined? Encoding
     Crack::XML.singleton_class.class_eval do
@@ -132,5 +141,6 @@ if $0 == __FILE__
     end
   end
 
+  $0 = File.basename __FILE__
   Weather.new(ARGV).run
 end
