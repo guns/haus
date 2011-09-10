@@ -34,8 +34,8 @@ Dotfile and ssh key management system.
  - Shouldn't touch `File.umask`; just `lchmod` and `install`
  - Finish `Haus::Clean` tests
  - Better `--help` documentation
+    - Accept `haus help COMMAND` invocation
  - `HAUS_PATH` environment variable
- - Accept `haus help COMMAND` invocation
  - Perhaps more of the tests should be using `Tempfile`
 
 
