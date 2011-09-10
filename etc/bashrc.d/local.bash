@@ -753,15 +753,9 @@ HAVE cdmetasploit && {
 }
 
 # Weechat
-ALIAS irc='weechat-curses' && {
-    # Edit configuration
-    alias weechatedit="(cd ~guns/.weechat && exec vim weechat.conf)"
-
-    # Save/restore configuration
-    [[ -d "$cdhaus/share/conf" ]] && {
-        alias weechatsave="(cd ~guns/.weechat && exec tar zcv .gitignore *.conf perl ruby ssl > \"$cdhaus/share/conf/weechat.tar.gz\")"
-        alias weechatrestore="(cd ~guns/.weechat && exec tar zxvf \"$cdhaus/share/conf/weechat.tar.gz\")"
-    }
+HAVE weechat-curses && {
+    alias irc='(cd ~guns/.weechat && exec weechat-curses)'
+    alias ircedit='(cd ~guns/.weechat && exec vim weechat.conf)'
 }
 
 # OS X Sync
