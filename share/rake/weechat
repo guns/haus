@@ -1,0 +1,57 @@
+# -*- encoding: utf-8 -*-
+
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+task :default => :build
+
+desc 'Build Weechat'
+task :build do
+  cmake = %W[
+    cmake
+    -DPREFIX=#{ENV['PREFIX'] || '/opt/weechat'}
+    -DCMAKE_BUILD_TYPE=None
+    -Wno-dev
+    ..
+  ]
+
+  ENV['CFLAGS' ] = ''
+  ENV['LDFLAGS'] = ''
+
+  if RUBY_PLATFORM =~ /darwin/i
+    # Homebrew linking help
+    if system 'command -v brew &>/dev/null'
+      %w[libgcrypt libgpg-error gettext gnutls].each do |pkg|
+        cellar = %x(brew --prefix #{pkg}).chomp
+        ENV['CFLAGS' ] += " -I#{cellar}/include "
+        ENV['LDFLAGS'] += " -L#{cellar}/lib "
+      end
+      ENV['LDFLAGS'] += ' -liconv '
+    end
+
+    # Strip Perl (taken from Homebrew formula)
+    File.open 'src/plugins/scripts/perl/CMakeLists.txt', 'r+' do |f|
+      buf = f.read
+      strip = %w[CFLAGS LFLAGS].map do |flags|
+        %Q{\n  STRING(REGEX REPLACE "-arch ppc|-arch i386|-arch x86_64" "" PERL_#{flags} "${PERL_#{flags}}")}
+      end.join
+
+      f.rewind
+      f.write buf.sub(/(IF\(PERL_FOUND\))/, "\\1#{strip}")
+    end
+
+    # Add missing include in dev version
+    File.open 'src/gui/curses/gui-curses-mouse.c', 'r+' do |f|
+      buf = f.read
+      f.rewind
+      f.write "#include <unistd.h>\n#{buf}"
+    end
+  end
+
+  mkdir_p 'build'
+  Dir.chdir 'build' do
+    sh *cmake
+    sh *%W[make --jobs=#{ENV['JOBS'] || 2}]
+  end
+end
