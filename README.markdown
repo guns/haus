@@ -31,10 +31,12 @@ Dotfile and ssh key management system.
  - haus ssh add
  - haus ssh rm
  - haus ssh clean
+ - All Queue instance methods should be thread safe
+   - Implement locking for add_*
  - Shouldn't touch `File.umask`; just `lchmod` and `install`
  - Finish `Haus::Clean` tests
  - Better `--help` documentation
-    - Accept `haus help COMMAND` invocation
+   - Accept `haus help COMMAND` invocation
  - `HAUS_PATH` environment variable
  - Perhaps more of the tests should be using `Tempfile`
 
