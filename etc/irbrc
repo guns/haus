@@ -36,11 +36,6 @@ IRB.conf.merge!({
 })
 
 
-### Aliases
-
-alias :λ :lambda unless defined? λ
-
-
 ### Helpers
 
 # Wrap helpers in module so we can :remove_method

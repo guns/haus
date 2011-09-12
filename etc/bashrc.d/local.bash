@@ -757,7 +757,7 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    alias irc='(cd ~guns/.weechat && exec weechat-curses)'
+    ((EUID)) && alias irc='weechat-curses'
     alias ircedit='(cd ~guns/.weechat && exec vim weechat.conf)'
 }
 
@@ -1141,6 +1141,10 @@ if __OSX__; then
     # Suspend idle sleep
     alias noidle='pmset noidle'
 fi
+
+HAVE batterystat && {
+    alias logbatterystat='batterystat --json >> ~/Documents/Notes/batterystat.json'
+}
 
 
 ### Encryption {{{1
