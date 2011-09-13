@@ -103,6 +103,11 @@ class Batterystat
       lines.push 'Charge: [%s] %d/%d mAh'
       lines.push 'Health: [%s] %d/%d mAh'
       lines.push ''
+      if data['IsCharging']
+        lines << 'Time to full: %d minutes' % data['AvgTimeToFull']
+      else
+        lines << 'Remaining:    %d minutes' % data['TimeRemaining']
+      end
       lines.push 'Manufactured: %s'     % battery_age
       lines.push 'Loadcycles:   %d'     % data['CycleCount']
       lines.push 'Temperature:  %.2f°C' % (data['Temperature'].to_f / 100)
