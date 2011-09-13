@@ -854,7 +854,50 @@ class Haus::QueueSpec < MiniTest::Spec
   end
 
   describe :summary_table do
-    # TODO
+    it 'must return an Array of Hashes with :title and :files keys' do
+      @q.summary_table.must_be_kind_of Array
+      @q.summary_table.size.must_equal 4
+      @q.summary_table.each do |h|
+        h.must_be_kind_of Hash
+        h.keys.sort_by { |k| k.to_s }.must_equal [:files, :title]
+        h[:title].must_be_kind_of Array
+        h[:title][0].must_match /\A\w+:\z/
+        h[:title][1..-1].all? { |e| e.is_a? Symbol }.must_equal true # Enumerable#drop not in 1.8.6
+        h[:files].must_be_kind_of Array
+      end
+    end
+
+    it 'must contain all files and annotations in the queue, in a format suitable for Haus::Logger#fmt' do
+      files  = [:file, :link].map { |t| $user.hausfile t }
+      logger = Haus::Logger.new
+
+      @q.add_link *files[0]
+      @q.annotate files[0].last, 'This is a regular file'
+      create = @q.summary_table.first
+      logger.fmt(create[:title]).must_match /CREATE:/
+      create[:files].must_be_kind_of Array
+      create[:files].size.must_equal 1
+      create[:files].first.size.must_equal 2
+      create[:files].each do |f, note|
+        logger.fmt(*f).must_match Regexp.new(files[0][1])
+        logger.fmt(*note).must_equal 'This is a regular file'
+      end
+
+      FileUtils.touch files[1].last
+      @q.add_deletion files[1].last
+      @q.annotate files[1].last, 'DELETE ME'
+      delete = @q.summary_table.last
+      logger.fmt(delete[:title]).must_match /DELETE:/
+      delete[:files].must_be_kind_of Array
+      delete[:files].size.must_equal 1
+      delete[:files].first.size.must_equal 2
+      delete[:files].each do |f, note|
+        logger.fmt(*f).must_match Regexp.new(files[1][1])
+        logger.fmt(*note).must_equal 'DELETE ME'
+      end
+
+      # TODO: Modifications and Overwrites
+    end
   end
 
   describe :private do
