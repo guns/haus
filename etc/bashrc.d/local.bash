@@ -1142,6 +1142,10 @@ if __OSX__; then
     alias noidle='pmset noidle'
 fi
 
+HAVE batterystat && {
+    alias logbatterystat='batterystat --json >> ~/Documents/Notes/batterystat.json'
+}
+
 
 ### Encryption {{{1
 
