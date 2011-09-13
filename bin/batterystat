@@ -19,24 +19,6 @@ class Batterystat
       @data ||= ioreg '-n AppleSmartBattery'
     end
 
-    # Mac serial numbers embed year and week of production
-    def age_of_this_mac
-      f = ioreg('-c IOPlatformExpertDevice')['IOPlatformSerialNumber'].split ''
-
-      # Year of manufacture can't be in the future!
-      cyear, myear = Time.now.year % 10, f[2].to_i
-      years = myear > cyear ? cyear + 10 - myear : cyear - myear
-      weeks = Time.now.strftime('%U').to_i - f[3..4].join.to_i
-
-      if weeks < 0
-        years -= 1
-        weeks += 52
-      end
-      months = (weeks / 4).round
-
-      "%d year#{'s' unless years == 1}, %d month#{'s' unless months == 1}" % [years, months]
-    end
-
     # From AppleSmartBattery.cpp:
     #
     #   Date is published in a bitfield per the Smart Battery Data spec rev
@@ -51,7 +33,8 @@ class Batterystat
       year  = ((bf & (((2**7)-1) << 9)) >> 9) + 1980
       date  = Time.strptime ('%0d %0d %d' % [day, month, year]), '%d %m %Y'
 
-      '%s (%.1f years old)' % [date.strftime('%d %b %Y'), (Time.now - date) / (60*60*24*365.242199)]
+      # Return age in years (avg from Google calculator)
+      '%s (%.2f years old)' % [date.strftime('%d %b %Y'), (Time.now - date) / (60*60*24*365.242199)]
     end
 
     def ioreg query
