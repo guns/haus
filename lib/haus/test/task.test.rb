@@ -169,7 +169,11 @@ class Haus::TaskSpec < MiniTest::Spec
       files << user.hausfile(:file).first
       files << user.hausfile(:dir).first
       files << user.hausfile(:link).first
-      user.hausfile :hier # Not an etcfile!
+
+      # Non etcfiles
+      File.join(user.etc, '.dotfile')
+      FileUtils.touch File.join(user.etc, '.dotfile')
+      user.hausfile :hier
 
       h.dotfiles.sort.must_equal files.sort
     end
@@ -194,6 +198,9 @@ class Haus::TaskSpec < MiniTest::Spec
         FileUtils.touch path
         files << (rel =~ /\Anode/ ? File.dirname(path) : path)
       end
+
+      # Not a hierfile
+      FileUtils.touch File.join(hierdir, '.foo')
 
       h.hierfiles.sort.must_equal files.sort
     end
