@@ -120,8 +120,8 @@ class Haus
 
       Dir["#{etc}/*"].select { |f| hierdir? f }.each do |hier|
         Find.find hier do |f|
-          # Move on if the file is itself a hier dir
-          next if File.basename(f) =~ /\A%/
+          # Move on if the file is itself a hier dir or a dotfile
+          next if File.basename(f) =~ /\A(%|\.)/
 
           # This is a non-hier node
           paths.push f

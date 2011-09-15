@@ -7,6 +7,10 @@ require 'haus/test/helper/minitest'
 require 'haus/test/helper/noop_tasks'
 
 class HausSpec < MiniTest::Spec
+  it 'must include Haus::Loggable' do
+    Haus.included_modules.must_include Haus::Loggable
+  end
+
   describe :initialize do
     it 'must accept an optional arguments array' do
       Haus.method(:initialize).arity.must_equal -1

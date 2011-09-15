@@ -2,6 +2,7 @@
 
 require 'haus/version'
 require 'haus/options'
+require 'haus/logger'
 require 'haus/task'
 require 'haus/link'
 require 'haus/copy'
@@ -14,6 +15,8 @@ require 'haus/clean'
 # logger, so Ruby libraries should invoke those instead.
 #
 class Haus
+  include Loggable
+
   def initialize args = []
     @args = args
   end
@@ -34,11 +37,11 @@ class Haus
     @options ||= Options.new do |opt|
       # Suppress regular OptionParser help output
       opt.on '-h', '--help' do
-        options.logger.log help; exit
+        log help; exit
       end
 
       opt.on '-v', '--version' do
-        options.logger.log VERSION; exit
+        log VERSION; exit
       end
     end
   end
@@ -48,15 +51,15 @@ class Haus
     task = Task.list[args.first]
 
     if task.nil?
-      options.logger.log help
+      log help
       exit 1
     end
 
     # Enumerable#drop unavailable in 1.8.6
     task[:class].new(args[1..-1]).run or exit 1
   rescue StandardError => e
-    options.logger.log ["[#{e.class}] ", :red, :bold], e.to_s
-    options.logger.log e.backtrace.join("\n") if options.debug
+    log ["[#{e.class}] ", :red, :bold], e.to_s
+    log e.backtrace.join("\n") if options.debug
     exit 1
   end
 end

@@ -1,7 +1,9 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-$:.unshift File.expand_path('../../lib', __FILE__)
+script = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
+$:.unshift File.expand_path('../../lib', script)
+
 require 'haus'
 
 $0 = 'haus'
