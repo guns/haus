@@ -114,7 +114,7 @@
 
     # remote
     r            = remote -v
-    up           = remote update
+    up           = remote update --prune
     shallowclone = clone --depth=1
 
     # stash
