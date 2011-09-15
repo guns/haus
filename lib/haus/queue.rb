@@ -23,7 +23,7 @@ class Haus
   # (however, no attempt is made to remove any newly created files).
   #
   class Queue
-    class MultipleJobError < RuntimeError; end
+    MultipleJobError = Class.new RuntimeError
 
     attr_reader :options, :archive_path, :links, :copies, :modifications, :deletions, :annotations
 

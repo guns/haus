@@ -33,6 +33,18 @@ class Haus::OptionsSpec < MiniTest::Spec
         puts Haus::Options.new.debug == true
       end.first.must_equal "true\ntrue\n"
     end
+
+    it 'must accept one optional Hash argument like OpenStruct' do
+      o = Haus::Options.new :funcdef => :parity
+      o.funcdef.must_equal :parity
+    end
+
+    it 'must accept up to three arguments like OptionParser' do
+      o = Haus::Options.new 'Hello World', 42, '****'
+      o.banner.must_equal 'Hello World'
+      o.summary_width.must_equal 42
+      o.summary_indent.must_equal '****'
+    end
   end
 
   describe :path do
