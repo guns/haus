@@ -44,7 +44,7 @@ class Haus::CleanSpec < DotfileSpec
     end
 
     it 'should not blow up on syscall errors' do
-      class CleanSpecError < RuntimeError; end
+      CleanSpecError = Class.new RuntimeError
 
       # EACCES
       user0 = Haus::TestUser.new
