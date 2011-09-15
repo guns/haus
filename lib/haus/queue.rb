@@ -84,25 +84,25 @@ class Haus
       @deletions = (deletions.dup << dst).freeze
     end
 
-    # Add modification operation;
-    # Parameter is the file to be modified, block is the actual operation, which
-    # in turn takes the file to be modified as an argument.
+    # Add modification operation.
+    #
+    # Parameter is the file to be modified, block is the actual operation,
+    # which in turn takes the file to be modified as an argument.
+    #
+    # The file parameter need not exist, and may be any kind of file type
+    # (including directories). Correspondingly, no effort is made to create
+    # the file before passing it to the block, although the path to the file's
+    # parent directory will be created if missing.
     #
     #   q = Queue.new
     #   q.add_modification 'smilies.txt' do |path|
     #     File.open(path, 'a') { |f| f.puts ':)' }
     #   end
     #
-    # Raises ArgumentError if passed path is a directory.
-    #
-    # NOTE: The passed file will be created/updated with FileUtils#touch before
-    #       block is called
-    #
     def add_modification destination, &block
       dst = File.expand_path destination
 
       raise MultipleJobError if targets.include? dst
-      raise "#{dst.inspect} must not be a directory" if File.directory? dst
       raise_if_blocking_path dst
       return nil if block.nil?
 
@@ -286,9 +286,12 @@ class Haus
           ft = if type == :create
             if links.any? { |s,d| d == f }
               :link
+            # Copy targets are the same type as their sources
+            elsif copy = copies.find { |s,d| d == f }
+              Haus::LSColors.ftype(copy.first)
+            # Modification operations can create anything
             else
-              job = (copies + modifications).find { |s,d| d == f }
-              job ? Haus::LSColors.ftype(job.first) : :unknown
+              :unknown
             end
           else
             Haus::LSColors.ftype f
@@ -490,9 +493,6 @@ class Haus
         end
 
         create_path_to dst, fopts
-        new = extant? dst
-        FileUtils.touch dst, fopts
-        adopt dst, fopts if new
 
         # No simple way to deny FS access to the proc
         if options.noop
@@ -500,6 +500,9 @@ class Haus
         else
           prc.call dst
         end
+
+        # The proc may not actually create dst
+        adopt dst, fopts if extant? dst
       end
     end
 

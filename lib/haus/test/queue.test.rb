@@ -304,8 +304,8 @@ class Haus::QueueSpec < MiniTest::Spec
       lambda { @q.add_modification(src) {} }.must_raise Haus::Queue::MultipleJobError
     end
 
-    it 'must raise an error if argument is a directory' do
-      lambda { @q.add_modification($user.hausfile(:dir).first) {} }.must_raise RuntimeError
+    it 'must not raise an error if argument is a directory' do
+      lambda { @q.add_modification($user.hausfile(:dir).first) {}; raise StandardError }.must_raise StandardError
     end
 
     it 'must raise an error if argument has a blocking path' do
@@ -588,11 +588,11 @@ class Haus::QueueSpec < MiniTest::Spec
       [6,7].each { |n| File.read(@targets[n]).must_equal 'MODIFIED' }
     end
 
-    it 'must touch files before calling modification proc' do
+    it 'must not touch files before calling modification proc' do
       target = $user.hausfile.last
       extant?(target).must_equal false
       @q.add_modification $user.hausfile.last do |f|
-        extant?(f).must_equal true
+        extant?(f).must_equal false
       end
       @q.execute!
     end
