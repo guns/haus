@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'shellwords'
+
+class Airportnetworks
+  def initialize args = []
+    @args = args.freeze
+    @opts = { :iface => 'en1' }
+    @networksetup = %x(command -v networksetup).chomp
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 20
+
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} command args
+
+        Commands:
+            list    List remembered networks
+            add     Add given network with given security type
+            clear   Clear all (or given) remembered networks
+
+        Options:\
+      ).gsub /^ {8}/, ''
+
+      opt.on '-i', '--iface NAME', 'BSD interface; %s by default' % @opts[:iface] do |arg|
+        @opts[:iface] = arg
+      end
+    end
+  end
+
+  def sh *args
+    warn args.shelljoin
+    system *args
+  end
+
+  def list
+    %x(#{@networksetup} -listpreferredwirelessnetworks #{@opts[:iface]}).lines.drop(1).map &:strip
+  end
+
+  def add name, sectype = 'WPA2'
+    sh @networksetup, '-addpreferredwirelessnetworkatindex', @opts[:iface], name, list.size.to_s, sectype
+  end
+
+  def clear list = nil
+    if list.nil? or list.empty?
+      sh @networksetup, '-removeallpreferredwirelessnetworks', @opts[:iface]
+    else
+      list.each do |name|
+        sh @networksetup, '-removepreferredwirelessnetwork', @opts[:iface], name
+      end
+    end
+  end
+
+  def run
+    args = options.parse @args
+
+    case args.first
+    when 'list', nil then puts list
+    when 'add'       then add *args.drop(1)
+    when 'clear'     then clear args.drop(1)
+    else abort options.to_s
+    end
+  end
+end
+
+Airportnetworks.new(ARGV).run if $0 == __FILE__
