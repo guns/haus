@@ -694,7 +694,7 @@ HAVE ncat && tcomp host ncat
 # ssh scp
 # http://blog.urfix.com/25-ssh-commands-tricks/
 ALIAS ssh='ssh -C -2' \
-      sshx='ssh -XY' \
+      sshx='ssh -Y' \
       ssh-master='ssh -Nn -M' \
       ssh-tunnel='ssh -Nn -M -D 22222' \
       ssh-password='ssh -o "PreferredAuthentications password"' \
