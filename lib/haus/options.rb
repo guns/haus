@@ -22,8 +22,9 @@ class Haus
       @ostruct.debug  = !!ENV['DEBUG']
       @ostruct.logger = Haus::Logger.new
 
-      params = [banner]
-      params.push width if width
+      params = []
+      params.push banner if banner
+      params.push width  if width
       params.push indent if indent
       super *params
     end
