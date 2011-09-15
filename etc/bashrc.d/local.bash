@@ -542,8 +542,8 @@ ALIAS ddc='dcfldd' && tcomp dd ddc
 ALIAS free='free -m'
 
 # Plist dumper
-ALIAS plistbuddy='/usr/libexec/PlistBuddy' && {
-    alias plistprint='plistbuddy -c Print'
+ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
+    alias pprint='pbuddy -c Print'
     # Param: $1 Application directory
     appvers() {
         while (($#)); do
