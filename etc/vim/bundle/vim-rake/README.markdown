@@ -5,7 +5,8 @@ With rake.vim, you can use all those parts of
 [rails.vim](https://github.com/tpope/vim-rails) that you wish you could
 use on your other Ruby projects on anything with a `Rakefile`, including
 `:R`/`:A`, `:Rlib` and friends, and of course `:Rake`.  It's great when
-paired with `gem open` and `bundle open`.
+paired with `gem open` and `bundle open` and complemented nicely by
+[bundler.vim](https://github.com/tpope/vim-bundler).
 
 Installation
 ------------
@@ -44,7 +45,7 @@ See the contribution guidelines for
 Self-Promotion
 --------------
 
-Like rails.vim? Follow the repository on
+Like rake.vim? Follow the repository on
 [GitHub](https://github.com/tpope/vim-rake) and vote for it on
 [vim.org](http://www.vim.org/scripts/script.php?script_id=3669).  And if
 you're feeling especially charitable, follow [tpope](http://tpo.pe/) on

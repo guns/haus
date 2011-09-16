@@ -1,5 +1,5 @@
 " rake.vim - It's like rails.vim without the rails
-" Maintainer:   Tim Pope <vimNOSPAM@tpope.org>
+" Maintainer:   Tim Pope <http://tpo.pe/>
 " Version:      1.0
 " GetLatestVimScripts: 3669 1 :AutoInstall: rake.vim
 
@@ -273,7 +273,11 @@ function! s:Rake(bang,arg)
   let old_errorformat = &l:errorformat
   call s:push_chdir()
   try
-    let &l:makeprg = 'rake'
+    if exists('b:bundle_root') && b:bundler_root ==# s:project().path()
+      let &l:makeprg = 'bundle exec rake'
+    else
+      let &l:makeprg = 'rake'
+    endif
     let &l:errorformat = '%D(in\ %f),'
           \.'%\\s%#from\ %f:%l:%m,'
           \.'%\\s%#from\ %f:%l:,'
@@ -449,7 +453,7 @@ endfunction
 
 function! s:Rlib(file)
   if a:file ==# ''
-    return 'Gemfile'
+    return get(s:project().relglob('','*.gemspec'),0,'Gemfile')
   elseif a:file =~# '/$'
     return 'lib/'.a:file
   else
@@ -516,7 +520,7 @@ call s:navcommand('task')
 " Rtags {{{1
 
 function! s:project_tags_file() dict abort
-  if filewritable(self.path())
+  if filereadable(self.path('.tags')) || filewritable(self.path())
     return self.path('.tags')
   else
     if !has_key(self,'_tags_file')
@@ -550,9 +554,8 @@ call s:command("-bar -bang -nargs=? Rtags :execute s:Tags(<q-args>)")
 augroup rake_tags
   autocmd!
   autocmd User Rake
-        \ if s:project().path() !~# ',' &&
-        \     stridx(&tags, s:project().tags_file()) < 0 |
-        \   let &l:tags .= ',' . s:project().tags_file() |
+        \ if stridx(&tags, escape(s:project().tags_file(),', ')) < 0 |
+        \   let &l:tags = escape(s:project().tags_file(),', ') . ',' . &tags |
         \ endif
 augroup END
 
@@ -562,8 +565,9 @@ augroup END
 augroup rake_path
   autocmd!
   autocmd User Rake
-        \ if stridx(&path, escape(s:project().path('lib'),', ')) < 0 |
-        \   let &l:path = escape(s:project().path('lib'),', ') . ',' . &l:path |
+        \ if &suffixesadd =~# '\.rb\>' && stridx(&path, escape(s:project().path('lib'),', ')) < 0 |
+        \   let &l:path = escape(s:project().path('lib'),', ')
+        \     . ',' . escape(s:project().path('ext'),', ') . ',' . &path |
         \ endif
 augroup END
 
