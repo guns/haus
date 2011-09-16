@@ -52,16 +52,20 @@ class Task
       when Hash
         files.each { |s, d| queue.add_copy File.join(base, s), File.join(haus, d) }
         queue.execute!
-      # A function that returns a new set of @files
+      # Relative rsync target directory
+      when String
+        dst = File.join haus, @files
+        FileUtils.mkdir_p dst
+        system *%W[rsync -ai --delete --no-owner --exclude=.* #{base}/ #{dst}/]
+      # A function that returns a new value for @files
       when Proc
         @files = @files.call(self) and update_files # Recurse!
       # This is a pathogen bundle
       when :pathogen
-        dst = File.join haus, 'etc/vim/bundle', File.basename(base)
-        FileUtils.mkdir_p dst
-        system *%W[rsync -ai --delete --no-owner --exclude=.* #{base}/ #{dst}/]
+        @files = File.join 'etc/vim/bundle', File.basename(base)
+        update_files # Recurse!
       else
-        raise 'No handler for @files as %s' % @files.class
+        raise 'No handler for :files as %s' % @files.class
       end
     end
 

@@ -92,11 +92,10 @@ vim = File.expand_path '~guns/src/vimfiles'
     { :base => "#{vim}/visualctrlg.vim",        :branch => %w[master],      :files => :pathogen },
     { :base => "#{vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
-    { # We don't want to remove any compiled bits
+    {
       :base   => "#{vim}/Command-T",
       :branch => %w[master guns],
-      :files  => :git,
-      :dst    => 'etc/vim/bundle/Command-T',
+      :files  => 'etc/vim/bundle/Command-T',
       :after  => proc { system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
     },
 
@@ -132,8 +131,7 @@ vim = File.expand_path '~guns/src/vimfiles'
     {
       :base   => "#{src}/urxvt-perls",
       :branch => %w[master guns],
-      :files  => :git,
-      :dst    => 'etc/urxvt'
+      :files  => 'etc/urxvt'
     }
   ]
 }.map { |k, ps| [k, ps.map { |p| Task::Subproject.new p }] }]
