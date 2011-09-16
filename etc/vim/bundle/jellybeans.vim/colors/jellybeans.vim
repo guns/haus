@@ -365,10 +365,10 @@ hi! link diffAdded String
 
 " VimDiff
 
-call s:X("DiffAdd","","032218","","Black","DarkGreen")
-call s:X("DiffChange","","100920","","Black","DarkMagenta")
-call s:X("DiffDelete","220000","220000","","DarkRed","DarkRed")
-call s:X("DiffText","","000940","","","DarkRed")
+call s:X("DiffAdd","D2EBBE","437019","","White","DarkGreen")
+call s:X("DiffDelete","40000A","700009","","DarkRed","DarkRed")
+call s:X("DiffChange","","2B5B77","","White","DarkBlue")
+call s:X("DiffText","8fbfdc","000000","reverse","Yellow","")
 
 " PHP
 
@@ -406,6 +406,7 @@ call s:X("rubyRegexpSpecial","a40073","","","Magenta","")
 call s:X("rubyPredefinedIdentifier","de5577","","","Red","")
 
 " JavaScript
+
 hi! link javaScriptValue Constant
 hi! link javaScriptRegexpString rubyRegexp
 
@@ -413,11 +414,16 @@ hi! link javaScriptRegexpString rubyRegexp
 
 hi! link coffeeRegExp javaScriptRegexpString
 
+" Lua
+
+hi! link luaOperator Conditional
+
 " C
 
 hi! link cOperator Constant
 
 " Objective-C/Cocoa
+
 hi! link objcClass Type
 hi! link cocoaClass objcClass
 hi! link objcSubclass objcClass
@@ -427,6 +433,11 @@ hi! link cocoaFunction Function
 hi! link objcMethodName Identifier
 hi! link objcMethodArg Normal
 hi! link objcMessageName Identifier
+
+" Debugger.vim
+
+call s:X("DbgCurrent","DEEBFE","345FA8","","White","DarkBlue")
+call s:X("DbgBreakPt","","4F0037","","","DarkMagenta")
 
 " Plugins, etc.
 
@@ -439,10 +450,8 @@ if !s:low_color
   hi Folded ctermbg=236
   hi FoldColumn ctermbg=236
   hi SignColumn ctermbg=236
-  hi DiffAdd ctermbg=22
-  hi DiffDelete ctermbg=52
-  hi DiffChange ctermbg=17
-  hi DiffText ctermbg=19
+  hi DiffText ctermfg=81
+  hi DbgBreakPt ctermbg=53
 endif
 
 " delete functions {{{
