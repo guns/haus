@@ -10,3 +10,4 @@ CountJump-todo	CountJump.txt	/*CountJump-todo*
 CountJump-usage	CountJump.txt	/*CountJump-usage*
 CountJump.txt	CountJump.txt	/*CountJump.txt*
 CountJump.vim	CountJump.txt	/*CountJump.vim*
+g:CountJump_Context	CountJump.txt	/*g:CountJump_Context*

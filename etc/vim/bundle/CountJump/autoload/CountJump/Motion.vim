@@ -204,7 +204,7 @@ function! CountJump#Motion#MakeBracketMotionWithJumpFunctions( mapArgs, keyAfter
 "	a:mode  Mode in which the search is invoked. Either 'n', 'v' or 'o'. 
 "		With 'O': Special additional treatment for operator-pending mode
 "		with a pattern to end. 
-"   All funcrefs should position the cursor to the appropriate position in the
+"   All Funcrefs should position the cursor to the appropriate position in the
 "   current window. 
 "   If no jump function is passed, the corresponding mappings are omitted. 
 

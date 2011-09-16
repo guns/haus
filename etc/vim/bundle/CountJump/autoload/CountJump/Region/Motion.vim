@@ -4,12 +4,14 @@
 " DEPENDENCIES:
 "   - CountJump.vim, CountJump/Region.vim autoload scripts. 
 "
-" Copyright: (C) 2010 Ingo Karkat
+" Copyright: (C) 2010-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.50.003	30-Aug-2011	Also support a match()-like Funcref instead of a
+"				pattern to define the range. 
 "   1.30.002	19-Dec-2010	Added a:isToEndOfLine argument to
 "				CountJump#Region#JumpToNextRegion(), to be used
 "				in operator-pending and visual modes in order to
@@ -25,13 +27,13 @@
 "[x, [[			Go to [count] previous start of ???. 
 "[X, []			Go to [count] previous end of ???. 
 
-function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, pattern, isMatch, ... )
+function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, Expr, isMatch, ... )
 "*******************************************************************************
 "* PURPOSE:
 "   Define a complete set of mappings for a [x / ]x motion (e.g. like the
 "   built-in ]m "Jump to start of next method") that support an optional [count]
 "   and jump over regions of lines which are defined by contiguous lines that
-"   (don't) match a:pattern. 
+"   (don't) match a:Expr. 
 "   The mappings work in normal mode (jump), visual mode (expand selection) and
 "   operator-pending mode (execute operator). 
 
@@ -74,8 +76,10 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 "   default [[ and ]] mappings are overwritten. (Note that this is different
 "   from passing ']' and '[', respectively, because the back motions are
 "   swapped.) 
-"   a:pattern	Regular expression that defines the region, i.e. must (not)
+"   a:Expr	Regular expression that defines the region, i.e. must (not)
 "		match in all lines belonging to it. 
+"		Or Funcref to a function that takes a line number and returns
+"		the matching byte offset (or -1), just like |match()|. 
 "   a:isMatch	Flag whether to search matching (vs. non-matching) lines. 
 "   a:mapModes		Optional string containing 'n', 'o' and/or 'v',
 "			representing the modes for which mappings should be
@@ -112,7 +116,7 @@ function! CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, i
 	    \	    a:mapArgs,
 	    \	    l:data[0],
 	    \	    string(l:mode ==# 'o' && l:useToEndOfLine ? 'O' : l:mode),
-	    \	    string(a:pattern),
+	    \	    string(a:Expr),
 	    \	    a:isMatch,
 	    \	    l:data[1],
 	    \	    l:data[2],

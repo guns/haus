@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - CountJump.vim autoload script. 
 "
-" Copyright: (C) 2009-2010 Ingo Karkat
+" Copyright: (C) 2009-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.50.011	30-Aug-2011	Initialize global g:CountJump_Context object for
+"				custom use by Funcrefs. 
 "   1.40.010	20-Dec-2010	Replaced s:Escape() function with string(). 
 "   1.22.009	06-Aug-2010	No more text objects for select mode; as the
 "				mappings start with a printable character ("a" /
@@ -45,7 +47,7 @@
 "				(e.g. i$, a$). 
 "	003	03-Oct-2009	ENH: Inner text objects can now be selected when
 "				the cursor is on the boundary text, like the
-"				built-in text object. The jump funcrefs now
+"				built-in text object. The jump Funcrefs now
 "				return the jump position (like searchpos()), not
 "				just the jump line number. 
 "	002	02-Oct-2009	ENH: Checking whether the jump is not around the
@@ -107,7 +109,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
 "		    The function is invoked after the call to a:JumpToBegin,
 "		    with the cursor located at the beginning of the text object. 
 "
-"		    Both funcrefs must return a list [lnum, col], like
+"		    Both Funcrefs must return a list [lnum, col], like
 "		    searchpos(). This should be the jump position (or [0, 0] if
 "		    a jump wasn't possible). Normally, this should correspond to
 "		    the cursor position set by the jump function. However, for
@@ -132,6 +134,7 @@ function! CountJump#TextObject#TextObjectWithJumpFunctions( mode, isInner, isExc
     let l:save_view = winsaveview()
     let [l:cursorLine, l:cursorCol] = [line('.'), col('.')] 
     let l:isSelected = 0
+    let g:CountJump_Context = {}
 
     let l:save_whichwrap = &whichwrap
     set whichwrap+=h,l
@@ -251,7 +254,7 @@ function! CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, ty
 "	a:count	Number of blocks to jump to. 
 "	a:isInner	Flag whether the jump should be to the inner or outer
 "			delimiter of the block. 
-"   Both funcrefs must return a list [lnum, col], like searchpos(). This should
+"   Both Funcrefs must return a list [lnum, col], like searchpos(). This should
 "   be the jump position (or [0, 0] if a jump wasn't possible). 
 "   They should position the cursor to the appropriate position in the current
 "   window. 

@@ -92,34 +92,45 @@ circumstances.
 
 
 Often, a region can be defined as a block of continuous lines that all match a
-certain pattern. The following functions aid in implementing movements to the
-boundaries of these regions and text objects consisting of the region: 
+certain pattern (or, even more generic, where a provided predicate function
+returns a match position). The following functions aid in implementing
+movements to the boundaries of these regions and text objects consisting of
+the region: 
 
-CountJump#Region#JumpToRegionEnd( count, pattern, isMatch, step, isToEndOfLine )
+CountJump#Region#JumpToRegionEnd( count, Expr, isMatch, step, isToEndOfLine )
 
 Starting from the current line, search for the position where the count'th
 region ends. Use this function to build Funcrefs for forward / backward jumps
 that can then be passed to CountJump#TextObject#MakeWithJumpFunctions(). 
 
-CountJump#Region#JumpToNextRegion( count, pattern, isMatch, step, isAcrossRegion, isToEndOfLine )
+CountJump#Region#JumpToNextRegion( count, Expr, isMatch, step, isAcrossRegion, isToEndOfLine )
 
 Starting from the current line, search for the position where the count'th
 region begins/ends. 
 
-CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, pattern, isMatch, ... )
+CountJump#Region#Motion#MakeBracketMotion( mapArgs, keyAfterBracket, inverseKeyAfterBracket, Expr, isMatch, ... )
 
 This function sets up mappings starting with [ and ] for movement (with
 optional [count]) relative to the current cursor position, targeting a text
-region defined by contiguous lines that (don't) match a:pattern. 
+region defined by contiguous lines that (don't) match a:Expr. 
 
-CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, pattern, isMatch )
+CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, Expr, isMatch )
 
 Defines a complete set of mappings for inner and/or outer text objects that
 support an optional [count] and select regions of lines which are defined by
-contiguous lines that (don't) match a:pattern. 
+contiguous lines that (don't) match a:Expr.  
 The inner text object comprises all lines of the region itself, while the
 outer text object also includes all adjacent lines above and below which do
 not themselves belong to a region. 
+
+							 *g:CountJump_Context*
+The custom Funcrefs for jumps and predicates of lines belonging to a range may
+be invoked multiple times until the CountJump function arrives at its
+destination. To help the Funcrefs to determine where in this sequence they
+are, an empty g:CountJump_Context |dictionary| is initialized at the start of
+each CountJump function. Funcrefs can put custom information (e.g. the
+particular comment prefix on the current line) in there and evaluate this in
+subsequent invocations. 
 
 ==============================================================================
 EXAMPLE							   *CountJump-example*
@@ -193,6 +204,15 @@ IDEAS							      *CountJump-ideas*
 
 ==============================================================================
 HISTORY							    *CountJump-history*
+
+1.50	30-Aug-2011
+- For regions of lines, also support a match()-like Funcref instead of a
+  pattern to define the range. This for example enables to define a range of
+  diff changes via a predicate function that checks diff_hlID() != 0. 
+- Initialize global g:CountJump_Context object for custom use by Funcrefs. 
+
+1.41	13-Jun-2011
+- FIX: Directly ring the bell to avoid problems when running under :silent!. 
 
 1.40	20-Dec-2010
 - ENH: Added CountJump#Region#TextObject#Make() to easily define text objects
@@ -268,7 +288,7 @@ First published version.
 Started development. 
 
 ==============================================================================
-Copyright: (C) 2009-2010 Ingo Karkat
+Copyright: (C) 2009-2011 Ingo Karkat
 The VIM LICENSE applies to this script; see|copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>

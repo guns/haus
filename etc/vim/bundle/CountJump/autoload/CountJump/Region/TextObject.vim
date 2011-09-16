@@ -3,12 +3,14 @@
 " DEPENDENCIES:
 "   - CountJump/Region.vim, CountJump/TextObjects.vim autoload scripts. 
 "
-" Copyright: (C) 2010 Ingo Karkat
+" Copyright: (C) 2010-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.50.002	30-Aug-2011	Also support a match()-like Funcref instead of a
+"				pattern to define the range. 
 "   1.40.001	20-Dec-2010	file creation
 
 function! s:EscapeForFunctionName( text )
@@ -19,7 +21,7 @@ endfunction
 function! s:function(name)
     return function(substitute(a:name, '^s:', matchstr(expand('<sfile>'), '<SNR>\d\+_\zefunction$'),''))
 endfunction 
-function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, pattern, isMatch )
+function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selectionMode, Expr, isMatch )
 "*******************************************************************************
 "* PURPOSE: 
 "   Define a complete set of mappings for inner and/or outer text objects that
@@ -48,8 +50,10 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
 "			'v' for characterwise, 'V' for linewise, '<CTRL-V>' for
 "			blockwise. Since regions are defined over full lines,
 "			this should typically be 'V'. 
-"   a:pattern	Regular expression that defines the region, i.e. must (not)
+"   a:Expr	Regular expression that defines the region, i.e. must (not)
 "		match in all lines belonging to it. 
+"		Or Funcref to a function that takes a line number and returns
+"		the matching byte offset (or -1), just like |match()|. 
 "   a:isMatch	Flag whether to search matching (vs. non-matching) lines. 
 "
 "* RETURN VALUES: 
@@ -74,17 +78,17 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
     let l:regionFunction = "
     \	function! %s( count, isInner )\n
     \	    %s\n
-    \	    let [l:pattern, l:isMatch, l:step, l:isToEndOfLine] = [%s, %d, %d, %d]\n
+    \	    let [l:Expr, l:isMatch, l:step, l:isToEndOfLine] = [%s, %d, %d, %d]\n
     \	    if a:isInner\n
-    \		return CountJump#Region#JumpToRegionEnd(a:count, l:pattern, l:isMatch, l:step, l:isToEndOfLine)\n
+    \		return CountJump#Region#JumpToRegionEnd(a:count, l:Expr, l:isMatch, l:step, l:isToEndOfLine)\n
     \	    else\n
     \		let l:isBackward = (l:step < 0)\n
-    \		let l:regionEndPosition = CountJump#Region#JumpToRegionEnd(a:count, l:pattern, l:isMatch, l:step, 0)\n
+    \		let l:regionEndPosition = CountJump#Region#JumpToRegionEnd(a:count, l:Expr, l:isMatch, l:step, 0)\n
     \		if l:regionEndPosition == [0, 0] || l:regionEndPosition[0] == (l:isBackward ? 1 : line('$'))\n
     \		    return l:regionEndPosition\n
     \		endif\n
     \		execute 'normal!' (l:isBackward ? 'k' : 'j')\n
-    \		return CountJump#Region#JumpToRegionEnd(1, l:pattern, ! l:isMatch, l:step, l:isToEndOfLine)\n
+    \		return CountJump#Region#JumpToRegionEnd(1, l:Expr, ! l:isMatch, l:step, l:isToEndOfLine)\n
     \	    endif\n
     \	endfunction"
 
@@ -98,7 +102,7 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
     execute printf(l:regionFunction,
     \	l:functionToBeginName,
     \	'let s:originalLineNum = line(".")',
-    \	string(a:pattern),
+    \	string(a:Expr),
     \	a:isMatch,
     \	-1,
     \	0
@@ -106,7 +110,7 @@ function! CountJump#Region#TextObject#Make( mapArgs, textObjectKey, types, selec
     execute printf(l:regionFunction,
     \	l:functionToEndName,
     \	'execute s:originalLineNum',
-    \	string(a:pattern),
+    \	string(a:Expr),
     \	a:isMatch,
     \	1,
     \	1
