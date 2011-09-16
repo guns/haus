@@ -104,12 +104,16 @@ vim = File.expand_path '~guns/src/vimfiles'
       :files  => { 'autoload/pathogen.vim' => 'etc/vim/autoload/pathogen.vim' }
     },
 
-    # FIXME: Do not sync snippets directory!
-    # {
-    #   :base   => "#{vim}/ultisnips",
-    #   :branch => %w[master guns],
-    #   :files  => proc {},
-    # },
+    {
+      :base   => "#{vim}/ultisnips",
+      :branch => %w[master guns],
+      :files  => proc { |proj|
+        dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
+        FileUtils.mkdir_p dst
+        system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=UltiSnips #{proj.base}/ #{dst}/]
+        nil # Return nil because the work is done
+      }
+    },
 
     {
       :base   => "#{src}/tmux",

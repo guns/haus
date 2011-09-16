@@ -222,6 +222,9 @@ class _VimTest(unittest.TestCase):
         # Reset UltiSnips
         self.send(":py UltiSnips_Manager.reset(test_error=True)\n")
 
+        # Make it unlikely that we do not parse any shipped snippets
+        self.send(":let g:UltiSnipsSnippetDirectories=['<un_def_ined>']\n")
+
         # Clear the buffer
         self.send("bggVGd")
 
@@ -440,6 +443,18 @@ class TabStop_EscapingCharsDollars(_VimTest):
     snippets = ("test", r"snip \$0 $$0 end")
     keys = "test" + EX + "hi"
     wanted = "snip $0 $hi end"
+class TabStop_EscapingCharsDollars1(_VimTest):
+    snippets = ("test", r"a\${1:literal}")
+    keys = "test" + EX
+    wanted = "a${1:literal}"
+class TabStop_EscapingCharsDollars_BeginningOfLine(_VimTest):
+    snippets = ("test", "\n\\${1:literal}")
+    keys = "test" + EX
+    wanted = "\n${1:literal}"
+class TabStop_EscapingCharsDollars_BeginningOfDefinitionText(_VimTest):
+    snippets = ("test", "\\${1:literal}")
+    keys = "test" + EX
+    wanted = "${1:literal}"
 class TabStop_EscapingChars_Backslash(_VimTest):
     snippets = ("test", r"This \ is a backslash!")
     keys = "test" + EX
@@ -593,6 +608,26 @@ class TabStop_TSInDefault_MirrorsOutside_Overwrite(_VimTest):
     snippets = ("test", "hi ${1:this ${2:second}} $2")
     keys = "test" + EX + "Hallo"
     wanted = "hi Hallo "
+class TabStop_TSInDefault_MirrorsOutside_Overwrite1(_VimTest):
+    snippets = ("test", "$1: ${1:'${2:second}'} $2")
+    keys = "test" + EX + "Hallo"
+    wanted = "Hallo: Hallo "
+class TabStop_TSInDefault_MirrorsOutside_OverwriteSecond1(_VimTest):
+    snippets = ("test", "$1: ${1:'${2:second}'} $2")
+    keys = "test" + EX + JF + "Hallo"
+    wanted = "'Hallo': 'Hallo' Hallo"
+class TabStop_TSInDefault_MirrorsOutside_OverwriteFirstSwitchNumbers(_VimTest):
+    snippets = ("test", "$2: ${2:'${1:second}'} $1")
+    keys = "test" + EX + "Hallo"
+    wanted = "'Hallo': 'Hallo' Hallo"
+class TabStop_TSInDefault_MirrorsOutside_OverwriteFirst_RLExample(_VimTest):
+    snippets = ("test", """`!p snip.rv = t[1].split('/')[-1].lower().strip("'")` = require(${1:'${2:sys}'})""")
+    keys = "test" + EX + "WORLD" + JF + "End"
+    wanted = "world = require(WORLD)End"
+class TabStop_TSInDefault_MirrorsOutside_OverwriteSecond_RLExample(_VimTest):
+    snippets = ("test", """`!p snip.rv = t[1].split('/')[-1].lower().strip("'")` = require(${1:'${2:sys}'})""")
+    keys = "test" + EX + JF + "WORLD" + JF + "End"
+    wanted = "world = require('WORLD')End"
 
 class TabStop_Multiline_Leave(_VimTest):
     snippets = ("test", "hi ${1:first line\nsecond line} world" )
@@ -1869,7 +1904,7 @@ class Snippet_With_SingleQuote(_VimTest):
 
 class Snippet_With_SingleQuote_List(_VimTest):
     snippets = _snip_quote("'")
-    keys = "te" + LS + "1\n"
+    keys = "te" + LS + "2\n"
     wanted = "Expand me'!"
 
 class Snippet_With_DoubleQuote(_VimTest):
@@ -1879,7 +1914,7 @@ class Snippet_With_DoubleQuote(_VimTest):
 
 class Snippet_With_DoubleQuote_List(_VimTest):
     snippets = _snip_quote('"')
-    keys = "te" + LS + "1\n"
+    keys = "te" + LS + "2\n"
     wanted = "Expand me\"!"
 
 # Test for Bug #774917
@@ -1963,12 +1998,12 @@ class _ListAllSnippets(_VimTest):
 
 class ListAllAvailable_NothingTyped_ExceptCorrectResult(_ListAllSnippets):
     keys = "" + LS + "3\n"
-    wanted = "OHEEEE"
+    wanted = "BLAAH"
 class ListAllAvailable_testtyped_ExceptCorrectResult(_ListAllSnippets):
-    keys = "hallo test" + LS + "1\n"
+    keys = "hallo test" + LS + "2\n"
     wanted = "hallo BLAAH"
 class ListAllAvailable_testtypedSecondOpt_ExceptCorrectResult(_ListAllSnippets):
-    keys = "hallo test" + LS + "2\n"
+    keys = "hallo test" + LS + "1\n"
     wanted = "hallo TEST ONE"
 
 class ListAllAvailable_NonDefined_NoExceptionShouldBeRaised(_ListAllSnippets):
@@ -1992,6 +2027,20 @@ class Anon_NoTrigger_Simple(_AnonBase):
     args = '"simple expand"'
     keys = "abc" + EA
     wanted = "abcsimple expand"
+
+class Anon_NoTrigger_AfterSpace(_AnonBase):
+    args = '"simple expand"'
+    keys = "abc " + EA
+    wanted = "abc simple expand"
+
+class Anon_NoTrigger_BeginningOfLine(_AnonBase):
+    args = r"':latex:\`$1\`$0'"
+    keys = EA + "Hello" + JF + "World"
+    wanted = ":latex:`Hello`World"
+class Anon_NoTrigger_FirstCharOfLine(_AnonBase):
+    args = r"':latex:\`$1\`$0'"
+    keys = " " + EA + "Hello" + JF + "World"
+    wanted = " :latex:`Hello`World"
 
 class Anon_NoTrigger_Multi(_AnonBase):
     args = '"simple $1 expand $1 $0"'
