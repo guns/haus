@@ -175,7 +175,7 @@ class Haus
         end
 
         did_archive = archive unless options.noop
-        old_umask   = File.umask 0077
+        old_umask   = File.umask options.umask if options.umask
         fopts       = { :noop => options.noop, :verbose => options.debug }
 
         execute_deletions     fopts.dup
@@ -196,8 +196,8 @@ class Haus
         # Unfreeze options
         @options = options.dup
 
-        # Restore original umask
-        File.umask old_umask
+        # Restore original umask if it was changed
+        File.umask old_umask if options.umask
 
         # Restore default signal handlers
         %w[INT TERM QUIT].each do |sig|
