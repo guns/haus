@@ -84,9 +84,11 @@ function! s:paste_range(motion_wiseness, text) "{{{
         call setreg('z', reg_z_save, regtype_z_save)
     endtry
 endfunction "}}}
-function! s:replace_range(funcname, motion_wiseness) "{{{
-    " Yank the range's text.
-    let text = {a:funcname}(s:yank_range(a:motion_wiseness))
+function! s:replace_range(funcname, pattern, motion_wiseness) "{{{
+    " Yank the text in the range given by a:motion_wiseness.
+    let text = s:yank_range(a:motion_wiseness)
+    " Convert the text.
+    let text = s:map_text_with_regex(text, a:funcname, a:pattern)
     " Paste the text to the range.
     call s:paste_range(a:motion_wiseness, text)
 endfunction "}}}
@@ -113,10 +115,13 @@ function! s:camelize_word(context) "{{{
     if word =~# '^[A-Z]\+$'
         let action = g:operator_camelize_all_uppercase_action
         if action ==# 'nop'
+            " "WORD" => "WORD"
             return word
         elseif action ==# 'lowercase'
+            " "WORD" => "word"
             return tolower(word)
         elseif action ==# 'camelize'
+            " "WORD" => "Word"
             return toupper(word[0]) . tolower(word[1:])
         else
             echohl WarningMsg
@@ -133,15 +138,9 @@ function! s:camelize_word(context) "{{{
     \)
 endfunction "}}}
 
-" For a text
-" e.g.: 'snake_case other_text' => 'SnakeCase OtherText'
-function! s:camelize_text(text) "{{{
-    return s:map_text_with_regex(a:text, 's:camelize_word', '\w\+')
-endfunction "}}}
-
 " For <Plug>(operator-camelize)
-function! operator#camelize#camelize(motion_wiseness) "{{{
-    call s:replace_range('s:camelize_text', a:motion_wiseness)
+function! operator#camelize#op_camelize(motion_wiseness) "{{{
+    call s:replace_range('s:camelize_word', '\w\+', a:motion_wiseness)
 endfunction "}}}
 
 
@@ -166,11 +165,11 @@ function! s:decamelize_word(context) "{{{
     if word =~# '^[A-Z]\+$'
         let action = g:operator_decamelize_all_uppercase_action
         if action ==# 'nop'
+            " "WORD" => "WORD"
             return word
         elseif action ==# 'lowercase'
+            " "WORD" => "word"
             return word
-        elseif action ==# 'decamelize'
-            " Fall through
         else
             echohl WarningMsg
             echomsg "g:operator_decamelize_all_uppercase_action is invalid value '"
@@ -186,15 +185,9 @@ function! s:decamelize_word(context) "{{{
     \)
 endfunction "}}}
 
-" For a text
-" e.g.: 'SnakeCase OtherText' => 'snake_case other_text'
-function! s:decamelize_text(text) "{{{
-    return s:map_text_with_regex(a:text, 's:decamelize_word', '\w\+')
-endfunction "}}}
-
 " For <Plug>(operator-decamelize)
-function! operator#camelize#decamelize(motion_wiseness) "{{{
-    call s:replace_range('s:decamelize_text', a:motion_wiseness)
+function! operator#camelize#op_decamelize(motion_wiseness) "{{{
+    call s:replace_range('s:decamelize_word', '\w\+', a:motion_wiseness)
 endfunction "}}}
 
 
@@ -207,7 +200,7 @@ endfunction "}}}
 " e.g.: 'camelCase_' => false
 " e.g.: 'CamelCase_' => false
 " e.g.: 'vim' => false
-function! s:is_camelized(word) "{{{
+function! operator#camelize#is_camelized(word) "{{{
     " upper camel case: e.g., 'CamelCase'
     if a:word =~# '^[A-Z][A-Za-z0-9]\+$' | return 1 | endif
     " lower camel case: e.g., 'camelCase'
@@ -219,23 +212,17 @@ endfunction "}}}
 " e.g.: 'SnakeCase' => 'snake_case'
 " e.g.: 'snake_case' => 'SnakeCase'
 function! s:toggle_word(context) "{{{
-    if s:is_camelized(a:context.match)
+    let camelized = g:operator_camelize_detect_function
+    if {camelized}(a:context.match)
         return s:decamelize_word(a:context)
     else
         return s:camelize_word(a:context)
     endif
 endfunction "}}}
 
-" For a text
-" e.g.: 'SnakeCase OtherText' => 'snake_case other_text'
-" e.g.: 'snake_case other_text' => 'SnakeCase OtherText'
-function! s:toggle_text(text) "{{{
-    return s:map_text_with_regex(a:text, 's:toggle_word', '\w\+')
-endfunction "}}}
-
 " For <Plug>(operator-camelize-toggle)
-function! operator#camelize#camelize_toggle(motion_wiseness) "{{{
-    call s:replace_range('s:toggle_text', a:motion_wiseness)
+function! operator#camelize#op_camelize_toggle(motion_wiseness) "{{{
+    call s:replace_range('s:toggle_word', '\w\+', a:motion_wiseness)
 endfunction "}}}
 
 

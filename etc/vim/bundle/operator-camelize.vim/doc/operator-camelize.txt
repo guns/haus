@@ -2,7 +2,7 @@
 
 Author:
   tyru <tyru.exe@gmail.com>
-Version: 0.0.5a
+Version: 0.0.6
 License: Under the same license as Vim itself (see :help license)
 
 ==============================================================================
@@ -70,7 +70,12 @@ g:operator_decamelize_all_uppercase_action		*g:operator_decamelize_all_uppercase
 		option value		{value} ~
 		"nop"				"WORD"
 		"lowercase" 		"word"
-		"decamelize"		"w_o_r_d"
+
+g:operator_camelize_detect_function		*g:operator_camelize_detect_function*
+									(Default: "operator#camelize#is_camelized")
+	Specify the function to detect
+	if a argument {word} is camelized, or not.
+
 }}}
 ------------------------------------------------------------------------------
 FUNCTIONS					*operator-camelize-functions* {{{
@@ -79,6 +84,10 @@ FUNCTIONS					*operator-camelize-functions* {{{
 operator#camelize#load()
 	Load autoload/operator/camelize.vim
 	and plugin/operator/camelize.vim .
+
+operator#camelize#is_camelized({word})
+	Return true if {word} is camelized.
+	Return false otherwise.
 
 }}}
 }}}
@@ -106,6 +115,10 @@ CHANGELOG						*operator-camelize-changelog* {{{
 - Add <Plug>(operator-camelize-toggle)
 0.0.5a:
 - Fix problem that it evaluates lower camelcase as snakecase. (e.g., camelCase).
+0.0.6:
+- Fix problem that "vim" is recognized as the camelized word.
+- Deprecate g:operator_camelize_all_uppercase_action = "decamelize"
+- Add variable g:operator_camelize_detect_function.
 
 }}}
 ==============================================================================

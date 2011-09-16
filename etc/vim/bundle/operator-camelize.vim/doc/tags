@@ -1,4 +1,5 @@
 g:operator_camelize_all_uppercase_action	operator-camelize.txt	/*g:operator_camelize_all_uppercase_action*
+g:operator_camelize_detect_function	operator-camelize.txt	/*g:operator_camelize_detect_function*
 g:operator_decamelize_all_uppercase_action	operator-camelize.txt	/*g:operator_decamelize_all_uppercase_action*
 operator#camelize#load()	operator-camelize.txt	/*operator#camelize#load()*
 operator-camelize	operator-camelize.txt	/*operator-camelize*
