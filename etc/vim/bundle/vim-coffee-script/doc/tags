@@ -1,0 +1,14 @@
+:CoffeeCompile	coffee-script.txt	/*:CoffeeCompile*
+:CoffeeMake	coffee-script.txt	/*:CoffeeMake*
+:CoffeeMake!	coffee-script.txt	/*:CoffeeMake!*
+:CoffeeRun	coffee-script.txt	/*:CoffeeRun*
+coffee-script	coffee-script.txt	/*coffee-script*
+coffee-script-author	coffee-script.txt	/*coffee-script-author*
+coffee-script-commands	coffee-script.txt	/*coffee-script-commands*
+coffee-script-contents	coffee-script.txt	/*coffee-script-contents*
+coffee-script-introduction	coffee-script.txt	/*coffee-script-introduction*
+coffee-script-license	coffee-script.txt	/*coffee-script-license*
+coffee-script-settings	coffee-script.txt	/*coffee-script-settings*
+coffee-script.txt	coffee-script.txt	/*coffee-script.txt*
+ft-coffee-script-syntax	coffee-script.txt	/*ft-coffee-script-syntax*
+g:coffee_make_options	coffee-script.txt	/*g:coffee_make_options*
