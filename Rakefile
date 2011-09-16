@@ -148,10 +148,10 @@ end
 
 desc 'Update subprojects (extra arguments are regexp filters)'
 task :update do
-  opts = {}
+  opts = { :threads => 4 }
   opts[:threads] = ENV['JOBS'].to_i if ENV['JOBS']
-  opts[:fetch]   = ENV['FETCH'] == '1' if ENV['FETCH']
-  opts[:filter]  = ARGV.drop_while { |a| a != 'update' }.drop 1
+  opts[:fetch  ] = ENV['FETCH'] == '1' if ENV['FETCH']
+  opts[:filter ] = ARGV.drop_while { |a| a != 'update' }.drop 1
 
   if Task::Update.new(@subprojects, opts).call
     Task::Update.helptags
