@@ -1,14 +1,12 @@
 " unimpaired.vim - Pairs of handy bracket mappings
-" Maintainer:   Tim Pope <vimNOSPAM@tpope.org>
+" Maintainer:   Tim Pope <http://tpo.pe/>
 " Version:      1.1
+" GetLatestVimScripts: 1590 1 :AutoInstall: unimpaired.vim
 
 if exists("g:loaded_unimpaired") || &cp || v:version < 700
   finish
 endif
 let g:loaded_unimpaired = 1
-
-let s:cpo_save = &cpo
-set cpo&vim
 
 " Next and previous {{{1
 
@@ -76,19 +74,63 @@ nnoremap <silent> <Plug>unimpairedOPrevious :<C-U>edit `=<SID>FileByOffset(-v:co
 nmap ]o <Plug>unimpairedONext
 nmap [o <Plug>unimpairedOPrevious
 
+nmap [, :call search('^[<=>]\{7\}','bW')<CR>
+nmap ], :call search('^[<=>]\{7\}','W')<CR>
+omap [, V:call search('^[<=>]\{7\}','bW')<CR>
+omap ], V:call search('^[<=>]\{7\}','W')<CR>
+xmap [, :<C-U>exe 'norm! gv'<Bar>call search('^[<=>]\{7\}','bW')<CR>
+xmap ], :<C-U>exe 'norm! gv'<Bar>call search('^[<=>]\{7\}','W')<CR>
+nmap [< :call search('^<<<<<<<','bW')<CR>
+nmap [= :call search('^=======','bW')<CR>
+nmap [> :call search('^>>>>>>>','bW')<CR>
+nmap ]< :call search('^<<<<<<<','W')<CR>
+nmap ]= :call search('^=======','W')<CR>
+nmap ]> :call search('^>>>>>>>','W')<CR>
+xmap [< :<C-U>exe 'norm! gv'<Bar>call search('^<<<<<<<','bW')<CR>
+xmap [= :<C-U>exe 'norm! gv'<Bar>call search('^=======','bW')<CR>
+xmap [> :<C-U>exe 'norm! gv'<Bar>call search('^>>>>>>>','bW')<CR>
+xmap ]< :<C-U>exe 'norm! gv'<Bar>call search('^<<<<<<<','W')<CR>
+xmap ]= :<C-U>exe 'norm! gv'<Bar>call search('^=======','W')<CR>
+xmap ]> :<C-U>exe 'norm! gv'<Bar>call search('^>>>>>>>','W')<CR>
+omap [< V:call search('^<<<<<<<','bW')<CR>
+omap [= V:call search('^=======','bW')<CR>
+omap [> V:call search('^>>>>>>>','bW')<CR>
+omap ]< V:call search('^<<<<<<<','W')<CR>
+omap ]= V:call search('^=======','W')<CR>
+omap ]> V:call search('^>>>>>>>','W')<CR>
+
 " }}}1
 " Line operations {{{1
 
-nnoremap <silent> <Plug>unimpairedBlankUp   :<C-U>put!=repeat(nr2char(10),v:count)<Bar>']+1<CR>
-nnoremap <silent> <Plug>unimpairedBlankDown :<C-U>put =repeat(nr2char(10),v:count)<Bar>'[-1<CR>
+function! s:BlankUp(count) abort
+  put!=repeat(nr2char(10), a:count)
+  ']+1
+  silent! call repeat#set("\<Plug>unimpairedBlankUp", a:count)
+endfunction
+
+function! s:BlankDown(count) abort
+  put =repeat(nr2char(10), a:count)
+  '[-1
+  silent! call repeat#set("\<Plug>unimpairedBlankDown", a:count)
+endfunction
+
+nnoremap <silent> <Plug>unimpairedBlankUp   :<C-U>call <SID>BlankUp(v:count1)<CR>
+nnoremap <silent> <Plug>unimpairedBlankDown :<C-U>call <SID>BlankDown(v:count1)<CR>
 
 nmap [<Space> <Plug>unimpairedBlankUp
 nmap ]<Space> <Plug>unimpairedBlankDown
 
-nnoremap <silent> <Plug>unimpairedMoveUp   :<C-U>exe 'norm m`'<Bar>exe 'move--'.v:count1<CR>``
-nnoremap <silent> <Plug>unimpairedMoveDown :<C-U>exe 'norm m`'<Bar>exe 'move+'.v:count1<CR>``
-xnoremap <silent> <Plug>unimpairedMoveUp   :<C-U>exe 'norm m`'<Bar>exe '''<,''>move--'.v:count1<CR>``
-xnoremap <silent> <Plug>unimpairedMoveDown :<C-U>exe 'norm m`'<Bar>exe '''<,''>move''>+'.v:count1<CR>``
+function! s:Move(cmd, count, map) abort
+  normal! m`
+  exe 'move'.a:cmd.a:count
+  norm! ``
+  call repeat#set("\<Plug>unimpairedMove".a:map, a:count)
+endfunction
+
+nnoremap <silent> <Plug>unimpairedMoveUp   :<C-U>call <SID>Move('--',v:count1,'Up')<CR>
+nnoremap <silent> <Plug>unimpairedMoveDown :<C-U>call <SID>Move('+',v:count1,'Down')<CR>
+xnoremap <silent> <Plug>unimpairedMoveUp   :<C-U>exe 'normal! m`'<Bar>exe '''<,''>move--'.v:count1<CR>``
+xnoremap <silent> <Plug>unimpairedMoveDown :<C-U>exe 'normal! m`'<Bar>exe '''<,''>move''>+'.v:count1<CR>``
 
 nmap [e <Plug>unimpairedMoveUp
 nmap ]e <Plug>unimpairedMoveDown
@@ -273,6 +315,4 @@ call s:MapTransform('XmlDecode',']x')
 
 " }}}1
 
-let &cpo = s:cpo_save
-
-" vim:set ft=vim ts=8 sw=2 sts=2:
+" vim:set sw=2 sts=2:
