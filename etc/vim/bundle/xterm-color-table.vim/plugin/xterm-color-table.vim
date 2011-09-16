@@ -1,11 +1,11 @@
 
-"   ___  __)                   )   ___                  ______)
-"  (,  |/                     (__/_____)   /)          (, /      /)  /)
-"      |  _/_  _  __  ____      /      ___// _____       /  _   (/_ //  _
-"   ) /|_ (___(/_/ (_/ / /_  (_/      (_)(/_(_)/ (_   ) /  (_(_/_) (/__(/_
-"  (_/                        (______)               (_/
+"   ___  __)                  )   ___                  ______)
+"  (,  |/                    (__/_____)   /)          (, /      /)  /)
+"      |  _/_  _  __  ____     /      ___// _____       /  _   (/_ //  _
+"   ) /|_ (___(/_/ (_/ / /_   /      (_)(/_(_)/ (_   ) /  (_(_/_) (/__(/_
+"  (_/                       (______)               (_/
 "
-"                                           guns <self@sungpae.com>
+"                                          guns <self@sungpae.com>
 
 " Version:  1.6
 " License:  MIT
@@ -15,10 +15,15 @@
 "
 "   * Provides command :XtermColorTable, as well as variants for different splits
 "   * Xterm numbers on the left, equivalent RGB values on the right
-"   * Press `#` to yank current color (shortcut for yiw)
-"   * Press `t` to toggle RGB text visibility
-"   * Press `f` to set RGB text to current color
+"   * Press `#` to yank current color
+"   * Press `t` to toggle RGB visibility
+"   * Press `f` to set and yank RGB foreground color
+"   * Press `x` to toggle zoom
 "   * Buffer behavior similar to Scratch.vim
+"
+" TODO:
+"
+"   * Configurable number of columns for main layout
 "
 " INSPIRED BY:
 "
@@ -27,11 +32,12 @@
 "   * http://www.vim.org/scripts/script.php?script_id=664
 
 
-" We have a dependency on buffer-local autocommands
+" We have a dependency on buffer-local autocommands "{{{
 if version < 700
     echo 'FAIL: XtermColorTable requires vim 7.0+'
     finish
 endif
+
 
 let s:bufname = '__XtermColorTable__'
 
@@ -40,36 +46,56 @@ if !exists('g:XtermColorTableDefaultOpen')
 endif
 
 
-command! XtermColorTable  execute 'call <SID>XtermColorTable(g:XtermColorTableDefaultOpen)'
+command! XtermColorTable  call <SID>XtermColorTable('')
 command! SXtermColorTable call <SID>XtermColorTable('split')
 command! VXtermColorTable call <SID>XtermColorTable('vsplit')
 command! TXtermColorTable call <SID>XtermColorTable('tabnew')
-command! EXtermColorTable call <SID>XtermColorTable('edit')
-command! OXtermColorTable call <SID>XtermColorTable('edit') | only
+command! TXtermColorTable call <SID>XtermColorTable('edit')
+command! OXtermColorTable call <SID>XtermColorTable('edit') | silent! only "}}}
 
 
 augroup XtermColorTable "{{{
     autocmd!
-    autocmd BufNewFile  __XtermColorTable__ call <SID>ColorTable()
-    autocmd ColorScheme *                   silent! doautoall XtermColorTableBuffer ColorScheme
+    autocmd BufNewFile __XtermColorTable__ call <SID>ColorTable()
 augroup END "}}}
 
 
 function! <SID>XtermColorTable(open) "{{{
+    let open  = empty(a:open) ? g:XtermColorTableDefaultOpen : a:open
     let bufid = bufnr(s:bufname)
     let winid = bufwinnr(bufid)
+    let reopening = 1
 
     if bufid == -1
         " Create new buffer
-        execute a:open.' '.s:bufname
+        execute open.' '.s:bufname
+        call setbufvar(bufnr(s:bufname), 'XtermColorTableOpenState', open)
         return
     elseif winid != -1 && winnr('$') > 1
-        " Close extant window
-        execute winid.'wincmd w' | close
+        " Switch to extant window
+        execute winid.'wincmd w'
+
+        " Stop if opening type not given or is the same as the buffer's type
+        if empty(a:open) || b:XtermColorTableOpenState == open
+            return
+        endif
+
+        " Close window unless we are reusing it
+        if open =~# '\v^edit'
+            reopening = 0
+        else
+            close
+        endif
     endif
 
     " Open extant buffer
-    execute a:open.' +buffer'.bufid
+    execute open.' +buffer'.bufid
+    call setbufvar(bufid, b:XtermColorTableOpenState, open)
+
+    " Restore dimensions if we are reopening a hidden buffer
+    " if reopening
+    "     call <SID>ZoomTable(1)
+    " endif
 endfunction "}}}
 
 
@@ -87,11 +113,20 @@ function! <SID>ColorTable() "{{{
         endif
     endfor
 
-    if &modifiable
-        call append(0, rows)
-        call append(len(rows) + 1, <SID>HelpComment())
-        call <SID>SetBufferOptions()
-    endif
+    " Since `buftype=nofile', BufNewFile events are fired every time the buffer
+    " is reloaded, since the corresponding file does not exist.
+    "
+    " Furthermore, the buffer loses its contents, but retains its settings,
+    " which may include `set nomodifiable'
+    "
+    " We have been careful to never add syntax items or highlight groups without
+    " clearing them first, so we can allow the buffer to repopulate itself
+    setlocal modifiable
+
+    call append(0, rows)
+    call append(len(rows) + 1, <SID>HelpComment())
+    call <SID>SetBufferOptions()
+    call <SID>SetWindowOptions()
 endfunction "}}}
 
 
@@ -147,24 +182,49 @@ endfunction "}}}
 
 
 function! <SID>SetBufferOptions() "{{{
-    setlocal buftype=nofile bufhidden=hide buflisted
-    setlocal nomodified nomodifiable noswapfile readonly
-    setlocal nocursorline nocursorcolumn
-    setlocal iskeyword+=#
+    setlocal buflisted          " Should appear in buffer lists
+    setlocal buftype=nofile     " Special non-file buffer, freezes bufname
+    setlocal bufhidden=hide     " Act like a normal buffer when window closes
+    setlocal iskeyword+=#       " For easy yanking of RGB hex values
+    setlocal nomodifiable       " Do not allow editing
+    setlocal noswapfile         " Don't need backups
+    setlocal textwidth=0        " Don't hard wrap
 
     let b:XtermColorTableRgbVisible = 0
     let b:XtermColorTableBGF = -2
+    let b:XtermColorTableZoomed = 0
 
-    nmap <silent><buffer> # yiw:echo 'yanked: '.@"<CR>
+    call <SID>SetTableDimensions(bufnr('%'))
+
+    nmap <silent><buffer> # :call <SID>YankColor()<CR>
+    nmap <silent><buffer> f :call <SID>YankColor()<CR>:call <SID>SetRgbForeground(expand('<cword>'))<CR>
     nmap <silent><buffer> t :call <SID>ToggleRgbVisibility()<CR>
-    nmap <silent><buffer> f :call <SID>SetRgbForeground(expand('<cword>'))<CR>
+    nmap <silent><buffer> x :call <SID>ZoomTable()<CR>
 
     " Colorschemes often call `highlight clear';
     " register a handler to deal with this
+    augroup XtermColorTable
+        autocmd! ColorScheme
+        autocmd ColorScheme * silent! doautoall XtermColorTableBuffer ColorScheme
+    augroup END
+
     augroup XtermColorTableBuffer
         autocmd! * <buffer>
         autocmd ColorScheme <buffer> call <SID>HighlightTable(-1)
+        autocmd BufWinLeave <buffer> call <SID>SetTableDimensions(str2nr(expand('<abuf>')))
+        autocmd BufUnload   <buffer> call <SID>ClearTable(str2nr(expand('<abuf>')))
     augroup END
+endfunction "}}}
+
+
+function! <SID>SetWindowOptions() "{{{
+    setlocal foldcolumn=0       " No folding
+    setlocal nocursorcolumn     " Just in case
+    setlocal nocursorline       " Distracting
+    setlocal nolist             " Ugly
+    setlocal nonumber           " Has xterm color numbers
+    setlocal nospell            " No words to spell
+    setlocal nowrap             " Soft wrap looks ugly
 endfunction "}}}
 
 
@@ -174,12 +234,13 @@ function! <SID>HelpComment() "{{{
     syntax match XtermColorTableComment ';.*'
     highlight link XtermColorTableComment Comment
 
-    let lines = []
-    call add(lines, "; # to copy current color (yiw)")
-    call add(lines, "; t to toggle RGB visibility")
-    call add(lines, "; f to set RGB foreground color")
+    let help = []
+    call add(help, "; # to yank current color")
+    call add(help, "; f to yank and set RGB foreground color")
+    call add(help, "; t to toggle RGB visibility")
+    call add(help, "; x to toggle zoom state")
 
-    return lines
+    return help
 endfunction "}}}
 
 
@@ -188,11 +249,6 @@ function! <SID>ToggleRgbVisibility() "{{{
     let b:XtermColorTableRgbVisible = (b:XtermColorTableRgbVisible + 1) % 2
 
     call <SID>HighlightTable(bgf)
-endfunction "}}}
-
-
-function! <SID>HighlightTable(bgf) "{{{
-    for val in range(0, 0xff) | call <SID>HighlightCell(val, a:bgf) | endfor
 endfunction "}}}
 
 
@@ -209,6 +265,75 @@ function! <SID>SetRgbForeground(cword) "{{{
     else
         call <SID>ToggleRgbVisibility()
     endif
+endfunction "}}}
+
+
+function! <SID>HighlightTable(bgf) "{{{
+    for n in range(0, 0xff) | call <SID>HighlightCell(n, a:bgf) | endfor
+endfunction "}}}
+
+
+function! <SID>ClearTable(abuf) "{{{
+    if !len(<SID>TableList(a:abuf))
+        " Remove global styles
+        for n in range(0, 0xff)
+            execute 'silent! highlight clear fg_'.n
+            execute 'silent! highlight clear bg_'.n
+            execute 'silent! syntax clear fg_'.n
+            execute 'silent! syntax clear bg_'.n
+        endfor
+
+        silent! syntax clear XtermColorTableComment
+        silent! highlight clear XtermColorTableComment
+
+        " Remove unnecessary global handlers
+        autocmd! XtermColorTable ColorScheme
+    endif
+endfunction "}}}
+
+
+function! <SID>YankColor() "{{{
+    call search('\v\w', 'c', line('.'))
+    normal yiw
+    echo 'Yanked: '.@"
+endfunction "}}}
+
+
+function! <SID>ZoomTable(...) "{{{
+    let zoomed = b:XtermColorTableZoomed
+    if a:0
+        let zoomed = (zoomed + 1) % 2
+    endif
+
+    if zoomed
+        let [height, width] = <SID>GetTableDimensions(bufnr('%'))
+        execute 'silent! resize '.height
+        execute 'silent! vertical resize '.width
+        let b:XtermColorTableZoomed = 0
+    else
+        execute 'silent! resize'
+        execute 'silent! vertical resize'
+        let b:XtermColorTableZoomed = 1
+    endif
+endfunction "}}}
+
+
+function! <SID>SetTableDimensions(bufid) "{{{
+    " Only set when not zoomed
+    if !getbufvar(a:bufid, 'XtermColorTableZoomed')
+        let winid = bufwinnr(a:bufid)
+        call setbufvar(a:bufid, 'XtermColorTableDimensions', [winheight(winid), winwidth(winid)])
+    endif
+endfunction "}}}
+
+
+function! <SID>GetTableDimensions(bufid) "{{{
+    return getbufvar(a:bufid, 'XtermColorTableDimensions')
+endfunction "}}}
+
+
+function! <SID>TableList(bufid) "{{{
+    return filter(range(1, bufnr('$')), '(bufname(v:val) == s:bufname) && (v:val != a:bufid)')
 endfunction "}}}
 
 

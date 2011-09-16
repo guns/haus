@@ -1,5 +1,4 @@
 :XtermColorTable	xterm-color-table.txt	/*:XtermColorTable*
-EXtermColorTable	xterm-color-table.txt	/*EXtermColorTable*
 OXtermColorTable	xterm-color-table.txt	/*OXtermColorTable*
 SXtermColorTable	xterm-color-table.txt	/*SXtermColorTable*
 TXtermColorTable	xterm-color-table.txt	/*TXtermColorTable*
