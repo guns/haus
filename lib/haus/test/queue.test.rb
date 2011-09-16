@@ -613,12 +613,14 @@ class Haus::QueueSpec < MiniTest::Spec
       end
     end
 
-    it 'must create files with owner-only privileges, but should not change the process umask' do
+    it 'must create files with options.umask, but should not permanently change the process umask' do
+      old_umask = File.umask
+      @q.options.umask = 0077
       @q.execute!
       @targets.values_at(0..3, 6..9).each do |f|
-        File.lstat(f).mode.to_s(8)[/.{2}\z/].must_equal '00'
+        (File.lstat(f).mode & 0077).must_equal 0
       end
-      File.umask.to_s(8)[/.{2}\z/].wont_equal '77'
+      File.umask.must_equal old_umask
     end
 
     it 'must freeze the options object during execution and unfreeze afterwards' do

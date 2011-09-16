@@ -67,12 +67,11 @@ class Haus::TaskSpec < MiniTest::Spec
       Haus::Noop.method(:initialize).arity.must_equal -1
       Haus::Noop.new(%w[-f noprocrast]).instance_variable_get(:@args).must_equal %w[-f noprocrast]
     end
-  end
 
-  describe :queue do
-    it 'must always return a Queue instance' do
+    it 'must initialize the @queue' do
       h = Haus::Noop.new
       h.queue.must_be_kind_of Haus::Queue
+      h.queue.options.umask.must_equal 0077
     end
   end
 

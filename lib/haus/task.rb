@@ -57,7 +57,7 @@ class Haus
 
     def initialize args = []
       @args  = args
-      @queue = Queue.new
+      @queue = Queue.new :umask => 0077
     end
 
     # Accesses Task::list entry for the current subclass
