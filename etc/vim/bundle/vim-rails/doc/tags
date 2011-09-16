@@ -8,7 +8,6 @@ g:rails_history_size	rails.txt	/*g:rails_history_size*
 g:rails_mappings	rails.txt	/*g:rails_mappings*
 g:rails_menu	rails.txt	/*g:rails_menu*
 g:rails_modelines	rails.txt	/*g:rails_modelines*
-g:rails_statusline	rails.txt	/*g:rails_statusline*
 g:rails_syntax	rails.txt	/*g:rails_syntax*
 g:rails_tabstop	rails.txt	/*g:rails_tabstop*
 g:rails_url	rails.txt	/*g:rails_url*
@@ -26,8 +25,6 @@ rails-'pa'	rails.txt	/*rails-'pa'*
 rails-'path'	rails.txt	/*rails-'path'*
 rails-'shiftwidth'	rails.txt	/*rails-'shiftwidth'*
 rails-'softtabstop'	rails.txt	/*rails-'softtabstop'*
-rails-'statusline'	rails.txt	/*rails-'statusline'*
-rails-'stl'	rails.txt	/*rails-'stl'*
 rails-'sts'	rails.txt	/*rails-'sts'*
 rails-'sua'	rails.txt	/*rails-'sua'*
 rails-'suffixesadd'	rails.txt	/*rails-'suffixesadd'*
@@ -111,14 +108,11 @@ rails-alternate-related	rails.txt	/*rails-alternate-related*
 rails-autocommands	rails.txt	/*rails-autocommands*
 rails-commands	rails.txt	/*rails-commands*
 rails-configuration	rails.txt	/*rails-configuration*
-rails-configure-vim	rails.txt	/*rails-configure-vim*
 rails-cream	rails.txt	/*rails-cream*
 rails-custom-navigation	rails.txt	/*rails-custom-navigation*
 rails-dbext	rails.txt	/*rails-dbext*
 rails-gf	rails.txt	/*rails-gf*
 rails-global-settings	rails.txt	/*rails-global-settings*
-rails-install-plugin	rails.txt	/*rails-install-plugin*
-rails-installation	rails.txt	/*rails-installation*
 rails-integration	rails.txt	/*rails-integration*
 rails-introduction	rails.txt	/*rails-introduction*
 rails-license	rails.txt	/*rails-license*
