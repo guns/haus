@@ -33,8 +33,8 @@ vim = File.expand_path '~guns/src/vimfiles'
   ],
 
   'vimfiles' => [
-    { :base => "#{src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen },
-    { :base => "#{src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen },
+    { :base => "#{src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :remote => 'github' },
+    { :base => "#{src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :remote => 'github' },
     { :base => "#{vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
     { :base => "#{vim}/Align",                  :branch => %w[master guns], :files => :pathogen },
     { :base => "#{vim}/AnsiEsc.vim",            :branch => %w[master],      :files => :pathogen },
@@ -81,7 +81,6 @@ vim = File.expand_path '~guns/src/vimfiles'
     { :base => "#{vim}/vim-preview",            :branch => %w[master guns], :files => :pathogen },
     { :base => "#{vim}/vim-rails",              :branch => %w[master],      :files => :pathogen },
     { :base => "#{vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
-    { :base => "#{vim}/vim-rdoc",               :branch => %w[master],      :files => :pathogen },
     { :base => "#{vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
     { :base => "#{vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },
     { :base => "#{vim}/vim-speeddating",        :branch => %w[master guns], :files => :pathogen },

@@ -28,7 +28,7 @@ class Task
         end
       else
         proj.values
-      end.flatten.uniq
+      end.flatten.uniq.shuffle
     end
 
     def call
