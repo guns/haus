@@ -61,6 +61,8 @@ class Getunicodedata
 
   def options
     OptionParser.new do |opt|
+      opt.summary_width = 16
+
       opt.banner = %Q(\
         Download, parse, and print Unicode data from #{UnicodeDataURL}
 
