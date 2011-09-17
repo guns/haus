@@ -51,7 +51,7 @@ class Task
 
             if not $?.exitstatus.zero?
               # Let the other threads finish their current iteration
-              exceptions << "Subproject #{proj.base} did not exit cleanly!"
+              exceptions << "Subproject update #{proj.base} did not exit cleanly!"
               break
             end
           end
@@ -60,7 +60,7 @@ class Task
       end
 
       pool.each &:join
-      log *exceptions.map { |e| [e, :red] } unless exceptions.empty?
+      log exceptions.map { |e| fmt [e, :red] }.join("\n") unless exceptions.empty?
       exceptions.empty?
     end
   end
