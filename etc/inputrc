@@ -18,7 +18,7 @@
 # set bind-tty-special-chars on
 
 # This must be explicitly set here to activate
-set blink-matching-paren on
+set blink-matching-paren off
 
 # Force strict 8-bit character mode
 # set byte-oriented off
