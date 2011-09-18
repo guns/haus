@@ -1,0 +1,158 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'net/http'
+require 'nokogiri'
+require 'json'
+
+class Bashorg
+  class Quotes < Nokogiri::HTML::Document
+    class << self
+      def browse num
+        parse Net::HTTP.get(URI.parse 'http://bash.org/?browse&p=%02d' % num)
+      end
+    end
+
+    def to_hash
+      td = css('td').find do |n|
+        not n.css('p.quote + p.qt').empty?
+      end
+
+      return unless td
+
+      Hash[td.css('p').each_slice(2).map do |meta, body|
+        id = meta.children.find { |n| n.text =~ /#\d+/ }.text[/#(\d+)/, 1]
+        [id, body.text.delete("\r")]
+      end]
+    end
+  end
+
+  attr_accessor :data
+
+  def initialize args = []
+    @args = args.freeze
+    @opts = { :delay => 5 }
+  end
+
+  def options
+    OptionParser.new do |opt|
+      opt.summary_width = 16
+
+      opt.banner = %Q(\
+        Download / dump the bash.org database.
+
+        Usage: #{File.basename __FILE__} [options] command [args]
+
+        Commands:
+            get              Retrieve quotes from http://bash.org/?browse&p=n
+            dump [FILE]      Dump quotes as a fortune database
+
+        Options:\
+      ).gsub /^ {8}/, ''
+
+      opt.on '-f', '--file PATH', 'Read and write from JSON database' do |arg|
+        @opts[:file] = arg
+      end
+
+      opt.on '-d', '--delay N', Integer, 'Delay in seconds between HTTP requests' do |arg|
+        @opts[:delay] = arg
+      end
+
+      opt.on '-p', '--page N', Integer, 'Start scraping from page N' do |arg|
+        @opts[:page] = arg
+      end
+    end
+  end
+
+  def get
+    @data ||= read 0
+    page    = @opts[:page] || data['page']
+    last    = page
+    quotes  = data['quotes'].dup
+
+    [:INT, :QUIT, :TERM].each do |sig|
+      trap(sig) { raise "Caught SIG#{sig}! Dumping data!" }
+    end
+
+    loop do
+      print "#{page}..."
+
+      qs = Quotes.browse(page).to_hash
+      break if qs.nil?
+
+      # Don't increment last page counter until we have the data
+      quotes.merge! qs
+      last  = page
+      page += 1
+
+      # Let's be polite
+      sleep @opts[:delay]
+    end
+
+    # Summarize
+    count = last - (@opts[:page] || data['page']) + 1
+    puts "\n%d page%s processed, %d new quotes retrieved" % [
+      count,
+      count == 1 ? '' : 's',
+      (quotes.keys - data['quotes'].keys).size
+    ]
+  ensure
+    # Restore default signal handlers
+    [:INT, :QUIT, :TERM].each do |sig|
+      trap sig, 'DEFAULT'
+    end
+
+    write ({ 'page' => last, 'quotes' => quotes }).to_json
+  end
+
+  # Fortune format is quote + "\n%", then you run strfile(1) to get an index
+  def dump file = 'bashorg'
+    @data ||= read
+    File.open file, 'w' do |f|
+      data['quotes'].sort_by { |k,v| k.to_i }.each do |n, q|
+        f.puts "#{wrap q}%"
+      end
+    end
+    system 'strfile', file
+  end
+
+  # Wrap to 80 chars per line; prettier output (like aligning indents to
+  # nicks) is not possible given the inconsistent formatting
+  # http://blog.macromates.com/2006/wrapping-text-with-regular-expressions/
+  def wrap quote, len = 80
+    quote.gsub /(.{1,#{len}})(?: +|$)\n?|(.{#{len}})/, "\\1\\2\n"
+  end
+
+  # Get JSON data from file, $stdin, or default template
+  def read timeout = nil
+    if @opts[:file] and File.readable? @opts[:file]
+      JSON[File.read @opts[:file]]
+    elsif select [$stdin], nil, nil, timeout
+      JSON[$stdin.read]
+    else
+      { 'page' => 0, 'quotes' => {} }
+    end
+  end
+
+  def write buf
+    @opts[:file] ? File.open(@opts[:file], 'w') { |f| f.write buf } : puts(buf)
+  end
+
+  def run
+    args = options.parse @args
+    abort options.to_s if args.empty?
+
+    case args.first
+    when 'get'  then get
+    when 'dump' then args[1] ? dump(args[1]) : dump
+    else abort options.to_s
+    end
+  end
+end
+
+Bashorg.new(ARGV).run if $0 == __FILE__
