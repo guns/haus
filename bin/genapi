@@ -47,10 +47,12 @@ class Genapi
   def generate dirs
     dirs.each do |dir|
       Dir.chdir dir do
-        project  = File.basename Dir.pwd
-        title    = @opts[:title] || project
-        main     = Dir['*'].grep(%r/\AREADME(\..+)?\z/i).first
-        outdir   = @opts[:outdir]
+        project = File.basename Dir.pwd
+        title   = @opts[:title] || project
+        main    = Dir['*'].find { |f| f =~ /\AREADME(\..+)?\z/i }
+        outdir  = @opts[:outdir]
+
+        # If outdir was not explicitly set, get basedir from environment
         outdir ||= if @opts[:apidir]
           File.join @opts[:apidir], (project[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || project)
         else
