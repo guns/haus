@@ -100,8 +100,8 @@ class Batterystat
       width ||= terminal_width
 
       lines = []
-      lines.push 'Charge: [%s] %d/%d mAh'
-      lines.push 'Health: [%s] %d/%d mAh'
+      lines.push 'Charge [%s] %d/%d mAh'
+      lines.push 'Health [%s] %d/%d mAh'
       lines.push ''
       if data['IsCharging']
         lines << 'Time to full: %d minutes' % data['AvgTimeToFull']
