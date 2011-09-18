@@ -65,9 +65,7 @@ include Haus::Loggable
     { :base => "#{@vim}/nerdtree",               :branch => %w[master],      :files => :pathogen },
     { :base => "#{@vim}/nginx.vim",              :branch => %w[master],      :files => :pathogen },
     { :base => "#{@vim}/operator-camelize.vim",  :branch => %w[master],      :files => :pathogen },
-    { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen },
     { :base => "#{@vim}/reporoot.vim",           :branch => %w[master],      :files => :pathogen },
-    { :base => "#{@vim}/screen.vim",             :branch => %w[master guns], :files => :pathogen },
     { :base => "#{@vim}/scratch.vim",            :branch => %w[master],      :files => :pathogen },
     { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
     { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
@@ -94,11 +92,30 @@ include Haus::Loggable
     { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master],      :files => :pathogen },
     { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
+    { :base   => "#{@vim}/screen.vim",
+      :branch => %w[master guns],
+      :files  => :pathogen,
+      :after  => proc { |proj|
+        %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
+      }
+    },
+
+    { :base   => "#{@vim}/regbuf.vim",
+      :branch => %w[master guns],
+      :files  => :pathogen,
+      :after  => proc { |proj|
+        %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
+      }
+    },
+
     {
       :base   => "#{@vim}/Command-T",
       :branch => %w[master guns],
       :files  => 'etc/vim/bundle/Command-T',
-      :after  => proc { system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
+      :after  => proc { |proj|
+        %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
+        system '/opt/ruby/1.8/bin/rake commandt &>/dev/null'
+      }
     },
 
     {
@@ -129,6 +146,9 @@ include Haus::Loggable
           system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
           raise 'Pull and merge failed' if not $?.exitstatus.zero?
         end
+      },
+      :after => proc { |proj|
+        %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
       }
     }
   ],
@@ -137,7 +157,10 @@ include Haus::Loggable
     {
       :base   => "#{@src}/urxvt-perls",
       :branch => %w[master guns],
-      :files  => 'etc/urxvt'
+      :files  => 'etc/urxvt',
+      :after  => proc { |proj|
+        %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
+      }
     }
   ]
 }.map { |k, ps| [k, ps.map { |p| Task::Subproject.new p }] }]
