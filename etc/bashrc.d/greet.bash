@@ -13,7 +13,9 @@ GREETINGS() {
     echo -e "\n\e[1;32mGNU Bash\e[0;3m ($BASH_VERSION)\e[0m ⚡ \e[1;${color}m$date\e[0m\n"
 
     if ((EUID)) && type fortune &>/dev/null; then
-        fortune -a && echo
+        local flag='-a'
+        ((NOOFFENSE)) && flag=''
+        fortune $flag && echo
     fi
 }
 
