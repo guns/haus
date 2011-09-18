@@ -172,6 +172,7 @@ noremap <Leader>gd       :Git di<CR>
 noremap <Leader>g%       :Git di %<CR>
 noremap <Leader>gf       :silent! Git f<CR>
 noremap <Leader>gl       :silent! Git lp<CR>
+noremap <Leader>gL       :Glog<CR>
 noremap <Leader>gr       :silent! Git rs<CR>
 noremap <Leader>gv       :Gitv<CR>
 noremap <Leader>gV       :Gitv!<CR>
