@@ -174,7 +174,7 @@ task :untracked do
   log Dir['etc/vim/bundle/*'].reject { |f| tracked.include? File.basename(f) }.join("\n")
 
   log ["\nUntracked projects:", :italic, :bold]
-  log *Dir["#{@vim}/*"].reject { |f| tracked.include? File.basename(f) }.join("\n")
+  log Dir["#{@vim}/*"].reject { |f| tracked.include? File.basename(f) }.join("\n")
 end
 
 desc 'Import all terminfo files in share/terminfo'
