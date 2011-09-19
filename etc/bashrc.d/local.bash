@@ -688,7 +688,6 @@ if __OSX__; then
 fi
 
 # netcat
-ALIAS nc='nc.openbsd'
 HAVE nc   && tcomp host nc
 HAVE ncat && tcomp host ncat
 
