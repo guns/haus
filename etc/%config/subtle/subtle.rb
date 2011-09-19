@@ -33,7 +33,7 @@ set :snap, 10
 
 # Default starting gravity for windows. Comment out to use gravity of
 # currently active client
-set :gravity, :center66
+set :gravity, :center50
 
 # Make transient windows urgent
 set :urgent, true
@@ -232,8 +232,8 @@ gravity :left33,         [   0,   0,  33, 100 ]
 
 # Center
 gravity :center,         [   0,   0, 100, 100 ]
-gravity :center66,       [  17,  17,  66,  66 ]
-gravity :center33,       [  33,  33,  33,  33 ]
+gravity :center75,       [12.5,   5,  75,  90 ]
+gravity :center50,       [  25,   5,  50,  90 ]
 
 # Right
 gravity :right,          [  50,   0,  50, 100 ]
@@ -259,11 +259,6 @@ gravity :bottom_right33, [  50,  67,  50,  33 ]
 gravity :gimp_image,     [  10,   0,  80, 100 ]
 gravity :gimp_toolbox,   [   0,   0,  10, 100 ]
 gravity :gimp_dock,      [  90,   0,  10, 100 ]
-
-# Middle
-gravity :middle,         [  25,  0,  50, 100 ]
-gravity :middle66,       [  17,  0,  66, 100 ]
-gravity :middle33,       [  34,  0,  33, 100 ]
 
 #
 # == Grabs {{{1
@@ -342,14 +337,14 @@ gravity :middle33,       [  34,  0,  33, 100 ]
 #
 
 # Awesome WM bindings
-(1..4).each do |n|
+(1..4).each do |view|
   # Switch to view
-  grab "W-#{n}", "ViewJump#{n}".to_sym
+  grab "W-#{view}", "ViewJump#{view}".to_sym
 
   # Retag (move) client to view
-  grab "W-S-#{n}" do |this|
+  grab "W-S-#{view}" do |this|
     this.toggle_stick if this.is_stick?
-    this.tags = [Subtlext::Tag.all.find { |t| t.name == n.to_s }]
+    this.tags = [Subtlext::Tag.all.find { |t| t.name == view.to_s }]
   end
 end
 
@@ -358,7 +353,7 @@ grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
 grab 'W-C-w', [ :top,          :top66,          :top33          ]
 grab 'W-C-e', [ :top_right,    :top_right66,    :top_right33    ]
 grab 'W-C-a', [ :left,         :left66,         :left33         ]
-grab 'W-C-s', [ :center,       :center66,       :center33       ]
+grab 'W-C-s', [ :center,       :center75,       :center50       ]
 grab 'W-C-d', [ :right,        :right66,        :right33        ]
 grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
 grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
@@ -578,35 +573,8 @@ grab 'F5', :VolumeRaise
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
 
-# Each view should have a tag of the same name
+# Each view has a tag of the same name
 (1..4).each { |n| tag n.to_s }
-
-tag 'dialog' do
-  match  /parcellite|wicd/i
-  float  true
-  urgent true
-end
-
-tag 'media' do
-  match /feh|vlc|npviewer/i
-  float true
-end
-
-tag 'term' do
-  match      /u?rxvt|xterm/i
-  gravity    :center
-  borderless true
-end
-
-tag 'browser' do
-  match   /chrom(e|ium)|firefox|namoroka/i
-  gravity :center
-end
-
-tag 'bgapp' do
-  match   /wireshark|transmission-gtk/i
-  gravity :center
-end
 
 #
 # == Views {{{1
@@ -669,11 +637,7 @@ end
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
 
-# Windows default to showing in every view
-view '1', /1|default|dialog|media|term/
-view '2', /2|default|dialog|media|browser/
-view '3', /3|default|dialog|media/
-view '4', /4|default|dialog|media|bgapp/
+(1..4).each { |n| view n.to_s, n.to_s }
 
 #
 # == Sublets {{{1
@@ -759,17 +723,31 @@ view '4', /4|default|dialog|media|bgapp/
 # http://subforge.org/projects/subtle/wiki/Hooks
 #
 
-# Redraw desktop wallpaper
-[:start, :reload].each do |hook|
-  on hook do
-    fehbg = File.expand_path '~/.fehbg'
-    system '/bin/sh', fehbg if File.readable? fehbg
+def assign_properties c
+  case c.klass
+  when /u?rxvt|xterm/i
+    c.toggle_borderless
+    c.gravity = c.name =~ /tmux/i ? :center : :center50
+  when /chrom(e|ium)|firefox|namoroka/i
+    c.gravity = :center75
+  when /wireshark/i
+    c.gravity = :center
   end
 end
 
-# Trigger views update
-on :client_kill do
-  Subtlext::View.current.jump
+# Redraw desktop wallpaper
+[:start, :reload].each do |event|
+  on event do
+    fehbg = File.expand_path '~/.fehbg'
+    system '/bin/sh', fehbg if File.readable? fehbg
+    Subtlext::Client['.*'].each { |c| assign_properties c }
+  end
+end
+
+# Place client in current view and assign properties
+on :client_create do |c|
+  c.tags = [Subtlext::View.current.to_s]
+  assign_properties c
 end
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker
