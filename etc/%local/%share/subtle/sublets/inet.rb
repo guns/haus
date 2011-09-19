@@ -24,7 +24,7 @@ on :run do |s|
   s.data = '%s%s' % if route.nil?
     [s.icons[:down], 'lo']
   elsif route.first =~ /\Awlan/
-    [s.icons[:wifi], route.first]
+    [s.icons[:wifi], %x(iwconfig #{route.first})[/ESSID:"(.*?)"/, 1]]
   else
     [s.icons[:wire], route.first]
   end
