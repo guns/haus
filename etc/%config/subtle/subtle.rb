@@ -730,6 +730,9 @@ def assign_properties c
     c.gravity = c.name =~ /tmux/i ? :center : :center50
   when /chrom(e|ium)|firefox|namoroka/i
     c.gravity = :center75
+  when /vlc/i
+    c.toggle_borderless
+    c.gravity = :center75
   when /wireshark/i
     c.gravity = :center
   end

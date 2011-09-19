@@ -682,6 +682,7 @@ ALIAS get='curl -#L' \
 
 # DNS
 ALIAS digx='dig -x'
+alias resolv='cat /etc/resolv.conf'
 if __OSX__; then
     alias flushdns='run dscacheutil -flushcache'
 fi

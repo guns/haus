@@ -9,8 +9,8 @@ require 'optparse'
 require 'digest/sha1'
 
 class Npass
-  attr_reader :length
-  attr_writer :length, :version, :buffer
+  attr_accessor :length
+  attr_writer :version, :buffer
 
   def initialize args = []
     @args = args
