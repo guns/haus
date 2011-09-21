@@ -6,23 +6,25 @@
 !  /___/\  \  guns <sung@metablu.com>
 !        \_/
 
-
 clear Mod1
 clear Mod2
 clear Mod3
 clear Mod4
 clear Mod5
+clear Lock
 
-! Cross-wire the modifiers
-!
-!   Command: L(63), R(71)
-!   Option:  L(66), R(69)
-!
-keycode 63 = Alt_L
-keycode 71 = Alt_R
-keycode 66 = Meta_L
-keycode 69 = Meta_R
+! Caps Lock as Control
+keycode 66 = Control_L
+add     Control = Control_L
 
-! And reset the Mod mappings
-add Mod1 = Meta_L Meta_R
-add Mod4 = Alt_L Alt_R
+! Enter as Meta (old macbooks)
+keycode 104 = Alt_R
+
+! Option (Alt) as Meta
+add Mod1 = Alt_L Alt_R
+
+! Command (Super) as Mod4
+add Mod4 = Super_L Super_R
+
+! Natural scrolling (like OS X Lion)
+pointer = 1 2 3 5 4 7 6 8 9 10 11 12
