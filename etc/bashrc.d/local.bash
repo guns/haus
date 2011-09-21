@@ -895,8 +895,8 @@ HAVE vim && {
     fi
 
     # frequently edited files
-    alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimabbreviations='(cdhaus && exec vim etc/vim/local/abbreviations.vim)'
+    alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
@@ -904,9 +904,11 @@ HAVE vim && {
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
-    alias vimscratch='vim -c Scratch'
-    alias vimtodo='vim -c "Org! TODO"'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
+    alias vimrcconf='(cd /etc && vim rc.conf)'
+    alias vimscratch='vim -c Scratch'
+    alias vimsubtle='(cdhaus && vim etc/%config/subtle/subtle.rb)'
+    alias vimtodo='vim -c "Org! TODO"'
 }
 
 
