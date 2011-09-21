@@ -404,7 +404,7 @@ dusort() {
 ALIAS mt='mount -v' \
       umt='umount -v' \
       mtext4='mt -t ext4' \
-      mthfs='mt -t hfs'
+      mthfs='mt -t hfsplus'
 
 # mkfs
 HAVE mkfs.ext4 && {
@@ -431,6 +431,7 @@ untar() {
     run tar xv$f "$@" "${opts[@]}"
 }
 suntar() { untar -S "$@"; }
+zuntar() { untar -z "$@"; }
 
 # open
 if __OSX__; then
@@ -523,7 +524,7 @@ HAVE hdiutil diskutil && {
 }
 
 # rsync
-ALIAS rsync='rsync --human-readable --progress' \
+ALIAS rsync='rsync --human-readable' \
       rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
       rsync-backup='rsync --archive --delete --partial --sparse --hard-links' && {
     if __OSX__; then
@@ -894,8 +895,8 @@ HAVE vim && {
     fi
 
     # frequently edited files
-    alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimabbreviations='(cdhaus && exec vim etc/vim/local/abbreviations.vim)'
+    alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
@@ -903,9 +904,11 @@ HAVE vim && {
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
-    alias vimscratch='vim -c Scratch'
-    alias vimtodo='vim -c "Org! TODO"'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
+    alias vimrcconf='(cd /etc && vim rc.conf)'
+    alias vimscratch='vim -c Scratch'
+    alias vimsubtle='(cdhaus && vim etc/%config/subtle/subtle.rb)'
+    alias vimtodo='vim -c "Org! TODO"'
 }
 
 
@@ -1145,6 +1148,20 @@ fi
 
 HAVE batterystat && {
     alias logbatterystat='batterystat --json >> ~/Documents/Notes/batterystat.json'
+}
+
+HAVE wpa_supplicant wpa_passphrase && {
+    wpajoin() {
+        local OPTIND OPTARG opt iface='wlan0'
+        while getopts :i opt; do
+            case $opt in
+                i) iface="$OPTARG";;
+                *) echo "USAGE: $FUNCNAME [-i iface] essid password"; return 1
+            esac
+        done
+        shift $((OPTIND-1))
+        bgrun wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@")
+    }
 }
 
 

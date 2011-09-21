@@ -8,7 +8,7 @@
 
 # == Initialize {{{1
 
-$:.push File.expand_path('../contrib', __FILE__)
+$:.unshift File.expand_path('../contrib', __FILE__)
 
 require 'launcher'
 
@@ -17,7 +17,6 @@ Subtle::Contrib::Launcher.paths = ENV['PATH']
 def config_valid?
   system *%W[/opt/subtle/bin/subtle --check --config=#{__FILE__}]
 end
-
 
 #
 # == Options {{{1
@@ -364,6 +363,7 @@ grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
   grab key do |this|
     clients = Subtlext::View.current.clients.sort_by &:win
     thisidx = clients.index { |c| c.win == this.win }
+    return if thisidx.nil?
     index   = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
     clients[index].focus
     clients[index].raise
@@ -743,7 +743,7 @@ end
   on event do
     fehbg = File.expand_path '~/.fehbg'
     system '/bin/sh', fehbg if File.readable? fehbg
-    Subtlext::Client['.*'].each { |c| assign_properties c }
+    [Subtlext::Client['.*']].flatten.each { |c| assign_properties c }
   end
 end
 

@@ -259,20 +259,22 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Open Files
 noremap <Leader>e<Space> :tabedit<Space>
-noremap <Leader>ee       :edit<Space>
 noremap <Leader>ea       :execute 'tabedit ' . expand('~/.vim/local/autocommands.vim')<CR>
 noremap <Leader>eA       :execute 'tabedit ' . expand('~/.vim/local/abbreviations.vim')<CR>
 noremap <Leader>eb       :execute 'tabedit ' . expand('~/.bashrc')<CR>
 noremap <Leader>ec       :execute 'tabedit ' . expand('~/.vim/local/commands.vim')<CR>
+noremap <Leader>ee       :edit<Space>
 noremap <Leader>ei       :execute 'tabedit ' . expand('~/.inputrc')<CR>
 noremap <Leader>el       :execute 'tabedit ' . expand('~/.bashrc.d/local.bash')<CR>
 noremap <Leader>em       :execute 'tabedit ' . expand('~/.vim/local/mappings.vim')<CR>
-noremap <Leader>en       :execute 'tabedit /opt/nginx/etc/nginx.conf'<CR>
+noremap <Leader>en       :tabedit /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :Org<CR>
+noremap <Leader>er       :tabedit /etc/rc.conf<CR>
 noremap <Leader>es       :tabnew<CR>:Scratch<CR>
-noremap <Leader>eS       :vnew<CR>:wincmd L<CR>:Scratch<CR>
+noremap <Leader>eS       :execute 'tabedit ' . expand('~/.config/subtle/subtle.rb')<CR>
 noremap <Leader>et       :Org TODO<CR>
 noremap <Leader>ev       :execute 'tabedit ' . expand($MYVIMRC)<CR>
+noremap <Leader>eV       :vnew<CR>:wincmd L<CR>:Scratch<CR>
 
 " Set Filetypes
 noremap <Leader>f<Space> :setlocal filetype=
