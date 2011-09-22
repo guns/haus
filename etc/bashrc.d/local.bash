@@ -395,7 +395,7 @@ dusort() {
         buf="$(f1 \( ! -name . \) -print0 | xargs -0 du -s)"
     fi
 
-    echo -e "$buf" | sort -n | awk '{print $2}' | while read line; do
+    echo -e "$buf" | sort -n | cut -f2 | while read line; do
         command du -sh -- "$line"
     done
 }
