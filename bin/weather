@@ -133,14 +133,26 @@ class Weather # {{{1
 end
 
 if $0 == __FILE__
-  # Fix encoding issue in Crack
-  # https://github.com/jnunemaker/crack/pull/16
+  # Google Weather returns ISO-8859-1, but is marked as either ASCII-8BIT or
+  # UTF-8. Parsing libraries seem to expect UTF-8, so we coerce our input.
   if defined? Encoding
-    Crack::XML.singleton_class.class_eval do
-      alias_method :__parse__, :parse
+    if defined? Crack
+      Crack::XML.singleton_class.class_eval do
+        alias_method :__parse__, :parse
 
-      def parse xml
-        __parse__ xml.force_encoding('iso-8859-1').encode 'utf-8'
+        def parse xml
+          __parse__ xml.force_encoding('iso-8859-1').encode 'utf-8'
+        end
+      end
+    end
+
+    if defined? MultiXml
+      MultiXml.singleton_class.class_eval do
+        alias_method :__parse__, :parse
+
+        def parse xml, options = {}
+          __parse__ xml.force_encoding('iso-8859-1').encode('utf-8'), options
+        end
       end
     end
   end
