@@ -966,11 +966,6 @@ HAVE git && {
         [[ $3 ]] && branch="--branch $3"
         run git clone $branch "https://github.com/$user/$repo"
     }
-    githubget() {
-        (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
-        local user="$1" repo="$2" branch="${3:-master}"
-        run curl -#L "https://github.com/$user/$repo/tarball/$branch"
-    }
 
     # PS1 git status
     HAVE __git_ps1 && {
@@ -978,6 +973,11 @@ HAVE git && {
             __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\e[3m\]%s\[\e[23m\]")'
         }; gitps1 # Turn it on now!
     }
+}
+githubget() {
+    (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
+    local user="$1" repo="$2" branch="${3:-master}"
+    run curl -#L "https://github.com/$user/$repo/tarball/$branch"
 }
 
 
