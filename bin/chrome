@@ -69,13 +69,6 @@ class Chrome
     EVAL
   end
 
-  def platform
-    @platform ||= case RUBY_PLATFORM
-    when /darwin/ then :darwin
-    when /linux/  then :linux
-    end
-  end
-
   def chrome_is_running
     %x(ps axo ucomm).split("\n").map(&:strip).include?(File.basename chrome)
   end
@@ -91,9 +84,9 @@ class Chrome
   end
 
   def chrome
-    @chrome ||= case platform
-    when :darwin then '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    when :linux  then %x(which chromium).chomp
+    @chrome ||= case RUBY_PLATFORM
+    when /darwin/ then '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    when /linux/  then %x(/bin/sh -c 'command -v chromium').chomp
     end
   end
 
@@ -185,7 +178,7 @@ class Chrome
 
   # straight adaptation from bash function
   def update
-    raise 'OS X only!' unless platform == :darwin
+    raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
     raise 'Do not update as root user!' if Process.euid.zero?
 
     dmg = fetch_update '/tmp/GoogleChrome.dmg'
@@ -211,19 +204,21 @@ class Chrome
   end
 
   def launch
-    if platform == :darwin and chrome_is_running
+    if RUBY_PLATFORM =~ /darwin/ and chrome_is_running
       warn ([chrome] + @chromeargs).shelljoin
       system 'open', '-a', chrome, *@chromeargs
     else
-      warn(([chrome] + chromeopts + @chromeargs).map(&:shellescape).join(" \\\n    "))
-      pid = fork do
+      args = [chrome] + chromeopts + @chromeargs
+      args.unshift *%W[sudo -u #{ENV['SUDO_USER']}] if ENV['SUDO_USER']
+      warn(args.map(&:shellescape).join(" \\\n    "))
+
+      Process.detach fork {
         $stdin.reopen '/dev/null'
         $stdout.reopen '/dev/null'
         $stderr.reopen '/dev/null'
         Dir.chdir '/'
-        exec *([chrome] + chromeopts + @chromeargs)
-      end
-      Process.detach pid
+        exec *args
+      }
     end
   end
 
