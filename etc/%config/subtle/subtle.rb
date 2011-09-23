@@ -8,15 +8,12 @@
 
 # == Initialize {{{1
 
-$:.unshift File.expand_path('../contrib', __FILE__)
+$:.unshift File.expand_path('../lib', __FILE__)
 
-require 'launcher'
+require 'subtle-desktop'
+extend SubtleDesktop
 
-Subtle::Contrib::Launcher.paths = ENV['PATH']
-
-def config_valid?
-  system *%W[/opt/subtle/bin/subtle --check --config=#{__FILE__}]
-end
+create_desktops '1'..'4'
 
 #
 # == Options {{{1
@@ -335,18 +332,6 @@ gravity :gimp_dock,      [  90,   0,  10, 100 ]
 # http://subforge.org/projects/subtle/wiki/Grabs
 #
 
-# Awesome WM bindings
-(1..4).each do |view|
-  # Switch to view
-  grab "W-#{view}", "ViewJump#{view}".to_sym
-
-  # Retag (move) client to view
-  grab "W-S-#{view}" do |this|
-    this.toggle_stick if this.is_stick?
-    this.tags = [Subtlext::Tag.all.find { |t| t.name == view.to_s }]
-  end
-end
-
 # In case no numpad is available e.g. on notebooks
 grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
 grab 'W-C-w', [ :top,          :top66,          :top33          ]
@@ -358,33 +343,17 @@ grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
 grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
 grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
 
-# Switch window focus in current view
-%w[W-Tab W-S-Tab].each_with_index do |key, direction|
-  grab key do |this|
-    clients = Subtlext::View.current.clients.sort_by &:win
-    thisidx = clients.index { |c| c.win == this.win }
-    return if thisidx.nil?
-    index   = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
-    clients[index].focus
-    clients[index].raise
-  end
-end
+# Move current window
+grab 'W-B1', :WindowMove
+
+# Resize current window
+grab 'W-B3', :WindowResize
 
 # Raise window
 grab 'W-C-f', :WindowRaise
 
 # Toggle sticky mode of window (will be visible on all views)
 grab 'W-C-g', :WindowStick
-
-# Check and reload config
-grab 'W-C-r' do
-  Subtlext::Subtle.reload if config_valid?
-end
-
-# Check and restart config
-grab 'W-C-t' do
-  Subtlext::Subtle.restart if config_valid?
-end
 
 # Toggle fullscreen mode of window
 grab 'W-C-space', :WindowFull
@@ -395,31 +364,43 @@ grab 'W-Escape', :SubtleQuit
 # Kill current window
 grab 'W-q', :WindowKill
 
-# Move current window
-grab 'W-B1', :WindowMove
+# Switch window focus in current view
+%w[W-Tab W-S-Tab].each_with_index do |key, direction|
+  grab key do |this|
+    clients = Subtlext::View.current.clients.sort_by &:win
+    thisidx = clients.index { |c| c.win == this.win }
+    return if thisidx.nil?
 
-# Resize current window
-grab 'W-B3', :WindowResize
+    i = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
+    clients[i].focus
+    clients[i].raise
+  end
+end
 
-# Applications
-grab 'F9',    'rxvt-unicode --client'
-grab 'W-F9',  'rxvt-unicode --client -- -e vim'
-grab 'A-F9',  'rxvt-unicode --client -- -e tmuxlaunch'
-grab 'F10',   'chrome'
-grab 'W-F10', 'chrome --incognito'
+# Check config and reload
+grab 'W-C-r' do
+  config_valid? ? Subtlext::Subtle.reload : system('espeak Invalid')
+end
 
-
-### Sublets
-
-# Launcher
-grab 'W-space' do
-  Subtle::Contrib::Launcher.run
+# Check config and restart
+grab 'W-C-t' do
+  config_valid? ? Subtlext::Subtle.restart : system('espeak Invalid')
 end
 
 # Volume
 grab 'F3', :VolumeToggle
 grab 'F4', :VolumeLower
 grab 'F5', :VolumeRaise
+
+# Terminal emulators
+open 'F9',   'rxvt-unicode --client', [:klass, :=~, /urxvt/i]
+grab 'S-F9', 'rxvt-unicode --client'
+grab 'W-F9', 'rxvt-unicode --client -- -e vim'
+grab 'A-F9', 'rxvt-unicode --client -- -e tmuxlaunch'
+
+# Browsers
+open 'F10',   'chrome', [:klass, :=~, /chromium/i]
+grab 'W-F10', 'chrome --incognito'
 
 #
 # == Tags {{{1
@@ -573,9 +554,6 @@ grab 'F5', :VolumeRaise
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
 
-# Each view has a tag of the same name
-(1..4).each { |n| tag n.to_s }
-
 #
 # == Views {{{1
 #
@@ -636,8 +614,6 @@ grab 'F5', :VolumeRaise
 #
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
-
-(1..4).each { |n| view n.to_s, n.to_s }
 
 #
 # == Sublets {{{1
@@ -723,34 +699,19 @@ grab 'F5', :VolumeRaise
 # http://subforge.org/projects/subtle/wiki/Hooks
 #
 
-def assign_properties c
-  case c.klass
-  when /u?rxvt|xterm/i
-    c.toggle_borderless
-    c.gravity = c.name =~ /tmux/i ? :center : :center50
-  when /chrom(e|ium)|firefox|namoroka/i
-    c.gravity = :center75
-  when /vlc/i
-    c.toggle_borderless
-    c.gravity = :center75
-  when /wireshark/i
-    c.gravity = :center
-  end
-end
-
 # Redraw desktop wallpaper
 [:start, :reload].each do |event|
   on event do
     fehbg = File.expand_path '~/.fehbg'
     system '/bin/sh', fehbg if File.readable? fehbg
-    [Subtlext::Client['.*']].flatten.each { |c| assign_properties c }
+    Subtlext::Client.all.each { |c| set_properties c }
   end
 end
 
 # Place client in current view and assign properties
 on :client_create do |c|
   c.tags = [Subtlext::View.current.to_s]
-  assign_properties c
+  set_properties c
 end
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker
