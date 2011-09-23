@@ -665,7 +665,11 @@ HAVE su && {
 
 ### Network {{{1
 
-ALIAS ic='ifconfig'
+if HAVE ifconfig; then
+    alias ic='ifconfig'
+elif HAVE ip; then
+    alias ic='ip addr'
+fi
 ALIAS iw='iwconfig'
 ALIAS arplan='arp -lan'
 ALIAS netstatnr='netstat -nr'
