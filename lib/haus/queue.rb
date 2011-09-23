@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+require 'etc'
 require 'fileutils'
 require 'ostruct'
 require 'pathname'
@@ -421,14 +422,18 @@ class Haus
     # Change the uid and gid of the file to match its parent directory.
     # Parent directory must exist.
     def adopt file, fopts
-      p = File.lstat File.dirname(file)
+      # Some old versions of FileUtils#chown_R only accept user names, so we
+      # must do the passwd lookup here.
+      p     = File.lstat File.dirname(file)
+      user  = Etc.getpwuid(p.uid).name
+      group = Etc.getgrgid(p.gid).name
 
       case File.lstat(file).ftype
       when 'directory'
-        FileUtils.chown_R p.uid, p.gid, file, fopts
+        FileUtils.chown_R user, group, file, fopts
       else
         # FileUtils logs to $stderr when verbose
-        $stderr.puts 'chown -h %d:%d %s' % [p.uid, p.gid, file] if fopts[:verbose]
+        $stderr.puts 'chown -h %s:%s %s' % [user, group, file] if fopts[:verbose]
         File.lchown p.uid, p.gid, file unless fopts[:noop]
       end
     end
