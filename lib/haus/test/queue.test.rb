@@ -1053,7 +1053,22 @@ class Haus::QueueSpec < MiniTest::Spec
     end
 
     describe :adopt do
-      # TODO
+      # HACK: This is hard to test properly without admin privileges;
+      #       following just tests verbose output of command
+      it "must change a file's owner and group to match that of its parent" do
+        f    = $user.hausfile.first
+        stat = File.stat File.dirname(f)
+        user = Etc.getpwuid(stat.uid).name
+        grp  = Etc.getgrgid(stat.gid).name
+        err  = capture_io { @q.send :adopt, f, :verbose => true }[1]
+        # NOTE: Some versions of FileUtils#chown_R only accept user/group
+        #       names and not uid/gids; this documents that behavior
+        err.must_match /\Achown.* #{user}:#{grp} #{f}\Z/
+      end
+
+      it 'must break when parent directory does not exist' do
+        lambda { @q.send :adopt, '/beagle/with/unsmelly/butt', {} }.must_raise Errno::ENOENT
+      end
     end
 
     describe :execute_deletions do
