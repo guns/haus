@@ -21,12 +21,8 @@ module SubtleDesktop
     end
   end
 
-  # Check your config before reloading Subtle!
-  def config_valid?
-    system 'subtle --check'
-  end
-
-  # Emulate OS X's app-document model
+  # Emulate OS X's app-document model by binding keys to focus a class of
+  # applications or create a new instance.
   def open keys, command, args
     grab keys do
       extant = Subtlext::Client.all.find do |c|
@@ -39,27 +35,6 @@ module SubtleDesktop
       else
         system *[command].flatten
       end
-    end
-  end
-
-  # Arbitrarily set client properties; an alternative to the tagging system
-  def set_properties c
-    case c.klass
-
-    when /u?rxvt|xterm/i
-      c.toggle_borderless
-      c.gravity = (c.name =~ /tmux/i ? :center : :center50)
-
-    when /chrom(e|ium)|firefox|namoroka/i
-      c.gravity = :center75
-
-    when /vlc/i
-      c.toggle_borderless
-      c.gravity = :center75
-
-    when /wireshark/i
-      c.gravity = :center
-
     end
   end
 end

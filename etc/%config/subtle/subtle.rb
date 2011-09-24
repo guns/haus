@@ -29,7 +29,7 @@ set :snap, 10
 
 # Default starting gravity for windows. Comment out to use gravity of
 # currently active client
-set :gravity, :center50
+set :gravity, :center75
 
 # Make transient windows urgent
 set :urgent, true
@@ -208,53 +208,48 @@ end
 
 # Top left
 gravity :top_left,       [   0,   0,  50,  50 ]
-gravity :top_left66,     [   0,   0,  50,  66 ]
-gravity :top_left33,     [   0,   0,  50,  34 ]
+gravity :top_left75,     [   0,   0,  50,  75 ]
+gravity :top_left33,     [   0,   0,  50,  33 ]
 
 # Top
 gravity :top,            [   0,   0, 100,  50 ]
-gravity :top66,          [   0,   0, 100,  66 ]
-gravity :top33,          [   0,   0, 100,  34 ]
+gravity :top75,          [   0,   0, 100,  75 ]
+gravity :top33,          [   0,   0, 100,  33 ]
 
 # Top right
 gravity :top_right,      [  50,   0,  50,  50 ]
-gravity :top_right66,    [  50,   0,  50,  66 ]
+gravity :top_right75,    [  50,   0,  50,  75 ]
 gravity :top_right33,    [  50,   0,  50,  33 ]
 
 # Left
 gravity :left,           [   0,   0,  50, 100 ]
-gravity :left66,         [   0,   0,  66, 100 ]
+gravity :left75,         [   0,   0,  75, 100 ]
 gravity :left33,         [   0,   0,  33, 100 ]
 
 # Center
 gravity :center,         [   0,   0, 100, 100 ]
-gravity :center75,       [12.5,   5,  75,  90 ]
-gravity :center50,       [  25,   5,  50,  90 ]
+gravity :center75,       [12.5,   0,  75, 100 ]
+gravity :center50,       [  25,   0,  50, 100 ]
 
 # Right
 gravity :right,          [  50,   0,  50, 100 ]
-gravity :right66,        [  34,   0,  66, 100 ]
+gravity :right75,        [  25,   0,  75, 100 ]
 gravity :right33,        [  67,  50,  33, 100 ]
 
 # Bottom left
 gravity :bottom_left,    [   0,  50,  50,  50 ]
-gravity :bottom_left66,  [   0,  34,  50,  66 ]
+gravity :bottom_left75,  [   0,  25,  50,  75 ]
 gravity :bottom_left33,  [   0,  67,  50,  33 ]
 
 # Bottom
 gravity :bottom,         [   0,  50, 100,  50 ]
-gravity :bottom66,       [   0,  34, 100,  66 ]
+gravity :bottom75,       [   0,  25, 100,  75 ]
 gravity :bottom33,       [   0,  67, 100,  33 ]
 
 # Bottom right
 gravity :bottom_right,   [  50,  50,  50,  50 ]
-gravity :bottom_right66, [  50,  34,  50,  66 ]
+gravity :bottom_right75, [  50,  25,  50,  75 ]
 gravity :bottom_right33, [  50,  67,  50,  33 ]
-
-# Gimp
-gravity :gimp_image,     [  10,   0,  80, 100 ]
-gravity :gimp_toolbox,   [   0,   0,  10, 100 ]
-gravity :gimp_dock,      [  90,   0,  10, 100 ]
 
 #
 # == Grabs {{{1
@@ -332,22 +327,22 @@ gravity :gimp_dock,      [  90,   0,  10, 100 ]
 # http://subforge.org/projects/subtle/wiki/Grabs
 #
 
-# In case no numpad is available e.g. on notebooks
-grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
-grab 'W-C-w', [ :top,          :top66,          :top33          ]
-grab 'W-C-e', [ :top_right,    :top_right66,    :top_right33    ]
-grab 'W-C-a', [ :left,         :left66,         :left33         ]
+# Gravities
+grab 'W-C-q', [ :top_left,     :top_left75,     :top_left33     ]
+grab 'W-C-w', [ :top,          :top75,          :top33          ]
+grab 'W-C-e', [ :top_right,    :top_right75,    :top_right33    ]
+grab 'W-C-a', [ :left,         :left75,         :left33         ]
 grab 'W-C-s', [ :center,       :center75,       :center50       ]
-grab 'W-C-d', [ :right,        :right66,        :right33        ]
-grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
-grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
-grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
+grab 'W-C-d', [ :right,        :right75,        :right33        ]
+grab 'W-C-z', [ :bottom_left,  :bottom_left75,  :bottom_left33  ]
+grab 'W-C-x', [ :bottom,       :bottom75,       :bottom33       ]
+grab 'W-C-c', [ :bottom_right, :bottom_right75, :bottom_right33 ]
 
 # Move current window
 grab 'W-B1', :WindowMove
 
 # Resize current window
-grab 'W-B3', :WindowResize
+grab 'W-C-B1', :WindowResize
 
 # Raise window
 grab 'W-C-f', :WindowRaise
@@ -379,12 +374,12 @@ end
 
 # Check config and reload
 grab 'W-C-r' do
-  config_valid? ? Subtlext::Subtle.reload : system('espeak Invalid')
+  system('subtle --check') ? Subtlext::Subtle.reload : system('espeak Invalid')
 end
 
 # Check config and restart
 grab 'W-C-t' do
-  config_valid? ? Subtlext::Subtle.restart : system('espeak Invalid')
+  system('subtle --check') ? Subtlext::Subtle.restart : system('espeak Invalid')
 end
 
 # Volume
@@ -395,12 +390,16 @@ grab 'F5', :VolumeRaise
 # Terminal emulators
 open 'F9',   'rxvt-unicode --client', [:klass, :=~, /urxvt/i]
 grab 'S-F9', 'rxvt-unicode --client'
-grab 'W-F9', 'rxvt-unicode --client -- -e vim'
-grab 'A-F9', 'rxvt-unicode --client -- -e tmuxlaunch'
+grab 'W-F9', 'rxvt-unicode --client -e vim'
+grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch'
 
 # Browsers
 open 'F10',   'chrome', [:klass, :=~, /chromium/i]
 grab 'W-F10', 'chrome --incognito'
+
+# File Managers
+open 'F2',  'rxvt-unicode --client -e ranger ~/Downloads', [:name, :=~, /ranger/i]
+open 'F11', 'rxvt-unicode --client -e ranger',             [:name, :=~, /ranger/i]
 
 #
 # == Tags {{{1
@@ -699,12 +698,41 @@ grab 'W-F10', 'chrome --incognito'
 # http://subforge.org/projects/subtle/wiki/Hooks
 #
 
+# Arbitrarily set client properties; an alternative to the tagging system
+def set_properties c
+  case c.klass
+
+  when /u?rxvt|xterm/i
+    c.toggle_borderless unless c.is_borderless?
+
+    c.gravity = case c.name
+    when /tmux/i   then :center
+    when /ranger/i then :top
+    else                :center50
+    end
+
+  when /chrom(e|ium)|firefox|namoroka/i
+    c.gravity = :center75
+
+  when /vlc/i
+    c.toggle_borderless unless c.is_borderless?
+    c.gravity = :center75
+
+  when /wireshark/i
+    c.gravity = :center
+
+  else
+    c.toggle_resize
+
+  end
+end
+
 # Redraw desktop wallpaper
 [:start, :reload].each do |event|
   on event do
     fehbg = File.expand_path '~/.fehbg'
     system '/bin/sh', fehbg if File.readable? fehbg
-    Subtlext::Client.all.each { |c| set_properties c }
+    Subtlext::Client.all.each { |c| set_properties c } unless event == :reload
   end
 end
 
