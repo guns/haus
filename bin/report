@@ -50,12 +50,12 @@ class Report
 
   def darwin_report msg
     if @opts[:file]
-      Process.detach fork { exec 'afplay', @opts[:file] } if system 'command -v afplay &>/dev/null'
+      Process.detach fork { exec 'afplay', @opts[:file] } if have 'afplay'
     else
-      Process.detach fork { exec 'say', msg } if system 'command -v say &>/dev/null'
+      Process.detach fork { exec 'say', msg } if have 'say'
     end
 
-    if system 'command -v growlnotify &>/dev/null'
+    if have 'growlnotify'
       Process.detach fork {
         $stderr.reopen '/dev/null'
         cmd  = %W[growlnotify -m #{msg}]
@@ -68,17 +68,21 @@ class Report
 
   def linux_report msg
     if @opts[:file]
-      Process.detach fork { exec 'play', '-q', @opts[:file] } if system 'command -v play &>/dev/null'
+      Process.detach fork { exec 'play', '-q', @opts[:file] } if have 'play'
     else
-      Process.detach fork { exec 'espeak', '-ven-us', msg } if system 'command -v espeak &>/dev/null'
+      Process.detach fork { exec 'espeak', '-ven-us', msg } if have 'espeak'
     end
 
-    if system 'command -v notify-send &>/dev/null'
+    if have 'notify-send'
       Process.detach fork {
         $stderr.reopen '/dev/null'
         exec 'notify-send', @opts[:title], msg
       }
     end
+  end
+
+  def have cmd
+    system %Q(/bin/sh -c "command -v #{cmd}" &>/dev/null)
   end
 
   def report msg
