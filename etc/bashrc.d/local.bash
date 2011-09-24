@@ -206,7 +206,8 @@ nohist() {
 }
 
 # report remind
-ALIAS r='report'
+ALIAS r='report' \
+      rs='report --file ~/.sounds/Message_Received.m4a'
 
 # run bgrun
 HAVE run   && tcomp exec run
