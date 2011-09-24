@@ -206,7 +206,8 @@ nohist() {
 }
 
 # report remind
-ALIAS r='report'
+ALIAS r='report' \
+      rs='report --file ~/.sounds/Message_Received.m4a'
 
 # run bgrun
 HAVE run   && tcomp exec run
@@ -263,12 +264,7 @@ if __OSX__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
-if [[ -d /dev/disk ]]; then
-    alias lsid='ls /dev/disk/by-id/'
-    alias lslabel='ls /dev/disk/by-label'
-    alias lspath='ls /dev/disk/by-path'
-    alias lsuuid='ls /dev/disk/by-uuid'
-fi
+alias lsb='lsblk -a'
 if [[ -d /dev/mapper ]]; then
     alias lsmapper='ls /dev/mapper'
 fi
@@ -670,7 +666,11 @@ HAVE su && {
 
 ### Network {{{1
 
-ALIAS ic='ifconfig'
+if HAVE ifconfig; then
+    alias ic='ifconfig'
+elif HAVE ip; then
+    alias ic='ip addr'
+fi
 ALIAS iw='iwconfig'
 ALIAS arplan='arp -lan'
 ALIAS netstatnr='netstat -nr'

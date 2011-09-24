@@ -85,6 +85,10 @@ class RxvtUnicode
         Options:
       ).gsub /^ +/, ''
 
+      opt.on '-e', '--eval COMMAND', 'Run specified command' do |arg|
+        @opts[:eval] = arg
+      end
+
       opt.on '-g', '--geometry HEIGHTxWIDTH[+XOFFSET[+YOFFSET]]', 'standard xterm geometry argument' do |arg|
         @geom.parse! arg
       end
@@ -109,7 +113,9 @@ class RxvtUnicode
   end
 
   def urxvt args = []
-    params = %W[-geometry #{@geom} --perl-lib #{File.expand_path '~/.urxvt'}] + args
+    params  = %W[-geometry #{@geom} --perl-lib #{File.expand_path '~/.urxvt'}]
+    params += %W[-e #{@opts[:eval]}] if @opts[:eval]
+    params += args
 
     if @opts[:client]
       # from urxvtc(1) man page

@@ -8,15 +8,12 @@
 
 # == Initialize {{{1
 
-$:.unshift File.expand_path('../contrib', __FILE__)
+$:.unshift File.expand_path('../lib', __FILE__)
 
-require 'launcher'
+require 'subtle-desktop'
+extend SubtleDesktop
 
-Subtle::Contrib::Launcher.paths = ENV['PATH']
-
-def config_valid?
-  system *%W[/opt/subtle/bin/subtle --check --config=#{__FILE__}]
-end
+create_desktops '1'..'4'
 
 #
 # == Options {{{1
@@ -32,7 +29,7 @@ set :snap, 10
 
 # Default starting gravity for windows. Comment out to use gravity of
 # currently active client
-set :gravity, :center50
+set :gravity, :center75
 
 # Make transient windows urgent
 set :urgent, true
@@ -211,53 +208,48 @@ end
 
 # Top left
 gravity :top_left,       [   0,   0,  50,  50 ]
-gravity :top_left66,     [   0,   0,  50,  66 ]
-gravity :top_left33,     [   0,   0,  50,  34 ]
+gravity :top_left75,     [   0,   0,  50,  75 ]
+gravity :top_left33,     [   0,   0,  50,  33 ]
 
 # Top
 gravity :top,            [   0,   0, 100,  50 ]
-gravity :top66,          [   0,   0, 100,  66 ]
-gravity :top33,          [   0,   0, 100,  34 ]
+gravity :top75,          [   0,   0, 100,  75 ]
+gravity :top33,          [   0,   0, 100,  33 ]
 
 # Top right
 gravity :top_right,      [  50,   0,  50,  50 ]
-gravity :top_right66,    [  50,   0,  50,  66 ]
+gravity :top_right75,    [  50,   0,  50,  75 ]
 gravity :top_right33,    [  50,   0,  50,  33 ]
 
 # Left
 gravity :left,           [   0,   0,  50, 100 ]
-gravity :left66,         [   0,   0,  66, 100 ]
+gravity :left75,         [   0,   0,  75, 100 ]
 gravity :left33,         [   0,   0,  33, 100 ]
 
 # Center
 gravity :center,         [   0,   0, 100, 100 ]
-gravity :center75,       [12.5,   5,  75,  90 ]
-gravity :center50,       [  25,   5,  50,  90 ]
+gravity :center75,       [12.5,   0,  75, 100 ]
+gravity :center50,       [  25,   0,  50, 100 ]
 
 # Right
 gravity :right,          [  50,   0,  50, 100 ]
-gravity :right66,        [  34,   0,  66, 100 ]
+gravity :right75,        [  25,   0,  75, 100 ]
 gravity :right33,        [  67,  50,  33, 100 ]
 
 # Bottom left
 gravity :bottom_left,    [   0,  50,  50,  50 ]
-gravity :bottom_left66,  [   0,  34,  50,  66 ]
+gravity :bottom_left75,  [   0,  25,  50,  75 ]
 gravity :bottom_left33,  [   0,  67,  50,  33 ]
 
 # Bottom
 gravity :bottom,         [   0,  50, 100,  50 ]
-gravity :bottom66,       [   0,  34, 100,  66 ]
+gravity :bottom75,       [   0,  25, 100,  75 ]
 gravity :bottom33,       [   0,  67, 100,  33 ]
 
 # Bottom right
 gravity :bottom_right,   [  50,  50,  50,  50 ]
-gravity :bottom_right66, [  50,  34,  50,  66 ]
+gravity :bottom_right75, [  50,  25,  50,  75 ]
 gravity :bottom_right33, [  50,  67,  50,  33 ]
-
-# Gimp
-gravity :gimp_image,     [  10,   0,  80, 100 ]
-gravity :gimp_toolbox,   [   0,   0,  10, 100 ]
-gravity :gimp_dock,      [  90,   0,  10, 100 ]
 
 #
 # == Grabs {{{1
@@ -335,56 +327,28 @@ gravity :gimp_dock,      [  90,   0,  10, 100 ]
 # http://subforge.org/projects/subtle/wiki/Grabs
 #
 
-# Awesome WM bindings
-(1..4).each do |view|
-  # Switch to view
-  grab "W-#{view}", "ViewJump#{view}".to_sym
-
-  # Retag (move) client to view
-  grab "W-S-#{view}" do |this|
-    this.toggle_stick if this.is_stick?
-    this.tags = [Subtlext::Tag.all.find { |t| t.name == view.to_s }]
-  end
-end
-
-# In case no numpad is available e.g. on notebooks
-grab 'W-C-q', [ :top_left,     :top_left66,     :top_left33     ]
-grab 'W-C-w', [ :top,          :top66,          :top33          ]
-grab 'W-C-e', [ :top_right,    :top_right66,    :top_right33    ]
-grab 'W-C-a', [ :left,         :left66,         :left33         ]
+# Gravities
+grab 'W-C-q', [ :top_left,     :top_left75,     :top_left33     ]
+grab 'W-C-w', [ :top,          :top75,          :top33          ]
+grab 'W-C-e', [ :top_right,    :top_right75,    :top_right33    ]
+grab 'W-C-a', [ :left,         :left75,         :left33         ]
 grab 'W-C-s', [ :center,       :center75,       :center50       ]
-grab 'W-C-d', [ :right,        :right66,        :right33        ]
-grab 'W-C-z', [ :bottom_left,  :bottom_left66,  :bottom_left33  ]
-grab 'W-C-x', [ :bottom,       :bottom66,       :bottom33       ]
-grab 'W-C-c', [ :bottom_right, :bottom_right66, :bottom_right33 ]
+grab 'W-C-d', [ :right,        :right75,        :right33        ]
+grab 'W-C-z', [ :bottom_left,  :bottom_left75,  :bottom_left33  ]
+grab 'W-C-x', [ :bottom,       :bottom75,       :bottom33       ]
+grab 'W-C-c', [ :bottom_right, :bottom_right75, :bottom_right33 ]
 
-# Switch window focus in current view
-%w[W-Tab W-S-Tab].each_with_index do |key, direction|
-  grab key do |this|
-    clients = Subtlext::View.current.clients.sort_by &:win
-    thisidx = clients.index { |c| c.win == this.win }
-    return if thisidx.nil?
-    index   = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
-    clients[index].focus
-    clients[index].raise
-  end
-end
+# Move current window
+grab 'W-B1', :WindowMove
+
+# Resize current window
+grab 'W-C-B1', :WindowResize
 
 # Raise window
 grab 'W-C-f', :WindowRaise
 
 # Toggle sticky mode of window (will be visible on all views)
 grab 'W-C-g', :WindowStick
-
-# Check and reload config
-grab 'W-C-r' do
-  Subtlext::Subtle.reload if config_valid?
-end
-
-# Check and restart config
-grab 'W-C-t' do
-  Subtlext::Subtle.restart if config_valid?
-end
 
 # Toggle fullscreen mode of window
 grab 'W-C-space', :WindowFull
@@ -395,31 +359,47 @@ grab 'W-Escape', :SubtleQuit
 # Kill current window
 grab 'W-q', :WindowKill
 
-# Move current window
-grab 'W-B1', :WindowMove
+# Switch window focus in current view
+%w[W-Tab W-S-Tab].each_with_index do |key, direction|
+  grab key do |this|
+    clients = Subtlext::View.current.clients.sort_by &:win
+    thisidx = clients.index { |c| c.win == this.win }
+    return if thisidx.nil?
 
-# Resize current window
-grab 'W-B3', :WindowResize
+    i = (direction.zero? ? thisidx - 1 : thisidx + 1) % clients.size
+    clients[i].focus
+    clients[i].raise
+  end
+end
 
-# Applications
-grab 'F9',    'rxvt-unicode --client'
-grab 'W-F9',  'rxvt-unicode --client -- -e vim'
-grab 'A-F9',  'rxvt-unicode --client -- -e tmuxlaunch'
-grab 'F10',   'chrome'
-grab 'W-F10', 'chrome --incognito'
+# Check config and reload
+grab 'W-C-r' do
+  system('subtle --check') ? Subtlext::Subtle.reload : system('espeak Invalid')
+end
 
-
-### Sublets
-
-# Launcher
-grab 'W-space' do
-  Subtle::Contrib::Launcher.run
+# Check config and restart
+grab 'W-C-t' do
+  system('subtle --check') ? Subtlext::Subtle.restart : system('espeak Invalid')
 end
 
 # Volume
 grab 'F3', :VolumeToggle
 grab 'F4', :VolumeLower
 grab 'F5', :VolumeRaise
+
+# Terminal emulators
+open 'F9',   'rxvt-unicode --client', [:klass, :=~, /urxvt/i]
+grab 'S-F9', 'rxvt-unicode --client'
+grab 'W-F9', 'rxvt-unicode --client -e vim'
+grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch'
+
+# Browsers
+open 'F10',   'chrome', [:klass, :=~, /chromium/i]
+grab 'W-F10', 'chrome --incognito'
+
+# File Managers
+open 'F2',  'rxvt-unicode --client -e ranger ~/Downloads', [:name, :=~, /ranger/i]
+open 'F11', 'rxvt-unicode --client -e ranger',             [:name, :=~, /ranger/i]
 
 #
 # == Tags {{{1
@@ -573,9 +553,6 @@ grab 'F5', :VolumeRaise
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
 
-# Each view has a tag of the same name
-(1..4).each { |n| tag n.to_s }
-
 #
 # == Views {{{1
 #
@@ -636,8 +613,6 @@ grab 'F5', :VolumeRaise
 #
 # http://subforge.org/projects/subtle/wiki/Tagging
 #
-
-(1..4).each { |n| view n.to_s, n.to_s }
 
 #
 # == Sublets {{{1
@@ -723,18 +698,32 @@ grab 'F5', :VolumeRaise
 # http://subforge.org/projects/subtle/wiki/Hooks
 #
 
-def assign_properties c
+# Arbitrarily set client properties; an alternative to the tagging system
+def set_properties c
   case c.klass
+
   when /u?rxvt|xterm/i
-    c.toggle_borderless
-    c.gravity = c.name =~ /tmux/i ? :center : :center50
+    c.toggle_borderless unless c.is_borderless?
+
+    c.gravity = case c.name
+    when /tmux/i   then :center
+    when /ranger/i then :top
+    else                :center50
+    end
+
   when /chrom(e|ium)|firefox|namoroka/i
     c.gravity = :center75
+
   when /vlc/i
-    c.toggle_borderless
+    c.toggle_borderless unless c.is_borderless?
     c.gravity = :center75
+
   when /wireshark/i
     c.gravity = :center
+
+  else
+    c.toggle_resize
+
   end
 end
 
@@ -743,14 +732,14 @@ end
   on event do
     fehbg = File.expand_path '~/.fehbg'
     system '/bin/sh', fehbg if File.readable? fehbg
-    [Subtlext::Client['.*']].flatten.each { |c| assign_properties c }
+    Subtlext::Client.all.each { |c| set_properties c } unless event == :reload
   end
 end
 
 # Place client in current view and assign properties
 on :client_create do |c|
   c.tags = [Subtlext::View.current.to_s]
-  assign_properties c
+  set_properties c
 end
 
 # vim:ts=2:bs=2:sw=2:et:fdm=marker

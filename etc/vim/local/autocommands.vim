@@ -48,9 +48,6 @@ augroup GUNS
     autocmd BufRead,BufNewFile $cdmetasploit/*
         \ setlocal noexpandtab |
         \ SetWhitespace 4
-    " Subtle WM config is a really long file
-    autocmd BufRead,BufNewFile subtle.rb
-        \ setlocal foldlevel=0
 
     " Python
     autocmd FileType python
