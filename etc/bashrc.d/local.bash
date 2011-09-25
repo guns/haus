@@ -1316,19 +1316,10 @@ HAVE feh && {
     fshow() { feh --recursive "${@:-.}"; }
     frand() { feh --recursive --randomize "${@:-.}"; }
     ftime() {
-        if [[ "$1" == -r ]]; then
-            local pattern='**/*'
-        else
-            local pattern='*'
-        fi
-
-        local IFS=$'\n'
-        local fs=($(ruby -e '
-            puts Dir[ARGV.first].reject { |f| File.directory? f }.sort_by { |f| File.mtime f }.reverse
-        ' "$pattern"));
-        unset IFS
-
-        feh "${fs[@]}"
+        ruby -e '
+            fs = (ARGV.empty? ? Dir["*"] : ARGV).reject { |f| Dir.exists? f }
+            exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
+        ' "$@"
     }
 }
 
@@ -1393,9 +1384,9 @@ if __OSX__; then
         # Param: $* Text to display
         largetext() {
             ruby -e '
-            input = ARGV.first.empty? ? $stdin.read : ARGV.first
-            msg = %Q(tell application "Launchbar" to display in large type #{input.inspect})
-            system *%W[osascript -e #{msg}]
+                input = ARGV.first.empty? ? $stdin.read : ARGV.first
+                msg = %Q(tell application "Launchbar" to display in large type #{input.inspect})
+                system *%W[osascript -e #{msg}]
             ' "$*"
         }
     }
