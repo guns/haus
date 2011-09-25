@@ -522,10 +522,10 @@ class Haus
           # `stty` man page says that toggling the raw bit is not guaranteed
           # to restore previous state, so we should do that explicitly
           state = %x(stty -g).chomp
-          system 'stty raw'
+          system 'stty', 'raw'
           char = $stdin.getc.chr.chomp rescue nil # Ruby 1.8.* returns Integer
         ensure
-          system 'stty ' + state
+          system 'stty', state
           $stdout.puts char
         end
       else
