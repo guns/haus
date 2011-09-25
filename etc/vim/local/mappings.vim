@@ -260,7 +260,6 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 " Open Files
 noremap <Leader>e<Space> :tabedit<Space>
 noremap <Leader>ea       :execute 'tabedit ' . expand('~/.vim/local/autocommands.vim')<CR>
-noremap <Leader>eA       :execute 'tabedit ' . expand('~/.vim/local/abbreviations.vim')<CR>
 noremap <Leader>eb       :execute 'tabedit ' . expand('~/.bashrc')<CR>
 noremap <Leader>ec       :execute 'tabedit ' . expand('~/.vim/local/commands.vim')<CR>
 noremap <Leader>ee       :edit<Space>
@@ -307,8 +306,7 @@ Mapall  <4-Bar>    :q!<CR>
 noremap <Leader><C-r>
     \ :source ~/.vim/local/mappings.vim<CR>
     \ :source ~/.vim/local/commands.vim<CR>
-    \ :source ~/.vim/local/abbreviations.vim<CR>
-    \ :echo 'Mappings, Commands, and Abbreviations reloaded!'<CR>
+    \ :echo 'Mappings and Commands reloaded!'<CR>
 noremap <Leader>r :RunCurrentFile<CR>
 noremap <Leader>R :RunCurrentMiniTestCase<CR>
 

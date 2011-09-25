@@ -895,7 +895,6 @@ HAVE vim && {
     fi
 
     # frequently edited files
-    alias vimabbreviations='(cdhaus && exec vim etc/vim/local/abbreviations.vim)'
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'

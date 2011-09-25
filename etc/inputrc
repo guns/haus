@@ -202,7 +202,6 @@ $if Bash
     "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
     "\C-xe ":       "\C-]vim "              (* call-last-kbd-macro)
     "\C-xea":       "\C-] vimautocommands \n"
-    "\C-xeA":       "\C-] vimabbreviations \n"
     "\C-xeb":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
     "\C-xee":       edit-and-execute-command

@@ -231,9 +231,6 @@ source ~/.vim/local/mappings.vim
 " Autocommands
 source ~/.vim/local/autocommands.vim
 
-" Command abbreviations
-source ~/.vim/local/abbreviations.vim
-
 
 """ TERMINAL and GUI SETTINGS """
 
