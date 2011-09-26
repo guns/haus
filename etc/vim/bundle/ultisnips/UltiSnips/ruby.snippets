@@ -24,14 +24,18 @@ snippet APP "CLI app template" b
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 
 class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
+	attr_reader :options
+
 	def initialize args = []
-		@args = args.freeze$0
+		@args    = args.freeze
+		@options = OpenStruct.new$0
 	end
 
-	def options
-		OptionParser.new do |opt|
+	def parser
+		@parser ||= OptionParser.new nil, 20 do |opt|
 			opt.banner = %Q(\
 				Usage: #{File.basename __FILE__} [options]
 
@@ -41,7 +45,7 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 	end
 
 	def run
-		args = options.parse @args
+		args = parser.parse @args
 	end
 end
 
@@ -76,9 +80,17 @@ endsnippet
 snippet deb "debugger" b
 begin ### DEBUG
 	require 'rubygems'; require 'ruby-debug'
-	$stdin.tty? ? Debugger.start : (Debugger.wait_connection = true; Debugger.start_remote)
+	Debugger.start
 	debugger
-end$0 ### DEBUG
+end$0
+endsnippet
+
+snippet debr "debugger remote" b
+begin ### DEBUG
+	require 'rubygems'; require 'ruby-debug'
+	Debugger.wait_connection = true; Debugger.start_remote
+	debugger
+end$0
 endsnippet
 
 snippet bm "benchmark" b
