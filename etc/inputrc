@@ -240,6 +240,10 @@ $if Ruby
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"       (- exchange-point-and-mark)
 
+    # Load files
+    "\C-xl":        "\C-]load ''\C-b"
+    "\C-xr":        "\C-]require ''\C-b"
+
     # interactive_editor
     "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
     "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
