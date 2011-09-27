@@ -493,7 +493,6 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
   let $COLUMNS=winwidth(0)
 
   " special manpageview buffer maps {{{3
-  nnoremap <buffer> q           :q<cr>
   nnoremap <buffer> <c-]>       :call manpageview#ManPageView(1,expand("<cWORD>"))<cr>
 
   " -----------------------------------------
