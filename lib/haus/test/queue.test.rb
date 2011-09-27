@@ -376,6 +376,15 @@ class Haus::QueueSpec < MiniTest::Spec
     end
   end
 
+  describe :include? do
+    it 'must return true if queue.targets include file' do
+      src, dst = $user.hausfile
+      @q.include?(dst).must_equal false
+      @q.add_link src, dst
+      @q.include?(dst).must_equal true
+    end
+  end
+
   describe :hash do
     it 'must return a hash of the concatenation of all job queues' do
       files = (0..3).map { $user.hausfile }
