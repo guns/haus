@@ -14,10 +14,13 @@ class Haus
   class Options < OptionParser
     def initialize arg = nil, width = nil, indent = nil
       # Send first arg to @ostruct or self
-      hash   = arg if arg.is_a? Hash
-      banner = arg unless arg.is_a? Hash
+      if arg.is_a? Hash
+        opts = arg
+      else
+        banner = arg
+      end
 
-      @ostruct        = OpenStruct.new hash
+      @ostruct        = OpenStruct.new opts
       @ostruct.path   = File.expand_path '../../..', __FILE__
       @ostruct.debug  = !!ENV['DEBUG']
       @ostruct.logger = Haus::Logger.new
@@ -26,6 +29,7 @@ class Haus
       params.push banner if banner
       params.push width  if width
       params.push indent if indent
+
       super *params
     end
 
