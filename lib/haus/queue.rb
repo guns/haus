@@ -53,7 +53,7 @@ class Haus
     def add_link source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
 
-      raise MultipleJobError if targets.include? dst
+      raise MultipleJobError if include? dst
       return nil unless extant? src
       raise_if_blocking_path dst
       return nil if File.symlink? dst and linked? src, dst
@@ -66,7 +66,7 @@ class Haus
     def add_copy source, destination
       src, dst = [source, destination].map { |f| File.expand_path f }
 
-      raise MultipleJobError if targets.include? dst
+      raise MultipleJobError if include? dst
       return nil unless extant? src
       raise_if_blocking_path dst
       return nil if extant? dst and duplicates? src, dst
@@ -79,7 +79,7 @@ class Haus
     def add_deletion destination
       dst = File.expand_path destination
 
-      raise MultipleJobError if targets.include? dst
+      raise MultipleJobError if include? dst
       return nil unless extant? dst
 
       @deletions = (deletions.dup << dst).freeze
@@ -103,7 +103,7 @@ class Haus
     def add_modification destination, &block
       dst = File.expand_path destination
 
-      raise MultipleJobError if targets.include? dst
+      raise MultipleJobError if include? dst
       raise_if_blocking_path dst
       return nil if block.nil?
 
@@ -134,6 +134,10 @@ class Haus
       when :archive   then targets - targets(:create)
       else raise ArgumentError
       end
+    end
+
+    def include? file
+      targets.include? file
     end
 
     def hash
@@ -522,10 +526,10 @@ class Haus
           # `stty` man page says that toggling the raw bit is not guaranteed
           # to restore previous state, so we should do that explicitly
           state = %x(stty -g).chomp
-          system 'stty raw'
+          system 'stty', 'raw'
           char = $stdin.getc.chr.chomp rescue nil # Ruby 1.8.* returns Integer
         ensure
-          system 'stty ' + state
+          system 'stty', state
           $stdout.puts char
         end
       else
