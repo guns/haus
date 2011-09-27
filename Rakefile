@@ -4,7 +4,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-$:.unshift 'lib'
+$:.unshift 'lib' # {{{1
 
 require 'task/update'
 require 'task/subproject'
@@ -12,7 +12,7 @@ require 'haus/logger'
 
 include Haus::Loggable
 
-task :env do
+task :env do # {{{1
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
   @subprojects = Hash[{
@@ -168,14 +168,14 @@ task :env do
 end
 
 
-desc 'Start an IRB console within the rake environment'
+desc 'Start an IRB console within the rake environment' # {{{1
 task :console do
   require 'irb'
   ARGV.clear
   IRB.start
 end
 
-desc 'Update subprojects (extra arguments are regexp filters)'
+desc 'Update subprojects (extra arguments are regexp filters)' # {{{1
 task :update => :env do
   opts = { :threads => 4 }
   opts[:threads] = ENV['JOBS'].to_i if ENV['JOBS']
@@ -189,7 +189,7 @@ task :update => :env do
   exit # Stop processing tasks!
 end
 
-desc 'Show untracked vim bundles and vimfile projects'
+desc 'Show untracked vim bundles and vimfile projects' # {{{1
 task :untracked => :env do
   tracked  = @subprojects['vimfiles'].map { |h| File.basename h.base }
 
@@ -200,12 +200,12 @@ task :untracked => :env do
   log Dir["#{@vim}/*"].reject { |f| tracked.include? File.basename(f) }.join("\n")
 end
 
-desc 'Import all terminfo files in share/terminfo'
+desc 'Import all terminfo files in share/terminfo' # {{{1
 task :tic do
   Dir['share/terminfo/*'].each { |f| sh 'tic', f }
 end
 
-desc 'Compile the Vim Command-T bundle'
+desc 'Compile the Vim Command-T bundle' # {{{1
 task :commandt do
   Dir.chdir 'etc/vim/bundle/Command-T/ruby/command-t' do
     sh File.join(RbConfig::CONFIG['bindir'], 'ruby'), 'extconf.rb'
@@ -213,7 +213,7 @@ task :commandt do
   end
 end
 
-desc 'Show subproject source remotes'
+desc 'Show subproject source remotes' # {{{1
 task :remotes => :env do
   @subprojects.values.flatten.each do |proj|
     log proj.base
