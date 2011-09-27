@@ -1040,12 +1040,6 @@ type ruby &>/dev/null && {
     # Rails
     ALIAS ra='rails'
 
-    # SDoc isn't quite Ruby 1.9 compatible
-    HAVE genapi ruby18 && {
-        # Param: $@ Arguments to `genapi`
-        genapi() { /opt/ruby/1.8/bin/ruby -rubygems -KU "$(type -P genapi)" "$@"; }
-    }
-
     # Local api server @ `$cdapi`
     HAVE cdapi && {
         # Param: $@ API Site names
