@@ -1,22 +1,33 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2010 Sung Pae <sung@metablu.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 
 class Genpw
-  def initialize args = []
-    @args, @opts = args, {}
-    @alpha = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
-    @ascii = (0x20..0x7e).map &:chr # ASCII printable chars
+  ALPHA = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
+  ASCII = (0x20..0x7e).map &:chr # ASCII printable chars
+
+  class << self
+    def generate len, opts = {}
+      chars = opts[:chars] ? opts[:chars] : (opts[:alpha] ? ALPHA : ASCII)
+      max   = chars.length
+      len.times.map { chars[rand max] }.join
+    end
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = %Q{\
         Generate a random string of given length(s).
 
@@ -26,22 +37,17 @@ class Genpw
       }.gsub /^ +/,''
 
       opt.on '-a', '--alpha', 'Alphanumeric characters only' do
-        @opts[:alpha] = true
+        options.alpha = true
       end
     end
   end
 
-  def password len
-    chars = @opts[:alpha] ? @alpha : @ascii
-    (1..len).map { chars[rand chars.length] }.join
-  end
-
-  def run
-    args = options.parse @args
-    args << 60 if args.empty?
-    print args.map { |a| password a.to_i }.join("\n")
+  def run arguments = []
+    args = parser.parse arguments
+    args = [60] if args.empty?
+    print args.map { |a| self.class.generate a.to_i, :alpha => options.alpha }.join("\n")
     puts if $stdout.tty?
   end
 end
 
-Genpw.new(ARGV).run if __FILE__ == $0
+Genpw.new.run ARGV if __FILE__ == $0

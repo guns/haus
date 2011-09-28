@@ -6,19 +6,21 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'shellwords'
 require 'nokogiri'
 
 # http://stackoverflow.com/questions/747075/how-to-git-svn-clone-the-last-n-revisions-from-a-subversion-repository
 class GitSvnshallowclone
-  def initialize args = []
-    @args = args.freeze
-    @opts = { :depth => 5 }
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.depth ||= 5
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = %Q(\
         Do a shallow clone of a svn repository.
 
@@ -27,12 +29,12 @@ class GitSvnshallowclone
         Options:
       ).gsub /^ +/, ''
 
-      opt.on '-d', '--depth N', Integer, 'Checkout last N revisions; default: %d' % @opts[:depth] do |arg|
-        @opts[:depth] = arg
+      opt.on '-d', '--depth N', Integer, 'Checkout last N revisions; default: %d' % options.depth do |arg|
+        options.depth = arg
       end
 
       opt.on '-s', '--stdlayout', 'Assume SVN standard layout' do
-        @opts[:stdlayout] = true
+        options.stdlayout = true
       end
     end
   end
@@ -43,18 +45,18 @@ class GitSvnshallowclone
 
   def clone url, basedir = nil
     cmd  = %w[git svn clone]
-    cmd << '--stdlayout' if @opts[:stdlayout]
-    cmd += %W[--revision #{head_rev(url) - @opts[:depth]}:HEAD]
+    cmd << '--stdlayout' if options.stdlayout
+    cmd += %W[--revision #{head_rev(url) - options.depth}:HEAD]
     cmd += [url, basedir || File.basename(url)]
     puts cmd.shelljoin
     system *cmd
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s unless [1, 2].include? args.size
+  def run arguments
+    args = parser.parse arguments
+    abort parser.help unless [1, 2].include? args.size
     clone *args
   end
 end
 
-GitSvnshallowclone.new(ARGV).run if $0 == __FILE__
+GitSvnshallowclone.new.run ARGV if $0 == __FILE__

@@ -1,75 +1,73 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'fileutils'
 
 class Gensslcert
-  def initialize args = []
-    @args = args
-    @opts = { :length => 2048 }
-    @time = Time.now
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.length  ||= 2048
+    options.openssl ||= %x(/bin/sh -c 'command -v openssl').chomp
+    @starttime = Time.now
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new do |opt|
       opt.banner = %Q{\
-        Generate a Certificate Signing Request, and optionally a
-        self-signed certificate.
+        Generate an SSL Certificate.
 
         http://wiki.nginx.org/NginxHttpSslModule#Generate_Certificates
 
-        Usage: #{File.basename __FILE__} [options] basename
+        Usage: #{File.basename __FILE__} [options] /path/to/outdir/basename
 
         Options:
       }.gsub /^ +/, ''
 
-      opt.on '-o', '--output-directory PATH',
-             'Output directory; current working directory by default' do |arg|
-        @opts[:output_directory] = arg
+      opt.on '-l', '--length NUM', Integer, "Length of private key; #{options.length} by default" do |arg|
+        options.length = arg
       end
 
-      opt.on '-l', '--length NUM', Integer,
-             "Length of private key; #{@opts[:length]} by default" do |arg|
-        @opts[:length] = arg
+      opt.on '-d', '--decrypt-private-key', 'Create an unencrypted version of the private key' do
+        options.decrypt_private_key = true
       end
 
-      opt.on '-d', '--decrypt-private-key',
-             'Create an unencrypted version of the private key' do |arg|
-        @opts[:decrypt_private_key] = true
+      opt.on '-s', '--sign', 'Create a self-signed certificate' do
+        options.sign = true
       end
 
-      opt.on '--sign', 'Create a self-signed certificate' do
-        @opts[:sign] = true
-      end
-
-      opt.on '--openssl PATH', 'Specify an openssl binary' do |arg|
-        @opts[:openssl] = arg
+      opt.on '--openssl PATH', 'Specify the openssl program' do |arg|
+        options.openssl = arg
       end
     end
   end
 
-  # returns path to openssl binary
-  def openssl
-    return @openssl if @openssl
-    @openssl = @opts[:openssl] || %x(which openssl).chomp
-    raise 'No suitable openssl binary found' unless File.executable? @openssl
-    @openssl
+  def openssl args = []
+    cmd = [options.openssl, *args]
+    puts cmd.join(' ')
+    system *cmd
   end
 
   # openssl does exit(0) even on error, so we check the files instead
   def created? file
-    File.exists? file and File.mtime(file) > @time and File.size(file) > 0
+    File.exists? file and File.mtime(file) > @starttime and File.size(file) > 0
   end
 
   def generate_private_key! key, nopass = nil
-    system openssl, 'genrsa', '-des3', '-out', key, @opts[:length].to_s
+    openssl %W[genrsa -des3 -out #{key} #{options.length}]
     raise 'failed to generate private key' unless created? key
 
     if nopass
-      puts "\nDecrypting private key"
+      puts "\nDecrypting private key:"
 
-      system openssl, 'rsa', '-in', key, '-out', nopass
+      openssl %W[rsa -in #{key} -out #{nopass}]
       raise 'failed to decrypt private key' unless created? nopass
     end
 
@@ -77,45 +75,44 @@ class Gensslcert
   end
 
   def generate_certificate_signing_request! key, csr
-    puts "\nGenerating certificate signing request"
+    puts "\nGenerating certificate signing request:"
 
-    system openssl, 'req', '-new', '-key', key, '-out', csr
+    openssl %W[req -new -key #{key} -out #{csr}]
     raise 'failed to create CSR' unless created? csr
 
     csr
   end
 
   def generate_self_signed_certificate! key, csr, crt
-    puts "\nGenerating self-signed certificate"
+    puts "\nGenerating self-signed certificate:"
 
-    system openssl, 'x509', '-req', '-days', '365',
-                    '-in', csr, '-signkey', key, '-out', crt
+    openssl %W[x509 -req -days 365 -in #{csr} -signkey #{key} -out #{crt}]
     raise 'failed to create certificate' unless created? crt
 
     crt
   end
 
-  def generate! basename
-    dir = File.expand_path @opts[:output_directory] || '.'
-    key = "#{dir}/#{basename}.key"
-    npw = "#{dir}/#{basename}.key.nopass"
-    csr = "#{dir}/#{basename}.csr"
-    crt = "#{dir}/#{basename}.crt"
+  def generate! path
+    key = "#{path}.key"
+    npw = "#{path}.key.nopass"
+    csr = "#{path}.csr"
+    crt = "#{path}.crt"
 
-    FileUtils.mkdir_p dir, :verbose => true unless File.directory? dir
+    FileUtils.mkdir_p File.dirname(path)
 
-    keyfile = generate_private_key! key, (npw if @opts[:decrypt_private_key])
+    keyfile = generate_private_key! key, (npw if options.decrypt_private_key)
     generate_certificate_signing_request! keyfile, csr
-    generate_self_signed_certificate! keyfile, csr, crt if @opts[:sign]
+    generate_self_signed_certificate! keyfile, csr, crt if options.sign
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.length != 1
-    abort 'STDIN must be a tty!' if not $stdin.tty? # it's all interactive
+  def run arguments = []
+    args = parser.parse arguments
+
+    abort parser.help if args.length != 1
+    abort 'STDIN must be a tty!' if not $stdin.tty?
 
     generate! args.first
   end
 end
 
-Gensslcert.new(ARGV).run if __FILE__ == $0
+Gensslcert.new.run ARGV if __FILE__ == $0

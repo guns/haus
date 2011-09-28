@@ -6,78 +6,84 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'fileutils'
-require 'rubygems'
+require 'pathname'
 require 'sdoc'
 
 class Genapi
-  def initialize args = [], opts = {}
-    @args = args.freeze
-    @opts = opts
-    @opts[:apidir] ||= ENV['cdapi']
-    @sdoc = RDoc::RDoc.new
+  attr_reader :options, :sdoc
+
+  def initialize opts = {}
+    @sdoc    = RDoc::RDoc.new
+    @options = OpenStruct.new opts
+    options.apidir ||= ENV['cdapi']
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
-        Usage: #{File.basename __FILE__} [options] dir ...
+        Usage: #{File.basename __FILE__} [options] dir
 
         Options:
       ).gsub /^ +/, ''
 
-      opt.on '-j', '--jobs N', '--threads N', Integer do |arg|
-        @opts[:jobs] = arg
+      opt.on '-o', '--outdir DIR' do |arg|
+        options.outdir = arg
+      end
+
+      opt.on '-i', '--index PATH', 'Use PATH as index page' do |arg|
+        options.index = arg
       end
 
       opt.on '-t', '--title TITLE' do |arg|
-        @opts[:title] = arg
-      end
-
-      opt.on '-o', '--outdir DIR' do |arg|
-        @opts[:outdir] = File.expand_path arg
+        options.title = arg
       end
 
       opt.on '-f', '--force' do
-        @opts[:force] = true
+        options.force = true
       end
     end
   end
 
-  def generate dirs
-    dirs.each do |dir|
-      Dir.chdir dir do
-        project = File.basename Dir.pwd
-        title   = @opts[:title] || project
-        main    = Dir['*'].find { |f| f =~ /\AREADME(\..+)?\z/i }
-        outdir  = @opts[:outdir]
+  def document
+    # We need to expand these before the chdir
+    index, outdir, apidir = %w[index outdir apidir].map { |m| File.expand_path options.send(m) if options.send m }
 
-        # If outdir was not explicitly set, get basedir from environment
-        outdir ||= if @opts[:apidir]
-          File.join @opts[:apidir], (project[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || project)
-        else
-          abort 'API dir not set! Set environment variable `$cdapi` or specify `--outdir`'
-        end
+    Dir.chdir options.directory do
+      project = File.basename Dir.pwd
+      title   = options.title || project
 
-        if File.directory? outdir
-          @opts[:force] ? FileUtils.rm_rf(outdir) : abort("#{outdir.inspect} already exists!")
-        end
-
-        args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
-        args.push "--main=#{main}" if main
-        args.push "--threads=#{@opts[:jobs]}" if @opts[:jobs]
-
-        puts 'Generating with `%s`' % args.join(' ')
-        @sdoc.document args
+      main = if index
+        Pathname.new(index).relative_path_from Pathname.new(Dir.pwd)
+      else
+        Dir['*'].find { |f| f =~ /\AREADME/i }
       end
+
+      outdir ||= if apidir
+        File.join apidir, (project[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || project)
+      else
+        raise 'Output directory not set! Set environment variable `$cdapi` or specify `--outdir`'
+      end
+
+      if File.exists? outdir
+        options.force ? FileUtils.rm_rf(outdir) : raise("#{outdir.inspect} already exists!")
+      end
+
+      args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
+      args.push "--main=#{main}" if main
+
+      puts 'Generating with `%s`' % args.join(' ')
+      sdoc.document args
     end
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.size.zero?
-    generate args
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 1
+    options.directory = args.first
+    document
   end
 end
 
-$0 = 'genapi' and Genapi.new(ARGV).run if $0 == __FILE__
+$0 = 'genapi' and Genapi.new.run ARGV if $0 == __FILE__

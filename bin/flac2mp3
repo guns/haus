@@ -6,17 +6,20 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'fileutils'
 require 'shellwords'
 
 class Flac2mp3
-  def initialize args = []
-    @args = args.freeze
-    @opts = { :jobs => 1 }
+  attr_reader :options
+
+  def initialize opts = {}
+    @options       = OpenStruct.new opts
+    options.jobs ||= 1
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new do |opt|
       opt.banner = %Q(\
         Usage: #{File.basename __FILE__} [options] [file|dir ...]
 
@@ -24,23 +27,23 @@ class Flac2mp3
       ).gsub /^ +/, ''
 
       opt.on '-r', '--recurse' do
-        @opts[:recurse] = true
+        options.recurse = true
       end
 
       opt.on '-o', '--outdir DIR' do |arg|
-        @opts[:outdir] = File.expand_path arg
+        options.outdir = arg
       end
 
       opt.on '-j', '--jobs N', Integer do |arg|
-        @opts[:jobs] = arg
+        options.jobs = arg
       end
     end
   end
 
-  def filter paths
+  def search paths
     paths.map do |path|
       if File.directory? path
-        pat = @opts[:recurse] ? '**/*.flac' : '*.flac'
+        pat = options.recurse ? '**/*.flac' : '*.flac'
         Dir[File.join path, pat]
       else
         path if File.extname(path) == '.flac'
@@ -56,31 +59,30 @@ class Flac2mp3
   end
 
   def mp3encode src, dst
-    system %Q{
+    system %Q(
       flac -sdc #{src.shellescape} |
       lame --preset standard #{id3tags(src).shelljoin} - #{dst.shellescape}.mp3 2>/dev/null
-    }
+    )
   end
 
-  def process paths
-    queue = filter paths
-    count = queue.count
+  def convert files
+    count = files.count
     label = "[%#{count.to_s.length}d/#{count}] Writing %s"
 
-    idx, pool, lock = 0, [], Mutex.new
+    idx, pool, lock = -1, [], Mutex.new
 
-    @opts[:jobs].times do
+    options.jobs.times do
       pool << Thread.new do
 
         loop do
-          flac, i = lock.synchronize { n = idx; idx += 1; [queue[n], n] }
+          flac = lock.synchronize { files[idx+=1] }
           break if flac.nil?
 
-          base = @opts[:outdir] || File.dirname(flac)
-          dst = File.join base, File.basename(flac, '.flac')
+          base = options.outdir || File.dirname(flac)
+          dst  = File.join base, File.basename(flac, '.flac')
           FileUtils.mkdir_p base
 
-          puts label % [i+1, (dst + '.mp3').inspect]
+          puts label % [idx + 1, (dst + '.mp3').inspect]
           raise 'Encoding error!' unless mp3encode flac, dst
         end
 
@@ -90,10 +92,10 @@ class Flac2mp3
     pool.each &:join
   end
 
-  def run
-    args = options.parse @args
-    process args.empty? ? %w[.] : args
+  def run arguments = []
+    args = parser.parse arguments
+    convert search(args.empty? ? %w[.] : args)
   end
 end
 
-Flac2mp3.new(ARGV).run if $0 == __FILE__
+Flac2mp3.new.run ARGV if $0 == __FILE__

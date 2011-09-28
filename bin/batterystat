@@ -5,36 +5,24 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-$:.unshift File.expand_path('../../lib', __FILE__)
-
 require 'optparse'
+require 'ostruct'
 require 'time'
+require 'json'
 require 'haus/logger'
 
 class Batterystat
   class DarwinStat
     include Haus::Loggable
 
-    def data
-      @data ||= ioreg '-n AppleSmartBattery'
+    attr_accessor :width
+
+    def initialize output_width = nil
+      @width = output_width
     end
 
-    # From AppleSmartBattery.cpp:
-    #
-    #   Date is published in a bitfield per the Smart Battery Data spec rev
-    #   1.1 in section 5.1.26
-    #     Bits 0...4 => day (value 1-31; 5 bits)
-    #     Bits 5...8 => month (value 1-12; 4 bits)
-    #     Bits 9...15 => years since 1980 (value 0-127; 7 bits)
-    def battery_age
-      bf    = data['ManufactureDate'].to_i
-      day   = bf & ((2**5)-1)
-      month = (bf & (((2**4)-1) << 5)) >> 5
-      year  = ((bf & (((2**7)-1) << 9)) >> 9) + 1980
-      date  = Time.strptime ('%0d %0d %d' % [day, month, year]), '%d %m %Y'
-
-      # Return age in years (avg from Google calculator)
-      '%s (%.2f years old)' % [date.strftime('%d %b %Y'), (Time.now - date) / (60*60*24*365.242199)]
+    def data
+      @data ||= ioreg('-n AppleSmartBattery').merge 'CurrentDate' => Time.now.utc
     end
 
     def ioreg query
@@ -64,21 +52,6 @@ class Batterystat
       80
     end
 
-    # Returns [graph, val, base]
-    def values val, base, len
-      # Normalize for display
-      k = val.to_f / base
-      k = 0 if k < 0
-      k = 1 if k > 1
-
-      pct   = (k * 100).round
-      bars  = (len * k).round
-      graph = (['|'] * bars) + ([' '] * (len - bars))
-      graph[-(pct.to_s.size+1)..-1] = (pct.to_s + '%').split('')
-
-      [fmt([graph.take(bars).join, color(k), :bold], graph.drop(bars).join), val, base]
-    end
-
     def color k
       if Haus::Logger.colors256?
         # Eleven gradations of red to green
@@ -95,10 +68,52 @@ class Batterystat
       end
     end
 
-    # Mirrors coconutBattery output
-    def to_s width = nil
-      width ||= terminal_width
+    # Returns [graph, val, base]
+    def values val, base, len
+      # Normalize for display
+      k = val.to_f / base
+      k = 0 if k < 0
+      k = 1 if k > 1
 
+      pct   = (k * 100).round
+      bars  = (len * k).round
+      graph = (['|'] * bars) + ([' '] * (len - bars))
+      graph[-(pct.to_s.length+1)..-1] = (pct.to_s + '%').chars.to_a
+
+      [fmt([graph.take(bars).join, color(k), :bold], graph.drop(bars).join), val, base]
+    end
+
+    # From AppleSmartBattery.cpp:
+    #
+    #   Date is published in a bitfield per the Smart Battery Data spec rev
+    #   1.1 in section 5.1.26
+    #     Bits 0...4 => day (value 1-31; 5 bits)
+    #     Bits 5...8 => month (value 1-12; 4 bits)
+    #     Bits 9...15 => years since 1980 (value 0-127; 7 bits)
+    def manufacture_date
+      bf    = data['ManufactureDate'].to_i
+      day   = bf & ((2**5)-1)
+      month = (bf & (((2**4)-1) << 5)) >> 5
+      year  = ((bf & (((2**7)-1) << 9)) >> 9) + 1980
+      Time.strptime ('%0d %0d %d' % [day, month, year]), '%d %m %Y'
+    end
+
+    def years_old
+      # Return age in years (avg from Google calculator)
+      '%s (%.2f years old)' % [
+        manufacture_date.strftime('%d %b %Y'),
+        (Time.now - manufacture_date) / (60*60*24*365.242199)
+      ]
+    end
+
+    def loadcycles
+      cc    = data['CycleCount']
+      weeks = (Time.now - manufacture_date) / (60*60*24*7)
+      '%d (%0.1f cycles per week)' % [cc, (cc/weeks).round(1)]
+    end
+
+    # Mirrors coconutBattery output
+    def to_s
       lines = []
       lines.push 'Charge [%s] %d/%d mAh'
       lines.push 'Health [%s] %d/%d mAh'
@@ -108,14 +123,14 @@ class Batterystat
       else
         lines << 'Remaining:    %d minutes' % data['TimeRemaining']
       end
-      lines.push 'Manufactured: %s'     % battery_age
-      lines.push 'Loadcycles:   %d'     % data['CycleCount']
+      lines.push 'Manufactured: %s'     % years_old
+      lines.push 'Loadcycles:   %s'     % loadcycles
       lines.push 'Temperature:  %.2f°C' % (data['Temperature'].to_f / 100)
 
       # Calculate graph length
       dsn = data['DesignCapacity']
-      len = width - (lines[0] % ['', dsn, dsn]).length
-      raise 'Not enough space to display graph!' if len < 0
+      len = (width || terminal_width) - (lines[0] % ['', dsn, dsn]).length
+      raise 'Not enough space to display graph!' if len < '100%'.length
 
       # Graph current charge and battery health
       cur, max = data.values_at *%w[CurrentCapacity MaxCapacity]
@@ -126,18 +141,23 @@ class Batterystat
     end
 
     def to_json
-      data.merge('CurrentDate' => Time.now.utc).to_json
+      data.to_json
     end
   end
 
-  def initialize args = []
-    @args = args.freeze
-    @opts = {}
+  attr_reader :options, :stat
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+
+    @stat = case RUBY_PLATFORM
+    when /darwin/i then DarwinStat.new options.width
+    else raise ArgumentError, "Unsupported platform: #{RUBY_PLATFORM}"
+    end
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = %Q(\
         Statistics about your machine's battery. Currently OS X only.
 
@@ -147,28 +167,28 @@ class Batterystat
       ).gsub /^ +/, ''
 
       opt.on '-w', '--width N', Integer, 'Limit output to given width' do |arg|
-        @opts[:width] = arg
+        stat.width = arg
       end
 
       opt.on '-j', '--json', 'Dump JSON serialization of battery data' do
-        require 'json'
-        @opts[:json] = true
+        options.json = true
       end
     end
   end
 
-  def stat
-    @stat ||= case RUBY_PLATFORM
-    when /darwin/i then DarwinStat.new
-    else raise ArgumentError, "Unsupported platform: #{RUBY_PLATFORM}"
-    end
+  def to_s
+    stat.to_s
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if not args.empty?
-    puts @opts[:json] ? stat.to_json : stat.to_s(@opts[:width])
+  def to_json
+    stat.to_json
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    puts options.json ? to_json : to_s
   end
 end
 
-Batterystat.new(ARGV).run if $0 == __FILE__
+Batterystat.new.run ARGV if $0 == __FILE__

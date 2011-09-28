@@ -1,95 +1,98 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2011 Sung Pae <sung@metablu.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'digest'
 require 'shellwords'
 
 class Figpreview
-  def initialize args = []
-    @args = args
-    @opts = {
-      :kerning => '-S',
-      :width => 160
-    }
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.width   ||= 1000
+    options.kerning ||= 0
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 24
-
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = %Q(\
         Preview all figlet fonts on the system.
 
-        Usage: #{File.basename __FILE__} [options] word ...
+        Usage: #{File.basename __FILE__} [options] [message]
 
         Options:
       ).gsub /^ +/, ''
 
-      opt.on '-k', '--kerning NUMBER', Integer, 'Set letter spacing; 1 by default' do |arg|
-        @opts[:kerning] = case arg
-        when 0 then '-S'
-        when 1 then '-s'
-        when 2 then '-k'
-        when 3 then '-W'
-        else raise ArgumentError, 'must be within 0..3'
-        end
+      opt.on '-k', '--kerning NUMBER', Integer, 'Set letter spacing; value from 0..3; 0 by default' do |arg|
+        options.kerning = arg
       end
 
-      opt.on '-w', '--width NUMBER', Integer, "Wrapping width. #{@opts[:width]} by default." do |arg|
-        @opts[:width] = arg
+      opt.on '-w', '--width NUMBER', Integer, "Wrapping width; #{options.width} by default" do |arg|
+        options.width = arg
       end
 
-      opt.on '-l', '--list', 'List all available figlet fonts (excluding duplicates)' do
-        puts figfonts
+      opt.on '-l', '--list', 'List all unique figlet fonts' do
+        puts fonts
         exit
       end
     end
   end
 
-  def figdirs
+  def kerning
+    case options.kerning
+    when 0 then '-S'
+    when 1 then '-s'
+    when 2 then '-k'
+    when 3 then '-W'
+    else raise ArgumentError, 'options.kerning must be within 0..3'
+    end
+  end
+
+  def fontdirs
     %w[/usr/share /usr/local/share /opt/brew/share /opt/local/share ~/Documents].map { |d| File.expand_path d }
   end
 
-  def figfonts
-    @figfonts ||= figdirs.inject({}) do |fonts, base|
-      fonts.merge Dir["#{base}/figlet/{,fonts/}*.flf"].inject({}) { |h, flf|
-        # we want to ignore dups, and many files only differ in the first line
-        h.merge Digest::MD5.hexdigest(File.read(flf).lines.drop(1).join) => flf
-      }
-    end.values.sort_by { |f| File.basename f }
+  def fonts
+    @fonts ||= begin
+      table = {}
+
+      fontdirs.each do |base|
+        Dir["#{base}/figlet/{,fonts/}*.flf"].each do |flf|
+          table.store Digest::MD5.hexdigest(File.read(flf).lines.drop(1).join), flf
+        end
+      end
+
+      table.values.sort_by { |f| File.basename f }
+    end
   end
 
-  def figlet font, msg
-    @figlet ||= begin
-      bin = %x(/bin/sh -c 'command -v figlet').chomp
-      abort 'Figlet is missing' unless File.executable? bin
-      bin
-    end
-
-    cmd = [@figlet, @opts[:kerning], '-l', '-w', @opts[:width].to_s, '-f', font, msg]
+  def generate flf
+    msg = options.message || File.basename(flf, '.flf')
+    cmd = ['figlet', kerning, '-l', '-w', options.width.to_s, '-f', flf, msg]
     ary = %x(#{cmd.shelljoin}).split("\n").map &:rstrip
     a,z = [:index, :rindex].map { |m| ary.send(m) { |l| not l.empty? } }
-    "\n#{ary[(a || 0)..(z || ary.size)].join "\n"}\n\n"
+    "\n%s\n\n" % ary[(a || 0)..(z || ary.size)].join("\n")
   end
 
-  def preview input
-    msg = input.empty? ? nil : input
-
-    figfonts.inject '' do |str, flf|
-      name = File.basename flf, '.flf'
-      str + "#{name}:\n#{figlet flf, msg || name}"
-    end
+  def to_s
+    fonts.map { |flf| "#{File.basename flf, '.flf'}:\n#{generate flf}" }.join "\n"
   end
 
-  def run
-    args = options.parse @args
-    puts preview(args.join ' ')
+  def inspect
+    "figlet #{kerning} -l -w #{options.width}"
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    options.message = args.join ' ' unless args.empty?
+    puts to_s
   end
 end
 
-Figpreview.new(ARGV).run if $0 == __FILE__
+Figpreview.new.run ARGV if $0 == __FILE__

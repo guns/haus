@@ -1,0 +1,100 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'uri'
+require 'cgi'
+require 'plist'
+
+class Itunes # {{{1
+  class LibraryCheck # {{{
+    def initialize opts = {}
+      self.library = opts[:library] || File.expand_path('~/Music/iTunes/iTunes Music Library.xml')
+    end
+
+    attr_reader :library
+    def library= arg
+      if File.file? arg
+        @library = Plist.parse_xml arg
+      elsif File.directory? arg
+        @library = Plist.parse_xml Dir[File.join arg, '*'].find { |f| f =~ /iTunes.*Library\.xml/ }
+      elsif arg.is_a? Hash
+        @library = arg
+      else
+        raise ArgumentError
+      end
+    end
+
+    # Filenames are byte strings, so no encodings. Also, save '+' char from
+    # being unescaped by escaping first.
+    def unescape str
+      CGI.unescape str.gsub(/\+/, CGI.escape('+')), 'ASCII-8BIT'
+    end
+
+    def media_directory
+      @media_directory ||= unescape URI.parse(library['Music Folder']).path
+    end
+
+    def media_assets
+      @media_assets ||= Dir[File.join media_directory, '**/*'].select { |f| File.file? f }
+    end
+
+    def tracks
+      # Local tracks only
+      @tracks ||= library['Tracks'].map do |k,v|
+        t = URI.parse v['Location']
+        t.host == 'localhost' ? unescape(t.path) : nil
+      end.compact
+    end
+
+    def missing
+      @missing ||= tracks.reject { |f| File.exists? f }
+    end
+
+    def untracked
+      @untracked ||= media_assets.reject { |f| tracks.include? f }
+    end
+
+    def to_s
+      lines = []
+
+      lines.push "# Missing tracks (%d)" % missing.size
+      lines.concat missing
+      lines.push "\n# Untracked files in %s (%d)" % [media_directory, untracked.size]
+      lines.concat untracked
+
+      lines.join "\n"
+    end
+  end # }}}
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} [options] command [args]
+
+        Commands:
+            check [itunes-dir|itunes-library-file]
+                Show missing and untracked files in the iTunes folder.\
+      ).gsub /^ {8}/, ''
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    case args.first
+    when 'check', 'ck'
+      abort parser.help if args.size > 2
+      puts LibraryCheck.new(:library => args[1]).to_s
+    else abort parser.help
+    end
+  end
+end
+
+Itunes.new.run ARGV if $0 == __FILE__

@@ -6,6 +6,7 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'net/http'
 
 class Getunicodedata
@@ -24,16 +25,16 @@ class Getunicodedata
         row = line.chomp.split ';'
         {
           :Char                       => [row[0].to_i(16)].pack('U'),
-          :Code_Point                 => row[0],
-          :Name                       => row[1],
-          :General_Category           => row[2],
-          :Canonical_Combining_Class  => row[3],
-          :Bidi_Class                 => row[4],
-          :Decomposition              => row[5],
-          :Numeric_Type_Decimal_Digit => row[6],
-          :Numeric_Type_Digit         => row[7],
-          :Numeric_Type_Numeric       => row[8],
-          :Bidi_Mirrored              => row[9],
+          :Code_Point                 => row[ 0],
+          :Name                       => row[ 1],
+          :General_Category           => row[ 2],
+          :Canonical_Combining_Class  => row[ 3],
+          :Bidi_Class                 => row[ 4],
+          :Decomposition              => row[ 5],
+          :Numeric_Type_Decimal_Digit => row[ 6],
+          :Numeric_Type_Digit         => row[ 7],
+          :Numeric_Type_Numeric       => row[ 8],
+          :Bidi_Mirrored              => row[ 9],
           :Unicode_1_Name             => row[10],
           :ISO_Comment                => row[11],
           :Simple_Uppercase_Mapping   => row[12],
@@ -54,47 +55,54 @@ class Getunicodedata
     end
   end
 
-  def initialize args = []
-    @args = args.freeze
-    @opts = {}
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
-
+  def parser
+    @parser ||= OptionParser.new nil, 12 do |opt|
       opt.banner = %Q(\
-        Download, parse, and print Unicode data from #{UnicodeDataURL}
+        Parse and print Unicode data.
 
-        Usage: #{File.basename __FILE__} [options]
+        If a file is given, data is read from file. If no file is given, and
+        there is data available on stdin, data is read from stdin.
+
+        Otherwise, downloads from #{UnicodeDataURL}
+
+        Usage: #{File.basename __FILE__} [options] [file]
 
         Options:
       ).gsub /^ +/, ''
 
-      opt.on '-f', '--file PATH', 'Read Unicode data from PATH' do |arg|
-        @opts[:file] = arg
-      end
-
       opt.on '-r', '--raw', 'Print raw unparsed data' do
-        @opts[:raw] = true
+        options.raw = true
       end
     end
   end
 
   def raw
-    @raw ||= if @opts[:file]
-      File.read @opts[:file]
+    @raw ||= if options.file
+      File.read options.file
+    elsif select [$stdin], nil, nil, 0
+      $stdin.read
     else
       Net::HTTP.get URI.parse(UnicodeDataURL)
     end
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s unless args.empty?
-    return raw if @opts[:raw]
-    puts UnicodeTable.new(raw).to_s
+  def table
+    @table ||= UnicodeTable.new raw
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    options.file = args.first
+
+    puts options.raw ? raw : table.to_s
   end
 end
 
-Getunicodedata.new(ARGV).run if $0 == __FILE__
+Getunicodedata.new.run ARGV if $0 == __FILE__

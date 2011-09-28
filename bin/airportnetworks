@@ -6,19 +6,19 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'shellwords'
 
 class Airportnetworks
-  def initialize args = []
-    @args = args.freeze
-    @opts = { :iface => 'en1' }
-    @networksetup = %x(command -v networksetup).chomp
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.interface ||= 'en1'
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 20
-
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
         Usage: #{File.basename __FILE__} command args
 
@@ -30,45 +30,45 @@ class Airportnetworks
         Options:\
       ).gsub /^ {8}/, ''
 
-      opt.on '-i', '--iface NAME', 'BSD interface; %s by default' % @opts[:iface] do |arg|
-        @opts[:iface] = arg
+      opt.on '-i', '--interface NAME', "BSD interface; #{options.interface} by default" do |arg|
+        options.interface = arg
       end
     end
   end
 
   def sh *args
-    warn args.shelljoin
+    warn args.join(' ')
     system *args
   end
 
-  def list
-    %x(#{@networksetup} -listpreferredwirelessnetworks #{@opts[:iface]}).lines.drop(1).map &:strip
+  def to_a
+    %x(networksetup -listpreferredwirelessnetworks #{options.interface.shellescape}).lines.drop(1).map &:strip
   end
 
-  def add name, sectype = 'WPA2'
-    sh @networksetup, '-addpreferredwirelessnetworkatindex', @opts[:iface], name, list.size.to_s, sectype
+  def add name, security = 'WPA2'
+    sh 'networksetup', '-addpreferredwirelessnetworkatindex', options.interface, name, to_a.size.to_s, security
   end
 
-  def clear list = nil
-    if list.nil? or list.empty?
-      sh @networksetup, '-removeallpreferredwirelessnetworks', @opts[:iface]
+  def clear names = nil
+    if names.nil? or names.empty?
+      sh 'networksetup', '-removeallpreferredwirelessnetworks', options.interface
     else
-      list.each do |name|
-        sh @networksetup, '-removepreferredwirelessnetwork', @opts[:iface], name
+      names.each do |name|
+        sh 'networksetup', '-removepreferredwirelessnetwork', options.interface, name
       end
     end
   end
 
-  def run
-    args = options.parse @args
+  def run arguments = []
+    args = parser.parse arguments
 
     case args.first
-    when 'list', nil then puts list
+    when 'list', nil then puts to_a
     when 'add'       then add *args.drop(1)
     when 'clear'     then clear args.drop(1)
-    else abort options.to_s
+    else abort parser.help
     end
   end
 end
 
-Airportnetworks.new(ARGV).run if $0 == __FILE__
+Airportnetworks.new.run ARGV if $0 == __FILE__

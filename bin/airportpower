@@ -1,53 +1,67 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'shellwords'
 
 class Airportpower
-  def initialize args = []
-    @args = args
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.interface ||= 'en1'
   end
 
-  def options
-    OptionParser.new %Q{\
-      Set or toggle your Mac's airport card via `networksetup'.
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = %Q(\
+        Set or toggle your Mac's airport card via `networksetup`.
 
-      Usage: #{File.basename __FILE__} [on|off|toggle]
-    }.gsub(/^ +/,'')
+        Usage: #{File.basename __FILE__} [on|off|toggle|status]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-i', '--interface NAME', "BSD interface; #{options.interface} by default" do |arg|
+        options.interface = arg
+      end
+    end
   end
 
   def status
-    %x(networksetup -getairportpower en1 2>/dev/null)[/\w+$/].downcase
+    %x(networksetup -getairportpower #{options.interface.shellescape})[/\w+$/].downcase
   end
 
-  def switch cmd
-    %x(networksetup -setairportpower en1 #{cmd.shellescape} 2>/dev/null)
-    cmd
+  %w[on off].each do |state|
+    define_method state do
+      system *%W[networksetup -setairportpower #{options.interface} #{state}]
+    end
   end
 
   def toggle
-    switch (status == 'on' ? 'off' : 'on')
+    send (status == 'on' ? :off : :on)
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.size > 1
-    raise 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
 
-    state = case arg = args.first
-    when nil              then status
-    when /\A(on|off)\z/i  then switch arg
-    when 'toggle'         then toggle
-    else abort options.to_s
+    case cmd = args.first
+    when 'status', nil then status
+    when 'toggle'      then toggle
+    when 'on'          then on
+    when 'off'         then off
+    else abort parser.help
     end
 
-    puts "Airport is #{state}"
+    puts "Airport is #{status}"
   end
 end
 
-Airportpower.new(ARGV).run if __FILE__ == $0
+Airportpower.new.run ARGV if $0 == __FILE__

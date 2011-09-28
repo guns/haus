@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-echo >&2 -e "\e[1;32m$*\e[0m"
+echo >&2 -e "\033[1;32m$*\033[0m"
 exec "$@"
