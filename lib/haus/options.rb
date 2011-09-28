@@ -12,7 +12,7 @@ class Haus
   # Options#logger provides default logger
   #
   class Options < OptionParser
-    def initialize arg = nil, width = nil, indent = nil
+    def initialize arg = nil, width = 32, indent = ' ' * 4
       # Send first arg to @ostruct or self
       if arg.is_a? Hash
         opts = arg
@@ -25,12 +25,7 @@ class Haus
       @ostruct.debug  = !!ENV['DEBUG']
       @ostruct.logger = Haus::Logger.new
 
-      params = []
-      params.push banner if banner
-      params.push width  if width
-      params.push indent if indent
-
-      super *params
+      super banner, width, indent
     end
 
     def path= arg
