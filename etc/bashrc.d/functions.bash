@@ -279,7 +279,7 @@ CD_FUNC() {
         )\"
 
         local IFS=\$'\\n'
-        COMPREPLY=(\$(compgen -W \"\$words\" -- \"\$cur\"))
+        COMPREPLY=(\$(grep -i \"^\$cur.*\" <<< \"\$words\"))
     }"
 
     # Complete the shell function
