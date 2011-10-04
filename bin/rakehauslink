@@ -6,46 +6,64 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'fileutils'
 
 class Rakehauslink
-  def initialize args = []
-    @args    = args.freeze
-    @opts    = {}
-    @rakedir = File.expand_path '../../share/rake', __FILE__
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.rakedir ||= File.expand_path '../../share/rake', __FILE__
+    options.verbose ||= true
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
-        Link Haus Rakefile of given name to basedir.
-
-        Usage: #{File.basename __FILE__} filename [basedir]
+        Usage: #{File.basename __FILE__} [options] name
 
         Options:
       ).gsub /^ +/, ''
 
+      opt.on '-l', '--list' do
+        options.list = true
+      end
+
       opt.on '-f', '--force' do
-        @opts[:force] = true
+        options.force = true
+      end
+
+      opt.on '-q', '--quiet' do
+        options.verbose = false
       end
     end
   end
 
-  def link name, base = Dir.pwd
-    dst  = File.join base, 'Rakefile'
+  def link name, base = nil
+    dst  = File.join base || Dir.pwd, 'Rakefile'
     stat = File.lstat dst rescue nil
 
-    abort "#{dst.inspect} already exists!" if stat and not @opts[:force]
+    abort "#{dst.inspect} already exists!" if stat and not options.force
 
-    FileUtils.rm dst, :verbose => true if stat
-    FileUtils.ln_s File.join(@rakedir, name), dst, :verbose => true
+    FileUtils.rm   dst, :verbose => options.verbose if stat
+    FileUtils.ln_s File.join(options.rakedir, name), dst, :verbose => options.verbose
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s unless args.size == 1 or args.size == 2
-    link *args
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size <= 2
+
+    # For convenience, grep the intended file
+    fs = Dir.entries(options.rakedir).reject { |f| f == '.' || f == '..' }
+    if options.list
+      puts fs
+    else
+      rk = fs.find { |f| f == args.first }
+      rk = fs.find { |f| f =~ Regexp.new(args.first) } if rk.nil?
+      rk ? link(rk, args[1]) : abort('File not found.')
+    end
   end
 end
 
-Rakehauslink.new(ARGV).run if $0 == __FILE__
+Rakehauslink.new.run ARGV if $0 == __FILE__
