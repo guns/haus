@@ -40,7 +40,7 @@ module CLI
     #
     #   precision:
     #     Round the values in the summary to given precision, as in
-    #     Float#round(precision); normally set to 0
+    #     Float#round(precision); available only in Ruby 1.9+
     #
     #   summary_format:
     #     Format string for value summary; must contain two numeric
@@ -114,7 +114,15 @@ module CLI
     end
 
     def summary
-      summary_format % [sum.round(precision), max.round(precision)]
+      summary_format % [round(sum), round(max)]
+    end
+
+    def round n
+      if Numeric.instance_method(:round).arity.zero?
+        n.round
+      else
+        n.round precision
+      end
     end
 
     def to_s

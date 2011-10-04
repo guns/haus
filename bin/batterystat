@@ -7,13 +7,14 @@
 
 require 'optparse'
 require 'ostruct'
-require 'time'
+require 'time' # Time#parse
+require 'date'
 require 'json'
 require 'cli/meter'
 require 'haus/logger'
 
 class Batterystat
-  class DarwinStat
+  class DarwinBattery
     attr_accessor :width
 
     def initialize width = nil
@@ -35,11 +36,11 @@ class Batterystat
 
     def str2val str
       case str
-      when /\A0x\h+\z/    then str.to_i 16
-      when /\AYes|No\z/   then str == 'Yes'
-      when /\A"(.*)"\z/   then $1
-      when /\A\((.*)\)\z/ then $1.split(',').map { |e| str2val e.strip } # Recurse!
-      when /\A\{(.*)\}\z/ then Hash[$1.split(',').map { |e| parse e }]   # Mutually recurse!
+      when /\A0x[0-9a-f]+\z/ then str.to_i 16 # Ruby 1.8 lacks \h character class
+      when /\AYes|No\z/      then str == 'Yes'
+      when /\A"(.*)"\z/      then $1
+      when /\A\((.*)\)\z/    then $1.split(',').map { |e| str2val e.strip } # Recurse!
+      when /\A\{(.*)\}\z/    then Hash[$1.split(',').map { |e| parse e }]   # Mutually recurse!
       else str
       end
     end
@@ -67,12 +68,16 @@ class Batterystat
     #     Bits 0...4 => day (value 1-31; 5 bits)
     #     Bits 5...8 => month (value 1-12; 4 bits)
     #     Bits 9...15 => years since 1980 (value 0-127; 7 bits)
+    #
+    # Returns Time object
     def manufacture_date
       bf    = data['ManufactureDate']
       day   = bf & ((2**5)-1)
       month = (bf & (((2**4)-1) << 5)) >> 5
       year  = ((bf & (((2**7)-1) << 9)) >> 9) + 1980
-      Time.strptime ('%0d %0d %d' % [day, month, year]), '%d %m %Y'
+
+      # Ruby 1.8 lacks Time#strptime
+      Time.parse Date.new(year, month, day).to_s
     end
 
     def years_old
@@ -86,7 +91,7 @@ class Batterystat
     def loadcycles
       cc    = data['CycleCount']
       weeks = (Time.now - manufacture_date) / (60*60*24*7)
-      '%d (%0.1f cycles per week)' % [cc, (cc/weeks).round(1)]
+      '%d (%0.1f cycles per week)' % [cc, cc/weeks]
     end
 
     # Mirrors coconutBattery output
@@ -120,7 +125,7 @@ class Batterystat
     @options = OpenStruct.new opts
 
     @stat = case RUBY_PLATFORM
-    when /darwin/i then DarwinStat.new options.width
+    when /darwin/i then DarwinBattery.new options.width
     else raise ArgumentError, "Unsupported platform: #{RUBY_PLATFORM}"
     end
   end
