@@ -1,56 +1,61 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 
 class Pltoggle
-  def initialize args = []
-    @args = args
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.plutil ||= %x(/bin/sh -c 'command -v plutil').chomp
+    options.format ||= 'xml1'
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.banner = %Q{\
+  def parser
+    @parser ||= OptionParser.new nil, 12 do |opt|
+      opt.banner = %Q(\
         Toggle Apple property lists between binary and plain text format.
         Converts files in place.
 
         Usage: #{File.basename __FILE__} file ...
-      }.gsub /^ +/, ''
-    end
-  end
+      ).gsub /^ +/, ''
 
-  def plutil
-    return @plutil if @plutil
-    abort 'missing plutil!' unless system 'command -v plutil &>/dev/null'
-    @plutil = %x(command -v plutil).chomp
+      opt.on '-j', '--json', 'Convert to and from JSON format instead of xml' do
+        options.format = 'json'
+      end
+    end
   end
 
   def typeof file
-    File.read(file, 6) == 'bplist' ? :binary : :xml
-  end
-
-  def toggle file
-    case typeof file
-    when :binary
-      system plutil, '-convert', 'xml1', file or raise 'XML conversion failed!'
-      :xml
-    when :xml
-      system plutil, '-convert', 'binary1', file or raise 'Binary conversion failed!'
-      :binary
+    case File.read file, 6
+    when 'bplist' then 'binary1'
+    when '<?xml ' then 'xml1'
+    when /\A\{"/  then 'json'
+    else raise 'Unknown plist format'
     end
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.empty?
-    abort 'OS X only!' unless RUBY_PLATFORM[/darwin/]
+  def convert file, type
+    system options.plutil, '-convert', type, file or raise "Conversion to #{type} failed!"
+  end
 
-    args.each { |f| warn "#{f} -> #{toggle f}" }
+  def toggle file
+    type = typeof(file) == 'binary1' ? options.format : 'binary1'
+    convert file, type
+    type
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    args.each { |f| puts '%s → %s' % [f, toggle(f)] }
   end
 end
 
-Pltoggle.new(ARGV).run if $0 == __FILE__
+Pltoggle.new.run ARGV if $0 == __FILE__
