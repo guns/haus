@@ -9,16 +9,15 @@ require 'optparse'
 require 'ostruct'
 require 'time'
 require 'json'
+require 'cli/meter'
 require 'haus/logger'
 
 class Batterystat
   class DarwinStat
-    include Haus::Loggable
-
     attr_accessor :width
 
-    def initialize output_width = nil
-      @width = output_width
+    def initialize width = nil
+      @width = width
     end
 
     def data
@@ -45,13 +44,6 @@ class Batterystat
       end
     end
 
-    def terminal_width
-      return ENV['COLUMNS'].to_i if ENV['COLUMNS'] =~ /\A\d+\z/
-      cols = %x(tput cols) rescue nil
-      return cols.to_i if cols
-      80
-    end
-
     def color k
       if Haus::Logger.colors256?
         # Eleven gradations of red to green
@@ -68,21 +60,6 @@ class Batterystat
       end
     end
 
-    # Returns [graph, val, base]
-    def values val, base, len
-      # Normalize for display
-      k = val.to_f / base
-      k = 0 if k < 0
-      k = 1 if k > 1
-
-      pct   = (k * 100).round
-      bars  = (len * k).round
-      graph = (['|'] * bars) + ([' '] * (len - bars))
-      graph[-(pct.to_s.length+1)..-1] = (pct.to_s + '%').chars.to_a
-
-      [fmt([graph.take(bars).join, color(k), :bold], graph.drop(bars).join), val, base]
-    end
-
     # From AppleSmartBattery.cpp:
     #
     #   Date is published in a bitfield per the Smart Battery Data spec rev
@@ -91,7 +68,7 @@ class Batterystat
     #     Bits 5...8 => month (value 1-12; 4 bits)
     #     Bits 9...15 => years since 1980 (value 0-127; 7 bits)
     def manufacture_date
-      bf    = data['ManufactureDate'].to_i
+      bf    = data['ManufactureDate']
       day   = bf & ((2**5)-1)
       month = (bf & (((2**4)-1) << 5)) >> 5
       year  = ((bf & (((2**7)-1) << 9)) >> 9) + 1980
@@ -114,9 +91,12 @@ class Batterystat
 
     # Mirrors coconutBattery output
     def to_s
+      cur, max, dsn = data.values_at *%w[CurrentCapacity MaxCapacity DesignCapacity]
+      sw = "#{dsn}/#{dsn}".length # Summary width
+
       lines = []
-      lines.push 'Charge [%s] %d/%d mAh'
-      lines.push 'Health [%s] %d/%d mAh'
+      lines.push CLI::Meter.new("Charge [%s] %#{sw}s mAh", [[cur, color(cur.to_f/max)]], max, :width => width).to_s
+      lines.push CLI::Meter.new("Health [%s] %#{sw}s mAh", [[max, color(max.to_f/dsn)]], dsn, :width => width).to_s
       lines.push ''
       if data['IsCharging']
         lines << 'Time to full: %d minutes' % data['AvgTimeToFull']
@@ -126,17 +106,6 @@ class Batterystat
       lines.push 'Manufactured: %s'     % years_old
       lines.push 'Loadcycles:   %s'     % loadcycles
       lines.push 'Temperature:  %.2f°C' % (data['Temperature'].to_f / 100)
-
-      # Calculate graph length
-      dsn = data['DesignCapacity']
-      len = (width || terminal_width) - (lines[0] % ['', dsn, dsn]).length
-      raise 'Not enough space to display graph!' if len < '100%'.length
-
-      # Graph current charge and battery health
-      cur, max = data.values_at *%w[CurrentCapacity MaxCapacity]
-      lines[0] = lines[0] % values(cur, max, len)
-      lines[1] = lines[1] % values(max, dsn, len)
-
       lines.join "\n"
     end
 
