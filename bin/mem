@@ -57,6 +57,27 @@ class Mem # {{{1
   end # }}}2
 
   class LinuxGraph < Graph # {{{2
+    def initialize *args
+      super
+
+      # Parse free(1) since the output of /proc/meminfo seems to be volatile
+      free = %x(free -b).split "\n"
+      keys = free.first.split
+      scan = lambda { |r| Hash[keys.zip free.find { |l| l =~ r }.scan(/\d+/).map { |n| (n.to_f / (2**20)).round }] }
+
+      @mem = OpenStruct.new scan.call(/\AMem/i)
+      mem.active = mem.used - mem.buffers - mem.cached
+      mem.values = [
+        [mem.active,  :green, :bold],
+        [mem.buffers, :yellow],
+        [mem.cached,  :magenta]
+      ]
+      mem.total ||= 0
+
+      @swap        = OpenStruct.new scan.call(/\ASwap/i)
+      swap.values  = [[swap.used, :red]]
+      swap.total ||= 0
+    end
   end # }}}2
 
   attr_reader :options, :graph
@@ -66,7 +87,7 @@ class Mem # {{{1
     @graph   = case RUBY_PLATFORM
     when /darwin/i then DarwinGraph.new options.width
     when /linux/i  then LinuxGraph.new options.width
-    raise 'OS X and Linux only'
+    else raise 'OS X and Linux only'
     end
   end
 

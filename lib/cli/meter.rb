@@ -70,6 +70,9 @@ module CLI
       # Return empty string if there isn't enough space for a useful graph
       return '' if length < '100%'.length
 
+      # Return blank string if max is 0, so we can avoid ZeroDivsionError
+      return ' ' * length if max.zero?
+
       chars, styles = [], []
 
       values.each do |val|
