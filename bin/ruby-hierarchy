@@ -44,8 +44,8 @@ class RubyHierarchy
     root = Kernel.const_get options.root if options.root
     tree = {}
 
-    ObjectSpace.each_object Class do |node|
-      branch = node.ancestors
+    ObjectSpace.each_object Class do |leaf|
+      branch = leaf.ancestors
 
       if root
         next unless branch.include? root
@@ -63,7 +63,7 @@ class RubyHierarchy
   end
 
   def reduce tree, buf = '', indent = 0
-    tree.keys.sort_by(&:to_s).each do |k|
+    tree.keys.sort_by { |k| k.to_s }.each do |k|
       buf << "%s%s\n" % [' ' * indent, k]
       indent += options.indent
       reduce tree[k], buf, indent # Recurse!
@@ -75,7 +75,7 @@ class RubyHierarchy
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.size < 2
+    abort parser.help if args.size > 1
     options.root = args.first if args.first
     puts to_s
   end
