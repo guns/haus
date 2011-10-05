@@ -1,30 +1,41 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-load File.expand_path('../report', __FILE__)
 require 'optparse'
-require 'time' # explicit require for Time::parse
+require 'ostruct'
+require 'time' # Time.parse
+require 'cli/notification'
 
 class Remind
-  # Subclassing Time is kind of a pain, so here is a light interface instead
-  class Timer
-    attr_accessor :time
+  class Alarm
+    def initialize time, opts = {}
+      self.time         = time
+      self.notification = opts[:command] || opts
+    end
 
-    def initialize arg
-      str = arg.to_s
+    attr_reader :time, :notification
 
-      @time = case str
+    def time= arg
+      @time = case arg
       when /:|am\z|pm\z/
-        parse str
-      when /^@/
-        parse (str =~ /:|am\z|pm\z/ ? str : str + ':00').sub(/^@/, '')
+        parse arg
+      when /\A@/
+        parse (arg =~ /:|am\z|pm\z/ ? arg : arg + ':00').sub(/\A@/, '')
       else
-        # Add one second so `remind 1m' does not return `Reminding in 59 seconds'
-        Time.now.localtime + seconds(str) + 1
+        # Add one second so `1m` does not return `59 seconds`
+        Time.now.localtime + seconds(arg) + 1
+      end
+    end
+
+    def notification= arg
+      @notification = case arg
+      when String then lambda { system arg }
+      when Hash   then CLI::Notification.new arg
+      else             arg
       end
     end
 
@@ -46,7 +57,7 @@ class Remind
       end.round
     end
 
-    def remaining fmt = nil
+    def remaining format = nil
       seconds = (time - Time.now).to_i
       seconds = 0 if seconds < 0
 
@@ -54,109 +65,110 @@ class Remind
       m = (seconds % 3600) / 60
       s = seconds % 60
 
-      case fmt
+      case format
       when :compact
         '%02d:%02d:%02d' % [h,m,s]
       when :verbose
         ary = []
-        ary << "#{h} hour#{'s' if h > 1}" if h > 0
+        ary << "#{h} hour#{'s' if h > 1}"   if h > 0
         ary << "#{m} minute#{'s' if m > 1}" if m > 0
         ary << "#{s} second#{'s' if s > 1}" if s > 0
 
         case ary.size
         when 0 then 'zero seconds'
         when 1 then ary.first
-        when 2 then "#{ary.first} and #{ary.last}"
-        when 3 then "#{ary.first}, #{ary[1]}, and #{ary.last}"
+        when 2 then '%s and %s' % ary
+        when 3 then '%s, %s, and %s' % ary
         end
       else
         [h,m,s]
       end
     end
 
-    def over?
+    def expired?
       Time.now > time
     end
 
-    def inspect
-      time
+    def activate
+      # Report time remaining on SIGUSR1
+      trap :USR1 do
+        s = remaining.reject(&:zero?).last == 1 ? 's' : ''
+        CLI::Notification.new(:message => '%s remain%s' % [remaining(:verbose), s]).call
+      end
+
+      process_name = $0.clone
+      label = "#{File.basename __FILE__} %s"
+
+      loop do
+        break if expired?
+        $0 = label % remaining(:compact)
+        sleep 1
+      end
+
+      notification.call
+    ensure
+      trap :USR1, 'default'
+      $0 = process_name
     end
-    alias :to_s :inspect
   end
 
-  def initialize args = []
-    @args = args
-    @opts = { :default_message => 'Attention!' }
+  attr_reader :alarm
+
+  def initialize time = (Time.now + 300).to_s, opts = {}
+    @alarm = Alarm.new time, {
+      :title  => 'Reminder',
+      :sticky => true
+    }.merge(opts)
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
       program = File.basename __FILE__
-      opt.summary_width = 20
+
       opt.banner = %Q(\
         Usage: #{program} [options] time [msg]
 
-        Requires the `report' program.
+        Time can be specified as the time FROM now:
 
-        Time can either be specified as the time FROM now or a clock time.
-
-        Examples:
             #{program} 1h30m5s  Ninety minutes and five seconds have passed.
             #{program} 1h5s     One hour and five seconds have passed.
             #{program} 5        'Five minutes have passed; minutes are the default unit'
 
-            # A leading @ sign, a colon, or am|pm triggers clock time parsing
+        A leading @ sign, a colon, or a trailing am|pm triggers clock time parsing:
+
             #{program} @10      It is now ten in the morning.
             #{program} 10:00    It is now ten in the morning.
-            #{program} 22:00    It is now ten in the evening.
             #{program} 10pm     It is now ten in the evening.
+            #{program} 22:00    It is now ten in the evening.
 
         Options:\
       ).gsub /^ {8}/, ''
 
-      opt.on '-e', '--eval COMMAND', 'Command to run in place of a notification' do |arg|
-        @opts[:command] = arg
+      opt.on '-c', '--command STRING', 'Command to run in place of a notification' do |arg|
+        alarm.notification = arg
       end
     end
   end
 
-  def remind fmt, msg
-    t = Remind::Timer.new fmt
+  def run arguments = []
+    args = parser.parse arguments
 
-    pid = fork do
-      trap :USR1 do
-        s = t.remaining.find { |n| n > 1 } ? '' : 's'
-        Report.report t.remaining(:verbose) + " remain#{s}", :title => 'Reminder'
-      end
-
-      while sleep(1) do
-        $0 = '%s %s' % [File.basename(__FILE__), t.remaining(:compact)]
-        break if t.over?
-      end
-
-      if @opts[:command]
-        system @opts[:command]
-      else
-        Report.report msg, :sticky => true, :title => 'Reminder'
+    case args.size
+    when 0
+      abort parser.help
+    when 1
+      alarm.time = args.first
+    else
+      alarm.time = args.first
+      if alarm.notification.is_a? CLI::Notification
+        alarm.notification.message = args.drop(1).join ' '
       end
     end
 
-    puts "[#{pid}] Reminding in #{t.remaining :verbose}" if $stdout.tty?
+    pid = fork { alarm.activate }
+    puts "[#{pid}] Reminding in #{alarm.remaining :verbose}"
     Process.detach pid
-    pid
-  end
-
-  def run
-    args = options.parse @args
-
-    time, msg = case args.size
-    when 0 then abort options.to_s
-    when 1 then [args.first, @opts[:default_message]]
-    else        [args.first, args.drop(1).join(' ')]
-    end
-
-    remind time, msg
   end
 end
 
-Remind.new(ARGV).run if $0 == __FILE__
+Remind.new.run ARGV if $0 == __FILE__
