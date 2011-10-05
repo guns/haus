@@ -1,48 +1,52 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
 
 require 'optparse'
+require 'ostruct'
 
 class RubyExceptionHierarchy
-  def initialize args
-    @args, @opts, @indent = args, {}, 0
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.indent ||= 2
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
-      opt.banner = %Q{\
-        Print a tree representing Ruby's exception hierarchy.
-
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = %Q(\
         http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
 
         Usage: #{File.basename __FILE__} [options]
 
         Options:
-      }.gsub(/^ +/, '')
+      ).gsub /^ +/, ''
 
-      opt.on '-a', '--all', 'Show all, including SystemCallError Errnos' do
-        @opts[:show_all] = true
+      opt.on '-a', '--all', 'Show SystemCallError Errnos' do
+        options.all = true
+      end
+
+      opt.on '-i', '--indent N', Integer, 'Indent step size' do |arg|
+        options.indent = arg
       end
     end
   end
 
-  def error_tree
-    exceptions = []
-    tree = {}
+  def to_hash
+    exceptions, tree = [], {}
 
     ObjectSpace.each_object Class do |klass|
       next unless klass.ancestors.include? Exception
       next if exceptions.include? klass
-      next if klass.superclass == SystemCallError and not @opts[:show_all]
+      next if not options.all and klass.superclass == SystemCallError
 
-      exceptions << klass
+      exceptions.push klass
 
-      klass.ancestors.delete_if do |e|
-        [Object, Kernel].include? e
-      end.reverse.inject tree do |k,v|
+      klass.ancestors.reject do |k|
+        [BasicObject, Object, Kernel].include? k
+      end.reverse.inject tree do |k, v|
         k[v] ||= {}
       end
     end
@@ -50,18 +54,26 @@ class RubyExceptionHierarchy
     tree
   end
 
-  def print_tree tree
-    tree.keys.sort_by(&:name).each do |k|
-      space = (' ' * @indent); space ||= ''
-      puts space + k.to_s
-      @indent += 2; print_tree tree[k]; @indent -= 2
-    end
+  def to_s
+    fold to_hash
   end
 
-  def run
-    options.parse @args
-    print_tree error_tree
+  def fold tree, buf = '', indent = 0
+    tree.keys.sort_by(&:name).each do |k|
+      buf << "%s%s\n" % [' ' * indent, k]
+      indent += options.indent
+      fold tree[k], buf, indent # Recurse!
+      indent -= options.indent
+    end
+
+    buf
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    puts to_s
   end
 end
 
-RubyExceptionHierarchy.new(ARGV).run if __FILE__ == $0
+RubyExceptionHierarchy.new.run ARGV if $0 == __FILE__
