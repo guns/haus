@@ -39,6 +39,10 @@ task :configure do
       gcc = %x(command -v gcc-4.2).chomp
       ENV['CC'] = gcc if File.executable? gcc
     end
+
+    # OS X doesn't implement setproctitle(3), but we can at least change ARGV.
+    # Only affects Ruby 1.9; 1.8 does this by default
+    ENV['CFLAGS'] = '-DSPT_TYPE=SPT_REUSEARGV'
   end
 
   sh *cmd
