@@ -394,7 +394,7 @@ grab 'W-F9', 'rxvt-unicode --client -e vim'
 grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch'
 
 # Browsers
-open 'F10',   'chrome', [:klass, :=~, /chromium/i]
+open 'F10',   'chrome', [:klass, :=~, /chromium|namoroka|firefox/i]
 grab 'W-F10', 'chrome --incognito'
 
 # File Managers
