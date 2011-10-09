@@ -1348,6 +1348,9 @@ HAVE xecho && {
     GC_VARS XCMD
 }
 
+# Clipboard
+ALIAS xselb='xsel -b'
+
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
 
