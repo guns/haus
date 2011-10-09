@@ -93,7 +93,10 @@ class Remind
       # Report time remaining on SIGUSR1
       trap :USR1 do
         s = remaining.reject(&:zero?).last == 1 ? 's' : ''
-        CLI::Notification.new(:message => '%s remain%s' % [remaining(:verbose), s]).call
+        CLI::Notification.new(
+          :message => '%s remain%s' % [remaining(:verbose), s],
+          :title   => (notification.message if notification.is_a? CLI::Notification)
+        ).call
       end
 
       process_name = $0.clone
@@ -141,28 +144,40 @@ class Remind
             #{program} 10pm     It is now ten in the evening.
             #{program} 22:00    It is now ten in the evening.
 
+        Specifying time as `-` reads the message from STDIN:
+
+            #{program} - < dramatic-reading.txt
+
         Options:\
       ).gsub /^ {8}/, ''
 
       opt.on '-c', '--command STRING', 'Command to run in place of a notification' do |arg|
         alarm.notification = arg
       end
+
+      opt.on '-q', '--query', 'Send SIGUSR1 to all instances of remind' do
+        query
+        exit
+      end
+    end
+  end
+
+  def query
+    %x(ps axo pid,comm).lines.each do |line|
+      pid, comm = line.strip.split /\s+/, 2
+      next unless comm =~ /\Aremind \d{2}:\d{2}:\d{2}\z/
+      Process.kill :USR1, pid.to_i
     end
   end
 
   def run arguments = []
     args = parser.parse arguments
+    abort parser.help if args.empty?
 
-    case args.size
-    when 0
-      abort parser.help
-    when 1
-      alarm.time = args.first
-    else
-      alarm.time = args.first
-      if alarm.notification.is_a? CLI::Notification
-        alarm.notification.message = args.drop(1).join ' '
-      end
+    alarm.time = args.first
+
+    if args.size > 1 and alarm.notification.is_a? CLI::Notification
+      alarm.notification.message = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
     end
 
     pid = fork { alarm.activate }
