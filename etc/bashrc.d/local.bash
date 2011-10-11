@@ -205,9 +205,9 @@ nohist() {
     __ps1toggle__ '/\\w/\\w [nohist]'
 }
 
-# report remind
-ALIAS r='report' \
-      rs='report --file ~/.sounds/Message_Received.m4a'
+# notify
+ALIAS n='notify' \
+      na='notify --audio ~/.sounds/Message_Received.m4a'
 
 # run bgrun
 HAVE run   && tcomp exec run
@@ -1038,7 +1038,7 @@ type ruby &>/dev/null && {
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
 
     # Rails
-    ALIAS ra='rails'
+    ALIAS r='rails'
 
     # Local api server @ `$cdapi`
     HAVE cdapi && {
