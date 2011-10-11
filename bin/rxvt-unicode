@@ -5,9 +5,9 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
 require 'ostruct'
 require 'shellwords'
+require 'cli/superparser'
 
 class RxvtUnicode # {{{1
   class Geometry # {{{2
@@ -79,18 +79,18 @@ class RxvtUnicode # {{{1
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 24 do |opt|
+    @parser ||= CLI::SuperParser.new nil, 24 do |opt|
+      opt.terminators << '-e'
+
       opt.banner = %Q(\
         Launch you an rxvt-unicode.
 
-        Usage: #{File.basename __FILE__} [options] -- [urxvt-args]
+        Usage: #{File.basename __FILE__} [options] [-e command [args]]
 
-        Options:
+        Options are a superset of urxvt(1); any options that are valid for
+        urxvt(1) are valid for this program, with the addition of:
+
       ).gsub /^ +/, ''
-
-      opt.on '-e', '--eval COMMAND', 'Run specified command' do |arg|
-        options.eval = arg
-      end
 
       opt.on '-g', '--geometry HxW+X+Y', 'Set window geometry' do |arg|
         options.geometry = arg
@@ -104,6 +104,11 @@ class RxvtUnicode # {{{1
         opt.on "--#{pos}" do
           options.position = pos
         end
+      end
+
+      opt.on '-h', '--help' do
+        puts opt
+        exit
       end
     end
   end
@@ -124,6 +129,7 @@ class RxvtUnicode # {{{1
   def env
     {
       'PATH'        => %x(bash ~/.bashpath).chomp,
+      'RUBYLIB'     => %w[~/.haus/lib /opt/haus/lib].find { |d| File.directory? d },
       'LC_CTYPE'    => 'en_US.UTF-8',
       'RXVT_SOCKET' => File.expand_path('~/.rxvt-unicode.sock')
     }
@@ -137,7 +143,6 @@ class RxvtUnicode # {{{1
 
     opts  = %W[-geometry #{geometry} --perl-lib #{File.expand_path '~/.urxvt'}]
     opts += args
-    opts += ['-e', *options.eval.shellsplit] if options.eval
 
     if options.client
       # From urxvtc(1) man page
@@ -154,7 +159,7 @@ class RxvtUnicode # {{{1
   end
 
   def run arguments = []
-    args = parser.parse arguments
+    args = parser.superparse arguments
     launch *args
   end
 end

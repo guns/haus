@@ -12,6 +12,13 @@ module CLI
   # as a superset of another options set, which can be then parsed or passed
   # separately.
   class SuperParser < OptionParser
+    attr_accessor :terminators
+
+    def initialize *args
+      @terminators ||= []
+      super
+    end
+
     def superparse arguments
       args, opts = arguments.clone, []
 
@@ -20,21 +27,21 @@ module CLI
         if args.first == '--'
           args.shift
           break
-        elsif args.empty?
+        elsif terminators.include? args.first or args.empty?
           break
         end
 
         # Parse and search for an exact match
         switch, type, head, tail = case args.first
-        when /\A--([^=]+)(=.*)?/ then [search(:long,  $1), :long,  $1, $2]
-        when /\A-([^-])(.*)?/    then [search(:short, $1), :short, $1, $2]
+        when /\A--([^=]+)(.*)?/ then [search(:long,  $1), :long,  $1, $2]
+        when /\A-([^-])(.*)?/   then [search(:short, $1), :short, $1, $2]
         else nil
         end
 
         case switch
         when Switch::NoArgument
           # Handle chained short options: `-abc` is `-a` + `-bc`
-          if type == :short and tail
+          if type == :short and not tail.empty?
             # Truncate args.first by head, not by shifting!
             args[0] = "-#{tail}"
             parse %W[-#{head}]
@@ -44,7 +51,7 @@ module CLI
         when Switch
           # Option may or may not require an argument, but don't pass it the
           # next argument if it looks like an option
-          if tail.nil? and args[1] !~ /\A-/
+          if tail.empty? and args[1] !~ /\A-\S/
             parse args.shift(2)
           else
             parse [args.shift]
@@ -55,7 +62,7 @@ module CLI
         end
       end
 
-      # Add arguments supplied after `--`
+      # Soak up rest of arguments list
       opts.concat args
     end
   end
