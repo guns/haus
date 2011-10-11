@@ -14,7 +14,7 @@ RAW() {
     # tmux 1.5 will support raw terminal passthrough
     if [[ $TMUX ]]; then
         echo -ne "\033Ptmux;\033$*\033\\"
-    elif [[ $TERM == screen* ]]; then
+    elif [[ "$TERM" == screen* ]]; then
         echo -ne "\033P$*\033\\"
     else
         echo -ne "$*"
@@ -22,15 +22,15 @@ RAW() {
 }
 
 MAX_HORIZONTAL() {
-    local xwidth=$(xwininfo -id $WINDOWID | \awk -F': ' '/Width: /{ print $2 }')
-    local screen=$(xrandr 2>&1            | \awk        '/current/{ print $8 }')
+    local xwidth=$(xwininfo -id "$WINDOWID" | \awk -F': ' '/Width: /{ print $2 }')
+    local screen=$(xrandr 2>&1              | \awk        '/current/{ print $8 }')
     echo $((screen - xwidth))
 }
 
 TITLE()  {
     if [[ $TMUX ]]; then
         tmux rename-window "$*"
-    elif [[ $TERM == screen* ]]; then
+    elif [[ "$TERM" == screen* ]]; then
         screen -X title "$*"
     else
         RAW "\033]2;$*\007"
