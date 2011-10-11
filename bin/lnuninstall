@@ -1,5 +1,3 @@
-#!/usr/bin/env ruby
+#!/bin/sh
 
-$0 = 'lninstall' # for help output
-load File.expand_path('../lninstall', __FILE__)
-Lninstall.new(['--uninstall'] + ARGV).run
+exec lninstall --uninstall "$@"

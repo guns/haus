@@ -1,23 +1,24 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'digest/sha1'
 
 class Npass
-  attr_accessor :length
-  attr_writer :version, :buffer
+  attr_reader :options
 
-  def initialize args = []
-    @args = args
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.version ||= 1
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
         Usage: #{File.basename __FILE__} [options]
 
@@ -25,35 +26,32 @@ class Npass
       ).gsub /^ +/, ''
 
       opt.on '-l', '--length N', Integer do |arg|
-        @length = arg
+        options.length = arg
       end
 
       opt.on '-v', '--version N', Integer do |arg|
-        @version = arg
+        options.version = arg
       end
 
       opt.on '-s', '--secret STRING' do |arg|
-        @secret = arg
+        options.secret = arg
       end
 
       opt.on '-b', '--buffer STRING' do |arg|
-        @buffer = arg
+        options.buffer = arg
       end
     end
   end
 
-  def version
-    @version || 1
-  end
-
   def secret
-    @secret || if $stdin.tty?
+    options.secret || if $stdin.tty?
       begin
         $stderr.print 'Secret:'
+        state = %x(stty -g).chomp
         system 'stty -echo'
         $stdin.readline.chomp rescue ''
       ensure
-        system 'stty echo'
+        system 'stty', state
         warn '####'
       end
     else
@@ -62,18 +60,16 @@ class Npass
   end
 
   def buffer
-    @buffer || ($stdin.gets nil if $stdin.tty?) || ''
+    options.buffer || ($stdin.gets nil if $stdin.tty?) || ''
   end
 
-  def version_valid? ver
-    (0..1).include? ver
+  def version_0
+    [secret, buffer].map { |s| Digest::SHA1.hexdigest s }.join
   end
 
-  def version_0 sec, buf
-    [sec, buf].map { |s| Digest::SHA1.hexdigest s }.join
-  end
+  def version_1
+    sec, buf = secret, buffer
 
-  def version_1 sec, buf
     # Create salt by least occurrence and last appearance
     salt = (sec + buf).split('').inject({}) do |h, ch|
       next h if ch =~ /\s/
@@ -88,28 +84,25 @@ class Npass
     end.join
   end
 
-  def call opts = {}
-    ver = opts[:version] || version
-    raise ArgumentError, "Invalid version: #{ver}" unless version_valid? ver
+  def call
+    name = 'version_%d' % options.version
+    raise ArgumentError, 'Invalid version' unless respond_to? name
 
-    sec = opts[:secret] || secret
-    buf = opts[:buffer] || buffer
+    pass = send name
 
-    pw = send "version_#{ver}", sec, buf
-
-    if len = opts[:length] || length
-      pw *= 2 until pw.length > len
-      pw[/.{#{len}}/]
+    if options.length
+      pass *= 2 until pass.length > options.length
+      pass[/.{#{options.length}}/]
     else
-      pw
+      pass
     end
   end
 
-  def run
-    args = options.parse @args
+  def run arguments = []
+    args = parser.parse arguments
     print call
     puts if $stdout.tty?
   end
 end
 
-Npass.new(ARGV).run if $0 == __FILE__
+$0 = File.basename(__FILE__) and Npass.new.run ARGV if $0 == __FILE__

@@ -1,84 +1,69 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2010 Sung Pae <sung@metablu.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-load File.expand_path('../../lib/haus/logger.rb', __FILE__)
-require 'fileutils'
 require 'optparse'
+require 'ostruct'
 require 'find'
+require 'haus/logger'
+require 'haus/ls_colors'
 
 class Fixperm
-  include FileUtils
   include Haus::Loggable
 
-  def initialize args = []
-    @args, @opts = args, {}
+  attr_reader :options
+
+  def initialize opts = {}
+    @options        = OpenStruct.new opts
+    options.umask ||= File.umask
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
-      opt.banner = %Q{\
-        Changes permissions of directories to 0755 and files to 0644. All other
-        file types are skipped. If the recursive option is specified and the
-        argument is a directory, it recurses and normalizes all children
-        as well.
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = %Q(\
+        Change mode of files to match the current umask (typically 0022).
 
         *Be careful*
 
         Usage: #{File.basename __FILE__} [options] path ...
 
         Options:
-      }.gsub(/^ +/,'')
+      ).gsub /^ +/,''
 
-      opt.on '-r', '--recursive', 'Normalize all children files' do
-        @opts[:recursive] = true
+      opt.on '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
+        options.umask = arg.to_i 8
       end
 
-      opt.on '-f', '--force' do
-        @opts[:force] = true
+      opt.on '-r', '--recurse', 'Recurse into directories' do
+        options.recurse = true
       end
-    end
-  end
 
-  def normalize file, expect = '', *styles
-    mode = File.stat(file).mode.to_s(8)[/.{4}$/]
-    return true if mode == expect
-    log "chmod #{mode} -> #{expect} on ", [file, *styles]
-    chmod expect.to_i(8), file
-  end
-
-  def process files
-    files.each do |item|
-      Find.find item do |f|
-        case ftype = File.ftype(f)
-        when 'directory'  then normalize f, '0755', :blue, :bold
-        when 'file'       then normalize f, '0644'
-        else
-          log "Skipping #{ftype} ", [f, :magenta, :bold]
-        end
-
-        # Move to next file if not traversing directories
-        break unless @opts[:recursive]
+      opt.on '-n', '--noop', 'Only show what would happen' do
+        options.noop = true
       end
     end
   end
 
-  def user_is_warned list
-    return true if !@opts[:recursive] or @opts[:force]
-    return true if list.size == 1 and File.ftype(list.first) != 'directory'
-    $stderr.print 'Are you sure you want to recursively normalize files? [y/N] '
-    $stdin.readline.chomp =~ /^y$/i
+  def normalize files
+    (options.recurse ? files.map { |f| Find.find(f).to_a }.flatten : files).each do |f|
+      stat = File.stat f
+      mode = stat.ftype == 'directory' ? (0777 & ~options.umask) : (0666 & ~options.umask)
+
+      next if (stat.mode & 0777) == mode
+
+      log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [f, Haus::LSColors[f]]
+      File.lchmod mode, f unless options.noop
+    end
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.empty?
-    process args if user_is_warned args
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    normalize args
   end
 end
 
-Fixperm.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Fixperm.new.run ARGV if __FILE__ == $0

@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # Copyright (c) 2010 Sung Pae <sung@metablu.com>
 # Distributed under the MIT license.
@@ -7,42 +7,40 @@
 
 require 'optparse'
 require 'fileutils'
-load File.expand_path('../../lib/haus/logger.rb', __FILE__)
+require 'etc'
+require 'haus/logger'
 
-class BpfToggle
-  include FileUtils::Verbose
-  include Haus::Loggable
+class Bpftoggle
+  class << self
+    include Haus::Loggable
+    include FileUtils::Verbose
 
-  def initialize args = []
-    @args = args
-  end
+    def toggle
+      raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
 
-  def options
-    OptionParser.new "Toggle staff read privileges on OS X's /dev/bpf*"
-  end
+      fs = Dir['/dev/bpf*']
 
-  def bpf
-    @bpf ||= Dir['/dev/bpf*']
-  end
-
-  def toggle
-    raise 'OS X only!' unless RUBY_PLATFORM[/darwin/]
-
-    if File::Stat.new(bpf.first).gid.zero?
-      log ['### Adding staff read privileges', :yellow, :bold]
-      chown 0, 'staff', bpf
-      chmod 0640, bpf
-    else
-      log ['### Restoring original privileges', :green, :bold]
-      chown 0, 0, bpf
-      chmod 0600, bpf
+      if File.stat(fs.first).gid.zero?
+        log ['→ Adding staff read privileges', :yellow, :bold]
+        chown Etc.getpwuid(0).name, 'staff', fs
+        chmod 0640, fs
+      else
+        log ['← Restoring original privileges', :green, :bold]
+        chown Etc.getpwuid(0).name, Etc.getgrgid(0).name, fs
+        chmod 0600, fs
+      end
     end
   end
 
-  def run
-    options.parse @args
-    toggle
+  def parser
+    @parser ||= OptionParser.new "Toggle staff read privileges on OS X's /dev/bpf*"
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    self.class.toggle
   end
 end
 
-BpfToggle.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Bpftoggle.new.run ARGV if __FILE__ == $0

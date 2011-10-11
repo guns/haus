@@ -1,215 +1,117 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-load File.expand_path('../../lib/haus/logger.rb', __FILE__)
 require 'optparse'
+require 'ostruct'
+require 'cli/meter'
 
-class Mem
-  include Haus::Loggable
+class Mem # {{{1
+  class Graph # {{{2
+    attr_accessor :width, :mem, :swap
 
-  def initialize(args = [])
-    @args = args
-    @opts = {}
+    def initialize width = nil
+      @width = width
+    end
+
+    def to_s
+      len = ([mem.total, swap.total].max.to_s.length * 2) + 1
+      [
+        CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values,  mem.total,  :width => width).to_s,
+        CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
+      ].join "\n"
+    end
+  end # }}}2
+
+  class DarwinGraph < Graph # {{{2
+    def initialize *args
+      super
+
+      # Memory usage from vm_stat
+      stat = %x(vm_stat)
+      page = (stat[/page size of (\d+) bytes/, 1] || 4096).to_i
+      @mem = OpenStruct.new Hash[stat.scan(/^Pages (.*):\s+(\d+)\.$/).map do |key, val|
+        [key.gsub(/\W+/, '_'), ((val.to_f * page) / 2**20).round]
+      end]
+
+      # OS X 10.6+ has a `speculative` field
+      mem.speculative ||= 0
+      mem.total = mem.wired_down + mem.active + mem.inactive + mem.speculative + mem.free
+      mem.values = [
+        [mem.wired_down,  :green, :bold],
+        [mem.active,      :green],
+        [mem.inactive,    :yellow],
+        [mem.speculative, :magenta]
+      ]
+
+      # Swap usage from sysctl
+      @swap = OpenStruct.new Hash[%x(sysctl vm.swapusage).scan(/(total|used|free)\s*=\s*(\d+(?:\.\d+)?)/).map do |key, val|
+        [key, val.to_f.round]
+      end]
+
+      swap.values = [[swap.used, :red]]
+    end
+  end # }}}2
+
+  class LinuxGraph < Graph # {{{2
+    def initialize *args
+      super
+
+      # Parse free(1) since the output of /proc/meminfo seems to be volatile
+      free = %x(free -b).split "\n"
+      keys = free.first.split
+      scan = lambda { |r| Hash[keys.zip free.find { |l| l =~ r }.scan(/\d+/).map { |n| (n.to_f / (2**20)).round }] }
+
+      @mem = OpenStruct.new scan.call(/\AMem/i)
+      mem.active = mem.used - mem.buffers - mem.cached
+      mem.values = [
+        [mem.active,  :green, :bold],
+        [mem.buffers, :yellow],
+        [mem.cached,  :magenta]
+      ]
+      mem.total ||= 0
+
+      @swap        = OpenStruct.new scan.call(/\ASwap/i)
+      swap.values  = [[swap.used, :red]]
+      swap.total ||= 0
+    end
+  end # }}}2
+
+  attr_reader :options, :graph
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    @graph   = case RUBY_PLATFORM
+    when /darwin/i then DarwinGraph.new options.width
+    when /linux/i  then LinuxGraph.new options.width
+    else raise 'OS X and Linux only'
+    end
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 20
-      opt.banner = %Q{\
-        Show memory and swap usage. Works on OS X and Linux.
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Show RAM and swap usage. OS X and Linux.
+
+        Usage: #{File.basename __FILE__} [options]
 
         Options:
-      }.gsub(/^ +/,'')
+      ).gsub /^ +/, ''
 
-      opt.on('-w', '--width COLUMNS', Integer,
-             'Set output to given width') do |n|
-        @opts[:width] = n
-      end
-
-      opt.on('-W', '--total-width', 'Set output to terminal width') do
-        @opts[:width] = (ENV['COLUMNS'] || 80).to_i
-      end
-
-      opt.on_tail('-h', '--help') { puts opt.to_s; exit }
-    end
-  end
-
-  # these methods should return a hash with at least :total, :used, :free
-  # as well as :swap[:total], :swap[:used], :swap[:free]
-  module Strategy
-    class << self
-      # OS X - know it works for OS X 10.5+ at least
-      def darwin
-        mem = { :type => :darwin }
-
-        # vm_stat(1) is our primary source; slurp it into a hash
-        keypat = 'free|active|inactive|speculative|wired'
-        %x(vm_stat).scan(/^Pages.*?(#{keypat}).*?:\s+(\d+)\.$/) do |key, val|
-          # vm_stat returns pages, which should be equal to 4096 bytes
-          mem[key.to_sym] = ((val.to_i * 4096.to_f) / 2**20).round
-        end
-
-        # snow leopard reports free memory as `free' + `speculative'
-        mem[:free] += mem[:speculative].to_i
-        mem[:total] = mem[:free] + mem[:active] + mem[:inactive] + mem[:wired]
-        mem[:used]  = mem[:total] - mem[:free]
-
-        # get swap usage from sysctl
-        mem[:swap] = {}
-        %x(sysctl vm.swapusage).scan(/(total|used|free)\s=\s([\d.]+)/) do |k, v|
-          mem[:swap][k.to_sym] = v.to_f.round
-        end
-
-        mem
-      end
-
-      def linux
-        mem = { :type => :linux }
-
-        # we'll parse free(1) since /proc/meminfo has more variable output
-        free = %x(free -m).split("\n")
-        keys = free.shift.split.map { |e| e.to_sym }
-        ints = lambda { |str| str.scan(/\d+/).map { |d| d.to_i } }
-
-        # assemble mem hash
-        mem.merge! Hash[*(keys.zip(ints.call(free.shift)).flatten)]
-        mem[:active] = mem[:used] - mem[:buffers] - mem[:cached]
-        mem[:FREE]   = mem[:total] - mem[:active] # as opposed to the real :free
-        mem[:swap]   = Hash[*(keys[0..2].zip(ints.call(free.pop)).flatten)]
-
-        mem
+      opt.on '-w', '--width COLUMNS', Integer, 'Set output to given width' do |arg|
+        graph.width = arg
       end
     end
   end
 
-  # returns hash of memory statistics; values are in megabytes
-  def memstat
-    case RUBY_PLATFORM
-    when /darwin/i  then Strategy.darwin
-    when /linux/i   then Strategy.linux
-    else
-      raise "Sorry, this platform is not supported yet."
-    end
-  end
-
-  def memgraph
-    mem  = memstat
-    buf  = ''
-    mbuf = "Mem [%s] #{mem[:used]}/#{mem[:total]} MB"
-    sbuf = "Swp [%s] #{mem[:swap][:used]}/#{mem[:swap][:total]} MB"
-    cols = @opts[:width] || (ENV['COLUMNS'] || (%x(stty size).scan(/\d+/).last rescue nil) || 80).to_i
-    glen = natural(cols - [mbuf.length, sbuf.length].max + 2)
-
-    #
-    # OS specific procedures
-    #
-    case mem[:type]
-    when :darwin
-      # MEMORY
-      buf << graph(mbuf, glen, mem[:total], [
-        [mem[:wired], :green, :bold],
-        [mem[:active], :green],
-        [mem[:inactive], :yellow]
-      ])
-
-      # SWAP
-      buf << "\n"
-      buf << graph(sbuf, glen, mem[:swap][:total], [
-        [mem[:swap][:used], :red]
-      ])
-
-      # STATS table
-      buf << "\n\n"
-      buf << table(%w[total used free wired active inactive], 10, [
-        ['Mem:',  [mem[:total]],
-                  [mem[:used], :yellow],
-                  [mem[:free], :cyan],
-                  [mem[:wired], :green, :bold],
-                  [mem[:active], :green],
-                  [mem[:inactive], :yellow]],
-
-        ['Swap:', [mem[:swap][:total]],
-                  [mem[:swap][:used], :red],
-                  [mem[:swap][:free], :cyan]]
-      ])
-    when :linux
-      # MEMORY
-      buf << graph(mbuf, glen, mem[:total], [
-        [mem[:active], :green],
-        [mem[:buffers], :magenta],
-        [mem[:cached], :blue]
-      ])
-
-      # SWAP
-      buf << "\n"
-      buf << graph(sbuf, glen, mem[:swap][:total], [
-        [mem[:swap][:used], :red]
-      ])
-
-      # STATS table
-      buf << "\n\n"
-      buf << table(%w[total used free active buffers cached], 10, [
-        ['Mem:',   [mem[:total]],
-                   [mem[:used], :yellow],
-                   [mem[:free], :cyan],
-                   [mem[:active], :green],
-                   [mem[:buffers], :magenta],
-                   [mem[:cached], :blue]],
-
-        ['- b/c:', [mem[:total]],
-                   [mem[:active], :green, :bold],
-                   [mem[:FREE], :cyan, :bold]],
-
-        ['Swap:',  [mem[:swap][:total]],
-                   [mem[:swap][:used], :red],
-                   [mem[:swap][:free], :cyan]]
-      ])
-    end
-  end
-
-  def run
-    args = options.parse @args
-    abort options.to_s unless args.empty?
-    puts memgraph
-  end
-
-  private
-
-  def natural(n)
-    n < 0 ? 0 : n
-  end
-
-  def graph(fstr, glen, mtotal, ary)
-    scale = glen.to_f / mtotal
-    gbuf = ary.inject('') do |str, a|
-      str << fmt(['|' * (a.shift * scale), *a])
-    end
-    gbuf << ' ' * natural(glen - gbuf.gsub(/\e\[[\d;]*m/, '').length)
-    fstr % gbuf
-  end
-
-  # first value of rows should be the row header
-  def table(headers, width, rows)
-    left = rows.map { |row| row.first.length }.max
-    tbuf = ' ' * left
-    tbuf << headers.inject('') { |str, h| str << "%#{width}s" % h } << "\n"
-    rows.each do |row|
-      tbuf << "%-#{left}s" % row.shift
-      until row.empty?
-        cell = row.shift
-        tbuf << case cell.size
-        when 1 then "%#{width}s" % cell.shift.to_s
-        else fmt(["%#{width}s" % cell.shift, *cell])
-        end
-      end
-      tbuf << "\n"
-    end
-    tbuf.chomp
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    puts graph.to_s
   end
 end
 
-Mem.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Mem.new.run ARGV if $0 == __FILE__

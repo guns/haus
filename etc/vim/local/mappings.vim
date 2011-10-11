@@ -292,7 +292,7 @@ noremap <Leader>fs       :setlocal filetype=sh<CR>
 noremap <Leader>fv       :setlocal filetype=vim<CR>
 noremap <Leader>fy       :setlocal filetype=yaml<CR>
 " Plugin: Shebang
-noremap <Leader>fx       :call SetExecutable()<CR>
+noremap <Leader>fx       :silent! call SetExecutable()<CR>:redraw!<CR>
 
 " Save / Exit
 " -- Q

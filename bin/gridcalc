@@ -1,17 +1,25 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 require 'rational'
 
 class Gridcalc
-  def initialize args = []
-    @args, @opts = args, { :ratio => Rational(2,1) }
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.ratio ||= 1
+    options.width ||= 0
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 20
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = %Q{\
         Calculate all possible horizontal grid measurements for a given
         pixel width.
@@ -21,69 +29,79 @@ class Gridcalc
         Options:
       }.gsub /^ +/,''
 
-      opt.on '-n', '--num-cols N',
+      opt.on '-c', '--columns N',
              'Show solutions that have N columns, where N is an',
-             "Integer or Range: `-n 24' or `-n 12..24'" do |arg|
-        @opts[:cols] = case arg
-        when /^\d+$/        then arg.to_i
-        when /^\d+\.\.\d+$/ then Range.new *arg.split('..').map(&:to_i)
-        else raise ArgumentError, 'must be an Integer or Range'
-        end
+             'Integer or Range: `-n 24` or `-n 12..24`' do |arg|
+        options.columns = arg
       end
 
       opt.on '-r', '--ratio N',
              'Show solutions that have a minumum column:gutter width ratio',
-             "expressed as a ratio `-r 3:1' or a number `-r 3'",
-             "Default: #{@opts[:ratio].to_s.tr '/',':'}" do |arg|
-        @opts[:ratio] = case arg
-        when /^\d+$/     then Rational arg
-        when /^\d+:\d+$/ then Rational *arg.split(':')
-        else raise ArgumentError, 'must be in the form of /\d+:\d+/'
-        end
+             'expressed as a ratio `-r 3:2` or a number `-r 1.5`',
+             "Default: #{options.ratio.to_s.tr '/',':'}" do |arg|
+        options.ratio = arg
       end
     end
   end
 
-  # width = n*colw + (n-1)*gutw
-  # width + gutw = n*(colw + gutw)
-  def calculate width
-    r, solutions       = @opts[:ratio], []
-    min_colw, min_gutw = r.numerator, r.denominator
-    max_num_cols       = (width + min_gutw)/(min_colw + min_gutw)
-
-    num_cols = case @opts[:cols]
-    when Range    then @opts[:cols]
-    when Integer  then [@opts[:cols]]
-    when NilClass then 2..max_num_cols
+  def ratio
+    case r = options.ratio
+    when Numeric           then Rational r.to_s # Floats are unreliable!
+    when /^\d+(?:\.\d+)?$/ then Rational r
+    when /^\d+:\d+$/       then Rational *r.split(':')
+    else raise ArgumentError, 'must be in the form of /\d+:\d+/'
     end
-
-    # Iterate and find solutions for n columns
-    num_cols.each do |n|
-      max_colw = width / n
-      max_colw.downto min_colw do |colw|
-        gutters = width - (n*colw)
-        next unless (gutters % (n-1)).zero? # Only whole pixels
-        gutw = gutters/(n-1)
-        break if not gutw.zero? and (colw/gutw) < r # this is below our threshold
-        solutions << [n, colw, gutw]
-      end
-    end
-    solutions
   end
 
-  def verbalize solutions
-    solutions.each do |n, colw, gutw|
-      puts "#{n} #{colw}px columns#{" with #{gutw}px gutters" if !gutw.zero?}"
+  def columns
+    case cols = options.columns
+    when NilClass         then nil
+    when Integer          then [cols]
+    when /^\d+$/          then [cols.to_i]
+    when /^\d+\.\.\d+$/   then Range.new *cols.split('..').map(&:to_i)
+    when /^\d+\.\.\.\d+$/ then Range.new *cols.split('...').map(&:to_i), true
+    else raise ArgumentError, 'must be an Integer, Range, or nil'
     end
+  end
+
+  def solutions
+    table   = []
+    mincw   = ratio.numerator
+    mingw   = ratio.denominator
+    maxcols = (options.width + mingw) / (mincw + mingw)
+
+    (columns || 2..maxcols).each do |n|
+      (options.width / n).downto mincw do |cw|
+        gutters = options.width - (n * cw)
+        next unless (gutters % (n - 1)).zero? # Only whole pixels
+
+        gw = gutters / (n - 1)
+        break if not gw.zero? and (cw / gw) < ratio # Too small, throw it back
+
+        table << [n, cw, gw]
+      end
+    end
+
+    table
+  end
+
+  def to_s
+    ss = solutions.map do |n, cw, gw|
+      buf  = '%d %dpx columns' % [n, cw]
+      buf << ' with %dpx gutters' % gw unless gw.zero?
+      buf
+    end.join "\n"
+
     size = solutions.size
-    puts "--\n#{size} solution#{'s' if size != 1} found"
+    ss << "\n--\n%d solution%s found" % [size, (size == 1 ? '' : 's')]
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.size != 1
-    verbalize calculate(args.first.to_i)
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size != 1
+    options.width = args.first.to_i
+    puts to_s
   end
 end
 
-Gridcalc.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Gridcalc.new.run ARGV if $0 == __FILE__

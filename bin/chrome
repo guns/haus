@@ -1,144 +1,69 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-load File.expand_path('../report', __FILE__)
 require 'optparse'
-require 'fileutils'
+require 'ostruct'
 require 'shellwords'
-require 'set'
-require 'net/http'
+require 'fileutils'
+require 'tempfile'
 
 class Chrome
-  include FileUtils::Verbose
+  class DarwinUpdate
+    include FileUtils::Verbose
 
-  def initialize args = []
-    @args = args
-    @signal = '-TERM'
-    @chromeargs = []
-  end
+    attr_accessor :chrome, :url
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 16
+    def initialize chrome, url
+      @chrome, @url = chrome, url
+    end
 
-      opt.banner = %Q{\
-        Launch Google Chrome / Chromium. Behavior varies by platform.
+    def hmount dmg
+      puts "hdiutil mount #{dmg}"
+      %x(hdiutil mount #{dmg.shellescape}).chomp[%r{(/Volumes/.*)}, 1]
+    end
 
-        Usage: #{opt.program_name} [options] -- [url-or-argument ...]
+    def version dir
+      File.basename Dir["#{dir}/Contents/Versions/*"].find { |d| Dir.exists? d }
+    end
 
-        Options:
-      }.gsub(/^ +/, '')
+    def showdiff old, new
+      [old, new].each { |d| puts "#{version d}: #{d}" }
+      base = %x(#{['diff', '-rq', old, new].shelljoin}).lines.reject { |l| l =~ %r{\AOnly.*Contents/Versions:} }
+      vers = %x(#{['diff', '-rq', *[old, new].map { |d| "#{d}/Contents/Versions/#{version d}" }].shelljoin}).lines.to_a
+      puts (base + vers).select { |l| l =~ /\AOnly/ }.join
+    end
 
-      opt.on '-n', '--no-sandbox', 'Disable the renderer sandbox' do
-        @no_sandbox = true
-      end
+    def confirm? msg
+      return true  if chrome.options.force
+      return false unless system '/bin/sh -c "command -v stty" &>/dev/null && stty -a &>/dev/null'
 
-      opt.on '-i', '--incognito', 'Launch in incognito mode' do
-        @incognito = true
-      end
+      system 'notify', 'Attention!'
+      print msg + ' [Y/n] '
 
-      opt.on '-r', '--relaunch', 'Relaunch all instances of chrome' do
-        @action = :relaunch
-      end
-
-      opt.on '-u', '--update', 'Update chrome to latest dev release' do
-        @action = :update
-      end
-
-      opt.on '-f', '--force', 'Force action where there would have been a prompt' do
-        @force = true
-      end
-
-      opt.on '-9', '--kill', 'When terminating application, send sigkill' do
-        @signal = '-KILL'
+      begin
+        state = %x(stty -g).chomp
+        system 'stty', 'raw'
+        char = $stdin.getc rescue nil
+        char =~ /y|\r|\n/
+      ensure
+        system 'stty', state
+        puts char
       end
     end
-  end
 
-  %w[killall diff].each do |cmd|
-    class_eval <<-EVAL
-      def #{cmd}
-        @#{cmd} ||= %x(which #{cmd}).chomp
-        raise %q(Command #{cmd.inspect} not found!) unless File.executable? @#{cmd}
-        @#{cmd}
-      end
-    EVAL
-  end
+    def install src, dst
+      return unless confirm? 'Would you like to install this update?'
 
-  def chrome_is_running
-    %x(ps axo ucomm).split("\n").map(&:strip).include?(File.basename chrome)
-  end
-
-  def kill_chrome
-    return unless chrome_is_running
-
-    cmd = [killall, @signal, File.basename(chrome)]
-    $stderr.print cmd.join(' ')
-    system *cmd
-    (sleep 1 and $stderr.print '.') while chrome_is_running
-    $stderr.puts
-  end
-
-  def chrome
-    @chrome ||= case RUBY_PLATFORM
-    when /darwin/ then '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-    when /linux/  then %x(/bin/sh -c 'command -v chromium').chomp
-    end
-  end
-
-  # http://src.chromium.org/svn/trunk/src/chrome/common/chrome_switches.cc
-  def chromeopts
-    opts = [
-      '--activate-on-launch',            # Application focus
-      '--enable-extension-timeline-api', # For Speed Tracer
-      '--disable-crash-reporter'         # Don't send crash reports
-    ]
-    opts << '--no-sandbox' if @no_sandbox
-    opts << '--incognito' if @incognito
-    opts
-  end
-
-  def version dir
-    File.basename Dir["#{dir}/Contents/Versions/*"].select { |f| Dir.exists? f }.join
-  end
-
-  def chromediff old, new
-    [old, new].each { |d| warn "# #{version d}: #{d}" }
-
-    base = %x(#{[diff, '-qr', old, new].shelljoin}).split("\n")
-    vers = %x(#{[diff, '-qr', "#{old}/Contents/Versions/#{version old}/",
-                              "#{new}/Contents/Versions/#{version new}/"].shelljoin}).split("\n")
-
-    warn (base.reject { |l| l =~ %r(\AOnly.*Contents/Versions:.*) } + vers).select { |l| l =~ %r(\AOnly) }.join("\n")
-  end
-
-  def user_wants_to msg
-    return @force if @force
-    return false if not $stdin.tty?
-
-    begin
-      Report.report 'Attention!'
-      $stderr.print "Would you like to #{msg} [y/N] "
-      system 'stty raw -echo'
-      puts (c = $stdin.getc)
-      c =~ /y/i
-    ensure
-      system 'stty -raw echo'
-      $stderr.puts
-    end
-  end
-
-  def install src, dst
-    if user_wants_to 'install this update?'
-      kill_chrome
+      chrome.terminate
 
       if File.exists? dst
-        # swap-files
-        tmp = ".#{File.basename __FILE__}-tmp-#{(1..10).map { rand 10 }.join}"
+        # Swap files
+        tmp = Tempfile.new('GoogleChrome').path
+        rm_f tmp
         mv dst, tmp
         mv src, dst
         mv tmp, src
@@ -146,91 +71,153 @@ class Chrome
         mv src, dst
       end
 
-      # relink flash-plugin
-      flash   = Dir[dst + '/**/Flash Player Plugin for Chrome.plugin'].first
-      plugins = File.expand_path '~/Library/Internet Plug-Ins/Flash Player.plugin'
-      ln_sf flash, plugins
+      # Relink Flash plugin
+      flash = Dir[File.join dst, '**/Flash Player Plugin for Chrome.plugin'].first
+      local = File.expand_path '~/Library/Internet Plug-Ins/Flash Player.plugin'
+      rm_rf local
+      ln_sf flash, local
+    end
 
-      launch
+    def run
+      dmg = '/tmp/GoogleChrome.dmg'
+      chrome.sh 'curl', '-#Lo', dmg, url unless File.exists? dmg
+      new = File.join hmount(dmg), 'Google Chrome.app'
+      old = '/Applications/Google Chrome.app'
+      tmp = '/tmp/Google Chrome.app'
+
+      Dir.chdir '/tmp' do
+        rm_rf    tmp
+        cp_r     new, tmp, :preserve => true
+        rm_rf    Dir["#{tmp}/**/KeystoneRegistration.framework"]
+        showdiff old, tmp if Dir.exists? old
+        install  *[tmp, old].map { |d| File.join d, 'Contents' } # /Applications is root-owned
+        system   'hdiutil', 'detach', File.dirname(new)
+        rm_f     dmg
+      end
     end
   end
 
-  def fetch_update file
-    url = 'http://dl.google.com/chrome/mac/dev/GoogleChrome.dmg'
+  attr_reader :options
 
-    $stderr.print 'Fetching ' + url
-    waiter = Thread.new { loop { sleep 1 and print '.' } }
-
-    File.open(file, 'w') { |f| f.write Net::HTTP.get(URI.parse url) }
-
-    waiter.kill
-    $stderr.puts
-
-    file
+  def initialize opts = {}
+    @options         = OpenStruct.new opts
+    options.signal ||= '-TERM'
+    options.argv   ||= [
+      '--enable-extension-timeline-api', # For Speed Tracer
+      '--disable-crash-reporter'         # Don't send crash reports
+    ]
   end
 
-  def hmount dmg, mounted_path
-    $stderr.print 'Opening ' + dmg
-    system 'open', dmg
-    (sleep 1 and $stderr.print '.') until Dir.exists? mounted_path
-    $stderr.puts
-  end
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = %Q(\
+        Google Chrome / Chromium launcher and updater.
 
-  # straight adaptation from bash function
-  def update
-    raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
-    raise 'Do not update as root user!' if Process.euid.zero?
+        Usage: #{File.basename __FILE__} [options] -- [url-or-argument ...]
 
-    dmg = fetch_update '/tmp/GoogleChrome.dmg'
-    new = '/Volumes/Google Chrome/Google Chrome.app'
-    old = '/Applications/Google Chrome.app'
-    tmp = '/tmp/Google Chrome.app'
+        Options:
+      ).gsub /^ +/, ''
 
-    Dir.chdir '/tmp/' do
-      hmount     dmg, new
-      rm_rf      tmp
-      cp_r       new, tmp, :preserve => true
-      rm_rf      Dir["#{tmp}/**/KeystoneRegistration.framework"]
-      chromediff old, tmp if File.exists? old
-      install    File.join(tmp, 'Contents'), File.join(old, 'Contents')
-      system     'hdiutil', 'detach', File.dirname(new)
-      rm_f       dmg
+      opt.on '-n', '--no-sandbox', 'Disable the renderer sandbox' do
+        options.argv << '--no-sandbox'
+      end
+
+      opt.on '-i', '--incognito', 'Launch in incognito mode' do
+        options.argv << '--incognito'
+      end
+
+      opt.on '-r', '--relaunch', 'Relaunch application' do
+        options.relaunch = :relaunch
+      end
+
+      opt.on '-u', '--update', 'Update chrome to latest dev release (OS X only)' do
+        options.update = :update
+      end
+
+      opt.on '-d', '--detach', 'Fork and detach application process' do
+        options.detach = true
+      end
+
+      opt.on '-f', '--force', 'Force the issue' do
+        options.force = true
+      end
+
+      opt.on '-9', '--kill', 'When terminating, send SIGKILL' do
+        options.signal = '-KILL'
+      end
     end
   end
 
-  def relaunch
-    kill_chrome
-    launch
+  def sh *args
+    puts args.join(' ')
+    system *args
   end
 
-  def launch
-    if RUBY_PLATFORM =~ /darwin/ and chrome_is_running
-      warn ([chrome] + @chromeargs).shelljoin
-      system 'open', '-a', chrome, *@chromeargs
+  def program
+    @program ||= case RUBY_PLATFORM
+    when /darwin/ then '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+    else               %x(/bin/sh -c 'command -v chromium').chomp
+    end
+  end
+
+  def running?
+    %x(ps axo ucomm).lines.map(&:strip).include? File.basename(program)
+  end
+
+  def terminate
+    return unless running?
+    sh 'killall', options.signal, File.basename(program)
+    sleep 0.5 while running?
+  end
+
+  def relaunch args = []
+    terminate
+    launch args
+  end
+
+  def launch args = []
+    if RUBY_PLATFORM =~ /darwin/i and running?
+      sh 'open', '-a', program, *args
     else
-      args = [chrome] + chromeopts + @chromeargs
-      args.unshift *%W[sudo -u #{ENV['SUDO_USER']}] if ENV['SUDO_USER']
-      warn(args.map(&:shellescape).join(" \\\n    "))
+      cmd  = []
+      cmd += %W[sudo -u #{ENV['SUDO_USER']}] if ENV['SUDO_USER']
+      cmd << program
+      cmd += options.argv
+      cmd += args
 
-      Process.detach fork {
-        $stdin.reopen '/dev/null'
-        $stdout.reopen '/dev/null'
-        $stderr.reopen '/dev/null'
-        Dir.chdir '/'
-        exec *args
-      }
+      puts cmd.map(&:shellescape).join(" \\\n    ")
+
+      if options.detach
+        Process.detach fork {
+          [$stdin, $stdout, $stderr].each { |fd| fd.reopen '/dev/null' }
+          Process.setsid
+          Dir.chdir '/'
+          exec *cmd
+        }
+      else
+        exec *cmd
+      end
     end
   end
 
-  def run
-    @chromeargs = options.parse @args
+  def update
+    raise '--update for OS X only!' unless RUBY_PLATFORM =~ /darwin/i
+    raise 'Do not update as root user!' if Process.euid.zero?
+    DarwinUpdate.new(self, 'http://dl.google.com/chrome/mac/dev/GoogleChrome.dmg').run
+  end
 
-    case @action
-    when :relaunch then relaunch
-    when :update   then update
-    else launch
+  def run arguments = []
+    args = parser.parse arguments
+
+    if options.update
+      update
+      relaunch args if options.relaunch
+    elsif options.relaunch
+      relaunch args
+    else
+      launch args
     end
   end
 end
 
-Chrome.new(ARGV).run if $0 == __FILE__
+$0 = File.basename(__FILE__) and Chrome.new.run ARGV if $0 == __FILE__

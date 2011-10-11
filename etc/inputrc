@@ -233,6 +233,9 @@ $if Bash
     "\C-xgr":       "\C-] git rs \n"
     "\C-xgv":       "\C-] gitv \n"
     "\C-xgV":       "\C-]gitv "
+
+    # IRB
+    "\C-xi":        "\C-] irb \n"
 $endif
 
 

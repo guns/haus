@@ -1,64 +1,95 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+require 'ostruct'
 
 class Plookup
-  def initialize(args = [])
-    @args     = args
-    @services = %W[/etc/services]
-    @opts     = {}
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.flags ||= []
   end
 
-  def options
-    OptionParser.new do |opt|
-      opt.summary_width = 20
-      opt.banner = %Q{\
-        Grep the services file by port number or regular expression.
-
-        Usage: #{File.basename __FILE__} [options] [port-number|regex] ...
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Usage: #{File.basename __FILE__} [options] port|string|regexp ...
 
         Options:
-      }.gsub(/^ +/,'')
+      ).gsub /^ +/, ''
 
-      opt.on '-f', '--file SERVICES',
-             "Services file to grep. By default this is set to the first of: ",
-             @services.join(', ') do |arg|
-        @opts[:services] = arg
+      opt.on '-f', '--file PATH', 'Services file; defaults to:', services.join(' + ') do |arg|
+        options.file = arg
       end
 
-      opt.on '-i', '--ignore-case','Ignore case when pattern matching' do
-        @opts[:ignore_case] = true
+      opt.on '-i', '--ignore-case', 'Case-insensitive search' do
+        options.flags << Regexp::IGNORECASE
       end
 
-      opt.on '-p', '--pattern', 'Force regex pattern matching' do
-        @opts[:pattern_match] = true
+      opt.on '-r', '--regexp', 'Interpret pattern as a Ruby regular expression' do
+        options.regexp = true
+      end
+
+      opt.on '-u', '--ugly', 'Do not pretty print results' do
+        options.ugly = true
       end
     end
   end
 
-  def run
-    args = options.parse @args
-    abort options.to_s if args.empty?
+  def services
+    fs = (options.file ? [options.file] : [
+      '/etc/services',
+      File.expand_path('../../share/nmap/nmap-services', %x(/bin/sh -c 'command -v nmap').chomp)
+    ]).select { |f| File.exists? f }
 
-    # choose and slurp services file
-    @opts[:services] ||= @services.select { |f| File.readable? f }.first
-    buf = File.readlines @opts[:services]
+    raise 'No services files found!' if fs.empty?
 
-    args.each do |arg|
-      # search for port numbers
-      if !@opts[:pattern_match] && arg =~ /^\d+$/
-        print buf.grep(/\s#{arg}\/\w+/).join
-      # search for patterns
+    fs
+  end
+
+  def flags
+    options.flags.inject(0) { |n, f| n|f }
+  end
+
+  def grep pattern
+    rgx = if options.regexp
+      Regexp.new pattern, flags
+    elsif pattern =~ /\A\d+\z/
+      # Restrict search to port numbers
+      Regexp.new '\s%s/\w' % pattern, flags
+    else
+      # String search
+      Regexp.new Regexp.escape(pattern), flags
+    end
+
+    services.map { |f| File.readlines f }.flatten.grep rgx
+  end
+
+  def pp lines
+    lines.map do |line|
+      line.gsub! /\t/, ' '
+      if m = line.match(%r(\A(.*?)\s+(\d+/.*?)\s*(#.*)))
+        '%-16s %-20s %s' % m[1..3]
+      elsif m = line.match(%r(\A(.*?)\s+(\d+.*)))
+        '%-16s %s' % m[1..2]
       else
-        print buf.grep(Regexp.new(arg, @opts[:ignore_case])).join
+        line
       end
     end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    args.each { |arg| puts options.ugly ? grep(arg) : pp(grep arg) }
   end
 end
 
-Plookup.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Plookup.new.run ARGV if $0 == __FILE__

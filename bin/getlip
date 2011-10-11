@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
+# -*- encoding: utf-8 -*-
 #
 # http://coderrr.wordpress.com/2008/05/28/get-your-local-ip-address/
 
@@ -8,46 +8,38 @@ require 'socket'
 require 'ipaddr'
 
 class Getlip
-  def initialize args = []
-    @args = args
+  class << self
+    def addr host = nil
+      host ||= '1.1.1.1'
+      state  = Socket.do_not_reverse_lookup
+
+      # Turn off name resolution for IP addresses
+      Socket.do_not_reverse_lookup = true if IPAddr.new host rescue nil
+
+      # Creating a udp "connection" does not actually send any packets
+      UDPSocket.open do |s|
+        s.connect host, 80
+        s.addr.last
+      end
+    ensure
+      Socket.do_not_reverse_lookup = state
+    end
   end
 
-  def options
-    OptionParser.new %Q{\
-      Return the local IP address via a udp socket. Does not do a DNS lookup if
-      host is an IP address or not given.
+  def parser
+    @parser ||= OptionParser.new %Q{\
+      Return the local IP address via a udp socket. Does not do a DNS lookup
+      if host is an IP address or not given.
 
       Usage: #{File.basename __FILE__} [host]
     }.gsub(/^ +/,'')
   end
 
-  def ipaddr? str
-    IPAddr.new str
-  rescue ArgumentError
-    nil
-  end
-
-  def local_ip host = nil
-    host ||= '1.1.1.1'
-    orig = Socket.do_not_reverse_lookup
-
-    # turn off name resolution for IP addresses
-    Socket.do_not_reverse_lookup = true if ipaddr? host
-
-    # connect, but do not #send
-    UDPSocket.open do |s|
-      s.connect host, 80
-      s.addr.last
-    end
-  ensure
-    Socket.do_not_reverse_lookup = orig
-  end
-
-  def run
-    args = options.parse @args
-    abort options.to_s if args.size > 1
-    puts local_ip(args.first)
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    puts self.class.addr(args.first)
   end
 end
 
-Getlip.new(ARGV).run if __FILE__ == $0
+$0 = File.basename(__FILE__) and Getlip.new.run ARGV if __FILE__ == $0

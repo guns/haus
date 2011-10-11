@@ -8,15 +8,14 @@ task :default => :configure
 
 desc 'Configure git'
 task :configure do
-  configure = File.expand_path 'configure'
-  system 'autoconf' unless File.executable? configure
+  system 'autoconf' unless File.executable? 'configure'
 
   cmd = %W[
-    #{configure}
+    ./configure
     --prefix=#{ENV['PREFIX'] || '/opt/git'}
   ]
 
-  if RUBY_PLATFORM =~ /darwin/i and system 'command -v brew &>/dev/null'
+  if RUBY_PLATFORM =~ /darwin/i and system '/bin/sh -c "command -v brew" &>/dev/null'
     cmd << '--with-libpcre=' + %x(brew --prefix pcre).chomp
   end
 

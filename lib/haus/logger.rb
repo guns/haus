@@ -97,11 +97,11 @@ class Haus
     alias :__logger__ :logger
 
     def log *args
-      logger.__send__ :log, *args
+      __logger__.log *args
     end
 
     def fmt *args
-      logger.__send__ :fmt, *args
+      __logger__.fmt *args
     end
   end
 end

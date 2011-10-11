@@ -29,9 +29,8 @@ require 'ostruct'
 class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
 	attr_reader :options
 
-	def initialize args = []
-		@args    = args.freeze
-		@options = OpenStruct.new$0
+	def initialize opts = {}
+		@options = OpenStruct.new opts$0
 	end
 
 	def parser
@@ -44,12 +43,12 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 		end
 	end
 
-	def run
-		args = parser.parse @args
+	def run arguments = []
+		args = parser.parse arguments
 	end
 end
 
-$1.new(ARGV).run if \$0 == __FILE__
+\$0 = File.basename(__FILE__) and $1.new.run ARGV if \$0 == __FILE__
 endsnippet
 
 
@@ -407,6 +406,10 @@ endsnippet
 
 snippet rl "readlink" w
 readlink
+endsnippet
+
+snippet cv "command -v" w
+/bin/sh -c 'command -v $1'
 endsnippet
 
 

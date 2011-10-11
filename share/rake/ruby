@@ -8,12 +8,13 @@ task :default => :configure
 
 desc 'Configure Ruby'
 task :configure do
-  configure = File.expand_path 'configure'
-  system 'autoconf' unless File.executable? configure
+  system 'autoconf' unless File.executable? 'configure'
 
-  cmd = [configure]
+  ENV['CFLAGS'] ||= ''
 
-  # prefer /opt/ruby/x.x PREFIX
+  cmd = %w[./configure]
+
+  # Prefer /opt/ruby/x.x PREFIX
   if ENV['PREFIX']
     cmd << '--prefix=' + ENV['PREFIX']
   else
@@ -27,18 +28,22 @@ task :configure do
 
   if RUBY_PLATFORM[/darwin/]
     # Use an authentic GNU readline
-    if system 'which brew &>/dev/null'
+    if system '/bin/sh -c "command -v brew" &>/dev/null'
       cmd << '--with-readline-dir=' + %x(brew --prefix readline).chomp
     elsif File.directory? '/opt/local'
       cmd << '--with-readline-dir=/opt/local'
     end
 
     # OS X Lion's default compiler is llvm; use gcc for the time being
-    cc = %x(command -v cc).chomp
+    cc = %x(/bin/sh -c 'command -v cc').chomp
     if File.symlink? cc and File.readlink(cc) =~ /llvm/
-      gcc = %x(command -v gcc-4.2).chomp
+      gcc = %x(/bin/sh -c 'command -v gcc-4.2').chomp
       ENV['CC'] = gcc if File.executable? gcc
     end
+
+    # OS X doesn't implement setproctitle(3), but we can at least change ARGV.
+    # Only affects Ruby 1.9; 1.8 does this by default
+    ENV['CFLAGS'] += ' -DSPT_TYPE=SPT_REUSEARGV '
   end
 
   sh *cmd

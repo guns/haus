@@ -1,24 +1,27 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011 Sung Pae <sung@metablu.com>
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'yaml'
+require 'ostruct'
 require 'shellwords'
+require 'yaml'
 
 class Loginitems
-  def initialize args = []
-    @args = args
-    @opts = { :rcfile => File.expand_path('~/.loginitems') }
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.rcfile ||= File.expand_path '~/.loginitems'
   end
 
-  def options
-    OptionParser.new do |opt|
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = %Q(\
-        Launch apps from #{@opts[:rcfile].inspect}
+        Launch apps from #{options.rcfile.inspect}
 
         Applications should be listed in dictionary format:
 
@@ -34,16 +37,16 @@ class Loginitems
       ).gsub /^ {8}/, ''
 
       opt.on '-f', '--file PATH', 'Read apps from an alternate file' do |arg|
-        @opts[:rcfile] = File.expand_path arg
+        options.rcfile = File.expand_path arg
       end
 
       opt.on '-e', '--edit', 'Open config file in EDITOR' do
-        exec *(ENV['EDITOR'].shellsplit << @opts[:rcfile])
+        exec *((ENV['EDITOR'] || 'vim').shellsplit.push options.rcfile)
       end
     end
   end
 
-  def alive? name
+  def running? name
     %x(ps axo ucomm).lines.map(&:strip).include? name
   end
 
@@ -58,23 +61,22 @@ class Loginitems
   end
 
   def launch!
-    YAML.load_file(@opts[:rcfile]).each do |name, app|
-      if not name.kind_of? String and not app.kind_of? String
-        raise "Invalid item found in #{@opts[:rcfile]}"
-      elsif alive? name
+    YAML.load_file(options.rcfile).each do |name, app|
+      if running? name.to_s
         puts ":: #{name} is already running."
       else
         puts "-> #{app}"
-        open app
+        open app.to_s
       end
     end
   end
 
-  def run
-    args = options.parse @args
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
     abort 'OS X only!' unless RUBY_PLATFORM =~ /darwin/i
     launch!
   end
 end
 
-Loginitems.new(ARGV).run if $0 == __FILE__
+$0 = File.basename(__FILE__) and Loginitems.new.run ARGV if $0 == __FILE__

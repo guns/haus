@@ -45,6 +45,16 @@ class Haus::OptionsSpec < MiniTest::Spec
       o.summary_width.must_equal 42
       o.summary_indent.must_equal '****'
     end
+
+    it 'must maintain parameter equivalent with OptionParser' do
+      compare_params = lambda do |a, b|
+        %w[banner summary_width summary_indent].each { |attr| a.send(attr).must_equal b.send(attr) }
+      end
+
+      compare_params.call Haus::Options.new(nil),             OptionParser.new(nil)
+      compare_params.call Haus::Options.new(nil, 16),         OptionParser.new(nil, 16)
+      compare_params.call Haus::Options.new(nil, nil, '-> '), OptionParser.new(nil, nil, '-> ')
+    end
   end
 
   describe :path do

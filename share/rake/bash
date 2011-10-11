@@ -8,11 +8,10 @@ task :default => :configure
 
 desc 'Configure bash'
 task :configure do
-  configure = File.expand_path 'configure'
-  system 'autoconf' unless File.executable? configure
+  system 'autoconf' unless File.executable? 'configure'
 
   cmd = %W[
-    #{configure}
+    ./configure
     --prefix=#{ENV['PREFIX'] || '/opt/bash'}
   ]
 
