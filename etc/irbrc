@@ -82,7 +82,7 @@ module IRBHelper
       end
 
       if self.verbose_inspect = !verbose_inspect
-        alias_method :native_inspect, :inspect
+        alias_method :__inspect__, :inspect
         def inspect
           lines = ['', '']
 
@@ -97,7 +97,7 @@ module IRBHelper
         end
       else
         remove_method :inspect
-        alias_method :inspect, :native_inspect
+        alias_method :inspect, :__inspect__
       end
     end
   end
