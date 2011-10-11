@@ -164,4 +164,4 @@ class RxvtUnicode # {{{1
   end
 end
 
-RxvtUnicode.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and RxvtUnicode.new.run ARGV if $0 == __FILE__

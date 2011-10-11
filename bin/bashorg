@@ -175,4 +175,4 @@ class Bashorg
   end
 end
 
-Bashorg.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Bashorg.new.run ARGV if $0 == __FILE__

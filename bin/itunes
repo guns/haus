@@ -92,9 +92,10 @@ class Itunes # {{{1
     when 'check', 'ck'
       abort parser.help if args.size > 2
       puts LibraryCheck.new(:library => args[1]).to_s
-    else abort parser.help
+    else
+      abort parser.help
     end
   end
 end
 
-Itunes.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Itunes.new.run ARGV if $0 == __FILE__

@@ -47,7 +47,7 @@ class Npass
     options.secret || if $stdin.tty?
       begin
         $stderr.print 'Secret:'
-        state = %x(stty -g)
+        state = %x(stty -g).chomp
         system 'stty -echo'
         $stdin.readline.chomp rescue ''
       ensure
@@ -105,4 +105,4 @@ class Npass
   end
 end
 
-Npass.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Npass.new.run ARGV if $0 == __FILE__

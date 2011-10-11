@@ -44,7 +44,7 @@ class Rakehauslink
     dst  = File.join base || Dir.pwd, 'Rakefile'
     stat = File.lstat dst rescue nil
 
-    abort "#{dst.inspect} already exists!" if stat and not options.force
+    raise "#{dst.inspect} already exists!" if stat and not options.force
 
     FileUtils.rm   dst, :verbose => options.verbose if stat
     FileUtils.ln_s File.join(options.rakedir, name), dst, :verbose => options.verbose
@@ -66,4 +66,4 @@ class Rakehauslink
   end
 end
 
-Rakehauslink.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Rakehauslink.new.run ARGV if $0 == __FILE__

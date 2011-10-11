@@ -45,4 +45,4 @@ class Notify
   end
 end
 
-Notify.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Notify.new.run ARGV if $0 == __FILE__

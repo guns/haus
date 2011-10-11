@@ -50,4 +50,4 @@ class Genpw
   end
 end
 
-Genpw.new.run ARGV if __FILE__ == $0
+$0 = File.basename(__FILE__) and Genpw.new.run ARGV if __FILE__ == $0

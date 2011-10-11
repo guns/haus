@@ -59,4 +59,4 @@ class GitSvnshallowclone
   end
 end
 
-GitSvnshallowclone.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and GitSvnshallowclone.new.run ARGV if $0 == __FILE__

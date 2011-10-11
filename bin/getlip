@@ -42,4 +42,4 @@ class Getlip
   end
 end
 
-Getlip.new.run ARGV if __FILE__ == $0
+$0 = File.basename(__FILE__) and Getlip.new.run ARGV if __FILE__ == $0

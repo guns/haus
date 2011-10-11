@@ -98,4 +98,4 @@ class Flac2mp3
   end
 end
 
-Flac2mp3.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Flac2mp3.new.run ARGV if $0 == __FILE__

@@ -79,4 +79,4 @@ class Loginitems
   end
 end
 
-Loginitems.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Loginitems.new.run ARGV if $0 == __FILE__

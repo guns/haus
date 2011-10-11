@@ -64,4 +64,4 @@ class Airportpower
   end
 end
 
-Airportpower.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Airportpower.new.run ARGV if $0 == __FILE__

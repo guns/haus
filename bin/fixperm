@@ -66,4 +66,4 @@ class Fixperm
   end
 end
 
-Fixperm.new.run ARGV if __FILE__ == $0
+$0 = File.basename(__FILE__) and Fixperm.new.run ARGV if __FILE__ == $0

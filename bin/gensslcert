@@ -115,4 +115,4 @@ class Gensslcert
   end
 end
 
-Gensslcert.new.run ARGV if __FILE__ == $0
+$0 = File.basename(__FILE__) and Gensslcert.new.run ARGV if __FILE__ == $0

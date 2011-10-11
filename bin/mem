@@ -114,4 +114,4 @@ class Mem # {{{1
   end
 end
 
-Mem.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Mem.new.run ARGV if $0 == __FILE__

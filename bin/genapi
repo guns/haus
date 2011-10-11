@@ -86,4 +86,4 @@ class Genapi
   end
 end
 
-$0 = 'genapi' and Genapi.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Genapi.new.run ARGV if $0 == __FILE__

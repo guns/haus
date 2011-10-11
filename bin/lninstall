@@ -127,4 +127,4 @@ class Lninstall
   end
 end
 
-Lninstall.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Lninstall.new.run ARGV if $0 == __FILE__

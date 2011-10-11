@@ -81,4 +81,4 @@ class RubyHierarchy
   end
 end
 
-RubyHierarchy.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and RubyHierarchy.new.run ARGV if $0 == __FILE__
