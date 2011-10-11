@@ -41,7 +41,7 @@ class Chrome
       return true  if chrome.options.force
       return false unless system '/bin/sh -c "command -v stty" &>/dev/null && stty -a &>/dev/null'
 
-      system 'report', 'Attention!'
+      system 'notify', 'Attention!'
       print msg + ' [Y/n] '
 
       begin
@@ -161,7 +161,7 @@ class Chrome
   end
 
   def running?
-    %x(ps axo ucomm).split("\n").map(&:strip).include? File.basename(program)
+    %x(ps axo ucomm).lines.map(&:strip).include? File.basename(program)
   end
 
   def terminate
