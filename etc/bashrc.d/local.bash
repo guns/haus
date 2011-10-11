@@ -154,7 +154,7 @@ CD_FUNC cdvar           /var
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
-CD_FUNC cdhaus          ~/.haus /opt/haus && export RUBYLIB="$cdhaus/lib:$RUBYLIB"
+CD_FUNC cdhaus          ~/.haus /opt/haus && export RUBYLIB="$cdhaus/lib"
 CD_FUNC cdsrc           ~/src /usr/local/src
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
@@ -1238,11 +1238,17 @@ ALIAS cs='cryptsetup' && {
 ### Virtual Machines {{{1
 
 # VMWare
-ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' \
-      vmnetstart='/Library/Application\ Support/VMware\ Fusion/boot.sh --start' \
-      vmnetstop='/Library/Application\ Support/VMware\ Fusion/boot.sh --stop' \
-      vmnetrestart='/Library/Application\ Support/VMware\ Fusion/boot.sh --restart' \
-      vmware-vdiskmanager='/Library/Application\ Support/VMware\ Fusion/vmware-vdiskmanager'
+ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
+    vmtoggle() {
+        if ps axo ucomm | grep -q 'vmnet-bridge'; then
+            local flag='--stop'
+        else
+            local flag='--start'
+        fi
+
+        run "/Library/Application Support/VMware Fusion/boot.sh" $flag
+    }
+}
 
 
 ### Package Managers {{{1
@@ -1338,7 +1344,7 @@ HAVE itunes-switch && {
 HAVE startx && alias xstartx='exec startx'
 
 HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 60; run xrdb ~/.Xdefaults'
+    alias xreload='run xset r rate 200 80; run xrdb ~/.Xdefaults'
 }
 
 HAVE xecho && {
