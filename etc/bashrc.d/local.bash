@@ -1240,7 +1240,7 @@ ALIAS cs='cryptsetup' && {
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
     vmtoggle() {
-        if ps axo ucomm | grep -q 'vmnet-bridge'; then
+        if ifconfig vmnet1 &>/dev/null; then
             local flag='--stop'
         else
             local flag='--start'
