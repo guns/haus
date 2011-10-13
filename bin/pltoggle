@@ -24,6 +24,8 @@ class Pltoggle
         Converts files in place.
 
         Usage: #{File.basename __FILE__} file ...
+
+        Options:
       ).gsub /^ +/, ''
 
       opt.on '-j', '--json', 'Convert to and from JSON format instead of xml' do
