@@ -239,7 +239,7 @@ class Haus
         # NOTE: `tar xp` is not POSIX; we'll see how that shakes out
         v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
-        log unless options.quiet # \n for clarity
+        log # \n for clarity
       end
     end
 
