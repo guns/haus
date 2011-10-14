@@ -1,0 +1,219 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'shellwords'
+require 'fileutils'
+require 'yaml'
+require 'plist'
+require 'haus/logger'
+
+class Macdriver
+  include Haus::Loggable
+
+  class Kext
+    attr_reader :id, :dependencies
+
+    def initialize plist
+      xml = Plist.parse_xml plist
+      @id = xml['CFBundleIdentifier']
+      @dependencies = (xml['OSBundleLibraries'] || {}).keys
+    end
+  end
+
+  HARDWARE_NAMES = %w[cd usb firewire bluetooth thunderbolt]
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.cache ||= '/tmp/macdriver.cache.yaml'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = %Q(\
+        Query, load, and unload kernel extensions. Kexts can be specified
+        either by bundle identifier, or by an alias:
+
+            #{HARDWARE_NAMES.join ' '}
+
+        Loading and unloading kexts load and unload dependencies and
+        dependents as necessary.
+
+        Note that all applicable kexts can be reloaded by simply sending
+        SIGHUP to `kextd`.
+
+        Usage: #{File.basename __FILE__} [options] [command [kext ...]]
+
+        Commands:
+            list                     List all known kext identifiers
+            show [kext ...]          Show kexts and all dependents
+            ancestors [kext ...]     Show kexts and all ancestors
+            unload [kext ...]        Unload kexts and all dependents
+            load [kext ...]          Load kexts and all dependencies
+
+        Options:\
+      ).gsub /^ {8}/, ''
+
+      opt.on '-f', '--force', 'Do not prompt for confirmation' do
+        options.force = true
+      end
+
+      opt.on '-r', '--reload', 'Reload kext metadata instead of reading from a cache' do
+        options.reload = true
+      end
+
+      opt.on '-v', '--verbose', 'Show kextload/kextunload output' do
+        options.verbose = true
+      end
+    end
+  end
+
+  def sh *args
+    log args.join(' ')
+    options.verbose ? system(*args) : system("#{args.shelljoin} &>/dev/null")
+  end
+
+  def kextlist
+    @kextlist ||= begin
+      if options.reload or not File.exists? options.cache
+        kexts = Dir['{/System,}/Library/Extensions/**/*.kext/Contents/Info.plist'].map { |f| Kext.new f }
+        File.open(options.cache, 'w') { |f| f.puts kexts.to_yaml }
+        FileUtils.chmod 0644, options.cache
+        FileUtils.chown Process.euid, Process.egid, options.cache
+        kexts
+      else
+        YAML.load_file options.cache
+      end
+    end
+  end
+
+  def kextstat
+    @kextstat ||= %x(kextstat -l).chomp.lines.map { |l| l.split[5] }
+  end
+
+  def loaded? kext, opts = {}
+    @kextstat = nil if opts[:reload]
+    kextstat.include? kext.id
+  end
+
+  def find name
+    id = case name
+    when 'cd'          then 'com.apple.iokit.IOCDStorageFamily'
+    when 'usb'         then 'com.apple.iokit.IOUSBFamily'
+    when 'firewire'    then 'com.apple.iokit.IOFireWireFamily'
+    when 'bluetooth'   then 'com.apple.iokit.IOBluetoothFamily'
+    when 'thunderbolt' then 'com.apple.iokit.IOThunderboltFamily'
+    else name
+    end
+
+    kextlist.find { |k| k.id == id }
+  end
+
+  def children kext, stack = []
+    kextlist.each do |k|
+      next unless k.dependencies.include? kext.id
+      children k, stack # Recurse!
+    end
+
+    stack.push kext unless stack.include? kext
+    stack
+  end
+
+  def ancestors kext, stack = []
+    kext.dependencies.each do |id|
+      next unless k = find(id)
+      ancestors k, stack # Recurse!
+    end
+
+    stack.push kext unless stack.include? kext
+    stack
+  end
+
+  def to_s
+    kextlist.map { |kext| decorate kext }.join "\n"
+  end
+
+  def decorate kext
+    loaded?(kext) ? fmt(["#{kext.id} (LOADED)", :green, :bold]) : kext.id
+  end
+
+  def summary name, type
+    kexts = case type
+    when :children  then children(find name).reverse
+    when :ancestors then ancestors find(name)
+    else raise ArgumentError
+    end
+
+    "#{name}:\n" + kexts.map { |kext| "    #{decorate kext}" }.join("\n")
+  end
+
+  def show names = nil, type
+    if names.nil? or names.empty?
+      HARDWARE_NAMES.map { |n| summary n, type }.join "\n"
+    elsif not names.empty?
+      names.map { |n| summary n, type }.join "\n"
+    else
+      summary n, type
+    end
+  end
+
+  def confirm? msg, kexts, *styles
+    return true  if options.force or kexts.empty?
+    return false unless system '/bin/sh -c "command -v stty" &>/dev/null && stty -a &>/dev/null'
+
+    kexts.each { |k| log [k.id, *styles] }
+    logger.io.print "\n%s [Y/n] " % msg
+
+    begin
+      state = %x(stty -g).chomp
+      system 'stty', 'raw'
+      char = $stdin.getc rescue nil
+      char =~ /y|\r|\n/
+    ensure
+      system 'stty', state
+      log char + "\n\n"
+    end
+  end
+
+  def unload kexts
+    queue = [kexts].flatten.inject [] do |q, kext|
+      q.concat children(kext).select { |k| loaded? k }
+    end
+
+    if confirm? 'Unload listed kexts?', queue, :yellow, :bold
+      queue.each { |kext| sh *%W[kextunload -b #{kext.id}] }
+    end
+  end
+
+  def load kexts
+    queue = [kexts].flatten.inject [] do |q, kext|
+      q.concat ancestors(kext).reject { |k| loaded? k }
+    end
+
+    if confirm? 'Load listed kexts?', queue, :green, :bold
+      queue.each { |kext| sh *%W[kextload -b #{kext.id}] }
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+
+    case args.first
+    when 'list', nil then puts to_s
+    when 'show'      then log show(args.drop(1), :children)
+    when 'ancestors' then log show(args.drop(1), :ancestors)
+    when 'load'      then load args.drop(1).map { |n| find n }
+    when 'unload'    then unload args.drop(1).map { |n| find n }
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Macdriver.new.run ARGV if $0 == __FILE__
