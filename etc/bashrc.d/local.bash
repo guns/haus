@@ -1018,8 +1018,7 @@ type ruby &>/dev/null && {
                   "rk${suf}t=rake${suf} -T"
 
             # Useful gem executables
-            ALIAS "sdoc${suf}=${bin}/sdoc"
-            ALIAS "bundle${suf}=${bin}/bundle"
+            ALIAS "b${suf}=${bin}/bundle"
             HAVE "${bin}/rdebug" && {
                 ALIAS "rdb${suf}=${bin}/rdebug" \
                       "rdb${suf}c=${bin}/rdebug -c"
