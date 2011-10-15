@@ -42,19 +42,19 @@ class Airportnetworks
   end
 
   def to_a
-    %x(networksetup -listpreferredwirelessnetworks #{options.interface.shellescape}).lines.drop(1).map &:strip
+    %x(/usr/sbin/networksetup -listpreferredwirelessnetworks #{options.interface.shellescape}).lines.drop(1).map &:strip
   end
 
   def add name, security = 'WPA2'
-    sh 'networksetup', '-addpreferredwirelessnetworkatindex', options.interface, name, to_a.size.to_s, security
+    sh '/usr/sbin/networksetup', '-addpreferredwirelessnetworkatindex', options.interface, name, to_a.size.to_s, security
   end
 
   def clear names = nil
     if names.nil? or names.empty?
-      sh 'networksetup', '-removeallpreferredwirelessnetworks', options.interface
+      sh '/usr/sbin/networksetup', '-removeallpreferredwirelessnetworks', options.interface
     else
       names.each do |name|
-        sh 'networksetup', '-removepreferredwirelessnetwork', options.interface, name
+        sh '/usr/sbin/networksetup', '-removepreferredwirelessnetwork', options.interface, name
       end
     end
   end

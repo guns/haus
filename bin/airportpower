@@ -20,7 +20,7 @@ class Airportpower
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = %Q(\
-        Set or toggle your Mac's airport card via `networksetup`.
+        Set or toggle your Mac's airport card via `/usr/sbin/networksetup`.
 
         Usage: #{File.basename __FILE__} [on|off|toggle|status]
 
@@ -34,12 +34,12 @@ class Airportpower
   end
 
   def status
-    %x(networksetup -getairportpower #{options.interface.shellescape})[/\w+$/].downcase
+    %x(/usr/sbin/networksetup -getairportpower #{options.interface.shellescape})[/\w+$/].downcase
   end
 
   %w[on off].each do |state|
     define_method state do
-      system *%W[networksetup -setairportpower #{options.interface} #{state}]
+      system *%W[/usr/sbin/networksetup -setairportpower #{options.interface} #{state}]
     end
   end
 
