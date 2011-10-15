@@ -159,14 +159,19 @@ class Remind
         query
         exit
       end
+
+      opt.on '-t', '--terminate', 'Send SIGTERM to all instances of remind' do
+        query :TERM
+        exit
+      end
     end
   end
 
-  def query
+  def query signal = :USR1
     %x(ps axo pid,comm).lines.each do |line|
       pid, comm = line.strip.split /\s+/, 2
       next unless comm =~ /\Aremind \d{2}:\d{2}:\d{2}\z/
-      Process.kill :USR1, pid.to_i
+      Process.kill signal, pid.to_i
     end
   end
 
