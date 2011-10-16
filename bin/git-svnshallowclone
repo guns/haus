@@ -52,7 +52,7 @@ class GitSvnshallowclone
     system *cmd
   end
 
-  def run arguments
+  def run arguments = []
     args = parser.parse arguments
     abort parser.help unless [1, 2].include? args.size
     clone *args
