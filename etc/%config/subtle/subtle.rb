@@ -40,7 +40,7 @@ set :resize, false
 # Enable gravity tiling
 set :tiling, false
 
-# Font string either take from e.g. xfontsel or use xft
+# FIXME: Is this deprecated, or not?
 set :font, 'xft:Menlo:pixelsize=12'
 
 # Separator between sublets
@@ -114,6 +114,7 @@ end
 # [*margin*]     Outer spacing
 # [*border*]     Border color and size
 # [*padding*]    Inner spacing
+# [*font*]       Font string (xftontsel or xft)
 #
 # === Link
 #
@@ -125,6 +126,7 @@ style :all do
   icon        "#757575"
   border      "#303030", 0
   padding     0, 3
+  # font        'xft:Menlo:pixelsize=12'
 end
 
 # Style for the views
@@ -374,12 +376,12 @@ end
 
 # Check config and reload
 grab 'W-C-r' do
-  system('subtle --check') ? Subtlext::Subtle.reload : system('espeak Invalid')
+  system('subtle --check') ? Subtlext::Subtle.reload : system('notify Invalid configuration')
 end
 
 # Check config and restart
 grab 'W-C-t' do
-  system('subtle --check') ? Subtlext::Subtle.restart : system('espeak Invalid')
+  system('subtle --check') ? Subtlext::Subtle.restart : system('notify Invalid configuration')
 end
 
 # Volume
@@ -727,7 +729,7 @@ def set_properties c
   end
 end
 
-# Redraw desktop wallpaper
+# Redraw wallpaper and reset client properties
 [:start, :reload].each do |event|
   on event do
     fehbg = File.expand_path '~/.fehbg'
