@@ -524,8 +524,7 @@ ALIAS rsync='rsync --human-readable' \
       rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
       rsync-backup='rsync --archive --delete --partial --sparse --hard-links' && {
     if __OSX__; then
-        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'
-        tcomp rsync applersync
+        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'; tcomp rsync applersync
         ALIAS applersync-mirror='applersync --archive --delete --partial --exclude=.git'
         ALIAS applersync-backup='applersync --archive --delete --partial --sparse --hard-links'
     fi
@@ -658,10 +657,8 @@ HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
 
 ALIAS s='sudo' \
       root='exec sudo su'
-HAVE su && {
-    alias xsu='exec su'
-    tcomp su xsu
-}
+HAVE su && alias xsu='exec su' && tcomp su xsu
+
 
 
 ### Network {{{1
@@ -816,8 +813,7 @@ HAVE vim && {
     }; tcomp find vimfind
 
     # Vim-ManPage
-    alias mman='command man'
-    tcomp man mman
+    alias mman='command man'; tcomp man mman
     # Param: $@ [[section] command] ...
     man() {
         local i sec page pages=0 args=()
@@ -919,8 +915,7 @@ HAVE tmux tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
 # GNU screen
 HAVE screen && {
     alias screenr='screen -R'
-    alias xscreenr='exec screen -R'
-    tcomp screen xscreenr
+    alias xscreenr='exec screen -R'; tcomp screen xscreenr
 }
 
 
@@ -1326,16 +1321,6 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
 # VLC
 ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
-
-# iTunes
-HAVE itunes-switch && {
-    # Param: $1 Key name
-    _itunes-switch() {
-        [[ -r ~/Music/.itunes.yml ]] || return
-        local words="$(awk -F: '{print $1}' < ~/Music/.itunes.yml)"
-        COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
-    }; complete -F _itunes-switch itunes-switch
-}
 
 
 ### X {{{1
