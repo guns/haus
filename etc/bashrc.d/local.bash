@@ -586,7 +586,8 @@ fi
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
 # File browsers
-ALIAS rr='ranger'
+ALIAS ranger='ranger -c' \
+      rr='ranger -c'
 
 
 ### Processes {{{1
@@ -1039,8 +1040,7 @@ type ruby &>/dev/null && {
         # Param: $@ API Site names
         api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
         _api() {
-            local words="$(lsd "$cdapi")"
-            COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
+            COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
         }; complete -F _api api
     }
 }
