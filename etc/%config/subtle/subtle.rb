@@ -236,7 +236,7 @@ gravity :center50,       [  25,   0,  50, 100 ]
 # Right
 gravity :right,          [  50,   0,  50, 100 ]
 gravity :right75,        [  25,   0,  75, 100 ]
-gravity :right33,        [  67,  50,  33, 100 ]
+gravity :right33,        [  67,   0,  33, 100 ]
 
 # Bottom left
 gravity :bottom_left,    [   0,  50,  50,  50 ]
