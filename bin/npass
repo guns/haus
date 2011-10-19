@@ -7,7 +7,7 @@
 
 require 'optparse'
 require 'ostruct'
-require 'digest/sha1'
+require 'cli/password'
 
 class Npass
   attr_reader :options
@@ -32,76 +32,19 @@ class Npass
       opt.on '-v', '--version N', Integer do |arg|
         options.version = arg
       end
-
-      opt.on '-s', '--secret STRING' do |arg|
-        options.secret = arg
-      end
-
-      opt.on '-b', '--buffer STRING' do |arg|
-        options.buffer = arg
-      end
-    end
-  end
-
-  def secret
-    options.secret || if $stdin.tty?
-      begin
-        $stderr.print 'Secret:'
-        state = %x(stty -g).chomp
-        system 'stty -echo'
-        $stdin.readline.chomp rescue ''
-      ensure
-        system 'stty', state
-        warn '####'
-      end
-    else
-      ''
-    end
-  end
-
-  def buffer
-    options.buffer || ($stdin.gets nil if $stdin.tty?) || ''
-  end
-
-  def version_0
-    [secret, buffer].map { |s| Digest::SHA1.hexdigest s }.join
-  end
-
-  def version_1
-    sec, buf = secret, buffer
-
-    # Create salt by least occurrence and last appearance
-    salt = (sec + buf).split('').inject({}) do |h, ch|
-      next h if ch =~ /\s/
-      h[ch] ||= 0
-      h[ch]  += 1
-      h
-    end.sort_by { |ch, n| n }.take(8).map(&:first).join
-
-    # Create password from different permutations of sec, buf, and salt
-    [sec + buf, buf + sec, salt.reverse + sec + buf].map do |str|
-      Digest::SHA1.base64digest(str + salt).chomp '='
-    end.join
-  end
-
-  def call
-    name = 'version_%d' % options.version
-    raise ArgumentError, 'Invalid version' unless respond_to? name
-
-    pass = send name
-
-    if options.length
-      pass *= 2 until pass.length > options.length
-      pass[/.{#{options.length}}/]
-    else
-      pass
     end
   end
 
   def run arguments = []
     args = parser.parse arguments
-    print call
-    puts if $stdout.tty?
+
+    name = 'npass_%d' % options.version
+    raise 'Invalid version: %d' % options.version unless CLI::Password.respond_to? name
+
+    params = []
+    params.push options.length if options.length
+
+    puts CLI::Password.send(name, *params)
   end
 end
 
