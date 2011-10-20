@@ -39,13 +39,13 @@ LESS_ARY=(
 export LESS="${LESS_ARY[@]}"
 export LESSSECURE=1                     # ++secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
-export LESS_TERMCAP_md=$'\e[37m'        # Begin bold
-export LESS_TERMCAP_so=$'\e[36m'        # Begin standout-mode
-export LESS_TERMCAP_us=$'\e[4;35m'      # Begin underline
-export LESS_TERMCAP_mb=$'\e[5m'         # Begin blink
-export LESS_TERMCAP_se=$'\e[0m'         # End standout-mode
-export LESS_TERMCAP_ue=$'\e[0m'         # End underline
-export LESS_TERMCAP_me=$'\e[0m'         # End mode
+export LESS_TERMCAP_md=$'\033[37m'      # Begin bold
+export LESS_TERMCAP_so=$'\033[36m'      # Begin standout-mode
+export LESS_TERMCAP_us=$'\033[4;35m'    # Begin underline
+export LESS_TERMCAP_mb=$'\033[5m'       # Begin blink
+export LESS_TERMCAP_se=$'\033[0m'       # End standout-mode
+export LESS_TERMCAP_ue=$'\033[0m'       # End underline
+export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
 # Ruby
@@ -347,7 +347,7 @@ swap-files() {
         mv   f1,  tmp
         mv   f2,  f1
         mv   tmp, f1
-    " "$@"
+    " -- "$@"
 }
 
 # rm
@@ -459,7 +459,7 @@ ALIAS gpax='pax -z' && {
             chdir basedir
             puts cmd
             system cmd
-        " "$@"
+        " -- "$@"
     }
 }
 
@@ -965,7 +965,7 @@ HAVE git && {
     # PS1 git status
     HAVE __git_ps1 && {
         gitps1() {
-            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\e[3m\]%s\[\e[23m\]")'
+            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
         }; gitps1 # Turn it on now!
     }
 }
@@ -1312,7 +1312,7 @@ HAVE feh && {
         ruby -e '
             fs = (ARGV.empty? ? Dir["*"] : ARGV).reject { |f| Dir.exists? f }
             exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
-        ' "$@"
+        ' -- "$@"
     }
 }
 
@@ -1373,7 +1373,7 @@ if __OSX__; then
                 input = ARGV.first.empty? ? $stdin.read : ARGV.first
                 msg = %Q(tell application "Launchbar" to display in large type #{input.inspect})
                 system *%W[osascript -e #{msg}]
-            ' "$*"
+            ' -- "$*"
         }
     }
 
