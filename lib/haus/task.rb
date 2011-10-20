@@ -176,15 +176,15 @@ class Haus
           opt.users = arg.map { |a| a =~ /\A\d+\z/ ? a.to_i : a.to_s }
         end
 
-        opt.on_tail '-f', '--force' do
+        opt.on_tail '-f', '--force', 'Act without confirmation' do
           opt.force = true
         end
 
-        opt.on_tail '-n', '--noop' do
+        opt.on_tail '-n', '--noop', 'Do not make any changes, but show what would happen' do
           opt.noop = true
         end
 
-        opt.on_tail '-q', '--quiet' do
+        opt.on_tail '-q', '--quiet', 'Produce no output; confirmation prompts fail silently' do
           opt.quiet = true
         end
       end

@@ -239,7 +239,7 @@ class Haus
         # NOTE: `tar xp` is not POSIX; we'll see how that shakes out
         v = 'v' unless options.quiet
         system *%W[tar z#{v}xpf #{archive_path}]
-        log unless options.quiet # \n for clarity
+        log # \n for clarity
       end
     end
 
@@ -521,7 +521,7 @@ class Haus
     # Returns nil on error.
     def tty_getchar
       # `stty -a` will return non-zero when not run from a terminal
-      if system 'command -v stty &>/dev/null && stty -a &>/dev/null'
+      if system '{ command -v stty && stty -a; } &>/dev/null'
         begin
           # `stty` man page says that toggling the raw bit is not guaranteed
           # to restore previous state, so we should do that explicitly
