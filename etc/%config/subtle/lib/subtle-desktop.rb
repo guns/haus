@@ -33,7 +33,7 @@ module SubtleDesktop
         extant.focus
         extant.raise
       else
-        system *[command].flatten
+        spawn *[command].flatten
       end
     end
   end

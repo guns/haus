@@ -39,13 +39,13 @@ LESS_ARY=(
 export LESS="${LESS_ARY[@]}"
 export LESSSECURE=1                     # ++secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
-export LESS_TERMCAP_md=$'\e[37m'        # Begin bold
-export LESS_TERMCAP_so=$'\e[36m'        # Begin standout-mode
-export LESS_TERMCAP_us=$'\e[4;35m'      # Begin underline
-export LESS_TERMCAP_mb=$'\e[5m'         # Begin blink
-export LESS_TERMCAP_se=$'\e[0m'         # End standout-mode
-export LESS_TERMCAP_ue=$'\e[0m'         # End underline
-export LESS_TERMCAP_me=$'\e[0m'         # End mode
+export LESS_TERMCAP_md=$'\033[37m'      # Begin bold
+export LESS_TERMCAP_so=$'\033[36m'      # Begin standout-mode
+export LESS_TERMCAP_us=$'\033[4;35m'    # Begin underline
+export LESS_TERMCAP_mb=$'\033[5m'       # Begin blink
+export LESS_TERMCAP_se=$'\033[0m'       # End standout-mode
+export LESS_TERMCAP_ue=$'\033[0m'       # End underline
+export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
 # Ruby
@@ -347,7 +347,7 @@ swap-files() {
         mv   f1,  tmp
         mv   f2,  f1
         mv   tmp, f1
-    " "$@"
+    " -- "$@"
 }
 
 # rm
@@ -459,7 +459,7 @@ ALIAS gpax='pax -z' && {
             chdir basedir
             puts cmd
             system cmd
-        " "$@"
+        " -- "$@"
     }
 }
 
@@ -524,8 +524,7 @@ ALIAS rsync='rsync --human-readable' \
       rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
       rsync-backup='rsync --archive --delete --partial --sparse --hard-links' && {
     if __OSX__; then
-        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'
-        tcomp rsync applersync
+        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'; tcomp rsync applersync
         ALIAS applersync-mirror='applersync --archive --delete --partial --exclude=.git'
         ALIAS applersync-backup='applersync --archive --delete --partial --sparse --hard-links'
     fi
@@ -587,7 +586,8 @@ fi
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
 # File browsers
-ALIAS rr='ranger'
+ALIAS ranger='ranger -c' \
+      rr='ranger -c'
 
 
 ### Processes {{{1
@@ -658,10 +658,8 @@ HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
 
 ALIAS s='sudo' \
       root='exec sudo su'
-HAVE su && {
-    alias xsu='exec su'
-    tcomp su xsu
-}
+HAVE su && alias xsu='exec su' && tcomp su xsu
+
 
 
 ### Network {{{1
@@ -816,8 +814,7 @@ HAVE vim && {
     }; tcomp find vimfind
 
     # Vim-ManPage
-    alias mman='command man'
-    tcomp man mman
+    alias mman='command man'; tcomp man mman
     # Param: $@ [[section] command] ...
     man() {
         local i sec page pages=0 args=()
@@ -919,8 +916,7 @@ HAVE tmux tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
 # GNU screen
 HAVE screen && {
     alias screenr='screen -R'
-    alias xscreenr='exec screen -R'
-    tcomp screen xscreenr
+    alias xscreenr='exec screen -R'; tcomp screen xscreenr
 }
 
 
@@ -969,7 +965,7 @@ HAVE git && {
     # PS1 git status
     HAVE __git_ps1 && {
         gitps1() {
-            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\e[3m\]%s\[\e[23m\]")'
+            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
         }; gitps1 # Turn it on now!
     }
 }
@@ -1044,8 +1040,7 @@ type ruby &>/dev/null && {
         # Param: $@ API Site names
         api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
         _api() {
-            local words="$(lsd "$cdapi")"
-            COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
+            COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
         }; complete -F _api api
     }
 }
@@ -1161,77 +1156,8 @@ HAVE wpa_supplicant wpa_passphrase && {
 
 ### Encryption {{{1
 
-# dm-crypt
-ALIAS cs='cryptsetup' && {
-    alias csopen='cryptsetup luksOpen'
-    alias csclose='cryptsetup luksClose'
-    alias csdump='cryptsetup luksDump'
-
-    # Option: -c   Cipher string
-    # Option: -i   Iteration time in milliseconds
-    # Param:  $1   Device
-    # Param:  [$2] Key file
-    csformat() {
-        local usage="Usage: $FUNCNAME [-c cipher] [-i iter-time] device [keyfile]"
-        local opts=(--verbose) cipher='serpent-xts-plain64'
-
-        local OPTIND OPTARG opt
-        while getopts :hc:i: opt; do
-            case $opt in
-            c) cipher="$OPTARG";;
-            i) opts+=(--iter-time "$OPTARG");;
-            *) echo "$usage"; return 1
-            esac
-        done
-        shift $((OPTIND-1))
-
-        # Set cipher and key type
-        opts+=(--cipher "$cipher")
-        case $# in
-        1) opts+=(--verify-passphrase --key-size 512);;
-        2) opts+=(--key-file "$2");;
-        *) echo "$usage"; return 1
-        esac
-
-        # Run on given device
-        run cryptsetup "${opts[@]}" luksFormat "$1"
-    }
-
-    # Option: -d Debug mode
-    # Option: -f Key file
-    # Option: -t Filesystem type
-    # Param:  $1 Device
-    # Param:  $2 Mountpoint (basename is also mapper name)
-    csmount() {
-        local usage="Usage: $FUNCNAME [-d] [-f keyfile] [-t fstype] device mountpoint"
-        local opts=(--verbose) fstype='ext4'
-
-        local OPTIND OPTARG opt
-        while getopts :df:t: opt "$@"; do
-            case $opt in
-            d) opts+=(--debug);;
-            f) opts+=(--key-file "$OPTARG");;
-            t) fstype="$OPTARG";;
-            *) echo "$usage"; return 1
-            esac
-        done
-        shift $((OPTIND-1))
-
-        (($# == 2)) || { echo "$usage"; return 1; }
-        local mapname="${2%/}"; mapname="${mapname##*/}"
-
-        if run cryptsetup "${opts[@]}" luksOpen "$1" "$mapname"; then
-            run mount -t "$fstype" "/dev/mapper/$mapname" "$2"
-        fi
-    }; tcomp mount csmount
-
-    # Param: $1 Device/mountpoint (basename is also mapper name)
-    csumount() {
-        (($# == 1)) || { echo "Usage: $FUNCNAME mountpoint"; return 1; }
-        local mapname="${1%/}"; mapname="${mapname##*/}"
-        run umount "$1" && run cryptsetup luksClose "/dev/mapper/$mapname"
-    }; tcomp umount csumount
-}
+# Complete custom wrapper
+HAVE cryptsetup cs && tcomp cryptsetup cs
 
 
 ### Virtual Machines {{{1
@@ -1317,7 +1243,7 @@ HAVE feh && {
         ruby -e '
             fs = (ARGV.empty? ? Dir["*"] : ARGV).reject { |f| Dir.exists? f }
             exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
-        ' "$@"
+        ' -- "$@"
     }
 }
 
@@ -1326,16 +1252,6 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
 # VLC
 ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
-
-# iTunes
-HAVE itunes-switch && {
-    # Param: $1 Key name
-    _itunes-switch() {
-        [[ -r ~/Music/.itunes.yml ]] || return
-        local words="$(awk -F: '{print $1}' < ~/Music/.itunes.yml)"
-        COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}))
-    }; complete -F _itunes-switch itunes-switch
-}
 
 
 ### X {{{1
@@ -1388,7 +1304,7 @@ if __OSX__; then
                 input = ARGV.first.empty? ? $stdin.read : ARGV.first
                 msg = %Q(tell application "Launchbar" to display in large type #{input.inspect})
                 system *%W[osascript -e #{msg}]
-            ' "$*"
+            ' -- "$*"
         }
     }
 

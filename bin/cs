@@ -1,0 +1,249 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'pty'
+require 'expect'
+require 'ostruct'
+require 'shellwords'
+require 'cli/password'
+require 'cli/superparser'
+
+class Cs # {{{1
+  class Command # {{{2
+    class << self
+      def inherited base
+        list[base.to_s.split('::').last.downcase] = base
+      end
+
+      def list
+        @@list ||= {}
+      end
+
+      attr_reader :required_arguments
+      def required_arguments args = nil
+        args ? @required_arguments = args.clone : @required_arguments
+      end
+    end
+
+    attr_reader :options
+
+    def initialize opts = {}
+      @options = OpenStruct.new opts
+    end
+
+    def parser
+      @parser ||= CLI::SuperParser.new nil, 20 do |opt|
+        opt.banner = %Q(\
+          Usage: #{File.basename __FILE__} #{self.class.to_s.split('::').last.downcase} [options] #{self.class.required_arguments.join ' '}
+
+          Options:
+        ).gsub /^ +/, ''
+
+        opt.on_tail '-h', '--help' do
+          puts opt
+          exit
+        end
+      end
+    end
+
+    def sh *args
+      puts args.shelljoin
+      system *args
+    end
+
+    def run arguments = []
+      args = parser.superparse arguments
+      abort parser.help unless args.size >= self.class.required_arguments.size
+      call *args
+    end
+  end
+
+  class Format < Command # {{{2
+    required_arguments %w[device]
+
+    def initialize *args
+      super
+      options.cipher ||= 'aes-xts-plain64'
+      options.cipher_aliases ||= {
+        'aes'     => 'aes-xts-plain64',
+        'serpent' => 'serpent-xts-plain64'
+      }
+    end
+
+    def parser
+      super.tap do |opt|
+        opt.on '-c', '--cipher STRING',
+               'Cipher to use. The following aliases are available:',
+               options.cipher_aliases.map { |k,v| '%s => %s' % [k,v] }.join(', '),
+               'Defaults to %s' % options.cipher do |arg|
+          options.cipher = arg
+        end
+
+        opt.on '-l', '--length N', Integer, 'Npass length' do |arg|
+          options.length = arg
+        end
+
+        opt.on '-u', '--urandom', 'Use /dev/urandom instead of /dev/random' do
+          options.urandom = true
+        end
+      end
+    end
+
+    def cipher
+      options.cipher_aliases[options.cipher] || options.cipher
+    end
+
+    def use_random
+      options.urandom ? '--use-urandom' : '--use-random'
+    end
+
+    def call *args
+      device = args.pop
+      cmd = ['cryptsetup', '--cipher', cipher, use_random] + args + ['luksFormat', device]
+
+      if options.length
+        PTY.spawn cmd.shelljoin do |r, w, pid|
+          begin
+            print r.expect(/Are you sure\?.*:/).first + ' '
+            res = $stdin.readline.chomp
+            return unless res =~ /\A\s*YES\s*\z/
+            w.puts res
+
+            pass = CLI::Password.npass options.length
+
+            puts r.expect(/(Enter.*:)/)[1]
+            w.puts pass
+
+            puts r.expect(/(Verify.*:)/)[1]
+            w.puts pass
+
+            Process.wait pid
+          rescue SystemCallError
+          end
+        end
+      else
+        sh *cmd
+      end
+    end
+  end
+
+  class Open < Command # {{{2
+    required_arguments %w[device mapname]
+
+    def parser
+      super.tap do |opt|
+        opt.on '-l', '--length N', Integer, 'Npass length' do |arg|
+          options.length = arg
+        end
+      end
+    end
+
+    def call *args
+      device, mapname = args.pop 2
+      cmd = ['cryptsetup'] + args + ['luksOpen', device, mapname]
+      puts cmd.join(' ')
+
+      if options.length
+        PTY.spawn cmd.shelljoin do |r, w, pid|
+          begin
+            loop do
+              puts r.expect(/.*Enter passphrase.*:/).first
+              w.puts CLI::Password.npass(options.length)
+            end
+          rescue SystemCallError
+          end
+        end
+      else
+        system *cmd
+      end
+
+      File.exists? "/dev/mapper/#{mapname}"
+    end
+  end
+
+  class Close < Command # {{{2
+    required_arguments %w[mapname]
+
+    def call *args
+      mapname = args.pop
+      sh *(['cryptsetup'] + args + ['luksClose', mapname])
+    end
+  end
+
+  class Mount < Command # {{{2
+    required_arguments %w[device mountpoint]
+
+    def initialize *args
+      super
+      options.types ||= 'ext4'
+    end
+
+    def parser
+      super.tap do |opt|
+        opt.on '-l', '--length N', Integer, 'Npass length' do |arg|
+          options.length = arg
+        end
+
+        opt.on '-t', '--types FSTYPE', 'Filesystem type; %s by default' % options.types do |arg|
+          options.types = arg
+        end
+      end
+    end
+
+    def call *args
+      device, mountpoint = args.pop 2
+      mapname = File.basename mountpoint
+
+      if Open.new(:length => options.length).call device, mapname
+        sh *(['mount', '-t', options.types] + args + ["/dev/mapper/#{mapname}", mountpoint])
+      end
+    end
+  end
+
+  class Umount < Command # {{{2
+    required_arguments %w[mountpoint]
+
+    def call *args
+      mountpoint = args.pop
+      mapname = File.basename mountpoint
+
+      if sh *(['umount'] + args + [mountpoint])
+        Close.new.call mapname
+      end
+    end
+  end # }}}2
+
+  def parser
+    @parser ||= OptionParser.new do |opt|
+      opt.banner = %Q(\
+        cryptsetup(8) wrapper.
+
+        Unknown options are sent to the underlying cryptsetup(8) command.
+
+        Unknown commands are sent unadulterated to cryptsetup(8).
+
+        Usage: #{File.basename __FILE__} command [options] [args]
+
+        Available wrapper commands:
+            #{Command.list.keys.join ' '}\
+      ).gsub /^ {8}/, ''
+    end
+  end
+
+  def run arguments = []
+    args = parser.order arguments
+
+    if klass = Command.list[args.first]
+      klass.new.run args.drop(1)
+    else
+      puts ['cryptsetup', *arguments].shelljoin
+      exec 'cryptsetup', *arguments
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Cs.new.run ARGV if $0 == __FILE__

@@ -7,18 +7,10 @@
 
 require 'optparse'
 require 'ostruct'
+require 'cli/password'
 
 class Genpw
-  ALPHA = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a
-  ASCII = (0x20..0x7e).map &:chr # ASCII printable chars
-
-  class << self
-    def generate len, opts = {}
-      chars = opts[:chars] ? opts[:chars] : (opts[:alpha] ? ALPHA : ASCII)
-      max   = chars.length
-      len.times.map { chars[rand max] }.join
-    end
-  end
+  include CLI::Password
 
   attr_reader :options
 
@@ -37,7 +29,11 @@ class Genpw
       }.gsub /^ +/,''
 
       opt.on '-a', '--alpha', 'Alphanumeric characters only' do
-        options.alpha = true
+        options.chars = ALPHA
+      end
+
+      opt.on '-r', '--random', 'Read characters from /dev/random' do
+        options.source = '/dev/random'
       end
     end
   end
@@ -45,8 +41,9 @@ class Genpw
   def run arguments = []
     args = parser.parse arguments
     args = [60] if args.empty?
-    print args.map { |a| self.class.generate a.to_i, :alpha => options.alpha }.join("\n")
-    puts if $stdout.tty?
+    args.each do |len|
+      puts password(len.to_i, :chars => options.chars, :source => options.source)
+    end
   end
 end
 

@@ -78,7 +78,7 @@ class Chrome
       ln_sf flash, local
     end
 
-    def run
+    def update!
       dmg = '/tmp/GoogleChrome.dmg'
       chrome.sh 'curl', '-#Lo', dmg, url unless File.exists? dmg
       new = File.join hmount(dmg), 'Google Chrome.app'
@@ -203,7 +203,7 @@ class Chrome
   def update
     raise '--update for OS X only!' unless RUBY_PLATFORM =~ /darwin/i
     raise 'Do not update as root user!' if Process.euid.zero?
-    DarwinUpdate.new(self, 'http://dl.google.com/chrome/mac/dev/GoogleChrome.dmg').run
+    DarwinUpdate.new(self, 'http://dl.google.com/chrome/mac/dev/GoogleChrome.dmg').update!
   end
 
   def run arguments = []
