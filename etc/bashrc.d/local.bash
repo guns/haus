@@ -1156,77 +1156,8 @@ HAVE wpa_supplicant wpa_passphrase && {
 
 ### Encryption {{{1
 
-# dm-crypt
-ALIAS cs='cryptsetup' && {
-    alias csopen='cryptsetup luksOpen'
-    alias csclose='cryptsetup luksClose'
-    alias csdump='cryptsetup luksDump'
-
-    # Option: -c   Cipher string
-    # Option: -i   Iteration time in milliseconds
-    # Param:  $1   Device
-    # Param:  [$2] Key file
-    csformat() {
-        local usage="Usage: $FUNCNAME [-c cipher] [-i iter-time] device [keyfile]"
-        local opts=(--verbose) cipher='serpent-xts-plain64'
-
-        local OPTIND OPTARG opt
-        while getopts :hc:i: opt; do
-            case $opt in
-            c) cipher="$OPTARG";;
-            i) opts+=(--iter-time "$OPTARG");;
-            *) echo "$usage"; return 1
-            esac
-        done
-        shift $((OPTIND-1))
-
-        # Set cipher and key type
-        opts+=(--cipher "$cipher")
-        case $# in
-        1) opts+=(--verify-passphrase --key-size 512);;
-        2) opts+=(--key-file "$2");;
-        *) echo "$usage"; return 1
-        esac
-
-        # Run on given device
-        run cryptsetup "${opts[@]}" luksFormat "$1"
-    }
-
-    # Option: -d Debug mode
-    # Option: -f Key file
-    # Option: -t Filesystem type
-    # Param:  $1 Device
-    # Param:  $2 Mountpoint (basename is also mapper name)
-    csmount() {
-        local usage="Usage: $FUNCNAME [-d] [-f keyfile] [-t fstype] device mountpoint"
-        local opts=(--verbose) fstype='ext4'
-
-        local OPTIND OPTARG opt
-        while getopts :df:t: opt "$@"; do
-            case $opt in
-            d) opts+=(--debug);;
-            f) opts+=(--key-file "$OPTARG");;
-            t) fstype="$OPTARG";;
-            *) echo "$usage"; return 1
-            esac
-        done
-        shift $((OPTIND-1))
-
-        (($# == 2)) || { echo "$usage"; return 1; }
-        local mapname="${2%/}"; mapname="${mapname##*/}"
-
-        if run cryptsetup "${opts[@]}" luksOpen "$1" "$mapname"; then
-            run mount -t "$fstype" "/dev/mapper/$mapname" "$2"
-        fi
-    }; tcomp mount csmount
-
-    # Param: $1 Device/mountpoint (basename is also mapper name)
-    csumount() {
-        (($# == 1)) || { echo "Usage: $FUNCNAME mountpoint"; return 1; }
-        local mapname="${1%/}"; mapname="${mapname##*/}"
-        run umount "$1" && run cryptsetup luksClose "/dev/mapper/$mapname"
-    }; tcomp umount csumount
-}
+# Complete custom wrapper
+HAVE cryptsetup cs && tcomp cryptsetup cs
 
 
 ### Virtual Machines {{{1
