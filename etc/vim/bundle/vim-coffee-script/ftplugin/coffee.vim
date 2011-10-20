@@ -14,11 +14,6 @@ setlocal comments=:#
 setlocal commentstring=#\ %s
 setlocal omnifunc=javascriptcomplete#CompleteJS
 
-" Extra options passed to CoffeeMake
-if !exists("coffee_make_options")
-  let coffee_make_options = ""
-endif
-
 " Enable CoffeeMake if it won't overwrite any settings.
 if !len(&l:makeprg)
   compiler coffee
@@ -124,8 +119,14 @@ function! s:CoffeeCompile(startline, endline, args)
   " Parse arguments.
   let watch = a:args =~ '\<watch\>'
   let unwatch = a:args =~ '\<unwatch\>'
-  let vert = a:args =~ '\<vert\%[ical]\>'
   let size = str2nr(matchstr(a:args, '\<\d\+\>'))
+   
+  " Determine default split direction.
+  if exists("g:coffee_compile_vert")
+    let vert = 1
+  else
+    let vert = a:args =~ '\<vert\%[ical]\>'
+  endif
 
   " Remove any watch listeners.
   silent! autocmd! CoffeeCompileAuWatch
