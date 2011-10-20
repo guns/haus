@@ -60,7 +60,7 @@ task :env do # {{{1
       { :base => "#{@vim}/jellybeans.vim",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jslint.vim",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/matchit.zip",            :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/ManPageView",            :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/ManPageView",                                        :files => :pathogen },
       { :base => "#{@vim}/NrrwRgn",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nerdcommenter",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nerdtree",               :branch => %w[master],      :files => :pathogen },
