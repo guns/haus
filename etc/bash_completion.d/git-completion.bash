@@ -1259,12 +1259,9 @@ _git_commit ()
 			" "" "${cur##--cleanup=}"
 		return
 		;;
-	--reuse-message=*)
-		__gitcomp "$(__git_refs)" "" "${cur##--reuse-message=}"
-		return
-		;;
-	--reedit-message=*)
-		__gitcomp "$(__git_refs)" "" "${cur##--reedit-message=}"
+	--reuse-message=*|--reedit-message=*|\
+	--fixup=*|--squash=*)
+		__gitcomp "$(__git_refs)" "" "${cur#*=}"
 		return
 		;;
 	--untracked-files=*)
@@ -1278,7 +1275,7 @@ _git_commit ()
 			--dry-run --reuse-message= --reedit-message=
 			--reset-author --file= --message= --template=
 			--cleanup= --untracked-files --untracked-files=
-			--verbose --quiet
+			--verbose --quiet --fixup= --squash=
 			"
 		return
 	esac
@@ -1556,14 +1553,9 @@ _git_log ()
 		merge="--merge"
 	fi
 	case "$cur" in
-	--pretty=*)
+	--pretty=*|--format=*)
 		__gitcomp "$__git_log_pretty_formats $(__git_pretty_aliases)
-			" "" "${cur##--pretty=}"
-		return
-		;;
-	--format=*)
-		__gitcomp "$__git_log_pretty_formats $(__git_pretty_aliases)
-			" "" "${cur##--format=}"
+			" "" "${cur#*=}"
 		return
 		;;
 	--date=*)
@@ -1671,11 +1663,9 @@ _git_notes ()
 			;;
 		esac
 		;;
-	add,--reuse-message=*|append,--reuse-message=*)
-		__gitcomp "$(__git_refs)" "" "${cur##--reuse-message=}"
-		;;
+	add,--reuse-message=*|append,--reuse-message=*|\
 	add,--reedit-message=*|append,--reedit-message=*)
-		__gitcomp "$(__git_refs)" "" "${cur##--reedit-message=}"
+		__gitcomp "$(__git_refs)" "" "${cur#*=}"
 		;;
 	add,--*|append,--*)
 		__gitcomp '--file= --message= --reedit-message=
@@ -1733,7 +1723,7 @@ _git_push ()
 	--*)
 		__gitcomp "
 			--all --mirror --tags --dry-run --force --verbose
-			--receive-pack= --repo=
+			--receive-pack= --repo= --set-upstream
 		"
 		return
 		;;
@@ -2370,14 +2360,9 @@ _git_show ()
 	__git_has_doubledash && return
 
 	case "$cur" in
-	--pretty=*)
+	--pretty=*|--format=*)
 		__gitcomp "$__git_log_pretty_formats $(__git_pretty_aliases)
-			" "" "${cur##--pretty=}"
-		return
-		;;
-	--format=*)
-		__gitcomp "$__git_log_pretty_formats $(__git_pretty_aliases)
-			" "" "${cur##--format=}"
+			" "" "${cur#*=}"
 		return
 		;;
 	--*)
