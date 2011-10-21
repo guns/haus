@@ -71,6 +71,7 @@ task :env do # {{{1
       { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tir_black",              :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/VimClojure",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-coffee-script",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen },

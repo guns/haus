@@ -220,6 +220,21 @@ let g:org_leader = '<C-o>'
 let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 120
 
+" Plugin: VimClojure
+let g:vimclojure#DynamicHighlighting = 1
+" let g:vimclojure#ParenRainbow = 1
+" let g:vimclojure#ParenRainbowColors = {
+"     \ '1':  'ctermfg=',
+"     \ '2':  'ctermfg=',
+"     \ '3':  'ctermfg=',
+"     \ '4':  'ctermfg=',
+"     \ '5':  'ctermfg=',
+"     \ '6':  'ctermfg=',
+"     \ '7':  'ctermfg=',
+"     \ '8':  'ctermfg=',
+"     \ '9':  'ctermfg=',
+"     \ '10': 'ctermfg=',
+" \ }
 
 """ MAPPINGS, AUTOCOMMANDS and ABBREVIATIONS """
 
