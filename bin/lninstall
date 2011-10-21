@@ -16,8 +16,6 @@ class Lninstall
   def initialize opts = {}
     @options = OpenStruct.new opts
     @queue   = Haus::Queue.new options
-    self.src = options.src if options.src
-    self.dst = options.dst if options.dst
   end
 
   def parser
@@ -63,14 +61,14 @@ class Lninstall
     end
   end
 
-  attr_reader :src, :dst
+  attr_writer :src, :dst
 
-  def src= path
-    @src = File.expand_path path
+  def src
+    File.expand_path options.src rescue nil
   end
 
-  def dst= path
-    @dst = File.expand_path path
+  def dst
+    File.expand_path options.dst rescue nil
   end
 
   def bin base
@@ -122,7 +120,7 @@ class Lninstall
     args = parser.parse arguments
     abort parser.help unless args.size == 2
 
-    self.src, self.dst = args
+    options.src, options.dst = args
     options.uninstall ? uninstall : install
   end
 end
