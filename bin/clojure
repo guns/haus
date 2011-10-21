@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Clojure wrapper.
+#
+# http://trac.macports.org/browser/trunk/dports/lang/clojure/files/clj-rlwrap.sh?format=txt
+
+[[ -d "$cdjars" ]] && CLASSPATH="$cdjars/clojure.jar:$CLASSPATH"
+CLOJURE="java -client -classpath $CLASSPATH clojure.main"
+BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
+COMPLETIONS=~/.clj_completions
+
+if (($#)) || ! type rlwrap &>/dev/null; then
+    exec run $CLOJURE -- "$@"
+else
+    touch "$COMPLETIONS"
+    exec run rlwrap --case-insensitive \
+                    --break-chars "$BREAK_CHARS" \
+                    --quote-characters '"' \
+                    --complete-filenames \
+                    --remember \
+                    --file "$COMPLETIONS" \
+                    -- $CLOJURE
+fi

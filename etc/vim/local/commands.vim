@@ -122,6 +122,7 @@ function! <SID>Screen(command)
         \ 'ruby'       : 'irb',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
+        \ 'clojure'    : 'clojure',
         \ 'javascript' : 'node'
         \ }
     let chdir = 'cd "' . getcwd() . '"'
