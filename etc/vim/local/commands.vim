@@ -110,6 +110,8 @@ function! <SID>Todo()
     else
         execute 'silent! grep! -r -Pw "' . join(words,'\|') . '" .'
     endif
+
+    redraw!
 endfunction
 
 
