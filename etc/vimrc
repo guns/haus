@@ -221,20 +221,21 @@ let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 120
 
 " Plugin: VimClojure
+let g:vimclojure#FuzzyIndent = 1
 let g:vimclojure#DynamicHighlighting = 1
-" let g:vimclojure#ParenRainbow = 1
-" let g:vimclojure#ParenRainbowColors = {
-"     \ '1':  'ctermfg=',
-"     \ '2':  'ctermfg=',
-"     \ '3':  'ctermfg=',
-"     \ '4':  'ctermfg=',
-"     \ '5':  'ctermfg=',
-"     \ '6':  'ctermfg=',
-"     \ '7':  'ctermfg=',
-"     \ '8':  'ctermfg=',
-"     \ '9':  'ctermfg=',
-"     \ '10': 'ctermfg=',
-" \ }
+let g:vimclojure#ParenRainbow = 1
+let g:vimclojure#ParenRainbowColors = {
+    \ '0':  'ctermfg=244',
+    \ '1':  'ctermfg=243',
+    \ '2':  'ctermfg=242',
+    \ '3':  'ctermfg=241',
+    \ '4':  'ctermfg=240',
+    \ '5':  'ctermfg=239',
+    \ '6':  'ctermfg=238',
+    \ '7':  'ctermfg=237',
+    \ '8':  'ctermfg=236',
+    \ '9':  'ctermfg=235'
+\ }
 
 """ MAPPINGS, AUTOCOMMANDS and ABBREVIATIONS """
 

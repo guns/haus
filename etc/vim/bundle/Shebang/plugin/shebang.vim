@@ -18,10 +18,11 @@ function! SetShebang()
 python << endpython
 import vim
 shebang = {
-	'python': '#!/usr/bin/env python',
-	'ruby':   '#!/usr/bin/env ruby',
-	'bash':   '#!/usr/bin/env bash',
-	'sh':     '#!/bin/sh',
+	'python':  '#!/usr/bin/env python',
+	'ruby':    '#!/usr/bin/env ruby',
+	'clojure': '#!/usr/bin/env clojure',
+	'bash':    '#!/usr/bin/env bash',
+	'sh':      '#!/bin/sh',
 }
 if not vim.current.buffer[0].startswith('#!'):
 	filetype = vim.eval('&filetype')
@@ -34,4 +35,3 @@ function! SetExecutable()
 	call SetExecutableBit()
 	call SetShebang()
 endfunction
-

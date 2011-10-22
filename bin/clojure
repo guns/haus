@@ -9,8 +9,8 @@ CLOJURE="java -client -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
 COMPLETIONS=~/.clj_completions
 
-if (($#)) || ! type rlwrap &>/dev/null; then
-    exec run $CLOJURE -- "$@"
+if (($#)); then
+    exec $CLOJURE "$@"
 else
     touch "$COMPLETIONS"
     exec run rlwrap --case-insensitive \
@@ -19,5 +19,5 @@ else
                     --complete-filenames \
                     --remember \
                     --file "$COMPLETIONS" \
-                    -- $CLOJURE
+                    $CLOJURE
 fi

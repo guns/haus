@@ -34,7 +34,8 @@ augroup GUNS
         \ setlocal iskeyword+=-
 
     " Lisp
-    autocmd Filetype lisp,scheme
+    autocmd Filetype lisp,scheme,clojure
+        \ let g:delimitMate_quotes = '"' |
         \ SetWhitespace 2 8
 
     " Ruby
