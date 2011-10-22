@@ -33,6 +33,15 @@ task :env do # {{{1
         :base   => "#{@src}/git",
         :branch => %w[master],
         :files  => { 'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git-completion.bash' }
+      },
+
+      {
+        :base   => "#{@src}/leiningen",
+        :branch => %w[guns],
+        :files  => {
+          'bin/lein'             => 'bin/lein',
+          'bash_completion.bash' => 'etc/bash_completion.d/leiningen.bash'
+        }
       }
     ],
 
