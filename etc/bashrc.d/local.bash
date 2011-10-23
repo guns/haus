@@ -162,8 +162,7 @@ CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdappsupport    ~/Library/Application\ Support
 CD_FUNC cdprefs         ~/Library/Preferences
 
-RC_FUNC rcd             /etc/rc.d /usr/local/etc/rc.d
-RC_FUNC initd           /etc/init.d /usr/local/etc/init.d
+RC_FUNC rcd             /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 
 
 ### Bash builtins and Haus commands {{{1
@@ -1275,6 +1274,17 @@ ALIAS xselb='xsel -b'
 
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
+
+
+### Launchd
+
+if HAVE launchctl; then
+    launchctlreload() {
+        run launchctl unload -w "$1"
+        sleep 2 # HACK!
+        run launchctl load -w "$1"
+    }
+fi
 
 
 ### Games {{{1
