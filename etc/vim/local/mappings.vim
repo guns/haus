@@ -42,7 +42,7 @@ PreserveMap <4-y> <C-y>
 "   * breaks out of insert mode for universal availability
 "   * -- i_Ctrl-X
 let g:mapleader = ''
-let g:maplocalleader = g:mapleader
+let g:maplocalleader = '-'
 map! <C-x> <Esc><Leader>
 
 " Allow use of <C-c> to terminate visual block insertion
@@ -280,6 +280,7 @@ noremap <Leader>f<Space> :setlocal filetype=
 noremap <Leader>f?       :setlocal filetype?<CR>
 noremap <Leader>fb       :setlocal filetype=sh<CR>
 noremap <Leader>fc       :setlocal filetype=c<CR>
+noremap <Leader>fC       :setlocal filetype=clojure<CR>
 noremap <Leader>fd       :setlocal filetype=diff<CR>
 noremap <Leader>fh       :setlocal filetype=html<CR>
 noremap <Leader>fj       :setlocal filetype=javascript<CR>

@@ -2,6 +2,10 @@ snippet #! "#!/usr/bin/env clojure" b
 #!/usr/bin/env clojure
 endsnippet
 
+snippet d "def" w
+(def $0)
+endsnippet
+
 snippet l "let" w
 (let [$0])
 endsnippet
@@ -10,20 +14,30 @@ snippet f "fn" w
 (fn $0)
 endsnippet
 
+snippet # "#()" w
+#($0)
+endsnippet
+
+snippet def "defn" w
+(defn $1
+  ${2:"$3"
+  }$0)
+endsnippet
+
 snippet lo "loop" w
 (loop $0)
 endsnippet
 
-snippet r "recur" w
+snippet re "recur" w
 (recur $0)
 endsnippet
 
 snippet if "if" w
-(if $1 ${0:(comment then)})
+(if $0)
 endsnippet
 
 snippet ifn "if-not" w
-(if-not $1 ${0:(comment then)})
+(if-not $0)
 endsnippet
 
 snippet n "not" w
