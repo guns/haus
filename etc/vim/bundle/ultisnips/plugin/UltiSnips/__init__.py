@@ -253,7 +253,9 @@ class _SnippetsFileParser(object):
             elif head in ("snippet", "global"):
                 self._parse_snippet()
             elif head == "clearsnippets":
-                self._sm.clear_snippets(tail.split(), self._ft)
+                triggers = tail.split()
+                self._sm.clear_snippets(triggers, self._ft)
+                self._sm.clear_snippets(triggers, "all")
             elif head and not head.startswith('#'):
                 self._error("Invalid line %r" % self._line().rstrip())
                 break
@@ -504,7 +506,8 @@ class VimState(object):
         vim.current.window.cursor = lineno + 1, col
 
         if delta.line == delta.col == 0:
-            if col == 0 or vim.eval("mode()") != 'i':
+            if col == 0 or vim.eval("mode()") != 'i' and \
+                    col < len(vim.current.buffer[lineno]):
                 feedkeys(r"\<Esc>i")
             else:
                 feedkeys(r"\<Esc>a")
@@ -667,6 +670,9 @@ class SnippetManager(object):
         before, after = self._get_before_after()
         snippets = self._snips(before, True)
 
+        # Sort snippets alphabetically
+        snippets.sort(key=lambda x: x.trigger)
+
         if not snippets:
             return True
 
@@ -716,7 +722,7 @@ class SnippetManager(object):
         before, after = self._get_before_after()
         snip = Snippet(trigger, value, descr, options, globals)
 
-        if snip.matches(before):
+        if not trigger or snip.matches(before):
             self._do_snippet(snip, before, after)
             return True
         else:
@@ -1139,7 +1145,13 @@ class SnippetManager(object):
         base_snippets = os.path.realpath(os.path.join(__file__, "../../../UltiSnips"))
         ret = []
 
-        for rtp in vim.eval("&runtimepath").split(',')[::-1]:
+        paths = vim.eval("&runtimepath").split(',')
+
+        if vim.eval("exists('g:UltiSnipsDontReverseSearchPath')") == "0" or \
+           vim.eval("g:UltiSnipsDontReverseSearchPath") == "0":
+            paths = paths[::-1]
+
+        for rtp in paths:
             for snippet_dir in snippet_dirs:
                 pth = os.path.realpath(os.path.join(rtp, snippet_dir))
 
