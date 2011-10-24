@@ -236,9 +236,13 @@ $if Bash
 
     # IRB
     "\C-xi":        "\C-] irb \n"
+
+    # Clojure
+    "\C-xc":        "\C-] clojure \n"
 $endif
 
 
+# IRB
 $if Ruby
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"       (- exchange-point-and-mark)
@@ -251,4 +255,17 @@ $if Ruby
     "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
     "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
     "\C-xee":       edit-and-execute-command
+$endif
+
+
+# Clojure REPL
+$if Java
+    # Documentation
+    "\C-xd":        "\C-](doc )\C-b"
+    "\C-xh":        "\C-xd"
+    "\C-xf":        "\C-](find-doc "")\C-b\C-b"
+    "\C-xs":        "\C-](source )\C-b"
+
+    # Loading
+    "\C-xl":        "\C-](load-file "")\C-b\C-b"
 $endif

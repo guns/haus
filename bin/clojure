@@ -5,7 +5,7 @@
 # http://trac.macports.org/browser/trunk/dports/lang/clojure/files/clj-rlwrap.sh?format=txt
 
 [[ -d "$cdjars" ]] && CLASSPATH="$cdjars/clojure.jar:$CLASSPATH"
-CLOJURE="java -client -classpath $CLASSPATH clojure.main"
+CLOJURE="java -server -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
 COMPLETIONS=~/.clj_completions
 
@@ -13,7 +13,9 @@ if (($#)); then
     exec $CLOJURE "$@"
 else
     touch "$COMPLETIONS"
-    exec run rlwrap --case-insensitive \
+    exec run rlwrap --ansi-colour-aware \
+                    --prompt-colour=GREEN \
+                    --case-insensitive \
                     --break-chars "$BREAK_CHARS" \
                     --quote-characters '"' \
                     --complete-filenames \
