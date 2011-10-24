@@ -65,6 +65,10 @@ class Macdriver
         options.force = true
       end
 
+      opt.on '-l', '--loaded-only', 'Show only loaded kexts' do
+        options.loaded_only = true
+      end
+
       opt.on '-r', '--reload', 'Reload kext metadata instead of reading from a cache' do
         options.reload = true
       end
@@ -103,6 +107,10 @@ class Macdriver
     kextstat.include? kext.id
   end
 
+  def filter kexts
+    options.loaded_only ? kexts.select { |k| loaded? k } : kexts
+  end
+
   def find name
     id = case name
     when 'cd'          then 'com.apple.iokit.IOCDStorageFamily'
@@ -137,7 +145,7 @@ class Macdriver
   end
 
   def to_s
-    kextlist.map { |kext| decorate kext }.join "\n"
+    fiter(kextlist).map { |kext| decorate kext }.join "\n"
   end
 
   def decorate kext
@@ -151,7 +159,7 @@ class Macdriver
     else raise ArgumentError
     end
 
-    "#{name}:\n" + kexts.map { |kext| "    #{decorate kext}" }.join("\n")
+    "#{name}:\n" + filter(kexts).map { |kext| "    #{decorate kext}" }.join("\n")
   end
 
   def show names = nil, type
