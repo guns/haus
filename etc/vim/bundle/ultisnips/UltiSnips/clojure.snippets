@@ -1,52 +1,693 @@
+###
+### Clojure
+### http://java.ociweb.com/mark/clojure/article.html
+###
+
+clearsnippets { [ ({ ([
+
+### Meta {{{1
+
 snippet #! "#!/usr/bin/env clojure" b
 #!/usr/bin/env clojure
 endsnippet
 
-snippet d "def" w
-(def $0)
+snippet lf "load-file"
+(load-file "${0:path}")
 endsnippet
 
-snippet l "let" w
-(let [$0])
+snippet ns "ns"
+(ns ${1:name}
+	$0)
 endsnippet
+
+snippet req "require"
+(require '(${0:libs}))
+endsnippet
+
+snippet :req ":require"
+(:require (${0:libs}))
+endsnippet
+
+snippet use "use"
+(use '(${0:libs}))
+endsnippet
+
+snippet :use ":use"
+(:use (${0:libs}))
+endsnippet
+
+snippet imp "import"
+(import '(${0:libs}))
+endsnippet
+
+snippet :imp ":import"
+(:import (${0:libs}))
+endsnippet
+
+
+### Collections {{{1
+
+snippet c "conj" w
+(conj ${1:coll} ${0:values})
+endsnippet
+
+snippet co "count" w
+(count ${0:coll})
+endsnippet
+
+snippet cons "cons" w
+(cons ${1:item} ${0:coll})
+endsnippet
+
+snippet rev "reverse" w
+(reverse ${0:coll})
+endsnippet
+
+snippet fir "first" w
+(first ${0:coll})
+endsnippet
+
+snippet sec "second" w
+(second ${0:coll})
+endsnippet
+
+snippet las "last" w
+(last ${0:coll})
+endsnippet
+
+snippet n "nth" w
+(nth ${1:coll} ${0:index default-value})
+endsnippet
+
+snippet nex "next" w
+(next ${0:coll})
+endsnippet
+
+snippet res "rest" w
+(rest ${0:coll})
+endsnippet
+
+snippet butl "butlast" w
+(butlast ${0:coll})$
+endsnippet
+
+snippet d "drop" w
+(drop ${1:n} ${0:coll})
+endsnippet
+
+snippet dl "drop-last" w
+(drop-last ${0:[s] [n s]})
+endsnippet
+
+snippet dw "drop-while" w
+(drop-while ${1:func} ${0:coll})
+endsnippet
+
+snippet t "take" w
+(take ${1:n} ${0:coll})
+endsnippet
+
+snippet tl "take-last" w
+(take-last ${1:n} ${0:coll})
+endsnippet
+
+snippet tn "take-nth" w
+(take-nth ${1:pos} ${0:coll})
+endsnippet
+
+snippet tw "take-while" w
+(take-while ${1:func} ${0:coll})
+endsnippet
+
+snippet nthn "nthnext" w
+(nthnext ${1:coll} ${0:n})
+endsnippet
+
+snippet into "into" w
+(into ${1:to-coll} ${0:from-coll})
+endsnippet
+
+snippet pe "peek" w
+(peek ${0:coll})
+endsnippet
+
+snippet pop "pop" w
+(pop ${0:coll})
+endsnippet
+
+snippet a "assoc" w
+(assoc ${1:map|vec} ${2:key|idx} ${0:val})
+endsnippet
+
+snippet dis "dissoc" w
+(dissoc ${1:map} ${0:keys})
+endsnippet
+
+snippet g "get" w
+(get ${1:map|vec} ${0:key|idx default})
+endsnippet
+
+snippet sv "subvec" w
+(subvec ${1:vec} ${0:[start] [start end]})
+endsnippet
+
+snippet set "set" w
+(set ${0:coll})
+endsnippet
+
+snippet hs "hash-set" w
+(hash-set ${0:items})
+endsnippet
+
+snippet ss "sorted-set" w
+(sorted-set ${0:items})
+endsnippet
+
+snippet disj "disj" w
+(disj ${1:set} ${0:items})
+endsnippet
+
+snippet dif "difference" w
+(difference ${0:sets})
+endsnippet
+
+snippet ind "index" w
+(index ${1:map} [${0:keys}])
+endsnippet
+
+snippet inters "intersection" w
+(intersection ${0:sets})
+endsnippet
+
+snippet j "join" w
+(join $0)
+endsnippet
+
+snippet mapinv "map-invert" w
+(map-invert ${0:map})
+endsnippet
+
+snippet pro "project" w
+(project ${1:map} [${0:keys}])
+endsnippet
+
+snippet ren "rename" w
+(rename ${1:relation} {${2::old} ${0::new}})
+endsnippet
+
+snippet renk "rename-keys" w
+(rename-keys ${1:map} {${2:old} ${0::new}})
+endsnippet
+
+snippet uni "union" w
+(union ${0:sets})
+endsnippet
+
+snippet hm "hash-map" w
+(hash-map ${0:keyvals})
+endsnippet
+
+snippet sm "sorted-map" w
+(sorted-map ${0:keyvals})
+endsnippet
+
+snippet ks "keys" w
+(keys ${0:map})
+endsnippet
+
+snippet vs "vals" w
+(vals ${0:map})
+endsnippet
+
+snippet v "vec" w
+(vec ${0:coll})
+endsnippet
+
+snippet vv "vector" w
+(vector ${0:items})
+endsnippet
+
+snippet lis "list" w
+(list ${0:items})
+endsnippet
+
+snippet quo "quote" w
+(quote (${0:items}))
+endsnippet
+
+snippet ' "'()" w
+'($0)
+endsnippet
+
+snippet map "map" w
+(map ${1:func} ${0:colls})
+endsnippet
+
+snippet red "reduce" w
+(reduce ${1:func} ${0:[coll] [val coll]})
+endsnippet
+
+snippet fil "filter" w
+(filter ${1:func} ${0:coll})
+endsnippet
+
+snippet sel "select" w
+(select ${1:func} ${0:coll})
+endsnippet
+
+snippet selk "select-keys" w
+(select-keys ${1:map} ${0:keys})
+endsnippet
+
+snippet gi "get-in" w
+(get-in ${1:map} [${0:keys}])
+endsnippet
+
+snippet ai "assoc-in" w
+(assoc-in ${1:map} [${2:keys}] ${0:value})
+endsnippet
+
+snippet ui "update-in" w
+(update-in ${1:map} [${2:keys}] ${0:func args})
+endsnippet
+
+snippet s "struct" w
+(struct ${1:type} ${0:values})
+endsnippet
+
+snippet cs "create-struct" w
+(create-struct ${0:keys})
+endsnippet
+
+snippet acc "accessor" w
+(accessor ${1:struct} ${0:key})
+endsnippet
+
+snippet cyc "cycle" w
+(cycle ${0:coll})
+endsnippet
+
+snippet dist "distinct" w
+(distinct ${0:coll})
+endsnippet
+
+snippet interl "interleave" w
+(interleave ${0:colls})
+endsnippet
+
+snippet interp "interpose" w
+(interpose ${1:sep} ${0:coll})
+endsnippet
+
+snippet iter "iterate" w
+(iterate ${1:func} ${0:arg})
+endsnippet
+
+snippet cat "concat" w
+(concat ${0:colls})
+endsnippet
+
+snippet lcat "lazy-cat" w
+(lazy-cat ${0:colls})
+endsnippet
+
+snippet ran "range" w
+(range ${0:[] [end] [start end] [start end step]})
+endsnippet
+
+snippet seq "seq" w
+(seq ${0:coll})
+endsnippet
+
+snippet lseq "lazy-seq" w
+(lazy-seq ${0:colls})
+endsnippet
+
+snippet lin "line-seq" w
+(line-seq ${0:reader})
+endsnippet
+
+snippet tseq "tree-seq" w
+(tree-seq ${0:[branch? children root]})
+endsnippet
+
+snippet part "partition" w
+(partition ${0:[n coll] [n step coll] [n step pad coll]})
+endsnippet
+
+snippet rseq "re-seq" w
+(re-seq ${1:#"$2"} ${0:string})
+endsnippet
+
+snippet rem "remove" w
+(remove ${1:func} ${0:coll})
+endsnippet
+
+snippet rep "repeat" w
+(repeat ${0:[x] [n x]})
+endsnippet
+
+
+### Predicates and Reflection {{{1
+
+snippet cla "class" w
+(class ${0:item})
+endsnippet
+
+snippet anc "ancestors" w
+(ancestors ${0:tag})
+endsnippet
+
+snippet com "compare" w
+(compare ${1:a} ${0:b})
+endsnippet
+
+snippet ident "identical?" w
+(identical? ${1:a} ${0:b})
+endsnippet
+
+snippet ? "predicate?" w
+(${1:test}? $0)
+endsnippet
+
+snippet isa "isa?" w
+(isa? ${1:child} ${0:parent})
+endsnippet
+
+snippet em "empty?" w
+(empty? ${0:coll})
+endsnippet
+
+snippet nem "not-empty" w
+(not-empty ${0:coll})
+endsnippet
+
+snippet col "coll?" w
+(coll? ${0:item})
+endsnippet
+
+snippet inst "instance?" w
+(instance? ${1:class} ${0:item})
+endsnippet
+
+snippet ev "every?" w
+(every? ${1:func} ${0:coll})
+endsnippet
+
+snippet nev "not-every?" w
+(not-every? ${1:func} ${0:coll})
+endsnippet
+
+snippet som "some" w
+(some ${1:func} ${0:coll})
+endsnippet
+
+snippet na "not-any?" w
+(not-any? ${1:func} ${0:coll})
+endsnippet
+
+snippet con "contains?" w
+(contains? ${1:coll} ${0:key})
+endsnippet
+
+snippet zer "zero?" w
+(zero? ${0:item})
+endsnippet
+
+
+### Functions {{{1
 
 snippet f "fn" w
-(fn $0)
+(fn [$1] $0)
 endsnippet
 
-snippet # "#()" w
-#($0)
+snippet app "apply" w
+(apply ${1:func} ${0:args})
 endsnippet
 
-snippet def "defn" w
-(defn $1
-  ${2:"$3"
-  }$0)
+snippet comp "comp" w
+(comp ${0:f g h})
 endsnippet
 
-snippet lo "loop" w
-(loop $0)
+snippet par "partial" w
+(partial ${1:func} ${0:args})
 endsnippet
 
-snippet re "recur" w
-(recur $0)
+snippet mem "memoize" w
+(memoize ${0:func})
 endsnippet
+
+snippet tim "time" w
+(time ${0:expr})
+endsnippet
+
+snippet compl "complement" w
+(complement ${0:func})
+endsnippet
+
+snippet - "->" w
+(-> ${1:item} ${0:funcs})
+endsnippet
+
+snippet -- "->>" w
+(->> ${1:item} ${0:funcs})
+endsnippet
+
+
+### Definitions {{{1
+
+snippet let "let" w
+(let [$1]
+	$0)
+endsnippet
+
+snippet bind "binding" w
+(binding [$1]
+	$0)
+endsnippet
+
+snippet def "def" w
+(def ${1:name} ${0:val})
+endsnippet
+
+snippet defn "defn" w
+(defn ${1:name [params]}
+	${2:"${3:docstring}"
+	}$0)
+endsnippet
+
+snippet defn- "defn-" w
+(defn- ${1:name [params]}
+	${2:"${3:docstring}"
+	}$0)
+endsnippet
+
+snippet defmem "defn (memoize)" w
+(def ${1:name} (memoize ${0:fn}))
+endsnippet
+
+snippet defmul "defmulti" w
+(defmulti ${1:name}
+	${2:"${3:docstring}"
+	}${0:dispatch-function})
+endsnippet
+
+snippet defmet "defmethod" w
+(defmethod ${1:multi-name} ${2::default} ${0:[] fn-tail})
+endsnippet
+
+snippet defs "defstruct" w
+(defstruct ${1:name} ${0:keys})
+endsnippet
+
+snippet defa "def (accessor)" w
+(def ${1:name} (accessor ${2:struct} ${0::$1}))
+endsnippet
+
+snippet decl "declare" w
+(declare ${0:func-names})
+endsnippet
+
+
+### Java Interop {{{1
+
+snippet new "new" w
+(new ${1:JavaClass} ${0:args})
+endsnippet
+
+snippet F "Static/method" w
+(${1:Class}/${0:method})
+endsnippet
+
+snippet M "Math" w
+(Math/$0)
+endsnippet
+
+snippet . "." w
+(. ${1:object} ${2:method} ${0:args})
+endsnippet
+
+snippet .. ".." w
+(.. ${1:object} ${0:methods})
+endsnippet
+
+snippet doto "doto" w
+(doto ${1:object}
+	$0)
+endsnippet
+
+snippet memfn "memfn" w
+(memfn ${1:method} ${0:args})
+endsnippet
+
+
+### Exception Handling {{{1
+
+snippet thr "throw" w
+(throw ${0:exception})
+endsnippet
+
+snippet try "try" w
+(try
+	$0)
+endsnippet
+
+snippet catch "cat" w
+(catch ${1:class} ${2:e}
+	$0)
+endsnippet
+
+snippet fin "finally" w
+(finally
+	$0)
+endsnippet
+
+
+### Conditionals and Logic {{{1
 
 snippet if "if" w
-(if $0)
+(if ${1:cond}
+	${2:(comment then)}
+	${0:(comment else)})
 endsnippet
 
 snippet ifn "if-not" w
-(if-not $0)
+(if-not ${1:cond}
+	${2:(comment then)}
+	${0:(comment else)})
 endsnippet
 
-snippet n "not" w
-(not $0)
+snippet not "not" w
+(not ${0:e})
 endsnippet
 
-snippet m "map" w
-(map $0)
+snippet ne "not=" w
+(not= ${1:a} ${0:b})
 endsnippet
+
+snippet eq "=" w
+(= ${1:a} ${0:b})
+endsnippet
+
+snippet w "when" w
+(when ${0:cond})
+endsnippet
+
+snippet wn "when-not" w
+(when-not ${0:cond})
+endsnippet
+
+snippet ifl "if-let" w
+(if-let [${1:name} ${2:expr}]
+	${3:(comment then)}
+	${0:(comment else)})
+endsnippet
+
+snippet wl "when-let" w
+(when [${1:name} ${2:expr}]$0)
+endsnippet
+
+snippet cond "cond" w
+(cond
+	(${1:when}) ${2:then}
+	:else $0)
+endsnippet
+
+snippet condp "condp" w
+(condp ${1:func} ${2:value}
+	${3:test} ${4:[result] [:>> func]}
+	${0:else})
+endsnippet
+
+snippet and "and" w
+(and $0)
+endsnippet
+
+snippet or "or" w
+(or $0)
+endsnippet
+
+
+### Expressions, Iteration, and Looping {{{1
+
+snippet do "do exprs" w
+(do $0)
+endsnippet
+
+snippet dos "doseq" w
+(doseq [${1:each-bind}]
+	$0)
+endsnippet
+
+snippet dot "dotimes" w
+(dotimes [${1:bindings}]
+	$0)
+endsnippet
+
+snippet dor "dorun" w
+(dorun ${0:[coll] [n coll]})
+endsnippet
+
+snippet doa "doall" w
+(doall ${0:[coll] [n coll]})
+endsnippet
+
+snippet for "for" w
+(for [${1:each-bind}]
+	$0)
+endsnippet
+
+snippet lo "loop" w
+(loop [${1:bindings}]
+	$0)
+endsnippet
+
+snippet re "recur" w
+(recur ${0:bindings})
+endsnippet
+
+snippet wh "while" w
+(while ${1:test}
+	$0)
+endsnippet
+
+snippet tram "trampoline" w
+(trampoline ${0:func args})
+endsnippet
+
+
+### Strings {{{1
+
+snippet str "str" w
+(str ${0:items})
+endsnippet
+
+snippet fmt "format" w
+(format ${1:"$2"} ${0:args})
+endsnippet
+
+
+### IO {{{1
 
 snippet p "print" w
 (print $0)
@@ -54,4 +695,33 @@ endsnippet
 
 snippet pr "println" w
 (println $0)
+endsnippet
+
+snippet pf "printf" w
+(printf ${1:"$2"} ${0:args})
+endsnippet
+
+snippet fl "flush" w
+(flush)
+endsnippet
+
+snippet nl "newline" w
+(newline)
+endsnippet
+
+snippet wos "with-out-str" w
+(with-out-str$0)
+endsnippet
+
+snippet wo "with-open" w
+(with-open [${1:name init ...}]
+	$0)
+endsnippet
+
+snippet slu "slurp" w
+(slurp ${0:file})
+endsnippet
+
+snippet spi "spit" w
+(spit ${1:file} ${0:body})
 endsnippet
