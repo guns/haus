@@ -172,10 +172,14 @@ endfunction
 " Source or run current file {{{1
 command! RunCurrentFile call <SID>RunCurrentFile()
 function! <SID>RunCurrentFile()
+    let map = {
+        \ 'ruby'    : 'ruby',
+        \ 'clojure' : 'clojure'
+    \ }
     if &filetype == 'vim'
         source %
-    elseif &filetype == 'ruby'
-        silent execute '! ruby % | $PAGER' | redraw!
+    elseif has_key(map, &filetype)
+        silent execute '! ' . map[&filetype] . ' % | $PAGER' | redraw!
     endif
 endfunction
 
@@ -220,6 +224,22 @@ function! <SID>CapturePane()
     if tab | execute 'normal gT' | endif
     execute buf . 'sbuffer'
     wincmd L
+endfunction
+
+
+" Clojure (comment) {{{1
+command! ToggleClojureFormComment call <SID>ToggleClojureFormComment()
+function! <SID>ToggleClojureFormComment()
+    normal m`vabv
+    let word = substitute(getline(line("'<")), '\v.{' . col("'<") . '}(\S*).*', '\1', '')
+
+    if word =~# 'comment'
+        execute 'normal gvov dw'
+    else
+        execute 'normal gvovacomment '
+    endif
+
+    normal =ap``
 endfunction
 
 

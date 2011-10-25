@@ -35,7 +35,11 @@ augroup GUNS
 
     " Lisp
     autocmd Filetype lisp,scheme,clojure
-        \ let g:delimitMate_quotes = '"' |
+        \ let b:delimitMate_quotes = '"' |
+        \ execute 'noremap <buffer> <C-x>ib :normal ysib(<CR>i' |
+        \ execute 'noremap <buffer> <C-x>i( :normal ysib(<CR>i' |
+        \ execute 'noremap <buffer> <C-x>i[ :normal ysib[<CR>i' |
+        \ execute 'noremap <buffer> <C-x>ic :ToggleClojureFormComment<CR>' |
         \ SetWhitespace 2 8
 
     " Ruby
