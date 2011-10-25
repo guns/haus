@@ -5,6 +5,7 @@
 PATH_ARY=(
     ~/bin                               # User programs
     /usr/local/{,s}bin                  # Local administrator's programs
+    "$RUBYPATH"                         # Used for switching top Ruby
     /opt/ruby/{1.9,1.8,1.8.6}/bin       # Ruby installations
     {~/.haus,/opt/haus/bin}             # Haus programs
     "$PATH"                             # Existing PATH

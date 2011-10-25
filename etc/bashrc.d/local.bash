@@ -1023,7 +1023,12 @@ type ruby &>/dev/null && {
         }
     }; GC_FUNC RUBY_VERSION_SETUP
 
-    RUBY_VERSION_SETUP ''  "$(dirname "$(type -P ruby)")"
+    # Set top Ruby to be the first extant dir in RUBYPATH
+    if [[ -d "${RUBYPATH%%:*}" ]]; then
+        RUBY_VERSION_SETUP '' "${RUBYPATH%%:*}"
+    else
+        RUBY_VERSION_SETUP ''  "$(dirname "$(type -P ruby)")"
+    fi
     RUBY_VERSION_SETUP 19  /opt/ruby/1.9/bin
     RUBY_VERSION_SETUP 18  /opt/ruby/1.8/bin
     RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
