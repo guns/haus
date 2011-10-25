@@ -71,8 +71,8 @@ augroup GUNS
     autocmd FileType haml,sass,yaml
         \ SetWhitespace 2
     autocmd FileType haml
-        \ execute 'noremap  <M-CR> i%br<Esc><Right>' |
-        \ execute 'noremap! <M-CR> %br'
+        \ execute 'noremap  <buffer> <M-CR> i%br<Esc><Right>' |
+        \ execute 'noremap! <buffer> <M-CR> %br'
 
     " CSS
     autocmd FileType css
@@ -88,7 +88,7 @@ augroup GUNS
     " C
     autocmd FileType c
         \ setlocal cinoptions=:0 |
-        \ noremap! <buffer> <C-l> ->
+        \ execute 'noremap! <buffer> <C-l> ->'
 
     " Nginx
     autocmd BufRead,BufNewFile /opt/nginx/etc/*.conf,nginx.conf
@@ -113,7 +113,7 @@ augroup GUNS
 
     " UltiSnips snippets
     autocmd FileType snippets
-        \ setlocal noexpandtab iskeyword+=- |
+        \ setlocal noexpandtab iskeyword+=- foldmethod=marker |
         \ SetWhitespace 8
 
     " Markdown

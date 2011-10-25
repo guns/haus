@@ -1046,6 +1046,21 @@ type ruby &>/dev/null && {
 }
 
 
+### JVM {{{1
+
+# Leiningen, Clojure package manager
+HAVE lein && {
+    # alias leine=
+    # alias leing=
+    # alias leini=
+    # alias leinq=
+    alias leins='run lein search'
+    # alias leinu=
+    # alias leinsync=
+    # alias leinoutdated=
+}
+
+
 ### JavaScript {{{1
 
 # node package manager

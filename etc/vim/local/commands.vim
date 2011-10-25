@@ -127,7 +127,7 @@ function! <SID>Screen(command)
         \ }
     let chdir = 'cd "' . getcwd() . '"'
     let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
-    execute 'ScreenShellVertical ' . chdir . '; ' . cmd
+    execute 'ScreenShell ' . chdir . '; ' . cmd
 endfunction
 
 

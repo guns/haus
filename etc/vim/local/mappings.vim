@@ -82,8 +82,7 @@ noremap  <M-BS> db
 noremap! <M-BS> <C-w>
 
 " Forward delete char / word / line
-" FIXME: forward-delete-word does not delete newlines as expected
-" FIXME: forward-delete-word also creeps forward on command line
+" FIXME: forward-delete-word creeps forward on command line
 " -- Ctrl-D i_Ctrl-D c_Ctrl-K i_Ctrl-K
 noremap  <C-d> x
 noremap! <C-d> <Del>
