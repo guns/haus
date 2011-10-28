@@ -159,7 +159,8 @@ class Macdriver
     else raise ArgumentError
     end
 
-    "#{name}:\n" + filter(kexts).map { |kext| "    #{decorate kext}" }.join("\n")
+    buf = filter(kexts).map { |kext| "    #{decorate kext}" }.join "\n"
+    '%s:%s' % [name, buf.empty? ? '' : "\n#{buf}"]
   end
 
   def show names = nil, type

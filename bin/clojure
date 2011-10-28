@@ -4,13 +4,13 @@
 #
 # http://trac.macports.org/browser/trunk/dports/lang/clojure/files/clj-rlwrap.sh?format=txt
 
-[[ -d "$cdjars" ]] && CLASSPATH="$cdjars/clojure.jar:$CLASSPATH"
-CLOJURE="java -server -classpath $CLASSPATH clojure.main"
+[[ -d "$cdclojure" ]] && CLASSPATH="$cdclojure/clojure.jar:$cdclojure:$CLASSPATH"
+CLOJURE_CMD="java -server -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
 COMPLETIONS=~/.clj_completions
 
 if (($#)); then
-    exec $CLOJURE "$@"
+    exec $CLOJURE_CMD "$@"
 else
     touch "$COMPLETIONS"
     exec run rlwrap --ansi-colour-aware \
@@ -21,5 +21,5 @@ else
                     --complete-filenames \
                     --remember \
                     --file "$COMPLETIONS" \
-                    $CLOJURE
+                    $CLOJURE_CMD
 fi
