@@ -119,10 +119,10 @@ endfunction
 command! -nargs=? -bar Screen call <SID>Screen(<q-args>)
 function! <SID>Screen(command)
     let map = {
-        \ 'ruby'       : 'irb',
+        \ 'ruby'       : 'irb -f --noreadline',
+        \ 'clojure'    : 'clojure --repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
-        \ 'clojure'    : 'clojure',
         \ 'javascript' : 'node'
         \ }
     let chdir = 'cd "' . getcwd() . '"'

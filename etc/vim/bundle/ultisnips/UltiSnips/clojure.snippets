@@ -21,27 +21,27 @@ snippet ns "ns"
 endsnippet
 
 snippet req "require"
-(require '(${0:libs}))
+(require '${0:libs})
 endsnippet
 
 snippet :req ":require"
-(:require (${0:libs}))
+(:require ${0:libs})
 endsnippet
 
 snippet use "use"
-(use '(${0:libs}))
+(use '${0:libs})
 endsnippet
 
 snippet :use ":use"
-(:use (${0:libs}))
+(:use ${0:libs})
 endsnippet
 
 snippet imp "import"
-(import '(${0:libs}))
+(import '${0:libs})
 endsnippet
 
 snippet :imp ":import"
-(:import (${0:libs}))
+(:import ${0:libs})
 endsnippet
 
 
@@ -271,11 +271,11 @@ snippet ui "update-in" w
 (update-in ${1:map} [${2:keys}] ${0:func args})
 endsnippet
 
-snippet s "struct" w
+snippet st "struct" w
 (struct ${1:type} ${0:values})
 endsnippet
 
-snippet cs "create-struct" w
+snippet cst "create-struct" w
 (create-struct ${0:keys})
 endsnippet
 
@@ -291,7 +291,7 @@ snippet dist "distinct" w
 (distinct ${0:coll})
 endsnippet
 
-snippet interl "interleave" w
+snippet int "interleave" w
 (interleave ${0:colls})
 endsnippet
 
@@ -458,6 +458,12 @@ endsnippet
 
 snippet let "let" w
 (let [$1]
+	$0)
+endsnippet
+
+snippet letf "letfn" w
+(letfn [(${1:name []}
+		${2:body})]
 	$0)
 endsnippet
 
@@ -724,4 +730,12 @@ endsnippet
 
 snippet spi "spit" w
 (spit ${1:file} ${0:body})
+endsnippet
+
+
+### Debugging {{{1
+
+# http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
+snippet deb "debug" w
+(defmacro debug[x] \`(let [x# ~x] (println '~x "=" x#) x#))
 endsnippet
