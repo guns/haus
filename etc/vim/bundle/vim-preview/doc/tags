@@ -18,6 +18,8 @@ PreviewRdoc	preview.txt	/*PreviewRdoc*
 PreviewRdocExt	preview.txt	/*PreviewRdocExt*
 PreviewRonn	preview.txt	/*PreviewRonn*
 PreviewRonnExt	preview.txt	/*PreviewRonnExt*
+PreviewRst	preview.txt	/*PreviewRst*
+PreviewRstExt	preview.txt	/*PreviewRstExt*
 PreviewTextile	preview.txt	/*PreviewTextile*
 PreviewTextileExt	preview.txt	/*PreviewTextileExt*
 preview.txt	preview.txt	/*preview.txt*
