@@ -1,0 +1,17 @@
+# Slackware Linux upgradepkg completion                    -*- shell-script -*-
+
+_upgradepkg()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    if [[ "$cur" == -* ]]; then
+        COMPREPLY=( $( compgen -W '--dry-run --install-new --reinstall \
+            --verbose' -- "$cur") )
+        return 0
+    fi
+
+    _filedir "t[bglx]z"
+} && complete -F _upgradepkg upgradepkg
+
+# ex: ts=4 sw=4 et filetype=sh

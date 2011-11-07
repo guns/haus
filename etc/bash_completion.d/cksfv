@@ -1,6 +1,4 @@
-# cksfv completion by Chris <xris@forevermore.net>
-
-have cksfv || return
+# cksfv completion by Chris <xris@forevermore.net>         -*- shell-script -*-
 
 _cksfv()
 {
@@ -28,10 +26,4 @@ _cksfv()
 } &&
 complete -F _cksfv cksfv
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

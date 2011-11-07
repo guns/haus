@@ -1,6 +1,4 @@
-# jar(1) completion
-
-have jar || return
+# jar(1) completion                                        -*- shell-script -*-
 
 _jar()
 {
@@ -17,7 +15,7 @@ _jar()
             _filedir
             ;;
         *f)
-            _filedir '@([ejw]ar|zip|apk)'
+            _filedir '@([ejsw]ar|zip|apk)'
             ;;
         *)
             _filedir
@@ -26,10 +24,4 @@ _jar()
 } &&
 complete -F _jar jar
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

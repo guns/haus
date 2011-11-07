@@ -1,6 +1,4 @@
-# unace(1) completion
-
-have unace || return
+# unace(1) completion                                      -*- shell-script -*-
 
 _unace()
 {
@@ -19,10 +17,4 @@ _unace()
 } &&
 complete -F _unace unace
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

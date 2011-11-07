@@ -1,7 +1,6 @@
+#                                                          -*- shell-script -*-
 # bash brogrammable completion for various Common Lisp implementations by
 # Nikodemus Siivola <nikodemus@random-state.net>
-
-have clisp || return
 
 _clisp()
 {
@@ -21,10 +20,4 @@ _clisp()
 } &&
 complete -F _clisp -o default clisp
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

@@ -1,4 +1,4 @@
-have gnome-mplayer || return
+# gnome-mplayer(1) completion                              -*- shell-script -*-
 
 _gnome_mplayer()
 {
@@ -36,10 +36,4 @@ _gnome_mplayer()
 } &&
 complete -F _gnome_mplayer gnome-mplayer
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

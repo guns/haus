@@ -1,6 +1,4 @@
-# bash completion for cpan2dist
-
-have cpan2dist || return
+# bash completion for cpan2dist                            -*- shell-script -*-
 
 _cpan2dist()
 {
@@ -30,17 +28,10 @@ _cpan2dist()
             [[ -d "$dir" && -r "$dir/02packages.details.txt.gz" ]] && \
                 packagelist="$dir/02packages.details.txt.gz"
         done
-        COMPREPLY=( $( zgrep "^${cur//-/::}" \
-            $packagelist 2>/dev/null \
-            | awk '{print $1}' | sed -e 's/::/-/g' ) )
+        [[ $packagelist ]] && COMPREPLY=( $( zgrep "^${cur//-/::}" \
+            $packagelist 2>/dev/null | awk '{print $1}' | sed -e 's/::/-/g' ) )
     fi
 } &&
 complete -F _cpan2dist -o default cpan2dist
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

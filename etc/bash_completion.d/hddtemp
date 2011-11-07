@@ -1,6 +1,4 @@
-# hddtemp(8) completion
-
-have hddtemp || return
+# hddtemp(8) completion                                    -*- shell-script -*-
 
 _hddtemp()
 {
@@ -37,10 +35,4 @@ _hddtemp()
 } &&
 complete -F _hddtemp hddtemp
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

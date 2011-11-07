@@ -1,6 +1,4 @@
-# Debian Linux dselect(8) completion.
-
-have dselect || return
+# Debian Linux dselect(8) completion                       -*- shell-script -*-
 
 _dselect()
 {
@@ -30,10 +28,4 @@ _dselect()
 } &&
 complete -F _dselect dselect
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

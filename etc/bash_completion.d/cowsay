@@ -1,6 +1,4 @@
-# bash completion for cowsay
-
-have cowsay || return
+# bash completion for cowsay                               -*- shell-script -*-
 
 _cowsay()
 {
@@ -9,7 +7,8 @@ _cowsay()
 
     case $prev in
         -f)
-            COMPREPLY=( $( compgen -W '$( cowsay -l | tail -n +2)' -- "$cur" ) )
+            COMPREPLY=( $( compgen -W \
+                '$( cowsay -l 2>/dev/null | tail -n +2 )' -- "$cur" ) )
             return 0
             ;;
     esac
@@ -21,10 +20,4 @@ _cowsay()
 } &&
 complete -F _cowsay -o default cowsay cowthink
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

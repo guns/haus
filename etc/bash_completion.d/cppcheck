@@ -1,6 +1,4 @@
-# bash completion for cppcheck(1)
-
-have cppcheck || return
+# bash completion for cppcheck(1)                          -*- shell-script -*-
 
 _cppcheck()
 {
@@ -13,7 +11,7 @@ _cppcheck()
             _filedir
             return
             ;;
-        -D*|--rule|--suppress|--template)
+        -D|--rule|--suppress|--template)
             return
             ;;
         --enable)
@@ -38,7 +36,8 @@ _cppcheck()
             return
             ;;
         --platform)
-            COMPREPLY=( $( compgen -W 'unix32 unix64 win32A win32W win64' -- "$cur" ) )
+            COMPREPLY=( $( compgen -W 'unix32 unix64 win32A win32W win64' \
+                -- "$cur" ) )
             return
             ;;
         --xml-version)
@@ -51,17 +50,11 @@ _cppcheck()
 
     if [[ $cur == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_help "$1" )' -- "$cur" ) )
-        [[ $COMPREPLY == @(-D|*=) ]] && compopt -o nospace
+        [[ $COMPREPLY == *= ]] && compopt -o nospace
     else
         _filedir @(cpp|cxx|cc|c++|c|tpp|txx)
     fi
 } &&
 complete -F _cppcheck cppcheck
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

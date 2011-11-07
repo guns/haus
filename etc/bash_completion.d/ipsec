@@ -1,6 +1,4 @@
-# Linux ipsec(8) completion (for FreeS/WAN and strongSwan)
-#
-have ipsec || return
+# Linux ipsec(8) completion (for FreeS/WAN and strongSwan) -*- shell-script -*-
 
 # Complete ipsec.conf conn entries.
 #
@@ -98,7 +96,7 @@ _ipsec_strongswan()
     return 0
 }
 
-case "$( ipsec --version )" in
+case "$( ipsec --version 2>/dev/null )" in
     *strongSwan*)
         complete -F _ipsec_strongswan ipsec
         ;;
@@ -107,10 +105,4 @@ case "$( ipsec --version )" in
         ;;
 esac
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

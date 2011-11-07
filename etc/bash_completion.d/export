@@ -1,0 +1,25 @@
+# bash export completion                                   -*- shell-script -*-
+
+_export()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    case ${words[@]} in
+        *=\$*)
+            COMPREPLY=( $( compgen -v -P '$' -- "${cur#*=\$}" ) )
+            ;;
+        *[^=])
+            COMPREPLY=( $( compgen -v -S '=' -- "$cur" ) )
+            ;;
+        *=)
+            COMPREPLY=( "$( eval echo -n \"$`echo ${cur%=}`\" |
+                ( echo -n \'
+                  sed -e 's/'\''/'\''\\\'\'''\''/g'
+                  echo -n \' ) )" )
+            ;;
+    esac
+} &&
+complete -F _export -o default -o nospace export
+
+# ex: ts=4 sw=4 et filetype=sh

@@ -1,6 +1,5 @@
-# mtx completion by Jon Middleton <jjm@ixtab.org.uk>
-
-have mtx || return
+# mtx completion                                           -*- shell-script -*-
+# by Jon Middleton <jjm@ixtab.org.uk>
 
 _mtx()
 {
@@ -12,11 +11,11 @@ _mtx()
     options="-f nobarcode invert noattach --version inquiry noattach \
         inventory status load unload eepos first last next"
 
-    tapes=$(mtx status | \
+    tapes=$(mtx status 2>/dev/null | \
         awk '/Storage Element [0-9]+:Full/ { printf "%s ", $3 }')
     tapes=${tapes//:Full}
 
-    drives=$(mtx status | \
+    drives=$(mtx status 2>/dev/null | \
         awk '/Data Transfer Element [0-9]+:(Full|Empty)/ { printf "%s ", $4 }')
     drives=${drives//:Full}
     drives=${drives//:Empty}
@@ -43,10 +42,4 @@ _mtx()
 } &&
 complete -F _mtx mtx
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

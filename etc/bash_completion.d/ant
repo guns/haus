@@ -1,6 +1,4 @@
-# bash completion for ant and phing
-
-have ant || have phing || return
+# bash completion for ant and phing                        -*- shell-script -*-
 
 _ant()
 {
@@ -59,14 +57,8 @@ _ant()
         COMPREPLY=( $( compgen -W '$targets' -- "$cur" ) )
     fi
 } &&
-have ant && { type complete-ant-cmd.pl &>/dev/null && \
-    complete -C complete-ant-cmd.pl -F _ant ant || complete -F _ant ant; }
-have phing && complete -F _ant phing
+complete -F _ant ant phing
+type complete-ant-cmd.pl &>/dev/null && \
+    complete -C complete-ant-cmd.pl -F _ant ant || :
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

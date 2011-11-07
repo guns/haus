@@ -36,6 +36,23 @@ task :env do # {{{1
       },
 
       {
+        :base   => "#{@src}/tmux",
+        :files  => {
+          'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
+          'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/bash_completion_tmux.sh'
+        },
+        :before => proc { |proj|
+          Dir.chdir proj.base do
+            system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
+            raise 'Pull and merge failed' if not $?.exitstatus.zero?
+          end
+        },
+        :after => proc { |proj|
+          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
+        }
+      },
+
+      {
         :base   => "#{@src}/leiningen",
         :files  => {
           'bin/lein'             => 'bin/lein',
@@ -142,23 +159,6 @@ task :env do # {{{1
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=*.snippets #{proj.base}/ #{dst}/]
           nil # Return nil because the work is done
-        }
-      },
-
-      {
-        :base   => "#{@src}/tmux",
-        :files  => {
-          'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
-          'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/bash_completion_tmux.sh'
-        },
-        :before => proc { |proj|
-          Dir.chdir proj.base do
-            system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
-            raise 'Pull and merge failed' if not $?.exitstatus.zero?
-          end
-        },
-        :after => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
         }
       }
     ],

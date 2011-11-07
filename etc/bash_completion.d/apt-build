@@ -1,6 +1,4 @@
-# Debian apt-build(1) completion.
-
-have apt-build || return
+# Debian apt-build(1) completion                           -*- shell-script -*-
 
 _apt_build()
 {
@@ -21,7 +19,8 @@ _apt_build()
                 return 0
                 ;;
             remove)
-                COMPREPLY=( $( _comp_dpkg_installed_packages "$cur" ) )
+                COMPREPLY=( \
+                    $( _xfunc dpkg _comp_dpkg_installed_packages "$cur" ) )
                 return 0
                 ;;
             *)
@@ -57,10 +56,4 @@ _apt_build()
 } &&
 complete -F _apt_build apt-build
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh

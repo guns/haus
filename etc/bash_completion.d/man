@@ -1,6 +1,8 @@
-# man(1) completion
+# man(1) completion                                        -*- shell-script -*-
 
-[[ $USERLAND == GNU || $UNAME == @(Darwin|FreeBSD|SunOS|Cygwin|OpenBSD) ]] &&
+[[ $OSTYPE == *@(darwin|freebsd|solaris|cygwin|openbsd)* ]] || _userland GNU \
+    || return 1
+
 _man()
 {
     local cur prev words cword split
@@ -99,10 +101,4 @@ _man()
 } &&
 complete -F _man man apropos whatis
 
-# Local variables:
-# mode: shell-script
-# sh-basic-offset: 4
-# sh-indent-comment: t
-# indent-tabs-mode: nil
-# End:
 # ex: ts=4 sw=4 et filetype=sh
