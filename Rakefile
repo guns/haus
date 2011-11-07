@@ -22,7 +22,7 @@ task :env do # {{{1
         :branch => %w[master guns],
         :files  => proc { |proj|
           Hash[proj.git.ls_files('completions').map(&:first).reject do |f|
-            File.directory? File.join(proj.base, f) or File.basename(f) =~ /\A(_|Makefile)/
+            File.directory? File.join(proj.base, f) or File.basename(f) =~ /\A(\.|_|Makefile)/
           end.map do |f|
             [f, "etc/bash_completion.d/#{File.basename f}"]
           end].merge 'bash_completion' => 'etc/bash_completion'
