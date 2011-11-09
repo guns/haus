@@ -1219,7 +1219,7 @@ if __OSX__; then
         alias brewq='run brew info'
         alias brews='run brew search'
         alias brewu='run brew uninstall'
-        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git co master && git remote update && brew update && git co guns && git merge master"'
+        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git co master && brew update && git co guns && git merge master && git push github --all"'
         alias brewoutdated='brew outdated'
     }
 elif __LINUX__; then
