@@ -254,5 +254,5 @@ source ~/.vim/local/autocommands.vim
 if has('gui_running')
     source ~/.vim/local/gvimrc.vim
 else
-    source ~/.vim/local/term.vim
+    source ~/.vim/local/tty.vim
 endif
