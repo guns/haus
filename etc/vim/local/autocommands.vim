@@ -70,6 +70,7 @@ augroup GUNS
 
     " HAML/SASS/YAML
     autocmd FileType haml,sass,yaml
+        \ setlocal iskeyword+=- |
         \ SetWhitespace 2
     autocmd FileType haml
         \ execute 'noremap  <buffer> <M-CR> i%br<Esc><Right>' |
@@ -77,6 +78,10 @@ augroup GUNS
 
     " CSS
     autocmd FileType css
+        \ setlocal iskeyword+=- |
+        \ SetWhitespace 4
+    autocmd BufRead,BufNewFile *.less
+        \ setlocal filetype=sass |
         \ SetWhitespace 4
 
     " JavaScript
