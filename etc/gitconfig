@@ -46,6 +46,7 @@
     a      = add
     aa     = add .
     ai     = add --interactive
+    af     = add --force
     ap     = add --patch
     ac     = !git add . && git commit -a
     acv    = !git add . && git commit -a -v
