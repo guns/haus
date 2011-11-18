@@ -40,12 +40,6 @@ set :resize, false
 # Enable gravity tiling
 set :tiling, false
 
-# FIXME: Is this deprecated, or not?
-set :font, 'xft:Menlo:pixelsize=12'
-
-# Separator between sublets
-set :separator, '|'
-
 #
 # == Screen {{{1
 #
@@ -126,11 +120,12 @@ style :all do
   icon        "#757575"
   border      "#303030", 0
   padding     0, 3
-  # font        'xft:Menlo:pixelsize=12'
+  font        'xft:Menlo:pixelsize=12'
 end
 
-# Style for the views
+# Style for the all views
 style :views do
+  foreground  "#757575"
 
   # Style for the active views
   style :focus do
@@ -146,11 +141,6 @@ style :views do
   style :occupied do
     foreground  "#b8b8b8"
   end
-
-  # Style for unoccupied views (views without clients)
-  style :unoccupied do
-    foreground  "#757575"
-  end
 end
 
 # Style for sublets
@@ -162,6 +152,7 @@ end
 # Style for separator
 style :separator do
   foreground  "#757575"
+  separator   "|"
 end
 
 # Style for focus window title
@@ -171,10 +162,10 @@ end
 
 # Style for active/inactive windows
 style :clients do
-  active      "#303030", 2
-  inactive    "#202020", 2
-  margin      0
-  width       50
+  active    "#303030", 2
+  inactive  "#202020", 2
+  margin    0
+  width     50
 end
 
 # Style for subtle
@@ -724,7 +715,7 @@ def set_properties c
     c.gravity = :center
 
   else
-    c.toggle_resize
+    c.toggle_resize if c.is_resize?
 
   end
 end
