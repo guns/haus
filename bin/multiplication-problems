@@ -22,12 +22,16 @@ class MultiplicationProblems
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = %Q(\
-        Print multiplication problems in a printable format.
+        Print multiplication problems in a printable format. Multiplicands and
+        multipliers may be given as a list of comma separated numbers, or as
+        an inclusive range:
 
-        Usage: #{File.basename __FILE__} [options]
+            #{File.basename __FILE__} 5,7,9 1..12
+
+        Usage: #{File.basename __FILE__} [options] multiplicands multipliers
 
         Options:
-      ).gsub /^ +/, ''
+      ).gsub /^ {8}/, ''
 
       opt.on '-s', '--shuffle' do
         options.shuffle = true
@@ -36,14 +40,6 @@ class MultiplicationProblems
       opt.on '-p', '--page ROWS,COLS', Array, 'Default: %d,%d' % [options.rows, options.columns] do |arg|
         options.rows = arg[0].to_i
         options.columns = arg[1].to_i
-      end
-
-      opt.on '-m', '--multiplicands 1..3', 'Multiplicands as a list or as an inclusive range' do |arg|
-        options.multiplicands = numbers arg
-      end
-
-      opt.on '-M', '--multipliers 1..3', 'Multipliers as a list or as an inclusive range' do |arg|
-        options.multipliers = numbers arg
       end
     end
   end
@@ -81,7 +77,14 @@ class MultiplicationProblems
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.empty?
+
+    case args.size
+    when 0 then true
+    when 1 then options.multiplicands = numbers args[0]
+    when 2 then options.multiplicands, options.multipliers = args.map { |a| numbers a }
+    else abort parser.help
+    end
+
     puts to_s
   end
 end
