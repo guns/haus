@@ -1038,7 +1038,13 @@ type ruby &>/dev/null && {
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
 
     # Rails
-    ALIAS r='rails'
+    HAVE rails && r() {
+        if [[ -x script/rails ]]; then
+            run script/rails "$@"
+        else
+            run rails "$@"
+        fi
+    }
 
     # Local api server @ `$cdapi`
     HAVE cdapi && {
