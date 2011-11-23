@@ -1,6 +1,6 @@
 :NR	NarrowRegion.txt	/*:NR*
 :NRMulti	NarrowRegion.txt	/*:NRMulti*
-:NRNS	NarrowRegion.txt	/*:NRNS*
+:NRN	NarrowRegion.txt	/*:NRN*
 :NRNoSyncOnWrite	NarrowRegion.txt	/*:NRNoSyncOnWrite*
 :NRPrepare	NarrowRegion.txt	/*:NRPrepare*
 :NRS	NarrowRegion.txt	/*:NRS*
