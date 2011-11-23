@@ -102,6 +102,17 @@ _userland()
     [[ $userland == $1 ]]
 }
 
+# This function sets correct SysV init directories
+#
+_sysvdirs()
+{
+    sysvdirs=( )
+    [[ -d /etc/rc.d/init.d ]] && sysvdirs+=( /etc/rc.d/init.d )
+    [[ -d /etc/init.d ]] && sysvdirs+=( /etc/init.d )
+    # Slackware uses /etc/rc.d
+    [[ -f /etc/slackware-version ]] && sysvdirs=( /etc/rc.d )
+}
+
 # This function checks whether we have a given program on the system.
 #
 _have()
@@ -245,24 +256,21 @@ __reassemble_comp_words_by_ref()
             # empty and is word made up of just word separator characters to
             # be excluded and is current word not preceded by whitespace in
             # original line?
-            while [[ $i -gt 0 && ${COMP_WORDS[$i]} && 
-                ${COMP_WORDS[$i]//[^$exclude]} == ${COMP_WORDS[$i]}
-            ]]; do
+            while [[ $i -gt 0 && ${COMP_WORDS[$i]} == +([$exclude]) ]]; do
                 # Is word separator not preceded by whitespace in original line
                 # and are we not going to append to word 0 (the command
                 # itself), then append to current word.
-                [[ ${line:0:1} != ' ' && ${line:0:1} != $'\t' ]] &&
-                    (( j >= 2 )) && ((j--))
+                [[ $line != [$' \t']* ]] && (( j >= 2 )) && ((j--))
                 # Append word separator to current or new word
                 ref="$2[$j]"
                 eval $2[$j]=\${!ref}\${COMP_WORDS[i]}
                 # Indicate new cword
-                [ $i = $COMP_CWORD ] && eval $3=$j
+                [[ $i == $COMP_CWORD ]] && eval $3=$j
                 # Remove optional whitespace + word separator from line copy
                 line=${line#*"${COMP_WORDS[$i]}"}
                 # Start new word if word separator in original line is
                 # followed by whitespace.
-                [[ ${line:0:1} == ' ' || ${line:0:1} == $'\t' ]] && ((j++))
+                [[ $line == [$' \t']* ]] && ((j++))
                 # Indicate next word if available, else end *both* while and
                 # for loop
                 (( $i < ${#COMP_WORDS[@]} - 1)) && ((i++)) || break 2
@@ -295,14 +303,14 @@ __get_cword_at_cursor_by_ref()
     local cword words=()
     __reassemble_comp_words_by_ref "$1" words cword
 
-    local i cur cur2 index=$COMP_POINT lead=${COMP_LINE:0:$COMP_POINT}
+    local i cur index=$COMP_POINT lead=${COMP_LINE:0:$COMP_POINT}
     # Cursor not at position 0 and not leaded by just space(s)?
     if [[ $index -gt 0 && ( $lead && ${lead//[[:space:]]} ) ]]; then
         cur=$COMP_LINE
         for (( i = 0; i <= cword; ++i )); do
             while [[
                 # Current word fits in $cur?
-                "${#cur}" -ge ${#words[i]} &&
+                ${#cur} -ge ${#words[i]} &&
                 # $cur doesn't match cword?
                 "${cur:0:${#words[i]}}" != "${words[i]}"
             ]]; do
@@ -313,11 +321,11 @@ __get_cword_at_cursor_by_ref()
             done
 
             # Does found word match cword?
-            if [[ "$i" -lt "$cword" ]]; then
+            if [[ $i -lt $cword ]]; then
                 # No, cword lies further;
-                local old_size="${#cur}"
-                cur="${cur#${words[i]}}"
-                local new_size="${#cur}"
+                local old_size=${#cur}
+                cur="${cur#"${words[i]}"}"
+                local new_size=${#cur}
                 index=$(( index - old_size + new_size ))
             fi
         done
@@ -472,7 +480,7 @@ _get_cword()
 #
 _get_pword() 
 {
-    if [ $COMP_CWORD -ge 1 ]; then
+    if [[ $COMP_CWORD -ge 1 ]]; then
         _get_cword "${@:-}" 1
     fi
 }
@@ -501,7 +509,7 @@ __ltrim_colon_completions()
         # Remove colon-word prefix from COMPREPLY items
         local colon_word=${1%${1##*:}}
         local i=${#COMPREPLY[*]}
-        while [ $((--i)) -ge 0 ]; do
+        while [[ $((--i)) -ge 0 ]]; do
             COMPREPLY[$i]=${COMPREPLY[$i]#"$colon_word"}
         done
     fi
@@ -526,7 +534,7 @@ __ltrim_colon_completions()
 # @param $2  Name of variable to return result to
 _quote_readline_by_ref()
 {
-    if [[ ${1:0:1} == "'" ]]; then
+    if [[ $1 == \'* ]]; then
         # Leave out first character
         printf -v $2 %s "${1:1}"
     else
@@ -536,7 +544,7 @@ _quote_readline_by_ref()
     # If result becomes quoted like this: $'string', re-evaluate in order to
     # drop the additional quoting.  See also: http://www.mail-archive.com/
     # bash-completion-devel@lists.alioth.debian.org/msg01942.html
-    [[ ${!2:0:1} == '$' ]] && eval $2=${!2}
+    [[ ${!2} == \$* ]] && eval $2=${!2}
 } # _quote_readline_by_ref()
 
 
@@ -581,7 +589,7 @@ _filedir()
         -n "$1" && "$1" != -d && ${#toks[@]} -lt 1 ]] && \
         toks+=( $( compgen -f -- $quoted ) )
 
-    [ ${#toks[@]} -ne 0 ] && compopt -o filenames 2>/dev/null
+    [[ ${#toks[@]} -ne 0 ]] && compopt -o filenames 2>/dev/null
 
     COMPREPLY+=( "${toks[@]}" )
 } # _filedir()
@@ -816,16 +824,16 @@ _mac_addresses()
 #
 _configured_interfaces()
 {
-    if [ -f /etc/debian_version ]; then
+    if [[ -f /etc/debian_version ]]; then
         # Debian system
         COMPREPLY=( $( compgen -W "$( sed -ne 's|^iface \([^ ]\{1,\}\).*$|\1|p'\
             /etc/network/interfaces )" -- "$cur" ) )
-    elif [ -f /etc/SuSE-release ]; then
+    elif [[ -f /etc/SuSE-release ]]; then
         # SuSE system
         COMPREPLY=( $( compgen -W "$( printf '%s\n' \
             /etc/sysconfig/network/ifcfg-* | \
             sed -ne 's|.*ifcfg-\(.*\)|\1|p' )" -- "$cur" ) )
-    elif [ -f /etc/pld-release ]; then
+    elif [[ -f /etc/pld-release ]]; then
         # PLD Linux
         COMPREPLY=( $( compgen -W "$( command ls -B \
             /etc/sysconfig/interfaces | \
@@ -864,9 +872,9 @@ _available_interfaces()
 {
     local cmd
 
-    if [ "${1:-}" = -w ]; then
+    if [[ ${1:-} == -w ]]; then
         cmd="iwconfig"
-    elif [ "${1:-}" = -a ]; then
+    elif [[ ${1:-} == -a ]]; then
         cmd="ifconfig"
     else
         cmd="ifconfig -a"
@@ -877,6 +885,14 @@ _available_interfaces()
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]/%[[:punct:]]/}' -- "$cur" ) )
 }
 
+# Echo number of CPUs, falling back to 1 on failure.
+_ncpus()
+{
+    local var=NPROCESSORS_ONLN
+    [[ $OSTYPE == *linux* ]] && var=_$var
+    local n=$( getconf $var 2>/dev/null )
+    printf %s ${n:-1}
+}
 
 # Perform tilde (~) completion
 # @return  True (0) if completion needs further processing, 
@@ -889,7 +905,7 @@ _tilde()
         # Try generate ~username completions
         COMPREPLY=( $( compgen -P '~' -u "${1#\~}" ) )
         result=${#COMPREPLY[@]}
-        [ $result -gt 0 ] && compopt -o filenames 2>/dev/null
+        [[ $result -gt 0 ]] && compopt -o filenames 2>/dev/null
     fi
     return $result
 }
@@ -920,9 +936,9 @@ _tilde()
 __expand_tilde_by_ref()
 {
     # Does $1 start with tilde (~)?
-    if [ "${!1:0:1}" = "~" ]; then
+    if [[ ${!1} == ~* ]]; then
         # Does $1 contain slash (/)?
-        if [ "${!1}" != "${!1//\/}" ]; then
+        if [[ ${!1} == */* ]]; then
             # Yes, $1 contains slash;
             # 1: Remove * including and after first slash (/), i.e. "~a/b"
             #    becomes "~a".  Double quotes allow eval.
@@ -954,7 +970,7 @@ _expand()
     elif [[ "$cur" == \~* ]]; then
         cur=${cur#\~}
         COMPREPLY=( $( compgen -P '~' -u "$cur" ) )
-        [ ${#COMPREPLY[@]} -eq 1 ] && eval COMPREPLY[0]=${COMPREPLY[0]}
+        [[ ${#COMPREPLY[@]} -eq 1 ]] && eval COMPREPLY[0]=${COMPREPLY[0]}
         return ${#COMPREPLY[@]}
     fi
 }
@@ -1039,32 +1055,67 @@ _gids()
 #
 _backup_glob='@(#*#|*@(~|.@(bak|orig|rej|swp|dpkg*|rpm@(orig|new|save))))'
 
+# Complete on xinetd services
+#
+_xinetd_services()
+{
+    local xinetddir=/etc/xinetd.d
+    if [[ -d $xinetddir ]]; then
+        local restore_nullglob=$(shopt -p nullglob); shopt -s nullglob
+        local -a svcs=( $( printf '%s\n' $xinetddir/!($_backup_glob) ) )
+        $restore_nullglob
+        COMPREPLY+=( $( compgen -W '${svcs[@]#$xinetddir/}' -- "$cur" ) )
+    fi
+}
+
 # This function completes on services
 #
 _services()
 {
-    local sysvdir=/etc/init.d famdir=/etc/xinetd.d
-    if [[ -d /etc/rc.d/init.d ]]; then
-        sysvdir=/etc/rc.d/init.d
-    elif [[ -f /etc/slackware-version ]]; then
-        sysvdir=/etc/rc.d
-    fi
+    local sysvdirs
+    _sysvdirs
 
     local restore_nullglob=$(shopt -p nullglob); shopt -s nullglob
-
-    COMPREPLY=( $( printf '%s\n' $sysvdir/!($_backup_glob|functions) ) )
-
-    if [ -d $famdir ]; then
-        COMPREPLY+=( $( printf '%s\n' $famdir/!($_backup_glob) ) )
-    fi
-
+    COMPREPLY=( $( printf '%s\n' ${sysvdirs[0]}/!($_backup_glob|functions) ) )
     $restore_nullglob
 
     COMPREPLY+=( $( systemctl list-units --full --all 2>/dev/null | \
         awk '$1 ~ /\.service$/ { sub("\\.service$", "", $1); print $1 }' ) )
 
-    COMPREPLY=( $( compgen -W '${COMPREPLY[@]#@($sysvdir|$famdir)/}' -- "$cur" ) )
+    COMPREPLY=( $( compgen -W '${COMPREPLY[@]#${sysvdirs[0]}/}' -- "$cur" ) )
 }
+
+# This completes on a list of all available service scripts for the
+# 'service' command and/or the SysV init.d directory, followed by
+# that script's available commands
+#
+_service()
+{
+    local cur prev words cword
+    _init_completion || return
+
+    # don't complete past 2nd token
+    [[ $cword -gt 2 ]] && return 0
+
+    if [[ $cword -eq 1 && $prev == ?(*/)service ]]; then
+        _services
+        [[ -e /etc/mandrake-release ]] && _xinetd_services
+    else
+        local sysvdirs
+        _sysvdirs
+        COMPREPLY=( $( compgen -W '`sed -e "y/|/ /" \
+            -ne "s/^.*\(U\|msg_u\)sage.*{\(.*\)}.*$/\2/p" \
+            ${sysvdirs[0]}/${prev##*/} 2>/dev/null` start stop' -- "$cur" ) )
+    fi
+} &&
+complete -F _service service
+_sysvdirs
+for svcdir in ${sysvdirs[@]}; do
+    for svc in $svcdir/!($_backup_glob); do
+        [[ -x $svc ]] && complete -F _service $svc
+    done
+done
+unset svc svcdir sysvdirs
 
 # This function completes on modules
 #
@@ -1177,7 +1228,7 @@ _fstypes()
 {
     local fss
 
-    if [ -e /proc/filesystems ] ; then
+    if [[ -e /proc/filesystems ]]; then
         # Linux
         fss="$( cut -d$'\t' -f2 /proc/filesystems )
              $( awk '! /\*/ { print $NF }' /etc/filesystems 2>/dev/null )"
@@ -1187,11 +1238,10 @@ _fstypes()
              $( awk '/^[ \t]*[^#]/ { print $3 }' /etc/mnttab 2>/dev/null )
              $( awk '/^[ \t]*[^#]/ { print $4 }' /etc/vfstab 2>/dev/null )
              $( awk '{ print $1 }' /etc/dfs/fstypes 2>/dev/null )
-             $( [ -d /etc/fs ] && command ls /etc/fs )"
+             $( [[ -d /etc/fs ]] && command ls /etc/fs )"
     fi
 
-    [ -n "$fss" ] && \
-        COMPREPLY+=( $( compgen -W "$fss" -- "$cur" ) )
+    [[ -n $fss ]] && COMPREPLY+=( $( compgen -W "$fss" -- "$cur" ) )
 }
 
 # Get real command.
@@ -1345,26 +1395,25 @@ _known_hosts_real()
             p) prefix=$OPTARG ;;
         esac
     done
-    [ $# -lt $OPTIND ] && echo "error: $FUNCNAME: missing mandatory argument CWORD"
+    [[ $# -lt $OPTIND ]] && echo "error: $FUNCNAME: missing mandatory argument CWORD"
     cur=${!OPTIND}; let "OPTIND += 1"
-    [ $# -ge $OPTIND ] && echo "error: $FUNCNAME("$@"): unprocessed arguments:"\
-    $(while [ $# -ge $OPTIND ]; do printf '%s\n' ${!OPTIND}; shift; done)
+    [[ $# -ge $OPTIND ]] && echo "error: $FUNCNAME("$@"): unprocessed arguments:"\
+    $(while [[ $# -ge $OPTIND ]]; do printf '%s\n' ${!OPTIND}; shift; done)
 
     [[ $cur == *@* ]] && user=${cur%@*}@ && cur=${cur#*@}
     kh=()
 
     # ssh config files
-    if [ -n "$configfile" ]; then
-        [ -r "$configfile" ] &&
-        config+=( "$configfile" )
+    if [[ -n $configfile ]]; then
+        [[ -r $configfile ]] && config+=( "$configfile" )
     else
         for i in /etc/ssh/ssh_config ~/.ssh/config ~/.ssh2/config; do
-            [ -r "$i" ] && config+=( "$i" )
+            [[ -r $i ]] && config+=( "$i" )
         done
     fi
 
     # Known hosts files from configs
-    if [ ${#config[@]} -gt 0 ]; then
+    if [[ ${#config[@]} -gt 0 ]]; then
         local OIFS=$IFS IFS=$'\n'
         local -a tmpkh
         # expand paths (if present) to global and user known hosts files
@@ -1377,20 +1426,20 @@ _known_hosts_real()
             i=${i//\"}
             # Eval/expand possible `~' or `~user'
             __expand_tilde_by_ref i
-            [ -r "$i" ] && kh+=( "$i" )
+            [[ -r $i ]] && kh+=( "$i" )
         done
         IFS=$OIFS
     fi
 
-    if [ -z "$configfile" ]; then
+    if [[ -z $configfile ]]; then
         # Global and user known_hosts files
         for i in /etc/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts2 \
             /etc/known_hosts /etc/known_hosts2 ~/.ssh/known_hosts \
             ~/.ssh/known_hosts2; do
-            [ -r "$i" ] && kh+=( "$i" )
+            [[ -r $i ]] && kh+=( "$i" )
         done
         for i in /etc/ssh2/knownhosts ~/.ssh2/hostkeys; do
-            [ -d "$i" ] && khd+=( "$i"/*pub )
+            [[ -d $i ]] && khd+=( "$i"/*pub )
         done
     fi
 
@@ -1408,14 +1457,14 @@ _known_hosts_real()
             # Digits followed by no dot or colon - search for digits followed
             # by a dot or a colon
             awkcur="^$awkcur.*[.:]"
-        elif [ -z "$awkcur" ]; then
+        elif [[ -z $awkcur ]]; then
             # A blank - search for a dot, a colon, or an alpha character
             awkcur="[a-z.:]"
         else
             awkcur="^$awkcur"
         fi
 
-        if [ ${#kh[@]} -gt 0 ]; then
+        if [[ ${#kh[@]} -gt 0 ]]; then
             # FS needs to look for a comma separated list
             COMPREPLY+=( $( awk 'BEGIN {FS=","}
             /^\s*[^|\#]/ {
@@ -1426,7 +1475,7 @@ _known_hosts_real()
             if ($i !~ /[*?]/ && $i ~ /'"$awkcur"'/) {print $i} \
             }}' "${kh[@]}" 2>/dev/null ) )
         fi
-        if [ ${#khd[@]} -gt 0 ]; then
+        if [[ ${#khd[@]} -gt 0 ]]; then
             # Needs to look for files called
             # .../.ssh2/key_22_<hostname>.pub
             # dont fork any processes, because in a cluster environment,
@@ -1468,7 +1517,7 @@ _known_hosts_real()
 
     # Add results of normal hostname completion, unless
     # `COMP_KNOWN_HOSTS_WITH_HOSTFILE' is set to an empty value.
-    if [ -n "${COMP_KNOWN_HOSTS_WITH_HOSTFILE-1}" ]; then
+    if [[ -n ${COMP_KNOWN_HOSTS_WITH_HOSTFILE-1} ]]; then
         COMPREPLY+=(
             $( compgen -A hostname -P "$prefix$user" -S "$suffix" -- "$cur" ) )
     fi
@@ -1558,16 +1607,16 @@ _command_offset()
 
     # find new first word position, then
     # rewrite COMP_LINE and adjust COMP_POINT
-    local word_offset=$1
-    local first_word=${COMP_WORDS[$word_offset]} char_offset i
-    for (( i=0; i <= ${#COMP_LINE}; i++ )); do
-        if [[ "${COMP_LINE:$i:${#first_word}}" == "$first_word" ]]; then
-            char_offset=$i
-            break
-        fi
+    local word_offset=$1 i j
+    for (( i=0; i < $word_offset; i++ )); do
+        for (( j=0; j <= ${#COMP_LINE}; j++ )); do
+            [[ "$COMP_LINE" == "${COMP_WORDS[i]}"* ]] && break
+            COMP_LINE=${COMP_LINE:1}
+            ((COMP_POINT--))
+        done
+        COMP_LINE=${COMP_LINE#"${COMP_WORDS[i]}"}
+        ((COMP_POINT-=${#COMP_WORDS[i]}))
     done
-    COMP_LINE=${COMP_LINE:$char_offset}
-    COMP_POINT=$(( COMP_POINT - $char_offset ))
 
     # shift COMP_WORDS elements and adjust COMP_CWORD
     for (( i=0; i <= COMP_CWORD - $word_offset; i++ )); do
@@ -1576,7 +1625,7 @@ _command_offset()
     for (( i; i <= COMP_CWORD; i++ )); do
         unset COMP_WORDS[i]
     done
-    COMP_CWORD=$(( $COMP_CWORD - $word_offset ))
+    ((COMP_CWORD -= $word_offset))
 
     COMPREPLY=()
     local cur
@@ -1589,28 +1638,21 @@ _command_offset()
     else
         local cmd=${COMP_WORDS[0]} compcmd=${COMP_WORDS[0]}
         local cspec=$( complete -p $cmd 2>/dev/null )
+
+        # If we have no completion for $cmd yet, see if we have for basename
+        if [[ ! $cspec && $cmd == */* ]]; then
+            cspec=$( complete -p ${cmd##*/} 2>/dev/null )
+            [[ $cspec ]] && compcmd=${cmd##*/}
+        fi
+        # If still nothing, just load it for the basename
         if [[ ! $cspec ]]; then
-            if [[ $cmd == */* ]]; then
-                # Load completion for full path
-                _completion_loader $cmd
-                if [[ $? -eq 124 ]]; then
-                    # Success, but we may now have the full path completion...
-                    cspec=$( complete -p $cmd 2>/dev/null )
-                    if [[ ! $cspec ]]; then
-                        # ...or just the basename one.
-                        compcmd=${cmd##*/}
-                        cspec=$( complete -p $compcmd 2>/dev/null )
-                    fi
-                fi
-            else
-                # Simple, non-full path case.
-                _completion_loader $cmd
-                [[ $? -eq 124 ]] && cspec=$( complete -p $cmd 2>/dev/null )
-            fi
+            compcmd=${cmd##*/}
+            _completion_loader $compcmd
+            cspec=$( complete -p $compcmd 2>/dev/null )
         fi
 
         if [[ -n $cspec ]]; then
-            if [ "${cspec#* -F }" != "$cspec" ]; then
+            if [[ ${cspec#* -F } != $cspec ]]; then
                 # complete -F <function>
 
                 # get function name
@@ -1628,7 +1670,7 @@ _command_offset()
                 while true; do
                     # FIXME: should we take "+o opt" into account?
                     t=${cspec#*-o }
-                    if [ "$t" == "$cspec" ]; then
+                    if [[ $t == $cspec ]]; then
                         break
                     fi
                     opt=${t%% *}
@@ -1640,7 +1682,9 @@ _command_offset()
                 cspec=${cspec%%$compcmd}
                 COMPREPLY=( $( eval compgen "$cspec" -- "$cur" ) )
             fi
-        elif [ ${#COMPREPLY[@]} -eq 0 ]; then
+        elif [[ ${#COMPREPLY[@]} -eq 0 ]]; then
+            # XXX will probably never happen as long as completion loader loads
+            #     *something* for every command thrown at it ($cspec != empty)
             _minimal
         fi
     fi
@@ -1652,7 +1696,7 @@ _root_command()
 {
     local PATH=$PATH:/sbin:/usr/sbin:/usr/local/sbin
     local root_command=$1
-    _command $1 $2 $3
+    _command
 }
 complete -F _root_command fakeroot gksu gksudo kdesudo really sudo
 
@@ -1749,12 +1793,12 @@ _filedir_xspec()
     toks+=( $(
         eval compgen -f -X "!$xspec" -- "\$(quote_readline "\$cur")" | {
         while read -r tmp; do
-            [ -n $tmp ] && printf '%s\n' $tmp
+            [[ -n $tmp ]] && printf '%s\n' $tmp
         done
         }
         ))
 
-    [ ${#toks[@]} -ne 0 ] && compopt -o filenames
+    [[ ${#toks[@]} -ne 0 ]] && compopt -o filenames
     COMPREPLY=( "${toks[@]}" )
 }
 
@@ -1803,7 +1847,6 @@ _install_xspec '!*.@(mid?(i)|cmf)' playmidi
 _install_xspec '!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)' timidity
 _install_xspec '!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|okta|p[st]m|s[3t]m|ult|umx|wav|xm)' modplugplay modplug123
 _install_xspec '*.@(o|so|so.!(conf)|a|[rs]pm|gif|jp?(e)g|mp3|mp?(e)g|avi|asf|ogg|class)' vi vim gvim rvim view rview rgvim rgview gview emacs xemacs sxemacs kate kwrite
-_install_xspec '!*.@([eE][xX][eE]?(.[sS][oO])|[cC][oO][mM]|[sS][cC][rR])' wine
 _install_xspec '!*.@(zip|z|gz|tgz)' bzme
 # konqueror not here on purpose, it's more than a web/html browser
 _install_xspec '!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))' netscape mozilla lynx opera galeon dillo elinks amaya firefox mozilla-firefox iceweasel google-chrome chromium-browser epiphany
@@ -1839,12 +1882,6 @@ _completion_loader()
 {
     local compdir=./completions
     [[ $BASH_SOURCE == */* ]] && compdir="${BASH_SOURCE%/*}/completions"
-
-    # Special case for init.d scripts.
-    if [[ $1 == /etc?(/rc.d)/init.d/* || \
-        ( $1 == /etc/rc.d/* && -f /etc/slackware-version ) ]]; then
-        . "$compdir/service" &>/dev/null && return 124 || return 1
-    fi
 
     # Try basename.
     . "$compdir/${1##*/}" &>/dev/null && return 124

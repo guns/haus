@@ -1,6 +1,6 @@
-# iwspy completion                                         -*- shell-script -*-
+# bash completion for wine(1)                              -*- shell-script -*-
 
-_iwspy()
+_wine()
 {
     local cur prev words cword
     _init_completion || return
@@ -8,13 +8,13 @@ _iwspy()
     if [[ $cword -eq 1 ]]; then
         if [[ "$cur" == -* ]]; then
             COMPREPLY=( $( compgen -W '--help --version' -- "$cur" ) )
-        else
-            _available_interfaces -w
+            [[ $COMPREPLY ]] && return
         fi
+        _filedir '[eE][xX][eE]?(.[sS][oO])|[cC][oO][mM]|[sS][cC][rR]'
     else
-        COMPREPLY=( $( compgen -W 'setthr getthr off' -- "$cur" ) )
+        _filedir
     fi
 } &&
-complete -F _iwspy iwspy
+complete -F _wine wine
 
 # ex: ts=4 sw=4 et filetype=sh
