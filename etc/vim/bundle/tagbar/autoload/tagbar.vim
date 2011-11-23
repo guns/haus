@@ -887,7 +887,11 @@ function! s:CreateAutocommands()
         autocmd BufUnload  __Tagbar__ call s:CleanUp()
         autocmd CursorHold __Tagbar__ call s:ShowPrototype()
 
-        autocmd BufEnter,CursorHold * call
+        autocmd BufWritePost *
+            \ if line('$') < g:tagbar_updateonsave_maxlines |
+                \ call s:AutoUpdate(fnamemodify(expand('<afile>'), ':p')) |
+            \ endif
+        autocmd BufEnter,CursorHold,FileType * call
                     \ s:AutoUpdate(fnamemodify(expand('<afile>'), ':p'))
         autocmd BufDelete * call
                     \ s:CleanupFileinfo(fnamemodify(expand('<afile>'), ':p'))
@@ -1373,10 +1377,21 @@ function! s:ToggleWindow()
 endfunction
 
 " s:OpenWindow() {{{2
-function! s:OpenWindow(autoclose)
-    " If the tagbar window is already open don't do anything
+function! s:OpenWindow(flags)
+    let autofocus = a:flags =~# 'f'
+    let jump      = a:flags =~# 'j'
+    let autoclose = a:flags =~# 'c'
+
+    " If the tagbar window is already open check jump flag
+    " Also set the autoclose flag if requested
     let tagbarwinnr = bufwinnr('__Tagbar__')
     if tagbarwinnr != -1
+        if winnr() != tagbarwinnr && jump
+            execute tagbarwinnr . 'wincmd w'
+            if autoclose
+                let w:autoclose = autoclose
+            endif
+        endif
         return
     endif
 
@@ -1404,13 +1419,13 @@ function! s:OpenWindow(autoclose)
 
     let &eventignore = eventignore_save
 
-    call s:InitWindow(a:autoclose)
+    call s:InitWindow(autoclose)
 
     wincmd p
 
     " Jump back to the tagbar window if autoclose or autofocus is set. Can't
     " just stay in it since it wouldn't trigger the update event
-    if g:tagbar_autoclose || a:autoclose || g:tagbar_autofocus
+    if g:tagbar_autoclose || autofocus || g:tagbar_autofocus
         let tagbarwinnr = bufwinnr('__Tagbar__')
         execute tagbarwinnr . 'wincmd w'
     endif
@@ -1430,6 +1445,8 @@ function! s:InitWindow(autoclose)
     setlocal nowrap
     setlocal winfixwidth
     setlocal textwidth=0
+    setlocal nocursorline
+    setlocal nocursorcolumn
 
     if exists('+relativenumber')
         setlocal norelativenumber
@@ -2859,7 +2876,8 @@ function! tagbar#ToggleWindow()
 endfunction
 
 function! tagbar#OpenWindow(...)
-    call s:OpenWindow(a:1)
+    let flags = a:0 > 0 ? a:1 : ''
+    call s:OpenWindow(flags)
 endfunction
 
 function! tagbar#CloseWindow()

@@ -70,6 +70,10 @@ if !exists('g:tagbar_autoshowtag')
     let g:tagbar_autoshowtag = 0
 endif
 
+if !exists('g:tagbar_updateonsave_maxlines')
+    let g:tagbar_updateonsave_maxlines = 5000
+endif
+
 if !exists('g:tagbar_systemenc')
     let g:tagbar_systemenc = &encoding
 endif
@@ -81,8 +85,8 @@ augroup END
 
 " Commands {{{1
 command! -nargs=0 TagbarToggle        call tagbar#ToggleWindow()
-command! -nargs=0 TagbarOpen          call tagbar#OpenWindow(0)
-command! -nargs=0 TagbarOpenAutoClose call tagbar#OpenWindow(1)
+command! -nargs=? TagbarOpen          call tagbar#OpenWindow(<f-args>)
+command! -nargs=0 TagbarOpenAutoClose call tagbar#OpenWindow('fc')
 command! -nargs=0 TagbarClose         call tagbar#CloseWindow()
 command! -nargs=1 TagbarSetFoldlevel  call tagbar#SetFoldLevel(<args>)
 command! -nargs=0 TagbarShowTag       call tagbar#OpenParents()
