@@ -488,6 +488,9 @@ TagbarComment
 TagbarKind
     The header of generic "kinds" like "functions" and "variables".
 
+TagbarNestedKind
+    The "kind" headers in square brackets inside of scopes.
+
 TagbarScope
     Tags that define a scope like classes, structs etc.
 
@@ -548,6 +551,16 @@ language) definitions. This can be used both to change the settings of the
 existing types and to add completely new types. A complete configuration
 consists of a type definition for Tagbar in your |vimrc| and optionally a
 language definition for ctags in case you want to add a new language.
+
+Before writing your own extension try googling for already existing ones. For
+example, here is one for Scala:
+http://latestbuild.net/scala-ctags-and-vim-tagbar
+Since those aren't "canonical" configurations and are somewhat subjective they
+probably won't be included in Tagbar, but it is easy enough to just copy&paste
+them into your own setup. Note that you don't have to modify Tagbar directly
+like the article suggests, you can just put the configuration into your
+|vimrc| (see below for more details).
+
 
 Every type definition in Tagbar is a dictionary with the following keys:
 
@@ -940,13 +953,13 @@ software.
 
 The folding technique was inspired by NERDTree by Martin Grenfell.
 
-Taybin Rutkin:
-  - Contributed tagbar_autofocus option
-Seth Milliken:
-  - Contributed folding keybindings that resemble the built-in ones
-
-Thanks to the following people for feature suggestions etc: Jan Christoph
-Ebersbach, pielgrzym
+Thanks to the following people for code contributions, feature suggestions etc:
+Jan Christoph Ebersbach
+Leandro Freitas
+Seth Milliken
+Kien N
+pielgrzym
+Taybin Rutkin
 
 ==============================================================================
  vim: tw=78 ts=8 sw=8 sts=8 noet ft=help
