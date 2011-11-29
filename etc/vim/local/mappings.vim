@@ -213,6 +213,7 @@ Mapall <4-x> :copen<CR>
 
 " Plugin: Command-T
 Mapall  <4-o> :CommandT<CR>
+Mapall  <4-'> :CommandTJump<CR>
 Mapall  <4-b> :CommandTBuffer<CR>
 Mapall  <4-t> :tabnew<CR>:CommandT<CR>
 noremap <4-B> :CommandTFlush<CR>:echo 'Command-T flushed!'<CR>
