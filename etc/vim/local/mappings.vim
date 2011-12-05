@@ -180,7 +180,7 @@ noremap <Leader>gac      :Git aa<CR>:Gcommit<CR>
 noremap <Leader>gap      :Git ap<CR>
 noremap <Leader><C-g>    :Gstatus<CR>
 noremap <4-g>            :Gstatus<CR>
-noremap <4-G>            q:iGgrep! -P<Space>
+noremap <4-G>            q:iGgrep! -Pi<Space>
 
 
 """ Window / Tab Management {{{1
