@@ -57,6 +57,9 @@ set smartcase                   " unless there's a capital letter
 set nowrap                      " no soft wrap by default
 set linebreak                   " but if gets turned on, break on words
 set showbreak=…                 " and give us a nice visual indicator
+if exists('&breakindent')
+    set breakindent             " Use the breakindent feature if we have it
+endif
 
 " Completions
 set completeopt=menu,longest,preview " better insert mode completion
