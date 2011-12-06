@@ -1,7 +1,11 @@
 g:org_agenda_files	orgguide.txt	/*g:org_agenda_files*
+g:org_export_emacs	orgguide.txt	/*g:org_export_emacs*
+g:org_export_init_script	orgguide.txt	/*g:org_export_init_script*
+g:org_export_verbose	orgguide.txt	/*g:org_export_verbose*
 g:org_heading_highlight_colors	orgguide.txt	/*g:org_heading_highlight_colors*
 g:org_heading_highlight_levels	orgguide.txt	/*g:org_heading_highlight_levels*
 g:org_heading_shade_leading_stars	orgguide.txt	/*g:org_heading_shade_leading_stars*
+g:org_plugins	orgguide.txt	/*g:org_plugins*
 g:org_todo_keyword_faces	orgguide.txt	/*g:org_todo_keyword_faces*
 g:org_todo_keywords	orgguide.txt	/*g:org_todo_keywords*
 org	orgguide.txt	/*org*
@@ -17,7 +21,8 @@ orgguide-<LocalLeader>caT	orgguide.txt	/*orgguide-<LocalLeader>caT*
 orgguide-<LocalLeader>caa	orgguide.txt	/*orgguide-<LocalLeader>caa*
 orgguide-<LocalLeader>cat	orgguide.txt	/*orgguide-<LocalLeader>cat*
 orgguide-<LocalLeader>d	orgguide.txt	/*orgguide-<LocalLeader>d*
-orgguide-<LocalLeader>t	orgguide.txt	/*orgguide-<LocalLeader>t*
+orgguide-<LocalLeader>ft	orgguide.txt	/*orgguide-<LocalLeader>ft*
+orgguide-<LocalLeader>st	orgguide.txt	/*orgguide-<LocalLeader>st*
 orgguide-<[[	orgguide.txt	/*orgguide-<[[*
 orgguide->>	orgguide.txt	/*orgguide->>*
 orgguide->]]	orgguide.txt	/*orgguide->]]*
