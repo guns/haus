@@ -19,4 +19,4 @@ rake-:Rtask	rake.txt	/*rake-:Rtask*
 rake-:Rtest	rake.txt	/*rake-:Rtest*
 rake-about	rake.txt	/*rake-about*
 rake-commands	rake.txt	/*rake-commands*
-rake.vim	rake.txt	/*rake.vim*
+rake.txt	rake.txt	/*rake.txt*
