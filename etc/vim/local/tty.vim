@@ -10,6 +10,7 @@ set ttymouse=xterm2 " more accurate mouse tracking
 set ttyfast         " more redrawing characters sent to terminal
 
 " From ECMA-48:
+"
 "   OSC - OPERATING SYSTEM COMMAND:
 "     Representation: 09/13 or ESC 05/13 (this is \033] here)
 "     OSC is used as the opening delimiter of a control string for
@@ -20,6 +21,7 @@ set ttyfast         " more redrawing characters sent to terminal
 "     command string depends on the relevant operating system.
 "
 " From man screen:
+"
 "   Virtual Terminal -> Control Sequences:
 "     ESC P  (A)  Device Control String
 "                 Outputs a string directly to the host
@@ -47,6 +49,7 @@ set ttyfast         " more redrawing characters sent to terminal
 "   terminfo(5) extensions, Cs and Csr. Written by Ailin Nemui.
 "
 " From :help t_SI:
+"
 "   Added by Vim (there are no standard codes for these):
 "     t_SI start insert mode (bar cursor shape)
 "     t_EI end insert mode (block cursor shape)
