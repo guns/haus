@@ -159,6 +159,7 @@ set visible-stats on
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
 "\ex":          "✖"         U+2716
+"\eX":          "⚓"         U+2693
 
 
 ### Application Macros ###  {{{1
