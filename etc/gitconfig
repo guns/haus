@@ -64,7 +64,9 @@
 
     # merging and rebasing
     m   = merge --no-ff
+    me  = merge --no-ff --edit
     mf  = merge
+    mef = merge --edit
     mnc = merge --no-commit
     rb  = rebase
     rbi = rebase -i
