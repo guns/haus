@@ -141,23 +141,25 @@ set visible-stats on
 "\e[A":         history-search-backward     (- previous-history)
 
 # Unicode characters
+"\e'":          "→"         U+2192
+"\e(":          "·"         U+00B7
 "\e6":          "§"         U+00A7          (- digit-argument)
 "\e8":          "•"         U+2022          (- digit-argument)
-"\e(":          "·"         U+00B7
-"\ec":          "ç"         U+00E7          (- capitalize-word)
-"\ea":          "á"         U+00E1
+"\e;":          "←"         U+2190
+"\e>":          "…"         U+2026          (- end-of-history)
 "\eA":          "à"         U+00E0
-"\ee":          "é"         U+00E9
+"\ea":          "á"         U+00E1
+"\ec":          "ç"         U+00E7          (- capitalize-word)
+"\eC":          "Ç"         U+00C7
 "\eE":          "è"         U+00E8
+"\ee":          "é"         U+00E9
 "\eh":          "❤"         U+2764
 "\eH":          "❦"         U+2766
 "\el":          "λ"         U+03BB          (- downcase-word)
-"\ev":          "✔"         U+2714
 "\eV":          "⚡"         U+26A1
+"\ev":          "✔"         U+2714
 "\ex":          "✖"         U+2716
-"\e>":          "…"         U+2026          (- end-of-history)
-"\e;":          "←"         U+2190
-"\e'":          "→"         U+2192
+"\eX":          "⚓"         U+2693
 
 
 ### Application Macros ###  {{{1
@@ -246,6 +248,10 @@ $endif
 $if Ruby
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"       (- exchange-point-and-mark)
+
+    # Hashrocket
+    "\C-l":         " => "                  (- clear-screen)
+    "\C-x\C-l":     clear-screen
 
     # Load files
     "\C-xl":        "\C-]load ''\C-b"

@@ -29,11 +29,10 @@ IRB.conf[:PROMPT][:PYTHON] = {
   :RETURN   => "%s\n"
 }
 
-IRB.conf.merge!({
+IRB.conf.merge! \
   :PROMPT_MODE  => :PYTHON,
   :SAVE_HISTORY => 2**16,
   :USE_READLINE => true
-})
 
 
 ### Helpers

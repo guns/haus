@@ -936,11 +936,11 @@ ALIAS mk='make' \
 ### SCM {{{1
 
 # diff patch
-ALIAS diff='diff -U3' \
-      diffw='diff -w' \
-      diffr='diff -r' \
-      diffq='diff -q' \
-      diffrq='diff -rq'
+ALIAS di='diff -U3' \
+      diw='diff -w' \
+      dir='diff -r' \
+      diq='diff -q' \
+      dirq='diff -rq'
 ALIAS patch='patch --version-control never'
 
 # git
@@ -1038,7 +1038,13 @@ type ruby &>/dev/null && {
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
 
     # Rails
-    ALIAS r='rails'
+    HAVE rails && r() {
+        if [[ -x script/rails ]]; then
+            run script/rails "$@"
+        else
+            run rails "$@"
+        fi
+    }
 
     # Local api server @ `$cdapi`
     HAVE cdapi && {

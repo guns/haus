@@ -64,7 +64,10 @@
 
     # merging and rebasing
     m   = merge --no-ff
+    me  = merge --no-ff --edit
     mf  = merge
+    mef = merge --edit
+    mnc = merge --no-commit
     rb  = rebase
     rbi = rebase -i
     cp  = cherry-pick
@@ -83,6 +86,8 @@
 
     f     = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
     fa    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
+
+    lg    = log --extended-regexp --regexp-ignore-case --grep
 
     # branches
     br   = branch

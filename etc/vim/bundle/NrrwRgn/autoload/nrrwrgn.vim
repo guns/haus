@@ -90,7 +90,7 @@ fun! <sid>NrwRgnWin() "{{{1
 		silent %d _
 		" Set up some options like 'bufhidden', 'noswapfile', 
 		" 'buftype', 'bufhidden', when enabling Narrowing.
-		call <sid>NrrwSettings(0)
+		call <sid>NrrwSettings(1)
 		let nrrw_win = bufwinnr("")
 	endif
 	call <sid>SetOptions(local_options)
@@ -200,8 +200,9 @@ fun! <sid>NrrwRgnAuCmd(instn) "{{{1
 			echo printf("bufnr: %d a:instn: %d\n", bufnr(''), a:instn)
 			echo "bwipe " s:nrrw_winname . '_' . a:instn
 		endif
-		if has_key(s:nrrw_rgn_lines[a:instn], 'disable') &&
-			\	!s:nrrw_rgn_lines[a:instn].disable
+		if (has_key(s:nrrw_rgn_lines[a:instn], 'disable') &&
+		\	!s:nrrw_rgn_lines[a:instn].disable ) ||
+		\   !has_key(s:nrrw_rgn_lines[a:instn], 'disable')
 			call <sid>DeleteMatches(a:instn)
 			exe "bwipe! " bufnr(s:nrrw_winname . '_' . a:instn)
 			if s:instn>=1
@@ -561,6 +562,7 @@ fun! nrrwrgn#NrrwRgn() range  "{{{1
 	call setline(1, a)
 	setl nomod
 	let b:nrrw_instn = s:instn
+	call <sid>NrrwSettings(1)
 	call <sid>SetupBufLocalCommands(0)
 	call <sid>NrrwRgnAuCmd(0)
 	if has_key(s:nrrw_aucmd, "create")

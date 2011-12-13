@@ -1030,6 +1030,8 @@ function! s:app_tags_command() dict
     let cmd = "exuberant-ctags"
   elseif executable("ctags-exuberant")
     let cmd = "ctags-exuberant"
+  elseif executable("exctags")
+    let cmd = "exctags"
   elseif executable("ctags")
     let cmd = "ctags"
   elseif executable("ctags.exe")
@@ -2132,6 +2134,7 @@ function! s:BufFinderCommands()
   call s:addfilecmds("controller")
   call s:addfilecmds("mailer")
   call s:addfilecmds("migration")
+  call s:addfilecmds("schema")
   call s:addfilecmds("observer")
   call s:addfilecmds("helper")
   call s:addfilecmds("layout")
@@ -2285,6 +2288,14 @@ function! s:migrationList(A,L,P)
     call map(migrations,'s:sub(v:val,"^[0-9]*_","")')
     return s:autocamelize(migrations,a:A)
   endif
+endfunction
+
+function! s:schemaList(A,L,P)
+  let tables = s:readfile(rails#app().path('db/schema.rb'))
+  let table_re = '^\s\+create_table\s["'':]\zs[^"'',]*\ze'
+  call map(tables,'matchstr(v:val, table_re)')
+  call filter(tables,'strlen(v:val)')
+  return s:autocamelize(tables, a:A)
 endfunction
 
 function! s:unittestList(A,L,P)
@@ -2514,6 +2525,15 @@ function! s:migrationEdit(cmd,...)
   else
     return s:error("Migration not found".(arg=='' ? '' : ': '.arg))
   endif
+endfunction
+
+function! s:schemaEdit(cmd,...)
+  let cmd = s:findcmdfor(a:cmd)
+  let schema = 'db/'.s:environment().'_structure.sql'
+  if rails#app().has_file('db/schema.rb') || !rails#app().has_file(schema)
+    let schema = 'db/schema.rb'
+  endif
+  call s:findedit(cmd,schema.(a:0 ? '#'.a:1 : ''))
 endfunction
 
 function! s:fixturesEdit(cmd,...)
