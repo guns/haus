@@ -175,6 +175,7 @@ let g:NERDTreeWinPos = 'left'
 " Plugin: NERDCommenter
 let g:NERDCompactSexyComs = 1
 let g:NERDSpaceDelims = 1
+let g:NERDMenuMode = 0
 
 " Plugin: delimitMate (expand <CR> still breaks undo/redo)
 let g:delimitMate_excluded_regions = ''
