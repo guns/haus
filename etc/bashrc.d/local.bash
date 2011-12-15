@@ -5,6 +5,7 @@
 ### Environment Variables {{{1
 
 # Bash history
+export HISTSIZE=65535
 export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
 
 # Editor
