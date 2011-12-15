@@ -387,8 +387,8 @@ nmap <Leader>_ viw<Plug>(operator-camelize-toggle)
 vmap <Leader>_ <Plug>(operator-camelize-toggle)
 
 " Plugin: NERD_commenter (assigning to <plug> via Mapall doesn't seem to work)
-map  <4-/> <plug>NERDCommenterToggleAlign
-map! <4-/> <Esc><plug>NERDCommenterToggleAlign
+map  <4-/> <Plug>NERDCommenterToggleAlign
+map! <4-/> <Esc><Plug>NERDCommenterToggleAlign
 
 " Plugin: closetag
 noremap! <4-.> <C-r>=GetCloseTag()<CR>
