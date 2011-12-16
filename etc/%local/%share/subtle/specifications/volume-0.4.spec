@@ -3,7 +3,7 @@
 Sur::Specification.new do |s|
   # Sublet information
   s.name        = "Volume"
-  s.version     = "0.3"
+  s.version     = "0.4"
   s.tags        = [ "Icon", "Ioctl", "Linux", "Config", "Grab" ]
   s.files       = [ "volume.rb" ]
   s.icons       = [

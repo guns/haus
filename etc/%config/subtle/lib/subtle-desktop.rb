@@ -16,7 +16,7 @@ module SubtleDesktop
 
       grab "W-S-#{i+1}" do |c|
         c.toggle_stick if c.is_stick?
-        c.tags = [Subtlext::Tag.find(name) || names.first]
+        c.tags = [Subtlext::Tag.find(name) || names.first].flatten
       end
     end
   end

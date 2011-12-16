@@ -22,29 +22,26 @@ create_desktops '1'..'4'
 #
 
 # Window move/resize steps in pixel per keypress
-set :step, 5
+set :increase_step, 5
 
 # Window screen border snapping
-set :snap, 10
+set :border_snap, 10
 
 # Default starting gravity for windows. Comment out to use gravity of
 # currently active client
-set :gravity, :center75
+set :default_gravity, :center75
 
 # Make transient windows urgent
-set :urgent, true
+set :urgent_dialogs, true
 
 # Honor resize size hints globally
-set :resize, false
+set :honor_size_hints, false
 
 # Enable gravity tiling
-set :tiling, false
+set :gravity_tiling, false
 
-# FIXME: Is this deprecated, or not?
-set :font, 'xft:Menlo:pixelsize=12'
-
-# Separator between sublets
-set :separator, '|'
+# Enable click-to-focus focus model
+set :click_to_focus, false
 
 #
 # == Screen {{{1
@@ -126,11 +123,12 @@ style :all do
   icon        "#757575"
   border      "#303030", 0
   padding     0, 3
-  # font        'xft:Menlo:pixelsize=12'
+  font        'xft:Menlo:pixelsize=12'
 end
 
-# Style for the views
+# Style for the all views
 style :views do
+  foreground  "#757575"
 
   # Style for the active views
   style :focus do
@@ -146,11 +144,6 @@ style :views do
   style :occupied do
     foreground  "#b8b8b8"
   end
-
-  # Style for unoccupied views (views without clients)
-  style :unoccupied do
-    foreground  "#757575"
-  end
 end
 
 # Style for sublets
@@ -162,6 +155,7 @@ end
 # Style for separator
 style :separator do
   foreground  "#757575"
+  separator   "|"
 end
 
 # Style for focus window title
@@ -171,10 +165,10 @@ end
 
 # Style for active/inactive windows
 style :clients do
-  active      "#303030", 2
-  inactive    "#202020", 2
-  margin      0
-  width       50
+  active    "#303030", 2
+  inactive  "#202020", 2
+  margin    0
+  width     50
 end
 
 # Style for subtle
@@ -724,7 +718,7 @@ def set_properties c
     c.gravity = :center
 
   else
-    c.toggle_resize
+    c.toggle_resize if c.is_resize?
 
   end
 end
