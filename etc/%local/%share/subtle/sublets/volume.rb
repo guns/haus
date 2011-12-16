@@ -4,22 +4,22 @@
 # Mixer class {{{
 class Mixer
   # Copied from linux/soundcard.h
-  VOLUME = 0
-  PCM    = 4
+  VOLUME = 0 # Line 743
+  PCM    = 4 # Line 747
 
   # Copied from asm-generic/ioctl.h
-  IOC_WRITE = 1
-  IOC_READ  = 2
+  IOC_WRITE = 1 # line 58
+  IOC_READ  = 2 # line 62
 
   # Values for Linux
-  IOC_NRBITS   = 8
-  IOC_TYPEBITS = 8
-  IOC_SIZEBITS = 14
+  IOC_NRBITS   = 8  # Line 22
+  IOC_TYPEBITS = 8  # Line 23
+  IOC_SIZEBITS = 14 # Line 31
+  IOC_NRSHIFT  = 0  # Line 43
 
-  IOC_NRSHIFT   = 0
-  IOC_TYPESHIFT = (IOC_NRSHIFT + IOC_NRBITS)
-  IOC_SIZESHIFT = (IOC_TYPESHIFT + IOC_TYPEBITS)
-  IOC_DIRSHIFT  = (IOC_SIZESHIFT + IOC_SIZEBITS)
+  IOC_TYPESHIFT = (IOC_NRSHIFT + IOC_NRBITS)     # Line 44
+  IOC_SIZESHIFT = (IOC_TYPESHIFT + IOC_TYPEBITS) # Line 45
+  IOC_DIRSHIFT  = (IOC_SIZESHIFT + IOC_SIZEBITS) # Line 46
 
   # Volume icon
   attr_reader :icon
@@ -29,8 +29,8 @@ class Mixer
 
   ## initialize {{{
   # Initializer
-  # @param [Fixnum, #read]  channel  Mixer channel
-  # @param [String, #read]  dev      Mixer device
+  # @param [Fixnum]  channel  Mixer channel
+  # @param [String]  dev      Mixer device
   ##
 
   def initialize(channel = Mixer::VOLUME, dev = "/dev/mixer")
@@ -65,11 +65,11 @@ class Mixer
 
   ## set_volume {{{
   # Set volume
-  # @param [Fixnum, #read]  vol  New volume
+  # @param [Fixnum]  vol  New volume
   ##
 
   def set_volume(vol)
-    return unless(0 <= vol and 100 >= vol)
+    return unless 0 <= vol and 100 >= vol
 
     @volume = [ vol, vol ]
 
@@ -82,7 +82,7 @@ class Mixer
 
   ## louder {{{
   # Increase volume
-  # @param [Fixnum, #read]  step  Increase step
+  # @param [Fixnum]  step  Increase step
   ##
 
   def louder(step = 5)
@@ -93,7 +93,7 @@ class Mixer
 
   ## quieter {{{
   # Decrease volume
-  # @param [Fixnum, #read]  step  Decrease step
+  # @param [Fixnum]  step  Decrease step
   ##
 
   def quieter(step = 5)
@@ -107,7 +107,7 @@ class Mixer
   ###
 
   def toggle
-    if(:off == @state)
+    if :off == @state
       @state = :on
 
       set_volume(@restore)
@@ -143,42 +143,45 @@ class Mixer
   ###
 
   def self.finalize
-    proc { @mixer.close unless(@mixer.nil?) }
+    proc { @mixer.close unless @mixer.nil? }
   end # }}}
 
   private
 
   ## ioc {{{
   # Assemble ioctl number
-  # @param [Fixnum, #read]  dir   Directive
-  # @param [Fixnum, #read]  type  Command type
-  # @param [Fixnum, #read]  nr    Command number
-  # @param [Fixnum, #read]  size  Value size
+  # @param [Fixnum]  dir   Directive
+  # @param [Fixnum]  type  Command type
+  # @param [Fixnum]  nr    Command number
+  # @param [Fixnum]  size  Value size
   # @return [Fixnum] Ioctl number
   ##
 
   def ioc(dir, type, nr, size = 4) # 4 => sizeof(int)
+    # Defined in asm-generic/ioctl.h on line 65
     ((dir << IOC_DIRSHIFT) | (type << IOC_TYPESHIFT) | (nr << IOC_NRSHIFT) | (size << IOC_SIZESHIFT))
   end # }}}
 
   ## mixer_read {{{
   # Get mixer read ioctl
-  # @param [Fixnum, #read]  dev  Mixer device
+  # @param [Fixnum]  dev  Mixer device
   # @return [Fixnum] Ioctl number
   ##
 
   def mixer_read(dev)
-    ioc(IOC_READ, "M".ord, dev)
+    # Defined in linux/soundcard.h on line 846
+    [ioc(IOC_READ, "M".ord, dev)].pack("i").unpack("i").first
   end # }}}
 
   ## mixer_write {{{
   # Get mixer write ioctl
-  # @param [Fixnum, #read]  dev  Mixer device
+  # @param [Fixnum]  dev  Mixer device
   # @return [Fixnum] Ioctl number
   ##
 
   def mixer_write(dev)
-    ioc(IOC_READ|IOC_WRITE, "M".ord, dev)
+    # Defined in linux/soundcard.h on line 876
+    [ioc(IOC_READ|IOC_WRITE, "M".ord, dev)].pack("i").unpack("i").first
   end # }}}
 end # }}}
 
