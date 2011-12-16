@@ -270,10 +270,10 @@ noremap <Leader>en       :tabedit /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :Org<CR>
 noremap <Leader>er       :tabedit /etc/rc.conf<CR>
 noremap <Leader>es       :tabnew<CR>:Scratch<CR>
-noremap <Leader>eS       :execute 'tabedit ' . expand('~/.config/subtle/subtle.rb')<CR>
+noremap <Leader>eS       :vnew<CR>:wincmd L<CR>:Scratch<CR>
 noremap <Leader>et       :Org TODO<CR>
 noremap <Leader>ev       :execute 'tabedit ' . expand($MYVIMRC)<CR>
-noremap <Leader>eV       :vnew<CR>:wincmd L<CR>:Scratch<CR>
+noremap <Leader>ew       :execute 'tabedit ' . expand('~/.config/subtle/subtle.rb')<CR>
 
 " Set Filetypes
 noremap <Leader>f<Space> :setlocal filetype=

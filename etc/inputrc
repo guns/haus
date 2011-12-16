@@ -214,9 +214,9 @@ $if Bash
     "\C-xeo":       "\C-] vimorg \n"
     "\C-xer":       "\C-] vimrcconf \n"
     "\C-xes":       "\C-] vimscratch \n"
-    "\C-xeS":       "\C-] vimsubtle \n"
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xev":       "\C-] vimrc \n"
+    "\C-xew":       "\C-] vimsubtle \n"
     "\C-xf":        "\C-]vimfind "
     "\C-x\C-g":     "\C-] vimgit \n"        (- abort)
     "\C-xm":        "\C-]man "
