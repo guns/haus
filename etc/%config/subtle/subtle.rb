@@ -22,23 +22,26 @@ create_desktops '1'..'4'
 #
 
 # Window move/resize steps in pixel per keypress
-set :step, 5
+set :increase_step, 5
 
 # Window screen border snapping
-set :snap, 10
+set :border_snap, 10
 
 # Default starting gravity for windows. Comment out to use gravity of
 # currently active client
-set :gravity, :center75
+set :default_gravity, :center75
 
 # Make transient windows urgent
-set :urgent, true
+set :urgent_dialogs, true
 
 # Honor resize size hints globally
-set :resize, false
+set :honor_size_hints, false
 
 # Enable gravity tiling
-set :tiling, false
+set :gravity_tiling, false
+
+# Enable click-to-focus focus model
+set :click_to_focus, false
 
 #
 # == Screen {{{1
