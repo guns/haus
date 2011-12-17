@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if [[ -x /usr/bin/open ]]; then
+    exec /usr/bin/open "$@"
+else
+    chrome "$@" &
+fi
