@@ -164,3 +164,9 @@ endsnippet
 snippet deb "call debugger" w
 raise(SIGTRAP);
 endsnippet
+
+snippet fdeb "printf debug to file" w
+FILE *_f = fopen("/tmp/${1:debug.log}");
+fprintf(_f, "$0");
+fclose(_f);
+endsnippet
