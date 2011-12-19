@@ -38,8 +38,6 @@ augroup GUNS
         \ let b:delimitMate_quotes = '"' |
         \ execute 'noremap  <buffer> <4-CR>     :normal m`=ap``<CR>' |
         \ execute 'noremap! <buffer> <4-CR>     <C-o>:normal m`=ap``<CR>' |
-        \ execute 'noremap  <buffer> <Leader>ab :normal %vabyvababpm`=ap``<CR>' |
-        \ execute 'noremap  <buffer> <Leader>ib :normal ysib(<CR>i' |
         \ execute 'noremap  <buffer> <Leader>ic :ToggleClojureFormComment<CR>' |
         \ SetWhitespace 2 8
 

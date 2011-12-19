@@ -353,6 +353,10 @@ inoremap <4-]> <C-o>>>
 vnoremap <4-[> <gv
 vnoremap <4-]> >gv
 
+" Wrap / break parens (useful for Lisp forms)
+Mapall <Leader>ab :normal\ %vabyvababpm`=ap``<CR>
+Mapall <Leader>ib :normal\ ysib(<CR>i
+
 " http://vim.wikia.com/wiki/Moving_lines_up_or_down
 nnoremap <M-j> :m+<CR>==
 nnoremap <M-k> :m-2<CR>==
