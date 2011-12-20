@@ -156,10 +156,11 @@ set visible-stats on
 "\eh":          "❤"         U+2764
 "\eH":          "❦"         U+2766
 "\el":          "λ"         U+03BB          (- downcase-word)
+"\es":          "⚓"         U+2693
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
-"\ex":          "✖"         U+2716
-"\eX":          "⚓"         U+2693
+"\ex":          "×"         U+00D7
+"\eX":          "✖"         U+2716
 
 
 ### Application Macros ###  {{{1

@@ -53,7 +53,7 @@ class MultiplicationProblems
 
   def format
     len = (options.multiplicands + options.multipliers).max.to_s.length
-    "%#{len}d ✖ %#{len}d ="
+    "%#{len}d × %#{len}d ="
   end
 
   def to_s
