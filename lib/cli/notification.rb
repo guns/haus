@@ -19,8 +19,11 @@ module CLI
       system %Q(/bin/sh -c 'command -v #{cmd}' &>/dev/null)
     end
 
-    def spawn *args
-      Process.detach fork { exec *args }
+    def forkexec *args
+      Process.detach fork {
+        [$stdout, $stderr].each { |fd| fd.reopen '/dev/null' }
+        exec *args
+      }
     end
 
     def notify
@@ -28,9 +31,9 @@ module CLI
         cmd  = %W[growlnotify -m #{message}]
         cmd += %W[--title #{title}] if title
         cmd += %w[--sticky] if sticky
-        spawn *cmd
+        forkexec *cmd
       elsif have 'notify-send'
-        spawn 'notify-send', title || '', message
+        forkexec 'notify-send', title || '', message
       end
     end
 
@@ -39,15 +42,15 @@ module CLI
 
       if audio == :voice
         if RUBY_PLATFORM =~ /darwin/i and have 'say'
-          spawn 'say', message
+          forkexec 'say', message
         elsif have 'espeak'
-          spawn 'espeak', '-ven-us', message
+          forkexec 'espeak', '-ven-us', message
         end
       elsif File.readable? audio
         if have 'afplay'
-          spawn 'afplay', audio
+          forkexec 'afplay', audio
         elsif have 'play'
-          spawn 'play', '-q', audio
+          forkexec 'play', '-q', audio
         end
       end
     end
