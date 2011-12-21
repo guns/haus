@@ -701,10 +701,6 @@ ALIAS ssh='ssh -C -2' \
       ssh-nocompression='ssh -o "Compression no"'
 ALIAS scp='scp -C -2' \
       scpr='scp -r'
-HAVE ssh-agent && {
-    alias ssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec ssh-agent \"$SHELL\""
-    HAVE sudo && alias rootssh-shell="[[ \"\$SSH_AGENT_PID\" ]] || exec sudo ssh-agent \"$SHELL\""
-}
 HAVE ssh-proxy && tcomp ssh ssh-proxy
 
 # lsof
