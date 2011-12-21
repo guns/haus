@@ -11,6 +11,8 @@
 $:.unshift File.expand_path('../lib', __FILE__)
 
 require 'subtle-desktop'
+require 'contrib/launcher'
+
 extend SubtleDesktop
 
 create_desktops '1'..'4'
@@ -378,6 +380,11 @@ grab 'W-C-t' do
   system('subtle --check') ? Subtlext::Subtle.restart : system('notify Invalid configuration')
 end
 
+# Run the Subtle Launcher
+grab 'W-space' do
+  Subtle::Contrib::Launcher.run
+end
+
 # Volume
 grab 'F3', :VolumeToggle
 grab 'F4', :VolumeLower
@@ -390,7 +397,7 @@ grab 'W-F9', 'rxvt-unicode --client -e vim'
 grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch'
 
 # Browsers
-open 'F10',   'chrome', [:klass, :=~, /chromium|namoroka|firefox/i]
+open 'F10',   'chrome', [:klass, :=~, /chromium|namoroka|firefox|aurora/i]
 grab 'W-F10', 'chrome --incognito'
 
 # File Managers
