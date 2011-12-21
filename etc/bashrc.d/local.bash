@@ -1039,7 +1039,7 @@ type ruby &>/dev/null && {
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
 
     # Rails
-    HAVE rails && r() {
+    r() {
         if [[ -x script/rails ]]; then
             run script/rails "$@"
         else
