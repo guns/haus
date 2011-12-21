@@ -151,7 +151,7 @@ noremap <Leader><C-p> :set paste!<CR>:set paste?<CR>
 noremap <Leader><C-w> :setlocal wrap!<CR>:setlocal wrap?<CR>
 
 " Other builtin commands
-noremap <Leader>M :make!<CR>
+noremap <Leader>! :make!<CR>
 
 " TextMate style syntax inspection
 noremap <4-P> :SynStack<CR>
@@ -250,6 +250,7 @@ Mapall <4-I> :TagbarOpen<CR>
 " Plugin: Manpageview
 noremap <Leader>K viwK
 noremap <Leader>m :Man<Space>
+noremap <Leader>M :VMan<Space>
 
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>

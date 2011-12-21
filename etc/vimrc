@@ -207,9 +207,6 @@ let g:UltiSnipsJumpForwardTrigger = '<Tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<S-tab>'
 let g:UltiSnipsRemoveSelectModeMappings = 0
 
-" Plugin: ManPageView
-let g:manpageview_winopen = 'vsplit='
-
 " Plugin: Tagbar
 let g:tagbar_autofocus = 1
 let g:tagbar_autoshowtag = 1
