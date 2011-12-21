@@ -29,7 +29,7 @@ augroup GUNS
 
     " Shell
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
-        \ setlocal filetype=sh
+        \ setfiletype=sh
     autocmd FileType sh
         \ setlocal iskeyword+=-
 
@@ -43,7 +43,7 @@ augroup GUNS
 
     " Ruby
     autocmd BufRead,BufNewFile *.irbrc,config.ru,Gemfile,*rakefile
-        \ setlocal filetype=ruby
+        \ setfiletype=ruby
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |
         \ execute 'noremap <buffer> <Leader><C-b> :B<CR>' |
@@ -79,7 +79,7 @@ augroup GUNS
         \ setlocal iskeyword+=- |
         \ SetWhitespace 4
     autocmd BufRead,BufNewFile *.less
-        \ setlocal filetype=sass |
+        \ setfiletype=sass |
         \ SetWhitespace 4
 
     " JavaScript
@@ -96,14 +96,14 @@ augroup GUNS
 
     " Nginx
     autocmd BufRead,BufNewFile /opt/nginx/etc/*.conf,nginx.conf
-        \ setlocal filetype=nginx
+        \ setfiletype=nginx
     autocmd FileType nginx
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |
         \ SetWhitespace 4
 
     " Ini conf
     autocmd BufRead,BufNewFile *gitconfig
-        \ setlocal filetype=gitconfig
+        \ setfiletype=gitconfig
     autocmd FileType ini,gitconfig
         \ SetWhitespace 4
 
@@ -113,7 +113,7 @@ augroup GUNS
 
     " XDefaults
     autocmd BufRead,BufNewFile *Xdefaults
-        \ setlocal filetype=xdefaults
+        \ setfiletype=xdefaults
 
     " UltiSnips snippets
     autocmd FileType snippets
@@ -128,7 +128,7 @@ augroup GUNS
 
     " Mail
     autocmd BufRead,BufNewFile editserver-*,*.mail
-        \ setlocal filetype=mail
+        \ setfiletype=mail
     autocmd FileType mail
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
@@ -149,32 +149,32 @@ augroup GUNS
 
     " tmux
     autocmd BufRead,BufNewFile *tmux.conf
-        \ setlocal filetype=tmux |
+        \ setfiletype=tmux |
         \ SetWhitespace 4
 
     " screen
     autocmd BufRead,BufNewFile *screenrc
-        \ setlocal filetype=screen
+        \ setfiletype=screen
 
     " http logs
     autocmd BufRead *access.log*
-        \ setlocal filetype=httplog
+        \ setfiletype=httplog
 
     " dnsmasq
     autocmd BufRead,BufNewFile dnsmasq.conf*
-        \ setlocal filetype=dnsmasq
+        \ setfiletype=dnsmasq
 
     " Applescript (which sucks)
     autocmd BufRead,BufNewFile *.applescript
-        \ setlocal filetype=applescript
+        \ setfiletype=applescript
 
     " Readline
     autocmd BufRead,BufNewFile *.inputrc
-        \ setlocal filetype=readline
+        \ setfiletype=readline
 
     " Nethack!
     autocmd BufRead,BufNewFile *.des
-        \ setlocal filetype=nhdes
+        \ setfiletype=nhdes
 
     " TeX
     autocmd FileType tex
@@ -183,7 +183,7 @@ augroup GUNS
 
     " CTags
     autocmd BufRead,BufNewFile .tags
-        \ setlocal filetype=tags
+        \ setfiletype=tags
 
     " Man pages
     autocmd FileType man
@@ -191,7 +191,7 @@ augroup GUNS
 
     " Terminfo
     autocmd BufRead,BufNewFile *.terminfo
-        \ setlocal filetype=terminfo
+        \ setfiletype=terminfo
 
     " vim-orgmode
     autocmd FileType org
