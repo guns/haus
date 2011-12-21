@@ -636,7 +636,7 @@ daemons() {
             named unbound dnsmasq
             exim sendmail
             smbd nmbd nfsd
-            sshd
+            sshd ssh-agent
             urxvtd
             wicd
         ]
