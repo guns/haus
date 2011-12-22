@@ -73,21 +73,27 @@
     cp  = cherry-pick
 
     # log
-    l     = log --relative-date --decorate --graph
-    lstat = log --relative-date --decorate --graph --stat
+    l      = log --relative-date --decorate --graph
+    lf     = log --relative-date --decorate --graph --first-parent
+    lstat  = log --relative-date --decorate --graph --stat
+    lfstat = log --relative-date --decorate --graph --stat --first-parent
 
-    lp    = log --relative-date --decorate --patch --stat
-    lpw   = log --relative-date --decorate --patch --stat -w
-    wlp   = log --relative-date --decorate --patch --stat --word-diff=color
+    lp     = log --relative-date --decorate --patch --stat
+    lpf    = log --relative-date --decorate --patch --stat --first-parent
+    lpw    = log --relative-date --decorate --patch --stat -w
+    wlp    = log --relative-date --decorate --patch --stat --word-diff=color
 
-    l1    = log --relative-date --decorate --patch --stat -1
-    l1w   = log --relative-date --decorate --patch --stat -1 -w
-    wl1   = log --relative-date --decorate --patch --stat -1 --word-diff=color
+    l1     = log --relative-date --decorate --patch --stat -1
+    l1w    = log --relative-date --decorate --patch --stat -1 -w
+    wl1    = log --relative-date --decorate --patch --stat -1 --word-diff=color
 
-    f     = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
-    fa    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
+    f      = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
+    ff     = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --first-parent
+    fa     = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
+    faf    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all --first-parent
 
-    lg    = log --extended-regexp --regexp-ignore-case --grep
+    lg     = log --extended-regexp --regexp-ignore-case --grep
+    lfg    = log --extended-regexp --regexp-ignore-case --first-parent --grep
 
     # branches
     br   = branch
