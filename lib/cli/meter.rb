@@ -109,7 +109,7 @@ module CLI
       # Chunk, join, and colorize chars
       pos = 0
       styles.map do |count, style|
-        buf  = chars[pos, count].join
+        buf  = chars[pos, count].join rescue (warn '%s[%d, %d] is nil!' % [chars, pos, count]; '')
         buf  = fmt [buf, *style] unless style.empty?
         pos += count
         buf

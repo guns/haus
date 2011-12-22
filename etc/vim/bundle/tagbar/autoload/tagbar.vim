@@ -73,17 +73,8 @@ if s:ftype_out !~# 'detection:ON'
 endif
 unlet s:ftype_out
 
-if has('multi_byte') && has('unix') && &encoding == 'utf-8' &&
- \ (empty(&termencoding) || &termencoding == 'utf-8')
-    let s:icon_closed = '▶'
-    let s:icon_open   = '▼'
-elseif has('multi_byte') && (has('win32') || has('win64')) && g:tagbar_usearrows
-    let s:icon_closed = '▷'
-    let s:icon_open   = '◢'
-else
-    let s:icon_closed = '+'
-    let s:icon_open   = '-'
-endif
+let s:icon_closed = g:tagbar_iconchars[0]
+let s:icon_open   = g:tagbar_iconchars[1]
 
 let s:type_init_done    = 0
 let s:autocommands_done = 0
@@ -101,6 +92,19 @@ let g:loaded_tagbar = 1
 let s:last_highlight_tline = 0
 let s:debug = 0
 let s:debug_file = ''
+
+" s:Init() {{{2
+function! s:Init()
+    if !s:type_init_done
+        call s:InitTypes()
+    endif
+
+    if !s:checked_ctags
+        if !s:CheckForExCtags()
+            return
+        endif
+    endif
+endfunction
 
 " s:InitTypes() {{{2
 function! s:InitTypes()
@@ -405,7 +409,8 @@ function! s:InitTypes()
     " Alternatively jsctags/doctorjs will be used if available.
     let type_javascript = {}
     let type_javascript.ctagstype = 'javascript'
-    if executable('jsctags')
+    let jsctags = s:CheckFTCtags('jsctags', 'javascript')
+    if jsctags != ''
         let type_javascript.kinds = [
             \ {'short' : 'v', 'long' : 'variables', 'fold' : 0},
             \ {'short' : 'f', 'long' : 'functions', 'fold' : 0}
@@ -418,7 +423,7 @@ function! s:InitTypes()
         let type_javascript.scope2kind = {
             \ 'namespace' : 'v'
         \ }
-        let type_javascript.ctagsbin   = 'jsctags'
+        let type_javascript.ctagsbin   = jsctags
         let type_javascript.ctagsargs  = '-f -'
     else
         let type_javascript.kinds = [
@@ -772,18 +777,20 @@ function! s:GetUserTypeDefs()
     " generate the other one
     " Also, transform the 'kind' definitions into dictionary format
     for def in values(defdict)
-        let kinds = def.kinds
-        let def.kinds = []
-        for kind in kinds
-            let kindlist = split(kind, ':')
-            let kinddict = {'short' : kindlist[0], 'long' : kindlist[1]}
-            if len(kindlist) == 3
-                let kinddict.fold = kindlist[2]
-            else
-                let kinddict.fold = 0
-            endif
-            call add(def.kinds, kinddict)
-        endfor
+        if has_key(def, 'kinds')
+            let kinds = def.kinds
+            let def.kinds = []
+            for kind in kinds
+                let kindlist = split(kind, ':')
+                let kinddict = {'short' : kindlist[0], 'long' : kindlist[1]}
+                if len(kindlist) == 3
+                    let kinddict.fold = kindlist[2]
+                else
+                    let kinddict.fold = 0
+                endif
+                call add(def.kinds, kinddict)
+            endfor
+        endif
 
         if has_key(def, 'kind2scope') && !has_key(def, 'scope2kind')
             let def.scope2kind = {}
@@ -818,15 +825,7 @@ function! s:RestoreSession()
         endif
     endif
 
-    if !s:type_init_done
-        call s:InitTypes()
-    endif
-
-    if !s:checked_ctags
-        if !s:CheckForExCtags()
-            return
-        endif
-    endif
+    call s:Init()
 
     call s:InitWindow(g:tagbar_autoclose)
 
@@ -965,6 +964,24 @@ function! s:CheckExCtagsVersion(output)
     let minor     = matchlist[2]
 
     return major >= 6 || (major == 5 && minor >= 5)
+endfunction
+
+" s:CheckFTCtags() {{{2
+function! s:CheckFTCtags(bin, ftype)
+    if executable(a:bin)
+        return a:bin
+    endif
+
+    if exists('g:tagbar_type_' . a:ftype)
+        execute 'let userdef = ' . 'g:tagbar_type_' . a:ftype
+        if has_key(userdef, 'ctagsbin')
+            return userdef.ctagsbin
+        else
+            return ''
+        endif
+    endif
+
+    return ''
 endfunction
 
 " Prototypes {{{1
@@ -1385,7 +1402,7 @@ function! s:ToggleWindow()
         return
     endif
 
-    call s:OpenWindow(0)
+    call s:OpenWindow('')
 endfunction
 
 " s:OpenWindow() {{{2
@@ -1407,15 +1424,7 @@ function! s:OpenWindow(flags)
         return
     endif
 
-    if !s:type_init_done
-        call s:InitTypes()
-    endif
-
-    if !s:checked_ctags
-        if !s:CheckForExCtags()
-            return
-        endif
-    endif
+    call s:Init()
 
     " Expand the Vim window to accomodate for the Tagbar window if requested
     if g:tagbar_expand && !s:window_expanded && has('gui_running')
@@ -2938,6 +2947,38 @@ function! s:CheckMouseClick()
     endif
 endfunction
 
+" s:DetermineFiletype() {{{2
+function! s:DetectFiletype(bufnr)
+    " Filetype has already been detected for loaded buffers, but not
+    " necessarily for unloaded ones
+    let ftype = getbufvar(a:bufnr, '&filetype')
+
+    if bufloaded(a:bufnr)
+        return ftype
+    endif
+
+    if ftype != ''
+        return ftype
+    endif
+
+    " Unloaded buffer with non-detected filetype, need to detect filetype
+    " manually
+    let bufname = bufname(a:bufnr)
+
+    let eventignore_save = &eventignore
+    set eventignore=FileType
+    let filetype_save = &filetype
+
+    exe 'doautocmd filetypedetect BufRead ' . bufname
+    let ftype = &filetype
+
+    let &filetype = filetype_save
+    let &eventignore = eventignore_save
+
+    return ftype
+endfunction
+
+
 " TagbarBalloonExpr() {{{2
 function! TagbarBalloonExpr()
     let taginfo = s:GetTagInfo(v:beval_lnum, 1)
@@ -3036,6 +3077,22 @@ endfunction
 
 function! tagbar#RestoreSession()
     call s:RestoreSession()
+endfunction
+
+" Automatically open Tagbar if one of the open buffers contains a supported
+" file
+function! tagbar#autoopen()
+    call s:Init()
+
+    for bufnr in range(1, bufnr('$'))
+        if buflisted(bufnr)
+            let ftype = s:DetectFiletype(bufnr)
+            if s:IsValidFile(bufname(bufnr), ftype)
+                call s:OpenWindow('')
+                return
+            endif
+        endif
+    endfor
 endfunction
 
 " Modeline {{{1

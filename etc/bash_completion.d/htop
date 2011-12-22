@@ -1,25 +1,20 @@
-# kcov(1) completion                                       -*- shell-script -*-
+# htop(1) completion                                       -*- shell-script -*-
 
-_kcov()
+_htop()
 {
     local cur prev words cword split
     _init_completion -s || return
 
     case "$prev" in
-        --pid|-p)
-            _pids
+        -s|--sort-key)
+            COMPREPLY=( $( compgen -W '$( "$1" -s help )' -- "$cur" ) )
             return
             ;;
-        --sort-type|-s)
-            COMPREPLY=( $( compgen -W 'filename percentage' -- "$cur" ) )
+        -u|--user)
+            COMPREPLY=( $( compgen -u -- "$cur" ) )
             return
             ;;
-        --include-path|--exclude-path)
-            _filedir
-            return
-            ;;
-        --limits|-l|--title|-t|--include-pattern|--exclude-pattern|\
-        --path-strip-level)
+        -d|--delay)
             # argument required but no completions available
             return
             ;;
@@ -32,8 +27,6 @@ _kcov()
         [[ $COMPREPLY == *= ]] && compopt -o nospace
         return
     fi
-
-    _filedir
-} && complete -F _kcov kcov
+} && complete -F _htop htop
 
 # ex: ts=4 sw=4 et filetype=sh
