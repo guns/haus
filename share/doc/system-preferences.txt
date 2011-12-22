@@ -8,7 +8,7 @@ Defaults timestamp_timeout = 0
 
 # Convenient environment variables
 Defaults env_reset
-Defaults env_keep += "SSH_AUTH_SOCK"
+Defaults env_keep += "SSH_AUTH_SOCK SSH_AGENT_PID"
 Defaults env_keep += "DISPLAY XAUTHORIZATION XAUTHORITY WINDOWID"
 Defaults env_keep += "WINDOW TMUX TMUX_PANE"
 
