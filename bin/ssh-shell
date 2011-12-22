@@ -2,6 +2,8 @@
 
 if [[ "$SSH_AGENT_PID" ]]; then
     echo "SSH_AGENT_PID already set: $SSH_AGENT_PID"
+elif (($#)); then
+    run ssh-agent "$@"
 else
     run ssh-agent "${SHELL:-/bin/bash}"
 fi
