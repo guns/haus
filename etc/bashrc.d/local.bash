@@ -883,7 +883,7 @@ HAVE vim && {
 
         # Param: [$@] Arguments to vim
         vimstartuptime() {
-            (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') & ) &
+            (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') &>/dev/null & ) &
             vim --servername 'editserver' --startuptime '.vimstartuptime' "$@"
         }
     fi

@@ -66,7 +66,7 @@ class Preview
         return
       end
     end
-    error "don't know how to handle .#{@ftype} format"
+    show_txt
   end
 
   def show_markdown
@@ -110,6 +110,10 @@ class Preview
     show_with(:browser) do
       wrap_html RbST.new(content).to_html
     end
+  end
+
+  def show_txt
+    show_with(:browser, 'txt') { content }
   end
   
   private
@@ -158,11 +162,11 @@ class Preview
   end
 
   def exts_match?(exts)
-    exts.find{|ext| ext.downcase == @ftype.downcase}
+    exts.find{|ext| (ext.downcase == @ftype.downcase) rescue nil}
   end
 
   def tmp_write(ext, data)
-    tmp = File.open(File.join(Dir::tmpdir, [@base_name,ext].join('.')), 'w')
+    tmp = File.open(File.join(Dir::tmpdir, (File.extname(@base_name) =~ /\.#{ext}\z/ ? @base_name : [@base_name,ext].join('.'))), 'w')
     #tmp = Tempfile.new(@base_name)
     tmp.write(data)
     tmp.close
