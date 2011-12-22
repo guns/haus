@@ -9,7 +9,7 @@ require 'optparse'
 require 'ostruct'
 require 'fileutils'
 
-class Rakehauslink
+class Rkhaus
   attr_reader :options
 
   def initialize opts = {}
@@ -66,4 +66,4 @@ class Rakehauslink
   end
 end
 
-$0 = File.basename(__FILE__) and Rakehauslink.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Rkhaus.new.run ARGV if $0 == __FILE__
