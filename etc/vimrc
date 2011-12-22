@@ -184,7 +184,7 @@ let g:delimitMate_expand_space = 1
 let g:delimitMate_quotes = "\" '"
 
 " Plugin: vim-preview
-let g:PreviewBrowsers = 'chrome'
+let g:PreviewBrowsers = 'open'
 
 " Plugin: Gnupg
 let g:GPGDefaultRecipients = ['self@sungpae.com']

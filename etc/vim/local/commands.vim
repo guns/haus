@@ -150,11 +150,7 @@ endfunction
 
 function! <SID>OpenURL(url)
     echo a:url
-    if g:VIM_PLATFORM == 'macunix'
-        call system('open ' . shellescape(a:url))
-    elseif g:VIM_PLATFORM == 'unix'
-        call system('chrome ' . shellescape(a:url))
-    endif
+    call system('open ' . shellescape(a:url))
 endfunction
 
 
