@@ -1012,6 +1012,7 @@ type ruby &>/dev/null && {
 
             # Useful gem executables
             ALIAS "b${suf}=${bin}/bundle"
+            ALIAS "bx${suf}=${bin}/bundle exec"
             HAVE "${bin}/rdebug" && {
                 ALIAS "rdb${suf}=${bin}/rdebug" \
                       "rdb${suf}c=${bin}/rdebug -c"
