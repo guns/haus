@@ -51,9 +51,6 @@ export PAGER='less'                     # Should be a single word to avoid quoti
 
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
-if [[ "$SSH_TTY" ]]; then
-    export RAILS_ENV='production' RACK_ENV='production'
-fi
 
 # OS X
 if __OSX__; then
@@ -1042,6 +1039,12 @@ type ruby &>/dev/null && {
         else
             run rails "$@"
         fi
+    }
+
+    # R(ACK|AILS)_ENV
+    renv() {
+        export RAILS_ENV="$1" RACK_ENV="$1"
+        echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
     }
 
     # Local api server @ `$cdapi`
