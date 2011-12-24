@@ -905,7 +905,9 @@ HAVE vim && {
 ### Terminal Multiplexers {{{1
 
 # Tmux
-HAVE tmux tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
+ALIAS tm='tmux' && {
+    HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
+}
 
 # GNU screen
 HAVE screen && {
