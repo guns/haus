@@ -130,13 +130,14 @@
     shallowclone = clone --depth=1
 
     # stash
-    sta     = stash --include-untracked
-    stap    = stash --include-untracked -p
+    sta     = stash
+    stap    = stash -p
+    stau    = stash -u
+    staup   = stash -u -p
     stal    = stash list
     stalp   = stash list -p
     stapop  = stash pop
     stashow = stash show -p
-    stasnap = !git stash --include-untracked && git stash apply
 
     # grep
     g   = grep -P
