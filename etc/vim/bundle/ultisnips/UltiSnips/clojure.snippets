@@ -640,7 +640,7 @@ snippet do "do exprs" w
 (do $0)
 endsnippet
 
-snippet dos "doseq" w
+snippet dose "doseq" w
 (doseq [${1:each-bind}]
 	$0)
 endsnippet
@@ -679,6 +679,22 @@ endsnippet
 
 snippet tram "trampoline" w
 (trampoline ${0:func args})
+endsnippet
+
+
+### Concurrency {{{1
+
+snippet dos "dosync" w
+(dosync
+	$0)
+endsnippet
+
+snippet aw "await" w
+(await ${0:agent})
+endsnippet
+
+snippet comm "commute" w
+(commute ${1:hash-or-var} ${0:fbody})
 endsnippet
 
 
