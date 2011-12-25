@@ -1012,11 +1012,11 @@ type ruby &>/dev/null && {
             # Useful gem executables
             ALIAS "b${suf}=${bin}/bundle"
             ALIAS "bx${suf}=${bin}/bundle exec"
-            HAVE "${bin}/rdebug" && {
-                ALIAS "rdb${suf}=${bin}/rdebug" \
-                      "rdb${suf}c=${bin}/rdebug -c"
-                tcomp exec "rdebug${suf}"
-            }
+            ALIAS "brake${suf}=${bin}/bundle exec rake"
+            ALIAS "rdb${suf}=${bin}/rdebug" \
+                  "rdb${suf}c=${bin}/rdebug -c" &&
+                  tcomp exec "rdb${suf}" &&
+                  tcomp exec "rdbc${suf}"
         }
     }; GC_FUNC RUBY_VERSION_SETUP
 
