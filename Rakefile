@@ -16,11 +16,11 @@ task :env do # {{{1
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
   @subprojects = Hash[{
-    'completions' => [ # {{{2
+    'completions' => [
       {
         :base   => "#{@src}/bash-completion",
         :branch => %w[master guns],
-        :files  => lambda { |proj|
+        :files  => proc { |proj|
           Hash[proj.git.ls_files('completions').map(&:first).reject do |f|
             File.directory? File.join(proj.base, f) or File.basename(f) =~ /\A(\.|_|Makefile)/
           end.map do |f|
@@ -41,13 +41,13 @@ task :env do # {{{1
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/bash_completion_tmux.sh'
         },
-        :before => lambda { |proj|
+        :before => proc { |proj|
           Dir.chdir proj.base do
             system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
             raise 'Pull and merge failed' if not $?.exitstatus.zero?
           end
         },
-        :after => lambda { |proj|
+        :after => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
         }
       },
@@ -61,7 +61,7 @@ task :env do # {{{1
       }
     ],
 
-    'vimfiles' => [ # {{{2
+    'vimfiles' => [
       { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :remote => 'github' },
       { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :remote => 'github' },
       { :base => "#{@vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
@@ -122,7 +122,7 @@ task :env do # {{{1
       { :base   => "#{@vim}/screen.vim",
         :branch => %w[master guns],
         :files  => :pathogen,
-        :after  => lambda { |proj|
+        :after  => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
         }
       },
@@ -130,7 +130,7 @@ task :env do # {{{1
       { :base   => "#{@vim}/regbuf.vim",
         :branch => %w[master guns],
         :files  => :pathogen,
-        :after  => lambda { |proj|
+        :after  => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
         }
       },
@@ -139,7 +139,7 @@ task :env do # {{{1
         :base   => "#{@vim}/Command-T",
         :branch => %w[master guns],
         :files  => 'etc/vim/bundle/Command-T',
-        :after  => lambda { |proj|
+        :after  => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
           system '/opt/ruby/1.8/bin/rake commandt &>/dev/null'
         }
@@ -154,7 +154,7 @@ task :env do # {{{1
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
-        :files  => lambda { |proj|
+        :files  => proc { |proj|
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=*.snippets #{proj.base}/ #{dst}/]
@@ -163,39 +163,13 @@ task :env do # {{{1
       }
     ],
 
-    'dotfiles' => [ # {{{2
+    'dotfiles' => [
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master guns],
         :files  => 'etc/urxvt',
-        :after  => lambda { |proj|
+        :after  => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-        }
-      }
-    ],
-
-    'programs' => [ # {{{2
-      {
-        :base   => "#{@src}/jsctags",
-        :branch => %w[master],
-        :files  => lambda { |proj|
-          haus_path = Dir.pwd
-          Dir.chdir proj.base do
-            begin
-              # Change PREFIX in Makefile
-              File.open 'Makefile', 'r+' do |f|
-                buf = f.read.sub /^PREFIX=.*$/, 'PREFIX=%s' % haus_path
-                f.rewind
-                f.write buf
-              end
-
-              sh 'make install &>/dev/null'
-            ensure
-              # Restore original Makefile
-              sh 'git checkout Makefile'
-            end
-          end
-          nil # Return nil because the work is done
         }
       }
     ]
