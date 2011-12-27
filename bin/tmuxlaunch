@@ -2,10 +2,12 @@
 #
 # Simple tmux wrapper
 
-while getopts :x opt; do
+SSH_SHELL=''
+
+while getopts :s opt; do
     case $opt in
-    x) echo >&2 '`-x` option is DEPRECATED; exec is now the default';;
-    *) echo >&2 "Usage: ${0##*/}"; exit 1
+    s) SSH_SHELL='ssh-shell';;
+    *) echo >&2 "Usage: ${0##*/} [-s]"; exit 1
     esac
 done
 shift $((OPTIND-1))
@@ -16,5 +18,5 @@ if [[ "$TMUX" ]]; then
 elif command tmux has-session &>/dev/null; then
     exec tmux attach
 else
-    exec tmux new
+    exec $SSH_SHELL tmux new
 fi
