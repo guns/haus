@@ -1012,7 +1012,8 @@ type ruby &>/dev/null && {
             # Useful gem executables
             ALIAS "b${suf}=${bin}/bundle"
             ALIAS "bx${suf}=${bin}/bundle exec"
-            ALIAS "brk${suf}=${bin}/bundle exec rake"
+            ALIAS "brk${suf}=${bin}/bundle exec rake" \
+                  "brk${suf}t=${bin}/bundle exec rake -T"
             ALIAS "rdb${suf}=${bin}/rdebug" \
                   "rdb${suf}c=${bin}/rdebug -c" &&
                   tcomp exec "rdb${suf}" &&
