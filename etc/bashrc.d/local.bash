@@ -51,6 +51,9 @@ export PAGER='less'                     # Should be a single word to avoid quoti
 
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
+if [[ "$SSH_TTY" ]]; then
+    export RAILS_ENV='production' RACK_ENV='production'
+fi
 
 # OS X
 if __OSX__; then
