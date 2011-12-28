@@ -238,7 +238,7 @@ Mapall <4-p> :Preview<CR>
 Mapall <4-U> :Open<CR>
 
 " Plugin: ScreenShell
-noremap <Leader><C-v> :Screen<CR>
+noremap <Leader>S :Screen<CR>
 
 " Plugin: UltiSnips
 noremap <4-F> :UltiSnipsEdit<CR>
