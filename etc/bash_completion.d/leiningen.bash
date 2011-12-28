@@ -1,5 +1,3 @@
-type lein &>/dev/null || return
-
 _lein_completion() {
     local cur prev tasks
     COMPREPLY=()

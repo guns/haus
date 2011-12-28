@@ -1048,7 +1048,7 @@ type ruby &>/dev/null && {
     }
 
     # R(ACK|AILS)_ENV
-    renv() {
+    rackenv() {
         (($#)) && export RAILS_ENV="$1" RACK_ENV="$1"
         echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
     }
