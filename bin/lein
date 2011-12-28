@@ -1,6 +1,6 @@
 #!/bin/sh
 
-LEIN_VERSION="1.6.2-SNAPSHOT"
+LEIN_VERSION="1.6.2"
 export LEIN_VERSION
 
 case $LEIN_VERSION in
@@ -33,7 +33,12 @@ do
 done
 
 if [ "$LEIN_HOME" = "" ]; then
+  if [ -d "$PWD/.lein" ] && [ "$PWD" != "$HOME" ]; then
+    echo "Leiningen is running in bundled mode."
+    LEIN_HOME="$PWD/.lein"
+  else
     LEIN_HOME="$HOME/.lein"
+  fi
 fi
 
 DEV_PLUGINS="$(ls -1 lib/dev/*jar 2> /dev/null)"
@@ -179,7 +184,7 @@ elif [ "$1" = "upgrade" ]; then
                 $HTTP_CLIENT "$TARGET" "$LEIN_SCRIPT_URL" \
                     && mv "$TARGET" "$SCRIPT" \
                     && chmod +x "$SCRIPT" \
-                    && echo && $SCRIPT self-install && echo && echo "Now running" `$SCRIPT version`
+                    && echo && "$SCRIPT" self-install && echo && echo "Now running" `$SCRIPT version`
                 exit $?;;
             *)
                 echo "Aborted."
@@ -220,7 +225,7 @@ else
             # Test to see if rlwrap supports custom quote chars
             rlwrap -m -q '"' echo "hi" > /dev/null 2>&1
             if [ $? -eq 0 ]; then
-                RLWRAP="$RLWRAP -m -q '\"'"
+                RLWRAP="$RLWRAP -r -m -q '\"'"
             fi
         fi
     fi

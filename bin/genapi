@@ -17,6 +17,7 @@ class Genapi
   def initialize opts = {}
     @sdoc    = RDoc::RDoc.new
     @options = OpenStruct.new opts
+    options.lang   ||= :ruby
     options.apidir ||= ENV['cdapi']
   end
 
@@ -27,6 +28,10 @@ class Genapi
 
         Options:
       ).gsub /^ +/, ''
+
+      opt.on '-c', '--clojure', 'Invoke Autodoc for a Clojure project' do
+        options.lang = :clojure
+      end
 
       opt.on '-o', '--outdir DIR' do |arg|
         options.outdir = arg
@@ -46,7 +51,13 @@ class Genapi
     end
   end
 
-  def document
+  def check_output_directory path
+    if File.exists? path
+      options.force ? FileUtils.rm_rf(path) : raise("#{path.inspect} already exists!")
+    end
+  end
+
+  def ruby_sdoc
     # We need to expand these before the chdir
     index, outdir, apidir = %w[index outdir apidir].map { |m| File.expand_path options.send(m) if options.send m }
 
@@ -66,9 +77,7 @@ class Genapi
         raise 'Output directory not set! Set environment variable `$cdapi` or specify `--outdir`'
       end
 
-      if File.exists? outdir
-        options.force ? FileUtils.rm_rf(outdir) : raise("#{outdir.inspect} already exists!")
-      end
+      check_output_directory
 
       args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
       args.push "--main=#{main}" if main
@@ -78,11 +87,37 @@ class Genapi
     end
   end
 
+  def clojure_marginalia
+    jar    = File.expand_path '../../lib/clojure/marginalia.jar', __FILE__
+    cmd    = %W[java -jar #{jar}]
+    outdir = options.outdir ? options.outdir : File.join(options.apidir, File.basename(File.expand_path options.directory))
+
+    Dir.chdir options.directory do
+      check_output_directory outdir
+      puts cmd.join(' ')
+
+      if system *cmd
+        FileUtils.mkdir_p outdir
+        FileUtils.cp 'docs/uberdoc.html', File.join(outdir, 'index.html')
+      else
+        raise 'Doc generation unsuccessful'
+      end
+    end
+  end
+
+  def call
+    case options.lang
+    when :ruby    then ruby_sdoc
+    when :clojure then clojure_marginalia
+    else raise 'No language specified'
+    end
+  end
+
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size == 1
     options.directory = args.first
-    document
+    call
   end
 end
 
