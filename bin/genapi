@@ -77,7 +77,7 @@ class Genapi
         raise 'Output directory not set! Set environment variable `$cdapi` or specify `--outdir`'
       end
 
-      check_output_directory
+      check_output_directory outdir
 
       args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
       args.push "--main=#{main}" if main
