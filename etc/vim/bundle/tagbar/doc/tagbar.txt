@@ -3,7 +3,7 @@
 Author:		Jan Larres <jan@majutsushi.net>
 Licence:	Vim licence, see |license|
 Homepage:	http://majutsushi.github.com/tagbar/
-Version:	2.2
+Version:	2.3
 
 ==============================================================================
 Contents					*tagbar* *tagbar-contents*
@@ -574,15 +574,11 @@ existing types and to add completely new types. A complete configuration
 consists of a type definition for Tagbar in your |vimrc| and optionally a
 language definition for ctags in case you want to add a new language.
 
-Before writing your own extension try googling for already existing ones. For
-example, here is one for Scala:
-http://latestbuild.net/scala-ctags-and-vim-tagbar
-Since those aren't "canonical" configurations and are somewhat subjective they
-probably won't be included in Tagbar, but it is easy enough to just copy&paste
-them into your own setup. Note that you don't have to modify Tagbar directly
-like the article suggests, you can just put the configuration into your
-|vimrc| (see below for more details).
-
+Before writing your own extension have a look at the wiki
+(https://github.com/majutsushi/tagbar/wiki/Support-for-additional-filetypes)
+or try googling for existing ones. If you do end up creating your own
+extension please consider adding it to the wiki so that others will be able to
+use it, too.
 
 Every type definition in Tagbar is a dictionary with the following keys:
 
@@ -901,6 +897,16 @@ file.
 
 ==============================================================================
 8. History						*tagbar-history*
+
+2.3 (2011-12-24)
+    - Add a convenience function that allows more flexible ways to
+      automatically open Tagbar.
+    - Replace option tagbar_usearrows with tagbar_iconchars to allow custom
+      characters to be specified. This helps with fonts that don't display the
+      default characters properly.
+    - Remove the need to provide the complete jsctags configuration if jsctags
+      is not found in $PATH, now only the concrete path has to be specified.
+    - Add debugging functionality.
 
 2.2 (2011-11-26)
     - Small incompatible change: TagbarOpen now doesn't jump to the Tagbar

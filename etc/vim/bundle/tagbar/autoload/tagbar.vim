@@ -4,7 +4,7 @@
 " Author:      Jan Larres <jan@majutsushi.net>
 " Licence:     Vim licence
 " Website:     http://majutsushi.github.com/tagbar/
-" Version:     2.2
+" Version:     2.3
 " Note:        This plugin was heavily inspired by the 'Taglist' plugin by
 "              Yegappan Lakshmanan and uses a small amount of code from it.
 "
@@ -442,6 +442,13 @@ function! s:InitTypes()
         \ {'short' : 'f', 'long' : 'functions', 'fold' : 0}
     \ ]
     let s:known_types.lisp = type_lisp
+    " Clojure {{{3
+    let type_clojure = {}
+    let type_clojure.ctagstype = 'lisp'
+    let type_clojure.kinds     = [
+        \ {'short' : 'f', 'long' : 'functions', 'fold' : 0}
+    \ ]
+    let s:known_types.clojure = type_clojure
     " Lua {{{3
     let type_lua = {}
     let type_lua.ctagstype = 'lua'
