@@ -784,8 +784,7 @@ HAVE iptables && {
 ### Editors {{{1
 
 # Exuberant ctags
-ALIAS ctags='ctags -f .tags' \
-      ctagsr='ctags -R'
+ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
