@@ -2,7 +2,7 @@
 " File:        NERD_tree.vim
 " Description: vim global plugin that provides a nice tree explorer
 " Maintainer:  Martin Grenfell <martin.grenfell at gmail dot com>
-" Last Change: 31 August, 2011
+" Last Change: 28 December, 2011
 " License:     This program is free software. It comes without any warranty,
 "              to the extent permitted by applicable law. You can redistribute
 "              it and/or modify it under the terms of the Do What The Fuck You
@@ -10,7 +10,7 @@
 "              See http://sam.zoy.org/wtfpl/COPYING for more details.
 "
 " ============================================================================
-let s:NERD_tree_version = '4.1.0'
+let s:NERD_tree_version = '4.2.0'
 
 " SECTION: Script init stuff {{{1
 "============================================================
@@ -2562,7 +2562,18 @@ function! s:findAndRevealPath()
     endtry
 
     if !s:treeExistsForTab()
-        call s:initNerdTree(p.getParent().str())
+        try
+            let cwd = s:Path.New(getcwd())
+        catch /^NERDTree.InvalidArgumentsError/
+            call s:echo("current directory does not exist.")
+            let cwd = p.getParent()
+        endtry
+
+        if p.isUnder(cwd)
+            call s:initNerdTree(cwd.str())
+        else
+            call s:initNerdTree(p.getParent().str())
+        endif
     else
         if !p.isUnder(s:TreeFileNode.GetRootForTab().path)
             call s:initNerdTree(p.getParent().str())
