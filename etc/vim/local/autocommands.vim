@@ -88,6 +88,8 @@ augroup GUNS
         \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
         \ execute 'noremap <buffer> <Leader>M :JSLintUpdate<CR>' |
         \ SetWhitespace 2
+    autocmd FileType coffee
+        \ SetWhitespace 2
 
     " C
     autocmd FileType c

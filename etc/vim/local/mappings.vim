@@ -263,7 +263,7 @@ noremap <Leader>e<Space> :tabedit<Space>
 noremap <Leader>ea       :execute 'tabedit ' . expand('~/.vim/local/autocommands.vim')<CR>
 noremap <Leader>eb       :execute 'tabedit ' . expand('~/.bashrc')<CR>
 noremap <Leader>ec       :execute 'tabedit ' . expand('~/.vim/local/commands.vim')<CR>
-noremap <Leader>ee       :edit<Space>
+noremap <Leader>ee       :edit<CR>
 noremap <Leader>ei       :execute 'tabedit ' . expand('~/.inputrc')<CR>
 noremap <Leader>el       :execute 'tabedit ' . expand('~/.bashrc.d/local.bash')<CR>
 noremap <Leader>em       :execute 'tabedit ' . expand('~/.vim/local/mappings.vim')<CR>
