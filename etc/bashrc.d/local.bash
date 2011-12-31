@@ -928,7 +928,7 @@ ALIAS mk='make' \
       mkj2='make -j2' \
       mkj4='make -j4' \
       mkj8='make -j8' \
-      mkj16='make -j16'
+      mkj16='make -j16' && cdmkinstall() { (run cd "$@"; run make install) }
 
 
 ### SCM {{{1
