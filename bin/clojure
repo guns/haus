@@ -14,7 +14,7 @@ elif [[ -d "$cdclojure" ]]; then
     CLASSPATH="$cdclojure/clojure.jar:$cdclojure:$CLASSPATH"
 fi
 
-CLOJURE_CMD="java -server -classpath \"$CLASSPATH\" clojure.main"
+CLOJURE_CMD="java -server -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
 COMPLETIONS=~/.clj_completions
 
