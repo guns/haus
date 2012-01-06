@@ -508,6 +508,19 @@ endsnippet
 wow<tab>Hello World ->
 Hello World                                                     HELLO WORLD
 
+Sometimes you want to have helper functions that are available in all your
+snippet files. This is easily achieved using a global snippet and a python
+module. First, add a search path to your python path by adding something along
+this line to your vimrc: >
+
+   py import sys; sys.path.append("/home/sirver/.vim/python")
+
+Now use a global snippet in your snippet file to import modules from this
+directory: >
+
+   global !p
+   from my_snippet_helpers import *
+   endglobals
 
 4.4 Tab Stops and Placeholders  *UltiSnips-tabstops* *UltiSnips-placeholders*
 ------------------------------
@@ -726,6 +739,21 @@ UltiSnips needs the help of a vibrant vim community to make it more useful
 tomorrow than it is today. Please consider joining this effort by providing
 new snippets, new features or bug reports.
 
+You can contribute by fixing or reporting bugs in our issue tracker:
+https://bugs.launchpad.net/ultisnips
+
+You can contribute snippets or patches in various ways. Here are the
+possibilities in order of convenience for me (please be as convenient as you
+can be):
+
+* Clone the repository on launchpad (bzr clone lp:ultisnips), make fixes, push
+  the branch and send a merge request on launchpad.
+* Clone the repository on GitHub (git clone git@github.com:SirVer/ultisnips.git),
+  make your changes and send a pull request on GitHub.
+* Make a patch, report a bug/feature request and attach the patch to it.
+* Send me an Email with a patch.
+* Send me an Email with the changed files only.
+
 If you like this plugin, please also vote for it on its vim script page. It is
 life changing for me, maybe it is for you too.
 You can find the page here:
@@ -767,6 +795,7 @@ Contributers are listed in chronological order:
    pberndt - Phillip Berndt
    thanatermesis-elive - Thanatermesis
    rico-ambiescent - Rico Sta. Cruz
+   Cody Frazer 
 
 7.2 Snippets                                       *UltiSnips-contrisnippets*
 ------------
