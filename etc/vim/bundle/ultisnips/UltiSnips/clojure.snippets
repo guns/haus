@@ -67,7 +67,7 @@ snippet rev "reverse" w
 (reverse ${0:coll})
 endsnippet
 
-snippet fir "first" w
+snippet fi "first" w
 (first ${0:coll})
 endsnippet
 
@@ -75,7 +75,7 @@ snippet sec "second" w
 (second ${0:coll})
 endsnippet
 
-snippet las "last" w
+snippet l "last" w
 (last ${0:coll})
 endsnippet
 
@@ -223,7 +223,7 @@ snippet vs "vals" w
 (vals ${0:map})
 endsnippet
 
-snippet v "vec" w
+snippet vec "vec" w
 (vec ${0:coll})
 endsnippet
 
@@ -349,6 +349,10 @@ endsnippet
 
 snippet rep "repeat" w
 (repeat ${0:[x] [n x]})
+endsnippet
+
+snippet ff "(first (filter))" w
+(first (filter ${1:fn} ${0:coll}))
 endsnippet
 
 
@@ -481,14 +485,12 @@ snippet def "def" w
 endsnippet
 
 snippet defn "defn" w
-(defn ${1:name [params]}
-	${2:"${3:docstring}"
+(defn ${1:name}${2: [${3}]
 	}$0)
 endsnippet
 
 snippet defn- "defn-" w
-(defn- ${1:name [params]}
-	${2:"${3:docstring}"
+(defn- ${1:name}${2: [${3}]
 	}$0)
 endsnippet
 
@@ -712,6 +714,10 @@ snippet fmt "format" w
 (format ${1:"$2"} ${0:args})
 endsnippet
 
+snippet k "keyword" w
+(keyword $0)
+endsnippet
+
 
 ### IO {{{1
 
@@ -758,4 +764,22 @@ endsnippet
 # http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
 snippet deb "debug" w
 (defmacro debug[x] \`(let [x# ~x] (println '~x "=" x#) x#))
+endsnippet
+
+
+### Ring / Noir / Hiccup {{{1
+
+snippet defp "defpage" w
+(defpage ${1:name }${2:[:post "/path/:var"]} {${3:binds}}
+	$0)
+endsnippet
+
+snippet defpp "defpartial" w
+(defpartial ${1:fname} [${2:& content}]
+	$0)
+endsnippet
+
+snippet defe "defelem" w
+(defelem ${1:fname} [${2}]
+	$0)
 endsnippet
