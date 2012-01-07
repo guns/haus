@@ -956,11 +956,9 @@ HAVE git && {
     }
 
     # PS1 git status
-    HAVE __git_ps1 && {
-        gitps1() {
-            __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
-        }; gitps1 # Turn it on now!
-    }
+    gitps1() {
+        __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
+    }; _load_comp git && gitps1 # Turn it on now!
 }
 githubget() {
     (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
