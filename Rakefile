@@ -32,14 +32,14 @@ task :env do # {{{1
       {
         :base   => "#{@src}/git",
         :branch => %w[master],
-        :files  => { 'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git-completion.bash' }
+        :files  => { 'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git' }
       },
 
       {
         :base   => "#{@src}/tmux",
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
-          'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/bash_completion_tmux.sh'
+          'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
         },
         :before => proc { |proj|
           Dir.chdir proj.base do
@@ -56,7 +56,7 @@ task :env do # {{{1
         :base   => "#{@src}/leiningen",
         :files  => {
           'bin/lein'             => 'bin/lein',
-          'bash_completion.bash' => 'etc/bash_completion.d/leiningen.bash'
+          'bash_completion.bash' => 'etc/bash_completion.d/lein'
         }
       }
     ],
