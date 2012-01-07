@@ -38,9 +38,7 @@ else
     set +v
 fi
 
-# Set the following to the location of the backwards compat completion dir.
-#
-[[ "$BASH_COMPLETION_DIRS" ]] || BASH_COMPLETION_DIRS=(/etc/bash_completion.d)
+[[ "$BASH_COMPLETION_DIRS" ]] || BASH_COMPLETION_DIRS=(/etc/completions /etc/bash_completion.d)
 readonly BASH_COMPLETION_DIRS
 
 # Blacklisted completions, causing problems with our code.
@@ -1912,14 +1910,24 @@ _minimal()
     _filedir
 }
 
+# @param $1 Basename of completion file to load
+_load_comp()
+{
+    local dir comp
+
+    # Try all directories in BASH_COMPLETION_DIRS
+    for dir in "${BASH_COMPLETION_DIRS[@]}"; do
+        local comp="$dir/${1##*/}"
+        [[ -e "$comp" ]] && . "$comp" &>/dev/null && return 0
+    done
+
+    return 1
+}
+
 # set up dynamic completion loading
 _completion_loader()
 {
-    local compdir=./completions
-    [[ $BASH_SOURCE == */* ]] && compdir="${BASH_SOURCE%/*}/completions"
-
-    # Try basename.
-    . "$compdir/${1##*/}" &>/dev/null && return 124
+    _load_comp "$1" && return 124
 
     # Need to define *something*, otherwise there will be no completion at all.
     complete -F _minimal "$1" && return 124
@@ -1936,28 +1944,11 @@ _xfunc()
     local srcfile=$1
     shift
     declare -F $1 &>/dev/null || {
-        local compdir=./completions
-        [[ $BASH_SOURCE == */* ]] && compdir="${BASH_SOURCE%/*}/completions"
-        . "$compdir/$srcfile"
+        _load_comp "$srcfile"
     }
     "$@"
 }
 
-# source completion directory definitions
-declare -A files
-for dir in "${BASH_COMPLETION_DIRS[@]}"; do
-    if [[ -d $dir && -r $dir && -x $dir ]]; then
-        for i in $(LC_ALL=C command ls "$dir"); do
-            (( files[${i%%.*}] )) || {
-                files[${i%%.*}]=1
-                i=$dir/$i
-                [[ ${i##*/} != @($_backup_glob|Makefile*|$_blacklist_glob) && -f $i && -r $i ]] && . "$i"
-            }
-        done
-    fi
-done
-
-unset files dir i _blacklist_glob
 unset -f have
 unset have
 

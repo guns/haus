@@ -68,11 +68,6 @@ fi
 # List all defined functions
 showfunctions() { set | grep '^[^ ]* ()'; }
 
-# Transfer completions
-# Param: $1 Source command
-# Param: $2 Target command
-tcomp() { eval $({ complete -p "$1" || echo :; } 2>/dev/null) "$2"; }
-
 # Chop lines to $COLUMNS
 choplines() { ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'"; }
 
@@ -178,11 +173,11 @@ alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
 alias rmhist='rm -f ~/.bash_history ~/.viminfo && unset HISTFILE && exec $SHELL'
-t() { type "$@"; }; tcomp type t
+t() { type "$@"; }; TCOMP type t
 ALIAS ta='t -a' \
       tp='t -P'
 ALIAS x='exec'
-alias wrld='while read l; do'; tcomp exec wrld
+alias wrld='while read l; do'; TCOMP exec wrld
 
 # PATH prefixer
 path() { __prepend_path__ PATH "$@"; }
@@ -211,8 +206,8 @@ ALIAS n='notify' \
       na='notify --audio ~/.sounds/Message_Received.m4a'
 
 # run bgrun
-HAVE run   && tcomp exec run
-HAVE bgrun && tcomp exec bgrun
+HAVE run   && TCOMP exec run
+HAVE bgrun && TCOMP exec bgrun
 
 # Simple fs event loop for execution in current shell
 alias watch='while read path <<< "$(ruby -r fssm -e "
@@ -319,16 +314,16 @@ f() {
     fi
 
     run find "${args[@]}"
-}; tcomp find f
-f1() { f "$@" -maxdepth 1; };               tcomp find f1
-ff() { f "$@" \( -type f -o -type l \); };  tcomp find ff
-fd() { f "$@" -type d; };                   tcomp find fd
-fl() { f "$@" -type l; };                   tcomp find fl
+}; TCOMP find f
+f1() { f "$@" -maxdepth 1; };               TCOMP find f1
+ff() { f "$@" \( -type f -o -type l \); };  TCOMP find ff
+fd() { f "$@" -type d; };                   TCOMP find fd
+fl() { f "$@" -type l; };                   TCOMP find fl
 stamp() { run touch /tmp/timestamp; }
-fnewer() { f "$@" -newer /tmp/timestamp; }; tcomp find fnewer
+fnewer() { f "$@" -newer /tmp/timestamp; }; TCOMP find fnewer
 cdf() {
     cd "$(f "$@" -type d -print0 | ruby -e 'print $stdin.gets("\0") || "."' 2>/dev/null)"
-}; tcomp find cdf
+}; TCOMP find cdf
 
 # cp mv
 alias cp='cp -v'
@@ -525,15 +520,15 @@ ALIAS rsync='rsync --human-readable' \
       rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
       rsync-backup='rsync --archive --delete --partial --sparse --hard-links' && {
     if __OSX__; then
-        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'; tcomp rsync applersync
+        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'; TCOMP rsync applersync
         ALIAS applersync-mirror='applersync --archive --delete --partial --exclude=.git'
         ALIAS applersync-backup='applersync --archive --delete --partial --sparse --hard-links'
     fi
 }
 
 # dd
-ALIAS dd3='dc3dd'  && tcomp dd dd3
-ALIAS ddc='dcfldd' && tcomp dd ddc
+ALIAS dd3='dc3dd'  && TCOMP dd dd3
+ALIAS ddc='dcfldd' && TCOMP dd ddc
 
 # free
 ALIAS free='free -m'
@@ -659,7 +654,7 @@ HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
 
 ALIAS s='sudo' \
       root='exec sudo su'
-HAVE su && alias xsu='exec su' && tcomp su xsu
+HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 
 
@@ -688,8 +683,8 @@ if __OSX__; then
 fi
 
 # netcat
-HAVE nc   && tcomp host nc
-HAVE ncat && tcomp host ncat
+HAVE nc   && TCOMP host nc
+HAVE ncat && TCOMP host ncat
 
 # ssh scp
 # http://blog.urfix.com/25-ssh-commands-tricks/
@@ -701,7 +696,7 @@ ALIAS ssh='ssh -C -2' \
       ssh-nocompression='ssh -o "Compression no"'
 ALIAS scp='scp -C -2' \
       scpr='scp -r'
-HAVE ssh-proxy && tcomp ssh ssh-proxy
+HAVE ssh-proxy && TCOMP ssh ssh-proxy
 
 # lsof
 ALIAS lsof='lsof -Pn +fg' && {
@@ -807,10 +802,10 @@ HAVE vim && {
         else
             vim -c 'CommandT'
         fi
-    }; tcomp find vimfind
+    }; TCOMP find vimfind
 
     # Vim-ManPage
-    alias mman='command man'; tcomp man mman
+    alias mman='command man'; TCOMP man mman
     # Param: $@ [[section] command] ...
     man() {
         local i sec page pages=0 args=()
@@ -914,7 +909,7 @@ ALIAS tm='tmux' && {
 # GNU screen
 HAVE screen && {
     alias screenr='screen -R'
-    alias xscreenr='exec screen -R'; tcomp screen xscreenr
+    alias xscreenr='exec screen -R'; TCOMP screen xscreenr
 }
 
 
@@ -1018,8 +1013,8 @@ type ruby &>/dev/null && {
                   "brk${suf}t=${bin}/bundle exec rake -T"
             ALIAS "rdb${suf}=${bin}/rdebug" \
                   "rdb${suf}c=${bin}/rdebug -c" &&
-                  tcomp exec "rdb${suf}" &&
-                  tcomp exec "rdbc${suf}"
+                  TCOMP exec "rdb${suf}" &&
+                  TCOMP exec "rdbc${suf}"
         }
     }; GC_FUNC RUBY_VERSION_SETUP
 
@@ -1189,7 +1184,7 @@ HAVE wpa_supplicant wpa_passphrase && {
 ### Encryption {{{1
 
 # Complete custom wrapper
-HAVE cryptsetup cs && tcomp cryptsetup cs
+HAVE cryptsetup cs && TCOMP cryptsetup cs
 
 
 ### Virtual Machines {{{1

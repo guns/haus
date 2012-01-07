@@ -25,7 +25,7 @@ CLEANUP() {
 
 
 # Abort the login process. {{{1
-# Param: [$*] Error message
+# Param: $* Error message
 ABORT() {
     # Explain
     (($#)) && echo -e >&2 "$*\n"
@@ -121,10 +121,44 @@ EXPORT_PATH() {
     CHECK_SECLIST
 }; GC_FUNC EXPORT_PATH
 
+# Lazy completion transfer function: {{{1
+#
+# The Bash-completion project v2.0 introduces dynamic loading of completions,
+# which greatly shortens shell initialization time. A result of this is that
+# completions can no longer be simply transferred using:
+#
+#   eval "$({ complete -p $source || echo :; } 2>/dev/null)" $target
+#
+# A workaround is to create a completion function that dynamically loads the
+# source completion, then replaces itself with the new completion, finally
+# invoking the new completion function to save the user from having to resend
+# the completion command.
+#
+# This is also much faster at shell initialization.
+#
+# Param: $1 Source command
+# Param: $2 Target command
+TCOMP() {
+    eval "__${FUNCNAME}_$2__() {
+        # Unset self and remove extant compspec
+        unset \"__${FUNCNAME}_$2__\" 2>/dev/null
+        complete -r \"$2\"
+
+        # Load completion through bash-completion 2.0 dynamic loading
+        if _load_comp \"$1\"; then
+            # If a compspec was successfully loaded, transfer to target and invoke
+            local cspec=\"\$(complete -p \"$1\" 2>/dev/null)\"
+            local cfunc=\"\$(sed -ne 's/.*-F \(.*\) .*/\1/p' <<< \"\$cspec\")\"
+            eval \"\$cspec\" \"$2\"
+            [[ \$cfunc ]] && _xfunc \"$1\" \"\$cfunc\"
+        fi
+    }; complete -F \"__${FUNCNAME}_$2__\" \"$2\""
+}; GC_FUNC TCOMP
+
 
 # Smarter aliasing function: {{{1
 #
-#   * Transfers any existing completions for a command to the alias:
+#   * Lazily transfers completions to the alias using TCOMP():
 #
 #       complete -p exec                        => `complete -c exec`
 #       ALIAS x='exec' && complete -p x         => `complete -c x`
@@ -158,9 +192,7 @@ ALIAS() {
             # Escape spaces in cmd; doesn't escape other shell metacharacters!
             builtin alias "$name=${cmd// /\\ } ${opts[@]}"
             # Transfer completions to the new alias
-            if [[ "$name" != "$cmd" ]]; then
-                eval $({ complete -p "$cmd" || echo :; } 2>/dev/null) "$name"
-            fi
+            [[ "$name" != "$cmd" ]] && TCOMP "$cmd" "$name"
         else
             return 1
         fi

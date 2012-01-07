@@ -143,6 +143,7 @@ REQUIRE ~/.bashrc.d/prompts.bash
 # Load completions
 BASH_COMPLETION_DIRS=(
     /usr/local/etc/bash_completion.d
+    /etc/completions
     /etc/bash_completion.d
     /opt/brew/etc/bash_completion.d
     ~/.bash_completion.d
