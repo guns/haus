@@ -7,6 +7,7 @@ GNU Bash $BASH_VERSION
 
 Upgrade:
 
-    git clone git://gitorious.org/bash/bash.git
-    curl -Ls https://gitorious.org/bash/bash/archive-tarball/maintenance/4.2 | tar zxv
+    git clone git://git.sv.gnu.org/bash.git
+
+    curl -Ls http://git.sv.gnu.org/cgit/bash.git/snapshot/master.tar.gz | tar zxv
 "
