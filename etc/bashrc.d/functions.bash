@@ -191,7 +191,9 @@ ALIAS() {
             # Escape spaces in cmd; doesn't escape other shell metacharacters!
             builtin alias "$name=${cmd// /\\ } ${opts[@]}"
             # Transfer completions to the new alias
-            [[ "$name" != "$cmd" ]] && TCOMP "$cmd" "$name"
+            if [[ "$name" != "$cmd" ]]; then
+                TCOMP "$cmd" "$name"
+            fi
         else
             return 1
         fi
