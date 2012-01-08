@@ -145,7 +145,7 @@ TCOMP() {
         complete -r \"$2\"
 
         # Load completion through bash-completion 2.0 dynamic loading
-        if _load_comp \"$1\"; then
+        if complete -p \"$1\" &>/dev/null || _load_comp \"$1\"; then
             # If a compspec was successfully loaded, transfer to target and invoke
             local cspec=\"\$(complete -p \"$1\" 2>/dev/null)\"
             local cfunc=\"\$(sed -ne 's/.*-F \(.*\) .*/\1/p' <<< \"\$cspec\")\"
@@ -160,10 +160,9 @@ TCOMP() {
 #
 #   * Lazily transfers completions to the alias using TCOMP():
 #
-#       complete -p exec                        => `complete -c exec`
-#       ALIAS x='exec' && complete -p x         => `complete -c x`
-#       complete -p sudo                        => `complete -c sudo`
-#       ALIAS -n s='sudo' && complete -p s      => (no completions)
+#       complete -p exec                        => complete -F _command exec
+#       ALIAS x exec && complete -p x           => complete -F __TCOMP_x__ x
+#       x <TAB>; complete -p x                  => complete -F _command x
 #
 #   * Skips alias and returns false if command does not exist:
 #
@@ -171,7 +170,7 @@ TCOMP() {
 #       ALIAS unicorn='magic-pony --with-horn'  => (no alias)
 #       echo $!                                 => `1`
 #
-#   * Lazy evaluation:
+#   * Early termination:
 #
 #       ALIAS mp='magic-pony' ls='ls -Ahl'      => `ls` remains unaliased
 #
