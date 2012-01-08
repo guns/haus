@@ -21,7 +21,7 @@ class Rkhaus
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
-        Usage: #{File.basename __FILE__} [options] name
+        Usage: #{File.basename __FILE__} [options] [name [dir]]
 
         Options:
       ).gsub /^ +/, ''
@@ -52,16 +52,17 @@ class Rkhaus
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.size <= 2
+    abort parser.help unless (0..2) === args.size
 
     # For convenience, grep the intended file
     fs = Dir.entries(options.rakedir).reject { |f| f == '.' || f == '..' }
+
     if options.list
       puts fs
     else
-      rk = fs.find { |f| f == args.first }
-      rk = fs.find { |f| f =~ Regexp.new(args.first) } if rk.nil?
-      rk ? link(rk, args[1]) : abort('File not found.')
+      name = args.first || File.basename(File.expand_path Dir.pwd)
+      rake = fs.find { |f| f == name } || fs.find { |f| f =~ Regexp.new(name) }
+      rake ? link(rake, args[1]) : abort('File not found.')
     end
   end
 end
