@@ -182,12 +182,12 @@ alias wrld='while read l; do'; TCOMP exec wrld
 # PATH prefixer
 path() { __prepend_path__ PATH "$@"; }
 
-# Toggle xtrace mode
+# Toggle xtrace, verbose mode
 setx() {
     if [[ "$SHELLOPTS" =~ :?xtrace:? ]]; then
-        set +x
+        set +xv
     else
-        set -x
+        set -xv
     fi
 }
 
