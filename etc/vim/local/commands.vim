@@ -240,7 +240,7 @@ endfunction
 
 
 " Exuberant Ctags {{{1
-command! Ctags silent ! ctags -R -f .tags
+command! Ctags silent ! ctags -R
 
 
 " Voice command {{{1
