@@ -167,7 +167,7 @@ set visible-stats on
 
 $if Bash
     # Reloads
-    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $SHELL \n"   (- exchange-point-and-mark)
+    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"   (- exchange-point-and-mark)
     "\C-xr":        "\C-] xreload \n"
 
     # Quick redirects
