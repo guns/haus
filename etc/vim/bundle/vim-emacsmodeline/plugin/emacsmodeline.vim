@@ -6,7 +6,7 @@
 " Date: Dec 23, 2010
 " Maintainer: Chris Pickel <sfiera@gmail.com>
 "
-" Installation: put this file under your ~/.vim/plugins/
+" Installation: put this file under your ~/.vim/plugin/
 "
 " Usage:
 "
@@ -108,6 +108,11 @@ function! ParseEmacsModeLine()
 
             call <SID>SetVimToggleOption(modeline, 'buffer-read-only',   'readonly',     0)
             call <SID>SetVimToggleOption(modeline, 'indent-tabs-mode',   'expandtab',    1)
+
+            let value = substitute(modeline, '^ *\([^ ]*\) *$', '\L\1', '')
+            if (has_key(g:emacsModeDict, value))
+                exec 'setlocal filetype=' .  g:emacsModeDict[value]
+            endif
 
             " Other emacs options seen in the wild include:
             "  * c-basic-offset: something like tab-width.
