@@ -394,7 +394,7 @@ grab 'F5', :VolumeRaise
 open 'F9',   'rxvt-unicode --client', [:klass, :=~, /urxvt/i]
 grab 'S-F9', 'rxvt-unicode --client'
 grab 'W-F9', 'rxvt-unicode --client -e vim'
-grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch'
+grab 'A-F9', 'rxvt-unicode --client -e tmuxlaunch -s'
 
 # Browsers
 open 'F10',   'chrome', [:klass, :=~, /chromium|namoroka|firefox|aurora/i]
