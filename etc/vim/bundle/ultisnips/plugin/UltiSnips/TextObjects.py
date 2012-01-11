@@ -7,11 +7,13 @@ import stat
 import tempfile
 import vim
 
-from UltiSnips.Util import IndentUtil
 from UltiSnips.Buffer import TextBuffer
+from UltiSnips.Compatibility import CheapTotalOrdering
+from UltiSnips.Compatibility import compatible_exec
 from UltiSnips.Geometry import Span, Position
 from UltiSnips.Lexer import tokenize, EscapeCharToken, TransformationToken,  \
     TabStopToken, MirrorToken, PythonCodeToken, VimLCodeToken, ShellCodeToken
+from UltiSnips.Util import IndentUtil
 
 __all__ = [ "Mirror", "Transformation", "SnippetInstance", "StartMarker" ]
 
@@ -28,6 +30,7 @@ class _CleverReplace(object):
     _CONDITIONAL = re.compile(r"\(\?(\d+):", re.DOTALL)
 
     _UNESCAPE = re.compile(r'\\[^ntrab]')
+    _SCHARS_ESCPAE = re.compile(r'\\[ntrab]')
 
     def __init__(self, s):
         self._s = s
@@ -95,6 +98,9 @@ class _CleverReplace(object):
 
     def _unescape(self, v):
         return self._UNESCAPE.subn(lambda m: m.group(0)[-1], v)[0]
+    def _schar_escape(self, v):
+        return self._SCHARS_ESCPAE.subn(lambda m: eval(r"'\%s'" % m.group(0)[-1]), v)[0]
+
     def replace(self, match):
         start, end = match.span()
 
@@ -108,7 +114,7 @@ class _CleverReplace(object):
         tv = self._LONG_CASEFOLDINGS.subn(self._lcase_folding, tv)[0]
         tv = self._replace_conditional(match, tv)
 
-        return self._unescape(tv.decode("string-escape"))
+        return self._unescape(self._schar_escape(tv))
 
 class _TOParser(object):
     def __init__(self, parent_to, text, indent):
@@ -142,7 +148,7 @@ class _TOParser(object):
         for parent, token in all_tokens:
             if isinstance(token, TransformationToken):
                 if token.no not in seen_ts:
-                    raise RuntimeError("Tabstop %i is not known but is used by a Transformation" % t._ts)
+                    raise RuntimeError("Tabstop %i is not known but is used by a Transformation" % token.no)
                 Transformation(parent, seen_ts[token.no], token)
 
     def _do_parse(self, all_tokens, seen_ts):
@@ -167,12 +173,10 @@ class _TOParser(object):
             elif isinstance(token, VimLCodeToken):
                 VimLCode(self._parent_to, token)
 
-
-
 ###########################################################################
 #                             Public classes                              #
 ###########################################################################
-class TextObject(object):
+class TextObject(CheapTotalOrdering):
     """
     This base class represents any object in the text
     that has a span in any ways
@@ -198,7 +202,7 @@ class TextObject(object):
         self._cts = 0
 
     def __cmp__(self, other):
-        return cmp(self._start, other._start)
+        return self._start.__cmp__(other._start)
 
     ##############
     # PROPERTIES #
@@ -446,7 +450,7 @@ class ShellCode(TextObject):
 
         # Write the code to a temporary file
         handle, path = tempfile.mkstemp(text=True)
-        os.write(handle, code)
+        os.write(handle, code.encode("utf-8"))
         os.close(handle)
 
         os.chmod(path, stat.S_IRWXU)
@@ -658,7 +662,7 @@ class PythonCode(TextObject):
 
         self._globals = {}
         globals = snippet.globals.get("!p", [])
-        exec "\n".join(globals).replace("\r\n", "\n") in self._globals
+        compatible_exec("\n".join(globals).replace("\r\n", "\n"), self._globals)
 
         # Add Some convenience to the code
         self._code = "import re, os, vim, string, random\n" + code
@@ -686,7 +690,7 @@ class PythonCode(TextObject):
         })
 
         self._code = self._code.replace("\r\n", "\n")
-        exec self._code in self._globals, local_d
+        compatible_exec(self._code, self._globals, local_d)
 
         if self._snip._rv_changed:
             self.current_text = self._snip.rv

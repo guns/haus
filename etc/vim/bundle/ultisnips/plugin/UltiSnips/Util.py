@@ -5,10 +5,7 @@ import os
 import types
 import vim
 
-def as_utf8(s):
-    if not isinstance(s, types.UnicodeType):
-        s = s.decode("utf-8")
-    return s.encode("utf-8")
+from UltiSnips.Compatibility import as_unicode
 
 def vim_string(inp):
     """ Creates a vim-friendly string from a group of
@@ -16,15 +13,15 @@ def vim_string(inp):
     """
     def conv(obj):
         if isinstance(obj, list):
-            rv = u'[' + u','.join(conv(o) for o in obj) + u']'
+            rv = as_unicode('[' + ','.join(conv(o) for o in obj) + ']')
         elif isinstance(obj, dict):
-            rv = u'{' + u','.join([
-                u"%s:%s" % (conv(key), conv(value))
-                for key, value in obj.iteritems()]) + u'}'
+            rv = as_unicode('{' + ','.join([
+                "%s:%s" % (conv(key), conv(value))
+                for key, value in obj.iteritems()]) + '}')
         else:
-            rv = u'"%s"' % str(obj).decode("utf-8").replace(u'"', u'\\"')
+            rv = as_unicode('"%s"') % as_unicode(obj).replace('"', '\\"')
         return rv
-    return conv(inp).encode("utf-8")
+    return conv(inp)
 
 class IndentUtil(object):
     """ Utility class for dealing properly with indentation. """

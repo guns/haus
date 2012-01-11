@@ -31,20 +31,19 @@ import unittest
 import time
 import re
 import platform
+import sys
 
 WIN = platform.system() == "Windows"
 
 from textwrap import dedent
 
-
-
 # Some constants for better reading
-BS = u'\x7f'
-ESC = u'\x1b'
-ARR_L = u'\x1bOD'
-ARR_R = u'\x1bOC'
-ARR_U = u'\x1bOA'
-ARR_D = u'\x1bOB'
+BS = '\x7f'
+ESC = '\x1b'
+ARR_L = '\x1bOD'
+ARR_R = '\x1bOC'
+ARR_U = '\x1bOA'
+ARR_D = '\x1bOB'
 
 # multi-key sequences generating a single key press
 SEQUENCES = [ARR_L, ARR_R, ARR_U, ARR_D]
@@ -82,26 +81,26 @@ def is_focused(title=None):
 BRACES = re.compile("([}{])")
 WIN_ESCAPES = ["+", "^", "%", "~", "[", "]", "<", ">", "(", ")"]
 WIN_REPLACES = [
-        (BS, u"{BS}"),
-        (ARR_L, u"{LEFT}"),
-        (ARR_R, u"{RIGHT}"),
-        (ARR_U, u"{UP}"),
-        (ARR_D, u"{DOWN}"),
-        ("\t", u"{TAB}"),
-        ("\n", u"~"),
-        (ESC, u"{ESC}"),
+        (BS, "{BS}"),
+        (ARR_L, "{LEFT}"),
+        (ARR_R, "{RIGHT}"),
+        (ARR_U, "{UP}"),
+        (ARR_D, "{DOWN}"),
+        ("\t", "{TAB}"),
+        ("\n", "~"),
+        (ESC, "{ESC}"),
 
         # On my system ` waits for a second keystroke, so `+SPACE = "`".  On
         # most systems, `+Space = "` ". I work around this, by sending the host
         # ` as `+_+BS. Awkward, but the only way I found to get this working.
-        (u"`", u"`_{BS}"),
-        (u"´", u"´_{BS}"),
-        (u"{^}", u"{^}_{BS}"),
+        ("`", "`_{BS}"),
+        ("´", "´_{BS}"),
+        ("{^}", "{^}_{BS}"),
 ]
 def convert_keys(keys):
-    keys = BRACES.sub(ur"{\1}", keys)
+    keys = BRACES.sub(r"{\1}", keys)
     for k in WIN_ESCAPES:
-        keys = keys.replace(k, u"{%s}" % k)
+        keys = keys.replace(k, "{%s}" % k)
     for f, r in WIN_REPLACES:
         keys = keys.replace(f, r)
     return keys
@@ -130,12 +129,12 @@ def send_win(keys, session):
 
 ################ end windows ################
 
-
-
-
-def send_screen(s,session):
+def send_screen(s, session):
     s = s.replace("'", r"'\''")
-    os.system((u"screen -x %s -X stuff '%s'" % (session, s)).encode("utf-8"))
+    cmd = "screen -x %s -X stuff '%s'" % (session, s)
+    if sys.version_info >= (3,0):
+        cmd = cmd.encode("utf-8")
+    os.system(cmd)
 
 
 def send(s, session):
@@ -148,7 +147,7 @@ def focus(title=None):
     if WIN:
         focus_win(title=title)
 
-def type(str, session, sleeptime):
+def send_keystrokes(str, session, sleeptime):
     """
     Send the keystrokes to vim via screen. Pause after each char, so
     vim can handle this
@@ -176,10 +175,13 @@ class _VimTest(unittest.TestCase):
         send(s, self.session)
 
     def send_py(self,s):
-        self.send(":py << EOF\n%s\nEOF\n" % s)
+        if sys.version_info < (3,0):
+            self.send(":py << EOF\n%s\nEOF\n" % s)
+        else:
+            self.send(":py3 << EOF\n%s\nEOF\n" % s)
 
-    def type(self,s):
-        type(s, self.session, self.sleeptime)
+    def send_keystrokes(self,s):
+        send_keystrokes(s, self.session, self.sleeptime)
 
     def check_output(self):
         wanted = self.text_before + '\n\n' + self.wanted + \
@@ -220,7 +222,7 @@ class _VimTest(unittest.TestCase):
         self.send(":silent! close\n")
 
         # Reset UltiSnips
-        self.send(":py UltiSnips_Manager.reset(test_error=True)\n")
+        self.send_py("UltiSnips_Manager.reset(test_error=True)")
 
         # Make it unlikely that we do not parse any shipped snippets
         self.send(":let g:UltiSnipsSnippetDirectories=['<un_def_ined>']\n")
@@ -265,7 +267,7 @@ class _VimTest(unittest.TestCase):
             self.send("i")
 
             # Execute the command
-            self.type(self.keys)
+            self.send_keystrokes(self.keys)
 
             self.send(ESC)
 
@@ -1387,7 +1389,7 @@ class Transformation_SimpleCaseTransformInFrontDefVal_ECR(_VimTest):
     keys = "test" + EX + "hallo foo"
     wanted = "hallo batzl hallo foo"
 class Transformation_MultipleTransformations_ECR(_VimTest):
-    snippets = ("test", "${1:Some Text}${1/.+/\U$0\E/}\n${1/.+/\L$0\E/}")
+    snippets = ("test", "${1:Some Text}${1/.+/\\U$0\E/}\n${1/.+/\L$0\E/}")
     keys = "test" + EX + "SomE tExt "
     wanted = "SomE tExt SOME TEXT \nsome text "
 class Transformation_TabIsAtEndAndDeleted_ECR(_VimTest):
@@ -1426,7 +1428,7 @@ class Transformation_BackreferenceTwice_ExceptCorrectResult(_VimTest):
     wanted = "dead parrot this parrot is a bit dead"
 
 class Transformation_CleverTransformUpercaseChar_ExceptCorrectResult(_VimTest):
-    snippets = ("test", "$1 ${1/(.)/\u$1/}")
+    snippets = ("test", "$1 ${1/(.)/\\u$1/}")
     keys = "test" + EX + "hallo"
     wanted = "hallo Hallo"
 class Transformation_CleverTransformLowercaseChar_ExceptCorrectResult(_VimTest):
@@ -1434,7 +1436,7 @@ class Transformation_CleverTransformLowercaseChar_ExceptCorrectResult(_VimTest):
     keys = "test" + EX + "Hallo"
     wanted = "Hallo hallo"
 class Transformation_CleverTransformLongUpper_ExceptCorrectResult(_VimTest):
-    snippets = ("test", "$1 ${1/(.*)/\U$1\E/}")
+    snippets = ("test", "$1 ${1/(.*)/\\U$1\E/}")
     keys = "test" + EX + "hallo"
     wanted = "hallo HALLO"
 class Transformation_CleverTransformLongLower_ExceptCorrectResult(_VimTest):
@@ -1469,6 +1471,10 @@ class Transformation_CINewlines_ECR(_VimTest):
     snippets = ("test", r"$1 ${1/, */\n/}")
     keys = "test" + EX + "test, hallo"
     wanted = "test, hallo test\nhallo"
+class Transformation_CITabstop_ECR(_VimTest):
+    snippets = ("test", r"$1 ${1/, */\t/}")
+    keys = "test" + EX + "test, hallo"
+    wanted = "test, hallo test\thallo"
 class Transformation_CIEscapedParensinReplace_ECR(_VimTest):
     snippets = ("test", r"$1 ${1/hal((?:lo)|(?:ul))/(?1:ha\($1\))/}")
     keys = "test" + EX + "test, halul"
@@ -1667,7 +1673,7 @@ class SnippetOptions_ExpandInwordSnippetsWithOtherChars_Expand2(_VimTest):
     wanted = "-Expand me!"
 class SnippetOptions_ExpandInwordSnippetsWithOtherChars_Expand3(_VimTest):
     snippets = (("test", "Expand me!", "", "i"), )
-    keys = u"ßßtest" + EX
+    keys = "ßßtest" + EX
     wanted = "ßßExpand me!"
 
 class _SnippetOptions_ExpandWordSnippets(_VimTest):
@@ -1913,14 +1919,31 @@ class Snippet_With_DoubleQuote(_VimTest):
     wanted = "Expand me\"!"
 
 class Snippet_With_Umlauts_List(_VimTest):
-    snippets = _snip_quote(u'ü')
+    snippets = _snip_quote('ü')
     keys = 'te' + LS + "2\n"
     wanted = "Expand meü!"
 
 class Snippet_With_Umlauts(_VimTest):
-    snippets = _snip_quote(u'ü')
-    keys = u'teüst' + EX
+    snippets = _snip_quote('ü')
+    keys = 'teüst' + EX
     wanted = "Expand meü!"
+
+class Snippet_With_Umlauts_TypeOn(_VimTest):
+    snippets = ('ül', 'üüüüüßßßß')
+    keys = 'te ül' + EX + "more text"
+    wanted = "te üüüüüßßßßmore text"
+class Snippet_With_Umlauts_OverwriteFirst(_VimTest):
+    snippets = ('ül', 'üü ${1:world} üü ${2:hello}ßß\nüüüü')
+    keys = 'te ül' + EX + "more text" + JF + JF + "end"
+    wanted = "te üü more text üü helloßß\nüüüüend"
+class Snippet_With_Umlauts_OverwriteSecond(_VimTest):
+    snippets = ('ül', 'üü ${1:world} üü ${2:hello}ßß\nüüüü')
+    keys = 'te ül' + EX + JF + "more text" + JF + "end"
+    wanted = "te üü world üü more textßß\nüüüüend"
+class Snippet_With_Umlauts_OverwriteNone(_VimTest):
+    snippets = ('ül', 'üü ${1:world} üü ${2:hello}ßß\nüüüü')
+    keys = 'te ül' + EX + JF + JF + "end"
+    wanted = "te üü world üü helloßß\nüüüüend"
 
 class Snippet_With_DoubleQuote_List(_VimTest):
     snippets = _snip_quote('"')
@@ -2331,6 +2354,27 @@ hi4"""
 
     def _options_on(self):
         self.send(":set langmap=dj,rk,nl,ln,jd,kr,DJ,RK,NL,LN,JD,KR\n")
+    def _options_off(self):
+        self.send(":set langmap=\n")
+
+#######################
+# Test for bug 871357 #
+#######################
+class TestLangmapWithUtf8_ExceptCorrectResult(_VimTest):
+    snippets = ("testme",
+"""my snipped ${1:some_default}
+and a mirror: $1
+$2...$3
+$0""")
+    keys = "testme" + EX + "hi1" + JF + "hi2" + JF + "hi3" + JF + "hi4"
+    wanted ="""my snipped hi1
+and a mirror: hi1
+hi2...hi3
+hi4"""
+
+    def _options_on(self):
+        self.send(":set langmap=йq,цw,уe,кr,еt,нy,гu,шi,щo,зp,х[,ъ],фa,ыs,вd,аf,пg,рh,оj,лk,дl,ж\\;,э',яz,чx,сc,мv,иb,тn,ьm,ю.,ё',ЙQ,ЦW,УE,КR,ЕT,НY,ГU,ШI,ЩO,ЗP,Х\{,Ъ\},ФA,ЫS,ВD,АF,ПG,РH,ОJ,ЛK,ДL,Ж\:,Э\",ЯZ,ЧX,СC,МV,ИB,ТN,ЬM,Б\<,Ю\>\n")
+
     def _options_off(self):
         self.send(":set langmap=\n")
 

@@ -3,12 +3,12 @@
 
 import vim
 from UltiSnips.Geometry import Position
+from UltiSnips.Compatibility import make_suitable_for_vim, as_unicode
 
 __all__ = [ "TextBuffer", "VimBuffer" ]
 
 class Buffer(object):
     def _replace(self, start, end, content, first_line, last_line):
-
         text = content[:]
         if len(text) == 1:
             arr = [ first_line + text[0] + last_line ]
@@ -27,7 +27,7 @@ class TextBuffer(Buffer):
     def __init__(self, textblock):
         # We do not use splitlines() here because it handles cases like 'text\n'
         # differently than we want it here
-        self._lines = textblock.replace('\r','').split('\n')
+        self._lines = [ as_unicode(l) for l in textblock.replace('\r','').split('\n') ]
 
     def calc_end(self, start):
         text = self._lines[:]
@@ -56,12 +56,15 @@ class VimBuffer(Buffer):
         self._bf = before
         self._af = after
     def __getitem__(self, a):
-        return vim.current.buffer[a]
+        if isinstance(a, slice):
+            return [ as_unicode(k) for k in vim.current.buffer[a] ]
+        return as_unicode(vim.current.buffer[a])
+
     def __setitem__(self, a, b):
         if isinstance(a,slice):
-            vim.current.buffer[a.start:a.stop] = b
+            vim.current.buffer[a.start:a.stop] = make_suitable_for_vim(b)
         else:
-            vim.current.buffer[a] = b
+            vim.current.buffer[a] = make_suitable_for_vim(b)
 
         # Open any folds this might have created
         vim.current.window.cursor = a.start + 1, 0

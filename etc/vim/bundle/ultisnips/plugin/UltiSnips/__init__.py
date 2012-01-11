@@ -6,15 +6,15 @@ import glob
 import hashlib
 import os
 import re
-import string
 import traceback
 
 import vim
 
 from UltiSnips.Geometry import Position
+from UltiSnips.Compatibility import make_suitable_for_vim, set_vim_cursor, vim_cursor
 from UltiSnips.TextObjects import *
 from UltiSnips.Buffer import VimBuffer
-from UltiSnips.Util import IndentUtil, vim_string, as_utf8
+from UltiSnips.Util import IndentUtil, vim_string, as_unicode
 from UltiSnips.Langmap import LangMapTranslator
 
 # The following lines silence DeprecationWarnings. They are raised
@@ -22,7 +22,7 @@ from UltiSnips.Langmap import LangMapTranslator
 # which is deprecated since 2.5 and will no longer work in 2.7. Let's hope
 # vim gets this fixed before)
 import sys
-if sys.version_info[:2] >= (2,6):
+if (2,6) <= sys.version_info[:2] < (3,0):
     import warnings
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -268,9 +268,9 @@ class Snippet(object):
     _TABS = re.compile(r"^\t*")
 
     def __init__(self, trigger, value, descr, options, globals):
-        self._t = as_utf8(trigger)
-        self._v = as_utf8(value)
-        self._d = as_utf8(descr)
+        self._t = as_unicode(trigger)
+        self._v = as_unicode(value)
+        self._d = as_unicode(descr)
         self._opts = options
         self._matched = ""
         self._last_re = None
@@ -297,7 +297,7 @@ class Snippet(object):
             return before.strip()
         else:
             before_words = before
-            for i in xrange(-1, -(num_words + 1), -1):
+            for i in range(-1, -(num_words + 1), -1):
                 left = before_words.rfind(word_list[i])
                 before_words = before_words[:left]
             return before[len(before_words):].strip()
@@ -324,7 +324,7 @@ class Snippet(object):
         self._matched = ""
 
         # Don't expand on whitespace
-        if trigger and trigger[-1] in string.whitespace:
+        if trigger and trigger.rstrip() is not trigger:
             return False
 
         words = self._words_for_line(trigger)
@@ -362,7 +362,7 @@ class Snippet(object):
         self._matched = ""
 
         # Don't expand on whitespace
-        if trigger and trigger[-1] in string.whitespace:
+        if trigger and trigger.rstrip() is not trigger:
             return False
 
         words = self._words_for_line(trigger)
@@ -464,7 +464,7 @@ class VimState(object):
         self._text_changed = None
 
     def update(self):
-        line, col = vim.current.window.cursor
+        line, col = vim_cursor()
         line -= 1
         abs_pos = Position(line,col)
         if self._abs_pos:
@@ -472,7 +472,7 @@ class VimState(object):
         self._abs_pos = abs_pos
 
         # Update buffer infos
-        cols = len(vim.current.buffer[line])
+        cols = len(as_unicode(vim.current.buffer[line]))
         if self._cols:
             self._dcols = cols - self._cols
         self._cols = cols
@@ -493,9 +493,9 @@ class VimState(object):
         # If the length didn't change but we moved a column, check if
         # the char under the cursor has changed (might be one char tab).
         elif self.moved.col == 1:
-            self._text_changed = self._cline != vim.current.buffer[line]
+            self._text_changed = self._cline != as_unicode(vim.current.buffer[line])
         self._lline = self._cline
-        self._cline = vim.current.buffer[line]
+        self._cline = as_unicode(vim.current.buffer[line])
 
     def select_span(self, r):
         self._unmap_select_mode_mapping()
@@ -503,11 +503,11 @@ class VimState(object):
         delta = r.end - r.start
         lineno, col = r.start.line, r.start.col
 
-        vim.current.window.cursor = lineno + 1, col
+        set_vim_cursor(lineno + 1, col)
 
         if delta.line == delta.col == 0:
             if col == 0 or vim.eval("mode()") != 'i' and \
-                    col < len(vim.current.buffer[lineno]):
+                    col < len(as_unicode(vim.current.buffer[lineno])):
                 feedkeys(r"\<Esc>i")
             else:
                 feedkeys(r"\<Esc>a")
@@ -520,7 +520,7 @@ class VimState(object):
             # an extra space which we can select.  Note that this problem could
             # be circumvent by selecting the tab backwards (that is starting
             # at the end); one would not need to modify the line for this.
-            if col >= len(vim.current.buffer[lineno]):
+            if col >= len(as_unicode(vim.current.buffer[lineno])):
                 vim.current.buffer[lineno] += " "
 
             if delta.line:
@@ -539,7 +539,7 @@ class VimState(object):
             # and select right from there. Note that the we have to select
             # one column less since vim's visual selection is including the
             # ending while Python slicing is excluding the ending.
-            if r.end.col == 0 and not len(vim.current.buffer[r.end.line]):
+            if r.end.col == 0 and not len(as_unicode(vim.current.buffer[r.end.line])):
                 # Selecting should end on an empty line -> Select the previous
                 # line till its end
                 do_select = "k$"
@@ -598,7 +598,7 @@ class VimState(object):
                             "| redir END")
 
                 # Check if any mappings where found
-                all_maps = filter(len, vim.eval(r"_tmp_smaps").splitlines())
+                all_maps = list(filter(len, vim.eval(r"_tmp_smaps").splitlines()))
                 if (len(all_maps) == 1 and all_maps[0][0] not in " sv"):
                     # "No maps found". String could be localized. Hopefully
                     # it doesn't start with any of these letters in any
@@ -778,7 +778,7 @@ class SnippetManager(object):
                 # a newline character or pasted some text which means we have
                 # to copy everything he entered on the last line and keep the
                 # indent vim chose for this line.
-                lline = vim.current.buffer[self._vstate.ppos.line]
+                lline = as_unicode(vim.current.buffer[self._vstate.ppos.line])
 
                 # Another thing that might have happened is that a word
                 # wrapped, in this case the last line is shortened and we must
@@ -792,7 +792,7 @@ class SnippetManager(object):
                 line_was_lengthened = len(lline) > len(self._vstate.last_line)
 
                 user_didnt_enter_newline = len(lline) != self._vstate.ppos.col
-                cline = vim.current.buffer[self._vstate.pos.line]
+                cline = as_unicode(vim.current.buffer[self._vstate.pos.line])
                 if line_was_lengthened:
                     this_entered = vim.current.line[:self._vstate.pos.col]
                     self._chars_entered('\n' + cline + this_entered, 1)
@@ -815,7 +815,7 @@ class SnippetManager(object):
                 # Backspace over line end
                 self._backspace(1)
             else:
-                line = vim.current.line
+                line = as_unicode(vim.current.line)
 
                 chars = line[self._vstate.pos.col - self._vstate.moved.col:
                              self._vstate.pos.col]
@@ -940,12 +940,12 @@ class SnippetManager(object):
         """ Returns the text before and after the cursor as a
         tuple.
         """
-        lineno,col = vim.current.window.cursor
+        lineno, col = vim.current.window.cursor  # Note: we want byte position here
 
         line = vim.current.line
 
         # Get the word to the left of the current edit position
-        before, after = line[:col], line[col:]
+        before, after = as_unicode(line[:col]), as_unicode(line[col:])
 
         return before, after
 
@@ -984,14 +984,14 @@ class SnippetManager(object):
 
         try:
             # let vim_string format it as a vim list
-            rv = vim.eval("inputlist(%s)" % vim_string(display))
+            rv = vim.eval(make_suitable_for_vim(as_unicode("inputlist(%s)") % vim_string(display)))
             if rv is None or rv == '0':
                 return None
             rv = int(rv)
             if rv > len(snippets):
                 rv = len(snippets)
             return snippets[rv-1]
-        except vim.error, e:
+        except vim.error as e:
             if str(e) == 'invalid expression':
                 return None
             raise
@@ -1001,7 +1001,7 @@ class SnippetManager(object):
         that needs to be done with it. 'before' and 'after' should
         come from _get_before_after.
         """
-        lineno,col = vim.current.window.cursor
+        lineno, col = vim_cursor()
         # Adjust before, maybe the trigger is not the complete word
 
         text_before = before
@@ -1116,7 +1116,8 @@ class SnippetManager(object):
         self._vb.replace_lines(sline, sline + dlines,
                        s._current_text)
         ct_end = self._ctab.abs_end
-        vim.current.window.cursor = ct_end.line +1, ct_end.col
+
+        set_vim_cursor(ct_end.line + 1, ct_end.col)
 
         self._vstate.update()
 
@@ -1153,7 +1154,7 @@ class SnippetManager(object):
 
         for rtp in paths:
             for snippet_dir in snippet_dirs:
-                pth = os.path.realpath(os.path.join(rtp, snippet_dir))
+                pth = os.path.realpath(os.path.expanduser(os.path.join(rtp, snippet_dir)))
 
                 patterns = ["%s.snippets", "*_%s.snippets"]
                 if not default and pth == base_snippets:
