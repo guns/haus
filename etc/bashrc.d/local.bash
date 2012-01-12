@@ -150,7 +150,7 @@ CD_FUNC cdvar           /var
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
-CD_FUNC cdclojure       ~/.clojure /opt/clojure && export cdclojure # Export for bin/clojure
+CD_FUNC cdclojure       ~/.clojure /opt/clojure
 CD_FUNC cdhaus          ~/.haus /opt/haus && export RUBYLIB="$cdhaus/lib"
 CD_FUNC cdsrc           ~/src /usr/local/src
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
@@ -858,6 +858,8 @@ HAVE vim && {
 
         run vim -c "Screen $cmd" "$file"
     }
+    # Drop into custom clojure REPL
+    HAVE clojure && alias vimclojure='cd ~/.clojure && vimrepl repl.clj'
 
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)

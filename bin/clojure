@@ -1,27 +1,18 @@
 #!/usr/bin/env bash
 #
 # Clojure wrapper.
-#
-# http://trac.macports.org/browser/trunk/dports/lang/clojure/files/clj-rlwrap.sh?format=txt
 
-# Lein projects
-if [[ -e project.clj && -d src && -d lib ]]; then
-    for JAR in $(find lib -name *.jar); do
-        JARPATH+="$JAR:"
-    done
-    CLASSPATH="src:$JARPATH:$CLASSPATH"
-elif [[ -d "$cdclojure" ]]; then
-    CLASSPATH="$cdclojure/clojure.jar:$cdclojure:$CLASSPATH"
-fi
-
+CLASSPATH="$cdclojure/clojure.jar:$CLASSPATH"
 CLOJURE_CMD="java -server -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
-COMPLETIONS=~/.clj_completions
 
-if (($#)); then
+if [[ "$1" == '--repl' && -e ~/.clojure/project.clj ]]; then
+    echo cd ~/.clojure
+    cd ~/.clojure
+    exec run lein repl
+elif (($#)); then
     exec run $CLOJURE_CMD "$@"
 else
-    touch "$COMPLETIONS"
     exec run rlwrap --ansi-colour-aware \
                     --prompt-colour=GREEN \
                     --case-insensitive \
@@ -29,6 +20,5 @@ else
                     --quote-characters '"' \
                     --complete-filenames \
                     --remember \
-                    --file "$COMPLETIONS" \
                     $CLOJURE_CMD
 fi

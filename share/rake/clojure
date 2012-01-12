@@ -9,7 +9,7 @@ end
 
 desc 'Install clojure and contrib jars to PREFIX=/opt/jars'
 task :install do
-  prefix = ENV['PREFIX'] || '/opt/clojure'
+  prefix = ENV['PREFIX'] || File.expand_path('~/.clojure')
 
   until clojure = Dir.entries('.').find { |f| f =~ /\Aclojure-.*\.jar\z/ }
     Rake::Task[:build].execute
