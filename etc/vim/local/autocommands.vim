@@ -92,7 +92,7 @@ augroup GUNS
         \ SetWhitespace 2
 
     " C
-    autocmd FileType c
+    autocmd FileType c,c++
         \ setlocal cinoptions=:0 |
         \ execute 'noremap! <buffer> <C-l> ->'
 

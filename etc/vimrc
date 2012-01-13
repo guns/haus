@@ -238,6 +238,7 @@ let g:vimclojure#ParenRainbowColors = {
     \ '9':  'ctermfg=235'
 \ }
 
+
 """ MAPPINGS, AUTOCOMMANDS and ABBREVIATIONS """
 
 " Set modifiers and load modifier mapping functions
