@@ -130,8 +130,7 @@ class RxvtUnicode # {{{1
     {
       'PATH'        => %x(bash ~/.bashpath).chomp,
       'RUBYLIB'     => %w[~/.haus/lib /opt/haus/lib].find { |d| File.directory? d },
-      'LC_CTYPE'    => 'en_US.UTF-8',
-      'RXVT_SOCKET' => File.expand_path('~/.rxvt-unicode.sock')
+      'LC_CTYPE'    => 'en_US.UTF-8'
     }
   end
 
