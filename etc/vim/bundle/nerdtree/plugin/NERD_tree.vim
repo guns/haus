@@ -151,7 +151,7 @@ let s:NERDTreeBufName = 'NERD_tree_'
 let s:tree_wid = 2
 
 if g:NERDTreeDirArrows
-    let s:tree_markup_reg = '^ *\([▾▸] \)\?'
+    let s:tree_markup_reg = '^\([▾▸] \| \+[▾▸] \| \+\)'
 else
     let s:tree_markup_reg = '^[ `|]*[\-+~]'
 endif
@@ -520,6 +520,15 @@ function! s:KeyMap.bind()
     exec 'nnoremap <buffer> <silent> '. mapkey . premap . ':call <SID>KeyMap_Invoke("'. self.key .'")<cr>'
 endfunction
 
+"FUNCTION: KeyMap.Remove(key, scope) {{{3
+function! s:KeyMap.Remove(key, scope)
+    let maps = s:KeyMap.All()
+    for i in range(len(maps))
+         if maps[i].key ==# a:key && maps[i].scope ==# a:scope
+            return remove(maps, i)
+        endif
+    endfor
+endfunction
 "FUNCTION: KeyMap.invoke() {{{3
 "Call the KeyMaps callback function
 function! s:KeyMap.invoke(...)
@@ -606,11 +615,7 @@ endfunction
 
 "FUNCTION: KeyMap.Add(keymap) {{{3
 function! s:KeyMap.Add(keymap)
-    let oldmap = s:KeyMap.FindFor(a:keymap.key, a:keymap.scope)
-    if !empty(oldmap)
-        call remove(s:KeyMap.All(), index(s:KeyMap.All(), oldmap))
-    endif
-
+    call s:KeyMap.Remove(a:keymap.key, a:keymap.scope)
     call add(s:KeyMap.All(), a:keymap)
 endfunction
 
@@ -1867,6 +1872,25 @@ endfunction
 "CLASS: Opener {{{2
 "============================================================
 let s:Opener = {}
+
+"FUNCTION: Opener._checkToCloseTree(newtab) {{{3
+"Check the class options and global options (i.e. NERDTreeQuitOnOpen) to see
+"if the tree should be closed now.
+"
+"Args:
+"a:newtab - boolean. If set, only close the tree now if we are opening the
+"target in a new tab. This is needed because we have to close tree before we
+"leave the tab
+function! s:Opener._checkToCloseTree(newtab)
+    if self._keepopen
+        return
+    endif
+
+    if (a:newtab && self._where == 't') || !a:newtab
+        call s:closeTreeIfQuitOnOpen()
+    endif
+endfunction
+
 "FUNCTION: Opener._gotoTargetWin() {{{3
 function! s:Opener._gotoTargetWin()
     if b:NERDTreeType ==# "secondary"
@@ -1878,6 +1902,7 @@ function! s:Opener._gotoTargetWin()
             tabnew
         endif
     else
+        call self._checkToCloseTree(1)
 
         if self._where == 'v'
             call self._newVSplit()
@@ -1888,6 +1913,8 @@ function! s:Opener._gotoTargetWin()
         elseif self._where == 'p'
             call self._previousWindow()
         endif
+
+        call self._checkToCloseTree(0)
     endif
 endfunction
 
@@ -1913,6 +1940,7 @@ function! s:Opener.New(path, opts)
     let newObj._reuse = s:has_opt(a:opts, 'reuse')
     let newObj._keepopen = s:has_opt(a:opts, 'keepopen')
     let newObj._where = has_key(a:opts, 'where') ? a:opts['where'] : ''
+    let newObj._treetype = b:NERDTreeType
     call newObj._saveCursorPos()
 
     return newObj
@@ -2009,16 +2037,13 @@ function! s:Opener._openFile()
         return
     endif
 
-    if b:NERDTreeType ==# "secondary"
-        call self._gotoTargetWin()
+    call self._gotoTargetWin()
+
+    if self._treetype ==# "secondary"
         call self._path.edit()
     else
-        call self._gotoTargetWin()
         call self._path.edit()
 
-        if self._keepopen
-            call s:closeTreeIfQuitOnOpen()
-        endif
 
         if self._stay
             call self._restoreCursorPos()
@@ -2028,7 +2053,7 @@ endfunction
 
 "FUNCTION: Opener._openDirectory(node) {{{3
 function! s:Opener._openDirectory(node)
-    if b:NERDTreeType ==# "secondary"
+    if self._treetype ==# "secondary"
         call self._gotoTargetWin()
         call s:initNerdTreeInPlace(a:node.path.str())
     else
@@ -2081,11 +2106,13 @@ function! s:Opener._reuseWindow()
     let winnr = bufwinnr('^' . self._path.str() . '$')
     if winnr != -1
         call s:exec(winnr . "wincmd w")
+        call self._checkToCloseTree(0)
         return 1
     else
         "check other tabs
         let tabnr = self._path.tabnr()
         if tabnr
+            call self._checkToCloseTree(1)
             call s:exec('normal! ' . tabnr . 'gt')
             let winnr = bufwinnr('^' . self._path.str() . '$')
             call s:exec(winnr . "wincmd w")
@@ -2516,6 +2543,16 @@ function! s:Path.Slash()
     return s:running_windows ? '\' : '/'
 endfunction
 
+"FUNCTION: Path.Resolve() {{{3
+"Invoke the vim resolve() function and return the result
+"This is necessary because in some versions of vim resolve() removes trailing
+"slashes while in other versions it doesn't.  This always removes the trailing
+"slash
+function! s:Path.Resolve(path)
+    let tmp = resolve(a:path)
+    return tmp =~# '/$' ? substitute(tmp, '/$', '', '') : tmp
+endfunction
+
 "FUNCTION: Path.readInfoFromDisk(fullpath) {{{3
 "
 "
@@ -2550,12 +2587,12 @@ function! s:Path.readInfoFromDisk(fullpath)
     let lastPathComponent = self.getLastPathComponent(0)
 
     "get the path to the new node with the parent dir fully resolved
-    let hardPath = resolve(self.strTrunk()) . lastPathComponent
+    let hardPath = s:Path.Resolve(self.strTrunk()) . '/' . lastPathComponent
 
     "if  the last part of the path is a symlink then flag it as such
-    let self.isSymLink = (resolve(hardPath) != hardPath)
+    let self.isSymLink = (s:Path.Resolve(hardPath) != hardPath)
     if self.isSymLink
-        let self.symLinkDest = resolve(fullpath)
+        let self.symLinkDest = s:Path.Resolve(fullpath)
 
         "if the link is a dir then slap a / on the end of its dest
         if isdirectory(self.symLinkDest)
@@ -2728,13 +2765,9 @@ function! s:Path._str()
 endfunction
 
 "FUNCTION: Path.strTrunk() {{{3
-"Gets the path without the last segment on the end, always with an endslash
+"Gets the path without the last segment on the end.
 function! s:Path.strTrunk()
-    let toReturn = self.drive . '/' . join(self.pathSegments[0:-2], '/')
-    if toReturn !~# '\/$'
-        let toReturn .= '/'
-    endif
-    return toReturn
+    return self.drive . '/' . join(self.pathSegments[0:-2], '/')
 endfunction
 
 " FUNCTION: Path.tabnr() {{{3
@@ -2821,6 +2854,75 @@ endfunction
 function! s:completeBookmarks(A,L,P)
     return filter(s:Bookmark.BookmarkNames(), 'v:val =~# "^' . a:A . '"')
 endfunction
+" FUNCTION: s:createDefaultBindings() {{{2
+function! s:createDefaultBindings()
+    let s = '<SNR>' . s:SID() . '_'
+
+    call NERDTreeAddKeyMap({ 'key': 'middlerelease', 'scope': "all", 'callback': s."handleMiddleMouse" })
+    call NERDTreeAddKeyMap({ 'key': 'leftrelease', 'scope': "all", 'callback': s."handleLeftClick" })
+    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "DirNode", 'callback': s."activateDirNode" })
+    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "FileNode", 'callback': s."activateFileNode" })
+    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "Bookmark", 'callback': s."activateBookmark" })
+    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "all", 'callback': s."activateAll" })
+
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "DirNode", 'callback': s."activateDirNode" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "FileNode", 'callback': s."activateFileNode" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "Bookmark", 'callback': s."activateBookmark" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "all", 'callback': s."activateAll" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Node", 'callback': s."openHSplit" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Node", 'callback': s."openVSplit" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Bookmark", 'callback': s."openHSplit" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Bookmark", 'callback': s."openVSplit" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreview, 'scope': "Node", 'callback': s."previewNodeCurrent" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewVSplit, 'scope': "Node", 'callback': s."previewNodeVSplit" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewSplit, 'scope': "Node", 'callback': s."previewNodeHSplit" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenRecursively, 'scope': "DirNode", 'callback': s."openNodeRecursively" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdir, 'scope': "all", 'callback': s."upDirCurrentRootClosed" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdirKeepOpen, 'scope': "all", 'callback': s."upDirCurrentRootOpen" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChangeRoot, 'scope': "Node", 'callback': s."chRoot" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChdir, 'scope': "Node", 'callback': s."chCwd" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapQuit, 'scope': "all", 'callback': s."closeTreeWindow" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefreshRoot, 'scope': "all", 'callback': s."refreshRoot" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefresh, 'scope': "Node", 'callback': s."refreshCurrent" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapHelp, 'scope': "all", 'callback': s."displayHelp" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleZoom, 'scope': "all", 'callback': s."toggleZoom" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleHidden, 'scope': "all", 'callback': s."toggleShowHidden" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleFilters, 'scope': "all", 'callback': s."toggleIgnoreFilter" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleFiles, 'scope': "all", 'callback': s."toggleShowFiles" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleBookmarks, 'scope': "all", 'callback': s."toggleShowBookmarks" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapCloseDir, 'scope': "Node", 'callback': s."closeCurrentDir" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapCloseChildren, 'scope': "DirNode", 'callback': s."closeChildren" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapMenu, 'scope': "Node", 'callback': s."showMenu" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpParent, 'scope': "Node", 'callback': s."jumpToParent" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpFirstChild, 'scope': "Node", 'callback': s."jumpToFirstChild" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpLastChild, 'scope': "Node", 'callback': s."jumpToLastChild" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpRoot, 'scope': "all", 'callback': s."jumpToRoot" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpNextSibling, 'scope': "Node", 'callback': s."jumpToNextSibling" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpPrevSibling, 'scope': "Node", 'callback': s."jumpToPrevSibling" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Node", 'callback': s."openInNewTab" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Node", 'callback': s."openInNewTabSilent" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Bookmark", 'callback': s."openInNewTab" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Bookmark", 'callback': s."openInNewTabSilent" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenExpl, 'scope': "DirNode", 'callback': s."openExplorer" })
+
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapDeleteBookmark, 'scope': "Bookmark", 'callback': s."deleteBookmark" })
+
+endfunction
 " FUNCTION: s:deprecated(func, [msg]) {{{2
 " Issue a deprecation warning for a:func. If a second arg is given, use this
 " as the deprecation message
@@ -2900,7 +3002,7 @@ function! s:initNerdTree(name)
         if dir =~# '^\.'
             let dir = getcwd() . s:Path.Slash() . dir
         endif
-        let dir = resolve(dir)
+        let dir = s:Path.Resolve(dir)
 
         try
             let path = s:Path.New(dir)
@@ -3034,6 +3136,7 @@ endfunction
 " FUNCTION: s:postSourceActions() {{{2
 function! s:postSourceActions()
     call s:Bookmark.CacheBookmarks(0)
+    call s:createDefaultBindings()
 
     "load all nerdtree plugins
     runtime! nerdtree_plugin/**/*.vim
@@ -3717,6 +3820,8 @@ function! s:setCommonBufOptions()
     setlocal bufhidden=hide
     setlocal nowrap
     setlocal foldcolumn=0
+    setlocal foldmethod=manual
+    setlocal nofoldenable
     setlocal nobuflisted
     setlocal nospell
     if g:NERDTreeShowLineNumbers
@@ -3842,75 +3947,9 @@ endfunction
 
 "FUNCTION: s:bindMappings() {{{2
 function! s:bindMappings()
-    let s = '<SNR>' . s:SID() . '_'
-
-    call NERDTreeAddKeyMap({ 'key': 'middlerelease', 'scope': "all", 'callback': s."handleMiddleMouse" })
-    call NERDTreeAddKeyMap({ 'key': 'leftrelease', 'scope': "all", 'callback': s."handleLeftClick" })
-    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "DirNode", 'callback': s."activateDirNode" })
-    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "FileNode", 'callback': s."activateFileNode" })
-    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "Bookmark", 'callback': s."activateBookmark" })
-    call NERDTreeAddKeyMap({ 'key': '2-leftmouse', 'scope': "all", 'callback': s."activateAll" })
-
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "Node", 'callback': s."activateNode" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "DirNode", 'callback': s."activateDirNode" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "FileNode", 'callback': s."activateFileNode" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "Bookmark", 'callback': s."activateBookmark" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "all", 'callback': s."activateAll" })
+    "make <cr> do the same as the default 'o' mapping
     exec "nnoremap <silent> <buffer> <cr> :call <SID>KeyMap_Invoke('". g:NERDTreeMapActivateNode ."')<cr>"
 
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Node", 'callback': s."openHSplit" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Node", 'callback': s."openVSplit" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Bookmark", 'callback': s."openHSplit" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenVSplit, 'scope': "Bookmark", 'callback': s."openVSplit" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreview, 'scope': "Node", 'callback': s."previewNodeCurrent" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewVSplit, 'scope': "Node", 'callback': s."previewNodeVSplit" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreviewSplit, 'scope': "Node", 'callback': s."previewNodeHSplit" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenRecursively, 'scope': "DirNode", 'callback': s."openNodeRecursively" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdir, 'scope': "all", 'callback': s."upDirCurrentRootClosed" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapUpdirKeepOpen, 'scope': "all", 'callback': s."upDirCurrentRootOpen" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChangeRoot, 'scope': "Node", 'callback': s."chRoot" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapChdir, 'scope': "Node", 'callback': s."chCwd" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapQuit, 'scope': "all", 'callback': s."closeTreeWindow" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefreshRoot, 'scope': "all", 'callback': s."refreshRoot" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapRefresh, 'scope': "Node", 'callback': s."refreshCurrent" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapHelp, 'scope': "all", 'callback': s."displayHelp" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleZoom, 'scope': "all", 'callback': s."toggleZoom" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleHidden, 'scope': "all", 'callback': s."toggleShowHidden" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleFilters, 'scope': "all", 'callback': s."toggleIgnoreFilter" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleFiles, 'scope': "all", 'callback': s."toggleShowFiles" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapToggleBookmarks, 'scope': "all", 'callback': s."toggleShowBookmarks" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapCloseDir, 'scope': "Node", 'callback': s."closeCurrentDir" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapCloseChildren, 'scope': "DirNode", 'callback': s."closeChildren" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapMenu, 'scope': "Node", 'callback': s."showMenu" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpParent, 'scope': "Node", 'callback': s."jumpToParent" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpFirstChild, 'scope': "Node", 'callback': s."jumpToFirstChild" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpLastChild, 'scope': "Node", 'callback': s."jumpToLastChild" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpRoot, 'scope': "all", 'callback': s."jumpToRoot" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpNextSibling, 'scope': "Node", 'callback': s."jumpToNextSibling" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapJumpPrevSibling, 'scope': "Node", 'callback': s."jumpToPrevSibling" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Node", 'callback': s."openInNewTab" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Node", 'callback': s."openInNewTabSilent" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTab, 'scope': "Bookmark", 'callback': s."openInNewTab" })
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenInTabSilent, 'scope': "Bookmark", 'callback': s."openInNewTabSilent" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenExpl, 'scope': "DirNode", 'callback': s."openExplorer" })
-
-    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapDeleteBookmark, 'scope': "Bookmark", 'callback': s."deleteBookmark" })
-
-    "bind all the user custom maps
     call s:KeyMap.BindAll()
 
     command! -buffer -nargs=? Bookmark :call <SID>bookmarkNode('<args>')
@@ -4050,8 +4089,8 @@ function! s:handleLeftClick()
         endfor
 
         if currentNode.path.isDirectory
-            if startToCur =~# s:tree_markup_reg . '$' && startToCur =~# '[+~▾▸]$'
-                call s:activateNode(currentNode)
+            if startToCur =~# s:tree_markup_reg && startToCur =~# '[+~▾▸] \?$'
+                call currentNode.activate()
                 return
             endif
         endif
@@ -4059,7 +4098,11 @@ function! s:handleLeftClick()
         if (g:NERDTreeMouseMode ==# 2 && currentNode.path.isDirectory) || g:NERDTreeMouseMode ==# 3
             let char = strpart(startToCur, strlen(startToCur)-1, 1)
             if char !~# s:tree_markup_reg
-                call s:activateNode(currentNode)
+                if currentNode.path.isDirectory
+                    call currentNode.activate()
+                else
+                    call currentNode.activate({'reuse': 1, 'where': 'p'})
+                endif
                 return
             endif
         endif
@@ -4176,19 +4219,18 @@ endfunction
 
 "FUNCTION: s:previewNodeCurrent(node) {{{2
 function! s:previewNodeCurrent(node)
-    call a:node.open({'stay': 1, 'where': 'p'})
+    call a:node.open({'stay': 1, 'where': 'p', 'keepopen': 1})
 endfunction
 
 "FUNCTION: s:previewNodeHSplit(node) {{{2
 function! s:previewNodeHSplit(node)
-    call a:node.open({'stay': 1, 'where': 'h'})
+    call a:node.open({'stay': 1, 'where': 'h', 'keepopen': 1})
 endfunction
 
 "FUNCTION: s:previewNodeVSplit(node) {{{2
 function! s:previewNodeVSplit(node)
-    call a:node.open({'stay': 1, 'where': 'v'})
+    call a:node.open({'stay': 1, 'where': 'v', 'keepopen': 1})
 endfunction
-
 
 " FUNCTION: s:revealBookmark(name) {{{2
 " put the cursor on the node associate with the given name
