@@ -141,6 +141,7 @@ set visible-stats on
 "\e[A":         history-search-backward     (- previous-history)
 
 # Unicode characters
+# /opt/haus/share/doc/unicode-data.txt.gz
 "\e'":          "→"         U+2192
 "\e(":          "·"         U+00B7
 "\e6":          "§"         U+00A7          (- digit-argument)
