@@ -1944,6 +1944,14 @@ class Snippet_With_Umlauts_OverwriteNone(_VimTest):
     snippets = ('ül', 'üü ${1:world} üü ${2:hello}ßß\nüüüü')
     keys = 'te ül' + EX + JF + JF + "end"
     wanted = "te üü world üü helloßß\nüüüüend"
+class Snippet_With_Umlauts_Mirrors(_VimTest):
+    snippets = ('ül', 'üü ${1:world} üü $1')
+    keys = 'te ül' + EX + "hello"
+    wanted = "te üü hello üü hello"
+class Snippet_With_Umlauts_Python(_VimTest):
+    snippets = ('ül', 'üü ${1:world} üü `!p snip.rv = len(t[1])*"a"`')
+    keys = 'te ül' + EX + "hüüll"
+    wanted = "te üü hüüll üü aaaaa"
 
 class Snippet_With_DoubleQuote_List(_VimTest):
     snippets = _snip_quote('"')
@@ -2520,10 +2528,10 @@ class _SelectModeMappings(_VimTest):
     def _options_off(self):
         for key, m in self.maps:
             if not len(key): continue
-            self.send(":sunmap %s\n" % key)
+            self.send(":silent! sunmap %s\n" % key)
         for key, m in self.buffer_maps:
             if not len(key): continue
-            self.send(":sunmap <buffer> %s\n" % key)
+            self.send(":silent! sunmap <buffer> %s\n" % key)
 
         self.send(":let g:UltiSnipsRemoveSelectModeMappings=1\n")
         self.send(":let g:UltiSnipsMappingsToIgnore= []\n")
@@ -2569,9 +2577,79 @@ ${1:Welt} }}}""")
 Ball }}}"""
 
 
+###################
+# ${VISUAL} tests #
+###################
+class Visual_NoVisualSelection_Ignore(_VimTest):
+    snippets = ("test", "h${VISUAL}b")
+    keys = "test" + EX + "abc"
+    wanted = "hbabc"
+class Visual_SelectOneWord(_VimTest):
+    snippets = ("test", "h${VISUAL}b")
+    keys = "blablub" + ESC + "0v6l" + EX + "test" + EX
+    wanted = "hblablubb"
 
+class Visual_ExpandTwice(_VimTest):
+    snippets = ("test", "h${VISUAL}b")
+    keys = "blablub" + ESC + "0v6l" + EX + "test" + EX + "\ntest" + EX
+    wanted = "hblablubb\nhb"
 
+class Visual_SelectOneWord_TwiceVisual(_VimTest):
+    snippets = ("test", "h${VISUAL}b${VISUAL}a")
+    keys = "blablub" + ESC + "0v6l" + EX + "test" + EX
+    wanted = "hblablubbblabluba"
+class Visual_SelectOneWord_Inword(_VimTest):
+    snippets = ("test", "h${VISUAL}b", "Description", "i")
+    keys = "blablub" + ESC + "0lv4l" + EX + "test" + EX
+    wanted = "bhlablubb"
+class Visual_SelectOneWord_TillEndOfLine(_VimTest):
+    snippets = ("test", "h${VISUAL}b", "Description", "i")
+    keys = "blablub" + ESC + "0v$" + EX + "test" + EX + ESC + "o"
+    wanted = "hblablub\nb"
+class Visual_SelectOneWordWithTabstop_TillEndOfLine(_VimTest):
+    snippets = ("test", "h${2:ahh}${VISUAL}${1:ups}b", "Description", "i")
+    keys = "blablub" + ESC + "0v$" + EX + "test" + EX + "mmm" + JF + "n" + JF + "done" + ESC + "o"
+    wanted = "hnblablub\nmmmbdone"
+class Visual_InDefaultText_SelectOneWord_NoOverwrite(_VimTest):
+    snippets = ("test", "h${1:${VISUAL}}b")
+    keys = "blablub" + ESC + "0v6l" + EX + "test" + EX + JF + "hello"
+    wanted = "hblablubbhello"
+class Visual_InDefaultText_SelectOneWord(_VimTest):
+    snippets = ("test", "h${1:${VISUAL}}b")
+    keys = "blablub" + ESC + "0v6l" + EX + "test" + EX + "hello"
+    wanted = "hhellob"
 
+class Visual_CrossOneLine(_VimTest):
+    snippets = ("test", "h${VISUAL}b")
+    keys = "bla blub\n  helloi" + ESC + "0k4lvjll" + EX + "test" + EX
+    wanted = "bla hblub\n  hellobi"
+
+class Visual_LineSelect(_VimTest):
+    snippets = ("test", "h${VISUAL}b")
+    keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX
+    wanted = "hhello\nnice\nworld\nb"
+class Visual_InDefaultText_LineSelect_NoOverwrite(_VimTest):
+    snippets = ("test", "h${1:bef${VISUAL}aft}b")
+    keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX + JF + "hi"
+    wanted = "hbefhello\nnice\nworld\naftbhi"
+class Visual_InDefaultText_LineSelect_Overwrite(_VimTest):
+    snippets = ("test", "h${1:bef${VISUAL}aft}b")
+    keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX + "jup" + JF + "hi"
+    wanted = "hjupbhi"
+class Visual_LineSelect_CheckIndent(_VimTest):
+    snippets = ("test", "beg\n\t${VISUAL}\nend")
+    keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX
+    wanted = "beg\n\thello\n\tnice\n\tworld\nend"
+
+class Visual_LineSelect_CheckIndentTwice(_VimTest):
+    snippets = ("test", "beg\n\t${VISUAL}\nend")
+    keys = "    hello\n    nice\n\tworld" + ESC + "Vkk" + EX + "test" + EX
+    wanted = "beg\n\t    hello\n\t    nice\n\t\tworld\nend"
+
+class Visual_LineSelect_WithTabStop(_VimTest):
+    snippets = ("test", "beg\n\t${VISUAL}\n\t${1:here_we_go}\nend")
+    keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX + "super" + JF + "done"
+    wanted = "beg\n\thello\n\tnice\n\tworld\n\tsuper\nenddone"
 
 ###########################################################################
 #                               END OF TEST                               #

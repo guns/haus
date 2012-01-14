@@ -15,7 +15,7 @@ __all__ = ['as_unicode', 'compatible_exec', 'CheapTotalOrdering', 'vim_cursor', 
 if sys.version_info >= (3,0):
     from UltiSnips.Compatibility_py3 import *
 
-    def set_vim_cursor(line, col): # TODO
+    def set_vim_cursor(line, col):
         """Wrapper around vims access to window.cursor. It can't handle
         multibyte chars, we therefore have to compensate"""
 
@@ -24,7 +24,7 @@ if sys.version_info >= (3,0):
 
         vim.current.window.cursor = line, nbytes
 
-    def vim_cursor(): # TODO
+    def vim_cursor():
         """Returns the character position (not the byte position) of the
         vim cursor"""
 
@@ -53,14 +53,14 @@ if sys.version_info >= (3,0):
     def as_unicode(s):
         if isinstance(s, bytes):
             return s.decode("utf-8")
-        return s
+        return str(s)
 
     def make_suitable_for_vim(s):
         return s
 else:
     from UltiSnips.Compatibility_py2 import *
 
-    def set_vim_cursor(line, col): # TODO
+    def set_vim_cursor(line, col):
         """Wrapper around vims access to window.cursor. It can't handle
         multibyte chars, we therefore have to compensate"""
 
@@ -69,7 +69,7 @@ else:
 
         vim.current.window.cursor = line, nbytes
 
-    def vim_cursor(): # TODO
+    def vim_cursor():
         """Returns the character position (not the byte position) of the
         vim cursor"""
 
@@ -98,9 +98,9 @@ else:
             return self.__cmp__(other) >= 0
 
     def as_unicode(s):
-        if not isinstance(s, unicode):
+        if isinstance(s, str):
             return s.decode("utf-8")
-        return s
+        return unicode(s)
 
     def make_suitable_for_vim(s):
         if isinstance(s, list):

@@ -9,10 +9,11 @@ import vim
 
 from UltiSnips.Buffer import TextBuffer
 from UltiSnips.Compatibility import CheapTotalOrdering
-from UltiSnips.Compatibility import compatible_exec
+from UltiSnips.Compatibility import compatible_exec, as_unicode
 from UltiSnips.Geometry import Span, Position
-from UltiSnips.Lexer import tokenize, EscapeCharToken, TransformationToken,  \
-    TabStopToken, MirrorToken, PythonCodeToken, VimLCodeToken, ShellCodeToken
+from UltiSnips.Lexer import tokenize, EscapeCharToken, VisualToken, \
+    TransformationToken, TabStopToken, MirrorToken, PythonCodeToken, \
+    VimLCodeToken, ShellCodeToken
 from UltiSnips.Util import IndentUtil
 
 __all__ = [ "Mirror", "Transformation", "SnippetInstance", "StartMarker" ]
@@ -166,6 +167,8 @@ class _TOParser(object):
                 k._do_parse(all_tokens, seen_ts)
             elif isinstance(token, EscapeCharToken):
                 EscapedChar(self._parent_to, token)
+            elif isinstance(token, VisualToken):
+                Visual(self._parent_to, token)
             elif isinstance(token, ShellCodeToken):
                 ShellCode(self._parent_to, token)
             elif isinstance(token, PythonCodeToken):
@@ -209,7 +212,7 @@ class TextObject(CheapTotalOrdering):
     ##############
     def current_text():
         def fget(self):
-            return str(self._current_text)
+            return as_unicode(self._current_text)
         def fset(self, text):
             self._current_text = TextBuffer(text)
 
@@ -420,6 +423,34 @@ class Mirror(TextObject):
     def __repr__(self):
         return "Mirror(%s -> %s)" % (self._start, self._end)
 
+class Visual(TextObject):
+    """
+    A ${VISUAL} placeholder that will use the text that was last visually
+    selected and insert it here. If there was no text visually selected,
+    this will be the empty string
+    """
+    def __init__(self, parent, token):
+
+        # Find our containing snippet for visual_content
+        snippet = parent
+        while snippet and not isinstance(snippet, SnippetInstance):
+            snippet = snippet._parent
+
+        text = ""
+        for idx, line in enumerate(snippet.visual_content.splitlines(True)):
+            text += token.leading_whitespace
+            text += line
+
+        self._text = text
+
+        TextObject.__init__(self, parent, token, initial_text = self._text)
+
+    def _do_update(self):
+        self.current_text = self._text
+
+    def __repr__(self):
+        return "Visual(%s -> %s)" % (self._start, self._end)
+
 
 class Transformation(Mirror):
     def __init__(self, parent, ts, token):
@@ -478,7 +509,7 @@ class VimLCode(TextObject):
         TextObject.__init__(self, parent, token)
 
     def _do_update(self):
-        self.current_text = str(vim.eval(self._code))
+        self.current_text = as_unicode(vim.eval(self._code))
 
     def __repr__(self):
         return "VimLCode(%s -> %s)" % (self._start, self._end)
@@ -695,7 +726,7 @@ class PythonCode(TextObject):
         if self._snip._rv_changed:
             self.current_text = self._snip.rv
         else:
-            self.current_text = str(local_d["res"])
+            self.current_text = as_unicode(local_d["res"])
 
     def __repr__(self):
         return "PythonCode(%s -> %s)" % (self._start, self._end)
@@ -729,7 +760,7 @@ class SnippetInstance(TextObject):
     also a TextObject because it has a start an end
     """
 
-    def __init__(self, parent, indent, initial_text, start = None, end = None, last_re = None, globals = None):
+    def __init__(self, parent, indent, initial_text, start, end, visual_content, last_re, globals):
         if start is None:
             start = Position(0,0)
         if end is None:
@@ -737,6 +768,7 @@ class SnippetInstance(TextObject):
 
         self.locals = {"match" : last_re}
         self.globals = globals
+        self.visual_content = visual_content
 
         TextObject.__init__(self, parent, start, end, initial_text)
 
