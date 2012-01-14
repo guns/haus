@@ -157,6 +157,10 @@ snippet pr "printf" w
 printf("${1:%s}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
+snippet prv "var" w
+printf("${1:var}: ${2:\"%s\"}\n", ${0:$1});
+endsnippet
+
 snippet fpr "fprintf" w
 fprintf(${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet

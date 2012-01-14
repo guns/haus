@@ -51,7 +51,7 @@ endsnippet
 
 ### Collections {{{1
 
-snippet c "conj" w
+snippet conj "conj" w
 (conj ${1:coll} ${0:values})
 endsnippet
 
@@ -75,11 +75,11 @@ snippet sec "second" w
 (second ${0:coll})
 endsnippet
 
-snippet l "last" w
+snippet la "last" w
 (last ${0:coll})
 endsnippet
 
-snippet n "nth" w
+snippet nt "nth" w
 (nth ${1:coll} ${0:index default-value})
 endsnippet
 
@@ -95,7 +95,7 @@ snippet butl "butlast" w
 (butlast ${0:coll})$
 endsnippet
 
-snippet d "drop" w
+snippet dr "drop" w
 (drop ${1:n} ${0:coll})
 endsnippet
 
@@ -107,7 +107,7 @@ snippet dw "drop-while" w
 (drop-while ${1:func} ${0:coll})
 endsnippet
 
-snippet t "take" w
+snippet ta "take" w
 (take ${1:n} ${0:coll})
 endsnippet
 
@@ -139,7 +139,7 @@ snippet pop "pop" w
 (pop ${0:coll})
 endsnippet
 
-snippet a "assoc" w
+snippet ass "assoc" w
 (assoc ${1:map|vec} ${2:key|idx} ${0:val})
 endsnippet
 
@@ -147,7 +147,7 @@ snippet dis "dissoc" w
 (dissoc ${1:map} ${0:keys})
 endsnippet
 
-snippet g "get" w
+snippet get "get" w
 (get ${1:map|vec} ${0:key|idx default})
 endsnippet
 
@@ -183,7 +183,7 @@ snippet inters "intersection" w
 (intersection ${0:sets})
 endsnippet
 
-snippet j "join" w
+snippet jo "join" w
 (join $0)
 endsnippet
 
@@ -237,10 +237,6 @@ endsnippet
 
 snippet quo "quote" w
 (quote (${0:items}))
-endsnippet
-
-snippet ' "'()" w
-'($0)
 endsnippet
 
 snippet map "map" w
@@ -374,7 +370,7 @@ snippet ident "identical?" w
 (identical? ${1:a} ${0:b})
 endsnippet
 
-snippet ? "predicate?" w
+snippet pre "predicate?" w
 (${1:test}? $0)
 endsnippet
 
@@ -425,7 +421,7 @@ endsnippet
 
 ### Functions {{{1
 
-snippet f "fn" w
+snippet fn "fn" w
 (fn [$1] $0)
 endsnippet
 
@@ -453,11 +449,11 @@ snippet compl "complement" w
 (complement ${0:func})
 endsnippet
 
-snippet - "->" w
+snippet -- "->" w
 (-> ${1:item} ${0:funcs})
 endsnippet
 
-snippet -- "->>" w
+snippet --- "->>" w
 (->> ${1:item} ${0:funcs})
 endsnippet
 
