@@ -104,7 +104,7 @@ snippet dl "drop-last" w
 endsnippet
 
 snippet dw "drop-while" w
-(drop-while ${1:func} ${0:coll})
+(drop-while ${1:λ} ${0:coll})
 endsnippet
 
 snippet ta "take" w
@@ -120,7 +120,7 @@ snippet tn "take-nth" w
 endsnippet
 
 snippet tw "take-while" w
-(take-while ${1:func} ${0:coll})
+(take-while ${1:λ} ${0:coll})
 endsnippet
 
 snippet nthn "nthnext" w
@@ -240,19 +240,19 @@ snippet quo "quote" w
 endsnippet
 
 snippet map "map" w
-(map ${1:func} ${0:colls})
+(map ${1:λ} ${0:colls})
 endsnippet
 
 snippet red "reduce" w
-(reduce ${1:func} ${0:[coll] [val coll]})
+(reduce ${1:λ} ${0:[coll] [val coll]})
 endsnippet
 
 snippet fil "filter" w
-(filter ${1:func} ${0:coll})
+(filter ${1:λ} ${0:coll})
 endsnippet
 
 snippet sel "select" w
-(select ${1:func} ${0:coll})
+(select ${1:λ} ${0:coll})
 endsnippet
 
 snippet selk "select-keys" w
@@ -268,7 +268,7 @@ snippet ai "assoc-in" w
 endsnippet
 
 snippet ui "update-in" w
-(update-in ${1:map} [${2:keys}] ${0:func args})
+(update-in ${1:map} [${2:keys}] ${0:λ args})
 endsnippet
 
 snippet st "struct" w
@@ -300,7 +300,7 @@ snippet interp "interpose" w
 endsnippet
 
 snippet iter "iterate" w
-(iterate ${1:func} ${0:arg})
+(iterate ${1:λ} ${0:arg})
 endsnippet
 
 snippet cat "concat" w
@@ -340,7 +340,7 @@ snippet rseq "re-seq" w
 endsnippet
 
 snippet rem "remove" w
-(remove ${1:func} ${0:coll})
+(remove ${1:λ} ${0:coll})
 endsnippet
 
 snippet rep "repeat" w
@@ -348,7 +348,11 @@ snippet rep "repeat" w
 endsnippet
 
 snippet ff "(first (filter))" w
-(first (filter ${1:fn} ${0:coll}))
+(first (filter ${1:λ} ${0:coll}))
+endsnippet
+
+snippet grb "group-by" w
+(group-by ${1:λ} ${0:coll})
 endsnippet
 
 
@@ -395,19 +399,19 @@ snippet inst "instance?" w
 endsnippet
 
 snippet ev "every?" w
-(every? ${1:func} ${0:coll})
+(every? ${1:λ} ${0:coll})
 endsnippet
 
 snippet nev "not-every?" w
-(not-every? ${1:func} ${0:coll})
+(not-every? ${1:λ} ${0:coll})
 endsnippet
 
 snippet som "some" w
-(some ${1:func} ${0:coll})
+(some ${1:λ} ${0:coll})
 endsnippet
 
 snippet na "not-any?" w
-(not-any? ${1:func} ${0:coll})
+(not-any? ${1:λ} ${0:coll})
 endsnippet
 
 snippet con "contains?" w
@@ -426,7 +430,7 @@ snippet fn "fn" w
 endsnippet
 
 snippet app "apply" w
-(apply ${1:func} ${0:args})
+(apply ${1:λ} ${0:args})
 endsnippet
 
 snippet comp "comp" w
@@ -434,11 +438,11 @@ snippet comp "comp" w
 endsnippet
 
 snippet par "partial" w
-(partial ${1:func} ${0:args})
+(partial ${1:λ} ${0:args})
 endsnippet
 
 snippet mem "memoize" w
-(memoize ${0:func})
+(memoize ${0:λ})
 endsnippet
 
 snippet tim "time" w
@@ -446,7 +450,7 @@ snippet tim "time" w
 endsnippet
 
 snippet compl "complement" w
-(complement ${0:func})
+(complement ${0:λ})
 endsnippet
 
 snippet -- "->" w
@@ -491,7 +495,7 @@ snippet defn- "defn-" w
 endsnippet
 
 snippet defmem "defn (memoize)" w
-(def ${1:name} (memoize ${0:fn}))
+(def ${1:name} (memoize ${0:λ}))
 endsnippet
 
 snippet defmul "defmulti" w
@@ -622,8 +626,8 @@ snippet cond "cond" w
 endsnippet
 
 snippet condp "condp" w
-(condp ${1:func} ${2:value}
-	${3:test} ${4:[result] [:>> func]}
+(condp ${1:λ} ${2:value}
+	${3:test} ${4:[result] [:>> λ]}
 	${0:else})
 endsnippet
 
@@ -680,7 +684,7 @@ snippet wh "while" w
 endsnippet
 
 snippet tram "trampoline" w
-(trampoline ${0:func args})
+(trampoline ${0:λ args})
 endsnippet
 
 
