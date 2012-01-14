@@ -243,8 +243,8 @@ $if Bash
     # IRB
     "\C-xi":        "\C-] irb \n"
 
-    # Clojure
-    "\C-xc":        "\C-] clojure \n"
+    # Clojure VimREPL
+    "\C-xc":        "\C-] vimclojure \n"
 $endif
 
 
