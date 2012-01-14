@@ -1064,7 +1064,7 @@ type ruby &>/dev/null && {
 HAVE lein && {
     # alias leine=
     # alias leing=
-    # alias leini=
+    alias leini='run lein install'
     # alias leinq=
     alias leins='run lein search'
     # alias leinu=
