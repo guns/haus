@@ -157,7 +157,9 @@ set visible-stats on
 "\eh":          "❤"         U+2764
 "\eH":          "❦"         U+2766
 "\el":          "λ"         U+03BB          (- downcase-word)
+"\ep":          "π"         U+03C0
 "\es":          "⚓"         U+2693
+"\et":          "τ"         U+03C4
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
 "\ex":          "×"         U+00D7
