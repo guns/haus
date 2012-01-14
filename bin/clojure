@@ -2,7 +2,7 @@
 #
 # Clojure wrapper.
 
-CLASSPATH="$cdclojure/clojure.jar:$CLASSPATH"
+CLASSPATH="$HOME/.clojure/clojure.jar:$CLASSPATH"
 CLOJURE_CMD="java -server -classpath $CLASSPATH clojure.main"
 BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
 
