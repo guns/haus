@@ -167,7 +167,7 @@ task :env do # {{{1
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master guns],
-        :files  => 'etc/urxvt/ext',
+        :files  => 'etc/%urxvt/ext',
         :after  => proc { |proj|
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
         }
