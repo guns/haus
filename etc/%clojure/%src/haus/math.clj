@@ -5,6 +5,10 @@
   (let [div (int (Math/pow 10 (int (Math/log10 (int n)))))]
     (int (/ n div))))
 
+(defn counts-by [& args]
+  "Like group-by, but values are replaced by their counts."
+  (into {} (for [[k v] (apply group-by args)] [k (count v)])))
+
 (defn pascals-triangle []
   "Return a lazy seq of rows of Pascal's triangle."
   (letfn [(next-row [row]
@@ -13,6 +17,9 @@
                     (take (count row) (iterate rest row))))]
     (iterate next-row [1])))
 
-(defn counts-by [& args]
-  "Like group-by, but values are replaced by their counts."
-  (into {} (for [[k v] (apply group-by args)] [k (count v)])))
+(defn rand-seq
+  "Return a lazy seq of (rand ceil) invocations"
+  ([]
+   (lazy-seq (cons (rand) (rand-seq))))
+  ([ceil]
+   (lazy-seq (cons (rand ceil) (rand-seq ceil)))))
