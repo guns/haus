@@ -39,11 +39,15 @@ PreserveMap <4-y> <C-y>
 """ Metamappings {{{1
 
 " Mapleader:
+"   * -- i_Ctrl-X (insert mode completions)
 "   * breaks out of insert mode for universal availability
-"   * -- i_Ctrl-X
 let g:mapleader = ''
-let g:maplocalleader = '-'
 map! <C-x> <Esc><Leader>
+
+" Local Mapleader:
+"   * -- - (previous line, first non-WS character)
+let g:maplocalleader = '-'
+map - <NOP>
 
 " Allow use of <C-c> to terminate visual block insertion
 " and hellaciously break out of Select mode

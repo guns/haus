@@ -114,14 +114,14 @@ class Export(object):
 		# to PDF
 		self.commands.append(Command(u'OrgExportToPDF', \
 				u':py ORGMODE.plugins[u"Export"].topdf()<CR>'))
-		self.keybindings.append(Keybinding(u'<localleader>ep',
+		self.keybindings.append(Keybinding(u'<localleader>Ep',
 				Plug(u'OrgExportToPDF', self.commands[-1])))
 		self.menu + ActionEntry(u'To PDF (via Emacs)', self.keybindings[-1])
 
 		# to HTML
 		self.commands.append(Command(u'OrgExportToHTML', \
 				u':py ORGMODE.plugins[u"Export"].tohtml()<CR>'))
-		self.keybindings.append(Keybinding(u'<localleader>eh',
+		self.keybindings.append(Keybinding(u'<localleader>Eh',
 				Plug(u'OrgExportToHTML', self.commands[-1])))
 		self.menu + ActionEntry(u'To HTML (via Emacs)', self.keybindings[-1])
 
