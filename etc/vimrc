@@ -62,7 +62,7 @@ if exists('&breakindent')
 endif
 
 " Completions
-set completeopt=menu,longest,preview " better insert mode completion
+set completeopt=menu,preview    " Better insert mode completion
 set wildmode=list:longest       " bash style command line completion
 set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff,.DS_Store,Thumbs.db
 if exists('&wildignorecase')
