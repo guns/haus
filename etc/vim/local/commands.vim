@@ -265,7 +265,7 @@ endfunction
 
 command! CaptureMaps
     \ execute 'Capture verbose map | silent verbose map!' |
-    \ :%! ruby -Eutf-8 -e 'puts STDIN.read.gsub(/\n\t/, " \" ")'
+    \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
 
 
 " Parse and map Readline's Unicode character bindings {{{1
