@@ -14,7 +14,7 @@ augroup GUNS
         \   execute "normal! g`\"" |
         \ endif
 
-    " Ensure the quickfix window opens after a `quickfixcmd!`
+    " Open the quickfix window if `quickfixcmd!` returns with errors
     autocmd QuickFixCmdPost *
         \ if !empty(getqflist()) | cwindow | end
 
@@ -85,7 +85,7 @@ augroup GUNS
     autocmd FileType javascript
         \ execute 'let b:jslint_disabled = 1' |
         \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
-        \ execute 'noremap <buffer> <Leader>M :JSLintUpdate<CR>' |
+        \ execute 'noremap <buffer> <Leader>!     :JSLintUpdate<CR>' |
         \ SetWhitespace 2
     autocmd FileType coffee
         \ SetWhitespace 2

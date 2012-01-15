@@ -35,6 +35,10 @@ PreserveMap! <C-Bslash> <C-k>
 PreserveMap <4-e> <C-e>
 PreserveMap <4-y> <C-y>
 
+" -- , (repeat f, t backwards)
+" ++ ; (repeat f, t)
+PreserveMap , ;
+
 
 """ Metamappings {{{1
 
@@ -118,11 +122,12 @@ cnoremap <Down> <Down>
 
 " -- ;
 noremap ;          :
-Mapall  <4-;>      q:
 noremap /          /\v
 noremap ?          ?\v
 noremap <Bslash>   /\V
 noremap <Bar>      ?\V
+Mapall  <4-;>      q:
+noremap q<Bslash>  q/
 noremap <Leader>h  :help<Space>
 noremap <Leader>co :colorscheme<Space>
 

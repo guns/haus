@@ -265,9 +265,7 @@ endfunction
 
 command! CaptureMaps
     \ execute 'Capture verbose map | silent verbose map!' |
-    \ while search('\v^\tLast', 'W') |
-    \   execute 'normal kJa" j' |
-    \ endwhile
+    \ :%! ruby -Eutf-8 -e 'puts STDIN.read.gsub(/\n\t/, " \" ")'
 
 
 " Parse and map Readline's Unicode character bindings {{{1
