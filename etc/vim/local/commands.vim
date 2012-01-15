@@ -223,9 +223,9 @@ function! <SID>CapturePane()
 endfunction
 
 
-" Clojure (comment) {{{1
-command! ToggleClojureFormComment call <SID>ToggleClojureFormComment()
-function! <SID>ToggleClojureFormComment()
+" Clojure utilities {{{1
+command! ClojureToggleFormComment call <SID>ClojureToggleFormComment()
+function! <SID>ClojureToggleFormComment()
     normal m`vabv
     let word = substitute(getline(line("'<")), '\v.{' . col("'<") . '}(\S*).*', '\1', '')
 
@@ -235,7 +235,7 @@ function! <SID>ToggleClojureFormComment()
         execute 'normal gvovacomment '
     endif
 
-    normal =ap``
+    normal =ab``
 endfunction
 
 

@@ -36,8 +36,12 @@ augroup GUNS
     " Lisp
     autocmd Filetype lisp,scheme,clojure
         \ let b:delimitMate_quotes = '"' |
-        \ execute 'nnoremap <buffer> ==        :normal m`=ap``<CR>' |
-        \ execute 'noremap  <buffer> <Leader>ic :ToggleClojureFormComment<CR>' |
+        \ execute 'nnoremap <buffer> ==         :normal m`=ab``<CR>' |
+        \ execute 'nnoremap <buffer> =p         :normal m`=ap``<CR>' |
+        \ execute 'nnoremap <buffer> <Leader>cc :ClojureToggleFormComment<CR>' |
+        \ execute 'nnoremap <buffer> <Leader>i  :normal ysib(<CR>i <Esc>i' |
+        \ execute 'nnoremap <buffer> <Leader>w  :normal ysiw(<CR>%i' |
+        \ execute 'nnoremap <buffer> <Leader>b  :normal %vabyvababpm`=ab``<CR>' |
         \ SetWhitespace 2 8
 
     " Ruby
@@ -207,7 +211,9 @@ augroup ScreenShellEnter
     autocmd User *
         \ silent! execute 'vmap <Leader><Leader> :ScreenSend<CR>' |
         \ silent! execute 'nmap <Leader><Leader> m`vip<Leader><Leader>``' |
-        \ silent! execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>'
+        \ silent! execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>' |
+        \ silent! execute 'nmap <Leader><C-d>    m`vab<Leader><Leader>``' |
+        \ silent! execute 'imap <Leader><C-d>    <Esc><Leader><C-d><Right>'
 augroup END
 
 augroup ScreenShellExit
@@ -217,5 +223,7 @@ augroup ScreenShellExit
         \   silent! execute 'vunmap <Leader><Leader>' |
         \   silent! execute 'nunmap <Leader><Leader>' |
         \   silent! execute 'iunmap <Leader><Leader>' |
+        \   silent! execute 'nunmap <Leader><C-d>' |
+        \   silent! execute 'iunmap <Leader><C-d>' |
         \ endif
 augroup END
