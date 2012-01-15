@@ -150,8 +150,8 @@ set visible-stats on
 "\e>":          "…"         U+2026          (- end-of-history)
 "\eA":          "à"         U+00E0
 "\ea":          "á"         U+00E1
-"\ec":          "ç"         U+00E7          (- capitalize-word)
 "\eC":          "Ç"         U+00C7
+"\ec":          "ç"         U+00E7          (- capitalize-word)
 "\eE":          "è"         U+00E8
 "\ee":          "é"         U+00E9
 "\eh":          "❤"         U+2764
@@ -162,8 +162,8 @@ set visible-stats on
 "\et":          "τ"         U+03C4
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
-"\ex":          "×"         U+00D7
 "\eX":          "✖"         U+2716
+"\ex":          "×"         U+00D7
 
 
 ### Application Macros ###  {{{1
