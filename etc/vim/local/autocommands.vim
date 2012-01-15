@@ -212,8 +212,8 @@ augroup ScreenShellEnter
         \ silent! execute 'vmap <Leader><Leader> :ScreenSend<CR>' |
         \ silent! execute 'nmap <Leader><Leader> m`vip<Leader><Leader>``' |
         \ silent! execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>' |
-        \ silent! execute 'nmap <Leader><C-d>    m`vab<Leader><Leader>``' |
-        \ silent! execute 'imap <Leader><C-d>    <Esc><Leader><C-d><Right>'
+        \ silent! execute 'nmap <Leader><C-f>    m`vab<Leader><Leader>``' |
+        \ silent! execute 'imap <Leader><C-f>    <Esc><Leader><C-f><Right>'
 augroup END
 
 augroup ScreenShellExit
@@ -223,7 +223,7 @@ augroup ScreenShellExit
         \   silent! execute 'vunmap <Leader><Leader>' |
         \   silent! execute 'nunmap <Leader><Leader>' |
         \   silent! execute 'iunmap <Leader><Leader>' |
-        \   silent! execute 'nunmap <Leader><C-d>' |
-        \   silent! execute 'iunmap <Leader><C-d>' |
+        \   silent! execute 'nunmap <Leader><C-f>' |
+        \   silent! execute 'iunmap <Leader><C-f>' |
         \ endif
 augroup END
