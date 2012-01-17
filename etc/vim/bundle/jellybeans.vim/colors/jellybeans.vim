@@ -11,13 +11,15 @@
 "
 " File:         jellybeans.vim
 " Maintainer:   NanoTech <http://nanotech.nanotechcorp.net/>
-" Version:      1.5~git
-" Last Change:  April 11th, 2011
-" Contributors: Daniel Herbert <http://pocket-ninja.com>,
+" Version:      1.6~git
+" Last Change:  January 15th, 2012
+" Contributors: Daniel Herbert <http://pocket-ninja.com/>,
 "               Henry So, Jr. <henryso@panix.com>,
-"               David Liang <bmdavll at gmail dot com>
+"               David Liang <bmdavll at gmail dot com>,
+"               Rich Healey (richoH),
+"               Andrew Wong (w0ng)
 "
-" Copyright (c) 2009-2011 NanoTech
+" Copyright (c) 2009-2012 NanoTech
 "
 " Permission is hereby granted, free of charge, to any person obtaining a copy
 " of this software and associated documentation files (the "Software"), to deal
@@ -436,6 +438,7 @@ hi! link cocoaClass objcClass
 hi! link objcSubclass objcClass
 hi! link objcSuperclass objcClass
 hi! link objcDirective rubyClass
+hi! link objcStatement Constant
 hi! link cocoaFunction Function
 hi! link objcMethodName Identifier
 hi! link objcMethodArg Normal
@@ -445,6 +448,14 @@ hi! link objcMessageName Identifier
 
 call s:X("DbgCurrent","DEEBFE","345FA8","","White","DarkBlue")
 call s:X("DbgBreakPt","","4F0037","","","DarkMagenta")
+
+" vim-indent-guides
+
+if !exists("g:indent_guides_auto_colors")
+  let g:indent_guides_auto_colors = 0
+endif
+call s:X("IndentGuidesOdd","","202020","","","")
+call s:X("IndentGuidesEven","","1c1c1c","","","")
 
 " Plugins, etc.
 
