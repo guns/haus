@@ -1,4 +1,4 @@
-### TEMPLATES ###
+### TEMPLATES {{{1
 
 snippet #! "#! ruby" b
 #!/usr/bin/env ruby
@@ -52,7 +52,7 @@ end
 endsnippet
 
 
-### SYNTAX HELPERS ###
+### SYNTAX HELPERS {{{
 
 snippet do "do || end" w
 do${1: |${2:obj}|}
@@ -78,16 +78,22 @@ endsnippet
 
 snippet deb "debugger" b
 begin ### DEBUG
-	require 'rubygems'; require 'ruby-debug'
-	Debugger.start
-	debugger
-end$0
-endsnippet
-
-snippet debr "debugger remote" b
-begin ### DEBUG
-	require 'rubygems'; require 'ruby-debug'
-	Debugger.wait_connection = true; Debugger.start_remote
+	# Nuclear option for Ruby 1.9.3 compatibility
+	$:.unshift *%w[
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug19-0.11.6/cli/
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug-base19-0.11.26/lib/
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug-base19-0.11.26/ext/
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/linecache19-0.5.13/lib/
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/linecache19-0.5.13/ext/
+		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/columnize-0.3.4/lib/
+	]
+	require 'ruby-debug'
+	Debugger.settings[:autolist] = 1
+	Debugger.settings[:autoeval] = 1
+	Debugger.settings[:force_stepping] = 1
+	Debugger.settings[:reload_source_on_change] = 1
+	Debugger.wait_connection = true
+	$stdout.tty? ? Debugger.start : Debugger.start_remote
 	debugger
 end$0
 endsnippet
@@ -137,7 +143,7 @@ synchronize
 endsnippet
 
 
-### COMPOSITION ###
+### COMPOSITION {{{1
 
 snippet req "require" b
 require '$1'
@@ -156,7 +162,7 @@ module_function :$0
 endsnippet
 
 
-### CLASS and MODULE DEFINITIONS ###
+### CLASS and MODULE DEFINITIONS {{{1
 
 snippet cla "class" w
 class ${0:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
@@ -179,7 +185,7 @@ end
 endsnippet
 
 
-### METHOD DEFINITIONS ###
+### METHOD DEFINITIONS {{{1
 
 snippet def "def" w
 def $0
@@ -217,7 +223,7 @@ lambda { ${1:|${2:x}| }$0 }
 endsnippet
 
 
-### METAPROGRAMMING ###
+### METAPROGRAMMING {{{1
 
 snippet ev "eval" w
 eval
@@ -244,7 +250,7 @@ const_get
 endsnippet
 
 
-### CONDITIONALS ###
+### CONDITIONALS {{{1
 
 snippet if "if"
 if $0
@@ -274,7 +280,7 @@ when $0
 endsnippet
 
 
-### LOOPS ###
+### LOOPS {{{1
 
 snippet lo "loop"
 loop {$0}
@@ -291,7 +297,7 @@ end
 endsnippet
 
 
-### PROPERTIES ###
+### PROPERTIES {{{1
 
 snippet rt "respond_to?" w
 respond_to?
@@ -334,7 +340,7 @@ shuffle
 endsnippet
 
 
-### IO, FILE, and FILEUTILS ###
+### IO, FILE, and FILEUTILS {{{1
 
 snippet F "File." w
 File.
@@ -421,7 +427,7 @@ snippet cv "command -v" w
 endsnippet
 
 
-### ENUMERATION ###
+### ENUMERATION {{{1
 
 snippet ea "each" w
 each { |${1:e}| $0 }
@@ -548,7 +554,7 @@ group_by { |${1:e}| $0 }
 endsnippet
 
 
-### RAKE ###
+### RAKE {{{1
 
 snippet tas "task" b
 desc '$1'
@@ -568,7 +574,14 @@ end
 endsnippet
 
 
-### MINITEST ###
+### RAILS {{{1
+
+snippet log "log" w
+Rails.logger.debug $0
+endsnippet
+
+
+### MINITEST {{{1
 
 snippet des "describe"
 describe :$1 do

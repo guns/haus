@@ -426,7 +426,8 @@ endsnippet
 ### Functions {{{1
 
 snippet fn "fn" w
-(fn [$1] $0)
+(fn [$1]
+	$0)
 endsnippet
 
 snippet app "apply" w
@@ -480,39 +481,39 @@ snippet bind "binding" w
 	$0)
 endsnippet
 
-snippet def "def" w
-(def ${1:name} ${0:val})
+snippet def "def"
+(def${1} ${2:name} ${0:val})
 endsnippet
 
-snippet defn "defn" w
+snippet defn "defn"
 (defn ${1:name}${2: [${3}]
 	}$0)
 endsnippet
 
-snippet defn- "defn-" w
+snippet defn- "defn-"
 (defn- ${1:name}${2: [${3}]
 	}$0)
 endsnippet
 
-snippet defmem "defn (memoize)" w
+snippet defmem "defn (memoize)"
 (def ${1:name} (memoize ${0:λ}))
 endsnippet
 
-snippet defmul "defmulti" w
+snippet defmul "defmulti"
 (defmulti ${1:name}
 	${2:"${3:docstring}"
 	}${0:dispatch-function})
 endsnippet
 
-snippet defmet "defmethod" w
+snippet defmet "defmethod"
 (defmethod ${1:multi-name} ${2::default} ${0:[] fn-tail})
 endsnippet
 
-snippet defs "defstruct" w
+snippet defs "defstruct"
 (defstruct ${1:name} ${0:keys})
 endsnippet
 
-snippet defa "def (accessor)" w
+snippet defa "def (accessor)"
 (def ${1:name} (accessor ${2:struct} ${0::$1}))
 endsnippet
 
