@@ -36,6 +36,7 @@ augroup GUNS
     " Lisp
     autocmd Filetype lisp,scheme,clojure
         \ let b:delimitMate_quotes = '"' |
+        \ execute 'noremap! <buffer> <C-l>      ->' |
         \ execute 'nnoremap <buffer> ==         :normal m`=ab``<CR>' |
         \ execute 'nnoremap <buffer> =p         :normal m`=ap``<CR>' |
         \ execute 'nnoremap <buffer> <Leader>cc :ClojureToggleFormComment<CR>' |
