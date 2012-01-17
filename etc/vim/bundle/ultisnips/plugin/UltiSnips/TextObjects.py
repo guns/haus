@@ -123,7 +123,7 @@ class _TOParser(object):
         self._parent_to = parent_to
         self._text = text
 
-    def parse(self):
+    def parse(self, add_ts_zero = False):
         seen_ts = {}
         all_tokens = []
 
@@ -131,6 +131,11 @@ class _TOParser(object):
 
         self._resolve_ambiguity(all_tokens, seen_ts)
         self._create_objects_with_links_to_tabs(all_tokens, seen_ts)
+
+        if add_ts_zero and 0 not in seen_ts:
+            mark = all_tokens[-1][1].end # Last token is always EndOfText
+            m1 = Position(mark.line, mark.col + 1)
+            self._parent_to._add_tabstop(TabStop(self._parent_to, 0, mark, m1))
 
     #####################
     # Private Functions #
@@ -141,7 +146,7 @@ class _TOParser(object):
                 if token.no not in seen_ts:
                     ts = TabStop(parent, token)
                     seen_ts[token.no] = ts
-                    parent._add_tabstop(token.no,ts)
+                    parent._add_tabstop(ts)
                 else:
                     Mirror(parent, seen_ts[token.no], token)
 
@@ -161,7 +166,7 @@ class _TOParser(object):
             if isinstance(token, TabStopToken):
                 ts = TabStop(self._parent_to, token)
                 seen_ts[token.no] = ts
-                self._parent_to._add_tabstop(token.no,ts)
+                self._parent_to._add_tabstop(ts)
 
                 k = _TOParser(ts, ts.current_text, self._indent)
                 k._do_parse(all_tokens, seen_ts)
@@ -223,8 +228,14 @@ class TextObject(CheapTotalOrdering):
             self._childs = []
             self._tabstops = {}
         return locals()
-
     current_text = property(**current_text())
+
+    @property
+    def current_tabstop(self):
+        if self._cts is None:
+            return None
+        return self._tabstops[self._cts]
+
     def abs_start(self):
         if self._parent:
             ps = self._parent.abs_start
@@ -296,23 +307,23 @@ class TextObject(CheapTotalOrdering):
             return
         tno_max = max(self._tabstops.keys())
 
-        posible_sol = []
+        possible_sol = []
         i = no + 1
         while i <= tno_max:
             if i in self._tabstops:
-                posible_sol.append( (i, self._tabstops[i]) )
+                possible_sol.append( (i, self._tabstops[i]) )
                 break
             i += 1
 
         c = [ c._get_next_tab(no) for c in self._childs ]
         c = filter(lambda i: i, c)
 
-        posible_sol += c
+        possible_sol += c
 
-        if not len(posible_sol):
+        if not len(possible_sol):
             return None
 
-        return min(posible_sol)
+        return min(possible_sol)
 
 
     def _get_prev_tab(self, no):
@@ -320,23 +331,23 @@ class TextObject(CheapTotalOrdering):
             return
         tno_min = min(self._tabstops.keys())
 
-        posible_sol = []
+        possible_sol = []
         i = no - 1
         while i >= tno_min and i > 0:
             if i in self._tabstops:
-                posible_sol.append( (i, self._tabstops[i]) )
+                possible_sol.append( (i, self._tabstops[i]) )
                 break
             i -= 1
 
         c = [ c._get_prev_tab(no) for c in self._childs ]
         c = filter(lambda i: i, c)
 
-        posible_sol += c
+        possible_sol += c
 
-        if not len(posible_sol):
+        if not len(possible_sol):
             return None
 
-        return max(posible_sol)
+        return max(possible_sol)
 
     ###############################
     # Private/Protected functions #
@@ -384,8 +395,8 @@ class TextObject(CheapTotalOrdering):
         self._childs.append(c)
         self._childs.sort()
 
-    def _add_tabstop(self, no, ts):
-        self._tabstops[no] = ts
+    def _add_tabstop(self, ts):
+        self._tabstops[ts.no] = ts
 
 class EscapedChar(TextObject):
     """
@@ -772,35 +783,13 @@ class SnippetInstance(TextObject):
 
         TextObject.__init__(self, parent, start, end, initial_text)
 
-        _TOParser(self, initial_text, indent).parse()
+        _TOParser(self, initial_text, indent).parse(True)
 
-        # Check if we have a zero Tab, if not, add one at the end
-        if isinstance(parent, TabStop):
-            if not parent.no == 0:
-                # We are recursively called, if we have a zero tab, remove it.
-                if 0 in self._tabstops:
-                    self._tabstops[0].current_text = ""
-                    del self._tabstops[0]
-        else:
+        if not isinstance(parent, TabStop):
             self.update()
-            if 0 not in self._tabstops:
-                delta = self._end - self._start
-                col = self.end.col
-                if delta.line == 0:
-                    col -= self.start.col
-                start = Position(delta.line, col)
-                end = Position(delta.line, col)
-                ts = TabStop(self, 0, start, end)
-                self._add_tabstop(0,ts)
-
-                self.update()
 
     def __repr__(self):
         return "SnippetInstance(%s -> %s)" % (self._start, self._end)
-
-    def has_tabs(self):
-        return len(self._tabstops)
-    has_tabs = property(has_tabs)
 
     def _get_tabstop(self, requester, no):
         # SnippetInstances are completely self contained, therefore, we do not
@@ -829,10 +818,7 @@ class SnippetInstance(TextObject):
             res = self._get_next_tab(self._cts)
             if res is None:
                 self._cts = None
-                if 0 in self._tabstops:
-                    return self._tabstops[0]
-                else:
-                    return None
+                return self._tabstops[0]
             else:
                 self._cts, ts = res
                 return ts
