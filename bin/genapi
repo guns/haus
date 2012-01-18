@@ -29,7 +29,7 @@ class Genapi
         Options:
       ).gsub /^ +/, ''
 
-      opt.on '-c', '--clojure', 'Invoke Autodoc for a Clojure project' do
+      opt.on '-c', '--clojure', 'Invoke Marginalia for a Clojure project' do
         options.lang = :clojure
       end
 
