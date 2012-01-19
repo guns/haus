@@ -210,6 +210,7 @@ augroup END
 augroup ScreenShellEnter
     autocmd!
     autocmd User *
+        \ silent! execute 'map  <Leader>q        :ScreenQuit<CR>' |
         \ silent! execute 'vmap <Leader><Leader> :ScreenSend<CR>' |
         \ silent! execute 'nmap <Leader><Leader> m`vip<Leader><Leader>``' |
         \ silent! execute 'imap <Leader><Leader> <Esc><Leader><Leader><Right>' |
@@ -221,6 +222,7 @@ augroup ScreenShellExit
     autocmd!
     autocmd User *
         \ if !g:ScreenShellActive |
+        \   silent! execute 'unmap  <Leader>q' |
         \   silent! execute 'vunmap <Leader><Leader>' |
         \   silent! execute 'nunmap <Leader><Leader>' |
         \   silent! execute 'iunmap <Leader><Leader>' |
