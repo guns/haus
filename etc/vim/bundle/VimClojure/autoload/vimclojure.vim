@@ -292,6 +292,7 @@ function! vimclojure#Buffer.showText(text) dict
 		let text = a:text
 	endif
 	call append(line("$"), text)
+	normal ggdd
 endfunction
 
 function! vimclojure#Buffer.showOutput(output) dict
@@ -365,8 +366,6 @@ function! vimclojure#ResultBuffer.Init() dict
 	call vimclojure#MapPlug("n", "p", "CloseResultBuffer")
 
 	call self.clear()
-	let leader = exists("g:maplocalleader") ? g:maplocalleader : "\\"
-	call append(0, "; Use " . leader . "p to close this buffer!")
 endfunction
 
 function! vimclojure#ResultBuffer.CloseBuffer() dict
