@@ -1,10 +1,9 @@
 """ Assorted Commands and Functions
 
-" FIXME: Make me work better with <plug> mappings {{{1
-" DRY up repetitive noremap, noremap! invocations
-command! -nargs=+ -bar Mapall   call <SID>Mapall('nore', <f-args>)
+command! -nargs=+ -bar Mapall   call <SID>Mapall('nore', <f-args>) "{{{1
 command! -nargs=+ -bar Remapall call <SID>Mapall('',     <f-args>)
 function! <SID>Mapall(prefix, map, ...)
+    " FIXME: Make me work better with <plug> mappings
     if a:0 == 1
         let esc    = '<Esc>'
         let seq    = a:1
@@ -26,9 +25,9 @@ function! <SID>Mapall(prefix, map, ...)
 endfunction
 
 
-" Alias and nullify old mapping {{{1
-command! -nargs=+ -bang PreserveMap call <SID>PreserveMap('<bang>', <f-args>)
+command! -nargs=+ -bang PreserveMap call <SID>PreserveMap('<bang>', <f-args>) "{{{1
 function! <SID>PreserveMap(bang, new, old)
+    " Alias and nullify old mapping
     execute 'noremap' . a:bang . ' <special> ' . a:new . ' ' . a:old
     execute     'map' . a:bang . ' <special> ' . a:old . ' <NOP>'
 endfunction
@@ -47,7 +46,7 @@ function! <SID>SetWhitespace(bang, ...)
 endfunction
 
 
-command! -nargs=* -bang -bar SetTextwidth call <SID>SetTextwidth('<bang>', <f-args>)
+command! -nargs=* -bang -bar SetTextwidth call <SID>SetTextwidth('<bang>', <f-args>) "{{{1
 function! <SID>SetTextwidth(bang, ...)
     if a:0
         let local = empty(a:bang) ? 'local' : ''
@@ -86,19 +85,18 @@ function! <SID>SetMatchParen(bang)
 endfunction
 
 
-" TextMate style syntax highlighting stack for word under cursor "{{{1
-" http://vimcasts.org/episodes/creating-colorschemes-for-vim/
-command! SynStack call <SID>SynStack()
+command! SynStack call <SID>SynStack() "{{{1
 function! <SID>SynStack()
-  if !exists("*synstack")
-    return
-  endif
-  echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+    " TextMate style syntax highlighting stack for word under cursor
+    " http://vimcasts.org/episodes/creating-colorschemes-for-vim/
+    if !exists("*synstack")
+        return
+    endif
+    echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endfunction
 
 
-" TextMate's Todo.bundle via grep + quickfix {{{1
-command! Todo call <SID>Todo()
+command! Todo call <SID>Todo() "{{{1
 function! <SID>Todo()
     let words = ['TODO', 'FIXME', 'NOTE', 'WARNING', 'DEBUG', 'HACK', 'XXX']
 
@@ -130,7 +128,7 @@ function! <SID>Screen(command)
     execute 'ScreenShell ' . chdir . '; ' . cmd
 endfunction
 
-command! ScreenEnterHandler call <SID>ScreenSetup(1)
+command! ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     if a:setup
@@ -153,12 +151,10 @@ function! <SID>ScreenSetup(setup)
 endfunction
 
 
-" Simple Open command: {{{1
-" Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
-" Worth the simple implementation IMO.
-command! Open call <SID>Open(expand('<cWORD>'))
+command! Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! <SID>Open(word)
-    " Extract web URLs
+    " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
+    " Worth the simple implementation IMO.
     let rdelims = "\"');>"
     let capture = 'https?://[^' . rdelims . ']+|(https?://)@<!www\.[^' . rdelims . ']+'
     let pattern = '\v.*(' . capture . ')[' . rdelims . ']?.*'
@@ -172,9 +168,9 @@ function! <SID>Open(word)
 endfunction
 
 
-" Run a command over all lines in the quickfix buffer {{{1
-command! -nargs=? Qfdo call <SID>Qfdo(<q-args>)
+command! -nargs=? Qfdo call <SID>Qfdo(<q-args>) "{{{1
 function! <SID>Qfdo(expr)
+    " Run a command over all lines in the quickfix buffer
     let qflist = getqflist()
     for item in qflist
         execute item['bufnr'] . 'buffer!'
@@ -183,8 +179,7 @@ function! <SID>Qfdo(expr)
 endfunction
 
 
-" Source or run current file {{{1
-command! RunCurrentFile call <SID>RunCurrentFile()
+command! RunCurrentFile call <SID>RunCurrentFile() "{{{1
 function! <SID>RunCurrentFile()
     let map = {
         \ 'ruby'    : 'ruby',
@@ -198,9 +193,9 @@ function! <SID>RunCurrentFile()
 endfunction
 
 
-" Create folds for Ruby method definitions using the ruby text object {{{1
-command! RubyFold call <SID>RubyFold()
+command! RubyFold call <SID>RubyFold() "{{{1
 function! <SID>RubyFold()
+    " Create folds for Ruby method definitions using the ruby text object
     setlocal foldmethod=manual
     normal mrgg
 
@@ -212,8 +207,8 @@ function! <SID>RubyFold()
 endfunction
 
 
-" Run a single MiniTest::Spec test case {{{1
-command! RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase()
+command! RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
+" Run a single MiniTest::Spec test case
 function! <SID>RunCurrentMiniTestCase()
     " Get the line number for the last assertion
     let line = search('\vit .* do', 'bcnW')
@@ -229,9 +224,9 @@ function! <SID>RunCurrentMiniTestCase()
 endfunction
 
 
-" Tmux-esque capture-pane {{{1
-command! -nargs=? -bar CapturePane call <SID>CapturePane()
+command! -nargs=? -bar CapturePane call <SID>CapturePane() "{{{1
 function! <SID>CapturePane()
+    " Tmux-esque capture-pane
     let buf = bufnr('%')
     let tab = len(tabpagebuflist()) > 1
     wincmd q
@@ -295,22 +290,20 @@ elseif g:VIM_PLATFORM == 'unix'
 endif
 
 
-" Redirect output of given commands into a scratch buffer {{{1
-command! -nargs=+ Capture call <SID>Capture(<q-args>)
+command! -nargs=+ Capture call <SID>Capture(<q-args>) "{{{1
+command! CaptureMaps
+    \ execute 'Capture verbose map | silent! verbose map!' |
+    \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
+" Redirect output of given commands into a scratch buffer
 function! <SID>Capture(cmd)
     try
         redir @r
-        execute 'silent ' . a:cmd
+        execute 'silent! ' . a:cmd
     finally
         redir END
         new | setlocal buftype=nofile filetype=vim | normal "rp
     endtry
 endfunction
-
-command! CaptureMaps
-    \ execute 'Capture verbose map | silent verbose map!' |
-    \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
-
 
 " Parse and map Readline's Unicode character bindings {{{1
 command! MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings()
