@@ -119,8 +119,8 @@ endfunction
 command! -nargs=? -bar Screen call <SID>Screen(<q-args>)
 function! <SID>Screen(command)
     let map = {
-        \ 'ruby'       : 'irb -f --noreadline',
-        \ 'clojure'    : '{ [[ -e project.clj ]] && lein repl; } || clojure --repl',
+        \ 'ruby'       : 'irb -f',
+        \ 'clojure'    : 'clojure --nailgun',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'javascript' : 'node'

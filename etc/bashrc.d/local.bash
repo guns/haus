@@ -859,7 +859,7 @@ HAVE vim && {
         run vim -c "Screen $cmd" "$file"
     }
     # Drop into custom clojure REPL
-    HAVE clojure && alias vimclojure='cd ~/.clojure && vimrepl repl.clj'
+    vimclojure() { vimrepl "${1:-repl.clj}" "clojure --nailgun"; }
 
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)
