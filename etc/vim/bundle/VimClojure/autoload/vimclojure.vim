@@ -1022,6 +1022,14 @@ function! vimclojure#InitBuffer(...)
 			endif
 		endif
 	endif
+
+	if exists("b:vimclojure_namespace")
+		setlocal omnifunc=vimclojure#OmniCompletion
+
+		augroup VimClojure
+			autocmd CursorMovedI <buffer> if pumvisible() == 0 | pclose | endif
+		augroup END
+	endif
 endfunction
 
 function! vimclojure#AddToLispWords(word)
