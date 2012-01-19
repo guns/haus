@@ -31,6 +31,10 @@ class Clojure
         options.classpath = arg.split ':'
       end
 
+      opt.on '-q', '--quiet', 'No command summary' do
+        options.quiet = true
+      end
+
       opt.on '--repl', 'Clojure REPL, wrapped by rlwrap if available' do
         options.repl = :repl
       end
@@ -76,10 +80,10 @@ class Clojure
     when :vimclojure
       %W[java -server -classpath #{classpath options.vimclojure}] + args + %W[vimclojure.nailgun.NGServer 127.0.0.1]
     else
-      %W[java -server -classpath #{classpath}] + args
+      %W[java -server -classpath #{classpath} clojure.main] + args
     end
 
-    puts cmd.join(' ')
+    warn cmd.join(' ') unless options.quiet
     exec *cmd
   end
 
