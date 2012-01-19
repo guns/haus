@@ -35,15 +35,7 @@ augroup GUNS
 
     " Lisp
     autocmd Filetype lisp,scheme,clojure
-        \ let b:delimitMate_quotes = '"' |
-        \ execute 'noremap! <buffer> <C-l>      ->' |
-        \ execute 'nnoremap <buffer> ==         :normal m`=ab``<CR>' |
-        \ execute 'nnoremap <buffer> =p         :normal m`=ap``<CR>' |
-        \ execute 'nnoremap <buffer> <Leader>cc :ClojureToggleFormComment<CR>' |
-        \ execute 'nnoremap <buffer> <Leader>i  :normal ysib(<CR>i <Esc>i' |
-        \ execute 'nnoremap <buffer> <Leader>w  :normal ysiw(<CR>%i' |
-        \ execute 'nnoremap <buffer> <Leader>b  :normal %vabyvababpm`=ab``<CR>' |
-        \ SetWhitespace 2 8
+        \ ClojureSetupBufferLocalSettings
 
     " Ruby
     autocmd BufRead,BufNewFile *.irbrc,config.ru,Gemfile,*rakefile
