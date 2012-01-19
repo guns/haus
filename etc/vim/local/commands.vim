@@ -229,13 +229,14 @@ function! <SID>ClojureSetupBufferLocalSettings()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 
-    noremap! <buffer> <C-l>      ->
-    nnoremap <buffer> ==         :normal m`=ab``<CR>
-    nnoremap <buffer> =p         :normal m`=ap``<CR>
-    nnoremap <buffer> <Leader>cc :ClojureToggleFormComment<CR>
-    nnoremap <buffer> <Leader>i  :normal ysib(<CR>i <Esc>i
-    nnoremap <buffer> <Leader>w  :normal ysiw(<CR>%i
-    nnoremap <buffer> <Leader>b  :normal %vabyvababpm`=ab``<CR>
+    noremap  <buffer> <Leader><C-n> :ToggleWantNailgun<CR>
+    noremap! <buffer> <C-l>         ->
+    nnoremap <buffer> ==            :normal m`=ab``<CR>
+    nnoremap <buffer> =p            :normal m`=ap``<CR>
+    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
+    nnoremap <buffer> <Leader>i     :normal ysib(<CR>i <Esc>i
+    nnoremap <buffer> <Leader>w     :normal ysiw(<CR>%i
+    nnoremap <buffer> <Leader>b     :normal %vabyvababpm`=ab``<CR>
 endfunction
 
 command! ClojureToggleFormComment call <SID>ClojureToggleFormComment()
@@ -250,6 +251,17 @@ function! <SID>ClojureToggleFormComment()
     endif
 
     normal =ab``
+endfunction
+
+command! ToggleWantNailgun call <SID>ToggleWantNailgun()
+function! <SID>ToggleWantNailgun()
+    let g:vimclojure#WantNailgun = !g:vimclojure#WantNailgun
+    echo 'g:vimclojure#WantNailgun=' . g:vimclojure#WantNailgun
+
+    if g:vimclojure#WantNailgun
+        unlet b:vimclojure_loaded
+        call vimclojure#InitBuffer()
+    endif
 endfunction
 
 

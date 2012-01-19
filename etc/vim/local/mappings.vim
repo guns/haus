@@ -155,7 +155,6 @@ noremap <Leader><C-b> :setlocal scrollbind!<CR>:setlocal scrollbind?<CR>
 noremap <Leader><C-e> :set expandtab!<CR>:set expandtab?<CR>
 noremap <Leader><C-h> :set hlsearch!<CR>:set hlsearch?<CR>
 noremap <Leader><C-l> :setlocal list!<CR>:setlocal list?<CR>
-noremap <Leader><C-n> :let g:vimclojure#WantNailgun = !g:vimclojure#WantNailgun<CR>:echo 'g:vimclojure#WantNailgun=' . g:vimclojure#WantNailgun<CR>
 noremap <Leader><C-o> :set cursorline! \| set cursorcolumn!<CR>:echo 'cursorcolumn: ' . &cursorcolumn . ' cursorline: ' . &cursorline<CR>
 noremap <Leader><C-p> :set paste!<CR>:set paste?<CR>
 noremap <Leader><C-w> :setlocal wrap!<CR>:setlocal wrap?<CR>
