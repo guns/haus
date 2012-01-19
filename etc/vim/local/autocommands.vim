@@ -196,17 +196,17 @@ augroup GUNS
         \ setlocal foldlevel=0 |
         \ SetWhitespace 2 8
 
+    augroup ScreenShellEnter "{{{1
+        autocmd!
+        autocmd User *
+            \ ScreenEnterHandler
+    augroup END
+
+    augroup ScreenShellExit
+        autocmd!
+        autocmd User *
+            \ ScreenExitHandler
+    augroup END
+
 "}}}1
-augroup END
-
-augroup ScreenShellEnter "{{{1
-    autocmd!
-    autocmd User *
-        \ ScreenEnterHandler
-augroup END
-
-augroup ScreenShellExit
-    autocmd!
-    autocmd User *
-        \ ScreenExitHandler
 augroup END

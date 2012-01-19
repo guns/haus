@@ -85,7 +85,7 @@ function! <SID>SetMatchParen(bang)
 endfunction
 
 
-command! SynStack call <SID>SynStack() "{{{1
+command! -bar SynStack call <SID>SynStack() "{{{1
 function! <SID>SynStack()
     " TextMate style syntax highlighting stack for word under cursor
     " http://vimcasts.org/episodes/creating-colorschemes-for-vim/
@@ -96,7 +96,7 @@ function! <SID>SynStack()
 endfunction
 
 
-command! Todo call <SID>Todo() "{{{1
+command! -bar Todo call <SID>Todo() "{{{1
 function! <SID>Todo()
     let words = ['TODO', 'FIXME', 'NOTE', 'WARNING', 'DEBUG', 'HACK', 'XXX']
 
@@ -202,8 +202,8 @@ function! <SID>Screen(command)
     execute 'ScreenShell ' . chdir . '; ' . cmd
 endfunction
 
-command! ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
-command! ScreenExitHandler  call <SID>ScreenSetup(0)
+command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
+command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     if a:setup
         vmap <Leader><Leader> :ScreenSend<CR>
@@ -229,7 +229,7 @@ function! <SID>ScreenSetup(setup)
 endfunction
 
 
-command! Open call <SID>Open(expand('<cWORD>')) "{{{1
+command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! <SID>Open(word)
     " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
     " Worth the simple implementation IMO.
@@ -257,7 +257,7 @@ function! <SID>Qfdo(expr)
 endfunction
 
 
-command! RunCurrentFile call <SID>RunCurrentFile() "{{{1
+command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
 function! <SID>RunCurrentFile()
     let map = {
         \ 'ruby'    : 'ruby',
@@ -271,7 +271,7 @@ function! <SID>RunCurrentFile()
 endfunction
 
 
-command! RubyFold call <SID>RubyFold() "{{{1
+command! -bar RubyFold call <SID>RubyFold() "{{{1
 function! <SID>RubyFold()
     " Create folds for Ruby method definitions using the ruby text object
     setlocal foldmethod=manual
@@ -285,7 +285,7 @@ function! <SID>RubyFold()
 endfunction
 
 
-command! RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
+command! -bar RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
 " Run a single MiniTest::Spec test case
 function! <SID>RunCurrentMiniTestCase()
     " Get the line number for the last assertion
@@ -318,7 +318,7 @@ endfunction
 command! -bar Ctags silent ! ctags -R
 
 
-" Voice command {{{1
+" Say {{{1
 if g:VIM_PLATFORM == 'macunix'
     command! -nargs=1 -bar Say call system('say ' . <q-args>)
 elseif g:VIM_PLATFORM == 'unix'
@@ -341,8 +341,7 @@ function! <SID>Capture(cmd)
     endtry
 endfunction
 
-" Parse and map Readline's Unicode character bindings {{{1
-command! MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings()
+command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! <SID>MapReadlineUnicodeBindings()
     if filereadable(expand('~/.inputrc'))
         for line in readfile(expand('~/.inputrc'))
@@ -361,8 +360,7 @@ function! <SID>MapReadlineUnicodeBindings()
 endfunction
 
 
-" Open ORG-mode files {{{1
-command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>)
+command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
 function! <SID>Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
     let orgdir = expand('~/Documents/Org')
@@ -379,20 +377,22 @@ function! <SID>Org(bang, ...)
 endfunction
 
 
-" A sometimes useful command for interleaving an even number of lines {{{1
-command! -range Interleave
+" Interleave {{{1
+command! -bar -range Interleave
     \ '<,'>! ruby -e 'l = STDIN.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
 
 
-" http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim {{{1
-command! Hitest
+" Hitest {{{1
+" http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
+command! -bar Hitest
     \ 45vnew |
     \ source $VIMRUNTIME/syntax/hitest.vim |
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
 
 
-" From vimrc_example.vim: {{{1
+" DiggOrig {{{1
+" From vimrc_example.vim
 " Convenient command to see the difference between the current buffer and the
 " file it was loaded from, thus the changes you made.
-command! DiffOrig
+command! -bar DiffOrig
     \ vert new | set bt=nofile | r # | 0d_ | diffthis | wincmd p | diffthis
