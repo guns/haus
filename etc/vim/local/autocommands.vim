@@ -3,7 +3,7 @@
 augroup GUNS
     autocmd!
 
-    " From vimrc_example.vim:
+    " From vimrc_example.vim: {{{1
     " When editing a file, always jump to the last known cursor position.  Don't
     " do it when the position is invalid or when inside an event handler (happens
     " when dropping a file on gvim).
@@ -14,30 +14,30 @@ augroup GUNS
         \   execute "normal! g`\"" |
         \ endif
 
-    " Open the quickfix window if `quickfixcmd!` returns with errors
+    " Open the quickfix window if `quickfixcmd!` returns with errors {{{1
     autocmd QuickFixCmdPost *
         \ if !empty(getqflist()) | cwindow | end
 
-    " Vimscript
+    " Vimscript {{{1
     autocmd FileType help
         \ setlocal iskeyword+=-
 
-    " Diff
+    " Diff {{{1
     autocmd FileType diff
         \ setlocal foldmethod=diff foldlevel=0 |
         \ SetWhitespace 8
 
-    " Shell
+    " Shell {{{1
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
         \ setlocal filetype=sh
     autocmd FileType sh
         \ setlocal iskeyword+=-
 
-    " Lisp
+    " Lisp {{{1
     autocmd Filetype lisp,scheme,clojure
         \ ClojureSetupBufferLocalSettings
 
-    " Ruby
+    " Ruby {{{1
     autocmd BufRead,BufNewFile *.irbrc,config.ru,Gemfile,*rakefile
         \ setlocal filetype=ruby
     autocmd FileType ruby,eruby
@@ -49,20 +49,20 @@ augroup GUNS
         \ setlocal noexpandtab |
         \ SetWhitespace 4
 
-    " Python
+    " Python {{{1
     autocmd FileType python
         \ SetWhitespace 4
 
-    " PHP
+    " PHP {{{1
     autocmd FileType php
         \ SetWhitespace 2
 
-    " X?HTML/XML
+    " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
         \ setlocal matchpairs+=<:> synmaxcol=500 |
         \ SetWhitespace 2
 
-    " HAML/SASS/YAML
+    " HAML/SASS/YAML {{{1
     autocmd FileType haml,sass,yaml
         \ setlocal iskeyword+=- |
         \ SetWhitespace 2
@@ -70,7 +70,7 @@ augroup GUNS
         \ execute 'noremap  <buffer> <M-CR> i%br<Esc><Right>' |
         \ execute 'noremap! <buffer> <M-CR> %br'
 
-    " CSS
+    " CSS {{{1
     autocmd FileType css
         \ setlocal iskeyword+=- |
         \ SetWhitespace 4
@@ -78,7 +78,7 @@ augroup GUNS
         \ setlocal filetype=sass |
         \ SetWhitespace 4
 
-    " JavaScript
+    " JavaScript {{{1
     autocmd FileType javascript
         \ execute 'let b:jslint_disabled = 1' |
         \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
@@ -87,44 +87,44 @@ augroup GUNS
     autocmd FileType coffee
         \ SetWhitespace 2
 
-    " C
+    " C {{{1
     autocmd FileType c,c++
         \ setlocal cinoptions=:0 |
         \ execute 'noremap! <buffer> <C-l> ->'
 
-    " Nginx
+    " Nginx {{{1
     autocmd BufRead,BufNewFile /opt/nginx/etc/*.conf,nginx.conf
         \ setlocal filetype=nginx
     autocmd FileType nginx
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |
         \ SetWhitespace 4
 
-    " Ini conf
+    " Ini conf {{{1
     autocmd BufRead,BufNewFile *gitconfig
         \ setlocal filetype=gitconfig
     autocmd FileType ini,gitconfig
         \ SetWhitespace 4
 
-    " Apache conf
+    " Apache conf {{{1
     autocmd FileType apache
         \ SetWhitespace 4
 
-    " XDefaults
+    " XDefaults {{{1
     autocmd BufRead,BufNewFile *Xdefaults
         \ setlocal filetype=xdefaults
 
-    " UltiSnips snippets
+    " UltiSnips snippets {{{1
     autocmd FileType snippets
         \ setlocal noexpandtab iskeyword+=- foldmethod=marker |
         \ SetWhitespace 8
 
-    " Markdown
+    " Markdown {{{1
     autocmd FileType markdown,rdoc
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
         \ SetWhitespace 4
 
-    " Mail
+    " Mail {{{1
     autocmd BufRead,BufNewFile editserver-*,*.mail
         \ setlocal filetype=mail
     autocmd FileType mail
@@ -133,73 +133,73 @@ augroup GUNS
         \ SetWhitespace 4 |
         \ SetAutowrap on
 
-    " Archive browsing
+    " Archive browsing {{{1
     autocmd BufReadCmd *.jar,*.xpi,*.pk3
         \ call zip#Browse(expand("<amatch>"))
     autocmd BufReadCmd *.gem
         \ call tar#Browse(expand("<amatch>"))
 
-    " git
+    " git {{{1
     autocmd FileType gitcommit
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
         \ SetAutowrap on
 
-    " tmux
+    " tmux {{{1
     autocmd BufRead,BufNewFile *tmux.conf
         \ setlocal filetype=tmux |
         \ SetWhitespace 4
 
-    " screen
+    " screen {{{1
     autocmd BufRead,BufNewFile *screenrc
         \ setlocal filetype=screen
 
-    " http logs
+    " http logs {{{1
     autocmd BufRead *access.log*
         \ setlocal filetype=httplog
 
-    " dnsmasq
+    " dnsmasq {{{1
     autocmd BufRead,BufNewFile dnsmasq.conf*
         \ setlocal filetype=dnsmasq
 
-    " Applescript (which sucks)
+    " Applescript (which sucks) {{{1
     autocmd BufRead,BufNewFile *.applescript
         \ setlocal filetype=applescript
 
-    " Readline
+    " Readline {{{1
     autocmd BufRead,BufNewFile *.inputrc
         \ setlocal filetype=readline
 
-    " Nethack!
+    " Nethack! {{{1
     autocmd BufRead,BufNewFile *.des
         \ setlocal filetype=nhdes
 
-    " TeX
+    " TeX {{{1
     autocmd FileType tex
         \ setlocal iskeyword+=\\,- |
         \ SetWhitespace 2
 
-    " CTags
+    " CTags {{{1
     autocmd BufRead,BufNewFile .tags
         \ setlocal filetype=tags
 
-    " Man pages
+    " Man pages {{{1
     autocmd FileType man
         \ setlocal iskeyword+=-
 
-    " Terminfo
+    " Terminfo {{{1
     autocmd BufRead,BufNewFile *.terminfo
         \ setlocal filetype=terminfo
 
-    " vim-orgmode
+    " vim-orgmode {{{1
     autocmd FileType org
         \ setlocal foldlevel=0 |
         \ SetWhitespace 2 8
 
+"}}}1
 augroup END
 
-" screen.vim
-augroup ScreenShellEnter
+augroup ScreenShellEnter "{{{1
     autocmd!
     autocmd User *
         \ ScreenEnterHandler
