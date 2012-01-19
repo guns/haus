@@ -683,8 +683,8 @@ if __OSX__; then
 fi
 
 # netcat
-HAVE nc   && TCOMP host nc
-HAVE ncat && TCOMP host ncat
+HAVE nc   && TCOMP dig nc
+HAVE ncat && TCOMP dig ncat
 
 # ssh scp
 # http://blog.urfix.com/25-ssh-commands-tricks/
@@ -1074,6 +1074,10 @@ HAVE lein && {
     # alias leinu=
     # alias leinsync=
     # alias leinoutdated=
+}
+
+HAVE ng && {
+    alias ng-stop='ng ng-stop'
 }
 
 
