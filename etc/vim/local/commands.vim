@@ -115,7 +115,7 @@ function! <SID>Todo()
 endfunction
 
 
-" Better ScreenShell command {{{1
+" ScreenShell {{{1
 command! -nargs=? -bar Screen call <SID>Screen(<q-args>)
 function! <SID>Screen(command)
     let map = {
@@ -135,22 +135,18 @@ endfunction
 " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
 " Worth the simple implementation IMO.
 command! Open call <SID>Open(expand('<cWORD>'))
-
 function! <SID>Open(word)
     " Extract web URLs
     let rdelims = "\"');>"
     let capture = 'https?://[^' . rdelims . ']+|(https?://)@<!www\.[^' . rdelims . ']+'
     let pattern = '\v.*(' . capture . ')[' . rdelims . ']?.*'
     if match(a:word, pattern) != -1
-        return <SID>OpenURL(substitute(a:word, pattern, '\1', ''))
+        let url = substitute(a:word, pattern, '\1', '')
+        echo url
+        return system('open ' . shellescape(url))
     endif
 
     echo 'No URL or path found!'
-endfunction
-
-function! <SID>OpenURL(url)
-    echo a:url
-    call system('open ' . shellescape(a:url))
 endfunction
 
 
