@@ -216,14 +216,14 @@ function! <SID>ScreenSetup(setup)
         nmap <Leader>Q        :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
-            vunmap <Leader><Leader>
-            nunmap <Leader><Leader>
-            iunmap <Leader><Leader>
+            silent! vunmap <Leader><Leader>
+            silent! nunmap <Leader><Leader>
+            silent! iunmap <Leader><Leader>
 
-            nunmap <Leader><C-f>
-            iunmap <Leader><C-f>
+            silent! nunmap <Leader><C-f>
+            silent! iunmap <Leader><C-f>
 
-            nunmap <Leader>Q
+            silent! nunmap <Leader>Q
         endif
     endif
 endfunction
