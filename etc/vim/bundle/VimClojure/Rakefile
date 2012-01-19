@@ -1,0 +1,23 @@
+# -*- encoding: utf-8 -*-
+
+task :default => :update
+
+desc 'Update nailgun dependencies'
+task :update do
+  version  = '2.3.1'
+  ngclient = 'http://kotka.de/projects/vimclojure/vimclojure-nailgun-client-%s.zip' % version
+  ngjar    = 'http://clojars.org/repo/vimclojure/server/%s/server-%s.jar' % [version, version]
+  threads  = []
+
+  threads << Thread.new do
+    sh *%W[curl -sL -o ngclient.zip #{ngclient}]
+    sh *%W[unzip ngclient.zip]
+    rm_f 'ngclient.zip'
+  end
+
+  threads << Thread.new do
+    sh *%W[curl -sL -o vimclojure-server.jar #{ngjar}]
+  end
+
+  threads.each &:join
+end

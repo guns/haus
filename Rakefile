@@ -96,7 +96,6 @@ task :env do # {{{1
       { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tir_black",              :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/VimClojure",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-coffee-script",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen },
@@ -143,6 +142,13 @@ task :env do # {{{1
           %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
           system '/opt/ruby/1.8/bin/rake commandt &>/dev/null'
         }
+      },
+
+      {
+        :base   => "#{@vim}/VimClojure",
+        :branch => %w[master guns],
+        :files  => 'etc/vim/bundle/VimClojure',
+        :after  => proc { |proj| system 'rake nailgun &>/dev/null' }
       },
 
       {
@@ -218,6 +224,13 @@ desc 'Compile the Vim Command-T bundle' # {{{1
 task :commandt do
   Dir.chdir 'etc/vim/bundle/Command-T/ruby/command-t' do
     sh File.join(RbConfig::CONFIG['bindir'], 'ruby'), 'extconf.rb'
+    sh 'make'
+  end
+end
+
+desc 'Compile the VimClojure nailgun client' # {{{1
+task :nailgun do
+  Dir.chdir 'etc/vim/bundle/VimClojure/vimclojure-nailgun-client' do
     sh 'make'
   end
 end
