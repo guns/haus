@@ -1,24 +1,92 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
 #
-# Clojure wrapper.
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-CLASSPATH="$HOME/.clojure/clojure.jar:$CLASSPATH"
-CLOJURE_CMD="java -server -classpath $CLASSPATH clojure.main"
-BREAK_CHARS="(){}[],^%\$#@\"';:|\\"
+require 'ostruct'
+require 'cli/superparser'
 
-if [[ "$1" == '--repl' && -e ~/.clojure/project.clj ]]; then
-    echo cd ~/.clojure
-    cd ~/.clojure
-    exec run lein repl
-elif (($#)); then
-    exec run $CLOJURE_CMD "$@"
-else
-    exec run rlwrap --ansi-colour-aware \
-                    --prompt-colour=GREEN \
-                    --case-insensitive \
-                    --break-chars "$BREAK_CHARS" \
-                    --quote-characters '"' \
-                    --complete-filenames \
-                    --remember \
-                    $CLOJURE_CMD
-fi
+class Clojure
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.classpath ||= (ENV['CLASSPATH'] || '').split ':'
+    options.vimclojure ||= '~/.vim/bundle/VimClojure/vimclojure-server.jar'
+  end
+
+  def parser
+    @parser ||= CLI::SuperParser.new nil, 24 do |opt|
+      opt.banner = %Q(\
+        Clojure wrapper.
+
+        Usage: #{File.basename __FILE__} [options] [java-options] [java-arguments]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-p', '--classpath a:b:c', 'Alternative to setting CLASSPATH' do |arg|
+        options.classpath = arg.split ':'
+      end
+
+      opt.on '--repl', 'Clojure REPL, wrapped by rlwrap if available' do
+        options.repl = :repl
+      end
+
+      opt.on '--leinrepl', 'Starts `lein repl`; runs in ~/.clojure if CWD is not a project directory' do
+        options.repl = :leinrepl
+      end
+
+      opt.on '--nailgun', 'Starts `lein nailgun`; runs in ~/.clojure if CWD is not a project directory' do
+        options.repl = :nailgun
+      end
+
+      opt.on '--vimclojure [jar]', 'Start the VimClojure Nailgun server' do |arg|
+        options.repl = :vimclojure
+        options.vimclojure = arg if arg
+      end
+
+      opt.on '-h', '--help' do
+        puts opt
+        exit
+      end
+    end
+  end
+
+  def classpath *dirs
+    ['~/.clojure/clojure.jar', *dirs, *options.classpath].map do |p|
+      File.expand_path p
+    end.join ':'
+  end
+
+  def rlwrap
+    rl = %x(/bin/sh -c 'command -v rlwrap').chomp
+    File.executable?(rl) ? [rl] : []
+  end
+
+  def execute args = []
+    cmd = case options.repl
+    when :repl
+      rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
+    when :leinrepl, :nailgun
+      str = File.exists?('project.clj') ? '' : 'cd ~/.clojure; '
+      [str << (options.repl == :leinrepl ? 'lein repl' : 'lein nailgun')]
+    when :vimclojure
+      %W[java -server -classpath #{classpath options.vimclojure}] + args + %W[vimclojure.nailgun.NGServer 127.0.0.1]
+    else
+      %W[java -server -classpath #{classpath}] + args
+    end
+
+    puts cmd.join(' ')
+    exec *cmd
+  end
+
+  def run arguments = []
+    args = parser.superparse arguments
+    execute args
+  end
+end
+
+$0 = File.basename(__FILE__) and Clojure.new.run ARGV if $0 == __FILE__
