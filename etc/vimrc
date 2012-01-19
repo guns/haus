@@ -222,6 +222,10 @@ let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 120
 
 " Plugin: VimClojure
+let g:vimclojure#WantNailgun = 0
+let g:vimclojure#NailgunClient = expand('~/.vim/bundle/VimClojure/vimclojure-nailgun-client/ng')
+let g:vimclojure#SplitPos = "bottom"
+let g:vimclojure#SplitSize = 10
 let g:vimclojure#FuzzyIndent = 1
 let g:vimclojure#DynamicHighlighting = 1
 let g:vimclojure#ParenRainbow = 1
