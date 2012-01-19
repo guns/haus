@@ -130,6 +130,28 @@ function! <SID>Screen(command)
     execute 'ScreenShell ' . chdir . '; ' . cmd
 endfunction
 
+command! ScreenEnterHandler call <SID>ScreenSetup(1)
+command! ScreenExitHandler  call <SID>ScreenSetup(0)
+function! <SID>ScreenSetup(setup)
+    if a:setup
+        map  <Leader>q        :ScreenQuit<CR>
+        vmap <Leader><Leader> :ScreenSend<CR>
+        nmap <Leader><Leader> m`vip<Leader><Leader>``
+        imap <Leader><Leader> <Esc><Leader><Leader><Right>
+        nmap <Leader><C-f>    m`vab<Leader><Leader>``
+        imap <Leader><C-f>    <Esc><Leader><C-f><Right>
+    else
+        if !g:ScreenShellActive
+            unmap  <Leader>q
+            vunmap <Leader><Leader>
+            nunmap <Leader><Leader>
+            iunmap <Leader><Leader>
+            nunmap <Leader><C-f>
+            iunmap <Leader><C-f>
+        endif
+    endif
+endfunction
+
 
 " Simple Open command: {{{1
 " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
