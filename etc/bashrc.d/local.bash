@@ -858,13 +858,11 @@ HAVE vim && {
 
         run vim -c "Screen $cmd" "$file"
     }
-    # Drop into custom clojure REPL
+
+    # Open local REPL project
     vimclojure() {
-        if (($#)); then
-            vimrepl "$1"
-        else
-            cd ~/.clojure; vimrepl repl.clj
-        fi
+        [[ -e project.clj ]] || cd ~/.clojure
+        vim -c 'Screen | StartNailgunServer | CommandT src/' project.clj
     }
 
     # Server / client functions

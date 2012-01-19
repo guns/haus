@@ -113,12 +113,86 @@ function! <SID>Todo()
 endfunction
 
 
-" ScreenShell {{{1
-command! -nargs=? -bar Screen call <SID>Screen(<q-args>)
+command! -bar ClojureToggleFormComment call <SID>ClojureToggleFormComment() "{{{1
+function! <SID>ClojureToggleFormComment()
+    normal m`vabv
+    let word = substitute(getline(line("'<")), '\v.{' . col("'<") . '}(\S*).*', '\1', '')
+
+    if word =~# 'comment'
+        execute 'normal gvov dw'
+    else
+        execute 'normal gvovacomment '
+    endif
+
+    normal =ab``
+endfunction
+
+command! -bar StartNailgunServer call <SID>StartNailgunServer() "{{{1
+function! <SID>StartNailgunServer()
+    if g:vimclojure#WantNailgun
+        echo 'WantNailgun option already set!'
+        return
+    endif
+    let g:vimclojure#WantNailgun = 1
+
+    if empty(system('nc -z 127.0.0.1 2113 &>/dev/null && echo 1'))
+        silent! execute '! clojure --nailgun &>/dev/null & until nc -z 127.0.0.1 2113 &>/dev/null; do echo -n .; sleep 1; done'
+    endif
+
+    augroup NailgunServer
+        autocmd!
+        autocmd VimLeave *
+            \ StopNailgunServer
+    augroup END
+
+    if exists('b:vimclojure_loaded')
+        unlet b:vimclojure_loaded
+    endif
+    call vimclojure#InitBuffer()
+    redraw!
+
+    echo 'Nailgun server started'
+endfunction
+
+
+command! -bar StopNailgunServer call <SID>StopNailgunServer() "{{{1
+function! <SID>StopNailgunServer()
+    let g:vimclojure#WantNailgun = 0
+
+    silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop &>/dev/null &' | redraw!
+
+    augroup NailgunServer
+        autocmd!
+    augroup END
+
+    echo 'Killing Nailgun server'
+endfunction
+
+
+command! -bar ClojureSetupBufferLocalSettings call <SID>ClojureSetupBufferLocalSettings() "{{{1
+function! <SID>ClojureSetupBufferLocalSettings()
+    let b:delimitMate_quotes = '"'
+    SetWhitespace 2 8
+
+    nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
+    noremap! <buffer> <C-l>         ->
+    nnoremap <buffer> ==            :normal m`=ab``<CR>
+    nnoremap <buffer> =p            :normal m`=ap``<CR>
+    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
+    nnoremap <buffer> <Leader>i     :normal ysib(<CR>i <Esc>i
+    nnoremap <buffer> <Leader>w     :normal ysiw(<CR>%i
+    nnoremap <buffer> <Leader>b     :normal %vabyvababpm`=ab``<CR>
+
+    " Extra VimClojure mappings
+    nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
+    nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
+endfunction
+
+command! -nargs=? -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
         \ 'ruby'       : 'irb -f',
-        \ 'clojure'    : 'clojure --nailgun',
+        \ 'clojure'    : 'clojure --leinrepl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'javascript' : 'node'
@@ -132,20 +206,24 @@ command! ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     if a:setup
-        map  <Leader>q        :ScreenQuit<CR>
         vmap <Leader><Leader> :ScreenSend<CR>
         nmap <Leader><Leader> m`vip<Leader><Leader>``
         imap <Leader><Leader> <Esc><Leader><Leader><Right>
+
         nmap <Leader><C-f>    m`vab<Leader><Leader>``
         imap <Leader><C-f>    <Esc><Leader><C-f><Right>
+
+        nmap <Leader>Q        :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
-            unmap  <Leader>q
             vunmap <Leader><Leader>
             nunmap <Leader><Leader>
             iunmap <Leader><Leader>
+
             nunmap <Leader><C-f>
             iunmap <Leader><C-f>
+
+            nunmap <Leader>Q
         endif
     endif
 endfunction
@@ -236,50 +314,8 @@ function! <SID>CapturePane()
 endfunction
 
 
-" Clojure utilities {{{1
-command! ClojureSetupBufferLocalSettings call <SID>ClojureSetupBufferLocalSettings()
-function! <SID>ClojureSetupBufferLocalSettings()
-    let b:delimitMate_quotes = '"'
-    SetWhitespace 2 8
-
-    noremap  <buffer> <Leader><C-n> :ToggleWantNailgun<CR>
-    noremap! <buffer> <C-l>         ->
-    nnoremap <buffer> ==            :normal m`=ab``<CR>
-    nnoremap <buffer> =p            :normal m`=ap``<CR>
-    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
-    nnoremap <buffer> <Leader>i     :normal ysib(<CR>i <Esc>i
-    nnoremap <buffer> <Leader>w     :normal ysiw(<CR>%i
-    nnoremap <buffer> <Leader>b     :normal %vabyvababpm`=ab``<CR>
-endfunction
-
-command! ClojureToggleFormComment call <SID>ClojureToggleFormComment()
-function! <SID>ClojureToggleFormComment()
-    normal m`vabv
-    let word = substitute(getline(line("'<")), '\v.{' . col("'<") . '}(\S*).*', '\1', '')
-
-    if word =~# 'comment'
-        execute 'normal gvov dw'
-    else
-        execute 'normal gvovacomment '
-    endif
-
-    normal =ab``
-endfunction
-
-command! ToggleWantNailgun call <SID>ToggleWantNailgun()
-function! <SID>ToggleWantNailgun()
-    let g:vimclojure#WantNailgun = !g:vimclojure#WantNailgun
-    echo 'g:vimclojure#WantNailgun=' . g:vimclojure#WantNailgun
-
-    if g:vimclojure#WantNailgun
-        unlet b:vimclojure_loaded
-        call vimclojure#InitBuffer()
-    endif
-endfunction
-
-
-" Exuberant Ctags {{{1
-command! Ctags silent ! ctags -R
+" Ctags {{{1
+command! -bar Ctags silent ! ctags -R
 
 
 " Voice command {{{1
