@@ -56,7 +56,7 @@ class Task
       when String
         dst = File.join haus, @files
         FileUtils.mkdir_p dst
-        system *%W[rsync -a --delete --no-owner --exclude=.* #{base}/ #{dst}/]
+        system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.bundle #{base}/ #{dst}/]
       # A function that returns a new value for @files
       when Proc
         @files = @files.call(self) and update_files # Recurse!
