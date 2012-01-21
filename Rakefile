@@ -37,6 +37,7 @@ task :env do # {{{1
 
       {
         :base   => "#{@src}/tmux",
+        :push   => 'github',
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
@@ -47,9 +48,6 @@ task :env do # {{{1
             raise 'Pull and merge failed' if not $?.exitstatus.zero?
           end
         },
-        :after => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-        }
       },
 
       {
@@ -62,8 +60,8 @@ task :env do # {{{1
     ],
 
     'vimfiles' => [
-      { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :remote => 'github' },
-      { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :remote => 'github' },
+      { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :pull => 'github' },
+      { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/Align",                  :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/AnsiEsc.vim",            :branch => %w[master],      :files => :pathogen },
@@ -84,15 +82,17 @@ task :env do # {{{1
       { :base => "#{@vim}/httplog",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jellybeans.vim",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jslint.vim",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/matchit.zip",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/ManPageView",                                        :files => :pathogen },
-      { :base => "#{@vim}/NrrwRgn",                :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/matchit.zip",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nerdcommenter",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nerdtree",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nginx.vim",              :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/NrrwRgn",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/operator-camelize.vim",  :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/reporoot.vim",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/scratch.vim",            :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/screen.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tir_black",              :branch => %w[master],      :files => :pathogen },
@@ -118,30 +118,12 @@ task :env do # {{{1
       { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
-      { :base   => "#{@vim}/screen.vim",
-        :branch => %w[master guns],
-        :files  => :pathogen,
-        :after  => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-        }
-      },
-
-      { :base   => "#{@vim}/regbuf.vim",
-        :branch => %w[master guns],
-        :files  => :pathogen,
-        :after  => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-        }
-      },
-
       {
         :base   => "#{@vim}/Command-T",
         :branch => %w[master guns],
         :files  => 'etc/vim/bundle/Command-T',
-        :after  => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-          system '/opt/ruby/1.8/bin/rake commandt &>/dev/null'
-        }
+        :push   => 'github',
+        :after  => proc { |proj| system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
       },
 
       {
@@ -154,6 +136,7 @@ task :env do # {{{1
       {
         :base   => "#{@vim}/slimv.vim",
         :branch => %w[master guns],
+        :push   => 'github',
         :files  => {
           'doc/paredit.txt'    => 'etc/vim/bundle/slimv.vim/doc/paredit.txt',
           'plugin/paredit.vim' => 'etc/vim/bundle/slimv.vim/plugin/paredit.vim'
@@ -182,10 +165,8 @@ task :env do # {{{1
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master guns],
+        :push   => 'github',
         :files  => 'etc/%urxvt/ext',
-        :after  => proc { |proj|
-          %w[master guns].each { |b| proj.git.push 'github', b } if proj.fetch
-        }
       }
     ]
   }.map { |k, ps| [k, ps.map { |p| Task::Subproject.new p }] }]

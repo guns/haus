@@ -8,14 +8,15 @@ class Task
   class Subproject
     include Haus::Loggable
 
-    attr_accessor :base, :files, :fetch, :haus, :remote, :branch, :callback, :queue
+    attr_accessor :base, :files, :fetch, :push, :haus, :pull, :branch, :callback, :queue
 
     def initialize opts = {}
-      @base     = opts[:base  ]
-      @files    = opts[:files ]
-      @fetch    = opts[:fetch ]
-      @haus     = opts[:haus  ] || Haus::Options.new.path
-      @remote   = opts[:remote] || 'origin'
+      @base     = opts[:base ]
+      @files    = opts[:files]
+      @fetch    = opts[:fetch]
+      @push     = opts[:push ]
+      @pull     = opts[:pull ] || 'origin'
+      @haus     = opts[:haus ] || Haus::Options.new.path
       @branch   = OpenStruct.new Hash[[:upstream, :local].zip [opts[:branch]].flatten]
       @callback = OpenStruct.new :before => opts[:before], :after => opts[:after]
       @queue    = Haus::Queue.new :quiet => true
@@ -31,8 +32,8 @@ class Task
 
       git.checkout branch.upstream
       if fetch
-        git.fetch remote
-        git.merge [remote, branch.upstream].join('/')
+        git.fetch pull
+        git.merge [pull, branch.upstream].join('/')
       end
 
       if branch.local
@@ -44,6 +45,10 @@ class Task
     ensure
       # We are likely running this as root, so restore original permissions
       FileUtils.chown_R stat.uid, stat.gid, base
+    end
+
+    def git_push
+      git.push push, '--all'
     end
 
     def update_files
@@ -78,6 +83,7 @@ class Task
       git_update if branch.upstream
       callback.before.call self if callback.before
       update_files
+      git_push if push and fetch
       callback.after.call self if callback.after
     end
   end
