@@ -52,6 +52,7 @@ task :env do # {{{1
 
       {
         :base   => "#{@src}/leiningen",
+        :branch => %w[1.x],
         :files  => {
           'bin/lein'             => 'bin/lein',
           'bash_completion.bash' => 'etc/bash_completion.d/lein'
