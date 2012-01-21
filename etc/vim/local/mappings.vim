@@ -324,7 +324,7 @@ noremap <Leader>R :RunCurrentMiniTestCase<CR>
 
 """ Text editing {{{1
 
-" Map readline's Unicode character bindings
+" Map unicode character bindings from ~/.inputrc
 MapReadlineUnicodeBindings
 
 " Character macros
