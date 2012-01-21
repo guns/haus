@@ -5,6 +5,7 @@
 
 # Windows
 Thumbs.db
+*.exe
 
 # Vim
 *.swp
@@ -18,3 +19,6 @@ Thumbs.db
 # Python
 *.pyc
 *.pyo
+
+# C
+*.o
