@@ -216,8 +216,7 @@ function! s:wrap(string,char,type,...)
       endif
     endif
   elseif idx >= 0
-    " only pad with extra space when wrapping with braces {}
-    let spc = idx == 4 ? " " : ""
+    let spc = ""
     let idx = idx / 3 * 3
     let before = strpart(pairs,idx+1,1) . spc
     let after  = spc . strpart(pairs,idx+2,1)
