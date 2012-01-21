@@ -183,6 +183,11 @@ task :console do
   IRB.start
 end
 
+desc 'Update vim plugin helptags'
+task :tags do
+  Task::Update.helptags
+end
+
 desc 'Update subprojects (extra arguments are regexp filters)' # {{{1
 task :update => :env do
   opts = { :threads => 4 }
