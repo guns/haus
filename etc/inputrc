@@ -221,6 +221,7 @@ $if Bash
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimsubtle \n"
+    "\C-xef":       "\C-] vimfind \n"
     "\C-xf":        "\C-]vimfind "
     "\C-x\C-g":     "\C-] vimgit \n"        (- abort)
     "\C-xm":        "\C-]man "
