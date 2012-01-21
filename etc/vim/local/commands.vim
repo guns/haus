@@ -310,45 +310,6 @@ function! <SID>RunCurrentMiniTestCase()
 endfunction
 
 
-command! -nargs=? -bar CapturePane call <SID>CapturePane() "{{{1
-function! <SID>CapturePane()
-    " Tmux-esque capture-pane
-    let buf = bufnr('%')
-    let tab = len(tabpagebuflist()) > 1
-    wincmd q
-    if tab | execute 'normal gT' | endif
-    execute buf . 'sbuffer'
-    wincmd L
-endfunction
-
-
-" Ctags {{{1
-command! -bar Ctags silent ! ctags -R
-
-
-" Say {{{1
-if g:VIM_PLATFORM == 'macunix'
-    command! -nargs=1 -bar Say call system('say ' . <q-args>)
-elseif g:VIM_PLATFORM == 'unix'
-    command! -nargs=1 -bar Say call system('espeak -ven-us "' . <q-args> . '"')
-endif
-
-
-command! -nargs=+ Capture call <SID>Capture(<q-args>) "{{{1
-command! CaptureMaps
-    \ execute 'Capture verbose map | silent! verbose map!' |
-    \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
-" Redirect output of given commands into a scratch buffer
-function! <SID>Capture(cmd)
-    try
-        redir @r
-        execute 'silent! ' . a:cmd
-    finally
-        redir END
-        new | setlocal buftype=nofile filetype=vim | normal "rp
-    endtry
-endfunction
-
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! <SID>MapReadlineUnicodeBindings()
     if filereadable(expand('~/.inputrc'))
@@ -368,6 +329,33 @@ function! <SID>MapReadlineUnicodeBindings()
 endfunction
 
 
+command! -nargs=? -bar CapturePane call <SID>CapturePane() "{{{1
+function! <SID>CapturePane()
+    " Tmux-esque capture-pane
+    let buf = bufnr('%')
+    let tab = len(tabpagebuflist()) > 1
+    wincmd q
+    if tab | execute 'normal gT' | endif
+    execute buf . 'sbuffer'
+    wincmd L
+endfunction
+
+
+command! -nargs=+ Capture call <SID>Capture(<q-args>) "{{{1
+command! CaptureMaps
+    \ execute 'Capture verbose map | silent! verbose map!' |
+    \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
+" Redirect output of given commands into a scratch buffer
+function! <SID>Capture(cmd)
+    try
+        redir @r
+        execute 'silent! ' . a:cmd
+    finally
+        redir END
+        new | setlocal buftype=nofile filetype=vim | normal "rp
+    endtry
+endfunction
+
 command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
 function! <SID>Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
@@ -383,6 +371,18 @@ function! <SID>Org(bang, ...)
         execute 'lcd ' . orgdir | CommandT
     endif
 endfunction
+
+
+" Ctags {{{1
+command! -bar Ctags silent ! ctags -R
+
+
+" Say {{{1
+if g:VIM_PLATFORM == 'macunix'
+    command! -nargs=1 -bar Say call system('say ' . <q-args>)
+elseif g:VIM_PLATFORM == 'unix'
+    command! -nargs=1 -bar Say call system('espeak -ven-us "' . <q-args> . '"')
+endif
 
 
 " Interleave {{{1
