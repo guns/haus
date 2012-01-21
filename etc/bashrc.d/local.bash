@@ -224,7 +224,9 @@ alias watch='while read path <<< "$(ruby -r fssm -e "
 # grep
 alias g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
 alias g3='g -C3'
+alias gw='g -w'
 alias gv='g -v'
+alias gvw='g -vw'
 alias wcl='grep -c .'
 
 # ack
