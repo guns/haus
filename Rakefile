@@ -112,24 +112,25 @@ task :env do # {{{1
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-speeddating",        :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-textobj-rubyblock",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-textobj-user",       :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {
         :base   => "#{@vim}/Command-T",
         :branch => %w[master guns],
-        :files  => 'etc/vim/bundle/Command-T',
         :push   => 'github',
+        :files  => 'etc/vim/bundle/Command-T',
         :after  => proc { |proj| system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
       },
 
       {
         :base   => "#{@vim}/VimClojure",
         :branch => %w[master guns],
+        :push   => 'github',
         :files  => 'etc/vim/bundle/VimClojure',
         :after  => proc { |proj| system 'rake nailgun &>/dev/null' }
       },
@@ -153,6 +154,7 @@ task :env do # {{{1
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
+        :push   => 'github',
         :files  => proc { |proj|
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
@@ -230,6 +232,13 @@ desc 'Show subproject source remotes' # {{{1
 task :remotes => :env do
   @subprojects.values.flatten.each do |proj|
     log proj.base
-    log proj.git.remotes.map { |r| '    %s → %s' % [r.name, r.url] }.join("\n")
+    proj.git.remotes.each do |r|
+      type, color = case r.name
+      when proj.pull then ['↓', :x41]
+      when proj.push then ['↑', :x135]
+      else                ['∅', :red]
+      end
+      log ['    %s %s → %s' % [type, r.name, r.url], color]
+    end
   end
 end
