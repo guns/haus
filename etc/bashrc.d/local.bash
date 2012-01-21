@@ -862,7 +862,7 @@ HAVE vim && {
     # Open local REPL project
     vimclojure() {
         [[ -e project.clj ]] || cd ~/.clojure
-        vim -c 'Screen | StartNailgunServer | CommandT src/' project.clj
+        vim -c 'Screen | CommandT src/' project.clj
     }
 
     # Server / client functions
