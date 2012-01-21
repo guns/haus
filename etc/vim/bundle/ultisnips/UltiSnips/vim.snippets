@@ -36,7 +36,7 @@ endfunction
 endsnippet
 
 snippet c "command"
-command! $1${2: call <SID>$1($3)}
+command! ${1:-bar} $2${3: call <SID>$2($4)}
 endsnippet
 
 snippet h "has"
