@@ -46,7 +46,7 @@ task :env do # {{{1
           Dir.chdir proj.base do
             system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
             raise 'Pull and merge failed' if not $?.exitstatus.zero?
-          end
+          end if proj.fetch
         },
       },
 
