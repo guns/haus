@@ -174,7 +174,7 @@ function! <SID>ClojureSetupBufferLocalSettings()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 
-    MapSExpressions
+    call PareditInitBuffer()
 
     nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
     noremap! <buffer> <C-l>         ->
@@ -185,14 +185,6 @@ function! <SID>ClojureSetupBufferLocalSettings()
     " Extra VimClojure mappings
     nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
     nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
-endfunction
-
-
-command! -bar MapSExpressions call <SID>MapSExpressions() "{{{1
-function! <SID>MapSExpressions()
-    nnoremap <buffer> <Leader>i :normal ysib(<CR>i <Esc>i
-    nnoremap <buffer> <Leader>w :normal ysiw(<CR>%i
-    nnoremap <buffer> <Leader>b :normal %vabyvababpm`=ab``<CR>
 endfunction
 
 

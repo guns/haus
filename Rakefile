@@ -152,6 +152,15 @@ task :env do # {{{1
       },
 
       {
+        :base   => "#{@vim}/slimv.vim",
+        :branch => %w[master guns],
+        :files  => {
+          'doc/paredit.txt'    => 'etc/vim/bundle/slimv.vim/doc/paredit.txt',
+          'plugin/paredit.vim' => 'etc/vim/bundle/slimv.vim/plugin/paredit.vim'
+        }
+      },
+
+      {
         :base   => "#{@vim}/vim-pathogen",
         :branch => %w[master],
         :files  => { 'autoload/pathogen.vim' => 'etc/vim/autoload/pathogen.vim' }
