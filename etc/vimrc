@@ -25,11 +25,6 @@ elseif has('unix')
     let g:VIM_PLATFORM = 'unix'
 endif
 
-" Avoid python bytecode creation
-if has('python')
-    let $PYTHONDONTWRITEBYTECODE = 1
-endif
-
 " Pathogen
 syntax off filetype off         " must be off before calling pathogen
 call pathogen#runtime_append_all_bundles()
