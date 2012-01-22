@@ -472,7 +472,7 @@ endsnippet
 
 snippet letf "letfn" w
 (letfn [(${1:name []}
-		${2:body})]
+					${2:body})]
 	$0)
 endsnippet
 
@@ -579,13 +579,13 @@ endsnippet
 ### Conditionals and Logic {{{1
 
 snippet if "if" w
-(if ${1:cond}
+(if ${1}
 	${2:(comment then)}
 	${0:(comment else)})
 endsnippet
 
 snippet ifn "if-not" w
-(if-not ${1:cond}
+(if-not ${1}
 	${2:(comment then)}
 	${0:(comment else)})
 endsnippet
@@ -611,18 +611,18 @@ snippet wn "when-not" w
 endsnippet
 
 snippet ifl "if-let" w
-(if-let [${1:name} ${2:expr}]
-	${3:(comment then)}
+(if-let [${1}]
+	${2:(comment then)}
 	${0:(comment else)})
 endsnippet
 
 snippet wl "when-let" w
-(when [${1:name} ${2:expr}]$0)
+(when [${1}]$0)
 endsnippet
 
 snippet cond "cond" w
 (cond
-	(${1:when}) ${2:then}
+	${1}
 	:else $0)
 endsnippet
 
