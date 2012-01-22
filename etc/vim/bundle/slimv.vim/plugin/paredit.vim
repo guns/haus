@@ -107,43 +107,34 @@ function! PareditInitBuffer()
         nnoremap <buffer> <silent> [[           :<C-U>call PareditFindDefunBck()<CR>
         nnoremap <buffer> <silent> ]]           :<C-U>call PareditFindDefunFwd()<CR>
         nnoremap <buffer> <silent> x            :<C-U>call PareditEraseFwd()<CR>
-        nmap     <buffer> <silent> <C-d>        :<C-U>call PareditEraseFwd()<CR>
-        imap     <buffer> <silent> <C-d>        <C-o>:<C-U>call PareditEraseFwd()<CR>
         nnoremap <buffer> <silent> <Del>        :<C-U>call PareditEraseFwd()<CR>
         nnoremap <buffer> <silent> X            :<C-U>call PareditEraseBck()<CR>
         nnoremap <buffer> <silent> s            :<C-U>call PareditEraseFwd()<CR>i
         nnoremap <buffer> <silent> D            v$:<C-U>call PareditDelete(visualmode(),1)<CR>
-        nmap     <buffer> <silent> <C-k>        v$:<C-U>call PareditDelete(visualmode(),1)<CR>
-        imap     <buffer> <silent> <C-k>        <C-o>v$:<C-U>call PareditDelete(visualmode(),1)<CR>
         nnoremap <buffer> <silent> C            v$:<C-U>call PareditChange(visualmode(),1)<CR>
         nnoremap <buffer> <silent> d            :<C-U>call PareditSetDelete(v:count)<CR>g@
         vnoremap <buffer> <silent> d            :<C-U>call PareditDelete(visualmode(),1)<CR>
-        nmap     <buffer> <silent> <M-d>        de
-        imap     <buffer> <silent> <M-d>        <C-o>:set opfunc=PareditDelete<CR><C-o>g@e
-        nmap     <buffer> <silent> <M-BS>       db
-        "imap    <buffer> <silent> <M-BS>       TODO: Find a way to wrap i_Ctrl-W
         vnoremap <buffer> <silent> x            :<C-U>call PareditDelete(visualmode(),1)<CR>
         vnoremap <buffer> <silent> <Del>        :<C-U>call PareditDelete(visualmode(),1)<CR>
         nnoremap <buffer> <silent> c            :set opfunc=PareditChange<CR>g@
         vnoremap <buffer> <silent> c            :<C-U>call PareditChange(visualmode(),1)<CR>
         nnoremap <buffer> <silent> dd           :<C-U>call PareditDeleteLines()<CR>
-        nnoremap <buffer> <silent> cc           :<C-U>call PareditChangeLines()<CR><C-o>$
+        nnoremap <buffer> <silent> cc           :<C-U>call PareditChangeLines()<CR>
         nnoremap <buffer> <silent> p            :<C-U>call PareditPut('p')<CR>
         nnoremap <buffer> <silent> P            :<C-U>call PareditPut('P')<CR>
-        execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'(  :<C-U>call PareditWrap("(",")")<CR>'
-        execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'(  :<C-U>call PareditWrapSelection("(",")")<CR>'
-        execute 'inoremap <buffer> <silent> ' . g:paredit_leader.'(  <Esc>:<C-U>call PareditWrap("(",")")<CR>%i'
+        execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w(  :<C-U>call PareditWrap("(",")")<CR>'
+        execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w(  :<C-U>call PareditWrapSelection("(",")")<CR>'
+        execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w"  :<C-U>call PareditWrap('."'".'"'."','".'"'."')<CR>"
+        execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w"  :<C-U>call PareditWrapSelection('."'".'"'."','".'"'."')<CR>"
         if &ft == 'clojure'
             inoremap <buffer> <expr>   [            PareditInsertOpening('[',']')
             inoremap <buffer> <expr>   ]            PareditInsertClosing('[',']')
             inoremap <buffer> <expr>   {            PareditInsertOpening('{','}')
             inoremap <buffer> <expr>   }            PareditInsertClosing('{','}')
-            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'[  :<C-U>call PareditWrap("[","]")<CR>'
-            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'[  :<C-U>call PareditWrapSelection("[","]")<CR>'
-            execute 'inoremap <buffer> <silent> ' . g:paredit_leader.'[  <Esc>:<C-U>call PareditWrap("[","]")<CR>%i'
-            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'{  :<C-U>call PareditWrap("{","}")<CR>'
-            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'{  :<C-U>call PareditWrapSelection("{","}")<CR>'
-            execute 'inoremap <buffer> <silent> ' . g:paredit_leader.'{  <Esc>:<C-U>call PareditWrap("{","}")<CR>%i'
+            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w[  :<C-U>call PareditWrap("[","]")<CR>'
+            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w[  :<C-U>call PareditWrapSelection("[","]")<CR>'
+            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w{  :<C-U>call PareditWrap("{","}")<CR>'
+            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w{  :<C-U>call PareditWrapSelection("{","}")<CR>'
         endif
 
         if g:paredit_shortmaps
@@ -164,7 +155,7 @@ function! PareditInitBuffer()
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'S  :<C-U>normal! S<CR>'
         else
             " Longer keymaps with <Leader> prefix
-            nnoremap <buffer> <silent> S            V:<C-U>call PareditChange(visualmode(),1)<CR><C-o>$
+            nnoremap <buffer> <silent> S            V:<C-U>call PareditChange(visualmode(),1)<CR>
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'<  :<C-U>call PareditMoveLeft()<CR>'
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'>  :<C-U>call PareditMoveRight()<CR>'
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'O  :<C-U>call PareditSplit()<CR>'
@@ -172,14 +163,6 @@ function! PareditInitBuffer()
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'W  :<C-U>call PareditWrap("(",")")<CR>'
             execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'W  :<C-U>call PareditWrapSelection("(",")")<CR>'
             execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'S  :<C-U>call PareditSplice()<CR>'
-            " Wrap word/selection, then insert at end
-            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w  :<C-U>call PareditWrap("(",")")<CR>%i'
-            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w  :<C-U>call PareditWrapSelection("(",")")<CR>i'
-            " Wrap form/selection, then insert in front
-            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'i  vi(:<C-U>call PareditWrapSelection("(",")")<CR>%i<Space><Left>'
-            execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'i  :<C-U>call PareditWrapSelection("(",")")<CR>%a<Space><Left>'
-            " paredit-raise-sexp
-            execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'o  da(v%p=a(%%'
         endif
     else
         " Paredit mode is off: remove keybindings
@@ -193,20 +176,12 @@ function! PareditInitBuffer()
         silent! unmap  <buffer> [[
         silent! unmap  <buffer> ]]
         silent! unmap  <buffer> x
-        silent! nunmap <buffer> <C-d>
-        silent! iunmap <buffer> <C-d>
         silent! unmap  <buffer> <Del>
         silent! unmap  <buffer> X
         silent! unmap  <buffer> s
         silent! unmap  <buffer> D
-        silent! nunmap <buffer> <C-k>
-        silent! iunmap <buffer> <C-k>
         silent! unmap  <buffer> C
         silent! unmap  <buffer> d
-        silent! unmap  <buffer> <M-d>
-        silent! iunmap <buffer> <M-d>
-        silent! unmap  <buffer> <M-BS>
-        "silent! iunmap <buffer> <M-BS>
         silent! unmap  <buffer> c
         silent! unmap  <buffer> dd
         silent! unmap  <buffer> cc

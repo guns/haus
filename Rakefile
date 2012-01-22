@@ -137,8 +137,7 @@ task :env do # {{{1
 
       {
         :base   => "#{@vim}/slimv.vim",
-        :branch => %w[master guns],
-        :push   => 'github',
+        :branch => %w[master no-autocommands],
         :files  => {
           'doc/paredit.txt'    => 'etc/vim/bundle/slimv.vim/doc/paredit.txt',
           'plugin/paredit.vim' => 'etc/vim/bundle/slimv.vim/plugin/paredit.vim'

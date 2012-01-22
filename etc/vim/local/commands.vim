@@ -174,12 +174,10 @@ function! <SID>ClojureSetupBufferLocalSettings()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 
-    call PareditInitBuffer()
+    MapSExpressions
 
     nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
     noremap! <buffer> <C-l>         ->
-    nnoremap <buffer> ==            :normal m`=ab``<CR>
-    nnoremap <buffer> =p            :normal m`=ap``<CR>
     map      <buffer> <4-CR>        A<Space>;<Space>
     map!     <buffer> <4-CR>        <C-o><4-CR>
     nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
@@ -187,6 +185,39 @@ function! <SID>ClojureSetupBufferLocalSettings()
     " Extra VimClojure mappings
     nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
     nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
+endfunction
+
+
+command! -bar MapSExpressions call <SID>MapSExpressions() "{{{1
+function! <SID>MapSExpressions()
+    nnoremap <buffer> == :normal m`=a(``<CR>
+    nnoremap <buffer> =p :normal m`=ap``<CR>
+
+    " Initialize Paredit, but don't create any mappings
+    let g:paredit_mode = 0
+    call PareditInitBuffer()
+    let g:paredit_mode = 1
+
+    nnoremap <buffer>        (  :<C-U>call PareditFindOpening('(',')',0)<CR>
+    nnoremap <buffer>        )  :<C-U>call PareditFindClosing('(',')',0)<CR>
+    inoremap <buffer> <expr> (  PareditInsertOpening('(',')')
+    inoremap <buffer> <expr> )  PareditInsertClosing('(',')')
+    nnoremap <buffer>        [[ :<C-U>call PareditFindDefunBck()<CR>zz
+    nnoremap <buffer>        ]] :<C-U>call PareditFindDefunFwd()<CR>zz
+
+    " Wrap word/selection
+    nnoremap <buffer> <Leader>W :<C-U>call PareditWrap("(",")")<CR>
+
+    " Wrap word/selection, then insert at end
+    nnoremap <buffer> <Leader>w :<C-U>call PareditWrap("(",")")<CR>%i
+    vnoremap <buffer> <Leader>w :<C-U>call PareditWrapSelection("(",")")<CR>i
+
+    " Wrap form/selection, then insert in front
+    nnoremap <buffer> <Leader>i vi(:<C-U>call PareditWrapSelection("(",")")<CR>%i<Space><Left>
+    vnoremap <buffer> <Leader>i :<C-U>call PareditWrapSelection("(",")")<CR>%a<Space><Left>
+
+    " paredit-raise-sexp
+    nnoremap <buffer> <Leader>o da(:<C-U>call PareditFindOpening('(',')',0)<CR>va(pm`=a(``
 endfunction
 
 
