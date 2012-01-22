@@ -180,6 +180,8 @@ function! <SID>ClojureSetupBufferLocalSettings()
     noremap! <buffer> <C-l>         ->
     nnoremap <buffer> ==            :normal m`=ab``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
+    map      <buffer> <4-CR>        A<Space>;<Space>
+    map!     <buffer> <4-CR>        <C-o><4-CR>
     nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
 
     " Extra VimClojure mappings
