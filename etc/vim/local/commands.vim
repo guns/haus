@@ -113,6 +113,70 @@ function! <SID>Todo()
 endfunction
 
 
+command! -bar LispSetup call <SID>LispSetup() "{{{1
+function! <SID>LispSetup()
+    let b:delimitMate_quotes = '"'
+    SetWhitespace 2 8
+
+    nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
+    noremap! <buffer> <C-l>         ->
+    map      <buffer> <4-CR>        A<Space>;<Space>
+    map!     <buffer> <4-CR>        <C-o><4-CR>
+    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
+    nnoremap <buffer> ==            :normal m`=a(``<CR>
+    nnoremap <buffer> =p            :normal m`=ap``<CR>
+
+    "
+    " VimClojure
+    "
+
+    nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
+    nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
+
+    "
+    " Paredit
+    "
+
+    " Initialize Paredit, but don't create any mappings
+    let g:paredit_mode = 0
+    call PareditInitBuffer()
+    let g:paredit_mode = 1
+
+    " Movement
+    nnoremap <silent> <buffer> [[        :<C-U>call PareditFindDefunBck()<CR>zz
+    nnoremap <silent> <buffer> ]]        :<C-U>call PareditFindDefunFwd()<CR>zz
+    nnoremap <silent> <buffer> (         :<C-U>call PareditFindOpening('(',')',0)<CR>
+    nnoremap <silent> <buffer> )         :<C-U>call PareditFindClosing('(',')',0)<CR>
+
+    " Auto-balancing insertion
+    inoremap <buffer> <expr>   (         PareditInsertOpening('(',')')
+    inoremap <buffer> <expr>   )         PareditInsertClosing('(',')')
+
+    " Select next/prev item in list
+    nnoremap <silent> <buffer> <Leader>j :<C-U>call PareditSelectListElement(1)<CR>
+    vnoremap <silent> <buffer> <Leader>j <C-c>:<C-U>call PareditSelectListElement(1)<CR>
+    nnoremap <silent> <buffer> <Leader>k :<C-U>call PareditSelectListElement(0)<CR>
+    vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-U>call PareditSelectListElement(0)<CR>
+
+    " Insert at end of form
+    nnoremap <silent> <buffer> <Leader>l :<C-U>call PareditFindClosing('(',')',0)<CR>i
+
+    " Wrap word/form
+    nnoremap <silent> <buffer> <Leader>W :<C-U>call PareditWrap("(",")")<CR>
+
+    " Wrap word/form/selection, then insert at end
+    nnoremap <silent> <buffer> <Leader>w :<C-U>call PareditWrap("(",")")<CR>%i
+    vnoremap <silent> <buffer> <Leader>w :<C-U>call PareditWrapSelection("(",")")<CR>i
+
+    " Wrap form/selection, then insert in front
+    nnoremap <silent> <buffer> <Leader>i vi(:<C-U>call PareditWrapSelection("(",")")<CR>%i<Space><Left>
+    vnoremap <silent> <buffer> <Leader>i :<C-U>call PareditWrapSelection("(",")")<CR>%a<Space><Left>
+
+    " paredit-raise-sexp
+    nnoremap <silent> <buffer> <Leader>o da(:<C-U>call PareditFindOpening('(',')',0)<CR>va(pm`=a(``
+endfunction
+
+
 command! -bar ClojureToggleFormComment call <SID>ClojureToggleFormComment() "{{{1
 function! <SID>ClojureToggleFormComment()
     normal m`vabv
@@ -166,58 +230,6 @@ function! <SID>StopNailgunServer()
     augroup END
 
     echo 'Killing Nailgun server'
-endfunction
-
-
-command! -bar ClojureSetupBufferLocalSettings call <SID>ClojureSetupBufferLocalSettings() "{{{1
-function! <SID>ClojureSetupBufferLocalSettings()
-    let b:delimitMate_quotes = '"'
-    SetWhitespace 2 8
-
-    MapSExpressions
-
-    nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
-    noremap! <buffer> <C-l>         ->
-    map      <buffer> <4-CR>        A<Space>;<Space>
-    map!     <buffer> <4-CR>        <C-o><4-CR>
-    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
-
-    " Extra VimClojure mappings
-    nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
-    nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
-endfunction
-
-
-command! -bar MapSExpressions call <SID>MapSExpressions() "{{{1
-function! <SID>MapSExpressions()
-    nnoremap <buffer> == :normal m`=a(``<CR>
-    nnoremap <buffer> =p :normal m`=ap``<CR>
-
-    " Initialize Paredit, but don't create any mappings
-    let g:paredit_mode = 0
-    call PareditInitBuffer()
-    let g:paredit_mode = 1
-
-    nnoremap <buffer>        (  :<C-U>call PareditFindOpening('(',')',0)<CR>
-    nnoremap <buffer>        )  :<C-U>call PareditFindClosing('(',')',0)<CR>
-    inoremap <buffer> <expr> (  PareditInsertOpening('(',')')
-    inoremap <buffer> <expr> )  PareditInsertClosing('(',')')
-    nnoremap <buffer>        [[ :<C-U>call PareditFindDefunBck()<CR>zz
-    nnoremap <buffer>        ]] :<C-U>call PareditFindDefunFwd()<CR>zz
-
-    " Wrap word/selection
-    nnoremap <buffer> <Leader>W :<C-U>call PareditWrap("(",")")<CR>
-
-    " Wrap word/selection, then insert at end
-    nnoremap <buffer> <Leader>w :<C-U>call PareditWrap("(",")")<CR>%i
-    vnoremap <buffer> <Leader>w :<C-U>call PareditWrapSelection("(",")")<CR>i
-
-    " Wrap form/selection, then insert in front
-    nnoremap <buffer> <Leader>i vi(:<C-U>call PareditWrapSelection("(",")")<CR>%i<Space><Left>
-    vnoremap <buffer> <Leader>i :<C-U>call PareditWrapSelection("(",")")<CR>%a<Space><Left>
-
-    " paredit-raise-sexp
-    nnoremap <buffer> <Leader>o da(:<C-U>call PareditFindOpening('(',')',0)<CR>va(pm`=a(``
 endfunction
 
 

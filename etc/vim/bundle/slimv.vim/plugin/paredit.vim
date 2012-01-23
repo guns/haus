@@ -1346,3 +1346,100 @@ function! PareditSplice()
         normal! X
     endif
 endfunction
+
+function! PareditSelectListElement(next)
+    if !s:IsBalanced()
+        return
+    endif
+
+    let startline = line('.')
+    let startcol  = col('.')
+    let startchar = getline(startline)[startcol-1]
+
+    " Select the current form
+    normal v
+    if startchar =~ '\v(\(|\))'
+        normal a(
+    endif
+    normal a(v
+
+    let endline = line('.')
+    let endcol  = col('.')
+
+    normal %w
+
+    " We are now at the first word of the list; record each element's position
+    let elements = []
+    while 1
+        let [line, col] = [line('.'), col('.')]
+
+        if line > endline || (line == endline && col >= endcol)
+            break
+        endif
+
+        let char = getline(line)[col-1]
+
+        " Ignore empty lines, comments, and words in strings
+        if !empty(char) && !s:InsideComment() && (!s:InsideString() || char == '"')
+            call add(elements, [line, col])
+        endif
+
+        " Advance to the next element
+        if char =~# b:any_opening_char
+            normal %
+        endif
+        normal W
+    endwhile
+
+    " Search for next element by searching forwards;
+    " Search for prev element by searching backwards
+    let len = len(elements)
+    let idx = a:next ? 0 : len-1
+    while idx >= 0 && idx < len
+        let [eline, ecol] = elements[idx]
+
+        if a:next
+            if eline > startline || (eline == startline && ecol > startcol)
+                break
+            endif
+            let idx += 1
+        else
+            if eline < startline || (eline == startline && ecol < startcol)
+                " Element indices are based on the first character of the
+                " element, so we may need to go back one element further.
+                if eline == startline
+                    execute 'let wdiff = getline(' . eline . ')[' . ecol . ':' . startcol . ']'
+                    if wdiff !~# '\v\s'
+                        let idx -= 1
+                    endif
+                endif
+                break
+            endif
+            let idx -= 1
+        endif
+    endwhile
+
+    " Move cursor to new position and select element if found
+    if idx >= 0 && idx < len
+        let [nline, ncol] = elements[idx]
+        let nchar         = getline(nline)[ncol-1]
+
+        call cursor(nline, ncol)
+
+        let bra = matchstr(nchar, b:any_opening_char)
+        if !empty(bra)
+            execute 'normal va' . bra
+        elseif nchar == '"'
+            normal v
+            call search('\v[^\\]"', 'eW')
+        else
+            normal viw
+        endif
+
+        return 1
+    " Return cursor to start if unsuccessful
+    else
+        call cursor(startline, startcol)
+        return 0
+    endif
+endfunction
