@@ -127,7 +127,6 @@ noremap ?          ?\v
 noremap <Bslash>   /\V
 noremap <Bar>      ?\V
 Mapall  <4-;>      q:
-noremap q<Bslash>  q/
 noremap <Leader>h  :help<Space>
 noremap <Leader>co :colorscheme<Space>
 
