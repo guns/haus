@@ -30,13 +30,13 @@ execute '$1'
 endsnippet
 
 snippet f "function"
-function! ${1:<SID>}${2:function_name}($3)
+function! ${1:<SID>}${2:Function_name}($3)
 	$0
 endfunction
 endsnippet
 
 snippet c "command"
-command! ${1:-bar} $2${3: call <SID>$2($4)}
+command! ${2:-bar} $1${3: call <SID>$1($4)}
 endsnippet
 
 snippet h "has"

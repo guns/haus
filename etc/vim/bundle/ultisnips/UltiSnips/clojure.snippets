@@ -307,7 +307,7 @@ snippet cat "concat" w
 (concat ${0:colls})
 endsnippet
 
-snippet lcat "lazy-cat" w
+snippet lc "lazy-cat" w
 (lazy-cat ${0:colls})
 endsnippet
 
@@ -319,7 +319,7 @@ snippet seq "seq" w
 (seq ${0:coll})
 endsnippet
 
-snippet lseq "lazy-seq" w
+snippet ls "lazy-seq" w
 (lazy-seq ${0:colls})
 endsnippet
 
@@ -466,14 +466,13 @@ endsnippet
 ### Definitions {{{1
 
 snippet let "let" w
-(let [$1]
-	$0)
+(let [$0]
+	)
 endsnippet
 
 snippet letf "letfn" w
-(letfn [(${1:name []}
-					${2:body})]
-	$0)
+(letfn [($0)]
+	)
 endsnippet
 
 snippet bind "binding" w
@@ -486,13 +485,11 @@ snippet def "def"
 endsnippet
 
 snippet defn "defn"
-(defn ${1:name}${2: [${3}]
-	}$0)
+(defn $0)
 endsnippet
 
 snippet defn- "defn-"
-(defn- ${1:name}${2: [${3}]
-	}$0)
+(defn- $0)
 endsnippet
 
 snippet defmem "defn (memoize)"
@@ -579,15 +576,15 @@ endsnippet
 ### Conditionals and Logic {{{1
 
 snippet if "if" w
-(if ${1}
-	${2:(comment then)}
-	${0:(comment else)})
+(if $0
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet ifn "if-not" w
-(if-not ${1}
-	${2:(comment then)}
-	${0:(comment else)})
+(if-not $0
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet not "not" w
@@ -611,9 +608,9 @@ snippet wn "when-not" w
 endsnippet
 
 snippet ifl "if-let" w
-(if-let [${1}]
-	${2:(comment then)}
-	${0:(comment else)})
+(if-let [${0}]
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet wl "when-let" w
@@ -666,8 +663,8 @@ snippet doa "doall" w
 endsnippet
 
 snippet for "for" w
-(for [${1:each-bind}]
-	$0)
+(for [${0:each-bind}]
+	)
 endsnippet
 
 snippet lo "loop" w
