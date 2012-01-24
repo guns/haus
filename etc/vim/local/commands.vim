@@ -113,8 +113,8 @@ function! <SID>Todo()
 endfunction
 
 
-command! -bar LispSetup call <SID>LispSetup() "{{{1
-function! <SID>LispSetup()
+command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
+function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 

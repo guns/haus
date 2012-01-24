@@ -35,7 +35,7 @@ augroup GUNS
 
     " Lisp {{{1
     autocmd Filetype lisp,scheme,clojure
-        \ LispSetup
+        \ LispBufferSetup
 
     " Ruby {{{1
     autocmd BufRead,BufNewFile *.irbrc,config.ru,Gemfile,*rakefile
