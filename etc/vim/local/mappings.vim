@@ -161,7 +161,7 @@ noremap <Leader><C-w> :setlocal wrap!<CR>:setlocal wrap?<CR>
 noremap <Leader>! :make!<CR>
 
 " TextMate style syntax inspection
-noremap <4-P> :SynStack<CR>
+noremap <4-p> :SynStack<CR>
 
 " Ctags
 noremap <Leader><C-t> :Ctags<CR>:redraw!<CR>:echo 'Ctags'<CR>
@@ -218,6 +218,9 @@ Mapall  <4-+> :execute\ 'tabmove\ '.tabpagenr()<CR>
 " Quickfix window
 Mapall <4-x> :copen<CR>
 
+" Open URLs and files
+Mapall <4-U> :Open<CR>
+
 " Plugin: Command-T
 Mapall  <4-o> :CommandT<CR>
 Mapall  <4-'> :CommandTJump<CR>
@@ -237,12 +240,6 @@ Mapall <4-u> :GundoToggle<CR>
 
 " Plugin: Regbuf
 Mapall <4-r> :RegbufOpen<CR>
-
-" Plugin: Preview
-Mapall <4-p> :Preview<CR>
-
-" Plugin: Open URLs and files
-Mapall <4-U> :Open<CR>
 
 " Plugin: ScreenShell
 noremap <Leader>S :Screen<CR>
@@ -397,10 +394,6 @@ vmap <Leader>_ <Plug>(operator-camelize-toggle)
 " Plugin: NERD_commenter (assigning to <plug> via Mapall doesn't seem to work)
 map  <4-/> <Plug>NERDCommenterToggleAlign
 map! <4-/> <Esc><Plug>NERDCommenterToggleAlign
-
-" Plugin: closetag
-noremap! <4-.> <C-r>=GetCloseTag()<CR>
-noremap  <4-.> a<C-r>=GetCloseTag()<CR><Esc>
 
 " Plugin: CamelCaseMotion
 map  <C-Left>  <Plug>CamelCaseMotion_b
