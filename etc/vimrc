@@ -3,101 +3,86 @@
 "  \ \   / (_)_ __ ___
 "   \ \ / /| | '_ ` _ \   Ftw
 "    \ V / | | | | | | |
-"     \_/  |_|_| |_| |_|  guns <sung@metablu.com>
+"     \_/  |_|_| |_| |_|  guns <sung@sungpae.com>
 "
 
-if version < 702
-    echo 'WARNING: Minimum vim version 7.2 not met, skipping $MYVIMRC'
-    finish
-endif
 
+""" INITIALIZE {{{1
 
-""" META """
-
-" Clear all autocommands now
+" Clear all autocommands
 autocmd!
 
-" Custom platform detection
-if filereadable('/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder')
-    " has('macunix') doesn't describe vim compiled on OS X with --disable-darwin
-    let g:VIM_PLATFORM = 'macunix'
-elseif has('unix')
-    let g:VIM_PLATFORM = 'unix'
-endif
-
-" Pathogen
-syntax off filetype off         " must be off before calling pathogen
-call pathogen#runtime_append_all_bundles()
+" Load plugins via Pathogen
+call pathogen#infect()
 filetype plugin indent on
 
-" Assorted commands and functions; no side effects from sourcing
+" Load commands and functions; no side effects from sourcing
 source ~/.vim/local/commands.vim
 
-set nocompatible                " break away from crusty vi compatibility
-set fileformats=unix,dos        " support LF and CR/LF
-set history=1024                " default command history = 20
-set backspace=indent,eol,start  " More intuitive backspace
-set tags=.tags,tags             " Allow hidden .tags file
 
+""" USER INTERFACE {{{1
 
-""" USER INTERFACE """
+" Meta
+set history=1024                " Default command history = 20
+set tags^=./.tags,.tags         " Read hidden .tags files
 
 " Searching / Matching
-set hlsearch                    " highlighting for searched patterns
-set incsearch                   " highlight as we search
-set ignorecase                  " set case insensitivity
-set smartcase                   " unless there's a capital letter
+set hlsearch                    " Highlight matching patterns
+set incsearch                   " Highlight as we search
+set ignorecase                  " Set case insensitivity
+set smartcase                   " Unless there's a capital letter
 
 " Line wrapping
-set nowrap                      " no soft wrap by default
-set linebreak                   " but if gets turned on, break on words
-set showbreak=…                 " and give us a nice visual indicator
+set nowrap                      " Don't wrap lines
+set linebreak                   " But if you do, break on words
+set showbreak=…                 " And give us a nice visual indicator
 if exists('&breakindent')
     set breakindent             " Use the breakindent feature if we have it
 endif
 
 " Completions
-set completeopt=menu,preview    " Better insert mode completion
-set wildmode=list:longest       " bash style command line completion
-set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff,.DS_Store,Thumbs.db
+set wildmode=list:longest       " Bash style command line completion
+set wildignore+=.git            " Filename ignore globs
+set wildignore+=*.swp,*.swo
+set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff
+set wildignore+=.DS_Store,Thumbs.db
 if exists('&wildignorecase')
-    set wildignorecase          " case insensitive command line path completion
+    set wildignorecase          " Case insensitive file completion on command line
 endif
 
 " Folding
 set foldmethod=marker           " Default to vim's marker folding
-set foldlevelstart=99           " But don't fold anything at the outset
+set foldlevelstart=99           " But don't fold anything on load
 
 " Gutter / Status line
-set number                      " yay line numbers
-set ruler                       " show current position at bottom
-set showcmd                     " show (partial) command in status line
+set number                      " Line numbers
+set ruler                       " Show current position at bottom
+set showcmd                     " Show (partial) command in status line
 
 " Messages
-set report=0                    " report back on all changes
-set shortmess=aoOstTAI          " shorter and truncated messages
-set autoread                    " Reread file on change after !; we can always [u]ndo
+set report=0                    " Report back on all changes
+set shortmess=aoOstTAI          " Shorten all messages, except for "written"
 
 " Clipboard
-set clipboard=unnamed           " use X11 PRIMARY clipboard (selection)
+set clipboard=unnamed           " Use X11 PRIMARY clipboard (selection) only
 
 " Timeouts
-set notimeout                   " Don't timeout on mappings
-set ttimeout                    " but timeout otherwise
+set notimeout ttimeout          " Wait for mappings, but timeout on key codes
 
-" Miscellaneous
+" Cursor behavior
+set nostartofline               " Leave my cursor position alone!
+
+" Display
 set lazyredraw                  " Don't redraw while in macros
-set nostartofline               " leave my cursor position alone!
-set visualbell t_vb=            " don't make faces
-set listchars=tab:‣\ ,trail:·   " Nice UI UTF-8 chars
-set fillchars=fold:\ ,diff:·,vert:│
-set sessionoptions+=globals,localoptions
+set visualbell t_vb=            " No bells, please
+set listchars=tab:⇥\ ,trail:･
+set fillchars=fold:\ ,diff:･,vert:│
 
-" Turn on syntax and apply some global rules
+" Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
 
 
-""" TEXT EDITING """
+""" TEXT EDITING {{{1
 
 " c  Autowrap comments to textwidth
 " r  Autoinsert comment leader with <Enter>
@@ -106,20 +91,25 @@ source ~/.vim/local/syntax.vim
 " n  Recognize numbered lists
 " 1  Don't break a line after a 1-letter word
 set formatoptions=crqln1
-SetTextwidth! 78
 
 " Indenting / Tabs
-set autoindent                  " set the cursor at same indent as line above
-set copyindent                  " use existing indents for new indents
-set shiftround                  " always round indents to multiple of shiftwidth
-set expandtab                   " expand <Tab>s with spaces; death to tabs!
-SetWhitespace! 4 8
+set autoindent                  " Set the cursor at same indent as line above
+set copyindent                  " Use existing indents for new indents
+set shiftround                  " Always round indents to multiple of shiftwidth
+set expandtab                   " Expand <Tab>s with spaces; death to tabs!
+
+" Global textwidth and tabstops
+SetTextwidth! 78                " Width of a standard mail message
+SetWhitespace! 4 8              " Old C mixed-spaces-and-tabs style
 
 " Joining lines
-set nojoinspaces
+set nojoinspaces                " Never join lines with two spaces
+
+" Key behavior
+set backspace=2                 " Familiar backspace behavior
 
 
-""" GLOBAL OPTIONS """
+""" GLOBAL VARIABLES {{{1
 
 " Bash
 let g:is_bash = 1
@@ -128,10 +118,6 @@ let g:sh_minlines = 500
 
 " Ruby
 let g:ruby_operators = 1
-let g:ruby_minlines = 20 " Default: 50
-
-" JavaScript
-let g:javascript_enable_domhtmlcss = 1
 
 " Vim
 let g:vim_indent_cont = 4
@@ -148,9 +134,6 @@ let g:tex_fold_enabled = 1
 " Netrw
 let g:netrw_home = expand('~')
 
-" Plugin: closetag
-let g:closetag_html_style = 1
-
 " Plugin: CommandT
 let g:CommandTAlwaysShowDotFiles = 1
 let g:CommandTMatchWindowAtTop = 1
@@ -159,27 +142,20 @@ let g:CommandTMatchWindowAtTop = 1
 let g:NERDChristmasTree = 1
 let g:NERDTreeChDirMode = 2
 let g:NERDTreeDirArrows = 1
-let g:NERDTreeHijackNetrw = 0
 let g:NERDTreeMinimalUI = 1
 let g:NERDTreeMouseMode = 2
 let g:NERDTreeQuitOnOpen = 0
 let g:NERDTreeShowHidden = 1
 let g:NERDTreeSortOrder = []
-let g:NERDTreeWinPos = 'left'
 
 " Plugin: NERDCommenter
-let g:NERDCompactSexyComs = 1
 let g:NERDSpaceDelims = 1
 let g:NERDMenuMode = 0
 
-" Plugin: delimitMate (expand <CR> still breaks undo/redo)
+" Plugin: delimitMate (expand <CR> breaks undo/redo)
 let g:delimitMate_excluded_regions = ''
 let g:delimitMate_expand_cr = 0
 let g:delimitMate_expand_space = 1
-let g:delimitMate_quotes = "\" '"
-
-" Plugin: vim-preview
-let g:PreviewBrowsers = 'open'
 
 " Plugin: Gnupg
 let g:GPGDefaultRecipients = ['self@sungpae.com']
@@ -209,15 +185,11 @@ let g:tagbar_compact = 1
 let g:tagbar_sort = 0
 let g:tagbar_width = 30
 
-" Plugin: vim-orgmode
-let g:org_leader = '<C-o>'
-
 " Plugin: NrrwRgn
 let g:nrrw_rgn_vert = 1
-let g:nrrw_rgn_wdth = 120
+let g:nrrw_rgn_wdth = 160
 
 " Plugin: VimClojure
-let g:vimclojure#WantNailgun = 0
 let g:vimclojure#NailgunClient = expand('~/.vim/bundle/VimClojure/vimclojure-nailgun-client/ng')
 let g:vimclojure#SplitPos = "right"
 let g:vimclojure#FuzzyIndent = 1
@@ -237,7 +209,7 @@ let g:vimclojure#ParenRainbowColors = {
 \ }
 
 
-""" MAPPINGS, AUTOCOMMANDS and ABBREVIATIONS """
+""" MAPPINGS and AUTOCOMMANDS {{{1
 
 " Set modifiers and load modifier mapping functions
 source ~/.vim/local/modifiers.vim
@@ -249,7 +221,7 @@ source ~/.vim/local/mappings.vim
 source ~/.vim/local/autocommands.vim
 
 
-""" TERMINAL and GUI SETTINGS """
+""" TERMINAL and GUI SETTINGS {{{1
 
 if has('gui_running')
     source ~/.vim/local/gvimrc.vim
