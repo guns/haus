@@ -1,5 +1,8 @@
 """ Modifier Normalization
 
+" NOTE: This file contains non-printing characters;
+"       it is best viewed from within Vim
+
 " http://vim.wikia.com/wiki/Fix_meta-keys_that_break_out_of_Insert_mode
 " http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
 
@@ -55,10 +58,17 @@ Setmap <C-BS>       
 Setmap <M-BS>       
 
 " Arrow keys
-Setmap <C-Up>       Oa
-Setmap <C-Down>     Ob
-Setmap <C-Right>    Oc
-Setmap <C-Left>     Od
+if exists('$TMUX')
+    Setmap <C-Up>       [A
+    Setmap <C-Down>     [B
+    Setmap <C-Right>    [C
+    Setmap <C-Left>     [D
+else
+    Setmap <C-Up>       Oa
+    Setmap <C-Down>     Ob
+    Setmap <C-Right>    Oc
+    Setmap <C-Left>     Od
+endif
 
 Setmap <S-Up>       [a
 Setmap <S-Down>     [b
