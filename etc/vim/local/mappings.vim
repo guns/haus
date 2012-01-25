@@ -27,9 +27,8 @@ PreserveMap! <C-t> <C-x>
 PreserveMap <C-x>> <C-x>
 PreserveMap <C-x>< <C-a>
 
-" -- i_Ctrl-\ (mode switch)
 " ++ i_Ctrl-K (insert digraph)
-PreserveMap! <C-Bslash> <C-k>
+PreserveMap! <M-Bslash> <C-k>
 
 " ++ Ctrl-y Ctrl-e (scroll window one line)
 PreserveMap <4-e> <C-e>
@@ -402,3 +401,11 @@ map! <4-/> <Esc><Plug>NERDCommenterToggleAlign
 " Plugin: closetag
 noremap! <4-.> <C-r>=GetCloseTag()<CR>
 noremap  <4-.> a<C-r>=GetCloseTag()<CR><Esc>
+
+" Plugin: CamelCaseMotion
+map  <C-Left>  <Plug>CamelCaseMotion_b
+map! <C-Left>  <C-Bslash><C-o><C-Left>
+map  <C-Right> <Plug>CamelCaseMotion_e
+map! <C-Right> <C-Bslash><C-o><C-Right>
+map  <C-BS>    d<Plug>CamelCaseMotion_b
+map! <C-BS>    <C-Bslash><C-o><C-BS>

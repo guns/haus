@@ -97,6 +97,9 @@ Setmap <4-CR>       \
 " Backspace / Delete
 Setmap <4-BS>       \ 
 
+" Backslash
+Setmap <M-Bslash>   \\
+
 
 """ Cleanup {{{1
 
