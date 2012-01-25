@@ -390,6 +390,10 @@ hi! link phpBoolean Constant
 hi! link phpNull Constant
 hi! link phpArrayPair Operator
 
+" Python
+
+hi! link pythonOperator Statement
+
 " Ruby
 
 hi! link rubySharpBang Comment
@@ -454,8 +458,8 @@ call s:X("DbgBreakPt","","4F0037","","","DarkMagenta")
 if !exists("g:indent_guides_auto_colors")
   let g:indent_guides_auto_colors = 0
 endif
-call s:X("IndentGuidesOdd","","202020","","","")
-call s:X("IndentGuidesEven","","1c1c1c","","","")
+call s:X("IndentGuidesOdd","","232323","","","")
+call s:X("IndentGuidesEven","","1b1b1b","","","")
 
 " Plugins, etc.
 
@@ -476,6 +480,8 @@ if !s:low_color
   hi DiffText ctermfg=81
   hi Normal ctermbg=233
   hi DbgBreakPt ctermbg=53
+  hi IndentGuidesOdd ctermbg=235
+  hi IndentGuidesEven ctermbg=234
 endif
 
 " delete functions {{{
