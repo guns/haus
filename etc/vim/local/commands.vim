@@ -122,7 +122,6 @@ function! <SID>LispBufferSetup()
     noremap! <buffer> <C-l>         ->
     map      <buffer> <4-CR>        A<Space>;<Space>
     map!     <buffer> <4-CR>        <C-o><4-CR>
-    nnoremap <buffer> <Leader>cc    :ClojureToggleFormComment<CR>
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
 
@@ -143,53 +142,46 @@ function! <SID>LispBufferSetup()
     let g:paredit_mode = 1
 
     " Movement
-    nnoremap <silent> <buffer> [[        :<C-U>call PareditFindDefunBck()<CR>zz
-    nnoremap <silent> <buffer> ]]        :<C-U>call PareditFindDefunFwd()<CR>zz
-    nnoremap <silent> <buffer> (         :<C-U>call PareditFindOpening('(',')',0)<CR>
-    nnoremap <silent> <buffer> )         :<C-U>call PareditFindClosing('(',')',0)<CR>
+    nnoremap <silent> <buffer> [[ :<C-u>call PareditFindDefunBck()<CR>zz
+    nnoremap <silent> <buffer> ]] :<C-u>call PareditFindDefunFwd()<CR>zz
+    nnoremap <silent> <buffer> (  :<C-u>call PareditFindOpening(0,0,0)<CR>
+    nnoremap <silent> <buffer> )  :<C-u>call PareditFindClosing(0,0,0)<CR>
 
     " Auto-balancing insertion
-    inoremap <buffer> <expr>   (         PareditInsertOpening('(',')')
-    inoremap <buffer> <expr>   )         PareditInsertClosing('(',')')
+    inoremap <silent> <buffer> <expr> ( PareditInsertOpening('(',')')
+    inoremap <silent> <buffer> <expr> ) PareditInsertClosing('(',')')
+    inoremap <silent> <buffer> <expr> [ PareditInsertOpening('[',']')
+    inoremap <silent> <buffer> <expr> ] PareditInsertClosing('[',']')
+    inoremap <silent> <buffer> <expr> { PareditInsertOpening('{','}')
+    inoremap <silent> <buffer> <expr> } PareditInsertClosing('{','}')
 
     " Select next/prev item in list
-    nnoremap <silent> <buffer> <Leader>j :<C-U>call PareditSelectListElement(1)<CR>
-    vnoremap <silent> <buffer> <Leader>j <C-c>:<C-U>call PareditSelectListElement(1)<CR>
-    nnoremap <silent> <buffer> <Leader>k :<C-U>call PareditSelectListElement(0)<CR>
-    vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-U>call PareditSelectListElement(0)<CR>
+    nnoremap <silent> <buffer> <Leader>j :<C-u>call PareditSelectListElement(1)<CR>
+    vnoremap <silent> <buffer> <Leader>j <C-c>:<C-u>call PareditSelectListElement(1)<CR>
+    nnoremap <silent> <buffer> <Leader>k :<C-u>call PareditSelectListElement(0)<CR>
+    vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-u>call PareditSelectListElement(0)<CR>
 
     " Insert at end of form
-    nnoremap <silent> <buffer> <Leader>l :<C-U>call PareditFindClosing('(',')',0)<CR>i
+    nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
 
     " Wrap word/form
-    nnoremap <silent> <buffer> <Leader>W :<C-U>call PareditWrap("(",")")<CR>
+    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>
 
     " Wrap word/form/selection, then insert at end
-    nnoremap <silent> <buffer> <Leader>w :<C-U>call PareditWrap("(",")")<CR>%i
-    vnoremap <silent> <buffer> <Leader>w :<C-U>call PareditWrapSelection("(",")")<CR>i
+    nnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrap('(',')')<CR>%i
+    vnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrapSelection('(',')')<CR>i
 
     " Wrap form/selection, then insert in front
-    nnoremap <silent> <buffer> <Leader>i vi(:<C-U>call PareditWrapSelection("(",")")<CR>%i<Space><Left>
-    vnoremap <silent> <buffer> <Leader>i :<C-U>call PareditWrapSelection("(",")")<CR>%a<Space><Left>
+    nnoremap <silent> <buffer> <Leader>i vi(:<C-u>call PareditWrapSelection('(',')')<CR>%i<Space><Left>
+    vnoremap <silent> <buffer> <Leader>i :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
 
     " paredit-raise-sexp
-    nnoremap <silent> <buffer> <Leader>o da(:<C-U>call PareditFindOpening('(',')',0)<CR>va(pm`=a(``
+    nnoremap <silent> <buffer> <Leader>o :<C-u>call PareditRaiseSexp()<CR>
+
+    " Toggle Clojure (comment)
+    nnoremap <silent> <buffer> <Leader>cc m`:<C-u>call PareditToggleClojureComment()<CR>=a(``
 endfunction
 
-
-command! -bar ClojureToggleFormComment call <SID>ClojureToggleFormComment() "{{{1
-function! <SID>ClojureToggleFormComment()
-    normal m`vabv
-    let word = substitute(getline(line("'<")), '\v.{' . col("'<") . '}(\S*).*', '\1', '')
-
-    if word =~# 'comment'
-        execute 'normal gvov dw'
-    else
-        execute 'normal gvovacomment '
-    endif
-
-    normal =ab``
-endfunction
 
 command! -bar StartNailgunServer call <SID>StartNailgunServer() "{{{1
 function! <SID>StartNailgunServer()

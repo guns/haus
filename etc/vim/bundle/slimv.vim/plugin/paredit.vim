@@ -469,8 +469,8 @@ endfunction
 
 " Find opening matched character
 function! PareditFindOpening( open, close, select )
-    let open  = escape( a:open , '[]' )
-    let close = escape( a:close, '[]' )
+    let open  = a:open  ? escape( a:open , '[]' ) : b:any_opening_char
+    let close = a:close ? escape( a:close, '[]' ) : b:any_closing_char
     call searchpair( open, '', close, 'bW', s:skip_sc )
     if a:select
         call searchpair( open, '', close, 'W', s:skip_sc )
@@ -484,8 +484,8 @@ endfunction
 
 " Find closing matched character
 function! PareditFindClosing( open, close, select )
-    let open  = escape( a:open , '[]' )
-    let close = escape( a:close, '[]' )
+    let open  = a:open  ? escape( a:open , '[]' ) : b:any_opening_char
+    let close = a:close ? escape( a:close, '[]' ) : b:any_closing_char
     if a:select
         let line = getline( '.' )
         if line[col('.')-1] != a:open
@@ -1347,6 +1347,17 @@ function! PareditSplice()
     endif
 endfunction
 
+" Replace the enclosing form with the current form
+function! PareditRaiseSexp()
+    if getline('.')[col('.')-1] !~# b:any_opening_char
+        call PareditFindOpening(0,0,0)
+    endif
+    normal d%
+    call PareditFindOpening(0,0,0)
+    normal v%p%
+endfunction
+
+" Visual select the next/prev element in the current form
 function! PareditSelectListElement(next)
     if !s:IsBalanced()
         return
@@ -1356,12 +1367,11 @@ function! PareditSelectListElement(next)
     let startcol  = col('.')
     let startchar = getline(startline)[startcol-1]
 
-    " Select the current form
-    normal v
-    if startchar =~ '\v(\(|\))'
-        normal a(
+    " Find the end of the enclosing form
+    if startchar =~ b:any_opening_char
+        call PareditFindClosing(0,0,0)
     endif
-    normal a(v
+    call PareditFindClosing(0,0,0)
 
     let endline = line('.')
     let endcol  = col('.')
@@ -1388,7 +1398,7 @@ function! PareditSelectListElement(next)
         if char =~# b:any_opening_char
             normal %
         endif
-        normal W
+        normal w
     endwhile
 
     " Search for next element by searching forwards;
@@ -1442,4 +1452,22 @@ function! PareditSelectListElement(next)
         call cursor(startline, startcol)
         return 0
     endif
+endfunction
+
+" Toggle Clojure (comment ...) style comments
+function! PareditToggleClojureComment()
+    let startpos = getpos('.')
+
+    if getline('.')[col('.')-1] !~# '('
+        call PareditFindOpening('(',')',0)
+    endif
+    call search('\v\S', 'W')
+
+    if expand('<cword>') ==# 'comment'
+        normal dw
+    else
+        execute 'normal icomment '
+    endif
+
+    return cursor(startpos[1:])
 endfunction
