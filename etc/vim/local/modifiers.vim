@@ -1,7 +1,7 @@
 """ Modifier Normalization
 
-" NOTE: This file contains non-printing characters;
-"       it is best viewed from within Vim
+" NOTE: This file contains non-printing characters!
+"       It is advisable to edit or view this file in Vim
 
 " http://vim.wikia.com/wiki/Fix_meta-keys_that_break_out_of_Insert_mode
 " http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
@@ -9,53 +9,65 @@
 " Set value of keycode or map in all modes {{{1
 command! -nargs=+ Setmap call <SID>Setmap(<f-args>)
 function! <SID>Setmap(map, seq)
-    " Some named values can be `set'
     try
+        " Some named values can be `set'
         execute 'set ' . a:map . '=' . a:seq
-    " but the rest can simply be mapped
     catch
+        " The rest can simply be mapped
         execute 'map  <special> ' . a:seq . ' ' . a:map
         execute 'map! <special> ' . a:seq . ' ' . a:map
     endtry
 endfunction
 
-" Named keycodes {{{1
-let g:named_keycode = {
+let g:VIM_NAMED_KEYCODES = {
     \ ' ': 'Space',
     \ '\': 'Bslash',
     \ '|': 'Bar',
     \ '<': 'lt'
 \ }
 
-" Normalize mod + ASCII printable chars {{{1
+" Normalize Modifier + ASCII printable chars {{{1
 for n in range(0x20, 0x7e)
     let char = nr2char(n)
     let key  = char
 
-    if has_key(g:named_keycode, char)
-        let char = g:named_keycode[char]
+    if has_key(g:VIM_NAMED_KEYCODES, char)
+        let char = g:VIM_NAMED_KEYCODES[char]
         let key  = '<' . char . '>'
     endif
 
-    " Option / Alt as Meta
-    "  * M-[ is ^[[, which is terminal escape
-    "  * M-" doesn't work
-    "  * M-O is escape for arrow keys
-    if char !=# '[' && char !=# '"' && char !=# 'O'
+    " Escaped Meta (i.e. not 8-bit mode)
+    "  * Esc-[ is the CSI prefix (Control Sequence Introducer)
+    "  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
+    if char !=# '[' && char !=# 'O'
         execute 'Setmap <M-' . char . '> ' . key
     endif
 
     " Super / Mod4
-    "  * Assumes terminal sends <Esc><Space> as Mod4 prefix
-    execute 'Setmap <4-' . char . '> \ ' . key
+    "  * Assumes terminal sends <Esc><Space> as Mod4 prefix; this can be
+    "    easily accomplished in rxvt-unicode using the keysym-list extension:
+    "
+    "    ~/.Xdefaults:
+    "       URxvt.keysym.Mod4-0x20: list\033\040 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+    "
+    "   Note that literal bell characters are used as delimiters since the
+    "   resource argument contains a list of all printable ASCII characters.
+    execute 'Setmap <4-' . char . '> <Esc><Space>' . key
 endfor
 
 
 """ Special Keys {{{1
 
 " Backspace
-Setmap <C-BS>       
-Setmap <M-BS>       
+Setmap <C-BS>       <C-h>
+Setmap <M-BS>       <Esc><BS>
+
+" Return
+Setmap <M-CR>       
+Setmap <4-CR>       <Esc><Space><CR>
+
+" Backslash
+Setmap <M-Bslash>   \\
 
 " Arrow keys
 if exists('$TMUX')
@@ -75,30 +87,20 @@ Setmap <S-Down>     [b
 Setmap <S-Right>    [c
 Setmap <S-Left>     [d
 
-Setmap <M-Up>       <Up>
-Setmap <M-Down>     <Down>
-Setmap <M-Right>    <Right>
-Setmap <M-Left>     <Left>
+Setmap <M-Up>       <Esc><Up>
+Setmap <M-Down>     <Esc><Down>
+Setmap <M-Right>    <Esc><Right>
+Setmap <M-Left>     <Esc><Left>
 
-Setmap <4-Up>       \ a
-Setmap <4-Down>     \ b
-Setmap <4-Right>    \ c
-Setmap <4-Left>     \ d
+Setmap <4-Up>       <Esc><Space>Oa
+Setmap <4-Down>     <Esc><Space>Ob
+Setmap <4-Right>    <Esc><Space>Oc
+Setmap <4-Left>     <Esc><Space>Od
 
-Setmap <4-S-Up>     \ A
-Setmap <4-S-Down>   \ B
-Setmap <4-S-Right>  \ C
-Setmap <4-S-Left>   \ D
-
-" Return
-Setmap <M-CR>       
-Setmap <4-CR>       \ 
-
-" Backspace / Delete
-Setmap <4-BS>       \ 
-
-" Backslash
-Setmap <M-Bslash>   \\
+Setmap <4-S-Up>     <Esc><Space>OA
+Setmap <4-S-Down>   <Esc><Space>OB
+Setmap <4-S-Right>  <Esc><Space>OC
+Setmap <4-S-Left>   <Esc><Space>OD
 
 
 """ Cleanup {{{1

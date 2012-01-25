@@ -21,11 +21,11 @@ if has('gui_macvim')
     for n in range(0x20, 0x7e) + spkeys
         let char = type(n) == type(0) ? nr2char(n) : n
 
-        " g:named_keycode from ~/.vim/local/modifiers.vim
+        " g:VIM_NAMED_KEYCODES from ~/.vim/local/modifiers.vim
         if type(n) == type(0)
             let char = nr2char(n)
-            if has_key(g:named_keycode, char)
-                let char = g:named_keycode[char]
+            if has_key(g:VIM_NAMED_KEYCODES, char)
+                let char = g:VIM_NAMED_KEYCODES[char]
             endif
         else
             let char = n
