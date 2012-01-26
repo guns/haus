@@ -92,15 +92,15 @@ Setmap <M-Down>     <Esc><Down>
 Setmap <M-Right>    <Esc><Right>
 Setmap <M-Left>     <Esc><Left>
 
-Setmap <4-Up>       <Esc><Space>Oa
-Setmap <4-Down>     <Esc><Space>Ob
-Setmap <4-Right>    <Esc><Space>Oc
-Setmap <4-Left>     <Esc><Space>Od
+Setmap <4-Up>       <Esc><Space>a
+Setmap <4-Down>     <Esc><Space>b
+Setmap <4-Right>    <Esc><Space>c
+Setmap <4-Left>     <Esc><Space>d
 
-Setmap <4-S-Up>     <Esc><Space>OA
-Setmap <4-S-Down>   <Esc><Space>OB
-Setmap <4-S-Right>  <Esc><Space>OC
-Setmap <4-S-Left>   <Esc><Space>OD
+Setmap <4-S-Up>     <Esc><Space>A
+Setmap <4-S-Down>   <Esc><Space>B
+Setmap <4-S-Right>  <Esc><Space>C
+Setmap <4-S-Left>   <Esc><Space>D
 
 
 """ Cleanup {{{1
