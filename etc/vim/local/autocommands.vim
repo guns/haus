@@ -19,7 +19,7 @@ augroup GUNS
         \ if !empty(getqflist()) | cwindow | end
 
     " Vimscript {{{1
-    autocmd FileType help
+    autocmd FileType vim,help
         \ setlocal iskeyword+=-
 
     " Diff {{{1
