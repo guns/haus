@@ -827,12 +827,12 @@ nnoremap <silent> <Plug>SpeedDatingNowLocal :<C-U>call <SID>timestamp(0,v:count)
 nnoremap <silent> <Plug>SpeedDatingNowUTC   :<C-U>call <SID>timestamp(1,v:count)<CR>
 
 if !exists("g:speeddating_no_mappings") || !g:speeddating_no_mappings
-    nmap  <Leader><     <Plug>SpeedDatingUp
-    nmap  <Leader>>     <Plug>SpeedDatingDown
-    xmap  <Leader><     <Plug>SpeedDatingUp
-    xmap  <Leader>>     <Plug>SpeedDatingDown
-    nmap d<Leader><     <Plug>SpeedDatingNowUTC
-    nmap d<Leader>>     <Plug>SpeedDatingNowLocal
+    nmap  <M-a>     <Plug>SpeedDatingUp
+    nmap  <M-x>     <Plug>SpeedDatingDown
+    xmap  <M-a>     <Plug>SpeedDatingUp
+    xmap  <M-x>     <Plug>SpeedDatingDown
+    nmap d<M-a>     <Plug>SpeedDatingNowUTC
+    nmap d<M-x>     <Plug>SpeedDatingNowLocal
 endif
 
 " }}}1
