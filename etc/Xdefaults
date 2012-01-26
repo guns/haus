@@ -47,11 +47,12 @@ URxvt.urlLauncher:        open
 URxvt.urlButton:          3
 
 ! Super + Character           <Esc-Space-char>
-! Super + Arrow keys          <Esc-Space-O-char>
+! Super + Arrow keys          <Esc-Space-BEL-char>
 URxvt.keysym.Mod4-0x20:       list\033\040 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 URxvt.keysym.Mod4-Return:     \033\040\015
-URxvt.keysym.Mod4-Left:       list:\033\040O:dacb:
-URxvt.keysym.Mod4-Shift-Left: list:\033\040O:DACB:
+URxvt.keysym.Mod4-Backspace:  \033\040\177
+URxvt.keysym.Mod4-Left:       list:\033\040\007:dacb:
+URxvt.keysym.Mod4-Shift-Left: list:\033\040\007:DACB:
 
 
 !!! XTERM
