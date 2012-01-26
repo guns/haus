@@ -407,10 +407,10 @@ command! -bar Ctags silent ! ctags -R
 
 
 " Say {{{1
-if g:VIM_PLATFORM == 'macunix'
-    command! -nargs=1 -bar Say call system('say ' . <q-args>)
-elseif g:VIM_PLATFORM == 'unix'
-    command! -nargs=1 -bar Say call system('espeak -ven-us "' . <q-args> . '"')
+if executable('/usr/bin/say')
+    command! -nargs=1 -bar Say call system('say ' . shellescape(<q-args>))
+else
+    command! -nargs=1 -bar Say call system('espeak -ven-us ' . shellescape(<q-args>))
 endif
 
 
