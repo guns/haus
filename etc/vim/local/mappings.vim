@@ -332,7 +332,7 @@ noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
 noremap <Leader>~        :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
-noremap <Leader><C-d>    :<C-u>diffthis<CR>
+noremap <Leader><C-d>    :<C-u>execute &diff ? 'diffoff' : 'diffthis' \| setlocal diff?<CR>
 noremap <Leader><C-e>    :<C-u>set expandtab! \| set expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>set hlsearch! \| set hlsearch?<CR>
 noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
