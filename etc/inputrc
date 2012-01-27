@@ -219,6 +219,7 @@ $if Bash
     "\C-xer":       "\C-] vimrcconf \n"
     "\C-xes":       "\C-] vimscratch \n"
     "\C-xet":       "\C-] vimtodo \n"
+    "\C-xeT":       "\C-] vimtmux \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimsubtle \n"
     "\C-xf":        "\C-]vimfind "

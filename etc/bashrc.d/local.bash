@@ -903,6 +903,7 @@ HAVE vim && {
     alias vimrcconf='(cd /etc && vim rc.conf)'
     alias vimscratch='vim -c Scratch'
     alias vimsubtle='(cdhaus && vim etc/%config/subtle/subtle.rb)'
+    alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'
 }
 
