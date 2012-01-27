@@ -502,8 +502,8 @@ noremap <Leader>gL       :<C-u>Glog<CR>
 noremap <Leader>gr       :<C-u>silent! Git rs<CR>
 noremap <Leader>gv       :Gitv<CR>
 noremap <Leader>gV       :Gitv!<CR>
-noremap <Leader>gaa      :<C-u>Git aa<CR>
-noremap <Leader>gac      :<C-u>Git aa \| Gcommit<CR>
+noremap <Leader>gaa      :<C-u>silent! Git aa<CR>
+noremap <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
 noremap <Leader>gap      :<C-u>Git ap<CR>
 noremap <Leader><C-g>    :<C-u>Gstatus<CR>
 noremap <4-g>            :<C-u>Gstatus<CR>
