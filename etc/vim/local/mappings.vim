@@ -477,7 +477,12 @@ vnoremap + "ry:ruby
     \ print r<CR>
 
 
-""" Plugins
+""" Plugins {{{1
+
+" Plugin: surround.vim - visual surround shortcuts (a la TextMate)
+" REPLACE (v)( sentence-backward and (v)' jump-to-mark with surrounds
+vmap ( s(
+vmap ' s'
 
 " Plugin: Shebang
 noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
@@ -503,6 +508,26 @@ noremap <Leader><C-g>    :<C-u>Gstatus<CR>
 noremap <4-g>            :<C-u>Gstatus<CR>
 noremap <4-G>            q:iGgrep! -Pi<Space>
 
+" Plugin: ScreenShell
+noremap <Leader>S :<C-u>Screen<CR>
+
+" Plugin: Manpageview
+noremap <Leader>K viwK
+noremap <Leader>m :<C-u>Man<Space>
+noremap <Leader>M :<C-u>VMan<Space>
+
+" Plugin: Align
+noremap <Leader>a<Space> :Align<Space>
+noremap <Leader>a.       :Align \.<CR>
+noremap <Leader>a<C-l>   :Align =><CR>
+
+" Plugin: NrrwRgn
+nnoremap <Leader>nr vip:NarrowRegion<CR>
+
+" Plugin: operator-camelize
+nmap <Leader>- viw<Plug>(operator-camelize-toggle)
+vmap <Leader>- <Plug>(operator-camelize-toggle)
+
 " Plugin: Command-T
 Mapall <4-o> :<C-u>CommandT<CR>
 Mapall <4-t> :<C-u>tabnew \\\| CommandT<CR>
@@ -523,37 +548,12 @@ Mapall <4-u> :GundoToggle<CR>
 " Plugin: Regbuf
 Mapall <4-r> :RegbufOpen<CR>
 
-" Plugin: ScreenShell
-noremap <Leader>S :<C-u>Screen<CR>
-
 " Plugin: UltiSnips
 Mapall <4-F> :<C-u>UltiSnipsEdit<CR>
 
 " Plugin: Tagbar
 Mapall <4-i> :<C-u>TagbarToggle<CR>
 Mapall <4-I> :<C-u>TagbarOpen<CR>
-
-" Plugin: Manpageview
-noremap <Leader>K viwK
-noremap <Leader>m :<C-u>Man<Space>
-noremap <Leader>M :<C-u>VMan<Space>
-
-" Plugin: NrrwRgn
-nnoremap <Leader>nr vip:NarrowRegion<CR>
-
-" Plugin: surround.vim - visual surround shortcuts (a la TextMate)
-" REPLACE (v)( sentence-backward and (v)' jump-to-mark with surrounds
-vmap ( s(
-vmap ' s'
-
-" Plugin: Align
-noremap <Leader>a<Space> :Align<Space>
-noremap <Leader>a.       :Align \.<CR>
-noremap <Leader>a<C-l>   :Align =><CR>
-
-" Plugin: operator-camelize
-nmap <Leader>- viw<Plug>(operator-camelize-toggle)
-vmap <Leader>- <Plug>(operator-camelize-toggle)
 
 " Plugin: NERD_commenter
 map  <4-/> <Plug>NERDCommenterToggleAlign
