@@ -40,21 +40,9 @@ function! <SID>SetAutowrap(bang, ...)
     if status == 'report'
         echo &formatoptions =~ 'a' ? 'Autowrap is on' : 'Autowrap is off'
     elseif status == 'on'
-        execute 'setlocal formatoptions+=t formatoptions+=a formatoptions+=w formatoptions+=c'
+        execute 'setlocal formatoptions+=t formatoptions+=a formatoptions+=w'
     else
         execute 'setlocal formatoptions-=t formatoptions-=a formatoptions-=w'
-    endif
-endfunction
-
-
-command! -nargs=? -bang -bar SetMatchParen call <SID>SetMatchParen('<bang>', <f-args>) "{{{1
-function! <SID>SetMatchParen(bang)
-    let loaded = exists('g:loaded_matchparen') && g:loaded_matchparen == 1
-
-    if empty(a:bang)
-        execute loaded ? 'echo "MatchParen is on!"' : 'echo "MatchParen is off!"'
-    else
-        execute loaded ? 'execute "NoMatchParen" | echo "MatchParen off!"' : 'execute "DoMatchParen" | echo "MatchParen on!"'
     endif
 endfunction
 
@@ -63,10 +51,9 @@ command! -bar SynStack call <SID>SynStack() "{{{1
 function! <SID>SynStack()
     " TextMate style syntax highlighting stack for word under cursor
     " http://vimcasts.org/episodes/creating-colorschemes-for-vim/
-    if !exists("*synstack")
-        return
+    if exists("*synstack")
+        echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
     endif
-    echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
 endfunction
 
 
@@ -80,7 +67,7 @@ function! <SID>Todo()
     elseif exists(':Ack')
         execute 'silent! Ack! -w "' . join(words,'\|') . '"'
     else
-        execute 'silent! grep! -r -Pw "' . join(words,'\|') . '" .'
+        execute 'silent! grep! -r -Ew "' . join(words,'\|') . '" .'
     endif
 
     redraw!
@@ -95,7 +82,7 @@ function! <SID>LispBufferSetup()
     nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
     noremap! <buffer> <C-l>         ->
     map      <buffer> <4-CR>        A<Space>;<Space>
-    map!     <buffer> <4-CR>        <C-o><4-CR>
+    map!     <buffer> <4-CR>        <C-\><C-o><4-CR>
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
 
@@ -208,9 +195,8 @@ function! <SID>Screen(command)
         \ 'scheme'     : 'scheme',
         \ 'javascript' : 'node'
         \ }
-    let chdir = 'cd "' . getcwd() . '"'
     let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
-    execute 'ScreenShell ' . chdir . '; ' . cmd
+    execute 'ScreenShell ' . cmd
 endfunction
 
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
@@ -219,10 +205,10 @@ function! <SID>ScreenSetup(setup)
     if a:setup
         vmap <Leader><Leader> :ScreenSend<CR>
         nmap <Leader><Leader> m`vip<Leader><Leader>``
-        imap <Leader><Leader> <Esc><Leader><Leader><Right>
+        imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
         nmap <Leader><C-f>    m`vab<Leader><Leader>``
-        imap <Leader><C-f>    <Esc><Leader><C-f><Right>
+        imap <Leader><C-f>    <C-\><C-n><Leader><C-f><Right>
 
         nmap <Leader>Q        :ScreenQuit<CR>
     else
@@ -251,9 +237,9 @@ function! <SID>Open(word)
         let url = substitute(a:word, pattern, '\1', '')
         echo url
         return system('open ' . shellescape(url))
+    else
+        echo 'No URL found!'
     endif
-
-    echo 'No URL or path found!'
 endfunction
 
 
@@ -386,7 +372,7 @@ endif
 
 " Interleave {{{1
 command! -bar -range Interleave
-    \ '<,'>! ruby -e 'l = STDIN.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
+    \ '<,'>! ruby -e 'l = $stdin.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
 
 
 " Hitest {{{1
@@ -395,11 +381,3 @@ command! -bar Hitest
     \ 45vnew |
     \ source $VIMRUNTIME/syntax/hitest.vim |
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
-
-
-" DiggOrig {{{1
-" From vimrc_example.vim
-" Convenient command to see the difference between the current buffer and the
-" file it was loaded from, thus the changes you made.
-command! -bar DiffOrig
-    \ vert new | set bt=nofile | r # | 0d_ | diffthis | wincmd p | diffthis

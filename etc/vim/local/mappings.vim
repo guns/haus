@@ -405,7 +405,7 @@ Mapall <4-+> :<C-u>execute 'tabmove ' . tabpagenr()<CR>
 " Quickfix window
 Mapall <4-x> :<C-u>copen<CR>
 
-" Open URLs and files
+" Open URLs
 Mapall <4-U> :<C-u>Open<CR>
 
 
@@ -438,7 +438,8 @@ noremap <M-U> gUWW
 map!    <M-U> <C-\><C-o>gUW<C-\><C-o>W
 
 " Join lines
-noremap <Leader><C-j> J
+noremap  <Leader><C-j> J
+inoremap <Leader><C-j> <C-\><C-o>J
 
 " Select all
 nnoremap <4-a> ggVG
