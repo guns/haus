@@ -751,7 +751,7 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    ((EUID)) && alias irc='weechat-curses'
+    ((EUID)) && alias irc='env $([[ $TMUX ]] && echo TERM=screen-256color) weechat-curses'
     alias ircedit='(cd ~guns/.weechat && exec vim weechat.conf)'
 }
 
