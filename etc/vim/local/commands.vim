@@ -1,35 +1,9 @@
 """ Assorted Commands and Functions
 
-command! -nargs=+ -bar Mapall   call <SID>Mapall('nore', <f-args>) "{{{1
-command! -nargs=+ -bar Remapall call <SID>Mapall('',     <f-args>)
-function! <SID>Mapall(prefix, map, ...)
-    " FIXME: Make me work better with <plug> mappings
-    if a:0 == 1
-        let esc    = '<Esc>'
-        let seq    = a:1
-        let endesc = ''
-    elseif a:0 == 2
-        let esc    = a:1
-        let seq    = a:2
-        let endesc = ''
-    elseif a:0 == 3
-        let esc    = a:1
-        let seq    = a:2
-        let endesc = a:3
-    else
-        return
-    endif
-
-    execute a:prefix . 'map  <special> ' . a:map . ' ' . seq
-    execute a:prefix . 'map! <special> ' . a:map . ' ' . esc . seq . endesc
-endfunction
-
-
-command! -nargs=+ -bang PreserveMap call <SID>PreserveMap('<bang>', <f-args>) "{{{1
-function! <SID>PreserveMap(bang, new, old)
-    " Alias and nullify old mapping
-    execute 'noremap' . a:bang . ' <special> ' . a:new . ' ' . a:old
-    execute     'map' . a:bang . ' <special> ' . a:old . ' <NOP>'
+command! -nargs=+ -bar Mapall call <SID>Mapall(<f-args>) " {{{1
+function! <SID>Mapall(...)
+    execute 'noremap ' . join(a:000)
+    execute 'map! ' . a:1 . ' <C-\><C-n>' . a:1
 endfunction
 
 
@@ -400,10 +374,6 @@ function! <SID>Org(bang, ...)
         execute 'lcd ' . orgdir | CommandT
     endif
 endfunction
-
-
-" Ctags {{{1
-command! -bar Ctags silent ! ctags -R
 
 
 " Say {{{1
