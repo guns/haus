@@ -751,8 +751,8 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    ((EUID)) && alias irc='env $([[ $TMUX ]] && echo TERM=screen-256color) weechat-curses'
-    alias ircedit='(cd ~guns/.weechat && exec vim weechat.conf)'
+    ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TMUX ]] && echo TERM=screen-256color) weechat-curses)'
+    alias ircedit='(cd ~/.weechat && exec vim weechat.conf)'
 }
 
 # OS X Sync
@@ -890,7 +890,7 @@ HAVE vim && {
         }
     fi
 
-    # frequently edited files
+    # Frequently edited files
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
@@ -1328,12 +1328,12 @@ fi
 ### Games {{{1
 
 HAVE nethack && {
-    alias nethack='env NETHACKOPTIONS="@~guns/src/nethack/etc/nethackrc" command nethack -u-u'
+    alias nethack='env NETHACKOPTIONS="@~/src/nethack/etc/nethackrc" command nethack -u-u'
     alias nethackwiz="nethack -u $USER -D"
     HAVE rxvt && {
         nethackterm() {(
-            cd ~guns/src/nethack/source &&
-            run xset +fp ~guns/src/nethack/etc &&
+            cd ~/src/nethack/source &&
+            run xset +fp ~/src/nethack/etc &&
             run xset fp rehash &&
             bgrun rxvt -fn vga11x19 -geometry 115x39 -fg white -cr white -title NetHack --meta8
         )}
