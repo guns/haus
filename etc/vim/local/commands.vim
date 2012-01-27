@@ -1,4 +1,4 @@
-""" Assorted Commands and Functions
+""" Library of commands
 
 command! -nargs=+ -bar Mapall call <SID>Mapall(<f-args>) " {{{1
 function! <SID>Mapall(...)

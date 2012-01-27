@@ -1,13 +1,9 @@
 """ Terminal Settings
 " http://vim-fr.org/index.php/Julm
 
-if has('gui_running')
-    finish
-endif
-
-set mouse=a         " enable full mouse support
-set ttymouse=xterm2 " more accurate mouse tracking
-set ttyfast         " more redrawing characters sent to terminal
+set mouse=a         " Enable full mouse support
+set ttymouse=xterm2 " More accurate mouse tracking
+set ttyfast         " More redrawing characters sent to terminal
 
 " From ECMA-48:
 "

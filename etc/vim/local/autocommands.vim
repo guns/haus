@@ -1,4 +1,4 @@
-""" Vim Autocommands
+""" Autocommands
 
 augroup GUNS
     autocmd!
@@ -67,7 +67,7 @@ augroup GUNS
         \ setlocal iskeyword+=- |
         \ SetWhitespace 2
     autocmd FileType haml
-        \ execute 'noremap  <buffer> <M-CR> i%br<Esc><Right>' |
+        \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-n><Right>' |
         \ execute 'noremap! <buffer> <M-CR> %br'
 
     " CSS {{{1
@@ -99,13 +99,13 @@ augroup GUNS
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |
         \ SetWhitespace 4
 
-    " Ini conf {{{1
+    " Ini conf gitconfig {{{1
     autocmd BufRead,BufNewFile *gitconfig
         \ setlocal filetype=gitconfig
     autocmd FileType ini,gitconfig
         \ SetWhitespace 4
 
-    " Apache conf {{{1
+    " Apache {{{1
     autocmd FileType apache
         \ SetWhitespace 4
 
@@ -115,7 +115,7 @@ augroup GUNS
 
     " UltiSnips snippets {{{1
     autocmd FileType snippets
-        \ setlocal noexpandtab iskeyword+=- foldmethod=marker |
+        \ setlocal noexpandtab iskeyword+=- |
         \ SetWhitespace 8
 
     " Markdown {{{1
@@ -167,7 +167,7 @@ augroup GUNS
         \ setlocal filetype=applescript
 
     " Readline {{{1
-    autocmd BufRead,BufNewFile *.inputrc
+    autocmd BufRead,BufNewFile *inputrc
         \ setlocal filetype=readline
 
     " Nethack! {{{1
@@ -193,7 +193,6 @@ augroup GUNS
 
     " vim-orgmode {{{1
     autocmd FileType org
-        \ setlocal foldlevel=0 |
         \ SetWhitespace 2 8
 
     augroup ScreenShellEnter "{{{1
