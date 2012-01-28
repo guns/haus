@@ -752,7 +752,6 @@ HAVE cdmetasploit && {
 # Weechat
 HAVE weechat-curses && {
     ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TMUX ]] && echo TERM=screen-256color) weechat-curses)'
-    alias ircedit='(cd ~/.weechat && exec vim weechat.conf)'
 }
 
 # OS X Sync
