@@ -44,15 +44,15 @@ for n in range(0x20, 0x7e)
     endif
 
     " Super / Mod4
-    "  * Assumes terminal sends <Esc><Space> as Mod4 prefix; this can be
-    "    easily accomplished in rxvt-unicode using the keysym-list extension:
+    "  * Assumes terminal sends <ESC><BEL> as Mod4 prefix; this can be
+    "    accomplished in rxvt-unicode using the keysym-list extension:
     "
     "    ~/.Xdefaults:
-    "       URxvt.keysym.Mod4-0x20: list\033\040 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+    "       URxvt.keysym.Mod4-0x20: list\033\007 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
     "
-    "   Note that literal bell characters are used as delimiters since the
+    "   Note that literal <US> (0x1f) characters are used as delimiters as the
     "   resource argument contains a list of all printable ASCII characters.
-    execute 'Setmap <4-' . char . '> <Esc><Space>' . key
+    execute 'Setmap <4-' . char . '> <Esc>' . key
 endfor
 
 
@@ -64,7 +64,7 @@ Setmap <M-BS>       <Esc><BS>
 
 " Return
 Setmap <M-CR>       
-Setmap <4-CR>       <Esc><Space><CR>
+Setmap <4-CR>       <Esc><CR>
 
 " Backslash
 Setmap <M-Bslash>   \\
@@ -92,15 +92,15 @@ Setmap <M-Down>     <Esc><Down>
 Setmap <M-Right>    <Esc><Right>
 Setmap <M-Left>     <Esc><Left>
 
-Setmap <4-Up>       <Esc><Space>a
-Setmap <4-Down>     <Esc><Space>b
-Setmap <4-Right>    <Esc><Space>c
-Setmap <4-Left>     <Esc><Space>d
+Setmap <4-Up>       <Esc>a
+Setmap <4-Down>     <Esc>b
+Setmap <4-Right>    <Esc>c
+Setmap <4-Left>     <Esc>d
 
-Setmap <4-S-Up>     <Esc><Space>A
-Setmap <4-S-Down>   <Esc><Space>B
-Setmap <4-S-Right>  <Esc><Space>C
-Setmap <4-S-Left>   <Esc><Space>D
+Setmap <4-S-Up>     <Esc>A
+Setmap <4-S-Down>   <Esc>B
+Setmap <4-S-Right>  <Esc>C
+Setmap <4-S-Left>   <Esc>D
 
 
 """ Cleanup {{{1
