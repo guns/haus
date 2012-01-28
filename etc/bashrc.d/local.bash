@@ -151,7 +151,7 @@ CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
 CD_FUNC cdclojure       ~/.clojure /opt/clojure
-CD_FUNC cdhaus          ~/.haus /opt/haus && export RUBYLIB="$cdhaus/lib"
+CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib"
 CD_FUNC cdsrc           ~/src /usr/local/src
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
@@ -906,6 +906,7 @@ HAVE vim && {
     alias vimsubtle='(cdhaus && vim etc/%config/subtle/subtle.rb)'
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'
+    alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
 }
 
 

@@ -221,6 +221,7 @@ $if Bash
     "\C-xes":       "\C-] vimscratch \n"
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xeT":       "\C-] vimtmux \n"
+    "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimsubtle \n"
     "\C-xf":        "\C-]vimfind "
