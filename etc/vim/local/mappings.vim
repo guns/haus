@@ -349,6 +349,7 @@ noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'tabedit ' . resolve(expand('~/.inputrc'))<CR>
 noremap <Leader>el       :<C-u>execute 'tabedit ' . resolve(expand('~/.bashrc.d/local.bash'))<CR>
 noremap <Leader>em       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
+noremap <Leader>eM       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/modifiers.vim'))<CR>
 noremap <Leader>en       :<C-u>tabedit /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>er       :<C-u>tabedit /etc/rc.conf<CR>
