@@ -224,6 +224,7 @@ $if Bash
     "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimsubtle \n"
+    "\C-xex":       "\C-] vimxdefaults \n"
     "\C-xf":        "\C-]vimfind "
     "\C-xef":       "\C-] vimfind \n"
     "\C-x\C-g":     "\C-] vimgit \n"        (- abort)

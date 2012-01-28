@@ -907,6 +907,7 @@ HAVE vim && {
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
+    alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
 }
 
 

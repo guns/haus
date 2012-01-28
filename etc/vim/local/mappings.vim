@@ -360,6 +360,7 @@ noremap <Leader>eT       :<C-u>execute 'tabedit ' . resolve(expand('~/.tmux.conf
 noremap <Leader>eu       :<C-u>execute 'tabedit ' . resolve($cdhaus . '/share/doc/unicode-table.txt.gz')<CR>
 noremap <Leader>ev       :<C-u>execute 'tabedit ' . resolve(expand($MYVIMRC))<CR>
 noremap <Leader>ew       :<C-u>execute 'tabedit ' . resolve(expand('~/.config/subtle/subtle.rb'))<CR>
+noremap <Leader>ex       :<C-u>execute 'tabedit ' . resolve(expand('~/.Xdefaults'))<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>setlocal filetype=
