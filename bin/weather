@@ -25,17 +25,13 @@ class Weather # {{{1
     end
 
     def rekey hash
-      new = {}
-
-      hash.clone.each do |key, val|
-        new[key] = case val
-        when Hash  then val.keys == ['data'] ? val['data'] : rekey(val) # Recurse!
-        when Array then val.map { |v| rekey v } # Recurse!
-        else val
-        end
-      end
-
-      new
+      Hash[hash.map do |key, val|
+        [key, case val
+              when Hash  then val.keys == ['data'] ? val['data'] : rekey(val) # Recurse!
+              when Array then val.map { |v| rekey v } # Recurse!
+              else val
+              end]
+      end]
     end
 
     def condition str
