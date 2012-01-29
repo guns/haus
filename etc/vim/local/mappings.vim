@@ -533,11 +533,12 @@ nmap <Leader>- viw<Plug>(operator-camelize-toggle)
 vmap <Leader>- <Plug>(operator-camelize-toggle)
 
 " Plugin: Command-T
-Mapall <4-o> :<C-u>CommandT<CR>
-Mapall <4-t> :<C-u>tabnew \\\| CommandT<CR>
-Mapall <4-'> :<C-u>CommandTJump<CR>
-Mapall <4-b> :<C-u>CommandTBuffer<CR>
-Mapall <4-B> :<C-u>CommandTFlush<CR>
+Mapall <4-o>      :<C-u>CommandT<CR>
+Mapall <4-t>      :<C-u>tabnew \\\| CommandT<CR>
+Mapall <4-'>      :<C-u>CommandTJump<CR>
+Mapall <4-b>      :<C-u>CommandTBuffer<CR>
+Mapall <4-B>      :<C-u>CommandTFlush<CR>
+map    <Leader>ef <4-t>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
