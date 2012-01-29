@@ -333,22 +333,24 @@ class EditStructure(object):
 		"""
 		settings.set(u'org_improve_split_heading', u'1')
 
-		self.keybindings.append(Keybinding(u'<M-CR>', Plug(u'OrgNewHeadingAboveNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=False)<CR>')))
+		self.keybindings.append(Keybinding(u'<C-S-CR>', Plug(u'OrgNewHeadingAboveNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=False)<CR>')))
 		self.menu + ActionEntry(u'New Heading &above', self.keybindings[-1])
-		self.keybindings.append(Keybinding(u'<4-CR>', Plug(u'OrgNewHeadingBelowNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=True)<CR>')))
+		self.keybindings.append(Keybinding(u'<S-CR>', Plug(u'OrgNewHeadingBelowNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=True)<CR>')))
 		self.menu + ActionEntry(u'New Heading &below', self.keybindings[-1])
 		self.keybindings.append(Keybinding(u'<C-CR>', Plug(u'OrgNewHeadingBelowAfterChildrenNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=True, end_of_last_child=True)<CR>')))
 		self.menu + ActionEntry(u'New Heading below, after &children', self.keybindings[-1])
 
-		self.keybindings.append(Keybinding(u'<M-CR>', Plug(u'OrgNewHeadingAboveInsert', u'<C-o>:<C-u>silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=False, insert_mode=True)<CR>', mode=MODE_INSERT)))
-		self.keybindings.append(Keybinding(u'<4-CR>', Plug(u'OrgNewHeadingBelowInsert', u'<C-o>:<C-u>silent! py ORGMODE.plugins[u"EditStructure"].new_heading(insert_mode=True)<CR>', mode=MODE_INSERT)))
+		self.keybindings.append(Keybinding(u'<C-S-CR>', Plug(u'OrgNewHeadingAboveInsert', u'<C-o>:<C-u>silent! py ORGMODE.plugins[u"EditStructure"].new_heading(below=False, insert_mode=True)<CR>', mode=MODE_INSERT)))
+		self.keybindings.append(Keybinding(u'<S-CR>', Plug(u'OrgNewHeadingBelowInsert', u'<C-o>:<C-u>silent! py ORGMODE.plugins[u"EditStructure"].new_heading(insert_mode=True)<CR>', mode=MODE_INSERT)))
 		self.keybindings.append(Keybinding(u'<C-CR>', Plug(u'OrgNewHeadingBelowAfterChildrenInsert', u'<C-o>:<C-u>silent! py ORGMODE.plugins[u"EditStructure"].new_heading(insert_mode=True, end_of_last_child=True)<CR>', mode=MODE_INSERT)))
 
 		self.menu + Separator()
 
-		self.keybindings.append(Keybinding(u'<M-K>', Plug(u'OrgMoveSubtreeUpward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_upward()<CR>')))
+		self.keybindings.append(Keybinding(u'm{', Plug(u'OrgMoveHeadingUpward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_upward(including_children=False)<CR>')))
+		self.keybindings.append(Keybinding(u'm[[', Plug(u'OrgMoveSubtreeUpward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_upward()<CR>')))
 		self.menu + ActionEntry(u'Move Subtree &Up', self.keybindings[-1])
-		self.keybindings.append(Keybinding(u'<M-J>', Plug(u'OrgMoveSubtreeDownward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_downward()<CR>')))
+		self.keybindings.append(Keybinding(u'm}', Plug(u'OrgMoveHeadingDownward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_downward(including_children=False)<CR>')))
+		self.keybindings.append(Keybinding(u'm]]', Plug(u'OrgMoveSubtreeDownward', u':py ORGMODE.plugins[u"EditStructure"].move_heading_downward()<CR>')))
 		self.menu + ActionEntry(u'Move Subtree &Down', self.keybindings[-1])
 
 		self.menu + Separator()
@@ -374,21 +376,17 @@ class EditStructure(object):
 		self.menu + ActionEntry(u'&Promote Subtree', self.keybindings[-1])
 		self.keybindings.append(Keybinding(u'<[[', u'<Plug>OrgPromoteSubtreeNormal', mode=MODE_NORMAL))
 		self.keybindings.append(Keybinding(u'<ir', u'<Plug>OrgPromoteSubtreeNormal', mode=MODE_NORMAL))
-		self.keybindings.append(Keybinding(u'<4-[>', u'<Plug>OrgPromoteSubtreeNormal', mode=MODE_NORMAL))
-		self.keybindings.append(Keybinding(u'<4-[>', u'<C-\><C-o><4-[>', mode=MODE_INSERT))
 
 		self.keybindings.append(Keybinding(u'>ah', Plug(u'OrgDemoteHeadingNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].demote_heading(including_children=False)<CR>')))
 		self.menu + ActionEntry(u'&Demote Heading', self.keybindings[-1])
 		self.keybindings.append(Keybinding(u'>>', Plug(u'OrgDemoteOnHeadingNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].demote_heading(including_children=False, on_heading=True)<CR>')))
-		self.keybindings.append(Keybinding(u'>}', u'>Plug>OrgDemoteHeadingNormal', mode=MODE_NORMAL))
-		self.keybindings.append(Keybinding(u'>ih', u'>Plug>OrgDemoteHeadingNormal', mode=MODE_NORMAL))
+		self.keybindings.append(Keybinding(u'>}', u'<Plug>OrgDemoteHeadingNormal', mode=MODE_NORMAL))
+		self.keybindings.append(Keybinding(u'>ih', u'<Plug>OrgDemoteHeadingNormal', mode=MODE_NORMAL))
 
 		self.keybindings.append(Keybinding(u'>ar', Plug(u'OrgDemoteSubtreeNormal', u':silent! py ORGMODE.plugins[u"EditStructure"].demote_heading()<CR>')))
 		self.menu + ActionEntry(u'&Demote Subtree', self.keybindings[-1])
 		self.keybindings.append(Keybinding(u'>]]', u'<Plug>OrgDemoteSubtreeNormal', mode=MODE_NORMAL))
 		self.keybindings.append(Keybinding(u'>ir', u'<Plug>OrgDemoteSubtreeNormal', mode=MODE_NORMAL))
-		self.keybindings.append(Keybinding(u'<4-]>', u'<Plug>OrgDemoteSubtreeNormal', mode=MODE_NORMAL))
-		self.keybindings.append(Keybinding(u'<4-]>', u'<C-\><C-o><4-]>', mode=MODE_INSERT))
 
 		# other keybindings
 		self.keybindings.append(Keybinding(u'<C-d>', Plug(u'OrgPromoteOnHeadingInsert', u'<C-o>:silent! py ORGMODE.plugins[u"EditStructure"].promote_heading(including_children=False, on_heading=True, insert_mode=True)<CR>', mode=MODE_INSERT)))

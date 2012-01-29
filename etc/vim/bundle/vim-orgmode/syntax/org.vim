@@ -18,8 +18,7 @@ let s:contains = ' contains=org_timestamp,org_timestamp_inactive'
 if g:org_heading_shade_leading_stars == 1
 	let s:contains = s:contains . ',org_shade_stars'
 	syntax match org_shade_stars /^\*\{2,\}/me=e-1 contained
-	hi HiddenChars ctermfg=234 ctermbg=234 guifg=#1c1c1c guibg=#1c1c1c
-	hi def link org_shade_stars HiddenChars
+	hi def link org_shade_stars NonText
 else
 	hi clear org_shade_stars
 endif
@@ -220,6 +219,13 @@ hi def link org_deadline_scheduled PreProc
 syn match org_table /^\s*|.*/ contains=org_timestamp,org_timestamp_inactive,hyperlink,org_table_separator,org_table_horizontal_line
 syn match org_table_separator /\(^\s*|[-+]\+|\?\||\)/ contained
 hi def link org_table_separator Type
+
+" Hyperlinks
+syntax match hyperlink	"\[\{2}[^][]*\(\]\[[^][]*\)\?\]\{2}" contains=hyperlinkBracketsLeft,hyperlinkURL,hyperlinkBracketsRight containedin=ALL
+syntax match hyperlinkBracketsLeft		contained "\[\{2}" conceal
+syntax match hyperlinkURL				contained "[^][]*\]\[" conceal
+syntax match hyperlinkBracketsRight		contained "\]\{2}" conceal
+hi def link hyperlink Underlined
 
 " Comments
 syntax match org_comment /^#.*/
