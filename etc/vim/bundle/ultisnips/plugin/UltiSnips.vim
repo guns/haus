@@ -14,7 +14,6 @@ endif
 
 if !has("python3")
     if !has("python")
-        echo  "UltiSnips requires py >= 2.5 or any py3"
         finish
     endif
 endif
