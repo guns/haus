@@ -484,9 +484,10 @@ vnoremap + "ry:ruby
 """ Plugins {{{1
 
 " Plugin: surround.vim - visual surround shortcuts (a la TextMate)
-" REPLACE (v)( sentence-backward and (v)' jump-to-mark with surrounds
-vmap ( s(
-vmap ' s'
+" REPLACE (v)( sentence-backward and (v)' jump-to-mark with surrounds.
+" RECURSIVE map for <Plug> mappings.
+vmap ( <Plug>VSurround(
+vmap ' <Plug>VSurround'
 
 " Plugin: Shebang
 noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
@@ -529,6 +530,7 @@ noremap <Leader>a<C-l>   :Align =><CR>
 nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: operator-camelize
+" RECURSIVE map for <Plug> mappings
 nmap <Leader>- viw<Plug>(operator-camelize-toggle)
 vmap <Leader>- <Plug>(operator-camelize-toggle)
 
