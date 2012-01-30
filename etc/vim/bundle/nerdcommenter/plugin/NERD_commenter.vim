@@ -98,6 +98,7 @@ let s:delimiterMap = {
     \ 'bindzone': { 'left': ';' },
     \ 'bst': { 'left': '%' },
     \ 'btm': { 'left': '::' },
+    \ 'cabal': { 'left': '--' },
     \ 'caos': { 'left': '*' },
     \ 'calibre': { 'left': '//' },
     \ 'catalog': { 'left': '--', 'right': '--' },
