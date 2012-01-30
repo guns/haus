@@ -26,16 +26,18 @@ endsnippet
 
 ### DECLARATIONS ###
 
-snippet main "int main(int argc, char const **argv)" b
-int main(int argc, char const **argv)
+snippet main "int main (int argc, char const **argv)" b
+int
+main (int argc, char const **argv)
 {
 	$0
 	return 0;
 }
 endsnippet
 
-snippet mainv "int main(void)" b
-int main(void)
+snippet mainv "int main (void)" b
+int
+main (void)
 {
 	$0
 	return 0;
@@ -43,14 +45,15 @@ int main(void)
 endsnippet
 
 snippet f "Function" b
-${1:type} ${2:function}($3)
+${1:type}
+${2:function} ($3)
 {
 	$0
 }
 endsnippet
 
 snippet fd "Function declaration" b
-${1:type} ${2:function}($3);
+${1:type} ${2:function} ($3);
 endsnippet
 
 snippet td "typedef" b
@@ -91,7 +94,7 @@ snippet u "uint8_t"
 uint${1:8}_t $0
 endsnippet
 
-snippet s "sizeof"
+snippet s "sizeof" w
 sizeof $0
 endsnippet
 
@@ -154,23 +157,23 @@ return $1;
 endsnippet
 
 snippet pr "printf" w
-printf("${1:%s}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
+printf ("${1:%s}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet prv "var" w
-printf("${1:var}: ${2:\"%s\"}\n", ${0:$1});
+printf ("${1:var}: ${2:\"%s\"}\n", ${0:$1});
 endsnippet
 
 snippet fpr "fprintf" w
-fprintf(${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%%)*(%.)?.*/(?2:\);)/}
+fprintf (${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet deb "call debugger" w
-raise(SIGTRAP);
+raise (SIGTRAP);
 endsnippet
 
 snippet fdeb "printf debug to file" w
-FILE *_f = fopen("/tmp/${1:debug.log}");
-fprintf(_f, "$0");
-fclose(_f);
+FILE *_f = fopen ("/tmp/${1:debug.log}");
+fprintf (_f, "$0");
+fclose (_f);
 endsnippet
