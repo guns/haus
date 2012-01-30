@@ -2,8 +2,8 @@
 
 command! -nargs=+ -bar Mapall call <SID>Mapall(<f-args>) " {{{1
 function! <SID>Mapall(...)
-    execute 'noremap ' . join(a:000)
-    execute 'map! ' . a:1 . ' <C-\><C-n>' . a:1
+    execute 'noremap  ' . join(a:000)
+    execute 'noremap! ' . a:1 . ' <C-\><C-n>' . join(a:000[1:])
 endfunction
 
 
