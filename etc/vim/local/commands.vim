@@ -231,10 +231,10 @@ endfunction
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! <SID>OrgBufferSetup()
     " RECURSIVE maps for <Plug> mappings
-    nmap <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
-    imap <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingInsert
-    nmap <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
-    imap <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingInsert
+    map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
+    imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
+    map  <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
+    imap <silent> <buffer> <4-]> <C-\><C-o><Plug>OrgDemoteHeadingNormal
 
     map  <silent> <buffer> <M-J> <Plug>OrgMoveSubtreeDownward
     imap <silent> <buffer> <M-J> <C-\><C-o><Plug>OrgMoveSubtreeDownward
@@ -242,10 +242,16 @@ function! <SID>OrgBufferSetup()
     imap <silent> <buffer> <M-K> <C-\><C-o><Plug>OrgMoveSubtreeUpward
 
     map  <silent> <buffer> <M-H> <Plug>OrgPromoteSubtreeNormal
-    imap <silent> <buffer> <M-H> <Plug>OrgPromoteSubtreeInsert
+    imap <silent> <buffer> <M-H> <C-\><C-o><Plug>OrgPromoteSubtreeNormal
     map  <silent> <buffer> <M-L> <Plug>OrgDemoteSubtreeNormal
-    imap <silent> <buffer> <M-L> <Plug>OrgDemoteSubtreeInsert
+    imap <silent> <buffer> <M-L> <C-\><C-o><Plug>OrgDemoteSubtreeNormal
 
+    map  <silent> <buffer> <4-CR> <Plug>OrgNewHeadingBelowNormal
+    imap <silent> <buffer> <4-CR> <C-\><C-o><Plug>OrgNewHeadingBelowNormal
+    map  <silent> <buffer> <M-CR> <Plug>OrgNewHeadingBelowNormal<C-\><C-o><Plug>OrgDemoteHeadingNormal<End>
+    imap <silent> <buffer> <M-CR> <C-\><C-n><M-CR>
+
+    " Please don't remap core keybindings!
     silent! iunmap <buffer> <C-d>
     silent! iunmap <buffer> <C-t>
 endfunction
