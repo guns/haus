@@ -645,7 +645,10 @@ daemons() {
 }
 
 # htop
-HAVE htop && [[ -d "$cdhaus/share/conf" ]] && {
+HAVE htop && {
+    # Satisfy ncurses hard-coded TERM names
+    alias htop='env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) htop'
+
     # htop writes its config file on exit
     htopsave() { (cd && exec gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
     htoprestore() { (cd && exec gunzip -c "$cdhaus/share/conf/htoprc.gz" > .htoprc) }
@@ -751,7 +754,7 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TMUX ]] && echo TERM=screen-256color) weechat-curses)'
+    ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) weechat-curses)'
 }
 
 # OS X Sync
