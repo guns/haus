@@ -193,6 +193,7 @@ augroup GUNS
 
     " vim-orgmode {{{1
     autocmd FileType org
+        \ OrgBufferSetup |
         \ SetWhitespace 2 8
 
     augroup ScreenShellEnter "{{{1

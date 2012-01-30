@@ -226,6 +226,29 @@ function! <SID>ScreenSetup(setup)
 endfunction
 
 
+command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
+function! <SID>OrgBufferSetup()
+    " RECURSIVE maps for <Plug> mappings
+    nmap <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
+    imap <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingInsert
+    nmap <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
+    imap <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingInsert
+
+    map  <silent> <buffer> <M-J> <Plug>OrgMoveSubtreeDownward
+    imap <silent> <buffer> <M-J> <C-\><C-o><Plug>OrgMoveSubtreeDownward
+    map  <silent> <buffer> <M-K> <Plug>OrgMoveSubtreeUpward
+    imap <silent> <buffer> <M-K> <C-\><C-o><Plug>OrgMoveSubtreeUpward
+
+    map  <silent> <buffer> <M-H> <Plug>OrgPromoteSubtreeNormal
+    imap <silent> <buffer> <M-H> <Plug>OrgPromoteSubtreeInsert
+    map  <silent> <buffer> <M-L> <Plug>OrgDemoteSubtreeNormal
+    imap <silent> <buffer> <M-L> <Plug>OrgDemoteSubtreeInsert
+
+    silent! iunmap <buffer> <C-d>
+    silent! iunmap <buffer> <C-t>
+endfunction
+
+
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! <SID>Open(word)
     " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
