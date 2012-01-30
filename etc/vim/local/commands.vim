@@ -81,8 +81,8 @@ function! <SID>LispBufferSetup()
 
     nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
     noremap! <buffer> <C-l>         ->
-    map      <buffer> <4-CR>        A<Space>;<Space>
-    map!     <buffer> <4-CR>        <C-\><C-o><4-CR>
+    noremap  <buffer> <4-CR>        A<Space>;<Space>
+    noremap! <buffer> <4-CR>        <C-\><C-o>A<Space>;<Space>
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
 
@@ -90,6 +90,7 @@ function! <SID>LispBufferSetup()
     " VimClojure
     "
 
+    " RECURSIVE map for <Plug> mappings
     nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
     nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
 
@@ -203,6 +204,7 @@ command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     if a:setup
+        " RECURSIVE map for cascading mappings
         vmap <Leader><Leader> :ScreenSend<CR>
         nmap <Leader><Leader> m`vip<Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
