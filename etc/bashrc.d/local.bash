@@ -944,10 +944,10 @@ ALIAS mk='make' \
 
 # diff patch
 ALIAS di='diff -U3' \
-      diw='diff -w' \
-      dir='diff -r' \
-      diq='diff -q' \
-      dirq='diff -rq'
+      diw='di -w' \
+      dir='di -r' \
+      diq='di -q' \
+      dirq='di -rq'
 ALIAS patch='patch --version-control never'
 
 # git

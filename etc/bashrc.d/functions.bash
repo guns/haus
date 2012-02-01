@@ -139,20 +139,30 @@ EXPORT_PATH() {
 # Param: $1 Source command
 # Param: $2 Target command
 TCOMP() {
-    eval "__${FUNCNAME}_$2__() {
-        # Unset self and remove extant compspec
-        unset \"__${FUNCNAME}_$2__\" 2>/dev/null
-        complete -r \"$2\"
+    local src="$1" alias="$2"
 
-        # Load completion through bash-completion 2.0 dynamic loading
-        if complete -p \"$1\" &>/dev/null || _load_comp \"$1\"; then
+    eval "__${FUNCNAME}_${alias}__() {
+        # Unset self and remove extant compspec
+        unset \"__${FUNCNAME}_${alias}__\" 2>/dev/null
+        complete -r \"$alias\"
+
+        # Load completion through bash-completion 2.0 dynamic loading function
+        if complete -p \"$src\" &>/dev/null || _load_comp \"$src\"; then
+            while true; do
+                local cspec=\"\$(complete -p \"$src\" 2>/dev/null)\"
+                local cfunc=\"\$(sed -ne 's/.*-F \\(.*\\) .*/\1/p' <<< \"\$cspec\")\"
+                if [[ \"\$cfunc\" == __${FUNCNAME}_*__ ]]; then
+                    # If this is another lazy completion, call now to load
+                    \$cfunc
+                else
+                    break
+                fi
+            done
             # If a compspec was successfully loaded, transfer to target and invoke
-            local cspec=\"\$(complete -p \"$1\" 2>/dev/null)\"
-            local cfunc=\"\$(sed -ne 's/.*-F \(.*\) .*/\1/p' <<< \"\$cspec\")\"
-            eval \"\$cspec\" \"$2\"
-            [[ \$cfunc ]] && _xfunc \"$1\" \"\$cfunc\"
+            eval \"\$cspec\" \"$alias\"
+            [[ \$cfunc ]] && _xfunc \"$src\" \"\$cfunc\"
         fi
-    }; complete -F \"__${FUNCNAME}_$2__\" \"$2\""
+    }; complete -F \"__${FUNCNAME}_${alias}__\" \"$alias\""
 }; GC_FUNC TCOMP
 
 
