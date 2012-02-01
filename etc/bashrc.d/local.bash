@@ -1059,6 +1059,19 @@ type ruby &>/dev/null && {
         echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
     }
 
+    # Create a private build of a gem
+    gem-private-build() {
+        ruby -rubygems -r fileutils -e "
+            abort 'Usage: $FUNCNAME spec suffix [outdir]' unless (2..3) === ARGV.size
+
+            specfile, suffix, outdir = ARGV
+            spec = Gem::Specification.load specfile
+            spec.version = '%s.%s' % [spec.version, suffix]
+            gem = Gem::Builder.new(spec).build
+            FileUtils.mv gem, outdir if outdir
+        " "$@"
+    }
+
     # Local api server @ `$cdapi`
     HAVE cdapi && {
         # Param: $@ API Site names
