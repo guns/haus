@@ -7,11 +7,11 @@ class Haus
   class Logger
     class << self
       def italics?
-        system '{ command -v tput && tput sitm; } &>/dev/null'
+        system '/bin/sh -c "command -v tput && tput sitm" &>/dev/null'
       end
 
       def colors256?
-        system '{ command -v tput && [ $(tput colors) -eq 256 ]; } &>/dev/null'
+        system '/bin/sh -c "command -v tput && [ $(tput colors) -eq 256 ]" &>/dev/null'
       end
     end
 
