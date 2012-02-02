@@ -149,10 +149,10 @@ class Haus
       h = hash
 
       dst            = File.expand_path destination
-      @links         = links.dup.reject { |s,d| d == dst }.freeze
-      @copies        = copies.dup.reject { |s,d| d == dst }.freeze
-      @modifications = modifications.dup.reject { |s,d| d == dst }.freeze
-      @deletions     = deletions.dup.reject { |d| d == dst }.freeze
+      @links         = links.reject { |s,d| d == dst }.freeze
+      @copies        = copies.reject { |s,d| d == dst }.freeze
+      @modifications = modifications.reject { |s,d| d == dst }.freeze
+      @deletions     = deletions.reject { |d| d == dst }.freeze
 
       hash != h
     end
