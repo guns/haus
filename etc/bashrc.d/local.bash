@@ -706,9 +706,11 @@ HAVE ssh-proxy && TCOMP ssh ssh-proxy
 # lsof
 ALIAS lsof='lsof -Pn +fg' && {
     alias lsif='lsof -i'
+    alias lsifr='\lsof -Pi +fg'
     alias lsifudp='lsif | grep UDP'
     alias lsiflisten='lsif | grep LISTEN'
     alias lsifconnect='lsif | grep -- "->"'
+    alias lsifconnectr='lsifr | grep -- "->"'
     alias lsuf='lsof -U'
 }
 
