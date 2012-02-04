@@ -20,7 +20,7 @@ task :env do # {{{1
       {
         :base   => "#{@src}/bash-completion",
         :branch => %w[master guns],
-        :files  => proc { |proj|
+        :files  => lambda { |proj|
           Hash[proj.git.ls_files('completions').map(&:first).reject do |f|
             File.directory? File.join(proj.base, f) or File.basename(f) =~ /\A(\.|_|Makefile)/
           end.map do |f|
@@ -42,7 +42,7 @@ task :env do # {{{1
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
         },
-        :before => proc { |proj|
+        :before => lambda { |proj|
           Dir.chdir proj.base do
             system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
             raise 'Pull and merge failed' if not $?.exitstatus.zero?
@@ -82,7 +82,6 @@ task :env do # {{{1
       { :base => "#{@vim}/httplog",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jellybeans.vim",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jslint.vim",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/ManPageView",                                        :files => :pathogen },
       { :base => "#{@vim}/matchit.zip",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nerdcommenter",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nerdtree",               :branch => %w[master],      :files => :pathogen },
@@ -122,7 +121,7 @@ task :env do # {{{1
         :branch => %w[master guns],
         :push   => 'github',
         :files  => 'etc/vim/bundle/Command-T',
-        :after  => proc { |proj| system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
+        :after  => lambda { |proj| system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
       },
 
       {
@@ -130,7 +129,7 @@ task :env do # {{{1
         :branch => %w[master guns],
         :push   => 'github',
         :files  => 'etc/vim/bundle/VimClojure',
-        :after  => proc { |proj| system 'rake nailgun &>/dev/null' }
+        :after  => lambda { |proj| system 'rake nailgun &>/dev/null' }
       },
 
       {
@@ -150,10 +149,33 @@ task :env do # {{{1
       },
 
       {
+        :base   => "#{@vim}/ManPageView",
+        :files  => :pathogen,
+        :before => lambda { |proj|
+          Dir.chdir proj.base do
+            uid = File.stat('.').uid
+            begin
+              system 'git checkout master &>/dev/null' or raise
+              updated = system 'rake update &>/dev/null'
+              system 'git checkout guns &>/dev/null' or raise
+              if updated
+                system 'git merge master &>/dev/null' or raise
+              end
+            rescue
+              raise 'ManPageView update failed!'
+            ensure
+              chown_R uid, nil, proj.base, :verbose => false
+              rm_f Dir['.Vimball*'], :verbose => false
+            end
+          end if proj.fetch
+        }
+      },
+
+      {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
         :push   => 'github',
-        :files  => proc { |proj|
+        :files  => lambda { |proj|
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.gitignore --exclude=*.snippets #{proj.base}/ #{dst}/]
