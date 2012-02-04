@@ -12,8 +12,6 @@ g:manpageview_sfx_EXT	manpageview.txt	/*g:manpageview_sfx_EXT*
 g:manpageview_syntax_EXT	manpageview.txt	/*g:manpageview_syntax_EXT*
 g:manpageview_winopen	manpageview.txt	/*g:manpageview_winopen*
 g:manpgeview_user	manpageview.txt	/*g:manpgeview_user*
-manpage-pagedown	manpageview.txt	/*manpage-pagedown*
-manpage-pageup	manpageview.txt	/*manpage-pageup*
 manpageview	manpageview.txt	/*manpageview*
 manpageview-K	manpageview.txt	/*manpageview-K*
 manpageview-contents	manpageview.txt	/*manpageview-contents*
@@ -25,9 +23,12 @@ manpageview-info	manpageview.txt	/*manpageview-info*
 manpageview-man	manpageview.txt	/*manpageview-man*
 manpageview-open	manpageview.txt	/*manpageview-open*
 manpageview-options	manpageview.txt	/*manpageview-options*
+manpageview-pagedown	manpageview.txt	/*manpageview-pagedown*
+manpageview-pageup	manpageview.txt	/*manpageview-pageup*
 manpageview-perl	manpageview.txt	/*manpageview-perl*
 manpageview-php	manpageview.txt	/*manpageview-php*
 manpageview-python	manpageview.txt	/*manpageview-python*
+manpageview-suggest	manpageview.txt	/*manpageview-suggest*
 manpageview-usage	manpageview.txt	/*manpageview-usage*
 manpageview.txt	manpageview.txt	/*manpageview.txt*
 manpageview_extend	manpageview.txt	/*manpageview_extend*
