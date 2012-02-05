@@ -88,6 +88,7 @@ task :env do # {{{1
       { :base => "#{@vim}/nginx.vim",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/NrrwRgn",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/operator-camelize.vim",  :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/refheap.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/reporoot.vim",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/scratch.vim",            :branch => %w[master],      :files => :pathogen },
