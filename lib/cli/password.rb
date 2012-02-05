@@ -40,7 +40,9 @@ module CLI
       buf = ''
       File.open source, 'r' do |f|
         loop do
-          buf << '%08b' % f.getc.unpack('C') until buf.length >= bit_len
+          chr = f.getc
+          break if chr.nil?
+          buf << '%08b' % chr.unpack('C') until buf.length >= bit_len
           yield buf.slice!(0, bit_len).to_i(2)
         end
       end
