@@ -152,9 +152,11 @@ function! <SID>StartNailgunServer()
         return
     endif
     let g:vimclojure#WantNailgun = 1
+    let g:StartedNailgunServer = 0
 
     if empty(system('nc -z 127.0.0.1 2113 &>/dev/null && echo 1'))
         silent! execute '! clojure --nailgun &>/dev/null & until nc -z 127.0.0.1 2113 &>/dev/null; do echo -n .; sleep 1; done'
+        let g:StartedNailgunServer = 1
     endif
 
     augroup NailgunServer
@@ -169,7 +171,7 @@ function! <SID>StartNailgunServer()
     call vimclojure#InitBuffer()
     redraw!
 
-    echo 'Nailgun server started'
+    echo (g:StartedNailgunServer ? 'Started' : 'Attached to') . ' Nailgun server'
 endfunction
 
 
@@ -177,13 +179,17 @@ command! -bar StopNailgunServer call <SID>StopNailgunServer() "{{{1
 function! <SID>StopNailgunServer()
     let g:vimclojure#WantNailgun = 0
 
-    silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop &>/dev/null &' | redraw!
+    if exists('g:StartedNailgunServer') && g:StartedNailgunServer
+        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop &>/dev/null &' | redraw!
+        echo 'Killing Nailgun server'
+        let g:StartNailgunServer = 0
+    else
+        echo 'Unloading Nailgun server'
+    endif
 
     augroup NailgunServer
         autocmd!
     augroup END
-
-    echo 'Killing Nailgun server'
 endfunction
 
 
