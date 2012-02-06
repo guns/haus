@@ -201,16 +201,16 @@ noremap! <C-d> <Del>
 
 """ Emacs: Ctrl-K Ctrl-U (kill-to-{end,start}-of-line) {{{1
 
-" Transfer enter-digraph to (nvoic)<M--> to free (nvoic)<C-k>
-" Bind:   <M--> =>   Ctrl-K
-" Bind: v_<M--> => v_Ctrl-K
-" Bind: o_<M--> => o_Ctrl-K
-" Bind: i_<M--> => i_Ctrl-K
-" Bind: c_<M--> => c_Ctrl-K
+" Transfer enter-digraph to (nvoic)<M-\> to free (nvoic)<C-k>
+" Bind:   <M-\> =>   Ctrl-K
+" Bind: v_<M-\> => v_Ctrl-K
+" Bind: o_<M-\> => o_Ctrl-K
+" Bind: i_<M-\> => i_Ctrl-K
+" Bind: c_<M-\> => c_Ctrl-K
 noremap  <C-k> <NOP>
-noremap  <M--> <C-k>
+noremap  <M-\> <C-k>
 noremap! <C-k> <NOP>
-noremap! <M--> <C-k>
+noremap! <M-\> <C-k>
 
 " Set (nvoic)<C-k> to kill-to-end-of-line
 " Bind:   Ctrl-K => D
@@ -473,6 +473,10 @@ vnoremap <M-k> :move-2<CR>gv=gv
 " http://vim.wikia.com/wiki/Drag_words_with_Ctrl-left/right
 vnoremap <M-h> <C-\><C-n>`<<Left>i_<C-\><C-n>mz"_xgvx`zPgv<Left>o<Left>o
 vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
+
+" Definitions / etymology
+noremap <Leader>D :<C-u>execute 'silent! ! open http://dictionary.reference.com/browse/' . expand('<cword>') \| redraw!<CR>
+noremap <Leader>E :<C-u>execute 'silent! ! open http://www.etymonline.com/index.php?search=' . expand('<cword>') \| redraw!<CR>
 
 " REPLACE move-down-and-start-of-line with a simple add-numbers-in-selection
 vnoremap + "ry:ruby
