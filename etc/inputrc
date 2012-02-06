@@ -141,7 +141,6 @@ set visible-stats on
 "\e[A":         history-search-backward     (- previous-history)
 
 # Unicode characters
-# /opt/haus/share/doc/unicode-data.txt.gz
 "\e'":          "→"         U+2192
 "\e(":          "·"         U+00B7
 "\e6":          "§"         U+00A7          (- digit-argument)
@@ -159,6 +158,7 @@ set visible-stats on
 "\el":          "λ"         U+03BB          (- downcase-word)
 "\ep":          "π"         U+03C0
 "\es":          "⚓"         U+2693
+"\eS":          "Σ"         U+03A3
 "\et":          "τ"         U+03C4
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
