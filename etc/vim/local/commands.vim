@@ -91,8 +91,8 @@ function! <SID>LispBufferSetup()
     "
 
     " RECURSIVE map for <Plug> mappings
-    nmap <buffer> <Leader>d <Plug>ClojureSourceLookupWord
-    nmap <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
+    nmap <silent> <buffer> <Leader>d <Plug>ClojureSourceLookupWord
+    nmap <silent> <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
 
     "
     " Paredit
