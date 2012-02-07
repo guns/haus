@@ -1123,7 +1123,21 @@ ALIAS npm='npm --global' && {
 
 ALIAS perlpe='perl -pe' \
       perlne='perl -ne' \
-      perlpie='perl -i -pe'
+      perlpie='perl -i -pe' && {
+    # http://www.toad.net/~jkaplan2/perlRepl.htm
+    perlrepl() {
+        perl -e '
+            while (true)
+            {
+                print ">>> ";
+                $line  = <>;
+                $value = eval ($line);
+                $error = $@;
+                if ($error ne "") { print $error; } else { print "$value\n"; }
+            }
+        ' "$@"
+    }
+}
 
 
 ### Haskell {{{1
