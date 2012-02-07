@@ -153,6 +153,7 @@ CD_FUNC cdlocal         /usr/local
 CD_FUNC cdclojure       ~/.clojure /opt/clojure
 CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib"
 CD_FUNC cdsrc           ~/src /usr/local/src
+CD_FUNC cdSRC           /usr/local/src
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdappsupport    ~/Library/Application\ Support

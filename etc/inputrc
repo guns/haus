@@ -197,6 +197,7 @@ $if Bash
     "\C-x\C-_":     "\C-] cd - \n"
     "\C-xo":        "\C-]cdopt "
     "\C-xs":        "\C-]cdsrc "
+    "\C-xS":        "\C-]cdSRC "
 
     # Job control
     "\C-xp":        "\C-] pushd . \n"
