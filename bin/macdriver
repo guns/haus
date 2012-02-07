@@ -145,7 +145,7 @@ class Macdriver
   end
 
   def to_s
-    fiter(kextlist).map { |kext| decorate kext }.join "\n"
+    filter(kextlist).map { |kext| decorate kext }.join "\n"
   end
 
   def decorate kext
