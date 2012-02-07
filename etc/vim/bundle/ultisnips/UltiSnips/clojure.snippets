@@ -426,8 +426,8 @@ endsnippet
 ### Functions {{{1
 
 snippet fn "fn" w
-(fn [$1]
-	$0)
+(fn [$0]
+	...)
 endsnippet
 
 snippet app "apply" w
@@ -467,7 +467,7 @@ endsnippet
 
 snippet let "let" w
 (let [$0]
-	)
+	...)
 endsnippet
 
 snippet letf "letfn" w
@@ -476,8 +476,8 @@ snippet letf "letfn" w
 endsnippet
 
 snippet bind "binding" w
-(binding [$1]
-	$0)
+(binding [$0]
+	...)
 endsnippet
 
 snippet def "def"
@@ -608,13 +608,14 @@ snippet wn "when-not" w
 endsnippet
 
 snippet ifl "if-let" w
-(if-let [${0}]
+(if-let [$0]
 	(comment then)
 	(comment else))
 endsnippet
 
 snippet wl "when-let" w
-(when [${1}]$0)
+(when-let [$0]
+	...)
 endsnippet
 
 snippet cond "cond" w
@@ -645,13 +646,13 @@ snippet do "do exprs" w
 endsnippet
 
 snippet dose "doseq" w
-(doseq [${1:each-bind}]
-	$0)
+(doseq [${0:each-bind}]
+	...)
 endsnippet
 
 snippet dot "dotimes" w
-(dotimes [${1:bindings}]
-	$0)
+(dotimes [${0:bindings}]
+	...)
 endsnippet
 
 snippet dor "dorun" w
@@ -664,12 +665,12 @@ endsnippet
 
 snippet for "for" w
 (for [${0:each-bind}]
-	)
+	...)
 endsnippet
 
 snippet lo "loop" w
-(loop [${1:bindings}]
-	$0)
+(loop [${0:bindings}]
+	...)
 endsnippet
 
 snippet re "recur" w
@@ -740,8 +741,8 @@ snippet wos "with-out-str" w
 endsnippet
 
 snippet wo "with-open" w
-(with-open [${1:name init ...}]
-	$0)
+(with-open [${0:name init ...}]
+	...)
 endsnippet
 
 snippet slu "slurp" w
@@ -769,11 +770,11 @@ snippet defp "defpage" w
 endsnippet
 
 snippet defpp "defpartial" w
-(defpartial ${1:fname} [${2:& content}]
-	$0)
+(defpartial ${1:fname} [${0:& content}]
+	...)
 endsnippet
 
 snippet defe "defelem" w
-(defelem ${1:fname} [${2}]
-	$0)
+(defelem ${1:fname} [${0}]
+	...)
 endsnippet
