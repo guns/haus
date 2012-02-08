@@ -1,0 +1,9 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1968
+
+Indentation script for Haskell.
+
+Modify g:haskell_indent_if and g:haskell_indent_case to
+change indentation for `if'(default 3) and `case'(default 5).
+Example (in .vimrc):
+> let g:haskell_indent_if = 2
+
