@@ -908,11 +908,12 @@ HAVE vim && {
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
     alias vimrcconf='(cd /etc && vim rc.conf)'
     alias vimscratch='vim -c Scratch'
-    alias vimsubtle='(cdhaus && vim etc/%config/subtle/subtle.rb)'
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
+    alias vimwm='(cdhaus && vim etc/%xmonad/xmonad.hs)'
     alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
+    alias vimxinitrc='vim ~/.xinitrc'
 }
 
 

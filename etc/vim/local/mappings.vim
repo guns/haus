@@ -359,8 +359,9 @@ noremap <Leader>et       :<C-u>Org TODO<CR>
 noremap <Leader>eT       :<C-u>execute 'tabedit ' . resolve(expand('~/.tmux.conf'))<CR>
 noremap <Leader>eu       :<C-u>execute 'tabedit ' . resolve($cdhaus . '/share/doc/unicode-table.txt.gz')<CR>
 noremap <Leader>ev       :<C-u>execute 'tabedit ' . resolve(expand($MYVIMRC))<CR>
-noremap <Leader>ew       :<C-u>execute 'tabedit ' . resolve(expand('~/.config/subtle/subtle.rb'))<CR>
+noremap <Leader>ew       :<C-u>execute 'tabedit ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
 noremap <Leader>ex       :<C-u>execute 'tabedit ' . resolve(expand('~/.Xdefaults'))<CR>
+noremap <Leader>eX       :<C-u>execute 'tabedit ' . expand('~/.xinitrc')<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>setlocal filetype=
