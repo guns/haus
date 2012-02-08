@@ -1148,7 +1148,7 @@ ALIAS perlpe='perl -pe' \
 HAVE cabal && {
     # alias cabale
     alias cabalg='run cabal list installed'
-    alias cabali='run cabal install --global'
+    alias cabali='run cabal install'
     alias cabalq='run cabal info'
     alias cabals='run cabal list'
     alias cabalu='run ghc-pkg unregister'
@@ -1348,6 +1348,9 @@ ALIAS xselb='xsel -b'
 
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
+
+# Xmonad
+HAVE xmonad && xmonadreload() { (xmonad --recompile && xmonad --restart && na) || notify "Xmonad compile failure"; }
 
 
 ### Launchd
