@@ -635,6 +635,7 @@ daemons() {
             exim sendmail
             smbd nmbd nfsd
             sshd ssh-agent
+            subtle xmonad
             urxvtd
             wicd
         ]
@@ -1350,7 +1351,13 @@ ALIAS xselb='xsel -b'
 ALIAS subtlecheck='subtle --check'
 
 # Xmonad
-HAVE xmonad && xmonadreload() { (xmonad --recompile && xmonad --restart && na) || notify "Xmonad compile failure"; }
+HAVE xmonad && xmonadrecompile() {
+    if ! ps axo ucomm | grep '^ghc' &>/dev/null; then
+        { run xmonad --recompile && run xmonad --restart && na; } || notify 'Xmonad compile failure'
+    else
+        notify 'GHC seems to be busy'
+    fi
+}
 
 
 ### Launchd
