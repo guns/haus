@@ -296,8 +296,8 @@ noremap <Leader>!     :<C-u>make!<CR>
 noremap <Leader><C-t> :<C-u>execute 'silent! !ctags -R' \| redraw! \| echo 'ctags -R'<CR>
 noremap <4-p>         :<C-u>SynStack<CR>
 
-" Overload redraw mapping to also clear last match
-noremap <C-l> :<C-u>let @/ = ''<CR><C-l>
+" Clear last match
+noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
 
 " Reload files
 noremap <Leader><C-r>
