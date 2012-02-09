@@ -52,7 +52,9 @@ export PAGER='less'                     # Should be a single word to avoid quoti
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
 if [[ "$SSH_TTY" ]]; then
-    export RAILS_ENV='production' RACK_ENV='production'
+    export RAILS_ENV='production'  RACK_ENV='production'
+else
+    export RAILS_ENV='development' RACK_ENV='development'
 fi
 
 # OS X
@@ -700,7 +702,8 @@ ALIAS ssh='ssh -C -2' \
       ssh-master='ssh -Nn -M' \
       ssh-tunnel='ssh -Nn -M -D 22222' \
       ssh-password='ssh -o \"PreferredAuthentications password\"' \
-      ssh-nocompression='ssh -o "Compression no"'
+      ssh-nocompression='ssh -o "Compression no"' \
+      xssh-shell='exec ssh-shell'
 ALIAS scp='scp -C -2' \
       scpr='scp -r'
 HAVE ssh-proxy && TCOMP ssh ssh-proxy
