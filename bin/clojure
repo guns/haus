@@ -6,6 +6,7 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'ostruct'
+require 'pathname'
 require 'cli/superparser'
 
 class Clojure
@@ -13,7 +14,7 @@ class Clojure
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.classpath ||= (ENV['CLASSPATH'] || '').split ':'
+    options.classpath  ||= (ENV['CLASSPATH'] || '').split ':'
     options.vimclojure ||= '~/.vim/bundle/VimClojure/vimclojure-server.jar'
   end
 
@@ -31,25 +32,21 @@ class Clojure
         options.classpath = arg.split ':'
       end
 
-      opt.on '-q', '--quiet', 'No command summary' do
-        options.quiet = true
+      opt.on '-l', '--lein', 'Fork leiningen commands and manage via a master process' do
+        options.command = :lein
       end
 
       opt.on '--repl', 'Clojure REPL, wrapped by rlwrap if available' do
-        options.repl = :repl
-      end
-
-      opt.on '--leinrepl', 'Starts `lein repl`; runs in ~/.clojure if CWD is not a project directory' do
-        options.repl = :leinrepl
-      end
-
-      opt.on '--nailgun', 'Starts `lein nailgun`; runs in ~/.clojure if CWD is not a project directory' do
-        options.repl = :nailgun
+        options.command = :repl
       end
 
       opt.on '--vimclojure [jar]', 'Start the VimClojure Nailgun server' do |arg|
-        options.repl = :vimclojure
+        options.command = :vimclojure
         options.vimclojure = arg if arg
+      end
+
+      opt.on '-q', '--quiet' do
+        options.quiet = true
       end
 
       opt.on '-h', '--help' do
@@ -70,13 +67,45 @@ class Clojure
     File.executable?(rl) ? [rl] : []
   end
 
+  def lein_project_dir
+    Pathname.new(Dir.pwd).ascend do |path|
+      break path.to_s if File.exists? (path + 'project.clj').to_s
+    end or File.expand_path '~/.clojure'
+  end
+
+  def lein_daemon *tasks
+    # FIXME: Forking in this manner mutates the parent terminal. We can
+    #        restore `stty -g`, but this assumes we are running from a tty
+    tty_state = %x(stty -g)
+
+    pids = tasks.map do |t|
+      fork do
+        Dir.chdir lein_project_dir
+        warn "[#{$$}] cd #{Dir.pwd}; lein #{t}" unless options.quiet
+        exec *%W[lein #{t}]
+      end
+    end
+
+    %w[TERM INT QUIT].each do |sig|
+      trap sig do
+        %w[TERM INT QUIT].each { |s| trap s, 'DEFAULT' }
+        warn "\nCaught SIG%s; sending SIGTERM to %s" % [sig, pids.join(', ')] unless options.quiet
+        Process.kill :TERM, *pids
+        Process.waitall
+      end
+    end
+
+    Process.waitall
+  ensure
+    system 'stty', tty_state
+  end
+
   def execute args = []
-    cmd = case options.repl
+    cmd = case options.command
+    when :lein
+      return lein_daemon(*args)
     when :repl
       rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
-    when :leinrepl, :nailgun
-      str = File.exists?('project.clj') ? '' : 'cd ~/.clojure; '
-      [str << (options.repl == :leinrepl ? 'lein repl' : 'lein nailgun')]
     when :vimclojure
       %W[java -server -classpath #{classpath options.vimclojure}] + args + %W[vimclojure.nailgun.NGServer 127.0.0.1]
     else

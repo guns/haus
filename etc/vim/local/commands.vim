@@ -155,7 +155,7 @@ function! <SID>StartNailgunServer()
     let g:StartedNailgunServer = 0
 
     if empty(system('nc -z 127.0.0.1 2113 &>/dev/null && echo 1'))
-        silent! execute '! clojure --nailgun &>/dev/null & until nc -z 127.0.0.1 2113 &>/dev/null; do echo -n .; sleep 1; done'
+        silent! execute '! clojure --lein nailgun &>/dev/null & until nc -z 127.0.0.1 2113 &>/dev/null; do echo -n .; sleep 1; done'
         let g:StartedNailgunServer = 1
     endif
 
@@ -197,7 +197,7 @@ command! -nargs=? -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
         \ 'ruby'       : 'irb -f',
-        \ 'clojure'    : 'clojure --leinrepl',
+        \ 'clojure'    : 'clojure --lein repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'javascript' : 'node'
