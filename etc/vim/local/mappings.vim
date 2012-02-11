@@ -518,6 +518,7 @@ noremap <Leader>gap      :<C-u>Git ap<CR>
 noremap <Leader><C-g>    :<C-u>Gstatus<CR>
 noremap <4-g>            :<C-u>Gstatus<CR>
 noremap <4-G>            q:iGgrep! -Pi<Space>
+noremap <4-*>            :<C-u>let @/ = expand('<cword>') \| execute 'silent! Ggrep! ' . expand('<cword>') \| redraw!<CR>
 
 " Plugin: ScreenShell
 noremap <Leader>S :<C-u>Screen<CR>
