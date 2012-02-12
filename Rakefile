@@ -69,7 +69,6 @@ task :env do # {{{1
       { :base => "#{@vim}/applescript.vim",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/BufOnly.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",        :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/ColorX",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/CountJump",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/delimitMate",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/devbox-dark-256",        :branch => %w[master],      :files => :pathogen },
