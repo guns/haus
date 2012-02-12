@@ -58,9 +58,9 @@ function! s:init() "{{{
 
 	" matchpairs
 	call s:option_init("matchpairs", string(&matchpairs)[1:-2])
-	call s:option_init("matchpairs_list", split(b:_l_delimitMate_matchpairs, ','))
-	call s:option_init("left_delims", split(b:_l_delimitMate_matchpairs, ':.,\='))
-	call s:option_init("right_delims", split(b:_l_delimitMate_matchpairs, ',\=.:'))
+	call s:option_init("matchpairs_list", map(split(b:_l_delimitMate_matchpairs, ','), 'split(v:val, '':'')'))
+	call s:option_init("left_delims", map(copy(b:_l_delimitMate_matchpairs_list), 'v:val[0]'))
+	call s:option_init("right_delims", map(copy(b:_l_delimitMate_matchpairs_list), 'v:val[1]'))
 
 	" quotes
 	call s:option_init("quotes", "\" ' `")
@@ -168,6 +168,7 @@ function! s:Unmap() " {{{
 				\ b:_l_delimitMate_apostrophes_list +
 				\ ['<BS>', '<S-BS>', '<Del>', '<CR>', '<Space>', '<S-Tab>', '<Esc>'] +
 				\ ['<Up>', '<Down>', '<Left>', '<Right>', '<LeftMouse>', '<RightMouse>'] +
+				\ ['<C-Left>', '<C-Right>'] +
 				\ ['<Home>', '<End>', '<PageUp>', '<PageDown>', '<S-Down>', '<S-Up>', '<C-G>g']
 
 	for map in imaps
@@ -353,38 +354,30 @@ function! s:ExtraMappings() "{{{
 	if !hasmapto('<Plug>delimitMateDel', 'i')
 		silent! imap <unique> <buffer> <Del> <Plug>delimitMateDel
 	endif
-	" When autoclose is off:
-	if !b:_l_delimitMate_autoclose
-		" Flush the char buffer on movement keystrokes or when leaving insert mode:
-		for map in ['Esc', 'Left', 'Right', 'Home', 'End']
-			exec 'inoremap <silent> <Plug>delimitMate'.map.' <C-R>=<SID>Finish()<CR><'.map.'>'
-			if !hasmapto('<Plug>delimitMate'.map, 'i')
-				exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
-			endif
-		endfor
-		" Except when pop-up menu is active:
-		for map in ['Up', 'Down', 'PageUp', 'PageDown', 'S-Down', 'S-Up']
-			exec 'inoremap <silent> <expr> <Plug>delimitMate'.map.' pumvisible() ? "\<'.map.'>" : "\<C-R>=\<SID>Finish()\<CR>\<'.map.'>"'
-			if !hasmapto('<Plug>delimitMate'.map, 'i')
-				exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
-			endif
-		endfor
-		" Avoid ambiguous mappings:
-		for map in ['LeftMouse', 'RightMouse']
-			exec 'inoremap <silent> <Plug>delimitMateM'.map.' <C-R>=delimitMate#Finish(1)<CR><'.map.'>'
-			if !hasmapto('<Plug>delimitMate'.map, 'i')
-				exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMateM'.map
-			endif
-		endfor
-	endif
+	" Flush the char buffer on movement keystrokes or when leaving insert mode:
+	for map in ['Esc', 'Left', 'Right', 'Home', 'End', 'C-Left', 'C-Right']
+		exec 'inoremap <silent> <Plug>delimitMate'.map.' <C-R>=<SID>Finish()<CR><'.map.'>'
+		if !hasmapto('<Plug>delimitMate'.map, 'i')
+			exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
+		endif
+	endfor
+	" Except when pop-up menu is active:
+	for map in ['Up', 'Down', 'PageUp', 'PageDown', 'S-Down', 'S-Up']
+		exec 'inoremap <silent> <expr> <Plug>delimitMate'.map.' pumvisible() ? "\<'.map.'>" : "\<C-R>=\<SID>Finish()\<CR>\<'.map.'>"'
+		if !hasmapto('<Plug>delimitMate'.map, 'i')
+			exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
+		endif
+	endfor
+	" Avoid ambiguous mappings:
+	for map in ['LeftMouse', 'RightMouse']
+		exec 'inoremap <silent> <Plug>delimitMateM'.map.' <C-R>=delimitMate#Finish(1)<CR><'.map.'>'
+		if !hasmapto('<Plug>delimitMate'.map, 'i')
+			exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMateM'.map
+		endif
+	endfor
 
 	" Jump over next delimiters
-	if b:_l_delimitMate_autoclose
-		" Don't insert missing delimiters if autoclose is on
-		inoremap <buffer> <Plug>delimitMateJumpMany <C-R>=delimitMate#JumpMany()<CR>
-	else
-		inoremap <buffer> <Plug>delimitMateJumpMany <C-R>=len(b:_l_delimitMate_buffer) ? delimitMate#Finish(0) : delimitMate#JumpMany()<CR>
-	endif
+	inoremap <buffer> <Plug>delimitMateJumpMany <C-R>=len(b:_l_delimitMate_buffer) ? delimitMate#Finish(0) : delimitMate#JumpMany()<CR>
 	if !hasmapto('<Plug>delimitMateJumpMany')
 		imap <silent> <buffer> <C-G>g <Plug>delimitMateJumpMany
 	endif
