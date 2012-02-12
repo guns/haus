@@ -16,7 +16,7 @@ augroup GUNS
 
     " Open the quickfix window if `quickfixcmd!` returns with errors {{{1
     autocmd QuickFixCmdPost *
-        \ if !empty(getqflist()) | cwindow | end
+        \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
 
     " Vimscript {{{1
     autocmd FileType vim,help

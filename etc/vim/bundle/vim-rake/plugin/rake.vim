@@ -291,9 +291,6 @@ function! s:Rake(bang,arg)
           \.'%\\s%#%f:%l:,'
           \.'%m\ [%f:%l]:'
     execute 'make! '.a:arg
-    if a:bang !=# '!'
-      return 'cwindow'
-    endif
     return ''
   finally
     let &l:errorformat = old_errorformat
