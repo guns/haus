@@ -79,7 +79,7 @@
     lfstat = log --relative-date --decorate --graph --stat --first-parent
 
     lp     = log --relative-date --decorate --patch --stat
-    lpf    = log --relative-date --decorate --patch --stat --first-parent
+    lfp    = log --relative-date --decorate --patch --stat --first-parent
     lpw    = log --relative-date --decorate --patch --stat -w
     wlp    = log --relative-date --decorate --patch --stat --word-diff=color
 
