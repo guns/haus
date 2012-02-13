@@ -1,227 +1,179 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'ostruct'
-require 'shellwords'
 require 'fileutils'
 require 'yaml'
 require 'plist'
-require 'haus/logger'
 
 class Macdriver
-  include Haus::Loggable
+  # I am aware of RGL and TSort; this implementation for amusement only!
+  class DirectedGraph
+    class CyclicDependencyError < RuntimeError; end
 
-  class Kext
-    attr_reader :id, :dependencies
+    DIRECTION = { :in => 0, :out => 1 }
 
-    def initialize plist
-      xml = Plist.parse_xml plist
-      @id = xml['CFBundleIdentifier']
-      @dependencies = (xml['OSBundleLibraries'] || {}).keys
+    attr_reader :table
+
+    # Takes a list of vertices and outbound edges.
+    def initialize list
+      # The graph is actually stored in a hash table (a.k.a. adjacency list)
+      @table = {}
+
+      # Storing only incoming (or outgoing) edges per node allows for fast
+      # appends, but storing both sets of edges per node allows for fast
+      # bi-directional traversal, and simple reversals.
+      #
+      # We are interested in analyzing a static graph, so we choose the latter
+      list.each do |v, es|
+        # [inbound, outbound]
+        table[v] ||= [[], []]
+        es.each do |e|
+          table[e] ||= [[], []]
+          # Storing object references makes for expensive deep-copies, so we
+          # just record the vertex ids instead.
+          table[e][DIRECTION[:in ]].push v
+          table[v][DIRECTION[:out]].push e
+        end
+      end
+    end
+
+    # Return a new graph rooted at given node.
+    def subgraph id, direction = :in
+      stack, dir = [], DIRECTION[direction]
+
+      # Walk the graph, populating our new node list
+      (walk = lambda do |v|
+        es = table[v][dir]
+        stack.push [v, es]
+        es.each { |e| walk.call e }
+      end).call id
+
+      self.class.new stack
+    end
+
+    # Tarjan's topological sort. Order determined via reverse depth-first
+    # traversal.
+    def tsort
+      visited, stack, dir = [], [], DIRECTION[:in]
+
+      dfs = lambda do |v|
+        if visited.include? v
+          if stack.include? v
+            next
+          else
+            # We are revisiting a node that is currently being traversed.
+            raise CyclicDependencyError, '%s → %s → %s' % [v, table[v][dir].find(v).first, v]
+          end
+        end
+        visited.push v
+        table[v][dir].each { |e| dfs.call e }
+        stack.push v
+      end
+
+      table.each_key { |id| dfs.call id }
+      stack
+    end
+
+    # Return a new graph with edge directions swapped.
+    def reverse
+      self.class.new table.inject([]) { |s, (v, (ins, outs))| s.push [v, ins] }
+    end
+
+    def write files = nil
+      # Graphviz is a heavy library dependency, so we load on demand
+      require 'graphviz'
+
+      files ||= ["#{self.class}.pdf"]
+      opts = Hash[[files].flatten.map { |f| [File.extname(f).sub('.', '').intern, f] }]
+
+      GraphViz.digraph :G, :rankdir => :LR do |g|
+        g.add_nodes table.keys
+        table.each { |v, (ins, outs)| g.add_edges v, outs }
+      end.output opts
     end
   end
 
-  HARDWARE_NAMES = %w[cd usb firewire bluetooth thunderbolt]
+  HARDWARE_ALIASES = {
+    'cd'          => 'com.apple.iokit.IOCDStorageFamily',
+    'usb'         => 'com.apple.iokit.IOUSBFamily',
+    'firewire'    => 'com.apple.iokit.IOFireWireFamily',
+    'bluetooth'   => 'com.apple.iokit.IOBluetoothFamily',
+    'thunderbolt' => 'com.apple.iokit.IOThunderboltFamily'
+  }
 
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.cache ||= '/tmp/macdriver.cache.yaml'
+    options.jobs  ||= 4
+    options.cache ||= "/tmp/#{self.class.to_s.downcase}-cache.yaml"
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 24 do |opt|
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
-        Query, load, and unload kernel extensions. Kexts can be specified
-        either by bundle identifier, or by an alias:
+        Query, graph, load, and unload kernel extensions. Kexts can be
+        specified either by bundle identifier, or by an alias:
 
-            #{HARDWARE_NAMES.join ' '}
+            #{HARDWARE_ALIASES.keys.join ', '}
 
         Loading and unloading kexts load and unload dependencies and
         dependents as necessary.
 
-        Note that all applicable kexts can be reloaded by simply sending
-        SIGHUP to `kextd`.
+        Note that kext load state can be restored to boot conditions by
+        sending SIGHUP to the `kextd` process.
 
         Usage: #{File.basename __FILE__} [options] [command [kext ...]]
 
-        Commands:
-            list                     List all known kext identifiers
-            show [kext ...]          Show kexts and all dependents
-            ancestors [kext ...]     Show kexts and all ancestors
-            unload [kext ...]        Unload kexts and all dependents
-            load [kext ...]          Load kexts and all dependencies
-
-        Options:\
+        Options:
       ).gsub /^ {8}/, ''
-
-      opt.on '-f', '--force', 'Do not prompt for confirmation' do
-        options.force = true
-      end
-
-      opt.on '-l', '--loaded-only', 'Show only loaded kexts' do
-        options.loaded_only = true
-      end
-
-      opt.on '-r', '--reload', 'Reload kext metadata instead of reading from a cache' do
-        options.reload = true
-      end
-
-      opt.on '-v', '--verbose', 'Show kextload/kextunload output' do
-        options.verbose = true
-      end
     end
   end
 
-  def sh *args
-    log args.join(' ')
-    options.verbose ? system(*args) : system("#{args.shelljoin} &>/dev/null")
+  # Returns list of [kext-id, dependency-ids]
+  def kextlist
+    plists = Dir['{/System,}/Library/Extensions/**/*.kext/Contents/Info.plist']
+    len,  vec,  idx  = plists.length, [], -1
+    jobs, pool, lock = options.jobs,  [], Mutex.new
+
+    # Threaded parsing of system kexts; ~35% speedup over single thread with
+    # empty disk cache, and 100% more fun!
+    jobs.times do |n|
+      pool << Thread.new do
+        loop do
+          i = lock.synchronize { idx += 1 }
+          break if i >= len
+          id, deps = Plist.parse_xml(plists[i]).values_at 'CFBundleIdentifier', 'OSBundleLibraries'
+          vec[i] = [id, (deps || {}).keys]
+        end
+      end
+    end
+
+    pool.each &:join
+    vec
   end
 
-  def kextlist
-    @kextlist ||= begin
+  # Create and persist kext graph or load from cache
+  def graph
+    @graph ||= begin
       if options.reload or not File.exists? options.cache
-        kexts = Dir['{/System,}/Library/Extensions/**/*.kext/Contents/Info.plist'].map { |f| Kext.new f }
-        File.open(options.cache, 'w') { |f| f.puts kexts.to_yaml }
-        FileUtils.chmod 0644, options.cache
-        FileUtils.chown Process.euid, Process.egid, options.cache
-        kexts
+        dg = DirectedGraph.new kextlist
+        File.open(options.cache, 'w', 0644) { |f| f.puts dg.to_yaml }
+        dg
       else
         YAML.load_file options.cache
       end
     end
   end
 
-  def kextstat
-    @kextstat ||= %x(kextstat -l).chomp.lines.map { |l| l.split[5] }
-  end
-
-  def loaded? kext, opts = {}
-    @kextstat = nil if opts[:reload]
-    kextstat.include? kext.id
-  end
-
-  def filter kexts
-    options.loaded_only ? kexts.select { |k| loaded? k } : kexts
-  end
-
-  def find name
-    id = case name
-    when 'cd'          then 'com.apple.iokit.IOCDStorageFamily'
-    when 'usb'         then 'com.apple.iokit.IOUSBFamily'
-    when 'firewire'    then 'com.apple.iokit.IOFireWireFamily'
-    when 'bluetooth'   then 'com.apple.iokit.IOBluetoothFamily'
-    when 'thunderbolt' then 'com.apple.iokit.IOThunderboltFamily'
-    else name
-    end
-
-    kextlist.find { |k| k.id == id }
-  end
-
-  def children kext, stack = []
-    kextlist.each do |k|
-      next unless k.dependencies.include? kext.id
-      children k, stack # Recurse!
-    end
-
-    stack.push kext unless stack.include? kext
-    stack
-  end
-
-  def ancestors kext, stack = []
-    kext.dependencies.each do |id|
-      next unless k = find(id)
-      ancestors k, stack # Recurse!
-    end
-
-    stack.push kext unless stack.include? kext
-    stack
-  end
-
-  def to_s
-    filter(kextlist).map { |kext| decorate kext }.join "\n"
-  end
-
-  def decorate kext
-    loaded?(kext) ? fmt(["#{kext.id} (LOADED)", :green, :bold]) : kext.id
-  end
-
-  def summary name, type
-    kexts = case type
-    when :children  then children(find name).reverse
-    when :ancestors then ancestors find(name)
-    else raise ArgumentError
-    end
-
-    buf = filter(kexts).map { |kext| "    #{decorate kext}" }.join "\n"
-    '%s:%s' % [name, buf.empty? ? '' : "\n#{buf}"]
-  end
-
-  def show names = nil, type
-    if names.nil? or names.empty?
-      HARDWARE_NAMES.map { |n| summary n, type }.join "\n"
-    elsif not names.empty?
-      names.map { |n| summary n, type }.join "\n"
-    else
-      summary n, type
-    end
-  end
-
-  def confirm? msg, kexts, *styles
-    return true  if options.force or kexts.empty?
-    return false unless system '/bin/sh -c "command -v stty" &>/dev/null && stty -a &>/dev/null'
-
-    kexts.each { |k| log [k.id, *styles] }
-    logger.io.print "\n%s [Y/n] " % msg
-
-    begin
-      state = %x(stty -g).chomp
-      system 'stty', 'raw'
-      char = $stdin.getc rescue nil
-      char =~ /y|\r|\n/
-    ensure
-      system 'stty', state
-      log char + "\n\n"
-    end
-  end
-
-  def unload kexts
-    queue = [kexts].flatten.inject [] do |q, kext|
-      q.concat children(kext).select { |k| loaded? k }
-    end
-
-    if confirm? 'Unload listed kexts?', queue, :yellow, :bold
-      queue.each { |kext| sh *%W[kextunload -b #{kext.id}] }
-    end
-  end
-
-  def load kexts
-    queue = [kexts].flatten.inject [] do |q, kext|
-      q.concat ancestors(kext).reject { |k| loaded? k }
-    end
-
-    if confirm? 'Load listed kexts?', queue, :green, :bold
-      queue.each { |kext| sh *%W[kextload -b #{kext.id}] }
-    end
-  end
-
   def run arguments = []
     args = parser.parse arguments
-
-    case args.first
-    when 'list', nil then puts to_s
-    when 'show'      then log show(args.drop(1), :children)
-    when 'ancestors' then log show(args.drop(1), :ancestors)
-    when 'load'      then load args.drop(1).map { |n| find n }
-    when 'unload'    then unload args.drop(1).map { |n| find n }
-    else abort parser.help
-    end
   end
 end
 
