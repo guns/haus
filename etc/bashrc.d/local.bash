@@ -1337,7 +1337,7 @@ ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
 HAVE startx && alias xstartx='exec startx'
 
 HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 80; run xrdb ~/.Xdefaults'
+    alias xreload='run xset r rate 200 100; run xrdb ~/.Xdefaults'
 }
 
 HAVE xecho && {
