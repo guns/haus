@@ -115,7 +115,7 @@ augroup GUNS
 
     " UltiSnips snippets {{{1
     autocmd FileType snippets
-        \ setlocal noexpandtab iskeyword+=- |
+        \ setlocal noexpandtab iskeyword+=- foldmethod=marker |
         \ SetWhitespace 8
 
     " Markdown {{{1
