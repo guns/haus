@@ -63,6 +63,15 @@ module IRBHelper
     vim *args
   end
 
+  def notify
+    $notify ||= begin
+      require 'cli/notification'
+      CLI::Notification.new :audio => File.expand_path('~/.sounds/Message_Received.m4a')
+    end
+    $notify.call; nil
+  end
+  alias :na :notify
+
   # http://stackoverflow.com/questions/123494/whats-your-favourite-irb-trick/123834#123834
   def bm n = 100, &block
     require 'benchmark'
