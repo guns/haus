@@ -6,5 +6,5 @@ if ! command -v ruby &>/dev/null; then
 fi
 
 BASE="$(cd "$(dirname "$0")"; pwd)"
-echo "Running \`$BASE/bin/haus link\`"
-exec "$BASE/bin/haus" link
+echo "Running \`$BASE/bin/haus link $@\`"
+exec "$BASE/bin/haus" link "$@"
