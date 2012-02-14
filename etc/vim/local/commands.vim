@@ -216,10 +216,14 @@ function! <SID>ScreenSetup(setup)
         nmap <Leader><Leader> m`vip<Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
-        nmap <Leader><C-f>    m`vab<Leader><Leader>``
-        imap <Leader><C-f>    <C-\><C-n><Leader><C-f><Right>
+        if &filetype ==# 'clojure'
+            nmap <Leader><C-f> m`vab<Leader><Leader>``
+        else
+            nmap <Leader><C-f> m`VggoG<Leader><Leader>``
+        endif
+        imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
 
-        nmap <Leader>Q        :ScreenQuit<CR>
+        nmap <Leader>Q :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
             silent! vunmap <Leader><Leader>

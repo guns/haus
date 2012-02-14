@@ -448,8 +448,8 @@ noremap  <Leader><C-j> J
 inoremap <Leader><C-j> <C-\><C-o>J
 
 " Select all
-nnoremap <4-a> ggVG
-vnoremap <4-a> <C-\><C-n>ggVG
+nnoremap <4-a> VggoG
+vnoremap <4-a> <C-\><C-n>VggoG
 
 " Kill trailing whitespace
 noremap <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
