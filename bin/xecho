@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # http://rtfm.etla.org/xterm/ctlseq.html
 
 USAGE() {
@@ -12,25 +12,24 @@ USAGE() {
 
 RAW() {
     # tmux 1.5 will support raw terminal passthrough
-    if [[ $TMUX ]]; then
-        echo -ne "\033Ptmux;\033$*\033\\"
-    elif [[ "$TERM" == screen* ]]; then
-        echo -ne "\033P$*\033\\"
+    if test -n "$TMUX"; then
+        printf "\033Ptmux;\033$*\033\\"
+    elif test "${TERM%%-*}" = screen; then
+        printf "\033P$*\033\\"
     else
-        echo -ne "$*"
+        printf "$*"
     fi
 }
 
 MAX_HORIZONTAL() {
-    local xwidth=$(xwininfo -id "$WINDOWID" | \awk -F': ' '/Width: /{ print $2 }')
-    local screen=$(xrandr 2>&1              | \awk        '/current/{ print $8 }')
-    echo $((screen - xwidth))
+    echo $(( $(xwininfo -id "$WINDOWID" | \awk -F': ' '/Width: /{ print $2 }') - \
+             $(xrandr 2>&1              | \awk        '/current/{ print $8 }') ))
 }
 
 TITLE()  {
-    if [[ $TMUX ]]; then
+    if test -n "$TMUX"; then
         tmux rename-window "$*"
-    elif [[ "$TERM" == screen* ]]; then
+    elif test "${TERM%%-*}" = screen; then
         screen -X title "$*"
     else
         RAW "\033]2;$*\007"

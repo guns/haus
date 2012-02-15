@@ -1,21 +1,21 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Simple tmux wrapper
 
 SSH_SHELL=''
 
-while getopts :s opt; do
-    case $opt in
+while getopts :s OPT; do
+    case $OPT in
     s) SSH_SHELL='ssh-shell';;
     *) echo >&2 "Usage: ${0##*/} [-s]"; exit 1
     esac
 done
 shift $((OPTIND-1))
 
-if [[ "$TMUX" ]]; then
+if test -n "$TMUX"; then
     echo >&2 '$TMUX is already set!'
     exit 1
-elif command tmux has-session &>/dev/null; then
+elif tmux has-session &>/dev/null; then
     exec tmux attach
 else
     exec $SSH_SHELL tmux new

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-echo >&2 -e "\033[1;33m$* &>/dev/null &\033[0m"
+printf >&2 "\033[1;33m$* &>/dev/null &\033[0m\n"
 "$@" &>/dev/null &

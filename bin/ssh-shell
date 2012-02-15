@@ -1,9 +1,9 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-if [[ "$SSH_AGENT_PID" ]]; then
+if test -n "$SSH_AGENT_PID"; then
     echo "SSH_AGENT_PID already set: $SSH_AGENT_PID"
-elif (($#)); then
+elif test "$#" -gt 0; then
     run ssh-agent "$@"
 else
-    run ssh-agent "${SHELL:-/bin/bash}"
+    run ssh-agent "${SHELL:-$(command -v bash)}"
 fi

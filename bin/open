@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-if [[ -x /usr/bin/open ]]; then
+if test -x /usr/bin/open; then
     exec /usr/bin/open "$@"
 else
     chrome "$@" &
