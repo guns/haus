@@ -242,7 +242,7 @@ setlocal lispwords+=defnk,definterface,defprotocol,deftype,defrecord,reify
 setlocal lispwords+=extend,extend-protocol,extend-type,bound-fn
 
 " Conditionals and Loops:
-setlocal lispwords+=if,if-not,if-let,when,when-not,when-let,when-first
+setlocal lispwords+=if-let,when,when-not,when-let,when-first
 setlocal lispwords+=condp,case,loop,dotimes,for,while
 
 " Blocks:
