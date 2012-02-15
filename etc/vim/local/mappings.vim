@@ -88,10 +88,10 @@ noremap! <4-a> <C-a>
 " Bind:   Ctrl-A => ^
 " Bind: v_Ctrl-A => v_^
 " Bind: o_Ctrl-A => o_^
-" Bind: i_Ctrl-A => i_<Home>
-" Bind: c_Ctrl-A => c_<Home>
+" Bind: i_Ctrl-A => i_Ctrl-\_Ctrl-O_^
+" Bind: c_Ctrl-A => i_Ctrl-\_Ctrl-O_^
 noremap  <C-a> ^
-noremap! <C-a> <Home>
+noremap! <C-a> <C-\><C-o>^
 
 
 """ Emacs: Ctrl-E (end-of-line) {{{1
