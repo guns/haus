@@ -11,7 +11,7 @@ class Haus
       end
 
       def colors256?
-        system '/bin/sh -c "command -v tput && [ $(tput colors) -eq 256 ]" &>/dev/null'
+        system '/bin/sh -c "command -v tput && test \"$(tput colors)\" -eq 256" &>/dev/null'
       end
     end
 
