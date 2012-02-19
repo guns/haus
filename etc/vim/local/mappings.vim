@@ -453,7 +453,7 @@ nnoremap <4-a> VggoG
 vnoremap <4-a> <C-\><C-n>VggoG
 
 " Kill trailing whitespace
-noremap <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
+noremap <silent> <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
 
 " REPLACE insertmode-go-to-normal-mode and command-line-insert-longest-match
 " with nothing for hashrocket
