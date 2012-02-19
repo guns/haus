@@ -60,24 +60,25 @@ class Macdriver
     # Tarjan's topological sort. Order determined via reverse depth-first
     # traversal.
     def tsort
-      visited, stack, dir = [], [], DIRECTION[:in]
+      visited, traversed, stack, dir = {}, {}, [], DIRECTION[:in]
 
       dfs = lambda do |v|
-        if visited.include? v
-          if stack.include? v
+        if visited.has_key? v
+          if traversed.has_key? v
             next
           else
             # We are revisiting a node that is currently being traversed.
-            raise CyclicDependencyError, '%s → %s → %s' % [v, table[v][dir].find(v).first, v]
+            raise CyclicDependencyError, '%s ↔ %s' % [v, table[v][dir].find(v).first]
           end
         end
-        visited.push v
+        visited[v] = true
         table[v][dir].each { |e| dfs.call e }
+        traversed[v] = true
         stack.push v
       end
 
       table.each_key { |id| dfs.call id }
-      stack
+      stack.reverse
     end
 
     # Return a new graph with edge directions swapped.
