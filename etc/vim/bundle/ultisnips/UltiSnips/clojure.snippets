@@ -104,7 +104,7 @@ snippet dl "drop-last" w
 endsnippet
 
 snippet dw "drop-while" w
-(drop-while ${1:λ} ${0:coll})
+(drop-while ${0:λ} ${1:coll})
 endsnippet
 
 snippet ta "take" w
@@ -120,7 +120,7 @@ snippet tn "take-nth" w
 endsnippet
 
 snippet tw "take-while" w
-(take-while ${1:λ} ${0:coll})
+(take-while ${0:λ} ${1})
 endsnippet
 
 snippet nthn "nthnext" w
@@ -240,19 +240,19 @@ snippet quo "quote" w
 endsnippet
 
 snippet map "map" w
-(map ${1:λ} ${0:colls})
+(map ${0:λ} ${1})
 endsnippet
 
 snippet red "reduce" w
-(reduce ${1:λ} ${0:[coll] [val coll]})
+(reduce ${0:λ} ${1})
 endsnippet
 
 snippet fil "filter" w
-(filter ${1:λ} ${0:coll})
+(filter ${0:λ} ${1})
 endsnippet
 
 snippet sel "select" w
-(select ${1:λ} ${0:coll})
+(select ${0:λ} ${1})
 endsnippet
 
 snippet selk "select-keys" w
@@ -427,7 +427,7 @@ endsnippet
 
 snippet fn "fn" w
 (fn [$0]
-	...)
+	)
 endsnippet
 
 snippet app "apply" w
@@ -467,7 +467,7 @@ endsnippet
 
 snippet let "let" w
 (let [$0]
-	...)
+	)
 endsnippet
 
 snippet letf "letfn" w
@@ -477,7 +477,7 @@ endsnippet
 
 snippet bind "binding" w
 (binding [$0]
-	...)
+	)
 endsnippet
 
 snippet def "def"
@@ -615,7 +615,7 @@ endsnippet
 
 snippet wl "when-let" w
 (when-let [$0]
-	...)
+	)
 endsnippet
 
 snippet cond "cond" w
@@ -647,12 +647,12 @@ endsnippet
 
 snippet dose "doseq" w
 (doseq [${0:each-bind}]
-	...)
+	)
 endsnippet
 
 snippet dot "dotimes" w
 (dotimes [${0:bindings}]
-	...)
+	)
 endsnippet
 
 snippet dor "dorun" w
@@ -664,13 +664,12 @@ snippet doa "doall" w
 endsnippet
 
 snippet for "for" w
-(for [${0:each-bind}]
-	...)
+(for [$0] )
 endsnippet
 
 snippet lo "loop" w
 (loop [${0:bindings}]
-	...)
+	)
 endsnippet
 
 snippet re "recur" w
@@ -742,7 +741,7 @@ endsnippet
 
 snippet wo "with-open" w
 (with-open [${0:name init ...}]
-	...)
+	)
 endsnippet
 
 snippet slu "slurp" w
@@ -771,10 +770,10 @@ endsnippet
 
 snippet defpp "defpartial" w
 (defpartial ${1:fname} [${0:& content}]
-	...)
+	)
 endsnippet
 
 snippet defe "defelem" w
 (defelem ${1:fname} [${0}]
-	...)
+	)
 endsnippet
