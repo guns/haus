@@ -216,11 +216,7 @@ function! <SID>ScreenSetup(setup)
         nmap <Leader><Leader> m`vip<Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
-        if &filetype ==# 'clojure'
-            nmap <Leader><C-f> m`vab<Leader><Leader>``
-        else
-            nmap <Leader><C-f> m`VggoG<Leader><Leader>``
-        endif
+        nmap <Leader><C-f> m`:execute 'normal ' . (&filetype == 'clojure' ? 'va(' : 'VggoG')<CR><Leader><Leader>``
         imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
 
         nmap <Leader>Q :ScreenQuit<CR>
