@@ -1,53 +1,101 @@
-#!/bin/sh
-# http://rtfm.etla.org/xterm/ctlseq.html
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-USAGE() {
-    echo "Usage: ${0##*/} [left|center|right] [cursor COLOR] [width CHARS] [title STRING]"
-    echo
-    echo 'Provides easy wrappers around xterm escape sequences;'
-    echo 'Also works in GNU Screen and tmux v1.5+'
-    echo
-    echo 'See http://rtfm.etla.org/xterm/ctlseq.html for details.'
-}
+require 'optparse'
 
-RAW() {
-    # tmux 1.5 will support raw terminal passthrough
-    if test -n "$TMUX"; then
-        printf "\033Ptmux;\033$*\033\\"
-    elif test "${TERM%%-*}" = screen; then
-        printf "\033P$*\033\\"
+class Xecho
+  COMMANDS = {
+    'left'   => ['',         'Move window to left screen edge'],
+    'center' => ['',         'Move window to center'],
+    'right'  => ['',         'Move window to right screen edge'],
+    'cursor' => ['COLOR',    'Set cursor color'],
+    'width'  => ['CHARS',    'Set terminal width in characters'],
+    'size'   => ['FONTSIZE', 'Set font size (currently only supports `xft:fontname:pixelsize=%d` style resources)'],
+    'title'  => ['STRING',   'Set window title']
+  }
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Wrappers to common Xterm / X escape sequences.
+        GNU Screen and Tmux v1.5+ are supported.
+
+        cf. http://rtfm.etla.org/xterm/ctlseq.html
+
+        Usage: #{File.basename __FILE__} command [args]
+
+        Commands:
+      ).gsub(/^ +/, '').concat COMMANDS.inject('') { |buf, (cmd, (args, desc))|
+        buf.concat "    %-15s%s\n" % [[cmd, args].join(' '), desc]
+      }
+    end
+  end
+
+  def sh cmd
+    system '/bin/sh', '-c', cmd
+  end
+
+  def raw seq
+    # Tmux 1.5+ supports raw terminal passthrough
+    if ENV.has_key? 'TMUX'
+      sh %Q(printf "\033Ptmux;\033%s\033\\\\") % seq
+    elsif ENV['TERM'] =~ /\Ascreen-?/
+      sh %Q(printf "\033P%s\033\\\\") % seq
     else
-        printf "$*"
-    fi
-}
+      sh %Q(printf "%s") % seq
+    end
+  end
 
-MAX_HORIZONTAL() {
-    echo $(( $(xwininfo -id "$WINDOWID" | \awk -F': ' '/Width: /{ print $2 }') - \
-             $(xrandr 2>&1              | \awk        '/current/{ print $8 }') ))
-}
+  def gutter_width
+    scrw = %x(/bin/sh -c "xrandr 2>&1")[/current (\d+)/, 1].to_i
+    winw = %x(xwininfo -id "#{ENV['WINDOWID']}")[/Width: (\d+)/, 1].to_i
+    scrw - winw
+  end
 
-TITLE()  {
-    if test -n "$TMUX"; then
-        tmux rename-window "$*"
-    elif test "${TERM%%-*}" = screen; then
-        screen -X title "$*"
+  def left
+    raw "\033[3;0;0t"
+  end
+
+  def center
+    raw "\033[3;%s;0t" % (gutter_width/2)
+  end
+
+  def right
+    raw "\033[3;%s;0t" % gutter_width
+  end
+
+  def width chars
+    raw "\033[8;0;%st" % chars
+  end
+
+  def cursor color
+    raw "\033]12;%s\007" % color
+  end
+
+  def size pixels
+    res = %x(xrdb -query).lines.grep(/\*font:/).first[/.*?\*font:\s*(.*)/, 1]
+    raw "\033]710;%s\007" % res.gsub(/(?<=pixelsize=)(\d+)/, pixels)
+  end
+
+  def title str
+    if ENV.has_key? 'TMUX'
+      system 'tmux', 'rename-window', str
+    elsif ENV['TERM'] =~ /\Ascreen-?/
+      system 'screen', '-X', 'title', str
     else
-        RAW "\033]2;$*\007"
-    fi
-}
+      raw "\033]2;%s\007" % str
+    end
+  end
 
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty? or not COMMANDS.include? args.first
+    send args.first, *args.drop(1)
+  end
+end
 
-### MAIN
-
-CMD="$1"
-shift
-
-case "$CMD" in
-left)   RAW "\033[3;0;0t";;
-center) RAW "\033[3;$(($(MAX_HORIZONTAL) / 2));0t";;
-right)  RAW "\033[3;$(MAX_HORIZONTAL);0t";;
-width)  RAW "\033[8;0;$*t";;
-cursor) RAW "\033]12;$*\007";;
-title)  TITLE "$*";;
-*)      USAGE
-esac
+$0 = File.basename(__FILE__) and Xecho.new.run ARGV if $0 == __FILE__
