@@ -57,10 +57,10 @@ fun! <sid>Init() "{{{1
 	let s:nrrw_winname='Narrow_Region'
 
 	" Customization
-	let s:nrrw_rgn_vert = (exists("g:nrrw_rgn_vert")  ? g:nrrw_rgn_vert   : 0)
-	let s:nrrw_rgn_wdth = (exists("g:nrrw_rgn_wdth")  ? g:nrrw_rgn_wdth   : 20)
-	let s:nrrw_rgn_hl	= (exists("g:nrrw_rgn_hl")	  ? g:nrrw_rgn_hl	  : "WildMenu")
-	let s:nrrw_rgn_nohl = (exists("g:nrrw_rgn_nohl")  ? g:nrrw_rgn_nohl   : 0)
+	let s:nrrw_rgn_vert = (exists("g:nrrw_rgn_vert") ? g:nrrw_rgn_vert : 0)
+	let s:nrrw_rgn_wdth = (exists("g:nrrw_rgn_wdth") ? g:nrrw_rgn_wdth : 20)
+	let s:nrrw_rgn_hl	= (exists("g:nrrw_rgn_hl")	 ? g:nrrw_rgn_hl   : "WildMenu")
+	let s:nrrw_rgn_nohl = (exists("g:nrrw_rgn_nohl") ? g:nrrw_rgn_nohl : 0)
 
 	let s:debug         = (exists("s:debug") ? s:debug : 0)
 		
@@ -99,12 +99,13 @@ endfun
 
 fun! <sid>CleanRegions() "{{{1
 	 let s:nrrw_rgn_line=[]
+	 unlet! s:nrrw_rgn_last
 endfun
 
 fun! <sid>CompareNumbers(a1,a2) "{{{1
 	return (a:a1+0) == (a:a2+0) ? 0
-				\: (a:a1+0) > (a:a2+0) ? 1
-				\: -1
+		\ : (a:a1+0) > (a:a2+0) ? 1
+		\ : -1
 endfun
 
 fun! <sid>ParseList(list) "{{{1
@@ -128,7 +129,6 @@ fun! <sid>ParseList(list) "{{{1
      return result
 endfun
 
-
 fun! <sid>WriteNrrwRgn(...) "{{{1
 	" if argument is given, write narrowed buffer back
 	" else destroy the narrowed window
@@ -144,7 +144,6 @@ fun! <sid>WriteNrrwRgn(...) "{{{1
 		exe ":WidenRegion"
 		if bufname('') !~# 'Narrow_Region'
 			exe ':noa' . bufwinnr(s:nrrw_winname . '_' . s:instn) . 'wincmd w'
-			"exe ':noa' . bufwinnr(nrrw_instn) . 'wincmd w'
 		endif
 	else
 		" Best guess
@@ -221,9 +220,11 @@ endfun
 
 fun! <sid>GeneratePattern(startl, endl, mode) "{{{1
 	if a:mode ==# '' && a:startl[0] > 0 && a:startl[1] > 0
-		return '\%>' . (a:startl[0]-1) . 'l\&\%>' . (a:startl[1]-1) . 'v\&\%<' . (a:endl[0]+1) . 'l\&\%<' . (a:endl[1]+1) . 'v'
+		return '\%>' . (a:startl[0]-1) . 'l\&\%>' . (a:startl[1]-1) .
+			\ 'v\&\%<' . (a:endl[0]+1) . 'l\&\%<' . (a:endl[1]+1) . 'v'
 	elseif a:mode ==# 'v' && a:startl[0] > 0 && a:startl[1] > 0
-		return '\%>' . (a:startl[0]-1) . 'l\&\%>' . (a:startl[1]-1) . 'v\_.*\%<' . (a:endl[0]+1) . 'l\&\%<' . (a:endl[1]+1) . 'v'
+		return '\%>' . (a:startl[0]-1) . 'l\&\%>' . (a:startl[1]-1) .
+			\ 'v\_.*\%<' . (a:endl[0]+1) . 'l\&\%<' . (a:endl[1]+1) . 'v'
 	elseif a:startl[0] > 0
 		return '\%>' . (a:startl[0]-1) . 'l\&\%<' . (a:endl[0]+1) . 'l'
 	else
@@ -255,7 +256,8 @@ fun! <sid>Options(search) "{{{1
 		call setreg('a', reg_a[0], reg_a[1])
 		call filter(b, 'v:val =~ "^''"')
 		" the following options should be set
-		let filter_opt='\%(modifi\%(ed\|able\)\|readonly\|noswapfile\|buftype\|bufhidden\|foldcolumn\|buflisted\)'
+		let filter_opt='\%(modifi\%(ed\|able\)\|readonly\|noswapfile\|' .
+				\ 'buftype\|bufhidden\|foldcolumn\|buflisted\)'
 		call filter(b, 'v:val !~ "^''".filter_opt."''"')
 		for item in b
 			let item=substitute(item, '''', '', 'g')
@@ -304,7 +306,8 @@ fun! <sid>CheckProtected() "{{{1
 	let b:orig_buf_ro=0
 	if !&l:ma || &l:ro
 		let b:orig_buf_ro=1
-		call s:WarningMsg("Buffer is protected, won't be able to write the changes back!")
+		call s:WarningMsg("Buffer is protected, won't be able to write".
+			\ "the changes back!")
 	else 
 	" Protect the original buffer,
 	" so you won't accidentally modify those lines,
@@ -315,7 +318,7 @@ endfun
 
 fun! <sid>DeleteMatches(instn) "{{{1
     " Make sure, we are in the correct buffer
-	if bufname('') =~# 'Narrow_Region'                                                                
+	if bufname('') =~# 'Narrow_Region'
 		exe ':noa' . bufwinnr(b:orig_buf) . 'wincmd w'
 	endif
 	if exists("s:nrrw_rgn_lines[a:instn].matchid")
@@ -344,16 +347,16 @@ fun! <sid>ReturnCommentFT() "{{{1
 	if &l:ft=="vim"
 		return '"'
 	" Perl, PHP, Ruby, Python, Sh
-	elseif &l:ft=~"^\(perl\|php\|ruby\|python\|sh\)$"
+	elseif &l:ft=~'^\(perl\|php\|ruby\|python\|sh\)$'
 	    return '#'
 	" C, C++
-	elseif &l:ft=~"^\(c\%(pp\)\?\|java\)"
-		return '//'
+	elseif &l:ft=~'^\(c\%(pp\)\?\|java\)'
+		return '/* */'
 	" HTML, XML
-	elseif &l:ft=~"^\(ht\|x\)ml\?$"
+	elseif &l:ft=~'^\(ht\|x\)ml\?$'
 		return '<!-- -->'
 	" LaTex
-	elseif &l:ft=~"^\(la\)tex"
+	elseif &l:ft=~'^\(la\)tex'
 		return '%'
 	else
 		" Fallback
@@ -368,24 +371,26 @@ fun! <sid>WidenRegionMulti(content, instn) "{{{1
 
 	let output= []
 	let list  = []
-	let cmt   = <sid>ReturnCommentFT()
+	let [c_s, c_e] =  <sid>ReturnComments()
 	let lastline = line('$')
 	" We must put the regions back from top to bottom,
 	" otherwise, changing lines in between messes up the list of lines that
 	" still need to put back from the narrowed buffer to the original buffer
-	for key in sort(keys(s:nrrw_rgn_lines[a:instn].multi), "<sid>CompareNumbers")
+	for key in sort(keys(s:nrrw_rgn_lines[a:instn].multi),
+			\ "<sid>CompareNumbers")
 		let adjust   = line('$') - lastline
 		let range    = s:nrrw_rgn_lines[a:instn].multi[key]
 		let last     = (len(range)==2) ? range[1] : range[0]
 		let first    = range[0]
-		let indexs   = index(a:content, cmt.' Start NrrwRgn'.key) + 1
-		let indexe   = index(a:content, cmt.' End NrrwRgn'.key) - 1
+		let indexs   = index(a:content, c_s.' Start NrrwRgn'.key.c_e) + 1
+		let indexe   = index(a:content, c_s.' End NrrwRgn'.key.c_e) - 1
 		if indexs <= 0 || indexe < -1
 		   call s:WarningMsg("Skipping Region " . key)
 		   continue
 		endif
 		" Adjust line numbers. Changing the original buffer, might also 
-		" change the regions we have remembered. So we must adjust these numbers.
+		" change the regions we have remembered. So we must adjust these
+		" numbers.
 		" This only works, if we put the regions from top to bottom!
 		let first += adjust
 		let last  += adjust
@@ -395,14 +400,15 @@ fun! <sid>WidenRegionMulti(content, instn) "{{{1
 			let delete_last_line=0
 		endif
 		exe ':silent :' . first . ',' . last . 'd _'
-		call append((first-1),a:content[indexs : indexe])
+		call append((first-1), a:content[indexs : indexe])
 		" Recalculate the start and end positions of the narrowed window
 		" so subsequent calls will adjust the region accordingly
 		let  last = first + len(a:content[indexs : indexe]) - 1
 		if last > line('$')
 			let last = line('$')
 		endif
-		call <sid>AddMatches(<sid>GeneratePattern([first, 0 ], [last, 0], 'V'), a:instn)
+		call <sid>AddMatches(<sid>GeneratePattern([first, 0 ],
+					\ [last, 0], 'V'), a:instn)
 		if delete_last_line
 			silent! $d _
 		endif
@@ -483,10 +489,22 @@ fun! <sid>SetupBufLocalCommands(visual) "{{{1
 	com! -buffer NRNoSyncOnWrite :call nrrwrgn#ToggleSyncWrite(0)
 endfun
 
+fun! <sid>ReturnComments() "{{{1
+	let cmt = <sid>ReturnCommentFT()
+	let c_s    = split(cmt)[0]
+	let c_e    = (len(split(cmt)) == 1 ? "" : " " . split(cmt)[1])
+	return [c_s, c_e]
+endfun
+
 fun! nrrwrgn#NrrwRgnDoPrepare() "{{{1
+	if !exists("s:nrrw_rgn_line")
+		call <sid>WarningMsg("You need to first select the lines to".
+			\ " narrow using :NRP!")
+	   return
+	endif
 	let s:nrrw_rgn_buf =  <sid>ParseList(s:nrrw_rgn_line)
 	if empty(s:nrrw_rgn_buf)
-		call <sid>WarningMsg("You need to first select the lines to narrow using NRP!")
+		call <sid>WarningMsg("No lines selected from :NRP, aborting!")
 	   return
 	endif
 	let o_lz = &lz
@@ -509,17 +527,17 @@ fun! nrrwrgn#NrrwRgnDoPrepare() "{{{1
 	let keys = keys(s:nrrw_rgn_buf)
 	call sort(keys,"<sid>CompareNumbers")
 	"for [ nr,lines] in items(s:nrrw_rgn_buf)
-	let comment=<sid>ReturnCommentFT()
+	let [c_s, c_e] =  <sid>ReturnComments()
 	for nr in keys
 		let lines = s:nrrw_rgn_buf[nr]
 		let start = lines[0]
 		let end   = len(lines)==2 ? lines[1] : lines[0]
 		call <sid>AddMatches(<sid>GeneratePattern([start,0], [end,0], 'V'),
 				\s:instn)
-		call add(buffer, comment.' Start NrrwRgn'.nr)
+		call add(buffer, c_s.' Start NrrwRgn'.nr.c_e)
 		let buffer = buffer +
 				\ getline(start,end) +
-				\ [comment.' End NrrwRgn'.nr, '']
+				\ [c_s.' End NrrwRgn'.nr.c_e, '']
 	endfor
 
 	let win=<sid>NrwRgnWin()
@@ -545,8 +563,16 @@ fun! nrrwrgn#NrrwRgn() range  "{{{1
 	" initialize Variables
 	call <sid>Init()
     call <sid>CheckProtected()
-	let s:nrrw_rgn_lines[s:instn].startline = [ a:firstline, 0 ]
-	let s:nrrw_rgn_lines[s:instn].endline	= [ a:lastline, 0 ]
+	let first = a:firstline
+	let last  = a:lastline
+	" If first line is in a closed fold,
+	" include complete fold in Narrowed window
+	if first == last && foldclosed(first) != -1
+		let first = foldclosed(first)
+		let last  = foldclosedend(last)
+	endif
+	let s:nrrw_rgn_lines[s:instn].startline = [ first, 0 ]
+	let s:nrrw_rgn_lines[s:instn].endline	= [ last , 0 ]
 	call <sid>DeleteMatches(s:instn)
 	" Set the highlighting
 	call <sid>AddMatches(<sid>GeneratePattern(
@@ -576,7 +602,13 @@ fun! nrrwrgn#NrrwRgn() range  "{{{1
 	let &lz   = o_lz
 endfun
 
-fun! nrrwrgn#Prepare() "{{{1
+fun! nrrwrgn#Prepare(bang) "{{{1
+	let ltime = localtime()
+	if !empty(a:bang) &&
+	\ (!exists("s:nrrw_rgn_last") || s:nrrw_rgn_last + 10 < ltime)
+		let s:nrrw_rgn_last = ltime
+		let s:nrrw_rgn_line = []
+	endif
 	if !exists("s:nrrw_rgn_line") | let s:nrrw_rgn_line=[] | endif
 	call add(s:nrrw_rgn_line, line('.'))
 endfun

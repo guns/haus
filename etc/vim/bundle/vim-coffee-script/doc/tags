@@ -1,4 +1,5 @@
 :CoffeeCompile	coffee-script.txt	/*:CoffeeCompile*
+:CoffeeLint	coffee-script.txt	/*:CoffeeLint*
 :CoffeeMake	coffee-script.txt	/*:CoffeeMake*
 :CoffeeRun	coffee-script.txt	/*:CoffeeRun*
 coffee-script	coffee-script.txt	/*coffee-script*
@@ -12,4 +13,7 @@ coffee-script.txt	coffee-script.txt	/*coffee-script.txt*
 compiler-coffee-script	coffee-script.txt	/*compiler-coffee-script*
 ft-coffee-script-syntax	coffee-script.txt	/*ft-coffee-script-syntax*
 g:coffee_compile_vert	coffee-script.txt	/*g:coffee_compile_vert*
+g:coffee_compiler	coffee-script.txt	/*g:coffee_compiler*
+g:coffee_lint_options	coffee-script.txt	/*g:coffee_lint_options*
+g:coffee_linter	coffee-script.txt	/*g:coffee_linter*
 g:coffee_make_options	coffee-script.txt	/*g:coffee_make_options*

@@ -25,25 +25,23 @@ scriptencoding utf-8
 " Basic init {{{2
 
 if !exists('g:tagbar_ctags_bin')
-    if executable('ctags-exuberant')
-        let g:tagbar_ctags_bin = 'ctags-exuberant'
-    elseif executable('exuberant-ctags')
-        let g:tagbar_ctags_bin = 'exuberant-ctags'
-    elseif executable('exctags')
-        let g:tagbar_ctags_bin = 'exctags'
-    elseif has('macunix') && executable('/usr/local/bin/ctags')
-        " Homebrew default location
-        let g:tagbar_ctags_bin = '/usr/local/bin/ctags'
-    elseif has('macunix') && executable('/opt/local/bin/ctags')
-        " Macports default location
-        let g:tagbar_ctags_bin = '/opt/local/bin/ctags'
-    elseif executable('ctags')
-        let g:tagbar_ctags_bin = 'ctags'
-    elseif executable('ctags.exe')
-        let g:tagbar_ctags_bin = 'ctags.exe'
-    elseif executable('tags')
-        let g:tagbar_ctags_bin = 'tags'
-    else
+    let ctagsbins  = []
+    let ctagsbins += ['ctags-exuberant'] " Debian
+    let ctagsbins += ['exuberant-ctags']
+    let ctagsbins += ['exctags'] " FreeBSD, NetBSD
+    let ctagsbins += ['/usr/local/bin/ctags'] " Homebrew
+    let ctagsbins += ['/opt/local/bin/ctags'] " Macports
+    let ctagsbins += ['ectags'] " OpenBSD
+    let ctagsbins += ['ctags']
+    let ctagsbins += ['ctags.exe']
+    let ctagsbins += ['tags']
+    for ctags in ctagsbins
+        if executable(ctags)
+            let g:tagbar_ctags_bin = ctags
+            break
+        endif
+    endfor
+    if !exists('g:tagbar_ctags_bin')
         echomsg 'Tagbar: Exuberant ctags not found, skipping plugin'
         finish
     endif
@@ -57,8 +55,9 @@ else
     let &wildignore = wildignore_save
 
     if !executable(g:tagbar_ctags_bin)
-        echomsg 'Tagbar: Exuberant ctags not found in specified place,'
-              \ 'skipping plugin'
+        echomsg "Tagbar: Exuberant ctags not found at " .
+              \ "'" . g:tagbar_ctags_bin . "', " .
+              \ "skipping plugin"
         finish
     endif
 endif
@@ -76,10 +75,13 @@ unlet s:ftype_out
 let s:icon_closed = g:tagbar_iconchars[0]
 let s:icon_open   = g:tagbar_iconchars[1]
 
-let s:type_init_done    = 0
-let s:autocommands_done = 0
-let s:checked_ctags     = 0
-let s:window_expanded   = 0
+let s:type_init_done      = 0
+let s:autocommands_done   = 0
+let s:checked_ctags       = 0
+let s:checked_ctags_types = 0
+let s:ctags_types         = {}
+let s:window_expanded     = 0
+
 
 let s:access_symbols = {
     \ 'public'    : '+',
@@ -95,15 +97,21 @@ let s:debug_file = ''
 
 " s:Init() {{{2
 function! s:Init()
+    if !s:checked_ctags
+        if !s:CheckForExCtags()
+            return 0
+        endif
+    endif
+
+    if !s:checked_ctags_types
+        call s:GetSupportedFiletypes()
+    endif
+
     if !s:type_init_done
         call s:InitTypes()
     endif
 
-    if !s:checked_ctags
-        if !s:CheckForExCtags()
-            return
-        endif
-    endif
+    return 1
 endfunction
 
 " s:InitTypes() {{{2
@@ -661,6 +669,46 @@ function! s:InitTypes()
         \ {'short' : 'G', 'long' : 'subparagraphs',  'fold' : 0}
     \ ]
     let s:known_types.tex = type_tex
+    " Vala {{{3
+    " Vala is supported by the ctags fork provided by Anjuta, so only add the
+    " type if the fork is used to prevent error messages otherwise
+    if has_key(s:ctags_types, 'vala') || executable('anjuta-tags')
+        let type_vala = {}
+        let type_vala.ctagstype = 'vala'
+        let type_vala.kinds     = [
+            \ {'short' : 'e', 'long' : 'Enumerations',       'fold' : 0},
+            \ {'short' : 'v', 'long' : 'Enumeration values', 'fold' : 0},
+            \ {'short' : 's', 'long' : 'Structures',         'fold' : 0},
+            \ {'short' : 'i', 'long' : 'Interfaces',         'fold' : 0},
+            \ {'short' : 'd', 'long' : 'Delegates',          'fold' : 0},
+            \ {'short' : 'c', 'long' : 'Classes',            'fold' : 0},
+            \ {'short' : 'p', 'long' : 'Properties',         'fold' : 0},
+            \ {'short' : 'f', 'long' : 'Fields',             'fold' : 0},
+            \ {'short' : 'm', 'long' : 'Methods',            'fold' : 0},
+            \ {'short' : 'E', 'long' : 'Error domains',      'fold' : 0},
+            \ {'short' : 'r', 'long' : 'Error codes',        'fold' : 0},
+            \ {'short' : 'S', 'long' : 'Signals',            'fold' : 0}
+        \ ]
+        let type_vala.sro = '.'
+        " 'enum' doesn't seem to be used as a scope, but it can't hurt to have
+        " it here
+        let type_vala.kind2scope = {
+            \ 's' : 'struct',
+            \ 'i' : 'interface',
+            \ 'c' : 'class',
+            \ 'e' : 'enum'
+        \ }
+        let type_vala.scope2kind = {
+            \ 'struct'    : 's',
+            \ 'interface' : 'i',
+            \ 'class'     : 'c',
+            \ 'enum'      : 'e'
+        \ }
+        let s:known_types.vala = type_vala
+    endif
+    if !has_key(s:ctags_types, 'vala') && executable('anjuta-tags')
+        let s:known_types.vala.ctagsbin = 'anjuta-tags'
+    endif
     " Vera {{{3
     " Why are variables 'virtual'?
     let type_vera = {}
@@ -738,51 +786,43 @@ function! s:InitTypes()
     let s:known_types.yacc = type_yacc
     " }}}3
 
-    let user_defs = s:GetUserTypeDefs()
-    for [key, value] in items(user_defs)
-        if !has_key(s:known_types, key) ||
-         \ (has_key(value, 'replace') && value.replace)
-            let s:known_types[key] = value
-        else
-            call extend(s:known_types[key], value)
-        endif
-    endfor
+    call s:LoadUserTypeDefs()
 
-    " Create a dictionary of the kind order for fast
-    " access in sorting functions
     for type in values(s:known_types)
-        let i = 0
-        let type.kinddict = {}
-        for kind in type.kinds
-            let type.kinddict[kind.short] = i
-            let i += 1
-        endfor
+        call s:CreateTypeKinddict(type)
     endfor
 
     let s:type_init_done = 1
 endfunction
 
-" s:GetUserTypeDefs() {{{2
-function! s:GetUserTypeDefs()
-    call s:LogDebugMessage('Initializing user types')
+" s:LoadUserTypeDefs() {{{2
+function! s:LoadUserTypeDefs(...)
+    if a:0 > 0
+        let type = a:1
 
-    redir => defs
-    silent execute 'let g:'
-    redir END
+        call s:LogDebugMessage("Initializing user type '" . type . "'")
 
-    let deflist = split(defs, '\n')
-    call map(deflist, 'substitute(v:val, ''^\S\+\zs.*'', "", "")')
-    call filter(deflist, 'v:val =~ "^tagbar_type_"')
+        let defdict = {}
+        let defdict[type] = g:tagbar_type_{type}
+    else
+        call s:LogDebugMessage('Initializing user types')
 
-    let defdict = {}
-    for defstr in deflist
-        let type = substitute(defstr, '^tagbar_type_', '', '')
-        execute 'let defdict["' . type . '"] = g:' . defstr
-    endfor
+        redir => defs
+        silent execute 'let g:'
+        redir END
 
-    " If the user only specified one of kind2scope and scope2kind use it to
-    " generate the other one
-    " Also, transform the 'kind' definitions into dictionary format
+        let deflist = split(defs, '\n')
+        call map(deflist, 'substitute(v:val, ''^\S\+\zs.*'', "", "")')
+        call filter(deflist, 'v:val =~ "^tagbar_type_"')
+
+        let defdict = {}
+        for defstr in deflist
+            let type = substitute(defstr, '^tagbar_type_', '', '')
+            let defdict[type] = g:{defstr}
+        endfor
+    endif
+
+    " Transform the 'kind' definitions into dictionary format
     for def in values(defdict)
         if has_key(def, 'kinds')
             let kinds = def.kinds
@@ -799,6 +839,8 @@ function! s:GetUserTypeDefs()
             endfor
         endif
 
+        " If the user only specified one of kind2scope and scope2kind use it
+        " to generate the other one
         if has_key(def, 'kind2scope') && !has_key(def, 'scope2kind')
             let def.scope2kind = {}
             for [key, value] in items(def.kind2scope)
@@ -811,8 +853,32 @@ function! s:GetUserTypeDefs()
             endfor
         endif
     endfor
+    unlet! key value
 
-    return defdict
+    for [key, value] in items(defdict)
+        if !has_key(s:known_types, key) ||
+         \ (has_key(value, 'replace') && value.replace)
+            let s:known_types[key] = value
+        else
+            call extend(s:known_types[key], value)
+        endif
+    endfor
+
+    if a:0 > 0
+        call s:CreateTypeKinddict(s:known_types[type])
+    endif
+endfunction
+
+" s:CreateTypeKinddict() {{{2
+function! s:CreateTypeKinddict(type)
+    " Create a dictionary of the kind order for fast access in sorting
+    " functions
+    let i = 0
+    let a:type.kinddict = {}
+    for kind in a:type.kinds
+        let a:type.kinddict[kind.short] = i
+        let i += 1
+    endfor
 endfunction
 
 " s:RestoreSession() {{{2
@@ -989,6 +1055,32 @@ function! s:CheckFTCtags(bin, ftype)
     endif
 
     return ''
+endfunction
+
+" s:GetSupportedFiletypes() {{{2
+function! s:GetSupportedFiletypes()
+    call s:LogDebugMessage('Getting filetypes sypported by Exuberant Ctags')
+
+    let ctags_cmd = s:EscapeCtagsCmd(g:tagbar_ctags_bin, '--list-languages')
+    if ctags_cmd == ''
+        return
+    endif
+
+    let ctags_output = s:ExecuteCtags(ctags_cmd)
+
+    if v:shell_error
+        " this shouldn't happen as potential problems would have already been
+        " caught by the previous ctags checking
+        return
+    endif
+
+    let types = split(ctags_output, '\n\+')
+
+    for type in types
+        let s:ctags_types[tolower(type)] = 1
+    endfor
+
+    let s:checked_ctags_types = 1
 endfunction
 
 " Prototypes {{{1
@@ -1439,7 +1531,9 @@ function! s:OpenWindow(flags)
         return
     endif
 
-    call s:Init()
+    if !s:Init()
+        return 0
+    endif
 
     " Expand the Vim window to accomodate for the Tagbar window if requested
     if g:tagbar_expand && !s:window_expanded && has('gui_running')
@@ -2453,7 +2547,7 @@ function! s:JumpToTag(stay_in_tagbar)
 
     let autoclose = w:autoclose
 
-    if empty(taginfo) || has_key(taginfo, 'numtags')
+    if empty(taginfo) || taginfo.isKindheader()
         return
     endif
 
@@ -2819,6 +2913,8 @@ endfunction
 
 " s:IsValidFile() {{{2
 function! s:IsValidFile(fname, ftype)
+    call s:LogDebugMessage('Checking if file is valid: ' . a:fname)
+
     if a:fname == '' || a:ftype == ''
         call s:LogDebugMessage('Empty filename or type')
         return 0
@@ -2830,8 +2926,14 @@ function! s:IsValidFile(fname, ftype)
     endif
 
     if !has_key(s:known_types, a:ftype)
-        call s:LogDebugMessage('Unsupported filetype: ' . a:ftype)
-        return 0
+        if exists('g:tagbar_type_' . a:ftype)
+            " Filetype definition must have been specified in an 'ftplugin'
+            " file, so load it now
+            call s:LoadUserTypeDefs(a:ftype)
+        else
+            call s:LogDebugMessage('Unsupported filetype: ' . a:ftype)
+            return 0
+        endif
     endif
 
     return 1
