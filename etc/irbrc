@@ -73,12 +73,12 @@ module IRBHelper
   alias :na :notify
 
   # http://stackoverflow.com/questions/123494/whats-your-favourite-irb-trick/123834#123834
-  def bm n = 100, &block
+  def bm n = 1
     require 'benchmark'
 
     warn "#{n} iterations:"
     Benchmark.bm do |test|
-      test.report { n.times &block }
+      test.report { n.times { yield } }
     end; nil
   end
 
