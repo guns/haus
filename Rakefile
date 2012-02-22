@@ -123,7 +123,7 @@ task :env do # {{{1
         :branch => %w[master guns],
         :push   => 'github',
         :files  => 'etc/vim/bundle/Command-T',
-        :after  => lambda { |proj| system '/opt/ruby/1.8/bin/rake commandt &>/dev/null' }
+        :after  => lambda { |proj| system '/usr/bin/rake commandt &>/dev/null' }
       },
 
       {

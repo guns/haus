@@ -83,6 +83,7 @@ module CommandT
 
     def hide
       @match_window.close
+      @prev_finder = @active_finder.dup
       @active_finder = nil
 
       if VIM::Window.select @initial_window
@@ -263,7 +264,7 @@ module CommandT
       command = options[:command] || default_open_command
 
       ensure_appropriate_window_selection
-      @active_finder.open_selection command, selection, options
+      (@active_finder || @prev_finder).open_selection command, selection, options
     end
 
     def map key, function, param = nil
