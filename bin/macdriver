@@ -9,6 +9,7 @@ require 'optparse'
 require 'ostruct'
 require 'fileutils'
 require 'yaml'
+require 'rubygems' # Ruby 1.8 compat
 require 'plist'
 
 class Macdriver
@@ -68,7 +69,7 @@ class Macdriver
             next
           else
             # We are revisiting a node that is currently being traversed.
-            raise CyclicDependencyError, '%s ↔ %s' % [v, table[v][dir].find(v).first]
+            raise CyclicDependencyError, '%s <-> %s' % [v, table[v][dir].find(v).first]
           end
         end
         visited[v] = true
@@ -122,13 +123,12 @@ class Macdriver
   end
 
   # Aliases for some important driver classes. Returns key if no alias exists.
-  HARDWARE_ALIASES = Hash.new { |h,k| h.has_key?(k) ? h.fetch(k) : k }.merge({
+  HARDWARE_ALIASES = Hash.new { |h,k| h.has_key?(k) ? h.fetch(k) : k }.merge \
     'cd'          => 'com.apple.iokit.IOCDStorageFamily',
     'usb'         => 'com.apple.iokit.IOUSBFamily',
     'firewire'    => 'com.apple.iokit.IOFireWireFamily',
     'bluetooth'   => 'com.apple.iokit.IOBluetoothFamily',
     'thunderbolt' => 'com.apple.iokit.IOThunderboltFamily'
-  })
 
   attr_reader :options
 
@@ -236,7 +236,7 @@ class Macdriver
   end
 
   def ancestors *ids
-    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject &:+
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject(&:+).reverse
   end
 
   def loaded? id
@@ -261,21 +261,23 @@ class Macdriver
   end
 
   def unload *ids
+    success = true
     ids.each do |id|
       descendents(id).tsort.select { |id| loaded? id }.each do |id|
-        kextunload id or return false
+        kextunload id or success = false
       end
     end
-    true
+    success
   end
 
   def load *ids
+    success = true
     ids.each do |id|
-      ancestors(id).tsort.reject { |id| loaded? id }.each do |id|
-        kextload id or return false
+      ancestors(id).tsort.reject { |id| loaded? id }.reverse_each do |id|
+        kextload id or success = false
       end
     end
-    true
+    success
   end
 
   def show type, ids
@@ -290,17 +292,27 @@ class Macdriver
       ids.each do |id|
         puts "-*- #{type.to_s.capitalize} of #{HARDWARE_ALIASES[id]} -*-"
 
-        dg = send type, *ids
-        dg = dg.reverse if type == :ancestors
-
-        dg.levels.each do |n, names|
+        send(type, id).levels.each do |n, names|
           names.each do |nym|
             line = '%d: %s' % [n, nym]
-            puts loaded?(nym) ? "\e[32;1m%s (LOADED)\e[0m" % line : line
+            if loaded? nym
+              line << ' (LOADED)'
+              line = "\e[32;1m%s\e[0m" % line if $stdout.tty?
+            end
+            puts line
           end
         end
       end
     end
+  end
+
+  # Return a property list as a string of a launchd.plist(5) that runs
+  # `macdriver` with the given arguments at load.
+  def launchd *args
+    Plist::Emit.dump \
+      :Label            => 'com.sungpae.macdriver',
+      :RunAtLoad        => true,
+      :ProgramArguments => ['/usr/bin/ruby', '--', File.expand_path(__FILE__)] + args
   end
 
   def run arguments = []
@@ -312,6 +324,7 @@ class Macdriver
     when 'load'        then load *args.drop(1)
     when 'ancestors'   then show :ancestors, args.drop(1)
     when 'descendents' then show :descendents, args.drop(1)
+    when 'launchd'     then puts launchd(*args.drop(1))
     else abort parser.help
     end
   end
