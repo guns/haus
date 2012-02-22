@@ -1,4 +1,4 @@
-# Copyright 2010-2011 Wincent Colaiuta. All rights reserved.
+# Copyright 2010-2012 Wincent Colaiuta. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -34,6 +34,7 @@ module CommandT
     def initialize options = {}
       @prompt = options[:prompt]
       @reverse_list = options[:match_window_reverse]
+      @min_height = options[:min_height]
 
       # save existing window dimensions so we can restore them later
       @windows = []
@@ -79,6 +80,12 @@ module CommandT
           'setlocal nobuflisted',       # don't show up in the buffer list
           'setlocal textwidth=0'        # don't hard-wrap (break long lines)
         ].each { |command| ::VIM::command command }
+
+        # don't show the color column
+        ::VIM::command 'setlocal colorcolumn=0' if VIM::exists?('+colorcolumn')
+
+        # don't show relative line numbers
+        ::VIM::command 'setlocal norelativenumber' if VIM::exists?('+relativenumber')
 
         # sanity check: make sure the buffer really was created
         raise "Can't find GoToFile buffer" unless $curbuf.name.match /GoToFile\z/
@@ -244,7 +251,7 @@ module CommandT
       return unless VIM::Window.select(@window)
       unlock
       clear
-      @window.height = 1
+      @window.height = @min_height > 0 ? @min_height : 1
       @@buffer[1] = "-- #{msg} --"
       lock
     end
@@ -273,7 +280,7 @@ module CommandT
     end
 
     def match_text_for_idx idx
-      match = truncated_match @matches[idx]
+      match = truncated_match @matches[idx].to_s
       if idx == @selection
         prefix = @@selection_marker
         suffix = padding_for_selected_match match
@@ -305,7 +312,8 @@ module CommandT
         @window_width = @window.width # update cached value
         max_lines = VIM::Screen.lines - 5
         max_lines = 1 if max_lines < 0
-        actual_lines = match_count > max_lines ? max_lines : match_count
+        actual_lines = match_count < @min_height ? @min_height : match_count
+        actual_lines = max_lines if actual_lines > max_lines
         @window.height = actual_lines
         (1..actual_lines).each do |line|
           idx = line - 1

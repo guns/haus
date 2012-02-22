@@ -1,4 +1,4 @@
-# Copyright 2010-2011 Wincent Colaiuta. All rights reserved.
+# Copyright 2010-2012 Wincent Colaiuta. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
@@ -24,6 +24,7 @@
 require 'command-t/finder/buffer_finder'
 require 'command-t/finder/jump_finder'
 require 'command-t/finder/file_finder'
+require 'command-t/finder/tag_finder'
 require 'command-t/match_window'
 require 'command-t/prompt'
 require 'command-t/vim/path_utilities'
@@ -61,6 +62,12 @@ module CommandT
       end
     end
 
+    def show_tag_finder
+      @path          = VIM::pwd
+      @active_finder = tag_finder
+      show
+    end
+
     def show_file_finder
       hiding_current CommandT::FileFinder do
         # optional parameter will be desired starting directory, or ""
@@ -91,7 +98,9 @@ module CommandT
 
     def flush
       @max_height   = nil
+      @min_height   = nil
       @file_finder  = nil
+      @tag_finder   = nil
     end
 
     def handle_key
@@ -179,7 +188,8 @@ module CommandT
       @match_window     = MatchWindow.new \
         :prompt               => @prompt,
         :match_window_at_top  => get_bool('g:CommandTMatchWindowAtTop'),
-        :match_window_reverse => get_bool('g:CommandTMatchWindowReverse')
+        :match_window_reverse => get_bool('g:CommandTMatchWindowReverse'),
+        :min_height           => min_height
       @focus            = @prompt
       @prompt.focus
       register_for_key_presses
@@ -190,38 +200,35 @@ module CommandT
       @max_height ||= get_number('g:CommandTMaxHeight') || 0
     end
 
-    def exists? name
-      ::VIM::evaluate("exists(\"#{name}\")").to_i != 0
+    def min_height
+      @min_height ||= begin
+        min_height = get_number('g:CommandTMinHeight') || 0
+        min_height = max_height if max_height != 0 && min_height > max_height
+        min_height
+      end
     end
 
     def get_number name
-      exists?(name) ? ::VIM::evaluate("#{name}").to_i : nil
+      VIM::exists?(name) ? ::VIM::evaluate("#{name}").to_i : nil
     end
 
     def get_bool name
-      exists?(name) ? ::VIM::evaluate("#{name}").to_i != 0 : nil
+      VIM::exists?(name) ? ::VIM::evaluate("#{name}").to_i != 0 : nil
     end
 
     def get_string name
-      exists?(name) ? ::VIM::evaluate("#{name}").to_s : nil
+      VIM::exists?(name) ? ::VIM::evaluate("#{name}").to_s : nil
     end
 
     # expect a string or a list of strings
     def get_list_or_string name
-      return nil unless exists?(name)
+      return nil unless VIM::exists?(name)
       list_or_string = ::VIM::evaluate("#{name}")
       if list_or_string.kind_of?(Array)
         list_or_string.map { |item| item.to_s }
       else
         list_or_string.to_s
       end
-    end
-
-    # Backslash-escape space, \, |, %, #, "
-    def sanitize_path_string str
-      # for details on escaping command-line mode arguments see: :h :
-      # (that is, help on ":") in the Vim documentation.
-      str.gsub(/[ \\|%#"]/, '\\\\\0')
     end
 
     def default_open_command
@@ -254,11 +261,9 @@ module CommandT
 
     def open_selection selection, options = {}
       command = options[:command] || default_open_command
-      selection = File.expand_path selection, @path
-      selection = relative_path_under_working_directory selection
-      selection = sanitize_path_string selection
+
       ensure_appropriate_window_selection
-      ::VIM::command "silent #{command} #{selection}"
+      @active_finder.open_selection command, selection, options
     end
 
     def map key, function, param = nil
@@ -342,6 +347,11 @@ module CommandT
 
     def jump_finder
       @jump_finder ||= CommandT::JumpFinder.new
+    end
+
+    def tag_finder
+      @tag_finder ||= CommandT::TagFinder.new \
+        :include_filenames => get_bool('g:CommandTTagIncludeFilenames')
     end
   end # class Controller
 end # module commandT

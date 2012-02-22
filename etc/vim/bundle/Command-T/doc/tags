@@ -2,6 +2,7 @@
 :CommandTBuffer	command-t.txt	/*:CommandTBuffer*
 :CommandTFlush	command-t.txt	/*:CommandTFlush*
 :CommandTJumps	command-t.txt	/*:CommandTJumps*
+:CommandTTag	command-t.txt	/*:CommandTTag*
 command-t	command-t.txt	/*command-t*
 command-t-authors	command-t.txt	/*command-t-authors*
 command-t-commands	command-t.txt	/*command-t-commands*
@@ -39,8 +40,10 @@ g:CommandTMaxCachedDirectories	command-t.txt	/*g:CommandTMaxCachedDirectories*
 g:CommandTMaxDepth	command-t.txt	/*g:CommandTMaxDepth*
 g:CommandTMaxFiles	command-t.txt	/*g:CommandTMaxFiles*
 g:CommandTMaxHeight	command-t.txt	/*g:CommandTMaxHeight*
+g:CommandTMinHeight	command-t.txt	/*g:CommandTMinHeight*
 g:CommandTNeverShowDotFiles	command-t.txt	/*g:CommandTNeverShowDotFiles*
 g:CommandTScanDotDirectories	command-t.txt	/*g:CommandTScanDotDirectories*
 g:CommandTSelectNextMap	command-t.txt	/*g:CommandTSelectNextMap*
 g:CommandTSelectPrevMap	command-t.txt	/*g:CommandTSelectPrevMap*
+g:CommandTTagIncludeFilenames	command-t.txt	/*g:CommandTTagIncludeFilenames*
 g:CommandTToggleFocusMap	command-t.txt	/*g:CommandTToggleFocusMap*
