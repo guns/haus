@@ -23,7 +23,7 @@ class Macdriver
     # Takes a list of vertices and outbound edges.
     def initialize list
       # The graph is actually stored in a hash table (a.k.a. adjacency list)
-      @table = {}
+      @table, din, dout = {}, DIRECTION[:in], DIRECTION[:out]
 
       # Storing only incoming (or outgoing) edges per node allows for fast
       # appends, but storing both sets of edges per node allows for fast
@@ -37,8 +37,8 @@ class Macdriver
           table[e] ||= [[], []]
           # Storing object references makes for expensive deep-copies, so we
           # just record the vertex ids instead.
-          table[e][DIRECTION[:in ]].push v
-          table[v][DIRECTION[:out]].push e
+          table[e][din ].push v
+          table[v][dout].push e
         end
       end
     end
@@ -81,17 +81,38 @@ class Macdriver
       stack.reverse
     end
 
+    # Each "level" of a directed acyclic graph is defined by the longest path
+    # to a root node.
+    def levels
+      parents, dir = {}, DIRECTION[:in]
+
+      tsort.reverse_each do |id|
+        parents[id] = table[id][dir].map { |e| (parents[e] || 0) + 1 }.max || 0
+      end
+
+      parents.group_by { |id,n| n }.sort_by { |k,v| k }.map { |k,v| [k, v.map(&:first)] }
+    end
+
+    # Returns a new graph of the union of the two graphs
+    def + other
+      alist = {}
+
+      (table.to_a + other.table.to_a).each do |id, (ins, outs)|
+        alist[id] = alist.has_key?(id) ? (alist[id] + outs).uniq : [outs]
+      end
+
+      self.class.new alist
+    end
+
     # Return a new graph with edge directions swapped.
     def reverse
       self.class.new table.inject([]) { |s, (v, (ins, outs))| s.push [v, ins] }
     end
 
-    def write files = nil
+    # Options are passed to GraphViz#output
+    def output opts = { :pdf => 'graph.pdf' }
       # Graphviz is a heavy library dependency, so we load on demand
       require 'graphviz'
-
-      files ||= ["#{self.class}.pdf"]
-      opts = Hash[[files].flatten.map { |f| [File.extname(f).sub('.', '').intern, f] }]
 
       GraphViz.digraph :G, :rankdir => :LR do |g|
         g.add_nodes table.keys
@@ -100,40 +121,53 @@ class Macdriver
     end
   end
 
-  HARDWARE_ALIASES = {
+  # Aliases for some important driver classes. Returns key if no alias exists.
+  HARDWARE_ALIASES = Hash.new { |h,k| h.has_key?(k) ? h.fetch(k) : k }.merge({
     'cd'          => 'com.apple.iokit.IOCDStorageFamily',
     'usb'         => 'com.apple.iokit.IOUSBFamily',
     'firewire'    => 'com.apple.iokit.IOFireWireFamily',
     'bluetooth'   => 'com.apple.iokit.IOBluetoothFamily',
     'thunderbolt' => 'com.apple.iokit.IOThunderboltFamily'
-  }
+  })
 
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.jobs  ||= 4
-    options.cache ||= "/tmp/#{self.class.to_s.downcase}-cache.yaml"
+    options.jobs       ||= 4
+    options.cache_file ||= "/tmp/#{self.class.to_s.downcase}-cache.yaml"
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = %Q(\
         Query, graph, load, and unload kernel extensions. Kexts can be
         specified either by bundle identifier, or by an alias:
 
             #{HARDWARE_ALIASES.keys.join ', '}
 
-        Loading and unloading kexts load and unload dependencies and
-        dependents as necessary.
+        Loading/unloading kexts load and unload dependencies/dependents as
+        necessary.
 
         Note that kext load state can be restored to boot conditions by
         sending SIGHUP to the `kextd` process.
 
         Usage: #{File.basename __FILE__} [options] [command [kext ...]]
 
-        Options:
+        Options:\
       ).gsub /^ {8}/, ''
+
+      opt.on '-f', '--cache-file PATH', 'Path to kext graph cache file; default: %s' % options.cache_file do |arg|
+        options.cache_file = arg
+      end
+
+      opt.on '-j', '--jobs N', Integer, 'Number of threads for plist parsing; %d by default' % options.jobs do |arg|
+        options.jobs = arg
+      end
+
+      opt.on '-o', '--output [PATH]', 'When displaying ancestors/descendents, write the graph of dependencies to PATH, using graphviz' do |arg|
+        options.output = arg || true
+      end
     end
   end
 
@@ -156,25 +190,130 @@ class Macdriver
       end
     end
 
+    # `kextstat` shows all loaded kexts, including those not found in the
+    # System "Extension" directories (kernel components, for example)
+    kstat = kextstat
+
     pool.each &:join
-    vec
+    Hash[vec].merge kstat
+  end
+
+  def kextstat
+    @kextstat ||= begin
+      lines, by_idx, names = %x(kextstat -l).lines, {}, {}
+
+      # `kextstat` output reports dependencies by index instead of bundle id
+      lines.each do |l|
+        i, name   = l.split.values_at 0, 5
+        deps      = l[/<(.*)>$/, 1] || ''
+        by_idx[i] = [name, deps.split]
+      end
+
+      # Now we can convert indices into names
+      by_idx.each do |idx, (name, deps)|
+        names[name] = deps.map { |i| by_idx[i][0] }
+      end
+
+      names
+    end
   end
 
   # Create and persist kext graph or load from cache
   def graph
     @graph ||= begin
-      if options.reload or not File.exists? options.cache
+      if options.reload or not File.exists? options.cache_file
         dg = DirectedGraph.new kextlist
-        File.open(options.cache, 'w', 0644) { |f| f.puts dg.to_yaml }
+        File.open(options.cache_file, 'w', 0644) { |f| f.puts dg.to_yaml }
         dg
       else
-        YAML.load_file options.cache
+        YAML.load_file options.cache_file
+      end
+    end
+  end
+
+  def descendents *ids
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id] }.inject &:+
+  end
+
+  def ancestors *ids
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject &:+
+  end
+
+  def loaded? id
+    kextstat.has_key? HARDWARE_ALIASES[id]
+  end
+
+  def sh *args
+    puts '→ %s' % args.join(' ')
+    system *args
+  end
+
+  def kextunload id
+    3.times do |n|
+      sleep n
+      return true if sh *%W[kextunload -b #{id}]
+    end
+    nil
+  end
+
+  def kextload id
+    sh *%W[kextload -b #{id}]
+  end
+
+  def unload *ids
+    ids.each do |id|
+      descendents(id).tsort.select { |id| loaded? id }.each do |id|
+        kextunload id or return false
+      end
+    end
+    true
+  end
+
+  def load *ids
+    ids.each do |id|
+      ancestors(id).tsort.reject { |id| loaded? id }.each do |id|
+        kextload id or return false
+      end
+    end
+    true
+  end
+
+  def show type, ids
+    raise 'No kext bundle ids given!' if ids.empty?
+
+    case options.output
+    when String
+      send(type, *ids).output File.extname(options.output).delete('.').intern => options.output
+    when true
+      send(type, *ids).output
+    else
+      ids.each do |id|
+        puts "-*- #{type.to_s.capitalize} of #{HARDWARE_ALIASES[id]} -*-"
+
+        dg = send type, *ids
+        dg = dg.reverse if type == :ancestors
+
+        dg.levels.each do |n, names|
+          names.each do |nym|
+            line = '%d: %s' % [n, nym]
+            puts loaded?(nym) ? "\e[32;1m%s (LOADED)\e[0m" % line : line
+          end
+        end
       end
     end
   end
 
   def run arguments = []
     args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    case args.first
+    when 'unload'      then unload *args.drop(1)
+    when 'load'        then load *args.drop(1)
+    when 'ancestors'   then show :ancestors, args.drop(1)
+    when 'descendents' then show :descendents, args.drop(1)
+    else abort parser.help
+    end
   end
 end
 
