@@ -8,72 +8,61 @@
 
 " Utilities {{{
 
-"let delimitMate_loaded = 1
+let delimitMate_loaded = 1
 
 function! delimitMate#ShouldJump() "{{{
 	" Returns 1 if the next character is a closing delimiter.
-	let char = delimitMate#GetCharFromCursor(0)
-	let list = b:_l_delimitMate_right_delims + b:_l_delimitMate_quotes_list
+	let col = col('.')
+	let lcol = col('$')
+	let char = getline('.')[col - 1]
 
 	" Closing delimiter on the right.
-	if index(list, char) > -1
-		return 1
-	endif
-
-	" Closing delimiter with space expansion.
-	let nchar = delimitMate#GetCharFromCursor(1)
-	if b:_l_delimitMate_expand_space && char == " "
-		if index(list, nchar) > -1
+	for cdel in b:_l_delimitMate_right_delims + b:_l_delimitMate_quotes_list
+		if char == cdel
 			return 1
 		endif
+	endfor
+
+	" Closing delimiter with space expansion.
+	let nchar = getline('.')[col]
+	if b:_l_delimitMate_expand_space && char == " "
+		for cdel in b:_l_delimitMate_right_delims + b:_l_delimitMate_quotes_list
+			if nchar == cdel
+				return 1
+			endif
+		endfor
 	endif
 
 	" Closing delimiter with CR expansion.
 	let uchar = getline(line('.') + 1)[0]
 	if b:_l_delimitMate_expand_cr && char == ""
-		if index(list, uchar) > -1
-			return 1
-		endif
+		for cdel in b:_l_delimitMate_right_delims + b:_l_delimitMate_quotes_list
+			if uchar == cdel
+				return 1
+			endif
+		endfor
 	endif
 
 	return 0
 endfunction "}}}
 
 function! delimitMate#IsEmptyPair(str) "{{{
-	if strlen(substitute(a:str, ".", "x", "g")) != 2
-		return 0
-	endif
-	let idx = index(b:_l_delimitMate_left_delims, matchstr(a:str, '^.'))
-	if idx > -1 &&
-				\ b:_l_delimitMate_right_delims[idx] == matchstr(a:str, '.$')
-		return 1
-	endif
-	let idx = index(b:_l_delimitMate_quotes_list, matchstr(a:str, '^.'))
-	if idx > -1 &&
-				\ b:_l_delimitMate_quotes_list[idx] == matchstr(a:str, '.$')
-		return 1
-	endif
+	for pair in b:_l_delimitMate_matchpairs_list
+		if a:str == join( split( pair, ':' ),'' )
+			return 1
+		endif
+	endfor
+	for quote in b:_l_delimitMate_quotes_list
+		if a:str == quote . quote
+			return 1
+		endif
+	endfor
 	return 0
 endfunction "}}}
-
-function! delimitMate#GetCharFromCursor(...) "{{{
-	let idx = col('.') - 1
-	if !a:0 || (a:0 && a:1 >= 0)
-		" Get char from cursor.
-		let line = getline('.')[idx :]
-		let pos = a:0 ? a:1 : 0
-		return matchstr(line, '^'.repeat('.', pos).'\zs.')
-	endif
-	" Get char behind cursor.
-	let line = getline('.')[: idx - 1]
-	let pos = 0 - (1 + a:1)
-	return matchstr(line, '.\ze'.repeat('.', pos).'$')
-endfunction "delimitMate#GetCharFromCursor }}}
 
 function! delimitMate#IsCRExpansion() " {{{
 	let nchar = getline(line('.')-1)[-1:]
 	let schar = getline(line('.')+1)[:0]
-	" TODO: Consider whitespace?
 	let isEmpty = getline('.') == ""
 	if index(b:_l_delimitMate_left_delims, nchar) > -1 &&
 				\ index(b:_l_delimitMate_left_delims, nchar) == index(b:_l_delimitMate_right_delims, schar) &&
@@ -89,10 +78,12 @@ function! delimitMate#IsCRExpansion() " {{{
 endfunction " }}} delimitMate#IsCRExpansion()
 
 function! delimitMate#IsSpaceExpansion() " {{{
-	if col('.') > 2
-		let pchar = delimitMate#GetCharFromCursor(-2)
-		let nchar = delimitMate#GetCharFromCursor(1)
-		let isSpaces = (delimitMate#GetCharFromCursor(-1) == delimitMate#GetCharFromCursor(0) && delimitMate#GetCharFromCursor(-1) == " ")
+	let line = getline('.')
+	let col = col('.')-2
+	if col > 0
+		let pchar = line[col - 1]
+		let nchar = line[col + 2]
+		let isSpaces = (line[col] == line[col+1] && line[col] == " ")
 
 		if index(b:_l_delimitMate_left_delims, pchar) > -1 &&
 				\ index(b:_l_delimitMate_left_delims, pchar) == index(b:_l_delimitMate_right_delims, nchar) &&
@@ -108,22 +99,14 @@ function! delimitMate#IsSpaceExpansion() " {{{
 endfunction " }}} IsSpaceExpansion()
 
 function! delimitMate#WithinEmptyPair() "{{{
-	" get char before the cursor.
-	let char1 = delimitMate#GetCharFromCursor(-1)
-	" get char under the cursor.
-	let char2 = delimitMate#GetCharFromCursor(0)
-	return delimitMate#IsEmptyPair( char1.char2 )
+	let cur = strpart( getline('.'), col('.')-2, 2 )
+	return delimitMate#IsEmptyPair( cur )
 endfunction "}}}
-
-function! delimitMate#CursorIdx() "{{{
-	let idx = len(split(getline('.')[: col('.') - 1], '\zs')) - 1
-	return idx
-endfunction "delimitMate#CursorCol }}}
 
 function! delimitMate#WriteBefore(str) "{{{
 	let len = len(a:str)
 	let line = getline('.')
-	let col = delimitMate#CursorIdx() - 1
+	let col = col('.')-2
 	if col < 0
 		call setline('.',line[(col+len+1):])
 	else
@@ -133,19 +116,14 @@ function! delimitMate#WriteBefore(str) "{{{
 endfunction " }}}
 
 function! delimitMate#WriteAfter(str) "{{{
-	let len = 1 "len(a:str)
-	let line = split(getline('.'), '\zs')
-	let col = delimitMate#CursorIdx() - 1
-	if (col + 1) < 0
-		let line = insert(line, a:str)
-	elseif col('.') == col('$')
-		let line = add(line, a:str)
+	let len = len(a:str)
+	let line = getline('.')
+	let col = col('.')-2
+	if (col) < 0
+		call setline('.',a:str.line)
 	else
-		let line1 = line[:(col)]
-		let line2 = line[(col+len):]
-		let line = line1 + [a:str] + line2
+		call setline('.',line[:(col)].a:str.line[(col+len):])
 	endif
-	call setline('.', join(line, ''))
 	return ''
 endfunction " }}}
 
@@ -175,12 +153,14 @@ function! delimitMate#IsForbidden(char) "{{{
 	if b:_l_delimitMate_excluded_regions_enabled == 0
 		return 0
 	endif
-	let region = delimitMate#GetCurrentSyntaxRegion()
-	if index(b:_l_delimitMate_excluded_regions_list, region) >= 0
+	"let result = index(b:_l_delimitMate_excluded_regions_list, delimitMate#GetCurrentSyntaxRegion()) >= 0
+	if index(b:_l_delimitMate_excluded_regions_list, delimitMate#GetCurrentSyntaxRegion()) >= 0
 		"echom "Forbidden 1!"
 		return 1
 	endif
 	let region = delimitMate#GetCurrentSyntaxRegionIf(a:char)
+	"let result = index(b:_l_delimitMate_excluded_regions_list, region) >= 0
+	"return result || region == 'Comment'
 	"echom "Forbidden 2!"
 	return index(b:_l_delimitMate_excluded_regions_list, region) >= 0
 endfunction "}}}
@@ -190,10 +170,6 @@ function! delimitMate#FlushBuffer() " {{{
 	return ''
 endfunction " }}}
 
-function! delimitMate#AddToBuffer(c) "{{{
-	call insert(b:_l_delimitMate_buffer, a:c)
-endfunction "delimitMate#AddToBuffer }}}
-
 function! delimitMate#BalancedParens(char) "{{{
 	" Returns:
 	" = 0 => Parens balanced.
@@ -201,7 +177,7 @@ function! delimitMate#BalancedParens(char) "{{{
 	" < 0 => More closing parens.
 
 	let line = getline('.')
-	let col = delimitMate#CursorIdx() - 1
+	let col = col('.') - 2
 	let col = col >= 0 ? col : 0
 	let list = split(line, '\zs')
 	let left = b:_l_delimitMate_left_delims[index(b:_l_delimitMate_right_delims, a:char)]
@@ -227,6 +203,14 @@ function! delimitMate#BalancedParens(char) "{{{
 	let opening += count(list[col :], left)
 	let closing += count(list[col :], right)
 
+	"echom "–––––––––"
+	"echom line
+	"echom col
+	""echom left.":".a:char
+	"echom string(list)
+	"echom string(list[start : col - 1]) . " : " . string(list[col :])
+	"echom opening . " - " . closing . " = " . (opening - closing)
+
 	" Return the found balance:
 	return opening - closing
 endfunction "}}}
@@ -238,20 +222,6 @@ function! delimitMate#RmBuffer(num) " {{{
 	return ""
 endfunction " }}}
 
-function! delimitMate#IsSmartQuote(char) "{{{
-	if !b:_l_delimitMate_smart_quotes
-		return 0
-	endif
-	let char_at = delimitMate#GetCharFromCursor(0)
-	let char_before = delimitMate#GetCharFromCursor(-1)
-	let valid_char_re = '\w\|[^[:punct:]]'
-	let word_before = char_before =~ valid_char_re
-	let word_at = char_at  =~ valid_char_re
-	let escaped = delimitMate#CursorIdx() >= 1 && delimitMate#GetCharFromCursor(-1) == '\'
-	let result = word_before || escaped || word_at
-	return result
-endfunction "delimitMate#SmartQuote }}}
-
 " }}}
 
 " Doers {{{
@@ -262,10 +232,10 @@ function! delimitMate#SkipDelim(char) "{{{
 	let col = col('.') - 1
 	let line = getline('.')
 	if col > 0
-		let cur = delimitMate#GetCharFromCursor(0)
-		let pre = delimitMate#GetCharFromCursor(-1)
+		let cur = line[col]
+		let pre = line[col-1]
 	else
-		let cur = delimitMate#GetCharFromCursor(0)
+		let cur = line[col]
 		let pre = ""
 	endif
 	if pre == "\\"
@@ -277,7 +247,7 @@ function! delimitMate#SkipDelim(char) "{{{
 		return a:char . delimitMate#Del()
 	elseif delimitMate#IsEmptyPair( pre . a:char )
 		" Add closing delimiter and jump back to the middle.
-		call delimitMate#AddToBuffer(a:char)
+		call insert(b:_l_delimitMate_buffer, a:char)
 		return delimitMate#WriteAfter(a:char)
 	else
 		" Nothing special here, return the same character.
@@ -305,11 +275,11 @@ function! delimitMate#ParenDelim(char) " {{{
 		return ''
 	elseif (col) < 0
 		call setline('.',a:char.line)
-		call delimitMate#AddToBuffer(a:char)
+		call insert(b:_l_delimitMate_buffer, a:char)
 	else
 		"echom string(col).':'.line[:(col)].'|'.line[(col+1):]
 		call setline('.',line[:(col)].a:char.line[(col+1):])
-		call delimitMate#AddToBuffer(a:char)
+		call insert(b:_l_delimitMate_buffer, a:char)
 	endif
 	return ''
 endfunction " }}}
@@ -318,23 +288,28 @@ function! delimitMate#QuoteDelim(char) "{{{
 	if delimitMate#IsForbidden(a:char)
 		return a:char
 	endif
-	let char_at = delimitMate#GetCharFromCursor(0)
-	let char_before = delimitMate#GetCharFromCursor(-1)
-	if delimitMate#IsSmartQuote(a:char)
-		" Seems like a smart quote, insert a single char.
+	let line = getline('.')
+	let col = col('.') - 2
+	if line[col] == "\\"
+		" Seems like a escaped character, insert one quotation mark.
 		return a:char
-	"elseif line[col + 1] == a:char &&
-	elseif char_at == a:char &&
+	elseif line[col + 1] == a:char &&
 				\ index(b:_l_delimitMate_nesting_quotes, a:char) < 0
 		" Get out of the string.
 		return a:char . delimitMate#Del()
-	elseif (char_before == a:char && char_at != a:char) && b:_l_delimitMate_smart_quotes
+	elseif (line[col] =~ '\w' && a:char == "'") ||
+				\ (b:_l_delimitMate_smart_quotes &&
+				\ (line[col] =~ '\w' ||
+				\ line[col + 1] =~ '\w'))
+		" Seems like an apostrophe or a smart quote case, insert a single quote.
+		return a:char
+	elseif (line[col] == a:char && line[col + 1 ] != a:char) && b:_l_delimitMate_smart_quotes
 		" Seems like we have an unbalanced quote, insert one quotation mark and jump to the middle.
-		call delimitMate#AddToBuffer(a:char)
+		call insert(b:_l_delimitMate_buffer, a:char)
 		return delimitMate#WriteAfter(a:char)
 	else
 		" Insert a pair and jump to the middle.
-		call delimitMate#AddToBuffer(a:char)
+		call insert(b:_l_delimitMate_buffer, a:char)
 		call delimitMate#WriteAfter(a:char)
 		return a:char
 	endif
@@ -344,7 +319,9 @@ function! delimitMate#JumpOut(char) "{{{
 	if delimitMate#IsForbidden(a:char)
 		return a:char
 	endif
-	if delimitMate#GetCharFromCursor(0) == a:char
+	let line = getline('.')
+	let col = col('.')-2
+	if line[col+1] == a:char
 		return a:char . delimitMate#Del()
 	else
 		return a:char
@@ -359,7 +336,7 @@ function! delimitMate#JumpAny(key) " {{{
 		return a:key
 	endif
 	" Let's get the character on the right.
-	let char = delimitMate#GetCharFromCursor(0)
+	let char = getline('.')[col('.')-1]
 	if char == " "
 		" Space expansion.
 		"let char = char . getline('.')[col('.')] . delimitMate#Del()
@@ -368,8 +345,8 @@ function! delimitMate#JumpAny(key) " {{{
 	elseif char == ""
 		" CR expansion.
 		"let char = "\<CR>" . getline(line('.') + 1)[0] . "\<Del>"
-		call delimitMate#FlushBuffer()
-		return "\<CR>" . getline(line('.') + 1)[0] . delimitMate#Del() . "\<Del>"
+		let b:_l_delimitMate_buffer = []
+		return "\<CR>" . getline(line('.') + 1)[0] . "\<Del>"
 	else
 		"call delimitMate#RmBuffer(1)
 		return char . delimitMate#Del()
@@ -377,10 +354,13 @@ function! delimitMate#JumpAny(key) " {{{
 endfunction " delimitMate#JumpAny() }}}
 
 function! delimitMate#JumpMany() " {{{
-	let line = split(getline('.')[col('.') - 1 : ], '\zs')
+	let line = getline('.')[col('.') - 1 : ]
+	let len = len(line)
 	let rights = ""
 	let found = 0
-	for char in line
+	let i = 0
+	while i < len
+		let char = line[i]
 		if index(b:_l_delimitMate_quotes_list, char) >= 0 ||
 					\ index(b:_l_delimitMate_right_delims, char) >= 0
 			let rights .= "\<Right>"
@@ -390,7 +370,8 @@ function! delimitMate#JumpMany() " {{{
 		else
 			break
 		endif
-	endfor
+		let i += 1
+	endwhile
 	if found == 1
 		return rights
 	else
@@ -405,11 +386,8 @@ function! delimitMate#ExpandReturn() "{{{
 	if delimitMate#WithinEmptyPair()
 		" Expand:
 		call delimitMate#FlushBuffer()
-		let char = delimitMate#GetCharFromCursor(0)
 		"return "\<Esc>a\<CR>x\<CR>\<Esc>k$\"_xa"
-		"return "\<Esc>a\<CR>\<UP>\<Esc>o"
-		call feedkeys("\<Esc>a\<Del>\<Esc>ox\<BS>\<CR>".char."\<Esc>kA", 't')
-		return ''
+		return "\<CR>\<UP>\<Esc>o"
 	else
 		return "\<CR>"
 	endif
@@ -419,10 +397,9 @@ function! delimitMate#ExpandSpace() "{{{
 	if delimitMate#IsForbidden("\<Space>")
 		return "\<Space>"
 	endif
-	let escaped = delimitMate#CursorIdx() >= 2 && delimitMate#GetCharFromCursor(-2) == '\'
-	if delimitMate#WithinEmptyPair() && !escaped
+	if delimitMate#WithinEmptyPair()
 		" Expand:
-		call delimitMate#AddToBuffer('s')
+		call insert(b:_l_delimitMate_buffer, 's')
 		return delimitMate#WriteAfter(' ') . "\<Space>"
 	else
 		return "\<Space>"
@@ -433,25 +410,27 @@ function! delimitMate#BS() " {{{
 	if delimitMate#IsForbidden("")
 		return "\<BS>"
 	endif
-	if &backspace !~ 'start\|2' && empty(b:_l_delimitMate_buffer)
+	if delimitMate#WithinEmptyPair()
+		"call delimitMate#RmBuffer(1)
+		return "\<BS>" . delimitMate#Del()
+"        return "\<Right>\<BS>\<BS>"
+	elseif delimitMate#IsSpaceExpansion()
+		"call delimitMate#RmBuffer(1)
+		return "\<BS>" . delimitMate#Del()
+	elseif delimitMate#IsCRExpansion()
+		return "\<BS>\<Del>"
+	else
 		return "\<BS>"
 	endif
-	if delimitMate#WithinEmptyPair()
-		return "\<BS>" . delimitMate#Del()
-	endif
-	if delimitMate#IsSpaceExpansion()
-		return "\<BS>" . delimitMate#Del()
-	endif
-	if delimitMate#IsCRExpansion()
-		return "\<BS>\<Del>"
-	endif
-	return "\<BS>"
 endfunction " }}} delimitMate#BS()
 
 function! delimitMate#Del() " {{{
 	if len(b:_l_delimitMate_buffer) > 0
+		let line = getline('.')
+		let col = col('.') - 2
 		call delimitMate#RmBuffer(1)
-		return "\<Del>"
+		call setline('.', line[:col] . line[col+2:])
+		return ''
 	else
 		return "\<Del>"
 	endif
@@ -478,8 +457,7 @@ function! delimitMate#Finish(move_back) " {{{
 			let lefts = lefts . "\<Left>"
 			let i += 1
 		endwhile
-		let result = substitute(buffer, "s", "\<Space>", 'g') . lefts
-		return result
+		return substitute(buffer, "s", "\<Space>", 'g') . lefts
 	endif
 	return ''
 endfunction " }}}
