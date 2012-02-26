@@ -419,3 +419,15 @@ command! -bar Hitest
     \ 45vnew |
     \ source $VIMRUNTIME/syntax/hitest.vim |
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
+
+
+""" Utility functions
+
+function! CwordOrSel(...)
+    if a:0 && a:1
+        normal gv"vy
+        return @v
+    else
+        return expand('<cword>')
+    endif
+endfunction

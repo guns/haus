@@ -477,9 +477,15 @@ vnoremap <M-k> :move-2<CR>gv=gv
 vnoremap <M-h> <C-\><C-n>`<<Left>i_<C-\><C-n>mz"_xgvx`zPgv<Left>o<Left>o
 vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
 
-" Definitions / etymology
-noremap <Leader>D :<C-u>execute 'silent! ! open http://dictionary.reference.com/browse/' . expand('<cword>') \| redraw!<CR>
-noremap <Leader>E :<C-u>execute 'silent! ! open http://www.etymonline.com/index.php?search=' . expand('<cword>') \| redraw!<CR>
+" Definitions / Etymology / Google
+for [g:lhs, g:rhs] in [['D', 'http://dictionary.reference.com/browse/'],
+                     \ ['E', 'http://www.etymonline.com/index.php?search='],
+                     \ ['G', 'https://encrypted.google.com/search?pws=0&tbs=li:1&q=']]
+    let g:fmt = 'noremap <Leader>' . g:lhs . ' :<C-u>execute "silent! ! open ' . shellescape(g:rhs) . '" . shellescape(CwordOrSel(%d)) \| redraw!<CR>'
+    execute 'n' . printf(g:fmt, 0)
+    execute 'v' . printf(g:fmt, 1)
+endfor
+unlet g:lhs g:rhs g:fmt
 
 " REPLACE move-down-and-start-of-line with a simple add-numbers-in-selection
 vnoremap + "ry:ruby
