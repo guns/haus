@@ -386,13 +386,6 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
    let manpageview_syntax= "man"
   endif
 
-  " support for searching for options from conf pages {{{3
-  if manpagebook == "" && manpageview_fname =~ '\.conf$'
-   let manpagesrch = '^\s\+'.manpagetopic
-   let manpagetopic= manpageview_fname
-  endif
-"  call Decho("manpagebook<".manpagebook."> manpagetopic<".manpagetopic.">")
-
   " it was reported to me that some systems change display sizes when a {{{3
   " filtering command is used such as :r! .  I record the height&width
   " here and restore it afterwards.  To make use of it, put
