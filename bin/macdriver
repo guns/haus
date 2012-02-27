@@ -280,27 +280,32 @@ class Macdriver
     success
   end
 
-  def show type, ids
-    raise 'No kext bundle ids given!' if ids.empty?
+  def summarize dg = graph
+    dg.levels.map do |n, names|
+      names.map do |nym|
+        line = '%d: %s' % [n, nym]
+        if loaded? nym
+          line << ' (LOADED)'
+          line = "\e[32;1m%s\e[0m" % line if $stdout.tty?
+        end
+        line
+      end.join "\n"
+    end.join "\n"
+  end
 
+  def show type, ids = nil
     case options.output
     when String
       send(type, *ids).output File.extname(options.output).delete('.').intern => options.output
     when true
       send(type, *ids).output
     else
-      ids.each do |id|
-        puts "-*- #{type.to_s.capitalize} of #{HARDWARE_ALIASES[id]} -*-"
-
-        send(type, id).levels.each do |n, names|
-          names.each do |nym|
-            line = '%d: %s' % [n, nym]
-            if loaded? nym
-              line << ' (LOADED)'
-              line = "\e[32;1m%s\e[0m" % line if $stdout.tty?
-            end
-            puts line
-          end
+      if type == :graph
+        puts summarize
+      else
+        ids.each do |id|
+          puts "-*- #{type.to_s.capitalize} of #{HARDWARE_ALIASES[id]} -*-"
+          puts summarize(send type, id)
         end
       end
     end
@@ -324,6 +329,7 @@ class Macdriver
     when 'load'        then load *args.drop(1)
     when 'ancestors'   then show :ancestors, args.drop(1)
     when 'descendents' then show :descendents, args.drop(1)
+    when 'list'        then show :graph
     when 'launchd'     then puts launchd(*args.drop(1))
     else abort parser.help
     end
