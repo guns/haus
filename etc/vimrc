@@ -155,8 +155,8 @@ let g:NERDMenuMode = 0
 
 " Plugin: delimitMate (expand <CR> breaks undo/redo)
 let g:delimitMate_excluded_regions = ''
-let g:delimitMate_expand_cr = 0
 let g:delimitMate_expand_space = 1
+let g:delimitMate_balance_matchpairs = 1
 
 " Plugin: Gnupg
 let g:GPGDefaultRecipients = ['self@sungpae.com']
