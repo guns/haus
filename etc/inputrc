@@ -276,8 +276,8 @@ $if Ruby
     "\C-xr":        "\C-]require ''\C-b"
 
     # interactive_editor
-    "\C-x\C-e":     "\C-] vim File.join('/tmp', ENV['USER'] + '.interactive-editor.rb')\n" (- edit-and-execute-command)
-    "\033\007e":    "\C-] vim File.join('/tmp', ENV['USER'] + '.interactive-editor.rb')\n"
+    "\C-x\C-e":     "\C-]vim \"/tmp/#{ENV['USER']}.interactive-editor.rb\"\n" (- edit-and-execute-command)
+    "\033\007e":    "\C-]vim \"/tmp/#{ENV['USER']}.interactive-editor.rb\"\n"
     "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
     "\C-xee":       edit-and-execute-command
 $endif
