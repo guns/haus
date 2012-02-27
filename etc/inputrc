@@ -172,6 +172,7 @@ $if Bash
     # Reloads
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"   (- exchange-point-and-mark)
     "\C-xr":        "\C-] xreload \n"
+    "\033\007r":    "\C-] xreload \n"
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
@@ -200,13 +201,14 @@ $if Bash
     "\C-xS":        "\C-]cdSRC "
 
     # Job control
-    "\C-xp":        "\C-] pushd . \n"
-    "\C-x\C-p":     "\C-] popd \n"
+    "\033\007p":    "\C-] pushd . \n"
+    "\033\007P":    "\C-] popd \n"
     "\C-x\C-f":     "\C-] fg \n"
     "\C-x\C-b":     "\C-] bg \n"
 
     # Vim
     "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
+    "\033\007e":    "\C-] vim \n"
     "\C-xe ":       "\C-]vim "              (* call-last-kbd-macro)
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeb":       "\C-] vimbashrc \n"
@@ -229,7 +231,11 @@ $if Bash
     "\C-xeX":       "\C-] vimxinitrc \n"
     "\C-xf":        "\C-]vimfind "
     "\C-xef":       "\C-] vimfind \n"
+    "\033\007f":    "\C-] vimfind \n"
+    "\033\007o":    "\C-] vimfind \n"
+    "\033\007t":    "\C-] vimfind \n"
     "\C-x\C-g":     "\C-] vimgit \n"        (- abort)
+    "\033\007g":    "\C-] vimgit \n"
     "\C-xm":        "\C-]man "
 
     # Git
@@ -249,6 +255,7 @@ $if Bash
 
     # IRB
     "\C-xi":        "\C-] irb \n"
+    "\033\007i":    "\C-] irb \n"
 
     # Clojure VimREPL
     "\C-xc":        "\C-] vimclojure \n"
@@ -269,7 +276,8 @@ $if Ruby
     "\C-xr":        "\C-]require ''\C-b"
 
     # interactive_editor
-    "\C-x\C-e":     "\C-] vim \n"           (- edit-and-execute-command)
+    "\C-x\C-e":     "\C-] vim File.join('/tmp', ENV['USER'] + '.interactive-editor.rb')\n" (- edit-and-execute-command)
+    "\033\007e":    "\C-] vim File.join('/tmp', ENV['USER'] + '.interactive-editor.rb')\n"
     "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
     "\C-xee":       edit-and-execute-command
 $endif
