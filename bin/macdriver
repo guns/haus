@@ -38,8 +38,8 @@ class Macdriver
           table[e] ||= [[], []]
           # Storing object references makes for expensive deep-copies, so we
           # just record the vertex ids instead.
-          table[e][din ].push v
-          table[v][dout].push e
+          table[e][dout].push v
+          table[v][din ].push e
         end
       end
     end
@@ -61,7 +61,7 @@ class Macdriver
     # Tarjan's topological sort. Order determined via reverse depth-first
     # traversal.
     def tsort
-      visited, traversed, stack, dir = {}, {}, [], DIRECTION[:in]
+      visited, traversed, stack, dir = {}, {}, [], DIRECTION[:out]
 
       dfs = lambda do |v|
         if visited.has_key? v
@@ -85,7 +85,7 @@ class Macdriver
     # Each "level" of a directed acyclic graph is defined by the longest path
     # to a root node.
     def levels
-      parents, dir = {}, DIRECTION[:in]
+      parents, dir = {}, DIRECTION[:out]
 
       tsort.reverse_each do |id|
         parents[id] = table[id][dir].map { |e| (parents[e] || 0) + 1 }.max || 0
@@ -99,7 +99,7 @@ class Macdriver
       alist = {}
 
       (table.to_a + other.table.to_a).each do |id, (ins, outs)|
-        alist[id] = alist.has_key?(id) ? (alist[id] + outs).uniq : [outs]
+        alist[id] = alist.has_key?(id) ? (alist[id] + ins).uniq : [ins]
       end
 
       self.class.new alist
@@ -107,7 +107,7 @@ class Macdriver
 
     # Return a new graph with edge directions swapped.
     def reverse
-      self.class.new table.inject([]) { |s, (v, (ins, outs))| s.push [v, ins] }
+      self.class.new table.inject([]) { |s, (v, (ins, outs))| s.push [v, outs] }
     end
 
     # Options are passed to GraphViz#output
@@ -117,7 +117,7 @@ class Macdriver
 
       GraphViz.digraph :G, :rankdir => :LR do |g|
         g.add_nodes table.keys
-        table.each { |v, (ins, outs)| g.add_edges v, outs }
+        table.each { |v, (ins, outs)| g.add_edges v, ins }
       end.output opts
     end
   end
@@ -232,7 +232,7 @@ class Macdriver
   end
 
   def descendents *ids
-    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id] }.inject &:+
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :in  }.inject &:+
   end
 
   def ancestors *ids
