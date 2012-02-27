@@ -480,7 +480,8 @@ vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
 " Definitions / Etymology / Google
 for [g:lhs, g:rhs] in [['D', 'http://dictionary.reference.com/browse/'],
                      \ ['E', 'http://www.etymonline.com/index.php?search='],
-                     \ ['G', 'https://encrypted.google.com/search?pws=0&tbs=li:1&q=']]
+                     \ ['G', 'https://encrypted.google.com/search?pws=0&tbs=li:1&q='],
+                     \ ['H', 'http://symbolhound.com/?q=']]
     let g:fmt = 'noremap <Leader>' . g:lhs . ' :<C-u>execute "silent! ! open ' . shellescape(g:rhs) . '" . shellescape(CwordOrSel(%d)) \| redraw!<CR>'
     execute 'n' . printf(g:fmt, 0)
     execute 'v' . printf(g:fmt, 1)
@@ -506,27 +507,28 @@ vmap ' <Plug>VSurround'
 noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
-noremap <Leader>g<Space> :<C-u>Git<Space>
-noremap <Leader>gb       :Gblame<CR>
-noremap <Leader>gB       :Gbrowse<CR>
-noremap <Leader>gc       :<C-u>Gcommit<CR>
-noremap <Leader>gd       :<C-u>Git di<CR>
-noremap <Leader>gD       :<C-u>Gdiff<Space>
-noremap <Leader>g<M-d>   :<C-u>Gdiff<CR>
-noremap <Leader>g%       :<C-u>Git di %<CR>
-noremap <Leader>gf       :<C-u>silent! Git f<CR>
-noremap <Leader>gl       :<C-u>silent! Git lp<CR>
-noremap <Leader>gL       :<C-u>Glog<CR>
-noremap <Leader>gr       :<C-u>silent! Git rs<CR>
-noremap <Leader>gv       :Gitv<CR>
-noremap <Leader>gV       :Gitv!<CR>
-noremap <Leader>gaa      :<C-u>silent! Git aa<CR>
-noremap <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
-noremap <Leader>gap      :<C-u>Git ap<CR>
-noremap <Leader><C-g>    :<C-u>Gstatus<CR>
-noremap <4-g>            :<C-u>Gstatus<CR>
-noremap <4-G>            q:iGgrep! -Pi<Space>
-noremap <4-*>            :<C-u>let @/ = expand('<cword>') \| execute 'silent! Ggrep! ' . expand('<cword>') \| redraw!<CR>
+noremap  <Leader>g<Space> :<C-u>Git<Space>
+noremap  <Leader>gb       :Gblame<CR>
+noremap  <Leader>gB       :Gbrowse<CR>
+noremap  <Leader>gc       :<C-u>Gcommit<CR>
+noremap  <Leader>gd       :<C-u>Git di<CR>
+noremap  <Leader>gD       :<C-u>Gdiff<Space>
+noremap  <Leader>g<M-d>   :<C-u>Gdiff<CR>
+noremap  <Leader>g%       :<C-u>Git di %<CR>
+noremap  <Leader>gf       :<C-u>silent! Git f<CR>
+noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
+noremap  <Leader>gL       :<C-u>Glog<CR>
+noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
+noremap  <Leader>gv       :Gitv<CR>
+noremap  <Leader>gV       :Gitv!<CR>
+noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
+noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
+noremap  <Leader>gap      :<C-u>Git ap<CR>
+noremap  <Leader><C-g>    :<C-u>Gstatus<CR>
+noremap  <4-g>            :<C-u>Gstatus<CR>
+noremap  <4-G>            q:iGgrep! -Pi<Space>
+nnoremap <4-*>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
+vnoremap <4-*>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 
 " Plugin: ScreenShell
 noremap <Leader>S :<C-u>Screen<CR>
