@@ -8,18 +8,26 @@ class Task
   class Subproject
     include Haus::Loggable
 
-    attr_accessor :base, :files, :fetch, :push, :haus, :pull, :branch, :callback, :queue
+    attr_accessor :base, :files, :push, :haus, :pull, :branch, :callback, :queue
 
     def initialize opts = {}
       @base     = opts[:base ]
       @files    = opts[:files]
-      @fetch    = opts[:fetch]
       @push     = opts[:push ]
       @pull     = opts[:pull ] || 'origin'
       @haus     = opts[:haus ] || Haus::Options.new.path
       @branch   = OpenStruct.new Hash[[:upstream, :local].zip [opts[:branch]].flatten]
       @callback = OpenStruct.new :before => opts[:before], :after => opts[:after]
       @queue    = Haus::Queue.new :quiet => true
+      @fetch    = opts[:fetch]
+    end
+
+    def fetch
+      @fetch == true
+    end
+
+    def fetch= value
+      @fetch = value unless @fetch == :never
     end
 
     # Lazy require
