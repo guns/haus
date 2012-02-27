@@ -147,8 +147,12 @@ snippet dis "dissoc" w
 (dissoc ${1:map} ${0:keys})
 endsnippet
 
-snippet get "get" w
-(get ${1:map|vec} ${0:key|idx default})
+snippet ge "get" w
+(get ${1:coll} ${0:key|idx default})
+endsnippet
+
+snippet geti "get-in" w
+(get-in ${1:coll} [${0:keys}])
 endsnippet
 
 snippet sv "subvec" w
@@ -360,6 +364,10 @@ endsnippet
 
 snippet cla "class" w
 (class ${0:item})
+endsnippet
+
+snippet tp "type" w
+(type $0)
 endsnippet
 
 snippet anc "ancestors" w
@@ -721,6 +729,10 @@ endsnippet
 
 snippet pr "prn" w
 (prn $0)
+endsnippet
+
+snippet prn "println" w
+(println $0)
 endsnippet
 
 snippet prf "printf" w
