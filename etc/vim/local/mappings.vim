@@ -524,7 +524,6 @@ noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
-noremap  <Leader><C-g>    :<C-u>Gstatus<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
 nnoremap <4-*>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
@@ -552,12 +551,11 @@ nmap <Leader>- viw<Plug>(operator-camelize-toggle)
 vmap <Leader>- <Plug>(operator-camelize-toggle)
 
 " Plugin: Command-T
-Mapall <4-o>      :<C-u>CommandT<CR>
-Mapall <4-t>      :<C-u>tabnew \\\| CommandT<CR>
-Mapall <4-'>      :<C-u>CommandTJump<CR>
-Mapall <4-b>      :<C-u>CommandTBuffer<CR>
-Mapall <4-B>      :<C-u>CommandTFlush<CR>
-map    <Leader>ef <4-t>
+Mapall <4-o> :<C-u>CommandT<CR>
+Mapall <4-t> :<C-u>tabnew \\\| CommandT<CR>
+Mapall <4-'> :<C-u>CommandTJump<CR>
+Mapall <4-b> :<C-u>CommandTBuffer<CR>
+Mapall <4-B> :<C-u>CommandTFlush<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
