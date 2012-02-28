@@ -148,12 +148,14 @@ Credits
 - Ben Loveridge -- Integrated quickfix with automatic error checking
 - Brian Egan -- Documentation for enabling filetype plugins
 - Trent Mick -- Feature to ignore #! lines for compatibility with shell scripts
+- Christopher Sexton -- Fixed errors in MacVim on Lion and Snow Leopard
+- Brian Donovan -- Fix for non-POSIX shells
 
 
 License
 ---------
 
-Copyright (c) 2008-2011 Jesse Hallett <hallettj@gmail.com>, except where
+Copyright (c) 2008-2012 Jesse Hallett <hallettj@gmail.com>, except where
 otherwise noted
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of

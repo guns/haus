@@ -972,8 +972,10 @@ function! s:CreateAutocommands()
             \ endif
         autocmd BufEnter,CursorHold,FileType * call
                     \ s:AutoUpdate(fnamemodify(expand('<afile>'), ':p'))
-        autocmd BufDelete * call
-                    \ s:CleanupFileinfo(fnamemodify(expand('<afile>'), ':p'))
+        autocmd BufDelete,BufUnload,BufWipeout * call
+                    \ s:known_files.rm(fnamemodify(expand('<afile>'), ':p'))
+
+        autocmd VimEnter * call s:CorrectFocusOnStartup()
     augroup END
 
     let s:autocommands_done = 1
@@ -1528,8 +1530,12 @@ function! s:OpenWindow(flags)
                 let w:autoclose = autoclose
             endif
         endif
+        call s:LogDebugMessage("OpenWindow finished, Tagbar already open")
         return
     endif
+
+    " This is only needed for the CorrectFocusOnStartup() function
+    let s:last_autofocus = autofocus
 
     if !s:Init()
         return 0
@@ -1700,6 +1706,23 @@ function! s:ZoomWindow()
     else
         vert resize
         let s:is_maximized = 1
+    endif
+endfunction
+
+" s:CorrectFocusOnStartup() {{{2
+" For whatever reason the focus will be on the Tagbar window if
+" tagbar#autoopen is used with a FileType autocommand on startup and
+" g:tagbar_left is set. This should work around it by jumping to the window of
+" the current file after startup.
+function! s:CorrectFocusOnStartup()
+    if bufwinnr('__Tagbar__') != -1 && !g:tagbar_autofocus && !s:last_autofocus
+        let curfile = s:known_files.getCurrent()
+        if !empty(curfile) && curfile.fpath != fnamemodify(bufname('%'), ':p')
+            let winnr = bufwinnr(curfile.fpath)
+            if winnr != -1
+                call s:winexec(winnr . 'wincmd w')
+            endif
+        endif
     endif
 endfunction
 
@@ -2819,36 +2842,6 @@ function! s:OpenParents(...)
 endfunction
 
 " Helper functions {{{1
-" s:CleanUp() {{{2
-function! s:CleanUp()
-    silent autocmd! TagbarAutoCmds
-
-    unlet s:is_maximized
-    unlet s:compare_typeinfo
-    unlet s:short_help
-endfunction
-
-" s:CleanupFileinfo() {{{2
-function! s:CleanupFileinfo(fname)
-    call s:known_files.rm(a:fname)
-endfunction
-
-" s:QuitIfOnlyWindow() {{{2
-function! s:QuitIfOnlyWindow()
-    " Check if there is more than window
-    if winbufnr(2) == -1
-        " Check if there is more than one tab page
-        if tabpagenr('$') == 1
-            " Before quitting Vim, delete the tagbar buffer so that
-            " the '0 mark is correctly set to the previous buffer.
-            bdelete
-            quitall
-        else
-            close
-        endif
-    endif
-endfunction
-
 " s:AutoUpdate() {{{2
 function! s:AutoUpdate(fname)
     call s:LogDebugMessage('AutoUpdate called on ' . a:fname)
@@ -2911,32 +2904,58 @@ function! s:AutoUpdate(fname)
     call s:LogDebugMessage('AutoUpdate finished successfully')
 endfunction
 
-" s:IsValidFile() {{{2
-function! s:IsValidFile(fname, ftype)
-    call s:LogDebugMessage('Checking if file is valid: ' . a:fname)
+" s:CheckMouseClick() {{{2
+function! s:CheckMouseClick()
+    let line   = getline('.')
+    let curcol = col('.')
 
-    if a:fname == '' || a:ftype == ''
-        call s:LogDebugMessage('Empty filename or type')
-        return 0
+    if (match(line, s:icon_open . '[-+ ]') + 1) == curcol
+        call s:CloseFold()
+    elseif (match(line, s:icon_closed . '[-+ ]') + 1) == curcol
+        call s:OpenFold()
+    elseif g:tagbar_singleclick
+        call s:JumpToTag(0)
+    endif
+endfunction
+
+" s:CleanUp() {{{2
+function! s:CleanUp()
+    silent autocmd! TagbarAutoCmds
+
+    unlet s:is_maximized
+    unlet s:compare_typeinfo
+    unlet s:short_help
+endfunction
+
+" s:DetectFiletype() {{{2
+function! s:DetectFiletype(bufnr)
+    " Filetype has already been detected for loaded buffers, but not
+    " necessarily for unloaded ones
+    let ftype = getbufvar(a:bufnr, '&filetype')
+
+    if bufloaded(a:bufnr)
+        return ftype
     endif
 
-    if !filereadable(a:fname)
-        call s:LogDebugMessage('File not readable')
-        return 0
+    if ftype != ''
+        return ftype
     endif
 
-    if !has_key(s:known_types, a:ftype)
-        if exists('g:tagbar_type_' . a:ftype)
-            " Filetype definition must have been specified in an 'ftplugin'
-            " file, so load it now
-            call s:LoadUserTypeDefs(a:ftype)
-        else
-            call s:LogDebugMessage('Unsupported filetype: ' . a:ftype)
-            return 0
-        endif
-    endif
+    " Unloaded buffer with non-detected filetype, need to detect filetype
+    " manually
+    let bufname = bufname(a:bufnr)
 
-    return 1
+    let eventignore_save = &eventignore
+    set eventignore=FileType
+    let filetype_save = &filetype
+
+    exe 'doautocmd filetypedetect BufRead ' . bufname
+    let ftype = &filetype
+
+    let &filetype = filetype_save
+    let &eventignore = eventignore_save
+
+    return ftype
 endfunction
 
 " s:EscapeCtagsCmd() {{{2
@@ -3015,6 +3034,29 @@ function! s:ExecuteCtags(ctags_cmd)
     return ctags_output
 endfunction
 
+" s:GetNearbyTag() {{{2
+" Get the tag info for a file near the cursor in the current file
+function! s:GetNearbyTag()
+    let fileinfo = s:known_files.getCurrent()
+
+    let curline = line('.')
+    let tag = {}
+
+    " If a tag appears in a file more than once (for example namespaces in
+    " C++) only one of them has a 'tline' entry and can thus be highlighted.
+    " The only way to solve this would be to go over the whole tag list again,
+    " making everything slower. Since this should be a rare occurence and
+    " highlighting isn't /that/ important ignore it for now.
+    for line in range(curline, 1, -1)
+        if has_key(fileinfo.fline, line)
+            let tag = fileinfo.fline[line]
+            break
+        endif
+    endfor
+
+    return tag
+endfunction
+
 " s:GetTagInfo() {{{2
 " Return the info dictionary of the tag on the specified line. If the line
 " does not contain a valid tag (for example because it is empty or only
@@ -3047,76 +3089,54 @@ function! s:GetTagInfo(linenr, ignorepseudo)
     return taginfo
 endfunction
 
-" s:GetNearbyTag() {{{2
-" Get the tag info for a file near the cursor in the current file
-function! s:GetNearbyTag()
-    let fileinfo = s:known_files.getCurrent()
+" s:IsValidFile() {{{2
+function! s:IsValidFile(fname, ftype)
+    call s:LogDebugMessage('Checking if file is valid: ' . a:fname)
 
-    let curline = line('.')
-    let tag = {}
+    if a:fname == '' || a:ftype == ''
+        call s:LogDebugMessage('Empty filename or type')
+        return 0
+    endif
 
-    " If a tag appears in a file more than once (for example namespaces in
-    " C++) only one of them has a 'tline' entry and can thus be highlighted.
-    " The only way to solve this would be to go over the whole tag list again,
-    " making everything slower. Since this should be a rare occurence and
-    " highlighting isn't /that/ important ignore it for now.
-    for line in range(curline, 1, -1)
-        if has_key(fileinfo.fline, line)
-            let tag = fileinfo.fline[line]
-            break
+    if !filereadable(a:fname)
+        call s:LogDebugMessage('File not readable')
+        return 0
+    endif
+
+    if !has_key(s:known_types, a:ftype)
+        if exists('g:tagbar_type_' . a:ftype)
+            " Filetype definition must have been specified in an 'ftplugin'
+            " file, so load it now
+            call s:LoadUserTypeDefs(a:ftype)
+        else
+            call s:LogDebugMessage('Unsupported filetype: ' . a:ftype)
+            return 0
         endif
-    endfor
+    endif
 
-    return tag
+    return 1
 endfunction
 
-" s:CheckMouseClick() {{{2
-function! s:CheckMouseClick()
-    let line   = getline('.')
-    let curcol = col('.')
-
-    if (match(line, s:icon_open . '[-+ ]') + 1) == curcol
-        call s:CloseFold()
-    elseif (match(line, s:icon_closed . '[-+ ]') + 1) == curcol
-        call s:OpenFold()
-    elseif g:tagbar_singleclick
-        call s:JumpToTag(0)
+" s:QuitIfOnlyWindow() {{{2
+function! s:QuitIfOnlyWindow()
+    " Check if there is more than window
+    if winbufnr(2) == -1
+        " Check if there is more than one tab page
+        if tabpagenr('$') == 1
+            " Before quitting Vim, delete the tagbar buffer so that
+            " the '0 mark is correctly set to the previous buffer.
+            bdelete
+            quitall
+        else
+            close
+        endif
     endif
-endfunction
-
-" s:DetectFiletype() {{{2
-function! s:DetectFiletype(bufnr)
-    " Filetype has already been detected for loaded buffers, but not
-    " necessarily for unloaded ones
-    let ftype = getbufvar(a:bufnr, '&filetype')
-
-    if bufloaded(a:bufnr)
-        return ftype
-    endif
-
-    if ftype != ''
-        return ftype
-    endif
-
-    " Unloaded buffer with non-detected filetype, need to detect filetype
-    " manually
-    let bufname = bufname(a:bufnr)
-
-    let eventignore_save = &eventignore
-    set eventignore=FileType
-    let filetype_save = &filetype
-
-    exe 'doautocmd filetypedetect BufRead ' . bufname
-    let ftype = &filetype
-
-    let &filetype = filetype_save
-    let &eventignore = eventignore_save
-
-    return ftype
 endfunction
 
 " s:winexec() {{{2
 function! s:winexec(cmd)
+    call s:LogDebugMessage("Executing without autocommands: " . a:cmd)
+
     let eventignore_save = &eventignore
     set eventignore=BufEnter
 
@@ -3228,6 +3248,7 @@ endfunction
 " Automatically open Tagbar if one of the open buffers contains a supported
 " file
 function! tagbar#autoopen(...)
+    call s:LogDebugMessage('tagbar#autoopen called on ' . bufname('%'))
     let always = a:0 > 0 ? a:1 : 1
 
     call s:Init()
@@ -3237,10 +3258,15 @@ function! tagbar#autoopen(...)
             let ftype = s:DetectFiletype(bufnr)
             if s:IsValidFile(bufname(bufnr), ftype)
                 call s:OpenWindow('')
+                call s:LogDebugMessage('tagbar#autoopen finished ' .
+                                     \ 'after finding valid file')
                 return
             endif
         endif
     endfor
+
+    call s:LogDebugMessage('tagbar#autoopen finished ' .
+                         \ 'without finding valid file')
 endfunction
 
 " Modeline {{{1
