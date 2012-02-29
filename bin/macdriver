@@ -242,11 +242,11 @@ class Macdriver
   end
 
   def descendents *ids
-    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :in  }.inject &:+
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject &:+
   end
 
   def ancestors *ids
-    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject(&:+).reverse
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :in  }.inject(&:+).reverse
   end
 
   def loaded? id
