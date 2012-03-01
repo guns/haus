@@ -252,7 +252,7 @@ $if Bash
     "\033\007i":    "\C-] irb \n"
 
     # Clojure VimREPL
-    "\033\007C":    "\C-] vimclojure \n"
+    "\C-xc":        "\C-] vimclojure \n"
 $endif
 
 
