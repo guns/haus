@@ -53,8 +53,10 @@ class Loginitems
   def open app
     Process.wait fork {
       env = {}
-      env['PATH'] = %x(bash ~/.bashpath).chomp
+      env['PATH'   ] = %x(bash ~/.bashpath).chomp
+      env['LANG'   ] = 'en_US.UTF-8'
       env['DISPLAY'] = ENV['DISPLAY']
+      env['RUBYLIB'] = ENV['RUBYLIB']
       ENV.replace env
       system *(app =~ /\.app\z/ ? %W[open -g #{File.expand_path app}] : app.shellsplit)
     }

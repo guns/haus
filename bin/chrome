@@ -10,6 +10,7 @@ require 'ostruct'
 require 'shellwords'
 require 'fileutils'
 require 'tempfile'
+require 'cli/superparser'
 
 class Chrome
   class DarwinUpdate
@@ -104,16 +105,17 @@ class Chrome
     options.signal ||= '-TERM'
     options.argv   ||= [
       '--enable-extension-timeline-api', # For Speed Tracer
-      '--disable-crash-reporter'         # Don't send crash reports
+      '--disable-crash-reporter',        # Don't send crash reports
+      '--disable-accelerated-2d-canvas'  # My GPU sucks
     ]
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 16 do |opt|
+    @parser ||= CLI::SuperParser.new nil, 16 do |opt|
       opt.banner = %Q(\
         Google Chrome / Chromium launcher and updater.
 
-        Usage: #{File.basename __FILE__} [options] -- [url-or-argument ...]
+        Usage: #{File.basename __FILE__} [options] [url-or-chrome-argument ...]
 
         Options:
       ).gsub /^ +/, ''
@@ -207,7 +209,7 @@ class Chrome
   end
 
   def run arguments = []
-    args = parser.parse arguments
+    args = parser.superparse arguments
 
     if options.update
       update
