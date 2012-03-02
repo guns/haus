@@ -7,6 +7,7 @@
 
 require 'ostruct'
 require 'pathname'
+require 'shellwords'
 require 'cli/superparser'
 
 class Clojure
@@ -16,10 +17,11 @@ class Clojure
     @options = OpenStruct.new opts
     options.classpath  ||= (ENV['CLASSPATH'] || '').split ':'
     options.vimclojure ||= '~/.vim/bundle/VimClojure/vimclojure-server.jar'
+    options.ngport     ||= 2113
   end
 
   def parser
-    @parser ||= CLI::SuperParser.new nil, 24 do |opt|
+    @parser ||= CLI::SuperParser.new nil, 28 do |opt|
       opt.banner = %Q(\
         Clojure wrapper.
 
@@ -40,9 +42,14 @@ class Clojure
         options.command = :repl
       end
 
-      opt.on '--vimclojure [jar]', 'Start the VimClojure Nailgun server' do |arg|
+      opt.on '--vimclojure [JAR]', 'Start the VimClojure Nailgun server' do |arg|
         options.command = :vimclojure
         options.vimclojure = arg if arg
+      end
+
+      opt.on '--lein-nailgun [PORT]', Integer, %Q(Same as `#{File.basename __FILE__} --lein "nailgun 127.0.0.1:PORT"`) do |arg|
+        options.command = :lein_nailgun
+        options.ngport = arg if arg
       end
 
       opt.on '-q', '--quiet' do
@@ -82,7 +89,7 @@ class Clojure
       fork do
         Dir.chdir lein_project_dir
         warn "[#{$$}] cd #{Dir.pwd}; lein #{t}" unless options.quiet
-        exec *%W[lein #{t}]
+        exec 'lein', *t.shellsplit
       end
     end
 
@@ -108,6 +115,8 @@ class Clojure
       rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
     when :vimclojure
       %W[java -server -classpath #{classpath options.vimclojure}] + args + %W[vimclojure.nailgun.NGServer 127.0.0.1]
+    when :lein_nailgun
+      return lein_daemon("nailgun 127.0.0.1:#{options.ngport}", *args)
     else
       %W[java -server -classpath #{classpath} clojure.main] + args
     end

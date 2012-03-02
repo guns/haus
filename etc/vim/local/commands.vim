@@ -146,18 +146,20 @@ function! <SID>LispBufferSetup()
 endfunction
 
 
-command! -bar StartNailgunServer call <SID>StartNailgunServer() "{{{1
-function! <SID>StartNailgunServer()
+command! -nargs=? -bar StartNailgunServer call <SID>StartNailgunServer(<args>) "{{{1
+function! <SID>StartNailgunServer(...)
     if g:vimclojure#WantNailgun
         echo 'WantNailgun option already set!'
         return
     endif
     let g:vimclojure#WantNailgun = 1
-    let g:StartedNailgunServer = 0
+    let g:NailgunServerStarted = 0
+    let g:NailgunServerPort = a:0 ? a:1 : 2113
 
-    if empty(system('nc -z 127.0.0.1 2113 &>/dev/null && echo 1'))
-        silent! execute '! clojure --lein nailgun &>/dev/null & until nc -z 127.0.0.1 2113 &>/dev/null; do echo -n .; sleep 1; done'
-        let g:StartedNailgunServer = 1
+    if empty(system('nc -z 127.0.0.1 ' . g:NailgunServerPort . ' &>/dev/null && echo 1'))
+        silent! execute '! clojure --lein-nailgun ' . g:NailgunServerPort . ' &>/dev/null &'
+        silent! execute '! until nc -z 127.0.0.1 ' . g:NailgunServerPort . ' &>/dev/null; do echo -n .; sleep 1; done'
+        let g:NailgunServerStarted = 1
     endif
 
     augroup NailgunServer
@@ -172,7 +174,7 @@ function! <SID>StartNailgunServer()
     call vimclojure#InitBuffer()
     redraw!
 
-    echo (g:StartedNailgunServer ? 'Started' : 'Attached to') . ' Nailgun server'
+    echo (g:NailgunServerStarted ? 'Started' : 'Attached to') . ' Nailgun server'
 endfunction
 
 
@@ -180,10 +182,10 @@ command! -bar StopNailgunServer call <SID>StopNailgunServer() "{{{1
 function! <SID>StopNailgunServer()
     let g:vimclojure#WantNailgun = 0
 
-    if exists('g:StartedNailgunServer') && g:StartedNailgunServer
-        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop &>/dev/null &' | redraw!
+    if exists('g:NailgunServerStarted') && g:NailgunServerStarted
+        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop --nailgun-port ' . g:NailgunServerPort . ' &>/dev/null &' | redraw!
         echo 'Killing Nailgun server'
-        let g:StartNailgunServer = 0
+        let g:NailgunServerStarted = 0
     else
         echo 'Unloading Nailgun server'
     endif
