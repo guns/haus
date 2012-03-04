@@ -79,7 +79,7 @@ function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 
-    nnoremap <buffer> <Leader><C-n> :StartNailgunServer<CR>
+    nnoremap <buffer> <Leader><C-n> :StartNailgunServer \| silent edit<CR>
     noremap! <buffer> <C-l>         ->
     noremap  <buffer> <4-CR>        A<Space>;<Space>
     noremap! <buffer> <4-CR>        <C-\><C-o>A<Space>;<Space>
@@ -94,6 +94,7 @@ function! <SID>LispBufferSetup()
     nmap <silent> <buffer> K         <Plug>ClojureSourceLookupWord
     nmap <silent> <buffer> <Leader>d <Plug>ClojureSourceLookupWord
     nmap <silent> <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
+    nmap <silent> <buffer> <Leader>r <Plug>ClojureRequireFileAll \| silent edit<CR>
 
     "
     " Paredit
