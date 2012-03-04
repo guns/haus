@@ -292,7 +292,7 @@ function! vimclojure#Buffer.showText(text) dict
 		let text = a:text
 	endif
 	call append(line("$"), text)
-	normal ggdd
+	normal! gg"_dd
 endfunction
 
 function! vimclojure#Buffer.showOutput(output) dict
@@ -384,6 +384,7 @@ function! s:InvalidateResultBufferIfNecessary(buf)
 endfunction
 
 augroup VimClojureResultBuffer
+	autocmd!
 	au BufDelete * call s:InvalidateResultBufferIfNecessary(expand("<abuf>"))
 augroup END
 
@@ -402,7 +403,6 @@ endfunction
 
 function! vimclojure#ClojureResultBuffer.showOutput(text) dict
 	call self.__superResultBufferShowOutput(a:text)
-	normal G
 endfunction
 
 " Nails
@@ -518,7 +518,7 @@ if !exists("vimclojure#Browser")
 endif
 
 function! vimclojure#JavadocLookup(word)
-	let word = substitute(a:word, "\\.$", "", "")
+	let word = substitute(a:word, "\\v[./][^./]*", "", "")
 	let path = vimclojure#ExecuteNailWithInput("JavadocPath", word,
 				\ "-n", b:vimclojure_namespace)
 
@@ -1026,6 +1026,7 @@ function! vimclojure#InitBuffer(...)
 		setlocal omnifunc=vimclojure#OmniCompletion
 
 		augroup VimClojure
+			autocmd!
 			autocmd CursorMovedI <buffer> if pumvisible() == 0 | pclose | endif
 		augroup END
 	endif
