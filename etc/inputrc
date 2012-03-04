@@ -235,6 +235,7 @@ $if Bash
 
     # Git
     "\C-xg ":       "\C-]git "              (* glob-list-expansions)
+    "\C-x\C-g":     "\C-] git st\n"
     "\C-xg%":       "\C-]git di "
     "\C-xgaa":      "\C-] git aa \n"
     "\C-xgac":      "\C-] git acv \n"
