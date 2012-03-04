@@ -11,13 +11,16 @@ snippet #! "#!/usr/bin/env clojure" b
 #!/usr/bin/env clojure
 endsnippet
 
-snippet lf "load-file"
-(load-file "${0:path}")
+snippet loadf "load-file" w
+(clojure.core/load-file "$0")
+endsnippet
+
+snippet load "load" w
+(clojure.core/load "$0")
 endsnippet
 
 snippet ns "ns"
-(ns ${1:name}
-	$0)
+(ns $0)
 endsnippet
 
 snippet req "require"
@@ -36,6 +39,14 @@ snippet :use ":use"
 (:use ${0:libs})
 endsnippet
 
+snippet :as ":as" w
+[$1 :as $0]
+endsnippet
+
+snippet :only ":only" w
+[$1 :only $0]
+endsnippet
+
 snippet imp "import"
 (import '${0:libs})
 endsnippet
@@ -44,8 +55,12 @@ snippet :imp ":import"
 (:import ${0:libs})
 endsnippet
 
-snippet doc "doc" w
-(doc $0)
+snippet me "meta" w
+(meta $0)
+endsnippet
+
+snippet wm "with-meta" w
+(with-meta $0)
 endsnippet
 
 
@@ -211,12 +226,20 @@ snippet uni "union" w
 (union ${0:sets})
 endsnippet
 
+snippet am "array-map" w
+(array-map $0)
+endsnippet
+
 snippet hm "hash-map" w
-(hash-map ${0:keyvals})
+(hash-map $0)
 endsnippet
 
 snippet sm "sorted-map" w
-(sorted-map ${0:keyvals})
+(sorted-map $0)
+endsnippet
+
+snippet smb "sorted-map-by" w
+(sorted-map-by ${0:λ} ${1:coll})
 endsnippet
 
 snippet ks "keys" w
@@ -357,6 +380,10 @@ endsnippet
 
 snippet grb "group-by" w
 (group-by ${1:λ} ${0:coll})
+endsnippet
+
+snippet zm "zipmap" w
+(zipmap $0)
 endsnippet
 
 
@@ -606,7 +633,7 @@ snippet eq "=" w
 (= ${1:a} ${0:b})
 endsnippet
 
-snippet w "when" w
+snippet wh "when" w
 (when ${0:cond})
 endsnippet
 
@@ -683,9 +710,8 @@ snippet re "recur" w
 (recur ${0:bindings})
 endsnippet
 
-snippet wh "while" w
-(while ${1:test}
-	$0)
+snippet whi "while" w
+(while ${0})
 endsnippet
 
 snippet tram "trampoline" w
@@ -706,6 +732,10 @@ endsnippet
 
 snippet comm "commute" w
 (commute ${1:hash-or-var} ${0:fbody})
+endsnippet
+
+snippet sw "swap!" w
+(swap! $0)
 endsnippet
 
 
@@ -747,7 +777,7 @@ snippet nl "newline" w
 endsnippet
 
 snippet wos "with-out-str" w
-(with-out-str$0)
+(with-out-str $0)
 endsnippet
 
 snippet wo "with-open" w
@@ -769,22 +799,4 @@ endsnippet
 # http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
 snippet deb "debug" w
 (defmacro debug[x] \`(let [x# ~x] (println '~x "=" x#) x#))
-endsnippet
-
-
-### Ring / Noir / Hiccup {{{1
-
-snippet defp "defpage" w
-(defpage ${1:name }${2:[:post "/path/:var"]} {${3:binds}}
-	$0)
-endsnippet
-
-snippet defpp "defpartial" w
-(defpartial ${1:fname} [${0:& content}]
-	)
-endsnippet
-
-snippet defe "defelem" w
-(defelem ${1:fname} [${0}]
-	)
 endsnippet
