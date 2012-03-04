@@ -873,7 +873,7 @@ HAVE vim && {
     # Open local REPL project
     vimclojure() {
         [[ -e project.clj ]] || cd ~/.clojure
-        vim -c 'Screen | CommandT src/' project.clj
+        vim -c 'Screen' project.clj
     }
 
     # Server / client functions
