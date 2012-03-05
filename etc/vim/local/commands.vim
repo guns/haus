@@ -150,7 +150,7 @@ endfunction
 command! -nargs=? -bar StartNailgunServer call <SID>StartNailgunServer(<args>) "{{{1
 function! <SID>StartNailgunServer(...)
     if g:vimclojure#WantNailgun
-        echo 'WantNailgun option already set!'
+        echo 'Already ' . (g:NailgunServerStarted ? "started" : "attached to") . ' Nailgun server!'
         return
     endif
     let g:vimclojure#WantNailgun = 1

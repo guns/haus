@@ -309,7 +309,7 @@ let s:delimiterMap = {
     \ 'ruby': { 'left': '#' },
     \ 'sa': { 'left': '--' },
     \ 'samba': { 'left': ';', 'leftAlt': '#' },
-    \ 'sass': { 'left': '//', 'leftAlt': '/*' },
+    \ 'sass': { 'left': '/*', 'leftAlt': '//' },
     \ 'sather': { 'left': '--' },
     \ 'scala': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'scheme': { 'left': ';', 'leftAlt': '#|', 'rightAlt': '|#' },
