@@ -46,8 +46,9 @@ defaults write com.apple.Dictionary ProhibitNewWindowForRequest -bool TRUE
 # Disable Safari web snapshots (Top Sites, History, etc)
 defaults write com.apple.Safari DebugSnapshotsUpdatePolicy -int 2
 
-# Disable Safari PubSubAgent
+# Disable PubSubAgent
 defaults write com.apple.Safari DebugSyndicationEnabled 0
+defaults write com.apple.Mail DebugSyndicationEnabled 0
 
 # Disable Time Machine nag
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool YES
