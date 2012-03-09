@@ -96,7 +96,7 @@ class Clojure
     %w[TERM INT QUIT].each do |sig|
       trap sig do
         %w[TERM INT QUIT].each { |s| trap s, 'DEFAULT' }
-        warn "\nCaught SIG%s; sending SIGTERM to %s" % [sig, pids.join(', ')] unless options.quiet
+        warn 'Caught SIG%s; sending SIGTERM to %s' % [sig, pids.join(', ')] unless options.quiet
         Process.kill :TERM, *pids
         Process.waitall
       end
