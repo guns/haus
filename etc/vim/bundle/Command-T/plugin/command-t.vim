@@ -33,14 +33,6 @@ command CommandTTag call <SID>CommandTShowTagFinder()
 command -nargs=? -complete=dir CommandT call <SID>CommandTShowFileFinder(<q-args>)
 command CommandTFlush call <SID>CommandTFlush()
 
-if !hasmapto(':CommandT<CR>')
-  silent! nnoremap <unique> <silent> <Leader>t :CommandT<CR>
-endif
-
-if !hasmapto(':CommandTBuffer<CR>')
-  silent! nnoremap <unique> <silent> <Leader>b :CommandTBuffer<CR>
-endif
-
 function s:CommandTRubyWarning()
   echohl WarningMsg
   echo "command-t.vim requires Vim to be compiled with Ruby support"
