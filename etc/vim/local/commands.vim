@@ -94,7 +94,12 @@ function! <SID>LispBufferSetup()
     nmap <silent> <buffer> K         <Plug>ClojureSourceLookupWord
     nmap <silent> <buffer> <Leader>d <Plug>ClojureSourceLookupWord
     nmap <silent> <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
-    nmap <silent> <buffer> <Leader>r <Plug>ClojureRequireFileAll \| silent edit<CR>
+    nmap <silent> <buffer> <Leader>r <Plug>ClojureRequireFileAll
+
+    " cf. ScreenSetup
+    vmap <silent> <buffer> <Leader>x <Plug>ClojureEvalBlock
+    nmap <silent> <buffer> <Leader>x m`va(<Leader>x``
+    imap <silent> <buffer> <Leader>x <C-\><C-n><Leader>x<Right>
 
     "
     " Paredit
@@ -216,10 +221,10 @@ function! <SID>ScreenSetup(setup)
     if a:setup
         " RECURSIVE map for cascading mappings
         vmap <Leader><Leader> :ScreenSend<CR>
-        nmap <Leader><Leader> m`vip<Leader><Leader>``
+        nmap <Leader><Leader> m`:execute 'normal ' . (&filetype == 'clojure' ? 'va(' : 'vip')<CR><Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
-        nmap <Leader><C-f> m`:execute 'normal ' . (&filetype == 'clojure' ? 'va(' : 'VggoG')<CR><Leader><Leader>``
+        nmap <Leader><C-f> m`VggoG<Leader><Leader>``
         imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
 
         nmap <Leader>Q :ScreenQuit<CR>
