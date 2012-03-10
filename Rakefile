@@ -77,7 +77,6 @@ task :env do # {{{1
       { :base => "#{@vim}/gnupg",                  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/gundo.vim",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/help_movement",          :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/hexman.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/httplog",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/indenthaskell.vim",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/jellybeans.vim",         :branch => %w[master],      :files => :pathogen },
