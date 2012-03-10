@@ -800,3 +800,15 @@ endsnippet
 snippet deb "debug" w
 (defmacro debug[x] \`(let [x# ~x] (println '~x "=" x#) x#))
 endsnippet
+
+snippet CP "print classpath" w
+(defn print-classpath []
+	(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))]
+		(println (.getPath u))))
+endsnippet
+
+snippet vimc "Start VimClojure NGServer" w
+(try
+	(vimclojure.nailgun.NGServer/main (into-array String [(str "127.0.0.1:" ${0:ngport})]))
+	(catch Exception _))
+endsnippet
