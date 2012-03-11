@@ -210,6 +210,10 @@ let g:vimclojure#ParenRainbowColors = {
     \ '9':  'ctermfg=235'
 \ }
 
+" Plugin: Regbuf
+let g:regbuf_open_command = 'vnew'
+let g:regbuf_edit_open_command = '84vnew'
+
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
