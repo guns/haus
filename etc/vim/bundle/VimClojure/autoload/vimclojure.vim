@@ -139,6 +139,28 @@ function! vimclojure#ExtractSexpr(toplevel)
 	return vimclojure#util#WithSavedPosition(closure)
 endfunction
 
+" Implementation by Eric Van Dewoestine <ervandew@gmail.com>
+" https://github.com/guns/screen/blob/master/autoload/screen.vim#L393
+function! vimclojure#GetVisualSelection()
+	let lines = getline(line("'<"), line("'>"))
+	let mode = visualmode()
+	let start = col("'<") - 1
+	let end = col("'>") - 1
+	if mode == "v"
+		" slice in end before start in case the selection is only one line
+		let lines[-1] = lines[-1][: end]
+		let lines[0] = lines[0][start :]
+	elseif mode == "\<c-v>"
+		if end < start
+			let [end, start] = [start, end]
+		endif
+		call map(lines, 'v:val[: end]')
+		call map(lines, 'v:val[start :]')
+	endif
+	return lines
+endfunction
+
+
 function! vimclojure#BufferName()
 	let file = expand("%")
 	if file == ""
@@ -611,6 +633,7 @@ function! vimclojure#RequireFile(all)
 	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(ns)
 	call resultBuffer.showOutput(result)
 	wincmd p
+	silent! edit
 endfunction
 
 function! vimclojure#RunTests(all)
@@ -654,7 +677,7 @@ function! vimclojure#EvalBlock()
 	let file = vimclojure#BufferName()
 	let ns = b:vimclojure_namespace
 
-	let content = getbufline(bufnr("%"), line("'<"), line("'>"))
+	let content = vimclojure#GetVisualSelection()
 	let result = vimclojure#ExecuteNailWithInput("Repl", content,
 				\ "-r", "-n", ns, "-f", file, "-l", line("'<") - 1)
 
