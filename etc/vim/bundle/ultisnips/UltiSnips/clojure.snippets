@@ -75,7 +75,7 @@ snippet co "count" w
 endsnippet
 
 snippet cons "cons" w
-(cons ${1:item} ${0:coll})
+(cons $0)
 endsnippet
 
 snippet rev "reverse" w
@@ -271,15 +271,15 @@ snippet map "map" w
 endsnippet
 
 snippet red "reduce" w
-(reduce ${0:λ} ${1})
+(reduce λ $0)
 endsnippet
 
 snippet fil "filter" w
-(filter ${0:λ} ${1})
+(filter λ $0)
 endsnippet
 
 snippet sel "select" w
-(select ${0:λ} ${1})
+(select λ $0)
 endsnippet
 
 snippet selk "select-keys" w
@@ -359,7 +359,7 @@ snippet tseq "tree-seq" w
 endsnippet
 
 snippet part "partition" w
-(partition ${0:[n coll] [n step coll] [n step pad coll]})
+(partition $0)
 endsnippet
 
 snippet rseq "re-seq" w
@@ -442,7 +442,7 @@ snippet nev "not-every?" w
 endsnippet
 
 snippet som "some" w
-(some ${1:λ} ${0:coll})
+(some λ $0)
 endsnippet
 
 snippet na "not-any?" w
@@ -515,7 +515,7 @@ snippet bind "binding" w
 endsnippet
 
 snippet def "def"
-(def${1} ${2:name} ${0:val})
+(def${1} ${0:name})
 endsnippet
 
 snippet defn "defn"
@@ -805,6 +805,7 @@ snippet CP "print classpath" w
 (defn print-classpath []
 	(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))]
 		(println (.getPath u))))
+(print-classpath)
 endsnippet
 
 snippet vimc "Start VimClojure NGServer" w
