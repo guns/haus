@@ -309,7 +309,7 @@ endfunction
 
 command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
 function! <SID>ToggleQuickfixWindow()
-    if &buftype ==# 'quickfix'
+    if len(filter(tabpagebuflist(), 'getbufvar(v:val, "&buftype") ==# "quickfix"'))
         cclose
     else
         copen
