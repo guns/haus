@@ -151,6 +151,7 @@ set visible-stats on
 "\ea":          "á"         U+00E1
 "\eC":          "Ç"         U+00C7
 "\ec":          "ç"         U+00E7          (- capitalize-word)
+"\eD":          "Δ"         U+0394
 "\eE":          "è"         U+00E8
 "\ee":          "é"         U+00E9
 "\eh":          "❤"         U+2764
