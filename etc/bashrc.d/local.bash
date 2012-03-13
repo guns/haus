@@ -49,6 +49,9 @@ export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
+# Clojure(Script)
+export CLOJURESCRIPT_HOME="$HOME/src/clojurescript"
+
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
 if [[ "$SSH_TTY" ]]; then
@@ -1104,6 +1107,8 @@ HAVE lein && {
     # alias leinsync=
     # alias leinoutdated=
 }
+
+ALIAS cljsc="$CLOJURESCRIPT_HOME/bin/cljsc"
 
 HAVE ng && {
     alias ng-stop='ng ng-stop'

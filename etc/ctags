@@ -1,2 +1,2 @@
 -f .tags
---langmap=Lisp:+.clj
+--langmap=Lisp:+.clj,Lisp:+.cljs

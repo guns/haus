@@ -34,6 +34,8 @@ augroup GUNS
         \ setlocal iskeyword+=-
 
     " Lisp {{{1
+    autocmd BufRead,BufNewFile *.cljs
+        \ setlocal filetype=clojure
     autocmd Filetype lisp,scheme,clojure
         \ LispBufferSetup
 
