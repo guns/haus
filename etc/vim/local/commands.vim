@@ -85,6 +85,7 @@ function! <SID>LispBufferSetup()
     noremap! <buffer> <4-CR>        <C-\><C-o>A<Space>;<Space>
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
+    nnoremap <buffer> <C-]>         :<C-u>ClojureTagJump<CR>
 
     "
     " VimClojure
@@ -160,11 +161,11 @@ function! <SID>StartNailgunServer(...)
     endif
     let g:vimclojure#WantNailgun = 1
     let g:NailgunServerStarted = 0
-    let g:NailgunServerPort = a:0 ? a:1 : 2113
+    let g:vimclojure#NailgunPort = a:0 ? a:1 : 2113
 
-    if empty(system('nc -z 127.0.0.1 ' . g:NailgunServerPort . ' &>/dev/null && echo 1'))
-        silent! execute '! clojure --lein-nailgun ' . g:NailgunServerPort . ' &>/dev/null &'
-        silent! execute '! until nc -z 127.0.0.1 ' . g:NailgunServerPort . ' &>/dev/null; do echo -n .; sleep 1; done'
+    if empty(system('nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort . ' &>/dev/null && echo 1'))
+        silent! execute '! clojure --lein-nailgun ' . g:vimclojure#NailgunPort . ' &>/dev/null &'
+        silent! execute '! until nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort . ' &>/dev/null; do echo -n .; sleep 1; done'
         let g:NailgunServerStarted = 1
     endif
 
@@ -189,7 +190,7 @@ function! <SID>StopNailgunServer()
     let g:vimclojure#WantNailgun = 0
 
     if exists('g:NailgunServerStarted') && g:NailgunServerStarted
-        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop --nailgun-port ' . g:NailgunServerPort . ' &>/dev/null &' | redraw!
+        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop --nailgun-port ' . g:vimclojure#NailgunPort . ' &>/dev/null &' | redraw!
         echo 'Killing Nailgun server'
         let g:NailgunServerStarted = 0
     else
@@ -224,7 +225,7 @@ function! <SID>ScreenSetup(setup)
         nmap <Leader><Leader> m`:execute 'normal ' . (&filetype == 'clojure' ? 'va(' : 'vip')<CR><Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
-        nmap <Leader><C-f> m`VggoG<Leader><Leader>``
+        nmap <Leader><C-f> m`:execute 'normal ' . (&filetype == 'clojure' ? 'vip' : 'VggoG')<CR><Leader><Leader>``
         imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
 
         nmap <Leader>Q :ScreenQuit<CR>
@@ -240,6 +241,12 @@ function! <SID>ScreenSetup(setup)
             silent! nunmap <Leader>Q
         endif
     endif
+endfunction
+
+
+command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
+function! <SID>ClojureTagJump(word)
+    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '')
 endfunction
 
 
@@ -297,6 +304,16 @@ function! <SID>Qfdo(expr)
         execute item['bufnr'] . 'buffer!'
         execute item['lnum'] . a:expr
     endfor
+endfunction
+
+
+command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
+function! <SID>ToggleQuickfixWindow()
+    if &buftype ==# 'quickfix'
+        cclose
+    else
+        copen
+    endif
 endfunction
 
 

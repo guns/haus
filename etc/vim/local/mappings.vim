@@ -410,7 +410,10 @@ Mapall <4-_> :<C-u>execute 'tabmove ' . (tabpagenr()-2)<CR>
 Mapall <4-+> :<C-u>execute 'tabmove ' . tabpagenr()<CR>
 
 " Quickfix window
-Mapall <4-x> :<C-u>copen<CR>
+Mapall <4-x> :<C-u>ToggleQuickfixWindow<CR>
+
+" Close Preview window
+Mapall <4-X> :<C-u>pclose<CR>
 
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
