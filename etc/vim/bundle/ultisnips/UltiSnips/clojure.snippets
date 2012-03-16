@@ -162,8 +162,8 @@ snippet dis "dissoc" w
 (dissoc ${1:map} ${0:keys})
 endsnippet
 
-snippet ge "get" w
-(get ${1:coll} ${0:key|idx default})
+snippet get "get" w
+(get $0)
 endsnippet
 
 snippet geti "get-in" w
@@ -609,16 +609,20 @@ endsnippet
 
 ### Conditionals and Logic {{{1
 
+snippet = "=" w
+(= $0)
+endsnippet
+
 snippet if "if" w
 (if $0
-    (comment then)
-    (comment else))
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet ifn "if-not" w
 (if-not $0
-        (comment then)
-        (comment else))
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet not "not" w
@@ -679,7 +683,7 @@ snippet do "do exprs" w
 (do $0)
 endsnippet
 
-snippet dose "doseq" w
+snippet dos "doseq" w
 (doseq [${0:each-bind}]
 	)
 endsnippet
@@ -721,7 +725,7 @@ endsnippet
 
 ### Concurrency {{{1
 
-snippet dos "dosync" w
+snippet dosy "dosync" w
 (dosync
 	$0)
 endsnippet
@@ -737,6 +741,15 @@ endsnippet
 snippet sw "swap!" w
 (swap! $0)
 endsnippet
+
+snippet se "set!" w
+(set! $0)
+endsnippet
+
+snippet rese "reset!" w
+(reset! $0)
+endsnippet
+
 
 
 ### Strings {{{1
@@ -812,4 +825,11 @@ snippet vimc "Start VimClojure NGServer" w
 (try
 	(vimclojure.nailgun.NGServer/main (into-array String [(str "127.0.0.1:" ${0:ngport})]))
 	(catch Exception _))
+endsnippet
+
+
+### ClojureScript {{{1
+
+snippet log "log" w
+(.log js/console $0)
 endsnippet

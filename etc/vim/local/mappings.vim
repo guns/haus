@@ -529,8 +529,8 @@ noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
-nnoremap <4-*>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
-vnoremap <4-*>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
+nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
+vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 
 " Plugin: ScreenShell
 noremap <Leader>S :<C-u>Screen<CR>
