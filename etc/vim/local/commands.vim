@@ -131,7 +131,8 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>k :<C-u>call PareditSelectListElement(0)<CR>
     vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-u>call PareditSelectListElement(0)<CR>
 
-    " Insert at end of form
+    " Insert at beginning, end of form
+    nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a
     nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
 
     " Wrap word/form
