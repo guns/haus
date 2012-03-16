@@ -4,6 +4,8 @@
 [L	unimpaired.txt	/*[L*
 [Q	unimpaired.txt	/*[Q*
 [T	unimpaired.txt	/*[T*
+[Y	unimpaired.txt	/*[Y*
+[YY	unimpaired.txt	/*[YY*
 [a	unimpaired.txt	/*[a*
 [b	unimpaired.txt	/*[b*
 [e	unimpaired.txt	/*[e*
@@ -24,6 +26,8 @@
 ]L	unimpaired.txt	/*]L*
 ]Q	unimpaired.txt	/*]Q*
 ]T	unimpaired.txt	/*]T*
+]Y	unimpaired.txt	/*]Y*
+]YY	unimpaired.txt	/*]YY*
 ]a	unimpaired.txt	/*]a*
 ]b	unimpaired.txt	/*]b*
 ]e	unimpaired.txt	/*]e*
@@ -44,10 +48,12 @@ unimpaired-lines	unimpaired.txt	/*unimpaired-lines*
 unimpaired-next	unimpaired.txt	/*unimpaired-next*
 unimpaired-todo	unimpaired.txt	/*unimpaired-todo*
 unimpaired.txt	unimpaired.txt	/*unimpaired.txt*
+v_[Y	unimpaired.txt	/*v_[Y*
 v_[e	unimpaired.txt	/*v_[e*
 v_[u	unimpaired.txt	/*v_[u*
 v_[x	unimpaired.txt	/*v_[x*
 v_[y	unimpaired.txt	/*v_[y*
+v_]Y	unimpaired.txt	/*v_]Y*
 v_]e	unimpaired.txt	/*v_]e*
 v_]u	unimpaired.txt	/*v_]u*
 v_]x	unimpaired.txt	/*v_]x*
