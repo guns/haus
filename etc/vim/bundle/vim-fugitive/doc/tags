@@ -35,10 +35,12 @@ fugitive-O	fugitive.txt	/*fugitive-O*
 fugitive-P	fugitive.txt	/*fugitive-P*
 fugitive-a	fugitive.txt	/*fugitive-a*
 fugitive-about	fugitive.txt	/*fugitive-about*
+fugitive-c_CTRL-R_CTRL-G	fugitive.txt	/*fugitive-c_CTRL-R_CTRL-G*
 fugitive-commands	fugitive.txt	/*fugitive-commands*
 fugitive-mappings	fugitive.txt	/*fugitive-mappings*
 fugitive-o	fugitive.txt	/*fugitive-o*
 fugitive-revision	fugitive.txt	/*fugitive-revision*
 fugitive-statusline	fugitive.txt	/*fugitive-statusline*
+fugitive-y_CTRL-G	fugitive.txt	/*fugitive-y_CTRL-G*
 fugitive-~	fugitive.txt	/*fugitive-~*
 fugitive.txt	fugitive.txt	/*fugitive.txt*
