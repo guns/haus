@@ -192,8 +192,8 @@ $if Bash
     "\C-xl":        "\C-]cdlocal "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
-    "\C-x\C-v":     "\C-] cdvar \n"         (- display-shell-version)
-    "\C-xv":        "\C-]cdvar "
+    "\C-x\C-v":     "\C-] cdvimfiles \n"         (- display-shell-version)
+    "\C-xv":        "\C-]cdvimfiles "
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
     "\C-x\C-_":     "\C-] cd - \n"
