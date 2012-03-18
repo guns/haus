@@ -86,6 +86,7 @@ function! <SID>LispBufferSetup()
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
     nnoremap <buffer> <C-]>         :<C-u>ClojureTagJump<CR>
+    nnoremap <buffer> <C-w><C-]>    :<C-u>split \| ClojureTagJump<CR>
 
     "
     " VimClojure
@@ -132,7 +133,7 @@ function! <SID>LispBufferSetup()
     vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-u>call PareditSelectListElement(0)<CR>
 
     " Insert at beginning, end of form
-    nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a
+    nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a<Space><Left>
     nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
 
     " Wrap word/form
