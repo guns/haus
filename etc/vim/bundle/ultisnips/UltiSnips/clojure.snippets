@@ -27,7 +27,7 @@ snippet req "require"
 (require '${0:libs})
 endsnippet
 
-snippet :req ":require"
+snippet :r ":require"
 (:require ${0:libs})
 endsnippet
 
@@ -35,23 +35,23 @@ snippet use "use"
 (use '${0:libs})
 endsnippet
 
-snippet :use ":use"
+snippet :u ":use"
 (:use ${0:libs})
 endsnippet
 
-snippet :as ":as" w
+snippet :a ":as" w
 [$1 :as $0]
 endsnippet
 
-snippet :only ":only" w
-[$1 :only $0]
+snippet :o ":only" w
+[$1 :only [$0]]
 endsnippet
 
 snippet imp "import"
 (import '${0:libs})
 endsnippet
 
-snippet :imp ":import"
+snippet :i ":import"
 (:import ${0:libs})
 endsnippet
 
@@ -489,11 +489,11 @@ snippet compl "complement" w
 endsnippet
 
 snippet -- "->" w
-(-> ${1:item} ${0:funcs})
+(-> $0)
 endsnippet
 
 snippet --- "->>" w
-(->> ${1:item} ${0:funcs})
+(->> $0)
 endsnippet
 
 
@@ -663,9 +663,9 @@ snippet cond "cond" w
 endsnippet
 
 snippet condp "condp" w
-(condp ${1:λ} ${2:value}
-	${3:test} ${4:[result] [:>> λ]}
-	${0:else})
+(condp ${0:λ} value
+	match [result | [:>> λ]]
+	:else )
 endsnippet
 
 snippet and "and" w
@@ -751,11 +751,14 @@ snippet rese "reset!" w
 endsnippet
 
 
-
 ### Strings {{{1
 
 snippet str "str" w
 (str ${0:items})
+endsnippet
+
+snippet prs "pr-str" w
+(pr-str $0)
 endsnippet
 
 snippet fmt "format" w
