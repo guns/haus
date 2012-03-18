@@ -456,10 +456,10 @@ function! s:InitTypes()
     \ ]
     let s:known_types.lisp = type_lisp
     " Clojure {{{3
-    let type_clojure = {}
+    let type_clojure = s:TypeInfo.New()
     let type_clojure.ctagstype = 'lisp'
     let type_clojure.kinds     = [
-        \ {'short' : 'f', 'long' : 'functions', 'fold' : 0}
+        \ {'short' : 'f', 'long' : 'functions', 'fold' : 0, 'stl' : 1}
     \ ]
     let s:known_types.clojure = type_clojure
     " Lua {{{3
