@@ -2118,16 +2118,6 @@ function! s:Opener._reuseWindow()
         call s:exec(winnr . "wincmd w")
         call self._checkToCloseTree(0)
         return 1
-    else
-        "check other tabs
-        let tabnr = self._path.tabnr()
-        if tabnr
-            call self._checkToCloseTree(1)
-            call s:exec('normal! ' . tabnr . 'gt')
-            let winnr = bufwinnr('^' . self._path.str() . '$')
-            call s:exec(winnr . "wincmd w")
-            return 1
-        endif
     endif
     return 0
 endfunction
