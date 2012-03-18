@@ -98,9 +98,11 @@ function! <SID>LispBufferSetup()
     nmap <silent> <buffer> <Leader>r <Plug>ClojureRequireFileAll
 
     " cf. ScreenSetup
-    vmap <silent> <buffer> <Leader>x <Plug>ClojureEvalBlock
-    nmap <silent> <buffer> <Leader>x m`va(<Leader>x``
-    imap <silent> <buffer> <Leader>x <C-\><C-n><Leader>x<Right>
+    vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock
+    nmap <silent> <buffer> <Leader><Leader> mp:call PareditFindOpening(0,0,0)<CR>v%<Leader><Leader>`p
+    imap <silent> <buffer> <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
+    nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel
+    imap <silent> <buffer> <Leader><C-f>    <C-\><C-n><Leader><C-f><Right>
 
     "
     " Paredit
@@ -223,10 +225,10 @@ function! <SID>ScreenSetup(setup)
     if a:setup
         " RECURSIVE map for cascading mappings
         vmap <Leader><Leader> :ScreenSend<CR>
-        nmap <Leader><Leader> m`:execute 'normal ' . (&filetype == 'clojure' ? 'va(' : 'vip')<CR><Leader><Leader>``
+        nmap <Leader><Leader> m`vip<CR><Leader><Leader>``
         imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
 
-        nmap <Leader><C-f> m`:execute 'normal ' . (&filetype == 'clojure' ? 'vip' : 'VggoG')<CR><Leader><Leader>``
+        nmap <Leader><C-f> m`VggoG<CR><Leader><Leader>``
         imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
 
         nmap <Leader>Q :ScreenQuit<CR>
