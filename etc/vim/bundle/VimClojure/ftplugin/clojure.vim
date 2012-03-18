@@ -130,8 +130,8 @@ call vimclojure#MapPlug("v", "Eb", "EvalBlock")
 call vimclojure#MapPlug("n", "Et", "EvalToplevel")
 call vimclojure#MapPlug("n", "Ep", "EvalParagraph")
 
-call vimclojure#MapPlug("n", "sr", "StartRepl")
-call vimclojure#MapPlug("n", "sR", "StartLocalRepl")
+call vimclojure#MapPlug("n", "sr", "StartLocalRepl")
+call vimclojure#MapPlug("n", "sR", "StartRepl")
 
 call vimclojure#MapPlug("n", "p", "CloseResultBuffer")
 
