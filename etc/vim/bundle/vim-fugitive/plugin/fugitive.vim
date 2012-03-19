@@ -107,33 +107,34 @@ let s:abstract_prototype = {}
 " }}}1
 " Initialization {{{1
 
-function! s:is_git_dir(path) abort
+function! fugitive#is_git_dir(path) abort
   let path = a:path . '/'
-  return isdirectory(path.'objects') && isdirectory(path.'refs') && filereadable(path.'HEAD') && filereadable(path.'config')
+  return isdirectory(path.'objects') && isdirectory(path.'refs') && getfsize(path.'HEAD') > 10
 endfunction
 
-function! s:extract_git_dir(path) abort
-  let path = s:shellslash(a:path)
-  if path =~? '^fugitive://.*//'
-    return matchstr(path,'fugitive://\zs.\{-\}\ze//')
+function! fugitive#extract_git_dir(path) abort
+  if s:shellslash(a:path) =~? '^fugitive://.*//'
+    return matchstr(a:path,'fugitive://\zs.\{-\}\ze//')
   endif
-  let fn = fnamemodify(path,':s?[\/]$??')
-  let ofn = ""
-  let nfn = fn
-  while fn !=# ofn
-    let embedded = s:sub(fn, '[\/]$', '') . '/.git'
-    if s:is_git_dir(embedded)
-      return s:sub(simplify(fnamemodify(fn . '/.git',':p')),'\W$','')
-    elseif filereadable(embedded)
-      let line = readfile(embedded,1)[0]
-      if line =~# '^gitdir: '
+  let root = s:shellslash(simplify(fnamemodify(a:path,':p:s?[\/]$??')))
+  let previous = ""
+  while root !=# previous
+    let dir = s:sub(root, '[\/]$', '') . '/.git'
+    let type = getftype(dir)
+    if type ==# 'dir' && fugitive#is_git_dir(dir)
+      return dir
+    elseif type ==# 'link' && fugitive#is_git_dir(dir)
+      return resolve(dir)
+    elseif type !=# ''
+      let line = readfile(dir, 1)[0]
+      if line =~# '^gitdir: ' && fugitive#is_git_dir(line[8:-1])
         return line[8:-1]
       endif
-    elseif s:is_git_dir(fn)
-      return s:sub(simplify(fnamemodify(fn,':p')),'\W$','')
+    elseif fugitive#is_git_dir(root)
+      return root
     endif
-    let ofn = fn
-    let fn = fnamemodify(ofn,':h')
+    let previous = root
+    let root = fnamemodify(previous,':h')
   endwhile
   return ''
 endfunction
@@ -143,7 +144,7 @@ function! s:Detect(path)
     unlet b:git_dir
   endif
   if !exists('b:git_dir')
-    let dir = s:extract_git_dir(a:path)
+    let dir = fugitive#extract_git_dir(a:path)
     if dir != ''
       let b:git_dir = dir
     endif
@@ -180,7 +181,7 @@ let s:repo_prototype = {}
 let s:repos = {}
 
 function! s:repo(...) abort
-  let dir = a:0 ? a:1 : (exists('b:git_dir') && b:git_dir !=# '' ? b:git_dir : s:extract_git_dir(expand('%:p')))
+  let dir = a:0 ? a:1 : (exists('b:git_dir') && b:git_dir !=# '' ? b:git_dir : fugitive#extract_git_dir(expand('%:p')))
   if dir !=# ''
     if has_key(s:repos,dir)
       let repo = get(s:repos,dir)
@@ -201,28 +202,38 @@ function! s:repo_dir(...) dict abort
   return join([self.git_dir]+a:000,'/')
 endfunction
 
+function! s:repo_configured_tree() dict abort
+  if !has_key(self,'_tree')
+    let self._tree = ''
+    if filereadable(self.dir('config'))
+      let config = readfile(self.dir('config'),10)
+      call filter(config,'v:val =~# "^\\s*worktree *="')
+      if len(config) == 1
+        let self._tree = matchstr(config[0], '= *\zs.*')
+      endif
+    endif
+  endif
+  return self._tree
+endfunction
+
 function! s:repo_tree(...) dict abort
   if self.dir() =~# '/\.git$'
     let dir = self.dir()[0:-6]
   else
-    let config = readfile(self.dir('config'),10)
-    call filter(config,'v:val =~# "^\\s*worktree *="')
-    if len(config) == 1
-      let dir = matchstr(config[0], '= *\zs.*')
-    else
-      call s:throw('no work tree')
-    endif
+    let dir = self.configured_tree()
   endif
-  return join([dir]+a:000,'/')
+  if dir ==# ''
+    call s:throw('no work tree')
+  else
+    return join([dir]+a:000,'/')
+  endif
 endfunction
 
 function! s:repo_bare() dict abort
   if self.dir() =~# '/\.git$'
     return 0
   else
-    let config = readfile(self.dir('config'),10)
-    call filter(config,'v:val =~# "^\\s*worktree *="')
-    return (len(config) != 1)
+    return self.configured_tree() ==# ''
   endtry
 endfunction
 
@@ -234,7 +245,7 @@ function! s:repo_translate(spec) dict abort
   elseif a:spec =~# '^:[0-3]:'
     return 'fugitive://'.self.dir().'//'.a:spec[1].'/'.a:spec[3:-1]
   elseif a:spec ==# ':'
-    if $GIT_INDEX_FILE =~# '/[^/]*index[^/]*\.lock$' && fnamemodify($GIT_INDEX_FILE,':p')[0:strlen(s:repo().dir())] ==# s:repo().dir('') && filereadable($GIT_INDEX_FILE)
+    if $GIT_INDEX_FILE =~# '/[^/]*index[^/]*\.lock$' && fnamemodify($GIT_INDEX_FILE,':p')[0:strlen(self.dir())] ==# self.dir('') && filereadable($GIT_INDEX_FILE)
       return fnamemodify($GIT_INDEX_FILE,':p')
     else
       return self.dir('index')
@@ -246,15 +257,15 @@ function! s:repo_translate(spec) dict abort
     return 'fugitive://'.self.dir().'//0/'.a:spec[1:-1]
   elseif a:spec =~# 'HEAD\|^refs/' && a:spec !~ ':' && filereadable(self.dir(a:spec))
     return self.dir(a:spec)
-  elseif filereadable(s:repo().dir('refs/'.a:spec))
+  elseif filereadable(self.dir('refs/'.a:spec))
     return self.dir('refs/'.a:spec)
-  elseif filereadable(s:repo().dir('refs/tags/'.a:spec))
+  elseif filereadable(self.dir('refs/tags/'.a:spec))
     return self.dir('refs/tags/'.a:spec)
-  elseif filereadable(s:repo().dir('refs/heads/'.a:spec))
+  elseif filereadable(self.dir('refs/heads/'.a:spec))
     return self.dir('refs/heads/'.a:spec)
-  elseif filereadable(s:repo().dir('refs/remotes/'.a:spec))
+  elseif filereadable(self.dir('refs/remotes/'.a:spec))
     return self.dir('refs/remotes/'.a:spec)
-  elseif filereadable(s:repo().dir('refs/remotes/'.a:spec.'/HEAD'))
+  elseif filereadable(self.dir('refs/remotes/'.a:spec.'/HEAD'))
     return self.dir('refs/remotes/'.a:spec,'/HEAD')
   else
     try
@@ -267,7 +278,7 @@ function! s:repo_translate(spec) dict abort
   endif
 endfunction
 
-call s:add_methods('repo',['dir','tree','bare','translate'])
+call s:add_methods('repo',['dir','configured_tree','tree','bare','translate'])
 
 function! s:repo_git_command(...) dict abort
   let git = g:fugitive_git_executable . ' --git-dir='.s:shellesc(self.git_dir)
@@ -897,7 +908,7 @@ endfunction
 
 augroup fugitive_commit
   autocmd!
-  autocmd VimLeavePre,BufDelete *.git/COMMIT_EDITMSG execute s:sub(s:FinishCommit(), '^echoerr (.*)', 'echohl ErrorMsg|echo \1|echohl NONE')
+  autocmd VimLeavePre,BufDelete COMMIT_EDITMSG execute s:sub(s:FinishCommit(), '^echoerr (.*)', 'echohl ErrorMsg|echo \1|echohl NONE')
 augroup END
 
 " }}}1
@@ -1943,7 +1954,7 @@ endfunction
 
 function! s:FileRead()
   try
-    let repo = s:repo(s:extract_git_dir(expand('<amatch>')))
+    let repo = s:repo(fugitive#extract_git_dir(expand('<amatch>')))
     let path = s:sub(s:sub(matchstr(expand('<amatch>'),'fugitive://.\{-\}//\zs.*'),'/',':'),'^\d:',':&')
     let hash = repo.rev_parse(path)
     if path =~ '^:'
@@ -2092,7 +2103,7 @@ endfunction
 augroup fugitive_files
   autocmd!
   autocmd BufReadCmd  index{,.lock}
-        \ if s:is_git_dir(expand('<amatch>:p:h')) |
+        \ if fugitive#is_git_dir(expand('<amatch>:p:h')) |
         \   exe s:BufReadIndex() |
         \ endif
   autocmd FileReadCmd fugitive://**//[0-3]/**          exe s:FileRead()
@@ -2312,7 +2323,7 @@ endfunction
 " Statusline {{{1
 
 function! s:repo_head_ref() dict abort
-  return readfile(s:repo().dir('HEAD'))[0]
+  return readfile(self.dir('HEAD'))[0]
 endfunction
 
 call s:add_methods('repo',['head_ref'])
