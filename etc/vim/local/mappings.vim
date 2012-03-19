@@ -300,13 +300,8 @@ noremap <4-p>         :<C-u>SynStack<CR>
 " Clear last match
 noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
 
-" Reload files
-noremap <Leader><C-r>
-    \ :<C-u>source ~/.vim/local/commands.vim \|
-    \ source ~/.vim/local/mappings.vim \|
-    \ source ~/.vim/local/autocommands.vim<CR>
+" Run file
 noremap <Leader>r :<C-u>RunCurrentFile<CR>
-noremap <Leader>R :<C-u>RunCurrentMiniTestCase<CR>
 
 
 """ Buffer commands {{{1
