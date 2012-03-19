@@ -47,15 +47,7 @@ def err_to_scratch_buffer(f):
         try:
             return f(*args, **kwds)
         except:
-            s = \
-"""An error occured. This is either a bug in UltiSnips or a bug in a
-snippet definition. If you think this is a bug, please report it to
-https://bugs.launchpad.net/ultisnips/+filebug.
-
-Following is the full stack trace:
-"""
-            s += traceback.format_exc()
-            _to_scratch_buffer(s)
+            vim.command('let @u = "%s"' % traceback.format_exc().replace('"', '\\"'))
     return wrapper
 
 def feedkeys(s, mode='n'):
