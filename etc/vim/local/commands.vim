@@ -93,9 +93,10 @@ function! <SID>LispBufferSetup()
     "
 
     " RECURSIVE map for <Plug> mappings
-    nmap <silent> <buffer> K         <Plug>ClojureSourceLookupWord
-    nmap <silent> <buffer> <Leader>q <Plug>ClojureCloseResultBuffer
-    nmap <silent> <buffer> <Leader>r <Plug>ClojureRequireFileAll
+    nmap <silent> <buffer> K             <Plug>ClojureSourceLookupWord
+    nmap <silent> <buffer> <Leader>q     <Plug>ClojureCloseResultBuffer
+    nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl
+    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileAll
 
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock
