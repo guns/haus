@@ -222,21 +222,23 @@ endfunction
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
+    let bind = &filetype == 'clojure' ? '<Leader>x' : '<Leader><Leader>'
+
     if a:setup
         " RECURSIVE map for cascading mappings
-        vmap <Leader><Leader> :ScreenSend<CR>
-        nmap <Leader><Leader> m`vip<CR><Leader><Leader>``
-        imap <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
+        execute 'vmap ' . bind . ' :ScreenSend<CR>'
+        execute 'nmap ' . bind . ' m`vip<CR>' . bind . '``'
+        execute 'imap ' . bind . ' <C-\><C-n>' . bind . '<Right>'
 
-        nmap <Leader><C-f> m`VggoG<CR><Leader><Leader>``
-        imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>
+        execute 'nmap <Leader><C-f> m`VggoG<CR>' . bind . '``'
+        execute 'imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>'
 
         nmap <Leader>Q :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
-            silent! vunmap <Leader><Leader>
-            silent! nunmap <Leader><Leader>
-            silent! iunmap <Leader><Leader>
+            execute 'silent! vunmap ' . bind
+            execute 'silent! nunmap ' . bind
+            execute 'silent! iunmap ' . bind
 
             silent! nunmap <Leader><C-f>
             silent! iunmap <Leader><C-f>
