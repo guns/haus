@@ -322,6 +322,22 @@ function! <SID>ToggleQuickfixWindow()
 endfunction
 
 
+command! -nargs=1 -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
+function! <SID>TabOpen(file)
+    for t in range(tabpagenr('$'))
+        for b in tabpagebuflist(t + 1)
+            if a:file ==# expand('#' . b . ':p')
+                execute ':' . (t + 1) . 'tabnext'
+                execute ':' . b       . 'wincmd w'
+                return
+            endif
+        endfor
+    endfor
+
+    execute 'tabedit ' . a:file
+endfunction
+
+
 command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
 function! <SID>RunCurrentFile()
     let map = {

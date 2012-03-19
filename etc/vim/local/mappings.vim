@@ -343,26 +343,26 @@ noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>tabedit<Space>
-noremap <Leader>ea       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
-noremap <Leader>eb       :<C-u>execute 'tabedit ' . resolve(expand('~/.bashrc'))<CR>
-noremap <Leader>ec       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
+noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
+noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
+noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
-noremap <Leader>ei       :<C-u>execute 'tabedit ' . resolve(expand('~/.inputrc'))<CR>
-noremap <Leader>el       :<C-u>execute 'tabedit ' . resolve(expand('~/.bashrc.d/local.bash'))<CR>
-noremap <Leader>em       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
-noremap <Leader>eM       :<C-u>execute 'tabedit ' . resolve(expand('~/.vim/local/modifiers.vim'))<CR>
-noremap <Leader>en       :<C-u>tabedit /opt/nginx/etc/nginx.conf<CR>
+noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
+noremap <Leader>el       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/local.bash'))<CR>
+noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
+noremap <Leader>eM       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/modifiers.vim'))<CR>
+noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
-noremap <Leader>er       :<C-u>tabedit /etc/rc.conf<CR>
+noremap <Leader>er       :<C-u>TabOpen /etc/rc.conf<CR>
 noremap <Leader>es       :<C-u>tabnew \| Scratch<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
 noremap <Leader>et       :<C-u>Org TODO<CR>
-noremap <Leader>eT       :<C-u>execute 'tabedit ' . resolve(expand('~/.tmux.conf'))<CR>
-noremap <Leader>eu       :<C-u>execute 'tabedit ' . resolve($cdhaus . '/share/doc/unicode-table.txt.gz')<CR>
-noremap <Leader>ev       :<C-u>execute 'tabedit ' . resolve(expand($MYVIMRC))<CR>
-noremap <Leader>ew       :<C-u>execute 'tabedit ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
-noremap <Leader>ex       :<C-u>execute 'tabedit ' . resolve(expand('~/.Xdefaults'))<CR>
-noremap <Leader>eX       :<C-u>execute 'tabedit ' . expand('~/.xinitrc')<CR>
+noremap <Leader>eT       :<C-u>execute 'TabOpen ' . resolve(expand('~/.tmux.conf'))<CR>
+noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve($cdhaus . '/share/doc/unicode-table.txt.gz')<CR>
+noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
+noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
+noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
+noremap <Leader>eX       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>setlocal filetype=
