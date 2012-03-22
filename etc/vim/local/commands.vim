@@ -153,7 +153,7 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>o :<C-u>call PareditRaiseSexp()<CR>
 
     " Toggle Clojure (comment)
-    nnoremap <silent> <buffer> <Leader>cc m`:<C-u>call PareditToggleClojureComment()<CR>=a(``
+    nnoremap <silent> <buffer> <Leader>cc m`:<C-u>call PareditToggleClojureComment()<CR>``
 endfunction
 
 
@@ -223,15 +223,17 @@ endfunction
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
-    let bind = &filetype == 'clojure' ? '<Leader>x' : '<Leader><Leader>'
+    let bind   = &filetype == 'clojure' ? '<Leader>x' : '<Leader><Leader>'
+    let select = &filetype == 'clojure' ? ':call PareditSelectCurrentForm()<CR>' : 'vip'
+    let topsel = &filetype == 'clojure' ? '((((((((((((((((((((v%' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings
         execute 'vmap ' . bind . ' :ScreenSend<CR>'
-        execute 'nmap ' . bind . ' m`vip<CR>' . bind . '``'
+        execute 'nmap ' . bind . ' mp' . select . bind . '`p'
         execute 'imap ' . bind . ' <C-\><C-n>' . bind . '<Right>'
 
-        execute 'nmap <Leader><C-f> m`VggoG<CR>' . bind . '``'
+        execute 'nmap <Leader><C-f> mp' . topsel . bind . '`p'
         execute 'imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>'
 
         nmap <Leader>Q :ScreenQuit<CR>
@@ -252,7 +254,7 @@ endfunction
 
 command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
 function! <SID>ClojureTagJump(word)
-    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '')
+    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal zz
 endfunction
 
 
@@ -315,7 +317,7 @@ endfunction
 
 command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
 function! <SID>ToggleQuickfixWindow()
-    if len(filter(tabpagebuflist(), 'getbufvar(v:val, "&buftype") ==# "quickfix"'))
+    if &buftype ==# 'quickfix'
         cclose
     else
         copen
