@@ -45,6 +45,7 @@ set wildmode=list:longest       " Bash style command line completion
 set wildignore+=.git            " Filename ignore globs
 set wildignore+=*.swp,*.swo
 set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff
+set wildignore+=*.class
 set wildignore+=.DS_Store,Thumbs.db
 if exists('&wildignorecase')
     set wildignorecase          " Case insensitive file completion on command line
@@ -135,6 +136,8 @@ let g:tex_fold_enabled = 1
 let g:netrw_home = expand('~')
 
 " Plugin: CommandT
+let g:CommandTMaxFiles = 20000
+let g:CommandTMaxCachedDirectories = 0
 let g:CommandTAlwaysShowDotFiles = 1
 let g:CommandTMatchWindowAtTop = 1
 
