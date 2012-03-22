@@ -1471,6 +1471,16 @@ function! PareditSelectListElement(next)
     endif
 endfunction
 
+" Select current form
+function! PareditSelectCurrentForm()
+    if getline('.')[col('.') - 1] =~ b:any_opening_char
+        call PareditFindClosing(0,0,0)
+    else
+        call PareditFindOpening(0,0,0)
+    endif
+    normal v%
+endfunction
+
 " Toggle Clojure (comment ...) style comments
 function! PareditToggleClojureComment()
     let startpos = getpos('.')

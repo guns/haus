@@ -314,7 +314,9 @@ function! vimclojure#Buffer.showText(text) dict
 		let text = a:text
 	endif
 	call append(line("$"), text)
-	normal! gg"_dd
+	if empty(getline(1))
+		normal! gg"_dd
+	endif
 endfunction
 
 function! vimclojure#Buffer.showOutput(output) dict
@@ -834,8 +836,7 @@ endfunction
 
 function! vimclojure#Repl.showPrompt() dict
 	call self.showText(self._prompt . " ")
-	normal! G
-	startinsert!
+	normal! G$
 endfunction
 
 function! vimclojure#Repl.getCommand() dict

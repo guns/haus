@@ -100,7 +100,7 @@ function! <SID>LispBufferSetup()
 
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock
-    nmap <silent> <buffer> <Leader><Leader> mp:call PareditFindOpening(0,0,0)<CR>v%<Leader><Leader>`p
+    nmap <silent> <buffer> <Leader><Leader> mp:call PareditSelectCurrentForm()<CR><Leader><Leader>`p
     imap <silent> <buffer> <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
     nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-n><Leader><C-f><Right>
@@ -139,7 +139,7 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
 
     " Wrap word/form
-    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>
+    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>%
 
     " Wrap word/form/selection, then insert at end
     nnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrap('(',')')<CR>%i
