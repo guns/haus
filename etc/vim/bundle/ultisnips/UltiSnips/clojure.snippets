@@ -24,19 +24,19 @@ snippet ns "ns"
 endsnippet
 
 snippet req "require"
-(require '${0:libs})
+(require '$0)
 endsnippet
 
 snippet :r ":require"
-(:require ${0:libs})
+(:require $0)
 endsnippet
 
 snippet use "use"
-(use '${0:libs})
+(use '[$1 :only [$0]])
 endsnippet
 
 snippet :u ":use"
-(:use ${0:libs})
+(:use [$1 :only [$0]])
 endsnippet
 
 snippet :a ":as" w
@@ -367,7 +367,7 @@ snippet rseq "re-seq" w
 endsnippet
 
 snippet rem "remove" w
-(remove ${1:λ} ${0:coll})
+(remove λ $0)
 endsnippet
 
 snippet rep "repeat" w
