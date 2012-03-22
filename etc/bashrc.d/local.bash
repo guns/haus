@@ -1107,6 +1107,46 @@ HAVE lein && {
     # alias leinu=
     # alias leinsync=
     # alias leinoutdated=
+
+    leindoc() {
+        [[ -e project.clj && -d lib ]] && ruby -r fileutils -e '
+            include FileUtils
+
+            trap(:INT) { abort "ABORT" }
+
+            def sh *args
+                system *args, :out => "/dev/null", :err => "/dev/null"
+                Process.kill :INT, $$ and sleep unless $?.exitstatus.zero?
+            end
+
+            jobs, pool, lock, idx = (ARGV.first || 1).to_i, [], Mutex.new, -1
+            jars = Dir["lib/**/*.jar"].shuffle
+            size = jars.size
+            label = "Thread %d [%#{size.to_s.length}d/#{size}]: %s"
+
+            begin
+                mkdir_p "doc"
+                jobs.times do |n|
+                    pool << Thread.new do
+                        loop do
+                            i = lock.synchronize { idx += 1 }
+                            break if i >= size
+                            jar, tmp = jars[i], "doc/tmp/#{i}"
+                            mkdir_p tmp
+                            puts label % [n+1, i+1, jar]
+                            dir = "doc/%s" % File.basename(jar, ".jar").sub(/-\d+\.\d+.*\z/, "")
+                            sh *%W[unzip -d #{tmp} #{jar}]
+                            sh *%W[rsync -av --delete --exclude=META-INF #{tmp}/ #{dir}/]
+                        end
+                    end
+                end
+                pool.each &:join
+                sh "ctags -R"
+            ensure
+                rm_rf "doc/tmp"
+            end
+        ' "$@"
+    }
 }
 
 ALIAS cljsc="$CLOJURESCRIPT_HOME/bin/cljsc"
