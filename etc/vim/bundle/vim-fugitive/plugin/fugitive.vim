@@ -89,17 +89,9 @@ function! s:define_commands()
   endfor
 endfunction
 
-function! s:compatibility_check()
-  if exists('b:git_dir') && exists('*GitBranchInfoCheckGitDir') && !exists('g:fugitive_did_compatibility_warning')
-    let g:fugitive_did_compatibility_warning = 1
-    call s:warn("See http://github.com/tpope/vim-fugitive/issues#issue/1 for why you should remove git-branch-info.vim")
-  endif
-endfunction
-
 augroup fugitive_utility
   autocmd!
   autocmd User Fugitive call s:define_commands()
-  autocmd VimEnter * call s:compatibility_check()
 augroup END
 
 let s:abstract_prototype = {}
@@ -125,8 +117,8 @@ function! fugitive#extract_git_dir(path) abort
       return dir
     elseif type ==# 'link' && fugitive#is_git_dir(dir)
       return resolve(dir)
-    elseif type !=# ''
-      let line = readfile(dir, 1)[0]
+    elseif type !=# '' && filereadable(dir)
+      let line = get(readfile(dir, 1), 0, '')
       if line =~# '^gitdir: ' && fugitive#is_git_dir(line[8:-1])
         return line[8:-1]
       endif
