@@ -16,7 +16,7 @@ if test -n "$TMUX"; then
     echo >&2 '$TMUX is already set!'
     exit 1
 elif tmux has-session &>/dev/null; then
-    exec tmux attach
+    exec $SSH_SHELL tmux attach
 else
     exec $SSH_SHELL tmux new
 fi
