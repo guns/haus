@@ -173,7 +173,7 @@ set visible-stats on
 $if Bash
     # Reloads
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"   (- exchange-point-and-mark)
-    "\033\007r":    "\C-] xreload \n"
+    "\033\007r":    "\C-] xreload; tmuxeval \n"
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
