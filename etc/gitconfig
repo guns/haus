@@ -44,7 +44,7 @@
 [alias]
     # index operations
     a      = add
-    aa     = add .
+    aa     = add . --all
     ai     = add --interactive
     af     = add --force
     ap     = add --patch
