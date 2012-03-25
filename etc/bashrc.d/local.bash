@@ -666,7 +666,7 @@ HAVE htop && {
 ### Switch User {{{1
 
 ALIAS s='sudo' \
-      root='exec sudo su'
+      root='exec sudo -Hs'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 
