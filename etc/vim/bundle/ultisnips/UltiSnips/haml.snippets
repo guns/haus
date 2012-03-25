@@ -1,4 +1,4 @@
-### HAML ###
+### HAML {{{1
 
 snippet { "{}" !w
 { :$1 => $0`!v " "`
@@ -13,7 +13,7 @@ snippet , ", :key => value" w
 endsnippet
 
 
-### HEADERS ###
+### HEADERS {{{1
 
 snippet html "html"
 !!!${1: 5}
@@ -53,11 +53,11 @@ snippet script "script"
 endsnippet
 
 snippet meta "meta"
-%meta{ :$1 => $2 }
+%meta{ :$1 => $0 }
 endsnippet
 
 
-### ELEMENTS ###
+### ELEMENTS {{{1
 
 snippet bl "blockquote"
 %blockquote
@@ -140,7 +140,7 @@ snippet p "paragraph"
 endsnippet
 
 
-### HEADINGS ###
+### HEADINGS {{{1
 
 snippet h1 "Heading 1"
 %h1
@@ -167,7 +167,7 @@ snippet h6 "Heading 6"
 endsnippet
 
 
-### FILTERS ###
+### FILTERS {{{1
 
 snippet f "erb"
 :erb
@@ -212,4 +212,19 @@ endsnippet
 snippet f "textile"
 :textile
 	$0
+endsnippet
+
+
+### RAILS {{{1
+
+snippet jit "javascript_include_tag" w
+javascript_include_tag $0
+endsnippet
+
+snippet slt "stylesheet_link_tag" w
+stylesheet_link_tag $0
+endsnippet
+
+snippet it "image_tag" w
+image_tag $0
 endsnippet
