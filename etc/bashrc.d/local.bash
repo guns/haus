@@ -1394,7 +1394,7 @@ HAVE xset xrdb && {
 }
 
 HAVE xecho && {
-    for XCMD in left center right cursor width title; do
+    for XCMD in left center right cursor width size title; do
         alias "x$XCMD=xecho $XCMD"
     done
     GC_VARS XCMD
