@@ -168,7 +168,8 @@ function! <SID>StartNailgunServer(...)
     let g:NailgunServerStarted = 0
     let g:vimclojure#NailgunPort = a:0 ? a:1 : 2113
 
-    if empty(system('nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort . ' &>/dev/null && echo 1'))
+    call system('nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort)
+    if v:shell_error
         silent! execute '! clojure --lein-nailgun ' . g:vimclojure#NailgunPort . ' &>/dev/null &'
         silent! execute '! until nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort . ' &>/dev/null; do echo -n .; sleep 1; done'
         let g:NailgunServerStarted = 1
