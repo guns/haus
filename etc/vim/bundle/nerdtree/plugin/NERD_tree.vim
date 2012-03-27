@@ -1615,7 +1615,7 @@ function! s:TreeDirNode._initChildren(silent)
     "get an array of all the files in the nodes dir
     let dir = self.path
     let globDir = dir.str({'format': 'Glob'})
-    let filesStr = globpath(globDir, '*') . "\n" . globpath(globDir, '.*')
+    let filesStr = globpath(globDir, '*', 1) . "\n" . globpath(globDir, '.*', 1)
     let files = split(filesStr, "\n")
 
     if !a:silent && len(files) > g:NERDTreeNotificationThreshold
@@ -1754,7 +1754,7 @@ function! s:TreeDirNode.refresh()
         let invalidFilesFound = 0
         let dir = self.path
         let globDir = dir.str({'format': 'Glob'})
-        let filesStr = globpath(globDir, '*') . "\n" . globpath(globDir, '.*')
+        let filesStr = globpath(globDir, '*', 1) . "\n" . globpath(globDir, '.*', 1)
         let files = split(filesStr, "\n")
         for i in files
             "filter out the .. and . directories
