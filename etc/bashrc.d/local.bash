@@ -148,7 +148,7 @@ CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
-CD_FUNC cddnsmasq       /opt/dnsmasq/etc /usr/local/etc
+CD_FUNC cddnsmasq       /opt/dnsmasq/etc
 CD_FUNC cdnginx         /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           /tmp
 CD_FUNC cdvar           /var
@@ -157,9 +157,9 @@ CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
 CD_FUNC cdclojure       ~/.clojure /opt/clojure
 CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib"
-CD_FUNC cdsrc           ~/src /usr/local/src
+CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           /usr/local/src
-CD_FUNC cdvimfiles      ~/src/vimfiles
+CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdappsupport    ~/Library/Application\ Support
