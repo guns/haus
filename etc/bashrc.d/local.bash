@@ -52,6 +52,9 @@ export PAGER='less'                     # Should be a single word to avoid quoti
 # Clojure(Script)
 export CLOJURESCRIPT_HOME="$HOME/src/clojurescript"
 
+# Git
+export GIT_MERGE_AUTOEDIT='no'
+
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
 if [[ "$SSH_TTY" ]]; then
