@@ -2,7 +2,7 @@
 # http://www.debiantutorials.net/loading-iptables-rules-on-startup/
 # http://www.brandonhutchinson.com/iptables_fw.html
 
-echo -n 'Loading iptables rules... '
+printf 'Loading iptables rules... '
 
 ### Initialization
 
@@ -14,7 +14,7 @@ test -x "$IPTABLES" || { echo "Could not execute $IPTABLES"; exit 1; }
 # Disable IPv6
 test -n "$IP6TABLES" || IP6TABLES=$(command -v ip6tables)
 test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
-    echo -n 'Filtering IPv6... '
+    printf 'Filtering IPv6... '
     $IP6TABLES -t filter --flush
     $IP6TABLES -t mangle --flush
     $IP6TABLES -t raw    --flush

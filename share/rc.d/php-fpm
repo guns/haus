@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
 NAME='php-fpm'
-PROGRAM="/opt/brew/sbin/$NAME"
+PROGRAM="${PROGRAM:=/opt/brew/sbin/$NAME}"
 PIDFILE="/var/run/$NAME.pid"
-OPTIONS=(--fpm-config="/opt/brew/etc/$NAME.conf")
+CONF="/opt/brew/etc/$NAME.conf"
+OPTIONS=(--fpm-config="$CONF")
 
 run() { echo "$@"; "$@"; }
-alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE")" &>/dev/null; }
+alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" &>/dev/null; }
 
 start() {
     if alive; then
@@ -19,7 +20,7 @@ start() {
 
 stop() {
     if alive; then
-        run kill $(cat "$PIDFILE")
+        run kill "$(cat "$PIDFILE")"
     else
         echo "$NAME is not running."
         return 1
@@ -29,6 +30,6 @@ stop() {
 case $1 in
 start)      start;;
 stop)       stop;;
-restart)    stop; sleep 3; start;;
+restart)    stop; while alive; do sleep 1; done; start;;
 *)          echo "Usage: ${0##*/} start|stop|restart"; exit 1
 esac
