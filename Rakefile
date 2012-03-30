@@ -8,6 +8,7 @@ $:.unshift 'lib' # {{{1
 
 require 'task/update'
 require 'task/subproject'
+require 'cli/notification'
 require 'haus/logger'
 
 include Haus::Loggable
@@ -219,6 +220,8 @@ task :update => :env do
   if Task::Update.new(@subprojects, opts).call
     Task::Update.helptags
   end
+
+  CLI::Notification.new(:message => 'Haus update complete.').call
 
   exit # Stop processing tasks!
 end
