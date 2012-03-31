@@ -169,6 +169,7 @@ let g:GPGPreferArmor = 1
 let g:gundo_preview_bottom = 1
 let g:gundo_right = 1
 let g:gundo_width = 30
+let g:gundo_auto_preview = 0
 
 " Plugin: ScreenShell
 let g:ScreenImpl = 'Tmux'
