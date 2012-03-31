@@ -14,6 +14,7 @@ class Xecho
     'right'  => ['',         'Move window to right screen edge'],
     'cursor' => ['COLOR',    'Set cursor color'],
     'width'  => ['CHARS',    'Set terminal width in characters'],
+    'font'   => ['FONT',     'Set fontset'],
     'size'   => ['FONTSIZE', 'Set font size (currently only supports `xft:fontname:pixelsize=%d` style resources)'],
     'title'  => ['STRING',   'Set window title']
   }
@@ -74,6 +75,10 @@ class Xecho
 
   def cursor color
     raw "\033]12;%s\007" % color
+  end
+
+  def font fontset
+    raw "\033]50;%s\007" % fontset
   end
 
   def size pixels
