@@ -1396,13 +1396,6 @@ HAVE xset xrdb && {
     alias xreload='run xset r rate 200 100; run xrdb ~/.Xdefaults'
 }
 
-HAVE xecho && {
-    for XCMD in left center right cursor width font size title; do
-        alias "x$XCMD=xecho $XCMD"
-    done
-    GC_VARS XCMD
-}
-
 # Clipboard
 ALIAS xselb='xsel -b'
 

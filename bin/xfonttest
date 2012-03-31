@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+load File.expand_path('../xecho', __FILE__)
+
+class Xfonttest
+  INTERVAL = 0.25
+
+  attr_reader :xecho
+
+  def initialize
+    @xecho = Xecho.new.freeze
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Find the largest xft pixelsize that fits within the bounds of the
+        current top font.
+
+        Usage: #{File.basename __FILE__} xft:font ...
+      ).gsub /^ +/, ''
+    end
+  end
+
+  def optimal_pixelsize font
+    initial = (font[/pixelsize=(\d+)/, 1] || xecho.fontset[/pixelsize=(\d+)/, 1]).to_i * 2
+
+    begin
+      opos  = xecho.position
+      ogeom = xecho.geometry
+
+      # Move and shrink window to prevent clipping screen borders
+      xecho.geom 20, 8
+      sleep INTERVAL
+      xecho.nw
+      sleep INTERVAL
+
+      tw, th = xecho.window_dimensions
+      cw, ch = tw + 1, th + 1
+      dec    = -1
+
+      while cw > tw or ch > th
+        dec += 1
+        xecho.font font.gsub(/:pixelsize=\d+/, '') + ':pixelsize=%d' % (initial - dec)
+        sleep INTERVAL
+        cw, ch = xecho.window_dimensions
+      end
+
+      "%s\noptimal pixelsize = %d (%dx%d <= %dx%d)" % [font, (initial - dec), cw, ch, tw, th]
+    ensure
+      xecho.geom *ogeom
+      sleep INTERVAL
+      xecho.move *opos
+      sleep INTERVAL
+      xecho.font
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    puts args.map { |f| optimal_pixelsize f }
+  end
+end
+
+$0 = File.basename(__FILE__) and Xfonttest.new.run ARGV if $0 == __FILE__

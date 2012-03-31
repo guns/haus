@@ -9,20 +9,28 @@ require 'optparse'
 
 class Xecho
   COMMANDS = {
-    'left'   => ['',         'Move window to left screen edge'],
-    'center' => ['',         'Move window to center'],
-    'right'  => ['',         'Move window to right screen edge'],
-    'cursor' => ['COLOR',    'Set cursor color'],
-    'width'  => ['CHARS',    'Set terminal width in characters'],
-    'font'   => ['FONT',     'Set fontset'],
-    'size'   => ['FONTSIZE', 'Set font size (currently only supports `xft:fontname:pixelsize=%d` style resources)'],
-    'title'  => ['STRING',   'Set window title']
+    'nw'     => ['',             'Move window to northwest corner'],
+    'n'      => ['',             'Move window to north edge'],
+    'ne'     => ['',             'Move window to northeast corner'],
+    'w'      => ['',             'Move window to west edge'],
+    'c'      => ['',             'Move window to center'],
+    'e'      => ['',             'Move window to east edge'],
+    'sw'     => ['',             'Move window to southwest corner'],
+    's'      => ['',             'Move window to south edge'],
+    'se'     => ['',             'Move window to southeast corner'],
+    'move'   => ['X Y',          'Move window to X,Y'],
+    'ccolor' => ['COLOR',        'Set cursor color'],
+    'font'   => ['[FONT]',       'Set fontset or restore default'],
+    'fsize'  => ['[FONTSIZE]',   'Set xft pixelsize or restore default'],
+    'geom'   => ['WIDTH HEIGHT', 'Set terminal dimensions in characters'],
+    'title'  => ['STRING',       'Set window title'],
+    'raw'    => ['CTLSEQ',       'Send control sequence to terminal']
   }
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
-        Wrappers to common Xterm / X escape sequences.
+        Wrappers around common Xterm / X escape sequences.
         GNU Screen and Tmux v1.5+ are supported.
 
         cf. http://rtfm.etla.org/xterm/ctlseq.html
@@ -31,9 +39,47 @@ class Xecho
 
         Commands:
       ).gsub(/^ +/, '').concat COMMANDS.inject('') { |buf, (cmd, (args, desc))|
-        buf.concat "    %-15s%s\n" % [[cmd, args].join(' '), desc]
+        buf.concat "    %-20s%s\n" % [[cmd, args].join(' '), desc]
       }
     end
+  end
+
+  def xwininfo
+    %x(xwininfo -id "#{ENV['WINDOWID']}")
+  end
+
+  def screen_dimensions
+    %x(/bin/sh -c "xrandr 2>&1").scan(/current (\d+) x (\d+)/).flatten.take(2).map &:to_i
+  end
+
+  def window_dimensions
+    buf    = xwininfo
+    w,  h  = buf.scan(/(?:Width:|Height:) (\d+)/).flatten.take(2).map &:to_i
+    w_, h_ = buf.scan(/Relative upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    [w + w_, h + h_]
+  end
+
+  def position
+    buf    = xwininfo
+    x,  y  = buf.scan(/Absolute upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    x_, y_ = buf.scan(/Relative upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    [x - x_, y - y_]
+  end
+
+  def geometry
+    xwininfo.scan(/.*geometry (\d+)x(\d+)/).last.map &:to_i
+  end
+
+  def mod_width
+    screen_dimensions[0] - window_dimensions[0]
+  end
+
+  def mod_height
+    screen_dimensions[1] - window_dimensions[1]
+  end
+
+  def fontset
+    %x(xrdb -query).lines.grep(/\*font:/).last[/\*font:\s*(.*)/, 1]
   end
 
   def sh cmd
@@ -51,39 +97,43 @@ class Xecho
     end
   end
 
-  def gutter_width
-    scrw = %x(/bin/sh -c "xrandr 2>&1")[/current (\d+)/, 1].to_i
-    winw = %x(xwininfo -id "#{ENV['WINDOWID']}")[/Width: (\d+)/, 1].to_i
-    scrw - winw
+  # Wouldn't it be nice to... '((name mod_width mod_height) ...)
+  { :nw => '[0, 0]',              :n => '[(mod_width/2), 0]',              :ne => '[mod_width, 0]',
+    :w  => '[0, (mod_height/2)]', :c => '[(mod_width/2), (mod_height/2)]', :e  => '[mod_width, (mod_height/2)]',
+    :sw => '[0, mod_height]',     :s => '[(mod_width/2), mod_height]',     :se => '[mod_width, mod_height]'
+  }.each do |k, v|
+    class_eval %Q(
+      def #{k}
+        raw "\033[3;%d;%dt" % #{v}
+      end
+    )
   end
 
-  def left
-    raw "\033[3;0;0t"
+  def move x, y
+    raw "\033[3;%d;%dt" % [x, y]
   end
 
-  def center
-    raw "\033[3;%s;0t" % (gutter_width/2)
+  def geom width, height
+    raw "\033[8;%d;%dt" % [height, width]
   end
 
-  def right
-    raw "\033[3;%s;0t" % gutter_width
-  end
-
-  def width chars
-    raw "\033[8;0;%st" % chars
-  end
-
-  def cursor color
+  def ccolor color
     raw "\033]12;%s\007" % color
   end
 
-  def font fontset
-    raw "\033]50;%s\007" % fontset
+  def font str = nil
+    raw "\033]50;%s\007" % (str || fontset)
   end
 
-  def size pixels
-    res = %x(xrdb -query).lines.grep(/\*font:/).first[/.*?\*font:\s*(.*)/, 1]
-    raw "\033]710;%s\007" % res.gsub(/(?<=pixelsize=)(\d+)/, pixels)
+  def fsize pixels = nil
+    buf = fontset
+    if pixels
+      raw "\033]710;%s\007" % buf.gsub(/(?<=pixelsize=)(\d+)/) { |ps|
+        (ps.to_i * pixels.to_i / buf[/pixelsize=(\d+)/, 1].to_f).round
+      }
+    else
+      raw "\033]710;%s\007" % buf
+    end
   end
 
   def title str
