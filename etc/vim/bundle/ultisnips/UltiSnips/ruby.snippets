@@ -609,14 +609,19 @@ endsnippet
 
 ### MINITEST {{{1
 
+snippet tes "test" w
+test "$1" do
+end
+endsnippet
+
 snippet des "describe"
-describe :$1 do
+describe $1 do
 	$0
 end
 endsnippet
 
 snippet it "it"
-it '$1' do
+it "$1" do
 	$0
 end
 endsnippet
@@ -629,12 +634,6 @@ endsnippet
 
 snippet aft "after"
 after do
-	$0
-end
-endsnippet
-
-snippet ar "assert_raises"
-assert_raises $1 do
 	$0
 end
 endsnippet
@@ -766,3 +765,140 @@ endsnippet
 snippet wm "wont_match" w
 wont_match $0
 endsnippet
+
+snippet as "assert" w
+assert $0
+endsnippet
+
+snippet asb "assert_block" w
+assert_block $0
+endsnippet
+
+snippet asem "assert_empty" w
+assert_empty $0
+endsnippet
+
+snippet aseq "assert_equal" w
+assert_equal $0
+endsnippet
+
+snippet asid "assert_in_delta" w
+assert_in_delta $0
+endsnippet
+
+snippet asie "assert_in_epsilon" w
+assert_in_epsilon $0
+endsnippet
+
+snippet asin "assert_includes" w
+assert_includes $0
+endsnippet
+
+snippet asio "assert_instance_of" w
+assert_instance_of $0
+endsnippet
+
+snippet asko "assert_kind_of" w
+assert_kind_of $0
+endsnippet
+
+snippet asm "assert_match" w
+assert_match $0
+endsnippet
+
+snippet asn "assert_nil" w
+assert_nil $0
+endsnippet
+
+snippet asop "assert_operator" w
+assert_operator $0
+endsnippet
+
+snippet asout "assert_output" w
+assert_output $0
+endsnippet
+
+snippet asp "assert_predicate" w
+assert_predicate $0
+endsnippet
+
+snippet asr "assert_raises" w
+assert_raises $0
+endsnippet
+
+snippet asrt "assert_respond_to" w
+assert_respond_to $0
+endsnippet
+
+snippet assa "assert_same" w
+assert_same $0
+endsnippet
+
+snippet asse "assert_send" w
+assert_send $0
+endsnippet
+
+snippet assi "assert_silent" w
+assert_silent $0
+endsnippet
+
+snippet ast "assert_throws" w
+assert_throws $0
+endsnippet
+
+snippet re "refute" w
+refute $0
+endsnippet
+
+snippet reem "refute_empty" w
+refute_empty $0
+endsnippet
+
+snippet reeq "refute_equal" w
+refute_equal $0
+endsnippet
+
+snippet reid "refute_in_delta" w
+refute_in_delta $0
+endsnippet
+
+snippet reie "refute_in_epsilon" w
+refute_in_epsilon $0
+endsnippet
+
+snippet rein "refute_includes" w
+refute_includes $0
+endsnippet
+
+snippet reio "refute_instance_of" w
+refute_instance_of $0
+endsnippet
+
+snippet reko "refute_kind_of" w
+refute_kind_of $0
+endsnippet
+
+snippet rem "refute_match" w
+refute_match $0
+endsnippet
+
+snippet ren "refute_nil" w
+refute_nil $0
+endsnippet
+
+snippet reop "refute_operator" w
+refute_operator $0
+endsnippet
+
+snippet rep "refute_predicate" w
+refute_predicate $0
+endsnippet
+
+snippet rert "refute_respond_to" w
+refute_respond_to $0
+endsnippet
+
+snippet resa "refute_same" w
+refute_same $0
+endsnippet
+

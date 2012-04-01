@@ -3850,6 +3850,10 @@ function! s:BufMappings()
       imap <buffer> <M-[>  <C-O><Plug>RailsAlternate
       imap <buffer> <M-]>  <C-O><Plug>RailsRelated
     endif
+    nmap <buffer> [r :<C-U>A<CR>
+    nmap <buffer> ]r :<C-U>A<CR>
+    nmap <buffer> [R :<C-U>RV \| wincmd L<CR>
+    nmap <buffer> ]R :<C-U>RV \| wincmd L<CR>
   endif
   " SelectBuf you're a dirty hack
   let v:errmsg = ""
