@@ -7,7 +7,7 @@
 #                                          guns <self@sungpae.com>
 
 
-### Readline Variables ### {{{1
+### Readline Variables {{{1
 
 # Let your terminal convert to `visible`; don't set here
 # set bell-style audible
@@ -122,41 +122,42 @@ set skip-completed-text on
 set visible-stats on
 
 
-### Global Macros ### {{{1
+### Global Macros {{{1
+# diff -U3 <(INPUTRC=/dev/null bind -p) <(bind -p)
 
 # Text editing
-"\C-]":         kill-whole-line             (- character-search)
+"\C-]":         kill-whole-line
 "\eB":          character-search-backward
 "\eF":          character-search
 "\eR":          overwrite-mode
-"\eu":          downcase-word               (- upcase-word)
+"\eu":          downcase-word
 "\eU":          upcase-word
 
 # History
-"\C-n":         history-search-forward      (- next-history)
-"\eOB":         history-search-forward      (- next-history)
-"\e[B":         history-search-forward      (- next-history)
-"\C-p":         history-search-backward     (- previous-history)
-"\eOA":         history-search-backward     (- previous-history)
-"\e[A":         history-search-backward     (- previous-history)
+"\C-n":         history-search-forward
+"\eOB":         history-search-forward
+"\e[B":         history-search-forward
+"\C-p":         history-search-backward
+"\eOA":         history-search-backward
+"\e[A":         history-search-backward
 
 # Unicode characters
 "\e'":          "→"         U+2192
 "\e(":          "·"         U+00B7
-"\e6":          "§"         U+00A7          (- digit-argument)
-"\e8":          "•"         U+2022          (- digit-argument)
+"\e6":          "§"         U+00A7
+"\e8":          "•"         U+2022
 "\e;":          "←"         U+2190
-"\e>":          "…"         U+2026          (- end-of-history)
+"\e>":          "…"         U+2026
 "\eA":          "à"         U+00E0
 "\ea":          "á"         U+00E1
 "\eC":          "Ç"         U+00C7
-"\ec":          "ç"         U+00E7          (- capitalize-word)
+"\ec":          "ç"         U+00E7
 "\eD":          "Δ"         U+0394
 "\eE":          "è"         U+00E8
 "\ee":          "é"         U+00E9
 "\eh":          "❤"         U+2764
 "\eH":          "❦"         U+2766
-"\el":          "λ"         U+03BB          (- downcase-word)
+"\el":          "λ"         U+03BB
 "\ep":          "π"         U+03C0
 "\es":          "⚓"         U+2693
 "\eS":          "Σ"         U+03A3
@@ -168,12 +169,13 @@ set visible-stats on
 "\ex":          "×"         U+00D7
 
 
-### Application Macros ###  {{{1
+### bash {{{1
 
 $if Bash
-    # Reloads
-    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"   (- exchange-point-and-mark)
+    # Meta
+    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] xreload; tmuxeval \n"
+    "\C-xV":        display-shell-version
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
@@ -192,7 +194,7 @@ $if Bash
     "\C-xl":        "\C-]cdlocal "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
-    "\C-x\C-v":     "\C-] cdvimfiles \n"         (- display-shell-version)
+    "\C-x\C-v":     "\C-] cdvimfiles \n"
     "\C-xv":        "\C-]cdvimfiles "
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
@@ -210,7 +212,7 @@ $if Bash
 
     # Vim
     "\033\007e":    "\C-] vim \n"
-    "\C-xe ":       "\C-]vim "              (* call-last-kbd-macro)
+    "\C-xe ":       "\C-]vim "
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeb":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
@@ -236,7 +238,7 @@ $if Bash
     "\C-xm":        "\C-]man "
 
     # Git
-    "\C-xg ":       "\C-]git "              (* glob-list-expansions)
+    "\C-xg ":       "\C-]git "
     "\C-x\C-g":     "\C-] git st\n"
     "\C-xg%":       "\C-]git di "
     "\C-xgaa":      "\C-] git aa \n"
@@ -259,13 +261,14 @@ $if Bash
 $endif
 
 
-# IRB
+### irb {{{1
+
 $if Ruby
     # Re-exec (see above)
-    "\C-x\C-x":     "\C-] exec $0 \n"       (- exchange-point-and-mark)
+    "\C-x\C-x":     "\C-] exec $0 \n"
 
     # Hashrocket
-    "\C-l":         " => "                  (- clear-screen)
+    "\C-l":         " => "
     "\C-x\C-l":     clear-screen
 
     # Load files
@@ -274,18 +277,110 @@ $if Ruby
 
     # interactive_editor
     "\033\007e":    "\C-]vim \"/tmp/#{ENV['USER']}.interactive-editor.rb\"\n"
-    "\C-xe ":       "\C-]vim "              (- call-last-kbd-macro)
+    "\C-xe":        "\C-]vim "
 $endif
 
 
-# Clojure REPL
+### Clojure REPL {{{1
+
 $if Java
     # Documentation
-    "\C-xd":        "\C-](doc )\C-b"
-    "\C-xh":        "\C-xd"
     "\C-xf":        "\C-](find-doc "")\C-b\C-b"
     "\C-xs":        "\C-](source )\C-b"
 
     # Loading
     "\C-xl":        "\C-](load-file "")\C-b\C-b"
+$endif
+
+
+### PostgreSQL {{{1
+
+$if Psql
+    # General
+    "\033\007g":    "\C-]\\g\n"
+    "\C-x\C-g":     "\C-]\\g\n"
+    "\C-xg":        "\C-]\\g "
+    "\033\007h":    "\C-]\\?\n"
+    "\C-xh":        "\C-]\\h "
+    "\033\007\\":   "\C-]\\q\n"
+
+    # Query Buffer
+    "\033\007e":    "\C-]\\e\n"
+    "\033\007p":    "\C-]\\p\n"
+    "\033\007r":    "\C-]\\r\n"
+    "\C-xw":        "\C-]\\w "
+
+    # Input/Output
+    "\C-xi":       "\C-]\\i "
+    "\C-xo":       "\C-]\\o "
+    "\C-xq":       "\C-]\\qecho "
+
+    # Informational
+    "\033\007d":    "\C-]\\d\n"
+    "\C-x\C-d":     "\C-]\\d+\n"
+    "\C-xd ":       "\C-]\\d "
+    "\C-xda":       "\C-]\\da\n"
+    "\C-xdb":       "\C-]\\db\n"
+    "\C-xdc":       "\C-]\\dc\n"
+    "\C-xdC":       "\C-]\\dC\n"
+    "\C-xdd":       "\C-]\\dd\n"
+    "\C-xddp":      "\C-]\\ddp\n"
+    "\C-xdD":       "\C-]\\dD\n"
+    "\C-xdet":      "\C-]\\det\n"
+    "\C-xdes":      "\C-]\\des\n"
+    "\C-xdeu":      "\C-]\\deu\n"
+    "\C-xdew":      "\C-]\\dew\n"
+    "\C-xdf":       "\C-]\\df\n"
+    "\C-xdF":       "\C-]\\dF\n"
+    "\C-xdFd":      "\C-]\\dFd\n"
+    "\C-xdFp":      "\C-]\\dFp\n"
+    "\C-xdFt":      "\C-]\\dFt\n"
+    "\C-xdg":       "\C-]\\dg\n"
+    "\C-xdi":       "\C-]\\di\n"
+    "\C-xdl":       "\C-]\\dl\n"
+    "\C-xdL":       "\C-]\\dL\n"
+    "\C-xdn":       "\C-]\\dn\n"
+    "\C-xdo":       "\C-]\\do\n"
+    "\C-xdO":       "\C-]\\dO\n"
+    "\C-xdp":       "\C-]\\dp\n"
+    "\C-xdrd":      "\C-]\\drd\n"
+    "\C-xds":       "\C-]\\ds\n"
+    "\C-xdt":       "\C-]\\dt\n"
+    "\C-xdT":       "\C-]\\dT\n"
+    "\C-xdu":       "\C-]\\du\n"
+    "\C-xdv":       "\C-]\\dv\n"
+    "\C-xdE":       "\C-]\\dE\n"
+    "\C-xdx":       "\C-]\\dx\n"
+    "\033\007l":    "\C-]\\l\n"
+    "\C-xS":        "\C-]\\sf "
+    "\033\007z":    "\C-]\\z\n"
+
+    # Formatting
+    "\C-x\C-a":     "\C-]\\a\n"
+    "\C-x\C-f":     "\C-]\\f\n"
+    "\C-xf":        "\C-]\\f "
+    "\C-x\C-h":     "\C-]\\H\n"
+    "\C-xp":        "\C-]\\pset "
+    "\C-x\C-t":     "\C-]\\t\n"
+    "\C-x\C-x":     "\C-]\\x\n"
+
+    # Connection
+    "\C-xC":        "\C-]\\conninfo\n"
+    "\C-xc":        "\C-]\\connect "
+    "\C-xe":        "\C-]\\encoding "
+    "\C-xp":        "\C-]\\password "
+
+    # Operating System
+    "\033\007t":    "\C-]\\timing\n"
+
+    # Variables
+    "\C-xP":        "\C-]\\prompt "
+    "\C-xs":        "\C-]\\set "
+    "\C-xu":        "\C-]\\unset "
+
+    # Large Objects
+    "\C-xle":       "\C-]\\lo_export "
+    "\C-xli":       "\C-]\\lo_import "
+    "\C-xll":       "\C-]\\lo_list\n"
+    "\C-xlu":       "\C-]\\lo_unlink "
 $endif
