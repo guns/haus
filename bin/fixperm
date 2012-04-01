@@ -50,7 +50,11 @@ class Fixperm
   def normalize files
     (options.recurse ? files.map { |f| Find.find(f).to_a }.flatten : files).each do |f|
       stat = File.stat f
-      mode = stat.ftype == 'directory' ? (0777 & ~options.umask) : (0666 & ~options.umask)
+      mode = if stat.ftype == 'directory' or File.basename(File.dirname File.expand_path(f)) =~ /\As?bin\z/
+        (0777 & ~options.umask)
+      else
+        (0666 & ~options.umask)
+      end
 
       next if (stat.mode & 0777) == mode
 
