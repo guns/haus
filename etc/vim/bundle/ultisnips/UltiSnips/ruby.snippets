@@ -134,6 +134,10 @@ snippet _f "__FILE__" w
 __FILE__
 endsnippet
 
+snippet _e "__END__" b
+__END__
+endsnippet
+
 snippet uns "unshift" w
 unshift
 endsnippet
@@ -584,12 +588,22 @@ snippet log "log" w
 Rails.logger.debug $0
 endsnippet
 
-snippet acc "attr_accessible" w
+snippet aa "attr_accessible" w
 attr_accessible $0
 endsnippet
 
-snippet val "validates" w
+snippet va "validates" w
 validates $0
+endsnippet
+
+snippet V "Validator" w
+class ${1}Validator < ActiveModel::EachValidator
+	def validate_each rec, att, val
+		unless val$0
+			rec.errors[att] << "must be a $1"
+		end
+	end
+end
 endsnippet
 
 

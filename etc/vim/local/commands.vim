@@ -47,6 +47,20 @@ function! <SID>SetAutowrap(bang, ...)
 endfunction
 
 
+command! -bang -bar SetIskeyword call <SID>SetIskeyword('<bang>') "{{{1
+function! <SID>SetIskeyword(bang)
+    let nonspaces = '@,1-31,33-127'
+    if empty(a:bang)
+        echo  &iskeyword
+    elseif &iskeyword != nonspaces
+        let b:__iskeyword__ = &iskeyword
+        execute 'setlocal iskeyword=' . nonspaces
+    else
+        execute 'setlocal iskeyword=' . b:__iskeyword__
+    endif
+endfunction
+
+
 command! -bar SynStack call <SID>SynStack() "{{{1
 function! <SID>SynStack()
     " TextMate style syntax highlighting stack for word under cursor

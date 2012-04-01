@@ -171,6 +171,7 @@ augroup GUNS
 
     " Readline {{{1
     autocmd BufRead,BufNewFile *inputrc
+        \ SetIskeyword! |
         \ setlocal filetype=readline
 
     " Nethack! {{{1

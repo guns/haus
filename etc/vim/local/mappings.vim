@@ -331,6 +331,7 @@ noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>execute &diff ? 'diffoff' : 'diffthis' \| setlocal diff?<CR>
 noremap <Leader><C-e>    :<C-u>set expandtab! \| set expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>set hlsearch! \| set hlsearch?<CR>
+noremap <Leader><C-i>    :<C-u>SetIskeyword! \| SetIskeyword<CR>
 noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
 noremap <Leader><C-o>    :<C-u>set cursorline! \| set cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>set paste! \| set paste?<CR>
@@ -531,8 +532,8 @@ noremap <Leader>S :<C-u>Screen<CR>
 
 " Plugin: Manpageview
 noremap <Leader>K viwK
-noremap <Leader>m :<C-u>Man<Space>
-noremap <Leader>M :<C-u>VMan<Space>
+noremap <Leader>m :<C-u>VMan<Space>
+noremap <Leader>M :<C-u>HMan<Space>
 
 " Plugin: Align
 noremap <Leader>a<Space> :Align<Space>
