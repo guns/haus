@@ -58,9 +58,9 @@ function! s:init() "{{{
 
 	" matchpairs
 	call s:option_init("matchpairs", string(&matchpairs)[1:-2])
-	call s:option_init("matchpairs_list", split(b:_l_delimitMate_matchpairs, ','))
-	call s:option_init("left_delims", split(b:_l_delimitMate_matchpairs, ':.,\='))
-	call s:option_init("right_delims", split(b:_l_delimitMate_matchpairs, ',\=.:'))
+	call s:option_init("matchpairs_list", map(split(b:_l_delimitMate_matchpairs, ','), 'split(v:val, '':'')'))
+	call s:option_init("left_delims", map(copy(b:_l_delimitMate_matchpairs_list), 'v:val[0]'))
+	call s:option_init("right_delims", map(copy(b:_l_delimitMate_matchpairs_list), 'v:val[1]'))
 
 	" quotes
 	call s:option_init("quotes", "\" ' `")
@@ -143,7 +143,9 @@ function! s:Map() "{{{
 		let save_keymap = &keymap
 		let save_iminsert = &iminsert
 		let save_imsearch = &imsearch
+		let save_cpo = &cpo
 		set keymap=
+		set cpo&vim
 		if b:_l_delimitMate_autoclose
 			call s:AutoClose()
 		else
@@ -151,6 +153,7 @@ function! s:Map() "{{{
 		endif
 		call s:ExtraMappings()
 	finally
+		let &cpo = save_cpo
 		let &keymap = save_keymap
 		let &iminsert = save_iminsert
 		let &imsearch = save_imsearch
@@ -168,6 +171,7 @@ function! s:Unmap() " {{{
 				\ b:_l_delimitMate_apostrophes_list +
 				\ ['<BS>', '<S-BS>', '<Del>', '<CR>', '<Space>', '<S-Tab>', '<Esc>'] +
 				\ ['<Up>', '<Down>', '<Left>', '<Right>', '<LeftMouse>', '<RightMouse>'] +
+				\ ['<C-Left>', '<C-Right>'] +
 				\ ['<Home>', '<End>', '<PageUp>', '<PageDown>', '<S-Down>', '<S-Up>', '<C-G>g']
 
 	for map in imaps
@@ -189,7 +193,7 @@ endfunction " }}} s:Unmap()
 function! s:TestMappingsDo() "{{{
 	%d
 	if !exists("g:delimitMate_testing")
-		silent call delimitMate#TestMappings()
+		call delimitMate#TestMappings()
 	else
 		let temp_varsDM = [b:_l_delimitMate_expand_space, b:_l_delimitMate_expand_cr, b:_l_delimitMate_autoclose]
 		for i in [0,1]
@@ -237,7 +241,9 @@ function! s:DelimitMateDo(...) "{{{
 	call s:init()
 
 	" Now, add magic:
-	call s:Map()
+	if !exists("g:delimitMate_offByDefault") || !g:delimitMate_offByDefault
+		call s:Map()
+	endif
 
 	if a:0 > 0
 		echo "delimitMate has been reset."
@@ -257,14 +263,14 @@ function! s:DelimitMateSwitch() "{{{
 endfunction "}}}
 
 function! s:Finish() " {{{
-	if exists('g:delimitMate_loaded')
+	if exists('b:delimitMate_enabled')
 		return delimitMate#Finish(1)
 	endif
 	return ''
 endfunction " }}}
 
 function! s:FlushBuffer() " {{{
-	if exists('g:delimitMate_loaded')
+	if exists('b:delimitMate_enabled')
 		return delimitMate#FlushBuffer()
 	endif
 	return ''
@@ -352,12 +358,21 @@ function! s:ExtraMappings() "{{{
 		silent! imap <unique> <buffer> <Del> <Plug>delimitMateDel
 	endif
 	" Flush the char buffer on movement keystrokes or when leaving insert mode:
-	for map in ['Esc', 'Left', 'Right', 'Home', 'End']
+	for map in ['Esc', 'Left', 'Right', 'Home', 'End', 'C-Left', 'C-Right']
 		exec 'inoremap <silent> <Plug>delimitMate'.map.' <C-R>=<SID>Finish()<CR><'.map.'>'
 		if !hasmapto('<Plug>delimitMate'.map, 'i')
 			exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
 		endif
 	endfor
+	" Also for default MacVim movements:
+	if has('gui_macvim')
+		for [key, map] in [['D-Left','Home'], ['D-Right','End'], ['M-Left','C-Left'], ['M-Right','C-Right']]
+			exec 'inoremap <silent> <Plug>delimitMate'.key.' <C-R>=<SID>Finish()<CR><'.map.'>'
+			if mapcheck('<'.key.'>', 'i') == '<'.map.'>'
+				exec 'silent! imap <buffer> <'.key.'> <Plug>delimitMate'.key
+			endif
+		endfor
+	endif
 	" Except when pop-up menu is active:
 	for map in ['Up', 'Down', 'PageUp', 'PageDown', 'S-Down', 'S-Up']
 		exec 'inoremap <silent> <expr> <Plug>delimitMate'.map.' pumvisible() ? "\<'.map.'>" : "\<C-R>=\<SID>Finish()\<CR>\<'.map.'>"'
@@ -382,7 +397,7 @@ function! s:ExtraMappings() "{{{
 	" The following simply creates an ambiguous mapping so vim fully processes
 	" the escape sequence for terminal keys, see 'ttimeout' for a rough
 	" explanation, this just forces it to work
-	if !has('gui_running')
+	if !has('gui_running') && (!exists('g:delimitMate_no_esc_mapping') || !g:delimitMate_no_esc_mapping)
 		imap <silent> <C-[>OC <RIGHT>
 	endif
 endfunction "}}}
@@ -397,7 +412,7 @@ call s:DelimitMateDo()
 command! -bar DelimitMateReload call s:DelimitMateDo(1)
 
 " Quick test:
-command! -bar DelimitMateTest silent call s:TestMappingsDo()
+command! -bar DelimitMateTest call s:TestMappingsDo()
 
 " Switch On/Off:
 command! -bar DelimitMateSwitch call s:DelimitMateSwitch()
