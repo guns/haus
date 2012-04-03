@@ -640,7 +640,7 @@ daemons() {
             apache2 httpd nginx
             php-cgi php-fpm
             mysqld postgres
-            named unbound dnsmasq
+            named unbound dnsmasq dnscrypt-proxy
             exim sendmail
             smbd nmbd nfsd
             sshd ssh-agent
