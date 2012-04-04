@@ -240,7 +240,9 @@ alias gvw='g -vw'
 alias wcl='grep -c .'
 
 # ack
-ALIAS acki='ack -i'
+ALIAS acki='ack -i' \
+      ackq='ack -Q' \
+      ackiq='ack -iQ'
 
 # cat less tail
 alias c='cat'

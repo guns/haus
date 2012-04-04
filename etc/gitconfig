@@ -140,10 +140,13 @@
     stashow = stash show -p
 
     # grep
-    g   = grep -P
-    gi  = grep -Pi
-    gw  = grep -Pw
-    giw = grep -Piw
+    g    = grep -P
+    gi   = grep -Pi
+    gw   = grep -Pw
+    gf   = grep -F
+    gif  = grep -Fi
+    giw  = grep -Piw
+    gifw = grep -Fiw
 
     # misc
     ls  = ls-files
