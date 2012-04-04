@@ -881,8 +881,9 @@ HAVE vim && {
 
     # Open local REPL project
     vimclojure() {
-        [[ -e project.clj ]] || cd ~/.clojure
-        vim -c 'Screen' project.clj
+        if [[ -e project.clj ]] || cd ~/.clojure; then
+            vim -c 'Screen clojure --lein \"nailgun 127.0.0.1:2113\" repl' project.clj
+        fi
     }
 
     # Server / client functions
@@ -1063,6 +1064,9 @@ type ruby &>/dev/null && {
     RUBY_VERSION_SETUP 19  /opt/ruby/1.9/bin
     RUBY_VERSION_SETUP 18  /opt/ruby/1.8/bin
     RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
+
+    # RUBYOPT
+    rbopt() { run env RUBYOPT=$1 "${@:2}"; }
 
     # PATH variables
     rubylib() { __prepend_path__ RUBYLIB "$@"; }
