@@ -200,6 +200,9 @@ augroup GUNS
         \ OrgBufferSetup |
         \ SetWhitespace 2 8
 
+    autocmd BufRead,BufNewFile psql.edit.*
+        \ setlocal filetype=sql
+
     augroup ScreenShellEnter "{{{1
         autocmd!
         autocmd User *
