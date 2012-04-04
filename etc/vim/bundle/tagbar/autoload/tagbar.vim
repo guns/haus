@@ -665,14 +665,32 @@ function! s:InitTypes()
     let type_tex = s:TypeInfo.New()
     let type_tex.ctagstype = 'tex'
     let type_tex.kinds     = [
+        \ {'short' : 'i', 'long' : 'includes',       'fold' : 1, 'stl' : 0},
         \ {'short' : 'p', 'long' : 'parts',          'fold' : 0, 'stl' : 1},
         \ {'short' : 'c', 'long' : 'chapters',       'fold' : 0, 'stl' : 1},
         \ {'short' : 's', 'long' : 'sections',       'fold' : 0, 'stl' : 1},
         \ {'short' : 'u', 'long' : 'subsections',    'fold' : 0, 'stl' : 1},
         \ {'short' : 'b', 'long' : 'subsubsections', 'fold' : 0, 'stl' : 1},
         \ {'short' : 'P', 'long' : 'paragraphs',     'fold' : 0, 'stl' : 0},
-        \ {'short' : 'G', 'long' : 'subparagraphs',  'fold' : 0, 'stl' : 0}
+        \ {'short' : 'G', 'long' : 'subparagraphs',  'fold' : 0, 'stl' : 0},
+        \ {'short' : 'l', 'long' : 'labels',         'fold' : 0, 'stl' : 0}
     \ ]
+    let type_tex.sro        = '""'
+    let type_tex.kind2scope = {
+        \ 'p' : 'part',
+        \ 'c' : 'chapter',
+        \ 's' : 'section',
+        \ 'u' : 'subsection',
+        \ 'b' : 'subsubsection'
+    \ }
+    let type_tex.scope2kind = {
+        \ 'part'          : 'p',
+        \ 'chapter'       : 'c',
+        \ 'section'       : 's',
+        \ 'subsection'    : 'u',
+        \ 'subsubsection' : 'b'
+    \ }
+    let type_tex.sort = 0
     let s:known_types.tex = type_tex
     " Vala {{{3
     " Vala is supported by the ctags fork provided by Anjuta, so only add the
@@ -2544,7 +2562,7 @@ endfunction
 function! s:HighlightTag()
     let tagline = 0
 
-    let tag = s:GetNearbyTag()
+    let tag = s:GetNearbyTag(1)
     if !empty(tag)
         let tagline = tag.tline
     endif
@@ -2869,7 +2887,7 @@ function! s:OpenParents(...)
     if a:0 == 1
         let tag = a:1
     else
-        let tag = s:GetNearbyTag()
+        let tag = s:GetNearbyTag(1)
     endif
 
     call tag.openParents()
@@ -3070,7 +3088,7 @@ endfunction
 
 " s:GetNearbyTag() {{{2
 " Get the tag info for a file near the cursor in the current file
-function! s:GetNearbyTag()
+function! s:GetNearbyTag(all)
     let fileinfo = s:known_files.getCurrent()
     if empty(fileinfo)
         return
@@ -3088,7 +3106,7 @@ function! s:GetNearbyTag()
     for line in range(curline, 1, -1)
         if has_key(fileinfo.fline, line)
             let tag = fileinfo.fline[line]
-            if typeinfo.getKind(tag.fields.kind).stl
+            if a:all || typeinfo.getKind(tag.fields.kind).stl
                 break
             endif
         endif
@@ -3335,7 +3353,7 @@ function! tagbar#currenttag(fmt, default, ...)
         return ''
     endif
 
-    let tag = s:GetNearbyTag()
+    let tag = s:GetNearbyTag(0)
 
     if !empty(tag)
         return printf(a:fmt, tag.strshort(longsig))

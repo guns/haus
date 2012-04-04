@@ -118,7 +118,7 @@ function! fugitive#extract_git_dir(path) abort
     elseif type ==# 'link' && fugitive#is_git_dir(dir)
       return resolve(dir)
     elseif type !=# '' && filereadable(dir)
-      let line = get(readfile(dir, 1), 0, '')
+      let line = get(readfile(dir, '', 1), 0, '')
       if line =~# '^gitdir: ' && fugitive#is_git_dir(line[8:-1])
         return line[8:-1]
       endif
@@ -162,6 +162,7 @@ augroup fugitive
   autocmd!
   autocmd BufNewFile,BufReadPost * call s:Detect(expand('<amatch>:p'))
   autocmd FileType           netrw call s:Detect(expand('<afile>:p'))
+  autocmd User NERDTreeInit,NERDTreeNewRoot call s:Detect(b:NERDTreeRoot.path.str())
   autocmd VimEnter * if expand('<amatch>')==''|call s:Detect(getcwd())|endif
   autocmd BufWinLeave * execute getwinvar(+bufwinnr(+expand('<abuf>')), 'fugitive_leave')
 augroup END
@@ -198,7 +199,7 @@ function! s:repo_configured_tree() dict abort
   if !has_key(self,'_tree')
     let self._tree = ''
     if filereadable(self.dir('config'))
-      let config = readfile(self.dir('config'),10)
+      let config = readfile(self.dir('config'),'',10)
       call filter(config,'v:val =~# "^\\s*worktree *="')
       if len(config) == 1
         let self._tree = matchstr(config[0], '= *\zs.*')
@@ -1184,7 +1185,8 @@ function! s:Write(force,...) abort
   let two = s:repo().translate(':2:'.path)
   let three = s:repo().translate(':3:'.path)
   for nr in range(1,bufnr('$'))
-    if bufloaded(nr) && !getbufvar(nr,'&modified') && (bufname(nr) == one || bufname(nr) == two || bufname(nr) == three)
+    let name = fnamemodify(bufname(nr), ':p')
+    if bufloaded(nr) && !getbufvar(nr,'&modified') && (name ==# one || name ==# two || name ==# three)
       execute nr.'bdelete'
     endif
   endfor
@@ -1194,7 +1196,7 @@ function! s:Write(force,...) abort
   for tab in range(1,tabpagenr('$'))
     for winnr in range(1,tabpagewinnr(tab,'$'))
       let bufnr = tabpagebuflist(tab)[winnr-1]
-      let bufname = bufname(bufnr)
+      let bufname = fnamemodify(bufname(bufnr), ':p')
       if bufname ==# zero && bufnr != mybufnr
         execute 'tabnext '.tab
         if winnr != winnr()
@@ -1361,9 +1363,9 @@ function! s:Diff(bang,...)
     let spec = s:repo().translate(file)
     let commit = matchstr(spec,'\C[^:/]//\zs\x\+')
     if s:buffer().compare_age(commit) < 0
-      execute 'rightbelow '.split.' `=spec`'
+      execute 'rightbelow '.split.' '.s:fnameescape(spec)
     else
-      execute 'leftabove '.split.' `=spec`'
+      execute 'leftabove '.split.' '.s:fnameescape(spec)
     endif
     call s:diffthis()
     wincmd p
@@ -1586,7 +1588,7 @@ function! s:BlameCommit(cmd) abort
             let offset -= 1
           endif
         endwhile
-        return ''
+        return 'if foldlevel(".")|foldopen!|endif'
       endif
     endwhile
     execute head
@@ -1857,7 +1859,7 @@ endfunction
 " File access {{{1
 
 function! s:ReplaceCmd(cmd,...) abort
-  let fn = bufname('')
+  let fn = expand('%:p')
   let tmp = tempname()
   let prefix = ''
   try
@@ -1885,7 +1887,7 @@ function! s:ReplaceCmd(cmd,...) abort
   finally
     silent exe 'keepalt file '.s:fnameescape(fn)
     call delete(tmp)
-    if bufname('$') == tmp
+    if fnamemodify(bufname('$'), ':p') ==# tmp
       silent execute 'bwipeout '.bufnr('$')
     endif
     silent exe 'doau BufReadPost '.s:fnameescape(fn)
@@ -1983,7 +1985,7 @@ function! s:BufReadIndexFile()
     endtry
     return ''
   catch /^fugitive: rev-parse/
-    silent exe 'doau BufNewFile '.s:fnameescape(bufname(''))
+    silent exe 'doau BufNewFile '.s:fnameescape(expand('%:p'))
     return ''
   catch /^fugitive:/
     return 'echoerr v:errmsg'
