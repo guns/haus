@@ -42,6 +42,9 @@ defaults write com.apple.finder _FXShowPosixPathInTitle -bool YES
 # Enable Mail Bundles
 defaults write com.apple.mail EnableBundles 1
 
+# Prefer plain text in Mail
+defaults write com.apple.mail PreferPlainText -bool TRUE
+
 # Disable multiple windows in Dictionary.app
 defaults write com.apple.Dictionary ProhibitNewWindowForRequest -bool TRUE
 
@@ -76,6 +79,7 @@ defaults write com.apple.DiskUtility DUShowUnsupportedNetworks -boolean YES
 # Crash Dialog
 defaults write com.apple.CrashReporter DialogType -string None
 
+
 ### https://raw.github.com/mathiasbynens/dotfiles/master/.osx {{{1
 
 # Make Dock icons of hidden applications translucent
@@ -94,13 +98,13 @@ defaults write NSGlobalDomain PMPrintingExpandedStateForPrint -bool true
 defaults write com.apple.LaunchServices LSQuarantine -bool false
 
 # Disable press-and-hold for keys in favor of key repeat
-defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+# defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
 
 # Set a blazingly fast keyboard repeat rate
-defaults write NSGlobalDomain KeyRepeat -int 0
+defaults write NSGlobalDomain KeyRepeat -int 1
 
 # Set a shorter Delay until key repeat
-defaults write NSGlobalDomain InitialKeyRepeat -int 0
+defaults write NSGlobalDomain InitialKeyRepeat -int 12
 
 # Disable auto-correct
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
