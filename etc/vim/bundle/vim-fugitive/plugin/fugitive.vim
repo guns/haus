@@ -915,10 +915,12 @@ if !exists('g:fugitive_summary_format')
   let g:fugitive_summary_format = '%s'
 endif
 
-call s:command("-bang -nargs=? -complete=customlist,s:EditComplete Ggrep :execute s:Grep(<bang>0,<q-args>)")
+call s:command("-bang -nargs=? -complete=customlist,s:EditComplete Ggrep :execute s:Grep('grep',<bang>0,<q-args>)")
+call s:command("-bang -nargs=? -complete=customlist,s:EditComplete Glgrep :execute s:Grep('lgrep',<bang>0,<q-args>)")
 call s:command("-bar -bang -nargs=* -complete=customlist,s:EditComplete Glog :execute s:Log('grep<bang>',<f-args>)")
+call s:command("-bar -bang -nargs=* -complete=customlist,s:EditComplete Gllog :execute s:Log('lgrep<bang>',<f-args>)")
 
-function! s:Grep(bang,arg) abort
+function! s:Grep(cmd,bang,arg) abort
   let grepprg = &grepprg
   let grepformat = &grepformat
   let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
@@ -927,8 +929,8 @@ function! s:Grep(bang,arg) abort
     execute cd.'`=s:repo().tree()`'
     let &grepprg = s:repo().git_command('--no-pager', 'grep', '-n')
     let &grepformat = '%f:%l:%m'
-    exe 'silent! grep! '.escape(matchstr(a:arg,'\v\C.{-}%($|[''" ]\@=\|)@='),'|')
-    let list = getqflist()
+    exe 'silent! '.a:cmd.'! '.escape(matchstr(a:arg,'\v\C.{-}%($|[''" ]\@=\|)@='),'|')
+    let list = a:cmd =~# '^l' ? getloclist(0) : getqflist()
     for entry in list
       if bufname(entry.bufnr) =~ ':'
         let entry.filename = s:repo().translate(bufname(entry.bufnr))
@@ -938,9 +940,13 @@ function! s:Grep(bang,arg) abort
         unlet! entry.bufnr
       endif
     endfor
-    call setqflist(list,'r')
+    if a:cmd =~# '^l'
+      call setloclist(0, list, 'r')
+    else
+      setqflist(list, 'r')
+    endif
     if !a:bang && !empty(list)
-      return 'cfirst'.matchstr(a:arg,'\v\C[''" ]\zs\|.*')
+      return (a:cmd =~# '^l' ? 'l' : 'c').'first'.matchstr(a:arg,'\v\C[''" ]\zs\|.*')
     else
       return matchstr(a:arg,'\v\C[''" ]\|\zs.*')
     endif
@@ -1206,7 +1212,7 @@ function! s:Write(force,...) abort
         try
           let lnum = line('.')
           let last = line('$')
-          silent $read `=file`
+          silent execute '$read '.s:fnameescape(file)
           silent execute '1,'.last.'delete_'
           silent execute lnum
           set nomodified
@@ -1388,7 +1394,7 @@ function! s:Move(force,destination)
       let destination = destination[strlen(s:repo().tree('')):-1]
     endif
   endif
-  if isdirectory(s:buffer().name())
+  if isdirectory(s:buffer().spec())
     " Work around Vim parser idiosyncrasy
     let discarded = s:buffer().setvar('&swapfile',0)
   endif

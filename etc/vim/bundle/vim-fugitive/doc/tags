@@ -11,6 +11,8 @@ fugitive-:Ggrep	fugitive.txt	/*fugitive-:Ggrep*
 fugitive-:Git	fugitive.txt	/*fugitive-:Git*
 fugitive-:Git!	fugitive.txt	/*fugitive-:Git!*
 fugitive-:Glcd	fugitive.txt	/*fugitive-:Glcd*
+fugitive-:Glgrep	fugitive.txt	/*fugitive-:Glgrep*
+fugitive-:Gllog	fugitive.txt	/*fugitive-:Gllog*
 fugitive-:Glog	fugitive.txt	/*fugitive-:Glog*
 fugitive-:Gmove	fugitive.txt	/*fugitive-:Gmove*
 fugitive-:Gpedit	fugitive.txt	/*fugitive-:Gpedit*
