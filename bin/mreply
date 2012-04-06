@@ -27,7 +27,7 @@ class Mreply
 
   def call
     m = Mail.new $stdin.gets(nil)
-    b = quote (m.text? ? m.body : m.text_part.body).to_s
+    b = quote (m.text? ? m.body : (m.text_part ? m.text_part.body : m.body)).to_s
     "%s writes:\n\n%s" % [m[:from], b]
   end
 
@@ -35,6 +35,8 @@ class Mreply
     args = parser.parse arguments
     abort parser.help unless args.empty?
     puts call
+  rescue RuntimeError => e
+    puts e
   end
 end
 
