@@ -113,7 +113,7 @@ class Cs # {{{1
             return unless res =~ /\A\s*YES\s*\z/
             w.puts res
 
-            pass = CLI::Password.npass options.length
+            pass = CLI::Password.npass_1 options.length
 
             puts r.expect(/(Enter.*:)/)[1]
             w.puts pass
@@ -152,7 +152,7 @@ class Cs # {{{1
           begin
             loop do
               puts r.expect(/.*Enter passphrase.*:/).first
-              w.puts CLI::Password.npass(options.length)
+              w.puts CLI::Password.npass_1(options.length)
             end
           rescue SystemCallError
           end

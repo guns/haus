@@ -88,8 +88,6 @@ module CLI
       pass[0, len]
     end
 
-    alias npass npass_1
-
     private
 
     # Get a passphrase from the terminal
