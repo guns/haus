@@ -226,7 +226,7 @@ endfunction
 command! -nargs=? -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
-        \ 'ruby'       : 'irb -f',
+        \ 'ruby'       : 'irb',
         \ 'clojure'    : 'clojure --lein repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
