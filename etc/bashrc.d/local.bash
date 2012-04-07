@@ -76,9 +76,6 @@ fi
 # List all defined functions
 showfunctions() { set | grep '^[^ ]* ()'; }
 
-# Chop lines to $COLUMNS
-choplines() { ruby -pe "\$_.sub! /^(.{$COLUMNS}).*/, '\1'"; }
-
 # Return absolute path
 # Param: $1 Filename
 expand_path() { ruby -e 'print File.expand_path(ARGV.first)' "$1"; }
@@ -629,8 +626,8 @@ else
     alias __psr__='psa k-pcpu'
     alias __psm__='psa k-rss'
 fi
-psr() { __psr__ | choplines | sed "$((LINES-2))q"; }
-psm() { __psm__ | choplines | sed "$((LINES-2))q"; }
+psr() { __psr__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
+psm() { __psm__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
 alias psrl='__psr__ | pager'
 alias psml='__psm__ | pager'
 
