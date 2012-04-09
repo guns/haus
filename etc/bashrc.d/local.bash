@@ -850,7 +850,7 @@ HAVE vim && {
     }
 
     # vim-fugitive
-    alias vimgit='vim -c Gstatus .'
+    alias vimgit='vim -c "pedit $(git rev-parse --git-dir 2>/dev/null)/index" -c "wincmd k"'
     # Param: [$1] File to browse
     gitv() {
         if [[ -f "$1" ]]; then
