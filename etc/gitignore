@@ -22,3 +22,6 @@ Thumbs.db
 
 # C
 *.o
+
+# Java
+.gradle/
