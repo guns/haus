@@ -197,7 +197,6 @@ let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 160
 
 " Plugin: VimClojure
-let g:vimclojure#NailgunClient = expand('~/.vim/bundle/VimClojure/vimclojure-nailgun-client/ng')
 let g:vimclojure#Browser = 'open'
 let g:vimclojure#SplitSize = 10
 let g:vimclojure#FuzzyIndent = 1

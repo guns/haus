@@ -131,8 +131,7 @@ task :env do # {{{1
         :base   => "#{@vim}/VimClojure",
         :branch => %w[master guns],
         :push   => 'github',
-        :files  => 'etc/vim/bundle/VimClojure',
-        :after  => lambda { |proj| system 'rake nailgun &>/dev/null' }
+        :files  => 'etc/vim/bundle/VimClojure'
       },
 
       {
@@ -247,13 +246,6 @@ desc 'Compile the Vim Command-T bundle' # {{{1
 task :commandt do
   Dir.chdir 'etc/vim/bundle/Command-T/ruby/command-t' do
     sh File.join(RbConfig::CONFIG['bindir'], 'ruby'), 'extconf.rb'
-    sh 'make'
-  end
-end
-
-desc 'Compile the VimClojure nailgun client' # {{{1
-task :nailgun do
-  Dir.chdir 'etc/vim/bundle/VimClojure/vimclojure-nailgun-client' do
     sh 'make'
   end
 end
