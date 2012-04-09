@@ -16,7 +16,3 @@ hgk =
 progress =
 purge =
 record =
-
-# http://stackoverflow.com/questions/883452/git-interoperability-with-a-mercurial-repository
-bookmarks =
-hggit =
