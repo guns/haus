@@ -6,6 +6,8 @@
 
 $:.unshift 'lib' # {{{1
 
+require 'shellwords'
+require 'digest/sha1'
 require 'task/update'
 require 'task/subproject'
 require 'cli/notification'
@@ -128,10 +130,40 @@ task :env do # {{{1
       },
 
       {
-        :base   => "#{@vim}/VimClojure",
-        :branch => %w[master guns],
+        :base   => "#{@vim}/vimclojure",
         :push   => 'github',
-        :files  => 'etc/vim/bundle/VimClojure'
+        :before => lambda { |proj|
+          Dir.chdir proj.base do
+            chown_R Process.euid, nil, '.git', :verbose => false
+
+            # Update using git-hg bridge
+            if proj.fetch
+              system '{ git checkout master && git-hg pull --rebase && git co guns && git merge master; } &>/dev/null'
+              raise 'Pull and merge failed' if not $?.exitstatus.zero?
+            else
+              system 'git checkout guns &>/dev/null' or raise 'Checkout failed'
+            end
+          end
+        },
+        :files  => lambda { |proj|
+          begin
+            uid = File.stat(proj.base).uid
+
+            Dir.chdir proj.base do
+              rm_rf ['vim/build', 'server/build'], :verbose => false
+              system 'gradle vimZip &>/dev/null' or raise 'gradle failure'
+              system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
+              raise 'unzip failure' if not $?.exitstatus.zero?
+            end
+
+            system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
+            raise 'rsync failure' if not $?.exitstatus.zero?
+          ensure
+            chown_R uid, nil, proj.base, :verbose => false
+          end
+
+          nil # The work is done
+        }
       },
 
       {
@@ -157,11 +189,11 @@ task :env do # {{{1
           Dir.chdir proj.base do
             uid = File.stat('.').uid
             begin
-              system 'git checkout master &>/dev/null' or raise
+              system 'git checkout master &>/dev/null' or raise 'Checkout failed'
               updated = system 'rake update &>/dev/null'
-              system 'git checkout guns &>/dev/null' or raise
+              system 'git checkout guns &>/dev/null' or raise 'Checkout failed'
               if updated
-                system 'git merge master &>/dev/null' or raise
+                system 'git merge master &>/dev/null' or raise 'Merge failed'
               end
             rescue
               raise 'ManPageView update failed!'

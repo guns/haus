@@ -16,7 +16,6 @@ class Clojure
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.classpath  ||= (ENV['CLASSPATH'] || '').split ':'
-    options.vimclojure ||= '~/.vim/bundle/VimClojure/vimclojure-server.jar'
     options.ngport     ||= 2113
   end
 
@@ -40,11 +39,6 @@ class Clojure
 
       opt.on '--repl', 'Clojure REPL, wrapped by rlwrap if available' do
         options.command = :repl
-      end
-
-      opt.on '--vimclojure [JAR]', 'Start the VimClojure Nailgun server' do |arg|
-        options.command = :vimclojure
-        options.vimclojure = arg if arg
       end
 
       opt.on '--lein-nailgun [PORT]', Integer, %Q(Same as `#{File.basename __FILE__} --lein "nailgun 127.0.0.1:PORT"`) do |arg|
@@ -113,8 +107,6 @@ class Clojure
       return lein_daemon(*args)
     when :repl
       rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
-    when :vimclojure
-      %W[java -server -classpath #{classpath options.vimclojure}] + args + %W[vimclojure.nailgun.NGServer 127.0.0.1]
     when :lein_nailgun
       return lein_daemon("nailgun 127.0.0.1:#{options.ngport}", *args)
     else
