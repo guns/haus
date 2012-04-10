@@ -878,8 +878,15 @@ HAVE vim && {
 
     # Open local REPL project
     vimclojure() {
+        local port="${1:-2113}"
         if [[ -e project.clj ]] || cd ~/.clojure; then
-            vim -c 'Screen clojure --lein \"nailgun 127.0.0.1:2113\" repl' project.clj
+            if ! nc -z 127.0.0.1 "$port" &>/dev/null; then
+                clojure --lein-nailgun "$port" &>/dev/null &
+                ( ( until nc -z 127.0.0.1 "$port"; do sleep 1; done
+                    notify --audio "Nailgun listening on 127.0.0.1:$port"
+                ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
+            fi
+            vim project.clj
         fi
     }
 

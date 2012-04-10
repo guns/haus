@@ -75,10 +75,6 @@ class Clojure
   end
 
   def lein_daemon *tasks
-    # FIXME: Forking in this manner mutates the parent terminal. We can
-    #        restore `stty -g`, but this assumes we are running from a tty
-    tty_state = %x(stty -g)
-
     pids = tasks.map do |t|
       fork do
         Dir.chdir lein_project_dir
@@ -97,8 +93,6 @@ class Clojure
     end
 
     Process.waitall
-  ensure
-    system 'stty', tty_state
   end
 
   def execute args = []
