@@ -32,8 +32,8 @@ class Notify
         notifier.sticky = true
       end
 
-      opt.on '-a', '--audio FILE', 'Play given audio file instead of speaking message' do |arg|
-        notifier.audio = arg
+      opt.on '-a', '--audio=[FILE]', 'Play given audio file instead of speaking message' do |arg|
+        notifier.audio = arg || File.expand_path('~/.sounds/Message_Received.m4a')
       end
     end
   end

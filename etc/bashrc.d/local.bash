@@ -210,7 +210,7 @@ nohist() {
 
 # notify
 ALIAS n='notify' \
-      na='notify --audio ~/.sounds/Message_Received.m4a'
+      na='notify --audio'
 
 # run bgrun
 HAVE run   && TCOMP exec run
@@ -1408,7 +1408,7 @@ ALIAS subtlecheck='subtle --check'
 # Xmonad
 HAVE xmonad && xmonadrecompile() {
     if ! ps axo ucomm | grep '^ghc' &>/dev/null; then
-        { run xmonad --recompile && run xmonad --restart && na; } || notify 'Xmonad compile failure'
+        { run xmonad --recompile && run xmonad --restart && notify --audio; } || notify 'Xmonad compile failure'
     else
         notify 'GHC seems to be busy'
     fi
