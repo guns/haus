@@ -48,7 +48,7 @@ task :env do # {{{1
         :before => lambda { |proj|
           Dir.chdir proj.base do
             system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
-            raise 'Pull and merge failed' if not $?.exitstatus.zero?
+            raise 'tmux pull and merge failed' if not $?.exitstatus.zero?
           end if proj.fetch
         },
       },
@@ -138,10 +138,10 @@ task :env do # {{{1
 
             # Update using git-hg bridge
             if proj.fetch
-              system '{ git checkout master && git-hg pull --rebase && git co guns && git merge master; } &>/dev/null'
-              raise 'Pull and merge failed' if not $?.exitstatus.zero?
+              system '{ git checkout master && git-hg pull --rebase && git checkout guns && git merge master; } &>/dev/null'
+              raise 'vimclojure pull and merge failed' if not $?.exitstatus.zero?
             else
-              system 'git checkout guns &>/dev/null' or raise 'Checkout failed'
+              system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
             end
           end
         },
@@ -151,13 +151,13 @@ task :env do # {{{1
 
             Dir.chdir proj.base do
               rm_rf ['vim/build', 'server/build'], :verbose => false
-              system 'gradle vimZip &>/dev/null' or raise 'gradle failure'
+              system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
               system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-              raise 'unzip failure' if not $?.exitstatus.zero?
+              raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
             end
 
             system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
-            raise 'rsync failure' if not $?.exitstatus.zero?
+            raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
           ensure
             chown_R uid, nil, proj.base, :verbose => false
           end
@@ -187,13 +187,13 @@ task :env do # {{{1
         :files  => :pathogen,
         :before => lambda { |proj|
           Dir.chdir proj.base do
-            uid = File.stat('.').uid
             begin
-              system 'git checkout master &>/dev/null' or raise 'Checkout failed'
+              uid = File.stat('.').uid
+              system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
               updated = system 'rake update &>/dev/null'
-              system 'git checkout guns &>/dev/null' or raise 'Checkout failed'
+              system 'git checkout guns &>/dev/null' or raise 'ManPageView checkout failed'
               if updated
-                system 'git merge master &>/dev/null' or raise 'Merge failed'
+                system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
               end
             rescue
               raise 'ManPageView update failed!'
