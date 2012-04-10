@@ -167,12 +167,22 @@ task :env do # {{{1
       },
 
       {
-        :base   => "#{@vim}/slimv.vim",
-        :branch => %w[master clojure-form-literals-support],
+        :base   => "#{@vim}/paredit",
+        :branch => %w[master guns],
+        :pull   => 'hg',
         :push   => 'github',
-        :files  => {
-          'doc/paredit.txt'    => 'etc/vim/bundle/slimv.vim/doc/paredit.txt',
-          'plugin/paredit.vim' => 'etc/vim/bundle/slimv.vim/plugin/paredit.vim'
+        :files  => :pathogen,
+        :before => lambda { |proj|
+          Dir.chdir proj.base do
+            begin
+              uid = File.stat('.').uid
+              chown_R Process.euid, nil, '.git', :verbose => false
+              system '{ git checkout master && git-hg pull --rebase; } &>/dev/null'
+              raise 'paredit pull failed' if not $?.exitstatus.zero?
+            ensure
+              chown_R uid, nil, proj.base, :verbose => false
+            end
+          end if proj.fetch
         }
       },
 
