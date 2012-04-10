@@ -4,9 +4,7 @@ g:rails_abbreviations	rails.txt	/*g:rails_abbreviations*
 g:rails_ctags_arguments	rails.txt	/*g:rails_ctags_arguments*
 g:rails_default_file	rails.txt	/*g:rails_default_file*
 g:rails_gnu_screen	rails.txt	/*g:rails_gnu_screen*
-g:rails_history_size	rails.txt	/*g:rails_history_size*
 g:rails_mappings	rails.txt	/*g:rails_mappings*
-g:rails_menu	rails.txt	/*g:rails_menu*
 g:rails_modelines	rails.txt	/*g:rails_modelines*
 g:rails_syntax	rails.txt	/*g:rails_syntax*
 g:rails_tabstop	rails.txt	/*g:rails_tabstop*
@@ -115,14 +113,12 @@ rails-global-settings	rails.txt	/*rails-global-settings*
 rails-integration	rails.txt	/*rails-integration*
 rails-introduction	rails.txt	/*rails-introduction*
 rails-license	rails.txt	/*rails-license*
-rails-menu	rails.txt	/*rails-menu*
 rails-migrations	rails.txt	/*rails-migrations*
 rails-modelines	rails.txt	/*rails-modelines*
 rails-navigation	rails.txt	/*rails-navigation*
 rails-options	rails.txt	/*rails-options*
 rails-partials	rails.txt	/*rails-partials*
 rails-plugin-author	rails.txt	/*rails-plugin-author*
-rails-rails-integration	rails.txt	/*rails-rails-integration*
 rails-rake	rails.txt	/*rails-rake*
 rails-rake-defaults	rails.txt	/*rails-rake-defaults*
 rails-refactoring	rails.txt	/*rails-refactoring*
