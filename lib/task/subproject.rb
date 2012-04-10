@@ -88,8 +88,8 @@ class Task
 
       log "Updating subproject #{base}"
 
-      git_update if branch.upstream
       callback.before.call self if callback.before
+      git_update if branch.upstream
       update_files
       git_push if push and fetch
       callback.after.call self if callback.after
