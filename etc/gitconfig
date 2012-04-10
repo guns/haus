@@ -153,3 +153,4 @@
     lso = ls-files -o
     st  = status --short
     fdx = clean -fdx
+    rp  = rev-parse
