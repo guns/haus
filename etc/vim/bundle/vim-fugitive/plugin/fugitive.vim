@@ -2173,6 +2173,7 @@ function! s:JumpInit() abort
   nnoremap <buffer> <silent> <CR>    :<C-U>exe <SID>GF("edit")<CR>
   if !&modifiable
     nnoremap <buffer> <silent> o     :<C-U>exe <SID>GF("split")<CR>
+    nnoremap <buffer> <silent> S     :<C-U>exe <SID>GF("vsplit")<CR>
     nnoremap <buffer> <silent> O     :<C-U>exe <SID>GF("tabedit")<CR>
     nnoremap <buffer> <silent> ,     :<C-U>exe <SID>Edit('edit',0,<SID>buffer().up(v:count1))<CR>
     nnoremap <buffer> <silent> P     :<C-U>exe <SID>Edit('edit',0,<SID>buffer().commit().'^'.v:count1.<SID>buffer().path(':'))<CR>
@@ -2180,6 +2181,7 @@ function! s:JumpInit() abort
     nnoremap <buffer> <silent> C     :<C-U>exe <SID>Edit('edit',0,<SID>buffer().containing_commit())<CR>
     nnoremap <buffer> <silent> cc    :<C-U>exe <SID>Edit('edit',0,<SID>buffer().containing_commit())<CR>
     nnoremap <buffer> <silent> co    :<C-U>exe <SID>Edit('split',0,<SID>buffer().containing_commit())<CR>
+    nnoremap <buffer> <silent> cS    :<C-U>exe <SID>Edit('vsplit',0,<SID>buffer().containing_commit())<CR>
     nnoremap <buffer> <silent> cO    :<C-U>exe <SID>Edit('tabedit',0,<SID>buffer().containing_commit())<CR>
     nnoremap <buffer> <silent> cp    :<C-U>exe <SID>Edit('pedit',0,<SID>buffer().containing_commit())<CR>
   endif
@@ -2382,6 +2384,53 @@ function! fugitive#statusline(...)
     return '[Git'.status.']'
   endif
 endfunction
+
+" }}}1
+" Folding {{{1
+
+function! fugitive#foldtext() abort
+  if &foldmethod !=# 'syntax'
+    return foldtext()
+  elseif getline(v:foldstart) =~# '^diff '
+    let [add, remove] = [-1, -1]
+    let filename = ''
+    for lnum in range(v:foldstart, v:foldend)
+      if filename ==# '' && getline(lnum) =~# '^[+-]\{3\} [ab]/'
+        let filename = getline(lnum)[6:-1]
+      endif
+      if getline(lnum) =~# '^+'
+        let add += 1
+      elseif getline(lnum) =~# '^-'
+        let remove += 1
+      elseif getline(lnum) =~# '^Binary '
+        let binary = 1
+      endif
+    endfor
+    if filename ==# ''
+      let filename = matchstr(getline(v:foldstart), '^diff .\{-\} a/\zs.*\ze b/')
+    endif
+    if exists('binary')
+      return 'Binary: '.filename
+    else
+      return (add<10&&remove<100?' ':'') . add . '+ ' . (remove<10&&add<100?' ':'') . remove . '- ' . filename
+    endif
+  elseif getline(v:foldstart) =~# '^# .*:$'
+    let lines = getline(v:foldstart, v:foldend)
+    call filter(lines, 'v:val =~# "^#\t"')
+    cal map(lines,'s:sub(v:val, "^#\t%(modified: +|renamed: +)=", "")')
+    cal map(lines,'s:sub(v:val, "^([[:alpha:] ]+): +(.*)", "\\2 (\\1)")')
+    return getline(v:foldstart).' '.join(lines, ', ')
+  endif
+  return foldtext()
+endfunction
+
+augroup fugitive_foldtext
+  autocmd!
+  autocmd User Fugitive
+        \ if &filetype =~# '^git\%(commit\)\=$' && &foldtext ==# 'foldtext()' |
+        \    set foldtext=fugitive#foldtext() |
+        \ endif
+augroup END
 
 " }}}1
 
