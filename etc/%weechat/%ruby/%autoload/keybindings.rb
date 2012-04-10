@@ -17,6 +17,21 @@ include Script::Skeleton
   :description => "Guns' personal keybindings"
 }
 
+CHANNELS = %w[
+  #vim
+  #clojure
+  #leiningen
+  #tmux
+  #bash
+  #git
+  #nginx
+  #rxvt-unicode
+  #ruby
+  #ruby-lang
+  #RubyOnRails
+  #weechat
+]
+
 KEYBINDINGS = {
   'ctrl-C'      => '/window scroll_bottom',
   'ctrl-V'      => '/input grab_key_command',
@@ -25,7 +40,7 @@ KEYBINDINGS = {
   'meta-s'      => '/input insert /list -re',
   'mod4-b'      => '/bar scroll nicklist * y-90%',
   'mod4-C'      => '/connect freenode',
-  'mod4-ctrl-M' => '/join #bash,#clojure,#foobarbaz,#git,#leiningen,#nginx,#rxvt-unicode,#ruby,#ruby-lang,#RubyOnRails,#tmux,#vim,#weechat,#xmonad',
+  'mod4-ctrl-M' => "/join #{CHANNELS.join ','}",
   'mod4-E'      => '/window page_down',
   'mod4-e'      => '/window scroll_down',
   'mod4-f'      => '/bar scroll nicklist * y+90%',
