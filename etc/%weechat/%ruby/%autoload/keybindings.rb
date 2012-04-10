@@ -36,6 +36,7 @@ KEYBINDINGS = {
   'mod4-K'      => '/buffer move -1',
   'mod4-p'      => '/window scroll_previous_highlight',
   'mod4-t'      => '/toggle_nicklist toggle',
+  'mod4-U'      => '/input set_unread_current_buffer',
   'mod4-u'      => '/window scroll_unread',
   'mod4-Y'      => '/window page_up',
   'mod4-y'      => '/window scroll_up',
