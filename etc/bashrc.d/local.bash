@@ -646,6 +646,7 @@ daemons() {
             subtle xmonad
             urxvtd
             wicd
+            java
         ]
 
         daemons.each do |d|
