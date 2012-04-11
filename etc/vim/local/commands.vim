@@ -241,7 +241,7 @@ command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     let bind   = &filetype == 'clojure' ? '<Leader>x' : '<Leader><Leader>'
     let select = &filetype == 'clojure' ? ':call PareditSelectCurrentForm()<CR>' : 'vip'
-    let topsel = &filetype == 'clojure' ? '((((((((((((((((((((v%' : 'VggoG'
+    let topsel = &filetype == 'clojure' ? ':call searchpair("(","",")","r")<CR>v%' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings
