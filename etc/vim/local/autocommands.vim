@@ -135,7 +135,7 @@ augroup GUNS
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
         \ SetWhitespace 4 |
-        \ SetAutowrap on
+        \ SetAutowrap 1
 
     " Archive browsing {{{1
     autocmd BufReadCmd *.jar,*.xpi,*.pk3
@@ -147,7 +147,7 @@ augroup GUNS
     autocmd FileType gitcommit
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
-        \ SetAutowrap on
+        \ SetAutowrap 1
 
     " tmux {{{1
     autocmd BufRead,BufNewFile *tmux.conf

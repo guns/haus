@@ -35,11 +35,11 @@ endfunction
 
 command! -nargs=? -bang -bar SetAutowrap call <SID>SetAutowrap('<bang>', <f-args>) "{{{1
 function! <SID>SetAutowrap(bang, ...)
-    let status = empty(a:bang) ? (a:0 ? a:1 : 'report') : (&formatoptions =~ 'a' ? 'off' : 'on')
+    let status = empty(a:bang) ? (a:0 ? a:1 : -1) : (&formatoptions =~ 'a' ? 0 : 1)
 
-    if status == 'report'
+    if status == -1
         echo &formatoptions =~ 'a' ? 'Autowrap is on' : 'Autowrap is off'
-    elseif status == 'on'
+    elseif status
         execute 'setlocal formatoptions+=t formatoptions+=a formatoptions+=w'
     else
         execute 'setlocal formatoptions-=t formatoptions-=a formatoptions-=w'
@@ -59,6 +59,22 @@ function! <SID>SetIskeyword(bang)
         execute 'setlocal iskeyword=' . b:__iskeyword__
     endif
 endfunction
+
+
+command! -nargs=? -bang -bar SetVerbose call <SID>SetVerbose('<bang>', <f-args>) "{{{1
+function! <SID>SetVerbose(bang, ...)
+    let enable = empty(a:bang) ? a:1 : (exists('g:SetVerbose') ? 0 : 1)
+
+    if enable
+        let g:SetVerbose = 1
+        set verbose=100 verbosefile=/tmp/vim.log
+        echo '♫ BEGIN VERBOSE MODE ♫'
+    else
+        echo '♫ END VERBOSE MODE ♫'
+        set verbose=0 verbosefile=
+        unlet! g:SetVerbose
+    endif
+endfunction "{{{1
 
 
 command! -bar SynStack call <SID>SynStack() "{{{1
