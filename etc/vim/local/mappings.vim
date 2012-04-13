@@ -318,9 +318,9 @@ nnoremap Q :quit<CR>
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
 noremap <Leader>sf       :<C-u>setlocal foldmethod=manual
-noremap <Leader>?sf      :<C-u>set foldmethod?<CR>
+noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
 noremap <Leader>sm       :<C-u>setlocal synmaxcol=1000
-noremap <Leader>?sm      :<C-u>set synmaxcol?<CR>
+noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
 noremap <Leader>st       :<C-u>SetTextwidth<Space>
 noremap <Leader>?st      :<C-u>SetTextwidth<CR>
 noremap <Leader>sw       :<C-u>SetWhitespace<Space>
@@ -329,12 +329,12 @@ noremap <Leader>~        :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>execute &diff ? 'diffoff' : 'diffthis' \| setlocal diff?<CR>
-noremap <Leader><C-e>    :<C-u>set expandtab! \| set expandtab?<CR>
-noremap <Leader><C-h>    :<C-u>set hlsearch! \| set hlsearch?<CR>
+noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
+noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
 noremap <Leader><C-i>    :<C-u>SetIskeyword! \| SetIskeyword<CR>
 noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
-noremap <Leader><C-o>    :<C-u>set cursorline! \| set cursorcolumn!<CR>
-noremap <Leader><C-p>    :<C-u>set paste! \| set paste?<CR>
+noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
+noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
 " Open frequently edited files
