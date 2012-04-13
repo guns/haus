@@ -20,7 +20,8 @@ augroup GUNS
 
     " Vimscript {{{1
     autocmd FileType vim,help
-        \ setlocal iskeyword+=-
+        \ setlocal iskeyword+=- |
+        \ SetWhitespace 4
 
     " Diff {{{1
     autocmd FileType diff
