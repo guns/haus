@@ -20,5 +20,4 @@
 ;;                                                  /     ###/
 
 {:user {:plugins [[lein-pprint "1.1.1"]
-                  [org.clojars.guns/lein-nailgun "1.1.0.guns"]]
-        :dependencies [[vimclojure/server "2.3.1"]]}}
+                  [com.sattvik/lein-vimclojure "0.9.0"]]}}

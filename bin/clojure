@@ -41,11 +41,6 @@ class Clojure
         options.command = :repl
       end
 
-      opt.on '--lein-nailgun [PORT]', Integer, %Q(Same as `#{File.basename __FILE__} --lein "nailgun 127.0.0.1:PORT"`) do |arg|
-        options.command = :lein_nailgun
-        options.ngport = arg if arg
-      end
-
       opt.on '-q', '--quiet' do
         options.quiet = true
       end
@@ -101,8 +96,6 @@ class Clojure
       return lein_daemon(*args)
     when :repl
       rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
-    when :lein_nailgun
-      return lein_daemon("nailgun 127.0.0.1:#{options.ngport}", *args)
     else
       %W[java -server -classpath #{classpath} clojure.main] + args
     end
