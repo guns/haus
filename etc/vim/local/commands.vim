@@ -67,7 +67,7 @@ function! <SID>SetVerbose(bang, ...)
 
     if enable
         let g:SetVerbose = 1
-        set verbose=100 verbosefile=/tmp/vim.log
+        set verbose=100 verbosefile=/tmp/verbose.vim
         echo '♫ BEGIN VERBOSE MODE ♫'
     else
         echo '♫ END VERBOSE MODE ♫'
