@@ -20,5 +20,5 @@
 ;;                                                  /     ###/
 
 {:user {:plugins [[lein-pprint "1.1.1"]
-                  [lein-outdated "0.1.0"]
+                  [lein-tarsier "0.9.1"]
                   [com.sattvik/lein-vimclojure "0.9.0"]]}}
