@@ -20,4 +20,5 @@
 ;;                                                  /     ###/
 
 {:user {:plugins [[lein-pprint "1.1.1"]
+                  [lein-outdated "0.1.0"]
                   [com.sattvik/lein-vimclojure "0.9.0"]]}}
