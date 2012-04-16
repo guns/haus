@@ -187,7 +187,7 @@ endfunction
 
 function! vimclojure#MakeProtectedPlug(mode, plug, f, args)
 	execute a:mode . "noremap <Plug>Clojure" . a:plug
-				\ . " <C-U>:call vimclojure#ProtectedPlug(function(\""
+				\ . " :<C-U>call vimclojure#ProtectedPlug(function(\""
 				\ . a:f . "\"), [ " . a:args . " ])<CR>"
 endfunction
 
@@ -693,10 +693,8 @@ function! vimclojure#EvalBlock()
 	let ns = b:vimclojure_namespace
 
 	let content = vimclojure#GetVisualSelection()
-	call insert(content, '(set! vimclojure.repl/*print-pretty* true)')
 	let result = vimclojure#ExecuteNailWithInput("Repl", content,
 				\ "-r", "-n", ns, "-f", file, "-l", line("'<") - 1)
-	let result.stdout = substitute(result.stdout, '\vtrue\n', '', '')
 
 	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(ns)
 	call resultBuffer.showOutput(result)
@@ -768,7 +766,7 @@ function! vimclojure#Repl.New(namespace) dict
 	let instance = call(self.__superBufferNew, [a:namespace], self)
 	let instance._id = replStart.value.id
 	call vimclojure#ExecuteNailWithInput("Repl",
-				\ "(do (require 'clojure.stacktrace) (set! vimclojure.repl/*print-pretty* true))",
+				\ "(require 'clojure.stacktrace)",
 				\ "-r", "-i", instance._id)
 
 	return instance
