@@ -63,6 +63,11 @@ snippet wm "with-meta" w
 (with-meta $0)
 endsnippet
 
+snippet main "main" w
+(defn -main [$1]
+	$0)
+endsnippet
+
 
 ### Collections {{{1
 
@@ -135,7 +140,7 @@ snippet tn "take-nth" w
 endsnippet
 
 snippet tw "take-while" w
-(take-while ${0:λ} ${1})
+(take-while λ $0)
 endsnippet
 
 snippet nthn "nthnext" w
@@ -267,7 +272,7 @@ snippet quo "quote" w
 endsnippet
 
 snippet map "map" w
-(map ${0:λ} ${1})
+(map λ $0)
 endsnippet
 
 snippet red "reduce" w
@@ -327,7 +332,7 @@ snippet interp "interpose" w
 endsnippet
 
 snippet iter "iterate" w
-(iterate ${1:λ} ${0:arg})
+(iterate $0)
 endsnippet
 
 snippet cat "concat" w
@@ -339,7 +344,7 @@ snippet lc "lazy-cat" w
 endsnippet
 
 snippet ran "range" w
-(range ${0:[] [end] [start end] [start end step]})
+(range $0)
 endsnippet
 
 snippet seq "seq" w
@@ -519,7 +524,7 @@ snippet bind "binding" w
 endsnippet
 
 snippet def "def"
-(def${1} ${0:name})
+(def$0)
 endsnippet
 
 snippet defn "defn"
@@ -528,10 +533,6 @@ endsnippet
 
 snippet defn- "defn-"
 (defn- $0)
-endsnippet
-
-snippet defmem "defn (memoize)"
-(def ${1:name} (memoize ${0:λ}))
 endsnippet
 
 snippet defmul "defmulti"

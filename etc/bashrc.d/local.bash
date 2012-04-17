@@ -884,8 +884,16 @@ HAVE vim && {
             if nc -z 127.0.0.1 "$port" &>/dev/null; then
                 vim -c StartNailgunServer project.clj
             else
+                local seconds=0
                 clojure --lein "vimclojure :port $port" &>/dev/null &
-                ( ( until nc -z 127.0.0.1 "$port"; do sleep 1; done
+                ( ( until nc -z 127.0.0.1 "$port"; do
+                        if ((++seconds < 30)); then
+                            sleep 1
+                        else
+                            notify "Nailgun failed to start."
+                            return
+                        fi
+                    done
                     notify --audio "Nailgun listening on 127.0.0.1:$port"
                 ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
                 vim project.clj
