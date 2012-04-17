@@ -21,4 +21,5 @@
 
 {:user {:plugins [[lein-pprint "1.1.1"]
                   [lein-tarsier "0.9.1"]
-                  [com.sattvik/lein-vimclojure "0.9.0"]]}}
+                  [lein-outdated "0.1.0"]]
+        :dependencies [[clj-ns-browser "1.1.0"]]}}
