@@ -5,7 +5,7 @@
 #  |__|__|___|___|_  |_____|___|_|_|_|___|  guns <self@sungpae.com>
 #                |___|
 
-# RI, but no html generation please
-gem: --no-rdoc
+# No documentation on installation please
+gem: --no-rdoc --no-ri
 
 # vim:ft=yaml:
