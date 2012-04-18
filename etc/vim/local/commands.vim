@@ -51,12 +51,24 @@ command! -bang -bar SetIskeyword call <SID>SetIskeyword('<bang>') "{{{1
 function! <SID>SetIskeyword(bang)
     let nonspaces = '@,1-31,33-127'
     if empty(a:bang)
-        echo  &iskeyword
+        echo &iskeyword
     elseif &iskeyword != nonspaces
         let b:__iskeyword__ = &iskeyword
         execute 'setlocal iskeyword=' . nonspaces
     else
         execute 'setlocal iskeyword=' . b:__iskeyword__
+    endif
+endfunction
+
+
+command! -bang -bar SetDiff call <SID>SetDiff('<bang>') "{{{1
+function! <SID>SetDiff(bang)
+    if empty(a:bang)
+        echo &diff
+    elseif &diff
+        windo execute "if expand(\"%:t\") !=# \"index\" | diffoff | endif"
+    else
+        windo execute "if expand(\"%:t\") !=# \"index\" | diffthis | endif"
     endif
 endfunction
 
