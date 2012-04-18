@@ -1123,6 +1123,10 @@ type ruby &>/dev/null && {
             COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
         }; complete -F _api api
     }
+
+    HAVE yard && {
+        alias yards='run yard server --host yard.api --port 8808'
+    }
 }
 
 
