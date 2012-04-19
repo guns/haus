@@ -136,7 +136,7 @@ function! <SID>LispBufferSetup()
 
     " RECURSIVE map for <Plug> mappings
     nmap <silent> <buffer> K             <Plug>ClojureSourceLookupWord
-    nmap <silent> <buffer> <Leader>q     <Plug>ClojureCloseResultBuffer
+    nmap <silent> <buffer> <Leader>Q     <Plug>ClojureCloseResultBuffer
     nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl
     nmap <silent> <buffer> <Leader>R     <Plug>ClojureStartRepl
     nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileAll
