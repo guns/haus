@@ -71,7 +71,7 @@ augroup GUNS
         \ setlocal iskeyword+=- |
         \ SetWhitespace 2
     autocmd FileType haml
-        \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-n><Right>' |
+        \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> %br'
 
     " CSS {{{1

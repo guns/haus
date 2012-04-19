@@ -19,10 +19,8 @@
 " Bind:   M-x =>   Ctrl-X
 " Bind: v_M-x => v_Ctrl-X
 " Bind: o_M-x => o_Ctrl-X
-" Bind: i_M-x => i_Ctrl-\_Ctrl-N_Ctrl-X
-" Bind: c_M-x => c_Ctrl-\_Ctrl-N_Ctrl-X
 noremap <C-x> <NOP>
-Mapall  <M-x> <C-x>
+noremap <M-x> <C-x>
 
 " Transfer shift-line-right to (ic)<4-]> to free (ic)<C-t>
 " Transfer insert-mode-completions to (ic)<C-t> to free (ic)<C-x>
@@ -72,10 +70,8 @@ snoremap <C-c> <C-\><C-n>
 " Bind:   M-a =>   Ctrl-A
 " Bind: v_M-a => v_Ctrl-A
 " Bind: o_M-a => o_Ctrl-A
-" Bind: i_M-a => i_Ctrl-\_Ctrl-N_Ctrl-A
-" Bind: c_M-a => i_Ctrl-\_Ctrl-N_Ctrl-A
 noremap <C-a> <NOP>
-Mapall  <M-a> <C-a>
+noremap <M-a> <C-a>
 
 " Transfer insert-prev-text / insert-all-completions to (ic)<4-a> to free
 " (ic)<C-a>
@@ -421,8 +417,8 @@ Mapall <4-U> :<C-u>Open<CR>
 MapReadlineUnicodeBindings
 
 " Insert other special characters
-nnoremap <M-CR> i\n<<C-\><C-n><Right>
-vnoremap <M-CR> c\n<C-\><C-n>v
+nnoremap <M-CR> i\n<C-\><C-o><C-\><C-n>
+vnoremap <M-CR> c\n<C-\><C-n>
 noremap! <M-CR> \n
 noremap  <4-CR> A;<C-\><C-n>
 inoremap <4-CR> <C-\><C-o>A;
@@ -467,8 +463,8 @@ vnoremap <4-]> >gv
 " http://vim.wikia.com/wiki/Moving_lines_up_or_down
 nnoremap <M-j> :move+<CR>==
 nnoremap <M-k> :move-2<CR>==
-inoremap <M-j> <C-\><C-n>:move+<CR>==gi
-inoremap <M-k> <C-\><C-n>:move-2<CR>==gi
+inoremap <M-j> <C-\><C-o><C-\><C-n>:move+<CR>==gi
+inoremap <M-k> <C-\><C-o><C-\><C-n>:move-2<CR>==gi
 vnoremap <M-j> :move'>+<CR>gv=gv
 vnoremap <M-k> :move-2<CR>gv=gv
 
@@ -580,7 +576,7 @@ Mapall <4-I> :<C-u>TagbarOpen<CR>
 
 " Plugin: NERD_commenter
 map  <4-/> <Plug>NERDCommenterToggleAlign
-map! <4-/> <C-\><C-n><Plug>NERDCommenterToggleAlign
+imap <4-/> <C-\><C-n><Plug>NERDCommenterToggleAlign
 
 " Plugin: CamelCaseMotion
 map  <C-Left>  <Plug>CamelCaseMotion_b

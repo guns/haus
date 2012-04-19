@@ -144,9 +144,9 @@ function! <SID>LispBufferSetup()
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock
     nmap <silent> <buffer> <Leader><Leader> mp:call PareditSelectCurrentForm()<CR><Leader><Leader>`p
-    imap <silent> <buffer> <Leader><Leader> <C-\><C-n><Leader><Leader><Right>
+    imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
     nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel
-    imap <silent> <buffer> <Leader><C-f>    <C-\><C-n><Leader><C-f><Right>
+    imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
 
     "
     " Paredit
@@ -173,9 +173,9 @@ function! <SID>LispBufferSetup()
 
     " Select next/prev item in list
     nnoremap <silent> <buffer> <Leader>j :<C-u>call PareditSelectListElement(1)<CR>
-    vnoremap <silent> <buffer> <Leader>j <C-c>:<C-u>call PareditSelectListElement(1)<CR>
+    vnoremap <silent> <buffer> <Leader>j <C-\><C-n>:<C-u>call PareditSelectListElement(1)<CR>
     nnoremap <silent> <buffer> <Leader>k :<C-u>call PareditSelectListElement(0)<CR>
-    vnoremap <silent> <buffer> <Leader>k o<C-c><Left>:<C-u>call PareditSelectListElement(0)<CR>
+    vnoremap <silent> <buffer> <Leader>k o<C-\><C-n><Left>:<C-u>call PareditSelectListElement(0)<CR>
 
     " Insert at beginning, end of form
     nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a<Space><Left>
@@ -274,10 +274,10 @@ function! <SID>ScreenSetup(setup)
         " RECURSIVE map for cascading mappings
         execute 'vmap ' . bind . ' :ScreenSend<CR>'
         execute 'nmap ' . bind . ' mp' . select . bind . '`p'
-        execute 'imap ' . bind . ' <C-\><C-n>' . bind . '<Right>'
+        execute 'imap ' . bind . ' <C-\><C-o><C-\><C-n>' . bind
 
         execute 'nmap <Leader><C-f> mp' . topsel . bind . '`p'
-        execute 'imap <Leader><C-f> <C-\><C-n><Leader><C-f><Right>'
+        execute 'imap <Leader><C-f> <C-\><C-o><C-\><C-n><Leader><C-f>'
 
         nmap <Leader>Q :ScreenQuit<CR>
     else
