@@ -51,7 +51,7 @@ command! -bang -bar SetIskeyword call <SID>SetIskeyword('<bang>') "{{{1
 function! <SID>SetIskeyword(bang)
     let nonspaces = '@,1-31,33-127'
     if empty(a:bang)
-        echo &iskeyword
+        set iskeyword?
     elseif &iskeyword != nonspaces
         let b:__iskeyword__ = &iskeyword
         execute 'setlocal iskeyword=' . nonspaces
@@ -64,7 +64,7 @@ endfunction
 command! -bang -bar SetDiff call <SID>SetDiff('<bang>') "{{{1
 function! <SID>SetDiff(bang)
     if empty(a:bang)
-        echo &diff
+        set diff?
     elseif &diff
         windo execute "if expand(\"%:t\") !=# \"index\" | diffoff | endif"
     else
@@ -75,9 +75,11 @@ endfunction
 
 command! -nargs=? -bang -bar SetVerbose call <SID>SetVerbose('<bang>', <f-args>) "{{{1
 function! <SID>SetVerbose(bang, ...)
-    let enable = empty(a:bang) ? a:1 : (exists('g:SetVerbose') ? 0 : 1)
+    let enable = a:0 ? a:1 : (exists('g:SetVerbose') ? 0 : 1)
 
-    if enable
+    if empty(a:bang)
+        set verbose?
+    elseif enable
         let g:SetVerbose = 1
         set verbose=100 verbosefile=/tmp/verbose.vim
         echo '♫ BEGIN VERBOSE MODE ♫'

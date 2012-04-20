@@ -332,6 +332,7 @@ noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
+noremap <Leader><C-v>    :<C-u>SetVerbose!<CR>
 
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>tabedit<Space>
