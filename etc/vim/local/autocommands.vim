@@ -46,7 +46,6 @@ augroup GUNS
         \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |
         \ execute 'noremap <buffer> <Leader><C-b> :B<CR>' |
         \ execute 'noremap <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
-        \ execute 'noremap <buffer> K :silent! ! open http://yard.api/<CR>:redraw!<CR>' |
         \ SetWhitespace 2 8
     " Metasploit doesn't follow community conventions
     autocmd BufRead,BufNewFile $cdmetasploit/*
