@@ -219,6 +219,10 @@ let g:vimclojure#ParenRainbowColors = {
 let g:regbuf_open_command = 'vnew'
 let g:regbuf_edit_open_command = '84vnew'
 
+" Plugin: Org
+let g:org_home = '~/Documents/Org'
+let g:org_agenda_files = [g:org_home . '/TODO.org']
+
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 

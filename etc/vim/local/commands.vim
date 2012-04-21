@@ -480,16 +480,15 @@ endfunction
 command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
 function! <SID>Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
-    let orgdir = expand('~/Documents/Org')
 
     if a:0
         for f in a:000
-            execute tab . 'edit ' . join([orgdir, f . '.org'], '/')
-            execute 'lcd ' . orgdir
+            execute tab . 'edit ' . join([g:org_home, f . '.org'], '/')
+            execute 'lcd ' . g:org_home
         endfor
     else
         if empty(a:bang) | tabnew | endif
-        execute 'lcd ' . orgdir | CommandT
+        execute 'lcd ' . g:org_home | CommandT
     endif
 endfunction
 
