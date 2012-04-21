@@ -9,7 +9,7 @@ PIDFILE="$DATADIR/postmaster.pid"
 OPTIONS=(-w -D "$DATADIR" -l "$LOGFILE" -o '-h 127.0.0.1')
 
 run() { echo "$@"; "$@"; }
-alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(awk 'NR>1 {exit}; {print $1}' "$PIDFILE" 2>/dev/null)" &>/dev/null; }
+alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(sed 1q "$PIDFILE" 2>/dev/null)" &>/dev/null; }
 control() { run sudo -u "$USER" "$PROGRAM" "$1" "${OPTIONS[@]}"; }
 
 start() {
