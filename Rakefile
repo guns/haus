@@ -223,6 +223,7 @@ task :env do # {{{1
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.gitignore --exclude=*.snippets #{proj.base}/ #{dst}/]
+          system *%W[rsync -a --delete --no-owner #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
           nil # Return nil because the work is done
         }
       }

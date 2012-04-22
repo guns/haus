@@ -66,7 +66,7 @@ function! <SID>SetDiff(bang)
     if empty(a:bang)
         set diff?
     elseif &diff
-        windo execute "if expand(\"%:t\") !=# \"index\" | diffoff | endif"
+        windo execute "if expand(\"%:t\") !=# \"index\" | diffoff | setlocal nowrap | endif"
     else
         windo execute "if expand(\"%:t\") !=# \"index\" | diffthis | endif"
     endif
