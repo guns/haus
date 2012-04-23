@@ -1247,6 +1247,8 @@ ALIAS mysql='mysql -p' \
       mysqldump='mysqldump -p' \
       mysqladmin='mysqladmin -p'
 
+ALIAS ppsql='psql postgres'
+
 HAVE sqlite3 && {
     # Param: $1 SQLite db
     sqlite3schema() {
