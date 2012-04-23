@@ -11,6 +11,7 @@ PATH_ARY=(
     {~/.haus,/opt/haus/bin}             # Haus programs
     "$PATH"                             # Existing PATH
     /{,usr/}{,s}bin                     # Canonical Unix PATH
+    /{opt,usr}/X11/bin                  # X11 programs
     /opt/brew/{,s}bin                   # Homebrew (OS X)
     /opt/passenger/bin                  # Phusion Passenger
     /usr/{local/,}games                 # Games

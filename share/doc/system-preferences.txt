@@ -117,4 +117,14 @@ defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
 defaults write com.apple.loginwindow TALLogoutSavesState -bool false
 defaults write com.apple.loginwindow LoginwindowLaunchesRelaunchApps -bool false
 
-# vim: filetype=conf:
+# Disable Spotlight
+mdutil -d /
+mdutil -E /
+launchctl unload -w $(find /System/Library/LaunchDaemons -name "*.mds.*")
+
+# Disable path_helper in /etc/profile
+
+# Disable swap?
+# launchctl unload -w /System/Library/LaunchDaemons/com.apple.dynamic_pager.plist
+
+# vim:filetype=conf:
