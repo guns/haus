@@ -143,28 +143,6 @@ function! vimclojure#ExtractSexpr(toplevel)
 	return vimclojure#util#WithSavedPosition(closure)
 endfunction
 
-" Implementation by Eric Van Dewoestine <ervandew@gmail.com>
-" https://github.com/guns/screen/blob/master/autoload/screen.vim#L393
-function! vimclojure#GetVisualSelection()
-	let lines = getline(line("'<"), line("'>"))
-	let mode = visualmode()
-	let start = col("'<") - 1
-	let end = col("'>") - 1
-	if mode == "v"
-		" slice in end before start in case the selection is only one line
-		let lines[-1] = lines[-1][: end]
-		let lines[0] = lines[0][start :]
-	elseif mode == "\<c-v>"
-		if end < start
-			let [end, start] = [start, end]
-		endif
-		call map(lines, 'v:val[: end]')
-		call map(lines, 'v:val[start :]')
-	endif
-	return lines
-endfunction
-
-
 function! vimclojure#BufferName()
 	let file = expand("%")
 	if file == ""
@@ -174,17 +152,6 @@ function! vimclojure#BufferName()
 endfunction
 
 " Key mappings and Plugs
-function! vimclojure#MakePlug(mode, plug, f, args)
-	if a:mode == "i"
-		let esc = "<ESC>"
-	else
-		let esc = ""
-	endif
-
-	execute a:mode . "noremap <Plug>Clojure" . a:plug
-				\ . " " . esc . ":<C-U>call " . a:f . "(" . a:args . ")<CR>"
-endfunction
-
 function! vimclojure#MakeProtectedPlug(mode, plug, f, args)
 	execute a:mode . "noremap <Plug>Clojure" . a:plug
 				\ . " :<C-U>call vimclojure#ProtectedPlug(function(\""
@@ -202,12 +169,10 @@ function! vimclojure#MapPlug(mode, keys, plug)
 	if exists("g:vimclojure#SetupKeyMap" . a:plug)
 		execute "let doSetup = g:vimclojure#SetupKeyMap" . a:plug
 	else
-		let doSetup = 1
+		let doSetup = g:vimclojure#SetupKeyMap
 	endif
 
-	if g:vimclojure#SetupKeyMap
-				\ && doSetup
-				\ && !hasmapto("<Plug>Clojure" . a:plug, a:mode)
+	if doSetup && !hasmapto("<Plug>Clojure" . a:plug, a:mode)
 		execute a:mode . "map <buffer> <unique> <silent> <LocalLeader>" . a:keys
 					\ . " <Plug>Clojure" . a:plug
 	endif
@@ -692,7 +657,7 @@ function! vimclojure#EvalBlock()
 	let file = vimclojure#BufferName()
 	let ns = b:vimclojure_namespace
 
-	let content = vimclojure#GetVisualSelection()
+	let content = vimclojure#util#Yank("l", 'normal! gv"ly')
 	let result = vimclojure#ExecuteNailWithInput("Repl", content,
 				\ "-r", "-n", ns, "-f", file, "-l", line("'<") - 1)
 
@@ -741,6 +706,7 @@ endfunction
 let vimclojure#Repl = copy(vimclojure#Buffer)
 let vimclojure#Repl.__superBufferNew = vimclojure#Repl.New
 let vimclojure#Repl.__superBufferInit = vimclojure#Repl.Init
+let vimclojure#Repl.__superBufferClear = vimclojure#Repl.clear
 
 let vimclojure#Repl._history = []
 let vimclojure#Repl._historyDepth = 0
@@ -851,6 +817,11 @@ endfunction
 function! vimclojure#Repl.showPrompt() dict
 	call self.showText(self._prompt . " ")
 	normal! G$
+endfunction
+
+function! vimclojure#Repl.clear() dict
+	call self.__superBufferClear()
+	call self.showPrompt()
 endfunction
 
 function! vimclojure#Repl.getCommand() dict
