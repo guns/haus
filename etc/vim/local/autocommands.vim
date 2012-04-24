@@ -52,6 +52,10 @@ augroup GUNS
         \ setlocal noexpandtab |
         \ SetWhitespace 4
 
+    " Rails {{{1
+    autocmd FileType railslog
+        \ AnsiEsc
+
     " Python {{{1
     autocmd FileType python
         \ SetWhitespace 4
