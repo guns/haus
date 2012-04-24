@@ -3,7 +3,7 @@
 ###########################################################################
 
 snippet anaf "accepts_nested_attributes_for"
-accepts_nested_attributes_for :${1:association_name}${2:${3:, :allow_destroy => true}${4:, :reject_if => proc { |obj| ${5:obj.blank?} \}}}
+accepts_nested_attributes_for :${1:association_name}${2:${3:, :allow_destroy => true}${4:, :reject_if => proc \{ |obj| ${5:obj.blank?} \}}}
 
 endsnippet
 
@@ -227,31 +227,31 @@ assert_response :${1:success}, @response.body$0
 endsnippet
 
 snippet aftc "after_create"
-after_create 
+after_create $0
 endsnippet
 
 snippet aftd "after_destroy"
-after_destroy 
+after_destroy $0
 endsnippet
 
 snippet afts "after_save"
-after_save 
+after_save $0
 endsnippet
 
 snippet aftu "after_update"
-after_update 
+after_update $0
 endsnippet
 
 snippet aftv "after_validation"
-after_validation 
+after_validation $0
 endsnippet
 
 snippet aftvoc "after_validation_on_create"
-after_validation_on_create 
+after_validation_on_create $0
 endsnippet
 
 snippet aftvou "after_validation_on_update"
-after_validation_on_update 
+after_validation_on_update $0
 endsnippet
 
 snippet asg "assert(var = assigns(:var))"
@@ -298,31 +298,31 @@ end}
 endsnippet
 
 snippet befc "before_create"
-before_create 
+before_create $0
 endsnippet
 
 snippet befd "before_destroy"
-before_destroy 
+before_destroy $0
 endsnippet
 
 snippet befs "before_save"
-before_save 
+before_save $0
 endsnippet
 
 snippet befu "before_update"
-before_update 
+before_update $0
 endsnippet
 
 snippet befv "before_validation"
-before_validation 
+before_validation $0
 endsnippet
 
 snippet befvoc "before_validation_on_create"
-before_validation_on_create 
+before_validation_on_create $0
 endsnippet
 
 snippet befvou "before_validation_on_update"
-before_validation_on_update
+before_validation_on_update $0
 endsnippet
 
 snippet bt "belongs_to (bt)"
@@ -691,6 +691,20 @@ t.timestamps
 t.$0
 endsnippet
 
+snippet V "Validator" w
+class ${1}Validator < ActiveModel::EachValidator
+	def validate_each rec, att, val
+		unless val$0
+			rec.errors[att] << "must be a $1"
+		end
+	end
+end
+endsnippet
+
+snippet val "validates" w
+validates $0
+endsnippet
+
 snippet vaoif "validates_acceptance_of if"
 validates_acceptance_of :${1:terms}${2:${3:, :accept => "${4:1}"}${5:, :message => "${6:You must accept the terms of service}"}}, :if => proc { |obj| ${7:obj.condition?} }}
 endsnippet
@@ -820,7 +834,7 @@ class ${1:Model}Sweeper < ActionController::Caching::Sweeper
   private
 
     def expire_cache(${1/./\l$0/})
-      ${0:expire_page ${1/./\l$0/}s_path 
+      ${0:expire_page ${1/./\l$0/}s_path
       expire_page ${1/./\l$0/}_path(${1/./\l$0/})}
     end
 
@@ -890,6 +904,16 @@ endsnippet
 snippet setup "setup do..end"
 setup do
 	$0
+end
+endsnippet
+
+snippet trans "Translation snippet"
+I18n.t('`!v substitute(substitute(substitute(@%, substitute(getcwd() . "/", "\/", "\\\\/", "g"), "", ""), "\\(\\.\\(html\\|js\\)\\.\\(haml\\|erb\\)\\|\\(_controller\\)\\?\\.rb\\)$", "", ""), "/", ".", "g")`.${2:${1/[^\w]/_/g}}${3}', :default => "${1:some_text}"${4})${5:$0}
+endsnippet
+
+snippet route_spec
+it 'routes to #${1:action}' do
+  ${2:get}('/${3:url}').should route_to('`!v substitute(expand('%:t:r'), '_routing_spec$', '', '')`#$1'${4:, ${5:params}})${6}
 end
 endsnippet
 

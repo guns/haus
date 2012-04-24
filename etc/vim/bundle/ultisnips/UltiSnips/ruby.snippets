@@ -55,7 +55,7 @@ endsnippet
 ### SYNTAX HELPERS {{{
 
 snippet do "do || end" w
-do${1: |${2:obj}|}
+do${1: |${2:obj}|}$0
 end
 endsnippet
 
@@ -577,31 +577,6 @@ endsnippet
 snippet nam "namespace" b
 namespace :$1 do
 	$0
-end
-endsnippet
-
-
-### RAILS {{{1
-
-snippet log "log" w
-Rails.logger.debug $0
-endsnippet
-
-snippet aa "attr_accessible" w
-attr_accessible $0
-endsnippet
-
-snippet va "validates" w
-validates $0
-endsnippet
-
-snippet V "Validator" w
-class ${1}Validator < ActiveModel::EachValidator
-	def validate_each rec, att, val
-		unless val$0
-			rec.errors[att] << "must be a $1"
-		end
-	end
 end
 endsnippet
 
