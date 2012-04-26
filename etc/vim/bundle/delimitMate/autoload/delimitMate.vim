@@ -194,8 +194,8 @@ function! delimitMate#FlushBuffer() " {{{
 	return ''
 endfunction " }}}
 
-function! delimitMate#AddToBuffer(c) "{{{
-	call insert(b:_l_delimitMate_buffer, a:c)
+function! delimitMate#AddToBuffer(str) "{{{
+	call insert(b:_l_delimitMate_buffer, a:str)
 endfunction "delimitMate#AddToBuffer }}}
 
 function! delimitMate#BalancedParens(char) "{{{
@@ -300,6 +300,7 @@ function! delimitMate#ParenDelim(char) " {{{
 	endif
 	let line = getline('.')
 	let col = col('.')-2
+	let tail = len(line) == (col + 1) ? b:_l_delimitMate_eol_marker : ''
 	let left = b:_l_delimitMate_left_delims[index(b:_l_delimitMate_right_delims,a:char)]
 	let smart_matchpairs = substitute(b:_l_delimitMate_smart_matchpairs, '\\!', left, 'g')
 	let smart_matchpairs = substitute(smart_matchpairs, '\\#', a:char, 'g')
@@ -312,8 +313,8 @@ function! delimitMate#ParenDelim(char) " {{{
 		call delimitMate#AddToBuffer(a:char)
 	else
 		"echom string(col).':'.line[:(col)].'|'.line[(col+1):]
-		call setline('.',line[:(col)].a:char.line[(col+1):])
-		call delimitMate#AddToBuffer(a:char)
+		call setline('.',line[:(col)].a:char.tail.line[(col+1):])
+		call delimitMate#AddToBuffer(a:char . tail)
 	endif
 	return ''
 endfunction " }}}
@@ -438,22 +439,30 @@ function! delimitMate#ExpandSpace() "{{{
 endfunction "}}}
 
 function! delimitMate#BS() " {{{
+	let buffer_tail = get(b:_l_delimitMate_buffer, '-1', '')
 	if delimitMate#IsForbidden("")
-		return "\<BS>"
+		let extra = ''
+	elseif &backspace !~ 'start\|2' && empty(b:_l_delimitMate_buffer)
+		let extra = ''
+	elseif delimitMate#WithinEmptyPair()
+		let extra = delimitMate#Del()
+	elseif delimitMate#IsSpaceExpansion()
+		let extra = delimitMate#Del()
+	elseif delimitMate#IsCRExpansion()
+		let extra = repeat("\<Del>", len(matchstr(getline(line('.') + 1), '^\s*\S')))
+	else
+		let extra = ''
 	endif
-	if &backspace !~ 'start\|2' && empty(b:_l_delimitMate_buffer)
-		return "\<BS>"
+	let tail_re = '\m\C\%('
+				\ . join(b:_l_delimitMate_right_delims, '\|')
+				\ . '\)'
+				\ . escape(b:_l_delimitMate_eol_marker, '\*.^$')
+				\ . '$'
+	if buffer_tail =~ tail_re && search('\%#'.tail_re, 'cWn')
+		let extra .= join(map(split(b:_l_delimitMate_eol_marker, '\zs'),
+					\ 'delimitMate#Del()'), '')
 	endif
-	if delimitMate#WithinEmptyPair()
-		return "\<BS>" . delimitMate#Del()
-	endif
-	if delimitMate#IsSpaceExpansion()
-		return "\<BS>" . delimitMate#Del()
-	endif
-	if delimitMate#IsCRExpansion()
-		return "\<BS>" . repeat("\<Del>", len(matchstr(getline(line('.') + 1), '^\s*\S')))
-	endif
-	return "\<BS>"
+	return "\<BS>" . extra
 endfunction " }}} delimitMate#BS()
 
 function! delimitMate#Del() " {{{
@@ -612,7 +621,7 @@ function! delimitMate#TestMappings() "{{{
 endfunction "}}}
 
 function! delimitMate#OptionsList() "{{{
-	return {'autoclose' : 1,'matchpairs': &matchpairs, 'quotes' : '" '' `', 'nesting_quotes' : [], 'expand_cr' : 0, 'expand_space' : 0, 'smart_quotes' : 1, 'smart_matchpairs' : '\w', 'balance_matchpairs' : 0, 'excluded_regions' : 'Comment', 'excluded_ft' : '', 'apostrophes' : ''}
+	return {'autoclose' : 1,'matchpairs': &matchpairs, 'quotes' : '" '' `', 'nesting_quotes' : [], 'expand_cr' : 0, 'expand_space' : 0, 'smart_quotes' : 1, 'smart_matchpairs' : '\w', 'balance_matchpairs' : 0, 'excluded_regions' : 'Comment', 'excluded_ft' : '', 'eol_marker': '', 'apostrophes' : ''}
 endfunction " delimitMate#OptionsList }}}
 "}}}
 
