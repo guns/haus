@@ -1,7 +1,7 @@
 " paredit.vim:
 "               Paredit mode for Slimv
-" Version:      0.9.6
-" Last Change:  13 Mar 2012
+" Version:      0.9.7
+" Last Change:  24 Apr 2012
 " Maintainer:   Tamas Kovacs <kovisoft at gmail dot com>
 " License:      This file is placed in the public domain.
 "               No warranty, express or implied.
@@ -126,6 +126,11 @@ function! PareditInitBuffer()
         execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w(  :<C-U>call PareditWrapSelection("(",")")<CR>'
         execute 'nnoremap <buffer> <silent> ' . g:paredit_leader.'w"  :<C-U>call PareditWrap('."'".'"'."','".'"'."')<CR>"
         execute 'vnoremap <buffer> <silent> ' . g:paredit_leader.'w"  :<C-U>call PareditWrapSelection('."'".'"'."','".'"'."')<CR>"
+        " Spliec s-expression killing backward/forward
+        execute 'nmap     <buffer> <silent> ' . g:paredit_leader.'<Up>    d[(,S'
+        execute 'nmap     <buffer> <silent> ' . g:paredit_leader.'<Down>  d])%,S'
+        " Raise s-expression
+        execute 'nmap     <buffer> <silent> ' . g:paredit_leader.'I       yiwdab"0Pb'
         if &ft == 'clojure'
             inoremap <buffer> <expr>   [            PareditInsertOpening('[',']')
             inoremap <buffer> <expr>   ]            PareditInsertClosing('[',']')
@@ -383,22 +388,34 @@ function! s:InsideString( ... )
     return s:SynIDMatch( '[Ss]tring', l, c, 0 )
 endfunction
 
-" Is this a Slimv REPL buffer?
+" Is this a Slimv or VimClojure REPL buffer?
 function! s:IsReplBuffer()
     if exists( 'g:slimv_repl_name' )
         return bufnr( g:slimv_repl_name ) == bufnr( '%' )
+    elseif exists( 'b:vimclojure_repl' )
+        return 1
     else
         return 0
     endif
 endfunction
 
-" Get Slimv REPL buffer last command prompt position
+" Get Slimv or VimClojure REPL buffer last command prompt position
 " Return [0, 0] if this is not the REPL buffer
 function! s:GetReplPromptPos()
     if !s:IsReplBuffer()
         return [0, 0]
     endif
-    return [ b:repl_prompt_line, b:repl_prompt_col ]
+    if exists( 'b:vimclojure_repl')
+        let cur_pos = getpos( '.' )
+        call cursor( line( '$' ), 1)
+        call cursor( line( '.' ), col( '$') )
+        call search( b:vimclojure_namespace . '=>', 'bcW' )
+        let target_pos = getpos( '.' )[1:2]
+        call setpos( '.', cur_pos )
+        return target_pos
+    else
+        return [ b:repl_prompt_line, b:repl_prompt_col ]
+    endif
 endfunction
 
 " Is the current top level form balanced, i.e all opening delimiters
