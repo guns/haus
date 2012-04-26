@@ -29,8 +29,8 @@ endfunction
 function! s:shellesc(arg) abort
   if a:arg =~ '^[A-Za-z0-9_/.-]\+$'
     return a:arg
-  elseif &shell =~# 'cmd' && a:arg !~# '"'
-    return '"'.a:arg.'"'
+  elseif &shell =~# 'cmd'
+    return '"'.s:gsub(s:gsub(a:arg, '"', '""'), '\%', '"%"').'"'
   else
     return shellescape(a:arg)
   endif
@@ -1951,6 +1951,7 @@ function! s:BufReadIndex()
         execute cd.'`=dir`'
       endtry
       set ft=gitcommit
+      set foldtext=fugitive#foldtext() foldmethod=syntax foldlevel=1
     endif
     setlocal ro noma nomod noswapfile
     if &bufhidden ==# ''
