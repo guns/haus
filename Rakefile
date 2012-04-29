@@ -225,6 +225,11 @@ task :env do # {{{1
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.gitignore --exclude=*.snippets #{proj.base}/ #{dst}/]
           system *%W[rsync -a --delete --no-owner #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
           nil # Return nil because the work is done
+        },
+        # Allow non-privileged user to edit snippets
+        :after  => lambda { |proj|
+          snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
+          chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false if ENV.has_key? 'SUDO_USER'
         }
       }
     ],
