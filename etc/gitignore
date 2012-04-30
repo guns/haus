@@ -5,7 +5,6 @@
 
 # Windows
 Thumbs.db
-*.exe
 
 # Vim
 *.swp
