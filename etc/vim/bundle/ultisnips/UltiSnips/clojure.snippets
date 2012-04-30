@@ -524,7 +524,7 @@ snippet bind "binding" w
 endsnippet
 
 snippet def "def"
-(def$0)
+(def $0)
 endsnippet
 
 snippet defn "defn"
@@ -535,22 +535,10 @@ snippet defn- "defn-"
 (defn- $0)
 endsnippet
 
-snippet defmul "defmulti"
-(defmulti ${1:name}
-	${2:"${3:docstring}"
-	}${0:dispatch-function})
-endsnippet
-
-snippet defmet "defmethod"
-(defmethod ${1:multi-name} ${2::default} ${0:[] fn-tail})
-endsnippet
-
-snippet defs "defstruct"
-(defstruct ${1:name} ${0:keys})
-endsnippet
-
-snippet defa "def (accessor)"
-(def ${1:name} (accessor ${2:struct} ${0::$1}))
+snippet defm "def memoize" w
+(def $1
+	(memoize
+		(fn [$0] )))
 endsnippet
 
 snippet decl "declare" w
@@ -670,7 +658,7 @@ endsnippet
 snippet condp "condp" w
 (condp ${0:λ} value
 	match [result | [:>> λ]]
-	(comment else)
+	(comment else))
 endsnippet
 
 snippet and "and" w
@@ -753,6 +741,10 @@ endsnippet
 
 snippet rese "reset!" w
 (reset! $0)
+endsnippet
+
+snippet at "atom" w
+(atom $0)
 endsnippet
 
 

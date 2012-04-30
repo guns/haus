@@ -32,12 +32,12 @@ call vimclojure#MakeCommandPlug("n", "SourceLookupInteractive", "vimclojure#Sour
 call vimclojure#MakeCommandPlug("n", "GotoSourceWord", "vimclojure#GotoSource", "expand(\"<cword>\")")
 call vimclojure#MakeCommandPlug("n", "GotoSourceInteractive", "vimclojure#GotoSource", "input(\"Symbol to go to: \")")
 
-call vimclojure#MakeCommandPlug("n", "RequireFile", "vimclojure#RequireFile", "0")
+call vimclojure#MakeCommandPlug("n", "RequireFileCurrent", "vimclojure#RequireFile", "0")
 call vimclojure#MakeCommandPlug("n", "RequireFileAll", "vimclojure#RequireFile", "1")
 
 call vimclojure#MakeCommandPlug("n", "RunTests", "vimclojure#RunTests", "0")
 
-call vimclojure#MakeCommandPlug("n", "MacroExpand",  "vimclojure#MacroExpand", "0")
+call vimclojure#MakeCommandPlug("n", "MacroExpandAll", "vimclojure#MacroExpand", "0")
 call vimclojure#MakeCommandPlug("n", "MacroExpand1", "vimclojure#MacroExpand", "1")
 
 call vimclojure#MakeCommandPlug("n", "EvalFile",      "vimclojure#EvalFile", "")

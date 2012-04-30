@@ -141,7 +141,7 @@ function! <SID>LispBufferSetup()
     nmap <silent> <buffer> <Leader>Q     <Plug>ClojureCloseResultBuffer
     nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl
     nmap <silent> <buffer> <Leader>R     <Plug>ClojureStartRepl
-    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileAll
+    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileCurrent
 
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock

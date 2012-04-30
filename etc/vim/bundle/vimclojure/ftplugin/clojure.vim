@@ -116,12 +116,12 @@ call vimclojure#MapPlug("n", "si", "SourceLookupInteractive")
 call vimclojure#MapPlug("n", "gw", "GotoSourceWord")
 call vimclojure#MapPlug("n", "gi", "GotoSourceInteractive")
 
-call vimclojure#MapPlug("n", "rf", "RequireFile")
+call vimclojure#MapPlug("n", "rf", "RequireFileCurrent")
 call vimclojure#MapPlug("n", "rF", "RequireFileAll")
 
 call vimclojure#MapPlug("n", "rt", "RunTests")
 
-call vimclojure#MapPlug("n", "me", "MacroExpand")
+call vimclojure#MapPlug("n", "me", "MacroExpandAll")
 call vimclojure#MapPlug("n", "m1", "MacroExpand1")
 
 call vimclojure#MapPlug("n", "ef", "EvalFile")
