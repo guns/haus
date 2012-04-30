@@ -881,7 +881,7 @@ HAVE vim && {
         local port="${1:-2113}"
         if [[ -e project.clj ]] || cd ~/.clojure; then
             if nc -z 127.0.0.1 "$port" &>/dev/null; then
-                vim -c StartNailgunServer project.clj
+                vim -c StartNailgunServer -c CommandT
             else
                 local seconds=0
                 clojure --lein "vimclojure :port $port" &>/dev/null &
@@ -895,7 +895,7 @@ HAVE vim && {
                     done
                     notify --audio "Nailgun listening on 127.0.0.1:$port"
                 ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
-                vim project.clj
+                vim -c CommandT
             fi
         fi
     }
