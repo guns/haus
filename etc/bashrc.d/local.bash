@@ -36,7 +36,7 @@ LESS_ARY=(
     --no-init                           # Prevent use of alternate screen
     --tilde                             # Do not show nonextant lines as `~`
     --shift 8                           # Horizontal movement in columns
-); GC_VARS LESSARY
+); GC_VARS LESS_ARY
 export LESS="${LESS_ARY[@]}"
 export LESSSECURE=1                     # ++secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
