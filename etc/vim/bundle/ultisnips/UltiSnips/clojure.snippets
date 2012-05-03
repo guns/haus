@@ -275,6 +275,14 @@ snippet map "map" w
 (map λ $0)
 endsnippet
 
+snippet mapv "mapv" w
+(mapv λ $0)
+endsnippet
+
+snippet mapc "mapcat" w
+(mapcat λ $0)
+endsnippet
+
 snippet red "reduce" w
 (reduce λ $0)
 endsnippet
@@ -800,6 +808,14 @@ endsnippet
 
 snippet spi "spit" w
 (spit $0)
+endsnippet
+
+
+### Testing {{{1
+
+snippet tis "clojure.test/is" w
+(clojure.test/is
+	$0)
 endsnippet
 
 
