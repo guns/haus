@@ -199,12 +199,16 @@ setx() {
 
 # Toggle history
 nohist() {
-    if [[ "$SHELLOPTS" =~ :?history:? ]]; then
-        set +o history
+    if [[ "$HISTFILE" ]]; then
+        HISTFILE_DISABLED="$HISTFILE"
+        unset HISTFILE
+        xecho title 'nohist'
     else
-        set -o history
+        HISTFILE="${HISTFILE_DISABLED:=$HOME/.bash_history}"
+        unset HISTFILE_DISABLED
+        xecho title 'HIST'
     fi
-    __ps1toggle__ '/\\w/\\w [nohist]'
+    __ps1toggle__ '/\\H/[nohist] \\H'
 }
 
 # notify

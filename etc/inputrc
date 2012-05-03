@@ -176,6 +176,7 @@ $if Bash
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] (xreload &); tmuxeval \n"
     "\C-xV":        display-shell-version
+    "\C-x\\":       "\C-] nohist \n"
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
