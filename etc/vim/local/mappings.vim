@@ -411,6 +411,12 @@ Mapall <4-X> :<C-u>pclose<CR>
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
 
+" Position terminal window
+Mapall <Nul>h :silent!\ !xecho\ nw<CR>:redraw!<CR>
+Mapall <Nul>j :silent!\ !xecho\ s<CR>:redraw!<CR>
+Mapall <Nul>k :silent!\ !xecho\ n<CR>:redraw!<CR>
+Mapall <Nul>l :silent!\ !xecho\ ne<CR>:redraw!<CR>
+
 
 """ Text editing {{{1
 
