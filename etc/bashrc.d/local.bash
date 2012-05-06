@@ -1405,7 +1405,7 @@ HAVE feh && {
     frand() { feh --recursive --randomize "${@:-.}"; }
     ftime() {
         ruby -e '
-            fs = (ARGV.empty? ? Dir["*"] : ARGV).reject { |f| Dir.exists? f }
+            fs = Dir[File.join(ARGV.first || "", "*")].reject { |f| File.directory? f }
             exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
