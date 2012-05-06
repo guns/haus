@@ -77,7 +77,7 @@ task :env do # {{{1
       { :base => "#{@vim}/delimitMate",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/devbox-dark-256",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/diff_movement",          :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/gitv",                   :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/gitv",                   :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/gnupg",                  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/gundo.vim",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/help_movement",          :branch => %w[master],      :files => :pathogen },
