@@ -2,10 +2,11 @@
 
 NAME='mysqld'
 PROGRAM="${PROGRAM:=/opt/brew/bin/mysqld_safe}"
-PIDFILE="/var/run/$NAME.pid"
+PIDFILE="/srv/db/mysql/$NAME.pid"
 OPTIONS=(--pid-file="$PIDFILE")
 
 run() { echo "$@"; "$@"; }
+bgrun() { echo "$@"; "$@" &>/dev/null & }
 alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" &>/dev/null; }
 
 start() {
@@ -13,7 +14,7 @@ start() {
         echo "$NAME is already running."
         return 1
     else
-        run "$PROGRAM" "${OPTIONS[@]}"
+        bgrun "$PROGRAM" "${OPTIONS[@]}"
     fi
 }
 
