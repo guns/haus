@@ -164,6 +164,8 @@ set visible-stats on
 "\eT":          "θ"         U+03B8
 "\eV":          "⚡"         U+26A1
 "\ev":          "✔"         U+2714
+"\eW":          "Ω"         U+03A9
+"\ew":          "ω"         U+03C9
 "\eX":          "✖"         U+2716
 "\ex":          "×"         U+00D7
 
