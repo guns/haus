@@ -30,8 +30,6 @@ endif
 
 " Global Variables {{{
 
-let g:UltiSnipsLoaded = 1
-
 " The trigger used to expand a snippet.
 " NOTE: expansion and forward jumping can, but needn't be the same trigger
 if !exists("g:UltiSnipsExpandTrigger")
@@ -226,6 +224,7 @@ exec g:_uspy "UltiSnips_Manager.backward_trigger = vim.eval('g:UltiSnipsJumpBack
 au CursorMovedI * call UltiSnips_CursorMoved()
 au CursorMoved * call UltiSnips_CursorMoved()
 au BufLeave * call UltiSnips_LeavingBuffer()
+autocmd FileType * call UltiSnips_FileTypeChanged()
 
 call UltiSnips_MapKeys()
 

@@ -1,4 +1,4 @@
 " recognize .snippet files
-if has("autocmd") && has("g:UltiSnipsLoaded")
+if has("autocmd")
     autocmd BufNewFile,BufRead *.snippets setf snippets
 endif
