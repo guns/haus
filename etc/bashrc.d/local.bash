@@ -701,6 +701,9 @@ if __OSX__; then
     alias flushdns='run dscacheutil -flushcache'
 fi
 
+# NTP
+alias ntpq='ntpd -g -q'
+
 # netcat
 HAVE nc   && TCOMP dig nc
 HAVE ncat && TCOMP dig ncat
