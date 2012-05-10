@@ -30,6 +30,8 @@ endif
 
 " Global Variables {{{
 
+let g:UltiSnipsLoaded = 1
+
 " The trigger used to expand a snippet.
 " NOTE: expansion and forward jumping can, but needn't be the same trigger
 if !exists("g:UltiSnipsExpandTrigger")
