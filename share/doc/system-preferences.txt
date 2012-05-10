@@ -121,6 +121,7 @@ defaults write com.apple.loginwindow LoginwindowLaunchesRelaunchApps -bool false
 mdutil -d /
 mdutil -E /
 launchctl unload -w $(find /System/Library/LaunchDaemons -name "*.mds.*")
+chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search
 
 # Disable path_helper in /etc/profile
 
