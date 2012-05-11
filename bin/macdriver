@@ -167,6 +167,10 @@ class Macdriver
         Options:\
       ).gsub /^ {8}/, ''
 
+      opt.on '-r A,B,C', Array, 'Use directories as kext repositories' do |arg|
+        options.repositories = arg
+      end
+
       opt.on '-f', '--cache-file PATH', 'Path to kext graph cache file; default: %s' % options.cache_file do |arg|
         options.cache_file = arg
       end
@@ -261,13 +265,17 @@ class Macdriver
   def kextunload id
     3.times do |n|
       sleep n
-      return true if sh *%W[kextunload -b #{id}]
+      return true if sh 'kextunload', '-b', id
     end
     nil
   end
 
   def kextload id
-    sh *%W[kextload -b #{id}]
+    if options.repositories
+      sh 'kextload', *options.repositories.map { |r| ['-r', r] }.flatten, '-b', id
+    else
+      sh 'kextload', '-b', id
+    end
   end
 
   def unload *ids

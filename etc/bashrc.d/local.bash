@@ -1342,6 +1342,18 @@ ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
     }
 }
 
+# VirtualBox
+if [[ -d /Applications/VirtualBox.app ]]; then
+    vboxtoggle() {
+        local ids=(org.virtualbox.kext.VBoxDrv org.virtualbox.kext.VBoxNetAdp org.virtualbox.kext.VBoxNetFlt org.virtualbox.kext.VBoxUSB)
+        if [[ -z $(kextstat -l -b "${ids[0]}") ]]; then
+            run macdriver load -r /Library/Extensions "${ids[@]}"
+        else
+            run macdriver unload -r /Library/Extensions "${ids[@]}"
+        fi
+    }
+fi
+
 
 ### Package Managers {{{1
 
@@ -1419,6 +1431,9 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
 # VLC
 ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
+
+# Quick Look (OS X)
+HAVE qlmanage && alias ql='bgrun qlmanage -p'
 
 
 ### X {{{1
