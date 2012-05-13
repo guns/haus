@@ -158,7 +158,7 @@ set visible-stats on
 "\eH":          "❦"         U+2766
 "\el":          "λ"         U+03BB
 "\ep":          "π"         U+03C0
-"\es":          "⚓"         U+2693
+"\es":          "★"         U+2605
 "\eS":          "Σ"         U+03A3
 "\et":          "τ"         U+03C4
 "\eT":          "θ"         U+03B8
@@ -279,8 +279,9 @@ $if Ruby
     "\C-xr":        "\C-]require ''\C-b"
 
     # interactive_editor
-    "\033\007e":    "\C-]vim \"/tmp/#{ENV['USER']}.interactive-editor.rb\"\n"
-    "\C-xe":        "\C-]vim "
+    "\033\007e":    "\C-] vim \n"
+    "\C-x\C-e":     "\C-] vim \n"
+    "\C-xe":        "\C-]vim \"/tmp/.interactive-editor.rb\"\eb\eb\eb\C-b"
 $endif
 
 
