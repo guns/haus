@@ -144,9 +144,9 @@ class Remind
             #{program} 10pm     It is now ten in the evening.
             #{program} 22:00    It is now ten in the evening.
 
-        Specifying time as `-` reads the message from STDIN:
+        Specifying message as `-` reads the message from STDIN:
 
-            #{program} - < dramatic-reading.txt
+            #{program} 5 - < dramatic-reading.txt
 
         Options:\
       ).gsub /^ {8}/, ''
