@@ -1471,22 +1471,6 @@ if HAVE launchctl; then
 fi
 
 
-### Games {{{1
-
-HAVE nethack && {
-    alias nethack='env NETHACKOPTIONS="@~/src/nethack/etc/nethackrc" command nethack -u-u'
-    alias nethackwiz="nethack -u $USER -D"
-    HAVE rxvt && {
-        nethackterm() {(
-            cd ~/src/nethack/source &&
-            run xset +fp ~/src/nethack/etc &&
-            run xset fp rehash &&
-            bgrun rxvt -fn vga11x19 -geometry 115x39 -fg white -cr white -title NetHack --meta8
-        )}
-    }
-}
-
-
 ### GUI programs {{{1
 
 if __OSX__; then
