@@ -151,6 +151,8 @@
     # misc
     ls  = ls-files
     lso = ls-files -o
+    lsu = ls-files -o --exclude-standard
     st  = status --short
+    fd  = clean -fd
     fdx = clean -fdx
     rp  = rev-parse
