@@ -267,9 +267,10 @@ task :update => :env do
 
   if Task::Update.new(@subprojects, opts).call
     Task::Update.helptags
+    CLI::Notification.new(:message => 'Haus update complete.').call
+  else
+    CLI::Notification.new(:message => 'Haus update failed.').call
   end
-
-  CLI::Notification.new(:message => 'Haus update complete.').call
 
   exit # Stop processing tasks!
 end
