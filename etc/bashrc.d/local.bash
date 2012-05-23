@@ -884,28 +884,30 @@ HAVE vim && {
     }
 
     # Open local REPL project
-    vimclojure() {
-        local port="${1:-2113}"
-        if [[ -e project.clj ]] || cd ~/.clojure; then
-            if nc -z 127.0.0.1 "$port" &>/dev/null; then
-                vim -c StartNailgunServer -c CommandT
-            else
-                local seconds=0
-                clojure --lein "vimclojure :port $port" &>/dev/null &
-                ( ( until nc -z 127.0.0.1 "$port"; do
-                        if ((++seconds < 30)); then
-                            sleep 1
-                        else
-                            notify "Nailgun failed to start."
-                            return
-                        fi
-                    done
-                    notify --audio "Nailgun listening on 127.0.0.1:$port"
-                ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
-                vim -c CommandT
+    if ((EUID)); then
+        vimclojure() {
+            local port="${1:-2113}"
+            if [[ -e project.clj ]] || cd ~/.clojure; then
+                if nc -z 127.0.0.1 "$port" &>/dev/null; then
+                    vim -c StartNailgunServer -c CommandT
+                else
+                    local seconds=0
+                    clojure --lein "vimclojure :port $port" &>/dev/null &
+                    ( ( until nc -z 127.0.0.1 "$port"; do
+                            if ((++seconds < 30)); then
+                                sleep 1
+                            else
+                                notify "Nailgun failed to start."
+                                return
+                            fi
+                        done
+                        notify --audio "Nailgun listening on 127.0.0.1:$port"
+                    ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
+                    vim -c CommandT
+                fi
             fi
-        fi
-    }
+        }
+    fi
 
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)
