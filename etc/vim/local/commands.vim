@@ -156,6 +156,7 @@ function! <SID>LispBufferSetup()
 
     " Initialize Paredit, but don't create any mappings
     let g:paredit_mode = 0
+    let g:paredit_electric_return = 0
     call PareditInitBuffer()
     let g:paredit_mode = 1
 
@@ -167,11 +168,14 @@ function! <SID>LispBufferSetup()
 
     " Auto-balancing insertion
     inoremap <silent> <buffer> <expr> ( PareditInsertOpening('(',')')
-    inoremap <silent> <buffer> <expr> ) PareditInsertClosing('(',')')
     inoremap <silent> <buffer> <expr> [ PareditInsertOpening('[',']')
-    inoremap <silent> <buffer> <expr> ] PareditInsertClosing('[',']')
     inoremap <silent> <buffer> <expr> { PareditInsertOpening('{','}')
-    inoremap <silent> <buffer> <expr> } PareditInsertClosing('{','}')
+    inoremap <silent> <buffer> <silent> ) <C-o>:<C-u>call PareditInsertClosing('(',')')<CR>
+    inoremap <silent> <buffer> <silent> ] <C-o>:<C-u>call PareditInsertClosing('[',']')<CR>
+    inoremap <silent> <buffer> <silent> } <C-o>:<C-u>call PareditInsertClosing('{','}')<CR>
+    if g:paredit_electric_return
+        inoremap <buffer> <expr> <CR> PareditEnter()
+    endif
 
     " Select next/prev item in list
     nnoremap <silent> <buffer> <Leader>j :<C-u>call PareditSelectListElement(1)<CR>
