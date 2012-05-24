@@ -140,7 +140,7 @@ class RxvtUnicode # {{{1
     original = ENV.clone
     env.each { |k,v| ENV[k] = v }
 
-    opts  = %W[-geometry #{geometry} --perl-lib #{File.expand_path '~/.urxvt'}]
+    opts  = %W[-geometry #{geometry} --perl-lib #{File.expand_path '~/.urxvt/ext'}]
     opts += args
 
     if options.client
