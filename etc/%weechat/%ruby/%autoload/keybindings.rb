@@ -22,6 +22,7 @@ CHANNELS = %w[
   #clojure
   #leiningen
   #tmux
+  ##English
   #bash
   #git
   #nginx
