@@ -160,6 +160,7 @@ set visible-stats on
 "\ei":          "∞"         U+221E
 "\el":          "λ"         U+03BB
 "\ep":          "π"         U+03C0
+"\er":          "ρ"         U+03C1
 "\es":          "★"         U+2605
 "\eS":          "Σ"         U+03A3
 "\et":          "τ"         U+03C4
