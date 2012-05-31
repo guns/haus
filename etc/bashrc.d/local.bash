@@ -232,11 +232,11 @@ alias watch='while read path <<< "$(ruby -r fssm -e "
 ### Files, Disks, and Memory {{{1
 
 # grep
-alias g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
-alias g3='g -C3'
-alias gw='g -w'
-alias gv='g -v'
-alias gvw='g -vw'
+alias gr="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
+alias g3='gr -C3'
+alias gw='gr -w'
+alias gv='gr -v'
+alias gvw='gr -vw'
 alias wcl='grep -c .'
 
 # ack
@@ -268,8 +268,8 @@ alias lc='ls -C'
 alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
 alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
 alias l1='command ls -1'
-alias l1g='l1 | g'
-alias lsg='ls | g'
+alias l1g='l1 | gr'
+alias lsg='ls | gr'
 if __OSX__; then
     alias ls@='ls -@'
     alias lse='ls -e'
@@ -619,7 +619,7 @@ ALIAS ka='killall -v' \
 # ps (traditional BSD / SysV flags seem to be the most portable)
 alias p1='ps caxo comm'
 alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,nice,user,tt,start,command'
-alias psg='psa | grep -v "grep -i" | g'
+alias psg='psa | grep -v "grep -i" | gr'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
     alias __psr__='psa -r'
@@ -999,13 +999,7 @@ ALIAS di='diff -U3' \
 ALIAS patch='patch --version-control never'
 
 # git
-HAVE git && {
-    # Slightly shorter versions of git commands
-    for A in $(git config --list | sed -ne 's/^alias\.\([^=]*\)=.*/\1/p'); do
-        alias "git$A=git $A"
-    done
-    GC_VARS A
-
+ALIAS g=git && {
     # Github
     # Param: $1   User name
     # Param: $2   Repository name
@@ -1046,7 +1040,7 @@ type ruby &>/dev/null && {
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
                # alias geme
-               alias "gem${suf}g=run ${bin}/gem list | g"
+               alias "gem${suf}g=run ${bin}/gem list | gr"
                alias "gem${suf}i=run ${bin}/gem install"
                alias "gem${suf}q=run ${bin}/gem specification -r"
                alias "gem${suf}s=run ${bin}/gem search -r"
@@ -1204,7 +1198,7 @@ HAVE ng && {
 # node package manager
 ALIAS npm='npm --global' && {
     # alias npme
-    alias npmg='run npm ls | g'
+    alias npmg='run npm ls | gr'
     alias npmi='run npm install --global'
     alias npmq='run npm view'
     alias npms='run npm search'
@@ -1363,7 +1357,7 @@ if __OSX__; then
     # MacPorts package manager
     ALIAS port='port -c' && {
         porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
-        alias portg='run port -c installed | g'
+        alias portg='run port -c installed | gr'
         alias porti='run port -c install'
         alias portq='run port -c info'
         alias ports='run port -c search'
@@ -1375,7 +1369,7 @@ if __OSX__; then
     # Homebrew package manager
     HAVE brew && {
         alias brewe='run brew edit'
-        alias brewg='run brew list | g'
+        alias brewg='run brew list | gr'
         alias brewi='run brew install'
         alias brewq='run brew info'
         alias brews='run brew search'
@@ -1387,7 +1381,7 @@ elif __LINUX__; then
     # Aptitude package manager
     ALIAS apt='aptitude' && {
         apte() { vim -p "$(apt-file "$@")"; }
-        alias aptg='run aptitude search ~i | g'
+        alias aptg='run aptitude search ~i | gr'
         alias apti='run aptitude install'
         alias aptq='run aptitude show'
         alias apts='run aptitude search'
