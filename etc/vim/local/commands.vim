@@ -374,8 +374,8 @@ function! <SID>ToggleQuickfixWindow()
 endfunction
 
 
-command! -nargs=1 -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
-function! <SID>TabOpen(file)
+command! -nargs=+ -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
+function! <SID>TabOpen(file, ...)
     for t in range(tabpagenr('$'))
         for b in tabpagebuflist(t + 1)
             if a:file ==# expand('#' . b . ':p')
@@ -386,7 +386,7 @@ function! <SID>TabOpen(file)
         endfor
     endfor
 
-    execute 'tabedit ' . a:file
+    execute a:0 ? join(a:000) : 'tabedit ' . a:file
 endfunction
 
 

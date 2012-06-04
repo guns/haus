@@ -347,12 +347,13 @@ noremap <Leader>eM       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local
 noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>er       :<C-u>TabOpen /etc/rc.conf<CR>
-noremap <Leader>es       :<C-u>tabnew \| Scratch<CR>
+noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
-noremap <Leader>et       :<C-u>Org TODO<CR>
+noremap <Leader>et       :<C-u>execute 'TabOpen ' . resolve(expand(g:org_home . '/TODO.org')) . ' Org TODO'<CR>
 noremap <Leader>eT       :<C-u>execute 'TabOpen ' . resolve(expand('~/.tmux.conf'))<CR>
-noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve($cdhaus . '/share/doc/unicode-table.txt.gz')<CR>
+noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/share/doc/unicode-table.txt.gz'))<CR>
 noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
+noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('/tmp/verbose.vim'))<CR>
 noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
 noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
 noremap <Leader>eX       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
