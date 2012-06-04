@@ -264,6 +264,9 @@ $if Bash
 
     # Clojure VimREPL
     "\C-xc":        "\C-] vimclojure \n"
+
+    # Ctags
+    "\C-x\C-t":     "\C-] ctags -R \n"
 $endif
 
 
