@@ -536,11 +536,13 @@ snippet def "def"
 endsnippet
 
 snippet defn "defn"
-(defn $1 [$0])
+(defn $1
+	[$0])
 endsnippet
 
 snippet defn- "defn-"
-(defn- $0)
+(defn- $1
+	[$0])
 endsnippet
 
 snippet defm "def memoize" w
@@ -658,9 +660,7 @@ snippet wl "when-let" w
 endsnippet
 
 snippet cond "cond" w
-(cond
-	$0
-	:else )
+(cond $0 :else )
 endsnippet
 
 snippet condp "condp" w
