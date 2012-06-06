@@ -607,12 +607,16 @@ ALIAS k='kill' \
       k9='kill -9' \
       khup='kill -HUP' \
       kint='kill -INT' \
+      kstop='kill -STOP' \
+      kcont='kill -CONT' \
       kusr1='kill -USR1' \
       kquit='kill -QUIT'
 ALIAS ka='killall -v' \
       ka9='ka -9' \
       kahup='ka -HUP' \
       kaint='ka -INT' \
+      kastop='ka -STOP' \
+      kacont='ka -CONT' \
       kausr1='ka -USR1' \
       kaquit='ka -QUIT'
 
