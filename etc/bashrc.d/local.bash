@@ -49,9 +49,6 @@ export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
-# Clojure(Script)
-export CLOJURESCRIPT_HOME="$HOME/src/clojurescript"
-
 # Git
 export GIT_MERGE_AUTOEDIT='no'
 
@@ -436,7 +433,7 @@ untar() {
     [[ -f "$1" ]] && f='f';
     run tar xv$f "$@" "${opts[@]}"
 }
-suntar() { untar -S "$@"; }
+suntar() { untar --strip-components "$@"; }
 zuntar() { untar -z "$@"; }
 
 # open
