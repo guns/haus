@@ -129,25 +129,25 @@ function! <SID>LispBufferSetup()
     noremap! <buffer> <4-CR>        <C-\><C-o>A<Space>;<Space>
     nnoremap <buffer> ==            :normal m`=a(``<CR>
     nnoremap <buffer> =p            :normal m`=ap``<CR>
-    nnoremap <buffer> <C-]>         :<C-u>ClojureTagJump<CR>
-    nnoremap <buffer> <C-w><C-]>    :<C-u>split \| ClojureTagJump<CR>
+    nnoremap <buffer> <C-]>         :<C-u>ClojureTagJump.<CR>
+    nnoremap <buffer> <C-w><C-]>    :<C-u>split \| ClojureTagJump.<CR>
 
     "
     " VimClojure
     "
 
     " RECURSIVE map for <Plug> mappings
-    nmap <silent> <buffer> K             <Plug>ClojureSourceLookupWord
-    nmap <silent> <buffer> <Leader>Q     <Plug>ClojureCloseResultBuffer
-    nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl
-    nmap <silent> <buffer> <Leader>R     <Plug>ClojureStartRepl
-    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileCurrent
+    nmap <silent> <buffer> K             <Plug>ClojureSourceLookupWord.
+    nmap <silent> <buffer> <Leader>Q     <Plug>ClojureCloseResultBuffer.
+    nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl.
+    nmap <silent> <buffer> <Leader>R     <Plug>ClojureStartRepl.
+    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileCurrent.
 
     " cf. ScreenSetup
-    vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock
+    vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock.
     nmap <silent> <buffer> <Leader><Leader> mp:call PareditSelectCurrentForm()<CR><Leader><Leader>`p
     imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
-    nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel
+    nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel.
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
 
     "
