@@ -49,12 +49,12 @@ call vimclojure#MakeCommandPlug("n", "EvalParagraph", "vimclojure#EvalParagraph"
 call vimclojure#MakeCommandPlug("n", "StartRepl", "vimclojure#StartRepl", "")
 call vimclojure#MakeCommandPlug("n", "StartLocalRepl", "vimclojure#StartRepl", "b:vimclojure_namespace")
 
-inoremap <Plug>ClojureReplEnterHook <Esc>:call b:vimclojure_repl.enterHook()<CR>
-inoremap <Plug>ClojureReplEvaluate <Esc>G$:call b:vimclojure_repl.enterHook()<CR>
-nnoremap <Plug>ClojureReplHatHook :call b:vimclojure_repl.hatHook()<CR>
-nnoremap <Plug>ClojureReplUpHistory :call b:vimclojure_repl.upHistory()<CR>
-nnoremap <Plug>ClojureReplDownHistory :call b:vimclojure_repl.downHistory()<CR>
+inoremap <Plug>ClojureReplEnterHook. <Esc>:call b:vimclojure_repl.enterHook()<CR>
+inoremap <Plug>ClojureReplEvaluate. <Esc>G$:call b:vimclojure_repl.enterHook()<CR>
+nnoremap <Plug>ClojureReplHatHook. :call b:vimclojure_repl.hatHook()<CR>
+nnoremap <Plug>ClojureReplUpHistory. :call b:vimclojure_repl.upHistory()<CR>
+nnoremap <Plug>ClojureReplDownHistory. :call b:vimclojure_repl.downHistory()<CR>
 
-nnoremap <Plug>ClojureCloseResultBuffer :call vimclojure#ResultBuffer.CloseBuffer()<CR>
+nnoremap <Plug>ClojureCloseResultBuffer. :call vimclojure#ResultBuffer.CloseBuffer()<CR>
 
 let &cpo = s:cpo_save
