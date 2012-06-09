@@ -21,8 +21,12 @@ export LC_COLLATE='C'                   # Traditional ASCII sorting
 export CLICOLOR=1
 export LSCOLORS='ExFxCxDxbxegedabagacad'
 export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
-command ls --color ~ &>/dev/null && export GNU_COLOR_OPT='--color'
-grep -P . <<< . &>/dev/null      && export GREP_PCRE_OPT='-P'
+
+# Command flags
+command ls --color ~    &>/dev/null && GNU_COLOR_OPT='--color'
+command grep -P . <<< . &>/dev/null && GREP_PCRE_OPT='-P'
+command lsof +fg -h     &>/dev/null && LSOF_FLAG_OPT='+fg'
+GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
 
 # Pager
 LESS_ARY=(
@@ -723,9 +727,9 @@ ALIAS scp='scp -C -2' \
 HAVE ssh-proxy && TCOMP ssh ssh-proxy
 
 # lsof
-ALIAS lsof='lsof -Pn +fg' && {
+ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
     alias lsif='lsof -i'
-    alias lsifr='\lsof -Pi +fg'
+    alias lsifr="\lsof -Pi $LSOF_FLAG_OPT"
     alias lsifudp='lsif | grep UDP'
     alias lsiflisten='lsif | grep LISTEN'
     alias lsifconnect='lsif | grep -- "->"'
