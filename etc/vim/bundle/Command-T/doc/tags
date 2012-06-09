@@ -43,6 +43,7 @@ g:CommandTMaxFiles	command-t.txt	/*g:CommandTMaxFiles*
 g:CommandTMaxHeight	command-t.txt	/*g:CommandTMaxHeight*
 g:CommandTMinHeight	command-t.txt	/*g:CommandTMinHeight*
 g:CommandTNeverShowDotFiles	command-t.txt	/*g:CommandTNeverShowDotFiles*
+g:CommandTRefreshMap	command-t.txt	/*g:CommandTRefreshMap*
 g:CommandTScanDotDirectories	command-t.txt	/*g:CommandTScanDotDirectories*
 g:CommandTSelectNextMap	command-t.txt	/*g:CommandTSelectNextMap*
 g:CommandTSelectPrevMap	command-t.txt	/*g:CommandTSelectPrevMap*

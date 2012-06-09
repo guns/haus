@@ -112,6 +112,10 @@ function CommandTAcceptSelectionVSplit()
   ruby $command_t.accept_selection :command => 'vs'
 endfunction
 
+function CommandTRefresh()
+  ruby $command_t.refresh
+endfunction
+
 function CommandTToggleFocus()
   ruby $command_t.toggle_focus
 endfunction
