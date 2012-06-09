@@ -31,14 +31,14 @@ if g:vimclojure#HighlightBuiltins != 0
 		\ "Cond":      "if if-not if-let when when-not when-let "
 		\            . "when-first cond condp case",
 		\ "Exception": "try catch finally throw",
-		\ "Repeat":    "recur map mapcat reduce filter for doseq dorun "
+		\ "Repeat":    "recur map mapcat mapv reduce reduce-kv filter filterv for doseq dorun "
 		\            . "doall dotimes map-indexed keep keep-indexed",
 		\ "Special":   ". def do fn if let new quote var loop",
-		\ "Variable":  "*warn-on-reflection* this *assert* "
+		\ "Variable":  "*warn-on-reflection* this *assert* default-data-readers"
 		\            . "*agent* *ns* *in* *out* *err* *command-line-args* "
 		\            . "*print-meta* *print-readably* *print-length* "
 		\            . "*allow-unresolved-args* *compile-files* "
-		\            . "*compile-path* *file* *flush-on-newline* "
+		\            . "*compile-path* *compiler-options* *data-readers* *file* *flush-on-newline* "
 		\            . "*math-context* *unchecked-math* *print-dup* "
 		\            . "*print-level* *use-context-classloader* "
 		\            . "*source-path* *clojure-version* *read-eval* "
@@ -113,7 +113,7 @@ if g:vimclojure#HighlightBuiltins != 0
 		\            . "proxy-super rationalize read-string remove "
 		\            . "remove-watch replace resultset-seq rsubseq "
 		\            . "seque set-validator! shutdown-agents subseq "
-		\            . "supers "
+		\            . "supers ex-info ex-data"
 		\            . "unchecked-add unchecked-dec unchecked-divide "
 		\            . "unchecked-inc unchecked-multiply unchecked-negate "
 		\            . "unchecked-subtract underive xml-seq trampoline "
