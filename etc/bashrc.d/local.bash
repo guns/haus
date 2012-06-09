@@ -26,7 +26,8 @@ export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su
 command ls --color ~    &>/dev/null && GNU_COLOR_OPT='--color'
 command grep -P . <<< . &>/dev/null && GREP_PCRE_OPT='-P'
 command lsof +fg -h     &>/dev/null && LSOF_FLAG_OPT='+fg'
-GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
+SSH_FAST_CIPHERS='arcfour,arcfour128,arcfour256,blowfish-cbc'
+GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT SSH_FAST_CIPHERS
 
 # Pager
 LESS_ARY=(
@@ -531,15 +532,10 @@ HAVE hdiutil diskutil && {
 }
 
 # rsync
-ALIAS rsync='rsync --human-readable' \
+ALIAS rsync='rsync -e \"ssh -2\" --human-readable' \
+      rsync-fast="rsync -e \\\"ssh -2 -c $SSH_FAST_CIPHERS\\\"" \
       rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
-      rsync-backup='rsync --archive --delete --partial --sparse --hard-links' && {
-    if __OSX__; then
-        alias applersync='/usr/bin/rsync --human-readable --progress --extended-attributes'; TCOMP rsync applersync
-        ALIAS applersync-mirror='applersync --archive --delete --partial --exclude=.git'
-        ALIAS applersync-backup='applersync --archive --delete --partial --sparse --hard-links'
-    fi
-}
+      rsync-backup='rsync --archive --delete --partial --sparse --hard-links'
 
 # dd
 ALIAS dd3='dc3dd'  && TCOMP dd dd3
@@ -714,17 +710,16 @@ HAVE nc   && TCOMP dig nc
 HAVE ncat && TCOMP dig ncat
 
 # ssh scp
-# http://blog.urfix.com/25-ssh-commands-tricks/
-ALIAS ssh='ssh -C -2' \
-      sshx='ssh -Y' \
-      ssh-master='ssh -Nn -M' \
-      ssh-tunnel='ssh -Nn -M -D 22222' \
-      ssh-password='ssh -o \"PreferredAuthentications password\"' \
-      ssh-nocompression='ssh -o "Compression no"' \
-      xssh-shell='exec ssh-shell'
-ALIAS scp='scp -C -2' \
-      scpr='scp -r'
+ALIAS ssh='ssh -2' \
+      ssh-fast="ssh -c $SSH_FAST_CIPHERS" \
+      ssh-vm='ssh-fast -Y' \
+      ssh-password='ssh -o \"PreferredAuthentications password\"'
+ALIAS scp='scp -2' \
+      scp-fast="scp -c $SSH_FAST_CIPHERS" \
+      scpr='scp -r' \
+      scpr-fast="scpr -c $SSH_FAST_CIPHERS"
 HAVE ssh-proxy && TCOMP ssh ssh-proxy
+HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
 
 # lsof
 ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
