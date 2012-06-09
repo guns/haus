@@ -210,9 +210,11 @@ Default: unset (windows use the default statusline)
 ------------------------------------------------------------------------------
 3.10 g:gundo_auto_preview                                 *gundo_auto_preview*
 
-Set this to 1 to rendering diff automatically with cursor move.
+Set this to 0 to disable automatically rendering preview diffs as you move
+through the undo tree (you can still render a specific diff with r).  This can
+be useful on large files and undo trees to speed up Gundo.
 
-Default: 1 (auto preview diff)
+Default: 1 (automatically preview diffs)
 
 ==============================================================================
 4. License                                                      *GundoLicense*
@@ -236,9 +238,11 @@ GitHub: http://github.com/sjl/gundo.vim/
 
 ==============================================================================
 7. Changelog                                                  *GundoChangelog*
-v2.3.1
+
+v2.4.0
     * Add auto preview option.
     * Add 'r' mapping to preview current state.
+    * Add public gundo#GundoShow() and gundo#GundoHide() functions.
 v2.3.0
     * Add statusline configuration.
 v2.2.2

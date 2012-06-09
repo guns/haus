@@ -332,7 +332,11 @@ let g:gundo_right = 1
                 <a name="gundo_statusline"></a>
                 <h2>g:gundo_[preview/tree]_statusline</h2>
 
-                <p>Set these to a string to display it as the status line for each Gundo window.</p>
+                <p>
+                    Set this to 0 to disable automatically rendering preview diffs as you move
+                    through the undo tree (you can still render a specific diff with r).  This can
+                    be useful on large files and undo trees to speed up Gundo.
+                </p>
 
                 <p>Default: unset (windows use the default statusline)</p>
 
@@ -384,13 +388,16 @@ let g:gundo_right = 1
                 <h1>Changelog</h1>
 
                 <ol class="changelog">
-                    <li>v2.3.1
+                    <li>v2.4.0
                         <ul>
                             <li>
                                 Add auto preview option.
                             </li>
                             <li>
                                 Add 'r' mapping to preview current state.
+                            </li>
+                            <li>
+                                Add public <code>gundo#GundoShow()</code> and <code>gundo#GundoHide()</code> functions.
                             </li>
                         </ul>
                     </li>
@@ -498,5 +505,18 @@ let g:gundo_right = 1
                 with a lot of help from others.
             </footer>
         </div>
+        <script type="text/javascript">
+            var _gauges = _gauges || [];
+            (function() {
+             var t   = document.createElement('script');
+             t.type  = 'text/javascript';
+             t.async = true;
+             t.id    = 'gauges-tracker';
+             t.setAttribute('data-site-id', '4f843f8c613f5d65280000e6');
+             t.src = '//secure.gaug.es/track.js';
+             var s = document.getElementsByTagName('script')[0];
+             s.parentNode.insertBefore(t, s);
+             })();
+         </script>
     </body>
 </html>
