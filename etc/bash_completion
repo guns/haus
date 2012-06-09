@@ -1142,7 +1142,7 @@ _modules()
     local modpath
     modpath=/lib/modules/$1
     COMPREPLY=( $( compgen -W "$( command ls -RL $modpath 2>/dev/null | \
-        sed -ne 's/^\(.*\)\.k\{0,1\}o\(\.gz\)\{0,1\}$/\1/p' )" -- "$cur" ) )
+        sed -ne 's/^\(.*\)\.k\{0,1\}o\(\.[gx]z\)\{0,1\}$/\1/p' )" -- "$cur" ) )
 }
 
 # This function completes on installed modules
@@ -1272,6 +1272,8 @@ _realcommand()
     type -P "$1" > /dev/null && {
         if type -p realpath > /dev/null; then
             realpath "$(type -P "$1")"
+        elif type -p greadlink > /dev/null; then
+            greadlink -f "$(type -P "$1")"
         elif type -p readlink > /dev/null; then
             readlink -f "$(type -P "$1")"
         else
@@ -1280,7 +1282,7 @@ _realcommand()
     }
 }
 
-# This function returns the first arugment, excluding options
+# This function returns the first argument, excluding options
 # @param $1 chars  Characters out of $COMP_WORDBREAKS which should
 #     NOT be considered word breaks. See __reassemble_comp_words_by_ref.
 _get_first_arg()
@@ -1853,7 +1855,7 @@ _install_xspec '!*.@(tlz|lzma)' lzcat lzegrep lzfgrep lzgrep lzless lzmore unlzm
 _install_xspec '!*.@(?(t)xz|tlz|lzma)' unxz xzcat
 _install_xspec '!*.lrz' lrunzip
 _install_xspec '!*.@(gif|jp?(e)g|miff|tif?(f)|pn[gm]|p[bgp]m|bmp|xpm|ico|xwd|tga|pcx)' ee
-_install_xspec '!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm)' qiv
+_install_xspec '!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|svg)' qiv
 _install_xspec '!*.@(gif|jp?(e)g|tif?(f)|png|p[bgp]m|bmp|x[bp]m|rle|rgb|pcx|fits|pm|?(e)ps)' xv
 _install_xspec '!*.@(@(?(e)ps|?(E)PS|pdf|PDF)?(.gz|.GZ|.bz2|.BZ2|.Z))' gv ggv kghostview
 _install_xspec '!*.@(dvi|DVI)?(.@(gz|Z|bz2))' xdvi kdvi
