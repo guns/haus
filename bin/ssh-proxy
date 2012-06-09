@@ -15,6 +15,7 @@ class SSHProxy
 
   def initialize opts = {}
     @options = OpenStruct.new opts
+    options.setup      ||= RUBY_PLATFORM =~ /darwin/i
     options.proxy_port ||= 22222
     options.signals    ||= %w[TERM INT QUIT HUP]
     options.wait       ||= 10
@@ -24,7 +25,9 @@ class SSHProxy
     @parser ||= CLI::SuperParser.new nil, 24 do |opt|
       opt.banner = %Q(\
         Create an SSH tunnel and configure it as a SOCKS proxy server for the
-        system. OS X only.
+        system.
+
+        Acts as a persistent wrapper around `ssh -D` on non OS X systems.
 
         WARNING: Existing system SOCKS Proxy details are clobbered and the
                  global SOCKS Proxy state is set to OFF on termination.
@@ -55,6 +58,10 @@ class SSHProxy
         options.wait = arg
       end
 
+      opt.on '--no-setup', "Don't change OS X proxy settings" do
+        options.setup = false
+      end
+
       opt.on '-h', '--help' do
         puts opt.help
         exit
@@ -74,7 +81,7 @@ class SSHProxy
       else
         raise 'No permissions to change proxy settings!'
       end
-    end
+    end if options.setup
 
     @active = true
 
@@ -92,7 +99,7 @@ class SSHProxy
     interfaces.each do |iface|
       system *%W[networksetup -setsocksfirewallproxystate #{iface} off]
       puts "#{iface} proxy off!"
-    end
+    end if options.setup
 
     @active = false
   end
@@ -100,7 +107,7 @@ class SSHProxy
   def command *args
     cmd  = []
     cmd += %W[sudo -u #{options.user}] if options.user
-    cmd += %W[ssh -C -T -2 -N -n] # Compression, no tty alloc, Protocol 2, noexec, nostdin
+    cmd += %W[ssh -2 -T -N -n] # Protocol 2, notty, noexec, nostdin
     cmd += %W[-D 127.0.0.1:#{options.proxy_port}]
     cmd += args
   end
@@ -109,40 +116,39 @@ class SSHProxy
     raise 'Proxy not active!' unless active
     raise 'SSH connection already active!' if ssh_pid
 
-    pid = fork do
-      options.signals.each do |sig|
-        trap sig do
-          trap :EXIT do
-            puts "WARNING: Shutting down, but ssh PID #{ssh_pid} is still alive" if ssh_pid
-          end
-
-          options.signals.each { |s| trap s, 'DEFAULT' }
-          puts "SIG#{sig.sub /\ASIG/, ''} recieved!"
-
-          if ssh_pid
-            puts "Sending SIGTERM to ssh PID #{ssh_pid}"
-            Process.kill :TERM, ssh_pid
-            Process.wait ssh_pid
-            @ssh_pid = nil
-          end
-
-          exit
+    options.signals.each do |sig|
+      trap sig do
+        trap :EXIT do
+          puts "WARNING: Shutting down, but ssh PID #{ssh_pid} is still alive" if ssh_pid
         end
-      end
 
-      loop do
-        puts command(*args).join(' ')
-        @ssh_pid = fork { exec *command(*args) } # Kernel#spawn introduced in 1.9
-        Process.wait ssh_pid
-        @ssh_pid = nil
+        options.signals.each { |s| trap s, 'DEFAULT' }
+        puts "SIG#{sig.sub /\ASIG/, ''} recieved!"
 
-        print "Connection closed! Trying again in #{options.wait} seconds"
-        options.wait.times { print '.'; sleep 1 }
-        puts
+        if ssh_pid
+          puts "Sending SIGTERM to ssh PID #{ssh_pid}"
+          Process.kill :TERM, ssh_pid
+          Process.wait ssh_pid
+          @ssh_pid = nil
+        end
+
+        exit
       end
     end
 
-    Process.wait pid
+    loop do
+      puts command(*args).join(' ')
+      @ssh_pid = fork { exec *command(*args) } # Kernel#spawn introduced in 1.9
+      Process.wait ssh_pid
+      @ssh_pid = nil
+
+      print "Connection closed! Trying again in #{options.wait} seconds"
+      options.wait.times do
+        break if select [$stdin], nil, nil, 1
+        print '.'
+      end
+      puts
+    end
   end
 
   def call *args
@@ -154,9 +160,6 @@ class SSHProxy
 
     # We must have at least the [user@]host argument
     abort parser.help if args.empty?
-
-    # Don't let things break, since this must run as root
-    raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/i
 
     call *args
   end
