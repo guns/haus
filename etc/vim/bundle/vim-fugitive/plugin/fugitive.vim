@@ -100,7 +100,7 @@ let s:abstract_prototype = {}
 " Initialization {{{1
 
 function! fugitive#is_git_dir(path) abort
-  let path = a:path . '/'
+  let path = s:sub(a:path, '[\/]$', '') . '/'
   return isdirectory(path.'objects') && isdirectory(path.'refs') && getfsize(path.'HEAD') > 10
 endfunction
 
@@ -2058,7 +2058,7 @@ function! s:BufWriteIndexFile()
     let info = old_mode.' '.sha1.' '.stage."\t".path
     call writefile([info],tmp)
     if has('win32')
-      let error = system('type '.tmp.'|'.s:repo().git_command('update-index','--index-info'))
+      let error = system('type '.s:gsub(tmp,'/','\\').'|'.s:repo().git_command('update-index','--index-info'))
     else
       let error = system(s:repo().git_command('update-index','--index-info').' < '.tmp)
     endif
