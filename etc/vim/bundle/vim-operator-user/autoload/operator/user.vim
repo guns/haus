@@ -1,7 +1,7 @@
 " operator-user - Define your own operator easily
-" Version: 0.0.6
-" Copyright (C) 2009 kana <http://whileimautomaton.net/>
-" License: MIT license  {{{
+" Version: 0.0.7
+" Copyright (C) 2009-2012 Kana Natsuno <http://whileimautomaton.net/>
+" License: So-called MIT/X license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
 "     "Software"), to deal in the Software without restriction, including
@@ -34,7 +34,7 @@ function! operator#user#define_ex_command(name, ex_command)  "{{{2
   return operator#user#define(
   \        a:name,
   \        'operator#user#_do_ex_command',
-  \        'call operator#user#_set_ex_command(''' . a:ex_command . ''')'
+  \        'call operator#user#_set_ex_command(' . string(a:ex_command) . ')'
   \      )
 endfunction
 
