@@ -179,6 +179,7 @@ $if Bash
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] (xreload &); tmuxeval \n"
+    "\033\007R":    "\C-] reset \n"
     "\C-xV":        display-shell-version
     "\C-x\\":       "\C-] nohist \n"
 
