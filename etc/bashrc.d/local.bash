@@ -739,7 +739,7 @@ ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
 
 # nmap
 ALIAS nmapscan='nmap -sS -A' && {
-    nmapsweep() { run nmap -sP -PPERM $(getlip)/24; }
+    nmapsweep() { run nmap -sP -PPERM "$(getlip)/24"; }
 }
 
 # networksetup
