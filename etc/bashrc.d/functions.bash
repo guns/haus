@@ -8,7 +8,7 @@
 # __GC_FUNC__ contains functions to be unset after shell init.
 # __GC_VARS__ contains variables to be unset after shell init.
 __SECLIST__=()
-__GC_FUNC__=(__SECLIST__ __GC_FUNC__ __GC_VARS__)
+__GC_FUNC__=(SECLIST GCFUNC GCVARS)
 __GC_VARS__=(__SECLIST__ __GC_FUNC__ __GC_VARS__)
 
 # Corresponding accumulation functions for convenience
