@@ -559,7 +559,6 @@ Mapall <4-t> :<C-u>tabnew \\\| CommandT<CR>
 Mapall <4-'> :<C-u>CommandTTag<CR>
 Mapall <4-.> :<C-u>CommandTJump<CR>
 Mapall <4-b> :<C-u>CommandTBuffer<CR>
-Mapall <4-B> :<C-u>CommandTFlush<CR>
 Mapall <4-V> :<C-u>vsplit \\\| wincmd l \\\| CommandT<CR>
 
 " Plugin: NERDTree

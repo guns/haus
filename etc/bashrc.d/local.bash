@@ -180,7 +180,6 @@ alias o='echo'
 alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
-alias rmhist='rm -f ~/.bash_history ~/.viminfo && unset HISTFILE && exec $SHELL'
 t() { type "$@"; }; TCOMP type t
 ALIAS ta='t -a' \
       tp='t -P'
@@ -335,8 +334,8 @@ f1() { f "$@" -maxdepth 1; };               TCOMP find f1
 ff() { f "$@" \( -type f -o -type l \); };  TCOMP find ff
 fd() { f "$@" -type d; };                   TCOMP find fd
 fl() { f "$@" -type l; };                   TCOMP find fl
-stamp() { run touch /tmp/timestamp; }
 fnewer() { f "$@" -newer /tmp/timestamp; }; TCOMP find fnewer
+stamp() { run touch /tmp/timestamp; }
 cdf() {
     cd "$(f "$@" -type d -print0 | ruby -e 'print $stdin.gets("\0") || "."' 2>/dev/null)"
 }; TCOMP find cdf
@@ -1001,10 +1000,10 @@ ALIAS patch='patch --version-control never'
 # git
 HAVE git && {
     # Slightly shorter versions of git commands
-    for A in $(git config --list | sed -ne 's/^alias\.\([^=]*\)=.*/\1/p'); do
-        alias "git$A=git $A"
+    for _git_alias in $(git config --list | sed -ne 's/^alias\.\([^=]*\)=.*/\1/p'); do
+        alias "git$_git_alias=git $_git_alias"
     done
-    GC_VARS A
+    unset _git_alias
 
     # Github
     # Param: $1   User name
