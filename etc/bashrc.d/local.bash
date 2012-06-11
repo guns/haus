@@ -1191,8 +1191,6 @@ HAVE lein && {
     }
 }
 
-ALIAS cljsc="$CLOJURESCRIPT_HOME/bin/cljsc"
-
 HAVE ng && {
     alias ngstop='ng ng-stop'
 }
