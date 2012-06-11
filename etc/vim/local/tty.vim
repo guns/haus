@@ -58,7 +58,7 @@ let s:nshape = '2 '
 if &term =~ '\v^screen' && !exists('$TMUX')
     let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\\033P\033[" . s:ishape . "q\033\\"
     let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\\033P\033[" . s:nshape . "q\033\\"
-elseif exists('$TMUX') || &term =~ '\v^tmux' || &term =~ '\v^rxvt' || &term =~ '\v^xterm'
+elseif exists('$TMUX') || &term =~ '\v^tmux' || &term =~ '\v^u?rxvt' || &term =~ '\v^xterm'
     let &t_SI = "\033]12;" . s:icolor . "\007\033[" . s:ishape . "q"
     let &t_EI = "\033]12;" . s:ncolor . "\007\033[" . s:nshape . "q"
 endif
