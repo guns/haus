@@ -335,7 +335,7 @@ class Macdriver
     Plist::Emit.dump \
       :Label            => 'com.sungpae.macdriver',
       :RunAtLoad        => true,
-      :ProgramArguments => ['/usr/bin/ruby', '--', File.expand_path(__FILE__)] + args
+      :ProgramArguments => [%x(/bin/sh -c 'command -v ruby').chomp, '--', File.expand_path(__FILE__)] + args
   end
 
   def run arguments = []
