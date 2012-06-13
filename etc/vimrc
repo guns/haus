@@ -36,9 +36,6 @@ set smartcase                   " Unless there's a capital letter
 set nowrap                      " Don't wrap lines
 set linebreak                   " But if you do, break on words
 set showbreak=…                 " And give us a nice visual indicator
-if exists('&breakindent')
-    set breakindent             " Use the breakindent feature if we have it
-endif
 
 " Completions
 set wildmode=list:longest       " Bash style command line completion
