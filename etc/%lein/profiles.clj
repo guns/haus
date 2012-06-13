@@ -19,7 +19,7 @@
 ;;        guns <self@sungpae.com>                    /######  /#
 ;;                                                  /     ###/
 
-{:user {:plugins [[vimclojure/server "2.3.2"]
+{:user {:plugins [[vimclojure/server "2.3.3"]
                   [lein-tarsier "0.9.2"]
                   [lein-pprint "1.1.1"]
                   [lein-outdated "0.1.0"]
