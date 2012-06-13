@@ -1440,7 +1440,7 @@ HAVE qlmanage && alias ql='bgrun qlmanage -p'
 HAVE startx && alias xstartx='exec startx'
 
 HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 200; run xrdb ~/.Xdefaults'
+    alias xreload='run xset r rate 200 120; run xrdb ~/.Xdefaults'
 }
 
 # Clipboard
