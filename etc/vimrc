@@ -16,6 +16,11 @@ autocmd!
 call pathogen#infect()
 filetype plugin indent on
 
+" Global dictionary of available features
+let g:__FEATURES__ = {
+    \ "par": !empty(system("/bin/sh -c 'command -v par'"))
+\ }
+
 " Load commands and functions; no side effects from sourcing
 source ~/.vim/local/commands.vim
 
@@ -108,6 +113,18 @@ set backspace=2                 " Familiar backspace behavior
 
 
 """ GLOBAL VARIABLES {{{1
+
+let g:__NAMED_KEYCODES__ = {
+    \ ' ': 'Space',
+    \ '\': 'Bslash',
+    \ '|': 'Bar',
+    \ '<': 'lt'
+\ }
+
+" Set default arguments to par
+if g:__FEATURES__['par']
+    let $PARINIT = 'B=_A_a.,?'
+endif
 
 " Bash
 let g:is_bash = 1

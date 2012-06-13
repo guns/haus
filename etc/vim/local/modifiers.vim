@@ -19,20 +19,13 @@ function! <SID>Setmap(map, seq)
     endtry
 endfunction
 
-let g:VIM_NAMED_KEYCODES = {
-    \ ' ': 'Space',
-    \ '\': 'Bslash',
-    \ '|': 'Bar',
-    \ '<': 'lt'
-\ }
-
 " Normalize Modifier + ASCII printable chars {{{1
 for n in range(0x20, 0x7e)
     let char = nr2char(n)
     let key  = char
 
-    if has_key(g:VIM_NAMED_KEYCODES, char)
-        let char = g:VIM_NAMED_KEYCODES[char]
+    if has_key(g:__NAMED_KEYCODES__, char)
+        let char = g:__NAMED_KEYCODES__[char]
         let key  = '<' . char . '>'
     endif
 

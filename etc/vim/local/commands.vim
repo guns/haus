@@ -24,9 +24,11 @@ command! -nargs=* -bang -bar SetTextwidth call <SID>SetTextwidth('<bang>', <f-ar
 function! <SID>SetTextwidth(bang, ...)
     if a:0
         let local = empty(a:bang) ? 'local' : ''
-        let paropts = a:0 == 2 ? a:2 : 'q1re\ B=_A_a.,?'
         execute 'set' . local . ' textwidth=' . a:1
-        execute 'set' . local . ' formatprg=par\ ' . paropts . '\ ' . a:1
+        if g:__FEATURES__['par']
+            let paropts = a:0 == 2 ? a:2 : 'heq'
+            execute 'set' . local . ' formatprg=par\ ' . paropts . '\ ' . a:1
+        endif
     else
         echo 'tw=' . &textwidth . ' fp=' . &formatprg
     endif
