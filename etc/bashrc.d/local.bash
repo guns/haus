@@ -515,7 +515,7 @@ HAVE hdiutil diskutil && {
                 when /\Ag\z/i    then num.to_f * 2**30
                 when /\Am\z/i,"" then num.to_f * 2**20
                 when /\Ak\z/i    then num.to_f * 2**10
-                else 0
+                else                  num.to_f
                 end
             }.round / 512
         ' "$size"))"
@@ -981,7 +981,7 @@ ALIAS mk='make' \
       mkj2='make -j2' \
       mkj4='make -j4' \
       mkj8='make -j8' \
-      mkj16='make -j16' && cdmkinstall() { (run cd "$@"; run make install) }
+      mkj16='make -j16' && cdmkinstall() { (cd "$@"; make install) }
 
 
 ### SCM {{{1
@@ -1146,46 +1146,6 @@ HAVE lein && {
     # alias leinu=
     # alias leinsync=
     # alias leinoutdated=
-
-    leindoc() {
-        [[ -e project.clj && -d lib ]] && ruby -r fileutils -e '
-            include FileUtils
-
-            trap(:INT) { abort "ABORT" }
-
-            def sh *args
-                system *args, :out => "/dev/null", :err => "/dev/null"
-                Process.kill :INT, $$ and sleep unless $?.exitstatus.zero?
-            end
-
-            jobs, pool, lock, idx = (ARGV.first || 1).to_i, [], Mutex.new, -1
-            jars = Dir["lib/**/*.jar"].shuffle
-            size = jars.size
-            label = "Thread %d [%#{size.to_s.length}d/#{size}]: %s"
-
-            begin
-                mkdir_p "doc"
-                jobs.times do |n|
-                    pool << Thread.new do
-                        loop do
-                            i = lock.synchronize { idx += 1 }
-                            break if i >= size
-                            jar, tmp = jars[i], "doc/tmp/#{i}"
-                            mkdir_p tmp
-                            puts label % [n+1, i+1, jar]
-                            dir = "doc/%s" % File.basename(jar, ".jar").sub(/-\d+\.\d+.*\z/, "")
-                            sh *%W[unzip -d #{tmp} #{jar}]
-                            sh *%W[rsync -av --delete --exclude=META-INF #{tmp}/ #{dir}/]
-                        end
-                    end
-                end
-                pool.each &:join
-                sh "ctags -R"
-            ensure
-                rm_rf "doc/tmp"
-            end
-        ' "$@"
-    }
 }
 
 HAVE ng && {
@@ -1374,7 +1334,8 @@ if __OSX__; then
         alias brewq='run brew info'
         alias brews='run brew search'
         alias brewu='run brew uninstall'
-        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git co master && brew update && git co guns && git merge master && git push github --all"'
+        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && brew update && \
+                                   git checkout guns && git merge master --no-edit && git push github --all"'
         alias brewoutdated='brew outdated'
     }
 elif __LINUX__; then
