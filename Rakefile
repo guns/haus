@@ -16,8 +16,12 @@ require 'haus/logger'
 include Haus::Loggable
 
 task :env do # {{{1
+  # Legacy non-interactive `merge` behavior
+  ENV['GIT_MERGE_AUTOEDIT'] = 'no'
+
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
+
   @subprojects = Hash[{
     'completions' => [
       {

@@ -63,11 +63,8 @@
     cam = commit -a -m
 
     # merging and rebasing
-    m   = merge --no-ff
-    me  = merge --no-ff --edit
-    mf  = merge
-    mef = merge --edit
-    mnc = merge --no-commit
+    m   = merge --no-ff --stat --log --edit
+    mf  = merge --ff-only --no-edit
     rb  = rebase
     rbi = rebase -i
     cp  = cherry-pick
