@@ -290,7 +290,7 @@ nnoremap N Nzz
 noremap <Leader>h     :<C-u>help<Space>
 noremap <Leader>C     :<C-u>colorscheme<Space>
 noremap <Leader>!     :<C-u>make!<CR>
-noremap <Leader><C-t> :<C-u>execute 'silent! !ctags -R' \| redraw! \| echo 'ctags -R'<CR>
+noremap <Leader><C-t> :<C-u>execute 'silent! !(ctags -R; notify --audio) &' \| redraw! \| echo 'ctags -R'<CR>
 noremap <4-p>         :<C-u>SynStack<CR>
 
 " Clear last match
