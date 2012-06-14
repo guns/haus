@@ -122,7 +122,7 @@ task :env do # {{{1
       { :base => "#{@vim}/vim-textobj-rubyblock",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-textobj-user",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
-      { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {

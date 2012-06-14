@@ -14,7 +14,6 @@ endfunction "}}}
 
 function! visualctrlg#report(verbose) "{{{
     let default = 1
-    let sleep_arg = v:count != 0 ? v:count : default
     let text = s:get_selected_text()
 
     let lines_num = getpos("'>")[1] - getpos("'<")[1] + 1
@@ -25,9 +24,6 @@ function! visualctrlg#report(verbose) "{{{
         echo printf('%d line(s), %d byte(s), %d char(s)',
         \           lines_num, strlen(text), s:strchars(text))
     endif
-
-    " Sleep to see the output in command-line.
-    execute 'sleep' sleep_arg
 endfunction "}}}
 
 function! visualctrlg#report_verbosely(...) "{{{
