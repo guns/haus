@@ -459,8 +459,8 @@ vnoremap <4-a> <C-\><C-n>VggoG
 noremap <silent> <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
 
 " REPLACE insertmode-go-to-normal-mode and command-line-insert-longest-match
-" with nothing for hashrocket
-noremap! <C-l> <Space>=><Space>
+" with nothing for ASCII arrow
+noremap! <C-l> ->
 
 " Indent lines (à la TextMate)
 nnoremap <4-[> a<C-d><C-\><C-n>

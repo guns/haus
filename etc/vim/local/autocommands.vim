@@ -42,8 +42,9 @@ augroup GUNS
         \ setlocal filetype=ruby
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |
-        \ execute 'noremap <buffer> <Leader><C-b> :B<CR>' |
-        \ execute 'noremap <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
+        \ execute 'noremap  <buffer> <Leader>R     :<C-u>RunCurrentMiniTestCase<CR>' |
+        \ execute 'noremap  <buffer> <Leader><C-b> :B<CR>' |
+        \ execute 'noremap! <buffer> <C-l>         <Space>=><Space>' |
         \ SetWhitespace 2 8
     " Metasploit doesn't follow community conventions
     autocmd BufRead,BufNewFile $cdmetasploit/*
@@ -69,7 +70,8 @@ augroup GUNS
         \ SetWhitespace 2
     autocmd FileType haml
         \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
-        \ execute 'noremap! <buffer> <M-CR> %br'
+        \ execute 'noremap! <buffer> <M-CR> %br' |
+        \ execute 'noremap! <buffer> <C-l>  <Space>=><Space>'
 
     " CSS {{{1
     autocmd FileType css
@@ -90,8 +92,7 @@ augroup GUNS
 
     " C {{{1
     autocmd FileType c,c++
-        \ setlocal cinoptions=:0 |
-        \ execute 'noremap! <buffer> <C-l> ->'
+        \ setlocal cinoptions=:0
 
     " Nginx {{{1
     autocmd BufRead,BufNewFile /opt/nginx/etc/*.conf,nginx.conf
