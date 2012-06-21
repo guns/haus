@@ -36,7 +36,7 @@
     tool = vimdiff
 
 [push]
-    default = upstream
+    default = tracking
 
 [rerere]
     enabled = true
