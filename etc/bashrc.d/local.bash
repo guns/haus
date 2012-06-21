@@ -417,7 +417,7 @@ dusort() {
         ps = res.sort_by { |s,f| s }.map do |s,f|
             case s
             when 0...2**10     then [                   s.to_s, "B", f]
-            when 2**10...2**20 then ["%.2f" % (s.to_f / 2**10), "K", f]
+            when 2**10...2**20 then [  "%d" % (s.to_f / 2**10), "K", f]
             when 2**20...2**30 then ["%.2f" % (s.to_f / 2**20), "M", f]
             else                    ["%.2f" % (s.to_f / 2**30), "G", f]
             end
@@ -1414,7 +1414,7 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
 
 # Quick Look (OS X)
-HAVE qlmanage && alias ql='bgrun qlmanage -p'
+HAVE qlmanage && alias ql='qlmanage -p'
 
 
 ### X {{{1
