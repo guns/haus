@@ -342,6 +342,9 @@ function! <SID>OrgBufferSetup()
     " Please don't remap core keybindings!
     silent! iunmap <buffer> <C-d>
     silent! iunmap <buffer> <C-t>
+
+    " Set foldlevel
+    setlocal foldlevel=1
 endfunction
 
 

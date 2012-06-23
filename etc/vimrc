@@ -50,6 +50,7 @@ set wildignore+=*.swp,*.swo
 set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff
 set wildignore+=*.class
 set wildignore+=.DS_Store,Thumbs.db
+set wildignore+=public/images/**
 if exists('&wildignorecase')
     set wildignorecase          " Case insensitive file completion on command line
 endif
