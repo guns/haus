@@ -120,6 +120,13 @@ function! <SID>Todo()
 endfunction
 
 
+command! -bar Ctags call <SID>Ctags() "{{{1
+function! <SID>Ctags()
+    let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
+    execute 'silent! !(' . cmd . '; notify --audio) &' | redraw! | echo cmd
+endfunction
+
+
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'

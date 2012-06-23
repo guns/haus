@@ -10,6 +10,7 @@ Thumbs.db
 *.swp
 *.swo
 .tags
+.jstags
 .types_*.vim
 
 # Ruby
