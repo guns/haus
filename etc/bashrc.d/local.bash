@@ -62,6 +62,11 @@ else
     export RAILS_ENV='development' RACK_ENV='development'
 fi
 
+# Node.js
+if [[ -d /opt/doctorjs/lib/jsctags && $NODE_PATH != */opt/doctorjs/lib/jsctags* ]]; then
+    export NODE_PATH="/opt/doctorjs/lib/jsctags${NODE_PATH}"
+fi
+
 # OS X
 if __OSX__; then
     # Prefer not copying Apple doubles and extended attributes
