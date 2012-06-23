@@ -3,7 +3,7 @@
 Author:         Jan Larres <jan@majutsushi.net>
 Licence:        Vim licence, see |license|
 Homepage:       http://majutsushi.github.com/tagbar/
-Version:        2.3
+Version:        2.4
 
 ==============================================================================
 Contents                                            *tagbar* *tagbar-contents*
@@ -214,6 +214,13 @@ The displayed scopes (and unscoped types) can be folded to hide uninteresting
 information. Mappings similar to Vim's built-in ones are provided. Folds can
 also be opened and closed by clicking on the fold icon with the mouse.
 
+Highlighting the current tag~
+When the Tagbar window is open the current tag will automatically be
+highlighted in it after a short pause if the cursor is not moving. The length
+of this pause is determined by the 'updatetime' option. If you want to make
+that pause shorter you can change the option, but don't set it too low or
+strange things will happen. This is unfortunately unavoidable.
+
 Displaying the prototype of a tag~
 Tagbar can display the prototype of a tag. More precisely it can display the
 line in which the tag is defined. This can be done by either pressing <Space>
@@ -225,7 +232,7 @@ displayed when the cursor stays on a tag for 'updatetime' milliseconds.
 ------------------------------------------------------------------------------
 COMMANDS                                                     *tagbar-commands*
 
-:TagbarOpen [{flags}]
+:TagbarOpen [{flags}]                                            *:TagbarOpen*
     Open the Tagbar window if it is closed.
 
     Additional behaviour can be specified with the optional {flags} argument.
@@ -241,33 +248,41 @@ COMMANDS                                                     *tagbar-commands*
     (unless |g:tagbar_autoclose| is set): >
         :TagbarOpen fj
 <
-:TagbarClose
+:TagbarClose                                                    *:TagbarClose*
     Close the Tagbar window if it is open.
 
-:TagbarToggle
+:TagbarToggle                                                  *:TagbarToggle*
     Open the Tagbar window if it is closed or close it if it is open.
 
-:TagbarOpenAutoClose
+:TagbarOpenAutoClose                                    *:TagbarOpenAutoClose*
     Open the Tagbar window, jump to it and close it on tag selection. This is
     an alias for ":TagbarOpen fc".
 
-:TagbarSetFoldlevel[!] {number}
+:TagbarSetFoldlevel[!] {number}                          *:TagbarSetFoldlevel*
     Set the foldlevel of the tags of the current file to {number}. The
     foldlevel of tags in other files remains unaffected. Works in the same way
     as 'foldlevel'. Folds that are specified to be closed by default in the
     type configuration will not be opened, use a "!" to force applying the new
     foldlevel to those folds as well.
 
-:TagbarShowTag
+:TagbarShowTag                                                *:TagbarShowTag*
     Open the parent folds of the current tag in the file window as much as
     needed for the tag to be visible in the Tagbar window.
 
-:TagbarDebug [logfile]
+:TagbarGetTypeConfig {filetype}                         *:TagbarGetTypeConfig*
+    Paste the Tagbar configuration of the vim filetype {filetype} at the
+    current cursor position (provided that filetype is supported by Tagbar)
+    for easy customization. The configuration will be ready to use as is but
+    will only contain the "kinds" entry as that is the only one that really
+    makes sense to customize. See |tagbar-extend| for more information about
+    type configurations.
+
+:TagbarDebug [logfile]                                          *:TagbarDebug*
     Start debug mode. This will write debug messages to file [logfile] while
     using Tagbar. If no argument is given "tagbardebug.log" in the current
     directory is used. Note: an existing file will be overwritten!
 
-:TagbarDebugEnd
+:TagbarDebugEnd                                              *:TagbarDebugEnd*
     End debug mode, debug messages will no longer be written to the logfile.
 
 ------------------------------------------------------------------------------
@@ -415,8 +430,8 @@ Example:
 g:tagbar_foldlevel~
 Default: 99
 
-The initial foldlevel for folds in the Tagbar window. Fold with a level higher
-than this number will be closed.
+The initial foldlevel for folds in the Tagbar window. Folds with a level
+higher than this number will be closed.
 
 Example:
 >
@@ -432,8 +447,8 @@ fonts. With this variable you can set the icons to characters of your liking.
 The first character in the list specifies the icon to use for a closed fold,
 and the second one for an open fold.
 
-Examples (don't worry if some the characters aren't displayed correctly, just
-choose other characters in that case):
+Examples (don't worry if some of the characters aren't displayed correctly,
+just choose other characters in that case):
 >
         let g:tagbar_iconchars = ['▶', '▼']  (default on Linux and Mac OS X)
         let g:tagbar_iconchars = ['▾', '▸']
@@ -448,8 +463,8 @@ Default: 0
 If this variable is set and the current tag is inside of a closed fold then
 the folds will be opened as much as needed for the tag to be visible so it can
 be highlighted. If it is not set then the folds won't be opened and the parent
-tag will be highlighted instead. You can use the TagbarShowTag command to open
-the folds manually.
+tag will be highlighted instead. You can use the |:TagbarShowTag| command to
+open the folds manually.
 
 Example:
 >
@@ -616,6 +631,10 @@ existing types and to add completely new types. For Tagbar to support a
 filetype two things are needed: a program that generates the tag information,
 usually Exuberant Ctags, and a Tagbar type definition in your |vimrc| or an
 |ftplugin| that tells Tagbar how to interpret the generated tags.
+
+Note: if you only want to customize an existing definition (like changing the
+order in which tag kinds are displayed) see "Changing an existing definition"
+below.
 
 There are two ways to generate the tag information for new filetypes: add a
 definition to Exuberant Ctags or create a specialized program for your
@@ -790,12 +809,17 @@ Which of the keys you have to specify depends on what you want to do.
 
 Changing an existing definition~
 If you want to change an existing definition you only need to specify the
-parts that you want to change. It probably only makes sense to change "kinds"
-and/or "scopes", which would be the case if you wanted to exclude certain
-kinds from appearing in Tagbar or if you want to change their order. As an
-example, if you didn't want Tagbar to show prototypes for C++ files, switch
-the order of enums and typedefs, and show macros in the statusline, you would
-do it like this:
+parts that you want to change. It probably only makes sense to change "kinds",
+which would be the case if you wanted to for example change the order of
+certain kinds, change their default fold state or exclude them from appearing
+in Tagbar. The easiest way to do that is to use the |:TagbarGetTypeConfig|
+command, which will paste a ready-to-use configuration with the "kinds" entry
+for the specified type at the current cursor position.
+
+As an example, if you didn't want Tagbar to show prototypes for C++ files,
+switch the order of enums and typedefs, and show macros in the statusline, you
+would first run ":TagbarGetTypeConfig cpp" in your vimrc and then change the
+definition like this:
 >
         let g:tagbar_type_cpp = {
             \ 'kinds' : [
@@ -993,6 +1017,16 @@ file.
 
 ==============================================================================
 8. History                                                    *tagbar-history*
+
+2.4 (2012-06-17)
+    - New function tagbar#currenttag() that reports the current tag, for
+      example for putting it into the statusline.
+    - New command TagbarGetTypeConfig for easy customization of an existing
+      type.
+    - Type definitions now can be loaded from ftplugins.
+    - The autoopen() function is now a bit more flexible.
+    - Vala is now supported if Anjuta is installed.
+    - Various other small improvements and bugfixes.
 
 2.3 (2011-12-24)
     - Add a convenience function that allows more flexible ways to

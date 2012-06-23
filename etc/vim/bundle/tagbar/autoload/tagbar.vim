@@ -4,7 +4,7 @@
 " Author:      Jan Larres <jan@majutsushi.net>
 " Licence:     Vim licence
 " Website:     http://majutsushi.github.com/tagbar/
-" Version:     2.3
+" Version:     2.4
 " Note:        This plugin was heavily inspired by the 'Taglist' plugin by
 "              Yegappan Lakshmanan and uses a small amount of code from it.
 "
@@ -21,6 +21,12 @@
 scriptencoding utf-8
 
 " Initialization {{{1
+
+" If another plugin calls an autoloaded Tagbar function on startup before the
+" plugin/tagbar.vim file got loaded, load it explicitly
+if exists(':Tagbar') == 0
+    runtime plugin/tagbar.vim
+endif
 
 " Basic init {{{2
 
@@ -424,6 +430,9 @@ function! s:InitTypes()
     let type_javascript = s:TypeInfo.New()
     let type_javascript.ctagstype = 'javascript'
     let jsctags = s:CheckFTCtags('jsctags', 'javascript')
+    if empty(jsctags)
+        let jsctags = s:CheckFTCtags('jsctags.js', 'javascript')
+    endif
     if jsctags != ''
         let type_javascript.kinds = [
             \ {'short' : 'v', 'long' : 'variables', 'fold' : 0, 'stl' : 0},
@@ -1191,17 +1200,22 @@ endfunction
 
 " s:BaseTag.getClosedParentTline() {{{3
 function! s:BaseTag.getClosedParentTline() dict
-    let tagline = self.tline
+    let tagline  = self.tline
     let fileinfo = self.fileinfo
 
-    let parent = self.parent
-    while !empty(parent)
+    " Find the first closed parent, starting from the top of the hierarchy.
+    let parents   = []
+    let curparent = self.parent
+    while !empty(curparent)
+        call add(parents, curparent)
+        let curparent = curparent.parent
+    endwhile
+    for parent in reverse(parents)
         if parent.isFolded()
             let tagline = parent.tline
             break
         endif
-        let parent = parent.parent
-    endwhile
+    endfor
 
     return tagline
 endfunction
@@ -1615,13 +1629,14 @@ endfunction
 function! s:InitWindow(autoclose)
     call s:LogDebugMessage('InitWindow called with autoclose: ' . a:autoclose)
 
+    setlocal filetype=tagbar
+
     setlocal noreadonly " in case the "view" mode is used
     setlocal buftype=nofile
     setlocal bufhidden=hide
     setlocal noswapfile
     setlocal nobuflisted
     setlocal nomodifiable
-    setlocal filetype=tagbar
     setlocal nolist
     setlocal nonumber
     setlocal nowrap
@@ -1629,6 +1644,7 @@ function! s:InitWindow(autoclose)
     setlocal textwidth=0
     setlocal nocursorline
     setlocal nocursorcolumn
+    setlocal nospell
 
     if exists('+relativenumber')
         setlocal norelativenumber
@@ -2626,6 +2642,7 @@ function! s:HighlightTag(openfolds, ...)
 
     let foldpat = '[' . s:icon_open . s:icon_closed . ' ]'
     let pattern = '/^\%' . tagline . 'l\s*' . foldpat . '[-+# ]\zs[^( ]\+\ze/'
+    call s:LogDebugMessage("Highlight pattern: '" . pattern . "'")
     execute 'match TagbarHighlight ' . pattern
 
     if a:0 == 0 " no line explicitly given, so assume we were in the file window
@@ -3402,6 +3419,43 @@ function! tagbar#currenttag(fmt, default, ...)
     else
         return a:default
     endif
+endfunction
+
+" tagbar#gettypeconfig() {{{2
+function! tagbar#gettypeconfig(type)
+    if !s:Init()
+        return ''
+    endif
+
+    let typeinfo = get(s:known_types, a:type, {})
+
+    if empty(typeinfo)
+        echoerr 'Unknown type ' . a:type . '!'
+        return
+    endif
+
+    let output = "let g:tagbar_type_" . a:type . " = {\n"
+
+    let output .= "    \\ 'kinds' : [\n"
+    for kind in typeinfo.kinds
+        let output .= "        \\ '" . kind.short . ":" . kind.long
+        if kind.fold || !kind.stl
+            if kind.fold
+                let output .= ":1"
+            else
+                let output .= ":0"
+            endif
+        endif
+        if !kind.stl
+            let output .= ":0"
+        endif
+        let output .= "',\n"
+    endfor
+    let output .= "    \\ ],\n"
+
+    let output .= "\\ }"
+
+    silent put =output
 endfunction
 
 " Modeline {{{1
