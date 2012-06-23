@@ -10,33 +10,41 @@
 "         "A colorful, dark color scheme for Vim."
 "
 " File:         jellybeans.vim
-" Maintainer:   NanoTech <http://nanotech.nanotechcorp.net/>
+" URL:          github.com/nanotech/jellybeans.vim
+" Scripts URL:  vim.org/scripts/script.php?script_id=2555
+" Maintainer:   NanoTech (nanotech.nanotechcorp.net)
 " Version:      1.6~git
 " Last Change:  January 15th, 2012
-" Contributors: Daniel Herbert <http://pocket-ninja.com/>,
-"               Henry So, Jr. <henryso@panix.com>,
-"               David Liang <bmdavll at gmail dot com>,
-"               Rich Healey (richo),
+" License:      MIT
+" Contributors: Daniel Herbert (pocketninja)
+"               Henry So, Jr. <henryso@panix.com>
+"               David Liang <bmdavll at gmail dot com>
+"               Rich Healey (richo)
 "               Andrew Wong (w0ng)
 "
 " Copyright (c) 2009-2012 NanoTech
 "
-" Permission is hereby granted, free of charge, to any person obtaining a copy
-" of this software and associated documentation files (the "Software"), to deal
-" in the Software without restriction, including without limitation the rights
-" to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-" copies of the Software, and to permit persons to whom the Software is
-" furnished to do so, subject to the following conditions:
+" Permission is hereby granted, free of charge, to any per‐
+" son obtaining a copy of this software and associated doc‐
+" umentation  files  (the “Software”), to deal in the Soft‐
+" ware without restriction,  including  without  limitation
+" the rights to use, copy, modify, merge, publish, distrib‐
+" ute, sublicense, and/or sell copies of the Software,  and
+" to permit persons to whom the Software is furnished to do
+" so, subject to the following conditions:
 "
-" The above copyright notice and this permission notice shall be included in
-" all copies or substantial portions of the Software.
+" The above copyright notice  and  this  permission  notice
+" shall  be  included in all copies or substantial portions
+" of the Software.
 "
-" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-" AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-" OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+" THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY
+" KIND,  EXPRESS  OR  IMPLIED, INCLUDING BUT NOT LIMITED TO
+" THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICU‐
+" LAR  PURPOSE  AND  NONINFRINGEMENT. IN NO EVENT SHALL THE
+" AUTHORS OR COPYRIGHT HOLDERS BE  LIABLE  FOR  ANY  CLAIM,
+" DAMAGES  OR OTHER LIABILITY, WHETHER IN AN ACTION OF CON‐
+" TRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CON‐
+" NECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 " THE SOFTWARE.
 
 set background=dark
@@ -280,11 +288,11 @@ fun! s:X(group, fg, bg, attr, lcfg, lcbg)
   if a:attr == ""
     exec "hi ".a:group." gui=none cterm=none"
   else
-    let noitalic = join(filter(split(a:attr, ","), "v:val !=? 'italic'"), ",")
-    if empty(noitalic)
-      let noitalic = "none"
+    let l:noitalic = join(filter(split(a:attr, ","), "v:val !=? 'italic'"), ",")
+    if empty(l:noitalic)
+      let l:noitalic = "none"
     endif
-    exec "hi ".a:group." gui=".a:attr." cterm=".noitalic
+    exec "hi ".a:group." gui=".a:attr." cterm=".l:noitalic
   endif
 endfun
 " }}}
@@ -490,6 +498,28 @@ if !s:low_color
   hi DbgBreakPt ctermbg=53
   hi IndentGuidesOdd ctermbg=235
   hi IndentGuidesEven ctermbg=234
+endif
+
+if exists("g:jellybeans_overrides")
+  fun! s:load_colors(defs)
+    for [l:group, l:v] in items(a:defs)
+      call s:X(l:group, get(l:v, 'guifg', ''), get(l:v, 'guibg', ''),
+      \                 get(l:v, 'attr', ''),
+      \                 get(l:v, 'ctermfg', ''), get(l:v, 'ctermbg', ''))
+      if !s:low_color
+        for l:prop in ['ctermfg', 'ctermbg']
+          let l:override_key = '256'.l:prop
+          if has_key(l:v, l:override_key)
+            exec "hi ".l:group." ".l:prop."=".l:v[l:override_key]
+          endif
+        endfor
+      endif
+      unlet l:group
+      unlet l:v
+    endfor
+  endfun
+  call s:load_colors(g:jellybeans_overrides)
+  delf s:load_colors
 endif
 
 " delete functions {{{
