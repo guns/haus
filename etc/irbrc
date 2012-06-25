@@ -11,12 +11,16 @@
 require 'rubygems' # for backwards compatibility
 require 'irb/completion'
 require 'fileutils'
+begin
+  require 'cli/repl_helpers'
+rescue LoadError
+end
+
+include FileUtils
+include CLI::ReplHelpers if defined? CLI::ReplHelpers
 
 # re-add working directory for ruby 1.9.2+
 $:.unshift Dir.pwd
-
-
-### IRB.conf
 
 # \001 and \002 are used by Readline to delimit non-printing chars
 # http://redmine.ruby-lang.org/issues/show/3616
@@ -34,89 +38,9 @@ IRB.conf.merge! \
   :SAVE_HISTORY => 2**16,
   :USE_READLINE => true
 
-
-### Helpers
-
-# Wrap helpers in module so we can :remove_method
-module IRBHelper
-  include FileUtils
-
-  def ls pat = '*', opts = {}
-    Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
-  end
-
-  def pp *args
-    require 'pp'
-    super
-    nil
-  end
-
-  def ap *args
-    require 'ap'
-    super
-    nil
-  end
-
-  def vim *args
-    require 'interactive_editor'
-    IRBHelper.send :remove_method, :vim
-    vim *args
-  end
-
-  def notify
-    $notify ||= begin
-      require 'cli/notification'
-      CLI::Notification.new :audio => File.expand_path('~/.sounds/Message_Received.m4a')
-    end
-    $notify.call; nil
-  end
-  alias :na :notify
-
-  # http://stackoverflow.com/questions/123494/whats-your-favourite-irb-trick/123834#123834
-  def bm n = 1
-    require 'benchmark'
-
-    warn "#{n} iterations:"
-    Benchmark.bm do |test|
-      test.report { n.times { yield } }
-    end; nil
-  end
-
-  # Toggle number inspect style
-  def toggle_verbose_numbers
-    Integer.module_eval do
-      class << self
-        attr_accessor :verbose_inspect
-      end
-
-      if self.verbose_inspect = !verbose_inspect
-        alias_method :__inspect__, :inspect
-        def inspect
-          lines = ['', '']
-
-          [%w[%-d dec], %w[%08b bin], %w[0%03o oct], %w[0x%02x hex]].each do |fmt, label|
-            str = fmt % self
-            len = [str, label].map(&:length).max + 1
-            lines[0] << "%-#{len}s" % label
-            lines[1] << "%-#{len}s" % str
-          end
-
-          lines.join "\n"
-        end
-      else
-        remove_method :inspect
-        alias_method :inspect, :__inspect__
-      end
-    end
-  end
-
-  def toggle_magic_quotes
-    eval <<-EVAL
-      def self.method_missing *args
-        args.join ' '
-      end
-    EVAL
-  end
+# Often want to use IRB as a command shell
+def ls pat = '*', opts = {}
+  Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
 end
 
-include IRBHelper
+alias :sh :system

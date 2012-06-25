@@ -250,11 +250,15 @@ task :env do # {{{1
 end
 
 
-desc 'Start an IRB console within the rake environment' # {{{1
+desc 'Start a Pry or IRB console within the rake environment' # {{{1
 task :console do
-  require 'irb'
   ARGV.clear
-  IRB.start
+  begin
+    require 'pry'
+    Pry
+  rescue LoadError
+    IRB
+  end.start
 end
 
 desc 'Update vim plugin helptags'

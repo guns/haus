@@ -38,7 +38,7 @@ augroup GUNS
         \ LispBufferSetup
 
     " Ruby {{{1
-    autocmd BufRead,BufNewFile *.irbrc,config.ru,Gemfile,*rakefile
+    autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile,*rakefile
         \ setlocal filetype=ruby
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |

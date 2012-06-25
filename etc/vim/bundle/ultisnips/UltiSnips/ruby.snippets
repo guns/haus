@@ -76,25 +76,7 @@ yield
 endsnippet
 
 snippet deb "debugger" b
-begin ### DEBUG
-	# Nuclear option for Ruby 1.9.3 compatibility
-	$:.unshift *%w[
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug19-0.11.6/cli/
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug-base19-0.11.26/lib/
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/ruby-debug-base19-0.11.26/ext/
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/linecache19-0.5.13/lib/
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/linecache19-0.5.13/ext/
-		/opt/ruby/1.9/lib/ruby/gems/1.9.1/gems/columnize-0.3.4/lib/
-	]
-	require 'ruby-debug'
-	Debugger.settings[:autolist] = 1
-	Debugger.settings[:autoeval] = 1
-	Debugger.settings[:force_stepping] = 1
-	Debugger.settings[:reload_source_on_change] = 1
-	Debugger.wait_connection = true
-	$stdout.tty? ? Debugger.start : Debugger.start_remote
-	debugger
-end$0
+binding.pry
 endsnippet
 
 snippet bm "benchmark" b

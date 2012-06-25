@@ -262,6 +262,7 @@ $if Bash
 
     # IRB
     "\033\007i":    "\C-] irb \n"
+    "\033\007I":    "\C-] pry \n"
 
     # Clojure VimREPL
     "\C-xc":        "\C-] vimclojure \n"
@@ -271,7 +272,7 @@ $if Bash
 $endif
 
 
-### irb {{{1
+### pry / irb {{{1
 
 $if Ruby
     # Re-exec (see above)
@@ -285,10 +286,10 @@ $if Ruby
     "\C-xl":        "\C-]load ''\C-b"
     "\C-xr":        "\C-]require ''\C-b"
 
-    # interactive_editor
-    "\033\007e":    "\C-] vim \n"
-    "\C-x\C-e":     "\C-] vim \n"
-    "\C-xe":        "\C-]vim \"/tmp/.interactive-editor.rb\"\eb\eb\eb\C-b"
+    # interactive_editor / pry edit
+    "\033\007e":    "\C-] edit \n"
+    "\C-x\C-e":     "\C-] edit \n"
+    "\C-xe":        "\C-]edit "
 $endif
 
 

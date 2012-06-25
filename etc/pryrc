@@ -1,0 +1,13 @@
+# -*- encoding: utf-8 -*-
+
+#   ______ ______ ___ ___
+#  |   __ \   __ \   |   |
+#  |    __/      <\     /
+#  |___|  |___|__| |___|   guns <self@sungpae.com>
+#
+
+begin
+  require 'cli/repl_helpers'
+  include CLI::ReplHelpers
+rescue LoadError
+end
