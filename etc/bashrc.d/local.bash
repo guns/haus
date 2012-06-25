@@ -1080,26 +1080,24 @@ type ruby &>/dev/null && {
                alias "gem${suf}outdated=run ${bin}/gem outdated"
             }
 
-            # Core ruby programs
+            # IRB
             if [[ "$suf" == 18* ]]; then
                 ALIAS "irb${suf}=${bin}/irb -Ku"
             else
                 ALIAS "irb${suf}=${bin}/irb"
             fi
-            ALIAS "ri${suf}=${bin}/ri"
+
+            # Rake
             ALIAS "rake${suf}=${bin}/rake" \
                   "rk${suf}=rake${suf}" \
                   "rk${suf}t=rake${suf} -T"
 
             # Useful gem executables
-            ALIAS "b${suf}=${bin}/bundle"
-            ALIAS "bx${suf}=${bin}/bundle exec"
-            ALIAS "brk${suf}=${bin}/bundle exec rake" \
-                  "brk${suf}t=${bin}/bundle exec rake -T"
-            ALIAS "rdb${suf}=${bin}/rdebug" \
-                  "rdb${suf}c=${bin}/rdebug -c" &&
-                  TCOMP exec "rdb${suf}" &&
-                  TCOMP exec "rdbc${suf}"
+            ALIAS "b${suf}=${bin}/bundle" \
+                  "bx${suf}=${bin}/bundle exec" \
+                  "brk${suf}=${bin}/bundle exec rake" \
+                  "brk${suf}t=${bin}/bundle exec rake -T" \
+                  "binstall${suf}=${bin}/bundle install"
         }
     }; GC_FUNC RUBY_VERSION_SETUP
 
