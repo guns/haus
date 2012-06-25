@@ -76,7 +76,10 @@ yield
 endsnippet
 
 snippet deb "debugger" b
-binding.pry
+begin ### DEBUG
+	require 'pry'
+	binding.send $stdout.tty? ? :pry : :remote_pry
+end
 endsnippet
 
 snippet bm "benchmark" b

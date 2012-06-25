@@ -8,6 +8,16 @@
 
 begin
   require 'cli/repl_helpers'
-  include CLI::ReplHelpers
+  require 'pry-nav'
 rescue LoadError
+end
+
+if defined? CLI::ReplHelpers
+  include CLI::ReplHelpers
+end
+
+if defined? PryNav
+  Pry.commands.alias_command 'c', 'continue'
+  Pry.commands.alias_command 's', 'step'
+  Pry.commands.alias_command 'n', 'next'
 end
