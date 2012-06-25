@@ -123,7 +123,7 @@ endfunction
 command! -bar Ctags call <SID>Ctags() "{{{1
 function! <SID>Ctags()
     let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
-    execute 'silent! !(' . cmd . '; notify --audio) &' | redraw! | echo cmd
+    execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
 endfunction
 
 
@@ -343,8 +343,9 @@ function! <SID>OrgBufferSetup()
     silent! iunmap <buffer> <C-d>
     silent! iunmap <buffer> <C-t>
 
-    " Set foldlevel
+    " Set foldlevel and fold styles
     setlocal foldlevel=1
+    highlight Folded ctermfg=240 guifg=#585858 ctermbg=233 guibg=#121212 term=italic gui=italic
 endfunction
 
 

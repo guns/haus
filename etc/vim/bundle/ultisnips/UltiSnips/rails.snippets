@@ -209,8 +209,8 @@ snippet mcol "Migration Remove and Add Column (mrac)"
 remove_column :${1:table}, :${2:column}${3: [press tab twice to generate add_column]}
 endsnippet
 
-snippet rdb "RAILS_DEFAULT_LOGGER.debug (rdb)"
-RAILS_DEFAULT_LOGGER.debug "${1:message}"$0
+snippet log "::Rails.logger.debug (rdb)"
+::Rails.logger.debug $0
 endsnippet
 
 snippet tre "Table column(s) rename"
@@ -419,26 +419,6 @@ endsnippet
 
 snippet ho "has_one (ho)"
 has_one :${1:object}${2:, :class_name => "${3:${1/[[:alpha:]]+|(_)/(?1::\u$0)/g}}", :foreign_key => "${4:${1}_id}"}
-endsnippet
-
-snippet logd "logger.debug"
-${1:Rails.}logger.debug { "${1:message}" }$0
-endsnippet
-
-snippet loge "logger.error"
-logger.error { "${1:message}" }$0
-endsnippet
-
-snippet logf "logger.fatal"
-logger.fatal { "${1:message}" }$0
-endsnippet
-
-snippet logi "logger.info"
-logger.info { "${1:message}" }$0
-endsnippet
-
-snippet logw "logger.warn"
-logger.warn { "${1:message}" }$0
 endsnippet
 
 snippet mp "map(&:sym_proc)"
