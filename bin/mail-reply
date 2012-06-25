@@ -8,7 +8,7 @@
 require 'optparse'
 require 'mail'
 
-class Mreply
+class MailReply
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = %Q(\
@@ -40,4 +40,4 @@ class Mreply
   end
 end
 
-$0 = File.basename(__FILE__) and Mreply.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and MailReply.new.run ARGV if $0 == __FILE__
