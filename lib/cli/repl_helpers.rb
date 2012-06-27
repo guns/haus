@@ -77,13 +77,13 @@ module CLI
         end
       end
     end
-  end
 
-  def toggle_magic_quotes
-    eval <<-EVAL
-      def self.method_missing *args
-        args.join ' '
-      end
-    EVAL
+    def toggle_magic_quotes
+      eval <<-EVAL
+        def self.method_missing *args
+          args.join ' '
+        end
+      EVAL
+    end
   end
 end
