@@ -1,6 +1,6 @@
 """ Library of commands
 
-command! -nargs=+ -bar Mapall call <SID>Mapall(<f-args>) " {{{1
+command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
 function! <SID>Mapall(...)
     execute 'noremap  ' . join(a:000)
     execute 'noremap! ' . a:1 . ' <C-\><C-n>' . join(a:000[1:])
@@ -103,17 +103,18 @@ function! <SID>SynStack()
 endfunction
 
 
-command! -bar Todo call <SID>Todo() "{{{1
-function! <SID>Todo()
+command! -nargs=? -bar -complete=file Todo call <SID>Todo(<f-args>) "{{{1
+function! <SID>Todo(...)
     let words = ['TODO', 'FIXME', 'NOTE', 'WARNING', 'DEBUG', 'HACK', 'XXX']
+    let arg = a:0 ? shellescape(expand(a:1), 1) : '.'
 
     " Fugitive detects Git repos for us
-    if exists(':Ggrep')
-        execute 'silent! Ggrep! -Ew "' . join(words,'|') . '" ' . shellescape(getcwd(), 1)
+    if !exists(':Ggrep')
+        execute 'silent! Ggrep! -Ew "' . join(words,'|') . '" ' . (a:0 ? arg : shellescape(getcwd(), 1))
     elseif exists(':Ack')
-        execute 'silent! Ack! -w "' . join(words,'\|') . '"'
+        execute 'silent! Ack! -w "' . join(words,'\|') . '" ' . arg
     else
-        execute 'silent! grep! -r -Ew "' . join(words,'\|') . '" .'
+        execute 'silent! grep! -r -Ew "' . join(words,'\|') . '" ' . arg
     endif
 
     redraw!
@@ -265,7 +266,7 @@ function! <SID>StopNailgunServer()
 endfunction
 
 
-command! -nargs=? -bar Screen call <SID>Screen(<q-args>) "{{{1
+command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
         \ 'ruby'       : 'irb',
@@ -366,7 +367,7 @@ function! <SID>Open(word)
 endfunction
 
 
-command! -nargs=? Qfdo call <SID>Qfdo(<q-args>) "{{{1
+command! -nargs=? -complete=command -bar Qfdo call <SID>Qfdo(<q-args>) "{{{1
 function! <SID>Qfdo(expr)
     " Run a command over all lines in the quickfix buffer
     let qflist = getqflist()
@@ -387,7 +388,7 @@ function! <SID>ToggleQuickfixWindow()
 endfunction
 
 
-command! -nargs=+ -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
+command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! <SID>TabOpen(file, ...)
     for t in range(tabpagenr('$'))
         for b in tabpagebuflist(t + 1)
@@ -467,7 +468,7 @@ function! <SID>MapReadlineUnicodeBindings()
 endfunction
 
 
-command! -nargs=? -bar CapturePane call <SID>CapturePane() "{{{1
+command! -bar CapturePane call <SID>CapturePane() "{{{1
 function! <SID>CapturePane()
     " Tmux-esque capture-pane
     let buf = bufnr('%')
@@ -479,7 +480,7 @@ function! <SID>CapturePane()
 endfunction
 
 
-command! -nargs=+ Capture call <SID>Capture(<q-args>) "{{{1
+command! -nargs=+ -complete=command -bar Capture call <SID>Capture(<q-args>) "{{{1
 command! CaptureMaps
     \ execute 'Capture verbose map | silent! verbose map!' |
     \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
@@ -494,7 +495,7 @@ function! <SID>Capture(cmd)
     endtry
 endfunction
 
-command! -nargs=* -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
+command! -nargs=* -complete=file -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
 function! <SID>Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
 
@@ -512,9 +513,9 @@ endfunction
 
 " Say {{{1
 if executable('/usr/bin/say')
-    command! -nargs=1 -bar Say call system('say ' . shellescape(<q-args>))
+    command! -nargs=1 -complete=command -bar Say call system('say ' . shellescape(<q-args>))
 else
-    command! -nargs=1 -bar Say call system('espeak -ven-us ' . shellescape(<q-args>))
+    command! -nargs=1 -complete=command -bar Say call system('espeak -ven-us ' . shellescape(<q-args>))
 endif
 
 
