@@ -329,6 +329,7 @@ noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
 noremap <Leader><C-i>    :<C-u>SetIskeyword! \| SetIskeyword<CR>
 noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
+noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
