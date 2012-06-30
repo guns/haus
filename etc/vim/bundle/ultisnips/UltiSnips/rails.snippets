@@ -18,15 +18,7 @@ $0
 endsnippet
 
 snippet cla "Create controller class"
-class ${1:Model}Controller < ApplicationController
-	before_filter :find_${2:model}
-
-	$0
-
-	private
-	def find_${2}
-		@$2 = ${3:$1}.find(params[:id]) if params[:id]
-	end
+class ${1:Model}Controller < ApplicationController$0
 end
 endsnippet
 
@@ -53,8 +45,7 @@ endsnippet
 snippet cla "Create functional test class"
 require 'test_helper'
 
-class ${1:Model}ControllerTest < ActionController::TestCase
-	test$0
+class ${1:Model}ControllerTest < ActionController::TestCase$0
 end
 
 endsnippet
