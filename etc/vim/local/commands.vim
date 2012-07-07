@@ -404,6 +404,18 @@ function! <SID>TabOpen(file, ...)
 endfunction
 
 
+command! -bar TabmoveNext call <SID>Tabmove(1) " {{{1
+command! -bar TabmovePrev call <SID>Tabmove(-1)
+function! <SID>Tabmove(n)
+    if version >= 703 && has('patch591')
+        execute 'tabmove ' . printf('%+d', a:n)
+    else
+        let nr = a:n > 0 ? tabpagenr() + a:n - 1 : tabpagenr() - a:n - 3
+        execute 'tabmove ' . (nr < 0 ? 0 : nr)
+    endif
+endfunction
+
+
 command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
 function! <SID>RunCurrentFile()
     let map = {

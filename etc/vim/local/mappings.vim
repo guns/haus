@@ -401,8 +401,8 @@ Mapall <4-t> :<C-u>tabnew<CR>
 Mapall <4-T> :<C-u>tabnew<CR>
 Mapall <4-{> :<C-u>tabprevious<CR>
 Mapall <4-}> :<C-u>tabnext<CR>
-Mapall <4-_> :<C-u>execute 'tabmove ' . (tabpagenr()-2)<CR>
-Mapall <4-+> :<C-u>execute 'tabmove ' . tabpagenr()<CR>
+Mapall <4-_> :<C-u>TabmovePrev<CR>
+Mapall <4-+> :<C-u>TabmoveNext<CR>
 
 " Quickfix window
 Mapall <4-x> :<C-u>ToggleQuickfixWindow<CR>
