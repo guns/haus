@@ -182,8 +182,8 @@ alias o='echo'
 alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
-t() { type "$@"; }; TCOMP type t
-ALIAS ta='t -a' \
+ALIAS t='type --' \
+      ta='t -a' \
       tp='t -P'
 ALIAS x='exec'
 alias wrld='while read l; do'; TCOMP exec wrld
@@ -235,11 +235,9 @@ alias watch='while read path <<< "$(ruby -r fssm -e "
 ### Files, Disks, and Memory {{{1
 
 # grep
-alias g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT"
-alias g3='g -C3'
-alias gw='g -w'
-alias gv='g -v'
-alias gvw='g -vw'
+ALIAS g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT" \
+      gw='g -w' \
+      gv='g -v'
 alias wcl='grep -c .'
 
 # ack
@@ -249,21 +247,20 @@ ALIAS acki='ack -i' \
 
 # cat less tail
 alias c='cat'
-alias l='less'
-alias L='l +S' # Soft-wrap
-alias lf='l +F' # Follow-forever
+ALIAS l='less' \
+      L='l +S' \
+      lf='l +F' && pager() { less -+c --quit-if-one-screen "$@"; }
 ALIAS tf='tail -f'
+
 # Logfiles
 if [[ -r /var/log/system.log ]]; then
-    ALIAS tfsystem='tf /var/log/system.log'
+    alias tfsystem='tf /var/log/system.log'
     alias lfsystem='lf /var/log/system.log'
 fi
 if [[ -r /var/log/everything.log ]]; then
-    ALIAS tfeverything='tf /var/log/everything.log'
+    alias tfeverything='tf /var/log/everything.log'
     alias lfeverything='lf /var/log/everything.log'
 fi
-# An eager-to-exit `less`
-pager() { less -+c --quit-if-one-screen "$@"; }
 
 # ls
 alias ls="ls -Ahl $GNU_COLOR_OPT"
