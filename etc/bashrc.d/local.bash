@@ -731,6 +731,18 @@ alias ntpq='ntpd -g -q'
 HAVE nc   && TCOMP dig nc
 HAVE ncat && TCOMP dig ncat
 
+# IMAP client
+HAVE openssl && {
+    # http://delog.wordpress.com/2011/05/10/access-imap-server-from-the-command-line-using-openssl/
+    imaps-connect() {
+        if (($# == 1)); then
+            run openssl s_client -crlf -connect "$@"
+        else
+            echo "Usage: $FUNCNAME host:port"
+        fi
+    }
+}
+
 # ssh scp
 ALIAS ssh='ssh -2' \
       ssh-fast="ssh -c $SSH_FAST_CIPHERS" \
