@@ -282,6 +282,9 @@ noremap ?        ?\v
 noremap <Bslash> /\V
 noremap <Bar>    ?\V
 
+" Search for non-printing ASCII characters
+noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
+
 " Center on next match (normal-mode only)
 nnoremap n nzz
 nnoremap N Nzz
