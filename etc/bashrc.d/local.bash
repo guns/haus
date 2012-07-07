@@ -1163,10 +1163,6 @@ type ruby &>/dev/null && {
             COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
         }; complete -F _api api
     }
-
-    HAVE yard && {
-        alias yards='run yard server --host yard.api --port 8808'
-    }
 }
 
 
@@ -1275,7 +1271,7 @@ if __OSX__; then
     # Param: [$@] Arguments to `pmset`
     pmset() {
         if (($#)); then
-            run command pmset "$@"
+            command pmset "$@"
         else
             run command pmset -g custom
         fi
