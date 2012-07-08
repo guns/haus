@@ -332,10 +332,11 @@ class Macdriver
   # Return a property list as a string of a launchd.plist(5) that runs
   # `macdriver` with the given arguments at load.
   def launchd *args
+    ruby = File.join RbConfig::CONFIG.values_at('bindir', 'ruby_install_name')
     Plist::Emit.dump \
       :Label            => 'com.sungpae.macdriver',
       :RunAtLoad        => true,
-      :ProgramArguments => ['/usr/bin/env', 'PATH=%s' % ENV['PATH'], File.expand_path(__FILE__)] + args
+      :ProgramArguments => [ruby, '--', File.expand_path(__FILE__)] + args
   end
 
   def run arguments = []
