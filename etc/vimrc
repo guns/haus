@@ -32,11 +32,15 @@ set history=1024                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 set tags+=./.jstags,.jstags     " Read hidden doctorjs .tags files
 
-" Swap files
-if !isdirectory(expand('~/.vimtmp'))
-    call mkdir(expand('~/.vimtmp'))
+" Swap and undo files
+if !isdirectory(expand('~/.vimtmp/undo'))
+    call mkdir(expand('~/.vimtmp/undo', 'p'))
 endif
-set directory^=~/.vimtmp
+if isdirectory(expand('~/.vimtmp/undo'))
+    set directory=~/.vimtmp
+    set undodir=~/.vimtmp/undo
+    set undofile
+endif
 
 " Searching / Matching
 set hlsearch                    " Highlight matching patterns
