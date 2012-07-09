@@ -564,9 +564,9 @@ command! -bar Hitest
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
 
 
-""" Utility functions
+""" Utility functions {{{1
 
-function! CwordOrSel(...)
+function! CwordOrSel(...) " {{{1
     if a:0 && a:1
         normal gv"vy
         return @v

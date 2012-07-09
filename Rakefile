@@ -111,6 +111,7 @@ task :env do # {{{1
       { :base => "#{@vim}/vim-haml",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-javascript",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-markdown",           :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-monit",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-operator-user",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-orgmode",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-rails",              :branch => %w[master guns], :files => :pathogen },
@@ -251,7 +252,7 @@ end
 
 
 desc 'Start a Pry or IRB console within the rake environment' # {{{1
-task :console do
+task :console => :env do
   ARGV.clear
   begin
     require 'pry'
