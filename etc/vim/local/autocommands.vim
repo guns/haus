@@ -61,7 +61,7 @@ augroup GUNS
 
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
-        \ setlocal matchpairs+=<:> synmaxcol=500 |
+        \ setlocal synmaxcol=500 |
         \ SparkupBufferSetup |
         \ SetWhitespace 2
 
