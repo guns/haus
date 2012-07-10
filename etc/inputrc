@@ -230,6 +230,7 @@ $if Bash
     "\C-xen":       "\C-] vimnginx \n"
     "\C-xeo":       "\C-] vimorg \n"
     "\C-xer":       "\C-] vimrcconf \n"
+    "\C-xeR":       "\C-] vimhausrakefile \n"
     "\C-xes":       "\C-] vimscratch \n"
     "\C-xet":       "\C-] vimtodo \n"
     "\C-xeT":       "\C-] vimtmux \n"

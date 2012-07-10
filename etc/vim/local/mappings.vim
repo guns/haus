@@ -352,6 +352,7 @@ noremap <Leader>eM       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local
 noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>er       :<C-u>TabOpen /etc/rc.conf<CR>
+noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
 noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
 noremap <Leader>et       :<C-u>execute 'TabOpen ' . resolve(expand(g:org_home . '/TODO.org')) . ' Org TODO'<CR>
@@ -555,8 +556,8 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: operator-camelize
 " RECURSIVE map for <Plug> mappings
-nmap <Leader>- viw<Plug>(operator-camelize-toggle)
-vmap <Leader>- <Plug>(operator-camelize-toggle)
+nmap <Leader><C-_> viw<Plug>(operator-camelize-toggle)
+vmap <Leader><C-_> <Plug>(operator-camelize-toggle)
 
 " Plugin: Command-T
 Mapall <4-o> :<C-u>CommandT<CR>
