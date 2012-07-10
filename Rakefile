@@ -236,6 +236,18 @@ task :env do # {{{1
           snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
           chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false if ENV.has_key? 'SUDO_USER'
         }
+      },
+
+      {
+        :base   => "#{@vim}/sparkup",
+        :branch => %w[master guns],
+        :files  => lambda { |proj|
+          src = "#{proj.base}/vim"
+          dst = "#{proj.haus}/etc/vim/bundle/sparkup"
+          FileUtils.mkdir_p dst
+          system *%W[rsync -a --delete --no-owner #{src}/ #{dst}/]
+          nil # Work is done
+        }
       }
     ],
 
