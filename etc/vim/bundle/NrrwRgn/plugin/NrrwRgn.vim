@@ -39,7 +39,7 @@ com! -bang NRLast :NRL
 
 " Define the actual Commands "{{{2
 com! -range -bang NR	 :<line1>, <line2>call nrrwrgn#NrrwRgn(<q-bang>)
-com! -range -bang NRP  :exe ":" . <line1> . ',' . <line2> . 'call nrrwrgn#Prepare(<q-bang>)'
+com! -range NRP  :exe ":" . <line1> . ',' . <line2> . 'call nrrwrgn#Prepare()'
 com! NRV :call nrrwrgn#VisualNrrwRgn(visualmode())
 com! NUD :call nrrwrgn#UnifiedDiff()
 com! -bang NW	 :exe ":" . line('w0') . ',' . line('w$') . "call nrrwrgn#NrrwRgn(<q-bang>)"
@@ -47,20 +47,12 @@ com! -bang NRM :call nrrwrgn#NrrwRgnDoPrepare(<q-bang>)
 com! -bang NRL :call nrrwrgn#LastNrrwRgn(<q-bang>)
 
 " Define the Mapping: "{{{2
-if !hasmapto('<Plug>NrrwrgnDo')
-	xmap <unique> <Leader>nr <Plug>NrrwrgnDo
-endif
-if !hasmapto('<Plug>NrrwrgnBangDo')
-	xmap <unique> <Leader>Nr <Plug>NrrwrgnBangDo
-endif
-if !hasmapto('VisualNrrwRgn')
-	xnoremap <unique> <script> <Plug>NrrwrgnDo <sid>VisualNrrwRgn
-endif
-if !hasmapto('VisualNrrwBangRgn')
-	xnoremap <unique> <script> <Plug>NrrwrgnBangDo <sid>VisualNrrwBangRgn
-endif
+xmap <unique> <Leader>nr <Plug>NrrwrgnDo
+xmap <unique> <Leader>Nr <Plug>NrrwrgnBangDo
+xnoremap <unique> <script> <Plug>NrrwrgnDo <sid>VisualNrrwRgn
+xnoremap <unique> <script> <Plug>NrrwrgnBangDo <sid>VisualNrrwBangRgn
 xnoremap <sid>VisualNrrwRgn :<c-u>call nrrwrgn#VisualNrrwRgn(visualmode(),'')<cr>
-xnoremap <sid>VisualNrrwBangRgn :NR!<cr>
+xnoremap <sid>VisualNrrwBangRgn :<c-u>call nrrwrgn#VisualNrrwRgn(visualmode(),'!')<cr>
 
 " Restore: "{{{1
 let &cpo=s:cpo

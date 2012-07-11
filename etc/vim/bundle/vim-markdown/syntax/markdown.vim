@@ -38,13 +38,13 @@ syn match markdownBlockquote ">\s" contained nextgroup=@markdownBlock
 syn region markdownCodeBlock start="    \|\t" end="$" contained
 
 " TODO: real nesting
-syn match markdownListMarker " \{0,4\}[-*+]\%(\s\+\S\)\@=" contained
-syn match markdownOrderedListMarker " \{0,4}\<\d\+\.\%(\s*\S\)\@=" contained
+syn match markdownListMarker "\%(\t\| \{0,4\}\)[-*+]\%(\s\+\S\)\@=" contained
+syn match markdownOrderedListMarker "\%(\t\| \{0,4}\)\<\d\+\.\%(\s*\S\)\@=" contained
 
 syn match markdownRule "\* *\* *\*[ *]*$" contained
 syn match markdownRule "- *- *-[ -]*$" contained
 
-syn match markdownLineBreak "\s\{2,\}$"
+syn match markdownLineBreak " \{2,\}$"
 
 syn region markdownIdDeclaration matchgroup=markdownLinkDelimiter start="^ \{0,3\}!\=\[" end="\]:" oneline keepend nextgroup=markdownUrl skipwhite
 syn match markdownUrl "\S\+" nextgroup=markdownUrlTitle skipwhite contained
@@ -66,7 +66,7 @@ syn region markdownBoldItalic start="\S\@<=\*\*\*\|\*\*\*\S\@=" end="\S\@<=\*\*\
 syn region markdownBoldItalic start="\S\@<=___\|___\S\@=" end="\S\@<=___\|___\S\@=" keepend contains=markdownLineStart
 syn region markdownCode matchgroup=markdownCodeDelimiter start="`" end="`" keepend contains=markdownLineStart
 syn region markdownCode matchgroup=markdownCodeDelimiter start="`` \=" end=" \=``" keepend contains=markdownLineStart
-syn region markdownCode matchgroup=markdownCodeDelimiter start="^\s*\zs```\s*\w*\ze\s*$" end="^```\ze\s*$" keepend
+syn region markdownCode matchgroup=markdownCodeDelimiter start="^\s*\zs```\s*.*$" end="^```\ze\s*$" keepend
 
 syn match markdownEscape "\\[][\\`*_{}()#+.!-]"
 syn match markdownError "\w\@<=_\w\@="

@@ -29,6 +29,7 @@ fun! <sid>WarningMsg(msg) "{{{1
 endfun
 
 fun! <sid>Init() "{{{1
+	let s:opts = []
 	if !exists("s:instn")
 		let s:instn=1
 		if !exists("g:nrrw_custom_options") || empty(g:nrrw_custom_options)
@@ -213,6 +214,9 @@ fun! <sid>NrrwRgnAuCmd(instn) "{{{1
 			" but because of 'bufhidden' wipeing will happen anyways
 			"exe "bwipe! " bufnr(s:nrrw_winname . '_' . a:instn)
 			if winnr('$') > 1
+				" If there is only a single window open don't clean up now
+				" because we can't put the narrowed lines back, so do not
+				" clean up now. We need to clean up then later. But how?
 				call <sid>CleanUpInstn(a:instn)
 			endif
 		endif
@@ -298,12 +302,14 @@ fun! <sid>Options(search) "{{{1
 		endif
 		keepj 0
 		let reg_a=[]
+		call add(reg_a, 'a')
 		call add(reg_a,getreg('a'))
 		call add(reg_a, getregtype('a'))
 		let @a=''
 		exe "silent :g/" . '\v'.escape(a:search, '\\/') . "/-y A"
 		let b=split(@a, "\n")
-		call setreg('a', reg_a[0], reg_a[1])
+		call call('setreg', reg_a)
+		"call setreg('a', reg_a[0], reg_a[1])
 		call filter(b, 'v:val =~ "^''"')
 		" the following options should be set
 		let filter_opt='\%(modifi\%(ed\|able\)\|readonly\|noswapfile\|' .
@@ -578,8 +584,8 @@ fun! <sid>ReturnComments() "{{{1
 	return [c_s, c_e]
 endfun
 
-fun! nrrwrgn#NrrwRgnDoPrepare(bang) "{{{1
-	let bang = !empty(a:bang)
+fun! nrrwrgn#NrrwRgnDoPrepare(...) "{{{1
+	let bang = (a:0 > 0 && !empty(a:1))
 	if !exists("s:nrrw_rgn_line")
 		call <sid>WarningMsg("You need to first select the lines to".
 			\ " narrow using :NRP!")
@@ -640,12 +646,12 @@ fun! nrrwrgn#NrrwRgnDoPrepare(bang) "{{{1
 	let &lz   = o_lz
 endfun
 
-fun! nrrwrgn#NrrwRgn(bang) range  "{{{1
+fun! nrrwrgn#NrrwRgn(...) range  "{{{1
 	let o_lz = &lz
 	let s:o_s  = @/
 	set lz
 	let orig_buf=bufnr('')
-	let bang = !empty(a:bang)
+	let bang = (a:0 > 0 && !empty(a:1))
 
 	" initialize Variables
 	call <sid>Init()
@@ -709,10 +715,9 @@ fun! nrrwrgn#NrrwRgn(bang) range  "{{{1
 	let &lz   = o_lz
 endfun
 
-fun! nrrwrgn#Prepare(bang) "{{{1
+fun! nrrwrgn#Prepare() "{{{1
 	let ltime = localtime()
-	if !empty(a:bang) &&
-	\ (!exists("s:nrrw_rgn_last") || s:nrrw_rgn_last + 10 < ltime)
+	if  (!exists("s:nrrw_rgn_last") || s:nrrw_rgn_last + 10 < ltime)
 		let s:nrrw_rgn_last = ltime
 		let s:nrrw_rgn_line = []
 	endif
@@ -861,7 +866,7 @@ fun! nrrwrgn#WidenRegion(vmode,force, close) "{{{1
 	endif
 endfun
 
-fun! nrrwrgn#VisualNrrwRgn(mode, bang) "{{{1
+fun! nrrwrgn#VisualNrrwRgn(mode, ...) "{{{1
 	" bang: open the narrowed buffer in the current window and don't open a
 	" new split window
 	if empty(a:mode)
@@ -875,7 +880,7 @@ fun! nrrwrgn#VisualNrrwRgn(mode, bang) "{{{1
 	" e.g. by using :NRV, so using :sil!
 	" else exiting visual mode
 	exe "sil! norm! \<ESC>"
-	let bang = !empty(a:bang)
+	let bang = (a:0 > 0 && !empty(a:1))
 	" stop visualmode
 	let o_lz = &lz
 	let s:o_s  = @/
@@ -900,7 +905,7 @@ fun! nrrwrgn#VisualNrrwRgn(mode, bang) "{{{1
 		" Non-Rectangular selection
 		let s:nrrw_rgn_lines[s:instn].blockmode = 0
 	endif
-	if a:bang
+	if bang
 		try
 			let local_options = <sid>GetOptions(s:opts)
 			" enew fails, when no new unnamed buffer can be edited
