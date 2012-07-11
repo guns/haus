@@ -39,7 +39,10 @@ task :env do # {{{1
       {
         :base   => "#{@src}/git",
         :branch => %w[master],
-        :files  => { 'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git' }
+        :files  => {
+          'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git',
+          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh'
+        }
       },
 
       {

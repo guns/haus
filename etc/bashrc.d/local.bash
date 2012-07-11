@@ -1053,9 +1053,10 @@ HAVE git && {
     }
 
     # PS1 git status
+    REQUIRE ~/.bashrc.d/git-prompt.sh
     gitps1() {
         __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
-    }; _load_comp git && gitps1 # Turn it on now!
+    }; gitps1
 }
 githubget() {
     (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
