@@ -27,14 +27,10 @@ class RailsTestServer
       opt.banner = %Q(\
         Simple forking Rails test server.
 
-        Usage: #{File.basename __FILE__} [options]
+        Usage: #{File.basename __FILE__} [options] [app-root]
 
         Options:
       ).gsub /^ +/, ''
-
-      opt.on '-r', '--root DIR', 'Rails application root; DEFAULT: %s' % (options.root || 'unknown') do |arg|
-        options.root = File.expand_path arg
-      end
 
       opt.on '-n', '--notify COMMAND', 'Optional notification command; should accept message on stdin' do |arg|
         options.notify = arg
@@ -44,27 +40,8 @@ class RailsTestServer
 
   def app_root
     dirname = File.dirname File.expand_path(__FILE__)
-    Pathname.new(dirname == 'script' ? dirname : Dir.pwd).ascend do |path|
+    Pathname.new(Dir.pwd).ascend do |path|
       break path.to_s if path.join('config', 'environment.rb').exist?
-    end
-  end
-
-  def listener
-    @listener ||= Listen.to('app', 'test', :filter => /\.rb\z/).change do |mod, add, rem|
-      begin
-        listener.pause
-        run_tests changed!(mod + add)
-      ensure
-        listener.unpause
-      end
-    end
-  end
-
-  def stdin_loop
-    loop do
-      true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
-      $stdin.gets "\n"
-      run_tests Dir['test/**/*_test.rb']
     end
   end
 
@@ -82,39 +59,68 @@ class RailsTestServer
     system 'echo %s | %s' % [msg.shellescape, options.notify] if options.notify
   end
 
+  def listener
+    Λ = Listen.to 'app', 'test', :filter => /\.rb\z/
+    Λ.change do |mod, add, rem|
+      begin
+        Λ.pause
+        run_tests *changed!(mod + add)
+      ensure
+        Λ.unpause
+      end
+    end
+  end
+
+  def stdin_loop
+    loop do
+      true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
+      $stdin.gets "\n"
+      run_tests [], Dir['test/**/*_test.rb']
+    end
+  end
+
+  # Returns [lib, test1, test2, ...]
   def tests_for file
     case file
-    when %r(\Aapp/models/)
-      ['test/unit/%s_test.rb' % File.basename(file, File.extname(file))]
-    when %r(\Aapp/controllers/)
-      ['test/functional/%s_test.rb' % File.basename(file, File.extname(file))] + Dir['test/integration/*_test.rb']
-    when %r(\Atest/(unit|functional|integration))
-      [file]
+    when %r{\Aapp/models/(.*/)?([^/]+)}
+      unit = 'test/unit/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
+      [file, unit]
+    when %r{\Aapp/controllers/(.*/)?([^/]+)}
+      functional = 'test/functional/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
+      integration = Dir['test/integration/**/*_test.rb']
+      [file, functional, *integration]
+    when %r{\Atest/.*_test\.rb}
+      [nil, file]
     else
       []
-    end.select { |f| File.exists? f }
+    end
   end
 
   def changed! files
-    tests = []
+    libs, tests = [], []
+
     files.each do |file|
-      path = file.sub '%s/' % Dir.pwd, ''
+      path = file.sub Dir.pwd + '/', ''
       hash = Digest::MD5.digest File.read(path)
       if checksum[path] != hash
         checksum[path] = hash
-        tests.concat tests_for(path)
+        l, *t = tests_for path
+        libs.push l if l
+        tests.concat t
       end
     end
-    tests.uniq
+
+    [libs, tests].map &:uniq
   end
 
-  def run_tests files
-    if files.any? and did_lock = lock.try_lock
+  def run_tests libs, tests
+    if tests.any? and did_lock = lock.try_lock
       start = Time.now
 
       Process.wait fork {
-        puts "\e[2J\e[H[#{$$}] Running test file#{'s' unless files.size == 1}: #{files.join ', '}"
-        files.each { |f| require File.expand_path(f) }
+        ARGV.clear # See MiniTest::Unit.autorun
+        puts "\e[2J\e[H[#{$$}] Running test file#{'s' unless tests.size == 1}: #{tests.join ', '}"
+        (libs + tests).each { |f| load File.expand_path(f) }
       }
 
       success = $?.exitstatus.zero?
@@ -128,7 +134,13 @@ class RailsTestServer
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.empty?
+
+    case args.size
+    when 1 then options.root = args.first
+    when 0 then nil
+    else abort parser.help
+    end
+
     abort 'Application root not found!' unless options.root
 
     Dir.chdir options.root do
