@@ -39,8 +39,8 @@ class Notify
   end
 
   def run arguments = []
-    args = parser.parse arguments
-    notifier.message = args.join ' ' unless args.empty?
+    msg = parser.parse(arguments).join ' '
+    notifier.message = msg == '-' ? $stdin.read : (msg unless msg.empty?)
     notifier.call
   end
 end

@@ -1,0 +1,151 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'pathname'
+require 'digest/md5'
+require 'shellwords'
+require 'listen'
+
+class RailsTestServer
+  attr_reader :options, :checksum, :lock
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.root ||= app_root
+    @checksum = {}
+    @lock = Mutex.new
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Simple forking Rails test server.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-r', '--root DIR', 'Rails application root; DEFAULT: %s' % (options.root || 'unknown') do |arg|
+        options.root = File.expand_path arg
+      end
+
+      opt.on '-n', '--notify COMMAND', 'Optional notification command; should accept message on stdin' do |arg|
+        options.notify = arg
+      end
+    end
+  end
+
+  def app_root
+    dirname = File.dirname File.expand_path(__FILE__)
+    Pathname.new(dirname == 'script' ? dirname : Dir.pwd).ascend do |path|
+      break path.to_s if path.join('config', 'environment.rb').exist?
+    end
+  end
+
+  def listener
+    @listener ||= Listen.to('app', 'test', :filter => /\.rb\z/).change do |mod, add, rem|
+      begin
+        listener.pause
+        run_tests changed!(mod + add)
+      ensure
+        listener.unpause
+      end
+    end
+  end
+
+  def stdin_loop
+    loop do
+      true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
+      $stdin.gets "\n"
+      run_tests Dir['test/**/*_test.rb']
+    end
+  end
+
+  def checksum!
+    Dir['app/**/*.rb', 'test/**/*.rb'].map do |f|
+      checksum[f] = Digest::MD5.digest(File.read f)
+    end
+  end
+
+  def print_ready
+    puts "\e[1;32m❤ Ready for tests!\e[0m"
+  end
+
+  def notify msg
+    system 'echo %s | %s' % [msg.shellescape, options.notify] if options.notify
+  end
+
+  def tests_for file
+    case file
+    when %r(\Aapp/models/)
+      ['test/unit/%s_test.rb' % File.basename(file, File.extname(file))]
+    when %r(\Aapp/controllers/)
+      ['test/functional/%s_test.rb' % File.basename(file, File.extname(file))] + Dir['test/integration/*_test.rb']
+    when %r(\Atest/(unit|functional|integration))
+      [file]
+    else
+      []
+    end.select { |f| File.exists? f }
+  end
+
+  def changed! files
+    tests = []
+    files.each do |file|
+      path = file.sub '%s/' % Dir.pwd, ''
+      hash = Digest::MD5.digest File.read(path)
+      if checksum[path] != hash
+        checksum[path] = hash
+        tests.concat tests_for(path)
+      end
+    end
+    tests.uniq
+  end
+
+  def run_tests files
+    if files.any? and did_lock = lock.try_lock
+      start = Time.now
+
+      Process.wait fork {
+        puts "\e[2J\e[H[#{$$}] Running test file#{'s' unless files.size == 1}: #{files.join ', '}"
+        files.each { |f| require File.expand_path(f) }
+      }
+
+      success = $?.exitstatus.zero?
+      puts "\e[1;#{success ? 36 : 31}m→ Completed in #{Time.now - start}s"
+      notify 'Test failure' unless success
+      print_ready
+    end
+  ensure
+    lock.unlock if did_lock
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    abort 'Application root not found!' unless options.root
+
+    Dir.chdir options.root do
+      ENV['RAILS_ENV'] = 'test'
+      $:.push 'lib', 'test'
+      require File.expand_path('config/environment.rb')
+      ActiveSupport::Autoload.eager_autoload!
+
+      checksum!
+
+      pool = []
+      pool << Thread.new { listener.start }
+      pool << Thread.new { stdin_loop.call }
+      print_ready
+      pool.each &:join
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and RailsTestServer.new.run ARGV if $0 == __FILE__
