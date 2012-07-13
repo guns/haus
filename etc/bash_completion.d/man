@@ -8,10 +8,9 @@ _man()
     local cur prev words cword split
     _init_completion -s -n : || return
 
-    local sect manpath manext mansect
-
-    manext="@([0-9lnp]|[0-9][px]|man|3?(gl|pm))?(.@([gx]z|bz2|lzma|Z))"
-    mansect="@([0-9lnp]|[0-9][px]|3?(gl|pm))"
+    local comprsuffix=".@([glx]z|bz2|lzma|Z)"
+    local manext="@([0-9lnp]|[0-9][px]|man|3?(gl|pm))?($comprsuffix)"
+    local mansect="@([0-9lnp]|[0-9][px]|3?(gl|pm))"
 
     case $prev in
         -C|--config-file)
@@ -56,6 +55,7 @@ _man()
         return 0
     fi
 
+    local manpath
     if [[ $OSTYPE == *@(darwin|linux|freebsd|cygwin)* ]] || _userland GNU; then
         manpath=$( manpath 2>/dev/null || command man --path )
     else
@@ -68,6 +68,7 @@ _man()
     fi
 
     # determine manual section to search
+    local sect
     [[ "$prev" == $mansect ]] && sect=$prev || sect='*'
 
     manpath=$manpath:
@@ -82,7 +83,7 @@ _man()
     # weed out directory path names and paths to man pages
     COMPREPLY=( ${COMPREPLY[@]##*/?(:)} )
     # strip suffix from man pages
-    COMPREPLY=( ${COMPREPLY[@]%.@([gx]z|bz2|lzma|Z)} )
+    COMPREPLY=( ${COMPREPLY[@]%$comprsuffix} )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]%.*}' -- "${cur//\\\\/}" ) )
 
     if [[ "$prev" != $mansect ]]; then
