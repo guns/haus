@@ -105,8 +105,7 @@ class Chrome
     options.signal ||= '-TERM'
     options.argv   ||= [
       '--enable-extension-timeline-api', # For Speed Tracer
-      '--disable-crash-reporter',        # Don't send crash reports
-      '--disable-accelerated-2d-canvas'  # My GPU sucks
+      '--disable-crash-reporter'         # Don't send crash reports
     ]
   end
 
