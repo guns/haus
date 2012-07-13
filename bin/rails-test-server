@@ -81,23 +81,34 @@ class RailsTestServer
     end
   end
 
+  def reload_config! file
+    case file
+    when 'config/routes.rb'
+      load File.expand_path(file)
+    end
+  end
+
   def tests_for file
     case file
     when %r{\Aapp/models/(.*/)?([^/]+)}
       unit = 'test/unit/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
-      [file, unit]
+      File.exists?(unit) ? [file, unit] : [file]
     when %r{\Aapp/controllers/(.*/)?([^/]+)}
       functional = 'test/functional/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
-      integration = Dir['test/integration/**/*_test.rb']
-      [file, functional, *integration]
-    when 'config/routes.rb'
-      functional = Dir['test/functional/**/*_test.rb']
-      [file, *functional]
-    when %r{\Atest/.*_test\.rb}
+      File.exists?(functional) ? [file, functional, *tests_for(:integration)] : [file, *tests_for(:integration)]
+    when %r{\Atest/.*\.rb}
       [file]
+    when 'config/routes.rb'
+      tests_for(:functional) + tests_for(:integration)
+    when :unit
+      Dir['test/unit/**/*_test.rb']
+    when :functional
+      Dir['test/functional/**/*_test.rb']
+    when :integration
+      Dir['test/integration/**/*_test.rb']
     else
       []
-    end.select { |f| File.exists? f }
+    end
   end
 
   def changed! files
@@ -108,6 +119,7 @@ class RailsTestServer
       hash = Digest::MD5.digest File.read(path)
       if checksum[path] != hash
         checksum[path] = hash
+        reload_config! path # Config files that should be reloaded in the parent
         tests.concat tests_for(path)
       end
     end
@@ -123,7 +135,9 @@ class RailsTestServer
         ARGV.clear # cf. MiniTest::Unit.autorun
         count = tests.size
         puts "\e[2J\e[H[#{$$}] Loading #{count} file#{'s' if count != 1}"
-        tests.each { |f| load File.expand_path(f) }
+        silence_warnings do
+          tests.each { |f| load File.expand_path(f) }
+        end
       }
 
       success = $?.exitstatus.zero?
@@ -149,6 +163,8 @@ class RailsTestServer
     Dir.chdir options.root do
       ENV['RAILS_ENV'] = 'test'
       $:.push 'lib', 'test'
+
+      # We can depend on tests autoloading app classes
       require File.expand_path('config/environment.rb')
       require 'test_helper'
       ActiveSupport::Autoload.eager_autoload!
