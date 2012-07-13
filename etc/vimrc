@@ -43,7 +43,7 @@ if isdirectory(expand('~/.vimtmp/undo'))
 endif
 
 " Searching / Matching
-set hlsearch                    " Highlight matching patterns
+set nohlsearch                  " Don't highlight matching patterns
 set incsearch                   " Highlight as we search
 set ignorecase                  " Set case insensitivity
 set smartcase                   " Unless there's a capital letter
