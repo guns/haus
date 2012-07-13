@@ -23,14 +23,16 @@ class RailsTestServer
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = %Q(\
         Simple forking Rails test server.
 
         Usage: #{File.basename __FILE__} [options] [app-root]
 
+        app-root DEFAULT: #{options.root}
+
         Options:
-      ).gsub /^ +/, ''
+      ).gsub /^ {8}/, ''
 
       opt.on '-n', '--notify COMMAND', 'Optional notification command; should accept message on stdin' do |arg|
         options.notify = arg
@@ -75,7 +77,7 @@ class RailsTestServer
     loop do
       true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
       $stdin.gets "\n"
-      run_tests [], Dir['test/**/*_test.rb']
+      run_tests [], checksum.keys
     end
   end
 
@@ -106,7 +108,7 @@ class RailsTestServer
         checksum[path] = hash
         l, *t = tests_for path
         libs.push l if l
-        tests.concat t
+        tests.concat t.select { |f| File.exists? f }
       end
     end
 
@@ -118,7 +120,7 @@ class RailsTestServer
       start = Time.now
 
       Process.wait fork {
-        ARGV.clear # See MiniTest::Unit.autorun
+        ARGV.clear # cf. MiniTest::Unit.autorun
         puts "\e[2J\e[H[#{$$}] Running test file#{'s' unless tests.size == 1}: #{tests.join ', '}"
         (libs + tests).each { |f| load File.expand_path(f) }
       }
@@ -147,6 +149,7 @@ class RailsTestServer
       ENV['RAILS_ENV'] = 'test'
       $:.push 'lib', 'test'
       require File.expand_path('config/environment.rb')
+      require 'test_helper'
       ActiveSupport::Autoload.eager_autoload!
 
       checksum!
