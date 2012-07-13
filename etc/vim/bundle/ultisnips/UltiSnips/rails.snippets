@@ -210,11 +210,15 @@ $0
 endsnippet
 
 snippet art "Test Assert Redirected To (art)"
-assert_redirected_to ${2::action => "${1:index}"}
+assert_redirected_to $0
 endsnippet
 
 snippet asre "Test Assert Response (are)"
-assert_response :${1:success}, @response.body$0
+assert_response :$0
+endsnippet
+
+snippet asro "assert_routing"
+assert_routing $0
 endsnippet
 
 snippet aftc "after_create"
@@ -343,7 +347,7 @@ end
 endsnippet
 
 snippet test "test do..end"
-test "${1:something interesting}" do
+test '${1}' do
 	$0
 end
 endsnippet
