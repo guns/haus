@@ -76,6 +76,9 @@ defaults write -g ApplePressAndHoldEnabled -boolean NO
 # Show unsupported networks in Disk Utility
 defaults write com.apple.DiskUtility DUShowUnsupportedNetworks -boolean YES
 
+# Disk utility debug menu
+defaults write com.apple.DiskUtility DUDebugMenuEnabled 1
+
 # Crash Dialog
 defaults write com.apple.CrashReporter DialogType -string None
 
