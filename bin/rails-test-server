@@ -48,7 +48,7 @@ class RailsTestServer
   end
 
   def checksum!
-    Dir['app/**/*.rb', 'test/**/*.rb'].map do |f|
+    Dir['app/**/*.rb', 'test/**/*_test.rb', 'config/routes.rb'].map do |f|
       checksum[f] = Digest::MD5.digest(File.read f)
     end
   end
@@ -62,11 +62,11 @@ class RailsTestServer
   end
 
   def listener
-    Λ = Listen.to 'app', 'test', :filter => /\.rb\z/
+    Λ = Listen.to 'app', 'test', 'config', :filter => /\.rb\z/
     Λ.change do |mod, add, rem|
       begin
         Λ.pause
-        run_tests *changed!(mod + add)
+        run_tests changed!(mod + add)
       ensure
         Λ.unpause
       end
@@ -77,11 +77,10 @@ class RailsTestServer
     loop do
       true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
       $stdin.gets "\n"
-      run_tests [], checksum.keys
+      run_tests checksum.keys
     end
   end
 
-  # Returns [lib, test1, test2, ...]
   def tests_for file
     case file
     when %r{\Aapp/models/(.*/)?([^/]+)}
@@ -91,38 +90,40 @@ class RailsTestServer
       functional = 'test/functional/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
       integration = Dir['test/integration/**/*_test.rb']
       [file, functional, *integration]
+    when 'config/routes.rb'
+      functional = Dir['test/functional/**/*_test.rb']
+      [file, *functional]
     when %r{\Atest/.*_test\.rb}
-      [nil, file]
+      [file]
     else
       []
-    end
+    end.select { |f| File.exists? f }
   end
 
   def changed! files
-    libs, tests = [], []
+    tests = []
 
     files.each do |file|
       path = file.sub Dir.pwd + '/', ''
       hash = Digest::MD5.digest File.read(path)
       if checksum[path] != hash
         checksum[path] = hash
-        l, *t = tests_for path
-        libs.push l if l
-        tests.concat t.select { |f| File.exists? f }
+        tests.concat tests_for(path)
       end
     end
 
-    [libs, tests].map &:uniq
+    tests.uniq
   end
 
-  def run_tests libs, tests
+  def run_tests tests
     if tests.any? and did_lock = lock.try_lock
       start = Time.now
 
       Process.wait fork {
         ARGV.clear # cf. MiniTest::Unit.autorun
-        puts "\e[2J\e[H[#{$$}] Running test file#{'s' unless tests.size == 1}: #{tests.join ', '}"
-        (libs + tests).each { |f| load File.expand_path(f) }
+        count = tests.size
+        puts "\e[2J\e[H[#{$$}] Loading #{count} file#{'s' if count != 1}"
+        tests.each { |f| load File.expand_path(f) }
       }
 
       success = $?.exitstatus.zero?
