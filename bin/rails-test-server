@@ -10,6 +10,7 @@ require 'ostruct'
 require 'pathname'
 require 'digest/md5'
 require 'shellwords'
+require 'set'
 require 'listen'
 
 class RailsTestServer
@@ -49,7 +50,7 @@ class RailsTestServer
 
   def checksum!
     Dir['app/**/*.rb', 'test/**/*_test.rb', 'config/routes.rb'].map do |f|
-      checksum[f] = Digest::MD5.digest(File.read f)
+      checksum[f] = Digest::MD5.digest File.read(f)
     end
   end
 
@@ -84,9 +85,11 @@ class RailsTestServer
     end
   end
 
-  def reload! file
-    if file =~ %r{\Aapp/|\Atest/.*(?!_test)\.rb\z} or file == 'config/routes.rb'
-      silence_warnings { load File.expand_path(file) }
+  def reload! files
+    files.each do |file|
+      if file =~ %r{\Aapp/} or file == 'config/routes.rb'
+        silence_warnings { load File.expand_path(file) }
+      end
     end
   end
 
@@ -114,33 +117,38 @@ class RailsTestServer
   end
 
   def changed! files
-    tests = []
+    paths, tests = Set.new, Set.new
 
     files.each do |file|
       path = file.sub Dir.pwd + '/', ''
       hash = Digest::MD5.digest File.read(path)
       if checksum[path] != hash
         checksum[path] = hash
-        reload! path # App and config files that should be reloaded in the parent
-        tests.concat tests_for(path)
+        paths << path
+        tests.merge tests_for(path)
       end
     end
 
-    tests.uniq
+    # App and config files that should be reloaded in the parent
+    reload! paths
+    tests
   end
 
   def run_tests tests
     if tests.any? and did_lock = lock.try_lock
       start = Time.now
 
-      Process.wait fork {
+      pid = fork do
+        trap(:INT) { exit! 1 }
         ARGV.clear # cf. MiniTest::Unit.autorun
         count = tests.size
         puts "\e[2J\e[H[#{$$}] Loading #{count} file#{'s' if count != 1}"
         silence_warnings do
           tests.each { |f| load File.expand_path(f) }
         end
-      }
+      end
+      Process.wait pid
+      pid = nil
 
       success = $?.exitstatus.zero?
       puts "\e[1;#{success ? 36 : 31}m→ Completed in #{Time.now - start}s"
@@ -148,6 +156,10 @@ class RailsTestServer
       print_ready
     end
   ensure
+    if pid
+      Process.kill :INT, pid
+      Process.wait pid
+    end
     lock.unlock if did_lock
   end
 
@@ -169,8 +181,8 @@ class RailsTestServer
       # We can depend on tests autoloading app classes
       require File.expand_path('config/environment.rb')
       require 'test_helper'
-      ActiveSupport::Autoload.eager_autoload!
 
+      ActiveSupport::Autoload.eager_autoload!
       checksum!
 
       pool = []
