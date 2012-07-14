@@ -79,14 +79,14 @@ class RailsTestServer
     loop do
       true while $stdin.read_nonblock 4096 rescue SystemCallError # Drain stdin
       $stdin.gets "\n"
-      run_tests checksum.keys
+      changed! checksum.keys
+      run_tests Dir['test/**/*_test.rb']
     end
   end
 
-  def reload_config! file
-    case file
-    when 'config/routes.rb'
-      load File.expand_path(file)
+  def reload! file
+    if file =~ %r{\Aapp/|\Atest/.*(?!_test)\.rb\z} or file == 'config/routes.rb'
+      silence_warnings { load File.expand_path(file) }
     end
   end
 
@@ -94,11 +94,11 @@ class RailsTestServer
     case file
     when %r{\Aapp/models/(.*/)?([^/]+)}
       unit = 'test/unit/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
-      File.exists?(unit) ? [file, unit] : [file]
+      File.exists?(unit) ? [unit] : []
     when %r{\Aapp/controllers/(.*/)?([^/]+)}
       functional = 'test/functional/%s%s_test.rb' % [$1, File.basename($2, File.extname(file))]
-      File.exists?(functional) ? [file, functional, *tests_for(:integration)] : [file, *tests_for(:integration)]
-    when %r{\Atest/.*\.rb}
+      File.exists?(functional) ? [functional, *tests_for(:integration)] : tests_for(:integration)
+    when %r{\Atest/.*_test\.rb\z}
       [file]
     when 'config/routes.rb'
       tests_for(:functional) + tests_for(:integration)
@@ -121,7 +121,7 @@ class RailsTestServer
       hash = Digest::MD5.digest File.read(path)
       if checksum[path] != hash
         checksum[path] = hash
-        reload_config! path # Config files that should be reloaded in the parent
+        reload! path # App and config files that should be reloaded in the parent
         tests.concat tests_for(path)
       end
     end
