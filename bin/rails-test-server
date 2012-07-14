@@ -58,7 +58,9 @@ class RailsTestServer
   end
 
   def notify msg
-    system 'echo %s | %s' % [msg.shellescape, options.notify] if options.notify
+    if options.notify
+      Process.detach spawn('echo %s | %s' % [msg.shellescape, options.notify])
+    end
   end
 
   def listener
