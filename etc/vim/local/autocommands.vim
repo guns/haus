@@ -17,7 +17,7 @@ augroup GUNS
         \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
 
     " Vimscript {{{1
-    autocmd FileType vim,help
+    autocmd FileType help
         \ setlocal iskeyword+=-
 
     " Diff {{{1
@@ -41,7 +41,7 @@ augroup GUNS
     autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile,*rakefile
         \ setlocal filetype=ruby
     autocmd FileType ruby,eruby
-        \ setlocal makeprg=rake iskeyword+=- iskeyword+=? iskeyword+=! |
+        \ setlocal makeprg=rake iskeyword+=? iskeyword+=! |
         \ execute 'noremap  <buffer> <Leader>R     :<C-u>RunCurrentMiniTestCase<CR>' |
         \ execute 'noremap  <buffer> <Leader><C-b> :B<CR>' |
         \ execute 'noremap! <buffer> <C-l>         <Space>=><Space>' |
@@ -61,7 +61,7 @@ augroup GUNS
 
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
-        \ setlocal synmaxcol=500 |
+        \ setlocal synmaxcol=500 iskeyword+=- |
         \ SparkupBufferSetup |
         \ SetWhitespace 2
 
@@ -180,7 +180,7 @@ augroup GUNS
 
     " TeX {{{1
     autocmd FileType tex
-        \ setlocal iskeyword+=\\,- |
+        \ setlocal iskeyword+=\\ iskeyword+=- |
         \ SetWhitespace 2
 
     " CTags {{{1
