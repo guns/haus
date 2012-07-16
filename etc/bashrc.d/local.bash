@@ -183,8 +183,8 @@ alias p='pushd .'
 alias pp='popd'
 alias rehash='hash -r'
 ALIAS t='type --' \
-      ta='t -a' \
-      tp='t -P'
+      ta='type -a --' \
+      tp='type -P --'
 ALIAS x='exec'
 alias wrld='while read l; do'; TCOMP exec wrld
 
@@ -1425,7 +1425,7 @@ HAVE qlmanage && alias ql='qlmanage -p'
 HAVE startx && alias xstartx='exec startx'
 
 HAVE xset xrdb && {
-    alias xreload='run xset r rate 200 120; run xrdb ~/.Xdefaults'
+    alias xreload='run xrdb ~/.Xdefaults'
 }
 
 # Clipboard
