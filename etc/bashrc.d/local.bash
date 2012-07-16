@@ -994,13 +994,6 @@ HAVE vim && {
 # Tmux
 ALIAS tm='tmux' && {
     HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
-
-    # Update shell variables with Tmux session values
-    tmuxeval() {
-        local vars=$(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+")
-        echo "$vars"
-        eval "$vars"
-    }
 }
 
 # GNU screen

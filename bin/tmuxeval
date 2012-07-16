@@ -1,0 +1,5 @@
+#!/bin/sh
+
+VARS=$(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+")
+echo "$VARS"
+eval "$VARS"
