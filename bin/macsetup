@@ -1,0 +1,299 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'set'
+require 'etc'
+require 'haus/logger'
+
+class Macsetup
+  class ShelloutError < RuntimeError; end
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    @indent = 0
+    @logger = Haus::Logger.new
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        OS X user and system preferences script. Global system preferences are
+        not altered unless executed as root.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-l', '--list', 'Display preference descriptions' do
+        options.list = true
+      end
+
+      opt.on '-u', '--user NAME', "Set given user's preferences (when root)" do |arg|
+        if Process.euid.zero?
+          options.user = Etc.getpwnam arg
+        else
+          raise "Only root may set another user's preferences!"
+        end
+      end
+
+      opt.on '-v', '--verbose' do
+        options.verbose = true
+      end
+    end
+  end
+
+  def sh *args
+    if options.verbose
+      with_indent { log '%s %s' % [(Process.euid.zero? ? '#' : '$'), args.join(' ')] }
+    end
+    system *args or raise ShelloutError, args.join(' ')
+  end
+
+  def prepend_indent messages
+    messages.map { |msg, styles| [('  ' * @indent) + msg, *styles] }
+  end
+
+  def log *messages
+    @logger.log *prepend_indent(messages)
+  end
+
+  def logf *messages
+    @logger.io.print @logger.fmt(*prepend_indent(messages))
+  end
+
+  def with_indent
+    @indent += 1
+    yield
+  ensure
+    @indent -= 1
+  end
+
+  def sudo_user
+    if user = ENV['SUDO_USER']
+      Etc.getpwnam user
+    elsif uid = ENV['SUDO_UID']
+      Etc.getpwuid uid.to_i
+    else
+      raise 'Could not determine unprivileged user!'
+    end
+  end
+
+  def as_user user
+    if Process.euid != user.uid
+      euid, uid, gid = Process.euid, Process.uid, Process.gid
+      Process.gid = user.gid
+      Process.uid = user.uid
+      Process.euid = user.uid
+    end
+    yield
+  ensure
+    Process.gid = gid if gid
+    Process.uid = uid if uid
+    Process.euid = euid if euid
+  end
+
+  def summarize label, messages
+    log label
+    with_indent do
+      messages.each { |m| log '• %s' % m }
+    end
+  end
+
+  def launchctl_jobs
+    Set.new %x(launchctl list).lines.map { |l| l.split("\t")[2] }
+  end
+
+  def execute! label, prefs
+    log label
+    with_indent do
+      prefs.each do |msg, λ|
+        logf ['• %s →%s' % [msg, (options.verbose ? "\n" : ' ')]]
+        begin
+          res = λ.call
+          logf '  ' if options.verbose
+          @logger.log res.respond_to?(:each) ? res : ['OK', :green, :bold]
+        rescue ShelloutError => e
+          logf '  ' if options.verbose
+          @logger.log ['ERROR', :red, :bold]
+          with_indent { log '✖ %s' % e }
+        end
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+
+    options.user ||= Process.euid.zero? ? sudo_user : Etc.getpwuid(Process.euid)
+
+    if options.list
+      summarize 'Root preferences:', root_preferences.keys
+      summarize 'User preferences (%s):' % options.user.name, user_preferences.keys
+      summarize 'Recommendations:', recommendations.keys
+    else
+      execute! 'Setting root preferences:', root_preferences if Process.euid.zero?
+      as_user options.user do
+        execute! 'Setting user preferences (%s):' % options.user.name, user_preferences
+      end
+      execute! 'Recommendations:', recommendations
+    end
+  end
+
+  def root_preferences
+    {
+      'Set verbose boot' => lambda {
+        sh 'nvram boot-args="-v"'
+      },
+
+      "Allow root to connect to user's X server" => lambda {
+        sh 'ln', '-sf', "#{options.user.dir}/.Xauthority", File.expand_path('~/.Xauthority')
+      },
+
+      'Set power management settings' => lambda {
+        sh 'pmset -a hibernatemode 0 displaysleep 10 disksleep 10 sleep 60 womp 0 destroyfvkeyonstandby 1'
+        sh 'pmset -b sleep 10'
+        sh 'pmset -u sleep 10'
+        sh 'ln -sf /dev/null /var/vm/sleepimage'
+      },
+
+      'Resolve .dev and .api TLDs locally' => lambda {
+        sh 'mkdir -p /etc/resolver'
+        sh 'echo "nameserver 127.0.0.1" > /etc/resolver/dev'
+        sh 'echo "nameserver 127.0.0.1" > /etc/resolver/api'
+      },
+
+      'Disable Spotlight' => lambda {
+        sh 'mdutil -d / &>/dev/null'
+        sh 'mdutil -E / &>/dev/null'
+        sh 'chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search'
+        jobs = launchctl_jobs
+        Dir['/System/Library/LaunchDaemons/*.mds.*'].each do |plist|
+          sh 'launchctl', 'unload', '-w', plist if jobs.include? File.basename(plist, '.plist')
+        end
+        true
+      },
+
+      # cf. http://support.apple.com/kb/HT3789
+      'Disable Bonjour advertising' => lambda {
+        mdns = '/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
+        unless File.read(mdns).index '-NoMulticastAdvertisements'
+          log 'Modifying %s' % mdns if options.verbose
+          require 'plist'
+          plist = Plist.parse_xml File.read(mdns)
+          plist['ProgramArguments'] << '-NoMulticastAdvertisements'
+          File.open(mdns, 'w') { |f| f.puts Plist::Emit.dump(plist) }
+        end
+      },
+
+      'Disable applepushserviced' => lambda {
+        if launchctl_jobs.include? 'com.apple.applepushserviced'
+          sh 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.applepushserviced.plist'
+        end
+      }
+    }
+  end
+
+  def user_preferences
+    {
+      'Set Dock and Spaces preferences' => lambda {
+        sh 'defaults write com.apple.dock no-glass -boolean TRUE' # Disable 3D Dock
+        sh 'defaults write com.apple.dock showhidden -boolean TRUE' # Hidden applications are translucent
+        sh 'defaults write com.apple.dock workspaces-edge-delay -float 5.0'
+      },
+
+      'Set Finder preferences' => lambda {
+        sh 'defaults write com.apple.finder _FXShowPosixPathInTitle -boolean TRUE'
+        sh 'defaults write com.apple.finder FXEnableExtensionChangeWarning -boolean FALSE' # Disable file extension change warning
+        sh 'defaults write com.apple.finder QuitMenuItem -boolean TRUE'
+      },
+
+      'Set Mail Preferences' => lambda {
+        sh 'defaults write com.apple.mail EnableBundles -boolean TRUE'
+        sh 'defaults write com.apple.mail PreferPlainText -boolean TRUE'
+      },
+
+      'Enable Disk Utility debug menu' => lambda {
+        sh 'defaults write com.apple.DiskUtility DUDebugMenuEnabled -boolean TRUE'
+      },
+
+      'Disable crash reports' => lambda {
+        sh 'defaults write com.apple.CrashReporter DialogType -string None'
+      },
+
+      'Disable Time Machine nagging about new external disks' => lambda {
+        sh 'defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -boolean TRUE'
+      },
+
+      'Disable Dashboard' => lambda {
+        sh 'defaults write com.apple.dashboard mcx-disabled -boolean TRUE'
+      },
+
+      'Set NSGlobalDomain preferences' => lambda {
+        sh 'defaults write -g NSNavPanelExpandedStateForSaveMode -boolean TRUE'
+        sh 'defaults write -g PMPrintingExpandedStateForPrint -boolean TRUE'
+        # Keyboard repeat rate and initial delay
+        sh 'defaults write -g KeyRepeat -int 1'
+        sh 'defaults write -g InitialKeyRepeat -int 12'
+      },
+
+      'Set Loginwindow preferences' => lambda {
+        sh 'defaults write com.apple.loginwindow TALLogoutSavesState -boolean FALSE'
+        sh 'defaults write com.apple.loginwindow LoginwindowLaunchesRelaunchApps -boolean FALSE'
+      }
+    }
+  end
+
+  def recommendations
+    yes = ['RECOMMENDED', :yellow, :bold]
+    no = ['UNNECESSARY', :green, :bold]
+    {
+      'Restrict sudo privileges in /etc/sudoers' => lambda {
+        if File.readable? '/etc/sudoers' and File.read('/etc/sudoers') !~ /^Defaults\s+timestamp_timeout\s*=\s*0\s*$/
+          if options.verbose
+            with_indent do
+              <<-EOF.lines.each { |l| log l.sub(/^ {16}/, '').chomp }
+                · Using visudo, add these lines to /etc/sudoers:
+
+                  # User whitelist only
+                  root ALL=(ALL) ALL
+                  #{options.user.name} ALL=(ALL) ALL
+
+                  # Disable timeouts and force passwords every time
+                  Defaults timestamp_timeout = 0
+
+                  # Convenient environment variables
+                  Defaults env_reset
+                  Defaults env_keep += "SSH_AUTH_SOCK SSH_AGENT_PID"
+                  Defaults env_keep += "DISPLAY XAUTHORIZATION XAUTHORITY WINDOWID"
+                  Defaults env_keep += "WINDOW TMUX TMUX_PANE"
+              EOF
+            end
+          end
+          yes
+        else
+          no
+        end
+      },
+
+      'Disable path_helper in /etc/profile' => lambda {
+        if File.readlines('/etc/profile').grep(/^[^#].*\bpath_helper\b/).empty?
+          no
+        else
+          yes
+        end
+      }
+    }
+  end
+end
+
+$0 = File.basename(__FILE__) and Macsetup.new.run ARGV if $0 == __FILE__
