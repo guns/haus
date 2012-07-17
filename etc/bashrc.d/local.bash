@@ -222,15 +222,6 @@ ALIAS n='notify' \
 HAVE run   && TCOMP exec run
 HAVE bgrun && TCOMP exec bgrun
 
-# Simple fs event loop for execution in current shell
-alias watch='while read path <<< "$(ruby -r fssm -e "
-    FSSM.monitor Dir.pwd, %q{**/*} do
-        create { |base, path| puts %Q{\e[1;32m++\e[0m #{path}}; raise Interrupt }
-        update { |base, path| puts %Q{\e[1;34m::\e[0m #{path}}; raise Interrupt }
-        delete { |base, path| puts %Q{\e[1;31m--\e[0m #{path}}; raise Interrupt }
-    end
-" 2>/dev/null)" && echo -e "$path";' # do ...; done
-
 
 ### Files, Disks, and Memory {{{1
 
