@@ -336,7 +336,7 @@ class Macdriver
     Plist::Emit.dump \
       :Label            => 'com.sungpae.macdriver',
       :RunAtLoad        => true,
-      :ProgramArguments => [ruby, '--', File.expand_path(__FILE__)] + args
+      :ProgramArguments => [ruby, '-Eutf-8', '--', File.expand_path(__FILE__)] + args
   end
 
   def run arguments = []
