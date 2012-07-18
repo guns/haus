@@ -240,18 +240,12 @@ ALIAS acki='ack -i' \
 alias c='cat'
 ALIAS l='less' \
       L='l +S' \
-      lf='l +F' && pager() { less -+c --quit-if-one-screen "$@"; }
-ALIAS tf='tail -f'
-
-# Logfiles
-if [[ -r /var/log/system.log ]]; then
-    alias tfsystem='tf /var/log/system.log'
-    alias lfsystem='lf /var/log/system.log'
-fi
-if [[ -r /var/log/everything.log ]]; then
-    alias tfeverything='tf /var/log/everything.log'
-    alias lfeverything='lf /var/log/everything.log'
-fi
+      lf='l +F' \
+      lfsystem='lf /var/log/system.log' \
+      lfeverything='lf /var/log/everything.log' && pager() { less -+c --quit-if-one-screen "$@"; }
+ALIAS tf='tail -f' \
+      tfsystem='tf /var/log/system.log' \
+      tfeverything='tf /var/log/everything.log'
 
 # ls
 alias ls="ls -Ahl $GNU_COLOR_OPT"
@@ -970,6 +964,7 @@ HAVE vim && {
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
     alias vimrcconf='(cd /etc && exec vim rc.conf)'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
+    alias vimmacsetup='(cdhaus && exec vim bin/macsetup)'
     alias vimscratch='vim -c Scratch'
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'

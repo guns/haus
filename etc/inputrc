@@ -226,7 +226,7 @@ $if Bash
     "\C-xei":       "\C-] viminputrc \n"
     "\C-xel":       "\C-] vimlocalbash \n"
     "\C-xem":       "\C-] vimmappings \n"
-    "\C-xeM":       "\C-] vimmodifiers \n"
+    "\C-xeM":       "\C-] vimmacsetup \n"
     "\C-xen":       "\C-] vimnginx \n"
     "\C-xeo":       "\C-] vimorg \n"
     "\C-xer":       "\C-] vimrcconf \n"
