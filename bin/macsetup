@@ -301,11 +301,7 @@ class Macsetup
       },
 
       'Disable path_helper in /etc/profile' => lambda {
-        if File.readlines('/etc/profile').grep(/^[^#].*\bpath_helper\b/).empty?
-          no
-        else
-          yes
-        end
+        File.readlines('/etc/profile').grep(/^[^#].*\bpath_helper\b/).empty? ? no : yes
       }
     }
   end
