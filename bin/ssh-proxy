@@ -17,6 +17,7 @@ class SSHProxy
     @options = OpenStruct.new opts
     options.setup      ||= RUBY_PLATFORM =~ /darwin/i
     options.proxy_port ||= 22222
+    options.host       ||= '127.0.0.2'
     options.signals    ||= %w[TERM INT QUIT HUP]
     options.wait       ||= 10
   end
@@ -29,8 +30,14 @@ class SSHProxy
 
         Acts as a persistent wrapper around `ssh -D` on non OS X systems.
 
-        WARNING: Existing system SOCKS Proxy details are clobbered and the
-                 global SOCKS Proxy state is set to OFF on termination.
+        WARNING:
+
+          * Existing system SOCKS Proxy details are clobbered and the global
+            SOCKS Proxy state is set to OFF on termination.
+
+          * The proxy server binds to 127.0.0.2 by default, which must be
+            created using a loopback alias: `ifconfig lo0 alias 127.0.0.2`
+            This is done to easily target the proxied traffic in firewalls.
 
         Usage: #{File.basename __FILE__} [options] [user@]host
 
@@ -38,23 +45,23 @@ class SSHProxy
         ssh(1) are valid for this program, with the addition of:
       ).gsub /^ {8}/, ''
 
-      opt.on '-P', '--proxy-port PORT', Integer, "Local port to bind proxy server; #{options.proxy_port} by default" do |arg|
+      opt.on '-P', '--proxy-port PORT', Integer, "Local port to bind proxy server [%s]" % options.proxy_port do |arg|
         options.proxy_port = arg
       end
 
-      opt.on '-u', '--user USER', 'Execute ssh command as USER; `-` is the same as specifying $SUDO_USER' do |arg|
-        options.user = (arg == '-' ? ENV['SUDO_USER'] : arg)
+      opt.on '-H', '--host HOST', "Local hostname or IP address to bind proxy server [%s]" % options.host do |arg|
+        options.host = arg
       end
 
-      opt.on '--interfaces A,B,C', Array, "OS X (not BSD) interface names; Default: #{interfaces.join ','}" do |arg|
+      opt.on '--interfaces A,B,C', Array, "OS X (not BSD) interface names [%s]" % interfaces.join(',') do |arg|
         options.interfaces = arg
       end
 
-      opt.on '--signals A,B,C', Array, "Disconnect on signal; #{options.signals.join ','} by default" do |arg|
+      opt.on '--signals A,B,C', Array, "Disconnect on signal [%s]" % options.signals.join(',') do |arg|
         options.signals = arg
       end
 
-      opt.on '--wait SECONDS', Integer, "Time to wait to reconnect dead connections; #{options.wait} by default" do |arg|
+      opt.on '--wait SECONDS', Integer, "Time to wait to reconnect dead connections [%s]" % options.wait do |arg|
         options.wait = arg
       end
 
@@ -76,7 +83,7 @@ class SSHProxy
 
   def proxy_on!
     interfaces.each do |iface|
-      if system *%W[networksetup -setsocksfirewallproxy #{iface} 127.0.0.1 #{options.proxy_port} off]
+      if system *%W[networksetup -setsocksfirewallproxy #{iface} #{options.host} #{options.proxy_port} off]
         puts "#{iface} proxy on!"
       else
         raise 'No permissions to change proxy settings!'
@@ -106,9 +113,8 @@ class SSHProxy
 
   def command *args
     cmd  = []
-    cmd += %W[sudo -u #{options.user}] if options.user
     cmd += %W[ssh -2 -T -N -n] # Protocol 2, notty, noexec, nostdin
-    cmd += %W[-D 127.0.0.1:#{options.proxy_port}]
+    cmd += %W[-D #{options.host}:#{options.proxy_port}]
     cmd += args
   end
 
