@@ -34,7 +34,7 @@ set tags+=./.jstags,.jstags     " Read hidden doctorjs .tags files
 
 " Swap and undo files
 if !isdirectory(expand('~/.vimtmp/undo'))
-    call mkdir(expand('~/.vimtmp/undo', 'p'))
+    call mkdir(expand('~/.vimtmp/undo'), 'p', 0700)
 endif
 if isdirectory(expand('~/.vimtmp/undo'))
     set directory=~/.vimtmp
