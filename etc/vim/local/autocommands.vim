@@ -189,7 +189,7 @@ augroup GUNS
 
     " Man pages {{{1
     autocmd FileType man
-        \ setlocal iskeyword+=-
+        \ SetIskeyword!
 
     " Terminfo {{{1
     autocmd BufRead,BufNewFile *.terminfo
