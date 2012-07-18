@@ -109,7 +109,11 @@ class Macsetup
   end
 
   def launchctl_jobs
-    Set.new %x(launchctl list).lines.map { |l| l.split("\t")[2] }
+    Set.new %x(launchctl list).lines.map { |l| l.strip.split("\t")[2] }
+  end
+
+  def network_service_ports
+    %x(networksetup -listallhardwareports).scan(/Hardware Port: (.*)/).flatten
   end
 
   def execute! label, prefs
@@ -166,10 +170,14 @@ class Macsetup
         sh 'ln -sf /dev/null /var/vm/sleepimage'
       },
 
-      'Resolve .dev and .api TLDs locally' => lambda {
+      'Set DNS servers to 127.0.0.1' => lambda {
         sh 'mkdir -p /etc/resolver'
-        sh 'echo "nameserver 127.0.0.1" > /etc/resolver/dev'
-        sh 'echo "nameserver 127.0.0.1" > /etc/resolver/api'
+        sh 'echo "nameserver 127.0.0.1" > /etc/resolver/root'
+        sh 'echo "domain ." >> /etc/resolver/root'
+        network_service_ports.each do |iface|
+          sh 'networksetup', '-setdnsservers', iface, '127.0.0.1'
+        end
+        true
       },
 
       'Disable Spotlight' => lambda {
@@ -199,6 +207,13 @@ class Macsetup
         if launchctl_jobs.include? 'com.apple.applepushserviced'
           sh 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.applepushserviced.plist'
         end
+      },
+
+      'Disable IPv6' => lambda {
+        network_service_ports.each do |iface|
+          sh 'networksetup', '-setv6off', iface
+        end
+        true
       }
     }
   end
