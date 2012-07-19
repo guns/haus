@@ -10,6 +10,7 @@ require 'ostruct'
 require 'set'
 require 'etc'
 require 'haus/logger'
+require 'plist'
 
 class Macsetup
   class ShelloutError < RuntimeError; end
@@ -109,7 +110,32 @@ class Macsetup
   end
 
   def launchctl_jobs
-    Set.new %x(launchctl list).lines.map { |l| l.strip.split("\t")[2] }
+    @launchctl_jobs ||= Set.new %x(launchctl list).lines.map { |l| l.strip.split("\t")[2] }
+  end
+
+  def launchctl_unload plist
+    sh 'launchctl', 'unload', '-w', plist if launchctl_jobs.include? File.basename(plist, '.plist')
+  end
+
+  def launchctl_disable plist
+    with_xml_plist plist do |p|
+      p['Disabled'] = true
+      File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(p) }
+    end
+  end
+
+  def with_xml_plist plist
+    buf = File.read plist
+    if buf[0..7] == 'bplist00'
+      sh 'plutil', '-convert', 'xml1', plist
+      begin
+        yield Plist.parse_xml(File.read plist)
+      ensure
+        sh 'plutil', '-convert', 'binary1', plist
+      end
+    else
+      yield Plist.parse_xml(buf)
+    end
   end
 
   def network_service_ports
@@ -180,13 +206,19 @@ class Macsetup
         true
       },
 
+      'Disable IPv6' => lambda {
+        network_service_ports.each do |iface|
+          sh 'networksetup', '-setv6off', iface
+        end
+        true
+      },
+
       'Disable Spotlight' => lambda {
         sh 'mdutil -d / &>/dev/null'
         sh 'mdutil -E / &>/dev/null'
         sh 'chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search'
-        jobs = launchctl_jobs
         Dir['/System/Library/LaunchDaemons/*.mds.*'].each do |plist|
-          sh 'launchctl', 'unload', '-w', plist if jobs.include? File.basename(plist, '.plist')
+          launchctl_unload plist
         end
         true
       },
@@ -196,24 +228,50 @@ class Macsetup
         mdns = '/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
         unless File.read(mdns).index '-NoMulticastAdvertisements'
           log 'Modifying %s' % mdns if options.verbose
-          require 'plist'
-          plist = Plist.parse_xml File.read(mdns)
-          plist['ProgramArguments'] << '-NoMulticastAdvertisements'
-          File.open(mdns, 'w') { |f| f.puts Plist::Emit.dump(plist) }
+          with_xml_plist mdns do |plist|
+            plist['ProgramArguments'] << '-NoMulticastAdvertisements'
+            File.open(mdns, 'w') { |f| f.puts Plist::Emit.dump(plist) }
+          end
         end
       },
 
       'Disable applepushserviced' => lambda {
-        if launchctl_jobs.include? 'com.apple.applepushserviced'
-          sh 'launchctl unload -w /System/Library/LaunchDaemons/com.apple.applepushserviced.plist'
-        end
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.applepushserviced.plist'
       },
 
-      'Disable IPv6' => lambda {
-        network_service_ports.each do |iface|
-          sh 'networksetup', '-setv6off', iface
+      'Disable revisiond' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.revisiond.plist'
+      },
+
+      'Disable stackshot daemon' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.stackshot.plist'
+      },
+
+      'Disable netbiosd' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.netbiosd.plist'
+      },
+
+      'Disable usbmuxd' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.usbmuxd.plist'
+      },
+
+      'Disable msrpc daemons' => lambda {
+        Dir['/System/Library/LaunchDaemons/com.apple.msrpc.*.plist'].each do |plist|
+          launchctl_unload plist
         end
         true
+      },
+
+      'Disable Airport Base Station Agent' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.AirPortBaseStationAgent.plist'
+      },
+
+      'Disable Transparent App Lifecycle Agent' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.talagent.plist'
+      },
+
+      'Disable IM Agent' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.imagent.plist'
       }
     }
   end
