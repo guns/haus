@@ -758,8 +758,8 @@ ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
 }
 
 # nmap
-ALIAS nmapscan='nmap -sS -A' && {
-    nmapsweep() { run nmap -sP -PPERM "$(getlip)/24"; }
+HAVE nmap && {
+    alias nmapsweep='run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(getlip)/24"'
 }
 
 # networksetup
