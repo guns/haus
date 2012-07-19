@@ -704,9 +704,10 @@ ALIAS get='curl -#L' \
 
 # DNS
 ALIAS digx='dig -x'
-alias resolv='cat /etc/resolv.conf'
 if __OSX__; then
-    alias flushdns='run dscacheutil -flushcache'
+    alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
+else
+    alias resolv='cat /etc/resolv.conf'
 fi
 
 # NTP
@@ -715,6 +716,11 @@ alias ntpq='ntpd -g -q'
 # netcat
 HAVE nc   && TCOMP dig nc
 HAVE ncat && TCOMP dig ncat
+
+# tcpdump
+HAVE tcpdump && {
+    alias pcapdump='tcpdump -n -XX -r'
+}
 
 # IMAP client
 HAVE openssl && {
@@ -795,9 +801,6 @@ HAVE cdmetasploit && {
 HAVE weechat-curses && {
     ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) weechat-curses)'
 }
-
-# OS X Sync
-ALIAS resetsync.pl='/System/Library/Frameworks/SyncServices.framework/Resources/resetsync.pl'
 
 
 ### Firewalls {{{1
