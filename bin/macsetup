@@ -262,6 +262,10 @@ class Macsetup
         true
       },
 
+      'Disable Find My Mac' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.findmymac.plist'
+      },
+
       'Disable Airport Base Station Agent' => lambda {
         launchctl_disable '/System/Library/LaunchAgents/com.apple.AirPortBaseStationAgent.plist'
       },
