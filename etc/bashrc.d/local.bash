@@ -821,7 +821,6 @@ HAVE iptables && {
 }
 
 
-
 ### Editors {{{1
 
 # Exuberant ctags
@@ -1433,15 +1432,11 @@ HAVE xmonad && xmonadrecompile() {
 }
 
 
-### Launchd
+### Launchd {{{1
 
-if HAVE launchctl; then
-    launchctlreload() {
-        run launchctl unload -w "$1"
-        sleep 2 # HACK!
-        run launchctl load -w "$1"
-    }
-fi
+ALIAS lctl='launchctl' \
+      lctlload='launchctl load -w' \
+      lctlunload='launchctl unload -w' && lctlreload() { run launchctl unload -w "$@"; run launchctl load -w "$@"; }
 
 
 ### GUI programs {{{1
