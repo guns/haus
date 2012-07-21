@@ -1297,6 +1297,10 @@ HAVE wpa_supplicant wpa_passphrase && {
 # Complete custom wrapper
 HAVE cryptsetup cs && TCOMP cryptsetup cs
 
+if __OSX__; then
+    alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
+fi
+
 
 ### Virtual Machines {{{1
 
