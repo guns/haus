@@ -39,6 +39,26 @@ module CLI
       end; nil
     end
 
+    def read_plist file
+      require 'plist'
+
+      buf = File.read file
+
+      if buf[0..7] == 'bplist00'
+        system 'plutil', '-convert', 'xml1', file
+        plist = Plist.parse_xml File.read(file)
+        system 'plutil', '-convert', 'binary1', file
+        plist
+      else
+        Plist.parse_xml(buf)
+      end
+    end
+
+    def write_plist plist, file
+      require 'plist'
+      File.open(file, 'w') { |f| f.puts Plist::Emit.dump(p) }
+    end
+
     def notify
       @notify ||= begin
         require 'cli/notification'
