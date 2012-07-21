@@ -362,6 +362,10 @@ class Macsetup
         end
       },
 
+      'Remove system certificates and certificate authorities' => lambda {
+        Dir['/System/Library/Keychains/*'].size > 0 ? yes : no
+      },
+
       'Disable path_helper in /etc/profile' => lambda {
         File.readlines('/etc/profile').grep(/^[^#].*\bpath_helper\b/).empty? ? no : yes
       }
