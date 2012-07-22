@@ -18,6 +18,7 @@
 [core]
     whitespace   = trailing-space,space-before-tab
     excludesfile = ~/.gitignore
+    ignorecase   = false
 
 [color]
     ui = auto
