@@ -59,6 +59,10 @@ augroup GUNS
     autocmd FileType php
         \ SetWhitespace 2
 
+    " Haskell {{{1
+    autocmd FileType haskell
+        \ SetWhitespace 2
+
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
         \ setlocal synmaxcol=500 iskeyword+=- |
