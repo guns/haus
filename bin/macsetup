@@ -109,12 +109,30 @@ class Macsetup
     end
   end
 
+  def appvers app
+    if File.readable? "#{app}/Contents/Info.plist"
+      with_xml_plist "#{app}/Contents/Info.plist" do |p|
+        p['CFBundleShortVersionString'] || ''
+      end
+    else
+      ''
+    end
+  end
+
+  def network_service_ports
+    @network_service_ports ||= %x(networksetup -listallhardwareports).scan(/Hardware Port: (.*)/).flatten
+  end
+
   def launchctl_jobs
     @launchctl_jobs ||= Set.new %x(launchctl list).lines.map { |l| l.strip.split("\t")[2] }
   end
 
-  def launchctl_unload plist
-    sh 'launchctl', 'unload', '-w', plist if launchctl_jobs.include? File.basename(plist, '.plist')
+  def launchctl_load plist, name = nil
+    sh 'launchctl', 'load', '-w', plist unless launchctl_jobs.include? name || File.basename(plist, '.plist')
+  end
+
+  def launchctl_unload plist, name = nil
+    sh 'launchctl', 'unload', '-w', plist if launchctl_jobs.include? name || File.basename(plist, '.plist')
   end
 
   def launchctl_disable plist
@@ -136,10 +154,6 @@ class Macsetup
     else
       yield Plist.parse_xml(buf)
     end
-  end
-
-  def network_service_ports
-    %x(networksetup -listallhardwareports).scan(/Hardware Port: (.*)/).flatten
   end
 
   def execute! label, prefs
@@ -232,6 +246,16 @@ class Macsetup
             plist['ProgramArguments'] << '-NoMulticastAdvertisements'
             File.open(mdns, 'w') { |f| f.puts Plist::Emit.dump(plist) }
           end
+        end
+      },
+
+      'Enable Application Firewall OR Little Snitch 3' => lambda {
+        if launchctl_jobs.include? 'at.obdev.littlesnitchd' and appvers('/Library/Little Snitch/Little Snitch Daemon.bundle')[/^\d+./].to_i >= 3
+          launchctl_unload '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', 'com.apple.alf'
+          ['LS3 detected, ALF DISABLED', :green, :bold]
+        else
+          launchctl_load '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', 'com.apple.alf'
+          ['LS3 no detected, ALF ENABLED', :yellow, :bold]
         end
       },
 
