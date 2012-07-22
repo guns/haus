@@ -30,6 +30,23 @@ class Task
       @fetch = value unless @fetch == :never
     end
 
+    def as_uid uid
+      if Process.euid.zero?
+        user = Etc.getpwuid uid
+        euid, uid, gid = Process.euid, Process.uid, Process.gid
+        Process.gid = user.gid
+        Process.uid = user.uid
+        Process.euid = user.uid
+        yield
+      else
+        yield
+      end
+    ensure
+      Process.gid = gid if gid
+      Process.uid = uid if uid
+      Process.euid = euid if euid
+    end
+
     # Lazy require
     def git
       @git ||= (require 'git'; Git.open base)
@@ -38,16 +55,18 @@ class Task
     def git_update
       stat = File.stat base
 
-      git.checkout branch.upstream
-      if fetch
-        git.fetch pull
-        git.merge [pull, branch.upstream].join('/')
-      end
-
-      if branch.local
-        git.checkout branch.local
+      as_uid stat.uid do
+        git.checkout branch.upstream
         if fetch
-          git.merge branch.upstream, 'Merge branch %s into %s' % [branch.upstream, branch.local]
+          git.fetch pull
+          git.merge [pull, branch.upstream].join('/')
+        end
+
+        if branch.local
+          git.checkout branch.local
+          if fetch
+            git.merge branch.upstream, 'Merge branch %s into %s' % [branch.upstream, branch.local]
+          end
         end
       end
     ensure
@@ -56,7 +75,9 @@ class Task
     end
 
     def git_push
-      git.push push, '--all'
+      as_uid File.stat(base).uid do
+        git.push push, '--all'
+      end
     end
 
     def update_files
