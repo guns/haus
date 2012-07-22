@@ -1460,7 +1460,6 @@ if __OSX__; then
     }
 
     ALIAS screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
-    alias focus-password-dialog='ps axo ucomm | grep -q SecurityAgent && sudo osascript -e "tell application \"SecurityAgent\" to activate"'
 fi
 
 : # Return true
