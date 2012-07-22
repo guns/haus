@@ -134,6 +134,7 @@ let s:delimiterMap = {
     \ 'django': { 'left': '<!--','right': '-->', 'leftAlt': '{#', 'rightAlt': '#}' },
     \ 'docbk': { 'left': '<!--', 'right': '-->' },
     \ 'dns': { 'left': ';' },
+    \ 'dnsmasq': { 'left': '#' },
     \ 'dosbatch': { 'left': 'REM ', 'leftAlt': '::' },
     \ 'dosini': { 'left': ';' },
     \ 'dot': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
