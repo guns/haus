@@ -290,6 +290,14 @@ class Macsetup
         launchctl_unload '/System/Library/LaunchDaemons/com.apple.findmymac.plist'
       },
 
+      'Disable helpd' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.helpd.plist'
+      },
+
+      'Disable SubmitDiagInfo' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.SubmitDiagInfo.plist'
+      },
+
       'Disable Airport Base Station Agent' => lambda {
         launchctl_disable '/System/Library/LaunchAgents/com.apple.AirPortBaseStationAgent.plist'
       },
