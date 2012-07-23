@@ -339,6 +339,11 @@ class Macsetup
         sh 'defaults write com.apple.dashboard mcx-disabled -boolean TRUE'
       },
 
+      'Disable Certificate Revocation checks' => lambda {
+        sh 'defaults write com.apple.security.revocation CRLStyle -string None'
+        sh 'defaults write com.apple.security.revocation OCSPStyle -string None'
+      },
+
       'Set NSGlobalDomain preferences' => lambda {
         sh 'defaults write -g NSNavPanelExpandedStateForSaveMode -boolean TRUE'
         sh 'defaults write -g PMPrintingExpandedStateForPrint -boolean TRUE'
