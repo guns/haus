@@ -355,7 +355,6 @@ class Macsetup
       'Set NSGlobalDomain preferences' => lambda {
         sh 'defaults write -g NSNavPanelExpandedStateForSaveMode -boolean TRUE'
         sh 'defaults write -g PMPrintingExpandedStateForPrint -boolean TRUE'
-        # Keyboard repeat rate and initial delay
         sh 'defaults write -g KeyRepeat -int 1'
         sh 'defaults write -g InitialKeyRepeat -int 12'
       },
@@ -401,6 +400,10 @@ class Macsetup
 
       'Remove system certificates and certificate authorities' => lambda {
         Dir['/System/Library/Keychains/*'].size > 0 ? yes : no
+      },
+
+      'Disable unused drivers on boot' => lambda {
+        File.exists?('/Library/LaunchDaemons/com.sungpae.macdriver.plist') ? no : yes
       },
 
       'Disable path_helper in /etc/profile' => lambda {
