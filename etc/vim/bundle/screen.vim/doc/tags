@@ -1,5 +1,9 @@
+:IPython	screen.txt	/*:IPython*
+:ScreenQuit	screen.txt	/*:ScreenQuit*
+:ScreenSend	screen.txt	/*:ScreenSend*
 :ScreenShell	screen.txt	/*:ScreenShell*
 :ScreenShellAttach	screen.txt	/*:ScreenShellAttach*
+:ScreenShellReopen	screen.txt	/*:ScreenShellReopen*
 :ScreenShellVertical	screen.txt	/*:ScreenShellVertical*
 g:ScreenImpl	screen.txt	/*g:ScreenImpl*
 g:ScreenShellExpandTabs	screen.txt	/*g:ScreenShellExpandTabs*
@@ -36,6 +40,7 @@ screen-shell	screen.txt	/*screen-shell*
 screen-shell-vertical	screen.txt	/*screen-shell-vertical*
 screen-shellattach	screen.txt	/*screen-shellattach*
 screen-shellheight	screen.txt	/*screen-shellheight*
+screen-shellreopen	screen.txt	/*screen-shellreopen*
 screen-shellwidth	screen.txt	/*screen-shellwidth*
 screen-terminal	screen.txt	/*screen-terminal*
 screen-troubleshooting	screen.txt	/*screen-troubleshooting*
