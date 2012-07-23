@@ -180,9 +180,9 @@ function! <SID>LispBufferSetup()
     inoremap <silent> <buffer> <expr> ( PareditInsertOpening('(',')')
     inoremap <silent> <buffer> <expr> [ PareditInsertOpening('[',']')
     inoremap <silent> <buffer> <expr> { PareditInsertOpening('{','}')
-    inoremap <silent> <buffer> <silent> ) <C-o>:<C-u>call PareditInsertClosing('(',')')<CR>
-    inoremap <silent> <buffer> <silent> ] <C-o>:<C-u>call PareditInsertClosing('[',']')<CR>
-    inoremap <silent> <buffer> <silent> } <C-o>:<C-u>call PareditInsertClosing('{','}')<CR>
+    inoremap <silent> <buffer> <silent> ) <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('(',')')<CR><C-O>:let &ve=save_ve<CR>
+    inoremap <silent> <buffer> <silent> ] <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('[',']')<CR><C-O>:let &ve=save_ve<CR>
+    inoremap <silent> <buffer> <silent> } <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('{','}')<CR><C-O>:let &ve=save_ve<CR>
     if g:paredit_electric_return
         inoremap <buffer> <expr> <CR> PareditEnter()
     endif
