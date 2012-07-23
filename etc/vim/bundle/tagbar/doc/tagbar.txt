@@ -3,7 +3,7 @@
 Author:         Jan Larres <jan@majutsushi.net>
 Licence:        Vim licence, see |license|
 Homepage:       http://majutsushi.github.com/tagbar/
-Version:        2.4
+Version:        2.4.1
 
 ==============================================================================
 Contents                                            *tagbar* *tagbar-contents*
@@ -473,19 +473,9 @@ Example:
 
                                               *g:tagbar_updateonsave_maxlines*
 g:tagbar_updateonsave_maxlines~
-Default: 5000
 
-If the current file has fewer lines than the value of this variable, Tagbar
-will update immediately after saving the file. If it is longer then the update
-will only happen on the |CursorHold| event and when switching buffers (or
-windows). This is to prevent the time it takes to save a large file from
-becoming annoying in case you have a slow computer. If you have a fast
-computer you can set it to a higher value.
+Deprecated. Tagbar will now always get updated when the file is being saved.
 
-Example:
->
-        let g:tagbar_updateonsave_maxlines = 10000
-<
 
                                                           *g:tagbar_systemenc*
 g:tagbar_systemenc~
@@ -496,6 +486,8 @@ system is different from the one set in Vim, i.e. the 'encoding' option. For
 example, if you use a Simplified Chinese Windows version that has a system
 encoding of "cp936", and you have set 'encoding' to "utf-8", then you would
 have to set this variable to "cp936".
+Note that this requires Vim to be compiled with the |+multi_byte| and (unless
+your encoding is latin1) |+iconv| features to work.
 
 Example:
 >
@@ -916,6 +908,11 @@ that.
 Tagbar should now be able to show the sections and other tags from LaTeX
 files.
 
+Note: As of 2012-05-05 the ctags development version contains an improved
+LaTeX parser that works better than the example configuration presented here.
+So if you are using a development build newer than that or a stable version
+newer than 5.8 you should use the built-in support instead of this example.
+
 Writing your own tag-generating program~
 If you want to write your own program for generating tags then here are some
 imporant tips to get it to integrate well with Tagbar:
@@ -1021,6 +1018,14 @@ file.
 
 ==============================================================================
 8. History                                                    *tagbar-history*
+
+2.4.1 (2012-07-16)
+    - Fixed some bugs related to the currenttag() function when it was called
+      before the rest of the plugin was loaded. Also fail silently in case
+      something goes wrong so the statusline doesn't get messed up.
+    - In certain cases highlighting tags in deeply nested folds could cause an
+      error message.
+    - Spellchecking is now correctly getting disabled in the Tagbar window.
 
 2.4 (2012-06-17)
     - New function tagbar#currenttag() that reports the current tag, for

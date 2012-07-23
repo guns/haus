@@ -4,7 +4,7 @@
 " Author:      Jan Larres <jan@majutsushi.net>
 " Licence:     Vim licence
 " Website:     http://majutsushi.github.com/tagbar/
-" Version:     2.4
+" Version:     2.4.1
 " Note:        This plugin was heavily inspired by the 'Taglist' plugin by
 "              Yegappan Lakshmanan and uses a small amount of code from it.
 "
@@ -89,10 +89,6 @@ endif
 
 if !exists('g:tagbar_autoshowtag')
     let g:tagbar_autoshowtag = 0
-endif
-
-if !exists('g:tagbar_updateonsave_maxlines')
-    let g:tagbar_updateonsave_maxlines = 5000
 endif
 
 if !exists('g:tagbar_systemenc')
