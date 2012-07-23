@@ -428,7 +428,7 @@ HAVE mkfs.ext4 && {
     mkfsext4() {
         local device="$1" label=()
         (($# == 2)) && label=(-L "$2")
-        run mkfs.ext4 -j -O extent "${label[@]}" "$device"
+        run mkfs.ext4 -j -O extent -O metadata_csum "${label[@]}" "$device"
     }
 }
 
