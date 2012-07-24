@@ -762,6 +762,12 @@ HAVE nmap && {
     alias nmapsweep='run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(getlip)/24"'
 }
 
+HAVE ngrep && {
+    ngg() {
+        run ngrep -d "$(netstat -nr | awk '/^default/{print $NF;exit}')" -q -l -W byline "$@"
+    }
+}
+
 # networksetup
 HAVE networksetup && {
     # Param: [$*] New hostname
