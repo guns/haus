@@ -308,6 +308,10 @@ class Macsetup
 
       'Disable IM Agent' => lambda {
         launchctl_disable '/System/Library/LaunchAgents/com.apple.imagent.plist'
+      },
+
+      'Disable imklaunchagent' => lambda {
+        launchctl_disable '/System/Library/LaunchAgents/com.apple.imklaunchagent.plist'
       }
     }
   end
@@ -350,6 +354,7 @@ class Macsetup
       'Disable Certificate Revocation checks' => lambda {
         sh 'defaults write com.apple.security.revocation CRLStyle -string None'
         sh 'defaults write com.apple.security.revocation OCSPStyle -string None'
+        sh 'defaults write com.apple.security.revocation RevocationFirst -string OCSP'
       },
 
       'Set NSGlobalDomain preferences' => lambda {
