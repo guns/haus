@@ -308,8 +308,8 @@ CD_FUNC() {
                     [[ -d \"\$line\" ]] && echo \"\${line%/}/\"
                 done
             else
-                # Chomp the trailing slash
-                base=\"\${cur%/}\"
+                # Chomp the trailing slash and dequote
+                base=\"\$(eval printf %s \"\${cur%/}\")\"
 
                 # If this directory doesn't exist, try its parent
                 [[ -d \"\$base\" ]] || base=\"\${base%/*}\"
