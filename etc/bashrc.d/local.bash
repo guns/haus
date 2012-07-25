@@ -1359,8 +1359,8 @@ if __OSX__; then
         alias brewq='run brew info'
         alias brews='run brew search'
         alias brewu='run brew uninstall'
-        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && brew update && \
-                                   git checkout guns && git merge master --no-edit && git push github --all"'
+        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && git pull && \
+                                   git checkout guns && git merge master -m "Merge master into guns" && git push github --all"'
         alias brewoutdated='brew outdated'
     }
 elif __LINUX__; then
