@@ -50,8 +50,12 @@ class Watchdiff
         Options:\
       ).gsub /^ {8}/, ''
 
-      opt.on '-f', '--filter REGEXP', Regexp, 'DEFAULT: %s' % options.filter.inspect do |arg|
+      opt.on '-f', '--filter REGEXP', Regexp do |arg|
         options.filter = arg
+      end
+
+      opt.on '-i', '--ignore REGEXP', Regexp do |arg|
+        options.ignore = arg
       end
     end
   end
@@ -81,7 +85,7 @@ class Watchdiff
     fs = []
 
     Find.find *dirs.map { |d| File.expand_path d } do |path|
-      next unless File.ftype(path) == 'file' and path =~ options.filter
+      next unless File.ftype(path) == 'file' and path =~ options.filter and path !~ options.ignore
       fs << path
     end
 
@@ -126,7 +130,7 @@ class Watchdiff
   end
 
   def listener *dirs
-    Listen.to(*dirs).filter(options.filter).change do |mod, add, rem|
+    Listen.to(*dirs).filter(options.filter).ignore(options.ignore).change do |mod, add, rem|
       print "\e[2J\e[H"
       mod.uniq.each do |f|
         log *diff(f).lines.map { |l|
@@ -152,7 +156,7 @@ class Watchdiff
   def run arguments = []
     dirs = parser.parse arguments
     dirs = ['.'] if dirs.empty?
-    watch! *dirs
+    watch! *dirs.uniq.select { |d| File.directory? d }
   ensure
     FileUtils.rm_rf git.repo.to_s
   end
