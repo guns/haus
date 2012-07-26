@@ -227,6 +227,14 @@ class Macsetup
         true
       },
 
+      'Change NTP servers' => lambda {
+        buf = File.read '/etc/ntp.conf'
+        File.open '/etc/ntp.conf', 'w' do |f|
+          f.puts buf.lines.reject { |l| l =~ /\Aserver / }
+          f.puts (0..3).map { |n| 'server %d.ch.pool.ntp.org' % n }
+        end
+      },
+
       'Disable Spotlight' => lambda {
         sh 'mdutil -d / &>/dev/null'
         sh 'mdutil -E / &>/dev/null'
@@ -339,11 +347,16 @@ class Macsetup
         sh 'defaults write com.apple.DiskUtility DUDebugMenuEnabled -boolean TRUE'
       },
 
+      'Clear login items' => lambda {
+        sh 'defaults write loginwindow AutoLaunchedApplicationDictionary -array'
+        sh 'defaults write com.apple.loginitems SessionItems -dict'
+      },
+
       'Disable crash reports' => lambda {
         sh 'defaults write com.apple.CrashReporter DialogType -string None'
       },
 
-      'Disable Time Machine nagging about new external disks' => lambda {
+      'Disable Time Machine nag about new external disks' => lambda {
         sh 'defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -boolean TRUE'
       },
 
