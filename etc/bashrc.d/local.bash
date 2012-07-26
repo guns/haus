@@ -155,6 +155,7 @@ CD_FUNC cdbrew          /opt/brew
 CD_FUNC cddnsmasq       /opt/dnsmasq/etc
 CD_FUNC cdnginx         /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           /tmp
+CD_FUNC cdTMP           "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
