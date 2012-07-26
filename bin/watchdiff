@@ -1,0 +1,161 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'tmpdir'
+require 'tempfile'
+require 'find'
+require 'fileutils'
+require 'shellwords'
+require 'git'
+require 'listen'
+require 'haus/logger'
+
+class Watchdiff
+  include Haus::Loggable
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.filter = /./
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Watch directories and report on changes, with special handling for a
+        few structured data types.
+
+        Usage: #{File.basename __FILE__} [options] [dir ...]
+
+        e.g.
+
+            Watch and report changes to user and system plist preference files:
+
+            $ #{File.basename __FILE__} -f '\.plist$' {~,}/Library/Preferences/
+
+            Note that the regular expression is quoted to avoid shell expansion.
+
+        WARNING:
+
+            A temporary bare git repository is used as a content tracker, so
+            take care to exclude large non-diffable binary files.
+
+        Options:\
+      ).gsub /^ {8}/, ''
+
+      opt.on '-f', '--filter REGEXP', Regexp, 'DEFAULT: %s' % options.filter.inspect do |arg|
+        options.filter = arg
+      end
+    end
+  end
+
+  def git
+    @git ||= begin
+      dir = Dir.mktmpdir
+      g = Git.init '/', :repository => dir, :index => "#{dir}/index"
+      File.open("#{g.repo}/info/exclude", 'w') { |f| f.puts '/*' } # Ignore everything by default
+      g
+    end
+  end
+
+  def head file
+    git.cat_file 'HEAD:%s' % file.sub(/\A\//, '')
+  end
+
+  def commit *files
+    git.chdir do
+      # Git#add doesn't expose the --force option
+      files.each { |f| system 'git', 'add', '--force', f }
+      git.commit_all Time.now.to_s unless %x(git status --short).empty?
+    end unless files.empty?
+  end
+
+  def commit_all *dirs
+    fs = []
+
+    Find.find *dirs.map { |d| File.expand_path d } do |path|
+      next unless File.ftype(path) == 'file' and path =~ options.filter
+      fs << path
+    end
+
+    commit *fs
+  end
+
+  def diff_binary_plist file
+    tmp = { :a => Tempfile.new('a'), :b => Tempfile.new('b') }
+    tmp[:a].write head(file)
+    FileUtils.cp file, tmp[:b].path
+    tmp.values.each do |t|
+      t.close
+      system 'plutil', '-convert', 'xml1', t.path
+    end
+    log ['Δ (bplist) %s' % file, :magenta, :bold]
+    %x(diff -U3 -- #{tmp[:a].path.shellescape} #{tmp[:b].path.shellescape})
+  ensure
+    tmp.values.each { |f| f.unlink }
+  end
+
+  def diff_text file
+    git.chdir do
+      IO.popen 'diff -U3 - %s' % file.shellescape, 'r+' do |io|
+        io.puts head(file)
+        io.close_write
+        io.read
+      end
+    end
+  end
+
+  def diff file
+    git.chdir do
+      case %x(file #{file.shellescape})[/.*?:\s+(.*)/, 1]
+      when /Apple binary property list/
+        diff_binary_plist file
+      when /text/
+        diff_text file
+      else
+        'Binary file %s has changed' % file.inspect
+      end
+    end
+  end
+
+  def listener *dirs
+    Listen.to(*dirs).filter(options.filter).change do |mod, add, rem|
+      print "\e[2J\e[H"
+      mod.uniq.each do |f|
+        log *diff(f).lines.map { |l|
+          case l
+          when /\A\+/ then [l, :green]
+          when /\A-/  then [l, :red]
+          else l
+          end
+        }
+      end
+      commit *(mod + add + rem).uniq
+    end
+  end
+
+  def watch! *dirs
+    print 'Setting up temporary git repository... '
+    commit_all *dirs
+    log '%d file(s) committed' % git.ls_files.count
+    log ['Ready to diff!', :green, :bold]
+    listener(*dirs).start
+  end
+
+  def run arguments = []
+    dirs = parser.parse arguments
+    dirs = ['.'] if dirs.empty?
+    watch! *dirs
+  ensure
+    FileUtils.rm_rf git.repo.to_s
+  end
+end
+
+$0 = File.basename(__FILE__) and Watchdiff.new.run ARGV if $0 == __FILE__
