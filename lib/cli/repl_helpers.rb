@@ -39,7 +39,7 @@ module CLI
       end; nil
     end
 
-    def read_plist file
+    def plist_read file
       require 'plist'
 
       buf = File.read file
@@ -54,7 +54,7 @@ module CLI
       end
     end
 
-    def write_plist plist, file
+    def plist_write plist, file
       require 'plist'
       File.open(file, 'w') { |f| f.puts Plist::Emit.dump(p) }
     end
