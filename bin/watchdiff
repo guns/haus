@@ -57,6 +57,10 @@ class Watchdiff
       opt.on '-i', '--ignore REGEXP', Regexp do |arg|
         options.ignore = arg
       end
+
+      opt.on '-k', '--keep' do
+        options.keep = true
+      end
     end
   end
 
@@ -151,14 +155,18 @@ class Watchdiff
     log '%d file(s) committed' % git.ls_files.count
     log ['Ready to diff!', :green, :bold]
     listener(*dirs).start
+  ensure
+    if options.keep
+      puts 'Git repo: %s' % git.repo
+    else
+      FileUtils.rm_rf git.repo.to_s
+    end
   end
 
   def run arguments = []
     dirs = parser.parse arguments
     dirs = ['.'] if dirs.empty?
     watch! *dirs.uniq.select { |d| File.directory? d }
-  ensure
-    FileUtils.rm_rf git.repo.to_s
   end
 end
 
