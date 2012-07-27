@@ -8,24 +8,6 @@ require 'socket'
 require 'ipaddr'
 
 class Getlip
-  class << self
-    def addr host = nil
-      host ||= '1.1.1.1'
-      state  = Socket.do_not_reverse_lookup
-
-      # Turn off name resolution for IP addresses
-      Socket.do_not_reverse_lookup = true if IPAddr.new host rescue nil
-
-      # Creating a udp "connection" does not actually send any packets
-      UDPSocket.open do |s|
-        s.connect host, 80
-        s.addr.last
-      end
-    ensure
-      Socket.do_not_reverse_lookup = state
-    end
-  end
-
   def parser
     @parser ||= OptionParser.new %Q{\
       Return the local IP address via a udp socket. Does not do a DNS lookup
@@ -35,10 +17,26 @@ class Getlip
     }.gsub(/^ +/,'')
   end
 
+  def addr host = nil
+    host ||= '1.1.1.1'
+    state  = Socket.do_not_reverse_lookup
+
+    # Turn off name resolution for IP addresses
+    Socket.do_not_reverse_lookup = true if IPAddr.new host rescue nil
+
+    # Creating a udp "connection" does not actually send any packets
+    UDPSocket.open do |s|
+      s.connect host, 80
+      s.addr.last
+    end
+  ensure
+    Socket.do_not_reverse_lookup = state
+  end
+
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.size > 1
-    puts self.class.addr(args.first)
+    puts addr(args.first)
   end
 end
 
