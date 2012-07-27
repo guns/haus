@@ -204,9 +204,10 @@ class Macsetup
       },
 
       'Set power management settings' => lambda {
-        sh 'pmset -a hibernatemode 0 displaysleep 10 disksleep 10 sleep 60 womp 0 destroyfvkeyonstandby 1'
+        sh 'pmset -a displaysleep 10 disksleep 10 sleep 60 womp 0'
         sh 'pmset -b sleep 10'
         sh 'pmset -u sleep 10'
+        sh 'pmset -a hibernatemode 0 hibernatefile /dev/null destroyfvkeyonstandby 1'
         sh 'ln -sf /dev/null /var/vm/sleepimage'
       },
 
