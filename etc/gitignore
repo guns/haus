@@ -11,7 +11,6 @@ Thumbs.db
 *.swo
 .tags
 .jstags
-.types_*.vim
 
 # Ruby
 .bundle/
