@@ -773,15 +773,17 @@ HAVE ngrep && {
 HAVE scutil && {
     # Param: [$*] New hostname
     sethostname() {
+        local pref keys=(ComputerName LocalHostName HostName)
         if (($#)); then
-            local pref
-            for pref in ComputerName LocalHostName HostName; do
+            for pref in "${keys[@]}"; do
                 scutil --set $pref "$*"
             done
             $FUNCNAME
         else
-            echo "computername: $(networksetup -getcomputername)"
-            echo "hostname:     $(hostname)"
+            for pref in  "${keys[@]}"; do
+                printf "$pref: "
+                scutil --get $pref
+            done
         fi
     }
 }
