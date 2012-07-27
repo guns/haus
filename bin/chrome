@@ -146,6 +146,11 @@ class Chrome
       opt.on '-9', '--kill', 'When terminating, send SIGKILL' do
         options.signal = '-KILL'
       end
+
+      opt.on '-h', '--help' do
+        puts opt.help
+        exit
+      end
     end
   end
 
@@ -162,7 +167,7 @@ class Chrome
   end
 
   def running?
-    %x(ps axo ucomm).lines.map(&:strip).include? File.basename(program)
+    system 'killall', '-0', File.basename(program)
   end
 
   def terminate
