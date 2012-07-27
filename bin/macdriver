@@ -126,6 +126,7 @@ class Macdriver
   HARDWARE_ALIASES = Hash.new { |h,k| h.has_key?(k) ? h.fetch(k) : k }.merge \
     'cd'          => 'com.apple.iokit.IOCDStorageFamily',
     'usb'         => 'com.apple.iokit.IOUSBFamily',
+    'audio'       => 'com.apple.iokit.IOHDAFamily',
     'firewire'    => 'com.apple.iokit.IOFireWireFamily',
     'bluetooth'   => 'com.apple.iokit.IOBluetoothFamily',
     'thunderbolt' => 'com.apple.iokit.IOThunderboltFamily'
