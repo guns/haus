@@ -91,6 +91,7 @@ augroup GUNS
         \ execute 'let b:jslint_disabled = 1' |
         \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
         \ execute 'noremap <buffer> <Leader>!     :JSLintUpdate<CR>' |
+        \ setlocal tags+=./.jstags,.jstags |
         \ SetWhitespace 2
     autocmd FileType coffee
         \ SetWhitespace 2

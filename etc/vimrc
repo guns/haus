@@ -30,7 +30,6 @@ source ~/.vim/local/commands.vim
 " Meta
 set history=1024                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
-set tags+=./.jstags,.jstags     " Read hidden doctorjs .tags files
 
 " Swap and undo files
 if !isdirectory(expand('~/.vimtmp/undo'))
