@@ -1268,18 +1268,6 @@ if __OSX__; then
             run command pmset -g custom
         fi
     }
-
-    # Turn off hibernate mode on Macbooks
-    nohibernate() {
-        local image='/var/vm/sleepimage'
-        run rm -f "$image"
-        run ln -s /dev/null "$image"
-        pmset -a hibernatefile "$image"
-        pmset -a hibernatemode 0
-    }
-
-    # Suspend idle sleep
-    alias noidle='pmset noidle'
 fi
 
 HAVE batterystat && {
