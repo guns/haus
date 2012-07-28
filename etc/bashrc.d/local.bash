@@ -765,7 +765,7 @@ HAVE nmap && {
 
 HAVE ngrep && {
     ngg() {
-        run ngrep -d "$(netstat -nr | awk '/^(default|0\.0\.0\.0)/{print $NF;exit}')" -q -l -W byline "$@"
+        run ngrep $device -l -W byline -d "$@"
     }
 }
 
