@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 script = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
-$:.unshift File.expand_path('../../lib', script)
+$:.unshift File.expand_path('../../lib/ruby', script)
 
 require 'haus'
 
