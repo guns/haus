@@ -162,7 +162,7 @@ CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
 CD_FUNC cdhome          ~
 CD_FUNC cdclojure       ~/.clojure /opt/clojure
-CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib"
+CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
 CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           /usr/local/src
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
