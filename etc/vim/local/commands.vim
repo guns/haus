@@ -131,6 +131,7 @@ endfunction
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'
+    setlocal iskeyword+='
     SetWhitespace 2 8
 
     nnoremap <buffer> <Leader><C-n> :StartNailgunServer \| silent edit<CR>
