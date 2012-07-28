@@ -375,7 +375,7 @@ snippet part "partition" w
 (partition $0)
 endsnippet
 
-snippet rseq "re-seq" w
+snippet reseq "re-seq" w
 (re-seq ${1:#"$2"} ${0:string})
 endsnippet
 
@@ -403,7 +403,7 @@ snippet fl "flatten" w
 (flatten $0)
 endsnippet
 
-snippet pq "clojure.lang.PersistentQueue/EMPTY" w
+snippet qu "clojure.lang.PersistentQueue/EMPTY" w
 clojure.lang.PersistentQueue/EMPTY
 endsnippet
 
@@ -549,10 +549,9 @@ snippet defn- "defn-"
 	[$0])
 endsnippet
 
-snippet defm "def memoize" w
-(def $1
-	(memoize
-		(fn [$0] )))
+snippet defm "defmacro" w
+(defmacro $1
+	[$0])
 endsnippet
 
 snippet decl "declare" w
