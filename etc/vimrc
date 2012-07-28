@@ -244,7 +244,7 @@ let g:vimclojure#ParenRainbowColors = {
 
 " Plugin: Regbuf
 let g:regbuf_open_command = 'vnew'
-let g:regbuf_edit_open_command = '84vnew'
+let g:regbuf_edit_open_command = '80vnew'
 
 " Plugin: Org
 let g:org_home = '~/Documents/Org'

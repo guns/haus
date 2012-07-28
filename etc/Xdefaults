@@ -11,7 +11,7 @@
 *foreground:      rgb:FF/F5/9B
 *pointerColor:    rgb:DD/DD/DD
 *cursorBlink:     off
-*geometry:        84x44
+*geometry:        80x44
 *loginShell:      on
 *ptySttySize:     on
 *saveLines:       1024
