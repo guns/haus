@@ -1677,19 +1677,25 @@ function! PareditSelectCurrentForm()
     normal v%
 endfunction
 
-" Toggle Clojure (comment ...) style comments
+" Toggle Clojure #_ comment reader macro
 function! PareditToggleClojureComment()
     let startpos = getpos('.')
+    let line = getline('.')
+    let col = col('.')
 
-    if getline('.')[col('.')-1] !~# '('
-        call PareditFindOpening('(',')',0)
+    if line[col-1 : col] ==# '#_'
+        call search(b:any_opening_char, 'W')
+    elseif line[col-1] !~# b:any_opening_char
+        call PareditFindOpening(0,0,0)
     endif
-    call search('\v\S', 'W')
 
-    if expand('<cword>') ==# 'comment'
-        normal dw
+    let col = col('.')
+    let prev2 = getline('.')[col-3 : col-2]
+
+    if prev2 ==# '#_'
+        normal hhxx
     else
-        execute 'normal icomment '
+        normal i#_
     endif
 
     return cursor(startpos[1:])
