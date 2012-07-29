@@ -4,7 +4,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-$:.unshift 'lib' # {{{1
+$:.unshift 'lib/ruby' # {{{1
 
 require 'shellwords'
 require 'digest/sha1'
