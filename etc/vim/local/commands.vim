@@ -212,7 +212,7 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>o :<C-u>call PareditRaiseSexp()<CR>
 
     " Toggle Clojure (comment)
-    nnoremap <silent> <buffer> <Leader>cc m`:<C-u>call PareditToggleClojureComment()<CR>``
+    nnoremap <silent> <buffer> <Leader>cc :<C-u>call PareditToggleClojureComment()<CR>
 endfunction
 
 
