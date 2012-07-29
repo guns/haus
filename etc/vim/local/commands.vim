@@ -161,6 +161,10 @@ function! <SID>LispBufferSetup()
     nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel.
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
 
+    " Cheatsheet (TODO should be temporary)
+    nnoremap <silent> <buffer> <LocalLeader>cs :ClojureCheatSheet!<CR>
+    nnoremap <silent> <buffer> <LocalLeader>ci :ClojureCheatSheet<CR>
+
     "
     " Paredit
     "
@@ -266,6 +270,19 @@ function! <SID>StopNailgunServer()
     augroup END
 endfunction
 
+
+command! -bar -bang ClojureCheatSheet call <SID>ClojureCheatSheet('<bang>') " {{{1
+function! <SID>ClojureCheatSheet(bang)
+    if a:bang ==# '!'
+        let clj = "(do (require 'dev.cheat-sheet) (dev.cheat-sheet/print-clojure-cheat-sheet!))"
+    else
+        let clj = "(do (require 'dev.cheat-sheet) (dev.cheat-sheet/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\"))"
+    endif
+    call vimclojure#Eval(clj)
+    normal yG
+    wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure
+    normal P
+endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)

@@ -710,6 +710,12 @@ function! vimclojure#EvalParagraph()
 	wincmd p
 endfunction
 
+function! vimclojure#Eval(content)
+	let result = vimclojure#ExecuteNailWithInput("Repl", a:content, "-r")
+	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(b:vimclojure_namespace)
+	call resultBuffer.showOutput(result)
+endfunction
+
 " The Repl
 let vimclojure#Repl = copy(vimclojure#Buffer)
 let vimclojure#Repl.__superBufferNew = vimclojure#Repl.New
