@@ -21,7 +21,7 @@ class Haus
       end
 
       @ostruct        = OpenStruct.new opts
-      @ostruct.path   = File.expand_path '../../..', __FILE__
+      @ostruct.path   = File.expand_path '../../../..', __FILE__
       @ostruct.debug  = !!ENV['DEBUG']
       @ostruct.logger = Haus::Logger.new
 
