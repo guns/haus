@@ -28,7 +28,7 @@ snippet req "require"
 endsnippet
 
 snippet :r ":require"
-(:require $0)
+(:require ${1:[$2 :as $3${4: :refer [$5]}]}$0)
 endsnippet
 
 snippet use "use"
@@ -535,8 +535,12 @@ snippet bind "binding" w
 	)
 endsnippet
 
-snippet def "def"
+snippet de "def"
 (def $0)
+endsnippet
+
+snippet def "def" w
+(def$0)
 endsnippet
 
 snippet defn "defn"
@@ -554,8 +558,16 @@ snippet defm "defmacro" w
 	[$0])
 endsnippet
 
+snippet defd "def ^:dynamic" w
+(def ^:dynamic $0)
+endsnippet
+
 snippet decl "declare" w
 (declare ${0:func-names})
+endsnippet
+
+snippet kw "keyword args" w
+& {:keys [$0]${1: :or {$2}}}
 endsnippet
 
 

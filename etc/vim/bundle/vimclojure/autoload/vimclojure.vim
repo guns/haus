@@ -730,7 +730,7 @@ let vimclojure#Repl._replCommands = [ ",close", ",st", ",ct", ",toggle-pprint" ]
 function! vimclojure#StartRepl(...)
 	let ns = a:0 > 0 ? a:1 : "user"
 	call g:vimclojure#Repl.New(ns)
-	wincmd L
+	wincmd J
 endfunction
 
 " FIXME: Ugly hack. But easier than cleaning up the buffer
