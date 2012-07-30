@@ -16,6 +16,10 @@ sure you run `rvm use system` before `brew install macvim`.
 
 There are a few gems you need to use this plugin.
 
+```
+gem install rubyheap
+gem install copier
+```
 
 You'll want to copy `plugin/` and `autoload/` to `~/.vim`. If you're
 using pathogen, you'll just want to put this whole directory into your
