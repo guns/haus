@@ -149,6 +149,7 @@ set visible-stats on
 "\e;":          "←"         U+2190
 "\e>":          "…"         U+2026
 "\ea":          "α"         U+00E1
+"\eB":          "β"         U+03B2
 "\eC":          "Ç"         U+00C7
 "\ec":          "ç"         U+00E7
 "\eD":          "Δ"         U+0394
@@ -243,6 +244,7 @@ $if Bash
     "\033\007o":    "\C-] vimfind \n"
     "\033\007t":    "\C-] vimfind \n"
     "\033\007g":    "\C-] vimgit \n"
+    "\033\007G":    "\C-]vim \"$(git ls-files | sed 1q)\" -c \"Ggrep -Pi \"\C-b"
     "\C-xm":        "\C-]man "
 
     # Git
