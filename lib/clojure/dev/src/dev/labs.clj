@@ -14,5 +14,6 @@
                      (and (contains? e :keys) (map? (:keys e)))
                      (assoc e :keys (keys (:keys e)) :or (:keys e))
                      ;; Pass through
-                     :else e)) rb)]
+                     :else e))
+                 rb)]
     `(defn ~@(concat l (cons (vec (concat lb rb')) (rest r))))))

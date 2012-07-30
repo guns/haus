@@ -14,11 +14,14 @@
          namespaces)))
 
 (defn print-cheat-sheet! [re]
-  (let [ns (sort-by strvar (filter #(re-seq re (str %))
-                                   (nspace/find-namespaces-on-classpath)))]
-    (doseq [n ns]
-      (try (require n) (catch Exception _)))
-    (println (apply cheat-sheet ns))))
+  (let [xs (filter #(re-seq re (str %))
+                   (nspace/find-namespaces-on-classpath))
+        xs' (reduce (fn [v x]
+                      (if (try (require x) true (catch Exception _))
+                        (conj v x)
+                        v))
+                    [] xs)]
+    (println (apply cheat-sheet (sort-by strvar xs')))))
 
 (defn print-clojure-cheat-sheet! []
   (print-cheat-sheet! #"\Aclojure\.(?!tools\.namespace)"))
