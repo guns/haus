@@ -291,7 +291,6 @@ nnoremap N Nzz
 
 " Simple command line aliases
 noremap <Leader>h     :<C-u>help<Space>
-noremap <Leader>C     :<C-u>colorscheme<Space>
 noremap <Leader>!     :<C-u>make!<CR>
 noremap <Leader><C-t> :<C-u>Ctags<CR>
 noremap <Leader><C-u> :<C-u>ShowUndofiles \| ClearUndofiles<CR>
@@ -317,6 +316,8 @@ nnoremap Q :quit<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
+noremap <Leader>sc       :<C-u>colorscheme<Space>
+noremap <Leader>?sc      :<C-u>colorscheme<CR>
 noremap <Leader>sf       :<C-u>setlocal foldmethod=manual
 noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
 noremap <Leader>sm       :<C-u>setlocal synmaxcol=1000

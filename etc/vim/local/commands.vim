@@ -134,14 +134,14 @@ function! <SID>LispBufferSetup()
     setlocal iskeyword+='
     SetWhitespace 2 8
 
-    nnoremap <buffer> <Leader><C-n> :StartNailgunServer \| silent edit<CR>
-    noremap! <buffer> <C-l>         ->
-    noremap  <buffer> <4-CR>        A<Space>;<Space>
-    noremap! <buffer> <4-CR>        <C-\><C-o>A<Space>;<Space>
-    nnoremap <buffer> ==            :normal m`=a(``<CR>
-    nnoremap <buffer> =p            :normal m`=ap``<CR>
-    nnoremap <buffer> <C-]>         :<C-u>ClojureTagJump.<CR>
-    nnoremap <buffer> <C-w><C-]>    :<C-u>split \| ClojureTagJump.<CR>
+    nnoremap <buffer> <Leader>C :StartNailgunServer \| silent edit<CR>
+    noremap! <buffer> <C-l>      ->
+    noremap  <buffer> <4-CR>     A<Space>;<Space>
+    noremap! <buffer> <4-CR>     <C-\><C-o>A<Space>;<Space>
+    nnoremap <buffer> ==         :normal m`=a(``<CR>
+    nnoremap <buffer> =p         :normal m`=ap``<CR>
+    nnoremap <buffer> <C-]>      :<C-u>ClojureTagJump.<CR>
+    nnoremap <buffer> <C-w><C-]> :<C-u>split \| ClojureTagJump.<CR>
 
     "
     " VimClojure
@@ -281,7 +281,7 @@ function! <SID>ClojureCheatSheet(bang)
     call vimclojure#Eval(clj)
     normal yG
     wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure
-    normal P
+    normal gg"_dGP
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
