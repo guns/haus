@@ -1477,7 +1477,7 @@ function! s:WrapSelection( open, close )
     let c0 = col( "'<" )
     let c1 = col( "'>" )
     if &selection == 'inclusive'
-        let c1 = c1 + 1
+        let c1 = c1 + strlen(matchstr(getline('.')[c1-1 :], '.'))
     endif
     if [l0, c0] == [0, 0] || [l1, c1] == [0, 0]
         " No selection
