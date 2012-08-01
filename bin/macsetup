@@ -52,15 +52,8 @@ class Macsetup
     end
   end
 
-  def sh *args
-    if options.verbose
-      with_indent { log '%s %s' % [(Process.euid.zero? ? '#' : '$'), args.join(' ')] }
-    end
-    system *args or raise ShelloutError, args.join(' ')
-  end
-
-  def prepend_indent messages
-    messages.map { |msg, styles| [('  ' * @indent) + msg, *styles] }
+  def verbose_log msg
+    with_indent { log msg } if options.verbose
   end
 
   def log *messages
@@ -69,6 +62,15 @@ class Macsetup
 
   def logf *messages
     @logger.io.print @logger.fmt(*prepend_indent(messages))
+  end
+
+  def prepend_indent messages
+    messages.map { |msg, styles| [('  ' * @indent) + msg, *styles] }
+  end
+
+  def sh *args
+    verbose_log '%s %s' % [(Process.euid.zero? ? '#' : '$'), args.join(' ')]
+    system *args or raise ShelloutError, args.join(' ')
   end
 
   def with_indent
@@ -136,9 +138,9 @@ class Macsetup
   end
 
   def launchctl_disable plist
-    with_xml_plist plist do |p|
-      p['Disabled'] = true
-      File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(p) }
+    verbose_log "Disabling #{plist}"
+    modify_plist! plist do |p|
+      p['Disabled'] = true; p
     end
   end
 
@@ -153,6 +155,13 @@ class Macsetup
       end
     else
       yield Plist.parse_xml(buf)
+    end
+  end
+
+  def modify_plist! plist
+    with_xml_plist plist do |p|
+      data = yield p
+      File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(data) }
     end
   end
 
@@ -229,11 +238,14 @@ class Macsetup
       },
 
       'Change NTP servers' => lambda {
-        buf = File.read '/etc/ntp.conf'
-        File.open '/etc/ntp.conf', 'w' do |f|
+        ntp = '/etc/ntp.conf'
+        verbose_log "Modifying #{ntp}"
+        buf = File.read ntp
+        File.open ntp, 'w' do |f|
           f.puts buf.lines.reject { |l| l =~ /\Aserver / }
           f.puts (0..3).map { |n| 'server %d.ch.pool.ntp.org' % n }
         end
+        true
       },
 
       'Disable Spotlight' => lambda {
@@ -250,10 +262,9 @@ class Macsetup
       'Disable Bonjour advertising' => lambda {
         mdns = '/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
         unless File.read(mdns).index '-NoMulticastAdvertisements'
-          log 'Modifying %s' % mdns if options.verbose
-          with_xml_plist mdns do |plist|
-            plist['ProgramArguments'] << '-NoMulticastAdvertisements'
-            File.open(mdns, 'w') { |f| f.puts Plist::Emit.dump(plist) }
+          verbose_log "Modifying #{mdns}"
+          modify_plist! mdns do |p|
+            p['ProgramArguments'] << '-NoMulticastAdvertisements'; p
           end
         end
       },
