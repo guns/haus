@@ -130,7 +130,7 @@ function! GetClojureIndent()
 	" normal lisp indenting or not.
 	let i = s:CheckForString()
 	if i > -1
-		return i
+		return i + 1
 	endif
 
 	call cursor(0, 1)

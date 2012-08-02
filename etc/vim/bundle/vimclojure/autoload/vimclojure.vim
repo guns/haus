@@ -495,7 +495,7 @@ function! vimclojure#FindDoc()
 endfunction
 
 let s:DefaultJavadocPaths = {
-			\ "java" : "http://java.sun.com/javase/6/docs/api/",
+			\ "java" : "http://java.sun.com/javase/7/docs/api/",
 			\ "org/apache/commons/beanutils" : "http://commons.apache.org/beanutils/api/",
 			\ "org/apache/commons/chain" : "http://commons.apache.org/chain/api-release/",
 			\ "org/apache/commons/cli" : "http://commons.apache.org/cli/api-release/",
@@ -528,7 +528,7 @@ if !exists("vimclojure#Browser")
 endif
 
 function! vimclojure#JavadocLookup(word)
-	let word = substitute(a:word, "\\v[./][^./]*", "", "")
+	let word = substitute(a:word, "\v[./][^./]*", "", "")
 	let path = vimclojure#ExecuteNailWithInput("JavadocPath", word,
 				\ "-n", b:vimclojure_namespace)
 
