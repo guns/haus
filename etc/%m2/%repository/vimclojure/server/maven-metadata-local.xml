@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>vimclojure</groupId>
+  <artifactId>server</artifactId>
+  <version>2.3.4-GUNS</version>
+  <versioning>
+    <versions>
+      <version>2.3.4-GUNS</version>
+    </versions>
+    <lastUpdated>20120803070621</lastUpdated>
+  </versioning>
+</metadata>

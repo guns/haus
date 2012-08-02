@@ -280,9 +280,9 @@ endfunction
 command! -bar -bang ClojureCheatSheet call <SID>ClojureCheatSheet('<bang>') " {{{1
 function! <SID>ClojureCheatSheet(bang)
     if a:bang ==# '!'
-        let clj = "(do (require 'dev.cheat-sheet) (dev.cheat-sheet/print-clojure-cheat-sheet!))"
+        let clj = "(vimclojure.util/print-cheat-sheet!)"
     else
-        let clj = "(do (require 'dev.cheat-sheet) (dev.cheat-sheet/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\"))"
+        let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
     endif
     call vimclojure#Eval(clj)
     normal yG
