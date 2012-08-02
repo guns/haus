@@ -251,14 +251,50 @@ class Macsetup
         true
       },
 
-      'Disable Spotlight' => lambda {
-        sh 'mdutil -d / &>/dev/null'
-        sh 'mdutil -E / &>/dev/null'
-        sh 'chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search'
-        Dir['/System/Library/LaunchDaemons/*.mds.*'].each do |plist|
-          launchctl_unload plist
+      'Scope Spotlight to only index Mail' => lambda {
+        # Set Spotlight types
+        as_user options.user do
+          modify_plist! '%s/Library/Preferences/com.apple.spotlight.plist' % options.user.dir do |p|
+            ts = %w[MESSAGES]
+            fs = %w[APPLICATIONS SYSTEM_PREFS DOCUMENTS DIRECTORIES CONTACT EVENT_TODO IMAGES PDF BOOKMARKS MUSIC MOVIES FONTS PRESENTATIONS SPREADSHEETS]
+            p['orderedItems'] = ts.map { |s| { :enabled => true, :name => s } }.concat(fs.map { |s| { :enabled => false, :name => s } })
+            p
+          end
         end
-        true
+
+        # Disable Spotlight menu item
+        sh 'chmod 600 /System/Library/CoreServices/Search.bundle/Contents/MacOS/Search'
+
+        # Destroy and alter index information if necessary
+        mds_plist = '/System/Library/LaunchDaemons/com.apple.metadata.mds.plist'
+        spotlight_dir = '/.Spotlight-V100'
+        volume_plist = '%s/VolumeConfiguration.plist' % spotlight_dir
+        partial_path = '%s/Library/Mail' % options.user.dir
+        ok = with_xml_plist volume_plist do |p|
+          p['Stores'].size == 1 and p['Stores'].values.first['PartialPath'] == partial_path
+        end rescue nil
+
+        unless ok
+          # Shutdown Spotlight and recreate new configuration
+          launchctl_unload mds_plist
+          sh 'rm', '-rf', spotlight_dir
+          launchctl_load mds_plist, :force => true
+          sleep 0.1 until File.exists? volume_plist
+
+          # Shut it back down while we alter the configuration
+          launchctl_unload mds_plist, :force => true
+
+          modify_plist! volume_plist do |p|
+            ids = p['Stores'].keys
+            raise 'No Spotlight stores defined!' if ids.size.zero?
+            raise 'Multiple Spotlight stores defined!' if ids.size > 1
+            id = ids.first
+            p['Stores'][id]['PartialPath'] = partial_path
+            p
+          end
+
+          launchctl_load mds_plist, :force => true
+        end
       },
 
       # cf. http://support.apple.com/kb/HT3789
