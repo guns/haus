@@ -1,0 +1,98 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+require 'tmpdir'
+
+class Ramdisk
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = %Q(\
+        Create and mount ramdisks. Size parameter may have units 'g', 'm', or
+        'k', and are otherwise assumed to be bytes.
+
+        Usage: #{File.basename __FILE__} [options] size mountpoint
+
+        Options:
+      ).gsub /^ +/, ''
+
+      opt.on '-r', '--replace', 'Copy extant directory tree at mountpoint to ramdisk' do
+        options.replace = true
+      end
+    end
+  end
+
+  def sh *args
+    puts '%s %s' % [Process.euid.zero? ? '#' : '$', args.join(' ')]
+    system *args
+  end
+
+  def shx cmd
+    puts '%s %s' % [Process.euid.zero? ? '#' : '$', cmd]
+    %x(#{cmd})
+  end
+
+  # Number of 512-byte blocks in given size string
+  def blocks size_spec
+    size_spec.scan(/([\d\.]+)(\D*)/).reduce(0) { |sum, (num, unit)|
+      sum + case unit
+      when /\Ag\z/i then num.to_f * 2**30
+      when /\Am\z/i then num.to_f * 2**20
+      when /\Ak\z/i then num.to_f * 2**10
+      else               num.to_f
+      end
+    }.round / 512
+  end
+
+  # http://osxdaily.com/2007/03/23/create-a-ram-disk-in-mac-os-x/
+  def osx_ramdisk blocks, mountpoint
+    tmpmnt = 'ramdisk-%s' % File.basename(mountpoint)
+    device = shx("hdiutil attach -nomount ram://#{blocks}").strip
+    sleep 0.1 until File.blockdev? device
+    sh 'diskutil', 'eraseVolume', 'HFSX', tmpmnt, device
+    sh 'hdiutil', 'unmount', '/Volumes/%s' % tmpmnt
+    sh 'hdiutil', 'attach', '-owners', 'on', '-mountpoint', mountpoint, device
+    device
+  end
+
+  def create size_spec, mountpoint
+    mountpoint = mountpoint.chomp '/'
+    FileUtils.mkdir_p mountpoint, :verbose => true
+
+    if options.replace
+      tmpdir = Dir.mktmpdir 'ramdisk-'
+      sh *%W[rsync -a #{mountpoint}/ #{tmpdir}/]
+    end
+
+    case RUBY_PLATFORM
+    when /darwin/i then osx_ramdisk blocks(size_spec), mountpoint
+    else raise 'This platform is unsupported!'
+    end
+
+    if options.replace
+      sh *%W[rsync -a #{tmpdir}/ #{mountpoint}/]
+    end
+  ensure
+    FileUtils.rm_rf tmpdir, :verbose => true if tmpdir
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 2
+    create *args
+  end
+end
+
+$0 = File.basename(__FILE__) and Ramdisk.new.run ARGV if $0 == __FILE__
