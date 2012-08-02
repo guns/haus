@@ -496,10 +496,12 @@ HAVE pkgutil && {
 # hdiutil diskutil
 HAVE hdiutil diskutil && {
     alias disklist='diskutil list'
+    alias diskinfo='diskutil info'
+    alias corestorage='diskutil coreStorage'
+    alias hattach='hdiutil attach'
     alias hdetach='hdiutil detach'
     alias hmount='hdiutil mount'
-    alias hcompact='hdiutil compact'
-    alias hresize='hdiutil resize'
+    alias humount='hdiutil unmount'
 }
 
 # rsync
