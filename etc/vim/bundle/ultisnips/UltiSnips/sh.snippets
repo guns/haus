@@ -114,3 +114,11 @@ while ((\$#)); do
 	shift
 done
 endsnippet
+
+snippet post-receive "git post-receive hook" w
+read _a _b branch
+if [[ "$branch" == */${1:development} && $(git symbolic-ref HEAD) == */${2:production} ]]; then
+	cd ..
+	env -i git merge --no-ff --stat --log -m "Merge branch '$1' into master" $1
+fi
+endsnippet
