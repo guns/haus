@@ -1439,7 +1439,15 @@ HAVE xmonad && xmonadrecompile() {
 
 ALIAS lctl='launchctl' \
       lctlload='launchctl load -w' \
-      lctlunload='launchctl unload -w' && lctlreload() { run launchctl unload -w "$@"; run launchctl load -w "$@"; }
+      lctlunload='launchctl unload -w' && {
+    lctlreload() { run launchctl unload -w "$@"; run launchctl load -w "$@"; }
+    lctlfind() {
+        local dir
+        for dir in {/System,~,}/Library/Launch{Agents,Daemons}; do
+            [[ -d "$dir" ]] && f "$dir" "$@"
+        done
+    }
+}
 
 
 ### GUI programs {{{1
