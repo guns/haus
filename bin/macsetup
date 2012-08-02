@@ -129,16 +129,19 @@ class Macsetup
     @launchctl_jobs ||= Set.new %x(launchctl list).lines.map { |l| l.strip.split("\t")[2] }
   end
 
-  def launchctl_load plist, name = nil
-    sh 'launchctl', 'load', '-w', plist unless launchctl_jobs.include? name || File.basename(plist, '.plist')
+  def launchctl_load plist, opts = {}
+    if opts[:force] or not launchctl_jobs.include? opts[:name] || File.basename(plist, '.plist')
+      sh 'launchctl', 'load', '-w', plist
+    end
   end
 
-  def launchctl_unload plist, name = nil
-    sh 'launchctl', 'unload', '-w', plist if launchctl_jobs.include? name || File.basename(plist, '.plist')
+  def launchctl_unload plist, opts = {}
+    if opts[:force] or launchctl_jobs.include? opts[:name] || File.basename(plist, '.plist')
+      sh 'launchctl', 'unload', '-w', plist
+    end
   end
 
   def launchctl_disable plist
-    verbose_log "Disabling #{plist}"
     modify_plist! plist do |p|
       p['Disabled'] = true; p
     end
@@ -159,6 +162,7 @@ class Macsetup
   end
 
   def modify_plist! plist
+    verbose_log "Modifying #{plist}"
     with_xml_plist plist do |p|
       data = yield p
       File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(data) }
@@ -185,9 +189,7 @@ class Macsetup
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help if args.size > 1
-    filter = Regexp.new args.first || '.', 'i'
-
+    filter = Regexp.new (args.empty? ? '.' : args.join('|')), 'i'
     options.user ||= Process.euid.zero? ? sudo_user : Etc.getpwuid(Process.euid)
 
     if options.list
@@ -261,21 +263,19 @@ class Macsetup
 
       # cf. http://support.apple.com/kb/HT3789
       'Disable Bonjour advertising' => lambda {
-        mdns = '/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist'
-        unless File.read(mdns).index '-NoMulticastAdvertisements'
-          verbose_log "Modifying #{mdns}"
-          modify_plist! mdns do |p|
-            p['ProgramArguments'] << '-NoMulticastAdvertisements'; p
-          end
+        modify_plist! '/System/Library/LaunchDaemons/com.apple.mDNSResponder.plist' do |p|
+          unless p['ProgramArguments'].include? '-NoMulticastAdvertisements'
+            p['ProgramArguments'] << '-NoMulticastAdvertisements'
+          end; p
         end
       },
 
       'Enable Application Firewall OR Little Snitch 3' => lambda {
         if launchctl_jobs.include? 'at.obdev.littlesnitchd' and appvers('/Library/Little Snitch/Little Snitch Daemon.bundle')[/^\d+./].to_i >= 3
-          launchctl_unload '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', 'com.apple.alf'
+          launchctl_unload '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', :name => 'com.apple.alf'
           ['LS3 detected, ALF DISABLED', :green, :bold]
         else
-          launchctl_load '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', 'com.apple.alf'
+          launchctl_load '/System/Library/LaunchDaemons/com.apple.alf.agent.plist', :name => 'com.apple.alf'
           ['LS3 no detected, ALF ENABLED', :yellow, :bold]
         end
       },
