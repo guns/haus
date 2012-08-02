@@ -29,7 +29,7 @@ class Macsetup
         OS X user and system preferences script. Global system preferences are
         not altered unless executed as root.
 
-        Usage: #{File.basename __FILE__} [options]
+        Usage: #{File.basename __FILE__} [options] [regexp-filter]
 
         Options:
       ).gsub /^ +/, ''
@@ -185,20 +185,21 @@ class Macsetup
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.empty?
+    abort parser.help if args.size > 1
+    filter = Regexp.new args.first || '.', 'i'
 
     options.user ||= Process.euid.zero? ? sudo_user : Etc.getpwuid(Process.euid)
 
     if options.list
-      summarize 'Root preferences:', root_preferences.keys
-      summarize 'User preferences (%s):' % options.user.name, user_preferences.keys
-      summarize 'Recommendations:', recommendations.keys
+      summarize 'Root preferences:', root_preferences.keys.grep(filter)
+      summarize 'User preferences (%s):' % options.user.name, user_preferences.keys.grep(filter)
+      summarize 'Recommendations:', recommendations.keys.grep(filter)
     else
-      execute! 'Setting root preferences:', root_preferences if Process.euid.zero?
+      execute! 'Setting root preferences:', root_preferences.select { |k,v| k =~ filter  } if Process.euid.zero?
       as_user options.user do
-        execute! 'Setting user preferences (%s):' % options.user.name, user_preferences
+        execute! 'Setting user preferences (%s):' % options.user.name, user_preferences.select { |k,v| k =~ filter }
       end
-      execute! 'Recommendations:', recommendations
+      execute! 'Recommendations:', recommendations.select { |k,v| k =~ filter }
     end
   end
 
