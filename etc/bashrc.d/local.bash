@@ -500,43 +500,6 @@ HAVE hdiutil diskutil && {
     alias hmount='hdiutil mount'
     alias hcompact='hdiutil compact'
     alias hresize='hdiutil resize'
-    # Param: $1 Size specification
-    # Param: $2 Name of file and volume
-    hcreate() {
-        (($# == 2)) || { echo >&2 "Usage: $FUNCNAME size name"; return 1; }
-
-        local size="$1" name="$2"
-        run hdiutil create \
-                    -size "$size" \
-                    -fs HFS+J \
-                    -encryption AES-128 \
-                    -volname "${name##*/}" \
-                    "$name"
-    }
-
-    # http://osxdaily.com/2007/03/23/create-a-ram-disk-in-mac-os-x/
-    # Param: $1 Size specification
-    # Param: $2 Volume name
-    ramdisk() {
-        (($# == 2)) || { echo "Usage: $FUNCNAME size name"; return 1; }
-
-        local size="$1" name="$2"
-        local disk="$(run hdiutil attach -nomount ram://$(ruby -e '
-            puts ARGV.first.scan(/([\d\.]+)(\D*)/).inject(0) { |sum, (num, unit)|
-                sum + case unit
-                when /\Ag\z/i    then num.to_f * 2**30
-                when /\Am\z/i,"" then num.to_f * 2**20
-                when /\Ak\z/i    then num.to_f * 2**10
-                else                  num.to_f
-                end
-            }.round / 512
-        ' "$size"))"
-
-        # Just make sure that $disk isn't a currently mounted volume
-        if ! mount | awk '{print $1}' | grep -q "$disk"; then
-            run diskutil eraseVolume HFS+ "$name" $disk # unquoted!
-        fi
-    }
 }
 
 # rsync
@@ -1174,9 +1137,7 @@ HAVE lein && {
     # alias leinoutdated=
 }
 
-HAVE ng && {
-    alias ngstop='ng ng-stop'
-}
+ALIAS ngstop='ng ng-stop'
 
 
 ### JavaScript {{{1
