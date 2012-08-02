@@ -842,10 +842,7 @@ snippet deb "debug" w
 endsnippet
 
 snippet CP "print classpath" w
-(defn print-classpath []
-	(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))]
-		(println (.getPath u))))
-(print-classpath)
+(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))] (println (.getPath u)))
 endsnippet
 
 snippet vimc "Start VimClojure NGServer" w

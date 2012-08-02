@@ -165,6 +165,12 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <LocalLeader>cs :ClojureCheatSheet!<CR>
     nnoremap <silent> <buffer> <LocalLeader>ci :ClojureCheatSheet<CR>
 
+    " Repl bindings
+    if exists('b:vimclojure_repl')
+        nmap <silent> <buffer> <Leader>Q  GS,close<CR>
+        nmap <silent> <buffer> <Leader>tp GS,toggle-pprint<CR>
+    endif
+
     "
     " Paredit
     "
