@@ -208,14 +208,26 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a<Space><Left>
     nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
 
-    " Wrap word/form/selection, then insert at end/beginning
+    " Wrap word/selection, then insert at front/end
     nnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrap('(',')')<CR>%i
     vnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrapSelection('(',')')<CR>i
-    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>a
-    vnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrapSelection('(',')')<CR>%a
+    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>a<Space><Left>
+    vnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
+    nnoremap <silent> <buffer> <Leader>( :<C-u>call PareditWrap('(',')')<CR>a<Space><Left>
+    nnoremap <silent> <buffer> <Leader>) :<C-u>call PareditWrap('(',')')<CR>%i
+    vnoremap <silent> <buffer> <Leader>( :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
+    vnoremap <silent> <buffer> <Leader>) :<C-u>call PareditWrapSelection('(',')')<CR>i
+    nnoremap <silent> <buffer> <Leader>[ :<C-u>call PareditWrap('[',']')<CR>a<Space><Left>
+    nnoremap <silent> <buffer> <Leader>] :<C-u>call PareditWrap('[',']')<CR>%i
+    vnoremap <silent> <buffer> <Leader>[ :<C-u>call PareditWrapSelection('[',']')<CR>%a<Space><Left>
+    vnoremap <silent> <buffer> <Leader>] :<C-u>call PareditWrapSelection('[',']')<CR>i
+    nnoremap <silent> <buffer> <Leader>{ :<C-u>call PareditWrap('{','}')<CR>a<Space><Left>
+    nnoremap <silent> <buffer> <Leader>} :<C-u>call PareditWrap('{','}')<CR>%i
+    vnoremap <silent> <buffer> <Leader>{ :<C-u>call PareditWrapSelection('{','}')<CR>%a<Space><Left>
+    vnoremap <silent> <buffer> <Leader>} :<C-u>call PareditWrapSelection('{','}')<CR>i
 
     " Wrap form/selection, then insert in front
-    nnoremap <silent> <buffer> <Leader>i vi(:<C-u>call PareditWrapSelection('(',')')<CR>%i<Space><Left>
+    nnoremap <silent> <buffer> <Leader>i :<C-u>call PareditFindClosing(0,0,0) \| call PareditWrap('(',')')<CR>a<Space><Left>
     vnoremap <silent> <buffer> <Leader>i :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
 
     " paredit-raise-sexp
