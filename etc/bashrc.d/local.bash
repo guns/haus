@@ -1139,6 +1139,7 @@ HAVE lein && {
     # alias leinoutdated=
 }
 
+ALIAS java-share-dump='java -server -Xshare:dump'
 ALIAS ngstop='ng ng-stop'
 
 
