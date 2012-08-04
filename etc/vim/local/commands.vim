@@ -508,7 +508,7 @@ function! <SID>MapReadlineUnicodeBindings()
                 let char = substitute(toks[1], '\v.*"(.+)".*', '\1', '')
 
                 " By convention, we'll always map as Meta-.
-                let bind = key =~# '\v[<>]' ? '' . key : '<M-' . key . '>'
+                let bind = '<Esc>' . key
                 execute 'noremap! ' . bind . ' ' . char
             endif
         endfor
