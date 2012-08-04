@@ -889,7 +889,7 @@ HAVE vim && {
                     vim -c StartNailgunServer -c CommandT
                 else
                     local seconds=0
-                    clojure --lein "vimclojure :port $port" &>/dev/null &
+                    clojure --lein "trampoline vimclojure :port $port" &>/dev/null &
                     ( ( until nc -z 127.0.0.1 "$port"; do
                             if ((++seconds < 30)); then
                                 sleep 1
