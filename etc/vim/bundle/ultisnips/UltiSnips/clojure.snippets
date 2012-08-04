@@ -36,15 +36,7 @@ snippet use "use"
 endsnippet
 
 snippet :u ":use"
-(:use [$1 :only [$0]])
-endsnippet
-
-snippet :a ":as" w
-[$1 :as $0]
-endsnippet
-
-snippet :o ":only" w
-[$1 :only [$0]]
+(:use [$1${2: :only [$3]}]$0)
 endsnippet
 
 snippet imp "import"
@@ -53,6 +45,14 @@ endsnippet
 
 snippet :i ":import"
 (:import ${0:libs})
+endsnippet
+
+snippet refc "refer-clojure"
+(refer-clojure :exclude [$0])
+endsnippet
+
+snippet :refc ":refer-clojure"
+(:refer-clojure :exclude [$0])
 endsnippet
 
 snippet me "meta" w
@@ -403,7 +403,7 @@ snippet fl "flatten" w
 (flatten $0)
 endsnippet
 
-snippet qu "clojure.lang.PersistentQueue/EMPTY" w
+snippet pq "clojure.lang.PersistentQueue/EMPTY" w
 clojure.lang.PersistentQueue/EMPTY
 endsnippet
 
@@ -478,6 +478,10 @@ snippet zer "zero?" w
 (zero? ${0:item})
 endsnippet
 
+snippet refl "clojure.reflect/reflect" w
+(clojure.reflect/reflect $0)
+endsnippet
+
 
 ### Functions {{{1
 
@@ -490,7 +494,7 @@ snippet app "apply" w
 endsnippet
 
 snippet comp "comp" w
-(comp ${0:f g h})
+(comp $0)
 endsnippet
 
 snippet par "partial" w
@@ -535,12 +539,20 @@ snippet bind "binding" w
 	)
 endsnippet
 
-snippet de "def"
+snippet def "def"
 (def $0)
 endsnippet
 
-snippet def "def" w
-(def$0)
+snippet defc "def ^:const"
+(def ^:const $0)
+endsnippet
+
+snippet defd "def ^:dynamic"
+(def ^:dynamic $0)
+endsnippet
+
+snippet defo "defonce"
+(defonce $0)
 endsnippet
 
 snippet defn "defn"
@@ -553,16 +565,17 @@ snippet defn- "defn-"
 	[$0])
 endsnippet
 
-snippet defm "defmacro" w
+snippet defm "defmacro"
 (defmacro $1
 	[$0])
 endsnippet
 
-snippet defd "def ^:dynamic" w
-(def ^:dynamic $0)
+snippet defin "definline"
+(definline $1
+	[$0])
 endsnippet
 
-snippet decl "declare" w
+snippet decl "declare"
 (declare ${0:func-names})
 endsnippet
 
@@ -796,16 +809,20 @@ snippet pr "prn" w
 (prn $0)
 endsnippet
 
-snippet prn "println" w
+snippet pl "println" w
 (println $0)
 endsnippet
 
-snippet prf "printf" w
+snippet pf "printf" w
 (printf ${1:"$2"} ${0:args})
 endsnippet
 
-snippet nl "newline" w
-(newline)
+snippet pp "clojure.pprint/pprint" w
+(clojure.pprint/pprint $0)
+endsnippet
+
+snippet pt "clojure.pprint/print-table" w
+(clojure.pprint/print-table $0)
 endsnippet
 
 snippet wos "with-out-str" w

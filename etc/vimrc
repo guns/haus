@@ -227,6 +227,7 @@ let g:nrrw_rgn_wdth = 160
 let g:vimclojure#Browser = 'open'
 let g:vimclojure#SplitSize = 10
 let g:vimclojure#FuzzyIndent = 1
+let g:vimclojure#FuzzyIndentPatterns .= ',run\*,fresh'
 let g:vimclojure#DynamicHighlighting = 1
 let g:vimclojure#ParenRainbow = 1
 let g:vimclojure#ParenRainbowColors = {
