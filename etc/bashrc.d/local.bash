@@ -1239,6 +1239,8 @@ if __OSX__; then
             run command pmset -g custom
         fi
     }
+
+    alias noidle='pmset noidle'
 fi
 
 HAVE batterystat && {
