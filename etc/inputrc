@@ -123,7 +123,7 @@ set visible-stats on
 
 
 ### Global Macros {{{1
-# diff -U3 <(INPUTRC=/dev/null bind -p) <(bind -p)
+# diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
 
 # Text editing
 "\C-]":         kill-whole-line
@@ -200,6 +200,17 @@ set visible-stats on
 ### bash {{{1
 
 $if Bash
+    # Rebinds
+    "\e!":          complete-command
+    "\e@":          complete-hostname
+    "\e#":          insert-comment
+    "\e$":          complete-variable
+    "\e^":          history-expand-line
+    "\e&":          tilde-expand
+    "\e*":          insert-completions
+    "\e.":          insert-last-argument
+    "\e_":          insert-last-argument
+
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] (xreload &); tmuxeval \n"
@@ -301,6 +312,17 @@ $endif
 ### pry / irb {{{1
 
 $if Ruby
+    # Rebinds
+    "\e!":          complete-command
+    "\e@":          complete-hostname
+    "\e#":          insert-comment
+    "\e$":          complete-variable
+    "\e^":          history-expand-line
+    "\e&":          tilde-expand
+    "\e*":          insert-completions
+    "\e.":          insert-last-argument
+    "\e_":          insert-last-argument
+
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"
 
@@ -322,6 +344,17 @@ $endif
 ### Clojure REPL {{{1
 
 $if Java
+    # Rebinds
+    "\e!":          complete-command
+    "\e@":          complete-hostname
+    "\e#":          insert-comment
+    "\e$":          complete-variable
+    "\e^":          history-expand-line
+    "\e&":          tilde-expand
+    "\e*":          insert-completions
+    "\e.":          insert-last-argument
+    "\e_":          insert-last-argument
+
     # Documentation
     "\C-xf":        "\C-](find-doc "")\C-b\C-b"
     "\C-xs":        "\C-](source )\C-b"
@@ -334,6 +367,17 @@ $endif
 ### PostgreSQL {{{1
 
 $if Psql
+    # Rebinds
+    "\e!":          complete-command
+    "\e@":          complete-hostname
+    "\e#":          insert-comment
+    "\e$":          complete-variable
+    "\e^":          history-expand-line
+    "\e&":          tilde-expand
+    "\e*":          insert-completions
+    "\e.":          insert-last-argument
+    "\e_":          insert-last-argument
+
     # General
     "\033\007g":    "\C-]\\g\n"
     "\C-x\C-g":     "\C-]\\g\n"
