@@ -530,7 +530,7 @@ endfunction
 
 command! -nargs=+ -complete=command -bar Capture call <SID>Capture(<q-args>) "{{{1
 command! CaptureMaps
-    \ execute 'Capture verbose map | silent! verbose map!' |
+    \ execute 'Capture verbose map \| silent! verbose map!' |
     \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
 " Redirect output of given commands into a scratch buffer
 function! <SID>Capture(cmd)
