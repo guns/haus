@@ -958,6 +958,11 @@ HAVE vim && {
 # Tmux
 ALIAS tm='tmux' && {
     HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
+    tmuxeval() {
+        local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+"))
+        echo "$vars"
+        eval "$vars"
+    }
 }
 
 # GNU screen
