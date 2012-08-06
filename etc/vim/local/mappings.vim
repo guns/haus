@@ -250,12 +250,13 @@ cnoremap <M-d> <C-f>de<C-c>
 """ Command line and Search {{{1
 
 " Transfer repeat-last-char-search to (nvo), to free (nvo);
-" REPLACE (nvo), with nothing
+" Transfer backwards-repeat-last-char-search to (nvo)M-, to free (nvo),
 " Bind:   , =>   ;
 " Bind: v_, => v_;
 " Bind: o_, => o_;
-noremap ; <NOP>
-noremap , ;
+noremap ;     <NOP>
+noremap <M-,> ,
+noremap ,     ;
 
 " Alias (nvo); to (nvo): for quick access to the command line
 " Bind:   ; =>   :
