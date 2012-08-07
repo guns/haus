@@ -291,15 +291,17 @@ endfunction
 
 command! -bar -bang ClojureCheatSheet call <SID>ClojureCheatSheet('<bang>') " {{{1
 function! <SID>ClojureCheatSheet(bang)
-    if a:bang ==# '!'
-        let clj = "(vimclojure.util/print-cheat-sheet!)"
-    else
-        let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
+    if exists('g:vimclojure#WantNailgun') && g:vimclojure#WantNailgun
+        if a:bang ==# '!'
+            let clj = "(vimclojure.util/print-cheat-sheet!)"
+        else
+            let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
+        endif
+        call vimclojure#Eval(clj)
+        normal yG
+        wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure
+        normal gg"_dGP
     endif
-    call vimclojure#Eval(clj)
-    normal yG
-    wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure
-    normal gg"_dGP
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
