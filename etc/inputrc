@@ -184,6 +184,7 @@ set visible-stats on
 "\eI":          "∩"         U+2229
 "\el":          "λ"         U+03bb
 "\ep":          "π"         U+03c0
+"\eP":          "∏"         U+03c0
 "\er":          "ρ"         U+03c1
 "\es":          "★"         U+2605
 "\eS":          "Σ"         U+03a3
