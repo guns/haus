@@ -65,7 +65,7 @@ class Clojure
 
   def lein_project_dir
     Pathname.new(Dir.pwd).ascend do |path|
-      break path.to_s if File.exists? (path + 'project.clj').to_s
+      break path.to_s if (path + 'project.clj').exist?
     end or File.expand_path '~/.clojure'
   end
 
@@ -95,9 +95,9 @@ class Clojure
     when :lein
       return lein_daemon(*args)
     when :repl
-      rlwrap + %W[java -server -classpath #{classpath}] + args + %W[clojure.main]
+      rlwrap + %W[java -classpath #{classpath}] + args + %W[clojure.main]
     else
-      %W[java -server -classpath #{classpath} clojure.main] + args
+      %W[java -classpath #{classpath} clojure.main] + args
     end
 
     warn cmd.join(' ') unless options.quiet
