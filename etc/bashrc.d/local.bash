@@ -729,9 +729,7 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    ngg() {
-        run ngrep $device -l -W byline -d "$@"
-    }
+    ngg() { run ngrep $device -l -W byline -d "$@"; }
 }
 
 # scutil

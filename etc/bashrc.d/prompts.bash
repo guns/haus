@@ -28,7 +28,7 @@ EXPORT_PROMPTS() {
     # which have special escapes in Bash: \[ \]
     export PS1="\[\e[0;${color}m\]\\H \[\e[1m\]${delim}\[\e[22m\] \\w\\n\[\e[0;${color}m\]\\u\\$\[\e[0m\] "
     export PS2="\[\e[0;${color}m\]${USER//?/░}░\[\e[0m\] "
-    export PS4='━ '
+    export PS4='• '
 }
 
 # Show exit status of last command if non-zero
