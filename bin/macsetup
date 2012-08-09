@@ -338,6 +338,10 @@ class Macsetup
         launchctl_unload '/System/Library/LaunchDaemons/com.apple.usbmuxd.plist'
       },
 
+      'Disable VDCAssistant (iSight daemon)' => lambda {
+        launchctl_unload '/System/Library/LaunchDaemons/com.apple.cmio.VDCAssistant.plist'
+      },
+
       'Disable msrpc daemons' => lambda {
         Dir['/System/Library/LaunchDaemons/com.apple.msrpc.*.plist'].each do |plist|
           launchctl_unload plist
