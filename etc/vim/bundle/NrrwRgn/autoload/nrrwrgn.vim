@@ -131,7 +131,7 @@ fun! <sid>ParseList(list) "{{{1
 		 let temp=item
      endfor
 	 if result[i-1][1] != item
-		 let result[i]=[item,item]
+		 let result[i]=[start,item]
 	 endif
      return result
 endfun
@@ -202,9 +202,13 @@ fun! <sid>NrrwRgnAuCmd(instn) "{{{1
 		au!
 		aug end
 		exe "aug! NrrwRgn" . a:instn
-		if !&ma
-			setl ma
+
+		" make the original buffer modifiable, if possible
+		let buf = s:nrrw_rgn_lines[a:instn].orig_buf
+		if !getbufvar(buf, '&l:ma') && !getbufvar(buf, 'orig_buf_ro')
+			call setbufvar(s:nrrw_rgn_lines[a:instn].orig_buf, '&ma', 1)
 		endif
+
 		if s:debug
 			echo printf("bufnr: %d a:instn: %d\n", bufnr(''), a:instn)
 			echo "bwipe " s:nrrw_winname . '_' . a:instn
@@ -234,6 +238,12 @@ fun! <sid>CleanUpInstn(instn) "{{{1
 endfu
 
 fun! <sid>StoreLastNrrwRgn(instn) "{{{1
+	" Only store the last region, when the narrowed instance is still valid
+	if !has_key(s:nrrw_rgn_lines, a:instn)
+		call <sid>WarningMsg("Error storing the last Narrowed Window, it's invalid!")
+		return
+	endif
+
 	let s:nrrw_rgn_lines['last'] = []
 	if !exists("b:orig_buf")
 		let orig_buf = s:nrrw_rgn_lines[a:instn].orig_buf
@@ -595,12 +605,12 @@ fun! nrrwrgn#NrrwRgnDoPrepare(...) "{{{1
 			\ " narrow using :NRP!")
 	   return
 	endif
-	if !exists("s:nrrw_rgn_buf")
-		let s:nrrw_rgn_buf =  <sid>ParseList(s:nrrw_rgn_line)
-	endif
-	if empty(s:nrrw_rgn_buf)
+	if empty(s:nrrw_rgn_line)
 		call <sid>WarningMsg("No lines selected from :NRP, aborting!")
 	   return
+	endif
+	if !exists("s:nrrw_rgn_buf")
+		let s:nrrw_rgn_buf =  <sid>ParseList(s:nrrw_rgn_line)
 	endif
 	let o_lz = &lz
 	let s:o_s  = @/
@@ -777,11 +787,19 @@ fun! nrrwrgn#WidenRegion(vmode,force, close) "{{{1
 					\s:nrrw_rgn_lines[instn].start[1])
 	endif
 
+	" Make sure the narrowed buffer is still valid (happens, when 2 split
+	" window of the narrowed buffer is opened.
+	if !has_key(s:nrrw_rgn_lines, instn)
+		call <sid>WarningMsg("Error writing changes back, Narrowed Window invalid!")
+		return
+	endif
+
 	" Now copy the content back into the original buffer
 
-	" Multiselection
+	" 1) Check: Multiselection
 	if has_key(s:nrrw_rgn_lines[instn], 'multi')
 		call <sid>WidenRegionMulti(cont, instn, a:close)
+	" 2) Visual Selection
 	elseif a:vmode
 		"charwise, linewise or blockwise selection 
 		call setreg('a', join(cont, "\n") . "\n", s:nrrw_rgn_lines[instn].vmode)
@@ -842,6 +860,7 @@ fun! nrrwrgn#WidenRegion(vmode,force, close) "{{{1
 				\ s:nrrw_rgn_lines[instn].vmode),
 				\ instn)
 		endif
+	" 3) :NR started selection
 	else 
 		" linewise selection because we started the NarrowRegion with the
 		" command NarrowRegion(0)
@@ -974,6 +993,7 @@ fun! nrrwrgn#VisualNrrwRgn(mode, ...) "{{{1
 		exe ':noa ' win 'wincmd w'
 	endif
 	let b:orig_buf = orig_buf
+	let s:nrrw_rgn_lines[s:instn].orig_buf  = orig_buf
 	silent put a
 	let b:nrrw_instn = s:instn
 	silent 0d _
