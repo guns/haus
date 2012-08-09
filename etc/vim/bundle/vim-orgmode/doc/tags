@@ -75,6 +75,8 @@ orgguide-toc	orgguide.txt	/*orgguide-toc*
 orgguide-todo	orgguide.txt	/*orgguide-todo*
 orgguide.txt	orgguide.txt	/*orgguide.txt*
 orgmode-<LocalLeader>-sa	orgguide.txt	/*orgmode-<LocalLeader>-sa*
+orgmode-<LocalLeader>pa	orgguide.txt	/*orgmode-<LocalLeader>pa*
+orgmode-<LocalLeader>pi	orgguide.txt	/*orgmode-<LocalLeader>pi*
 orgmode-<LocalLeader>si	orgguide.txt	/*orgmode-<LocalLeader>si*
 orgmode-ctrl-a	orgguide.txt	/*orgmode-ctrl-a*
 orgmode-ctrl-x	orgguide.txt	/*orgmode-ctrl-x*
