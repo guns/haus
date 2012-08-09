@@ -246,7 +246,15 @@ function! s:buffer_path() dict abort
   return s:shellslash(bufname == '' ? '' : fnamemodify(bufname,':p'))
 endfunction
 
-call s:add_methods('buffer',['getvar','setvar','getline','project','name','path'])
+function! s:buffer_relative() dict abort
+  return self.name()
+endfunction
+
+function! s:buffer_absolute() dict abort
+  return self.path()
+endfunction
+
+call s:add_methods('buffer',['getvar','setvar','getline','project','name','path','relative','absolute'])
 
 " }}}1
 " Rake {{{1
@@ -337,10 +345,14 @@ function! s:buffer_related() dict abort
     return s:project().first_file(
           \'test/'.bare.'_test.rb',
           \'spec/'.bare.'_spec.rb',
+          \'test/lib/'.bare.'_test.rb',
+          \'spec/lib/'.bare.'_spec.rb',
           \'test/unit/'.bare.'_test.rb',
           \'spec/unit/'.bare.'_spec.rb')
   elseif self.name() =~# '^\(test\|spec\)/.*_\1\.rb$'
-    return 'lib/'.self.name()[5:-9].'.rb'
+    return s:project().first_file(
+      \'lib/'.self.name()[5:-9].'.rb',
+      \self.name()[5:-9].'.rb')
   elseif self.name() ==# 'Gemfile'
     return 'Gemfile.lock'
   elseif self.name() ==# 'Gemfile.lock'
