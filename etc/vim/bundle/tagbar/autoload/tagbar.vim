@@ -1606,9 +1606,6 @@ function! s:OpenWindow(flags) abort
     if tagbarwinnr != -1
         if winnr() != tagbarwinnr && jump
             call s:winexec(tagbarwinnr . 'wincmd w')
-            if autoclose
-                let w:autoclose = autoclose
-            endif
             call s:HighlightTag(1, curline)
         endif
         call s:LogDebugMessage("OpenWindow finished, Tagbar already open")
@@ -1828,6 +1825,10 @@ function! s:ProcessFile(fname, ftype) abort
     endif
 
     let tempfile = tempname()
+    let ext = fnamemodify(fileinfo.fpath, ':e')
+    if ext != ''
+        let tempfile .= '.' . ext
+    endif
 
     call writefile(getbufline(fileinfo.bufnr, 1, '$'), tempfile)
     let fileinfo.mtime = getftime(tempfile)
@@ -2756,7 +2757,7 @@ function! s:JumpToTag(stay_in_tagbar) abort
     call cursor(taginfo.fields.line, taginfo.fields.column)
 
     if foldclosed('.') != -1
-        .foldopen!
+        .foldopen
     endif
 
     redraw
