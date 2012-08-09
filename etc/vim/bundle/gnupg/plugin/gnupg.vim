@@ -178,7 +178,12 @@ function s:GPGInit()
   set viminfo=
 
   " we don't want a swap file, as it writes unencrypted data to disk
-  set noswapfile
+  setlocal noswapfile
+
+  " Ditto with undo files
+  if has('persistent_undo')
+      setlocal noundofile
+  endif
 
   " check what gpg command to use
   if (!exists("g:GPGExecutable"))
