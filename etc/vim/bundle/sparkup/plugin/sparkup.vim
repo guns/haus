@@ -26,12 +26,12 @@ command! -bar SparkupBufferSetup call <SID>SparkupBufferSetup()
 function! <SID>SparkupBufferSetup()
     if exists('b:SparkupBufferSetup')
         unlet b:SparkupBufferSetup
-        silent nunmap <buffer> <Leader>-
-        silent nunmap <buffer> --
+        silent nunmap <buffer> <Leader>t
+        silent nunmap <buffer> <Leader>j
     else
         let b:SparkupBufferSetup = 1
-        silent nmap <buffer> <Leader>- :call <SID>Sparkup()<cr>
-        silent nmap <buffer> --        :call <SID>SparkupNext()<cr>
+        silent nmap <buffer> <Leader>t :call <SID>Sparkup()<cr>
+        silent nmap <buffer> <Leader>j :call <SID>SparkupNext()<cr>
     endif
 endfunction
 
