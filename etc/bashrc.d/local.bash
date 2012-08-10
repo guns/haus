@@ -1324,6 +1324,8 @@ if __OSX__; then
         alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && git pull && \
                                    git checkout guns && git merge master -m "Merge master into guns" && git push github --all"'
         alias brewoutdated='brew outdated'
+
+        alias brewprefix='brew --prefix'
     }
 elif __LINUX__; then
     # Aptitude package manager
