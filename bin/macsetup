@@ -430,6 +430,7 @@ class Macsetup
         sh 'defaults write -g PMPrintingExpandedStateForPrint -boolean TRUE'
         sh 'defaults write -g KeyRepeat -int 1'
         sh 'defaults write -g InitialKeyRepeat -int 12'
+        sh 'defaults write -g NSAutomaticWindowAnimationsEnabled -boolean FALSE'
       },
 
       'Set Loginwindow preferences' => lambda {
