@@ -176,7 +176,6 @@ RC_FUNC rcd             /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 
 ALIAS comp='complete -p'
 ALIAS cv='command -v'
-alias d='dirs'
 alias h='history'
 ALIAS j='jobs'
 alias o='echo'
@@ -802,7 +801,6 @@ ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
-    alias v='command vim'
     alias vi='command vim -u NONE'
     alias vim='vim -p'
     alias vimtag='vim -t'
@@ -954,7 +952,7 @@ HAVE vim && {
 ### Terminal Multiplexers {{{1
 
 # Tmux
-ALIAS tm='tmux' && {
+HAVE tmux && {
     HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
     tmuxeval() {
         local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+"))
