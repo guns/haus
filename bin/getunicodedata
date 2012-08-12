@@ -24,8 +24,7 @@ class Getunicodedata
       buf.lines.map do |line|
         row = line.chomp.split ';'
         {
-          :Char                       => [row[0].to_i(16)].pack('U'),
-          :Code_Point                 => row[ 0],
+          :Code_Point                 => row[ 0].to_i(16),
           :Name                       => row[ 1],
           :General_Category           => row[ 2],
           :Canonical_Combining_Class  => row[ 3],
@@ -44,11 +43,25 @@ class Getunicodedata
       end
     end
 
+    def glyph code_point, category
+      # cf. http://en.wikipedia.org/wiki/C0_and_C1_control_codes
+      if category == 'Cc'
+        case code_point
+        when 0x00..0x1f then '^%s' % (code_point + 0x40).chr
+        when 0x7f then '^?'
+        when 0x80..0x9f then '^[%s' % (code_point - 0x40).chr
+        else [code_point].pack('U').inspect.delete '"'
+        end
+      else
+        [code_point].pack 'U'
+      end
+    end
+
     def to_s
       data.map do |row|
-        buf  = row[:General_Category] == 'Cc' ? row[:Char].inspect.delete('"') : row[:Char]
-        buf << "\tU+%s" % row[:Code_Point]
-        buf << "\t%s"   % row[:Name]
+        buf  = glyph row[:Code_Point], row[:General_Category]
+        buf << "\tU+%04X" % row[:Code_Point]
+        buf << "\t%s" % row[:Name]
         buf << "\t(%s)" % row[:Unicode_1_Name] if row[:Unicode_1_Name] and not row[:Unicode_1_Name].empty?
         buf
       end.join "\n"
