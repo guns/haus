@@ -269,13 +269,12 @@ class Macsetup
         mds_plists = Dir['/System/Library/LaunchDaemons/com.apple.metadata.mds.{scan.,spindump.,}plist']
         spotlight_dir = '/.Spotlight-V100'
         volume_plist = '%s/VolumeConfiguration.plist' % spotlight_dir
-        partial_path = '%s/Library/Mail' % options.user.dir
+        partial_path = '%s/Library/Mail' % options.user.dir.sub(/\A\//, '')
         ok = with_xml_plist volume_plist do |p|
           p['Stores'].size == 1 and p['Stores'].values.first['PartialPath'] == partial_path
-        end rescue nil
+        end rescue false
 
         unless ok
-
           # Shutdown Spotlight and recreate new configuration
           mds_plists.each { |f| launchctl_unload f }
           sh 'rm', '-rf', spotlight_dir
