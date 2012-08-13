@@ -218,6 +218,7 @@ $if Bash
     "\033\007R":    "\C-] reset \n"
     "\C-xV":        display-shell-version
     "\C-x\\":       "\C-] nohist \n"
+    "\C-x(":        "\C-a <(\C-e)\C-a"
 
     # Quick redirects
     "\C-x0":        " &>/dev/null "
