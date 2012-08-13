@@ -1384,10 +1384,6 @@ HAVE qlmanage && alias ql='qlmanage -p'
 
 HAVE startx && alias xstartx='exec startx'
 
-HAVE xset xrdb && {
-    alias xreload='run xrdb ~/.Xdefaults'
-}
-
 # Clipboard
 ALIAS xselb='xsel -b'
 
