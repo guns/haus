@@ -30,7 +30,6 @@ CHANNELS = %w[
   #ruby
   #ruby-lang
   #RubyOnRails
-  #weechat
 ]
 
 KEYBINDINGS = {
