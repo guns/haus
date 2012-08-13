@@ -35,10 +35,12 @@ set tags^=./.tags,.tags         " Read hidden .tags files
 if !isdirectory(expand('~/.vimtmp/undo'))
     call mkdir(expand('~/.vimtmp/undo'), 'p', 0700)
 endif
-if isdirectory(expand('~/.vimtmp/undo'))
+if isdirectory(expand('~/.vimtmp'))
     set directory=~/.vimtmp
-    set undodir=~/.vimtmp/undo
+endif
+if has('persistent_undo') && isdirectory(expand('~/.vimtmp/undo'))
     set undofile
+    set undodir=~/.vimtmp/undo
 endif
 
 " Searching / Matching
