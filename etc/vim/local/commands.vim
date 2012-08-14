@@ -491,8 +491,10 @@ function! <SID>RunCurrentMiniTestCase()
 
     " Construct the test name
     let rbstr = matchlist(getline(line), '\vit (.*) do')[1]
+    let reg_save = @r
     execute 'ruby VIM.command(%q(let @r = "%s") % ' . rbstr . '.gsub(/\W+/, %q(_)).downcase)'
     let name = @r
+    let @r = reg_save
 
     " Run the test
     silent execute '! ruby % --name /test.*' . name . '/ | $PAGER' | redraw!
