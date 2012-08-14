@@ -141,7 +141,7 @@ set visible-stats on
 "\eOA":         history-search-backward
 "\e[A":         history-search-backward
 
-# Unicode characters
+# Unicode characters (UTF-8)
 "\e0":          "₀"         U+2080
 "\e1":          "₁"         U+2081
 "\e2":          "₂"         U+2082
