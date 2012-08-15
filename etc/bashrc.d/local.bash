@@ -450,7 +450,8 @@ untar() {
     run tar xv$f "$@" "${opts[@]}"
 }
 suntar() { untar --strip-components "$@"; }
-zuntar() { untar -z "$@"; }
+guntar() { untar -z "$@"; }
+buntar() { untar -j "$@"; }
 
 # open
 if __OSX__; then
