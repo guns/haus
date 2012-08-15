@@ -160,12 +160,12 @@ class Haus
         opt.users = [Process.euid] # Default value for users array
         opt.summary_width = 18
 
-        opt.banner = %Q{\
+        opt.banner = <<-BANNER.gsub /^ +/, ''
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
           Usage: haus #{self.class.command} [options]
 
           Options:
-        }.gsub /^ +/, ''
+        BANNER
 
         opt.on '-p', '--path PATH', "Override the location of HAUS_PATH. Currently: #{opt.path}" do |arg|
           opt.path = arg
