@@ -256,7 +256,9 @@ alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
 alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
 alias l1='command ls -1'
 alias l1g='l1 | g'
+alias l1gv='l1 | gv'
 alias lsg='ls | g'
+alias lsgv='ls | gv'
 if __OSX__; then
     alias ls@='ls -@'
     alias lse='ls -e'
@@ -595,6 +597,7 @@ ALIAS ka='killall -v' \
 alias p1='ps caxo comm'
 alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,nice,user,tt,start,command'
 alias psg='psa | grep -v "grep -i" | g'
+alias psgv='psa | grep -v "grep -i" | gv'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
     alias __psr__='psa -r'
