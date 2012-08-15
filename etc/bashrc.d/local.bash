@@ -251,6 +251,7 @@ ALIAS tf='tail -f' \
 # ls
 alias ls="ls -Ahl $GNU_COLOR_OPT"
 alias lc='ls -C'
+alias lsd='ls -d'
 alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
 alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
 alias l1='command ls -1'
@@ -276,7 +277,7 @@ __lstype__() {
     ' "$1" "$2"
 }
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
-lsd() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
+lsD() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
 
