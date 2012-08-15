@@ -12,8 +12,13 @@ GREETINGS() {
 
     echo -e "\n\e[1;32mGNU Bash \e[0;3m($BASH_VERSION)\e[0m ⚡ \e[1;${color}m$date\e[0m\n"
 
-    if ((EUID)) && type fortune &>/dev/null; then
-        fortune -a && echo
+    if ((EUID)); then
+        if [[ -r ~/.bash_greet ]]; then
+            # NOTE: cat -v is not POSIX!
+            cat -v ~/.bash_greet 2>/dev/null && echo
+        elif type fortune &>/dev/null; then
+            fortune -a && echo
+        fi
     fi
 }
 
