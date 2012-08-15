@@ -21,7 +21,7 @@ class Gensslcert
 
   def parser
     @parser ||= OptionParser.new do |opt|
-      opt.banner = %Q{\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Generate an SSL Certificate.
 
         http://wiki.nginx.org/NginxHttpSslModule#Generate_Certificates
@@ -29,7 +29,7 @@ class Gensslcert
         Usage: #{File.basename __FILE__} [options] /path/to/outdir/basename
 
         Options:
-      }.gsub /^ +/, ''
+      BANNER
 
       opt.on '-l', '--length NUM', Integer, "Length of private key; #{options.length} by default" do |arg|
         options.length = arg

@@ -20,11 +20,11 @@ class Rkhaus
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] [name [dir]]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-l', '--list' do
         options.list = true

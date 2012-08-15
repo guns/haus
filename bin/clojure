@@ -21,13 +21,13 @@ class Clojure
 
   def parser
     @parser ||= CLI::SuperParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Clojure wrapper.
 
         Usage: #{File.basename __FILE__} [options] [java-options] [java-arguments]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-p', '--classpath a:b:c', 'Alternative to setting CLASSPATH' do |arg|
         options.classpath = arg.split ':'

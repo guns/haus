@@ -28,7 +28,7 @@ class Watchdiff
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Watch directories and report on changes, with special handling for a
         few structured data types.
 
@@ -47,8 +47,8 @@ class Watchdiff
             A temporary bare git repository is used as a content tracker, so
             take care to exclude large non-diffable binary files.
 
-        Options:\
-      ).gsub /^ {8}/, ''
+        Options:
+      BANNER
 
       opt.on '-f', '--filter REGEXP', Regexp do |arg|
         options.filter = arg

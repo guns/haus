@@ -24,7 +24,7 @@ class SSHProxy
 
   def parser
     @parser ||= CLI::SuperParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Create an SSH tunnel and configure it as a SOCKS proxy server for the
         system.
 
@@ -43,7 +43,8 @@ class SSHProxy
 
         Options are a superset of ssh(1); any options that are valid for
         ssh(1) are valid for this program, with the addition of:
-      ).gsub /^ {8}/, ''
+
+      BANNER
 
       opt.on '-P', '--proxy-port PORT', Integer, "Local port to bind proxy server [%s]" % options.proxy_port do |arg|
         options.proxy_port = arg

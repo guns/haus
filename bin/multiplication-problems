@@ -21,7 +21,7 @@ class MultiplicationProblems
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Print multiplication problems in a printable format. Multiplicands and
         multipliers may be given as a list of comma separated numbers, or as
         an inclusive range:
@@ -31,7 +31,7 @@ class MultiplicationProblems
         Usage: #{File.basename __FILE__} [options] multiplicands multipliers
 
         Options:
-      ).gsub /^ {8}/, ''
+      BANNER
 
       opt.on '-s', '--shuffle' do
         options.shuffle = true

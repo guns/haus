@@ -20,14 +20,14 @@ class Gridcalc
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q{\
+      opt.banner = <<-BANNER.gsub /^ +/,''
         Calculate all possible horizontal grid measurements for a given
         pixel width.
 
         Usage: #{File.basename __FILE__} [options] width
 
         Options:
-      }.gsub /^ +/,''
+      BANNER
 
       opt.on '-c', '--columns N',
              'Show solutions that have N columns, where N is an',

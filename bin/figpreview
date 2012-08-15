@@ -21,13 +21,13 @@ class Figpreview
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Preview all figlet fonts on the system.
 
         Usage: #{File.basename __FILE__} [options] [message]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-k', '--kerning NUMBER', Integer, 'Set letter spacing; value from 0..3; 0 by default' do |arg|
         options.kerning = arg

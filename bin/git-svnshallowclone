@@ -21,13 +21,13 @@ class GitSvnshallowclone
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Do a shallow clone of a svn repository.
 
         Usage: #{File.basename __FILE__} [options] url [basedir]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-d', '--depth N', Integer, 'Checkout last N revisions; default: %d' % options.depth do |arg|
         options.depth = arg

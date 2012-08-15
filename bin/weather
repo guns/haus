@@ -92,11 +92,11 @@ class Weather # {{{1
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] [location]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-d', '--days N', Integer, 'Number of days to show' do |arg|
         options.days = arg

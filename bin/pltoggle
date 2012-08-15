@@ -19,14 +19,14 @@ class Pltoggle
 
   def parser
     @parser ||= OptionParser.new nil, 12 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Toggle Apple property lists between binary and plain text format.
         Converts files in place.
 
         Usage: #{File.basename __FILE__} file ...
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-j', '--json', 'Convert to and from JSON format instead of xml' do
         options.format = 'json'

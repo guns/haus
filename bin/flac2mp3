@@ -20,11 +20,11 @@ class Flac2mp3
 
   def parser
     @parser ||= OptionParser.new do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] [file|dir ...]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-r', '--recurse' do
         options.recurse = true

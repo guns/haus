@@ -132,13 +132,13 @@ class Batterystat
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Statistics about your machine's battery. Currently OS X only.
 
         Usage: #{File.basename __FILE__} [options]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-w', '--width N', Integer, 'Limit output to given width' do |arg|
         stat.width = arg

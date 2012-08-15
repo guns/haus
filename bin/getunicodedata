@@ -76,7 +76,7 @@ class Getunicodedata
 
   def parser
     @parser ||= OptionParser.new nil, 12 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Parse and print Unicode data.
 
         If a file is given, data is read from file. If no file is given, and
@@ -87,7 +87,7 @@ class Getunicodedata
         Usage: #{File.basename __FILE__} [options] [file]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-r', '--raw', 'Print raw unparsed data' do
         options.raw = true

@@ -111,13 +111,13 @@ class Chrome
 
   def parser
     @parser ||= CLI::SuperParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Google Chrome / Chromium launcher and updater.
 
         Usage: #{File.basename __FILE__} [options] [url-or-chrome-argument ...]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-n', '--no-sandbox', 'Disable the renderer sandbox' do
         options.argv << '--no-sandbox'

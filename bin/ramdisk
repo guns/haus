@@ -19,14 +19,14 @@ class Ramdisk
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Create and mount ramdisks. Size parameter may have units 'g', 'm', or
         'k', and are otherwise assumed to be bytes.
 
         Usage: #{File.basename __FILE__} [options] size mountpoint
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-r', '--replace', 'Copy extant directory tree at mountpoint to ramdisk' do
         options.replace = true

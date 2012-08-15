@@ -44,7 +44,7 @@ class Bashorg
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Download / dump the bash.org database.
 
         Usage: #{File.basename __FILE__} [options] command
@@ -54,8 +54,8 @@ class Bashorg
             dump      Dump quotes to stdout
             fortune   Save quotes as a fortune database
 
-        Options:\
-      ).gsub /^ {8}/, ''
+        Options:
+      BANNER
 
       opt.on '-i', '--infile PATH', 'Read and write from JSON database; alternately read/write from STDIN/STDOUT' do |arg|
         options.infile = arg

@@ -11,11 +11,11 @@ require 'mail'
 class MailReply
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Create a standard quoted reply from an email message.
 
         Usage: #{File.basename __FILE__} < INPUT
-      ).gsub /^ +/, ''
+      BANNER
     end
   end
 

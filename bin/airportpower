@@ -19,13 +19,13 @@ class Airportpower
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Set or toggle your Mac's airport card via `/usr/sbin/networksetup`.
 
         Usage: #{File.basename __FILE__} [on|off|toggle|status]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-i', '--interface NAME', "BSD interface; #{options.interface} by default" do |arg|
         options.interface = arg

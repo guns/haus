@@ -25,14 +25,14 @@ class Macsetup
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         OS X user and system preferences script. Global system preferences are
         not altered unless executed as root.
 
         Usage: #{File.basename __FILE__} [options] [regexp-filter]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-l', '--list', 'Display preference descriptions' do
         options.list = true

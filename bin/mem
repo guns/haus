@@ -93,13 +93,13 @@ class Mem # {{{1
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Show RAM and swap usage. OS X and Linux.
 
         Usage: #{File.basename __FILE__} [options]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-w', '--width COLUMNS', Integer, 'Set output to given width' do |arg|
         graph.width = arg

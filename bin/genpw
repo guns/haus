@@ -20,13 +20,13 @@ class Genpw
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q{\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Generate a random string of given length(s).
 
         Usage: #{File.basename __FILE__} [options] length ...
 
         Options:
-      }.gsub /^ +/,''
+      BANNER
 
       opt.on '-a', '--alpha', 'Alphanumeric characters only' do
         options.chars = ALPHA

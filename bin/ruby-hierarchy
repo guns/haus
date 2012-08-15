@@ -16,7 +16,7 @@ class RubyHierarchy
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Print Ruby Class hierarchy, optionally rooted to given class.
 
         Adapted from: http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
@@ -24,7 +24,7 @@ class RubyHierarchy
         Usage: #{File.basename __FILE__} [options] [root-node]
 
         Options:
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-e', '--exceptions', 'Show exception hierarchy; same as specifying Exception as the root node' do
         options.root = 'Exception'

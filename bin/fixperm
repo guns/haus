@@ -23,7 +23,7 @@ class Fixperm
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Change mode of files to match the current umask (typically 0022).
 
         *Be careful*
@@ -31,7 +31,7 @@ class Fixperm
         Usage: #{File.basename __FILE__} [options] path ...
 
         Options:
-      ).gsub /^ +/,''
+      BANNER
 
       opt.on '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
         options.umask = arg.to_i 8

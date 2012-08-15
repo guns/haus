@@ -74,13 +74,13 @@ class Itunes # {{{1
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Usage: #{File.basename __FILE__} [options] command [args]
 
         Commands:
             check [itunes-dir|itunes-library-file]
-                Show missing and untracked files in the iTunes folder.\
-      ).gsub /^ {8}/, ''
+                Show missing and untracked files in the iTunes folder.
+      BANNER
     end
   end
 

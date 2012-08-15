@@ -82,7 +82,7 @@ class RxvtUnicode # {{{1
     @parser ||= CLI::SuperParser.new nil, 24 do |opt|
       opt.terminators << '-e'
 
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Launch you an rxvt-unicode.
 
         Usage: #{File.basename __FILE__} [options] [-e command [args]]
@@ -90,7 +90,7 @@ class RxvtUnicode # {{{1
         Options are a superset of urxvt(1); any options that are valid for
         urxvt(1) are valid for this program, with the addition of:
 
-      ).gsub /^ +/, ''
+      BANNER
 
       opt.on '-g', '--geometry HxW+X+Y', 'Set window geometry' do |arg|
         options.geometry = arg

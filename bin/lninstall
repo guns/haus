@@ -20,7 +20,7 @@ class Lninstall
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Link the program executables and man pages of an installation to another
         directory tree. Also works in reverse.
 
@@ -36,8 +36,8 @@ class Lninstall
 
         Usage: #{File.basename __FILE__} [options] src dst
 
-        Options:\
-      ).gsub /^ {8}/, ''
+        Options:
+      BANNER
 
       opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
         queue.options.relative = true

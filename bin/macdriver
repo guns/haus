@@ -141,7 +141,7 @@ class Macdriver
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Query, graph, load, and unload kernel extensions. Kexts can be
         specified either by bundle identifier, or by an alias:
 
@@ -165,8 +165,8 @@ class Macdriver
             descendents kext [...]   Show topologically sorted list of kext descendents
             launchd command [args]   Print a launchd.plist(5) for the given command and arguments to stdout
 
-        Options:\
-      ).gsub /^ {8}/, ''
+        Options:
+      BANNER
 
       opt.on '-r A,B,C', Array, 'Use directories as kext repositories' do |arg|
         options.repositories = arg

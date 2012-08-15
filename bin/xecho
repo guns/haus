@@ -29,7 +29,7 @@ class Xecho
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Wrappers around common Xterm / X escape sequences.
         GNU Screen and Tmux v1.5+ are supported.
 
@@ -38,7 +38,9 @@ class Xecho
         Usage: #{File.basename __FILE__} command [args]
 
         Commands:
-      ).gsub(/^ +/, '').concat COMMANDS.inject('') { |buf, (cmd, (args, desc))|
+      BANNER
+
+      opt.banner << COMMANDS.inject('') { |buf, (cmd, (args, desc))|
         buf.concat "    %-20s%s\n" % [[cmd, args].join(' '), desc]
       }
     end

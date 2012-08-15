@@ -18,8 +18,8 @@ class Airportnetworks
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = %Q(\
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Usage: #{File.basename __FILE__} command args
 
         Commands:
@@ -27,8 +27,8 @@ class Airportnetworks
             add     Add given network with given security type
             clear   Clear all (or given) remembered networks
 
-        Options:\
-      ).gsub /^ {8}/, ''
+        Options:
+      BANNER
 
       opt.on '-i', '--interface NAME', "BSD interface; #{options.interface} by default" do |arg|
         options.interface = arg

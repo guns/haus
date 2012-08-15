@@ -14,9 +14,9 @@ class GitSummary
 
   def parser
     @parser ||= OptionParser.new do |opt|
-      opt.banner = %Q(\
+      opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [repo]
-      ).gsub /^ +/, ''
+      BANNER
     end
   end
 
