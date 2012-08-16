@@ -106,13 +106,13 @@ class Minecraft
     FileUtils.ln_s src, dst
   end
 
-  def fork_server_and_wait debug = false
+  def fork_server_and_wait opts = {}
     Dir.chdir gamedir do
       cmd = %W[java -Xms#{options.memory}M -Xmx#{options.memory}M -jar #{File.basename server_jar} nogui]
 
       begin
         pid = fork do
-          unless debug
+          unless opts[:debug]
             $stdin.reopen '/dev/null'
             $stdout.reopen '/dev/null'
             $stderr.reopen '/dev/null'
@@ -138,7 +138,7 @@ class Minecraft
     setup_world!
 
     if options.debug
-      fork_server_and_wait true
+      fork_server_and_wait :debug => true
     else
       Process.detach fork { fork_server_and_wait }
     end
