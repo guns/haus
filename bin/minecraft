@@ -110,8 +110,6 @@ class Minecraft
       cmd = %W[java -Xms#{options.memory}M -Xmx#{options.memory}M -jar #{File.basename server_jar} nogui]
 
       begin
-        puts cmd.join(' ')
-
         pid = fork do
           unless debug
             $stdin.reopen '/dev/null'
@@ -121,6 +119,8 @@ class Minecraft
           end
           exec *cmd
         end
+
+        puts '[%d] %s' % [pid, cmd.join(' ')]
 
         [:TERM, :QUIT, :INT].each do |sig|
           trap(sig) { Process.kill sig, pid }
