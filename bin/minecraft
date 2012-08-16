@@ -146,6 +146,7 @@ class Minecraft
   def stop_server!
     return unless have_pidfile
     pid = read_pidfile
+    puts 'Sending SIGTERM to %d' % pid
     Process.kill :TERM, pid
     sleep 0.1 while Process.kill 0, pid rescue nil
   end
