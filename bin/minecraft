@@ -81,11 +81,10 @@ class Minecraft
     raise 'Game directory "%s" does not exist!' unless Dir.exists? gamedir
     return if File.exists? server_jar
 
-    stat = File.stat gamedir
-    default_savedir = File.join gamedir, 'saves', 'default'
-
     system 'curl', '-#L', '-o', server_jar, DOWNLOAD_URL
-    FileUtils.mkdir_p default_savedir, :mode => stat.mode
+
+    default_savedir = File.join gamedir, 'saves', 'default'
+    FileUtils.mkdir_p default_savedir, :mode => File.stat(gamedir).mode
     FileUtils.ln_s default_savedir, File.join(gamedir, 'world')
   end
 
