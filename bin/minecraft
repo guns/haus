@@ -1,0 +1,161 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+
+class Minecraft
+  DOWNLOAD_URL = 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar'
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.memory = 256
+    options.gamedir = '/srv/games/minecraft'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+           _____   ___ _______  ______________________________   _____  _____________________
+          /     \\ |   |\\      \\ \\_   _____/\\_   ___ \\______   \\ /  _  \\ \\_   _____/__    ___/
+         /  \\ /  \\|   |/   |   \\ |    __)_ /    \\  \\/|       _//  /_\\  \\ |    __)   |    |
+        /    Y    \\   /    |    \\|        \\\\     \\___|    |   \\    |    \\|     \\    |    |
+        \\____|__  /___\\____|__  /_______  / \\______  /____|_  /____|__  /\\___  /    |____|
+                \\/            \\/        \\/         \\/       \\/        \\/     \\/
+
+        Usage: #{File.basename __FILE__} [options] start|stop|restart
+
+        Options:
+      BANNER
+
+      opt.on '-g', '--gamedir PATH', 'Path to minecraft directory [DEFAULT: %s]' % options.gamedir do |arg|
+        options.gamedir = File.expand_path arg
+      end
+
+      opt.on '-m', '--memory SIZE', Integer, 'Memory in MB [DEFAULT: %d]' % options.memory do |arg|
+        options.memory = arg
+      end
+
+      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found' do |arg|
+        options.world = arg
+      end
+
+      opt.on '-d', '--debug', 'Keep server process in foreground' do
+        options.debug = true
+      end
+    end
+  end
+
+  def gamedir
+    options.gamedir
+  end
+
+  def savedir
+    File.join gamedir, 'saves'
+  end
+
+  def pidfile
+    File.join gamedir, 'minecraft.pid'
+  end
+
+  def server_jar
+    File.join gamedir, 'minecraft_server.jar'
+  end
+
+  def write_pidfile pid
+    File.open(pidfile, 'w') { |f| f.puts pid }
+  end
+
+  def read_pidfile
+    File.read(pidfile).to_i
+  end
+
+  def setup_minecraft!
+    raise 'Game directory "%s" does not exist!' unless Dir.exists? gamedir
+    return if File.exists? server_jar
+
+    stat = File.stat gamedir
+    default_savedir = File.join gamedir, 'saves', 'default'
+
+    system 'curl', '-#L', '-o', server_jar, DOWNLOAD_URL
+    FileUtils.mkdir_p default_savedir, :mode => stat.mode
+    FileUtils.ln_s default_savedir, File.join(gamedir, 'world')
+  end
+
+  def setup_world!
+    src = File.join savedir, options.world || 'default'
+    dst = File.join gamedir, 'world'
+
+    FileUtils.rm_f dst
+    FileUtils.mkdir_p src
+    FileUtils.ln_s src, dst
+  end
+
+  def fork_server_and_wait debug = false
+    Dir.chdir gamedir do
+      cmd = %W[java -Xms#{options.memory}M -Xmx#{options.memory}M -jar #{File.basename server_jar} nogui]
+
+      begin
+        puts cmd.join(' ')
+
+        pid = fork do
+          unless debug
+            $stdin.reopen '/dev/null'
+            $stdout.reopen '/dev/null'
+            $stderr.reopen '/dev/null'
+            Process.setsid
+          end
+          exec *cmd
+        end
+
+        [:TERM, :QUIT, :INT].each do |sig|
+          trap(sig) { Process.kill sig, pid }
+        end
+
+        write_pidfile pid
+        Process.wait pid
+        FileUtils.rm_f pidfile
+      end
+    end
+  end
+
+  def start_server!
+    setup_world!
+
+    if options.debug
+      fork_server_and_wait true
+    else
+      Process.detach fork { fork_server_and_wait }
+    end
+  end
+
+  def stop_server!
+    return unless File.exists? pidfile
+    pid = read_pidfile
+    Process.kill :TERM, pid
+    sleep 0.1 while Process.kill 0, pid rescue nil
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 1
+
+    setup_minecraft!
+
+    case args.first
+    when 'start'   then start_server!
+    when 'stop'    then stop_server!
+    when 'restart' then stop_server!; start_server!
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Minecraft.new.run ARGV if $0 == __FILE__
