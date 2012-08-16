@@ -86,7 +86,7 @@ class Minecraft
   end
 
   def setup_minecraft!
-    raise 'Game directory "%s" does not exist!' unless Dir.exists? gamedir
+    raise 'Game directory "%s" does not exist!' % gamedir unless Dir.exists? gamedir
     return if File.exists? server_jar
 
     system 'curl', '-#L', '-o', server_jar, DOWNLOAD_URL
