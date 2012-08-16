@@ -18,6 +18,7 @@ class Minecraft
     @options = OpenStruct.new opts
     options.memory = 256
     options.gamedir = '/srv/games/minecraft'
+    options.world = 'default'
   end
 
   def parser
@@ -43,7 +44,7 @@ class Minecraft
         options.memory = arg
       end
 
-      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found' do |arg|
+      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found. [DEFAULT: %s]' % options.world do |arg|
         options.world = arg
       end
 
@@ -97,7 +98,7 @@ class Minecraft
   end
 
   def setup_world!
-    src = File.join savedir, options.world || 'default'
+    src = File.join savedir, options.world
     dst = File.join gamedir, 'world'
 
     FileUtils.rm_f dst
