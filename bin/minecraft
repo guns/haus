@@ -77,6 +77,14 @@ class Minecraft
     File.read(pidfile).to_i
   end
 
+  def remove_pidfile
+    FileUtils.rm_f pidfile
+  end
+
+  def have_pidfile
+    File.exists? pidfile
+  end
+
   def setup_minecraft!
     raise 'Game directory "%s" does not exist!' unless Dir.exists? gamedir
     return if File.exists? server_jar
@@ -120,7 +128,7 @@ class Minecraft
 
         write_pidfile pid
         Process.wait pid
-        FileUtils.rm_f pidfile
+        remove_pidfile
       end
     end
   end
@@ -136,7 +144,7 @@ class Minecraft
   end
 
   def stop_server!
-    return unless File.exists? pidfile
+    return unless have_pidfile
     pid = read_pidfile
     Process.kill :TERM, pid
     sleep 0.1 while Process.kill 0, pid rescue nil
