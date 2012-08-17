@@ -16,9 +16,9 @@ class Minecraft
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.memory = 256
-    options.gamedir = '/srv/games/minecraft'
-    options.world = 'default'
+    options.memory ||= 256
+    options.gamedir ||= '/srv/games/minecraft'
+    options.world ||= 'default'
   end
 
   def parser

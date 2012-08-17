@@ -13,10 +13,10 @@ class MultiplicationProblems
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.rows = 17
-    options.columns = 4
-    options.multiplicands = (1..10).to_a
-    options.multipliers = (1..10).to_a
+    options.rows ||= 17
+    options.columns ||= 4
+    options.multiplicands ||= (1..10).to_a
+    options.multipliers ||= (1..10).to_a
   end
 
   def parser

@@ -37,9 +37,9 @@ class Bashorg
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.delay     ||= 5
+    options.delay ||= 5
     options.textwidth ||= 80
-    options.outfile   ||= 'bashorg'
+    options.outfile ||= 'bashorg'
   end
 
   def parser

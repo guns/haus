@@ -101,9 +101,9 @@ class Chrome
   attr_reader :options
 
   def initialize opts = {}
-    @options         = OpenStruct.new opts
+    @options = OpenStruct.new opts
     options.signal ||= '-TERM'
-    options.argv   ||= [
+    options.argv ||= [
       '--enable-extension-timeline-api', # For Speed Tracer
       '--disable-crash-reporter'         # Don't send crash reports
     ]

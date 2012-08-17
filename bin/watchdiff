@@ -23,7 +23,7 @@ class Watchdiff
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.filter = /./
+    options.filter ||= /./
   end
 
   def parser

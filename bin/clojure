@@ -15,8 +15,8 @@ class Clojure
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.classpath  ||= (ENV['CLASSPATH'] || '').split ':'
-    options.ngport     ||= 2113
+    options.classpath ||= (ENV['CLASSPATH'] || '').split ':'
+    options.ngport ||= 2113
   end
 
   def parser
