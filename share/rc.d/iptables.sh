@@ -60,12 +60,7 @@ $IPTABLES -A OUTPUT -o lo -j ACCEPT
 $IPTABLES -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 
 # ICMP
-$IPTABLES -A INPUT -p icmp --icmp-type echo-reply              -m state --state ESTABLISHED,RELATED -j ACCEPT
-$IPTABLES -A INPUT -p icmp --icmp-type echo-request            -m state --state NEW                 -j ACCEPT -m limit --limit 5/s
-$IPTABLES -A INPUT -p icmp --icmp-type destination-unreachable -m state --state NEW                 -j ACCEPT
-$IPTABLES -A INPUT -p icmp --icmp-type time-exceeded           -m state --state NEW                 -j ACCEPT
-$IPTABLES -A INPUT -p icmp --icmp-type timestamp-request       -m state --state NEW                 -j ACCEPT
-$IPTABLES -A INPUT -p icmp --icmp-type timestamp-reply         -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A INPUT -p icmp -m state --state NEW -j ACCEPT
 
 
 ### Services
@@ -77,7 +72,7 @@ $IPTABLES -A INPUT -p icmp --icmp-type timestamp-reply         -m state --state 
 ### Examples
 
 # # Host based exception
-# $IPTABLES -A INPUT --source VMHOST -j ACCEPT
+# $IPTABLES -A INPUT --source VMHOST -m state --state NEW -j ACCEPT
 
 # # SSH
 # $IPTABLES -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
