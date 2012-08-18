@@ -121,6 +121,32 @@ class Macsetup
     end
   end
 
+  def pref plist
+    "#{options.user.dir}/Library/Preferences/#{plist}"
+  end
+
+  def with_xml_plist plist
+    buf = File.read plist
+    if buf[0..7] == 'bplist00'
+      sh 'plutil', '-convert', 'xml1', plist
+      begin
+        yield Plist.parse_xml(File.read plist)
+      ensure
+        sh 'plutil', '-convert', 'binary1', plist
+      end
+    else
+      yield Plist.parse_xml(buf)
+    end
+  end
+
+  def modify_plist! plist
+    verbose_log "Modifying #{plist}"
+    with_xml_plist plist do |p|
+      data = yield p
+      File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(data) }
+    end
+  end
+
   def network_service_ports
     @network_service_ports ||= %x(networksetup -listallhardwareports).scan(/Hardware Port: (.*)/).flatten
   end
@@ -147,25 +173,11 @@ class Macsetup
     end
   end
 
-  def with_xml_plist plist
-    buf = File.read plist
-    if buf[0..7] == 'bplist00'
-      sh 'plutil', '-convert', 'xml1', plist
-      begin
-        yield Plist.parse_xml(File.read plist)
-      ensure
-        sh 'plutil', '-convert', 'binary1', plist
-      end
-    else
-      yield Plist.parse_xml(buf)
-    end
-  end
-
-  def modify_plist! plist
-    verbose_log "Modifying #{plist}"
-    with_xml_plist plist do |p|
-      data = yield p
-      File.open(plist, 'w') { |f| f.puts Plist::Emit.dump(data) }
+  def add_keybindings plist, bindings
+    modify_plist! plist do |p|
+      p['NSUserKeyEquivalents'] ||= {}
+      p['NSUserKeyEquivalents'].merge! bindings
+      p
     end
   end
 
@@ -254,7 +266,7 @@ class Macsetup
       'Scope Spotlight to only index Mail' => lambda {
         # Set Spotlight types
         as_user options.user do
-          modify_plist! '%s/Library/Preferences/com.apple.spotlight.plist' % options.user.dir do |p|
+          modify_plist! pref('com.apple.spotlight') do |p|
             ts = %w[MESSAGES]
             fs = %w[APPLICATIONS SYSTEM_PREFS DOCUMENTS DIRECTORIES CONTACT EVENT_TODO IMAGES PDF BOOKMARKS MUSIC MOVIES FONTS PRESENTATIONS SPREADSHEETS]
             p['orderedItems'] = ts.map { |s| { :enabled => true, :name => s } }.concat(fs.map { |s| { :enabled => false, :name => s } })
@@ -435,6 +447,16 @@ class Macsetup
       'Set Loginwindow preferences' => lambda {
         sh 'defaults write com.apple.loginwindow TALLogoutSavesState -boolean FALSE'
         sh 'defaults write com.apple.loginwindow LoginwindowLaunchesRelaunchApps -boolean FALSE'
+      },
+
+      'Add user keybindings' => lambda {
+        add_keybindings pref('.GlobalPreferences.plist'),
+          'Zoom' => '@^w',
+          'Enter Full Screen' => '@^f',
+          'Exit Full Screen' => '@^f'
+
+        add_keybindings pref('com.apple.Safari.plist'),
+          'Reset Safari...' => '@$'
       }
     }
   end
