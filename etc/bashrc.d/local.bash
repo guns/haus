@@ -709,7 +709,8 @@ HAVE openssl && {
 ALIAS ssh='ssh -2' \
       ssh-fast="ssh -c $SSH_FAST_CIPHERS" \
       ssh-vm='ssh-fast -Y' \
-      ssh-password='ssh -o \"PreferredAuthentications password\"'
+      ssh-password='ssh -o \"PreferredAuthentications password\"' \
+      ssh-remove-host='ssh-keygen -R'
 ALIAS scp='scp -2' \
       scp-fast="scp -c $SSH_FAST_CIPHERS" \
       scpr='scp -r' \
