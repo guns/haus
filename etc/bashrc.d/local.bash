@@ -279,9 +279,9 @@ __lstype__() {
     ' "$1" "$2"
 }
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
-lsD() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
+lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 
 # hexdump strings hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
