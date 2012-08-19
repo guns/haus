@@ -237,6 +237,8 @@ $if Bash
     "\C-xl":        "\C-]cdlocal "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
+    "\C-x\C-s":     "\C-] cdsrc \n"
+    "\C-xs":        "\C-]cdsrc "
     "\C-x\C-v":     "\C-] cdvimfiles \n"
     "\C-xv":        "\C-]cdvimfiles "
     "\C-x\C-w":     "\C-] cdwww \n"
@@ -244,7 +246,6 @@ $if Bash
     "\C-x\C-_":     "\C-] cd - \n"
     "\C-x`":        "\C-]cdhome "
     "\C-xo":        "\C-]cdopt "
-    "\C-xs":        "\C-]cdsrc "
     "\C-xS":        "\C-]cdSRC "
 
     # Job control
