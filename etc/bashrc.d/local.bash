@@ -1381,7 +1381,9 @@ HAVE feh && {
 HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 
 # VLC
-ALIAS vlc='/Applications/VLC.app/Contents/MacOS/VLC'
+[[ -x /Applications/VLC.app/Contents/MacOS/VLC ]] && {
+    alias vlc='open -a /Applications/VLC.app'
+}
 
 # Quick Look (OS X)
 HAVE qlmanage && alias ql='qlmanage -p'
