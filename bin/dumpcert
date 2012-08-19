@@ -1,0 +1,89 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'openssl'
+require 'tempfile'
+require 'shellwords'
+require 'plist'
+
+class Dumpcert
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Dump and inspect trusted certificates. Optionally accepts PEM encoded
+        certificates from stdin.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-l', '--list', 'List certificate names' do
+        options.list = true
+      end
+    end
+  end
+
+  def parse string
+    string.scan(/-+BEGIN CERTIFICATE-+.*?-+END CERTIFICATE-+/m).map do |pem|
+      OpenSSL::X509::Certificate.new pem
+    end
+  end
+
+  def osx_trust_settings
+    tmp = Tempfile.new 'trust'
+    system 'security trust-settings-export %s &>/dev/null' % tmp.path.shellescape
+    Plist.parse_xml(tmp.read)['trustList']
+  ensure
+    tmp.close
+    tmp.unlink
+  end
+
+  def osx_trusted_issuer_and_serials
+    osx_trust_settings.values.map do |t|
+      {
+        :issuer => OpenSSL::X509::Name.new(t['issuerName'].read),
+        :serial => OpenSSL::BN.new(t['serialNumber'].read, 2)
+      }
+    end
+  end
+
+  def osx_certificates
+    certs_by_issuer = parse(%x(security export -t certs)).group_by { |c| c.issuer }
+    osx_trusted_issuer_and_serials.map do |m|
+      if cs = certs_by_issuer[m[:issuer]]
+        cs.find { |c| c.serial == m[:serial] }
+      end
+    end.compact
+  end
+
+  def certificates
+    case RUBY_PLATFORM
+    when /darwin/ then osx_certificates
+    else raise 'Unsupported platform'
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.any?
+
+    certs = select([$stdin], nil, nil, 0) ? parse($stdin.read) : certificates
+    trusted = options.list ? certs.map(&:subject).join("\n") : certs.map(&:to_s).join
+    puts trusted unless trusted.empty?
+  end
+end
+
+$0 = File.basename(__FILE__) and Dumpcert.new.run ARGV if $0 == __FILE__

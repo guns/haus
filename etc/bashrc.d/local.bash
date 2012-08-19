@@ -55,6 +55,9 @@ export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
+# cURL
+export CURL_CA_BUNDLE="$HOME/.certificates"
+
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
 if [[ "$SSH_TTY" ]]; then
