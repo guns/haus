@@ -5,7 +5,7 @@
 ### Environment Variables {{{1
 
 # Bash history
-export HISTSIZE=65535
+export HISTSIZE='65535'
 export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
 
 # Editor
@@ -18,7 +18,7 @@ export LC_CTYPE='en_US.UTF-8'           # Rxvt-unicode needs this set explicitly
 export LC_COLLATE='C'                   # Traditional ASCII sorting
 
 # BSD and GNU colors
-export CLICOLOR=1
+export CLICOLOR='1'
 export LSCOLORS='ExFxCxDxbxegedabagacad'
 export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
 
@@ -44,7 +44,7 @@ LESS_ARY=(
     --shift 8                           # Horizontal movement in columns
 ); GC_VARS LESS_ARY
 export LESS="${LESS_ARY[@]}"
-export LESSSECURE=1                     # ++secure
+export LESSSECURE='1'                   # More secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
 export LESS_TERMCAP_md=$'\033[37m'      # Begin bold
 export LESS_TERMCAP_so=$'\033[36m'      # Begin standout-mode
