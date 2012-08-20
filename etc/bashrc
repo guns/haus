@@ -125,6 +125,16 @@ unalias -a
 # Load init functions
 source ~/.bashrc.d/functions.bash
 
+# Bash completion directories
+BASH_COMPLETION_DIRS=(
+    /usr/local/etc/bash_completion.d
+    /usr/share/bash-completion/completions
+    /etc/completions
+    /etc/bash_completion.d
+    /opt/brew/etc/bash_completion.d
+    ~/.bash_completion.d
+)
+
 # Check shell init files before proceeding
 __SECLIST__+=(
     /etc/profile                        # System POSIX init
@@ -139,9 +149,12 @@ __SECLIST__+=(
     ~/.inputrc                          # User readline
     ~/.bashrc.d/*                       # Extra bash init files
     ~/.bash_local                       # Local bash init
-    "$INPUTRC"                          # Readline override
-    "$BASH_ENV"                         # Bash init override
     "$ENV"                              # POSIX init override
+    "$BASH_ENV"                         # Bash init override
+    "$INPUTRC"                          # Readline override
+    ~/.bash_history                     # Bash history file
+    ~/.bash_completion                  # Bash completion script
+    "${BASH_COMPLETION_DIRS[@]}"        # Extra bash completion scripts
 ); CHECK_SECLIST
 
 
@@ -157,14 +170,7 @@ REQUIRE ~/.bashrc.d/options.bash
 REQUIRE ~/.bashrc.d/prompts.bash
 
 # Load completions
-BASH_COMPLETION_DIRS=(
-    /usr/local/etc/bash_completion.d
-    /usr/share/bash-completion/completions
-    /etc/completions
-    /etc/bash_completion.d
-    /opt/brew/etc/bash_completion.d
-    ~/.bash_completion.d
-); REQUIRE ~/.bash_completion
+REQUIRE ~/.bash_completion
 
 # Load functions, aliases, and variables
 REQUIRE ~/.bashrc.d/interactive.bash
