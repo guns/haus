@@ -55,9 +55,6 @@ export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
 
-# cURL
-export CURL_CA_BUNDLE="$HOME/.certificates"
-
 # Ruby
 export BUNDLE_PATH="$HOME/.bundle"
 if [[ "$SSH_TTY" ]]; then
@@ -940,7 +937,7 @@ HAVE vim && {
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
-    alias vimlocalbash='(cdhaus && exec vim etc/bashrc.d/local.bash)'
+    alias viminteractivebash='(cdhaus && exec vim etc/bashrc.d/interactive.bash)'
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimmodifiers='(cdhaus && exec vim etc/vim/local/modifiers.vim)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'

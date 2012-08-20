@@ -137,6 +137,8 @@ __SECLIST__+=(
     ~/.bashrc                           # Bash interactive init
     ~/.bash_logout                      # Bash logout
     ~/.inputrc                          # User readline
+    ~/.bashrc.d/*                       # Extra bash init files
+    ~/.bash_local                       # Local bash init
     "$INPUTRC"                          # Readline override
     "$BASH_ENV"                         # Bash init override
     "$ENV"                              # POSIX init override
@@ -165,7 +167,7 @@ BASH_COMPLETION_DIRS=(
 ); REQUIRE ~/.bash_completion
 
 # Load functions, aliases, and variables
-REQUIRE ~/.bashrc.d/local.bash
+REQUIRE ~/.bashrc.d/interactive.bash
 
 
 ### DENOUEMENT ###
@@ -173,8 +175,11 @@ REQUIRE ~/.bashrc.d/local.bash
 # One last check
 CHECK_SECLIST
 
-# Greets
-REQUIRE ~/.bashrc.d/greet.bash
+# Happy Hacking
+GREETINGS
+
+# Run local init script
+[[ -e ~/.bash_local ]] && REQUIRE ~/.bash_local
 
 # Cleanup
 CLEANUP

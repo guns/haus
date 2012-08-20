@@ -344,11 +344,11 @@ noremap <Leader><C-v>    :<C-u>SetVerbose!<CR>
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>tabedit<Space>
 noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
-noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
+noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
+noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
 noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
-noremap <Leader>el       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/local.bash'))<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
 noremap <Leader>eM       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/bin/macsetup'))<CR>
 noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
