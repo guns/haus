@@ -640,7 +640,7 @@ daemons() {
 # htop
 HAVE htop && {
     # Satisfy ncurses hard-coded TERM names
-    alias htop='env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) htop'
+    alias htop='envtmux htop'
 
     # htop writes its config file on exit
     htopsave() { (cd && exec gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
@@ -779,7 +779,7 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    ((EUID)) && alias irc='(cd ~/.weechat && env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) weechat-curses)'
+    ((EUID)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
 }
 
 
@@ -965,6 +965,10 @@ HAVE tmux && {
         local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+"))
         echo "$vars"
         eval "$vars"
+    }
+
+    envtmux() {
+        run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
     }
 }
 
@@ -1378,6 +1382,11 @@ HAVE feh && {
             exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
+}
+
+# cmus
+HAVE cmus && {
+    alias cmus='envtmux cmus'
 }
 
 # espeak
