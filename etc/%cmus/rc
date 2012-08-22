@@ -1,0 +1,12 @@
+
+#   .ooooo. ooo. .oo.  .oo. oooo  oooo  .oooo.o
+#  d88' `"Y8`888P"Y88bP"Y88b`888  `888 d88(  "8
+#  888       888   888   888 888   888 `"Y88b.
+#  888   .o8 888   888   888 888   888 o.  )88b
+#  `Y8bod8P'o888o o888o o888o`V88V"V8P'8""888P'
+#
+#  guns <self@sungpae.com>
+
+colorscheme zenburn
+
+unbind -f common ^C
