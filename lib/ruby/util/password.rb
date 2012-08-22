@@ -6,7 +6,7 @@
 
 require 'digest/sha1'
 
-module CLI
+module Util
   module Password
     extend self
 
@@ -42,6 +42,7 @@ module CLI
         loop do
           chr = f.getc
           break if chr.nil?
+          # Using a BitSet here would be less wasteful than using chars
           buf << '%08b' % chr.unpack('C') until buf.length >= bit_len
           yield buf.slice!(0, bit_len).to_i(2)
         end

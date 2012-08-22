@@ -4,7 +4,7 @@ require 'haus/queue'
 require 'haus/options'
 require 'haus/logger'
 
-class Task
+module Project
   class Subproject
     include Haus::Loggable
 

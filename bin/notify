@@ -7,13 +7,13 @@
 
 require 'optparse'
 require 'ostruct'
-require 'cli/notification'
+require 'util/notification'
 
 class Notify
   attr_reader :notifier
 
   def initialize opts = {}
-    @notifier = CLI::Notification.new opts
+    @notifier = Util::Notification.new opts
   end
 
   def parser

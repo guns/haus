@@ -4,7 +4,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-module CLI
+module Util
   class Notification
     attr_accessor :message, :title, :sticky, :audio
 

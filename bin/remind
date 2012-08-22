@@ -8,7 +8,7 @@
 require 'optparse'
 require 'ostruct'
 require 'time' # Time.parse
-require 'cli/notification'
+require 'util/notification'
 
 class Remind
   class Alarm
@@ -34,7 +34,7 @@ class Remind
     def notification= arg
       @notification = case arg
       when String then lambda { system arg }
-      when Hash   then CLI::Notification.new arg
+      when Hash   then Util::Notification.new arg
       else             arg
       end
     end
@@ -93,9 +93,9 @@ class Remind
       # Report time remaining on SIGUSR1
       trap :USR1 do
         s = remaining.reject(&:zero?).last == 1 ? 's' : ''
-        CLI::Notification.new(
+        Util::Notification.new(
           :message => '%s remain%s' % [remaining(:verbose), s],
-          :title   => (notification.message if notification.is_a? CLI::Notification)
+          :title   => (notification.message if notification.is_a? Util::Notification)
         ).call
       end
 
@@ -181,7 +181,7 @@ class Remind
 
     alarm.time = args.first
 
-    if args.size > 1 and alarm.notification.is_a? CLI::Notification
+    if args.size > 1 and alarm.notification.is_a? Util::Notification
       alarm.notification.message = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
     end
 

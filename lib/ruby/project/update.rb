@@ -3,7 +3,7 @@
 require 'ostruct'
 require 'haus/logger'
 
-class Task
+module Project
   class Update
     class << self
       def helptags

@@ -7,7 +7,7 @@
 
 require 'optparse'
 require 'ostruct'
-require 'cli/password'
+require 'util/password'
 
 class Npass
   attr_reader :options
@@ -39,12 +39,12 @@ class Npass
     args = parser.parse arguments
 
     name = 'npass_%d' % options.version
-    raise 'Invalid version: %d' % options.version unless CLI::Password.respond_to? name
+    raise 'Invalid version: %d' % options.version unless Util::Password.respond_to? name
 
     params = []
     params.push options.length if options.length
 
-    puts CLI::Password.send(name, *params)
+    puts Util::Password.send(name, *params)
   end
 end
 

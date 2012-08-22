@@ -8,9 +8,9 @@ $:.unshift 'lib/ruby' # {{{1
 
 require 'shellwords'
 require 'digest/sha1'
-require 'task/update'
-require 'task/subproject'
-require 'cli/notification'
+require 'project/update'
+require 'project/subproject'
+require 'util/notification'
 require 'haus/logger'
 
 include Haus::Loggable
@@ -262,7 +262,7 @@ task :env do # {{{1
         :files  => 'etc/%urxvt/ext',
       }
     ]
-  }.map { |k, ps| [k, ps.map { |p| Task::Subproject.new p }] }]
+  }.map { |k, ps| [k, ps.map { |p| Project::Subproject.new p }] }]
 end
 
 
@@ -279,7 +279,7 @@ end
 
 desc 'Update vim plugin helptags'
 task :tags do
-  Task::Update.helptags
+  Project::Update.helptags
 end
 
 desc 'Update subprojects (extra arguments are regexp filters)' # {{{1
@@ -289,11 +289,11 @@ task :update => :env do
   opts[:fetch  ] = ENV['FETCH'] == '1' if ENV['FETCH']
   opts[:filter ] = ARGV.drop_while { |a| a != 'update' }.drop 1
 
-  if Task::Update.new(@subprojects, opts).call
-    Task::Update.helptags
-    CLI::Notification.new(:message => 'Haus update complete.').call
+  if Project::Update.new(@subprojects, opts).call
+    Project::Update.helptags
+    Util::Notification.new(:message => 'Haus update complete.').call
   else
-    CLI::Notification.new(:message => 'Haus update failed.').call
+    Util::Notification.new(:message => 'Haus update failed.').call
   end
 
   exit # Stop processing tasks!
