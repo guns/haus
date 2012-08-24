@@ -11,7 +11,7 @@ require 'net/http'
 require 'ipaddr'
 
 class Getip
-  URLS = %w[http://whatismyip.org/ http://metablu.com/whatismyip]
+  URLS = %w[http://metablu.com/whatismyip]
 
   class << self
     def addr urls = URLS
@@ -19,6 +19,7 @@ class Getip
         ip = IPAddr.new Net::HTTP.get(URI.parse url).chomp rescue nil
         return ip.to_s if ip
       end
+      'undetermined'
     end
   end
 
