@@ -1044,6 +1044,7 @@ type ruby &>/dev/null && {
         local suf="$1" bin="$2"
         ALIAS "ruby${suf}=${bin}/ruby" && {
             alias "rb${suf}=${bin}/ruby"
+            alias "rb${suf}e=${bin}/ruby -e"
 
             CD_FUNC -f "cdruby${suf}" "ruby${suf} -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
             CD_FUNC -f "cdgems${suf}" "ruby${suf} -rubygems -e \"puts File.join(Gem.dir, 'gems')\""
