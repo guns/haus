@@ -379,6 +379,7 @@ let s:delimiterMap = {
     \ 'uc': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'uil': { 'left': '!' },
     \ 'vb': { 'left': "'" },
+    \ 'vcl': { 'left': '#' },
     \ 'velocity': { 'left': "##", 'right': "", 'leftAlt': '#*', 'rightAlt': '*#' },
     \ 'vera': { 'left': '/*','right': '*/', 'leftAlt': '//' },
     \ 'verilog': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
