@@ -1249,6 +1249,7 @@ if __OSX__; then
     }
 
     alias noidle='pmset noidle'
+    alias pmassertions='pmset -g assertions'
 fi
 
 HAVE batterystat && {
