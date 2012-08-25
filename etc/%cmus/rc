@@ -10,3 +10,4 @@
 colorscheme zenburn
 
 unbind -f common ^C
+bind -f common p player-pause
