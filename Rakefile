@@ -131,6 +131,29 @@ task :env do # {{{1
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {
+        :base => "#{@src}/vimperator-labs",
+        :branch => %w[master],
+        :before => lambda { |proj|
+          Dir.chdir proj.base do
+            begin
+              uid = File.stat('.').uid
+              system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
+              raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
+            ensure
+              chown_R uid, nil, proj.base, :verbose => false
+            end
+          end if proj.fetch
+        },
+        :files => lambda { |proj|
+          src = "#{proj.base}/vimperator/contrib/vim"
+          dst = "#{proj.haus}/etc/vim/bundle/vimperator"
+          FileUtils.mkdir_p dst
+          system *%W[rsync -a --delete --no-owner #{src}/ #{dst}/]
+          nil # Work is done
+        }
+      },
+
+      {
         :base   => "#{@vim}/Command-T",
         :branch => %w[master guns],
         :push   => 'github',
