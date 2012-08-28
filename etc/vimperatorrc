@@ -1,0 +1,56 @@
+
+"  __      ___                                _
+"  \ \    / (_)                              | |
+"   \ \  / / _ _ __ ___  _ __   ___ _ __ __ _| |_ ___  _ __
+"    \ \/ / | | '_ ` _ \| '_ \ / _ \ '__/ _` | __/ _ \| '__|
+"     \  /  | | | | | | | |_) |  __/ | | (_| | || (_) | |
+"      \/   |_|_| |_| |_| .__/ \___|_|  \__,_|\__\___/|_|
+"                       | |
+"                       |_|       guns <self@sungpae.com>
+
+""" Mapleader and Escape {{{1
+
+let g:mapleader = "<C-x>"
+imap <Leader> <Esc><Leader>
+cmap <Leader> <Esc><Leader>
+
+""" Settings {{{1
+
+set hintchars=sadfjklewcmpgh
+set editor='env RUBYLIB=/opt/haus/lib/ruby:~/haus/lib/ruby rxvt-unicode --center -e vim'
+
+""" Command line mappings {{{1
+
+noremap <Leader>h :help<Space>
+noremap <Leader>s :set<Space>
+noremap <Leader><C-r> :source ~/.vimperatorrc<CR>
+
+cnoremap <C-n> <Down>
+cnoremap <C-p> <Up>
+
+""" Movement {{{1
+
+noremap j 7j
+noremap k 7k
+noremap b <C-u>
+noremap B b
+noremap <C-j> gt
+noremap <C-k> gT
+noremap <C-h> H
+noremap <C-l> L
+
+""" Links and Search {{{1
+
+noremap ; F
+noremap "'" f
+noremap e ;
+noremap f /
+noremap \\ /
+
+""" Colors {{{1
+
+highlight! Hint font-size: 11px; color: black; font-weight: bold; font-family: Helvetica, Arial, sans-serif; border: 1px solid #E3BE23; background-color: #FFEBB6; text-transform: uppercase
+highlight! HintElem background-color: transparent
+highlight! HintActive background-color: transparent
+
+" vim: set ft=vimperator:
