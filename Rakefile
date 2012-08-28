@@ -161,42 +161,42 @@ task :env do # {{{1
         :after  => lambda { |proj| system '/usr/bin/rake commandt &>/dev/null' }
       },
 
-      {
-        :base   => "#{@vim}/vimclojure",
-        :push   => 'github',
-        :before => lambda { |proj|
-          Dir.chdir proj.base do
-            chown_R Process.euid, nil, '.git', :verbose => false
+      # {
+      #   :base   => "#{@vim}/vimclojure",
+      #   :push   => 'github',
+      #   :before => lambda { |proj|
+      #     Dir.chdir proj.base do
+      #       chown_R Process.euid, nil, '.git', :verbose => false
 
-            # Update using git-hg bridge
-            if proj.fetch
-              system '{ git checkout master && git-hg pull --rebase && git checkout guns && git merge master; } &>/dev/null'
-              raise 'vimclojure pull and merge failed' if not $?.exitstatus.zero?
-            else
-              system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
-            end
-          end
-        },
-        :files  => lambda { |proj|
-          begin
-            uid = File.stat(proj.base).uid
+      #       # Update using git-hg bridge
+      #       if proj.fetch
+      #         system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
+      #         raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
+      #       else
+      #         system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
+      #       end
+      #     end
+      #   },
+      #   :files  => lambda { |proj|
+      #     begin
+      #       uid = File.stat(proj.base).uid
 
-            Dir.chdir proj.base do
-              rm_rf ['vim/build', 'server/build'], :verbose => false
-              system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-              system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-              raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
-            end
+      #       Dir.chdir proj.base do
+      #         rm_rf ['vim/build', 'server/build'], :verbose => false
+      #         system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
+      #         system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
+      #         raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
+      #       end
 
-            system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
-            raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
-          ensure
-            chown_R uid, nil, proj.base, :verbose => false
-          end
+      #       system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
+      #       raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
+      #     ensure
+      #       chown_R uid, nil, proj.base, :verbose => false
+      #     end
 
-          nil # The work is done
-        }
-      },
+      #     nil # The work is done
+      #   }
+      # },
 
       {
         :base   => "#{@vim}/paredit",
@@ -208,9 +208,8 @@ task :env do # {{{1
           Dir.chdir proj.base do
             begin
               uid = File.stat('.').uid
-              chown_R Process.euid, nil, '.git', :verbose => false
-              system '{ git checkout master && git-hg pull --rebase; } &>/dev/null'
-              raise 'paredit pull failed' if not $?.exitstatus.zero?
+              system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
+              raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
             ensure
               chown_R uid, nil, proj.base, :verbose => false
             end
