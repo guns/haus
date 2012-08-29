@@ -696,12 +696,13 @@ HAVE tcpdump && {
 # IMAP client
 HAVE openssl && {
     # http://delog.wordpress.com/2011/05/10/access-imap-server-from-the-command-line-using-openssl/
-    imaps-connect() {
-        if (($# == 1)); then
-            run openssl s_client -crlf -connect "$@"
-        else
-            echo "Usage: $FUNCNAME host:port"
-        fi
+    sslconnect() {
+        case $# in
+        1) local host="$1" port='443';;
+        2) local host="$1" port="$2";;
+        *) echo "Usage: $FUNCNAME host [port]"; return 1
+        esac
+        openssl s_client -crlf -connect "$host:$port"
     }
 }
 
