@@ -26,6 +26,7 @@ CHANNELS = %w[
   #bash
   #git
   #nginx
+  #openssl
   #rxvt-unicode
   #ruby
   #ruby-lang
