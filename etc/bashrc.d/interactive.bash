@@ -784,6 +784,16 @@ HAVE weechat-curses && {
 }
 
 
+### Browsers {{{1
+
+if [[ -d /Applications/FirefoxAurora.app  ]]; then
+    alias firefox='/Applications/FirefoxAurora.app/Contents/MacOS/firefox'
+    disable-firefox-root-certificates() {
+        mv -f /Applications/FirefoxAurora.app/Contents/MacOS/libnssckbi.dylib{,.disabled}
+    }
+fi
+
+
 ### Firewalls {{{1
 
 # IPTables
@@ -1137,6 +1147,11 @@ type ruby &>/dev/null && {
         }; complete -F _api api
     }
 }
+
+
+### Python {{{1
+
+ALIAS py='python'
 
 
 ### JVM {{{1
