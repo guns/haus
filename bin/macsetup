@@ -459,9 +459,7 @@ class Macsetup
           'Reset Safari...' => '@$'
 
         add_keybindings pref('org.mozilla.aurora.plist'),
-          'Developer Toolbar' => '@~t',
-          'Scratchpad' => '@~p',
-          'Style Editor' => '@~e'
+          'Special Characters...' => '@^~$t'
       }
     }
   end
