@@ -1294,7 +1294,10 @@ HAVE cryptsetup cs && TCOMP cryptsetup cs
 
 if __OSX__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
+    alias security-dump-certificates='run security export -t certs'
 fi
+
+ALIAS dx='dumpcert exec'
 
 
 ### Virtual Machines {{{1
