@@ -30,7 +30,8 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 	attr_reader :options
 
 	def initialize opts = {}
-		@options = OpenStruct.new opts$0
+		@options = OpenStruct.new opts
+		options.$0 ||=
 	end
 
 	def parser
