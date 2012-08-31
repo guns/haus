@@ -18,6 +18,8 @@ include Haus::Loggable
 task :env do # {{{1
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
+  ENV['CURL_CA_BUNDLE'] = File.expand_path '~/.certificates/cabundle.pem'
+  ENV['GIT_SSL_CAINFO'] = ENV['CURL_CA_BUNDLE']
 
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
