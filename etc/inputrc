@@ -274,6 +274,7 @@ $if Bash
     "\C-xeT":       "\C-] vimtmux \n"
     "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
+    "\C-xeV":       "\C-] vimperatorrc \n"
     "\C-xew":       "\C-] vimwm \n"
     "\C-xex":       "\C-] vimxdefaults \n"
     "\C-xeX":       "\C-] vimxinitrc \n"

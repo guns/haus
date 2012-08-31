@@ -954,6 +954,7 @@ HAVE vim && {
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
+    alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
     alias vimrcconf='(cd /etc && exec vim rc.conf)'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
     alias vimmacsetup='(cdhaus && exec vim bin/macsetup)'

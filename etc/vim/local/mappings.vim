@@ -361,7 +361,7 @@ noremap <Leader>et       :<C-u>execute 'TabOpen ' . resolve(expand(g:org_home . 
 noremap <Leader>eT       :<C-u>execute 'TabOpen ' . resolve(expand('~/.tmux.conf'))<CR>
 noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/share/doc/unicode-table.txt.gz'))<CR>
 noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
-noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('/tmp/verbose.vim'))<CR>
+noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vimperatorrc'))<CR>
 noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
 noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
 noremap <Leader>eX       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
