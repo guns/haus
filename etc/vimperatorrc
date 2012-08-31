@@ -39,6 +39,10 @@ noremap <C-k> gT
 noremap <C-h> H
 noremap <C-l> L
 
+""" Tabs and Buffers {{{1
+
+noremap t :tabnew<CR>
+
 """ Links and Search {{{1
 
 noremap ; F
