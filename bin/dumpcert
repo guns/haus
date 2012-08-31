@@ -8,81 +8,158 @@
 require 'optparse'
 require 'ostruct'
 require 'openssl'
-require 'tempfile'
 require 'shellwords'
-require 'plist'
+require 'net/http'
 
 class Dumpcert
+  module Certificate
+    extend self
+
+    def parse string
+      certs = string.scan /-+BEGIN CERTIFICATE-+\n.*?\n-+END CERTIFICATE-+/m
+
+      if certs.any?
+        certs.map { |pem| OpenSSL::X509::Certificate.new pem }
+      else
+        # Maybe DER format?
+        [OpenSSL::X509::Certificate.new(string)]
+      end
+    rescue OpenSSL::X509::CertificateError
+      []
+    end
+
+    def parse_server_arg server
+      h, p = server.split ':', 1
+      p = p.to_i if p
+      [h, p]
+    end
+
+    def self_signed? cert
+      cert.subject == cert.issuer
+    end
+
+    def ssl_get host, port = nil
+      server = "#{host}:#{port || 443}".shellescape
+      certs = parse %x(openssl s_client -connect #{server} < /dev/null 2>/dev/null)
+      raise 'Multiple certificates returned from %s' % host if certs.count > 1
+      certs.first
+    end
+
+    def http_get url
+      certs = parse Net::HTTP.get(URI.parse url)
+      raise 'Multiple certificates returned from %s' % url if certs.count > 1
+      certs.first
+    end
+
+    def get url
+      case url
+      when /\.html$/ then http_get url
+      else ssl_get *parse_server_arg(url)
+      end
+    end
+
+    def get_chain url
+      chain = []
+      cert = get url
+
+      loop do
+        chain.push cert
+        break unless cert.extensions.find { |e| e.oid == 'authorityInfoAccess' and e.value =~ /URI:(http.*?\.crt)/ }
+        break unless cert = http_get($1)
+      end
+
+      chain
+    end
+
+    def get_root url
+      cert = get_chain(url).last
+      cert if self_signed? cert
+    end
+  end
+
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new opts
+    options.cabundle ||= File.expand_path '~/.certificates/cabundle.pem'
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Dump and inspect trusted certificates. Optionally accepts PEM encoded
-        certificates from stdin.
-
         Usage: #{File.basename __FILE__} [options]
 
         Options:
       BANNER
 
-      opt.on '-l', '--list', 'List certificate names' do
-        options.list = true
+      opt.on '-f', '--cabundle', 'File containing CA Roots [DEFAULT: %s]' % options.cabundle do
+        options.cabundle = File.expand_path arg
       end
     end
   end
 
-  def parse string
-    string.scan(/-+BEGIN CERTIFICATE-+.*?-+END CERTIFICATE-+/m).map do |pem|
-      OpenSSL::X509::Certificate.new pem
+  def cabundle
+    Certificate.parse File.read(options.cabundle)
+  end
+
+  def write_cabundle certs
+    File.open options.cabundle, 'w' do |f|
+      f.puts certs.sort_by { |c| c.subject.to_s }.map { |c| [c.subject.to_s, c.to_s].join "\n" }
     end
   end
 
-  def osx_trust_settings
-    tmp = Tempfile.new 'trust'
-    system 'security trust-settings-export %s &>/dev/null' % tmp.path.shellescape
-    Plist.parse_xml(tmp.read)['trustList']
-  ensure
-    tmp.close
-    tmp.unlink
-  end
-
-  def osx_trusted_issuer_and_serials
-    osx_trust_settings.values.map do |t|
-      {
-        :issuer => OpenSSL::X509::Name.new(t['issuerName'].read),
-        :serial => OpenSSL::BN.new(t['serialNumber'].read, 2)
-      }
-    end
-  end
-
-  def osx_certificates
-    certs_by_issuer = parse(%x(security export -t certs)).group_by { |c| c.issuer }
-    osx_trusted_issuer_and_serials.map do |m|
-      if cs = certs_by_issuer[m[:issuer]]
-        cs.find { |c| c.serial == m[:serial] }
+  def mapcerts args = []
+    args.flat_map do |arg|
+      if arg == '-'
+        Certificate.parse($stdin.read)
+      elsif File.readable? arg
+        Certificate.parse File.read(arg)
+      else
+        Certificate.get_root arg
       end
-    end.compact
+    end.compact.select { |c| Certificate.self_signed? c }
   end
 
-  def certificates
-    case RUBY_PLATFORM
-    when /darwin/ then osx_certificates
-    else raise 'Unsupported platform'
-    end
+  def dump *args
+    puts (args.empty? ? cabundle : mapcerts(args)).map { |c| [c.subject.to_s, c.to_s].join "\n" }.join
+  end
+
+  def add *args
+    write_cabundle mapcerts(args).reduce(cabundle) { |certs, root|
+      certs << root unless certs.find { |c| c.subject == root.subject }
+      certs
+    }
+  end
+
+  def rm *args
+    write_cabundle mapcerts(args).reduce(cabundle) { |certs, root|
+      certs.reject { |c| c.subject == root.subject }
+    }
+  end
+
+  def exec *args
+    env = { 'CURL_CA_BUNDLE' => options.cabundle, 'GIT_SSL_CAINFO' => options.cabundle }
+    Kernel.exec env, *args
+  end
+
+  def console *args
+    require 'pry'
+    certs = mapcerts args
+    binding.pry
   end
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help if args.any?
+    rest = args.drop 1
 
-    certs = select([$stdin], nil, nil, 0) ? parse($stdin.read) : certificates
-    trusted = options.list ? certs.map(&:subject).join("\n") : certs.map(&:to_s).join
-    puts trusted unless trusted.empty?
+    case args.first
+    when 'dump', nil then dump *rest
+    when 'add' then add *rest
+    when 'rm' then show *rest
+    when 'exec' then exec *rest
+    when 'console' then console *rest
+    else abort parser.help
+    end
   end
 end
 
