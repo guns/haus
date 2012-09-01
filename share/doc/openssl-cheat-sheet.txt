@@ -1,0 +1,18 @@
+# 01 September 2012
+
+### Certificates
+
+# Generate a private key:
+openssl genrsa 4096
+
+# Generate an encrypted private key:
+openssl genrsa -des3 4096
+
+# Decrypt an encrypted private key:
+openssl rsa < secret.key
+
+# Generate a Certificate Signing Request:
+openssl req -new -key secret.key
+
+# Sign a Certificate Signing Request, generating an X509 certificate:
+openssl x509 -req -days $((365*3)) -signkey secret.key < my.csr > my.cert
