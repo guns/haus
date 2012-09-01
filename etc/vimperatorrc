@@ -34,14 +34,19 @@ noremap j 7j
 noremap k 7k
 noremap b <C-u>
 noremap B b
+
+""" Tabs and Buffers {{{1
+
 noremap <C-j> gt
 noremap <C-k> gT
 noremap <C-h> H
 noremap <C-l> L
-
-""" Tabs and Buffers {{{1
-
 noremap t :tabnew<CR>
+noremap <M-S-o> :tabonly<CR>
+inoremap <M-S-o> <Esc>:tabonly<CR>
+cnoremap <M-S-o> <Esc>:tabonly<CR>
+noremap <M-S-C> :tabopen about:config<CR>
+noremap <M-S-M> :tabopen about:memory<CR>
 
 """ Links and Search {{{1
 
