@@ -54,6 +54,7 @@ noremap ; F
 noremap "'" f
 noremap e ;
 noremap f /
+noremap <M-f> /
 noremap \\ /
 
 """ Colors {{{1
