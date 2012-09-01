@@ -132,7 +132,7 @@ augroup GUNS
         \ SetWhitespace 4 8
 
     " Mail {{{1
-    autocmd BufRead,BufNewFile editserver-*,*.mail
+    autocmd BufRead,BufNewFile editserver-*,vimperator-*,*.mail
         \ setlocal filetype=mail
     autocmd FileType mail
         \ setlocal iskeyword+=- |
