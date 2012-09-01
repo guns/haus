@@ -49,30 +49,30 @@ augroup GUNS
     " Metasploit doesn't follow community conventions
     autocmd BufRead,BufNewFile $cdmetasploit/*
         \ setlocal noexpandtab |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " Python {{{1
     autocmd FileType python
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " PHP {{{1
     autocmd FileType php
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
 
     " Haskell {{{1
     autocmd FileType haskell
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
 
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
         \ setlocal synmaxcol=500 iskeyword+=- |
         \ SparkupBufferSetup |
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
 
     " HAML/SASS/YAML {{{1
     autocmd FileType haml,sass,yaml
         \ setlocal iskeyword+=- |
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
     autocmd FileType haml
         \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> %br' |
@@ -81,19 +81,19 @@ augroup GUNS
     " CSS {{{1
     autocmd FileType css
         \ setlocal iskeyword+=- |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
     autocmd BufRead,BufNewFile *.less
         \ setlocal filetype=sass |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " JavaScript {{{1
     autocmd FileType javascript
         \ execute 'let b:jslint_disabled = 1' |
         \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
         \ setlocal tags+=./.jstags,.jstags |
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
     autocmd FileType coffee
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
 
     " C {{{1
     autocmd FileType c,c++
@@ -104,17 +104,17 @@ augroup GUNS
         \ setlocal filetype=nginx
     autocmd FileType nginx
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " Ini conf gitconfig {{{1
     autocmd BufRead,BufNewFile *gitconfig
         \ setlocal filetype=gitconfig
     autocmd FileType ini,gitconfig
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " Apache {{{1
     autocmd FileType apache
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " XDefaults {{{1
     autocmd BufRead,BufNewFile *Xdefaults
@@ -129,7 +129,7 @@ augroup GUNS
     autocmd FileType markdown,rdoc
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " Mail {{{1
     autocmd BufRead,BufNewFile editserver-*,*.mail
@@ -137,7 +137,7 @@ augroup GUNS
     autocmd FileType mail
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
-        \ SetWhitespace 4 |
+        \ SetWhitespace 4 8 |
         \ SetAutowrap 1
 
     " Archive browsing {{{1
@@ -155,7 +155,7 @@ augroup GUNS
     " tmux {{{1
     autocmd BufRead,BufNewFile *tmux.conf
         \ setlocal filetype=tmux |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " screen {{{1
     autocmd BufRead,BufNewFile *screenrc
@@ -185,7 +185,7 @@ augroup GUNS
     " TeX {{{1
     autocmd FileType tex
         \ setlocal iskeyword+=\\ iskeyword+=- |
-        \ SetWhitespace 2
+        \ SetWhitespace 2 8
 
     " CTags {{{1
     autocmd BufRead,BufNewFile .tags
