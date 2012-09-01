@@ -693,19 +693,6 @@ HAVE tcpdump && {
     alias pcapdump='tcpdump -n -XX -r'
 }
 
-# IMAP client
-HAVE openssl && {
-    # http://delog.wordpress.com/2011/05/10/access-imap-server-from-the-command-line-using-openssl/
-    sslconnect() {
-        case $# in
-        1) local host="$1" port='443';;
-        2) local host="$1" port="$2";;
-        *) echo "Usage: $FUNCNAME host [port]"; return 1
-        esac
-        openssl s_client -crlf -connect "$host:$port"
-    }
-}
-
 # ssh scp
 ALIAS ssh='ssh -2' \
       ssh-fast="ssh -c $SSH_FAST_CIPHERS" \
@@ -1290,15 +1277,25 @@ HAVE wpa_supplicant wpa_passphrase && {
 
 ### Encryption {{{1
 
-# Complete custom wrapper
+# OpenSSL
+HAVE openssl && {
+    sslconnect() {
+        case $# in
+        1) local host="$1" port='443';;
+        2) local host="$1" port="$2";;
+        *) echo "Usage: $FUNCNAME host [port]"; return 1
+        esac
+        run openssl s_client -crlf -connect "$host:$port"
+    }
+}
+
 HAVE cryptsetup cs && TCOMP cryptsetup cs
+ALIAS dx='dumpcert exec'
 
 if __OSX__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
     alias security-dump-certificates='run security export -t certs'
 fi
-
-ALIAS dx='dumpcert exec'
 
 
 ### Virtual Machines {{{1
