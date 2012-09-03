@@ -35,19 +35,6 @@ noremap k 7k
 noremap b <C-u>
 noremap B b
 
-""" Tabs and Buffers {{{1
-
-noremap <C-j> gt
-noremap <C-k> gT
-noremap <C-h> H
-noremap <C-l> L
-noremap t :tabnew<CR>
-noremap <M-S-o> :tabonly<CR>
-inoremap <M-S-o> <Esc>:tabonly<CR>
-cnoremap <M-S-o> <Esc>:tabonly<CR>
-noremap <M-S-C> :tabopen about:config<CR>
-noremap <M-S-M> :tabopen about:memory<CR>
-
 """ Links and Search {{{1
 
 noremap ; F
@@ -56,6 +43,29 @@ noremap e ;
 noremap f /
 noremap <M-f> /
 noremap \\ /
+
+""" Tabs and Buffers {{{1
+
+noremap <C-j> gt
+noremap <C-k> gT
+noremap <C-h> H
+noremap <C-l> L
+noremap t :tabnew<CR>
+noremap <M-_> :tabmove -1<CR>
+noremap <M-+> :tabmove +1<CR>
+noremap <M-S-o> :tabonly<CR>
+inoremap <M-S-o> <Esc>:tabonly<CR>
+cnoremap <M-S-o> <Esc>:tabonly<CR>
+
+""" Location Shortcuts {{{1
+
+noremap <M-S-c> :tabopen about:config<CR>
+noremap <M-S-m> :tabopen about:memory<CR>
+noremap <M-A-C-p> :emenu Tools.Web Developer.Scratchpad<CR>
+noremap <M-A-C-s> :emenu Tools.Web Developer.Style Editor<CR>
+noremap <M-A-C-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
+imap <M-A-C-t> <Esc><M-A-C-t>
+cmap <M-A-C-t> <Esc><M-A-C-t>
 
 """ Colors {{{1
 
