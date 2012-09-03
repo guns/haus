@@ -457,9 +457,6 @@ class Macsetup
 
         add_keybindings pref('com.apple.Safari.plist'),
           'Reset Safari...' => '@$'
-
-        add_keybindings pref('org.mozilla.aurora.plist'),
-          'Special Characters...' => '@^~$t'
       }
     }
   end
