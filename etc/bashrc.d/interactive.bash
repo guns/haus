@@ -1219,9 +1219,9 @@ ALIAS mysql='mysql -p' \
 
 ALIAS ppsql='psql postgres'
 
-HAVE sqlite3 && {
+ALIAS sqlite='sqlite3' && {
     # Param: $1 SQLite db
-    sqlite3schema() {
+    sqliteschema() {
         {   sqlite3 "$1" <<< .schema
             local t tables=($(sqlite3 "$1" <<< .table))
             for t in "${tables[@]}"; do
@@ -1278,7 +1278,7 @@ HAVE wpa_supplicant wpa_passphrase && {
 ### Encryption {{{1
 
 # OpenSSL
-HAVE openssl && {
+ALIAS ssl='openssl' && {
     sslconnect() {
         case $# in
         1) local host="$1" port='443';;
