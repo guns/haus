@@ -307,7 +307,7 @@ endfunction
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
-        \ 'ruby'       : 'pry || irb',
+        \ 'ruby'       : 'script/rails console || pry || irb',
         \ 'clojure'    : 'clojure --lein repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
