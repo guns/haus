@@ -55,8 +55,9 @@ endsnippet
 
 ### SYNTAX HELPERS {{{
 
-snippet do "do || end" w
-do${1: |${2:obj}|}$0
+snippet do "do |x| end" w
+do |$1|
+	$0
 end
 endsnippet
 
