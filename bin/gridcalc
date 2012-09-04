@@ -70,7 +70,7 @@ class Gridcalc
     mingw   = ratio.denominator
     maxcols = (options.width + mingw) / (mincw + mingw)
 
-    (columns || 2..maxcols).each do |n|
+    (columns || (2..maxcols)).each do |n|
       (options.width / n).downto mincw do |cw|
         gutters = options.width - (n * cw)
         next unless (gutters % (n - 1)).zero? # Only whole pixels
