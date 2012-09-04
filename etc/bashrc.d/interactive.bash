@@ -1290,7 +1290,7 @@ ALIAS ssl='openssl' && {
 }
 
 HAVE cryptsetup cs && TCOMP cryptsetup cs
-ALIAS dx='dumpcert exec'
+ALIAS dx='dumpcert exec --'
 
 if __OSX__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
