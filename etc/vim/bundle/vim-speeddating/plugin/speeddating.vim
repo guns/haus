@@ -171,6 +171,9 @@ function! s:incrementvisual(count)
     let ve = &ve
     set virtualedit=all
     exe "norm! gv\<Esc>"
+    if &selection ==# 'exclusive' && getpos('.') == getpos("'>")
+        normal! h
+    endif
     let vcol = virtcol('.')
     let lnum = line("'<")
     let lastrepl = ""
@@ -186,7 +189,7 @@ function! s:incrementvisual(count)
             let end = s:setvirtcol(lnum,virtcol('.'))
             call s:setvirtcol(lnum,vcol)
             if strpart(getline('.'),start,end-start) =~ '^\s*$'
-                let before_padded = printf("%-".start."s",strpart(getline('.'),0,start))
+                let before_padded = start == end ? '' : printf("%-".start."s",strpart(getline('.'),0,start))
                 let tweaked_line  = before_padded.strpart(lastrepl,laststart,lastend-laststart).strpart(getline('.'),end)
                 let [repl,offset,start,end] = s:incrementstring(tweaked_line,col('.')-1,a:count*(lnum-lastlnum))
             endif
