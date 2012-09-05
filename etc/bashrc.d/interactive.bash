@@ -822,7 +822,7 @@ HAVE vim && {
         if (( ${#files[@]} )); then
             vim -p "${files[@]}"
         else
-            vim -c 'CommandT'
+            vim -c CtrlP
         fi
     }; TCOMP find vimfind
 
@@ -887,7 +887,7 @@ HAVE vim && {
             local port="${1:-2113}"
             if [[ -e project.clj ]] || cd ~/.clojure; then
                 if nc -z 127.0.0.1 "$port" &>/dev/null; then
-                    vim -c StartNailgunServer -c CommandT
+                    vim -c StartNailgunServer -c CtrlP
                 else
                     local seconds=0
                     clojure --lein "trampoline vimclojure :port $port" &>/dev/null &
@@ -901,7 +901,7 @@ HAVE vim && {
                         done
                         notify --audio "Nailgun listening on 127.0.0.1:$port"
                     ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
-                    vim -c CommandT
+                    vim -c CtrlP
                 fi
             fi
         }

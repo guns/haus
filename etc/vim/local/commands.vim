@@ -90,7 +90,7 @@ function! <SID>SetVerbose(bang, ...)
         set verbose=0 verbosefile=
         unlet! g:SetVerbose
     endif
-endfunction "{{{1
+endfunction
 
 
 command! -bar SynStack call <SID>SynStack() "{{{1
@@ -558,7 +558,7 @@ function! <SID>Org(bang, ...)
         endfor
     else
         if empty(a:bang) | tabnew | endif
-        execute 'lcd ' . g:org_home | CommandT
+        execute 'lcd ' . g:org_home | CtrlP
     endif
 endfunction
 

@@ -167,12 +167,6 @@ let g:netrw_home = expand('~')
 " SQL
 let g:omni_sql_no_default_maps = 1
 
-" Plugin: CommandT
-let g:CommandTMaxFiles = 20000
-let g:CommandTMaxCachedDirectories = 0
-let g:CommandTAlwaysShowDotFiles = 1
-let g:CommandTMatchWindowAtTop = 1
-
 " Plugin: NERDTree
 let g:NERDChristmasTree = 1
 let g:NERDTreeChDirMode = 2
@@ -252,6 +246,25 @@ let g:regbuf_edit_open_command = '80vnew'
 " Plugin: Org
 let g:org_home = '~/Documents/Org'
 let g:org_agenda_files = [g:org_home . '/TODO.org']
+
+" Plugin: CtrlP
+let g:ctrlp_match_window_bottom = 0
+let g:ctrlp_match_window_reversed = 0
+let g:ctrlp_max_height = 30
+let g:ctrlp_working_path_mode = 0
+let g:ctrlp_cache_dir = expand('~/.vimtmp/ctrlp')
+let g:ctrlp_clear_cache_on_exit = 1
+let g:ctrlp_user_command = ['.git', 'git ls-files %s -co --exclude-standard']
+let g:ctrlp_max_history = 0
+let g:ctrlp_open_new_file = 'r'
+let g:ctrlp_prompt_mappings = {
+    \ 'PrtSelectMove("j")':   ['<C-j>', '<C-n>'],
+    \ 'PrtSelectMove("k")':   ['<C-k>', '<C-p>'],
+    \ 'PrtHistory(-1)':       ['<Up>'],
+    \ 'PrtHistory(1)':        ['<Down>'],
+    \ 'PrtClearCache()':      ['<4-r>'],
+    \ 'PrtDeleteEnt()':       ['<4-R>'],
+\ }
 
 
 """ MAPPINGS and AUTOCOMMANDS {{{1

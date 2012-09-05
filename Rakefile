@@ -83,6 +83,7 @@ task :env do # {{{1
       { :base => "#{@vim}/BufOnly.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/CountJump",              :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/ctrlp.vim",              :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/delimitMate",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/devbox-dark-256",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/diff_movement",          :branch => %w[master guns], :files => :pathogen },
@@ -153,14 +154,6 @@ task :env do # {{{1
           system *%W[rsync -a --delete --no-owner #{src}/ #{dst}/]
           nil # Work is done
         }
-      },
-
-      {
-        :base   => "#{@vim}/Command-T",
-        :branch => %w[master guns],
-        :push   => 'github',
-        :files  => :pathogen,
-        :after  => lambda { |proj| system '/usr/bin/rake commandt &>/dev/null' }
       },
 
       # {
@@ -338,14 +331,6 @@ end
 desc 'Import all terminfo files in share/terminfo' # {{{1
 task :tic do
   Dir['share/terminfo/*'].each { |f| sh 'tic', f }
-end
-
-desc 'Compile the Vim Command-T bundle' # {{{1
-task :commandt do
-  Dir.chdir 'etc/vim/bundle/Command-T/ruby/command-t' do
-    sh File.join(RbConfig::CONFIG['bindir'], 'ruby'), 'extconf.rb'
-    sh 'make'
-  end
 end
 
 desc 'Show subproject source remotes' # {{{1

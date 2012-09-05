@@ -561,14 +561,13 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 nmap <Leader><C-_> viw<Plug>(operator-camelize-toggle)
 vmap <Leader><C-_> <Plug>(operator-camelize-toggle)
 
-" Plugin: Command-T
-Mapall <4-o> :<C-u>CommandT<CR>
-Mapall <4-t> :<C-u>tabnew \\\| CommandT<CR>
-Mapall <4-'> :<C-u>CommandTTag<CR>
-Mapall <4-.> :<C-u>CommandTJump<CR>
-Mapall <4-b> :<C-u>CommandTBuffer<CR>
-Mapall <4-B> :<C-u>tabnew \\\| CommandTBuffer<CR>
-Mapall <4-V> :<C-u>vsplit \\\| wincmd l \\\| CommandT<CR>
+" Plugin: CtrlP
+Mapall <4-o> :<C-u>CtrlPMixed<CR>
+Mapall <4-t> :<C-u>tabnew \\\| CtrlPMixed<CR>
+Mapall <4-'> :<C-u>CtrlPBufTag<CR>
+Mapall <4-\"> :<C-u>CtrlPTag<CR>
+Mapall <4-b> :<C-u>CtrlPBuffer<CR>
+Mapall <4-B> :<C-u>tabnew \\\| CtrlPBuffer<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
