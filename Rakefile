@@ -206,8 +206,12 @@ task :env do # {{{1
         :before => lambda { |proj|
           Dir.chdir proj.base do
             begin
-              system '{ git checkout master && rake update && git checkout guns && git merge master -m "Merge master into guns"; } &>/dev/null'
-              system 'ManPageView update failed!' if not $?.exitstatus.zero?
+              system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
+              updated = system 'rake update &>/dev/null'
+              system 'git checkout guns &>/dev/null' or raise 'ManPageView checkout failed'
+              if updated
+                system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
+              end
             ensure
               rm_f Dir['.Vimball*'], :verbose => false
             end
