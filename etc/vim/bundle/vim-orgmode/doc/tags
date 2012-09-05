@@ -1,3 +1,4 @@
+bold	orgguide.txt	/*bold*
 g:org_agenda_files	orgguide.txt	/*g:org_agenda_files*
 g:org_export_emacs	orgguide.txt	/*g:org_export_emacs*
 g:org_export_init_script	orgguide.txt	/*g:org_export_init_script*

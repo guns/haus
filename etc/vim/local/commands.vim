@@ -381,10 +381,6 @@ function! <SID>OrgBufferSetup()
     " Please don't remap core keybindings!
     silent! iunmap <buffer> <C-d>
     silent! iunmap <buffer> <C-t>
-
-    " Set foldlevel and fold styles
-    setlocal foldlevel=1
-    highlight Folded ctermfg=240 guifg=#585858 ctermbg=233 guibg=#121212 term=italic gui=italic
 endfunction
 
 
