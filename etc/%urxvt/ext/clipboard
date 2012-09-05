@@ -1,7 +1,8 @@
 #! perl -w
-# Author:  Bert Muennich
-# Website: http://www.github.com/muennich/urxvt-perls
-# License: GPLv2
+# Author:   Bert Muennich
+# Website:  http://www.github.com/muennich/urxvt-perls
+# Version:  2.0
+# License:  GPLv2
 
 # Use keyboard shortcuts to copy the selection to the clipboard and to paste
 # the clipboard contents (optionally escaping all special characters).
@@ -15,14 +16,14 @@
 
 # You can also overwrite the system commands to use for copying/pasting.
 # The default ones are:
-#   URxvt.copyCommand:  xsel -ib
-#   URxvt.pasteCommand: xsel -ob
+#   URxvt.clipboard.copycmd:  xsel -ib
+#   URxvt.clipboard.pastecmd: xsel -ob
 # If you prefer xclip, then put these lines in your .Xdefaults/.Xresources:
-#   URxvt.copyCommand:  xclip -i -selection clipboard
-#   URxvt.pasteCommand: xclip -o -selection clipboard
+#   URxvt.clipboard.copycmd:  xclip -i -selection clipboard
+#   URxvt.clipboard.pastecmd: xclip -o -selection clipboard
 # On Mac OS X, put these lines in your .Xdefaults/.Xresources:
-#   URxvt.copyCommand:  pbcopy
-#   URxvt.pasteCommand: pbpaste
+#   URxvt.clipboard.copycmd:  pbcopy
+#   URxvt.clipboard.pastecmd: pbpaste
 
 # The use of the functions should be self-explanatory!
 
@@ -35,8 +36,8 @@ sub on_start {
 	my $copy_cmd  = (($^O eq 'darwin') ? 'pbcopy'  : ($have_xsel ? 'xsel -ib' : 'xclip -i -selection clipboard'));
 	my $paste_cmd = (($^O eq 'darwin') ? 'pbpaste' : ($have_xsel ? 'xsel -ob' : 'xclip -o -selection clipboard'));
 
-	$self->{copy_cmd}  = $self->x_resource('copyCommand')  || $copy_cmd;
-	$self->{paste_cmd} = $self->x_resource('pasteCommand') || $paste_cmd;
+	$self->{copy_cmd} = $self->x_resource('clipboard.copyCommand') || $copy_cmd;
+	$self->{paste_cmd} = $self->x_resource('clipboard.pasteCommand') || $paste_cmd;
 
 	()
 }
