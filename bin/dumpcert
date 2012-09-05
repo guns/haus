@@ -35,7 +35,11 @@ class Dumpcert
     end
 
     def self_signed? cert
-      cert.subject == cert.issuer
+      cert.subject.eql? cert.issuer
+    end
+
+    def equal? a, b
+      a.subject.eql? b.subject and a.issuer.eql? b.issuer
     end
 
     def ssl_get host, port = nil
@@ -72,8 +76,7 @@ class Dumpcert
     end
 
     def get_root url
-      cert = get_chain(url).last
-      cert if self_signed? cert
+      get_chain(url).last
     end
   end
 
@@ -109,7 +112,7 @@ class Dumpcert
   end
 
   def mapcerts args = []
-    args.flat_map do |arg|
+    args.map do |arg|
       if arg == '-'
         Certificate.parse($stdin.read)
       elsif File.readable? arg
@@ -117,7 +120,11 @@ class Dumpcert
       else
         Certificate.get_root arg
       end
-    end.compact.select { |c| Certificate.self_signed? c }
+    end.flatten.compact
+  end
+
+  def maproots args = []
+    mapcerts(args).select { |c| Certificate.self_signed? c }
   end
 
   def dump *args
@@ -125,15 +132,15 @@ class Dumpcert
   end
 
   def add *args
-    write_cabundle mapcerts(args).reduce(cabundle) { |certs, root|
-      certs << root unless certs.find { |c| c.subject == root.subject }
+    write_cabundle maproots(args).reduce(cabundle) { |certs, root|
+      certs << root unless certs.find { |c| Certificate.equal? c, root }
       certs
     }
   end
 
   def rm *args
-    write_cabundle mapcerts(args).reduce(cabundle) { |certs, root|
-      certs.reject { |c| c.subject == root.subject }
+    write_cabundle maproots(args).reduce(cabundle) { |certs, root|
+      certs.reject { |c| Certificate.equal? c, root }
     }
   end
 
@@ -154,7 +161,7 @@ class Dumpcert
     case args.first
     when 'dump', nil then dump *rest
     when 'add' then add *rest
-    when 'rm' then show *rest
+    when 'rm' then rm *rest
     when 'exec' then exec *rest
     when 'console' then console *rest
     else abort parser.help
