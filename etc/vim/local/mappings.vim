@@ -545,7 +545,7 @@ noremap <Leader>S :<C-u>Screen<CR>
 
 " Plugin: Manpageview
 noremap <Leader>K viwK
-noremap <Leader>m :<C-u>VMan<Space>
+noremap <Leader>m :<C-u>VEMan<Space>
 noremap <Leader>M :<C-u>HMan<Space>
 
 " Plugin: Align

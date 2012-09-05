@@ -1,8 +1,8 @@
-*manpageview.txt*	Man Page Viewer			Nov 26, 2010
+*manpageview.txt*	Man Page Viewer			Aug 07, 2012
 
 Author:  Charles E. Campbell, Jr.  <NdrchipO@ScampbellPfamily.AbizM>
 	  (remove NOSPAM from Campbell's email first)
-Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
+Copyright: (c) 2004-2012 by Charles E. Campbell, Jr.	*manpageview-copyright*
            The VIM LICENSE applies to ManPageView.vim and ManPageView.txt
            (see |copyright|) except use "ManPageView" instead of "Vim"
 	   no warranty, express or implied.  use at-your-own-risk.
@@ -21,6 +21,7 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 	     Php....................................: |manpageview-php|
 	     Extending ManPageView..................: |manpageview-extend|
 	     Manpageview Suggestion.................: |manpageview-suggest|
+	     From the Shell.........................: |manpageview-shell|
 	3. ManPageView Options......................: |manpageview-options|
 	4. ManPageView History......................: |manpageview-history|
 
@@ -64,6 +65,7 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 		:[count]VEMan topic    -- g:manpageview_winopen= "vsplit="
 		:[count]OMan topic     -- g:manpageview_winopen= "osplit"
 		:[count]RMan topic     -- g:manpageview_winopen= "reuse"
+		:[count]TMan topic     -- g:manpageview_winopen= "tab"
 <
 	To support perl, manpageview now can switch to using perldoc
 	instead of man.  In fact, the facility is generalized to
@@ -185,6 +187,19 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 	C program.  One may make similar maps for other languages, of course,
 	or simply put the map in one's <.vimrc>.
 
+	FROM THE SHELL				*manpageview-shell*
+
+	There are a lot of ways to get manpageview to work from the shell.
+	I typically use: >
+
+		function man
+		{
+		gvim -c "Man $*" -c "silent! only"
+		}
+<
+	With this function (and with Korn shell or bash), one may use "man"
+	from the shell's command line and have it bring up gvim with
+	manpageview instead.
 
 
 ==============================================================================
@@ -202,6 +217,10 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 		    happens to not be |executable()|, then no filtering
 		    will be done.  (Thanks to Matthew Wozniski).
 
+		    As an example, Hong Xu reports that he has found that >
+		      let g:manpageview_iconv= "iconv -c UTF-8 -t UTF-8"
+<		    useful when using NetBSD.
+
 						*g:manpageview_multimanpage*
 	g:manpageview_multimanpage (=1 by default)
 		    This option means that the PageUp and PageDown keys
@@ -217,29 +236,31 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 	            let g:manpageview_options= "-P 'cat -'"
 	            let g:manpageview_options= "-c"
 	            let g:manpageview_options= "-Tascii"
-	
+
 						*g:manpageview_pgm*
 	g:manpageview_pgm : by default, its "man", but it may be changed
 		     by the user.  This program is what is called to actually
 		     extract the manpage.
 
 						*g:manpageview_winopen*
-	g:manpageview_winopen : may take on one of six values:
+	g:manpageview_winopen : may take on one of seven values:
 
-	   "only"    man page will become sole window.
-	             Side effect: All windows' contents will be saved first!
-		     (windo w) Use :q to terminate the manpage and restore the
-		     window setup.  Note that mksession is used for this
-		     option, hence the +mksession configure-option is required.
-	   "hsplit"  man page will appear in a horizontally          split window (default)
-	   "vsplit"  man page will appear in a vertically            split window
-	   "hsplit=" man page will appear in a horizontally & evenly split window
-	   "vsplit=" man page will appear in a vertically   & evenly split window
-	   "reuse"   man page will re-use current window.  Use <ctrl-o> to return.
-	             (for the reuse option, thanks go to Alan Schmitt)
-	
+	   *OMan*  "only"		man page will become sole window.
+				Side effect: All windows' contents will be saved first!
+				(windo w) Use :q to terminate the manpage and restore the
+				window setup.  Note that mksession is used for this
+				option, hence the +mksession configure-option is required.
+	   *HMan*  "hsplit"	man page will appear in a horizontally          split window (default)
+	   *VMan*  "vsplit"	man page will appear in a vertically            split window
+	   *HEMan* "hsplit="	man page will appear in a horizontally & evenly split window
+	   *VEMan* "vsplit="	man page will appear in a vertically   & evenly split window
+	   *RMan*  "reuse"	man page will re-use current window.  Use <ctrl-o> to return.
+				(for the reuse option, thanks go to Alan Schmitt)
+	   *TMan*  "tab"		man page will be on a separate tab
+
+
 				*g:manpageview_server* *g:manpgeview_user*
-						
+
 	g:manpageview_server : for WinNT; uses rsh to read manpage remotely
 	g:manpageview_user   : use given server (host) and username
 	  examples:
@@ -306,6 +327,12 @@ Copyright: (c) 2004-2010 by Charles E. Campbell, Jr.	*manpageview-copyright*
 	Thanks go to the various people who have contributed changes,
 	pointed out problems, and made suggestions!
 
+	v24: Jan 03, 2011  * some extra protection against trying to use
+			     a program that is not executable
+	     Mar 30, 2012  * TMan command included
+	     May 25, 2012  * When in a specially supported filetype, such
+			     as perl, allow ".man" as a topic extension to
+			     get regular manpage support.  (ex. :Man paps.man)
 	v23: May 18, 2009  * on the third attempt to get a manpage, if
 	                     the user provided no explicit
 			     |g:manpageview_iconv| setting, then the

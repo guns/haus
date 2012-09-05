@@ -1,3 +1,10 @@
+HEMan	manpageview.txt	/*HEMan*
+HMan	manpageview.txt	/*HMan*
+OMan	manpageview.txt	/*OMan*
+RMan	manpageview.txt	/*RMan*
+TMan	manpageview.txt	/*TMan*
+VEMan	manpageview.txt	/*VEMan*
+VMan	manpageview.txt	/*VMan*
 g:manpageview_K_EXT	manpageview.txt	/*g:manpageview_K_EXT*
 g:manpageview_iconv	manpageview.txt	/*g:manpageview_iconv*
 g:manpageview_init_EXT	manpageview.txt	/*g:manpageview_init_EXT*
@@ -28,6 +35,7 @@ manpageview-pageup	manpageview.txt	/*manpageview-pageup*
 manpageview-perl	manpageview.txt	/*manpageview-perl*
 manpageview-php	manpageview.txt	/*manpageview-php*
 manpageview-python	manpageview.txt	/*manpageview-python*
+manpageview-shell	manpageview.txt	/*manpageview-shell*
 manpageview-suggest	manpageview.txt	/*manpageview-suggest*
 manpageview-usage	manpageview.txt	/*manpageview-usage*
 manpageview.txt	manpageview.txt	/*manpageview.txt*
