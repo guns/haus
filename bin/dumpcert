@@ -10,6 +10,8 @@ require 'ostruct'
 require 'openssl'
 require 'shellwords'
 require 'net/http'
+require 'digest/sha1'
+require 'digest/md5'
 
 class Dumpcert
   module Certificate
@@ -74,10 +76,6 @@ class Dumpcert
 
       chain
     end
-
-    def get_root url
-      get_chain(url).last
-    end
   end
 
   attr_reader :options
@@ -101,13 +99,24 @@ class Dumpcert
     end
   end
 
+  def format certs
+    certs.map do |c|
+      [ 'Subject: %s' % c.subject,
+        'Issuer:  %s' % c.issuer,
+        'SHA1:    %s' % Digest::SHA1.hexdigest(c.to_der),
+        'MD5:     %s' % Digest::MD5.hexdigest(c.to_der),
+        c.to_s
+      ].join "\n"
+    end.join
+  end
+
   def cabundle
     Certificate.parse File.read(options.cabundle)
   end
 
   def write_cabundle certs
     File.open options.cabundle, 'w' do |f|
-      f.puts certs.sort_by { |c| c.subject.to_s }.map { |c| [c.subject.to_s, c.to_s].join "\n" }
+      f.puts format(certs.sort_by { |c| c.subject.to_s })
     end
   end
 
@@ -118,7 +127,7 @@ class Dumpcert
       elsif File.readable? arg
         Certificate.parse File.read(arg)
       else
-        Certificate.get_root arg
+        Certificate.get_chain arg
       end
     end.flatten.compact
   end
@@ -128,7 +137,7 @@ class Dumpcert
   end
 
   def dump *args
-    puts (args.empty? ? cabundle : mapcerts(args)).map { |c| [c.subject.to_s, c.to_s].join "\n" }.join
+    puts format(args.empty? ? cabundle : mapcerts(args))
   end
 
   def add *args
