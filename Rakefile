@@ -55,10 +55,10 @@ task :env do # {{{1
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
         },
         :before => lambda { |proj|
-          Dir.chdir proj.base do
+          if proj.fetch
             system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
             raise 'tmux pull and merge failed' if not $?.exitstatus.zero?
-          end if proj.fetch
+          end
         },
       },
 
@@ -137,10 +137,10 @@ task :env do # {{{1
         :base => "#{@src}/firefox/vimperator-labs",
         :branch => %w[master],
         :before => lambda { |proj|
-          Dir.chdir proj.base do
+          if proj.fetch
             system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
             raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
-          end if proj.fetch
+          end
         },
         :files => lambda { |proj|
           src = "#{proj.base}/vimperator/contrib/vim"
@@ -155,25 +155,21 @@ task :env do # {{{1
       #   :base   => "#{@vim}/vimclojure",
       #   :push   => 'github',
       #   :before => lambda { |proj|
-      #     Dir.chdir proj.base do
-      #       # Update using git-hg bridge
-      #       if proj.fetch
-      #         system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
-      #         raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
-      #       else
-      #         system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
-      #       end
+      #     # Update using git-hg bridge
+      #     if proj.fetch
+      #       system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
+      #       raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
+      #     else
+      #       system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
       #     end
       #   },
       #   :files  => lambda { |proj|
-      #     Dir.chdir proj.base do
-      #       rm_rf ['vim/build', 'server/build'], :verbose => false
-      #       system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-      #       system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-      #       raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
-      #     end
+      #     rm_rf ['vim/build', 'server/build'], :verbose => false
+      #     system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
+      #     system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
+      #     raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
 
-      #     system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
+      #     system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
       #     raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
 
       #     nil # The work is done
@@ -187,10 +183,10 @@ task :env do # {{{1
         :push   => 'github',
         :files  => :pathogen,
         :before => lambda { |proj|
-          Dir.chdir proj.base do
+          if proj.fetch
             system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
             raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
-          end if proj.fetch
+          end
         }
       },
 
@@ -204,7 +200,7 @@ task :env do # {{{1
         :base   => "#{@vim}/ManPageView",
         :files  => :pathogen,
         :before => lambda { |proj|
-          Dir.chdir proj.base do
+          if proj.fetch
             begin
               system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
               updated = system 'rake update &>/dev/null'
@@ -215,7 +211,7 @@ task :env do # {{{1
             ensure
               rm_f Dir['.Vimball*'], :verbose => false
             end
-          end if proj.fetch
+          end
         }
       },
 

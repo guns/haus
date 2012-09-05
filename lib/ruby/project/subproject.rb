@@ -102,11 +102,11 @@ module Project
 
       uid = File.stat(base).uid
 
-      as_uid(uid) { callback.before.call self } if callback.before
+      Dir.chdir(base) { as_uid(uid) { callback.before.call self } } if callback.before
       as_uid(uid) { git_update } if branch.upstream
       update_files
       as_uid(uid) { git_push } if push and fetch
-      as_uid(uid) { callback.after.call self } if callback.after
+      Dir.chdir(base) { as_uid(uid) { callback.after.call self } } if callback.after
     end
   end
 end
