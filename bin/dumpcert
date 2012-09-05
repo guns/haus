@@ -86,9 +86,19 @@ class Dumpcert
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options]
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Usage: #{File.basename __FILE__} [options] command [args]
+
+        Arguments can be host:port, a PEM or DER certificate file, or '-' for STDIN.
+
+        Commands:
+
+            dump [arg ...]   Dump certificates (or cabundle) to stdout
+            add arg ...      Add certificate roots to cabundle
+            rm arg ...       Remove certificate roots from cabundle
+            exec arg ...     Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to cabundle
+            console          Open a Pry debugging session
 
         Options:
       BANNER
