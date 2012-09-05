@@ -49,17 +49,12 @@ task :env do # {{{1
 
       {
         :base   => "#{@src}/tmux",
+        :branch => %w[master guns],
         :push   => 'github',
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
-        },
-        :before => lambda { |proj|
-          if proj.fetch
-            system '{ git checkout guns && cd "%s" && rake pull && git merge master; } &>/dev/null' % proj.base.shellescape
-            raise 'tmux pull and merge failed' if not $?.exitstatus.zero?
-          end
-        },
+        }
       },
 
       {
@@ -203,7 +198,7 @@ task :env do # {{{1
           if proj.fetch
             begin
               system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
-              updated = system 'cd "%s" && rake update &>/dev/null' % proj.base.shellescape
+              updated = system 'cd %s && rake update &>/dev/null' % proj.base.shellescape
               system 'git checkout guns &>/dev/null' or raise 'ManPageView checkout failed'
               if updated
                 system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
