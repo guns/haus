@@ -3,5 +3,5 @@
 if test -x /usr/bin/open; then
     exec /usr/bin/open "$@"
 else
-    chrome "$@" &
+    firefox "$@" &
 fi
