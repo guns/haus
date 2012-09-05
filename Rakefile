@@ -56,7 +56,7 @@ task :env do # {{{1
         },
         :before => lambda { |proj|
           if proj.fetch
-            system '{ git checkout guns && rake pull && git merge master; } &>/dev/null'
+            system '{ git checkout guns && cd "%s" && rake pull && git merge master; } &>/dev/null' % proj.base.shellescape
             raise 'tmux pull and merge failed' if not $?.exitstatus.zero?
           end
         },
@@ -203,7 +203,7 @@ task :env do # {{{1
           if proj.fetch
             begin
               system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
-              updated = system 'rake update &>/dev/null'
+              updated = system 'cd "%s" && rake update &>/dev/null' % proj.base.shellescape
               system 'git checkout guns &>/dev/null' or raise 'ManPageView checkout failed'
               if updated
                 system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
