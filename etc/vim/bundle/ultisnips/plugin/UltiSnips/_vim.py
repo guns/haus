@@ -4,6 +4,8 @@
 """
 Wrapper functionality around the functions we need from Vim
 """
+import re
+
 import vim
 from vim import error
 
@@ -64,10 +66,6 @@ buf = VimBuffer()
 def text_to_vim(start, end, text):
     lines = text.split('\n')
 
-    # Open any folds this might have created
-    buf.cursor = start
-    vim.command("normal zv")
-
     new_end = _calc_end(lines, start)
 
     before = buf[start.line][:start.col]
@@ -79,6 +77,10 @@ def text_to_vim(start, end, text):
         new_lines.extend(lines[1:])
         new_lines[-1] += after
     buf[start.line:end.line + 1] = new_lines
+
+    # Open any folds this might have created
+    buf.cursor = start
+    vim.command("normal zv")
 
     return new_end
 
@@ -118,6 +120,8 @@ def new_scratch_buffer(text):
     command("set buftype=nofile")
 
     vim.buffers[-1][:] = text.splitlines()
+
+    feedkeys(r"\<Esc>")
 
 def select(start, end):
     """Select the span in Select mode"""
@@ -275,12 +279,16 @@ class _Real_LangMapTranslator(object):
     one line down is no longer possible and UltiSnips will fail.
     """
     _maps = {}
+    _SEMICOLONS = re.compile(r"(?<!\\);")
+    _COMMA = re.compile(r"(?<!\\),")
 
     def _create_translation(self, langmap):
         from_chars, to_chars = "", ""
-        for c in langmap.split(','):
-            if ";" in c:
-                a,b = c.split(';')
+        for c in self._COMMA.split(langmap):
+            c = c.replace("\\,", ",")
+            res = self._SEMICOLONS.split(c)
+            if len(res) > 1:
+                a,b = map(lambda a: a.replace("\\;", ";"), res)
                 from_chars += a
                 to_chars += b
             else:
