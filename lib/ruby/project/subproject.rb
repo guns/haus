@@ -53,31 +53,22 @@ module Project
     end
 
     def git_update
-      stat = File.stat base
+      git.checkout branch.upstream
+      if fetch
+        git.fetch pull
+        git.merge [pull, branch.upstream].join('/')
+      end
 
-      as_uid stat.uid do
-        git.checkout branch.upstream
+      if branch.local
+        git.checkout branch.local
         if fetch
-          git.fetch pull
-          git.merge [pull, branch.upstream].join('/')
-        end
-
-        if branch.local
-          git.checkout branch.local
-          if fetch
-            git.merge branch.upstream, 'Merge branch %s into %s' % [branch.upstream, branch.local]
-          end
+          git.merge branch.upstream, 'Merge branch %s into %s' % [branch.upstream, branch.local]
         end
       end
-    ensure
-      # We are likely running this as root, so restore original permissions
-      FileUtils.chown_R stat.uid, stat.gid, base
     end
 
     def git_push
-      as_uid File.stat(base).uid do
-        git.push push, '--all'
-      end
+      git.push push, '--all'
     end
 
     def update_files
@@ -109,11 +100,13 @@ module Project
 
       log "Updating subproject #{base}"
 
-      callback.before.call self if callback.before
-      git_update if branch.upstream
+      uid = File.stat(base).uid
+
+      as_uid(uid) { callback.before.call self } if callback.before
+      as_uid(uid) { git_update } if branch.upstream
       update_files
-      git_push if push and fetch
-      callback.after.call self if callback.after
+      as_uid(uid) { git_push } if push and fetch
+      as_uid(uid) { callback.after.call self } if callback.after
     end
   end
 end

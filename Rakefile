@@ -134,17 +134,12 @@ task :env do # {{{1
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {
-        :base => "#{@src}/vimperator-labs",
+        :base => "#{@src}/firefox/vimperator-labs",
         :branch => %w[master],
         :before => lambda { |proj|
           Dir.chdir proj.base do
-            begin
-              uid = File.stat('.').uid
-              system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
-              raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
-            ensure
-              chown_R uid, nil, proj.base, :verbose => false
-            end
+            system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
+            raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
           end if proj.fetch
         },
         :files => lambda { |proj|
@@ -161,8 +156,6 @@ task :env do # {{{1
       #   :push   => 'github',
       #   :before => lambda { |proj|
       #     Dir.chdir proj.base do
-      #       chown_R Process.euid, nil, '.git', :verbose => false
-
       #       # Update using git-hg bridge
       #       if proj.fetch
       #         system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
@@ -173,21 +166,15 @@ task :env do # {{{1
       #     end
       #   },
       #   :files  => lambda { |proj|
-      #     begin
-      #       uid = File.stat(proj.base).uid
-
-      #       Dir.chdir proj.base do
-      #         rm_rf ['vim/build', 'server/build'], :verbose => false
-      #         system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-      #         system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-      #         raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
-      #       end
-
-      #       system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
-      #       raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
-      #     ensure
-      #       chown_R uid, nil, proj.base, :verbose => false
+      #     Dir.chdir proj.base do
+      #       rm_rf ['vim/build', 'server/build'], :verbose => false
+      #       system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
+      #       system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
+      #       raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
       #     end
+
+      #     system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, 'etc/vim/bundle/vimclojure/']
+      #     raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
 
       #     nil # The work is done
       #   }
@@ -201,13 +188,8 @@ task :env do # {{{1
         :files  => :pathogen,
         :before => lambda { |proj|
           Dir.chdir proj.base do
-            begin
-              uid = File.stat('.').uid
-              system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
-              raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
-            ensure
-              chown_R uid, nil, proj.base, :verbose => false
-            end
+            system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
+            raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
           end if proj.fetch
         }
       },
@@ -224,17 +206,9 @@ task :env do # {{{1
         :before => lambda { |proj|
           Dir.chdir proj.base do
             begin
-              uid = File.stat('.').uid
-              system 'git checkout master &>/dev/null' or raise 'ManPageView checkout failed'
-              updated = system 'rake update &>/dev/null'
-              system 'git checkout guns &>/dev/null' or raise 'ManPageView checkout failed'
-              if updated
-                system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
-              end
-            rescue
-              raise 'ManPageView update failed!'
+              system '{ git checkout master && rake update && git checkout guns && git merge master -m "Merge master into guns"; } &>/dev/null'
+              system 'ManPageView update failed!' if not $?.exitstatus.zero?
             ensure
-              chown_R uid, nil, proj.base, :verbose => false
               rm_f Dir['.Vimball*'], :verbose => false
             end
           end if proj.fetch
