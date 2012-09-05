@@ -130,7 +130,6 @@ task :env do # {{{1
 
       {
         :base => "#{@src}/firefox/vimperator-labs",
-        :branch => %w[master],
         :before => lambda { |proj|
           if proj.fetch
             system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
