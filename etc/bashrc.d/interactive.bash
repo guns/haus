@@ -169,6 +169,7 @@ CD_FUNC cdSRC           /usr/local/src
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
+CD_FUNC cdmail          ~/Mail
 
 RC_FUNC rcd             /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 

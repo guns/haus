@@ -244,6 +244,7 @@ $if Bash
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
     "\C-x\C-_":     "\C-] cd - \n"
+    "\C-x\C-m":     "\C-] cdmail \n"
     "\C-x`":        "\C-]cdhome "
     "\C-xo":        "\C-]cdopt "
     "\C-xS":        "\C-]cdSRC "
