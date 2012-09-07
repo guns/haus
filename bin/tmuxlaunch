@@ -2,12 +2,13 @@
 #
 # Simple tmux wrapper
 
-SSH_SHELL=''
+WRAPPER=''
 
-while getopts :s OPT; do
+while getopts :gs OPT; do
     case $OPT in
-    s) SSH_SHELL='ssh-shell';;
-    *) echo >&2 "Usage: ${0##*/} [-s]"; exit 1
+    g) WRAPPER='gpg-shell';;
+    s) WRAPPER='ssh-shell';;
+    *) echo >&2 "Usage: ${0##*/} [-gs]"; exit 1
     esac
 done
 shift $((OPTIND-1))
@@ -16,7 +17,7 @@ if test -n "$TMUX"; then
     echo >&2 '$TMUX is already set!'
     exit 1
 elif tmux has-session &>/dev/null; then
-    exec $SSH_SHELL tmux attach
+    exec $WRAPPER tmux attach
 else
-    exec $SSH_SHELL tmux new
+    exec $WRAPPER tmux new
 fi

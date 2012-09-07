@@ -1,7 +1,7 @@
 #!/bin/sh
 
-if test -n "$SSH_AGENT_PID"; then
-    echo "SSH_AGENT_PID already set: $SSH_AGENT_PID"
+if test -n "$SSH_AUTH_SOCK"; then
+    echo "SSH_AUTH_SOCK already set: $SSH_AUTH_SOCK"
 elif test "$#" -gt 0; then
     run ssh-agent "$@"
 else
