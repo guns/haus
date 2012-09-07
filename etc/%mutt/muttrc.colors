@@ -1,0 +1,20 @@
+# color attachment
+# color body
+# color bold
+# color header
+color hdrdefault color244 black
+color index      color252 black ~R
+color index      color46  black ~N
+color index      color34  black ~O
+# color indicator
+# color markers
+# color message
+# color normal     color252 black
+# color quoted
+# color quotedN
+# color search
+# color signature
+# color status
+# color tilde
+color tree       color244 black
+# color underline
