@@ -8,3 +8,6 @@
 #    guns <self@sungpae.com>
 
 text/html; firefox -new-tab file://%s
+image/png; feh %s
+image/jpg; feh %s
+image/gif; qlmanage -p %s
