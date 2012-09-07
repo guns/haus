@@ -32,6 +32,8 @@ cnoremap <C-p> <Up>
 
 noremap j 7j
 noremap k 7k
+nmap <M-e> j
+nmap <M-y> k
 noremap b <C-u>
 noremap B b
 
