@@ -140,6 +140,10 @@ augroup GUNS
         \ SetWhitespace 4 8 |
         \ SetAutowrap 1
 
+    " Mutt {{{1
+    autocmd BufRead,BufNewFile ~/.mutt/*rc,/opt/haus/etc/%mutt/muttrc*
+        \ setlocal filetype=muttrc
+
     " Archive browsing {{{1
     autocmd BufReadCmd *.jar,*.xpi,*.pk3
         \ call zip#Browse(expand("<amatch>"))
