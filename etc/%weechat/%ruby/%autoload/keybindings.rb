@@ -19,6 +19,7 @@ include Script::Skeleton
 
 CHANNELS = %w[
   #vim
+  #mutt
   #clojure
   #leiningen
   #tmux
