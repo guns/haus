@@ -7,7 +7,9 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-text/html; firefox -new-tab file://%s
+text/html; lynx %s
 image/png; feh %s
 image/jpg; feh %s
+image/jpeg; feh %s
 image/gif; qlmanage -p %s
+application/octet-stream; hexdump -C %s | less
