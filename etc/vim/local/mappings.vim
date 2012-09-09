@@ -350,7 +350,7 @@ noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local
 noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
-noremap <Leader>eM       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/muttrc'))<CR>
+noremap <Leader>eM       :<C-u>execute 'TabOpen ' . substitute(resolve(expand('~/.mutt/muttrc')), '\V%', '\\\\\%', 'g')<CR>
 noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>er       :<C-u>TabOpen /etc/rc.conf<CR>
