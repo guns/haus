@@ -1,20 +1,39 @@
-# color attachment
-# color body
+set my_norm=color253
+set my_bg=color233
+set my_comm=color244
+
+color status     color218 color234
+color search     black    color96
+
+### Index
+color index      $my_norm $my_bg  ~R
+color index      color47  $my_bg  ~U
+color index      color52  $my_bg  ~D
+color index      black    color96 ~T
+color index      $my_norm color17 ~F
+color tree       color218 $my_bg
+
+### Message
+color message    color252 black
+color attachment color218 color234
+color hdrdefault $my_comm black
+color signature  $my_comm black
+color quoted0    $my_comm black
+color quoted1    color182 black
+color quoted2    $my_comm black
+color quoted3    color182 black
+color quoted4    $my_comm black
+color quoted5    color182 black
+color quoted6    $my_comm black
+color quoted7    color182 black
+
+color header     color150 black '^From:'
+color header     color150 black '^Subject:'
+
+# color normal
 # color bold
 # color header
-color hdrdefault color244 black
-color index      color252 black ~R
-color index      color46  black ~N
-color index      color34  black ~O
 # color indicator
 # color markers
-# color message
-# color normal     color252 black
-# color quoted
-# color quotedN
-# color search
-# color signature
-# color status
 # color tilde
-color tree       color244 black
 # color underline

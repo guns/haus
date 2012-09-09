@@ -34,7 +34,7 @@ source $alias_file
 set my_list=index,attach,browser,alias,postpone,pgp
 
 # Meta
-macro $my_list,pager \Cx\Cr ":source ~/.mutt/muttrc<Enter>"
+macro $my_list,pager \Cx\Cr "<enter-command>source ~/.mutt/muttrc<Enter>"
 
 # Go ->
 macro $my_list,pager gg <Home>
@@ -68,21 +68,30 @@ macro index,pager    [       <previous-unread><current-middle>
 bind  $my_list,pager \\      search
 
 # Actions
-bind index,pager c   mail
-bind index       m   toggle-new
-bind index,pager S   sync-mailbox
-bind index,pager R   group-reply
-bind index,pager p   recall-message
-bind index,pager B   bounce-message
-bind index,pager E   edit
-bind index,pager F   forward-message
+bind  index,pager c    mail
+macro index,pager m    <set-flag>N
+macro index,pager M    <clear-flag>N
+bind  index,pager S    sync-mailbox
+bind  index,pager R    group-reply
+bind  index,pager p    recall-message
+bind  index,pager B    bounce-message
+bind  index,pager E    edit
+bind  index,pager F    forward-message
+bind  index,pager \es  flag-message
+macro index,pager \Cxr '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
+macro index,pager \Cxq '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
 
-# Index views
-set my_index_format_a="%2C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
-set my_index_format_b="%2C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%I:%M%p %d/%b/%Y]"
+# Index macros
+set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
+set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
 set index_format="$my_index_format_a"
 macro index \e\g1 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\g2<enter>"
 macro index \e\g2 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\g1<enter>"
 macro index i     \e\g1
+
+# Message macros
+macro pager \e\g3 "<enter-command>set wrap=0 <enter><enter-command>macro pager w \\e\\g4<enter>"
+macro pager \e\g4 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\g3<enter>"
+macro pager w     \e\g3
 
 push <current-middle>

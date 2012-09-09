@@ -78,7 +78,7 @@ attachments   -I message/external-body
 ##
 
 
-set abort_nosubject=yes
+set abort_nosubject=no
 #
 # Name: abort_nosubject
 # Type: quadoption
@@ -509,7 +509,7 @@ set certificate_file="~/.certificates/cabundle.pem"
 # unread messages.
 #
 
-# set compose_format="-- Mutt: Compose  [Approx. msg size: %l   Atts: %a]%>-"
+set compose_format="❦ %a attached, %l%* ❦"
 #
 # Name: compose_format
 # Type: string
@@ -604,7 +604,7 @@ set certificate_file="~/.certificates/cabundle.pem"
 # $save_name, $force_name and ``fcc-hook''.
 #
 
-# set crypt_autoencrypt=no
+set crypt_autoencrypt=yes
 #
 # Name: crypt_autoencrypt
 # Type: boolean
@@ -2001,7 +2001,7 @@ set menu_scroll=yes
 # if 0, the match will be top-aligned.
 #
 
-# set pager_format="-%Z- %C/%m: %-20.20n   %s%*  -- (%P)"
+set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
 #
 # Name: pager_format
 # Type: string
@@ -3855,7 +3855,7 @@ set ssl_usesystemcerts=no
 # the <account-hook> function.
 #
 
-# set status_chars="-*%A"
+set status_chars="-+%A"
 #
 # Name: status_chars
 # Type: string
@@ -3874,7 +3874,7 @@ set ssl_usesystemcerts=no
 # forwarding, etc. are not permitted in this mode).
 #
 
-# set status_format="-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?l? %l?]---(%s/%S)-%>-(%P)---"
+set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%F Flagged · ?%?t?%t Tagged · ?%u/%M %L]%?V? ★ Limit: %V ?%> %P"
 #
 # Name: status_format
 # Type: string
@@ -4253,7 +4253,7 @@ set user_agent=no
 # given in the built-in editor.
 #
 
-# set wait_key=yes
+set wait_key=no
 #
 # Name: wait_key
 # Type: boolean
