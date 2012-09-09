@@ -1,6 +1,3 @@
-# Mailboxes
-mailboxes `echo ~/Mail/*`
-
 #
 # System configuration file for Mutt
 #
@@ -1027,7 +1024,7 @@ set fast_reply=yes
 # (PGP only)
 #
 
-# set folder="~/Mail"
+set folder="~/Mail/Local"
 #
 # Name: folder
 # Type: path
@@ -1742,7 +1739,7 @@ set markers=no
 # will be shown. The match is always case-sensitive.
 #
 
-set mbox="~/Mail/Archive"
+set mbox="$folder/Archive"
 #
 # Name: mbox
 # Type: path
@@ -2575,7 +2572,7 @@ set pager_stop=yes
 # Also see the $recall variable.
 #
 
-set postponed="~/Mail/Drafts"
+set postponed="$folder/Drafts"
 #
 # Name: postponed
 # Type: path
@@ -2814,7 +2811,7 @@ set realname="Sung Pae"
 # Also see $postponed variable.
 #
 
-set record="~/Mail/SentLocal"
+set record="$folder/Outgoing"
 #
 # Name: record
 # Type: path
@@ -3734,7 +3731,7 @@ set sort_aux=last-date-received
 # separator.
 #
 
-set spoolfile="~/Mail/INBOX"
+set spoolfile="$folder/INBOX"
 #
 # Name: spoolfile
 # Type: path

@@ -17,6 +17,12 @@ source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
 source $alias_file
 
+# SMTP authentication
+send-hook ~A 'set smtp_pass="`gpg --decrypt ~/.mutt/smtp_pass`"'
+
+# Mailboxes
+mailboxes `echo $folder/*`
+
 # Major modes
 #   index:    list the eMails of an openend folder, it's the main mode.
 #   pager:    display a selected e-mail.
@@ -34,16 +40,19 @@ source $alias_file
 set my_list=index,attach,browser,alias,postpone,pgp
 
 # Meta
-macro $my_list,pager \Cx\Cr "<enter-command>source ~/.mutt/muttrc<Enter>"
+macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
+macro $my_list,pager \Cxf   '<enter-command>set smtp_pass=<enter><forget-passphrase>'
+macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
+macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
 
 # Go ->
 macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
 macro $my_list,pager gi "<change-folder>push =INBOX<Enter>"
 macro $my_list,pager ga "<change-folder>push =Archive<Enter>"
-macro $my_list,pager gs "<change-folder>push =Sent<Enter>"
-macro $my_list,pager gt "<change-folder>push =Trash<Enter>"
-macro $my_list,pager gj "<change-folder>push =Junk<Enter>"
+macro $my_list,pager gs "<change-folder>push =SENT<Enter>"
+macro $my_list,pager gt "<change-folder>push =TRASH<Enter>"
+macro $my_list,pager gj "<change-folder>push =JUNK<Enter>"
 macro $my_list,pager gl "<change-folder>push ="
 
 # Movement
@@ -78,8 +87,6 @@ bind  index,pager B    bounce-message
 bind  index,pager E    edit
 bind  index,pager F    forward-message
 bind  index,pager \es  flag-message
-macro index,pager \Cxr '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
-macro index,pager \Cxq '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
 
 # Index macros
 set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
