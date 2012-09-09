@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+
+class Postsynchook
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.imapfolder ||= File.expand_path '~/Mail/self@sungpae.com'
+    options.localfolder ||= File.expand_path '~/Mail/Local'
+    options.filter ||= /\A\[Gmail\]|\AINBOX\z/
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-i', '--imapfolder PATH', '[DEFAULT: %s]' % options.imapfolder do |arg|
+        options.imapfolder = File.expand_path arg
+      end
+
+      opt.on '-l', '--localfolder PATH', '[DEFAULT: %s]' % options.localfolder do |arg|
+        options.localfolder = File.expand_path arg
+      end
+
+      opt.on '-f', '--filter REGEXP', Regexp, '[DEFAULT: %s]' % options.filter do |arg|
+        options.filter = arg
+      end
+    end
+  end
+
+  def syncfolders
+    Dir['%s/*' % options.imapfolder].select do |f|
+      File.directory? f and File.basename(f) !~ options.filter
+    end
+  end
+
+  def sync!
+    removed = []
+    syncfolders.each do |src|
+      dst = File.join options.localfolder, File.basename(src)
+      system 'rsync', '-a', "#{src}/", "#{dst}/"
+      if $?.exitstatus.zero?
+        removed.concat FileUtils.rm_f(Dir['%s/**/*' % src].select { |f| File.file? f })
+      end
+    end
+    removed
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.any?
+    puts 'Moved %d messages(s)' % sync!.size
+  end
+end
+
+$0 = File.basename(__FILE__) and Postsynchook.new.run ARGV if $0 == __FILE__
