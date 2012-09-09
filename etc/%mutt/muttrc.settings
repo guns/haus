@@ -1,3 +1,6 @@
+# Mailboxes
+mailboxes `echo ~/Mail/*`
+
 #
 # System configuration file for Mutt
 #
@@ -11,29 +14,6 @@ unignore from: subject to cc date x-mailer x-url user-agent
 
 # Display the fields in this order
 hdr_order date from to cc subject
-
-# imitate the old search-body function
-macro index \eb "<search>~b " "search in message bodies"
-
-# simulate the old url menu
-macro index,pager,attach,compose \cb "\
-<enter-command> set my_pipe_decode=\$pipe_decode pipe_decode<Enter>\
-<pipe-message> urlview<Enter>\
-<enter-command> set pipe_decode=\$my_pipe_decode; unset my_pipe_decode<Enter>" \
-"call urlview to extract URLs out of a message"
-
-# show the incoming mailboxes list (just like "mutt -y") and back when pressing "y"
-macro index,pager y "<change-folder>?<toggle-mailboxes>" "show incoming mailboxes list"
-bind browser y exit
-
-# If Mutt is unable to determine your site's domain name correctly, you can
-# set the default here.
-
-# set hostname=cs.hmc.edu
-
-# If your sendmail supports the -B8BITMIME flag, enable the following
-
-# set use_8bitmime
 
 # Use mime.types to look up handlers for application/octet-stream. Can
 # be undone with unmime_lookup.
@@ -1119,7 +1099,7 @@ set fast_reply=yes
 # of the same email for you.
 #
 
-set force_name=yes
+# set force_name=no
 #
 # Name: force_name
 # Type: boolean
@@ -1528,7 +1508,7 @@ set include=yes
 # $index_format for supported printf(3)-style sequences.
 #
 
-set index_format="%4C %Z %{%d/%b/%y} %-15.15L (%X) %s"
+# set index_format="%4C %Z %{%H:%M %d/%b/%y} %-15.15L (%X) %s"
 #
 # Name: index_format
 # Type: string
@@ -2054,7 +2034,7 @@ set menu_scroll=yes
 # many lines as it needs.
 #
 
-# set pager_stop=no
+set pager_stop=yes
 #
 # Name: pager_stop
 # Type: boolean
@@ -2834,7 +2814,7 @@ set realname="Sung Pae"
 # Also see $postponed variable.
 #
 
-set record="~/Mail/Sent"
+set record="~/Mail/SentLocal"
 #
 # Name: record
 # Type: path
@@ -3639,7 +3619,7 @@ set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587"
 # variable.
 #
 
-set sort=reverse-threads
+set sort=threads
 #
 # Name: sort
 # Type: sort order
@@ -3670,7 +3650,7 @@ set sort=reverse-threads
 # Type: sort order
 # Default: alias
 #
-#
+
 # Specifies how the entries in the ``alias'' menu are sorted.  The
 # following are legal values:
 # - address (sort alphabetically by email address)

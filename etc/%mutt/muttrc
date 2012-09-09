@@ -13,19 +13,76 @@
 #      "~'    "~        ""
 #                                 guns <self@sungpae.com>
 
-# Mailboxes
-mailboxes `echo ~/Mail/*`
-
-### Bindings
-
-# Reload
-macro generic \Cx\Cr ":source ~/.mutt/muttrc<enter>"
-
-# Go ->
-# bind index gg
-macro index gi cINBOX<enter>
-# bind index G
-
-# More settings
 source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
+source $alias_file
+
+# Major modes
+#   index:    list the eMails of an openend folder, it's the main mode.
+#   pager:    display a selected e-mail.
+#   attach:   list the parts of MIME attachments.
+#   compose:  set up a new eMail to be sent out.
+#   browser:  directory listing when searching for folder to change to.
+# Sub modes
+#   alias:    list aliases (in mutt, your collection of aliases is your address book) to choose from.
+#   query:    often used to reference a database, a common protocol being LDAP.
+#   postpone: list of postpones e-mails to select which one to continue.
+#   pgp:      list of PGP or GnuPG? keys, depending on your configuration.
+#   editor:   the input line when you are supposed to enter some text.
+# cf. http://wiki.mutt.org/?MuttGuide/Actions
+
+set my_list=index,attach,browser,alias,postpone,pgp
+
+# Meta
+macro $my_list,pager \Cx\Cr ":source ~/.mutt/muttrc<Enter>"
+
+# Go ->
+macro $my_list,pager gg <Home>
+macro $my_list,pager G  <End>
+macro $my_list,pager gi "<change-folder>push =INBOX<Enter>"
+macro $my_list,pager ga "<change-folder>push =Archive<Enter>"
+macro $my_list,pager gs "<change-folder>push =Sent<Enter>"
+macro $my_list,pager gt "<change-folder>push =Trash<Enter>"
+macro $my_list,pager gj "<change-folder>push =Junk<Enter>"
+macro $my_list,pager gl "<change-folder>push ="
+
+# Movement
+macro $my_list,pager \Cf     <next-page><middle-page>
+macro $my_list,pager f       <next-page><middle-page>
+macro $my_list,pager <Space> <next-page><middle-page>
+macro $my_list,pager \Cb     <previous-page><middle-page>
+macro $my_list,pager b       <previous-page><middle-page>
+macro $my_list,pager b       <previous-page><middle-page>
+bind  $my_list,pager e       next-line
+bind  $my_list,pager \e\ge   next-line
+bind  $my_list,pager y       previous-line
+bind  $my_list,pager \e\gy   previous-line
+bind  $my_list,pager n       search-next
+bind  $my_list,pager N       search-opposite
+bind  $my_list       zt      current-top
+bind  $my_list       zz      current-middle
+bind  $my_list       zb      current-bottom
+macro $my_list,pager <Tab>   <next-unread><current-middle>
+macro index,pager    ]       <next-unread><current-middle>
+macro index,pager    [       <previous-unread><current-middle>
+bind  $my_list,pager \\      search
+
+# Actions
+bind index,pager c   mail
+bind index       m   toggle-new
+bind index,pager S   sync-mailbox
+bind index,pager R   group-reply
+bind index,pager p   recall-message
+bind index,pager B   bounce-message
+bind index,pager E   edit
+bind index,pager F   forward-message
+
+# Index views
+set my_index_format_a="%2C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
+set my_index_format_b="%2C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%I:%M%p %d/%b/%Y]"
+set index_format="$my_index_format_a"
+macro index \e\g1 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\g2<enter>"
+macro index \e\g2 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\g1<enter>"
+macro index i     \e\g1
+
+push <current-middle>
