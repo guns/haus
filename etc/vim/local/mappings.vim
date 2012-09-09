@@ -562,8 +562,8 @@ nmap <Leader><C-_> viw<Plug>(operator-camelize-toggle)
 vmap <Leader><C-_> <Plug>(operator-camelize-toggle)
 
 " Plugin: CtrlP
-Mapall <4-o> :<C-u>CtrlPMixed<CR>
-Mapall <4-t> :<C-u>tabnew \\\| CtrlPMixed<CR>
+Mapall <4-o> :<C-u>CtrlP<CR>
+Mapall <4-t> :<C-u>tabnew \\\| CtrlP<CR>
 Mapall <4-'> :<C-u>CtrlPBufTag<CR>
 Mapall <4-\"> :<C-u>CtrlPTag<CR>
 Mapall <4-b> :<C-u>CtrlPBuffer<CR>
