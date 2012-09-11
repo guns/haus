@@ -1291,6 +1291,9 @@ ALIAS ssl='openssl' && {
     }
 }
 
+# GnuPG
+ALIAS gpg='gpg --no-encrypt-to'
+
 HAVE cryptsetup cs && TCOMP cryptsetup cs
 ALIAS dx='dumpcert exec --'
 
