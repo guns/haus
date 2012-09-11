@@ -13,59 +13,60 @@
 #      "~'    "~        ""
 #                                 guns <self@sungpae.com>
 
+# Mailboxes
+mailboxes `echo ~/Mail/Local/*`
+
+# Configuration files
 source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
 source $alias_file
 
-# SMTP authentication
-send-hook ~A 'set smtp_pass="`gpg --decrypt ~/.mutt/smtp_pass`"'
-
-# Mailboxes
-mailboxes `echo $folder/*`
+# Hooks
+folder-hook . 'set record="^"' # Save sent mail to current folder
 
 # Major modes
-#   index:    list the eMails of an openend folder, it's the main mode.
-#   pager:    display a selected e-mail.
-#   attach:   list the parts of MIME attachments.
-#   compose:  set up a new eMail to be sent out.
-#   browser:  directory listing when searching for folder to change to.
+#   index:    List the eMails of an openend folder, it's the main mode.
+#   pager:    Display a selected e-mail.
+#   attach:   List the parts of MIME attachments.
+#   compose:  Set up a new eMail to be sent out.
+#   browser:  Directory listing when searching for folder to change to.
 # Sub modes
-#   alias:    list aliases (in mutt, your collection of aliases is your address book) to choose from.
-#   query:    often used to reference a database, a common protocol being LDAP.
-#   postpone: list of postpones e-mails to select which one to continue.
-#   pgp:      list of PGP or GnuPG? keys, depending on your configuration.
-#   editor:   the input line when you are supposed to enter some text.
+#   alias:    List aliases (in mutt, your collection of aliases is your address book) to choose from.
+#   query:    Often used to reference a database, a common protocol being LDAP.
+#   postpone: List of postpones e-mails to select which one to continue.
+#   pgp:      List of PGP or GnuPG? keys, depending on your configuration.
+#   editor:   The input line when you are supposed to enter some text.
 # cf. http://wiki.mutt.org/?MuttGuide/Actions
 
 set my_list=index,attach,browser,alias,postpone,pgp
 
 # Meta
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
-macro $my_list,pager \Cxf   '<enter-command>set smtp_pass=<enter><forget-passphrase>'
 macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
+macro $my_list,pager \Cxs   '<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/smtp_pass`"<enter><refresh>'
+macro $my_list,pager \Cxf   '<enter-command>set smtp_pass=<enter><forget-passphrase>'
 
 # Go ->
 macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
 macro $my_list,pager gi "<change-folder>push =INBOX<Enter>"
 macro $my_list,pager ga "<change-folder>push =Archive<Enter>"
-macro $my_list,pager gs "<change-folder>push =SENT<Enter>"
-macro $my_list,pager gt "<change-folder>push =TRASH<Enter>"
-macro $my_list,pager gj "<change-folder>push =JUNK<Enter>"
-macro $my_list,pager gl "<change-folder>push ="
+macro $my_list,pager gj "<change-folder>push =[Gmail].Spam<Enter>"
+macro $my_list,pager gt "<change-folder>push =[Gmail].Trash<Enter>"
+macro $my_list,pager \' "<change-folder>?<toggle-mailboxes>"
+bind  browser        \' exit
 
 # Movement
+macro $my_list,pager <Space> <next-page><middle-page>
 macro $my_list,pager \Cf     <next-page><middle-page>
 macro $my_list,pager f       <next-page><middle-page>
-macro $my_list,pager <Space> <next-page><middle-page>
 macro $my_list,pager \Cb     <previous-page><middle-page>
 macro $my_list,pager b       <previous-page><middle-page>
-macro $my_list,pager b       <previous-page><middle-page>
 bind  $my_list,pager e       next-line
-bind  $my_list,pager \e\ge   next-line
+bind  $my_list,pager \e\007e half-down
 bind  $my_list,pager y       previous-line
-bind  $my_list,pager \e\gy   previous-line
+bind  $my_list,pager \e\007y half-up
 bind  $my_list,pager n       search-next
 bind  $my_list,pager N       search-opposite
 bind  $my_list       zt      current-top
@@ -77,28 +78,35 @@ macro index,pager    [       <previous-unread><current-middle>
 bind  $my_list,pager \\      search
 
 # Actions
-bind  index,pager c    mail
-macro index,pager m    <set-flag>N
-macro index,pager M    <clear-flag>N
-bind  index,pager S    sync-mailbox
-bind  index,pager R    group-reply
-bind  index,pager p    recall-message
-bind  index,pager B    bounce-message
-bind  index,pager E    edit
-bind  index,pager F    forward-message
-bind  index,pager \es  flag-message
+bind  index,pager c       mail
+macro index,pager m       <set-flag>N
+macro index,pager M       <clear-flag>N
+bind  index,pager S       sync-mailbox
+bind  index,pager R       group-reply
+bind  index,pager p       recall-message
+bind  index,pager B       bounce-message
+bind  index,pager E       edit
+bind  index,pager F       forward-message
+bind  index,pager \es     flag-message
+macro index,pager a       <save-entry>=Archive<enter>
+bind  index,pager A       create-alias
+macro index       \e\007a <tag-pattern>.<enter>
+macro index       \e\007t <tag-pattern>.<enter>
+macro index       \e\007T <untag-pattern>.<enter>
+macro index       =       <limit>~=<enter>
+macro index       \e\007L <limit>all<enter>
 
 # Index macros
-set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
-set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
+set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
+set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
 set index_format="$my_index_format_a"
-macro index \e\g1 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\g2<enter>"
-macro index \e\g2 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\g1<enter>"
-macro index i     \e\g1
+macro index \e\0071 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\0072<enter>"
+macro index \e\0072 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\0071<enter>"
+macro index i       \e\0071
 
 # Message macros
-macro pager \e\g3 "<enter-command>set wrap=0 <enter><enter-command>macro pager w \\e\\g4<enter>"
-macro pager \e\g4 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\g3<enter>"
-macro pager w     \e\g3
+macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager w \\e\\0074<enter>"
+macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
+macro pager w       \e\0073
 
 push <current-middle>

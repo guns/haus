@@ -326,7 +326,7 @@ set assumed_charset="utf-8"
 # the section on $index_format.
 #
 
-# set auto_tag=no
+set auto_tag=yes
 #
 # Name: auto_tag
 # Type: boolean
@@ -506,7 +506,7 @@ set certificate_file="~/.certificates/cabundle.pem"
 # unread messages.
 #
 
-set compose_format="❦ %a attached, %l%* ❦"
+set compose_format="❦ %a attached, %l%* ❦"
 #
 # Name: compose_format
 # Type: string
@@ -601,7 +601,7 @@ set compose_format="❦ %a attached, %l%* ❦"
 # $save_name, $force_name and ``fcc-hook''.
 #
 
-set crypt_autoencrypt=yes
+# set crypt_autoencrypt=no
 #
 # Name: crypt_autoencrypt
 # Type: boolean
@@ -647,7 +647,7 @@ set crypt_autoencrypt=yes
 # (Crypto only)
 #
 
-# set crypt_autosmime=yes
+set crypt_autosmime=no
 #
 # Name: crypt_autosmime
 # Type: boolean
@@ -1172,7 +1172,7 @@ set folder="~/Mail/Local"
 # $indent_string.
 #
 
-# set from=""
+set from="Sung Pae <self@sungpae.com>"
 #
 # Name: from
 # Type: e-mail address
@@ -1231,7 +1231,7 @@ set folder="~/Mail/Local"
 # The $weed setting applies.
 #
 
-set header_cache="~/.mutt/cache"
+set header_cache="~/.mutt/cache/"
 #
 # Name: header_cache
 # Type: path
@@ -1505,7 +1505,7 @@ set include=yes
 # $index_format for supported printf(3)-style sequences.
 #
 
-# set index_format="%4C %Z %{%H:%M %d/%b/%y} %-15.15L (%X) %s"
+# set index_format="%4C %Z %{%b %d} %-15.15L (%?l?%4l&%4c?) %s"
 #
 # Name: index_format
 # Type: string
@@ -1998,7 +1998,7 @@ set menu_scroll=yes
 # if 0, the match will be top-aligned.
 #
 
-set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
+set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
 #
 # Name: pager_format
 # Type: string
@@ -2811,7 +2811,7 @@ set realname="Sung Pae"
 # Also see $postponed variable.
 #
 
-set record="$folder/Outgoing"
+# set record="$folder/INBOX"
 #
 # Name: record
 # Type: path
@@ -3871,7 +3871,7 @@ set status_chars="-+%A"
 # forwarding, etc. are not permitted in this mode).
 #
 
-set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%F Flagged · ?%?t?%t Tagged · ?%u/%M %L]%?V? ★ Limit: %V ?%> %P"
+set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%F Flagged · ?%?t?%t Tagged · ?%u/%M %L]%?V? ★ Limit: %V ?%> %P"
 #
 # Name: status_format
 # Type: string
