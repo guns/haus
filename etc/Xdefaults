@@ -14,7 +14,7 @@
 *geometry:        80x44
 *loginShell:      on
 *ptySttySize:     on
-*saveLines:       1024
+*saveLines:       1023
 *scrollBar:       off
 *scrollBar_right: on
 *visualBell:      on

@@ -28,7 +28,7 @@ source ~/.vim/local/commands.vim
 """ USER INTERFACE {{{1
 
 " Meta
-set history=1024                " Default command history = 20
+set history=1023                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 
 " Swap and undo files

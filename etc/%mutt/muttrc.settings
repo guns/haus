@@ -3015,7 +3015,7 @@ set reply_to=yes
 # delete MH and Maildir directories.
 #
 
-# set save_history=0
+set save_history=1023
 #
 # Name: save_history
 # Type: number

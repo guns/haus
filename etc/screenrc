@@ -11,7 +11,7 @@
 
 altscreen on            # allows alternate buffers for pagers, etc.
 autodetach on           # detach on signal hangup, instead of killing sessions
-defscrollback 1024      # define a bigger scrollback, default is 100 lines
+defscrollback 1023      # define a bigger scrollback, default is 100 lines
 defutf8 on              # utf-8 + rxvt-unicode == <3
 msgwait 2.0             # message duration
 nethack on              # Help! I'm trapped in a fortune cookie factory!
