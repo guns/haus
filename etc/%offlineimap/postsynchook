@@ -8,6 +8,7 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
+require 'shellwords'
 
 class Postsynchook
   attr_reader :options
@@ -16,13 +17,15 @@ class Postsynchook
     @options = OpenStruct.new opts
     options.imapfolder ||= File.expand_path '~/Mail/self@sungpae.com'
     options.localfolder ||= File.expand_path '~/Mail/Local'
-    options.filter ||= /\A\[Gmail\]|\AINBOX\z/
+    options.spoolfolder ||= File.join options.localfolder, 'INBOX'
+    options.filter ||= /\AINBOX\z/
+    options.audio ||= File.expand_path '~/.sounds/New_Message.m4a'
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options]
+        Usage: #{File.basename __FILE__} [options] [sync|notify]
 
         Options:
       BANNER
@@ -35,14 +38,22 @@ class Postsynchook
         options.localfolder = File.expand_path arg
       end
 
+      opt.on '-s', '--spoolfolder PATH', '[DEFAULT: %s]' do |arg|
+        options.spoolfolder = File.expand_path arg
+      end
+
       opt.on '-f', '--filter REGEXP', Regexp, '[DEFAULT: %s]' % options.filter do |arg|
         options.filter = arg
+      end
+
+      opt.on '-a', '--audio FILE', '[DEFAULT: %s]' % options.audio do |arg|
+        options.audio = File.expand_path arg
       end
     end
   end
 
   def syncfolders
-    Dir['%s/*' % options.imapfolder].select do |f|
+    Dir['%s/*' % options.imapfolder.shellescape].select do |f|
       File.directory? f and File.basename(f) !~ options.filter
     end
   end
@@ -53,16 +64,47 @@ class Postsynchook
       dst = File.join options.localfolder, File.basename(src)
       system 'rsync', '-a', "#{src}/", "#{dst}/"
       if $?.exitstatus.zero?
-        removed.concat FileUtils.rm_f(Dir['%s/**/*' % src].select { |f| File.file? f })
+        removed.concat FileUtils.rm_f(Dir['%s/**/*' % src.shellescape].select { |f| File.file? f })
       end
     end
+    system 'notmuch', 'new'
     removed
+  end
+
+  def notify!
+    time = File.mtime options.spoolfolder
+    new = Dir['%s/new/*' % options.spoolfolder.shellescape].select { |f| File.mtime(f) > time }
+
+    system 'notify', '--audio=%s' % options.audio, "%d new message%s from:\n%s" % [
+      new.size,
+      ('s' unless new.size == 1),
+      new.reduce([]) { |s,f| s << File.read(f)[/^From: (.*)\n/, 1] }.uniq.join("\n")
+    ] if new.any?
+
+    FileUtils.touch options.spoolfolder
+    new
   end
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help if args.any?
-    puts 'Moved %d messages(s)' % sync!.size
+    ts = []
+    moved = 0
+    new = 0
+
+    case args.first
+    when 'sync'
+      ts << Thread.new { moved = sync!.size }
+    when 'notify'
+      ts << Thread.new { new = notify!.size }
+    when nil
+      ts << Thread.new { moved = sync!.size }
+      ts << Thread.new { new = notify!.size }
+    else
+      abort parser.help
+    end
+
+    ts.each &:join
+    puts '%d new, %d moved' % [new, moved]
   end
 end
 
