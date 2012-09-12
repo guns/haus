@@ -566,8 +566,8 @@ Mapall <4-o> :<C-u>CtrlP<CR>
 Mapall <4-t> :<C-u>tabnew \\\| CtrlP<CR>
 Mapall <4-'> :<C-u>CtrlPBufTag<CR>
 Mapall <4-\"> :<C-u>CtrlPTag<CR>
-Mapall <4-b> :<C-u>CtrlPBuffer<CR>
-Mapall <4-B> :<C-u>tabnew \\\| CtrlPBuffer<CR>
+Mapall <4-b> :<C-u>CtrlPMRU<CR>
+Mapall <4-B> :<C-u>tabnew \\\| CtrlPMRU<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
