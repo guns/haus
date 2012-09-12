@@ -1039,7 +1039,7 @@ set folder="~/Mail/Local"
 # when handling the ``mailboxes'' command.
 #
 
-# set folder_format="%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f"
+set folder_format="%2C %t %4N %F %2l %-8.8u %-8.8g %8s %d %f"
 #
 # Name: folder_format
 # Type: string
@@ -1172,7 +1172,7 @@ set folder="~/Mail/Local"
 # $indent_string.
 #
 
-set from="Sung Pae <self@sungpae.com>"
+# set from=""
 #
 # Name: from
 # Type: e-mail address
@@ -1700,7 +1700,7 @@ set mailcap_path="~/.mailcap"
 # mailbox types.
 #
 
-# set mark_old=yes
+set mark_old=no
 #
 # Name: mark_old
 # Type: boolean
@@ -2780,7 +2780,7 @@ set postponed="$folder/Drafts"
 # If set, all folders are opened in read-only mode.
 #
 
-set realname="Sung Pae"
+# set realname=""
 #
 # Name: realname
 # Type: string
@@ -3600,7 +3600,7 @@ set signature="~/.mutt/signature"
 # if you are the only one who can read the file.
 #
 
-set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587"
+# set smtp_url=""
 #
 # Name: smtp_url
 # Type: string
@@ -3681,7 +3681,7 @@ set sort_aux=last-date-received
 # but kept to not break any existing configuration setting).
 #
 
-# set sort_browser=alpha
+set sort_browser=reverse-date
 #
 # Name: sort_browser
 # Type: sort order

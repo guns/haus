@@ -13,16 +13,42 @@
 #      "~'    "~        ""
 #                                 guns <self@sungpae.com>
 
-# Mailboxes
-mailboxes `echo ~/Mail/Local/*`
-
 # Configuration files
 source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
 source $alias_file
 
+# Mailboxes
+mailboxes `echo ~/Mail/Local/*` ~/.mutt/notmuch/results
+
+# Mailing lists
+lists arch-announce@arch-linux.org \
+      arch-dev-public@arch-linux.org \
+      bash-completion-devel@lists.alioth.debian.org \
+      bug-bash@gnu.org \
+      bugtraq@securityfocus.com \
+      clojure@googlegroups.com \
+      clojure-hackers@googlegroups.com \
+      clojure-tools@googlegroups.com \
+      dnsmasq-discuss@lists.thekelleys.org.uk \
+      full-disclosure@lists.grok.org.uk \
+      mutt-dev@mutt.org \
+      mutt-users@mutt.org \
+      observatory@eff.org \
+      oss-security@lists.openwall.com \
+      ruby-core@ruby-lang.org \
+      ruby-talk@ruby-lang.org \
+      rubyonrails-security@googlegroups.com \
+      rxvt-unicode@lists.schmorp.de \
+      tmux-users@lists.sourceforge.net \
+      vim_dev@googlegroups.com \
+      vim_use@googlegroups.com \
+      vimclojure@googlegroups.com \
+      x11-users@lists.apple.com
+
 # Hooks
 folder-hook . 'set record="^"' # Save sent mail to current folder
+folder-hook . 'push <current-middle><refresh>'
 
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
@@ -44,18 +70,19 @@ set my_list=index,attach,browser,alias,postpone,pgp
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
-macro $my_list,pager \Cxs   '<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/smtp_pass`"<enter><refresh>'
-macro $my_list,pager \Cxf   '<enter-command>set smtp_pass=<enter><forget-passphrase>'
 
 # Go ->
 macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
-macro $my_list,pager gi "<change-folder>push =INBOX<Enter>"
-macro $my_list,pager ga "<change-folder>push =Archive<Enter>"
-macro $my_list,pager gj "<change-folder>push =[Gmail].Spam<Enter>"
-macro $my_list,pager gt "<change-folder>push =[Gmail].Trash<Enter>"
-macro $my_list,pager \' "<change-folder>?<toggle-mailboxes>"
+macro index,pager    gi <change-folder>=INBOX<Enter>
+macro index,pager    ga <change-folder>=Archive<Enter>
+macro index,pager    gm <change-folder>=Metablu<Enter>
+macro index,pager    gj <change-folder>=[Gmail].Spam<Enter>
+macro index,pager    gt <change-folder>=[Gmail].Trash<Enter>
+macro index,pager    \' <change-folder>?<toggle-mailboxes>
 bind  browser        \' exit
+macro index          q  <change-folder>?<toggle-mailboxes>
+macro browser        q  <exit><quit>
 
 # Movement
 macro $my_list,pager <Space> <next-page><middle-page>
@@ -72,7 +99,7 @@ bind  $my_list,pager N       search-opposite
 bind  $my_list       zt      current-top
 bind  $my_list       zz      current-middle
 bind  $my_list       zb      current-bottom
-macro $my_list,pager <Tab>   <next-unread><current-middle>
+macro index,pager    <Tab>   <next-unread><current-middle>
 macro index,pager    ]       <next-unread><current-middle>
 macro index,pager    [       <previous-unread><current-middle>
 bind  $my_list,pager \\      search
@@ -109,4 +136,21 @@ macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager
 macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
 macro pager w       \e\0073
 
-push <current-middle>
+# notmuch-mutt.rb macros
+macro index,pager gf      <change-folder-readonly>~/.mutt/notmuch/results<enter>
+macro index,pager \e\007f "<shell-escape>notmuch-mutt.rb search<enter>gf"
+
+# Identities
+macro $my_list,pager \Cx0 '\
+<enter-command>unset from<enter>\
+<enter-command>unset smtp_url<enter>\
+<enter-command>unset smtp_pass<enter>\
+<forget-passphrase>'
+macro $my_list,pager \Cx1 '\
+<enter-command>set from="Sung Pae <self@sungpae.com>"<enter>\
+<enter-command>set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587"<enter>\
+<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/self@sungpae.com`"<enter>'
+macro $my_list,pager \Cx2 '\
+<enter-command>set from="Sung Pae <sungpae@gmail.com>"<enter>\
+<enter-command>set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587"<enter>\
+<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"<enter>'
