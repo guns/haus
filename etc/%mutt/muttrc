@@ -70,6 +70,7 @@ set my_list=index,attach,browser,alias,postpone,pgp
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
+bind  $my_list,pager \;     enter-command
 
 # Go ->
 macro $my_list,pager gg <Home>
@@ -122,6 +123,7 @@ macro index       \e\007t <tag-pattern>.<enter>
 macro index       \e\007T <untag-pattern>.<enter>
 macro index       =       <limit>~=<enter>
 macro index       \e\007L <limit>all<enter>
+bind  browser     .       check-new
 
 # Index macros
 set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
@@ -139,8 +141,10 @@ macro pager w       \e\0073
 # notmuch-mutt.rb macros
 macro index,pager gf      <change-folder-readonly>~/.mutt/notmuch/results<enter>
 macro index,pager \e\007f "<shell-escape>notmuch-mutt.rb search<enter>gf"
+macro index,pager \e\007r "<shell-escape>notmuch new<enter>"
 
 # Identities
+macro $my_list,pager \Cx? "<enter-command>set ?from<enter>"
 macro $my_list,pager \Cx0 '\
 <enter-command>unset from<enter>\
 <enter-command>unset smtp_url<enter>\
@@ -149,8 +153,10 @@ macro $my_list,pager \Cx0 '\
 macro $my_list,pager \Cx1 '\
 <enter-command>set from="Sung Pae <self@sungpae.com>"<enter>\
 <enter-command>set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587"<enter>\
-<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/self@sungpae.com`"<enter>'
+<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/self@sungpae.com`"<enter><refresh>\
+<enter-command>set ?from<enter>'
 macro $my_list,pager \Cx2 '\
 <enter-command>set from="Sung Pae <sungpae@gmail.com>"<enter>\
 <enter-command>set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587"<enter>\
-<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"<enter>'
+<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"<enter>\
+<refresh><enter-command>set ?from<enter>'

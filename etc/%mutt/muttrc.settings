@@ -1039,7 +1039,7 @@ set folder="~/Mail/Local"
 # when handling the ``mailboxes'' command.
 #
 
-set folder_format="%2C %t %4N %F %2l %-8.8u %-8.8g %8s %d %f"
+# set folder_format="%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f"
 #
 # Name: folder_format
 # Type: string
@@ -1700,7 +1700,7 @@ set mailcap_path="~/.mailcap"
 # mailbox types.
 #
 
-set mark_old=no
+# set mark_old=yes
 #
 # Name: mark_old
 # Type: boolean
