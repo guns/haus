@@ -168,8 +168,9 @@ class Dumpcert
     Kernel.exec env, *args
   end
 
-  def console
+  def console *args
     require 'pry'
+    certs = mapcerts args
     binding.pry
   end
 
