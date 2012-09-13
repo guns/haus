@@ -32,8 +32,10 @@ cnoremap <C-p> <Up>
 
 noremap j 7j
 noremap k 7k
-nmap <M-e> j
-nmap <M-y> k
+noremap <M-e> 7j
+noremap <M-y> 7k
+noremap e 7j
+noremap y 7k
 noremap b <C-u>
 noremap B b
 
@@ -41,10 +43,11 @@ noremap B b
 
 noremap ; F
 noremap "'" f
-noremap e ;
+noremap , ;
 noremap f /
 noremap <M-f> /
 noremap \\ /
+noremap Y y
 
 """ Tabs and Buffers {{{1
 
