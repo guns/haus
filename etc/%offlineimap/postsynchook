@@ -67,7 +67,6 @@ class Postsynchook
         removed.concat FileUtils.rm_f(Dir['%s/**/*' % src.shellescape].select { |f| File.file? f })
       end
     end
-    system 'notmuch', 'new'
     removed
   end
 
