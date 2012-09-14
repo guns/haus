@@ -160,3 +160,5 @@ macro $my_list,pager \Cx2 '\
 <enter-command>set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587"<enter>\
 <enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"<enter>\
 <refresh><enter-command>set ?from<enter>'
+send-hook !~l 'push \0301'
+send-hook ~l  'push \0302'
