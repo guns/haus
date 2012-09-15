@@ -19,7 +19,8 @@ source ~/.mutt/muttrc.settings
 source $alias_file
 
 # Mailboxes
-mailboxes `echo ~/Mail/Local/*` ~/.mutt/notmuch/results
+mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo ${dirs[@]// /\\ }` \
+          ~/.mutt/notmuch/results
 
 # Mailing lists
 lists arch-announce@arch-linux.org \
@@ -144,21 +145,17 @@ macro index,pager \e\007f "<shell-escape>notmuch-mutt.rb search<enter>gf"
 macro index,pager \e\007r "<shell-escape>notmuch new<enter>"
 
 # Identities
+set my_identity_1='\
+    set from="Sung Pae <self@sungpae.com>";\
+    set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
+    set smtp_pass="`gpg --decrypt ~/.mutt/identities/self@sungpae.com`"'
+set my_identity_2='\
+    set from="Sung Pae <sungpae@gmail.com>";\
+    set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
+    set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"'
 macro $my_list,pager \Cx? "<enter-command>set ?from<enter>"
-macro $my_list,pager \Cx0 '\
-<enter-command>unset from<enter>\
-<enter-command>unset smtp_url<enter>\
-<enter-command>unset smtp_pass<enter>\
-<forget-passphrase>'
-macro $my_list,pager \Cx1 '\
-<enter-command>set from="Sung Pae <self@sungpae.com>"<enter>\
-<enter-command>set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587"<enter>\
-<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/self@sungpae.com`"<enter><refresh>\
-<enter-command>set ?from<enter>'
-macro $my_list,pager \Cx2 '\
-<enter-command>set from="Sung Pae <sungpae@gmail.com>"<enter>\
-<enter-command>set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587"<enter>\
-<enter-command>set smtp_pass="`gpg --decrypt ~/.mutt/identities/sungpae@gmail.com`"<enter>\
-<refresh><enter-command>set ?from<enter>'
-send-hook !~l 'push \0301'
-send-hook ~l  'push \0302'
+macro $my_list,pager \Cx0 '<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>'
+macro $my_list,pager \Cx1 '<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>'
+macro $my_list,pager \Cx2 '<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>'
+send-hook !~l "$my_identity_1"
+send-hook ~l  "$my_identity_2"

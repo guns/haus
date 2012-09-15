@@ -385,6 +385,7 @@ RC_FUNC() {
     complete -F __${name}__ $name
 }; GC_FUNC RC_FUNC
 
+
 # HAPPY HACKING {{{1
 GREETINGS() {
     local date="$(date +%H:%M:%S\ %Z)" color
