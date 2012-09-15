@@ -656,7 +656,6 @@ ALIAS s='sudo' \
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 
-
 ### Network {{{1
 
 if HAVE ifconfig; then

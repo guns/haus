@@ -3,7 +3,7 @@
 if test -n "$SSH_AUTH_SOCK"; then
     echo "SSH_AUTH_SOCK already set: $SSH_AUTH_SOCK"
 elif test -n "$GPG_AGENT_INFO"; then
-    echo "GPG_AGENT_INFO alreadt set: $GPG_AGENT_INFO"
+    echo "GPG_AGENT_INFO already set: $GPG_AGENT_INFO"
 elif test "$#" -gt 0; then
     run gpg-agent --enable-ssh-support --daemon "$@"
 else
