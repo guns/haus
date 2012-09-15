@@ -247,7 +247,6 @@ $if Bash
     "\C-x\C-m":     "\C-] cdmail \n"
     "\C-x`":        "\C-]cdhome "
     "\C-xo":        "\C-]cdopt "
-    "\C-xS":        "\C-]cdSRC "
 
     # Job control
     "\033\007p":    "\C-] pushd . \n"
