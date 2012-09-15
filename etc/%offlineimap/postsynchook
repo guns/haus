@@ -23,7 +23,7 @@ class Postsynchook
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] [sync|notify]
 
@@ -38,7 +38,7 @@ class Postsynchook
         options.localfolder = File.expand_path arg
       end
 
-      opt.on '-s', '--spoolfolder PATH', '[DEFAULT: %s]' do |arg|
+      opt.on '-s', '--spoolfolder PATH', '[DEFAULT: %s]' % options.spoolfolder do |arg|
         options.spoolfolder = File.expand_path arg
       end
 
