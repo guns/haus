@@ -64,6 +64,14 @@ task :env do # {{{1
           'bin/lein'             => 'bin/lein',
           'bash_completion.bash' => 'etc/bash_completion.d/lein'
         }
+      },
+
+      {
+        :base   => "#{@src}/READONLY/password-store",
+        :branch => %w[master],
+        :files  => {
+          'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
+        }
       }
     ],
 
