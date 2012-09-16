@@ -310,6 +310,9 @@ $if Bash
 
     # Ctags
     "\C-x\C-t":     "\C-] ctags -R \n"
+
+    # X
+    "\C-xX":        "\C-] exec startx \n"
 $endif
 
 
