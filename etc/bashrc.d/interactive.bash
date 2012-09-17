@@ -242,12 +242,16 @@ ALIAS acki='ack -i' \
 alias c='cat'
 ALIAS l='less' \
       L='l +S' \
-      lf='l +F' \
-      lfsystem='lf /var/log/system.log' \
-      lfeverything='lf /var/log/everything.log' && pager() { less -+c --quit-if-one-screen "$@"; }
-ALIAS tf='tail -f' \
-      tfsystem='tf /var/log/system.log' \
-      tfeverything='tf /var/log/everything.log'
+      lf='l +F' && pager() { less -+c --quit-if-one-screen "$@"; }
+ALIAS tf='tail -f'
+
+if [[ -e /var/log/system.log ]]; then
+    ALIAS lfsyslog='lf /var/log/system.log'
+    ALIAS tfsyslog='tf /var/log/system.log'
+elif [[ -e /var/log/everything.log ]]; then
+    ALIAS lfsyslog='lf /var/log/everything.log'
+    ALIAS tfsyslog='tf /var/log/everything.log'
+fi
 
 # ls
 alias ls="ls -Ahl $GNU_COLOR_OPT"
@@ -1456,7 +1460,8 @@ fi
 ### systemd {{{1
 
 ALIAS sd='systemd' \
-      sc='systemctl'
+      sc='systemctl' \
+      jc='journalctl'
 
 
 ### Launchd {{{1
