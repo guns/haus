@@ -1270,7 +1270,8 @@ HAVE wpa_supplicant wpa_passphrase && {
             esac
         done
         shift $((OPTIND-1))
-        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@")
+        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@") &
+        dhcpcd -i "$iface"
     }
 }
 
