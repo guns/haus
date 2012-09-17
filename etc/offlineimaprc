@@ -381,7 +381,7 @@ remoteuser = self@sungpae.com
 #    This method can be used to design more elaborate setups, e.g. by
 #    querying the gnome-keyring via its python bindings.
 
-remotepasseval = keychain_password(host="imap.gmail.com", user="self@sungpae.com")
+remotepasseval = pass_get('google/self@sungpae.com')
 
 ########## Advanced settings
 

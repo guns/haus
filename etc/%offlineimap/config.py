@@ -9,3 +9,6 @@ def keychain_password(host, user):
                  }
           '""" % (host, user)
     return commands.getoutput(cmd)
+
+def pass_get(arg):
+    return commands.getoutput("pass show %s" % arg)
