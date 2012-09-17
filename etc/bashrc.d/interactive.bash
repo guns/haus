@@ -1273,8 +1273,7 @@ HAVE wpa_supplicant wpa_passphrase && {
         shift $((OPTIND-1))
         local ssid="$1"; [[ $ssid ]] || ssid=$(printf "ssid: " >&2; read r; echo "$r")
         local pass="$2"; [[ $pass ]] || pass=$(printf "pass: " >&2; read r; echo "$r")
-        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass") &
-        dhcpcd -i "$iface"
+        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
     }
 }
 
