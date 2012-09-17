@@ -668,6 +668,7 @@ ALIAS arplan='arp -lan'
 ALIAS netstatnr='netstat -nr'
 ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
       ap='airport'
+ALIAS net='netcfg'
 
 # cURL
 ALIAS get='curl -#L' \
@@ -1266,11 +1267,13 @@ HAVE wpa_supplicant wpa_passphrase && {
         while getopts :i opt; do
             case $opt in
                 i) iface="$OPTARG";;
-                *) echo "USAGE: $FUNCNAME [-i iface] essid password"; return 1
+                *) echo "USAGE: $FUNCNAME [-i iface] essid [password]"; return 1
             esac
         done
         shift $((OPTIND-1))
-        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@") &
+        local ssid="$1"; [[ $ssid ]] || ssid=$(printf "ssid: " >&2; read r; echo "$r")
+        local pass="$2"; [[ $pass ]] || pass=$(printf "pass: " >&2; read r; echo "$r")
+        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass") &
         dhcpcd -i "$iface"
     }
 }
