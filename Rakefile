@@ -70,6 +70,8 @@ task :env do # {{{1
         :base   => "#{@src}/READONLY/password-store",
         :branch => %w[master],
         :files  => {
+          'src/password-store.sh'        => 'bin/pass',
+          'man/pass.1'                   => 'share/man/man1/pass.1',
           'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
         }
       }
