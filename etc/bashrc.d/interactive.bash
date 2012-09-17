@@ -942,7 +942,6 @@ HAVE vim && {
     alias vimorg='vim -c Org!'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
     alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
-    alias vimrcconf='(cd /etc && exec vim rc.conf)'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
     alias vimmuttrc='(cdhaus && exec vim etc/%mutt/muttrc)'
     alias vimmacsetup='(cdhaus && exec vim bin/macsetup)'
