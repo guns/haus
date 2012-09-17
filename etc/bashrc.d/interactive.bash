@@ -1271,7 +1271,7 @@ HAVE wpa_supplicant wpa_passphrase && {
             esac
         done
         shift $((OPTIND-1))
-        bgrun wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@")
+        wpa_supplicant -i "$iface" -c <(wpa_passphrase "$@")
     }
 }
 
@@ -1442,6 +1442,19 @@ HAVE xmonad && xmonadrecompile() {
         notify 'GHC seems to be busy'
     fi
 }
+
+
+### Linux Console {{{1
+
+if [[ "$TERM" == linux ]]; then
+    alias vconsole-setup="loadkeys \"$cdhaus/share/kbd/macbook.map.gz\"; unicode_start"
+fi
+
+
+### systemd {{{1
+
+ALIAS sd='systemd' \
+      sc='systemctl'
 
 
 ### Launchd {{{1
