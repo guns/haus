@@ -39,7 +39,6 @@ URxvt*font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslig
             xft:Courier New:pixelsize=17:antialias=on:hinting=on:hintstyle=hintslight, \
             xft:Arial Unicode MS:pixelsize=17:antialias=on:hinting=on:hintstyle=hintslight
 
-
 ! Perl extensions
 URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select
 
