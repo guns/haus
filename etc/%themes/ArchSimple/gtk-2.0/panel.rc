@@ -1,0 +1,73 @@
+################################################
+# PANELS
+################################################
+
+style "theme-panel"
+{
+	xthickness	= 0
+	ythickness	= 0
+
+	bg[NORMAL]	= @menu_color
+	bg[PRELIGHT]	= shade (0.5, @menu_color)
+	bg[ACTIVE]	= @selected_bg_color
+	bg[SELECTED]	= @selected_bg_color
+	bg[INSENSITIVE]	= @menu_color
+
+	fg[NORMAL]	= shade (0.8, @selected_fg_color)
+	fg[PRELIGHT]	= @selected_fg_color
+	fg[ACTIVE]	= @selected_fg_color
+	fg[SELECTED]	= @selected_fg_color
+	fg[INSENSITIVE]	= shade (0.3, @menu_color)
+
+	text[NORMAL]		= shade (0.8, @selected_fg_color)
+	text[PRELIGHT]		= @selected_fg_color
+	text[ACTIVE]		= @selected_fg_color
+	text[SELECTED]		= @selected_fg_color
+	text[INSENSITIVE]	= shade (0.3, @menu_color)
+
+
+	engine "murrine"
+	{
+		contrast		= 0.0
+		lightborder_shade	= 1.0
+		gradient_shades		= {1.0,1.0,1.0,1.0}
+		gradient_colors		= FALSE
+		reliefstyle		= 0
+		roundness		= 0
+		border_shades		= {1.0,1.0}
+		border_colors		= {@menu_color, @menu_color}
+	}
+}
+
+style "theme-panel-light"
+{
+	fg[NORMAL]	= shade (0.5, @base_color)
+}
+
+# Panel settings. Do not change.
+widget "*PanelWidget*"		style "theme-panel"
+widget "*PanelApplet*"		style "theme-panel"
+widget "*fast-user-switch*"	style "theme-panel"
+widget "*gdm-user-switch*"	style "theme-panel"
+widget "*CPUFreq*Applet*"	style "theme-panel"
+widget "*indicator-applet*"	style "theme-panel"
+class "PanelApp*"		style "theme-panel"
+class "PanelToplevel*"		style "theme-panel"
+widget_class "*PanelToplevel*"	style "theme-panel"
+#widget_class "*Mail*"		style "theme-panel" # Disabled to fix Evolution bug.
+#class "*Panel*"		style "theme-panel" # Disabled to fix bug.
+widget_class "*notif*"		style "theme-panel"
+widget_class "*Notif*"		style "theme-panel"
+widget_class "*Tray*"		style "theme-panel" 
+widget_class "*tray*"		style "theme-panel"
+widget_class "*computertemp*"	style "theme-panel"
+widget_class "*Applet*Tomboy*"	style "theme-panel"
+widget_class "*Applet*Netstatus*"	style "theme-panel"
+
+# Fixes for tooltip text in some apps.
+widget_class "*Notif*Beagle*"	style "theme-panel-light"
+widget_class "*Notif*Brasero*"	style "theme-panel-light"
+
+# XFCE panel theming.
+widget "*Xfce*Panel*"		style "theme-panel"
+class "*Xfce*Panel*"		style "theme-panel"
