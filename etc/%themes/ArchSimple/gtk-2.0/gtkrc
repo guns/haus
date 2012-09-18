@@ -209,7 +209,7 @@ style "murrine-menubar"
 	text[SELECTED]		= @selected_fg_color
 	text[INSENSITIVE]	= shade (0.4, @selected_fg_color)
 
-	font_name		= "Bold"
+	font_name		= "Regular"
 
 	engine "murrine" 
 	{
