@@ -47,6 +47,7 @@ KEYBINDINGS = {
   'mod4-e'      => '/window scroll_down',
   'mod4-f'      => '/bar scroll nicklist * y+90%',
   'mod4-g'      => '/go',
+  'mod4-i'      => '/msg NickServ identify guns %s' % %x(pass freenode/guns),
   'mod4-j'      => '/buffer +1',
   'mod4-J'      => '/buffer move +1',
   'mod4-k'      => '/buffer -1',
