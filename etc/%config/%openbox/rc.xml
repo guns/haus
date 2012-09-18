@@ -184,6 +184,11 @@
         <prompt>false</prompt>
       </action>
     </keybind>
+    <keybind key="C-S-XF86Eject">
+      <action name="Execute">
+        <command>slock</command>
+      </action>
+    </keybind>
     <!-- Application bindings -->
     <keybind key="W-C-S-space">
       <action name="Execute">
