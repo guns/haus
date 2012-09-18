@@ -490,7 +490,7 @@ vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
 " Web queries
 for [g:lhs, g:rhs] in [['d', 'http://dictionary.reference.com/browse/'],
                      \ ['e', 'http://www.etymonline.com/index.php?search='],
-                     \ ['g', 'https://encrypted.google.com/search?pws=0&tbs=li:1&q='],
+                     \ ['g', 'https://www.google.com/search?pws=0&tbs=li:1&q='],
                      \ ['s', 'http://symbolhound.com/?q='],
                      \ ['w', 'http://en.wikipedia.org/wiki/']]
     let g:fmt = 'noremap <Leader>q' . g:lhs . ' :<C-u>execute "silent! ! open ' . shellescape(g:rhs) . '" . shellescape(CwordOrSel(%d)) \| redraw!<CR>'
