@@ -18,7 +18,7 @@ border_color = #FFFFFF 44
 # ID 3
 rounded = 0
 border_width = 0
-background_color = #FFFFFF 10
+background_color = #FFAFDF 10
 border_color = #FFFFFF 64
 
 # Panel
@@ -40,7 +40,7 @@ autohide_height = 0
 strut_policy = follow_size
 
 # Taskbar
-taskbar_mode = single_desktop
+taskbar_mode = multi_desktop
 taskbar_padding = 0 0 0
 taskbar_background_id = 0
 taskbar_active_background_id = 0
@@ -50,7 +50,7 @@ urgent_nb_of_blink = 8
 task_icon = 1
 task_text = 1
 task_centered = 0
-task_maximum_size = 150 20
+task_maximum_size = 200 20
 task_padding = 6 2
 task_background_id = 3
 task_active_background_id = 2
