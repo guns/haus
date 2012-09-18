@@ -93,8 +93,8 @@ set nostartofline               " Leave my cursor position alone!
 " Display
 set lazyredraw                  " Don't redraw while in macros
 set visualbell t_vb=            " No bells, please
-set listchars=tab:⇥\ ,trail:･
-set fillchars=fold:\ ,diff:･,vert:│
+set listchars=tab:⇥\ ,trail:·
+set fillchars=fold:\ ,diff:╳,vert:│
 
 " Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
