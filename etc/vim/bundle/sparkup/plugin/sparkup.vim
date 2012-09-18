@@ -59,7 +59,6 @@ function! s:Sparkup()
         endif
     endif
     exec '.!' . s:sparkup
-    call s:SparkupNext()
 endfunction
 
 function! s:SparkupNext()
