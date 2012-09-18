@@ -1,6 +1,4 @@
 #!/bin/sh
 
-xset r rate 200 125 &
+# We must set the background here after openbox is done initializing
 ruby -r shellwords -e 'system "feh", "--bg-fill", File.read(File.expand_path "~/.fehbg").shellsplit.last' &
-tint2 -c ~/.config/tint2/tint2rc &
-parcellite &
