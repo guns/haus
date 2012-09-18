@@ -73,7 +73,7 @@ font_shadow = 0
 
 # System Tray
 systray = 1
-systray_padding = 0 0 4
+systray_padding = 3 0 4
 systray_sort = descending
 systray_background_id = 0
 systray_icon_size = 16
@@ -110,7 +110,7 @@ battery_hide = 98
 bat1_font = sans 8
 bat2_font = sans 6
 battery_font_color = #FFFFFF 70
-battery_padding = 1 0
+battery_padding = 3 0
 battery_background_id = 0
 
 # End of config
