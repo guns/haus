@@ -667,7 +667,6 @@ if HAVE ifconfig; then
 elif HAVE ip; then
     alias ic='ip addr'
 fi
-ALIAS iw='iwconfig'
 ALIAS arplan='arp -lan'
 ALIAS netstatnr='netstat -nr'
 ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
