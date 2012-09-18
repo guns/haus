@@ -6,4 +6,4 @@
 #
 
 # Default options
-feh --fullscreen --draw-filename
+feh --draw-filename --action9 "feh --bg-fill %F"

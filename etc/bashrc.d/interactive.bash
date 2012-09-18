@@ -1398,17 +1398,17 @@ fi
 ALIAS geometry='identify -format "%w %h"'
 
 # feh
-HAVE feh && {
+ALIAS fehf='feh --fullscreen' && {
     fehbg() { feh --bg-fill "$(expand_path "$1")"; }
-    fshow() { feh --recursive "${@:-.}"; }
-    frand() { feh --recursive --randomize "${@:-.}"; }
+    fshow() { feh --fullscreen --recursive "${@:-.}"; }
+    frand() { feh --fullscreen --recursive --randomize "${@:-.}"; }
     ftime() {
         ruby -r set -e '
             args = ARGV.empty? ? ["."] : ARGV
             fs = args.reduce Set.new do |set, arg|
                 set.merge Dir[File.join(arg, "*")].reject { |f| File.directory? f }
             end
-            exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
+            exec "feh", "--fullscreen" *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
 }
