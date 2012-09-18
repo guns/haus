@@ -1,0 +1,11 @@
+[Unit]
+Description=dnscrypt-proxy daemon
+After=loopback-alias.service
+
+[Service]
+ExecStart=/opt/dnscrypt-proxy/sbin/dnscrypt-proxy -a 127.0.0.2 -r 208.67.220.220 -u nobody
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

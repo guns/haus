@@ -1,0 +1,11 @@
+[Unit]
+Description=Create a loopback alias at 127.0.0.2
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/ifconfig lo:0 127.0.0.2
+ExecStop=/sbin/ifconfig lo:0 down
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
