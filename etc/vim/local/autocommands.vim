@@ -208,6 +208,10 @@ augroup GUNS
         \ OrgBufferSetup |
         \ SetWhitespace 2 8
 
+    " systemd {{{1
+    autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service,*.socket,*.swap,*.target,*.timer
+        \ set filetype=systemd
+
     autocmd BufRead,BufNewFile psql.edit.*
         \ setlocal filetype=sql
 
