@@ -185,6 +185,16 @@
       </action>
     </keybind>
     <!-- Application bindings -->
+    <keybind key="W-C-S-space">
+      <action name="Execute">
+        <command>sh -c "printf p > ~/.config/pianobar/ctl"</command>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-Right">
+      <action name="Execute">
+        <command>sh -c "printf n > ~/.config/pianobar/ctl"</command>
+      </action>
+    </keybind>
     <!-- <keybind key="XF86KbdBrightnessUp"> -->
     <!--   <action name="Execute">           -->
     <!--     <command>chrome</command>       -->
