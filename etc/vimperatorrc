@@ -36,6 +36,8 @@ noremap <M-e> 7j
 noremap <M-y> 7k
 noremap e 7j
 noremap y 7k
+noremap h 7h
+noremap l 7l
 noremap b <C-u>
 noremap B b
 
