@@ -33,7 +33,7 @@ module Util
         cmd += %w[--sticky] if sticky
         forkexec *cmd
       elsif have 'notify-send'
-        forkexec 'notify-send', title || '', message
+        forkexec 'notify-send', *[title, message].compact
       end
     end
 
