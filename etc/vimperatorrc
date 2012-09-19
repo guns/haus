@@ -50,6 +50,7 @@ noremap f /
 noremap <M-f> /
 noremap \\ /
 noremap Y y
+noremap ga <F6>
 
 """ Tabs and Buffers {{{1
 
@@ -57,7 +58,7 @@ noremap <C-j> gt
 noremap <C-k> gT
 noremap <C-h> H
 noremap <C-l> L
-noremap t :tabnew<CR>
+noremap t :tabnew<CR><F6>
 noremap <M-_> :tabmove -1<CR>
 noremap <M-+> :tabmove +1<CR>
 noremap <M-S-o> :tabonly<CR>
