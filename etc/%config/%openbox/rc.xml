@@ -177,6 +177,9 @@
     <chainQuitKey>C-c</chainQuitKey>
     <!-- X bindings -->
     <keybind key="W-C-A-r">
+      <action name="Reconfigure"/>
+    </keybind>
+    <keybind key="W-C-A-S-r">
       <action name="Restart"/>
     </keybind>
     <keybind key="W-C-A-q">
@@ -189,15 +192,25 @@
         <command>slock</command>
       </action>
     </keybind>
+    <keybind key="XF86MonBrightnessDown">
+      <action name="Execute">
+        <command>hwctl backlight -5</command>
+      </action>
+    </keybind>
+    <keybind key="XF86MonBrightnessUp">
+      <action name="Execute">
+        <command>hwctl backlight +5</command>
+      </action>
+    </keybind>
     <!-- Application bindings -->
     <keybind key="W-C-S-space">
       <action name="Execute">
-        <command>sh -c "printf p > ~/.config/pianobar/ctl"</command>
+        <command>/bin/sh -c "printf p > ~/.config/pianobar/ctl"</command>
       </action>
     </keybind>
     <keybind key="W-C-S-Right">
       <action name="Execute">
-        <command>sh -c "printf n > ~/.config/pianobar/ctl"</command>
+        <command>/bin/sh -c "printf n > ~/.config/pianobar/ctl"</command>
       </action>
     </keybind>
     <!-- <keybind key="XF86KbdBrightnessUp"> -->

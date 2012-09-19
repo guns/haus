@@ -1,0 +1,81 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+
+class Hwctl
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.sys_backlight ||= '/sys/class/backlight/intel_backlight'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Linux hardware control wrapper.
+
+        Usage: #{File.basename __FILE__} [options] command [args]
+
+        Commands:
+
+          b[acklight] [pct] Query or set backlight as a percentage. Argument can be signed
+                            for relative adjustment.
+
+        Options:
+      BANNER
+
+      opt.on '--sys-backlight PATH', '[DEFAULT: %s]' % options.sys_backlight do |arg|
+        options.sys_backlight = File.expand_path arg
+      end
+    end
+  end
+
+  def brightness cur, max
+    '%d %.2f%%' % [cur, cur.to_f/max * 100]
+  end
+
+  def set_brightness value, max
+    v = value
+    v = max if value > max
+    v = 0 if value < 0
+
+    File.open File.join(options.sys_backlight, 'brightness'), 'w' do |f|
+      f.puts v
+    end
+
+    v
+  end
+
+  def backlight setting = nil
+    max = File.read(File.join options.sys_backlight, 'max_brightness').to_i
+    cur = File.read(File.join options.sys_backlight, 'actual_brightness').to_i
+
+    case setting
+    when nil           then brightness cur, max
+    when /\A[+-]\d+\z/ then brightness set_brightness((cur + (max * (setting.to_f / 100))).round, max), max
+    when /\A\d+\z/     then brightness set_brightness((max * (setting.to_f / 100)).round, max), max
+    else :invalid_value
+    end
+  end
+
+  def run arguments = []
+    args = parser.order arguments
+    rest = args.drop 1
+
+    out = case args.first
+    when 'b', 'backlight' then backlight *rest
+    else abort parser.help
+    end
+
+    puts out if out
+  end
+end
+
+$0 = File.basename(__FILE__) and Hwctl.new.run ARGV if $0 == __FILE__
