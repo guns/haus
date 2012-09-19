@@ -158,6 +158,7 @@ CD_FUNC cdnginx         /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           /tmp
 CD_FUNC cdTMP           "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
+CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
 CD_FUNC cdlocal         /usr/local
@@ -166,6 +167,7 @@ CD_FUNC cdclojure       ~/.clojure /opt/clojure
 CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
 CD_FUNC cdpass          ~/.password-store
 CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
+CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
@@ -1384,7 +1386,7 @@ elif __LINUX__; then
         alias paci='run pacman -S'
         alias pacq='run pacman -Si'
         alias pacs='run pacman -Ss'
-        alias pacu='run pacman -R'
+        alias pacu='run pacman -Rss'
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
     }
@@ -1446,6 +1448,14 @@ HAVE xmonad && xmonadrecompile() {
     else
         notify 'GHC seems to be busy'
     fi
+}
+
+# GTK
+HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
+    local dir
+    for dir in ~/.icons/*; do
+        [[ -d "$dir" ]] && run gtk-update-icon-cache -f -t "$dir"
+    done
 }
 
 
