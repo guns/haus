@@ -1452,7 +1452,7 @@ HAVE xmonad && xmonadrecompile() {
 ### Linux Console {{{1
 
 if [[ "$TERM" == linux ]]; then
-    alias vconsole-setup="loadkeys \"$cdhaus/share/kbd/macbook.map.gz\"; unicode_start"
+    alias vconsole-setup="loadkeys '$cdhaus/share/kbd/macbook.map.gz'; unicode_start"
 fi
 
 
@@ -1460,7 +1460,8 @@ fi
 
 ALIAS sd='systemd' \
       sc='systemctl' \
-      jc='journalctl'
+      sleepnow='systemctl suspend' \
+      jc='journalctl' \
 
 
 ### Launchd {{{1
