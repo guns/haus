@@ -2457,7 +2457,7 @@ set pager_stop=yes
 # (PGP only)
 #
 
-# set pgp_timeout=300
+set pgp_timeout=3600
 #
 # Name: pgp_timeout
 # Type: number
