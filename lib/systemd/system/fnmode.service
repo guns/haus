@@ -1,0 +1,11 @@
+[Unit]
+Description=Switch MacBook function keys mode
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo 2 > /sys/module/hid_apple/parameters/fnmode'
+ExecStop=/bin/sh -c 'echo 2 > /sys/module/hid_apple/parameters/fnmode'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
