@@ -23,7 +23,7 @@
        mouse into it, also raise the window -->
   </focus>
   <placement>
-    <policy>UnderMouse</policy>
+    <policy>Smart</policy>
     <!-- 'Smart' or 'UnderMouse' -->
     <center>yes</center>
     <!-- whether to place windows in the center of the free area found or
@@ -231,19 +231,19 @@
         <wrap>yes</wrap>
       </action>
     </keybind>
-    <keybind key="W-C-S-k">
+    <keybind key="W-C-h">
       <action name="SendToDesktop">
         <to>left</to>
         <wrap>yes</wrap>
       </action>
     </keybind>
-    <keybind key="W-C-S-j">
+    <keybind key="W-C-l">
       <action name="SendToDesktop">
         <to>right</to>
         <wrap>yes</wrap>
       </action>
     </keybind>
-    <keybind key="W-C-d">
+    <keybind key="W-C-f">
       <action name="ToggleShowDesktop"/>
     </keybind>
     <!-- Keybindings for windows -->
@@ -255,48 +255,91 @@
         <menu>client-menu</menu>
       </action>
     </keybind>
-    <keybind key="W-C-h">
+    <keybind key="W-C-m">
+      <action name="Iconify"/>
+    </keybind>
+    <!-- Subtle-esque tiling -->
+    <keybind key="W-C-a">
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>0</x>
+        <y>center</y>
+        <width>50%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <keybind key="W-C-d">
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>50%</x>
+        <y>center</y>
+        <width>50%</width>
+        <height>100%</height>
+      </action>
+    </keybind>
+    <keybind key="W-C-w">
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>0</y>
+        <width>100%</width>
+        <height>50%</height>
+      </action>
+    </keybind>
+    <keybind key="W-C-x">
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>50%</y>
+        <width>100%</width>
+        <height>50%</height>
+      </action>
+    </keybind>
+    <keybind key="W-C-s">
+      <action name="ToggleMaximizeFull"/>
+    </keybind>
+    <keybind key="W-C-q">
       <action name="UnMaximize"/>
       <action name="MoveResizeTo">
         <x>0</x>
         <y>0</y>
         <width>50%</width>
-        <height>0</height>
-      </action>
-      <action name="GrowToEdge">
-        <direction>south</direction>
-      </action>
-      <action name="MoveResizeTo">
-        <y>center</y>
+        <height>50%</height>
       </action>
     </keybind>
-    <keybind key="W-C-l">
+    <keybind key="W-C-e">
       <action name="UnMaximize"/>
       <action name="MoveResizeTo">
         <x>50%</x>
         <y>0</y>
         <width>50%</width>
-        <height>0</height>
+        <height>50%</height>
       </action>
-      <action name="GrowToEdge">
-        <direction>south</direction>
-      </action>
+    </keybind>
+    <keybind key="W-C-z">
+      <action name="UnMaximize"/>
       <action name="MoveResizeTo">
-        <y>center</y>
+        <x>0</x>
+        <y>50%</y>
+        <width>50%</width>
+        <height>50%</height>
       </action>
     </keybind>
-    <keybind key="W-C-f">
-      <action name="ToggleMaximizeFull"/>
-    </keybind>
-    <keybind key="W-C-m">
-      <action name="Iconify"/>
+    <keybind key="W-C-c">
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>50%</x>
+        <y>50%</y>
+        <width>50%</width>
+        <height>50%</height>
+      </action>
     </keybind>
     <!-- Keybindings for window switching -->
     <keybind key="W-Tab">
       <action name="NextWindow">
         <dialog>icons</dialog>
         <bar>no</bar>
-        <allDesktops>yes</allDesktops>
+        <allDesktops>no</allDesktops>
         <finalactions>
           <action name="Focus"/>
           <action name="Raise"/>
@@ -308,7 +351,7 @@
       <action name="PreviousWindow">
         <dialog>icons</dialog>
         <bar>no</bar>
-        <allDesktops>yes</allDesktops>
+        <allDesktops>no</allDesktops>
         <finalactions>
           <action name="Focus"/>
           <action name="Raise"/>
@@ -552,7 +595,7 @@
         <y>center</y>
       </position>
     </application>
-    <application name="Navigator">
+    <application role="browser">
       <decor>no</decor>
     </application>
     <!--
