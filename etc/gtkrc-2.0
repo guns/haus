@@ -14,3 +14,5 @@ gtk-can-change-accels = 1
 # Theming
 gtk-theme-name = "ArchSimple"
 gtk-font-name = "Segoe UI 10"
+gtk-icon-theme-name = "elementary"
+# gtk-cursor-theme-name = ""
