@@ -55,7 +55,7 @@ class Figpreview
   end
 
   def fontdirs
-    %w[/usr/share /usr/local/share /opt/brew/share].map { |d| File.expand_path d }
+    %w[/usr/share /usr/local/share ~/.local/share /opt/brew/share].map { |d| File.expand_path d }
   end
 
   def fonts
