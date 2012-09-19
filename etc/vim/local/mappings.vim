@@ -362,8 +362,8 @@ noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/s
 noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
 noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vimperatorrc'))<CR>
 noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xmonad/xmonad.hs'))<CR>
-noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
-noremap <Leader>eX       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
+noremap <Leader>ex       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
+noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>setlocal filetype=
