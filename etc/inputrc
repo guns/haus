@@ -227,6 +227,8 @@ $if Bash
     "\C-x3":        " 2>&1 "
 
     # Directories
+    "\C-x\C-_":     "\C-] cd - \n"
+    "\C-x-":        "\C-]cd ~/"
     "\C-x\C-a":     "\C-] cdapi \n"
     "\C-xa":        "\C-]cdapi "
     "\C-x\C-d":     "\C-] cddownloads \n"
@@ -235,24 +237,24 @@ $if Bash
     "\C-xh":        "\C-]cdhaus "
     "\C-x\C-l":     "\C-] cdlocal \n"
     "\C-xl":        "\C-]cdlocal "
-    "\C-x\C-L":     "\C-] cdlog \n"
-    "\C-xL":        "\C-]cdlog "
+    "\C-x\C-L":     "\C-] cdLOCAL \n"
+    "\C-xL":        "\C-]cdLOCAL "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
+    "\C-x\C-o":     "\C-] cdopt \n"
+    "\C-xo":        "\C-]cdopt "
     "\C-x\C-s":     "\C-] cdsrc \n"
     "\C-xs":        "\C-]cdsrc "
     "\C-x\C-S":     "\C-] cdSRC \n"
     "\C-xS":        "\C-]cdSRC "
+    "\C-x\C-t":     "\C-] cdtmp \n"
+    "\C-xt":        "\C-]cdtmp "
     "\C-x\C-v":     "\C-] cdvimfiles \n"
     "\C-xv":        "\C-]cdvimfiles "
     "\C-x\C-V":     "\C-] cdvar \n"
     "\C-xV":        "\C-]cdvar "
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
-    "\C-x\C-_":     "\C-] cd - \n"
-    "\C-x\C-m":     "\C-] cdmail \n"
-    "\C-x`":        "\C-]cdhome "
-    "\C-xo":        "\C-]cdopt "
 
     # Job control
     "\033\007p":    "\C-] pushd . \n"
@@ -311,10 +313,7 @@ $if Bash
     "\033\007I":    "\C-] pry \n"
 
     # Clojure VimREPL
-    "\C-xc":        "\C-] vimclojure \n"
-
-    # Ctags
-    "\C-x\C-t":     "\C-] ctags -R \n"
+    "\C-xC":        "\C-] vimclojure \n"
 
     # X
     "\C-xX":        "\C-] exec startx \n"
