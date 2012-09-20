@@ -728,6 +728,8 @@ HAVE nmap && {
 
 HAVE ngrep && {
     ngg() { run ngrep $device -l -W byline -d "$@"; }
+    _ngg() { local cur="${COMP_WORDS[COMP_CWORD]}"; _available_interfaces; }
+    complete -F _ngg ngg
 }
 
 # scutil
@@ -1384,10 +1386,13 @@ elif __LINUX__; then
         alias paci='run pacman -S'
         alias pacq='run pacman -Si'
         alias pacs='run pacman -Ss'
-        alias pacu='run pacman -Rss'
+        alias pacu='run pacman -Rs'
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
     }
+
+    ALIAS mkpkg='makepkg' \
+          mkpkgs='makepkg -s'
 fi
 
 
