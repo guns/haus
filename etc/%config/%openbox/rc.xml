@@ -213,6 +213,11 @@
         <command>/bin/sh -c "printf n > ~/.config/pianobar/ctl"</command>
       </action>
     </keybind>
+    <keybind key="A-Tab">
+      <action name="Execute">
+        <command>/bin/sh -c "if killall -0 skippy-xd; then killall skippy-xd; else skippy-xd; fi"</command>
+      </action>
+    </keybind>
     <!-- <keybind key="XF86KbdBrightnessUp"> -->
     <!--   <action name="Execute">           -->
     <!--     <command>chrome</command>       -->
@@ -243,9 +248,6 @@
         <wrap>yes</wrap>
       </action>
     </keybind>
-    <keybind key="W-C-f">
-      <action name="ToggleShowDesktop"/>
-    </keybind>
     <!-- Keybindings for windows -->
     <keybind key="W-q">
       <action name="Close"/>
@@ -257,6 +259,12 @@
     </keybind>
     <keybind key="W-C-m">
       <action name="Iconify"/>
+    </keybind>
+    <keybind key="W-C-f">
+      <action name="ToggleMaximizeFull"/>
+    </keybind>
+    <keybind key="W-S-d">
+      <action name="ToggleShowDesktop"/>
     </keybind>
     <!-- Subtle-esque tiling -->
     <keybind key="W-C-a">
@@ -296,7 +304,13 @@
       </action>
     </keybind>
     <keybind key="W-C-s">
-      <action name="ToggleMaximizeFull"/>
+      <action name="UnMaximize"/>
+      <action name="MoveResizeTo">
+        <x>center</x>
+        <y>center</y>
+        <width>100%</width>
+        <height>100%</height>
+      </action>
     </keybind>
     <keybind key="W-C-q">
       <action name="UnMaximize"/>
@@ -553,7 +567,7 @@
     </context>
     <context name="Root">
       <!-- Menus -->
-      <mousebind button="Left" action="Press">
+      <mousebind button="W-Right" action="Press">
         <action name="ShowMenu">
           <menu>root-menu</menu>
         </action>
