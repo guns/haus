@@ -317,6 +317,9 @@ $if Bash
 
     # X
     "\C-xX":        "\C-] exec startx \n"
+
+    # Tmux
+    "\C-x,":        "\C-] tmux rename-window \"${PWD##*/}\" \n"
 $endif
 
 
