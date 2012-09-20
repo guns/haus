@@ -461,9 +461,7 @@ guntar() { untar -z "$@"; }
 buntar() { untar -j "$@"; }
 
 # open
-if __OSX__; then
-    alias op='open'
-fi
+alias op='open'
 
 # pax
 ALIAS gpax='pax -z' && {
