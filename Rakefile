@@ -251,7 +251,7 @@ task :env do # {{{1
       },
 
       {
-        :base   => "#{@src}/vidir",
+        :base   => "#{@src}/READONLY/vidir",
         :branch => %w[master],
         :files  => { 'bin/vidir' => 'bin/vidir' },
         :before => lambda { |proj| FileUtils.chmod 0755, 'bin/vidir' }
