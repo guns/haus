@@ -103,7 +103,7 @@ class Dumpcert
         Options:
       BANNER
 
-      opt.on '-f', '--cabundle', 'File containing CA Roots [DEFAULT: %s]' % options.cabundle do
+      opt.on '-f', '--cabundle PATH', 'File containing CA Roots [DEFAULT: %s]' % options.cabundle do |arg|
         options.cabundle = File.expand_path arg
       end
     end
