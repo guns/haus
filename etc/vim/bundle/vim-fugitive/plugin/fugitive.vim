@@ -26,13 +26,13 @@ function! s:gsub(str,pat,rep) abort
   return substitute(a:str,'\v\C'.a:pat,a:rep,'g')
 endfunction
 
-function! s:shellesc(arg) abort
+function! s:shellesc(arg,...) abort
   if a:arg =~ '^[A-Za-z0-9_/.-]\+$'
     return a:arg
   elseif &shell =~# 'cmd'
     return '"'.s:gsub(s:gsub(a:arg, '"', '""'), '\%', '"%"').'"'
   else
-    return shellescape(a:arg)
+    return shellescape(a:arg, a:0 ? a:1 : 0)
   endif
 endfunction
 
@@ -737,13 +737,13 @@ function! s:StageDiff(diff) abort
     return 'Git! diff'
   elseif filename =~# ' -> '
     let [old, new] = split(filename,' -> ')
-    execute 'Gedit '.s:fnameescape(':0:'.new)
+    execute 'Gedit :0:'.new
     return a:diff.' HEAD:'.s:fnameescape(old)
   elseif section ==# 'staged'
-    execute 'Gedit '.s:fnameescape(':0:'.filename)
+    execute 'Gedit :0:'.filename
     return a:diff.' -'
   else
-    execute 'Gedit '.s:fnameescape('/'.filename)
+    execute 'Gedit /'.filename
     return a:diff
   endif
 endfunction
@@ -752,7 +752,7 @@ function! s:StageDiffEdit() abort
   let [filename, section] = s:stage_info(line('.'))
   let arg = (filename ==# '' ? '.' : filename)
   if section ==# 'staged'
-    return 'Git! diff --cached '.s:shellesc(arg)
+    return 'Git! diff --cached '.s:shellesc(arg,1)
   elseif section ==# 'untracked'
     let repo = s:repo()
     call repo.git_chomp_in_tree('add','--intent-to-add',arg)
@@ -767,7 +767,7 @@ function! s:StageDiffEdit() abort
     endif
     return ''
   else
-    return 'Git! diff '.s:shellesc(arg)
+    return 'Git! diff '.s:shellesc(arg,1)
   endif
 endfunction
 
@@ -862,10 +862,10 @@ function! s:StagePatch(lnum1,lnum2) abort
   endfor
   try
     if !empty(add)
-      execute "Git add --patch -- ".join(map(add,'s:shellesc(v:val)'))
+      execute "Git add --patch -- ".join(map(add,'s:shellesc(v:val,1)'))
     endif
     if !empty(reset)
-      execute "Git reset --patch -- ".join(map(add,'s:shellesc(v:val)'))
+      execute "Git reset --patch -- ".join(map(add,'s:shellesc(v:val,1)'))
     endif
     if exists('first_filename')
       silent! edit!
@@ -1195,7 +1195,7 @@ function! s:Write(force,...) abort
     elseif a:force
       return 'bdelete'
     else
-      return 'Gedit '.fnameescape(filename)
+      return 'Gedit '.filename
     endif
   endif
   let mytab = tabpagenr()
