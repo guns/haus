@@ -28,17 +28,17 @@ CLEANUP() {
 # Param: $* Error message
 ABORT() {
     # Explain
-    (($#)) && echo -e >&2 "$*\n"
+    (($#)) && echo -e "$*\n" >&2
 
     # Stack trace
     local i
     for ((i = 0; i < ${#BASH_SOURCE[@]} - 1; ++i)); do
-        echo >&2 "-> ${BASH_SOURCE[i+1]}:${BASH_LINENO[i]}:${FUNCNAME[i]}"
+        echo "-> ${BASH_SOURCE[i+1]}:${BASH_LINENO[i]}:${FUNCNAME[i]}" >&2
     done
 
     # Clean up, send interrupt signal, and suspend execution
     CLEANUP
-    echo -e >&2 "\n\e[1;3;31mAborting shell initialization.\e[0m\n"
+    echo -e "\n\e[1;3;31mAborting shell initialization.\e[0m\n" >&2
     while true; do kill -INT $$; sleep 60; done
 }; GC_FUNC ABORT
 

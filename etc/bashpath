@@ -6,7 +6,7 @@ EXEC=''
 while getopts :x opt; do
     case $opt in
     x) EXEC='exec';;
-    *) echo >&2 "Usage: ${0##*/} [-x] [command]"; exit
+    *) echo "Usage: ${0##*/} [-x] [command]" >&2; exit
     esac
 done
 shift $((OPTIND-1))
@@ -16,7 +16,7 @@ if [[ -r "$FUNCTIONS" ]]; then
     REQUIRE ~/.bashrc.d/path.bash
     CLEANUP
 else
-    echo >&2 "Missing $FUNCTIONS"
+    echo "Missing $FUNCTIONS" >&2
     exit 1
 fi
 

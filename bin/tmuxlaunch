@@ -8,13 +8,13 @@ while getopts :gs OPT; do
     case $OPT in
     g) WRAPPER='gpg-shell';;
     s) WRAPPER='ssh-shell';;
-    *) echo >&2 "Usage: ${0##*/} [-gs]"; exit 1
+    *) echo "Usage: ${0##*/} [-gs]" >&2; exit 1
     esac
 done
 shift $((OPTIND-1))
 
 if test -n "$TMUX"; then
-    echo >&2 '$TMUX is already set!'
+    echo '$TMUX is already set!' >&2
     exit 1
 elif tmux has-session &>/dev/null; then
     exec $WRAPPER tmux attach
