@@ -1,5 +1,0 @@
-editor:
-  default:  vim
-  terminal: rxvt-unicode -g 80x44 --client --center --
-
-# vim: ft=yaml :
