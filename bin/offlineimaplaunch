@@ -1,0 +1,7 @@
+#!/bin/sh
+
+if kill -0 $(cat ~/.offlineimap/pid); then
+    exit 1
+else
+    offlineimap
+fi

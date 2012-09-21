@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-chars = File.read(File.expand_path '~/.inputrc').scan /"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/
-exec 'mutt', '-n', *(ARGV + chars.map { |k,c| ['-e', %Q(macro editor "\\e#{k}" #{c})] }.flatten)
+if system 'killall', '-0', 'mutt'
+  abort
+else
+  chars = File.read(File.expand_path '~/.inputrc').scan /"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/
+  exec 'mutt', '-n', *(ARGV + chars.map { |k,c| ['-e', %Q(macro editor "\\e#{k}" #{c})] }.flatten)
+end
