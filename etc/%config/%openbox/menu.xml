@@ -5,12 +5,12 @@
 <menu id="root-menu" label="Openbox 3">
   <item label="rxvt-unicode">
     <action name="Execute">
-      <command>rxvt-unicode --client</command>
+      <command>urxvt-client</command>
     </action>
   </item>
   <item label="tmux + gpg">
     <action name="Execute">
-      <command>rxvt-unicode --client -e tmuxlaunch -g</command>
+      <command>urxvt-client -e tmuxlaunch -g</command>
     </action>
   </item>
   <item label="Log Out">
