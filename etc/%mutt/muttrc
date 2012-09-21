@@ -83,8 +83,6 @@ macro index,pager    gj <change-folder>=[Gmail].Spam<Enter>
 macro index,pager    gt <change-folder>=[Gmail].Trash<Enter>
 macro index,pager    \' <change-folder>?<toggle-mailboxes>
 bind  browser        \' exit
-macro index          q  <change-folder>?<toggle-mailboxes>
-macro browser        q  <exit><quit>
 
 # Movement
 macro $my_list,pager <Space> <next-page><middle-page>
