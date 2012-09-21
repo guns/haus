@@ -1511,4 +1511,6 @@ if __OSX__; then
     ALIAS screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
 fi
 
+ALIAS kf='kupfer'
+
 : # Return true
