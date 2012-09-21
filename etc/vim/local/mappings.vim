@@ -524,7 +524,7 @@ noremap  <Leader>gB       :Gbrowse<CR>
 noremap  <Leader>gc       :<C-u>Gcommit<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
-noremap  <Leader>g%       :<C-u>Git di %<CR>
+noremap  <Leader>g%       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
 noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
 noremap  <Leader>gL       :<C-u>Glog<CR>
