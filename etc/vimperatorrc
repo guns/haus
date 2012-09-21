@@ -17,7 +17,7 @@ cmap <Leader> <Esc><Leader>
 """ Settings {{{1
 
 set hintchars=sadfjklewcmpgh
-set editor='env RUBYLIB=/opt/haus/lib/ruby:~/haus/lib/ruby rxvt-unicode --center -e vim'
+set editor='rxvt-unicode -e vim'
 
 """ Command line mappings {{{1
 
