@@ -618,30 +618,6 @@ psm() { __psm__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
 alias psrl='__psr__ | pager'
 alias psml='__psm__ | pager'
 
-# Report on interesting daemons
-daemons() {
-    ruby -e '
-        processes = %x(ps axo ucomm).split("\n").map &:strip
-        daemons   = %w[
-            apache2 httpd nginx
-            php-cgi php-fpm
-            mysqld postgres
-            named unbound dnsmasq dnscrypt-proxy
-            exim sendmail
-            smbd nmbd nfsd
-            sshd ssh-agent
-            subtle xmonad
-            urxvtd
-            wicd
-            java
-        ]
-
-        daemons.each do |d|
-            puts "#{d} is ALIVE" if processes.any? { |p| p =~ /\A#{d}/ }
-        end
-    '
-}
-
 # htop
 HAVE htop && {
     # Satisfy ncurses hard-coded TERM names
