@@ -146,11 +146,11 @@ macro index,pager \e\007r "<shell-escape>notmuch new<enter>"
 set my_identity_1='\
     set from="Sung Pae <self@sungpae.com>";\
     set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
-    set smtp_pass="`gpg --decrypt ~/.password-store/google/self@sungpae.com.gpg`"'
+    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/self@sungpae.com.gpg`"'
 set my_identity_2='\
     set from="Sung Pae <sungpae@gmail.com>";\
     set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
-    set smtp_pass="`gpg --decrypt ~/.password-store/google/sungpae@gmail.com.gpg`"'
+    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/sungpae@gmail.com.gpg`"'
 macro $my_list,pager \Cx? "<enter-command>set ?from<enter>"
 macro $my_list,pager \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
 macro $my_list,pager \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
