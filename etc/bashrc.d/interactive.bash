@@ -12,6 +12,9 @@ export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and lead
 export EDITOR='vim'
 export VISUAL='vim'
 
+# Locales
+export LC_COLLATE='C'                   # Traditional ASCII sorting
+
 # BSD and GNU colors
 export CLICOLOR='1'
 export LSCOLORS='ExFxCxDxbxegedabagacad'
