@@ -258,6 +258,16 @@
         <command>xdg-open https://mail.google.com/</command>
       </action>
     </keybind>
+    <keybind key="W-C-t">
+      <action name="Execute">
+        <command>urxvt-client</command>
+      </action>
+    </keybind>
+    <keybind key="W-C-g">
+      <action name="Execute">
+        <command>urxvt-client -e tmuxlaunch -g</command>
+      </action>
+    </keybind>
     <!-- Keybindings for desktop switching -->
     <keybind key="W-C-k">
       <action name="GoToDesktop">
