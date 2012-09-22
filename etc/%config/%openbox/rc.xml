@@ -228,6 +228,16 @@
       </action>
     </keybind>
     <!-- Application bindings -->
+    <keybind key="F9">
+      <action name="Execute">
+        <command>wmctrl -a 'guns ❦'</command>
+      </action>
+    </keybind>
+    <keybind key="W-F9">
+      <action name="Execute">
+        <command>wmctrl -a 'root ❦'</command>
+      </action>
+    </keybind>
     <keybind key="W-C-S-space">
       <action name="Execute">
         <command>/bin/sh -c "printf p > ~/.config/pianobar/ctl"</command>
