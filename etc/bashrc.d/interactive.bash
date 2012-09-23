@@ -1274,7 +1274,21 @@ ALIAS ssl='openssl' && {
 # GnuPG
 ALIAS gpg='gpg --no-encrypt-to'
 
-HAVE cryptsetup cs && TCOMP cryptsetup cs
+ALIAS cs='cryptsetup' && {
+    csmount() {
+        (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
+        if run cryptsetup luksOpen "$1" "${2##*/}"; then
+            run mount -t auto /dev/mapper/"${2##*/}" "$2"
+        fi
+    }
+    csumount() {
+        (($# == 1)) || { echo "USAGE: $FUNCNAME mountpoint"; return 1; }
+        if run umount "$1"; then
+            run cryptsetup luksClose "${1##*/}"
+        fi
+    }
+}
+
 ALIAS dx='dumpcert exec --'
 
 if __OSX__; then
