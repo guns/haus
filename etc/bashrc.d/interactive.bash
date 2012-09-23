@@ -1371,7 +1371,7 @@ elif __LINUX__; then
     ALIAS pac='pacman' && {
         # alias pace
         alias pacg='run pacman -Qs'
-        alias paci='run pacman -S'
+        alias paci='run pacman -S --needed'
         alias pacq='run pacman -Si'
         alias pacs='run pacman -Ss'
         alias pacu='run pacman -Rs'
