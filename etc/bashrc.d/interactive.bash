@@ -1436,7 +1436,7 @@ HAVE qlmanage && alias ql='qlmanage -p'
 
 ### X {{{1
 
-HAVE startx && alias xstartx='exec startx'
+HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
 ALIAS xselb='xsel -b'

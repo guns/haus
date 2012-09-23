@@ -245,7 +245,6 @@ $if Bash
     "\C-xo":        "\C-]cdopt "
     "\C-x\C-s":     "\C-] cdsrc \n"
     "\C-xs":        "\C-]cdsrc "
-    "\C-x\C-S":     "\C-] cdSRC \n"
     "\C-xS":        "\C-]cdSRC "
     "\C-x\C-t":     "\C-] cdtmp \n"
     "\C-xt":        "\C-]cdtmp "
@@ -316,7 +315,7 @@ $if Bash
     "\C-xC":        "\C-] vimclojure \n"
 
     # X
-    "\C-xX":        "\C-] exec startx \n"
+    "\C-xX":        "\C-] exec startx &>/dev/null \n"
 
     # Tmux
     "\C-x,":        "\C-] tmux rename-window \"${PWD##*/}\" \n"
