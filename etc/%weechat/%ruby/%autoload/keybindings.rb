@@ -17,23 +17,29 @@ include Script::Skeleton
   :description => "Guns' personal keybindings"
 }
 
-CHANNELS = %w[
-  #vim
-  #mutt
-  #clojure
-  #leiningen
-  #tmux
-  ##English
-  #bash
-  #git
-  #nginx
-  #archlinux
-  #openssl
-  #rxvt-unicode
-  #ruby
-  #ruby-lang
-  #RubyOnRails
-]
+CHANNELS = {
+  :freenode => %w[
+    #vim
+    #mutt
+    #clojure
+    #leiningen
+    #tmux
+    ##English
+    #bash
+    #git
+    #nginx
+    #archlinux
+    #openssl
+    #rxvt-unicode
+    #ruby
+    #ruby-lang
+    #RubyOnRails
+  ],
+
+  :mozilla => %w[
+    #firefox
+  ]
+}
 
 KEYBINDINGS = {
   'ctrl-C'      => '/window scroll_bottom',
@@ -45,18 +51,22 @@ KEYBINDINGS = {
   'ctrl-Cu'     => nil,
   'ctrl-X'      => nil,
   'ctrl-Xcf'    => '/shell -o echo "/connect freenode -password=$(pass irc/freenode-guns)"',
+  'ctrl-Xcm'    => '/shell -o echo "/connect mozilla -password=$(pass irc/mozilla-guns)"',
   'ctrl-Xco'    => '/shell -o echo "/connect oftc -password=$(pass irc/oftc-guns)"',
   'ctrl-Xh'     => '/input insert /help',
   'ctrl-Xif'    => '/shell -o echo "/msg NickServ identify guns $(pass irc/freenode-guns)"',
-  'ctrl-Xio'    => '/shell -o echo "/msg NickServ identify $(pass irc/oftc-guns)"',
-  'ctrl-Xj'     => '/input insert /join #',
+  'ctrl-Xim'    => '/shell -o echo "/msg NickServ identify $(pass irc/mozilla-guns)"',
+  'ctrl-Xio'    => '/shell -o echo "/msg NickServ identify $(pass irc/oftc-guns) guns"',
+  'ctrl-Xj'     => nil,
+  'ctrl-XJ'     => '/input insert /join #',
+  'ctrl-Xjf'    => "/join -server freenode #{CHANNELS[:freenode].join ','}",
+  'ctrl-Xjm'    => "/join -server freenode #{CHANNELS[:mozilla].join ','}",
   'ctrl-Xm'     => '/input insert /msg ',
   'ctrl-Xn'     => '/input insert /msg NickServ ',
   'ctrl-Xs'     => '/input insert /list -re ',
   'ctrl-V'      => '/input grab_key_command',
   'meta-ctrl-?' => '/input delete_previous_word',
   'mod4-b'      => '/bar scroll nicklist * y-90%',
-  'mod4-ctrl-M' => "/join #{CHANNELS.join ','}",
   'mod4-E'      => '/window page_down',
   'mod4-e'      => '/window scroll_down',
   'mod4-f'      => '/bar scroll nicklist * y+90%',
