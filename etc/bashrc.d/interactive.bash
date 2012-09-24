@@ -660,7 +660,7 @@ else
 fi
 
 # NTP
-alias ntpq='ntpd -g -q'
+alias qntp='ntpd -g -q'
 
 # netcat
 HAVE nc   && TCOMP dig nc
