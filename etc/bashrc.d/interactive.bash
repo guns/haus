@@ -751,16 +751,6 @@ HAVE weechat-curses && {
 }
 
 
-### Browsers {{{1
-
-if [[ -d /Applications/FirefoxAurora.app  ]]; then
-    alias firefox-bin='/Applications/FirefoxAurora.app/Contents/MacOS/firefox-bin'
-    disable-firefox-root-certificates() {
-        mv -f /Applications/FirefoxAurora.app/Contents/MacOS/libnssckbi.dylib{,.disabled}
-    }
-fi
-
-
 ### Firewalls {{{1
 
 # IPTables
