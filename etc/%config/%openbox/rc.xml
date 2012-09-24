@@ -187,7 +187,7 @@
         <prompt>false</prompt>
       </action>
     </keybind>
-    <keybind key="C-S-XF86Eject">
+    <keybind key="XF86Eject">
       <action name="Execute">
         <command>slock</command>
       </action>
