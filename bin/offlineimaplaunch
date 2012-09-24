@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if kill -0 $(cat ~/.offlineimap/pid); then
+if kill -0 $(cat ~/.offlineimap/pid) &>/dev/null; then
     exit 1
 else
     offlineimap

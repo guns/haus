@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-if system 'killall', '-0', 'mutt'
+if system 'killall -0 mutt &>/dev/null'
   abort
 else
   chars = File.read(File.expand_path '~/.inputrc').scan /"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/
