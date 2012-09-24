@@ -102,6 +102,8 @@ bind  $my_list       zb      current-bottom
 macro index,pager    <Tab>   <next-unread><current-middle>
 macro index,pager    ]       <next-unread><current-middle>
 macro index,pager    [       <previous-unread><current-middle>
+macro $my_list       \Cn     <next-thread><current-middle>
+macro $my_list       \Cp     <previous-thread><current-middle>
 bind  $my_list,pager \\      search
 
 # Actions
@@ -114,9 +116,14 @@ bind  index,pager p       recall-message
 bind  index,pager B       bounce-message
 bind  index,pager E       edit
 bind  index,pager F       forward-message
-bind  index,pager \es     flag-message
 macro index,pager a       <save-entry>=Archive<enter>
 bind  index,pager A       create-alias
+macro index,pager \Cd     <delete-thread><current-middle>
+macro index,pager \Cu     <undelete-thread><current-middle>
+macro index,pager \Cr     <read-thread><current-middle>
+macro index,pager \Ct     <tag-thread><current-middle>
+bind  index,pager \es     flag-message
+bind  index       \et     untag-pattern
 macro index       \e\007a <tag-pattern>.<enter>
 macro index       \e\007t <tag-pattern>.<enter>
 macro index       \e\007T <untag-pattern>.<enter>
