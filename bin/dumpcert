@@ -133,7 +133,7 @@ class Dumpcert
   def mapcerts args = []
     args.map do |arg|
       if arg == '-'
-        Certificate.parse($stdin.read)
+        Certificate.parse $stdin.read
       elsif File.readable? arg
         Certificate.parse File.read(arg)
       else
@@ -170,7 +170,7 @@ class Dumpcert
 
   def console *args
     require 'pry'
-    certs = mapcerts args
+    cs = mapcerts args
     binding.pry
   end
 
@@ -179,7 +179,8 @@ class Dumpcert
     rest = args.drop 1
 
     case args.first
-    when 'dump', nil then dump *rest
+    when nil then dump
+    when 'dump' then dump *rest
     when 'add' then add *rest
     when 'rm' then rm *rest
     when 'exec' then exec *rest
