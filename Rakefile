@@ -130,7 +130,6 @@ task :env do # {{{1
       { :base => "#{@vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/vim-speeddating",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-textobj-rubyblock",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-textobj-user",       :branch => %w[master],      :files => :pathogen },
