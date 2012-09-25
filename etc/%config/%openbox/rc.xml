@@ -255,7 +255,7 @@
     </keybind>
     <keybind key="F11">
       <action name="Execute">
-        <command>xdg-open https://reader.google.com/</command>
+        <command>xdg-open https://www.google.com/reader</command>
       </action>
     </keybind>
     <keybind key="F12">
