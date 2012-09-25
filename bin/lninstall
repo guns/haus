@@ -8,6 +8,7 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
+require 'set'
 require 'haus/queue'
 
 class Lninstall
@@ -21,8 +22,8 @@ class Lninstall
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
-        Link the program executables and man pages of an installation to another
-        directory tree. Also works in reverse.
+        Link the program executables, man pages, and init scripts of an
+        installation to another directory tree. Also works in reverse.
 
         For instance:
 
@@ -71,28 +72,26 @@ class Lninstall
     File.expand_path options.dst rescue nil
   end
 
-  def bin base
-    Dir[File.join base, '/{,s}bin/*']
-  end
-
-  def man base
-    Dir[File.join base, '/share/man/**/*']
+  def files base
+    Set.new Dir[*%W[
+      #{base}/{,s}bin/*
+      #{base}/share/man/**/*
+      #{base}/lib/systemd/**/*
+      #{base}/etc/{rc.d,init.d}/*
+    ]]
   end
 
   def src_files
-    @src_files ||= begin
-      bin(src).select { |f| File.executable? f or File.symlink? f } +
-      man(src).select { |f| File.file? f or File.symlink? f }
+    @src_files ||= files(src).select do |f|
+      File.file? f or File.symlink? f
     end
   end
 
   # Returns a list of all files in dst that link to files in src;
   # the files returned may have different basenames than their sources
   def dst_files
-    @dst_files ||= begin
-      (bin(dst) + man(dst)).select do |f|
-        File.symlink? f and src_files.include? File.readlink(f)
-      end
+    @dst_files ||= files(dst).select do |f|
+      File.symlink? f and src_files.include? File.readlink(f)
     end
   end
 
