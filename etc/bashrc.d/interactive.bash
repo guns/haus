@@ -615,6 +615,7 @@ psr() { __psr__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
 psm() { __psm__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
 alias psrl='__psr__ | pager'
 alias psml='__psm__ | pager'
+ALIAS pst='pstree'
 
 # htop
 HAVE htop && {
