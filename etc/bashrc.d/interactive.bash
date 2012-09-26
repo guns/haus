@@ -682,8 +682,9 @@ ALIAS scp='scp -2' \
       scp-fast="scp -c $SSH_FAST_CIPHERS" \
       scpr='scp -r' \
       scpr-fast="scpr -c $SSH_FAST_CIPHERS"
-HAVE ssh-proxy && TCOMP ssh ssh-proxy
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
+HAVE ssh-proxy && TCOMP ssh ssh-proxy
+ALIAS sshuttle='/opt/sshuttle/sshuttle' && TCOMP ssh sshuttle
 
 # lsof
 ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
@@ -755,11 +756,19 @@ HAVE weechat-curses && {
 ### Firewalls {{{1
 
 # IPTables
-HAVE iptables && {
+ALIAS ipt='iptables' && {
+    ALIAS ipt6='ip6tables'
     ALIAS iptables.sh='/etc/iptables/iptables.sh'
-    iptlist() { echo -e "$(iptables -L -v $*)\n\n### IPv6 ###\n\n$(ip6tables -L -v $* 2>/dev/null)" | pager; }
+    iptl() {
+        {   local table ipv6=$(test -e /proc/net/if_inet6)
+            for table in filter nat mangle raw security; do
+                run iptables -t "$table" -L -v "$@"
+                ((ipv6)) && run ip6tables -t "$table" -L -v "$@"
+            done
+        } 2>&1 | pager;
+    }
     iptsave() {
-        local ipt cmd
+        local ipt
         for ipt in iptables ip6tables; do
             if type ${ipt}-save &>/dev/null; then
                 echo "${ipt}-save > /etc/iptables/$ipt.rules"
@@ -939,7 +948,7 @@ HAVE tmux && {
 
     envtmux() {
         run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
-    }
+    }; TCOMP exec envtmux
 }
 
 # GNU screen

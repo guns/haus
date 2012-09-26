@@ -30,6 +30,10 @@ class SSHProxy
 
         Acts as a persistent wrapper around `ssh -D` on non OS X systems.
 
+        NOTE:
+
+          This script has served us well, but sshuttle is now much preferred.
+
         WARNING:
 
           * Existing system SOCKS Proxy details are clobbered and the global
