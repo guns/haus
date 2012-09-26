@@ -240,12 +240,17 @@
     </keybind>
     <keybind key="W-C-S-space">
       <action name="Execute">
-        <command>/bin/sh -c "printf p > ~/.config/pianobar/ctl"</command>
+        <command>mediactl toggle</command>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-Left">
+      <action name="Execute">
+        <command>mediactl prev</command>
       </action>
     </keybind>
     <keybind key="W-C-S-Right">
       <action name="Execute">
-        <command>/bin/sh -c "printf n > ~/.config/pianobar/ctl"</command>
+        <command>mediactl next</command>
       </action>
     </keybind>
     <keybind key="A-Tab">
@@ -271,6 +276,11 @@
     <keybind key="W-C-t">
       <action name="Execute">
         <command>urxvt-client</command>
+      </action>
+    </keybind>
+    <keybind key="W-C-S-t">
+      <action name="Execute">
+        <command>urxvt-client -e vim</command>
       </action>
     </keybind>
     <keybind key="W-C-g">
