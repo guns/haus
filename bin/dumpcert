@@ -94,11 +94,12 @@ class Dumpcert
 
         Commands:
 
-            dump [arg ...]   Dump certificates (or cabundle) to stdout
-            add arg ...      Add certificate roots to cabundle
-            rm arg ...       Remove certificate roots from cabundle
-            exec arg ...     Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to cabundle
-            console          Open a Pry debugging session
+            d[ump] [arg ...] Dump certificates (or cabundle) to stdout
+            i[nfo] [arg ...] Show certificates (or cabundle) information
+            a[dd] arg ...    Add certificate roots to cabundle
+            r[m] arg ...     Remove certificate roots from cabundle
+            e[xec] arg ...   Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to cabundle
+            c[onsole]        Open a Pry debugging session
 
         Options:
       BANNER
@@ -150,6 +151,10 @@ class Dumpcert
     puts format(args.empty? ? cabundle : mapcerts(args))
   end
 
+  def info *args
+    puts (args.empty? ? cabundle : mapcerts(args)).map(&:to_text)
+  end
+
   def add *args
     write_cabundle maproots(args).reduce(cabundle) { |certs, root|
       certs << root unless certs.find { |c| Certificate.equal? c, root }
@@ -180,11 +185,12 @@ class Dumpcert
 
     case args.first
     when nil then dump
-    when 'dump' then dump *rest
-    when 'add' then add *rest
-    when 'rm' then rm *rest
-    when 'exec' then exec *rest
-    when 'console' then console *rest
+    when 'd', 'dump' then dump *rest
+    when 'i', 'info' then info *rest
+    when 'a', 'add' then add *rest
+    when 'r', 'rm' then rm *rest
+    when 'x', 'e', 'exec' then exec *rest
+    when 'c', 'console' then console *rest
     else abort parser.help
     end
   end
