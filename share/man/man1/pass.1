@@ -1,4 +1,4 @@
-.TH PASS 1 "2012 Sept 2" ZX2C4 "Password Store"
+.TH PASS 1 "2012 Sept 24" ZX2C4 "Password Store"
 
 .SH NAME
 pass - stores, retrieves, generates, and synchronizes passwords securely
@@ -19,8 +19,7 @@ pass - stores, retrieves, generates, and synchronizes passwords securely
 is a very simple password store that keeps passwords inside 
 .BR gpg (1)
 encrypted files inside a simple directory tree residing at 
-.IR $HOME/.password-store ,
-or the environment variable \fBPASSWORD_STORE_DIR\fP if it is set.
+.IR ~/.password-store .
 The
 .B pass
 utility provides a series of commands for manipulating the password store,
@@ -37,12 +36,13 @@ the valid commands listed below.
 Several of the commands below rely on or provide additional functionality if
 the password store directory is also a git repository. If the password store
 directory is a git repository, all password store modification commands will
-cause a corresponding git commit. See the \fIEXAMPLES\fP section for an
-extended description using \fBinit\fP and
+cause a corresponding git commit. See the \fIEXTENDED GIT EXAMPLE\fP section
+for a detailed description using \fBinit\fP and
 .BR git (1).
 
 The \fBinit\fP command must be run before other commands in order to initialize
-the password store with the correct gpg key id.
+the password store with the correct gpg key id. Passwords are encrypting using
+the gpg key set with \fBinit\fP.
 
 There is a corresponding bash completion script for use with tab completing
 password names in
@@ -51,11 +51,15 @@ password names in
 .SH COMMANDS
 
 .TP
-\fBinit\fP \fIgpg-id\fP
+\fBinit\fP [ \fI--reencrypt\fP, \fI-e\fP ] \fIgpg-id\fP
 Initialize new password storage and use
 .I gpg-id
 for encryption. This command must be run first before a password store can be
-used.
+used. If \fI--reencrypt\fP or \fI-e\fP is specified, reencrypt all existing
+passwords in the password store using \fIgpg-id\fP. Note that use of
+.BR gpg-agent (1)
+is recommended so that the batch decryption does not require as much user
+intervention.
 .TP
 \fBls\fP \fIsubfolder\fP
 List names of passwords inside the tree at
@@ -71,7 +75,7 @@ clipboard using
 .BR xclip (1)
 and then restore the clipboard after 45 seconds.
 .TP
-\fBinsert\fP [ \fI--no-echo\fP, \fI-n\fP | \fI--multiline\fP, \fI-m\fP ] [ \fI--force\fP, \fI-f\fP ]\fIpass-name\fP
+\fBinsert\fP [ \fI--no-echo\fP, \fI-n\fP | \fI--multiline\fP, \fI-m\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name\fP
 Insert a new password into the password store called \fIpass-name\fP. This will
 read the new password from standard in. If \fI--no-echo\fP or \fI-n\fP is specified, do
 disable keyboard echo when the password is entered and confirm the password by asking
@@ -81,14 +85,14 @@ before overwriting an existing password, unless \fI--force\fP or \fI-f\fP is spe
 .TP
 \fBedit\fP \fIpass-name\fP
 Insert a new password or edit an existing password using the default text editor specified
-by the environment variable \fBEDITOR\fP or using
+by the environment variable \fIEDITOR\fP or using
 .BR vi (1)
 as a fallback. This mode makes use of temporary files for editing, but care is taken to
 ensure that temporary files are created in \fI/dev/shm\fP in order to avoid writing to
 difficult-to-erase disk sectors. If \fI/dev/shm\fP is not accessible, fallback to
-the ordinary \fBTMPDIR\fP location, and print a warning.
+the ordinary \fITMPDIR\fP location, and print a warning.
 .TP
-\fBgenerate\fP [ \fI--no-symbols\fP, \fI-n\fP ] [ \fI--clip\fP, \fI-c\fP ] \fIpass-name pass-length\fP
+\fBgenerate\fP [ \fI--no-symbols\fP, \fI-n\fP ] [ \fI--clip\fP, \fI-c\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name pass-length\fP
 Generate a new password using
 .BR pwgen (1)
 of length \fIpass-length\fP and insert into \fIpass-name\fP. If \fI--no-symbols\fP or \fI-n\fP
@@ -96,26 +100,21 @@ is specified, do not use any non-alphanumeric characters in the generated passwo
 If \fI--clip\fP or \fI-c\fP is specified, do not print the password but instead copy
 it to the clipboard using
 .BR xclip (1)
-and then restore the clipboard after 45 seconds.
+and then restore the clipboard after 45 seconds. Prompt before overwriting an existing password,
+unless \fI--force\fP or \fI-f\fP is specified.
 .TP
-\fBrm\fP [ \fI--recursive\fP, \fI-r\fP ] [ \fI--force\fP, \fI-f\fP ]\fI pass-name\fP
+\fBrm\fP [ \fI--recursive\fP, \fI-r\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name\fP
 Remove the password named \fIpass-name\fP from the password store. This command is
 alternatively named \fBremove\fP or \fBdelete\fP. If \fI--recursive\fP or \fI-r\fP
 is specified, delete pass-name recursively if it is a directory. If \fI--force\fP
 or \fI-f\fP is specified, do not interactively prompt before removal.
 .TP
-\fBpush\fP
-If the password store is a git repository, push the latest changes using
-.BR git-push (1).
-.TP
-\fBpull\fP
-If the password store is a git repository, pull the latest changes using
-.BR git-pull (1).
-.TP
 \fBgit\fP \fIgit-command-args\fP...
 If the password store is a git repository, pass \fIgit-command-args\fP as arguments to
 .BR git (1)
-using the password store as the git repository.
+using the password store as the git repository. If \fIgit-command-args\fP is \fBinit\fP,
+in addition to initializing the git repository, add the current contents of the password
+store to the repository in an initial commit.
 .TP
 \fBhelp\fP
 Show usage message.
@@ -223,7 +222,7 @@ rm: remove regular file \[u2018]/home/zx2c4/.password-store/Business/cheese-whiz
 removed \[u2018]/home/zx2c4/.password-store/Business/cheese-whiz-factory.gpg\[u2019]
 
 .SH EXTENDED GIT EXAMPLE
-Here, we initialize new password store, create a git repository, and then manipulate and sync passwords. Make note of the arguments to the first call of \fBpass push\fP; consult
+Here, we initialize new password store, create a git repository, and then manipulate and sync passwords. Make note of the arguments to the first call of \fBpass git push\fP; consult
 .BR git-push (1)
 for more information.
 
@@ -235,7 +234,13 @@ Password store initialized for Jason@zx2c4.com.
 
 .B zx2c4@laptop ~ $ pass git init 
 .br
-Initialized empty Git repository in /home/zx2c4/.password-store/.git/ 
+Initialized empty Git repository in /home/zx2c4/.password-store/.git/
+.br
+[master (root-commit) 998c8fd] Added current contents of password store.
+.br
+ 1 file changed, 1 insertion(+)
+.br
+ create mode 100644 .gpg-id
 
 .B zx2c4@laptop ~ $ pass git remote add origin kexec.com:pass-store 
 
@@ -243,7 +248,7 @@ Initialized empty Git repository in /home/zx2c4/.password-store/.git/
 .br
 mkdir: created directory \[u2018]/home/zx2c4/.password-store/Amazon\[u2019] 
 .br
-[master (root-commit) 30fdc1e] Added generated password for Amazon/amazonemail@email.com to store. 
+[master 30fdc1e] Added generated password for Amazon/amazonemail@email.com to store.
 .br
 1 file changed, 0 insertions(+), 0 deletions(-) 
 .br
@@ -253,7 +258,7 @@ The generated password to Amazon/amazonemail@email.com is:
 .br
 <5m,_BrZY`antNDxKN<0A 
 
-.B zx2c4@laptop ~ $ pass push -u --all 
+.B zx2c4@laptop ~ $ pass git push -u --all
 .br
 Counting objects: 4, done. 
 .br
@@ -295,7 +300,7 @@ rm 'Amazon/amazonemail@email.com.gpg'
 .br
 delete mode 100644 Amazon/amazonemail@email.com.gpg 
 
-.B zx2c4@laptop ~ $ pass push 
+.B zx2c4@laptop ~ $ pass git push
 .br
 Counting objects: 9, done. 
 .br
@@ -313,11 +318,28 @@ To kexec.com:pass-store
 
 .TP
 .B ~/.password-store
-The password storage directory.
+The default password storage directory.
 .TP
 .B ~/.password-store/.gpg-id
-Contains the gpg key identification used for encryption and decryption. This should
-be set using the \fBinit\fP command.
+Contains the default gpg key identification used for encryption and decryption.
+This should be set using the \fBinit\fP command.
+
+.SH ENVIRONMENT VARIABLES
+
+.TP
+.I PASSWORD_STORE_DIR
+Overrides the default password storage directory.
+.TP
+.I PASSWORD_STORE_KEY
+Overrides the default gpg key identification set by \fBinit\fP.
+.TP
+.I PASSWORD_STORE_GIT
+Overrides the default root of the git repository, which is helpful if
+\fIPASSWORD_STORE_DIR\fP is temporarily set to a sub-directory of the default
+password store.
+.TP
+.I EDITOR
+The location of the text editor used by \fBedit\fP.
 
 .SH SEE ALSO
 .BR gpg (1),

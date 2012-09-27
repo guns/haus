@@ -1,32 +1,87 @@
 # completion file for bash
 
-# (C) Copyright 2012 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
-# This is released under the GPLv2+. Please see COPYING for more information.
+# Copyright (C) 2012 Jason A. Donenfeld <Jason@zx2c4.com> and
+# Brian Mattern <rephorm@rephorm.com>. All Rights Reserved.
+# This file is licensed under the GPLv2+. Please see COPYING for more information.
 
-_pass()
-{
-	local cur prev prefix suffix gen
-	COMPREPLY=()
-	cur="${COMP_WORDS[COMP_CWORD]}"
-	prev="${COMP_WORDS[COMP_CWORD-1]}"
-	prefix="$HOME/.password-store/"
+_pass_complete_entries () {
+	prefix="${PASSWORD_STORE_DIR:-$HOME/.password-store/}"
 	suffix=".gpg"
+	autoexpand=${1:-0}
 
-	if [[ $prev == --* ]]; then
-		return 0
-	fi
-	
-	for item in $(compgen -f $prefix$cur); do
+	local IFS=$'\n'
+	local items=($(compgen -f $prefix$cur))
+	for item in ${items[@]}; do
 		if [[ $item == $prefix.* ]]; then
 			continue
 		fi
-		if [[ -d $item ]]; then
-			item="$item/"
-		fi
-		item="${item%$suffix}"
-		gen="$gen ${item#$prefix}"
-	done
 
-	COMPREPLY=( $gen )
+		# if there is a unique match, and it is a directory with one entry
+		# autocomplete the subentry as well (recursively)
+		if [[ ${#items[@]} -eq 1 && $autoexpand -eq 1 ]]; then
+			while [[ -d $item ]]; do
+				local subitems=($(compgen -f "$item/"))
+				if [[ ${#subitems[@]} -eq 1 ]]; then
+					item="${subitems[0]}"
+				else
+					break
+				fi
+			done
+		fi
+
+		# append / to directories
+		[[ -d $item ]] && item="$item/"
+
+		item="${item%$suffix}"
+		COMPREPLY+=("${item#$prefix}")
+	done
 }
+
+_pass_complete_keys () {
+	local IFS=$'\n'
+	# Extract names and email addresses from gpg --list-keys
+	local keys="$(gpg --list-secret-keys --with-colons | cut -d : -f 10 | sort -u | sed '/^$/d')"
+	COMPREPLY+=($(compgen -W "${keys}" -- ${cur}))
+}
+
+_pass()
+{
+	COMPREPLY=()
+	local cur="${COMP_WORDS[COMP_CWORD]}"
+	local commands="init ls show insert generate edit rm git help version"
+	if [[ $COMP_CWORD -gt 1 ]]; then
+		case "${COMP_WORDS[1]}" in
+			init)
+				COMPREPLY+=($(compgen -W "-e --reencrypt" -- ${cur}))
+				_pass_complete_keys
+				;;
+			ls|list|edit)
+				_pass_complete_entries
+				;;
+			show|-*)
+				COMPREPLY+=($(compgen -W "-c --clip" -- ${cur}))
+				_pass_complete_entries 1
+				;;
+			insert)
+				COMPREPLY+=($(compgen -W "-n --no-echo -m --multiline -f --force" -- ${cur}))
+				_pass_complete_entries
+				;;
+			generate)
+				COMPREPLY+=($(compgen -W "-n --no-symbols -c --clip -f --force" -- ${cur}))
+				_pass_complete_entries
+				;;
+			rm|remove|delete)
+				COMPREPLY+=($(compgen -W "-r --recursive -f --force" -- ${cur}))
+				_pass_complete_entries
+				;;
+			git)
+				COMPREPLY+=($(compgen -W "init push pull config log reflog" -- ${cur}))
+				;;
+		esac
+	else
+		COMPREPLY+=($(compgen -W "${commands}" -- ${cur}))
+		_pass_complete_entries 1
+	fi
+}
+
 complete -o filenames -o nospace -F _pass pass
