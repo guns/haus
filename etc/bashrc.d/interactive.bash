@@ -224,6 +224,9 @@ ALIAS n='notify' \
 HAVE run   && TCOMP exec run
 HAVE bgrun && TCOMP exec bgrun
 
+# opensearch
+HAVE opensearch && opensearch() { command opensearch "$@" | tee "$1.xml"; }
+
 
 ### Files, Disks, and Memory {{{1
 
