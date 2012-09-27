@@ -1,5 +1,5 @@
 [Unit]
-Description=dnscrypt-proxy daemon
+Description=Encrypted DNS proxy daemon
 After=loopback-alias.service
 
 [Service]

@@ -1,5 +1,5 @@
 [Unit]
-Description=Switch MacBook function keys mode
+Description=MacBook function keys mode toggle
 
 [Service]
 Type=oneshot

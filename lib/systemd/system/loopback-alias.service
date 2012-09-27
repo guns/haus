@@ -1,5 +1,5 @@
 [Unit]
-Description=Create a loopback alias at 127.0.0.2
+Description=Loopback alias (127.0.0.2)
 
 [Service]
 Type=oneshot

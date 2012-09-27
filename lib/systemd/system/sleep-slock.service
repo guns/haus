@@ -1,5 +1,5 @@
 [Unit]
-Description=slock
+Description=Screen lock on sleep
 Before=sleep.target
 
 [Service]

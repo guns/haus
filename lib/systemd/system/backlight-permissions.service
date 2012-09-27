@@ -1,5 +1,5 @@
 [Unit]
-Description=Allow users of group power to change backlight settings
+Description=Backlight permissions toggle
 
 [Service]
 Type=oneshot
