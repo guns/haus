@@ -1194,9 +1194,9 @@ HAVE cabal && {
 
 ### Databases {{{1
 
-ALIAS mysql='mysql -p' \
-      mysqldump='mysqldump -p' \
-      mysqladmin='mysqladmin -p'
+ALIAS mysql='mysql -uroot -p\$\(pass mysql/root\)' \
+      mysqldump='mysqldump -uroot -p\$\(pass mysql/root\)' \
+      mysqladmin='mysqladmin -uroot -p\$\(pass mysql/root\)'
 
 ALIAS ppsql='psql postgres'
 

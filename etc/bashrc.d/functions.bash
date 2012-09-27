@@ -196,7 +196,7 @@ ALIAS() {
     local arg
     for arg in "$@"; do
         # Split argument into name and (array)value; eval preserves user's
-        # quoting and escaping
+        # quoting and escaping (for the most part)
         local name="${arg%%=*}"
         eval "local val=(${arg#*=})"
         local cmd="${val[0]}" opts="${val[@]:1}"
