@@ -21,7 +21,7 @@ menu.title.text.color: #FFFFFF
 menu.title.text.font: shadow=n
 menu.title.text.justify: Center
 osd.bg: Solid Flat
-osd.bg.color: #F9F9F9
+osd.bg.color: #DEDEDE
 osd.hilight.bg: Solid Flat
 osd.hilight.bg.color: #1793D1
 osd.label.bg: parentrelative
