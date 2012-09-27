@@ -226,14 +226,15 @@ task :env do # {{{1
         :files  => lambda { |proj|
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
+
           system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.gitignore --exclude=*.snippets #{proj.base}/ #{dst}/]
           system *%W[rsync -a --delete --no-owner #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
-          nil # Return nil because the work is done
-        },
-        # Allow non-privileged user to edit snippets
-        :after  => lambda { |proj|
           snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
+
+          # Allow non-privileged user to edit snippets
           chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false if ENV.has_key? 'SUDO_USER'
+
+          nil # Return nil because the work is done
         }
       },
 

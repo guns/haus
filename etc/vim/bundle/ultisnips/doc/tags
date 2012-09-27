@@ -30,6 +30,7 @@ UltiSnips-snippet-search-path	UltiSnips.txt	/*UltiSnips-snippet-search-path*
 UltiSnips-syntax	UltiSnips.txt	/*UltiSnips-syntax*
 UltiSnips-tabstops	UltiSnips.txt	/*UltiSnips-tabstops*
 UltiSnips-transformations	UltiSnips.txt	/*UltiSnips-transformations*
+UltiSnips-trigger-functions	UltiSnips.txt	/*UltiSnips-trigger-functions*
 UltiSnips-triggers	UltiSnips.txt	/*UltiSnips-triggers*
 UltiSnips-using-a-downloaded-packet	UltiSnips.txt	/*UltiSnips-using-a-downloaded-packet*
 UltiSnips-using-bzr	UltiSnips.txt	/*UltiSnips-using-bzr*
