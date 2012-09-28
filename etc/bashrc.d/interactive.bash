@@ -1481,8 +1481,10 @@ fi
 
 ALIAS sd='systemd' \
       sc='systemctl' \
-      sleepnow='systemctl suspend' \
-      jc='journalctl' \
+      jc='journalctl' && {
+    alias sleepnow='systemctl suspend'
+    alias daemons='systemctl list-units | ruby -ne "puts \$_ if \$_.split[3] == %q(running)"'
+}
 
 
 ### Launchd {{{1
