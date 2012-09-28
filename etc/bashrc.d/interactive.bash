@@ -158,7 +158,7 @@ __ps1toggle__() {
 }
 
 
-### Directories and Init scripts {{{1
+### Directories {{{1
 
 CD_FUNC -n ..           ..
 CD_FUNC -n ...          ../..
@@ -189,8 +189,6 @@ CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdmail          ~/Mail
-
-RC_FUNC rcd             /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 
 
 ### Bash builtins and Haus commands {{{1
@@ -1497,14 +1495,18 @@ if [[ "$TERM" == linux ]]; then
 fi
 
 
-### systemd {{{1
+### Init {{{1
 
-ALIAS sd='systemd' \
-      sc='systemctl' \
-      jc='journalctl' && {
-    alias sleepnow='systemctl suspend'
-    alias daemons='systemctl list-units | ruby -ne "puts \$_ if \$_.split[3] == %q(running)"'
-}
+if HAVE systemd; then
+    ALIAS sd='systemd' \
+          sc='systemctl' \
+          jc='journalctl' && {
+        alias sleepnow='systemctl suspend'
+        alias daemons='systemctl list-units | ruby -ne "puts \$_ if \$_.split[3] == %q(running)"'
+    }
+else
+    RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
+fi
 
 
 ### Launchd {{{1
