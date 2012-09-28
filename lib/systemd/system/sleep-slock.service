@@ -3,6 +3,7 @@ Description=Screen lock on sleep
 Before=sleep.target
 
 [Service]
+Type=simple
 User=guns
 Environment=DISPLAY=:0
 ExecStart=/usr/local/bin/slock

@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'ostruct'
+require 'fileutils'
 
 class Hwctl
   attr_reader :options
@@ -25,8 +26,15 @@ class Hwctl
 
         Commands:
 
-          b[acklight] [pct] Query or set backlight as a percentage. Argument can be signed
-                            for relative adjustment.
+          b[acklight] [pct]
+            Query or set backlight as a percentage. Argument can be signed for
+            relative adjustment.
+
+          backlight-permissions mode user group
+            Set backlight control file permissions.
+
+          fnmode fn|media
+            Set MacBook function key mode.
 
         Options:
       BANNER
@@ -61,8 +69,26 @@ class Hwctl
     when nil           then brightness cur, max
     when /\A[+-]\d+\z/ then brightness set_brightness((cur + (max * (setting.to_f / 100))).round, max), max
     when /\A\d+\z/     then brightness set_brightness((max * (setting.to_f / 100)).round, max), max
-    else :invalid_value
+    else raise ArgumentError
     end
+  end
+
+  def backlight_permissions mode, user, group
+    f = File.join options.sys_backlight, 'brightness'
+    FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
+    FileUtils.chown user, group, f
+    s = File.stat f
+    '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
+  end
+
+  def fnmode type
+    f = '/sys/module/hid_apple/parameters/fnmode'
+    case type
+    when 2, 'fn'    then File.open(f, 'w') { |f| f.puts '2' }
+    when 1, 'media' then File.open(f, 'w') { |f| f.puts '1' }
+    else raise ArgumentError
+    end
+    File.read f
   end
 
   def run arguments = []
@@ -71,6 +97,8 @@ class Hwctl
 
     out = case args.first
     when 'b', 'backlight' then backlight *rest
+    when 'backlight-permissions' then backlight_permissions *rest
+    when 'fnmode' then fnmode *rest
     else abort parser.help
     end
 

@@ -3,8 +3,8 @@ Description=Backlight permissions toggle
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c "/bin/chmod 0664 /sys/class/backlight/intel_backlight/brightness; chown root:power /sys/class/backlight/intel_backlight/brightness"
-ExecStop=/bin/sh -c "/bin/chmod 0644 /sys/class/backlight/intel_backlight/brightness; chown root:root /sys/class/backlight/intel_backlight/brightness"
+ExecStart=/opt/haus/bin/hwctl backlight-permissions 0664 root power
+ExecStop=/opt/haus/bin/hwctl backlight-permissions 0644 root root
 RemainAfterExit=yes
 
 [Install]

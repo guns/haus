@@ -3,8 +3,8 @@ Description=MacBook function keys mode toggle
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'echo 2 > /sys/module/hid_apple/parameters/fnmode'
-ExecStop=/bin/sh -c 'echo 1 > /sys/module/hid_apple/parameters/fnmode'
+ExecStart=/opt/haus/bin/hwctl fnmode fn
+ExecStop=/opt/haus/bin/hwctl fnmode media
 RemainAfterExit=yes
 
 [Install]
