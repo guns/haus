@@ -1227,7 +1227,7 @@ ALIAS sqlite='sqlite3' && {
 
 ### Hardware control {{{1
 
-ALIAS mp='modprobe'
+ALIAS mp='modprobe -a'
 
 if __OSX__; then
     # Show all pmset settings by default
