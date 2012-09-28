@@ -76,8 +76,27 @@ fi
 
 ### Meta Utility Functions {{{1
 
-# List all defined functions
+# Lists of aliases and functions
 showfunctions() { set | grep '^[^ ]* ()'; }
+showconflicts() {
+    {
+        local cmd buf
+
+        builtin alias | command perl -pe 's:alias (.*?)=.*:\1:p' | while builtin read cmd; do
+            buf="$(command type -a "$cmd")"
+            if (($(grep -c "$cmd is " <<< "$buf") > 1)); then
+                builtin printf "$buf\0"
+            fi
+        done
+
+        showfunctions | awk '{print $1}' | while builtin read cmd; do
+            buf="$(command type -a "$cmd" | grep "$cmd is ")"
+            if (($(grep -c . <<< "$buf") > 1)); then
+                builtin printf "$buf\0"
+            fi
+        done
+    } | ruby -e 'puts $stdin.read.scan(/(.*?)\0/m).flatten.sort.join("\n\n")'
+}
 
 # Return absolute path
 # Param: $1 Filename
@@ -1228,6 +1247,7 @@ ALIAS sqlite='sqlite3' && {
 ### Hardware control {{{1
 
 ALIAS mp='modprobe -a'
+ALIAS sens='sensors'
 
 if __OSX__; then
     # Show all pmset settings by default
