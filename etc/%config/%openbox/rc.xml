@@ -258,11 +258,6 @@
         <command>/bin/sh -c "if killall -0 skippy-xd; then killall skippy-xd; else skippy-xd; fi"</command>
       </action>
     </keybind>
-    <keybind key="F11">
-      <action name="Execute">
-        <command>xdg-open https://www.google.com/reader</command>
-      </action>
-    </keybind>
     <keybind key="F12">
       <action name="Execute">
         <command>/bin/sh -c "wmctrl -a '★ Mutt ★' || { cd ~/Downloads; urxvt-client -title '★ Mutt ★' -g 120x40 -e gpg-shell muttlaunch; }"</command>
@@ -271,6 +266,11 @@
     <keybind key="W-F12">
       <action name="Execute">
         <command>xdg-open https://mail.google.com/</command>
+      </action>
+    </keybind>
+    <keybind key="A-F12">
+      <action name="Execute">
+        <command>xdg-open https://www.google.com/reader</command>
       </action>
     </keybind>
     <keybind key="W-C-t">
