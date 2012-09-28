@@ -512,3 +512,13 @@ $if Psql
     "\C-xll":       "\C-]\\lo_list\n"
     "\C-xlu":       "\C-]\\lo_unlink "
 $endif
+
+$if Mysql
+    "\033\007e":    "\C-]\\e\n"
+    "\C-x\C-d":     "\C-]show databases;\n"
+    "\C-x\C-f":     "\C-]flush privileges;\n"
+    "\C-x\C-t":     "\C-]show table status;\n"
+    "\C-xh":        "\C-]\\h "
+    "\C-xu":        "\C-]\\u "
+    "\C-xs":        "\C-]SELECT "
+$endif
