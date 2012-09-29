@@ -135,6 +135,8 @@ class Minecraft
   end
 
   def start_server!
+    raise 'Minecraft directory is locked! Remove %s to override.' if File.exists? pidfile
+
     setup_world!
 
     if options.debug
