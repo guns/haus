@@ -684,8 +684,8 @@ fi
 alias qntp='ntpd -g -q'
 
 # netcat
-HAVE nc   && TCOMP dig nc
-HAVE ncat && TCOMP dig ncat
+HAVE nc   && complete -F _known_hosts nc
+HAVE ncat && complete -F _known_hosts ncat
 
 # tcpdump
 HAVE tcpdump && {
@@ -697,7 +697,7 @@ ALIAS ssh='ssh -2' \
       ssh-fast="ssh -c $SSH_FAST_CIPHERS" \
       ssh-vm='ssh-fast -Y' \
       ssh-password='ssh -o \"PreferredAuthentications password\"' \
-      ssh-remove-host='ssh-keygen -R'
+      ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
 ALIAS scp='scp -2' \
       scp-fast="scp -c $SSH_FAST_CIPHERS" \
       scpr='scp -r' \
