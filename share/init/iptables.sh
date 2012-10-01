@@ -58,12 +58,12 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 
 # Packet tracing / logging
 # $IPTABLES --table raw --append PREROUTING/OUTPUT [--match ...] --jump TRACE
-$IPTABLES --new-chain LOGDROP
-$IPTABLES --append    LOGDROP   --jump LOG
-$IPTABLES --append    LOGDROP   --jump DROP
-$IPTABLES --new-chain LOGACCEPT
-$IPTABLES --append    LOGACCEPT --jump LOG
-$IPTABLES --append    LOGACCEPT --jump ACCEPT
+# $IPTABLES --new-chain LOGDROP
+# $IPTABLES --append    LOGDROP   --jump LOG
+# $IPTABLES --append    LOGDROP   --jump DROP
+# $IPTABLES --new-chain LOGACCEPT
+# $IPTABLES --append    LOGACCEPT --jump LOG
+# $IPTABLES --append    LOGACCEPT --jump ACCEPT
 
 #
 # Core rules
@@ -83,7 +83,7 @@ $IPTABLES --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED
 # Security
 #
 
-$IPTABLES --append INPUT --match conntrack --ctstate INVALID --jump LOGDROP
+$IPTABLES --append INPUT --match conntrack --ctstate INVALID --jump DROP
 
 #
 # Services
