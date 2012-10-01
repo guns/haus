@@ -25,6 +25,28 @@ task :env do # {{{1
   @vim = File.expand_path '~guns/src/vimfiles'
 
   @subprojects = Hash[{
+    'programs' => [
+      {
+        :base   => "#{@src}/leiningen",
+        :branch => %w[master],
+        :files  => {
+          'bin/lein'             => 'bin/lein',
+          'doc/lein.1'           => 'share/man/man1/lein.1',
+          'bash_completion.bash' => 'etc/bash_completion.d/lein'
+        }
+      },
+
+      {
+        :base   => "#{@src}/READONLY/password-store",
+        :branch => %w[master],
+        :files  => {
+          'src/password-store.sh'        => 'bin/pass',
+          'man/pass.1'                   => 'share/man/man1/pass.1',
+          'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
+        }
+      }
+    ],
+
     'completions' => [
       {
         :base   => "#{@src}/bash-completion",
@@ -54,26 +76,6 @@ task :env do # {{{1
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
-        }
-      },
-
-      {
-        :base   => "#{@src}/leiningen",
-        :branch => %w[master],
-        :files  => {
-          'bin/lein'             => 'bin/lein',
-          'doc/lein.1'           => 'share/man/man1/lein.1',
-          'bash_completion.bash' => 'etc/bash_completion.d/lein'
-        }
-      },
-
-      {
-        :base   => "#{@src}/READONLY/password-store",
-        :branch => %w[master],
-        :files  => {
-          'src/password-store.sh'        => 'bin/pass',
-          'man/pass.1'                   => 'share/man/man1/pass.1',
-          'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
         }
       }
     ],
@@ -150,7 +152,7 @@ task :env do # {{{1
           src = "#{proj.base}/vimperator/contrib/vim"
           dst = "#{proj.haus}/etc/vim/bundle/vimperator"
           FileUtils.mkdir_p dst
-          system *%W[rsync -a --delete --no-owner #{src}/ #{dst}/]
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           nil # Work is done
         }
       },
@@ -173,7 +175,7 @@ task :env do # {{{1
       #     system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
       #     raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
 
-      #     system 'rsync -a --delete --no-owner %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
+      #     system 'rsync -a --delete --no-owner --no-group %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
       #     raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
 
       #     nil # The work is done
@@ -227,8 +229,8 @@ task :env do # {{{1
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
 
-          system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.gitignore --exclude=*.snippets #{proj.base}/ #{dst}/]
-          system *%W[rsync -a --delete --no-owner #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
+          system *%W[rsync -a --delete --no-owner --no-group --exclude=/.git --exclude=/.gitignore --exclude=/UltiSnips #{proj.base}/ #{dst}/]
+          system *%W[rsync -a --delete --no-owner --no-group #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
           snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
 
           # Allow non-privileged user to edit snippets
@@ -245,7 +247,7 @@ task :env do # {{{1
           src = "#{proj.base}/vim"
           dst = "#{proj.haus}/etc/vim/bundle/sparkup"
           FileUtils.mkdir_p dst
-          system *%W[rsync -a --delete --no-owner #{src}/ #{dst}/]
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           nil # Work is done
         }
       },
