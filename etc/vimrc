@@ -187,10 +187,6 @@ let g:delimitMate_excluded_regions = ''
 let g:delimitMate_expand_space = 1
 let g:delimitMate_balance_matchpairs = 1
 
-" Plugin: Gnupg
-let g:GPGDefaultRecipients = ['self@sungpae.com']
-let g:GPGPreferArmor = 1
-
 " Plugin: Gundo.vim
 let g:gundo_preview_bottom = 1
 let g:gundo_right = 1
