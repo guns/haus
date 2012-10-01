@@ -775,15 +775,18 @@ HAVE weechat-curses && {
 
 ### Firewalls {{{1
 
+# IPv6
+__LINUX__ && have_ipv6() { [[ -e /proc/net/if_inet6 ]]; }
+
 # IPTables
 ALIAS ipt='iptables' && {
     ALIAS ipt6='ip6tables'
     ALIAS iptables.sh='/etc/iptables/iptables.sh'
     iptl() {
-        {   local table ipv6=$(test -e /proc/net/if_inet6)
+        {   local table
             for table in filter nat mangle raw security; do
-                run iptables -t "$table" -L -v "$@"
-                ((ipv6)) && run ip6tables -t "$table" -L -v "$@"
+                run iptables --table "$table" --list --verbose "$@"
+                have_ipv6 && run ip6tables --table "$table" --list --verbose "$@"
             done
         } 2>&1 | pager;
     }
@@ -793,6 +796,15 @@ ALIAS ipt='iptables' && {
             if type ${ipt}-save &>/dev/null; then
                 echo "${ipt}-save > /etc/iptables/$ipt.rules"
                 ${ipt}-save > /etc/iptables/$ipt.rules
+            fi
+        done
+    }
+    iptrestore() {
+        local ipt
+        for ipt in iptables ip6tables; do
+            if type ${ipt}-restore &>/dev/null; then
+                echo "${ipt}-restore < /etc/iptables/$ipt.rules"
+                ${ipt}-restore < /etc/iptables/$ipt.rules
             fi
         done
     }
