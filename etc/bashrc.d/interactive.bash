@@ -781,7 +781,7 @@ __LINUX__ && have_ipv6() { [[ -e /proc/net/if_inet6 ]]; }
 # IPTables
 ALIAS ipt='iptables' && {
     ALIAS ipt6='ip6tables'
-    ALIAS iptables.sh='/etc/iptables/iptables.sh'
+    [[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
     iptl() {
         {   local table
             for table in filter nat mangle raw security; do
