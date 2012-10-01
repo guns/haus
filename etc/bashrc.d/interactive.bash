@@ -970,8 +970,9 @@ HAVE vim && {
 ### Terminal Multiplexers {{{1
 
 # Tmux
-HAVE tmux && {
+ALIAS tm='tmux' && {
     HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
+
     tmuxeval() {
         local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+"))
         echo "$vars"
