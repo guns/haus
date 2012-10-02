@@ -1478,7 +1478,7 @@ HAVE youtubedown && {
     youtubedownformats() {
         youtubedown -v --size "$@" 2>&1 | ruby -Eiso-8859-1 -e '
             puts input = $stdin.readlines
-            fmts = input.find { |l| l =~ /available formats:/ }[/formats:(.*);/, 1].split(",").map &:to_i
+            fmts = input.find { |l| l =~ /available formats:/ }[/formats:(.*);/, 1].scan /\d+/
             buf = File.readlines %x(/bin/sh -c "command -v youtubedown").chomp
             puts fmts.map { |f| buf.grep /^  # #{f}/ }
         '
