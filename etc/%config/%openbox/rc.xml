@@ -289,6 +289,18 @@
       </action>
     </keybind>
     <!-- Keybindings for desktop switching -->
+    <keybind key="C-1">
+      <action name="GoToDesktop">
+        <to>left</to>
+        <wrap>yes</wrap>
+      </action>
+    </keybind>
+    <keybind key="C-2">
+      <action name="GoToDesktop">
+        <to>right</to>
+        <wrap>yes</wrap>
+      </action>
+    </keybind>
     <keybind key="W-C-k">
       <action name="GoToDesktop">
         <to>left</to>
