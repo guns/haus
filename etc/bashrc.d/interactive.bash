@@ -1472,6 +1472,18 @@ HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
 # Quick Look (OS X)
 HAVE qlmanage && alias ql='qlmanage -p'
 
+# youtubedown
+HAVE youtubedown && {
+    youtubedownformats() {
+        youtubedown -v --size "$@" 2>&1 | ruby -Eiso-8859-1 -e '
+            puts input = $stdin.readlines
+            fmts = input.find { |l| l =~ /available formats:/ }[/formats:(.*);/, 1].split(",").map &:to_i
+            buf = File.readlines %x(/bin/sh -c "command -v youtubedown").chomp
+            puts fmts.map { |f| buf.grep /^  # #{f}/ }
+        '
+    }
+}
+
 
 ### X {{{1
 
