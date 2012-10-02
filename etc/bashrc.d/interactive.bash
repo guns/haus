@@ -1316,16 +1316,17 @@ ALIAS gpg='gpg --no-encrypt-to'
 ALIAS cs='cryptsetup' && {
     csmount() {
         (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
-        if run cryptsetup luksOpen "$1" "${2##*/}"; then
-            run mount -t auto /dev/mapper/"${2##*/}" "$2"
+        local name="$(sed 's:/$:: ; s:.*/::' <<< "$2")"
+        if run cryptsetup luksOpen "$1" "$name"; then
+            run mount -t auto "/dev/mapper/$name" "$2"
         fi
     }
     csumount() {
         (($# == 1)) || { echo "USAGE: $FUNCNAME mountpoint"; return 1; }
         if run umount "$1"; then
-            run cryptsetup luksClose "${1##*/}"
+            run cryptsetup luksClose "$(sed 's:/$:: ; s:.*/::' <<< "$1")"
         fi
-    }
+    }; TCOMP umount csumount
 }
 
 ALIAS dx='dumpcert exec --'
