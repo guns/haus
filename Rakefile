@@ -44,6 +44,20 @@ task :env do # {{{1
           'man/pass.1'                   => 'share/man/man1/pass.1',
           'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
         }
+      },
+
+      {
+        :base   => "#{@src}/jwzhacks",
+        :before => lambda { |proj|
+          if proj.fetch
+            system './update.sh &>/dev/null'
+            if not %x(git status --short).empty?
+              proj.git.add
+              proj.git.commit 'UPDATE'
+            end
+          end
+        },
+        :files => { 'youtubedown' => 'bin/youtubedown' }
       }
     ],
 
