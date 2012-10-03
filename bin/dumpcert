@@ -82,7 +82,6 @@ class Dumpcert
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.cabundle ||= File.expand_path '~/.certificates/cabundle.pem'
   end
 
   def parser
@@ -94,18 +93,22 @@ class Dumpcert
 
         Commands:
 
-            d[ump] [arg ...] Dump certificates (or cabundle) to stdout
-            i[nfo] [arg ...] Show certificates (or cabundle) information
-            a[dd] arg ...    Add certificate roots to cabundle
-            r[m] arg ...     Remove certificate roots from cabundle
-            e[xec] arg ...   Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to cabundle
+            d[ump] [arg ...] Dump certificates to stdout
+            i[nfo] [arg ...] Show detailed certificate information
+            a[dd] arg ...    Add certificates to certfile
+            r[m] arg ...     Remove certificates from certfile
+            e[xec] arg ...   Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to certfile
             c[onsole]        Open a Pry debugging session
 
         Options:
       BANNER
 
-      opt.on '-f', '--cabundle PATH', 'File containing CA Roots [DEFAULT: %s]' % options.cabundle do |arg|
-        options.cabundle = File.expand_path arg
+      opt.on '-f', '--certfile PATH', 'Certificate file, required for some commands' do |arg|
+        options.certfile = File.expand_path arg
+      end
+
+      opt.on '-s', '--self-signed', 'Select only self-signed certificates' do
+        options.self_signed = true
       end
     end
   end
@@ -121,18 +124,22 @@ class Dumpcert
     end.join
   end
 
-  def cabundle
-    Certificate.parse File.read(options.cabundle)
+  def certfile
+    options.certfile or raise "'certfile' is unset"
   end
 
-  def write_cabundle certs
-    File.open options.cabundle, 'w' do |f|
-      f.puts format(certs.sort_by { |c| c.subject.to_s })
+  def certificates
+    Certificate.parse File.read(certfile)
+  end
+
+  def write_certfile certs
+    File.open certfile, 'w' do |f|
+      f.puts format(certs)
     end
   end
 
   def mapcerts args = []
-    args.map do |arg|
+    certs = args.map do |arg|
       if arg == '-'
         Certificate.parse $stdin.read
       elsif File.readable? arg
@@ -141,35 +148,33 @@ class Dumpcert
         Certificate.get_chain arg
       end
     end.flatten.compact
-  end
 
-  def maproots args = []
-    mapcerts(args).select { |c| Certificate.self_signed? c }
+    options.self_signed ? certs.select { |c| Certificate.self_signed? c } : certs
   end
 
   def dump *args
-    puts format(args.empty? ? cabundle : mapcerts(args))
+    puts format(args.empty? ? certificates : mapcerts(args))
   end
 
   def info *args
-    puts (args.empty? ? cabundle : mapcerts(args)).map(&:to_text)
+    puts (args.empty? ? certificates : mapcerts(args)).map(&:to_text)
   end
 
   def add *args
-    write_cabundle maproots(args).reduce(cabundle) { |certs, root|
+    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
       certs << root unless certs.find { |c| Certificate.equal? c, root }
       certs
     }
   end
 
   def rm *args
-    write_cabundle maproots(args).reduce(cabundle) { |certs, root|
+    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
       certs.reject { |c| Certificate.equal? c, root }
     }
   end
 
   def exec *args
-    env = { 'CURL_CA_BUNDLE' => options.cabundle, 'GIT_SSL_CAINFO' => options.cabundle }
+    env = { 'CURL_CA_BUNDLE' => certfile, 'GIT_SSL_CAINFO' => certfile }
     Kernel.exec env, *args
   end
 
