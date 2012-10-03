@@ -1330,8 +1330,11 @@ ALIAS cs='cryptsetup' && {
     }; TCOMP umount csumount
 }
 
-ALIAS dc='dumpcert' \
-      dx='dumpcert exec --'
+ALIAS dc='dumpcert' && {
+    dx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
+    _dx() { COMPREPLY=($(compgen -W "$(command ls ~/.certificates/)" -- ${COMP_WORDS[COMP_CWORD]})); }
+    complete -F _dx dx
+}
 
 if __OSX__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
