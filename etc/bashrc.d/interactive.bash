@@ -1330,7 +1330,8 @@ ALIAS cs='cryptsetup' && {
     }; TCOMP umount csumount
 }
 
-ALIAS dx='dumpcert exec --'
+ALIAS dc='dumpcert' \
+      dx='dumpcert exec --'
 
 if __OSX__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
