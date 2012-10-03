@@ -85,7 +85,7 @@ class Dumpcert
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 16 do |opt|
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Usage: #{File.basename __FILE__} [options] command [args]
 
@@ -93,12 +93,12 @@ class Dumpcert
 
         Commands:
 
-            d[ump] [arg ...] Dump certificates to stdout
-            i[nfo] [arg ...] Show detailed certificate information
-            a[dd] arg ...    Add certificates to certfile
-            r[m] arg ...     Remove certificates from certfile
-            e[xec] arg ...   Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to certfile
-            c[onsole]        Open a Pry debugging session
+            d[ump] [arg ...]     Dump certificates to stdout
+            i[nfo] [arg ...]     Show detailed certificate information
+            a[dd] arg ...        Add certificates to certfile
+            r[m] arg ...         Remove certificates from certfile
+            e[xec] arg ...       Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to certfile
+            c[onsole]            Open a Pry debugging session
 
         Options:
       BANNER
