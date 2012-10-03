@@ -332,7 +332,7 @@ sslcacertfile = ~/.certificates/gmail.crt
 # You can also configure this in addition to CA certificate validation
 # above and it will check both ways.
 
-cert_fingerprint = f3043dd689a2e7dddfbef82703a6c65ea9b634c1
+cert_fingerprint = 6d1b5b5ee0180ab493b71d3b94534b5ab937d042
 
 # Specify the port.  If not specified, use a default port.
 remoteport = 993
