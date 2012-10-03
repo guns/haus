@@ -321,7 +321,7 @@ ssl = yes
 # specified, the CA Cert(s) need to verify the Server cert AND
 # match the hostname (* wildcard allowed on the left hand side)
 # The certificate should be in PEM format.
-sslcacertfile = ~/.certificates/cabundle.pem
+sslcacertfile = ~/.certificates/gmail.crt
 
 # If you connect via SSL/TLS (ssl=true) and you have no CA certificate
 # specified, offlineimap will refuse to sync as it connects to a server

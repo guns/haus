@@ -419,7 +419,7 @@ set beep=no
 # visual terminals don't permit making the cursor invisible.
 #
 
-set certificate_file="~/.certificates/cabundle.pem"
+set certificate_file="~/.certificates/gmail.crt"
 #
 # Name: certificate_file
 # Type: path
