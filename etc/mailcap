@@ -7,7 +7,7 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-text/html; lynx %s
+text/html; elinks %s
 image/png; feh %s
 image/jpg; feh %s
 image/jpeg; feh %s
