@@ -260,7 +260,7 @@
     </keybind>
     <keybind key="F12">
       <action name="Execute">
-        <command>/bin/sh -c "wmctrl -a '★ Mutt ★' || { cd ~/Downloads; urxvt-client -title '★ Mutt ★' -g 120x40 -e gpg-shell muttlaunch; }"</command>
+        <command>/bin/sh -c "wmctrl -a '★ Mutt ★' || wmctrl -a \"mutt-$HOSTNAME\" || { cd ~/Downloads; urxvt-client -title '★ Mutt ★' -g 120x40 -e gpg-shell muttlaunch; }"</command>
       </action>
     </keybind>
     <keybind key="W-F12">
