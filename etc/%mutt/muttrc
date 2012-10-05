@@ -158,9 +158,9 @@ set my_identity_2='\
     set from="Sung Pae <sungpae@gmail.com>";\
     set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
     set smtp_pass="`gpg --decrypt ~/.password-store/google.com/sungpae@gmail.com.gpg`"'
-macro $my_list,pager \Cx? "<enter-command>set ?from<enter>"
-macro $my_list,pager \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
-macro $my_list,pager \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
-macro $my_list,pager \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
+macro $my_list,pager,compose \Cx? "<enter-command>set ?from<enter>"
+macro $my_list,pager,compose \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
+macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
+macro $my_list,pager,compose \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
 send-hook !~l "$my_identity_1"
 send-hook ~l  "$my_identity_2"
