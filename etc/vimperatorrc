@@ -22,6 +22,7 @@ set editor='urxvt -e vim'
 """ Command line mappings {{{1
 
 noremap <Leader>h :help<Space>
+noremap <Leader>m :emenu<Space>
 noremap <Leader>s :set<Space>
 noremap <Leader><C-r> :source ~/.vimperatorrc<CR>
 
