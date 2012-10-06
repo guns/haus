@@ -168,6 +168,7 @@ let g:netrw_home = expand('~')
 let g:omni_sql_no_default_maps = 1
 
 " Plugin: NERDTree
+let g:NERDTreeBookmarksFile = expand('~/.vimtmp/NERDTreeBookmarks')
 let g:NERDChristmasTree = 1
 let g:NERDTreeChDirMode = 2
 let g:NERDTreeDirArrows = 1
