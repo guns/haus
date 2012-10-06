@@ -1141,7 +1141,7 @@ type ruby &>/dev/null && {
     # Local api server @ `$cdapi`
     HAVE cdapi && {
         # Param: $@ API Site names
-        api() { local d; for d in "$@"; do chrome "http://${cdapi##*/}/$d"; done; }
+        api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
         _api() {
             COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
         }; complete -F _api api
