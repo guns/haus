@@ -1,7 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
-if test -x /usr/bin/open; then
+if [[ -x /usr/bin/open ]]; then
     exec /usr/bin/open "$@"
+# We don't want to start GUI applications as root
+elif ((!EUID)); then
+    if [[ $SUDO_USER ]]; then
+        exec sudo -u "$SUDO_USER" xdg-open "$@"
+    else
+        echo 'Refusing to xdg-open as root!' >&2
+        exit 1
+    fi
 else
     exec xdg-open "$@"
 fi
