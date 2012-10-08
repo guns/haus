@@ -721,7 +721,7 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    ngg() { run ngrep $device -l -W byline -d "$@"; }
+    ngg() { run ngrep -l -W byline -d "$@"; }
     _ngg() { local cur="${COMP_WORDS[COMP_CWORD]}"; _available_interfaces; }
     complete -F _ngg ngg
 }
