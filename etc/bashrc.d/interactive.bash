@@ -73,6 +73,11 @@ if __OSX__; then
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
 fi
 
+# gPodder
+if HAVE gpodder; then
+    export GPODDER_HOME=~/Media/gPodder
+fi
+
 
 ### Meta Utility Functions {{{1
 
@@ -1259,7 +1264,7 @@ ALIAS sqlite='sqlite3' && {
 ALIAS mp='modprobe -a'
 ALIAS sens='sensors'
 
-HAVE rfkill && {
+ALIAS rfk='rfkill' && {
     alias rfdisable='run rfkill block all'
     alias rfenable='run rfkill unblock all'
 }
