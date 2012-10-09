@@ -15,6 +15,7 @@ class Hwctl
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.sys_backlight ||= '/sys/class/backlight/intel_backlight'
+    options.sys_fnmode ||= '/sys/module/hid_apple/parameters/fnmode'
   end
 
   def parser
@@ -33,7 +34,7 @@ class Hwctl
           backlight-permissions mode user group
             Set backlight control file permissions.
 
-          fnmode fn|media
+          fnmode [fn|media]
             Set MacBook function key mode.
 
         Options:
@@ -41,6 +42,10 @@ class Hwctl
 
       opt.on '--sys-backlight PATH', '[DEFAULT: %s]' % options.sys_backlight do |arg|
         options.sys_backlight = File.expand_path arg
+      end
+
+      opt.on '--sys-fnmode PATH', '[DEFAULT: %s]' % options.sys_fnmode do |arg|
+        options.sys_fnmode = File.expand_path arg
       end
     end
   end
@@ -81,14 +86,14 @@ class Hwctl
     '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
   end
 
-  def fnmode type
-    f = '/sys/module/hid_apple/parameters/fnmode'
+  def fnmode type = nil
     case type
-    when 2, 'fn'    then File.open(f, 'w') { |f| f.puts '2' }
-    when 1, 'media' then File.open(f, 'w') { |f| f.puts '1' }
+    when 2, 'fn'    then File.open(options.sys_fnmode, 'w') { |f| f.puts '2' }
+    when 1, 'media' then File.open(options.sys_fnmode, 'w') { |f| f.puts '1' }
+    when nil        then nil
     else raise ArgumentError
     end
-    File.read f
+    File.read options.sys_fnmode
   end
 
   def run arguments = []
