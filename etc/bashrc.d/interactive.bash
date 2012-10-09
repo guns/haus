@@ -210,6 +210,7 @@ alias wrld='while read l; do'; TCOMP exec wrld
 
 # PATH prefixer
 path() { __prepend_path__ PATH "$@"; }
+ldpath() { __prepend_path__ LD_LIBRARY_PATH "$@"; }
 
 # Toggle xtrace, verbose mode
 setx() {
@@ -477,7 +478,7 @@ guntar() { untar -z "$@"; }
 buntar() { untar -j "$@"; }
 
 # open
-alias op='open'
+alias op='open 2>/dev/null'
 
 # pax
 ALIAS gpax='pax -z' && {
@@ -996,7 +997,7 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
-      mkj='make -j$(grep -c ^processor /proc/cpuinfo)' \
+      mkj='make -j\$\(grep -c ^processor /proc/cpuinfo\)' \
       mkj2='make -j2' \
       mkj4='make -j4' \
       mkj8='make -j8' \
@@ -1258,6 +1259,11 @@ ALIAS sqlite='sqlite3' && {
 ALIAS mp='modprobe -a'
 ALIAS sens='sensors'
 
+HAVE rfkill && {
+    alias rfdisable='run rfkill block all'
+    alias rfenable='run rfkill unblock all'
+}
+
 if __OSX__; then
     # Show all pmset settings by default
     # Param: [$@] Arguments to `pmset`
@@ -1311,6 +1317,10 @@ ALIAS ssl='openssl' && {
 # GnuPG
 ALIAS gpg='gpg --no-encrypt-to'
 
+# pass
+ALIAS passclip='pass -c'
+
+# cryptsetup
 ALIAS cs='cryptsetup' && {
     csmount() {
         (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
@@ -1528,7 +1538,8 @@ fi
 if HAVE systemd; then
     ALIAS sd='systemd' \
           sc='systemctl' \
-          jc='journalctl' && {
+          jc='journalctl' \
+          jcf='journalctl -f' && {
         alias sleepnow='systemctl suspend'
         alias daemons='systemctl list-units | ruby -ne "puts \$_ if \$_.split[3] == %q(running)"'
     }
