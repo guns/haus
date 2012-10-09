@@ -278,9 +278,9 @@
         <command>urxvt-client</command>
       </action>
     </keybind>
-    <keybind key="W-C-S-t">
+    <keybind key="W-C-r">
       <action name="Execute">
-        <command>urxvt-client -e vim</command>
+        <command>urxvt-client -g 80x40 -e vim</command>
       </action>
     </keybind>
     <keybind key="W-C-g">
