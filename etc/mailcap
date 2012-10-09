@@ -11,5 +11,6 @@ text/html; elinks %s
 image/png; feh %s
 image/jpg; feh %s
 image/jpeg; feh %s
-image/gif; qlmanage -p %s
+image/gif; open %s
+application/pdf; open %s
 application/octet-stream; hexdump -C %s | less
