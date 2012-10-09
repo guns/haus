@@ -57,6 +57,8 @@ noremap ga <F6>
 
 noremap <C-j> gt
 noremap <C-k> gT
+noremap J gt
+noremap K gT
 noremap <C-h> H
 noremap <C-l> L
 noremap t :tabnew<CR><F6>
