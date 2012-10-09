@@ -5,5 +5,5 @@ if system 'killall -0 mutt &>/dev/null'
   abort
 else
   chars = File.read(File.expand_path '~/.inputrc').scan /"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/
-  exec 'mutt', '-n', *(ARGV + chars.map { |k,c| ['-e', %Q(macro editor "\\e#{k}" #{c})] }.flatten)
+  exec ({ 'LD_LIBRARY_PATH' => '/opt/notmuch/lib' }), 'mutt', '-n', *(ARGV + chars.map { |k,c| ['-e', %Q(macro editor "\\e#{k}" #{c})] }.flatten)
 end
