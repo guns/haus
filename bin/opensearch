@@ -25,8 +25,9 @@ class Opensearch
   def format url
     # URI#check_query erroneously raises on curly braces
     uri = URI.parse url
-    uri.send :set_path, (uri.path || '').gsub('***', '{searchTerms}')
-    uri.send :set_query, (uri.query || '').gsub('***', '{searchTerms}')
+    %w[path query fragment].each do |x|
+      uri.send "set_#{x}", uri.send(x).gsub('***', '{searchTerms}') if uri.send x
+    end
     URI.join(uri).to_s
   end
 
