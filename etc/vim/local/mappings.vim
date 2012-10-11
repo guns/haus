@@ -488,12 +488,16 @@ vnoremap <M-h> <C-\><C-n>`<<Left>i_<C-\><C-n>mz"_xgvx`zPgv<Left>o<Left>o
 vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
 
 " Web queries
-for [g:lhs, g:rhs] in [['d', 'http://dictionary.reference.com/browse/'],
-                     \ ['e', 'http://www.etymonline.com/index.php?search='],
-                     \ ['g', 'https://www.google.com/search?pws=0&tbs=li:1&q='],
-                     \ ['s', 'http://symbolhound.com/?q='],
-                     \ ['w', 'http://en.wikipedia.org/wiki/']]
-    let g:fmt = 'noremap <Leader>q' . g:lhs . ' :<C-u>execute "silent! ! open ' . shellescape(g:rhs) . '" . shellescape(CwordOrSel(%d)) \| redraw!<CR>'
+for [g:lhs, g:rhs] in [['d', 'qdictionary'],
+                     \ ['e', 'qetymology'],
+                     \ ['g', 'qgoogle'],
+                     \ ['s', 'qsymbolhound'],
+                     \ ['t', 'qthesaurus'],
+                     \ ['w', 'qwikipedia']]
+    let g:fmt = 'noremap <Leader>q' . g:lhs .
+        \ ' :<C-u>execute "silent! ! opensearch search ' .
+        \ '~guns/.local/share/kupfer/searchplugins/' . g:rhs . '.xml "' .
+        \ '. shellescape(CwordOrSel(%d)) \| redraw!<CR>'
     execute 'n' . printf(g:fmt, 0)
     execute 'v' . printf(g:fmt, 1)
 endfor
