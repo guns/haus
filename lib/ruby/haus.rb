@@ -6,7 +6,7 @@ require 'haus/logger'
 require 'haus/task'
 require 'haus/link'
 require 'haus/copy'
-require 'haus/clean'
+require 'haus/unlink'
 
 #
 # Command line interface, intended to be run as Haus.new(ARGV).run

@@ -3,14 +3,14 @@
 $:.unshift File.expand_path('../../..', __FILE__)
 
 require 'fileutils'
-require 'haus/clean'
+require 'haus/unlink'
 require 'haus/test/helper/dotfile_spec'
 
 $user ||= Haus::TestUser[$$]
 
-class Haus::CleanSpec < DotfileSpec
+class Haus::UnlinkSpec < DotfileSpec
   before do
-    create_task Haus::Clean
+    create_task Haus::Unlink
   end
 
   after do
@@ -44,7 +44,7 @@ class Haus::CleanSpec < DotfileSpec
     end
 
     it 'should not blow up on syscall errors' do
-      CleanSpecError = Class.new RuntimeError
+      UnlinkSpecError = Class.new RuntimeError
 
       # EACCES
       user0 = Haus::TestUser.new
@@ -52,14 +52,14 @@ class Haus::CleanSpec < DotfileSpec
       src, dst = user0.hausfile
       FileUtils.ln_s src, dst
       File.lchmod 0200, dst
-      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
+      lambda { @task.enqueue; raise UnlinkSpecError }.must_raise UnlinkSpecError
       FileUtils.rm_f dst
 
       # ENOENT
       user1 = Haus::TestUser.new
       @task.options.path = user1.haus
       user1.hausfile
-      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
+      lambda { @task.enqueue; raise UnlinkSpecError }.must_raise UnlinkSpecError
 
       # ENOTDIR
       user2 = Haus::TestUser.new
@@ -67,7 +67,7 @@ class Haus::CleanSpec < DotfileSpec
       src, dst = user2.hausfile :hier
       FileUtils.rm_rf File.dirname(dst)
       FileUtils.ln_s src, File.dirname(dst)
-      lambda { @task.enqueue; raise CleanSpecError }.must_raise CleanSpecError
+      lambda { @task.enqueue; raise UnlinkSpecError }.must_raise UnlinkSpecError
     end
   end
 
@@ -92,7 +92,7 @@ class Haus::CleanSpec < DotfileSpec
       # must_return_true_or_nil
     end
 
-    it 'must clean all dotfiles' do
+    it 'must unlink all dotfiles' do
       # TODO
       # must_result_in_dotfiles do |jobs|
       # end
