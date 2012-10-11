@@ -7,15 +7,17 @@
 
 require 'optparse'
 require 'uri'
+require 'cgi'
 require 'nokogiri'
 
 class Opensearch
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
-        Minimal opensearch creator.
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Create and use opensearch xml files.
 
-        Usage: #{File.basename __FILE__} name search-url [GET|POST]
+        Usage: #{File.basename __FILE__} generate name search-url [GET|POST]
+               #{File.basename __FILE__} search file query ...
 
         The string '***' will be replaced with '{searchTerms}' in search-url.
       BANNER
@@ -41,10 +43,21 @@ class Opensearch
     end.to_xml
   end
 
+  def search file, *query
+    xml = Nokogiri::XML File.read(file)
+    url = xml.css('Url').attr('template').text.gsub '{searchTerms}', CGI.escape(query.join ' ')
+    system 'open', url
+  end
+
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless [2,3].include? args.size
-    puts document(*args)
+    rest = args.drop 1
+
+    case args.first
+    when 'generate' then puts document(*rest)
+    when 'search' then puts search(*rest)
+    else abort parser.help
+    end
   end
 end
 
