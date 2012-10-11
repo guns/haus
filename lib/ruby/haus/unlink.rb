@@ -5,9 +5,9 @@ require 'shellwords'
 require 'haus/task'
 
 class Haus
-  class Clean < Task
-    desc 'Clean up dotfiles'
-    help 'Clean up dotfiles'
+  class Unlink < Task
+    desc 'Remove dotfile symlinks'
+    help 'Remove dotfile symlinks'
 
     def options
       super.tap do |opt|

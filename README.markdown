@@ -30,7 +30,7 @@ Dotfile management system.
  - All Queue instance methods should be thread safe
    - Implement locking for add_*
  - Shouldn't touch `File.umask`; just `lchmod` and `install`
- - Finish `Haus::Clean` tests
+ - Finish `Haus::Unlink` tests
  - Better `--help` documentation
    - Accept `haus help COMMAND` invocation
  - `HAUS_PATH` environment variable
