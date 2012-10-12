@@ -7,7 +7,7 @@ color search     black    color96
 
 ### Index
 color index      $my_norm $my_bg  ~R
-color index      color47  $my_bg  ~U
+color index      color123 $my_bg  ~U
 color index      color52  $my_bg  ~D
 color index      black    color96 ~T
 color index      $my_norm color17 ~F

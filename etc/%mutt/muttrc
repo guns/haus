@@ -19,33 +19,11 @@ source ~/.mutt/muttrc.settings
 source $alias_file
 
 # Mailboxes
-mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo ${dirs[@]// /\\ }` \
+mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"` \
           ~/.mutt/notmuch/results
 
 # Mailing lists
-lists arch-announce@arch-linux.org \
-      arch-dev-public@arch-linux.org \
-      bash-completion-devel@lists.alioth.debian.org \
-      bug-bash@gnu.org \
-      bugtraq@securityfocus.com \
-      clojure@googlegroups.com \
-      clojure-hackers@googlegroups.com \
-      clojure-tools@googlegroups.com \
-      dnsmasq-discuss@lists.thekelleys.org.uk \
-      full-disclosure@lists.grok.org.uk \
-      mutt-dev@mutt.org \
-      mutt-users@mutt.org \
-      observatory@eff.org \
-      oss-security@lists.openwall.com \
-      ruby-core@ruby-lang.org \
-      ruby-talk@ruby-lang.org \
-      rubyonrails-security@googlegroups.com \
-      rxvt-unicode@lists.schmorp.de \
-      tmux-users@lists.sourceforge.net \
-      vim_dev@googlegroups.com \
-      vim_use@googlegroups.com \
-      vimclojure@googlegroups.com \
-      x11-users@lists.apple.com
+source "~/.mutt/mailing-lists"
 
 # Hooks
 folder-hook . 'set record="^"' # Save sent mail to current folder
