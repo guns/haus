@@ -194,7 +194,6 @@ CD_FUNC cdmail          ~/Mail
 
 ### Bash builtins and Haus commands {{{1
 
-ALIAS comp='complete -p'
 ALIAS cv='command -v'
 alias h='history'
 ALIAS j='jobs'
@@ -207,6 +206,8 @@ ALIAS t='type --' \
       tp='type -P --'
 ALIAS x='exec'
 alias wrld='while read l; do'; TCOMP exec wrld
+ALIAS comp='complete -p'
+__compreply__() { COMPREPLY=($(compgen -W "$@" -- ${COMP_WORDS[COMP_CWORD]})); }
 
 # PATH prefixer
 path() { __prepend_path__ PATH "$@"; }
@@ -760,10 +761,8 @@ HAVE cdmetasploit && {
         fi
         run "$cmd" "$@"
     }
-    _msf() {
-        local words="$(lsx "$cdmetasploit" | sed 's/^msf//')"
-        COMPREPLY=($(compgen -W "$words" -- ${COMP_WORDS[COMP_CWORD]}));
-    }; complete -F _msf msf
+    _msf() { __compreply__ "$(lsx "$cdmetasploit" | sed 's/^msf//')"; }
+    complete -F _msf msf
 }
 
 # Weechat
@@ -1143,9 +1142,8 @@ type ruby &>/dev/null && {
     HAVE cdapi && {
         # Param: $@ API Site names
         api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
-        _api() {
-            COMPREPLY=($(compgen -W "$(lsd "$cdapi")" -- ${COMP_WORDS[COMP_CWORD]}));
-        }; complete -F _api api
+        _api() { __compreply__ "$(lsdir "$cdapi")"; }
+        complete -F _api api
     }
 }
 
@@ -1339,7 +1337,7 @@ ALIAS cs='cryptsetup' && {
 
 ALIAS dc='dumpcert' && {
     dx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
-    _dx() { COMPREPLY=($(compgen -W "$(command ls ~/.certificates/)" -- ${COMP_WORDS[COMP_CWORD]})); }
+    _dx() { __compreply__ "$(command ls ~/.certificates/)"; }
     complete -F _dx dx
 }
 
