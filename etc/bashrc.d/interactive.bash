@@ -73,11 +73,6 @@ if __OSX__; then
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
 fi
 
-# gPodder
-if HAVE gpodder; then
-    export GPODDER_HOME=~/Media/gPodder
-fi
-
 
 ### Meta Utility Functions {{{1
 
