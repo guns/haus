@@ -11,8 +11,12 @@ class Haus
 
     def options
       super.tap do |opt|
-        opt.on '-a', '--all', 'Search all dotfiles for broken links (slow)' do
+        opt.on '-a', '--all', 'Search all dotfiles for broken symlinks (slow)' do
           opt.all = true
+        end
+
+        opt.on '-b', '--broken', 'Remove broken symlinks (slow)' do |arg|
+          opt.broken = true
         end
       end
     end
@@ -35,11 +39,16 @@ class Haus
 
     def enqueue
       users.each do |user|
-        if options.all
+        if options.all or options.broken
           haus = Regexp.compile '\A%s/' % options.path
           all_dotfiles user.dir do |dst|
-            if File.symlink? dst and File.expand_path(File.readlink dst) =~ haus
-              queue.add_deletion dst
+            if File.symlink? dst
+              src = File.expand_path File.readlink(dst)
+              if src =~ haus
+                if options.all or (options.broken and not queue.extant? src)
+                  queue.add_deletion dst
+                end
+              end
             end
           end
         else

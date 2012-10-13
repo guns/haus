@@ -315,6 +315,13 @@ class Haus
       end
     end
 
+    # Checks to see if file exists, even broken symlinks
+    def extant? path
+      File.lstat(path) ? true : false
+    rescue Errno::ENOENT
+      false
+    end
+
     private
 
     def log *args
@@ -349,13 +356,6 @@ class Haus
 
     def linked? src, dst
       (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
-    end
-
-    # Checks to see if file exists, even broken symlinks
-    def extant? path
-      File.lstat(path) ? true : false
-    rescue Errno::ENOENT
-      false
     end
 
     # Compare two files:
