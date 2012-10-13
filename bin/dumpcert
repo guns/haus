@@ -189,13 +189,13 @@ class Dumpcert
     rest = args.drop 1
 
     case args.first
-    when nil then dump
     when 'd', 'dump' then dump *rest
     when 'i', 'info' then info *rest
     when 'a', 'add' then add *rest
     when 'r', 'rm' then rm *rest
     when 'x', 'e', 'exec' then exec *rest
     when 'c', 'console' then console *rest
+    when nil then options.certfile ? dump : abort(parser.help)
     else abort parser.help
     end
   end
