@@ -4281,7 +4281,7 @@ set wait_key=no
 # printing, or replying to messages.
 #
 
-set wrap=78
+# set wrap=0
 #
 # Name: wrap
 # Type: number

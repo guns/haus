@@ -120,7 +120,7 @@ macro index i       \e\0071
 # Message macros
 macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager w \\e\\0074<enter>"
 macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
-macro pager w       \e\0073
+macro pager w       \e\0074
 
 # notmuch-mutt.rb macros
 macro index,pager gf      <change-folder-readonly>~/.mutt/notmuch/results<enter>
