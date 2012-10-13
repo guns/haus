@@ -358,19 +358,18 @@ alias cp='cp -v'
 alias cpr='cp -r'
 alias mv='mv -v'
 swap-files() {
-    ruby -r fileutils -r tempfile -e "
+    ruby -r fileutils -r digest/sha1 -e "
         include FileUtils::Verbose
 
-        abort 'Usage: $FUNCNAME f1 f2' unless ARGV.size == 2
+        abort 'Usage: $FUNCNAME f₁ f₂' unless ARGV.size == 2
         ARGV.each { |f| raise %Q(No permissions to write #{f.inspect}) unless File.lstat(f).writable? }
 
-        f1, f2 = ARGV
-        tmp    = Tempfile.new(File.basename f1).path
-
-        rm_f tmp
-        mv   f1,  tmp
-        mv   f2,  f1
-        mv   tmp, f1
+        f₁, f₂ = ARGV
+        tmp = f₁ + '.' + Digest::SHA1.hexdigest(f₁)
+        abort '%s exists!' % tmp if File.exists? tmp
+        mv f₁,  tmp
+        mv f₂,  f₁
+        mv tmp, f₂
     " -- "$@"
 }
 
