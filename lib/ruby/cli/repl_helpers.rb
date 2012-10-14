@@ -78,18 +78,11 @@ module CLI
         if self.verbose_inspect = !verbose_inspect
           alias_method :__inspect__, :inspect
           def inspect
-            lines = ['', '']
-
-            [%w[%-d dec], %w[%08b bin], %w[0%03o oct], %w[0x%02x hex]].each do |fmt, label|
-              str = fmt % self
-              len = [str, label].map(&:length).max + 1
-              lines[0] << "%-#{len}s" % label
-              lines[1] << "%-#{len}s" % str
-            end
-
-            lines[1] = '   %s' % lines[1] if $0 == 'pry'
-
-            lines.join "\n"
+            hex = '%x' % self
+            hex = '0' + hex unless hex.length.even?
+            bin = '%08b' % self
+            bin = ('0' * (4 - (bin.length % 4))) + bin unless (bin.length % 4).zero?
+            '%d 0%03o 0x%s (%s)' % [self, self, hex, bin.scan(/\d{4}/).join(' ')]
           end
         else
           remove_method :inspect
