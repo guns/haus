@@ -44,7 +44,7 @@ use strict;
 use Socket;
 
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.141 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.142 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -216,6 +216,7 @@ sub get_url_1($;$$$$$) {
   my $out;
   if ($to_file) {
     open ($out, ">$to_file") || error ("$to_file: $!");
+    binmode ($out);
   }
 
   if ($to_file && $to_file eq '-') {
@@ -1248,7 +1249,7 @@ sub download_video_url($$$$$) {
                 $size > 1024 ? sprintf ("%dK", $size/1024) :
                 "$size bytes");
       $ss .= ", $w x $h" if ($w && $h);
-      print STDERR "$progname: wrote \"$file\", $ss\n";
+      print STDERR "$progname: wrote       \"$file\", $ss\n";
     }
   }
 }
