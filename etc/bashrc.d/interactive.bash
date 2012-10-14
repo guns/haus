@@ -1418,7 +1418,7 @@ elif __LINUX__; then
         # alias pace
         alias pacg='run pacman -Qs'
         alias paci='run pacman -S --needed'
-        alias pacq='run pacman -Si'
+        pacq() { (pacman -Si "$@"; pacman -Ql "$@") 2>/dev/null | pager; }
         alias pacs='run pacman -Ss'
         alias pacu='run pacman -Rs'
         alias pacsync='run pacman -Sy'
