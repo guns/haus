@@ -10,4 +10,7 @@
 colorscheme zenburn
 
 unbind -f common ^C
+bind -f common d win-remove
 bind -f common p player-pause
+bind -f browser u browser-up
+bind -f browser R win-update
