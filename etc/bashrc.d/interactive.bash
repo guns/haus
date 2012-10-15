@@ -100,7 +100,7 @@ showconflicts() {
 
 # Return absolute path
 # Param: $1 Filename
-expand_path() { ruby -e 'print File.expand_path(ARGV.first)' "$1"; }
+expand_path() { ruby -e 'print File.expand_path(ARGV.first)' -- "$1"; }
 
 # Param: $1       PATH-style envvar name
 # Param: [${@:2}] List of directories to prepend
@@ -108,7 +108,7 @@ __prepend_path__() {
     local var="$1"
 
     if (($# == 1)); then
-        ruby -e 'puts "%s=%s" % [ARGV[0], ENV[ARGV[0]]]' "$var"
+        ruby -e 'puts "%s=%s" % [ARGV[0], ENV[ARGV[0]]]' -- "$var"
         return
     fi
 
@@ -119,7 +119,7 @@ __prepend_path__() {
             dir   = File.expand_path ARGV[1]
             abort unless File.directory? dir
             puts paths.reject { |d| d == dir }.unshift(dir).join(":")
-        ' "$path" "$dir")"; then
+        ' -- "$path" "$dir")"; then
             path="$newpath"
             export "$var=$path"
             echo "$var=$path"
@@ -301,7 +301,7 @@ __lstype__() {
                 eval ARGV[1]
             }.sort
         end
-    ' "$1" "$2"
+    ' -- "$1" "$2"
 }
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
@@ -440,7 +440,7 @@ dusort() {
 
         fmt = "%#{ps.map { |s,u,f| s.length }.max}s %s  %s"
         ps.each { |p| puts fmt % p }
-    ' "$@"
+    ' -- "$@"
 }
 
 # mount
@@ -816,7 +816,7 @@ ALIAS ipt='iptables' && {
 
                 sh *(%w[iptables --append INPUT --protocol tcp] + source + ports + %w[--match conntrack --ctstate NEW --jump ACCEPT])
             end
-        ' "$@"
+        ' -- "$@"
     }
 }
 
@@ -1150,7 +1150,7 @@ type ruby &>/dev/null && {
             spec.version = '%s.%s' % [spec.version, suffix]
             gem = Gem::Builder.new(spec).build
             FileUtils.mv gem, outdir if outdir
-        " "$@"
+        " -- "$@"
     }
 
     # Local api server @ `$cdapi`
