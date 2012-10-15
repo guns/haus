@@ -1331,7 +1331,7 @@ ALIAS ssl='openssl' && {
 ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS passclip='pass -c'
+ALIAS pclip='pass -c'
 
 # cryptsetup
 ALIAS cs='cryptsetup' && {
