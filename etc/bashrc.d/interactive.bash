@@ -13,6 +13,7 @@ export EDITOR='vim'
 export VISUAL='vim'
 
 # Locales
+export LANG='en_US.UTF-8'
 export LC_COLLATE='C'                   # Traditional ASCII sorting
 
 # BSD and GNU colors
@@ -798,6 +799,25 @@ ALIAS ipt='iptables' && {
                 ${ipt}-restore < /etc/iptables/$ipt.rules
             fi
         done
+    }
+    iptopenport() {
+        (($#)) || { echo "USAGE: $FUNCNAME source[:port,...] ..."; return 1; }
+        ruby -e '
+            def sh *args; puts args.join(" "); system *args; end
+            ARGV.each do |arg|
+                s = arg[/(.*):/, 1] || arg
+                source = (s.nil? || s.empty?) ? [] : %W[--source #{s}]
+
+                ps = (arg[/:([\d,]+)/, 1] || "").split(",").map &:to_i
+                ports = case ps.size
+                when 0 then []
+                when 1 then %W[--dport #{ps.first}]
+                else        %W[--match multiport --dports #{ps.join ","}]
+                end
+
+                sh *(%w[iptables --append INPUT --protocol tcp] + source + ports + %w[--match conntrack --ctstate NEW --jump ACCEPT])
+            end
+        ' "$@"
     }
 }
 
