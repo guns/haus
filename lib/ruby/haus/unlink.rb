@@ -43,7 +43,7 @@ class Haus
           haus = Regexp.compile '\A%s/' % options.path
           all_dotfiles user.dir do |dst|
             if File.symlink? dst
-              src = File.expand_path File.readlink(dst)
+              src = File.expand_path File.readlink(dst), File.dirname(dst)
               if src =~ haus
                 if options.all or (options.broken and not queue.extant? src)
                   queue.add_deletion dst
