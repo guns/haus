@@ -13,6 +13,8 @@
 let g:mapleader = "<C-x>"
 imap <Leader> <Esc><Leader>
 cmap <Leader> <Esc><Leader>
+noremap <C-x> <NOP>
+noremap <C-a> <NOP>
 
 """ Settings {{{1
 
