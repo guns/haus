@@ -37,8 +37,9 @@ task :env do # {{{1
       },
 
       {
-        :base   => "#{@src}/READONLY/password-store",
-        :branch => %w[master],
+        :base   => "#{@src}/password-store",
+        :branch => %w[master guns],
+        :push   => 'github',
         :files  => {
           'src/password-store.sh'        => 'bin/pass',
           'man/pass.1'                   => 'share/man/man1/pass.1',
