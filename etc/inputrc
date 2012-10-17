@@ -319,7 +319,7 @@ $if Bash
     "\C-xX":        "\C-] exec startx &>/dev/null \n"
 
     # Tmux
-    "\C-x,":        "\C-] tmux rename-window \"${PWD##*/}\" \n"
+    "\033\007,":    "\C-] tmux rename-window \"${PWD##*/}\" \n"
 $endif
 
 
