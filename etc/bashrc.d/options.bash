@@ -63,6 +63,7 @@ shopt -s no_empty_cmd_completion        # Don't attempt cmd completion on empty 
 shopt -s progcomp                       # Enable programmable completion
 shopt -s promptvars                     # Do variable expansion in PS* prompts
 shopt -s sourcepath                     # Prepend PWD to filename when sourcing
+shopt -s direxpand 2>/dev/null          # Expand patterns when completing directory names (bash-4.2.29)
 # OFF
 shopt -u cdable_vars                    # Enable var arguments to `cd`
 shopt -u compat31                       # Do not respect quoting in [[ =~ ]]

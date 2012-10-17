@@ -108,6 +108,7 @@
 #   declare -g GLOBAL                   4.2-alpha
 #   printf %(%Y-%m-%d)T                 4.2-alpha
 #   test -v, [ -v ], [[ -v ]]           4.2-alpha
+#   shopt -s direxpand                  4.2.29
 #
 # http://tiswww.case.edu/php/chet/bash/CHANGES
 # http://wiki.bash-hackers.org/scripting/bashchanges
