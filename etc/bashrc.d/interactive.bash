@@ -319,29 +319,24 @@ HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
 # Param: [$1] Directory to search, if extant
 # Param: [$@] Options to find
 f() {
-    local args=() pattern
-
-    if [[ -d "$1" ]]; then
-        args+=("$1")
-        shift
-    else
-        args+=(.)
-    fi
-
-    if (($#)); then
-        if [[ "$1" == -* || "$1" == '(' ]]; then
-            args+=("$@")
-        else
-            case $1 in
-            ^*) pattern="${1#^}*";;
-            *$) pattern="*${1%$}";;
-            *)  pattern="*$1*"
-            esac
-            args+=(-iname "$pattern" "${@:2}")
-        fi
-    fi
-
-    run find "${args[@]}"
+    ruby -r shellwords -e '
+        cmd = ["find"]
+        cmd.push File.directory?(ARGV.first) ? ARGV.shift.chomp("/") : "."
+        if ARGV.first =~ /\A-.*|\A\(\z/
+            cmd.concat ARGV
+        elsif ARGV.any?
+            pattern = ARGV.shift
+            pattern = case pattern
+            when /\A\^/ then "%s*" % pattern.sub(/\^/,"")
+            when /\$\z/ then "*%s" % pattern.chomp("$")
+            else             "*%s*" % pattern
+            end
+            cmd.push "-iname", pattern, *ARGV
+        end
+        cmd.push "-print", "-delete" if cmd.delete "-delete"
+        warn "\e[32;1m%s\e[0m" % cmd.shelljoin
+        exec *cmd
+    ' -- "$@"
 }; TCOMP find f
 f1() { f "$@" -maxdepth 1; };               TCOMP find f1
 ff() { f "$@" \( -type f -o -type l \); };  TCOMP find ff
@@ -874,6 +869,16 @@ HAVE vim && {
         done
 
         (( ${#args[@]} )) && run vim -p "${args[@]}"
+    }
+
+    # Diff mode for pacnew files
+    vimpacnew() {
+        ruby -r shellwords -e '
+            exec "vim", *%x(find . -name "*.pacnew" \\( -type f -o -type l \\) -print0).split("\0").reduce([]) { |as,f|
+                old, new = f.chomp(".pacnew"), f
+                as << "-c" << "edit #{new.shellescape} | diffthis | vsplit #{old.shellescape} | diffthis | tabnew"
+            }, "-c", "tabclose | tabfirst"
+        '
     }
 
     # vim-fugitive
