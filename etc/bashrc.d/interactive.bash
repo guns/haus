@@ -874,10 +874,10 @@ HAVE vim && {
     # Diff mode for pacnew files
     vimpacnew() {
         ruby -r shellwords -e '
-            exec "vim", *%x(find . -name "*.pacnew" \\( -type f -o -type l \\) -print0).split("\0").reduce([]) { |as,f|
-                old, new = f.chomp(".pacnew"), f
-                as << "-c" << "edit #{new.shellescape} | diffthis | vsplit #{old.shellescape} | diffthis | tabnew"
-            }, "-c", "tabclose | tabfirst"
+            files = %x(find . -name "*.pacnew" \\( -type f -o -type l \\) -print0).split "\0"
+            exec "vim", *files.reduce([]) { |as, f|
+                as << "-c" << "edit #{f.shellescape} | diffthis | vsplit #{f.chomp(".pacnew").shellescape} | diffthis | tabnew"
+            }, "-c", "tabclose | tabfirst" if files.any?
         '
     }
 
