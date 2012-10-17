@@ -1336,7 +1336,10 @@ ALIAS ssl='openssl' && {
 ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS pclip='pass -c'
+ALIAS pclip='pass -c' && {
+    passl() { pass "$@" | pager; }
+    TCOMP pass passl
+}
 
 # cryptsetup
 ALIAS cs='cryptsetup' && {
