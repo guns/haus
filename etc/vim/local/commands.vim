@@ -311,6 +311,7 @@ function! <SID>Screen(command)
         \ 'clojure'    : 'clojure --lein repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
+        \ 'haskell'    : 'ghci',
         \ 'javascript' : 'node'
         \ }
     let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
