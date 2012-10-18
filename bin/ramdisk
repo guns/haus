@@ -44,27 +44,30 @@ class Ramdisk
     %x(#{cmd})
   end
 
-  # Number of 512-byte blocks in given size string
-  def blocks size_spec
-    size_spec.scan(/([\d\.]+)(\D*)/).reduce(0) { |sum, (num, unit)|
+  def bytes size_spec
+    size_spec.scan(/([\d\.]+)(\D*)/).reduce 0 do |sum, (num, unit)|
       sum + case unit
       when /\Ag\z/i then num.to_f * 2**30
       when /\Am\z/i then num.to_f * 2**20
       when /\Ak\z/i then num.to_f * 2**10
       else               num.to_f
       end
-    }.round / 512
+    end.round
   end
 
   # http://osxdaily.com/2007/03/23/create-a-ram-disk-in-mac-os-x/
-  def osx_ramdisk blocks, mountpoint
+  def osx_ramdisk bytes, mountpoint
     tmpmnt = 'ramdisk-%s' % File.basename(mountpoint)
-    device = shx("hdiutil attach -nomount ram://#{blocks}").strip
+    device = shx("hdiutil attach -nomount ram://#{bytes.to_i/512}").strip
     sleep 0.1 until File.blockdev? device
     sh 'diskutil', 'eraseVolume', 'HFSX', tmpmnt, device
     sh 'hdiutil', 'unmount', '/Volumes/%s' % tmpmnt
     sh 'hdiutil', 'attach', '-owners', 'on', '-mountpoint', mountpoint, device
     device
+  end
+
+  def linux_ramdisk bytes, mountpoint
+    sh *%W[mount -t tmpfs -o size=#{bytes} tmpfs #{mountpoint}]
   end
 
   def create size_spec, mountpoint
@@ -77,7 +80,8 @@ class Ramdisk
     end
 
     case RUBY_PLATFORM
-    when /darwin/i then osx_ramdisk blocks(size_spec), mountpoint
+    when /darwin/i then osx_ramdisk bytes(size_spec), mountpoint
+    when /linux/i  then linux_ramdisk bytes(size_spec), mountpoint
     else raise 'This platform is unsupported!'
     end
 
