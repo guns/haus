@@ -60,16 +60,16 @@ snippet td "typedef" b
 typedef ${1:int} ${2:MyCustomType};
 endsnippet
 
-snippet st "struct" b
+snippet str "struct" b
 struct ${1:`!p snip.rv = (snip.basename or "name") + "_t"`} {
 	$0
 };
 endsnippet
 
 snippet tds "typedef struct" b
-typedef struct ${1:`!p snip.rv = (snip.basename or "name") + "_t"`} {
+typedef struct {
 	$0
-} $1;
+} ${1:`!p snip.rv = (snip.basename or "name") + "_t"`};
 endsnippet
 
 snippet tde "typedef enum" b
@@ -78,24 +78,28 @@ typedef enum {
 } ${1:`!p snip.rv = (snip.basename or "name") + "_e"`};
 endsnippet
 
-snippet un "unsigned"
+snippet u "unsigned" w
 unsigned $0
 endsnippet
 
-snippet c "char"
+snippet c "char" w
 char $0
 endsnippet
 
-snippet i "int8_t"
-int${1:8}_t $0
+snippet l "long" w
+long $0
 endsnippet
 
-snippet u "uint8_t"
-uint${1:8}_t $0
+snippet d "double" w
+double $0
 endsnippet
 
-snippet s "sizeof" w
-sizeof $0
+snippet v "void" w
+void
+endsnippet
+
+snippet st "size_t" w
+size_t
 endsnippet
 
 
@@ -146,7 +150,7 @@ endsnippet
 snippet do "do {} while" b
 do {
 	$0
-} while ($1)
+} while ($1);
 endsnippet
 
 
@@ -157,7 +161,7 @@ return $1;
 endsnippet
 
 snippet pr "printf" w
-printf("${1:%s}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
+printf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet prv "var" w
@@ -176,4 +180,16 @@ snippet fdeb "printf debug to file" w
 FILE *_f = fopen("/tmp/${1:debug.log}", "a");
 fprintf(_f, "$0");
 fclose(_f);
+endsnippet
+
+snippet s "sizeof" w
+sizeof
+endsnippet
+
+snippet ma "malloc" w
+malloc($0);
+endsnippet
+
+snippet fr "free" w
+free($0);
 endsnippet

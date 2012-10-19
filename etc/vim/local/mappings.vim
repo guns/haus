@@ -292,9 +292,9 @@ nnoremap N Nzz
 
 " Simple command line aliases
 noremap <Leader>h     :<C-u>help<Space>
-noremap <Leader>!     :<C-u>make!<CR>
 noremap <Leader><C-t> :<C-u>Ctags<CR>
 noremap <Leader><C-u> :<C-u>ShowUndofiles \| ClearUndofiles<CR>
+noremap <4-!>         :<C-u>make!<CR>
 noremap <4-p>         :<C-u>SynStack<CR>
 
 " Clear last match
