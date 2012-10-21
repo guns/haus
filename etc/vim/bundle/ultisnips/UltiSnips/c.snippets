@@ -86,6 +86,10 @@ snippet c "char" w
 char $0
 endsnippet
 
+snippet co "const" w
+const $0
+endsnippet
+
 snippet l "long" w
 long $0
 endsnippet
@@ -95,11 +99,15 @@ double $0
 endsnippet
 
 snippet v "void" w
-void
+void $0
 endsnippet
 
 snippet st "size_t" w
-size_t
+size_t $0
+endsnippet
+
+snippet s "struct" w
+struct $0
 endsnippet
 
 
@@ -182,8 +190,8 @@ fprintf(_f, "$0");
 fclose(_f);
 endsnippet
 
-snippet s "sizeof" w
-sizeof
+snippet si "sizeof" w
+sizeof $0
 endsnippet
 
 snippet ma "malloc" w
