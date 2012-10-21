@@ -214,7 +214,7 @@ $if Bash
 
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
-    "\033\007r":    "\C-] (xrdb ~/.Xdefaults &); tmuxeval \n"
+    "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-xV":        display-shell-version
     "\C-x\\":       "\C-] nohist \n"
