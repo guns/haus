@@ -212,6 +212,11 @@
         <command>hwctl backlight +5</command>
       </action>
     </keybind>
+    <keybind key="W-F3">
+      <action name="Execute">
+        <command>/bin/sh -c "wmctrl -a '♫ alsamixer ♫' || urxvt-client -title '♫ alsamixer ♫' -g 130x30 -e alsamixer -Vall"</command>
+      </action>
+    </keybind>
     <keybind key="F3">
       <action name="Execute">
         <command>xdotool key XF86AudioMute</command>
