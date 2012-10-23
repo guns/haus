@@ -13,15 +13,15 @@ toggle_filenames  d
 save_filelist
 toggle_pause      p
 toggle_info       i
-toggle_menu       m
+toggle_menu       M
 next_img          j           space
-toggle_pointer    o
+toggle_pointer    P
 prev_img          k
 quit              Q           q             Escape
 reload_image      r
 save_image        s
 toggle_fullscreen f
-size_to_image     w
+size_to_image     F
 close             x
 jump_random       z
 #orient_3         <
@@ -33,11 +33,11 @@ action_1          1
 action_2          2
 action_3          3
 action_4          4
-action_5          5           B
+action_5          5
 action_6          6
-action_7          7
-action_8          8
-action_9          9
+action_7          7           o
+action_8          8           m
+action_9          9           B
 jump_first        g
 jump_last         G
 jump_fwd          C-f
@@ -57,7 +57,7 @@ scroll_down_page  C-n
 render            R
 zoom_in           J
 zoom_out          K
-zoom_default      F
+zoom_default      w
 zoom_fit          W
 #menu_close       (Escape)
 #menu_up          (Up)
