@@ -1335,7 +1335,7 @@ ALIAS ssl='openssl' && {
 # GnuPG
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
-ALIAS gpg='gpg --no-encrypt-to'
+ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
 ALIAS pclip='pass -c' && {
