@@ -65,7 +65,7 @@ module Util
       buf.join
     end
 
-    def npass_0 len = 40, sec = tty_secret, buf = tty_buffer
+    def npass_0 len = 80, sec = tty_secret, buf = tty_buffer
       pass = [sec, buf].map { |s| Digest::SHA1.hexdigest s }.join
       pass *= 2 until pass.length >= len
       pass[0, len]
