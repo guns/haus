@@ -138,7 +138,7 @@ class Dumpcert
     end
   end
 
-  def mapcerts args = []
+  def mapcerts args = [], self_signed = options.self_signed
     certs = args.map do |arg|
       if arg == '-'
         Certificate.parse $stdin.read
@@ -149,7 +149,7 @@ class Dumpcert
       end
     end.flatten.compact
 
-    options.self_signed ? certs.select { |c| Certificate.self_signed? c } : certs
+    self_signed ? certs.select { |c| Certificate.self_signed? c } : certs
   end
 
   def dump *args
