@@ -43,7 +43,7 @@ jump_last         G
 jump_fwd          C-f
 jump_back         C-b
 reload_plus       plus
-reload_minus      minus
+reload_minus      underscore
 remove            BackSpace
 delete            C-BackSpace
 scroll_left       h
@@ -52,11 +52,11 @@ scroll_up         u
 scroll_down       n
 scroll_left_page  C-h
 scroll_right_page C-l
-scroll_up_page    C-u
-scroll_down_page  C-n
+scroll_up_page    C-u         C-k
+scroll_down_page  C-n         C-j
 render            R
-zoom_in           J
-zoom_out          K
+zoom_in           J           equal
+zoom_out          K           minus
 zoom_default      w
 zoom_fit          W
 #menu_close       (Escape)
