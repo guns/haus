@@ -768,7 +768,7 @@ __LINUX__ && have_ipv6() { [[ -e /proc/net/if_inet6 ]]; }
 ALIAS ipt='iptables' && {
     ALIAS ipt6='ip6tables'
     [[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
-    iptl() {
+    iptlist() {
         {   local table
             for table in filter nat mangle raw security; do
                 run iptables --table "$table" --list --verbose "$@"
@@ -794,7 +794,7 @@ ALIAS ipt='iptables' && {
             fi
         done
     }
-    iptopenport() {
+    iptopen() {
         (($#)) || { echo "USAGE: $FUNCNAME source[:port,...] ..."; return 1; }
         ruby -e '
             def sh *args; puts args.join(" "); system *args; end
