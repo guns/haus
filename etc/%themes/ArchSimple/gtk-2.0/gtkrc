@@ -191,13 +191,13 @@ style "murrine-menu" = "murrine-wider"
 
 style "murrine-menubar"
 {
-	bg[NORMAL]		= @selected_bg_color
+	bg[NORMAL]		= shade (3.0, @menu_color)
 	bg[PRELIGHT]		= @menu_color
 	bg[ACTIVE]		= @menu_color
 	bg[SELECTED]		= @menu_color
 	bg[INSENSITIVE]		= shade (0.8, @menu_color)
 
-	fg[NORMAL]		= @selected_fg_color
+	fg[NORMAL]		= @menu_color
 	fg[PRELIGHT]		= @selected_fg_color
 	fg[ACTIVE]		= @selected_fg_color
 	fg[SELECTED]		= @selected_fg_color
