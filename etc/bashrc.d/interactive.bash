@@ -692,7 +692,10 @@ ALIAS scp='scp -2' \
       scpr='scp -r' \
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
 HAVE ssh-proxy && TCOMP ssh ssh-proxy
-ALIAS sshuttle='/opt/sshuttle/sshuttle' && TCOMP ssh sshuttle
+ALIAS sshuttle='/opt/sshuttle/sshuttle' && {
+    TCOMP ssh sshuttle
+    type sshuttle-wrapper &>/dev/null && TCOMP ssh sshuttle-wrapper
+}
 
 # lsof
 ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
@@ -761,9 +764,6 @@ HAVE weechat-curses && {
 
 ### Firewalls {{{1
 
-# IPv6
-__LINUX__ && have_ipv6() { [[ -e /proc/net/if_inet6 ]]; }
-
 # IPTables
 ALIAS ipt='iptables' && {
     ALIAS ipt6='ip6tables'
@@ -772,7 +772,9 @@ ALIAS ipt='iptables' && {
         {   local table
             for table in filter nat mangle raw security; do
                 run iptables --table "$table" --list --verbose "$@"
-                have_ipv6 && run ip6tables --table "$table" --list --verbose "$@"
+                if [[ -e /proc/net/if_inet6 ]]; then
+                    run ip6tables --table "$table" --list --verbose "$@"
+                fi
             done
         } 2>&1 | pager;
     }
