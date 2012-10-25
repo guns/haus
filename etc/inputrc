@@ -318,8 +318,8 @@ $if Bash
     # X
     "\C-xX":        "\C-] exec startx &>/dev/null \n"
 
-    # Tmux
-    "\033\007,":    "\C-] tmux rename-window \"${PWD##*/}\" \n"
+    # Window title
+    "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
 $endif
 
 

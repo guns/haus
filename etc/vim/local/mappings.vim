@@ -303,6 +303,9 @@ noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
 " Run file
 noremap <Leader>r :<C-u>RunCurrentFile<CR>
 
+" Rename tmux/screen/term window
+noremap <4-,> :<C-u>silent! execute '! xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>:redraw!<CR>
+
 
 """ Buffer commands {{{1
 
