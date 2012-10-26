@@ -7,13 +7,14 @@
 
 require 'optparse'
 require 'ostruct'
+require 'set'
 
 class Plookup
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.flags ||= []
+    options.flags ||= Set.new
   end
 
   def parser
@@ -54,7 +55,7 @@ class Plookup
   end
 
   def flags
-    options.flags.inject(0) { |n, f| n|f }
+    options.flags.inject(0) { |n,f| n|f }
   end
 
   def grep pattern
