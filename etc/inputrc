@@ -220,7 +220,7 @@ $if Bash
     "\C-x\\":       "\C-] nohist \n"
     "\C-x(":        "\C-a <(\C-e)\C-a"
 
-    # Quick redirects
+    # Redirections
     "\C-x0":        " &>/dev/null "
     "\C-x1":        " >/dev/null "
     "\C-x2":        " 2>/dev/null "
@@ -320,6 +320,9 @@ $if Bash
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
+
+    # Make
+    "\033\007!":    "\C-] if [[ -e Makefile ]]; then make; elif [[ -e Rakefile ]]; then rake; fi \n"
 $endif
 
 
