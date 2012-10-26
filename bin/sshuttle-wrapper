@@ -18,7 +18,8 @@ class SshuttleWrapper
     @options = OpenStruct.new opts
     options.sshuttle ||= '/opt/sshuttle/sshuttle'
     options.excluded ||= Set.new
-    options.port ||= 12300
+    options.commands ||= []
+    options.port ||= 3346 # IANA "trnsprntproxy"
   end
 
   def parser
@@ -34,8 +35,8 @@ class SshuttleWrapper
         Options:
       BANNER
 
-      opt.on '-c', '--command STRING', 'Command to run after sshuttle terminates' do |arg|
-        options.command = arg
+      opt.on '-c', '--command STRING', 'Command to run after sshuttle terminates; can be specified multiple times' do |arg|
+        options.commands << arg
       end
 
       opt.on '-i', '--iptables-only', 'Setup outgoing firewall only' do
@@ -127,7 +128,7 @@ class SshuttleWrapper
     return if options.iptables_only
 
     start_server ssh_host, xargs do
-      sh options.command if options.command
+      options.commands.each { |cmd| sh cmd }
     end
   end
 
