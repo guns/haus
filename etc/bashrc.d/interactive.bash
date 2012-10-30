@@ -320,18 +320,18 @@ HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
 # Param: [$@] Options to find
 f() {
     ruby -r shellwords -e '
-        cmd = ["find"]
-        cmd.push File.directory?(ARGV.first) ? ARGV.shift.chomp("/") : "."
-        if ARGV.first =~ /\A-.*|\A\(\z/
-            cmd.concat ARGV
-        elsif ARGV.any?
-            pattern = ARGV.shift
+        cmd, args = ["find"], ARGV.empty? ? ["."] : ARGV.dup
+        cmd.push File.directory?(args.first) ? args.shift.chomp("/") : "."
+        if args.first =~ /\A-.*|\A\(\z/
+            cmd.concat args
+        elsif args.any?
+            pattern = args.shift
             pattern = case pattern
             when /\A\^/ then "%s*" % pattern.sub(/\^/,"")
             when /\$\z/ then "*%s" % pattern.chomp("$")
             else             "*%s*" % pattern
             end
-            cmd.push "-iname", pattern, *ARGV
+            cmd.push "-iname", pattern, *args
         end
         cmd.push "-print", "-delete" if cmd.delete "-delete"
         warn "\e[32;1m%s\e[0m" % cmd.shelljoin
