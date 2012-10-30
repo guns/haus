@@ -1,3 +1,8 @@
+### Symmetric Encryption
+
+openssl aes-256-cbc < plain > secret
+openssl aes-256-cbc -d < secret > plain
+
 ### Certificates
 
 # Generate a private key:
