@@ -62,7 +62,7 @@ module CLI
     def notify
       @notify ||= begin
         require 'util/notification'
-        Util::Notification.new :audio => File.expand_path('~/.sounds/Message_Received.m4a')
+        Util::Notification.new :audio => File.expand_path('~/.sounds/message-received.mp3')
       end
       @notify.call; nil
     end

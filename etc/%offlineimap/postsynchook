@@ -19,7 +19,7 @@ class Postsynchook
     options.localfolder ||= File.expand_path '~/Mail/Local'
     options.spoolfolder ||= File.join options.localfolder, 'INBOX'
     options.filter ||= /\AINBOX\z/
-    options.audio ||= File.expand_path '~/.sounds/New_Message.m4a'
+    options.audio ||= File.expand_path '~/.sounds/new-message.mp3'
   end
 
   def parser
