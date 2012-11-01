@@ -19,7 +19,7 @@ noremap <C-a> <NOP>
 """ Settings {{{1
 
 set hintchars=sadfjklewcmpgh
-set editor='urxvt -e vim'
+set editor='urxvt-client -e vim'
 
 """ Command line mappings {{{1
 
