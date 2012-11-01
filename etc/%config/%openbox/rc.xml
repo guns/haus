@@ -118,14 +118,13 @@
 
        use obconf if you want to change these without having to log out
        and back in -->
-    <number>3</number>
+    <number>2</number>
     <firstdesk>1</firstdesk>
     <names>
       <name>One</name>
       <name>Two</name>
-      <name>Three</name>
     </names>
-    <popupTime>0</popupTime>
+    <popupTime>100</popupTime>
     <!-- The number of milliseconds to show the popup for when switching
        desktops.  Set this to 0 to disable the popup. -->
   </desktops>
@@ -273,9 +272,9 @@
         <command>xdg-open https://mail.google.com/</command>
       </action>
     </keybind>
-    <keybind key="A-F12">
+    <keybind key="W-F11">
       <action name="Execute">
-        <command>xdg-open https://www.google.com/reader</command>
+        <command>/bin/sh -c "wmctrl -a '· newsbeuter ·' || { cd ~/Downloads; urxvt-client -title '· newsbeuter ·' -g 120x40 -e newsbeuter; }"</command>
       </action>
     </keybind>
     <keybind key="W-C-t">
@@ -654,7 +653,7 @@
           <menu>root-menu</menu>
         </action>
       </mousebind>
-      <mousebind button="W-Right" action="Press">
+      <mousebind button="Middle" action="Press">
         <action name="ShowMenu">
           <menu>client-list-combined-menu</menu>
         </action>
