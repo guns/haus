@@ -54,6 +54,7 @@ noremap <M-f> /
 noremap \\ /
 noremap Y y
 noremap ga <F6>
+noremap <Leader>\\ :nohlsearch<CR>
 
 """ Tabs and Buffers {{{1
 
