@@ -262,6 +262,16 @@
         <command>/bin/sh -c "if killall -0 skippy-xd; then killall skippy-xd; else skippy-xd; fi"</command>
       </action>
     </keybind>
+    <keybind key="F8">
+      <action name="Execute">
+        <command>/bin/sh -c "wmctrl -a 'gPodder' || gpodder"</command>
+      </action>
+    </keybind>
+    <keybind key="A-F10">
+      <action name="Execute">
+        <command>/bin/sh -c "wmctrl -a '• newsbeuter •' || { cd ~/Downloads; urxvt-client -title '• newsbeuter •' -g 120x40 -e newsbeuter; }"</command>
+      </action>
+    </keybind>
     <keybind key="F12">
       <action name="Execute">
         <command>/bin/sh -c "wmctrl -a '★ Mutt ★' || wmctrl -a \"mutt-$HOSTNAME\" || { cd ~/Downloads; urxvt-client -title '★ Mutt ★' -g 120x40 -e gpg-shell muttlaunch; }"</command>
@@ -270,11 +280,6 @@
     <keybind key="W-F12">
       <action name="Execute">
         <command>xdg-open https://mail.google.com/</command>
-      </action>
-    </keybind>
-    <keybind key="W-F11">
-      <action name="Execute">
-        <command>/bin/sh -c "wmctrl -a '· newsbeuter ·' || { cd ~/Downloads; urxvt-client -title '· newsbeuter ·' -g 120x40 -e newsbeuter; }"</command>
       </action>
     </keybind>
     <keybind key="W-C-t">
@@ -344,7 +349,7 @@
     <keybind key="W-C-f">
       <action name="ToggleMaximizeFull"/>
     </keybind>
-    <keybind key="F8">
+    <keybind key="W-F11">
       <action name="ToggleShowDesktop"/>
     </keybind>
     <!-- Subtle-esque tiling -->
