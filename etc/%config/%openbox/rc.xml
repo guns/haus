@@ -269,7 +269,7 @@
     </keybind>
     <keybind key="A-F10">
       <action name="Execute">
-        <command>/bin/sh -c "wmctrl -a '• newsbeuter •' || { cd ~/Downloads; urxvt-client -title '• newsbeuter •' -g 120x40 -e newsbeuter; }"</command>
+        <command>/bin/sh -c "wmctrl -a '• newsbeuter •' || { cd ~/Downloads; urxvt-client -title '• newsbeuter •' -g 120x40 -e newsbeuterlaunch; }"</command>
       </action>
     </keybind>
     <keybind key="F12">
