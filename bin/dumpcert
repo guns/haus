@@ -9,6 +9,7 @@ require 'optparse'
 require 'ostruct'
 require 'openssl'
 require 'shellwords'
+require 'fileutils'
 require 'net/http'
 require 'digest/sha1'
 require 'digest/md5'
@@ -125,7 +126,9 @@ class Dumpcert
   end
 
   def certfile
-    options.certfile or raise "'certfile' is unset"
+    raise "'certfile' is unset" if options.certfile.nil?
+    FileUtils.touch options.certfile unless File.exists? options.certfile
+    options.certfile
   end
 
   def certificates
