@@ -28,7 +28,7 @@ task :env do # {{{1
     'programs' => [
       {
         :base   => "#{@src}/leiningen",
-        :branch => %w[master],
+        :branch => %w[preview],
         :files  => {
           'bin/lein'             => 'bin/lein',
           'doc/lein.1'           => 'share/man/man1/lein.1',
