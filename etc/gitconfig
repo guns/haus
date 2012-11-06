@@ -73,12 +73,12 @@
 
     # log
     l    = log --relative-date --decorate --graph
-    lf   = log --relative-date --decorate --graph --first-parent
+    lf   = log --relative-date --decorate --graph --first-parent --no-merges
     lst  = log --relative-date --decorate --graph --stat
-    lfst = log --relative-date --decorate --graph --stat --first-parent
+    lfst = log --relative-date --decorate --graph --stat --first-parent --no-merges
 
     lp   = log --relative-date --decorate --patch --stat
-    lfp  = log --relative-date --decorate --patch --stat --first-parent
+    lfp  = log --relative-date --decorate --patch --stat --first-parent --no-merges
     lpw  = log --relative-date --decorate --patch --stat -w
     wlp  = log --relative-date --decorate --patch --stat --word-diff=color
 
@@ -88,7 +88,7 @@
 
     f    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
     fa   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
-    ff   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --first-parent
+    ff   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --first-parent --no-merges
 
     lg   = log --patch -G
     lgi  = log --patch -i -G
