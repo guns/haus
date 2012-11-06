@@ -19,5 +19,5 @@
 ;;        guns <self@sungpae.com>                    /######  /#
 ;;                                                  /     ###/
 
-{:user {:plugins [[lein-tarsier "0.9.3"]]
+{:user {:plugins [[lein-tarsier "0.9.4"]]
         :dependencies [[vimclojure/server "2.3.4-GUNS"]]}}
