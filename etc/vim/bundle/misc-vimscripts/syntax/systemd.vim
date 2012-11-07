@@ -1,5 +1,3 @@
-" TODO: Update from http://fedorapeople.org/cgit/wwoods/public_git/vim-scripts.git/plain/syntax/systemd.vim
-"
 " Filename:     systemd.vim
 " Purpose:      Vim syntax file
 " Language:     systemd unit files

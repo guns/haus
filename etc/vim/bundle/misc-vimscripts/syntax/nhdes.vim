@@ -96,4 +96,4 @@ highlight   nhDesMapCharIronbars ctermbg=black ctermfg=cyan	 guibg=black guifg=c
 highlight   nhDesMapCharLinenum	 ctermbg=black ctermfg=darkgrey	 guibg=black guifg=darkgrey
 highlight   nhDesMapCharError	 ctermbg=red   ctermfg=yellow    guibg=red   guifg=yellow
 
-let b:current_syntax = "nhdes" 
+let b:current_syntax = "nhdes"

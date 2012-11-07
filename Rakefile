@@ -172,7 +172,7 @@ task :env do # {{{1
       },
 
       {
-        :base => "#{@vim}/pgsql.vim",
+        :base => "#{@vim}/misc-vimscripts",
         :files => :pathogen,
         :before => lambda { |proj|
           if proj.fetch
