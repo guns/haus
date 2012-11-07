@@ -1,0 +1,13 @@
+# -*- encoding: utf-8 -*-
+
+require 'net/http'
+
+task :default => :update
+
+desc 'Update'
+task :update do
+  mkdir_p 'syntax'
+  File.open 'syntax/pgsql.vim', 'w' do |f|
+    f.puts Net::HTTP.get(URI.parse 'http://www.gunduz.org/postgresql/pgsql.vim')
+  end
+end

@@ -171,6 +171,16 @@ task :env do # {{{1
         }
       },
 
+      {
+        :base => "#{@vim}/pgsql.vim",
+        :files => :pathogen,
+        :before => lambda { |proj|
+          if proj.fetch
+            system '{ cd %s && rake update && git add . && git commit -m UPDATE; } &>/dev/null' % proj.base.shellescape
+          end
+        }
+      },
+
       # {
       #   :base   => "#{@vim}/vimclojure",
       #   :push   => 'github',
