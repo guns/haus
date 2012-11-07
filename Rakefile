@@ -340,11 +340,6 @@ task :untracked => :env do
   log Dir["#{@vim}/*"].reject { |f| tracked.include? File.basename(f) }.join("\n")
 end
 
-desc 'Import all terminfo files in share/terminfo' # {{{1
-task :tic do
-  Dir['share/terminfo/*'].each { |f| sh 'tic', f }
-end
-
 desc 'Show subproject source remotes' # {{{1
 task :remotes => :env do
   @subprojects.values.flatten.each do |proj|
@@ -356,6 +351,28 @@ task :remotes => :env do
       else                ['∅', :red]
       end
       log ['    %s %s → %s' % [type, r.name, r.url], color]
+    end
+  end
+end
+
+desc 'Import all terminfo files in share/terminfo' # {{{1
+task :tic do
+  Dir['share/terminfo/*'].each { |f| sh 'tic', f }
+end
+
+desc 'Install service files in lib/systemd to /usr/local/lib/systemd'
+task :service do
+  require 'erb'
+
+  def path cmd
+    %x(/bin/sh -c "command -v #{cmd.shellescape}").chomp
+  end
+
+  Dir['share/systemd/**/*.service.erb'].each do |service|
+    dst = File.join '/usr/local/lib/systemd', service[%r{share/systemd/(.*)}, 1].chomp('.erb')
+    puts dst
+    File.open dst, 'w' do |f|
+      f.puts ERB.new(File.read service).result(binding)
     end
   end
 end

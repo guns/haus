@@ -6,7 +6,7 @@ Before=sleep.target
 Type=simple
 User=guns
 Environment=DISPLAY=:0
-ExecStart=/usr/local/bin/slock
+ExecStart=<%= path 'slock' %>
 
 [Install]
 WantedBy=sleep.target

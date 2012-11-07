@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=oneshot
-ExecStart=/sbin/ifconfig lo:0 127.0.0.2
-ExecStop=/sbin/ifconfig lo:0 down
+ExecStart=<%= path 'ifconfig' %> lo:0 127.0.0.2
+ExecStop=<%= path 'ifconfig' %> lo:0 down
 RemainAfterExit=yes
 
 [Install]
