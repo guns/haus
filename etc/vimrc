@@ -31,12 +31,14 @@ source ~/.vim/local/commands.vim
 set history=1023                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 
-" Swap and undo files
+" Temporary files
 if !isdirectory(expand('~/.vimtmp/undo'))
     call mkdir(expand('~/.vimtmp/undo'), 'p', 0700)
 endif
 if isdirectory(expand('~/.vimtmp'))
     set directory=~/.vimtmp
+    set viminfo+=n~/.vimtmp/viminfo
+    let g:netrw_home = expand('~/.vimtmp')
 endif
 if has('persistent_undo') && isdirectory(expand('~/.vimtmp/undo'))
     set undofile
