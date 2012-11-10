@@ -1342,7 +1342,7 @@ ALIAS cs='cryptsetup' && {
         (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
         local name="$(sed 's:/$:: ; s:.*/::' <<< "$2")"
         if run cryptsetup luksOpen "$1" "$name"; then
-            run mount -t auto "/dev/mapper/$name" "$2"
+            run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$2"
         fi
     }
     csumount() {
