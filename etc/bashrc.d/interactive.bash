@@ -444,17 +444,6 @@ ALIAS mt='mount -v' \
       mtext4='mt -t ext4' \
       mthfs='mt -t hfsplus'
 
-# mkfs
-HAVE mkfs.ext4 && {
-    # Param: $1   Device
-    # Param: [$2] Label
-    mkfsext4() {
-        local device="$1" label=()
-        (($# == 2)) && label=(-L "$2")
-        run mkfs.ext4 -j -O extent -O metadata_csum "${label[@]}" "$device"
-    }
-}
-
 # tar
 alias star='tar --strip-components=1'
 alias gtar='tar zcv'
