@@ -560,26 +560,6 @@ function! <SID>Org(bang, ...)
 endfunction
 
 
-command! -bar ClearUndofiles call <SID>ClearUndofiles() " {{{1
-command! -bar ShowUndofiles echo join(<SID>UndofilesList(), "\n")
-function! <SID>UndofilesList()
-    return glob(fnameescape(&undodir . '/%') . '*', 1, 1)
-endfunction
-function! <SID>ClearUndofiles()
-    if len(split(&undodir, ',')) == 1 && &undodir =~# '\v<vimtmp>'
-        let fs = <SID>UndofilesList()
-        let i = 0
-        for f in fs
-            call delete(f)
-            if !v:shell_error | let i += 1 | endif
-        endfor
-        echo 'Deleted ' . i . ' undofile(s).'
-    else
-        echo "Unrecognized 'undodir'"
-    endif
-endfunction
-
-
 " Say {{{1
 if executable('/usr/bin/say')
     command! -nargs=1 -complete=command -bar Say call system('say ' . shellescape(<q-args>))
