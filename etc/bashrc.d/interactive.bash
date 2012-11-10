@@ -1459,6 +1459,16 @@ elif __LINUX__; then
         # alias auraoutdated='run aura -Au'
     }
 
+    HAVE abs && abslocal() {
+        ruby -e '
+            ARGV.each do |src|
+                dst = "/var/abs/local/%s" % File.basename(src)
+                system *%W[git init #{dst}] unless Dir.exists? dst
+                system *%W[rsync -av --delete --exclude=/.git #{src}/ #{dst}/]
+            end
+        ' -- "$@"
+    }
+
     ALIAS mkpkg='makepkg' \
           mkpkgs='makepkg -s'
 fi
