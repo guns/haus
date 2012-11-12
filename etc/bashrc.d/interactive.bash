@@ -1567,7 +1567,7 @@ if HAVE systemd; then
           jc='journalctl' \
           jcf='journalctl -f' && {
         alias sleepnow='systemctl suspend'
-        alias daemons='systemctl list-units | ruby -ne "puts \$_ if \$_.split[3] == %q(running)"'
+        alias daemons='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
     }
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
