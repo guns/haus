@@ -340,6 +340,7 @@ f() {
 }; TCOMP find f
 f1() { f "$@" -maxdepth 1; };               TCOMP find f1
 ff() { f "$@" \( -type f -o -type l \); };  TCOMP find ff
+fF() { f "$@" -type f; };                   TCOMP find fF
 fd() { f "$@" -type d; };                   TCOMP find fd
 fl() { f "$@" -type l; };                   TCOMP find fl
 fnewer() { f "$@" -newer /tmp/timestamp; }; TCOMP find fnewer
