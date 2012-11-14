@@ -54,7 +54,7 @@ class Haus
         else
           hausfiles user do |src, dst|
             begin
-              if File.symlink? dst and File.expand_path(File.readlink dst) == src
+              if File.symlink? dst and File.expand_path(File.readlink(dst), File.dirname(dst)) == src
                 queue.add_deletion dst
               end
             rescue Errno::ENOENT
