@@ -11,6 +11,7 @@ require 'fileutils'
 require 'set'
 require 'etc'
 require 'yaml'
+require 'pathname'
 
 class Setuptmpfiles
   attr_reader :options
@@ -96,15 +97,17 @@ class Setuptmpfiles
     { :verbose => !!options.verbose, :noop => !!options.noop }
   end
 
+  def relative_path src, dst
+    Pathname.new(src).relative_path_from(Pathname.new File.dirname(dst)).to_s
+  end
+
   def move_tmpfiles home
     tmpfiles(home).each do |type, fs|
       fs.each do |dst|
         src = File.expand_path File.join(tmpdir(home), File.basename(dst))
         dst = File.expand_path dst
 
-        next if File.symlink? dst and File.expand_path(File.readlink dst) == src and File.exists? src
-
-        puts [dst, src].join(' -> ')
+        next if File.symlink? dst and File.expand_path(File.readlink(dst), File.dirname(dst)) == src and File.exists? src
 
         if File.exists? dst and not File.symlink? dst
           FileUtils.rm_rf src, fopts
@@ -115,7 +118,9 @@ class Setuptmpfiles
           FileUtils.send (type == 'directory' ? :mkdir_p : :touch), src, fopts
         end
 
-        FileUtils.ln_s src, dst, fopts
+        relsrc = relative_path src, dst
+        puts '%s -> %s' % [dst, relsrc]
+        FileUtils.ln_s relsrc, dst, fopts
       end
     end
   end
