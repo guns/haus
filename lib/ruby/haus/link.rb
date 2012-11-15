@@ -7,10 +7,15 @@ class Haus
     desc 'Create dotfile symlinks'
     help "Create dotfile symlinks from #{Options.new.path}/etc/*"
 
+    def initialize *args
+      super
+      options.relative = true
+    end
+
     def options
       super.tap do |opt|
-        opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
-          opt.relative = true
+        opt.on '-a', '--absolute', 'Create absolute links instead of relative links' do
+          opt.relative = false
         end
       end
     end
