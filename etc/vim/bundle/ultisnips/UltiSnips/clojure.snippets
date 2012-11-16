@@ -68,6 +68,14 @@ snippet main "main" w
 	$0)
 endsnippet
 
+snippet CC "comment" w
+(comment
+
+	$0
+
+	)
+endsnippet
+
 
 ### Collections {{{1
 
@@ -556,8 +564,7 @@ snippet defo "defonce"
 endsnippet
 
 snippet defn "defn"
-(defn $1
-	[$0])
+(defn $1 [$0])
 endsnippet
 
 snippet defn- "defn-"
@@ -854,9 +861,8 @@ endsnippet
 
 ### Testing {{{1
 
-snippet tis "clojure.test/is" w
-(clojure.test/is
-	$0)
+snippet is "clojure.test/is" w
+(is $0)
 endsnippet
 
 
