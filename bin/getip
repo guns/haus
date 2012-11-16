@@ -1,38 +1,50 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'ostruct'
-require 'net/http'
-require 'ipaddr'
+require 'shellwords'
+require 'nokogiri'
 
 class Getip
-  URLS = %w[http://metablu.com/whatismyip]
+  USER_AGENT = 'Mozilla/6.0 (Windows NT 6.2; WOW64; rv:16.0.1) Gecko/20121011 Firefox/16.0.1'
 
-  class << self
-    def addr urls = URLS
-      urls.each do |url|
-        ip = IPAddr.new Net::HTTP.get(URI.parse url).chomp rescue nil
-        return ip.to_s if ip
-      end
-      'undetermined'
-    end
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.certfile ||= File.expand_path '~/.certificates/www.google.com.crt'
   end
 
   def parser
-    @parser ||= OptionParser.new "Get your public IP from:\n    #{URLS.join "\n    "}"
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Determine public IP address as seen by google.com.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-f', '--certfile PATH', 'google.com certificate file', '[DEFAULT: %s]' % options.certfile do |arg|
+        options.certfile = File.expand_path arg
+      end
+    end
+  end
+
+  def query
+    cmd = %W[curl -s -A #{USER_AGENT} --cacert #{options.certfile} https://www.google.com/search?q=what+is+my+ip]
+    Nokogiri::HTML(%x(#{cmd.shelljoin})).search('[text()*="Your public IP address is"]').css('em').text.strip
   end
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.empty?
-
-    ip = self.class.addr
-    ip ? puts(ip) : abort
+    abort parser.help if args.any?
+    puts query
   end
 end
 
