@@ -7,7 +7,7 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-text/html; elinks %s
+text/html; elinks -localhost %s
 image/png; feh %s
 image/jpg; feh %s
 image/jpeg; feh %s
