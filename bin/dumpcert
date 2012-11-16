@@ -60,7 +60,7 @@ class Dumpcert
 
     def get url
       case url
-      when /\.html$/ then http_get url
+      when %r{\Ahttp://} then http_get url
       else ssl_get *parse_server_arg(url)
       end
     end
