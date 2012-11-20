@@ -906,7 +906,7 @@ function! s:Commit(args) abort
         let old_editor = $GIT_EDITOR
         let $GIT_EDITOR = 'false'
       else
-        let command = 'env GIT_EDITOR=false '
+        let command = 'env GIT_EDITOR=/bin/false '
       endif
       let command .= s:repo().git_command('commit').' -v '.a:args
       if &shell =~# 'csh'
