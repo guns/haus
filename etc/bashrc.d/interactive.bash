@@ -818,8 +818,7 @@ ALIAS ctagsr='ctags -R'
 HAVE vim && {
     alias vi='command vim -u NONE'
     alias vim='vim -p'
-    alias vimtag='vim -t'
-    alias vimlog='vim -V/tmp/vim.log'
+    alias vimnilla='command vim -u NONE -N'
     # Param: [$@] Arguments to `ff()`
     vimfind() {
         local files=()
