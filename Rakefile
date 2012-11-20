@@ -147,8 +147,6 @@ task :env do # {{{1
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
-      { :base => "#{@vim}/vim-textobj-rubyblock",  :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-textobj-user",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-varnish",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master guns], :files => :pathogen },
