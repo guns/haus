@@ -882,17 +882,22 @@ snippet CP "print classpath" w
 (doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))] (println (.getPath u)))
 endsnippet
 
-snippet vimc "Start VimClojure NGServer" w
-(try
-	(vimclojure.nailgun.NGServer/main (into-array String [(str "127.0.0.1:" ${0:ngport})]))
-	(catch Exception _))
-endsnippet
-
 snippet bm "benchmark" w
 (defmacro bm [& body]
 	(if (integer? (first body))
 		\`(time (dotimes [_# ~(first body)] ~@(rest body)))
 		\`(time (dotimes [_# 10] ~@body))))
+endsnippet
+
+snippet trace "clojure.tools.trace/trace" w
+clojure.tools.trace/trace
+endsnippet
+
+snippet tracens "trace-ns" w
+(do (require 'clojure.tools.trace)
+	(try (clojure.tools.trace/trace-ns ${1:*ns*})
+		$0
+		(finally (clojure.tools.trace/untrace-ns $1))))
 endsnippet
 
 
