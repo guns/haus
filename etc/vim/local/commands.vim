@@ -465,20 +465,6 @@ function! <SID>RunCurrentFile()
 endfunction
 
 
-command! -bar RubyFold call <SID>RubyFold() "{{{1
-function! <SID>RubyFold()
-    " Create folds for Ruby method definitions using the ruby text object
-    setlocal foldmethod=manual
-    normal mrgg
-
-    while search('\v^\s*def ', 'W')
-        normal v%zfj0
-    endwhile
-
-    normal `r
-endfunction
-
-
 command! -bar RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
 " Run a single MiniTest::Spec test case
 function! <SID>RunCurrentMiniTestCase()
