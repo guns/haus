@@ -889,11 +889,7 @@ snippet bm "benchmark" w
 		\`(time (dotimes [_# 10] ~@body))))
 endsnippet
 
-snippet trace "clojure.tools.trace/trace" w
-clojure.tools.trace/trace
-endsnippet
-
-snippet tracens "trace-ns" w
+snippet trace "trace-ns" w
 (do (require 'clojure.tools.trace)
 	(try (clojure.tools.trace/trace-ns ${1:*ns*})
 		$0
