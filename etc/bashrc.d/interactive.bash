@@ -521,8 +521,33 @@ ALIAS rsync='rsync -e \"ssh -2\" --human-readable' \
       rsync-backup='rsync --archive --delete --partial --sparse --hard-links'
 
 # dd
-ALIAS dd3='dc3dd'  && TCOMP dd dd3
 ALIAS ddc='dcfldd' && TCOMP dd ddc
+ALIAS dd3='dc3dd'  && TCOMP dd dd3
+ddsize() {
+    [[ $# -ge 2 ]] || { echo "Usage: $FUNCNAME size block-size [dd-args]"; return 1; }
+    ruby -e '
+        size, bs = ARGV.take(2).map do |arg|
+            arg.scan(/([\d\.]+)(\D*)/).reduce 0 do |sum, (num, unit)|
+                sum + case unit
+                when /\Ag\z/i then num.to_f * 2**30
+                when /\Am\z/i then num.to_f * 2**20
+                when /\Ak\z/i then num.to_f * 2**10
+                else               num.to_f
+                end
+            end.round
+        end
+
+        dd = %w[dcfldd dd].map { |c| %x(/bin/sh -c "command -v #{c}").chomp }.find do |path|
+            File.executable? path
+        end
+
+        raise "#{ARGV[0]} not a multiple of #{ARGV[1]}" if not (size % bs).zero?
+
+        cmd = %W[#{dd} bs=#{bs} count=#{size / bs}] + ARGV.drop(2)
+        puts cmd.join(" ")
+        exec *cmd
+    ' -- "$@"
+}; TCOMP dd ddsize
 
 # free
 ALIAS free='free -m'
