@@ -168,7 +168,7 @@ class Remind
   end
 
   def query signal = :USR1
-    %x(ps axo pid,comm).lines.each do |line|
+    %x(ps axo pid,args).lines.each do |line|
       pid, comm = line.strip.split /\s+/, 2
       next unless comm =~ /\Aremind \d{2}:\d{2}:\d{2}\z/
       Process.kill signal, pid.to_i
