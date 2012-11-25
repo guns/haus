@@ -51,17 +51,20 @@
     ap     = add --patch
     ac     = !git add . && git commit -a
     acv    = !git add . && git commit -a -v
+    acva   = !git add . && git commit -a -v --amend
     acm    = !git add . && git commit -a -m
     rs     = reset
     rshard = reset --hard
 
     # committing
-    c   = commit
-    cv  = commit -v
-    cm  = commit -m
-    ca  = commit -a
-    cav = commit -a -v
-    cam = commit -a -m
+    c    = commit
+    cv   = commit -v
+    cva  = commit -v --amend
+    cm   = commit -m
+    ca   = commit -a
+    cav  = commit -a -v
+    cava = commit -a -v --amend
+    cam  = commit -a -m
 
     # merging and rebasing
     m   = merge --no-ff --stat --log --edit
