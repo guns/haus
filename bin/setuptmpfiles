@@ -64,7 +64,7 @@ class Setuptmpfiles
     Hash[YAML.load_file(options.config_file).map do |type, files|
       fs = files.map do |f|
         if f =~ /\Aglob:(.*)/
-          Dir.glob(tilde_expand_path $1, home).select { |f| File.ftype(f) == type }
+          Dir.glob(tilde_expand_path $1, home).select { |f| [type, 'link'].include? File.ftype(f) }
         else
           tilde_expand_path f, home
         end
