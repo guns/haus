@@ -4,6 +4,10 @@ snippet def "#define" b
 #define $0
 endsnippet
 
+snippet once "#pragma once" b
+#pragma once
+endsnippet
+
 snippet Def "#ifndef … #define … #endif" b
 #ifndef ${1/([A-Za-z0-9_]+).*/$1/}
 #define ${1:SYMBOL}
