@@ -262,7 +262,7 @@
         <command>/bin/sh -c "if killall -0 skippy-xd; then killall skippy-xd; else skippy-xd; fi"</command>
       </action>
     </keybind>
-    <keybind key="F8">
+    <keybind key="W-A-F10">
       <action name="Execute">
         <command>/bin/sh -c "wmctrl -a 'gPodder' || gpodder"</command>
       </action>
@@ -349,7 +349,7 @@
     <keybind key="W-C-f">
       <action name="ToggleMaximizeFull"/>
     </keybind>
-    <keybind key="W-F11">
+    <keybind key="F8">
       <action name="ToggleShowDesktop"/>
     </keybind>
     <!-- Subtle-esque tiling -->
