@@ -23,6 +23,7 @@ task :env do # {{{1
 
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
+  @emacs = File.expand_path '~guns/src/emacsfiles'
 
   @subprojects = Hash[{
     'programs' => [
@@ -279,6 +280,14 @@ task :env do # {{{1
         :branch => %w[master],
         :files  => { 'bin/vidir' => 'bin/vidir' },
         :before => lambda { |proj| FileUtils.chmod 0755, 'bin/vidir' }
+      }
+    ],
+
+    'emacsfiles' => [
+      {
+        :base => "#{@emacs}/evil",
+        :branch => %w[master],
+        :files => 'etc/%emacs.d/evil'
       }
     ],
 

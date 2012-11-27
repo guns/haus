@@ -998,6 +998,9 @@ HAVE vim && {
     alias vimxinitrc='vim ~/.xinitrc'
 }
 
+# Emacs
+ALIAS emacs='emacs -nw'
+
 
 ### Terminal Multiplexers {{{1
 
