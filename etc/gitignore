@@ -12,6 +12,10 @@ Thumbs.db
 .tags
 .jstags
 
+# Emacs
+\#*\#
+*.elc
+
 # Ruby
 .bundle/
 .yardoc/
