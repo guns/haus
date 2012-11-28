@@ -525,7 +525,7 @@ noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
 noremap  <Leader>g<Space> :<C-u>Git<Space>
-noremap  <Leader>gb       :Gblame<CR>
+noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
 noremap  <Leader>gc       :<C-u>Gcommit<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
