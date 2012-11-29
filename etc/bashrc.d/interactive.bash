@@ -406,9 +406,6 @@ dusort() {
         res, pool, lock = [], [], Mutex.new
         label           = "\r%#{size.to_s.length}d/#{size}"
 
-        # We are assuming POSIX 512 bytes per block
-        ENV.delete "BLOCKSIZE"
-
         # Threading mostly for for user feedback.
         # Will usually be slower than a single call to `du`
         4.times do
@@ -417,7 +414,8 @@ dusort() {
                     i = lock.synchronize { idx += 1 }
                     break if i >= size
                     $stderr.print label % (i+1)
-                    res[i] = [%x(du -s #{fs[i].shellescape})[/^\d+/].to_i * 512, fs[i]]
+                    # du -k is a POSIX flag
+                    res[i] = [%x(du -k -s #{fs[i].shellescape})[/^\d+/].to_i * 1024, fs[i]]
                 end
             end
         end
