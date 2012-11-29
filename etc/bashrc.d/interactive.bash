@@ -1054,12 +1054,6 @@ ALIAS patch='patch --version-control never'
 
 # git
 HAVE git && {
-    # Slightly shorter versions of git commands
-    for _git_alias in $(git config --list | sed -ne 's/^alias\.\([^=]*\)=.*/\1/p'); do
-        alias "git$_git_alias=git $_git_alias"
-    done
-    unset _git_alias
-
     # Github
     # Param: $1   User name
     # Param: $2   Repository name
