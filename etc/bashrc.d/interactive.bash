@@ -1519,6 +1519,14 @@ HAVE feh && {
             exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
+    fmove() {
+        ruby -r shellwords -e '
+            dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
+            abort "USAGE: fmove dir ..." if ARGV.empty? or dirs.count != ARGV.count
+            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "mv -- %F #{d.shellescape}"] }
+            exec "feh", "-Tsmall", "--draw-actions", *actions
+        ' -- "$@"
+    }
 }
 
 # cmus
