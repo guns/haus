@@ -127,12 +127,25 @@ function! <SID>Ctags()
     execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
 endfunction
 
+function! LispFoldExpr(lnum)
+    let line = getline(a:lnum)
+    if line =~ '\v^\s*;;; ' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
+        return '>1'
+    elseif line =~ '\v.*[\(/]def.*'
+        return '>2'
+    else
+        return '='
+    endif
+endfunction
 
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'
     setlocal iskeyword+='
     SetWhitespace 2 8
+
+    setlocal foldmethod=expr
+    setlocal foldexpr=LispFoldExpr(v:lnum)
 
     nnoremap <buffer> <Leader>C :StartNailgunServer \| silent edit<CR>
     noremap! <buffer> <C-l>      ->
