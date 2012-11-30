@@ -36,7 +36,7 @@ class Ramdisk
 
   def sh *args
     puts '%s %s' % [Process.euid.zero? ? '#' : '$', args.join(' ')]
-    system *args
+    system *args or raise 'Process failed!'
   end
 
   def shx cmd
