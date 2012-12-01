@@ -127,7 +127,8 @@ function! <SID>Ctags()
     execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
 endfunction
 
-function! LispFoldExpr(lnum)
+
+function! LispFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
     if line =~ '\v^\s*;;; ' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
         return '>1'
@@ -137,6 +138,7 @@ function! LispFoldExpr(lnum)
         return '='
     endif
 endfunction
+
 
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()

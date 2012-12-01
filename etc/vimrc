@@ -73,6 +73,7 @@ set thesaurus+=~/Documents/Notes/mthesaur.txt " http://www.gutenberg.org/dirs/et
 " Folding
 set foldmethod=marker           " Default to vim's marker folding
 set foldlevelstart=99           " But don't fold anything on load
+set foldtext=getline(v:foldstart)
 
 " Gutter / Status line
 set nonumber                    " No line numbers
