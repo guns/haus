@@ -839,7 +839,6 @@ ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
-    alias vi='command vim -u NONE'
     alias vim='vim -p'
     alias vimnilla='command vim -u NONE -N'
     # Param: [$@] Arguments to `ff()`
