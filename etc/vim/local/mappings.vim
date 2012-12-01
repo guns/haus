@@ -50,7 +50,7 @@ noremap - <NOP>
 let g:maplocalleader = '-'
 
 
-""" Ctrl-C as Escape {{{1
+""" Escape {{{1
 
 " Allow Ctrl-C, which is easily accessible from the home row, to be a complete
 " replacement for the Escape key:
@@ -62,6 +62,12 @@ let g:maplocalleader = '-'
 " Bind: s_Ctrl-C => s_Ctrl-\_Ctrl-N
 vnoremap <C-c> <C-\><C-n>
 snoremap <C-c> <C-\><C-n>
+
+" Since our mapping never timeout, a single ESC will hang indefinitely,
+" waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
+" and double ESC as our secondary.
+noremap  <Esc><Esc> <C-\><C-n>
+noremap! <Esc><Esc> <C-\><C-n>
 
 
 """ Emacs: Ctrl-A (start-of-line) {{{1
