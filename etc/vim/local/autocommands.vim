@@ -35,7 +35,7 @@ augroup GUNS
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
         \ setlocal filetype=sh
     autocmd FileType sh
-        \ setlocal iskeyword+=-
+        \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Lisp {{{1
     autocmd BufRead,BufNewFile *.cljs
@@ -182,7 +182,7 @@ augroup GUNS
     " Readline {{{1
     autocmd BufRead,BufNewFile *inputrc
         \ SetIskeyword! |
-        \ setlocal filetype=readline
+        \ setlocal filetype=readline foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Nethack! {{{1
     autocmd BufRead,BufNewFile *.des

@@ -7,7 +7,7 @@
 #                                          guns <self@sungpae.com>
 
 
-### Readline Variables {{{1
+### Readline Variables
 
 # Let your terminal convert to `visible`; don't set here
 # set bell-style audible
@@ -122,7 +122,7 @@ set skip-completed-text on
 set visible-stats on
 
 
-### Global Macros {{{1
+### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
 
 # Text editing
@@ -198,7 +198,7 @@ set visible-stats on
 "\ex":          "×"         U+00d7
 
 
-### bash {{{1
+### bash
 
 $if Bash
     # Rebinds
@@ -326,7 +326,7 @@ $if Bash
 $endif
 
 
-### pry / irb {{{1
+### pry / irb
 
 $if Ruby
     # Rebinds
@@ -358,7 +358,7 @@ $if Ruby
 $endif
 
 
-### Clojure REPL {{{1
+### Clojure REPL
 
 $if Java
     # Rebinds
@@ -381,7 +381,7 @@ $if Java
 $endif
 
 
-### PostgreSQL {{{1
+### PostgreSQL
 
 $if Psql
     # Rebinds

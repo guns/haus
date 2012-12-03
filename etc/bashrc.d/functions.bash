@@ -1,10 +1,13 @@
-### BASH INITIALIZATION FUNCTIONS ###
+###
+### BASH INITIALIZATION FUNCTIONS
+###
 
 # Helper functions for defining a bash environment.
 # All functions and variables can be unset by calling `CLEANUP`.
 # Bash 3.1+ compatible.
 
-# __SECLIST__ contains files that should be checked for loose privileges. {{{1
+### Temporary collections
+# __SECLIST__ contains files that should be checked for loose privileges.
 # __GC_FUNC__ contains functions to be unset after shell init.
 # __GC_VARS__ contains variables to be unset after shell init.
 __SECLIST__=()
@@ -24,7 +27,7 @@ CLEANUP() {
 }; GC_FUNC CLEANUP
 
 
-# Abort the login process. {{{1
+### Abort the login process.
 # Param: $* Error message
 ABORT() {
     # Explain
@@ -43,7 +46,7 @@ ABORT() {
 }; GC_FUNC ABORT
 
 
-# Source file and abort on failure {{{1
+### Source file and abort on failure
 # Param: $1 Filename
 REQUIRE() {
     [[ -e "$1" ]] || ABORT "\"$1\" does not exist!"
@@ -52,7 +55,7 @@ REQUIRE() {
 }; GC_FUNC REQUIRE
 
 
-# Simple wrapper around `type` {{{1
+### Simple wrapper around `type`
 # Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
@@ -61,7 +64,9 @@ __OSX__()   { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OSX__
 __LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
 
 
-# Check to see if current user or root owns and has sole write privileges {{{1
+### Security check
+#
+# Check to see if current user or root owns and has sole write privileges
 # on all files in SECLIST.
 #
 # Clears SECLIST on success and aborts on failure.
@@ -94,7 +99,7 @@ CHECK_SECLIST() {
 }; GC_FUNC CHECK_SECLIST
 
 
-# Processes array variable PATH_ARY and exports PATH. {{{1
+### Processes array variable PATH_ARY and exports PATH.
 #
 # PATH_ARY may consist of directories or colon-delimited PATH strings.
 # Duplicate, non-searchable, and non-extant directories are pruned, as well
@@ -121,7 +126,7 @@ EXPORT_PATH() {
     CHECK_SECLIST
 }; GC_FUNC EXPORT_PATH
 
-# Lazy completion transfer function: {{{1
+### Lazy completion transfer function:
 #
 # The Bash-completion project v2.0 introduces dynamic loading of completions,
 # which greatly shortens shell initialization time. A result of this is that
@@ -170,7 +175,7 @@ TCOMP() {
 }; GC_FUNC TCOMP
 
 
-# Smarter aliasing function: {{{1
+### Smarter aliasing function:
 #
 #   * Lazily transfers completions to the alias using TCOMP():
 #
@@ -215,7 +220,7 @@ ALIAS() {
 }; GC_FUNC ALIAS
 
 
-# `cd` wrapper creation: {{{1
+### `cd` wrapper creation:
 #
 # CD_FUNC foo /usr/local/foo ...
 #
@@ -334,7 +339,7 @@ CD_FUNC() {
 }; GC_FUNC CD_FUNC
 
 
-# Init script wrapper creation: {{{1
+### Init script wrapper creation:
 #
 # RC_FUNC rcd /etc/rc.d ...
 #
@@ -386,7 +391,8 @@ RC_FUNC() {
 }; GC_FUNC RC_FUNC
 
 
-# HAPPY HACKING {{{1
+### HAPPY HACKING
+
 GREETINGS() {
     local date="$(date +%H:%M:%S\ %Z)" color
     local hour="${date%%:*}"; hour="${hour#0}"

@@ -1,4 +1,6 @@
-### MINIMAL BASH SETUP FOR LEGACY VERSIONS ###
+###
+### MINIMAL BASH SETUP FOR LEGACY VERSIONS
+###
 
 PS_COLOR="${PS_COLOR:-32}" . ~/.bashrc.d/prompts.bash
 

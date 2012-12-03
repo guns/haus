@@ -1,4 +1,6 @@
-### BASH PROMPTS ###
+###
+### BASH PROMPTS
+###
 
 EXPORT_PROMPTS() {
     # Environment overrides

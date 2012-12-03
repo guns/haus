@@ -1,8 +1,10 @@
-### BASH FUNCTIONS, ALIASES, and VARIABLES ###
+###
+### BASH FUNCTIONS, ALIASES, and VARIABLES
+###
 
 # Requires ~/.bashrc.d/functions.bash
 
-### Environment Variables {{{1
+### Environment Variables
 
 # Bash history
 export HISTSIZE='65535'
@@ -74,7 +76,7 @@ if __OSX__; then
 fi
 
 
-### Meta Utility Functions {{{1
+### Meta Utility Functions
 
 # Lists of aliases and functions
 showfunctions() { set | grep '^[^ ]* ()'; }
@@ -158,7 +160,7 @@ __ps1toggle__() {
 }
 
 
-### Directories {{{1
+### Directories
 
 CD_FUNC -n ..           ..
 CD_FUNC -n ...          ../..
@@ -192,7 +194,7 @@ CD_FUNC cddownloads     ~/Downloads
 CD_FUNC cdmail          ~/Mail
 
 
-### Bash builtins and Haus commands {{{1
+### Bash builtins and Haus commands
 
 ALIAS cv='command -v'
 alias h='history'
@@ -245,7 +247,7 @@ HAVE run   && TCOMP exec run
 HAVE bgrun && TCOMP exec bgrun
 
 
-### Files, Disks, and Memory {{{1
+### Files, Disks, and Memory
 
 # grep
 ALIAS g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT" \
@@ -603,7 +605,7 @@ ALIAS ranger='ranger -c' \
       rr='ranger -c'
 
 
-### Processes {{{1
+### Processes
 
 # kill killall
 ALIAS k='kill' \
@@ -654,14 +656,14 @@ HAVE htop && {
 }
 
 
-### Switch User {{{1
+### Switch User
 
 ALIAS s='sudo' \
       root='exec sudo -Hs'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 
-### Network {{{1
+### Network
 
 if HAVE ifconfig; then
     alias ic='ifconfig'
@@ -776,7 +778,7 @@ HAVE weechat-curses && {
 }
 
 
-### Firewalls {{{1
+### Firewalls
 
 # IPTables
 ALIAS ipt='iptables' && {
@@ -832,7 +834,7 @@ ALIAS ipt='iptables' && {
 }
 
 
-### Editors {{{1
+### Editors
 
 # Exuberant ctags
 ALIAS ctagsr='ctags -R'
@@ -999,7 +1001,7 @@ HAVE vim && {
 ALIAS emacs='emacs -nw'
 
 
-### Terminal Multiplexers {{{1
+### Terminal Multiplexers
 
 # Tmux
 ALIAS tm='tmux' && {
@@ -1026,7 +1028,7 @@ HAVE screen && {
 }
 
 
-### Compilers {{{1
+### Compilers
 
 # make
 ALIAS mk='make' \
@@ -1041,7 +1043,7 @@ ALIAS mk='make' \
       mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
 
 
-### SCM {{{1
+### SCM
 
 # diff patch
 ALIAS di='diff -U3' \
@@ -1077,7 +1079,7 @@ githubget() {
 }
 
 
-### Ruby {{{1
+### Ruby
 
 type ruby &>/dev/null && {
     # Ruby versions
@@ -1180,12 +1182,12 @@ type ruby &>/dev/null && {
 }
 
 
-### Python {{{1
+### Python
 
 ALIAS py='python'
 
 
-### JVM {{{1
+### JVM
 
 # Leiningen, Clojure package manager
 HAVE lein && {
@@ -1203,7 +1205,7 @@ ALIAS java-share-dump='java -server -Xshare:dump'
 ALIAS ngstop='ng ng-stop'
 
 
-### JavaScript {{{1
+### JavaScript
 
 # node package manager
 ALIAS npm='npm --global' && {
@@ -1218,7 +1220,7 @@ ALIAS npm='npm --global' && {
 }
 
 
-### Perl {{{1
+### Perl
 
 ALIAS perlpe='perl -pe' \
       perlne='perl -ne' \
@@ -1239,7 +1241,7 @@ ALIAS perlpe='perl -pe' \
 }
 
 
-### Haskell {{{1
+### Haskell
 
 # cabal package manager
 HAVE cabal && {
@@ -1254,7 +1256,7 @@ HAVE cabal && {
 }
 
 
-### Databases {{{1
+### Databases
 
 HAVE mysql && {
     mysql() { env "MYSQL_PWD=$(pass mysql/root)" mysql -uroot "${@:-mysql}"; }
@@ -1284,7 +1286,7 @@ ALIAS sqlite='sqlite3' && {
 }
 
 
-### Hardware control {{{1
+### Hardware control
 
 ALIAS mp='modprobe -a'
 ALIAS sens='sensors'
@@ -1330,7 +1332,7 @@ HAVE wpa_supplicant wpa_passphrase && {
 }
 
 
-### Encryption {{{1
+### Encryption
 
 # OpenSSL
 ALIAS ssl='openssl' && {
@@ -1384,7 +1386,7 @@ if __OSX__; then
 fi
 
 
-### Virtual Machines {{{1
+### Virtual Machines
 
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
@@ -1412,7 +1414,7 @@ if [[ -d /Applications/VirtualBox.app ]]; then
 fi
 
 
-### Package Managers {{{1
+### Package Managers
 
 if __OSX__; then
     # MacPorts package manager
@@ -1493,7 +1495,7 @@ elif __LINUX__; then
 fi
 
 
-### Media {{{1
+### Media
 
 # Imagemagick
 ALIAS geometry='identify -format "%w %h"'
@@ -1551,7 +1553,7 @@ ALIAS youtubedown='youtubedown --verbose' && {
 }
 
 
-### X {{{1
+### X
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
 
@@ -1579,14 +1581,14 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
 }
 
 
-### Linux Console {{{1
+### Linux Console
 
 if [[ "$TERM" == linux ]]; then
     alias vconsole-setup="loadkeys '$cdhaus/share/kbd/macbook.map.gz'; unicode_start"
 fi
 
 
-### Init {{{1
+### Init
 
 if HAVE systemd; then
     ALIAS sd='systemd' \
@@ -1601,7 +1603,7 @@ else
 fi
 
 
-### Launchd {{{1
+### Launchd
 
 ALIAS lctl='launchctl' \
       lctlload='launchctl load -w' \
@@ -1616,7 +1618,7 @@ ALIAS lctl='launchctl' \
 }
 
 
-### GUI programs {{{1
+### GUI programs
 
 if __OSX__; then
     # LaunchBar

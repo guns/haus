@@ -1,4 +1,6 @@
-### SHELL PATH ###
+###
+### SHELL PATH
+###
 
 # Requires ~/.bashrc.d/functions.bash
 

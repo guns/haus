@@ -1,6 +1,8 @@
-### SHELL OPTIONS ###
+###
+### SHELL OPTIONS
+###
 
-# POSIX shell options.
+### POSIX shell options.
 #
 # Default:
 # SHELLOPTS=braceexpand:emacs:hashall:histexpand:history:interactive-comments:monitor
@@ -35,7 +37,7 @@ set +o vi                               # vi editing mode
 #set +o xtrace                          # DO NOT SET HERE!
 
 
-# Bash shell options.
+### Bash shell options.
 #
 # Default:
 # BASHOPTS=cmdhist:expand_aliases:extquote:force_fignore:hostcomplete:interactive_comments:progcomp:promptvars:sourcepath

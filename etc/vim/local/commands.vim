@@ -128,6 +128,15 @@ function! <SID>Ctags()
 endfunction
 
 
+function! ShellFoldExpr(lnum)
+    if getline(a:lnum) =~# '\v^\s*\#\#\#\s' && empty(getline(a:lnum - 1))
+        return '>1'
+    else
+        return '='
+    endif
+endfunction
+
+
 function! DiffFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^diff>'
         return '>1'
@@ -150,7 +159,7 @@ endfunction
 
 function! LispFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
-    if line =~ '\v^\s*;;; ' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
+    if line =~ '\v^\s*;;;\s' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
         return '>1'
     elseif line =~# '\v.*[\(/]def.*'
         return '>2'
