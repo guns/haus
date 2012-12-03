@@ -128,6 +128,15 @@ function! <SID>Ctags()
 endfunction
 
 
+function! DiffFoldExpr(lnum) "{{{1
+    if getline(a:lnum) =~ '^\Vdiff '
+        return '>1'
+    else
+        return '='
+    endif
+endfunction
+
+
 function! LispFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
     if line =~ '\v^\s*;;; ' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
@@ -146,8 +155,7 @@ function! <SID>LispBufferSetup()
     setlocal iskeyword+='
     SetWhitespace 2 8
 
-    setlocal foldmethod=expr
-    setlocal foldexpr=LispFoldExpr(v:lnum)
+    setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
 
     nnoremap <buffer> <Leader>C :StartNailgunServer \| silent edit<CR>
     noremap! <buffer> <C-l>      ->

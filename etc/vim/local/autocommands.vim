@@ -22,8 +22,14 @@ augroup GUNS
 
     " Diff {{{1
     autocmd FileType diff
-        \ setlocal foldmethod=diff foldlevel=0 |
+        \ setlocal foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
         \ SetWhitespace 8
+
+    " gitcommit {{{1
+    autocmd FileType gitcommit
+        \ setlocal iskeyword+=- foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
+        \ SetTextwidth 72 |
+        \ SetAutowrap 1
 
     " Shell {{{1
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
@@ -149,12 +155,6 @@ augroup GUNS
         \ call zip#Browse(expand("<amatch>"))
     autocmd BufReadCmd *.gem
         \ call tar#Browse(expand("<amatch>"))
-
-    " git {{{1
-    autocmd FileType gitcommit
-        \ setlocal iskeyword+=- |
-        \ SetTextwidth 72 |
-        \ SetAutowrap 1
 
     " tmux {{{1
     autocmd BufRead,BufNewFile *tmux.conf
