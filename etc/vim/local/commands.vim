@@ -158,11 +158,10 @@ endfunction
 
 
 function! LispFoldExpr(lnum) "{{{1
-    let line = getline(a:lnum)
-    if line =~ '\v^\s*;;;\s' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
+    if getline(a:lnum) =~# '\v.*[\(/]def.*'
         return '>1'
-    elseif line =~# '\v.*[\(/]def.*'
-        return '>2'
+    elseif getline(a:lnum + 1) =~# '\v^\s*;;;'
+        return 's1'
     else
         return '='
     endif
