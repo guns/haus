@@ -2,7 +2,7 @@
 
 (leiningen.exec/deps '[[hiccup "1.0.2"]])
 
-(require '[hiccup.core :as hiccup :refer [h]]
+(require '[hiccup.core :as hiccup]
          '[hiccup.page :as page]
          '[clojure.string :as string]
          '[clojure.java.io :as io]
@@ -84,7 +84,7 @@
   (let [command (if (coll? command)
                   (format "/bin/sh -c \"%s\"" (string/join "; " command))
                   command)]
-    (bind key ["Execute" [:command (h command)]])))
+    (bind key ["Execute" [:command (hiccup/h command)]])))
 
 (defn bindfocus
   ([key title] (bindfocus key title nil))
@@ -360,7 +360,8 @@
 
 (defn -main [argv]
   (let [[program command arg] argv]
-    (cond (= command "xml") (println (render-xml rc))
+    (cond (= command nil) (println (render-xml rc))
+          (= command "xml") (println (render-xml rc))
           (= command "update") (do (spit (openbox-rc-path) (render-xml rc))
                                    (shell/sh "openbox" "--reconfigure"))
           (= command "parse") (println (convert-xml (or arg *in*)))
