@@ -44,8 +44,10 @@ augroup GUNS
         \ LispBufferSetup
 
     " Ruby {{{1
-    autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile,*rakefile
+    autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile,*Rakefile
         \ setlocal filetype=ruby
+    autocmd BufRead,BufNewFile *Rakefile
+        \ setlocal foldmethod=expr foldexpr=RakefileFoldExpr(v:lnum)
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=? iskeyword+=! |
         \ execute 'noremap  <buffer> <Leader>R     :<C-u>RunCurrentMiniTestCase<CR>' |

@@ -129,8 +129,19 @@ endfunction
 
 
 function! DiffFoldExpr(lnum) "{{{1
-    if getline(a:lnum) =~ '^\Vdiff '
+    if getline(a:lnum) =~# '\v^diff>'
         return '>1'
+    else
+        return '='
+    endif
+endfunction
+
+
+function! RakefileFoldExpr(lnum) "{{{1
+    if getline(a:lnum) =~# '\v^\s*<task>'
+        return '>1'
+    elseif getline(a:lnum + 1) =~# '\v^\s*<(desc|namespace)>'
+        return 's1'
     else
         return '='
     endif
@@ -141,7 +152,7 @@ function! LispFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
     if line =~ '\v^\s*;;; ' && getline(a:lnum - 1) =~ '\v^\s*;;;$' && empty(getline(a:lnum - 2))
         return '>1'
-    elseif line =~ '\v.*[\(/]def.*'
+    elseif line =~# '\v.*[\(/]def.*'
         return '>2'
     else
         return '='

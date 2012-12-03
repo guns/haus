@@ -4,7 +4,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-$:.unshift 'lib/ruby' # {{{1
+$:.unshift 'lib/ruby'
 
 require 'shellwords'
 require 'digest/sha1'
@@ -15,7 +15,7 @@ require 'haus/logger'
 
 include Haus::Loggable
 
-task :env do # {{{1
+task :env do
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
   ENV['CURL_CA_BUNDLE'] = File.expand_path 'etc/certificates/haus-update.crt'
@@ -309,7 +309,7 @@ task :env do # {{{1
 end
 
 
-desc 'Start a Pry or IRB console within the rake environment' # {{{1
+desc 'Start a Pry or IRB console within the rake environment'
 task :console => :env do
   ARGV.clear
   begin
@@ -325,7 +325,7 @@ task :tags do
   Project::Update.helptags
 end
 
-desc 'Update subprojects (extra arguments are regexp filters)' # {{{1
+desc 'Update subprojects (extra arguments are regexp filters)'
 task :update => :env do
   opts = { :threads => 4 }
   opts[:threads] = ENV['JOBS'].to_i if ENV['JOBS']
@@ -342,7 +342,7 @@ task :update => :env do
   exit # Stop processing tasks!
 end
 
-desc 'Show untracked vim bundles and vimfile projects' # {{{1
+desc 'Show untracked vim bundles and vimfile projects'
 task :untracked => :env do
   tracked  = @subprojects['vimfiles'].map { |h| File.basename h.base }
 
@@ -353,7 +353,7 @@ task :untracked => :env do
   log Dir["#{@vim}/*"].reject { |f| tracked.include? File.basename(f) }.join("\n")
 end
 
-desc 'Show subproject source remotes' # {{{1
+desc 'Show subproject source remotes'
 task :remotes => :env do
   @subprojects.values.flatten.each do |proj|
     log proj.base
@@ -368,7 +368,7 @@ task :remotes => :env do
   end
 end
 
-desc 'Import all terminfo files in share/terminfo' # {{{1
+desc 'Import all terminfo files in share/terminfo'
 task :tic do
   Dir['share/terminfo/*'].each { |f| sh 'tic', f }
 end
