@@ -63,10 +63,9 @@ let g:maplocalleader = '-'
 vnoremap <C-c> <C-\><C-n>
 snoremap <C-c> <C-\><C-n>
 
-" Since our mapping never timeout, a single ESC will hang indefinitely,
+" Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
 " and double ESC as our secondary.
-noremap  <Esc><Esc> <C-\><C-n>
 noremap! <Esc><Esc> <C-\><C-n>
 
 
