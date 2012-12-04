@@ -390,6 +390,9 @@ noremap <Leader>fs       :<C-u>setlocal filetype=sh<CR>
 noremap <Leader>fv       :<C-u>setlocal filetype=vim<CR>
 noremap <Leader>fy       :<C-u>setlocal filetype=yaml<CR>
 
+" Toggle folds
+nnoremap <C-j> za
+
 
 """ Windows and Tabs {{{1
 
