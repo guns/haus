@@ -313,14 +313,17 @@ noremap <4-,> :<C-u>silent! execute '! xecho title ' . shellescape(fnamemodify(g
 
 """ Buffer commands {{{1
 
+" REPLACE linewise-downward with nothing to alias toggle-fold
+nnoremap <C-j> za
+
+" REPLACE ex-mode with nothing to alias (n)Q as :quit
+nnoremap Q :quit<CR>
+
 " Save / Quit Buffer
 Mapall <4-s>   :<C-u>update<CR>
 Mapall <4-S>   :<C-u>write !sudo tee % >/dev/null<CR>
 Mapall <4-\>   :<C-u>quit<CR>
 Mapall <4-Bar> :<C-u>quit!<CR>
-
-" REPLACE ex-mode with nothing to alias (n)Q as :quit
-nnoremap Q :quit<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
@@ -389,9 +392,6 @@ noremap <Leader>fr       :<C-u>setlocal filetype=ruby<CR>
 noremap <Leader>fs       :<C-u>setlocal filetype=sh<CR>
 noremap <Leader>fv       :<C-u>setlocal filetype=vim<CR>
 noremap <Leader>fy       :<C-u>setlocal filetype=yaml<CR>
-
-" Toggle folds
-nnoremap <C-j> za
 
 
 """ Windows and Tabs {{{1
