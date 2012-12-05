@@ -341,9 +341,9 @@ function! <SID>ClojureCheatSheet(bang)
             let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
         endif
         call vimclojure#Eval(clj)
-        normal yG
-        wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure
-        normal gg"_dGP
+        normal! d/\v^nil
+        wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure foldmethod=marker
+        normal! gg"_dGP
     endif
 endfunction
 
