@@ -1529,9 +1529,6 @@ HAVE cmus && {
     alias cmus='envtmux cmus'
 }
 
-# espeak
-HAVE espeak && ! HAVE say && say() { espeak -ven-us "$*"; }
-
 # VLC
 [[ -x /Applications/VLC.app/Contents/MacOS/VLC ]] && {
     alias vlc='open -a /Applications/VLC.app'
