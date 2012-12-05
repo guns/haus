@@ -180,8 +180,8 @@ function! <SID>LispBufferSetup()
     noremap! <buffer> <C-l>      ->
     noremap  <buffer> <4-CR>     A<Space>;<Space>
     noremap! <buffer> <4-CR>     <C-\><C-o>A<Space>;<Space>
-    nnoremap <buffer> ==         :normal m`=a(``<CR>
-    nnoremap <buffer> =p         :normal m`=ap``<CR>
+    nnoremap <buffer> ==         :<C-u>normal! m`=a(``<CR>
+    nnoremap <buffer> =p         :<C-u>normal! m`=ap``<CR>
     nnoremap <buffer> <C-]>      :<C-u>ClojureTagJump.<CR>
     nnoremap <buffer> <C-w><C-]> :<C-u>split \| ClojureTagJump.<CR>
 
@@ -198,14 +198,14 @@ function! <SID>LispBufferSetup()
 
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock.
-    nmap <silent> <buffer> <Leader><Leader> mp:call PareditSelectCurrentForm()<CR><Leader><Leader>`p
+    nmap <silent> <buffer> <Leader><Leader> mp:<C-u>call PareditSelectCurrentForm()<CR><Leader><Leader>`p
     imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
     nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel.
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
 
     " Cheatsheet (TODO should be temporary)
-    nnoremap <silent> <buffer> <LocalLeader>cs :ClojureCheatSheet!<CR>
-    nnoremap <silent> <buffer> <LocalLeader>ci :ClojureCheatSheet<CR>
+    nnoremap <silent> <buffer> <LocalLeader>cs :<C-u>ClojureCheatSheet!<CR>
+    nnoremap <silent> <buffer> <LocalLeader>ci :<C-u>ClojureCheatSheet<CR>
 
     " Repl bindings
     if exists('b:vimclojure_repl')
@@ -394,7 +394,7 @@ endfunction
 
 command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
 function! <SID>ClojureTagJump(word)
-    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal zz
+    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
 endfunction
 
 
@@ -551,7 +551,7 @@ function! <SID>CapturePane()
     let buf = bufnr('%')
     let tab = len(tabpagebuflist()) > 1
     wincmd q
-    if tab | execute 'normal gT' | endif
+    if tab | execute 'normal! gT' | endif
     execute buf . 'sbuffer'
     wincmd L
 endfunction
@@ -568,7 +568,7 @@ function! <SID>Capture(cmd)
         execute 'silent! ' . a:cmd
     finally
         redir END
-        new | setlocal buftype=nofile filetype=vim | normal "rp
+        new | setlocal buftype=nofile filetype=vim | normal! "rp
     endtry
 endfunction
 
@@ -613,7 +613,7 @@ command! -bar Hitest
 
 function! CwordOrSel(...) " {{{1
     if a:0 && a:1
-        normal gv"vy
+        normal! gv"vy
         return @v
     else
         return expand('<cword>')
