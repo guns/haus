@@ -43,8 +43,10 @@ module Util
       if audio == :voice
         if RUBY_PLATFORM =~ /darwin/i and have 'say'
           forkexec 'say', message
+        elsif have 'festival'
+          Process.detach fork { IO.popen('festival --tts', 'w') { |io| io.puts message } }
         elsif have 'espeak'
-          forkexec 'espeak', '-ven-us', message
+          forkexec 'espeak', message
         end
       elsif File.readable? audio
         if have 'afplay'
