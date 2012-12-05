@@ -20,6 +20,7 @@ include Script::Skeleton
 CHANNELS = {
   :freenode => %w[
     #vim
+    #emacs
     #mutt
     #clojure
     #leiningen
