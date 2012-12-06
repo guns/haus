@@ -219,9 +219,9 @@
 (define-key evil-motion-state-map "[{" 'evil-previous-open-brace)
 (define-key evil-motion-state-map "]}" 'evil-next-close-brace)
 (define-key evil-motion-state-map "*" 'evil-search-symbol-forward)
-(define-key evil-motion-state-map "," 'evil-repeat-find-char-reverse)
+(define-key evil-motion-state-map "," 'evil-repeat-find-char) ; evil-repeat-find-char-reverse
 (define-key evil-motion-state-map "/" 'evil-search-forward)
-(define-key evil-motion-state-map ";" 'evil-repeat-find-char)
+(define-key evil-motion-state-map ";" 'execute-extended-command) ; evil-repeat-find-char
 (define-key evil-motion-state-map "?" 'evil-search-backward)
 (define-key evil-motion-state-map "|" 'evil-goto-column)
 (define-key evil-motion-state-map "^" 'evil-first-non-blank)
