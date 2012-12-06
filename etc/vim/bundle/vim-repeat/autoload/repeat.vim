@@ -40,7 +40,7 @@
 " in your mapping will look like this:
 "
 "   nnoremap <silent> <Plug>MyMap
-"   \   :<C-U>silent! call repeat#setreg("\<lt>Plug>MyMap", v:register)<Bar>
+"   \   :<C-U>execute 'silent! call repeat#setreg("\<lt>Plug>MyMap", v:register)'<Bar>
 "   \   call <SID>MyFunction(v:register, ...)<Bar>
 "   \   silent! call repeat#set("\<lt>Plug>MyMap")<CR>
 
@@ -68,7 +68,7 @@ function! repeat#setreg(sequence,register)
     let g:repeat_reg = [a:sequence, a:register]
 endfunction
 
-function! s:repeat(count)
+function! repeat#run(count)
     if g:repeat_tick == b:changedtick
         let r = ''
         if g:repeat_reg[0] ==# g:repeat_sequence && !empty(g:repeat_reg[1])
@@ -99,7 +99,7 @@ function! s:wrap(command,count)
     endif
 endfunction
 
-nnoremap <silent> .     :<C-U>call <SID>repeat(v:count)<CR>
+nnoremap <silent> .     :<C-U>call repeat#run(v:count)<CR>
 nnoremap <silent> u     :<C-U>call <SID>wrap('u',v:count)<CR>
 if maparg('U','n') ==# ''
     nnoremap <silent> U     :<C-U>call <SID>wrap('U',v:count)<CR>
