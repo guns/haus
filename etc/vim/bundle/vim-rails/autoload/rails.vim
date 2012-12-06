@@ -686,8 +686,6 @@ function! s:readable_calculate_file_type() dict abort
     let r = "view-layout-" . e
   elseif f =~ '\<app/views\>.*\.'
     let r = "view-" . e
-  elseif f =~ '\<lib/.*\.rb$'
-    let r = 'lib'
   elseif f =~ '\<test/\%(unit\|models\|helpers\)/.*_test\.rb$'
     let r = "test-unit"
   elseif f =~ '\<test/\%(functional\|controllers\)/.*_test\.rb$'
@@ -698,6 +696,8 @@ function! s:readable_calculate_file_type() dict abort
     let r = s:sub(f,'.*<test/(\w*)s/.*','test-\1')
   elseif f =~ '\<spec/lib/.*_spec\.rb$'
     let r = 'spec-lib'
+  elseif f =~ '\<lib/.*\.rb$'
+    let r = 'lib'
   elseif f =~ '\<spec/\w*s/.*_spec\.rb$'
     let r = s:sub(f,'.*<spec/(\w*)s/.*','spec-\1')
   elseif f =~ '\<features/.*\.feature$'
@@ -848,7 +848,7 @@ function! s:app_background_script_command(cmd) dict abort
   elseif exists("$STY") && !has("gui_running") && screen && executable("screen")
     silent exe "!screen -ln -fn -t ".s:sub(s:sub(a:cmd,'\s.*',''),'^%(script|-rcommand)/','rails-').' '.cmd
   elseif exists("$TMUX") && !has("gui_running") && screen && executable("tmux")
-    silent exe '!tmux new-window -d -n "'.s:sub(s:sub(a:cmd,'\s.*',''),'^%(script|-rcommand)/','rails-').'" "'.cmd.'"'
+    silent exe '!tmux new-window -n "'.s:sub(s:sub(a:cmd,'\s.*',''),'^%(script|-rcommand)/','rails-').'" "'.cmd.'"'
   else
     exe "!".cmd
   endif
@@ -3182,27 +3182,40 @@ function! s:readable_related(...) dict abort
       let file .= '_test.rb'
     endif
     if self.type_name('helper')
-      return s:sub(file,'<app/helpers/','test/unit/helpers/')."\n".s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/helpers/','spec/helpers/')
+      return s:sub(file,'<app/','test/')."\n".
+            \s:sub(file,'<app/helpers/','test/unit/helpers/')."\n".
+            \s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/helpers/','spec/helpers/')
     elseif self.type_name('model')
-      return s:sub(file,'<app/models/','test/unit/')."\n".s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/models/','spec/models/')
+      return s:sub(file,'<app/','test/')."\n".
+            \s:sub(file,'<app/models/','test/unit/')."\n".
+            \s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/models/','spec/models/')
     elseif self.type_name('controller')
-      return s:sub(file,'<app/controllers/','test/functional/')."\n".s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'app/controllers/','spec/controllers/')
+      return s:sub(file,'<app/','test/')."\n".
+            \s:sub(file,'<app/controllers/','test/functional/')."\n".
+            \s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'app/controllers/','spec/controllers/')
     elseif self.type_name('mailer')
-      return s:sub(file,'<app/m%(ailer|odel)s/','test/unit/')."\n".s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/','spec/')
+      " is %(|odel) necessary on that 2nd one ↓ ?
+      return s:sub(file,'<app/','test/')."\n".
+            \s:sub(file,'<app/m%(ailer|odel)s/','test/unit/')."\n".
+            \s:sub(s:sub(file,'_test\.rb$','_spec.rb'),'<app/','spec/')
     elseif self.type_name('test-unit')
-      return s:sub(s:sub(file,'test/unit/helpers/','app/helpers/'),'test/unit/','app/models/')."\n".s:sub(file,'test/unit/','lib/')
+      let app_helpered = s:sub(file,'test/unit/helpers/','app/helpers/')
+      return s:sub(app_helpered,'test/unit/','app/models/')."\n".
+            \s:sub(app_helpered,'<test/','app/')."\n".
+            \s:sub(file,'test/unit/','lib/')
     elseif self.type_name('test-functional')
       if file =~ '_api\.rb'
-        return s:sub(file,'test/functional/','app/apis/')
+        return s:sub(file,'<test/functional/','app/apis/')
       elseif file =~ '_controller\.rb'
-        return s:sub(file,'test/functional/','app/controllers/')
+        return s:sub(file,'<test/functional/','app/controllers/')."\n".
+              \s:sub(file,'<test/','app/')
       else
-        return s:sub(file,'test/functional/','')
+        return s:sub(file,'<test/functional/','')
       endif
     elseif self.type_name('spec-lib')
       return s:sub(file,'<spec/','')
     elseif self.type_name('lib')
-      return s:sub(f, '<lib/(.*)\.rb$', 'test/unit/\1_test.rb')."\n".s:sub(f, '<lib/(.*)\.rb$', 'spec/lib/\1_spec.rb')
+      return s:sub(f,'<lib/(.*)\.rb$','test/unit/\1_test.rb')."\n".s:sub(f,'<lib/(.*)\.rb$','spec/lib/\1_spec.rb')
     elseif self.type_name('spec')
       return s:sub(file,'<spec/','app/')
     elseif file =~ '\<vendor/.*/lib/'
