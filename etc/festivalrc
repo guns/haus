@@ -17,5 +17,6 @@
 
 ;; https://wiki.archlinux.org/index.php/Festival
 (Parameter.set 'Audio_Method 'Audio_Command)
-(Parameter.set 'Audio_Command "aplay -q -c 1 -t raw -f s16 -r $(( SR * 105/100 )) $FILE")
-(set! voice_default 'voice_cmu_us_slt_arctic_hts)
+(Parameter.set 'Audio_Command "aplay -q -t raw -f s16 -r $(( SR * 105/100 )) $FILE")
+
+;; vim:ft=scheme:
