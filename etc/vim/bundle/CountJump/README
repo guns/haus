@@ -31,7 +31,7 @@ mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
 JumpToTrailingWhitespace (vimscript #3968): Motions to locate unwanted
                                             whitespace at the end of lines.
 TaskMotion        (vimscript #3990): Motions to task and TODO markers.
-ConflictMotion    (vimscript #3991): Motions to and inside SCM conflict markers.
+ConflictMotions   (vimscript #3991): Motions to and inside SCM conflict markers.
 vim_movement      (vimscript #4002): Movement over Vim functions with ]m etc.
 vbs_movement      (vimscript #4003): Movement over VBScript classes /
                                      functions / properties / subs with ]m etc.
