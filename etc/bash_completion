@@ -3,7 +3,7 @@
 #   bash_completion - programmable completion functions for bash 4.1+
 #
 #   Copyright © 2006-2008, Ian Macdonald <ian@caliban.org>
-#             © 2009-2011, Bash Completion Maintainers
+#             © 2009-2012, Bash Completion Maintainers
 #                     <bash-completion-devel@lists.alioth.debian.org>
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 #
 #   http://bash-completion.alioth.debian.org/
 #
-#   RELEASE: 1.99
+#   RELEASE: 2.0
 
 if [[ $- == *v* ]]; then
     BASH_COMPLETION_ORIGINAL_V_VALUE="-v"
@@ -1545,7 +1545,8 @@ _known_hosts_real()
 
     # Add hosts reported by ruptime.
     COMPREPLY+=( $( compgen -W \
-        "$( ruptime 2>/dev/null | awk '{ print $1 }' )" -- "$cur" ) )
+        "$( ruptime 2>/dev/null | awk '!/^ruptime:/ { print $1 }' )" \
+        -- "$cur" ) )
 
     # Add results of normal hostname completion, unless
     # `COMP_KNOWN_HOSTS_WITH_HOSTFILE' is set to an empty value.
@@ -1698,16 +1699,13 @@ _command_offset()
                 fi
 
                 # restore initial compopts
-                local opt t
-                while true; do
+                local opt
+                while [[ $cspec == *" -o "* ]]; do
                     # FIXME: should we take "+o opt" into account?
-                    t=${cspec#*-o }
-                    if [[ $t == $cspec ]]; then
-                        break
-                    fi
-                    opt=${t%% *}
+                    cspec=${cspec#*-o }
+                    opt=${cspec%% *}
                     compopt -o $opt
-                    cspec=${t#$opt}
+                    cspec=${cspec#$opt}
                 done
             else
                 cspec=${cspec#complete}
