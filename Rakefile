@@ -279,13 +279,6 @@ task :env do
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           nil # Work is done
         }
-      },
-
-      {
-        :base   => "#{@src}/READONLY/vidir",
-        :branch => %w[master],
-        :files  => { 'bin/vidir' => 'bin/vidir' },
-        :before => lambda { |proj| FileUtils.chmod 0755, 'bin/vidir' }
       }
     ],
 
