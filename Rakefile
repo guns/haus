@@ -292,7 +292,7 @@ task :env do
     'emacsfiles' => [
       {
         :base => "#{@emacs}/evil",
-        :branch => %w[master],
+        :branch => %w[master guns],
         :files => 'etc/%emacs.d/evil'
       }
     ],
