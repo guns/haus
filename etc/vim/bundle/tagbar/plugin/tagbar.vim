@@ -66,6 +66,14 @@ if !exists('g:tagbar_compact')
     let g:tagbar_compact = 0
 endif
 
+if !exists('g:tagbar_indent')
+    let g:tagbar_indent = 2
+endif
+
+if !exists('g:tagbar_show_visibility')
+    let g:tagbar_show_visibility = 1
+endif
+
 if !exists('g:tagbar_expand')
     let g:tagbar_expand = 0
 endif
@@ -106,10 +114,12 @@ command! -nargs=? TagbarOpen          call tagbar#OpenWindow(<f-args>)
 command! -nargs=0 TagbarOpenAutoClose call tagbar#OpenWindow('fcj')
 command! -nargs=0 TagbarClose         call tagbar#CloseWindow()
 command! -nargs=1 -bang TagbarSetFoldlevel  call tagbar#SetFoldLevel(<args>, <bang>0)
-command! -nargs=0 TagbarShowTag       call tagbar#OpenParents()
+command! -nargs=0 TagbarShowTag       call tagbar#highlighttag(1, 1)
+command! -nargs=? TagbarCurrentTag    echo tagbar#currenttag('%s', 'No current tag', <f-args>)
 command! -nargs=1 TagbarGetTypeConfig call tagbar#gettypeconfig(<f-args>)
 command! -nargs=? TagbarDebug         call tagbar#StartDebug(<f-args>)
 command! -nargs=0 TagbarDebugEnd      call tagbar#StopDebug()
+command! -nargs=0 TagbarTogglePause   call tagbar#PauseAutocommands()
 
 " Modeline {{{1
 " vim: ts=8 sw=4 sts=4 et foldenable foldmethod=marker foldcolumn=1
