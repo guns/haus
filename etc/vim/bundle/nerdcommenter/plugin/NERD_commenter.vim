@@ -321,6 +321,7 @@ let s:delimiterMap = {
     \ 'sass': { 'left': '/*', 'leftAlt': '//' },
     \ 'sather': { 'left': '--' },
     \ 'scala': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
+    \ 'scons': { 'left': '#' },
     \ 'scheme': { 'left': ';', 'leftAlt': '#|', 'rightAlt': '|#' },
     \ 'scilab': { 'left': '//' },
     \ 'scsh': { 'left': ';' },
@@ -379,6 +380,7 @@ let s:delimiterMap = {
     \ 'twig': { 'left': '{#', 'right': '#}' },
     \ 'uc': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'uil': { 'left': '!' },
+    \ 'vala': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'vb': { 'left': "'" },
     \ 'vcl': { 'left': '#' },
     \ 'velocity': { 'left': "##", 'right': "", 'leftAlt': '#*', 'rightAlt': '*#' },
@@ -1187,15 +1189,8 @@ function s:PlaceDelimitersAndInsBetween()
         execute ":normal! " . lenRight . "h"
     else
         execute ":normal! " . insOrApp . left
-
-        " if we are tacking the delim on the EOL then we gotta add a space
-        " after it cos when we go out of insert mode the cursor will move back
-        " one and the user wont be in position to type the comment.
-        if isDelimOnEOL
-            execute 'normal! a '
-        endif
     endif
-    normal! l
+    silent! normal! l
 
     "if needed convert spaces back to tabs and adjust the cursors col
     "accordingly
@@ -1205,7 +1200,11 @@ function s:PlaceDelimitersAndInsBetween()
         call cursor(line("."), tabbedCol)
     endif
 
-    startinsert
+    if isDelimOnEOL && lenRight == 0
+        startinsert!
+    else
+        startinsert
+    endif
 endfunction
 
 " Function: s:RemoveDelimiters(left, right, line) {{{2
@@ -2771,6 +2770,8 @@ call s:CreateMaps('n',  'AltDelims',  'Switch Delimiters', 'ca')
 call s:CreateMaps('i',  'Insert',     'Insert Comment Here', '')
 call s:CreateMaps('',   ':',          '-Sep3-', '')
 call s:CreateMaps('',   ':help NERDCommenterContents<CR>', 'Help', '')
+
+inoremap <silent> <plug>NERDCommenterInsert <SPACE><BS><ESC>:call NERDComment('i', "insert")<CR>
 
 " switch to/from alternative delimiters (does not use wrapper function)
 nnoremap <plug>NERDCommenterAltDelims :call <SID>SwitchToAlternativeDelimiters(1)<cr>
