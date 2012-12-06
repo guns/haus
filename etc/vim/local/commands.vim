@@ -160,7 +160,7 @@ endfunction
 function! LispFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v.*[\(/]def.*'
         return '>1'
-    elseif getline(a:lnum + 1) =~# '\v^\s*;;;'
+    elseif getline(a:lnum + 1) =~# '\v(^\s*;;;|\(comment>)'
         return 's1'
     else
         return '='
