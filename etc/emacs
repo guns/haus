@@ -2,3 +2,17 @@
 (add-to-list 'load-path "~/.emacs.d/evil")
 (require 'evil)
 (evil-mode 1)
+
+;; Text editing
+(setq require-final-newline t)
+
+;; User interface
+(setq inhibit-splash-screen t)
+(setq initial-scratch-message nil)
+(setq ring-bell-function 'ignore)
+(xterm-mouse-mode 1)
+(line-number-mode 1)
+(column-number-mode 1)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
