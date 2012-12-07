@@ -3,7 +3,7 @@
 if command -v say &>/dev/null; then
     exec say "$@"
 elif command -v festival &>/dev/null; then
-    if test "$#" -gt 0; then
+    if [ "$#" -gt 0 ]; then
         echo "$@" | festival --tts
     else
         exec festival --tts

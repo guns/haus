@@ -1,8 +1,8 @@
 #!/bin/sh
 
-if test -n "$SSH_AUTH_SOCK"; then
+if [ -n "$SSH_AUTH_SOCK" ]; then
     echo "SSH_AUTH_SOCK already set: $SSH_AUTH_SOCK"
-elif test "$#" -gt 0; then
+elif [ "$#" -gt 0 ]; then
     run ssh-agent "$@"
 else
     run ssh-agent "${SHELL:-$(command -v bash)}"

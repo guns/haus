@@ -1,10 +1,10 @@
 #!/bin/sh
 
-if test -n "$SSH_AUTH_SOCK"; then
+if [ -n "$SSH_AUTH_SOCK" ]; then
     echo "SSH_AUTH_SOCK already set: $SSH_AUTH_SOCK"
-elif test -n "$GPG_AGENT_INFO"; then
+elif [ -n "$GPG_AGENT_INFO" ]; then
     echo "GPG_AGENT_INFO already set: $GPG_AGENT_INFO"
-elif test "$#" -gt 0; then
+elif [ "$#" -gt 0 ]; then
     run gpg-agent --enable-ssh-support --daemon "$@"
 else
     run gpg-agent --enable-ssh-support --daemon "${SHELL:-$(command -v bash)}"
