@@ -331,6 +331,7 @@ function! <SID>StopNailgunServer()
     augroup END
 endfunction
 
+command! -bar RestartNailgunServer StopNailgunServer | StartNailgunServer
 
 command! -bar -bang ClojureCheatSheet call <SID>ClojureCheatSheet('<bang>') " {{{1
 function! <SID>ClojureCheatSheet(bang)
