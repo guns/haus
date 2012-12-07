@@ -333,6 +333,8 @@ Copyright: (c) 2004-2012 by Charles E. Campbell, Jr.	*manpageview-copyright*
 	     May 25, 2012  * When in a specially supported filetype, such
 			     as perl, allow ".man" as a topic extension to
 			     get regular manpage support.  (ex. :Man paps.man)
+	     Aug 07, 2012  * (Gary Johnson) the K map wasn't working correctly
+			     inside C functions.
 	v23: May 18, 2009  * on the third attempt to get a manpage, if
 	                     the user provided no explicit
 			     |g:manpageview_iconv| setting, then the

@@ -1,7 +1,7 @@
 " manpagevim : extra commands for manual-handling
 " Author:	Charles E. Campbell, Jr.
-" Date:		Aug 06, 2012
-" Version:	25a	ASTRO-ONLY
+" Date:		Nov 02, 2012
+" Version:	25b	ASTRO-ONLY
 "
 " Please read :help manpageview for usage, options, etc
 "
@@ -12,7 +12,7 @@
 if &cp || exists("g:loaded_manpageview")
  finish
 endif
-let g:loaded_manpageview = "v25a"
+let g:loaded_manpageview = "v25b"
 if v:version < 702
  echohl WarningMsg
  echo "***warning*** this version of manpageview needs vim 7.2 or later"
@@ -421,13 +421,13 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
   if     g:manpageview_winopen == "only"
    " OMan
 "   DechoWF "only mode"
-   silent! windo w
+   sil! noautocmd windo w
    if !exists("g:ManCurPosn") && has("mksession")
     call s:ManSavePosn()
    endif
    " Record current file/position/screen-position
    if &ft != manpageview_syntax
-    silent! only!
+    sil! only!
    endif
    enew!
 
@@ -483,7 +483,7 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
 "   DechoWF "reuse mode"
    " determine if a Manpageview window already exists
    let g:manpageview_manwin= -1
-   exe "windo if &ft == '".fnameescape(manpageview_syntax)."'|let g:manpageview_manwin= winnr()|endif"
+   exe "noautocmd windo if &ft == '".fnameescape(manpageview_syntax)."'|let g:manpageview_manwin= winnr()|endif"
    if g:manpageview_manwin != -1
 	" found a pre-existing Manpageview window, re-using it
 	exe fnameescape(g:manpageview_manwin)."wincmd w"
@@ -580,7 +580,7 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
    endif
   elseif ext == ""
 "   DechoWF "change K map to support empty extension"
-   silent! unmap K
+   sil! unmap K
    nmap <unique> K <Plug>ManPageView
 "   DechoWF "nmap <unique> K <Plug>ManPageView"
   endif
@@ -614,7 +614,7 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
     elseif has("win32") && exists("g:manpageview_server") && exists("g:manpageview_user")
 "     DechoWF "win32: manpagebook<".manpagebook."> topic<".manpagetopic.">"
      exe cmdmod."r!".g:manpageview_rsh." ".g:manpageview_server." -l ".g:manpageview_user." ".pgm." ".iopt." ".shellescape(manpagebook,1)." ".shellescape(manpagetopic,1)
-     exe cmdmod.'silent!  %s/.\b//ge'
+     exe cmdmod.'sil!  %s/.\b//ge'
 
 "   elseif has("conceal")
 "    exe cmdmod."r!".pgm." ".iopt." ".shellescape(manpagebook,1)." ".shellescape(manpagetopic,1)
@@ -629,7 +629,7 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
 	  let mpb= ""
 	 endif
      if nospace
-"      DechoWF "(nospace) exe silent! ".cmdmod."r!".pgm.iopt.mpb.manpagetopic.s:iconv
+"      DechoWF "(nospace) exe sil! ".cmdmod."r!".pgm.iopt.mpb.manpagetopic.s:iconv
 	  exe cmdmod."r!".pgm.iopt.mpb.shellescape(manpagetopic,1).(exists("s:iconv")? s:iconv : "")
      elseif has("win32")
 "	   DechoWF "(win32) exe ".cmdmod."r!".pgm." ".iopt." ".mpb." \"".manpagetopic."\" ".(exists("s:iconv")? s:iconv : "")
@@ -638,7 +638,7 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
 "	  DechoWF "(nrml) exe ".cmdmod."r!".pgm." ".iopt." ".mpb." '".manpagetopic."' ".(exists("s:iconv")? s:iconv : "")
 	  exe cmdmod."r!".pgm." ".iopt." ".mpb." ".shellescape(manpagetopic,1).(exists("s:iconv")? " ".s:iconv : "")
 	endif
-     exe cmdmod.'silent!  %s/.\b//ge'
+     exe cmdmod.'sil!  %s/.\b//ge'
     endif
 	setlocal ro nomod noswf
    endif
@@ -665,11 +665,11 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
   endif
 
   " clean up (ie. remove) any ansi escape sequences {{{3
-  silent! %s/\e\[[0-9;]\{-}m//ge
-  silent! %s/\%xe2\%x80\%x90/-/ge
-  silent! %s/\%xe2\%x88\%x92/-/ge
-  silent! %s/\%xe2\%x80\%x99/'/ge
-  silent! %s/\%xe2\%x94\%x82/ /ge
+  sil! %s/\e\[[0-9;]\{-}m//ge
+  sil! %s/\%xe2\%x80\%x90/-/ge
+  sil! %s/\%xe2\%x88\%x92/-/ge
+  sil! %s/\%xe2\%x80\%x99/'/ge
+  sil! %s/\%xe2\%x94\%x82/ /ge
 
   " set up options and put cursor at top-left of manpage {{{3
   if manpagebook == "-k"
@@ -784,11 +784,12 @@ fun! s:ManRestorePosn()
   if exists("g:ManCurPosn")
 "   DechoWF "g:ManCurPosn<".g:ManCurPosn.">"
    if v:version >= 603
-	exe 'keepjumps silent! source '.fnameescape(g:ManCurPosn)
+	exe 'keepjumps sil! source '.fnameescape(g:ManCurPosn)
    else
-	exe 'silent! source '.fnameescape(g:ManCurPosn)
+	exe 'sil! source '.fnameescape(g:ManCurPosn)
    endif
    unlet g:ManCurPosn
+   sil! cunmap q
   endif
 
 "  call Dret("s:ManRestorePosn")
@@ -803,9 +804,9 @@ fun! s:ManSavePosn()
   let keep_ssop   = &ssop
   let &ssop       = 'winpos,buffers,slash,globals,resize,blank,folds,help,options,winsize'
   if v:version >= 603
-   exe 'keepjumps silent! mksession! '.fnameescape(g:ManCurPosn)
+   exe 'keepjumps sil! mksession! '.fnameescape(g:ManCurPosn)
   else
-   exe 'silent! mksession! '.fnameescape(g:ManCurPosn)
+   exe 'sil! mksession! '.fnameescape(g:ManCurPosn)
   endif
   let &ssop       = keep_ssop
 
@@ -1023,7 +1024,7 @@ fun! s:InfoIndexLink(cmd)
 
 	" read file <topic.info-#.gz>
     setlocal ma
-    silent! %d
+    sil! %d
 	if s:indxcnt != 0
 	 let wheretopic= substitute(wheretopic,'\.info\%(-\d\+\)\=\.','.info-'.s:indxcnt.".",'')
 	else
@@ -1089,7 +1090,7 @@ fun! s:InfoIndexLink(cmd)
 
   " clear screen
   setlocal ma
-  silent! %d
+  sil! %d
   setlocal noma nomod
 
   if s:indxfind < 0
@@ -1179,8 +1180,8 @@ fun! manpageview#KMan(ext)
 
   " change the K map
 "  DechoWF "change the K map"
-  silent! nummap K
-  silent! nunmap <buffer> K
+  sil! nummap K
+  sil! nunmap <buffer> K
   if exists("g:manpageview_K_{ext}") && g:manpageview_K_{ext} != ""
    exe "nmap <silent> <buffer> K :call ".g:manpageview_K_{ext}."\<cr>"
 "   DechoWF "nmap <silent> K :call ".g:manpageview_K_{ext}
