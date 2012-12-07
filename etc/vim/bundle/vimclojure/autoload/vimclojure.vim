@@ -18,7 +18,7 @@ if !exists("g:vimclojure#FuzzyIndent")
 endif
 
 if !exists("g:vimclojure#FuzzyIndentPatterns")
-	let vimclojure#FuzzyIndentPatterns = "with.*,def.*,let.*,.*ing"
+	let vimclojure#FuzzyIndentPatterns = "with.*,def.*,let.*"
 endif
 
 if !exists("g:vimclojure#HighlightBuiltins")
