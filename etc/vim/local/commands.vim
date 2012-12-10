@@ -187,12 +187,11 @@ function! <SID>LispBufferSetup()
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock.
     nmap <silent> <buffer> <Leader><Leader> mp:<C-u>call PareditSelectCurrentForm()<CR><Leader><Leader>`p
     imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
-    nmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureEvalToplevel.
+    vmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureFutureEvalBlock.
+    nmap <silent> <buffer> <Leader><C-f>    mp:<C-u>call PareditSelectCurrentForm()<CR><Leader><C-f>`p
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
-
-    " Cheatsheet (TODO should be temporary)
-    nnoremap <silent> <buffer> <LocalLeader>cs :<C-u>ClojureCheatSheet!<CR>
-    nnoremap <silent> <buffer> <LocalLeader>ci :<C-u>ClojureCheatSheet<CR>
+    nmap <silent> <buffer> <Leader>x        <Plug>ClojureEvalToplevel.
+    imap <silent> <buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader><C-f>
 
     " Repl bindings
     if exists('b:vimclojure_repl')
@@ -317,21 +316,6 @@ endfunction
 
 command! -bar RestartNailgunServer StopNailgunServer | StartNailgunServer
 
-command! -bar -bang ClojureCheatSheet call <SID>ClojureCheatSheet('<bang>') " {{{1
-function! <SID>ClojureCheatSheet(bang)
-    if exists('g:vimclojure#WantNailgun') && g:vimclojure#WantNailgun
-        if a:bang ==# '!'
-            let clj = "(vimclojure.util/print-cheat-sheet!)"
-        else
-            let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
-        endif
-        call vimclojure#Eval(clj)
-        normal! d/\v^nil
-        wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure foldmethod=marker
-        normal! gg"_dGP
-    endif
-endfunction
-
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
     let map = {
@@ -349,9 +333,9 @@ endfunction
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
-    let bind   = &filetype == 'clojure' ? '<Leader>x' : '<Leader><Leader>'
-    let select = &filetype == 'clojure' ? ':call PareditSelectCurrentForm()<CR>' : 'vip'
-    let topsel = &filetype == 'clojure' ? ':call searchpair("(","",")","r")<CR>v%' : 'VggoG'
+    let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
+    let select = &filetype =~ '\vclojure|scheme|lisp' ? ':call PareditSelectCurrentForm()<CR>' : 'vip'
+    let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':call searchpair("(","",")","r")<CR>v%' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings
@@ -359,8 +343,8 @@ function! <SID>ScreenSetup(setup)
         execute 'nmap ' . bind . ' mp' . select . bind . '`p'
         execute 'imap ' . bind . ' <C-\><C-o><C-\><C-n>' . bind
 
-        execute 'nmap <Leader><C-f> mp' . topsel . bind . '`p'
-        execute 'imap <Leader><C-f> <C-\><C-o><C-\><C-n><Leader><C-f>'
+        execute 'nmap <Leader>F mp' . topsel . bind . '`p'
+        execute 'imap <Leader>F <C-\><C-o><C-\><C-n><Leader><C-f>'
 
         nmap <Leader>Q :ScreenQuit<CR>
     else

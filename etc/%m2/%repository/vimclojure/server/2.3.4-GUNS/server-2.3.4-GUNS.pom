@@ -5,12 +5,5 @@
   <groupId>vimclojure</groupId>
   <artifactId>server</artifactId>
   <version>2.3.4-GUNS</version>
-  <dependencies>
-    <dependency>
-      <groupId>org.clojure</groupId>
-      <artifactId>clojure</artifactId>
-      <version>[1.2,1.5)</version>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
+  <description>POM was created from install:install-file</description>
 </project>

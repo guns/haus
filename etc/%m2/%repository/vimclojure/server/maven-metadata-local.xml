@@ -2,11 +2,11 @@
 <metadata>
   <groupId>vimclojure</groupId>
   <artifactId>server</artifactId>
-  <version>2.3.4-GUNS</version>
   <versioning>
+    <release>2.3.4-GUNS</release>
     <versions>
       <version>2.3.4-GUNS</version>
     </versions>
-    <lastUpdated>20120803070621</lastUpdated>
+    <lastUpdated>20121210050311</lastUpdated>
   </versioning>
 </metadata>

@@ -130,6 +130,14 @@ call vimclojure#MapPlug("v", "eb", "EvalBlock")
 call vimclojure#MapPlug("n", "et", "EvalToplevel")
 call vimclojure#MapPlug("n", "ep", "EvalParagraph")
 
+call vimclojure#MapPlug("v", "fb", "FutureEvalBlock")
+call vimclojure#MapPlug("n", "fl", "FutureList")
+call vimclojure#MapPlug("n", "ff", "FutureFlush")
+call vimclojure#MapPlug("n", "fc", "FutureCancel")
+
+call vimclojure#MapPlug("n", "cs", "CheatSheetAll")
+call vimclojure#MapPlug("n", "ci", "CheatSheetInteractive")
+
 call vimclojure#MapPlug("n", "sr", "StartLocalRepl")
 call vimclojure#MapPlug("n", "sR", "StartRepl")
 

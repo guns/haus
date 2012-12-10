@@ -42,9 +42,17 @@ call vimclojure#MakeCommandPlug("n", "MacroExpand1", "vimclojure#MacroExpand", "
 
 call vimclojure#MakeCommandPlug("n", "EvalFile",      "vimclojure#EvalFile", "")
 call vimclojure#MakeCommandPlug("n", "EvalLine",      "vimclojure#EvalLine", "")
-call vimclojure#MakeCommandPlug("v", "EvalBlock",     "vimclojure#EvalBlock", "")
+call vimclojure#MakeCommandPlug("v", "EvalBlock",     "vimclojure#EvalBlock", "0")
 call vimclojure#MakeCommandPlug("n", "EvalToplevel",  "vimclojure#EvalToplevel", "")
 call vimclojure#MakeCommandPlug("n", "EvalParagraph", "vimclojure#EvalParagraph", "")
+
+call vimclojure#MakeCommandPlug("v", "FutureEvalBlock","vimclojure#EvalBlock", "1")
+call vimclojure#MakeCommandPlug("n", "FutureList", "vimclojure#Eval", "\"(vimclojure.repl/print-futures)\"")
+call vimclojure#MakeCommandPlug("n", "FutureFlush", "vimclojure#Eval", "\"(do (vimclojure.repl/flush-futures) (vimclojure.repl/print-futures))\"")
+call vimclojure#MakeCommandPlug("n", "FutureCancel", "vimclojure#Eval", "\"(do (vimclojure.repl/cancel-futures) (vimclojure.repl/print-futures))\"")
+
+call vimclojure#MakeCommandPlug("n", "CheatSheetAll", "vimclojure#CheatSheet", "0")
+call vimclojure#MakeCommandPlug("n", "CheatSheetInteractive", "vimclojure#CheatSheet", "1")
 
 call vimclojure#MakeCommandPlug("n", "StartRepl", "vimclojure#StartRepl", "")
 call vimclojure#MakeCommandPlug("n", "StartLocalRepl", "vimclojure#StartRepl", "b:vimclojure_namespace")

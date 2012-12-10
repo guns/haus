@@ -481,7 +481,7 @@ function! vimclojure#DocLookup(word)
 
 	let doc = vimclojure#ExecuteNailWithInput("DocLookup", a:word,
 				\ "-n", b:vimclojure_namespace)
-	let buf = g:vimclojure#ResultBuffer.New()
+	let buf = g:vimclojure#ClojureResultBuffer.New(b:vimclojure_namespace)
 	call buf.showOutput(doc)
 	wincmd p
 endfunction
@@ -661,13 +661,13 @@ function! vimclojure#EvalLine()
 	wincmd p
 endfunction
 
-function! vimclojure#EvalBlock()
+function! vimclojure#EvalBlock(async)
 	let file = vimclojure#BufferName()
 	let ns = b:vimclojure_namespace
 
 	let content = vimclojure#util#Yank("l", 'normal! gv"ly')
 	let result = vimclojure#ExecuteNailWithInput("Repl", content,
-				\ "-r", "-n", ns, "-f", file, "-l", line("'<") - 1)
+				\ "-r", "-n", ns, "-f", file, "-l", line("'<") - 1, a:async ? "-a" : "-r")
 
 	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(ns)
 	call resultBuffer.showOutput(result)
@@ -675,6 +675,7 @@ function! vimclojure#EvalBlock()
 endfunction
 
 function! vimclojure#EvalToplevel()
+	normal! mp
 	let file = vimclojure#BufferName()
 	let ns = b:vimclojure_namespace
 	let [pos, expr] = vimclojure#ExtractSexpr(1)
@@ -685,6 +686,7 @@ function! vimclojure#EvalToplevel()
 	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(ns)
 	call resultBuffer.showOutput(result)
 	wincmd p
+	normal! `p
 endfunction
 
 function! ClojureEvalParagraphWorker() dict
@@ -714,6 +716,18 @@ function! vimclojure#Eval(content)
 	let result = vimclojure#ExecuteNailWithInput("Repl", a:content, "-r")
 	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(b:vimclojure_namespace)
 	call resultBuffer.showOutput(result)
+endfunction
+
+function! vimclojure#CheatSheet(input)
+	if a:input
+		let clj = "(vimclojure.util/print-cheat-sheet! #\"" . input('Namespace filter regex: ') . "\")"
+	else
+		let clj = "(vimclojure.util/print-cheat-sheet!)"
+	endif
+	call vimclojure#Eval(clj)
+	normal! "cd/\v^nil
+	wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure foldmethod=marker
+	normal! gg"_dG"cP
 endfunction
 
 " The Repl
