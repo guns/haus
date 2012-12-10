@@ -6,7 +6,6 @@ function! <SID>Mapall(...)
     execute 'noremap! ' . a:1 . ' <C-\><C-n>' . join(a:000[1:])
 endfunction
 
-
 command! -nargs=* -bang -bar SetWhitespace call <SID>SetWhitespace('<bang>', <f-args>) "{{{1
 function! <SID>SetWhitespace(bang, ...)
     if a:0
@@ -18,7 +17,6 @@ function! <SID>SetWhitespace(bang, ...)
         echo 'sw=' . &shiftwidth . ' ts=' . &tabstop . ' sts=' . &softtabstop
     endif
 endfunction
-
 
 command! -nargs=* -bang -bar SetTextwidth call <SID>SetTextwidth('<bang>', <f-args>) "{{{1
 function! <SID>SetTextwidth(bang, ...)
@@ -34,7 +32,6 @@ function! <SID>SetTextwidth(bang, ...)
     endif
 endfunction
 
-
 command! -nargs=? -bang -bar SetAutowrap call <SID>SetAutowrap('<bang>', <f-args>) "{{{1
 function! <SID>SetAutowrap(bang, ...)
     let status = empty(a:bang) ? (a:0 ? a:1 : -1) : (&formatoptions =~ 'a' ? 0 : 1)
@@ -47,7 +44,6 @@ function! <SID>SetAutowrap(bang, ...)
         execute 'setlocal formatoptions-=t formatoptions-=a formatoptions-=w'
     endif
 endfunction
-
 
 command! -bang -bar SetIskeyword call <SID>SetIskeyword('<bang>') "{{{1
 function! <SID>SetIskeyword(bang)
@@ -62,7 +58,6 @@ function! <SID>SetIskeyword(bang)
     endif
 endfunction
 
-
 command! -bang -bar SetDiff call <SID>SetDiff('<bang>') "{{{1
 function! <SID>SetDiff(bang)
     if empty(a:bang)
@@ -73,7 +68,6 @@ function! <SID>SetDiff(bang)
         windo execute "if expand(\"%:t\") !=# \"index\" | diffthis | endif"
     endif
 endfunction
-
 
 command! -nargs=? -bang -bar SetVerbose call <SID>SetVerbose('<bang>', <f-args>) "{{{1
 function! <SID>SetVerbose(bang, ...)
@@ -92,7 +86,6 @@ function! <SID>SetVerbose(bang, ...)
     endif
 endfunction
 
-
 command! -bar SynStack call <SID>SynStack() "{{{1
 function! <SID>SynStack()
     " TextMate style syntax highlighting stack for word under cursor
@@ -101,7 +94,6 @@ function! <SID>SynStack()
         echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
     endif
 endfunction
-
 
 command! -nargs=? -bar -complete=file Todo call <SID>Todo(<f-args>) "{{{1
 function! <SID>Todo(...)
@@ -120,13 +112,11 @@ function! <SID>Todo(...)
     redraw!
 endfunction
 
-
 command! -bar Ctags call <SID>Ctags() "{{{1
 function! <SID>Ctags()
     let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
     execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
 endfunction
-
 
 function! ShellFoldExpr(lnum)
     if getline(a:lnum) =~# '\v^\s*\#\#\#\s' && empty(getline(a:lnum - 1))
@@ -136,7 +126,6 @@ function! ShellFoldExpr(lnum)
     endif
 endfunction
 
-
 function! DiffFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^diff>'
         return '>1'
@@ -144,7 +133,6 @@ function! DiffFoldExpr(lnum) "{{{1
         return '='
     endif
 endfunction
-
 
 function! RakefileFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^\s*<task>'
@@ -156,7 +144,6 @@ function! RakefileFoldExpr(lnum) "{{{1
     endif
 endfunction
 
-
 function! LispFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v.*[\(/]def.*'
         return '>1'
@@ -166,7 +153,6 @@ function! LispFoldExpr(lnum) "{{{1
         return '='
     endif
 endfunction
-
 
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()
@@ -280,7 +266,6 @@ function! <SID>LispBufferSetup()
     nnoremap <silent> <buffer> <Leader>cc :<C-u>call PareditToggleClojureComment()<CR>
 endfunction
 
-
 command! -nargs=? -bar StartNailgunServer call <SID>StartNailgunServer(<args>) "{{{1
 function! <SID>StartNailgunServer(...)
     if g:vimclojure#WantNailgun
@@ -312,7 +297,6 @@ function! <SID>StartNailgunServer(...)
 
     echo (g:NailgunServerStarted ? 'Started' : 'Attached to') . ' Nailgun server'
 endfunction
-
 
 command! -bar StopNailgunServer call <SID>StopNailgunServer() "{{{1
 function! <SID>StopNailgunServer()
@@ -393,12 +377,10 @@ function! <SID>ScreenSetup(setup)
     endif
 endfunction
 
-
 command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
 function! <SID>ClojureTagJump(word)
     execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
 endfunction
-
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! <SID>OrgBufferSetup()
@@ -428,7 +410,6 @@ function! <SID>OrgBufferSetup()
     silent! iunmap <buffer> <C-t>
 endfunction
 
-
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! <SID>Open(word)
     " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
@@ -445,7 +426,6 @@ function! <SID>Open(word)
     endif
 endfunction
 
-
 command! -nargs=? -complete=command -bar Qfdo call <SID>Qfdo(<q-args>) "{{{1
 function! <SID>Qfdo(expr)
     " Run a command over all lines in the quickfix buffer
@@ -456,7 +436,6 @@ function! <SID>Qfdo(expr)
     endfor
 endfunction
 
-
 command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
 function! <SID>ToggleQuickfixWindow()
     if &buftype ==# 'quickfix'
@@ -465,7 +444,6 @@ function! <SID>ToggleQuickfixWindow()
         copen
     endif
 endfunction
-
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! <SID>TabOpen(file, ...)
@@ -482,7 +460,6 @@ function! <SID>TabOpen(file, ...)
     execute a:0 ? join(a:000) : 'tabedit ' . a:file
 endfunction
 
-
 command! -bar TabmoveNext call <SID>Tabmove(1) " {{{1
 command! -bar TabmovePrev call <SID>Tabmove(-1)
 function! <SID>Tabmove(n)
@@ -493,7 +470,6 @@ function! <SID>Tabmove(n)
         execute 'tabmove ' . (nr < 0 ? 0 : nr)
     endif
 endfunction
-
 
 command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
 function! <SID>RunCurrentFile()
@@ -507,7 +483,6 @@ function! <SID>RunCurrentFile()
         silent execute '! ' . map[&filetype] . ' % | $PAGER' | redraw!
     endif
 endfunction
-
 
 command! -bar RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
 " Run a single MiniTest::Spec test case
@@ -527,7 +502,6 @@ function! <SID>RunCurrentMiniTestCase()
     silent execute '! ruby % --name /test.*' . name . '/ | $PAGER' | redraw!
 endfunction
 
-
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! <SID>MapReadlineUnicodeBindings()
     if filereadable(expand('~/.inputrc'))
@@ -546,7 +520,6 @@ function! <SID>MapReadlineUnicodeBindings()
     endif
 endfunction
 
-
 command! -bar CapturePane call <SID>CapturePane() "{{{1
 function! <SID>CapturePane()
     " Tmux-esque capture-pane
@@ -557,7 +530,6 @@ function! <SID>CapturePane()
     execute buf . 'sbuffer'
     wincmd L
 endfunction
-
 
 command! -nargs=+ -complete=command -bar Capture call <SID>Capture(<q-args>) "{{{1
 command! CaptureMaps
@@ -589,7 +561,6 @@ function! <SID>Org(bang, ...)
     endif
 endfunction
 
-
 " Say {{{1
 if executable('/usr/bin/say')
     command! -nargs=1 -complete=command -bar Say call system('say ' . shellescape(<q-args>))
@@ -597,11 +568,9 @@ else
     command! -nargs=1 -complete=command -bar Say call system('espeak -ven-us ' . shellescape(<q-args>))
 endif
 
-
 " Interleave {{{1
 command! -bar -range Interleave
     \ '<,'>! ruby -e 'l = $stdin.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
-
 
 " Hitest {{{1
 " http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
@@ -609,7 +578,6 @@ command! -bar Hitest
     \ 45vnew |
     \ source $VIMRUNTIME/syntax/hitest.vim |
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
-
 
 """ Utility functions {{{1
 
