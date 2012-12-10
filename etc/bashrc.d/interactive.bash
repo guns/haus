@@ -516,9 +516,8 @@ HAVE hdiutil diskutil && {
 }
 
 # rsync
-ALIAS rsync='rsync -e \"ssh -2\" --human-readable' \
-      rsync-mirror='rsync --archive --delete --partial --exclude=.git' \
-      rsync-backup='rsync --archive --delete --partial --sparse --hard-links'
+ALIAS rsync='rsync -hh -S --partial' \
+      rsync-backup='rsync -axAX --hard-links --delete'
 
 # dd
 ALIAS ddc='dcfldd' && TCOMP dd ddc
