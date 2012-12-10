@@ -186,30 +186,33 @@ task :env do
         }
       },
 
-      # {
-      #   :base   => "#{@vim}/vimclojure",
-      #   :push   => 'github',
-      #   :before => lambda { |proj|
-      #     # Update using git-hg bridge
-      #     if proj.fetch
-      #       system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
-      #       raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
-      #     else
-      #       system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
-      #     end
-      #   },
-      #   :files  => lambda { |proj|
-      #     rm_rf ['vim/build', 'server/build'], :verbose => false
-      #     system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-      #     system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-      #     raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
+      {
+        :base   => "#{@vim}/vimclojure",
+        :push   => 'github',
+        :branch => %w[guns],
+        # :before => lambda { |proj|
+        #   Update using git-hg bridge
+        #   if proj.fetch
+        #     system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
+        #     raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
+        #   else
+        #     system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
+        #   end
+        # },
+        :files  => lambda { |proj|
+          Dir.chdir proj.base do
+            FileUtils.rm_rf ['vim/build', 'server/build'], :verbose => false
+            system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
+            system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
+            raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
 
-      #     system 'rsync -a --delete --no-owner --no-group %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
-      #     raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
+            system 'rsync -a --delete --no-owner --no-group %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
+            raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
+          end
 
-      #     nil # The work is done
-      #   }
-      # },
+          nil # The work is done
+        }
+      },
 
       {
         :base   => "#{@vim}/paredit",
@@ -244,7 +247,7 @@ task :env do
                 system 'git merge master &>/dev/null' or raise 'ManPageView merge failed'
               end
             ensure
-              rm_f Dir['.Vimball*'], :verbose => false
+              FileUtils.rm_f Dir['.Vimball*'], :verbose => false
             end
           end
         }
@@ -300,7 +303,6 @@ task :env do
     ]
   }.map { |k, ps| [k, ps.map { |p| Project::Subproject.new p }] }]
 end
-
 
 desc 'Start a Pry or IRB console within the rake environment'
 task :console => :env do
@@ -381,4 +383,24 @@ task :service do
       f.puts ERB.new(File.read service).result(binding)
     end
   end
+end
+
+desc 'Update vimclojure server jar'
+task :vimclojure => :env do
+  proj = @subprojects['vimfiles'].find { |s| File.basename(s.base) == 'vimclojure' }
+  proj.as_uid File.stat(proj.base).uid do
+    Dir.chdir(proj.base) { system 'gradle jar' }
+  end
+  version = '2.3.4-GUNS'
+  jar = File.join proj.base, "server/build/libs/server-#{version}.jar"
+  raise 'vimclojure server jar not found!' if not File.exists? jar
+  system *%W[
+    mvn
+    install:install-file
+    -DgroupId=vimclojure
+    -DartifactId=server
+    -Dversion=#{version}
+    -Dpackaging=jar
+    -Dfile=#{jar}
+  ]
 end
