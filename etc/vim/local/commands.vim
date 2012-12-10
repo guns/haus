@@ -145,7 +145,7 @@ function! RakefileFoldExpr(lnum) "{{{1
 endfunction
 
 function! LispFoldExpr(lnum) "{{{1
-    if getline(a:lnum) =~# '\v.*[\(/]def.*'
+    if getline(a:lnum) =~# '\v^\s*[\(/](def|ns ).*'
         return '>1'
     elseif getline(a:lnum + 1) =~# '\v(^\s*;;;|\(comment>)'
         return 's1'
