@@ -185,10 +185,12 @@ function! <SID>LispBufferSetup()
 
     " cf. ScreenSetup
     vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock.
-    nmap <silent> <buffer> <Leader><Leader> mp:<C-u>call PareditSelectCurrentForm()<CR><Leader><Leader>`p
+    " FIXME: vim-sexpr
+    nmap <silent> <buffer> <Leader><Leader> mpvab<CR><Leader><Leader>`p
     imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
     vmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureFutureEvalBlock.
-    nmap <silent> <buffer> <Leader><C-f>    mp:<C-u>call PareditSelectCurrentForm()<CR><Leader><C-f>`p
+    " FIXME: vim-sexpr
+    nmap <silent> <buffer> <Leader><C-f>    mpvab<CR><Leader><C-f>`p
     imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
     nmap <silent> <buffer> <Leader>x        <Plug>ClojureEvalToplevel.
     imap <silent> <buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader><C-f>
@@ -198,71 +200,6 @@ function! <SID>LispBufferSetup()
         nmap <silent> <buffer> <Leader>Q  GS,close<CR>
         nmap <silent> <buffer> <Leader>tp GS,toggle-pprint<CR>
     endif
-
-    "
-    " Paredit
-    "
-
-    " Initialize Paredit, but don't create any mappings
-    let g:paredit_mode = 0
-    let g:paredit_electric_return = 0
-    call PareditInitBuffer()
-    let g:paredit_mode = 1
-
-    " Movement
-    nnoremap <silent> <buffer> [[ :<C-u>call PareditFindDefunBck()<CR>zz
-    nnoremap <silent> <buffer> ]] :<C-u>call PareditFindDefunFwd()<CR>zz
-    nnoremap <silent> <buffer> (  :<C-u>call PareditFindOpening(0,0,0)<CR>
-    nnoremap <silent> <buffer> )  :<C-u>call PareditFindClosing(0,0,0)<CR>
-
-    " Auto-balancing insertion
-    inoremap <silent> <buffer> <expr> ( PareditInsertOpening('(',')')
-    inoremap <silent> <buffer> <expr> [ PareditInsertOpening('[',']')
-    inoremap <silent> <buffer> <expr> { PareditInsertOpening('{','}')
-    inoremap <silent> <buffer> <silent> ) <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('(',')')<CR><C-O>:let &ve=save_ve<CR>
-    inoremap <silent> <buffer> <silent> ] <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('[',']')<CR><C-O>:let &ve=save_ve<CR>
-    inoremap <silent> <buffer> <silent> } <C-R>=(pumvisible() ? "\<lt>C-Y>" : "")<CR><C-O>:let save_ve=&ve<CR><C-O>:set ve=onemore<CR><C-O>:<C-U>call PareditInsertClosing('{','}')<CR><C-O>:let &ve=save_ve<CR>
-    if g:paredit_electric_return
-        inoremap <buffer> <expr> <CR> PareditEnter()
-    endif
-
-    " Select next/prev item in list
-    nnoremap <silent> <buffer> <Leader>j :<C-u>call PareditSelectListElement(1)<CR>
-    vnoremap <silent> <buffer> <Leader>j <C-\><C-n>:<C-u>call PareditSelectListElement(1)<CR>
-    nnoremap <silent> <buffer> <Leader>k :<C-u>call PareditSelectListElement(0)<CR>
-    vnoremap <silent> <buffer> <Leader>k o<C-\><C-n><Left>:<C-u>call PareditSelectListElement(0)<CR>
-
-    " Insert at beginning, end of form
-    nnoremap <silent> <buffer> <Leader>I :<C-u>call PareditFindOpening(0,0,0)<CR>a<Space><Left>
-    nnoremap <silent> <buffer> <Leader>l :<C-u>call PareditFindClosing(0,0,0)<CR>i
-
-    " Wrap word/selection, then insert at front/end
-    nnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrap('(',')')<CR>%i
-    vnoremap <silent> <buffer> <Leader>w :<C-u>call PareditWrapSelection('(',')')<CR>i
-    nnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrap('(',')')<CR>a<Space><Left>
-    vnoremap <silent> <buffer> <Leader>W :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
-    nnoremap <silent> <buffer> <Leader>( :<C-u>call PareditWrap('(',')')<CR>a<Space><Left>
-    nnoremap <silent> <buffer> <Leader>) :<C-u>call PareditWrap('(',')')<CR>%i
-    vnoremap <silent> <buffer> <Leader>( :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
-    vnoremap <silent> <buffer> <Leader>) :<C-u>call PareditWrapSelection('(',')')<CR>i
-    nnoremap <silent> <buffer> <Leader>[ :<C-u>call PareditWrap('[',']')<CR>a<Space><Left>
-    nnoremap <silent> <buffer> <Leader>] :<C-u>call PareditWrap('[',']')<CR>%i
-    vnoremap <silent> <buffer> <Leader>[ :<C-u>call PareditWrapSelection('[',']')<CR>%a<Space><Left>
-    vnoremap <silent> <buffer> <Leader>] :<C-u>call PareditWrapSelection('[',']')<CR>i
-    nnoremap <silent> <buffer> <Leader>{ :<C-u>call PareditWrap('{','}')<CR>a<Space><Left>
-    nnoremap <silent> <buffer> <Leader>} :<C-u>call PareditWrap('{','}')<CR>%i
-    vnoremap <silent> <buffer> <Leader>{ :<C-u>call PareditWrapSelection('{','}')<CR>%a<Space><Left>
-    vnoremap <silent> <buffer> <Leader>} :<C-u>call PareditWrapSelection('{','}')<CR>i
-
-    " Wrap form/selection, then insert in front
-    nnoremap <silent> <buffer> <Leader>i :<C-u>call PareditFindClosing(0,0,0) \| call PareditWrap('(',')')<CR>a<Space><Left>
-    vnoremap <silent> <buffer> <Leader>i :<C-u>call PareditWrapSelection('(',')')<CR>%a<Space><Left>
-
-    " paredit-raise-sexp
-    nnoremap <silent> <buffer> <Leader>o :<C-u>call PareditRaiseSexp()<CR>
-
-    " Toggle Clojure (comment)
-    nnoremap <silent> <buffer> <Leader>cc :<C-u>call PareditToggleClojureComment()<CR>
 endfunction
 
 command! -nargs=? -bar StartNailgunServer call <SID>StartNailgunServer(<args>) "{{{1
@@ -334,8 +271,9 @@ command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! <SID>ScreenSetup(setup)
     let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
-    let select = &filetype =~ '\vclojure|scheme|lisp' ? ':call PareditSelectCurrentForm()<CR>' : 'vip'
-    let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':call searchpair("(","",")","r")<CR>v%' : 'VggoG'
+    " FIXME: vim-sexpr
+    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'vab' : 'vip'
+    let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':<C-u>call searchpair("(","",")","r")<CR>v%' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings

@@ -215,20 +215,6 @@ task :env do
       },
 
       {
-        :base   => "#{@vim}/paredit",
-        :branch => %w[master guns],
-        :pull   => 'hg',
-        :push   => 'github',
-        :files  => :pathogen,
-        :before => lambda { |proj|
-          if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
-            raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
-          end
-        }
-      },
-
-      {
         :base   => "#{@vim}/vim-pathogen",
         :branch => %w[master],
         :files  => { 'autoload/pathogen.vim' => 'etc/vim/autoload/pathogen.vim' }
