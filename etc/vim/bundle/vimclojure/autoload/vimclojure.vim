@@ -713,9 +713,11 @@ function! vimclojure#EvalParagraph()
 endfunction
 
 function! vimclojure#Eval(content)
-	let result = vimclojure#ExecuteNailWithInput("Repl", a:content, "-r")
-	let resultBuffer = g:vimclojure#ClojureResultBuffer.New(b:vimclojure_namespace)
-	call resultBuffer.showOutput(result)
+	let ns = b:vimclojure_namespace
+	let result = vimclojure#ExecuteNailWithInput("Repl", a:content,
+				\ "-r", "-n", ns, "-f", vimclojure#BufferName())
+	let buf = g:vimclojure#ClojureResultBuffer.New(b:vimclojure_namespace)
+	call buf.showOutput(result)
 endfunction
 
 function! vimclojure#CheatSheet(input)
@@ -725,9 +727,9 @@ function! vimclojure#CheatSheet(input)
 		let clj = "(vimclojure.util/print-cheat-sheet!)"
 	endif
 	call vimclojure#Eval(clj)
-	normal! "cd/\v^nil
-	wincmd q | vsplit | wincmd L | execute 'Scratch' | setlocal filetype=clojure foldmethod=marker
-	normal! gg"_dG"cP
+	setlocal filetype=clojure foldmethod=marker
+	wincmd L
+	normal! gg
 endfunction
 
 " The Repl
