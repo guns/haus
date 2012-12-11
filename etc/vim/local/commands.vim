@@ -154,104 +154,26 @@ function! LispFoldExpr(lnum) "{{{1
     endif
 endfunction
 
+command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
+function! <SID>ClojureTagJump(word)
+    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
+endfunction
+
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! <SID>LispBufferSetup()
     let b:delimitMate_quotes = '"'
-    setlocal iskeyword+='
     SetWhitespace 2 8
 
     setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
 
-    nnoremap <buffer> <Leader>C :StartNailgunServer \| silent edit<CR>
-    noremap! <buffer> <C-l>      ->
     noremap  <buffer> <4-CR>     A<Space>;<Space>
     noremap! <buffer> <4-CR>     <C-\><C-o>A<Space>;<Space>
+    " FIXME: vim-sexpr
     nnoremap <buffer> ==         :<C-u>normal! m`=a(``<CR>
     nnoremap <buffer> =p         :<C-u>normal! m`=ap``<CR>
     nnoremap <buffer> <C-]>      :<C-u>ClojureTagJump.<CR>
     nnoremap <buffer> <C-w><C-]> :<C-u>split \| ClojureTagJump.<CR>
-
-    "
-    " VimClojure
-    "
-
-    " RECURSIVE map for <Plug> mappings
-    nmap <silent> <buffer> K             <Plug>ClojureDocLookupWord.
-    nmap <silent> <buffer> <Leader>K     <Plug>ClojureSourceLookupWord.
-    nmap <silent> <buffer> <Leader>Q     <Plug>ClojureCloseResultBuffer.
-    nmap <silent> <buffer> <Leader>r     <Plug>ClojureStartLocalRepl.
-    nmap <silent> <buffer> <Leader>R     <Plug>ClojureStartRepl.
-    nmap <silent> <buffer> <Leader><C-r> <Plug>ClojureRequireFileCurrent.
-
-    " cf. ScreenSetup
-    vmap <silent> <buffer> <Leader><Leader> <Plug>ClojureEvalBlock.
-    " FIXME: vim-sexpr
-    nmap <silent> <buffer> <Leader><Leader> mpvab<CR><Leader><Leader>`p
-    imap <silent> <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
-    vmap <silent> <buffer> <Leader><C-f>    <Plug>ClojureFutureEvalBlock.
-    " FIXME: vim-sexpr
-    nmap <silent> <buffer> <Leader><C-f>    mpvab<CR><Leader><C-f>`p
-    imap <silent> <buffer> <Leader><C-f>    <C-\><C-o><C-\><C-n><Leader><C-f>
-    nmap <silent> <buffer> <Leader>x        <Plug>ClojureEvalToplevel.
-    imap <silent> <buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader><C-f>
-
-    " Repl bindings
-    if exists('b:vimclojure_repl')
-        nmap <silent> <buffer> <Leader>Q  GS,close<CR>
-        nmap <silent> <buffer> <Leader>tp GS,toggle-pprint<CR>
-    endif
 endfunction
-
-command! -nargs=? -bar StartNailgunServer call <SID>StartNailgunServer(<args>) "{{{1
-function! <SID>StartNailgunServer(...)
-    if g:vimclojure#WantNailgun
-        echo 'Already ' . (g:NailgunServerStarted ? "started" : "attached to") . ' Nailgun server!'
-        return
-    endif
-    let g:vimclojure#WantNailgun = 1
-    let g:NailgunServerStarted = 0
-    let g:vimclojure#NailgunPort = a:0 ? a:1 : 2113
-
-    call system('nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort)
-    if v:shell_error
-        silent! execute '! clojure --lein "trampoline vimclojure :port ' . g:vimclojure#NailgunPort . '" &>/dev/null &'
-        silent! execute '! until nc -z 127.0.0.1 ' . g:vimclojure#NailgunPort . ' &>/dev/null; do echo -n .; sleep 1; done'
-        let g:NailgunServerStarted = 1
-    endif
-
-    augroup NailgunServer
-        autocmd!
-        autocmd VimLeave *
-            \ StopNailgunServer
-    augroup END
-
-    if exists('b:vimclojure_loaded')
-        unlet b:vimclojure_loaded
-    endif
-    call vimclojure#InitBuffer()
-    redraw!
-
-    echo (g:NailgunServerStarted ? 'Started' : 'Attached to') . ' Nailgun server'
-endfunction
-
-command! -bar StopNailgunServer call <SID>StopNailgunServer() "{{{1
-function! <SID>StopNailgunServer()
-    let g:vimclojure#WantNailgun = 0
-
-    if exists('g:NailgunServerStarted') && g:NailgunServerStarted
-        silent! execute '!' . g:vimclojure#NailgunClient . ' ng-stop --nailgun-port ' . g:vimclojure#NailgunPort . ' &>/dev/null &' | redraw!
-        echo 'Killing Nailgun server'
-        let g:NailgunServerStarted = 0
-    else
-        echo 'Unloading Nailgun server'
-    endif
-
-    augroup NailgunServer
-        autocmd!
-    augroup END
-endfunction
-
-command! -bar RestartNailgunServer StopNailgunServer | StartNailgunServer
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! <SID>Screen(command)
@@ -297,11 +219,6 @@ function! <SID>ScreenSetup(setup)
             silent! nunmap <Leader>Q
         endif
     endif
-endfunction
-
-command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
-function! <SID>ClojureTagJump(word)
-    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
 endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1

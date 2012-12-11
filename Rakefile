@@ -187,34 +187,6 @@ task :env do
       },
 
       {
-        :base   => "#{@vim}/vimclojure",
-        :push   => 'github',
-        :branch => %w[guns],
-        # :before => lambda { |proj|
-        #   Update using git-hg bridge
-        #   if proj.fetch
-        #     system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
-        #     raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
-        #   else
-        #     system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
-        #   end
-        # },
-        :files  => lambda { |proj|
-          Dir.chdir proj.base do
-            FileUtils.rm_rf ['vim/build', 'server/build'], :verbose => false
-            system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-            system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-            raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
-
-            system 'rsync -a --delete --no-owner --no-group %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
-            raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
-          end
-
-          nil # The work is done
-        }
-      },
-
-      {
         :base   => "#{@vim}/vim-pathogen",
         :branch => %w[master],
         :files  => { 'autoload/pathogen.vim' => 'etc/vim/autoload/pathogen.vim' }
@@ -369,24 +341,4 @@ task :service do
       f.puts ERB.new(File.read service).result(binding)
     end
   end
-end
-
-desc 'Update vimclojure server jar'
-task :vimclojure => :env do
-  proj = @subprojects['vimfiles'].find { |s| File.basename(s.base) == 'vimclojure' }
-  proj.as_uid File.stat(proj.base).uid do
-    Dir.chdir(proj.base) { system 'gradle jar' }
-  end
-  version = '2.3.4-GUNS'
-  jar = File.join proj.base, "server/build/libs/server-#{version}.jar"
-  raise 'vimclojure server jar not found!' if not File.exists? jar
-  system *%W[
-    mvn
-    install:install-file
-    -DgroupId=vimclojure
-    -DartifactId=server
-    -Dversion=#{version}
-    -Dpackaging=jar
-    -Dfile=#{jar}
-  ]
 end

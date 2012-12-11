@@ -216,26 +216,6 @@ let g:tagbar_sort = 0
 let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 160
 
-" Plugin: VimClojure
-let g:vimclojure#Browser = 'open'
-let g:vimclojure#SplitSize = 10
-let g:vimclojure#FuzzyIndent = 1
-let g:vimclojure#FuzzyIndentPatterns .= ',.*ing,run\*,fresh'
-let g:vimclojure#DynamicHighlighting = 1
-let g:vimclojure#ParenRainbow = 1
-let g:vimclojure#ParenRainbowColors = {
-    \ '0':  'ctermfg=244',
-    \ '1':  'ctermfg=243',
-    \ '2':  'ctermfg=242',
-    \ '3':  'ctermfg=241',
-    \ '4':  'ctermfg=240',
-    \ '5':  'ctermfg=239',
-    \ '6':  'ctermfg=238',
-    \ '7':  'ctermfg=237',
-    \ '8':  'ctermfg=236',
-    \ '9':  'ctermfg=235'
-\ }
-
 " Plugin: Regbuf
 let g:regbuf_open_command = 'vnew'
 let g:regbuf_edit_open_command = '80vnew'

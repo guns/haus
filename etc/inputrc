@@ -312,9 +312,6 @@ $if Bash
     "\033\007i":    "\C-] irb \n"
     "\033\007I":    "\C-] pry \n"
 
-    # Clojure VimREPL
-    "\C-xC":        "\C-] vimclojure \n"
-
     # X
     "\C-xX":        "\C-] exec startx &>/dev/null \n"
 
