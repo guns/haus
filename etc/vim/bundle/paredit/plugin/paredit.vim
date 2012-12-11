@@ -1,7 +1,7 @@
 " paredit.vim:
 "               Paredit mode for Slimv
 " Version:      0.9.10
-" Last Change:  05 Dec 2012
+" Last Change:  10 Dec 2012
 " Maintainer:   Tamas Kovacs <kovisoft at gmail dot com>
 " License:      This file is placed in the public domain.
 "               No warranty, express or implied.
@@ -254,7 +254,7 @@ function! PareditOpfunc( func, type, visualmode )
         silent exe "normal! `[v`]"
     endif
 
-    if !g:paredit_mode || a:visualmode && a:type == 'block' || a:type == "\<C-V>"
+    if !g:paredit_mode || (a:visualmode && (a:type == 'block' || a:type == "\<C-V>"))
         " Block mode is too difficult to handle at the moment
         silent exe "normal! d"
         let putreg = getreg( '"' )
@@ -264,6 +264,9 @@ function! PareditOpfunc( func, type, visualmode )
         if a:func == 'd'
             " Register "0 is corrupted by the above 'y' command
             call setreg( '0', save_0 ) 
+        elseif a:visualmode && len(getline("'>")) < col("'>") && len(putreg) > 0
+            " Remove extra space added at the end of line when selection=inclusive, all, or onemore
+            let putreg = putreg[:-2]
         endif
 
         " Find and keep unbalanced matched characters in the region
@@ -281,7 +284,7 @@ function! PareditOpfunc( func, type, visualmode )
         endif
 
         if matched == ''
-            if a:type == 'V'
+            if a:func == 'c' && (a:type == 'V' || a:type == 'char')
                 silent exe "normal! gvc"
             else
                 silent exe "normal! gvd"
@@ -289,8 +292,15 @@ function! PareditOpfunc( func, type, visualmode )
         else
             silent exe "normal! gvc" . matched
             silent exe "normal! l"
-            if a:func == 'c'
-                silent exe "normal! " . string(len(endingwhitespace)) . "h"
+            let offs = len(matched)
+            if matched[0] =~ b:any_closing_char
+                let offs = offs + 1
+            endif
+            if a:func == 'd'
+                let offs = offs - 1
+            endif
+            if offs > 0
+                silent exe "normal! " . string(offs) . "h"
             endif
         endif
     endif
@@ -322,9 +332,25 @@ endfunction
 
 " General change operator handling
 function! PareditChange( type, ... )
+    let startcol = col('.')
     let ve_save = &virtualedit
     set virtualedit=all
     call PareditOpfunc( 'c', a:type, a:0 )
+    if len(getline('.')) == 0
+        let l = line('.')
+        let expr = &indentexpr
+        if expr == ''
+            " No special 'indentexpr', call default lisp indent
+            let expr = 'lispindent(l)'
+        else
+            " Replace (v:lnum) in 'indentexpr' with (l)
+            let expr = substitute( expr, '(.*)', '(l)', 'g' )
+        endif
+        execute "call setline( l, repeat( ' ', " . expr . " ) )"
+        normal! $l
+    elseif startcol > 1
+        normal! l
+    endif
     startinsert
     let &virtualedit = ve_save
 endfunction
