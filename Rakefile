@@ -150,6 +150,7 @@ task :env do
       { :base => "#{@vim}/vim-operator-user",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-orgmode",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-rails",              :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/rainbow_parentheses.vim",:branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },

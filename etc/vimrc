@@ -244,6 +244,31 @@ let g:ctrlp_prompt_mappings = {
     \ 'PrtDeleteEnt()':       ['<4-R>'],
 \ }
 
+" Plugin: rainbow_parentheses.vim
+let g:rbpt_colorpairs = [
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [236, '#303030'],
+    \ [237, '#3a3a3a'],
+    \ [238, '#444444'],
+    \ [239, '#4e4e4e'],
+    \ [240, '#585858'],
+    \ [241, '#606060'],
+    \ [242, '#666666'],
+    \ [243, '#767676'],
+    \ [244, '#808080'],
+    \ [245, '#8a8a8a']
+    \ ]
+let g:rbpt_max = len(g:rbpt_colorpairs)
+
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
