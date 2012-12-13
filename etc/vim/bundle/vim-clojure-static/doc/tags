@@ -1,0 +1,15 @@
+clojure	clojure.txt	/*clojure*
+clojure-about	clojure.txt	/*clojure-about*
+clojure-indent	clojure.txt	/*clojure-indent*
+clojure-introduction	clojure.txt	/*clojure-introduction*
+clojure-options	clojure.txt	/*clojure-options*
+clojure.txt	clojure.txt	/*clojure.txt*
+clojure.vim	clojure.txt	/*clojure.vim*
+ftplugin/clojure.vim	clojure.txt	/*ftplugin\/clojure.vim*
+g:clojure_align_multiline_strings	clojure.txt	/*g:clojure_align_multiline_strings*
+g:clojure_fuzzy_indent	clojure.txt	/*g:clojure_fuzzy_indent*
+g:clojure_fuzzy_indent_patterns	clojure.txt	/*g:clojure_fuzzy_indent_patterns*
+g:clojure_maxlines	clojure.txt	/*g:clojure_maxlines*
+indent/clojure.vim	clojure.txt	/*indent\/clojure.vim*
+syntax/clojure.vim	clojure.txt	/*syntax\/clojure.vim*
+vim-clojure-static	clojure.txt	/*vim-clojure-static*

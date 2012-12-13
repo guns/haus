@@ -18,13 +18,13 @@
     `Y8bod8P'o888o`Y8bod8P' 888 `V88V"V8P'd888b   `Y8bod8P'
                             888
                         .o. 88P
-                 .      `Y888P   .   o8o
-               .o8             .o8   `"'
-      .oooo.o.o888oo .oooo.  .o888oooooo  .ooooo.
-     d88(  "8  888  `P  )88b   888  `888 d88' `"Y8
-     `"Y88b.   888   .oP"888   888   888 888
-     o.  )88b  888 .d8(  888   888 . 888 888   .o8
-     8""888P'  "888"`Y888""8o  "888"o888o`Y8bod8P'
+                 .      `Y888P  .   o8o
+               .o8            .o8   '"'
+      .oooo.o.o888oo .oooo. .o888oooooo  .ooooo.
+     d88(  "8  888  `P  )88b  888  `888 d88' `"Y8
+     `"Y88b.   888   .oP"888  888   888 888
+     o.  )88b  888 .d8(  888  888 . 888 888   .o8
+     8""888P'  "888"`Y888""8o "888"o888o`Y8bod8P'
 
 
 
@@ -48,8 +48,8 @@ side effects of this coupling are:
 * Hacking on the runtime files is more difficult
 
 * Installation from source is more complicated (e.g. installing clojure
-  runtime files from the source repository must first build a zip file
-  via `gradle`)
+  runtime files from the source repository necessitates building a zip
+  file via `gradle`)
 
 * Installing the whole VimClojure distribution for the runtime files is
   overkill. A smaller, self-contained set of files would be eligible for
@@ -83,7 +83,29 @@ bugs may not reside upstream.
 Alternate Interactive Development Plugins
 =========================================
 
-TODO
+### [vim-foreplay](https://github.com/tpope/vim-foreplay)
+
+New nREPL client by Tim Pope.
+
+### [slimv.vim](http://www.vim.org/scripts/script.php?script_id=2531)
+
+SWANK client for Vim by Tamas Kovacs.
+
+### [screen](http://www.vim.org/scripts/script.php?script_id=2711)
+
+Send text to REPLs running in GNU Screen or tmux. Not Clojure specific.
+
+By Eric Van Dewoestine.
+
+Try <https://github.com/guns/screen> for better window handling if you
+are running tmux 1.5 or higher.
+
+### [VimClojure](http://www.vim.org/scripts/script.php?script_id=2501)
+
+The original interactive Clojure editing environment by Meikel
+Brandmeyer. These runtime files are **incompatible** with the original
+VimClojure project in several small ways, so be sure to uninstall
+vim-clojure-static when using VimClojure.
 
 Options
 =======
@@ -115,7 +137,7 @@ let g:clojure_fuzzy_indent_patterns = "with.*,def.*,let.*"
 When indenting multiline strings, align subsequent lines to the column
 after the opening quote, instead of the same column.
 
-Demo:
+For example:
 
 ```clojure
 (def default
