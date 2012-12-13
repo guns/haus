@@ -167,6 +167,9 @@ let g:tex_fold_enabled = 1
 " SQL
 let g:omni_sql_no_default_maps = 1
 
+" Plugin: vim-clojure-static
+let g:clojure_align_multiline_strings = 1
+
 " Plugin: NERDTree
 let g:NERDTreeBookmarksFile = expand('~/.vimtmp/NERDTreeBookmarks')
 let g:NERDChristmasTree = 1
