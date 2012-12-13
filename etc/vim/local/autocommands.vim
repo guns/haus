@@ -12,6 +12,12 @@ augroup GUNS
     autocmd BufReadPost *
         \ if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
+    " :help ft-syntax-omni {{{1
+    if has("autocmd") && exists("+omnifunc")
+        autocmd Filetype *
+            \ if &omnifunc == "" | setlocal omnifunc=syntaxcomplete#Complete | endif
+    endif
+
     " Open the quickfix window if `quickfixcmd!` returns with errors {{{1
     autocmd QuickFixCmdPost *
         \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
