@@ -25,6 +25,8 @@ augroup GUNS
     " Vimscript {{{1
     autocmd FileType help
         \ setlocal iskeyword+=-
+    autocmd BufRead /tmp/verbose.vim
+        \ silent! :%s/\V^I/	/g
 
     " Diff {{{1
     autocmd FileType diff
