@@ -1,13 +1,13 @@
 """ Library of commands
 
 command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
-function! <SID>Mapall(...)
+function! s:Mapall(...)
     execute 'noremap  ' . join(a:000)
     execute 'noremap! ' . a:1 . ' <C-\><C-n>' . join(a:000[1:])
 endfunction
 
 command! -nargs=* -bang -bar SetWhitespace call <SID>SetWhitespace('<bang>', <f-args>) "{{{1
-function! <SID>SetWhitespace(bang, ...)
+function! s:SetWhitespace(bang, ...)
     if a:0
         let local = empty(a:bang) ? 'local' : ''
         execute 'set' . local . ' shiftwidth=' . a:1
@@ -18,8 +18,8 @@ function! <SID>SetWhitespace(bang, ...)
     endif
 endfunction
 
-command! -nargs=* -bang -bar SetTextwidth call <SID>SetTextwidth('<bang>', <f-args>) "{{{1
-function! <SID>SetTextwidth(bang, ...)
+command! -nargs=* -bang -bar SetTextwidth call s:SetTextwidth('<bang>', <f-args>) "{{{1
+function! s:SetTextwidth(bang, ...)
     if a:0
         let local = empty(a:bang) ? 'local' : ''
         execute 'set' . local . ' textwidth=' . a:1
@@ -33,7 +33,7 @@ function! <SID>SetTextwidth(bang, ...)
 endfunction
 
 command! -nargs=? -bang -bar SetAutowrap call <SID>SetAutowrap('<bang>', <f-args>) "{{{1
-function! <SID>SetAutowrap(bang, ...)
+function! s:SetAutowrap(bang, ...)
     let status = empty(a:bang) ? (a:0 ? a:1 : -1) : (&formatoptions =~ 'a' ? 0 : 1)
 
     if status == -1
@@ -46,7 +46,7 @@ function! <SID>SetAutowrap(bang, ...)
 endfunction
 
 command! -bang -bar SetIskeyword call <SID>SetIskeyword('<bang>') "{{{1
-function! <SID>SetIskeyword(bang)
+function! s:SetIskeyword(bang)
     let nonspaces = '@,1-31,33-127'
     if empty(a:bang)
         set iskeyword?
@@ -59,7 +59,7 @@ function! <SID>SetIskeyword(bang)
 endfunction
 
 command! -bang -bar SetDiff call <SID>SetDiff('<bang>') "{{{1
-function! <SID>SetDiff(bang)
+function! s:SetDiff(bang)
     if empty(a:bang)
         set diff?
     elseif &diff
@@ -70,7 +70,7 @@ function! <SID>SetDiff(bang)
 endfunction
 
 command! -nargs=? -bang -bar SetVerbose call <SID>SetVerbose('<bang>', <f-args>) "{{{1
-function! <SID>SetVerbose(bang, ...)
+function! s:SetVerbose(bang, ...)
     let enable = a:0 ? a:1 : (exists('g:SetVerbose') ? 0 : 1)
 
     if empty(a:bang)
@@ -87,7 +87,7 @@ function! <SID>SetVerbose(bang, ...)
 endfunction
 
 command! -bar SynStack call <SID>SynStack() "{{{1
-function! <SID>SynStack()
+function! s:SynStack()
     " TextMate style syntax highlighting stack for word under cursor
     " http://vimcasts.org/episodes/creating-colorschemes-for-vim/
     if exists("*synstack")
@@ -96,7 +96,7 @@ function! <SID>SynStack()
 endfunction
 
 command! -nargs=? -bar -complete=file Todo call <SID>Todo(<f-args>) "{{{1
-function! <SID>Todo(...)
+function! s:Todo(...)
     let words = ['TODO', 'FIXME', 'NOTE', 'WARNING', 'DEBUG', 'HACK', 'XXX']
     let arg = a:0 ? shellescape(expand(a:1), 1) : '.'
 
@@ -113,7 +113,7 @@ function! <SID>Todo(...)
 endfunction
 
 command! -bar Ctags call <SID>Ctags() "{{{1
-function! <SID>Ctags()
+function! s:Ctags()
     let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
     execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
 endfunction
@@ -155,12 +155,12 @@ function! LispFoldExpr(lnum) "{{{1
 endfunction
 
 command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
-function! <SID>ClojureTagJump(word)
+function! s:ClojureTagJump(word)
     execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
 endfunction
 
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
-function! <SID>LispBufferSetup()
+function! s:LispBufferSetup()
     let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
 
@@ -180,7 +180,7 @@ function! <SID>LispBufferSetup()
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
-function! <SID>Screen(command)
+function! s:Screen(command)
     let map = {
         \ 'ruby'       : 'script/rails console || pry || irb',
         \ 'clojure'    : 'clojure --lein repl',
@@ -195,7 +195,7 @@ endfunction
 
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
-function! <SID>ScreenSetup(setup)
+function! s:ScreenSetup(setup)
     let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
     " FIXME: vim-sexpr
     let select = &filetype =~ '\vclojure|scheme|lisp' ? 'vab' : 'vip'
@@ -226,7 +226,7 @@ function! <SID>ScreenSetup(setup)
 endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
-function! <SID>OrgBufferSetup()
+function! s:OrgBufferSetup()
     " RECURSIVE maps for <Plug> mappings
     map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
     imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
@@ -254,7 +254,7 @@ function! <SID>OrgBufferSetup()
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
-function! <SID>Open(word)
+function! s:Open(word)
     " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
     " Worth the simple implementation IMO.
     let rdelims = "\"');>"
@@ -270,7 +270,7 @@ function! <SID>Open(word)
 endfunction
 
 command! -nargs=? -complete=command -bar Qfdo call <SID>Qfdo(<q-args>) "{{{1
-function! <SID>Qfdo(expr)
+function! s:Qfdo(expr)
     " Run a command over all lines in the quickfix buffer
     let qflist = getqflist()
     for item in qflist
@@ -280,7 +280,7 @@ function! <SID>Qfdo(expr)
 endfunction
 
 command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
-function! <SID>ToggleQuickfixWindow()
+function! s:ToggleQuickfixWindow()
     if &buftype ==# 'quickfix'
         cclose
     else
@@ -289,7 +289,7 @@ function! <SID>ToggleQuickfixWindow()
 endfunction
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
-function! <SID>TabOpen(file, ...)
+function! s:TabOpen(file, ...)
     for t in range(tabpagenr('$'))
         for b in tabpagebuflist(t + 1)
             if a:file ==# expand('#' . b . ':p')
@@ -305,7 +305,7 @@ endfunction
 
 command! -bar TabmoveNext call <SID>Tabmove(1) " {{{1
 command! -bar TabmovePrev call <SID>Tabmove(-1)
-function! <SID>Tabmove(n)
+function! s:Tabmove(n)
     if version >= 703 && has('patch591')
         execute 'tabmove ' . printf('%+d', a:n)
     else
@@ -315,7 +315,7 @@ function! <SID>Tabmove(n)
 endfunction
 
 command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
-function! <SID>RunCurrentFile()
+function! s:RunCurrentFile()
     let map = {
         \ 'ruby'    : 'ruby',
         \ 'clojure' : 'clojure'
@@ -329,7 +329,7 @@ endfunction
 
 command! -bar RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
 " Run a single MiniTest::Spec test case
-function! <SID>RunCurrentMiniTestCase()
+function! s:RunCurrentMiniTestCase()
     " Get the line number for the last assertion
     let line = search('\vit .* do', 'bcnW')
     if !line | return | endif
@@ -346,7 +346,7 @@ function! <SID>RunCurrentMiniTestCase()
 endfunction
 
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
-function! <SID>MapReadlineUnicodeBindings()
+function! s:MapReadlineUnicodeBindings()
     if filereadable(expand('~/.inputrc'))
         for line in readfile(expand('~/.inputrc'))
             if line =~# '\v<U\+\x{4,6}>'
@@ -364,7 +364,7 @@ function! <SID>MapReadlineUnicodeBindings()
 endfunction
 
 command! -bar CapturePane call <SID>CapturePane() "{{{1
-function! <SID>CapturePane()
+function! s:CapturePane()
     " Tmux-esque capture-pane
     let buf = bufnr('%')
     let tab = len(tabpagebuflist()) > 1
@@ -379,7 +379,7 @@ command! CaptureMaps
     \ execute 'Capture verbose map \| silent! verbose map!' |
     \ :%! ruby -Eutf-8 -e 'puts $stdin.read.chars.map { |c| c.unpack("U").pack "U" rescue "UTF-8-ERROR" }.join.gsub(/\n\t/, " \" ")'
 " Redirect output of given commands into a scratch buffer
-function! <SID>Capture(cmd)
+function! s:Capture(cmd)
     try
         redir @r
         execute 'silent! ' . a:cmd
@@ -390,7 +390,7 @@ function! <SID>Capture(cmd)
 endfunction
 
 command! -nargs=* -complete=file -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
-function! <SID>Org(bang, ...)
+function! s:Org(bang, ...)
     let tab = empty(a:bang) ? 'tab' : ''
 
     if a:0
