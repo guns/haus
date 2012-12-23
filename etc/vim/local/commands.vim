@@ -167,29 +167,22 @@ function! LispFoldExpr(lnum) "{{{1
     endif
 endfunction
 
-command! -bar ClojureTagJump call <SID>ClojureTagJump(expand('<cword>')) "{{{1
-function! s:ClojureTagJump(word)
-    execute 'tag ' . substitute(a:word, '\v.*/(.*)', '\1', '') | normal! zz
-endfunction
-
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! s:LispBufferSetup()
-    let b:delimitMate_quotes = '"'
     SetWhitespace 2 8
-
+    let b:delimitMate_quotes = '"'
     setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
+
+    " Rainbow parens
     call rainbow_parentheses#load(0)
     call rainbow_parentheses#load(1)
     call rainbow_parentheses#load(2)
     call rainbow_parentheses#activate()
 
-    noremap  <buffer> <4-CR>     A<Space>;<Space>
-    noremap! <buffer> <4-CR>     <C-\><C-o>A<Space>;<Space>
-    " FIXME: vim-sexpr
-    nnoremap <buffer> ==         :<C-u>normal! m`=a(``<CR>
-    nnoremap <buffer> =p         :<C-u>normal! m`=ap``<CR>
-    nnoremap <buffer> <C-]>      :<C-u>ClojureTagJump.<CR>
-    nnoremap <buffer> <C-w><C-]> :<C-u>split \| ClojureTagJump.<CR>
+    noremap  <silent><buffer> <4-CR> A<Space>;<Space>
+    noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
+    nmap     <silent><buffer> ==     m`=<Plug>sexp_textobj_outer_form``
+    nnoremap <silent><buffer> =p     m`=ap``
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
