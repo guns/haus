@@ -1008,6 +1008,7 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
+      mke='make -e' \
       mkj='make -j\$\(grep -c ^processor /proc/cpuinfo\)' \
       mkj2='make -j2' \
       mkj4='make -j4' \
@@ -1345,6 +1346,7 @@ ALIAS cs='cryptsetup' && {
             run cryptsetup luksClose "$(sed 's:/$:: ; s:.*/::' <<< "$1")"
         fi
     }; TCOMP umount csumount
+    alias csdump='cryptsetup luksDump'
 }
 
 ALIAS dc='dumpcert' && {
