@@ -144,6 +144,19 @@ function! RakefileFoldExpr(lnum) "{{{1
     endif
 endfunction
 
+function! VimscriptFoldExpr(lnum) "{{{1
+    let line = getline(a:lnum)
+    if line =~# '\v\{\{\{\d*\s*$'
+        return '>1'
+    elseif line =~# '\v^\s*(fun|com)'
+        return '>1'
+    elseif line[0] == '"'
+        return '0'
+    else
+        return '='
+    endif
+endfunction
+
 function! LispFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^\s*[\(/](def|ns ).*'
         return '>1'

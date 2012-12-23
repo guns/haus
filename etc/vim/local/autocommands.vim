@@ -23,6 +23,8 @@ augroup GUNS
         \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
 
     " Vimscript {{{1
+    autocmd FileType vim
+        \ setlocal foldmethod=expr foldexpr=VimscriptFoldExpr(v:lnum)
     autocmd FileType help
         \ setlocal iskeyword+=-
     autocmd BufRead /tmp/verbose.vim
