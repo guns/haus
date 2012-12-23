@@ -1476,8 +1476,8 @@ ALIAS geometry='identify -format "%w %h"'
 # feh
 HAVE feh && {
     fehbg() { feh --bg-fill "$(expand_path "$1")"; }
-    fshow() { feh --recursive "${@:-.}"; }
-    frand() { feh --recursive --randomize "${@:-.}"; }
+    fshow() { feh --recursive "${@:-.}"; }; TCOMP feh fshow
+    frand() { feh --recursive --randomize "${@:-.}"; }; TCOMP feh fshow
     ftime() {
         ruby -r set -e '
             args = ARGV.empty? ? ["."] : ARGV
@@ -1492,7 +1492,7 @@ HAVE feh && {
             dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
             abort "USAGE: fmove dir ..." if ARGV.empty? or dirs.count != ARGV.count
             actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "mv -- %F #{d.shellescape}"] }
-            exec "feh", "-Tsmall", "--draw-actions", *actions
+            exec "feh", "--theme", "gifs", "--draw-actions", *actions
         ' -- "$@"
     }
 }

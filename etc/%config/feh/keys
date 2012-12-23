@@ -35,8 +35,8 @@ action_3          3
 action_4          4
 action_5          5
 action_6          6
-action_7          7           o
-action_8          8           m
+action_7          7
+action_8          8           o
 action_9          9           B
 jump_first        g
 jump_last         G
