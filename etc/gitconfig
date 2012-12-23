@@ -120,6 +120,7 @@
     dihw = diff HEAD -w
     wdih = diff HEAD --word-diff=color
 
+    dic  = diff --cached
     dis  = diff --summary --stat
 
     fp   = format-patch
