@@ -291,10 +291,6 @@ noremap <Bar>    ?\V
 " Search for non-printing ASCII characters
 noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 
-" Center on next match (normal-mode only)
-nnoremap n nzz
-nnoremap N Nzz
-
 " Simple command line aliases
 noremap <Leader>h     :<C-u>help<Space>
 noremap <Leader><C-t> :<C-u>Ctags<CR>
