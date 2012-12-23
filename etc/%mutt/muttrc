@@ -49,6 +49,7 @@ set my_list=index,attach,browser,alias,postpone,pgp
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
+macro $my_list,pager \CxQ   '<shell-escape>kill -QUIT "$(cat ~/.offlineimap/pid)"<enter>'
 bind  $my_list,pager \;     enter-command
 
 # Go ->
