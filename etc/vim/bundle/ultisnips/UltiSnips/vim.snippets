@@ -1,7 +1,7 @@
 ### VIMSCRIPT ###
 
 snippet once "once guard"
-if exists('g:${1:did_${2:`!v expand('%:r')`}}')
+if exists('g:${1}')
 	finish
 endif
 let g:$1 = 1
@@ -13,7 +13,7 @@ endsnippet
 
 snippet letg "let g:var = var if exists"
 if !exists('g:${1:var}')
-	let g:$1 = $2
+	let g:$1 = $0
 endif
 endsnippet
 
@@ -30,7 +30,7 @@ execute '$1'
 endsnippet
 
 snippet f "function"
-function! ${1:s:function}($3)
+function! s:${1:function}($3)
 	$0
 endfunction
 endsnippet
@@ -121,4 +121,8 @@ endsnippet
 
 snippet \n "<C-\><C-o><C-\><C-n>" w
 <C-\><C-o><C-\><C-n>
+endsnippet
+
+snippet m "echom string()" w
+echom string($0)
 endsnippet
