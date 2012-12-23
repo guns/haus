@@ -171,8 +171,8 @@
 (def config-resize
   [:resize
    [:drawContents "yes"]
-   [:popupShow "NonPixel"]
-   [:popupPosition "Center"]
+   [:popupShow "Always"]
+   [:popupPosition "Top"]
    [:popupFixedPosition [:x "10"] [:y "10"]]])
 
 (def config-margins
