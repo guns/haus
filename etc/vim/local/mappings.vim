@@ -345,7 +345,7 @@ noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
-noremap <Leader><C-v>    :<C-u>SetVerbose!<CR>
+noremap <Leader><C-v>    :<C-u>execute exists('g:SetVerbose') ? 'SetVerbose \| tabedit /tmp/verbose.vim' : 'SetVerbose!'<CR>
 
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>tabedit<Space>

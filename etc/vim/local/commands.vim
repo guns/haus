@@ -69,13 +69,15 @@ function! s:SetDiff(bang)
     endif
 endfunction
 
-command! -nargs=? -bang -bar SetVerbose call <SID>SetVerbose('<bang>', <f-args>) "{{{1
-function! s:SetVerbose(bang, ...)
-    let enable = a:0 ? a:1 : (exists('g:SetVerbose') ? 0 : 1)
+command! -bang -bar SetVerbose call <SID>SetVerbose('<bang>') "{{{1
+function! s:SetVerbose(bang)
+    let enable = !exists('g:SetVerbose')
 
-    if empty(a:bang)
-        set verbose?
-    elseif enable
+    if !empty(a:bang)
+        call writefile([], '/tmp/verbose.vim')
+    end
+
+    if enable
         let g:SetVerbose = 1
         set verbose=100 verbosefile=/tmp/verbose.vim
         echo '♫ BEGIN VERBOSE MODE ♫'
