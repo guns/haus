@@ -412,12 +412,8 @@ function! s:Org(bang, ...)
     endif
 endfunction
 
-" Say {{{1
-if executable('/usr/bin/say')
-    command! -nargs=1 -complete=command -bar Say call system('say ' . shellescape(<q-args>))
-else
-    command! -nargs=1 -complete=command -bar Say call system('espeak -ven-us ' . shellescape(<q-args>))
-endif
+" Speak {{{1
+command! -nargs=1 -complete=command -bar Speak call system('speak ' . shellescape(<q-args>))
 
 " Interleave {{{1
 command! -bar -range Interleave
