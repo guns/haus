@@ -170,6 +170,7 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
+CD_FUNC cdmnt           /mnt
 CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
 CD_FUNC cddnsmasq       /opt/dnsmasq/etc
@@ -291,9 +292,11 @@ if __OSX__; then
     alias lse='ls -e'
 fi
 alias lsb='lsblk -a'
-if [[ -d /dev/mapper ]]; then
-    alias lsmapper='ls /dev/mapper'
-fi
+[[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
+for _d in /dev/disk/by-*; do
+    eval "alias ls${_d##*/by-}=\"ls $_d\""
+done
+unset _d
 # Param: $1 Directory to list
 # Param: $2 Interior of Ruby block with filename `f`
 __lstype__() {
@@ -442,8 +445,34 @@ dusort() {
 # mount
 ALIAS mt='mount -v' \
       umt='umount -v' \
-      mtext4='mt -t ext4' \
-      mthfs='mt -t hfsplus'
+      mtext4='mount -v -t ext4' \
+      mthfs='mount -v -t hfsplus' \
+      mtvfat='mount -v -t vfat' && {
+    mtusb() {
+        ruby -r shellwords -r fileutils -e '
+            options = "nosuid,uid=#{ENV["SUDO_UID"] || Process.euid},gid=#{ENV["SUDO_GID"] || Process.egid}"
+
+            blkdevs = Hash[%x(blkid).lines.map do |l|
+                f, kvs = l.split(":", 2)
+                [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
+            end]
+
+            usbdevs = Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
+                [File.expand_path(File.readlink(l), File.dirname(l)), l]
+            end]
+
+            (blkdevs.keys & usbdevs.keys).each do |dev|
+                label = blkdevs[dev]["LABEL"]
+                mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
+                FileUtils.mkdir_p mtpt
+                cmd = %W[mount -v -o #{options} #{dev} #{mtpt}]
+                puts cmd.shelljoin
+                system *cmd
+            end
+        ' -- "$@"
+    }
+    umtusb() { run umount -v /mnt/usb-*; rmdir /mnt/usb-*; }
+}
 
 # tar
 alias star='tar --strip-components=1'
