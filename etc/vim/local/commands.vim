@@ -103,7 +103,7 @@ function! s:Todo(...)
     let arg = a:0 ? shellescape(expand(a:1), 1) : '.'
 
     " Fugitive detects Git repos for us
-    if !exists(':Ggrep')
+    if exists(':Ggrep')
         execute 'silent! Ggrep! -Ew "' . join(words,'|') . '" ' . (a:0 ? arg : shellescape(getcwd(), 1))
     elseif exists(':Ack')
         execute 'silent! Ack! -w "' . join(words,'\|') . '" ' . arg
