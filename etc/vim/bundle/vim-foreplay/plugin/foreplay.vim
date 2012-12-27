@@ -140,8 +140,8 @@ function! s:repl.require(lib) dict abort
   if a:lib !~# '^\%(user\)\=$' && !get(self.requires, a:lib, 0)
     let reload = has_key(self.requires, a:lib) ? ' :reload' : ''
     let self.requires[a:lib] = 0
-    call self.eval('(doto '.s:qsym(a:lib).' (require'.reload.') the-ns)', 'user')
-    let self.requires[a:lib] = 1
+    let result = self.eval('(doto '.s:qsym(a:lib).' (require'.reload.') the-ns)', 'user')
+    let self.requires[a:lib] = !has_key(result, 'ex')
   endif
   return ''
 endfunction
@@ -263,7 +263,7 @@ let s:oneoff_out = tempname()
 let s:oneoff_err = tempname()
 
 function! s:oneoff.eval(expr, ns) dict abort
-  return
+  return {'value': ''}
   if &verbose
     echohl WarningMSG
     echomsg "No REPL found. Running java clojure.main ..."
@@ -290,26 +290,16 @@ function! s:oneoff.eval(expr, ns) dict abort
         \   '      (spit "'.s:oneoff_ex.'" (class e))))' .
         \   '  nil)')
   let wtf = system(command)
-  let pr  = join(readfile(s:oneoff_pr, 'b'), "\n")
-  let out = join(readfile(s:oneoff_out, 'b'), "\n")
-  let err = join(readfile(s:oneoff_err, 'b'), "\n")
-  let ex  = join(readfile(s:oneoff_err, 'b'), "\n")
-  if v:shell_error && ex ==# ''
+  let result = {}
+  let result.value = join(readfile(s:oneoff_pr, 'b'), "\n")
+  let result.out   = join(readfile(s:oneoff_out, 'b'), "\n")
+  let result.err   = join(readfile(s:oneoff_err, 'b'), "\n")
+  let result.ex    = join(readfile(s:oneoff_err, 'b'), "\n")
+  call filter(result, 'v:val !=# ""')
+  if v:shell_error && result.ex ==# ''
     throw 'Error running Clojure: '.wtf
   else
-    if err !=# ''
-      echohl ErrorMSG
-      echo substitute(err, '\n$', '', '')
-      echohl None
-    endif
-    if out !=# ''
-      echo substitute(out, "\n$", '', '')
-    endif
-    if v:shell_error
-      throw 'Clojure: '.ex
-    else
-      return pr
-    endif
+    return result
   endif
 endfunction
 
@@ -355,10 +345,30 @@ endfunction
 
 function! foreplay#eval(expr, ...) abort
   let c = s:client()
+
   if !a:0 && foreplay#ns() !~# '^\%(user\)$'
     call c.require(foreplay#ns())
   endif
-  return c.eval(a:expr, a:0 ? a:1 : foreplay#ns())
+
+  let result = c.eval(a:expr, a:0 ? a:1 : foreplay#ns())
+
+  if get(result, 'err', '') !=# ''
+    echohl ErrorMSG
+    echo substitute(result.err, '\n$', '', '')
+    echohl NONE
+  endif
+  if get(result, 'out', '') !=# ''
+    echo substitute(result.out, '\n$', '', '')
+  endif
+
+  if get(result, 'ex', '') !=# ''
+    let err = 'Clojure: '.result.ex
+  elseif has_key(result, 'value')
+    return result.value
+  else
+    let err = 'foreplay.vim: Something went wrong: '.string(result)
+  endif
+  throw err
 endfunction
 
 function! foreplay#evalparse(expr) abort
@@ -590,6 +600,10 @@ function! s:setup_eval() abort
   nmap <buffer> cp <Plug>ForeplayPrint
   nmap <buffer> cpp <Plug>ForeplayPrintab
 
+  vmap <buffer> <Leader><Leader> <Plug>ForeplayPrint
+  nmap <buffer> <Leader><Leader> m`<Plug>ForeplayPrint<Plug>sexp_textobj_outer_form``
+  imap <buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
+
   nmap <buffer> c! <Plug>ForeplayFilter
   nmap <buffer> c!! <Plug>ForeplayFilterab
 
@@ -656,7 +670,7 @@ function! foreplay#source(symbol) abort
         \ '            (if (= "jar" (.getProtocol url))' .
         \ '              (str "zip" (.replaceFirst (.getFile url) "!/" "::"))' .
         \ '              (.getFile url)))))))'
-  let result = get(split(c.eval(cmd, foreplay#ns()), "\n"), 0, '')
+  let result = get(split(c.eval(cmd, foreplay#ns()).value, "\n"), 0, '')
   return result ==# 'nil' ? '' : result
 endfunction
 
@@ -716,7 +730,7 @@ function! foreplay#findfile(path) abort
           \ '(if-let [ns ((ns-aliases *ns*) '.s:qsym(path).')]' .
           \ '  (str (.replace (.replace (str (ns-name ns)) "-" "_") "." "/") ".clj")' .
           \ '  "'.path.'.clj")')
-    let result = get(split(c.eval(aliascmd, foreplay#ns()), "\n"), 0, '')
+    let result = get(split(c.eval(aliascmd, foreplay#ns()).value, "\n"), 0, '')
   else
     if path !~# '/'
       let path = tr(path, '.-', '/_')
@@ -725,7 +739,7 @@ function! foreplay#findfile(path) abort
       let path .= '.clj'
     endif
 
-    let result = get(split(c.eval(printf(cmd, '"'.escape(path, '"').'"'), foreplay#ns()), "\n"), 0, '')
+    let result = get(split(c.eval(printf(cmd, '"'.escape(path, '"').'"'), foreplay#ns()).value, "\n"), 0, '')
 
   endif
   if result ==# ''
@@ -782,6 +796,14 @@ function! s:tons(path) abort
 endfunction
 
 function! foreplay#ns() abort
+  let lnum = 1
+  while lnum < line('$') && getline(lnum) =~# '^\s*\%(;.*\)\=$'
+    let lnum += 1
+  endwhile
+  let ns = matchstr(getline(lnum), '\C^(in-ns ''\zs\k\+\ze)')
+  if ns !=# ''
+    return ns
+  endif
   let path = s:buffer_path()
   return s:tons(path ==# '' ? 'user' : path)
 endfunction
@@ -832,15 +854,26 @@ function! s:Apropos(pattern) abort
   endif
 endfunction
 
+function! s:K()
+  let word = expand('<cword>')
+  let java_candidate = matchstr(word, '^\%(\w\+\.\)*\u\w*\ze\%(\.\|\/\w\+\)\=$')
+  if java_candidate !=# ''
+    return 'Javadoc '.java_candidate
+  else
+    return 'Doc '.word
+  endif
+endfunction
+
 augroup foreplay_doc
   autocmd!
-  autocmd FileType clojure nnoremap <buffer> K  :Doc <C-R><C-W><CR>
+  autocmd FileType clojure nnoremap <buffer> K  :<C-R>=<SID>K()<CR><CR>
   autocmd FileType clojure nnoremap <buffer> [d :Source <C-R><C-W><CR>
   autocmd FileType clojure nnoremap <buffer> ]d :Source <C-R><C-W><CR>
+  autocmd FileType clojure command! -buffer -nargs=1 Apropos :exe s:Apropos(<q-args>)
   autocmd FileType clojure command! -buffer -nargs=1 FindDoc :exe s:Lookup('find-doc', printf('#"%s"', <q-args>))
+  autocmd FileType clojure command! -buffer -bar -nargs=1 Javadoc :exe s:Lookup('javadoc', <q-args>)
   autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Doc     :exe s:Lookup('doc', <q-args>)
   autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Source  :exe s:Lookup('source', <q-args>)
-  autocmd FileType clojure command! -buffer -nargs=1 -complete=customlist,foreplay#eval_complete Apropos :exe s:Apropos(<q-args>)
 augroup END
 
 " }}}1

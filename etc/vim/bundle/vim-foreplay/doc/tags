@@ -6,6 +6,7 @@ foreplay-:Dsplit	foreplay.txt	/*foreplay-:Dsplit*
 foreplay-:Eval	foreplay.txt	/*foreplay-:Eval*
 foreplay-:Eval!	foreplay.txt	/*foreplay-:Eval!*
 foreplay-:FindDoc	foreplay.txt	/*foreplay-:FindDoc*
+foreplay-:Javadoc	foreplay.txt	/*foreplay-:Javadoc*
 foreplay-:Require	foreplay.txt	/*foreplay-:Require*
 foreplay-:Require!	foreplay.txt	/*foreplay-:Require!*
 foreplay-:Source	foreplay.txt	/*foreplay-:Source*
