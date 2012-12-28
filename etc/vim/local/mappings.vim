@@ -509,13 +509,6 @@ for [g:lhs, g:rhs] in [['d', 'qdictionary'],
 endfor
 unlet g:lhs g:rhs g:fmt
 
-" REPLACE move-down-and-start-of-line with a simple add-numbers-in-selection
-vnoremap + "ry:ruby
-    \ r = VIM.evaluate('@r').scan(/[+-]?\d+(?:\.\d+)?/).flatten.inject(0) { \|s,n\| s + n.to_f };
-    \ VIM.command(%q(let @r = "%f") % r);
-    \ print r<CR>
-
-
 """ Plugins {{{1
 
 " Plugin: surround.vim - visual surround shortcuts (a la TextMate)
