@@ -432,10 +432,15 @@ command! -bar Hitest
 """ Utility functions {{{1
 
 function! CwordOrSel(...) " {{{1
-    if a:0 && a:1
-        normal! gv"vy
-        return @v
-    else
-        return expand('<cword>')
-    endif
+    try
+        let reg_save = @v
+        if a:0 && a:1
+            normal! gv"vy
+            return @v
+        else
+            return expand('<cword>')
+        endif
+    finally
+        let @v = reg_save
+    endtry
 endfunction
