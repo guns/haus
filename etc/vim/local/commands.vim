@@ -389,11 +389,14 @@ command! CaptureMaps
 " Redirect output of given commands into a scratch buffer
 function! s:Capture(cmd)
     try
+        let reg_save = @r
         redir @r
         execute 'silent! ' . a:cmd
     finally
         redir END
         new | setlocal buftype=nofile filetype=vim | normal! "rp
+        execute "normal! d/\\v^\\s*\\S\<CR>"
+        let @r = reg_save
     endtry
 endfunction
 
