@@ -126,3 +126,7 @@ endsnippet
 snippet m "echom string()" w
 echom string($0)
 endsnippet
+
+snippet M "echom join(map(split()))" w
+echom join(map(split("$0", ','), 'v:val . ": " . string(eval(v:val))'), ', ')
+endsnippet
