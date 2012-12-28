@@ -258,29 +258,33 @@ function! GetClojureIndent()
 	" We still have to check, whether the keyword starts with a (, [ or {.
 	" In that case we use the ( position for indent.
 	let w = s:CurrentWord()
-	if stridx('([{', w[0]) > 0
+	if stridx('([{', w[0]) > -1
 		return paren[1]
 	endif
 
-	if &lispwords =~ '\<' . w . '\>'
+	" Noe we want to test words with any leading non-word chars stripped;
+	" e.g. #'defn should indent like defn.
+	let ww = substitute(w, '\v\W*(\w.*)', '\1', '')
+
+	if &lispwords =~ '\<' . ww . '\>'
 		return paren[1] + &shiftwidth - 1
 	endif
 
 	" XXX: Slight glitch here with special cases. However it's only
 	" a heureustic. Offline we can't do more.
 	if g:clojure_fuzzy_indent
-				\ && w != 'with-meta'
-				\ && w != 'clojure.core/with-meta'
+				\ && ww != 'with-meta'
+				\ && ww != 'clojure.core/with-meta'
 		for pat in split(g:clojure_fuzzy_indent_patterns, ",")
-			if w =~ '\(^\|/\)' . pat . '$'
-						\ && w !~ '\(^\|/\)' . pat . '\*$'
-						\ && w !~ '\(^\|/\)' . pat . '-fn$'
+			if ww =~ '\(^\|/\)' . pat . '$'
+						\ && ww !~ '\(^\|/\)' . pat . '\*$'
+						\ && ww !~ '\(^\|/\)' . pat . '-fn$'
 				return paren[1] + &shiftwidth - 1
 			endif
 		endfor
 	endif
 
-	normal! w
+	normal! W
 	if paren[0] < line(".")
 		return paren[1] + &shiftwidth - 1
 	endif
