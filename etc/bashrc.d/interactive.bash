@@ -191,7 +191,7 @@ CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
-CD_FUNC cddownloads     ~/Downloads
+CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cdmail          ~/Mail
 
 
