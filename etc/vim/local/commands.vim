@@ -1,5 +1,18 @@
 """ Library of commands
 
+" Will place history in global input history instead of command history (which
+" may be a good thing in some cases), as well as offering direct control of
+" completions.
+function! Prompt(...)
+    if a:0 == 3
+        execute a:1 . input(a:1, a:2, a:3)
+    elseif a:0 == 2
+        execute a:1 . input(a:1, a:2, 'file')
+    elseif a:0 == 1
+        execute a:1 . input(a:1, '', 'file')
+    endif
+endfunction
+
 command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
 function! s:Mapall(...)
     execute 'noremap  ' . join(a:000)
@@ -86,6 +99,14 @@ function! s:SetVerbose(bang)
         set verbose=0 verbosefile=
         unlet! g:SetVerbose
     endif
+endfunction
+
+command! -nargs=* -complete=function -bar Time call <SID>Time(<f-args>)
+function! s:Time(...)
+    profile start /tmp/profile.vim
+    for pat in a:000
+        execute 'profile func ' . pat
+    endfor
 endfunction
 
 command! -bar SynStack call <SID>SynStack() "{{{1
@@ -416,7 +437,7 @@ function! s:Org(bang, ...)
 endfunction
 
 " Speak {{{1
-command! -nargs=1 -complete=command -bar Speak call system('speak ' . shellescape(<q-args>))
+command! -nargs=1 -bar Speak call system('speak ' . shellescape(<q-args>))
 
 " Interleave {{{1
 command! -bar -range Interleave

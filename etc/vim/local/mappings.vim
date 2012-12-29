@@ -292,10 +292,10 @@ noremap <Bar>    ?\V
 noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 
 " Simple command line aliases
-noremap <Leader>h     :<C-u>help<Space>
-noremap <Leader><C-t> :<C-u>Ctags<CR>
-noremap <4-!>         :<C-u>make!<CR>
-noremap <4-p>         :<C-u>SynStack<CR>
+noremap <Leader>h :<C-u>call Prompt('help ', '', 'help')<CR>
+noremap <Leader>T :<C-u>Ctags<CR>
+noremap <4-!>     :<C-u>make!<CR>
+noremap <4-p>     :<C-u>SynStack<CR>
 
 " Clear last match
 noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
@@ -323,17 +323,16 @@ Mapall <4-Bar> :<C-u>quit!<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
-noremap <Leader>sc       :<C-u>colorscheme<Space>
+noremap <Leader>sc       :<C-u>call Prompt('colorscheme ', '', 'color')<CR>
 noremap <Leader>?sc      :<C-u>colorscheme<CR>
-noremap <Leader>sf       :<C-u>setlocal foldmethod=manual
+noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'marker')<CR>
 noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
-noremap <Leader>sm       :<C-u>setlocal synmaxcol=1000
+noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '1000')<CR>
 noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
 noremap <Leader>st       :<C-u>SetTextwidth<Space>
 noremap <Leader>?st      :<C-u>SetTextwidth<CR>
 noremap <Leader>sw       :<C-u>SetWhitespace<Space>
 noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
-noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>SetDiff! \| SetDiff<CR>
@@ -344,11 +343,13 @@ noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
-noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
+noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
+noremap <Leader><C-t>    :<C-u>if v:profiling \| silent! execute '!(sleep 2; urxvt-client -e vim /tmp/profile.vim) &' \| quit! \| else \| call Prompt('Time ', '', 'function') \| endif<CR>
 noremap <Leader><C-v>    :<C-u>execute exists('g:SetVerbose') ? 'SetVerbose \| tabedit /tmp/verbose.vim' : 'SetVerbose!'<CR>
+noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
 " Open frequently edited files
-noremap <Leader>e<Space> :<C-u>tabedit<Space>
+noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
 noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
 noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
 noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
@@ -372,7 +373,7 @@ noremap <Leader>ex       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
 noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
 
 " Set filetype
-noremap <Leader>f<Space> :<C-u>setlocal filetype=
+noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>
 noremap <Leader>f?       :<C-u>setlocal filetype?<CR>
 noremap <Leader>fc       :<C-u>setlocal filetype=c<CR>
 noremap <Leader>fC       :<C-u>setlocal filetype=clojure<CR>
@@ -461,15 +462,15 @@ noremap <M-U> gUWW
 map!    <M-U> <C-\><C-o>gUW<C-\><C-o>W
 
 " Join lines
-noremap  <Leader><C-j> J
-inoremap <Leader><C-j> <C-\><C-o>J
+noremap  <Leader>j J
+inoremap <Leader>j <C-\><C-o>J
 
 " Select all
 nnoremap <4-a> VggoG
 vnoremap <4-a> <C-\><C-n>VggoG
 
 " Kill trailing whitespace
-noremap <silent> <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
+noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
 
 " REPLACE insertmode-go-to-normal-mode and command-line-insert-longest-match
 " with nothing for ASCII arrow
@@ -547,8 +548,8 @@ noremap <Leader>S :<C-u>Screen<CR>
 
 " Plugin: Manpageview
 noremap <Leader>K viwK
-noremap <Leader>m :<C-u>VEMan<Space>
-noremap <Leader>M :<C-u>HMan<Space>
+noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
+noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
 " Plugin: Align
 noremap <Leader>a<Space> :Align<Space>
@@ -560,8 +561,8 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: operator-camelize
 " RECURSIVE map for <Plug> mappings
-nmap <Leader><C-_> viw<Plug>(operator-camelize-toggle)
-vmap <Leader><C-_> <Plug>(operator-camelize-toggle)
+nmap <Leader>- viw<Plug>(operator-camelize-toggle)
+vmap <Leader>- <Plug>(operator-camelize-toggle)
 
 " Plugin: CtrlP
 Mapall <4-o> :<C-u>CtrlP<CR>
