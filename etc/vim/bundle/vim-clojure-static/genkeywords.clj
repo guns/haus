@@ -3,7 +3,7 @@
 ;; Vim keyword syntax generator for Clojure.
 ;; Functionality kept in a monolithic function for easy copy and paste.
 ;;
-;; Copyright (c) 2012 guns <self@sungpae.com>
+;; Copyright (c) 2012 Sung Pae <self@sungpae.com>
 ;; Distributed under the MIT license.
 ;; http://www.opensource.org/licenses/mit-license.php
 
@@ -48,7 +48,7 @@
                            (str "syntax keyword clojure" group \space
                                 (clojure.string/join \space (sort (names keywords)))))
                          builtins)]
-    (clojure.string/join \newline definitions)))
+    (str "\" Clojure " (clojure-version) \newline
+         (clojure.string/join \newline definitions))))
 
-(println (str "\" Clojure " (clojure-version) \newline
-              (vim-syntax-keywords)))
+(println (vim-syntax-keywords))
