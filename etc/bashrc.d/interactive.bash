@@ -1080,7 +1080,7 @@ githubget() {
     local user="$1" repo="$2" branch="${3:-master}"
     run curl -#L "https://github.com/$user/$repo/tarball/$branch"
 }
-
+HAVE git-hg && alias git-hg-pull='run git-hg pull --force --rebase'
 
 ### Ruby
 
