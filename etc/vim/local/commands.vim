@@ -5,12 +5,13 @@
 " completions.
 function! Prompt(...)
     if a:0 == 3
-        execute a:1 . input(a:1, a:2, a:3)
+        let buf = input(a:1, a:2, a:3)
     elseif a:0 == 2
-        execute a:1 . input(a:1, a:2, 'file')
+        let buf = input(a:1, a:2, 'file')
     elseif a:0 == 1
-        execute a:1 . input(a:1, '', 'file')
+        let buf = input(a:1, '', 'file')
     endif
+    if !empty(buf) | execute a:1 . buf | endif
 endfunction
 
 command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
@@ -230,8 +231,7 @@ command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! s:ScreenSetup(setup)
     let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
-    " FIXME: vim-sexpr
-    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'vab' : 'vip'
+    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'v<Plug>sexp_textobj_outer_form' : 'vip'
     let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':<C-u>call searchpair("(","",")","r")<CR>v%' : 'VggoG'
 
     if a:setup
