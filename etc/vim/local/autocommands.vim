@@ -29,6 +29,8 @@ augroup GUNS
         \ setlocal iskeyword+=-
     autocmd BufRead /tmp/verbose.vim
         \ silent! :%s/\V^I/	/g
+    autocmd BufRead /tmp/profile.vim
+        \ silent! :%s/\v[ \t\r]+$//
 
     " Diff {{{1
     autocmd FileType diff

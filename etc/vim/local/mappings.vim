@@ -344,7 +344,7 @@ noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
-noremap <Leader><C-t>    :<C-u>if v:profiling \| silent! execute '!(sleep 2; urxvt-client -e vim /tmp/profile.vim) &' \| quit! \| else \| call Prompt('Time ', '', 'function') \| endif<CR>
+noremap <Leader><C-t>    :<C-u>if v:profiling \| silent! execute '!(sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Time ', '', 'function') \| endif<CR>
 noremap <Leader><C-v>    :<C-u>execute exists('g:SetVerbose') ? 'SetVerbose \| tabedit /tmp/verbose.vim' : 'SetVerbose!'<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 

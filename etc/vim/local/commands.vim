@@ -105,7 +105,11 @@ command! -nargs=* -complete=function -bar Time call <SID>Time(<f-args>)
 function! s:Time(...)
     profile start /tmp/profile.vim
     for pat in a:000
-        execute 'profile func ' . pat
+        if pat =~# '\v^file:'
+            execute 'profile file ' . substitute(pat, '\vfile:(.*)', '\1', '')
+        else
+            execute 'profile func ' . pat
+        endif
     endfor
 endfunction
 
