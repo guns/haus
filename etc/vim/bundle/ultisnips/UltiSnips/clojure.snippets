@@ -875,7 +875,7 @@ endsnippet
 
 # http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
 snippet deb "debug" w
-(defmacro debug[x] \`(let [x# ~x] (println '~x "=" x#) x#))
+(defmacro debug [x] \`(let [x# ~x] (println '~x \\= x#) x#))
 endsnippet
 
 snippet CP "print classpath" w
