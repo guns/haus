@@ -207,7 +207,7 @@
    (bind "W-q" "Close")
    (bind "W-C-f" "ToggleMaximizeFull")
    (bind "W-C-m" "Iconify")
-   (bind "W-A-space" ["ShowMenu" [:menu "client-menu"]])
+   (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
    (bindfocus "W-F3" "♫ alsamixer ♫"
               "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
@@ -223,6 +223,7 @@
    (bindsh "W-C-S-Left" "mediactl prev")
    (bindsh "W-C-S-Right" "mediactl next")
    (bindsh "A-space" "xdotool click 3")
+   (bindsh "W-A-space" "xdotool click 2")
    ;; Application bindings
    (bindsh "W-C-t" "urxvt-client")
    (bindsh "W-C-g" "urxvt-client -e tmuxlaunch -g")
