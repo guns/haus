@@ -101,11 +101,21 @@ function! classpath#detect(...) abort
     return path
   else
     try
-      let out = foreplay#eval(
+      if &verbose
+        echomsg 'Determining class path with '.cmd.' ...'
+      endif
+      let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
+      let dir = getcwd()
+      try
+        execute cd . fnameescape(root)
+        let out = foreplay#eval(
             \ '(require `clojure.repl)' .
             \ '(clojure.string/join ":"' .
             \ '  (map #(clojure.string/replace (.getPath %) #"/\z" "")' .
             \ '       (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))))')
+      finally
+        execute cd . fnameescape(dir)
+      endtry
     catch /^Vim:Interrupt/
       return default
     endtry

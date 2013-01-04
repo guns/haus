@@ -19,7 +19,7 @@ augroup foreplay_file_type
 augroup END
 
 " }}}1
-" Shell escaping {{{1
+" Escaping {{{1
 
 function! foreplay#shellesc(arg) abort
   if a:arg =~ '^[A-Za-z0-9_/.-]\+$'
@@ -36,8 +36,24 @@ function! foreplay#shellesc(arg) abort
   endif
 endfunction
 
+function! s:str(string)
+  return '"' . escape(a:string, '"\') . '"'
+endfunction
+
 " }}}1
 " Completion {{{1
+
+let s:jar_contents = {}
+
+function! foreplay#jar_contents(path) abort
+  if !has_key(s:jar_contents, a:path) && executable('zipinfo')
+    let s:jar_contents[a:path] = split(system('zipinfo -1 '.shellescape(a:path)), "\n")
+    if v:shell_error
+      return []
+    endif
+  endif
+  return copy(get(s:jar_contents, a:path, []))
+endfunction
 
 function! foreplay#eval_complete(A, L, P) abort
   let prefix = matchstr(a:A, '\%(.* \|^\)\%(#\=[\[{('']\)*')
@@ -47,12 +63,9 @@ endfunction
 
 function! foreplay#ns_complete(A, L, P) abort
   let matches = []
-  for dir in classpath#split(classpath#from_vim(&path))
-    if dir =~# '\.jar$' && executable('zipinfo')
-      let files = split(system('zipinfo -1 '.shellescape(dir).' "*.clj"'), "\n")
-      if v:shell_error
-        let files = []
-      endif
+  for dir in foreplay#client().path()
+    if dir =~# '\.jar$'
+      let files = filter(foreplay#jar_contents(dir), 'v:val =~# "\\.clj$"')
     else
       let files = split(glob(dir."/**/*.clj", 1), "\n")
       call map(files, 'v:val[strlen(dir)+1 : -1]')
@@ -125,6 +138,10 @@ function! s:qsym(symbol)
   endif
 endfunction
 
+function! s:repl.path() dict abort
+  return self.connection.path()
+endfunction
+
 function! s:repl.eval(expr, ns) dict abort
   try
     let result = self.connection.eval(a:expr, a:ns)
@@ -148,7 +165,7 @@ endfunction
 
 function! s:repl.includes_file(file) dict abort
   let file = substitute(a:file, '\C^zipfile:\(.*\)::', '\1/', '')
-  for path in self.connection.path()
+  for path in self.path()
     if file[0 : len(path)-1] ==? path
       return 1
     endif
@@ -256,8 +273,13 @@ endif
 
 let s:oneoff = {}
 
+function! s:oneoff.path() dict abort
+  return classpath#split(classpath#from_vim(self.classpath))
+endfunction
+
 let s:oneoff_pr  = tempname()
 let s:oneoff_ex  = tempname()
+let s:oneoff_stk = tempname()
 let s:oneoff_in  = tempname()
 let s:oneoff_out = tempname()
 let s:oneoff_err = tempname()
@@ -276,27 +298,30 @@ function! s:oneoff.eval(expr, ns) dict abort
   endif
   call writefile([], s:oneoff_pr, 'b')
   call writefile([], s:oneoff_ex, 'b')
+  call writefile([], s:oneoff_stk, 'b')
   call writefile(split('(do '.a:expr.')', "\n"), s:oneoff_in, 'b')
   call writefile([], s:oneoff_out, 'b')
   call writefile([], s:oneoff_err, 'b')
   let command = g:java_cmd.' -cp '.shellescape(self.classpath).' clojure.main -e ' .
         \ foreplay#shellesc(
-        \   '(binding [*out* (java.io.FileWriter. "'.s:oneoff_out.'")' .
-        \   '          *err* (java.io.FileWriter. "'.s:oneoff_err.'")]' .
+        \   '(binding [*out* (java.io.FileWriter. '.s:str(s:oneoff_out).')' .
+        \   '          *err* (java.io.FileWriter. '.s:str(s:oneoff_err).')]' .
         \   '  (try' .
-        \   '    (require ''clojure.repl) '.ns.'(spit "'.s:oneoff_pr.'" (pr-str (eval (read-string (slurp "'.s:oneoff_in.'")))))' .
+        \   '    (require ''clojure.repl) '.ns.'(spit '.s:str(s:oneoff_pr).' (pr-str (eval (read-string (slurp '.s:str(s:oneoff_in).')))))' .
         \   '    (catch Exception e' .
         \   '      (spit *err* (.toString e))' .
-        \   '      (spit "'.s:oneoff_ex.'" (class e))))' .
+        \   '      (spit '.s:str(s:oneoff_ex).' (class e))' .
+        \   '      (spit '.s:str(s:oneoff_stk).' (apply str (interpose "\n" (.getStackTrace e))))))' .
         \   '  nil)')
   let wtf = system(command)
   let result = {}
   let result.value = join(readfile(s:oneoff_pr, 'b'), "\n")
   let result.out   = join(readfile(s:oneoff_out, 'b'), "\n")
   let result.err   = join(readfile(s:oneoff_err, 'b'), "\n")
-  let result.ex    = join(readfile(s:oneoff_err, 'b'), "\n")
-  call filter(result, 'v:val !=# ""')
-  if v:shell_error && result.ex ==# ''
+  let result.ex    = join(readfile(s:oneoff_ex, 'b'), "\n")
+  let result.stacktrace = readfile(s:oneoff_stk)
+  call filter(result, '!empty(v:val)')
+  if v:shell_error && get(result, 'ex', '') ==# ''
     throw 'Error running Clojure: '.wtf
   else
     return result
@@ -693,6 +718,10 @@ function! s:Edit(cmd, keyword) abort
   return 'echoerr v:errmsg'
 endfunction
 
+nnoremap <silent> <Plug>ForeplayDjump :<C-U>exe <SID>Edit('edit', expand('<cword>'))<CR>
+nnoremap <silent> <Plug>ForeplayDsplit :<C-U>exe <SID>Edit('split', expand('<cword>'))<CR>
+nnoremap <silent> <Plug>ForeplayDtabjump :<C-U>exe <SID>Edit('tabedit', expand('<cword>'))<CR>
+
 augroup foreplay_source
   autocmd!
   autocmd FileType clojure setlocal includeexpr=tr(v:fname,'.-','/_')
@@ -700,11 +729,11 @@ augroup foreplay_source
   autocmd FileType clojure setlocal define=^\\s*(def\\w*
   autocmd FileType clojure command! -bar -buffer -nargs=1 -complete=customlist,foreplay#eval_complete Djump  :exe s:Edit('edit', <q-args>)
   autocmd FileType clojure command! -bar -buffer -nargs=1 -complete=customlist,foreplay#eval_complete Dsplit :exe s:Edit('split', <q-args>)
-  autocmd FileType clojure nnoremap <silent><buffer> [<C-D>     :<C-U>exe <SID>Edit('edit', expand('<cword>'))<CR>
-  autocmd FileType clojure nnoremap <silent><buffer> ]<C-D>     :<C-U>exe <SID>Edit('edit', expand('<cword>'))<CR>
-  autocmd FileType clojure nnoremap <silent><buffer> <C-W><C-D> :<C-U>exe <SID>Edit('split', expand('<cword>'))<CR>
-  autocmd FileType clojure nnoremap <silent><buffer> <C-W>d     :<C-U>exe <SID>Edit('split', expand('<cword>'))<CR>
-  autocmd FileType clojure nnoremap <silent><buffer> <C-W>gd    :<C-U>exe <SID>Edit('tabedit', expand('<cword>'))<CR>
+  autocmd FileType clojure nmap <buffer> [<C-D>     <Plug>ForeplayDjump
+  autocmd FileType clojure nmap <buffer> ]<C-D>     <Plug>ForeplayDjump
+  autocmd FileType clojure nmap <buffer> <C-W><C-D> <Plug>ForeplayDsplit
+  autocmd FileType clojure nmap <buffer> <C-W>d     <Plug>ForeplayDsplit
+  autocmd FileType clojure nmap <buffer> <C-W>gd    <Plug>ForeplayDtabedit
 augroup END
 
 " }}}1
@@ -800,7 +829,10 @@ function! foreplay#ns() abort
   while lnum < line('$') && getline(lnum) =~# '^\s*\%(;.*\)\=$'
     let lnum += 1
   endwhile
-  let ns = matchstr(getline(lnum), '\C^(in-ns ''\zs\k\+\ze)')
+  let lines = join(getline(lnum, lnum+10), ' ')
+  let lines = substitute(lines, '"\%(\\.\|[^"]\)*"', '', 'g')
+  let lines = substitute(lines, '\^\={[^{}]*}', '', '')
+  let ns = matchstr(lines, '\C^(\s*\%(in-ns\s*''\|ns\s\+\)\zs[A-Za-z0-9_?*!+/=<>.-]\+\ze')
   if ns !=# ''
     return ns
   endif
@@ -808,10 +840,10 @@ function! foreplay#ns() abort
   return s:tons(path ==# '' ? 'user' : path)
 endfunction
 
-function! s:Lookup(macro, arg) abort
+function! s:Lookup(ns, macro, arg) abort
   " doc is in clojure.core in older Clojure versions
   try
-    call foreplay#eval("(eval (list (if (ns-resolve 'clojure.core '".a:macro.") '".a:macro." 'clojure.repl/".a:macro.") '".a:arg.'))')
+    call foreplay#eval("(require '".a:ns.") (eval (list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
   catch /^Clojure:/
   catch /.*/
     echohl ErrorMSG
@@ -842,11 +874,11 @@ function! s:Apropos(pattern) abort
   else
     let pattern = '"' . a:pattern . '"'
   endif
-  let matches = foreplay#evalparse('(apropos '.pattern.')')
+  let matches = foreplay#evalparse('(clojure.repl/apropos '.pattern.')')
   if empty(matches)
     return ''
   endif
-  let choice = s:inputlist('Lookup docs for:', matches)
+  let choice = s:inputlist('Look up docs for:', matches)
   if choice !=# ''
     return 'echo "\n"|Doc '.choice
   else
@@ -856,7 +888,7 @@ endfunction
 
 function! s:K()
   let word = expand('<cword>')
-  let java_candidate = matchstr(word, '^\%(\w\+\.\)*\u\w*\ze\%(\.\|\/\w\+\)\=$')
+  let java_candidate = matchstr(word, '^\%(\w\+\.\)*\u\l\w*\ze\%(\.\|\/\w\+\)\=$')
   if java_candidate !=# ''
     return 'Javadoc '.java_candidate
   else
@@ -864,16 +896,19 @@ function! s:K()
   endif
 endfunction
 
+nnoremap <Plug>ForeplayK :<C-R>=<SID>K()<CR><CR>
+nnoremap <Plug>ForeplaySource :Source <C-R><C-W><CR>
+
 augroup foreplay_doc
   autocmd!
-  autocmd FileType clojure nnoremap <buffer> K  :<C-R>=<SID>K()<CR><CR>
-  autocmd FileType clojure nnoremap <buffer> [d :Source <C-R><C-W><CR>
-  autocmd FileType clojure nnoremap <buffer> ]d :Source <C-R><C-W><CR>
+  autocmd FileType clojure nmap <buffer> K  <Plug>ForeplayK
+  autocmd FileType clojure nmap <buffer> [d <Plug>ForeplaySource
+  autocmd FileType clojure nmap <buffer> ]d <Plug>ForeplaySource
   autocmd FileType clojure command! -buffer -nargs=1 Apropos :exe s:Apropos(<q-args>)
-  autocmd FileType clojure command! -buffer -nargs=1 FindDoc :exe s:Lookup('find-doc', printf('#"%s"', <q-args>))
-  autocmd FileType clojure command! -buffer -bar -nargs=1 Javadoc :exe s:Lookup('javadoc', <q-args>)
-  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Doc     :exe s:Lookup('doc', <q-args>)
-  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Source  :exe s:Lookup('source', <q-args>)
+  autocmd FileType clojure command! -buffer -nargs=1 FindDoc :exe s:Lookup('clojure.repl', 'find-doc', printf('#"%s"', <q-args>))
+  autocmd FileType clojure command! -buffer -bar -nargs=1 Javadoc :exe s:Lookup('clojure.java.javadoc', 'javadoc', <q-args>)
+  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Doc     :exe s:Lookup('clojure.repl', 'doc', <q-args>)
+  autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Source  :exe s:Lookup('clojure.repl', 'source', <q-args>)
 augroup END
 
 " }}}1
@@ -905,11 +940,11 @@ function! s:leiningen_connect()
   endif
   let portfile = b:leiningen_root . '/target/repl-port'
   if getfsize(portfile) > 0 && getftime(portfile) !=# get(s:leiningen_repl_ports, b:leiningen_root, -1)
-    let port = readfile(portfile, 'b', 1)[0]
+    let port = matchstr(readfile(portfile, 'b', 1)[0], '\d\+')
     let s:leiningen_repl_ports[b:leiningen_root] = getftime(portfile)
     try
       call s:register_connection(nrepl#foreplay_connection#open(port), b:leiningen_root)
-    catch /^nREPL: Connection/
+    catch /^nREPL: .*[Cc]onnection/
       call delete(portfile)
     endtry
   endif
