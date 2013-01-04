@@ -38,12 +38,6 @@ task :env do
       },
 
       {
-        :base => "#{@src}/READONLY/drip",
-        :branch => %w[master],
-        :files => { 'bin/drip' => 'bin/drip' }
-      },
-
-      {
         :base   => "#{@src}/password-store",
         :branch => %w[master guns],
         :push   => 'github',
