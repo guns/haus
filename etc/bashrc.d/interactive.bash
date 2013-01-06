@@ -1017,11 +1017,11 @@ ALIAS tm='tmux' && {
         echo "$vars"
         eval "$vars"
     }
-
-    envtmux() {
-        run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
-    }; TCOMP exec envtmux
 }
+
+envtmux() {
+    run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
+}; TCOMP exec envtmux
 
 # GNU screen
 HAVE screen && {
