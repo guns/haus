@@ -18,7 +18,6 @@ class Minecraft
     @options = OpenStruct.new opts
     options.memory ||= 256
     options.gamedir ||= '/srv/games/minecraft'
-    options.world ||= 'default'
   end
 
   def parser
@@ -44,7 +43,7 @@ class Minecraft
         options.memory = arg
       end
 
-      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found. [DEFAULT: %s]' % options.world do |arg|
+      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found.' % options.world do |arg|
         options.world = arg
       end
 
@@ -97,8 +96,8 @@ class Minecraft
     FileUtils.ln_s default_savedir, File.join(gamedir, 'world')
   end
 
-  def setup_world!
-    src = File.join savedir, options.world
+  def setup_world! name
+    src = File.join savedir, name
     dst = File.join gamedir, 'world'
 
     FileUtils.rm_f dst
@@ -137,7 +136,7 @@ class Minecraft
   def start_server!
     raise 'Minecraft directory is locked! Remove %s to override.' if File.exists? pidfile
 
-    setup_world!
+    setup_world! options.world if options.world
 
     if options.debug
       fork_server_and_wait :debug => true
