@@ -1,0 +1,2 @@
+# Disable timeouts and force passwords every time
+Defaults timestamp_timeout = 0
