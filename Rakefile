@@ -29,7 +29,7 @@ task :env do
     'programs' => [
       {
         :base   => "#{@src}/leiningen",
-        :branch => %w[drip],
+        :branch => %w[master],
         :files  => {
           'bin/lein'             => 'bin/lein',
           'doc/lein.1'           => 'share/man/man1/lein.1',
