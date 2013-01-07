@@ -136,7 +136,7 @@ task :env do
       { :base => "#{@vim}/vim-coffee-script",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-eunuch",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-foreplay",           :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-foreplay",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-git",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",               :branch => %w[master],      :files => :pathogen },

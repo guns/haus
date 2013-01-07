@@ -1,4 +1,4 @@
-" classpath.vim - Manipulate the Java class path
+" autoload/classpath.vim
 " Maintainer:   Tim Pope <http://tpo.pe>
 
 if exists("g:autoloaded_classpath")
@@ -108,11 +108,7 @@ function! classpath#detect(...) abort
       let dir = getcwd()
       try
         execute cd . fnameescape(root)
-        let out = foreplay#eval(
-            \ '(require `clojure.repl)' .
-            \ '(clojure.string/join ":"' .
-            \ '  (map #(clojure.string/replace (.getPath %) #"/\z" "")' .
-            \ '       (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))))')
+        let out = system(cmd)
       finally
         execute cd . fnameescape(dir)
       endtry
