@@ -32,17 +32,17 @@ set history=1023                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 
 " Temporary files
-if !isdirectory(expand('~/.vimtmp/undo'))
-    call mkdir(expand('~/.vimtmp/undo'), 'p', 0700)
+if !isdirectory(expand('~/.cache/vim/undo'))
+    call mkdir(expand('~/.cache/vim/undo'), 'p', 0700)
 endif
-if isdirectory(expand('~/.vimtmp'))
-    set directory=~/.vimtmp
-    set viminfo+=n~/.vimtmp/viminfo
-    let g:netrw_home = expand('~/.vimtmp')
+if isdirectory(expand('~/.cache/vim'))
+    set directory=~/.cache/vim
+    set viminfo+=n~/.cache/vim/viminfo
+    let g:netrw_home = expand('~/.cache/vim')
 endif
-if has('persistent_undo') && isdirectory(expand('~/.vimtmp/undo'))
+if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
     set undofile
-    set undodir=~/.vimtmp/undo
+    set undodir=~/.cache/vim/undo
 endif
 
 " Searching / Matching
@@ -172,7 +172,7 @@ let g:clojure_align_multiline_strings = 1
 let g:clojure_fuzzy_indent_patterns = "with.*,def.*,let.*,.*ing"
 
 " Plugin: NERDTree
-let g:NERDTreeBookmarksFile = expand('~/.vimtmp/NERDTreeBookmarks')
+let g:NERDTreeBookmarksFile = expand('~/.cache/vim/NERDTreeBookmarks')
 let g:NERDChristmasTree = 1
 let g:NERDTreeChDirMode = 2
 let g:NERDTreeDirArrows = 1
@@ -234,7 +234,7 @@ let g:ctrlp_match_window_reversed = 0
 let g:ctrlp_max_height = 30
 let g:ctrlp_switch_buffer = 'et'
 let g:ctrlp_working_path_mode = 0
-let g:ctrlp_cache_dir = expand('~/.vimtmp/ctrlp')
+let g:ctrlp_cache_dir = expand('~/.cache/vim/ctrlp')
 let g:ctrlp_clear_cache_on_exit = 0
 let g:ctrlp_user_command = ['.git', 'git ls-files %s -co --exclude-standard']
 let g:ctrlp_max_history = 0
