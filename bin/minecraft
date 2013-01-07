@@ -14,6 +14,7 @@ class Minecraft
 
   def initialize opts = {}
     @options = OpenStruct.new opts
+    options.jar ||= :server
     options.memory ||= 256
     options.gamedir ||= '/srv/games/minecraft'
   end
@@ -32,6 +33,10 @@ class Minecraft
 
         Options:
       BANNER
+
+      opt.on '-b', '--bukkit', 'Load craftbukkit.jar' do
+        options.jar = :bukkit
+      end
 
       opt.on '-g', '--gamedir PATH', 'Path to minecraft directory [DEFAULT: %s]' % options.gamedir do |arg|
         options.gamedir = File.expand_path arg
@@ -67,17 +72,14 @@ class Minecraft
     File.join gamedir, 'minecraft.pid'
   end
 
-  def server_jar
-    File.join gamedir, 'minecraft_server.jar'
-  end
-
-  def bukkit_jar
-    File.join gamedir, 'craftbukkit.jar'
+  def jar_paths
+    { :server => File.join(gamedir, 'minecraft_server.jar'),
+      :bukkit => File.join(gamedir, 'craftbukkit.jar') }
   end
 
   def jar_urls
-    { server_jar => 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar',
-      bukkit_jar => 'http://dl.bukkit.org/latest-rb/craftbukkit.jar' }
+    { :server => 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar',
+      :bukkit => 'http://dl.bukkit.org/latest-rb/craftbukkit.jar' }
   end
 
   def write_pidfile pid
@@ -99,8 +101,8 @@ class Minecraft
   def setup_minecraft!
     raise 'Game directory "%s" does not exist!' % gamedir unless Dir.exists? gamedir
 
-    jar_urls.each do |path, url|
-      system 'curl', '-#L', '-o', path, url
+    jar_urls.each do |key, url|
+      system 'curl', '-#L', '-o', jar_paths[key], url
     end
 
     default_savedir = File.join gamedir, 'saves', 'default'
@@ -155,9 +157,9 @@ class Minecraft
     setup_world! options.world if options.world
 
     if options.debug
-      fork_server_and_wait server_jar, options.memory, :debug => options.debug
+      fork_server_and_wait jar_paths[options.jar], options.memory, :debug => options.debug
     else
-      Process.detach fork { fork_server_and_wait server_jar, options.memory }
+      Process.detach fork { fork_server_and_wait jar_paths[options.jar], options.memory }
     end
   end
 
@@ -181,7 +183,7 @@ class Minecraft
     args = parser.parse arguments
     abort parser.help unless args.size == 1
 
-    setup_minecraft! if options.update or not File.exists? server_jar
+    setup_minecraft! if options.update or not File.exists? jar_paths[options.jar]
 
     case args.first
     when 'start'   then start_server!
