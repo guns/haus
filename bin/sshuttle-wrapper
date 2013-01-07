@@ -39,8 +39,8 @@ class SshuttleWrapper
         options.commands << arg
       end
 
-      opt.on '-i', '--iptables-only', 'Setup outgoing firewall only' do
-        options.iptables_only = true
+      opt.on '-f', '--firewall-only', 'Setup outgoing iptables rules only' do
+        options.firewall_only = true
       end
 
       opt.on '-p', '--port N', Integer, 'Local proxy port [DEFAULT: %s]' % options.port do |arg|
@@ -125,7 +125,7 @@ class SshuttleWrapper
 
     iptables_secure_outgoing host, port
 
-    return if options.iptables_only
+    return if options.firewall_only
 
     start_server ssh_host, xargs do
       options.commands.each { |cmd| sh cmd }
