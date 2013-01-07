@@ -105,9 +105,9 @@ class Minecraft
     FileUtils.ln_s src, dst
   end
 
-  def fork_server_and_wait opts = {}
+  def fork_server_and_wait jar, memory, opts = {}
     Dir.chdir gamedir do
-      cmd = %W[java -Xms#{options.memory}M -Xmx#{options.memory}M -jar #{File.basename server_jar} nogui]
+      cmd = %W[java -Xms#{memory}M -Xmx#{memory}M -jar #{jar} nogui]
 
       begin
         pid = fork do
@@ -134,14 +134,16 @@ class Minecraft
   end
 
   def start_server!
-    raise 'Minecraft directory is locked! Remove %s to override.' if File.exists? pidfile
+    if File.exists? pidfile
+      raise 'Minecraft directory is locked! Remove %s to override.' % pidfile
+    end
 
     setup_world! options.world if options.world
 
     if options.debug
-      fork_server_and_wait :debug => true
+      fork_server_and_wait server_jar, options.memory, :debug => options.debug
     else
-      Process.detach fork { fork_server_and_wait }
+      Process.detach fork { fork_server_and_wait server_jar, options.memory }
     end
   end
 
