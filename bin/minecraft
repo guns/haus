@@ -17,6 +17,7 @@ class Minecraft
     options.jar ||= :server
     options.memory ||= 256
     options.gamedir ||= '/srv/games/minecraft'
+    options.umask ||= 0002
   end
 
   def parser
@@ -50,12 +51,16 @@ class Minecraft
         options.world = arg
       end
 
-      opt.on '-u', '--update', 'Update all server jars' do
+      opt.on '-u', '--update', 'Update server jars' do
         options.update = true
       end
 
       opt.on '-d', '--debug', 'Keep server process in foreground' do
         options.debug = true
+      end
+
+      opt.on '--umask OCTAL', 'Set process umask in octal [DEFAULT: %03o]' % options.umask do |arg|
+        options.umask = arg.to_i 8
       end
     end
   end
@@ -133,6 +138,7 @@ class Minecraft
             $stderr.reopen '/dev/null'
             Process.setsid
           end
+          File.umask opts[:umask] if opts[:umask]
           exec *cmd
         end
 
@@ -157,9 +163,9 @@ class Minecraft
     setup_world! options.world if options.world
 
     if options.debug
-      fork_server_and_wait jar_paths[options.jar], options.memory, :debug => options.debug
+      fork_server_and_wait jar_paths[options.jar], options.memory, :umask => options.umask, :debug => options.debug
     else
-      Process.detach fork { fork_server_and_wait jar_paths[options.jar], options.memory }
+      Process.detach fork { fork_server_and_wait jar_paths[options.jar], options.memory, :umask => options.umask }
     end
   end
 
