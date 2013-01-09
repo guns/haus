@@ -30,6 +30,7 @@ CHANNELS = {
     #git
     #nginx
     #archlinux
+    #archlinux-arm
     #openssl
     #rxvt-unicode
     #ruby
