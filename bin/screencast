@@ -93,7 +93,7 @@ class Screencast
     # http://ubuntuforums.org/showthread.php?t=1392026
     system *%W[
       ffmpeg
-      -f alsa -i hw:0,0 -ac 2
+      -f alsa -ac 2 -i pulse
       -f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}
       -acodec pcm_s16le -vcodec libx264
       -preset ultrafast -tune animation -crf 0
