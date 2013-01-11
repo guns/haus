@@ -1490,6 +1490,9 @@ elif __LINUX__; then
                 dst = "/var/abs/local/%s" % File.basename(src)
                 system *%W[git init #{dst}] unless Dir.exists? dst
                 system *%W[rsync -av --delete --exclude=/.git #{src}/ #{dst}/]
+                Dir.chdir dst do
+                    system "git add .; git commit -m init"
+                end
             end
         ' -- "$@"
     }
