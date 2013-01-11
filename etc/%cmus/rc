@@ -42,7 +42,7 @@ bind -f common ^B win-page-up
 bind -f common ^E win-add-q
 bind -f common ^F win-page-down
 bind -f common ^L refresh
-bind -f common ^R update-cache
+bind -f common ^R shell cmus-remote --raw update-cache; cmus-remote -l ~/Media/Music
 bind -f common a win-add-p
 bind -f common c toggle continue
 bind -f common d win-remove
