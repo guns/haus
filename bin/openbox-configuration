@@ -82,7 +82,7 @@
 
 (defn bindsh [key command]
   (let [command (if (coll? command)
-                  (format "/bin/sh -c \"%s\"" (string/join "; " command))
+                  (format "/bin/bash -c \"%s\"" (string/join "; " command))
                   command)]
     (bind key ["Execute" [:command (hiccup/h command)]])))
 
@@ -211,6 +211,9 @@
    ;; Hardware / Media control
    (bindfocus "W-F3" "♫ alsamixer ♫"
               "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"
+                   "killall volumeicon"
+                   "volumeicon &"])
    (bindsh "F3" "xdotool key XF86AudioMute")
    (bindsh "F4" "xdotool key XF86AudioLowerVolume")
    (bindsh "F5" "xdotool key XF86AudioRaiseVolume")
