@@ -20,22 +20,21 @@ include Script::Skeleton
 CHANNELS = {
   :freenode => %w[
     #vim
+    #clojure
+    #archlinux
+    #rxvt-unicode
+    #archlinux-arm
+    #leiningen
     #emacs
     #mutt
-    #clojure
-    #leiningen
     #tmux
-    ##English
     #bash
     #git
     #nginx
-    #archlinux
-    #archlinux-arm
     #openssl
-    #rxvt-unicode
     #ruby
     #ruby-lang
-    #RubyOnRails
+    ##English
   ],
 
   :mozilla => %w[
