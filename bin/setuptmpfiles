@@ -102,29 +102,33 @@ class Setuptmpfiles
   end
 
   def move_tmpfiles home
-    tmpfiles(home).each do |type, fs|
-      fs.each do |dst|
-        dst = File.expand_path dst
-        src = File.expand_path File.join(tmpdir(home), dst.sub(%r{\A#{Regexp.escape home}/}, ''))
+    Process.wait fork {
+      File.umask 0077
 
-        next if File.symlink? dst and File.expand_path(File.readlink(dst), File.dirname(dst)) == src and File.exists? src
+      tmpfiles(home).each do |type, fs|
+        fs.each do |dst|
+          dst = File.expand_path dst
+          src = File.expand_path File.join(tmpdir(home), dst.sub(%r{\A#{Regexp.escape home}/}, ''))
 
-        FileUtils.mkdir_p File.dirname(src), fopts
+          next if File.symlink? dst and File.expand_path(File.readlink(dst), File.dirname(dst)) == src and File.exists? src
 
-        if File.exists? dst and not File.symlink? dst
-          FileUtils.rm_rf src, fopts
-          FileUtils.mv dst, src, fopts
-        else
-          FileUtils.rm_rf dst, fopts
-          FileUtils.mkdir_p File.dirname(dst), fopts
-          FileUtils.send (type == 'directory' ? :mkdir_p : :touch), src, fopts
+          FileUtils.mkdir_p File.dirname(src), fopts
+
+          if File.exists? dst and not File.symlink? dst
+            FileUtils.rm_rf src, fopts
+            FileUtils.mv dst, src, fopts
+          else
+            FileUtils.rm_rf dst, fopts
+            FileUtils.mkdir_p File.dirname(dst), fopts
+            FileUtils.send (type == 'directory' ? :mkdir_p : :touch), src, fopts
+          end
+
+          relsrc = relative_path src, dst
+          puts '%s -> %s' % [dst, relsrc]
+          FileUtils.ln_s relsrc, dst, fopts
         end
-
-        relsrc = relative_path src, dst
-        puts '%s -> %s' % [dst, relsrc]
-        FileUtils.ln_s relsrc, dst, fopts
       end
-    end
+    }
   end
 
   def as_user user
