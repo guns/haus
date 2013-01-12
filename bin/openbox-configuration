@@ -211,9 +211,7 @@
    ;; Hardware / Media control
    (bindfocus "W-F3" "♫ alsamixer ♫"
               "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
-   (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"
-                   "killall volumeicon"
-                   "volumeicon &"])
+   (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"])
    (bindsh "F3" "xdotool key XF86AudioMute")
    (bindsh "F4" "xdotool key XF86AudioLowerVolume")
    (bindsh "F5" "xdotool key XF86AudioRaiseVolume")
