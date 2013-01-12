@@ -212,9 +212,10 @@
    (bindfocus "W-F3" "♫ alsamixer ♫"
               "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
    (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"])
-   (bindsh "F3" "xdotool key XF86AudioMute")
-   (bindsh "F4" "xdotool key XF86AudioLowerVolume")
-   (bindsh "F5" "xdotool key XF86AudioRaiseVolume")
+   (let [launch "if ! killall -0 volumeicon; then volumeicon & fi"]
+     (list (bindsh "F3" [launch "xdotool key XF86AudioMute"])
+           (bindsh "F4" [launch "xdotool key XF86AudioLowerVolume"])
+           (bindsh "F5" [launch "xdotool key XF86AudioRaiseVolume"])))
    (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
    (bindsh "F6" "hwctl backlight -5")
    (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
