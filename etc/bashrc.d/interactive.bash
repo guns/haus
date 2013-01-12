@@ -1512,9 +1512,14 @@ ALIAS geometry='identify -format "%w %h"'
 
 # feh
 HAVE feh && {
-    fehbg() { feh --bg-fill "$(expand_path "$1")"; }
     fshow() { feh --recursive "${@:-.}"; }; TCOMP feh fshow
     frand() { feh --recursive --randomize "${@:-.}"; }; TCOMP feh fshow
+    fehbg() {
+        ruby -r shellwords -e '
+            source = File.expand_path ARGV.first || File.read(File.expand_path "~/.fehbg").shellsplit.last
+            system "feh", "--bg-fill", source
+        ' -- "$@"
+    }
     ftime() {
         ruby -r set -e '
             args = ARGV.empty? ? ["."] : ARGV
