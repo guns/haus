@@ -159,12 +159,7 @@ class Setuptmpfiles
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.empty?
-
-    if options.list
-      list_tmpfiles
-    else
-      setup!
-    end
+    options.list ? list_tmpfiles : setup!
   end
 end
 
