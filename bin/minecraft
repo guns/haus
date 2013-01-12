@@ -128,7 +128,7 @@ class Minecraft
       begin
         pid = fork do
           unless opts[:debug]
-            $stdin.reopen '/dev/null'
+            $stdin.reopen opts[:stdin] || '/dev/null'
             $stdout.reopen '/dev/null'
             $stderr.reopen '/dev/null'
             Process.setsid
@@ -149,17 +149,30 @@ class Minecraft
     end
   end
 
+  def with_fifo
+    path = File.join gamedir, 'stdin'
+    system 'mkfifo', '--mode=0660', path
+    writer = File.open path, 'r+'
+    yield writer
+  ensure
+    writer.close
+    FileUtils.rm_f path
+  end
+
   def start_server!
-    if File.exists? pidfile
-      raise 'Minecraft directory is locked! Remove %s to override.' % pidfile
-    end
+    raise 'Minecraft directory is locked!' if File.exists? pidfile
 
     setup_world! options.world if options.world
 
     if options.debug
       fork_server_and_wait jar_paths[options.jar], options.memory, :debug => options.debug
     else
-      Process.detach fork { fork_server_and_wait jar_paths[options.jar], options.memory }
+      Process.detach fork {
+        # Keep a channel open for the SysOp
+        with_fifo do |fifo|
+          fork_server_and_wait jar_paths[options.jar], options.memory, :stdin => fifo
+        end
+      }
     end
   end
 
