@@ -162,6 +162,16 @@ function! DiffFoldExpr(lnum) "{{{1
     endif
 endfunction
 
+function! RubyFoldExpr(lnum) "{{{1
+    if getline(a:lnum) =~# '\v^\s*def'
+        return '>1'
+    elseif getline(a:lnum + 1) =~# '\v^\s*#'
+        return 's1'
+    else
+        return '='
+    endif
+endfunction
+
 function! RakefileFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^\s*<task>'
         return '>1'
@@ -179,7 +189,7 @@ function! VimscriptFoldExpr(lnum) "{{{1
     elseif line =~# '\v^\s*(fun|com)'
         return '>1'
     elseif line[0] == '"'
-        return '0'
+        return 's1'
     else
         return '='
     endif
