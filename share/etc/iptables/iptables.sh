@@ -34,14 +34,14 @@ test -x "$IPTABLES" || { echo "Could not execute $IPTABLES"; exit 1; }
 
 # Flush rules and delete non-default chains
 for TABLE in filter nat mangle raw security; do
-    $IPTABLES --table $TABLE --flush
-    $IPTABLES --table $TABLE --delete-chain
+    "$IPTABLES" --table $TABLE --flush
+    "$IPTABLES" --table $TABLE --delete-chain
 done
 
 # Default policies
-$IPTABLES --policy INPUT   DROP
-$IPTABLES --policy FORWARD DROP
-$IPTABLES --policy OUTPUT  ACCEPT
+"$IPTABLES" --policy INPUT   DROP
+"$IPTABLES" --policy FORWARD DROP
+"$IPTABLES" --policy OUTPUT  ACCEPT
 
 # Disable IPv6 until hell freezes over
 test -n "$IP6TABLES" || IP6TABLES=$(command -v ip6tables)
@@ -57,60 +57,60 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 }
 
 # Packet tracing / logging
-# $IPTABLES --table raw --append PREROUTING/OUTPUT [--match ...] --jump TRACE
-# $IPTABLES --new-chain LOGDROP
-# $IPTABLES --append    LOGDROP   --jump LOG
-# $IPTABLES --append    LOGDROP   --jump DROP
-# $IPTABLES --new-chain LOGACCEPT
-# $IPTABLES --append    LOGACCEPT --jump LOG
-# $IPTABLES --append    LOGACCEPT --jump ACCEPT
+# "$IPTABLES" --table raw --append PREROUTING/OUTPUT [--match ...] --jump TRACE
+# "$IPTABLES" --new-chain LOGDROP
+# "$IPTABLES" --append    LOGDROP   --jump LOG
+# "$IPTABLES" --append    LOGDROP   --jump DROP
+# "$IPTABLES" --new-chain LOGACCEPT
+# "$IPTABLES" --append    LOGACCEPT --jump LOG
+# "$IPTABLES" --append    LOGACCEPT --jump ACCEPT
 
 #
 # Core rules
 #
 
 # Stateful rule
-$IPTABLES --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+"$IPTABLES" --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
 
 # Loopback access
-$IPTABLES --append INPUT  --in-interface  lo --jump ACCEPT
-# $IPTABLES --append OUTPUT --out-interface lo --jump ACCEPT # Uncomment if OUTPUT policy is DROP
+"$IPTABLES" --append INPUT  --in-interface  lo --jump ACCEPT
+# "$IPTABLES" --append OUTPUT --out-interface lo --jump ACCEPT # Uncomment if OUTPUT policy is DROP
 
 # ICMP
-$IPTABLES --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
+"$IPTABLES" --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
 
 #
 # Security
 #
 
-$IPTABLES --append INPUT --match conntrack --ctstate INVALID --jump DROP
+"$IPTABLES" --append INPUT --match conntrack --ctstate INVALID --jump DROP
 
 #
 # Services
 #
 
 # Host based exception
-# $IPTABLES --append INPUT --source VMHOST --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --source VMHOST --match conntrack --ctstate NEW --jump ACCEPT
 
 # SSH
-# $IPTABLES --append INPUT --protocol tcp --dport 22 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 22 --match conntrack --ctstate NEW --jump ACCEPT
 
 # HTTP
-# $IPTABLES --append INPUT --protocol tcp --dport 80  --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol tcp --dport 443 --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol tcp --match multiport --dports 80,443 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 80  --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 443 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --match multiport --dports 80,443 --match conntrack --ctstate NEW --jump ACCEPT
 
 # NFS
-# $IPTABLES --append INPUT --protocol tcp --dport 111   --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol udp --dport 111   --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol tcp --dport 2049  --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol tcp --dport 32767 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 111   --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol udp --dport 111   --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 2049  --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --dport 32767 --match conntrack --ctstate NEW --jump ACCEPT
 
 # NTP
-# $IPTABLES --append INPUT --protocol udp --dport 123 --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol udp --dport 123 --jump ACCEPT
 
 # Samba
-# $IPTABLES --append INPUT --protocol tcp --match multiport --dports 139,445 --match conntrack --ctstate NEW --jump ACCEPT
-# $IPTABLES --append INPUT --protocol udp --match multiport --dports 137,138 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol tcp --match multiport --dports 139,445 --match conntrack --ctstate NEW --jump ACCEPT
+# "$IPTABLES" --append INPUT --protocol udp --match multiport --dports 137,138 --match conntrack --ctstate NEW --jump ACCEPT
 
 echo 'OK'
