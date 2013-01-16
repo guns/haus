@@ -1368,7 +1368,7 @@ ALIAS pclip='pass -c' && {
 ALIAS cs='cryptsetup' && {
     csmount() {
         (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
-        local name="$(sed 's:/$:: ; s:.*/::' <<< "$2")"
+        local name="$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$2")"
         if run cryptsetup luksOpen "$1" "$name"; then
             run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$2"
         fi
@@ -1491,7 +1491,7 @@ elif __LINUX__; then
     HAVE abs && abslocal() {
         ruby -e '
             ARGV.each do |src|
-                dst = "/var/abs/local/%s" % File.basename(src)
+                dst = "/var/abs/local/%s" % File.basename(File.expand_path src)
                 system *%W[git init #{dst}] unless Dir.exists? dst
                 system *%W[rsync -av --delete --exclude=/.git #{src}/ #{dst}/]
                 Dir.chdir dst do
