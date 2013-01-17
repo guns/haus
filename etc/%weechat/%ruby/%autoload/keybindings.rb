@@ -11,7 +11,7 @@ include Script::Skeleton
 @script = {
   :name        => 'keybindings',
   :author      => 'guns <self@sungpae.com>',
-  :version     => '0.1',
+  :version     => '1.0',
   :license     => 'GPL3',
   :gem_version => '0.0.5',
   :description => "Guns' personal keybindings"
@@ -64,6 +64,7 @@ KEYBINDINGS = {
   'ctrl-Xjm'    => "/join -server freenode #{CHANNELS[:mozilla].join ','}",
   'ctrl-Xm'     => '/input insert /msg ',
   'ctrl-Xn'     => '/input insert /msg NickServ ',
+  'ctrl-Xr'     => '/RELOADALL',
   'ctrl-Xs'     => '/input insert /list -re ',
   'ctrl-V'      => '/input grab_key_command',
   'meta-ctrl-?' => '/input delete_previous_word',
