@@ -339,3 +339,21 @@ task :service do
     end
   end
 end
+
+desc 'Update WeeChat scripts'
+task :weechat do
+  %w[
+    http://www.weechat.org/files/scripts/buffers.pl
+    http://www.weechat.org/files/scripts/launcher.pl
+    http://www.weechat.org/files/scripts/country.py
+    http://www.weechat.org/files/scripts/go.py
+    http://www.weechat.org/files/scripts/shell.py
+    http://www.weechat.org/files/scripts/toggle_nicklist.py
+  ].each do |url|
+    file = 'etc/%%weechat/%%%s/%%autoload/%s' % [
+      { '.pl' => 'perl', '.py' => 'python' }[File.extname url],
+      File.basename(url)
+    ]
+    sh 'curl', '-#L', '-o' + file, url
+  end
+end
