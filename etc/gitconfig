@@ -157,4 +157,5 @@
     st  = status --short
     fd  = clean -fd
     fdx = clean -fdx
+    rl  = reflog
     rp  = rev-parse
