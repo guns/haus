@@ -27,7 +27,7 @@ source "~/.mutt/mailing-lists"
 
 # Hooks
 folder-hook . 'set record="^"' # Save sent mail to current folder
-folder-hook . 'push <current-middle><refresh>'
+folder-hook . 'push <current-top><refresh>'
 
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
@@ -64,11 +64,11 @@ macro index,pager    \' <change-folder>?<toggle-mailboxes>
 bind  browser        \' exit
 
 # Movement
-macro $my_list,pager <Space> <next-page><middle-page>
-macro $my_list,pager \Cf     <next-page><middle-page>
-macro $my_list,pager f       <next-page><middle-page>
-macro $my_list,pager \Cb     <previous-page><middle-page>
-macro $my_list,pager b       <previous-page><middle-page>
+macro $my_list,pager <Space> <next-page>
+macro $my_list,pager \Cf     <next-page>
+macro $my_list,pager f       <next-page>
+macro $my_list,pager \Cb     <previous-page>
+macro $my_list,pager b       <previous-page>
 bind  $my_list,pager e       next-line
 bind  $my_list,pager \e\007e half-down
 bind  $my_list,pager y       previous-line
@@ -78,11 +78,11 @@ bind  $my_list,pager N       search-opposite
 bind  $my_list       zt      current-top
 bind  $my_list       zz      current-middle
 bind  $my_list       zb      current-bottom
-macro index,pager    <Tab>   <next-unread><current-middle>
-macro index,pager    ]       <next-unread><current-middle>
-macro index,pager    [       <previous-unread><current-middle>
-macro $my_list       \Cn     <next-thread><current-middle>
-macro $my_list       \Cp     <previous-thread><current-middle>
+macro index,pager    <Tab>   <next-unread>
+macro index,pager    ]       <next-unread>
+macro index,pager    [       <previous-unread>
+macro $my_list       \Cn     <next-thread>
+macro $my_list       \Cp     <previous-thread>
 bind  $my_list,pager \\      search
 
 # Actions
@@ -97,10 +97,10 @@ bind  index,pager E       edit
 bind  index,pager F       forward-message
 macro index,pager a       <save-entry>=Archive<enter>
 bind  index,pager A       create-alias
-macro index,pager \Cd     <delete-thread><current-middle>
-macro index,pager \Cu     <undelete-thread><current-middle>
-macro index,pager \Cr     <read-thread><current-middle>
-macro index,pager \Ct     <tag-thread><current-middle>
+macro index,pager \Cd     <delete-thread>
+macro index,pager \Cu     <undelete-thread>
+macro index,pager \Cr     <read-thread>
+macro index,pager \Ct     <tag-thread>
 bind  index,pager \es     flag-message
 bind  index       \et     untag-pattern
 macro index       \e\007a <tag-pattern>.<enter>
