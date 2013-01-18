@@ -1515,12 +1515,7 @@ ALIAS geometry='identify -format "%w %h"'
 HAVE feh && {
     fshow() { feh --recursive "${@:-.}"; }; TCOMP feh fshow
     frand() { feh --recursive --randomize "${@:-.}"; }; TCOMP feh fshow
-    fehbg() {
-        ruby -r shellwords -e '
-            source = File.expand_path ARGV.first || File.read(File.expand_path "~/.fehbg").shellsplit.last
-            system "feh", "--bg-fill", source
-        ' -- "$@"
-    }
+    fehbg() { feh --bg-fill "$1"; }
     ftime() {
         ruby -r set -e '
             args = ARGV.empty? ? ["."] : ARGV
@@ -1532,12 +1527,14 @@ HAVE feh && {
     }
     fmove() {
         ruby -r shellwords -e '
+            op = ARGV.first == "-c" ? (ARGV.shift; "cp") : "mv"
             dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
             abort "USAGE: fmove dir ..." if ARGV.empty? or dirs.count != ARGV.count
-            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "mv -- %F #{d.shellescape}"] }
-            exec "feh", "--theme", "gifs", "--draw-actions", *actions
+            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
+            exec "feh", "--draw-actions", *actions
         ' -- "$@"
     }
+    fcopy() { fmove -c "$@"; }
 }
 
 # cmus
