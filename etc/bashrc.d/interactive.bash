@@ -1513,16 +1513,16 @@ ALIAS geometry='identify -format "%w %h"'
 
 # feh
 HAVE feh && {
-    fshow() { feh --recursive "${@:-.}"; }; TCOMP feh fshow
-    frand() { feh --recursive --randomize "${@:-.}"; }; TCOMP feh fshow
-    fehbg() { feh --bg-fill "$1"; }
-    ftime() {
-        ruby -r set -e '
-            args = ARGV.empty? ? ["."] : ARGV
-            fs = args.reduce Set.new do |set, arg|
-                set.merge Dir[File.join(arg, "*")].reject { |f| File.directory? f }
+    ALIAS fshow='feh -r' \
+          frand='feh -rz' \
+          ftime='feh -Smtime'
+    fehbg() {
+        ruby -r shellwords -e '
+            if ARGV.empty?
+                system "feh", File.expand_path(File.read(File.expand_path "~/.fehbg").shellsplit.last)
+            else
+                system "feh", "--bg-fill", ARGV.first
             end
-            exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
     fmove() {
