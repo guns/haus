@@ -1376,7 +1376,7 @@ ALIAS cs='cryptsetup' && {
     csumount() {
         (($# == 1)) || { echo "USAGE: $FUNCNAME mountpoint"; return 1; }
         if run umount "$1"; then
-            run cryptsetup luksClose "$(sed 's:/$:: ; s:.*/::' <<< "$1")"
+            run cryptsetup luksClose "$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$1")"
         fi
     }; TCOMP umount csumount
     alias csdump='cryptsetup luksDump'
