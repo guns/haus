@@ -189,7 +189,7 @@ function! VimscriptFoldExpr(lnum) "{{{1
     elseif line =~# '\v^\s*(fun|com)'
         return '>1'
     elseif line[0] == '"'
-        return 's1'
+        return '0'
     else
         return '='
     endif
