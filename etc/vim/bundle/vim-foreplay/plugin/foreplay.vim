@@ -1,5 +1,5 @@
 " foreplay.vim - Clojure REPL tease
-" Maintainer:   Tim Pope <http://tpo.pe>
+" Maintainer:   Tim Pope <http://tpo.pe/>
 
 if exists("g:loaded_foreplay") || v:version < 700 || &cp
   finish
@@ -26,7 +26,10 @@ endfunction
 let s:jar_contents = {}
 
 function! foreplay#jar_contents(path) abort
-  if !has_key(s:jar_contents, a:path) && executable('zipinfo')
+  if !exists('s:zipinfo')
+    let s:zipinfo = executable('zipinfo')
+  endif
+  if !has_key(s:jar_contents, a:path) && s:zipinfo
     let s:jar_contents[a:path] = split(system('zipinfo -1 '.shellescape(a:path)), "\n")
     if v:shell_error
       return []
@@ -250,7 +253,7 @@ augroup END
 let s:oneoff = {}
 
 function! s:oneoff.path() dict abort
-  return classpath#split(classpath#from_vim(self.classpath))
+  return classpath#split(self.classpath)
 endfunction
 
 let s:oneoff_pr  = tempname()
@@ -267,7 +270,7 @@ function! s:oneoff.eval(expr, options) dict abort
     echohl None
   endif
   if a:options.ns !=# '' && a:options.ns !=# 'user'
-    let ns = '(require '.s:qsym(options).') (in-ns '.s:qsym(options).') '
+    let ns = '(require '.s:qsym(a:options.ns).') (in-ns '.s:qsym(a:options.ns).') '
   else
     let ns = ''
   endif
@@ -280,14 +283,14 @@ function! s:oneoff.eval(expr, options) dict abort
   let java_cmd = exists('$JAVA_CMD') ? $JAVA_CMD : 'java'
   let command = java_cmd.' -cp '.shellescape(self.classpath).' clojure.main -e ' .
         \ shellescape(
-        \   '(binding [*out* (java.io.FileWriter. '.s:str(s:oneoff_out).')' .
-        \   '          *err* (java.io.FileWriter. '.s:str(s:oneoff_err).')]' .
+        \   '(clojure.core/binding [*out* (java.io.FileWriter. '.s:str(s:oneoff_out).')' .
+        \   '                       *err* (java.io.FileWriter. '.s:str(s:oneoff_err).')]' .
         \   '  (try' .
-        \   '    (require ''clojure.repl) '.ns.'(spit '.s:str(s:oneoff_pr).' (pr-str (eval (read-string (slurp '.s:str(s:oneoff_in).')))))' .
+        \   '    (clojure.core/require ''clojure.repl) '.ns.'(clojure.core/spit '.s:str(s:oneoff_pr).' (clojure.core/pr-str (clojure.core/eval (clojure.core/read-string (clojure.core/slurp '.s:str(s:oneoff_in).')))))' .
         \   '    (catch Exception e' .
-        \   '      (spit *err* (.toString e))' .
-        \   '      (spit '.s:str(s:oneoff_ex).' (class e))' .
-        \   '      (spit '.s:str(s:oneoff_stk).' (apply str (interpose "\n" (.getStackTrace e))))))' .
+        \   '      (clojure.core/spit *err* (.toString e))' .
+        \   '      (clojure.core/spit '.s:str(s:oneoff_ex).' (clojure.core/class e))' .
+        \   '      (clojure.core/spit '.s:str(s:oneoff_stk).' (clojure.core/apply clojure.core/str (clojure.core/interpose "\n" (.getStackTrace e))))))' .
         \   '  nil)')
   let wtf = system(command)
   let result = {}
@@ -347,14 +350,65 @@ function! foreplay#local_client(...)
   throw ':Connect to a REPL or install classpath.vim to evaluate code'
 endfunction
 
+function! foreplay#findresource(resource) abort
+  if a:resource ==# ''
+    return ''
+  endif
+  try
+    let path = foreplay#local_client().path()
+  catch /^:Connect/
+    return ''
+  endtry
+  let file = findfile(a:resource, escape(join(path, ','), ' '))
+  if !empty(file)
+    return file
+  endif
+  for jar in path
+    if fnamemodify(jar, ':e') ==# 'jar' && index(foreplay#jar_contents(jar), a:resource) >= 0
+      return 'zipfile:' . jar . '::' . a:resource
+    endif
+  endfor
+  return ''
+endfunction
+
+function! foreplay#quickfix_for(stacktrace) abort
+  let qflist = []
+  for line in a:stacktrace
+    let entry = {'text': line}
+    let match = matchlist(line, '\(.*\)(\(.*\))')
+    if !empty(match)
+      let [_, class, file; __] = match
+      if file =~# '^NO_SOURCE_FILE:' || file !~# ':'
+        let entry.resource = ''
+        let entry.lnum = 0
+      else
+        let truncated = substitute(class, '\.[A-Za-z0-9_]\+\%($.*\)$', '', '')
+        let entry.resource = tr(truncated, '.', '/').'/'.split(file, ':')[0]
+        let entry.lnum = split(file, ':')[-1]
+      endif
+      let qflist += [entry]
+    endif
+  endfor
+  let paths = map(copy(qflist), 'foreplay#findresource(v:val.resource)')
+  let i = 0
+  for i in range(len(qflist))
+    if !empty(paths[i])
+      let qflist[i].filename = paths[i]
+    else
+      call remove(qflist[i], 'lnum')
+    endif
+  endfor
+  return qflist
+endfunction
+
 function! s:output_response(response) abort
   if get(a:response, 'err', '') !=# ''
     echohl ErrorMSG
-    echo substitute(a:response.err, '\n$', '', '')
+    echo substitute(a:response.err, '\r\|\n$', '', 'g')
     echohl NONE
   endif
   if get(a:response, 'out', '') !=# ''
-    echo substitute(a:response.out, '\n$', '', '')
+    echo substitute(a:response.out, '\r\|\n$', '', 'g')
   endif
 endfunction
 
@@ -370,64 +424,14 @@ function! s:eval(expr, ...) abort
   return client.eval(a:expr, options)
 endfunction
 
-function! s:temp_response(response) abort
-  let output = []
-  if get(a:response, 'out', '') !=# ''
-    let output = map(split(a:response.out, "\n"), '";".v:val')
-  endif
-  if has_key(a:response, 'value')
-    let output += [a:response.value]
-  endif
-  let temp = tempname().'.clj'
-  call writefile(output, temp)
-  return temp
-endfunction
-
-if !exists('s:history')
-  let s:history = []
-endif
-
-if !exists('s:qffiles')
-  let s:qffiles = {}
-endif
-
-function! s:qfentry(entry) abort
-  if !has_key(a:entry, 'tempfile')
-    let a:entry.tempfile = s:temp_response(a:entry.response)
-  endif
-  let s:qffiles[a:entry.tempfile] = a:entry
-  return {'filename': a:entry.tempfile, 'text': a:entry.code}
-endfunction
-
-function! s:qfhistory() abort
-  let list = []
-  for entry in s:history
-    if !has_key(entry, 'tempfile')
-      let entry.tempfile = s:temp_response(entry.response)
-    endif
-    call extend(list, [s:qfentry(entry)])
-  endfor
-  return list
-endfunction
-
-function! s:previewwindow()
-  for nr in range(1, winnr('$'))
-    if getwinvar(nr, '&previewwindow')
-      return nr
-    endif
-  endfor
-endfunction
-
 function! foreplay#eval(expr) abort
   let response = s:eval(a:expr, {'session': 1})
 
-  call extend(s:history, [{'buffer': bufnr(''), 'code': a:expr, 'ns': foreplay#ns(), 'response': response}])
-  let pwin = s:previewwindow()
-  if pwin && has_key(s:qffiles, bufname(winbufnr(pwin)))
-    call setloclist(pwin, [s:qfentry(s:history[-1])], 'a')
-  endif
-
   call s:output_response(response)
+
+  if !empty(get(response, 'stacktrace', []))
+    call setloclist(0, foreplay#quickfix_for(response.stacktrace))
+  endif
 
   if get(response, 'ex', '') !=# ''
     let err = 'Clojure: '.response.ex
@@ -440,25 +444,10 @@ function! foreplay#eval(expr) abort
 endfunction
 
 function! foreplay#evalprint(expr) abort
-  let pwin = s:previewwindow()
-  if s:previewwindow()
-    try
-      silent call foreplay#eval(a:expr)
-    catch /^Clojure:/
-    endtry
-    let nr = winnr()
-    wincmd p
-    wincmd P
-    call setloclist(pwin, s:qfhistory())
-    llast
-    wincmd p
-    exe nr.'wincmd w'
-  else
-    try
-      echo foreplay#eval(a:expr)
-    catch /^Clojure:/
-    endtry
-  endif
+  try
+    echo foreplay#eval(a:expr)
+  catch /^Clojure:/
+  endtry
   return ''
 endfunction
 
@@ -819,11 +808,12 @@ function! foreplay#findfile(path) abort
       let path .= '.clj'
     endif
 
-    let result = get(split(s:eval(printf(cmd, '"'.escape(path, '"').'"'), options).value, "\n"), 0, '')
+    let response = s:eval(printf(cmd, '"'.escape(path, '"').'"'), options)
+    let result = get(split(get(response, 'value', ''), "\n"), 0, '')
 
   endif
   if result ==# ''
-    return findfile(path, &l:path)
+    return foreplay#findresource(path)
   else
     return result
   endif
@@ -882,8 +872,8 @@ function! foreplay#ns() abort
   while lnum < line('$') && getline(lnum) =~# '^\s*\%(;.*\)\=$'
     let lnum += 1
   endwhile
-  let lines = join(getline(lnum, lnum+10), ' ')
-  let lines = substitute(lines, '"\%(\\.\|[^"]\)*"', '', 'g')
+  let lines = join(getline(lnum, lnum+50), ' ')
+  let lines = substitute(lines, '"\%(\\.\|[^"]\)*"\|\\.', '', 'g')
   let lines = substitute(lines, '\^\={[^{}]*}', '', '')
   let ns = matchstr(lines, '\C^(\s*\%(in-ns\s*''\|ns\s\+\)\zs[A-Za-z0-9_?*!+/=<>.-]\+\ze')
   if ns !=# ''
@@ -896,7 +886,7 @@ endfunction
 function! s:Lookup(ns, macro, arg) abort
   " doc is in clojure.core in older Clojure versions
   try
-    call foreplay#eval("(require '".a:ns.") (eval (list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
+    call foreplay#eval("(require '".a:ns.") (clojure.core/eval (list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
   catch /^Clojure:/
   catch /.*/
     echohl ErrorMSG
@@ -997,7 +987,7 @@ function! s:leiningen_connect()
     let s:leiningen_repl_ports[b:leiningen_root] = getftime(portfile)
     try
       call s:register_connection(nrepl#foreplay_connection#open(port), b:leiningen_root)
-    catch /^nREPL: .*[Cc]onnection/
+    catch /^nREPL Connection Error:/
       call delete(portfile)
     endtry
   endif

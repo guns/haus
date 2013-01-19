@@ -106,7 +106,8 @@ task :env do
 
     'vimfiles' => [
       { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :pull => 'github' },
-      { :base => "#{@src}/vim-clojure-static",     :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@src}/vim-clojure-static",     :branch => %w[master],      :files => :pathogen, :pull => 'github' },
+      { :base => "#{@src}/vim-sexp",               :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/Align",                  :branch => %w[master guns], :files => :pathogen },
