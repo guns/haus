@@ -221,7 +221,7 @@
    (bindsh "F6" "hwctl backlight -5")
    (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
    (bindsh "F7" "hwctl backlight +5")
-   (bindsh "XF86Eject" "slock")
+   (bindsh "XF86Eject" ["slock" "killall -HUP gpg-agent"])
    (bindsh "W-C-S-space" "mediactl toggle")
    (bindsh "W-C-S-Left" "mediactl prev")
    (bindsh "W-C-S-Right" "mediactl next")
