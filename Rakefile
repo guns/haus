@@ -93,6 +93,14 @@ task :env do
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
         }
+      },
+
+      {
+        :base   => "#{@src}/ponymix",
+        :branch => %w[master guns],
+        :files  => {
+          'bash-completion' => 'etc/bash_completion.d/ponymix'
+        }
       }
     ],
 
