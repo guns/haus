@@ -229,8 +229,9 @@
    (bindsh "W-A-space" "xdotool click 2")
    ;; Application bindings
    (bindsh "W-C-t" "urxvt-client")
-   (bindsh "W-C-g" "urxvt-client -e tmuxlaunch -g")
-   (bindsh "W-C-r" "urxvt-client -g 80x40 -e vim")
+   (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
+   (bindsh "W-C-r" "urxvt-client -g 80x40 -e vim -c 'Org! TODO'")
+   (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
    (bindfocus "F9" "guns ❦")
    (bindfocus "W-F9" "root ❦")
    (bindfocus "W-A-F10" "gPodder" "gpodder")
@@ -239,7 +240,7 @@
                "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
    (bindfocus "F12" ["★ Mutt ★" "mutt-$HOSTNAME" "mutt"]
               ["cd ~/Downloads"
-               "urxvt-client -title %s -g 120x40 -e gpg-shell muttlaunch"])
+               "urxvt-client -title %s -g 120x40 -e muttlaunch"])
    (bindsh "W-F12" "open https://mail.google.com/")
    ;; Window switching
    (bind "F8" "ToggleShowDesktop")
