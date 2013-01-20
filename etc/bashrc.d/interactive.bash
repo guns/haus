@@ -1569,7 +1569,13 @@ ALIAS youtubedown='youtubedown --verbose' && {
 HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
-ALIAS xselb='xsel -b'
+if HAVE xsel; then
+    alias clip='xsel -ib'
+elif HAVE xclip; then
+    alias clip='xclip -i -selection clipboard'
+elif __OSX__ && HAVE pbcopy; then
+    alias clip='pbcopy'
+fi
 
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
