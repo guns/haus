@@ -1359,9 +1359,10 @@ ALIAS ssl='openssl' && {
 ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS pclip='pass -c' && {
-    passl() { pass "$@" | pager; }
-    TCOMP pass passl
+ALIAS passc='pass -c' && {
+    passl() { pass "$@" | pager; }; TCOMP pass passl
+    passi() { pass insert -fm "$1" < <(genpw "${@:2}"); pass "$1"; }; TCOMP pass passi
+    passic() { pass insert -fm "$1" < <(genpw "${@:2}"); pass -c "$1"; }; TCOMP pass passic
 }
 
 # cryptsetup
