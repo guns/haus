@@ -216,7 +216,14 @@ class Minecraft
       puts 'No such process, removing %s' % pidfile
       remove_pidfile
     rescue Errno::EPERM
-      puts 'Insufficient permissions to kill process %d' % pid
+      # Try writing to fifo instead
+      fifo = gamedir 'stdin'
+      if File.writable? fifo
+        File.open(fifo, 'w') { |f| f.puts 'stop' }
+        sleep 0.1 while File.exists? fifo
+      else
+        puts 'Insufficient permissions to kill process %d' % pid
+      end
     end
   end
 
