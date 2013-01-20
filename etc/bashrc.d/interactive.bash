@@ -1361,8 +1361,8 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 # pass
 ALIAS passc='pass -c' && {
     passl() { pass "$@" | pager; }; TCOMP pass passl
-    passi() { pass insert -fm "$1" < <(genpw "${@:2}"); pass "$1"; }; TCOMP pass passi
-    passiclip() { pass insert -fm "$1" < <(genpw "${@:2}"); pass -c "$1"; }; TCOMP pass passic
+    passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
+    passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
 }
 
 # cryptsetup
@@ -1569,13 +1569,15 @@ ALIAS youtubedown='youtubedown --verbose' && {
 HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
-if HAVE xsel; then
-    alias clip='xsel -ib'
-elif HAVE xclip; then
-    alias clip='xclip -i -selection clipboard'
-elif __OS_X__ && HAVE pbcopy; then
-    alias clip='pbcopy'
-fi
+clip() {
+    if type xsel &>/dev/null; then
+        xsel -ib "$@"
+    elif type xclip &>/dev/null; then
+        xclip -i -selection clipboard "$@"
+    elif type pbcopy &>/dev/null; then
+        pbcopy "$@"
+    fi
+}
 
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
