@@ -69,7 +69,7 @@ if [[ -d /opt/doctorjs/lib/jsctags && $NODE_PATH != */opt/doctorjs/lib/jsctags* 
 fi
 
 # OS X
-if __OSX__; then
+if __OS_X__; then
     # Prefer not copying Apple doubles and extended attributes
     export COPYFILE_DISABLE=1
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
@@ -288,7 +288,7 @@ alias l1g='l1 | g'
 alias l1gv='l1 | gv'
 alias lsg='ls | g'
 alias lsgv='ls | gv'
-if __OSX__; then
+if __OS_X__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
@@ -598,7 +598,7 @@ ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
 }
 
 # Remove logs and caches
-if __OSX__; then
+if __OS_X__; then
     flushcache() {
         local dir cachedirs=(
             "$HOME/Library/Preferences/Macromedia/Flash Player"
@@ -711,7 +711,7 @@ ALIAS get='curl -#L' \
 
 # DNS
 ALIAS digx='dig -x'
-if __OSX__; then
+if __OS_X__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
     alias resolv='cat /etc/resolv.conf'
@@ -1297,7 +1297,7 @@ ALIAS rfk='rfkill' && {
     alias rfenable='run rfkill unblock all'
 }
 
-if __OSX__; then
+if __OS_X__; then
     # Show all pmset settings by default
     # Param: [$@] Arguments to `pmset`
     pmset() {
@@ -1389,7 +1389,7 @@ ALIAS dc='dumpcert' && {
     complete -F _dx dx
 }
 
-if __OSX__; then
+if __OS_X__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
     alias security-dump-certificates='run security export -t certs'
 fi
@@ -1425,7 +1425,7 @@ fi
 
 ### Package Managers
 
-if __OSX__; then
+if __OS_X__; then
     # MacPorts package manager
     ALIAS port='port -c' && {
         porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
@@ -1573,7 +1573,7 @@ if HAVE xsel; then
     alias clip='xsel -ib'
 elif HAVE xclip; then
     alias clip='xclip -i -selection clipboard'
-elif __OSX__ && HAVE pbcopy; then
+elif __OS_X__ && HAVE pbcopy; then
     alias clip='pbcopy'
 fi
 
@@ -1637,7 +1637,7 @@ ALIAS lctl='launchctl' \
 
 ### GUI programs
 
-if __OSX__; then
+if __OS_X__; then
     # LaunchBar
     HAVE /Applications/LaunchBar.app/Contents/MacOS/LaunchBar && {
         alias lb='open -a /Applications/LaunchBar.app'

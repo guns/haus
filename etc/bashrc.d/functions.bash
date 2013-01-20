@@ -60,7 +60,7 @@ REQUIRE() {
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
 # Simple platform checks
-__OSX__()   { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OSX__
+__OS_X__()  { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OS_X__
 __LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
 
 
