@@ -211,8 +211,7 @@
    (bind "W-C-m" "Iconify")
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
-   (bindfocus "W-F3" "♫ alsamixer ♫"
-              "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindfocus "W-F3" "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
    (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"])
    (bindsh "F3" "ponymix toggle")
    (bindsh "F4" "ponymix decrease 5")
@@ -230,17 +229,15 @@
    ;; Application bindings
    (bindsh "W-C-t" "urxvt-client")
    (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
-   (bindsh "W-C-r" "urxvt-client -g 80x40 -e vim -c 'Org! TODO'")
+   (bindfocus "W-C-r" "✔ TODO ✔" "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
    (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
    (bindfocus "F9" "guns ❦")
    (bindfocus "W-F9" "root ❦")
    (bindfocus "W-A-F10" "gPodder" "gpodder")
-   (bindfocus "A-F10" "• newsbeuter •"
-              ["cd ~/Downloads"
-               "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
-   (bindfocus "F12" ["★ Mutt ★" "mutt-$HOSTNAME" "mutt"]
-              ["cd ~/Downloads"
-               "urxvt-client -title %s -g 120x40 -e muttlaunch"])
+   (bindfocus "A-F10" "♻ newsbeuter ♻"
+              ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
+   (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME" "mutt"]
+              ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e muttlaunch"])
    (bindsh "W-F12" "open https://mail.google.com/")
    ;; Window switching
    (bind "F8" "ToggleShowDesktop")
