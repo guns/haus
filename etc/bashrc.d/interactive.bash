@@ -1359,7 +1359,7 @@ ALIAS ssl='openssl' && {
 ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS passc='pass -c' && {
+ALIAS pc='pass -c' && {
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
