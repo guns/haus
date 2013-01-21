@@ -1475,6 +1475,8 @@ elif __LINUX__; then
         alias pacu='run pacman -Rs'
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
+
+        alias paclog='pager /var/log/pacman.log'
     }
 
     # Aura pacman + AUR wrapper
