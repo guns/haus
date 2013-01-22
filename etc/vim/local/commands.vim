@@ -109,7 +109,7 @@ function! s:Time(...)
         if pat =~# '\v^file:'
             execute 'profile file ' . substitute(pat, '\vfile:(.*)', '\1', '')
         else
-            execute 'profile func ' . pat
+            execute 'profile func *' . pat . '*'
         endif
     endfor
 endfunction
