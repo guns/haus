@@ -27,8 +27,8 @@ color quoted5    color182 black
 color quoted6    $my_comm black
 color quoted7    color182 black
 
-color header     color150 black '^From:'
-color header     color150 black '^Subject:'
+color header     color150 black '^from:'
+color header     color150 black '^subject:'
 
 # color normal
 # color bold

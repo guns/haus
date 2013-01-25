@@ -22,9 +22,6 @@ source $alias_file
 mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"` \
           ~/.mutt/notmuch/results
 
-# Mailing lists
-source "~/.mutt/mailing-lists"
-
 # Hooks
 folder-hook . 'set record="^"' # Save sent mail to current folder
 folder-hook . 'push <current-top><refresh>'
@@ -141,5 +138,5 @@ macro $my_list,pager,compose \Cx? "<enter-command>set ?from<enter>"
 macro $my_list,pager,compose \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
 macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
 macro $my_list,pager,compose \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
-send-hook !~l "$my_identity_1"
-send-hook ~l  "$my_identity_2"
+reply-hook '!~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_1"
+reply-hook '~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_2"
