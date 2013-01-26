@@ -1383,10 +1383,10 @@ ALIAS cs='cryptsetup' && {
     alias csdump='cryptsetup luksDump'
 }
 
-ALIAS dc='dumpcert' && {
-    dx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
-    _dx() { __compreply__ "$(command ls ~/.certificates/)"; }
-    complete -F _dx dx
+HAVE cert && {
+    cx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
+    _cx() { __compreply__ "$(command ls ~/.certificates/)"; }
+    complete -F _cx cx
 }
 
 if __OS_X__; then
