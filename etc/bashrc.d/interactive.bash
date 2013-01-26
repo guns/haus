@@ -1384,7 +1384,7 @@ ALIAS cs='cryptsetup' && {
 }
 
 HAVE cert && {
-    cx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
+    cx() { run cert exec -f "~/.certificates/$1" -- "${@:2}"; }
     _cx() { __compreply__ "$(command ls ~/.certificates/)"; }
     complete -F _cx cx
 }
