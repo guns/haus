@@ -22,10 +22,6 @@ source $alias_file
 mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"` \
           ~/.mutt/notmuch/results
 
-# Hooks
-folder-hook . 'set record="^"' # Save sent mail to current folder
-folder-hook . 'push <current-top><refresh>'
-
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
 #   pager:    Display a selected e-mail.
@@ -140,3 +136,8 @@ macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh>
 macro $my_list,pager,compose \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
 reply-hook '!~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_1"
 reply-hook '~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_2"
+send-hook '!~s ^Re:' "$my_identity_1"
+
+# Hooks
+folder-hook . 'set record="^"' # Save sent mail to current folder
+folder-hook . 'push <current-top><refresh>'
