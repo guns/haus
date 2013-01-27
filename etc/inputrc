@@ -309,6 +309,9 @@ $if Bash
     "\033\007g":    "\C-] vimgit \n"
     "\033\007G":    "\C-]vim \"$(git ls-files | sed 1q)\" -c \"Ggrep -Pi \"\C-b"
 
+    # Ack
+    "\033\007A":    "\C-]vim -c \"Ack \"\C-b"
+
     # IRB
     "\033\007i":    "\C-] irb \n"
     "\033\007I":    "\C-] pry \n"
