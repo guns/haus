@@ -31,24 +31,17 @@ class Mediactl
     system 'cmus-remote', cmd if alive? 'cmus'
   end
 
-  def banshee cmd
-    system 'banshee', cmd if alive? 'banshee'
-  end
-
   def trigger action
     ts = []
 
     case action
     when 'toggle'
-      ts << Thread.new { banshee '--toggle-playing' }
       ts << Thread.new { cmus '--pause' }
       ts << Thread.new { pianobar 'p' }
     when 'next'
-      ts << Thread.new { banshee '--next' }
       ts << Thread.new { cmus '--next' }
       ts << Thread.new { pianobar 'n' }
     when 'prev'
-      ts << Thread.new { banshee '--previous' }
       ts << Thread.new { cmus '--prev' }
     else
       raise 'Unknown action: %s' % action.inspect
