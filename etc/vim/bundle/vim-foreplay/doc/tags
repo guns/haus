@@ -1,3 +1,7 @@
+foreplay-:A	foreplay.txt	/*foreplay-:A*
+foreplay-:AS	foreplay.txt	/*foreplay-:AS*
+foreplay-:AT	foreplay.txt	/*foreplay-:AT*
+foreplay-:AV	foreplay.txt	/*foreplay-:AV*
 foreplay-:Apropos	foreplay.txt	/*foreplay-:Apropos*
 foreplay-:Connect	foreplay.txt	/*foreplay-:Connect*
 foreplay-:Djump	foreplay.txt	/*foreplay-:Djump*
@@ -7,6 +11,7 @@ foreplay-:Eval	foreplay.txt	/*foreplay-:Eval*
 foreplay-:Eval!	foreplay.txt	/*foreplay-:Eval!*
 foreplay-:FindDoc	foreplay.txt	/*foreplay-:FindDoc*
 foreplay-:Javadoc	foreplay.txt	/*foreplay-:Javadoc*
+foreplay-:Last	foreplay.txt	/*foreplay-:Last*
 foreplay-:Require	foreplay.txt	/*foreplay-:Require*
 foreplay-:Require!	foreplay.txt	/*foreplay-:Require!*
 foreplay-:Source	foreplay.txt	/*foreplay-:Source*

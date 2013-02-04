@@ -69,10 +69,14 @@ if !exists('g:sexp_mappings')
         \ 'sexp_splice_form':              '<Leader>O',
         \ 'sexp_insert_at_form_head':      '<Leader>h',
         \ 'sexp_insert_at_form_tail':      '<Leader>l',
-        \ 'sexp_swap_element_backward':    '<M-h>',
-        \ 'sexp_swap_element_forward':     '<M-l>',
         \ 'sexp_swap_form_backward':       '<M-k>',
         \ 'sexp_swap_form_forward':        '<M-j>',
+        \ 'sexp_swap_element_backward':    '<M-h>',
+        \ 'sexp_swap_element_forward':     '<M-l>',
+        \ 'sexp_capture_prev_element':     '<Leader>H',
+        \ 'sexp_capture_next_element':     '<Leader>L',
+        \ 'sexp_emit_first_element':       '<Leader><M-h>',
+        \ 'sexp_emit_last_element':        '<Leader><M-l>',
     \ }
 endif
 
@@ -156,10 +160,10 @@ onoremap <silent> <Plug>sexp_textobj_next_top_element :<C-u>call sexp#docount("s
 " object instead of a command since it makes sense to have an operator pending
 " version of this movement.
 nnoremap <silent> <Plug>sexp_textobj_exclusive_prev_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('n', 0)", v:count)<CR>
-vnoremap <silent> <Plug>sexp_textobj_exclusive_prev_element_selection <C-Bslash><C-n>:<C-u>call sexp#docount("sexp#select_adjacent_element('v', 0)", v:prevcount)<CR>
+vnoremap <silent> <Plug>sexp_textobj_exclusive_prev_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('v', 0)", v:count)<CR>
 onoremap <silent> <Plug>sexp_textobj_exclusive_prev_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('o', 0)", v:count)<CR>
 nnoremap <silent> <Plug>sexp_textobj_exclusive_next_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('n', 1)", v:count)<CR>
-vnoremap <silent> <Plug>sexp_textobj_exclusive_next_element_selection <C-Bslash><C-n>:<C-u>call sexp#docount("sexp#select_adjacent_element('v', 1)", v:prevcount)<CR>
+vnoremap <silent> <Plug>sexp_textobj_exclusive_next_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('v', 1)", v:count)<CR>
 onoremap <silent> <Plug>sexp_textobj_exclusive_next_element_selection :<C-u>call sexp#docount("sexp#select_adjacent_element('o', 1)", v:count)<CR>
 
 if !empty('g:sexp_textobj_mappings')
@@ -231,17 +235,27 @@ vnoremap <silent> <Plug>sexp_insert_at_form_head :<C-u>call sexp#insert_at_form_
 nnoremap <silent> <Plug>sexp_insert_at_form_tail :<C-u>call sexp#insert_at_form_terminal(1)<CR>
 vnoremap <silent> <Plug>sexp_insert_at_form_tail :<C-u>call sexp#insert_at_form_terminal(1)<CR>
 
+" Exchange form
+nnoremap <silent> <Plug>sexp_swap_form_backward :<C-u>call sexp#swap_element('n', 0, 1)<CR>
+vnoremap <silent> <Plug>sexp_swap_form_backward <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 0, 1)<CR>
+nnoremap <silent> <Plug>sexp_swap_form_forward  :<C-u>call sexp#swap_element('n', 1, 1)<CR>
+vnoremap <silent> <Plug>sexp_swap_form_forward  <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 1, 1)<CR>
+
 " Exchange element
 nnoremap <silent> <Plug>sexp_swap_element_backward :<C-u>call sexp#swap_element('n', 0, 0)<CR>
 vnoremap <silent> <Plug>sexp_swap_element_backward <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 0, 0)<CR>
 nnoremap <silent> <Plug>sexp_swap_element_forward  :<C-u>call sexp#swap_element('n', 1, 0)<CR>
 vnoremap <silent> <Plug>sexp_swap_element_forward  <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 1, 0)<CR>
 
-" Exchange form
-nnoremap <silent> <Plug>sexp_swap_form_backward :<C-u>call sexp#swap_element('n', 0, 1)<CR>
-vnoremap <silent> <Plug>sexp_swap_form_backward <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 0, 1)<CR>
-nnoremap <silent> <Plug>sexp_swap_form_forward  :<C-u>call sexp#swap_element('n', 1, 1)<CR>
-vnoremap <silent> <Plug>sexp_swap_form_forward  <C-Bslash><C-n>:<C-u>call sexp#swap_element('v', 1, 1)<CR>
+" Emit / capture element
+nnoremap <silent> <Plug>sexp_capture_prev_element :<C-u>call sexp#docount("sexp#stackop('n', 0, 1)", v:count)<CR>
+vnoremap <silent> <Plug>sexp_capture_prev_element :<C-u>call sexp#docount("sexp#stackop('v', 0, 1)", v:count)<CR>
+nnoremap <silent> <Plug>sexp_capture_next_element :<C-u>call sexp#docount("sexp#stackop('n', 1, 1)", v:count)<CR>
+vnoremap <silent> <Plug>sexp_capture_next_element :<C-u>call sexp#docount("sexp#stackop('v', 1, 1)", v:count)<CR>
+nnoremap <silent> <Plug>sexp_emit_first_element   :<C-u>call sexp#docount("sexp#stackop('n', 0, 0)", v:count)<CR>
+vnoremap <silent> <Plug>sexp_emit_first_element   :<C-u>call sexp#docount("sexp#stackop('v', 0, 0)", v:count)<CR>
+nnoremap <silent> <Plug>sexp_emit_last_element    :<C-u>call sexp#docount("sexp#stackop('n', 1, 0)", v:count)<CR>
+vnoremap <silent> <Plug>sexp_emit_last_element    :<C-u>call sexp#docount("sexp#stackop('v', 1, 0)", v:count)<CR>
 
 if !empty(g:sexp_mappings)
     for s:plug in keys(g:sexp_mappings)

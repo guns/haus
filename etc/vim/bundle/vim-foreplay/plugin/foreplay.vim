@@ -128,7 +128,7 @@ endfunction
 function! s:repl.eval(expr, options) dict abort
   try
     let result = self.connection.eval(a:expr, a:options)
-  catch /^\w\+: Connection/
+  catch /^\w\+ Connection Error:/
     call filter(s:repl_paths, 'v:val isnot self')
     call filter(s:repls, 'v:val isnot self')
     throw v:exception
@@ -316,7 +316,13 @@ endfunction
 
 function! s:client() abort
   silent doautocmd User ForeplayPreConnect
-  let buf = exists('s:input') ? s:input : '%'
+  if exists('s:input')
+    let buf = s:input
+  elseif has_key(s:qffiles, expand('%:p'))
+    let buf = s:qffiles[expand('%:p')].buffer
+  else
+    let buf = '%'
+  endif
   let root = simplify(fnamemodify(bufname(buf), ':p:s?[\/]$??'))
   let previous = ""
   while root !=# previous
@@ -337,7 +343,13 @@ function! foreplay#local_client(...)
   if !a:0
     silent doautocmd User ForeplayPreConnect
   endif
-  let buf = exists('s:input') ? s:input : '%'
+  if exists('s:input')
+    let buf = s:input
+  elseif has_key(s:qffiles, expand('%:p'))
+    let buf = s:qffiles[expand('%:p')].buffer
+  else
+    let buf = '%'
+  endif
   for repl in s:repls
     if repl.includes_file(fnamemodify(bufname(buf), ':p'))
       return repl
@@ -424,14 +436,69 @@ function! s:eval(expr, ...) abort
   return client.eval(a:expr, options)
 endfunction
 
+function! s:temp_response(response) abort
+  let output = []
+  if get(a:response, 'out', '') !=# ''
+    let output = map(split(a:response.out, "\n"), '";".v:val')
+  endif
+  if has_key(a:response, 'value')
+    let output += [a:response.value]
+  endif
+  let temp = tempname().'.clj'
+  call writefile(output, temp)
+  return temp
+endfunction
+
+if !exists('s:history')
+  let s:history = []
+endif
+
+if !exists('s:qffiles')
+  let s:qffiles = {}
+endif
+
+function! s:qfentry(entry) abort
+  if !has_key(a:entry, 'tempfile')
+    let a:entry.tempfile = s:temp_response(a:entry.response)
+  endif
+  let s:qffiles[a:entry.tempfile] = a:entry
+  return {'filename': a:entry.tempfile, 'text': a:entry.code}
+endfunction
+
+function! s:qfhistory() abort
+  let list = []
+  for entry in reverse(s:history)
+    if !has_key(entry, 'tempfile')
+      let entry.tempfile = s:temp_response(entry.response)
+    endif
+    call extend(list, [s:qfentry(entry)])
+  endfor
+  return list
+endfunction
+
 function! foreplay#eval(expr) abort
   let response = s:eval(a:expr, {'session': 1})
 
-  call s:output_response(response)
+  if !empty(get(response, 'value', ''))
+    call insert(s:history, {'buffer': bufnr(''), 'code': a:expr, 'ns': foreplay#ns(), 'response': response})
+  endif
+  if len(s:history) > &history
+    call remove(s:history, &history, -1)
+  endif
 
   if !empty(get(response, 'stacktrace', []))
-    call setloclist(0, foreplay#quickfix_for(response.stacktrace))
+    let nr = 0
+    if has_key(s:qffiles, expand('%:p'))
+      let nr = winbufnr(s:qffiles[expand('%:p')].buffer)
+    endif
+    if nr != -1
+      call setloclist(nr, foreplay#quickfix_for(response.stacktrace))
+      lopen
+      wincmd p
+    endif
   endif
+
+  call s:output_response(response)
 
   if get(response, 'ex', '') !=# ''
     let err = 'Clojure: '.response.ex
@@ -451,7 +518,8 @@ function! foreplay#evalprint(expr) abort
   return ''
 endfunction
 
-function! foreplay#evalparse(expr) abort
+function! foreplay#evalparse(expr, ...) abort
+  let options = extend({'session': 0}, a:0 ? a:1 : {})
   let response = s:eval(
         \ '(symbol ((fn *vimify [x]' .
         \ '  (cond' .
@@ -460,7 +528,7 @@ function! foreplay#evalparse(expr) abort
         \ '    (number? x)  (pr-str x)' .
         \ '    (keyword? x) (pr-str (name x))' .
         \ '    :else        (pr-str (str x)))) '.a:expr.'))',
-        \ {'session': 0})
+        \ options)
   call s:output_response(response)
 
   if get(response, 'ex', '') !=# ''
@@ -665,8 +733,30 @@ nnoremap          <Plug>ForeplayPrompt :exe <SID>inputeval()<CR>
 
 noremap!          <Plug>ForeplayRecall <C-R>=<SID>recall()<CR>
 
+function! s:Last(bang, count) abort
+  if len(s:history) < a:count
+    return 'echoerr "History entry not found"'
+  endif
+  let history = s:qfhistory()
+  let last = s:qfhistory()[a:count-1]
+  execute 'pedit '.last.filename
+  if !&previewwindow
+    let nr = winnr()
+    wincmd p
+    wincmd P
+  endif
+  call setloclist(0, history)
+  silent exe 'llast '.(len(history)-a:count+1)
+  if exists('nr') && a:bang
+    wincmd p
+    exe nr.'wincmd w'
+  endif
+  return ''
+endfunction
+
 function! s:setup_eval() abort
   command! -buffer -bang -range=0 -nargs=? -complete=customlist,foreplay#eval_complete Eval :exe s:Eval(<bang>0, <line1>, <line2>, <count>, <q-args>)
+  command! -buffer -bang -bar -count=1 Last exe s:Last(<bang>0, <count>)
 
   nmap <buffer> cp <Plug>ForeplayPrint
   nmap <buffer> cpp <Plug>ForeplayPrintab
@@ -683,6 +773,11 @@ function! s:setup_eval() abort
   map! <buffer> <C-R>( <Plug>ForeplayRecall
 endfunction
 
+function! s:setup_historical()
+  set readonly nomodifiable
+  nnoremap <buffer><silent>q :bdelete<CR>
+endfunction
+
 function! s:cmdwinenter()
   setlocal filetype=clojure
 endfunction
@@ -694,6 +789,9 @@ endfunction
 augroup foreplay_eval
   autocmd!
   autocmd FileType clojure call s:setup_eval()
+  autocmd BufReadPost * if has_key(s:qffiles, expand('<afile>:p')) |
+        \   call s:setup_historical() |
+        \ endif
   autocmd CmdWinEnter @ if exists('s:input') | call s:cmdwinenter() | endif
   autocmd CmdWinLeave @ if exists('s:input') | call s:cmdwinleave() | endif
 augroup END
@@ -726,18 +824,29 @@ augroup END
 " }}}1
 " Go to source {{{1
 
+function! s:decode_url(url) abort
+  let url = a:url
+  let url = substitute(url, '^\%(jar:\)\=file:\zs/\ze\w:/', '', '')
+  let url = substitute(url, '^file:', '', '')
+  let url = substitute(url, '^jar:\(.*\)!/', 'zip\1::', '')
+  let url = substitute(url, '%\(\x\x\)', '\=eval(''"\x''.submatch(1).''"'')', 'g')
+  return url
+endfunction
+
 function! foreplay#source(symbol) abort
-  let options = {'client': foreplay#local_client(), 'ns': foreplay#ns(), 'session': 0}
+  let options = {'client': foreplay#local_client(), 'session': 0}
   let cmd =
-        \ "  (when-let [v (resolve " . s:qsym(a:symbol) .')]' .
-        \ '    (when-let [filepath (:file (meta v))]' .
-        \ '      (when-let [url (.getResource (clojure.lang.RT/baseLoader) filepath)]' .
-        \ '        (symbol (str (str "+" (:line (meta v))) " "' .
-        \ '            (if (= "jar" (.getProtocol url))' .
-        \ '              (str "zip" (.replaceFirst (.getFile url) "!/" "::"))' .
-        \ '              (.getFile url)))))))'
-  let result = get(split(s:eval(cmd, options).value, "\n"), 0, '')
-  return result ==# 'nil' ? '' : result
+        \ '(when-let [v (resolve ' . s:qsym(a:symbol) .')]' .
+        \ '  (when-let [filepath (:file (meta v))]' .
+        \ '    (when-let [url (.getResource (clojure.lang.RT/baseLoader) filepath)]' .
+        \ '      [(str url)' .
+        \ '       (:line (meta v))])))'
+  let result = foreplay#evalparse(cmd, options)
+  if type(result) == type([])
+    return '+' . result[1] . ' ' . fnameescape(s:decode_url(result[0]))
+  else
+    return ''
+  endif
 endfunction
 
 function! s:Edit(cmd, keyword) abort
@@ -774,22 +883,20 @@ augroup foreplay_source
   autocmd FileType clojure nmap <buffer> ]<C-D>     <Plug>ForeplayDjump
   autocmd FileType clojure nmap <buffer> <C-W><C-D> <Plug>ForeplayDsplit
   autocmd FileType clojure nmap <buffer> <C-W>d     <Plug>ForeplayDsplit
-  autocmd FileType clojure nmap <buffer> <C-W>gd    <Plug>ForeplayDtabedit
+  autocmd FileType clojure nmap <buffer> <C-W>gd    <Plug>ForeplayDtabjump
 augroup END
 
 " }}}1
 " Go to file {{{1
 
 function! foreplay#findfile(path) abort
-  let options = {'client': foreplay#local_client(), 'ns': foreplay#ns(), 'session': 0}
+  let options = {'client': foreplay#local_client(), 'session': 0}
 
   let cmd =
         \ '(symbol' .
         \ '  (or' .
         \ '    (when-let [url (.getResource (clojure.lang.RT/baseLoader) %s)]' .
-        \ '    (if (= "jar" (.getProtocol url))' .
-        \ '      (str "zip" (.replaceFirst (.getFile url) "!/" "::"))' .
-        \ '      (.getFile url)))' .
+        \ '      (str url))' .
         \ '    ""))'
 
   let path = a:path
@@ -810,8 +917,8 @@ function! foreplay#findfile(path) abort
 
     let response = s:eval(printf(cmd, '"'.escape(path, '"').'"'), options)
     let result = get(split(get(response, 'value', ''), "\n"), 0, '')
-
   endif
+  let result = s:decode_url(result)
   if result ==# ''
     return foreplay#findresource(path)
   else
@@ -878,6 +985,9 @@ function! foreplay#ns() abort
   let ns = matchstr(lines, '\C^(\s*\%(in-ns\s*''\|ns\s\+\)\zs[A-Za-z0-9_?*!+/=<>.-]\+\ze')
   if ns !=# ''
     return ns
+  endif
+  if has_key(s:qffiles, expand('%:p'))
+    return s:qffiles[expand('%:p')].ns
   endif
   let path = s:buffer_path()
   return s:tons(path ==# '' ? 'user' : path)
@@ -953,6 +1063,40 @@ augroup foreplay_doc
   autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Doc     :exe s:Lookup('clojure.repl', 'doc', <q-args>)
   autocmd FileType clojure command! -buffer -bar -nargs=1 -complete=customlist,foreplay#eval_complete Source  :exe s:Lookup('clojure.repl', 'source', <q-args>)
 augroup END
+
+" }}}1
+" Alternate {{{1
+
+augroup foreplay_alternate
+  autocmd!
+  autocmd FileType clojure command! -buffer -bar -bang A :exe s:Alternate('edit<bang>')
+  autocmd FileType clojure command! -buffer -bar AS :exe s:Alternate('split')
+  autocmd FileType clojure command! -buffer -bar AV :exe s:Alternate('vsplit')
+  autocmd FileType clojure command! -buffer -bar AT :exe s:Alternate('tabedit')
+augroup END
+
+function! s:alternates() abort
+  let ns = foreplay#ns()
+  if ns =~# '-test$'
+    let alt = [ns[0:-6]]
+  elseif ns =~# '\.test\.'
+    let alt = [substitute(ns, '\.test\.', '.', '')]
+  else
+    let alt = [ns . '-test', substitute(ns, '\.', '.test.', '')]
+  endif
+  return map(alt, 'tr(v:val, ".-", "/_") . ".clj"')
+endfunction
+
+function! s:Alternate(cmd) abort
+  let alternates = s:alternates()
+  for file in alternates
+    let path = foreplay#findresource(file)
+    if !empty(path)
+      return a:cmd . ' ' . fnameescape(path)
+    endif
+  endfor
+  return 'echoerr '.string("Couldn't find " . alternates[0] . "in class path")
+endfunction
 
 " }}}1
 " Leiningen {{{1

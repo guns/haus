@@ -5,7 +5,14 @@
 ;; Copy this file to a project running the latest Clojure release and generate
 ;; updated Vimscript definitions.
 
-(ns vim-clojure-static)
+(ns vim-clojure-static
+  (:require clojure.string clojure.java.shell))
+
+(def generation-message
+  (str "\" Generated from https://github.com/guns/vim-clojure-static/blob/vim-release-001/vim_clojure_static.clj"
+       \newline
+       "\" Clojure " (clojure-version)
+       \newline))
 
 (def special-forms
   "http://clojure.org/special_forms"
@@ -49,26 +56,36 @@
                            (str "syntax keyword clojure" group \space
                                 (clojure.string/join \space (sort (names keywords)))))
                          builtins)]
-    (str "\" Clojure " (clojure-version) \newline
-         (clojure.string/join \newline definitions))))
+    (str generation-message (clojure.string/join \newline definitions))))
 
-(def core-dictionary
-  "Newline delimited string of public vars in clojure.core. Intended for use
-   as a dictionary file for Vim insert mode completion."
-  (->> `clojure.core
-       ns-publics
-       keys
-       (map str)
-       sort
-       (clojure.string/join \newline)))
+(def completion-words
+  "Vimscript literal list of special forms and public vars in clojure.core."
+  (str generation-message
+       (format "let s:words = [%s]"
+               (->> `clojure.core
+                    ns-publics
+                    keys
+                    (concat special-forms)
+                    (map #(str \" % \"))
+                    sort
+                    (clojure.string/join \,)))))
 
-(def special-forms-dictionary
-  (->> special-forms
-       (map str)
-       sort
-       (clojure.string/join \newline)))
+(defn update-vim!
+  "Update runtime files in dir/runtime"
+  [src dst]
+  (let [join (fn [& args] (clojure.string/join \/ args))
+        indent-file (join dst "runtime/doc/indent.txt")
+        indent-buf (slurp indent-file)
+        indent-match (re-find #"(?ms)^CLOJURE.*?(?=^[ \p{Lu}]+\t*\*)" indent-buf)
+        indent-doc (re-find #"(?ms)^CLOJURE.*(?=^ABOUT)" (slurp (join src "doc/clojure.txt")))]
+    ;; Insert indentation documentation
+    (spit indent-file (clojure.string/replace-first indent-buf
+                                                    indent-match
+                                                    (str indent-doc \newline)))
+    ;; Copy runtime files
+    (doseq [file ["autoload/clojurecomplete.vim" "ftplugin/clojure.vim" "indent/clojure.vim" "syntax/clojure.vim"]]
+      (println (clojure.java.shell/sh "cp" (join src file) (join dst "runtime" file))))))
 
 (comment
-  (do (spit "/tmp/clojure-keywords.vim" syntax-keywords)
-      (spit "/home/guns/src/vim-clojure-static/ftplugin/clojure/clojure.core.txt" core-dictionary)
-      (spit "/home/guns/src/vim-clojure-static/ftplugin/clojure/special-forms.txt" special-forms-dictionary)))
+  (spit "/tmp/clojure-defs.vim" (str syntax-keywords "\n\n" completion-words))
+  (update-vim! "/home/guns/src/vim-clojure-static" "/home/guns/src/vim"))
