@@ -18,4 +18,4 @@
 (scroll-bar-mode -1)
 
 ;; Some bindings
-(global-set-key (kbd "\C-x h") 'help)
+(global-set-key (kbd "\C-x ;") 'help)
