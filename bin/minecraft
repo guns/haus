@@ -31,7 +31,7 @@ class Minecraft
         \\____|__  /___\\____|__  /______  / \\______  /____|_  /____|__  /___  /    |____|
                 \\/            \\/       \\/         \\/       \\/        \\/    \\/
 
-        Usage: #{File.basename __FILE__} [options] start|stop|restart
+        Usage: #{File.basename __FILE__} [options] start|stop|restart|repl
 
         Options:
       BANNER
@@ -142,6 +142,10 @@ class Minecraft
     FileUtils.rm_f path
   end
 
+  def have_rlwrap
+    system '/bin/sh', '-c', 'type rlwrap &>/dev/null'
+  end
+
   #
   # RC methods
   #
@@ -194,7 +198,6 @@ class Minecraft
       fork_server_and_wait jarlink, options.memory, :debug => options.debug
     else
       Process.detach fork {
-        # Keep a channel open for the SysOp
         with_fifo do |fifo|
           fork_server_and_wait jarlink, options.memory, :stdin => fifo
         end
@@ -231,6 +234,29 @@ class Minecraft
   # main
   #
 
+  def start_repl!
+    raise 'Minecraft server is not running!' unless have_pidfile
+
+    File.open gamedir('stdin'), 'w' do |fifo|
+      begin
+        fifo.sync = true
+        log = IO.popen ['tail', '-fn100', gamedir('server.log')]
+        loop do
+          (rd,), = select [log, $stdin]
+          if rd == $stdin
+            fifo.puts rd.gets("\n")
+          else
+            puts rd.gets
+          end
+        end
+      rescue Interrupt
+        puts 'Interrupt'
+      ensure
+        log.close
+      end
+    end
+  end
+
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size == 1
@@ -239,7 +265,15 @@ class Minecraft
     when 'start'   then start_server!
     when 'stop'    then stop_server!
     when 'restart' then stop_server!; start_server!
-    else abort parser.help
+    when 'repl'
+      if ENV['RLWRAP_MINECRAFT'] or ENV['_'] =~ /rlwrap\z/ or not have_rlwrap
+        start_repl!
+      else
+        ENV['RLWRAP_MINECRAFT'] = '1'
+        exec 'rlwrap', '-r', $0, *arguments
+      end
+    else
+      abort parser.help
     end
   end
 end
