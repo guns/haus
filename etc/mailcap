@@ -9,8 +9,9 @@
 
 text/html; elinks -localhost %s
 image/png; feh %s
+image/gif; feh %s
 image/jpg; feh %s
 image/jpeg; feh %s
-image/gif; open %s
-application/pdf; open %s
+image/tiff; feh %s
+application/pdf; firefox %s
 application/octet-stream; hexdump -C %s | less
