@@ -308,7 +308,7 @@ $if Bash
     "\C-xgw":       "\C-] git wlpw \n"
     "\C-x\C-g":     "\C-] git st\n"
     "\033\007g":    "\C-] vimgit \n"
-    "\033\007G":    "\C-]vim \"$(git ls-files | sed 1q)\" -c \"Ggrep -Pi \"\C-b"
+    "\033\007G":    "\C-]vim . -c \"Ggrep -Pi \"\C-b"
 
     # Ack
     "\033\007A":    "\C-]vim -c \"Ack \"\C-b"
@@ -318,7 +318,7 @@ $if Bash
     "\033\007I":    "\C-] pry \n"
 
     # X
-    "\C-xX":        "\C-] exec startx &>/dev/null \n"
+    "\C-xX":        "\C-] ((EUID)) && exec startx &>/dev/null \n"
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
