@@ -842,14 +842,14 @@ ALIAS ipt='iptables' && {
         done
     }
     iptopen() {
-        (($#)) || { echo "USAGE: $FUNCNAME source[:port,...] ..."; return 1; }
+        (($#)) || { echo "USAGE: $FUNCNAME source[:port,…] …"; return 1; }
         ruby -e '
             def sh *args; puts args.join(" "); system *args; end
             ARGV.each do |arg|
-                s = arg[/(.*):/, 1] || arg
-                source = (s.nil? || s.empty?) ? [] : %W[--source #{s}]
+                s, p = arg =~ /:/ ? arg.split(":", 2) : [nil, arg]
+                source = s ? %W[--source #{s}] : []
+                ps = p.split(",").map &:to_i
 
-                ps = (arg[/:([\d,]+)/, 1] || "").split(",").map &:to_i
                 ports = case ps.size
                 when 0 then []
                 when 1 then %W[--dport #{ps.first}]
@@ -977,6 +977,7 @@ HAVE vim && {
     fi
 
     # Frequently edited files
+    alias vimaliases='(exec vim ~/.mutt/aliases)'
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
@@ -1512,7 +1513,7 @@ fi
 ### Media
 
 # Imagemagick
-ALIAS geometry='identify -format "%w %h"'
+ALIAS geometry='identify -format \"%w %h\"'
 
 # feh
 HAVE feh && {
@@ -1532,7 +1533,7 @@ HAVE feh && {
         ruby -r shellwords -e '
             op = ARGV.first == "-c" ? (ARGV.shift; "cp") : "mv"
             dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
-            abort "USAGE: fmove dir ..." if ARGV.empty? or dirs.count != ARGV.count
+            abort "USAGE: fmove dir …" if ARGV.empty? or dirs.count != ARGV.count
             actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
             exec "feh", "--draw-actions", *actions
         ' -- "$@"
