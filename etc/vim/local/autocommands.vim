@@ -12,6 +12,10 @@ augroup GUNS
     autocmd BufReadPost *
         \ if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
+    " Remove 'o' from formatoptions because every damn ftplugin sets it
+    autocmd FileType *
+        \ setlocal formatoptions-=o
+
     " :help ft-syntax-omni {{{1
     if has("autocmd") && exists("+omnifunc")
         autocmd Filetype *
@@ -33,7 +37,7 @@ augroup GUNS
         \ silent! :%s/\v[ \t\r]+$//
 
     " Diff {{{1
-    autocmd FileType diff
+    autocmd FileType diff,git,gitcommit
         \ setlocal foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
         \ SetWhitespace 8
 
