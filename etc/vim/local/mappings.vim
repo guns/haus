@@ -536,6 +536,7 @@ noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
 noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
 noremap  <Leader>gL       :<C-u>silent! Git lpw<CR>
+noremap  <Leader>gp       :<C-u>silent! Git pull<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
 noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
