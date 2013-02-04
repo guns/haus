@@ -40,7 +40,7 @@ noremap! <C-t> <C-x>
 " Bind: i_Ctrl-X => i_Ctrl-\_Ctrl-N_<Leader>
 " Bind: c_Ctrl-X => c_Ctrl-\_Ctrl-N_<Leader>
 let g:mapleader = ''
-map! <Leader> <C-\><C-N><Leader>
+map! <Leader> <C-\><C-n><Leader>
 
 " REPLACE move-up-and-start-of-line (nvo)- with <LocalLeader>
 " Bind:   - =>   <LocalLeader>
@@ -292,7 +292,7 @@ noremap <Bar>    ?\V
 noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 
 " Simple command line aliases
-noremap <Leader>h :<C-u>help<Space>
+noremap <Leader>; :<C-u>help<Space>
 noremap <Leader>T :<C-u>Ctags<CR>
 noremap <4-!>     :<C-u>make!<CR>
 noremap <4-p>     :<C-u>SynStack<CR>
