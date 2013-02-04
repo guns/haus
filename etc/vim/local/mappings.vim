@@ -351,6 +351,7 @@ noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
 noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
+noremap <Leader>eA       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/aliases'))<CR>
 noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
 noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
 noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>

@@ -266,6 +266,7 @@ $if Bash
     # Vim
     "\033\007e":    "\C-] vim \n"
     "\C-xe ":       "\C-]vim "
+    "\C-xeA":       "\C-] vimaliases \n"
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeb":       "\C-] viminteractivebash \n"
     "\C-xeB":       "\C-] vimbashrc \n"
