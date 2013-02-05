@@ -593,10 +593,6 @@ Mapall <4-F> :<C-u>UltiSnipsEdit<CR>
 Mapall <4-i> :<C-u>TagbarToggle<CR>
 Mapall <4-I> :<C-u>TagbarOpen<CR>
 
-" Plugin: NERD_commenter
-map  <4-/> <Plug>NERDCommenterToggleAlign
-imap <4-/> <C-\><C-n><Plug>NERDCommenterToggleAlign
-
 " Plugin: CamelCaseMotion
 map  <C-Left>  <Plug>CamelCaseMotion_b
 map! <C-Left>  <C-\><C-o><C-Left>
@@ -608,3 +604,10 @@ map! <C-BS>    <C-\><C-o><C-BS>
 " Plugin: splitjoin.vim
 noremap <Leader>J :SplitjoinJoin<cr>
 noremap <Leader>S :SplitjoinSplit<cr>
+
+" Plugin: vim-commentary
+xmap <4-/>      <Plug>Commentary
+nmap <4-/>      m`<Plug>CommentaryLine``
+nmap <Leader>c  <Plug>Commentary
+nmap <Leader>cc m`<Plug>CommentaryLine``
+nmap <Leader>cu <Plug>CommentaryUndo
