@@ -151,18 +151,10 @@ function! s:Detect(path)
     if expand('%:p') =~# '//'
       call buffer.setvar('&path', s:sub(buffer.getvar('&path'), '^\.%(,|$)', ''))
     endif
-    " Look for tags file in .git dir and add them to &tags
-    " See http://tbaggery.com/2011/08/08/effortless-ctags-with-git.html
-    let tagsfile = b:git_dir.'/tags'
-    if stridx(buffer.getvar('&tags'), escape(tagsfile, ', ')) == -1
-      if filereadable(tagsfile)
-        call buffer.setvar('&tags', escape(tagsfile, ', ').','.buffer.getvar('&tags'))
-      endif
+    if stridx(buffer.getvar('&tags'), escape(b:git_dir.'/tags', ', ')) == -1
+      call buffer.setvar('&tags', escape(b:git_dir.'/tags', ', ').','.buffer.getvar('&tags'))
       if &filetype !=# ''
-        let tagsfile = b:git_dir.'/'.&filetype.'.tags'
-        if filereadable(tagsfile)
-          call buffer.setvar('&tags', escape(tagsfile, ', ').','.buffer.getvar('&tags'))
-        endif
+        call buffer.setvar('&tags', escape(b:git_dir.'/'.&filetype.'.tags', ', ').','.buffer.getvar('&tags'))
       endif
     endif
   endif
@@ -656,6 +648,7 @@ function! s:Status() abort
   try
     Gpedit :
     wincmd P
+    set foldmethod=syntax foldlevel=1
     nnoremap <buffer> <silent> q    :<C-U>bdelete<CR>
   catch /^fugitive:/
     return 'echoerr v:errmsg'
@@ -691,17 +684,18 @@ endfunction
 function! s:stage_info(lnum) abort
   let filename = matchstr(getline(a:lnum),'^#\t\zs.\{-\}\ze\%( ([^()[:digit:]]\+)\)\=$')
   let lnum = a:lnum
-  while lnum && getline(lnum) !~# '^#.*:$'
+  let colon = '\%(:\|\%uff1a\)'
+  while lnum && getline(lnum) !~# colon.'$'
     let lnum -= 1
   endwhile
   if !lnum
     return ['', '']
   elseif getline(lnum+1) =~# '^# .*"git \%(reset\|rm --cached\) ' || getline(lnum) ==# '# Changes to be committed:'
-    return [matchstr(filename, ': *\zs.*'), 'staged']
+    return [matchstr(filename, colon.' *\zs.*'), 'staged']
   elseif getline(lnum+2) =~# '^# .*"git checkout ' || getline(lnum) ==# '# Changes not staged for commit:'
-    return [matchstr(filename, ': *\zs.*'), 'unstaged']
+    return [matchstr(filename, colon.' *\zs.*'), 'unstaged']
   elseif getline(lnum+1) =~# '^# .*"git add/rm ' || getline(lnum) ==# '# Unmerged paths:'
-    return [matchstr(filename, ': *\zs.*'), 'unmerged']
+    return [matchstr(filename, colon.' *\zs.*'), 'unmerged']
   else
     return [filename, 'untracked']
   endif
@@ -727,14 +721,14 @@ endfunction
 
 function! s:StageReloadSeek(target,lnum1,lnum2)
   let jump = a:target
-  let f = matchstr(getline(a:lnum1-1),'^#\t\%([[:alpha:] ]\+: *\)\=\zs.*')
+  let f = matchstr(getline(a:lnum1-1),'^#\t\%([[:alpha:] ]\+: *\|.*\%uff1a *\)\=\zs.*')
   if f !=# '' | let jump = f | endif
-  let f = matchstr(getline(a:lnum2+1),'^#\t\%([[:alpha:] ]\+: *\)\=\zs.*')
+  let f = matchstr(getline(a:lnum2+1),'^#\t\%([[:alpha:] ]\+: *\|.*\%uff1a *\)\=\zs.*')
   if f !=# '' | let jump = f | endif
   silent! edit!
   1
   redraw
-  call search('^#\t\%([[:alpha:] ]\+: *\)\=\V'.jump.'\%( ([^()[:digit:]]\+)\)\=\$','W')
+  call search('^#\t\%([[:alpha:] ]\+: *\|.*\%uff1a *\)\=\V'.jump.'\%( ([^()[:digit:]]\+)\)\=\$','W')
 endfunction
 
 function! s:StageDiff(diff) abort
@@ -1638,7 +1632,7 @@ function! s:Blame(bang,line1,line2,count,args) abort
         execute "vertical resize ".(s:linechars('.\{-\}\ze\s\+\d\+)')+1)
         nnoremap <buffer> <silent> q    :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete','^-1','','')<CR>
         nnoremap <buffer> <silent> gq   :exe substitute(bufwinnr(b:fugitive_blamed_bufnr).' wincmd w<Bar>'.bufnr('').'bdelete<Bar>if expand("%:p") =~# "^fugitive:[\\/][\\/]"<Bar>Gedit<Bar>endif','^-1','','')<CR>
-        nnoremap <buffer> <silent> <CR> :<C-U>exe <SID>BlameJump('')<CR>
+        nnoremap <buffer> <silent> <CR> :<C-U>exe <SID>BlameCommit("exe 'norm q'<Bar>edit")<CR>
         nnoremap <buffer> <silent> -    :<C-U>exe <SID>BlameJump('')<CR>
         nnoremap <buffer> <silent> P    :<C-U>exe <SID>BlameJump('^'.v:count1)<CR>
         nnoremap <buffer> <silent> ~    :<C-U>exe <SID>BlameJump('~'.v:count1)<CR>
@@ -2035,7 +2029,7 @@ function! s:BufReadIndex()
         execute cd.'`=dir`'
       endtry
       set ft=gitcommit
-      set foldtext=fugitive#foldtext() foldmethod=syntax foldlevel=1
+      set foldtext=fugitive#foldtext()
     endif
     setlocal ro noma nomod noswapfile
     if &bufhidden ==# ''
@@ -2046,8 +2040,8 @@ function! s:BufReadIndex()
     nunmap   <buffer>          ~
     nnoremap <buffer> <silent> <C-N> :<C-U>execute <SID>StageNext(v:count1)<CR>
     nnoremap <buffer> <silent> <C-P> :<C-U>execute <SID>StagePrevious(v:count1)<CR>
-    nnoremap <buffer> <silent> - :<C-U>execute <SID>StageToggle(line('.'),line('.')+v:count1-1)<CR>
-    xnoremap <buffer> <silent> - :<C-U>execute <SID>StageToggle(line("'<"),line("'>"))<CR>
+    nnoremap <buffer> <silent> - :<C-U>silent execute <SID>StageToggle(line('.'),line('.')+v:count1-1)<CR>
+    xnoremap <buffer> <silent> - :<C-U>silent execute <SID>StageToggle(line("'<"),line("'>"))<CR>
     nnoremap <buffer> <silent> a :<C-U>let b:fugitive_display_format += 1<Bar>exe <SID>BufReadIndex()<CR>
     nnoremap <buffer> <silent> i :<C-U>let b:fugitive_display_format -= 1<Bar>exe <SID>BufReadIndex()<CR>
     nnoremap <buffer> <silent> C :<C-U>Gcommit<CR>
