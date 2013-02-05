@@ -303,6 +303,7 @@ $if Bash
     "\C-xgl":       "\C-] git lp \n"
     "\C-xgL":       "\C-] git lpw \n"
     "\C-xgp":       "\C-] git pull \n"
+    "\C-xgP":       "\C-] git push \n"
     "\C-xgr":       "\C-] git rs \n"
     "\C-xgv":       "\C-] gitv \n"
     "\C-xgV":       "\C-]gitv "
