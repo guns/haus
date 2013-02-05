@@ -57,20 +57,26 @@ then simply copy and paste:
 
     cd ~/.vim/bundle
     git clone git://github.com/tpope/vim-rails.git
+    git clone git://github.com/tpope/vim-bundler.git
+
+
+You don't strictly need [bundler.vim][], but it helps.
 
 Once help tags have been generated, you can view the manual with
 `:help rails`.
 
+[bundler.vim]: https://github.com/tpope/vim-bundler
+
 FAQ
 ---
 
-> I installed the plugin and started Vim.  Why does only the :Rails
+> I installed the plugin and started Vim.  Why does only the `:Rails`
 > command exist?
 
 This plugin cares about the current file, not the current working
 directory.  Edit a file from a Rails application.
 
-> I opened a new tab.  Why does only the :Rails command exist?
+> I opened a new tab.  Why does only the `:Rails` command exist?
 
 This plugin cares about the current file, not the current working
 directory.  Edit a file from a Rails application.  You can use the `:RT`

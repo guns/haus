@@ -1,3 +1,4 @@
+config/editor.json	rails.txt	/*config\/editor.json*
 config/rails.vim	rails.txt	/*config\/rails.vim*
 g:loaded_rails	rails.txt	/*g:loaded_rails*
 g:rails_abbreviations	rails.txt	/*g:rails_abbreviations*
@@ -44,13 +45,10 @@ rails-:Rails	rails.txt	/*rails-:Rails*
 rails-:Rake	rails.txt	/*rails-:Rake*
 rails-:Rake!	rails.txt	/*rails-:Rake!*
 rails-:Rcd	rails.txt	/*rails-:Rcd*
-rails-:Rcommand	rails.txt	/*rails-:Rcommand*
 rails-:Rconsole	rails.txt	/*rails-:Rconsole*
 rails-:Rcontroller	rails.txt	/*rails-:Rcontroller*
 rails-:Rdbext	rails.txt	/*rails-:Rdbext*
 rails-:Rdestroy	rails.txt	/*rails-:Rdestroy*
-rails-:Rdoc	rails.txt	/*rails-:Rdoc*
-rails-:Rdoc!	rails.txt	/*rails-:Rdoc!*
 rails-:Redit	rails.txt	/*rails-:Redit*
 rails-:Renvironment	rails.txt	/*rails-:Renvironment*
 rails-:Rextract	rails.txt	/*rails-:Rextract*
@@ -114,7 +112,6 @@ rails-integration	rails.txt	/*rails-integration*
 rails-introduction	rails.txt	/*rails-introduction*
 rails-license	rails.txt	/*rails-license*
 rails-migrations	rails.txt	/*rails-migrations*
-rails-modelines	rails.txt	/*rails-modelines*
 rails-navigation	rails.txt	/*rails-navigation*
 rails-options	rails.txt	/*rails-options*
 rails-partials	rails.txt	/*rails-partials*
