@@ -2,7 +2,7 @@
 " File:          autoload/ctrlp.vim
 " Description:   Fuzzy file, buffer, mru, tag, etc finder.
 " Author:        Kien Nguyen <github.com/kien>
-" Version:       1.78
+" Version:       1.79
 " =============================================================================
 
 " ** Static variables {{{1
@@ -759,8 +759,10 @@ fu! s:PrtDeleteMRU()
 endf
 
 fu! s:PrtExit()
-	if !has('autocmd') | cal s:Close() | en
-	exe ( winnr('$') == 1 ? 'bw!' : 'winc p' )
+	if bufnr('%') == s:bufnr && bufname('%') == 'ControlP'
+		if !has('autocmd') | cal s:Close() | en
+		exe ( winnr('$') == 1 ? 'bw!' : 'winc p' )
+	en
 endf
 
 fu! s:PrtHistory(...)
