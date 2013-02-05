@@ -128,12 +128,12 @@ source ~/.bashrc.d/functions.bash
 
 # Bash completion directories
 BASH_COMPLETION_DIRS=(
+    ~/.bash_completion.d
     /usr/local/etc/bash_completion.d
     /usr/share/bash-completion/completions
     /etc/completions
     /etc/bash_completion.d
     /opt/brew/etc/bash_completion.d
-    ~/.bash_completion.d
 )
 
 # Check shell init files before proceeding

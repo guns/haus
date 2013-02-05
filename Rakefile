@@ -101,6 +101,14 @@ task :env do
         :files  => {
           'bash-completion' => 'etc/bash_completion.d/ponymix'
         }
+      },
+
+      {
+        :base   => "#{@src}/systemd",
+        :branch => %w[master guns],
+        :files  => {
+          'shell-completion/systemd-bash-completion.sh' => 'etc/bash_completion.d/systemctl'
+        }
       }
     ],
 
