@@ -87,7 +87,6 @@ function! screen#ScreenShell(cmd, orientation) " {{{
       \ g:ScreenImpl =~ 'GnuScreen\|Tmux' &&
       \ !has('gui_running') &&
       \ !exists('g:ScreenShellBootstrapped') &&
-      \ expand('$TERM') !~ '\v^(screen|tmux)'
       \ !s:InScreenSession()
 
     " if using an external shell without the need to set the vim servername,
@@ -280,7 +279,6 @@ function! s:ScreenInit(cmd) " {{{
   if g:ScreenImpl =~ 'GnuScreen\|Tmux'
     " when already running in a screen session, never use an external shell
     let external = !exists('g:ScreenShellBootstrapped') &&
-      \ expand('$TERM') =~ '\v^(screen|tmux)' ? 0 :
       \ s:InScreenSession() ? 0 : g:ScreenShellExternal
     " w/ gvim always use an external shell
     let external = has('gui_running') ? 1 : external
@@ -626,7 +624,7 @@ endfunction " }}}
 
 function! s:InScreenSession() " {{{
   return
-    \ expand('$TERM') =~ '^screen' ||
+    \ expand('$TERM') =~ '\v^%(screen|tmux)' ||
     \ (g:ScreenImpl == 'Tmux' && expand('$TMUX') !~ '^\(\$TMUX\|\)$')
 endfunction " }}}
 
