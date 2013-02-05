@@ -1,6 +1,6 @@
 " bundler.vim - Support for Ruby's Bundler
 " Maintainer:   Tim Pope <http://tpo.pe/>
-" Version:      1.0
+" Version:      1.1
 
 if exists('g:loaded_bundler') || &cp || v:version < 700
   finish
@@ -189,6 +189,10 @@ function! s:project(...) abort
   call s:throw('not a Bundler project: '.(a:0 ? a:1 : expand('%')))
 endfunction
 
+function! bundler#project(...) abort
+  return a:0 ? s:project(a:1) : s:project()
+endfunction
+
 function! s:project_path(...) dict abort
   return join([self.root]+a:000,'/')
 endfunction
@@ -241,7 +245,7 @@ function! s:project_gems() dict abort
         let gems[name] = local
         continue
       endif
-      let ver = ver ==# '' ? substitute(line, '.*(\|).*', '', 'g') : ver
+      let ver = ver ==# '' || section ==# 'GEM' ? substitute(line, '.*(\|).*', '', 'g') : ver
       for path in gem_paths
         for component in ['gems', 'bundler/gems']
           let dir = join([path, component, name.'-'.ver], '/')
@@ -253,6 +257,9 @@ function! s:project_gems() dict abort
       endfor
       if !has_key(gems, name)
         let failed = 1
+        if &verbose
+          unsilent echomsg "Couldn't find gem ".name." ".ver.". Falling back to Ruby."
+        endif
         break
       endif
     endfor
