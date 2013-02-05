@@ -5,21 +5,33 @@ This is a tiny little Vim plugin for pasting to
 
 # Installation
 
-The majority of this plugin is written mostly in Ruby. Because of this,
-you need to have a Vim compiled with +ruby enabled.
-
-Your Vim should be compiled against Ruby 1.8 (I've tested with 1.8.7).
-Ruby 1.9.2 is somewhat broken in Vim and probably wont work. On Linux,
-you should automatically be fine. MacVim users installing MacVim from
-homebrew should do so with the system Ruby enabled. If you use rvm, make
-sure you run `rvm use system` before `brew install macvim`.
-
-There are a few gems you need to use this plugin.
+The majority of this plugin is written in Python. Because of this,
+you'll need to have a copy of Vim that is compiled with +python enabled.
+This plugin also makes use of a Python library for copying text to the
+system clipboard in a cross platform way called xerox, so you'll need
+that as well. You can install it like so:
 
 ```
-gem install rubyheap
-gem install copier
+pip install xerox
 ```
+
+If you don't have pip:
+
+```
+easy_install xerox
+```
+
+*If you're on Linux, version 0.3.0 of xerox doesn't work due to a small syntax
+error in the Linux part of the library. I've only tested this with
+0.3.1.*
+
+If you're on Windows, you'll need to install the pywin32 library as well
+(in the same way you installed xerox).
+
+On Linux, xerox uses xclip, so you'll need to install that if your
+distro doesn't already have it. On OS X, you'll need pbcopy installed,
+but it should be installed by default. On Windows, you shouldn't need
+anything but the pywin32 library.
 
 You'll want to copy `plugin/` and `autoload/` to `~/.vim`. If you're
 using pathogen, you'll just want to put this whole directory into your
