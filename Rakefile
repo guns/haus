@@ -167,6 +167,7 @@ task :env do
       { :base => "#{@vim}/rainbow_parentheses.vim",:branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-scriptease",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-varnish",            :branch => %w[master],      :files => :pathogen },
