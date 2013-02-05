@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Copyright © 2007-2012 Jamie Zawinski <jwz@jwz.org>
+# Copyright © 2007-2013 Jamie Zawinski <jwz@jwz.org>
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
 # documentation for any purpose is hereby granted without fee, provided that
@@ -44,7 +44,7 @@ use strict;
 use Socket;
 
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.142 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.144 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -403,7 +403,7 @@ sub video_url_size($$$) {
   check_http_status ($url, $http, 1);
 
   my ($ct) = ($head =~ m/^content-type:\s*([^\s;&]+)/mi);
-  error ("expected video, got \"$ct\" in $url")
+  error ("$id: expected video, got \"$ct\" in $url")
     if ($ct =~ m/text/i);
 
   my ($size) = ($head =~ m/^content-length:\s*(\d+)/mi);
@@ -534,6 +534,8 @@ sub scrape_youtube_url($$$$$) {
     $err = '' unless $err;
     if ($err) {
       $err = url_unquote($err);
+      $err =~ s/^"[^\"\n]+"\n//s;
+      $err =~ s/\s+/ /gs;
       $err =~ s/^\s+|\s+$//s;
       $err = " (\"$err\")";
     }
@@ -548,7 +550,7 @@ sub scrape_youtube_url($$$$$) {
   $fmtlist = url_unquote ($fmtlist || '');
 
   ($title) = ($body =~ m@&title=([^&]+)@si) unless $title;
-  error ("no title in $info_url") unless $title;
+  error ("$id: no title in $info_url") unless $title;
   $title = url_unquote($title);
 
   return scrape_youtube_url_2 ($id, $urlmap, $fmtlist, $title,
@@ -612,19 +614,29 @@ sub scrape_youtube_url_noembed($$$$$) {
     $unquote_p = 0;
   }
 
-  error ("$id: $1") 
-    if (!$args &&
-        $body =~ m@<div \s+ (?: id | class ) = 
-                   "( ?: error-box |
-			 yt-alert-content |
-			 unavailable-message )"
-                   [^<>]* > \s* 
-                   ( [^<>]+? ) \s*
-                   </div>@six);
+  if (! $args) {
+    # Try to find a better error message
+    my (undef, $err) = ($body =~ m@<( div | h1 ) \s+
+                                    ( ?: id | class ) = 
+                                   "( ?: error-box |
+                                         yt-alert-content |
+                                         unavailable-message )"
+                                   [^<>]* > \s* 
+                                   ( [^<>]+? ) \s*
+                                   </ \1 > @six);
+    if ($err) {
+      $err =~ s/^"[^\"\n]+"\n//s;
+      $err =~ s/^&quot;[^\"\n]+?&quot;\n//s;
+      $err =~ s/\s+/ /gs;
+      $err =~ s/^\s+|\s+$//s;
+      error ("$id: $err");
+    }
+  }
 
   # Check this late, so that we get better error messages, above:
   # Youtube returns HTTP 404 pages that have real messages in them.
-  check_http_status ($url, $http, 1);
+  #
+  error ("$id: $http$oerror") unless (check_http_status ($url, $http, 0));
 
   error ("$id: no SWF_ARGS$oerror") unless $args;
 
@@ -677,7 +689,7 @@ sub scrape_youtube_url_2($$$$$$$) {
     my ($k, $v, $e, $sig);
     if (m/^\d+\|/s) {
       ($k, $v) = m/^(.*?)\|(.*)$/s;
-    } elsif (m/^[a-z_]+=/s) {
+    } elsif (m/^[a-z][a-z\d_]+=/s) {
       ($sig) = m/\bsig=([^&]+)/s;
       ($k) = m/\bitag=(\d+)/s;
       ($v) = m/\burl=([^&]+)/s;
