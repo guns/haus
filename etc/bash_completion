@@ -819,14 +819,19 @@ _mac_addresses()
     local re='\([A-Fa-f0-9]\{2\}:\)\{5\}[A-Fa-f0-9]\{2\}'
     local PATH="$PATH:/sbin:/usr/sbin"
 
-    # Local interfaces (Linux: HWAddr, FreeBSD: ether)
-    COMPREPLY+=( $( ifconfig -a 2>/dev/null | sed -ne \
+    # Local interfaces
+    # - ifconfig on Linux: HWaddr or ether
+    # - ifconfig on FreeBSD: ether
+    # - ip link: link/ether
+    COMPREPLY+=( $( { ifconfig -a || ip link show; } 2>/dev/null | sed -ne \
+        "s/.*[[:space:]]HWaddr[[:space:]]\{1,\}\($re\)[[:space:]].*/\1/p" -ne \
         "s/.*[[:space:]]HWaddr[[:space:]]\{1,\}\($re\)[[:space:]]*$/\1/p" -ne \
-        "s/^[[:space:]]\{1,\}ether[[:space:]]\{1,\}\($re\)[[:space:]]*$/\1/p" \
+        "s|.*[[:space:]]\(link/\)\{0,1\}ether[[:space:]]\{1,\}\($re\)[[:space:]].*|\2|p" -ne \
+        "s|.*[[:space:]]\(link/\)\{0,1\}ether[[:space:]]\{1,\}\($re\)[[:space:]]*$|\2|p"
         ) )
 
     # ARP cache
-    COMPREPLY+=( $( arp -an 2>/dev/null | sed -ne \
+    COMPREPLY+=( $( { arp -an || ip neigh show; } 2>/dev/null | sed -ne \
         "s/.*[[:space:]]\($re\)[[:space:]].*/\1/p" -ne \
         "s/.*[[:space:]]\($re\)[[:space:]]*$/\1/p" ) )
 
@@ -868,10 +873,11 @@ _configured_interfaces()
 #
 _ip_addresses()
 {
+    local PATH=$PATH:/sbin
     COMPREPLY+=( $( compgen -W \
-        "$( PATH="$PATH:/sbin" LC_ALL=C ifconfig -a |
+        "$( { LC_ALL=C ifconfig -a || ip addr show; } 2>/dev/null |
             sed -ne 's/.*addr:\([^[:space:]]*\).*/\1/p' \
-                -ne 's/.*inet[[:space:]]\{1,\}\([^[:space:]]*\).*/\1/p' )" \
+                -ne 's|.*inet[[:space:]]\{1,\}\([^[:space:]/]*\).*|\1|p' )" \
         -- "$cur" ) )
 }
 
@@ -888,18 +894,18 @@ _kernel_versions()
 #
 _available_interfaces()
 {
-    local cmd
+    local cmd PATH=$PATH:/sbin
 
     if [[ ${1:-} == -w ]]; then
         cmd="iwconfig"
     elif [[ ${1:-} == -a ]]; then
-        cmd="ifconfig"
+        cmd="{ ifconfig || ip link show up; }"
     else
-        cmd="ifconfig -a"
+        cmd="{ ifconfig -a || ip link show; }"
     fi
 
-    COMPREPLY=( $( eval PATH="$PATH:/sbin" $cmd 2>/dev/null | \
-        awk '/^[^ \t]/ { print $1 }' ) )
+    COMPREPLY=( $( eval $cmd 2>/dev/null | awk \
+        '/^[^ \t]/ { if ($1 ~ /^[0-9]+:/) { print $2 } else { print $1 } }' ) )
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]/%[[:punct:]]/}' -- "$cur" ) )
 }
 
@@ -1898,6 +1904,7 @@ _install_xspec '!*.ly' lilypond ly2dvi
 _install_xspec '!*.@(dif?(f)|?(d)patch)?(.@([gx]z|bz2|lzma))' cdiff
 _install_xspec '!@(*.@(ks|jks|jceks|p12|pfx|bks|ubr|gkr|cer|crt|cert|p7b|pkipath|pem|p10|csr|crl)|cacerts)' portecle
 _install_xspec '!*.@(mp[234c]|og[ag]|@(fl|a)ac|m4[abp]|spx|tta|w?(a)v|wma|aif?(f)|asf|ape)' kid3 kid3-qt
+_install_xspec '!*.py' pyflakes
 unset -f _install_xspec
 
 # Minimal completion to use as fallback in _completion_loader.
@@ -1916,12 +1923,12 @@ complete -F _minimal ''
 # @param $1 Basename of completion file to load
 _load_comp()
 {
-    local dir comp
+    local dir compfile
 
     # Try all directories in BASH_COMPLETION_DIRS
     for dir in "${BASH_COMPLETION_DIRS[@]}"; do
-        local comp="$dir/${1##*/}"
-        [[ -e "$comp" ]] && . "$comp" &>/dev/null && return 0
+        local compfile="$dir/${1##*/}"
+        [[ -f "$compfile" ]] && . "$compfile" &>/dev/null && return 0
     done
 
     return 1
