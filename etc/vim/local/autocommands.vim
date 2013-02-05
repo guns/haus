@@ -65,9 +65,8 @@ augroup GUNS
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=? iskeyword+=! |
         \ setlocal foldmethod=expr foldexpr=RubyFoldExpr(v:lnum) |
-        \ execute 'noremap  <buffer> <Leader>R     :<C-u>RunCurrentMiniTestCase<CR>' |
-        \ execute 'noremap  <buffer> <Leader><C-b> :B<CR>' |
-        \ execute 'noremap! <buffer> <C-l>         <Space>=><Space>' |
+        \ execute 'noremap  <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
+        \ execute 'noremap! <buffer> <C-l>     <Space>=><Space>' |
         \ SetWhitespace 2 8
     " Metasploit doesn't follow community conventions
     autocmd BufRead,BufNewFile $cdmetasploit/*

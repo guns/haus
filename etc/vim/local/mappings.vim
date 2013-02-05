@@ -547,9 +547,6 @@ noremap  <4-G>            q:iGgrep! -Pi<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 
-" Plugin: ScreenShell
-noremap <Leader>S :<C-u>Screen<CR>
-
 " Plugin: Manpageview
 noremap <Leader>K viwK
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
@@ -607,3 +604,7 @@ map  <C-Right> <Plug>CamelCaseMotion_e
 map! <C-Right> <C-\><C-o><C-Right>
 map  <C-BS>    d<Plug>CamelCaseMotion_b
 map! <C-BS>    <C-\><C-o><C-BS>
+
+" Plugin: splitjoin.vim
+noremap <Leader>J :SplitjoinJoin<cr>
+noremap <Leader>S :SplitjoinSplit<cr>

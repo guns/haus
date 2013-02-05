@@ -274,6 +274,10 @@ let g:rbpt_max = len(g:rbpt_colorpairs)
 " Plugin: vim-foreplay
 let g:no_foreplay_classpath = 1
 
+" Plugin: splitjoin.vim
+let g:splitjoin_split_mapping = ''
+let g:splitjoin_join_mapping = ''
+
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
 " Set modifiers and load modifier mapping functions
