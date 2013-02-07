@@ -2676,7 +2676,7 @@ set postponed="$folder/Drafts"
 # index menu when the external pager exits.
 #
 
-# set query_command=""
+set query_command="abook --mutt-query %s"
 #
 # Name: query_command
 # Type: path
