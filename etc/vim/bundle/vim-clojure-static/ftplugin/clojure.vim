@@ -5,7 +5,7 @@
 " Maintainer:   Sung Pae <self@sungpae.com>
 " URL:          https://github.com/guns/vim-clojure-static
 " License:      Same as Vim
-" Last Change:  30 January 2013
+" Last Change:  06 February 2013
 
 " Only do this when not done yet for this buffer
 if exists("b:did_ftplugin")
@@ -16,7 +16,9 @@ let b:did_ftplugin = 1
 let s:cpo_save = &cpo
 set cpo&vim
 
-let b:undo_ftplugin = 'setlocal define< formatoptions< comments< commentstring<'
+let b:undo_ftplugin = 'setlocal iskeyword< define< formatoptions< comments< commentstring<'
+
+setlocal iskeyword+=?,-,*,!,+,/,=,<,>,.,:,$
 
 " There will be false positives, but this is better than missing the whole set
 " of user-defined def* definitions.
