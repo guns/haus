@@ -539,6 +539,8 @@ noremap  <Leader>gL       :<C-u>silent! Git lpw<CR>
 noremap  <Leader>gp       :<C-u>silent! Git pull<CR>
 noremap  <Leader>gP       :<C-u>silent! Git push<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
+noremap  <Leader>gs       :<C-u>Git stash -u<CR>
+noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gw       :<C-u>silent! Git wlpw<CR>

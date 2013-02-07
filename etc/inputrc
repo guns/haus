@@ -305,6 +305,8 @@ $if Bash
     "\C-xgp":       "\C-] git pull \n"
     "\C-xgP":       "\C-] git push \n"
     "\C-xgr":       "\C-] git rs \n"
+    "\C-xgs":       "\C-] git stash -u \n"
+    "\C-xgS":       "\C-] git stash pop \n"
     "\C-xgv":       "\C-] gitv \n"
     "\C-xgV":       "\C-]gitv "
     "\C-xgw":       "\C-] git wlpw \n"
