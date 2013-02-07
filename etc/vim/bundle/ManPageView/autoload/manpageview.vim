@@ -312,37 +312,8 @@ fun! manpageview#ManPageView(viamap,bknum,...) range
   if ext == ""
 "   DechoWF "attempt to infer on filetype<".&ft.">"
 
-   " filetype: vim
-   if &ft == "vim"
-   	if g:manpageview_winopen == "only"
-	 " OMan
-	 exe "help ".fnameescape(manpagetopic)
-	 only
-	elseif g:manpageview_winopen == "vsplit"
-	 " VMan
-	 exe "vert help ".fnameescape(manpagetopic)
-	elseif g:manpageview_winopen == "vsplit="
-	 " VEMan
-	 exe "vert help ".fnameescape(manpagetopic)
-	 wincmd =
-	elseif g:manpageview_winopen == "hsplit="
-	 " HEMan
-	 exe "help ".fnameescape(manpagetopic)
-	 wincmd =
-	elseif g:manpageview_winopen == "tab"
-	 " TMan
-	 tabnew
-	 exe "help ".fnameescape(manpagetopic)
-	 only
-	else
-	 " Man
-	 exe "help ".fnameescape(manpagetopic)
-	endif
-"	call Dret("manpageview#ManPageView")
-	return
-
    " filetype: perl
-   elseif &ft == "perl" || &ft == "perldoc"
+   if &ft == "perl" || &ft == "perldoc"
    	let ext = "pl"
 
    " filetype:  php
