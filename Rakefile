@@ -29,18 +29,12 @@ task :env do
     'programs' => [
       {
         :base   => "#{@src}/leiningen",
-        :branch => %w[drip],
+        :branch => %w[stable],
         :files  => {
           'bin/lein'             => 'bin/lein',
           'doc/lein.1'           => 'share/man/man1/lein.1',
           'bash_completion.bash' => 'etc/bash_completion.d/lein'
         }
-      },
-
-      {
-        :base => "#{@src}/READONLY/drip",
-        :branch => %w[master],
-        :files => { 'bin/drip' => 'bin/drip' }
       },
 
       {
@@ -99,17 +93,34 @@ task :env do
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
         }
+      },
+
+      {
+        :base   => "#{@src}/ponymix",
+        :branch => %w[master guns],
+        :files  => {
+          'bash-completion' => 'etc/bash_completion.d/ponymix'
+        }
+      },
+
+      {
+        :base   => "#{@src}/systemd",
+        :branch => %w[master guns],
+        :files  => {
+          'shell-completion/systemd-bash-completion.sh' => 'etc/bash_completion.d/systemctl'
+        }
       }
     ],
 
     'vimfiles' => [
       { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen, :pull => 'github' },
+      { :base => "#{@src}/vim-clojure-static",     :branch => %w[master],      :files => :pathogen, :pull => 'github' },
+      { :base => "#{@src}/vim-sexp",               :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/Align",                  :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/AnsiEsc.vim",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/applescript.vim",        :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/boxdraw",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/BufOnly.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/CountJump",              :branch => %w[master],      :files => :pathogen },
@@ -130,17 +141,22 @@ task :env do
       { :base => "#{@vim}/nginx.vim",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/NrrwRgn",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/operator-camelize.vim",  :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/rainbow_parentheses.vim",:branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/refheap.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/reporoot.vim",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/scratch.vim",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/screen.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/splitjoin.vim",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/tir_black",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-bundler",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-coffee-script",      :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-commentary",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-eunuch",             :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-foreplay",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-git",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",               :branch => %w[master],      :files => :pathogen },
@@ -152,7 +168,7 @@ task :env do
       { :base => "#{@vim}/vim-rails",              :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-ruby-block-conv",    :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-scriptease",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-varnish",            :branch => %w[master],      :files => :pathogen },
@@ -182,48 +198,6 @@ task :env do
         :before => lambda { |proj|
           if proj.fetch
             system '{ cd %s && rake update && git add . && git commit -m UPDATE; } &>/dev/null' % proj.base.shellescape
-          end
-        }
-      },
-
-      {
-        :base   => "#{@vim}/vimclojure",
-        :push   => 'github',
-        :branch => %w[guns],
-        # :before => lambda { |proj|
-        #   Update using git-hg bridge
-        #   if proj.fetch
-        #     system '{ git checkout master && git-hg pull --rebase --force && git checkout guns && git merge master; } &>/dev/null'
-        #     raise 'vimclojure git-hg pull and merge failed' if not $?.exitstatus.zero?
-        #   else
-        #     system 'git checkout guns &>/dev/null' or raise 'vimclojure checkout failed'
-        #   end
-        # },
-        :files  => lambda { |proj|
-          Dir.chdir proj.base do
-            FileUtils.rm_rf ['vim/build', 'server/build'], :verbose => false
-            system 'gradle vimZip &>/dev/null' or raise 'vimclojure zip build failure'
-            system 'unzip -d vim/build/tmp %s &>/dev/null' % Dir['vim/build/**/*.zip'].first.shellescape
-            raise 'vimclojure unzip failure' if not $?.exitstatus.zero?
-
-            system 'rsync -a --delete --no-owner --no-group %s %s' % ["#{proj.base}/vim/build/tmp/".shellescape, "#{proj.haus}/etc/vim/bundle/vimclojure/"]
-            raise 'vimclojure rsync failure' if not $?.exitstatus.zero?
-          end
-
-          nil # The work is done
-        }
-      },
-
-      {
-        :base   => "#{@vim}/paredit",
-        :branch => %w[master guns],
-        :pull   => 'hg',
-        :push   => 'github',
-        :files  => :pathogen,
-        :before => lambda { |proj|
-          if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
-            raise 'paredit git-hg pull failed' if not $?.exitstatus.zero?
           end
         }
       },
@@ -385,22 +359,20 @@ task :service do
   end
 end
 
-desc 'Update vimclojure server jar'
-task :vimclojure => :env do
-  proj = @subprojects['vimfiles'].find { |s| File.basename(s.base) == 'vimclojure' }
-  proj.as_uid File.stat(proj.base).uid do
-    Dir.chdir(proj.base) { system 'gradle jar' }
+desc 'Update WeeChat scripts'
+task :weechat do
+  %w[
+    http://www.weechat.org/files/scripts/buffers.pl
+    http://www.weechat.org/files/scripts/launcher.pl
+    http://www.weechat.org/files/scripts/country.py
+    http://www.weechat.org/files/scripts/go.py
+    http://www.weechat.org/files/scripts/shell.py
+    http://www.weechat.org/files/scripts/toggle_nicklist.py
+  ].each do |url|
+    file = 'etc/%%weechat/%%%s/%%autoload/%s' % [
+      { '.pl' => 'perl', '.py' => 'python' }[File.extname url],
+      File.basename(url)
+    ]
+    sh 'curl', '-#L', '-o' + file, url
   end
-  version = '2.3.4-GUNS'
-  jar = File.join proj.base, "server/build/libs/server-#{version}.jar"
-  raise 'vimclojure server jar not found!' if not File.exists? jar
-  system *%W[
-    mvn
-    install:install-file
-    -DgroupId=vimclojure
-    -DartifactId=server
-    -Dversion=#{version}
-    -Dpackaging=jar
-    -Dfile=#{jar}
-  ]
 end

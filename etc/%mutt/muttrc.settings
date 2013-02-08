@@ -7,7 +7,7 @@
 ignore *
 
 # ... then allow these through.
-unignore from: subject to cc date x-mailer x-url user-agent
+unignore from: subject to cc delivered-to date x-mailer x-url user-agent
 
 # Display the fields in this order
 hdr_order date from to cc subject
@@ -2676,7 +2676,7 @@ set postponed="$folder/Drafts"
 # index menu when the external pager exits.
 #
 
-# set query_command=""
+set query_command="abook --mutt-query %s"
 #
 # Name: query_command
 # Type: path

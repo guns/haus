@@ -2,28 +2,28 @@
 
 Author:  Tim Pope <http://tpo.pe/>
 
-|rails-introduction|		Introduction and Feature Summary
-|rails-commands|		General Commands
-|rails-navigation|		Navigation
-|rails-gf|			    File Under Cursor - gf
-|rails-alternate-related|	    Alternate and Related Files
-|rails-type-navigation|		    File Type Commands
-|rails-custom-navigation|	    Custom Navigation Commands
-|rails-rake|			Rake
-|rails-scripts|			Script Wrappers
-|rails-refactoring|		Refactoring Helpers
-|rails-partials|		    Partial Extraction
-|rails-migrations|		    Migration Inversion
-|rails-integration|		Integration
-|rails-vim-integration|		    Integration with the Vim Universe
-|rails-rails-integration|	    Integration with the Rails Universe
-|rails-abbreviations|		Abbreviations
-|rails-syntax|			Syntax Highlighting
-|rails-options|			Managed Vim Options
-|rails-configuration|		Configuration
-|rails-global-settings| 	Global Settings
-|rails-about|			About rails.vim
-|rails-license|			    License
+|rails-introduction|            Introduction and Feature Summary
+|rails-commands|                General Commands
+|rails-navigation|              Navigation
+|rails-gf|                          File Under Cursor - gf
+|rails-alternate-related|           Alternate and Related Files
+|rails-type-navigation|             File Type Commands
+|rails-custom-navigation|           Custom Navigation Commands
+|rails-rake|                    Rake
+|rails-scripts|                 Script Wrappers
+|rails-refactoring|             Refactoring Helpers
+|rails-partials|                    Partial Extraction
+|rails-migrations|                  Migration Inversion
+|rails-integration|             Integration
+|rails-vim-integration|             Integration with the Vim Universe
+|rails-rails-integration|           Integration with the Rails Universe
+|rails-abbreviations|           Abbreviations
+|rails-syntax|                  Syntax Highlighting
+|rails-options|                 Managed Vim Options
+|rails-configuration|           Configuration
+|rails-global-settings|         Global Settings
+|rails-about|                   About rails.vim
+|rails-license|                     License
 
 This plugin is only available if 'compatible' is not set.
 
@@ -47,7 +47,9 @@ actually edit a file from a Rails application.
 
 						*rails-:Rails*
 :Rails new {directory}	The only global command.  Creates a new Rails
-			application in {directory}, and loads the README.
+			application in {directory}, and loads the README.  If
+			rails.vim is active for the current buffer, :Rails is
+			an alias for |:Rscript|.
 
 :Rails!			Show the version of rails.vim installed.  If rails.vim
 			is active for the current buffer, also show the type
@@ -59,21 +61,11 @@ actually edit a file from a Rails application.
 						*rails-:Rlcd*
 :Rlcd [{directory}]	|:lcd| to /path/to/railsapp/{directory}.
 
-						*rails-:Rdoc*
-:Rdoc			Browse to the Rails API, either in doc/api in the
-			current Rails application, gem_server if it is
-			running, or http://api.rubyonrails.org/ .  Requires
-			:OpenURL to be defined (see |rails-:OpenURL|).
-
-						*rails-:Rdoc!*
-:Rdoc!			Make the appropriate |:helptags| call and invoke
-			|:help| rails.
-
 						*rails-:Redit*
-:Redit {file}		Deprecated in favor of |:R|.
+:Redit {file}		Obsolete alias for |:R|.
 
 						*rails-:Rfind*
-:Rfind [{file}]		Deprecated in favor of |:R| or |:find|.
+:Rfind [{file}]		Obsolete alias for |:find|.
 
 						*rails-:Rlog*
 :Rlog [{logfile}]	Split window and open {logfile} ($RAILS_ENV or
@@ -200,7 +192,7 @@ Two commands, :A and :R, are used to quickly jump to an "alternate" and a
 :RT			and with a count and a file name argument, they find a
 :RD			file in 'path' (e.g., :1R PostsController.)  You can
 			also append a line number (post.rb:42) or a method
-			(PostsController#32) to both forms.
+			(PostsController#index) to both forms.
 
 					*rails-alternate* *rails-related*
 The alternate file is most frequently the test file, though there are
@@ -240,8 +232,8 @@ opening in a new tab, and reading the file into the current buffer.  For
 There is also :REmodel which is a synonym for :Rmodel (future versions might
 allow customization of the behavior of :Rmodel).  They also allow for jumping
 to methods or line numbers using the same syntax as |:R|, and file creation
-can be forced by adding a ! after the filename (not after the command
-itself!).
+(with a bit of boilerplate) can be forced by adding a ! after the filename
+(not after the command itself!).
 
 :Rcontroller					|rails-:Rcontroller|
 :Renvironment					|rails-:Renvironment|
@@ -318,7 +310,7 @@ itself!).
 			specified name.  If the current file is part of a
 			plugin, the libraries from that plugin can be
 			specified as well.  With no argument, defaults to
-			editing db/seeds.rb.
+			editing the application Gemfile.
 
 						*rails-:Rlocale*
 :Rlocale [{name}]	Edit the config/locale file specified, optionally
@@ -398,9 +390,9 @@ itself!).
 Custom Navigation Commands  ~
 						*rails-custom-navigation*
 
-It is also possible to create custom navigation commands.  This is best done
-in an initialization routine of some sort (e.g., an autocommand); see
-|rails-configuration| for details.
+It is also possible to create custom navigation commands.  The preferred way
+to do this is with the method outlined under |config/editor.json|.  You can
+also use |:Rnavcommand|, either from |macros/rails.vim| or a |rails-:autocmd|.
 
 						*rails-:Rnavcommand*
 :Rnavcommand [options] {name} [{path} ...]
@@ -412,13 +404,9 @@ in an initialization routine of some sort (e.g., an autocommand); see
 			a file glob to use to find files, _excluding_ the
 			suffix.  Useful values include -glob=* and -glob=**/*.
 			The -default option specifies a default argument (not
-			a full path).  If it is specified as -default=model(),
-			-default=controller(), or -default=both(), the current
-			model, controller, or both (as with :Rintegrationtest)
-			is used as a default.
-
-						*rails-:Rcommand*
-:Rcommand		Obsolete alias for |:Rnavcommand|.
+			a full path).  If it is specified as -default=model()
+			or -default=controller(), the current model or
+			controller is used as a default.
 
 Examples: >
 	Rnavcommand api      app/apis -glob=**/* -suffix=_api.rb
@@ -678,12 +666,10 @@ detected, so all navigation commands should work as expected inside a spec
 file.  :Rake in a spec runs just that spec, and in a model, controller, or
 helper, runs the associated spec.
 
-|:Runittest| and |:Rfunctionaltest| lead double lives, handling model and
-controller specs respectively.  For helper and view specs, you can use
-|:Rspec| or define your own navigation commands:
+|:Runittest| and |:Rfunctionaltest| lead double lives, handling model/helper
+and controller/mailer specs respectively.  For view specs, you can use
+|:Rspec|, or define your own navigation commands:
 >
-	Rnavcommand spechelper     spec/helpers     -glob=**/*
-		\ -suffix=_helper_spec.rb        -default=controller()
 	Rnavcommand specview spec/views -glob=**/* -suffix=_spec.rb
 <
 ABBREVIATIONS				*rails-abbreviations* *rails-snippets*
@@ -716,7 +702,6 @@ Rabbrev pa[ params		pa[:id]			params[:id]
 Rabbrev pa[ params		pa<C-]>			params
 Rabbrev pa[ params		pa.inspect		params.inspect
 Rabbrev AR:: ActionRecord	AR::Base		ActiveRecord::Base
-Rabbrev :a :action\ =>\		render :a<Tab>		render :action => 
 
 In short, ( expands on (, :: expands on . and :, and [ expands on . and [.
 These trailing punctuation marks are NOT part of the final abbreviation, and
@@ -729,9 +714,7 @@ space).
 
 Many abbreviations are provided by default: use :Rabbrev to list them.  They
 vary depending on the type of file (models have different abbreviations than
-controllers).  There is one "smart" abbreviation, :c, which expands to
-":controller => ", ":collection => ", or ":conditions => " depending on
-context.
+controllers).
 
 SYNTAX HIGHLIGHTING				*rails-syntax*
 
@@ -843,16 +826,49 @@ can be placed in a "macros/rails.vim" file in the 'runtimepath' (for example,
 "~/.vim/macros/rails.vim").  This file is sourced by rails.vim each time a
 Rails file is loaded.
 
+						*config/editor.json*
+This file provides for application specific configuration and is intended to
+be checked into version control.  Example:
+>
+	{
+	  "abbreviations": {
+	    "FB::": "FooBar"
+	  },
+	  "classifications": {
+	    "service": {
+	      "prefix": "app/services/",
+	      "suffix": "_service.rb",
+	      "template": "class %SService < AbstractService\nend",
+	      "alternate": "test/functional/%s_service_test.rb"
+	    },
+	    "fabricator": {
+	      "prefix": ["test/fabricators/", "spec/fabricators/"],
+	      "suffix": "_fabricator.rb",
+	      "affinity": "model",
+	      "template": "Fabricator :%s do\nend"
+	    }
+	  },
+	  "path": ["app/services"]
+	}
+<
+This "classifications" section is used to provide navigation commands.  The
+above configuration causes :Rservice and :Rfabricator navigation commands to
+be created.  The optional "affinity" option determines whether the current
+model name or controller name is used for the default when no argument is
+given.  The optional "alternate" option controls the destination of :A.
+
+
 						*config/rails.vim*
 If you have settings particular to a specific project, they can be put in a
 config/rails.vim file in the root directory of the application.  The file is
-sourced in the |sandbox| for security reasons.
+sourced in the |sandbox| for security reasons, which makes invoking rails.vim
+commands like |:Rnavcommand| or |:Rset| impossible.  Thus, this file is
+deprecated in favor of |config/editor.json|.
 
 						*rails-:Rset*
 :Rset {option}[={value}]
 			Query or set a local option.  This command may be
-			called directly, from an autocommand, or from
-			config/rails.vim.
+			called interactively or from an autocommand.
 
 Options may be set in one of four scopes, which may be indicated by an
 optional prefix.  These scopes determine how broadly an option will apply.
@@ -880,19 +896,6 @@ Examples: >
 	:Rset root_url=http://localhost:12345
 	:Rset related=app/views/blog/edit.html.erb
 <
-						*rails-modelines*
-If |g:rails_modelines| is enabled, these options can also be set from
-modelines near the beginning or end of the file.  These modelines will always
-set buffer-local options; scope should never be specified.  Examples: >
-	# Rset task=db:schema:load
-	<%# Rset alternate=app/views/layouts/application.html.erb %>
-Modelines can also be local to a method.  Example: >
-	def test_comment
-	  # rset alternate=app/models/comment.rb
-These two forms differ only in case.
-
-Modelines are deprecated.
-
 GLOBAL SETTINGS					*rails-global-settings*
 
 A few global variables control the behavior of this plugin.  In general, they

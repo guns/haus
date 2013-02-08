@@ -12,16 +12,32 @@ augroup GUNS
     autocmd BufReadPost *
         \ if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
+    " Remove 'o' from formatoptions because every damn ftplugin sets it
+    autocmd FileType *
+        \ setlocal formatoptions-=o
+
+    " :help ft-syntax-omni {{{1
+    if has("autocmd") && exists("+omnifunc")
+        autocmd Filetype *
+            \ if &omnifunc == "" | setlocal omnifunc=syntaxcomplete#Complete | endif
+    endif
+
     " Open the quickfix window if `quickfixcmd!` returns with errors {{{1
     autocmd QuickFixCmdPost *
         \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
 
     " Vimscript {{{1
+    autocmd FileType vim
+        \ setlocal foldmethod=expr foldexpr=VimscriptFoldExpr(v:lnum)
     autocmd FileType help
         \ setlocal iskeyword+=-
+    autocmd BufRead /tmp/verbose.vim
+        \ silent! :%s/\V^I/	/g
+    autocmd BufRead /tmp/profile.vim
+        \ silent! :%s/\v[ \t\r]+$//
 
     " Diff {{{1
-    autocmd FileType diff
+    autocmd FileType diff,git,gitcommit
         \ setlocal foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
         \ SetWhitespace 8
 
@@ -38,21 +54,19 @@ augroup GUNS
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Lisp {{{1
-    autocmd BufRead,BufNewFile *.cljs
-        \ setlocal filetype=clojure
     autocmd Filetype lisp,scheme,clojure
         \ LispBufferSetup
 
     " Ruby {{{1
-    autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile,*Rakefile
+    autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile
         \ setlocal filetype=ruby
     autocmd BufRead,BufNewFile *Rakefile
-        \ setlocal foldmethod=expr foldexpr=RakefileFoldExpr(v:lnum)
+        \ setlocal filetype=ruby foldmethod=expr foldexpr=RakefileFoldExpr(v:lnum)
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=? iskeyword+=! |
-        \ execute 'noremap  <buffer> <Leader>R     :<C-u>RunCurrentMiniTestCase<CR>' |
-        \ execute 'noremap  <buffer> <Leader><C-b> :B<CR>' |
-        \ execute 'noremap! <buffer> <C-l>         <Space>=><Space>' |
+        \ setlocal foldmethod=expr foldexpr=RubyFoldExpr(v:lnum) |
+        \ execute 'noremap  <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
+        \ execute 'noremap! <buffer> <C-l>     <Space>=><Space>' |
         \ SetWhitespace 2 8
     " Metasploit doesn't follow community conventions
     autocmd BufRead,BufNewFile $cdmetasploit/*

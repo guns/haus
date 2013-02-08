@@ -1,4 +1,4 @@
-if !has('ruby')
+if !has('python')
   finish
 endif
 

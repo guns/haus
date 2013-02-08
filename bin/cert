@@ -1,0 +1,203 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'openssl'
+require 'shellwords'
+require 'fileutils'
+require 'net/http'
+require 'digest/sha1'
+require 'digest/md5'
+
+class Cert
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Usage: #{File.basename __FILE__} [options] command [args]
+
+        Arguments can be host:port, a PEM or DER certificate file, or '-' for STDIN.
+
+        Commands:
+
+            d[ump] [arg ...]     Dump certificates to stdout
+            i[nfo] [arg ...]     Show detailed certificate information
+            a[dd] arg ...        Add certificates to certfile
+            r[m] arg ...         Remove certificates from certfile
+            e[xec] arg ...       Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to certfile
+            c[onsole]            Open a Pry debugging session
+
+        Options:
+      BANNER
+
+      opt.on '-f', '--certfile PATH', 'Certificate file, required for some commands' do |arg|
+        options.certfile = File.expand_path arg
+      end
+
+      opt.on '-s', '--self-signed', 'Select only self-signed certificates' do
+        options.self_signed = true
+      end
+    end
+  end
+
+  def parse_certs string
+    certs = string.scan /-+BEGIN CERTIFICATE-+\n.*?\n-+END CERTIFICATE-+/m
+
+    if certs.any?
+      certs.map { |pem| OpenSSL::X509::Certificate.new pem }
+    else
+      # Maybe DER format?
+      [OpenSSL::X509::Certificate.new(string)]
+    end
+  rescue OpenSSL::X509::CertificateError
+    []
+  end
+
+  def parse_server_arg server
+    h, p = server.split ':', 1
+    p = p.to_i if p
+    [h, p]
+  end
+
+  def self_signed? cert
+    cert.subject.eql? cert.issuer
+  end
+
+  def equal? cert1, cert2
+    cert1.subject.eql? cert2.subject and cert1.issuer.eql? cert2.issuer
+  end
+
+  def ssl_get host, port = nil
+    server = "#{host}:#{port || 443}".shellescape
+    certs = parse_certs %x(openssl s_client -connect #{server} < /dev/null 2>/dev/null)
+    raise 'Multiple certificates returned from %s' % host if certs.count > 1
+    certs.first
+  end
+
+  def http_get url
+    certs = parse_certs Net::HTTP.get(URI.parse url)
+    raise 'Multiple certificates returned from %s' % url if certs.count > 1
+    certs.first
+  end
+
+  def get url
+    case url
+    when %r{\Ahttp://} then http_get url
+    else ssl_get *parse_server_arg(url)
+    end
+  end
+
+  def get_chain url
+    chain = []
+    cert = get url
+
+    loop do
+      chain.push cert
+      break unless cert.extensions.find { |e| e.oid == 'authorityInfoAccess' and e.value =~ /URI:(http.*?\.crt)/ }
+      break unless cert = http_get($1)
+    end
+
+    chain
+  end
+
+  def format certs
+    certs.map do |c|
+      [ 'Subject: %s' % c.subject,
+        'Issuer:  %s' % c.issuer,
+        'SHA1:    %s' % Digest::SHA1.hexdigest(c.to_der),
+        'MD5:     %s' % Digest::MD5.hexdigest(c.to_der),
+        c.to_s
+      ].join "\n"
+    end.join
+  end
+
+  def certfile
+    raise "'certfile' is unset" if options.certfile.nil?
+    FileUtils.touch options.certfile unless File.exists? options.certfile
+    options.certfile
+  end
+
+  def certificates
+    parse_certs File.read(certfile)
+  end
+
+  def write_certfile certs
+    File.open certfile, 'w' do |f|
+      f.puts format(certs)
+    end
+  end
+
+  def mapcerts args = [], self_signed = options.self_signed
+    certs = args.map do |arg|
+      if arg == '-'
+        parse_certs $stdin.read
+      elsif File.readable? arg
+        parse_certs File.read(arg)
+      else
+        get_chain arg
+      end
+    end.flatten.compact
+
+    self_signed ? certs.select { |c| self_signed? c } : certs
+  end
+
+  def dump *args
+    puts format(args.empty? ? certificates : mapcerts(args))
+  end
+
+  def info *args
+    puts (args.empty? ? certificates : mapcerts(args)).map(&:to_text)
+  end
+
+  def add *args
+    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
+      certs << root unless certs.find { |c| equal? c, root }
+      certs
+    }
+  end
+
+  def rm *args
+    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
+      certs.reject { |c| equal? c, root }
+    }
+  end
+
+  def exec *args
+    env = { 'CURL_CA_BUNDLE' => certfile, 'GIT_SSL_CAINFO' => certfile }
+    Kernel.exec env, *args
+  end
+
+  def console *args
+    require 'pry'
+    cs = mapcerts args
+    binding.pry
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    rest = args.drop 1
+
+    case args.first
+    when 'd', 'dump' then dump *rest
+    when 'i', 'info' then info *rest
+    when 'a', 'add' then add *rest
+    when 'r', 'rm' then rm *rest
+    when 'x', 'e', 'exec' then exec *rest
+    when 'c', 'console' then console *rest
+    when nil then options.certfile ? dump : abort(parser.help)
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Cert.new.run ARGV if $0 == __FILE__

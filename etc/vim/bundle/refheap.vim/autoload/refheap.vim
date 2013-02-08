@@ -7,7 +7,7 @@ if !exists('g:refheap_username')
 endif
 
 if !exists('g:refheap_api_url')
-  let g:refheap_api_url = 'https://refheap.com/api/'
+  let g:refheap_api_url = 'https://www.refheap.com/api/'
 endif
 
 " I didn't come up with this, but it seems to work for getting the currently
@@ -25,45 +25,53 @@ endfunction
 " This is easily the most insane I've ever written on purpose.
 function! refheap#Refheap(count, line1, line2, ...)
   let lastarg = a:0 == 1 ? ",'" . a:1 . "'" : ''
-  execute 'ruby refheap(' . a:count . ',' . a:line1 . ',' . a:line2 . lastarg . ')'
+  execute 'python refheap(' . a:count . ',' . a:line1 . ',' . a:line2 . lastarg . ')'
 endfunction
 
-ruby << EOF
+python << EOF
 
-require 'rubygems'
-require 'rubyheap'
-require 'copier'
+import vim
+import json
+import urllib
+import urllib2
+import xerox
 
-user  = VIM::evaluate("g:refheap_username")
-token = VIM::evaluate("g:refheap_token")
+REFHEAP_URL = vim.eval('g:refheap_api_url')
 
-if not user.empty? && token.empty?
-  $heap = Refheap::Paste.new(user, token)
-else
-  $heap = Refheap::Paste.new()
-end
+def buffer_contents():
+    return '\n'.join(vim.current.buffer)
 
-def buffer_contents()
-  buffer = VIM::Buffer.current
-  1.upto(buffer.count).map { |i| buffer[i] }.join("\n")
-end
+def selected():
+    return vim.eval('GetVisualSelection()')
 
-def refheap(count, line1 = nil, line2 = nil, priv = nil)
-  if priv == "-p"
-    priv = "true"
-  else
-    priv = "false"
-  end
-  if count < 1
-    text = buffer_contents()
-  else
-    text = VIM::evaluate("GetVisualSelection()")
-  end
-  ref = $heap.create(text,
-                     :language => "." + VIM::evaluate('expand("%:e")'),
-                     :private => priv)['url']
-  Copier(ref)
-  puts "Copied #{ref} to the clipboard."
-end
+def refheap_req(text, priv):
+    ext = vim.eval('expand("%:e")')
+    if ext:
+        ext = '.' + ext
+    data = {'language': ext,
+            'contents': text,
+            'private': priv}
+    username = vim.eval('g:refheap_username')
+    token = vim.eval('g:refheap_token')
+    if username and token:
+        data['username'] = username
+        data['token'] = token
+    req = urllib2.Request(REFHEAP_URL + "paste", urllib.urlencode(data))
+    try:
+        res = json.loads(urllib2.urlopen(req).read())['url']
+        xerox.copy(res)
+        print "Copied " + res + " to your clipboard."
+    except urllib2.HTTPError, e:
+        print e.read()
+
+def refheap(count, line1 = None, line2 = None, priv = None):
+    if priv == "-p":
+        priv = "true"
+    else:
+        priv = "false"
+    if count < 1:
+        refheap_req(buffer_contents(), priv)
+    else:
+        refheap_req(selected(), priv)
 
 EOF

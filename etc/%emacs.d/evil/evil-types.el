@@ -2,6 +2,9 @@
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+
+;; Version: 0.0.0
+
 ;;
 ;; This file is NOT part of GNU Emacs.
 
@@ -72,7 +75,7 @@ If the end position is at the beginning of a line, then:
                  (cond
                   ((progn
                      (goto-char beg)
-                     (looking-back "^[ \f\t\v]*"))
+                     (looking-back "^[ \f\t\v]*" (line-beginning-position)))
                    (evil-expand beg end 'line))
                   (t
                    (unless evil-cross-lines

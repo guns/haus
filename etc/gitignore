@@ -29,3 +29,9 @@ Thumbs.db
 
 # Java
 .gradle/
+
+# Clojure
+.lein-deps-sum
+.lein-failures
+.lein-plugins
+.lein-repl-history

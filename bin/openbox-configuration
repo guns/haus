@@ -19,10 +19,12 @@
   ([form indent]
    (if (and (vector? form) (some coll? form))
      (conj (reduce (fn [v f]
-                     (if (vector? f)
-                       (conj v (apply str \newline (repeat indent \tab))
-                             (tidy f (inc indent)))
-                       (conj v f)))
+                     (cond (vector? f) (conj v (apply str \newline (repeat indent \tab))
+                                             (tidy f (inc indent)))
+                           (list? f) (into v (map #(list %1 (tidy %2 (inc indent)))
+                                                  (repeat (apply str \newline (repeat indent \tab)))
+                                                  f))
+                           :else (conj v f)))
                    [] form)
            (apply str \newline (repeat (dec indent) \tab)))
      form)))
@@ -82,7 +84,7 @@
 
 (defn bindsh [key command]
   (let [command (if (coll? command)
-                  (format "/bin/sh -c \"%s\"" (string/join "; " command))
+                  (format "/bin/bash -c \"%s\"" (string/join "; " command))
                   command)]
     (bind key ["Execute" [:command (hiccup/h command)]])))
 
@@ -171,8 +173,8 @@
 (def config-resize
   [:resize
    [:drawContents "yes"]
-   [:popupShow "NonPixel"]
-   [:popupPosition "Center"]
+   [:popupShow "Always"]
+   [:popupPosition "Top"]
    [:popupFixedPosition [:x "10"] [:y "10"]]])
 
 (def config-margins
@@ -207,34 +209,38 @@
    (bind "W-q" "Close")
    (bind "W-C-f" "ToggleMaximizeFull")
    (bind "W-C-m" "Iconify")
-   (bind "A-space" ["ShowMenu" [:menu "client-menu"]])
+   (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
-   (bindfocus "W-F3" "♫ alsamixer ♫"
-              "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
-   (bindsh "F3" "xdotool key XF86AudioMute")
-   (bindsh "F4" "xdotool key XF86AudioLowerVolume")
-   (bindsh "F5" "xdotool key XF86AudioRaiseVolume")
+   (bindfocus "W-F3" "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"])
+   (bindsh "F3" "ponymix toggle")
+   (bindsh "F4" "ponymix decrease 5")
+   (bindsh "F5" "ponymix increase 5")
    (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
    (bindsh "F6" "hwctl backlight -5")
    (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
    (bindsh "F7" "hwctl backlight +5")
-   (bindsh "XF86Eject" "slock")
+   (bindsh "XF86Eject" ["slock" "killall -HUP gpg-agent"])
+   (bindsh "W-XF86Eject" "sudo /usr/local/sbin/systemctl-suspend")
+   (bindsh "W-A-XF86Eject" "sudo /sbin/reboot")
+   (bindsh "W-C-A-XF86Eject" "sudo /sbin/poweroff")
    (bindsh "W-C-S-space" "mediactl toggle")
    (bindsh "W-C-S-Left" "mediactl prev")
    (bindsh "W-C-S-Right" "mediactl next")
+   (bindsh "A-space" "xdotool click 3")
+   (bindsh "W-A-space" "xdotool click 2")
    ;; Application bindings
    (bindsh "W-C-t" "urxvt-client")
-   (bindsh "W-C-g" "urxvt-client -e tmuxlaunch -g")
-   (bindsh "W-C-r" "urxvt-client -g 80x40 -e vim")
+   (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
+   (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
+   (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
    (bindfocus "F9" "guns ❦")
    (bindfocus "W-F9" "root ❦")
    (bindfocus "W-A-F10" "gPodder" "gpodder")
-   (bindfocus "A-F10" "• newsbeuter •"
-              ["cd ~/Downloads"
-               "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
-   (bindfocus "F12" ["★ Mutt ★" "mutt-$HOSTNAME"]
-              ["cd ~/Downloads"
-               "urxvt-client -title %s -g 120x40 -e gpg-shell muttlaunch"])
+   (bindfocus "A-F10" "♻ newsbeuter ♻"
+              ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
+   (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME" "mutt"]
+              ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e muttlaunch"])
    (bindsh "W-F12" "open https://mail.google.com/")
    ;; Window switching
    (bind "F8" "ToggleShowDesktop")

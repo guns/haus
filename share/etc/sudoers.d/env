@@ -1,0 +1,5 @@
+# Convenient environment variables
+Defaults env_reset
+Defaults env_keep += "GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID"
+Defaults env_keep += "DISPLAY XAUTHORIZATION XAUTHORITY WINDOWID"
+Defaults env_keep += "WINDOW TMUX TMUX_PANE DBUS_SESSION_BUS_ADDRESS"

@@ -84,6 +84,7 @@
     lfp  = log --relative-date --decorate --patch --stat --first-parent --no-merges
     lpw  = log --relative-date --decorate --patch --stat -w
     wlp  = log --relative-date --decorate --patch --stat --word-diff=color
+    wlpw = log --relative-date --decorate --patch --stat --word-diff=color -w
 
     l1   = log --relative-date --decorate --patch --stat -1
     l1w  = log --relative-date --decorate --patch --stat -1 -w
@@ -120,6 +121,7 @@
     dihw = diff HEAD -w
     wdih = diff HEAD --word-diff=color
 
+    dic  = diff --cached
     dis  = diff --summary --stat
 
     fp   = format-patch
@@ -150,10 +152,12 @@
     gifw = grep -Fiw
 
     # misc
+    bs  = bisect
     ls  = ls-files
     lso = ls-files -o
     lsu = ls-files -o --exclude-standard
     st  = status --short
     fd  = clean -fd
     fdx = clean -fdx
+    rl  = reflog
     rp  = rev-parse

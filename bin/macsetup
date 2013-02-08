@@ -465,34 +465,6 @@ class Macsetup
     yes = ['RECOMMENDED', :yellow, :bold]
     no = ['UNNECESSARY', :green, :bold]
     {
-      'Restrict sudo privileges in /etc/sudoers' => lambda {
-        if File.readable? '/etc/sudoers' and File.read('/etc/sudoers') !~ /^Defaults\s+timestamp_timeout\s*=\s*0\s*$/
-          if options.verbose
-            with_indent do
-              <<-EOF.lines.each { |l| log l.sub(/^ {16}/, '').chomp }
-                · Using visudo, add these lines to /etc/sudoers:
-
-                  # User whitelist only
-                  root ALL=(ALL) ALL
-                  #{options.user.name} ALL=(ALL) ALL
-
-                  # Disable timeouts and force passwords every time
-                  Defaults timestamp_timeout = 0
-
-                  # Convenient environment variables
-                  Defaults env_reset
-                  Defaults env_keep += "SSH_AUTH_SOCK SSH_AGENT_PID"
-                  Defaults env_keep += "DISPLAY XAUTHORIZATION XAUTHORITY WINDOWID"
-                  Defaults env_keep += "WINDOW TMUX TMUX_PANE"
-              EOF
-            end
-          end
-          yes
-        else
-          no
-        end
-      },
-
       'Remove system certificates and certificate authorities' => lambda {
         Dir['/System/Library/Keychains/*'].size > 0 ? yes : no
       },

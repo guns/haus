@@ -10,7 +10,8 @@ require 'ostruct'
 require 'fileutils'
 
 class Minecraft
-  DOWNLOAD_URL = 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar'
+  SERVER_DOWNLOAD_URL = 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar'
+  SERVER_JAR_BASENAME = File.basename SERVER_DOWNLOAD_URL
 
   attr_reader :options
 
@@ -18,7 +19,6 @@ class Minecraft
     @options = OpenStruct.new opts
     options.memory ||= 256
     options.gamedir ||= '/srv/games/minecraft'
-    options.world ||= 'default'
   end
 
   def parser
@@ -31,10 +31,19 @@ class Minecraft
         \\____|__  /___\\____|__  /______  / \\______  /____|_  /____|__  /___  /    |____|
                 \\/            \\/       \\/         \\/       \\/        \\/    \\/
 
-        Usage: #{File.basename __FILE__} [options] start|stop|restart
+        Usage: #{File.basename __FILE__} [options] start|stop|restart|repl
 
         Options:
       BANNER
+
+      opt.on '-j', '--jar JARNAME', 'Name of server jar' do |arg|
+        raise '`--jar` argument must not be a path' if arg =~ /\//
+        options.jar = arg
+      end
+
+      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found.' % options.world do |arg|
+        options.world = arg
+      end
 
       opt.on '-g', '--gamedir PATH', 'Path to minecraft directory [DEFAULT: %s]' % options.gamedir do |arg|
         options.gamedir = File.expand_path arg
@@ -44,8 +53,8 @@ class Minecraft
         options.memory = arg
       end
 
-      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found. [DEFAULT: %s]' % options.world do |arg|
-        options.world = arg
+      opt.on '-u', '--update', 'Update %s' % SERVER_JAR_BASENAME do
+        options.update = true
       end
 
       opt.on '-d', '--debug', 'Keep server process in foreground' do
@@ -54,21 +63,37 @@ class Minecraft
     end
   end
 
-  def gamedir
-    options.gamedir
-  end
+  #
+  # Game paths
+  #
 
-  def savedir
-    File.join gamedir, 'saves'
+  def gamedir *args
+    File.join options.gamedir, *args
   end
 
   def pidfile
-    File.join gamedir, 'minecraft.pid'
+    gamedir 'minecraft.pid'
   end
 
-  def server_jar
-    File.join gamedir, 'minecraft_server.jar'
+  def jarlink
+    gamedir 'server.jar'
   end
+
+  def worldlink
+    gamedir 'world'
+  end
+
+  def read_jarlink
+    File.symlink?(jarlink) ? File.readlink(jarlink) : jarlink
+  end
+
+  def read_worldlink
+    File.symlink?(worldlink) ? File.readlink(worldlink) : worldlink
+  end
+
+  #
+  # Pidfile handling
+  #
 
   def write_pidfile pid
     File.open(pidfile, 'w') { |f| f.puts pid }
@@ -86,34 +111,53 @@ class Minecraft
     File.exists? pidfile
   end
 
-  def setup_minecraft!
+  #
+  # Helpers
+  #
+
+  def download_official_server_jar!
     raise 'Game directory "%s" does not exist!' % gamedir unless Dir.exists? gamedir
-    return if File.exists? server_jar
-
-    system 'curl', '-#L', '-o', server_jar, DOWNLOAD_URL
-
-    default_savedir = File.join gamedir, 'saves', 'default'
-    FileUtils.mkdir_p default_savedir, :mode => File.stat(gamedir).mode
-    FileUtils.ln_s default_savedir, File.join(gamedir, 'world')
+    success = system 'curl', '-#L', '-o', gamedir(SERVER_JAR_BASENAME), SERVER_DOWNLOAD_URL
+    raise 'Download failed!' unless success
   end
 
-  def setup_world!
-    src = File.join savedir, options.world
-    dst = File.join gamedir, 'world'
+  def setup_links jarname, name
+    world = gamedir 'saves', jarname.chomp(File.extname jarname), name
 
-    FileUtils.rm_f dst
-    FileUtils.mkdir_p src
-    FileUtils.ln_s src, dst
+    FileUtils.rm_f worldlink
+    FileUtils.mkdir_p world, :mode => File.stat(gamedir).mode
+    FileUtils.ln_s world, worldlink
+
+    FileUtils.rm_f jarlink
+    FileUtils.ln_s gamedir(jarname), jarlink
   end
 
-  def fork_server_and_wait opts = {}
+  def with_fifo
+    path = gamedir 'stdin'
+    system 'mkfifo', '--mode=0660', path
+    fifo = File.open path, 'r+'
+    yield fifo
+  ensure
+    fifo.close
+    FileUtils.rm_f path
+  end
+
+  def have_rlwrap
+    system '/bin/sh', '-c', 'type rlwrap &>/dev/null'
+  end
+
+  #
+  # RC methods
+  #
+
+  def fork_server_and_wait jar, memory, opts = {}
     Dir.chdir gamedir do
-      cmd = %W[java -Xms#{options.memory}M -Xmx#{options.memory}M -jar #{File.basename server_jar} nogui]
+      cmd = %W[java -Xms#{memory}M -Xmx#{memory}M -jar #{jar} nogui]
 
       begin
         pid = fork do
           unless opts[:debug]
-            $stdin.reopen '/dev/null'
+            $stdin.reopen opts[:stdin] || '/dev/null'
             $stdout.reopen '/dev/null'
             $stderr.reopen '/dev/null'
             Process.setsid
@@ -122,6 +166,8 @@ class Minecraft
         end
 
         puts '[%d] %s' % [pid, cmd.join(' ')]
+        puts 'JAR: %s' % read_jarlink
+        puts 'WORLD: %s' % read_worldlink
 
         [:TERM, :QUIT, :INT].each do |sig|
           trap(sig) { Process.kill sig, pid }
@@ -135,20 +181,35 @@ class Minecraft
   end
 
   def start_server!
-    raise 'Minecraft directory is locked! Remove %s to override.' if File.exists? pidfile
+    raise 'Minecraft directory is locked!' if have_pidfile
 
-    setup_world!
+    if not File.exists? jarlink and not File.exists? worldlink
+      download_official_server_jar!
+      setup_links SERVER_JAR_BASENAME, 'default'
+    elsif options.update
+      download_official_server_jar!
+    end
+
+    if options.jar or options.world
+      setup_links options.jar || SERVER_JAR_BASENAME, options.world || 'default'
+    end
 
     if options.debug
-      fork_server_and_wait :debug => true
+      fork_server_and_wait jarlink, options.memory, :debug => options.debug
     else
-      Process.detach fork { fork_server_and_wait }
+      Process.detach fork {
+        with_fifo do |fifo|
+          fork_server_and_wait jarlink, options.memory, :stdin => fifo
+        end
+      }
     end
   end
 
   def stop_server!
     return unless have_pidfile
+
     pid = read_pidfile
+
     begin
       Process.kill 0, pid
       puts 'Sending SIGTERM to %d' % pid
@@ -158,7 +219,41 @@ class Minecraft
       puts 'No such process, removing %s' % pidfile
       remove_pidfile
     rescue Errno::EPERM
-      puts 'Insufficient permissions to kill process %d' % pid
+      # Try writing to fifo instead
+      fifo = gamedir 'stdin'
+      if File.writable? fifo
+        File.open(fifo, 'w') { |f| f.puts 'stop' }
+        sleep 0.1 while File.exists? fifo
+      else
+        puts 'Insufficient permissions to kill process %d' % pid
+      end
+    end
+  end
+
+  #
+  # main
+  #
+
+  def start_repl!
+    raise 'Minecraft server is not running!' unless have_pidfile
+
+    File.open gamedir('stdin'), 'w' do |fifo|
+      begin
+        fifo.sync = true
+        log = IO.popen ['tail', '-fn100', gamedir('server.log')]
+        loop do
+          (rd,), = select [log, $stdin]
+          if rd == $stdin
+            fifo.puts rd.gets("\n")
+          else
+            puts rd.gets
+          end
+        end
+      rescue Interrupt
+        puts 'Interrupt'
+      ensure
+        log.close
+      end
     end
   end
 
@@ -166,13 +261,19 @@ class Minecraft
     args = parser.parse arguments
     abort parser.help unless args.size == 1
 
-    setup_minecraft!
-
     case args.first
     when 'start'   then start_server!
     when 'stop'    then stop_server!
     when 'restart' then stop_server!; start_server!
-    else abort parser.help
+    when 'repl'
+      if ENV['RLWRAP_MINECRAFT'] or ENV['_'] =~ /rlwrap\z/ or not have_rlwrap
+        start_repl!
+      else
+        ENV['RLWRAP_MINECRAFT'] = '1'
+        exec 'rlwrap', '-r', $0, *arguments
+      end
+    else
+      abort parser.help
     end
   end
 end

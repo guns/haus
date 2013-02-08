@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2009-2011 Sébastien Helleu <flashcode@flashtux.org>
+# Copyright (C) 2009-2012 Sebastien Helleu <flashcode@flashtux.org>
 # Copyright (C) 2010 m4v <lambdae2@gmail.com>
 # Copyright (C) 2011 stfn <stfnmd@googlemail.com>
 #
@@ -23,47 +23,54 @@
 # (this script requires WeeChat 0.3.0 or newer)
 #
 # History:
-#
+# 2012-11-26, Nei <anti.teamidiot.de>
+#     version 1.9: add auto_jump option to automatically go to buffer when it is uniquely selected
+# 2012-09-17, Sebastien Helleu <flashcode@flashtux.org>:
+#     version 1.8: fix jump to non-active merged buffers (jump with buffer name instead of number)
+# 2012-01-03 nils_2 <weechatter@arcor.de>
+#     version 1.7: add option use_core_instead_weechat (requested by k-man and _rane)
+# 2012-01-03, Sebastien Helleu <flashcode@flashtux.org>:
+#     version 1.6: make script compatible with Python 3.x
 # 2011-08-24, stfn <stfnmd@googlemail.com>:
 #     version 1.5: /go with name argument jumps directly to buffer
 #                  Remember cursor position in buffer input
 # 2011-05-31, Elián Hanisch <lambdae2@gmail.com>:
 #     version 1.4: Sort list of buffers by activity.
-# 2011-04-25, Sébastien Helleu <flashcode@flashtux.org>:
+# 2011-04-25, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 1.3: add info "go_running" (used by script input_lock.rb)
-# 2010-11-01, Sébastien Helleu <flashcode@flashtux.org>:
+# 2010-11-01, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 1.2: use high priority for hooks to prevent conflict with other
 #                  plugins/scripts (WeeChat >= 0.3.4 only)
 # 2010-03-25, Elián Hanisch <lambdae2@gmail.com>:
 #     version 1.1: use a space for match the end of a string
-# 2009-11-16, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-11-16, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 1.0: add new option for displaying short names
-# 2009-06-15, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-06-15, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.9: fix typo in /help go with command /key
-# 2009-05-16, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-05-16, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.8: search buffer by number, fix bug when window is split
-# 2009-05-03, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-05-03, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.7: eat tab key (do not complete input, just move buffer pointer)
-# 2009-05-02, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-05-02, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.6: sync with last API changes
-# 2009-03-22, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-03-22, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.5: update modifier signal name for input text display,
 #                  fix arguments for function string_remove_color
-# 2009-02-18, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-02-18, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.4: do not hook command and init options if register failed
-# 2009-02-08, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-02-08, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.3: case insensitive search for buffers names
-# 2009-02-08, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-02-08, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.2: add help about Tab key
-# 2009-02-08, Sébastien Helleu <flashcode@flashtux.org>:
+# 2009-02-08, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.1: initial release
 #
 
 import weechat, re
 
 SCRIPT_NAME    = "go"
-SCRIPT_AUTHOR  = "Sébastien Helleu <flashcode@flashtux.org>"
-SCRIPT_VERSION = "1.5"
+SCRIPT_AUTHOR  = "Sebastien Helleu <flashcode@flashtux.org>"
+SCRIPT_VERSION = "1.9"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC    = "Quick jump to buffers"
 
@@ -78,6 +85,8 @@ settings = {
     "message"                      : "Go to: ",
     "short_name"                   : "off",
     "sort_by_activity"             : "off",
+    "use_core_instead_weechat"     : "off",
+    "auto_jump"                    : "off",
 }
 
 # hooks management
@@ -108,7 +117,7 @@ if weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION, SCRIPT_LICENSE,
                          "You can use completion key (commonly Tab and shift-Tab) to select " +
                          "next/previous buffer in list.",
                          "%(buffers_names)", "go_cmd", "")
-    for option, default_value in settings.iteritems():
+    for option, default_value in settings.items():
         if weechat.config_get_plugin(option) == "":
             weechat.config_set_plugin(option, default_value)
     weechat.hook_info("go_running", "Return '1' if go is running", "", "info_go_running", "")
@@ -130,7 +139,8 @@ def unhook_all():
     """ Unhook all """
     global hook_command_run
     unhook_one("modifier")
-    map(unhook_one, hook_command_run.keys())
+    for hook in hook_command_run:
+        unhook_one(hook)
 
 def hook_all():
     """ Hook command_run and modifier """
@@ -141,7 +151,7 @@ def hook_all():
     # (WeeChat >= 0.3.4 only)
     if int(version) >= 0x00030400:
         priority = "2000|"
-    for hook, value in hook_command_run.iteritems():
+    for hook, value in hook_command_run.items():
         if hook not in hooks:
             hooks[hook] = weechat.hook_command_run("%s%s" % (priority, value[0]),
                                                    value[1], "")
@@ -173,11 +183,11 @@ def go_now(buffer, args):
     # Prefer buffer that matches at beginning
     for index in range(len(buffers)):
         if re.search(r"^#?" + re.escape(args), buffers[index]["name"]):
-            weechat.command(buffer, "/buffer " + str(buffers[index]["number"]))
+            weechat.command(buffer, "/buffer " + str(buffers[index]["full_name"]))
             return None
     # Otherwise, just take first buffer in list
     if len(buffers) > 0:
-        weechat.command(buffer, "/buffer " + str(buffers[0]["number"]))
+        weechat.command(buffer, "/buffer " + str(buffers[0]["full_name"]))
 
 def go_cmd(data, buffer, args):
     """ Command "/go": just hook what we need """
@@ -203,7 +213,13 @@ def get_matching_buffers(input):
             name = weechat.infolist_string(infolist, "short_name")
         else:
             name = weechat.infolist_string(infolist, "name")
+        if weechat.config_get_plugin("use_core_instead_weechat") == "on" and name == "weechat":
+            name = "core"
         number = weechat.infolist_integer(infolist, "number")
+        full_name = weechat.infolist_string(infolist, "full_name")
+        if not full_name:
+            full_name = "%s.%s" % (weechat.infolist_string(infolist, "plugin_name"),
+                                   weechat.infolist_string(infolist, "name"))
         pointer = weechat.infolist_pointer(infolist, "pointer")
         matching = name.lower().find(input) >= 0
         if not matching and input[-1] == ' ':
@@ -211,7 +227,7 @@ def get_matching_buffers(input):
         if not matching and input.isdigit():
             matching = str(number).startswith(input)
         if len(input) == 0 or matching:
-            list.append({"number": number, "name": name, "pointer": pointer})
+            list.append({"number": number, "name": name, "full_name": full_name, "pointer": pointer})
             if len(input) == 0 and pointer == weechat.current_buffer():
                 buffers_pos = len(list) - 1
     weechat.infolist_free(infolist)
@@ -276,6 +292,8 @@ def input_modifier(data, modifier, modifier_data, string):
         old_buffers = buffers
         buffers = get_matching_buffers(input)
         if buffers != old_buffers and len(input) > 0:
+            if len(buffers) == 1 and weechat.config_string_to_boolean(weechat.config_get_plugin('auto_jump')):
+                weechat.command(modifier_data, "/wait 1ms /input return")
             buffers_pos = 0
         old_input = input
     names = buffers_to_string(buffers, buffers_pos, input.strip())
@@ -307,7 +325,7 @@ def command_run_input(data, buffer, command):
         # switch to selected buffer (if any)
         go_end(buffer)
         if len(buffers) > 0:
-            weechat.command(buffer, "/buffer " + str(buffers[buffers_pos]["number"]))
+            weechat.command(buffer, "/buffer " + str(buffers[buffers_pos]["full_name"]))
         return weechat.WEECHAT_RC_OK_EAT
     return weechat.WEECHAT_RC_OK
 

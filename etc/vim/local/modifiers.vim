@@ -8,7 +8,7 @@
 
 " Set value of keycode or map in all modes {{{1
 command! -nargs=+ Setmap call <SID>Setmap(<f-args>)
-function! <SID>Setmap(map, seq)
+function! s:Setmap(map, seq)
     try
         " Some named values can be `set'
         execute 'set ' . a:map . '=' . a:seq
@@ -99,4 +99,4 @@ Setmap <4-S-Left>   <Esc>D
 """ Cleanup {{{1
 
 delcommand  Setmap
-delfunction <SID>Setmap
+delfunction s:Setmap

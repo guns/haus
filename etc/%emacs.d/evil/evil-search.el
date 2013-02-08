@@ -2,6 +2,9 @@
 
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+
+;; Version: 0.0.0
+
 ;;
 ;; This file is NOT part of GNU Emacs.
 
@@ -671,6 +674,8 @@ was unsuccessful and 'wrapped if the search was successful but
 has been wrapped at the buffer boundaries."
   (setq pattern (or pattern evil-ex-search-pattern)
         direction (or direction evil-ex-search-direction))
+  (unless (and pattern (evil-ex-pattern-regex pattern))
+    (signal 'search-failed (list "No search pattern")))
   (catch 'done
     (let (wrapped)
       (while t

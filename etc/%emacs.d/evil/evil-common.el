@@ -1,6 +1,9 @@
 ;;; evil-common.el --- Common functions and utilities
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+
+;; Version: 0.0.0
+
 ;;
 ;; This file is NOT part of GNU Emacs.
 
@@ -32,7 +35,7 @@
 (unless (fboundp 'deactivate-input-method)
   (defalias 'deactivate-input-method 'inactivate-input-method))
 (unless (boundp 'input-method-deactivate-hook)
-  (defalias 'input-method-deactivate-hook 'input-method-inactivate-hook))
+  (defvaralias 'input-method-deactivate-hook 'input-method-inactivate-hook))
 
 (condition-case nil
     (require 'windmove)
@@ -116,7 +119,7 @@ otherwise add at the end of the list."
   "Delete by side-effect all items satisfying PREDICATE in LIST.
 Stop when reaching POINTER.  If the first item satisfies PREDICATE,
 there is no way to remove it by side-effect; therefore, write
-\(setq foo (evil-delete-if 'predicate foo)) to be sure of
+\(setq foo (evil-filter-list 'predicate foo)) to be sure of
 changing the value of `foo'."
   (let ((tail list) elt head)
     (while (and tail (not (eq tail pointer)))
@@ -558,6 +561,14 @@ Both COUNT and CMD may be nil."
           (setq count nil)
         (setq count (string-to-number count))))
     ;; return command description
+    (when (arrayp cmd)
+      (let ((result (evil-keypress-parser cmd)))
+        (setq cmd (car result)
+              count (cond
+                     ((and count (cadr result))
+                      (* count (cadr result)))
+                     (count count)
+                     (t (cadr result))))))
     (list cmd count)))
 
 (defun evil-read-key (&optional prompt)
@@ -1204,28 +1215,84 @@ POS defaults to the current position of point."
              (< pos (match-end 0)))))))
 
 (defun evil-in-comment-p (&optional pos)
-  "Whether POS is inside a comment.
-POS defaults to the current position of point."
-  (let ((parse #'(lambda (p)
-                   (let ((c (char-after p)))
-                     (or (and c (eq (char-syntax c) ?<))
-                         (memq (get-text-property p 'face)
-                               '(font-lock-comment-face
-                                 font-lock-comment-delimiter-face))
-                         (nth 4 (parse-partial-sexp
-                                 (save-excursion
-                                   (beginning-of-defun)
-                                   (point)) p)))))))
-    (save-excursion
-      (goto-char (or pos (point)))
-      (and (or (funcall parse (point))
-               ;; `parse-partial-sexp's notion of comments
-               ;; doesn't span lines
-               (progn
-                 (back-to-indentation)
-                 (unless (eolp)
-                   (forward-char)
-                   (funcall parse (point))))) t))))
+  "Checks if POS is within a comment according to current syntax.
+If POS is nil, (point) is used. The return value is the beginning
+position of the comment."
+  (setq pos (or pos (point)))
+  (let ((chkpos
+         (cond
+          ((eobp) pos)
+          ((= (char-syntax (char-after)) ?<) (1+ pos))
+          ((and (not (zerop (logand (car (syntax-after (point)))
+                                    (lsh 1 16))))
+                (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                                    (lsh 1 17)))))
+           (+ pos 2))
+          ((and (not (zerop (logand (car (syntax-after (point)))
+                                    (lsh 1 17))))
+                (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                                    (lsh 1 16)))))
+           (1+ pos))
+          (t pos))))
+    (let ((syn (save-excursion (syntax-ppss chkpos))))
+      (and (nth 4 syn) (nth 8 syn)))))
+
+(defun evil-looking-at-start-comment (&optional move)
+  "Returns t if point is at the start of a comment.
+point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore these
+characters must been parsed as opening characters, i.e. they
+won't be considered as comment starters inside a string or
+possibly another comment. Point is moved to the first character
+of the comment opener if MOVE is non-nil."
+  (cond
+   ;; one character opener
+   ((= (char-syntax (char-after)) ?<)
+    (equal (point) (evil-in-comment-p (1+ (point)))))
+   ;; two character opener on first char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 16))))
+         (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                             (lsh 1 17)))))
+    (equal (point) (evil-in-comment-p (+ 2 (point)))))
+   ;; two character opener on second char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 17))))
+         (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                             (lsh 1 16)))))
+    (and (equal (1- (point)) (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (backward-char)))))))
+
+(defun evil-looking-at-end-comment (&optional move)
+  "Returns t if point is at the end of a comment.
+point must be on one of the opening characters of a block comment
+according to the current syntax table. Futhermore these
+characters must been parsed as opening characters, i.e. they
+won't be considered as comment starters inside a string or
+possibly another comment. Point is moved right after the comment
+closer if MOVE is non-nil."
+  (cond
+   ;; one char closer
+   ((= (char-syntax (char-after)) ?>)
+    (and (evil-in-comment-p) ; in comment
+         (not (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (forward-char)))))
+   ;; two char closer on first char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 18))))
+         (not (zerop (logand (or (car (syntax-after (1+ (point)))) 0)
+                             (lsh 1 19)))))
+    (and (evil-in-comment-p)
+         (not (evil-in-comment-p (+ (point) 2)))
+         (prog1 t (when move (forward-char 2)))))
+   ;; two char closer on second char
+   ((and (not (zerop (logand (car (syntax-after (point)))
+                             (lsh 1 19))))
+         (not (zerop (logand (or (car (syntax-after (1- (point)))) 0)
+                             (lsh 1 18)))))
+    (and (evil-in-comment-p)
+         (not (evil-in-comment-p (1+ (point))))
+         (prog1 t (when move (forward-char)))))))
 
 (defun evil-in-string-p (&optional pos)
   "Whether POS is inside a string.
@@ -1263,16 +1330,17 @@ Stops at LIMIT, which defaults to the end of the buffer."
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-comment-p pos)
-      (evil-find-beginning #'evil-in-comment-p pos))))
+  (evil-in-comment-p pos))
 
 (defun evil-comment-end (&optional pos)
   "Return end of comment containing POS.
 POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-comment-p pos)
-      (evil-find-end #'evil-in-comment-p pos))))
+  (let ((beg (evil-in-comment-p pos)))
+    (and beg
+         (save-excursion
+           (goto-char beg)
+           (forward-comment 1)
+           (1- (point))))))
 
 (defun evil-string-beginning (&optional pos)
   "Return beginning of string containing POS.
@@ -1705,65 +1773,19 @@ Then restore Transient Mark mode to its previous setting."
     (set-marker (mark-marker) point)
     (goto-char mark)))
 
-(defun evil-apply-on-block (func beg end &rest args)
-  "Call FUNC for each line of Visual Block selection.
-The selection may be specified explicitly with BEG and END.
-FUNC must take at least two arguments, the beginning and end of
-each line. Extra arguments to FUNC may be passed via ARGS."
-  (let ((eol-col (and (memq last-command '(next-line previous-line))
-                      (numberp temporary-goal-column)
-                      (= temporary-goal-column most-positive-fixnum)
-                      temporary-goal-column))
-        beg-marker end-marker left right eob)
-    (save-excursion
-      (evil-sort beg end)
-      ;; calculate columns
-      (setq left  (evil-column beg)
-            right (evil-column end))
-      ;; ensure LEFT < RIGHT
-      (when (> left right)
-        (evil-sort left right)
-        (setq beg (save-excursion
-                    (goto-char beg)
-                    (move-to-column left)
-                    (point))
-              end (save-excursion
-                    (goto-char end)
-                    (move-to-column right)
-                    (point))))
-      (goto-char beg)
-      (setq beg-marker (move-marker (make-marker) beg)
-            end-marker (move-marker (make-marker) end))
-      (set-marker-insertion-type beg-marker nil)
-      (set-marker-insertion-type end-marker t)
-      ;; apply FUNC on each line
-      (while (progn
-               (apply func
-                      (save-excursion
-                        (move-to-column left t)
-                        (point))
-                      (save-excursion
-                        (move-to-column (or eol-col right))
-                        (point))
-                      args)
-               (forward-line 1)
-               (and (prog1 (not eob)
-                      (setq eob (eobp)))
-                    (<= (point) end-marker))))
-      (set-marker beg-marker nil)
-      (set-marker end-marker nil))))
-
-(defun evil-apply-on-rectangle (function start end &rest args)
-  "Like `apply-on-rectangle' but maybe extends to eol.
-If `temporary-goal-column' is set to a big number, then the
-region of each line is extended to the end of each line. The end
-column is set to the maximal column in all covered lines."
+(defun evil-apply-on-block (func beg end pass-columns &rest args)
+  "Call FUNC for each line of a block selection.
+The selection is specified by the region BEG and END.  FUNC must
+take at least two arguments, the beginning and end of each
+line. If PASS-COLUMNS is non-nil, these values are the columns,
+otherwise tey are buffer positions. Extra arguments to FUNC may
+be passed via ARGS."
   (let ((eol-col (and (memq last-command '(next-line previous-line))
                       (numberp temporary-goal-column)
                       temporary-goal-column))
         startcol startpt endcol endpt)
     (save-excursion
-      (goto-char start)
+      (goto-char beg)
       (setq startcol (current-column))
       (beginning-of-line)
       (setq startpt (point))
@@ -1772,9 +1794,7 @@ column is set to the maximal column in all covered lines."
       (forward-line 1)
       (setq endpt (point-marker))
       ;; ensure the start column is the left one.
-      (if (< endcol startcol)
-          (let ((col startcol))
-            (setq startcol endcol endcol col)))
+      (evil-sort startcol endcol)
       ;; maybe find maximal column
       (when eol-col
         (setq eol-col 0)
@@ -1783,14 +1803,27 @@ column is set to the maximal column in all covered lines."
           (setq eol-col (max eol-col
                              (evil-column (line-end-position))))
           (forward-line 1))
-        (setq endcol (min eol-col
-                          (1+ (min (1- most-positive-fixnum)
-                                   temporary-goal-column)))))
+        (setq endcol (max endcol
+                          (min eol-col
+                               (1+ (min (1- most-positive-fixnum)
+                                        temporary-goal-column))))))
       ;; start looping over lines
       (goto-char startpt)
       (while (< (point) endpt)
-        (apply function startcol endcol args)
+        (if pass-columns
+            (apply func startcol endcol args)
+          (apply func
+                 (save-excursion (evil-move-to-column startcol))
+                 (save-excursion (evil-move-to-column endcol t))
+                 args))
         (forward-line 1)))))
+
+(defun evil-apply-on-rectangle (function start end &rest args)
+  "Like `apply-on-rectangle' but maybe extends to eol.
+If `temporary-goal-column' is set to a big number, then the
+region of each line is extended to the end of each line. The end
+column is set to the maximal column in all covered lines."
+  (apply #'evil-apply-on-block function start end t args))
 
 ;;; Insertion
 
@@ -2364,7 +2397,9 @@ the default is \"[ \\f\\t\\n\\r\\v]+\"."
       (save-match-data
         (goto-char pos)
         (cond
-         ((if (< dir 0) (looking-back regexp) (not (looking-at regexp)))
+         ((if (< dir 0)
+              (looking-back regexp (1- (line-beginning-position)))
+            (not (looking-at regexp)))
           (or (evil-add-whitespace-after-range range regexp)
               (evil-add-whitespace-before-range range regexp)))
          (t
@@ -2382,7 +2417,7 @@ Returns t if RANGE was successfully increased and nil otherwise."
     (save-excursion
       (save-match-data
         (goto-char (evil-range-beginning range))
-        (when (looking-back regexp nil t)
+        (when (looking-back regexp (1- (line-beginning-position)) t)
           ;; exclude the newline on the preceding line
           (goto-char (match-beginning 0))
           (when (eolp) (forward-char))
@@ -2422,7 +2457,8 @@ Returns t if RANGE was successfully adjusted and nil otherwise."
           (evil-move-beginning-of-line))
         (evil-set-range range (point) nil))
       (goto-char (evil-range-end range))
-      (when (and shrink (looking-back (concat "^" regexp)))
+      (when (and shrink (looking-back (concat "^" regexp)
+                                      (line-beginning-position)))
         (evil-set-range range nil (line-end-position 0)))
       (not (evil-subrange-p orig range)))))
 
@@ -2606,7 +2642,7 @@ use `evil-regexp-range'."
             (modify-syntax-entry open (format "(%c" close))
             (modify-syntax-entry close (format ")%c" open))
             (if (< count 0)
-                (when (looking-back close-regexp)
+                (when (looking-back close-regexp (line-beginning-position))
                   (backward-char))
               (when (looking-at open-regexp)
                 (forward-char)
@@ -2701,7 +2737,7 @@ the range; otherwise they are included. See also `evil-paren-range'."
                            (goto-char (match-beginning 0))))
                        ;; Is point next to a delimiter?
                        (if (< count 0)
-                           (when (looking-back close)
+                           (when (looking-back close (line-beginning-position))
                              (goto-char (match-beginning 0)))
                          (when (looking-at open)
                            (goto-char (match-end 0))))
@@ -2721,7 +2757,7 @@ the range; otherwise they are included. See also `evil-paren-range'."
                                beg-exc (match-end 0))
                          (while (and (> level 0)
                                      (re-search-forward either nil t))
-                           (if (looking-back close)
+                           (if (looking-back close (line-beginning-position))
                                (setq level (1- level))
                              ;; found an OPEN, so need to find another
                              ;; CLOSE first

@@ -70,8 +70,11 @@ noremap <M-+> :tabmove +1<CR>
 noremap <M-S-o> :tabonly<CR>
 inoremap <M-S-o> <Esc>:tabonly<CR>
 cnoremap <M-S-o> <Esc>:tabonly<CR>
-noremap = +
-noremap 0 :zoom 100<CR>
+noremap _ :zoom -10<CR>
+noremap + :zoom +10<CR>
+noremap \- :zoom! -10<CR>
+noremap = :zoom! +10<CR>
+noremap 0 :zoom! 100<CR>
 
 """ Location Shortcuts {{{1
 

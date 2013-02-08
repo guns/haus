@@ -1,6 +1,6 @@
 " repeat.vim - Let the repeat command repeat plugin maps
 " Maintainer:   Tim Pope
-" Version:      1.0
+" Version:      1.1
 " GetLatestVimScripts: 2136 1 :AutoInstall: repeat.vim
 
 " Installation:
@@ -91,7 +91,7 @@ function! repeat#run(count)
     endif
 endfunction
 
-function! s:wrap(command,count)
+function! repeat#wrap(command,count)
     let preserve = (g:repeat_tick == b:changedtick)
     exe 'norm! '.(a:count ? a:count : '').a:command . (&foldopen =~# 'undo' ? 'zv' : '')
     if preserve
@@ -100,11 +100,11 @@ function! s:wrap(command,count)
 endfunction
 
 nnoremap <silent> .     :<C-U>call repeat#run(v:count)<CR>
-nnoremap <silent> u     :<C-U>call <SID>wrap('u',v:count)<CR>
+nnoremap <silent> u     :<C-U>call repeat#wrap('u',v:count)<CR>
 if maparg('U','n') ==# ''
-    nnoremap <silent> U     :<C-U>call <SID>wrap('U',v:count)<CR>
+    nnoremap <silent> U     :<C-U>call repeat#wrap('U',v:count)<CR>
 endif
-nnoremap <silent> <C-R> :<C-U>call <SID>wrap("\<Lt>C-R>",v:count)<CR>
+nnoremap <silent> <C-R> :<C-U>call repeat#wrap("\<Lt>C-R>",v:count)<CR>
 
 augroup repeatPlugin
     autocmd!

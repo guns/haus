@@ -1,11 +1,56 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-if system 'killall -0 mutt &>/dev/null'
-  abort
-else
-  keybindings = File.read(File.expand_path '~/.inputrc').scan(/"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/).map do |k,c|
-    ['-e', %Q(macro editor "\\e#{k}" #{c})]
-  end.flatten
-  exec ({ 'LD_LIBRARY_PATH' => '/opt/notmuch/lib' }), 'mutt', '-n', *(ARGV + keybindings)
+require 'optparse'
+require 'ostruct'
+
+class Muttlaunch
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.env ||= { 'LD_LIBRARY_PATH' => '/opt/notmuch/lib' }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-f', '--force' do
+        options.force = true
+      end
+    end
+  end
+
+  def active?
+    system 'killall -0 mutt &>/dev/null'
+  end
+
+  def unicode_bindings
+    File.read(File.expand_path '~/.inputrc')
+        .scan(/"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/)
+        .reduce [] do |a, (k, c)|
+      a << '-e' << %Q(macro editor "\\e#{k}" #{c})
+    end
+  end
+
+  def launch *args
+    exec options.env, 'mutt', '-n', *unicode_bindings, *args
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort unless options.force or not active?
+    launch *args
+  end
 end
+
+$0 = File.basename(__FILE__) and Muttlaunch.new.run ARGV if $0 == __FILE__

@@ -1,0 +1,9 @@
+[Unit]
+Description=Power saving features
+
+[Service]
+Type=oneshot
+ExecStart=/etc/local/powersave.sh
+
+[Install]
+WantedBy=multi-user.target

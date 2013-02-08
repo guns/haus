@@ -6,7 +6,8 @@
 #
 
 # Default options
-feh --fullscreen --zoom max --draw-filename --action8 ";mirage %F &>/dev/null" --action9 ";feh --bg-fill %F"
-
-# For small images (e.g. animated GIFS)
-small --geometry 800x600 --image-bg black --borderless --draw-filename --action8 ";mirage %F &>/dev/null"
+feh -F -x -d -B black --zoom max --action8 ";mirage %F &>/dev/null" --action9 ";feh --bg-fill %F"
+# Same as default, but full size
+fixed -F -x -d -B black --zoom 100 --action8 ";mirage %F &>/dev/null" --action9 ";feh --bg-fill %F"
+# Optimized for viewing gifs in external viewer
+gifs -g 800x600 -x -d -B black --zoom 100 --action8 ";mirage %F &>/dev/null"

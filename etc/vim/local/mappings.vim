@@ -40,7 +40,7 @@ noremap! <C-t> <C-x>
 " Bind: i_Ctrl-X => i_Ctrl-\_Ctrl-N_<Leader>
 " Bind: c_Ctrl-X => c_Ctrl-\_Ctrl-N_<Leader>
 let g:mapleader = ''
-map! <Leader> <C-\><C-N><Leader>
+map! <Leader> <C-\><C-n><Leader>
 
 " REPLACE move-up-and-start-of-line (nvo)- with <LocalLeader>
 " Bind:   - =>   <LocalLeader>
@@ -291,15 +291,11 @@ noremap <Bar>    ?\V
 " Search for non-printing ASCII characters
 noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 
-" Center on next match (normal-mode only)
-nnoremap n nzz
-nnoremap N Nzz
-
 " Simple command line aliases
-noremap <Leader>h     :<C-u>help<Space>
-noremap <Leader><C-t> :<C-u>Ctags<CR>
-noremap <4-!>         :<C-u>make!<CR>
-noremap <4-p>         :<C-u>SynStack<CR>
+noremap <Leader>; :<C-u>help<Space>
+noremap <Leader>T :<C-u>Ctags<CR>
+noremap <4-!>     :<C-u>make!<CR>
+noremap <4-p>     :<C-u>SynStack<CR>
 
 " Clear last match
 noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
@@ -327,17 +323,16 @@ Mapall <4-Bar> :<C-u>quit!<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
-noremap <Leader>sc       :<C-u>colorscheme<Space>
+noremap <Leader>sc       :<C-u>call Prompt('colorscheme ', '', 'color')<CR>
 noremap <Leader>?sc      :<C-u>colorscheme<CR>
-noremap <Leader>sf       :<C-u>setlocal foldmethod=manual
+noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'marker')<CR>
 noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
-noremap <Leader>sm       :<C-u>setlocal synmaxcol=1000
+noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '1000')<CR>
 noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
 noremap <Leader>st       :<C-u>SetTextwidth<Space>
 noremap <Leader>?st      :<C-u>SetTextwidth<CR>
 noremap <Leader>sw       :<C-u>SetWhitespace<Space>
 noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
-noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>SetDiff! \| SetDiff<CR>
@@ -348,12 +343,15 @@ noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
+noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
+noremap <Leader><C-t>    :<C-u>if v:profiling \| silent! execute '!(sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
+noremap <Leader><C-v>    :<C-u>execute exists('g:SetVerbose') ? 'SetVerbose \| tabedit /tmp/verbose.vim' : 'SetVerbose!'<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
-noremap <Leader><C-v>    :<C-u>SetVerbose!<CR>
 
 " Open frequently edited files
-noremap <Leader>e<Space> :<C-u>tabedit<Space>
+noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
 noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
+noremap <Leader>eA       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/aliases'))<CR>
 noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
 noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
 noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
@@ -376,7 +374,7 @@ noremap <Leader>ex       :<C-u>execute 'TabOpen ' . expand('~/.xinitrc')<CR>
 noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
 
 " Set filetype
-noremap <Leader>f<Space> :<C-u>setlocal filetype=
+noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>
 noremap <Leader>f?       :<C-u>setlocal filetype?<CR>
 noremap <Leader>fc       :<C-u>setlocal filetype=c<CR>
 noremap <Leader>fC       :<C-u>setlocal filetype=clojure<CR>
@@ -426,8 +424,9 @@ Mapall <4-x> :<C-u>ToggleQuickfixWindow<CR>
 " Close Preview window
 Mapall <4-X> :<C-u>pclose<CR>
 
-" Open URLs
-Mapall <4-U> :<C-u>Open<CR>
+" Open URLs (with netrw)
+map  <4-U> gx
+map! <4-U> <C-\><C-n>gx
 
 " Position terminal window
 Mapall <Nul>h :silent!\ !xecho\ nw<CR>:redraw!<CR>
@@ -465,15 +464,15 @@ noremap <M-U> gUWW
 map!    <M-U> <C-\><C-o>gUW<C-\><C-o>W
 
 " Join lines
-noremap  <Leader><C-j> J
-inoremap <Leader><C-j> <C-\><C-o>J
+noremap  <Leader>j J
+inoremap <Leader>j <C-\><C-o>J
 
 " Select all
 nnoremap <4-a> VggoG
 vnoremap <4-a> <C-\><C-n>VggoG
 
 " Kill trailing whitespace
-noremap <silent> <Leader><C-k> :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
+noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
 
 " REPLACE insertmode-go-to-normal-mode and command-line-insert-longest-match
 " with nothing for ASCII arrow
@@ -513,13 +512,6 @@ for [g:lhs, g:rhs] in [['d', 'qdictionary'],
 endfor
 unlet g:lhs g:rhs g:fmt
 
-" REPLACE move-down-and-start-of-line with a simple add-numbers-in-selection
-vnoremap + "ry:ruby
-    \ r = VIM.evaluate('@r').scan(/[+-]?\d+(?:\.\d+)?/).flatten.inject(0) { \|s,n\| s + n.to_f };
-    \ VIM.command(%q(let @r = "%f") % r);
-    \ print r<CR>
-
-
 """ Plugins {{{1
 
 " Plugin: surround.vim - visual surround shortcuts (a la TextMate)
@@ -532,34 +524,35 @@ vmap ' <Plug>VSurround'
 noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
+noremap  <Leader>g%       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
 noremap  <Leader>g<Space> :<C-u>Git<Space>
+noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
+noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
+noremap  <Leader>gap      :<C-u>Git ap<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
 noremap  <Leader>gc       :<C-u>Gcommit<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
-noremap  <Leader>g%       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
 noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
-noremap  <Leader>gL       :<C-u>Glog<CR>
+noremap  <Leader>gL       :<C-u>silent! Git lpw<CR>
+noremap  <Leader>gp       :<C-u>silent! Git pull<CR>
+noremap  <Leader>gP       :<C-u>silent! Git push<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
+noremap  <Leader>gs       :<C-u>Git stash -u<CR>
+noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
-noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
-noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
-noremap  <Leader>gap      :<C-u>Git ap<CR>
+noremap  <Leader>gw       :<C-u>silent! Git wlpw<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
 
-" Plugin: ScreenShell
-noremap <Leader>S :<C-u>Screen<CR>
-
 " Plugin: Manpageview
-noremap <Leader>K viwK
-noremap <Leader>m :<C-u>VEMan<Space>
-noremap <Leader>M :<C-u>HMan<Space>
+noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
+noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
 " Plugin: Align
 noremap <Leader>a<Space> :Align<Space>
@@ -571,8 +564,8 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: operator-camelize
 " RECURSIVE map for <Plug> mappings
-nmap <Leader><C-_> viw<Plug>(operator-camelize-toggle)
-vmap <Leader><C-_> <Plug>(operator-camelize-toggle)
+nmap <Leader>- viw<Plug>(operator-camelize-toggle)
+vmap <Leader>- <Plug>(operator-camelize-toggle)
 
 " Plugin: CtrlP
 Mapall <4-o> :<C-u>CtrlP<CR>
@@ -602,10 +595,6 @@ Mapall <4-F> :<C-u>UltiSnipsEdit<CR>
 Mapall <4-i> :<C-u>TagbarToggle<CR>
 Mapall <4-I> :<C-u>TagbarOpen<CR>
 
-" Plugin: NERD_commenter
-map  <4-/> <Plug>NERDCommenterToggleAlign
-imap <4-/> <C-\><C-n><Plug>NERDCommenterToggleAlign
-
 " Plugin: CamelCaseMotion
 map  <C-Left>  <Plug>CamelCaseMotion_b
 map! <C-Left>  <C-\><C-o><C-Left>
@@ -613,3 +602,14 @@ map  <C-Right> <Plug>CamelCaseMotion_e
 map! <C-Right> <C-\><C-o><C-Right>
 map  <C-BS>    d<Plug>CamelCaseMotion_b
 map! <C-BS>    <C-\><C-o><C-BS>
+
+" Plugin: splitjoin.vim
+noremap <Leader>J :SplitjoinJoin<cr>
+noremap <Leader>S :SplitjoinSplit<cr>
+
+" Plugin: vim-commentary
+xmap <4-/>      <Plug>Commentary
+nmap <4-/>      m`<Plug>CommentaryLine``
+nmap <Leader>c  <Plug>Commentary
+nmap <Leader>cc m`<Plug>CommentaryLine``
+nmap <Leader>cu <Plug>CommentaryUndo

@@ -1,6 +1,9 @@
 ;;; evil-core.el --- Core functionality
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
+
+;; Version: 0.0.0
+
 ;;
 ;; This file is NOT part of GNU Emacs.
 
@@ -115,11 +118,11 @@
     ;; restore the proper value of `major-mode' in Fundamental buffers
     (when (eq major-mode 'turn-on-evil-mode)
       (setq major-mode 'fundamental-mode))
-    ;; determine and enable the initial state
-    (unless evil-state
-      ;; note: the initial state may be re-determined in
-      ;; `post-command-hook' by `evil-mode-check-buffers'
-      (evil-initialize-state))
+    ;; The initial state is usually setup by `evil-initialize' when
+    ;; the major-mode in a buffer changes. This preliminary
+    ;; initialization is only for the case when `evil-local-mode' is
+    ;; called directly for the first time in a buffer.
+    (unless evil-state (evil-initialize-state))
     (add-hook 'input-method-activate-hook #'evil-activate-input-method t t)
     (add-hook 'input-method-deactivate-hook #'evil-deactivate-input-method t t)
     (add-hook 'activate-mark-hook #'evil-visual-activate-hook nil t)
@@ -145,12 +148,19 @@
   (interactive)
   (evil-local-mode (or arg -1)))
 
+;; The function `evil-initialize' should only be used to initialize
+;; `evil-local-mode' from the globalized minor-mode `evil-mode'. It is
+;; called whenever evil is enabled in a buffer for the first time or
+;; when evil is active and the major-mode of the buffer changes. In
+;; addition to enabling `evil-local-mode' it also sets the initial
+;; evil-state according to the major-mode.
 (defun evil-initialize ()
   "Enable Evil in the current buffer, if appropriate.
 To enable Evil globally, do (evil-mode 1)."
   ;; TODO: option for enabling vi keys in the minibuffer
   (unless (minibufferp)
-    (evil-local-mode 1)))
+    (evil-local-mode 1)
+    (evil-initialize-state)))
 
 ;;;###autoload (autoload 'evil-mode "evil" "Toggle evil in all buffers" t)
 (define-globalized-minor-mode evil-mode
@@ -283,14 +293,6 @@ This is the state the buffer comes up in."
   (when state
     (add-to-list (evil-state-property state :modes) mode)))
 
-(defadvice evil-mode-check-buffers (before start-evil activate)
-  "Determine the initial state."
-  (dolist (buffer evil-mode-buffers)
-    (when (and (buffer-live-p buffer)
-               (not (minibufferp buffer)))
-      (with-current-buffer buffer
-        (evil-initialize-state)))))
-
 (evil-define-command evil-change-to-initial-state
   (&optional buffer message)
   "Change the state of BUFFER to its initial state.
@@ -353,39 +355,40 @@ This is the state the buffer came up in."
 
 (defun evil-refresh-mode-line (&optional state)
   "Refresh mode line tag."
-  (setq evil-mode-line-tag (evil-generate-mode-line-tag state))
-  ;; refresh mode line data structure
-  ;; first remove evil from mode-line
-  (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
-  (let ((mlpos mode-line-format)
-        pred which where)
-    ;; determine before/after which symbol the tag should be placed
-    (cond
-     ((eq evil-mode-line-format 'before)
-      (setq where 'after which 'mode-line-position))
-     ((eq evil-mode-line-format 'after)
-      (setq where 'after which 'mode-line-modes))
-     ((consp evil-mode-line-format)
-      (setq where (car evil-mode-line-format)
-            which (cdr evil-mode-line-format))))
-    ;; find the cons-cell of the symbol before/after which the tag
-    ;; should be placed
-    (while (and mlpos
-                (let ((sym (or (car-safe (car mlpos)) (car mlpos))))
-                  (not (eq which sym))))
-      (setq pred mlpos
-            mlpos (cdr mlpos)))
-    ;; put evil tag at the right position in the mode line
-    (cond
-     ((not mlpos)) ;; position not found, so do not add the tag
-     ((eq where 'before)
-      (if pred
-          (setcdr pred (cons 'evil-mode-line-tag mlpos))
-        (setq mode-line-format
-              (cons 'evil-mode-line-tag mode-line-format))))
-     ((eq where 'after)
-      (setcdr mlpos (cons 'evil-mode-line-tag (cdr mlpos)))))
-    (force-mode-line-update)))
+  (when (listp mode-line-format)
+    (setq evil-mode-line-tag (evil-generate-mode-line-tag state))
+    ;; refresh mode line data structure
+    ;; first remove evil from mode-line
+    (setq mode-line-format (delq 'evil-mode-line-tag mode-line-format))
+    (let ((mlpos mode-line-format)
+          pred which where)
+      ;; determine before/after which symbol the tag should be placed
+      (cond
+       ((eq evil-mode-line-format 'before)
+        (setq where 'after which 'mode-line-position))
+       ((eq evil-mode-line-format 'after)
+        (setq where 'after which 'mode-line-modes))
+       ((consp evil-mode-line-format)
+        (setq where (car evil-mode-line-format)
+              which (cdr evil-mode-line-format))))
+      ;; find the cons-cell of the symbol before/after which the tag
+      ;; should be placed
+      (while (and mlpos
+                  (let ((sym (or (car-safe (car mlpos)) (car mlpos))))
+                    (not (eq which sym))))
+        (setq pred mlpos
+              mlpos (cdr mlpos)))
+      ;; put evil tag at the right position in the mode line
+      (cond
+       ((not mlpos)) ;; position not found, so do not add the tag
+       ((eq where 'before)
+        (if pred
+            (setcdr pred (cons 'evil-mode-line-tag mlpos))
+          (setq mode-line-format
+                (cons 'evil-mode-line-tag mode-line-format))))
+       ((eq where 'after)
+        (setcdr mlpos (cons 'evil-mode-line-tag (cdr mlpos)))))
+      (force-mode-line-update))))
 
 ;; input methods should be disabled in non-insertion states
 (defun evil-activate-input-method ()
@@ -1031,8 +1034,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
              ,@body))
           (t
            (unless evil-local-mode
-             (evil-local-mode 1)
-             (evil-initialize-state))
+             (evil-local-mode 1))
            (let ((evil-next-state ',state)
                  input-method-activate-hook
                  input-method-deactivate-hook)

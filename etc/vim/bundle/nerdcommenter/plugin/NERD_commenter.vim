@@ -116,7 +116,9 @@ let s:delimiterMap = {
     \ 'cmusrc': { 'left': '#' },
     \ 'coffee': { 'left': '#' },
     \ 'conkyrc': { 'left': '#' },
+    \ 'context': { 'left': '%', 'leftAlt': '--' },
     \ 'cpp': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
+    \ 'cuda': { 'left': '/*','right': '*/', 'leftAlt': '//' },
     \ 'crontab': { 'left': '#' },
     \ 'cs': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'csp': { 'left': '--' },
@@ -183,7 +185,7 @@ let s:delimiterMap = {
     \ 'groovy': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'gsp': { 'left': '<%--', 'right': '--%>', 'leftAlt': '<!--','rightAlt': '-->'},
     \ 'gtkrc': { 'left': '#' },
-    \ 'haskell': { 'left': '{-','right': '-}', 'leftAlt': '-- ' },
+    \ 'haskell': { 'left': '{-','right': '-}', 'leftAlt': '--' },
     \ 'hb': { 'left': '#' },
     \ 'h': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'haml': { 'left': '-#', 'leftAlt': '/' },
@@ -270,6 +272,7 @@ let s:delimiterMap = {
     \ 'objj': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'ocaml': { 'left': '(*', 'right': '*)' },
     \ 'occam': { 'left': '--' },
+    \ 'octave': { 'left': '%', 'leftAlt': '#' },
     \ 'omlet': { 'left': '(*', 'right': '*)' },
     \ 'omnimark': { 'left': ';' },
     \ 'ooc': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
@@ -290,7 +293,7 @@ let s:delimiterMap = {
     \ 'pilrc': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'pine': { 'left': '#' },
     \ 'plm': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
-    \ 'plsql': { 'left': '--', 'leftAlt': '/*', 'rightAlt': '*/' },
+    \ 'plsql': { 'left': '-- ', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'po': { 'left': '#' },
     \ 'postscr': { 'left': '%' },
     \ 'pov': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
@@ -315,6 +318,7 @@ let s:delimiterMap = {
     \ 'rgb': { 'left': '!' },
     \ 'rib': { 'left': '#' },
     \ 'robots': { 'left': '#' },
+    \ 'rspec': { 'left': '#' },
     \ 'ruby': { 'left': '#' },
     \ 'sa': { 'left': '--' },
     \ 'samba': { 'left': ';', 'leftAlt': '#' },
@@ -352,9 +356,9 @@ let s:delimiterMap = {
     \ 'specman': { 'left': '//' },
     \ 'spectre': { 'left': '//', 'leftAlt': '*' },
     \ 'spice': { 'left': '$' },
-    \ 'sql': { 'left': '--' },
-    \ 'sqlforms': { 'left': '--' },
-    \ 'sqlj': { 'left': '--' },
+    \ 'sql': { 'left': '-- ' },
+    \ 'sqlforms': { 'left': '-- ' },
+    \ 'sqlj': { 'left': '-- ' },
     \ 'sqr': { 'left': '!' },
     \ 'squid': { 'left': '#' },
     \ 'st': { 'left': '"' },
@@ -2751,22 +2755,22 @@ function! s:CreateMaps(modes, target, desc, combo)
         endif
     endfor
 endfunction
-call s:CreateMaps('nx', 'Comment',    'Comment', 'cc')
+call s:CreateMaps('nx', 'Comment',    'Comment', 'Cc')
 call s:CreateMaps('nx', 'Toggle',     'Toggle', '')
 call s:CreateMaps('nx', 'ToggleAlign', 'ToggleAlign', '')
-call s:CreateMaps('nx', 'Minimal',    'Minimal', 'cm')
-call s:CreateMaps('nx', 'Nested',     'Nested', 'cn')
-call s:CreateMaps('n',  'ToEOL',      'To EOL', 'c$')
-call s:CreateMaps('nx', 'Invert',     'Invert', 'ci')
-call s:CreateMaps('nx', 'Sexy',       'Sexy', 'cs')
-call s:CreateMaps('nx', 'Yank',       'Yank then comment', 'cy')
-call s:CreateMaps('n',  'Append',     'Append', 'cA')
+call s:CreateMaps('nx', 'Minimal',    'Minimal', 'Cm')
+call s:CreateMaps('nx', 'Nested',     'Nested', 'Cn')
+call s:CreateMaps('n',  'ToEOL',      'To EOL', 'C$')
+call s:CreateMaps('nx', 'Invert',     'Invert', 'Ci')
+call s:CreateMaps('nx', 'Sexy',       'Sexy', 'Cs')
+call s:CreateMaps('nx', 'Yank',       'Yank then comment', 'Cy')
+call s:CreateMaps('n',  'Append',     'Append', 'CA')
 call s:CreateMaps('',   ':',          '-Sep-', '')
-call s:CreateMaps('nx', 'AlignLeft',  'Left aligned', 'cl')
-call s:CreateMaps('nx', 'AlignBoth',  'Left and right aligned', 'cb')
+call s:CreateMaps('nx', 'AlignLeft',  'Left aligned', 'Cl')
+call s:CreateMaps('nx', 'AlignBoth',  'Left and right aligned', 'Cb')
 call s:CreateMaps('',   ':',          '-Sep2-', '')
-call s:CreateMaps('nx', 'Uncomment',  'Uncomment', 'cu')
-call s:CreateMaps('n',  'AltDelims',  'Switch Delimiters', 'ca')
+call s:CreateMaps('nx', 'Uncomment',  'Uncomment', 'Cu')
+call s:CreateMaps('n',  'AltDelims',  'Switch Delimiters', 'Ca')
 call s:CreateMaps('i',  'Insert',     'Insert Comment Here', '')
 call s:CreateMaps('',   ':',          '-Sep3-', '')
 call s:CreateMaps('',   ':help NERDCommenterContents<CR>', 'Help', '')

@@ -3,5 +3,5 @@
 if killall -0 newsbeuter &>/dev/null; then
     exit 1
 else
-    exec dumpcert exec -f ~/.certificates/newsbeuter.crt newsbeuter
+    exec cert exec -f ~/.certificates/newsbeuter.crt newsbeuter
 fi

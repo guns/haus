@@ -69,7 +69,7 @@ if [[ -d /opt/doctorjs/lib/jsctags && $NODE_PATH != */opt/doctorjs/lib/jsctags* 
 fi
 
 # OS X
-if __OSX__; then
+if __OS_X__; then
     # Prefer not copying Apple doubles and extended attributes
     export COPYFILE_DISABLE=1
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
@@ -170,6 +170,7 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
+CD_FUNC cdmnt           /mnt
 CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
 CD_FUNC cddnsmasq       /opt/dnsmasq/etc
@@ -177,6 +178,7 @@ CD_FUNC cdnginx         /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           /tmp
 CD_FUNC cdTMP           "$TMPDIR" ~/tmp /tmp
 CD_FUNC cdvar           /var
+CD_FUNC cdabs           /var/abs
 CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
@@ -190,7 +192,7 @@ CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
-CD_FUNC cddownloads     ~/Downloads
+CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cdmail          ~/Mail
 
 
@@ -286,14 +288,16 @@ alias l1g='l1 | g'
 alias l1gv='l1 | gv'
 alias lsg='ls | g'
 alias lsgv='ls | gv'
-if __OSX__; then
+if __OS_X__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
 alias lsb='lsblk -a'
-if [[ -d /dev/mapper ]]; then
-    alias lsmapper='ls /dev/mapper'
-fi
+[[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
+for _d in /dev/disk/by-*; do
+    eval "alias ls${_d##*/by-}=\"ls $_d\""
+done
+unset _d
 # Param: $1 Directory to list
 # Param: $2 Interior of Ruby block with filename `f`
 __lstype__() {
@@ -442,8 +446,34 @@ dusort() {
 # mount
 ALIAS mt='mount -v' \
       umt='umount -v' \
-      mtext4='mt -t ext4' \
-      mthfs='mt -t hfsplus'
+      mtext4='mount -v -t ext4' \
+      mthfs='mount -v -t hfsplus' \
+      mtvfat='mount -v -t vfat' && {
+    mtusb() {
+        ruby -r shellwords -r fileutils -e '
+            options = "nosuid,uid=#{ENV["SUDO_UID"] || Process.euid},gid=#{ENV["SUDO_GID"] || Process.egid}"
+
+            blkdevs = Hash[%x(blkid).lines.map do |l|
+                f, kvs = l.split(":", 2)
+                [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
+            end]
+
+            usbdevs = Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
+                [File.expand_path(File.readlink(l), File.dirname(l)), l]
+            end]
+
+            (blkdevs.keys & usbdevs.keys).each do |dev|
+                label = blkdevs[dev]["LABEL"]
+                mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
+                FileUtils.mkdir_p mtpt
+                cmd = %W[mount -v -o #{options} #{dev} #{mtpt}]
+                puts cmd.shelljoin
+                system *cmd
+            end
+        ' -- "$@"
+    }
+    umtusb() { run umount -v /mnt/usb-*; rmdir /mnt/usb-*; }
+}
 
 # tar
 alias star='tar --strip-components=1'
@@ -568,7 +598,7 @@ ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
 }
 
 # Remove logs and caches
-if __OSX__; then
+if __OS_X__; then
     flushcache() {
         local dir cachedirs=(
             "$HOME/Library/Preferences/Macromedia/Flash Player"
@@ -681,7 +711,7 @@ ALIAS get='curl -#L' \
 
 # DNS
 ALIAS digx='dig -x'
-if __OSX__; then
+if __OS_X__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
     alias resolv='cat /etc/resolv.conf'
@@ -812,14 +842,14 @@ ALIAS ipt='iptables' && {
         done
     }
     iptopen() {
-        (($#)) || { echo "USAGE: $FUNCNAME source[:port,...] ..."; return 1; }
+        (($#)) || { echo "USAGE: $FUNCNAME source[:port,…] …"; return 1; }
         ruby -e '
             def sh *args; puts args.join(" "); system *args; end
             ARGV.each do |arg|
-                s = arg[/(.*):/, 1] || arg
-                source = (s.nil? || s.empty?) ? [] : %W[--source #{s}]
+                s, p = arg =~ /:/ ? arg.split(":", 2) : [nil, arg]
+                source = s ? %W[--source #{s}] : []
+                ps = p.split(",").map &:to_i
 
-                ps = (arg[/:([\d,]+)/, 1] || "").split(",").map &:to_i
                 ports = case ps.size
                 when 0 then []
                 when 1 then %W[--dport #{ps.first}]
@@ -923,32 +953,6 @@ HAVE vim && {
         run vim -c "Screen $cmd" "$file"
     }
 
-    # Open local REPL project
-    if ((EUID)); then
-        vimclojure() {
-            local port="${1:-2113}"
-            if [[ -e project.clj ]] || cd ~/.clojure; then
-                if nc -z 127.0.0.1 "$port" &>/dev/null; then
-                    vim -c StartNailgunServer -c CtrlP
-                else
-                    local seconds=0
-                    clojure --lein "trampoline vimclojure :port $port" &>/dev/null &
-                    ( ( until nc -z 127.0.0.1 "$port"; do
-                            if ((++seconds < 30)); then
-                                sleep 1
-                            else
-                                notify "Nailgun failed to start."
-                                return
-                            fi
-                        done
-                        notify --audio "Nailgun listening on 127.0.0.1:$port"
-                    ) &>/dev/null & ) & # Double fork notification so we don't overwrite the display
-                    vim -c CtrlP
-                fi
-            fi
-        }
-    fi
-
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)
     if ((EUID)); then
@@ -967,12 +971,13 @@ HAVE vim && {
 
         # Param: [$@] Arguments to vim
         vimstartuptime() {
-            (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') &>/dev/null & ) &
-            vim --servername 'editserver' --startuptime '.vimstartuptime' "$@"
+            vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
+            urxvt-client -e vim /tmp/.vimstartuptime
         }
     fi
 
     # Frequently edited files
+    alias vimaliases='(exec vim ~/.mutt/aliases)'
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
@@ -1004,21 +1009,18 @@ ALIAS emacs='emacs -nw'
 
 # Tmux
 ALIAS tm='tmux' && {
-    HAVE tmuxlaunch && {
-        alias xtmuxlaunch='exec tmuxlaunch'
-        alias xroottmuxlaunch='exec sudo tmuxlaunch'
-    }
+    HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
 
     tmuxeval() {
         local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+"))
         echo "$vars"
         eval "$vars"
     }
-
-    envtmux() {
-        run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
-    }; TCOMP exec envtmux
 }
+
+envtmux() {
+    run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
+}; TCOMP exec envtmux
 
 # GNU screen
 HAVE screen && {
@@ -1034,6 +1036,7 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
+      mke='make -e' \
       mkj='make -j\$\(grep -c ^processor /proc/cpuinfo\)' \
       mkj2='make -j2' \
       mkj4='make -j4' \
@@ -1076,7 +1079,7 @@ githubget() {
     local user="$1" repo="$2" branch="${3:-master}"
     run curl -#L "https://github.com/$user/$repo/tarball/$branch"
 }
-
+HAVE git-hg && alias git-hg-pull='run git-hg pull --force --rebase'
 
 ### Ruby
 
@@ -1295,7 +1298,7 @@ ALIAS rfk='rfkill' && {
     alias rfenable='run rfkill unblock all'
 }
 
-if __OSX__; then
+if __OS_X__; then
     # Show all pmset settings by default
     # Param: [$@] Arguments to `pmset`
     pmset() {
@@ -1345,22 +1348,29 @@ ALIAS ssl='openssl' && {
     }
 }
 
+# NSS
+[[ -e /usr/lib/libnssckbi.so ]] && {
+    alias disable-nss-roots='chmod 0 /usr/lib/libnssckbi.so'
+    alias enable-nss-roots='chmod 0644 /usr/lib/libnssckbi.so'
+}
+
 # GnuPG
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
 ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS pclip='pass -c' && {
-    passl() { pass "$@" | pager; }
-    TCOMP pass passl
+ALIAS pc='pass -c' && {
+    passl() { pass "$@" | pager; }; TCOMP pass passl
+    passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
+    passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
 }
 
 # cryptsetup
 ALIAS cs='cryptsetup' && {
     csmount() {
         (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
-        local name="$(sed 's:/$:: ; s:.*/::' <<< "$2")"
+        local name="$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$2")"
         if run cryptsetup luksOpen "$1" "$name"; then
             run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$2"
         fi
@@ -1368,18 +1378,19 @@ ALIAS cs='cryptsetup' && {
     csumount() {
         (($# == 1)) || { echo "USAGE: $FUNCNAME mountpoint"; return 1; }
         if run umount "$1"; then
-            run cryptsetup luksClose "$(sed 's:/$:: ; s:.*/::' <<< "$1")"
+            run cryptsetup luksClose "$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$1")"
         fi
     }; TCOMP umount csumount
+    alias csdump='cryptsetup luksDump'
 }
 
-ALIAS dc='dumpcert' && {
-    dx() { run dumpcert exec -f "~/.certificates/$1" -- "${@:2}"; }
-    _dx() { __compreply__ "$(command ls ~/.certificates/)"; }
-    complete -F _dx dx
+HAVE cert && {
+    cx() { run cert exec -f "~/.certificates/$1" -- "${@:2}"; }
+    _cx() { __compreply__ "$(command ls ~/.certificates/)"; }
+    complete -F _cx cx
 }
 
-if __OSX__; then
+if __OS_X__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
     alias security-dump-certificates='run security export -t certs'
 fi
@@ -1415,7 +1426,7 @@ fi
 
 ### Package Managers
 
-if __OSX__; then
+if __OS_X__; then
     # MacPorts package manager
     ALIAS port='port -c' && {
         porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
@@ -1465,6 +1476,8 @@ elif __LINUX__; then
         alias pacu='run pacman -Rs'
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
+
+        alias paclog='pager /var/log/pacman.log'
     }
 
     # Aura pacman + AUR wrapper
@@ -1482,9 +1495,12 @@ elif __LINUX__; then
     HAVE abs && abslocal() {
         ruby -e '
             ARGV.each do |src|
-                dst = "/var/abs/local/%s" % File.basename(src)
+                dst = "/var/abs/local/%s" % File.basename(File.expand_path src)
                 system *%W[git init #{dst}] unless Dir.exists? dst
                 system *%W[rsync -av --delete --exclude=/.git #{src}/ #{dst}/]
+                Dir.chdir dst do
+                    system "git add .; git commit -m init"
+                end
             end
         ' -- "$@"
     }
@@ -1497,30 +1513,32 @@ fi
 ### Media
 
 # Imagemagick
-ALIAS geometry='identify -format "%w %h"'
+ALIAS geometry='identify -format \"%w %h\"'
 
 # feh
 HAVE feh && {
-    fehbg() { feh --bg-fill "$(expand_path "$1")"; }
-    fshow() { feh --recursive "${@:-.}"; }
-    frand() { feh --recursive --randomize "${@:-.}"; }
-    ftime() {
-        ruby -r set -e '
-            args = ARGV.empty? ? ["."] : ARGV
-            fs = args.reduce Set.new do |set, arg|
-                set.merge Dir[File.join(arg, "*")].reject { |f| File.directory? f }
+    ALIAS fshow='feh -r' \
+          frand='feh -rz' \
+          ftime='feh -Smtime'
+    fehbg() {
+        ruby -r shellwords -e '
+            if ARGV.empty?
+                system "feh", File.expand_path(File.read(File.expand_path "~/.fehbg").shellsplit.last)
+            else
+                system "feh", "--bg-fill", ARGV.first
             end
-            exec "feh", *fs.sort_by { |f| File.mtime f }.reverse
         ' -- "$@"
     }
     fmove() {
         ruby -r shellwords -e '
+            op = ARGV.first == "-c" ? (ARGV.shift; "cp") : "mv"
             dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
-            abort "USAGE: fmove dir ..." if ARGV.empty? or dirs.count != ARGV.count
-            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "mv -- %F #{d.shellescape}"] }
-            exec "feh", "-Tsmall", "--draw-actions", *actions
+            abort "USAGE: fmove dir …" if ARGV.empty? or dirs.count != ARGV.count
+            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
+            exec "feh", "--draw-actions", *actions
         ' -- "$@"
     }
+    fcopy() { fmove -c "$@"; }
 }
 
 # cmus
@@ -1554,7 +1572,15 @@ ALIAS youtubedown='youtubedown --verbose' && {
 HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
-ALIAS xselb='xsel -b'
+clip() {
+    if type xsel &>/dev/null; then
+        xsel -ib "$@"
+    elif type xclip &>/dev/null; then
+        xclip -i -selection clipboard "$@"
+    elif type pbcopy &>/dev/null; then
+        pbcopy "$@"
+    fi
+}
 
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
@@ -1616,7 +1642,7 @@ ALIAS lctl='launchctl' \
 
 ### GUI programs
 
-if __OSX__; then
+if __OS_X__; then
     # LaunchBar
     HAVE /Applications/LaunchBar.app/Contents/MacOS/LaunchBar && {
         alias lb='open -a /Applications/LaunchBar.app'

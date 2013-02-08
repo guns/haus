@@ -37,6 +37,9 @@ class Hwctl
           fnmode [fn|media]
             Set MacBook function key mode.
 
+          toggle-alsa-card [number]
+            Switch between available sound cards, or specified card number
+
         Options:
       BANNER
 
@@ -96,6 +99,33 @@ class Hwctl
     File.read options.sys_fnmode
   end
 
+  def toggle_alsa_card number = nil
+    asoundrc = File.expand_path '~/.asoundrc'
+    settings = %w[defaults.pcm.card defaults.ctl.card]
+    cards = Hash[File.readlines('/proc/asound/cards').grep(/\A\s*(\d+)\s*(\[.*)/) { |m|
+      [$1.to_i, $2]
+    }]
+    numbers = cards.keys
+
+    FileUtils.touch asoundrc
+    buf = File.read asoundrc
+
+    next_number = number || begin
+      cur = buf[/^#{settings.first}\s+(\d+)/, 1]
+      if cur
+        i = numbers.index cur.to_i
+        numbers[i ? (i + 1) % numbers.size : 0]
+      else
+        numbers.first
+      end
+    end
+
+    lines = buf.lines.reject { |l| settings.include? l[/\A\S+/] }
+    lines += settings.map { |k| "#{k} #{next_number}\n" }
+    File.open(asoundrc, 'w') { |f| f.puts lines.join }
+    cards[next_number]
+  end
+
   def run arguments = []
     args = parser.order arguments
     rest = args.drop 1
@@ -104,6 +134,7 @@ class Hwctl
     when 'b', 'backlight' then backlight *rest
     when 'backlight-permissions' then backlight_permissions *rest
     when 'fnmode' then fnmode *rest
+    when 'toggle-alsa-card' then toggle_alsa_card *rest
     else abort parser.help
     end
 

@@ -32,17 +32,17 @@ set history=1023                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 
 " Temporary files
-if !isdirectory(expand('~/.vimtmp/undo'))
-    call mkdir(expand('~/.vimtmp/undo'), 'p', 0700)
+if !isdirectory(expand('~/.cache/vim/undo'))
+    call mkdir(expand('~/.cache/vim/undo'), 'p', 0700)
 endif
-if isdirectory(expand('~/.vimtmp'))
-    set directory=~/.vimtmp
-    set viminfo+=n~/.vimtmp/viminfo
-    let g:netrw_home = expand('~/.vimtmp')
+if isdirectory(expand('~/.cache/vim'))
+    set directory=~/.cache/vim
+    set viminfo+=n~/.cache/vim/viminfo
+    let g:netrw_home = expand('~/.cache/vim')
 endif
-if has('persistent_undo') && isdirectory(expand('~/.vimtmp/undo'))
+if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
     set undofile
-    set undodir=~/.vimtmp/undo
+    set undodir=~/.cache/vim/undo
 endif
 
 " Searching / Matching
@@ -167,8 +167,12 @@ let g:tex_fold_enabled = 1
 " SQL
 let g:omni_sql_no_default_maps = 1
 
+" Plugin: vim-clojure-static
+let g:clojure_align_multiline_strings = 1
+let g:clojure_fuzzy_indent_patterns = ['^with', '^def', '^let', 'ing$']
+
 " Plugin: NERDTree
-let g:NERDTreeBookmarksFile = expand('~/.vimtmp/NERDTreeBookmarks')
+let g:NERDTreeBookmarksFile = expand('~/.cache/vim/NERDTreeBookmarks')
 let g:NERDChristmasTree = 1
 let g:NERDTreeChDirMode = 2
 let g:NERDTreeDirArrows = 1
@@ -184,9 +188,8 @@ let g:NERDSpaceDelims = 1
 let g:NERDMenuMode = 0
 
 " Plugin: delimitMate (expand <CR> breaks undo/redo)
-let g:delimitMate_excluded_regions = ''
+let g:delimitMate_excluded_regions = 'Comment,String'
 let g:delimitMate_expand_space = 1
-let g:delimitMate_balance_matchpairs = 1
 
 " Plugin: Gundo.vim
 let g:gundo_preview_bottom = 1
@@ -216,26 +219,6 @@ let g:tagbar_sort = 0
 let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 160
 
-" Plugin: VimClojure
-let g:vimclojure#Browser = 'open'
-let g:vimclojure#SplitSize = 10
-let g:vimclojure#FuzzyIndent = 1
-let g:vimclojure#FuzzyIndentPatterns .= ',.*ing,run\*,fresh'
-let g:vimclojure#DynamicHighlighting = 1
-let g:vimclojure#ParenRainbow = 1
-let g:vimclojure#ParenRainbowColors = {
-    \ '0':  'ctermfg=244',
-    \ '1':  'ctermfg=243',
-    \ '2':  'ctermfg=242',
-    \ '3':  'ctermfg=241',
-    \ '4':  'ctermfg=240',
-    \ '5':  'ctermfg=239',
-    \ '6':  'ctermfg=238',
-    \ '7':  'ctermfg=237',
-    \ '8':  'ctermfg=236',
-    \ '9':  'ctermfg=235'
-\ }
-
 " Plugin: Regbuf
 let g:regbuf_open_command = 'vnew'
 let g:regbuf_edit_open_command = '80vnew'
@@ -250,7 +233,7 @@ let g:ctrlp_match_window_reversed = 0
 let g:ctrlp_max_height = 30
 let g:ctrlp_switch_buffer = 'et'
 let g:ctrlp_working_path_mode = 0
-let g:ctrlp_cache_dir = expand('~/.vimtmp/ctrlp')
+let g:ctrlp_cache_dir = expand('~/.cache/vim/ctrlp')
 let g:ctrlp_clear_cache_on_exit = 0
 let g:ctrlp_user_command = ['.git', 'git ls-files %s -co --exclude-standard']
 let g:ctrlp_max_history = 0
@@ -264,6 +247,36 @@ let g:ctrlp_prompt_mappings = {
     \ 'PrtDeleteEnt()':       ['<4-R>'],
 \ }
 
+" Plugin: rainbow_parentheses.vim
+let g:rbpt_colorpairs = [
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [236, '#303030'],
+    \ [237, '#3a3a3a'],
+    \ [238, '#444444'],
+    \ [239, '#4e4e4e'],
+    \ [240, '#585858'],
+    \ [241, '#606060'],
+    \ [242, '#666666'],
+    \ [243, '#767676'],
+    \ [244, '#808080'],
+    \ [245, '#8a8a8a']]
+let g:rbpt_max = len(g:rbpt_colorpairs)
+
+" Plugin: vim-foreplay
+let g:no_foreplay_classpath = 1
+
+" Plugin: splitjoin.vim
+let g:splitjoin_split_mapping = ''
+let g:splitjoin_join_mapping = ''
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 

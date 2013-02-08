@@ -25,6 +25,7 @@ class Fixperm
     @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Change mode of files to match the current umask (typically 0022).
+        Skips symbolic links.
 
         *Be careful*
 
@@ -56,10 +57,10 @@ class Fixperm
         (0666 & ~options.umask)
       end
 
-      next if (stat.mode & 0777) == mode
+      next if stat.ftype == 'link' or (stat.mode & 0777) == mode
 
       log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [f, Haus::LSColors[f]]
-      File.lchmod mode, f unless options.noop
+      File.chmod mode, f unless options.noop
     end
   end
 

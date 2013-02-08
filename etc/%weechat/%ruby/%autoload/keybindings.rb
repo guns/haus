@@ -11,7 +11,7 @@ include Script::Skeleton
 @script = {
   :name        => 'keybindings',
   :author      => 'guns <self@sungpae.com>',
-  :version     => '0.1',
+  :version     => '1.0',
   :license     => 'GPL3',
   :gem_version => '0.0.5',
   :description => "Guns' personal keybindings"
@@ -20,21 +20,21 @@ include Script::Skeleton
 CHANNELS = {
   :freenode => %w[
     #vim
+    #clojure
+    #archlinux
+    #rxvt-unicode
+    #archlinux-arm
+    #leiningen
     #emacs
     #mutt
-    #clojure
-    #leiningen
     #tmux
-    ##English
     #bash
     #git
     #nginx
-    #archlinux
     #openssl
-    #rxvt-unicode
     #ruby
     #ruby-lang
-    #RubyOnRails
+    ##English
   ],
 
   :mozilla => %w[
@@ -64,6 +64,7 @@ KEYBINDINGS = {
   'ctrl-Xjm'    => "/join -server freenode #{CHANNELS[:mozilla].join ','}",
   'ctrl-Xm'     => '/input insert /msg ',
   'ctrl-Xn'     => '/input insert /msg NickServ ',
+  'ctrl-Xr'     => '/RELOADALL',
   'ctrl-Xs'     => '/input insert /list -re ',
   'ctrl-V'      => '/input grab_key_command',
   'meta-ctrl-?' => '/input delete_previous_word',
@@ -72,12 +73,12 @@ KEYBINDINGS = {
   'mod4-e'      => '/window scroll_down',
   'mod4-f'      => '/bar scroll nicklist * y+90%',
   'mod4-g'      => '/go',
+  'mod4-i'      => '/toggle_nicklist toggle',
   'mod4-j'      => '/buffer +1',
   'mod4-J'      => '/buffer move +1',
   'mod4-k'      => '/buffer -1',
   'mod4-K'      => '/buffer move -1',
   'mod4-p'      => '/window scroll_previous_highlight',
-  'mod4-t'      => '/toggle_nicklist toggle',
   'mod4-U'      => '/input set_unread_current_buffer',
   'mod4-u'      => '/window scroll_unread',
   'mod4-x'      => '/input switch_active_buffer',
