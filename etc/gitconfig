@@ -152,6 +152,7 @@
     gifw = grep -Fiw
 
     # misc
+    bs  = bisect
     ls  = ls-files
     lso = ls-files -o
     lsu = ls-files -o --exclude-standard
