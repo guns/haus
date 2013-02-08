@@ -102,8 +102,8 @@ function! s:SetVerbose(bang)
     endif
 endfunction
 
-command! -nargs=* -complete=function -bar Time call <SID>Time(<f-args>)
-function! s:Time(...)
+command! -nargs=* -complete=function -bar Profile call <SID>Profile(<f-args>)
+function! s:Profile(...)
     profile start /tmp/profile.vim
     for pat in a:000
         if pat =~# '\v^file:'
