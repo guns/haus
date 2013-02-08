@@ -971,8 +971,8 @@ HAVE vim && {
 
         # Param: [$@] Arguments to vim
         vimstartuptime() {
-            (sleep 3 && vimserver '.vimstartuptime' && (sleep 3 && rm -f '.vimstartuptime') &>/dev/null & ) &
-            vim --servername 'editserver' --startuptime '.vimstartuptime' "$@"
+            vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
+            urxvt-client -e vim /tmp/.vimstartuptime
         }
     fi
 
