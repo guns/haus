@@ -174,7 +174,9 @@ noremap! <4-;> <C-f>
 noremap! <C-f> <Right>
 
 " Since c_4-; opens the command line window, map <4-;> to do the same in (nvo)
+" Also bind the repeat last command to semicolon
 noremap <4-;> q:
+noremap @;    @:
 
 
 """ Emacs: Ctrl-D (forward-delete) {{{1
