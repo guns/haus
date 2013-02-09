@@ -426,9 +426,8 @@ Mapall <4-x> :<C-u>ToggleQuickfixWindow<CR>
 " Close Preview window
 Mapall <4-X> :<C-u>pclose<CR>
 
-" Open URLs (with netrw)
-map  <4-U> gx
-map! <4-U> <C-\><C-n>gx
+" Open URLs
+Mapall <4-U> :<C-u>Open<CR>
 
 " Position terminal window
 Mapall <Nul>h :silent!\ !xecho\ nw<CR>:redraw!<CR>

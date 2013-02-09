@@ -296,6 +296,22 @@ function! s:OrgBufferSetup()
     silent! iunmap <buffer> <C-t>
 endfunction
 
+command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
+function! s:Open(word)
+    " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
+    " Worth the simple implementation IMO.
+    let rdelims = "\"');>"
+    let capture = 'https?://[^' . rdelims . ']+|(https?://)@<!www\.[^' . rdelims . ']+'
+    let pattern = '\v.*(' . capture . ')[' . rdelims . ']?.*'
+    if match(a:word, pattern) != -1
+        let url = substitute(a:word, pattern, '\1', '')
+        echo url
+        return system('open ' . shellescape(url))
+    else
+        echo 'No URL found!'
+    endif
+endfunction
+
 command! -nargs=? -complete=command -bar Qfdo call <SID>Qfdo(<q-args>) "{{{1
 function! s:Qfdo(expr)
     " Run a command over all lines in the quickfix buffer
