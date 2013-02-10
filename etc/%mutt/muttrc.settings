@@ -1398,7 +1398,7 @@ set history_file="~/.mutt/history"
 # honored when group-replying to a message.
 #
 
-# set hostname=""
+set hostname="guns@SUNGPAE"
 #
 # Name: hostname
 # Type: string
