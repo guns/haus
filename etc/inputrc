@@ -234,6 +234,8 @@ $if Bash
     "\C-xc":        "\C-]cdconfig "
     "\C-x\C-d":     "\C-] cddownloads \n"
     "\C-xd":        "\C-]cddownloads "
+    "\C-x\C-D":     "\C-] cddocuments \n"
+    "\C-xD":        "\C-]cddocuments "
     "\C-x\C-h":     "\C-] cdhaus \n"
     "\C-xh":        "\C-]cdhaus "
     "\C-x\C-l":     "\C-] cdlocal \n"

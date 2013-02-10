@@ -193,7 +193,8 @@ CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
-CD_FUNC cdmail          ~/Mail
+CD_FUNC cddocuments     ~/Documents ~guns/Documents
+CD_FUNC cdmail          ~/Mail ~guns/Mail
 
 
 ### Bash builtins and Haus commands
