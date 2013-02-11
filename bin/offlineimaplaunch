@@ -2,6 +2,21 @@
 
 if kill -0 $(cat ~/.offlineimap/pid) &>/dev/null; then
     exit 1
-else
-    exec offlineimap
 fi
+
+PORT=3346
+
+# Create the sshuttle tunnel to the IMAP and SMTP servers
+if ! nc -z 127.0.0.1 $PORT; then
+    sudo /opt/sshuttle/sshuttle \
+        -v \
+        -l 127.0.0.1:$PORT \
+        -r guns@sungpae.com \
+        $(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]') &
+fi
+
+while ! nc -z 127.0.0.1 $PORT; do
+  sleep 0.1
+done
+
+exec offlineimap

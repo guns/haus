@@ -25,6 +25,9 @@ class SshuttleWrapper
   def parser
     @parser ||= CLI::SuperParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
+        Tunnel ALL traffic through sshuttle and prevent any other outgoing
+        connections.
+
         Usage: #{File.basename __FILE__} [options] [user@]host[:port]
 
         Options are a superset of sshuttle options, although sshuttle option
