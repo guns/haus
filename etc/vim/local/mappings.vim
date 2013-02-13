@@ -611,6 +611,7 @@ noremap <Leader>S :SplitjoinSplit<cr>
 " Plugin: vim-commentary
 xmap <4-/>      <Plug>Commentary
 nmap <4-/>      m`<Plug>CommentaryLine``
+imap <4-/>      <C-\><C-n><4-/>
 nmap <Leader>c  <Plug>Commentary
 nmap <Leader>cc m`<Plug>CommentaryLine``
 nmap <Leader>cu <Plug>CommentaryUndo
