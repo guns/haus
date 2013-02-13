@@ -22,6 +22,10 @@ source $alias_file
 mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"` \
           ~/.mutt/notmuch/results
 
+# Mailing lists
+lists .*@googlegroups.com \
+      vim.*@vim.org
+
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
 #   pager:    Display a selected e-mail.
