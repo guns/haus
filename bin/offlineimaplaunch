@@ -1,22 +1,28 @@
-#!/bin/sh
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
 
-if kill -0 $(cat ~/.offlineimap/pid) &>/dev/null; then
-    exit 1
-fi
+pidfile = File.expand_path '~/.offlineimap/pid'
+port = '3346'
 
-PORT=3346
+def running? pid
+  Process.kill 0, pid
+rescue Errno::ESRCH
+  false
+end
 
-# Create the sshuttle tunnel to the IMAP and SMTP servers
-if ! nc -z 127.0.0.1 $PORT; then
-    sudo /opt/sshuttle/sshuttle \
-        -v \
-        -l 127.0.0.1:$PORT \
-        -r guns@sungpae.com \
-        $(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]') &
-fi
+if File.exists? pidfile and running? File.read(pidfile).to_i
+  abort 'Offlineimap is already running!'
+end
 
-while ! nc -z 127.0.0.1 $PORT; do
-  sleep 0.1
-done
+fork do
+  addrs = %x(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]').lines.map &:strip
+  exec *(%W[sudo /opt/sshuttle/sshuttle -v -l 127.0.0.1:#{port} -r guns@sungpae.com] + addrs)
+end
 
-exec offlineimap
+sleep 0.5 until system 'nc', '-z', '127.0.0.1', port
+
+fork do
+  exec 'offlineimap'
+end
+
+Process.waitall
