@@ -21,8 +21,16 @@ end
 
 sleep 0.5 until system 'nc', '-z', '127.0.0.1', port
 
-fork do
+offlineimap_pid = fork do
   exec 'offlineimap'
+end
+
+%w[INT QUIT TERM].each do |sig|
+  trap sig do
+    puts "Caught SIG#{sig}; sending SIGQUIT to offlineimap (#{offlineimap_pid})"
+    Process.kill :QUIT, offlineimap_pid
+    Process.waitall
+  end
 end
 
 Process.waitall
