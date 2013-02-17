@@ -85,11 +85,11 @@ clip() {
 	# in shell. There must be a better way to deal with this, but because I'm a dolt,
 	# we're going with this for now.
 
-	before="$(xclip -o -selection clipboard | base64)"
-	echo -n "$1" | xclip -selection clipboard
+	before="$(xsel -o --clipboard | base64)"
+	echo -n "$1" | xsel -i --clipboard
 	(
 		sleep 45
-		now="$(xclip -o -selection clipboard | base64)"
+		now="$(xsel -o --clipboard | base64)"
 		if [[ $now != $(echo -n "$1" | base64) ]]; then
 			before="$now"
 		fi
@@ -103,7 +103,7 @@ clip() {
 		# so we axe it here:
 		qdbus org.kde.klipper /klipper org.kde.klipper.klipper.clearClipboardHistory &>/dev/null
 
-		echo "$before" | base64 -d | xclip -selection clipboard
+		echo "$before" | base64 -d | xsel -i --clipboard
 	) & disown
 	echo "Copied $2 to clipboard. Will clear in 45 seconds."
 }
