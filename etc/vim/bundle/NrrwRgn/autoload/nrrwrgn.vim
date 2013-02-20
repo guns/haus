@@ -1,8 +1,8 @@
 " nrrwrgn.vim - Narrow Region plugin for Vim
 " -------------------------------------------------------------
-" Version:	   0.30
+" Version:	   0.31
 " Maintainer:  Christian Brabandt <cb@256bit.org>
-" Last Change: Fri, 25 Jan 2013 12:29:11 +0100
+" Last Change: Sat, 16 Feb 2013 22:28:31 +0100
 "
 " Script: http://www.vim.org/scripts/script.php?script_id=3075 
 " Copyright:   (c) 2009, 2010, 2011, 2012, 2013 by Christian Brabandt
@@ -11,7 +11,7 @@
 "			   instead of "Vim".
 "			   No warranty, express or implied.
 "	 *** ***   Use At-Your-Own-Risk!   *** ***
-" GetLatestVimScripts: 3075 30 :AutoInstall: NrrwRgn.vim
+" GetLatestVimScripts: 3075 31 :AutoInstall: NrrwRgn.vim
 "
 " Functions:
 
@@ -372,7 +372,7 @@ fun! <sid>Options(search) "{{{1
 		"call setreg('a', reg_a[0], reg_a[1])
 		call filter(b, 'v:val =~ "^''"')
 		" the following options should be set
-		let filter_opt='\%(modifi\%(ed\|able\)\|readonly\|noswapfile\|'.
+		let filter_opt='\%(modifi\%(ed\|able\)\|readonly\|swapfile\|'.
 				\ 'buftype\|bufhidden\|foldcolumn\|buflisted\)'
 		call filter(b, 'v:val !~ "^''".filter_opt."''"')
 		for item in b
@@ -984,7 +984,6 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 		"  become invalid, if CleanUp is executed)
 "	endif
 	call <sid>SaveRestoreRegister(_opts)
-	let  @/=s:o_s
 	call winrestview(wsv)
 	if !close && has_key(s:nrrw_rgn_lines[instn], 'single')
 		" move back to narrowed buffer
