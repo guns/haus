@@ -1604,12 +1604,13 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
 }
 
 
-### Linux Console
+### TTY
 
 if [[ "$TERM" == linux ]]; then
     alias vconsole-setup="loadkeys '$cdhaus/share/kbd/macbook.map.gz'; unicode_start"
 fi
 
+ALIAS rl='rlwrap'
 
 ### Init
 
@@ -1624,9 +1625,6 @@ if HAVE systemd; then
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
-
-
-### Launchd
 
 ALIAS lctl='launchctl' \
       lctlload='launchctl load -w' \
