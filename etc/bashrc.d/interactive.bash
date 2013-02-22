@@ -75,7 +75,6 @@ if __OS_X__; then
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
 fi
 
-
 ### Meta Utility Functions
 
 # Lists of aliases and functions
@@ -159,7 +158,6 @@ __ps1toggle__() {
     done
 }
 
-
 ### Directories
 
 CD_FUNC -n ..           ..
@@ -195,7 +193,6 @@ CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for 
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cddocuments     ~/Documents ~guns/Documents
 CD_FUNC cdmail          ~/Mail ~guns/Mail
-
 
 ### Bash builtins and Haus commands
 
@@ -248,7 +245,6 @@ ALIAS n='notify' \
 # run bgrun
 HAVE run   && TCOMP exec run
 HAVE bgrun && TCOMP exec bgrun
-
 
 ### Files, Disks, and Memory
 
@@ -634,7 +630,6 @@ ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/F
 ALIAS ranger='ranger -c' \
       rr='ranger -c'
 
-
 ### Processes
 
 # kill killall
@@ -685,13 +680,11 @@ HAVE htop && {
     htoprestore() { (cd && exec gunzip -c "$cdhaus/share/conf/htoprc.gz" > .htoprc) }
 }
 
-
 ### Switch User
 
 ALIAS s='sudo' \
       root='exec sudo -Hs'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
-
 
 ### Network
 
@@ -807,7 +800,6 @@ HAVE weechat-curses && {
     ((EUID)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
 }
 
-
 ### Firewalls
 
 # IPTables
@@ -862,7 +854,6 @@ ALIAS ipt='iptables' && {
         ' -- "$@"
     }
 }
-
 
 ### Editors
 
@@ -1005,7 +996,6 @@ HAVE vim && {
 # Emacs
 ALIAS emacs='emacs -nw'
 
-
 ### Terminal Multiplexers
 
 # Tmux
@@ -1029,7 +1019,6 @@ HAVE screen && {
     alias xscreenr='exec screen -R'; TCOMP screen xscreenr
 }
 
-
 ### Compilers
 
 # make
@@ -1044,7 +1033,6 @@ ALIAS mk='make' \
       mkj8='make -j8' \
       mkb='make -B' \
       mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
-
 
 ### SCM
 
@@ -1184,11 +1172,9 @@ type ruby &>/dev/null && {
     }
 }
 
-
 ### Python
 
 ALIAS py='python'
-
 
 ### JVM
 
@@ -1207,7 +1193,6 @@ HAVE lein && {
 ALIAS java-share-dump='java -server -Xshare:dump'
 ALIAS ngstop='ng ng-stop'
 
-
 ### JavaScript
 
 # node package manager
@@ -1221,7 +1206,6 @@ ALIAS npm='npm --global' && {
     # alias npmsync
     # alias npmoutdated
 }
-
 
 ### Perl
 
@@ -1243,7 +1227,6 @@ ALIAS perlpe='perl -pe' \
     }
 }
 
-
 ### Haskell
 
 # cabal package manager
@@ -1257,7 +1240,6 @@ HAVE cabal && {
     alias cabalsync='run cabal update'
     # alias cabaloutdated
 }
-
 
 ### Databases
 
@@ -1287,7 +1269,6 @@ ALIAS sqlite='sqlite3' && {
         } 2>/dev/null | pager
     }
 }
-
 
 ### Hardware control
 
@@ -1333,7 +1314,6 @@ HAVE wpa_supplicant wpa_passphrase && {
         bgrun wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
     }
 }
-
 
 ### Encryption
 
@@ -1396,7 +1376,6 @@ if __OS_X__; then
     alias security-dump-certificates='run security export -t certs'
 fi
 
-
 ### Virtual Machines
 
 # VMWare
@@ -1423,7 +1402,6 @@ if [[ -d /Applications/VirtualBox.app ]]; then
         fi
     }
 fi
-
 
 ### Package Managers
 
@@ -1510,7 +1488,6 @@ elif __LINUX__; then
           mkpkgs='makepkg -s'
 fi
 
-
 ### Media
 
 # Imagemagick
@@ -1567,7 +1544,6 @@ ALIAS youtubedown='youtubedown --verbose' && {
     }
 }
 
-
 ### X
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
@@ -1603,7 +1579,6 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
     done
 }
 
-
 ### TTY
 
 if [[ "$TERM" == linux ]]; then
@@ -1637,7 +1612,6 @@ ALIAS lctl='launchctl' \
         done
     }
 }
-
 
 ### GUI programs
 
