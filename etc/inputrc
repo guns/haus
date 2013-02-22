@@ -330,6 +330,13 @@ $if Bash
     "\033\007!":    "\C-] if [[ -e Makefile ]]; then make; elif [[ -e Rakefile ]]; then rake; fi \n"
 $endif
 
+### gdb
+
+$if Gdb
+    # Arrow
+    "\C-l":         "->"
+    "\C-x\C-l":     clear-screen
+$endif
 
 ### pry / irb
 
@@ -362,7 +369,6 @@ $if Ruby
     "\C-xe":        "\C-]edit "
 $endif
 
-
 ### Clojure REPL
 
 $if Java
@@ -384,7 +390,6 @@ $if Java
     # Loading
     "\C-xl":        "\C-](load-file "")\C-b\C-b"
 $endif
-
 
 ### PostgreSQL
 
@@ -521,6 +526,8 @@ $if Psql
     "\C-xll":       "\C-]\\lo_list\n"
     "\C-xlu":       "\C-]\\lo_unlink "
 $endif
+
+### Mysql
 
 $if Mysql
     "\033\007e":    "\C-]\\e\n"
