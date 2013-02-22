@@ -76,6 +76,12 @@
    [:weight weight]
    [:slant slant]])
 
+(defn sh [command]
+  (let [command (if (coll? command)
+                  (format "/bin/bash -c \"%s\"" (string/join "; " command))
+                  command)]
+    ["Execute" [:command (hiccup/h command)]]))
+
 (defn bind [key & actions]
   `[:keybind {:key ~key}
     ~@(map #(let [[name & opts] (wrap %)]
@@ -83,10 +89,7 @@
            actions)])
 
 (defn bindsh [key command]
-  (let [command (if (coll? command)
-                  (format "/bin/bash -c \"%s\"" (string/join "; " command))
-                  command)]
-    (bind key ["Execute" [:command (hiccup/h command)]])))
+  (bind key (sh command)))
 
 (defn bindfocus
   ([key title] (bindfocus key title nil))
@@ -313,7 +316,7 @@
    [:context {:name "Desktop"}]
    [:context {:name "Root"}
     (bindmouse ["Right" "Press"] ["ShowMenu" [:menu "client-list-combined-menu"]])
-    (bindmouse ["Middle" "Press"] ["Execute" [:command "urxvt-client"]])]])
+    (bindmouse ["Middle" "Press"] (sh "urxvt-client"))]])
 
 (def config-menu
   [:menu
