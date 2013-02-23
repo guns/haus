@@ -235,6 +235,7 @@
    ;; Application bindings
    (bindsh "W-C-t" "urxvt-client")
    (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
+   (bindsh "W-A-t" "urxvt-client -g 120x30 -e htop")
    (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
    (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
    (bindfocus "F9" "guns ❦")
