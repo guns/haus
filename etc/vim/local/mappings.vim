@@ -543,6 +543,7 @@ noremap  <Leader>gP       :<C-u>silent! Git push<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
 noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
+noremap  <Leader>gu       :<C-u>Git up<CR>
 noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gw       :<C-u>silent! Git wlpw<CR>
