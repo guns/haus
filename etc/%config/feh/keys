@@ -45,7 +45,7 @@ jump_back         C-b
 reload_plus       plus
 reload_minus      underscore
 remove            BackSpace
-delete            C-BackSpace
+delete            C-BackSpace S-BackSpace
 scroll_left       h
 scroll_right      l
 scroll_up         y           u
