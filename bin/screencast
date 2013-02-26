@@ -91,7 +91,7 @@ class Screencast
     end
 
     # http://ubuntuforums.org/showthread.php?t=1392026
-    system *%W[
+    exec *%W[
       ffmpeg
       -f alsa -ac 2 -i pulse
       -f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}
