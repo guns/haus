@@ -5,8 +5,8 @@
 #  |__| |_____|__|__|  guns <self@sungpae.com>
 #
 
-toggle_actions    a
-toggle_aliasing   A
+toggle_actions    A
+toggle_aliasing   a
 toggle_caption    c
 toggle_exif       x
 toggle_filenames  d
