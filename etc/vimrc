@@ -6,7 +6,6 @@
 "     \_/  |_|_| |_| |_|  guns <sung@sungpae.com>
 "
 
-
 """ INITIALIZE {{{1
 
 " Clear all autocommands
@@ -23,7 +22,6 @@ let g:__FEATURES__ = {
 
 " Load commands and functions; no side effects from sourcing
 source ~/.vim/local/commands.vim
-
 
 """ USER INTERFACE {{{1
 
@@ -102,7 +100,6 @@ set fillchars=fold:\ ,diff:╳,vert:│
 " Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
 
-
 """ TEXT EDITING {{{1
 
 " c  Autowrap comments to textwidth
@@ -128,7 +125,6 @@ set nojoinspaces                " Never join lines with two spaces
 
 " Key behavior
 set backspace=2                 " Familiar backspace behavior
-
 
 """ GLOBAL VARIABLES {{{1
 
@@ -288,7 +284,6 @@ source ~/.vim/local/mappings.vim
 
 " Autocommands
 source ~/.vim/local/autocommands.vim
-
 
 """ TERMINAL and GUI SETTINGS {{{1
 
