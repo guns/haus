@@ -809,7 +809,7 @@ ALIAS ipt='iptables' && {
     iptlist() {
         {   local table
             for table in filter nat mangle raw security; do
-                run iptables --table "$table" --list --verbose "$@"
+                run iptables --table "$table" --list --line-numbers --verbose "$@"
                 if [[ -e /proc/net/if_inet6 ]]; then
                     run ip6tables --table "$table" --list --verbose "$@"
                 fi
