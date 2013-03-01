@@ -150,7 +150,6 @@ augroup GUNS
     " Markdown {{{1
     autocmd FileType markdown,rdoc
         \ setlocal iskeyword+=- |
-        \ SetTextwidth 72 |
         \ SetWhitespace 4 8
 
     " Mail {{{1
