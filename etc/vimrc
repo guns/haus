@@ -43,6 +43,11 @@ if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
     set undodir=~/.cache/vim/undo
 endif
 
+" Dictionaries, etc
+if !isdirectory(expand('~/.local/share/vim'))
+    call mkdir(expand('~/.local/share/vim'), 'p', 0700)
+endif
+
 " Searching / Matching
 set nohlsearch                  " Don't highlight matching patterns
 set incsearch                   " Highlight as we search
@@ -66,7 +71,8 @@ if exists('&wildignorecase')
     set wildignorecase          " Case insensitive file completion on command line
 endif
 set dictionary+=/usr/share/dict/words
-set thesaurus+=~/Documents/Notes/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
+set spellfile=~/.local/share/vim/spell.utf8.add
+set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
 
 " Folding
 set foldmethod=marker           " Default to vim's marker folding
