@@ -102,6 +102,13 @@ function! s:SetVerbose(bang)
     endif
 endfunction
 
+command! -nargs=? -complete=file -bar UndoRemove call <SID>UndoRemove(<f-args>)
+function! s:UndoRemove(...)
+    let file = undofile(a:0 ? a:1 : expand('%'))
+    let s = delete(file) == 0
+    echo printf('%successfully deleted %s', s ? 'S' : 'Uns', file)
+endfunction
+
 command! -nargs=* -complete=function -bar Profile call <SID>Profile(<f-args>)
 function! s:Profile(...)
     profile start /tmp/profile.vim
@@ -450,21 +457,16 @@ function! s:Org(bang, ...)
     endif
 endfunction
 
-" Speak {{{1
 command! -nargs=1 -bar Speak call system('speak ' . shellescape(<q-args>))
 
-" Interleave {{{1
 command! -bar -range Interleave
     \ '<,'>! ruby -e 'l = $stdin.read.lines; puts l.take(l.count/2).zip(l.drop l.count/2).join'
 
-" Hitest {{{1
 " http://vim.wikia.com/wiki/Xterm256_color_names_for_console_Vim
 command! -bar Hitest
     \ 45vnew |
     \ source $VIMRUNTIME/syntax/hitest.vim |
     \ setlocal synmaxcol=5000 nocursorline nocursorcolumn
-
-""" Utility functions {{{1
 
 function! CwordOrSel(...) " {{{1
     try

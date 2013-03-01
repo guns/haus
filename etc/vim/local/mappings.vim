@@ -296,6 +296,7 @@ noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>
 noremap <Leader>T :<C-u>Ctags<CR>
+noremap <Leader>U :<C-u>UndoRemove<CR>
 noremap <4-!>     :<C-u>make!<CR>
 noremap <4-p>     :<C-u>SynStack<CR>
 
