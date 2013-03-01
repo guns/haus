@@ -485,7 +485,7 @@ untar() {
     [[ -f "$1" ]] && f='f';
     run tar xv$f "$@" "${opts[@]}"
 }
-suntar() { untar --strip-components "$@"; }
+suntar() { untar -S "$@"; }
 guntar() { untar -z "$@"; }
 buntar() { untar -j "$@"; }
 
@@ -797,7 +797,7 @@ HAVE cdmetasploit && {
 
 # Weechat
 HAVE weechat-curses && {
-    ((EUID)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
+    ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
 }
 
 ### Firewalls
@@ -947,7 +947,7 @@ HAVE vim && {
 
     # Server / client functions
     # (be careful; vim clientserver is a huge security hole)
-    if ((EUID)); then
+    if ((EUID > 0)); then
         # Option: -w   Wait for file to close
         # Param:  [$@] Arguments to vim
         vimserver() {
@@ -1341,7 +1341,8 @@ ALIAS ssl='openssl' && {
 ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
-ALIAS pc='pass -c' && {
+HAVE pass && {
+    pc() { pass "$@" | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
@@ -1550,7 +1551,9 @@ HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
 clip() {
-    if type xsel &>/dev/null; then
+    if ((EUID > 0)) && type parcellite &>/dev/null; then
+        parcellite "$@" &>/dev/null
+    elif type xsel &>/dev/null; then
         xsel -ib "$@"
     elif type xclip &>/dev/null; then
         xclip -i -selection clipboard "$@"

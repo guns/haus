@@ -8,14 +8,14 @@ EXPORT_PROMPTS() {
 
     if [[ "$SSH_TTY" ]]; then
         delim="${delim:-■}" # Tunnel
-        if ((EUID)); then
+        if ((EUID > 0)); then
             color="${color:-36}"
         else
             color="${color:-31}"
         fi
     else
         delim="${delim:-§}" # Section
-        if ((EUID)); then
+        if ((EUID > 0)); then
             color="${color:-37}"
         else
             color="${color:-35}"
