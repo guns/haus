@@ -20,6 +20,18 @@ function! s:str(string)
   return '"' . escape(a:string, '"\') . '"'
 endfunction
 
+function! s:qsym(symbol)
+  if a:symbol =~# '^[[:alnum:]?*!+/=<>.:-]\+$'
+    return "'".a:symbol
+  else
+    return '(symbol '.s:str(a:symbol).')'
+  endif
+endfunction
+
+function! s:to_ns(path) abort
+  return tr(substitute(a:path, '\.\w\+$', '', ''), '\/_', '..-')
+endfunction
+
 " }}}1
 " Completion {{{1
 
@@ -55,7 +67,7 @@ function! foreplay#ns_complete(A, L, P) abort
     endif
     let matches += files
   endfor
-  return filter(map(matches, 's:tons(v:val)'), 'a:A ==# "" || a:A ==# v:val[0 : strlen(a:A)-1]')
+  return filter(map(matches, 's:to_ns(v:val)'), 'a:A ==# "" || a:A ==# v:val[0 : strlen(a:A)-1]')
 endfunction
 
 function! foreplay#omnicomplete(findstart, base) abort
@@ -113,14 +125,6 @@ if !exists('s:repls')
   let s:repl_paths = {}
 endif
 
-function! s:qsym(symbol)
-  if a:symbol =~# '^[[:alnum:]?*!+/=<>.:-]\+$'
-    return "'".a:symbol
-  else
-    return '(symbol "'.escape(a:symbol, '"').'")'
-  endif
-endfunction
-
 function! s:repl.path() dict abort
   return self.connection.path()
 endfunction
@@ -166,7 +170,7 @@ endfunction
 " }}}1
 " :Connect {{{1
 
-command! -bar -complete=customlist,s:connect_complete -nargs=? ForeplayConnect :exe s:Connect(<q-args>)
+command! -bar -complete=customlist,s:connect_complete -nargs=* ForeplayConnect :exe s:Connect(<f-args>)
 
 function! foreplay#input_host_port()
   let arg = input('Host> ', 'localhost')
@@ -205,7 +209,7 @@ function! s:connect_complete(A, L, P)
   return options
 endfunction
 
-function! s:Connect(arg)
+function! s:Connect(arg, ...)
   if a:arg =~# '^\w\+://'
     let [proto, arg] = split(a:arg, '://')
   elseif a:arg !=# ''
@@ -235,16 +239,16 @@ function! s:Connect(arg)
   let client = s:register_connection(connection)
   echo 'Connected to '.proto.'://'.arg
   let path = fnamemodify(exists('b:java_root') ? b:java_root : fnamemodify(expand('%'), ':p:s?.*\zs[\/]src[\/].*??'), ':~')
-  let root = input('Scope connection to: ', path, 'dir')
-  if root !=# ''
-    let s:repl_paths[fnamemodify(root, ':p:s?[\/]$??')] = client
+  let root = a:0 ? expand(a:1) : input('Scope connection to: ', path, 'dir')
+  if root !=# '' && root !=# '-'
+    let s:repl_paths[fnamemodify(root, ':p:s?.\zs[\/]$??')] = client
   endif
   return ''
 endfunction
 
 augroup foreplay_connect
   autocmd!
-  autocmd FileType clojure command! -bar -complete=customlist,s:connect_complete -nargs=? Connect :ForeplayConnect <args>
+  autocmd FileType clojure command! -bar -complete=customlist,s:connect_complete -nargs=* Connect :ForeplayConnect <args>
 augroup END
 
 " }}}1
@@ -476,7 +480,7 @@ function! s:qfhistory() abort
   return list
 endfunction
 
-function! foreplay#eval_pr_str(expr) abort
+function! foreplay#session_eval(expr) abort
   let response = s:eval(a:expr, {'session': 1})
 
   if !empty(get(response, 'value', ''))
@@ -511,32 +515,35 @@ function! foreplay#eval_pr_str(expr) abort
 endfunction
 
 function! foreplay#eval(expr) abort
-  return foreplay#eval_pr_str(a:expr)
+  return foreplay#session_eval(a:expr)
 endfunction
 
-function! foreplay#eval_prn(expr) abort
+function! foreplay#echo_session_eval(expr) abort
   try
-    echo foreplay#eval_pr_str(a:expr)
+    echo foreplay#session_eval(a:expr)
   catch /^Clojure:/
   endtry
   return ''
 endfunction
 
 function! foreplay#evalprint(expr) abort
-  return foreplay#eval_prn(a:expr)
+  return foreplay#echo_session_eval(a:expr)
 endfunction
+
+let g:foreplay#reader =
+      \ '(symbol ((fn *vimify [x]' .
+      \  ' (cond' .
+      \    ' (map? x)     (str "{" (apply str (interpose ", " (map (fn [[k v]] (str (*vimify k) ": " (*vimify v))) x))) "}")' .
+      \    ' (coll? x)    (str "[" (apply str (interpose ", " (map *vimify x))) "]")' .
+      \    ' (true? x)    "1"' .
+      \    ' (false? x)   "0"' .
+      \    ' (number? x)  (pr-str x)' .
+      \    ' (keyword? x) (pr-str (name x))' .
+      \    ' :else        (pr-str (str x)))) %s))'
 
 function! foreplay#evalparse(expr, ...) abort
   let options = extend({'session': 0}, a:0 ? a:1 : {})
-  let response = s:eval(
-        \ '(symbol ((fn *vimify [x]' .
-        \ '  (cond' .
-        \ '    (map? x)     (str "{" (apply str (interpose ", " (map (fn [[k v]] (str (*vimify k) ": " (*vimify v))) x))) "}")' .
-        \ '    (coll? x)    (str "[" (apply str (interpose ", " (map *vimify x))) "]")' .
-        \ '    (number? x)  (pr-str x)' .
-        \ '    (keyword? x) (pr-str (name x))' .
-        \ '    :else        (pr-str (str x)))) '.a:expr.'))',
-        \ options)
+  let response = s:eval(printf(g:foreplay#reader, a:expr), options)
   call s:output_response(response)
 
   if get(response, 'ex', '') !=# ''
@@ -587,7 +594,7 @@ function! s:filterop(type) abort
   let reg_save = @@
   try
     let expr = s:opfunc(a:type)
-    let @@ = matchstr(expr, '^\n\+').foreplay#eval_pr_str(expr).matchstr(expr, '\n\+$')
+    let @@ = matchstr(expr, '^\n\+').foreplay#session_eval(expr).matchstr(expr, '\n\+$')
     if @@ !~# '^\n*$'
       normal! gvp
     endif
@@ -604,7 +611,7 @@ function! s:printop(type) abort
 endfunction
 
 function! s:print_last() abort
-  call foreplay#eval_prn(s:todo)
+  call foreplay#echo_session_eval(s:todo)
   return ''
 endfunction
 
@@ -612,7 +619,7 @@ function! s:editop(type) abort
   call feedkeys(&cedit . "\<Home>", 'n')
   let input = s:input(substitute(substitute(s:opfunc(a:type), "\s*;[^\n]*", '', 'g'), '\n\+\s*', ' ', 'g'))
   if input !=# ''
-    call foreplay#eval_prn(input)
+    call foreplay#echo_session_eval(input)
   endif
 endfunction
 
@@ -638,7 +645,7 @@ function! s:Eval(bang, line1, line2, count, args) abort
   endif
   if a:bang
     try
-      let result = foreplay#eval_pr_str(expr)
+      let result = foreplay#session_eval(expr)
       if a:args !=# ''
         call append(a:line1, result)
         exe a:line1
@@ -649,7 +656,7 @@ function! s:Eval(bang, line1, line2, count, args) abort
     catch /^Clojure:/
     endtry
   else
-    call foreplay#eval_prn(expr)
+    call foreplay#echo_session_eval(expr)
   endif
   return ''
 endfunction
@@ -694,7 +701,7 @@ function! s:inputeval() abort
   let input = s:input('')
   redraw
   if input !=# ''
-    call foreplay#eval_prn(input)
+    call foreplay#echo_session_eval(input)
   endif
   return ''
 endfunction
@@ -706,7 +713,7 @@ function! s:recall() abort
     if input =~# '^(\=$'
       return ''
     else
-      return foreplay#eval_pr_str(input)
+      return foreplay#session_eval(input)
     endif
   catch /^Clojure:/
     return ''
@@ -808,10 +815,10 @@ augroup END
 " :Require {{{1
 
 function! s:Require(bang, ns)
-  let cmd = ('(require '.s:qsym(a:ns ==# '' ? foreplay#ns() : a:ns).' :reload'.(a:bang ? '-all' : '').')')
+  let cmd = ('(clojure.core/require '.s:qsym(a:ns ==# '' ? foreplay#ns() : a:ns).' :reload'.(a:bang ? '-all' : '').')')
   echo cmd
   try
-    call foreplay#eval_pr_str(cmd)
+    call foreplay#session_eval(cmd)
     return ''
   catch /^Clojure:.*/
     return ''
@@ -923,7 +930,7 @@ function! foreplay#findfile(path) abort
       let path .= '.clj'
     endif
 
-    let response = s:eval(printf(cmd, '"'.escape(path, '"').'"'), options)
+    let response = s:eval(printf(cmd, s:str(path)), options)
     let result = get(split(get(response, 'value', ''), "\n"), 0, '')
   endif
   let result = s:decode_url(result)
@@ -978,10 +985,6 @@ function! s:buffer_path(...) abort
   return ''
 endfunction
 
-function! s:tons(path) abort
-  return tr(substitute(a:path, '\.\w\+$', '', ''), '\/_', '..-')
-endfunction
-
 function! foreplay#ns() abort
   let lnum = 1
   while lnum < line('$') && getline(lnum) =~# '^\s*\%(;.*\)\=$'
@@ -998,13 +1001,13 @@ function! foreplay#ns() abort
     return s:qffiles[expand('%:p')].ns
   endif
   let path = s:buffer_path()
-  return s:tons(path ==# '' ? 'user' : path)
+  return s:to_ns(path ==# '' ? 'user' : path)
 endfunction
 
 function! s:Lookup(ns, macro, arg) abort
   " doc is in clojure.core in older Clojure versions
   try
-    call foreplay#eval_pr_str("(require '".a:ns.") (clojure.core/eval (list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
+    call foreplay#session_eval("(clojure.core/require '".a:ns.") (clojure.core/eval (clojure.core/list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
   catch /^Clojure:/
   catch /.*/
     echohl ErrorMSG
@@ -1089,8 +1092,10 @@ function! s:alternates() abort
     let alt = [ns[0:-6]]
   elseif ns =~# '\.test\.'
     let alt = [substitute(ns, '\.test\.', '.', '')]
+  elseif ns =~# '-spec$'
+    let alt = [ns[0:-6], ns . '-test']
   else
-    let alt = [ns . '-test', substitute(ns, '\.', '.test.', '')]
+    let alt = [ns . '-test', substitute(ns, '\.', '.test.', ''), ns . '-spec']
   endif
   return map(alt, 'tr(v:val, ".-", "/_") . ".clj"')
 endfunction
@@ -1103,20 +1108,20 @@ function! s:Alternate(cmd) abort
       return a:cmd . ' ' . fnameescape(path)
     endif
   endfor
-  return 'echoerr '.string("Couldn't find " . alternates[0] . "in class path")
+  return 'echoerr '.string("Couldn't find " . alternates[0] . " in class path")
 endfunction
 
 " }}}1
 " Leiningen {{{1
 
-function! s:hunt(start, anchor) abort
+function! s:hunt(start, anchor, pattern) abort
   let root = simplify(fnamemodify(a:start, ':p:s?[\/]$??'))
   if !isdirectory(fnamemodify(root, ':h'))
     return ''
   endif
   let previous = ""
   while root !=# previous
-    if filereadable(root . '/' . a:anchor) && isdirectory(root . '/src')
+    if filereadable(root . '/' . a:anchor) && join(readfile(root . '/' . a:anchor, '', 50)) =~# a:pattern
       return root
     endif
     let previous = root
@@ -1148,7 +1153,7 @@ endfunction
 function! s:leiningen_init() abort
 
   if !exists('b:leiningen_root')
-    let root = s:hunt(expand('%:p'), 'project.clj')
+    let root = s:hunt(expand('%:p'), 'project.clj', '(\s*defproject')
     if root !=# ''
       let b:leiningen_root = root
     endif
