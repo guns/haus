@@ -6,10 +6,12 @@
 #
 
 reload
-pan    1
-zoom   C-1
-menu   3
+pan      1
+zoom     2
+menu     3
 prev
 next
-blur   2
-rotate
+blur     C-1
+rotate   C-2
+zoom_in  4
+zoom_out 5

@@ -8,25 +8,26 @@
 toggle_actions    A
 toggle_aliasing   a
 toggle_caption    c
-toggle_exif       x
 toggle_filenames  d
+toggle_exif       x
 save_filelist
 toggle_pause      p
 toggle_info       i
-toggle_menu       M
+toggle_keep_vp    v
+toggle_menu       m
 next_img          j           space
 toggle_pointer    P
 prev_img          k
 quit              Q           q             Escape
 reload_image      r
-save_image        s
+save_image        S
 toggle_fullscreen f
 size_to_image     F
 close             x
 jump_random       z
-#orient_3         <
-#orient_1         >
-flip              underscore
+orient_3          less
+orient_1          greater
+flip              backslash
 mirror            bar
 action_0          0           Return
 action_1          1
@@ -52,16 +53,16 @@ scroll_up         y           u
 scroll_down       e           n
 scroll_left_page  C-h
 scroll_right_page C-l
-scroll_up_page    C-u         C-k
-scroll_down_page  C-n         C-j
+scroll_up_page    C-y         C-u
+scroll_down_page  C-e         C-n
 render            R
 zoom_in           J           equal
 zoom_out          K           minus
 zoom_default      w
 zoom_fit          W
-#menu_close       (Escape)
-#menu_up          (Up)
-#menu_down        (Down)
-#menu_parent      (Left)
-#menu_child       (Right)
-#menu_select      (Return)    (Space)
+menu_close        Escape
+menu_up           Up
+menu_down         Down
+menu_parent       Left
+menu_child        Right
+menu_select       Return
