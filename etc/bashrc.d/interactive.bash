@@ -919,7 +919,7 @@ HAVE vim && {
     }
 
     # vim-fugitive
-    alias vimgit='vim -c Gstatus "$(git ls-files | sed 1q)"'
+    alias vimgit='vim -c Gstatus "$(git ls-files | sed q)"'
     # Param: [$1] File to browse
     gitv() {
         if [[ -f "$1" ]]; then
@@ -1342,7 +1342,7 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
 HAVE pass && {
-    pc() { pass "$@" | clip; }; TCOMP pass pc
+    pc() { pass "$@" | sed q | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
