@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
+require 'shellwords'
+
 def running? pid
   Process.kill 0, pid
 rescue Errno::ESRCH
@@ -16,8 +18,10 @@ end
 
 unless system 'nc', '-z', '127.0.0.1', port
   fork do
-    servers = %x(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]').lines.map &:strip
-    exec *(%W[sudo /opt/sshuttle/sshuttle -v -l 127.0.0.1:#{port} -r guns@sungpae.com] + servers)
+    servers = %x(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]').lines.map { |s| s.strip.shellescape }
+    cmd = servers.map { |s| "iptables -C OUTPUT -d #{s} -j DROP || iptables -A OUTPUT -d #{s} -j DROP;" }.join
+    cmd << "exec /opt/sshuttle/sshuttle -v -l 127.0.0.1:#{port} -r guns@sungpae.com #{servers.join ' '}"
+    exec 'sudo', '/bin/sh', '-c', cmd
   end
   sleep 0.5 until system 'nc', '-z', '127.0.0.1', port
 end
