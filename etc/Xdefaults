@@ -3,9 +3,8 @@
 !  \   \/  /   _| __|__.   |_|_ _
 !   \     /   (_|(/_|(_||_|| |__>
 !   /     \
-!  /___/\  \  guns <sung@metablu.com>
+!  /___/\  \  guns <self@sungpae.com>
 !        \_/
-
 
 *background:      rgb:00/00/00
 *foreground:      rgb:FF/EB/B6
@@ -18,13 +17,11 @@
 *scrollBar_right: on
 *visualBell:      on
 
-
 !!! XFT
 
 Xft*antialias: on
 Xft*hinting:   on
 Xft*hintstyle: hintslight
-
 
 !!! RXVT-UNICODE
 
@@ -57,7 +54,6 @@ URxvt.keysym.Mod4-Backspace: \033\007\177
 ! keysym-list: Super + Arrow keys <Esc-BEL-BEL-char>
 URxvt.keysym.Mod4-Left:       list:\033\007\007:dacb:
 URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
-
 
 !!! XTERM
 

@@ -6,7 +6,6 @@
 #
 #                                          guns <self@sungpae.com>
 
-
 ### Readline Variables
 
 # Let your terminal convert to `visible`; don't set here
@@ -121,7 +120,6 @@ set skip-completed-text on
 # Completions show file types
 set visible-stats on
 
-
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
 
@@ -196,7 +194,6 @@ set visible-stats on
 "\ew":          "ω"         U+03c9
 "\eX":          "✖"         U+2716
 "\ex":          "×"         U+00d7
-
 
 ### bash
 

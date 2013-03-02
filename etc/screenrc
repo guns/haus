@@ -4,8 +4,7 @@
 #  |    |  |       |   |   | |__     |  __|   _|  -__|  -__|     |
 #  |_______|__|____|_______| |_______|____|__| |_____|_____|__|__|
 #
-#                                     guns <sung@metablu.com>
-
+#                                     guns <self@sungpae.com>
 
 ### Options
 
@@ -24,7 +23,6 @@ hardstatus on           # send screen messages to the hardstatus line
 hardstatus string   '[screen] %Lw' # string to display in terminal title
 hardstatus lastline '[screen] %Lw' # or last line if terminal doesn't support it
 term screen-256color    # use a 256-color terminfo
-
 
 ### Keybindings
 

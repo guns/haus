@@ -26,7 +26,6 @@ CLEANUP() {
     unset "${__GC_VARS__[@]}"
 }; GC_FUNC CLEANUP
 
-
 ### Abort the login process.
 # Param: $* Error message
 ABORT() {
@@ -45,7 +44,6 @@ ABORT() {
     while true; do kill -INT $$; sleep 60; done
 }; GC_FUNC ABORT
 
-
 ### Source file and abort on failure
 # Param: $1 Filename
 REQUIRE() {
@@ -54,7 +52,6 @@ REQUIRE() {
     source "$1"   || ABORT "\`source $1\` returned false!"
 }; GC_FUNC REQUIRE
 
-
 ### Simple wrapper around `type`
 # Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
@@ -62,7 +59,6 @@ HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 # Simple platform checks
 __OS_X__()  { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OS_X__
 __LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
-
 
 ### Security check
 #
@@ -97,7 +93,6 @@ CHECK_SECLIST() {
         ABORT "\nYour shell is at risk of being compromised."
     fi
 }; GC_FUNC CHECK_SECLIST
-
 
 ### Processes array variable PATH_ARY and exports PATH.
 #
@@ -174,7 +169,6 @@ TCOMP() {
     }; complete -F \"__${FUNCNAME}_${alias}__\" \"$alias\""
 }; GC_FUNC TCOMP
 
-
 ### Smarter aliasing function:
 #
 #   * Lazily transfers completions to the alias using TCOMP():
@@ -218,7 +212,6 @@ ALIAS() {
         fi
     done
 }; GC_FUNC ALIAS
-
 
 ### `cd` wrapper creation:
 #
@@ -338,7 +331,6 @@ CD_FUNC() {
     complete -o nospace -o filenames -F "__${name}__" "$name"
 }; GC_FUNC CD_FUNC
 
-
 ### Init script wrapper creation:
 #
 # RC_FUNC rcd /etc/rc.d ...
@@ -389,7 +381,6 @@ RC_FUNC() {
     # Complete the shell function
     complete -F __${name}__ $name
 }; GC_FUNC RC_FUNC
-
 
 ### HAPPY HACKING
 

@@ -5,8 +5,7 @@
 #   _/ // _ \/ __/ -_) __/ _ `/ __/ __/ / |/ / -_) , _/ // / _  / // /
 #  /___/_//_/\__/\__/_/  \_,_/\__/\__/_/|___/\__/_/|_|\_,_/____/\_, /
 #                                                              /___/
-#      guns <sung@metablu.com>
-
+#      guns <self@sungpae.com>
 
 require 'rubygems' # for backwards compatibility
 require 'irb/completion'

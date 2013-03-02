@@ -7,10 +7,6 @@
 #       _/
 #  _/_/     guns <self@sungpae.com>
 
-
-# NOTE: In general we want to only change interactive functionality
-
-
 [user]
     name  = guns
     email = self@sungpae.com

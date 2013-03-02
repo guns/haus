@@ -12,7 +12,6 @@
 " <Leader>
 "   Command line shortcuts
 
-
 """ Mapleader {{{1
 
 " Transfer decrement-number to (nvoic)<M-x> to free (nvo)<C-x>
@@ -49,7 +48,6 @@ map! <Leader> <C-\><C-n><Leader>
 noremap - <NOP>
 let g:maplocalleader = '-'
 
-
 """ Escape {{{1
 
 " Allow Ctrl-C, which is easily accessible from the home row, to be a complete
@@ -67,7 +65,6 @@ snoremap <C-c> <C-\><C-n>
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
 " and double ESC as our secondary.
 noremap! <Esc><Esc> <C-\><C-n>
-
 
 """ Emacs: Ctrl-A (start-of-line) {{{1
 
@@ -95,7 +92,6 @@ noremap  <C-a> ^
 inoremap <C-a> <C-\><C-o>^
 cnoremap <C-a> <Home>
 
-
 """ Emacs: Ctrl-E (end-of-line) {{{1
 
 " Transfer scroll-window-down to (nvo)<4-e> to free (nvo)<C-e>
@@ -119,7 +115,6 @@ inoremap <4-e> <C-e>
 noremap  <C-e> $
 inoremap <C-e> <End>
 
-
 """ Emacs: Ctrl-Y (paste-unnamed-register) {{{1
 
 " Transfer scroll-window-up, insert-character-above, accept-completion,
@@ -142,7 +137,6 @@ noremap! <4-y> <C-y>
 " Bind: c_Ctrl-Y => c_Ctrl-R_""p
 noremap  <C-y> ""p
 noremap! <C-y> <C-r>"
-
 
 """ Emacs: Ctrl-F Ctrl-B (page-{down,up}, char-{right,left}) {{{1
 
@@ -178,7 +172,6 @@ noremap! <C-f> <Right>
 noremap <4-;> q:
 noremap @;    @:
 
-
 """ Emacs: Ctrl-D (forward-delete) {{{1
 
 " REPLACE scroll-half-page-down (nvo)<C-d> with forward-delete.
@@ -201,7 +194,6 @@ cnoremap <4-[> <C-d>
 " Bind: i_Ctrl-D => i_Del
 " Bind: c_Ctrl-D => c_Del
 noremap! <C-d> <Del>
-
 
 """ Emacs: Ctrl-K Ctrl-U (kill-to-{end,start}-of-line) {{{1
 
@@ -235,7 +227,6 @@ cnoremap <C-k> <C-f>D<C-c><Right>
 noremap  <C-u> d^
 inoremap <C-u> <C-\><C-o>d^
 
-
 """ Emacs: Meta-f Meta-b Meta-d (word-{right,left} forward-delete-word) {{{1
 
 " Word-right
@@ -252,7 +243,6 @@ cnoremap <M-b> <S-Left>
 noremap  <M-d> de
 inoremap <M-d> <C-\><C-o>de
 cnoremap <M-d> <C-f>de<C-c>
-
 
 """ Command line and Search {{{1
 
@@ -308,7 +298,6 @@ noremap <Leader>r :<C-u>RunCurrentFile<CR>
 
 " Rename tmux/screen/term window
 noremap <4-,> :<C-u>silent! execute '! xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>:redraw!<CR>
-
 
 """ Buffer commands {{{1
 
@@ -394,7 +383,6 @@ noremap <Leader>fs       :<C-u>setlocal filetype=sh<CR>
 noremap <Leader>fv       :<C-u>setlocal filetype=vim<CR>
 noremap <Leader>fy       :<C-u>setlocal filetype=yaml<CR>
 
-
 """ Windows and Tabs {{{1
 
 " Window focus / position
@@ -435,7 +423,6 @@ Mapall <Nul>h :silent!\ !xecho\ nw<CR>:redraw!<CR>
 Mapall <Nul>j :silent!\ !xecho\ s<CR>:redraw!<CR>
 Mapall <Nul>k :silent!\ !xecho\ n<CR>:redraw!<CR>
 Mapall <Nul>l :silent!\ !xecho\ ne<CR>:redraw!<CR>
-
 
 """ Text editing {{{1
 

@@ -48,7 +48,6 @@ for n in range(0x20, 0x7e)
     execute 'Setmap <4-' . char . '> <Esc>' . key
 endfor
 
-
 """ Special Keys {{{1
 
 " Backspace
@@ -94,7 +93,6 @@ Setmap <4-S-Up>     <Esc>A
 Setmap <4-S-Down>   <Esc>B
 Setmap <4-S-Right>  <Esc>C
 Setmap <4-S-Left>   <Esc>D
-
 
 """ Cleanup {{{1
 

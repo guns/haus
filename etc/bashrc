@@ -10,7 +10,6 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-
 ### INITIALIZE ###
 
 # Reject non-interactive shells and shells that don't understand [[
@@ -158,7 +157,6 @@ __SECLIST__+=(
     "${BASH_COMPLETION_DIRS[@]}"        # Extra bash completion scripts
 ); CHECK_SECLIST
 
-
 ### SHELL CONFIGURATION ###
 
 # Set shell path
@@ -175,7 +173,6 @@ REQUIRE ~/.bash_completion
 
 # Load functions, aliases, and variables
 REQUIRE ~/.bashrc.d/interactive.bash
-
 
 ### DENOUEMENT ###
 

@@ -36,7 +36,6 @@ set +o verbose                          # Print input lines as they are read
 set +o vi                               # vi editing mode
 #set +o xtrace                          # DO NOT SET HERE!
 
-
 ### Bash shell options.
 #
 # Default:
