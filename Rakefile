@@ -106,8 +106,11 @@ task :env do
       {
         :base   => "#{@src}/systemd",
         :branch => %w[master guns],
-        :files  => {
-          'shell-completion/systemd-bash-completion.sh' => 'etc/bash_completion.d/systemctl'
+        :files  => lambda { |proj|
+          Hash[proj.git.ls_files('shell-completion/bash').map { |fs|
+            f = fs.first
+            [f, "etc/bash_completion.d/#{File.basename f}"]
+          }]
         }
       }
     ],

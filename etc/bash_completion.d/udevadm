@@ -1,76 +1,103 @@
-# udevadm(8) completion                                    -*- shell-script -*-
+# udevadm(8) completion                                   -*- shell-script -*-
+#
+# This file is part of systemd.
+#
+# Copyright 2010 Ran Benita
+#
+# systemd is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# systemd is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
-_udevadm()
-{
-    local cur prev words cword split
-    _init_completion -s || return
+__contains_word () {
+        local word=$1; shift
+        for w in $*; do [[ $w = $word ]] && return 0; done
+        return 1
+}
 
-    local i udevcmd
-    for (( i=1; i < cword; i++ )); do
-        if [[ ${words[i]} != -* ]]; then
-            udevcmd=${words[i]}
-            break
+__get_all_sysdevs() {
+        local -a devs=(/sys/bus/*/devices/*/ /sys/class/*/*/)
+        printf '%s\n' "${devs[@]%/}"
+}
+
+_udevadm() {
+        local i verb comps
+        local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+        local OPTS='-h --help --version --debug'
+
+        local -A VERBS=(
+                [INFO]='info'
+                [TRIGGER]='trigger'
+                [SETTLE]='settle'
+                [CONTROL]='control'
+                [MONITOR]='monitor'
+                [HWDB]='hwdb'
+                [TESTBUILTIN]='test-builtin'
+                [TEST]='test'
+        )
+
+        for ((i=0; $i <= $COMP_CWORD; i++)); do
+                if __contains_word "${COMP_WORDS[i]}" ${VERBS[*]} &&
+                 ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
+                        verb=${COMP_WORDS[i]}
+                        break
+                fi
+        done
+
+        if [[ -z $verb  && $cur = -* ]]; then
+                COMPREPLY=( $(compgen -W '${OPTS[*]}' -- "$cur") )
+                return 0
         fi
-    done
 
-    case $prev in
-        --help|--version|--property|--children-max|--timeout|--seq-start|\
-        --seq-end|--attr-match|--attr-nomatch|--parent-match|--property-match|\
-        --tag-match|--subsystem-match|--subsystem-nomatch|--sysname-match|\
-        --path)
-            return
-            ;;
-        --log-priority)
-            COMPREPLY=( $( compgen -W 'err info debug' -- "$cur" ) )
-            return
-            ;;
-        --query)
-            COMPREPLY=( $( compgen -W 'name symlink path property all' \
-                -- "$cur" ) )
-            return
-            ;;
-        --name)
-            cur=${cur:=/dev/}
-            _filedir
-            return
-            ;;
-        --device-id-of-file|--exit-if-exists)
-            _filedir
-            return
-            ;;
-        --action)
-            COMPREPLY=( $( compgen -W 'add change remove' -- "$cur" ) )
-            return
-            ;;
-        --type)
-            COMPREPLY=( $( compgen -W 'devices subsystems failed' -- "$cur" ) )
-            return
-            ;;
-    esac
+        if [[ -z $verb ]]; then
+                comps=${VERBS[*]}
 
-    $split && return
+        elif __contains_word "$verb" ${VERBS[INFO]}; then
+                if [[ $cur = -* ]]; then
+                        comps='--help --query= --path= --name= --root --attribute-walk --export-db --cleanup-db'
+                else
+                        comps=$( __get_all_sysdevs )
+                fi
 
-    if [[ -z $udevcmd ]]; then
-        case $cur in
-            -*)
-                COMPREPLY=( $( compgen -W '--help --version --debug' -- \
-                    "$cur" ) )
-                ;;
-            *)
-                COMPREPLY=( $( compgen -W "$( "$1" --help 2>/dev/null |
-                    awk '/^[[:space:]]+/ { print $1 }' )" -- "$cur" ) )
-                ;;
-        esac
-        return
-    fi
+        elif __contains_word "$verb" ${VERBS[TRIGGER]}; then
+                comps='--help --verbose --dry-run --type= --action= --subsystem-match=
+                       --subsystem-nomatch= --attr-match= --attr-nomatch= --property-match=
+                       --tag-match= --sysname-match= --parent-match='
 
-    if [[ $cur == -* ]]; then
-        COMPREPLY=( $( compgen -W \
-            '$( "$1" $udevcmd --help 2>/dev/null | _parse_help - )' \
-            -- "$cur" ) )
-        [[ $COMPREPLY == *= ]] && compopt -o nospace
-    fi
-} &&
+        elif __contains_word "$verb" ${VERBS[SETTLE]}; then
+                comps='--help --timeout= --seq-start= --seq-end= --exit-if-exists= --quiet'
+
+        elif __contains_word "$verb" ${VERBS[CONTROL]}; then
+                comps='--help --exit --log-priority= --stop-exec-queue --start-exec-queue
+                       --reload --property= --children-max= --timeout='
+
+        elif __contains_word "$verb" ${VERBS[MONITOR]}; then
+                comps='--help --kernel --udev --property --subsystem-match= --tag-match='
+
+        elif __contains_word "$verb" ${VERBS[HWDB]}; then
+                comps='--help --update --test='
+
+        elif __contains_word "$verb" ${VERBS[TEST]}; then
+                if [[ $cur = -* ]]; then
+                        comps='--help --action='
+                else
+                        comps=$( __get_all_sysdevs )
+                fi
+
+        elif __contains_word "$verb" ${VERBS[TESTBUILTIN]}; then
+                      comps='blkid btrfs firmware hwdb input_id kmod net_id path_id usb_id uaccess'
+        fi
+
+        COMPREPLY=( $(compgen -W '$comps' -- "$cur") )
+        return 0
+}
+
 complete -F _udevadm udevadm
-
-# ex: ts=4 sw=4 et filetype=sh
