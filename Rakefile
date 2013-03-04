@@ -271,7 +271,8 @@ task :env do
           dst = "#{proj.haus}/etc/vim/bundle/go"
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
-          nil # Work is done
+          # Copy bash completion file
+          { 'misc/bash/go' => 'etc/bash_completion.d/go' }
         }
       }
     ],
