@@ -513,19 +513,26 @@ vmap ' <Plug>VSurround'
 noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
-noremap  <Leader>g%       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
 noremap  <Leader>g<Space> :<C-u>Git<Space>
+noremap  <Leader>g.       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
+noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
-noremap  <Leader>gc       :<C-u>Gcommit<CR>
+noremap  <Leader>gc.      :<C-u>Gcommit %<CR>
+noremap  <Leader>gca      :<C-u>Gcommit -a<CR>
+noremap  <Leader>gcA      :<C-u>Gcommit --amend<CR>
+noremap  <Leader>gcc      :<C-u>Gcommit<CR>
+noremap  <Leader>gcv      :<C-u>Gcommit<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
+noremap  <Leader>gF       :<C-u>silent! Git ff<CR>
+noremap  <Leader>gg       :<C-u>!clear; git st<CR>
 noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
-noremap  <Leader>gL       :<C-u>silent! Git lpw<CR>
+noremap  <Leader>gL       :<C-u>silent! Git lfp<CR>
 noremap  <Leader>gp       :<C-u>silent! Git pull<CR>
 noremap  <Leader>gP       :<C-u>silent! Git push<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
@@ -534,7 +541,8 @@ noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>gu       :<C-u>Git up<CR>
 noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
-noremap  <Leader>gw       :<C-u>silent! Git wlpw<CR>
+noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
+noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>

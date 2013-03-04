@@ -39,7 +39,7 @@
     enabled = true
 
 [alias]
-    # index operations
+    # Index operations
     a      = add
     aa     = add . --all
     ai     = add --interactive
@@ -52,7 +52,7 @@
     rs     = reset
     rshard = reset --hard
 
-    # committing
+    # Committing
     c    = commit
     cv   = commit -v
     cva  = commit -v --amend
@@ -62,7 +62,7 @@
     cava = commit -a -v --amend
     cam  = commit -a -m
 
-    # merging and rebasing
+    # Merging and rebasing
     m   = merge --no-ff --stat --log --edit
     mm  = merge --no-ff --stat --log --no-edit
     mf  = merge --ff-only --no-edit
@@ -70,7 +70,7 @@
     rbi = rebase -i
     cp  = cherry-pick
 
-    # log
+    # Log
     l    = log --relative-date --decorate --graph
     lf   = log --relative-date --decorate --graph --first-parent --no-merges
     lst  = log --relative-date --decorate --graph --stat
@@ -79,12 +79,12 @@
     lp   = log --relative-date --decorate --patch --stat
     lfp  = log --relative-date --decorate --patch --stat --first-parent --no-merges
     lpw  = log --relative-date --decorate --patch --stat -w
-    wlp  = log --relative-date --decorate --patch --stat --word-diff=color
-    wlpw = log --relative-date --decorate --patch --stat --word-diff=color -w
+    wlp  = log --relative-date --decorate --patch --stat --color-words=.
+    wlpw = log --relative-date --decorate --patch --stat --color-words=. -w
 
     l1   = log --relative-date --decorate --patch --stat -1
     l1w  = log --relative-date --decorate --patch --stat -1 -w
-    wl1  = log --relative-date --decorate --patch --stat -1 --word-diff=color
+    wl1  = log --relative-date --decorate --patch --stat -1 --color-words=.
 
     f    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
     fa   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
@@ -93,7 +93,7 @@
     lg   = log --patch -G
     lgi  = log --patch -i -G
 
-    # branches
+    # Branches
     br   = branch
     bra  = branch -a
     brd  = branch -d
@@ -104,18 +104,18 @@
     cot  = checkout -t
     sb   = show-branch --color
 
-    # tags
+    # Tags
     tagd = tag -d
     tagf = tag -f
 
-    # diff && patch
+    # Diff and patch
     di   = diff
     diw  = diff -w
-    wdi  = diff --word-diff=color
+    wdi  = diff --color-words=.
 
     dih  = diff HEAD
     dihw = diff HEAD -w
-    wdih = diff HEAD --word-diff=color
+    wdih = diff HEAD --color-words=.
 
     dic  = diff --cached
     dis  = diff --summary --stat
@@ -123,12 +123,12 @@
     fp   = format-patch
     fps  = format-patch --stdout
 
-    # remote
+    # Remotes
     r            = remote -v
     up           = remote update --prune
     shallowclone = clone --depth=1
 
-    # stash
+    # Stash
     sta     = stash
     stap    = stash -p
     stau    = stash -u
@@ -138,7 +138,7 @@
     stapop  = stash pop
     stashow = stash show -p
 
-    # grep
+    # Grep
     g    = grep -P
     gi   = grep -Pi
     gw   = grep -Pw
@@ -147,7 +147,7 @@
     giw  = grep -Piw
     gifw = grep -Fiw
 
-    # misc
+    # Misc
     bs  = bisect
     ls  = ls-files
     lso = ls-files -o
