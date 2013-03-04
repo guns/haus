@@ -1451,7 +1451,7 @@ set hostname="SUNGPAE"
 # list.
 #
 
-# set implicit_autoview=no
+set implicit_autoview=yes
 #
 # Name: implicit_autoview
 # Type: boolean

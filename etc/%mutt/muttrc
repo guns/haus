@@ -26,6 +26,9 @@ mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"
 lists .*@googlegroups.com \
       vim.*@vim.org
 
+# Always prefer text/plain even with implicit_autoview
+alternative_order text/plain
+
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
 #   pager:    Display a selected e-mail.
@@ -111,6 +114,10 @@ macro index       +       <limit>~X1-<enter>
 macro index       \e\007L <limit>all<enter>
 bind  browser     .       check-new
 bind  attach      o       view-mailcap
+
+# Editor
+bind editor \Cn history-down
+bind editor \Cp history-up
 
 # Index macros
 set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
