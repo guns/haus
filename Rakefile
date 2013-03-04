@@ -256,6 +256,23 @@ task :env do
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           nil # Work is done
         }
+      },
+
+      {
+        :base   => "#{@src}/READONLY/go",
+        :before => lambda { |proj|
+          if proj.fetch
+            system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
+            raise 'go git-hg pull failed' unless $?.exitstatus.zero?
+          end
+        },
+        :files  => lambda { |proj|
+          src = "#{proj.base}/misc/vim"
+          dst = "#{proj.haus}/etc/vim/bundle/go"
+          FileUtils.mkdir_p dst
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
+          nil # Work is done
+        }
       }
     ],
 
