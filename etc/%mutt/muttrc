@@ -45,6 +45,7 @@ set my_list=index,attach,browser,alias,postpone,pgp
 # Meta
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \CxeA  '<shell-escape>vim ~/.mutt/aliases<Enter>'
+macro $my_list,pager \Cx\;  '<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>'
 macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -USR2 "$(cat ~/.offlineimap/pid)"<enter>'
 macro $my_list,pager \CxQ   '<shell-escape>kill -QUIT "$(cat ~/.offlineimap/pid)"<enter>'
@@ -106,8 +107,10 @@ macro index       \e\007a <tag-pattern>.<enter>
 macro index       \e\007t <tag-pattern>.<enter>
 macro index       \e\007T <untag-pattern>.<enter>
 macro index       =       <limit>~=<enter>
+macro index       +       <limit>~X1-<enter>
 macro index       \e\007L <limit>all<enter>
 bind  browser     .       check-new
+bind  attach      o       view-mailcap
 
 # Index macros
 set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
