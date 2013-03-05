@@ -349,7 +349,14 @@ fl() { f "$@" -type l; };                   TCOMP find fl
 fnewer() { f "$@" -newer /tmp/timestamp; }; TCOMP find fnewer
 stamp() { run touch /tmp/timestamp; }
 cdf() {
-    cd "$(f "$@" -type d -print0 | ruby -e 'print $stdin.gets("\0") || "."' 2>/dev/null)"
+    cd "$(ruby -r find -e '
+        pat, dst = Regexp.new(ARGV.first), "."
+        Find.find "." do |path|
+            next unless File.directory? path
+            (dst = path; break) if path =~ pat
+        end
+        puts dst
+    ' -- "$@")"
 }; TCOMP find cdf
 
 # cp mv
