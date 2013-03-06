@@ -299,7 +299,7 @@ $if Bash
     "\C-xgc.":      "\C-] git cv . \n"
     "\C-xgca":      "\C-] git cav \n"
     "\C-xgcA":      "\C-] git cva \n"
-    "\C-xgcc":      "\C-] git c \n"
+    "\C-xgcc":      "\C-] git cv \n"
     "\C-xgcv":      "\C-] git cv \n"
     "\C-xgd":       "\C-] git di \n"
     "\C-xgD":       "\C-]git di "
