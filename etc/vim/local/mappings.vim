@@ -297,7 +297,7 @@ noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
 noremap <Leader>r :<C-u>RunCurrentFile<CR>
 
 " Rename tmux/screen/term window
-noremap <4-,> :<C-u>silent! execute '! xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>:redraw!<CR>
+noremap <4-,> :<C-u>execute 'Sh xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>
 
 """ Buffer commands {{{1
 
@@ -336,7 +336,7 @@ noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
 noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
-noremap <Leader><C-t>    :<C-u>if v:profiling \| silent! execute '!(sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
+noremap <Leader><C-t>    :<C-u>if v:profiling \| execute 'Sh (sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
 noremap <Leader><C-v>    :<C-u>execute exists('g:SetVerbose') ? 'SetVerbose \| tabedit /tmp/verbose.vim' : 'SetVerbose!'<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
@@ -418,12 +418,6 @@ Mapall <4-X> :<C-u>pclose<CR>
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
 
-" Position terminal window
-Mapall <Nul>h :silent!\ !xecho\ nw<CR>:redraw!<CR>
-Mapall <Nul>j :silent!\ !xecho\ s<CR>:redraw!<CR>
-Mapall <Nul>k :silent!\ !xecho\ n<CR>:redraw!<CR>
-Mapall <Nul>l :silent!\ !xecho\ ne<CR>:redraw!<CR>
-
 """ Text editing {{{1
 
 " Map Unicode character bindings from ~/.inputrc
@@ -493,9 +487,9 @@ for [g:lhs, g:rhs] in [['d', 'qdictionary'],
                      \ ['t', 'qthesaurus'],
                      \ ['w', 'qwikipedia']]
     let g:fmt = 'noremap <Leader>q' . g:lhs .
-        \ ' :<C-u>execute "silent! ! opensearch search ' .
+        \ ' :<C-u>execute "Sh opensearch search ' .
         \ '~guns/.local/share/kupfer/searchplugins/' . g:rhs . '.xml "' .
-        \ '. shellescape(CwordOrSel(%d)) \| redraw!<CR>'
+        \ '. shellescape(CwordOrSel(%d))<CR>'
     execute 'n' . printf(g:fmt, 0)
     execute 'v' . printf(g:fmt, 1)
 endfor
@@ -510,7 +504,7 @@ vmap ( <Plug>VSurround(
 vmap ' <Plug>VSurround'
 
 " Plugin: Shebang
-noremap <Leader>fx :<C-u>silent! call SetExecutable() \| :redraw!<CR>
+noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
 noremap  <Leader>g<Space> :<C-u>Git<Space>
@@ -545,8 +539,8 @@ noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
-nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
-vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/ \| redraw!<CR>
+nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F ' . @/<CR>
+vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F ' . @/<CR>
 
 " Plugin: Manpageview
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
@@ -612,3 +606,23 @@ imap <4-/>      <C-\><C-n><4-/>
 nmap <Leader>c  <Plug>Commentary
 nmap <Leader>cc m`<Plug>CommentaryLine``
 nmap <Leader>cu <Plug>CommentaryUndo
+
+" Plugin: vim-sexp
+let g:sexp_mappings = {
+    \ 'sexp_list_wrap_round_head':      '<Leader>i',
+    \ 'sexp_list_wrap_round_tail':      '<Leader>I',
+    \ 'sexp_list_wrap_square_head':     '<Leader>[',
+    \ 'sexp_list_wrap_square_tail':     '<Leader>]',
+    \ 'sexp_list_wrap_curly_head':      '<Leader>{',
+    \ 'sexp_list_wrap_curly_tail':      '<Leader>}',
+    \ 'sexp_element_wrap_round_head':   '<Leader>W',
+    \ 'sexp_element_wrap_round_tail':   '<Leader>w',
+    \ 'sexp_element_wrap_square_head':  '<Leader>e[',
+    \ 'sexp_element_wrap_square_tail':  '<Leader>e]',
+    \ 'sexp_element_wrap_curly_head':   '<Leader>e{',
+    \ 'sexp_element_wrap_curly_tail':   '<Leader>e}',
+    \ 'sexp_lift_list':                 '<Leader>o',
+    \ 'sexp_splice_list':               '<Leader>O',
+    \ 'sexp_insert_at_list_head':       '<Leader>h',
+    \ 'sexp_insert_at_list_tail':       '<Leader>l',
+    \ }

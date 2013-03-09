@@ -1,5 +1,8 @@
 """ Library of commands
 
+" Call shell commands silently, suppressing all output
+command! -nargs=+ -complete=shellcmd Sh call system(<q-args>)
+
 " Will place history in global input history instead of command history (which
 " may be a good thing in some cases), as well as offering direct control of
 " completions.
@@ -143,14 +146,12 @@ function! s:Todo(...)
     else
         execute 'silent! grep! -r -Ew "' . join(words,'\|') . '" ' . arg
     endif
-
-    redraw!
 endfunction
 
 command! -bar Ctags call <SID>Ctags() "{{{1
 function! s:Ctags()
     let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
-    execute 'silent! !(' . cmd . '; notify --audio) &>/dev/null &' | redraw! | echo cmd
+    execute 'Sh (' . cmd . '; notify --audio) &>/dev/null &' | echo cmd
 endfunction
 
 function! ShellFoldExpr(lnum)
@@ -239,7 +240,7 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     m`=<Plug>sexp_textobj_outer_form``
+    nmap     <silent><buffer> ==     m`=<Plug>sexp_select_list_outer``
     nnoremap <silent><buffer> =p     m`=ap``
 endfunction
 
@@ -261,7 +262,7 @@ command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! s:ScreenSetup(setup)
     let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
-    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'v<Plug>sexp_textobj_outer_form' : 'vip'
+    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'v<Plug>sexp_select_list_outer' : 'vip'
     let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':<C-u>call searchpair("(","",")","r")<CR>v%' : 'VggoG'
 
     if a:setup
@@ -386,7 +387,7 @@ function! s:RunCurrentFile()
     if &filetype == 'vim'
         source %
     elseif has_key(map, &filetype)
-        silent execute '! ' . map[&filetype] . ' % | $PAGER' | redraw!
+        execute 'Sh ' . map[&filetype] . ' % | $PAGER'
     endif
 endfunction
 
@@ -405,7 +406,7 @@ function! s:RunCurrentMiniTestCase()
     let @r = reg_save
 
     " Run the test
-    silent execute '! ruby % --name /test.*' . name . '/ | $PAGER' | redraw!
+    execute 'Sh ruby % --name /test.*' . name . '/ | $PAGER'
 endfunction
 
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
