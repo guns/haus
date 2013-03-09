@@ -30,7 +30,7 @@ augroup GUNS
     autocmd FileType vim
         \ setlocal foldmethod=expr foldexpr=VimFoldExpr(v:lnum)
     autocmd FileType help
-        \ setlocal iskeyword+=-
+        \ setlocal foldmethod=expr foldexpr=VimHelpFoldExpr(v:lnum) iskeyword+=-
     autocmd BufRead /tmp/verbose.vim
         \ silent! :%s/\V^I/	/g
     autocmd BufRead /tmp/profile.vim

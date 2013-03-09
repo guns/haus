@@ -193,10 +193,23 @@ function! VimFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
     if line =~# '\v\{\{\{\d*\s*$'
         return '>1'
-    elseif line =~# '\v^\s*(fun|com)'
+    elseif line =~# '\v^\s*aug%[roup] END'
+        return '='
+    elseif line =~# '\v^\s*(fu%[nction]|com%[mand]|aug%[roup])'
         return '>1'
     elseif line[0] ==# '"'
         return getline(a:lnum - 1)[0] ==# '"' ? '=' : '>1'
+    else
+        return '='
+    endif
+endfunction
+
+function! VimHelpFoldExpr(lnum) "{{{1
+    let line = getline(a:lnum)
+    if line =~# '\v\*\S+\*\s*$'
+        return getline(a:lnum - 1) =~# '\v\*\S+\*\s*$' ? '=' : '>1'
+    elseif line =~# '\v\~$'
+        return '>1'
     else
         return '='
     endif
