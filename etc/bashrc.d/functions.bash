@@ -158,6 +158,8 @@ TCOMP() {
                     break
                 fi
             done
+            # Dynamic load may have loaded empty compspec
+            [[ \$cspec ]] || return 1
             # If a compspec was successfully loaded, transfer to target and invoke
             eval \"\$cspec\" \"$alias\"
             if [[ \$cfunc ]]; then
