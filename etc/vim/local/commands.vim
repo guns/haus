@@ -162,6 +162,17 @@ function! ShellFoldExpr(lnum)
     endif
 endfunction
 
+function! CFoldExpr(lnum)
+    let line = getline(a:lnum)
+    if line[0] == '{'
+        return '>1'
+    elseif getline(a:lnum - 1)[0] == '}'
+        return '0'
+    else
+        return '='
+    endif
+endfunction
+
 function! DiffFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^diff>'
         return '>1'
