@@ -951,28 +951,11 @@ HAVE vim && {
         run vim -c "Screen $cmd" "$file"
     }
 
-    # Server / client functions
-    # (be careful; vim clientserver is a huge security hole)
-    if ((EUID > 0)); then
-        # Option: -w   Wait for file to close
-        # Param:  [$@] Arguments to vim
-        vimserver() {
-            local name='editserver'
-            if ((!$#)); then
-                vim --servername $name
-            elif [[ "$1" == -w ]]; then
-                vim --servername $name --remote-tab-wait "${@:1}"
-            else
-                vim --servername $name --remote-tab "$@"
-            fi
-        }
-
-        # Param: [$@] Arguments to vim
-        vimstartuptime() {
-            vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
-            urxvt-client -e vim /tmp/.vimstartuptime
-        }
-    fi
+    # Param: [$@] Arguments to vim
+    vimstartuptime() {
+        vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
+        urxvt-client -e vim /tmp/.vimstartuptime
+    }
 
     # Frequently edited files
     alias vimaliases='(exec vim ~/.mutt/aliases)'
