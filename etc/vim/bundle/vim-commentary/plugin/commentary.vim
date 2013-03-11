@@ -8,6 +8,12 @@ if exists("g:loaded_commentary") || &cp || v:version < 700
 endif
 let g:loaded_commentary = 1
 
+function! s:commentstring()
+  return (exists('b:NERDCommenterDelims') && !empty(b:NERDCommenterDelims['left']))
+         \ ? b:NERDCommenterDelims['left'] . '%s' . b:NERDCommenterDelims['right']
+         \ : &commentstring
+endfunction
+
 function! s:go(type,...) abort
   if a:0
     let [lnum1, lnum2] = [a:type, a:1]
@@ -15,7 +21,7 @@ function! s:go(type,...) abort
     let [lnum1, lnum2] = [line("'["), line("']")]
   endif
 
-  let [l, r] = split(substitute(substitute(&commentstring,'\S\zs%s',' %s',''),'%s\ze\S','%s ',''),'%s',1)
+  let [l, r] = split(substitute(substitute(s:commentstring(),'\S\zs%s',' %s',''),'%s\ze\S','%s ',''),'%s',1)
   let uncomment = 2
   for lnum in range(lnum1,lnum2)
     let line = matchstr(getline(lnum),'\S.*\s\@<!')
@@ -41,7 +47,7 @@ function! s:go(type,...) abort
 endfunction
 
 function! s:undo()
-  let [l, r] = split(substitute(substitute(&commentstring,'\S\zs%s',' %s',''),'%s\ze\S','%s ',''),'%s',1)
+  let [l, r] = split(substitute(substitute(s:commentstring(),'\S\zs%s',' %s',''),'%s\ze\S','%s ',''),'%s',1)
   let lnums = [line('.')+1, line('.')-2]
   for [index, dir, bound, line] in [[0, -1, 1, ''], [1, 1, line('$'), '']]
     while lnums[index] != bound && line ==# '' || !(stridx(line,l) || line[strlen(line)-strlen(r) : -1] != r)
@@ -58,18 +64,18 @@ nnoremap <silent> <Plug>Commentary     :<C-U>set opfunc=<SID>go<CR>g@
 nnoremap <silent> <Plug>CommentaryLine :<C-U>set opfunc=<SID>go<Bar>exe 'norm! 'v:count1.'g@_'<CR>
 nnoremap <silent> <Plug>CommentaryUndo :<C-U>call <SID>undo()<CR>
 
-if !hasmapto('<Plug>Commentary') || maparg('\\','n') ==# '' && maparg('\','n') ==# ''
-  xmap \\  <Plug>Commentary
-  nmap \\  <Plug>Commentary
-  nmap \\\ <Plug>CommentaryLine
-  nmap \\u <Plug>CommentaryUndo
-endif
-
-if maparg('gc','n') ==# ''
+if !hasmapto('<Plug>Commentary') || maparg('gc','n') ==# ''
   xmap gc  <Plug>Commentary
   nmap gc  <Plug>Commentary
   nmap gcc <Plug>CommentaryLine
   nmap gcu <Plug>CommentaryUndo
+endif
+
+if maparg('\\','n') ==# '' && maparg('\','n') ==# ''
+  xmap \\  <Plug>Commentary
+  nmap \\  <Plug>Commentary
+  nmap \\\ <Plug>CommentaryLine
+  nmap \\u <Plug>CommentaryUndo
 endif
 
 " vim:set et sw=2:
