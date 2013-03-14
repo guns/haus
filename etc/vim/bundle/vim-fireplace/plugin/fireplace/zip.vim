@@ -1,4 +1,4 @@
-" foreplay/zip.vim: zip.vim monkey patch to allow access from quickfix
+" fireplace/zip.vim: zip.vim monkey patch to allow access from quickfix
 " Maintainer:   Tim Pope <http://tpo.pe>
 
 if exists("g:loaded_zip") || &cp
@@ -7,7 +7,7 @@ endif
 
 runtime! autoload/zip.vim
 
-" Copied and pasted verbatime from autoload/zip.vim.
+" Copied and pasted verbatim from autoload/zip.vim.
 
 fun! zip#Read(fname,mode)
 "  call Dfunc("zip#Read(fname<".a:fname.">,mode=".a:mode.")")
@@ -25,7 +25,7 @@ fun! zip#Read(fname,mode)
 "  call Decho("zipfile<".zipfile.">")
 "  call Decho("fname  <".fname.">")
 
-  " Changes for foreplay.
+  " Changes for fireplace.
   let temp = tempname()
   let fn = expand('%:p')
   exe "sil! ! ".g:zip_unzipcmd." -p -- ".shellescape(zipfile,1)." ".shellescape(fnameescape(fname),1). ' > '.temp

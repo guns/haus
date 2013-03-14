@@ -273,9 +273,6 @@ let g:rbpt_colorpairs = [
     \ [245, '#8a8a8a']]
 let g:rbpt_max = len(g:rbpt_colorpairs)
 
-" Plugin: vim-foreplay
-let g:no_foreplay_classpath = 1
-
 " Plugin: splitjoin.vim
 let g:splitjoin_split_mapping = ''
 let g:splitjoin_join_mapping = ''
