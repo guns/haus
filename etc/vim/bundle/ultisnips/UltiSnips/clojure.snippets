@@ -115,7 +115,7 @@ snippet nex "next" w
 (next ${0:coll})
 endsnippet
 
-snippet res "rest" w
+snippet re "rest" w
 (rest ${0:coll})
 endsnippet
 
@@ -383,8 +383,12 @@ snippet part "partition" w
 (partition $0)
 endsnippet
 
-snippet reseq "re-seq" w
+snippet res "re-seq" w
 (re-seq ${1:#"$2"} ${0:string})
+endsnippet
+
+snippet ref "re-find" w
+(re-find ${1:#"$2"} ${0:string})
 endsnippet
 
 snippet rem "remove" w
@@ -751,7 +755,7 @@ snippet lo "loop" w
 	)
 endsnippet
 
-snippet re "recur" w
+snippet rec "recur" w
 (recur ${0:bindings})
 endsnippet
 
