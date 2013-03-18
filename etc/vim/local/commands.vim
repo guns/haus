@@ -228,9 +228,9 @@ function! VimHelpFoldExpr(lnum) "{{{1
 endfunction
 
 function! LispFoldExpr(lnum) "{{{1
-    if getline(a:lnum) =~# '\v^\s*[\(/](def|ns ).*'
+    if getline(a:lnum)[0] ==# '('
         return '>1'
-    elseif getline(a:lnum + 1) =~# '\v(^\s*;;;|\(comment>)'
+    elseif getline(a:lnum + 1)[0] ==# ';'
         return 's1'
     else
         return '='
