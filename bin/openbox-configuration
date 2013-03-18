@@ -67,7 +67,7 @@
 
 (defn move-resize-to [{:keys [x y width height]}]
   `["MoveResizeTo"
-    ~@(filter second {:x x :y y :width width :height height})])
+    ~@(filter val {:x x :y y :width width :height height})])
 
 (defn font [place name size weight slant]
   [:font {:place place}
