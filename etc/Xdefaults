@@ -31,7 +31,7 @@ URxvt*scrollTtyKeypress: on
 
 ! Explicit multiple fonts for code point search
 URxvt*font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
-            xft:Menlo:pixelsize=17:antialias=on:hinting=on:hintstyle=hintslight
+            xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
 
 ! Perl extensions
 URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select
