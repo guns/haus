@@ -153,8 +153,12 @@ augroup GUNS
         \ SetWhitespace 4 8
 
     " Mail {{{1
-    autocmd BufRead,BufNewFile vimperator-*,*.mail
+    autocmd BufRead,BufNewFile *.mail
         \ setlocal filetype=mail
+    autocmd BufRead,BufNewFile vimperator-*
+        \ setlocal filetype=mail |
+        \ SetAutowrap 0 |
+        \ setlocal wrap
     autocmd FileType mail
         \ setlocal iskeyword+=- |
         \ SetTextwidth 72 |
