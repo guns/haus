@@ -6,17 +6,6 @@
 !  /___/\  \  guns <self@sungpae.com>
 !        \_/
 
-*background:      rgb:00/00/00
-*foreground:      rgb:FF/EB/B6
-*pointerColor:    rgb:DD/DD/DD
-*cursorBlink:     off
-*loginShell:      on
-*ptySttySize:     on
-*saveLines:       1023
-*scrollBar:       off
-*scrollBar_right: on
-*visualBell:      on
-
 !!! XFT
 
 Xft*antialias: on
@@ -24,6 +13,17 @@ Xft*hinting:   on
 Xft*hintstyle: hintslight
 
 !!! RXVT-UNICODE
+
+URxvt*background:      rgb:00/00/00
+URxvt*foreground:      rgb:FF/EB/B6
+URxvt*pointerColor:    rgb:DD/DD/DD
+URxvt*cursorBlink:     off
+URxvt*loginShell:      on
+URxvt*ptySttySize:     on
+URxvt*saveLines:       1023
+URxvt*scrollBar:       off
+URxvt*scrollBar_right: on
+URxvt*visualBell:      on
 
 URxvt*pointerBlank:      on
 URxvt*pointerBlankDelay: 65535
