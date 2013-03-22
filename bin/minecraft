@@ -31,7 +31,7 @@ class Minecraft
         \\____|__  /___\\____|__  /______  / \\______  /____|_  /____|__  /___  /    |____|
                 \\/            \\/       \\/         \\/       \\/        \\/    \\/
 
-        Usage: #{File.basename __FILE__} [options] start|stop|restart|repl
+        Usage: #{File.basename __FILE__} [options] start|stop|restart|update|repl
 
         Options:
       BANNER
@@ -51,10 +51,6 @@ class Minecraft
 
       opt.on '-m', '--memory SIZE', Integer, 'Memory in MB [DEFAULT: %d]' % options.memory do |arg|
         options.memory = arg
-      end
-
-      opt.on '-u', '--update', 'Update %s' % SERVER_JAR_BASENAME do
-        options.update = true
       end
 
       opt.on '-d', '--debug', 'Keep server process in foreground' do
@@ -186,8 +182,6 @@ class Minecraft
     if not File.exists? jarlink and not File.exists? worldlink
       download_official_server_jar!
       setup_links SERVER_JAR_BASENAME, 'default'
-    elsif options.update
-      download_official_server_jar!
     end
 
     if options.jar or options.world
@@ -265,6 +259,7 @@ class Minecraft
     when 'start'   then start_server!
     when 'stop'    then stop_server!
     when 'restart' then stop_server!; start_server!
+    when 'update'  then download_official_server_jar!
     when 'repl'
       if ENV['RLWRAP_MINECRAFT'] or ENV['_'] =~ /rlwrap\z/ or not have_rlwrap
         start_repl!
