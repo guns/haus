@@ -81,7 +81,7 @@ Differences from VimClojure
 Interactive Clojure Development Plugins
 =======================================
 
-### [vim-foreplay](https://github.com/tpope/vim-foreplay)
+### [vim-fireplace](https://github.com/tpope/vim-fireplace)
 
 New nREPL client by Tim Pope.
 
@@ -109,13 +109,32 @@ By Eric Van Dewoestine.
 Try <https://github.com/guns/screen> for better window handling if you are
 running tmux 1.5 or higher.
 
+### [vim-slime](https://github.com/jpalardy/vim-slime)
+
+Like `screen` above, an asynchronous REPL plugin that uses GNU screen and
+tmux. Not Clojure specific.
+
+By Jonathan Palardy.
+
+Installation
+============
+
+Vim version 7.3.803 and later ships with these runtime files, so you may
+already have them installed!
+
+If you are running an earlier version or you would like to keep up with
+development, you can install this repository like a standard Vim plugin. If
+you don't have a favorite method for installing plugins,
+[Pathogen](https://github.com/tpope/vim-pathogen) or
+[Vundle](https://github.com/gmarik/vundle) are recommended.
+
 Indent Options
 ==============
 
 Clojure indentation differs somewhat from traditional Lisps, due in part to
 the use of square and curly brackets, and otherwise by community convention.
-These conventions are not always universally followed, so the Clojure indent
-script offers a few configurable options, listed below.
+These conventions are not universally followed, so the Clojure indent script
+offers a few configurable options, listed below.
 
 If the current vim does not include searchpairpos(), the indent script falls
 back to normal `'lisp'` indenting, and the following options are ignored.

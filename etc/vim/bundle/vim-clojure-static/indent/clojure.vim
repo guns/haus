@@ -62,7 +62,7 @@ if exists("*searchpairpos")
 
     function! s:IsParen()
         return s:CurrentChar() =~ '\v[\(\)\[\]\{\}]' &&
-             \ s:SynIdName() !~? '\vstring|comment'
+             \ s:SynIdName() !~? '\vstring|regex|comment'
     endfunction
 
     " Returns 1 if string matches a pattern in 'patterns', which may be a
@@ -75,20 +75,6 @@ if exists("*searchpairpos")
         for pat in list
             if a:string =~ pat | return 1 | endif
         endfor
-    endfunction
-
-    function! s:SavePosition()
-        let [ _b, l, c, _o ] = getpos(".")
-        let b = bufnr("%")
-        return [b, l, c]
-    endfunction
-
-    function! s:RestorePosition(value)
-        let [b, l, c] = a:value
-        if bufnr("%") != b
-            execute b "buffer!"
-        endif
-        call setpos(".", [0, l, c, 0])
     endfunction
 
     function! s:MatchPairs(open, close, stopat)
@@ -144,11 +130,11 @@ if exists("*searchpairpos")
     endfunction
 
     function! s:CheckForString()
-        let pos = s:SavePosition()
+        let pos = getpos('.')
         try
             let val = s:ClojureCheckForStringWorker()
         finally
-            call s:RestorePosition(pos)
+            call setpos('.', pos)
         endtry
         return val
     endfunction
@@ -180,11 +166,11 @@ if exists("*searchpairpos")
     endfunction
 
     function! s:IsMethodSpecialCase(position)
-        let pos = s:SavePosition()
+        let pos = getpos('.')
         try
             let val = s:ClojureIsMethodSpecialCaseWorker(a:position)
         finally
-            call s:RestorePosition(pos)
+            call setpos('.', pos)
         endtry
         return val
     endfunction
@@ -290,7 +276,7 @@ if exists("*searchpairpos")
             return paren[1] + &shiftwidth - 1
         endif
 
-        call search('\v\s|\n', 'cW')
+        call search('\v\_s', 'cW')
         call search('\v\S', 'W')
         if paren[0] < line(".")
             return paren[1] + &shiftwidth - 1
