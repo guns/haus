@@ -1462,12 +1462,14 @@ elif __LINUX__; then
     }
 
     HAVE abs && abslocal() {
-        ruby -e '
+        ruby -r pathname -r fileutils -e '
             ARGV.each do |src|
-                dst = "/var/abs/local/%s" % File.basename(File.expand_path src)
+                src = File.expand_path src
+                dst = "/var/abs/local/%s" % File.basename(src)
                 system *%W[git init #{dst}] unless Dir.exists? dst
                 system *%W[rsync -av --delete --exclude=/.git #{src}/ #{dst}/]
                 Dir.chdir dst do
+                    FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), File.basename(src)
                     system "git add .; git commit -m init"
                 end
             end
