@@ -9,8 +9,8 @@
 
 application/pdf; firefox %s
 application/pdf; pdftotext %s -; copiousoutput
-application/*; hexdump -C %s | less
-application/*; hexdump -C %s; copiousoutput
+application/*; less %s
+application/*; less %s; copiousoutput
 image/*; feh %s
 text/html; firefox %s
 text/html; elinks -dump -force-html %s; copiousoutput
