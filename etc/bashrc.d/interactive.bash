@@ -1113,6 +1113,7 @@ type ruby &>/dev/null && {
     else
         RUBY_VERSION_SETUP ''  "$(dirname "$(type -P ruby)")"
     fi
+    RUBY_VERSION_SETUP 20  /opt/ruby/2.0/bin
     RUBY_VERSION_SETUP 19  /opt/ruby/1.9/bin
     RUBY_VERSION_SETUP 18  /opt/ruby/1.8/bin
     RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
