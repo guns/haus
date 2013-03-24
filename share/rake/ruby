@@ -26,7 +26,7 @@ task :configure do
     end
   end
 
-  if RUBY_PLATFORM[/darwin/]
+  if RUBY_PLATFORM =~ /darwin/i
     # Use an authentic GNU readline
     if system '/bin/sh -c "command -v brew" &>/dev/null'
       cmd << '--with-readline-dir=' + %x(brew --prefix readline).chomp
@@ -39,9 +39,11 @@ task :configure do
       gcc = %x(/bin/sh -c 'command -v gcc-4.2').chomp
       ENV['CC'] = gcc if File.executable? gcc
     end
+  end
 
-    # OS X doesn't implement setproctitle(3), but we can at least change ARGV.
-    # Only affects Ruby 1.9; 1.8 does this by default
+  if RUBY_PLATFORM =~ /darwin|linux/i
+    # OS X and Linux do not implement setproctitle(3), but we can at least
+    # change ARGV. Only affects Ruby 1.9 (2.0?); 1.8 does this by default
     ENV['CFLAGS'] += ' -DSPT_TYPE=SPT_REUSEARGV '
   end
 
