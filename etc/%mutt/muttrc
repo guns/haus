@@ -114,6 +114,9 @@ macro index       +       <limit>~X1-<enter>
 macro index       \e\007L <limit>all<enter>
 bind  browser     .       check-new
 bind  attach      o       view-mailcap
+bind  index       <Space> collapse-thread
+bind  index       zM      collapse-all
+bind  index       zR      collapse-all
 
 # Editor
 bind editor \Cn history-down
