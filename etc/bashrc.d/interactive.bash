@@ -1520,6 +1520,13 @@ HAVE cmus && {
     alias cmus='envtmux cmus'
 }
 
+HAVE ffmpeg && {
+    voicerecording() {
+        (($# == 1)) || { echo "USAGE: $FUNCNAME out-basename"; return 1; }
+        ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -y "$1.wav";
+    }
+}
+
 # VLC
 [[ -x /Applications/VLC.app/Contents/MacOS/VLC ]] && {
     alias vlc='open -a /Applications/VLC.app'

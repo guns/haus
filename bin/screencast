@@ -97,7 +97,7 @@ class Screencast
       -f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}
       -acodec pcm_s16le -vcodec libx264
       -preset ultrafast -tune animation -crf 0
-      -y -loglevel info -threads auto
+      -y -threads auto
       #{file}
     ]
   end
