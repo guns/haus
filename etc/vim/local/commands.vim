@@ -251,8 +251,11 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     m`=<Plug>sexp_select_list_outer``
-    nnoremap <silent><buffer> =p     m`=ap``
+    nmap     <silent><buffer> ==     m`=<Plug>sexp_select_outer_list``
+
+    vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
+    nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_select_outer_list``
+    imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
@@ -272,25 +275,25 @@ endfunction
 command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
 command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
 function! s:ScreenSetup(setup)
-    let bind   = &filetype =~ '\vclojure|scheme|lisp' ? '<Leader>X' : '<Leader><Leader>'
-    let select = &filetype =~ '\vclojure|scheme|lisp' ? 'v<Plug>sexp_select_list_outer' : 'vip'
-    let topsel = &filetype =~ '\vclojure|scheme|lisp' ? ':<C-u>call searchpair("(","",")","r")<CR>v%' : 'VggoG'
+    let sexp_filetypes = exists('g:sexp_filetypes') ? '\v<' . g:sexp_filetypes . '>' : nr2char(0x01)
+    let select = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_list' : 'vip'
+    let topsel = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_top_list' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings
-        execute 'vmap ' . bind . ' :ScreenSend<CR>'
-        execute 'nmap ' . bind . ' mp' . select . bind . '`p'
-        execute 'imap ' . bind . ' <C-\><C-o><C-\><C-n>' . bind
+        execute 'vmap <Leader>X :ScreenSend<CR>'
+        execute 'nmap <Leader>X mp' . select . '<Leader>X`p'
+        execute 'imap <Leader>X <C-\><C-o><C-\><C-n><Leader>X'
 
-        execute 'nmap <Leader>F mp' . topsel . bind . '`p'
+        execute 'nmap <Leader>F mp' . topsel . '<Leader>X`p'
         execute 'imap <Leader>F <C-\><C-o><C-\><C-n><Leader><C-f>'
 
         nmap <Leader>Q :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
-            execute 'silent! vunmap ' . bind
-            execute 'silent! nunmap ' . bind
-            execute 'silent! iunmap ' . bind
+            execute 'silent! vunmap <Leader>X'
+            execute 'silent! nunmap <Leader>X'
+            execute 'silent! iunmap <Leader>X'
 
             silent! nunmap <Leader><C-f>
             silent! iunmap <Leader><C-f>
