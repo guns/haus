@@ -1160,6 +1160,9 @@ type ruby &>/dev/null && {
         _api() { __compreply__ "$(lsdir "$cdapi")"; }
         complete -F _api api
     }
+
+    # Simple webserver
+    httpserver() { rackup -b 'run Rack::Directory.new(".")' "$@"; }
 }
 
 ### Python
