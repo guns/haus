@@ -59,7 +59,6 @@ let g:maplocalleader = '-'
 " Bind: v_Ctrl-C => v_Ctrl-\_Ctrl-N
 " Bind: s_Ctrl-C => s_Ctrl-\_Ctrl-N
 vnoremap <C-c> <C-\><C-n>
-snoremap <C-c> <C-\><C-n>
 
 " Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
