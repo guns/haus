@@ -176,6 +176,7 @@ task :env do
       { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
       { :base => "#{@vim}/vim-varnish",            :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-visual-star-search", :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
