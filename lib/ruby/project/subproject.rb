@@ -80,6 +80,7 @@ module Project
       # Relative rsync target directory
       when String
         dst = File.join haus, @files
+        raise "#{dst} is a symbolic link" if File.symlink? dst
         FileUtils.mkdir_p dst
         system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.bundle #{base}/ #{dst}/]
       # A function that returns a new value for @files
