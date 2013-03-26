@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Copyright © 2007-2013 Jamie Zawinski <jwz@jwz.org>
+# Copyright Â© 2007-2013 Jamie Zawinski <jwz@jwz.org>
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
 # documentation for any purpose is hereby granted without fee, provided that
@@ -24,9 +24,10 @@
 #
 #   javascript:location='http://YOUR_SITE/youtubedown.cgi?url='+location
 #
-# or better,
+# or, the same thing but using a small popup window,
 #
-#   javascript:window.open('http://YOUR_SITE/youtubedown.cgi?url='+location.toString().replace(/%26/g,'%2526').replace(/%23/g,'%2523'),'youtubedown','width=400,height=50')
+#   javascript:window.open('http://YOUR_SITE/youtubedown.cgi?url='+location.toString().replace(/%26/g,'%2526').replace(/%23/g,'%2523'),'youtubedown','width=400,height=50,top=0,left='+((screen.width-400)/2))
+#
 #
 # When you click on that bookmarklet in your toolbar, it will give you
 # a link on which you can do "Save Link As..." and be offered a sensible
@@ -44,7 +45,7 @@ use strict;
 use Socket;
 
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.144 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.149 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -74,6 +75,7 @@ sub error($) {
                   "Status: 500\n" .
                   "\n" .
                   "<P><B>ERROR:</B> " . $err . "<P>\n");
+    die "$err\n" if ($verbose > 2);  # For debugging CGI.
     exit 1;
   } elsif ($noerror) {
     die "$err\n";
@@ -214,12 +216,21 @@ sub get_url_1($;$$$$$) {
   print STDERR "  <== \n" if ($verbose > 4);
 
   my $out;
-  if ($to_file) {
+  if ($to_file) {  # might be "-".
     open ($out, ">$to_file") || error ("$to_file: $!");
     binmode ($out);
   }
 
+  # If we're proxying a download, also copy the document's headers.
+  #
   if ($to_file && $to_file eq '-') {
+
+    # Maybe if we nuke the Content-Type, that will stop Safari from
+    # opening the file by default.  Answer: nope.
+    #  $head =~ s@^(Content-Type:)[^\r\n]+@$1 application/octet-stream@gmi;
+    # Ok, maybe if we mark it as an attachment?  Answer: still nope.
+    #  $head = "Content-Disposition: attachment\r\n" . $head;
+
     print $out $head;
   }
 
@@ -469,12 +480,20 @@ sub cgi_output($$$$$$$) {
   # a "500 Server Error" back.
   #
   my $proxy_p = 1;
+  utf8::encode ($file);   # Unpack wide chars into multi-byte UTF-8.
   $url = ($ENV{SCRIPT_NAME} . 
           '/' . url_quote($file) .
           '?' . ($proxy_p? 'proxy' : 'redir') .
           '=' . url_quote($url));
   $url = html_quote ($url);
+  $title = html_quote ($title);
 
+  # New HTML5 feature: <A DOWNLOAD=...> seems to be a client-side way of
+  # doing the same thing that "Content-Disposition: attachment; filename="
+  # does.  Unfortunately, even with this, Safari still opens the .MP4 file
+  # after downloading instead of just saving it.
+
+  binmode (STDOUT, ':utf8');
   print STDOUT
     ("Content-Type: text/html; charset=UTF-8\n" .
      "\n" .
@@ -492,7 +511,7 @@ sub cgi_output($$$$$$$) {
      " </HEAD>\n" .
      " <BODY>\n" .
      "  Save Link As:&nbsp; " .
-     "  <A HREF=\"$url\">$title</A>, " .
+     "  <A HREF=\"$url\" DOWNLOAD=\"$title\">$title</A>, " .
      "  <NOBR>$ss.</NOBR>\n" .
      " </BODY>\n" .
      "</HTML>\n");
@@ -511,17 +530,43 @@ sub scrape_youtube_url($$$$$) {
   my $info_url = ("http://www.youtube.com/get_video_info?video_id=$id" .
                   "&el=vevo");	# Needed for VEVO, works on non-VEVO.
 
-  my ($http, $head, $body) = get_url ($info_url);
-  check_http_status ($url, $http, 1);
+  my ($kind, $urlmap, $body, $fmtlist);
 
-  my ($kind, $urlmap) = ($body =~ m@&(fmt_url_map)=([^&]+)@si);
-  ($kind, $urlmap) = ($body =~ m@&(fmt_stream_map)=([^&]+)@si)	    # VEVO
-    unless $urlmap;
-  ($kind, $urlmap) = ($body =~ m@&(url_encoded_fmt_stream_map)=([^&]+)@si) 
-    unless $urlmap;			   # New nonsense seen in Aug 2011
-  print STDERR "$progname: $id: found $kind\n" if ($kind && $verbose > 1);
+  my $retries = 5;
+  my $err = undef;
 
-  my ($fmtlist) = ($body =~ m@&fmt_list=([^&]+)@si);
+  while (--$retries) {	# Sometimes the $info_url fails; try a few times.
+
+    my ($http, $head);
+    ($http, $head, $body) = get_url ($info_url);
+    $err = (check_http_status ($url, $http, 0) ? undef : $http);
+
+    ($kind, $urlmap) = ($body =~ m@&(fmt_url_map)=([^&]+)@si);
+    ($kind, $urlmap) = ($body =~ m@&(fmt_stream_map)=([^&]+)@si)	# VEVO
+      unless $urlmap;
+    ($kind, $urlmap) = ($body =~ m@&(url_encoded_fmt_stream_map)=([^&]+)@si) 
+      unless $urlmap;			   # New nonsense seen in Aug 2011
+    print STDERR "$progname: $id: found $kind\n" if ($kind && $verbose > 1);
+
+    ($fmtlist) = ($body =~ m@&fmt_list=([^&]+)@si);
+
+    ($title) = ($body =~ m@&title=([^&]+)@si) unless $title;
+
+    last if ($urlmap && $title);
+
+    if ($verbose) {
+      if (!$urlmap) {
+        print STDERR "$progname: $id: no urlmap, retrying...\n";
+      } else {
+        print STDERR "$progname: $id: no title, retrying...\n";
+      }
+    }
+
+    sleep (1);
+  }
+
+  error ("$progname: $id: $err")
+    if $err;
 
   if (! $urlmap) {
     # If we couldn't get a URL map out of the info URL, try harder.
@@ -550,7 +595,7 @@ sub scrape_youtube_url($$$$$) {
   $fmtlist = url_unquote ($fmtlist || '');
 
   ($title) = ($body =~ m@&title=([^&]+)@si) unless $title;
-  error ("$id: no title in $info_url") unless $title;
+  error ("$id: no title in $info_url\n\n####\n$body") unless $title;
   $title = url_unquote($title);
 
   return scrape_youtube_url_2 ($id, $urlmap, $fmtlist, $title,
@@ -992,6 +1037,8 @@ sub scrape_vimeo_private($$) {
 sub munge_title($) {
   my ($title) = @_;
 
+  utf8::decode ($title);  # Pack multi-byte UTF-8 back into wide chars.
+
   # Crud added by the sites themselves.
 
   $title =~ s/\s+/ /gsi;
@@ -1065,6 +1112,9 @@ sub download_video_url($$$$$) {
   # Rewrite Vimeo URLs so that we get a page with the proper video title:
   # "/...#NNNNN" => "/NNNNN"
   $url =~ s@^(https?://([a-z]+\.)?vimeo\.com/)[^\d].*\#(\d+)$@$1$3@s;
+
+  # No https.
+  $url =~ s@^https:@http:@s;
 
   my ($id, $site, $playlist_p);
 
@@ -1378,6 +1428,7 @@ sub do_cgi() {
     } else {
       # Proxy the data, so that we can feed it a non-browser user agent.
       print STDOUT "Content-Disposition: attachment; filename=\"$name\"\n";
+      binmode (STDOUT);
       get_url ($proxy, undef, undef, 0, '-');
     }
 
