@@ -1,13 +1,15 @@
 :IPython	screen.txt	/*:IPython*
+:IPython!	screen.txt	/*:IPython!*
 :ScreenQuit	screen.txt	/*:ScreenQuit*
 :ScreenSend	screen.txt	/*:ScreenSend*
 :ScreenShell	screen.txt	/*:ScreenShell*
+:ScreenShell!	screen.txt	/*:ScreenShell!*
 :ScreenShellAttach	screen.txt	/*:ScreenShellAttach*
 :ScreenShellReopen	screen.txt	/*:ScreenShellReopen*
-:ScreenShellVertical	screen.txt	/*:ScreenShellVertical*
 g:ScreenImpl	screen.txt	/*g:ScreenImpl*
 g:ScreenShellExpandTabs	screen.txt	/*g:ScreenShellExpandTabs*
 g:ScreenShellExternal	screen.txt	/*g:ScreenShellExternal*
+g:ScreenShellGnuScreenVerticalSupport	screen.txt	/*g:ScreenShellGnuScreenVerticalSupport*
 g:ScreenShellHeight	screen.txt	/*g:ScreenShellHeight*
 g:ScreenShellInitialFocus	screen.txt	/*g:ScreenShellInitialFocus*
 g:ScreenShellQuitOnVimExit	screen.txt	/*g:ScreenShellQuitOnVimExit*
@@ -28,6 +30,7 @@ screen-gotchas	screen.txt	/*screen-gotchas*
 screen-impl	screen.txt	/*screen-impl*
 screen-intro	screen.txt	/*screen-intro*
 screen-ipython	screen.txt	/*screen-ipython*
+screen-ipython-vertical	screen.txt	/*screen-ipython-vertical*
 screen-mappings	screen.txt	/*screen-mappings*
 screen-options	screen.txt	/*screen-options*
 screen-quit	screen.txt	/*screen-quit*
