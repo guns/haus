@@ -40,35 +40,7 @@ function! s:autoload(...)
 endfunction
 
 " }}}1
-" Configuration {{{
-
-function! s:SetOptDefault(opt,val)
-  if !exists("g:".a:opt)
-    let g:{a:opt} = a:val
-  endif
-endfunction
-
-call s:SetOptDefault("rails_syntax",1)
-call s:SetOptDefault("rails_mappings",1)
-call s:SetOptDefault("rails_abbreviations",1)
-call s:SetOptDefault("rails_ctags_arguments","--languages=-javascript")
-call s:SetOptDefault("rails_default_file","README")
-call s:SetOptDefault("rails_root_url",'http://localhost:3000/')
-call s:SetOptDefault("rails_gnu_screen",1)
-if exists("g:loaded_dbext") && executable("sqlite3") && ! executable("sqlite")
-  " Since dbext can't find it by itself
-  call s:SetOptDefault("dbext_default_SQLITE_bin","sqlite3")
-endif
-
-" }}}1
 " Detection {{{1
-
-function! s:escvar(r)
-  let r = fnamemodify(a:r,':~')
-  let r = substitute(r,'\W','\="_".char2nr(submatch(0))."_"','g')
-  let r = substitute(r,'^\d','_&','')
-  return r
-endfunction
 
 function! s:Detect(filename)
   if exists('b:rails_root')
@@ -79,36 +51,23 @@ function! s:Detect(filename)
   if sep != ""
     let fn = getcwd().sep.fn
   endif
-  if fn =~ '[\/]config[\/]environment\.rb$'
-    return s:BufInit(strpart(fn,0,strlen(fn)-22))
-  endif
   if isdirectory(fn)
     let fn = fnamemodify(fn,':s?[\/]$??')
   else
     let fn = fnamemodify(fn,':s?\(.*\)[\/][^\/]*$?\1?')
   endif
   let ofn = ""
-  let nfn = fn
-  while nfn != ofn && nfn != ""
-    if exists("s:_".s:escvar(nfn))
-      return s:BufInit(nfn)
-    endif
-    let ofn = nfn
-    let nfn = fnamemodify(nfn,':h')
-  endwhile
-  let ofn = ""
   while fn != ofn
     if filereadable(fn . "/config/environment.rb")
-      return s:BufInit(fn)
+      return s:BufInit(resolve(fn))
     endif
     let ofn = fn
-    let fn = fnamemodify(ofn,':s?\(.*\)[\/]\(app\|config\|db\|doc\|extras\|features\|lib\|log\|public\|script\|spec\|stories\|test\|tmp\|vendor\)\($\|[\/].*$\)?\1?')
+    let fn = fnamemodify(ofn,':h')
   endwhile
   return 0
 endfunction
 
 function! s:BufInit(path)
-  let s:_{s:escvar(a:path)} = 1
   if s:autoload()
     return RailsBufInit(a:path)
   endif
@@ -119,15 +78,15 @@ endfunction
 
 augroup railsPluginDetect
   autocmd!
-  autocmd BufNewFile,BufRead * call s:Detect(expand("<afile>:p"))
   autocmd VimEnter * if expand("<amatch>") == "" && !exists("b:rails_root") | call s:Detect(getcwd()) | endif | if exists("b:rails_root") | silent doau User BufEnterRails | endif
-  autocmd FileType netrw if !exists("b:rails_root") | call s:Detect(expand("%:p")) | endif | if exists("b:rails_root") | silent doau User BufEnterRails | endif
+  autocmd BufNewFile,BufRead * if empty(&filetype) | call s:Detect(expand("<afile>:p")) | endif
+  autocmd FileType * if !exists("b:rails_root") | call s:Detect(expand("%:p")) | endif | if exists("b:rails_root") | silent doau User BufEnterRails | endif
   autocmd BufEnter * if exists("b:rails_root")|silent doau User BufEnterRails|endif
   autocmd BufLeave * if exists("b:rails_root")|silent doau User BufLeaveRails|endif
   autocmd Syntax railslog if s:autoload()|call rails#log_syntax()|endif
 augroup END
 
-command! -bar -bang -nargs=* -complete=dir Rails :if s:autoload()|call rails#new_app_command(<bang>0,<f-args>)|endif
+command! -bar -bang -nargs=* -complete=dir Rails :if s:autoload()|execute rails#new_app_command(<bang>0,<f-args>)|endif
 
 " }}}1
 " abolish.vim support {{{1
