@@ -2,8 +2,8 @@
 "
 " emacsmodeline.vim
 " Brief: Parse emacs mode line and setlocal in vim
-" Version: 0.1
-" Date: Dec 23, 2010
+" Version: 1.1
+" Date: Feb 20, 2013
 " Maintainer: Chris Pickel <sfiera@gmail.com>
 "
 " Installation: put this file under your ~/.vim/plugin/
@@ -23,11 +23,17 @@
 " 1.0, Dec 23, 2010:
 "  * Support for mode, fill-column, buffer-read-only, and indent-tabs-mode.
 "  * Maintainership taken up by Chris Pickel <sfiera@gmail.com>.
+" 1.1, Feb 20, 2013
+"  * Prevent an exploit.  Not seen in the wild, but likely to be used by vengeful emacs users.
 "
 
 " No attempt is made to support vim versions before 7.0.
 if version < 700
     finish
+endif
+
+if (!exists("g:emacs_modelines"))
+    let g:emacs_modelines=5
 endif
 
 if (!exists('g:emacsModeDict'))
@@ -51,7 +57,7 @@ function! <SID>FindParameterValue(modeline, emacs_name, value)
 endfunc
 
 function! <SID>SetVimModeOption(modeline)
-    let value = <SID>FindParameterValue(a:modeline, 'mode', '\S\+')
+    let value = <SID>FindParameterValue(a:modeline, 'mode', '[A-Za-z_+-]\+')
     if strlen(value)
         let value = tolower(value)
         if (has_key(g:emacsModeDict, value))
@@ -80,15 +86,10 @@ function! <SID>SetVimToggleOption(modeline, emacs_name, vim_name, nil_value)
 endfunc
 
 function! ParseEmacsModeLine()
-    " If &modeline is false, then don't try to detect modelines.
-    if ! &modeline
-        return
-    endif
-
-    " Prepare to scan the first and last &modelines lines.
+    " Prepare to scan the first and last g:emacs_modelines lines.
     let max = line("$")
-    if max > (&modelines * 2)
-        let lines = range(1, &modelines) + range(max - &modelines + 1, max)
+    if max > (g:emacs_modelines * 2)
+        let lines = range(1, g:emacs_modelines) + range(max - g:emacs_modelines + 1, max)
     else
         let lines = range(1, max)
     endif
