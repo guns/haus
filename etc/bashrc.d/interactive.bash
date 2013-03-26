@@ -330,9 +330,10 @@ f() {
         elsif args.any?
             pattern = args.shift
             pattern = case pattern
-            when /\A\^/ then "%s*" % pattern.sub(/\^/,"")
-            when /\$\z/ then "*%s" % pattern.chomp("$")
-            else             "*%s*" % pattern
+            when /\A\^.*\$\z/ then pattern.sub(/\^/,"").chomp("$")
+            when /\A\^/       then "%s*" % pattern.sub(/\^/,"")
+            when /\$\z/       then "*%s" % pattern.chomp("$")
+            else                   "*%s*" % pattern
             end
             cmd.push "-iname", pattern, *args
         end
