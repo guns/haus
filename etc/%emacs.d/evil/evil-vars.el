@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -278,6 +278,30 @@ This should be a regexp set without the enclosing []."
   :type 'number
   :group 'evil)
 
+(defvar evil-esc-mode nil
+  "Non-nil if `evil-esc-mode' is enabled.")
+
+(defvar evil-esc-map nil
+  "Original ESC prefix map in `input-decode-map'.
+Used by `evil-esc-mode'.")
+
+(defvar evil-inhibit-esc nil
+  "If non-nil, the \\e event will never be translated to 'escape.")
+
+(defcustom evil-intercept-esc 'always
+  "Whether evil should intercept the ESC key.
+In terminal, a plain ESC key and a meta-key-sequence both
+generate the same event. In order to distinguish both evil
+modifies `input-decode-map'. This is necessary in terminal but
+not in X mode. However, the terminal ESC is equivalent to C-[, so
+if you want to use C-[ instead of ESC in X, then Evil must
+intercept the ESC event in X, too. This variable determines when
+Evil should intercept the event."
+  :type '(radio (const :tag "Never" :value nil)
+                (const :tag "In terminal only" :value t)
+                (const :tag "Always" :value 'always))
+  :group 'evil)
+
 (defcustom evil-show-paren-range 0
   "The minimal distance between point and a parenthesis
 which causes the parenthesis to be highlighted."
@@ -491,6 +515,7 @@ If STATE is nil, Evil is disabled in the buffer."
     magit-mode
     magit-reflog-mode
     magit-show-branches-mode
+    magit-branch-manager-mode ;; New name for magit-show-branches-mode
     magit-stash-mode
     magit-status-mode
     magit-wazzup-mode
@@ -898,6 +923,17 @@ the replacement is shown interactively."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-ex-substitute-global nil
+  "If non-nil substitute patterns a global by default.
+Usually (if this variable is nil) a substitution works only on
+the first match of a pattern in a line unless the 'g' flag is
+given, in which case the substitution happens on all matches in a
+line. If this option is non-nil, this behaviour is reversed: the
+substitution works on all matches unless the 'g' pattern is
+specified, then is works only on the first match."
+  :type  'boolean
+  :group 'evil)
+
 (defface evil-ex-search '((t :inherit isearch))
   "Face for interactive search."
   :group 'evil)
@@ -1196,6 +1232,9 @@ instead of `buffer-undo-list'.")
 (evil-define-local-var evil-undo-list-pointer nil
   "Everything up to this mark is united in the undo-list.")
 
+(defvar evil-in-single-undo nil
+  "Set to non-nil if the current undo steps are connected.")
+
 (defvar evil-flash-timer nil
   "Timer for flashing search results.")
 
@@ -1280,8 +1319,6 @@ Key sequences bound in this map are immediately executed.")
 
 (defvar evil-ex-completion-map (make-sparse-keymap)
   "Completion keymap for Ex.")
-(set-keymap-parent evil-ex-completion-map minibuffer-local-completion-map)
-(define-key evil-ex-completion-map (kbd "SPC") #'self-insert-command)
 
 (defvar evil-ex-shell-argument-initialized nil
   "This variable is set to t if shell command completion has been initialized.
@@ -1366,6 +1403,10 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-substitute-current-replacement nil
   "The actual replacement.")
 
+(defvar evil-ex-last-was-search nil
+  "Non-nil if the previous was a search.
+Otherwise the previous command is assumed as substitute.")
+
 ;; The lazy-highlighting framework.
 (evil-define-local-var evil-ex-active-highlights-alist nil
   "An alist of currently active highlights.")
@@ -1377,7 +1418,7 @@ See `evil-ex-init-shell-argument-completion'.")
   "Keymap used in ex-search-mode.")
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
-(defconst evil-version "0.1"
+(defconst evil-version "1.0-dev"
   "The current version of Evil")
 
 (defun evil-version ()

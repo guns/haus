@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -207,6 +207,7 @@
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
 (define-key evil-motion-state-map "}" 'evil-forward-paragraph)
 (define-key evil-motion-state-map "#" 'evil-search-symbol-backward)
+(define-key evil-motion-state-map "g#" 'evil-search-unbounded-symbol-backward)
 (define-key evil-motion-state-map "$" 'evil-end-of-line)
 (define-key evil-motion-state-map "%" 'evil-jump-item)
 (define-key evil-motion-state-map "`" 'evil-goto-mark)
@@ -222,6 +223,7 @@
 (define-key evil-motion-state-map "[{" 'evil-previous-open-brace)
 (define-key evil-motion-state-map "]}" 'evil-next-close-brace)
 (define-key evil-motion-state-map "*" 'evil-search-symbol-forward)
+(define-key evil-motion-state-map "g*" 'evil-search-unbounded-symbol-forward)
 (define-key evil-motion-state-map "," 'evil-repeat-find-char) ; evil-repeat-find-char-reverse
 (define-key evil-motion-state-map "/" 'evil-search-forward)
 (define-key evil-motion-state-map ";" 'execute-extended-command) ; evil-repeat-find-char
@@ -284,6 +286,7 @@
 (define-key evil-outer-text-objects-map "\"" 'evil-a-double-quote)
 (define-key evil-outer-text-objects-map "`" 'evil-a-back-quote)
 (define-key evil-outer-text-objects-map "t" 'evil-a-tag)
+(define-key evil-outer-text-objects-map "o" 'evil-a-symbol)
 (define-key evil-inner-text-objects-map "w" 'evil-inner-word)
 (define-key evil-inner-text-objects-map "W" 'evil-inner-WORD)
 (define-key evil-inner-text-objects-map "s" 'evil-inner-sentence)
@@ -302,6 +305,7 @@
 (define-key evil-inner-text-objects-map "\"" 'evil-inner-double-quote)
 (define-key evil-inner-text-objects-map "`" 'evil-inner-back-quote)
 (define-key evil-inner-text-objects-map "t" 'evil-inner-tag)
+(define-key evil-inner-text-objects-map "o" 'evil-inner-symbol)
 
 (when evil-want-C-i-jump
   (define-key evil-motion-state-map (kbd "C-i") 'evil-jump-forward))
@@ -340,6 +344,8 @@
 (define-key evil-insert-state-map "\C-p" 'evil-complete-previous)
 (define-key evil-insert-state-map "\C-x\C-n" 'evil-complete-next-line)
 (define-key evil-insert-state-map "\C-x\C-p" 'evil-complete-previous-line)
+(define-key evil-insert-state-map "\C-t" 'evil-shift-right-line)
+(define-key evil-insert-state-map "\C-d" 'evil-shift-left-line)
 (define-key evil-insert-state-map [remap newline] 'evil-ret)
 (define-key evil-insert-state-map [remap newline-and-indent] 'evil-ret)
 (define-key evil-insert-state-map [escape] 'evil-normal-state)
@@ -398,6 +404,7 @@
 
 (evil-ex-define-cmd "c[hange]" 'evil-change)
 (evil-ex-define-cmd "d[elete]" 'evil-delete)
+(evil-ex-define-cmd "y[ank]" 'evil-yank)
 (evil-ex-define-cmd "go[to]" 'evil-goto-char)
 (evil-ex-define-cmd "j[oin]" 'evil-join)
 (evil-ex-define-cmd "le[ft]" 'evil-align-left)
@@ -420,6 +427,7 @@
 (evil-ex-define-cmd "bd[elete]" 'evil-delete-buffer)
 (evil-ex-define-cmd "g[lobal]" 'evil-ex-global)
 (evil-ex-define-cmd "v[global]" 'evil-ex-global-inverted)
+(evil-ex-define-cmd "norm[al]" 'evil-ex-normal)
 (evil-ex-define-cmd "s[ubstitute]" 'evil-ex-substitute)
 (evil-ex-define-cmd "&" 'evil-ex-repeat-substitute)
 (evil-ex-define-cmd "&&" 'evil-ex-repeat-substitute-with-flags)
@@ -436,24 +444,48 @@
 (evil-ex-define-cmd "!" 'evil-shell-command)
 (evil-ex-define-cmd "@:" 'evil-ex-repeat)
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
+(evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 
 (when (fboundp 'undo-tree-visualize)
   (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
   (evil-ex-define-cmd "ul" 'undo-tree-visualize))
 
-;; completion
+;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
+
+;; ex command line
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\t" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-p" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "\C-n" #'evil-ex-run-completion-at-point)
-(define-key evil-ex-completion-map "?" nil)
+(define-key evil-ex-completion-map [tab] #'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-a" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
+(define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)
+(define-key evil-ex-completion-map "\C-d" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-g" 'abort-recursive-edit)
+(define-key evil-ex-completion-map "\C-k" 'evil-insert-digraph)
+(define-key evil-ex-completion-map "\C-l" 'evil-ex-run-completion-at-point)
+(define-key evil-ex-completion-map "\C-p" #'next-complete-history-element)
+(define-key evil-ex-completion-map "\C-r" 'evil-paste-from-register)
+(define-key evil-ex-completion-map "\C-n" #'next-complete-history-element)
+(define-key evil-ex-completion-map "\C-u" 'evil-delete-whole-line)
+(define-key evil-ex-completion-map "\C-v" #'quoted-insert)
+(define-key evil-ex-completion-map "\C-w" 'backward-kill-word)
+(define-key evil-ex-completion-map [escape] 'abort-recursive-edit)
+(define-key evil-ex-completion-map [S-left] 'backward-word)
+(define-key evil-ex-completion-map [S-right] 'forward-word)
+(define-key evil-ex-completion-map [up] 'previous-complete-history-element)
+(define-key evil-ex-completion-map [down] 'next-complete-history-element)
+(define-key evil-ex-completion-map [prior] 'previous-history-element)
+(define-key evil-ex-completion-map [next] 'next-history-element)
+(define-key evil-ex-completion-map [return] 'exit-minibuffer)
+(define-key evil-ex-completion-map (kbd "RET") 'exit-minibuffer)
 
 ;; evil-read-key
 (define-key evil-read-key-map (kbd "ESC") #'keyboard-quit)
 (define-key evil-read-key-map (kbd "C-]") #'keyboard-quit)
 (define-key evil-read-key-map (kbd "C-q") #'evil-read-quoted-char)
 (define-key evil-read-key-map (kbd "C-v") #'evil-read-quoted-char)
+(define-key evil-read-key-map (kbd "C-k") #'evil-read-digraph-char)
 (define-key evil-read-key-map "\r" "\n")
 
 (provide 'evil-maps)

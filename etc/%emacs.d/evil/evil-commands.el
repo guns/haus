@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -475,26 +475,46 @@ and jump to the corresponding one."
            (hif-endif-to-ifdef)
            t))))))
    (t
-    (let* ((next-open
-            (condition-case err
-                (1- (scan-lists (point) 1 -1))
-              (error
-               (point-max))))
-           (next-close
-            (condition-case nil
-                (1- (scan-lists (point) 1 1))
-              (error (point-max))))
-           (pos (min next-open next-close)))
+    (let* ((open (point-max))
+           (close (point-max))
+           (open-pair (condition-case nil
+                          (save-excursion
+                            (setq open (1- (scan-lists (point) 1 -1)))
+                            (when (< open (line-end-position))
+                              (goto-char open)
+                              (forward-list)
+                              (1- (point))))
+                        (error nil)))
+           (close-pair (condition-case nil
+                           (save-excursion
+                             (setq close (1- (scan-lists (point) 1 1)))
+                             (when (< close (line-end-position))
+                               (goto-char (1+ close))
+                               (backward-list)
+                               (point)))
+                         (error nil))))
       (cond
-       ((>= pos (line-end-position))
-        (error "No matching item found on the current line"))
-       ((= pos next-open)
-        (goto-char pos)
-        (forward-list)
-        (backward-char))
-       (t
-        (goto-char (1+ pos))
-        (backward-list)))))))
+       ((not (or open-pair close-pair))
+        ;; nothing found, check if we are inside a string
+        (let ((pnt (point))
+              (state (syntax-ppss (point))))
+          (if (not (evil-in-string-p))
+              ;; no, then we really failed
+              (error "No matching item found on the current line")
+            ;; yes, go to the end of the string and try again
+            (let ((endstr (evil-string-end (point) (line-end-position))))
+              (when (or (evil-in-string-p endstr) ; not at end of string
+                        (condition-case nil
+                            (progn
+                              (goto-char endstr)
+                              (evil-jump-item)
+                              nil)
+                          (error t)))
+                ;; failed again, go back to original point
+                (goto-char pnt)
+                (error "No matching item found on the current line"))))))
+       ((< open close) (goto-char open-pair))
+       (t (goto-char close-pair)))))))
 
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
@@ -729,7 +749,7 @@ In Insert state, insert a newline."
         (newline count)
         (indent-according-to-mode)))
      (t
-      (evil-next-line count)))))
+      (evil-next-line-first-non-blank count)))))
 
 (evil-define-motion evil-window-top (count)
   "Move the cursor to line COUNT from the top of the window
@@ -1059,6 +1079,16 @@ or line COUNT to the top of the window."
   :extend-selection nil
   (evil-xml-range count beg end type t))
 
+(evil-define-text-object evil-a-symbol (count &optional beg end type)
+  "Select a symbol."
+  (require 'thingatpt)
+  (evil-an-object-range count beg end type #'forward-symbol))
+
+(evil-define-text-object evil-inner-symbol (count &optional beg end type)
+  "Select inner symbol."
+  (require 'thingatpt)
+  (evil-inner-object-range count beg end type #'forward-symbol))
+
 ;;; Operator commands
 
 (evil-define-operator evil-yank (beg end type register yank-handler)
@@ -1371,6 +1401,22 @@ See also `evil-shift-left'."
     (set-marker beg nil)
     (set-marker end nil)))
 
+(evil-define-command evil-shift-right-line (count)
+  "Shift the current line COUNT times to the right.
+The text is shifted to the nearest multiple of
+`evil-shift-width'. Like `evil-shift-right' but always works on
+the current line."
+  (interactive "<c>")
+  (evil-shift-right (line-beginning-position) (line-end-position) count))
+
+(evil-define-command evil-shift-left-line (count)
+  "Shift the current line COUNT times to the leeft.
+The text is shifted to the nearest multiple of
+`evil-shift-width'. Like `evil-shift-leeft' but always works on
+the current line."
+  (interactive "<c>")
+  (evil-shift-left (line-beginning-position) (line-end-position) count))
+
 (evil-define-operator evil-align-left (beg end type &optional width)
   "Right-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
@@ -1422,15 +1468,19 @@ The default for width is the value of `fill-column'."
                      (insert (make-string (- endcol begcol) char))))))
            beg end char))
       (goto-char beg)
-      (while (< (point) end)
-        (if (eq (char-after) ?\n)
-            (forward-char)
-          (delete-char 1)
-          (insert-char char 1)))
-      (if (eq char ?\n)
-          (when evil-auto-indent
-            (indent-according-to-mode))
-        (goto-char (max beg (1- end)))))))
+      (cond
+       ((eq char ?\n)
+        (delete-region beg end)
+        (newline)
+        (when evil-auto-indent
+          (indent-according-to-mode)))
+       (t
+        (while (< (point) end)
+          (if (eq (char-after) ?\n)
+              (forward-char)
+            (delete-char 1)
+            (insert-char char 1)))
+        (goto-char (max beg (1- end))))))))
 
 (evil-define-command evil-paste-before
   (count &optional register yank-handler)
@@ -1909,33 +1959,35 @@ next VCOUNT - 1 lines below the current one."
                    vcount)))
   (evil-insert-state 1))
 
-(defun evil-insert-digraph (count digraph)
-  "Insert COUNT digraphs DIGRAPH."
-  (interactive
-   (let (count char1 char2 overlay string)
-     (unwind-protect
-         (progn
-           (setq count (prefix-numeric-value current-prefix-arg)
-                 overlay (make-overlay (point) (point)))
-           ;; create overlay prompt
-           (setq string "?")
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           ;; put cursor at (i.e., right before) the prompt
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
-           (setq char1 (evil-read-key))
-           (setq string (string char1))
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
-           (setq char2 (evil-read-key)))
-       (delete-overlay overlay))
-     (list count (list char1 char2))))
-  (let ((digraph (or (evil-digraph digraph)
-                     ;; use the last character if undefined
-                     (cadr digraph))))
-    (dotimes (var count)
-      (insert digraph))))
+(evil-define-command evil-insert-digraph (count)
+  "Insert COUNT digraphs."
+  (interactive "p")
+  (let ((digraph (evil-read-digraph-char 0)))
+    (insert-char digraph count)))
+
+(defun evil-ex-show-digraphs ()
+  "Shows a list of all available digraphs."
+  (interactive)
+  (let ((buf (get-buffer-create "*evil-digraphs*"))
+        (inhibit-read-only t))
+    (with-current-buffer buf
+      (erase-buffer)
+      (let ((i 0)
+            (digraphs
+             (mapcar #'(lambda (digraph)
+                         (cons (cdr digraph)
+                               (car digraph)))
+                     (append evil-digraphs-table
+                             evil-digraphs-table-user))))
+        (dolist (digraph digraphs)
+          (insert (nth 0 digraph) "\t"
+                  (nth 1 digraph) " "
+                  (nth 2 digraph)
+                  (if (= i 2) "\n" "\t\t"))
+          (setq i (mod (1+ i) 3))))
+      (goto-char (point-min))
+      (view-buffer buf #'kill-buffer)
+      (evil-emacs-state))))
 
 (defun evil-copy-from-above (arg)
   "Copy characters from preceding non-blank line.
@@ -2116,6 +2168,24 @@ for `isearch-forward',\nwhich lists available keys:\n\n%s"
   :type exclusive
   (dotimes (var (or count 1))
     (evil-search-symbol t)))
+
+(evil-define-motion evil-search-unbounded-symbol-backward (count)
+  "Search backward for symbol under point.
+The search is unbounded, i.e., the pattern is not wrapped in
+\\<...\\>."
+  :jump t
+  :type exclusive
+  (dotimes (var (or count 1))
+    (evil-search-symbol nil t)))
+
+(evil-define-motion evil-search-unbounded-symbol-forward (count)
+  "Search forward for symbol under point.
+The search is unbounded, i.e., the pattern is not wrapped in
+\\<...\\>."
+  :jump t
+  :type exclusive
+  (dotimes (var (or count 1))
+    (evil-search-symbol t t)))
 
 (evil-define-motion evil-goto-definition ()
   "Go to definition or first occurrence of symbol under point."
@@ -2483,33 +2553,45 @@ the previous shell command is executed instead."
             (forward-line (1- line))))
       (error "File does not exist."))))
 
-(evil-ex-define-argument-type state (flag &rest args)
+(evil-ex-define-argument-type state
   "Defines an argument type which can take state names."
-  (when (eq flag 'complete)
-    (let ((arg (pop args))
-          (predicate (pop args))
-          (flag (pop args))
-          (completions
-           (append '("nil")
-                   (mapcar #'(lambda (state)
-                               (format "%s" (car state)))
-                           evil-state-properties))))
-      (when arg
-        (cond
-         ((eq flag nil)
-          (try-completion arg completions predicate))
-         ((eq flag t)
-          (all-completions arg completions predicate))
-         ((eq flag 'lambda)
-          (test-completion arg completions predicate)))))))
+  :completer
+  (lambda ()
+    (list
+     (point-min) (point-max)
+     (lambda (arg predicate flag)
+       (let ((completions
+              (append '("nil")
+                      (mapcar #'(lambda (state)
+                                  (format "%s" (car state)))
+                              evil-state-properties))))
+         (when arg
+           (cond
+            ((eq flag nil)
+             (try-completion arg completions predicate))
+            ((eq flag t)
+             (all-completions arg completions predicate))
+            ((eq flag 'lambda)
+             (test-completion arg completions predicate))
+            ((eq (car-safe flag) 'boundaries)
+             (cons 'boundaries
+                   (completion-boundaries arg
+                                          completions
+                                          predicate
+                                          (cdr flag)))))))))))
+
+(evil-define-interactive-code "<state>"
+  "A valid evil state."
+  :ex-arg state
+  (list (when (and (evil-ex-p) evil-ex-argument)
+          (intern evil-ex-argument))))
 
 ;; TODO: should we merge this command with `evil-set-initial-state'?
 (evil-define-command evil-ex-set-initial-state (state)
   "Set the initial state for the current major mode to STATE.
 This is the state the buffer comes up in. See `evil-set-initial-state'."
-  :ex-arg state
   :repeat nil
-  (interactive "<sym>")
+  (interactive "<state>")
   (if (not (or (assq state evil-state-properties)
                (null state)))
       (error "State %s cannot be set as initial Evil state" state)
@@ -2538,7 +2620,8 @@ Change to `%s'? "
   "Goes to the next occurrence."
   :jump t
   :type exclusive
-  (setq evil-ex-search-start-point (point))
+  (setq evil-ex-search-start-point (point)
+        evil-ex-last-was-search t)
   (let ((orig (point))
         wrapped)
     (dotimes (i (or count 1))
@@ -2641,6 +2724,7 @@ resp.  after executing the command."
     (error "No pattern given"))
   (unless replacement
     (error "No replacement given"))
+  (setq evil-ex-last-was-search nil)
   (let* ((flags (append flags nil))
          (confirm (memq ?c flags))
          (case-fold-search (eq (evil-ex-pattern-case-fold pattern)
@@ -2820,32 +2904,33 @@ This is the same as :%s//~/&"
     (error "No pattern given"))
   (unless command
     (error "No command given"))
-  (let ((case-fold-search
-         (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
-        match markers)
-    (when (and pattern command)
-      (setq isearch-string pattern)
-      (isearch-update-ring pattern t)
-      (goto-char beg)
-      (evil-move-beginning-of-line)
-      (while (< (point) end)
-        (setq match (re-search-forward pattern (line-end-position) t))
-        (when (or (and match (not invert))
-                  (and invert (not match)))
-          (push (move-marker (make-marker)
-                             (or (and match (match-beginning 0))
-                                 (line-beginning-position)))
-                markers))
-        (forward-line))
-      (setq markers (nreverse markers))
-      (unwind-protect
+  (evil-with-single-undo
+    (let ((case-fold-search
+           (eq (evil-ex-regex-case pattern 'smart) 'insensitive))
+          match markers)
+      (when (and pattern command)
+        (setq isearch-string pattern)
+        (isearch-update-ring pattern t)
+        (goto-char beg)
+        (evil-move-beginning-of-line)
+        (while (< (point) end)
+          (setq match (re-search-forward pattern (line-end-position) t))
+          (when (or (and match (not invert))
+                    (and invert (not match)))
+            (push (move-marker (make-marker)
+                               (or (and match (match-beginning 0))
+                                   (line-beginning-position)))
+                  markers))
+          (forward-line))
+        (setq markers (nreverse markers))
+        (unwind-protect
+            (dolist (marker markers)
+              (goto-char marker)
+              (evil-ex-eval command))
+          ;; ensure that all markers are deleted afterwards,
+          ;; even in the event of failure
           (dolist (marker markers)
-            (goto-char marker)
-            (evil-ex-eval command))
-        ;; ensure that all markers are deleted afterwards,
-        ;; even in the event of failure
-        (dolist (marker markers)
-          (set-marker marker nil))))))
+            (set-marker marker nil)))))))
 
 (evil-define-operator evil-ex-global-inverted
   (beg end pattern command &optional invert)
@@ -2855,6 +2940,38 @@ This is the same as :%s//~/&"
   :move-point nil
   (interactive "<r><g/><!>")
   (evil-ex-global beg end pattern command (not invert)))
+
+(evil-define-operator evil-ex-normal (beg end commands)
+  "The Ex normal command.
+Execute the argument as normal command on each line in the
+range. The given argument is passed straight to
+`execute-kbd-macro'.  The default is the current line."
+  :motion evil-line
+  (interactive "<r><a>")
+  (evil-with-single-undo
+    (let (markers evil-ex-current-buffer prefix-arg current-prefix-arg)
+      (goto-char beg)
+      (while
+          (and (< (point) end)
+               (progn
+                 (push (move-marker (make-marker) (line-beginning-position))
+                       markers)
+                 (and (= (forward-line) 0) (bolp)))))
+      (setq markers (nreverse markers))
+      (deactivate-mark)
+      (evil-force-normal-state)
+      ;; replace ^[ by escape
+      (setq commands
+            (vconcat
+             (mapcar #'(lambda (ch) (if (equal ch ?) 'escape ch))
+                     (append commands nil))))
+      (dolist (marker markers)
+        (goto-char marker)
+        (condition-case nil
+            (execute-kbd-macro commands)
+          (error nil))
+        (evil-force-normal-state)
+        (set-marker marker nil)))))
 
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.
@@ -2889,25 +3006,26 @@ Default position is the beginning of the buffer."
   "Set the current window's width or height to NEW-SIZE.
 If HORIZONTAL is non-nil the width of the window is changed,
 otherwise its height is changed."
-  (let ((wincfg (current-window-configuration))
-        (nwins (length (window-list)))
-        (count (if horizontal
-                   (- new-size (window-width))
-                 (- new-size (window-height)))))
-    (catch 'done
-      (save-window-excursion
-        (while (not (zerop count))
-          (if (> count 0)
-              (progn
-                (enlarge-window 1 horizontal)
-                (setq count (1- count)))
-            (progn
-              (shrink-window 1 horizontal)
-              (setq count (1+ count))))
-          (if (= nwins (length (window-list)))
-              (setq wincfg (current-window-configuration))
-            (throw 'done t)))))
-    (set-window-configuration wincfg)))
+  (let ((count (- new-size (if horizontal (window-width) (window-height)))))
+    (if (>= emacs-major-version 24)
+        (enlarge-window count horizontal)
+      (let ((wincfg (current-window-configuration))
+            (nwins (length (window-list)))
+            (inhibit-redisplay t))
+        (catch 'done
+          (save-window-excursion
+            (while (not (zerop count))
+              (if (> count 0)
+                  (progn
+                    (enlarge-window 1 horizontal)
+                    (setq count (1- count)))
+                (progn
+                  (shrink-window 1 horizontal)
+                  (setq count (1+ count))))
+              (if (= nwins (length (window-list)))
+                  (setq wincfg (current-window-configuration))
+                (throw 'done t)))))
+        (set-window-configuration wincfg)))))
 
 (defun evil-get-buffer-tree (wintree)
   "Extracts the buffer tree from a given window tree WINTREE."
@@ -3519,30 +3637,6 @@ if the previous state was Emacs state."
       (with-current-buffer evil-execute-in-emacs-state-buffer
         (evil-change-to-previous-state)))
     (setq evil-execute-in-emacs-state-buffer))))
-
-;; TODO: this will probably not work well with the repeat-system.
-(evil-define-command evil-esc (arg)
-  "Wait for further keys within `evil-esc-delay'.
-Otherwise send [escape]."
-  :repeat ignore
-  (interactive "P")
-  (if (sit-for evil-esc-delay t)
-      (progn
-        (push 'escape unread-command-events)
-        (when defining-kbd-macro
-          ;; we need to replace the ESC by 'escape in the currently
-          ;; defined keyboard macro
-          (evil-save-echo-area
-            (end-kbd-macro)
-            (setq last-kbd-macro (vconcat last-kbd-macro [escape]))
-            (start-kbd-macro t t))))
-    (push last-command-event unread-command-events)
-    ;; preserve prefix argument
-    (setq prefix-arg arg))
-  ;; disable interception for the next key sequence
-  (evil-esc-mode -1)
-  (setq this-command last-command)
-  (add-hook 'pre-command-hook #'evil-turn-on-esc-mode nil t))
 
 (defun evil-exit-visual-and-repeat (event)
   "Exit insert state and repeat event.

@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -73,23 +73,6 @@
 (evil-declare-insert-at-point-repeat 'mouse-yank-secondary)
 
 ;;; key-binding
-
-;; disable evil-esc-mode during a call to key-binding
-(defadvice key-binding (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
-
-;; disable evil-esc-mode during the read of a key-sequence
-;; TODO: should we handle the special ESC-delay, too?
-(defadvice read-key-sequence (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
-
-;; disable evil-esc-mode during the read of a key-sequence
-;; TODO: should we handle the special ESC-delay, too?
-(defadvice read-key-sequence-vector (around evil activate)
-  (let (evil-esc-mode)
-    ad-do-it))
 
 ;; Calling `keyboard-quit' should cancel repeat
 (defadvice keyboard-quit (before evil activate)

@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -25,6 +25,7 @@
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
 (require 'evil-vars)
+(require 'evil-digraphs)
 (require 'rect)
 
 ;;; Code:
@@ -614,6 +615,36 @@ This command can be used wherever `read-quoted-char' is required
 as a command. Its main use is in the `evil-read-key-map'."
   (interactive)
   (read-quoted-char))
+
+(defun evil-read-digraph-char (&optional hide-chars)
+  "Read two keys from keyboard forming a digraph.
+This function creates an overlay at (point), hiding the next
+HIDE-CHARS characters. HIDE-CHARS defaults to 1."
+  (interactive)
+  (let (char1 char2 string overlay)
+    (unwind-protect
+        (progn
+          (setq overlay (make-overlay (point)
+                                      (min (point-max)
+                                           (+ (or hide-chars 1)
+                                              (point)))))
+          (overlay-put overlay 'invisible t)
+          ;; create overlay prompt
+          (setq string "?")
+          (put-text-property 0 1 'face 'minibuffer-prompt string)
+          ;; put cursor at (i.e., right before) the prompt
+          (put-text-property 0 1 'cursor t string)
+          (overlay-put overlay 'after-string string)
+          (setq char1 (read-key))
+          (setq string (string char1))
+          (put-text-property 0 1 'face 'minibuffer-prompt string)
+          (put-text-property 0 1 'cursor t string)
+          (overlay-put overlay 'after-string string)
+          (setq char2 (read-key)))
+      (delete-overlay overlay))
+    (or (evil-digraph (list char1 char2))
+        ;; use the last character if undefined
+        (cadr char2))))
 
 (defun evil-read-motion (&optional motion count type modifier)
   "Read a MOTION, motion COUNT and motion TYPE from the keyboard.
@@ -1214,6 +1245,33 @@ POS defaults to the current position of point."
         (and (> pos (match-beginning 0))
              (< pos (match-end 0)))))))
 
+(defun evil-in-string-p (&optional pos)
+  "Whether POS is inside a string.
+POS defaults to the current position of point."
+  (save-excursion
+    (let ((state (syntax-ppss pos)))
+      (and (nth 3 state) (nth 8 state)))))
+
+(defun evil-string-beginning (&optional pos)
+  "Return beginning of string containing POS.
+POS defaults to the current position of point."
+  (evil-normalize-position (evil-in-string-p)))
+
+(defun evil-string-end (&optional pos limit)
+  "Return end of string containing POS.
+POS defaults to the current position of point. Stops at LIMIT,
+which defaults to the end of the buffer."
+  (save-excursion
+    (let ((state (syntax-ppss pos)))
+      (when (nth 3 state)
+        (parse-partial-sexp (or pos (point))
+                            (or limit (point-max))
+                            nil
+                            nil
+                            state
+                            'syntax-table)
+        (evil-normalize-position (point))))))
+
 (defun evil-in-comment-p (&optional pos)
   "Checks if POS is within a comment according to current syntax.
 If POS is nil, (point) is used. The return value is the beginning
@@ -1294,39 +1352,6 @@ closer if MOVE is non-nil."
          (not (evil-in-comment-p (1+ (point))))
          (prog1 t (when move (forward-char)))))))
 
-(defun evil-in-string-p (&optional pos)
-  "Whether POS is inside a string.
-POS defaults to the current position of point."
-  (save-excursion
-    (goto-char (or pos (point)))
-    (and (nth 3 (parse-partial-sexp
-                 (save-excursion (beginning-of-defun) (point))
-                 (point))) t)))
-
-(defun evil-find-beginning (predicate &optional pos limit)
-  "Find the beginning of a series of characters satisfying PREDICATE.
-POS is the starting point and defaults to the current position.
-Stops at LIMIT, which defaults to the beginning of the buffer."
-  (setq pos (or pos (point))
-        limit (or limit (buffer-end -1)))
-  (while (let ((prev (1- pos)))
-           (when (and (>= prev limit)
-                      (funcall predicate prev))
-             (setq pos prev))))
-  pos)
-
-(defun evil-find-end (predicate &optional pos limit)
-  "Find the end of a series of characters satisfying PREDICATE.
-POS is the starting point and defaults to the current position.
-Stops at LIMIT, which defaults to the end of the buffer."
-  (setq pos (or pos (point))
-        limit (or limit (buffer-end 1)))
-  (while (let ((next (1+ pos)))
-           (when (and (<= next limit)
-                      (funcall predicate next))
-             (setq pos next))))
-  pos)
-
 (defun evil-comment-beginning (&optional pos)
   "Return beginning of comment containing POS.
 POS defaults to the current position of point."
@@ -1341,22 +1366,6 @@ POS defaults to the current position of point."
            (goto-char beg)
            (forward-comment 1)
            (1- (point))))))
-
-(defun evil-string-beginning (&optional pos)
-  "Return beginning of string containing POS.
-POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-string-p pos)
-      (evil-normalize-position
-       (1- (evil-find-beginning #'evil-in-string-p pos))))))
-
-(defun evil-string-end (&optional pos)
-  "Return end of string containing POS.
-POS defaults to the current position of point."
-  (let ((pos (or pos (point))))
-    (when (evil-in-string-p pos)
-      (evil-normalize-position
-       (1+ (evil-find-end #'evil-in-string-p pos))))))
 
 (defmacro evil-narrow-to-comment (&rest body)
   "Narrow to the current comment or docstring, if any."
@@ -1501,6 +1510,7 @@ The following special registers are supported.
   :  the last command line (read only)
   .  the last inserted text (read only)
   -  the last small (less than a line) delete
+  _  the black hole register
   =  the expression register (read only)"
   (when (characterp register)
     (or (cond
@@ -1891,7 +1901,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (setq text (propertize text 'yank-handler (list yank-handler))))
     (when register
       (evil-set-register register text))
-    (kill-new text)))
+    (unless (eq register ?_)
+      (kill-new text))))
 
 (defun evil-yank-lines (beg end &optional register yank-handler)
   "Saves the lines in the region BEG and END into the kill-ring."
@@ -1906,7 +1917,8 @@ The tracked insertion is set to `evil-last-insertion'."
     (setq text (propertize text 'yank-handler yank-handler))
     (when register
       (evil-set-register register text))
-    (kill-new text)))
+    (unless (eq register ?_)
+      (kill-new text))))
 
 (defun evil-yank-rectangle (beg end &optional register yank-handler)
   "Stores the rectangle defined by region BEG and END into the kill-ring."
@@ -1927,7 +1939,8 @@ The tracked insertion is set to `evil-last-insertion'."
                              'yank-handler yank-handler)))
       (when register
         (evil-set-register register text))
-      (kill-new text))))
+      (unless (eq register ?_)
+        (kill-new text)))))
 
 (defun evil-yank-line-handler (text)
   "Inserts the current text linewise."
@@ -2627,16 +2640,27 @@ use `evil-regexp-range'."
            ;; if OPEN is equal to CLOSE, handle as string delimiters
            ((eq open close)
             (modify-syntax-entry open "\"")
-            (while (not (or (eobp) (evil-in-string-p)))
-              (forward-char))
-            (when (evil-in-string-p)
-              (setq range (evil-range
-                           (if exclusive
-                               (1+ (evil-string-beginning))
-                             (evil-string-beginning))
-                           (if exclusive
-                               (1- (evil-string-end))
-                             (evil-string-end))))))
+            ;; syntax table is out-of-date, encourage reparsing
+            (let ((pnt (point)))
+              (beginning-of-defun)
+              (let ((state (parse-partial-sexp (point) pnt)))
+                (when (not (nth 3 state))
+                  (setq state (parse-partial-sexp (point)
+                                                  (point-max)
+                                                  0
+                                                  nil
+                                                  state
+                                                  'syntax-table)))
+                (when (nth 3 state)
+                  (let ((beg (nth 8 state)))
+                    (parse-partial-sexp (point) (point-max)
+                                        0
+                                        nil
+                                        state
+                                        'syntax-table)
+                    (setq range (evil-range
+                                 (if exclusive (1+ beg) beg)
+                                 (if exclusive (1- (point)) (point)))))))))
            (t
             ;; otherwise handle as open and close parentheses
             (modify-syntax-entry open (format "(%c" close))
@@ -2834,7 +2858,8 @@ If no description is available, return the empty string."
 All following buffer modifications are grouped together as a
 single action. If CONTINUE is non-nil, preceding modifications
 are included. The step is terminated with `evil-end-undo-step'."
-  (when (listp buffer-undo-list)
+  (when (and (listp buffer-undo-list)
+             (not evil-in-single-undo))
     (if evil-undo-list-pointer
         (evil-refresh-undo-step)
       (unless (or continue (null (car-safe buffer-undo-list)))
@@ -2844,7 +2869,8 @@ are included. The step is terminated with `evil-end-undo-step'."
 (defun evil-end-undo-step (&optional continue)
   "End a undo step started with `evil-start-undo-step'.
 Adds an undo boundary unless CONTINUE is specified."
-  (when evil-undo-list-pointer
+  (when (and evil-undo-list-pointer
+             (not evil-in-single-undo))
     (evil-refresh-undo-step)
     (unless continue
       (undo-boundary))
@@ -2891,7 +2917,8 @@ is stored in `evil-temporary-undo' instead of `buffer-undo-list'."
        (unwind-protect
            (progn
              (evil-start-undo-step)
-             ,@body)
+             (let ((evil-in-single-undo t))
+               ,@body))
          (evil-end-undo-step)))))
 
 (defun evil-undo-pop ()

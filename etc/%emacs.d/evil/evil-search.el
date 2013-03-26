@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 0.0.0
+;; Version: 1.0-dev
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -235,7 +235,7 @@ one more than the current position."
         (setq string (evil-search-message string forward))))
       (evil-flash-search-pattern string t))))
 
-(defun evil-search-symbol (forward)
+(defun evil-search-symbol (forward &optional unbounded)
   "Search for symbol near point.
 If FORWARD is nil, search backward, otherwise forward."
   (let ((string (car-safe regexp-search-ring))
@@ -251,9 +251,13 @@ If FORWARD is nil, search backward, otherwise forward."
       (evil-search string forward t))
      (t
       (setq string (evil-find-symbol forward))
-      (if (null string)
-          (error "No symbol under point")
-        (setq string (format "\\_<%s\\_>" (regexp-quote string))))
+      (cond
+       ((null string)
+        (error "No symbol under point"))
+       (unbounded
+        (setq string (regexp-quote string)))
+       (t
+        (setq string (format "\\_<%s\\_>" (regexp-quote string)))))
       (evil-search string forward t)))))
 
 (defun evil-find-symbol (forward)
@@ -926,7 +930,8 @@ current search result."
   (let ((evil-ex-current-buffer (current-buffer)))
     (setq evil-ex-search-count count
           evil-ex-search-direction direction
-          evil-ex-search-start-point (point))
+          evil-ex-search-start-point (point)
+          evil-ex-last-was-search t)
     (progn
       ;; ensure minibuffer is initialized accordingly
       (add-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
@@ -981,7 +986,8 @@ The DIRECTION argument should be either `forward' or
               evil-ex-search-direction direction
               evil-ex-search-pattern
               (evil-ex-make-pattern regex evil-ex-search-case t)
-              evil-ex-search-offset nil)
+              evil-ex-search-offset nil
+              evil-ex-last-was-search t)
         ;; update search history unless this pattern equals the
         ;; previous pattern
         (unless (equal (car-safe evil-ex-search-history) regex)
@@ -1015,7 +1021,7 @@ This handler highlights the pattern of the current substitution."
                  evil-ex-substitute-highlight-all
                  (not (zerop (length arg))))
         (condition-case lossage
-            (let* ((result (evil-ex-get-substitute-info arg))
+            (let* ((result (evil-ex-get-substitute-info arg t))
                    (pattern (pop result))
                    (replacement (pop result))
                    (range (or (evil-copy-range evil-ex-range)
@@ -1060,7 +1066,7 @@ This handler highlights the pattern of the current substitution."
   "Parse STRING as a global argument."
   (evil-delimited-arguments string 2))
 
-(defun evil-ex-get-substitute-info (string)
+(defun evil-ex-get-substitute-info (string &optional implicit-r)
   "Returns the substitution info of command line STRING.
 This function returns a three-element list \(PATTERN REPLACEMENT
 FLAGS) consisting of the substitution parts of STRING. PATTERN is
@@ -1068,12 +1074,15 @@ a ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a
 compiled replacement expression (see `evil-compile-replacement').
 The information returned is the actual substitution information
 w.r.t. to special situations like empty patterns or repetition of
-previous substitution commands."
+previous substitution commands. If IMPLICIT-R is non-nil, then
+the flag 'r' is assumed, i.e. in the case of an empty pattern the
+last search pattern is used. This will be used when called from
+a :substitute command with arguments."
   (let (pattern replacement flags)
     (cond
      ((or (null string) (string-match "^[a-zA-Z]" string))
       ;; starts with letter so there is no pattern because the
-      ;; separate must not be a letter repeat last substitute
+      ;; separator must not be a letter repeat last substitute
       (setq replacement evil-ex-substitute-replacement)
       ;; flags are everything that is not a white space
       (when (and string (string-match "[^[:space:]]+" string))
@@ -1086,21 +1095,27 @@ previous substitution commands."
         ;; if replacment equals "~" use previous replacement
         (if (equal replacement "~")
             (setq replacement evil-ex-substitute-replacement)
-          (setq replacement (evil-compile-replacement replacement))))))
+          (setq replacement (evil-compile-replacement replacement)))
+        ;; append implicit "r" flag if required
+        (when (and implicit-r (not (memq ?r (append flags nil))))
+          (setq flags (concat flags "r"))))))
     ;; if flags equals "&" add previous flags
     (if (and (not (zerop (length flags)))
              (= (aref flags 0) ?&))
         (setq flags (append (substring flags 1)
                             evil-ex-substitute-flags))
       (setq flags (append flags nil)))
-    ;; if no pattern, use previous pattern
+    ;; if no pattern, use previous pattern, either search or
+    ;; substitute pattern depending on `evil-ex-last-was-search' and
+    ;; the r flag
     (when (zerop (length pattern))
-      (if (memq ?r flags)
-          (setq pattern (and evil-ex-search-pattern
-                             (evil-ex-pattern-regex evil-ex-search-pattern))
-                flags (remq ?r flags))
-        (setq pattern (and evil-ex-substitute-pattern
-                           (evil-ex-pattern-regex evil-ex-substitute-pattern)))))
+      (setq pattern
+            (if (and evil-ex-last-was-search (memq ?r flags))
+                (and evil-ex-search-pattern
+                     (evil-ex-pattern-regex evil-ex-search-pattern))
+              (and evil-ex-substitute-pattern
+                   (evil-ex-pattern-regex evil-ex-substitute-pattern)))
+            flags (remq ?r flags)))
     ;; generate pattern
     (when pattern
       (setq pattern
@@ -1110,7 +1125,10 @@ previous substitution commands."
                  (and (memq ?I flags) 'sensitive)
                  evil-ex-substitute-case
                  evil-ex-search-case)
-             (memq ?g flags))))
+             (or (and (not evil-ex-substitute-global)
+                      (memq ?g flags))
+                 (and evil-ex-substitute-global
+                      (not (memq ?g flags)))))))
     (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()
