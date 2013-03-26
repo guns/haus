@@ -7,5 +7,6 @@ bundler-:Btabedit	bundler.txt	/*bundler-:Btabedit*
 bundler-:Bundle	bundler.txt	/*bundler-:Bundle*
 bundler-:Bvsplit	bundler.txt	/*bundler-:Bvsplit*
 bundler-about	bundler.txt	/*bundler-about*
+bundler-api	bundler.txt	/*bundler-api*
 bundler-commands	bundler.txt	/*bundler-commands*
 bundler.txt	bundler.txt	/*bundler.txt*
