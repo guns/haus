@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe "python" do
-  let(:vim) { VIM }
   let(:filename) { 'test.py' }
 
   before :each do
@@ -72,5 +71,20 @@ describe "python" do
     join
 
     assert_file_contents 'while True: loop()'
+  end
+
+  specify "splitting within a string" do
+    set_file_contents <<-EOF
+      run("one", "two", "three {}".format(four))
+    EOF
+
+    vim.search('one')
+    split
+
+    assert_file_contents <<-EOF
+      run("one",
+      "two",
+      "three {}".format(four))
+    EOF
   end
 end

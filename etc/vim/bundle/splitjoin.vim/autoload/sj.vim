@@ -375,6 +375,8 @@ function! s:Tabularize(from, to, type)
     let pattern = '^[^=>]*\zs=>'
   elseif a:type == 'css_declaration' || a:type == 'json_object'
     let pattern = '^[^:]*:\s*\zs\s/l0'
+  elseif a:type == 'lua_table'
+    let pattern = '^[^=]*\zs='
   else
     return
   endif
@@ -496,5 +498,5 @@ function! s:SkipSyntax(...)
   let syntax_groups = a:000
   let skip_pattern  = '\%('.join(syntax_groups, '\|').'\)'
 
-  return "synIDattr(synID(line('.'),col('.'),1),'name') =~ 'rubyInterpolationDelimiter'"
+  return "synIDattr(synID(line('.'),col('.'),1),'name') =~ '".skip_pattern."'"
 endfunction
