@@ -361,7 +361,7 @@ function! s:ExtraMappings() "{{{
 		silent! imap <unique> <buffer> <Del> <Plug>delimitMateDel
 	endif
 	" Flush the char buffer on movement keystrokes or when leaving insert mode:
-	for map in ['Esc', 'Left', 'Right', 'Home', 'End', 'C-Left', 'C-Right']
+	for map in ['Left', 'Right', 'Home', 'End', 'C-Left', 'C-Right']
 		exec 'inoremap <silent> <Plug>delimitMate'.map.' <C-R>=<SID>Finish()<CR><'.map.'>'
 		if !hasmapto('<Plug>delimitMate'.map, 'i') && maparg('<'.map.'>', 'i') == ''
 			exec 'silent! imap <unique> <buffer> <'.map.'> <Plug>delimitMate'.map
@@ -405,13 +405,6 @@ function! s:ExtraMappings() "{{{
 	inoremap <buffer> <Plug>delimitMateJumpMany <C-R>=len(b:_l_delimitMate_buffer) ? delimitMate#Finish(0) : delimitMate#JumpMany()<CR>
 	if !hasmapto('<Plug>delimitMateJumpMany', 'i') && maparg("<C-G>g", 'i') == ''
 		imap <silent> <buffer> <C-G>g <Plug>delimitMateJumpMany
-	endif
-
-	" The following simply creates an ambiguous mapping so vim fully processes
-	" the escape sequence for terminal keys, see 'ttimeout' for a rough
-	" explanation, this just forces it to work
-	if !has('gui_running') && (!exists('g:delimitMate_no_esc_mapping') || !g:delimitMate_no_esc_mapping) && maparg('<C-[>OC', 'i') == ''
-		imap <silent> <C-[>OC <RIGHT>
 	endif
 endfunction "}}}
 
