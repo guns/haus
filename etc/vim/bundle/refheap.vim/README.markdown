@@ -50,7 +50,7 @@ with an account, add the following to your `.vimrc`:
 
 ```
 let g:refheap_token = 'yourtokenhere'
-let g:refheap_user = 'username'
+let g:refheap_username = 'username'
 ```
 
 You can get your API token by logging in and navigating to the [RefHeap
