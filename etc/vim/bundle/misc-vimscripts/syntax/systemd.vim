@@ -118,7 +118,7 @@ syn match   sdDevAllow      contained /\/\S\+\s\+/ nextgroup=sdDevAllowPerm
 syn match   sdDevAllowPerm  contained /\S\+/ contains=sdDevAllowErr nextgroup=sdErr
 syn match   sdDevAllowErr   contained /[^rwm]\+/
 syn keyword sdStdin         contained nextgroup=sdErr null tty-force tty-fail socket tty
-syn match   sdStdout        contained nextgroup=sdErr /\%(syslog\|kmsg\)\%(+console\)\=/
+syn match   sdStdout        contained nextgroup=sdErr /\%(syslog\|kmsg\|journal\)\%(+console\)\=/
 syn keyword sdStdout        contained nextgroup=sdErr inherit null tty socket
 syn keyword sdSyslogFacil   contained nextgroup=sdErr kern user mail daemon auth syslog lpr news uucp cron authpriv ftp
 syn match   sdSyslogFacil   contained nextgroup=sdErr /\<local[0-7]\>/
