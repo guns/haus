@@ -255,7 +255,9 @@ function! s:LispBufferSetup()
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
     nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_select_outer_list``
+    nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_select_inner_element``
     imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
+    imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
