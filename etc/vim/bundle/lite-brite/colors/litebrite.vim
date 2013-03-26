@@ -621,24 +621,24 @@ hi link clojureDeref litebriteBoldRed
 hi link clojureDispatch litebriteBoldRed
 hi link clojureKeyword litebriteFuchsia
 hi link clojureMacro litebriteYellow
-hi link clojurePattern litebriteGreen
-hi link clojureUnquote litebriteBoldRed
-hi link clojureQuote litebriteBoldRed
 hi link clojureMeta litebriteBoldRed
+hi link clojurePattern litebriteGreen
+hi link clojureQuote litebriteBoldRed
 hi link clojureRegexp litebriteRegexp
-" These groups are currently in development.
-hi link clojureRegexpEscape litebriteEscapeChar
 hi link clojureRegexpBackRef litebriteRegexpBackRef
 hi link clojureRegexpBoundary litebriteRegexpBoundary
 hi link clojureRegexpCharClass Special
+hi link clojureRegexpEscape litebriteEscapeChar
+hi link clojureRegexpJavaCharClass litebriteRegexpBracketExp
 hi link clojureRegexpMod litebriteRegexpMod
 hi link clojureRegexpOr Conditional
 hi link clojureRegexpPosixCharClass litebriteRegexpBracketExp
-hi link clojureRegexpUnicodeCharClass litebriteRegexpBracketExp
-hi link clojureRegexpJavaCharClass litebriteRegexpBracketExp
 hi link clojureRegexpPredefinedCharClass litebriteRegexpCharClass
 hi link clojureRegexpQuantifier litebriteRegexpQuantifier
+hi link clojureRegexpQuoted litebriteTeal
 hi link clojureRegexpSpecialChar SpecialChar
+hi link clojureRegexpUnicodeCharClass litebriteRegexpBracketExp
+hi link clojureUnquote litebriteBoldRed
 hi link clojureVariable litebriteBoldWhite
 
 " }}}
