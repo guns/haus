@@ -209,8 +209,8 @@ function! VimFoldExpr(lnum) "{{{1
         return '='
     elseif line =~# '\v^\s*(fu%[nction]|com%[mand]|aug%[roup])'
         return '>1'
-    elseif line[0] ==# '"'
-        return getline(a:lnum - 1)[0] ==# '"' ? '=' : '>1'
+    elseif line[0] ==# '"' && getline(a:lnum - 1)[0] !=# '"'
+        return '>1'
     else
         return '='
     endif
@@ -228,10 +228,11 @@ function! VimHelpFoldExpr(lnum) "{{{1
 endfunction
 
 function! LispFoldExpr(lnum) "{{{1
-    if getline(a:lnum)[0] ==# '('
+    let line = getline(a:lnum)
+    if line[0] ==# '('
         return '>1'
-    elseif getline(a:lnum + 1)[0] ==# ';'
-        return 's1'
+    elseif line[0] ==# ';' && getline(a:lnum - 1)[0] !=# ';'
+        return '>1'
     else
         return '='
     endif
