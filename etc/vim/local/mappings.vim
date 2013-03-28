@@ -439,12 +439,6 @@ noremap! <M-BS> <C-w>
 noremap  <C-_> :<C-u>undo<CR>
 inoremap <C-_> <C-\><C-n><C-_>
 
-" Forward-change-case
-noremap <M-u> guWW
-map!    <M-u> <C-\><C-o>guW<C-\><C-o>W
-noremap <M-U> gUWW
-map!    <M-U> <C-\><C-o>gUW<C-\><C-o>W
-
 " Join lines
 noremap  <Leader>j J
 inoremap <Leader>j <C-\><C-o>J
