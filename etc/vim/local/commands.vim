@@ -20,7 +20,7 @@ endfunction
 command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
 function! s:Mapall(...)
     execute 'noremap  ' . join(a:000)
-    execute 'noremap! ' . a:1 . ' <C-\><C-n>' . join(a:000[1:])
+    execute 'noremap! ' . a:1 . ' <Esc>' . join(a:000[1:])
 endfunction
 
 command! -nargs=* -bang -bar SetWhitespace call <SID>SetWhitespace('<bang>', <f-args>) "{{{1

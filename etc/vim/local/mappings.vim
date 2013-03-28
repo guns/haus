@@ -56,14 +56,13 @@ let g:maplocalleader = '-'
 "   * Complete (don't cancel) visual block insertions
 "   * Alway break out of Select mode
 "
-" Bind: v_Ctrl-C => v_Ctrl-\_Ctrl-N
-" Bind: s_Ctrl-C => s_Ctrl-\_Ctrl-N
-vnoremap <C-c> <C-\><C-n>
+" Bind: v_Ctrl-C => <Esc>
+vnoremap <C-c> <Esc>
 
 " Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
 " and double ESC as our secondary.
-noremap! <Esc><Esc> <C-\><C-n>
+noremap! <Esc><Esc> <Esc>
 
 """ Emacs: Ctrl-A (start-of-line) {{{1
 
@@ -424,9 +423,9 @@ MapReadlineUnicodeBindings
 
 " Insert other special characters
 nnoremap <M-CR> i\n<C-\><C-o><C-\><C-n>
-vnoremap <M-CR> c\n<C-\><C-n>
+vnoremap <M-CR> c\n<Esc>
 noremap! <M-CR> \n
-noremap  <4-CR> A;<C-\><C-n>
+noremap  <4-CR> A;<Esc>
 inoremap <4-CR> <C-\><C-o>A;
 cnoremap <4-CR> <End>;
 
@@ -437,7 +436,7 @@ noremap! <M-BS> <C-w>
 " REPLACE switch-keyboard-language with nothing to alias (nvoi)<C-_>
 " as undo-and-return-to-normal-mode
 noremap  <C-_> :<C-u>undo<CR>
-inoremap <C-_> <C-\><C-n><C-_>
+inoremap <C-_> <Esc>:<C-u>undo<CR>
 
 " Join lines
 noremap  <Leader>j J
@@ -445,7 +444,7 @@ inoremap <Leader>j <C-\><C-o>J
 
 " Select all
 nnoremap <4-a> VggoG
-vnoremap <4-a> <C-\><C-n>VggoG
+vnoremap <4-a> <Esc>VggoG
 
 " Kill trailing whitespace
 noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
@@ -455,22 +454,22 @@ noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//
 noremap! <C-l> ->
 
 " Indent lines (à la TextMate)
-nnoremap <4-[> a<C-d><C-\><C-n>
-nnoremap <4-]> a<C-t><C-\><C-n>
+nnoremap <4-[> a<C-d><Esc>
+nnoremap <4-]> a<C-t><Esc>
 vnoremap <4-[> <gv
 vnoremap <4-]> >gv
 
 " http://vim.wikia.com/wiki/Moving_lines_up_or_down
 nnoremap <M-j> :move+<CR>==
 nnoremap <M-k> :move-2<CR>==
-inoremap <M-j> <C-\><C-o><C-\><C-n>:move+<CR>==gi
-inoremap <M-k> <C-\><C-o><C-\><C-n>:move-2<CR>==gi
+inoremap <M-j> <Esc>:move+<CR>==gi
+inoremap <M-k> <Esc>:move-2<CR>==gi
 vnoremap <M-j> :move'>+<CR>gv=gv
 vnoremap <M-k> :move-2<CR>gv=gv
 
 " http://vim.wikia.com/wiki/Drag_words_with_Ctrl-left/right
-vnoremap <M-h> <C-\><C-n>`<<Left>i_<C-\><C-n>mz"_xgvx`zPgv<Left>o<Left>o
-vnoremap <M-l> <C-\><C-n>`><Right>gvxpgv<Right>o<Right>o
+vnoremap <M-h> <Esc>`<<Left>i_<Esc>mz"_xgvx`zPgv<Left>o<Left>o
+vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 
 " Web queries
 for [g:lhs, g:rhs] in [['d', 'qdictionary'],
