@@ -251,11 +251,11 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     m`=<Plug>sexp_select_outer_list``
+    nmap     <silent><buffer> ==     m`=<Plug>sexp_outer_list``
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
-    nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_select_outer_list``
-    nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_select_inner_element``
+    nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_outer_list``
+    nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
