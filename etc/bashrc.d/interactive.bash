@@ -709,7 +709,19 @@ ALIAS net='netcfg' \
 
 # cURL
 ALIAS get='curl -#L' \
-      geto='curl -#LO'
+      geto='curl -#LO' && {
+    httpget() {
+        ruby -r webrick -e '
+            req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
+            req.parse $stdin
+            cmd = %W[curl -#LA #{req.header["user-agent"].first || ["Gecko"]}]
+            cmd << "-o" << ARGV.first unless ARGV.empty?
+            cmd << req.request_uri.to_s
+            p cmd
+            exec *cmd
+        ' -- "$@"
+    }
+}
 
 # DNS
 ALIAS digx='dig -x'
@@ -761,7 +773,7 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    ngg() { run ngrep -l -W byline -d "$@"; }
+    ngg() { run ngrep -l -P '' -W byline -d "$@"; }
     _ngg() { local cur="${COMP_WORDS[COMP_CWORD]}"; _available_interfaces; }
     complete -F _ngg ngg
 }
@@ -1163,7 +1175,7 @@ type ruby &>/dev/null && {
     }
 
     # Simple webserver
-    httpserver() { rackup -b 'run Rack::Directory.new(".")' "$@"; }
+    httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 }
 
 ### Python
