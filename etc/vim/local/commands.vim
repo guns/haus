@@ -256,8 +256,12 @@ function! s:LispBufferSetup()
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
     nmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>sexp_outer_list``
-    nmap <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
+
+    nmap <silent><buffer> <Leader>X        <Plug>FireplacePrint<Plug>sexp_outer_top_list``
+    imap <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
+
+    nmap <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
 
@@ -284,19 +288,19 @@ function! s:ScreenSetup(setup)
 
     if a:setup
         " RECURSIVE map for cascading mappings
-        execute 'vmap <Leader>X :ScreenSend<CR>'
-        execute 'nmap <Leader>X ' . select . '<Leader>X``'
-        execute 'imap <Leader>X <C-\><C-o><C-\><C-n><Leader>X'
+        execute 'vmap <Leader>S :ScreenSend<CR>'
+        execute 'nmap <Leader>S ' . select . '<Leader>S``'
+        execute 'imap <Leader>S <C-\><C-o><C-\><C-n><Leader>S'
 
-        execute 'nmap <Leader>F ' . topsel . '<Leader>X``'
+        execute 'nmap <Leader>F ' . topsel . '<Leader>S``'
         execute 'imap <Leader>F <C-\><C-o><C-\><C-n><Leader><C-f>'
 
         nmap <Leader>Q :ScreenQuit<CR>
     else
         if !g:ScreenShellActive
-            execute 'silent! vunmap <Leader>X'
-            execute 'silent! nunmap <Leader>X'
-            execute 'silent! iunmap <Leader>X'
+            execute 'silent! vunmap <Leader>S'
+            execute 'silent! nunmap <Leader>S'
+            execute 'silent! iunmap <Leader>S'
 
             silent! nunmap <Leader><C-f>
             silent! iunmap <Leader><C-f>
