@@ -209,7 +209,6 @@ let g:UltiSnipsListSnippets = '<4-f>'
 let g:UltiSnipsExpandTrigger = '<Tab>'
 let g:UltiSnipsJumpForwardTrigger = '<Tab>'
 let g:UltiSnipsJumpBackwardTrigger = '<S-tab>'
-let g:UltiSnipsRemoveSelectModeMappings = 0
 
 " Plugin: Tagbar
 let g:tagbar_autofocus = 1
