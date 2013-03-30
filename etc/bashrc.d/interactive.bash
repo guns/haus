@@ -1378,6 +1378,11 @@ HAVE cert && {
     complete -F _cx cx
 }
 
+java-import-keystore() {
+    (($# == 2)) || { echo "USAGE: $FUNCNAME crtfile keystore"; return 1; }
+    run keytool -storepass changeit -importcert -file "$1" -keystore "$2"
+}
+
 if __OS_X__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
     alias security-dump-certificates='run security export -t certs'
