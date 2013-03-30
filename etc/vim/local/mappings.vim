@@ -39,7 +39,7 @@ noremap! <C-t> <C-x>
 " Bind: i_Ctrl-X => i_Ctrl-\_Ctrl-N_<Leader>
 " Bind: c_Ctrl-X => c_Ctrl-\_Ctrl-N_<Leader>
 let g:mapleader = ''
-map! <Leader> <C-\><C-n><Leader>
+noremap! <Leader> <C-\><C-n><Leader>
 
 " REPLACE move-up-and-start-of-line (nvo)- with <LocalLeader>
 " Bind:   - =>   <LocalLeader>
