@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+abort if Process.euid.zero? or system 'pgrep', 'pianobar'
+
+Process.detach fork {
+  fifo = File.expand_path '~/.config/pianobar/ctl'
+  3.times do
+    sleep 0.2
+    if File.pipe? fifo
+      pw = %x(pass pandora.com/self@sungpae.com)
+      File.open fifo, 'w' do |f|
+        f.puts 'self@sungpae.com', pw
+      end
+      exit
+    end
+  end
+}
+
+exec 'pianobar'
