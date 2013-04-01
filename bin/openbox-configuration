@@ -1,6 +1,6 @@
 #!/usr/bin/env lein-exec
 
-(leiningen.exec/deps '[[hiccup "1.0.2"]])
+(leiningen.exec/deps '[[hiccup "1.0.3"]])
 
 (require '[hiccup.core :as hiccup]
          '[hiccup.page :as page]
@@ -168,9 +168,9 @@
 
 (def config-desktops
   [:desktops
-   [:number "2"]
+   [:number "3"]
    [:firstdesk "1"]
-   [:names [:name "One"] [:name "Two"]]
+   [:names [:name "One"] [:name "Two"] [:name "Three"]]
    [:popupTime "100"]])
 
 (def config-resize
@@ -215,7 +215,6 @@
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
    (bindfocus "W-F3" "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
-   (bindsh "A-F3" ["notify --audio - < <(hwctl toggle-alsa-card)"])
    (bindsh "F3" "ponymix toggle")
    (bindsh "F4" "ponymix decrease 5")
    (bindsh "F5" "ponymix increase 5")
