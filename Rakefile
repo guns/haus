@@ -40,7 +40,6 @@ task :env do
       {
         :base   => "#{@src}/password-store",
         :branch => %w[master guns],
-        :push   => 'github',
         :files  => {
           'src/password-store.sh'        => 'bin/pass',
           'man/pass.1'                   => 'share/man/man1/pass.1',
@@ -88,7 +87,6 @@ task :env do
       {
         :base   => "#{@src}/tmux",
         :branch => %w[master guns],
-        :push   => 'github',
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
@@ -147,10 +145,10 @@ task :env do
       { :base => "#{@vim}/operator-camelize.vim",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/rainbow_parentheses.vim",:branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/refheap.vim",            :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
+      { :base => "#{@vim}/regbuf.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/reporoot.vim",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/scratch.vim",            :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/screen.vim",             :branch => %w[master guns], :files => :pathogen, :push => 'github' },
+      { :base => "#{@vim}/screen.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/Shebang",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/splitjoin.vim",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/tagbar",                 :branch => %w[master guns], :files => :pathogen },
@@ -161,7 +159,7 @@ task :env do
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-eunuch",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fireplace",          :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
+      { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-git",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-javascript",         :branch => %w[master],      :files => :pathogen },
@@ -173,8 +171,8 @@ task :env do
       { :base => "#{@vim}/vim-rake",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-scriptease",         :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen, :push => 'github' },
-      { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen, :push => 'github' },
+      { :base => "#{@vim}/vim-surround",           :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-unimpaired",         :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-varnish",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-visual-star-search", :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",        :branch => %w[master guns], :files => :pathogen },
@@ -235,7 +233,6 @@ task :env do
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
-        :push   => 'github',
         :files  => lambda { |proj|
           dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
           FileUtils.mkdir_p dst
@@ -294,7 +291,6 @@ task :env do
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master guns],
-        :push   => 'github',
         :files  => 'etc/%urxvt/ext',
       }
     ]
