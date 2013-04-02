@@ -264,8 +264,6 @@
    (bindtile "W-C-z" {:x "5%"     :y "50%"    :width "45%" :height "45%"} "west" "south")
    (bindtile "W-C-c" {:x "50%"    :y "50%"    :width "45%" :height "45%"} "east" "south")
    ;; Desktop switching
-   (bind "C-1" ["GoToDesktop" [:to "left"] [:wrap "yes"]])
-   (bind "C-2" ["GoToDesktop" [:to "right"] [:wrap "yes"]])
    (bind "W-C-k" ["GoToDesktop" [:to "left"] [:wrap "yes"]])
    (bind "W-C-j" ["GoToDesktop" [:to "right"] [:wrap "yes"]])
    (bind "W-C-h" ["SendToDesktop" [:to "left"] [:wrap "yes"]])
