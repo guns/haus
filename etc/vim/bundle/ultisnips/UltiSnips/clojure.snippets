@@ -498,7 +498,7 @@ endsnippet
 ### Functions {{{1
 
 snippet fn "fn" w
-(fn [$0] )
+(fn [$1] $0)
 endsnippet
 
 snippet app "apply" w
@@ -800,7 +800,7 @@ snippet at "atom" w
 endsnippet
 
 
-### Strings {{{1
+### Strings and Numbers {{{1
 
 snippet str "str" w
 (str ${0:items})
@@ -818,6 +818,17 @@ snippet k "keyword" w
 (keyword $0)
 endsnippet
 
+snippet rand "rand" w
+(rand $0)
+endsnippet
+
+snippet randi "rand-int" w
+(rand-int $0)
+endsnippet
+
+snippet randn "rand-nth" w
+(rand-nth $0)
+endsnippet
 
 ### IO {{{1
 
