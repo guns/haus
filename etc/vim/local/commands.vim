@@ -299,11 +299,12 @@ function! s:ClojureCheatSheet(pattern)
             \ . '                              (sort-by str namespaces))))'
             \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
             \ . '    (if (seq matches)'
-            \ . '      (let [_ (clojure.java.io/make-parents "tmp/vim/file")'
-            \ . '            tmp (.getAbsolutePath (java.io.File/createTempFile "cheat-sheet-" ".clj" (java.io.File. "tmp/vim")))]'
+            \ . '      (let [tmp (format "tmp/vim/cheat-sheet-%s.clj" '
+            \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
+            \ . '        (clojure.java.io/make-parents tmp)'
             \ . '        (spit tmp (str (apply cheat-sheet matches)'
-            \ . '                       "\n\n;; vim:fdm=marker:"))'
-            \ . '        tmp)'
+            \ . '                       "\n\n;; vim:fdm=marker:ro:noma:"))'
+            \ . '        (.getAbsolutePath (java.io.File. tmp)))'
             \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
             \ )
         let g:__clojure_cheat_sheets__[b:leiningen_root][a:pattern] = file
