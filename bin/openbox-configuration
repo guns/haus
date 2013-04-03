@@ -237,8 +237,8 @@
    (bindsh "W-A-t" "urxvt-client -g 120x30 -e htop")
    (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
    (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
-   (bindfocus "F9" "guns ❦")
-   (bindfocus "W-F9" "root ❦")
+   (bindfocus "F9" "guns ❦ EVA")
+   (bindfocus "W-F9" "root ❦ EVA")
    (bindfocus "W-A-F10" "gPodder" "gpodder")
    (bindfocus "A-F10" "♻ newsbeuter ♻"
               ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
