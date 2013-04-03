@@ -55,6 +55,33 @@ set cpo&vim
 
 " }}}
 
+function! screen#ScreenShellSetup(setup)
+    let sexp_filetypes = exists('g:sexp_filetypes') ? '\v<' . g:sexp_filetypes . '>' : nr2char(0x01)
+    let select = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_list' : 'vip'
+    let topsel = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_top_list' : 'VggoG'
+
+    if a:setup
+        " RECURSIVE map for cascading mappings
+        execute 'vmap <silent><buffer> <Leader><Leader> :ScreenSend<CR>'
+        execute 'nmap <silent><buffer> <Leader><Leader> m`' . select . '<Leader><Leader>``'
+        execute 'imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>'
+
+        execute 'nmap <silent><buffer> <Leader>X m`' . topsel . '<Leader><Leader>``'
+        execute 'imap <silent><buffer> <Leader>X <C-\><C-o><C-\><C-n><Leader><Leader>X'
+
+        nmap <silent><buffer> <Leader>Q :ScreenQuit<CR>
+    else
+        silent! vunmap <buffer> <Leader><Leader>
+        silent! nunmap <buffer> <Leader><Leader>
+        silent! iunmap <buffer> <Leader><Leader>
+
+        silent! nunmap <buffer> <Leader>X
+        silent! iunmap <buffer> <Leader>X
+
+        silent! nunmap <buffer> <Leader>Q
+    endif
+endfunction
+
 function! screen#ScreenShell(cmd, ...) " {{{
   " Open a split shell.
   " Optional args:
@@ -213,6 +240,7 @@ function! s:ScreenBootstrap(cmd) " {{{
     let g:ScreenShellActive = 0
     let g:ScreenShellCmd = ''
     try
+      call screen#ScreenShellSetup(0)
       doautoall ScreenShellExit User
     catch /E216/
     endtry
@@ -389,6 +417,7 @@ function! s:ScreenInit(cmd) " {{{
       let g:ScreenShellActive = 1
       let g:ScreenShellCmd = a:cmd
       try
+        call screen#ScreenShellSetup(1)
         doautoall ScreenShellEnter User
       catch /E216/
       endtry
@@ -516,6 +545,7 @@ function! s:ScreenQuit(owner, onleave) " {{{
     let g:ScreenShellActive = 0
     let g:ScreenShellCmd = ''
     try
+      call screen#ScreenShellSetup(0)
       doautoall ScreenShellExit User
     catch /E216/
     endtry

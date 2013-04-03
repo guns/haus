@@ -231,20 +231,9 @@ augroup GUNS
     autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service,*.socket,*.swap,*.target,*.timer
         \ set filetype=systemd
 
+    " PostgreSQL {{{1
     autocmd BufRead,BufNewFile psql.edit.*
         \ setlocal filetype=sql
 
-    augroup ScreenShellEnter "{{{1
-        autocmd!
-        autocmd User *
-            \ ScreenEnterHandler
-    augroup END
-
-    augroup ScreenShellExit
-        autocmd!
-        autocmd User *
-            \ ScreenExitHandler
-    augroup END
-
-"}}}1
+" }}}1
 augroup END

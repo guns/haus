@@ -279,37 +279,6 @@ function! s:Screen(command)
     execute 'ScreenShell ' . cmd
 endfunction
 
-command! -bar ScreenEnterHandler call <SID>ScreenSetup(1) "{{{1
-command! -bar ScreenExitHandler  call <SID>ScreenSetup(0)
-function! s:ScreenSetup(setup)
-    let sexp_filetypes = exists('g:sexp_filetypes') ? '\v<' . g:sexp_filetypes . '>' : nr2char(0x01)
-    let select = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_list' : 'vip'
-    let topsel = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_top_list' : 'VggoG'
-
-    if a:setup
-        " RECURSIVE map for cascading mappings
-        execute 'vmap <Leader>S :ScreenSend<CR>'
-        execute 'nmap <Leader>S m`' . select . '<Leader>S``'
-        execute 'imap <Leader>S <C-\><C-o><C-\><C-n><Leader>S'
-
-        execute 'nmap <Leader>F m`' . topsel . '<Leader>S``'
-        execute 'imap <Leader>F <C-\><C-o><C-\><C-n><Leader><C-f>'
-
-        nmap <Leader>Q :ScreenQuit<CR>
-    else
-        if !g:ScreenShellActive
-            execute 'silent! vunmap <Leader>S'
-            execute 'silent! nunmap <Leader>S'
-            execute 'silent! iunmap <Leader>S'
-
-            silent! nunmap <Leader><C-f>
-            silent! iunmap <Leader><C-f>
-
-            silent! nunmap <Leader>Q
-        endif
-    endif
-endfunction
-
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! s:OrgBufferSetup()
     " RECURSIVE maps for <Plug> mappings
