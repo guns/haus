@@ -57,7 +57,8 @@ let g:maplocalleader = '-'
 "   * Alway break out of Select mode
 "
 " Bind: v_Ctrl-C => <Esc>
-vnoremap <C-c> <Esc>
+xnoremap <C-c> <Esc>
+snoremap <C-s> <Esc>
 
 " Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
