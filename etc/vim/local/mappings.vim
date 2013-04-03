@@ -588,8 +588,8 @@ map  <C-BS>    d<Plug>CamelCaseMotion_b
 map! <C-BS>    <C-\><C-o><C-BS>
 
 " Plugin: splitjoin.vim
-noremap <Leader>J :SplitjoinJoin<cr>
-noremap <Leader>S :SplitjoinSplit<cr>
+noremap <Leader>J :SplitjoinJoin<CR>
+noremap <Leader>S :SplitjoinSplit<CR>
 
 " Plugin: vim-commentary
 xmap <4-/>      <Plug>Commentary
