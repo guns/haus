@@ -270,8 +270,8 @@
    (bind "W-C-l" ["SendToDesktop" [:to "right"] [:wrap "yes"]])])
 
 (def config-mouse
-  (let [scroll-desktop (list (bindmouse ["W-C-Up" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]])
-                             (bindmouse ["W-C-Down" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]]))]
+  (let [scroll-desktop (list (bindmouse ["W-C-Up" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
+                             (bindmouse ["W-C-Down" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]]))]
     [:mouse
      [:dragThreshold "1"]
      [:doubleClickTime "200"]
