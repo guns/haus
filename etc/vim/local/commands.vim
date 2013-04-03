@@ -252,16 +252,16 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     =<Plug>sexp_outer_list``
+    nmap     <silent><buffer> ==     m`=<Plug>sexp_outer_list``
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
-    nmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>sexp_outer_list``
+    nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_outer_list``
     imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
 
-    nmap <silent><buffer> <Leader>X        <Plug>FireplacePrint<Plug>sexp_outer_top_list``
+    nmap <silent><buffer> <Leader>X        m`<Plug>FireplacePrint<Plug>sexp_outer_top_list``
     imap <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
 
-    nmap <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>sexp_inner_element``
+    nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
 
@@ -289,10 +289,10 @@ function! s:ScreenSetup(setup)
     if a:setup
         " RECURSIVE map for cascading mappings
         execute 'vmap <Leader>S :ScreenSend<CR>'
-        execute 'nmap <Leader>S ' . select . '<Leader>S``'
+        execute 'nmap <Leader>S m`' . select . '<Leader>S``'
         execute 'imap <Leader>S <C-\><C-o><C-\><C-n><Leader>S'
 
-        execute 'nmap <Leader>F ' . topsel . '<Leader>S``'
+        execute 'nmap <Leader>F m`' . topsel . '<Leader>S``'
         execute 'imap <Leader>F <C-\><C-o><C-\><C-n><Leader><C-f>'
 
         nmap <Leader>Q :ScreenQuit<CR>
