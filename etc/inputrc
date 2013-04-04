@@ -215,7 +215,8 @@ $if Bash
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-xV":        display-shell-version
     "\C-x\\":       "\C-] nohist \n"
-    "\C-x(":        "\C-a <(\C-e)\C-a"
+    "\C-x$":        "\C-a $(\C-e)\C-a"
+    "\C-x<":        "\C-a <(\C-e)\C-a"
 
     # Redirections
     "\C-x0":        " &>/dev/null "
