@@ -1669,7 +1669,7 @@ HAVE minecraft && _minecraft() {
     _get_comp_words_by_ref cur prev cword
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug' -- "$cur"))
+        COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug --help' -- "$cur"))
     elif [[ $cword -eq 1 ]]; then
         COMPREPLY=($(compgen -W 'start stop restart update repl' -- "$cur"))
     elif [[ $prev == @(-j|--jar) ]]; then
