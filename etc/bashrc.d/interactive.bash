@@ -1670,8 +1670,6 @@ HAVE minecraft && _minecraft() {
 
     if [[ $cur == -* ]]; then
         COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug --help' -- "$cur"))
-    elif [[ $cword -eq 1 ]]; then
-        COMPREPLY=($(compgen -W 'start stop restart update repl' -- "$cur"))
     elif [[ $prev == @(-j|--jar) ]]; then
         local jars="$(__lstype__ '/srv/games/minecraft' 'File.extname(f) == ".jar" and File.lstat(f).ftype == "file"')"
         local IFS=$'\n'
@@ -1684,6 +1682,8 @@ HAVE minecraft && _minecraft() {
         unset IFS
     elif [[ $prev == @(-g|--gamedir) ]]; then
         _filedir -d
+    else
+        COMPREPLY=($(compgen -W 'start stop restart update repl' -- "$cur"))
     fi
 } && complete -F _minecraft minecraft
 
