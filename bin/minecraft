@@ -8,6 +8,7 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
+require 'pathname'
 
 class Minecraft
   SERVER_DOWNLOAD_URL = 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar'
@@ -122,10 +123,10 @@ class Minecraft
 
     FileUtils.rm_f worldlink
     FileUtils.mkdir_p world, :mode => File.stat(gamedir).mode
-    FileUtils.ln_s world, worldlink
+    link_relative world, worldlink
 
     FileUtils.rm_f jarlink
-    FileUtils.ln_s gamedir(jarname), jarlink
+    link_relative gamedir(jarname), jarlink
   end
 
   def with_fifo
@@ -140,6 +141,11 @@ class Minecraft
 
   def have_rlwrap
     system '/bin/sh', '-c', 'type rlwrap &>/dev/null'
+  end
+
+  def link_relative src, dst
+    lsrc = Pathname.new(File.expand_path src).relative_path_from Pathname.new(File.expand_path dst).dirname
+    FileUtils.ln_s lsrc, dst
   end
 
   #
