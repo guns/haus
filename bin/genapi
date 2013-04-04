@@ -29,10 +29,6 @@ class Genapi
         Options:
       BANNER
 
-      opt.on '-c', '--clojure', 'Invoke Marginalia for a Clojure project' do
-        options.lang = :clojure
-      end
-
       opt.on '-o', '--outdir DIR' do |arg|
         options.outdir = arg
       end
@@ -87,28 +83,9 @@ class Genapi
     end
   end
 
-  def clojure_marginalia
-    jar    = File.expand_path '../../lib/clojure/marginalia.jar', __FILE__
-    cmd    = %W[java -jar #{jar}]
-    outdir = options.outdir ? options.outdir : File.join(options.apidir, File.basename(File.expand_path options.directory))
-
-    Dir.chdir options.directory do
-      check_output_directory outdir
-      puts cmd.join(' ')
-
-      if system *cmd
-        FileUtils.mkdir_p outdir
-        FileUtils.cp 'docs/uberdoc.html', File.join(outdir, 'index.html')
-      else
-        raise 'Doc generation unsuccessful'
-      end
-    end
-  end
-
   def call
     case options.lang
     when :ruby    then ruby_sdoc
-    when :clojure then clojure_marginalia
     else raise 'No language specified'
     end
   end
