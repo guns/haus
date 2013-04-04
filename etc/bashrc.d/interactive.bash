@@ -208,7 +208,11 @@ ALIAS t='type --' \
 ALIAS x='exec'
 alias wrld='while read l; do'; TCOMP exec wrld
 ALIAS comp='complete -p'
-__compreply__() { COMPREPLY=($(compgen -W "$@" -- ${COMP_WORDS[COMP_CWORD]})); }
+__compreply__() {
+    local cur
+    _get_comp_words_by_ref cur
+    COMPREPLY=($(compgen -W "$*" -- "$cur"));
+}
 
 # PATH prefixer
 path() { __prepend_path__ PATH "$@"; }
@@ -298,12 +302,19 @@ unset _d
 # Param: $2 Interior of Ruby block with filename `f`
 __lstype__() {
     ruby -e '
+        if ARGV.first == "-q"
+            require "shellwords"
+            quote = true
+            ARGV.shift
+        end
         Dir.chdir ARGV.first do
-            puts Dir.entries(".").reject { |e| e =~ /\A\.{1,2}\z/ }.select { |f|
+            fs = Dir.entries(".").reject { |e| e =~ /\A\.{1,2}\z/ }.select { |f|
                 eval ARGV[1]
             }.sort
+            fs.map! { |f| f.shellescape.shellescape } if quote
+            puts fs
         end
-    ' -- "$1" "$2"
+    ' -- "$@"
 }
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
@@ -1652,5 +1663,28 @@ if __OS_X__; then
 fi
 
 ALIAS kf='kupfer'
+
+HAVE minecraft && _minecraft() {
+    local cur prev cword
+    _get_comp_words_by_ref cur prev cword
+
+    if [[ $cur == -* ]]; then
+        COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug' -- "$cur"))
+    elif [[ $cword -eq 1 ]]; then
+        COMPREPLY=($(compgen -W 'start stop restart update repl' -- "$cur"))
+    elif [[ $prev == @(-j|--jar) ]]; then
+        local jars="$(__lstype__ '/srv/games/minecraft' 'File.extname(f) == ".jar" and File.lstat(f).ftype == "file"')"
+        local IFS=$'\n'
+        COMPREPLY=($(compgen -W "$jars" -- "$cur"))
+        unset IFS
+    elif [[ $prev == @(-w|--world) ]]; then
+        local saves="$(__lstype__ -q '/srv/games/minecraft/saves/minecraft_server' 'File.ftype(f) == "directory"')"
+        local IFS=$'\n'
+        COMPREPLY=($(compgen -W "$saves" -- "$cur"))
+        unset IFS
+    elif [[ $prev == @(-g|--gamedir) ]]; then
+        _filedir -d
+    fi
+} && complete -F _minecraft minecraft
 
 : # Return true
