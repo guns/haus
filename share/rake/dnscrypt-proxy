@@ -1,9 +1,0 @@
-# -*- encoding: utf-8 -*-
-
-task :default => :configure
-
-desc 'Configure dnscrypt-proxy'
-task :configure do
-  sh './autogen.sh' unless File.executable? 'configure'
-  sh *%W[./configure --prefix=#{ENV['PREFIX'] || '/opt/dnscrypt-proxy'}]
-end
