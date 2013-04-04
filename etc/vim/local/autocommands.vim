@@ -122,7 +122,7 @@ augroup GUNS
         \ setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
 
     " Nginx {{{1
-    autocmd BufRead,BufNewFile /opt/nginx/etc/*.conf,nginx.conf
+    autocmd BufRead,BufNewFile */nginx/etc/*.conf,nginx.conf
         \ setlocal filetype=nginx
     autocmd FileType nginx
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |

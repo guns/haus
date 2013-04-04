@@ -350,7 +350,7 @@ noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
 noremap <Leader>eM       :<C-u>execute 'TabOpen ' . substitute(resolve(expand('~/.mutt/muttrc')), '\V%', '\\\\\%', 'g')<CR>
-noremap <Leader>en       :<C-u>TabOpen /opt/nginx/etc/nginx.conf<CR>
+noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
 noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
