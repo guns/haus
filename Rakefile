@@ -12,6 +12,7 @@ require 'project/update'
 require 'project/subproject'
 require 'util/notification'
 require 'haus/logger'
+require 'haus/queue'
 
 include Haus::Loggable
 
@@ -326,6 +327,26 @@ task :update => :env do
   else
     Util::Notification.new(:message => 'Haus update failed.').call
   end
+
+  exit # Stop processing tasks!
+end
+
+desc 'Replace vim bundles with direct symlinks for development'
+task :vimlink => :env do
+  vs = @subprojects['vimfiles']
+  xs = []
+
+  ARGV.drop_while { |a| a != 'vimlink' }.drop(1).each do |pat|
+    xs.concat vs.select { |p| p.base =~ Regexp.new(pat, 'i') }.map(&:base)
+  end
+
+  q = Haus::Queue.new
+
+  xs.each do |src|
+    q.add_link src, "etc/vim/bundle/#{File.basename src}"
+  end
+
+  q.execute
 
   exit # Stop processing tasks!
 end
