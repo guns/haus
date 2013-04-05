@@ -3,24 +3,24 @@
 type _get_comp_words_by_ref _filedir &>/dev/null &&
 
 _haus() {
-    local cur prev cword words space=1
+    local cur prev cword words reply space=1
     _get_comp_words_by_ref cur prev cword words
 
     if ((cword == 1)); then
-        local reply=(link copy unlink)
+        reply=(link copy unlink)
     elif [[ $cur == -* ]]; then
-        local reply=(--path --users --force --noop --quiet --help)
+        reply=(--path --users --force --noop --quiet --help)
         if [[ "${words[1]}" == 'link' ]]; then
-            local reply+=(--absolute)
+            reply+=(--absolute)
         elif [[ "${words[1]}" == 'unlink' ]]; then
-            local reply+=(--all --broken)
+            reply+=(--all --broken)
         fi
     elif [[ $prev == @(-p|--path) ]]; then
         _filedir -d
-        local reply="${COMPREPLY[@]}"
+        reply="${COMPREPLY[@]}"
     elif [[ $prev == @(-u|--users) ]]; then
-        local space=0
-        local reply=($(ruby -r etc -e '
+        space=0
+        reply=($(ruby -r etc -e '
             cur = ARGV.first.split ",", -1
             pre = cur[0...-1].join ","
             pre << "," unless pre.empty?
@@ -38,7 +38,7 @@ _haus() {
     if ((space)); then
         local i
         for ((i = 0; i < ${#reply[@]}; ++i)); do
-            local reply[i]="${reply[i]} \
+            reply[i]="${reply[i]} \
 "
         done
     fi
