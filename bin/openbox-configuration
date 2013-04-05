@@ -134,7 +134,7 @@
 
 (def config-resistance
   [:resistance
-   [:strength "100"]
+   [:strength "400"]
    [:screen_edge_strength "65535"]])
 
 (def config-focus
