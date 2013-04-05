@@ -42,17 +42,24 @@ syn keyword sdTodo contained TODO XXX FIXME NOTE
 " see systemd.unit(5)
 syn region sdUnitBlock matchgroup=sdHeader start=/^\[Unit\]/ end=/^\[/me=e-2 contains=sdUnitKey
 syn match sdUnitKey contained /^Description=/
-syn match sdUnitKey contained /^\%(Requires\|RequiresOverridable\|Requisite\|RequisiteOverridable\|Wants\|BindTo\|Conflicts\|Before\|After\|OnFailure\|Names\)=/ nextgroup=sdUnitList
+syn match sdUnitKey contained /^Documentation=/ nextgroup=sdDocURI
+syn match sdUnitKey contained /^SourcePath=/ nextgroup=sdFilename,sdErr
+syn match sdUnitKey contained /^\%(Requires\|RequiresOverridable\|Requisite\|RequisiteOverridable\|Wants\|BindsTo\|PartOf\|Conflicts\|Before\|After\|OnFailure\|Names|PropagatesReloadTo\|ReloadPropagatedFrom\)=/ nextgroup=sdUnitList
 syn match sdUnitKey contained /^\%(OnFailureIsolate\|IgnoreOnIsolate\|IgnoreOnSnapshot\|StopWhenUnneeded\|RefuseManualStart\|RefuseManualStop\|AllowIsolate\|DefaultDependencies\)=/ nextgroup=sdBool,sdErr
 syn match sdUnitKey contained /^JobTimeoutSec=/ nextgroup=sdDuration,sdErr
-syn match sdUnitKey contained /^Condition\(PathExists\|PathExistsGlob\|PathIsDirectory\|DirectoryNotEmpty\|FileIsExecutable\)=|\=!\=/ contains=sdConditionFlag nextgroup=sdFilename,sdErr
+" ConditionXXX. Note that they all have an optional '|' after the '='
+syn match sdUnitKey contained /^Condition\(PathExists\|PathExistsGlob\|PathIsDirectory\|PathIsMountPoint\|PathIsReadWrite\|PathIsSymbolicLink\|DirectoryNotEmpty\|FileNotEmpty\|FileIsExecutable\)=|\=!\=/ contains=sdConditionFlag nextgroup=sdFilename,sdErr
 syn match sdUnitKey contained /^ConditionVirtualization=|\=!\=/ contains=sdConditionFlag nextgroup=sdVirtType,sdErr
 syn match sdUnitKey contained /^ConditionSecurity=|\=!\=/ contains=sdConditionFlag nextgroup=sdSecurityType,sdErr
-syn match sdUnitKey contained /^Condition\(KernelCommandLine\|Null\)=|\=!\=/ contains=sdConditionFlag
+syn match sdUnitKey contained /^ConditionCapability=|\=!\=/ contains=sdConditionFlag nextgroup=sdAnyCapName,sdErr
+syn match sdUnitKey contained /^Condition\%(KernelCommandLine\|Host\)=|\=!\=/ contains=sdConditionFlag
+syn match sdUnitKey contained /^Condition\%(ACPower\|Null\)=|\=/ contains=sdConditionFlag nextgroup=sdBool,sdErr
+" extra bits
 syn match sdUnitList       contained /.*/ contains=sdUnitName,sdErr
 syn match sdConditionFlag  contained /[!|]/
-syn keyword sdVirtType     contained nextgroup=sdErr qemu kvm vmware microsoft oracle xen pidns openvz
+syn keyword sdVirtType     contained nextgroup=sdErr vm container qemu kvm vmware microsoft oracle xen bochs chroot openvz lxc lxc-libvirt systemd-nspawn
 syn keyword sdSecurityType contained nextgroup=sdErr selinux
+syn match sdDocUri         contained /\%(https\=:\/\/\|file:\|info:\|man:\)\S\+\s*/ nextgroup=sdDocUri,sdErr
 
 " [Install] {{{1
 " see systemd.unit(5)
@@ -151,7 +158,7 @@ syn match sdServiceKey contained /^PIDFile=/ nextgroup=sdFilename,sdErr
 syn match sdServiceKey contained /^Type=/ nextgroup=sdServiceType,sdErr
 syn match sdServiceKey contained /^Restart=/ nextgroup=sdRestartType,sdErr
 syn match sdServiceKey contained /^NotifyAccess=/ nextgroup=sdNotifyType,sdErr
-syn keyword sdServiceType contained nextgroup=sdErr simple forking dbus oneshot notify
+syn keyword sdServiceType contained nextgroup=sdErr simple forking dbus oneshot notify idle
 syn keyword sdRestartType contained nextgroup=sdErr no on-success on-failure on-abort always
 syn keyword sdNotifyType  contained nextgroup=sdErr none main all
 
