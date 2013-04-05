@@ -114,7 +114,6 @@ rails-autocommands	rails.txt	/*rails-autocommands*
 rails-commands	rails.txt	/*rails-commands*
 rails-config/projections.json	rails.txt	/*rails-config\/projections.json*
 rails-configuration	rails.txt	/*rails-configuration*
-rails-custom-navigation	rails.txt	/*rails-custom-navigation*
 rails-dbext	rails.txt	/*rails-dbext*
 rails-gf	rails.txt	/*rails-gf*
 rails-global-settings	rails.txt	/*rails-global-settings*
@@ -129,8 +128,8 @@ rails-plugin-author	rails.txt	/*rails-plugin-author*
 rails-projection-abbreviations	rails.txt	/*rails-projection-abbreviations*
 rails-projection-affinity	rails.txt	/*rails-projection-affinity*
 rails-projection-alternate	rails.txt	/*rails-projection-alternate*
+rails-projection-command	rails.txt	/*rails-projection-command*
 rails-projection-compiler	rails.txt	/*rails-projection-compiler*
-rails-projection-format	rails.txt	/*rails-projection-format*
 rails-projection-keywords	rails.txt	/*rails-projection-keywords*
 rails-projection-related	rails.txt	/*rails-projection-related*
 rails-projection-task	rails.txt	/*rails-projection-task*

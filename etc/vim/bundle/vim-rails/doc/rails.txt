@@ -8,7 +8,6 @@ Author:  Tim Pope <http://tpo.pe/>
 |rails-gf|                          File Under Cursor - gf
 |rails-alternate-related|           Alternate and Related Files
 |rails-type-navigation|             File Type Commands
-|rails-custom-navigation|           Custom Navigation Commands
 |rails-rake|                    Rake
 |rails-scripts|                 Script Wrappers
 |rails-refactoring|             Refactoring Helpers
@@ -361,17 +360,6 @@ There are also "classic" versions of these commands that start with :R (e.g.,
 			editing a method of a controller.  If a view name is
 			given with an extension, a new file will be created.
 			This is a quick way to create a new view.
-
-Custom Navigation Commands  ~
-						*rails-custom-navigation*
-
-The officially supported way to create custom navigation commands is with
-projections, as described under |rails-projections|.
-
-						*rails-:Rnavcommand*
-:Rnavcommand [options] {name} [{path} ...]
-			Create a custom navigation command.  Deprecated in
-			favor of |rails-projections|.
 
 Finally, one Vim feature that proves helpful in conjunction with all of the
 above is |CTRL-^|.  This keystroke edits the previous file, and is helpful to
@@ -770,11 +758,11 @@ Vim syntax looks a lot like JSON, but with funky |line-continuation|:
 	      \   "test": [
 	      \     "test/unit/%s_uploader_test.rb",
 	      \     "spec/models/%s_uploader_spec.rb"
-	      \   ]
+	      \   ],
 	      \   "keywords": "process version"
 	      \ },
 	      \ "features/support/*.rb": {"command": "support"},
-	      \ "features/support/env.rb": {"command": support"}}
+	      \ "features/support/env.rb": {"command": "support"}}
 
 Keys can be either literal file names or globs containing a single asterisk.
 In the latter case, you can use placeholders in the values to plug in some
@@ -819,7 +807,7 @@ The full list of available options is as follows:
 	Provides a dictionary of abbreviations to define.  See
 	|rails-abbreviations|.  You might consider setting this in a "*"
 	projection.
-						*rails-projection-format*
+						*rails-projection-command*
 "command" ~
 	Names a navigation command to be created.  Use the same name on
 	multiple projections to combine them into a single command.  Glob
@@ -869,6 +857,10 @@ Rails file is loaded.
 						*config/rails.vim*
 This file used to be sourced automatically from the root of the application,
 but has been superseded by |rails-projections|.
+
+						*rails-:Rnavcommand*
+:Rnavcommand		This command has been superseded by
+			|rails-projections|.
 
 						*rails-:Rset*
 :Rset			This command has been superseded by

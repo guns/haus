@@ -9,9 +9,12 @@ features:
   context and knows about partials, fixtures, and much more.  There are
   two commands, `:A` (alternate) and `:R` (related) for easy jumping
   between files, including favorites like model to schema, template to
-  helper, and controller to functional test.  For more advanced usage,
-  `:Rmodel`, `:Rview`, `:Rcontroller`, and several other commands are
-  provided.  `:help rails-navigation`
+  helper, and controller to functional test.  Commands like `:Emodel`,
+  `:Eview`, `:Econtroller`, are provided to `:edit` files by type, along
+  with `S`, `V`, and `T` variants for `:split`, `:vsplit`, and
+  `:tabedit`.  Throw a bang on the end (`:Emodel foo!`) to automatically
+  create the file with the standard boilerplate if it doesn't exist.
+  `:help rails-navigation`
 
 * Enhanced syntax highlighting.  From `has_and_belongs_to_many` to
   `distance_of_time_in_words`, it's here.  For easy completion of these
@@ -37,6 +40,11 @@ features:
   appropriate `include` declaration left behind.
   `:help rails-:Rextract`
 
+* Fully customizable. Define "projections" at the global, app, or gem
+  level to define navigation commands and override the alternate file,
+  default rake task, syntax highlighting, abbreviations, and more.
+  `:help rails-projections`.
+
 * Integration with other plugins.  If
   [dbext.vim](http://www.vim.org/scripts/script.php?script_id=356) is
   installed, it will be transparently configured to reflect
@@ -55,7 +63,6 @@ then simply copy and paste:
     cd ~/.vim/bundle
     git clone git://github.com/tpope/vim-rails.git
     git clone git://github.com/tpope/vim-bundler.git
-
 
 You don't strictly need [bundler.vim][], but it helps.
 

@@ -6,7 +6,7 @@
 if exists('g:autoloaded_rails') || &cp
   finish
 endif
-let g:autoloaded_rails = '4.4'
+let g:autoloaded_rails = '5.0'
 
 " Utility Functions {{{1
 
@@ -1082,7 +1082,7 @@ function! s:app_tags_command() dict
     call s:error("ctags not found")
     return ''
   endif
-  let args = self.config('ctags_arguments', s:split(get(g:, 'rails_ctags_arguments', '--languages=-javascript')))
+  let args = s:split(get(g:, 'rails_ctags_arguments', '--languages=-javascript'))
   exe '!'.cmd.' -f '.s:escarg(self.path("tags")).' -R --langmap="ruby:+.rake.builder.jbuilder.rjs" '.join(args,' ').' '.s:escarg(self.path())
   return ''
 endfunction
@@ -1243,8 +1243,7 @@ function! s:readable_test_file_candidates() dict abort
           \ fnamemodify(f,':s?\<app/?spec/?')."_spec.rb",
           \ fnamemodify(f,':r:s?\<app/?spec/?')."_spec.rb",
           \ fnamemodify(f,':r:r:s?\<app/?spec/?')."_spec.rb",
-          \ s:sub(s:sub(dest,'<app/views/','test/functional/'),'/[^/]*$','_controller_test.rb')]
-    return [spec_format, spec_handler, spec_bare, test]
+          \ s:sub(s:sub(f,'<app/views/','test/functional/'),'/[^/]*$','_controller_test.rb')]
   elseif self.type_name('controller-api')
     let tests = [
           \ s:sub(s:sub(f,'/controllers/','/apis/'),'_controller\.rb$','_api.rb')]
@@ -1273,7 +1272,7 @@ function! s:readable_test_file_candidates() dict abort
           \ '<test/mailers/', 'test/functional/'),
           \ '<test/controllers/', 'test/functional/')
     let tests = s:uniq([test_file, old_test_file, spec_file])
-  elseif f =~# '\<\(test\|spec\)/\%(\1_helper\.rb$\|support\>\)' || f =~# '\<features/.*\.rb$'
+  elseif f =~# '\<\(test\|spec\)/\%(\1_helper\.rb$\|support\>\)' || f =~# '\%(\<spec/\)\@<!\<features/.*\.rb$'
     let tests = [matchstr(f, '.*\<\%(test\|spec\|features\)\>')]
   elseif self.type_name('test', 'spec', 'cucumber')
     let tests = [f]
@@ -1323,7 +1322,6 @@ function! s:readable_default_rake_task(...) dict abort
     let placeholders.l = lnum
     let last = self.last_method(lnum)
     if !empty(last)
-      let placeholders.m = last
       let placeholders.d = last
     endif
   endif
@@ -1665,7 +1663,9 @@ function! s:readable_runner_command(bang, count, arg) dict abort
     endif
 
     let compiler = get(file.projected('compiler'), 0, compiler)
-    if empty(findfile('compiler/'.compiler.'.vim', escape(&rtp, ' ')))
+    if compiler ==# 'testrb' || compiler ==# 'minitest'
+      let compiler = 'rubyunit'
+    elseif empty(findfile('compiler/'.compiler.'.vim', escape(&rtp, ' ')))
       let compiler = 'ruby'
     endif
 
@@ -1676,6 +1676,8 @@ function! s:readable_runner_command(bang, count, arg) dict abort
       let extra = ''
     elseif &makeprg =~# '^\%(testrb\|rspec\|cucumber\)\>' && self.app().has_path('.zeus.sock')
       let &l:makeprg = 'zeus ' . &l:makeprg
+    elseif compiler ==# 'rubyunit'
+      let &l:makeprg = 'ruby -Itest'
     elseif self.app().has_path('bin/' . &l:makeprg)
       let &l:makeprg = self.app().ruby_script_command('bin/' . &l:makeprg)
     elseif &l:makeprg !~# '^bundle\>' && self.app().has('bundler')
@@ -1965,7 +1967,7 @@ function! s:Edit(count,cmd,...)
     let str = ""
     let i = 1
     while i < a:0
-      let str .= "`=a:".i."` "
+      let str .= s:escarg(a:{i}) . " "
       let i += 1
     endwhile
     let file = a:{i}
@@ -2381,7 +2383,7 @@ function! s:app_commands() dict abort
   let all = self.projections()
   for pattern in reverse(sort(keys(all), function('rails#lencmp')))
     let projection = all[pattern]
-    for name in s:split(get(projection, 'command', ''))
+    for name in s:split(get(projection, 'command', get(projection, 'label', get(projection, 'name', get(projection, 'description', '')))))
       let command = {
             \ 'pattern': pattern,
             \ 'affinity': get(projection, 'affinity', '')}
@@ -2557,34 +2559,16 @@ function! s:Navcommand(bang,...)
   let suffix = '.rb'
   let affinity = ''
   for arg in a:000
-    if arg =~# '^-suffix='
-      let suffix = matchstr(arg,'-suffix=\zs.*')
-    elseif arg =~# '^-default='
-      let default = matchstr(arg,'-default=\zs.*')
-      if default =~# '()$'
-        let affinity = default[0:-3]
-        unlet default
-      endif
-    elseif arg !~# '^-'
-      if !exists('name')
-        let name = arg
-      else
-        let prefixes += [s:sub(arg, '/=$', '/')]
-      endif
+    if arg =~# '^[a-z]\+$'
+      for prefix in ['E', 'S', 'V', 'T', 'D', 'R', 'RE', 'RS', 'RV', 'RT', 'RD']
+        exe 'command! -buffer -bar -bang -nargs=* ' .
+              \ (prefix =~# 'D' ? '-range=0 ' : '') .
+              \ prefix . arg . ' :echoerr ' .
+              \ string(':Rnavcommand has been removed.  See :help rails-projections')
+      endfor
+      break
     endif
   endfor
-  if !exists('name') || name !~# '^[a-z]\+$'
-    return s:error("E182: Invalid command name")
-  endif
-  if empty(prefixes)
-    return ''
-  endif
-  let command = map(prefixes, '{"pattern": v:val . "*" . suffix, "affinity": affinity}')
-  if exists('default')
-    let command += [{"pattern": default}]
-  endif
-  let deprecation = ':Rnavcommand is deprecated.  See :help config/projections.json for replacement.'
-  return s:define_navcommand(name, command, 'call s:warn('.string(deprecation).')')
 endfunction
 
 function! s:define_navcommand(name, projection, ...) abort
@@ -2634,14 +2618,13 @@ function! s:CommandEdit(cmd, name, projections, ...)
   endif
 endfunction
 
-function! s:EditSimpleRb(cmd,name,target,prefix,suffix,...)
+function! s:LegacyCommandEdit(cmd,name,target,prefix,suffix)
   let cmd = s:findcmdfor(a:cmd)
   if a:target == ""
     return s:error("E471: Argument required")
   endif
-  let f = a:0 ? a:target : rails#underscore(a:target)
-  let jump = matchstr(f,'[#!].*\|:\d*\%(:in\)\=$')
-  let f = s:sub(f,'[#!].*|:\d*%(:in)=$','')
+  let jump = matchstr(a:target, '[#!].*\|:\d*\%(:in\)\=$')
+  let f = s:sub(a:target, '[#!].*|:\d*%(:in)=$', '')
   if jump =~ '^!'
     let cmd = s:editcmdfor(cmd)
   endif
@@ -2650,7 +2633,7 @@ function! s:EditSimpleRb(cmd,name,target,prefix,suffix,...)
   else
     let f .= a:suffix.jump
   endif
-  let f = s:gsub(a:prefix,'\n',f.'\n').f
+  let f = a:prefix.f
   return s:findedit(cmd,f)
 endfunction
 
@@ -2755,7 +2738,7 @@ function! s:localeEdit(cmd,...)
     return s:edit(a:cmd,rails#app().find_file(c,'config/locales',[],'config/locales/'.c))
   else
     return rails#buffer().open_command(a:cmd, c, 'locale',
-          \ [{'pattern': 'config/locales/*.yml'}, {'pattern': 'config/locales/*.rb'}]})
+          \ [{'pattern': 'config/locales/*.yml'}, {'pattern': 'config/locales/*.rb'}])
   endif
 endfunction
 
@@ -2880,17 +2863,17 @@ endfunction
 function! s:stylesheetEdit(cmd,...)
   let name = a:0 ? a:1 : s:controller(1)
   if rails#app().has('sass') && rails#app().has_file('public/stylesheets/sass/'.name.'.sass')
-    return s:EditSimpleRb(a:cmd,"stylesheet",name,"public/stylesheets/sass/",".sass",1)
+    return s:LegacyCommandEdit(a:cmd,"stylesheet",name,"public/stylesheets/sass/",".sass")
   elseif rails#app().has('sass') && rails#app().has_file('public/stylesheets/sass/'.name.'.scss')
-    return s:EditSimpleRb(a:cmd,"stylesheet",name,"public/stylesheets/sass/",".scss",1)
+    return s:LegacyCommandEdit(a:cmd,"stylesheet",name,"public/stylesheets/sass/",".scss")
   elseif rails#app().has('lesscss') && rails#app().has_file('app/stylesheets/'.name.'.less')
-    return s:EditSimpleRb(a:cmd,"stylesheet",name,"app/stylesheets/",".less",1)
+    return s:LegacyCommandEdit(a:cmd,"stylesheet",name,"app/stylesheets/",".less")
   else
     let types = rails#app().relglob('app/assets/stylesheets/'.name,'.*','')
     if !empty(types)
-      return s:EditSimpleRb(a:cmd,'stylesheet',name,'app/assets/stylesheets/',types[0],1)
+      return s:LegacyCommandEdit(a:cmd,'stylesheet',name,'app/assets/stylesheets/',types[0])
     else
-      return s:EditSimpleRb(a:cmd,'stylesheet',name,'public/stylesheets/','.css',1)
+      return s:LegacyCommandEdit(a:cmd,'stylesheet',name,'public/stylesheets/','.css')
     endif
   endif
 endfunction
@@ -2898,15 +2881,15 @@ endfunction
 function! s:javascriptEdit(cmd,...)
   let name = a:0 ? a:1 : s:controller(1)
   if rails#app().has('coffee') && rails#app().has_file('app/scripts/'.name.'.coffee')
-    return s:EditSimpleRb(a:cmd,'javascript',name,'app/scripts/','.coffee',1)
+    return s:LegacyCommandEdit(a:cmd,'javascript',name,'app/scripts/','.coffee')
   elseif rails#app().has('coffee') && rails#app().has_file('app/scripts/'.name.'.js')
-    return s:EditSimpleRb(a:cmd,'javascript',name,'app/scripts/','.js',1)
+    return s:LegacyCommandEdit(a:cmd,'javascript',name,'app/scripts/','.js')
   else
     let types = rails#app().relglob('app/assets/javascripts/'.name,'.*','')
     if !empty(types)
-      return s:EditSimpleRb(a:cmd,'javascript',name,'app/assets/javascripts/',types[0],1)
+      return s:LegacyCommandEdit(a:cmd,'javascript',name,'app/assets/javascripts/',types[0])
     else
-      return s:EditSimpleRb(a:cmd,'javascript',name,'public/javascripts/','.js',1)
+      return s:LegacyCommandEdit(a:cmd,'javascript',name,'public/javascripts/','.js')
     endif
   endif
 endfunction
@@ -3144,7 +3127,6 @@ function! s:readable_alternate_candidates(...) dict abort
   if a:0 && a:1
     let lastmethod = self.last_method(a:1)
     if !empty(lastmethod)
-      let placeholders.m = lastmethod
       let placeholders.d = lastmethod
     endif
     let projected = self.projected('related', placeholders)
@@ -4160,8 +4142,7 @@ function! s:BufAbbreviations()
     Rabbrev AM::  ActionMailer
     Rabbrev AO::  ActiveModel
     for pairs in
-          \ items(type(get(g:, 'rails_abbreviations', 0)) == type({}) ? g:rails_abbreviations : {}) +
-          \ items(rails#app().config('abbreviations'))
+          \ items(type(get(g:, 'rails_abbreviations', 0)) == type({}) ? g:rails_abbreviations : {})
       call call(function(s:sid.'Abbrev'), [0, pairs[0]] + s:split(pairs[1]))
     endfor
     for hash in reverse(rails#buffer().projected('abbreviations'))
@@ -4226,7 +4207,7 @@ function! s:Abbrev(bang,...) abort
 endfunction
 
 " }}}1
-" Settings {{{1
+" Projections {{{1
 
 function! rails#json_parse(string) abort
   let [null, false, true] = ['', 0, 1]
@@ -4239,49 +4220,6 @@ function! rails#json_parse(string) abort
     endtry
   endif
   throw "invalid JSON: ".string
-endfunction
-
-function! s:app_config(...) dict abort
-  if self.cache.needs('config')
-    call self.cache.set('config', 0)
-
-    let projections = {}
-    if self.has_path('config/projections.json')
-      try
-        let projections = rails#json_parse(readfile(self.path('config/projections.json')))
-      catch /^invalid JSON:/
-      endtry
-    endif
-
-    if self.has_path('config/editor.json')
-      try
-        let config = rails#json_parse(readfile(self.path('config/editor.json')))
-        if !has_key(config, 'projections')
-          let config.projections = projections
-        endif
-        call self.cache.set('config', config)
-      catch /^invalid JSON:/
-        call s:error("Couldn't parse config/editor.json")
-      endtry
-    elseif !empty(projections)
-      call self.cache.set('config', {'projections': projections})
-    endif
-
-  endif
-  if type(self.cache.get('config')) == type({})
-    let config = self.cache.get('config')
-  elseif exists('g:rails_default_config')
-    let config = g:rails_default_config
-  else
-    let config = {}
-  endif
-  if a:0
-    let default = a:0 > 1 ? a:2 : {}
-    let value = get(config, a:1, default)
-    return type(value) == type(default) ? value : default
-  else
-    return config
-  endif
 endfunction
 
 function! s:app_gems() dict abort
@@ -4333,33 +4271,7 @@ function! s:combine_projections(dest, src, ...) abort
   if type(a:src) == type({})
     for [pattern, original] in items(a:src)
       let projection = extend(copy(original), extra)
-      if has_key(projection, 'prefix') || has_key(projection, 'format')
-        let nested = extend({
-              \ 'command': pattern,
-              \ }, projection)
-        if type(get(nested, 'template', '')) == type([])
-          let nested.template = join(nested.template, "\n")
-        endif
-        for key in ['prefix', 'suffix', 'format', 'default']
-          if has_key(nested, key)
-            call remove(nested, key)
-          endif
-        endfor
-        for [prefix, suffix] in s:projection_pairs(projection)
-          let a:dest[prefix . '*' . suffix] = copy(nested)
-          if type(get(nested, 'template', '')) == type({})
-            let a:dest[prefix . '*' . suffix].template = get(nested.template, prefix)
-          endif
-          if type(get(projection, 'default', [])) ==# type('')
-            let a:dest[prefix . projection.default . suffix] = copy(nested)
-          endif
-        endfor
-        if type(get(projection, 'default', '')) ==# type([])
-          for default in projection.default
-            let a:dest[prefix . default . suffix] = copy(nested)
-          endfor
-        endif
-      else
+      if !has_key(projection, 'prefix') && !has_key(projection, 'format')
         let a:dest[pattern] = s:extend_projection(get(a:dest, pattern, {}), projection)
       endif
     endfor
@@ -4381,12 +4293,6 @@ function! s:app_projections() dict abort
     if !has_key(s:projections_for_gems, gem_path)
       let gem_projections = {}
       for path in ['lib/', 'lib/rails/']
-        for file in findfile(path.'editor.json', gem_path, -1)
-          try
-            call s:combine_projections(gem_projections, get(rails#json_parse(readfile(self.path(file))), 'projections'))
-          catch
-          endtry
-        endfor
         for file in findfile(path.'projections.json', gem_path, -1)
           try
             call s:combine_projections(gem_projections, rails#json_parse(readfile(self.path(file))))
@@ -4398,11 +4304,26 @@ function! s:app_projections() dict abort
     endif
     call s:combine_projections(dict, s:projections_for_gems[gem_path])
   endif
-  call s:combine_projections(dict, get(self.config(), 'projections', ''))
+  if self.cache.needs('projections')
+    call self.cache.set('projections', {})
+
+    let projections = {}
+    if self.has_path('config/projections.json')
+      try
+        let projections = rails#json_parse(readfile(self.path('config/projections.json')))
+        if type(projections) == type({})
+          call self.cache.set('projections', projections)
+        endif
+      catch /^invalid JSON:/
+      endtry
+    endif
+  endif
+
+  call s:combine_projections(dict, self.cache.get('projections'))
   return dict
 endfunction
 
-call s:add_methods('app', ['config', 'gems', 'has_gem', 'engines', 'projections'])
+call s:add_methods('app', ['gems', 'has_gem', 'engines', 'projections'])
 
 function! s:expand_placeholders(string, placeholders)
   if type(a:string) !=# type('')
@@ -4429,7 +4350,6 @@ function! s:readable_projected(key, ...) dict abort
             \ 'S': rails#camelize(root),
             \ 'h': toupper(root[0]) . tr(rails#underscore(root), '_', ' ')[1:-1],
             \ 'p': rails#pluralize(root),
-            \ 'o': rails#singularize(root),
             \ 'i': rails#singularize(root),
             \ '%': '%'}, a:0 ? a:1 : {})
       if suffix =~# '\.js\>'
@@ -4508,8 +4428,6 @@ function! s:SetBasePath() abort
   let old_path = s:pathsplit(s:sub(self.getvar('&path'),'^\.%(,|$)',''))
 
   let path = ['lib', 'vendor']
-  let path += self.app().config('path_additions', [])
-  let path += self.app().config('path', [])
   let path += get(g:, 'rails_path_additions', [])
   let path += get(g:, 'rails_path', [])
   let path += ['app/models/concerns', 'app/controllers/concerns', 'app/controllers', 'app/helpers', 'app/mailers', 'app/models']
