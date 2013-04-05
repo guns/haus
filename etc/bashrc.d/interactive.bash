@@ -714,8 +714,8 @@ fi
 ALIAS netstatnr='netstat -nr'
 ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
       ap='airport'
-ALIAS net='netcfg' \
-      netr='netcfg -r'
+ALIAS net='netcfg'
+ALIAS net='netctl'
 
 # cURL
 ALIAS get='curl -#L' \
