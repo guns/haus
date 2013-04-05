@@ -13,6 +13,7 @@
 # The name of the file will be derived from the title of the video.
 #
 #  --title "STRING"  Use this as the title instead.
+#  --progress        Show a textual progress bar for downloads.
 #  --suffix          Append the video ID to each written file name.
 #  --size            Instead of downloading it all, print video dimensions.
 #		     This requires "mplayer" and/or "ffmpeg".
@@ -45,7 +46,7 @@ use strict;
 use Socket;
 
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.149 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.151 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -121,10 +122,43 @@ sub html_quote($) {
 }
 
 
+my $progress_ticks = 0;
+my $progress_time = 0;
+
+sub draw_progress($) {
+  my ($ratio) = @_;
+
+  my $now = time();
+  my $eof = ($ratio == -1);
+  $ratio = 1 if $eof;
+
+  return if ($progress_time == $now && !$eof);
+
+  my $cols = 72;
+  my $ticks = int($cols * $ratio);
+
+  if ($ticks > $progress_ticks) {
+    my $pct = sprintf("%3d%%", 100 * $ratio);
+    $pct =~ s/^  /. /s;
+    print STDERR "\b" x length($pct)			# erase previous pct
+      if ($progress_ticks > 0);
+    while ($ticks > $progress_ticks) {
+      print STDERR ".";
+      $progress_ticks++;
+    }
+    print STDERR $pct;
+  }
+  print STDERR "\r" . (' ' x ($cols + 4)) . "\r" if ($eof);	# erase line
+  $progress_time = $now;
+}
+
+
+
 # Loads the given URL, returns: $http, $head, $body.
 #
-sub get_url_1($;$$$$$) {
-  my ($url, $referer, $extra_headers, $head_p, $to_file, $max_bytes) = @_;
+sub get_url_1($;$$$$$$) {
+  my ($url, $referer, $extra_headers, $head_p, $to_file, $max_bytes,
+      $expect_bytes) = @_;
   
   error ("can't do HEAD and write to a file") if ($head_p && $to_file);
 
@@ -248,8 +282,10 @@ sub get_url_1($;$$$$$) {
       $bytes += length($_);
       $lines++;
     }
+    draw_progress ($bytes / $expect_bytes) if ($expect_bytes);
     last if ($max_bytes && $bytes >= $max_bytes);
   }
+  draw_progress (-1) if ($expect_bytes);
 
   if ($to_file) {
     close $out || error ("$to_file: $!");
@@ -273,8 +309,9 @@ sub get_url_1($;$$$$$) {
 # Loads the given URL, processes redirects.
 # Returns: $http, $head, $body, $final_redirected_url.
 #
-sub get_url($;$$$$$$) {
-  my ($url, $referer, $headers, $head_p, $to_file, $max_bytes, $retry_p) = @_;
+sub get_url($;$$$$$$$) {
+  my ($url, $referer, $headers, $head_p, $to_file, $max_bytes, $retry_p,
+      $expect_bytes) = @_;
 
   print STDERR "$progname: " . ($head_p ? "HEAD" : "GET") . " $url\n"
     if ($verbose > 2);
@@ -288,7 +325,8 @@ sub get_url($;$$$$$$) {
 
   do {
     my ($http, $head, $body) = 
-      get_url_1 ($url, $referer, $headers, $head_p, $to_file, $max_bytes);
+      get_url_1 ($url, $referer, $headers, $head_p, $to_file, $max_bytes,
+                 $expect_bytes);
 
     $http =~ s/[\r\n]+$//s;
 
@@ -771,7 +809,7 @@ sub scrape_youtube_url_2($$$$$$$) {
       $append_suffix_p = $x;
       download_video_url ($url, $title, 
                           ($size_p ? $append_suffix_p : 0),
-                          0, $fmt);
+                          undef, 0, $fmt);
     }
     exit (0);
   }
@@ -1099,9 +1137,9 @@ sub file_exists_with_suffix($) {
 }
 
 
-sub download_video_url($$$$$);
-sub download_video_url($$$$$) {
-  my ($url, $title, $size_p, $cgi_p, $force_fmt) = @_;
+sub download_video_url($$$$$$);
+sub download_video_url($$$$$$) {
+  my ($url, $title, $size_p, $progress_p, $cgi_p, $force_fmt) = @_;
 
   # Add missing "http:"
   $url = "http://$url" unless ($url =~ m@^https?://@si);
@@ -1162,7 +1200,8 @@ sub download_video_url($$$$$) {
       $url =~ s@&.*$@@s;
     }
     $url = "http://www.$site.com$url" if ($url =~ m@^/@s);
-    return download_video_url ($url, $title, $size_p, $cgi_p, $force_fmt);
+    return download_video_url ($url, $title, $size_p, undef, $cgi_p,
+                               $force_fmt);
 
   # Youtube "/user" and "/profile" URLs.
   } elsif ($url =~ m@^https?://(?:[a-z]+\.)?(youtube) (?:-nocookie)? \.com/
@@ -1292,7 +1331,9 @@ sub download_video_url($$$$$) {
 
     print STDERR "$progname: downloading \"$title\"\n" if ($verbose);
 
-    my ($http, $head, $body) = get_url ($url, undef, undef, 0, $file);
+    my $expect_bytes = ($progress_p ? $size : undef);
+    my ($http, $head, $body) = get_url ($url, undef, undef, 0, $file, undef,
+                                        undef, $expect_bytes);
     check_http_status ($url, $http, 1);
 
     if (! -s $file) {
@@ -1359,7 +1400,7 @@ sub download_playlist($$$$$) {
 
       eval {
         $noerror = 1;
-        download_video_url ($u2, $t2, $size_p, $cgi_p, undef);
+        download_video_url ($u2, $t2, $size_p, undef, $cgi_p, undef);
         $noerror = 0;
       };
       print STDERR "$progname: $@" if $@;
@@ -1435,7 +1476,7 @@ sub do_cgi() {
   } elsif ($url) {
     error ("extraneous crap in URL: $ENV{PATH_INFO}")
       if (defined($ENV{PATH_INFO}) && $ENV{PATH_INFO} ne "");
-    download_video_url ($url, undef, 0, 1, undef);
+    download_video_url ($url, undef, 0, undef, 1, undef);
 
   } else {
     error ("no URL specified for CGI");
@@ -1445,7 +1486,7 @@ sub do_cgi() {
 
 sub usage() {
   print STDERR "usage: $progname [--verbose] [--quiet] [--size]" .
-		       " [--suffix] [--fmt N]\n" .
+		       " [--progress] [--suffix] [--fmt N]\n" .
                "\t\t   [--title title] youtube-or-vimeo-urls ...\n";
   exit 1;
 }
@@ -1463,18 +1504,20 @@ sub main() {
   my @urls = ();
   my $title = undef;
   my $size_p = 0;
+  my $progress_p = 0;
   my $fmt = undef;
 
   while ($#ARGV >= 0) {
     $_ = shift @ARGV;
-    if (m/^--?verbose$/)   { $verbose++; }
-    elsif (m/^-v+$/)       { $verbose += length($_)-1; }
-    elsif (m/^--?quiet$/)  { $verbose--; }
-    elsif (m/^--?title$/)  { $title = shift @ARGV; }
-    elsif (m/^--?size$/)   { $size_p++; }
-    elsif (m/^--?suffix$/) { $append_suffix_p++; }
-    elsif (m/^--?fmt$/)    { $fmt = shift @ARGV; }
-    elsif (m/^-./)         { usage; }
+    if (m/^--?verbose$/)     { $verbose++; }
+    elsif (m/^-v+$/)         { $verbose += length($_)-1; }
+    elsif (m/^--?q(uiet)?$/) { $verbose--; }
+    elsif (m/^--?title$/)    { $title = shift @ARGV; }
+    elsif (m/^--?size$/)     { $size_p++; }
+    elsif (m/^--?suffix$/)   { $append_suffix_p++; }
+    elsif (m/^--?progress$/) { $progress_p++; }
+    elsif (m/^--?fmt$/)      { $fmt = shift @ARGV; }
+    elsif (m/^-./)           { usage; }
     else { 
       s@^//@http://@s;
       error ("not a Youtube or Vimeo URL: $_")
@@ -1499,7 +1542,7 @@ sub main() {
   usage unless ($#urls >= 0);
   foreach (@urls) {
     my ($title, $fmt, $url) = @$_;
-    download_video_url ($url, $title, $size_p, 0, $fmt);
+    download_video_url ($url, $title, $size_p, $progress_p, 0, $fmt);
   }
 }
 
