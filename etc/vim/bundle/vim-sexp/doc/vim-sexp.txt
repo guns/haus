@@ -44,7 +44,7 @@ you can bind them manually in any filetype:
 >
         " Select the current compound form and send the selection to
         " a hypothetical Lisp REPL
-        nmap <Leader><Leader> v<Plug>sexp_select_outer_list:SendToREPL<CR>
+        nmap <Leader><Leader> v<Plug>sexp_outer_list:SendToREPL<CR>
 <
 Insert mode mappings are enabled when |g:sexp_enable_insert_mode_mappings| is
 set, which is true by default.
@@ -55,16 +55,16 @@ All mappings can be easily changed via |g:sexp_mappings|.
 
 TEXT OBJECTS (visual, operator-pending)~
 
-af                                                    *sexp_select_outer_list*
-if                                                    *sexp_select_inner_list*
+af                                                           *sexp_outer_list*
+if                                                           *sexp_inner_list*
         Select [count] lists (compound FORMS) delimited by any of '(' and ')',
         '[' and ']', or '{' and '}'. Outer motion includes the delimiting
         brackets and the inner motion excludes them.
 
         Does not include surrounding whitespace.
 
-aF                                                *sexp_select_outer_top_list*
-iF                                                *sexp_select_inner_top_list*
+aF                                                       *sexp_outer_top_list*
+iF                                                       *sexp_inner_top_list*
         Select the current top-level list (compound FORM) delimited by any of
         '(' and ')', '[' and ']', or '{' or '}'. Outer motion includes the
         delimiting brackets and the inner motion excludes them.
@@ -76,8 +76,8 @@ iF                                                *sexp_select_inner_top_list*
         on the first column. This is typically much faster than calling
         |searchpairpos()| recursively.
 
-as                                                  *sexp_select_outer_string*
-is                                                  *sexp_select_inner_string*
+as                                                         *sexp_outer_string*
+is                                                         *sexp_inner_string*
         Select the current string or regular expression. Outer motion includes
         surrounding quotes, inner motion excludes them.
 
@@ -88,8 +88,8 @@ is                                                  *sexp_select_inner_string*
         conflict bothers you, see |g:sexp_mappings| for documentation on
         changing the default mappings.
 
-ae                                                 *sexp_select_outer_element*
-ie                                                 *sexp_select_inner_element*
+ae                                                        *sexp_outer_element*
+ie                                                        *sexp_inner_element*
         Select the current element. An element is defined as:
 
             * Current string if cursor is in a string
@@ -144,7 +144,7 @@ CURSOR MOTIONS (normal, visual, operator-pending)~
 
         Analogous to |b| and |w| motions.
 
-<M-S-b>                                       *sexp_move_to_prev_element_tail*
+g<M-e>                                        *sexp_move_to_prev_element_tail*
 <M-e>                                         *sexp_move_to_next_element_tail*
         [count] elements backward or forward, |inclusive|, placing the cursor
         on the tail of an element. If an element is at the beginning or end of
@@ -175,12 +175,12 @@ CURSOR MOTIONS (normal, visual, operator-pending)~
 
 WRAP COMMANDS (normal, visual)~
 
-<LocalLeader>i                                     *sexp_list_wrap_round_head*
-<LocalLeader>I                                     *sexp_list_wrap_round_tail*
-<LocalLeader>[                                    *sexp_list_wrap_square_head*
-<LocalLeader>]                                    *sexp_list_wrap_square_tail*
-<LocalLeader>{                                     *sexp_list_wrap_curly_head*
-<LocalLeader>}                                     *sexp_list_wrap_curly_tail*
+<LocalLeader>i                                     *sexp_round_head_wrap_list*
+<LocalLeader>I                                     *sexp_round_tail_wrap_list*
+<LocalLeader>[                                    *sexp_square_head_wrap_list*
+<LocalLeader>]                                    *sexp_square_tail_wrap_list*
+<LocalLeader>{                                     *sexp_curly_head_wrap_list*
+<LocalLeader>}                                     *sexp_curly_tail_wrap_list*
         Wrap the current list (compound FORM) or visual selection with '(' and
         ')', '[' and ']', or '{' and '}' and place the cursor at the head or
         tail of the newly created list.
@@ -190,12 +190,12 @@ WRAP COMMANDS (normal, visual)~
         list, a space is conditionally appended after the opening bracket so
         that any typed characters will be separated from the next element.
 
-<LocalLeader>W                                  *sexp_element_wrap_round_head*
-<LocalLeader>w                                  *sexp_element_wrap_round_tail*
-<LocalLeader>e[                                *sexp_element_wrap_square_head*
-<LocalLeader>e]                                *sexp_element_wrap_square_tail*
-<LocalLeader>e{                                 *sexp_element_wrap_curly_head*
-<LocalLeader>e}                                 *sexp_element_wrap_curly_tail*
+<LocalLeader>W                                  *sexp_round_head_wrap_element*
+<LocalLeader>w                                  *sexp_round_tail_wrap_element*
+<LocalLeader>e[                                *sexp_square_head_wrap_element*
+<LocalLeader>e]                                *sexp_square_tail_wrap_element*
+<LocalLeader>e{                                 *sexp_curly_head_wrap_element*
+<LocalLeader>e}                                 *sexp_curly_tail_wrap_element*
         Wrap the current element or visual selection with '(' and ')', '[' and
         ']', or '{' and '}' and place the cursor at the head or tail of the
         newly created list.
@@ -242,8 +242,8 @@ LIST MANIPULATION (normal, visual)~
         swap is done pairwise to preserve the associative structure of the
         containing compound form.
 
-<M-S-j>                                              *sexp_emit_first_element*
-<M-S-k>                                               *sexp_emit_last_element*
+<M-S-j>                                               *sexp_emit_head_element*
+<M-S-k>                                               *sexp_emit_tail_element*
 <M-S-h>                                            *sexp_capture_prev_element*
 <M-S-l>                                            *sexp_capture_next_element*
         Emit [count] terminal elements of the current list, or capture [count]
@@ -320,7 +320,7 @@ Toggle insert mode mappings in |g:sexp_filetypes|.
 <
                                                     *g:sexp_insert_after_wrap*
 Enter insert mode (and append a space after the opening bracket when inserting
-at head) after using a wrap command like |sexp_list_wrap_round_head|.
+at head) after using a wrap command like |sexp_round_head_wrap_list|.
 >
         " Default
         let g:sexp_insert_after_wrap = 1
@@ -337,36 +337,36 @@ not necessary to copy all the entries to change a few.
 
         " vim-sexp internal mappings
         let s:sexp_mappings = {
-            \ 'sexp_select_outer_list':         'af',
-            \ 'sexp_select_inner_list':         'if',
-            \ 'sexp_select_outer_top_list':     'aF',
-            \ 'sexp_select_inner_top_list':     'iF',
-            \ 'sexp_select_outer_string':       'as',
-            \ 'sexp_select_inner_string':       'is',
-            \ 'sexp_select_outer_element':      'ae',
-            \ 'sexp_select_inner_element':      'ie',
+            \ 'sexp_outer_list':                'af',
+            \ 'sexp_inner_list':                'if',
+            \ 'sexp_outer_top_list':            'aF',
+            \ 'sexp_inner_top_list':            'iF',
+            \ 'sexp_outer_string':              'as',
+            \ 'sexp_inner_string':              'is',
+            \ 'sexp_outer_element':             'ae',
+            \ 'sexp_inner_element':             'ie',
             \ 'sexp_move_to_prev_bracket':      '(',
             \ 'sexp_move_to_next_bracket':      ')',
             \ 'sexp_move_to_prev_element_head': '<M-b>',
             \ 'sexp_move_to_next_element_head': '<M-w>',
-            \ 'sexp_move_to_prev_element_tail': '<M-S-b>',
+            \ 'sexp_move_to_prev_element_tail': 'g<M-e>',
             \ 'sexp_move_to_next_element_tail': '<M-e>',
             \ 'sexp_move_to_prev_top_element':  '[[',
             \ 'sexp_move_to_next_top_element':  ']]',
             \ 'sexp_select_prev_element':       '[e',
             \ 'sexp_select_next_element':       ']e',
-            \ 'sexp_list_wrap_round_head':      '<LocalLeader>i',
-            \ 'sexp_list_wrap_round_tail':      '<LocalLeader>I',
-            \ 'sexp_list_wrap_square_head':     '<LocalLeader>[',
-            \ 'sexp_list_wrap_square_tail':     '<LocalLeader>]',
-            \ 'sexp_list_wrap_curly_head':      '<LocalLeader>{',
-            \ 'sexp_list_wrap_curly_tail':      '<LocalLeader>}',
-            \ 'sexp_element_wrap_round_head':   '<LocalLeader>W',
-            \ 'sexp_element_wrap_round_tail':   '<LocalLeader>w',
-            \ 'sexp_element_wrap_square_head':  '<LocalLeader>e[',
-            \ 'sexp_element_wrap_square_tail':  '<LocalLeader>e]',
-            \ 'sexp_element_wrap_curly_head':   '<LocalLeader>e{',
-            \ 'sexp_element_wrap_curly_tail':   '<LocalLeader>e}',
+            \ 'sexp_round_head_wrap_list':      '<LocalLeader>i',
+            \ 'sexp_round_tail_wrap_list':      '<LocalLeader>I',
+            \ 'sexp_square_head_wrap_list':     '<LocalLeader>[',
+            \ 'sexp_square_tail_wrap_list':     '<LocalLeader>]',
+            \ 'sexp_curly_head_wrap_list':      '<LocalLeader>{',
+            \ 'sexp_curly_tail_wrap_list':      '<LocalLeader>}',
+            \ 'sexp_round_head_wrap_element':   '<LocalLeader>W',
+            \ 'sexp_round_tail_wrap_element':   '<LocalLeader>w',
+            \ 'sexp_square_head_wrap_element':  '<LocalLeader>e[',
+            \ 'sexp_square_tail_wrap_element':  '<LocalLeader>e]',
+            \ 'sexp_curly_head_wrap_element':   '<LocalLeader>e{',
+            \ 'sexp_curly_tail_wrap_element':   '<LocalLeader>e}',
             \ 'sexp_insert_at_list_head':       '<LocalLeader>h',
             \ 'sexp_insert_at_list_tail':       '<LocalLeader>l',
             \ 'sexp_lift_list':                 '<LocalLeader>o',
@@ -375,8 +375,8 @@ not necessary to copy all the entries to change a few.
             \ 'sexp_swap_list_forward':         '<M-j>',
             \ 'sexp_swap_element_backward':     '<M-h>',
             \ 'sexp_swap_element_forward':      '<M-l>',
-            \ 'sexp_emit_first_element':        '<M-S-j>',
-            \ 'sexp_emit_last_element':         '<M-S-k>',
+            \ 'sexp_emit_head_element':         '<M-S-j>',
+            \ 'sexp_emit_tail_element':         '<M-S-k>',
             \ 'sexp_capture_prev_element':      '<M-S-h>',
             \ 'sexp_capture_next_element':      '<M-S-l>',
             \ }
@@ -386,8 +386,8 @@ as the value. For example, if you wanted to avoid shadowing vim's sentence
 motions:
 >
         let g:sexp_mappings = {
-            \ 'sexp_select_outer_string':       'aS',
-            \ 'sexp_select_inner_string':       'iS',
+            \ 'sexp_outer_string':              'aS',
+            \ 'sexp_inner_string':              'iS',
             \ 'sexp_move_to_prev_bracket':      '',
             \ 'sexp_move_to_next_bracket':      '',
             \ }
@@ -404,7 +404,7 @@ its match, which can be slow if the nearest bracket is far from the cursor.
 If g:sexp_maxlines is positive, the scan is limited to this number of lines,
 trading accuracy for performance.
 
-If searching for a top-level compound form via |sexp_select_outer_top_list|
+If searching for a top-level compound form via |sexp_outer_top_list|
 or |sexp_move_to_prev_top_element| with g:sexp_maxlines equal to 0,
 |searchpairpos()| will be run recursively until the whole buffer is scanned
 for possible unpaired brackets. In moderately large buffers, this is an

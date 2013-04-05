@@ -19,7 +19,6 @@ let g:sexp_autoloaded = 1
 
 " TODO:
 "
-" * Deliberately set jump marks so users can `` back after undo.
 " * Don't ignore virtualedit mode?
 " * Comments should always be swapped to their own line
 " * Ignore non-changing operators when repeating?
@@ -36,7 +35,7 @@ let s:opening_bracket = '\v\(|\[|\{'
 let s:closing_bracket = '\v\)|\]|\}'
 let s:delimiter = s:bracket . '|\s'
 let s:string_region = '\vstring|regex|pattern'
-let s:ignored_region = s:string_region . '|comment|char'
+let s:ignored_region = s:string_region . '|comment|character'
 let s:macro_filetype_characters = {
     \ 'clojure': ['#', "\\v[#'`~@^_=]"],
     \ 'scheme':  ['#', "\\v[#'`,@]"],
@@ -333,7 +332,7 @@ function! s:current_element_terminal(end)
         let pos = s:current_string_terminal(a:end)
     elseif s:is_comment(line, col)
         let pos = s:current_comment_terminal(a:end)
-    elseif char =~# s:bracket
+    elseif char =~# s:bracket && !s:syntax_match(s:ignored_region, line, col)
         if (a:end && char =~# s:closing_bracket) || (!a:end && char =~# s:opening_bracket)
             let pos = [0, line, col, 0]
         else
@@ -409,14 +408,14 @@ function! s:nearest_element_terminal(next, tail)
 
         " We are at the beginning or end of file
         if adjacent[1] < 1 || s:compare_pos(pos, adjacent) == 0
-            throw 'sexp-error
+            throw 'sexp-error'
         else
             let pos = adjacent
         endif
 
         " We are at a head if moving forward or at a tail if moving backward
         if (a:next && !a:tail) || (!a:next && a:tail)
-            throw 'sexp-error
+            throw 'sexp-error'
         else
             call setpos('.', pos)
             let final = s:current_element_terminal(a:tail)
@@ -678,9 +677,13 @@ endfunction
 function! s:is_atom(line, col)
     let char = getline(a:line)[a:col - 1]
 
-    return (empty(char) || char =~# s:delimiter)
-           \ ? 0
-           \ : !s:syntax_match(s:string_region . '|comment', a:line, a:col)
+    if empty(char)
+        return 0
+    elseif char =~# s:delimiter && !s:syntax_match(s:ignored_region, a:line, a:col)
+        return 0
+    else
+        return !s:syntax_match(s:string_region . '|comment', a:line, a:col)
+    endif
 endfunction
 
 " Returns -1 if position a is before position b, 1 if position a is after
@@ -1544,7 +1547,8 @@ endfunction
 " Return keys to be inserted in place of bra; this includes the closing pair,
 " as well as a leading and/or trailing space to separate from other elements.
 "
-" Returns bra if cursor position is in s:ignored_region.
+" Returns bra if cursor is in s:ignored_region or is preceded by a single
+" backslash.
 function! sexp#opening_insertion(bra)
     let [_b, line, col, _o] = getpos('.')
 
@@ -1553,15 +1557,19 @@ function! sexp#opening_insertion(bra)
         return a:bra
     endif
 
-    let ket = s:pairs[a:bra]
     let curline = getline(line)
     let cur = curline[col - 1]
     let prev = curline[col - 2]
     let pprev = curline[col - 3]
-    let [dispatch, macro] = s:macro_chars()
+
+    if prev ==# '\' && pprev !=# '\'
+        return a:bra
+    endif
 
     let buf = ''
     let buftail = ''
+    let ket = s:pairs[a:bra]
+    let [dispatch, macro] = s:macro_chars()
 
     if prev =~# '\v\S'
         \ && prev !~# s:opening_bracket
@@ -1582,25 +1590,32 @@ endfunction
 
 " Return keys to be inserted in place of ket:
 "
-"   * Insert ket if cursor position is in s:ignored_region
+"   * Insert ket if cursor is in s:ignored_region or is preceded by a single
+"     backslash
 "   * Skip current char if equal to ket
 "   * Jump to next closing ket if current list is balanced
 "   * Insert ket if current list is unbalanced
 "
 function! sexp#closing_insertion(ket)
     let [_b, line, col, _o] = getpos('.')
-    let char = getline(line)[col - 1]
+
+    let curline = getline(line)
+    let cur = curline[col - 1]
+    let prev = curline[col - 2]
+    let pprev = curline[col - 3]
 
     if s:syntax_match(s:ignored_region, line, col)
         \ && s:compare_pos(s:current_element_terminal(0), [0, line, col, 0]) < 0
         return a:ket
-    elseif char ==# a:ket
+    elseif prev ==# '\' && pprev !=# '\'
+        return a:ket
+    elseif cur ==# a:ket
         return "\<Right>"
     endif
 
     let bra = '\V' . s:pairs[a:ket]
     let ket = '\V' . a:ket
-    let open = char =~# s:opening_bracket
+    let open = cur =~# s:opening_bracket
                \ ? [0, line, col, 0]
                \ : s:nearest_bracket(0, bra, ket)
 
@@ -1623,7 +1638,8 @@ endfunction
 "
 "   * If in a string, always insert quote if previous char is a backslash
 "   * If in a string, insert quote unless current char is a quote
-"   * Insert quote if cursor position is in s:ignored_region
+"   * Insert quote if cursor is in s:ignored_region or is preceded by a single
+"     backslash
 "   * Otherwise insert pair of quotes with a leading and/or trailing space to
 "     separate from other elements.
 "
@@ -1646,10 +1662,14 @@ function! sexp#quote_insertion(quote)
         let cur = curline[col - 1]
         let prev = curline[col - 2]
         let pprev = curline[col - 3]
-        let [dispatch, macro] = s:macro_chars()
+
+        if prev ==# '\' && pprev !=# '\'
+            return a:quote
+        endif
 
         let buf = ''
         let buftail = ''
+        let [dispatch, macro] = s:macro_chars()
 
         if prev =~# '\v\S'
             \ && prev !~# s:opening_bracket
@@ -1673,8 +1693,8 @@ endfunction
 "
 "   * Delete adjacent double quotes when previous position is in a string,
 "     unless the first quote is preceded by another quote or a backslash
-"   * Delete adjacent paired brackets, unless cursor position is in
-"     s:ignored_region
+"   * Delete adjacent paired brackets, unless cursor is in s:ignored_region or
+"     preceded by a single backslash
 "   * Normal backspace otherwise
 "
 function! sexp#backspace_insertion()
@@ -1682,12 +1702,17 @@ function! sexp#backspace_insertion()
     let curline = getline(line)
     let cur = curline[col - 1]
     let prev = curline[col - 2]
+    let pprev = curline[col - 3]
+    let ppprev = curline[col - 4]
+    let escaped = pprev ==# '\' && ppprev !=# '\'
 
     if prev ==# '"' && cur ==# '"'
         \ && s:syntax_match(s:string_region, line, col)
-        \ && curline[col - 3] !~# '\v[\"]'
+        \ && !escaped
+        \ && pprev !~# '"'
         return "\<BS>\<Del>"
     elseif !s:syntax_match(s:ignored_region, line, col)
+        \ && !escaped
         \ && prev =~# s:opening_bracket
         \ && cur ==# s:pairs[prev]
         return "\<BS>\<Del>"

@@ -36,36 +36,36 @@ if !exists('g:sexp_mappings')
 endif
 
 let s:sexp_mappings = {
-    \ 'sexp_select_outer_list':         'af',
-    \ 'sexp_select_inner_list':         'if',
-    \ 'sexp_select_outer_top_list':     'aF',
-    \ 'sexp_select_inner_top_list':     'iF',
-    \ 'sexp_select_outer_string':       'as',
-    \ 'sexp_select_inner_string':       'is',
-    \ 'sexp_select_outer_element':      'ae',
-    \ 'sexp_select_inner_element':      'ie',
+    \ 'sexp_outer_list':                'af',
+    \ 'sexp_inner_list':                'if',
+    \ 'sexp_outer_top_list':            'aF',
+    \ 'sexp_inner_top_list':            'iF',
+    \ 'sexp_outer_string':              'as',
+    \ 'sexp_inner_string':              'is',
+    \ 'sexp_outer_element':             'ae',
+    \ 'sexp_inner_element':             'ie',
     \ 'sexp_move_to_prev_bracket':      '(',
     \ 'sexp_move_to_next_bracket':      ')',
     \ 'sexp_move_to_prev_element_head': '<M-b>',
     \ 'sexp_move_to_next_element_head': '<M-w>',
-    \ 'sexp_move_to_prev_element_tail': '<M-S-b>',
+    \ 'sexp_move_to_prev_element_tail': 'g<M-e>',
     \ 'sexp_move_to_next_element_tail': '<M-e>',
     \ 'sexp_move_to_prev_top_element':  '[[',
     \ 'sexp_move_to_next_top_element':  ']]',
     \ 'sexp_select_prev_element':       '[e',
     \ 'sexp_select_next_element':       ']e',
-    \ 'sexp_list_wrap_round_head':      '<LocalLeader>i',
-    \ 'sexp_list_wrap_round_tail':      '<LocalLeader>I',
-    \ 'sexp_list_wrap_square_head':     '<LocalLeader>[',
-    \ 'sexp_list_wrap_square_tail':     '<LocalLeader>]',
-    \ 'sexp_list_wrap_curly_head':      '<LocalLeader>{',
-    \ 'sexp_list_wrap_curly_tail':      '<LocalLeader>}',
-    \ 'sexp_element_wrap_round_head':   '<LocalLeader>W',
-    \ 'sexp_element_wrap_round_tail':   '<LocalLeader>w',
-    \ 'sexp_element_wrap_square_head':  '<LocalLeader>e[',
-    \ 'sexp_element_wrap_square_tail':  '<LocalLeader>e]',
-    \ 'sexp_element_wrap_curly_head':   '<LocalLeader>e{',
-    \ 'sexp_element_wrap_curly_tail':   '<LocalLeader>e}',
+    \ 'sexp_round_head_wrap_list':      '<LocalLeader>i',
+    \ 'sexp_round_tail_wrap_list':      '<LocalLeader>I',
+    \ 'sexp_square_head_wrap_list':     '<LocalLeader>[',
+    \ 'sexp_square_tail_wrap_list':     '<LocalLeader>]',
+    \ 'sexp_curly_head_wrap_list':      '<LocalLeader>{',
+    \ 'sexp_curly_tail_wrap_list':      '<LocalLeader>}',
+    \ 'sexp_round_head_wrap_element':   '<LocalLeader>W',
+    \ 'sexp_round_tail_wrap_element':   '<LocalLeader>w',
+    \ 'sexp_square_head_wrap_element':  '<LocalLeader>e[',
+    \ 'sexp_square_tail_wrap_element':  '<LocalLeader>e]',
+    \ 'sexp_curly_head_wrap_element':   '<LocalLeader>e{',
+    \ 'sexp_curly_tail_wrap_element':   '<LocalLeader>e}',
     \ 'sexp_insert_at_list_head':       '<LocalLeader>h',
     \ 'sexp_insert_at_list_tail':       '<LocalLeader>l',
     \ 'sexp_lift_list':                 '<LocalLeader>o',
@@ -74,8 +74,8 @@ let s:sexp_mappings = {
     \ 'sexp_swap_list_forward':         '<M-j>',
     \ 'sexp_swap_element_backward':     '<M-h>',
     \ 'sexp_swap_element_forward':      '<M-l>',
-    \ 'sexp_emit_first_element':        '<M-S-j>',
-    \ 'sexp_emit_last_element':         '<M-S-k>',
+    \ 'sexp_emit_head_element':         '<M-S-j>',
+    \ 'sexp_emit_tail_element':         '<M-S-k>',
     \ 'sexp_capture_prev_element':      '<M-S-h>',
     \ 'sexp_capture_next_element':      '<M-S-l>',
     \ }
@@ -108,7 +108,10 @@ function! s:defplug(mode, mapmode, name, ...)
     if a:mode ==# '*'
         execute lhs . ' ' . rhs
     elseif empty(a:mode) || (should_repeat && !exists('*repeat#set'))
-        execute lhs . ' :<C-u>call ' . rhs . '<CR>'
+        " TODO: Only first visual motion should set '`
+        execute lhs . ' '
+                \ . ':<C-u>call setpos("' . "'`" . '", getpos(".")) \| '
+                \ . 'call ' . rhs . '<CR>'
     elseif should_repeat && a:mapmode[0] ==# 'o'
         " Due to a bug in vim, we need to set curwin->w_curswant to the
         " current cursor position by entering and exiting character-wise
@@ -117,6 +120,7 @@ function! s:defplug(mode, mapmode, name, ...)
         execute lhs . ' '
                 \ . ':<C-u>let b:sexp_count = v:count \| '
                 \ . 'execute "normal! vv" \| '
+                \ . 'call setpos("' . "'`" . '", getpos(".")) \| '
                 \ . 'call ' . substitute(rhs, '\v<v:count>', 'b:sexp_count', 'g') . ' \| '
                 \ . 'if v:operator ==? "c" \| '
                 \ . '  call <SID>repeat_set(v:operator . "\<Plug>' . a:name . '\<lt>C-r>.\<lt>C-Bslash>\<lt>C-n>", b:sexp_count) \| '
@@ -126,6 +130,7 @@ function! s:defplug(mode, mapmode, name, ...)
     elseif should_repeat
         execute lhs . ' '
                 \ . ':<C-u>let b:sexp_count = v:count \| '
+                \ . 'call setpos("' . "'`" . '", getpos(".")) \| '
                 \ . 'call ' . substitute(rhs, '\v<v:count>', 'b:sexp_count', 'g') . ' \| '
                 \ . 'call <SID>repeat_set("\<Plug>' . a:name . '", b:sexp_count)<CR>'
     endif
@@ -146,10 +151,10 @@ endfunction
 " Bind <Plug> mappings in current buffer to values in g:sexp_mappings or
 " s:sexp_mappings
 function! s:sexp_create_mappings()
-    for plug in ['sexp_select_outer_list',     'sexp_select_inner_list',
-               \ 'sexp_select_outer_top_list', 'sexp_select_inner_top_list',
-               \ 'sexp_select_outer_string',   'sexp_select_inner_string',
-               \ 'sexp_select_outer_element',  'sexp_select_inner_element']
+    for plug in ['sexp_outer_list',     'sexp_inner_list',
+               \ 'sexp_outer_top_list', 'sexp_inner_top_list',
+               \ 'sexp_outer_string',   'sexp_inner_string',
+               \ 'sexp_outer_element',  'sexp_inner_element']
         let lhs = get(g:sexp_mappings, plug, s:sexp_mappings[plug])
         if !empty(lhs)
             execute 'xmap <silent><buffer> ' . lhs . ' <Plug>' . plug
@@ -170,17 +175,17 @@ function! s:sexp_create_mappings()
         endif
     endfor
 
-    for plug in ['sexp_list_wrap_round_head',     'sexp_list_wrap_round_tail',
-               \ 'sexp_list_wrap_square_head',    'sexp_list_wrap_square_tail',
-               \ 'sexp_list_wrap_curly_head',     'sexp_list_wrap_curly_tail',
-               \ 'sexp_element_wrap_round_head',  'sexp_element_wrap_round_tail',
-               \ 'sexp_element_wrap_square_head', 'sexp_element_wrap_square_tail',
-               \ 'sexp_element_wrap_curly_head',  'sexp_element_wrap_curly_tail',
+    for plug in ['sexp_round_head_wrap_list',     'sexp_round_tail_wrap_list',
+               \ 'sexp_square_head_wrap_list',    'sexp_square_tail_wrap_list',
+               \ 'sexp_curly_head_wrap_list',     'sexp_curly_tail_wrap_list',
+               \ 'sexp_round_head_wrap_element',  'sexp_round_tail_wrap_element',
+               \ 'sexp_square_head_wrap_element', 'sexp_square_tail_wrap_element',
+               \ 'sexp_curly_head_wrap_element',  'sexp_curly_tail_wrap_element',
                \ 'sexp_insert_at_list_head',      'sexp_insert_at_list_tail',
                \ 'sexp_lift_list',                'sexp_splice_list',
                \ 'sexp_swap_list_backward',       'sexp_swap_list_forward',
                \ 'sexp_swap_element_backward',    'sexp_swap_element_forward',
-               \ 'sexp_emit_first_element',       'sexp_emit_last_element',
+               \ 'sexp_emit_head_element',        'sexp_emit_tail_element',
                \ 'sexp_capture_prev_element',     'sexp_capture_next_element']
         let lhs = get(g:sexp_mappings, plug, s:sexp_mappings[plug])
         if !empty(lhs)
@@ -204,28 +209,28 @@ endfunction
 """ Text objects {{{1
 
 " Current list (compound FORM)
-Defplug  xnoremap sexp_select_outer_list sexp#docount(v:count, 'sexp#select_current_list', 'v', 0, 1)
-Defplug! onoremap sexp_select_outer_list sexp#docount(v:count, 'sexp#select_current_list', 'o', 0, 1)
-Defplug  xnoremap sexp_select_inner_list sexp#docount(v:count, 'sexp#select_current_list', 'v', 1, 1)
-Defplug! onoremap sexp_select_inner_list sexp#docount(v:count, 'sexp#select_current_list', 'o', 1, 1)
+Defplug  xnoremap sexp_outer_list sexp#docount(v:count, 'sexp#select_current_list', 'v', 0, 1)
+Defplug! onoremap sexp_outer_list sexp#docount(v:count, 'sexp#select_current_list', 'o', 0, 1)
+Defplug  xnoremap sexp_inner_list sexp#docount(v:count, 'sexp#select_current_list', 'v', 1, 1)
+Defplug! onoremap sexp_inner_list sexp#docount(v:count, 'sexp#select_current_list', 'o', 1, 1)
 
 " Current top-level list (compound FORM)
-Defplug  xnoremap sexp_select_outer_top_list sexp#select_current_top_list('v', 0)
-Defplug! onoremap sexp_select_outer_top_list sexp#select_current_top_list('o', 0)
-Defplug  xnoremap sexp_select_inner_top_list sexp#select_current_top_list('v', 1)
-Defplug! onoremap sexp_select_inner_top_list sexp#select_current_top_list('o', 1)
+Defplug  xnoremap sexp_outer_top_list sexp#select_current_top_list('v', 0)
+Defplug! onoremap sexp_outer_top_list sexp#select_current_top_list('o', 0)
+Defplug  xnoremap sexp_inner_top_list sexp#select_current_top_list('v', 1)
+Defplug! onoremap sexp_inner_top_list sexp#select_current_top_list('o', 1)
 
 " Current string
-Defplug  xnoremap sexp_select_outer_string sexp#select_current_string('v', 0)
-Defplug! onoremap sexp_select_outer_string sexp#select_current_string('o', 0)
-Defplug  xnoremap sexp_select_inner_string sexp#select_current_string('v', 1)
-Defplug! onoremap sexp_select_inner_string sexp#select_current_string('o', 1)
+Defplug  xnoremap sexp_outer_string sexp#select_current_string('v', 0)
+Defplug! onoremap sexp_outer_string sexp#select_current_string('o', 0)
+Defplug  xnoremap sexp_inner_string sexp#select_current_string('v', 1)
+Defplug! onoremap sexp_inner_string sexp#select_current_string('o', 1)
 
 " Current element
-Defplug  xnoremap sexp_select_outer_element sexp#select_current_element('v', 0)
-Defplug! onoremap sexp_select_outer_element sexp#select_current_element('o', 0)
-Defplug  xnoremap sexp_select_inner_element sexp#select_current_element('v', 1)
-Defplug! onoremap sexp_select_inner_element sexp#select_current_element('o', 1)
+Defplug  xnoremap sexp_outer_element sexp#select_current_element('v', 0)
+Defplug! onoremap sexp_outer_element sexp#select_current_element('o', 0)
+Defplug  xnoremap sexp_inner_element sexp#select_current_element('v', 1)
+Defplug! onoremap sexp_inner_element sexp#select_current_element('o', 1)
 
 """ Directional motions {{{1
 
@@ -283,32 +288,32 @@ Defplug! onoremap sexp_select_next_element sexp#docount(v:count, 'sexp#select_ad
 """ Commands {{{1
 
 " Wrap list
-Defplug! nnoremap sexp_list_wrap_round_head  sexp#wrap('f', '(', ')', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_round_head  sexp#wrap('v', '(', ')', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_list_wrap_round_tail  sexp#wrap('f', '(', ')', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_round_tail  sexp#wrap('v', '(', ')', 1, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_list_wrap_square_head sexp#wrap('f', '[', ']', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_square_head sexp#wrap('v', '[', ']', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_list_wrap_square_tail sexp#wrap('f', '[', ']', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_square_tail sexp#wrap('v', '[', ']', 1, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_list_wrap_curly_head  sexp#wrap('f', '{', '}', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_curly_head  sexp#wrap('v', '{', '}', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_list_wrap_curly_tail  sexp#wrap('f', '{', '}', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_list_wrap_curly_tail  sexp#wrap('v', '{', '}', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_round_head_wrap_list  sexp#wrap('f', '(', ')', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_round_head_wrap_list  sexp#wrap('v', '(', ')', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_round_tail_wrap_list  sexp#wrap('f', '(', ')', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_round_tail_wrap_list  sexp#wrap('v', '(', ')', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_square_head_wrap_list sexp#wrap('f', '[', ']', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_square_head_wrap_list sexp#wrap('v', '[', ']', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_square_tail_wrap_list sexp#wrap('f', '[', ']', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_square_tail_wrap_list sexp#wrap('v', '[', ']', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_curly_head_wrap_list  sexp#wrap('f', '{', '}', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_curly_head_wrap_list  sexp#wrap('v', '{', '}', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_curly_tail_wrap_list  sexp#wrap('f', '{', '}', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_curly_tail_wrap_list  sexp#wrap('v', '{', '}', 1, g:sexp_insert_after_wrap)
 
 " Wrap element
-Defplug! nnoremap sexp_element_wrap_round_head  sexp#wrap('e', '(', ')', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_round_head  sexp#wrap('v', '(', ')', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_element_wrap_round_tail  sexp#wrap('e', '(', ')', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_round_tail  sexp#wrap('v', '(', ')', 1, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_element_wrap_square_head sexp#wrap('e', '[', ']', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_square_head sexp#wrap('v', '[', ']', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_element_wrap_square_tail sexp#wrap('e', '[', ']', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_square_tail sexp#wrap('v', '[', ']', 1, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_element_wrap_curly_head  sexp#wrap('e', '{', '}', 0, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_curly_head  sexp#wrap('v', '{', '}', 0, g:sexp_insert_after_wrap)
-Defplug! nnoremap sexp_element_wrap_curly_tail  sexp#wrap('e', '{', '}', 1, g:sexp_insert_after_wrap)
-Defplug  xnoremap sexp_element_wrap_curly_tail  sexp#wrap('v', '{', '}', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_round_head_wrap_element  sexp#wrap('e', '(', ')', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_round_head_wrap_element  sexp#wrap('v', '(', ')', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_round_tail_wrap_element  sexp#wrap('e', '(', ')', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_round_tail_wrap_element  sexp#wrap('v', '(', ')', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_square_head_wrap_element sexp#wrap('e', '[', ']', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_square_head_wrap_element sexp#wrap('v', '[', ']', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_square_tail_wrap_element sexp#wrap('e', '[', ']', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_square_tail_wrap_element sexp#wrap('v', '[', ']', 1, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_curly_head_wrap_element  sexp#wrap('e', '{', '}', 0, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_curly_head_wrap_element  sexp#wrap('v', '{', '}', 0, g:sexp_insert_after_wrap)
+Defplug! nnoremap sexp_curly_tail_wrap_element  sexp#wrap('e', '{', '}', 1, g:sexp_insert_after_wrap)
+Defplug  xnoremap sexp_curly_tail_wrap_element  sexp#wrap('v', '{', '}', 1, g:sexp_insert_after_wrap)
 
 " Insert at list terminal
 Defplug! nnoremap sexp_insert_at_list_head sexp#insert_at_list_terminal(0)
@@ -337,10 +342,10 @@ Defplug! nnoremap sexp_swap_element_forward  sexp#docount(v:count, 'sexp#swap_el
 DEFPLUG  xnoremap sexp_swap_element_forward  <Esc>:<C-u>call sexp#docount(v:prevcount, 'sexp#swap_element', 'v', 1, 0)<CR>
 
 " Emit/capture element
-Defplug! nnoremap sexp_emit_first_element   sexp#docount(v:count, 'sexp#stackop', 'n', 0, 0)
-Defplug  xnoremap sexp_emit_first_element   sexp#docount(v:count, 'sexp#stackop', 'v', 0, 0)
-Defplug! nnoremap sexp_emit_last_element    sexp#docount(v:count, 'sexp#stackop', 'n', 1, 0)
-Defplug  xnoremap sexp_emit_last_element    sexp#docount(v:count, 'sexp#stackop', 'v', 1, 0)
+Defplug! nnoremap sexp_emit_head_element    sexp#docount(v:count, 'sexp#stackop', 'n', 0, 0)
+Defplug  xnoremap sexp_emit_head_element    sexp#docount(v:count, 'sexp#stackop', 'v', 0, 0)
+Defplug! nnoremap sexp_emit_tail_element    sexp#docount(v:count, 'sexp#stackop', 'n', 1, 0)
+Defplug  xnoremap sexp_emit_tail_element    sexp#docount(v:count, 'sexp#stackop', 'v', 1, 0)
 Defplug! nnoremap sexp_capture_prev_element sexp#docount(v:count, 'sexp#stackop', 'n', 0, 1)
 Defplug  xnoremap sexp_capture_prev_element sexp#docount(v:count, 'sexp#stackop', 'v', 0, 1)
 Defplug! nnoremap sexp_capture_next_element sexp#docount(v:count, 'sexp#stackop', 'n', 1, 1)
