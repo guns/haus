@@ -264,6 +264,7 @@ function! s:LispBufferSetup()
     nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
+    nnoremap <silent><buffer> <LocalLeader>l  :silent call fireplace#session_eval('(do (clojure.pprint/pp) *1)') \| Last<CR>yG:pclose<CR>:new \| execute 'Scratch' \| setfiletype clojure<CR>:execute "normal! gg\"_dGVPG\"_dd0\<lt>C-v>gg\"_d"<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>ci :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
 endfunction
@@ -280,8 +281,8 @@ function! s:ClojureCheatSheet(pattern)
     let file = get(g:__clojure_cheat_sheets__[b:leiningen_root], a:pattern, '')
 
     if !filereadable(file)
-        let file = fireplace#evalparse(''
-            \ . '((fn [pattern]'
+        let file = fireplace#evalparse(
+            \   '((fn [pattern]'
             \ . '   (let [cheat-sheet (fn [& namespaces]'
             \ . '                       (clojure.string/join'
             \ . '                         "\n\n"'
