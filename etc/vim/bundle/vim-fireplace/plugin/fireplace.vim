@@ -798,7 +798,7 @@ function! s:setup_eval() abort
 endfunction
 
 function! s:setup_historical()
-  set readonly nomodifiable
+  setlocal readonly nomodifiable
   nnoremap <buffer><silent>q :bdelete<CR>
 endfunction
 
@@ -837,7 +837,6 @@ endfunction
 function! s:setup_require()
   command! -buffer -bar -bang -complete=customlist,fireplace#ns_complete -nargs=? Require :exe s:Require(<bang>0, <q-args>)
   nnoremap <silent><buffer> cpr :Require<CR>
-  nnoremap <silent><buffer> cpR :Require!<CR>
 endfunction
 
 augroup fireplace_require
