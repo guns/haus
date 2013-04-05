@@ -4,7 +4,7 @@
 # somewhere on your $PATH, like ~/bin. The rest of Leiningen will be
 # installed upon first run into the ~/.lein/self-installs directory.
 
-export LEIN_VERSION="2.1.1"
+export LEIN_VERSION="2.1.2"
 
 case $LEIN_VERSION in
     *SNAPSHOT) SNAPSHOT="YES" ;;
@@ -91,9 +91,11 @@ done
 
 BIN_DIR="$(dirname "$SCRIPT")"
 
-# Try to make the default more sane for :eval-in :classloader.lein
-grep -E -q '^\s*:eval-in\s+:classloader\s*$' project.clj 2> /dev/null &&
-LEIN_JVM_OPTS="${LEIN_JVM_OPTS:-"-Xms64m -Xmx512m"}"
+export LEIN_JVM_OPTS="${LEIN_JVM_OPTS-"-XX:+TieredCompilation -XX:TieredStopAtLevel=1"}"
+
+# When :eval-in :classloader we need more memory
+grep -E -q '^\s*:eval-in\s+:classloader\s*$' project.clj 2> /dev/null && \
+    export LEIN_JVM_OPTS="$LEIN_JVM_OPTS -Xms64m -Xmx512m"
 
 if [ -r "$BIN_DIR/../src/leiningen/version.clj" ]; then
     # Running from source checkout
@@ -102,8 +104,8 @@ if [ -r "$BIN_DIR/../src/leiningen/version.clj" ]; then
     # Need to use lein release to bootstrap the leiningen-core library (for aether)
     if [ ! -r "$LEIN_DIR/leiningen-core/.lein-bootstrap" ]; then
         echo "Leiningen is missing its dependencies."
-        echo "Please run `lein do install, classpath .lein-bootstrap` in the leiningen-core/"
-        echo "directory with a stable release of Leiningen. See CONTRIBUTING.md for details."
+        echo "Please run \"lein bootstrap\" in the leiningen-core/ directory"
+        echo "with a stable release of Leiningen. See CONTRIBUTING.md for details."
         exit 1
     fi
 
@@ -129,7 +131,7 @@ if [ -r "$BIN_DIR/../src/leiningen/version.clj" ]; then
     fi
 
     mkdir -p "$LEIN_DIR/target/classes"
-    export LEIN_JVM_OPTS="${LEIN_JVM_OPTS:-"-Xms64m -Xmx256m"} -Dclojure.compile.path=$LEIN_DIR/target/classes"
+    export LEIN_JVM_OPTS="$LEIN_JVM_OPTS -Dclojure.compile.path=$LEIN_DIR/target/classes"
     add_path CLASSPATH "$LEIN_DIR/leiningen-core/src/" "$LEIN_DIR/leiningen-core/resources/" \
         "$LEIN_DIR/test:$LEIN_DIR/target/classes" "$LEIN_DIR/src" ":$LEIN_DIR/resources"
 
@@ -186,7 +188,11 @@ export JVM_OPTS="${JVM_OPTS:-"$JAVA_OPTS"}"
 # If you're packaging this for a package manager (.deb, homebrew, etc)
 # you need to remove the self-install and upgrade functionality or see lein-pkg.
 if [ "$1" = "self-install" ]; then
-    if [ -r "$LEIN_JAR" ]; then
+    if [ -r "$BIN_DIR/../src/leiningen/version.clj" ]; then
+        echo "Running self-install from a checkout is not supported."
+        echo "See CONTRIBUTING.md for SNAPSHOT-specific build instructions."
+        exit 1
+    elif [ -r "$LEIN_JAR" ]; then
       echo "The self-install jar already exists at $LEIN_JAR."
       echo "If you wish to re-download, delete it and rerun \"$0 self-install\"."
       exit 1
@@ -201,9 +207,6 @@ if [ "$1" = "self-install" ]; then
     else
         rm "$LEIN_JAR.pending" 2> /dev/null
         download_failed_message "$LEIN_URL"
-        if [ $SNAPSHOT = "YES" ]; then
-            echo "See CONTRIBUTING.md for SNAPSHOT-specific build instructions."
-        fi
         exit 1
     fi
 elif [ "$1" = "upgrade" ]; then
@@ -285,8 +288,7 @@ else
         exec sh -c "exec $(cat $TRAMPOLINE_FILE)"
     else
         export TRAMPOLINE_FILE
-        "$LEIN_JAVA_CMD" \
-            -client -XX:+TieredCompilation -XX:TieredStopAtLevel=1 \
+        "$LEIN_JAVA_CMD" -client \
             "${BOOTCLASSPATH[@]}" \
             $LEIN_JVM_OPTS \
             -Dfile.encoding=UTF-8 \
