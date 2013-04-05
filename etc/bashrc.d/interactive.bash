@@ -1665,8 +1665,8 @@ fi
 ALIAS kf='kupfer'
 
 HAVE minecraft && _minecraft() {
-    local cur prev cword
-    _get_comp_words_by_ref cur prev cword
+    local cur prev
+    _get_comp_words_by_ref cur prev
 
     if [[ $cur == -* ]]; then
         COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug --help' -- "$cur"))
