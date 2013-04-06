@@ -720,6 +720,7 @@ ALIAS net='netctl'
 # cURL
 ALIAS get='curl -#L' \
       geto='curl -#LO' && {
+    alias getip='CURL_CA_BUNDLE=~/.certificates/getip.sungpae.com.crt ruby -e "puts %x(curl -Is https://getip.sungpae.com)[/^X-Client-IP: (.*)/, 1]"'
     httpget() {
         ruby -r webrick -e '
             req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
