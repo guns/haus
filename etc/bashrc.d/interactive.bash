@@ -725,7 +725,7 @@ ALIAS get='curl -#L' \
         ruby -r webrick -e '
             req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
             req.parse $stdin
-            cmd = %W[curl -#LA #{req.header["user-agent"].first || ["Gecko"]}]
+            cmd = %W[curl -#LA #{req.header["user-agent"].first || "Gecko"}]
             cmd << "-o" << ARGV.first unless ARGV.empty?
             cmd << req.request_uri.to_s
             p cmd
