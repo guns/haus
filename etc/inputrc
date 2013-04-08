@@ -332,7 +332,7 @@ $if Bash
     "\033\007I":    "\C-] pry \n"
 
     # X
-    "\C-xX":        "\C-] ((EUID > 0)) && exec startx &>/dev/null \n"
+    "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
