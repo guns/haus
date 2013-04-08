@@ -264,9 +264,24 @@ function! s:LispBufferSetup()
     nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
-    nnoremap <silent><buffer> <LocalLeader>p  :silent call fireplace#session_eval('(do (clojure.pprint/pp) *1)') \| Last<CR>yG:pclose<CR>:new \| execute 'Scratch' \| setfiletype clojure<CR>:execute "normal! gg\"_dGVPG\"_dd0\<lt>C-v>gg\"_d"<CR>
+    nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>ci :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(0)<CR>
+    nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>rt :call <SID>ClojureRunTests(0)<CR>
+    nnoremap <silent><buffer> <LocalLeader>rT :call <SID>ClojureRunTests(1)<CR>
+endfunction
+
+function! s:ClojurePprint(expr)
+    silent call fireplace#session_eval('(do (clojure.pprint/pprint ' . a:expr . ') ' . a:expr . ')')
+    Last
+    normal! yG
+    pclose
+    new
+    Scratch
+    setfiletype clojure
+    execute "normal! gg\"_dGVPG\"_dd0\<C-v>gg\"_d"
 endfunction
 
 function! s:ClojureCheatSheet(pattern)
@@ -300,11 +315,11 @@ function! s:ClojureCheatSheet(pattern)
             \ . '                              (sort-by str namespaces))))'
             \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
             \ . '    (if (seq matches)'
-            \ . '      (let [tmp (format "tmp/vim/cheat-sheet-%s.clj" '
+            \ . '      (let [tmp (format "target/vim/cheat-sheet-%s.clj" '
             \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
             \ . '        (clojure.java.io/make-parents tmp)'
             \ . '        (spit tmp (str (apply cheat-sheet matches)'
-            \ . '                       "\n\n;; vim:fdm=marker:ro:noma:"))'
+            \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:ro:noma:"))'
             \ . '        (.getAbsolutePath (java.io.File. tmp)))'
             \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
             \ )
@@ -316,6 +331,27 @@ function! s:ClojureCheatSheet(pattern)
         echo "No matching namespaces."
     else
         execute 'vsplit ' . file . ' | wincmd L'
+    endif
+endfunction
+
+function! s:ClojureMacroexpand(once)
+    let reg_save = @m
+    let expand = a:once ? 'macroexpand-1' : 'macroexpand'
+    execute "normal \"my\<Plug>sexp_outer_list"
+    call s:ClojurePprint("(" . expand . " (quote " . @m . "))")
+    let @m = reg_save
+endfunction
+
+function! s:ClojureRunTests(all)
+    if a:all
+        call fireplace#session_eval('(clojure.test/run-all-tests)')
+    else
+        call fireplace#session_eval(
+            \   '(clojure.test/run-tests'
+            \ . '  (if (re-seq #"-test\z" (str *ns*))'
+            \ . '    *ns*'
+            \ . '    (first (filter #(re-seq (re-pattern (str *ns* "-test\\z")) (str %)) (all-ns)))))'
+            \ )
     endif
 endfunction
 
