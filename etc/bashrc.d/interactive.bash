@@ -706,10 +706,10 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 ### Network
 
-if HAVE ifconfig; then
-    alias ic='ifconfig'
-elif HAVE ip; then
+if HAVE ip; then
     alias ic='ip addr'
+elif HAVE ifconfig; then
+    alias ic='ifconfig'
 fi
 ALIAS netstatnr='netstat -nr'
 ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
