@@ -9,12 +9,12 @@ require 'ipaddr'
 
 class Getlip
   def parser
-    @parser ||= OptionParser.new %Q{\
+    @parser ||= OptionParser.new <<-BANNER.gsub /^ +/,''
       Return the local IP address via a udp socket. Does not do a DNS lookup
       if host is an IP address or not given.
 
       Usage: #{File.basename __FILE__} [host]
-    }.gsub(/^ +/,'')
+    BANNER
   end
 
   def addr host = nil
