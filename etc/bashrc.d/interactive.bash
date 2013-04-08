@@ -987,6 +987,7 @@ HAVE vim && {
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
+    alias vimiptables='(cdetc && exec vim iptables/iptables.sh)'
     alias viminteractivebash='(cdhaus && exec vim etc/bashrc.d/interactive.bash)'
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimmodifiers='(cdhaus && exec vim etc/vim/local/modifiers.vim)'

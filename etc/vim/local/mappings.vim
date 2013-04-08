@@ -348,6 +348,7 @@ noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))
 noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
+noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
 noremap <Leader>eM       :<C-u>execute 'TabOpen ' . substitute(resolve(expand('~/.mutt/muttrc')), '\V%', '\\\\\%', 'g')<CR>
 noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
