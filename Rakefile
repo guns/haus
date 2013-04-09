@@ -60,6 +60,12 @@ task :env do
           end
         },
         :files => { 'youtubedown' => 'bin/youtubedown' }
+      },
+
+      {
+        :base   => "#{@src}/READONLY/speedtest-cli",
+        :branch => %w[master],
+        :files  => { 'speedtest-cli' => 'bin/speedtest-cli' }
       }
     ],
 
