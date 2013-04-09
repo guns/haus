@@ -63,13 +63,11 @@ noremap K gT
 noremap <C-h> H
 noremap <C-l> L
 noremap t :tabnew<CR><F6>
-noremap { :tabmove -1<CR>
-noremap } :tabmove +1<CR>
+noremap _ :tabmove -1<CR>
+noremap + :tabmove +1<CR>
 noremap <C-S-o> :tabonly<CR>
 inoremap <C-S-o> <Esc>:tabonly<CR>
 cnoremap <C-S-o> <Esc>:tabonly<CR>
-noremap _ :zoom -10<CR>
-noremap + :zoom +10<CR>
 noremap \- :zoom! -10<CR>
 noremap = :zoom! +10<CR>
 noremap 0 :zoom! 100<CR>
