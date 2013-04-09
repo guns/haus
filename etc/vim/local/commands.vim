@@ -271,10 +271,11 @@ function! s:LispBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>rt :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>rT :call <SID>ClojureRunTests(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>ts :call <SID>ClojureTypeScaffold()<CR>
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#session_eval('(do (clojure.pprint/pprint ' . a:expr . ') ' . a:expr . ')')
+    silent call fireplace#session_eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
@@ -338,7 +339,7 @@ function! s:ClojureMacroexpand(once)
     let reg_save = @m
     let expand = a:once ? 'macroexpand-1' : 'macroexpand'
     execute "normal \"my\<Plug>sexp_outer_list"
-    call s:ClojurePprint("(" . expand . " (quote " . @m . "))")
+    call s:ClojurePprint('(' . expand . ' (quote ' . @m . '))')
     let @m = reg_save
 endfunction
 
@@ -353,6 +354,39 @@ function! s:ClojureRunTests(all)
             \ . '    (first (filter #(re-seq (re-pattern (str *ns* "-test\\z")) (str %)) (all-ns)))))'
             \ )
     endif
+endfunction
+
+function! s:ClojureTypeScaffold()
+    try
+        let reg_save = [@e, @r]
+        execute "normal \"ey\<Plug>sexp_inner_element"
+        redir @r
+        call fireplace#session_eval(
+            \   '(defn type-scaffold'
+            \ . '  "https://gist.github.com/mpenet/2053633, originally by cgrand"'
+            \ . '  [iface]'
+            \ . '  (let [ms (map (fn [m] [(.getCanonicalName (.getDeclaringClass m))'
+            \ . '                         (symbol (.getName m))'
+            \ . '                         (map #(symbol (.getCanonicalName %)) (.getParameterTypes m))])'
+            \ . '                (.getMethods iface))'
+            \ . '        idecls (map (fn [[cls ms]]'
+            \ . '                      (let [decls (map (fn [[_ s ps]] (str (list s (into [(quote this)] ps))))'
+            \ . '                                       ms)]'
+            \ . '                        (str "  " cls "\n  " (clojure.string/join "\n  " decls))))'
+            \ . '                    (group-by first ms))]'
+            \ . '    (clojure.string/join "\n\n" idecls)))'
+            \ . '(let [elem ' . @e . ']'
+            \ . '  (println (type-scaffold (if (class? elem) elem (class elem)))))'
+            \ )
+    finally
+        redir END
+        vnew
+        wincmd L
+        Scratch
+        setfiletype clojure
+        normal! gg"_dG"rPdd
+        let [@e, @r] = reg_save
+    endtry
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
