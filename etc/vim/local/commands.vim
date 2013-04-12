@@ -459,12 +459,17 @@ function! s:Qfdo(expr)
     endfor
 endfunction
 
-command! -bar ToggleQuickfixWindow call <SID>ToggleQuickfixWindow() "{{{1
-function! s:ToggleQuickfixWindow()
-    if &buftype ==# 'quickfix'
-        cclose
+command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows(0) "{{{1
+command! -bar CloseMinorWindows call <SID>ToggleMinorWindows(1)
+function! s:ToggleMinorWindows(close)
+    if a:close || !empty(filter(map(tabpagebuflist(), 'getbufvar(v:val, "&buftype")'), 'v:val == "quickfix"'))
+        cclose | lclose | pclose
     else
-        copen
+        try
+            execute empty(getqflist()) ? 'lopen' : 'copen'
+        catch /./
+            cclose | lclose | pclose
+        endtry
     endif
 endfunction
 

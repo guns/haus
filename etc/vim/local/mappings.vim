@@ -409,11 +409,9 @@ Mapall <4-}> :<C-u>tabnext<CR>
 Mapall <4-_> :<C-u>TabmovePrev<CR>
 Mapall <4-+> :<C-u>TabmoveNext<CR>
 
-" Quickfix window
-Mapall <4-x> :<C-u>ToggleQuickfixWindow<CR>
-
-" Close Preview window
-Mapall <4-X> :<C-u>pclose<CR>
+" Quickfix, location, preview windows
+Mapall <4-x> :<C-u>ToggleMinorWindows<CR>
+Mapall <4-X> :<C-u>CloseMinorWindows<CR>
 
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
