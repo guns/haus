@@ -267,8 +267,9 @@ function! s:LispBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>ci :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
-    nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(0)<CR>
-    nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(0)<CR>
+    nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>mE :call <SID>ClojureMacroexpand(2)<CR>
     nnoremap <silent><buffer> <LocalLeader>rt :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>rT :call <SID>ClojureRunTests(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>ts :call <SID>ClojureTypeScaffold()<CR>
@@ -337,9 +338,10 @@ endfunction
 
 function! s:ClojureMacroexpand(once)
     let reg_save = @m
-    let expand = a:once ? 'macroexpand-1' : 'macroexpand'
+    let expand = ['macroexpand', 'macroexpand', 'clojure.walk/macroexpand-all'][a:once]
     execute "normal \"my\<Plug>sexp_outer_list"
     call s:ClojurePprint('(' . expand . ' (quote ' . @m . '))')
+    wincmd L
     let @m = reg_save
 endfunction
 
