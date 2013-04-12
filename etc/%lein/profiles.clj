@@ -20,5 +20,4 @@
 ;;                                                  /     ###/
 
 {:user {:plugins [[lein-exec "0.3.0"]]}
- :dev {:dependencies [[org.clojure/tools.trace "0.7.5"]
-                      [slamhound "1.3.1"]]}}
+ :dev {:dependencies [[org.clojure/tools.trace "0.7.5"]]}}
