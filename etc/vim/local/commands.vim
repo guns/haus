@@ -280,8 +280,7 @@ function! s:ClojurePprint(expr)
     Last
     normal! yG
     pclose
-    new
-    Scratch
+    Sscratch
     setfiletype clojure
     execute "normal! gg\"_dGVPG\"_dd0\<C-v>gg\"_d"
 endfunction
@@ -382,9 +381,8 @@ function! s:ClojureTypeScaffold()
             \ )
     finally
         redir END
-        vnew
+        Sscratch
         wincmd L
-        Scratch
         setfiletype clojure
         normal! gg"_dG"rPdd
         let [@e, @r] = reg_save
