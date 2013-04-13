@@ -728,7 +728,7 @@ ALIAS get='curl -#L' \
             cmd = %W[curl -#LA #{req.header["user-agent"].first || "Gecko"}]
             cmd << "-o" << ARGV.first unless ARGV.empty?
             cmd << req.request_uri.to_s
-            p cmd
+            warn cmd.inspect
             exec *cmd
         ' -- "$@"
     }
