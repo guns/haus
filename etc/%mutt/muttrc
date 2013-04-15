@@ -19,7 +19,7 @@ source ~/.mutt/muttrc.settings
 source $alias_file
 
 # Mailboxes
-mailboxes `IFS=$'\n'; dirs=(~/Mail/Local/*); unset IFS; echo "${dirs[@]// /\\ }"` \
+mailboxes `ruby -r shellwords -e 'puts Dir[File.expand_path("~/Mail/Local/*")].map(&:shellescape).join(" ")'` \
           ~/.mutt/notmuch/results
 
 # Mailing lists
