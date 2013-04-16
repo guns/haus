@@ -9,6 +9,8 @@ rescue Errno::ESRCH
   false
 end
 
+$0 = File.basename __FILE__
+
 pidfile = File.expand_path '~/.offlineimap/pid'
 
 if File.exists? pidfile and running? File.read(pidfile).to_i
