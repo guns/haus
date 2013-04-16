@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'erb'
+require 'shellwords'
+require 'net/imap'
+require 'haus/logger'
+load File.expand_path('../imappostsynchook', __FILE__)
+
+@wait = 5 * 60
+@next = Time.now
+@lock = Mutex.new
+@sync = IMAPPostSyncHook.new
+@conf = ERB.new(File.read File.expand_path('~/.mbsyncrc.erb')).result
+@logger = Haus::Logger.new $stderr
+@threads = {}
+
+def log msg, *styles
+  @logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *styles]
+end
+
+def mbsync channel
+  log "START mbsync #{channel}", :green, :bold
+
+  IO.popen "/bin/bash -c \"exec mbsync -c <(cat) #{channel.shellescape}\"", 'w' do |w|
+    w.puts @conf
+    w.close
+  end
+
+  @sync.run
+
+  log "END mbsync #{channel}", :green, :bold
+end
+
+def kill_threads threads
+  threads.each_value &:kill
+  Process.waitall
+  threads.each_value &:join
+end
+
+def time_till time
+  seconds = (time - Time.now).to_i
+  seconds = 0 if seconds < 0
+
+  h = seconds / 3600
+  m = (seconds % 3600) / 60
+  s = seconds % 60
+
+  ary = []
+  ary << "#{h} hour#{'s' if h > 1}"   if h > 0
+  ary << "#{m} minute#{'s' if m > 1}" if m > 0
+  ary << "#{s} second#{'s' if s > 1}" if s > 0
+
+  case ary.size
+  when 0 then 'Any time now…'
+  when 1 then ary.first
+  when 2 then '%s and %s' % ary
+  when 3 then '%s, %s, and %s' % ary
+  end
+end
+
+# Poll all mailboxes
+@threads[:poll] = Thread.new do
+  loop do
+    @lock.synchronize { mbsync 'sungpae.com' }
+    @next = Time.now + @wait
+    sleep @wait
+  end
+end
+
+# Fetch INBOX on IMAP IDLE
+@threads[:idle] = Thread.new do
+  begin
+    @imap = Net::IMAP.new 'imap.gmail.com',
+                          :port => 993,
+                          :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
+    @imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
+    @imap.select 'INBOX'
+
+    @imap.idle do |resp|
+      next if @lock.locked?
+      @lock.synchronize { mbsync 'inbox.sungpae.com' }
+    end
+  rescue e
+    log e.to_s, :red
+  ensure
+    log 'Disconnecting IMAP', :yellow
+    @imap.idle_done rescue nil
+    @imap.logout
+  end
+end
+
+# Finally respond to user commands
+begin
+  loop do
+    @lock.synchronize do
+      @logger.io.print @logger.fmt(['Commands: [R]esync, [T]ime of next sync, [Q]uit # ', :white])
+    end
+
+    select [$stdin]
+
+    case $stdin.gets("\n")
+    when /\Ar/i
+      next if @lock.locked?
+      @lock.synchronize { mbsync 'sungpae.com' }
+    when /\A[t?]/i
+      log time_till(@next), :x217
+    when /\Aq/i
+      kill_threads @threads
+      break
+    end
+  end
+ensure
+  kill_threads @threads
+end
