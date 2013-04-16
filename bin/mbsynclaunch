@@ -3,6 +3,7 @@
 
 require 'erb'
 require 'shellwords'
+require 'fileutils'
 require 'net/imap'
 require 'haus/logger'
 load File.expand_path('../imappostsynchook', __FILE__)
@@ -14,6 +15,16 @@ load File.expand_path('../imappostsynchook', __FILE__)
 @conf = ERB.new(File.read File.expand_path('~/.mbsyncrc.erb')).result
 @logger = Haus::Logger.new $stderr
 @threads = {}
+@program = File.basename __FILE__
+@pidfile = File.expand_path "~/.local/share/mbsync/#{@program}.pid"
+
+$0 = @program
+
+def running? pid
+  Process.kill 0, pid
+rescue Errno::ESRCH
+  false
+end
 
 def log msg, *styles
   @logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *styles]
@@ -21,6 +32,7 @@ end
 
 def mbsync channel
   log "START mbsync #{channel}", :green, :bold
+  start = Time.now
 
   IO.popen "/bin/bash -c \"exec mbsync -c <(cat) #{channel.shellescape}\"", 'w' do |w|
     w.puts @conf
@@ -29,7 +41,8 @@ def mbsync channel
 
   @sync.run
 
-  log "END mbsync #{channel}", :green, :bold
+  log "END mbsync #{channel} (#{human_time start, Time.now})", :green, :bold
+  display_prompt
 end
 
 def kill_threads threads
@@ -38,8 +51,8 @@ def kill_threads threads
   threads.each_value &:join
 end
 
-def time_till time
-  seconds = (time - Time.now).to_i
+def human_time from, to
+  seconds = (to - from).to_i
   seconds = 0 if seconds < 0
 
   h = seconds / 3600
@@ -59,6 +72,18 @@ def time_till time
   end
 end
 
+def display_prompt
+  @logger.io.print @logger.fmt(["\rCommands: [R]esync, [T]ime until next sync, [Q]uit # ", :white])
+end
+
+# Write pidfile
+if File.exists? @pidfile and running? File.read(@pidfile).to_i
+  abort "#{@program} is already running!"
+else
+  FileUtils.mkdir_p File.dirname(@pidfile)
+  File.open(@pidfile, 'w') { |f| f.puts $$ }
+end
+
 # Poll all mailboxes
 @threads[:poll] = Thread.new do
   loop do
@@ -70,46 +95,68 @@ end
 
 # Fetch INBOX on IMAP IDLE
 @threads[:idle] = Thread.new do
-  begin
-    @imap = Net::IMAP.new 'imap.gmail.com',
-                          :port => 993,
-                          :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
-    @imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
-    @imap.select 'INBOX'
+  imap = Net::IMAP.new 'imap.gmail.com',
+                        :port => 993,
+                        :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
+  imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
+  imap.select 'INBOX'
 
-    @imap.idle do |resp|
-      next if @lock.locked?
-      @lock.synchronize { mbsync 'inbox.sungpae.com' }
+  begin
+    loop do
+      imap.idle do |resp|
+        imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+      end
+      if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
+        log 'New message in INBOX', :x150
+        @lock.synchronize { mbsync 'inbox.sungpae.com' } unless @lock.locked?
+      end
     end
-  rescue e
-    log e.to_s, :red
+  rescue
+    log $!.to_s, :red
   ensure
     log 'Disconnecting IMAP', :yellow
-    @imap.idle_done rescue nil
-    @imap.logout
+    imap.logout
   end
 end
 
-# Finally respond to user commands
+# Register signal handlers
+trap :USR1 do
+  log 'Received SIGUSR1; starting sync…', :x158
+  if @lock.locked?
+    log 'Sync already in progress!', :yellow
+  else
+    mbsync 'sungpae.com'
+  end
+end
+
+term_signals = [:INT, :TERM, :QUIT, :USR2]
+term_signals.each do |sig|
+  trap sig do
+    term_signals.each { |sig| trap sig, 'DEFAULT' }
+    log "Received SIG#{sig}; killing threads…", :magenta, :bold
+    kill_threads @threads
+    exit
+  end
+end
+
+# Process user input
 begin
   loop do
-    @lock.synchronize do
-      @logger.io.print @logger.fmt(['Commands: [R]esync, [T]ime of next sync, [Q]uit # ', :white])
-    end
-
     select [$stdin]
 
     case $stdin.gets("\n")
     when /\Ar/i
-      next if @lock.locked?
-      @lock.synchronize { mbsync 'sungpae.com' }
+      @lock.synchronize { mbsync 'sungpae.com' } unless @lock.locked?
     when /\A[t?]/i
-      log time_till(@next), :x217
+      log human_time(Time.now, @next), :x217
     when /\Aq/i
-      kill_threads @threads
       break
     end
+
+    @lock.synchronize { display_prompt }
   end
 ensure
   kill_threads @threads
 end
+
+log 'Graceful shutdown.', :green
