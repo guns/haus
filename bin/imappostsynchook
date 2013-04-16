@@ -10,7 +10,7 @@ require 'ostruct'
 require 'fileutils'
 require 'shellwords'
 
-class Postsynchook
+class IMAPPostSyncHook
   attr_reader :options
 
   def initialize opts = {}
@@ -64,7 +64,8 @@ class Postsynchook
       dst = File.join options.localfolder, File.basename(src)
       system 'rsync', '-a', "#{src}/", "#{dst}/"
       if $?.exitstatus.zero?
-        removed.concat FileUtils.rm_f(Dir['%s/**/*' % src.shellescape].select { |f| File.file? f })
+        files = Dir['%s/**/*' % src.shellescape].select { |f| File.file? f }
+        removed.concat FileUtils.rm_f(files)
       end
     end
     removed
@@ -107,4 +108,4 @@ class Postsynchook
   end
 end
 
-$0 = File.basename(__FILE__) and Postsynchook.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and IMAPPostSyncHook.new.run ARGV if $0 == __FILE__

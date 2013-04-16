@@ -202,7 +202,7 @@ autorefresh = 5
 # start.
 
 # presynchook = imapfilter
-postsynchook = ~/.offlineimap/postsynchook
+postsynchook = imappostsynchook
 
 # You can also specify parameters to the commands
 # presynchook = imapfilter -c someotherconfig.lua
