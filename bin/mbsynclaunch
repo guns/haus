@@ -34,7 +34,7 @@ def mbsync channel
   log "START mbsync #{channel}", :green, :bold
   start = Time.now
 
-  IO.popen "/bin/bash -c \"exec mbsync -c <(cat) #{channel.shellescape}\"", 'w' do |w|
+  IO.popen "/bin/bash -c \"exec mbsync -q -c <(cat) #{channel.shellescape}\"", 'w' do |w|
     w.puts @conf
     w.close
   end
@@ -95,24 +95,25 @@ end
 
 # Fetch INBOX on IMAP IDLE
 @threads[:idle] = Thread.new do
-  imap = Net::IMAP.new 'imap.gmail.com',
-                        :port => 993,
-                        :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
-  imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
-  imap.select 'INBOX'
-
   begin
+    imap = Net::IMAP.new 'imap.gmail.com',
+                         :port => 993,
+                         :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
+    imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
+    imap.select 'INBOX'
+
     loop do
       imap.idle do |resp|
         imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
       end
+
       if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
         log 'New message in INBOX', :x150
         @lock.synchronize { mbsync 'inbox.sungpae.com' } unless @lock.locked?
       end
     end
   rescue
-    log $!.to_s, :red
+    log '[%s] %s' % [$!.class, $!.to_s], :red
   ensure
     log 'Disconnecting IMAP', :yellow
     imap.logout
@@ -121,11 +122,11 @@ end
 
 # Register signal handlers
 trap :USR1 do
-  log 'Received SIGUSR1; starting sync…', :x158
+  log "\nReceived SIGUSR1; starting sync…", :x158
   if @lock.locked?
     log 'Sync already in progress!', :yellow
   else
-    mbsync 'sungpae.com'
+    @threads[:poll].run
   end
 end
 
@@ -146,14 +147,17 @@ begin
 
     case $stdin.gets("\n")
     when /\Ar/i
-      @lock.synchronize { mbsync 'sungpae.com' } unless @lock.locked?
+      unless @lock.locked?
+        warn
+        @threads[:poll].run
+      end
     when /\A[t?]/i
       log human_time(Time.now, @next), :x217
     when /\Aq/i
       break
     end
 
-    @lock.synchronize { display_prompt }
+    display_prompt unless @lock.locked?
   end
 ensure
   kill_threads @threads
