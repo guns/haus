@@ -10,25 +10,12 @@ rescue Errno::ESRCH
 end
 
 pidfile = File.expand_path '~/.offlineimap/pid'
-port = '3346'
 
 if File.exists? pidfile and running? File.read(pidfile).to_i
   abort 'Offlineimap is already running!'
 end
 
-unless system 'nc', '-z', '127.0.0.1', port
-  fork do
-    servers = %x(dig +short imap.gmail.com smtp.gmail.com | grep '^[0-9]').lines.map { |s| s.strip.shellescape }
-    cmd = servers.map { |s| "iptables -C OUTPUT -d #{s} -j DROP || iptables -A OUTPUT -d #{s} -j DROP;" }.join
-    cmd << "exec /opt/sshuttle/sshuttle -v -l 127.0.0.1:#{port} -r guns@sungpae.com #{servers.join ' '}"
-    exec 'sudo', '/bin/sh', '-c', cmd
-  end
-  sleep 0.5 until system 'nc', '-z', '127.0.0.1', port
-end
-
-offlineimap_pid = fork do
-  exec 'offlineimap'
-end
+offlineimap_pid = fork { exec 'offlineimap' }
 
 %w[INT QUIT TERM].each do |sig|
   trap sig do
