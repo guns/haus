@@ -1,0 +1,31 @@
+
+#         _
+#   _____| |_ ___ _ _ ___ ___
+#  |     | . |_ -| | |   |  _|
+#  |_|_|_|___|___|_  |_|_|___|  guns <self@sungpae.com>
+#                |___|
+
+Create Both
+Expunge Both
+
+MaildirStore localstore.sungpae.com
+Path ~/Mail/self@sungpae.com/
+Inbox ~/Mail/self@sungpae.com/INBOX
+Flatten .
+
+IMAPStore imapstore.sungpae.com
+Host imap.gmail.com
+User self@sungpae.com
+Pass <%= %x(pass google.com/self@sungpae.com).chomp.inspect %>
+UseIMAPS yes
+RequireSSL yes
+CertificateFile ~/.certificates/gmail.crt
+
+Channel sungpae.com
+Master :imapstore.sungpae.com:
+Slave :localstore.sungpae.com:
+Patterns *
+
+Channel inbox.sungpae.com
+Master :imapstore.sungpae.com:INBOX
+Slave :localstore.sungpae.com:INBOX
