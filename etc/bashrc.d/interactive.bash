@@ -708,6 +708,7 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 if HAVE ip; then
     alias ic='ip addr'
+    cidr() { ip addr show scope global | awk '/^ *inet/{print $2}'; }
 elif HAVE ifconfig; then
     alias ic='ifconfig'
 fi
@@ -780,7 +781,7 @@ ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
 
 # nmap
 HAVE nmap && {
-    alias nmapsweep='run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(getlip)/24"'
+    alias nmapsweep='run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(cidr)"'
 }
 
 HAVE ngrep && {
