@@ -1,166 +1,349 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
+require 'optparse'
+require 'ostruct'
 require 'erb'
 require 'shellwords'
 require 'fileutils'
+require 'resolv'
+require 'timeout'
+require 'socket'
 require 'net/imap'
 require 'haus/logger'
 load File.expand_path('../imappostsynchook', __FILE__)
 
-@wait = 5 * 60
-@next = Time.now
-@lock = Mutex.new
-@sync = IMAPPostSyncHook.new
-@conf = ERB.new(File.read File.expand_path('~/.mbsyncrc.erb')).result
-@logger = Haus::Logger.new $stderr
-@threads = {}
-@program = File.basename __FILE__
-@pidfile = File.expand_path "~/.local/share/mbsync/#{@program}.pid"
+class Mbsynclaunch
+  attr_reader :options, :lock, :logger, :threads, :next_sync, :sync_hook
 
-$0 = @program
+  COLORS = {
+    :success  => [:green],
+    :info     => [:cyan],
+    :progress => [:x212],
+    :warning  => [:magenta],
+    :error    => [:red],
+    :prompt   => [:white]
+  }
 
-def running? pid
-  Process.kill 0, pid
-rescue Errno::ESRCH
-  false
-end
-
-def log msg, *styles
-  @logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *styles]
-end
-
-def mbsync channel
-  log "START mbsync #{channel}", :green, :bold
-  start = Time.now
-
-  IO.popen "/bin/bash -c \"exec mbsync -q -c <(cat) #{channel.shellescape}\"", 'w' do |w|
-    w.puts @conf
-    w.close
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.config ||= File.expand_path '~/.mbsyncrc.erb'
+    options.delay ||= 5 * 60
+    options.channel ||= 'sungpae.com'
+    options.inbox_channel ||= 'inbox.sungpae.com'
+    options.pidfile ||= File.expand_path '~/.local/run/mbsynclaunch.pid'
+    options.post_sync_hook_options ||= {}
+    @lock = Mutex.new
+    @logger = Haus::Logger.new $stderr
+    @threads = {}
+    @next_sync = Time.now
   end
 
-  @sync.run
+  def parser
+    @parser ||= OptionParser.new nil, 40 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        mbsync daemon
 
-  log "END mbsync #{channel} (#{human_time start, Time.now})", :green, :bold
-  display_prompt
-end
+        * Syncs on fixed schedule
+        * Syncs INBOX on IMAP IDLE EXISTS
+        * Syncs or quits on signals or input via stdin
 
-def kill_threads threads
-  threads.each_value &:kill
-  Process.waitall
-  threads.each_value &:join
-end
+        Usage: #{File.basename __FILE__} [options]
 
-def human_time from, to
-  seconds = (to - from).to_i
-  seconds = 0 if seconds < 0
+        Options:
+      BANNER
 
-  h = seconds / 3600
-  m = (seconds % 3600) / 60
-  s = seconds % 60
-
-  ary = []
-  ary << "#{h} hour#{'s' if h > 1}"   if h > 0
-  ary << "#{m} minute#{'s' if m > 1}" if m > 0
-  ary << "#{s} second#{'s' if s > 1}" if s > 0
-
-  case ary.size
-  when 0 then 'Any time now…'
-  when 1 then ary.first
-  when 2 then '%s and %s' % ary
-  when 3 then '%s, %s, and %s' % ary
-  end
-end
-
-def display_prompt
-  @logger.io.print @logger.fmt(["\rCommands: [R]esync, [T]ime until next sync, [Q]uit # ", :white])
-end
-
-# Write pidfile
-if File.exists? @pidfile and running? File.read(@pidfile).to_i
-  abort "#{@program} is already running!"
-else
-  FileUtils.mkdir_p File.dirname(@pidfile)
-  File.open(@pidfile, 'w') { |f| f.puts $$ }
-end
-
-# Poll all mailboxes
-@threads[:poll] = Thread.new do
-  loop do
-    @lock.synchronize { mbsync 'sungpae.com' }
-    @next = Time.now + @wait
-    sleep @wait
-  end
-end
-
-# Fetch INBOX on IMAP IDLE
-@threads[:idle] = Thread.new do
-  begin
-    imap = Net::IMAP.new 'imap.gmail.com',
-                         :port => 993,
-                         :ssl => { :ca_file => File.expand_path('~/.certificates/gmail.crt') }
-    imap.login 'self@sungpae.com', %x(pass google.com/self@sungpae.com).chomp
-    imap.select 'INBOX'
-
-    loop do
-      imap.idle do |resp|
-        imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+      opt.on '-c', '--config PATH', 'mbsync config file. May be an ERB template. [DEFAULT: %s]' % options.config do |arg|
+        options.config = arg
       end
 
-      if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
-        log 'New message in INBOX', :x150
-        @lock.synchronize { mbsync 'inbox.sungpae.com' } unless @lock.locked?
+      opt.on '-d', '--delay SECONDS', Integer, '[DEFAULT: %d]' % options.delay do |arg|
+        options.delay = arg
+      end
+
+      opt.on '-C', '--channel CHANNEL', '[DEFAULT: %s]' % options.channel do |arg|
+        options.channel = arg
+      end
+
+      opt.on '-I', '--inbox-channel CHANNEL', '[DEFAULT: %s]' % options.inbox_channel do |arg|
+        options.inbox_channel = arg
+      end
+
+      opt.on '-P', '--pidfile PATH', '[DEFAULT: %s]' % options.pidfile do |arg|
+        options.pidfile = arg
+      end
+
+      opt.on '-o', '--post-sync-hook-options KEY:VALUE,…', Array, 'Options hash to pass to IMAPPostSyncHook. [DEFAULT: none]' do |arg|
+        options.post_sync_hook_options = Hash[arg.map { |a| a.split ':', 2 }]
       end
     end
-  rescue
-    log '[%s] %s' % [$!.class, $!.to_s], :red
+  end
+
+  def config
+    @config ||= if options.config =~ /erb\z/
+      ERB.new(File.read options.config).result
+    else
+      File.read options.config
+    end
+  end
+
+  def delay
+    options.delay
+  end
+
+  def channel
+    options.channel
+  end
+
+  def inbox_channel
+    options.inbox_channel
+  end
+
+  def pidfile
+    options.pidfile
+  end
+
+  def post_sync_hook
+    @post_sync_hook ||= IMAPPostSyncHook.new options.post_sync_hook_options
+  end
+
+  # The config file doesn't rely on newlines to delimit sections, but it feels
+  # silly to implement an mbsyncrc parser here
+  def mbsyncrc
+    @mbsyncrc ||= Hash[config.split(/\n\n/).map do |section|
+      lines = section.lines.map(&:strip).reject { |l| l =~ /\A\s*#\z/ }
+      [lines.first.downcase, Hash[lines.drop(1).map { |l|
+        k, v = l.split /\s+/, 2
+        [k.downcase, v]
+      }]]
+    end.reject { |l| l.first.empty? }]
+  end
+
+  def imapstore
+    chan = mbsyncrc['channel ' << inbox_channel.downcase]
+    master = chan['master']
+    imap = master[/:([^:]*):/, 1]
+    mbsyncrc['imapstore ' << imap.downcase]
+  end
+
+  def imap_address
+    @imap_address ||= Resolv.getaddress imapstore['host']
+  end
+
+  def imap_port
+    @imap_port ||= (imapstore['port'] || 993).to_i
+  end
+
+  def alive?
+    File.exists? pidfile and Process.kill 0, File.read(pidfile).to_i
+  rescue Errno::ESRCH
+    false
+  end
+
+  # Implementation of Ping.pingecho from Ruby 1.8.7.
+  # Pass an IP address string to avoid DNS resolution hangups when offline.
+  #
+  # cf. http://www.mikeperham.com/2009/03/15/socket-timeouts-in-ruby/
+  #     for an alternate implementation.
+  def connect_with_timeout ipaddr, port, timeout
+    Timeout.timeout timeout do
+      TCPSocket.new(ipaddr, port).close
+    end
+    true
+  rescue Errno::ECONNREFUSED
+    true
+  rescue Timeout::Error, StandardError
+    false
+  end
+
+  def if_reachable addr, port
+    if connect_with_timeout addr, port, 1
+      yield
+    else
+      log '%s is unreachable!' % [addr, port].join(':'), *COLORS[:warning]
+    end
+  end
+
+  def write_pidfile
+    FileUtils.mkdir_p File.dirname(pidfile)
+    File.open(pidfile, 'w') { |f| f.puts $$ }
+  end
+
+  def remove_pidfile
+    FileUtils.rm_f pidfile
+  end
+
+  def log msg, *styles
+    logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *styles]
+  end
+
+  def human_time from, to
+    seconds = (to - from).to_i
+    seconds = 0 if seconds < 0
+
+    h = seconds / 3600
+    m = (seconds % 3600) / 60
+    s = seconds % 60
+
+    ary = []
+    ary << "#{h} hour#{'s' if h > 1}"   if h > 0
+    ary << "#{m} minute#{'s' if m > 1}" if m > 0
+    ary << "#{s} second#{'s' if s > 1}" if s > 0
+
+    case ary.size
+    when 0 then 'Any time now'
+    when 1 then ary.first
+    when 2 then '%s and %s' % ary
+    when 3 then '%s, %s, and %s' % ary
+    end
+  end
+
+  def dequote quoted_string
+    s = quoted_string[/\A"(.*)"\z/, 1] || quoted_string
+    s.gsub /\\(.)/, '\1'
+  end
+
+  def sync chan, *hook_args
+    log "START mbsync #{chan}", *COLORS[:progress]
+    start = Time.now
+
+    IO.popen %Q[/bin/bash -c "exec mbsync -c <(cat) #{chan.shellescape}"], 'w' do |w|
+      w.puts config
+      w.close
+    end
+
+    status = $?.exitstatus
+
+    post_sync_hook.run *hook_args
+
+    time = human_time start, Time.now
+    if status.zero?
+      log "FINISHED mbsync #{chan} in #{time}", *COLORS[:success]
+    else
+      log "FAILURE mbsync #{chan} aborted in #{time} with status #{status}", *COLORS[:error]
+    end
+  end
+
+  def kill_threads
+    log 'Killing threads and reaping children', *COLORS[:warning]
+    threads.each_value &:kill
+    Process.waitall
+    threads.each_value &:join
+  end
+
+  # Also (re)starts idle_thread. This is pretty terrible, but idle_thread
+  # was dying on exceptions thrown during blocking operations. This also
+  # allows the scheduled thread to run before the idle thread without
+  # synchronization.
+  def schedule_thread
+    Thread.new do
+      loop do
+        if_reachable imap_address, imap_port do
+          t = Thread.new { lock.synchronize { sync channel } }
+          Thread.new do
+            threads[:idle] = idle_thread if threads[:idle].nil? or threads[:idle].status.nil?
+          end
+          t.join
+        end
+        @next_sync = Time.now + delay
+        sleep delay
+      end
+    end
+  end
+
+  def idle_thread
+    Thread.new do
+      begin
+        log 'Connecting INBOX watcher', *COLORS[:progress]
+
+        imap = Net::IMAP.new imapstore['host'],
+                             :port => imap_port,
+                             :ssl => { :ca_file => File.expand_path(imapstore['certificatefile']) }
+        imap.login imapstore['user'], dequote(imapstore['pass'])
+        imap.select 'INBOX'
+
+        log 'Connected INBOX watcher', *COLORS[:success]
+
+        loop do
+          imap.idle do |resp|
+            imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+          end
+
+          if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
+            log 'New message in INBOX', *COLORS[:info]
+            lock.synchronize { sync inbox_channel, 'notify' } unless lock.locked?
+          end
+        end
+      rescue StandardError => e
+        log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
+      ensure
+        unless imap.disconnected?
+          log 'Disconnecting INBOX watcher', *COLORS[:warning]
+          imap.logout unless imap.disconnected?
+          imap.disconnect
+        end
+      end
+    end
+  end
+
+  def register_signal_handlers!
+    trap :USR1 do
+      if lock.locked?
+        log 'Received SIGUSR1, but sync already in progress!', *COLORS[:warning]
+      else
+        log 'Received SIGUSR1, starting sync', *COLORS[:progress]
+        threads[:schedule].run
+      end
+    end
+
+    term_signals = [:INT, :TERM, :QUIT]
+    term_signals.each do |sig|
+      trap sig do
+        term_signals.each { |sig| trap sig, 'DEFAULT' }
+        log "Received SIG#{sig}", *COLORS[:warning]
+        kill_threads
+      end
+    end
+  end
+
+  def command_thread input_stream = $stdin
+    Thread.new do
+      loop do
+        select [input_stream]
+
+        case input_stream.gets("\n")
+        when /\Ar/i
+          threads[:schedule].run unless lock.locked?
+        when /\A[t?]/i
+          log human_time(Time.now, next_sync), *COLORS[:info]
+        when /\Aq/i
+          kill_threads
+          break
+        else
+          log 'Commands: [R]esync, [T]ime until next sync, [Q]uit', *COLORS[:prompt]
+        end
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort 'mbsynclaunch is already running!' if alive?
+    write_pidfile
+
+    threads[:schedule] = schedule_thread
+    threads[:command]  = command_thread
+
+    register_signal_handlers!
+
+    threads[:command].join
   ensure
-    log 'Disconnecting IMAP', :yellow
-    imap.logout
+    remove_pidfile
   end
 end
 
-# Register signal handlers
-trap :USR1 do
-  log "\nReceived SIGUSR1; starting sync…", :x158
-  if @lock.locked?
-    log 'Sync already in progress!', :yellow
-  else
-    @threads[:poll].run
-  end
-end
-
-term_signals = [:INT, :TERM, :QUIT, :USR2]
-term_signals.each do |sig|
-  trap sig do
-    term_signals.each { |sig| trap sig, 'DEFAULT' }
-    log "Received SIG#{sig}; killing threads…", :magenta, :bold
-    kill_threads @threads
-    exit
-  end
-end
-
-# Process user input
-begin
-  loop do
-    select [$stdin]
-
-    case $stdin.gets("\n")
-    when /\Ar/i
-      unless @lock.locked?
-        warn
-        @threads[:poll].run
-      end
-    when /\A[t?]/i
-      log human_time(Time.now, @next), :x217
-    when /\Aq/i
-      break
-    end
-
-    display_prompt unless @lock.locked?
-  end
-ensure
-  kill_threads @threads
-end
-
-log 'Graceful shutdown.', :green
+$0 = File.basename(__FILE__) and Mbsynclaunch.new.run ARGV if $0 == __FILE__
