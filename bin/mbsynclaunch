@@ -269,8 +269,15 @@ class Mbsynclaunch
         log 'Connected INBOX watcher', *COLORS[:success]
 
         loop do
-          imap.idle do |resp|
-            imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+          begin
+            # IDLE calls time out after 30 minutes.
+            Timeout.timeout 20 * 60 do
+              imap.idle do |resp|
+                imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+              end
+            end
+          rescue Timeout::Error
+            next
           end
 
           if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
