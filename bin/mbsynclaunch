@@ -346,11 +346,18 @@ class Mbsynclaunch
           threads[:schedule].run unless lock.locked?
         when /\A[t?]/i
           log human_time(Time.now, next_sync), *COLORS[:info]
+        when /\Ad/i
+          begin
+            require 'pry'
+            binding.send $stdin.tty? ? :pry : :remote_pry
+          rescue LoadError => e
+            log '[%s] %s' % [e.class, e.to_s], *COLORS[:error]
+          end
         when /\Aq/i
           kill_threads
           break
         else
-          log 'Commands: [R]esync, [T]ime until next sync, [Q]uit', *COLORS[:prompt]
+          log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', *COLORS[:prompt]
         end
       end
     end
