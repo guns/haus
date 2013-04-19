@@ -49,7 +49,7 @@ set my_list=index,attach,browser,alias,postpone,pgp
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \CxeA  '<shell-escape>vim ~/.mutt/aliases<Enter>'
 macro $my_list,pager \Cx\;  '<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>'
-macro $my_list,pager \Cxr   '<shell-escape>kill -USR1 "$(cat ~/.local/run/mbsynclaunch.pid)"<enter>'
+macro $my_list,pager \Cxr   '<shell-escape>kill -HUP  "$(cat ~/.local/run/mbsynclaunch.pid)"<enter>'
 macro $my_list,pager \Cxq   '<shell-escape>kill -TERM "$(cat ~/.local/run/mbsynclaunch.pid)"<enter>'
 bind  $my_list,pager \;     enter-command
 

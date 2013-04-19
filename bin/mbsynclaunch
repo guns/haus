@@ -113,7 +113,7 @@ class Mbsynclaunch
   end
 
   def killed?
-    !!@killed
+    @killed
   end
 
   # The config file doesn't rely on newlines to delimit sections, but it feels
@@ -238,20 +238,32 @@ class Mbsynclaunch
   end
 
   def kill_threads
-    log 'Killing threads and reaping children', *COLORS[:warning]
     @killed = true
-    threads.each_value &:kill
+
+    log 'Killing threads', *COLORS[:warning]
+    threads[:idle].kill
+    threads[:schedule].kill
+
+    log 'Reaping children', *COLORS[:warning]
     Process.waitall
-    threads.each_value &:join
+
+    log 'Joining threads', *COLORS[:warning]
+    threads[:idle].join
+    threads[:schedule].join
   end
 
-  def chunked_sleep time
-    remaining = (time - Time.now).to_i
+  def sleep_till_next_sync
+    remaining = (@next_sync - Time.now).to_i
     (remaining / 60).times do
-      return if Time.now > time
+      return if Time.now > @next_sync
       sleep 60
     end
-    sleep (time - Time.now).to_i
+    sleep (@next_sync - Time.now).to_i
+  end
+
+  def run_schedule_thread
+    @next_sync = Time.now
+    threads[:schedule].run
   end
 
   # Also (re)starts idle_thread. This is pretty terrible, but idle_thread
@@ -263,13 +275,13 @@ class Mbsynclaunch
       loop do
         if_reachable imap_address, imap_port do
           t = Thread.new { lock.synchronize { sync channel } }
-          Thread.new do
-            threads[:idle] = idle_thread if threads[:idle].nil? or threads[:idle].status.nil?
+          if threads[:idle].nil? or threads[:idle].status.nil?
+            threads[:idle] = idle_thread
           end
           t.join
         end
         @next_sync = Time.now + delay
-        chunked_sleep next_sync
+        sleep_till_next_sync
       end
     end
   end
@@ -308,21 +320,20 @@ class Mbsynclaunch
         log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
       ensure
         unless imap.disconnected?
-          log 'Disconnecting INBOX watcher', *COLORS[:warning]
-          imap.logout unless imap.disconnected?
           imap.disconnect
+          log 'Disconnected INBOX watcher', *COLORS[:warning]
         end
       end
     end
   end
 
   def register_signal_handlers!
-    trap :USR1 do
+    trap :HUP do
       if lock.locked?
-        log 'Received SIGUSR1, but sync already in progress!', *COLORS[:warning]
+        log 'Received SIGHUP, but sync already in progress!', *COLORS[:warning]
       else
-        log 'Received SIGUSR1, starting sync', *COLORS[:progress]
-        threads[:schedule].run
+        log 'Received SIGHUP, starting sync', *COLORS[:progress]
+        run_schedule_thread
       end
     end
 
@@ -341,11 +352,13 @@ class Mbsynclaunch
       loop do
         select [input_stream]
 
-        case input_stream.gets("\n")
+        case input = input_stream.gets("\n").chomp
         when /\Ar/i
-          threads[:schedule].run unless lock.locked?
-        when /\A[t?]/i
-          log human_time(Time.now, next_sync), *COLORS[:info]
+          if lock.locked?
+            log 'Sync already in progress!', *COLORS[:warning]
+          else
+            run_schedule_thread
+          end
         when /\Ad/i
           begin
             require 'pry'
@@ -357,7 +370,11 @@ class Mbsynclaunch
           kill_threads
           break
         else
-          log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', *COLORS[:prompt]
+          t = input =~ /\A[t]/i
+          log human_time(Time.now, next_sync), *COLORS[:info] if t or input.empty?
+          unless t
+            log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', *COLORS[:prompt]
+          end
         end
       end
     end
@@ -369,11 +386,11 @@ class Mbsynclaunch
     write_pidfile
 
     threads[:schedule] = schedule_thread
-    threads[:command]  = command_thread
+    command_thread
 
     register_signal_handlers!
 
-    threads[:command].join
+    threads[:schedule].join
   ensure
     remove_pidfile
   end
