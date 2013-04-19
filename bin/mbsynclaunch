@@ -235,6 +235,15 @@ class Mbsynclaunch
     threads.each_value &:join
   end
 
+  def chunked_sleep time
+    remaining = (time - Time.now).to_i
+    (remaining / 60).times do
+      return if Time.now > time
+      sleep 60
+    end
+    sleep (time - Time.now).to_i
+  end
+
   # Also (re)starts idle_thread. This is pretty terrible, but idle_thread
   # was dying on exceptions thrown during blocking operations. This also
   # allows the scheduled thread to run before the idle thread without
@@ -250,7 +259,7 @@ class Mbsynclaunch
           t.join
         end
         @next_sync = Time.now + delay
-        sleep delay
+        chunked_sleep next_sync
       end
     end
   end
