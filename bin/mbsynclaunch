@@ -18,8 +18,6 @@ require 'haus/logger'
 load File.expand_path('../imappostsynchook', __FILE__)
 
 class Mbsynclaunch
-  attr_reader :options, :lock, :logger, :threads, :next_sync, :sync_hook
-
   COLORS = {
     :success  => [:green],
     :info     => [:cyan],
@@ -28,6 +26,8 @@ class Mbsynclaunch
     :error    => [:red],
     :prompt   => [:white]
   }
+
+  attr_reader :options, :lock, :logger, :threads, :next_sync, :sync_hook
 
   def initialize opts = {}
     @options = OpenStruct.new opts
@@ -41,6 +41,7 @@ class Mbsynclaunch
     @logger = Haus::Logger.new $stderr
     @threads = {}
     @next_sync = Time.now
+    @killed = false
   end
 
   def parser
@@ -111,6 +112,10 @@ class Mbsynclaunch
     @post_sync_hook ||= IMAPPostSyncHook.new options.post_sync_hook_options
   end
 
+  def killed?
+    !!@killed
+  end
+
   # The config file doesn't rely on newlines to delimit sections, but it feels
   # silly to implement an mbsyncrc parser here
   def mbsyncrc
@@ -131,7 +136,11 @@ class Mbsynclaunch
   end
 
   def imap_address
-    @imap_address ||= Resolv.getaddress imapstore['host']
+    @imap_address ||= begin
+      dns = Resolv::DNS.new
+      dns.timeouts = 5
+      dns.getaddress(imapstore['host']).to_s
+    end
   end
 
   def imap_port
@@ -211,7 +220,7 @@ class Mbsynclaunch
     log "START mbsync #{chan}", *COLORS[:progress]
     start = Time.now
 
-    IO.popen %Q[/bin/bash -c "exec mbsync -c <(cat) #{chan.shellescape}"], 'w' do |w|
+    IO.popen %Q[/bin/bash -c "exec mbsync -q -c <(cat) #{chan.shellescape}"], 'w' do |w|
       w.puts config
       w.close
     end
@@ -230,6 +239,7 @@ class Mbsynclaunch
 
   def kill_threads
     log 'Killing threads and reaping children', *COLORS[:warning]
+    @killed = true
     threads.each_value &:kill
     Process.waitall
     threads.each_value &:join
@@ -321,7 +331,7 @@ class Mbsynclaunch
       trap sig do
         term_signals.each { |sig| trap sig, 'DEFAULT' }
         log "Received SIG#{sig}", *COLORS[:warning]
-        kill_threads
+        kill_threads unless killed?
       end
     end
   end
