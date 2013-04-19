@@ -184,7 +184,7 @@ endfunction
 function! RubyFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^\s*def'
         return '>1'
-    elseif getline(a:lnum + 1) =~# '\v^\s*#'
+    elseif getline(a:lnum + 1) =~# '\v^\s{0,2}#'
         return 's1'
     else
         return '='
@@ -346,13 +346,17 @@ endfunction
 
 function! s:ClojureRunTests(all)
     if a:all
+        Require!
         call fireplace#session_eval('(clojure.test/run-all-tests)')
     else
         call fireplace#session_eval(
-            \   '(clojure.test/run-tests'
-            \ . '  (if (re-seq #"-test\z" (str *ns*))'
-            \ . '    *ns*'
-            \ . '    (first (filter #(re-seq (re-pattern (str *ns* "-test\\z")) (str %)) (all-ns)))))'
+            \   '(let [nspace (if (re-seq #"-test\z" (str *ns*))'
+            \ . '               *ns*'
+            \ . '               (first (filter #(re-seq (re-pattern (str *ns* "-test\\z"))'
+            \ . '                                       (str %))'
+            \ . '                              (all-ns))))]'
+            \ . '  (clojure.core/require (symbol (str nspace)) :reload)'
+            \ . '  (clojure.test/run-tests nspace))'
             \ )
     endif
 endfunction
