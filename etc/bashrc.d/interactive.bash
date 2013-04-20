@@ -1627,6 +1627,7 @@ if HAVE systemd; then
           sc='systemctl' \
           jc='journalctl' \
           jcf='journalctl -f' && {
+        alias scdaemonreload='systemctl --system daemon-reload'
         alias sleepnow='systemctl suspend'
         alias daemons='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
     }
