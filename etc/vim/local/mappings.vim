@@ -546,11 +546,6 @@ noremap <Leader>a<C-l>   :Align =><CR>
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>
 
-" Plugin: operator-camelize
-" RECURSIVE map for <Plug> mappings
-nmap <Leader>- viw<Plug>(operator-camelize-toggle)
-vmap <Leader>- <Plug>(operator-camelize-toggle)
-
 " Plugin: CtrlP
 Mapall <4-o> :<C-u>CtrlP<CR>
 Mapall <4-t> :<C-u>tabnew \\\| CtrlP<CR>
