@@ -241,14 +241,14 @@ class Mbsynclaunch
     @killed = true
 
     log 'Killing threads', *COLORS[:warning]
-    threads[:idle].kill
+    threads[:inbox].kill
     threads[:schedule].kill
 
     log 'Reaping children', *COLORS[:warning]
     Process.waitall
 
     log 'Joining threads', *COLORS[:warning]
-    threads[:idle].join
+    threads[:inbox].join
     threads[:schedule].join
   end
 
@@ -266,7 +266,7 @@ class Mbsynclaunch
     threads[:schedule].run
   end
 
-  # Also (re)starts idle_thread. This is pretty terrible, but idle_thread
+  # Also (re)starts inbox_thread. This is pretty terrible, but inbox_thread
   # was dying on exceptions thrown during blocking operations. This also
   # allows the scheduled thread to run before the idle thread without
   # synchronization.
@@ -275,8 +275,8 @@ class Mbsynclaunch
       loop do
         if_reachable imap_address, imap_port do
           t = Thread.new { lock.synchronize { sync channel } }
-          if threads[:idle].nil? or threads[:idle].status.nil?
-            threads[:idle] = idle_thread
+          if threads[:inbox].nil? or not threads[:inbox].status
+            threads[:inbox] = inbox_thread
           end
           t.join
         end
@@ -286,44 +286,51 @@ class Mbsynclaunch
     end
   end
 
-  def idle_thread
+  def inbox_thread
     Thread.new do
       begin
-        log 'Connecting INBOX watcher', *COLORS[:progress]
-
-        imap = Net::IMAP.new imapstore['host'],
-                             :port => imap_port,
-                             :ssl => { :ca_file => File.expand_path(imapstore['certificatefile']) }
-        imap.login imapstore['user'], dequote(imapstore['pass'])
-        imap.select 'INBOX'
-
-        log 'Connected INBOX watcher', *COLORS[:success]
-
-        loop do
-          begin
-            # IDLE calls time out after 30 minutes.
-            Timeout.timeout 20 * 60 do
-              imap.idle do |resp|
-                imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
-              end
-            end
-          rescue Timeout::Error
-            next
-          end
-
-          if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
-            log 'New message in INBOX', *COLORS[:info]
-            lock.synchronize { sync inbox_channel, 'notify' } unless lock.locked?
-          end
-        end
+        watch_inbox
       rescue StandardError => e
         log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
-      ensure
-        unless imap.disconnected?
-          imap.disconnect
-          log 'Disconnected INBOX watcher', *COLORS[:warning]
-        end
+        log 'Retrying in 10 seconds', *COLORS[:progress]
+        sleep 10
+        retry if connect_with_timeout imap_address, imap_port, 1
       end
+    end
+  end
+
+  def watch_inbox
+    log 'Connecting INBOX watcher', *COLORS[:progress]
+
+    imap = Net::IMAP.new imapstore['host'],
+                         :port => imap_port,
+                         :ssl => { :ca_file => File.expand_path(imapstore['certificatefile']) }
+    imap.login imapstore['user'], dequote(imapstore['pass'])
+    imap.select 'INBOX'
+
+    log 'Connected INBOX watcher', *COLORS[:success]
+
+    loop do
+      begin
+        # IDLE calls time out after 30 minutes.
+        Timeout.timeout 20 * 60 do
+          imap.idle do |resp|
+            imap.idle_done if resp.kind_of? Net::IMAP::UntaggedResponse and resp.name == 'EXISTS'
+          end
+        end
+      rescue Timeout::Error
+        next
+      end
+
+      if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
+        log 'New message in INBOX', *COLORS[:info]
+        lock.synchronize { sync inbox_channel, 'notify' } unless lock.locked?
+      end
+    end
+  ensure
+    unless imap.disconnected?
+      imap.disconnect
+      log 'Disconnected INBOX watcher', *COLORS[:warning]
     end
   end
 
@@ -371,7 +378,15 @@ class Mbsynclaunch
           break
         else
           t = input =~ /\A[t]/i
-          log human_time(Time.now, next_sync), *COLORS[:info] if t or input.empty?
+
+          if t or input.empty?
+            if lock.locked?
+              log 'Sync in progress!', *COLORS[:info]
+            else
+              log human_time(Time.now, next_sync), *COLORS[:info]
+            end
+          end
+
           unless t
             log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', *COLORS[:prompt]
           end
