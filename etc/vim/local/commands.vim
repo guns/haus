@@ -264,6 +264,9 @@ function! s:LispBufferSetup()
     nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
+    nmap <silent><buffer> <Leader>r        :Require<CR>
+    nmap <silent><buffer> <Leader>R        :Require!<CR>
+
     nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>ci :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
