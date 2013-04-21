@@ -272,16 +272,25 @@ class Mbsynclaunch
   # synchronization.
   def schedule_thread
     Thread.new do
-      loop do
-        if_reachable imap_address, imap_port do
-          t = Thread.new { lock.synchronize { sync channel } }
-          if threads[:inbox].nil? or not threads[:inbox].status
-            threads[:inbox] = inbox_thread
+      begin
+        log 'Starting scheduled sync', *COLORS[:progress]
+
+        loop do
+          if_reachable imap_address, imap_port do
+            t = Thread.new { lock.synchronize { sync channel } }
+            if threads[:inbox].nil? or not threads[:inbox].status
+              threads[:inbox] = inbox_thread
+            end
+            t.join
           end
-          t.join
+          @next_sync = Time.now + delay
+          sleep_till_next_sync
         end
-        @next_sync = Time.now + delay
+      rescue StandardError => e
+        log 'Scheduled sync thread exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
+        log 'Retrying in %s' % human_time(Time.now, next_sync), *COLORS[:progress]
         sleep_till_next_sync
+        retry
       end
     end
   end
@@ -292,8 +301,8 @@ class Mbsynclaunch
         watch_inbox
       rescue StandardError => e
         log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
-        log 'Retrying in 10 seconds', *COLORS[:progress]
-        sleep 10
+        log 'Retrying in 30 seconds', *COLORS[:progress]
+        sleep 30
         retry if connect_with_timeout imap_address, imap_port, 1
       end
     end
