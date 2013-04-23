@@ -240,8 +240,8 @@ endfunction
 
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! s:LispBufferSetup()
+    let b:loaded_delimitMate = 1
     SetWhitespace 2 8
-    let b:delimitMate_quotes = '"'
     setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
 
     " Rainbow parens
