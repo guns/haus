@@ -96,6 +96,7 @@ class Screencast
       -f alsa -ac 2 -i pulse
       -f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}
       -acodec pcm_s16le -vcodec libx264
+      -af bandreject=frequency=60:width_type=q:width=1.0
       -preset ultrafast -tune animation -crf 0
       -y -threads auto
       #{file}
