@@ -224,8 +224,7 @@ augroup GUNS
 
     " vim-orgmode {{{1
     autocmd FileType org
-        \ OrgBufferSetup |
-        \ SetWhitespace 2 8
+        \ OrgBufferSetup
 
     " systemd {{{1
     autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service,*.socket,*.swap,*.target,*.timer

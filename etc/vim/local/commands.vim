@@ -412,6 +412,9 @@ endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! s:OrgBufferSetup()
+    SetWhitespace 2 8
+    setlocal foldlevel=0
+
     " RECURSIVE maps for <Plug> mappings
     map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
     imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
