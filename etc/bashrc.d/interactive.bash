@@ -787,9 +787,7 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    ngg() { run ngrep -l -P '' -W byline -d "$@"; }
-    _ngg() { local cur="${COMP_WORDS[COMP_CWORD]}"; _available_interfaces; }
-    complete -F _ngg ngg
+    alias ngg='ngrep -l -q -P "" -W byline -d any'
 }
 
 # scutil
