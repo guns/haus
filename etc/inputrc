@@ -248,9 +248,9 @@ $if Bash
     "\C-xS":        "\C-]cdSRC "
     "\C-x\C-t":     "\C-] cdtmp \n"
     "\C-xt":        "\C-]cdtmp "
-    "\C-x\C-v":     "\C-] cdvimfiles \n"
-    "\C-xv":        "\C-]cdvimfiles "
-    "\C-xV":        "\C-]cdvar "
+    "\C-x\C-v":     "\C-] cdvar \n"
+    "\C-xv":        "\C-]cdvar "
+    "\C-xV":        "\C-]cdvimfiles "
     "\C-x\C-w":     "\C-] cdwww \n"
     "\C-xw":        "\C-]cdwww "
 
