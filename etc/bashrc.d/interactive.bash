@@ -644,10 +644,6 @@ fi
 # MIME type handlers
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
-# File browsers
-ALIAS ranger='ranger -c' \
-      rr='ranger -c'
-
 ### Processes
 
 # kill killall
