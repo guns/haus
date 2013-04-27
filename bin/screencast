@@ -13,6 +13,7 @@ class Screencast
 
   def initialize opts = {}
     @options = OpenStruct.new opts
+    options.audio ||= true
   end
 
   def parser
@@ -43,6 +44,10 @@ class Screencast
 
       opt.on '-d', '--delay SECONDS', Integer, 'Seconds to wait before recording' do |arg|
         options.delay = arg
+      end
+
+      opt.on '-n', '--no-audio', 'Do not record audio' do
+        options.audio = false
       end
     end
   end
@@ -84,6 +89,7 @@ class Screencast
 
   def record file, opts = {}
     display = opts[:display] || ':0.0'
+
     dimensions, offset = if opts[:geometry]
       fmt_geometry(opts[:geometry]).values_at :dimensions, :offset
     else
@@ -91,16 +97,21 @@ class Screencast
     end
 
     # http://ubuntuforums.org/showthread.php?t=1392026
-    exec *%W[
-      ffmpeg
-      -f alsa -ac 2 -i pulse
-      -f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}
-      -acodec pcm_s16le -vcodec libx264
-      -af bandreject=frequency=60:width_type=q:width=1.0
-      -preset ultrafast -tune animation -crf 0
+    copts = %W[-f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}]
+    copts += %W[-f alsa -ac 2 -i pulse] if opts[:audio]
+    copts += %W[
+      -vcodec libx264
+      -preset ultrafast
+      -tune animation
+      -crf 0
       -y -threads auto
-      #{file}
     ]
+    copts += %W[
+      -acodec pcm_s16le
+      -af bandreject=frequency=60:width_type=q:width=1.0
+    ] if opts[:audio]
+
+    exec 'ffmpeg', *copts, file
   end
 
   def run arguments = []
@@ -111,7 +122,7 @@ class Screencast
     file = File.join file, new_filename if File.directory? file
     geometry = options.window ? get_window_geometry(options.window_id) : options.geometry
     countdown options.delay.to_i
-    record file, :geometry => geometry
+    record file, :geometry => geometry, :audio => options.audio
   end
 end
 
