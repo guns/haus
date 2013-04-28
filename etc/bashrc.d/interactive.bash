@@ -644,6 +644,22 @@ fi
 # MIME type handlers
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
+# Filesystem watcher
+listen() {
+    (($# == 2)) || { echo "Usage: $FUNCNAME path shellcmd"; return 1; }
+
+    ruby -r listen -e '
+        arg = File.expand_path ARGV[0]
+        cmd = ARGV[1]
+        d, f = File.directory?(arg) ? [arg, nil] : [File.dirname(arg), File.basename(arg)]
+        λ = Proc.new { |m,a,r| system cmd unless m.empty? }
+        l = Listen.to d
+        l.filter Regexp.new("\\A" + Regexp.escape(f) + "\\z") if f
+        l.change &λ
+        l.start!
+    ' "$1" "$2"
+}
+
 ### Processes
 
 # kill killall
