@@ -828,6 +828,17 @@ HAVE weechat-curses && {
     ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
 }
 
+# Local api server @ `$cdapi`
+HAVE cdapi && {
+    # Param: $@ API Site names
+    api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
+    _api() { __compreply__ "$(lsdir "$cdapi")"; }
+    complete -F _api api
+}
+
+# Simple webserver
+httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
+
 ### Firewalls
 
 # IPTables
@@ -1174,17 +1185,6 @@ type ruby &>/dev/null && {
             FileUtils.mv gem, outdir if outdir
         " -- "$@"
     }
-
-    # Local api server @ `$cdapi`
-    HAVE cdapi && {
-        # Param: $@ API Site names
-        api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
-        _api() { __compreply__ "$(lsdir "$cdapi")"; }
-        complete -F _api api
-    }
-
-    # Simple webserver
-    httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 }
 
 ### Python
