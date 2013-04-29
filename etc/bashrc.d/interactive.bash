@@ -720,7 +720,7 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 if HAVE ip; then
     alias ic='ip addr'
-    cidr() { ip addr show scope global | awk '/^ *inet/{print $2}'; }
+    alias cidr='ip addr show scope global | awk "/^ *inet/{print \$2; exit}"'
 elif HAVE ifconfig; then
     alias ic='ifconfig'
 fi
@@ -1565,6 +1565,7 @@ HAVE cmus && {
 
 HAVE ffmpeg && {
     alias voicerecording='ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -af bandreject=frequency=60:width_type=q:width=1.0 -y'
+    # alias screenrecording='ffmpeg'
 }
 
 # VLC
