@@ -13,7 +13,7 @@
 #    R888"~ '88888F`      'Y"   "888*""888" `%888*%"   ^*888%  "88888%  `   ^"F
 #     ""     888 ^               ^Y"   ^Y'     "`        "%      "YP'
 #            *8E
-#            '8>                                          guns <self@sungpae.com>
+#            '8>                                        guns <self@sungpae.com>
 #             "
 #
 #  cf. http://inai.de/documents/Perfect_Ruleset.pdf
