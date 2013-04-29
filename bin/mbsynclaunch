@@ -253,12 +253,12 @@ class Mbsynclaunch
   end
 
   def sleep_till_next_sync
-    remaining = (@next_sync - Time.now).to_i
+    remaining = (next_sync - Time.now).to_i
     (remaining / 60).times do
-      return if Time.now > @next_sync
+      return if Time.now > next_sync
       sleep 60
     end
-    sleep (@next_sync - Time.now).to_i
+    sleep [(next_sync - Time.now).to_i, 0].max
   end
 
   def run_schedule_thread
