@@ -19,9 +19,9 @@ load File.expand_path('../imappostsynchook', __FILE__)
 
 class Mbsynclaunch
   COLORS = {
-    :success  => [:green],
-    :info     => [:cyan],
-    :progress => [:x212],
+    :success  => [:x83],
+    :info     => [:x81],
+    :progress => [:x218],
     :warning  => [:magenta],
     :error    => [:red],
     :prompt   => [:white]
@@ -173,7 +173,7 @@ class Mbsynclaunch
     if connect_with_timeout addr, port, 1
       yield
     else
-      log '%s is unreachable!' % [addr, port].join(':'), *COLORS[:warning]
+      log '%s is unreachable!' % [addr, port].join(':'), :warning
     end
   end
 
@@ -186,8 +186,8 @@ class Mbsynclaunch
     FileUtils.rm_f pidfile
   end
 
-  def log msg, *styles
-    logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *styles]
+  def log msg, style = nil
+    logger.log ['[%s] %s' % [Time.now.strftime('%H:%M:%S'), msg], *(COLORS[style] || [])]
   end
 
   def human_time from, to
@@ -217,7 +217,7 @@ class Mbsynclaunch
   end
 
   def sync chan, *hook_args
-    log "START mbsync #{chan}", *COLORS[:progress]
+    log "START mbsync #{chan}", :progress
     start = Time.now
 
     IO.popen %Q[/bin/bash -c "exec mbsync -q -c <(cat) #{chan.shellescape}"], 'w' do |w|
@@ -231,23 +231,23 @@ class Mbsynclaunch
 
     time = human_time start, Time.now
     if status.zero?
-      log "FINISHED mbsync #{chan} in #{time}", *COLORS[:success]
+      log "FINISHED mbsync #{chan} in #{time}", :success
     else
-      log "FAILURE mbsync #{chan} aborted in #{time} with status #{status}", *COLORS[:error]
+      log "FAILURE mbsync #{chan} aborted in #{time} with status #{status}", :error
     end
   end
 
   def kill_threads
     @killed = true
 
-    log 'Killing threads', *COLORS[:warning]
+    log 'Killing threads', :warning
     threads[:inbox].kill
     threads[:schedule].kill
 
-    log 'Reaping children', *COLORS[:warning]
+    log 'Reaping children', :warning
     Process.waitall
 
-    log 'Joining threads', *COLORS[:warning]
+    log 'Joining threads', :warning
     threads[:inbox].join
     threads[:schedule].join
   end
@@ -273,7 +273,7 @@ class Mbsynclaunch
   def schedule_thread
     Thread.new do
       begin
-        log 'Starting scheduled sync', *COLORS[:progress]
+        log 'Starting scheduled sync', :progress
 
         loop do
           if_reachable imap_address, imap_port do
@@ -287,8 +287,8 @@ class Mbsynclaunch
           sleep_till_next_sync
         end
       rescue StandardError => e
-        log 'Scheduled sync thread exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
-        log 'Retrying in %s' % human_time(Time.now, next_sync), *COLORS[:progress]
+        log 'Scheduled sync thread exception: [%s] %s' % [e.class, e.to_s], :error
+        log 'Retrying in %s' % human_time(Time.now, next_sync), :progress
         sleep_till_next_sync
         retry
       end
@@ -300,8 +300,8 @@ class Mbsynclaunch
       begin
         watch_inbox
       rescue StandardError => e
-        log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], *COLORS[:error]
-        log 'Retrying in 30 seconds', *COLORS[:progress]
+        log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], :error
+        log 'Retrying in 30 seconds', :progress
         sleep 30
         retry if connect_with_timeout imap_address, imap_port, 1
       end
@@ -309,7 +309,7 @@ class Mbsynclaunch
   end
 
   def watch_inbox
-    log 'Connecting INBOX watcher', *COLORS[:progress]
+    log 'Connecting INBOX watcher', :progress
 
     imap = Net::IMAP.new imapstore['host'],
                          :port => imap_port,
@@ -317,7 +317,7 @@ class Mbsynclaunch
     imap.login imapstore['user'], dequote(imapstore['pass'])
     imap.select 'INBOX'
 
-    log 'Connected INBOX watcher', *COLORS[:success]
+    log 'Connected INBOX watcher', :success
 
     loop do
       begin
@@ -332,23 +332,23 @@ class Mbsynclaunch
       end
 
       if imap.status('INBOX', ['UNSEEN'])['UNSEEN'] > 0
-        log 'New message in INBOX', *COLORS[:info]
+        log 'New message in INBOX', :info
         lock.synchronize { sync inbox_channel, 'notify' } unless lock.locked?
       end
     end
   ensure
     unless imap.disconnected?
       imap.disconnect
-      log 'Disconnected INBOX watcher', *COLORS[:warning]
+      log 'Disconnected INBOX watcher', :warning
     end
   end
 
   def register_signal_handlers!
     trap :HUP do
       if lock.locked?
-        log 'Received SIGHUP, but sync already in progress!', *COLORS[:warning]
+        log 'Received SIGHUP, but sync already in progress!', :warning
       else
-        log 'Received SIGHUP, starting sync', *COLORS[:progress]
+        log 'Received SIGHUP, starting sync', :progress
         run_schedule_thread
       end
     end
@@ -357,7 +357,7 @@ class Mbsynclaunch
     term_signals.each do |sig|
       trap sig do
         term_signals.each { |sig| trap sig, 'DEFAULT' }
-        log "Received SIG#{sig}", *COLORS[:warning]
+        log "Received SIG#{sig}", :warning
         kill_threads unless killed?
       end
     end
@@ -371,7 +371,7 @@ class Mbsynclaunch
         case input = input_stream.gets("\n").chomp
         when /\Ar/i
           if lock.locked?
-            log 'Sync already in progress!', *COLORS[:warning]
+            log 'Sync already in progress!', :warning
           else
             run_schedule_thread
           end
@@ -380,7 +380,7 @@ class Mbsynclaunch
             require 'pry'
             binding.send $stdin.tty? ? :pry : :remote_pry
           rescue LoadError => e
-            log '[%s] %s' % [e.class, e.to_s], *COLORS[:error]
+            log '[%s] %s' % [e.class, e.to_s], :error
           end
         when /\Aq/i
           kill_threads
@@ -390,14 +390,14 @@ class Mbsynclaunch
 
           if t or input.empty?
             if lock.locked?
-              log 'Sync in progress!', *COLORS[:info]
+              log 'Sync in progress!', :info
             else
-              log human_time(Time.now, next_sync), *COLORS[:info]
+              log human_time(Time.now, next_sync), :info
             end
           end
 
           unless t
-            log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', *COLORS[:prompt]
+            log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', :prompt
           end
         end
       end
