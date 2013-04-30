@@ -32,7 +32,7 @@ class Mbsynclaunch
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.config ||= File.expand_path '~/.mbsyncrc.erb'
-    options.delay ||= 5 * 60
+    options.delay ||= 10 * 60
     options.channel ||= 'sungpae.com'
     options.inbox_channel ||= 'inbox.sungpae.com'
     options.pidfile ||= File.expand_path '~/.local/run/mbsynclaunch.pid'
@@ -301,9 +301,16 @@ class Mbsynclaunch
         watch_inbox
       rescue StandardError => e
         log 'INBOX watcher exception: [%s] %s' % [e.class, e.to_s], :error
-        log 'Retrying in 30 seconds', :progress
-        sleep 30
-        retry if connect_with_timeout imap_address, imap_port, 1
+        log 'Polling for server availability', :progress
+        available = false
+        10.times do
+          sleep 5
+          if connect_with_timeout imap_address, imap_port, 1
+            available = true
+            break
+          end
+        end
+        retry if available
       end
     end
   end
