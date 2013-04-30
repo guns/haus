@@ -230,7 +230,7 @@ class Mbsynclaunch
     post_sync_hook.run *hook_args
 
     time = human_time start, Time.now
-    if status.zero?
+    if status and status.zero?
       log "FINISHED mbsync #{chan} in #{time}", :success
     else
       log "FAILURE mbsync #{chan} aborted in #{time} with status #{status}", :error
