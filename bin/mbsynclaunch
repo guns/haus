@@ -276,6 +276,7 @@ class Mbsynclaunch
         log 'Starting scheduled sync', :progress
 
         loop do
+          @next_sync = Time.now + delay
           if_reachable imap_address, imap_port do
             t = Thread.new { lock.synchronize { sync channel } }
             if threads[:inbox].nil? or not threads[:inbox].status
@@ -283,7 +284,6 @@ class Mbsynclaunch
             end
             t.join
           end
-          @next_sync = Time.now + delay
           sleep_till_next_sync
         end
       rescue StandardError => e
