@@ -154,6 +154,14 @@ function! s:Ctags()
     execute 'Sh (' . cmd . '; notify --audio) &>/dev/null &' | echo cmd
 endfunction
 
+function! MarkdownFoldExpr(lnum)
+    if getline(a:lnum) =~# '\v^#' || getline(a:lnum + 1) =~# '\v^[=-]+$'
+        return '>1'
+    else
+        return '='
+    endif
+endfunction
+
 function! ShellFoldExpr(lnum)
     if getline(a:lnum) =~# '\v^\s*\#\#\#\s' && empty(getline(a:lnum - 1))
         return '>1'

@@ -149,7 +149,7 @@ augroup GUNS
 
     " Markdown {{{1
     autocmd FileType markdown,rdoc
-        \ setlocal iskeyword+=- |
+        \ setlocal iskeyword+=- foldmethod=expr foldexpr=MarkdownFoldExpr(v:lnum) |
         \ SetWhitespace 4 8
 
     " Mail {{{1
