@@ -1,0 +1,9 @@
+[Unit]
+Description=Hardware settings
+
+[Service]
+Type=oneshot
+ExecStart=/etc/local/hardware-settings.sh
+
+[Install]
+WantedBy=multi-user.target
