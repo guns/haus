@@ -78,7 +78,7 @@ class Mbsynclaunch
         options.pidfile = arg
       end
 
-      opt.on '-o', '--post-sync-hook-options KEY:VALUE,…', Array, 'Options hash to pass to IMAPPostSyncHook. [DEFAULT: none]' do |arg|
+      opt.on '-o', '--post-sync-hook-options KEY:VALUE,…', Array, 'Options hash to pass to IMAPPostSyncHook.' do |arg|
         options.post_sync_hook_options = Hash[arg.map { |a| a.split ':', 2 }]
       end
     end
@@ -350,13 +350,19 @@ class Mbsynclaunch
     end
   end
 
+  def reconnect_inbox_thread
+    threads[:inbox].kill.join if threads[:inbox].is_a? Thread
+    threads[:inbox] = inbox_thread
+  end
+
   def register_signal_handlers!
     trap :HUP do
       if lock.locked?
         log 'Received SIGHUP, but sync already in progress!', :warning
       else
-        log 'Received SIGHUP, starting sync', :progress
+        log 'Received SIGHUP', :progress
         run_schedule_thread
+        reconnect_inbox_thread
       end
     end
 
@@ -376,12 +382,14 @@ class Mbsynclaunch
         select [input_stream]
 
         case input = input_stream.gets("\n").chomp
-        when /\Ar/i
+        when /\As/i
           if lock.locked?
             log 'Sync already in progress!', :warning
           else
             run_schedule_thread
           end
+        when /\Ar/i
+          reconnect_inbox_thread
         when /\Ad/i
           begin
             require 'pry'
@@ -404,7 +412,7 @@ class Mbsynclaunch
           end
 
           unless t
-            log 'Commands: [R]esync, [T]ime until next sync, [D]ebug, [Q]uit', :prompt
+            log 'Commands: [S]ync, [R]econnect inbox watcher, [T]ime until next sync, [D]ebug, [Q]uit', :prompt
           end
         end
       end
