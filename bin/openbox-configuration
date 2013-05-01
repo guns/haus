@@ -222,6 +222,9 @@
    (bindsh "F6" "hwctl backlight -5")
    (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
    (bindsh "F7" "hwctl backlight +5")
+   (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
+                   "synclient TouchpadOff=$OFF"
+                   "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
    (bindsh "XF86Eject" ["slock" "killall -HUP gpg-agent"])
    (bindsh "W-XF86Eject" "sudo /usr/local/sbin/systemctl-suspend")
    (bindsh "W-A-XF86Eject" "sudo /sbin/reboot")
