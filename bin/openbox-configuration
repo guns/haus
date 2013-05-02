@@ -19,7 +19,8 @@
   ([form indent]
    (if (and (vector? form) (some coll? form))
      (conj (reduce (fn [v f]
-                     (cond (vector? f) (conj v (apply str \newline (repeat indent \tab))
+                     (cond (vector? f) (conj v
+                                             (apply str \newline (repeat indent \tab))
                                              (tidy f (inc indent)))
                            (list? f) (into v (map #(list %1 (tidy %2 (inc indent)))
                                                   (repeat (apply str \newline (repeat indent \tab)))
@@ -35,7 +36,9 @@
   ([node indent]
    (if (string? node)
      (format " \"%s\""
-             (string/replace node #"(\\*\")" "\\\\$1"))
+             (-> node
+                 (string/replace #"(\\+\")" "\\\\\\\\$1")
+                 (string/replace #"(?<!\\)(\")" "\\\\$1")))
      (format "\n%s[%s%s%s]"
              (apply str (repeat indent \space))
              (:tag node)
@@ -359,7 +362,7 @@
 (defn openbox-rc-path []
   (:out (shell/sh "/bin/sh" "-c" "printf %s ~/.config/openbox/rc.xml")))
 
-(defn usage []
+(defn print-usage []
   (let [help (format
                (string/join
                  \newline
@@ -379,8 +382,8 @@
           (= command "update") (do (spit (openbox-rc-path) (render-xml rc))
                                    (shell/sh "openbox" "--reconfigure"))
           (= command "parse") (println (convert-xml (or arg *in*)))
-          (contains? #{"-h" "--help" "help"} command) (usage)
-          :else (do (usage) (System/exit 1)))))
+          (contains? #{"-h" "--help" "help"} command) (print-usage)
+          :else (do (print-usage) (System/exit 1)))))
 
 (-main *command-line-args*)
 
