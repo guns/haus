@@ -720,7 +720,7 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 if HAVE ip; then
     alias ic='ip addr'
-    alias cidr='ip addr show scope global | awk "/^ *inet/{print \$2; exit}"'
+    alias cidr='ip route list scope link | awk "{print \$1; exit}"'
 elif HAVE ifconfig; then
     alias ic='ifconfig'
 fi
