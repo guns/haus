@@ -1487,9 +1487,9 @@ elif __LINUX__; then
         # alias pace
         alias pacg='run pacman -Qs'
         alias paci='run pacman -S --needed'
-        pacq() { (pacman -Si "$@"; pacman -Ql "$@") 2>/dev/null | pager; }
+        pacq() { (pacman -Si "$@" || pacman -Qi "$@"; pacman -Ql "$@") 2>/dev/null | pager; }
         alias pacs='run pacman -Ss'
-        alias pacu='run pacman -Rs'
+        alias pacu='run pacman -Rss'
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
 
