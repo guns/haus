@@ -273,8 +273,6 @@ class Mbsynclaunch
   def schedule_thread
     Thread.new do
       begin
-        log 'Starting scheduled sync', :progress
-
         loop do
           @next_sync = Time.now + delay
           if_reachable imap_address, imap_port do
