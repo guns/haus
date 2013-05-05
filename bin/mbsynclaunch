@@ -358,7 +358,7 @@ class Mbsynclaunch
       if lock.locked?
         log 'Received SIGHUP, but sync already in progress!', :warning
       else
-        log 'Received SIGHUP', :progress
+        log 'Received SIGHUP', :warning
         run_schedule_thread
         reconnect_inbox_thread
       end
