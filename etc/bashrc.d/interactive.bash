@@ -1514,10 +1514,12 @@ elif __LINUX__; then
                 src = File.join "/var/abs", pkg
                 dst = "/var/abs/local/%s" % File.basename(pkg)
                 system *%W[abs #{pkg}]
-                system *%W[mkdir -p #{dst}]
-                system *%W[rsync -av --delete #{src}/ #{dst}/]
-                Dir.chdir dst do
-                    FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), File.basename(src)
+                unless File.directory? dst
+                    system *%W[mkdir -p #{dst}]
+                    system *%W[rsync -av --delete #{src}/ #{dst}/]
+                    Dir.chdir dst do
+                        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), File.basename(src)
+                    end
                 end
             end
         ' -- "$@"
