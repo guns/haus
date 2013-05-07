@@ -1375,7 +1375,7 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 HAVE pass && {
     pc() { pass "$@" | sed q | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
-    passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
+    passi() { pass insert -fm "$1" < <(genpw --random "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
 }
 
