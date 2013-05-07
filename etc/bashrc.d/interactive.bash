@@ -1566,7 +1566,7 @@ HAVE cmus && {
 }
 
 HAVE ffmpeg && {
-    alias voicerecording='ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -af bandreject=frequency=60:width_type=q:width=1.0 -y'
+    alias voicerecording='sleep 0.5; ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -af bandreject=frequency=60:width_type=q:width=1.0 -y'
     # alias screenrecording='ffmpeg'
 }
 
