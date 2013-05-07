@@ -232,6 +232,13 @@
    (bindsh "W-XF86Eject" "sudo /usr/local/sbin/systemctl-suspend")
    (bindsh "W-A-XF86Eject" "sudo /sbin/reboot")
    (bindsh "W-C-A-XF86Eject" "sudo /sbin/poweroff")
+   (bindsh "W-C-S-z" ["WM_PID=$(xprop | awk '/_NET_WM_PID/{print $NF; exit}')"
+                      "if [[ $WM_PID != +([0-9]) ]]"
+                      "then notify COULD NOT DETERMINE PID"
+                      "elif [[ $(awk '{print $3}' /proc/$WM_PID/stat) == T ]]"
+                      "then kill -CONT $WM_PID; notify --audio CONT $WM_PID"
+                      "else kill -STOP $WM_PID; notify --audio STOP $WM_PID"
+                      "fi"])
    (bindsh "W-C-S-space" "mediactl toggle")
    (bindsh "W-C-S-Left" "mediactl prev")
    (bindsh "W-C-S-Right" "mediactl next")
