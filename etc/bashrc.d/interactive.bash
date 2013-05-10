@@ -660,6 +660,8 @@ listen() {
     ' "$1" "$2"
 }
 
+ALIAS iotop='iotop --only'
+
 ### Processes
 
 # kill killall
