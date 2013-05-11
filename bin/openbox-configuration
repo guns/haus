@@ -251,12 +251,12 @@
    (bindsh "W-A-t" "urxvt-client -g 120x30 -e htop")
    (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
    (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
-   (bindfocus "F2" "File Manager" "thunar ~/Downloads")
+   (bindfocus "F2" "File Manager" "exec thunar ~/Downloads")
    (bindfocus "F9" "guns ❦ EVA")
    (bindfocus "W-F9" "root ❦ EVA")
-   (bindfocus "F10" "Vimperator" "firefox")
-   (bindfocus "W-F10" "Chromium" "chromium")
-   (bindfocus "W-A-F10" "gPodder" "gpodder")
+   (bindfocus "F10" "Vimperator" "exec firefox")
+   (bindfocus "W-F10" "Chromium" "exec chromium")
+   (bindfocus "W-A-F10" "gPodder" "exec gpodder")
    (bindfocus "A-F10" "♻ newsbeuter ♻"
               ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
    (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME"]
