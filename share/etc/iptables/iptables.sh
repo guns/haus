@@ -106,9 +106,6 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 # "$IPTABLES" --append INPUT --protocol tcp --dport 2049  --match conntrack --ctstate NEW --jump ACCEPT
 # "$IPTABLES" --append INPUT --protocol tcp --dport 32767 --match conntrack --ctstate NEW --jump ACCEPT
 
-# NTP
-# "$IPTABLES" --append INPUT --protocol udp --dport 123 --jump ACCEPT
-
 # Samba
 # "$IPTABLES" --append INPUT --protocol tcp --match multiport --dports 139,445 --match conntrack --ctstate NEW --jump ACCEPT
 # "$IPTABLES" --append INPUT --protocol udp --match multiport --dports 137,138 --match conntrack --ctstate NEW --jump ACCEPT
