@@ -1510,23 +1510,6 @@ elif __LINUX__; then
         # alias auraoutdated='run aura -Au'
     }
 
-    HAVE abs && abslocal() {
-        ruby -r pathname -r fileutils -e '
-            ARGV.each do |pkg|
-                src = File.join "/var/abs", pkg
-                dst = "/var/abs/local/%s" % File.basename(pkg)
-                system *%W[abs #{pkg}]
-                unless File.directory? dst
-                    system *%W[mkdir -p #{dst}]
-                    system *%W[rsync -av --delete #{src}/ #{dst}/]
-                    Dir.chdir dst do
-                        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), File.basename(src)
-                    end
-                end
-            end
-        ' -- "$@"
-    }
-
     ALIAS mkpkg='makepkg' \
           mkpkgs='makepkg -s'
 fi
