@@ -861,7 +861,7 @@ httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 
 # IPTables
 ALIAS ipt='iptables' && {
-    ALIAS ipt6='ip6tables'
+    ALIAS IPT='ip6tables'
     [[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
     iptlist() {
         {   local table
