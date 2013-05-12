@@ -1626,6 +1626,7 @@ if HAVE systemd; then
     ALIAS sd='systemd' \
           sc='systemctl' \
           jc='journalctl' \
+          jcb='journalctl -b' \
           jcf='journalctl -f' && {
         alias scdaemonreload='systemctl --system daemon-reload'
         alias sleepnow='systemctl suspend'
