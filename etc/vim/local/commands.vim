@@ -301,11 +301,13 @@ function! s:ClojureCheatSheet(pattern)
         let g:__clojure_cheat_sheets__ = {}
     endif
 
-    if !has_key(g:__clojure_cheat_sheets__, b:leiningen_root)
-        let g:__clojure_cheat_sheets__[b:leiningen_root] = {}
+    let root = exists('b:leiningen_root') ? b:leiningen_root : expand('%:p:h')
+
+    if !has_key(g:__clojure_cheat_sheets__, root)
+        let g:__clojure_cheat_sheets__[root] = {}
     endif
 
-    let file = get(g:__clojure_cheat_sheets__[b:leiningen_root], a:pattern, '')
+    let file = get(g:__clojure_cheat_sheets__[root], a:pattern, '')
 
     if !filereadable(file)
         let file = fireplace#evalparse(
@@ -335,7 +337,7 @@ function! s:ClojureCheatSheet(pattern)
             \ . '        (.getAbsolutePath (java.io.File. tmp)))'
             \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
             \ )
-        let g:__clojure_cheat_sheets__[b:leiningen_root][a:pattern] = file
+        let g:__clojure_cheat_sheets__[root][a:pattern] = file
     endif
 
     if empty(file)
