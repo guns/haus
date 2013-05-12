@@ -1498,18 +1498,6 @@ elif __LINUX__; then
         alias paclog='pager /var/log/pacman.log'
     }
 
-    # Aura pacman + AUR wrapper
-    HAVE aura && {
-        # alias aurae
-        alias aurag='run aura -Ls'
-        alias aurai='run aura -Ax --hotedit'
-        auraq() { (aura -Ai "$@"; aura -Ad "$@"; aura -Ap "$@") | pager; }
-        alias auras='run aura -As'
-        # alias aurau
-        # alias aurasync
-        # alias auraoutdated='run aura -Au'
-    }
-
     ALIAS mkpkg='makepkg' \
           mkpkgf='makepkg -f' \
           mkpkgs='makepkg -s'
