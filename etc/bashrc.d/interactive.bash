@@ -1511,6 +1511,7 @@ elif __LINUX__; then
     }
 
     ALIAS mkpkg='makepkg' \
+          mkpkgf='makepkg -f' \
           mkpkgs='makepkg -s'
 fi
 
