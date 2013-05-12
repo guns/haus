@@ -7,10 +7,9 @@ task :local do
 
   args = ARGV.drop_while { |a| a != 'local' }.drop 1
 
-  args.each do |pkg|
-    src = File.join __dir__, pkg
-    dst = File.join __dir__, 'local', File.basename(pkg)
-    sh 'abs', pkg
+  args.each do |src|
+    dst = File.join 'local', File.basename(src)
+    sh 'abs', src
     unless File.directory? dst
       sh 'mkdir', '-p', dst
       sh 'rsync', '-av', '--delete', src + '/', dst + '/'
@@ -34,7 +33,7 @@ task :aur do
 
   Dir.chdir 'AUR' do
     urls.each do |url|
-      sh "curl -#L #{url.shellescape} | tar zxv"
+      sh "curl -#L #{url.shellescape} | tar zxv &"
     end
   end
 end
