@@ -32,7 +32,7 @@ class Mbsynclaunch
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.config ||= File.expand_path '~/.mbsyncrc.erb'
-    options.delay ||= 10 * 60
+    options.delay ||= 15 * 60
     options.channel ||= 'sungpae.com'
     options.inbox_channel ||= 'inbox.sungpae.com'
     options.pidfile ||= File.expand_path '~/.local/run/mbsynclaunch.pid'
