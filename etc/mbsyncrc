@@ -16,7 +16,6 @@ Flatten .
 IMAPStore imapstore.sungpae.com
 Host imap.gmail.com
 User self@sungpae.com
-Pass <%= %x(pass google.com/self@sungpae.com).chomp.inspect %>
 UseIMAPS yes
 RequireSSL yes
 CertificateFile ~/.certificates/gmail.crt
