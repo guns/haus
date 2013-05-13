@@ -1495,6 +1495,7 @@ elif __LINUX__; then
         alias pacsync='run pacman -Sy'
         alias pacoutdated='run pacman -Qu'
 
+        alias pactreer='pactree -r'
         alias paclog='pager /var/log/pacman.log'
     }
 
