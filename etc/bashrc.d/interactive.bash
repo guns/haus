@@ -1203,6 +1203,16 @@ type ruby &>/dev/null && {
             FileUtils.mv gem, outdir if outdir
         " -- "$@"
     }
+
+    rklink() {
+        case $# in
+        0) local fname="${PWD##*/}";;
+        1) local fname="$1";;
+        *) echo "USAGE: $FUNCNAME [srcname]"; return 1;;
+        esac
+
+        ln -s "$cdhaus/share/rake/$fname" Rakefile
+    }
 }
 
 ### Python
