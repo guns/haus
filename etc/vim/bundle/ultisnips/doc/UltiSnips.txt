@@ -1365,6 +1365,11 @@ Contributors listed in chronological order:
    Josh Strater (jstrater)
    jinzhu
    Rene Vergara (ravl1084)
+   Johan Haals (JHaals)
+   Danilo Bargen (dbrgn)
+   Bernhard Vallant (lazerscience)
+   Von Welch (von)
+   Nikola Petrov (nikolavp)
 
 Thank you for your support.
 

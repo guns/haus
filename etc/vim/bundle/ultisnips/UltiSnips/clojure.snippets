@@ -20,7 +20,13 @@ snippet load "load" w
 endsnippet
 
 snippet ns "ns"
-(ns $0)
+(ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
+endsnippet
+
+snippet nst "test ns"
+(ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
+	(:require [clojure.test :as test :refer [deftest testing is]]
+	          [$1$0 :as ]))
 endsnippet
 
 snippet req "require"
@@ -70,10 +76,12 @@ endsnippet
 
 snippet CC "comment" w
 (comment
-
 	$0
-
 	)
+endsnippet
+
+snippet SH "clojure.java.shell/sh" w
+(clojure.java.shell/sh $0)
 endsnippet
 
 
@@ -560,7 +568,7 @@ snippet defc "def ^:const"
 endsnippet
 
 snippet defd "def ^:dynamic"
-(def ^:dynamic $0)
+(def ^:dynamic *$0*)
 endsnippet
 
 snippet defo "defonce"
@@ -602,7 +610,7 @@ snippet decl "declare"
 endsnippet
 
 snippet kwa "keyword args" w
-& {:keys [$0]${1: :or {$2}}}
+{:keys [$0]}
 endsnippet
 
 
@@ -901,7 +909,9 @@ endsnippet
 
 # http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
 snippet deb "debug" w
-(defmacro debug [& fs] \`(clojure.pprint/pprint (zipmap '~fs [~@fs])))
+(defmacro debug
+	([x] \`(do (clojure.pprint/pprint {'~x ~x}) ~x))
+	([x & xs] \`(do (clojure.pprint/pprint (zipmap '~(cons x xs) [~@(cons x xs)])) ~(last xs))))
 endsnippet
 
 snippet dump "dump-locals" w
