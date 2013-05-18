@@ -1622,8 +1622,8 @@ ALIAS rl='rlwrap'
 
 ### Init
 
-if HAVE systemd; then
-    ALIAS sd='systemd' \
+if HAVE systemctl; then
+    ALIAS sd='/usr/lib/systemd/systemd' \
           sc='systemctl' \
           jc='journalctl' \
           jcb='journalctl -b' \
