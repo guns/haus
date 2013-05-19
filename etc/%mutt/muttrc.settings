@@ -506,7 +506,7 @@ set certificate_file="~/.certificates/gmail.crt"
 # unread messages.
 #
 
-set compose_format="❦ %a attached, %l%* ❦"
+set compose_format="Compose ★ %a attached, %l"
 #
 # Name: compose_format
 # Type: string
@@ -756,7 +756,7 @@ set crypt_use_gpgme=yes
 # (Crypto only)
 #
 
-# set date_format="!%a, %b %d, %Y at %I:%M:%S%p %Z"
+set date_format="%a %e %b %Y at %I:%M:%S%p %Z"
 #
 # Name: date_format
 # Type: string
@@ -1039,7 +1039,7 @@ set folder="~/Mail/Local"
 # when handling the ``mailboxes'' command.
 #
 
-# set folder_format="%2C %t %N %F %2l %-8.8u %-8.8g %8s %d %f"
+set folder_format="%2C %t %N %f%> %D"
 #
 # Name: folder_format
 # Type: string
@@ -1998,7 +1998,7 @@ set menu_scroll=yes
 # if 0, the match will be top-aligned.
 #
 
-set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
+set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
 #
 # Name: pager_format
 # Type: string
@@ -3871,7 +3871,7 @@ set status_chars="-+%A"
 # forwarding, etc. are not permitted in this mode).
 #
 
-set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%F Flagged · ?%?t?%t Tagged · ?%u/%M %L]%?V? ★ Limit: %V ?%> %P"
+set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%F Flagged · ?%?t?%t Tagged · ?%u/%M %L]%?V? ★ Limit: %V ?%> %P"
 #
 # Name: status_format
 # Type: string

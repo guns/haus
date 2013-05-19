@@ -122,8 +122,8 @@ bind editor \Cn history-down
 bind editor \Cp history-up
 
 # Index macros
-set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
-set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
+set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
+set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
 set index_format="$my_index_format_a"
 macro index \e\0071 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\0072<enter>"
 macro index \e\0072 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\0071<enter>"
