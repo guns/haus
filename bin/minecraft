@@ -154,7 +154,7 @@ class Minecraft
 
   def fork_server_and_wait jar, memory, opts = {}
     Dir.chdir gamedir do
-      cmd = %W[java -Xms#{memory}M -Xmx#{memory}M -jar #{jar} nogui]
+      cmd = %W[java -Xmx#{memory}M -jar #{jar} nogui]
 
       begin
         pid = fork do
