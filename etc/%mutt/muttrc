@@ -18,13 +18,8 @@ source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
 source $alias_file
 
-# Mailboxes
-mailboxes `ruby -r shellwords -e 'puts Dir[File.expand_path("~/Mail/Local/*")].map(&:shellescape).join(" ")'` \
-          ~/.mutt/notmuch/results
-
 # Mailing lists
-lists .*@googlegroups.com \
-      vim.*@vim.org
+lists .*@googlegroups.com vim.*@vim.org
 
 # Always prefer text/plain even with implicit_autoview
 alternative_order text/plain
@@ -49,20 +44,20 @@ set my_list=index,attach,browser,alias,postpone,pgp
 macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
 macro $my_list,pager \CxeA  '<shell-escape>vim ~/.mutt/aliases<Enter>'
 macro $my_list,pager \Cx\;  '<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>'
-macro $my_list,pager \Cxr   '<shell-escape>kill -HUP  "$(cat ~/.local/run/mbsynclaunch.pid)"<enter>'
-macro $my_list,pager \Cxq   '<shell-escape>kill -TERM "$(cat ~/.local/run/mbsynclaunch.pid)"<enter>'
+macro $my_list,pager \Cxr   '<shell-escape>kill -HUP  "$(cat ~/.local/run/mbwatch.pid)"<enter>'
+macro $my_list,pager \Cxq   '<shell-escape>kill -TERM "$(cat ~/.local/run/mbwatch.pid)"<enter>'
 bind  $my_list,pager \;     enter-command
 
 # Go ->
 macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
 macro index,pager    gi <change-folder>=INBOX<Enter>
-macro index,pager    ga <change-folder>=Archive<Enter>
-macro index,pager    gm <change-folder>=Metablu<Enter>
-macro index,pager    gj <change-folder>=[Gmail].Spam<Enter>
-macro index,pager    gt <change-folder>=[Gmail].Trash<Enter>
-macro index,pager    \' <change-folder>?<toggle-mailboxes>
+macro index,pager    ga <change-folder>=ARCHIVE<Enter>
+macro index,pager    \' "<enter-command>source ~/.mutt/muttrc.mailboxes.sungpae<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager    \" "<enter-command>source ~/.mutt/muttrc.mailboxes.local<enter><change-folder>?<toggle-mailboxes>"
 bind  browser        \' exit
+bind  browser        \" exit
+macro browser        u  <search>^\.\.$<Enter>
 
 # Movement
 macro $my_list,pager <Space> <next-page>
@@ -96,7 +91,7 @@ bind  index,pager p       recall-message
 bind  index,pager B       bounce-message
 bind  index,pager E       edit
 bind  index,pager F       forward-message
-macro index,pager a       <save-entry>=Archive<enter>
+macro index,pager a       <save-entry>=ARCHIVE<enter>
 bind  index,pager A       create-alias
 macro index,pager \Ca     "<pipe-message>abook --add-email<enter>"
 macro index,pager \Cd     <delete-thread>
@@ -135,7 +130,7 @@ macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager
 macro pager w       \e\0074
 
 # notmuch-mutt.rb macros
-macro index,pager gf      <change-folder-readonly>~/.mutt/notmuch/results<enter>
+macro index,pager gf      <change-folder-readonly>~/Mail/.notmuch/search-results<enter>
 macro index,pager \e\007f "<shell-escape>notmuch-mutt.rb search<enter>gf"
 macro index,pager \e\007r "<shell-escape>notmuch new<enter>"
 

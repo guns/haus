@@ -1024,7 +1024,7 @@ set fast_reply=yes
 # (PGP only)
 #
 
-set folder="~/Mail/Local"
+set folder="~/Mail"
 #
 # Name: folder
 # Type: path
@@ -1739,7 +1739,7 @@ set markers=no
 # will be shown. The match is always case-sensitive.
 #
 
-set mbox="$folder/Archive"
+set mbox="$folder/ARCHIVE"
 #
 # Name: mbox
 # Type: path
@@ -2572,7 +2572,7 @@ set pgp_timeout=3600
 # Also see the $recall variable.
 #
 
-set postponed="$folder/Drafts"
+set postponed="$folder/DRAFTS"
 #
 # Name: postponed
 # Type: path
@@ -2811,7 +2811,7 @@ set query_command="abook --mutt-query %s"
 # Also see $postponed variable.
 #
 
-# set record="$folder/INBOX"
+set record="$folder/INBOX"
 #
 # Name: record
 # Type: path

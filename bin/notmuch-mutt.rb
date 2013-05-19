@@ -16,8 +16,8 @@ class NotmuchMutt
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.database ||= File.expand_path '~/Mail/Local'
-    options.outdir ||= File.expand_path '~/.mutt/notmuch/results'
+    options.database ||= File.expand_path '~/Mail'
+    options.outdir ||= File.expand_path '~/Mail/.notmuch/search-results'
   end
 
   def parser
