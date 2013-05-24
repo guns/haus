@@ -5,7 +5,7 @@
 #  |_|_|_|___|___|_  |_|_|___|  guns <self@sungpae.com>
 #                |___|
 
-IMAPStore imap.sungpae.com
+IMAPStore self-imap
 Host imap.gmail.com
 User self@sungpae.com
 Port 993
@@ -15,15 +15,37 @@ CertificateFile ~/.certificates/gmail.crt
 #Pass <%= %x(pass google.com/self@sungpae.com).chomp.inspect %>
 #GPGPassFile ~/.password-store/google.com/self@sungpae.com.gpg
 
-MaildirStore mdir.sungpae.com
-Path ~/Mail/sungpae/
+IMAPStore gmail-imap
+Host imap.gmail.com
+User sungpae@gmail.com
+Port 993
+UseIMAPS yes
+RequireSSL yes
+CertificateFile ~/.certificates/gmail.crt
+#GPGPassFile ~/.password-store/google.com/sungpae@gmail.com-ephemeral1-iphone.gpg
+
+MaildirStore self-mdir
+Path ~/Mail/self/
 Inbox ~/Mail/INBOX
 Flatten .
 
-Channel sungpae.com
-Master :imap.sungpae.com:
-Slave :mdir.sungpae.com:
+MaildirStore gmail-mdir
+Path ~/Mail/gmail/
+Inbox ~/Mail/INBOX
+Flatten .
+
+Channel self
+Master :self-imap:
+Slave :self-mdir:
 Patterns *
 Sync All
-Create Both
+Create Slave
+Expunge Both
+
+Channel gmail
+Master :gmail-imap:
+Slave :gmail-mdir:
+Patterns *
+Sync All
+Create Slave
 Expunge Both
