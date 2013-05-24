@@ -338,9 +338,7 @@ function! s:xml_encode(str)
   let str = substitute(str,'<','\&lt;','g')
   let str = substitute(str,'>','\&gt;','g')
   let str = substitute(str,'"','\&quot;','g')
-  for key in keys(g:unimpaired_html_entities)
-      let str = substitute(str, nr2char(g:unimpaired_html_entities[key]),'\&'.key.';','g')
-  endfor
+  let str = substitute(str,"'",'\&apos;','g')
   return str
 endfunction
 
@@ -359,6 +357,15 @@ endfunction
 function! s:xml_decode(str)
   let str = substitute(a:str,'<\%([[:alnum:]-]\+=\%("[^"]*"\|''[^'']*''\)\|.\)\{-\}>','','g')
   return s:xml_entity_decode(str)
+endfunction
+
+function! s:html_encode(str)
+  let str = a:str
+  let str = s:xml_encode(str)
+  for key in keys(g:unimpaired_html_entities)
+      let str = substitute(str, nr2char(g:unimpaired_html_entities[key]),'\&'.key.';','g')
+  endfor
+  return str
 endfunction
 
 function! s:Transform(algorithm,type)
@@ -415,6 +422,8 @@ call UnimpairedMapTransform('url_encode','[u')
 call UnimpairedMapTransform('url_decode',']u')
 call UnimpairedMapTransform('xml_encode','[x')
 call UnimpairedMapTransform('xml_decode',']x')
+call UnimpairedMapTransform('html_encode','[h')
+call UnimpairedMapTransform('xml_decode',']h')
 
 " }}}1
 
