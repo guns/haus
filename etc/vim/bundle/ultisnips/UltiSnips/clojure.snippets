@@ -50,7 +50,7 @@ snippet imp "import"
 endsnippet
 
 snippet :i ":import"
-(:import ${0:libs})
+(:import [$0])
 endsnippet
 
 snippet refc "refer-clojure"
@@ -588,7 +588,7 @@ snippet defm "defmacro"
 endsnippet
 
 snippet deft "deftest" w
-(deftest $1
+(deftest $1-test
 	$0)
 endsnippet
 
