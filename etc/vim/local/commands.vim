@@ -277,7 +277,7 @@ function! s:LispBufferSetup()
 
     nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
-    nnoremap <silent><buffer> <LocalLeader>ci :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>cS :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>mE :call <SID>ClojureMacroexpand(2)<CR>
@@ -297,48 +297,33 @@ function! s:ClojurePprint(expr)
 endfunction
 
 function! s:ClojureCheatSheet(pattern)
-    if !exists('g:__clojure_cheat_sheets__')
-        let g:__clojure_cheat_sheets__ = {}
-    endif
-
-    let root = exists('b:leiningen_root') ? b:leiningen_root : expand('%:p:h')
-
-    if !has_key(g:__clojure_cheat_sheets__, root)
-        let g:__clojure_cheat_sheets__[root] = {}
-    endif
-
-    let file = get(g:__clojure_cheat_sheets__[root], a:pattern, '')
-
-    if !filereadable(file)
-        let file = fireplace#evalparse(
-            \   '((fn [pattern]'
-            \ . '   (let [cheat-sheet (fn [& namespaces]'
-            \ . '                       (clojure.string/join'
-            \ . '                         "\n\n"'
-            \ . '                         (map (fn [nspace]'
-            \ . '                                (let [nsname (str nspace)'
-            \ . '                                      mdata (map meta (vals (ns-publics nspace)))'
-            \ . '                                      {funcs true defs false} (group-by #(contains? % :arglists) mdata)'
-            \ . '                                      funclen (apply max 0 (map (comp count str :name) funcs))'
-            \ . '                                      defnames (map #(str nsname "/" (:name %)) defs)'
-            \ . '                                      funcnames (map #(format (str "%s/%-" funclen "s %s")'
-            \ . '                                                              nsname (:name %)'
-            \ . '                                                              (clojure.string/join \space (:arglists %))) funcs)]'
-            \ . '                                  (str ";;; " nsname " {{{1\n\n"'
-            \ . '                                       (clojure.string/join "\n" (concat (sort defnames) (sort funcnames))))))'
-            \ . '                              (sort-by str namespaces))))'
-            \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
-            \ . '    (if (seq matches)'
-            \ . '      (let [tmp (format "target/vim/cheat-sheet-%s.clj" '
-            \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
-            \ . '        (clojure.java.io/make-parents tmp)'
-            \ . '        (spit tmp (str (apply cheat-sheet matches)'
-            \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:ro:noma:"))'
-            \ . '        (.getAbsolutePath (java.io.File. tmp)))'
-            \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
-            \ )
-        let g:__clojure_cheat_sheets__[root][a:pattern] = file
-    endif
+    let file = fireplace#evalparse(
+        \   '((fn [pattern]'
+        \ . '   (let [cheat-sheet (fn [& namespaces]'
+        \ . '                       (clojure.string/join'
+        \ . '                         "\n\n"'
+        \ . '                         (map (fn [nspace]'
+        \ . '                                (let [nsname (str nspace)'
+        \ . '                                      mdata (map meta (vals (ns-publics nspace)))'
+        \ . '                                      {funcs true defs false} (group-by #(contains? % :arglists) mdata)'
+        \ . '                                      funclen (apply max 0 (map (comp count str :name) funcs))'
+        \ . '                                      defnames (map #(str nsname "/" (:name %)) defs)'
+        \ . '                                      funcnames (map #(format (str "%s/%-" funclen "s %s")'
+        \ . '                                                              nsname (:name %)'
+        \ . '                                                              (clojure.string/join \space (:arglists %))) funcs)]'
+        \ . '                                  (str ";;; " nsname " {{{1\n\n"'
+        \ . '                                       (clojure.string/join "\n" (concat (sort defnames) (sort funcnames))))))'
+        \ . '                              (sort-by str namespaces))))'
+        \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
+        \ . '    (if (seq matches)'
+        \ . '      (let [tmp (format "target/vim/cheat-sheet-%s.clj" '
+        \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
+        \ . '        (clojure.java.io/make-parents tmp)'
+        \ . '        (spit tmp (str (apply cheat-sheet matches)'
+        \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:ro:noma:"))'
+        \ . '        (.getAbsolutePath (java.io.File. tmp)))'
+        \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
+        \ )
 
     if empty(file)
         redraw!
