@@ -216,10 +216,11 @@ $if Bash
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
-    "\C-xV":        display-shell-version
     "\C-x\\":       "\C-] nohist \n"
     "\C-x$":        "\C-a $(\C-e)\C-a"
     "\C-x<":        "\C-a <(\C-e)\C-a"
+    "\C-x\"":       "\C-a \"\C-e\"\C-a"
+    "\C-x'":        "\C-a '\C-e'\C-a"
 
     # Redirections
     "\C-x0":        " &>/dev/null "
@@ -387,27 +388,31 @@ $endif
 
 $if Psql
     # General
+    "\033\007;":    "\C-];\n"
     "\033\007g":    "\C-]\\g\n"
-    "\C-x\C-g":     "\C-]\\g\n"
     "\C-xg":        "\C-]\\g "
     "\033\007h":    "\C-]\\?\n"
     "\C-xh":        "\C-]\\h "
     "\033\007\\":   "\C-]\\q\n"
+    "\033\007|":    "\C-]\\q\n"
 
     # Query Buffer
     "\033\007e":    "\C-]\\e\n"
+    "\C-xe":        "\C-]\\e "
     "\033\007p":    "\C-]\\p\n"
     "\033\007r":    "\C-]\\r\n"
+    # \s unbound
     "\C-xw":        "\C-]\\w "
 
     # Input/Output
+    # \copy unbound
     "\C-xi":       "\C-]\\i "
     "\C-xo":       "\C-]\\o "
     "\C-xq":       "\C-]\\qecho "
 
     # Informational
     "\033\007d":    "\C-]\\d+\n"
-    "\C-x\C-d":     "\C-]\\dS+\n"
+    "\033\007D":    "\C-]\\dS+\n"
     "\C-xd ":       "\C-]\\d+ "
     "\C-xD ":       "\C-]\\dS+ "
     "\C-xda":       "\C-]\\da+\n"
@@ -418,8 +423,8 @@ $if Psql
     "\C-xDc":       "\C-]\\dcS+\n"
     "\C-xdC":       "\C-]\\dC+\n"
     "\C-xDC":       "\C-]\\dCS+\n"
-    "\C-xdd":       "\C-]\\dd+\n"
-    "\C-xDd":       "\C-]\\ddS+\n"
+    "\C-xddd":      "\C-]\\dd+\n"
+    "\C-xDdd":      "\C-]\\ddS+\n"
     "\C-xddp":      "\C-]\\ddp+\n"
     "\C-xDdp":      "\C-]\\ddpS+\n"
     "\C-xdD":       "\C-]\\dD+\n"
@@ -434,8 +439,8 @@ $if Psql
     "\C-xDew":      "\C-]\\dewS+\n"
     "\C-xdf":       "\C-]\\df+\n"
     "\C-xDf":       "\C-]\\dfS+\n"
-    "\C-xdF":       "\C-]\\dF+\n"
-    "\C-xDF":       "\C-]\\dFS+\n"
+    "\C-xdFF":      "\C-]\\dF+\n"
+    "\C-xDFF":      "\C-]\\dFS+\n"
     "\C-xdFd":      "\C-]\\dFd+\n"
     "\C-xDFd":      "\C-]\\dFdS+\n"
     "\C-xdFp":      "\C-]\\dFp+\n"
@@ -458,8 +463,8 @@ $if Psql
     "\C-xDO":       "\C-]\\dOS+\n"
     "\C-xdp":       "\C-]\\dp+\n"
     "\C-xDp":       "\C-]\\dpS+\n"
-    "\C-xdrd":      "\C-]\\drd+\n"
-    "\C-xDrd":      "\C-]\\drdS+\n"
+    "\C-xdr":       "\C-]\\drds+\n"
+    "\C-xDr":       "\C-]\\drdsS+\n"
     "\C-xds":       "\C-]\\ds+\n"
     "\C-xDs":       "\C-]\\dsS+\n"
     "\C-xdt":       "\C-]\\dt+\n"
@@ -475,31 +480,36 @@ $if Psql
     "\C-xdx":       "\C-]\\dx+\n"
     "\C-xDx":       "\C-]\\dxS+\n"
     "\033\007l":    "\C-]\\l+\n"
-    "\C-xS":        "\C-]\\sf+ "
-    "\033\007z":    "\C-]\\z\n"
+    "\C-xs":        "\C-]\\sf+ "
+    "\033\007L":    "\C-]\\z\n"
+    "\C-xz":        "\C-]\\z\n"
 
     # Formatting
     "\C-x\C-a":     "\C-]\\a\n"
-    "\C-x\C-f":     "\C-]\\f\n"
+    # \C unbound
     "\C-xf":        "\C-]\\f "
-    "\C-x\C-h":     "\C-]\\H\n"
+    "\C-xH":        "\C-]\\H\n"
     "\C-xp":        "\C-]\\pset "
     "\C-x\C-t":     "\C-]\\t\n"
+    # \T unbound
     "\C-x\C-x":     "\C-]\\x\n"
 
     # Connection
-    "\C-xC":        "\C-]\\conninfo\n"
     "\C-xc":        "\C-]\\connect "
-    "\C-xe":        "\C-]\\encoding "
-    "\C-xp":        "\C-]\\password "
+    "\C-xE":        "\C-]\\encoding "
+    "\C-xP":        "\C-]\\password "
+    "\C-xC":        "\C-]\\conninfo\n"
 
     # Operating System
+    # \cd unbound
+    # \setenv unbound
     "\033\007t":    "\C-]\\timing\n"
+    "\C-x!":        "\C-]\\! "
 
     # Variables
-    "\C-xP":        "\C-]\\prompt "
-    "\C-xs":        "\C-]\\set "
-    "\C-xu":        "\C-]\\unset "
+    # \prompt unbound
+    "\C-xS":        "\C-]\\set "
+    "\C-xU":        "\C-]\\unset "
 
     # Large Objects
     "\C-xle":       "\C-]\\lo_export "
