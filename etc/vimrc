@@ -17,7 +17,8 @@ filetype plugin indent on
 
 " Global dictionary of available features
 let g:__FEATURES__ = {
-    \ "par": !empty(system("/bin/sh -c 'command -v par'"))
+    \ "par": !empty(system("/bin/sh -c 'command -v par'")),
+    \ "ag": !empty(system("/bin/sh -c 'command -v ag'"))
 \ }
 
 " Load commands and functions; no side effects from sourcing
@@ -285,6 +286,11 @@ let g:rbpt_max = len(g:rbpt_colorpairs)
 " Plugin: splitjoin.vim
 let g:splitjoin_split_mapping = ''
 let g:splitjoin_join_mapping = ''
+
+" Plugin: Ack.vim
+if g:__FEATURES__['ag']
+    let g:ackprg = 'ag --nogroup --nocolor --column'
+endif
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
