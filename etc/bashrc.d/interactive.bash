@@ -1292,7 +1292,8 @@ HAVE mysql && {
     alias mysqladmin='env "MYSQL_PWD=$(pass mysql/root)" mysqladmin -uroot'
 }
 
-ALIAS ppsql='psql postgres'
+ALIAS ppsql='psql postgres' \
+      aspostgres='sudo -iu postgres'
 
 ALIAS sqlite='sqlite3' && {
     # Param: $1 SQLite db
