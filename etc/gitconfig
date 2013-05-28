@@ -45,10 +45,10 @@
     ai     = add --interactive
     af     = add --force
     ap     = add --patch
-    ac     = !git add . && git commit -a
-    acv    = !git add . && git commit -a -v
-    acva   = !git add . && git commit -a -v --amend
-    acm    = !git add . && git commit -a -m
+    ac     = !git add . --all && git commit -a
+    acv    = !git add . --all && git commit -a -v
+    acva   = !git add . --all && git commit -a -v --amend
+    acm    = !git add . --all && git commit -a -m
     rs     = reset
     rshard = reset --hard
 
