@@ -1287,9 +1287,9 @@ HAVE cabal && {
 ### Databases
 
 HAVE mysql && {
-    mysql() { env "MYSQL_PWD=$(pass mysql/root)" mysql -uroot "${@:-mysql}"; }
-    alias mysqldump='env "MYSQL_PWD=$(pass mysql/root)" mysqldump -uroot'
-    alias mysqladmin='env "MYSQL_PWD=$(pass mysql/root)" mysqladmin -uroot'
+    mysql() { command mysql -uroot -p"$(pass mysql/root)" "${@:-mysql}"; }
+    ALIAS mysqldump="mysqldump -uroot -p\"\$(pass mysql/root)\""
+    ALIAS mysqladmin="mysqladmin -uroot -p\"\$(pass mysql/root)\""
 }
 
 HAVE psql && {
@@ -1389,7 +1389,7 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 HAVE pass && {
     pc() { pass "$@" | sed q | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
-    passi() { pass insert -fm "$1" < <(genpw --random "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
+    passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
 }
 
