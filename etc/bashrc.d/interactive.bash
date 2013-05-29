@@ -1287,12 +1287,22 @@ HAVE cabal && {
 ### Databases
 
 HAVE mysql && {
-    mysql() { command mysql -uroot -p"$(pass mysql/root)" "${@:-mysql}"; }
-    ALIAS mysqldump="mysqldump -uroot -p\"\$(pass mysql/root)\""
-    ALIAS mysqladmin="mysqladmin -uroot -p\"\$(pass mysql/root)\""
+    mysql() { command mysql -uroot -p"$(pass "$HOSTNAME/mysql/root")" "${@:-mysql}"; }
+    ALIAS mysqldump="mysqldump -uroot -p\"\\\$(pass "$HOSTNAME/mysql/root")\""
+    ALIAS mysqladmin="mysqladmin -uroot -p\"\\\$(pass "$HOSTNAME/mysql/root")\""
 }
 
 HAVE psql && {
+    with-pgpass() {
+        if [[ ! -e ~/.pgpass ]]; then
+            > ~/.pgpass
+            command chmod 0600 ~/.pgpass
+            echo "*:*:*:*:$(pass "$HOSTNAME/postgresql/guns")" > ~/.pgpass
+            ((sleep 1; command rm ~/.pgpass) &) &
+        fi
+        "$@"
+    }; TCOMP exec with-pgpass
+    psql() { with-pgpass command psql "${@:-postgres}"; }
     ALIAS aspostgres='sudo -iu postgres'
 }
 
