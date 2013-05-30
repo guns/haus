@@ -123,22 +123,6 @@ set visible-stats on
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
 
-# Text editing
-"\C-]":         kill-whole-line
-"\eB":          character-search-backward
-"\eF":          character-search
-"\eR":          overwrite-mode
-"\eu":          downcase-word
-"\eU":          upcase-word
-
-# History
-"\C-n":         history-search-forward
-"\eOB":         history-search-forward
-"\e[B":         history-search-forward
-"\C-p":         history-search-backward
-"\eOA":         history-search-backward
-"\e[A":         history-search-backward
-
 # Unicode characters (UTF-8)
 "\e0":          "₀"         U+2080
 "\e1":          "₁"         U+2081
@@ -209,9 +193,25 @@ set visible-stats on
 "\e.":          insert-last-argument
 "\e_":          insert-last-argument
 
+# Text editing
+"\C-]":         kill-whole-line
+"\eB":          character-search-backward
+"\eF":          character-search
+"\eR":          overwrite-mode
+"\eu":          downcase-word
+"\eU":          upcase-word
+
+# History
+"\C-n":         history-search-forward
+"\eOB":         history-search-forward
+"\e[B":         history-search-forward
+"\C-p":         history-search-backward
+"\eOA":         history-search-backward
+"\e[A":         history-search-backward
+
 ### bash
 
-$if Bash
+$if bash
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
     "\033\007r":    "\C-] tmuxeval \n"
@@ -347,7 +347,7 @@ $endif
 
 ### gdb
 
-$if Gdb
+$if gdb
     # Arrow
     "\C-l":         "->"
     "\C-x\C-l":     clear-screen
@@ -355,7 +355,7 @@ $endif
 
 ### pry / irb
 
-$if Ruby
+$if ruby
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"
 
@@ -375,7 +375,7 @@ $endif
 
 ### Clojure REPL
 
-$if Java
+$if java
     # Documentation
     "\C-xf":        "\C-](find-doc "")\C-b\C-b"
     "\C-xs":        "\C-](source )\C-b"
@@ -386,7 +386,7 @@ $endif
 
 ### PostgreSQL
 
-$if Psql
+$if psql
     # General
     "\033\007;":    "\C-e;\n"
     "\033\007g":    "\C-e\\g\n"
@@ -520,7 +520,7 @@ $endif
 
 ### Mysql
 
-$if Mysql
+$if mysql
     "\033\007e":    "\C-]\\e\n"
     "\C-x\C-d":     "\C-]show databases;\n"
     "\C-x\C-f":     "\C-]flush privileges;\n"
