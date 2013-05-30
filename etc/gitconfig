@@ -94,8 +94,8 @@
     lgi  = log --patch -i -G
 
     # Branches
-    br   = branch
-    bra  = branch -a
+    br   = branch -vv
+    bra  = branch -avv
     brd  = branch -d
     brdd = branch -D
     brm  = branch -m
