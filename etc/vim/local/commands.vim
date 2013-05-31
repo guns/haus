@@ -396,7 +396,7 @@ command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{
 function! s:Screen(command)
     let map = {
         \ 'ruby'       : 'script/rails console || pry || irb',
-        \ 'clojure'    : 'clojure --lein repl',
+        \ 'clojure'    : 'lein repl',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'haskell'    : 'ghci',
