@@ -298,6 +298,8 @@ function! s:ClojurePprint(expr)
 endfunction
 
 function! s:ClojureCheatSheet(pattern)
+    if empty(a:pattern) | return | endif
+
     let file = fireplace#evalparse(
         \   '((fn [pattern]'
         \ . '   (let [cheat-sheet (fn [& namespaces]'
@@ -321,7 +323,7 @@ function! s:ClojureCheatSheet(pattern)
         \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
         \ . '        (clojure.java.io/make-parents tmp)'
         \ . '        (spit tmp (str (apply cheat-sheet matches)'
-        \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:ro:noma:"))'
+        \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:"))'
         \ . '        (.getAbsolutePath (java.io.File. tmp)))'
         \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
         \ )
