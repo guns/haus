@@ -1211,7 +1211,13 @@ type ruby &>/dev/null && {
         *) echo "USAGE: $FUNCNAME [srcname]"; return 1;;
         esac
 
-        ln -s "$cdhaus/share/rake/$fname" Rakefile
+        local src="$cdhaus/share/rake/$fname"
+        if [[ -e "$src" ]]; then
+            ln -s "$src" Rakefile
+        else
+            echo "$src does not exist!"
+            return 1
+        fi
     }
 }
 
