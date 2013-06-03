@@ -1028,7 +1028,7 @@ HAVE vim && {
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
-    alias vimwm='(cdhaus && exec vim etc/%xmonad/xmonad.hs)'
+    alias vimwm='(cdhaus && exec vim -c "setfiletype clojure" bin/openbox-configuration)'
     alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
     alias vimxinitrc='vim ~/.xinitrc'
 }
