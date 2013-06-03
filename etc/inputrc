@@ -44,7 +44,7 @@ set visible-stats on
 # set completion-prefix-display-length 0
 set completion-query-items 256
 # set editing-mode emacs
-set history-size 0
+# set history-size 0
 # set keymap emacs
 
 ### Global Macros
