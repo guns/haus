@@ -48,7 +48,7 @@ set completion-query-items 256
 # set keymap emacs
 
 ### Global Macros
-# diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
+# diff -U3 <(INPUTRC=/dev/null bash -c "bind -p; bind -s") <(bash -c "bind -p; bind -s")
 
 $include ~/.inputrc.d/utf-8
 
@@ -56,6 +56,17 @@ $include ~/.inputrc.d/utf-8
 # The Unicode table above is parsed by external programs that do not actually
 # use readline. For actual interactive programs, we would be sorry to lose the
 # following commands:
+"\e-":          digit-argument
+"\e0":          digit-argument
+"\e1":          digit-argument
+"\e2":          digit-argument
+"\e3":          digit-argument
+"\e4":          digit-argument
+"\e5":          digit-argument
+"\e6":          digit-argument
+"\e7":          digit-argument
+"\e8":          digit-argument
+"\e9":          digit-argument
 "\e!":          complete-command
 "\e@":          complete-hostname
 "\e#":          insert-comment
@@ -68,6 +79,7 @@ $include ~/.inputrc.d/utf-8
 
 # Text editing
 "\C-]":         kill-whole-line
+"\C-xx":        exchange-point-and-mark
 "\eB":          character-search-backward
 "\eF":          character-search
 "\eR":          overwrite-mode
