@@ -197,7 +197,7 @@ augroup GUNS
         \ setlocal filetype=applescript
 
     " Readline {{{1
-    autocmd BufRead,BufNewFile *inputrc
+    autocmd BufRead,BufNewFile *inputrc,*inputrc.d/*
         \ SetIskeyword! |
         \ setlocal filetype=readline foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 

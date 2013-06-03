@@ -50,61 +50,7 @@ set completion-query-items 256
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
 
-# Unicode characters (UTF-8)
-"\e0":          "₀"         U+2080
-"\e1":          "₁"         U+2081
-"\e2":          "₂"         U+2082
-"\e3":          "₃"         U+2083
-"\e4":          "₄"         U+2084
-"\e5":          "₅"         U+2085
-"\e6":          "₆"         U+2086
-"\e7":          "₇"         U+2087
-"\e8":          "₈"         U+2088
-"\e9":          "₉"         U+2089
-"\e-":          "₋"         U+208b
-"\e=":          "₊"         U+208a
-"\e)":          "⁰"         U+2070
-"\e!":          "¹"         U+00b9
-"\e@":          "²"         U+00b2
-"\e#":          "³"         U+00b3
-"\e$":          "⁴"         U+2074
-"\e%":          "⁵"         U+2075
-"\e^":          "⁶"         U+2076
-"\e&":          "⁷"         U+2077
-"\e*":          "⁸"         U+2078
-"\e(":          "⁹"         U+2079
-"\e_":          "⁻"         U+207b
-"\e+":          "⁺"         U+207a
-"\e'":          "•"         U+2022
-"\e.":          "…"         U+2026
-"\e;":          "·"         U+00b7
-"\e<":          "←"         U+2190
-"\e>":          "→"         U+2192
-"\ea":          "α"         U+03b1
-"\eB":          "β"         U+03b2
-"\eC":          "Ç"         U+00c7
-"\ec":          "ç"         U+00e7
-"\eD":          "Δ"         U+0394
-"\eE":          "è"         U+00e8
-"\ee":          "é"         U+00e9
-"\eh":          "❤"         U+2764
-"\eH":          "❦"         U+2766
-"\ei":          "∞"         U+221e
-"\eI":          "∩"         U+2229
-"\el":          "λ"         U+03bb
-"\ep":          "π"         U+03c0
-"\eP":          "∏"         U+03c0
-"\er":          "ρ"         U+03c1
-"\es":          "★"         U+2605
-"\eS":          "Σ"         U+03a3
-"\eT":          "θ"         U+03b8
-"\et":          "τ"         U+03c4
-"\eV":          "⚡"         U+26a1
-"\ev":          "✔"         U+2714
-"\eW":          "Ω"         U+03a9
-"\ew":          "ω"         U+03c9
-"\eX":          "✖"         U+2716
-"\ex":          "×"         U+00d7
+$include ~/.inputrc.d/utf-8
 
 # Rebinds:
 # The Unicode table above is parsed by external programs that do not actually
