@@ -538,17 +538,16 @@ endfunction
 
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! s:MapReadlineUnicodeBindings()
-    if filereadable(expand('~/.inputrc'))
-        for line in readfile(expand('~/.inputrc'))
-            if line =~# '\v<U\+\x{4,6}>'
-                " Example: "\el": "λ" # U+03BB
-                let toks = split(line)
-                let key  = substitute(toks[0], '\v.*\\e(.).*', '\1', '')
-                let char = substitute(toks[1], '\v.*"(.+)".*', '\1', '')
+    let inputrc = expand('~/.inputrc.d/utf-8')
+    if filereadable(inputrc)
+        for line in readfile(inputrc)
+            if line[0] == '"'
+                " Example: "\el": "λ"
+                let key  = line[3]
+                let char = line[8 : len(line) - 2]
 
                 " By convention, we'll always map as Meta-.
-                let bind = '<Esc>' . key
-                execute 'noremap! ' . bind . ' ' . char
+                execute 'noremap! <Esc>' . key . ' ' . char
             endif
         endfor
     endif

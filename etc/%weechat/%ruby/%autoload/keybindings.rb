@@ -98,11 +98,11 @@ def bind key, val
 end
 
 def bind_readline_unicode_chars
-  inputrc = File.expand_path '~/.inputrc'
+  inputrc = File.expand_path '~/.inputrc.d/utf-8'
 
   if File.readable? inputrc
-    # Ruby 1.8 series lacks both encoded strings and \h character class
-    IO.readlines(inputrc).grep /"\\e(.)":\s*"(.+)".*\bU\+[0-9a-fA-F]{4,6}\b/ do
+    # Ruby 1.8 lacks encoded strings
+    IO.readlines(inputrc).grep /\A"\\e(.)": "(.+)"/ do
       bind "meta-#{$1}", '/input insert %s' % $2.unpack('U').pack('U')
     end
   end

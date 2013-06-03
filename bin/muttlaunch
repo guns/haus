@@ -35,8 +35,8 @@ class Muttlaunch
   end
 
   def unicode_bindings
-    File.read(File.expand_path '~/.inputrc')
-        .scan(/"\\e(.)":\s*"(.+)".*\bU\+\h{4,6}\b/)
+    File.read(File.expand_path '~/.inputrc.d/utf-8')
+        .scan(/^"\\e(.)": "(.+)"/)
         .reduce([]) { |a, (k, c)| a << '-e' << %Q(macro editor "\\e#{k}" #{c}) }
   end
 
