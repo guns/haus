@@ -4,121 +4,48 @@
 #  |    |  |       |   |   | |      <  -__|  _  |  _  |  |  |     |  -__|
 #  |_______|__|____|_______| |___|__|_____|___._|_____|__|__|__|__|_____|
 #
-#                                          guns <self@sungpae.com>
+#    guns <self@sungpae.com>
 
-### Readline Variables
+### Variables
+# diff -U3 <(INPUTRC=/dev/null bash -c "bind -v") <(bash -c "bind -v")
 
-# Let your terminal convert to `visible`; don't set here
-# set bell-style audible
-
-# Do not try to sync terminal bindings with equivalent readline bindings. This
-# is necessary when trying to remap something like \C-w
-# http://www.shallowsky.com/blog/linux/bash-word-erase.html
-# set bind-tty-special-chars on
-
-# This must be explicitly set here to activate
-# set blink-matching-paren off
-
-# Force strict 8-bit character mode
+# set bind-tty-special-chars on # http://www.shallowsky.com/blog/linux/bash-word-erase.html
+set blink-matching-paren off
 # set byte-oriented off
-
-# Comment character
-# set comment-begin #
-
-# Number of completion columns; -1 for auto
-# set completion-display-width -1
-
-# Case insensitivity for completions
 set completion-ignore-case on
-
-# Case-insensitive mode treats `-` and `_` as equivalent
-# set completion-map-case off
-
-# Replace common beginnings of completions with ... when length is over value
-# set completion-prefix-display-length 0
-
-# Number of completions before user is prompted
-set completion-query-items 300
-
-# Convert ASCII high bit into \e
-# Useful when running a terminal in meta8 mode for legacy applications
+set completion-map-case on
 # set convert-meta off
-
-# Don't complete, insert literal tab
 # set disable-completion off
-
-# Show control characters from stdin
 # set echo-control-characters on
-
-# Emacs/Vi mode
-# set editing-mode emacs
-
-# Try to enable "application keypad"
 # set enable-keypad off
-
-# Allow use of meta key
 # set enable-meta-key on
-
-# Expand `~` inline during completion
-set expand-tilde off
-
-# Preserve cursor position with history
+# set expand-tilde off
 # set history-preserve-point off
-
-# Maximum number of history entries
-set history-size 65535
-
-# Scroll long lines, not wrap
 # set horizontal-scroll-mode off
-
-# Allow 8-bit characters (regardless of their use)
 # set input-meta on
-# set meta-flag on
-
-# Binding convention style
-# set keymap emacs
-
-# Completed directory names have trailing slash
 # set mark-directories on
-
-# Mark modified history lines with `*`
 # set mark-modified-lines off
-
-# Mark symlinks to directories like regular directories for completion
 set mark-symlinked-directories on
-
-# Complete hidden files (otherwise suppressed until user supplies leading `.`)
 # set match-hidden-files on
-
-# Complete common prefix before cycling in menu-complete mode
 # set menu-complete-display-prefix off
-
-# Output 8-bit characters directly instead of as an escape prefix
+# set meta-flag on
 # set output-meta on
-
-# Turn off pager for completion replies
 set page-completions off
-
-# Undocumented preference that sometimes diverts the bell method
 # set prefer-visible-bell on
-
-# Print completions alphabetically left to right, instead of by columns
 # set print-completions-horizontally off
-
-# Revert all changes to history lines before accept-line
 # set revert-all-at-newline off
-
-# One tab for completions instead of two
 set show-all-if-ambiguous on
-
-# One tab for completions that don't share a common prefix
 set show-all-if-unmodified on
-
-# Smarter inword completions
 set skip-completed-text on
-
-# Completions show file types
 set visible-stats on
+# set bell-style audible # Let your terminal convert to `visible`
+# set comment-begin #
+# set completion-display-width -1
+# set completion-prefix-display-length 0
+set completion-query-items 256
+# set editing-mode emacs
+set history-size 0
+# set keymap emacs
 
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p") <(bash -c "bind -p")
