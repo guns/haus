@@ -1666,6 +1666,19 @@ ALIAS lctl='launchctl' \
     }
 }
 
+### Mail
+
+HAVE mbsync && {
+    mbsync() {
+        command mbsync -c <(ruby -e '
+            buf = File.read File.expand_path("~/.mbsyncrc")
+            puts buf.gsub(/^#GPGPassFile\s+(.*)$/) { |_|
+                "Pass " << %x(gpg -d #{$1}).chomp.inspect
+            }
+        ') "$@"
+    }
+}
+
 ### GUI programs
 
 if __OS_X__; then
