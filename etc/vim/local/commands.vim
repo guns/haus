@@ -275,6 +275,7 @@ function! s:LispBufferSetup()
     nmap <silent><buffer> <Leader>r        :Require<CR>
     nmap <silent><buffer> <Leader>R        :Require!<CR>
 
+    nnoremap <silent><buffer> <LocalLeader>l  :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>e  :call <SID>ClojurePprint('*e')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
@@ -284,6 +285,7 @@ function! s:LispBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>mE :call <SID>ClojureMacroexpand(2)<CR>
     nnoremap <silent><buffer> <LocalLeader>rt :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>rT :call <SID>ClojureRunTests(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>sh :call <SID>ClojureSlamHound(expand('%'))<CR>
     nnoremap <silent><buffer> <LocalLeader>ts :call <SID>ClojureTypeScaffold()<CR>
 endfunction
 
@@ -360,6 +362,17 @@ function! s:ClojureRunTests(all)
             \ . '  (clojure.test/run-tests nspace))'
             \ )
     endif
+endfunction
+
+function! s:ClojureSlamHound(file)
+    if &modified
+        echom "Buffer contains unsaved changes!"
+        return 1
+    endif
+    call fireplace#session_eval(
+        \   '(do (require (quote slam.hound))'
+        \ . '    (slam.hound/swap-in-reconstructed-ns-form (clojure.java.io/file "' . a:file . '")))')
+    edit
 endfunction
 
 function! s:ClojureTypeScaffold()
