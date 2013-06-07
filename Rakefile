@@ -165,7 +165,7 @@ task :env do
       { :base => "#{@vim}/vim-commentary",         :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",      :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-eunuch",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vim-fireplace",          :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-fireplace",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",           :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-git",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",               :branch => %w[master],      :files => :pathogen },
