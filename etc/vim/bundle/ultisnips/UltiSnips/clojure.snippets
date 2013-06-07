@@ -25,8 +25,8 @@ endsnippet
 
 snippet nst "test ns"
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
-	(:require [clojure.test :as test :refer [deftest testing is]]
-	          [$1$0 :as ]))
+	(:require [$0]
+	          [clojure.test :as test :refer [deftest is testing]]))
 endsnippet
 
 snippet req "require"
@@ -34,23 +34,15 @@ snippet req "require"
 endsnippet
 
 snippet :r ":require"
-(:require ${1:[$2 :as $3${4: :refer [$5]}]}$0)
-endsnippet
-
-snippet use "use"
-(use '[$1 :only [$0]])
-endsnippet
-
-snippet :u ":use"
-(:use [$1${2: :only [$3]}]$0)
+(:require [$0])
 endsnippet
 
 snippet imp "import"
-(import '${0:libs})
+(import '$0)
 endsnippet
 
 snippet :i ":import"
-(:import [$0])
+(:import ($0))
 endsnippet
 
 snippet refc "refer-clojure"
@@ -861,6 +853,10 @@ endsnippet
 
 snippet pl "println" w
 (println $0)
+endsnippet
+
+snippet warn "warn" w
+(binding [*out* *err*] $0)
 endsnippet
 
 snippet pf "printf" w
