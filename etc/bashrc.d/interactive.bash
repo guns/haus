@@ -795,7 +795,7 @@ ALIAS ssh='ssh -2' \
 
                     next if pubkeys.subset? authkeys
 
-                    FileUtils.cp auth, "authorized_keys.old", :verbose => true if File.exists? auth
+                    FileUtils.cp auth, "authorized_keys.old" if File.exists? auth
 
                     ks = (pubkeys - authkeys).to_a
                     warn "Adding %s key%s to %s" % [ks.count, ks.count == 1 ? "" : "s", authpath]
