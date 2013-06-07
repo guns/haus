@@ -280,6 +280,7 @@ function! s:LispBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>e  :call <SID>ClojurePprint('*e')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp :call <SID>ClojureClassPath()<CR>
     nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>mE :call <SID>ClojureMacroexpand(2)<CR>
@@ -296,7 +297,7 @@ function! s:ClojurePprint(expr)
     pclose
     Sscratch
     setfiletype clojure
-    execute "normal! gg\"_dGVPG\"_dd0\<C-v>gg\"_d"
+    execute "normal! gg\"_dGVPG\"_dd"
 endfunction
 
 function! s:ClojureCheatSheet(pattern)
@@ -338,9 +339,13 @@ function! s:ClojureCheatSheet(pattern)
     endif
 endfunction
 
+function! s:ClojureClassPath()
+    call fireplace#session_eval('(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))] (println (.getPath u)))')
+endfunction
+
 function! s:ClojureMacroexpand(once)
     let reg_save = @m
-    let expand = ['macroexpand', 'macroexpand', 'clojure.walk/macroexpand-all'][a:once]
+    let expand = ['macroexpand-1', 'macroexpand', 'clojure.walk/macroexpand-all'][a:once]
     execute "normal \"my\<Plug>sexp_outer_list"
     call s:ClojurePprint('(' . expand . ' (quote ' . @m . '))')
     wincmd L
