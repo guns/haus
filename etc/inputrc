@@ -98,7 +98,7 @@ $include ~/.inputrc.d/utf-8
 
 $if bash
     # Meta
-    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec $BASH \n"
+    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
     "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-x\\":       "\C-] nohist \n"
