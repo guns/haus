@@ -657,7 +657,7 @@ listen() {
         l.filter Regexp.new("\\A" + Regexp.escape(f) + "\\z") if f
         l.change &λ
         l.start!
-    ' "$1" "$2"
+    ' -- "$1" "$2"
 }
 
 ALIAS iotop='iotop --only'
@@ -774,7 +774,40 @@ HAVE tcpdump && {
 # ssh scp
 ALIAS ssh='ssh -2' \
       ssh-password='ssh -o \"PreferredAuthentications password\"' \
-      ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
+      ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host && {
+    ssh-install-authorized-keys() {
+        ruby -r etc -r fileutils -r set -e '
+            auth = "authorized_keys"
+
+            ARGV.each do |arg|
+                user = Etc.getpwnam arg
+
+                Dir.chdir File.join(user.dir, ".ssh") do
+                    authpath = File.join user.dir, ".ssh", auth
+
+                    if File.symlink? auth and File.readlink(auth) == "/dev/null"
+                        warn "%s is linked to /dev/null" % authpath
+                        next
+                    end
+
+                    pubkeys = Dir["*.pub"].reduce(Set.new) { |s, f| s.merge File.read(f).split("\n") }
+                    authkeys = Set.new File.exists?(auth) ? File.read(auth).split("\n") : []
+
+                    next if pubkeys.subset? authkeys
+
+                    FileUtils.cp auth, "authorized_keys.old", :verbose => true if File.exists? auth
+
+                    ks = (pubkeys - authkeys).to_a
+                    warn "Adding %s key%s to %s" % [ks.count, ks.count == 1 ? "" : "s", authpath]
+
+                    File.open auth, "a" do |f|
+                        f.puts ks
+                    end
+                end
+            end
+        ' -- "${@:-$USER}"
+    }
+}
 ALIAS scp='scp -2' \
       scpr='scp -r' \
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
@@ -855,7 +888,7 @@ HAVE cdapi && {
 }
 
 # Simple webserver
-httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
+httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' -- "$@"; }
 
 ### Firewalls
 
@@ -1162,7 +1195,7 @@ type ruby &>/dev/null && {
     if [[ -d "${RUBYPATH%%:*}" ]]; then
         RUBY_VERSION_SETUP '' "${RUBYPATH%%:*}"
     else
-        RUBY_VERSION_SETUP ''  "$(dirname "$(type -P ruby)")"
+        RUBY_VERSION_SETUP '' "$(dirname "$(type -P ruby)")"
     fi
     RUBY_VERSION_SETUP 20  /opt/ruby/2.0/bin
     RUBY_VERSION_SETUP 19  /opt/ruby/1.9/bin
@@ -1272,7 +1305,7 @@ ALIAS perlpe='perl -pe' \
                 $error = $@;
                 if ($error ne "") { print $error; } else { print "$value\n"; }
             }
-        ' "$@"
+        ' -- "$@"
     }
 }
 
