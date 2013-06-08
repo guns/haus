@@ -269,12 +269,15 @@ ALIAS l='less' \
       lf='l +F' && pager() { less -+c --quit-if-one-screen "$@"; }
 ALIAS tf='tail -f'
 
-if [[ -e /var/log/system.log ]]; then
-    ALIAS lfsyslog='lf /var/log/system.log'
-    ALIAS tfsyslog='tf /var/log/system.log'
-elif [[ -e /var/log/everything.log ]]; then
+if [[ -e /var/log/everything.log ]]; then
     ALIAS lfsyslog='lf /var/log/everything.log'
     ALIAS tfsyslog='tf /var/log/everything.log'
+elif [[ -e /var/log/system.log ]]; then
+    ALIAS lfsyslog='lf /var/log/system.log'
+    ALIAS tfsyslog='tf /var/log/system.log'
+elif [[ -e /var/log/syslog ]]; then
+    ALIAS lfsyslog='lf /var/log/syslog'
+    ALIAS tfsyslog='tf /var/log/syslog'
 fi
 
 # ls
