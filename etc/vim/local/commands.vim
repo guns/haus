@@ -278,6 +278,7 @@ function! s:LispBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>l  :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>e  :call <SID>ClojurePprint('*e')<CR>
+    nnoremap <silent><buffer> <LocalLeader>st :silent call fireplace#session_eval('(clojure.stacktrace/print-stack-trace *e)') \| Last<CR>
     nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>cp :call <SID>ClojureClassPath()<CR>
