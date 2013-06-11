@@ -580,7 +580,7 @@ snippet defm "defmacro"
 endsnippet
 
 snippet deft "deftest" w
-(deftest $1-test
+(deftest test-$1
 	$0)
 endsnippet
 
@@ -856,7 +856,7 @@ snippet pl "println" w
 endsnippet
 
 snippet warn "warn" w
-(binding [*out* *err*] $0)
+(binding [*out* *err*] (prn $0))
 endsnippet
 
 snippet pf "printf" w
