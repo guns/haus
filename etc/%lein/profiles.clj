@@ -20,6 +20,8 @@
 ;;                                                  /     ###/
 
 {:user {:plugins [[lein-exec "0.3.0"]
-                  [lein-kibit "0.0.8"]]}
- :dev {:dependencies [[org.clojure/tools.trace "0.7.5"]
-                      [slamhound "1.3.3"]]}}
+                  [lein-kibit "0.0.8"]]
+        :dependencies [[org.clojure/tools.trace "0.7.5"]
+                       [slamhound "1.3.3"]]
+        :aliases {"RUN" ["trampoline" "run"]
+                  "REPL" ["trampoline" "repl" ":headless"]}}}
