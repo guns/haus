@@ -738,14 +738,14 @@ ALIAS net='netctl' \
       netstop='netctl stop-all'
 
 # cURL
-ALIAS get='curl -#L' \
-      geto='curl -#LO' && {
+ALIAS get='curl -A Mozilla/5.0 -#L' \
+      geto='curl -A Mozilla/5.0 -#LO' && {
     alias getip='CURL_CA_BUNDLE=~/.certificates/getip.sungpae.com.crt ruby -e "puts %x(curl -Is https://getip.sungpae.com)[/^X-Client-IP: (.*)/, 1]"'
     httpget() {
         ruby -r webrick -e '
             req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
             req.parse $stdin
-            cmd = %W[curl -#LA #{req.header["user-agent"].first || "Gecko"}]
+            cmd = %W[curl -#LA #{req.header["user-agent"].first || "Mozilla/5.0"}]
             cmd << "-o" << ARGV.first unless ARGV.empty?
             cmd << req.request_uri.to_s
             warn cmd.inspect
