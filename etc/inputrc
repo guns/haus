@@ -221,7 +221,7 @@ $if bash
     "\033\007I":    "\C-] pry \n"
 
     # lein REPL
-    "\033\007l":    "\C-] lein REPL \n"
+    "\033\007l":    "\C-]lein REPL \n"
 
     # X
     "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
