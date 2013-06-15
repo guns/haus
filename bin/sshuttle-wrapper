@@ -88,7 +88,7 @@ class SshuttleWrapper
     sh *%W[iptables --append OUTPUT --out-interface lo --jump ACCEPT]
     # dnscrypt-proxy queries to OpenDNS
     sh *%W[iptables --append OUTPUT --protocol udp --destination 208.67.220.220 --destination-port 443 --jump ACCEPT]
-    # local redirects to the sshuttle python daemon
+    # local redirects to the sshuttle daemon (from the gateway interface)
     sh *%W[iptables --append OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{options.port} --jump ACCEPT]
     # traffic to the remote proxy server
     sh *%W[iptables --append OUTPUT --protocol tcp --destination #{host} --destination-port #{port} --jump ACCEPT]

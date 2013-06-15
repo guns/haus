@@ -56,14 +56,15 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
     $IP6TABLES --policy OUTPUT  DROP
 }
 
-# Packet tracing / logging
+#
+# Chains
+#
+
 # "$IPTABLES" --table raw --append PREROUTING/OUTPUT [--match ...] --jump TRACE
-# "$IPTABLES" --new-chain LOGDROP
-# "$IPTABLES" --append    LOGDROP   --jump LOG
-# "$IPTABLES" --append    LOGDROP   --jump DROP
-# "$IPTABLES" --new-chain LOGACCEPT
-# "$IPTABLES" --append    LOGACCEPT --jump LOG
-# "$IPTABLES" --append    LOGACCEPT --jump ACCEPT
+
+# "$IPTABLES" --new-chain DROP-INVALID
+# "$IPTABLES" --append    DROP-INVALID --jump LOG  --log-prefix '[INVALID INPUT] '
+# "$IPTABLES" --append    DROP-INVALID --jump DROP
 
 #
 # Core rules
@@ -72,9 +73,11 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 # Stateful rule
 "$IPTABLES" --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
 
-# Loopback access
-"$IPTABLES" --append INPUT  --in-interface  lo --jump ACCEPT
-# "$IPTABLES" --append OUTPUT --out-interface lo --jump ACCEPT # Uncomment if OUTPUT policy is DROP
+# Inbound loopback
+"$IPTABLES" --append INPUT  --in-interface lo --jump ACCEPT
+
+# Outbound loopback; Uncomment if OUTPUT policy is DROP
+# "$IPTABLES" --append OUTPUT --out-interface lo --jump ACCEPT
 
 # ICMP
 "$IPTABLES" --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
