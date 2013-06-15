@@ -292,7 +292,7 @@ function! s:LispBufferSetup()
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#session_eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
+    silent call fireplace#session_eval('(do (require (quote clojure.pprint)) (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
