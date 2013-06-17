@@ -24,4 +24,18 @@
         :dependencies [[org.clojure/tools.trace "0.7.5"]
                        [slamhound "1.3.3"]]
         :aliases {"RUN" ["trampoline" "run"]
-                  "REPL" ["trampoline" "repl" ":headless"]}}}
+                  "REPL" ["trampoline" "repl" ":headless"]}
+        :repl-options {:init (do (require 'clojure.java.javadoc)
+                                 (let [core-url clojure.java.javadoc/*core-java-api*
+                                       local-url "http://api/jdk7/api/"]
+                                   (dosync
+                                     (alter clojure.java.javadoc/*remote-javadocs*
+                                            #(reduce
+                                               (fn [m [pre url]]
+                                                 (assoc m pre (if (= url core-url)
+                                                                local-url
+                                                                url)))
+                                               {} %)))
+                                   (alter-var-root
+                                     #'clojure.java.javadoc/*core-java-api*
+                                     (constantly local-url))))}}}
