@@ -115,7 +115,7 @@ nmap <silent> <script> <Plug>AlignMapsWrapperEnd	:call AlignMaps#WrapperEnd()<CR
 " character-based right-justified alignment maps {{{2
 " if !hasmapto('<Plug>AM_T|')|map <unique> <Leader>T|		<Plug>AM_T||endif
 " if !hasmapto('<Plug>AM_T#')	 |map <unique> <Leader>T#		<Plug>AM_T#|endif
-if !hasmapto('<Plug>AM_T,')	 |map <unique> <Leader>A,		<Plug>AM_T,o|endif
+if !hasmapto('<Plug>AM_T,')	 |map <unique> <Leader>A,		<Plug>AM_T,|endif
 " if !hasmapto('<Plug>AM_Ts,') |map <unique> <Leader>Ts,		<Plug>AM_Ts,|endif
 if !hasmapto('<Plug>AM_T:')	 |map <unique> <Leader>A:		<Plug>AM_T:|endif
 if !hasmapto('<Plug>AM_T;')	 |map <unique> <Leader>A;		<Plug>AM_T;|endif
