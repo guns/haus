@@ -229,9 +229,9 @@
                    "synclient TouchpadOff=$OFF"
                    "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
    (bindsh "XF86Eject" ["slock" "killall -HUP gpg-agent"])
-   (bindsh "W-XF86Eject" "sudo /usr/local/sbin/systemctl-suspend")
-   (bindsh "W-A-XF86Eject" "sudo /sbin/reboot")
-   (bindsh "W-C-A-XF86Eject" "sudo /sbin/poweroff")
+   (bindsh "W-XF86Eject" "sudo /usr/local/bin/systemctl-suspend")
+   (bindsh "W-A-XF86Eject" "sudo /usr/bin/reboot")
+   (bindsh "W-C-A-XF86Eject" "sudo /usr/bin/poweroff")
    (bindsh "W-C-S-z" ["WM_PID=$(xprop | awk '/_NET_WM_PID/{print $NF; exit}')"
                       "if [[ $WM_PID != +([0-9]) ]]"
                       "then notify COULD NOT DETERMINE PID"
