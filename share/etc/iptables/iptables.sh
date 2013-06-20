@@ -63,7 +63,7 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 # "$IPTABLES" --table raw --append PREROUTING/OUTPUT [--match ...] --jump TRACE
 
 # "$IPTABLES" --new-chain DROP-INVALID
-# "$IPTABLES" --append    DROP-INVALID --jump LOG  --log-prefix '[INVALID INPUT] '
+# "$IPTABLES" --append    DROP-INVALID --jump LOG  --log-prefix '[INPUT INVALID] '
 # "$IPTABLES" --append    DROP-INVALID --jump DROP
 
 #
