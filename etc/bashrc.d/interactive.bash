@@ -837,7 +837,7 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    alias ngg='ngrep -l -q -P "" -W byline -d any'
+    alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
 }
 
 # scutil
@@ -1553,7 +1553,7 @@ elif __LINUX__; then
         # alias pace
         alias pacg='run pacman -Qs'
         alias paci='run pacman -S --needed'
-        pacq() { (pacman -Si "$@" || pacman -Qi "$@"; pacman -Ql "$@") 2>/dev/null | pager; }
+        pacq() { (pacman -Si "$@" || pacman -Qi "$@"; pactree -r "$@"; echo; pacman -Ql "$@") 2>/dev/null | pager; }
         alias pacs='run pacman -Ss'
         alias pacu='run pacman -Rss'
         alias pacsync='run pacman -Sy'
@@ -1679,9 +1679,9 @@ ALIAS rl='rlwrap'
 if HAVE systemctl; then
     ALIAS sd='/usr/lib/systemd/systemd' \
           sc='systemctl' \
-          jc='journalctl' \
-          jcb='journalctl -b' \
-          jcf='journalctl -f' && {
+          jc='journalctl --full' \
+          jcb='journalctl --full -b' \
+          jcf='journalctl --full -f' && {
         alias scdaemonreload='systemctl --system daemon-reload'
         alias sleepnow='systemctl suspend'
         alias daemons='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
