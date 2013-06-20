@@ -97,7 +97,7 @@ class SshuttleWrapper
       sh *%W[iptables --append OUTPUT --destination #{net} --jump ACCEPT]
     end
     # Log the rest
-    sh *%W[iptables --append OUTPUT --jump LOG]
+    sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[OUTPUT DROPPED] '}]
   end
 
   def start_server ssh_host, xargs = []
