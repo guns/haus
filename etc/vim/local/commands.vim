@@ -323,7 +323,7 @@ function! s:ClojureCheatSheet(pattern)
         \ . '                              (sort-by str namespaces))))'
         \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
         \ . '    (if (seq matches)'
-        \ . '      (let [tmp (format "target/vim/cheat-sheet-%s.clj" '
+        \ . '      (let [tmp (format "target/classes/vim/cheat-sheet-%s.clj" '
         \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
         \ . '        (clojure.java.io/make-parents tmp)'
         \ . '        (spit tmp (str (apply cheat-sheet matches)'
