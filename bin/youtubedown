@@ -46,7 +46,7 @@ use strict;
 use Socket;
 
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.151 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.153 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -865,14 +865,14 @@ sub scrape_youtube_url_2($$$$$$$) {
   # Test cases and examples:
   #
   #   http://www.youtube.com/watch?v=wjzyv2Q_hdM
-  #   5-Aug-2011: 38=flv/1080p but 45=webm/720p
-  #   6-Aug-2011: 38 no longer offered
+  #   5-Aug-2011: 38=flv/1080p but 45=webm/720p.
+  #   6-Aug-2011: 38 no longer offered.
   #
   #   http://www.youtube.com/watch?v=ms1C5WeSocY
-  #   6-Aug-2011: embedding disabled, but get_video_info works
+  #   6-Aug-2011: embedding disabled, but get_video_info works.
   #
   #   http://www.youtube.com/watch?v=g40K0dFi9Bo
-  #   10-Sep-2011: 3D, fmts 82 and 84
+  #   10-Sep-2011: 3D, fmts 82 and 84.
   #
   #   http://www.youtube.com/watch?v=KZaVq1tFC9I
   #   14-Nov-2011: 3D, fmts 100 and 102.  This one has 2D images in most
@@ -884,6 +884,9 @@ sub scrape_youtube_url_2($$$$$$$) {
   #
   #   http://www.youtube.com/watch?v=711bZ_pLusQ
   #   30-May-2012: First sighting of fmt 36, 3gpp/240p.
+  #
+  #   http://www.youtube.com/watch?v=0yyorhl6IjM
+  #   30-May-2013: Here's one that's more than an hour long.
   #
   # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
   # disagrees with the above to some extent.  Which is more accurate?
@@ -897,7 +900,7 @@ sub scrape_youtube_url_2($$$$$$$) {
                        );
   my @preferred_fmts = ( 38,  # huge mp4
                          37,  # 1080 mp4
-                         22,  #  720 flv
+                         22,  #  720 mp4
                          45,  #  720 webm
                          35,  #  480 flv
                          44,  #  480 webm
