@@ -1,5 +1,6 @@
 Subject: /C=US/ST=Washington/L=Seattle/O=Amazon.com Inc./CN=s3.amazonaws.com
 Issuer:  /C=US/O=VeriSign, Inc./OU=VeriSign Trust Network/OU=Terms of use at https://www.verisign.com/rpa (c)09/CN=VeriSign Class 3 Secure Server CA - G2
+SHA256:  affe0b15ce2ee17a82eb2f6a7919ce49e2eba050f60c4fb662e11bbf04ac6601
 SHA1:    13170f6fdc8ce3b4309d114ce0d2f8ba37c336f4
 MD5:     3bc853c03ba357779468727a29ecbba1
 -----BEGIN CERTIFICATE-----
@@ -33,6 +34,7 @@ W4wWQZ5AWPUZmZ4Dl8XgUPtCeArv8R+9zQVMHQ==
 -----END CERTIFICATE-----
 Subject: /C=US/O=VeriSign, Inc./OU=VeriSign Trust Network/OU=Terms of use at https://www.verisign.com/rpa (c)09/CN=VeriSign Class 3 Secure Server CA - G2
 Issuer:  /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority - G2/OU=(c) 1998 VeriSign, Inc. - For authorized use only/OU=VeriSign Trust Network
+SHA256:  50505039f8cbd1d36739bcf80d334f532f6817a332add4352f1f4fee9915cd8a
 SHA1:    62f3c89771da4ce01a91fc13e02b6057b4547a1d
 MD5:     ae0fd70945ea3c1060b617bc8e090769
 -----BEGIN CERTIFICATE-----
@@ -72,6 +74,7 @@ YhHB2QmcQrmy1KotmDojYMyimvFu6M+O0Ro8XhnF15s1sAIjJOUFuNWI4+D6ufRf
 -----END CERTIFICATE-----
 Subject: /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority - G2/OU=(c) 1998 VeriSign, Inc. - For authorized use only/OU=VeriSign Trust Network
 Issuer:  /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority - G2/OU=(c) 1998 VeriSign, Inc. - For authorized use only/OU=VeriSign Trust Network
+SHA256:  83ce3c1229688a593d485f81973c0f9195431eda37cc5e36430e79c7a888638b
 SHA1:    85371ca6e550143dce2803471bde3a09e8f8770f
 MD5:     a2339b4c747873d46ce7c1f38dcb5ce9
 -----BEGIN CERTIFICATE-----

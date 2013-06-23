@@ -1,5 +1,6 @@
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=*.googlecode.com
 Issuer:  /C=US/O=Google Inc/CN=Google Internet Authority
+SHA256:  2643d7bf9dce54e44d7700afd1b3c7efbf1c5b0a85a3ee4a29ba6c8e9a73cd93
 SHA1:    e6d8e012d8834e632feb208726e950aa2852b1d4
 MD5:     658c476639cef18641d3411a82ba4f64
 -----BEGIN CERTIFICATE-----
@@ -28,6 +29,7 @@ Bnae8Puc7A==
 -----END CERTIFICATE-----
 Subject: /C=US/O=Google Inc/CN=Google Internet Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+SHA256:  250da2691be97c9a33ceef7e311c14fb01846e058a99cea9bd1125bd25a0cad5
 SHA1:    dd7a7f131ddba33d3e8670179483e6fea6987d6a
 MD5:     33a0ea980e3d6e261d772d82df66007d
 -----BEGIN CERTIFICATE-----

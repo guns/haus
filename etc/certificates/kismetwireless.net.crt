@@ -1,5 +1,6 @@
 Subject: /serialNumber=uK/b72PDEDIQMYgtmA6/lJ5f6zf7aTl5/OU=GT75872571/OU=See www.geotrust.com/resources/cps (c)13/OU=Domain Control Validated - QuickSSL(R)/CN=www.kismetwireless.net
 Issuer:  /C=US/O=GeoTrust Inc./OU=Domain Validated SSL/CN=GeoTrust DV SSL CA
+SHA256:  d8876463ecdc6563d2e0fcb00077e1ec2e3fa4e088b6262c8700819882e2656b
 SHA1:    b14a44cd4a7e898ccdd893cea0376cc1bac7359b
 MD5:     49ffd9bf8435f8bff1b6c56a46655a56
 -----BEGIN CERTIFICATE-----
@@ -41,6 +42,7 @@ zHIma0VMsiSSXA==
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust Inc./OU=Domain Validated SSL/CN=GeoTrust DV SSL CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  c27fd4b85e96d3777c68ab7df6aa4e626bf3ff8c72b1ce81d1eb78babeb1a074
 SHA1:    bae30b15dbb1544cf194d076b75b7bb9e3d6b760
 MD5:     f4858289ead55c53b36d4b553f267837
 -----BEGIN CERTIFICATE-----
@@ -69,6 +71,7 @@ IIi0tWeUz12OYjf+xLQ=
 -----END CERTIFICATE-----
 Subject: /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+SHA256:  08297a4047dba23680c731db6e317653ca7848e1bebd3a0b0179a707f92cf178
 SHA1:    d23209ad23d314232174e40d7f9d62139786633a
 MD5:     67cb9dc013248a829bb2171ed11becd4
 -----BEGIN CERTIFICATE-----

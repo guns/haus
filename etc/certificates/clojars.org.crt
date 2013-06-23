@@ -1,5 +1,6 @@
 Subject: /serialNumber=7VHDQ4G2E5/xGZEpvQG7dMAJ1OdIEnV5/OU=GT35491347/OU=See www.rapidssl.com/resources/cps (c)12/OU=Domain Control Validated - RapidSSL(R)/CN=www.clojars.org
 Issuer:  /C=US/O=GeoTrust, Inc./CN=RapidSSL CA
+SHA256:  468b248e6902cd193eb849c5be668985cd6cdb0483c9c1153c5666b5b2594346
 SHA1:    c279cf9a1c197ff8fef75bcda2f756349c49e032
 MD5:     193a518b4144d3f7ebd6cb3cb00ca5d7
 -----BEGIN CERTIFICATE-----
@@ -34,6 +35,7 @@ Fic31we55TD8GJn+8XMZUO3YRPnAU+AAjkrt+TwEYneoFKN7iA==
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust, Inc./CN=RapidSSL CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  6d5bc979461c7264e1710010cd7d4ea3ec57fa11215f04ffa516ae61959ab2b2
 SHA1:    c039a3269ee4b8e82d00c53fa797b5a19e836f47
 MD5:     1bee285e8ff8085f79cc608b9299a453
 -----BEGIN CERTIFICATE-----
@@ -61,6 +63,7 @@ LEL2TxyJeN4mTvVvk0wVaydWTQBUbHq3tw==
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 SHA1:    de28f4a4ffe5b92fa3c503d1a349a7f9962a8212
 MD5:     f775ab29fb514eb7775eff053c998ef5
 -----BEGIN CERTIFICATE-----

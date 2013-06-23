@@ -1,5 +1,6 @@
 Subject: /OU=Domain Control Validated/OU=Gandi Standard Wildcard SSL/CN=*.freenode.net
 Issuer:  /C=FR/O=GANDI SAS/CN=Gandi Standard SSL CA
+SHA256:  647f8793029050f548f90fc5a96b69186355cc7314759635685d80046b4c424e
 SHA1:    cd1dc6658dd3905ad5735676879aeebd69ce75f2
 MD5:     ab91d820b35ab1b452d73e201cf120e9
 -----BEGIN CERTIFICATE-----
@@ -32,6 +33,7 @@ ieUu/uD5jWqfR59Po4Md2xs736CCIdzgQGzmV253tsaKVbEE2vNWx219WDoky1A=
 -----END CERTIFICATE-----
 Subject: /C=FR/O=GANDI SAS/CN=Gandi Standard SSL CA
 Issuer:  /C=US/ST=UT/L=Salt Lake City/O=The USERTRUST Network/OU=http://www.usertrust.com/CN=UTN-USERFirst-Hardware
+SHA256:  25c205e29b2e94215705c41125c8aa2c295bff059ca8e33e0bb2fd9b7a0b719a
 SHA1:    a9f79883a075ce82d20d274d1368e876140d33b3
 MD5:     502aed49cede628a2e9b00ace3067b15
 -----BEGIN CERTIFICATE-----
@@ -63,6 +65,7 @@ m1gAv6+t+jducW0YNA7B6mr4Dd9pVFYV8iiz/qRj7MUEZGC7/irw9IehsK69quQv
 -----END CERTIFICATE-----
 Subject: /C=US/ST=UT/L=Salt Lake City/O=The USERTRUST Network/OU=http://www.usertrust.com/CN=UTN-USERFirst-Hardware
 Issuer:  /C=SE/O=AddTrust AB/OU=AddTrust External TTP Network/CN=AddTrust External CA Root
+SHA256:  cd1ee37f0f4ac1aa3f6759f3cad998d1c581f7c1e039ba891c8244ef9e3ad9ce
 SHA1:    3d4b2a4c64317143f50258d7e6fd7d3c021a529e
 MD5:     73be83e20b42a2693b500d700c1494d3
 -----BEGIN CERTIFICATE-----
@@ -92,6 +95,7 @@ pG1FJseIVqDwavfY5/wnfmcI0L36tsNhAgFlubgvz1o=
 -----END CERTIFICATE-----
 Subject: /serialNumber=jJNoDeAj2XruggOCC/9OznpNC/MoRdVu/C=US/ST=California/L=Mountain View/O=Mozilla Corporation/OU=Mozilla IT/CN=irc.mozilla.org
 Issuer:  /C=US/O=GeoTrust, Inc./CN=GeoTrust SSL CA
+SHA256:  7a3499a45bcbaca4db583a37e0856ad55cbafe96fdcc57683109aec30a3c99d1
 SHA1:    2606996546cdbe0000956eaebf62117ecfed971d
 MD5:     6dcf4f6ccb1a4e3fae6a97958d000ab4
 -----BEGIN CERTIFICATE-----
@@ -123,6 +127,7 @@ XpPObss8UbxP9iPmcFTagwDofzZxtPM=
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust, Inc./CN=GeoTrust SSL CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  d4c4c99819f3a5f2c6261c9444c62a8b263b39bc6acce35cdcabe272d5037fb2
 SHA1:    780a06f6e9b4061cad0c6502710606eb535f1c26
 MD5:     dff1b76b258dbe7348e3766897a93871
 -----BEGIN CERTIFICATE-----
@@ -150,6 +155,7 @@ TpnKXKBuervdo5AaRTPvvz7SBMS24CqFZUE+ENQ=
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 SHA1:    de28f4a4ffe5b92fa3c503d1a349a7f9962a8212
 MD5:     f775ab29fb514eb7775eff053c998ef5
 -----BEGIN CERTIFICATE-----
@@ -174,6 +180,7 @@ hw4EbNX/3aBd7YdStysVAq45pmp06drE57xNNB6pXE0zX5IJL4hmXXeXxx12E6nV
 -----END CERTIFICATE-----
 Subject: /C=DE/ST=Hessen/L=Fulda/O=Ganneff.de/OU=CA/CN=kosh.ganneff.de/emailAddress=joerg@ganneff.de
 Issuer:  /C=DE/ST=Hessen/L=Fulda/O=Ganneff.de/OU=CA/CN=ganneff.de/emailAddress=joerg@ganneff.de
+SHA256:  5c7ac80f4a90e3d84f740ae4e772ff0f377d54168cb3e2c533f0b8f5b9aa96b9
 SHA1:    17c7dd3d73a9ebb21f347d469658e8edfb27c09a
 MD5:     b5ae964185e2de93aed3fed034d061a8
 -----BEGIN CERTIFICATE-----
@@ -218,6 +225,7 @@ jFxC3xW7kJDqbw==
 -----END CERTIFICATE-----
 Subject: /C=US/ST=Indiana/L=Indianapolis/O=Software in the Public Interest/OU=hostmaster/CN=Certificate Authority/emailAddress=hostmaster@spi-inc.org
 Issuer:  /C=US/ST=Indiana/L=Indianapolis/O=Software in the Public Interest/OU=hostmaster/CN=Certificate Authority/emailAddress=hostmaster@spi-inc.org
+SHA256:  80b1d6ec2d4cb684640133cf3722c540db2b6cc93eeca4f02ba12a6a27721a2c
 SHA1:    af70884383820215cd61c6bcecfd3724a990431c
 MD5:     2a479f60bb83746f0103d70b0df60d78
 -----BEGIN CERTIFICATE-----

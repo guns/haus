@@ -1,5 +1,6 @@
 Subject: /C=US/ST=Washington/L=Seattle/O=Amazon.com Inc./CN=*.s3.amazonaws.com
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance CA-3
+SHA256:  1aa129a36dc6b5a871d551dd250a4b730c491f39fb2e08fd6eea04e791b5ac5e
 SHA1:    cfe3fbb5b1d1986b1b39fe65a8f64affb21f53b5
 MD5:     e3cc103aacd8562c62c727dd83f88685
 -----BEGIN CERTIFICATE-----
@@ -40,6 +41,7 @@ lscsgR0wjMOEcksa4Q==
 -----END CERTIFICATE-----
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance CA-3
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
+SHA256:  21eb37ab4cf6ef8965ec1766409ca76b8b2e03f2d1a388df734208e86deee679
 SHA1:    42857855fb0ea43f54c9911e30e7791d8ce82705
 MD5:     c68b9930c8578d416f8c094e6adb0c90
 -----BEGIN CERTIFICATE-----
@@ -80,6 +82,7 @@ Ib4p1I5eFdZCSucyb6Sxa1GDWL4/bcf72gMhy2oWGU4K8K2Eyl2Us1p292E=
 -----END CERTIFICATE-----
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
 Issuer:  /C=US/O=Entrust.net/OU=www.entrust.net/CPS incorp. by ref. (limits liab.)/OU=(c) 1999 Entrust.net Limited/CN=Entrust.net Secure Server Certification Authority
+SHA256:  583f7a68139b0656a2419eeb5a2caefd4e5cc8146ebeb2194e3a6604133f6d7a
 SHA1:    918da5e499c15f7c6275b124fede53357c34bd36
 MD5:     5868b15b3b124b62bf1a73099ec35c7e
 -----BEGIN CERTIFICATE-----
@@ -109,6 +112,7 @@ nXZwC99CcvhPQRFkpdLq/NWvEfQVOGecIKhLd1qRMkIy54Wz3zY=
 -----END CERTIFICATE-----
 Subject: /C=US/O=Entrust.net/OU=www.entrust.net/CPS incorp. by ref. (limits liab.)/OU=(c) 1999 Entrust.net Limited/CN=Entrust.net Secure Server Certification Authority
 Issuer:  /C=US/O=Entrust.net/OU=www.entrust.net/CPS incorp. by ref. (limits liab.)/OU=(c) 1999 Entrust.net Limited/CN=Entrust.net Secure Server Certification Authority
+SHA256:  62f240278c564c4dd8bf7d9d4f6f366ea894d22f5f34d989a983acec2fffed50
 SHA1:    99a69be61afe886b4d2b82007cb854fc317e1539
 MD5:     dff28073ccf1e66173fcf542e9c57cee
 -----BEGIN CERTIFICATE-----

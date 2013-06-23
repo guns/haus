@@ -1,5 +1,6 @@
 Subject: /serialNumber=Z-nML/xz6lTjAkHxw6TNBVhSoUqNdFdm/C=US/ST=Virginia/L=Fairfax/O=Geeknet, Inc./CN=*.sourceforge.net
 Issuer:  /C=US/O=GeoTrust, Inc./CN=GeoTrust SSL CA
+SHA256:  b78215458f81842c133d30af0fbbbb3364dac79bbd0d3030d47abaac67bd469a
 SHA1:    e4ec3f6d2c0ed196b6f7d55bb58302eef47ddb65
 MD5:     4ddf829f874f68924fa11ed1adec58bf
 -----BEGIN CERTIFICATE-----
@@ -33,6 +34,7 @@ ComzwIuM8hvYzy5lsKlQU5hXpjziHCE9bP1Zq2yH2xiUVBo=
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust, Inc./CN=GeoTrust SSL CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  d4c4c99819f3a5f2c6261c9444c62a8b263b39bc6acce35cdcabe272d5037fb2
 SHA1:    780a06f6e9b4061cad0c6502710606eb535f1c26
 MD5:     dff1b76b258dbe7348e3766897a93871
 -----BEGIN CERTIFICATE-----
@@ -60,6 +62,7 @@ TpnKXKBuervdo5AaRTPvvz7SBMS24CqFZUE+ENQ=
 -----END CERTIFICATE-----
 Subject: /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
 Issuer:  /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+SHA256:  ff856a2d251dcd88d36656f450126798cfabaade40799c722de4d2b5db36a73a
 SHA1:    de28f4a4ffe5b92fa3c503d1a349a7f9962a8212
 MD5:     f775ab29fb514eb7775eff053c998ef5
 -----BEGIN CERTIFICATE-----

@@ -1,3 +1,8 @@
+Subject: /C=US/O=sungpae.com/OU=fights/CN=fights.sungpae.com
+Issuer:  /C=US/O=sungpae.com/OU=fights/CN=fights.sungpae.com
+SHA256:  cf8f208ab006eec1a344042d8e24191bc174ca244fc58cd826bba30617ab09f0
+SHA1:    f543c76c0347e292ec5392722ffa66e65d9222d9
+MD5:     1f42db790dfc8276ff8540d7a1b1dd9e
 -----BEGIN CERTIFICATE-----
 MIIFdTCCA12gAwIBAgIJAJFfhRRAuSItMA0GCSqGSIb3DQEBBQUAMFExCzAJBgNV
 BAYTAlVTMRQwEgYDVQQKDAtzdW5ncGFlLmNvbTEPMA0GA1UECwwGZmlnaHRzMRsw

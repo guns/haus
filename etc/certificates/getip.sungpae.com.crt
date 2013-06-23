@@ -1,3 +1,8 @@
+Subject: /C=US/O=sungpae.com/OU=getip/CN=getip.sungpae.com
+Issuer:  /C=US/O=sungpae.com/OU=getip/CN=getip.sungpae.com
+SHA256:  800d11ae6de07c18e4d5fb58d0ab9839197f0c3fb2879bed46fe5971d38a6d75
+SHA1:    4eca810932f9d5b1fa4f05a7ee9da097d77ce58d
+MD5:     602209f69bf84e0e6fb64e6907274eb7
 -----BEGIN CERTIFICATE-----
 MIIFcTCCA1mgAwIBAgIJAPXQgGA4G5oUMA0GCSqGSIb3DQEBBQUAME8xCzAJBgNV
 BAYTAlVTMRQwEgYDVQQKDAtzdW5ncGFlLmNvbTEOMAwGA1UECwwFZ2V0aXAxGjAY

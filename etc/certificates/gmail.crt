@@ -1,5 +1,6 @@
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=imap.gmail.com
 Issuer:  /C=US/O=Google Inc/CN=Google Internet Authority
+SHA256:  37e2c0a44c64792b3945f8acd1dc205a389abbd13f5b93fb82b5f80b4ca43280
 SHA1:    6d1b5b5ee0180ab493b71d3b94534b5ab937d042
 MD5:     2307e65204ec0e45659b391063f0e795
 -----BEGIN CERTIFICATE-----
@@ -25,6 +26,7 @@ is72sIrAeprsVU8PbNsllUamWsIjKr3DH5xQdH54hDtzQojY
 -----END CERTIFICATE-----
 Subject: /C=US/O=Google Inc/CN=Google Internet Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+SHA256:  250da2691be97c9a33ceef7e311c14fb01846e058a99cea9bd1125bd25a0cad5
 SHA1:    dd7a7f131ddba33d3e8670179483e6fea6987d6a
 MD5:     33a0ea980e3d6e261d772d82df66007d
 -----BEGIN CERTIFICATE-----
@@ -46,6 +48,7 @@ UUIuOss4jHg7y/j7lYe8vJD5UDI=
 -----END CERTIFICATE-----
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=smtp.gmail.com
 Issuer:  /C=US/O=Google Inc/CN=Google Internet Authority
+SHA256:  263fad75d97294b56806302f30c105e95f39cc22dee01825501f85432c37cfee
 SHA1:    34b43e6671d8ac5a47767fb7cde43108f4a5dda8
 MD5:     96ac76529f17e41d2807803a8e00a841
 -----BEGIN CERTIFICATE-----
@@ -71,6 +74,7 @@ raoUPFuD3IH+zP/FGj5LPQirjnJLUvuFDsiM4eowPUthQad9SGWWdz6hCx8HpEUZ
 -----END CERTIFICATE-----
 Subject: /C=US/O=Google Inc/CN=Google Internet Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+SHA256:  250da2691be97c9a33ceef7e311c14fb01846e058a99cea9bd1125bd25a0cad5
 SHA1:    dd7a7f131ddba33d3e8670179483e6fea6987d6a
 MD5:     33a0ea980e3d6e261d772d82df66007d
 -----BEGIN CERTIFICATE-----
@@ -92,6 +96,7 @@ UUIuOss4jHg7y/j7lYe8vJD5UDI=
 -----END CERTIFICATE-----
 Subject: /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+SHA256:  08297a4047dba23680c731db6e317653ca7848e1bebd3a0b0179a707f92cf178
 SHA1:    d23209ad23d314232174e40d7f9d62139786633a
 MD5:     67cb9dc013248a829bb2171ed11becd4
 -----BEGIN CERTIFICATE-----

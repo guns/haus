@@ -1,5 +1,6 @@
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=www.google.com
 Issuer:  /C=ZA/O=Thawte Consulting (Pty) Ltd./CN=Thawte SGC CA
+SHA256:  ec6a6b156b3062fa99499d1e1515cf6c5048af17945748396bd2ecf12b8de22c
 SHA1:    c1956dc8a7dfb2a5a56934da09778e3a11023358
 MD5:     7d7c837f0a8d739d1a1494d0be1f82ea
 -----BEGIN CERTIFICATE-----
@@ -23,6 +24,7 @@ IOkKcGQRCMha8X2e7GmlpdWC1ycenlbN0nbVeSv3JUMcafC4+Q==
 -----END CERTIFICATE-----
 Subject: /C=ZA/O=Thawte Consulting (Pty) Ltd./CN=Thawte SGC CA
 Issuer:  /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority
+SHA256:  0b57e9180fc8f1b466a2421069d232cf45596106f83e6fd19621caea183f1cf6
 SHA1:    0954e2343dd5efe0a7f0967d69caf33e5f893720
 MD5:     152b83f7882501be5533a7dca63d2c37
 -----BEGIN CERTIFICATE-----
@@ -46,6 +48,7 @@ sszLbNlOp++qVkPi4iKjgGiwg6piNBGT4BAfgSGZIi4bosoz9Qlh
 -----END CERTIFICATE-----
 Subject: /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority
 Issuer:  /C=US/O=VeriSign, Inc./OU=Class 3 Public Primary Certification Authority
+SHA256:  a4b6b3996fc2f306b3fd8681bd63413d8c5009cc4fa329c2ccf0e2fa1b140305
 SHA1:    a1db6393916f17e4185509400415c70240b0ae6b
 MD5:     ef5af133eff1cdbb5102ee12144b96c4
 -----BEGIN CERTIFICATE-----

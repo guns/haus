@@ -1,5 +1,6 @@
 Subject: /O=launchpad.net/OU=Domain Control Validated/CN=launchpad.net
 Issuer:  /C=US/ST=Arizona/L=Scottsdale/O=GoDaddy.com, Inc./OU=http://certificates.godaddy.com/repository/CN=Go Daddy Secure Certification Authority/serialNumber=07969287
+SHA256:  eedf6ed9e4e7642a40873db583960bcb5f3f56be54713f9306e521dd12b4b0ad
 SHA1:    d381d319a6da5a70b66bd5cd67cad6da3e2b7991
 MD5:     de87a7542fa0bd98ae8dab2d335d8130
 -----BEGIN CERTIFICATE-----
@@ -35,6 +36,7 @@ uozpyIuVB8bmA+KDsqGryZRbd7DDR/Xm0c5Gsfo7YzAV5yc=
 -----END CERTIFICATE-----
 Subject: /C=US/ST=Arizona/L=Scottsdale/O=GoDaddy.com, Inc./OU=http://certificates.godaddy.com/repository/CN=Go Daddy Secure Certification Authority/serialNumber=07969287
 Issuer:  /C=US/O=The Go Daddy Group, Inc./OU=Go Daddy Class 2 Certification Authority
+SHA256:  09ed6e991fc3273d8fea317d339c02041861973549cfa6e1558f411f11211aa3
 SHA1:    7c4656c3061f7f4c0d67b319a855f60ebc11fc44
 MD5:     d5df85b79a5287d18cd50f90232db534
 -----BEGIN CERTIFICATE-----
@@ -68,6 +70,7 @@ U+4=
 -----END CERTIFICATE-----
 Subject: /L=ValiCert Validation Network/O=ValiCert, Inc./OU=ValiCert Class 2 Policy Validation Authority/CN=http://www.valicert.com//emailAddress=info@valicert.com
 Issuer:  /L=ValiCert Validation Network/O=ValiCert, Inc./OU=ValiCert Class 2 Policy Validation Authority/CN=http://www.valicert.com//emailAddress=info@valicert.com
+SHA256:  58d017279cd4dc63abddb196a6c9906c30c4e08783eae8c1609954d69355596b
 SHA1:    317a2ad07f2b335ef5a1c34e4b57e8b7d8f1fca6
 MD5:     a923759bba49366e31c2dbf2e766ba87
 -----BEGIN CERTIFICATE-----

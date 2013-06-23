@@ -11,8 +11,9 @@ require 'openssl'
 require 'shellwords'
 require 'fileutils'
 require 'net/http'
-require 'digest/sha1'
 require 'digest/md5'
+require 'digest/sha1'
+require 'digest/sha2'
 
 class Cert
   attr_reader :options
@@ -112,10 +113,12 @@ class Cert
 
   def format certs
     certs.map do |c|
+      der = c.to_der
       [ 'Subject: %s' % c.subject,
         'Issuer:  %s' % c.issuer,
-        'SHA1:    %s' % Digest::SHA1.hexdigest(c.to_der),
-        'MD5:     %s' % Digest::MD5.hexdigest(c.to_der),
+        'SHA256:  %s' % Digest::SHA256.hexdigest(der),
+        'SHA1:    %s' % Digest::SHA1.hexdigest(der),
+        'MD5:     %s' % Digest::MD5.hexdigest(der),
         c.to_s
       ].join "\n"
     end.join

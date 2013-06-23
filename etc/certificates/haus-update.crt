@@ -1,5 +1,6 @@
 Subject: /businessCategory=Private Organization/1.3.6.1.4.1.311.60.2.1.3=US/1.3.6.1.4.1.311.60.2.1.2=California/serialNumber=C3268102/C=US/ST=California/L=San Francisco/O=GitHub, Inc./CN=github.com
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV CA-1
+SHA256:  7cfb00ba0b9769f136fc4fd4f39619898bd1d9dd85a57f3c0ad19b8abf97765b
 SHA1:    ce6799252cac78127d94b5622c31c516a6347353
 MD5:     dfef600c26e8cfc7003af4b730580d07
 -----BEGIN CERTIFICATE-----
@@ -45,6 +46,7 @@ n2Xkw9dJh1tybLEvrG8=
 -----END CERTIFICATE-----
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV CA-1
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
+SHA256:  541af019961760ef19e8fb4134e6d43085b5e5e087f30197dc42b2097e10487e
 SHA1:    dbc7e90b0da5d88a5535430eeb665d077859e8e8
 MD5:     b02e8ad4da5258c90776d99b52266eb3
 -----BEGIN CERTIFICATE-----
@@ -88,6 +90,7 @@ zVMSW4SOwg/H7ZMZ2cn6j1g0djIvruFQFGHUqFijyDATI+/GJYw2jxyA
 -----END CERTIFICATE-----
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
+SHA256:  7431e5f4c3c1ce4690774f0b61e05440883ba9a01ed00ba6abd7806ed3b118cf
 SHA1:    5fb7ee0633e259dbad0c4c9ae6d38f1a61c7dc25
 MD5:     d474de575c39b2d39c8583c5c065498a
 -----BEGIN CERTIFICATE-----

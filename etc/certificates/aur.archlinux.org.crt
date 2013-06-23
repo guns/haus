@@ -1,5 +1,6 @@
 Subject: /description=H3k7JO60Bs1D9D02/C=US/ST=Illinois/L=Chicago, IL/O=Aaron Griffin/CN=*.archlinux.org/emailAddress=webmaster@archlinux.org
 Issuer:  /C=IL/O=StartCom Ltd./OU=Secure Digital Certificate Signing/CN=StartCom Class 2 Primary Intermediate Server CA
+SHA256:  56fc29fbd2d6c3a83dc9e2d057f9937ce1ab6644ec4b97c005886adb9de51e35
 SHA1:    25fb92577a73907b674714ab1887c39bc9c2e701
 MD5:     40c4da06fde628b879a530eac465fc5c
 -----BEGIN CERTIFICATE-----
@@ -46,6 +47,7 @@ GUSCyptzvSiFm2a6HRF+xmyIfVjl89aS+CoFW8LEy4egKmykdeb+w5XR2L+MmUpP
 -----END CERTIFICATE-----
 Subject: /C=IL/O=StartCom Ltd./OU=Secure Digital Certificate Signing/CN=StartCom Class 2 Primary Intermediate Server CA
 Issuer:  /C=IL/O=StartCom Ltd./OU=Secure Digital Certificate Signing/CN=StartCom Certification Authority
+SHA256:  9527a5fca765b9bcf6f95d9d05cdedf4904c6b8335cc99354cd75d24037e18d6
 SHA1:    a1ace4046b6e332232b87ecfb6f37a0763720147
 MD5:     3560c6d76a78ce1ee8126c5f80b9d504
 -----BEGIN CERTIFICATE-----
@@ -86,6 +88,7 @@ qhykguAzx/Q=
 -----END CERTIFICATE-----
 Subject: /C=IL/O=StartCom Ltd./OU=Secure Digital Certificate Signing/CN=StartCom Certification Authority
 Issuer:  /C=IL/O=StartCom Ltd./OU=Secure Digital Certificate Signing/CN=StartCom Certification Authority
+SHA256:  c766a9bef2d4071c863a31aa4920e813b2d198608cb7b7cfe21143b836df09ea
 SHA1:    3e2bf7f2031b96f38ce6c4d8a85d3e2d58476a0f
 MD5:     224d8f8afcf735c2bb5734907b8b2216
 -----BEGIN CERTIFICATE-----

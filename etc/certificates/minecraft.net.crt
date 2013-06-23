@@ -1,5 +1,6 @@
 Subject: /O=*.minecraft.net/OU=Domain Control Validated/CN=*.minecraft.net
 Issuer:  /C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies, Inc./OU=http://certificates.starfieldtech.com/repository/CN=Starfield Secure Certification Authority/serialNumber=10688435
+SHA256:  8ab5ec08a078f752312fe3c227f787b54a16f1042caa93035f9ef550e6fd2c59
 SHA1:    94512dce63e389defc9506f84b272eb8a2a335d5
 MD5:     2952dec645951c136dc8352201f6aa40
 -----BEGIN CERTIFICATE-----
@@ -36,6 +37,7 @@ MbINVCkf3tfw1p11boJ1fxHSpBZ2xtOzdlBU8c2lw38=
 -----END CERTIFICATE-----
 Subject: /C=US/ST=Arizona/L=Scottsdale/O=Starfield Technologies, Inc./OU=http://certificates.starfieldtech.com/repository/CN=Starfield Secure Certification Authority/serialNumber=10688435
 Issuer:  /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority
+SHA256:  05a6db389391df92e0be93fdfa4db1e3cf53903918b8d9d85a9c396cb55df030
 SHA1:    7e1874a98faa5d6d2f506a8920ff22fbd16652d9
 MD5:     df4c2884c9cdc467fbeacf2d4f478acd
 -----BEGIN CERTIFICATE-----
@@ -69,6 +71,7 @@ KOUiAgOCRJo0Y577KM/ozS4OUiDtSss4fJ2ubnnXlSyokfOGASGRS7VApA==
 -----END CERTIFICATE-----
 Subject: /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority
 Issuer:  /C=US/O=Starfield Technologies, Inc./OU=Starfield Class 2 Certification Authority
+SHA256:  1465fa205397b876faa6f0a9958e5590e40fcc7faa4fb7c2c8677521fb5fb658
 SHA1:    ad7e1c28b064ef8f6003402014c3d0e3370eb58a
 MD5:     324a4bbbc863699bbe749ac6dd1d4624
 -----BEGIN CERTIFICATE-----
