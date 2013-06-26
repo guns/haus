@@ -1448,10 +1448,14 @@ HAVE pass && {
 # cryptsetup
 ALIAS cs='cryptsetup' && {
     csmount() {
-        (($# == 2)) || { echo "USAGE: $FUNCNAME device mountpoint"; return 1; }
-        local name="$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$2")"
-        if run cryptsetup luksOpen "$1" "$name"; then
-            run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$2"
+        (($# >= 2)) || { echo "USAGE: $FUNCNAME device mountpoint [header [keyfile]]"; return 1; }
+        local device="$1" mountpoint="$2" header="$3" keyfile="$4"
+        local name="$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$mountpoint")"
+        local opts=() args=()
+        [[ "$header" ]] && opts+=(--header "$header")
+        [[ "$keyfile" ]] && opts+=(--key-file "$keyfile")
+        if run cryptsetup "${opts[@]}" luksOpen "$device" "$name"; then
+            run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$mountpoint"
         fi
     }
     csumount() {
