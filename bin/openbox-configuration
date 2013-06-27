@@ -91,8 +91,10 @@
               `[:action {:name ~name} ~@opts])
            actions)])
 
-(defn bindsh [key command]
-  (bind key (sh command)))
+(defmacro bindsh [key command]
+  (if (coll? key)
+    `(list ~@(map #(bind % (sh command)) key))
+    `(bind ~key (sh ~command))))
 
 (defn bindfocus
   ([key title] (bindfocus key title nil))
@@ -218,9 +220,9 @@
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
    (bindfocus "W-F3" "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
-   (bindsh "F3" "ponymix toggle")
-   (bindsh "F4" "ponymix decrease 5")
-   (bindsh "F5" "ponymix increase 5")
+   (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
+   (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
+   (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
    (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
    (bindsh "F6" "hwctl backlight -5")
    (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
@@ -228,10 +230,10 @@
    (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
                    "synclient TouchpadOff=$OFF"
                    "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
-   (bindsh "XF86Eject" ["slock" "killall -HUP gpg-agent"])
-   (bindsh "W-XF86Eject" "sudo /usr/local/bin/systemctl-suspend")
-   (bindsh "W-A-XF86Eject" "sudo /usr/bin/reboot")
-   (bindsh "W-C-A-XF86Eject" "sudo /usr/bin/poweroff")
+   (bindsh ["XF86Eject" "Pause"] ["slock" "killall -HUP gpg-agent"])
+   (bindsh ["W-XF86Eject" "W-Pause"] "sudo /usr/local/bin/systemctl-suspend")
+   (bindsh ["W-A-XF86Eject" "W-A-Pause"] "sudo /usr/bin/reboot")
+   (bindsh ["W-C-A-XF86Eject" "W-C-A-Pause"] "sudo /usr/bin/poweroff")
    (bindsh "W-C-S-z" ["WM_PID=$(xprop | awk '/_NET_WM_PID/{print $NF; exit}')"
                       "if [[ $WM_PID != +([0-9]) ]]"
                       "then notify COULD NOT DETERMINE PID"
