@@ -292,7 +292,7 @@ function! s:LispBufferSetup()
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#session_eval('(do (require (quote clojure.pprint)) (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
+    silent call fireplace#session_eval('(do (clojure.core/require (quote clojure.pprint)) (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
@@ -376,8 +376,11 @@ function! s:ClojureSlamHound(file)
         return 1
     endif
     call fireplace#session_eval(
-        \   '(do (require (quote slam.hound))'
-        \ . '    (slam.hound/swap-in-reconstructed-ns-form (clojure.java.io/file "' . a:file . '")))')
+        \   '(clojure.core/require (quote slam.hound) (quote clojure.pprint))'
+        \ . '(let [file (clojure.java.io/file "' . a:file . '")]'
+        \ . '  (binding [clojure.pprint/*print-right-margin* ' . &textwidth . ']'
+        \ . '    (slam.hound/swap-in-reconstructed-ns-form file)))'
+        \ )
     edit
 endfunction
 
