@@ -665,6 +665,15 @@ listen() {
 
 ALIAS iotop='iotop --only'
 
+# Linux /proc /sys
+__LINUX__ && {
+    drop_caches() {
+        local cmd='echo 1 > /proc/sys/vm/drop_caches'
+        echo "$cmd"
+        eval "$cmd"
+    }
+}
+
 ### Processes
 
 # kill killall
