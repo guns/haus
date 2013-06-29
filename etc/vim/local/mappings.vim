@@ -282,6 +282,9 @@ noremap <Bar>    ?\V
 " Search for non-printing ASCII characters
 noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
 
+" Search for lines that exceed textwidth
+execute "noremap <Leader>+ /\<C-u>\\v^.{" . &textwidth . "}\\zs.+\<CR>"
+
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>
 noremap <Leader>T :<C-u>Ctags<CR>
