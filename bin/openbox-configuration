@@ -91,10 +91,10 @@
               `[:action {:name ~name} ~@opts])
            actions)])
 
-(defmacro bindsh [key command]
+(defn bindsh [key command]
   (if (coll? key)
-    `(list ~@(map #(bind % (sh command)) key))
-    `(bind ~key (sh ~command))))
+    (apply list (map #(bind % (sh command)) key))
+    (bind key (sh command))))
 
 (defn bindfocus
   ([key title] (bindfocus key title nil))
@@ -219,7 +219,8 @@
    (bind "W-C-m" "Iconify")
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
    ;; Hardware / Media control
-   (bindfocus "W-F3" "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindfocus ["W-F3" "W-XF86AudioMute"]
+              "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
