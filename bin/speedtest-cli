@@ -71,7 +71,7 @@ class FileGetter(threading.Thread):
                 f = urllib2.urlopen(self.url)
                 self.result = 0
                 while 1:
-                    contents = f.read(1024)
+                    contents = f.read(10240)
                     if contents:
                         self.result += len(contents)
                     else:
@@ -204,7 +204,7 @@ def closestServers(client, all=False):
     distance
     """
 
-    uh = urllib2.urlopen('http://speedtest.net/speedtest-servers.php')
+    uh = urllib2.urlopen('http://www.speedtest.net/speedtest-servers.php')
     serversxml = uh.read()
     if int(uh.code) != 200:
         return None
@@ -220,6 +220,7 @@ def closestServers(client, all=False):
             servers[d] = [attrib]
         else:
             servers[d].append(attrib)
+    del root
 
     closest = []
     for d in sorted(servers.keys()):
@@ -232,7 +233,6 @@ def closestServers(client, all=False):
         break
 
     del servers
-    del root
     return closest
 
 
@@ -352,9 +352,9 @@ def speedtest():
     dlspeed = downloadSpeed(urls, args.simple)
     if not args.simple:
         print
-    print 'Download: %0.2f Mbit/s' % ((dlspeed / 1024 / 1024) * 8)
+    print 'Download: %0.2f Mbit/s' % ((dlspeed / 1000 / 1000) * 8)
 
-    sizesizes = [int(.25 * 1024 * 1024), int(.5 * 1024 * 1024)]
+    sizesizes = [int(.25 * 1000 * 1000), int(.5 * 1000 * 1000)]
     sizes = []
     for size in sizesizes:
         for i in xrange(0, 25):
@@ -364,12 +364,12 @@ def speedtest():
     ulspeed = uploadSpeed(best['url'], sizes, args.simple)
     if not args.simple:
         print
-    print 'Upload: %0.2f Mbit/s' % ((ulspeed / 1024 / 1024) * 8)
+    print 'Upload: %0.2f Mbit/s' % ((ulspeed / 1000 / 1000) * 8)
 
     if args.share:
-        dlspeedk = int(round((dlspeed / 1024) * 8, 0))
+        dlspeedk = int(round((dlspeed / 1000) * 8, 0))
         ping = int(round(best['latency'], 0))
-        ulspeedk = int(round((ulspeed / 1024) * 8, 0))
+        ulspeedk = int(round((ulspeed / 1000) * 8, 0))
 
         apiData = [
             'download=%s' % dlspeedk,
