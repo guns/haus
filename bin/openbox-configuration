@@ -79,6 +79,9 @@
    [:weight weight]
    [:slant slant]])
 
+(defn system [& args]
+  (zero? (:exit (apply shell/sh args))))
+
 (defn sh [command]
   (let [command (if (coll? command)
                   (format "/bin/bash -c \"%s\"" (string/join "; " command))
@@ -221,17 +224,22 @@
    ;; Hardware / Media control
    (bindfocus ["W-F3" "W-XF86AudioMute"]
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
-   (bindsh ["A-F3" "A-XF86AudioMute"] ["notify -a - < <(hwctl toggle-pulseaudio-sink)"])
+   (bindsh ["A-F3" "A-XF86AudioMute"]
+           (if (system "killall" "-0" "pulseaudio")
+             ["notify -a - < <(hwctl toggle-pulseaudio-sink)"]
+             ["notify -a - < <(hwctl toggle-alsa-card)"]))
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
-   (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
-   (bindsh "F6" "hwctl backlight -5")
-   (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
-   (bindsh "F7" "hwctl backlight +5")
-   (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
-                   "synclient TouchpadOff=$OFF"
-                   "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
+   (when (.exists (io/file "/sys/class/backlight/intel_backlight"))
+     (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
+     (bindsh "F6" "hwctl backlight -5")
+     (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
+     (bindsh "F7" "hwctl backlight +5"))
+   (when (system "synclient" "-l")
+     (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
+                     "synclient TouchpadOff=$OFF"
+                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"]))
    (bindsh ["XF86Eject" "Pause"] ["slock" "killall -HUP gpg-agent"])
    (bindsh ["W-XF86Eject" "W-Pause" "XF86Sleep"] "sudo /usr/local/bin/systemctl-suspend")
    (bindsh ["W-A-XF86Eject" "W-A-Pause"] "sudo /usr/bin/reboot")
