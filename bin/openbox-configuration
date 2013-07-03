@@ -221,6 +221,7 @@
    ;; Hardware / Media control
    (bindfocus ["W-F3" "W-XF86AudioMute"]
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindsh ["A-F3" "A-XF86AudioMute"] ["notify -a - < <(hwctl toggle-pulseaudio-sink)"])
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")

@@ -40,6 +40,9 @@ class Hwctl
           toggle-alsa-card [number]
             Switch between available sound cards, or specified card number
 
+          toggle-pulseaudio-sink
+            Toggle between available Pulseaudio output sinks
+
         Options:
       BANNER
 
@@ -67,6 +70,24 @@ class Hwctl
     end
 
     v
+  end
+
+  def pulseaudio_sinks
+    sinks = %x(pacmd list-sinks).scan(/(\*?) index: (\d+).*?alsa\.card_name = "(.*?)"/m).map do |s, i, n|
+      [s.length > 0, i, n]
+    end
+
+    until sinks[0][0]
+      sinks.rotate!
+    end
+
+    sinks.map { |a| a.drop 1 }
+  end
+
+  def pulseaudio_move_inputs index
+    %x(pacmd list-sink-inputs).lines.grep(/index: (\d+)/) { $1 }.each do |input|
+      system 'pacmd', 'move-sink-input', input.to_s, index.to_s, :out => '/dev/null'
+    end
   end
 
   def backlight setting = nil
@@ -126,6 +147,13 @@ class Hwctl
     cards[next_number]
   end
 
+def toggle_pulseaudio_sink
+  index, name = pulseaudio_sinks.rotate.first
+  system 'pacmd', 'set-default-sink', index, :out => '/dev/null'
+  pulseaudio_move_inputs index
+  name
+end
+
   def run arguments = []
     args = parser.order arguments
     rest = args.drop 1
@@ -135,6 +163,7 @@ class Hwctl
     when 'backlight-permissions' then backlight_permissions *rest
     when 'fnmode' then fnmode *rest
     when 'toggle-alsa-card' then toggle_alsa_card *rest
+    when 'toggle-pulseaudio-sink' then toggle_pulseaudio_sink *rest
     else abort parser.help
     end
 
