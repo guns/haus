@@ -18,10 +18,10 @@ structures with text, and give Lisps their distinctive look and feel. Emacs
 users know that what appear to be a preponderance of brackets are really hooks
 the editor may use to effortlessly transform the text before them.
 
-Vim, possessing |text-objects|, |cursor-motions|, and an |operator-pending|
-mode, is well suited for editing structured text. This plugin extends these
-ideas to S-Expressions as embodied by both classical Lisps like Scheme and new
-Lisps like Clojure.
+Vim, possessing |cursor-motions| and an |operator-pending| mode, is well
+suited for editing structured text. This plugin extends these ideas to
+S-Expressions as embodied by both classical Lisps like Scheme and new Lisps
+like Clojure.
 
 A handful of features found in the popular S-Expression plugin for emacs,
 paredit.el, are also provided.
@@ -53,7 +53,7 @@ All mappings can be easily changed via |g:sexp_mappings|.
 
 [1]: http://www.vim.org/scripts/script.php?script_id=2136
 
-TEXT OBJECTS (visual, operator-pending)~
+TEXT OBJECT SELECTIONS (visual, operator-pending)~
 
 af                                                           *sexp_outer_list*
 if                                                           *sexp_inner_list*
@@ -84,9 +84,9 @@ is                                                         *sexp_inner_string*
         Does not include surrounding whitespace.
 
         The default mappings shadow the internal |as| and |is| mappings. These
-        sentence text-objects are of limited use in code buffers, but if this
-        conflict bothers you, see |g:sexp_mappings| for documentation on
-        changing the default mappings.
+        sentence object selections are of limited use in code buffers, but if
+        you disagree, see |g:sexp_mappings| for documentation on changing the
+        default mappings.
 
 ae                                                        *sexp_outer_element*
 ie                                                        *sexp_inner_element*
@@ -116,9 +116,10 @@ ie                                                        *sexp_inner_element*
               exists
 
         If the cursor is on whitespace that is not in a string or between line
-        comments, the next element in the buffer is selected.
+        comments, the motion includes the current position up to and including
+        the end of the next element, if it exists.
 
-CURSOR MOTIONS (normal, visual, operator-pending)~
+TEXT OBJECT MOTIONS (normal, visual, operator-pending)~
 
 (                                                  *sexp_move_to_prev_bracket*
 )                                                  *sexp_move_to_next_bracket*
@@ -132,9 +133,9 @@ CURSOR MOTIONS (normal, visual, operator-pending)~
               in which case the motion includes both brackets
 
         The default mappings shadow the internal |(| and |)| mappings. These
-        sentence cursor motions are of limited use in code buffers, but if
-        this conflict bothers you, see |g:sexp_mappings| for documentation on
-        changing the default mappings.
+        sentence object motions are of limited use in code buffers, but if
+        you disagree, see |g:sexp_mappings| for documentation on changing the
+        default mappings.
 
 <M-b>                                         *sexp_move_to_prev_element_head*
 <M-w>                                         *sexp_move_to_next_element_head*
@@ -205,26 +206,19 @@ WRAP COMMANDS (normal, visual)~
         list, a space is conditionally appended after the opening bracket so
         that any typed characters will be separated from the next element.
 
-CURSOR INSERTION (normal, visual)~
-
-<LocalLeader>h                                      *sexp_insert_at_list_head*
-<LocalLeader>l                                      *sexp_insert_at_list_tail*
-        Move cursor to head or tail of current list (compound FORM) and enter
-        insert mode.
-
-        If inserting at the head, a space is conditionally appended after the
-        opening bracket so that any typed characters will be separated from
-        the next element.
-
 LIST MANIPULATION (normal, visual)~
 
-<LocalLeader>o                                                *sexp_lift_list*
-        Select the current list (compound FORM) or visual selection and
-        replace [count] enclosing lists with the selection.
-
-<LocalLeader>O                                              *sexp_splice_list*
+<LocalLeader>@                                              *sexp_splice_list*
         Splice the current list (compound FORM) into its parent scope [count]
         times by deleting each list's brackets.
+
+<LocalLeader>o                                                *sexp_lift_list*
+        Replace [count] enclosing lists (compound FORMs) with the current list
+        or visual selection.
+
+<LocalLeader>O                                             *sexp_lift_element*
+        Replace [count] enclosing lists (compound FORMs) with the current
+        element or visual selection.
 
 <M-k>                                                *sexp_swap_list_backward*
 <M-j>                                                 *sexp_swap_list_forward*
@@ -251,6 +245,17 @@ LIST MANIPULATION (normal, visual)~
         element and will never capture its parent.
 
         These commands are similar to "barfage" and "slurpage" in paredit.el.
+
+CURSOR INSERTION (normal, visual)~
+
+<LocalLeader>h                                      *sexp_insert_at_list_head*
+<LocalLeader>l                                      *sexp_insert_at_list_tail*
+        Move cursor to head or tail of current list (compound FORM) and enter
+        insert mode.
+
+        If inserting at the head, a space is conditionally appended after the
+        opening bracket so that any typed characters will be separated from
+        the next element.
 
 INSERT MODE MAPPINGS (insert, optional)~
 
@@ -367,10 +372,9 @@ not necessary to copy all the entries to change a few.
             \ 'sexp_square_tail_wrap_element':  '<LocalLeader>e]',
             \ 'sexp_curly_head_wrap_element':   '<LocalLeader>e{',
             \ 'sexp_curly_tail_wrap_element':   '<LocalLeader>e}',
-            \ 'sexp_insert_at_list_head':       '<LocalLeader>h',
-            \ 'sexp_insert_at_list_tail':       '<LocalLeader>l',
+            \ 'sexp_splice_list':               '<LocalLeader>@',
             \ 'sexp_lift_list':                 '<LocalLeader>o',
-            \ 'sexp_splice_list':               '<LocalLeader>O',
+            \ 'sexp_lift_element':              '<LocalLeader>O',
             \ 'sexp_swap_list_backward':        '<M-k>',
             \ 'sexp_swap_list_forward':         '<M-j>',
             \ 'sexp_swap_element_backward':     '<M-h>',
@@ -379,6 +383,8 @@ not necessary to copy all the entries to change a few.
             \ 'sexp_emit_tail_element':         '<M-S-k>',
             \ 'sexp_capture_prev_element':      '<M-S-h>',
             \ 'sexp_capture_next_element':      '<M-S-l>',
+            \ 'sexp_insert_at_list_head':       '<LocalLeader>h',
+            \ 'sexp_insert_at_list_tail':       '<LocalLeader>l',
             \ }
 <
 To unbind a mapping, keep the key in the dictionary with an empty string
@@ -392,8 +398,8 @@ motions:
             \ 'sexp_move_to_next_bracket':      '',
             \ }
 <
-This would remap the string text object mappings and remove the adjacent
-bracket cursor motion mappings altogether.
+This would remap the string object selection mappings and remove the adjacent
+bracket object motion mappings altogether.
 
                                                              *g:sexp_maxlines*
 Searching for paired brackets is accomplished with the |searchpairpos()|

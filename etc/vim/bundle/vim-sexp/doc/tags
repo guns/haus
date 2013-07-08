@@ -28,6 +28,7 @@ sexp_insert_double_quote	vim-sexp.txt	/*sexp_insert_double_quote*
 sexp_insert_opening_curly	vim-sexp.txt	/*sexp_insert_opening_curly*
 sexp_insert_opening_round	vim-sexp.txt	/*sexp_insert_opening_round*
 sexp_insert_opening_square	vim-sexp.txt	/*sexp_insert_opening_square*
+sexp_lift_element	vim-sexp.txt	/*sexp_lift_element*
 sexp_lift_list	vim-sexp.txt	/*sexp_lift_list*
 sexp_move_to_next_bracket	vim-sexp.txt	/*sexp_move_to_next_bracket*
 sexp_move_to_next_element_head	vim-sexp.txt	/*sexp_move_to_next_element_head*

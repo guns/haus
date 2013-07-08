@@ -37,9 +37,9 @@ let s:delimiter = s:bracket . '|\s'
 let s:string_region = '\vstring|regex|pattern'
 let s:ignored_region = s:string_region . '|comment|character'
 let s:macro_filetype_characters = {
-    \ 'clojure': ['#', "\\v[#'`~@^_=]"],
-    \ 'scheme':  ['#', "\\v[#'`,@]"],
-    \ 'lisp':    ['#', "\\v[#'`,@]"],
+    \ 'clojure': "\\v[#'`~@^_=]",
+    \ 'scheme':  "\\v[#'`,@]",
+    \ 'lisp':    "\\v[#'`,@]",
     \ }
 let s:pairs = {
     \ '(': ')',
@@ -51,6 +51,9 @@ let s:pairs = {
     \ '"': '"'
     \ }
 
+" Patch 7.3.590 introduced the ability to set visual marks with setpos()
+let s:can_set_visual_marks = v:version > 703 || (v:version == 703 && has('patch590'))
+
 " Return macro characters for current filetype. Defaults to Scheme's macro
 " characters if 'lisp' is set, invalid characters otherwise.
 function! s:macro_chars()
@@ -59,7 +62,7 @@ function! s:macro_chars()
     elseif &lisp
         return s:macro_filetype_characters['scheme']
     else
-        return [nr2char(0x01), nr2char(0x01)]
+        return nr2char(0x01)
     endif
 endfunction
 
@@ -278,7 +281,7 @@ endfunction
 " 1 for end. Returns [0, 0, 0, 0] if not currently in a macro character
 " sequence or no macro characters are defined for the current filetype.
 function! s:current_macro_character_terminal(end)
-    let macro = s:macro_chars()[1]
+    let macro = s:macro_chars()
 
     if empty(macro)
         return [0, 0, 0, 0]
@@ -338,7 +341,7 @@ function! s:current_element_terminal(end)
         else
             let pos = s:nearest_bracket(a:end)
         end
-    elseif char =~# s:macro_chars()[1]
+    elseif char =~# s:macro_chars()
         if !a:end
             " Let the rest of the function find the macro head
             let include_macro_characters = 1
@@ -498,14 +501,15 @@ endfunction
 "
 "   * If trailing whitespace after end, end' is set to include the trailing
 "     whitespace up to the next element, unless start is preceded on its line
-"     by something other than whitespace, in which case end' is set to include
-"     only the trailing whitespace to the end of line.
+"     by something other than whitespace (but not an opening bracket), in
+"     which case end' is set to include only the trailing whitespace to the
+"     end of line.
 "   * If no trailing whitespace after end, start' is set to include leading
 "     whitespace up to the previous element on the same line if any exist.
 "   * Otherwise start and end are returned verbatim.
 "
-" This behavior diverges from the behavior of native text object aw in that it
-" allows multiline whitespace selections.
+" This behavior diverges from the behavior of the native text object aw in
+" that it allows multiline whitespace selections.
 function! s:terminals_with_whitespace(start, end)
     let [start, end] = [a:start, a:end]
     let ws_end = s:adjacent_whitespace_terminal(end, 1)
@@ -515,10 +519,11 @@ function! s:terminals_with_whitespace(start, end)
         " ws_end is on the same line as end, so accept it
         if end[1] == ws_end[1]
             let end = ws_end
-        " start begins its line, so include all of ws_end, which is on a
-        " subsequent line. Note that the double substring slicing here is
-        " intentional in order to avoid calculating the substring index.
-        elseif getline(start[1])[: start[2] - 1][: -2] =~# '\v^\s*$'
+        " start begins its line or is immediately preceded by an opening
+        " bracket, so include all of ws_end, which is on a subsequent line.
+        " Note that the double substring slicing here is intentional in order
+        " to avoid calculating the substring index.
+        elseif getline(start[1])[: start[2] - 1][: -2] =~# '\v^\s*$|[([{]$'
             let end = ws_end
         " start does not begin its line, so just include any trailing
         " whitespace to eol, not to ws_end
@@ -766,14 +771,14 @@ endfunction
 function! s:move_cursor_extending_selection(func, ...)
     " Break out of visual mode, preserving cursor position
     if s:countindex > 0
-        execute "normal! \<C-Bslash>\<C-n>"
+        execute "normal! \<Esc>"
     endif
 
     let [start, end] = s:get_visual_marks()
     let omode = s:compare_pos(start, getpos('.')) == 0
 
     let pos = call(a:func, a:000)
-    let valid = pos[1] > 1
+    let valid = pos[1] > 0
 
     if omode
         call s:set_visual_marks([valid ? pos : start, end])
@@ -787,6 +792,95 @@ function! s:move_cursor_extending_selection(func, ...)
     return pos
 endfunction
 
+" Move cursor to current list's terminal bracket, returning its position; 0
+" for previous, 1 for next. If currently on an opening or closing bracket and
+" moving backward or forward (respectively), cursor is moved to enclosing
+" list's terminal bracket.
+"
+" The mode 'o' is handled specially:
+"
+"   * If moving backward, the cursor is positioned just after the opening
+"     bracket so that the selection is exclusive at the head.
+"   * If moving forward and the cursor is on an opening bracket, the current
+"     list is treated as an element and the selection is extended up to, but
+"     not including, the next outer closing bracket.
+"   * If moving forward and the cursor is on a closing bracket, and the next
+"     outer closing bracket is not immediately adjacent, the selection is made
+"     exclusive such that neither the current bracket nor next outer closing
+"     bracket are included.
+"   * Otherwise the cursor is not moved and [0, 0, 0, 0] is returned.
+"
+" If there is no enclosing list, the cursor is not moved and [0, 0, 0, 0] is
+" returned.
+function! sexp#move_to_nearest_bracket(mode, next)
+    if a:mode ==? 'v'
+        return s:move_cursor_extending_selection('s:move_to_nearest_bracket', a:next)
+    elseif a:mode ==? 'o' && !a:next
+        let [_b, l, c, _o] = s:move_to_nearest_bracket(0)
+        if l > 0
+            let [l, c] = s:findpos('\v\_.', 1)
+            call cursor(l, c)
+        endif
+        return [0, l, c, 0]
+    elseif a:mode ==? 'o' && getline('.')[col('.') - 1] =~# s:bracket
+        let cursor = getpos('.')
+        let bracket = getline(cursor[1])[cursor[2] - 1]
+
+        call s:move_to_current_element_terminal(1)
+        let pos = s:nearest_bracket(1)
+
+        if pos[1] < 1 || (bracket =~# s:closing_bracket
+                          \ && cursor[1] == pos[1]
+                          \ && cursor[2] == pos[2] - 1)
+            call setpos('.', cursor)
+            return [0, 0, 0, 0]
+        endif
+
+        let start = getline(cursor[1])[cursor[2] - 1] =~# s:opening_bracket
+                    \ ? cursor
+                    \ : s:pos_with_col_offset(cursor, 1)
+        call s:set_visual_marks([start, s:pos_with_col_offset(pos, -1)])
+        call s:select_current_marks('o')
+        return pos
+    else
+        return s:move_to_nearest_bracket(a:next)
+    endif
+endfunction
+
+" Calls s:move_to_adjacent_element, but extends the current visual selection
+" if mode is 'v'.
+function! sexp#move_to_adjacent_element(mode, next, tail, top)
+    return a:mode ==? 'v'
+           \ ? s:move_cursor_extending_selection('s:move_to_adjacent_element', a:next, a:tail, a:top)
+           \ : s:move_to_adjacent_element(a:next, a:tail, a:top)
+endfunction
+
+" Move cursor to current list start or end and enter insert mode. Inserts
+" a leading space after opening bracket if inserting at head, unless there
+" already is one.
+function! sexp#insert_at_list_terminal(end)
+    let pos = s:move_to_nearest_bracket(a:end)
+
+    " Handle opening bracket edge cases
+    if !a:end && pos[1] > 0
+        let nextchar = getline(pos[1])[pos[2]]
+
+        " This is the eol, so start insert at eol
+        if empty(nextchar)
+            startinsert!
+            return
+        " Add headspace unless there's already some there
+        elseif nextchar !~# '\v\s'
+            execute 'normal! a '
+        " Else start after the bracket
+        else
+            normal! l
+        endif
+    endif
+
+    startinsert
+endfunction
+
 """ VISUAL MARKS {{{1
 
 " Return current visual marks as a list
@@ -794,17 +888,28 @@ function! s:get_visual_marks()
     return [getpos("'<"), getpos("'>")]
 endfunction
 
-" Set visual marks to [start, end]
-function! s:set_visual_marks(marks)
-    call setpos("'<", a:marks[0])
-    call setpos("'>", a:marks[1])
-endfunction
+if s:can_set_visual_marks
+    " Set visual marks to [start, end]
+    function! s:set_visual_marks(marks)
+        call setpos("'<", a:marks[0])
+        call setpos("'>", a:marks[1])
+    endfunction
+else
+    " Before 7.3.590, the only way to set visual marks was to actually enter
+    " and exit visual mode. The method using setpos() above is preferred
+    " because there are no side effects apart from setting the marks.
+    function! s:set_visual_marks(marks)
+        let cursor = getpos('.')
 
-" Set start and end visual marks to [0, 0, 0, 0]
-function! s:clear_visual_marks()
-    call setpos("'<", [0, 0, 0, 0])
-    call setpos("'>", [0, 0, 0, 0])
-endfunction
+        if mode() ==? 'v' | execute "normal! \<Esc>" | endif
+        call setpos('.', a:marks[0])
+        normal! v
+        call setpos('.', a:marks[1])
+        execute "normal! \<Esc>"
+
+        call setpos('.', cursor)
+    endfunction
+endif
 
 " Set visual marks to the positions of the nearest paired brackets. Offset is
 " the number of columns inwards from the brackets to set the marks.
@@ -842,7 +947,7 @@ function! s:set_marks_around_current_list(mode, offset, allow_expansion)
         let cursor_moved = 1
     endif
 
-    " Native text objects expand when repeating inner motions too
+    " Native object selections expand when repeating inner motions as well
     if expanding
         \ && a:offset == 1
         \ && getline(cursor[1])[cursor[2] - 2] =~# s:opening_bracket
@@ -880,7 +985,7 @@ function! s:set_marks_around_current_list(mode, offset, allow_expansion)
         call s:set_visual_marks([open, close])
     " Don't erase marks when in visual mode
     elseif !visual
-        call s:clear_visual_marks()
+        delmarks < >
     endif
 
     if cursor_moved
@@ -903,13 +1008,13 @@ function! s:set_marks_around_current_top_list(mode, offset)
 
         " Don't delete adjacent brackets with an inner motion
         if a:offset > 0 && opening[1] == closing[1] && opening[2] == closing[2] - 1
-            call s:clear_visual_marks()
+            delmarks < >
         else
-            call setpos("'<", s:pos_with_col_offset(opening, a:offset))
-            call setpos("'>", s:pos_with_col_offset(closing, -a:offset))
+            call s:set_visual_marks([s:pos_with_col_offset(opening, a:offset),
+                                   \ s:pos_with_col_offset(closing, -a:offset)])
         endif
     elseif a:mode !=? 'v'
-        call s:clear_visual_marks()
+        delmarks < >
     endif
 endfunction
 
@@ -923,13 +1028,13 @@ function! s:set_marks_around_current_string(mode, offset)
 
         " Don't delete adjacent quotes with an inner motion
         if a:offset > 0 && start[1] == end[1] && start[2] == end[2] - 1
-            call s:clear_visual_marks()
+            delmarks < >
         else
-            call setpos("'<", s:pos_with_col_offset(s:current_string_terminal(0), a:offset))
-            call setpos("'>", s:pos_with_col_offset(end, -a:offset))
+            call s:set_visual_marks([s:pos_with_col_offset(s:current_string_terminal(0), a:offset),
+                                   \ s:pos_with_col_offset(end, -a:offset)])
         endif
     elseif a:mode !=? 'v'
-        call s:clear_visual_marks()
+        delmarks < >
     endif
 endfunction
 
@@ -938,38 +1043,44 @@ endfunction
 " s:terminals_with_whitespace().
 "
 " If cursor is on whitespace that is not in a string or between line comments,
-" the marks are set around the next element.
+" the marks are set around the next element if inner is 1, and around the
+" current position and end of the next element if inner is 0.
 "
 " Will set both to [0, 0, 0, 0] if an element could not be found and mode does
 " not equal 'v'.
 function! s:set_marks_around_current_element(mode, inner)
-    let start = [0, 0, 0, 0]
-    let end = s:current_element_terminal(1)
+    let cursor = getpos('.')
+    let start = s:current_element_terminal(0)
+    let end = [0, 0, 0, 0]
+    let include_ws = !a:inner
 
-    " We are on whitespace; move to next element and recurse.
-    if end[1] < 1
-        let cursor = getpos('.')
+    " We are on whitespace; check for next element
+    if start[1] < 1
         let next = s:move_to_adjacent_element(1, 0, 0)
 
         " No next element! We are at the eof or in a blank buffer.
         if s:compare_pos(next, cursor) == 0
             if a:mode !=? 'v'
-                call s:clear_visual_marks()
+                delmarks < >
             endif
-        else
-            call s:set_marks_around_current_element(a:mode, a:inner)
-            call setpos('.', cursor)
+            return
         endif
 
-        return
+        let include_ws = 0
+        let start = a:inner ? next : cursor
+    else
+        " Search from element start to avoid errors with elements that end
+        " with macro characters. e.g. Clojure auto-gensyms: `(let [s# :foo)])
+        call setpos('.', start)
     endif
 
-    let start = s:current_element_terminal(0)
+    let end = s:current_element_terminal(1)
 
-    if !a:inner
+    if include_ws
         let [start, end] = s:terminals_with_whitespace(start, end)
     endif
 
+    call setpos('.', cursor)
     call s:set_visual_marks([start, end])
 endfunction
 
@@ -980,7 +1091,7 @@ function! s:set_marks_around_adjacent_element(mode, next)
     let cursor = getpos('.')
 
     if a:mode ==? 'v'
-        execute "normal! \<C-Bslash>\<C-n>"
+        execute "normal! \<Esc>"
     endif
 
     " If moving backward, first position ourselves at the head of the current
@@ -1017,6 +1128,44 @@ function! s:set_marks_characterwise()
         call s:select_current_marks('v')
         execute "normal! \<Esc>"
     endif
+endfunction
+
+" Set visual marks at current list's brackets, then enter visual mode with
+" that selection. If no brackets are found and mode equals 'o', nothing is
+" done.
+function! sexp#select_current_list(mode, offset, allow_expansion)
+    call s:set_marks_around_current_list(a:mode, a:offset, a:allow_expansion)
+    return s:select_current_marks(a:mode)
+endfunction
+
+" Set visual marks at current outermost list's brackets, then enter visual
+" mode with that selection. If no brackets are found and mode equals 'o',
+" nothing is done.
+function! sexp#select_current_top_list(mode, offset)
+    call s:set_marks_around_current_top_list(a:mode, a:offset)
+    return s:select_current_marks(a:mode)
+endfunction
+
+" Unlike the native text object a" we do not try to select all the whitespace
+" up to the next element. This can be done with sexp#select_current_element if
+" desired. If not currently in string and mode equals 'o', nothing is done.
+function! sexp#select_current_string(mode, offset)
+    call s:set_marks_around_current_string(a:mode, a:offset)
+    return s:select_current_marks(a:mode)
+endfunction
+
+" Set visual marks around current element and enter visual mode.
+function! sexp#select_current_element(mode, inner)
+    call s:set_marks_around_current_element(a:mode, a:inner)
+    return s:select_current_marks(a:mode)
+endfunction
+
+" Set visual marks around adjacent element and enter visual mode; 0 for
+" previous, 1 for next. If no such adjacent element exists, selects current
+" element.
+function! sexp#select_adjacent_element(mode, next)
+    call s:set_marks_around_adjacent_element(a:mode, a:next)
+    return s:select_current_marks(a:mode)
 endfunction
 
 """ BUFFER MUTATION {{{1
@@ -1220,12 +1369,14 @@ function! s:swap_current_selection(mode, next, pairwise)
         let [sl, sc] = s:findpos(nr2char(0x02), 1)
         call setpos('.', [0, sl, sc, 0])
         normal! x
-        call setpos("'<", [0, sl, sc, 0])
+        let s = [0, sl, sc, 0]
 
         let [el, ec] = s:findpos(nr2char(0x03), 1)
         call setpos('.', [0, el, ec, 0])
         normal! x
-        call setpos("'>", [0, el, ec - 1, 0])
+        let e = [0, el, ec - 1, 0]
+
+        call s:set_visual_marks([s, e])
     endif
 
     if visual
@@ -1238,119 +1389,6 @@ function! s:swap_current_selection(mode, next, pairwise)
 
     let [@a, @b] = reg_save
     return 1
-endfunction
-
-""" EXPORTED FUNCTIONS {{{1
-
-" Call func count times with given varargs. Will call func at least once.
-" Stores current evaluation iteration (from 0 to count, exclusive) in
-" s:countindex.
-function! sexp#docount(count, func, ...)
-    try
-        for n in range(a:count > 0 ? a:count : 1)
-            let s:countindex = n
-            call call(a:func, a:000)
-        endfor
-    finally
-        let s:countindex = 0
-    endtry
-endfunction
-
-" Set visual marks at current list's brackets, then enter visual mode with
-" that selection. If no brackets are found and mode equals 'o', nothing is
-" done.
-function! sexp#select_current_list(mode, offset, allow_expansion)
-    call s:set_marks_around_current_list(a:mode, a:offset, a:allow_expansion)
-    return s:select_current_marks(a:mode)
-endfunction
-
-" Set visual marks at current outermost list's brackets, then enter visual
-" mode with that selection. If no brackets are found and mode equals 'o',
-" nothing is done.
-function! sexp#select_current_top_list(mode, offset)
-    call s:set_marks_around_current_top_list(a:mode, a:offset)
-    return s:select_current_marks(a:mode)
-endfunction
-
-" Unlike the native text object a" we do not try to select all the whitespace
-" up to the next element. This can be done with sexp#select_current_element if
-" desired. If not currently in string and mode equals 'o', nothing is done.
-function! sexp#select_current_string(mode, offset)
-    call s:set_marks_around_current_string(a:mode, a:offset)
-    return s:select_current_marks(a:mode)
-endfunction
-
-" Set visual marks around current element and enter visual mode.
-function! sexp#select_current_element(mode, inner)
-    call s:set_marks_around_current_element(a:mode, a:inner)
-    return s:select_current_marks(a:mode)
-endfunction
-
-" Set visual marks around adjacent element and enter visual mode; 0 for
-" previous, 1 for next. If no such adjacent element exists, selects current
-" element.
-function! sexp#select_adjacent_element(mode, next)
-    call s:set_marks_around_adjacent_element(a:mode, a:next)
-    return s:select_current_marks(a:mode)
-endfunction
-
-" Move cursor to current list's terminal bracket, returning its position; 0
-" for previous, 1 for next. If currently on an opening or closing bracket and
-" moving backward or forward (respectively), cursor is moved to enclosing
-" list's terminal bracket.
-"
-" The mode 'o' is handled specially:
-"
-"   * If moving backward, the cursor is positioned just after the opening
-"     bracket so that the selection is exclusive at the head.
-"   * If moving forward and the cursor is on a bracket, an exclusive visual
-"     selection is made that omits both the current and next bracket.
-"   * If this selection is empty and the brackets are paired, make the pair of
-"     brackets the selection, otherwise do nothing and return [0, 0, 0, 0]
-"
-" If there is no enclosing list, the cursor is not moved and [0, 0, 0, 0] is
-" returned.
-function! sexp#move_to_nearest_bracket(mode, next)
-    if a:mode ==? 'v'
-        return s:move_cursor_extending_selection('s:move_to_nearest_bracket', a:next)
-    elseif a:mode ==? 'o' && !a:next
-        let [_b, l, c, _o] = s:move_to_nearest_bracket(0)
-        if l > 0
-            let [l, c] = s:findpos('\v\_.', 1)
-            call cursor(l, c)
-        endif
-        return [0, l, c, 0]
-    elseif a:mode ==? 'o' && getline('.')[col('.') - 1] =~# s:bracket
-        let cursor = getpos('.')
-        let pos = s:nearest_bracket(1)
-
-        if pos[1] < 1
-            return [0, 0, 0, 0]
-        elseif cursor[1] == pos[1] && cursor[2] == pos[2] - 1
-            if getline(cursor[1])[cursor[2] - 1] =~# s:opening_bracket
-                \ && getline(pos[1])[pos[2] - 1] =~# s:closing_bracket
-                call s:set_visual_marks([cursor, pos])
-            else
-                return [0, 0, 0, 0]
-            endif
-        else
-            call s:set_visual_marks([s:pos_with_col_offset(cursor, 1),
-                                   \ s:pos_with_col_offset(pos, -1)])
-        endif
-
-        call s:select_current_marks('o')
-        return pos
-    else
-        return s:move_to_nearest_bracket(a:next)
-    endif
-endfunction
-
-" Calls s:move_to_adjacent_element, but extends the current visual selection
-" if mode is 'v'.
-function! sexp#move_to_adjacent_element(mode, next, tail, top)
-    return a:mode ==? 'v'
-           \ ? s:move_cursor_extending_selection('s:move_to_adjacent_element', a:next, a:tail, a:top)
-           \ : s:move_to_adjacent_element(a:next, a:tail, a:top)
 endfunction
 
 " Place brackets around scope, then place cursor at head or tail, finally
@@ -1370,12 +1408,13 @@ function! sexp#wrap(scope, bra, ket, at_tail, insert)
     endif
 endfunction
 
-" Replace parent list with current list or visual selection.
-function! sexp#lift_list(mode)
+" Replace parent list with selection resulting from executing func with given
+" varargs.
+function! sexp#lift(mode, func, ...)
     if a:mode ==# 'v'
         call s:select_current_marks('v')
     else
-        call sexp#select_current_list('n', 0, 0)
+        call call(a:func, a:000)
     endif
     normal! d
     call sexp#select_current_list('n', 0, 0)
@@ -1418,7 +1457,7 @@ function! sexp#stackop(mode, last, capture)
     let char = getline(cursorline)[cursorcol - 1]
 
     if a:mode ==? 'v'
-        execute "normal! \<C-Bslash>\<C-n>"
+        execute "normal! \<Esc>"
         let marks = s:get_visual_marks()
     endif
 
@@ -1487,7 +1526,7 @@ function! sexp#swap_element(mode, next, list)
 
         " Ensure visual marks are set character-wise
         call s:select_current_marks('v')
-        execute "normal! \<C-Bslash>\<C-n>"
+        execute "normal! \<Esc>"
 
         call s:set_visual_marks(s:positions_with_element_terminals(marks))
         let pairwise = (call('s:count_elements', s:get_visual_marks()) % 2) == 0
@@ -1499,7 +1538,7 @@ function! sexp#swap_element(mode, next, list)
                    \ ? pos
                    \ : s:nearest_bracket(1)
         if tail[1] < 1
-            call s:clear_visual_marks()
+            delmarks < >
         else
             call setpos('.', tail)
             call s:set_marks_around_current_element('o', 1)
@@ -1518,31 +1557,23 @@ function! sexp#swap_element(mode, next, list)
     endif
 endfunction
 
-" Move cursor to current list start or end and enter insert mode. Inserts
-" a leading space after opening bracket if inserting at head, unless there
-" already is one.
-function! sexp#insert_at_list_terminal(end)
-    let pos = s:move_to_nearest_bracket(a:end)
+""" ITERATION {{{1
 
-    " Handle opening bracket edge cases
-    if !a:end && pos[1] > 0
-        let nextchar = getline(pos[1])[pos[2]]
-
-        " This is the eol, so start insert at eol
-        if empty(nextchar)
-            startinsert!
-            return
-        " Add headspace unless there's already some there
-        elseif nextchar !~# '\v\s'
-            execute 'normal! a '
-        " Else start after the bracket
-        else
-            normal! l
-        endif
-    endif
-
-    startinsert
+" Call func count times with given varargs. Will call func at least once.
+" Stores current evaluation iteration (from 0 to count, exclusive) in
+" s:countindex.
+function! sexp#docount(count, func, ...)
+    try
+        for n in range(a:count > 0 ? a:count : 1)
+            let s:countindex = n
+            call call(a:func, a:000)
+        endfor
+    finally
+        let s:countindex = 0
+    endtry
 endfunction
+
+""" INSERTION EXPRESSIONS {{{1
 
 " Return keys to be inserted in place of bra; this includes the closing pair,
 " as well as a leading and/or trailing space to separate from other elements.
@@ -1569,11 +1600,11 @@ function! sexp#opening_insertion(bra)
     let buf = ''
     let buftail = ''
     let ket = s:pairs[a:bra]
-    let [dispatch, macro] = s:macro_chars()
+    let macro = s:macro_chars()
 
     if prev =~# '\v\S'
         \ && prev !~# s:opening_bracket
-        \ && (pprev !=# dispatch && prev !~# macro)
+        \ && prev !~# macro
         let buf .= ' '
     endif
 
@@ -1669,11 +1700,11 @@ function! sexp#quote_insertion(quote)
 
         let buf = ''
         let buftail = ''
-        let [dispatch, macro] = s:macro_chars()
+        let macro = s:macro_chars()
 
         if prev =~# '\v\S'
             \ && prev !~# s:opening_bracket
-            \ && (pprev !=# dispatch && prev !~# macro)
+            \ && prev !~# macro
             let buf .= ' '
         endif
 
