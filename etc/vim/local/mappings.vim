@@ -280,10 +280,9 @@ noremap <Bslash> /\V
 noremap <Bar>    ?\V
 
 " Search for non-printing ASCII characters
-noremap <Leader>u /<C-u>\v[^\x09\x20-\x7e]<CR>
-
+noremap <Leader>- /<C-u>\v[^\x09\x20-\x7e]<CR>
 " Search for lines that exceed textwidth
-execute "noremap <Leader>+ /\<C-u>\\v^.{" . &textwidth . "}\\zs.+\<CR>"
+noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| set hlsearch \| normal! n<CR>
 
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>
@@ -550,6 +549,7 @@ noremap <Leader>a<C-l>   :Align =><CR>
 nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: Unite.vim
+noremap <Leader>u :<C-u>Unite -no-split<Space>
 Mapall <4-o> :<C-u>Unite -no-split git_cached<CR>
 Mapall <4-t> :<C-u>tabnew \\\| Unite -no-split git_cached<CR>
 Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
