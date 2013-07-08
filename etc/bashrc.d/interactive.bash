@@ -1642,6 +1642,16 @@ ALIAS youtubedown='youtubedown --verbose' && {
     }
 }
 
+# mkvmerge
+HAVE mkvmerge && mkvmergeout() {
+    (($# > 1)) || { echo "USAGE: $FUNCNAME out-file [input-files …]"; return 1; }
+    ruby -e '
+        out, *inputs = ARGV
+        args = [inputs.first] + (["+"] * (inputs.size - 1)).zip(inputs.drop 1)
+        system "mkvmerge", "-o", out, *args.flatten
+    ' -- "$@"
+}
+
 ### X
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
