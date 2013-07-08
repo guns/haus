@@ -234,5 +234,11 @@ augroup GUNS
     autocmd BufRead,BufNewFile psql.edit.*
         \ setlocal filetype=sql
 
+    " Plugin: Unite.vim {{{1
+    autocmd FileType unite
+        \ syntax clear Tab TrailingWS |
+        \ BufReMapall <4-\> <Plug>(unite_all_exit) |
+        \ BufReMapall <4-r> <Plug>(unite_redraw)
+
 " }}}1
 augroup END

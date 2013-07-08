@@ -17,10 +17,13 @@ function! Prompt(...)
     if !empty(buf) | execute a:1 . buf | endif
 endfunction
 
-command! -nargs=+ -complete=command -bar Mapall call <SID>Mapall(<f-args>) " {{{1
-function! s:Mapall(...)
-    execute 'noremap  ' . join(a:000)
-    execute 'noremap! ' . a:1 . ' <Esc>' . join(a:000[1:])
+command! -nargs=+ -complete=command -bar Mapall      call <SID>Mapall('nore', '',         <f-args>) " {{{1
+command! -nargs=+ -complete=command -bar ReMapall    call <SID>Mapall('',     '',         <f-args>)
+command! -nargs=+ -complete=command -bar BufMapall   call <SID>Mapall('nore', '<buffer>', <f-args>)
+command! -nargs=+ -complete=command -bar BufReMapall call <SID>Mapall('',     '<buffer>', <f-args>)
+function! s:Mapall(prefix, mods, ...)
+    execute a:prefix . 'map  ' . a:mods . ' '. join(a:000)
+    execute a:prefix . 'map! ' . a:mods . ' '. a:1 . ' <Esc>' . join(a:000[1:])
 endfunction
 
 command! -nargs=* -bang -bar SetWhitespace call <SID>SetWhitespace('<bang>', <f-args>) "{{{1
@@ -615,7 +618,7 @@ function! s:Org(bang, ...)
         endfor
     else
         if empty(a:bang) | tabnew | endif
-        execute 'lcd ' . g:org_home | CtrlP
+        execute 'lcd ' . g:org_home | Unite -no-split git_cached
     endif
 endfunction
 

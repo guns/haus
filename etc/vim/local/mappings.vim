@@ -549,13 +549,12 @@ noremap <Leader>a<C-l>   :Align =><CR>
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>
 
-" Plugin: CtrlP
-Mapall <4-o> :<C-u>CtrlP<CR>
-Mapall <4-t> :<C-u>tabnew \\\| CtrlP<CR>
-Mapall <4-'> :<C-u>CtrlPBufTag<CR>
-Mapall <4-\"> :<C-u>CtrlPTag<CR>
-Mapall <4-b> :<C-u>CtrlPMRU<CR>
-Mapall <4-B> :<C-u>tabnew \\\| CtrlPMRU<CR>
+" Plugin: Unite.vim
+Mapall <4-o> :<C-u>Unite -no-split git_cached<CR>
+Mapall <4-t> :<C-u>tabnew \\\| Unite -no-split git_cached<CR>
+Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
+Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
+Mapall <4-'> :<C-u>Unite -no-split tag<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
@@ -629,8 +628,6 @@ let g:sexp_mappings = {
     \ 'sexp_square_tail_wrap_element':  '<Leader>e]',
     \ 'sexp_curly_head_wrap_element':   '<Leader>e{',
     \ 'sexp_curly_tail_wrap_element':   '<Leader>e}',
-    \ 'sexp_insert_at_list_head':       '<Leader>h',
-    \ 'sexp_insert_at_list_tail':       '<Leader>l',
     \ 'sexp_splice_list':               '<Leader>@',
     \ 'sexp_lift_list':                 '<Leader>o',
     \ 'sexp_lift_element':              '<Leader>O',
@@ -642,4 +639,6 @@ let g:sexp_mappings = {
     \ 'sexp_emit_tail_element':         '<M-S-k>',
     \ 'sexp_capture_prev_element':      '<M-S-h>',
     \ 'sexp_capture_next_element':      '<M-S-l>',
+    \ 'sexp_insert_at_list_head':       '<Leader>h',
+    \ 'sexp_insert_at_list_tail':       '<Leader>l',
     \ }

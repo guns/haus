@@ -977,7 +977,7 @@ HAVE vim && {
         if (( ${#files[@]} )); then
             vim -p "${files[@]}"
         else
-            vim -c CtrlP
+            vim -c 'Unite -no-split git_cached'
         fi
     }; TCOMP find vimfind
 

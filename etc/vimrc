@@ -229,26 +229,6 @@ let g:regbuf_edit_open_command = '80vnew'
 let g:org_home = '~/Documents/Org'
 let g:org_agenda_files = [g:org_home . '/TODO.org']
 
-" Plugin: CtrlP
-let g:ctrlp_match_window_bottom = 0
-let g:ctrlp_match_window_reversed = 0
-let g:ctrlp_max_height = 30
-let g:ctrlp_switch_buffer = 'et'
-let g:ctrlp_working_path_mode = 0
-let g:ctrlp_cache_dir = expand('~/.cache/vim/ctrlp')
-let g:ctrlp_clear_cache_on_exit = 0
-let g:ctrlp_user_command = ['.git', 'git ls-files %s -co --exclude-standard']
-let g:ctrlp_max_history = 0
-let g:ctrlp_open_new_file = 'r'
-let g:ctrlp_prompt_mappings = {
-    \ 'PrtSelectMove("j")':   ['<C-j>', '<C-n>'],
-    \ 'PrtSelectMove("k")':   ['<C-k>', '<C-p>'],
-    \ 'PrtHistory(-1)':       ['<Up>'],
-    \ 'PrtHistory(1)':        ['<Down>'],
-    \ 'PrtClearCache()':      ['<4-r>'],
-    \ 'PrtDeleteEnt()':       ['<4-R>'],
-\ }
-
 " Plugin: rainbow_parentheses.vim
 let g:rbpt_colorpairs = [
     \ [235, '#1c1c1c'],
@@ -291,6 +271,12 @@ let g:splitjoin_join_mapping = ''
 if g:__FEATURES__['ag']
     let g:ackprg = 'ag --nogroup --nocolor --column'
 endif
+
+" Plugin: Unite.vim
+let g:unite_enable_start_insert = 1
+let g:unite_data_directory = expand('~/.cache/vim/unite')
+call unite#filters#matcher_default#use(['matcher_fuzzy'])
+call unite#filters#sorter_default#use(['sorter_rank'])
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
