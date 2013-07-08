@@ -1136,9 +1136,9 @@ HAVE git && {
     # Param: $2   Repository name
     # Param: [$3] Branch name
     githubclone() {
-        (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
-        local user="$1" repo="$2" branch
-        [[ $3 ]] && branch="--branch $3"
+        (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
+        local user="${1%%/*}" repo="${1#*/}" branch
+        [[ $2 ]] && branch="--branch $2"
         run git clone $branch "git://github.com/$user/$repo.git"
     }
 
@@ -1149,8 +1149,8 @@ HAVE git && {
     }; gitps1
 }
 githubget() {
-    (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user repo [branch]"; return 1; }
-    local user="$1" repo="$2" branch="${3:-master}"
+    (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
+    local user="${1%%/*}" repo="${1#*/}" branch="${2:master}"
     run curl -#L "https://github.com/$user/$repo/tarball/$branch"
 }
 HAVE git-hg && alias git-hg-pull='run git-hg pull --force --rebase'
