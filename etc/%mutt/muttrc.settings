@@ -631,7 +631,7 @@ set compose_format="Compose ★ %a attached, %l"
 # $crypt_autosign, $crypt_replysign and $smime_is_default.
 #
 
-# set crypt_autosign=no
+set crypt_autosign=yes
 #
 # Name: crypt_autosign
 # Type: boolean
