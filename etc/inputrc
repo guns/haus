@@ -211,7 +211,7 @@ $if bash
     "\C-xgw":       "\C-] git wdi \n"
     "\C-xgW":       "\C-] git wlp \n"
     "\033\007g":    "\C-] vimgit \n"
-    "\033\007G":    "\C-]vim . -c \"Ggrep -Pi \"\C-b"
+    "\033\007G":    "\C-]vim .gitignore -c \"Ggrep -Pi \"\C-b"
 
     # Ack
     "\033\007A":    "\C-]vim -c \"Ack \"\C-b"
