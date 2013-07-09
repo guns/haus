@@ -39,16 +39,6 @@ class Date(object):
 		# commands for this plugin
 		self.commands = []
 
-		# set speeddating format that is compatible with orgmode
-		try:
-			if int(vim.eval(u'exists(":SpeedDatingFormat")'.encode(u'utf-8'))) == 2:
-				vim.command(u':1SpeedDatingFormat %Y-%m-%d %a'.encode(u'utf-8'))
-				vim.command(u':1SpeedDatingFormat %Y-%m-%d %a %H:%M'.encode(u'utf-8'))
-			else:
-				echom(u'Speeddating plugin not installed. Please install it.')
-		except:
-			echom(u'Speeddating plugin not installed. Please install it.')
-
 	@classmethod
 	def _modify_time(cls, startdate, modifier):
 		u"""Modify the given startdate according to modifier. Return the new
