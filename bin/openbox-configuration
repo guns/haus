@@ -213,8 +213,7 @@
    [:chainQuitKey "C-c"]
    ;; Openbox functions
    (bindsh "W-C-A-r" ["notify --audio=/dev/null 'Compiling Openbox configuration.'"
-                      "openbox-configuration update"
-                      "notify --audio $(if (($?)); then echo Failure; else echo Success; fi)"])
+                      "if openbox-configuration update; then notify --audio Success; else notify Failure; fi"])
    (bind "W-C-A-S-r" "Restart")
    (bind "W-C-A-q" ["Exit" [:prompt "false"]])
    (bind "W-q" "Close")
@@ -226,8 +225,8 @@
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
    (bindsh ["A-F3" "A-XF86AudioMute"]
            (if (system "killall" "-0" "pulseaudio")
-             ["notify -a - < <(hwctl toggle-pulseaudio-sink)"]
-             ["notify -a - < <(hwctl toggle-alsa-card)"]))
+             ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink)"]
+             ["notify --audio=/dev/null - < <(hwctl toggle-alsa-card)"]))
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
