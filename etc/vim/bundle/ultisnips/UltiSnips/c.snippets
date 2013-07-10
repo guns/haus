@@ -66,9 +66,7 @@ typedef ${1:int} ${2:MyCustomType};
 endsnippet
 
 snippet str "struct" b
-struct ${1:`!p snip.rv = (snip.basename or "name") + "_t"`} {
-	$0
-};
+struct $0
 endsnippet
 
 snippet tds "typedef struct" b
@@ -109,10 +107,6 @@ endsnippet
 
 snippet st "size_t" w
 size_t $0
-endsnippet
-
-snippet s "struct" w
-struct $0
 endsnippet
 
 
