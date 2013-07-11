@@ -618,7 +618,7 @@ function! s:Org(bang, ...)
         endfor
     else
         if empty(a:bang) | tabnew | endif
-        execute 'lcd ' . g:org_home | Unite -no-split git_cached
+        execute 'lcd ' . g:org_home | Unite -no-split git_cached git_untracked
     endif
 endfunction
 

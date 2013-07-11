@@ -970,6 +970,8 @@ ALIAS ctagsr='ctags -R'
 # Vim
 HAVE vim && {
     alias vimnilla='command vim -u NONE -N'
+    vimopen() { vim -c 'Unite -no-split git_cached git_untracked' "$@"; }
+
     # Param: [$@] Arguments to `ff()`
     vimfind() {
         local files=()
@@ -982,7 +984,7 @@ HAVE vim && {
         if (( ${#files[@]} )); then
             vim -p "${files[@]}"
         else
-            vim -c 'Unite -no-split git_cached'
+            vimopen
         fi
     }; TCOMP find vimfind
 

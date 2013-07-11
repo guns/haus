@@ -551,8 +551,8 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 
 " Plugin: Unite.vim
 noremap <Leader>u :<C-u>Unite -no-split<Space>
-Mapall <4-o> :<C-u>Unite -no-split git_cached<CR>
-Mapall <4-t> :<C-u>tabnew \\\| Unite -no-split git_cached<CR>
+Mapall <4-o> :<C-u>Unite -no-split git_cached git_untracked<CR>
+Mapall <4-t> :<C-u>tabnew \\\| Unite -no-split git_cached git_untracked<CR>
 Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
 Mapall <4-'> :<C-u>Unite -no-split tag<CR>
