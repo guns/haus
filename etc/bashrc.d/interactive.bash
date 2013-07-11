@@ -295,7 +295,7 @@ if __OS_X__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
-alias lsb='lsblk -a'
+alias lsb='lsblk -a; echo; blkid'
 [[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
 for _d in /dev/disk/by-*; do
     eval "alias ls${_d##*/by-}=\"ls $_d\""
@@ -469,7 +469,9 @@ ALIAS mt='mount -v' \
       mtvfat='mount -v -t vfat' && {
     mtusb() {
         ruby -r shellwords -r fileutils -e '
-            options = "nosuid,uid=#{ENV["SUDO_UID"] || Process.euid},gid=#{ENV["SUDO_GID"] || Process.egid}"
+            options = %w[noatime nodev nodiratime noexec nosuid]
+            uid = ENV["SUDO_UID"] || Process.euid
+            gid = ENV["SUDO_GID"] || Process.egid
 
             blkdevs = Hash[%x(blkid).lines.map do |l|
                 f, kvs = l.split(":", 2)
@@ -482,9 +484,12 @@ ALIAS mt='mount -v' \
 
             (blkdevs.keys & usbdevs.keys).each do |dev|
                 label = blkdevs[dev]["LABEL"]
+                type = blkdevs[dev]["TYPE"]
                 mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
                 FileUtils.mkdir_p mtpt
-                cmd = %W[mount -v -o #{options} #{dev} #{mtpt}]
+                opts = options
+                opts += %W[uid=#{uid} gid=#{gid}] if %w[fat vfat hfs iso9660 ntfs udf].include? type
+                cmd = %W[mount -v -o #{opts.join ","} #{dev} #{mtpt}]
                 puts cmd.shelljoin
                 system *cmd
             end
