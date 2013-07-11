@@ -10,6 +10,7 @@
 [user]
     name  = guns
     email = self@sungpae.com
+    signingkey = 24142BFA974864C311D3AED537BD7E31C8C835A2
 
 [core]
     whitespace   = trailing-space,space-before-tab
@@ -71,20 +72,20 @@
     cp  = cherry-pick
 
     # Log
-    l    = log --relative-date --decorate --graph
-    lf   = log --relative-date --decorate --graph --first-parent --no-merges
-    lst  = log --relative-date --decorate --graph --stat
-    lfst = log --relative-date --decorate --graph --stat --first-parent --no-merges
+    l    = log --relative-date --decorate --graph --show-signature
+    lf   = log --relative-date --decorate --graph --show-signature --first-parent --no-merges
+    lst  = log --relative-date --decorate --graph --show-signature --stat
+    lfst = log --relative-date --decorate --graph --show-signature --stat --first-parent --no-merges
 
-    lp   = log --relative-date --decorate --patch --stat
-    lfp  = log --relative-date --decorate --patch --stat --first-parent --no-merges
-    lpw  = log --relative-date --decorate --patch --stat -w
-    wlp  = log --relative-date --decorate --patch --stat --color-words=.
-    wlpw = log --relative-date --decorate --patch --stat --color-words=. -w
+    lp   = log --relative-date --decorate --patch --show-signature --stat
+    lfp  = log --relative-date --decorate --patch --show-signature --stat --first-parent --no-merges
+    lpw  = log --relative-date --decorate --patch --show-signature --stat -w
+    wlp  = log --relative-date --decorate --patch --show-signature --stat --color-words=.
+    wlpw = log --relative-date --decorate --patch --show-signature --stat --color-words=. -w
 
-    l1   = log --relative-date --decorate --patch --stat -1
-    l1w  = log --relative-date --decorate --patch --stat -1 -w
-    wl1  = log --relative-date --decorate --patch --stat -1 --color-words=.
+    l1   = log --relative-date --decorate --patch --show-signature --stat -1
+    l1w  = log --relative-date --decorate --patch --show-signature --stat -1 -w
+    wl1  = log --relative-date --decorate --patch --show-signature --stat -1 --color-words=.
 
     f    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
     fa   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
@@ -105,8 +106,10 @@
     sb   = show-branch --color
 
     # Tags
-    tagd = tag -d
-    tagf = tag -f
+    t   = tag
+    td  = tag -d
+    ts  = tag -s
+    tsf = tag -s -f
 
     # Diff and patch
     di   = diff
