@@ -15,7 +15,9 @@
 
 color background        color253 black
 color listnormal        color253 color233
+color listnormal_unread color253 color233
 color listfocus         color233 color253
+color listfocus_unread  color233 color253
 color info              color218 color234
 color article           color252 black
 search-highlight-colors black color96
@@ -93,6 +95,7 @@ datetime-format %d/%b/%Y
 feed-sort-order firsttag
 feedlist-format "%4i %n %-11u │ %-12T │ %t"
 goto-next-feed no
+max-items 500
 reload-only-visible-feeds yes
 reload-threads 8
 save-path ~/Downloads
