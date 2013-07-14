@@ -6,6 +6,9 @@ _wget()
     _init_completion -s || return
 
     case $prev in
+        -V|--version|-h|--help)
+            return
+            ;;
         --progress)
             COMPREPLY=( $( compgen -W 'bar dot' -- "$cur" ) )
             return
@@ -100,7 +103,7 @@ _wget()
             ;;
         -Q|--quota|--limit-rate|--warc-max-size)
             # expect size
-            if [[ $cur == *@(k|m) ]]; then
+            if [[ $cur == *[km] ]]; then
                 COMPREPLY=( $( compgen -W "$cur" ) )
             elif [[ $cur ]]; then
                 COMPREPLY=( $( compgen -P "$cur" -W "{0..9} k m" ) )
@@ -140,13 +143,18 @@ _wget()
         -e|--execute)
             return # TODO base=STR
             ;;
-        -nv|--report-speed)
+        --report-speed)
             COMPREPLY=( $( compgen -W 'bits' -- "$cur" ) )
+            return
+            ;;
+        --regex-type)
+            COMPREPLY=( $( compgen -W 'posix' -- "$cur" ) )
             return
             ;;
         -B|--base|--password|--ftp-password|--http-password|--proxy-password|\
         --default-page|--referer|-U|--user-agent|--post-data|--warc-header|-A|\
-        --accept|-R|--reject|-I|--include-directories|-X|--exclude-directories)
+        --accept|-R|--reject|--accept-regex|--reject-regex|-I|\
+        --include-directories|-X|--exclude-directories)
             # argument required but no completions available
             return
             ;;
