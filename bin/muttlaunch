@@ -46,7 +46,9 @@ class Muttlaunch
 
   def run arguments = []
     args = parser.parse arguments
-    abort unless options.force or not active?
+    unless options.force
+      abort if active?
+    end
     launch *args
   end
 end
