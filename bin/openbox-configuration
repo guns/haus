@@ -260,7 +260,7 @@
    (bindsh "W-space" "kupfer")
    (bindsh "W-C-t" "urxvt-client")
    (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
-   (bindsh "W-A-t" "urxvt-client -g 120x30 -e htop")
+   (bindsh "W-A-t" "urxvt-client -e htop")
    (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
    (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
    ; (bindfocus "F2" "File Manager" "exec thunar ~/Downloads") ; Kupfer trigger
@@ -367,7 +367,8 @@
 (def config-applications
   [:applications
    [:application {:name "urxvt"} [:decor "no"]]
-   [:application {:role "browser"} [:decor "no"]]])
+   [:application {:role "browser"} [:decor "no"]]
+   [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]])
 
 (def rc
   [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
