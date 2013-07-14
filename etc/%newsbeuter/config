@@ -103,9 +103,9 @@ show-keymap-hint no
 text-width 78
 
 # Podbeuter
-download-path ~/Downloads
+download-path ~/Media/Music/Podcasts
 max-downloads 4
-player cmus
+player mplayer
 
 feedlist-title-format     "[%u/%t] ★ Feeds%?T? ★ %T?"
 articlelist-title-format  "[%u/%t] ★ %T ★ %U"
