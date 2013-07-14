@@ -192,7 +192,6 @@ let g:NERDMenuMode = 0
 
 " Plugin: delimitMate (expand <CR> breaks undo/redo)
 let g:delimitMate_excluded_regions = 'Comment,String'
-let g:delimitMate_expand_space = 1
 
 " Plugin: Gundo.vim
 let g:gundo_preview_bottom = 1
