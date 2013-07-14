@@ -276,8 +276,10 @@
               ["cd ~/Downloads"
                "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
    (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME"]
-              ["cd ~/Downloads" "urxvt-client -title %s -g 120x40 -e muttlaunch"])
-   (bindsh "W-F12" "open https://mail.google.com/")
+              ["cd ~/Downloads"
+               "urxvt-client -title %s -g 120x40 -e muttlaunch"])
+   (bindsh "W-F12" "urxvt-client -title %s -g 120x40 -e muttlaunch -f")
+   (bindsh "A-F12" "open https://mail.google.com/")
    ;; Window switching
    (bind "F8" "ToggleShowDesktop")
    (bindswitch "W-Tab" "NextWindow")
