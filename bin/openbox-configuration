@@ -18,16 +18,15 @@
   ([form] (tidy form 1))
   ([form indent]
    (if (and (vector? form) (some coll? form))
-     (conj (reduce (fn [v f]
-                     (cond (vector? f) (conj v
-                                             (apply str \newline (repeat indent \tab))
-                                             (tidy f (inc indent)))
+     (let [nltab (apply str \newline (repeat indent \tab))
+           form' (reduce
+                   (fn [v f]
+                     (cond (vector? f) (conj v nltab (tidy f (inc indent)))
                            (list? f) (into v (map #(list %1 (tidy %2 (inc indent)))
-                                                  (repeat (apply str \newline (repeat indent \tab)))
-                                                  f))
+                                                  (repeat nltab) f))
                            :else (conj v f)))
-                   [] form)
-           (apply str \newline (repeat (dec indent) \tab)))
+                   [] form)]
+       (conj form' (apply str \newline (repeat (dec indent) \tab))))
      form)))
 
 (defn render-hiccup
