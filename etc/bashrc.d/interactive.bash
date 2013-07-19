@@ -738,7 +738,7 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 ### Network
 
 if HAVE ip; then
-    alias ic='ip addr'
+    alias a='ip addr'
     alias cidr='ip route list scope link | awk "{print \$1; exit}"'
 elif HAVE ifconfig; then
     alias ic='ifconfig'
