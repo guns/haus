@@ -2043,7 +2043,7 @@ set pager_stop=yes
 # function.
 #
 
-set pgp_auto_decode=yes
+# set pgp_auto_decode=no
 #
 # Name: pgp_auto_decode
 # Type: boolean
