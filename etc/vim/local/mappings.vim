@@ -166,11 +166,6 @@ noremap! <4-;> <C-f>
 " Bind: c_Ctrl-F => c_<Right>
 noremap! <C-f> <Right>
 
-" Since c_4-; opens the command line window, map <4-;> to do the same in (nvo)
-" Also bind the repeat last command to semicolon
-noremap <4-;> q:
-noremap @;    @:
-
 """ Emacs: Ctrl-D (forward-delete) {{{1
 
 " REPLACE scroll-half-page-down (nvo)<C-d> with forward-delete.
@@ -253,6 +248,12 @@ cnoremap <M-d> <C-f>de<C-c>
 noremap ;     <NOP>
 noremap <M-,> ,
 noremap ,     ;
+
+" Since c_4-; opens the command line window, map <4-;> to do the same in (nvo)
+" Also bind some more ; -> : aliases.
+noremap <4-;> q:
+noremap q;    q:
+noremap @;    @:
 
 " Alias (nvo); to (nvo): for quick access to the command line
 " Bind:   ; =>   :
