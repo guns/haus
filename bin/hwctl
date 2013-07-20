@@ -10,12 +10,23 @@ require 'ostruct'
 require 'fileutils'
 
 class Hwctl
+  SYSTEM = {
+    :macbook => {
+      :backlight        => '/sys/class/backlight/intel_backlight/brightness',
+      :backlight_max    => '/sys/class/backlight/intel_backlight/max_brightness',
+      :backlight_actual => '/sys/class/backlight/intel_backlight/actual_brightness',
+      :fnmode           => '/sys/module/hid_apple/parameters/fnmode',
+      :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
+      :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
+      :coretemps        => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
+    }
+  }
+
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.sys_backlight ||= '/sys/class/backlight/intel_backlight'
-    options.sys_fnmode ||= '/sys/module/hid_apple/parameters/fnmode'
+    options.system ||= SYSTEM[:macbook]
   end
 
   def parser
@@ -23,10 +34,9 @@ class Hwctl
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Linux hardware control wrapper.
 
-        Usage: #{File.basename __FILE__} [options] command [args]
+        Usage: #{File.basename __FILE__} command [args]
 
         Commands:
-
           b[acklight] [pct]
             Query or set backlight as a percentage. Argument can be signed for
             relative adjustment.
@@ -42,18 +52,12 @@ class Hwctl
 
           toggle-pulseaudio-sink
             Toggle between available Pulseaudio output sinks
-
-        Options:
       BANNER
-
-      opt.on '--sys-backlight PATH', '[DEFAULT: %s]' % options.sys_backlight do |arg|
-        options.sys_backlight = File.expand_path arg
-      end
-
-      opt.on '--sys-fnmode PATH', '[DEFAULT: %s]' % options.sys_fnmode do |arg|
-        options.sys_fnmode = File.expand_path arg
-      end
     end
+  end
+
+  def system
+    options.system
   end
 
   def brightness cur, max
@@ -65,7 +69,7 @@ class Hwctl
     v = max if value > max
     v = 0 if value < 0
 
-    File.open File.join(options.sys_backlight, 'brightness'), 'w' do |f|
+    File.open system[:backlight], 'w' do |f|
       f.puts v
     end
 
@@ -91,8 +95,8 @@ class Hwctl
   end
 
   def backlight setting = nil
-    max = File.read(File.join options.sys_backlight, 'max_brightness').to_i
-    cur = File.read(File.join options.sys_backlight, 'actual_brightness').to_i
+    max = File.read(system[:backlight_max]).to_i
+    cur = File.read(system[:backlight_actual]).to_i
 
     case setting
     when nil           then brightness cur, max
@@ -103,7 +107,7 @@ class Hwctl
   end
 
   def backlight_permissions mode, user, group
-    f = File.join options.sys_backlight, 'brightness'
+    f = system[:backlight]
     FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
     FileUtils.chown user, group, f
     s = File.stat f
@@ -112,12 +116,12 @@ class Hwctl
 
   def fnmode type = nil
     case type
-    when 2, 'fn'    then File.open(options.sys_fnmode, 'w') { |f| f.puts '2' }
-    when 1, 'media' then File.open(options.sys_fnmode, 'w') { |f| f.puts '1' }
+    when 2, 'fn'    then File.open(system[:fnmode], 'w') { |f| f.puts '2' }
+    when 1, 'media' then File.open(system[:fnmode], 'w') { |f| f.puts '1' }
     when nil        then nil
     else raise ArgumentError
     end
-    File.read options.sys_fnmode
+    File.read system[:fnmode]
   end
 
   def toggle_alsa_card number = nil
@@ -147,12 +151,12 @@ class Hwctl
     cards[next_number]
   end
 
-def toggle_pulseaudio_sink
-  index, name = pulseaudio_sinks.rotate.first
-  system 'pacmd', 'set-default-sink', index, :out => '/dev/null'
-  pulseaudio_move_inputs index
-  name
-end
+  def toggle_pulseaudio_sink
+    index, name = pulseaudio_sinks.rotate.first
+    system 'pacmd', 'set-default-sink', index, :out => '/dev/null'
+    pulseaudio_move_inputs index
+    name
+  end
 
   def run arguments = []
     args = parser.order arguments
