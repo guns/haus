@@ -1471,7 +1471,7 @@ ALIAS cs='cryptsetup' && {
         [[ "$header" ]] && opts+=(--header "$header")
         [[ "$keyfile" ]] && opts+=(--key-file "$keyfile")
         if run cryptsetup "${opts[@]}" luksOpen "$device" "$name"; then
-            run mount -t auto -o defaults,relatime "/dev/mapper/$name" "$mountpoint"
+            run mount -t auto "/dev/mapper/$name" "$mountpoint"
         fi
     }
     csumount() {
