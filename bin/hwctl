@@ -44,6 +44,11 @@ class Hwctl
           backlight-permissions mode user group
             Set backlight control file permissions.
 
+          fan base-speed [temp:speed …]
+            Manually set fan speeds (in RPM) at given temps (in Celsius).
+            Polls every 10 seconds and speeds are not ramped. Fan control is
+            handed back to the kernel on exit.
+
           fnmode [fn|media]
             Set MacBook function key mode.
 
@@ -56,7 +61,7 @@ class Hwctl
     end
   end
 
-  def system
+  def sys
     options.system
   end
 
@@ -69,7 +74,7 @@ class Hwctl
     v = max if value > max
     v = 0 if value < 0
 
-    File.open system[:backlight], 'w' do |f|
+    File.open sys[:backlight], 'w' do |f|
       f.puts v
     end
 
@@ -94,9 +99,13 @@ class Hwctl
     end
   end
 
+  def get_coretemps
+    sys[:coretemps].map { |f| File.read(f).to_i }
+  end
+
   def backlight setting = nil
-    max = File.read(system[:backlight_max]).to_i
-    cur = File.read(system[:backlight_actual]).to_i
+    max = File.read(sys[:backlight_max]).to_i
+    cur = File.read(sys[:backlight_actual]).to_i
 
     case setting
     when nil           then brightness cur, max
@@ -107,21 +116,69 @@ class Hwctl
   end
 
   def backlight_permissions mode, user, group
-    f = system[:backlight]
+    f = sys[:backlight]
     FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
     FileUtils.chown user, group, f
     s = File.stat f
     '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
   end
 
+  def fan base_speed, *temps_speeds
+    table = [[-1000, base_speed.to_i]] + temps_speeds.map { |s|
+      raise 'Fan speed arguments must be in form of °C:RPM' unless s =~ /\A\d+:\d+\z/
+      temp, speed = s.split ':'
+      [temp.to_i, speed.to_i]
+    }
+    last_index = table.size - 1
+
+    puts 'Assuming manual control of fan via: ' + sys[:fan_manual]
+    File.open(sys[:fan_manual], 'w') { |f| f.puts '1' }
+
+    current_index = nil
+
+    if last_index.zero?
+      puts 'Setting constant fan speed %s' % base_speed
+      File.open(sys[:fan_speed], 'w') { |f| f.puts base_speed }
+      sleep
+    else
+      loop do
+        # Take two samples, since the values tend to jump around
+        temp = get_coretemps.max
+        sleep 1
+        temp += get_coretemps.max
+        temp /= 2000
+
+        i = table.find_index { |t, sp| temp < t }
+
+        index = case i
+        when 0 then raise 'Erroneous temperature reading: %d' % temp
+        when nil then last_index
+        else i - 1
+        end
+
+        if current_index != index
+          speed = table[index][1]
+          puts "Temp: %d, Speed: %d" % [temp, speed]
+          File.open(sys[:fan_speed], 'w') { |f| f.puts speed }
+          current_index = index
+        end
+
+        sleep 9
+      end
+    end
+  ensure
+    File.open(sys[:fan_manual], 'w') { |f| f.puts '0' }
+    puts 'Released manual fan control!'
+  end
+
   def fnmode type = nil
     case type
-    when 2, 'fn'    then File.open(system[:fnmode], 'w') { |f| f.puts '2' }
-    when 1, 'media' then File.open(system[:fnmode], 'w') { |f| f.puts '1' }
+    when 2, 'fn'    then File.open(sys[:fnmode], 'w') { |f| f.puts '2' }
+    when 1, 'media' then File.open(sys[:fnmode], 'w') { |f| f.puts '1' }
     when nil        then nil
     else raise ArgumentError
     end
-    File.read system[:fnmode]
+    File.read sys[:fnmode]
   end
 
   def toggle_alsa_card number = nil
@@ -165,6 +222,7 @@ class Hwctl
     out = case args.first
     when 'b', 'backlight' then backlight *rest
     when 'backlight-permissions' then backlight_permissions *rest
+    when 'fan' then fan *rest
     when 'fnmode' then fnmode *rest
     when 'toggle-alsa-card' then toggle_alsa_card *rest
     when 'toggle-pulseaudio-sink' then toggle_pulseaudio_sink *rest
