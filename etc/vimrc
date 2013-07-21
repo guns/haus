@@ -150,7 +150,7 @@ endif
 " Bash
 let g:is_bash = 1
 let g:readline_has_bash = 1
-let g:sh_minlines = 500
+let g:sh_minlines = 1000
 
 " Ruby
 let g:ruby_operators = 1
