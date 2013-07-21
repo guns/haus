@@ -1574,7 +1574,17 @@ elif __LINUX__; then
         # alias pace
         alias pacg='run pacman -Qs'
         alias paci='run pacman -S --needed'
-        pacq() { (pacman -Si "$@" || pacman -Qi "$@"; pactree -r "$@"; echo; pacman -Ql "$@") 2>/dev/null | pager; }
+        pacq() {
+            local pkg
+            for pkg in "$@"; do
+                if pacman -Qi "$pkg"; then
+                    pactree -r "$pkg"; echo
+                    pacman -Ql "$pkg"; echo
+                else
+                    pacman -Si "$pkg"
+                fi
+            done 2>/dev/null | pager
+        }
         alias pacs='run pacman -Ss'
         alias pacr='run pacman -Rss'
         alias pacsync='run pacman -Sy'
