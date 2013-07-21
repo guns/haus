@@ -40,6 +40,10 @@ class Lninstall
         Options:
       BANNER
 
+      opt.on '-l', '--libs', 'Also link header files and libraries' do
+        options.libs = true
+      end
+
       opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
         queue.options.relative = true
       end
@@ -72,7 +76,7 @@ class Lninstall
     File.expand_path options.dst rescue nil
   end
 
-  def files base
+  def program_files base
     Set.new Dir[*%W[
       #{base}/{,s}bin/*
       #{base}/share/man/**/*
@@ -81,8 +85,21 @@ class Lninstall
     ]]
   end
 
+  def library_files base
+    Set.new Dir[*%W[
+      #{base}/include/**/*
+      #{base}/lib/**/*
+    ]]
+  end
+
+  def source_files base
+    fs = program_files base
+    fs.merge library_files(base) if options.libs or options.uninstall
+    fs
+  end
+
   def src_files
-    @src_files ||= files(src).select do |f|
+    @src_files ||= source_files(src).select do |f|
       File.file? f or File.symlink? f
     end
   end
@@ -90,7 +107,7 @@ class Lninstall
   # Returns a list of all files in dst that link to files in src;
   # the files returned may have different basenames than their sources
   def dst_files
-    @dst_files ||= files(dst).select do |f|
+    @dst_files ||= source_files(dst).select do |f|
       File.symlink? f and src_files.include? File.readlink(f)
     end
   end
