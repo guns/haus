@@ -1536,7 +1536,7 @@ if __OS_X__; then
         alias porti='run port -c install'
         alias portq='run port -c info'
         alias ports='run port -c search'
-        alias portu='run port -c uninstall'
+        alias portr='run port -c uninstall'
         alias portsync='run port -c selfupdate'
         # alias portoutdated
     }
@@ -1548,7 +1548,7 @@ if __OS_X__; then
         alias brewi='run brew install'
         alias brewq='run brew info'
         alias brews='run brew search'
-        alias brewu='run brew uninstall'
+        alias brewr='run brew uninstall'
         alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && git pull && \
                                    git checkout guns && git merge master -m "Merge master into guns" && git push github --all"'
         alias brewoutdated='brew outdated'
@@ -1563,8 +1563,9 @@ elif __LINUX__; then
         alias apti='run aptitude install'
         alias aptq='run aptitude show'
         alias apts='run aptitude search'
-        alias aptu='run aptitude remove'
+        alias aptr='run aptitude remove'
         alias aptsync='run aptitude update'
+        alias aptupgrade='run aptitude safe-upgrade'
         # alias aptoutdated
     }
 
@@ -1575,11 +1576,11 @@ elif __LINUX__; then
         alias paci='run pacman -S --needed'
         pacq() { (pacman -Si "$@" || pacman -Qi "$@"; pactree -r "$@"; echo; pacman -Ql "$@") 2>/dev/null | pager; }
         alias pacs='run pacman -Ss'
-        alias pacu='run pacman -Rss'
+        alias pacr='run pacman -Rss'
         alias pacsync='run pacman -Sy'
+        alias pacupgrade='run pacman -Syu'
         alias pacoutdated='run pacman -Qu'
 
-        alias rpactree='pactree -r'
         alias paclog='pager /var/log/pacman.log'
     }
 
@@ -1613,7 +1614,7 @@ HAVE feh && {
             dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
             abort "USAGE: fmove dir …" if ARGV.empty? or dirs.count != ARGV.count
             actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
-            exec "feh", "--draw-actions", *actions
+            exec "feh", "-Smtime", "--draw-actions", *actions
         ' -- "$@"
     }
     fcopy() { fmove -c "$@"; }
