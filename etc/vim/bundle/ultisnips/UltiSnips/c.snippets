@@ -32,8 +32,7 @@ endsnippet
 ### DECLARATIONS ###
 
 snippet main "int main(int argc, char const **argv)" b
-int
-main(int argc, char const **argv)
+int main(int argc, char const **argv)
 {
 	$0
 	return 0;
@@ -41,8 +40,7 @@ main(int argc, char const **argv)
 endsnippet
 
 snippet mainv "int main(void)" b
-int
-main(void)
+int main(void)
 {
 	$0
 	return 0;
@@ -50,8 +48,7 @@ main(void)
 endsnippet
 
 snippet f "Function" b
-${1:type}
-${2:function}($3)
+${1:type} ${2:function}($3)
 {
 	$0
 }
@@ -65,7 +62,7 @@ snippet td "typedef" b
 typedef ${1:int} ${2:MyCustomType};
 endsnippet
 
-snippet str "struct" b
+snippet st "struct" b
 struct $0
 endsnippet
 
@@ -105,7 +102,7 @@ snippet v "void" w
 void $0
 endsnippet
 
-snippet st "size_t" w
+snippet siz "size_t" w
 size_t $0
 endsnippet
 
