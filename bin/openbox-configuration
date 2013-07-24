@@ -175,9 +175,9 @@
 
 (def config-desktops
   [:desktops
-   [:number "3"]
+   [:number "4"]
    [:firstdesk "1"]
-   [:names [:name "One"] [:name "Two"] [:name "Three"]]
+   [:names [:name "One"] [:name "Two"] [:name "Three"] [:name "Four"]]
    [:popupTime "100"]])
 
 (def config-resize
