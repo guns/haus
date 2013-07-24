@@ -425,7 +425,7 @@ alias dus='du -s'
 # Param: [$@] Files to list
 dusort() {
     ruby -r shellwords -e '
-        fs = ARGV.empty? ? Dir["*"] : ARGV
+        fs              = ARGV.empty? ? Dir["*", ".*"].reject { |f| f == "." || f == ".." } : ARGV
         idx, size,      = -1, fs.count
         res, pool, lock = [], [], Mutex.new
         label           = "\r%#{size.to_s.length}d/#{size}"
