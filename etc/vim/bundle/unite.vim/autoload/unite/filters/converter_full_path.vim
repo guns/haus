@@ -1,7 +1,7 @@
 "=============================================================================
-" FILE: matcher_hide_hidden_files.vim
+" FILE: converter_full_path.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 23 Jul 2013.
+" Last Modified: 25 Jul 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -27,23 +27,26 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#filters#matcher_hide_hidden_files#define() "{{{
-  return s:matcher
+function! unite#filters#converter_full_path#define() "{{{
+  return s:converter
 endfunction"}}}
 
-let s:matcher = {
-      \ 'name' : 'matcher_hide_hidden_files',
-      \ 'description' : 'hide hidden files matcher',
+let s:converter = {
+      \ 'name' : 'converter_full_path',
+      \ 'description' : 'converts word to full path of filename',
       \}
 
-function! s:matcher.filter(candidates, context) "{{{
-  if stridx(a:context.input, '.') >= 0
-        \ || get(a:context, 'source__directory', '') =~ '/\.\|^\.'
-    return unite#filters#filter_matcher(
-          \ a:candidates, '', a:context)
-  endif
+function! s:converter.filter(candidates, context) "{{{
+  for candidate in a:candidates
+    if !has_key(candidate, 'abbr')
+      " Save original word.
+      let candidate.abbr = candidate.word
+    endif
+    let candidate.word = unite#util#substitute_path_separator(
+          \ fnamemodify(candidate.word, ':p'))
+  endfor
 
-  return filter(a:candidates, "v:val.action__path !~ '/\\.\\|^\\.'")
+  return a:candidates
 endfunction"}}}
 
 let &cpo = s:save_cpo
