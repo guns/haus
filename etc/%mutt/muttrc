@@ -152,3 +152,11 @@ send-hook '!~s ^Re:' "$my_identity_1"
 # Hooks
 folder-hook . 'set record="^"' # Save sent mail to current folder
 folder-hook . 'push <current-top><refresh>'
+
+# Encrypt mail only to recipients with public keys
+set my_cryptlist=`gpg --list-keys | ruby -e '\
+    puts $stdin.read.scan(/<(.*?)>/)\
+         .map { |(e)| "\\\\\\\\<%s\\\\\\\\>" % Regexp.escape(Regexp.escape(Regexp.escape(e))) }\
+         .join("\\\\|")'`
+send-hook ~A 'set crypt_autoencrypt=no'
+send-hook "~t ($my_cryptlist)" 'set crypt_autoencrypt=yes'

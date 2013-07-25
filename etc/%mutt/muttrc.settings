@@ -601,7 +601,7 @@ set compose_format="Compose ★ %a attached, %l"
 # $save_name, $force_name and ``fcc-hook''.
 #
 
-set crypt_autoencrypt=yes
+# set crypt_autoencrypt=no
 #
 # Name: crypt_autoencrypt
 # Type: boolean
