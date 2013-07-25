@@ -301,6 +301,9 @@ noremap <Leader>r :<C-u>RunCurrentFile<CR>
 " Rename tmux/screen/term window
 noremap <4-,> :<C-u>execute 'Sh xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>
 
+" Change directory to current file's parent
+noremap <4-.> :<C-u>cd %:h \| echo getcwd()<CR>
+
 """ Buffer commands {{{1
 
 " REPLACE linewise-downward with nothing to alias toggle-fold
@@ -557,6 +560,7 @@ Mapall <4-t> :<C-u>tabnew \\\| Unite -no-split git_cached git_untracked<CR>
 Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
 Mapall <4-'> :<C-u>Unite -no-split tag<CR>
+Mapall <4-f> :<C-u>Unite -no-split file<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
