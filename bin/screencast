@@ -19,10 +19,10 @@ class Screencast
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Capture uncompressed X11 screen data and audio input to file. If
-        argument is a directory, a timestamped file is created in that
-        directory instead. If no arguments are given, the current directory is
-        used as the parameter.
+        Capture X11 screen data and audio input to file. If argument is a
+        directory, a timestamped file is created in that directory instead.
+        If no arguments are given, the current directory is used as the
+        parameter.
 
         Usage: #{File.basename __FILE__} [options] [file|dir]
 
@@ -33,7 +33,7 @@ class Screencast
         options.window = true
       end
 
-      opt.on '--window-id ID', 'Set capture area to given window ID' do |arg|
+      opt.on '-W', '--window-id ID', 'Set capture area to given window ID' do |arg|
         options.window = true
         options.window_id = arg
       end
@@ -52,7 +52,7 @@ class Screencast
     end
   end
 
-  def fmt_geometry geometry
+  def parse_geometry geometry
     w, h, x, y = geometry
     { :dimensions => "#{w}x#{h}", :offset => "+#{x},#{y}" }
   end
@@ -71,12 +71,12 @@ class Screencast
     ENV['DISPLAY'] + '.0'
   end
 
-  def current_screen_dimensions
-    %x(xrandr).match(/current (\d+) x (\d+)/)[1..2].join ','
+  def current_screen_geometry
+    %x(xrandr).match(/current (\d+) x (\d+)/)[1..2].map(&:to_i) + [0, 0]
   end
 
-  def new_filename
-    Time.now.strftime('%Y-%m-%d:%H:%M:%S') + '.mkv'
+  def timestamp
+    Time.now.strftime '%Y-%m-%d:%H:%M:%S'
   end
 
   def countdown delay
@@ -87,24 +87,18 @@ class Screencast
     end
   end
 
-  def record file, opts = {}
+  def record file, geometry, opts = {}
+    dimensions, offset = parse_geometry(geometry).values_at :dimensions, :offset
     display = opts[:display] || ':0.0'
 
-    dimensions, offset = if opts[:geometry]
-      fmt_geometry(opts[:geometry]).values_at :dimensions, :offset
-    else
-      [opts[:dimensions] || current_screen_dimensions, opts[:offset] || '+0,0']
-    end
-
-    # http://ubuntuforums.org/showthread.php?t=1392026
-    copts = %W[-f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}]
+    copts = %W[-y -threads auto]
+    copts += %W[-f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}]
     copts += %W[-f alsa -ac 2 -i pulse] if opts[:audio]
     copts += %W[
       -vcodec libx264
       -preset ultrafast
       -tune animation
       -crf 0
-      -y -threads auto
     ]
     copts += %W[
       -acodec pcm_s16le
@@ -118,11 +112,17 @@ class Screencast
     args = parser.parse arguments
     args = ['.'] if args.empty?
     abort parser.help if args.size > 1
+
     file = args.first
-    file = File.join file, new_filename if File.directory? file
-    geometry = options.window ? get_window_geometry(options.window_id) : options.geometry
+    if File.directory? file
+      file = File.join file, timestamp + (options.dnxhd ? '.mov' : '.mkv')
+    end
+
+    geometry = options.window ? get_window_geometry(options.window_id)
+                              : (options.geometry || current_screen_geometry)
+
     countdown options.delay.to_i
-    record file, :geometry => geometry, :audio => options.audio
+    record file, geometry, :audio => options.audio, :display => current_display
   end
 end
 
