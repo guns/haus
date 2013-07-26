@@ -153,6 +153,15 @@
    [:focusDelay "200"]
    [:raiseOnFocus "no"]])
 
+(def config-focus-follows-mouse
+  [:focus
+   [:focusNew "yes"]
+   [:followMouse "yes"]
+   [:focusLast "no"]
+   [:underMouse "yes"]
+   [:focusDelay "100"]
+   [:raiseOnFocus "no"]])
+
 (def config-placement
   [:placement
    [:policy "Smart"]
@@ -372,7 +381,7 @@
 (def rc
   [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
    config-resistance
-   config-focus
+   config-focus-follows-mouse
    config-placement
    config-theme
    config-desktops
