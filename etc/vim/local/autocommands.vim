@@ -237,8 +237,10 @@ augroup GUNS
     " Plugin: Unite.vim {{{1
     autocmd FileType unite
         \ syntax clear Tab TrailingWS |
-        \ BufReMapall <4-\> <Plug>(unite_all_exit) |
-        \ BufReMapall <4-r> <Plug>(unite_redraw)
+        \ let b:loaded_delimitMate = 1 |
+        \ BufReMapall <4-Bslash> <Plug>(unite_all_exit) |
+        \ nmap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)") |
+        \ imap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)")
 
 " }}}1
 augroup END
