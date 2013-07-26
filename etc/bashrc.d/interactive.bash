@@ -1676,9 +1676,7 @@ HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 # Clipboard
 clip() {
-    if ((EUID > 0)) && type parcellite &>/dev/null && pgrep parcellite &>/dev/null; then
-        parcellite "$@" &>/dev/null
-    elif type xsel &>/dev/null; then
+    if type xsel &>/dev/null; then
         xsel -ib "$@"
     elif type xclip &>/dev/null; then
         xclip -i -selection clipboard "$@"

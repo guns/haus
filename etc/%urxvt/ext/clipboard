@@ -34,12 +34,8 @@ use strict;
 sub on_start {
 	my ($self) = @_;
 
-	my $have_xsel = system('sh -c "command -v xsel" &>/dev/null') == 0;
-	my $copy_cmd  = (($^O eq 'darwin') ? 'pbcopy'  : ($have_xsel ? 'xsel -ib' : 'xclip -i -selection clipboard'));
-	my $paste_cmd = (($^O eq 'darwin') ? 'pbpaste' : ($have_xsel ? 'xsel -ob' : 'xclip -o -selection clipboard'));
-
-	$self->{copy_cmd} = $self->x_resource('clipboard.copyCommand') || $copy_cmd;
-	$self->{paste_cmd} = $self->x_resource('clipboard.pasteCommand') || $paste_cmd;
+	$self->{copy_cmd} = $self->x_resource('clipboard.copycmd') || 'xsel -ib';
+	$self->{paste_cmd} = $self->x_resource('clipboard.pastecmd') || 'xsel -ob';
 
 	if ($self->x_resource('clipboard.autocopy') eq 'true') {
 		$self->enable(sel_grab => \&sel_grab);

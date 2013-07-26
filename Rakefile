@@ -299,7 +299,7 @@ task :env do
     'dotfiles' => [
       {
         :base   => "#{@src}/urxvt-perls",
-        :branch => %w[master guns],
+        :branch => %w[master],
         :files  => 'etc/%urxvt/ext',
       }
     ]
