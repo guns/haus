@@ -14,6 +14,8 @@ class Screencast
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.audio ||= true
+    options.rate ||= 25
+    options.codec ||= 'libx264'
   end
 
   def parser
@@ -29,6 +31,22 @@ class Screencast
         Options:
       BANNER
 
+      opt.on '-d', '--delay SECONDS', Integer, 'Seconds to wait before recording' do |arg|
+        options.delay = arg
+      end
+
+      opt.on '-g', '--geometry WxH+X,Y', 'Geometry and offset of capture area' do |arg|
+        options.geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:,(\d+)))/)[1..-1]
+      end
+
+      opt.on '-n', '--no-audio', 'Do not record audio' do
+        options.audio = false
+      end
+
+      opt.on '-r', '--rate FPS', Integer, 'Set capture FPS' do |arg|
+        options.rate = arg
+      end
+
       opt.on '-w', '--window', 'Set capture area to interactively chosen window' do
         options.window = true
       end
@@ -38,16 +56,8 @@ class Screencast
         options.window_id = arg
       end
 
-      opt.on '-g', '--geometry WxH+X,Y', 'Geometry and offset of capture area' do |arg|
-        options.geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:,(\d+)))/)[1..-1]
-      end
-
-      opt.on '-d', '--delay SECONDS', Integer, 'Seconds to wait before recording' do |arg|
-        options.delay = arg
-      end
-
-      opt.on '-n', '--no-audio', 'Do not record audio' do
-        options.audio = false
+      opt.on '-x', '--dnxhd', 'Use the DNxHD codec' do
+        options.codec = 'dnxhd'
       end
     end
   end
@@ -92,14 +102,63 @@ class Screencast
     display = opts[:display] || ':0.0'
 
     copts = %W[-y -threads auto]
-    copts += %W[-f x11grab -r 30 -s #{dimensions} -i #{display}#{offset}]
+    copts += %W[-f x11grab -r #{opts[:rate]} -s #{dimensions} -i #{display}#{offset}]
     copts += %W[-f alsa -ac 2 -i pulse] if opts[:audio]
-    copts += %W[
-      -vcodec libx264
-      -preset ultrafast
-      -tune animation
-      -crf 0
-    ]
+
+    copts += case opts[:codec]
+    when 'libx264'
+      %W[
+        -vcodec libx264
+        -preset ultrafast
+        -tune animation
+        -crf 0
+      ]
+    when 'dnxhd'
+      # Valid DNxHD profiles:
+      # Frame size: 1920x1080p; bitrate: 175Mbps; pixel format: yuv422p10; framerate: 24000/1001
+      # Frame size: 1920x1080p; bitrate: 185Mbps; pixel format: yuv422p10; framerate: 25/1
+      # Frame size: 1920x1080p; bitrate: 365Mbps; pixel format: yuv422p10; framerate: 50/1
+      # Frame size: 1920x1080p; bitrate: 440Mbps; pixel format: yuv422p10; framerate: 60000/1001
+      # Frame size: 1920x1080p; bitrate: 115Mbps; pixel format: yuv422p; framerate: 24000/1001
+      # Frame size: 1920x1080p; bitrate: 120Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1920x1080p; bitrate: 145Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1920x1080p; bitrate: 240Mbps; pixel format: yuv422p; framerate: 50/1
+      # Frame size: 1920x1080p; bitrate: 290Mbps; pixel format: yuv422p; framerate: 60000/1001
+      # Frame size: 1920x1080p; bitrate: 175Mbps; pixel format: yuv422p; framerate: 24000/1001
+      # Frame size: 1920x1080p; bitrate: 185Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1920x1080p; bitrate: 220Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1920x1080p; bitrate: 365Mbps; pixel format: yuv422p; framerate: 50/1
+      # Frame size: 1920x1080p; bitrate: 440Mbps; pixel format: yuv422p; framerate: 60000/1001
+      # Frame size: 1920x1080i; bitrate: 185Mbps; pixel format: yuv422p10; framerate: 25/1
+      # Frame size: 1920x1080i; bitrate: 220Mbps; pixel format: yuv422p10; framerate: 30000/1001
+      # Frame size: 1920x1080i; bitrate: 120Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1920x1080i; bitrate: 145Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1920x1080i; bitrate: 185Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1920x1080i; bitrate: 220Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1280x720p; bitrate: 90Mbps; pixel format: yuv422p10; framerate: 24000/1001
+      # Frame size: 1280x720p; bitrate: 90Mbps; pixel format: yuv422p10; framerate: 25/1
+      # Frame size: 1280x720p; bitrate: 180Mbps; pixel format: yuv422p10; framerate: 50/1
+      # Frame size: 1280x720p; bitrate: 220Mbps; pixel format: yuv422p10; framerate: 60000/1001
+      # Frame size: 1280x720p; bitrate: 90Mbps; pixel format: yuv422p; framerate: 24000/1001
+      # Frame size: 1280x720p; bitrate: 90Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1280x720p; bitrate: 110Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1280x720p; bitrate: 180Mbps; pixel format: yuv422p; framerate: 50/1
+      # Frame size: 1280x720p; bitrate: 220Mbps; pixel format: yuv422p; framerate: 60000/1001
+      # Frame size: 1280x720p; bitrate: 60Mbps; pixel format: yuv422p; framerate: 24000/1001
+      # Frame size: 1280x720p; bitrate: 60Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1280x720p; bitrate: 75Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1280x720p; bitrate: 120Mbps; pixel format: yuv422p; framerate: 50/1
+      # Frame size: 1280x720p; bitrate: 145Mbps; pixel format: yuv422p; framerate: 60000/1001
+      # Frame size: 1920x1080p; bitrate: 36Mbps; pixel format: yuv422p; framerate: 24000/1001
+      # Frame size: 1920x1080p; bitrate: 36Mbps; pixel format: yuv422p; framerate: 25/1
+      # Frame size: 1920x1080p; bitrate: 45Mbps; pixel format: yuv422p; framerate: 30000/1001
+      # Frame size: 1920x1080p; bitrate: 75Mbps; pixel format: yuv422p; framerate: 50/1
+      # Frame size: 1920x1080p; bitrate: 90Mbps; pixel format: yuv422p; framerate: 60000/1001
+      %W[-vcodec dnxhd -vb 60M]
+    else
+      raise "No settings available for codec #{opts[:codec].inspect}"
+    end
+
     copts += %W[
       -acodec pcm_s16le
       -af bandreject=frequency=60:width_type=q:width=1.0
@@ -115,14 +174,19 @@ class Screencast
 
     file = args.first
     if File.directory? file
-      file = File.join file, timestamp + (options.dnxhd ? '.mov' : '.mkv')
+      file = File.join file, timestamp + (options.codec == 'dnxhd' ? '.mov' : '.mkv')
     end
 
     geometry = options.window ? get_window_geometry(options.window_id)
                               : (options.geometry || current_screen_geometry)
 
-    countdown options.delay.to_i
-    record file, geometry, :audio => options.audio, :display => current_display
+    countdown options.delay if options.delay
+
+    record file, geometry,
+      :codec => options.codec,
+      :rate => options.rate,
+      :display => current_display,
+      :audio => options.audio
   end
 end
 
