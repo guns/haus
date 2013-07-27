@@ -63,7 +63,7 @@
 ;;;
 
 (defn wrap
-  "Wrap single items in a list and collections as is."
+  "Wrap single items in a list and leave collections as is."
   [x]
   (if (coll? x) x (list x)))
 
@@ -157,8 +157,8 @@
   [:focus
    [:focusNew "yes"]
    [:followMouse "yes"]
-   [:focusLast "no"]
-   [:underMouse "yes"]
+   [:focusLast "yes"]
+   [:underMouse "no"]
    [:focusDelay "100"]
    [:raiseOnFocus "no"]])
 
@@ -243,10 +243,17 @@
      (bindsh "F6" "hwctl backlight -5")
      (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
      (bindsh "F7" "hwctl backlight +5"))
-   (when (system "synclient" "-l")
+   (if (system "synclient" "-l")
      (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
                      "synclient TouchpadOff=$OFF"
-                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"]))
+                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
+     (bindsh "W-F8" ["ruby -e '
+                        id = %x(xinput list)[/mouse.*id=(\\d+)/i, 1]
+                        exit if id.nil? or id.empty?
+                        state = !!(%x(xinput list-props #{id}) =~ /Device Enabled.*:\\s*1$/i)
+                        system %q(xinput), %q(set-prop), id, %q(Device Enabled), (state ? 0 : 1).to_s
+                        system %q(notify), %q(--audio), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
+                      '"]))
    (bindsh ["XF86Eject" "Pause"] ["slock" "killall -HUP gpg-agent"])
    (bindsh ["C-XF86Eject" "C-Pause"] "killall -HUP gpg-agent")
    (bindsh ["W-XF86Eject" "W-Pause" "XF86Sleep"] "sudo /usr/local/bin/systemctl-suspend")
@@ -375,8 +382,9 @@
 (def config-applications
   [:applications
    [:application {:name "urxvt"} [:decor "no"]]
+   [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]
    [:application {:role "browser"} [:decor "no"]]
-   [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]])
+   [:application {:name "cinelerra"} [:decor "no"]]])
 
 (def rc
   [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
