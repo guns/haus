@@ -679,6 +679,13 @@ __LINUX__ && {
     }
 }
 
+# Random file
+randfile() {
+    ruby -e '
+        puts Dir[File.join ARGV.first, "*"].select { |f| File.file? f }.shuffle.first
+    ' -- "${@:-.}"
+}
+
 ### Processes
 
 # kill killall
