@@ -1,3 +1,4 @@
 *.swp
-*.vba
+*.vmb
 doc/tags
+/README.html

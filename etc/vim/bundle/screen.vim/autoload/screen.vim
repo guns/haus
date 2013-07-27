@@ -57,8 +57,8 @@ set cpo&vim
 
 function! screen#ScreenShellSetup(setup)
     let sexp_filetypes = exists('g:sexp_filetypes') ? '\v<' . g:sexp_filetypes . '>' : nr2char(0x01)
-    let select = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_list' : 'vip'
-    let topsel = &filetype =~ sexp_filetypes ? 'v<Plug>sexp_select_outer_top_list' : 'VggoG'
+    let select = &filetype =~ sexp_filetypes ? 'v<Plug>(sexp_outer_list)' : 'vip'
+    let topsel = &filetype =~ sexp_filetypes ? 'v<Plug>(sexp_outer_top_list)' : 'VggoG'
 
     if a:setup
         " RECURSIVE map for cascading mappings
