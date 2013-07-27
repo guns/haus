@@ -263,16 +263,16 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     m`=<Plug>sexp_outer_list``
+    nmap     <silent><buffer> ==     =<Plug>(sexp_outer_list)``
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
-    nmap <silent><buffer> <Leader><Leader> m`<Plug>FireplacePrint<Plug>sexp_outer_list``
+    nmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>(sexp_outer_list)``
     imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
 
-    nmap <silent><buffer> <Leader>X        m`<Plug>FireplacePrint<Plug>sexp_outer_top_list``
+    nmap <silent><buffer> <Leader>X        <Plug>FireplacePrint<Plug>(sexp_outer_top_list)``
     imap <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
 
-    nmap <silent><buffer> <Leader>x        m`<Plug>FireplacePrint<Plug>sexp_inner_element``
+    nmap <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>(sexp_inner_element)``
     imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
     nmap <silent><buffer> <Leader>r        :Require<CR>
@@ -350,7 +350,7 @@ endfunction
 function! s:ClojureMacroexpand(once)
     let reg_save = @m
     let expand = ['macroexpand-1', 'macroexpand', 'clojure.walk/macroexpand-all'][a:once]
-    execute "normal \"my\<Plug>sexp_outer_list"
+    execute "normal \"my\<Plug>(sexp_outer_list)"
     call s:ClojurePprint('(' . expand . ' (quote ' . @m . '))')
     wincmd L
     let @m = reg_save
@@ -390,7 +390,7 @@ endfunction
 function! s:ClojureTypeScaffold()
     try
         let reg_save = [@e, @r]
-        execute "normal \"ey\<Plug>sexp_inner_element"
+        execute "normal \"ey\<Plug>(sexp_inner_element)"
         redir @r
         call fireplace#session_eval(
             \   '(defn type-scaffold'
