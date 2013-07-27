@@ -221,13 +221,19 @@
    [:chainQuitKey "C-c"]
    ;; Openbox functions
    (bindsh "W-C-A-r" ["notify --audio=/dev/null 'Compiling Openbox configuration.'"
-                      "if openbox-configuration update; then notify --audio Success; else notify Failure; fi"])
+                      "if openbox-configuration update"
+                      "then notify --audio Success"
+                      "else notify Failure"
+                      "fi"])
    (bind "W-C-A-S-r" "Restart")
    (bind "W-C-A-q" ["Exit" [:prompt "false"]])
    (bind "W-q" "Close")
    (bind "W-C-f" "ToggleMaximizeFull")
    (bind "W-C-m" "Iconify")
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
+   ;; Send function keys
+   (apply list (for [[k v] (reduce (fn [m n] (assoc m n n)) {0 10} (range 1 10))]
+                 (bindsh (str "W-C-" k) (str "xdotool key --clearmodifiers F" v))))
    ;; Hardware / Media control
    (bindfocus ["W-F3" "W-XF86AudioMute"]
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
