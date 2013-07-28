@@ -155,7 +155,7 @@
 
 (def config-placement
   [:placement
-   [:policy "Smart"]
+   [:policy "UnderMouse"]
    [:center "yes"]
    [:monitor "Active"]
    [:primaryMonitor "1"]])
