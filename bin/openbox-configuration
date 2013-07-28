@@ -147,15 +147,6 @@
 (def config-focus
   [:focus
    [:focusNew "yes"]
-   [:followMouse "no"]
-   [:focusLast "yes"]
-   [:underMouse "no"]
-   [:focusDelay "200"]
-   [:raiseOnFocus "no"]])
-
-(def config-focus-follows-mouse
-  [:focus
-   [:focusNew "yes"]
    [:followMouse "yes"]
    [:focusLast "yes"]
    [:underMouse "no"]
@@ -326,8 +317,8 @@
    (bind "W-C-l" ["SendToDesktop" [:to "right"] [:wrap "yes"]])])
 
 (def config-mouse
-  (let [scroll-desktop (list (bindmouse ["W-C-Up" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
-                             (bindmouse ["W-C-Down" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]]))]
+  (let [scroll-desktop (list (bindmouse ["W-Button8" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
+                             (bindmouse ["W-Button9" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]]))]
     [:mouse
      [:dragThreshold "1"]
      [:doubleClickTime "200"]
@@ -390,12 +381,14 @@
    [:application {:name "urxvt"} [:decor "no"]]
    [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]
    [:application {:role "browser"} [:decor "no"]]
+   [:application {:name "gifview"} [:position [:x "center"] [:y "center"]]]
+   [:application {:name "kupfer.py"} [:position [:x "center"] [:y "center"]]]
    [:application {:name "cinelerra"} [:decor "no"]]])
 
 (def rc
   [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
    config-resistance
-   config-focus-follows-mouse
+   config-focus
    config-placement
    config-theme
    config-desktops
