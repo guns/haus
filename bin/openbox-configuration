@@ -319,64 +319,62 @@
    (bind "W-C-l" ["SendToDesktop" [:to "right"] [:wrap "yes"]])])
 
 (def config-mouse
-  (let [scroll-desktop (list (bindmouse ["W-Button8" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
-                             (bindmouse ["W-Button9" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]]))]
-    [:mouse
-     [:dragThreshold "1"]
-     [:doubleClickTime "200"]
-     [:screenEdgeWarpTime "0"]
-     [:screenEdgeWarpMouse "false"]
-     [:context {:name "Frame"}
-      (bindmouse ["W-Left" "Press"] "Focus")
-      (bindmouse ["W-Left" "Drag"] "Move")
-      (bindmouse ["W-C-Left" "Press"] "Resize")]
-     [:context {:name "Titlebar"}
-      (bindmouse ["Left" "Drag"] "Move")
-      (bindmouse ["Left" "DoubleClick"] "ToggleMaximizeFull")]
-     [:context {:name "Titlebar Top Right Bottom Left TLCorner TRCorner BRCorner BLCorner"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
-     [:context {:name "Client"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise")
-      (bindmouse ["Middle" "Press"] "Focus" "Raise")
-      (bindmouse ["Right" "Press"] "Focus" "Raise")
-      scroll-desktop]
-     [:context {:name "Icon"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade" ["ShowMenu" [:menu "client-menu"]])
-      (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
-     [:context {:name "AllDesktops"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Left" "Click"] "ToggleOmnipresent")]
-     [:context {:name "Shade"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise")
-      (bindmouse ["Left" "Click"] "ToggleShade")]
-     [:context {:name "Iconify"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise")
-      (bindmouse ["Left" "Click"] "Iconify")]
-     [:context {:name "Maximize"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Middle" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Right" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Left" "Click"] "ToggleMaximize")
-      (bindmouse ["Middle" "Click"] ["ToggleMaximize" [:direction "vertical"]])
-      (bindmouse ["Right" "Click"] ["ToggleMaximize" [:direction "horizontal"]])]
-     [:context {:name "Close"}
-      (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
-      (bindmouse ["Left" "Click"] "Close")]
-     [:context {:name "Desktop"}]
-     [:context {:name "Root"}
-      (bindmouse ["Right" "Press"] ["ShowMenu" [:menu "client-list-combined-menu"]])
-      (bindmouse ["Middle" "Press"] (sh "urxvt-client"))
-      scroll-desktop]]))
+  [:mouse
+   [:dragThreshold "1"]
+   [:doubleClickTime "200"]
+   [:screenEdgeWarpTime "0"]
+   [:screenEdgeWarpMouse "false"]
+   [:context {:name "Frame"}
+    (bindmouse ["W-Left" "Press"] "Focus")
+    (bindmouse ["W-Left" "Drag"] "Move")
+    (bindmouse ["W-C-Left" "Press"] "Resize")]
+   [:context {:name "Titlebar"}
+    (bindmouse ["Left" "Drag"] "Move")
+    (bindmouse ["Left" "DoubleClick"] "ToggleMaximizeFull")]
+   [:context {:name "Titlebar Top Right Bottom Left TLCorner TRCorner BRCorner BLCorner"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
+   [:context {:name "Client"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Middle" "Press"] "Focus" "Raise")
+    (bindmouse ["Right" "Press"] "Focus" "Raise")]
+   [:context {:name "Icon"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade" ["ShowMenu" [:menu "client-menu"]])
+    (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
+   [:context {:name "AllDesktops"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "ToggleOmnipresent")]
+   [:context {:name "Shade"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Left" "Click"] "ToggleShade")]
+   [:context {:name "Iconify"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Left" "Click"] "Iconify")]
+   [:context {:name "Maximize"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Middle" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Right" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "ToggleMaximize")
+    (bindmouse ["Middle" "Click"] ["ToggleMaximize" [:direction "vertical"]])
+    (bindmouse ["Right" "Click"] ["ToggleMaximize" [:direction "horizontal"]])]
+   [:context {:name "Close"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "Close")]
+   [:context {:name "Desktop"}]
+   [:context {:name "Root"}
+    (bindmouse ["Up" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
+    (bindmouse ["Down" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]])
+    (bindmouse ["Right" "Press"] ["ShowMenu" [:menu "client-list-combined-menu"]])
+    (bindmouse ["Middle" "Press"] (sh "urxvt-client"))]])
 
 (def config-menu
   [:menu
    [:hideDelay "200"]
-   [:middle "no"]
+   [:middle "yes"]
    [:submenuShowDelay "100"]
    [:submenuHideDelay "400"]
    [:applicationIcons "yes"]
-   [:manageDesktops "yes"]])
+   [:manageDesktops "no"]])
 
 (def config-applications
   [:applications
