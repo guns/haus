@@ -243,14 +243,16 @@
    (if (system "synclient" "-l")
      (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
                      "synclient TouchpadOff=$OFF"
-                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"])
+                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"
+                     "xdotool mousemove 10000 10000"])
      (bindsh "W-F8" ["ruby -e '
                         id = %x(xinput list)[/mouse.*id=(\\d+)/i, 1]
                         exit if id.nil? or id.empty?
                         state = !!(%x(xinput list-props #{id}) =~ /Device Enabled.*:\\s*1$/i)
                         system %q(xinput), %q(set-prop), id, %q(Device Enabled), (state ? 0 : 1).to_s
                         system %q(notify), %q(--audio), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
-                      '"]))
+                      '"
+                     "xdotool mousemove 10000 10000"]))
    (bindsh ["XF86Eject" "Pause"] ["slock" "killall -HUP gpg-agent"])
    (bindsh ["C-XF86Eject" "C-Pause"] "killall -HUP gpg-agent")
    (bindsh ["W-XF86Eject" "W-Pause" "XF86Sleep"] "sudo /usr/local/bin/systemctl-suspend")
