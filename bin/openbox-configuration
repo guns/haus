@@ -224,10 +224,6 @@
    (bind "W-C-m" "Iconify")
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
 
-   ;; Send function keys
-   (apply list (for [[k v] (reduce (fn [m n] (assoc m n n)) {0 10} (range 1 10))]
-                 (bindsh (str "W-C-" k) (str "xdotool key --clearmodifiers F" v))))
-
    ;; Hardware / Media control
    (bindfocus ["W-F3" "W-XF86AudioMute"]
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
