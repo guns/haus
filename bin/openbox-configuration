@@ -363,8 +363,8 @@
     (bindmouse ["Left" "Click"] "Close")]
    [:context {:name "Desktop"}]
    [:context {:name "Root"}
-    (bindmouse ["Up" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
-    (bindmouse ["Down" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]])
+    (bindmouse ["Up" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]])
+    (bindmouse ["Down" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
     (bindmouse ["Right" "Press"] ["ShowMenu" [:menu "client-list-combined-menu"]])
     (bindmouse ["Middle" "Press"] (sh "urxvt-client"))]])
 
