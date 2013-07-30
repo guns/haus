@@ -127,11 +127,6 @@ macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager
 macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
 macro pager w       \e\0074
 
-# notmuch-mutt.rb macros
-macro index,pager gf      <change-folder-readonly>~/Mail/.notmuch/search-results<enter>
-macro index,pager \e\007f "<shell-escape>notmuch-mutt.rb search<enter>gf"
-macro index,pager \e\007r "<shell-escape>notmuch new<enter>"
-
 # Identities
 set my_identity_1='\
     set from="guns <self@sungpae.com>";\
