@@ -178,7 +178,7 @@
    [:number "4"]
    [:firstdesk "1"]
    [:names [:name "One"] [:name "Two"] [:name "Three"] [:name "Four"]]
-   [:popupTime "100"]])
+   [:popupTime "750"]])
 
 (def config-resize
   [:resize
