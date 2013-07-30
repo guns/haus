@@ -127,6 +127,12 @@ macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager
 macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
 macro pager w       \e\0074
 
+# notmuchfs macros
+macro index,pager \e\007/ "<enter-command>source ~/.mutt/muttrc.mailboxes.search<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager \e\007f "<shell-escape>prompt_mkdir $folder/search/<enter>\e\007/"
+macro index,pager \e\007R "<shell-escape>(cd \"$folder\"; rake notmuchfs; notmuch new; notify -a 'Notmuch scan complete') &>/dev/null &<enter>"
+bind  browser     \e\007/ exit
+
 # Identities
 set my_identity_1='\
     set from="guns <self@sungpae.com>";\
