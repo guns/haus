@@ -48,7 +48,7 @@ augroup GUNS
         \ SetAutowrap 1
 
     " Shell {{{1
-    autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD
+    autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,/etc/netctl/*
         \ setlocal filetype=sh
     autocmd FileType sh
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)

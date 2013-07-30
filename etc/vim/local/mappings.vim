@@ -279,7 +279,7 @@ noremap /        /\v
 noremap ?        ?\v
 noremap <Bslash> /\V
 noremap <Bar>    ?\V
-noremap <4-?>    :execute ':vimgrep /' . @/ . '/gj ##'<CR>
+noremap <4-?>    :execute ':vimgrep /' . @/ . '/gj ##' \| set hlsearch<CR>
 
 " Search for non-printing ASCII characters
 noremap <Leader>- /<C-u>\v[^\x09\x20-\x7e]<CR>
@@ -321,7 +321,7 @@ Mapall <4-Bar> :<C-u>quit!<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
-noremap <Leader>sa       :<C-u>args `git ls-files`<CR>
+noremap <Leader>sa       :<C-u>let cbuf = expand('%:p') \| execute 'args `git ls-files`' \| execute 'edit ' . cbuf \| unlet cbuf<CR>
 noremap <Leader>?sa      :<C-u>Capture args<CR>
 noremap <Leader>sc       :<C-u>call Prompt('colorscheme ', '', 'color')<CR>
 noremap <Leader>?sc      :<C-u>colorscheme<CR>
