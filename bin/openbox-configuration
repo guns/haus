@@ -383,7 +383,7 @@
    [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]
    [:application {:role "browser"} [:decor "no"]]
    [:application {:name "gifview"} [:position [:x "center"] [:y "center"]]]
-   [:application {:name "kupfer.py"} [:position [:x "center"] [:y "center"]]]
+   [:application {:name "kupfer.py"} [:position [:x "center"] [:y "center"]] [:layer "above"]]
    [:application {:name "cinelerra"} [:decor "no"]]])
 
 (def rc
