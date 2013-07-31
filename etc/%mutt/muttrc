@@ -128,9 +128,11 @@ macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager
 macro pager w       \e\0074
 
 # notmuchfs macros
-macro index,pager \e\007/ "<enter-command>source ~/.mutt/muttrc.mailboxes.search<enter><change-folder>?<toggle-mailboxes>"
-macro index,pager \e\007f "<shell-escape>prompt_mkdir $folder/search/<enter>\e\007/"
-macro index,pager \e\007R "<shell-escape>(cd \"$folder\"; rake notmuchfs; notmuch new; notify -a 'Notmuch scan complete') &>/dev/null &<enter>"
+macro index,pager \e\007R "<shell-escape>(if notmuch new; then notify -a 'Notmuch scan complete'; else notify -a 'Notmuch scan failed'; fi) &>/dev/null &<enter>"
+macro index,pager \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify -a 'notmuchfs mounted') &>/dev/null &<enter>"
+macro index,pager \e\007N "<shell-escape>(cd $folder; rake umount && notify -a 'notmuchfs unmounted') &>/dev/null &<enter>"
+macro index,pager \e\007/ "\e\007n<enter-command>source ~/.mutt/muttrc.mailboxes.notmuch<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
 bind  browser     \e\007/ exit
 
 # Identities
