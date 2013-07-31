@@ -5,6 +5,7 @@
 # http://www.gnu.org/licenses/gpl-3.0.html
 
 require 'weechat'
+require 'yaml'
 include Weechat
 include Script::Skeleton
 
@@ -17,30 +18,7 @@ include Script::Skeleton
   :description => "Guns' personal keybindings"
 }
 
-CHANNELS = {
-  :freenode => %w[
-    #vim
-    #clojure
-    #archlinux
-    #rxvt-unicode
-    #archlinux-arm
-    #leiningen
-    #emacs
-    #mutt
-    #tmux
-    #bash
-    #git
-    #nginx
-    #openssl
-    #ruby
-    #ruby-lang
-    ##English
-  ],
-
-  :mozilla => %w[
-    #firefox
-  ]
-}
+CHANNELS = YAML.load_file File.expand_path('~/.weechat/channels.yml')
 
 KEYBINDINGS = {
   'ctrl-C'      => '/window scroll_bottom',
