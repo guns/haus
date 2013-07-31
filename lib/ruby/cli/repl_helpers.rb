@@ -39,26 +39,6 @@ module CLI
       end; nil
     end
 
-    def plist_read file
-      require 'plist'
-
-      buf = File.read file
-
-      if buf[0..7] == 'bplist00'
-        system 'plutil', '-convert', 'xml1', file
-        plist = Plist.parse_xml File.read(file)
-        system 'plutil', '-convert', 'binary1', file
-        plist
-      else
-        Plist.parse_xml(buf)
-      end
-    end
-
-    def plist_write plist, file
-      require 'plist'
-      File.open(file, 'w') { |f| f.puts Plist::Emit.dump(p) }
-    end
-
     def notify
       @notify ||= begin
         require 'util/notification'
@@ -70,23 +50,25 @@ module CLI
 
     # Toggle number inspect style
     def toggle_verbose_numbers
-      Integer.module_eval do
-        class << self
-          attr_accessor :verbose_inspect
-        end
-
-        if self.verbose_inspect = !verbose_inspect
-          alias_method :__inspect__, :inspect
-          def inspect
-            hex = '%x' % self
-            hex = '0' + hex unless hex.length.even?
-            bin = '%08b' % self
-            bin = ('0' * (4 - (bin.length % 4))) + bin unless (bin.length % 4).zero?
-            '%d 0%03o 0x%s (%s)' % [self, self, hex, bin.scan(/\d{4}/).join(' ')]
+      [Fixnum, Bignum].each do |klass|
+        klass.module_eval do
+          class << self
+            attr_accessor :verbose_inspect
           end
-        else
-          remove_method :inspect
-          alias_method :inspect, :__inspect__
+
+          if self.verbose_inspect = !verbose_inspect
+            alias_method :__inspect__, :inspect
+            def inspect
+              hex = '%x' % self
+              hex = '0' + hex unless hex.length.even?
+              bin = '%08b' % self
+              bin = ('0' * (4 - (bin.length % 4))) + bin unless (bin.length % 4).zero?
+              '%d 0%03o 0x%s (%s)' % [self, self, hex, bin.scan(/\d{4}/).join(' ')]
+            end
+          else
+            remove_method :inspect
+            alias_method :inspect, :__inspect__
+          end
         end
       end
     end
