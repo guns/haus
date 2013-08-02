@@ -977,6 +977,7 @@ ALIAS ctagsr='ctags -R'
 # Vim
 HAVE vim && {
     alias vimnilla='command vim -u NONE -N'
+    vimfile() { vim -c 'Unite -no-split file_rec' "$@"; }
     vimopen() { vim -c 'Unite -no-split git_cached git_untracked' "$@"; }
 
     # Param: [$@] Arguments to `ff()`

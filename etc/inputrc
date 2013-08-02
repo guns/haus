@@ -177,6 +177,7 @@ $if bash
     "\C-xex":       "\C-] vimxinitrc \n"
     "\C-xeX":       "\C-] vimxdefaults \n"
     "\C-xf":        "\C-]vimfind "
+    "\033\007F":    "\C-] vimfile \n"
     "\033\007o":    "\C-] vimopen \n"
     "\033\007t":    "\C-] vimopen \n"
     "\C-xm":        "\C-]man "
