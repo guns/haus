@@ -382,9 +382,10 @@
    [:application {:name "urxvt"} [:decor "no"]]
    [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]
    [:application {:role "browser"} [:decor "no"]]
-   [:application {:name "gifview"} [:position [:x "center"] [:y "center"]]]
+   [:application {:name "gifview"} [:position [:x "center"] [:y "center"]] [:decor "no"]]
    [:application {:name "kupfer.py"} [:position [:x "center"] [:y "center"]] [:layer "above"]]
-   [:application {:name "cinelerra"} [:decor "no"]]])
+   [:application {:name "cinelerra"} [:decor "no"]]
+   [:application {:name "xv"} [:decor "no"]]])
 
 (def rc
   [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
