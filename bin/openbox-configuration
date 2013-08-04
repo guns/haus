@@ -156,7 +156,6 @@
 (def config-placement
   [:placement
    [:policy "UnderMouse"]
-   [:center "yes"]
    [:monitor "Active"]
    [:primaryMonitor "1"]])
 
@@ -374,7 +373,7 @@
    [:middle "yes"]
    [:submenuShowDelay "100"]
    [:submenuHideDelay "400"]
-   [:applicationIcons "yes"]
+   [:showIcons "yes"]
    [:manageDesktops "no"]])
 
 (def config-applications
