@@ -76,7 +76,6 @@ snippet SH "clojure.java.shell/sh" w
 (clojure.java.shell/sh $0)
 endsnippet
 
-
 ### Collections {{{1
 
 snippet conj "conj" w
@@ -419,7 +418,6 @@ snippet pq "clojure.lang.PersistentQueue/EMPTY" w
 clojure.lang.PersistentQueue/EMPTY
 endsnippet
 
-
 ### Predicates and Reflection {{{1
 
 snippet cla "class" w
@@ -494,7 +492,6 @@ snippet refl "clojure.reflect/reflect" w
 (clojure.reflect/reflect $0)
 endsnippet
 
-
 ### Functions {{{1
 
 snippet fn "fn" w
@@ -532,7 +529,6 @@ endsnippet
 snippet --- "->>" w
 (->> $0)
 endsnippet
-
 
 ### Definitions {{{1
 
@@ -609,7 +605,6 @@ snippet kwa "keyword args" w
 {:keys [$0]}
 endsnippet
 
-
 ### Java Interop {{{1
 
 snippet new "new" w
@@ -641,7 +636,6 @@ snippet memfn "memfn" w
 (memfn ${1:method} ${0:args})
 endsnippet
 
-
 ### Exception Handling {{{1
 
 snippet thr "throw" w
@@ -662,7 +656,6 @@ snippet fin "finally" w
 (finally
 	$0)
 endsnippet
-
 
 ### Conditionals and Logic {{{1
 
@@ -736,7 +729,6 @@ snippet or "or" w
 (or $0)
 endsnippet
 
-
 ### Expressions, Iteration, and Looping {{{1
 
 snippet do "do exprs" w
@@ -782,7 +774,6 @@ snippet tram "trampoline" w
 (trampoline ${0:λ args})
 endsnippet
 
-
 ### Concurrency {{{1
 
 snippet dosy "dosync" w
@@ -813,7 +804,6 @@ endsnippet
 snippet at "atom" w
 (atom $0)
 endsnippet
-
 
 ### Strings and Numbers {{{1
 
@@ -892,7 +882,6 @@ snippet sp "spit" w
 (spit $0)
 endsnippet
 
-
 ### Testing {{{1
 
 snippet is "clojure.test/is" w
@@ -904,44 +893,27 @@ snippet test "testing" w
 	)
 endsnippet
 
-
 ### Debugging {{{1
 
-# http://stackoverflow.com/questions/2352020/debugging-in-clojure/2352280#2352280
-snippet deb "debug" w
-(do (require 'clojure.pprint)
-    (defmacro debug
-      ([x] \`(do (clojure.pprint/pprint {'~x ~x}) ~x))
-      ([x & xs] \`(do (clojure.pprint/pprint (zipmap '~(cons x xs) [~@(cons x xs)])) ~(last xs)))))
+snippet deb "user/debug" w
+(user/debug $0)
 endsnippet
 
-snippet dump "dump-locals" w
-(do (def ^:dynamic *dumping-locals* false)
-    (defmacro dump-locals []
-      \`(when-not *dumping-locals*
-         (binding [*dumping-locals* true]
-           (clojure.pprint/pprint
-             ~(into {} (map (fn [l] [\`'~l l]) (keys &env))))))))
+snippet DL "dump-locals" w
+(user/dump-locals)
 endsnippet
 
 snippet CP "print classpath" w
-(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))] (println (.getPath u)))
+(user/print-classpath)
 endsnippet
 
-snippet bm "benchmark" w
-(defmacro bm [& body]
-	(if (integer? (first body))
-		\`(time (dotimes [_# ~(first body)] ~@(rest body)))
-		\`(time (dotimes [_# 10] ~@body))))
+snippet BM "benchmark" w
+(user/benchmark $0)
 endsnippet
 
 snippet trace "trace-ns" w
-(do (require 'clojure.tools.trace)
-	(try (clojure.tools.trace/trace-ns ${1:*ns*})
-		$0
-		(finally (clojure.tools.trace/untrace-ns $1))))
+(user/trace $0)
 endsnippet
-
 
 ### ClojureScript {{{1
 
