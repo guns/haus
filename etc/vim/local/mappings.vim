@@ -372,7 +372,7 @@ noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR
 noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vimperatorrc'))<CR>
 noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/bin/openbox-configuration')) \| setfiletype clojure<CR>
 noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xinitrc'))<CR>
-noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.Xdefaults'))<CR>
+noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.config/openbox/autostart'))<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>

@@ -1089,7 +1089,7 @@ HAVE vim && {
     alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
     alias vimwm='(cdhaus && exec vim -c "setfiletype clojure" bin/openbox-configuration)'
     alias vimxinitrc='vim ~/.xinitrc'
-    alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
+    alias vimxautostart='(cd ~/.config/openbox && exec vim autostart)'
 }
 
 # Emacs

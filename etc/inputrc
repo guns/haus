@@ -175,7 +175,7 @@ $if bash
     "\C-xeV":       "\C-] vimperatorrc \n"
     "\C-xew":       "\C-] vimwm \n"
     "\C-xex":       "\C-] vimxinitrc \n"
-    "\C-xeX":       "\C-] vimxdefaults \n"
+    "\C-xeX":       "\C-] vimxautostart \n"
     "\C-xf":        "\C-]vimfind "
     "\033\007F":    "\C-] vimfile \n"
     "\033\007o":    "\C-] vimopen \n"
