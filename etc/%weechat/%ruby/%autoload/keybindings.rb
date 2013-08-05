@@ -31,7 +31,7 @@ KEYBINDINGS = {
   'ctrl-X'      => nil,
   'ctrl-Xcf'    => '/shell -o echo "/connect freenode -password=$(pass irc/freenode-guns)"',
   'ctrl-Xcm'    => '/shell -o echo "/connect mozilla -password=$(pass irc/mozilla-guns)"',
-  'ctrl-Xco'    => '/shell -o echo "/connect oftc -password=$(pass irc/oftc-guns)"',
+  'ctrl-Xco'    => '/shell -o echo "/connect oftc"',
   'ctrl-Xh'     => '/input insert /help',
   'ctrl-Xif'    => '/shell -o echo "/msg NickServ identify guns $(pass irc/freenode-guns)"',
   'ctrl-Xim'    => '/shell -o echo "/msg NickServ identify $(pass irc/mozilla-guns)"',
