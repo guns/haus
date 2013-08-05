@@ -22,16 +22,14 @@ fi
 
 if [[ $SESSION ]]; then
     if tmux has-session -t "$SESSION" &>/dev/null; then
-        exec $WRAPPER tmux attach-session -t "$SESSION"
+        exec $WRAPPER tmux attach-session -d -t "$SESSION"
+    else
+        exec $WRAPPER tmux new-session -s "$SESSION" "$@"
     fi
 else
     if tmux has-session &>/dev/null; then
-        exec $WRAPPER tmux attach-session
+        exec $WRAPPER tmux attach-session -d
+    else
+        exec $WRAPPER tmux new-session "$@"
     fi
-fi
-
-if [[ $SESSION ]]; then
-    exec $WRAPPER tmux new-session -s "$SESSION" "$@"
-else
-    exec $WRAPPER tmux new-session "$@"
 fi
