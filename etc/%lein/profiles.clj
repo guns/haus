@@ -65,10 +65,6 @@
                    `(clojure.pprint/pprint
                       ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
-                 (defn print-classpath []
-                   (doseq [url (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))]
-                     (println (.getPath url))))
-
                  (defmacro benchmark
                    ([expr] `(benchmark 10 ~expr))
                    ([n expr] `(time (dotimes [_# ~n] ~expr))))
