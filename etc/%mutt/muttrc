@@ -96,6 +96,7 @@ macro index,pager \Cd     <delete-thread>
 macro index,pager \Cu     <undelete-thread>
 macro index,pager \Cr     <read-thread>
 macro index,pager \Ct     <tag-thread>
+macro index,pager \ea     <shell-escape>abook<enter>
 bind  index,pager \es     flag-message
 bind  index       \et     untag-pattern
 macro index       \e\007a <tag-pattern>.<enter>
