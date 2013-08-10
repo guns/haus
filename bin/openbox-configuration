@@ -412,15 +412,13 @@
 
 (def options
   [["-c" "--config FILE" :default openbox-rc-path]
-   ["-p" "--parse FILE" :parse-fn #(if (= % "-") *in* %)]
    ["-u" "--update"]
    ["-h" "--help"]])
 
 (defn -main [& argv]
   (try
-    (let [[{:keys [config parse update help]} args summary] (parse argv options)]
+    (let [[{:keys [config update help]} args summary] (parse argv options)]
       (cond help (do (println (str "Usage: openbox-configuration [options]\n\nOptions:\n" summary)))
-            parse (println (convert-xml parse))
             update (do (spit config (render-xml rc))
                        (shell/sh "openbox" "--reconfigure"))
             :else (println (render-xml rc)))
