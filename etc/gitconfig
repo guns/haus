@@ -41,15 +41,15 @@
 
 [alias]
     # Index operations
-    a      = add
-    aa     = add . --all
-    ai     = add --interactive
-    af     = add --force
-    ap     = add --patch
-    ac     = !git add . --all && git commit -a
-    acv    = !git add . --all && git commit -a -v
-    acva   = !git add . --all && git commit -a -v --amend
-    acm    = !git add . --all && git commit -a -m
+    a      = add --all
+    aa     = add --all .
+    ai     = add --all --interactive
+    af     = add --all --force
+    ap     = add --all --patch
+    ac     = !git add --all . && git commit -a
+    acv    = !git add --all . && git commit -a -v
+    acva   = !git add --all . && git commit -a -v --amend
+    acm    = !git add --all . && git commit -a -m
     rs     = reset
     rshard = reset --hard
 
