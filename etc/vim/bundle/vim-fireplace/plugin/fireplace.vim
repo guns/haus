@@ -540,7 +540,7 @@ function! fireplace#evalprint(expr) abort
 endfunction
 
 function! fireplace#macroexpand(fn, form) abort
-  return fireplace#evalprint('(clojure.core/'.a:fn.' (quote '.a:form.'))')
+  return fireplace#evalprint('('.a:fn.' (quote '.a:form.'))')
 endfunction
 
 let g:fireplace#reader =
@@ -619,11 +619,11 @@ function! s:filterop(type) abort
 endfunction
 
 function! s:macroexpandop(type) abort
-  call fireplace#macroexpand("macroexpand", s:opfunc(a:type))
+  call fireplace#macroexpand("clojure.walk/macroexpand-all", s:opfunc(a:type))
 endfunction
 
 function! s:macroexpand1op(type) abort
-  call fireplace#macroexpand("macroexpand-1", s:opfunc(a:type))
+  call fireplace#macroexpand("clojure.core/macroexpand-1", s:opfunc(a:type))
 endfunction
 
 function! s:printop(type) abort
@@ -1125,7 +1125,7 @@ augroup fireplace_alternate
   autocmd FileType clojure command! -buffer -bar AT :exe s:Alternate('tabedit')
 augroup END
 
-function! s:alternates() abort
+function! fireplace#alternates() abort
   let ns = fireplace#ns()
   if ns =~# '-test$'
     let alt = [ns[0:-6]]
@@ -1140,7 +1140,7 @@ function! s:alternates() abort
 endfunction
 
 function! s:Alternate(cmd) abort
-  let alternates = s:alternates()
+  let alternates = fireplace#alternates()
   for file in alternates
     let path = fireplace#findresource(file)
     if !empty(path)
