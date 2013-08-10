@@ -1,0 +1,3 @@
+#!/bin/sh
+
+dispwin /etc/local/AdobeRGB1998.icc
