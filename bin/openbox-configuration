@@ -1,13 +1,15 @@
 #!/usr/bin/env lein-exec
 
-(leiningen.exec/deps '[[hiccup "1.0.3"]])
+(leiningen.exec/deps '[[hiccup "1.0.3"]
+                       [guns.cli/optparse "1.0.1"]])
 
 (require '[hiccup.core :as hiccup]
          '[hiccup.page :as page]
          '[clojure.string :as string]
          '[clojure.java.io :as io]
          '[clojure.data.xml :as xml]
-         '[clojure.java.shell :as shell])
+         '[clojure.java.shell :as shell]
+         '[guns.cli.optparse :refer [parse]])
 
 ;;;
 ;;; XML <-> Hiccup conversion functions.
@@ -212,7 +214,7 @@
 
    ;; Openbox functions
    (bindsh "W-C-A-r" ["notify --audio=/dev/null 'Compiling Openbox configuration.'"
-                      "if openbox-configuration update"
+                      "if openbox-configuration --update"
                       "then notify --audio Success"
                       "else notify Failure"
                       "fi"])
@@ -284,7 +286,7 @@
    (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME"]
               ["cd ~/Downloads"
                "urxvt-client -title %s -g 120x40 -e muttlaunch"])
-   (bindsh "W-F12" "urxvt-client -title %s -g 120x40 -e muttlaunch -f")
+   (bindsh "W-F12" "urxvt-client -title '✉ Mutt ✉' -g 120x40 -e muttlaunch -f")
    (bindsh "A-F12" "open https://mail.google.com/")
 
    ;; Toggle application
@@ -405,32 +407,28 @@
 ;;; Program actions.
 ;;;
 
-(defn openbox-rc-path []
-  (:out (shell/sh "/bin/sh" "-c" "printf %s ~/.config/openbox/rc.xml")))
+(def openbox-rc-path
+  (str (System/getProperty "user.home") "/.config/openbox/rc.xml"))
 
-(defn print-usage []
-  (let [help (format
-               (string/join
-                 \newline
-                 ["USAGE: %s command [arg]"
-                  ""
-                  "Commands:"
-                  "  xml           Print Openbox configuration"
-                  "  update        Overwrite %s and reload configuration"
-                  "  parse [path]  XML -> hiccup"])
-               (first *command-line-args*) (openbox-rc-path))]
-    (binding [*out* *err*] (println help))))
+(def options
+  [["-c" "--config FILE" :default openbox-rc-path]
+   ["-p" "--parse FILE" :parse-fn #(if (= % "-") *in* %)]
+   ["-u" "--update"]
+   ["-h" "--help"]])
 
-(defn -main [argv]
-  (let [[program command arg] argv]
-    (cond (= command nil) (println (render-xml rc))
-          (= command "xml") (println (render-xml rc))
-          (= command "update") (do (spit (openbox-rc-path) (render-xml rc))
-                                   (shell/sh "openbox" "--reconfigure"))
-          (= command "parse") (println (convert-xml (or arg *in*)))
-          (contains? #{"-h" "--help" "help"} command) (print-usage)
-          :else (do (print-usage) (System/exit 1)))))
+(defn -main [& argv]
+  (try
+    (let [[{:keys [config parse update help]} args summary] (parse argv options)]
+      (cond help (do (println (str "Usage: openbox-configuration [options]\n\nOptions:\n" summary)))
+            parse (println (convert-xml parse))
+            update (do (spit config (render-xml rc))
+                       (shell/sh "openbox" "--reconfigure"))
+            :else (println (render-xml rc)))
+      (System/exit 0))
+    (catch AssertionError e
+      (println (.getMessage e))
+      (System/exit 1))))
 
-(-main *command-line-args*)
+(apply -main (rest *command-line-args*))
 
 ;; vim: ft=clojure:
