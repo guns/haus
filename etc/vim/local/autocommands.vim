@@ -54,6 +54,10 @@ augroup GUNS
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Lisp {{{1
+    autocmd BufRead,BufNewFile *.el
+        \ setlocal filetype=lisp
+    autocmd FileType emacs-lisp
+        \ setlocal filetype=lisp
     autocmd Filetype lisp,scheme,clojure
         \ LispBufferSetup
 
