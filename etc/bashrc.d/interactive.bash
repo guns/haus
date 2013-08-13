@@ -1093,7 +1093,7 @@ HAVE vim && {
 }
 
 # Emacs
-ALIAS emacs='emacs -nw'
+HAVE emacs && alias emacsparedit='PAREDIT=1 emacs'
 
 ### Terminal Multiplexers
 
