@@ -1,5 +1,8 @@
-;; http://emacswiki.org/emacs/Evil
+;; Modes
 (add-to-list 'load-path "~/.emacs.d/evil")
+(add-to-list 'load-path "~/.emacs.d/paredit")
+
+;; http://emacswiki.org/emacs/Evil
 (require 'evil)
 (evil-mode 1)
 
