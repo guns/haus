@@ -1396,7 +1396,7 @@ ALIAS sqlite='sqlite3' && {
             SELECT datetime(moz_historyvisits.visit_date/1000000, 'unixepoch'), moz_places.url, moz_places.title, moz_places.visit_count
             FROM moz_places, moz_historyvisits
             WHERE moz_places.id = moz_historyvisits.place_id
-            ORDER by moz_historyvisits.visit_date;
+            ORDER BY moz_historyvisits.visit_date DESC;
 	EOF
     }
 }
