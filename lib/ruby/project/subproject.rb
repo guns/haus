@@ -8,7 +8,7 @@ module Project
   class Subproject
     include Haus::Loggable
 
-    attr_accessor :base, :files, :push, :haus, :pull, :branch, :callback, :queue
+    attr_accessor :base, :push, :haus, :pull, :branch, :callback
 
     def initialize opts = {}
       @base     = opts[:base ]
@@ -18,7 +18,6 @@ module Project
       @haus     = opts[:haus ] || Haus::Options.new.path
       @branch   = OpenStruct.new Hash[[:upstream, :local].zip [opts[:branch]].flatten]
       @callback = OpenStruct.new :before => opts[:before], :after => opts[:after]
-      @queue    = Haus::Queue.new :quiet => true
       @fetch    = opts[:fetch]
     end
 
@@ -71,27 +70,30 @@ module Project
       git.push push, '--all'
     end
 
-    def update_files
+    def update_files files
       case files
+      # Recursively contains any of the below
+      when Array
+        files.each { |fs| update_files fs }
       # Map of (relative src) => (relative dst)
       when Hash
-        files.each { |s, d| queue.add_copy File.join(base, s), File.join(haus, d) }
-        queue.execute!
+        q = Haus::Queue.new :quiet => true
+        files.each { |s, d| q.add_copy File.join(base, s), File.join(haus, d) }
+        q.execute!
       # Relative rsync target directory
       when String
-        dst = File.join haus, @files
+        dst = File.join haus, files
         FileUtils.rm_f dst if File.symlink? dst
         FileUtils.mkdir_p dst
         system *%W[rsync -a --delete --no-owner --exclude=.git --exclude=.bundle #{base}/ #{dst}/]
-      # A function that returns a new value for @files
+      # A function that returns a new value for files
       when Proc
-        @files = @files.call(self) and update_files # Recurse!
+        fs = files.call(self) and update_files fs
       # This is a pathogen bundle
       when :pathogen
-        @files = File.join 'etc/vim/bundle', File.basename(base)
-        update_files # Recurse!
+        update_files File.join('etc/vim/bundle', File.basename(base))
       else
-        raise 'No handler for :files as %s' % @files.class
+        raise 'No handler for :files as %s' % files.class
       end
     end
 
@@ -105,7 +107,7 @@ module Project
 
       Dir.chdir(base) { as_uid(uid) { callback.before.call self } } if callback.before
       as_uid(uid) { git_update } if branch.upstream
-      update_files
+      update_files @files
       as_uid(uid) { git_push } if push and fetch
       Dir.chdir(base) { as_uid(uid) { callback.after.call self } } if callback.after
     end
