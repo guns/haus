@@ -187,6 +187,8 @@ endfunction
 function! DiffFoldExpr(lnum) "{{{1
     if getline(a:lnum) =~# '\v^diff>'
         return '>1'
+    elseif getline(a:lnum - 3) =~# '\v^-- '
+        return '0'
     else
         return '='
     endif
