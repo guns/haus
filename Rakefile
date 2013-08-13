@@ -293,6 +293,12 @@ task :env do
         :base => "#{@emacs}/evil",
         :branch => %w[master guns],
         :files => 'etc/%emacs.d/evil'
+      },
+
+      {
+        :base => "#{@emacs}/paredit",
+        :branch => %w[master],
+        :files => { 'paredit.el' => 'etc/%emacs.d/paredit/paredit.el' }
       }
     ],
 
