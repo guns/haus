@@ -1388,6 +1388,17 @@ ALIAS sqlite='sqlite3' && {
             done
         } 2>/dev/null | pager
     }
+
+    sqlite-firefox-dump-history() {
+        (($# == 1)) || { echo "Usage: $FUNCNAME path/to/places.sqlite"; return 1; }
+        # http://unfocusedbrain.com/site/2010/03/09/dumping-firefoxs-places-sqlite/
+        sqlite3 "$@" <<-EOF
+            SELECT datetime(moz_historyvisits.visit_date/1000000, 'unixepoch'), moz_places.url, moz_places.title, moz_places.visit_count
+            FROM moz_places, moz_historyvisits
+            WHERE moz_places.id = moz_historyvisits.place_id
+            ORDER by moz_historyvisits.visit_date;
+	EOF
+    }
 }
 
 ### Hardware control
