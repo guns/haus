@@ -1795,27 +1795,4 @@ fi
 
 ALIAS kf='kupfer'
 
-HAVE minecraft && _minecraft() {
-    local cur prev
-    _get_comp_words_by_ref cur prev
-
-    if [[ $cur == -* ]]; then
-        COMPREPLY=($(compgen -W '--jar --world --gamedir --memory --debug --help' -- "$cur"))
-    elif [[ $prev == @(-j|--jar) ]]; then
-        local jars="$(__lstype__ '/srv/games/minecraft' 'File.extname(f) == ".jar" and File.lstat(f).ftype == "file"')"
-        local IFS=$'\n'
-        COMPREPLY=($(compgen -W "$jars" -- "$cur"))
-        unset IFS
-    elif [[ $prev == @(-w|--world) ]]; then
-        local saves="$(__lstype__ -q '/srv/games/minecraft/saves/minecraft_server' 'File.ftype(f) == "directory"')"
-        local IFS=$'\n'
-        COMPREPLY=($(compgen -W "$saves" -- "$cur"))
-        unset IFS
-    elif [[ $prev == @(-g|--gamedir) ]]; then
-        _filedir -d
-    else
-        COMPREPLY=($(compgen -W 'start stop restart update repl' -- "$cur"))
-    fi
-} && complete -F _minecraft minecraft
-
 : # Return true
