@@ -681,9 +681,11 @@ __LINUX__ && {
 
 # Random file
 randfile() {
-    ruby -e '
-        puts Dir[File.join ARGV.first, "*"].select { |f| File.file? f }.shuffle.first
-    ' -- "${@:-.}"
+    ruby -roptparse -e '
+        r = ARGV.getopts("r")["r"]
+        glob = File.join ARGV.first || ".", r ? "**/*" : "*"
+        puts Dir[glob].select { |f| File.file? f }.shuffle.first
+    ' -- "$@"
 }
 
 ### Processes
@@ -1667,7 +1669,7 @@ HAVE ffmpeg && {
 HAVE qlmanage && alias ql='qlmanage -p'
 
 # youtubedown
-ALIAS youtubedown='youtubedown --verbose' && {
+ALIAS youtubedown='youtubedown --verbose --progress' && {
     youtubedownformats() {
         youtubedown --verbose --size "$@" 2>&1 | ruby -Eiso-8859-1 -e '
             puts input = $stdin.readlines
