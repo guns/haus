@@ -8,8 +8,8 @@
 reload
 pan      1
 zoom     2
-menu     3
-prev
+menu
+prev     3
 next
 blur     C-1
 rotate   C-2
