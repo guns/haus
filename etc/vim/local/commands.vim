@@ -265,7 +265,6 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nmap     <silent><buffer> ==     =<Plug>(sexp_outer_list)``
 
     vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
     nmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>(sexp_outer_list)``
