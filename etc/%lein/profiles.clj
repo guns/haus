@@ -26,7 +26,7 @@
                        [slamhound "1.4.0"]]
         :aliases {"RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]}
-        :signing {:gpg-key "0x24142BFA974864C311D3AED537BD7E31C8C835A2"}
+        :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
         :repl-options
         {:init
          (do

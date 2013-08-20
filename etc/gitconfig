@@ -10,7 +10,7 @@
 [user]
     name  = guns
     email = self@sungpae.com
-    signingkey = 24142BFA974864C311D3AED537BD7E31C8C835A2
+    signingkey = 0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D
 
 [core]
     whitespace   = trailing-space,space-before-tab
