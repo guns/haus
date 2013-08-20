@@ -41,6 +41,10 @@ class Figpreview
         puts fonts
         exit
       end
+
+      opt.on '-r', '--random', 'Pick a single random font' do
+        options.random = true
+      end
     end
   end
 
@@ -91,7 +95,7 @@ class Figpreview
   def run arguments = []
     args = parser.parse arguments
     options.message = args.join ' ' unless args.empty?
-    puts to_s
+    puts options.random ? generate(fonts.shuffle.last) : to_s
   end
 end
 
