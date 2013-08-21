@@ -58,6 +58,8 @@ augroup GUNS
         \ setlocal filetype=lisp
     autocmd FileType emacs-lisp
         \ setlocal filetype=lisp
+    autocmd BufRead,BufNewFile *.cljx
+        \ setlocal filetype=clojure
     autocmd Filetype lisp,scheme,clojure
         \ LispBufferSetup
 
