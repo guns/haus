@@ -914,7 +914,7 @@ HAVE cdapi && {
 }
 
 # Simple webserver
-httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' -- "$@"; }
+httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 
 ### Firewalls
 
