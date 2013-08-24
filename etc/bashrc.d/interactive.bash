@@ -33,7 +33,7 @@ GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
 LESS_ARY=(
     --force                             # Force open non-regular files
     --clear-screen                      # Print buffer from top of screen
-    --dumb                              # Don't complain about terminfo errors
+    --dumb                              # Do not complain about terminfo errors
     --ignore-case                       # Like vim ignorecase + smartcase
     --no-lessopen                       # Ignore LESSOPEN preprocessor
     --long-prompt                       # Show position percentage
