@@ -13,13 +13,13 @@ require 'etc'
 require 'yaml'
 require 'pathname'
 
-class Setuptmpfiles
+class Usertmpfiles
   attr_reader :options
 
   def initialize opts = {}
     @options = OpenStruct.new
     options.dir = 'tmp'
-    options.config_file = '/etc/setuptmpfiles.yml'
+    options.config_file = '/etc/usertmpfiles.yml'
   end
 
   def parser
@@ -163,4 +163,4 @@ class Setuptmpfiles
   end
 end
 
-$0 = File.basename(__FILE__) and Setuptmpfiles.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Usertmpfiles.new.run ARGV if $0 == __FILE__
