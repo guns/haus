@@ -224,6 +224,7 @@
    (bind "W-C-f" "ToggleMaximizeFull")
    (bind "W-C-m" "Iconify")
    (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
+   (bind "W-C-A-d" "ToggleDecorations")
 
    ;; Hardware / Media control
    (bindfocus ["W-F3" "W-XF86AudioMute"]
