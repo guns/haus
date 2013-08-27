@@ -15,17 +15,10 @@ task :local do
       sh 'mkdir', '-p', dst
       sh 'rsync', '-av', '--delete', src + '/', dst + '/'
       Dir.chdir dst do
-        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), File.basename(src)
+        FileUtils.ln_s Pathname.new(src).relative_path_from(Pathname.new dst), 'upstream'
       end
     end
   end
-
-  # This is a quick hack, adapted from vimpacnew
-  files = %x(git status --short).lines.map { |l| l.chomp[/.{3}(.*)/, 1] }
-
-  exec 'vim', *files.reduce([]) { |as, f|
-    as << '-c' << "edit #{f.shellescape} | diffthis | vsplit #{f.sub(%r{.*?(/.*)}, 'local/\1').shellescape} | diffthis | tabnew"
-  }, '-c', 'tabclose | tabfirst' if files.any?
 
   exit # Stop processing ARGV
 end
