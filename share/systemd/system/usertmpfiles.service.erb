@@ -3,8 +3,8 @@ Description=Move sensitive user files to temporary directories
 
 [Service]
 Type=oneshot
-ExecStart=<%= path 'setuptmpfiles' %> -u root,guns
-ExecStop=<%= path 'setuptmpfiles' %> -u root,guns
+ExecStart=<%= path 'usertmpfiles' %> -u root,guns
+ExecStop=<%= path 'usertmpfiles' %> -u root,guns
 RemainAfterExit=yes
 
 [Install]
