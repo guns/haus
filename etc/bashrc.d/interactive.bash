@@ -1639,12 +1639,20 @@ HAVE feh && {
         ' -- "$@"
     }
     fmove() {
-        ruby -r shellwords -e '
-            op = ARGV.first == "-c" ? (ARGV.shift; "cp") : "mv"
-            dirs = ARGV.select { |d| Dir.exists? d and File.writable? d }
-            abort "USAGE: fmove dir …" if ARGV.empty? or dirs.count != ARGV.count
-            actions = ARGV.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
-            exec "feh", "-Smtime", "--draw-actions", *actions
+        ruby -r shellwords -r optparse -e '
+            dirs, op = [], "mv"
+            options = OptionParser.new do |opt|
+                opt.banner = "USAGE: fmove [options] [feh-args]\n\nOptions:\n"
+                opt.on("-c") { op = "cp" }
+                opt.on "-d DIR" do |d|
+                    if Dir.exists? d and File.writable? d
+                        dirs << d
+                    end
+                end
+            end
+            args = options.parse ARGV
+            actions = dirs.flat_map.with_index { |d,i| ["--action#{i+1}", "#{op} -- %F #{d.shellescape}"] }
+            exec "feh", "-Smtime", "--draw-actions", *actions, *args
         ' -- "$@"
     }
     fcopy() { fmove -c "$@"; }
