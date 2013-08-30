@@ -188,7 +188,7 @@ task :env do
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {
-        :base => "#{@src}/firefox/vimperator-labs",
+        :base   => "#{@src}/firefox/vimperator-labs",
         :before => lambda { |proj|
           if proj.fetch
             system '{ git checkout master && git-hg pull --rebase --force; } &>/dev/null'
@@ -205,8 +205,8 @@ task :env do
       },
 
       {
-        :base => "#{@vim}/misc-vimscripts",
-        :files => :pathogen,
+        :base   => "#{@vim}/misc-vimscripts",
+        :files  => :pathogen,
         :before => lambda { |proj|
           if proj.fetch
             system '{ cd %s && rake update && git add . && git commit -m UPDATE; } &>/dev/null' % proj.base.shellescape
@@ -277,7 +277,7 @@ task :env do
             raise 'go git-hg pull failed' unless $?.exitstatus.zero?
           end
         },
-        :files  => lambda { |proj|
+        :files => lambda { |proj|
           src = "#{proj.base}/misc/vim"
           dst = "#{proj.haus}/etc/vim/bundle/go"
           FileUtils.mkdir_p dst
@@ -290,15 +290,15 @@ task :env do
 
     'emacsfiles' => [
       {
-        :base => "#{@emacs}/evil",
+        :base   => "#{@emacs}/evil",
         :branch => %w[master guns],
-        :files => 'etc/%emacs.d/evil'
+        :files  => 'etc/%emacs.d/evil'
       },
 
       {
-        :base => "#{@emacs}/paredit",
+        :base   => "#{@emacs}/paredit",
         :branch => %w[master],
-        :files => { 'paredit.el' => 'etc/%emacs.d/paredit/paredit.el' }
+        :files  => { 'paredit.el' => 'etc/%emacs.d/paredit/paredit.el' }
       }
     ],
 
