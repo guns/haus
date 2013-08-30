@@ -126,7 +126,7 @@ task :env do
       { :base => "#{@src}/vim-sexp",               :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@src}/xterm-color-table.vim",  :branch => %w[master],      :files => :pathogen, :pull => 'github' },
       { :base => "#{@vim}/ack.vim",                :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/AnsiEsc.vim",            :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/AnsiEsc.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/applescript.vim",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/BufOnly.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",        :branch => %w[master guns], :files => :pathogen },
