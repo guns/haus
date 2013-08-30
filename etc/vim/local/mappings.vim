@@ -548,10 +548,8 @@ vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
 noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
-" Plugin: Align
-noremap <Leader>a<Space> :Align<Space>
-noremap <Leader>a.       :Align \.<CR>
-noremap <Leader>a<C-l>   :Align =><CR>
+" Plugin: vim-easy-align
+vnoremap <Leader>a :EasyAlign<CR>
 
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>
