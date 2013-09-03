@@ -22,9 +22,11 @@ augroup GUNS
             \ if &omnifunc == "" | setlocal omnifunc=syntaxcomplete#Complete | endif
     endif
 
-    " Open the quickfix window if `quickfixcmd!` returns with errors {{{1
+    " Quickfix / Location List
     autocmd QuickFixCmdPost *
-        \ if !empty(filter(getqflist(), 'get(v:val, "bufnr")')) | cwindow | end
+        \ cwindow | topleft lwindow
+    autocmd FileType qf
+        \ execute 'noremap <buffer> <C-l> :<C-u>call setqflist([]) \| quit<CR>'
 
     " Vimscript {{{1
     autocmd FileType vim
