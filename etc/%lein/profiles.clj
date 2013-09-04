@@ -55,7 +55,7 @@
 
            (require 'clojure.pprint)
 
-           (defmacro debug
+           (defmacro p
              ([& xs]
               `(do (clojure.pprint/pprint
                      (zipmap '~(reverse xs) [~@(reverse xs)]))
@@ -65,8 +65,8 @@
              `(clojure.pprint/pprint
                 ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
-           (defmacro benchmark
-             ([expr] `(benchmark 10 ~expr))
+           (defmacro bm
+             ([expr] `(bm 10 ~expr))
              ([n expr] `(time (dotimes [_# ~n] ~expr))))
 
            (defmacro trace
