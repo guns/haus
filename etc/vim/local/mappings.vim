@@ -420,7 +420,7 @@ Mapall <4-+> :<C-u>TabmoveNext<CR>
 
 " Quickfix, location, preview windows
 Mapall <4-x> :<C-u>ToggleMinorWindows<CR>
-Mapall <4-X> :<C-u>call setloclist(0, getqflist()) \\\| call setqflist([])<CR>
+Mapall <4-X> :<C-u>call setloclist(0, getqflist()) \\\| call setqflist([]) \\\| cclose \\\| topleft lwindow<CR>
 
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
