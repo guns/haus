@@ -539,9 +539,35 @@ class SnippetManager(object):
             self._handle_failure(self.expand_trigger)
 
     @err_to_scratch_buffer
+    def list_snippets_dict(self):
+        before, after = _vim.buf.current_line_splitted
+        snippets = self._snips(before, True)
+
+        # Sort snippets alphabetically
+        snippets.sort(key=lambda x: x.trigger)
+        for snip in snippets:
+            description = snip.description[snip.description.find(snip.trigger) +
+                len(snip.trigger) + 2:]
+
+            key = as_unicode(snip.trigger)
+            description = as_unicode(description)
+
+            #remove surrounding "" or '' in snippet description if it exists
+            if len(description) > 2:
+              if description[0] == description[-1] and description[0] in ['"', "'"]:
+                description = description[1:-1]
+
+            _vim.command(as_unicode("let g:current_ulti_dict['{key}'] = '{val}'").format(
+              key=key.replace("'", "''"), val=description.replace("'", "''")))
+
+    @err_to_scratch_buffer
     def list_snippets(self):
         before, after = _vim.buf.current_line_splitted
         snippets = self._snips(before, True)
+
+        if len(snippets) == 0:
+            self._handle_failure(self.backward_trigger)
+            return True
 
         # Sort snippets alphabetically
         snippets.sort(key=lambda x: x.trigger)
@@ -764,6 +790,8 @@ class SnippetManager(object):
         """
         if trigger.lower() == "<tab>":
             feedkey = "\\" + trigger
+        elif trigger.lower() == "<s-tab>":
+            feedkey = "\\" + trigger
         else:
             feedkey = None
         mode = "n"
@@ -852,6 +880,17 @@ class SnippetManager(object):
             start = Position(_vim.buf.cursor.line, len(text_before))
             end = Position(_vim.buf.cursor.line, len(before))
 
+            # It could be that our trigger contains the content of TextObjects
+            # in our containing snippet. If this is indeed the case, we have to
+            # make sure that those are properly killed. We do this by
+            # pretending that the user deleted and retyped the text that our
+            # trigger matched.
+            edit_actions = [
+                ("D", start.line, start.col, snippet.matched),
+                ("I", start.line, start.col, snippet.matched),
+            ]
+            self._csnippets[0].replay_user_edits(edit_actions)
+
             si = snippet.launch(text_before, self._visual_content,
                     self._cs.find_parent_for_new_to(start), start, end)
         else:
@@ -908,7 +947,10 @@ class SnippetManager(object):
         the filetype.
         """
 
-        snippet_dirs = _vim.eval("g:UltiSnipsSnippetDirectories")
+        if _vim.eval("exists('b:UltiSnipsSnippetDirectories')") == "1":
+            snippet_dirs = _vim.eval("b:UltiSnipsSnippetDirectories")
+        else:
+            snippet_dirs = _vim.eval("g:UltiSnipsSnippetDirectories")
         base_snippets = os.path.realpath(os.path.join(__file__, "../../../UltiSnips"))
         ret = []
 

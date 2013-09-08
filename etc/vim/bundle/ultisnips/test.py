@@ -217,10 +217,17 @@ class _VimTest(unittest.TestCase):
         self.vim.send(s)
 
     def send_py(self,s):
-        if sys.version_info < (3,0):
-            self.send(":py << EOF\n%s\nEOF\n" % s)
-        else:
-            self.send(":py3 << EOF\n%s\nEOF\n" % s)
+        # Do not delete the file so that Vim can safely read it.
+        with tempfile.NamedTemporaryFile(
+            prefix="UltiSnips_Python",suffix=".py", delete=False
+        ) as temporary_file:
+            temporary_file.write(s)
+            temporary_file.close()
+
+            if sys.version_info < (3,0):
+                self.send(":pyfile %s\n" % temporary_file.name)
+            else:
+                self.send(":py3file %s\n" % temporary_file.name)
 
     def send_keystrokes(self,s):
         self.vim.send_keystrokes(s, self.sleeptime)
@@ -1868,6 +1875,27 @@ class RecTabStops_MirroredZeroTS_ECR(_VimTest):
     keys = "m" + EX + "m1" + EX + "one" + JF + "two" + \
             JF + "three" + JF + "four" + JF + "end"
     wanted = "[ [ one three three two ] four ]end"
+class RecTabStops_ChildTriggerContainsParentTextObjects(_PS_Base):
+    # https://bugs.launchpad.net/ultisnips/+bug/1191617
+    snippets_test_file = ("all", "test_file", r"""
+global !p
+def complete(t, opts):
+ if t:
+   opts = [ q[len(t):] for q in opts if q.startswith(t) ]
+ if len(opts) == 0:
+   return ''
+ return opts[0] if len(opts) == 1 else "(" + '|'.join(opts) + ')'
+def autocomplete_options(t, string, attr=None):
+   return complete(t[1], [opt for opt in attr if opt not in string])
+endglobal
+snippet /form_for(.*){([^|]*)/ "form_for html options" rw!
+`!p
+auto = autocomplete_options(t, match.group(2), attr=["id: ", "class: ", "title:  "])
+snip.rv = "form_for" + match.group(1) + "{"`$1`!p if (snip.c != auto) : snip.rv=auto`
+endsnippet
+""")
+    keys = "form_for user, namespace: some_namespace, html: {i" + EX + "i" + EX
+    wanted = "form_for user, namespace: some_namespace, html: {(id: |class: |title:  )d: "
 # End: Recursive (Nested) Snippets  #}}}
 # List Snippets  {{{#
 class _ListAllSnippets(_VimTest):
@@ -2988,6 +3016,42 @@ class DeleteCurrentTabStop3_JumpAround(_VimTest):
     wanted = "hello\nendworld"
 
 # End: Normal mode editing  #}}}
+
+class VerifyVimDict1(_VimTest):
+    """check:
+    correct type (4 means vim dictionary)
+    correct length of dictionary (in this case we have on element if the use same prefix, dictionary should have 1 element)
+    correct description (including the apostrophe)
+    if the prefix is mismatched no resulting dict should have 0 elements
+    """
+
+    snippets = ('testâ', 'abc123ά', '123\'êabc')
+    keys = ('test=(type(UltiSnips_SnippetsInCurrentScope()) . len(UltiSnips_SnippetsInCurrentScope()) . ' +
+       'UltiSnips_SnippetsInCurrentScope()["testâ"]' + ')\n' +
+       '=len(UltiSnips_SnippetsInCurrentScope())\n')
+
+    wanted = 'test41123\'êabc0'
+
+class VerifyVimDict2(_VimTest):
+    """check:
+    can use " in trigger
+    """
+
+    snippets = ('te"stâ', 'abc123ά', '123êabc')
+    akey = "'te{}stâ'".format('"')
+    keys = ('te"=(UltiSnips_SnippetsInCurrentScope()[{}]'.format(akey) + ')\n')
+    wanted = 'te"123êabc'
+
+class VerifyVimDict3(_VimTest):
+    """check:
+    can use ' in trigger
+    """
+
+    snippets = ("te'stâ", 'abc123ά', '123êabc')
+    akey = '"te{}stâ"'.format("'")
+    keys = ("te'=(UltiSnips_SnippetsInCurrentScope()[{}]".format(akey) + ')\n')
+    wanted = "te'123êabc"
+
 ###########################################################################
 #                               END OF TEST                               #
 ###########################################################################
