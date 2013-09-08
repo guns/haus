@@ -1,22 +1,26 @@
-### PREPROCESSOR ###
+### PREPROCESSOR
+
+snippet once "#pragma once" b
+#pragma once
+#ifndef $1
+#define ${1:_`!v toupper(substitute(expand("%:t:r"), '\v[^A-Za-z0-9_]', '_', 'g'))`_}
+$0
+#endif
+endsnippet
 
 snippet def "#define" b
 #define $0
 endsnippet
 
-snippet once "#pragma once" b
-#pragma once
-endsnippet
-
-snippet Def "#ifndef … #define … #endif" b
-#ifndef ${1/([A-Za-z0-9_]+).*/$1/}
-#define ${1:SYMBOL}
-$0
+snippet ifdef "#ifdef" b
+#ifdef ${1:SYMBOL}
 #endif
 endsnippet
 
-snippet ifdef "#ifdef" b
-#ifdef ${1:SYMBOL}
+snippet ifndef "#ifndef … #define … #endif" b
+#ifndef ${1/([A-Za-z0-9_]+).*/$1/}
+#define ${1:SYMBOL}
+$0
 #endif
 endsnippet
 
@@ -28,8 +32,7 @@ snippet Inc "#include" b
 #include "${2:${1:`!p snip.rv = snip.basename`}.h}"
 endsnippet
 
-
-### DECLARATIONS ###
+### DECLARATIONS
 
 snippet main "int main(int argc, char const **argv)" b
 int main(int argc, char const **argv)
@@ -48,66 +51,61 @@ int main(void)
 endsnippet
 
 snippet f "Function" b
-${1:type} ${2:function}($3)
+${1:type fn}($2)
 {
 	$0
 }
 endsnippet
 
 snippet fd "Function declaration" b
-${1:type} ${2:function}($3);
+${1:type fn}($0);
 endsnippet
 
 snippet td "typedef" b
-typedef ${1:int} ${2:MyCustomType};
+typedef ${1:int} ${2:CustomType};
 endsnippet
 
-snippet st "struct" b
+snippet S "struct" w
 struct $0
 endsnippet
 
-snippet tds "typedef struct" b
-typedef struct {
-	$0
-} ${1:`!p snip.rv = (snip.basename or "name") + "_t"`};
+snippet E "enum" w
+enum $0
 endsnippet
 
-snippet tde "typedef enum" b
-typedef enum {
-	$0
-} ${1:`!p snip.rv = (snip.basename or "name") + "_e"`};
-endsnippet
-
-snippet u "unsigned" w
-unsigned $0
-endsnippet
-
-snippet c "char" w
+snippet C "char" w
 char $0
+endsnippet
+
+snippet I "int" w
+int $0
+endsnippet
+
+snippet L "long" w
+long $0
+endsnippet
+
+snippet V "void" w
+void $0
+endsnippet
+
+snippet U "unsigned" w
+unsigned $0
 endsnippet
 
 snippet co "const" w
 const $0
 endsnippet
 
-snippet l "long" w
-long $0
-endsnippet
-
-snippet d "double" w
+snippet D "double" w
 double $0
 endsnippet
 
-snippet v "void" w
-void $0
-endsnippet
-
-snippet siz "size_t" w
+snippet st "size_t" w
 size_t $0
 endsnippet
 
-
-### CONDITIONALS ###
+### CONDITIONALS
 
 snippet if "if" w
 if ($1)
@@ -136,10 +134,9 @@ case $1:
 	break;
 endsnippet
 
+### LOOPS
 
-### LOOPS ###
-
-snippet for "for loop"
+snippet for "for loop" w
 for (${1:i} = 0; $1 < ${2:count}; ${3:++$1})
 endsnippet
 
@@ -147,18 +144,17 @@ snippet for- "reverse for loop" w
 for (${1:i} = ${2:count}; $1 >= 0; ${3:--$1})
 endsnippet
 
-snippet wh "while loop" b
-while ($1)
+snippet wh "while loop" w
+while ($0)
 endsnippet
 
-snippet do "do {} while" b
+snippet do "do {} while" w
 do {
 	$0
 } while ($1);
 endsnippet
 
-
-### STATEMENTS ###
+### STATEMENTS
 
 snippet r "return" w
 return $1;
@@ -169,7 +165,7 @@ printf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\)
 endsnippet
 
 snippet prv "var" w
-printf("${1:var}: ${2:\"%s\"}\n", ${0:$1});
+printf("${1:var}: ${2:<%s>}\n", ${0:$1});
 endsnippet
 
 snippet fpr "fprintf" w
@@ -186,7 +182,7 @@ fprintf(_f, "$0");
 fclose(_f);
 endsnippet
 
-snippet si "sizeof" w
+snippet so "sizeof" w
 sizeof($0)
 endsnippet
 
