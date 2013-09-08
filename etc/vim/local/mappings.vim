@@ -549,7 +549,7 @@ noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
 noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
 " Plugin: vim-easy-align
-nnoremap <Leader>a vip:EasyAlign<CR>
+nnoremap <Leader>a m`vip:EasyAlign<CR>
 vnoremap <Leader>a :EasyAlign<CR>
 
 " Plugin: NrrwRgn
