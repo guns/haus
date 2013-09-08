@@ -311,15 +311,15 @@
    (bindswitch "W-S-Tab" "PreviousWindow")
 
    ;; Subtle-esque window tiling
-   (bindtile "W-C-s" {:x "center" :y "center" :width "95%" :height "95%"} "east" "west" "north" "south")
-   (bindtile "W-C-a" {:x "5%"     :y "0"      :width "45%" :height "95%"} "west" "south" {:y "center"})
-   (bindtile "W-C-d" {:x "50%"    :y "0"      :width "45%" :height "95%"} "east" "south" {:y "center"})
-   (bindtile "W-C-w" {:x "0"      :y "5%"     :width "95%" :height "45%"} "east" "north" {:x "center"})
-   (bindtile "W-C-x" {:x "0"      :y "50%"    :width "95%" :height "45%"} "east" "south" {:x "center"})
-   (bindtile "W-C-q" {:x "5%"     :y "5%"     :width "45%" :height "45%"} "west" "north")
-   (bindtile "W-C-e" {:x "50%"    :y "5%"     :width "45%" :height "45%"} "east" "north")
-   (bindtile "W-C-z" {:x "5%"     :y "50%"    :width "45%" :height "45%"} "west" "south")
-   (bindtile "W-C-c" {:x "50%"    :y "50%"    :width "45%" :height "45%"} "east" "south")])
+   (bindtile "W-C-s" {:x "center" :y "0"   :width "66%" :height "95%"} "south")
+   (bindtile "W-C-a" {:x "5%"     :y "0"   :width "45%" :height "95%"} "west" "south" {:y "center"})
+   (bindtile "W-C-d" {:x "50%"    :y "0"   :width "45%" :height "95%"} "east" "south" {:y "center"})
+   (bindtile "W-C-w" {:x "0"      :y "5%"  :width "95%" :height "45%"} "east" "north" {:x "center"})
+   (bindtile "W-C-x" {:x "0"      :y "50%" :width "95%" :height "45%"} "east" "south" {:x "center"})
+   (bindtile "W-C-q" {:x "5%"     :y "5%"  :width "45%" :height "45%"} "west" "north")
+   (bindtile "W-C-e" {:x "50%"    :y "5%"  :width "45%" :height "45%"} "east" "north")
+   (bindtile "W-C-z" {:x "5%"     :y "50%" :width "45%" :height "45%"} "west" "south")
+   (bindtile "W-C-c" {:x "50%"    :y "50%" :width "45%" :height "45%"} "east" "south")])
 
 (def config-mouse
   [:mouse
