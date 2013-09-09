@@ -276,6 +276,7 @@
    (bindsh "W-F2" "thunar ~/Downloads")
    (bindfocus "F9" "guns ❦ EVA")
    (bindfocus "W-F9" "root ❦ EVA")
+   (bindfocus "A-F9" "urxvt" "urxvt-client")
    ; (bindfocus "F10" "Vimperator" "exec firefox") ; Kupfer trigger
    ; (bindfocus "W-F10" "Chromium" "exec chromium") ; Kupfer trigger
    (bindfocus "W-A-F10" "♻ podbeuter ♻"
