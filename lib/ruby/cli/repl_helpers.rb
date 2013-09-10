@@ -61,9 +61,8 @@ module CLI
             def inspect
               hex = '%x' % self
               hex = '0' + hex unless hex.length.even?
-              bin = '%08b' % self
-              bin = ('0' * (4 - (bin.length % 4))) + bin unless (bin.length % 4).zero?
-              '%d 0%0o 0x%s (%s)' % [self, self, hex, bin.scan(/\d{4}/).join(' ')]
+              bin = '%04b' % self
+              '%d 0%0o 0x%s (%s)' % [self, self, hex, bin.reverse.scan(/\d{1,4}/).join(' ').reverse]
             end
           else
             remove_method :inspect

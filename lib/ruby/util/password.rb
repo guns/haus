@@ -11,7 +11,7 @@ module Util
     extend self
 
     PASSWORD_LENGTH = 60
-    ASCII = (0x20..0x7e).map &:chr # Printable characters only
+    ASCII = (0x21..0x7e).map &:chr # Printable non-whitespace characters
     ALPHA = ASCII.grep /[a-zA-Z0-9]/
 
     # Open a file and stream it to a block, `bit_len` bits at a time. This is
@@ -37,14 +37,19 @@ module Util
     #   1921: 011110000001
     #
     def stream source, bit_len = 8
-      buf = ''
+      buf = len = 0
       File.open source, 'r' do |f|
         loop do
-          chr = f.getc
-          break if chr.nil?
-          # Using a BitSet here would be less wasteful than using chars
-          buf << '%08b' % chr.unpack('C') until buf.length >= bit_len
-          yield buf.slice!(0, bit_len).to_i(2)
+          until len > bit_len
+            byte = f.getbyte
+            raise 'Source reached EOF' if byte.nil?
+            len += 8
+            buf <<= 8
+            buf |= byte
+          end
+          yield (buf >> (len - bit_len))
+          len -= bit_len
+          buf &= ~(~0 << len)
         end
       end
     end
