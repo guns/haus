@@ -51,6 +51,7 @@ macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
 macro index,pager    gi <change-folder>=INBOX<Enter>
 macro index,pager    ga <change-folder>=ARCHIVE<Enter>
+macro index,pager    gs <change-folder>=self/[Gmail].Spam<Enter>
 macro index,pager    \' "<enter-command>source ~/.mutt/muttrc.mailboxes.self<enter><change-folder>?<toggle-mailboxes>"
 macro index,pager    \" "<enter-command>source ~/.mutt/muttrc.mailboxes.local<enter><change-folder>?<toggle-mailboxes>"
 bind  browser        \' exit
