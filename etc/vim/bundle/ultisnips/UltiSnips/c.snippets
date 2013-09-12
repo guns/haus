@@ -51,7 +51,7 @@ int main(void)
 endsnippet
 
 snippet f "Function" b
-${1:type fn}($2)
+${1:type} ${2:fn}($3)
 {
 	$0
 }
@@ -75,6 +75,10 @@ endsnippet
 
 snippet C "char" w
 char $0
+endsnippet
+
+snippet CC "char const" w
+char const $0
 endsnippet
 
 snippet I "int" w
