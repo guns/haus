@@ -96,7 +96,6 @@ augroup GUNS
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
         \ setlocal synmaxcol=500 iskeyword+=- |
-        \ SparkupBufferSetup |
         \ SetWhitespace 2 8
 
     " HAML/SASS/YAML {{{1
