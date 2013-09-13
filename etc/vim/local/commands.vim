@@ -265,44 +265,61 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
+endfunction
 
-    vmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
-    nmap <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>(sexp_outer_list)``
-    imap <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
+command! -bar ClojureBufferSetup call <SID>ClojureBufferSetup() "{{{1
+function! s:ClojureBufferSetup()
+    LispBufferSetup
 
-    nmap <silent><buffer> <Leader>X        <Plug>FireplacePrint<Plug>(sexp_outer_top_list)``
-    imap <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
+    vmap     <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
+    nmap     <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>(sexp_outer_list)``
+    imap     <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
 
-    nmap <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>(sexp_inner_element)``
-    imap <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
+    nmap     <silent><buffer> <Leader>X        <Plug>FireplacePrint<Plug>(sexp_outer_top_list)``
+    imap     <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
 
-    nmap <silent><buffer> <Leader>r        :Require<CR>
-    nmap <silent><buffer> <Leader>R        :Require!<CR>
+    nmap     <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>(sexp_inner_element)``
+    imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
-    nnoremap <silent><buffer> <LocalLeader>l  :Last<CR>
-    nnoremap <silent><buffer> <LocalLeader>p  :call <SID>ClojurePprint('*1')<CR>
-    nnoremap <silent><buffer> <LocalLeader>e  :call <SID>ClojurePprint('*e')<CR>
-    nnoremap <silent><buffer> <LocalLeader>st :silent call fireplace#session_eval('(clojure.stacktrace/print-stack-trace *e)') \| Last<CR>
-    nnoremap <silent><buffer> <LocalLeader>cs :call <SID>ClojureCheatSheet('.')<CR>
-    nnoremap <silent><buffer> <LocalLeader>cS :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
-    nnoremap <silent><buffer> <LocalLeader>cp :call <SID>ClojureClassPath()<CR>
-    nnoremap <silent><buffer> <LocalLeader>m1 :call <SID>ClojureMacroexpand(0)<CR>
-    nnoremap <silent><buffer> <LocalLeader>me :call <SID>ClojureMacroexpand(1)<CR>
-    nnoremap <silent><buffer> <LocalLeader>mE :call <SID>ClojureMacroexpand(2)<CR>
-    nnoremap <silent><buffer> <LocalLeader>rt :call <SID>ClojureRunTests(0)<CR>
-    nnoremap <silent><buffer> <LocalLeader>rT :call <SID>ClojureRunTests(1)<CR>
-    nnoremap <silent><buffer> <LocalLeader>sh :call <SID>ClojureSlamHound(expand('%'))<CR>
-    nnoremap <silent><buffer> <LocalLeader>ts :call <SID>ClojureTypeScaffold()<CR>
+    nnoremap <silent><buffer> <Leader>r        :Require<CR>
+    nnoremap <silent><buffer> <Leader>R        :Require!<CR>
+    nnoremap <silent><buffer> <LocalLeader>R   :call <SID>ClojureNamespaceRefresh<CR>
+    nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
+    nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
+    nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
+    nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
+    nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
+    nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp  :call <SID>ClojureClassPath()<CR>
+    nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>
+    nnoremap <silent><buffer> <LocalLeader>me  :call <SID>ClojureMacroexpand(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>mE  :call <SID>ClojureMacroexpand(2)<CR>
+    nnoremap <silent><buffer> <LocalLeader>rt  :call <SID>ClojureRunTests(0)<CR>
+    nnoremap <silent><buffer> <LocalLeader>rT  :call <SID>ClojureRunTests(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
+    nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
+    nnoremap <silent><buffer> <LocalLeader>tw  :call <SID>ClojureToggleWarnings()<CR>
+endfunction
+
+function! s:ClojureNamespaceRefresh()
+    call fireplace#session_eval("(do (require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh))")
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#session_eval('(do (clojure.core/require (quote clojure.pprint)) (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
+    silent call fireplace#session_eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
     Sscratch
     setfiletype clojure
     execute "normal! gg\"_dGVPG\"_dd"
+    wincmd L
+endfunction
+
+function! s:ClojureStackTrace()
+    silent call fireplace#session_eval('(clojure.stacktrace/print-stack-trace *e)')
+    Last
+    wincmd L
 endfunction
 
 function! s:ClojureCheatSheet(pattern)
@@ -345,7 +362,9 @@ function! s:ClojureCheatSheet(pattern)
 endfunction
 
 function! s:ClojureClassPath()
-    call fireplace#session_eval('(doseq [u (seq (.getURLs (java.lang.ClassLoader/getSystemClassLoader)))] (println (.getPath u)))')
+    call fireplace#session_eval(
+        \   '(doseq [u (seq (.getURLs ^java.net.URLClassLoader (ClassLoader/getSystemClassLoader)))]'
+        \ . '  (println (.getPath ^java.net.URL u)))')
 endfunction
 
 function! s:ClojureMacroexpand(once)
@@ -380,9 +399,9 @@ function! s:ClojureSlamHound(file)
         return 1
     endif
     call fireplace#session_eval(
-        \   '(clojure.core/require (quote slam.hound) (quote clojure.pprint))'
+        \   '(clojure.core/require (quote slam.hound))'
         \ . '(let [file (clojure.java.io/file "' . a:file . '")]'
-        \ . '  (binding [clojure.pprint/*print-right-margin* ' . &textwidth . ']'
+        \ . '  (binding [clojure.pprint/*print-right-margin* ' . (&textwidth + 1) . ']'
         \ . '    (slam.hound/swap-in-reconstructed-ns-form file)))'
         \ )
     edit
@@ -418,6 +437,13 @@ function! s:ClojureTypeScaffold()
         normal! gg"_dG"rPdd
         let [@e, @r] = reg_save
     endtry
+endfunction
+
+function! s:ClojureToggleWarnings()
+    call fireplace#session_eval(
+        \   '(do (set! *warn-on-reflection* (not *warn-on-reflection*))'
+        \ . '    (prn {(quote *warn-on-reflection*) *warn-on-reflection*}))'
+        \ )
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1

@@ -22,7 +22,8 @@
 {:user {:plugins [[lein-exec "0.3.1"]
                   [lein-kibit "0.0.8"]
                   [lein-ancient "0.4.4"]]
-        :dependencies [[org.clojure/tools.trace "0.7.6"]
+        :dependencies [[org.clojure/tools.namespace "0.2.4"]
+                       [org.clojure/tools.trace "0.7.6"]
                        [slamhound "1.4.0"]]
         :aliases {"RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]}
@@ -73,7 +74,7 @@
            (defmacro trace
              ([expr] `(trace *ns* ~expr))
              ([nspace expr]
-              (require 'clojure.tools.trace)
-              `(try (clojure.tools.trace/trace-ns ~nspace)
+              `(try (require 'clojure.tools.trace)
+                    (clojure.tools.trace/trace-ns ~nspace)
                     ~expr
                     (finally (clojure.tools.trace/untrace-ns ~nspace))))))}}}

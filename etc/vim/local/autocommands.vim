@@ -56,14 +56,12 @@ augroup GUNS
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Lisp {{{1
-    autocmd BufRead,BufNewFile *.el
-        \ setlocal filetype=lisp
-    autocmd FileType emacs-lisp
-        \ setlocal filetype=lisp
     autocmd BufRead,BufNewFile *.cljx
         \ setlocal filetype=clojure
-    autocmd Filetype lisp,scheme,clojure
+    autocmd Filetype lisp,scheme
         \ LispBufferSetup
+    autocmd Filetype clojure
+        \ ClojureBufferSetup
 
     " Ruby {{{1
     autocmd BufRead,BufNewFile *irbrc,*pryrc,config.ru,Gemfile
