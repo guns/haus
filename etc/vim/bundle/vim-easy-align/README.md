@@ -13,7 +13,7 @@ Demo
 Features
 --------
 
-- Makes the common case easy
+- Easy to use
   - Comes with a predefined set of alignment rules
   - Provides a fast and intuitive interface
 - Extensible
@@ -22,12 +22,20 @@ Features
 - Optimized for code editing
   - Takes advantage of syntax highlighting feature to avoid unwanted alignments
 
+### _"I already have a similar one. Should I switch?"_
+
+Maybe. See [related work](https://github.com/junegunn/vim-easy-align#related-work) section.
+
 Installation
 ------------
 
 Either [download zip file](http://www.vim.org/scripts/script.php?script_id=4520)
-and extract in ~/.vim or use [Vundle](https://github.com/gmarik/vundle) (recommended)
-or [Pathogen](https://github.com/tpope/vim-pathogen).
+and extract in ~/.vim or
+[use](https://github.com/tpope/vim-pathogen)
+[your](https://github.com/gmarik/vundle)
+[favorite](https://github.com/junegunn/vim-plug)
+[plugin](https://github.com/Shougo/neobundle.vim)
+[manager](https://github.com/MarcWeber/vim-addon-manager).
 
 ### With Vundle
 
@@ -109,6 +117,8 @@ You can override these default rules or define your own rules with
 | `<Enter><Enter>**=` | Right-left alternating alignment around all equals signs | `:'<,'>EasyAlign!**=` |
 | ...                 | ...                                                      |                       |
 
+---
+
 ### *Intermission*
 
 You can stop reading here. Trust me. All the fancy features described in the
@@ -116,6 +126,8 @@ following sections are really powerful but you won't be needing them in most
 of the cases.
 
 Go try out vim-easy-align right now, and come back later when you feel like it.
+
+---
 
 ### Non-interactive mode
 
@@ -579,6 +591,9 @@ For the simplest cases, Tabular and Align are also easy to use. But sooner or
 later, you will find yourself scratching your head, trying to come up with some
 complex regular expressions.
 
+_"How am I going to align the third to the last word in each line to the right
+without affecting the ones before it?"_
+
 ### Clean
 
 vim-easy-align doesn't clutter your workspace with mappings and global
@@ -591,8 +606,8 @@ vim-easy-align by default performs syntax-aware alignment, which is invaluable
 when editing codes.
 
 Try to come up with a regular expression to correctly format the following code
-snippet. With vim-easy-align under default configuration, it can be done with
-just two keystrokes: `<Enter>:`
+snippet. With vim-easy-align under default configuration and a mapping, it can
+be done with just two keystrokes: `<Enter>:`
 
 ```javascript
 var jdbc = {
