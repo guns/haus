@@ -780,7 +780,7 @@ function! s:readable_calculate_file_type() dict abort
     let r = "db-migration"
   elseif f=~ '\<db/schema\.rb$'
     let r = "db-schema"
-  elseif f =~ '\.rake$' || f =~ '\<\%(Rake\|Cap\)file$' || f =~ '\<config/deploy\.rb$'
+  elseif f =~ '\.rake$' || f =~ '\<\%(Rake\|Cap\)file$' || f =~ '\<config/deploy\.rb$' || f =~ '\<config/deploy/.*\.rb$'
     let r = "task"
   elseif f =~ '\<log/.*\.log$'
     let r = "log"
@@ -915,7 +915,7 @@ function! s:app_start_rails_command(cmd, ...) dict abort
         \ }, title, title)
   call s:push_chdir(1)
   try
-    if exists(':Start')
+    if exists(':Start') == 2
       exe 'Start'.(a:0 && a:1 ? '!' : '').' -title=rails\ '.title.' '.cmd
     elseif has("win32")
       exe "!start ".cmd
@@ -1013,7 +1013,7 @@ function! s:Log(bang,arg)
     exe "cgetfile ".lf
     clast
   else
-    if exists(":Tail")
+    if exists(":Tail") == 2
       Tail  `=rails#app().path(lf)`
     else
       pedit `=rails#app().path(lf)`
@@ -1165,7 +1165,7 @@ let g:rails#rake_errorformat = '%D(in\ %f),'
       \.'%m\ [%f:%l]:'
 
 function! s:make(bang, args, ...)
-  if exists(':Make')
+  if exists(':Make') == 2
     exe 'Make'.(a:bang ? '! ' : ' ').a:args
   else
     exe 'make! '.a:args
@@ -1216,7 +1216,6 @@ function! s:Rake(bang,lnum,arg)
     let withrubyargs = '-r ./config/boot -r '.s:rquote(self.path('config/environment')).' -e "puts \%((in \#{Dir.getwd}))" '
     if arg =~# '^notes\>'
       let &l:errorformat = '%-P%f:,\ \ *\ [%*[\ ]%l]\ [%t%*[^]]] %m,\ \ *\ [%*[\ ]%l] %m,%-Q'
-      exe 'make! '.arg
       call s:make(a:bang, arg)
     elseif arg =~# '^\%(stats\|routes\|secret\|time:zones\|db:\%(charset\|collation\|fixtures:identify\>.*\|migrate:status\|version\)\)\%([: ]\|$\)'
       let &l:errorformat = '%D(in\ %f),%+G%.%#'
@@ -1341,7 +1340,7 @@ function! s:readable_default_rake_task(...) dict abort
     let line = getline(mnum)
     " We can't grab the namespace so only run tasks at the start of the line
     if line =~# '^\%(task\|file\)\>'
-      return self.last_method(a:lnum)
+      return self.last_method(lnum)
     else
       return matchstr(self.getline(1),'\C# rake \zs.*')
     endif
@@ -1387,9 +1386,9 @@ function! s:readable_default_rake_task(...) dict abort
           let opts = ' TESTOPTS=-n'.method
         endif
       endif
-      if test =~# '^test/unit\>'
+      if test =~# '^test/\%(unit\|models\)\>'
         return 'test:units TEST='.s:rquote(test).opts
-      elseif test =~# '^test/functional\>'
+      elseif test =~# '^test/\%(functional\|controllers\)\>'
         return 'test:functionals TEST='.s:rquote(test).opts
       elseif test =~# '^test/integration\>'
         return 'test:integration TEST='.s:rquote(test).opts
@@ -1419,7 +1418,7 @@ call s:add_methods('readable', ['test_file_candidates', 'test_file', 'default_ra
 " Preview {{{1
 
 function! s:initOpenURL()
-  if !exists(":OpenURL")
+  if !exists(":OpenURL") == 2
     if has("gui_mac") || has("gui_macvim") || exists("$SECURITYSESSIONID")
       command -bar -nargs=1 OpenURL :!open <args>
     elseif has("gui_win32")
@@ -1539,7 +1538,7 @@ function! s:Preview(bang, lnum, uri) abort
     let uri = 'http://'.binding.'/'.s:sub(uri,'^/','')
   endif
   call s:initOpenURL()
-  if exists(':OpenURL') && !a:bang
+  if (exists(':OpenURL') == 2) && !a:bang
     exe 'OpenURL '.uri
   else
     " Work around bug where URLs ending in / get handled as FTP
@@ -1764,7 +1763,7 @@ function! s:app_server_command(bang,arg) dict
       return
     endif
   endif
-  if exists(':Start') || has('win32')
+  if (exists(':Start') == 2) || has('win32')
     call self.start_rails_command('server '.a:arg, 1)
   else
     call self.execute_rails_command('server '.a:arg.' -d')
@@ -3666,7 +3665,7 @@ function! s:BufSyntax()
         syn keyword rubyRailsControllerMethod helper helper_attr helper_method filter layout url_for serialize exempt_from_layout filter_parameter_logging hide_action cache_sweeper protect_from_forgery caches_page cache_page caches_action expire_page expire_action rescue_from
         syn keyword rubyRailsRenderMethod head redirect_to render_to_string respond_with
         syn match   rubyRailsRenderMethod '\<respond_to\>?\@!'
-        syn keyword rubyRailsFilterMethod before_filter append_before_filter prepend_before_filter after_filter append_after_filter prepend_after_filter around_filter append_around_filter prepend_around_filter skip_before_filter skip_after_filter skip_filter
+        syn keyword rubyRailsFilterMethod before_filter append_before_filter prepend_before_filter after_filter append_after_filter prepend_after_filter around_filter append_around_filter prepend_around_filter skip_before_filter skip_after_filter skip_filter before_action append_before_action prepend_before_action after_action append_after_action prepend_after_action around_action append_around_action prepend_around_action skip_before_action skip_after_action skip_action
         syn keyword rubyRailsFilterMethod verify
       endif
       if buffer.type_name('db-migration','db-schema')
@@ -4481,7 +4480,7 @@ function! s:BufSettings()
       call self.setvar('surround_69',  "\1expr: \1\rend")
       call self.setvar('surround_101', "\r\nend")
     endif
-    if exists(':UltiSnipsAddFiletypes')
+    if exists(':UltiSnipsAddFiletypes') == 2
       UltiSnipsAddFiletypes rails
     endif
   elseif ft =~# 'yaml\>' || fnamemodify(self.name(),':e') ==# 'yml'
