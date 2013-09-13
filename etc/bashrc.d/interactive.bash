@@ -1290,6 +1290,8 @@ ALIAS py='python'
 
 # Leiningen, Clojure package manager
 HAVE lein && {
+    alias lein='run cert exec -f ~/.certificates/leiningen.crt lein'
+
     # alias leine=
     # alias leing=
     alias leini='run lein install'
