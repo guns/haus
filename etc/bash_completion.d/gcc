@@ -27,6 +27,9 @@ _gcc()
         *77)
             backend=f771
             ;;
+        *95)
+            backend=f951
+            ;;
         *)
             backend=cc1 # (near-)universal backend
             ;;
@@ -45,10 +48,20 @@ _gcc()
         _filedir
     fi
 } &&
-complete -F _gcc gcc g++ g77 gcj gpc &&
+complete -F _gcc gcc g++ gfortran g77 g95 gcj gpc &&
 {
-    cc  --version 2>/dev/null | grep -q GCC && complete -F _gcc cc  || :
-    c++ --version 2>/dev/null | grep -q GCC && complete -F _gcc c++ || :
+    cc  --version 2>/dev/null | grep -q GCC || \
+        [[ $( _realcommand cc ) == *gcc* ]] && \
+        complete -F _gcc cc  || complete -F _minimal cc
+    c++ --version 2>/dev/null | grep -q GCC || \
+        [[ $( _realcommand c++ ) == *g++* ]] && \
+        complete -F _gcc c++ || complete -F _minimal c++
+    f77 --version 2>/dev/null | grep -q GCC || \
+        [[ $( _realcommand f77 ) == *gfortran* ]] && \
+        complete -F _gcc f77 || complete -F _minimal f77
+    f95 --version 2>/dev/null | grep -q GCC || \
+        [[ $( _realcommand f95 ) == *gfortran* ]] && \
+        complete -F _gcc f95 || complete -F _minimal f95
 }
 
 # ex: ts=4 sw=4 et filetype=sh
