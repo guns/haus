@@ -1,0 +1,63 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+
+class Pltoggle
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.plutil ||= %x(/bin/sh -c 'command -v plutil').chomp
+    options.format ||= 'xml1'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 12 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Toggle Apple property lists between binary and plain text format.
+        Converts files in place.
+
+        Usage: #{File.basename __FILE__} file ...
+
+        Options:
+      BANNER
+
+      opt.on '-j', '--json', 'Convert to and from JSON format instead of xml' do
+        options.format = 'json'
+      end
+    end
+  end
+
+  def typeof file
+    case File.read file, 6
+    when 'bplist' then 'binary1'
+    when '<?xml ' then 'xml1'
+    when /\A\{"/  then 'json'
+    else raise 'Unknown plist format'
+    end
+  end
+
+  def convert file, type
+    system options.plutil, '-convert', type, file or raise "Conversion to #{type} failed!"
+  end
+
+  def toggle file
+    type = typeof(file) == 'binary1' ? options.format : 'binary1'
+    convert file, type
+    type
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    args.each { |f| puts '%s → %s' % [f, toggle(f)] }
+  end
+end
+
+$0 = File.basename(__FILE__) and Pltoggle.new.run ARGV if $0 == __FILE__

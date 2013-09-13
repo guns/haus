@@ -1,0 +1,253 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+require 'yaml'
+require 'rubygems' # Ruby 1.8 compat
+require 'plist'
+require 'util/directed_graph'
+
+class Macdriver
+  # Aliases for some important driver classes. Returns key if no alias exists.
+  HARDWARE_ALIASES = Hash.new { |h,k| h.has_key?(k) ? h.fetch(k) : k }.merge \
+    'cd'          => 'com.apple.iokit.IOCDStorageFamily',
+    'usb'         => 'com.apple.iokit.IOUSBFamily',
+    'audio'       => 'com.apple.iokit.IOHDAFamily',
+    'firewire'    => 'com.apple.iokit.IOFireWireFamily',
+    'bluetooth'   => 'com.apple.iokit.IOBluetoothFamily',
+    'thunderbolt' => 'com.apple.iokit.IOThunderboltFamily'
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.jobs       ||= 4
+    options.cache_file ||= "/tmp/#{self.class.to_s.downcase}-cache.yaml"
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Query, graph, load, and unload kernel extensions. Kexts can be
+        specified either by bundle identifier, or by an alias:
+
+            #{HARDWARE_ALIASES.keys.join ', '}
+
+        Note that kext load state can be restored by sending SIGHUP to the
+        `kextd` process.
+
+        If you wish to invoke #{File.basename __FILE__} on login (to unload the bluetooth
+        drivers in this example), create a launchd.plist(5) with:
+
+            #{File.basename __FILE__} launchd unload bluetooth > /Library/LaunchDaemons/com.sungpae.macdriver.plist
+
+        Usage: #{File.basename __FILE__} [options] [command [args]]
+
+        Commands:
+            unload kext [...]        Unload kexts and all descendents
+            load kext [...]          Load kext along with dependencies
+            list                     Show all kexts, topologically sorted
+            ancestors kext [...]     Show topologically sorted list of kext dependencies
+            descendents kext [...]   Show topologically sorted list of kext descendents
+            launchd command [args]   Print a launchd.plist(5) for the given command and arguments to stdout
+
+        Options:
+      BANNER
+
+      opt.on '-r A,B,C', Array, 'Use directories as kext repositories' do |arg|
+        options.repositories = arg
+      end
+
+      opt.on '-f', '--cache-file PATH', 'Path to kext graph cache file; default: %s' % options.cache_file do |arg|
+        options.cache_file = arg
+      end
+
+      opt.on '-j', '--jobs N', Integer, 'Number of threads for plist parsing; %d by default' % options.jobs do |arg|
+        options.jobs = arg
+      end
+
+      opt.on '-o', '--output[=PATH]', 'When displaying ancestors/descendents, write the graph of dependencies to PATH, using graphviz' do |arg|
+        options.output = arg || true
+      end
+    end
+  end
+
+  # Returns list of [kext-id, dependency-ids]
+  def kextlist
+    plists = Dir['{/System,}/Library/Extensions/**/*.kext/Contents/Info.plist']
+    len,  vec,  idx  = plists.length, [], -1
+    jobs, pool, lock = options.jobs,  [], Mutex.new
+
+    # Threaded parsing of system kexts; ~35% speedup over single thread with
+    # empty disk cache, and 100% more fun!
+    jobs.times do |n|
+      pool << Thread.new do
+        loop do
+          i = lock.synchronize { idx += 1 }
+          break if i >= len
+          id, deps = Plist.parse_xml(plists[i]).values_at 'CFBundleIdentifier', 'OSBundleLibraries'
+          vec[i] = [id, (deps || {}).keys]
+        end
+      end
+    end
+
+    # `kextstat` shows all loaded kexts, including those not found in the
+    # System "Extension" directories (kernel components, for example)
+    kstat = kextstat
+
+    pool.each &:join
+    Hash[vec].merge kstat
+  end
+
+  def kextstat
+    @kextstat ||= begin
+      lines, by_idx, names = %x(kextstat -l).lines, {}, {}
+
+      # `kextstat` output reports dependencies by index instead of bundle id
+      lines.each do |l|
+        i, name   = l.split.values_at 0, 5
+        deps      = l[/<(.*)>$/, 1] || ''
+        by_idx[i] = [name, deps.split]
+      end
+
+      # Now we can convert indices into names
+      by_idx.each do |idx, (name, deps)|
+        names[name] = deps.map { |i| by_idx[i][0] }
+      end
+
+      names
+    end
+  end
+
+  # Create and persist kext graph or load from cache
+  def graph
+    @graph ||= begin
+      if options.reload or not File.exists? options.cache_file
+        dg = Util::DirectedGraph.new kextlist
+        File.open(options.cache_file, 'w', 0644) { |f| f.puts dg.to_yaml }
+        dg
+      else
+        YAML.load_file options.cache_file
+      end
+    end
+  end
+
+  def descendents *ids
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :out }.inject &:+
+  end
+
+  def ancestors *ids
+    ids.map { |id| graph.subgraph HARDWARE_ALIASES[id], :in  }.inject(&:+).reverse
+  end
+
+  def loaded? id
+    kextstat.has_key? HARDWARE_ALIASES[id]
+  end
+
+  def sh *args
+    puts '-> %s' % args.join(' ')
+    system *args
+  end
+
+  def kextunload id
+    3.times do |n|
+      sleep n
+      return true if sh 'kextunload', '-b', id
+    end
+    nil
+  end
+
+  def kextload id
+    if options.repositories
+      sh 'kextload', *options.repositories.map { |r| ['-r', r] }.flatten, '-b', id
+    else
+      sh 'kextload', '-b', id
+    end
+  end
+
+  def unload *ids
+    success = true
+    ids.each do |id|
+      descendents(id).tsort.select { |id| loaded? id }.each do |id|
+        kextunload id or success = false
+      end
+    end
+    success
+  end
+
+  def load *ids
+    success = true
+    ids.each do |id|
+      ancestors(id).tsort.reject { |id| loaded? id }.reverse_each do |id|
+        kextload id or success = false
+      end
+    end
+    success
+  end
+
+  def summarize dg = graph
+    dg.levels.map do |n, names|
+      names.map do |nym|
+        line = '%d: %s' % [n, nym]
+        if loaded? nym
+          line << ' (LOADED)'
+          line = "\e[32;1m%s\e[0m" % line if $stdout.tty?
+        end
+        line
+      end.join "\n"
+    end.join "\n"
+  end
+
+  def show type, ids = nil
+    case options.output
+    when String
+      send(type, *ids).output File.extname(options.output).delete('.').intern => options.output
+    when true
+      send(type, *ids).output
+    else
+      if type == :graph
+        puts summarize
+      else
+        ids.each do |id|
+          puts "-*- #{type.to_s.capitalize} of #{HARDWARE_ALIASES[id]} -*-"
+          puts summarize(send type, id)
+        end
+      end
+    end
+  end
+
+  # Return a property list as a string of a launchd.plist(5) that runs
+  # `macdriver` with the given arguments at load.
+  def launchd *args
+    ruby = File.join RbConfig::CONFIG.values_at('bindir', 'ruby_install_name')
+    env = ['/usr/bin/env', 'RUBYLIB=%s' % ENV['RUBYLIB']]
+    cmd = [ruby, '-Eutf-8', '--', File.expand_path(__FILE__)]
+    Plist::Emit.dump \
+      :Label            => 'com.sungpae.macdriver',
+      :RunAtLoad        => true,
+      :ProgramArguments => env + cmd + args
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    case args.first
+    when 'unload'      then unload *args.drop(1)
+    when 'load'        then load *args.drop(1)
+    when 'list'        then show :graph
+    when 'ancestors'   then show :ancestors, args.drop(1)
+    when 'descendents' then show :descendents, args.drop(1)
+    when 'launchd'     then puts launchd(*args.drop(1))
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Macdriver.new.run ARGV if $0 == __FILE__

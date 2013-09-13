@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'util/notification'
+
+class Notify
+  attr_reader :notifier
+
+  def initialize opts = {}
+    @notifier = Util::Notification.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [msg]
+
+        Options:
+      BANNER
+
+      opt.on '-t', '--title TITLE', 'Title for notification, if applicable' do |arg|
+        notifier.title = arg
+      end
+
+      opt.on '-s', '--sticky', 'Set notification to sticky, if applicable' do
+        notifier.sticky = true
+      end
+
+      opt.on '-a', '--audio=[FILE]', 'Play given audio file instead of speaking message' do |arg|
+        notifier.audio = arg || File.expand_path('~/.sounds/message-received.mp3')
+      end
+    end
+  end
+
+  def run arguments = []
+    msg = parser.parse(arguments).join ' '
+    notifier.message = msg == '-' ? $stdin.read : (msg.empty? ? 'Attention' : msg)
+    notifier.call
+  end
+end
+
+$0 = File.basename(__FILE__) and Notify.new.run ARGV if $0 == __FILE__

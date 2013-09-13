@@ -1,0 +1,153 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'json'
+require 'httparty'
+require 'nokogiri'
+
+class Weather # {{{1
+  class GoogleWeather # {{{2
+    attr_reader :raw, :data, :location, :info, :current, :forecast
+
+    def initialize loc, days = nil
+      @location = loc
+      @raw      = HTTParty.get('http://www.google.com/ig/api', :query => { :weather => location })['xml_api_reply']['weather']
+      @data     = rekey raw
+      @info     = data['forecast_information']
+      @current  = data['current_conditions']
+      @forecast = data['forecast_conditions']
+    end
+
+    def rekey hash
+      Hash[hash.map do |key, val|
+        [key, case val
+              when Hash  then val.keys == ['data'] ? val['data'] : rekey(val) # Recurse!
+              when Array then val.map { |v| rekey v } # Recurse!
+              else val
+              end]
+      end]
+    end
+
+    def condition str
+      case str
+      when /sunny|clear/i    then '☀ '
+      when /cloud|overcast/i then '☁ '
+      when /fog/i            then '░ '
+      when /rain|showers/i   then '☔ '
+      when /storm/i          then '☈ '
+      when /hail/i           then '☄ '
+      when /snow/i           then '❄ '
+      else ''
+      end + str
+    end
+
+    def to_s days = nil
+      return 'No forecast available for %s' % location.inspect if info.nil?
+
+      lines, cell = [], '%-26s'
+
+      # Current conditions
+      lines[0] = cell % info['city']
+      lines[1] = cell % current['wind_condition']
+      lines[2] = cell % "Current:  #{current['temp_f']}°F"
+      lines[3] = cell % current['humidity']
+      lines[4] = cell % condition(current['condition'])
+
+      # Upcoming
+      forecast.take(days || forecast.count).each do |f|
+        lines[1] << cell % f['day_of_week']
+        lines[2] << cell % "High: #{f['high']}°F"
+        lines[3] << cell % "Low:  #{f['low']}°F"
+        lines[4] << cell % condition(f['condition'])
+      end
+
+      lines.map(&:rstrip).join "\n"
+    end
+  end
+
+  class CheckIP # {{{2
+    attr_reader :data
+
+    def initialize
+      html  = Nokogiri::HTML HTTParty.get('http://www.checkip.org/').to_s
+      @data = Hash[html.css('#feature-list li').map { |n| n.children.text.split(':').map &:strip }]
+    end
+
+    def to_s
+      data.values_at('City', 'State', 'Country').compact.join ' '
+    end
+  end # }}}
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [location]
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--days N', Integer, 'Number of days to show' do |arg|
+        options.days = arg
+      end
+
+      opt.on '-j', '--json', 'Dump source data as JSON' do
+        options.json = true
+      end
+    end
+  end
+
+  def report location = nil
+    GoogleWeather.new location || current_location
+  end
+
+  def current_location
+    CheckIP.new.to_s
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    rep = report args.empty? ? nil : args.join(' ')
+    puts options.json ? rep.raw.to_json : rep.to_s(options.days)
+  end
+end
+
+if $0 == __FILE__ # {{{1
+  # Google Weather returns ISO-8859-1, but is marked as either ASCII-8BIT or
+  # UTF-8. Parsing libraries seem to expect UTF-8, so we coerce our input.
+  if defined? Encoding
+    if defined? Crack
+      Crack::XML.singleton_class.class_eval do
+        alias_method :__parse__, :parse
+
+        def parse xml
+          __parse__ xml.force_encoding('iso-8859-1').encode 'utf-8'
+        end
+      end
+    end
+
+    if defined? MultiXml
+      MultiXml.singleton_class.class_eval do
+        alias_method :__parse__, :parse
+
+        def parse xml, options = {}
+          __parse__ xml.force_encoding('iso-8859-1').encode('utf-8'), options
+        end
+      end
+    end
+  end
+
+  $0 = File.basename __FILE__
+  Weather.new.run ARGV
+end

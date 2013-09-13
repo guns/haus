@@ -1,0 +1,2 @@
+unmailboxes *
+mailboxes `ruby -r shellwords -e 'puts Dir[File.expand_path("~/Mail/.search/*")].map(&:shellescape).join(" ")'`

@@ -1,0 +1,23 @@
+
+#   _____ _____ _____ ___
+#  |   __|_   _|  |  |_  |
+#  |  |  | | | |    -|  _|
+#  |_____| |_| |__|__|___|
+#
+#  guns <self@sungpae.com>
+#
+
+# Use emacs keybindings in text fields
+gtk-key-theme-name = "Emacs"
+
+# Allow keyboard shortcut rebinding
+gtk-can-change-accels = 1
+
+# Theming
+gtk-theme-name = "ArchSimple"
+gtk-font-name = "Segoe UI 10"
+gtk-icon-theme-name = "elementary"
+# gtk-cursor-theme-name = ""
+
+# Misc options
+gtk-recent-files-max-age = 0

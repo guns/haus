@@ -1,0 +1,14 @@
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+task :default => :update
+
+desc "Update from DrChip's home page"
+task :update do
+  url = 'http://www.drchip.org/astronaut/vim/vbafiles/manpageview.vba.gz'
+  msg = "Update from #{url}"
+
+  sh %Q(curl -L# #{url.shellescape} | gzip -cd | vim -c 'execute "UseVimball ." | quit!' -)
+  sh "git add . && git commit --author 'Charles Campbell <drchip@campbellfamily.biz>' -m #{msg.shellescape}"
+end

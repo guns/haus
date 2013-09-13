@@ -1,0 +1,11 @@
+[Unit]
+Description=Backlight permissions toggle
+
+[Service]
+Type=oneshot
+ExecStart=<%= path 'hwctl' %> backlight-permissions 0664 root power
+ExecStop=<%= path 'hwctl' %> backlight-permissions 0644 root root
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

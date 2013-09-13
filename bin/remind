@@ -1,0 +1,194 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'time' # Time.parse
+require 'util/notification'
+
+class Remind
+  class Alarm
+    def initialize time, opts = {}
+      self.time         = time
+      self.notification = opts[:command] || opts
+    end
+
+    attr_reader :time, :notification
+
+    def time= arg
+      @time = case arg
+      when /:|am\z|pm\z/
+        parse arg
+      when /\A@/
+        parse (arg =~ /:|am\z|pm\z/ ? arg : arg + ':00').sub(/\A@/, '')
+      else
+        # Add one second so `1m` does not return `59 seconds`
+        Time.now.localtime + seconds(arg) + 1
+      end
+    end
+
+    def notification= arg
+      @notification = case arg
+      when String then lambda { system arg }
+      when Hash   then Util::Notification.new arg
+      else             arg
+      end
+    end
+
+    def parse str
+      time  = Time.parse(str).localtime
+      time += 24 * 60 * 60 if time < Time.now # Add a day if necessary
+      time
+    end
+
+    def seconds str
+      str.scan(/(\d+(?:\.\d+)?)(\D*)/).inject 0.0 do |sum, (num, unit)|
+        sum + case unit
+        when 'D','d'    then num.to_f * 24 * 60 * 60
+        when 'H','h'    then num.to_f * 60 * 60
+        when 'M','m','' then num.to_f * 60 # default unit
+        when 'S','s'    then num.to_f
+        else raise ArgumentError, 'Invalid time format'
+        end
+      end.round
+    end
+
+    def remaining format = nil
+      seconds = (time - Time.now).to_i
+      seconds = 0 if seconds < 0
+
+      h = seconds / 3600
+      m = (seconds % 3600) / 60
+      s = seconds % 60
+
+      case format
+      when :compact
+        '%02d:%02d:%02d' % [h,m,s]
+      when :verbose
+        ary = []
+        ary << "#{h} hour#{'s' if h > 1}"   if h > 0
+        ary << "#{m} minute#{'s' if m > 1}" if m > 0
+        ary << "#{s} second#{'s' if s > 1}" if s > 0
+
+        case ary.size
+        when 0 then 'zero seconds'
+        when 1 then ary.first
+        when 2 then '%s and %s' % ary
+        when 3 then '%s, %s, and %s' % ary
+        end
+      else
+        [h,m,s]
+      end
+    end
+
+    def expired?
+      Time.now > time
+    end
+
+    def activate
+      # Report time remaining on SIGUSR1
+      trap :USR1 do
+        s = remaining.reject(&:zero?).last == 1 ? 's' : ''
+        Util::Notification.new(
+          :message => '%s remain%s' % [remaining(:verbose), s],
+          :title   => (notification.message if notification.is_a? Util::Notification)
+        ).call
+      end
+
+      process_name = $0.clone
+      label = "#{File.basename __FILE__} %s"
+
+      loop do
+        break if expired?
+        $0 = label % remaining(:compact)
+        sleep 1
+      end
+
+      notification.call
+    ensure
+      trap :USR1, 'default'
+      $0 = process_name
+    end
+  end
+
+  attr_reader :alarm
+
+  def initialize time = (Time.now + 300).to_s, opts = {}
+    @alarm = Alarm.new time, {
+      :title  => 'Reminder',
+      :sticky => true
+    }.merge(opts)
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      program = File.basename __FILE__
+
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Usage: #{program} [options] time [msg]
+
+        Time can be specified as the time FROM now:
+
+            #{program} 1h30m5s  Ninety minutes and five seconds have passed.
+            #{program} 1h5s     One hour and five seconds have passed.
+            #{program} 5        'Five minutes have passed; minutes are the default unit'
+
+        A leading @ sign, a colon, or a trailing am|pm triggers clock time parsing:
+
+            #{program} @10      It is now ten in the morning.
+            #{program} 10:00    It is now ten in the morning.
+            #{program} 10pm     It is now ten in the evening.
+            #{program} 22:00    It is now ten in the evening.
+
+        Specifying message as `-` reads the message from STDIN:
+
+            #{program} 5 - < dramatic-reading.txt
+
+        Options:
+      BANNER
+
+      opt.on '-c', '--command STRING', 'Command to run in place of a notification' do |arg|
+        alarm.notification = arg
+      end
+
+      opt.on '-q', '--query', 'Send SIGUSR1 to all instances of remind' do
+        query
+        exit
+      end
+
+      opt.on '-t', '--terminate', 'Send SIGTERM to all instances of remind' do
+        query :TERM
+        exit
+      end
+    end
+  end
+
+  def query signal = :USR1
+    %x(ps axo pid,args).lines.each do |line|
+      pid, comm = line.strip.split /\s+/, 2
+      next unless comm =~ /\Aremind \d{2}:\d{2}:\d{2}\z/
+      Process.kill signal, pid.to_i
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    alarm.time = args.first
+
+    if args.size > 1 and alarm.notification.is_a? Util::Notification
+      alarm.notification.message = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
+    end
+
+    pid = fork { alarm.activate }
+    puts "[#{pid}] Reminding in #{alarm.remaining :verbose}"
+    Process.detach pid
+  end
+end
+
+$0 = File.basename(__FILE__) and Remind.new.run ARGV if $0 == __FILE__

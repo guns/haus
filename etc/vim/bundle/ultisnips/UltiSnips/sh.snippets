@@ -1,0 +1,128 @@
+### BASH ###
+
+snippet #! "#!/usr/bin/env bash" b
+#!/usr/bin/env bash
+
+endsnippet
+
+snippet if "if"
+if ${1:[[ $2 ]]}; then
+	$0
+fi
+endsnippet
+
+snippet elif "elif"
+elif ${1:[[ $2 ]]}; then
+	$0
+endsnippet
+
+snippet for "for loop"
+for ((${1:i} = 0; $1 < ${2:count}; ${3:++$1})); do
+	$0
+done
+endsnippet
+
+snippet for- "reverse for loop" w
+for ((${1:i} = ${2:count}; $1 >= 0; ${3:--$1})); do
+	$0
+done
+endsnippet
+
+snippet forin "for in loop"
+for ${1:var} in ${2:"\$@"}; do
+	$0
+done
+endsnippet
+
+snippet wh "while loop"
+while ${1:[[ $2 ]]}; do
+	$0
+done
+endsnippet
+
+snippet un "until loop"
+until ${1:[[ $2 ]]}; do
+	$0
+done
+endsnippet
+
+snippet case "case"
+case ${1:word} in
+${2:pat}) $0;;
+esac
+endsnippet
+
+snippet r "return"
+return $0
+endsnippet
+
+snippet l "local"
+local $0
+endsnippet
+
+snippet t "[[ ]]"
+[[ $1 ]]
+endsnippet
+
+snippet o "echo"
+echo $0
+endsnippet
+
+snippet p "printf %s" w
+printf "%s" $0
+endsnippet
+
+snippet o2 "echo >&2" w
+echo $0 >&2
+endsnippet
+
+snippet wrld "while read line; do" w
+while read ${1:line}; do
+	$0
+done
+endsnippet
+
+snippet $ "$()"
+$($1)
+endsnippet
+
+snippet $( "$(())"
+endsnippet
+
+snippet f "function"
+${1:function}() {$0}
+endsnippet
+
+snippet tp "type" w
+type $1 ${2:&>/dev/null}
+endsnippet
+
+snippet cv "command -v"
+command -v $0
+endsnippet
+
+snippet getopts "getopts"
+${1:local OPTIND OPTARG opt
+}while getopts :${2:flags} ${3:opt}; do
+	case \$$3 in
+	${4:flag}) $0;;
+	esac
+done
+shift $((OPTIND-1))
+endsnippet
+
+snippet getargs "getargs"
+while ((\$#)); do
+	local ${1:arg}="\$1"
+	$0
+	shift
+done
+endsnippet
+
+snippet post-receive "git post-receive hook" w
+read _a _b branch
+if [[ "$branch" == */${1:development} && $(git symbolic-ref HEAD) == */${2:production} ]]; then
+	cd ..
+	env -i git merge --no-ff --stat --log -m "Merge branch '$1' into master" $1
+fi
+endsnippet

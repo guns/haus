@@ -1,0 +1,1 @@
+ACTION=="add" SUBSYSTEM=="input" ATTRS{name}=="Lite-On Technology Corp. USB Keyboard" RUN+="keymap $name lenovo-K4803"

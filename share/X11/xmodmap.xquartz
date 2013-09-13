@@ -1,0 +1,24 @@
+
+!  ____  ___
+!  \   \/  /  ._ _  _  _|._ _  _.._
+!   \     /   | | |(_)(_|| | |(_||_)
+!   /     \                      |
+!  /___/\  \  guns <self@sungpae.com>
+!        \_/
+
+clear Mod1
+clear Mod4
+
+! Cross-wire the modifiers
+!
+!   Command: L(63), R(71)
+!   Option:  L(66), R(69)
+!
+keycode 63 = Alt_L
+keycode 71 = Alt_R
+keycode 66 = Meta_L
+keycode 69 = Meta_R
+
+! And reset the Mod mappings
+add Mod1 = Meta_L Meta_R
+add Mod4 = Alt_L Alt_R

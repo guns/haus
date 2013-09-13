@@ -1,0 +1,27 @@
+
+!  ____  ___
+!  \   \/  /  ._ _  _  _|._ _  _.._
+!   \     /   | | |(_)(_|| | |(_||_)
+!   /     \                      |
+!  /___/\  \  guns <self@sungpae.com>
+!        \_/
+
+clear Mod1
+clear Mod4
+clear Lock
+
+! Caps Lock as Control
+keycode 66 = Control_L
+add Control = Control_L
+
+! Enter as Alt (old macbooks)
+keycode 104 = Alt_R
+
+! Use Option key as Alt
+add Mod1 = Alt_L Alt_R
+
+! Use Command key as Mod4
+add Mod4 = Super_L Super_R
+
+! Natural scrolling (like OS X Lion)
+pointer = 1 2 3 5 4 7 6 8 9 10 11 12

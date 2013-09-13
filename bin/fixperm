@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'find'
+require 'haus/logger'
+require 'haus/ls_colors'
+
+class Fixperm
+  include Haus::Loggable
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options        = OpenStruct.new opts
+    options.umask ||= File.umask
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Change mode of files to match the current umask (typically 0022).
+        Skips symbolic links.
+
+        *Be careful*
+
+        Usage: #{File.basename __FILE__} [options] path ...
+
+        Options:
+      BANNER
+
+      opt.on '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
+        options.umask = arg.to_i 8
+      end
+
+      opt.on '-r', '--recurse', 'Recurse into directories' do
+        options.recurse = true
+      end
+
+      opt.on '-n', '--noop', 'Only show what would happen' do
+        options.noop = true
+      end
+    end
+  end
+
+  def normalize files
+    (options.recurse ? files.map { |f| Find.find(f).to_a }.flatten : files).each do |f|
+      stat = File.stat f
+      mode = if stat.ftype == 'directory' or File.basename(File.dirname File.expand_path(f)) =~ /\As?bin\z/
+        (0777 & ~options.umask)
+      else
+        (0666 & ~options.umask)
+      end
+
+      next if stat.ftype == 'link' or (stat.mode & 0777) == mode
+
+      log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [f, Haus::LSColors[f]]
+      File.chmod mode, f unless options.noop
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    normalize args
+  end
+end
+
+$0 = File.basename(__FILE__) and Fixperm.new.run ARGV if __FILE__ == $0

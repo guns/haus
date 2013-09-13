@@ -1,0 +1,9 @@
+[Unit]
+Description=Send SIGHUP to gpg-agent processes on suspend
+
+[Service]
+Type=oneshot
+ExecStart=<%= path 'killall' %> -HUP gpg-agent
+
+[Install]
+WantedBy=sleep.target

@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+require 'set'
+require 'haus/queue'
+
+class Lninstall
+  attr_reader :options, :queue
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    @queue   = Haus::Queue.new options
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Link the program executables, man pages, and init scripts of an
+        installation to another directory tree. Also works in reverse.
+
+        For instance:
+
+            #{File.basename __FILE__} /opt/bash /usr/local
+
+        is functionally equivalent to:
+
+            mkdir -p /usr/local/bin /usr/local/share/man/man1
+            ln -s /opt/bash/bin/bash /usr/local/bin/bash
+            ln -s /opt/bash/share/man/man1/bash.1 /usr/local/share/man/man1/bash.1
+
+        Usage: #{File.basename __FILE__} [options] src dst
+
+        Options:
+      BANNER
+
+      opt.on '-l', '--libs', 'Also link header files and libraries' do
+        options.libs = true
+      end
+
+      opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
+        queue.options.relative = true
+      end
+
+      opt.on '-f', '--force', 'Overwrite all files without prompting' do
+        queue.options.force = true
+      end
+
+      opt.on '-n', '--noop', 'Make no changes, but show what would have been done' do
+        queue.options.noop = true
+      end
+
+      opt.on '-q', '--quiet', 'Produce no output' do
+        queue.options.quiet = true
+      end
+
+      opt.on '-u', '--uninstall', 'Unlink files in `dst` that link to corresponding files in `src`' do
+        options.uninstall = true
+      end
+    end
+  end
+
+  attr_writer :src, :dst
+
+  def src
+    File.expand_path options.src rescue nil
+  end
+
+  def dst
+    File.expand_path options.dst rescue nil
+  end
+
+  def program_files base
+    Set.new Dir[*%W[
+      #{base}/{,s}bin/*
+      #{base}/share/man/**/*
+      #{base}/lib/systemd/**/*
+      #{base}/etc/{rc.d,init.d}/*
+    ]]
+  end
+
+  def library_files base
+    Set.new Dir[*%W[
+      #{base}/include/**/*
+      #{base}/lib/**/*
+    ]]
+  end
+
+  def source_files base
+    fs = program_files base
+    fs.merge library_files(base) if options.libs or options.uninstall
+    fs
+  end
+
+  def src_files
+    @src_files ||= source_files(src).select do |f|
+      File.file? f or File.symlink? f
+    end
+  end
+
+  # Returns a list of all files in dst that link to files in src;
+  # the files returned may have different basenames than their sources
+  def dst_files
+    @dst_files ||= source_files(dst).select do |f|
+      File.symlink? f and src_files.include? File.readlink(f)
+    end
+  end
+
+  def install
+    src_files.each do |f|
+      queue.add_link f, f.sub(%r{\A#{src}(.*)}, dst + '\1')
+    end
+
+    queue.execute
+  end
+
+  def uninstall
+    dst_files.each do |f|
+      queue.add_deletion f
+    end
+
+    if queue.execute
+      dst_files.map { |f| File.dirname f }.uniq.each do |d|
+        FileUtils.rmdir d if Dir.entries(d).reject { |e| e == '.' || e == '..' }.empty?
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 2
+
+    options.src, options.dst = args
+    options.uninstall ? uninstall : install
+  end
+end
+
+$0 = File.basename(__FILE__) and Lninstall.new.run ARGV if $0 == __FILE__

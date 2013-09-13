@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'cli/meter'
+
+class Mem # {{{1
+  class Graph # {{{2
+    attr_accessor :width, :mem, :swap
+
+    def initialize width = nil
+      @width = width
+    end
+
+    def to_s
+      len = ([mem.total, swap.total].max.to_s.length * 2) + 1
+      [
+        CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values,  mem.total,  :width => width).to_s,
+        CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
+      ].join "\n"
+    end
+  end # }}}2
+
+  class DarwinGraph < Graph # {{{2
+    def initialize *args
+      super
+
+      # Memory usage from vm_stat
+      stat = %x(vm_stat)
+      page = (stat[/page size of (\d+) bytes/, 1] || 4096).to_i
+      @mem = OpenStruct.new Hash[stat.scan(/^Pages (.*):\s+(\d+)\.$/).map do |key, val|
+        [key.gsub(/\W+/, '_'), ((val.to_f * page) / 2**20).round]
+      end]
+
+      # OS X 10.6+ has a `speculative` field
+      mem.speculative ||= 0
+      mem.total = mem.wired_down + mem.active + mem.inactive + mem.speculative + mem.free
+      mem.values = [
+        [mem.wired_down,  :green, :bold],
+        [mem.active,      :green],
+        [mem.inactive,    :yellow],
+        [mem.speculative, :magenta]
+      ]
+
+      # Swap usage from sysctl
+      @swap = OpenStruct.new Hash[%x(sysctl vm.swapusage).scan(/(total|used|free)\s*=\s*(\d+(?:\.\d+)?)/).map do |key, val|
+        [key, val.to_f.round]
+      end]
+
+      swap.values = [[swap.used, :red]]
+    end
+  end # }}}2
+
+  class LinuxGraph < Graph # {{{2
+    def initialize *args
+      super
+
+      # Parse free(1) since the output of /proc/meminfo seems to be volatile
+      free = %x(free -b).split "\n"
+      keys = free.first.split
+      scan = lambda { |r| Hash[keys.zip free.find { |l| l =~ r }.scan(/\d+/).map { |n| (n.to_f / (2**20)).round }] }
+
+      @mem = OpenStruct.new scan.call(/\AMem/i)
+      mem.active = mem.used - mem.buffers - mem.cached
+      mem.values = [
+        [mem.active,  :green, :bold],
+        [mem.buffers, :yellow],
+        [mem.cached,  :magenta]
+      ]
+      mem.total ||= 0
+
+      @swap        = OpenStruct.new scan.call(/\ASwap/i)
+      swap.values  = [[swap.used, :red]]
+      swap.total ||= 0
+    end
+  end # }}}2
+
+  attr_reader :options, :graph
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    @graph   = case RUBY_PLATFORM
+    when /darwin/i then DarwinGraph.new options.width
+    when /linux/i  then LinuxGraph.new options.width
+    else raise 'OS X and Linux only'
+    end
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Show RAM and swap usage. OS X and Linux.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-w', '--width COLUMNS', Integer, 'Set output to given width' do |arg|
+        graph.width = arg
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    puts graph.to_s
+  end
+end
+
+$0 = File.basename(__FILE__) and Mem.new.run ARGV if $0 == __FILE__

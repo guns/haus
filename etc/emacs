@@ -1,0 +1,36 @@
+;; http://emacswiki.org/emacs/Evil
+(add-to-list 'load-path "~/.emacs.d/evil")
+
+;; Paredit.el
+(add-to-list 'load-path "~/.emacs.d/paredit")
+(autoload 'enable-paredit-mode "paredit"
+  "Turn on pseudo-structural editing of Lisp code."
+  t)
+
+;; Switch between minor modes
+(if (getenv "PAREDIT")
+  (progn
+    (add-hook 'emacs-lisp-mode-hook       'enable-paredit-mode)
+    (add-hook 'lisp-mode-hook             'enable-paredit-mode)
+    (add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+    (add-hook 'scheme-mode-hook           'enable-paredit-mode))
+  (progn
+    (require 'evil)
+    (evil-mode 1)))
+
+;; Text editing
+(setq require-final-newline t)
+
+;; User interface
+(setq inhibit-splash-screen t)
+(setq initial-scratch-message nil)
+(setq ring-bell-function 'ignore)
+(xterm-mouse-mode 1)
+(line-number-mode 1)
+(column-number-mode 1)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+
+;; Some bindings
+(global-set-key (kbd "\C-x ;") 'help)

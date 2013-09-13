@@ -1,0 +1,297 @@
+
+"  __     ___
+"  \ \   / (_)_ __ ___
+"   \ \ / /| | '_ ` _ \   Ftw
+"    \ V / | | | | | | |
+"     \_/  |_|_| |_| |_|  guns <self@sungpae.com>
+"
+
+""" INITIALIZE {{{1
+
+" Clear all autocommands
+autocmd!
+
+" Load plugins via Pathogen
+call pathogen#infect()
+filetype plugin indent on
+
+" Global dictionary of available features
+let g:__FEATURES__ = {
+    \ "par": !empty(system("/bin/sh -c 'command -v par'")),
+    \ "ag": !empty(system("/bin/sh -c 'command -v ag'"))
+\ }
+
+" Load commands and functions; no side effects from sourcing
+source ~/.vim/local/commands.vim
+
+""" USER INTERFACE {{{1
+
+" Meta
+set history=1023                " Default command history = 20
+set tags^=./.tags,.tags         " Read hidden .tags files
+
+" Temporary files
+if !isdirectory(expand('~/.cache/vim/undo'))
+    call mkdir(expand('~/.cache/vim/undo'), 'p', 0700)
+endif
+if isdirectory(expand('~/.cache/vim'))
+    set directory=~/.cache/vim
+    set viminfo+=n~/.cache/vim/viminfo
+    let g:netrw_home = expand('~/.cache/vim')
+endif
+if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
+    set undofile
+    set undodir=~/.cache/vim/undo
+endif
+
+" Dictionaries, etc
+if !isdirectory(expand('~/.local/share/vim'))
+    call mkdir(expand('~/.local/share/vim'), 'p', 0700)
+endif
+
+" Searching / Matching
+set nohlsearch                  " Don't highlight matching patterns
+set incsearch                   " Highlight as we search
+set ignorecase                  " Set case insensitivity
+set smartcase                   " Unless there's a capital letter
+
+" Line wrapping
+set nowrap                      " Don't wrap lines
+set linebreak                   " But if you do, break on words
+set showbreak=…                 " And give us a nice visual indicator
+
+" Completions
+set wildmode=list:longest       " Bash style command line completion
+set wildignore+=.git            " Filename ignore globs
+set wildignore+=*.swp,*.swo
+set wildignore+=*.o,*.jpg,*.jpeg,*.png,*.gif,*.tif,*.tiff
+set wildignore+=*.class
+set wildignore+=.DS_Store,Thumbs.db
+set wildignore+=public/images/**
+if exists('&wildignorecase')
+    set wildignorecase          " Case insensitive file completion on command line
+endif
+set dictionary+=/usr/share/dict/words
+set spellfile=~/.local/share/vim/spell.utf8.add
+set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
+
+" Folding
+set foldmethod=marker           " Default to vim's marker folding
+set foldlevelstart=99           " But don't fold anything on load
+set foldtext=getline(v:foldstart)
+
+" Gutter / Status line
+set nonumber                    " No line numbers
+set ruler                       " Show current position at bottom
+set showcmd                     " Show (partial) command in status line
+
+" Messages
+set report=0                    " Report back on all changes
+set shortmess=aoOstTAI          " Shorten all messages, except for "written"
+
+" Clipboard
+set clipboard=unnamed           " Use X11 PRIMARY clipboard (selection) only
+
+" Timeouts
+set notimeout ttimeout          " Wait for mappings, but timeout on key codes
+
+" Cursor behavior
+set nostartofline               " Leave my cursor position alone!
+
+" Display
+set lazyredraw                  " Don't redraw while in macros
+set visualbell t_vb=            " No bells, please
+set listchars=tab:⇥\ ,trail:·
+set fillchars=fold:\ ,diff:╳,vert:│
+
+" Initialize syntax plugin and choose a colorscheme
+source ~/.vim/local/syntax.vim
+
+""" TEXT EDITING {{{1
+
+" c  Autowrap comments to textwidth
+" r  Autoinsert comment leader with <Enter>
+" q  Allow formatting of comments with :gq
+" l  Don't format already long lines
+" n  Recognize numbered lists
+" 1  Don't break a line after a 1-letter word
+set formatoptions=crqln1
+
+" Indenting / Tabs
+set autoindent                  " Set the cursor at same indent as line above
+set copyindent                  " Use existing indents for new indents
+set shiftround                  " Always round indents to multiple of shiftwidth
+set expandtab                   " Expand <Tab>s with spaces; death to tabs!
+
+" Global textwidth and tabstops
+SetTextwidth! 78                " Width of a standard mail message
+SetWhitespace! 4 8              " Old C mixed-spaces-and-tabs style
+
+" Joining lines
+set nojoinspaces                " Never join lines with two spaces
+
+" Key behavior
+set backspace=2                 " Familiar backspace behavior
+
+""" GLOBAL VARIABLES {{{1
+
+let g:__NAMED_KEYCODES__ = {
+    \ ' ': 'Space',
+    \ '\': 'Bslash',
+    \ '|': 'Bar',
+    \ '<': 'lt'
+\ }
+
+" Set default arguments to par
+if g:__FEATURES__['par']
+    let $PARINIT = 'B=_A_a.,?'
+endif
+
+" Bash
+let g:is_bash = 1
+let g:readline_has_bash = 1
+let g:sh_minlines = 1000
+
+" Ruby
+let g:ruby_operators = 1
+
+" Vim
+let g:vim_indent_cont = 4
+let g:vimsyn_folding = 'afmpPrt'
+
+" Javadoc
+let g:java_css = 1
+let g:java_javascript = 1
+let g:java_vb = 1
+
+" TeX
+let g:tex_fold_enabled = 1
+
+" SQL
+let g:omni_sql_no_default_maps = 1
+
+" Plugin: vim-clojure-static
+let g:clojure_align_multiline_strings = 1
+let g:clojure_fuzzy_indent_patterns = ['^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^fn']
+
+" Plugin: NERDTree
+let g:NERDTreeBookmarksFile = expand('~/.cache/vim/NERDTreeBookmarks')
+let g:NERDChristmasTree = 1
+let g:NERDTreeChDirMode = 2
+let g:NERDTreeDirArrows = 1
+let g:NERDTreeMinimalUI = 1
+let g:NERDTreeMouseMode = 2
+let g:NERDTreeQuitOnOpen = 0
+let g:NERDTreeShowHidden = 1
+let g:NERDTreeSortOrder = []
+let g:NERDTreeHijackNetrw = 0
+
+" Plugin: NERDCommenter
+let g:NERDSpaceDelims = 1
+let g:NERDMenuMode = 0
+
+" Plugin: delimitMate (expand <CR> breaks undo/redo)
+let g:delimitMate_excluded_regions = 'Comment,String'
+
+" Plugin: Gundo.vim
+let g:gundo_preview_bottom = 1
+let g:gundo_right = 1
+let g:gundo_width = 30
+let g:gundo_auto_preview = 0
+
+" Plugin: ScreenShell
+let g:ScreenImpl = 'Tmux'
+
+" Plugin: UltiSnips
+let g:UltiSnipsEditSplit = 'vertical'
+let g:UltiSnipsSnippetsDir = '~/.vim/bundle/ultisnips/UltiSnips'
+let g:UltiSnipsListSnippets = '<4-`>'
+let g:UltiSnipsExpandTrigger = '<Tab>'
+let g:UltiSnipsJumpForwardTrigger = '<Tab>'
+let g:UltiSnipsJumpBackwardTrigger = '<S-Tab>'
+
+" Plugin: Tagbar
+let g:tagbar_autofocus = 1
+let g:tagbar_autoshowtag = 1
+let g:tagbar_compact = 1
+let g:tagbar_sort = 0
+
+" Plugin: NrrwRgn
+let g:nrrw_rgn_vert = 1
+let g:nrrw_rgn_wdth = 160
+
+" Plugin: Regbuf
+let g:regbuf_open_command = 'vnew'
+let g:regbuf_edit_open_command = '80vnew'
+
+" Plugin: Org
+let g:org_home = '~/Documents/Org'
+let g:org_agenda_files = [g:org_home . '/TODO.org']
+
+" Plugin: rainbow_parentheses.vim
+let g:rbpt_colorpairs = [
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [235, '#1c1c1c'],
+    \ [236, '#303030'],
+    \ [237, '#3a3a3a'],
+    \ [238, '#444444'],
+    \ [239, '#4e4e4e'],
+    \ [240, '#585858'],
+    \ [241, '#606060'],
+    \ [242, '#666666'],
+    \ [243, '#767676'],
+    \ [244, '#808080'],
+    \ [245, '#8a8a8a']]
+let g:rbpt_max = len(g:rbpt_colorpairs)
+
+" Plugin: splitjoin.vim
+let g:splitjoin_split_mapping = ''
+let g:splitjoin_join_mapping = ''
+
+" Plugin: Ack.vim
+if g:__FEATURES__['ag']
+    let g:ackprg = 'ag --nogroup --nocolor --column'
+endif
+
+" Plugin: Unite.vim
+let g:unite_enable_start_insert = 1
+let g:unite_data_directory = expand('~/.cache/vim/unite')
+call unite#filters#matcher_default#use(['matcher_fuzzy'])
+call unite#filters#sorter_default#use(['sorter_rank'])
+
+""" MAPPINGS and AUTOCOMMANDS {{{1
+
+" Set modifiers and load modifier mapping functions
+source ~/.vim/local/modifiers.vim
+
+" Main mappings file
+source ~/.vim/local/mappings.vim
+
+" Autocommands
+source ~/.vim/local/autocommands.vim
+
+""" TERMINAL and GUI SETTINGS {{{1
+
+if has('gui_running')
+    source ~/.vim/local/gvimrc.vim
+else
+    source ~/.vim/local/tty.vim
+endif

@@ -1,0 +1,11 @@
+[Unit]
+Description=Move sensitive user files to temporary directories
+
+[Service]
+Type=oneshot
+ExecStart=<%= path 'usertmpfiles' %> -u root,guns
+ExecStop=<%= path 'usertmpfiles' %> -u root,guns
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

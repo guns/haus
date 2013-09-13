@@ -1,0 +1,18 @@
+#   __
+#  |  |--.-----.
+#  |     |  _  |
+#  |__|__|___  |  guns <self@sungpae.com>
+#        |_____|
+
+[ui]
+username = guns <self@sungpae.com>
+verbose  = true
+
+[extensions]
+color =
+fetch =
+graphlog =
+hgk =
+progress =
+purge =
+record =

@@ -1,0 +1,51 @@
+# -*- encoding: utf-8 -*-
+
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+task :default => :configure
+
+desc 'Configure Ruby'
+task :configure do
+  system 'autoconf' unless File.executable? 'configure'
+
+  ENV['CFLAGS'] ||= ''
+
+  cmd = %w[./configure]
+
+  # Prefer /opt/ruby/x.x PREFIX
+  if ENV['PREFIX']
+    cmd << '--prefix=' + ENV['PREFIX']
+  else
+    ver = File.read('version.h')[/RUBY_VERSION\W*(\d\.\d\.\d)/, 1].split '.'
+    if ver == %w[1 8 6]
+      cmd << '--prefix=/opt/ruby/%d.%d.%d' % ver
+    else
+      cmd << '--prefix=/opt/ruby/%d.%d' % ver[0..1]
+    end
+  end
+
+  if RUBY_PLATFORM =~ /darwin/i
+    # Use an authentic GNU readline
+    if system '/bin/sh -c "command -v brew" &>/dev/null'
+      cmd << '--with-readline-dir=' + %x(brew --prefix readline).chomp
+      cmd << '--with-libyaml-dir=' + %x(brew --prefix libyaml).chomp
+    end
+
+    # OS X Lion's default compiler is llvm; use gcc for the time being
+    cc = %x(/bin/sh -c 'command -v cc').chomp
+    if File.symlink? cc and File.readlink(cc) =~ /llvm/
+      gcc = %x(/bin/sh -c 'command -v gcc-4.2').chomp
+      ENV['CC'] = gcc if File.executable? gcc
+    end
+  end
+
+  if RUBY_PLATFORM =~ /darwin|linux/i
+    # OS X and Linux do not implement setproctitle(3), but we can at least
+    # change ARGV. Only affects Ruby 1.9 (2.0?); 1.8 does this by default
+    ENV['CFLAGS'] += ' -DSPT_TYPE=SPT_REUSEARGV '
+  end
+
+  sh *cmd
+end

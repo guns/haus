@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+require 'etc'
+require 'haus/logger'
+
+class Bpftoggle
+  class << self
+    include Haus::Loggable
+    include FileUtils::Verbose
+
+    def toggle
+      raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
+
+      fs = Dir['/dev/bpf*']
+
+      if File.stat(fs.first).gid.zero?
+        log ['→ Adding staff read privileges', :yellow, :bold]
+        chown Etc.getpwuid(0).name, 'staff', fs
+        chmod 0640, fs
+      else
+        log ['← Restoring original privileges', :green, :bold]
+        chown Etc.getpwuid(0).name, Etc.getgrgid(0).name, fs
+        chmod 0600, fs
+      end
+    end
+  end
+
+  def parser
+    @parser ||= OptionParser.new "Toggle staff read privileges on OS X's /dev/bpf*"
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.empty?
+    self.class.toggle
+  end
+end
+
+$0 = File.basename(__FILE__) and Bpftoggle.new.run ARGV if __FILE__ == $0

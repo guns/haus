@@ -1,0 +1,16 @@
+
+#                      _ __
+#     ____ ___  ____ _(_) /________ _____
+#    / __ `__ \/ __ `/ / / ___/ __ `/ __ \
+#   / / / / / / /_/ / / / /__/ /_/ / /_/ /
+#  /_/ /_/ /_/\__,_/_/_/\___/\__,_/ .___/
+#                                /_/
+#    guns <self@sungpae.com>
+
+application/pdf; firefox %s
+application/pdf; pdftotext %s -; copiousoutput
+application/*; less %s
+application/*; less %s; copiousoutput
+image/*; feh %s
+text/html; firefox %s
+text/html; elinks -dump -force-html %s; copiousoutput

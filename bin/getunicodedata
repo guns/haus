@@ -1,0 +1,121 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'net/http'
+
+class Getunicodedata
+  UnicodeDataURL = 'http://www.unicode.org/Public/UNIDATA/UnicodeData.txt'
+
+  # http://www.unicode.org/Public/5.1.0/ucd/UCD.html#UnicodeData.txt
+  class UnicodeTable
+    attr_reader :data
+
+    def initialize buf
+      @data = parse buf
+    end
+
+    def parse buf
+      buf.lines.map do |line|
+        row = line.chomp.split ';'
+        {
+          :Code_Point                 => row[ 0].to_i(16),
+          :Name                       => row[ 1],
+          :General_Category           => row[ 2],
+          :Canonical_Combining_Class  => row[ 3],
+          :Bidi_Class                 => row[ 4],
+          :Decomposition              => row[ 5],
+          :Numeric_Type_Decimal_Digit => row[ 6],
+          :Numeric_Type_Digit         => row[ 7],
+          :Numeric_Type_Numeric       => row[ 8],
+          :Bidi_Mirrored              => row[ 9],
+          :Unicode_1_Name             => row[10],
+          :ISO_Comment                => row[11],
+          :Simple_Uppercase_Mapping   => row[12],
+          :Simple_Lowercase_Mapping   => row[13],
+          :Simple_Titlecase_Mapping   => row[14]
+        }
+      end
+    end
+
+    def glyph code_point, category
+      # cf. http://en.wikipedia.org/wiki/C0_and_C1_control_codes
+      if category == 'Cc'
+        case code_point
+        when 0x00..0x1f then '^%s' % (code_point + 0x40).chr
+        when 0x7f then '^?'
+        when 0x80..0x9f then '^[%s' % (code_point - 0x40).chr
+        else [code_point].pack('U').inspect.delete '"'
+        end
+      else
+        [code_point].pack 'U'
+      end
+    end
+
+    def to_s
+      data.map do |row|
+        buf  = glyph row[:Code_Point], row[:General_Category]
+        buf << "\tU+%04X" % row[:Code_Point]
+        buf << "\t%s" % row[:Name]
+        buf << "\t(%s)" % row[:Unicode_1_Name] if row[:Unicode_1_Name] and not row[:Unicode_1_Name].empty?
+        buf
+      end.join "\n"
+    end
+  end
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 12 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Parse and print Unicode data.
+
+        If a file is given, data is read from file. If no file is given, and
+        there is data available on stdin, data is read from stdin.
+
+        Otherwise, downloads from #{UnicodeDataURL}
+
+        Usage: #{File.basename __FILE__} [options] [file]
+
+        Options:
+      BANNER
+
+      opt.on '-r', '--raw', 'Print raw unparsed data' do
+        options.raw = true
+      end
+    end
+  end
+
+  def raw
+    @raw ||= if options.file
+      File.read options.file
+    elsif select [$stdin], nil, nil, 0
+      $stdin.read
+    else
+      Net::HTTP.get URI.parse(UnicodeDataURL)
+    end
+  end
+
+  def table
+    @table ||= UnicodeTable.new raw
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    options.file = args.first
+
+    puts options.raw ? raw : table.to_s
+  end
+end
+
+$0 = File.basename(__FILE__) and Getunicodedata.new.run ARGV if $0 == __FILE__

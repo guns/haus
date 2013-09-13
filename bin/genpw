@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'util/password'
+
+class Genpw
+  include Util::Password
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Generate a random string of given length(s).
+
+        Usage: #{File.basename __FILE__} [options] length ...
+
+        Options:
+      BANNER
+
+      opt.on '-a', '--alpha', 'Alphanumeric characters only' do
+        options.chars = ALPHA
+      end
+
+      opt.on '-f', '--file PATH', 'Entropy source file [DEFAULT: /dev/urandom]' do |arg|
+        options.source = File.expand_path arg
+      end
+
+      opt.on '-r', '--random', 'Read characters from /dev/random' do
+        options.source = '/dev/random'
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    args = [60] if args.empty?
+    args.each do |len|
+      puts password(len.to_i, :chars => options.chars, :source => options.source)
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Genpw.new.run ARGV if __FILE__ == $0

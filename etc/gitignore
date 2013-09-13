@@ -1,0 +1,37 @@
+### Global gitignore
+
+# OS X
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Vim
+*.swp
+*.swo
+.tags
+.jstags
+
+# Emacs
+\#*\#
+*.elc
+
+# Ruby
+.bundle/
+.yardoc/
+
+# Python
+*.pyc
+*.pyo
+
+# C
+*.o
+
+# Java
+.gradle/
+
+# Clojure
+.lein-deps-sum
+.lein-failures
+.lein-plugins
+.lein-repl-history

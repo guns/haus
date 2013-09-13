@@ -1,0 +1,17 @@
+
+#    ___       __
+#  .'  _|-----|  |--.  Buttons
+#  |   _|  -__|     |
+#  |__| |_____|__|__|  guns <self@sungpae.com>
+#
+
+reload
+pan      1
+zoom     2
+menu
+prev     3
+next
+blur     C-1
+rotate   C-2
+zoom_in  4
+zoom_out 5

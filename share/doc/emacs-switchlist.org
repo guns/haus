@@ -1,0 +1,49 @@
+
+#  The journey to …
+#
+#   .ooooo. ooo. .oo.  .oo.   .oooo.   .ooooo.  .oooo.o
+#  d88' `88b`888P"Y88bP"Y88b `P  )88b d88' `"Y8d88(  "8
+#  888ooo888 888   888   888  .oP"888 888      `"Y88b.
+#  888    .o 888   888   888 d8(  888 888   .o8o.  )88b
+#  `Y8bod8P'o888o o888o o888o`Y888""8o`Y8bod8P'8""888P'
+#
+
+* Rationale
+
+  Vim's modal editing is a pernicious drug. Once you taste it, you have to
+  have it everywhere, all the time. There is also a high cost: Vimscript, and
+  the haphazard C code base.¹
+
+  Emacs, despite its finger-contorting, wrist-destroying, chorded workflow,
+  has at its core a theoretically beautiful design: a lisp interpreter, in
+  which the majority of the editor is written.
+
+  The Evil project has brought the best parts of Vim's modal editing to Emacs,
+  which has suddenly made it possible to imagine having the best of both
+  worlds. However, there are many very nice features in Vim that will have
+  to be rediscovered in Emacs in order for a migration to not feel like a
+  compromise.
+
+  Should I fail, I promise to bring a new editor into the world,² a beautiful
+  modal editor equally full of S-expressions and text objects.
+
+  ¹ All respect to Bram; Vim's code base isn't that awful compared to other
+    projects of its age.
+
+  ² https://news.ycombinator.com/item?id=4710745
+
+* Necessary
+** [ ] Vim bindings (Evil)
+** [ ] Use of Meta and Mod4 in a terminal
+** [ ] Port personal text editing keybindings
+** [ ] Fugitive.vim replacement
+** [ ] Port relevant vim plugins
+** [ ] Snippets engine
+** [ ] Vimdiff mode
+** [ ] Clojure workflow
+** [ ] Abstract vim shell / readline aliases and bindings as 'edit'
+* Nice to have
+** [ ] Port JellyX.vim colorscheme
+** [ ] http://www.emacswiki.org/emacs/SmoothScrolling
+** [ ] Code folding
+** [ ] Better

@@ -1,0 +1,179 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+#
+# http://peter.upfold.org.uk/blog/2008/10/10/applescript-to-enable-socks-proxy-on-mac-os-x/
+
+require 'ostruct'
+require 'cli/superparser'
+
+class SSHProxy
+  attr_reader :options, :active, :ssh_pid
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.setup      ||= RUBY_PLATFORM =~ /darwin/i
+    options.proxy_port ||= 22222
+    options.host       ||= '127.0.0.2'
+    options.signals    ||= %w[TERM INT QUIT HUP]
+    options.wait       ||= 10
+  end
+
+  def parser
+    @parser ||= CLI::SuperParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Create an SSH tunnel and configure it as a SOCKS proxy server for the
+        system.
+
+        Acts as a persistent wrapper around `ssh -D` on non OS X systems.
+
+        NOTE:
+
+          This script has served us well, but sshuttle is now much preferred.
+
+        WARNING:
+
+          * Existing system SOCKS Proxy details are clobbered and the global
+            SOCKS Proxy state is set to OFF on termination.
+
+          * The proxy server binds to 127.0.0.2 by default, which must be
+            created using a loopback alias: `ifconfig lo0 alias 127.0.0.2`
+            This is done to easily target the proxied traffic in firewalls.
+
+        Usage: #{File.basename __FILE__} [options] [user@]host
+
+        Options are a superset of ssh(1); any options that are valid for
+        ssh(1) are valid for this program, with the addition of:
+
+      BANNER
+
+      opt.on '-P', '--proxy-port PORT', Integer, "Local port to bind proxy server [%s]" % options.proxy_port do |arg|
+        options.proxy_port = arg
+      end
+
+      opt.on '-H', '--host HOST', "Local hostname or IP address to bind proxy server [%s]" % options.host do |arg|
+        options.host = arg
+      end
+
+      opt.on '--interfaces A,B,C', Array, "OS X (not BSD) interface names [%s]" % interfaces.join(',') do |arg|
+        options.interfaces = arg
+      end
+
+      opt.on '--signals A,B,C', Array, "Disconnect on signal [%s]" % options.signals.join(',') do |arg|
+        options.signals = arg
+      end
+
+      opt.on '--wait SECONDS', Integer, "Time to wait to reconnect dead connections [%s]" % options.wait do |arg|
+        options.wait = arg
+      end
+
+      opt.on '--no-setup', "Don't change OS X proxy settings" do
+        options.setup = false
+      end
+
+      opt.on '-h', '--help' do
+        puts opt.help
+        exit
+      end
+    end
+  end
+
+  # List Mac interface names (as opposed to BSD names)
+  def interfaces
+    options.interfaces || %x(networksetup -listallnetworkservices).lines.drop(1).map(&:strip)
+  end
+
+  def proxy_on!
+    interfaces.each do |iface|
+      if system *%W[networksetup -setsocksfirewallproxy #{iface} #{options.host} #{options.proxy_port} off]
+        puts "#{iface} proxy on!"
+      else
+        raise 'No permissions to change proxy settings!'
+      end
+    end if options.setup
+
+    @active = true
+
+    if block_given?
+      begin
+        yield
+      ensure
+        proxy_off!
+      end
+    end
+  end
+
+  def proxy_off!
+    # NOTE: `networksetup` uses locking, so do not thread!
+    interfaces.each do |iface|
+      system *%W[networksetup -setsocksfirewallproxystate #{iface} off]
+      puts "#{iface} proxy off!"
+    end if options.setup
+
+    @active = false
+  end
+
+  def command *args
+    cmd  = []
+    cmd += %W[ssh -2 -T -N -n] # Protocol 2, notty, noexec, nostdin
+    cmd += %W[-D #{options.host}:#{options.proxy_port}]
+    cmd += args
+  end
+
+  def connect *args
+    raise 'Proxy not active!' unless active
+    raise 'SSH connection already active!' if ssh_pid
+
+    options.signals.each do |sig|
+      trap sig do
+        trap :EXIT do
+          puts "WARNING: Shutting down, but ssh PID #{ssh_pid} is still alive" if ssh_pid
+        end
+
+        options.signals.each { |s| trap s, 'DEFAULT' }
+        puts "SIG#{sig.sub /\ASIG/, ''} recieved!"
+
+        if ssh_pid
+          puts "Sending SIGTERM to ssh PID #{ssh_pid}"
+          Process.kill :TERM, ssh_pid
+          Process.wait ssh_pid
+          @ssh_pid = nil
+        end
+
+        exit
+      end
+    end
+
+    loop do
+      puts command(*args).join(' ')
+      @ssh_pid = fork { exec *command(*args) } # Kernel#spawn introduced in 1.9
+      Process.wait ssh_pid
+      @ssh_pid = nil
+
+      print "Connection closed! Trying again in #{options.wait} seconds"
+      options.wait.times do
+        break if select [$stdin], nil, nil, 1
+        print '.'
+      end
+      puts
+    end
+  end
+
+  def call *args
+    proxy_on! { connect *args }
+  end
+
+  def run arguments = []
+    args = parser.superparse arguments
+
+    # We must have at least the [user@]host argument
+    abort parser.help if args.empty?
+
+    call *args
+  end
+end
+
+$0 = File.basename(__FILE__) and SSHProxy.new.run ARGV if $0 == __FILE__

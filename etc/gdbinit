@@ -1,0 +1,18 @@
+#             _ _
+#            | | |
+#    __ _  __| | |__
+#   / _` |/ _` | '_ \
+#  | (_| | (_| | |_) |
+#   \__, |\__,_|_.__/   guns <self@sungpae.com>
+#    __/ |
+#   |___/
+#
+
+set height 0
+set print pretty on
+set print object on
+set history expansion on
+set history filename ~/.gdb_history
+set history save on
+set history size 65535
+add-auto-load-safe-path ~/src/vim/.gdbinit

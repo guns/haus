@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+# Simple tmux wrapper
+
+WRAPPER=''
+SESSION=''
+
+while getopts :gst: OPT; do
+    case $OPT in
+    g) WRAPPER='gpg-shell';;
+    s) WRAPPER='ssh-shell';;
+    t) SESSION="$OPTARG";;
+    *) echo "Usage: ${0##*/} [-gs] [-t session] [args …]" >&2; exit 1
+    esac
+done
+shift $((OPTIND-1))
+
+if [[ $TMUX ]]; then
+    echo '$TMUX is already set!' >&2
+    exit 1
+fi
+
+if [[ $SESSION ]]; then
+    if tmux has-session -t "$SESSION" &>/dev/null; then
+        exec $WRAPPER tmux attach-session -d -t "$SESSION"
+    else
+        exec $WRAPPER tmux new-session -s "$SESSION" "$@"
+    fi
+else
+    if tmux has-session &>/dev/null; then
+        exec $WRAPPER tmux attach-session -d
+    else
+        exec $WRAPPER tmux new-session "$@"
+    fi
+fi

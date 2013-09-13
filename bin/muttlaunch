@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+
+class Muttlaunch
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.env ||= {}
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-f', '--force' do
+        options.force = true
+      end
+    end
+  end
+
+  def active?
+    system 'killall -0 mutt &>/dev/null'
+  end
+
+  def unicode_bindings
+    File.read(File.expand_path '~/.inputrc.d/utf-8')
+        .scan(/^"\\e(.)": "(.+)"/)
+        .reduce([]) { |a, (k, c)| a << '-e' << %Q(macro editor "\\e#{k}" #{c}) }
+  end
+
+  def launch *args
+    exec options.env, 'mutt', '-n', *unicode_bindings, *args
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    unless options.force
+      abort if active?
+    end
+    launch *args
+  end
+end
+
+$0 = File.basename(__FILE__) and Muttlaunch.new.run ARGV if $0 == __FILE__

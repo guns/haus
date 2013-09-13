@@ -1,0 +1,101 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+require 'pathname'
+require 'sdoc'
+
+class Genapi
+  attr_reader :options, :sdoc
+
+  def initialize opts = {}
+    @sdoc    = RDoc::RDoc.new
+    @options = OpenStruct.new opts
+    options.lang   ||= :ruby
+    options.apidir ||= ENV['cdapi']
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] dir
+
+        Options:
+      BANNER
+
+      opt.on '-o', '--outdir DIR' do |arg|
+        options.outdir = arg
+      end
+
+      opt.on '-i', '--index PATH', 'Use PATH as index page' do |arg|
+        options.index = arg
+      end
+
+      opt.on '-t', '--title TITLE' do |arg|
+        options.title = arg
+      end
+
+      opt.on '-f', '--force' do
+        options.force = true
+      end
+    end
+  end
+
+  def check_output_directory path
+    if File.exists? path
+      options.force ? FileUtils.rm_rf(path) : raise("#{path.inspect} already exists!")
+    end
+  end
+
+  def ruby_sdoc
+    # We need to expand these before the chdir
+    index, outdir, apidir = %w[index outdir apidir].map { |m| File.expand_path options.send(m) if options.send m }
+
+    Dir.chdir options.directory do
+      project = File.basename Dir.pwd
+      title   = options.title || project
+
+      main = if index
+        Pathname.new(index).relative_path_from Pathname.new(Dir.pwd)
+      else
+        Dir['*'].find { |f| f =~ /\AREADME/i }
+      end
+
+      outdir ||= if apidir
+        File.join apidir, (project[/(.*)-\d+\.\d+(?:\.\d+)/, 1] || project)
+      else
+        raise 'Output directory not set! Set environment variable `$cdapi` or specify `--outdir`'
+      end
+
+      check_output_directory outdir
+
+      args = %W[--format=sdoc --all --charset=utf-8 --title=#{title} --output=#{outdir}]
+      args.push "--main=#{main}" if main
+
+      puts 'Generating with `%s`' % args.join(' ')
+      sdoc.document args
+    end
+  end
+
+  def call
+    case options.lang
+    when :ruby    then ruby_sdoc
+    else raise 'No language specified'
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 1
+    options.directory = args.first
+    call
+  end
+end
+
+$0 = File.basename(__FILE__) and Genapi.new.run ARGV if $0 == __FILE__

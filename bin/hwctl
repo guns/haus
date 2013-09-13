@@ -1,0 +1,236 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+
+class Hwctl
+  SYSTEM = {
+    :macbook => {
+      :backlight        => '/sys/class/backlight/intel_backlight/brightness',
+      :backlight_max    => '/sys/class/backlight/intel_backlight/max_brightness',
+      :backlight_actual => '/sys/class/backlight/intel_backlight/actual_brightness',
+      :fnmode           => '/sys/module/hid_apple/parameters/fnmode',
+      :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
+      :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
+      :coretemps        => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
+    }
+  }
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.system ||= SYSTEM[:macbook]
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Linux hardware control wrapper.
+
+        Usage: #{File.basename __FILE__} command [args]
+
+        Commands:
+          b[acklight] [pct]
+            Query or set backlight as a percentage. Argument can be signed for
+            relative adjustment.
+
+          backlight-permissions mode user group
+            Set backlight control file permissions.
+
+          fan base-speed [temp:speed …]
+            Manually set fan speeds (in RPM) at given temps (in Celsius).
+            Polls every 10 seconds and speeds are not ramped. Fan control is
+            handed back to the kernel on exit.
+
+          fnmode [fn|media]
+            Set MacBook function key mode.
+
+          toggle-alsa-card [number]
+            Switch between available sound cards, or specified card number
+
+          toggle-pulseaudio-sink
+            Toggle between available Pulseaudio output sinks
+      BANNER
+    end
+  end
+
+  def sys
+    options.system
+  end
+
+  def brightness cur, max
+    '%d %.2f%%' % [cur, cur.to_f/max * 100]
+  end
+
+  def set_brightness value, max
+    v = value
+    v = max if value > max
+    v = 0 if value < 0
+
+    File.open sys[:backlight], 'w' do |f|
+      f.puts v
+    end
+
+    v
+  end
+
+  def pulseaudio_sinks
+    sinks = %x(pacmd list-sinks).scan(/(\*?) index: (\d+).*?alsa\.card_name = "(.*?)"/m).map do |s, i, n|
+      [s.length > 0, i, n]
+    end
+
+    until sinks[0][0]
+      sinks.rotate!
+    end
+
+    sinks.map { |a| a.drop 1 }
+  end
+
+  def pulseaudio_move_inputs index
+    %x(pacmd list-sink-inputs).lines.grep(/index: (\d+)/) { $1 }.each do |input|
+      system 'pacmd', 'move-sink-input', input.to_s, index.to_s, :out => '/dev/null'
+    end
+  end
+
+  def get_coretemps
+    sys[:coretemps].map { |f| File.read(f).to_i }
+  end
+
+  def backlight setting = nil
+    max = File.read(sys[:backlight_max]).to_i
+    cur = File.read(sys[:backlight_actual]).to_i
+
+    case setting
+    when nil           then brightness cur, max
+    when /\A[+-]\d+\z/ then brightness set_brightness((cur + (max * (setting.to_f / 100))).round, max), max
+    when /\A\d+\z/     then brightness set_brightness((max * (setting.to_f / 100)).round, max), max
+    else raise ArgumentError
+    end
+  end
+
+  def backlight_permissions mode, user, group
+    f = sys[:backlight]
+    FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
+    FileUtils.chown user, group, f
+    s = File.stat f
+    '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
+  end
+
+  def fan base_speed, *temps_speeds
+    table = [[-1000, base_speed.to_i]] + temps_speeds.map { |s|
+      raise 'Fan speed arguments must be in form of °C:RPM' unless s =~ /\A\d+:\d+\z/
+      temp, speed = s.split ':'
+      [temp.to_i, speed.to_i]
+    }
+    last_index = table.size - 1
+
+    puts 'Assuming manual control of fan via: ' + sys[:fan_manual]
+    File.open(sys[:fan_manual], 'w') { |f| f.puts '1' }
+
+    current_index = nil
+
+    if last_index.zero?
+      puts 'Setting constant fan speed %s' % base_speed
+      File.open(sys[:fan_speed], 'w') { |f| f.puts base_speed }
+      sleep
+    else
+      loop do
+        # Take two samples, since the values tend to jump around
+        temp = get_coretemps.max
+        sleep 1
+        temp += get_coretemps.max
+        temp /= 2000
+
+        i = table.find_index { |t, sp| temp < t }
+
+        index = case i
+        when 0 then raise 'Erroneous temperature reading: %d' % temp
+        when nil then last_index
+        else i - 1
+        end
+
+        if current_index != index
+          speed = table[index][1]
+          puts "Temp: %d, Speed: %d" % [temp, speed]
+          File.open(sys[:fan_speed], 'w') { |f| f.puts speed }
+          current_index = index
+        end
+
+        sleep 9
+      end
+    end
+  ensure
+    File.open(sys[:fan_manual], 'w') { |f| f.puts '0' }
+    puts 'Released manual fan control!'
+  end
+
+  def fnmode type = nil
+    case type
+    when 2, 'fn'    then File.open(sys[:fnmode], 'w') { |f| f.puts '2' }
+    when 1, 'media' then File.open(sys[:fnmode], 'w') { |f| f.puts '1' }
+    when nil        then nil
+    else raise ArgumentError
+    end
+    File.read sys[:fnmode]
+  end
+
+  def toggle_alsa_card number = nil
+    asoundrc = File.expand_path '~/.asoundrc'
+    settings = %w[defaults.pcm.card defaults.ctl.card]
+    cards = Hash[File.readlines('/proc/asound/cards').grep(/\A\s*(\d+)\s*(\[.*)/) { |m|
+      [$1.to_i, $2]
+    }]
+    numbers = cards.keys
+
+    FileUtils.touch asoundrc
+    buf = File.read asoundrc
+
+    next_number = number || begin
+      cur = buf[/^#{settings.first}\s+(\d+)/, 1]
+      if cur
+        i = numbers.index cur.to_i
+        numbers[i ? (i + 1) % numbers.size : 0]
+      else
+        numbers.first
+      end
+    end
+
+    lines = buf.lines.reject { |l| settings.include? l[/\A\S+/] }
+    lines += settings.map { |k| "#{k} #{next_number}\n" }
+    File.open(asoundrc, 'w') { |f| f.puts lines.join }
+    cards[next_number]
+  end
+
+  def toggle_pulseaudio_sink
+    index, name = pulseaudio_sinks.rotate.first
+    system 'pacmd', 'set-default-sink', index, :out => '/dev/null'
+    pulseaudio_move_inputs index
+    name
+  end
+
+  def run arguments = []
+    args = parser.order arguments
+    rest = args.drop 1
+
+    out = case args.first
+    when 'b', 'backlight' then backlight *rest
+    when 'backlight-permissions' then backlight_permissions *rest
+    when 'fan' then fan *rest
+    when 'fnmode' then fnmode *rest
+    when 'toggle-alsa-card' then toggle_alsa_card *rest
+    when 'toggle-pulseaudio-sink' then toggle_pulseaudio_sink *rest
+    else abort parser.help
+    end
+
+    puts out if out
+  end
+end
+
+$0 = File.basename(__FILE__) and Hwctl.new.run ARGV if $0 == __FILE__

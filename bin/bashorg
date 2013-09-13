@@ -1,0 +1,178 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'net/http'
+require 'json'
+require 'nokogiri'
+
+class Bashorg
+  class Quotes < Nokogiri::HTML::Document
+    class << self
+      def browse num
+        parse Net::HTTP.get(URI.parse 'http://bash.org/?browse&p=%02d' % num)
+      end
+    end
+
+    def to_hash
+      td = css('td').find do |n|
+        not n.css('p.quote + p.qt').empty?
+      end
+
+      return unless td
+
+      Hash[td.css('p').each_slice(2).map do |meta, body|
+        id = meta.children.find { |n| n.text =~ /#\d+/ }.text[/#(\d+)/, 1]
+        [id, body.text.delete("\r")]
+      end]
+    end
+  end
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.delay ||= 5
+    options.textwidth ||= 80
+    options.outfile ||= 'bashorg'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Download / dump the bash.org database.
+
+        Usage: #{File.basename __FILE__} [options] command
+
+        Commands:
+            get       Retrieve quotes from http://bash.org/?browse
+            dump      Dump quotes to stdout
+            fortune   Save quotes as a fortune database
+
+        Options:
+      BANNER
+
+      opt.on '-i', '--infile PATH', 'Read and write from JSON database; alternately read/write from STDIN/STDOUT' do |arg|
+        options.infile = arg
+      end
+
+      opt.on '-o', '--outfile PATH', "Path to generated fortune file; #{options.outfile.inspect} by default" do |arg|
+        options.outfile = arg
+      end
+
+      opt.on '-d', '--delay N', Integer, "Delay in seconds between HTTP requests; #{options.delay} by default" do |arg|
+        options.delay = arg
+      end
+
+      opt.on '-p', '--page N', Integer, 'Start scraping from page N' do |arg|
+        options.page = arg
+      end
+    end
+  end
+
+  def data
+    @data ||= read
+  end
+
+  def quotes
+    # Goddamn IRC is full of racists. Go read some history, assholes.
+    data['quotes'].reject do |n, q|
+      q =~ Regexp.new([110, 105, 103, 103, 101, 114].pack('C*'), 'i')
+    end.sort_by { |n, q| n.to_i }.map do |n, q|
+      "#{wrap q}%"
+    end.join "\n"
+  end
+
+  # Wrap long lines; prettier output (like aligning indents to nicks) is not
+  # possible given the inconsistent formatting.
+  #
+  # http://blog.macromates.com/2006/wrapping-text-with-regular-expressions/
+  def wrap str
+    str.gsub /(.{1,#{options.textwidth}})(?: +|$)\n?|(.{#{options.textwidth}})/, "\\1\\2\n"
+  end
+
+  def get
+    startkeys      = data['quotes'].keys.size
+    options.page ||= data['page']
+    startpage      = options.page
+
+    [:INT, :QUIT, :TERM].each do |sig|
+      trap(sig) { raise "Caught SIG#{sig}! Dumping data!" }
+    end
+
+    loop do
+      print "#{options.page}..."
+
+      qs = Quotes.browse(options.page).to_hash
+      break if qs.nil?
+
+      # Don't increment page counter until we have the data
+      data['quotes'].merge! qs
+      data['page'] = options.page
+      options.page += 1
+
+      # Let's be polite
+      sleep options.delay
+    end
+
+    # Summarize
+    count = options.page - startpage + 1
+    puts "\n%d page%s processed, %d new quotes retrieved" % [
+      count,
+      count == 1 ? '' : 's',
+      data['quotes'].keys.size - startkeys
+    ]
+  ensure
+    # Restore default signal handlers
+    [:INT, :QUIT, :TERM].each { |sig| trap sig, 'DEFAULT' }
+
+    # Always persist state
+    write
+  end
+
+  # Get JSON data from file, $stdin, or default template
+  def read
+    # This might be a new file
+    if options.infile and File.exists? options.infile
+      JSON[File.read options.infile]
+    elsif select [$stdin], nil, nil, 0
+      JSON[$stdin.read]
+    else
+      { 'page' => 1, 'quotes' => {} }
+    end
+  end
+
+  # Serialize data to JSON and flush / write
+  def write
+    buf = data.to_json
+    options.infile ? File.open(options.infile, 'w') { |f| f.write buf } : puts(buf)
+  end
+
+  # Fortune format is quote + "\n%", then you run strfile(1) to get an index
+  def write_fortune
+    File.open options.outfile, 'w' do |f|
+      f.puts quotes
+    end
+
+    system 'strfile', options.outfile
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 1
+
+    case args.first
+    when 'get'     then get
+    when 'dump'    then puts quotes
+    when 'fortune' then write_fortune
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Bashorg.new.run ARGV if $0 == __FILE__

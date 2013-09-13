@@ -1,0 +1,11 @@
+[Unit]
+Description=MacBook function keys mode toggle
+
+[Service]
+Type=oneshot
+ExecStart=<%= path 'hwctl' %> fnmode fn
+ExecStop=<%= path 'hwctl' %> fnmode media
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

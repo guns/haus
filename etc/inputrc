@@ -1,0 +1,423 @@
+
+#   _______ _______ _______   ______                __ __ __
+#  |     __|    |  |   |   | |   __ \-----.---.-.--|  |  |__|-----.-----.
+#  |    |  |       |   |   | |      <  -__|  _  |  _  |  |  |     |  -__|
+#  |_______|__|____|_______| |___|__|_____|___._|_____|__|__|__|__|_____|
+#
+#    guns <self@sungpae.com>
+
+### Variables
+# diff -U3 <(INPUTRC=/dev/null bash -c "bind -v") <(bash -c "bind -v")
+
+# set bind-tty-special-chars on # http://www.shallowsky.com/blog/linux/bash-word-erase.html
+set blink-matching-paren off
+# set byte-oriented off
+set completion-ignore-case on
+set completion-map-case on
+# set convert-meta off
+# set disable-completion off
+# set echo-control-characters on
+# set enable-keypad off
+# set enable-meta-key on
+# set expand-tilde off
+# set history-preserve-point off
+# set horizontal-scroll-mode off
+# set input-meta on
+# set mark-directories on
+# set mark-modified-lines off
+set mark-symlinked-directories on
+# set match-hidden-files on
+# set menu-complete-display-prefix off
+# set meta-flag on
+# set output-meta on
+set page-completions off
+# set prefer-visible-bell on
+# set print-completions-horizontally off
+# set revert-all-at-newline off
+set show-all-if-ambiguous on
+set show-all-if-unmodified on
+set skip-completed-text on
+set visible-stats on
+# set bell-style audible # Let your terminal convert to `visible`
+# set comment-begin #
+# set completion-display-width -1
+# set completion-prefix-display-length 0
+set completion-query-items 256
+# set editing-mode emacs
+# set history-size 0
+# set keymap emacs
+
+### Global Macros
+# diff -U3 <(INPUTRC=/dev/null bash -c "bind -p; bind -s") <(bash -c "bind -p; bind -s")
+
+$include ~/.inputrc.d/utf-8
+
+# Rebinds:
+# The Unicode table above is parsed by external programs that do not actually
+# use readline. For actual interactive programs, we would be sorry to lose the
+# following commands:
+"\e-":          digit-argument
+"\e0":          digit-argument
+"\e1":          digit-argument
+"\e2":          digit-argument
+"\e3":          digit-argument
+"\e4":          digit-argument
+"\e5":          digit-argument
+"\e6":          digit-argument
+"\e7":          digit-argument
+"\e8":          digit-argument
+"\e9":          digit-argument
+"\e!":          complete-command
+"\e@":          complete-hostname
+"\e#":          insert-comment
+"\e$":          complete-variable
+"\e^":          history-expand-line
+"\e&":          tilde-expand
+"\e*":          insert-completions
+"\e.":          insert-last-argument
+"\e_":          insert-last-argument
+
+# Text editing
+"\C-]":         kill-whole-line
+"\C-xx":        exchange-point-and-mark
+"\eB":          character-search-backward
+"\eF":          character-search
+"\eR":          overwrite-mode
+"\eu":          downcase-word
+"\eU":          upcase-word
+
+# History
+"\C-n":         history-search-forward
+"\eOB":         history-search-forward
+"\e[B":         history-search-forward
+"\C-p":         history-search-backward
+"\eOA":         history-search-backward
+"\e[A":         history-search-backward
+
+### bash
+
+$if bash
+    # Meta
+    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
+    "\033\007r":    "\C-] tmuxeval \n"
+    "\033\007R":    "\C-] reset; stty -ixon \n"
+    "\C-x\\":       "\C-] nohist \n"
+    "\C-x$":        "\C-a $(\C-e)\C-a"
+    "\C-x<":        "\C-a <(\C-e)\C-a"
+    "\C-x\"":       "\C-a \"\C-e\"\C-a"
+    "\C-x'":        "\C-a '\C-e'\C-a"
+
+    # Redirections
+    "\C-x0":        " &>/dev/null "
+    "\C-x1":        " >/dev/null "
+    "\C-x2":        " 2>/dev/null "
+    "\C-x3":        " 2>&1 "
+
+    # Directories
+    "\C-x/":        "\C-]cd /"
+    "\C-x\C-_":     "\C-] cd - \n"
+    "\C-x-":        "\C-]cd ~/"
+    "\C-x\C-a":     "\C-] cdabs \n"
+    "\C-xa":        "\C-]cdabs "
+    "\C-xc":        "\C-]cdconfig "
+    "\C-x\C-d":     "\C-] cddownloads \n"
+    "\C-xd":        "\C-]cddownloads "
+    "\C-xD":        "\C-]cddocuments "
+    "\C-x\C-h":     "\C-] cdhaus \n"
+    "\C-xh":        "\C-]cdhaus "
+    "\C-x\C-l":     "\C-] cdlocal \n"
+    "\C-xl":        "\C-]cdlocal "
+    "\C-xL":        "\C-]cdLOCAL "
+    "\C-x\C-n":     "\C-] cdnginx \n"
+    "\C-xn":        "\C-]cdnginx "
+    "\C-x\C-o":     "\C-] cdopt \n"
+    "\C-xo":        "\C-]cdopt "
+    "\C-x\C-s":     "\C-] cdsrc \n"
+    "\C-xs":        "\C-]cdsrc "
+    "\C-xS":        "\C-]cdSRC "
+    "\C-x\C-t":     "\C-] cdtmp \n"
+    "\C-xt":        "\C-]cdtmp "
+    "\C-x\C-v":     "\C-] cdvar \n"
+    "\C-xv":        "\C-]cdvar "
+    "\C-xV":        "\C-]cdvimfiles "
+    "\C-x\C-w":     "\C-] cdwww \n"
+    "\C-xw":        "\C-]cdwww "
+
+    # Job control
+    "\033\007p":    "\C-] pushd . \n"
+    "\033\007P":    "\C-] popd \n"
+    "\033\007j":    "\C-] jobs \n"
+    "\033\007f":    "\C-] fg \n"
+    "\033\007b":    "\C-] bg \n"
+
+    # Vim
+    "\033\007e":    "\C-] vim \n"
+    "\C-xe ":       "\C-]vim "
+    "\C-xea":       "\C-] vimautocommands \n"
+    "\C-xeA":       "\C-] vimaliases \n"
+    "\C-xeb":       "\C-] vimbashinteractive \n"
+    "\C-xeB":       "\C-] vimbashrc \n"
+    "\C-xec":       "\C-] vimcommands \n"
+    "\C-xee":       "\C-] vim \n"
+    "\C-xei":       "\C-] viminputrc \n"
+    "\C-xeI":       "\C-] vimiptables \n"
+    "\C-xem":       "\C-] vimmappings \n"
+    "\C-xeM":       "\C-] vimmuttrc \n"
+    "\C-xen":       "\C-] vimnginx \n"
+    "\C-xeo":       "\C-] vimorg \n"
+    "\C-xeR":       "\C-] vimhausrakefile \n"
+    "\C-xes":       "\C-] vimscratch \n"
+    "\C-xeS":       "\C-] vimsshconfig \n"
+    "\C-xet":       "\C-] vimtodo \n"
+    "\C-xeT":       "\C-] vimtmux \n"
+    "\C-xeu":       "\C-] vimunicode \n"
+    "\C-xev":       "\C-] vimrc \n"
+    "\C-xeV":       "\C-] vimperatorrc \n"
+    "\C-xew":       "\C-] vimwm \n"
+    "\C-xex":       "\C-] vimxinitrc \n"
+    "\C-xeX":       "\C-] vimxautostart \n"
+    "\C-xf":        "\C-]vimfind "
+    "\033\007F":    "\C-] vimfile \n"
+    "\033\007o":    "\C-] vimopen \n"
+    "\033\007t":    "\C-] vimopen \n"
+    "\C-xm":        "\C-]man "
+
+    # Git
+    "\C-xg ":       "\C-]git "
+    "\C-xg.":       "\C-] git di . \n"
+    "\C-xga.":      "\C-] git a . \n"
+    "\C-xgaa":      "\C-] git aa \n"
+    "\C-xgac":      "\C-] git acv \n"
+    "\C-xgap":      "\C-] git ap \n"
+    "\C-xgb":       "\C-]vim -c 'Gblame -w' "
+    "\C-xgB":       "\C-]vim -c Gbrowse "
+    "\C-xgc.":      "\C-] git cv . \n"
+    "\C-xgca":      "\C-] git cav \n"
+    "\C-xgcA":      "\C-] git cva \n"
+    "\C-xgcc":      "\C-] git cv \n"
+    "\C-xgcv":      "\C-] git cv \n"
+    "\C-xgd":       "\C-] git di \n"
+    "\C-xgD":       "\C-]git di "
+    "\C-xgf":       "\C-] git f \n"
+    "\C-xgF":       "\C-] git ff \n"
+    "\C-xgg":       "\C-] git st \n"
+    "\C-xgh":       "\C-] git-hg pull --force --rebase \n"
+    "\C-xgl":       "\C-] git lp \n"
+    "\C-xgL":       "\C-] git lfp \n"
+    "\C-xgp":       "\C-] git pull \n"
+    "\C-xgP":       "\C-] git push \n"
+    "\C-xgr":       "\C-] git rs \n"
+    "\C-xgs":       "\C-] git stash -u \n"
+    "\C-xgS":       "\C-] git stash pop \n"
+    "\C-xgu":       "\C-] git up \n"
+    "\C-xgv":       "\C-] gitv \n"
+    "\C-xgV":       "\C-]gitv "
+    "\C-xgw":       "\C-] git wdi \n"
+    "\C-xgW":       "\C-] git wlp \n"
+    "\033\007g":    "\C-] vimgit \n"
+    "\033\007G":    "\C-]vim .gitignore -c \"Ggrep -Pi \"\C-b"
+
+    # Ack
+    "\033\007A":    "\C-]vim -c \"Ack \"\C-b"
+
+    # IRB
+    "\033\007i":    "\C-] irb \n"
+    "\033\007I":    "\C-] pry \n"
+
+    # lein REPL
+    "\033\007l":    "\C-]lein REPL \n"
+
+    # X
+    "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
+
+    # Window title
+    "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
+
+    # Make
+    "\033\007!":    "\C-] if [[ -e Makefile ]]; then make; elif [[ -e Rakefile ]]; then rake; fi \n"
+$endif
+
+### gdb
+
+$if gdb
+    # Arrow
+    "\C-l":         "->"
+    "\C-x\C-l":     clear-screen
+$endif
+
+### pry / irb
+
+$if ruby
+    # Re-exec (see above)
+    "\C-x\C-x":     "\C-] exec $0 \n"
+
+    # Hashrocket
+    "\C-l":         " => "
+    "\C-x\C-l":     clear-screen
+
+    # Load files
+    "\C-xl":        "\C-]load ''\C-b"
+    "\C-xr":        "\C-]require ''\C-b"
+
+    # interactive_editor / pry edit
+    "\033\007e":    "\C-] edit \n"
+    "\C-x\C-e":     "\C-] edit \n"
+    "\C-xe":        "\C-]edit "
+$endif
+
+### Clojure REPL
+
+$if java
+    # Documentation
+    "\C-xf":        "\C-](find-doc "")\C-b\C-b"
+    "\C-xs":        "\C-](source )\C-b"
+
+    # Loading
+    "\C-xl":        "\C-](load-file "")\C-b\C-b"
+$endif
+
+### PostgreSQL
+
+$if psql
+    # General
+    "\033\007;":    "\C-e;\n"
+    "\033\007g":    "\C-e\\g\n"
+    "\C-xg":        "\C-e\\g "
+    "\033\007h":    "\C-]\\?\n"
+    "\C-xh":        "\C-]\\h "
+    "\033\007\\":   "\C-]\\q\n"
+    "\033\007|":    "\C-]\\q\n"
+
+    # Query Buffer
+    "\033\007e":    "\C-]\\e\n"
+    "\C-xe":        "\C-]\\e "
+    "\033\007p":    "\C-]\\p\n"
+    "\033\007r":    "\C-]\\r\n"
+    # \s unbound
+    "\C-xw":        "\C-]\\w "
+
+    # Input/Output
+    # \copy unbound
+    "\C-xi":       "\C-]\\i "
+    "\C-xo":       "\C-]\\o "
+    "\C-xq":       "\C-]\\qecho "
+
+    # Informational
+    "\033\007d":    "\C-]\\d+\n"
+    "\033\007D":    "\C-]\\dS+\n"
+    "\C-xd ":       "\C-]\\d+ "
+    "\C-xD ":       "\C-]\\dS+ "
+    "\C-xda":       "\C-]\\da+\n"
+    "\C-xDa":       "\C-]\\daS+\n"
+    "\C-xdb":       "\C-]\\db+\n"
+    "\C-xDb":       "\C-]\\dbS+\n"
+    "\C-xdc":       "\C-]\\dc+\n"
+    "\C-xDc":       "\C-]\\dcS+\n"
+    "\C-xdC":       "\C-]\\dC+\n"
+    "\C-xDC":       "\C-]\\dCS+\n"
+    "\C-xddd":      "\C-]\\dd+\n"
+    "\C-xDdd":      "\C-]\\ddS+\n"
+    "\C-xddp":      "\C-]\\ddp+\n"
+    "\C-xDdp":      "\C-]\\ddpS+\n"
+    "\C-xdD":       "\C-]\\dD+\n"
+    "\C-xDD":       "\C-]\\dDS+\n"
+    "\C-xdet":      "\C-]\\det+\n"
+    "\C-xDet":      "\C-]\\detS+\n"
+    "\C-xdes":      "\C-]\\des+\n"
+    "\C-xDes":      "\C-]\\desS+\n"
+    "\C-xdeu":      "\C-]\\deu+\n"
+    "\C-xDeu":      "\C-]\\deuS+\n"
+    "\C-xdew":      "\C-]\\dew+\n"
+    "\C-xDew":      "\C-]\\dewS+\n"
+    "\C-xdf":       "\C-]\\df+\n"
+    "\C-xDf":       "\C-]\\dfS+\n"
+    "\C-xdFF":      "\C-]\\dF+\n"
+    "\C-xDFF":      "\C-]\\dFS+\n"
+    "\C-xdFd":      "\C-]\\dFd+\n"
+    "\C-xDFd":      "\C-]\\dFdS+\n"
+    "\C-xdFp":      "\C-]\\dFp+\n"
+    "\C-xDFp":      "\C-]\\dFpS+\n"
+    "\C-xdFt":      "\C-]\\dFt+\n"
+    "\C-xDFt":      "\C-]\\dFtS+\n"
+    "\C-xdg":       "\C-]\\dg+\n"
+    "\C-xDg":       "\C-]\\dgS+\n"
+    "\C-xdi":       "\C-]\\di+\n"
+    "\C-xDi":       "\C-]\\diS+\n"
+    "\C-xdl":       "\C-]\\dl+\n"
+    "\C-xDl":       "\C-]\\dlS+\n"
+    "\C-xdL":       "\C-]\\dL+\n"
+    "\C-xDL":       "\C-]\\dLS+\n"
+    "\C-xdn":       "\C-]\\dn+\n"
+    "\C-xDn":       "\C-]\\dnS+\n"
+    "\C-xdo":       "\C-]\\do+\n"
+    "\C-xDo":       "\C-]\\doS+\n"
+    "\C-xdO":       "\C-]\\dO+\n"
+    "\C-xDO":       "\C-]\\dOS+\n"
+    "\C-xdp":       "\C-]\\dp+\n"
+    "\C-xDp":       "\C-]\\dpS+\n"
+    "\C-xdr":       "\C-]\\drds+\n"
+    "\C-xDr":       "\C-]\\drdsS+\n"
+    "\C-xds":       "\C-]\\ds+\n"
+    "\C-xDs":       "\C-]\\dsS+\n"
+    "\C-xdt":       "\C-]\\dt+\n"
+    "\C-xDt":       "\C-]\\dtS+\n"
+    "\C-xdT":       "\C-]\\dT+\n"
+    "\C-xDT":       "\C-]\\dTS+\n"
+    "\C-xdu":       "\C-]\\du+\n"
+    "\C-xDu":       "\C-]\\duS+\n"
+    "\C-xdv":       "\C-]\\dv+\n"
+    "\C-xDv":       "\C-]\\dvS+\n"
+    "\C-xdE":       "\C-]\\dE+\n"
+    "\C-xDE":       "\C-]\\dES+\n"
+    "\C-xdx":       "\C-]\\dx+\n"
+    "\C-xDx":       "\C-]\\dxS+\n"
+    "\033\007l":    "\C-]\\l+\n"
+    "\C-xs":        "\C-]\\sf+ "
+    "\033\007L":    "\C-]\\z\n"
+    "\C-xz":        "\C-]\\z\n"
+
+    # Formatting
+    "\C-x\C-a":     "\C-]\\a\n"
+    # \C unbound
+    "\C-xf":        "\C-]\\f "
+    "\C-xH":        "\C-]\\H\n"
+    "\C-xp":        "\C-]\\pset "
+    "\C-x\C-t":     "\C-]\\t\n"
+    # \T unbound
+    "\C-x\C-x":     "\C-]\\x\n"
+
+    # Connection
+    "\C-xc":        "\C-]\\connect "
+    "\C-xE":        "\C-]\\encoding "
+    "\C-xP":        "\C-]\\password "
+    "\C-xC":        "\C-]\\conninfo\n"
+
+    # Operating System
+    # \cd unbound
+    # \setenv unbound
+    "\033\007t":    "\C-]\\timing\n"
+    "\C-x!":        "\C-]\\! "
+
+    # Variables
+    # \prompt unbound
+    "\C-xS":        "\C-]\\set "
+    "\C-xU":        "\C-]\\unset "
+
+    # Large Objects
+    "\C-xle":       "\C-]\\lo_export "
+    "\C-xli":       "\C-]\\lo_import "
+    "\C-xll":       "\C-]\\lo_list\n"
+    "\C-xlu":       "\C-]\\lo_unlink "
+$endif
+
+### Mysql
+
+$if mysql
+    "\033\007e":    "\C-]\\e\n"
+    "\C-x\C-d":     "\C-]show databases;\n"
+    "\C-x\C-f":     "\C-]flush privileges;\n"
+    "\C-x\C-t":     "\C-]show table status;\n"
+    "\C-xh":        "\C-]\\h "
+    "\C-xu":        "\C-]\\u "
+    "\C-xs":        "\C-]SELECT "
+$endif

@@ -1,0 +1,434 @@
+#!/usr/bin/env lein-exec
+
+(leiningen.exec/deps '[[hiccup "1.0.3"]
+                       [guns.cli/optparse "1.0.1"]])
+
+(require '[hiccup.core :as hiccup]
+         '[hiccup.page :as page]
+         '[clojure.string :as string]
+         '[clojure.java.io :as io]
+         '[clojure.data.xml :as xml]
+         '[clojure.java.shell :as shell]
+         '[guns.cli.optparse :refer [parse]])
+
+;;;
+;;; XML <-> Hiccup conversion functions.
+;;;
+
+(defn tidy
+  "Add newlines and tab indents to hiccup form for pretty printing."
+  ([form] (tidy form 1))
+  ([form indent]
+   (if (and (vector? form) (some coll? form))
+     (let [nltab (apply str \newline (repeat indent \tab))
+           form' (reduce
+                   (fn [v f]
+                     (cond (vector? f) (conj v nltab (tidy f (inc indent)))
+                           (list? f) (into v (map #(list %1 (tidy %2 (inc indent)))
+                                                  (repeat nltab) f))
+                           :else (conj v f)))
+                   [] form)]
+       (conj form' (apply str \newline (repeat (dec indent) \tab))))
+     form)))
+
+(defn render-hiccup
+  "Render xml node into a parsable hiccup string."
+  ([node] (render-hiccup node 0))
+  ([node indent]
+   (if (string? node)
+     (format " \"%s\""
+             (-> node
+                 (string/replace #"(\\+\")" "\\\\\\\\$1")
+                 (string/replace #"(?<!\\)(\")" "\\\\$1")))
+     (format "\n%s[%s%s%s]"
+             (apply str (repeat indent \space))
+             (:tag node)
+             (let [a (:attrs node)] (if (seq a) (str \space a) ""))
+             (string/join (map #(render-hiccup % (inc indent)) (:content node)))))))
+
+(defn render-xml
+  "Render hiccup expression into XML."
+  [body]
+  (hiccup/html (page/xml-declaration "UTF-8") (tidy body)))
+
+(defn convert-xml
+  "Convert xml file into hiccup string."
+  [file]
+  (render-hiccup (xml/parse (io/reader file))))
+
+;;;
+;;; Configuration snippets.
+;;;
+;;; cf. http://openbox.org/wiki/Help:Configuration
+;;;     http://openbox.org/wiki/Help:Actions
+;;;     /etc/xdg/openbox/rc.xml
+;;;
+
+(defn wrap
+  "Wrap single items in a list and leave collections as is."
+  [x]
+  (if (coll? x) x (list x)))
+
+(defn move-resize-to [{:keys [x y width height]}]
+  `["MoveResizeTo"
+    ~@(filter val {:x x :y y :width width :height height})])
+
+(defn font [place name size weight slant]
+  [:font {:place place}
+   [:name name]
+   [:size size]
+   [:weight weight]
+   [:slant slant]])
+
+(defn system [& args]
+  (zero? (:exit (apply shell/sh args))))
+
+(defn sh [command]
+  (let [command (if (coll? command)
+                  (format "/bin/bash -c \"%s\"" (string/join "; " command))
+                  command)]
+    ["Execute" [:command (hiccup/h command)]]))
+
+(defn bind [key & actions]
+  (if (coll? key)
+    (apply list (map #(apply bind % actions) key))
+    `[:keybind {:key ~key}
+      ~@(map #(let [[name & opts] (wrap %)]
+                `[:action {:name ~name} ~@opts])
+             actions)]))
+
+(defn bindsh [key command]
+  (bind key (sh command)))
+
+(defn bindfocus
+  ([key title] (bindfocus key title nil))
+  ([key title fallback]
+   (let [titles (wrap title)
+         fallback (string/join "; " (wrap fallback))
+         cmd (string/join " || " (map #(format "wmctrl -a \\\"%s\\\"" %) titles))
+         cmd (if (seq fallback)
+               (format "%s || { %s; }"
+                       cmd (format fallback (format "\\\"%s\\\"" (first titles))))
+               cmd)]
+     (bindsh key (format "/bin/sh -c \"%s\"" cmd)))))
+
+(defn bindswitch [key name]
+  (bind key [name
+             [:dialog "icons"]
+             [:bar "no"]
+             [:allDesktops "no"]
+             [:finalactions
+              [:action {:name "Focus"}]
+              [:action {:name "Raise"}]
+              [:action {:name "Unshade"}]]]))
+
+(defn bindtile [key {:keys [x y width height] :as opts} & actions]
+  (let [actions (map #(if (map? %)
+                        (move-resize-to %)
+                        ["GrowToEdge" [:direction %]])
+                     actions)
+        args (concat [key "UnMaximize" (move-resize-to opts)]
+                     actions)]
+    (apply bind args)))
+
+(defn bindmouse [[button event] & actions]
+  `[:mousebind {:button ~button :action ~event}
+    ~@(map #(let [[name & opts] (wrap %)]
+              `[:action {:name ~name} ~@opts])
+           actions)])
+
+(defn menu-item [label action & opts]
+  `[:item {:label ~label}
+    [:action {:name ~action} ~@opts]])
+
+(def config-resistance
+  [:resistance
+   [:strength "400"]
+   [:screen_edge_strength "65535"]])
+
+(def config-focus
+  [:focus
+   [:focusNew "yes"]
+   [:followMouse "yes"]
+   [:focusLast "yes"]
+   [:underMouse "no"]
+   [:focusDelay "100"]
+   [:raiseOnFocus "no"]])
+
+(def config-placement
+  [:placement
+   [:policy "UnderMouse"]
+   [:monitor "Active"]
+   [:primaryMonitor "1"]])
+
+(def config-theme
+  [:theme
+   [:name "ArchSimple"]
+   [:titleLayout "NLC"]
+   [:keepBorder "no"]
+   [:animateIconify "yes"]
+   (font "ActiveWindow"            "Segoe UI" "8" "Bold"   "Normal")
+   (font "InactiveWindow"          "Segoe UI" "8" "Bold"   "Normal")
+   (font "MenuHeader"              "Segoe UI" "9" "normal" "normal")
+   (font "MenuItem"                "Segoe UI" "9" "normal" "normal")
+   (font "ActiveOnScreenDisplay"   "Segoe UI" "9" "bold"   "normal")
+   (font "InactiveOnScreenDisplay" "Segoe UI" "9" "bold"   "normal")])
+
+(def config-desktops
+  [:desktops
+   [:number "4"]
+   [:firstdesk "1"]
+   [:names [:name "One"] [:name "Two"] [:name "Three"] [:name "Four"]]
+   [:popupTime "750"]])
+
+(def config-resize
+  [:resize
+   [:drawContents "yes"]
+   [:popupShow "Always"]
+   [:popupPosition "Top"]
+   [:popupFixedPosition [:x "10"] [:y "10"]]])
+
+(def config-margins
+  [:margins
+   [:top "0"]
+   [:bottom "0"]
+   [:left "0"]
+   [:right "0"]])
+
+(def config-dock
+  [:dock
+   [:position "TopLeft"]
+   [:floatingX "0"]
+   [:floatingY "0"]
+   [:noStrut "no"]
+   [:stacking "Above"]
+   [:direction "Vertical"]
+   [:autoHide "no"]
+   [:hideDelay "300"]
+   [:showDelay "300"]
+   [:moveButton "Middle"]])
+
+(def config-keyboard
+  [:keyboard
+   [:chainQuitKey "C-c"]
+
+   ;; Openbox functions
+   (bindsh "W-C-A-r" ["notify --audio=/dev/null 'Compiling Openbox configuration.'"
+                      "if openbox-configuration --update"
+                      "then notify --audio Success"
+                      "else notify Failure"
+                      "fi"])
+   (bind "W-C-A-S-r" "Restart")
+   (bind "W-C-A-q" ["Exit" [:prompt "false"]])
+   (bind "W-q" "Close")
+   (bind "W-C-f" "ToggleMaximizeFull")
+   (bind "W-C-m" "Iconify")
+   (bind "W-C-A-space" ["ShowMenu" [:menu "client-menu"]])
+   (bind "W-C-A-d" "ToggleDecorations")
+
+   ;; Hardware / Media control
+   (bindfocus ["W-F3" "W-XF86AudioMute"]
+              "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
+   (bindsh ["A-F3" "A-XF86AudioMute"]
+           (if (system "killall" "-0" "pulseaudio")
+             ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink)"]
+             ["notify --audio=/dev/null - < <(hwctl toggle-alsa-card)"]))
+   (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
+   (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
+   (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
+   (when (.exists (io/file "/sys/class/backlight/intel_backlight"))
+     (bindsh "XF86MonBrightnessDown" "hwctl backlight -5")
+     (bindsh "F6" "hwctl backlight -5")
+     (bindsh "XF86MonBrightnessUp" "hwctl backlight +5")
+     (bindsh "F7" "hwctl backlight +5"))
+   (if (system "synclient" "-l")
+     (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
+                     "synclient TouchpadOff=$OFF"
+                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"
+                     "xdotool mousemove 10000 10000"])
+     (bindsh "W-F8" ["ruby -e '
+                        id = %x(xinput list)[/mouse.*id=(\\d+)/i, 1]
+                        exit if id.nil? or id.empty?
+                        state = !!(%x(xinput list-props #{id}) =~ /Device Enabled.*:\\s*1$/i)
+                        system %q(xinput), %q(set-prop), id, %q(Device Enabled), (state ? 0 : 1).to_s
+                        system %q(notify), %q(--audio), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
+                      '"
+                     "xdotool mousemove 10000 10000"]))
+   (bindsh ["XF86Eject" "Pause"] ["slock" "killall -HUP gpg-agent"])
+   (bindsh ["C-XF86Eject" "C-Pause"] "killall -HUP gpg-agent")
+   (bindsh ["W-XF86Eject" "W-Pause" "XF86Sleep"] "sudo /usr/local/bin/systemctl-suspend")
+   (bindsh ["W-A-XF86Eject" "W-A-Pause"] "sudo /usr/bin/reboot")
+   (bindsh ["W-C-A-XF86Eject" "W-C-A-Pause"] "sudo /usr/bin/poweroff")
+   (bindsh "W-C-S-space" "mediactl toggle")
+   (bindsh "W-C-S-Left" "mediactl prev")
+   (bindsh "W-C-S-Right" "mediactl next")
+   (bindsh "A-space" "xdotool click 3")
+   (bindsh "W-A-space" "xdotool click 2")
+
+   ;; Application bindings
+   (bindsh "W-space" "kupfer")
+   (bindsh "W-C-t" "urxvt-client")
+   (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
+   (bindsh "W-A-t" "urxvt-client -e htop")
+   (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
+   (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
+   ; (bindfocus "F2" "File Manager" "exec thunar ~/Downloads") ; Kupfer trigger
+   (bindsh "W-F2" "thunar ~/Downloads")
+   (bindfocus "F9" "guns ❦ EVA")
+   (bindfocus "W-F9" "root ❦ EVA")
+   (bindfocus "A-F9" "urxvt" "urxvt-client")
+   ; (bindfocus "F10" "Vimperator" "exec firefox") ; Kupfer trigger
+   ; (bindfocus "W-F10" "Chromium" "exec chromium") ; Kupfer trigger
+   (bindfocus "W-A-F10" "♻ podbeuter ♻"
+              ["cd ~/Media/Music/Podcasts"
+               "urxvt-client -title %s -g 120x40 -e podbeuterlaunch"])
+   (bindfocus "A-F10" "♻ newsbeuter ♻"
+              ["cd ~/Downloads"
+               "urxvt-client -title %s -g 120x40 -e newsbeuterlaunch"])
+   (bindfocus "F12" ["✉ Mutt ✉" "mutt-$HOSTNAME"]
+              ["cd ~/Downloads"
+               "urxvt-client -title %s -g 120x40 -e muttlaunch"])
+   (bindsh "W-F12" "urxvt-client -title '✉ Mutt ✉' -g 120x40 -e muttlaunch -f")
+   (bindsh "A-F12" "open https://mail.google.com/")
+
+   ;; Toggle application
+   (bindsh "W-C-S-z" ["WM_PID=$(xprop | awk '/_NET_WM_PID/{print $NF; exit}')"
+                      "if [[ $WM_PID != +([0-9]) ]]"
+                      "then notify COULD NOT DETERMINE PID"
+                      "elif [[ $(awk '{print $3}' /proc/$WM_PID/stat) == T ]]"
+                      "then kill -CONT $WM_PID; notify --audio CONT $WM_PID"
+                      "else kill -STOP $WM_PID; notify --audio STOP $WM_PID"
+                      "fi"])
+
+   ;; Desktop switching
+   (bind "W-C-k" ["GoToDesktop" [:to "left"] [:wrap "yes"]])
+   (bind "W-C-j" ["GoToDesktop" [:to "right"] [:wrap "yes"]])
+   (bind "W-C-h" ["SendToDesktop" [:to "left"] [:wrap "yes"]])
+   (bind "W-C-l" ["SendToDesktop" [:to "right"] [:wrap "yes"]])
+
+   ;; Window switching
+   (bind "F8" "ToggleShowDesktop")
+   (bindswitch "W-Tab" "NextWindow")
+   (bindswitch "W-S-Tab" "PreviousWindow")
+
+   ;; Subtle-esque window tiling
+   (bindtile "W-C-A-s" {:x "center" :y "0"   :width "66%" :height "95%"} "south")
+   (bindtile "W-C-a" {:x "5%"     :y "0"   :width "45%" :height "95%"} "west" "south" {:y "center"})
+   (bindtile "W-C-d" {:x "50%"    :y "0"   :width "45%" :height "95%"} "east" "south" {:y "center"})
+   (bindtile "W-C-w" {:x "0"      :y "5%"  :width "95%" :height "45%"} "east" "north" {:x "center"})
+   (bindtile "W-C-x" {:x "0"      :y "50%" :width "95%" :height "45%"} "east" "south" {:x "center"})
+   (bindtile "W-C-q" {:x "5%"     :y "5%"  :width "45%" :height "45%"} "west" "north")
+   (bindtile "W-C-e" {:x "50%"    :y "5%"  :width "45%" :height "45%"} "east" "north")
+   (bindtile "W-C-z" {:x "5%"     :y "50%" :width "45%" :height "45%"} "west" "south")
+   (bindtile "W-C-c" {:x "50%"    :y "50%" :width "45%" :height "45%"} "east" "south")])
+
+(def config-mouse
+  [:mouse
+   [:dragThreshold "1"]
+   [:doubleClickTime "200"]
+   [:screenEdgeWarpTime "0"]
+   [:screenEdgeWarpMouse "false"]
+   [:context {:name "Frame"}
+    (bindmouse ["W-Left" "Press"] "Focus")
+    (bindmouse ["W-Left" "Drag"] "Move")
+    (bindmouse ["W-C-Left" "Press"] "Resize")]
+   [:context {:name "Titlebar"}
+    (bindmouse ["Left" "Drag"] "Move")
+    (bindmouse ["Left" "DoubleClick"] "ToggleMaximizeFull")]
+   [:context {:name "Titlebar Top Right Bottom Left TLCorner TRCorner BRCorner BLCorner"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
+   [:context {:name "Client"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Middle" "Press"] "Focus" "Raise")
+    (bindmouse ["Right" "Press"] "Focus" "Raise")]
+   [:context {:name "Icon"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade" ["ShowMenu" [:menu "client-menu"]])
+    (bindmouse ["Right" "Press"] "Focus" "Raise" ["ShowMenu" [:menu "client-menu"]])]
+   [:context {:name "AllDesktops"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "ToggleOmnipresent")]
+   [:context {:name "Shade"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Left" "Click"] "ToggleShade")]
+   [:context {:name "Iconify"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise")
+    (bindmouse ["Left" "Click"] "Iconify")]
+   [:context {:name "Maximize"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Middle" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Right" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "ToggleMaximize")
+    (bindmouse ["Middle" "Click"] ["ToggleMaximize" [:direction "vertical"]])
+    (bindmouse ["Right" "Click"] ["ToggleMaximize" [:direction "horizontal"]])]
+   [:context {:name "Close"}
+    (bindmouse ["Left" "Press"] "Focus" "Raise" "Unshade")
+    (bindmouse ["Left" "Click"] "Close")]
+   [:context {:name "Desktop"}]
+   [:context {:name "Root"}
+    (bindmouse ["Up" "Click"] ["GoToDesktop" [:to "left"] [:wrap "yes"]])
+    (bindmouse ["Down" "Click"] ["GoToDesktop" [:to "right"] [:wrap "yes"]])
+    (bindmouse ["Right" "Press"] ["ShowMenu" [:menu "client-list-combined-menu"]])
+    (bindmouse ["Middle" "Press"] (sh "urxvt-client"))]])
+
+(def config-menu
+  [:menu
+   [:hideDelay "200"]
+   [:middle "yes"]
+   [:submenuShowDelay "100"]
+   [:submenuHideDelay "400"]
+   [:showIcons "yes"]
+   [:manageDesktops "no"]])
+
+(def config-applications
+  [:applications
+   [:application {:name "urxvt"} [:decor "no"]]
+   [:application {:name "urxvt" :title "htop"} [:maximized "yes"]]
+   [:application {:role "browser"} [:decor "no"]]
+   [:application {:name "gifview"} [:position [:x "center"] [:y "center"]] [:decor "no"]]
+   [:application {:name "kupfer.py"} [:position [:x "center"] [:y "center"]] [:layer "above"]]
+   [:application {:name "cinelerra"} [:decor "no"]]
+   [:application {:name "xv"} [:decor "no"]]])
+
+(def rc
+  [:openbox_config {:xmlns "http://openbox.org/3.4/rc" :xmlns:xi "http://www.w3.org/2001/XInclude"}
+   config-resistance
+   config-focus
+   config-placement
+   config-theme
+   config-desktops
+   config-resize
+   config-margins
+   config-dock
+   config-keyboard
+   config-mouse
+   config-menu
+   config-applications])
+
+;;;
+;;; Program actions.
+;;;
+
+(def openbox-rc-path
+  (str (System/getProperty "user.home") "/.config/openbox/rc.xml"))
+
+(def options
+  [["-c" "--config FILE" :default openbox-rc-path]
+   ["-u" "--update"]
+   ["-h" "--help"]])
+
+(defn -main [& argv]
+  (try
+    (let [[{:keys [config update help]} args summary] (parse argv options)]
+      (cond help (do (println (str "Usage: openbox-configuration [options]\n\nOptions:\n" summary)))
+            update (do (spit config (render-xml rc))
+                       (shell/sh "openbox" "--reconfigure"))
+            :else (println (render-xml rc)))
+      (System/exit 0))
+    (catch AssertionError e
+      (println (.getMessage e))
+      (System/exit 1))))
+
+(apply -main (rest *command-line-args*))
+
+;; vim: ft=clojure:

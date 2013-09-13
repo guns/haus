@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if killall -0 podbeuter &>/dev/null; then
+    exit 1
+else
+    exec cert exec -f ~/.certificates/newsbeuter.crt podbeuter
+fi

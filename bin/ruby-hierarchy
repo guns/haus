@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
+
+require 'optparse'
+require 'ostruct'
+
+class RubyHierarchy
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.indent ||= 2
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 16 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Print Ruby Class hierarchy, optionally rooted to given class.
+
+        Adapted from: http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
+
+        Usage: #{File.basename __FILE__} [options] [root-node]
+
+        Options:
+      BANNER
+
+      opt.on '-e', '--exceptions', 'Show exception hierarchy; same as specifying Exception as the root node' do
+        options.root = 'Exception'
+      end
+
+      opt.on '-i', '--indent N', Integer, 'Indent step size' do |arg|
+        options.indent = arg
+      end
+
+      opt.on '-r', '--require a,b,c', Array, 'Libraries to require before building tree' do |arg|
+        arg.each { |l| require l }
+      end
+    end
+  end
+
+  def to_hash
+    root = Kernel.const_get options.root if options.root
+    tree = {}
+
+    ObjectSpace.each_object Class do |leaf|
+      branch = leaf.ancestors
+
+      if root
+        next unless branch.include? root
+        branch.pop until branch.last == root
+      end
+
+      branch.reverse.inject(tree) { |k,v| k[v] ||= {} }
+    end
+
+    tree
+  end
+
+  def to_s
+    reduce to_hash
+  end
+
+  def reduce tree, buf = '', indent = 0
+    tree.keys.sort_by { |k| k.to_s }.each do |k|
+      buf << "%s%s\n" % [' ' * indent, k]
+      indent += options.indent
+      reduce tree[k], buf, indent # Recurse!
+      indent -= options.indent
+    end
+
+    buf
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    options.root = args.first if args.first
+    puts to_s
+  end
+end
+
+$0 = File.basename(__FILE__) and RubyHierarchy.new.run ARGV if $0 == __FILE__

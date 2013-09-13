@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2011 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'shellwords'
+
+class Airportpower
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.interface ||= 'en1'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Set or toggle your Mac's airport card via `/usr/sbin/networksetup`.
+
+        Usage: #{File.basename __FILE__} [on|off|toggle|status]
+
+        Options:
+      BANNER
+
+      opt.on '-i', '--interface NAME', "BSD interface; #{options.interface} by default" do |arg|
+        options.interface = arg
+      end
+    end
+  end
+
+  def status
+    %x(/usr/sbin/networksetup -getairportpower #{options.interface.shellescape})[/\w+$/].downcase
+  end
+
+  %w[on off].each do |state|
+    define_method state do
+      system *%W[/usr/sbin/networksetup -setairportpower #{options.interface} #{state}]
+    end
+  end
+
+  def toggle
+    send (status == 'on' ? :off : :on)
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    raise 'OS X only!' unless RUBY_PLATFORM =~ /darwin/
+
+    case cmd = args.first
+    when 'status', nil then status
+    when 'toggle'      then toggle
+    when 'on'          then on
+    when 'off'         then off
+    else abort parser.help
+    end
+
+    puts "Airport is #{status}"
+  end
+end
+
+$0 = File.basename(__FILE__) and Airportpower.new.run ARGV if $0 == __FILE__

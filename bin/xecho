@@ -1,0 +1,158 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Xecho
+  COMMANDS = {
+    'nw'     => ['',             'Move window to northwest corner'],
+    'n'      => ['',             'Move window to north edge'],
+    'ne'     => ['',             'Move window to northeast corner'],
+    'w'      => ['',             'Move window to west edge'],
+    'c'      => ['',             'Move window to center'],
+    'e'      => ['',             'Move window to east edge'],
+    'sw'     => ['',             'Move window to southwest corner'],
+    's'      => ['',             'Move window to south edge'],
+    'se'     => ['',             'Move window to southeast corner'],
+    'move'   => ['X Y',          'Move window to X,Y'],
+    'ccolor' => ['COLOR',        'Set cursor color'],
+    'font'   => ['[FONT]',       'Set fontset or restore default'],
+    'fsize'  => ['[FONTSIZE]',   'Set xft pixelsize or restore default'],
+    'geom'   => ['WIDTH HEIGHT', 'Set terminal dimensions in characters'],
+    'title'  => ['STRING',       'Set window title'],
+    'raw'    => ['CTLSEQ',       'Send control sequence to terminal']
+  }
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Wrappers around common Xterm / X escape sequences.
+        GNU Screen and Tmux v1.5+ are supported.
+
+        cf. http://rtfm.etla.org/xterm/ctlseq.html
+
+        Usage: #{File.basename __FILE__} command [args]
+
+        Commands:
+      BANNER
+
+      opt.banner << COMMANDS.inject('') { |buf, (cmd, (args, desc))|
+        buf.concat "    %-20s%s\n" % [[cmd, args].join(' '), desc]
+      }
+    end
+  end
+
+  def xwininfo
+    %x(xwininfo -id "#{ENV['WINDOWID']}")
+  end
+
+  def screen_dimensions
+    %x(/bin/sh -c "xrandr 2>&1").scan(/current (\d+) x (\d+)/).flatten.take(2).map &:to_i
+  end
+
+  def window_dimensions
+    buf    = xwininfo
+    w,  h  = buf.scan(/(?:Width:|Height:) (\d+)/).flatten.take(2).map &:to_i
+    w_, h_ = buf.scan(/Relative upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    [w + w_, h + h_]
+  end
+
+  def position
+    buf    = xwininfo
+    x,  y  = buf.scan(/Absolute upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    x_, y_ = buf.scan(/Relative upper-left (?:X|Y):\s*(\d+)/).flatten.take(2).map &:to_i
+    [x - x_, y - y_]
+  end
+
+  def geometry
+    xwininfo.scan(/.*geometry (\d+)x(\d+)/).last.map &:to_i
+  end
+
+  def mod_width
+    screen_dimensions[0] - window_dimensions[0]
+  end
+
+  def mod_height
+    screen_dimensions[1] - window_dimensions[1]
+  end
+
+  def fontset
+    %x(xrdb -query).lines.grep(/\*font:/).last[/\*font:\s*(.*)/, 1]
+  end
+
+  def sh cmd
+    system '/bin/sh', '-c', cmd
+  end
+
+  def raw seq
+    # Tmux 1.5+ supports raw terminal passthrough
+    if ENV.has_key? 'TMUX'
+      sh %Q(printf "\033Ptmux;\033%s\033\\\\") % seq
+    elsif ENV['TERM'] =~ /\Ascreen-?/
+      sh %Q(printf "\033P%s\033\\\\") % seq
+    else
+      sh %Q(printf "%s") % seq
+    end
+  end
+
+  # Wouldn't it be nice to... '((name mod_width mod_height) ...)
+  { :nw => '[0, 0]',              :n => '[(mod_width/2), 0]',              :ne => '[mod_width, 0]',
+    :w  => '[0, (mod_height/2)]', :c => '[(mod_width/2), (mod_height/2)]', :e  => '[mod_width, (mod_height/2)]',
+    :sw => '[0, mod_height]',     :s => '[(mod_width/2), mod_height]',     :se => '[mod_width, mod_height]'
+  }.each do |k, v|
+    class_eval %Q(
+      def #{k}
+        raw "\033[3;%d;%dt" % #{v}
+      end
+    )
+  end
+
+  def move x, y
+    raw "\033[3;%d;%dt" % [x, y]
+  end
+
+  def geom width, height
+    raw "\033[8;%d;%dt" % [height, width]
+  end
+
+  def ccolor color
+    raw "\033]12;%s\007" % color
+  end
+
+  def font str = nil
+    raw "\033]50;%s\007" % (str || fontset)
+  end
+
+  def fsize pixels = nil
+    buf = fontset
+    if pixels
+      raw "\033]710;%s\007" % buf.gsub(/(?<=pixelsize=)(\d+)/) { |ps|
+        (ps.to_i * pixels.to_i / buf[/pixelsize=(\d+)/, 1].to_f).round
+      }
+    else
+      raw "\033]710;%s\007" % buf
+    end
+  end
+
+  def title str
+    if ENV.has_key? 'TMUX'
+      system 'tmux', 'rename-window', str
+    elsif ENV['TERM'] =~ /\Ascreen-?/
+      system 'screen', '-X', 'title', str
+    else
+      raw "\033]2;%s\007" % str
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty? or not COMMANDS.include? args.first
+    send args.first, *args.drop(1)
+  end
+end
+
+$0 = File.basename(__FILE__) and Xecho.new.run ARGV if $0 == __FILE__

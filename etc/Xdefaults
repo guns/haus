@@ -1,0 +1,66 @@
+
+!  ____  ___         _
+!  \   \/  /   _| __|__.   |_|_ _
+!   \     /   (_|(/_|(_||_|| |__>
+!   /     \
+!  /___/\  \  guns <self@sungpae.com>
+!        \_/
+
+!!! XFT
+
+Xft*antialias: on
+Xft*hinting:   on
+Xft*hintstyle: hintslight
+
+!!! RXVT-UNICODE
+
+URxvt*background:      rgb:00/00/00
+URxvt*foreground:      rgb:FF/EB/B6
+URxvt*pointerColor:    rgb:DD/DD/DD
+URxvt*cursorBlink:     off
+URxvt*loginShell:      on
+URxvt*ptySttySize:     on
+URxvt*saveLines:       1023
+URxvt*scrollBar:       off
+URxvt*scrollBar_right: on
+URxvt*visualBell:      on
+
+URxvt*pointerBlank:      on
+URxvt*pointerBlankDelay: 65535
+URxvt*scrollTtyKeypress: on
+
+! Explicit multiple fonts for code point search
+URxvt*font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+            xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
+
+! Perl extensions
+URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select
+
+! urxvt-perls
+URxvt.keysym.Mod4-c:       perl:clipboard:copy
+URxvt.keysym.Mod4-v:       perl:clipboard:paste
+URxvt.keysym.Mod4-Meta-i:  perl:keyboard-select:activate
+URxvt.keysym.Mod4-Meta-u:  perl:url-select:select_next
+URxvt.url-select.launcher: open
+URxvt.url-select.button:   3
+
+! keysym-list: Super + Character <ESC-BEL-char>
+URxvt.keysym.Mod4-0x20:      list\033\007 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+URxvt.keysym.Mod4-Return:    \033\007\015
+URxvt.keysym.Mod4-Backspace: \033\007\177
+
+! keysym-list: Super + Arrow keys <Esc-BEL-BEL-char>
+URxvt.keysym.Mod4-Left:       list:\033\007\007:dacb:
+URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
+
+!!! XTERM
+
+XTerm*background:   rgb:00/00/00
+XTerm*foreground:   rgb:FF/EB/B6
+XTerm*pointerColor: rgb:DD/DD/DD
+
+! Remove SetSelection from blacklist
+XTerm*disallowedWindowOps: 20,21,SetXprop
+XTerm*faceName:            Consolas:pixelsize=14
+XTerm*utf8:                1
+XTerm*metaSendsEscape:     on

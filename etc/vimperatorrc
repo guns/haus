@@ -1,0 +1,93 @@
+
+"  __      ___                                _
+"  \ \    / (_)                              | |
+"   \ \  / / _ _ __ ___  _ __   ___ _ __ __ _| |_ ___  _ __
+"    \ \/ / | | '_ ` _ \| '_ \ / _ \ '__/ _` | __/ _ \| '__|
+"     \  /  | | | | | | | |_) |  __/ | | (_| | || (_) | |
+"      \/   |_|_| |_| |_| .__/ \___|_|  \__,_|\__\___/|_|
+"                       | |
+"                       |_|       guns <self@sungpae.com>
+
+""" Mapleader and Escape {{{1
+
+let g:mapleader = "<C-x>"
+imap <Leader> <Esc><Leader>
+cmap <Leader> <Esc><Leader>
+noremap <C-x> <NOP>
+noremap <C-a> <NOP>
+
+""" Settings {{{1
+
+set hintchars=sadfjklewcmpgh
+set editor='urxvt -e vim'
+
+""" Command line mappings {{{1
+
+noremap <Leader>; :help<Space>
+noremap <Leader>m :emenu<Space>
+noremap <Leader>s :set<Space>
+noremap <Leader><C-r> :source ~/.vimperatorrc<CR>
+
+cnoremap <C-n> <Down>
+cnoremap <C-p> <Up>
+
+""" Movement {{{1
+
+noremap j 7j
+noremap k 7k
+noremap e 7j
+noremap y 7k
+noremap h 7h
+noremap l 7l
+noremap b <C-u>
+noremap B b
+
+""" Links and Search {{{1
+
+noremap ; F
+noremap "'" f
+noremap , ;
+noremap f /
+noremap \\ /
+noremap Y y
+noremap <C-a> <F6>
+noremap ga <F6>
+noremap <Leader>\\ :nohlsearch<CR>
+
+""" Tabs and Buffers {{{1
+
+noremap <C-j> gt
+noremap <C-k> gT
+noremap J gt
+noremap K gT
+noremap <C-h> H
+noremap <C-l> L
+noremap t :tabnew<CR><F6>
+noremap _ :tabmove -1<CR>
+noremap + :tabmove +1<CR>
+noremap <C-S-o> :tabonly<CR>
+inoremap <C-S-o> <Esc>:tabonly<CR>
+cnoremap <C-S-o> <Esc>:tabonly<CR>
+noremap \- :zoom! -10<CR>
+noremap = :zoom! +10<CR>
+noremap 0 :zoom! 100<CR>
+
+""" Location Shortcuts {{{1
+
+noremap <C-S-lt> :tabopen about:config<CR>
+noremap <C-S-m> :tabopen about:memory<CR>
+noremap <C-S-d> :emenu Tools.DownThemAll!.DownThemAll!<CR>
+noremap <C-S-i> :emenu Tools.Web Developer.Inspector<CR>
+noremap <C-S-p> :emenu Tools.Web Developer.Scratchpad<CR>
+noremap <C-S-e> :emenu Tools.Web Developer.Style Editor<CR>
+noremap <C-S-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
+imap <C-S-t> <Esc><C-S-t>
+cmap <C-S-t> <Esc><C-S-t>
+
+""" Colors {{{1
+
+highlight! Hint font-size: 11px; color: black; font-weight: bold; font-family: Helvetica, Arial, sans-serif; border: 1px solid #E3BE23; background-color: #FFEBB6; text-transform: uppercase
+highlight! HintElem background-color: transparent
+highlight! HintActive background-color: transparent
+
+" vim: set ft=vimperator:

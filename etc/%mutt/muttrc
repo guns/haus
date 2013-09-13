@@ -1,0 +1,167 @@
+
+#      ...     ..      ..                      s        s
+#    x*8888x.:*8888: -"888:                   :8       :8
+#   X   48888X `8888H  8888     x.    .      .88      .88
+#  X8x.  8888X  8888X  !888>  .@88k  z88u   :888ooo  :888ooo
+#  X8888 X8888  88888   "*8%-~"8888 ^8888 -*8888888-*8888888
+#  '*888!X8888> X8888  xH8>    8888  888R   8888     8888
+#    `?8 `8888  X888X X888>    8888  888R   8888     8888
+#    -^  '888"  X888  8888>    8888  888R   8888     8888
+#     dx '88~x. !88~  8888>    8888 ,888B ..8888Lu= .8888Lu=
+#   .8888Xf.888x:!    X888X.: "8888Y 8888" ^%888*   ^%888*
+#  :""888":~"888"     `888*"   `Y"   'YP     'Y"      'Y"
+#      "~'    "~        ""
+#                                 guns <self@sungpae.com>
+
+# Configuration files
+source ~/.mutt/muttrc.colors
+source ~/.mutt/muttrc.settings
+source $alias_file
+
+# Mailing lists
+lists .*@googlegroups.com vim.*@vim.org
+
+# Always prefer text/plain even with implicit_autoview
+alternative_order text/plain
+
+# Major modes
+#   index:    List the eMails of an openend folder, it's the main mode.
+#   pager:    Display a selected e-mail.
+#   attach:   List the parts of MIME attachments.
+#   compose:  Set up a new eMail to be sent out.
+#   browser:  Directory listing when searching for folder to change to.
+# Sub modes
+#   alias:    List aliases (in mutt, your collection of aliases is your address book) to choose from.
+#   query:    Often used to reference a database, a common protocol being LDAP.
+#   postpone: List of postpones e-mails to select which one to continue.
+#   pgp:      List of PGP or GnuPG? keys, depending on your configuration.
+#   editor:   The input line when you are supposed to enter some text.
+# cf. http://wiki.mutt.org/?MuttGuide/Actions
+
+set my_list=index,attach,browser,alias,postpone,pgp
+
+# Meta
+macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
+macro $my_list,pager \CxeA  '<shell-escape>vim ~/.mutt/aliases<Enter>'
+macro $my_list,pager \Cx\;  '<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>'
+bind  $my_list,pager \;     enter-command
+
+# Go ->
+macro $my_list,pager gg <Home>
+macro $my_list,pager G  <End>
+macro index,pager    gi <change-folder>=INBOX<Enter>
+macro index,pager    ga <change-folder>=ARCHIVE<Enter>
+macro index,pager    gs <change-folder>=self/[Gmail].Spam<Enter>
+macro index,pager    \' "<enter-command>source ~/.mutt/muttrc.mailboxes.self<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager    \" "<enter-command>source ~/.mutt/muttrc.mailboxes.local<enter><change-folder>?<toggle-mailboxes>"
+bind  browser        \' exit
+bind  browser        \" exit
+macro browser        u  <search>^\.\.$<Enter>
+
+# Movement
+macro $my_list,pager <Space> <next-page>
+macro $my_list,pager \Cf     <next-page>
+macro $my_list,pager f       <next-page>
+macro $my_list,pager \Cb     <previous-page>
+macro $my_list,pager b       <previous-page>
+bind  $my_list,pager e       next-line
+bind  $my_list,pager \e\007e half-down
+bind  $my_list,pager y       previous-line
+bind  $my_list,pager \e\007y half-up
+bind  $my_list,pager n       search-next
+bind  $my_list,pager N       search-opposite
+bind  $my_list       zt      current-top
+bind  $my_list       zz      current-middle
+bind  $my_list       zb      current-bottom
+macro index,pager    <Tab>   <next-unread>
+macro index,pager    ]       <next-unread>
+macro index,pager    [       <previous-unread>
+macro $my_list       \Cn     <next-thread>
+macro $my_list       \Cp     <previous-thread>
+bind  $my_list,pager \\      search
+
+# Actions
+bind  index,pager c       mail
+macro index,pager m       <set-flag>N
+macro index,pager M       <clear-flag>N
+bind  index,pager S       sync-mailbox
+bind  index,pager R       group-reply
+bind  index,pager p       recall-message
+bind  index,pager B       bounce-message
+bind  index,pager E       edit
+bind  index,pager F       forward-message
+macro index,pager a       <save-entry>=ARCHIVE<enter>
+bind  index,pager A       create-alias
+macro index,pager \Ca     "<pipe-message>abook --add-email<enter>"
+macro index,pager \Cd     <delete-thread>
+macro index,pager \Cu     <undelete-thread>
+macro index,pager \Cr     <read-thread>
+macro index,pager \Ct     <tag-thread>
+macro index,pager \ea     <shell-escape>abook<enter>
+bind  index,pager \es     flag-message
+bind  index       \et     untag-pattern
+macro index       \e\007a <tag-pattern>.<enter>
+macro index       \e\007t <tag-pattern>.<enter>
+macro index       \e\007T <untag-pattern>.<enter>
+macro index       =       <limit>~=<enter>
+macro index       +       <limit>~X1-<enter>
+macro index       \e\007L <limit>all<enter>
+bind  browser     .       check-new
+bind  attach      o       view-mailcap
+bind  index       <Space> collapse-thread
+bind  index       zM      collapse-all
+bind  index       zR      collapse-all
+
+# Editor
+bind editor \Cn history-down
+bind editor \Cp history-up
+
+# Index macros
+set my_index_format_a="%3C %S │%-16.16F│%?X?•& ?%s%* %?M? +& ?│%[%d/%b]"
+set my_index_format_b="%3C %Z │%-48.48f│%?X?•& ?%s%* %?M? +%M& ?│%4c(%X) %[%l:%M%p %d/%b/%Y]"
+set index_format="$my_index_format_a"
+macro index \e\0071 "<enter-command>set index_format=\"$my_index_format_b\"<enter><enter-command>macro index i \\e\\0072<enter>"
+macro index \e\0072 "<enter-command>set index_format=\"$my_index_format_a\"<enter><enter-command>macro index i \\e\\0071<enter>"
+macro index i       \e\0071
+
+# Message macros
+macro pager \e\0073 "<enter-command>set wrap=0 <enter><enter-command>macro pager w \\e\\0074<enter>"
+macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager w \\e\\0073<enter>"
+macro pager w       \e\0074
+
+# notmuchfs macros
+macro index,pager \e\007R "<shell-escape>(if notmuch new; then notify -a 'Notmuch scan complete'; else notify -a 'Notmuch scan failed'; fi) &>/dev/null &<enter>"
+macro index,pager \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify -a 'notmuchfs mounted') &>/dev/null &<enter>"
+macro index,pager \e\007N "<shell-escape>(cd $folder; rake umount && notify -a 'notmuchfs unmounted') &>/dev/null &<enter>"
+macro index,pager \e\007/ "\e\007n<enter-command>source ~/.mutt/muttrc.mailboxes.notmuch<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
+bind  browser     \e\007/ exit
+
+# Identities
+set my_identity_1='\
+    set from="guns <self@sungpae.com>";\
+    set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
+    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/self@sungpae.com.gpg`"'
+set my_identity_2='\
+    set from="guns <sungpae@gmail.com>";\
+    set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
+    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/sungpae@gmail.com.gpg`"'
+macro $my_list,pager,compose \Cx? "<enter-command>set ?from<enter>"
+macro $my_list,pager,compose \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
+macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
+macro $my_list,pager,compose \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
+reply-hook '!~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_1"
+reply-hook '~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_2"
+send-hook '!~s ^Re:' "$my_identity_1"
+
+# Hooks
+folder-hook . 'set record="^"' # Save sent mail to current folder
+folder-hook . 'push <current-top><refresh>'
+
+# Encrypt mail only to recipients with public keys
+set my_cryptlist=`gpg --list-keys | ruby -e '\
+    puts $stdin.read.scan(/<(.*?)>/)\
+         .map { |(e)| "\\\\\\\\<%s\\\\\\\\>" % Regexp.escape(Regexp.escape(Regexp.escape(e))) }\
+         .join("\\\\|")'`
+send-hook ~A 'set crypt_autoencrypt=no'
+send-hook "~t ($my_cryptlist)" 'set crypt_autoencrypt=yes'

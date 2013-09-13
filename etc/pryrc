@@ -1,0 +1,23 @@
+# -*- encoding: utf-8 -*-
+
+#   ______ ______ ___ ___
+#  |   __ \   __ \   |   |
+#  |    __/      <\     /
+#  |___|  |___|__| |___|   guns <self@sungpae.com>
+#
+
+begin
+  require 'cli/repl_helpers'
+  require 'pry-nav'
+rescue LoadError
+end
+
+if defined? CLI::ReplHelpers
+  include CLI::ReplHelpers
+end
+
+if defined? PryNav
+  Pry.commands.alias_command 'c', 'continue'
+  Pry.commands.alias_command 's', 'step'
+  Pry.commands.alias_command 'n', 'next'
+end

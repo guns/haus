@@ -1,0 +1,872 @@
+### TEMPLATES {{{1
+
+snippet #! "#! ruby" b
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+endsnippet
+
+snippet #E "-*- encoding:utf-8 -*-" b
+# -*- encoding: utf-8 -*-
+
+endsnippet
+
+snippet # "# =>" w
+# => $0
+endsnippet
+
+snippet APP "CLI app template" b
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+
+class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
+	attr_reader :options
+
+	def initialize opts = {}
+		@options = OpenStruct.new opts
+		options.$0 ||=
+	end
+
+	def parser
+		@parser ||= OptionParser.new nil, 20 do |opt|
+			opt.banner = <<-BANNER.gsub /^ +/, ''
+				Usage: #{File.basename __FILE__} [options]
+
+				Options:
+			BANNER
+		end
+	end
+
+	def run arguments = []
+		args = parser.parse arguments
+	end
+end
+
+\$0 = File.basename(__FILE__) and $1.new.run ARGV if \$0 == __FILE__
+endsnippet
+
+
+### SYNTAX HELPERS {{{
+
+snippet do "do |x| end" w
+do |$1|
+	$0
+end
+endsnippet
+
+snippet { "{ || }" !
+{ ${1:|${2:}| }$0`!v " "`
+endsnippet
+
+snippet : ":key => value" w
+:$1 => $0
+endsnippet
+
+snippet r "return" w
+return $0
+endsnippet
+
+snippet y "yield"
+yield
+endsnippet
+
+snippet deb "debugger" b
+begin ### DEBUG
+	require 'pry'
+	binding.send $stdin.tty? ? :pry : :remote_pry
+end
+endsnippet
+
+snippet bm "benchmark" b
+n = $1
+Benchmark.${2:bm} do |${3:test}|
+	$3.report { n.times { $0 } }
+end
+endsnippet
+
+snippet rpp "require pretty_print; pp" b
+require 'pp'; pp $0
+endsnippet
+
+snippet rap "require awesome_print" b
+require 'ap'; ap $0
+endsnippet
+
+snippet opt "opt.on"
+${1:opt}.on ${2:'-${3:o}', }${4:'--${5:option}'}${6:, ${7:Class}}${8:, '${9:Desc}'} do${10: |arg|}
+	$0
+end
+endsnippet
+
+snippet sw "summary_width =" w
+summary_width = $0
+endsnippet
+
+snippet beg "begin .. end" b
+begin
+	$0
+${1:rescue$2}
+end
+endsnippet
+
+snippet _f "__FILE__" w
+__FILE__
+endsnippet
+
+snippet _d "__dir__" w
+__dir__
+endsnippet
+
+snippet _e "__END__" b
+__END__
+endsnippet
+
+snippet uns "unshift" w
+unshift
+endsnippet
+
+snippet syn "synchronize" w
+synchronize
+endsnippet
+
+
+### COMPOSITION {{{1
+
+snippet req "require" b
+require '$1'
+endsnippet
+
+snippet inc "include" w
+include $0
+endsnippet
+
+snippet extend "extend" w
+extend $0
+endsnippet
+
+snippet mf "module_function"
+module_function :$0
+endsnippet
+
+
+### CLASS and MODULE DEFINITIONS {{{1
+
+snippet cla "class" w
+class ${0:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
+end
+endsnippet
+
+snippet clae "class MyException < Exception" w
+class $1 < ${2:StandardError}; end
+endsnippet
+
+snippet clas "class << self" w
+class << self
+	$0
+end
+endsnippet
+
+snippet mod "module" w
+module ${0:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
+end
+endsnippet
+
+
+### METHOD DEFINITIONS {{{1
+
+snippet def "def" w
+def $0
+end
+endsnippet
+
+snippet defs "def self." w
+def self.$0
+end
+endsnippet
+
+snippet defm "define_method" w
+define_method
+endsnippet
+
+snippet ini "def initialize" w
+def initialize$0
+end
+endsnippet
+
+snippet rd "attr_reader" w
+attr_reader :
+endsnippet
+
+snippet wr "attr_writer" w
+attr_writer :
+endsnippet
+
+snippet rw "attr_accessor" w
+attr_accessor :
+endsnippet
+
+snippet f "lambda"
+lambda { ${1:|${2:x}| }$0 }
+endsnippet
+
+
+### METAPROGRAMMING {{{1
+
+snippet ev "eval" w
+eval
+endsnippet
+
+snippet iev "instance_eval" w
+instance_eval
+endsnippet
+
+snippet cev "class_eval" w
+class_eval
+endsnippet
+
+snippet ivg "instance_variable_get" w
+instance_variable_get
+endsnippet
+
+snippet ivs "instance_variable_set" w
+instance_variable_set
+endsnippet
+
+snippet cg "const_get" w
+const_get
+endsnippet
+
+
+### CONDITIONALS {{{1
+
+snippet if "if"
+if $0
+end
+endsnippet
+
+snippet e "else"
+else
+endsnippet
+
+snippet el "elsif"
+elsif $0
+endsnippet
+
+snippet un "unless"
+unless $0
+endsnippet
+
+snippet case "case"
+case $1
+when $0
+end
+endsnippet
+
+snippet w "when"
+when $0
+endsnippet
+
+
+### LOOPS {{{1
+
+snippet lo "loop"
+loop do
+	$0
+end
+endsnippet
+
+snippet wh "while"
+while $0
+end
+endsnippet
+
+snippet unt "until"
+until $0
+end
+endsnippet
+
+
+### PROPERTIES {{{1
+
+snippet rt "respond_to?" w
+respond_to?
+endsnippet
+
+snippet is "is_a?" w
+is_a?
+endsnippet
+
+snippet ko "kind_of?" w
+kind_of?
+endsnippet
+
+snippet emp "empty?" w
+empty?
+endsnippet
+
+snippet fro "frozen?" w
+frozen?
+endsnippet
+
+snippet zer "zero?" w
+zero?
+endsnippet
+
+snippet bg "block_given?"
+block_given?
+endsnippet
+
+snippet ins "inspect" w
+inspect
+endsnippet
+
+snippet rev "reverse" w
+reverse
+endsnippet
+
+snippet shu "shuffle" w
+shuffle
+endsnippet
+
+snippet hk "has_key?" w
+has_key?
+endsnippet
+
+
+### IO, FILE, and FILEUTILS {{{1
+
+snippet F "File." w
+File.
+endsnippet
+
+snippet fu "FileUtils" w
+FileUtils.
+endsnippet
+
+snippet exp "File.expand_path"
+File.expand_path
+endsnippet
+
+snippet .exp ".expand_path" w
+.expand_path
+endsnippet
+
+snippet exe "File.executable?"
+File.executable?
+endsnippet
+
+snippet .exe ".executable?" w
+.executable?
+endsnippet
+
+snippet bas "File.basename"
+File.basename
+endsnippet
+
+snippet .bas ".basename" w
+.basename
+endsnippet
+
+snippet dir "File.dirname"
+File.dirname
+endsnippet
+
+snippet .dir ".dirname" w
+.dirname
+endsnippet
+
+snippet exi "File.exists?"
+File.exists?
+endsnippet
+
+snippet .exi ".exists?" w
+.exists?
+endsnippet
+
+snippet mkd "FileUtils.mkdir_p"
+FileUtils.mkdir_p
+endsnippet
+
+snippet .mkd ".mkdir_p" w
+.mkdir_p
+endsnippet
+
+snippet fope "File.open"
+File.open${3:(}${1:IO}, '${2:w}'${3/\(/) /}{ |${4:io}| $0 }
+endsnippet
+
+snippet ope "open" w
+open${3:(}${1:IO}, '${2:w}'${3/\(/) /}{ |${4:io}| $0 }
+endsnippet
+
+snippet fj "File.join"
+File.join
+endsnippet
+
+snippet File.j "File.join"
+File.join
+endsnippet
+
+snippet frl "File.readlink"
+File.readlink
+endsnippet
+
+snippet rl "readlink" w
+readlink
+endsnippet
+
+snippet cv "command -v" w
+/bin/sh -c "command -v $1"
+endsnippet
+
+
+### ENUMERATION {{{1
+
+snippet ea "each" w
+each { |${1:e}| $0 }
+endsnippet
+
+snippet eai "each_index" w
+each_index { |${1:i}| $0 }
+endsnippet
+
+snippet eak "each_key" w
+each_key { |${1:key}| $0 }
+endsnippet
+
+snippet eav "each_value" w
+each_value { |${1:val}| $0 }
+endsnippet
+
+snippet eac "each_cons" w
+each_cons${2:(}${1:n}${2/\(/) /}{ |${3:ary}| $0 }
+endsnippet
+
+snippet eas "each_slice" w
+each_slice${2:(}${1:n}${2/\(/) /}{ |${3:ary}| $0 }
+endsnippet
+
+snippet eawi "each_with_index" w
+each { |${1:e}, ${2:i}| $0 }
+endsnippet
+
+snippet reverse_each "reverse_each" w
+reverse_each { |${1:e}| $0 }
+endsnippet
+
+snippet wi "with_index" w
+with_index { |${1:e}, ${2:i}| $0 }
+endsnippet
+
+snippet map "map" w
+map { |${1:e}| $0 }
+endsnippet
+
+snippet map! "map!" w
+map! { |${1:e}| $0 }
+endsnippet
+
+snippet red "reduce" w
+reduce
+endsnippet
+
+snippet ste "step" w
+step${2:(}${1:limit}, ${3:i}${2/\(/) /}{ |${4:n}| $0 }
+endsnippet
+
+snippet sel "select" w
+select { |${1:e}| $0 }
+endsnippet
+
+snippet sel! "select!" w
+select! { |${1:e}| $0 }
+endsnippet
+
+snippet rej "reject" w
+reject { |${1:e}| $0 }
+endsnippet
+
+snippet rej! "reject!" w
+reject! { |${1:e}| $0 }
+endsnippet
+
+snippet tim "times" w
+times { |${1:n}| $0 }
+endsnippet
+
+snippet ut "upto" w
+upto${2:(}${1:ceil}${2/\(/) /}{ |${3:n}| $0 }
+endsnippet
+
+snippet dt "downto" w
+downto${2:(}${1:floor}${2/\(/) /}{ |${3:n}| $0 }
+endsnippet
+
+snippet sor "sort" w
+sort { |a,b| $0 }
+endsnippet
+
+snippet sorb "sort_by" w
+sort_by { |${1:e}| $0 }
+endsnippet
+
+snippet sorr "sort_by { rand }"
+sort_by { rand }
+endsnippet
+
+snippet maxb "max_by" w
+max_by { |${1:e}| $0 }
+endsnippet
+
+snippet minb "min_by" w
+min_by { |${1:e}| $0 }
+endsnippet
+
+snippet all? "all?" w
+all? { |${1:e}| $0 }
+endsnippet
+
+snippet any "any?" w
+any? { |${1:e}| $0 }
+endsnippet
+
+snippet fet "fetch" w
+fetch${2:(}${1:index, default}${2/\(/) /}
+endsnippet
+
+snippet fin "find" w
+find${1:${3:(}${2:default}${3/\(/) /}}{ |${4:e}| $0 }
+endsnippet
+
+snippet par "partition" w
+partition { |${1:e}| $0 }
+endsnippet
+
+snippet grb "group_by" w
+group_by { |${1:e}| $0 }
+endsnippet
+
+
+### RAKE {{{1
+
+snippet tas "task" b
+desc '$1'
+task :$2 do
+	$0
+end
+endsnippet
+
+snippet tasd "task :default" b
+task :default => :$1
+endsnippet
+
+snippet nam "namespace" b
+namespace :$1 do
+	$0
+end
+endsnippet
+
+
+### MINITEST {{{1
+
+snippet tes "test" w
+test '$1' do
+	$0
+end
+endsnippet
+
+snippet des "describe"
+describe $1 do
+	$0
+end
+endsnippet
+
+snippet it "it"
+it "$1" do
+	$0
+end
+endsnippet
+
+snippet bef "before"
+before do
+	$0
+end
+endsnippet
+
+snippet aft "after"
+after do
+	$0
+end
+endsnippet
+
+snippet mb "must_be" w
+must_be $0
+endsnippet
+
+snippet mbct "must_be_close_to" w
+must_be_close_to $0
+endsnippet
+
+snippet mbct "must_be_close_to" w
+must_be_close_to $0
+endsnippet
+
+snippet mbe "must_be_empty" w
+must_be_empty
+endsnippet
+
+snippet mbio "must_be_instance_of" w
+must_be_instance_of $0
+endsnippet
+
+snippet mbko "must_be_kind_of" w
+must_be_kind_of $0
+endsnippet
+
+snippet mbn "must_be_nil" w
+must_be_nil
+endsnippet
+
+snippet mbsa "must_be_same_as" w
+must_be_same_as $0
+endsnippet
+
+snippet mbs "must_be_silent" w
+must_be_silent
+endsnippet
+
+snippet mbwd "must_be_within_delta" w
+must_be_within_delta $0
+endsnippet
+
+snippet mbwe "must_be_within_epsilon" w
+must_be_within_epsilon $0
+endsnippet
+
+snippet me "must_equal" w
+must_equal $0
+endsnippet
+
+snippet mi "must_include" w
+must_include $0
+endsnippet
+
+snippet mm "must_match" w
+must_match $0
+endsnippet
+
+snippet mo "must_output" w
+must_output $0
+endsnippet
+
+snippet mr "must_raise" w
+must_raise $0
+endsnippet
+
+snippet mrt "must_respond_to" w
+must_respond_to $0
+endsnippet
+
+snippet ms "must_send" w
+must_send $0
+endsnippet
+
+snippet mt "must_throw" w
+must_throw $0
+endsnippet
+
+snippet wb "wont_be" w
+wont_be $0
+endsnippet
+
+snippet wbct "wont_be_close_to" w
+wont_be_close_to $0
+endsnippet
+
+snippet wbct "wont_be_close_to" w
+wont_be_close_to $0
+endsnippet
+
+snippet wbe "wont_be_empty" w
+wont_be_empty
+endsnippet
+
+snippet wbio "wont_be_instance_of" w
+wont_be_instance_of $0
+endsnippet
+
+snippet wbko "wont_be_kind_of" w
+wont_be_kind_of $0
+endsnippet
+
+snippet wbn "wont_be_nil" w
+wont_be_nil
+endsnippet
+
+snippet wbsa "wont_be_same_as" w
+wont_be_same_as $0
+endsnippet
+
+snippet wbwd "wont_be_within_delta" w
+wont_be_within_delta $0
+endsnippet
+
+snippet wbwe "wont_be_within_epsilon" w
+wont_be_within_epsilon $0
+endsnippet
+
+snippet we "wont_equal" w
+wont_equal $0
+endsnippet
+
+snippet wi "wont_include" w
+wont_include $0
+endsnippet
+
+snippet wm "wont_match" w
+wont_match $0
+endsnippet
+
+snippet as "assert" w
+assert $0
+endsnippet
+
+snippet asb "assert_block" w
+assert_block $0
+endsnippet
+
+snippet asem "assert_empty" w
+assert_empty $0
+endsnippet
+
+snippet aseq "assert_equal" w
+assert_equal $0
+endsnippet
+
+snippet asid "assert_in_delta" w
+assert_in_delta $0
+endsnippet
+
+snippet asie "assert_in_epsilon" w
+assert_in_epsilon $0
+endsnippet
+
+snippet asin "assert_includes" w
+assert_includes $0
+endsnippet
+
+snippet asio "assert_instance_of" w
+assert_instance_of $0
+endsnippet
+
+snippet asko "assert_kind_of" w
+assert_kind_of $0
+endsnippet
+
+snippet asm "assert_match" w
+assert_match $0
+endsnippet
+
+snippet asn "assert_nil" w
+assert_nil $0
+endsnippet
+
+snippet asop "assert_operator" w
+assert_operator $0
+endsnippet
+
+snippet asout "assert_output" w
+assert_output $0
+endsnippet
+
+snippet asp "assert_predicate" w
+assert_predicate $0
+endsnippet
+
+snippet asr "assert_raises" w
+assert_raises $0
+endsnippet
+
+snippet asrt "assert_respond_to" w
+assert_respond_to $0
+endsnippet
+
+snippet assa "assert_same" w
+assert_same $0
+endsnippet
+
+snippet asse "assert_send" w
+assert_send $0
+endsnippet
+
+snippet assi "assert_silent" w
+assert_silent $0
+endsnippet
+
+snippet ast "assert_throws" w
+assert_throws $0
+endsnippet
+
+snippet re "refute" w
+refute $0
+endsnippet
+
+snippet reem "refute_empty" w
+refute_empty $0
+endsnippet
+
+snippet reeq "refute_equal" w
+refute_equal $0
+endsnippet
+
+snippet reid "refute_in_delta" w
+refute_in_delta $0
+endsnippet
+
+snippet reie "refute_in_epsilon" w
+refute_in_epsilon $0
+endsnippet
+
+snippet rein "refute_includes" w
+refute_includes $0
+endsnippet
+
+snippet reio "refute_instance_of" w
+refute_instance_of $0
+endsnippet
+
+snippet reko "refute_kind_of" w
+refute_kind_of $0
+endsnippet
+
+snippet rem "refute_match" w
+refute_match $0
+endsnippet
+
+snippet ren "refute_nil" w
+refute_nil $0
+endsnippet
+
+snippet reop "refute_operator" w
+refute_operator $0
+endsnippet
+
+snippet rep "refute_predicate" w
+refute_predicate $0
+endsnippet
+
+snippet rert "refute_respond_to" w
+refute_respond_to $0
+endsnippet
+
+snippet resa "refute_same" w
+refute_same $0
+endsnippet
+

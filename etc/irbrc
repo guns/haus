@@ -1,0 +1,45 @@
+# -*- encoding: utf-8 -*-
+
+#     ____     __                   __  _          ___       ___
+#    /  _/__  / /____ _______ _____/ /_(_)  _____ / _ \__ __/ _ )__ __
+#   _/ // _ \/ __/ -_) __/ _ `/ __/ __/ / |/ / -_) , _/ // / _  / // /
+#  /___/_//_/\__/\__/_/  \_,_/\__/\__/_/|___/\__/_/|_|\_,_/____/\_, /
+#                                                              /___/
+#      guns <self@sungpae.com>
+
+require 'rubygems' # for backwards compatibility
+require 'irb/completion'
+require 'fileutils'
+begin
+  require 'cli/repl_helpers'
+rescue LoadError
+end
+
+include FileUtils
+include CLI::ReplHelpers if defined? CLI::ReplHelpers
+
+# re-add working directory for ruby 1.9.2+
+$:.unshift Dir.pwd
+
+# \001 and \002 are used by Readline to delimit non-printing chars
+# http://redmine.ruby-lang.org/issues/show/3616
+color = Process.euid.zero? ? 31 : 32
+IRB.conf[:PROMPT][:PYTHON] = {
+  :PROMPT_I => "\001\e[0;1;#{color}m\002>>> \001\e[0m\002",
+  :PROMPT_N => "\001\e[0;1;#{color}m\002... \001\e[0m\002",
+  :PROMPT_S => "\001\e[0;1;#{color}m\002... \001\e[0m\002",
+  :PROMPT_C => "\001\e[0;1;#{color}m\002... \001\e[0m\002",
+  :RETURN   => "%s\n"
+}
+
+IRB.conf.merge! \
+  :PROMPT_MODE  => :PYTHON,
+  :SAVE_HISTORY => 2**16,
+  :USE_READLINE => true
+
+# Often want to use IRB as a command shell
+def ls pat = '*', opts = {}
+  Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
+end
+
+alias :sh :system

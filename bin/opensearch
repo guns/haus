@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'uri'
+require 'cgi'
+require 'nokogiri'
+
+class Opensearch
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Create and use opensearch xml files.
+
+        Usage: #{File.basename __FILE__} generate name search-url [GET|POST]
+               #{File.basename __FILE__} search file query ...
+
+        The string '***' will be replaced with '{searchTerms}' in search-url.
+      BANNER
+    end
+  end
+
+  def format url
+    # URI#check_query erroneously raises on curly braces
+    uri = URI.parse url
+    %w[path query fragment].each do |x|
+      uri.send "set_#{x}", uri.send(x).gsub('***', '{searchTerms}') if uri.send x
+    end
+    URI.join(uri).to_s
+  end
+
+  def document name, url, method = 'GET'
+    Nokogiri::XML::Builder.new do |x|
+      x.OpenSearchDescription :xmlns => 'http://a9.com/-/spec/opensearch/1.1/' do
+        x.ShortName name
+        x.InputEncoding 'UTF-8'
+        x.Url :type => 'text/html', :method => method, :template => format(url)
+      end
+    end.to_xml
+  end
+
+  def search file, *query
+    xml = Nokogiri::XML File.read(file)
+    url = xml.css('Url').attr('template').text.gsub '{searchTerms}', CGI.escape(query.join ' ')
+    system 'open', url
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    rest = args.drop 1
+
+    case args.first
+    when 'generate' then puts document(*rest)
+    when 'search' then puts search(*rest)
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Opensearch.new.run ARGV if $0 == __FILE__

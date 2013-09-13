@@ -1,0 +1,20 @@
+# -*- encoding: utf-8 -*-
+
+task :default => :build
+
+def env
+  { 'PREFIX' => ENV['PREFIX'] || '/opt/feh',
+    'exif' => '1',
+    'help' => '1',
+    'debug' => ENV['DEBUG'] ? '1' : '0' }
+end
+
+desc 'Build feh'
+task :build do
+  sh env, 'make', '-j%d' % (ENV['JOBS'] || (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue nil) || 2).to_i
+end
+
+desc 'Install feh'
+task :install do
+  sh env, 'make', 'install'
+end
