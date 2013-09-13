@@ -1299,7 +1299,7 @@ HAVE lein && {
     alias leins='run lein search'
     # alias leinu=
     # alias leinsync=
-    # alias leinoutdated=
+    alias leinoutdated='run lein ancient :all :check-clojure :allow-qualified :allow-snapshots'
 }
 
 ALIAS java-share-dump='java -server -Xshare:dump'

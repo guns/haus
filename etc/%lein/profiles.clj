@@ -25,8 +25,7 @@
         :dependencies [[org.clojure/tools.trace "0.7.6"]
                        [slamhound "1.4.0"]]
         :aliases {"RUN" ["trampoline" "run"]
-                  "REPL" ["trampoline" "repl" ":headless"]
-                  "outdated" ["ancient" ":all" ":check-clojure"]}
+                  "REPL" ["trampoline" "repl" ":headless"]}
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
         :repl-options
         {:init-ns user
