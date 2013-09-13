@@ -186,8 +186,18 @@ moves the cursor."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-backspace-join-lines t
+  "Whether backward delete in insert state may join lines."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-move-cursor-back t
   "Whether the cursor is moved backwards when exiting Insert state."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-repeat-find-to-skip-next t
+  "Whether a repeat of t or T should skip an adjacent character."
   :type 'boolean
   :group 'evil)
 
@@ -299,7 +309,7 @@ intercept the ESC event in X, too. This variable determines when
 Evil should intercept the event."
   :type '(radio (const :tag "Never" :value nil)
                 (const :tag "In terminal only" :value t)
-                (const :tag "Always" :value 'always))
+                (const :tag "Always" :value always))
   :group 'evil)
 
 (defcustom evil-show-paren-range 0
@@ -619,9 +629,11 @@ If STATE is nil, Evil is disabled in the buffer."
     ert-results-mode
     help-mode
     Info-mode
+    Man-mode
     speedbar-mode
     undo-tree-visualizer-mode
-    view-mode)
+    view-mode
+    woman-mode)
   "Modes that should come up in Motion state."
   :type  '(repeat symbol)
   :group 'evil)
@@ -692,6 +704,10 @@ intercepted."
     beginning-of-visual-line
     c-beginning-of-defun
     c-end-of-defun
+    diff-file-next
+    diff-file-prev
+    diff-hunk-next
+    diff-hunk-prev
     down-list
     end-of-buffer
     end-of-defun
@@ -758,14 +774,12 @@ intercepted."
     pop-to-mark-command
     previous-error
     previous-line
-    redo
     right-char
     right-word
     scroll-down
     scroll-up
-    undo
-    undo-tree-redo
-    undo-tree-undo
+    sgml-skip-tag-backward
+    sgml-skip-tag-forward
     up-list)
   "Non-Evil commands to initialize to motions."
   :type  '(repeat symbol)
@@ -845,11 +859,37 @@ list of categories."
   :type '((character . character))
   :group 'evil-cjk)
 
+(defcustom evil-ex-complete-emacs-commands 'in-turn
+  "TAB-completion for Emacs commands in ex command line.
+This variable determines when Emacs commands are considered for
+completion, always, never, or only if no Evil ex command is
+available for completion."
+  :group 'evil
+  :type '(radio (const :tag "Only if no ex-command." :value in-turn)
+                (const :tag "Never" :value nil)
+                (const :tag "Always" :value t)))
+
+(defface evil-ex-commands '(( nil
+                              :underline t
+                              :slant italic))
+  "Face for the evil command in completion in ex mode."
+  :group 'evil)
+
 (defface evil-ex-info '(( ((supports :slant))
                           :slant italic
                           :foreground "red"))
   "Face for the info message in ex mode."
   :group 'evil)
+
+(defcustom evil-ex-visual-char-range nil
+  "Type of default ex range in visual char state.
+If non-nil the default range when starting an ex command from
+character visual state is `<,`> otherwise it is '<,'>. In the
+first case the ex command will be passed a region covering only
+the visual selection. In the second case the passed region will
+be extended to contain full lines."
+  :group 'evil
+  :type 'boolean)
 
 ;; Searching
 (defcustom evil-magic t
@@ -1079,6 +1119,11 @@ of `evil-inhibit-operator' from one local scope to another.")
 (defvar evil-operator-range-motion nil
   "Motion of `evil-operator-range'.")
 
+(defvar evil-restriction-stack nil
+  "List of previous restrictions.
+Using `evil-with-restriction' stores the previous values of
+`point-min' and `point-max' as a pair in this list.")
+
 (evil-define-local-var evil-markers-alist
   '((?\( . evil-backward-sentence)
     (?\) . evil-forward-sentence)
@@ -1199,10 +1244,13 @@ is not restored.")
 
 (defvar evil-last-paste nil
   "Information about the latest paste.
-This should be a list (CMD POINT BEG END) where CMD is the last
-paste-command (either `evil-paste-before' or `evil-paste-after'),
-POINT is the position of point before the paste,
-BEG end END are the region of the inserted text.")
+This should be a list (CMD COUNT POINT BEG END FIRSTVISUAL) where
+CMD is the last paste-command (`evil-paste-before',
+`evil-paste-after' or `evil-visual-paste'), COUNT is the repeat
+count of the paste, POINT is the position of point before the
+paste, BEG end END are the region of the inserted
+text. FIRSTVISUAL is t if and only if the previous command was
+the first visual paste (i.e. before any paste-pop).")
 
 (evil-define-local-var evil-last-undo-entry nil
   "Information about the latest undo entry in the buffer.
@@ -1344,6 +1392,9 @@ See `evil-ex-init-shell-argument-completion'.")
 
 (defvar evil-ex-previous-command nil
   "The previously executed Ex command.")
+
+(defvar evil-ex-point nil
+  "The position of `point' when the ex command has been called.")
 
 (defvar evil-ex-range nil
   "The current range of the Ex command.")

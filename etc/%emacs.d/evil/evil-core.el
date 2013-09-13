@@ -180,12 +180,14 @@ To enable Evil globally, do (evil-mode 1)."
   "Enable Evil in Fundamental mode."
   (if evil-mode
       (progn
-        ;; changed back by `evil-local-mode'
-        (setq-default major-mode 'turn-on-evil-mode)
+        (when (eq (default-value 'major-mode) 'fundamental-mode)
+          ;; changed back by `evil-local-mode'
+          (setq-default major-mode 'turn-on-evil-mode))
         (ad-enable-regexp "^evil")
         (ad-activate-regexp "^evil")
         (with-no-warnings (evil-esc-mode 1)))
-    (setq-default major-mode 'fundamental-mode)
+    (when (eq (default-value 'major-mode) 'turn-on-evil-mode)
+      (setq-default major-mode 'fundamental-mode))
     (ad-disable-regexp "^evil")
     (ad-update-regexp "^evil")
     (with-no-warnings (evil-esc-mode -1))))
@@ -213,10 +215,13 @@ If STATE is nil, disable all states."
           (evil-previous-state-alist (copy-tree evil-previous-state-alist))
           (evil-next-state evil-next-state)
           (old-state evil-state)
-          (inhibit-quit t))
+          (inhibit-quit t)
+          (buf (current-buffer)))
      (unwind-protect
          (progn ,@body)
-       (evil-change-state old-state))))
+       (when (buffer-live-p buf)
+         (with-current-buffer buf
+           (evil-change-state old-state))))))
 
 (defmacro evil-with-state (state &rest body)
   "Change to STATE and execute BODY without refreshing the display.
@@ -555,13 +560,11 @@ the ESC prefix map (i.e. the map originally bound to \\e in
     (unless evil-esc-mode
       (setq evil-esc-mode t)
       (add-hook 'after-make-frame-functions #'evil-init-esc)
-      (add-hook 'delete-terminal-functions #'evil-deinit-esc)
       (mapc #'evil-init-esc (frame-list))))
    ((< arg 0)
     (when evil-esc-mode
       (remove-hook 'after-make-frame-functions #'evil-init-esc)
-      (remove-hook 'delete-terminal-functions #'evil-deinit-esc)
-      (mapc #'evil-deinit-esc (terminal-list))
+      (mapc #'evil-deinit-esc (frame-list))
       (setq evil-esc-mode nil)))))
 
 (defun evil-init-esc (frame)
@@ -578,12 +581,15 @@ the ESC prefix map (i.e. the map originally bound to \\e in
           (define-key input-decode-map [?\e]
             `(menu-item "" ,evil-esc-map :filter ,#'evil-esc)))))))
 
-(defun evil-deinit-esc (term)
+(defun evil-deinit-esc (frame)
   "Restore `input-decode-map' in terminal."
-  (when (eq (terminal-live-p term) 't)
-    (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
-      (define-key input-decode-map [?\e] evil-esc-map)
-      (set-terminal-parameter term 'evil-esc-map nil))))
+  (with-selected-frame frame
+    (let ((term (frame-terminal frame)))
+      (when (terminal-live-p term)
+        (let ((evil-esc-map (terminal-parameter term 'evil-esc-map)))
+          (when evil-esc-map
+            (define-key input-decode-map [?\e] evil-esc-map)
+            (set-terminal-parameter term 'evil-esc-map nil)))))))
 
 (defun evil-esc (map)
   "Translate \\e to 'escape if no further event arrives.
@@ -606,7 +612,12 @@ mapping will always be the ESC prefix map."
            (not (evil-emacs-state-p))
            (equal (this-single-command-keys) [?\e])
            (sit-for evil-esc-delay))
-      [escape] map))
+      (prog1 [escape]
+        (when defining-kbd-macro
+          (end-kbd-macro)
+          (setq last-kbd-macro (vconcat last-kbd-macro [escape]))
+          (start-kbd-macro t t)))
+    map))
 
 (defun evil-state-p (sym)
   "Whether SYM is the name of a state."
