@@ -1,7 +1,7 @@
 "=============================================================================
-" FILE: mru.vim
+" FILE: sorter_ftime.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Oct 2010
+" Last Modified: 06 Aug 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -24,34 +24,27 @@
 " }}}
 "=============================================================================
 
-if exists('g:loaded_unite_source_mru')
-  finish
-endif
-
 let s:save_cpo = &cpo
 set cpo&vim
 
-augroup plugin-unite-source-mru
-  autocmd!
-  autocmd BufEnter,BufFilePost,BufWritePost *
-        \ call s:append(expand('<amatch>'))
-  autocmd VimLeavePre *
-        \ call unite#sources#mru#_save({'event' : 'VimLeavePre'})
-augroup END
+function! unite#filters#sorter_ftime#define() "{{{
+  return s:sorter
+endfunction"}}}
 
-let g:loaded_unite_source_mru = 1
+let s:sorter = {
+      \ 'name' : 'sorter_ftime',
+      \ 'description' : 'sort by getftime() order',
+      \}
 
-function! s:append(path) "{{{
-  if bufnr('%') != expand('<abuf>')
-        \ || a:path == ''
-    return
-  endif
-
-  call unite#sources#mru#variables#append()
+function! s:sorter.filter(candidates, context) "{{{
+  return unite#util#sort_by(a:candidates, '
+      \   has_key(v:val, "action__path")      ? getftime(v:val.action__path)
+      \ : has_key(v:val, "action__directory") ? getftime(v:val.action__directory)
+      \ : 0
+      \ ')
 endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
 
-" __END__
 " vim: foldmethod=marker

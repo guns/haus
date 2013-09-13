@@ -1,7 +1,7 @@
 "=============================================================================
-" FILE: mru.vim
+" FILE: converter_smart_path.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Oct 2010
+" Last Modified: 04 Aug 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -24,34 +24,28 @@
 " }}}
 "=============================================================================
 
-if exists('g:loaded_unite_source_mru')
-  finish
-endif
-
 let s:save_cpo = &cpo
 set cpo&vim
 
-augroup plugin-unite-source-mru
-  autocmd!
-  autocmd BufEnter,BufFilePost,BufWritePost *
-        \ call s:append(expand('<amatch>'))
-  autocmd VimLeavePre *
-        \ call unite#sources#mru#_save({'event' : 'VimLeavePre'})
-augroup END
+function! unite#filters#converter_smart_path#define() "{{{
+  return s:converter
+endfunction"}}}
 
-let g:loaded_unite_source_mru = 1
+let s:converter = {
+      \ 'name' : 'converter_smart_path',
+      \ 'description' : 'converts word to smart path of filename',
+      \}
 
-function! s:append(path) "{{{
-  if bufnr('%') != expand('<abuf>')
-        \ || a:path == ''
-    return
+function! s:converter.filter(candidates, context) "{{{
+  if a:context.input =~ '^\%(\a\+:/\|/\)'
+    return unite#filters#converter_full_path#define().filter(
+          \ a:candidates, a:context)
   endif
 
-  call unite#sources#mru#variables#append()
+  return a:candidates
 endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
 
-" __END__
 " vim: foldmethod=marker

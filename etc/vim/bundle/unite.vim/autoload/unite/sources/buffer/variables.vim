@@ -1,7 +1,7 @@
 "=============================================================================
-" FILE: mru.vim
-" AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Oct 2010
+" FILE: variables.vim
+" AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
+" Last Modified: 30 Apr 2013
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -24,34 +24,25 @@
 " }}}
 "=============================================================================
 
-if exists('g:loaded_unite_source_mru')
-  finish
-endif
-
 let s:save_cpo = &cpo
 set cpo&vim
 
-augroup plugin-unite-source-mru
-  autocmd!
-  autocmd BufEnter,BufFilePost,BufWritePost *
-        \ call s:append(expand('<amatch>'))
-  autocmd VimLeavePre *
-        \ call unite#sources#mru#_save({'event' : 'VimLeavePre'})
-augroup END
+let s:buffer_list = {}
 
-let g:loaded_unite_source_mru = 1
+function! unite#sources#buffer#variables#append() "{{{
+  " Append the current buffer.
+  let bufnr = bufnr('%')
+  let s:buffer_list[bufnr] = {
+        \ 'action__buffer_nr' : bufnr,
+        \ 'source__time' : localtime(),
+        \ }
+endfunction"}}}
 
-function! s:append(path) "{{{
-  if bufnr('%') != expand('<abuf>')
-        \ || a:path == ''
-    return
-  endif
-
-  call unite#sources#mru#variables#append()
+function! unite#sources#buffer#variables#get_buffer_list() "{{{
+  return s:buffer_list
 endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
 
-" __END__
 " vim: foldmethod=marker

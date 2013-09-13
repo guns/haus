@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: init.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 24 Jul 2013.
+" Last Modified: 08 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -26,6 +26,11 @@
 
 let s:save_cpo = &cpo
 set cpo&vim
+
+" Global options definition. "{{{
+let g:unite_ignore_source_files =
+      \ get(g:, 'unite_ignore_source_files', [])
+"}}}
 
 function! unite#init#_context(context, ...) "{{{
   let source_names = get(a:000, 0, [])
@@ -115,6 +120,7 @@ function! unite#init#_unite_buffer() "{{{
     setlocal nolist
     setlocal nobuflisted
     setlocal noswapfile
+    setlocal nospell
     setlocal noreadonly
     setlocal nofoldenable
     setlocal nomodeline
@@ -122,7 +128,7 @@ function! unite#init#_unite_buffer() "{{{
     setlocal foldcolumn=0
     setlocal iskeyword+=-,+,\\,!,~
     setlocal matchpairs-=<:>
-    setlocal completefunc=
+    setlocal completefunc=unite#dummy_completefunc
     setlocal omnifunc=
     match
     if has('conceal')
@@ -134,6 +140,9 @@ function! unite#init#_unite_buffer() "{{{
     endif
     if exists('+colorcolumn')
       setlocal colorcolumn=0
+    endif
+    if exists('+relativenumber')
+      setlocal norelativenumber
     endif
 
     " Autocommands.
@@ -211,8 +220,7 @@ function! unite#init#_current_unite(sources, context) "{{{
   endif
 
   " The current buffer is initialized.
-  let buffer_name = unite#util#is_windows() ?
-        \ '[unite] - ' : '*unite* - '
+  let buffer_name = '[unite] - '
   let buffer_name .= context.buffer_name
 
   let winnr = winnr()
@@ -270,8 +278,9 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.args = unite#helper#get_source_args(a:sources)
   let unite.msgs = []
   let unite.err_msgs = []
-  let unite.redraw_hold_candidates = (unite#util#has_lua() ? 10000 : 4000)
+  let unite.redraw_hold_candidates = (unite#util#has_lua() ? 20000 : 10000)
   let unite.disabled_max_candidates = 0
+  let unite.cursor_line_time = reltime()
 
   if context.here
     let context.winheight = winheight(0) - winline() +
@@ -468,6 +477,11 @@ function! unite#init#_default_scripts(kind, names) "{{{
       let files += split(globpath(&runtimepath,
             \ 'autoload/unite/'.a:kind.'/'.prefix.'*.vim', 1), '\n')
     endfor
+
+    if a:kind == 'sources'
+      call filter(files, "index(g:unite_ignore_source_files,
+            \ fnamemodify(v:val, ':t')) < 0")
+    endif
 
     for define in map(files,
           \ "unite#{a:kind}#{fnamemodify(v:val, ':t:r')}#define()")

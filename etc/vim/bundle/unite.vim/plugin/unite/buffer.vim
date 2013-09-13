@@ -65,7 +65,7 @@ function! s:append(path) "{{{
   let t:unite_buffer_dictionary[bufnr] = 1
 
   if !has('vim_starting') || bufname('%') != ''
-    call unite#sources#buffer#_append()
+    call unite#sources#buffer#variables#append()
   endif
 endfunction"}}}
 

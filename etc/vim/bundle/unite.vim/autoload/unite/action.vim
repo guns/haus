@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: action.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 20 Jul 2013.
+" Last Modified: 02 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -66,6 +66,10 @@ function! s:get_action_table(source_name, kind_name, self_func, is_parents_actio
         \ unite#util#get_name(a:source_table, a:source_name, {})
   if empty(source)
     call unite#print_error('[unite.vim] source "' . a:source_name . '" is not found.')
+    return {}
+  endif
+  if empty(kind)
+    call unite#print_error('[unite.vim] kind "' . a:kind_name . '" is not found.')
     return {}
   endif
 
@@ -373,12 +377,12 @@ function! unite#action#do(action_name, ...) "{{{
     catch /^Vim\%((\a\+)\)\=:E325/
       " Ignore catch.
       call unite#print_error(v:exception)
-      call unite#print_error('Attenssion: Swap file is found in executing action!')
+      call unite#print_error('Warning: Swap file was found while executing action!')
       call unite#print_error('Action name is ' . table.action.name)
     catch
       call unite#print_error(v:throwpoint)
       call unite#print_error(v:exception)
-      call unite#print_error('Error occured in executing action!')
+      call unite#print_error('Error occured while executing action!')
       call unite#print_error('Action name is ' . table.action.name)
     endtry
 
@@ -397,7 +401,7 @@ function! unite#action#do(action_name, ...) "{{{
     endif
   endfor
 
-  if !is_quit && unite.context.keep_focus
+  if (!is_quit || unite.context.no_quit) && unite.context.keep_focus
     let winnr = bufwinnr(unite.bufnr)
 
     if winnr > 0

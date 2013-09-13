@@ -30,7 +30,7 @@ set cpo&vim
 
 
 " Variables  "{{{
-let s:V = vital#of('unite.vim')
+let s:V = unite#util#get_vital()
 let s:L = s:V.import("Data.List")
 
 " The version of MRU file format.
@@ -120,9 +120,6 @@ let s:mru = {
 function! s:mru.is_a(type) "{{{
   return self.type == a:type
 endfunction "}}}
-function! s:mru.path()
-    throw 'unite(mru) umimplemented method: path()!'
-endfunction
 function! s:mru.save(...)
     throw 'unite(mru) umimplemented method: save()!'
 endfunction
@@ -133,33 +130,21 @@ function! s:mru.validate()
     throw 'unite(mru) umimplemented method: validate()!'
 endfunction
 
-function! s:mru.append() "{{{
-  let path = self.path()
-
-  if empty(path)
-    return
-  endif
-
-  if empty(self.candidates)
-    call self.load()
-  endif
-
-  let save_ignorecase = &ignorecase
-  let &ignorecase = unite#util#is_windows()
-
-  let time = localtime()
-  call insert(self.candidates, s:convert2dictionary([path, time]))
-
-  let &ignorecase = save_ignorecase
-
-  if (time - self.mtime) > self.update_interval
-    call self.save()
-  endif
-endfunction"}}}
-
 function! s:mru.gather_candidates(args, context) "{{{
   if empty(self.candidates)
     call self.load()
+  endif
+
+  let self.candidates = unite#sources#mru#variables#get_mrus(self.type)
+        \ + self.candidates
+  call unite#sources#mru#variables#clear(self.type)
+
+  if a:context.is_redraw
+    call filter(self.candidates,
+          \ ((self.type == 'file') ?
+          \ "v:val.action__path !~ '^\\a\\w\\+:'
+          \       && getftype(v:val.action__path) ==# 'file'" :
+          \ "isdirectory(v:val.action__path)"))
   endif
 
   if get(a:args, 0, '') =~# '\%(long\|all\|\*\|_\)'
@@ -184,6 +169,10 @@ function! s:mru.has_external_update() "{{{
 endfunction"}}}
 
 function! s:mru.save(...) "{{{
+  let self.candidates = unite#sources#mru#variables#get_mrus(self.type)
+        \ + self.candidates
+  call unite#sources#mru#variables#clear(self.type)
+
   if empty(self.candidates)
     " nothing to save, mru is not loaded
     return
@@ -195,16 +184,14 @@ function! s:mru.save(...) "{{{
   endif
 
   " should load all candidates
-  if self.is_loaded < 2
-    call self.load()
-  endif
+  call self.load()
 
   if self.has_external_update() && filereadable(self.mru_file.short)
     " only need to get the short list which contains the latest MRUs
     let [ver; items] = readfile(self.mru_file.short)
     if self.version_check(ver)
       call extend(self.candidates, s:convert2candidates(items))
-      let self.candidates = s:uniq_sort(self.candidates)
+      let self.candidates = s:L.uniq(items, 'v:val.action__path')
     endif
   endif
 
@@ -292,21 +279,6 @@ let s:file_mru = extend(deepcopy(s:mru), {
       \  },
       \ }
       \)
-function! s:file_mru.path() "{{{
-  let path = unite#util#substitute_path_separator(expand('%:p'))
-  if path !~ '\a\+:'
-    let path = unite#util#substitute_path_separator(
-          \ simplify(resolve(path)))
-  endif
-
-  " Append the current buffer to the mru list.
-  if !s:is_file_exist(path) || &l:buftype =~# 'help\|nofile'
-    return ''
-  endif
-
-  return path
-endfunction "}}}
-
 function! s:file_mru.validate()  "{{{
   if self.do_validate
     call filter(self.candidates,
@@ -328,30 +300,6 @@ let s:directory_mru = extend(deepcopy(s:mru), {
       \ }
       \)
 
-function! s:directory_mru.path() "{{{
-  let filetype = getbufvar(bufnr('%'), '&filetype')
-  if filetype ==# 'vimfiler' &&
-        \ type(getbufvar(bufnr('%'), 'vimfiler')) == type({})
-    let path = getbufvar(bufnr('%'), 'vimfiler').current_dir
-  elseif filetype ==# 'vimshell' &&
-        \ type(getbufvar(bufnr('%'), 'vimshell')) == type({})
-    let path = getbufvar(bufnr('%'), 'vimshell').current_dir
-  else
-    let path = getcwd()
-  endif
-
-  let path = unite#util#substitute_path_separator(
-        \ simplify(resolve(path)))
-  " Chomp last /.
-  let path = substitute(path, '/$', '', '')
-
-  " Append the current buffer to the mru list.
-  if !isdirectory(path) || &buftype =~ 'help'
-    return ''
-  endif
-  return path
-endfunction "}}}
-
 function! s:directory_mru.validate()  "{{{
   if self.do_validate
     call filter(self.candidates,
@@ -364,12 +312,6 @@ endfunction"}}}
 
 let s:MRUs.file = s:file_mru
 let s:MRUs.directory = s:directory_mru
-function! unite#sources#mru#_append() "{{{
-  for m in values(s:MRUs)
-    call m.append()
-  endfor
-endfunction"}}}
-
 function! unite#sources#mru#_save(...) "{{{
   let opts = {}
   if a:0 >= 1 && s:V.is_dict(a:1)
@@ -396,6 +338,7 @@ let s:file_mru_source = {
       \ 'syntax' : 'uniteSource__FileMru',
       \ 'default_kind' : 'file',
       \ 'ignore_pattern' : g:unite_source_file_mru_ignore_pattern,
+      \ 'max_candidates' : 200,
       \}
 
 let s:dir_mru_source = {
@@ -408,6 +351,7 @@ let s:dir_mru_source = {
       \ 'ignore_pattern' :
       \    g:unite_source_directory_mru_ignore_pattern,
       \ 'alias_table' : { 'unite__new_candidate' : 'vimfiler__mkdir' },
+      \ 'max_candidates' : 200,
       \}
 
 function! s:file_mru_source.hooks.on_syntax(args, context) "{{{
@@ -480,14 +424,7 @@ let s:dir_mru_source.converters = [ s:dir_mru_source.source__converter ]
 
 " Misc "{{{
 function! s:is_file_exist(path)  "{{{
-  return a:path !~ '^\a\w\+:' && getftype(a:path) ==# 'file'
-endfunction"}}}
-function! s:uniq_sort(items)  "{{{
-  function! s:compare(i1, i2)  "{{{
-    return a:i2.source__time - a:i1.source__time
-  endfunction"}}}
-  call sort(a:items, function('s:compare'))
-  return s:L.uniq(a:items, 'v:val.action__path')
+  return 
 endfunction"}}}
 function! s:convert2candidates(items)  "{{{
   try

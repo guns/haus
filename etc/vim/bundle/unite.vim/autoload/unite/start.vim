@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: start.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 23 Jul 2013.
+" Last Modified: 08 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -120,7 +120,7 @@ function! unite#start#script(sources, ...) "{{{
 
   let context.script = 1
 
-  return get(unite#get_context(), 'temporary', 0) ?
+  return &filetype == 'unite' ?
         \ unite#start#temporary(a:sources, context) :
         \ unite#start#standard(a:sources, context)
 endfunction"}}}
@@ -267,6 +267,22 @@ function! unite#start#get_vimfiler_candidates(sources, ...) "{{{
     let context.unite__is_interactive = 0
 
     let candidates = s:get_candidates(a:sources, context)
+
+    " Converts utf-8-mac to utf-8.
+    if unite#util#is_mac() && has('iconv')
+      for item in candidates
+        let item.action__path = unite#util#iconv(
+              \ item.action__path, 'utf-8-mac', &encoding)
+        let item.action__directory = unite#util#iconv(
+              \ item.action__directory, 'utf-8-mac', &encoding)
+        let item.word = unite#util#iconv(item.word, 'utf-8-mac', &encoding)
+        let item.abbr = unite#util#iconv(item.abbr, 'utf-8-mac', &encoding)
+        let item.vimfiler__filename = unite#util#iconv(
+              \ item.vimfiler__filename, 'utf-8-mac', &encoding)
+        let item.vimfiler__abbr = unite#util#iconv(
+              \ item.vimfiler__abbr, 'utf-8-mac', &encoding)
+      endfor
+    endif
   finally
     call unite#set_current_unite(unite_save)
   endtry
@@ -404,8 +420,7 @@ function! s:get_resume_buffer(buffer_name) "{{{
   let buffer_name = a:buffer_name
   if buffer_name !~ '@\d\+$'
     " Add postfix.
-    let prefix = unite#util#is_windows() ?
-          \ '[unite] - ' : '*unite* - '
+    let prefix = '[unite] - '
     let prefix .= buffer_name
     let buffer_name .= unite#helper#get_postfix(prefix, 0)
   endif

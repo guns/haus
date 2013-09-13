@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: sorter_rank.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Jul 2013.
+" Last Modified: 08 Aug 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -37,7 +37,7 @@ let s:sorter = {
       \}
 
 function! s:sorter.filter(candidates, context) "{{{
-  if a:context.input == '' || !has('float')
+  if a:context.input == '' || !has('float') || empty(a:candidates)
     return a:candidates
   endif
 
@@ -46,12 +46,22 @@ function! s:sorter.filter(candidates, context) "{{{
     let candidate.filter__rank = 0
   endfor
 
+  " let is_path = has_key(a:candidates[0], 'action__path')
+
   for input in split(a:context.input, '\\\@<! ')
     let input = substitute(substitute(input, '\\ ', ' ', 'g'),
           \ '\*', '', 'g')
 
     " Calc rank.
     let l1 = len(input)
+
+    " for candidate in a:candidates
+    "   let word = is_path ? fnamemodify(candidate.word, ':t') : candidate.word
+    "   let index = stridx(word, input[0])
+    "   let candidate.filter__rank +=
+    "         \ len(word) + (index > 0 ? index * 2 : len(word))
+    " endfor
+
     if unite#util#has_lua()
       for candidate in a:candidates
         let candidate.filter__rank +=
@@ -71,6 +81,8 @@ function! s:sorter.filter(candidates, context) "{{{
 endfunction"}}}
 
 function! s:calc_word_distance(str1, str2, l1) "{{{
+  return 
+
   let l2 = len(a:str2)
   let p1 = range(l2+1)
   let p2 = []
@@ -113,16 +125,12 @@ function! s:calc_word_distance_lua(str1, str2, l1) "{{{
     for j = 0, l2 do
       p2[j+1] = math.min(p1[j+1] + 1, p2[j]+1)
     end
-
-    -- Swap.
-    local tmp = p1
-    p1 = p2
-    p2 = tmp
   end
 
   vim.command('let distance = ' .. p1[l2])
 EOF
 
+  " echomsg string([a:str1, a:str2, distance])
   return distance
 endfunction"}}}
 
@@ -142,6 +150,7 @@ do
   end
 end
 EOF
+  " echomsg string(map(copy(a:candidates), '[v:val.word, v:val.filter__rank]'))
   return a:candidates
 endfunction"}}}
 

@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: handlers.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 06 Jul 2013.
+" Last Modified: 05 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -31,11 +31,6 @@ function! unite#handlers#_on_insert_enter()  "{{{
   let unite = unite#get_current_unite()
   let unite.is_insert = 1
 
-  if exists(':NeoComplCacheLock')
-    " Lock neocomplcache.
-    NeoComplCacheLock
-  endif
-
   if &filetype ==# 'unite'
     setlocal modifiable
   endif
@@ -44,7 +39,7 @@ function! unite#handlers#_on_insert_leave()  "{{{
   let unite = unite#get_current_unite()
 
   if line('.') != unite.prompt_linenr
-    keepjumps normal! 0
+    normal! 0
   endif
 
   let unite.is_insert = 0
@@ -55,6 +50,8 @@ function! unite#handlers#_on_insert_leave()  "{{{
 endfunction"}}}
 function! unite#handlers#_on_cursor_hold_i()  "{{{
   let unite = unite#get_current_unite()
+
+  call s:change_highlight()
 
   if unite.max_source_candidates > unite.redraw_hold_candidates
     call s:check_redraw()
@@ -152,10 +149,13 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   let prompt_linenr = unite.prompt_linenr
   let context = unite.context
 
-  setlocal nocursorline
+  if line('.') == prompt_linenr && !&l:modifiable
+    setlocal modifiable
+  endif
+  if line('.') != prompt_linenr && &l:modifiable
+    setlocal nomodifiable
+  endif
 
-  execute 'setlocal' line('.') == prompt_linenr ?
-        \ 'modifiable' : 'nomodifiable'
   if line('.') <= prompt_linenr
     nnoremap <silent><buffer> <Plug>(unite_loop_cursor_up)
           \ :call unite#mappings#loop_cursor_up_call(
@@ -185,11 +185,13 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   endif
 
   if exists('b:current_syntax') && !context.no_cursor_line
-    silent! execute 'match' (line('.') <= prompt_linenr ?
-          \ line('$') <= prompt_linenr ?
-          \ 'uniteError /\%'.prompt_linenr.'l/' :
-          \ context.cursor_line_highlight.' /\%'.(prompt_linenr+1).'l/' :
-          \ context.cursor_line_highlight.' /\%'.line('.').'l/')
+    match
+
+    if line('.') <= prompt_linenr+1 || mode('.') == 'i' ||
+          \ split(reltimestr(reltime(unite.cursor_line_time)))[0] > '0.10'
+      call s:set_cursor_line()
+    endif
+    let unite.cursor_line_time = reltime()
   endif
 
   if context.auto_preview
@@ -202,8 +204,8 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   call s:restore_statusline()
 
   " Check lines. "{{{
-  if winheight(0) < line('$') &&
-        \ line('.') + winheight(0) / 2 < line('$')
+  if !context.auto_resize &&
+        \ winheight(0) < line('$') && line('.') + winheight(0) / 2 < line('$')
     return
   endif
 
@@ -212,7 +214,7 @@ function! unite#handlers#_on_cursor_moved()  "{{{
         \  || unite.context.winheight == 0) ?
         \ winheight(0) : unite.context.winheight
   let candidates = unite#candidates#_gather_pos(height)
-  if empty(candidates)
+  if !context.auto_resize && empty(candidates)
     " Nothing.
     return
   endif
@@ -288,22 +290,19 @@ function! s:change_highlight()  "{{{
   let context = unite#get_context()
   let prompt_linenr = unite.prompt_linenr
   if !context.no_cursor_line
-    execute 'match' (line('.') <= prompt_linenr ?
-          \ line('$') <= prompt_linenr ?
-          \ 'uniteError /\%'.prompt_linenr.'l/' :
-          \ context.cursor_line_highlight.' /\%'.(prompt_linenr+1).'l/' :
-          \ context.cursor_line_highlight.' /\%'.line('.').'l/')
+    call s:set_cursor_line()
   endif
 
   silent! syntax clear uniteCandidateInputKeyword
 
-  if unite#helper#get_input() == ''
+  if !context.is_changed || unite#helper#get_input() == ''
     return
   endif
 
   syntax case ignore
 
-  for input in unite#helper#get_substitute_input(unite#helper#get_input())
+  for input in unite#helper#get_substitute_input(
+        \ unite#helper#get_input())
     for pattern in map(split(input, '\\\@<! '),
           \ "substitute(escape(unite#util#escape_match(v:val), '/'),
           \   '\\\\\\@<!|', '\\\\|', 'g')")
@@ -359,6 +358,18 @@ function! s:check_redraw() "{{{
     call s:change_highlight()
   endif
 endfunction"}}}
+function! s:set_cursor_line()
+  let unite = unite#get_current_unite()
+  let prompt_linenr = unite.prompt_linenr
+  let context = unite.context
+
+  execute 'match' (line('.') <= prompt_linenr ?
+        \ line('$') <= prompt_linenr ?
+        \ 'uniteError /\%'.prompt_linenr.'l/' :
+        \ context.cursor_line_highlight.' /\%'.(prompt_linenr+1).'l/' :
+        \ context.cursor_line_highlight.' /\%'.line('.').'l/')
+  let unite.cursor_line_time = reltime()
+endfunction
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

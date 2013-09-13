@@ -2,7 +2,7 @@
 " FILE: grep.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
 "          Tomohiro Nishimura <tomohiro68 at gmail.com>
-" Last Modified: 16 Jul 2013.
+" Last Modified: 08 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -146,15 +146,29 @@ function! s:source.hooks.on_syntax(args, context) "{{{
   endif
 
   syntax case ignore
-  execute 'syntax match uniteSource__GrepPattern /:.*\zs'
+  syntax region uniteSource__GrepLine
+        \ start=' ' end='$'
+        \ containedin=uniteSource__Grep
+  syntax match uniteSource__GrepFile /^[^:]*/ contained
+        \ containedin=uniteSource__GrepLine
+        \ nextgroup=uniteSource__GrepSeparator
+  syntax match uniteSource__GrepSeparator /:/ contained
+        \ containedin=uniteSource__GrepLine
+        \ nextgroup=uniteSource__GrepLineNr
+  syntax match uniteSource__GrepLineNr /\d\+\ze:/ contained
+        \ containedin=uniteSource__GrepLine
+        \ nextgroup=uniteSource__GrepPattern
+  execute 'syntax match uniteSource__GrepPattern /'
         \ . substitute(a:context.source__input, '\([/\\]\)', '\\\1', 'g')
-        \ . '/ contained containedin=uniteSource__Grep'
+        \ . '/ contained containedin=uniteSource__GrepLine'
+  highlight default link uniteSource__GrepFile Directory
+  highlight default link uniteSource__GrepLineNr LineNR
   execute 'highlight default link uniteSource__GrepPattern'
         \ unite#get_source_variables(a:context).search_word_highlight
 endfunction"}}}
 function! s:source.hooks.on_close(args, context) "{{{
   if has_key(a:context, 'source__proc')
-    call a:context.source__proc.waitpid()
+    call a:context.source__proc.kill()
   endif
 endfunction "}}}
 function! s:source.hooks.on_post_filter(args, context) "{{{
@@ -253,6 +267,8 @@ function! s:source.async_gather_candidates(args, context) "{{{
     " Disable async.
     let a:context.is_async = 0
     call unite#print_source_message('Completed.', s:source.name)
+
+    call a:context.source__proc.waitpid()
   endif
 
   let candidates = map(stdout.read_lines(-1, 100),
@@ -266,11 +282,6 @@ function! s:source.async_gather_candidates(args, context) "{{{
     let candidates = map(filter(candidates,
           \  'v:val =~ "^.\\+:.\\+$"'),
           \ '[v:val, split(v:val[2:], ":", 1)]')
-  endif
-
-  let cwd = getcwd()
-  if isdirectory(a:context.source__directory)
-    lcd `=a:context.source__directory`
   endif
 
   if a:context.source__ssh_path != ''
@@ -316,8 +327,6 @@ function! s:source.async_gather_candidates(args, context) "{{{
 
     call add(_, dict)
   endfor
-
-  lcd `=cwd`
 
   return _
 endfunction "}}}

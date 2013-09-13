@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: file.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 02 Jul 2013.
+" Last Modified: 10 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -60,7 +60,7 @@ function! unite#kinds#file#define() "{{{
   return s:kind
 endfunction"}}}
 
-let s:System = vital#of('unite.vim').import('System.File')
+let s:System = unite#util#get_vital().import('System.File')
 
 let s:kind = {
       \ 'name' : 'file',
@@ -201,6 +201,13 @@ function! s:kind.action_table.diff.func(candidates)
 
   if len(a:candidates) == 1
     " :vimdiff with current buffer.
+    if &filetype ==# 'vimfiler'
+      " Move to other window.
+      wincmd w
+    endif
+
+    tabnew %
+    let t:title = 'vimdiff'
     call s:execute_command('vert diffsplit', a:candidates[0])
   elseif len(a:candidates) == 2
     " :vimdiff the other candidate.
@@ -804,6 +811,7 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
   let current_dir_save = getcwd()
   lcd `=directory`
 
+  let hidden_save = &l:hidden
   try
     let old_filename = unite#util#substitute_path_separator(
           \ fnamemodify(a:old_filename, ':.'))
@@ -812,6 +820,8 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
 
     let bufnr = bufnr(unite#util#escape_file_searching(old_filename))
     if bufnr > 0
+      setlocal hidden
+
       " Buffer rename.
       let bufnr_save = bufnr('%')
       execute 'buffer' bufnr
@@ -827,6 +837,7 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
   finally
     " Restore path.
     lcd `=current_dir_save`
+    let &l:hidden = hidden_save
   endtry
 endfunction"}}}
 function! s:filename2candidate(filename) "{{{

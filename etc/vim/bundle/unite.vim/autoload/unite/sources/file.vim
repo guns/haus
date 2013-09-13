@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: file.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 25 Jul 2013.
+" Last Modified: 12 Aug 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -44,7 +44,6 @@ let s:source_file = {
       \ 'ignore_pattern' : g:unite_source_file_ignore_pattern,
       \ 'default_kind' : 'file',
       \ 'matchers' : [ 'matcher_default', 'matcher_hide_hidden_files' ],
-      \ 'converters' : [ 'converter_relative_abbr', ],
       \}
 
 function! s:source_file.change_candidates(args, context) "{{{
@@ -93,8 +92,9 @@ function! s:source_file.change_candidates(args, context) "{{{
     let files = unite#util#glob(glob, !is_vimfiler)
 
     if !is_vimfiler
-      let files = sort(filter(copy(files), 'isdirectory(v:val)'), 1) +
-            \ sort(filter(copy(files), '!isdirectory(v:val)'), 1)
+      let files = sort(filter(copy(files),
+            \ "v:val != '.' && isdirectory(v:val)"), 1) +
+            \ sort(filter(copy(files), "!isdirectory(v:val)"), 1)
     endif
 
     let a:context.source__cache[glob] = map(files,
@@ -217,22 +217,29 @@ let s:source_file_new = {
       \ 'name' : 'file/new',
       \ 'description' : 'file candidates from input',
       \ 'default_kind' : 'file',
-      \ 'converters' : 'converter_relative_abbr',
+      \ 'hooks' : {},
       \ }
 
-function! s:source_file_new.change_candidates(args, context) "{{{
-  let input = substitute(substitute(
-        \ a:context.path, '\\ ', ' ', 'g'), '^\a\+:\zs\*/', '/', '')
-  if input == ''
-    return []
-  endif
-
-  let path = join(a:args, ':')
+function! s:source_file_new.hooks.on_init(args, context) "{{{
+  let path = unite#util#substitute_path_separator(
+        \ expand(join(a:args, ':')))
+  let path = unite#util#substitute_path_separator(
+        \ fnamemodify(path, ':p'))
   if path !=# '/' && path =~ '[\\/]$'
     " Chomp.
     let path = path[: -2]
   endif
+  let a:context.source__path = path
+endfunction"}}}
 
+function! s:source_file_new.change_candidates(args, context) "{{{
+  let input = substitute(substitute(
+        \ a:context.input, '\\ ', ' ', 'g'), '^\a\+:\zs\*/', '/', '')
+  if input == ''
+    return []
+  endif
+
+  let path = a:context.source__path
   if input !~ '^\%(/\|\a\+:/\)' && path != '' && path != '/'
     let input = path . '/' .  input
   endif
@@ -245,14 +252,10 @@ function! s:source_file_new.change_candidates(args, context) "{{{
     let input = resolve(input)
   endif
 
-  " Glob by directory name.
-  let input = substitute(input, '[^/.]*$', '', '')
-  let glob = input . (input =~ '\*$' ? '' : '*')
-
   let is_relative_path = path !~ '^\%(/\|\a\+:/\)'
 
   let newfile = unite#util#expand(
-        \ escape(substitute(a:context.path, '[*\\]', '', 'g'), ''))
+        \ escape(substitute(input, '[*\\]', '', 'g'), ''))
   if filereadable(newfile) || isdirectory(newfile)
     return []
   endif
@@ -302,14 +305,16 @@ function! unite#sources#file#create_file_dict(file, is_relative_path, ...) "{{{
 
     let dict.kind = 'directory'
   elseif is_newfile
+    let dict.abbr = unite#util#substitute_path_separator(
+        \ fnamemodify(a:file, ':~:.'))
     if is_newfile == 1
       " New file.
-      let dict.abbr = '[new file] ' . a:file
+      let dict.abbr = '[new file] ' . dict.abbr
       let dict.kind = 'file'
     elseif is_newfile == 2
       " New directory.
       let dict.action__directory = a:file
-      let dict.abbr = '[new directory] ' . a:file
+      let dict.abbr = '[new directory] ' . dict.abbr
       let dict.kind = 'directory'
     endif
   else
