@@ -250,7 +250,7 @@ function! s:Verbose(level, excmd)
         \ 'finally|' .
         \ 'let &verbosefile = '.string(verbosefile).'|' .
         \ 'endtry|' .
-        \ 'pedit '.temp.'|wincmd P'
+        \ 'pedit '.temp.'|wincmd P|nnoremap q :bd<CR>'
 endfunction
 
 " }}}1
@@ -616,6 +616,7 @@ function! s:time(cmd)
   try
     execute a:cmd
   finally
+    redraw
     echomsg matchstr(reltimestr(reltime(time)), '.*\..\{,3\}') . ' seconds to run :'.a:cmd
   endtry
   return ''
@@ -653,7 +654,7 @@ nmap zS <Plug>ScripteaseSynnames
 
 augroup scriptease_help
   autocmd!
-  autocmd FileType vim nmap <silent><buffer> K :exe 'help '.<SID>helptopic()<CR>
+  autocmd FileType vim nnoremap <silent><buffer> K :exe 'help '.<SID>helptopic()<CR>
 augroup END
 
 function! s:helptopic()
@@ -690,12 +691,12 @@ endfunction
 " Settings {{{1
 
 function! s:setup() abort
-  let &l:path = escape(&runtimepath, ' ')
   setlocal suffixesadd=.vim keywordprg=:help
 endfunction
 
 augroup scriptease
   autocmd!
+  autocmd FileType vim,help let &l:path = escape(&runtimepath, ' ')
   autocmd FileType vim call s:setup()
   " Recent versions of vim.vim set iskeyword to include ":", which breaks among
   " other things tags. :(
