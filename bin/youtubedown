@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.217 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.218 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -257,7 +257,7 @@ sub get_url_1($;$$$$$$) {
 
   select(S); $| = 1; select(STDOUT);
 
-  my $user_agent = "$progname/$version";
+  my $user_agent = "Chrome 27/Windows: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.116 Safari/537.36";
 
   my $hdrs = (($head_p ? "HEAD " : "GET ") .
               ($http_proxy ? $url : "/$path") . " HTTP/1.0\r\n" .
@@ -596,6 +596,7 @@ my %ciphers = (
   'vflHOr_nV' => 'w58 r w50 s1 r s1 r w11 s3',      # 30 Aug 2013
   'vfluy6kdb' => 'r w12 w32 r w34 s3 w35 w42 s2',   # 05 Sep 2013
   'vflkuzxcs' => 'w22 w43 s3 r s1 w43',             # 10 Sep 2013
+  'vflGNjMhJ' => 'w43 w2 w54 r w8 s1',              # 12 Sep 2013
 );
 
 sub decipher_sig($$$) {

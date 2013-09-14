@@ -52,12 +52,16 @@ task :env do
         :base   => "#{@src}/jwzhacks",
         :before => lambda { |proj|
           if proj.fetch
+            raise unless system 'git checkout master &>/dev/null'
             system './update.sh &>/dev/null'
             if not %x(git status --short).empty?
               proj.git.add
               proj.git.commit 'UPDATE'
             end
+            raise unless system 'git checkout guns &>/dev/null'
+            raise 'Merge failed' unless system 'git merge master &>/dev/null'
           end
+          system 'git checkout guns &>/dev/null'
         },
         :files => { 'youtubedown' => 'bin/youtubedown' }
       },
