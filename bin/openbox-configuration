@@ -163,7 +163,7 @@
 
 (def config-theme
   [:theme
-   [:name "ArchSimple"]
+   [:name "Numix"]
    [:titleLayout "NLC"]
    [:keepBorder "no"]
    [:animateIconify "yes"]

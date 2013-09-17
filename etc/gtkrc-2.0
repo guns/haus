@@ -14,9 +14,9 @@ gtk-key-theme-name = "Emacs"
 gtk-can-change-accels = 1
 
 # Theming
-gtk-theme-name = "ArchSimple"
+gtk-theme-name = "Numix"
 gtk-font-name = "Segoe UI 10"
-gtk-icon-theme-name = "elementary"
+gtk-icon-theme-name = "Numix-icons"
 # gtk-cursor-theme-name = ""
 
 # Misc options
