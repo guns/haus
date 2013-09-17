@@ -1,7 +1,7 @@
 #!/usr/bin/env lein-exec
 
 (leiningen.exec/deps '[[hiccup "1.0.3"]
-                       [guns.cli/optparse "1.0.1"]])
+                       [guns.cli/optparse "1.1.1"]])
 
 (require '[hiccup.core :as hiccup]
          '[hiccup.page :as page]
