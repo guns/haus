@@ -277,6 +277,11 @@ let g:unite_data_directory = expand('~/.cache/vim/unite')
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
 
+" Plugin: EasyAlign
+let g:easy_align_delimiters = {
+    \ 't': { 'pattern': ':-' }
+    \ }
+
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
 " Set modifiers and load modifier mapping functions
