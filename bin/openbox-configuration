@@ -312,7 +312,7 @@
    (bindswitch "W-S-Tab" "PreviousWindow")
 
    ;; Subtle-esque window tiling
-   (bindtile "W-C-A-s" {:x "center" :y "0"   :width "66%" :height "95%"} "south")
+   (bindtile "W-C-A-s" {:x "center" :y "0"   :width "75%" :height "95%"} "south")
    (bindtile "W-C-a" {:x "5%"     :y "0"   :width "45%" :height "95%"} "west" "south" {:y "center"})
    (bindtile "W-C-d" {:x "50%"    :y "0"   :width "45%" :height "95%"} "east" "south" {:y "center"})
    (bindtile "W-C-w" {:x "0"      :y "5%"  :width "95%" :height "45%"} "east" "north" {:x "center"})
