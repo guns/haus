@@ -19,14 +19,15 @@
 ;;        guns <self@sungpae.com>                    /######  /#
 ;;                                                  /     ###/
 
-{:user {:plugins [[lein-exec "0.3.1"]
-                  [lein-kibit "0.0.8"]
-                  [lein-ancient "0.4.4"]]
+{:user {:plugins [[lein-exec "LATEST"]
+                  [lein-kibit "LATEST"]
+                  [lein-ancient "LATEST"]]
         :dependencies [[org.clojure/tools.namespace "0.2.4"]
                        [org.clojure/tools.trace "0.7.6"]
                        [slamhound "1.4.0"]]
         :aliases {"RUN" ["trampoline" "run"]
-                  "REPL" ["trampoline" "repl" ":headless"]}
+                  "REPL" ["trampoline" "repl" ":headless"]
+                  "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
         :repl-options
         {:init-ns user
