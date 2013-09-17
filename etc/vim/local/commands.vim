@@ -282,8 +282,7 @@ function! s:ClojureBufferSetup()
     imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
-    nnoremap <silent><buffer> <Leader>R        :Require!<CR>
-    nnoremap <silent><buffer> <LocalLeader>R   :call <SID>ClojureNamespaceRefresh<CR>
+    nnoremap <silent><buffer> <Leader>R        :call <SID>ClojureNamespaceRefresh()<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
@@ -302,7 +301,7 @@ function! s:ClojureBufferSetup()
 endfunction
 
 function! s:ClojureNamespaceRefresh()
-    call fireplace#session_eval("(do (require 'clojure.tools.namespace.repl) (clojure.tools.namespace.repl/refresh))")
+    call fireplace#session_eval('(do (require (quote clojure.tools.namespace.repl)) (clojure.tools.namespace.repl/refresh))')
 endfunction
 
 function! s:ClojurePprint(expr)

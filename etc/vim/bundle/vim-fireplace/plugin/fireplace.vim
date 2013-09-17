@@ -1179,7 +1179,7 @@ function! s:portfile()
   endif
 
   let root = b:leiningen_root
-  let portfiles = [root.'/target/repl-port', root.'/target/repl/repl-port']
+  let portfiles = [root.'/target/repl-port', root.'/target/repl/repl-port', root.'/.nrepl-port']
 
   for f in portfiles
     if filereadable(f)
