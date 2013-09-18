@@ -19,10 +19,10 @@ class Mem # {{{1
 
     def to_s
       len = ([mem.total, swap.total].max.to_s.length * 2) + 1
-      [
-        CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values,  mem.total,  :width => width).to_s,
-        CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
-      ].join "\n"
+      memm = CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values, mem.total, :width => width).to_s
+      return memm.to_s if swap.total.zero?
+      swpm = CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
+      [memm, swpm].join "\n"
     end
   end # }}}2
 
