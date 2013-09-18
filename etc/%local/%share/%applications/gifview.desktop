@@ -1,6 +1,7 @@
 [Desktop Entry]
 Encoding=UTF-8
+Version=1.0
 Type=Application
 NoDisplay=true
-Exec=urxvt-client -g 80x40 -e less %F
-Name=urxvt-less
+Exec=gifview -a %F %f
+Name=gifview

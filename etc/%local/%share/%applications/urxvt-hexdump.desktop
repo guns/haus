@@ -1,5 +1,6 @@
 [Desktop Entry]
 Encoding=UTF-8
 Type=Application
+NoDisplay=true
 Exec=urxvt-client -g 80x40 -e /bin/sh -c "hexdump -C %f | less"
 Name=urxvt-hexdump
