@@ -268,10 +268,10 @@
    ;; Application bindings
    (bindsh "W-space" "kupfer")
    (bindsh "W-C-t" "urxvt-client")
-   (bindsh "W-C-S-t" "urxvt-client -e tmuxlaunch")
-   (bindsh "W-A-t" "urxvt-client -e htop")
-   (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -e vim -c 'Org! TODO'")
-   (bindsh "W-C-i" "urxvt-client -g 80x40 -e vim")
+   (bindsh "W-C-S-t" "urxvt-client -icon ~/.icons/local/terminal -e tmuxlaunch")
+   (bindsh "W-A-t" "urxvt-client -icon ~/.icons/local/htop -e htop")
+   (bindfocus "W-C-r" ["✔ TODO ✔" "TODO.org"] "urxvt-client -title %s -g 80x40 -icon ~/.icons/local/vim -e vim -c 'Org! TODO'")
+   (bindsh "W-C-i" "urxvt-client -g 80x40 -icon ~/.icons/local/vim -e vim")
    ; (bindfocus "F2" "File Manager" "exec thunar ~/Downloads") ; Kupfer trigger
    (bindsh "W-F2" "thunar ~/Downloads")
    (bindfocus "F9" "guns ❦ EVA")
