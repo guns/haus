@@ -30,7 +30,8 @@ augroup GUNS
 
     " Vimscript {{{1
     autocmd FileType vim
-        \ setlocal foldmethod=expr foldexpr=VimFoldExpr(v:lnum)
+        \ setlocal foldmethod=expr foldexpr=VimFoldExpr(v:lnum) |
+        \ SetWhitespace 4
     autocmd FileType help
         \ setlocal foldmethod=expr foldexpr=VimHelpFoldExpr(v:lnum) iskeyword+=-
     autocmd BufRead /tmp/verbose.vim

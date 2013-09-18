@@ -34,7 +34,7 @@ function! s:SetWhitespace(bang, ...)
         execute 'set' . local . ' softtabstop=' . a:1
         execute 'set' . local . ' tabstop=' . (a:0 == 2 ? a:2 : a:1)
     else
-        echo 'sw=' . &shiftwidth . ' ts=' . &tabstop . ' sts=' . &softtabstop
+        echo 'sw=' . &shiftwidth . ' sts=' . &softtabstop . ' ts=' . &tabstop
     endif
 endfunction
 

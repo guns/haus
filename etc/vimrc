@@ -125,7 +125,7 @@ set expandtab                   " Expand <Tab>s with spaces; death to tabs!
 
 " Global textwidth and tabstops
 SetTextwidth! 78                " Width of a standard mail message
-SetWhitespace! 4 8              " Old C mixed-spaces-and-tabs style
+SetWhitespace! 8                " Set sw = sts = ts = 8
 
 " Joining lines
 set nojoinspaces                " Never join lines with two spaces
