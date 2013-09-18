@@ -176,7 +176,6 @@ CD_FUNC cdnginx         /etc/nginx /opt/nginx/etc /usr/local/etc/nginx && export
 CD_FUNC cdtmp           /tmp
 CD_FUNC cdTMP           "$TMPDIR" ~/tmp /tmp
 CD_FUNC cdvar           /var
-CD_FUNC cdabs           /var/abs
 CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
 CD_FUNC cdapi           "$cdwww/api" && export cdapi # Export for `genapi`
