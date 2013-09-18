@@ -13,7 +13,7 @@
 set blink-matching-paren off
 # set byte-oriented off
 set completion-ignore-case on
-set completion-map-case on
+# set completion-map-case off
 # set convert-meta off
 # set disable-completion off
 # set echo-control-characters on
