@@ -22,9 +22,9 @@
 {:user {:plugins [[lein-exec "LATEST"]
                   [lein-kibit "LATEST"]
                   [lein-ancient "LATEST"]]
-        :dependencies [[org.clojure/tools.namespace "0.2.4"]
-                       [org.clojure/tools.trace "0.7.6"]
-                       [slamhound "1.4.0"]]
+        :dependencies [[org.clojure/tools.namespace "LATEST"]
+                       [org.clojure/tools.trace "LATEST"]
+                       [slamhound "LATEST"]]
         :aliases {"RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
                   "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
