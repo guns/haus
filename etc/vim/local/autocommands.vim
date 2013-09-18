@@ -54,7 +54,8 @@ augroup GUNS
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,/etc/netctl/*
         \ setlocal filetype=sh
     autocmd FileType sh
-        \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
+        \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
+        \ SetWhitespace 4
 
     " Lisp {{{1
     autocmd BufRead,BufNewFile *.cljx
