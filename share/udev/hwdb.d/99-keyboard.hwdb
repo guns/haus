@@ -1,0 +1,24 @@
+# Lenovo K4803 USB Keyboard
+#
+# scan code: 0x70039   key code: capslock
+# scan code: 0x700E1   key code: leftshift
+# scan code: 0x700E0   key code: leftctrl
+# scan code: 0x700E3   key code: leftmeta
+# scan code: 0x700E2   key code: leftalt
+# scan code: 0x700E6   key code: rightalt
+# scan code: 0x700E7   key code: rightmeta
+# scan code: 0x70065   key code: compose
+# scan code: 0x700E4   key code: rightctrl
+# scan code: 0x70029   key code: esc
+#
+# Setting two scan codes to a single modifier key code does not work!
+
+keyboard:usb:v04CAp004B*
+ KEYBOARD_KEY_70039=leftctrl    # CapsLock -> Control_L
+ KEYBOARD_KEY_700E0=rightctrl   # Control_L -> Control_R
+ KEYBOARD_KEY_700E3=leftalt     # Super_L -> Alt_L
+ KEYBOARD_KEY_700E2=leftmeta    # Alt_L -> Super_L
+ KEYBOARD_KEY_700E6=rightmeta   # Alt_R -> Super_R
+ KEYBOARD_KEY_700E7=rightalt    # Super_R -> Alt_R
+ KEYBOARD_KEY_70065=esc         # Menu -> Escape
+ KEYBOARD_KEY_700E4=compose     # Control_R -> Menu

@@ -1,0 +1,27 @@
+#!/bin/sh
+
+#
+# Display
+#
+
+dispwin /etc/local/AdobeRGB1998.icc
+
+#
+# Fonts
+#
+
+xset +fp ~/.local/share/fonts
+xset fp rehash
+
+#
+# Input devices
+#
+
+xmodmap /etc/X11/xmodmap
+
+#
+# X Resources
+#
+
+xrdb -merge ~/.Xdefaults
+xrdb -merge ~/.Xdefaults-$HOSTNAME
