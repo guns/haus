@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Exec=urxvt-client
+Name=urxvt-client
