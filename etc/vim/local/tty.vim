@@ -50,15 +50,17 @@ set ttyfast         " More redrawing characters sent to terminal
 "     t_SI start insert mode (bar cursor shape)
 "     t_EI end insert mode (block cursor shape)
 
-let s:icolor = 'rgb:00/CC/FF'
-let s:ncolor = 'rgb:FF/F5/9B'
-let s:ishape = '4 '
-let s:nshape = '2 '
+if &t_Co == 256
+    let s:icolor = 'rgb:00/CC/FF'
+    let s:ncolor = 'rgb:FF/F5/9B'
+    let s:ishape = '4 '
+    let s:nshape = '2 '
 
-if &term =~ '\v^screen' && !exists('$TMUX')
-    let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\\033P\033[" . s:ishape . "q\033\\"
-    let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\\033P\033[" . s:nshape . "q\033\\"
-elseif exists('$TMUX') || &term =~ '\v^tmux' || &term =~ '\v^u?rxvt' || &term =~ '\v^xterm'
-    let &t_SI = "\033]12;" . s:icolor . "\007\033[" . s:ishape . "q"
-    let &t_EI = "\033]12;" . s:ncolor . "\007\033[" . s:nshape . "q"
+    if &term =~ '\v^screen' && !exists('$TMUX')
+        let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\\033P\033[" . s:ishape . "q\033\\"
+        let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\\033P\033[" . s:nshape . "q\033\\"
+    elseif exists('$TMUX') || &term =~ '\v^tmux' || &term =~ '\v^u?rxvt' || &term =~ '\v^xterm'
+        let &t_SI = "\033]12;" . s:icolor . "\007\033[" . s:ishape . "q"
+        let &t_EI = "\033]12;" . s:ncolor . "\007\033[" . s:nshape . "q"
+    endif
 endif
