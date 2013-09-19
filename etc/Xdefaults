@@ -14,6 +14,7 @@ Xft*hintstyle: hintslight
 
 !!! RXVT-UNICODE
 
+URxvt*termName:        rxvt-unicode-256color
 URxvt*background:      rgb:00/00/00
 URxvt*foreground:      rgb:FF/EB/B6
 URxvt*pointerColor:    rgb:DD/DD/DD

@@ -1,4 +1,4 @@
-#	Reconstructed via infocmp from file: /usr/share/terminfo/73/screen-256color-bce-s
+#	Reconstructed via infocmp from file: /usr/share/terminfo/s/screen-256color-bce-s
 tmux-256color|GNU Screen with 256 colors, BCE, and status line,
 	am,
 	bce,
@@ -10,7 +10,6 @@ tmux-256color|GNU Screen with 256 colors, BCE, and status line,
 	cols#80,
 	it#8,
 	lines#24,
-	ncv#3,
 	pairs#32767,
 	acsc=++\,\,--..00``aaffgghhiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~,
 	bel=^G,
