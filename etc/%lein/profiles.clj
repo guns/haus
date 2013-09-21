@@ -56,7 +56,10 @@
            ;; Add debugging macros
            ;;
 
-           (require 'clojure.pprint)
+           (require 'clojure.pprint
+                    'clojure.reflect)
+
+           (def reflect clojure.reflect/reflect)
 
            (defmacro p
              ([& xs]
