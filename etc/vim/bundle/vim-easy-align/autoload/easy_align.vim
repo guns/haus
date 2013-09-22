@@ -27,16 +27,16 @@ endif
 let g:loaded_easy_align = 1
 
 let s:easy_align_delimiters_default = {
-\  ' ': { 'pattern': ' ',  'left_margin': '',  'right_margin': '',  'stick_to_left': 0 },
+\  ' ': { 'pattern': ' ',  'left_margin': 0, 'right_margin': 0, 'stick_to_left': 0 },
 \  '=': { 'pattern': '===\|<=>\|\(&&\|||\|<<\|>>\)=\|=\~[#?]\?\|=>\|[:+/*!%^=><&|.-]\?=[#?]\?',
-\                          'left_margin': ' ', 'right_margin': ' ', 'stick_to_left': 0 },
-\  ':': { 'pattern': ':',  'left_margin': '',  'right_margin': ' ', 'stick_to_left': 1 },
-\  ',': { 'pattern': ',',  'left_margin': '',  'right_margin': ' ', 'stick_to_left': 1 },
-\  '|': { 'pattern': '|',  'left_margin': ' ', 'right_margin': ' ', 'stick_to_left': 0 },
-\  '.': { 'pattern': '\.', 'left_margin': '',  'right_margin': '',  'stick_to_left': 0 },
+\                          'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
+\  ':': { 'pattern': ':',  'left_margin': 0, 'right_margin': 1, 'stick_to_left': 1 },
+\  ',': { 'pattern': ',',  'left_margin': 0, 'right_margin': 1, 'stick_to_left': 1 },
+\  '|': { 'pattern': '|',  'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
+\  '.': { 'pattern': '\.', 'left_margin': 0, 'right_margin': 0, 'stick_to_left': 0 },
 \  '{': { 'pattern': '(\@<!{',
-\                          'left_margin': ' ', 'right_margin': ' ', 'stick_to_left': 0 },
-\  '}': { 'pattern': '}',  'left_margin': ' ', 'right_margin': '',  'stick_to_left': 0 }
+\                          'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
+\  '}': { 'pattern': '}',  'left_margin': 1, 'right_margin': 0, 'stick_to_left': 0 }
 \ }
 
 let s:mode_labels = { 'l': '', 'r': '[R]', 'c': '[C]' }
@@ -53,6 +53,13 @@ let s:option_values = {
 \ 'delimiter_align':  ['left', 'center', 'right'],
 \ 'ignore_unmatched': [0, 1],
 \ 'ignore_groups':    [[], ['String'], ['Comment'], ['String', 'Comment']]
+\ }
+
+let s:shorthand = {
+\ 'margin_left':   'lm', 'margin_right':     'rm', 'stick_to_left':   'stl',
+\ 'left_margin':   'lm', 'right_margin':     'rm', 'indentation':     'idt',
+\ 'ignore_groups': 'ig', 'ignore_unmatched': 'iu', 'delimiter_align': 'da',
+\ 'mode_sequence': 'm',  'ignores': 'ig'
 \ }
 
 if exists("*strwidth")
@@ -88,14 +95,61 @@ function! s:ignored_syntax()
   endif
 endfunction
 
-function! s:echon(l, n, d, o)
-  echon "\r"
-  echon "\rEasyAlign". s:mode_labels[a:l] ." (" .a:n.a:d. ")"
-        \ . (empty(a:o) ? '' : ' '.string(a:o))
+let s:prev_echon_len = 0
+function! s:echon_(tokens)
+  " http://vim.wikia.com/wiki/How_to_print_full_screen_width_messages
+  let xy = [&ruler, &showcmd]
+  try
+    set noruler noshowcmd
+
+    let winlen = winwidth(winnr()) - 2
+    let len = len(join(map(copy(a:tokens), 'v:val[1]'), ''))
+    if len < s:prev_echon_len
+      echohl None
+      echon "\r". repeat(' ', min([winlen, s:prev_echon_len]))
+    endif
+    let s:prev_echon_len = len
+    let ellipsis = len > winlen ? '..' : ''
+
+    echon "\r"
+    let yet = 0
+    for [hl, msg] in a:tokens
+      if empty(msg) | continue | endif
+      execute "echohl ". hl
+      let yet += len(msg)
+      if yet > winlen - len(ellipsis)
+        echon msg[ 0 : (winlen - len(ellipsis) - yet - 1) ] . ellipsis
+        break
+      else
+        echon msg
+      endif
+    endfor
+  finally
+    echohl None
+    let [&ruler, &showcmd] = xy
+  endtry
+endfunction
+
+function! s:echon(l, n, r, d, o, warn)
+  let tokens = [
+  \ ['Function', ':EasyAlign'],
+  \ ['ModeMsg', get(s:mode_labels, a:l, a:l)],
+  \ ['None', ' ']]
+
+  if a:r == -1 | call add(tokens, ['Comment', '(']) | endif
+  call add(tokens, [a:n =~ '*' ? 'Repeat' : 'Number', a:n])
+  call extend(tokens, a:r == 1 ?
+  \ [['Delimiter', '/'], ['String', a:d], ['Delimiter', '/']] :
+  \ [['Identifier', a:d == ' ' ? '\ ' : (a:d == '\' ? '\\' : a:d)]])
+  if a:r == -1 | call add(tokens, ['Comment', ')']) | endif
+  call add(tokens, ['Statement', empty(a:o) ? '' : ' '.string(a:o)])
+  call add(tokens, ['WarningMsg', a:warn])
+
+  call s:echon_(tokens)
 endfunction
 
 function! s:exit(msg)
-  echon "\r". a:msg
+  call s:echon_([['ErrorMsg', a:msg]])
   throw 'exit'
 endfunction
 
@@ -108,7 +162,7 @@ function! s:rtrim(str)
 endfunction
 
 function! s:trim(str)
-  return substitute(a:str, '^\s*\(\S*\)\s*$', '\1', '')
+  return substitute(a:str, '^\s*\(.\{-}\)\s*$', '\1', '')
 endfunction
 
 function! s:fuzzy_lu(key)
@@ -164,6 +218,14 @@ function! s:normalize_options(opts)
     unlet v
   endfor
   return s:validate_options(ret)
+endfunction
+
+function! s:compact_options(opts)
+  let ret = {}
+  for k in keys(a:opts)
+    let ret[s:shorthand[k]] = a:opts[k]
+  endfor
+  return ret
 endfunction
 
 function! s:validate_options(opts)
@@ -302,12 +364,12 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
     " Calculate the maximum number of tokens for a line within the range
     call s:max(max, { 'tokens': len(tokens) })
 
-    if a:nth > 0 " Positive field number
+    if a:nth > 0 " Positive N-th
       if len(tokens) < a:nth
         continue
       endif
       let nth = a:nth - 1 " make it 0-based
-    else " -0 or Negative field number
+    else " -0 or Negative N-th
       if a:nth == 0 && mode !=? 'l'
         let nth = len(tokens) - 1
       else
@@ -480,27 +542,37 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
   endif
 endfunction
 
-function! s:input(str, default)
-  redraw
+function! s:input(str, default, vis)
+  if a:vis
+    normal! gv
+    redraw
+    execute "normal! \<esc>"
+  else
+    " EasyAlign command can be called without visual selection
+    redraw
+  endif
   call inputsave()
   let got = input(a:str, a:default)
   call inputrestore()
-  try
-    return eval(got)
-  catch
-    return got
-  endtry
+  return got
 endfunction
 
-function! s:interactive(modes)
+function! s:atoi(str)
+  return (a:str =~ '^[0-9]\+$') ? str2nr(a:str) : a:str
+endfunction
+
+function! s:interactive(modes, vis, opts)
   let mode = s:shift(a:modes, 1)
   let n    = ''
   let ch   = ''
-  let opts = {}
+  let opts = s:compact_options(a:opts)
   let vals = deepcopy(s:option_values)
+  let regx = 0
+  let warn = ''
 
   while 1
-    call s:echon(mode, n, '', opts)
+    call s:echon(mode, n, -1, '', opts, warn)
+    let warn = ''
 
     let c  = getchar()
     let ch = nr2char(c)
@@ -535,16 +607,25 @@ function! s:interactive(modes)
     elseif ch == "\<C-I>"
       let opts['idt'] = s:shift(vals['indentation'], 1)
     elseif ch == "\<C-L>"
-      let opts['lm'] = s:input("Left margin: ", get(opts, 'lm', ''))
+      let opts['lm'] = s:atoi(s:input("Left margin: ", get(opts, 'lm', ''), a:vis))
     elseif ch == "\<C-R>"
-      let opts['rm'] = s:input("Right margin: ", get(opts, 'rm', ''))
+      let opts['rm'] = s:atoi(s:input("Right margin: ", get(opts, 'rm', ''), a:vis))
     elseif ch == "\<C-U>"
       let opts['iu'] = s:shift(vals['ignore_unmatched'], 1)
     elseif ch == "\<C-G>"
       let opts['ig'] = s:shift(vals['ignore_groups'], 1)
+    elseif c == "\<Left>"
+      let opts['stl'] = 1
+      let opts['lm']  = 0
+    elseif c == "\<Right>"
+      let opts['stl'] = 0
+      let opts['lm']  = 1
+    elseif c == "\<Up>" || c == "\<Down>"
+      silent! call remove(opts, 'stl')
+      silent! call remove(opts, 'lm')
     elseif ch == "\<C-O>"
-      let modes = tolower(s:input("Mode sequence: ", get(opts, 'm', mode)))
-      if match(modes, '^[lrc]\+$') != -1
+      let modes = tolower(s:input("Mode sequence: ", get(opts, 'm', mode), a:vis))
+      if match(modes, '^[lrc]\+\*\{0,2}$') != -1
         let opts['m'] = modes
         let mode      = modes[0]
         while mode != s:shift(a:modes, 1)
@@ -552,18 +633,34 @@ function! s:interactive(modes)
       else
         silent! call remove(opts, 'm')
       endif
-    else
+    elseif ch == "\<C-_>" || ch == "\<C-X>"
+      let prompt = 'Regular expression: '
+      let ch = s:input(prompt, '', a:vis)
+      if !empty(ch)
+        let regx = 1
+        let s:prev_echon_len = len(prompt . ch)
+        break
+      endif
+    elseif ch =~ '[[:print:]]'
       break
+    else
+      let warn = ' - Invalid character'
     endif
   endwhile
-  return [mode, n, ch, opts, s:normalize_options(opts)]
+  return [mode, n, ch, s:normalize_options(opts), regx]
+endfunction
+
+function! s:test_regexp(regexp)
+  try   | call matchlist('', a:regexp)
+  catch | call s:exit("Invalid regular expression: ". a:regexp)
+  endtry
 endfunction
 
 function! s:parse_args(args)
-  let n      = ''
-  let ch     = ''
-  let args   = a:args
-  let cand   = ''
+  let n    = ''
+  let ch   = ''
+  let args = a:args
+  let cand = ''
   let opts = {}
 
   " Poor man's option parser
@@ -603,54 +700,59 @@ function! s:parse_args(args)
 
   " Found regexp
   if !empty(matches)
-    let regexp = matches[2]
-    " Test regexp
-    try   | call matchlist('', regexp)
-    catch | call s:exit("Invalid regular expression: ". regexp)
-    endtry
-    return [matches[1], regexp, opts, 1]
+    return [matches[1], matches[2], opts, 1]
   else
     let tokens = matchlist(args, '^\([1-9][0-9]*\|-[0-9]*\|\*\*\?\)\?\s*\(.\{-}\)\?$')
     return [tokens[1], tokens[2], opts, 0]
   endif
 endfunction
 
+function! s:modes(bang)
+  return get(g:,
+    \ (a:bang ? 'easy_align_bang_interactive_modes' : 'easy_align_interactive_modes'),
+    \ (a:bang ? ['r', 'l', 'c'] : ['l', 'r', 'c']))
+endfunction
+
+function! s:alternating_modes(mode)
+  return a:mode ==? 'r' ? ['r', 'l'] : ['l', 'r']
+endfunction
+
 function! easy_align#align(bang, expr) range
-  let modes  = get(g:,
-        \ (a:bang ? 'easy_align_bang_interactive_modes' : 'easy_align_interactive_modes'),
-        \ (a:bang ? ['r', 'l', 'c'] : ['l', 'r', 'c']))
+  try
+    call s:align(a:bang, a:firstline, a:lastline, a:expr)
+  catch 'exit'
+  endtry
+endfunction
+
+function! s:align(bang, first_line, last_line, expr)
+  let modes  = s:modes(a:bang)
   let mode   = modes[0]
   let recur  = 0
   let n      = ''
   let ch     = ''
   let opts   = {}
-  let ioptsr = {}
-  let iopts  = {}
   let regexp = 0
+  " Heuristically determine if the user was in visual mode
+  let vis    = a:first_line == line("'<") && a:last_line == line("'>")
 
-  try
-    if empty(a:expr)
-      let [mode, n, ch, ioptsr, iopts] = s:interactive(copy(modes))
-    else
-      let [n, ch, opts, regexp] = s:parse_args(a:expr)
-      if empty(n) && empty(ch)
-        let [mode, n, ch, ioptsr, iopts] = s:interactive(copy(modes))
-      elseif empty(ch)
-        " Try swapping n and ch
-        let [n, ch] = ['', n]
-      endif
+  if empty(a:expr)
+    let [mode, n, ch, opts, regexp] = s:interactive(copy(modes), vis, opts)
+  else
+    let [n, ch, opts, regexp] = s:parse_args(a:expr)
+    if empty(n) && empty(ch)
+      let [mode, n, ch, opts, regexp] = s:interactive(copy(modes), vis, opts)
+    elseif empty(ch)
+      " Try swapping n and ch
+      let [n, ch] = ['', n]
     endif
-  catch 'exit'
-    return
-  endtry
+  endif
 
   if n == '*'      | let [nth, recur] = [1, 1]
   elseif n == '**' | let [nth, recur] = [1, 2]
   elseif n == '-'  | let nth = -1
   elseif empty(n)  | let nth = 1
   elseif n == '0' || ( n != '-0' && n != string(str2nr(n)) )
-    echon "\rInvalid field number: ". n
-    return
+    call s:exit('Invalid N-th parameter: '. n)
   else
     let nth = n
   endif
@@ -661,12 +763,14 @@ function! easy_align#align(bang, expr) range
   endif
 
   if regexp
+    call s:test_regexp(ch)
     let dict = { 'pattern': ch }
   else
     " Resolving command-line ambiguity
     if !empty(a:expr)
       " '\ ' => ' '
-      if ch =~ '^\\\s\+$'
+      " '\'  => ' '
+      if ch =~ '^\\\s*$'
         let ch = ' '
       " '\\' => '\'
       elseif ch =~ '^\\\\\s*$'
@@ -674,37 +778,40 @@ function! easy_align#align(bang, expr) range
       endif
     endif
     if !has_key(delimiters, ch)
-      echon "\rUnknown delimiter key: ". ch
-      return
+      call s:exit('Unknown delimiter key: '. ch)
     endif
-    let dict = delimiters[ch]
+    let dict = copy(delimiters[ch])
   endif
 
-  for opt in [opts, iopts]
-    if !empty(opt)
-      let dict = extend(copy(dict), opt)
-    endif
-  endfor
+  call extend(dict, opts)
 
   let ml = get(dict, 'left_margin', ' ')
   let mr = get(dict, 'right_margin', ' ')
   if type(ml) == 0 | let ml = repeat(' ', ml) | endif
   if type(mr) == 0 | let mr = repeat(' ', mr) | endif
 
-  let bvisual = char2nr(visualmode()) == 22 " ^V
+  let bvisual = vis && char2nr(visualmode()) == 22 " ^V
 
   if recur && bvisual
-    echon "\rRecursive alignment is currently not supported in blockwise-visual mode"
-    return
+    call s:exit('Recursive alignment is not supported in blockwise-visual mode')
   endif
 
   let aseq = get(dict, 'mode_sequence',
-        \ recur == 2 ? (mode ==? 'r' ? ['r', 'l'] : ['l', 'r']) : [mode])
+        \ recur == 2 ? s:alternating_modes(mode) : [mode])
+  let mode_expansion = matchstr(aseq, '\*\+$')
+  if mode_expansion == '*'
+    let aseq = aseq[0 : -2]
+    let recur = 1
+  elseif mode_expansion == '**'
+    let aseq = aseq[0 : -3]
+    let recur = 2
+  endif
+  let aseq_list = type(aseq) == 1 ? split(tolower(aseq), '\s*') : map(copy(aseq), 'tolower(v:val)')
+  let aseq_str = join(aseq_list, '')
 
-  try
-    call s:do_align(
-    \ type(aseq) == 1 ? split(tolower(aseq), '\s*') : map(copy(aseq), 'tolower(v:val)'),
-    \ {}, {}, a:firstline, a:lastline,
+  call s:do_align(
+    \ aseq_list,
+    \ {}, {}, a:first_line, a:last_line,
     \ bvisual ? min([col("'<"), col("'>")]) : 1,
     \ bvisual ? max([col("'<"), col("'>")]) : 0,
     \ get(dict, 'pattern', ch),
@@ -717,8 +824,15 @@ function! easy_align#align(bang, expr) range
     \ get(dict, 'ignore_unmatched', get(g:, 'easy_align_ignore_unmatched', 1)),
     \ get(dict, 'ignore_groups', get(dict, 'ignores', s:ignored_syntax())),
     \ recur)
-    call s:echon(mode, n, regexp ? '/'.ch.'/' : ch, ioptsr)
-  catch 'exit'
-  endtry
+
+  let copts = s:compact_options(opts)
+  let nbmode = s:modes(0)[0]
+  if !has_key(copts, 'm') && (
+    \  (recur == 2 && join(s:alternating_modes(nbmode), '') != aseq_str) ||
+    \  (recur != 2 && (aseq_str[0] != nbmode || len(aseq_str) > 1))
+    \ )
+    call extend(copts, { 'm': aseq_str })
+  endif
+  call s:echon('', n, regexp, ch, copts, '')
 endfunction
 
