@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: jump_list.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 17 May 2013.
+" Last Modified: 19 Sep 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -74,9 +74,15 @@ function! unite#kinds#jump_list#define() "{{{
     let preview_windows = filter(range(1, winnr('$')),
           \ 'getwinvar(v:val, "&previewwindow") != 0')
     if empty(preview_windows)
-      silent pedit! `=filename`
-      let preview_windows = filter(range(1, winnr('$')),
-            \ 'getwinvar(v:val, "&previewwindow") != 0')
+      noautocmd silent execute 'pedit!' fnameescape(filename)
+      if !buflisted
+        let prev_winnr = winnr('#')
+        let winnr = winnr()
+        wincmd P
+        doautoall BufRead
+        execute prev_winnr.'wincmd w'
+        execute winnr.'wincmd w'
+      endif
     endif
 
     let prev_winnr = winnr('#')
@@ -263,7 +269,7 @@ function! s:open(candidate) "{{{
     if has_key(a:candidate, 'action__buffer_nr')
       silent execute 'buffer' bufnr
     else
-      edit `=a:candidate.action__path`
+      edit! `=a:candidate.action__path`
     endif
   endif
 
