@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.218 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.223 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -597,6 +597,8 @@ my %ciphers = (
   'vfluy6kdb' => 'r w12 w32 r w34 s3 w35 w42 s2',   # 05 Sep 2013
   'vflkuzxcs' => 'w22 w43 s3 r s1 w43',             # 10 Sep 2013
   'vflGNjMhJ' => 'w43 w2 w54 r w8 s1',              # 12 Sep 2013
+  'vfldJ8xgI' => 'w11 r w29 s1 r s3',               # 17 Sep 2013
+  'vfl79wBKW' => 's3 r s1 r s3 r s3 w59 s2',        # 19 Sep 2013
 );
 
 sub decipher_sig($$$) {
@@ -1129,6 +1131,12 @@ sub scrape_youtube_url_html($$$$$) {
         $err = "$err ($title)";
       }
 
+      if ($verbose == 0 && $err =~ m/available in your country/i) {
+        # With --quiet, just silently ignore country-locked video failures,
+        # for "youtubefeed".
+        exit (0);
+      }
+
       error ("$id: $err");
     }
   }
@@ -1516,8 +1524,8 @@ sub scrape_vimeo_private($$) {
   # it is one that doesn't work!  We need the one from the main HTML page.
   # Also note that User-Agent must be the same on both this URL and the
   # play_redirect URL: it seems to be part of what the signature signs.
-  #
-  $url = "http://vimeo.com/$id";
+  #  $url = "http://vimeo.com/$id";
+  # No longer true? Instead, look at the URL inside "files" which has sig.
 
   my ($http, $head, $body) = get_url ($url, $referer);
   if (! check_http_status ($url, $http, 0)) {
@@ -1527,7 +1535,9 @@ sub scrape_vimeo_private($$) {
   my ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si);
   my ($sig)   = ($body  =~ m@"signature":"([a-fA-F\d]+)"@s);
   my ($time)  = ($body  =~ m@"timestamp":"?(\d+)"?@s);
-  my ($files) = ($body  =~ m@"files":{(.*?)}@s);
+  my ($files) = ($body  =~ m@("hd":{.*?})@s);
+     ($files) = ($body  =~ m@("sd":{.*?})@s) unless $files;
+     ($files) = ($body  =~ m@"files":{(.*?)\]}@s) unless $files;
 
   errorI ("$id: vimeo HTML unparsable") unless ($sig && $time && $files);
 
@@ -1543,6 +1553,10 @@ sub scrape_vimeo_private($$) {
           '&time='    . $time .
           '&sig='     . $sig .
           '&type=html5_desktop_local');
+
+  # Hmm, let's just try to use this one directly.
+  # Sometimes the "sd" and "mobile" entries work but "hd" doesn't, WTF.
+  $url = $1 if ($files =~ m@"url":"([^\"]+)"@s);
 
   my $ct = ($codec =~ m@mov@si  ? 'video/quicktime' :
             $codec =~ m@flv@si  ? 'video/flv' :
@@ -1622,6 +1636,7 @@ sub munge_title($) {
 
 
   $title =~ s/ \(\)//gs;
+  $title =~ s/ \[\]//gs;
 
   # Don't allow the title to begin with "." or it writes a hidden file.
   $title =~ s/^([.,\s])/_$1/gs;
