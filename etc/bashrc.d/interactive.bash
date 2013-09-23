@@ -572,8 +572,7 @@ ALIAS rsync='rsync -hh -S --partial' \
       rsync-backup='rsync -axAX --hard-links --delete'
 
 # dd
-ALIAS ddc='dcfldd' && TCOMP dd ddc
-ALIAS dd3='dc3dd'  && TCOMP dd dd3
+HAVE dcfldd && TCOMP dd dcfldd
 ddsize() {
     [[ $# -ge 2 ]] || { echo "Usage: $FUNCNAME size block-size [dd-args]"; return 1; }
     ruby -e '
@@ -1485,8 +1484,8 @@ HAVE pass && {
 # cryptsetup
 ALIAS cs='cryptsetup' && {
     csmount() {
-        (($# >= 2)) || { echo "USAGE: $FUNCNAME device mountpoint [header [keyfile]]"; return 1; }
-        local device="$1" mountpoint="$2" header="$3" keyfile="$4"
+        (($# >= 2)) || { echo "USAGE: $FUNCNAME device mountpoint [keyfile [header]]"; return 1; }
+        local device="$1" mountpoint="$2" keyfile="$3" header="$4"
         local name="$(ruby -e 'puts File.basename(File.expand_path ARGV.first)' -- "$mountpoint")"
         local opts=() args=()
         [[ "$header" ]] && opts+=(--header "$header")
