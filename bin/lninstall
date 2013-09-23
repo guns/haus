@@ -40,8 +40,20 @@ class Lninstall
         Options:
       BANNER
 
+      opt.on '-a', '--all', 'Also link init, headers, libraries, and all of share/' do
+        options.init = options.libs = options.share = true
+      end
+
+      opt.on '-i', '--init', 'Also link init files' do
+        options.init = true
+      end
+
       opt.on '-l', '--libs', 'Also link header files and libraries' do
         options.libs = true
+      end
+
+      opt.on '-s', '--share', 'Also link all files in share/' do
+        options.share = true
       end
 
       opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
@@ -80,6 +92,11 @@ class Lninstall
     Set.new Dir[*%W[
       #{base}/{,s}bin/*
       #{base}/share/man/**/*
+    ]]
+  end
+
+  def init_files base
+    Set.new Dir[*%W[
       #{base}/lib/systemd/**/*
       #{base}/etc/{rc.d,init.d}/*
     ]]
@@ -92,9 +109,17 @@ class Lninstall
     ]]
   end
 
+  def share_files base
+    Set.new Dir[*%W[
+      #{base}/share/**/*
+    ]]
+  end
+
   def source_files base
     fs = program_files base
+    fs.merge init_files(base) if options.init or options.uninstall
     fs.merge library_files(base) if options.libs or options.uninstall
+    fs.merge share_files(base) if options.share or options.uninstall
     fs
   end
 
