@@ -20,16 +20,19 @@ if [[ $TMUX ]]; then
     exit 1
 fi
 
+OPTS=()
+[[ $TERM == *256color* ]] && OPTS+=(-2)
+
 if [[ $SESSION ]]; then
     if tmux has-session -t "$SESSION" &>/dev/null; then
-        exec $WRAPPER tmux attach-session -d -t "$SESSION"
+        exec $WRAPPER tmux "${OPTS[@]}" attach-session -d -t "$SESSION"
     else
-        exec $WRAPPER tmux new-session -s "$SESSION" "$@"
+        exec $WRAPPER tmux "${OPTS[@]}" new-session -s "$SESSION" "$@"
     fi
 else
     if tmux has-session &>/dev/null; then
-        exec $WRAPPER tmux attach-session -d
+        exec $WRAPPER tmux "${OPTS[@]}" attach-session -d
     else
-        exec $WRAPPER tmux new-session "$@"
+        exec $WRAPPER tmux "${OPTS[@]}" new-session "$@"
     fi
 fi
