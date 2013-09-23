@@ -137,10 +137,8 @@ class Usertmpfiles
       Process.gid = user.gid
       Process.uid = user.uid
       Process.euid = user.uid
-      yield
-    else
-      yield
     end
+    yield
   ensure
     Process.gid = gid if gid
     Process.uid = uid if uid
