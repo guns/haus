@@ -103,9 +103,9 @@ CHECK_SECLIST() {
 # Valid paths are added to __SECLIST__ and reviewed.
 EXPORT_PATH() {
     export PATH="$(ruby -e '
-        print ARGV.flat_map { |arg|
+        print ARGV.map { |arg|
             arg.split(":").map { |p| File.symlink?(p) ? File.expand_path(File.readlink(p), File.dirname(p)) : p }
-        }.uniq.select { |path|
+        }.flatten.uniq.select { |path|
             if File.directory? path and File.executable? path
                 stat = File.stat path
                 stat.uid == Process.euid or stat.uid.zero?

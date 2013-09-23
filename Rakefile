@@ -452,8 +452,10 @@ task :keystore do
 
       rm_f ks
 
+      ENV['STOREPASS'] = pw
+
       cs.each_with_index do |c, i|
-        IO.popen ({ 'STOREPASS' => pw }), cmd % [ks, i], 'w' do |io|
+        IO.popen cmd % [ks, i], 'w' do |io|
           io.puts c.to_s
           io.close
         end
