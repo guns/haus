@@ -1579,7 +1579,7 @@ elif __LINUX__; then
     # Aptitude package manager
     ALIAS apt='aptitude' && {
         apte() { vim -p "$(apt-file "$@")"; }
-        alias aptg='run aptitude search ~i | g'
+        alias aptg='run dpkg --list | g'
         alias apti='run aptitude install'
         alias aptq='run aptitude show'
         alias apts='run aptitude search'
