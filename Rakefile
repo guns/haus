@@ -70,6 +70,12 @@ task :env do
         :base   => "#{@src}/READONLY/speedtest-cli",
         :branch => %w[master],
         :files  => { 'speedtest-cli' => 'bin/speedtest-cli' }
+      },
+
+      {
+        :base   => "#{@src}/READONLY/git-cal",
+        :branch => %w[master],
+        :files  => { 'git-cal' => 'bin/git-cal' }
       }
     ],
 
