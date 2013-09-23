@@ -167,8 +167,12 @@ REQUIRE ~/.bashrc.d/options.bash
 # Set prompts
 REQUIRE ~/.bashrc.d/prompts.bash
 
-# Load completions
-REQUIRE ~/.bash_completion
+# Load completions unless it was already sourced by /etc/profile
+if [[ "$BASH_COMPLETION" ]]; then
+    echo "Warning: Already sourced $BASH_COMPLETION" >&2
+else
+    REQUIRE ~/.bash_completion
+fi
 
 # Load functions, aliases, and variables
 REQUIRE ~/.bashrc.d/interactive.bash
