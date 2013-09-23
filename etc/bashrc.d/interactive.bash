@@ -1437,8 +1437,8 @@ HAVE wpa_supplicant wpa_passphrase && {
         local OPTIND OPTARG opt iface='wlan0'
         while getopts :i opt; do
             case $opt in
-                i) iface="$OPTARG";;
-                *) echo "USAGE: $FUNCNAME [-i iface] essid [password]"; return 1
+            i) iface="$OPTARG";;
+            *) echo "USAGE: $FUNCNAME [-i iface] essid [password]"; return 1
             esac
         done
         shift $((OPTIND-1))
