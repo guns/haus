@@ -1581,7 +1581,13 @@ elif __LINUX__; then
         apte() { vim -p "$(apt-file "$@")"; }
         alias aptg='run dpkg --list | g'
         alias apti='run aptitude install'
-        alias aptq='run aptitude show'
+        aptq() {
+            local pkg
+            for pkg in "$@"; do
+                aptitude show "$pkg"
+                dpkg --listfiles "$pkg"
+            done
+        }
         alias apts='run aptitude search'
         alias aptr='run aptitude remove'
         alias aptsync='run aptitude update'
