@@ -990,7 +990,7 @@ HAVE vim && {
         fi
 
         if (( ${#files[@]} )); then
-            vim -p "${files[@]}"
+            vim "${files[@]}"
         else
             vimopen
         fi
@@ -1021,7 +1021,7 @@ HAVE vim && {
             fi
         done
 
-        (( ${#args[@]} )) && run vim -p "${args[@]}"
+        (( ${#args[@]} )) && run vim "${args[@]}"
     }
 
     # Diff mode for pacnew files
@@ -1578,7 +1578,7 @@ if __OS_X__; then
 elif __LINUX__; then
     # Aptitude package manager
     ALIAS apt='aptitude' && {
-        apte() { vim -p "$(apt-file "$@")"; }
+        apte() { vim "$(apt-file "$@")"; }
         alias aptg='run dpkg --list | g'
         alias apti='run aptitude install'
         aptq() {
