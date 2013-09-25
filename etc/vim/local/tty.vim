@@ -44,6 +44,16 @@ set ttyfast         " More redrawing characters sent to terminal
 "   Support DECSCUSR sequence to set the cursor style with two new
 "   terminfo(5) extensions, Cs and Csr. Written by Ailin Nemui.
 "
+"   NOTE: The following commit appears to break this feature.
+"
+"   commit 13441e8cb8b0ce68db3204a44bbdc004bee42a0f
+"   Author: Nicholas Marriott <nicm@openbsd.org>
+"   Date:   4 months ago
+"
+"       The actual terminfo entries we ended up with for cursor changes are Cs,
+"       Ce, Ss and Se (not Cc, Ce, Cs, Csr). So use and document these instead
+"       of the ones we were using earlier.
+"
 " From :help t_SI:
 "
 "   Added by Vim (there are no standard codes for these):
@@ -53,14 +63,15 @@ set ttyfast         " More redrawing characters sent to terminal
 if &t_Co == 256
     let s:icolor = 'rgb:00/CC/FF'
     let s:ncolor = 'rgb:FF/F5/9B'
-    let s:ishape = '4 '
-    let s:nshape = '2 '
 
-    if &term =~ '\v^screen' && !exists('$TMUX')
-        let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\\033P\033[" . s:ishape . "q\033\\"
-        let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\\033P\033[" . s:nshape . "q\033\\"
-    elseif exists('$TMUX') || &term =~ '\v^tmux' || &term =~ '\v^u?rxvt' || &term =~ '\v^xterm'
-        let &t_SI = "\033]12;" . s:icolor . "\007\033[" . s:ishape . "q"
-        let &t_EI = "\033]12;" . s:ncolor . "\007\033[" . s:nshape . "q"
+    if exists('$TMUX') || &term =~ '\v^tmux'
+        let &t_SI = "\033Ptmux;\033\033]12;" . s:icolor . "\007\033\\"
+        let &t_EI = "\033Ptmux;\033\033]12;" . s:ncolor . "\007\033\\"
+    elseif &term =~ '\v^screen'
+        let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\"
+        let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\"
+    elseif &term =~ '\v^u?rxvt|^xterm'
+        let &t_SI = "\033]12;" . s:icolor . "\007"
+        let &t_EI = "\033]12;" . s:ncolor . "\007"
     endif
 endif
