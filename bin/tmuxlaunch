@@ -5,7 +5,7 @@
 NEW=0
 WRAPPER=''
 SESSION=''
-CONF="source-file ~/.tmux.conf\nset-option -g default-terminal %s\n"
+CONF="set-option -g default-terminal %s\nsource-file ~/.tmux.conf\n"
 TMUX_TERM='tmux'
 
 while getopts :ngst: OPT; do
