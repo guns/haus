@@ -56,6 +56,7 @@ URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
 
 !!! XTERM
 
+XTerm*termName:     xterm-256color
 XTerm*background:   rgb:00/00/00
 XTerm*foreground:   rgb:FF/EB/B6
 XTerm*pointerColor: rgb:DD/DD/DD
