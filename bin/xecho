@@ -20,6 +20,7 @@ class Xecho
     'se'     => ['',             'Move window to southeast corner'],
     'move'   => ['X Y',          'Move window to X,Y'],
     'ccolor' => ['COLOR',        'Set cursor color'],
+    'cshape' => ['SHAPE'         'Set cursor shape'],
     'font'   => ['[FONT]',       'Set fontset or restore default'],
     'fsize'  => ['[FONTSIZE]',   'Set xft pixelsize or restore default'],
     'geom'   => ['WIDTH HEIGHT', 'Set terminal dimensions in characters'],
@@ -121,6 +122,10 @@ class Xecho
 
   def ccolor color
     raw "\033]12;%s\007" % color
+  end
+
+  def cshape shape
+    raw "\033[%s q" % shape
   end
 
   def font str = nil
