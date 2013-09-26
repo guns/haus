@@ -57,28 +57,27 @@
            ;;
 
            (require 'clojure.pprint
-                    'clojure.reflect)
+                    'clojure.reflect
+                    'clojure.tools.trace)
 
            (def reflect clojure.reflect/reflect)
 
-           (defmacro p
-             ([& xs]
-              `(do (clojure.pprint/pprint
-                     (zipmap '~(reverse xs) [~@(reverse xs)]))
-                   ~(last xs))))
+           (defmacro p [& xs]
+             `(do (clojure.pprint/pprint
+                    (zipmap '~(reverse xs) [~@(reverse xs)]))
+                  ~(last xs)))
 
            (defmacro dump-locals []
              `(clojure.pprint/pprint
                 ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
-           (defmacro bm
-             ([expr] `(bm 10 ~expr))
-             ([n expr] `(time (dotimes [_# ~n] ~expr))))
-
            (defmacro trace
              ([expr] `(trace *ns* ~expr))
              ([nspace expr]
-              `(try (require 'clojure.tools.trace)
-                    (clojure.tools.trace/trace-ns ~nspace)
+              `(try (clojure.tools.trace/trace-ns ~nspace)
                     ~expr
-                    (finally (clojure.tools.trace/untrace-ns ~nspace))))))}}}
+                    (finally (clojure.tools.trace/untrace-ns ~nspace)))))
+
+           (defmacro bm
+             ([expr] `(bm 10 ~expr))
+             ([n expr] `(time (dotimes [_# ~n] ~expr)))))}}}
