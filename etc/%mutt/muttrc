@@ -130,7 +130,7 @@ macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager
 macro pager w       \e\0074
 
 # notmuchfs macros
-macro index,pager \e\007R "<shell-escape>(notify -a 'Starting Notmuch scan'; if notmuch new; then notify -a 'Notmuch scan complete'; else notify -a 'Notmuch scan failed'; fi) &>/dev/null &<enter>"
+macro index,pager \e\007R "<shell-escape>notmuch new<enter>"
 macro index,pager \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify -a 'notmuchfs mounted') &>/dev/null &<enter>"
 macro index,pager \e\007N "<shell-escape>(cd $folder; rake umount && notify -a 'notmuchfs unmounted') &>/dev/null &<enter>"
 macro index,pager \e\007/ "\e\007n<enter-command>source ~/.mutt/muttrc.mailboxes.notmuch<enter><change-folder>?<toggle-mailboxes>"
