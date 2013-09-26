@@ -24,7 +24,9 @@
 
 (require 'clojure.pprint
          'clojure.tools.trace
-         'spyscope.core)
+         'spyscope.core
+         'redl.core
+         'redl.complete)
 
 (defmacro p [& xs]
   `(do (clojure.pprint/pprint

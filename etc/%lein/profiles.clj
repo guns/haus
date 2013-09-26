@@ -25,7 +25,8 @@
         :dependencies [[org.clojure/tools.namespace "LATEST"]
                        [org.clojure/tools.trace "LATEST"]
                        [slamhound "LATEST"]
-                       [spyscope "LATEST"]]
+                       [spyscope "LATEST"]
+                       [redl "LATEST"]]
         :aliases {"RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
                   "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
