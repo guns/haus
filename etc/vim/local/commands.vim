@@ -282,14 +282,14 @@ function! s:ClojureBufferSetup()
     imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
-    nnoremap <silent><buffer> <Leader>R        :call <SID>ClojureNamespaceRefresh()<CR>
+    nnoremap <silent><buffer> <Leader>R        :call fireplace#eval('(user/refresh)')<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
-    nnoremap <silent><buffer> <LocalLeader>cp  :call <SID>ClojureClassPath()<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#eval('(user/classpath)')<CR>
     nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me  :call <SID>ClojureMacroexpand(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>mE  :call <SID>ClojureMacroexpand(2)<CR>
@@ -297,11 +297,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>rT  :call <SID>ClojureRunTests(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
     nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
-    nnoremap <silent><buffer> <LocalLeader>tw  :call <SID>ClojureToggleWarnings()<CR>
-endfunction
-
-function! s:ClojureNamespaceRefresh()
-    call fireplace#eval('(do (require (quote clojure.tools.namespace.repl)) (clojure.tools.namespace.repl/refresh))')
+    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#eval('(user/toggle-warnings!)')<CR>
 endfunction
 
 function! s:ClojurePprint(expr)
@@ -316,7 +312,7 @@ function! s:ClojurePprint(expr)
 endfunction
 
 function! s:ClojureStackTrace()
-    silent call fireplace#eval('(clojure.stacktrace/print-stack-trace *e)')
+    silent call fireplace#eval('(clojure.stacktrace/e)')
     Last
     wincmd L
 endfunction
@@ -324,46 +320,14 @@ endfunction
 function! s:ClojureCheatSheet(pattern)
     if empty(a:pattern) | return | endif
 
-    let file = fireplace#evalparse(
-        \   '((fn [pattern]'
-        \ . '   (let [cheat-sheet (fn [& namespaces]'
-        \ . '                       (clojure.string/join'
-        \ . '                         "\n\n"'
-        \ . '                         (map (fn [nspace]'
-        \ . '                                (let [nsname (str nspace)'
-        \ . '                                      mdata (map meta (vals (ns-publics nspace)))'
-        \ . '                                      {funcs true defs false} (group-by #(contains? % :arglists) mdata)'
-        \ . '                                      funclen (apply max 0 (map (comp count str :name) funcs))'
-        \ . '                                      defnames (map #(str nsname "/" (:name %)) defs)'
-        \ . '                                      funcnames (map #(format (str "%s/%-" funclen "s %s")'
-        \ . '                                                              nsname (:name %)'
-        \ . '                                                              (clojure.string/join \space (:arglists %))) funcs)]'
-        \ . '                                  (str ";;; " nsname " {{{1\n\n"'
-        \ . '                                       (clojure.string/join "\n" (concat (sort defnames) (sort funcnames))))))'
-        \ . '                              (sort-by str namespaces))))'
-        \ . '         matches (filter #(re-seq pattern (str %)) (all-ns))]'
-        \ . '    (if (seq matches)'
-        \ . '      (let [tmp (format "target/cheat-sheet-%s.clj"'
-        \ . '                        (clojure.string/replace pattern #"[\x00/\n]" \·))]'
-        \ . '        (clojure.java.io/make-parents tmp)'
-        \ . '        (spit tmp (str (apply cheat-sheet matches)'
-        \ . '                       "\n\n;; vim:ft=clojure:fdm=marker:"))'
-        \ . '        (.getAbsolutePath (java.io.File. tmp)))'
-        \ . '      ""))) #"' . escape(a:pattern, '"') . '")'
-        \ )
+    let file = fireplace#evalparse('(user/write-cheat-sheet! #"' . escape(a:pattern, '"') . '")')
 
     if empty(file)
-        redraw!
+        redraw! " Clear command line
         echo "No matching namespaces."
     else
         execute 'vsplit ' . file . ' | wincmd L'
     endif
-endfunction
-
-function! s:ClojureClassPath()
-    call fireplace#eval(
-        \   '(doseq [u (seq (.getURLs ^java.net.URLClassLoader (ClassLoader/getSystemClassLoader)))]'
-        \ . '  (println (.getPath ^java.net.URL u)))')
 endfunction
 
 function! s:ClojureMacroexpand(once)
@@ -380,15 +344,7 @@ function! s:ClojureRunTests(all)
         Require!
         call fireplace#eval('(clojure.test/run-all-tests)')
     else
-        call fireplace#eval(
-            \   '(let [nspace (if (re-seq #"-test\z" (str *ns*))'
-            \ . '               *ns*'
-            \ . '               (first (filter #(re-seq (re-pattern (str *ns* "-test\\z"))'
-            \ . '                                       (str %))'
-            \ . '                              (all-ns))))]'
-            \ . '  (clojure.core/require (symbol (str nspace)) :reload)'
-            \ . '  (clojure.test/run-tests nspace))'
-            \ )
+        call fireplace#eval('(user/run-tests-for-current-ns)')
     endif
 endfunction
 
@@ -397,12 +353,7 @@ function! s:ClojureSlamHound(file)
         echom "Buffer contains unsaved changes!"
         return 1
     endif
-    call fireplace#eval(
-        \   '(clojure.core/require (quote slam.hound))'
-        \ . '(let [file (clojure.java.io/file "' . a:file . '")]'
-        \ . '  (binding [clojure.pprint/*print-right-margin* ' . (&textwidth + 1) . ']'
-        \ . '    (slam.hound/swap-in-reconstructed-ns-form file)))'
-        \ )
+    call fireplace#eval('(user/slamhound! "' . escape(a:file, '"') . '" ' . &textwidth . ')')
     edit
 endfunction
 
@@ -411,23 +362,7 @@ function! s:ClojureTypeScaffold()
         let reg_save = [@e, @r]
         execute "normal \"ey\<Plug>(sexp_inner_element)"
         redir @r
-        call fireplace#eval(
-            \   '(defn type-scaffold'
-            \ . '  "https://gist.github.com/mpenet/2053633, originally by cgrand"'
-            \ . '  [iface]'
-            \ . '  (let [ms (map (fn [m] [(.getCanonicalName (.getDeclaringClass m))'
-            \ . '                         (symbol (.getName m))'
-            \ . '                         (map #(symbol (.getCanonicalName %)) (.getParameterTypes m))])'
-            \ . '                (.getMethods iface))'
-            \ . '        idecls (map (fn [[cls ms]]'
-            \ . '                      (let [decls (map (fn [[_ s ps]] (str (list s (into [(quote this)] ps))))'
-            \ . '                                       ms)]'
-            \ . '                        (str "  " cls "\n  " (clojure.string/join "\n  " decls))))'
-            \ . '                    (group-by first ms))]'
-            \ . '    (clojure.string/join "\n\n" idecls)))'
-            \ . '(let [elem ' . @e . ']'
-            \ . '  (println (type-scaffold (if (class? elem) elem (class elem)))))'
-            \ )
+        call fireplace#eval('(println (user/object-scaffold ' . @e . '))')
     finally
         redir END
         Sscratch
@@ -436,13 +371,6 @@ function! s:ClojureTypeScaffold()
         normal! gg"_dG"rPdd
         let [@e, @r] = reg_save
     endtry
-endfunction
-
-function! s:ClojureToggleWarnings()
-    call fireplace#eval(
-        \   '(do (set! *warn-on-reflection* (not *warn-on-reflection*))'
-        \ . '    (prn {(quote *warn-on-reflection*) *warn-on-reflection*}))'
-        \ )
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
