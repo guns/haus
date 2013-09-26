@@ -4,16 +4,21 @@ use strict;
 use utf8;
 use Getopt::Long;
 use Pod::Usage;
+use Time::Local;
+use LWP::Simple;
+use JSON::PP qw ( decode_json );
 use Data::Dumper;
 
 binmode(STDOUT, ":utf8");
 #command line options
-my ( $help, $period, $author, $filepath );
+my ( $help, $period, $use_ascii, $author, $filepath, $github_username );
 
 GetOptions(
     'help|?'     => \$help,
     'period|p=n' => \$period,
+    'ascii'      => \$use_ascii,
     'author=s'     => \$author,
+    'github|gh=s'  => \$github_username
 ) or pod2usage(2);
 pod2usage(1) if $help;
 
@@ -24,6 +29,7 @@ $filepath = shift @ARGV;
 #qw(⬚ ▢ ▤ ▣ ⬛)
 
 my @colors = ( 237, 157, 155, 47, 2 );
+my @ascii = ( " ", ".", "o", "O", "0" );
 my @months = qw (Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 
 process();
@@ -37,34 +43,40 @@ my ( $cur_start, $max_start, $max_end, $cur_weekdays_start, $max_weekdays_start,
 #loads of global variables
 
 sub process {
-    #try to exit gracefully when the terminal doesn't support enough colors
-    no warnings; #dont warn if tput command fails
-    my $colors_supported = qx/tput colors/;
-    if ($colors_supported && $colors_supported < 256) {
-      chomp $colors_supported;
-      print "fatal: 'tput colors' returned < 256 (" . $colors_supported . ") , cannot plot the calendar as the terminal doesn't support enough colors\n"; #will try to hack around this soon
-      exit(1);
-    }
     init_cal_stuff();
-    my $extra_args = "";
-    $extra_args = " --author=" . $author if $author;
-    if ($filepath) {
-        if ( -e $filepath ) {
-            $extra_args .= " -- " . $filepath;
-        }
-        else {
-            print "fatal: $filepath do not exists\n";
-            exit(2);
-        }
+    if ($github_username) {
+        process_github_contributions();
     }
-    my $git_command = "git log --pretty=format:\"%at\" --since=\"13 months\"" . $extra_args;    #commits might not be in strict time order, check some past too
-    my $epochs = qx/$git_command/;
+    else {
+        process_current_repo();
+    }
+    compute_stats();
+    print_grid();
+}
+
+sub process_github_contributions {
+        my $content = get("https://github.com/users/" . $github_username . "/contributions_calendar_data");
+        my $result = decode_json ( $content ) if $content;
+        if (!$content || !$result) {
+           print "fatal: could not get github contributions data of " . $github_username . "\n";
+           exit(1);
+         }
+        foreach my $contrib (@$result) {
+            next if !$contrib->[1];
+            my ( $year, $mon, $mday ) = split "/", $contrib->[0];
+            my $epoch = timelocal( 0, 0, 0, $mday, $mon-1, $year );
+            add_epoch( $epoch, $contrib->[1] );
+        }
+}
+
+sub process_current_repo {
+    my $git_command = git_command();
+    my @epochs      = qx/$git_command/;
     if ($?) {
         print "fatal: git-cal failed to get the git log\n";
         exit(2);
     }
-    my @epochs = split /\n/, $epochs;
-    if (! @epochs) {
+    if ( !@epochs ) {
         print "git-cal: got empty log, nothing to do\n";
         exit(1);
     }
@@ -73,10 +85,23 @@ sub process {
         $status = add_epoch($_);
         last if !$status;
     }
-    compute_stats();
-    print_grid();
 }
 
+
+sub git_command {
+    my $command = qq{git log --no-merges --pretty=format:"%at" --since="13 months"};
+    $command .= qq{ --author="$author"} if $author;
+    if ($filepath) {
+        if ( -e $filepath ) {
+            $command .= qq{ -- $filepath};
+        }
+        else {
+            print "fatal: $filepath do not exists\n";
+            exit(2);
+        }
+    }
+    return $command;
+}
 
 sub init_cal_stuff {
     my ( $wday, $yday, $month, $year ) = ( localtime(time) )[ 6, 7, 4, 5 ];
@@ -131,7 +156,7 @@ sub init_cal_stuff {
 
 
 sub add_epoch {
-    my $epoch = shift;
+    my ($epoch, $count) = @_;
     if ( $epoch > $max_epoch || $epoch < $min_epoch ) {
         return 1;
     }
@@ -145,15 +170,16 @@ sub add_epoch {
         $pos = ( $jan1 - ( $total - $yday ) );
     }
     return 0 if $pos < 0;    #just in case
-    add_to_grid( $pos, $epoch );
+    add_to_grid( $pos, $epoch, $count );
     return 1;
 }
 
 sub add_to_grid {
-    my ( $pos, $epoch ) = @_;
+    my ( $pos, $epoch, $count ) = @_;
+    $count ||= 1;
     my $r = int $pos / 7;
     my $c = $pos % 7;
-    $grid[$r][$c]->{commits}++;
+    $grid[$r][$c]->{commits}+=$count;
     $grid[$r][$c]->{epoch} = $epoch;
     $max_commits = $grid[$r][$c]->{commits} if $grid[$r][$c]->{commits} > $max_commits;
 }
@@ -213,39 +239,23 @@ sub print_grid {
     print_month_names($space);
     foreach my $c ( 0 .. 6 ) {
         printf "\n%" . ( $space - 2 ) . "s", "";
-        if ( $c == 1 ) {
-            print "M ";
-        }
-        elsif ( $c == 3 ) {
-            print "W ";
-        }
-        elsif ( $c == 5 ) {
-            print "F ";
-        }
-        else {
-            print "  ";
-        }
+
+        print $c == 1 ? "M "
+            : $c == 3 ? "W "
+            : $c == 5 ? "F "
+                      : "  ";
+
         foreach my $r ( $row_start .. $row_end ) {
             my $cur_block = ( $r * 7 ) + $c;
             if ( $cur_block >= $start_block && $cur_block < $end_block ) {
                 my $val = $grid[$r][$c]->{commits} || 0;
-                my $index = 0;
 
-                #$index = ( int( ( $val - 4 ) / $divide ) ) + 1 if $val > 0; #too dumb and bad
-                if ($val) {
-                    if ( $val <= $q1 ) {
-                        $index = 1;
-                    }
-                    elsif ( $val <= $q2 ) {
-                        $index = 2;
-                    }
-                    elsif ( $val <= $q3 ) {
-                        $index = 3;
-                    }
-                    else {
-                        $index = 4;
-                    }
-                }
+                my $index = $val == 0   ? 0
+                          : $val <= $q1 ? 1
+                          : $val <= $q2 ? 2
+                          : $val <= $q3 ? 3
+                                        : 4;
+
                 print_block($index);
             }
             else {
@@ -268,10 +278,8 @@ sub print_grid {
 sub print_block {
     my $index = shift;
     $index = 4 if $index > 4;
-    my $c     = $colors[$index];
-    #always show on a black background, else it looks different (sometimes really bad ) with different settings.
-    #print "\e[40;38;5;${c}m⬛ \e[0m";
-    print "\e[40;38;5;${c}m\x{25fc} \e[0m";
+    print $use_ascii ? "${ascii[$index]} "
+                     : "\e[40;38;5;$colors[$index]m\x{25fc} \e[0m";
 }
 
 sub print_month_names {
@@ -350,13 +358,50 @@ git-cal - A simple tool to view commits calendar (similar to github contribution
 The calendar shows how frequently the commits are made over the past year or some choosen period
 
   git-cal
+
+  git-cal --period=<1..12>
+
   git-cal --author=<author> -- <filepath>
+
+  git-cal --ascii
 
 =head2 OPTIONS
 
-  --author              view commits of a particular author (passed to git log --author= )
-  --period|p            Do not show the entire year, p=1 to 12 shows only one month (1 = Jan .. 12 = Dec), p=-1 to -11 shows last p months and the current month
-  --help|?              help me
+=over
+
+=item --ascii
+
+Display activity using ASCII characters instead of ANSI colors.
+
+=item --author=<author>
+
+View commits of a particular author.
+
+=item --period|p=<n>
+
+Do not show the entire year:
+
+=over
+
+=item n = 1 to 12
+
+Shows only one month (1=Jan .. 12=Dec)
+
+=item n = -1 to -11 
+
+Shows the last n months (and the current month)
+
+=back
+
+=item --github|gh=<github_username>
+
+Show public contributions data from github
+
+=item --help|?
+
+Print this message.
+
+=back
 
 =head2 ADDITIONAL OPTIONS
 
