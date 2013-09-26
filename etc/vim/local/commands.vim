@@ -301,11 +301,11 @@ function! s:ClojureBufferSetup()
 endfunction
 
 function! s:ClojureNamespaceRefresh()
-    call fireplace#session_eval('(do (require (quote clojure.tools.namespace.repl)) (clojure.tools.namespace.repl/refresh))')
+    call fireplace#eval('(do (require (quote clojure.tools.namespace.repl)) (clojure.tools.namespace.repl/refresh))')
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#session_eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
+    silent call fireplace#eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
@@ -316,7 +316,7 @@ function! s:ClojurePprint(expr)
 endfunction
 
 function! s:ClojureStackTrace()
-    silent call fireplace#session_eval('(clojure.stacktrace/print-stack-trace *e)')
+    silent call fireplace#eval('(clojure.stacktrace/print-stack-trace *e)')
     Last
     wincmd L
 endfunction
@@ -361,7 +361,7 @@ function! s:ClojureCheatSheet(pattern)
 endfunction
 
 function! s:ClojureClassPath()
-    call fireplace#session_eval(
+    call fireplace#eval(
         \   '(doseq [u (seq (.getURLs ^java.net.URLClassLoader (ClassLoader/getSystemClassLoader)))]'
         \ . '  (println (.getPath ^java.net.URL u)))')
 endfunction
@@ -378,9 +378,9 @@ endfunction
 function! s:ClojureRunTests(all)
     if a:all
         Require!
-        call fireplace#session_eval('(clojure.test/run-all-tests)')
+        call fireplace#eval('(clojure.test/run-all-tests)')
     else
-        call fireplace#session_eval(
+        call fireplace#eval(
             \   '(let [nspace (if (re-seq #"-test\z" (str *ns*))'
             \ . '               *ns*'
             \ . '               (first (filter #(re-seq (re-pattern (str *ns* "-test\\z"))'
@@ -397,7 +397,7 @@ function! s:ClojureSlamHound(file)
         echom "Buffer contains unsaved changes!"
         return 1
     endif
-    call fireplace#session_eval(
+    call fireplace#eval(
         \   '(clojure.core/require (quote slam.hound))'
         \ . '(let [file (clojure.java.io/file "' . a:file . '")]'
         \ . '  (binding [clojure.pprint/*print-right-margin* ' . (&textwidth + 1) . ']'
@@ -411,7 +411,7 @@ function! s:ClojureTypeScaffold()
         let reg_save = [@e, @r]
         execute "normal \"ey\<Plug>(sexp_inner_element)"
         redir @r
-        call fireplace#session_eval(
+        call fireplace#eval(
             \   '(defn type-scaffold'
             \ . '  "https://gist.github.com/mpenet/2053633, originally by cgrand"'
             \ . '  [iface]'
@@ -439,7 +439,7 @@ function! s:ClojureTypeScaffold()
 endfunction
 
 function! s:ClojureToggleWarnings()
-    call fireplace#session_eval(
+    call fireplace#eval(
         \   '(do (set! *warn-on-reflection* (not *warn-on-reflection*))'
         \ . '    (prn {(quote *warn-on-reflection*) *warn-on-reflection*}))'
         \ )
