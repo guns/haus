@@ -18,6 +18,11 @@ source ~/.mutt/muttrc.colors
 source ~/.mutt/muttrc.settings
 source $alias_file
 
+# Mailboxes
+mailboxes $spoolfile $mbox $postponed `list-files ~/Mail/self`
+macro index,pager \" "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
+macro browser     \" <exit>\"
+
 # Mailing lists
 lists .*@googlegroups.com vim.*@vim.org
 
@@ -41,21 +46,19 @@ alternative_order text/plain
 set my_list=index,attach,browser,alias,postpone,pgp
 
 # Meta
-macro $my_list,pager \Cx\Cr '<enter-command>source ~/.mutt/muttrc<Enter>'
-macro $my_list,pager \CxeA  '<shell-escape>vim ~/.mutt/aliases<Enter>'
-macro $my_list,pager \Cx\;  '<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>'
+macro $my_list,pager \Cx\Cr "<enter-command>source ~/.mutt/muttrc<Enter>"
+macro $my_list,pager \CxeA  "<shell-escape>vim ~/.mutt/aliases<Enter>"
+macro $my_list,pager \Cx\;  "<shell-escape>vim /opt/mutt/share/doc/mutt/manual.txt<Enter>"
 bind  $my_list,pager \;     enter-command
 
 # Go ->
 macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
-macro index,pager    gi <change-folder>=INBOX<Enter>
-macro index,pager    ga <change-folder>=ARCHIVE<Enter>
-macro index,pager    gs <change-folder>=self/[Gmail].Spam<Enter>
-macro index,pager    \' "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
-macro index,pager    \" "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/local\`<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager    gi <change-folder>$spoolfile<Enter>
+macro index,pager    ga <change-folder>$mbox<Enter>
+macro index,pager    gS <change-folder>=self/[Gmail].Spam<Enter>
+macro index,pager    \' <change-folder>?<toggle-mailboxes>
 bind  browser        \' exit
-bind  browser        \" exit
 macro browser        u  <search>^\.\.$<Enter>
 
 # Movement
@@ -134,18 +137,18 @@ macro index,pager \e\007R "<shell-escape>notmuch new<enter>"
 macro index,pager \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify -a 'notmuchfs mounted') &>/dev/null &<enter>"
 macro index,pager \e\007N "<shell-escape>(cd $folder; rake umount && notify -a 'notmuchfs unmounted') &>/dev/null &<enter>"
 macro index,pager \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/.search\`<enter><change-folder>?<toggle-mailboxes>"
-macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
+macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir \$folder/.search/<enter>\e\007/"
 bind  browser     \e\007/ exit
 
 # Identities
 set my_identity_1='\
     set from="guns <self@sungpae.com>";\
     set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
-    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/self@sungpae.com.gpg`"'
+    set smtp_pass="`pass google.com/self@sungpae.com`"'
 set my_identity_2='\
     set from="guns <sungpae@gmail.com>";\
     set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
-    set smtp_pass="`gpg --decrypt ~/.password-store/google.com/sungpae@gmail.com.gpg`"'
+    set smtp_pass="`pass google.com/sungpae@gmail.com`"'
 macro $my_list,pager,compose \Cx? "<enter-command>set ?from<enter>"
 macro $my_list,pager,compose \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
 macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
@@ -155,13 +158,16 @@ reply-hook '~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_2"
 send-hook '!~s ^Re:' "$my_identity_1"
 
 # Hooks
-folder-hook . 'set record="^"' # Save sent mail to current folder
-folder-hook . 'push <current-top><refresh>'
+folder-hook . "set record='^'" # Save sent mail to current folder
+folder-hook . "push <current-top><refresh>"
 
 # Encrypt mail only to recipients with public keys
 set my_cryptlist=`gpg --list-keys | ruby -e '\
     puts $stdin.read.scan(/<(.*?)>/)\
          .map { |(e)| "\\\\\\\\<%s\\\\\\\\>" % Regexp.escape(Regexp.escape(Regexp.escape(e))) }\
          .join("\\\\|")'`
-send-hook ~A 'set crypt_autoencrypt=no'
-send-hook "~t ($my_cryptlist)" 'set crypt_autoencrypt=yes'
+send-hook ~A "set crypt_autoencrypt=no"
+send-hook "~t ($my_cryptlist)" "set crypt_autoencrypt=yes"
+
+# Local configuration
+source ~/.mutt/muttrc.local
