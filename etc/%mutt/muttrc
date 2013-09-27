@@ -52,8 +52,8 @@ macro $my_list,pager G  <End>
 macro index,pager    gi <change-folder>=INBOX<Enter>
 macro index,pager    ga <change-folder>=ARCHIVE<Enter>
 macro index,pager    gs <change-folder>=self/[Gmail].Spam<Enter>
-macro index,pager    \' "<enter-command>source ~/.mutt/muttrc.mailboxes.self<enter><change-folder>?<toggle-mailboxes>"
-macro index,pager    \" "<enter-command>source ~/.mutt/muttrc.mailboxes.local<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager    \' "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
+macro index,pager    \" "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/local\`<enter><change-folder>?<toggle-mailboxes>"
 bind  browser        \' exit
 bind  browser        \" exit
 macro browser        u  <search>^\.\.$<Enter>
@@ -133,7 +133,7 @@ macro pager w       \e\0074
 macro index,pager \e\007R "<shell-escape>notmuch new<enter>"
 macro index,pager \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify -a 'notmuchfs mounted') &>/dev/null &<enter>"
 macro index,pager \e\007N "<shell-escape>(cd $folder; rake umount && notify -a 'notmuchfs unmounted') &>/dev/null &<enter>"
-macro index,pager \e\007/ "\e\007n<enter-command>source ~/.mutt/muttrc.mailboxes.notmuch<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/.search\`<enter><change-folder>?<toggle-mailboxes>"
 macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
 bind  browser     \e\007/ exit
 

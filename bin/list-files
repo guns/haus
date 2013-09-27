@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+print (ARGV.empty? ? ['.'] : ARGV).reduce([]) { |v, arg|
+   v.concat Dir['%s/*' % File.expand_path(arg)].map(&:shellescape)
+}.join(' ')
