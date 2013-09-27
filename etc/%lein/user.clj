@@ -93,7 +93,7 @@
   (let [matches (filter #(re-seq pattern (str %)) (all-ns))]
     (if (seq matches)
       (let [tmp (java.io.File.
-                  (format "target/cheat-sheet-%s.clj"
+                  (format "target/vim/cheat-sheet-%s.clj"
                           (clojure.string/replace pattern #"[\x00/\n]" \.)))
             buf (str (clojure.string/join "\n\n" (map cheat-sheet matches))
                      "\n\n;; vim:ft=clojure:fdm=marker:")]
