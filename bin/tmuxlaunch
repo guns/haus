@@ -2,11 +2,21 @@
 #
 # Simple tmux wrapper
 
+if [[ $TMUX ]]; then
+    echo '$TMUX is already set!' >&2
+    exit 1
+fi
+
 NEW=0
 WRAPPER=''
 SESSION=''
 CONF="set-option -g default-terminal %s\nsource-file ~/.tmux.conf\n"
-TMUX_TERM='tmux'
+
+if [[ $TERM == *256color* ]]; then
+    TMUX_TERM='tmux-256color'
+else
+    TMUX_TERM='tmux'
+fi
 
 while getopts :ngst: OPT; do
     case $OPT in
@@ -18,15 +28,6 @@ while getopts :ngst: OPT; do
     esac
 done
 shift $((OPTIND-1))
-
-if [[ $TMUX ]]; then
-    echo '$TMUX is already set!' >&2
-    exit 1
-fi
-
-if [[ $TERM == *256color* ]]; then
-    TMUX_TERM='tmux-256color'
-fi
 
 exec_tmux() {
     exec $WRAPPER tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
