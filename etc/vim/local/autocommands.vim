@@ -41,7 +41,7 @@ augroup GUNS
 
     " Diff {{{1
     autocmd FileType diff,git,gitcommit
-        \ setlocal foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
+        \ setlocal synmaxcol=0 foldmethod=expr foldexpr=DiffFoldExpr(v:lnum) |
         \ SetWhitespace 8
 
     " gitcommit {{{1
