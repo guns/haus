@@ -28,7 +28,7 @@ task :configure do
 
   if RUBY_PLATFORM =~ /darwin/i
     # Use an authentic GNU readline
-    if system '/bin/sh -c "command -v brew" &>/dev/null'
+    if system '/bin/sh -c "command -v brew" 2>&1 >/dev/null'
       cmd << '--with-readline-dir=' + %x(brew --prefix readline).chomp
       cmd << '--with-libyaml-dir=' + %x(brew --prefix libyaml).chomp
     end

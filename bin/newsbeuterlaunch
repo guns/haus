@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-if killall -0 newsbeuter &>/dev/null; then
+if killall -0 newsbeuter 2>&1 >/dev/null; then
     exit 1
 else
     exec cert exec -f ~/.certificates/newsbeuter.crt newsbeuter

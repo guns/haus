@@ -140,7 +140,7 @@ class Minecraft
   end
 
   def have_rlwrap
-    system '/bin/sh', '-c', 'type rlwrap &>/dev/null'
+    system '/bin/sh', '-c', 'type rlwrap 2>&1 >/dev/null'
   end
 
   def link_relative src, dst

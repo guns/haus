@@ -99,7 +99,7 @@ module Util
     # Get a passphrase from the terminal
     def tty_secret
       raise 'stdin is not a terminal!' unless $stdin.tty?
-      raise '`stty` is unavailable!' unless system 'command -v stty &>/dev/null'
+      raise '`stty` is unavailable!' unless system 'command -v stty 2>&1 >/dev/null'
 
       $stderr.print 'Secret:'
       state = %x(stty -g).chomp

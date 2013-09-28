@@ -154,7 +154,7 @@ endfunction
 command! -bar Ctags call <SID>Ctags() "{{{1
 function! s:Ctags()
     let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
-    execute 'Sh (' . cmd . '; notify --audio) &>/dev/null &' | echo cmd
+    execute 'Sh (' . cmd . '; notify --audio) 2>&1 >/dev/null &' | echo cmd
 endfunction
 
 function! MarkdownFoldExpr(lnum)

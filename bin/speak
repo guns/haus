@@ -1,13 +1,13 @@
 #!/bin/sh
 
-if command -v say &>/dev/null; then
+if command -v say 2>&1 >/dev/null; then
     exec say "$@"
-elif command -v festival &>/dev/null; then
+elif command -v festival 2>&1 >/dev/null; then
     if [ "$#" -gt 0 ]; then
         echo "$@" | festival --tts
     else
         exec festival --tts
     fi
-elif command -v espeak &>/dev/null; then
+elif command -v espeak 2>&1 >/dev/null; then
     exec espeak "$@"
 fi

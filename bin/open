@@ -6,13 +6,13 @@ if [ -x /usr/bin/open ]; then
 # We don't want to start GUI applications as root
 elif [ "$EUID" -eq 0 ]; then
     if [ -n "$SUDO_USER" ]; then
-        exec sudo -u "$SUDO_USER" "$0" "$@" &>/dev/null &
+        exec sudo -u "$SUDO_USER" "$0" "$@" 2>&1 >/dev/null &
     else
         echo 'Refusing to xdg-open as root!' >&2
         exit 1
     fi
 else
     for arg in "$@"; do
-        xdg-open "$arg" &>/dev/null
+        xdg-open "$arg" 2>&1 >/dev/null
     done
 fi

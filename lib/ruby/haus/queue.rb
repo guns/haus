@@ -217,7 +217,7 @@ class Haus
 
     def archive
       %w[tar gzip].each do |cmd|
-        raise "#{cmd.inspect} not found" unless system "/bin/sh -c 'command -v #{cmd}' &>/dev/null"
+        raise "#{cmd.inspect} not found" unless system "/bin/sh -c 'command -v #{cmd}' 2>&1 >/dev/null"
       end
 
       files = targets(:archive).map { |f| f.sub %r{\A/}, '' }
@@ -521,7 +521,7 @@ class Haus
     # Returns nil on error.
     def tty_getchar
       # `stty -a` will return non-zero when not run from a terminal
-      if system '/bin/sh -c "command -v stty && stty -a" &>/dev/null'
+      if system '/bin/sh -c "command -v stty && stty -a" 2>&1 >/dev/null'
         begin
           # `stty` man page says that toggling the raw bit is not guaranteed
           # to restore previous state, so we should do that explicitly

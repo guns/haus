@@ -36,13 +36,13 @@ exec_tmux() {
 if ((NEW)); then
     exec_tmux new-session "$@"
 elif [[ $SESSION ]]; then
-    if tmux has-session -t "$SESSION" &>/dev/null; then
+    if tmux has-session -t "$SESSION" 2>&1 >/dev/null; then
         exec_tmux attach-session -d -t "$SESSION" "$@"
     else
         exec_tmux new-session -s "$SESSION" "$@"
     fi
 else
-    if tmux has-session &>/dev/null; then
+    if tmux has-session 2>&1 >/dev/null; then
         exec_tmux attach-session -d "$@"
     else
         exec_tmux new-session "$@"
