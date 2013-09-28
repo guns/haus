@@ -160,3 +160,4 @@
     fdx = clean -fdx
     rl  = reflog
     rp  = rev-parse
+    rmu = read-tree -mu
