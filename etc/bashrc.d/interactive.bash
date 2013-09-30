@@ -1612,7 +1612,7 @@ elif __LINUX__; then
             done 2>/dev/null | pager
         }
         alias pacs='run pacman -Ss'
-        alias pacr='run pacman -Rss'
+        alias pacr='run pacman -Rs'
         alias pacsync='run pacman -Sy'
         alias pacupgrade='run pacman -Syu'
         alias pacoutdated='run pacman -Qu'
