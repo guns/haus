@@ -94,6 +94,7 @@ bind  index,pager B       bounce-message
 bind  index,pager E       edit
 bind  index,pager F       forward-message
 macro index,pager a       <save-entry>=ARCHIVE<enter>
+macro index,pager s       <save-entry>=self/
 bind  index,pager A       create-alias
 macro index,pager \Ca     "<pipe-message>abook --add-email<enter>"
 macro index,pager \Cd     <delete-thread>
