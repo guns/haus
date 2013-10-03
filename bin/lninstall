@@ -88,31 +88,37 @@ class Lninstall
     File.expand_path options.dst rescue nil
   end
 
+  def dirpaths *patterns
+    fs = {}
+    Dir[*patterns].each { |f| fs[File.realdirpath(f)] = f }
+    Set.new fs.values
+  end
+
   def program_files base
-    Set.new Dir[*%W[
+    dirpaths *%W[
       #{base}/{,s}bin/*
       #{base}/share/man/**/*
-    ]]
+    ]
   end
 
   def init_files base
-    Set.new Dir[*%W[
+    dirpaths *%W[
       #{base}/lib/systemd/**/*
       #{base}/etc/{rc.d,init.d}/*
-    ]]
+    ]
   end
 
   def library_files base
-    Set.new Dir[*%W[
+    dirpaths *%W[
       #{base}/include/**/*
       #{base}/lib/**/*
-    ]]
+    ]
   end
 
   def share_files base
-    Set.new Dir[*%W[
+    dirpaths *%W[
       #{base}/share/**/*
-    ]]
+    ]
   end
 
   def source_files base
