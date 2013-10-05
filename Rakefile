@@ -76,6 +76,12 @@ task :env do
         :base   => "#{@src}/READONLY/git-cal",
         :branch => %w[master],
         :files  => { 'git-cal' => 'bin/git-cal' }
+      },
+
+      {
+        :base => "#{@src}/READONLY/screenFetch",
+        :branch => %w[master],
+        :files => { 'screenfetch-dev' => 'bin/screenfetch' }
       }
     ],
 
