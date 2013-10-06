@@ -8,10 +8,10 @@ if [[ $TMUX ]]; then
 fi
 
 NEW=0
+DETACH=''
 WRAPPER=''
 SESSION=''
 CONF="set-option -g default-terminal %s\nsource-file ~/.tmux.conf\n"
-OPTS=()
 
 if [[ $TERM == *256color* ]]; then
     TMUX_TERM='tmux-256color'
@@ -21,7 +21,7 @@ fi
 
 while getopts :dngst: OPT; do
     case $OPT in
-    d) OPTS+=(-d);;
+    d) DETACH='-d';;
     n) NEW=1;;
     g) WRAPPER='gpg-shell';;
     s) WRAPPER='ssh-shell';;
@@ -32,20 +32,20 @@ done
 shift $((OPTIND-1))
 
 exec_tmux() {
-    exec $WRAPPER tmux -f <(printf "$CONF" "$TMUX_TERM") "$@" "${OPTS[@]}"
+    exec $WRAPPER tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
 }
 
 if ((NEW)); then
     exec_tmux new-session "$@"
 elif [[ $SESSION ]]; then
     if tmux has-session -t "$SESSION" 2>&1 >/dev/null; then
-        exec_tmux attach-session -t "$SESSION" "$@"
+        exec_tmux attach-session -t "$SESSION" "$@" $DETACH
     else
         exec_tmux new-session -s "$SESSION" "$@"
     fi
 else
     if tmux has-session 2>&1 >/dev/null; then
-        exec_tmux attach-session "$@"
+        exec_tmux attach-session "$@" $DETACH
     else
         exec_tmux new-session "$@"
     fi
