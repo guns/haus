@@ -16,7 +16,7 @@ module Util
     end
 
     def have cmd
-      system %Q(/bin/sh -c 'command -v #{cmd}' 2>&1 >/dev/null)
+      system %Q(/bin/sh -c 'command -v #{cmd}' >/dev/null 2>&1)
     end
 
     def forkexec *args

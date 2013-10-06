@@ -7,7 +7,7 @@ CONF="/opt/brew/etc/$NAME.conf"
 OPTIONS=(--fpm-config="$CONF")
 
 run() { echo "$@"; "$@"; }
-alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>&1 >/dev/null; }
+alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" >/dev/null 2>&1; }
 
 start() {
     if alive; then

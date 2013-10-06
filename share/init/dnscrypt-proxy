@@ -9,7 +9,7 @@ SERVER='208.67.220.220'
 OPTIONS=(-a "$HOST" -p "$PIDFILE" -r "$SERVER" -u "$USER" -d)
 
 run() { echo "$@"; "$@"; }
-alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>&1 >/dev/null; }
+alive() { [[ -e "$PIDFILE" ]] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" >/dev/null 2>&1; }
 
 start() {
     if alive; then

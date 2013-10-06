@@ -31,7 +31,7 @@ class Muttlaunch
   end
 
   def active?
-    system 'killall -0 mutt 2>&1 >/dev/null'
+    system 'killall -0 mutt >/dev/null 2>&1'
   end
 
   def unicode_bindings

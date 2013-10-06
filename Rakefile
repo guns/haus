@@ -52,16 +52,16 @@ task :env do
         :base   => "#{@src}/jwzhacks",
         :before => lambda { |proj|
           if proj.fetch
-            raise unless system 'git checkout master 2>&1 >/dev/null'
-            system './update.sh 2>&1 >/dev/null'
+            raise unless system 'git checkout master >/dev/null 2>&1'
+            system './update.sh >/dev/null 2>&1'
             if not %x(git status --short).empty?
               proj.git.add
               proj.git.commit 'UPDATE'
             end
-            raise unless system 'git checkout guns 2>&1 >/dev/null'
-            raise 'Merge failed' unless system 'git merge master 2>&1 >/dev/null'
+            raise unless system 'git checkout guns >/dev/null 2>&1'
+            raise 'Merge failed' unless system 'git merge master >/dev/null 2>&1'
           end
-          system 'git checkout guns 2>&1 >/dev/null'
+          system 'git checkout guns >/dev/null 2>&1'
         },
         :files => { 'youtubedown' => 'bin/youtubedown' }
       },
@@ -208,7 +208,7 @@ task :env do
         :base   => "#{@src}/firefox/vimperator-labs",
         :before => lambda { |proj|
           if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } 2>&1 >/dev/null'
+            system '{ git checkout master && git-hg pull --rebase --force; } >/dev/null 2>&1'
             raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
           end
         },
@@ -226,7 +226,7 @@ task :env do
         :files  => :pathogen,
         :before => lambda { |proj|
           if proj.fetch
-            system '{ cd %s && rake update && git add . && git commit -m UPDATE; } 2>&1 >/dev/null' % proj.base.shellescape
+            system '{ cd %s && rake update && git add . && git commit -m UPDATE; } >/dev/null 2>&1' % proj.base.shellescape
           end
         }
       },
@@ -243,11 +243,11 @@ task :env do
         :before => lambda { |proj|
           if proj.fetch
             begin
-              system 'git checkout master 2>&1 >/dev/null' or raise 'ManPageView checkout failed'
-              updated = system 'cd %s && rake update 2>&1 >/dev/null' % proj.base.shellescape
-              system 'git checkout guns 2>&1 >/dev/null' or raise 'ManPageView checkout failed'
+              system 'git checkout master >/dev/null 2>&1' or raise 'ManPageView checkout failed'
+              updated = system 'cd %s && rake update >/dev/null 2>&1' % proj.base.shellescape
+              system 'git checkout guns >/dev/null 2>&1' or raise 'ManPageView checkout failed'
               if updated
-                system 'git merge master 2>&1 >/dev/null' or raise 'ManPageView merge failed'
+                system 'git merge master >/dev/null 2>&1' or raise 'ManPageView merge failed'
               end
             ensure
               FileUtils.rm_f Dir['.Vimball*'], :verbose => false
@@ -290,7 +290,7 @@ task :env do
         :base   => "#{@src}/READONLY/go",
         :before => lambda { |proj|
           if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } 2>&1 >/dev/null'
+            system '{ git checkout master && git-hg pull --rebase --force; } >/dev/null 2>&1'
             raise 'go git-hg pull failed' unless $?.exitstatus.zero?
           end
         },

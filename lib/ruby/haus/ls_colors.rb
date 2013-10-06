@@ -50,7 +50,7 @@ class Haus
       def parse str = nil, type = nil
         type ||= if str
           str =~ /=/ ? :gnu : :bsd
-        elsif system 'ls --color 2>&1 >/dev/null'
+        elsif system 'ls --color >/dev/null 2>&1'
           :gnu
         else
           :bsd

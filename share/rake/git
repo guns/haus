@@ -15,7 +15,7 @@ task :configure do
     --prefix=#{ENV['PREFIX'] || '/opt/git'}
   ]
 
-  if RUBY_PLATFORM =~ /darwin/i and system '/bin/sh -c "command -v brew" 2>&1 >/dev/null'
+  if RUBY_PLATFORM =~ /darwin/i and system '/bin/sh -c "command -v brew" >/dev/null 2>&1'
     cmd << '--with-libpcre=' + %x(brew --prefix pcre).chomp
   end
 
