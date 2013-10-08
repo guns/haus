@@ -1475,6 +1475,7 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 
 # pass
 HAVE pass && {
+    # We want pc() to suppress the trailing newline
     pc() { pass "$@" | ruby -e 'print $stdin.gets("\n").chomp' | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
