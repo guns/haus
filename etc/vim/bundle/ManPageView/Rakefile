@@ -10,5 +10,6 @@ task :update do
   msg = "Update from #{url}"
 
   sh %Q(curl -L# #{url.shellescape} | gzip -cd | vim -c 'execute "UseVimball ." | quit!' -)
+  rm_f '.sw*'
   sh "git add . && git commit --author 'Charles Campbell <drchip@campbellfamily.biz>' -m #{msg.shellescape}"
 end
