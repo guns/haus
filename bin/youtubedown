@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.225 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.229 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -601,6 +601,8 @@ my %ciphers = (
   'vfl79wBKW' => 's3 r s1 r s3 r s3 w59 s2',        # 19 Sep 2013
   'vflg3FZfr' => 'r s3 w66 w10 w43 s2',             # 24 Sep 2013
   'vflUKrNpT' => 'r s2 r w63 r',                    # 25 Sep 2013
+  'vfldWnjUz' => 'r s1 w68',                        # 30 Sep 2013
+  'vflP7iCEe' => 'w7 w37 r s1',                     # 03 Oct 2013
 );
 
 sub decipher_sig($$$) {
@@ -948,7 +950,7 @@ sub scrape_youtube_url($$$$$) {
   # '&gl=US' .
   # '&hl=en'
 
-  my ($kind, $urlmap, $body, $fmtlist);
+  my ($kind, $urlmap, $body, $fmtlist, $rental);
 
   my $retries = 5;
   my $err = undef;
@@ -969,6 +971,7 @@ sub scrape_youtube_url($$$$$) {
 
     ($fmtlist) = ($body =~ m@&fmt_list=([^&]+)@si);
     ($title)   = ($body =~ m@&title=([^&]+)@si) unless $title;
+    ($rental)  = ($body =~ m@&ypc_video_rental_bar_text=([^&]+)@si);
 
     last if ($urlmap && $title);
 
@@ -982,6 +985,9 @@ sub scrape_youtube_url($$$$$) {
 
     sleep (1);
   }
+
+  $err = "can't download rental videos"
+    if (!$err && !$urlmap && $rental);
 
   error ("$progname: $id: $err")
     if $err;
@@ -1143,9 +1149,18 @@ sub scrape_youtube_url_html($$$$$) {
     }
   }
 
-  # Check this late, so that we get better error messages, above:
-  # Youtube returns HTTP 404 pages that have real messages in them.
-  #
+  if ($verbose == 0 && $oerror =~ m/available in your country/i) {
+    # With --quiet, just silently ignore country-locked video failures,
+    # for "youtubefeed".
+    # (Need to test twice because sometimes we have $args but no fmt_url_map)
+    exit (0);
+  }
+
+  # Sometimes Youtube returns HTTP 404 pages that have real messages in them,
+  # so we have to check the HTTP status late. But sometimes it doesn't return
+  # 404 for pages that no longer exist. Hooray.
+
+  $http = 'HTTP/1.0 404' if ($oerror && $oerror =~ m/has been removed/);
   error ("$id: $http$oerror") unless (check_http_status ($url, $http, 0));
 
   errorI ("$id: no ytplayer.config$oerror") unless $args;
