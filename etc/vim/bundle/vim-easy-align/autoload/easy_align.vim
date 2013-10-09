@@ -49,10 +49,10 @@ let s:known_options = {
 \ }
 
 let s:option_values = {
-\ 'indentation':      ['shallow', 'deep', 'none', 'keep'],
-\ 'delimiter_align':  ['left', 'center', 'right'],
-\ 'ignore_unmatched': [0, 1],
-\ 'ignore_groups':    [[], ['String'], ['Comment'], ['String', 'Comment']]
+\ 'indentation':      ['shallow', 'deep', 'none', 'keep', -1],
+\ 'delimiter_align':  ['left', 'center', 'right', -1],
+\ 'ignore_unmatched': [0, 1, -1],
+\ 'ignore_groups':    [[], ['String'], ['Comment'], ['String', 'Comment'], -1]
 \ }
 
 let s:shorthand = {
@@ -142,6 +142,7 @@ function! s:echon(l, n, r, d, o, warn)
   endif
 
   call s:echon_(tokens)
+  return join(map(tokens, 'v:val[1]'), '')
 endfunction
 
 function! s:exit(msg)
@@ -311,7 +312,10 @@ function! s:split_line(line, nth, modes, cycle, fc, lc, pattern, stick_to_left, 
     let delims = []
   " Append an empty item to enable right/center alignment of the last token
   " - if the last token is not ignorable or ignorable but not the only token
-  elseif (mode ==? 'r' || mode ==? 'c') && (!ignorable || len(tokens) > 1) && a:nth >= 0 " includes -0
+  elseif a:ignore_unmatched != 1          &&
+        \ (mode ==? 'r' || mode ==? 'c')  &&
+        \ (!ignorable || len(tokens) > 1) &&
+        \ a:nth >= 0 " includes -0
     call add(tokens, '')
     call add(delims, '')
   endif
@@ -557,6 +561,15 @@ function! s:atoi(str)
   return (a:str =~ '^[0-9]\+$') ? str2nr(a:str) : a:str
 endfunction
 
+function! s:shift_opts(opts, key, vals)
+  let val = s:shift(a:vals, 1)
+  if type(val) == 0 && val == -1
+    call remove(a:opts, a:key)
+  else
+    let a:opts[a:key] = val
+  endif
+endfunction
+
 function! s:interactive(modes, vis, opts, delims)
   let mode = s:shift(a:modes, 1)
   let n    = ''
@@ -600,9 +613,9 @@ function! s:interactive(modes, vis, opts, delims)
       else             | let n = n . ch
       end
     elseif ch == "\<C-D>"
-      let opts['da'] = s:shift(vals['delimiter_align'], 1)
+      call s:shift_opts(opts, 'da', vals['delimiter_align'])
     elseif ch == "\<C-I>"
-      let opts['idt'] = s:shift(vals['indentation'], 1)
+      call s:shift_opts(opts, 'idt', vals['indentation'])
     elseif ch == "\<C-L>"
       let lm = s:input("Left margin: ", get(opts, 'lm', ''), a:vis)
       if empty(lm)
@@ -620,18 +633,22 @@ function! s:interactive(modes, vis, opts, delims)
         let opts['rm'] = s:atoi(rm)
       endif
     elseif ch == "\<C-U>"
-      let opts['iu'] = s:shift(vals['ignore_unmatched'], 1)
+      call s:shift_opts(opts, 'iu', vals['ignore_unmatched'])
     elseif ch == "\<C-G>"
-      let opts['ig'] = s:shift(vals['ignore_groups'], 1)
+      call s:shift_opts(opts, 'ig', vals['ignore_groups'])
     elseif c == "\<Left>"
       let opts['stl'] = 1
       let opts['lm']  = 0
     elseif c == "\<Right>"
       let opts['stl'] = 0
       let opts['lm']  = 1
-    elseif c == "\<Up>" || c == "\<Down>"
+    elseif c == "\<Down>"
+      let opts['lm']  = 0
+      let opts['rm']  = 0
+    elseif c == "\<Up>"
       silent! call remove(opts, 'stl')
       silent! call remove(opts, 'lm')
+      silent! call remove(opts, 'rm')
     elseif ch == "\<C-O>"
       let modes = tolower(s:input("Mode sequence: ", get(opts, 'm', mode), a:vis))
       if match(modes, '^[lrc]\+\*\{0,2}$') != -1
@@ -684,6 +701,54 @@ function! s:test_regexp(regexp)
   return a:regexp
 endfunction
 
+let s:shorthand_regex =
+  \ '\s*\('
+  \   .'\(lm\?[0-9]\+\)\|\(rm\?[0-9]\+\)\|\(iu[01]\)\|\(s\%(tl\)\?[01]\)\|'
+  \   .'\(da\?[clr]\)\|\(ms\?[lrc*]\+\)\|\(i\%(dt\)\?[kdsn]\)\|\(ig\[.*\]\)'
+  \ .'\)\+\s*$'
+
+function! s:parse_shorthand_opts(expr)
+  let opts = {}
+  let expr = substitute(a:expr, '\s', '', 'g')
+  let regex = '^'. s:shorthand_regex
+
+  if empty(expr)
+    return opts
+  elseif expr !~ regex
+    call s:exit("Invalid expression: ". a:expr)
+  else
+    let match = matchlist(expr, regex)
+    if empty(match) | break | endif
+    for m in filter(match[ 2 : -1 ], '!empty(v:val)')
+      for key in ['lm', 'rm', 'l', 'r', 'stl', 's', 'iu', 'da', 'd', 'ms', 'm', 'ig', 'i']
+        if stridx(tolower(m), key) == 0
+          let rest = strpart(m, len(key))
+          if key == 'i' | let key = 'idt' | endif
+
+          if key == 'idt' || index(['d', 'm'], key[0]) >= 0
+            let opts[key] = rest
+          elseif key == 'ig'
+            try
+              let arr = eval(rest)
+              if type(arr) == 3
+                let opts[key] = arr
+              else
+                throw 'Not an array'
+              endif
+            catch
+              call s:exit("Invalid ignore_groups: ". a:expr)
+            endtry
+          else
+            let opts[key] = str2nr(rest)
+          endif
+          break
+        endif
+      endfor
+    endfor
+  endif
+  return s:normalize_options(opts)
+endfunction
+
 function! s:parse_args(args)
   let n    = ''
   let ch   = ''
@@ -721,6 +786,13 @@ function! s:parse_args(args)
     call s:exit("Invalid option: ". cand)
   else
     let opts = s:normalize_options(opts)
+  endif
+
+  " Shorthand option notation
+  let sopts = matchstr(args, s:shorthand_regex)
+  if !empty(sopts)
+    let args = strpart(args, 0, len(args) - len(sopts))
+    let opts = extend(s:parse_shorthand_opts(sopts), opts)
   endif
 
   " Has /Regexp/?
@@ -848,7 +920,7 @@ function! s:align(bang, first_line, last_line, expr)
     \ get(dict, 'delimiter_align', get(g:, 'easy_align_delimiter_align', 'r'))[0],
     \ get(dict, 'indentation', get(g:, 'easy_align_indentation', 'k'))[0],
     \ get(dict, 'stick_to_left', 0),
-    \ get(dict, 'ignore_unmatched', get(g:, 'easy_align_ignore_unmatched', 1)),
+    \ get(dict, 'ignore_unmatched', get(g:, 'easy_align_ignore_unmatched', 2)),
     \ get(dict, 'ignore_groups', get(dict, 'ignores', s:ignored_syntax())),
     \ recur)
 
@@ -860,6 +932,6 @@ function! s:align(bang, first_line, last_line, expr)
     \ )
     call extend(copts, { 'm': aseq_str })
   endif
-  call s:echon('', n, regexp, ch, copts, '')
+  let g:easy_align_last_command = s:echon('', n, regexp, ch, copts, '')
 endfunction
 
