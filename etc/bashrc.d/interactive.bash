@@ -184,7 +184,7 @@ CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
 CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
 CD_FUNC cdpass          ~/.password-store
-CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src
+CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src && export cdsrc # Export for edit bindings
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
@@ -1079,6 +1079,7 @@ HAVE vim && {
     alias vimmuttrc='(cdhaus && exec vim etc/%mutt/muttrc)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
+    alias vimprojectclj='vim "$cdsrc/leiningen/sample.project.clj"'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
     alias vimscratch='vim -c Scratch'
     alias vimsshconfig='(cd ~/.ssh && exec vim config)'
