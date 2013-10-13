@@ -112,7 +112,7 @@ augroup GUNS
         \ setlocal iskeyword+=- |
         \ SetWhitespace 4 8
     autocmd BufRead,BufNewFile *.less
-        \ setlocal filetype=sass |
+        \ setlocal filetype=scss |
         \ SetWhitespace 4 8
 
     " JavaScript {{{1
