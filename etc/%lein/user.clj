@@ -44,9 +44,37 @@
          ~expr
          (finally (clojure.tools.trace/untrace-ns ~nspace)))))
 
+;;
+;; Warnings
+;;
+
+(def warnings (atom {}))
+
+(defn print-warnings []
+  (clojure.pprint/pprint @warnings))
+
+(defn toggle-warn-on-reflection!
+  ([]
+   (toggle-warn-on-reflection! (not *warn-on-reflection*))
+   (print-warnings))
+  ([value]
+   (set! *warn-on-reflection* value)
+   (swap! warnings assoc '*warn-on-reflection* value)))
+
+(defmacro toggle-schema-validation!
+  ([]
+   `(do (toggle-schema-validation! (not (@warnings '~'validate-schema?)))
+        (print-warnings)))
+  ([value]
+   `(do (require 'schema.core)
+        (schema.core/set-fn-validation! ~value)
+        (swap! warnings assoc '~'validate-schema? ~value))))
+
 (defn toggle-warnings! []
-  (set! *warn-on-reflection* (not *warn-on-reflection*))
-  (prn {'*warn-on-reflection* *warn-on-reflection*}))
+  (let [v (not *warn-on-reflection*)]
+    (toggle-warn-on-reflection! v)
+    (toggle-schema-validation! v)
+    (print-warnings)))
 
 ;;
 ;; Reloading
@@ -114,7 +142,7 @@
                    (symbol (.getName m))
                    (map #(symbol (.getCanonicalName ^Class %)) (.getParameterTypes m))])
                 (.getMethods cls))
-        idecls (mapv (fn [[cls ms]]
+        idecls (mapv (fn [[^Class cls ms]]
                        (let [decls (map (fn [[_ s ps]] (str (list s (into ['this] ps))))
                                         ms)
                              typ (if (.isInterface cls) "Interface" "Superclass")]

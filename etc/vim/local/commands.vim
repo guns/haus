@@ -283,6 +283,7 @@ function! s:ClojureBufferSetup()
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
     nnoremap <silent><buffer> <Leader>R        :call fireplace#eval('(user/refresh)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
@@ -297,6 +298,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>rT  :call <SID>ClojureRunTests(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
     nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
+    nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#eval('(user/toggle-warn-on-reflection!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#eval('(user/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#eval('(user/toggle-warnings!)')<CR>
 endfunction
 
