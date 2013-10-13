@@ -26,7 +26,7 @@ while getopts :dngst: OPT; do
     g) WRAPPER='gpg-shell';;
     s) WRAPPER='ssh-shell';;
     t) SESSION="$OPTARG";;
-    *) echo "Usage: ${0##*/} [-ngs] [-t session] [args …]" >&2; exit 1
+    *) echo "Usage: ${0##*/} [-dngs] [-t session] [args …]" >&2; exit 1
     esac
 done
 shift $((OPTIND-1))
