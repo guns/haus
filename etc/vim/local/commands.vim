@@ -283,6 +283,7 @@ function! s:ClojureBufferSetup()
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
     nnoremap <silent><buffer> <Leader>R        :call fireplace#eval('(user/refresh)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
     nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
