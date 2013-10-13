@@ -953,7 +953,7 @@ ALIAS ipt='iptables' && {
         ruby -e '
             def sh *args; puts args.join(" "); system *args; end
             ARGV.each do |arg|
-                s, p = arg =~ /:/ ? arg.split(":", 2) : [arg, nil]
+                s, p = arg =~ /:/ ? arg.split(":", 2) : [arg, ""]
                 source = s ? %W[--source #{s}] : []
                 ps = p.split(",").map &:to_i
 
