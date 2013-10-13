@@ -45,12 +45,12 @@ snippet :i ":import"
 (:import ($0))
 endsnippet
 
-snippet refc "refer-clojure"
+snippet rc "refer-clojure"
 (refer-clojure :exclude [$0])
 endsnippet
 
-snippet :refc ":refer-clojure"
-(:refer-clojure :exclude [$0])
+snippet :rc ":refer-clojure"
+(:refer-clojure :exclude [${0:defn}])
 endsnippet
 
 snippet me "meta" w
@@ -561,6 +561,11 @@ endsnippet
 
 snippet defn "defn"
 (defn $1 [$0])
+endsnippet
+
+snippet DEFN "defn :-"
+(defn $1 :- $2
+	[$0])
 endsnippet
 
 snippet defn- "defn-"
