@@ -151,13 +151,14 @@
     gifw = grep -Fiw
 
     # Misc
-    bs  = bisect
-    ls  = ls-files
-    lso = ls-files -o
-    lsu = ls-files -o --exclude-standard
-    st  = status --short
-    fd  = clean -fd
-    fdx = clean -fdx
-    rl  = reflog
-    rp  = rev-parse
-    rmu = read-tree -mu
+    bs   = bisect
+    ls   = ls-files
+    lso  = ls-files -o
+    lsu  = ls-files -o --exclude-standard
+    st   = status --short
+    sm   = submodule
+    fd   = clean -fd
+    fdx  = clean -fdx
+    rl   = reflog
+    rp   = rev-parse
+    rtmu = read-tree -mu
