@@ -88,44 +88,50 @@ class Lninstall
     File.expand_path options.dst rescue nil
   end
 
-  def dirpaths *patterns
+  def dirpaths patterns
     fs = {}
-    Dir[*patterns].each { |f| fs[File.realdirpath(f)] = f }
+    Dir[*patterns].each do |f|
+      if File.symlink? f
+        fs[File.join(File.realdirpath(File.dirname f), File.basename(f))] = f
+      else
+        fs[File.realdirpath(f)] = f
+      end
+    end
     Set.new fs.values
   end
 
   def program_files base
-    dirpaths *%W[
+    dirpaths %W[
       #{base}/{,s}bin/*
       #{base}/share/man/**/*
     ]
   end
 
   def init_files base
-    dirpaths *%W[
+    dirpaths %W[
       #{base}/lib/systemd/**/*
       #{base}/etc/{rc.d,init.d}/*
     ]
   end
 
   def library_files base
-    dirpaths *%W[
+    dirpaths %W[
       #{base}/include/**/*
       #{base}/lib/**/*
     ]
   end
 
   def share_files base
-    dirpaths *%W[
+    dirpaths %W[
       #{base}/share/**/*
     ]
   end
 
   def source_files base
     fs = program_files base
-    fs.merge init_files(base) if options.init or options.uninstall
-    fs.merge library_files(base) if options.libs or options.uninstall
-    fs.merge share_files(base) if options.share or options.uninstall
+    fs.merge init_files(base)    if options.init  or options.uninstall
+    fs.merge library_files(base) if options.libs  or options.uninstall
+    fs.merge share_files(base)   if options.share or options.uninstall
     fs
   end
 
