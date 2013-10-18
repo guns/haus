@@ -1620,6 +1620,11 @@ elif __LINUX__; then
         alias pacoutdated='run pacman -Qu'
 
         alias paclog='pager /var/log/pacman.log'
+        pacinstallfile() {
+            (($# == 1)) || { echo "USAGE: $FUNCNAME pkg" >&2; return 1; }
+            # Installing from a URL copies the package to /var/cache/pacman
+            pacman -U "file://$1"
+        }; _install_xspec '!*.tar.xz' pacinstallfile
     }
 
     ALIAS mkpkg='makepkg' \
