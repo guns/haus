@@ -1,1 +1,1 @@
-guns ALL = (ALL) PASSWD: ALL, NOPASSWD: /usr/bin/reboot, /usr/bin/poweroff, /usr/local/bin/systemctl-suspend
+guns ALL = (ALL) PASSWD: ALL, NOPASSWD: /usr/local/bin/systemctl-wrapper
