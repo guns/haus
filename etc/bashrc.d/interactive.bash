@@ -836,9 +836,9 @@ ALIAS scp='scp -2' \
       scpr='scp -r' \
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
 HAVE ssh-proxy && TCOMP ssh ssh-proxy
-ALIAS sshuttle='/opt/sshuttle/sshuttle' && {
+HAVE sshuttle && {
     TCOMP ssh sshuttle
-    type sshuttle-wrapper &>/dev/null && TCOMP ssh sshuttle-wrapper
+    TCOMP ssh sshuttle-wrapper
 }
 
 # lsof

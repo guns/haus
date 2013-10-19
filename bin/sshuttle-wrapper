@@ -16,7 +16,7 @@ class SshuttleWrapper
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.sshuttle ||= '/opt/sshuttle/sshuttle'
+    options.sshuttle ||= 'sshuttle'
     options.excluded ||= Set.new
     options.commands ||= []
     options.port ||= 3346 # IANA "trnsprntproxy"
