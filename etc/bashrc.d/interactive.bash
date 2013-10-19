@@ -1623,7 +1623,7 @@ elif __LINUX__; then
         pacinstallfile() {
             (($# == 1)) || { echo "USAGE: $FUNCNAME pkg" >&2; return 1; }
             # Installing from a URL copies the package to /var/cache/pacman
-            pacman -U "file://$1"
+            pacman -U "file://$(expand_path "$1")"
         }; _install_xspec '!*.tar.xz' pacinstallfile
     }
 
