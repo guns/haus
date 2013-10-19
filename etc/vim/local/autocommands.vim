@@ -185,7 +185,7 @@ augroup GUNS
         \ call tar#Browse(expand("<amatch>"))
 
     " tmux {{{1
-    autocmd BufRead,BufNewFile *tmux.conf
+    autocmd BufRead,BufNewFile *tmux.conf,*/tmux.conf.d/*.conf
         \ setlocal filetype=tmux |
         \ SetWhitespace 4 8
 
@@ -237,7 +237,7 @@ augroup GUNS
 
     " systemd {{{1
     autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service{,.erb},*.socket,*.swap,*.target,*.timer,
-        \ set filetype=systemd
+        \ setlocal filetype=systemd noexpandtab
 
     " PostgreSQL {{{1
     autocmd BufRead,BufNewFile psql.edit.*
