@@ -1126,11 +1126,12 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
-      mke='make -e' \
       mkj='make -j\$\(grep -c ^processor /proc/cpuinfo\)' \
       mkj2='make -j2' \
       mkj4='make -j4' \
       mkj8='make -j8' \
+      mke='make -e' \
+      mkej='make -ej\$\(grep -c ^processor /proc/cpuinfo\)'
       mkb='make -B' \
       mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
 
