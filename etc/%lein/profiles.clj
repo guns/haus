@@ -27,6 +27,7 @@
                        [slamhound "LATEST"]
                        [spyscope "LATEST"]
                        [redl "LATEST"]]
+        :resource-paths ["resources" "target/vim"]
         :aliases {"RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
                   "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
