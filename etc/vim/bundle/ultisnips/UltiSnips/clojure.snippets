@@ -23,6 +23,12 @@ snippet ns "ns"
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
 endsnippet
 
+snippet NS "ns with schema.core" w
+(ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
+	(:require [schema.core :refer [defn]])
+	(:refer-clojure :exclude [defn]))
+endsnippet
+
 snippet nst "test ns"
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
 	(:require [$0]
