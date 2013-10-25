@@ -61,14 +61,15 @@
    (set! *warn-on-reflection* value)
    (swap! warnings assoc '*warn-on-reflection* value)))
 
-(defmacro toggle-schema-validation!
+(defn toggle-schema-validation!
   ([]
-   `(do (toggle-schema-validation! (not (@warnings :validate-schema?)))
-        (print-warnings)))
+   (toggle-schema-validation! (not (@warnings :validate-schema?)))
+   (print-warnings))
   ([value]
-   `(eval `(do (require 'schema.core)
-               (schema.core/set-fn-validation! ~~value)
-               (swap! warnings assoc :validate-schema? ~~value)))))
+   (eval
+     `(do (require 'schema.core)
+          (schema.core/set-fn-validation! ~value)
+          (swap! warnings assoc :validate-schema? ~value)))))
 
 (defn toggle-warnings! []
   (let [v (not *warn-on-reflection*)]
@@ -83,6 +84,8 @@
 (require 'clojure.tools.namespace.repl)
 
 (def refresh clojure.tools.namespace.repl/refresh)
+
+(load-file (str (System/getProperty "user.home") "/.lein/user/system.clj"))
 
 ;;
 ;; Manipulation
