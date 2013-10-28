@@ -50,32 +50,31 @@
 
 (def warnings (atom {}))
 
-(defn print-warnings []
+(defn print-warnings-atom []
   (clojure.pprint/pprint @warnings))
 
 (defn toggle-warn-on-reflection!
   ([]
    (toggle-warn-on-reflection! (not *warn-on-reflection*))
-   (print-warnings))
+   (print-warnings-atom))
   ([value]
    (set! *warn-on-reflection* value)
    (swap! warnings assoc '*warn-on-reflection* value)))
 
-(defn toggle-schema-validation!
+(defmacro toggle-schema-validation!
   ([]
-   (toggle-schema-validation! (not (@warnings :validate-schema?)))
-   (print-warnings))
+   `(do (toggle-schema-validation! (not (@warnings :validate-schema?)))
+        (print-warnings-atom)))
   ([value]
-   (eval
-     `(do (require 'schema.core)
-          (schema.core/set-fn-validation! ~value)
+   (when (find-ns 'schema.core)
+     `(do (schema.core/set-fn-validation! ~value)
           (swap! warnings assoc :validate-schema? ~value)))))
 
 (defn toggle-warnings! []
   (let [v (not *warn-on-reflection*)]
     (toggle-warn-on-reflection! v)
     (toggle-schema-validation! v)
-    (print-warnings)))
+    (print-warnings-atom)))
 
 ;;
 ;; Reloading
@@ -85,7 +84,10 @@
 
 (def refresh clojure.tools.namespace.repl/refresh)
 
-(load-file (str (System/getProperty "user.home") "/.lein/user/system.clj"))
+(try
+  (require 'system)
+  (load-file (str (System/getProperty "user.home") "/.lein/user/system.clj"))
+  (catch Throwable _))
 
 ;;
 ;; Manipulation
