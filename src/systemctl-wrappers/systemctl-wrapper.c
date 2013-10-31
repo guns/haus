@@ -26,9 +26,13 @@ int main(int argc, char const **argv)
 	if (strcmp(argv[1], SUSPEND) == 0)
 		args[1] = SUSPEND;
 	else if (strcmp(argv[1], REBOOT) == 0)
-		args[1] = REBOOT;
+		args[1] = REBOOT,
+		args[2] = "--force",
+		args[3] = "-i"; /* --ignore-inhibitors */
 	else if (strcmp(argv[1], POWEROFF) == 0)
-		args[1] = POWEROFF;
+		args[1] = POWEROFF,
+		args[2] = "--force",
+		args[3] = "-i"; /* --ignore-inhibitors */
 	else
 		die();
 
