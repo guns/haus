@@ -173,8 +173,7 @@ CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
 CD_FUNC cddnsmasq       /etc/dnsmasq /opt/dnsmasq/etc
 CD_FUNC cdnginx         /etc/nginx /opt/nginx/etc /usr/local/etc/nginx && export cdnginx # Export for vim mapping
-CD_FUNC cdtmp           /tmp
-CD_FUNC cdTMP           "$TMPDIR" ~/tmp /tmp
+CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www ~/Sites
