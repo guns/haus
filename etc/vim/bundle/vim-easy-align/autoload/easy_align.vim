@@ -34,6 +34,8 @@ let s:easy_align_delimiters_default = {
 \  ',': { 'pattern': ',',  'left_margin': 0, 'right_margin': 1, 'stick_to_left': 1 },
 \  '|': { 'pattern': '|',  'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
 \  '.': { 'pattern': '\.', 'left_margin': 0, 'right_margin': 0, 'stick_to_left': 0 },
+\  '&': { 'pattern': '\\\@<!&\|\\\\',
+\                          'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
 \  '{': { 'pattern': '(\@<!{',
 \                          'left_margin': 1, 'right_margin': 1, 'stick_to_left': 0 },
 \  '}': { 'pattern': '}',  'left_margin': 1, 'right_margin': 0, 'stick_to_left': 0 }
@@ -45,7 +47,7 @@ let s:known_options = {
 \ 'margin_left':   [0, 1], 'margin_right':     [0, 1], 'stick_to_left':   [0],
 \ 'left_margin':   [0, 1], 'right_margin':     [0, 1], 'indentation':     [1],
 \ 'ignore_groups': [3   ], 'ignore_unmatched': [0   ], 'delimiter_align': [1],
-\ 'mode_sequence': [1   ], 'ignores': [3]
+\ 'mode_sequence': [1   ], 'ignores':          [3],    'filter':          [1]
 \ }
 
 let s:option_values = {
@@ -59,16 +61,16 @@ let s:shorthand = {
 \ 'margin_left':   'lm', 'margin_right':     'rm', 'stick_to_left':   'stl',
 \ 'left_margin':   'lm', 'right_margin':     'rm', 'indentation':     'idt',
 \ 'ignore_groups': 'ig', 'ignore_unmatched': 'iu', 'delimiter_align': 'da',
-\ 'mode_sequence': 'm',  'ignores': 'ig'
+\ 'mode_sequence': 'm',  'ignores':          'ig', 'filter':          'f'
 \ }
 
 if exists("*strwidth")
   function! s:strwidth(str)
-    return strwidth(a:str)
+    return strwidth(a:str) + len(matchstr(a:str, '^\t*')) * (&tabstop - 1)
   endfunction
 else
   function! s:strwidth(str)
-    return len(split(a:str, '\zs'))
+    return len(split(a:str, '\zs')) + len(matchstr(a:str, '^\t*')) * (&tabstop - 1)
   endfunction
 endif
 
@@ -151,11 +153,11 @@ function! s:exit(msg)
 endfunction
 
 function! s:ltrim(str)
-  return substitute(a:str, '^\s*', '', '')
+  return substitute(a:str, '^\s\+', '', '')
 endfunction
 
 function! s:rtrim(str)
-  return substitute(a:str, '\s*$', '', '')
+  return substitute(a:str, '\s\+$', '', '')
 endfunction
 
 function! s:trim(str)
@@ -254,6 +256,7 @@ function! s:split_line(line, nth, modes, cycle, fc, lc, pattern, stick_to_left, 
   " Phase 1: split
   let ignorable = 0
   let token = ''
+  let phantom = 0
   while 1
     let matches = matchlist(string, pattern, idx)
     " No match
@@ -284,8 +287,7 @@ function! s:split_line(line, nth, modes, cycle, fc, lc, pattern, stick_to_left, 
     " If the string is non-empty and ends with the delimiter,
     " append an empty token to the list
     if idx == len(string)
-      call add(tokens, '')
-      call add(delims, '')
+      let phantom = 1
       break
     endif
   endwhile
@@ -294,6 +296,9 @@ function! s:split_line(line, nth, modes, cycle, fc, lc, pattern, stick_to_left, 
   if !empty(leftover)
     let ignorable = s:highlighted_as(a:line, len(string) + a:fc - 1, a:ignore_groups)
     call add(tokens, leftover)
+    call add(delims, '')
+  elseif phantom
+    call add(tokens, '')
     call add(delims, '')
   endif
   let [pmode, mode] = [mode, s:shift(a:modes, a:cycle)]
@@ -323,30 +328,29 @@ function! s:split_line(line, nth, modes, cycle, fc, lc, pattern, stick_to_left, 
   return [tokens, delims]
 endfunction
 
-function! s:max(old, new)
-  for k in keys(a:new)
-    if a:new[k] > a:old[k]
-      let a:old[k] = a:new[k] " max() doesn't work with Floats
-    endif
-  endfor
-endfunction
-
-function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth,
-      \ ml, mr, da, indentation, stick_to_left, ignore_unmatched, ignore_groups, recur)
+function! s:do_align(todo, modes, all_tokens, all_delims, fl, ll, fc, lc, nth, recur, dict)
   let mode       = a:modes[0]
   let lines      = {}
   let min_indent = -1
   let max = { 'pivot_len': 0.0, 'token_len': 0, 'just_len': 0, 'delim_len': 0,
         \ 'indent': 0, 'tokens': 0, 'strip_len': 0 }
+  let d = a:dict
+  let [f, fx] = s:parse_filter(d.filter)
 
   " Phase 1
   for line in range(a:fl, a:ll)
+    if f == 1 && getline(line) !~ fx
+      continue
+    elseif f == -1 && getline(line) =~ fx
+      continue
+    endif
+
     if !has_key(a:all_tokens, line)
       " Split line into the tokens by the delimiters
       let [tokens, delims] = s:split_line(
             \ line, a:nth, copy(a:modes), a:recur == 2,
-            \ a:fc, a:lc, a:pattern,
-            \ a:stick_to_left, a:ignore_unmatched, a:ignore_groups)
+            \ a:fc, a:lc, d.pattern,
+            \ d.stick_to_left, d.ignore_unmatched, d.ignore_groups)
 
       " Remember tokens for subsequent recursive calls
       let a:all_tokens[line] = tokens
@@ -362,7 +366,7 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
     endif
 
     " Calculate the maximum number of tokens for a line within the range
-    call s:max(max, { 'tokens': len(tokens) })
+    let max.tokens = max([max.tokens, len(tokens)])
 
     if a:nth > 0 " Positive N-th
       if len(tokens) < a:nth
@@ -388,38 +392,46 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
     let delim  = delims[nth]
     let token  = s:rtrim( tokens[nth] )
     let token  = s:rtrim( strpart(token, 0, len(token) - len(s:rtrim(delim))) )
-    if empty(delim) && !exists('tokens[nth + 1]') && a:ignore_unmatched
+    if empty(delim) && !exists('tokens[nth + 1]') && d.ignore_unmatched
       continue
     endif
 
-    let indent        = len(matchstr(tokens[0], '^\s\+'))
+    let indent = s:strwidth(matchstr(tokens[0], '^\s*'))
     if min_indent < 0 || indent < min_indent
       let min_indent  = indent
     endif
-    if mode ==? 'c' | let token .= matchstr(token, '^\s*') | endif
-    let [pw, tw] = [s:strwidth(prefix), s:strwidth(token)]
-    call s:max(max, { 'indent': indent, 'token_len': tw, 'just_len': pw + tw,
-                     \ 'delim_len': s:strwidth(delim) })
     if mode ==? 'c'
-      call s:max(max, { 'pivot_len': pw + tw / 2.0,
-                       \ 'strip_len': s:strwidth(s:trim(token)) })
+      let token .= substitute(matchstr(token, '^\s*'), '\t', repeat(' ', &tabstop), 'g')
+    endif
+    let [pw, tw] = [s:strwidth(prefix), s:strwidth(token)]
+    let max.indent    = max([max.indent,    indent])
+    let max.token_len = max([max.token_len, tw])
+    let max.just_len  = max([max.just_len,  pw + tw])
+    let max.delim_len = max([max.delim_len, s:strwidth(delim)])
+
+    if mode ==? 'c'
+      if max.pivot_len < pw + tw / 2.0
+        let max.pivot_len = pw + tw / 2.0
+      endif
+      let max.strip_len = max([max.strip_len, s:strwidth(s:trim(token))])
     endif
     let lines[line]   = [nth, prefix, token, delim]
   endfor
 
   " Phase 1-5: indentation handling (only on a:nth == 1)
   if a:nth == 1
-    if a:indentation ==? 'd'
-      let indent = repeat(' ', max.indent)
-    elseif a:indentation ==? 's'
-      let indent = repeat(' ', min_indent)
-    elseif a:indentation ==? 'n'
-      let indent = ''
-    elseif a:indentation !=? 'k'
-      call s:exit('Invalid indentation: ' . a:indentation)
+    let idt = d.indentation
+    if idt ==? 'd'
+      let indent = max.indent
+    elseif idt ==? 's'
+      let indent = min_indent
+    elseif idt ==? 'n'
+      let indent = 0
+    elseif idt !=? 'k'
+      call s:exit('Invalid indentation: ' . idt)
     end
 
-    if a:indentation !=? 'k'
+    if idt !=? 'k'
       let max.just_len  = 0
       let max.token_len = 0
       let max.pivot_len = 0
@@ -427,14 +439,30 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
       for [line, elems] in items(lines)
         let [nth, prefix, token, delim] = elems
 
-        let token = substitute(token, '^\s*', indent, '')
+        let tindent = matchstr(token, '^\s*')
+        while 1
+          let len = s:strwidth(tindent)
+          if len < indent
+            let tindent .= repeat(' ', indent - len)
+            break
+          elseif len > indent
+            let tindent = tindent[0 : -2]
+          else
+            break
+          endif
+        endwhile
+
+        let token = tindent . s:ltrim(token)
         if mode ==? 'c'
-          let token = substitute(token, '\s*$', indent, '')
+          let token = substitute(token, '\s*$', repeat(' ', indent), '')
         endif
         let [pw, tw] = [s:strwidth(prefix), s:strwidth(token)]
-        call s:max(max, { 'token_len': tw, 'just_len': pw + tw })
+        let max.token_len = max([max.token_len, tw])
+        let max.just_len  = max([max.just_len,  pw + tw])
         if mode ==? 'c'
-          call s:max(max, { 'pivot_len': pw + tw / 2.0 })
+          if max.pivot_len < pw + tw / 2.0
+            let max.pivot_len = pw + tw / 2.0
+          endif
         endif
 
         let lines[line][2] = token
@@ -458,14 +486,15 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
     let rpad = ''
     if mode ==? 'l'
       let pad = repeat(' ', max.just_len - pw - tw)
-      if a:stick_to_left
+      if d.stick_to_left
         let rpad = pad
       else
         let token = token . pad
       endif
     elseif mode ==? 'r'
       let pad = repeat(' ', max.just_len - pw - tw)
-      let token = pad . token
+      let indent = matchstr(token, '^\s*')
+      let token = indent . pad . s:ltrim(token)
     elseif mode ==? 'c'
       let p1  = max.pivot_len - (pw + tw / 2.0)
       let p2  = (max.token_len - tw) / 2.0
@@ -474,10 +503,11 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
       else        | let p2 = floor(p2)
       endif
       let strip = float2nr(ceil((max.token_len - max.strip_len) / 2.0))
-      let token = repeat(' ', float2nr(pf1)) .token. repeat(' ', float2nr(p2))
+      let indent = matchstr(token, '^\s*')
+      let token = indent. repeat(' ', float2nr(pf1)) .s:ltrim(token). repeat(' ', float2nr(p2))
       let token = substitute(token, repeat(' ', strip) . '$', '', '')
 
-      if a:stick_to_left
+      if d.stick_to_left
         if empty(s:rtrim(token))
           let center = len(token) / 2
           let [token, rpad] = [strpart(token, 0, center), strpart(token, center)]
@@ -490,27 +520,28 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
 
     " Pad the delimiter
     let dpadl = max.delim_len - s:strwidth(delim)
-    if a:da ==? 'l'
+    let da = d.delimiter_align
+    if da ==? 'l'
       let [dl, dr] = ['', repeat(' ', dpadl)]
-    elseif a:da ==? 'c'
+    elseif da ==? 'c'
       let dl = repeat(' ', dpadl / 2)
       let dr = repeat(' ', dpadl - dpadl / 2)
-    elseif a:da ==? 'r'
+    elseif da ==? 'r'
       let [dl, dr] = [repeat(' ', dpadl), '']
     else
-      call s:exit('Invalid delimiter_align: ' . a:da)
+      call s:exit('Invalid delimiter_align: ' . da)
     endif
 
     " Before and after the range (for blockwise visual mode)
-    let cline   = getline(line)
-    let before  = strpart(cline, 0, a:fc - 1)
-    let after   = a:lc ? strpart(cline, a:lc) : ''
+    let cline  = getline(line)
+    let before = strpart(cline, 0, a:fc - 1)
+    let after  = a:lc ? strpart(cline, a:lc) : ''
 
     " Determine the left and right margin around the delimiter
-    let rest    = join(tokens[nth + 1 : -1], '')
-    let ml      = empty(prefix . token) ? '' : a:ml
-    let mr      = (empty(rest) ||
-          \ (empty(rest) && stridx(after, a:mr) == 0)) ? '' : a:mr
+    let rest   = join(tokens[nth + 1 : -1], '')
+    let nomore = empty(rest.after)
+    let ml     = (empty(prefix . token) || empty(delim) && nomore) ? '' : d.ml
+    let mr     = nomore ? '' : d.mr
 
     " Adjust indentation of the lines starting with a delimiter
     let lpad = ''
@@ -528,18 +559,15 @@ function! s:do_align(modes, all_tokens, all_delims, fl, ll, fc, lc, pattern, nth
     let tokens[nth] = aligned
 
     " Update the line
-    let newline = s:rtrim(before.join(tokens, '').after)
-    call setline(line, newline)
+    let a:todo[line] = before.join(tokens, '').after
   endfor
 
   if a:nth < max.tokens && (a:recur || len(a:modes) > 1)
     call s:shift(a:modes, a:recur == 2)
-    call s:do_align(
-          \ a:modes, a:all_tokens, a:all_delims,
-          \ a:fl, a:ll, a:fc, a:lc, a:pattern,
-          \ a:nth + 1, a:ml, a:mr, a:da, a:indentation, a:stick_to_left,
-          \ a:ignore_unmatched, a:ignore_groups, a:recur)
+    return [a:todo, a:modes, a:all_tokens, a:all_delims,
+          \ a:fl, a:ll, a:fc, a:lc, a:nth + 1, a:recur, a:dict]
   endif
+  return [a:todo]
 endfunction
 
 function! s:input(str, default, vis)
@@ -551,9 +579,7 @@ function! s:input(str, default, vis)
     " EasyAlign command can be called without visual selection
     redraw
   endif
-  call inputsave()
   let got = input(a:str, a:default)
-  call inputrestore()
   return got
 endfunction
 
@@ -570,26 +596,56 @@ function! s:shift_opts(opts, key, vals)
   endif
 endfunction
 
-function! s:interactive(modes, vis, opts, delims)
+function! s:interactive(range, modes, n, d, opts, rules, vis, live)
   let mode = s:shift(a:modes, 1)
-  let n    = ''
+  let n    = a:n
+  let d    = a:d
   let ch   = ''
   let opts = s:compact_options(a:opts)
   let vals = deepcopy(s:option_values)
   let regx = 0
   let warn = ''
+  let undo = 0
 
   while 1
-    call s:echon(mode, n, -1, '', opts, warn)
+    " Live preview
+    let rdrw = 0
+    if undo
+      silent! undo
+      let undo = 0
+      let rdrw = 1
+    endif
+    if a:live && !empty(d)
+      let output = s:process(a:range, mode, n, d, s:normalize_options(opts), regx, a:rules, 0)
+      let &undolevels = &undolevels " Break undo block
+      call s:update_lines(output.todo)
+      let undo = 1
+      let rdrw = 1
+    endif
+    if rdrw
+      if a:vis
+        normal! gv
+      endif
+      redraw
+      if a:vis | execute "normal! \<esc>" | endif
+    endif
+    call s:echon(mode, n, -1, regx ? '/'.d.'/' : d, opts, warn)
+
     let check = 0
     let warn = ''
 
     let c  = getchar()
     let ch = nr2char(c)
     if c == 3 || c == 27 " CTRL-C / ESC
+      if undo
+        silent! undo
+      endif
       throw 'exit'
     elseif c == "\<bs>"
-      if len(n) > 0
+      if !empty(d)
+        let d = ''
+        let regx = 0
+      elseif len(n) > 0
         let n = strpart(n, 0, len(n) - 1)
       endif
     elseif c == 13 " Enter key
@@ -608,7 +664,7 @@ function! s:interactive(modes, vis, opts, delims)
       elseif n == '**' | let n = ''
       else             | let check = 1
       endif
-    elseif (c == 48 && len(n) > 0) || c > 48 && c <= 57 " Numbers
+    elseif empty(d) && ((c == 48 && len(n) > 0) || c > 48 && c <= 57) " Numbers
       if n[0] == '*'   | let check = 1
       else             | let n = n . ch
       end
@@ -660,13 +716,28 @@ function! s:interactive(modes, vis, opts, delims)
         silent! call remove(opts, 'm')
       endif
     elseif ch == "\<C-_>" || ch == "\<C-X>"
+      if a:live && regx && !empty(d)
+        break
+      endif
+
       let prompt = 'Regular expression: '
       let ch = s:input(prompt, '', a:vis)
       if !empty(ch) && s:valid_regexp(ch)
         let regx = 1
-        break
+        let d = ch
+        if !a:live | break | endif
       else
         let warn = 'Invalid regular expression: '.ch
+      endif
+    elseif ch == "\<C-F>"
+      let f = s:input("Filter (g/../ or v/../): ", get(opts, 'f', ''), a:vis)
+      let m = matchlist(f, '^[gv]/\(.\{-}\)/\?$')
+      if empty(f)
+        silent! call remove(opts, 'f')
+      elseif !empty(m) && s:valid_regexp(m[1])
+        let opts['f'] = f
+      else
+        let warn = 'Invalid filter expression'
       endif
     elseif ch =~ '[[:print:]]'
       let check = 1
@@ -675,14 +746,33 @@ function! s:interactive(modes, vis, opts, delims)
     endif
 
     if check
-      if has_key(a:delims, ch)
-        break
+      if empty(d)
+        if has_key(a:rules, ch)
+          let d = ch
+          if !a:live
+            break
+          endif
+        else
+          let warn = 'Unknown delimiter key: '.ch
+        endif
       else
-        let warn = 'Unknown delimiter key: '.ch
+        if regx
+          let warn = 'Press <CTRL-X> to finish'
+        else
+          if d == ch
+            break
+          else
+            let warn = 'Press '''.d.''' again to finish'
+          endif
+        end
       endif
     endif
   endwhile
-  return [mode, n, ch, s:normalize_options(opts), regx]
+  if a:live
+    let copts = call('s:summarize', output.summarize)
+    let g:easy_align_last_command = s:echon('', n, regx, d, copts, '')
+  end
+  return [mode, n, ch, opts, regx]
 endfunction
 
 function! s:valid_regexp(regexp)
@@ -702,9 +792,9 @@ function! s:test_regexp(regexp)
 endfunction
 
 let s:shorthand_regex =
-  \ '\s*\('
+  \ '\s*\%('
   \   .'\(lm\?[0-9]\+\)\|\(rm\?[0-9]\+\)\|\(iu[01]\)\|\(s\%(tl\)\?[01]\)\|'
-  \   .'\(da\?[clr]\)\|\(ms\?[lrc*]\+\)\|\(i\%(dt\)\?[kdsn]\)\|\(ig\[.*\]\)'
+  \   .'\(da\?[clr]\)\|\(ms\?[lrc*]\+\)\|\(i\%(dt\)\?[kdsn]\)\|\([gv]/.*/\)\|\(ig\[.*\]\)'
   \ .'\)\+\s*$'
 
 function! s:parse_shorthand_opts(expr)
@@ -719,13 +809,17 @@ function! s:parse_shorthand_opts(expr)
   else
     let match = matchlist(expr, regex)
     if empty(match) | break | endif
-    for m in filter(match[ 2 : -1 ], '!empty(v:val)')
-      for key in ['lm', 'rm', 'l', 'r', 'stl', 's', 'iu', 'da', 'd', 'ms', 'm', 'ig', 'i']
+    for m in filter(match[ 1 : -1 ], '!empty(v:val)')
+      for key in ['lm', 'rm', 'l', 'r', 'stl', 's', 'iu', 'da', 'd', 'ms', 'm', 'ig', 'i', 'g', 'v']
         if stridx(tolower(m), key) == 0
           let rest = strpart(m, len(key))
           if key == 'i' | let key = 'idt' | endif
+          if key == 'g' || key == 'v'
+            let rest = key.rest
+            let key = 'f'
+          endif
 
-          if key == 'idt' || index(['d', 'm'], key[0]) >= 0
+          if key == 'idt' || index(['d', 'f', 'm'], key[0]) >= 0
             let opts[key] = rest
           elseif key == 'ig'
             try
@@ -750,6 +844,9 @@ function! s:parse_shorthand_opts(expr)
 endfunction
 
 function! s:parse_args(args)
+  if empty(a:args)
+    return ['', '', {}, 0]
+  endif
   let n    = ''
   let ch   = ''
   let args = a:args
@@ -803,55 +900,51 @@ function! s:parse_args(args)
     return [matches[1], s:test_regexp(matches[2]), opts, 1]
   else
     let tokens = matchlist(args, '^\([1-9][0-9]*\|-[0-9]*\|\*\*\?\)\?\s*\(.\{-}\)\?$')
-    return [tokens[1], tokens[2], opts, 0]
+    " Try swapping n and ch
+    let [n, ch] = empty(tokens[2]) ? reverse(tokens[1:2]) : tokens[1:2]
+
+    " Resolving command-line ambiguity
+    " '\ ' => ' '
+    " '\'  => ' '
+    if ch =~ '^\\\s*$'
+      let ch = ' '
+    " '\\' => '\'
+    elseif ch =~ '^\\\\\s*$'
+      let ch = '\'
+    endif
+
+    return [n, ch, opts, 0]
   endif
 endfunction
 
-function! s:modes(bang)
+function! s:parse_filter(f)
+  let m = matchlist(a:f, '^\([gv]\)/\(.\{-}\)/\?$')
+  if empty(m)
+    return [0, '']
+  else
+    return [m[1] == 'g' ? 1 : -1, m[2]]
+  endif
+endfunction
+
+function! s:interactive_modes(bang)
   return get(g:,
     \ (a:bang ? 'easy_align_bang_interactive_modes' : 'easy_align_interactive_modes'),
     \ (a:bang ? ['r', 'l', 'c'] : ['l', 'r', 'c']))
 endfunction
 
 function! s:alternating_modes(mode)
-  return a:mode ==? 'r' ? ['r', 'l'] : ['l', 'r']
+  return a:mode ==? 'r' ? 'rl' : 'lr'
 endfunction
 
-function! easy_align#align(bang, expr) range
-  try
-    call s:align(a:bang, a:firstline, a:lastline, a:expr)
-  catch 'exit'
-  endtry
+function! s:update_lines(todo)
+    for [line, content] in items(a:todo)
+      call setline(line, s:rtrim(content))
+    endfor
 endfunction
 
-function! s:align(bang, first_line, last_line, expr)
-  let modes  = s:modes(a:bang)
-  let mode   = modes[0]
-  let recur  = 0
-  let n      = ''
-  let ch     = ''
-  let opts   = {}
-  let regexp = 0
-  " Heuristically determine if the user was in visual mode
-  let vis    = a:first_line == line("'<") && a:last_line == line("'>")
-
-  let delimiters = s:easy_align_delimiters_default
-  if exists('g:easy_align_delimiters')
-    let delimiters = extend(copy(delimiters), g:easy_align_delimiters)
-  endif
-
-  if empty(a:expr)
-    let [mode, n, ch, opts, regexp] = s:interactive(copy(modes), vis, opts, delimiters)
-  else
-    let [n, ch, opts, regexp] = s:parse_args(a:expr)
-    if empty(n) && empty(ch)
-      let [mode, n, ch, opts, regexp] = s:interactive(copy(modes), vis, opts, delimiters)
-    elseif empty(ch)
-      " Try swapping n and ch
-      let [n, ch] = ['', n]
-    endif
-  endif
-
+function! s:parse_nth(n)
+  let n = a:n
+  let recur = 0
   if n == '*'      | let [nth, recur] = [1, 1]
   elseif n == '**' | let [nth, recur] = [1, 2]
   elseif n == '-'  | let nth = -1
@@ -861,77 +954,136 @@ function! s:align(bang, first_line, last_line, expr)
   else
     let nth = n
   endif
+  return [nth, recur]
+endfunction
 
-  if regexp
-    let dict = { 'pattern': ch }
+function! s:build_dict(delimiters, ch, regexp, opts)
+  if a:regexp
+    let dict = { 'pattern': a:ch }
   else
-    " Resolving command-line ambiguity
-    if !empty(a:expr)
-      " '\ ' => ' '
-      " '\'  => ' '
-      if ch =~ '^\\\s*$'
-        let ch = ' '
-      " '\\' => '\'
-      elseif ch =~ '^\\\\\s*$'
-        let ch = '\'
-      endif
+    if !has_key(a:delimiters, a:ch)
+      call s:exit('Unknown delimiter key: '. a:ch)
     endif
-    if !has_key(delimiters, ch)
-      call s:exit('Unknown delimiter key: '. ch)
-    endif
-    let dict = copy(delimiters[ch])
+    let dict = copy(a:delimiters[a:ch])
   endif
-
-  call extend(dict, opts)
+  call extend(dict, a:opts)
 
   let ml = get(dict, 'left_margin', ' ')
   let mr = get(dict, 'right_margin', ' ')
   if type(ml) == 0 | let ml = repeat(' ', ml) | endif
   if type(mr) == 0 | let mr = repeat(' ', mr) | endif
+  call extend(dict, { 'ml': ml, 'mr': mr })
 
-  let bvisual = vis && char2nr(visualmode()) == 22 " ^V
+  let dict.pattern = get(dict, 'pattern', a:ch)
+  let dict.delimiter_align =
+    \ get(dict, 'delimiter_align', get(g:, 'easy_align_delimiter_align', 'r'))[0]
+  let dict.indentation =
+    \ get(dict, 'indentation', get(g:, 'easy_align_indentation', 'k'))[0]
+  let dict.stick_to_left =
+    \ get(dict, 'stick_to_left', 0)
+  let dict.ignore_unmatched =
+    \ get(dict, 'ignore_unmatched', get(g:, 'easy_align_ignore_unmatched', 2))
+  let dict.ignore_groups =
+    \ get(dict, 'ignore_groups', get(dict, 'ignores', s:ignored_syntax()))
+  let dict.filter =
+    \ get(dict, 'filter', '')
+  return dict
+endfunction
 
-  if recur && bvisual
+function! s:build_mode_sequence(expr, recur)
+  let [expr, recur] = [a:expr, a:recur]
+  let suffix = matchstr(a:expr, '\*\+$')
+  if suffix == '*'
+    let expr = expr[0 : -2]
+    let recur = 1
+  elseif suffix == '**'
+    let expr = expr[0 : -3]
+    let recur = 2
+  endif
+  return [tolower(expr), recur]
+endfunction
+
+function! s:process(range, mode, n, ch, opts, regexp, rules, bvis)
+  let [nth, recur] = s:parse_nth(a:n)
+  let dict = s:build_dict(a:rules, a:ch, a:regexp, a:opts)
+  let [mode_sequence, recur] = s:build_mode_sequence(
+    \ get(dict, 'mode_sequence', recur == 2 ? s:alternating_modes(a:mode) : a:mode),
+    \ recur)
+
+  if recur && a:bvis
     call s:exit('Recursive alignment is not supported in blockwise-visual mode')
   endif
 
-  let aseq = get(dict, 'mode_sequence',
-        \ recur == 2 ? s:alternating_modes(mode) : [mode])
-  let mode_expansion = matchstr(aseq, '\*\+$')
-  if mode_expansion == '*'
-    let aseq = aseq[0 : -2]
-    let recur = 1
-  elseif mode_expansion == '**'
-    let aseq = aseq[0 : -3]
-    let recur = 2
-  endif
-  let aseq_list = type(aseq) == 1 ? split(tolower(aseq), '\s*') : map(copy(aseq), 'tolower(v:val)')
-  let aseq_str = join(aseq_list, '')
+  let args = [
+    \ {}, split(mode_sequence, '\zs'),
+    \ {}, {}, a:range[0], a:range[1],
+    \ a:bvis ? min([col("'<"), col("'>")]) : 1,
+    \ a:bvis ? max([col("'<"), col("'>")]) : 0,
+    \ nth, recur, dict ]
+  while len(args) > 1
+    let args = call('s:do_align', args)
+  endwhile
 
-  call s:do_align(
-    \ aseq_list,
-    \ {}, {}, a:first_line, a:last_line,
-    \ bvisual ? min([col("'<"), col("'>")]) : 1,
-    \ bvisual ? max([col("'<"), col("'>")]) : 0,
-    \ get(dict, 'pattern', ch),
-    \ nth,
-    \ ml,
-    \ mr,
-    \ get(dict, 'delimiter_align', get(g:, 'easy_align_delimiter_align', 'r'))[0],
-    \ get(dict, 'indentation', get(g:, 'easy_align_indentation', 'k'))[0],
-    \ get(dict, 'stick_to_left', 0),
-    \ get(dict, 'ignore_unmatched', get(g:, 'easy_align_ignore_unmatched', 2)),
-    \ get(dict, 'ignore_groups', get(dict, 'ignores', s:ignored_syntax())),
-    \ recur)
+  " todo: lines to update
+  " summarize: arguments to s:summarize
+  return { 'todo': args[0], 'summarize': [ a:opts, recur, mode_sequence ] }
+endfunction
 
-  let copts = s:compact_options(opts)
-  let nbmode = s:modes(0)[0]
+function s:summarize(opts, recur, mode_sequence)
+  let copts = s:compact_options(a:opts)
+  let nbmode = s:interactive_modes(0)[0]
   if !has_key(copts, 'm') && (
-    \  (recur == 2 && join(s:alternating_modes(nbmode), '') != aseq_str) ||
-    \  (recur != 2 && (aseq_str[0] != nbmode || len(aseq_str) > 1))
+    \  (a:recur == 2 && s:alternating_modes(nbmode) != a:mode_sequence) ||
+    \  (a:recur != 2 && (a:mode_sequence[0] != nbmode || len(a:mode_sequence) > 1))
     \ )
-    call extend(copts, { 'm': aseq_str })
+    call extend(copts, { 'm': a:mode_sequence })
   endif
-  let g:easy_align_last_command = s:echon('', n, regexp, ch, copts, '')
+  return copts
+endfunction
+
+function! s:align(bang, live, first_line, last_line, expr)
+  " Heuristically determine if the user was in visual mode
+  let vis   = a:first_line == line("'<") && a:last_line == line("'>")
+  let bvis  = vis && char2nr(visualmode()) == 22 " ^V
+  let range = [a:first_line, a:last_line]
+  let modes = s:interactive_modes(a:bang)
+  let mode  = modes[0]
+
+  if bvis && a:live
+    call s:exit('Live mode is not supported in blockwise-visual mode')
+  endif
+
+  let rules = s:easy_align_delimiters_default
+  if exists('g:easy_align_delimiters')
+    let rules = extend(copy(rules), g:easy_align_delimiters)
+  endif
+
+  let [n, ch, opts, regexp] = s:parse_args(a:expr)
+
+  let bypass_fold = get(g:, 'easy_align_bypass_fold', 0)
+  let ofm = &l:foldmethod
+  try
+    if bypass_fold | let &l:foldmethod = 'manual' | endif
+
+    if empty(n) && empty(ch) || a:live
+      let [mode, n, ch, opts, regexp] = s:interactive(range, copy(modes), n, ch, opts, rules, vis, a:live)
+    endif
+
+    if !a:live
+      let output = s:process(range, mode, n, ch, s:normalize_options(opts), regexp, rules, bvis)
+      call s:update_lines(output.todo)
+      let copts = call('s:summarize', output.summarize)
+      let g:easy_align_last_command = s:echon('', n, regexp, ch, copts, '')
+    endif
+  finally
+    if bypass_fold | let &l:foldmethod = ofm | endif
+  endtry
+endfunction
+
+function! easy_align#align(bang, live, expr) range
+  try
+    call s:align(a:bang, a:live, a:firstline, a:lastline, a:expr)
+  catch 'exit'
+  endtry
 endfunction
 

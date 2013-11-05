@@ -6,9 +6,9 @@ A simple, easy-to-use Vim alignment plugin.
 Demo
 ----
 
-![Screencast](https://raw.github.com/junegunn/vim-easy-align/gif/vim-easy-align.gif)
+![Screencast](https://raw.github.com/junegunn/i/master/vim-easy-align.gif)
 
-(Too fast? Slower GIF is [here](https://raw.github.com/junegunn/vim-easy-align/gif/vim-easy-align-slow.gif))
+(Too fast? Slower GIF is [here](https://raw.github.com/junegunn/i/master/vim-easy-align.gif))
 
 Features
 --------
@@ -60,12 +60,13 @@ variant `:EasyAlign!`) for visual mode.
 | Interactive mode          | `:EasyAlign[!] [OPTIONS]`                        |
 | Using predefined rules    | `:EasyAlign[!] [N-th] DELIMITER_KEY [OPTIONS]`   |
 | Using regular expressions | `:EasyAlign[!] [N-th] /REGEXP/ [OPTIONS]`        |
+| Live interactive mode     | `:LiveEasyAlign[!] [...]`                        |
 
 ### Concept of _alignment rule_
 
 An *alignment rule* is a predefined set of options for common alignment tasks,
 which is identified by a single character, *DELIMITER KEY*, such as `<space>`,
-`=`, `:`, `.`, `|`, and `,`.
+`=`, `:`, `.`, `|`, `&`, and `,`.
 
 Think of it as a shortcut. Instead of writing regular expression and setting
 several options, you can just type in a single character.
@@ -95,7 +96,7 @@ With the mapping, you can align selected lines of text with only a few keystroke
     - `-`         Around the last occurrences of delimiters (`-1`)
     - `-2`        Around the second to last occurrences of delimiters
     - ...
-1. Delimiter key (a single keystroke; `<space>`, `=`, `:`, `.`, `|`, `,`)
+1. Delimiter key (a single keystroke; `<space>`, `=`, `:`, `.`, `|`, `&`, `,`)
 
 Alignment rules for the following delimiters have been defined to meet the most needs.
 
@@ -106,6 +107,7 @@ Alignment rules for the following delimiters have been defined to meet the most 
 | `:`           | Suitable for formatting JSON or YAML                                 |
 | `.`           | Multi-line method chaining                                           |
 | `,`           | Multi-line method arguments                                          |
+| `&`           | LaTeX tables (matches `&` and `\\`)                                  |
 | &#124;        | Table markdown                                                       |
 
 You can override these default rules or define your own rules with
@@ -149,13 +151,14 @@ keys listed below. The meaning of each option will be described in
 
 | Key       | Option             | Values                                             |
 | --------  | ------------------ | -------------------------------------------------- |
+| `CTRL-F`  | `filter`           | Input string (`[gv]/.*/?`)                         |
 | `CTRL-I`  | `indentation`      | shallow, deep, none, keep                          |
 | `CTRL-L`  | `left_margin`      | Input number or string                             |
 | `CTRL-R`  | `right_margin`     | Input number or string                             |
 | `CTRL-D`  | `delimiter_align`  | left, center, right                                |
 | `CTRL-U`  | `ignore_unmatched` | 0, 1                                               |
 | `CTRL-G`  | `ignore_groups`    | [], ['String'], ['Comment'], ['String', 'Comment'] |
-| `CTRL-O`  | `mode_sequence`    | Input string of `/[lrc]+\*{0,2}/`                  |
+| `CTRL-O`  | `mode_sequence`    | Input string (`/[lrc]+\*{0,2}/`)                   |
 | `<Left>`  | `stick_to_left`    | `{ 'stick_to_left': 1, 'left_margin': 0 }`         |
 | `<Right>` | `stick_to_left`    | `{ 'stick_to_left': 0, 'left_margin': 1 }`         |
 | `<Down>`  | `*_margin`         | `{ 'left_margin': 0, 'right_margin': 0 }`          |
@@ -167,17 +170,24 @@ repeatable, non-interactive command recorded in `g:easy_align_last_command`.
 :<C-R>=g:easy_align_last_command<Enter><Enter>
 ```
 
----
+### Live interactive mode
 
-### *Intermission*
+If you're performing a complex alignment where multiple options should be
+carefully adjusted, try "live interactive mode" where you can preview the result
+of the alignment on-the-fly as you type in.
 
-You can stop reading here. Trust me. All the fancy features described in the
-following sections are really powerful but you won't be needing them in most
-of the cases.
+Live interactive mode can be started with `:LiveEasyAlign` command which takes
+the same parameters as `:EasyAlign`. I suggest you define a mapping such as
+follows in addition to the one for `:EasyAlign` command.
 
-Go try out vim-easy-align right now, and come back later when you feel like it.
+```vim
+vnoremap <silent> <Leader><Enter> :LiveEasyAlign<Enter>
+```
 
----
+In live interactive mode, you have to type in the same delimiter (or `CTRL-X` on
+regular expression) again to finalize the alignment. This allows you to preview
+the result of the alignment and freely change the delimiter using backspace key
+without leaving the interactive mode.
 
 ### Using `EasyAlign` in command line
 
@@ -233,6 +243,7 @@ The following table summarizes the shorthand notation.
 
 | Option           | Expression |
 | ---------------- | ---------- |
+| filter           | `[gv]/.*/` |
 | left_margin      | `l[0-9]+`  |
 | right_margin     | `r[0-9]+`  |
 | stick_to_left    | `s[01]`    |
@@ -278,6 +289,26 @@ my_hash = { :a   => 1,
 However, in this case, we don't really need blockwise visual mode
 since the same can be easily done using the negative N-th parameter: `<Enter>-=`
 
+### EasyAlign as Vim operator
+
+You can define an operator function which executes EasyAlign command, so that it
+can be used with a Vim movement.
+
+```vim
+function! s:easy_align_1st_eq(type, ...)
+  '[,']EasyAlign=
+endfunction
+nnoremap <Leader>= :set opfunc=<SID>easy_align_1st_eq<Enter>g@
+
+function! s:easy_align_1st_colon(type, ...)
+  '[,']EasyAlign:
+endfunction
+nnoremap <Leader>: :set opfunc=<SID>easy_align_1st_colon<Enter>g@
+```
+
+Now without going into visual mode, you can align the lines in the paragraph
+by `<Leader>=ip` or `<Leader>:ip`.
+
 Alignment options
 -----------------
 
@@ -285,6 +316,7 @@ Alignment options
 
 | Option             | Type    | Default               | Description                                             |
 | ------------------ | ------- | --------------------- | ------------------------------------------------------- |
+| `filter`           | string  |                       | Line filtering expression: `g/../` or `v/../`           |
 | `left_margin`      | number  | 1                     | Number of spaces to attach before delimiter             |
 | `left_margin`      | string  | `' '`                 | String to attach before delimiter                       |
 | `right_margin`     | number  | 1                     | Number of spaces to attach after delimiter              |
@@ -305,6 +337,7 @@ There are 4 ways to set alignment options (from lowest precedence to highest):
 
 | Option name        | Shortcut key        | Abbreviated | Global variable                 |
 | ------------------ | ------------------- | ----------- | ------------------------------- |
+| `filter`           | `CTRL-F`            | `[gv]/.*/`  |                                 |
 | `left_margin`      | `CTRL-L`            | `l[0-9]+`   |                                 |
 | `right_margin`     | `CTRL-R`            | `r[0-9]+`   |                                 |
 | `stick_to_left`    | `<Left>`, `<Right>` | `s[01]`     |                                 |
@@ -313,6 +346,30 @@ There are 4 ways to set alignment options (from lowest precedence to highest):
 | `indentation`      | `CTRL-I`            | `i[ksdn]`   | `g:easy_align_indentation`      |
 | `delimiter_align`  | `CTRL-D`            | `d[lrc]`    | `g:easy_align_delimiter_align`  |
 | `mode_sequence`    | `CTRL-O`            | `m[lrc*]*`  |                                 |
+
+### Filtering lines
+
+With `filter` option, you can align lines that only match or do not match a
+given pattern. There are several ways to set the pattern.
+
+1. Press `CTRL-F` in interactive mode and input `g/pat/` or `v/pat/`
+2. In command-line, it can be written in dictionary format: `{'filter': 'g/pat/'}`
+3. Or in shorthand notation: `g/pat/` or `v/pat/`
+
+(You don't need to escape '/'s in the regular expression)
+
+#### Examples
+
+```vim
+" Start interactive mode with filter option set to g/hello/
+EasyAlign g/hello/
+
+" Start live interactive mode with filter option set to v/goodbye/
+LiveEasyAlign v/goodbye/
+
+" Align the lines with 'hi' around the first colons
+EasyAlign:g/hi/
+```
 
 ### Ignoring delimiters in comments or strings
 
@@ -619,6 +676,42 @@ let g:easy_align_delimiters = {
 \ }
 ```
 
+Other options
+-------------
+
+### Disabling &foldmethod during alignment
+
+[It is reported](https://github.com/junegunn/vim-easy-align/issues/14) that
+`&foldmethod` value of `expr` or `syntax` can significantly slow down the
+alignment when editing a large, complex file with many folds. To alleviate this
+issue, EasyAlign provides an option to temporarily set `&foldmethod` to `manual`
+during the alignment task. In order to enable this feature, set
+`g:easy_align_bypass_fold` switch to 1.
+
+```vim
+let g:easy_align_bypass_fold = 1
+```
+
+### Left/right/center mode switch in interactive mode
+
+In interactive mode, you can choose the alignment mode you want by pressing
+enter keys. The non-bang command, `:EasyAlign` starts in left-alignment mode
+and changes to right and center mode as you press enter keys, while the bang
+version first starts in right-alignment mode.
+
+- `:EasyAlign`
+  - Left, Right, Center
+- `:EasyAlign!`
+  - Right, Left, Center
+
+If you do not prefer this default mode transition, you can define your own
+settings as follows.
+
+```vim
+let g:easy_align_interactive_modes = ['l', 'r']
+let g:easy_align_bang_interactive_modes = ['c', 'r']
+```
+
 Advanced examples and use cases
 -------------------------------
 
@@ -690,6 +783,11 @@ var jdbc = {
 (To be fair, Align also can be configured to consider syntax highlighting with
 `g:AlignSkip` function reference which should point to a custom function that
 looks up the syntax group of a character on a certain position)
+
+### Thoroughly tested
+
+Virtually every aspect of vim-easy-align is being tested with a comprehensive
+set of test cases using [Vader.vim](https://github.com/junegunn/vader.vim).
 
 ### "Okay. So should I switch?"
 
