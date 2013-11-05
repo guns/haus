@@ -30,7 +30,7 @@ LANG=C
 LANGUAGE=C
 LC_ALL=C
 
-scriptVersion="3.2.0"
+scriptVersion="3.2.2"
 
 ######################
 # Settings for fetcher
@@ -82,6 +82,9 @@ underline="\033[4m" # Underline Text
 display_index=0
 
 # Static Color Definitions
+colorize () {
+	echo -ne "\033[38;5;$1m"
+}
 getColor() {
 	if [[ -n "$1" ]]; then
 		if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
@@ -110,6 +113,8 @@ getColor() {
 			'light purple') color_ret='\033[1;35m';;
 			'light cyan') color_ret='\033[1;36m';;
 			'white') color_ret='\033[1;37m';;
+			# Some 256 colors
+			'orange') color_ret="$(colorize '202')";;
 		esac
 		[[ -n "${color_ret}" ]] && echo "${color_ret}"
 	else
@@ -123,6 +128,9 @@ function verboseOut {
 
 function errorOut {
 	printf "\033[1;37m[[ \033[1;31m! \033[1;37m]] \033[0m$1\n"
+}
+function stderrOut {
+	while IFS='' read -r line; do printf "\033[1;37m[[ \033[1;31m! \033[1;37m]] \033[0m${line}\n"; done
 }
 
 
@@ -361,6 +369,8 @@ detectdistro () {
 				else
 					distro="Gentoo"
 				fi
+			elif [[ "${distro_detect}" == "Jiyuu Linux" ]]; then
+				 distro="Jiyuu Linux"
 			elif [[ "${distro_detect}" == "LinuxDeepin" ]]; then
 				distro="LinuxDeepin"
 				distro_codename=null
@@ -392,8 +402,8 @@ detectdistro () {
 				distro="Mint"
 				if [[ "${distro_codename}" == "debian" ]]; then
 					distro="LMDE"
-					distro_codename=null
-					distro_release=null
+					distro_codename="n/a"
+					distro_release="n/a"
 				fi
 			elif [[ "${distro_detect}" == "SUSE LINUX" || "${distro_detect}" == "openSUSE project" ]]; then
 				distro="openSUSE"
@@ -451,6 +461,7 @@ detectdistro () {
 				# Hotfixes
 				[[ "${distro}" == "Arch" ]] && distro="Arch Linux"
 				[[ "${distro}" == "Archarm" || "${distro}" == "archarm" ]] && distro="Arch Linux"
+				[[ "${distro}" == "elementary" ]] && distro="elementary OS"
 			fi
 
 			if [[ "${distro}" == "Unknown" ]]; then
@@ -589,7 +600,7 @@ detectdistro () {
 		arch*linux*old) distro="Arch Linux - Old" ;;
 		arch*linux) distro="Arch Linux" ;;
 		arch) distro="Arch Linux";;
-		elementary) distro="elementary OS";;
+		'elementary'|'elementary os') distro="elementary OS";;
 		fedora) distro="Fedora" ;;
 		mageia) distro="Mageia" ;;
 		mandriva) distro="Mandriva" ;;
@@ -779,7 +790,7 @@ detectgpu () {
 		gpu_info=$(pciconf -lv | grep -B 4 VGA)
 		gpu_info=$(echo "${gpu_info}" | grep -E 'device.*=.*')
 		gpu=$(echo "${gpu_info}" | sed 's/.*device.*= //' | sed "s/'//g")
-	else
+	elif [[ "$distro" != "Mac OS X" ]]; then
 		if [ -n "$(type -p lspci)" ]; then
 			gpu_info=$(lspci | grep VGA)
 			gpu=$(echo "$gpu_info" | grep -oE '\[.*\]' | sed 's/\[//;s/\]//')
@@ -790,12 +801,12 @@ detectgpu () {
 			gpu=$(echo "$gpu" | cut -d ':' -f2)
 			gpu="${gpu:1}"
 			gpu_info=$(echo "$gpu_info" | grep "OpenGL vendor string")
-		elif [[ "${distro}" == "Mac OS X" ]]; then
-			gpu=$(system_profiler SPDisplaysDataType | awk -F': ' '/^\ *Chipset Model:/ {print $2}')
-		elif [[ "${distro}" == "Cygwin" ]]; then
-			gpu=$(wmic path Win32_VideoController get caption)
-			gpu=$(tail -1 <<< ${gpu})
 		fi
+	elif [[ "${distro}" == "Mac OS X" ]]; then
+		gpu=$(system_profiler SPDisplaysDataType | awk -F': ' '/^\ *Chipset Model:/ {print $2}')
+	elif [[ "${distro}" == "Cygwin" ]]; then
+		gpu=$(wmic path Win32_VideoController get caption)
+		gpu=$(tail -1 <<< ${gpu})
 	fi
 
 	if [ -n "$gpu" ];then
@@ -811,7 +822,7 @@ detectgpu () {
 			gpu_info=$(echo "$gpu_info" | cut -d ':' -f2)
 			gpu_info="${gpu_info:1} "
 		fi
-		gpu="${gpu_info}${gpu}"
+		gpu="${gpu}"
 	else
 		gpu="Not Found"
 	fi
@@ -1030,14 +1041,19 @@ detectshell () {
 
 # Resolution Detection - Begin
 detectres () {
-	if [[ -n ${DISPLAY} && ${distro} != "Mac OS X" && ${distro} != "Cygwin" ]]; then
-		if [[ "$distro" =~ "BSD" ]]; then
-			xResolution=$(xdpyinfo | sed -n 's/.*dim.* \([0-9]*x[0-9]*\) .*/\1/pg' | tr '\n' ' ')
-		else
-			xResolution=$(xdpyinfo | sed -n 's/.*dim.* \([0-9]*x[0-9]*\) .*/\1/pg' | sed ':a;N;$!ba;s/\n/ /g')
+	if [[ ${distro} != "Mac OS X" && ${distro} != "Cygwin" ]]; then
+		if [[ -n ${DISPLAY} ]]; then
+			if [[ "$distro" =~ "BSD" ]]; then
+				xResolution=$(xdpyinfo | sed -n 's/.*dim.* \([0-9]*x[0-9]*\) .*/\1/pg' | tr '\n' ' ')
+			else
+				xResolution=$(xdpyinfo | sed -n 's/.*dim.* \([0-9]*x[0-9]*\) .*/\1/pg' | sed ':a;N;$!ba;s/\n/ /g')
+			fi
 		fi
 	elif [[ ${distro} == "Mac OS X" ]]; then
 		xResolution=$(system_profiler SPDisplaysDataType | awk '/Resolution:/ {print $2"x"$4" "}')
+		if [[ "$(echo $xResolution | wc -l)" -ge 1 ]]; then
+			xResolution=$(echo $xResolution | tr "\\n" "," | sed 's/\(.*\),/\1/')
+		fi
 	elif [[ "${distro}" == "Cygwin" ]]; then
 		width=$(wmic desktopmonitor get screenwidth | grep -vE '[a-z]+' | tr -d '\r\n ')
 		height=$(wmic desktopmonitor get screenheight | grep -vE '[a-z]+' | tr -d '\r\n ')
@@ -1053,122 +1069,124 @@ detectres () {
 # DE Detection - Begin
 detectde () {
 	DE="Not Present"
-	if [[ -n ${DISPLAY} && ${distro} != "Mac OS X" && ${distro} != "Cygwin" ]]; then
-		if type -p xprop >/dev/null 2>&1;then
-			xprop_root="$(xprop -root 2>/dev/null)"
-			if [[ -n ${xprop_root} ]]; then
-				DE=$(echo "${xprop_root}" | awk 'BEGIN {
-					de = "Not Present"
-				}
-				{
-					if ($1 ~ /^_DT_SAVE_MODE/) {
-						de = $NF
-						gsub(/\"/,"",de)
-						de = toupper(de)
-						exit
+	if [[ ${distro} != "Mac OS X" && ${distro} != "Cygwin" ]]; then
+		if [[ -n ${DISPLAY} ]]; then
+			if type -p xprop >/dev/null 2>&1;then
+				xprop_root="$(xprop -root 2>/dev/null)"
+				if [[ -n ${xprop_root} ]]; then
+					DE=$(echo "${xprop_root}" | awk 'BEGIN {
+						de = "Not Present"
 					}
-					else if ($1 ~/^KDE_SESSION_VERSION/) {
-						de = "KDE"$NF
-						exit
-					}
-					else if ($1 ~ /^_MARCO/) {
-						de = "MATE"
-						exit
-					}
-					else if ($1 ~ /^_MUFFIN/) {
-						de = "Cinnamon"
-						exit
-					}
-					else if ($0 ~ /"xfce4"/) {
-						de = "XFCE4"
-						exit
-					}
-					else if ($0 ~ /"xfce5"/) {
-						de = "XFCE5"
-						exit
-					}
-				} END {
-					print de
-				}')
+					{
+						if ($1 ~ /^_DT_SAVE_MODE/) {
+							de = $NF
+							gsub(/\"/,"",de)
+							de = toupper(de)
+							exit
+						}
+						else if ($1 ~/^KDE_SESSION_VERSION/) {
+							de = "KDE"$NF
+							exit
+						}
+						else if ($1 ~ /^_MARCO/) {
+							de = "MATE"
+							exit
+						}
+						else if ($1 ~ /^_MUFFIN/) {
+							de = "Cinnamon"
+							exit
+						}
+						else if ($0 ~ /"xfce4"/) {
+							de = "XFCE4"
+							exit
+						}
+						else if ($0 ~ /"xfce5"/) {
+							de = "XFCE5"
+							exit
+						}
+					} END {
+						print de
+					}')
+				fi
 			fi
-		fi
 
-		if [[ ${DE} == "Not Present" ]]; then
-			if [[ -n ${GNOME_DESKTOP_SESSION_ID} ]]; then
-				DE="Gnome"
-				if type -p xprop >/dev/null 2>&1; then
-					if xprop -name "unity-launcher" >/dev/null 2>&1; then
-						DE="Unity"
-					elif xprop -name "launcher" >/dev/null 2>&1 &&
-						xprop -name "panel" >/dev/null 2>&1; then
+			if [[ ${DE} == "Not Present" ]]; then
+				if [[ -n ${GNOME_DESKTOP_SESSION_ID} ]]; then
+					DE="Gnome"
+					if type -p xprop >/dev/null 2>&1; then
+						if xprop -name "unity-launcher" >/dev/null 2>&1; then
+							DE="Unity"
+						elif xprop -name "launcher" >/dev/null 2>&1 &&
+							xprop -name "panel" >/dev/null 2>&1; then
 
-						DE="Unity"
+							DE="Unity"
+						fi
+					fi
+				elif [[ -n ${MATE_DESKTOP_SESSION_ID} ]]; then
+					DE="MATE"
+				elif [[ -n ${KDE_SESSION_VERSION} ]]; then
+					if [[ ${KDE_SESSION_VERSION} == '5' ]]; then
+						DE="KDE5"
+					elif [[ ${KDE_SESSION_VERSION} == '4' ]]; then
+						DE="KDE4"
+					fi
+				elif [[ -n ${KDE_FULL_SESSION} ]]; then
+					if [[ ${KDE_FULL_SESSION} == 'true' ]]; then
+						DE="KDE"
+						DEver_data=$( kded --version 2>/dev/null )
+						DEver=$( grep -si '^KDE:' <<< "$DEver_data" | awk '{print $2}' )
 					fi
 				fi
-			elif [[ -n ${MATE_DESKTOP_SESSION_ID} ]]; then
-				DE="MATE"
-			elif [[ -n ${KDE_SESSION_VERSION} ]]; then
-				if [[ ${KDE_SESSION_VERSION} == '5' ]]; then
-					DE="KDE5"
-				elif [[ ${KDE_SESSION_VERSION} == '4' ]]; then
-					DE="KDE4"
-				fi
-			elif [[ -n ${KDE_FULL_SESSION} ]]; then
-				if [[ ${KDE_FULL_SESSION} == 'true' ]]; then
-					DE="KDE"
-					DEver_data=$( kded --version 2>/dev/null )
-					DEver=$( grep -si '^KDE:' <<< "$DEver_data" | awk '{print $2}' )
+			fi
+
+			if [[ ${DE} != "Not Present" ]]; then
+				if [[ ${DE} == "Cinnamon" ]]; then
+					if type -p >/dev/null 2>&1; then
+						DEver=$(cinnamon --version)
+						DE="${DE} ${DEver//* }"
+					fi
+				elif [[ ${DE} == "Gnome" || ${DE} == "GNOME" ]]; then
+					if type -p gnome-session-properties >/dev/null 2>&1; then
+						DEver=$(gnome-session-properties --version)
+						DE="${DE} ${DEver//* }"
+					elif type -p gnome-session >/dev/null 2>&1; then
+						DEver=$(gnome-session --version)
+						DE="${DE} ${DEver//* }"
+					fi
+				elif [[ ${DE} == "KDE4" || ${DE} == "KDE5" ]]; then
+					if type -p kded${DE#KDE} >/dev/null 2>&1; then
+						DEver=$(kded${DE#KDE} --version)
+						for l in $(echo "${DEver// /_}"); do
+							if [[ ${l//:*} == "KDE_Development_Platform" ]]; then
+								DEver=${l//*:_}
+								DE="KDE ${DEver//_*}"
+							fi;
+						done
+					fi
+				elif [[ ${DE} == "MATE" ]]; then
+					if type -p mate-session >/dev/null 2>&1; then
+						DEver=$(mate-session --version)
+						DE="${DE} ${DEver//* }"
+					fi
+
+				elif [[ ${DE} == "Unity" ]]; then
+					if type -p unity >/dev/null 2>&1; then
+						DEver=$(unity --version)
+						DE="${DE} ${DEver//* }"
+					fi
 				fi
 			fi
-		fi
 
-		if [[ ${DE} != "Not Present" ]]; then
-			if [[ ${DE} == "Cinnamon" ]]; then
-				if type -p >/dev/null 2>&1; then
-					DEver=$(cinnamon --version)
-					DE="${DE} ${DEver//* }"
+			if [[ "${DE}" == "Not Present" ]]; then
+				if pgrep -U ${UID} lxsession >/dev/null 2>&1; then
+					DE="LXDE"
+					if type -p lxpanel >/dev/null 2>&1; then
+						DEver=$(lxpanel -v)
+						DE="${DE} $DEver"
+					fi
+				elif pgrep -U ${UID} razor-session >/dev/null 2>&1; then
+					DE="RazorQt"
 				fi
-			elif [[ ${DE} == "Gnome" || ${DE} == "GNOME" ]]; then
-				if type -p gnome-session-properties >/dev/null 2>&1; then
-					DEver=$(gnome-session-properties --version)
-					DE="${DE} ${DEver//* }"
-				elif type -p gnome-session >/dev/null 2>&1; then
-					DEver=$(gnome-session --version)
-					DE="${DE} ${DEver//* }"
-				fi
-			elif [[ ${DE} == "KDE4" || ${DE} == "KDE5" ]]; then
-				if type -p kded${DE#KDE} >/dev/null 2>&1; then
-					DEver=$(kded${DE#KDE} --version)
-					for l in $(echo "${DEver// /_}"); do
-						if [[ ${l//:*} == "KDE_Development_Platform" ]]; then
-							DEver=${l//*:_}
-							DE="KDE ${DEver//_*}"
-						fi;
-					done
-				fi
-			elif [[ ${DE} == "MATE" ]]; then
-				if type -p mate-session >/dev/null 2>&1; then
-					DEver=$(mate-session --version)
-					DE="${DE} ${DEver//* }"
-				fi
-
-			elif [[ ${DE} == "Unity" ]]; then
-				if type -p unity >/dev/null 2>&1; then
-					DEver=$(unity --version)
-					DE="${DE} ${DEver//* }"
-				fi
-			fi
-		fi
-
-		if [[ "${DE}" == "Not Present" ]]; then
-			if pgrep -U ${UID} lxsession >/dev/null 2>&1; then
-				DE="LXDE"
-				if type -p lxpanel >/dev/null 2>&1; then
-					DEver=$(lxpanel -v)
-					DE="${DE} $DEver"
-				fi
-			elif pgrep -U ${UID} razor-session >/dev/null 2>&1; then
-				DE="RazorQt"
 			fi
 		fi
 	elif [[ "${distro}" == "Mac OS X" ]]; then
@@ -1189,15 +1207,84 @@ detectde () {
 # WM Detection - Begin
 detectwm () {
 	WM="Not Found"
-	if [[ -n ${DISPLAY} && ${distro} != "Cygwin" ]]; then
+	if [[ ${distro} != "Mac OS X" && ${distro} != "Cygwin" ]]; then
+		if [[ -n ${DISPLAY} ]]; then
+			for each in "${wmnames[@]}"; do
+				PID="$(pgrep -U ${UID} $each)"
+				if [ "$PID" ]; then
+					case $each in
+						'awesome') WM="Awesome";;
+						'beryl') WM="Beryl";;
+						'bspwm') WM="bspwm";;
+						'blackbox') WM="Blackbox";;
+						'cinnamon') WM="Cinnamon";;
+						'compiz') WM="Compiz";;
+						'dminiwm') WM="dminiwm";;
+						'dwm') WM="dwm";;
+						'e16') WM="E16";;
+						'emerald') WM="Emerald";;
+						'enlightenment') WM="E17";;
+						'fluxbox') WM="FluxBox";;
+						'fvwm') WM="FVWM";;
+						'herbstluftwm') WM="herbstluftwm";;
+						'icewm') WM="IceWM";;
+						'kwin') WM="KWin";;
+						'metacity') WM="Metacity";;
+						'monsterwm') WM="monsterwm";;
+						'musca') WM="Musca";;
+						'notion') WM="Notion";;
+						'openbox') WM="OpenBox";;
+						'pekwm') WM="PekWM";;
+						'ratpoison') WM="Ratpoison";;
+						'sawfish') WM="Sawfish";;
+						'scrotwm') WM="ScrotWM";;
+						'spectrwm') WM="SpectrWM";;
+						'stumpwm') WM="StumpWM";;
+						'subtle') WM="subtle";;
+						'wmaker') WM="WindowMaker";;
+						'wmfs') WM="WMFS";;
+						'wmii') WM="wmii";;
+						'xfwm4') WM="Xfwm4";;
+						'i3') WM="i3";;
+						'xmonad') WM="XMonad";;
+					esac
+				fi
 
-		for each in "${wmnames[@]}"; do
-			PID="$(pgrep -U ${UID} $each)"
-			if [ "$PID" ]; then
-				case $each in
+				if [[ ${WM} != "Not Found" ]]; then
+					break 1
+				fi
+			done
+
+			if [[ ${WM} == "Not Found" ]]; then
+				if type -p xprop >/dev/null 2>&1; then
+					WM=$(xprop -root _NET_SUPPORTING_WM_CHECK)
+					if [[ "$WM" =~ 'not found' ]]; then
+						WM="Not Found"
+					elif [[ "$WM" =~ 'Not found' ]]; then
+						WM="Not Found"
+					elif [[ "$WM" =~ '[Ii]nvalid window id format' ]]; then
+						WM="Not Found"
+					elif [[ "$WM" =~ "no such" ]]; then
+						WM="Not Found"
+					else
+						WM=${WM//* }
+						WM=$(xprop -id ${WM} 8s _NET_WM_NAME)
+						WM=$(echo $(WM=${WM//*= }; echo ${WM//\"}))
+					fi
+				fi
+			else
+				if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
+					if [[ ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -gt 1 ]] || [[ ${BASH_VERSINFO[0]} -gt 4 ]]; then
+						WM=${WM,,}
+					else
+						WM="$(tr '[:upper:]' '[:lower:]' <<< ${WM})"
+					fi
+				else
+					WM="$(tr '[:upper:]' '[:lower:]' <<< ${WM})"
+				fi
+				case ${WM} in
 					'awesome') WM="Awesome";;
 					'beryl') WM="Beryl";;
-					'bspwm') WM="bspwm";;
 					'blackbox') WM="Blackbox";;
 					'cinnamon') WM="Cinnamon";;
 					'compiz') WM="Compiz";;
@@ -1214,6 +1301,9 @@ detectwm () {
 					'metacity') WM="Metacity";;
 					'monsterwm') WM="monsterwm";;
 					'musca') WM="Musca";;
+					*'gala'*) WM="Gala";;
+					'mutter'*) WM="Mutter";;
+					'gnome shell'*) WM="Mutter";;
 					'notion') WM="Notion";;
 					'openbox') WM="OpenBox";;
 					'pekwm') WM="PekWM";;
@@ -1227,81 +1317,10 @@ detectwm () {
 					'wmfs') WM="WMFS";;
 					'wmii') WM="wmii";;
 					'xfwm4') WM="Xfwm4";;
-					'i3') WM="i3";;
 					'xmonad') WM="XMonad";;
+					'i3') WM="i3";;
 				esac
 			fi
-
-			if [[ ${WM} != "Not Found" ]]; then
-				break 1
-			fi
-		done
-
-		if [[ ${WM} == "Not Found" ]]; then
-			if type -p xprop >/dev/null 2>&1; then
-				WM=$(xprop -root _NET_SUPPORTING_WM_CHECK)
-				if [[ "$WM" =~ 'not found' ]]; then
-					WM="Not Found"
-				elif [[ "$WM" =~ 'Not found' ]]; then
-					WM="Not Found"
-				elif [[ "$WM" =~ '[Ii]nvalid window id format' ]]; then
-					WM="Not Found"
-				elif [[ "$WM" =~ "no such" ]]; then
-					WM="Not Found"
-				else
-					WM=${WM//* }
-					WM=$(xprop -id ${WM} 8s _NET_WM_NAME)
-					WM=$(echo $(WM=${WM//*= }; echo ${WM//\"}))
-				fi
-			fi
-		else
-			if [[ ${BASH_VERSINFO[0]} -ge 4 ]]; then
-				if [[ ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -gt 1 ]] || [[ ${BASH_VERSINFO[0]} -gt 4 ]]; then
-					WM=${WM,,}
-				else
-					WM="$(tr '[:upper:]' '[:lower:]' <<< ${WM})"
-				fi
-			else
-				WM="$(tr '[:upper:]' '[:lower:]' <<< ${WM})"
-			fi
-			case ${WM} in
-				'awesome') WM="Awesome";;
-				'beryl') WM="Beryl";;
-				'blackbox') WM="Blackbox";;
-				'cinnamon') WM="Cinnamon";;
-				'compiz') WM="Compiz";;
-				'dminiwm') WM="dminiwm";;
-				'dwm') WM="dwm";;
-				'e16') WM="E16";;
-				'emerald') WM="Emerald";;
-				'enlightenment') WM="E17";;
-				'fluxbox') WM="FluxBox";;
-				'fvwm') WM="FVWM";;
-				'herbstluftwm') WM="herbstluftwm";;
-				'icewm') WM="IceWM";;
-				'kwin') WM="KWin";;
-				'metacity') WM="Metacity";;
-				'monsterwm') WM="monsterwm";;
-				'musca') WM="Musca";;
-				*'gala'*) WM="Gala";;
-				'mutter'*) WM="Mutter";;
-				'gnome shell'*) WM="Mutter";;
-				'notion') WM="Notion";;
-				'openbox') WM="OpenBox";;
-				'pekwm') WM="PekWM";;
-				'ratpoison') WM="Ratpoison";;
-				'sawfish') WM="Sawfish";;
-				'scrotwm') WM="ScrotWM";;
-				'spectrwm') WM="SpectrWM";;
-				'stumpwm') WM="StumpWM";;
-				'subtle') WM="subtle";;
-				'wmaker') WM="WindowMaker";;
-				'wmfs') WM="WMFS";;
-				'wmii') WM="wmii";;
-				'xfwm4') WM="Xfwm4";;
-				'xmonad') WM="XMonad";;
-				'i3') WM="i3";;
-			esac
 		fi
 	elif [[ ${distro} == "Mac OS X" && "${WM}" == "Not Found" ]]; then
 		if ps -U ${USER} | grep [F]inder >/dev/null 2>&1; then
@@ -1419,8 +1438,14 @@ detectwmtheme () {
 		'Xfwm4') if [ -f ${XDG_CONFIG_HOME:-${HOME}/.config}/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml ]; then Win_theme="$(xfconf-query -c xfwm4 -p /general/theme)"; fi;;
 		'XMonad') Win_theme="Not Present";;
 	esac
-
-	if [[ "${distro}" == "Cygwin" ]]; then
+	if [[ "${distro}" == "Mac OS X" ]]; then
+		themeNumber="$(defaults read NSGlobalDomain AppleAquaColorVariant)"
+		if themeNumber = 1; then
+			Win_theme="Blue"
+		else
+			Win_theme="Graphite"
+		fi
+	elif [[ "${distro}" == "Cygwin" ]]; then
 		themeFile="$(reg query 'HKCU\Software\Microsoft\Windows\CurrentVersion\Themes' /v 'CurrentTheme' | grep -o '[A-Z]:\\.*')"
 		Win_theme=$(echo $themeFile | awk -F"\\" '{print $NF}' | grep -o '[0-9A-z. ]*$' | grep -o '^[0-9A-z ]*')
 	fi
@@ -1435,242 +1460,241 @@ detectgtk () {
 	gtk3Theme="Not Found"
 	gtkIcons="Not Found"
 	gtkFont="Not Found"
-	case $DE in
-		'KDE'*) # Desktop Environment found as "KDE"
-			if type - p kde4-config >/dev/null 2>&1; then
-				KDE_CONFIG_DIR=$(kde4-config --localprefix)
-				if [[ -d ${KDE_CONFIG_DIR} ]]; then
-					if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
-						KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+	# Font detection (OS X)
+	if [[ ${distro} == "Mac OS X" ]]; then
+		gtk2Theme="Not Applicable"
+		gtk3Theme="Not Applicable"
+		gtkIcons="Not Applicable"
+		if ps -U ${USER} | grep [F]inder >/dev/null 2>&1; then
+			if [ -f ~/Library/Preferences/com.googlecode.iterm2.plist ]; then
+				gtkFont=$(str1=$(defaults read com.googlecode.iTerm2|grep -m 1 "Normal Font");echo ${str1:29:${#str1}-29-2})
+			fi
+		fi
+	else
+		case $DE in
+			'KDE'*) # Desktop Environment found as "KDE"
+				if type - p kde4-config >/dev/null 2>&1; then
+					KDE_CONFIG_DIR=$(kde4-config --localprefix)
+					if [[ -d ${KDE_CONFIG_DIR} ]]; then
+						if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
+							KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+						fi
+					fi
+				elif type -p kde5-config >/dev/null 2>&1; then
+					KDE_CONFIG_DIR=$(kde5-config --localprefix)
+					if [[ -d ${KDE_CONFIG_DIR} ]]; then
+						if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
+							KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+						fi
+					fi
+				elif type -p kde-config >/dev/null 2>&1; then
+					KDE_CONFIG_DIR=$(kde-config --localprefix)
+					if [[ -d ${KDE_CONFIG_DIR} ]]; then
+						if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
+							KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+						fi
 					fi
 				fi
-			elif type -p kde5-config >/dev/null 2>&1; then
-				KDE_CONFIG_DIR=$(kde5-config --localprefix)
-				if [[ -d ${KDE_CONFIG_DIR} ]]; then
-					if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
-						KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+
+				if [[ -n ${KDE_CONFIG_FILE} ]]; then
+					if grep -q "widgetStyle=" "${KDE_CONFIG_FILE}"; then
+						gtk2Theme=$(awk -F"=" '/widgetStyle=/ {print $2}' "${KDE_CONFIG_FILE}")
+					elif grep -q "colorScheme=" "${KDE_CONFIG_FILE}"; then
+						gtk2Theme=$(awk -F"=" '/colorScheme=/ {print $2}' "${KDE_CONFIG_FILE}")
+					fi
+
+					if grep -q "Theme=" "${KDE_CONFIG_FILE}"; then
+						gtkIcons=$(awk -F"=" '/Theme=/ {print $2}' "${KDE_CONFIG_FILE}")
+					fi
+
+					if grep -q "Font=" "${KDE_CONFIG_FILE}"; then
+						gtkFont=$(awk -F"=" '/font=/ {print $2}' "${KDE_CONFIG_FILE}")
 					fi
 				fi
-			elif type -p kde-config >/dev/null 2>&1; then
-				KDE_CONFIG_DIR=$(kde-config --localprefix)
-				if [[ -d ${KDE_CONFIG_DIR} ]]; then
-					if [[ -f "${KDE_CONFIG_DIR}/share/config/kdeglobals" ]]; then
-						KDE_CONFIG_FILE="${KDE_CONFIG_DIR}/share/config/kdeglobals"
+
+				if [[ -f $HOME/.gtkrc-2.0 ]]; then
+					gtk2Theme=$(grep '^gtk-theme-name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
+					gtk2Theme=${gtk2Theme//\"/}
+					gtkIcons=$(grep '^gtk-icon-theme-name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
+					gtkIcons=${gtkIcons//\"/}
+					gtkFont=$(grep 'font_name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
+					gtkFont=${gtkFont//\"/}
+				fi
+
+				if [[ -f $HOME/.config/gtk-3.0/settings.ini ]]; then
+					gtk3Theme=$(grep '^gtk-theme-name=' $HOME/.config/gtk-3.0/settings.ini | awk -F'=' '{print $2}')
+				fi
+			;;
+			'Cinnamon'*) # Desktop Environment found as "Cinnamon"
+				if type -p gsettings >/dev/null 2>&1; then
+					gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme)
+					gtk3Theme=${gtk3Theme//"'"}
+					gtk2Theme=${gtk3Theme}
+
+					gtkIcons=$(gsettings get org.gnome.desktop.interface icon-theme)
+					gtkIcons=${gtkIcons//"'"}
+					gtkFont=$(gsettings get org.gnome.desktop.interface font-name)
+					gtkFont=${gtkFont//"'"}
+					if [ "$background_detect" == "1" ]; then gtkBackground=$(gsettings get org.gnome.desktop.background picture-uri); fi
+				fi
+			;;
+			'GNOME'*|'Gnome'*|'Unity'*) # Desktop Environment found as "GNOME"
+				if type -p gsettings >/dev/null 2>&1; then
+					gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme)
+					gtk3Theme=${gtk3Theme//"'"}
+					gtk2Theme=${gtk3Theme}
+					gtkIcons=$(gsettings get org.gnome.desktop.interface icon-theme)
+					gtkIcons=${gtkIcons//"'"}
+					gtkFont=$(gsettings get org.gnome.desktop.interface font-name)
+					gtkFont=${gtkFont//"'"}
+					if [ "$background_detect" == "1" ]; then gtkBackground=$(gsettings get org.gnome.desktop.background picture-uri); fi
+				elif type -p gconftool-2 >/dev/null 2>&1; then
+					gtk2Theme=$(gconftool-2 -g /desktop/gnome/interface/gtk_theme)
+					gtkIcons=$(gconftool-2 -g /desktop/gnome/interface/icon_theme)
+					gtkFont=$(gconftool-2 -g /desktop/gnome/interface/font_name)
+					if [ "$background_detect" == "1" ]; then
+						gtkBackgroundFull=$(gconftool-2 -g /desktop/gnome/background/picture_filename)
+						gtkBackground=$(echo "$gtkBackgroundFull" | awk -F"/" '{print $NF}')
 					fi
 				fi
-			fi
-
-			if [[ -n ${KDE_CONFIG_FILE} ]]; then
-				if grep -q "widgetStyle=" "${KDE_CONFIG_FILE}"; then
-					gtk2Theme=$(awk -F"=" '/widgetStyle=/ {print $2}' "${KDE_CONFIG_FILE}")
-				elif grep -q "colorScheme=" "${KDE_CONFIG_FILE}"; then
-					gtk2Theme=$(awk -F"=" '/colorScheme=/ {print $2}' "${KDE_CONFIG_FILE}")
-				fi
-
-				if grep -q "Theme=" "${KDE_CONFIG_FILE}"; then
-					gtkIcons=$(awk -F"=" '/Theme=/ {print $2}' "${KDE_CONFIG_FILE}")
-				fi
-
-				if grep -q "Font=" "${KDE_CONFIG_FILE}"; then
-					gtkFont=$(awk -F"=" '/font=/ {print $2}' "${KDE_CONFIG_FILE}")
-				fi
-			fi
-
-			if [[ -f $HOME/.gtkrc-2.0 ]]; then
-				gtk2Theme=$(grep '^gtk-theme-name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
-				gtk2Theme=${gtk2Theme//\"/}
-				gtkIcons=$(grep '^gtk-icon-theme-name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
-				gtkIcons=${gtkIcons//\"/}
-				gtkFont=$(grep 'font_name' $HOME/.gtkrc-2.0 | awk -F'=' '{print $2}')
-				gtkFont=${gtkFont//\"/}
-			fi
-
-			if [[ -f $HOME/.config/gtk-3.0/settings.ini ]]; then
-				gtk3Theme=$(grep '^gtk-theme-name=' $HOME/.config/gtk-3.0/settings.ini | awk -F'=' '{print $2}')
-			fi
-		;;
-		'Cinnamon'*) # Desktop Environment found as "Cinnamon"
-			if type -p gsettings >/dev/null 2>&1; then
-				gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme)
-				gtk3Theme=${gtk3Theme//"'"}
+			;;
+			'MATE'*) # MATE desktop environment
+				#if type -p gsettings >/dev/null 2&>1; then
+				gtk3Theme=$(gsettings get org.mate.interface gtk-theme)
+				# gtk3Theme=${gtk3Theme//"'"}
 				gtk2Theme=${gtk3Theme}
+				gtkIcons=$(gsettings get org.mate.interface icon-theme)
+				gtkIcons=${gtkIcons//"'"}
+				gtkFont=$(gsettings get org.mate.interface font-name)
+				gtkFont=${gtkFont//"'"}
+				#fi
+			;;
+			'XFCE'*) # Desktop Environment found as "XFCE"
+				if type -p xfconf-query >/dev/null 2>&1; then
+					gtk2Theme=$(xfconf-query -c xsettings -p /Net/ThemeName)
+				fi
 
-				gtkIcons=$(gsettings get org.gnome.desktop.interface icon-theme)
-				gtkIcons=${gtkIcons//"'"}
-				gtkFont=$(gsettings get org.gnome.desktop.interface font-name)
-				gtkFont=${gtkFont//"'"}
-				if [ "$background_detect" == "1" ]; then gtkBackground=$(gsettings get org.gnome.desktop.background picture-uri); fi
-			fi
-		;;
-		'GNOME'*|'Gnome'*|'Unity'*) # Desktop Environment found as "GNOME"
-			if type -p gsettings >/dev/null 2>&1; then
-				gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme)
-				gtk3Theme=${gtk3Theme//"'"}
-				gtk2Theme=${gtk3Theme}
-				gtkIcons=$(gsettings get org.gnome.desktop.interface icon-theme)
-				gtkIcons=${gtkIcons//"'"}
-				gtkFont=$(gsettings get org.gnome.desktop.interface font-name)
-				gtkFont=${gtkFont//"'"}
-				if [ "$background_detect" == "1" ]; then gtkBackground=$(gsettings get org.gnome.desktop.background picture-uri); fi
-			elif type -p gconftool-2 >/dev/null 2>&1; then
-				gtk2Theme=$(gconftool-2 -g /desktop/gnome/interface/gtk_theme)
-				gtkIcons=$(gconftool-2 -g /desktop/gnome/interface/icon_theme)
-				gtkFont=$(gconftool-2 -g /desktop/gnome/interface/font_name)
+				if type -p xfconf-query >/dev/null 2>&1; then
+					gtkIcons=$(xfconf-query -c xsettings -p /Net/IconThemeName)
+				fi
+
+				if type -p xfconf-query >/dev/null 2>&1; then
+					gtkFont=$(xfconf-query -c xsettings -p /Gtk/FontName)
+				fi
+			;;
+			'LXDE'*)
+				if [ -f ${XDG_CONFIG_HOME:-${HOME}/.config}/lxde/config ]; then
+					lxdeconf="/lxde/config"
+				elif [ "$distro" == "Trisquel" ]; then
+					lxdeconf=""
+				elif [ "$distro" == "FreeBSD" ]; then
+					lxdeconf=""
+				else
+					lxdeconf="/lxsession/LXDE/desktop.conf"
+				fi
+				# TODO: Clean me.
+				if grep -q "sNet\/ThemeName" ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
+					gtk2Theme=$(awk -F'=' '/sNet\/ThemeName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
+				fi
+
+				if grep -q IconThemeName ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
+					gtkIcons=$(awk -F'=' '/sNet\/IconThemeName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
+				fi
+
+				if grep -q FontName ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
+					gtkFont=$(awk -F'=' '/sGtk\/FontName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
+				fi
+			;;
+
+			# /home/me/.config/rox.sourceforge.net/ROX-Session/Settings.xml
+
+			*)	# Lightweight or No DE Found
+				if [ -f $HOME/.gtkrc-2.0 ]; then
+					if grep -q gtk-theme $HOME/.gtkrc-2.0; then
+						gtk2Theme=$(awk -F'"' '/^gtk-theme/ {print $2}' $HOME/.gtkrc-2.0)
+					fi
+
+					if grep -q icon-theme $HOME/.gtkrc-2.0; then
+						gtkIcons=$(awk -F'"' '/^gtk-icon-theme/ {print $2}' $HOME/.gtkrc-2.0)
+					fi
+
+					if grep -q font $HOME/.gtkrc-2.0; then
+						gtkFont=$(awk -F'"' '/^gtk-font-name/ {print $2}' $HOME/.gtkrc-2.0)
+					fi
+				fi
+				# $HOME/.gtkrc.mine theme detect only
+				if [ -f $HOME/.gtkrc.mine ]; then
+					if grep -q "^include" $HOME/.gtkrc.mine; then
+						gtk2Theme=$(grep '^include.*gtkrc' $HOME/.gtkrc.mine | awk -F "/" '{ print $5 }')
+					fi
+					if grep -q "^gtk-icon-theme-name" $HOME/.gtkrc.mine; then
+						gtkIcons=$(grep '^gtk-icon-theme-name' $HOME/.gtkrc.mine | awk -F '"' '{print $2}')
+					fi
+				fi
+				# /etc/gtk-2.0/gtkrc compatability
+				if [[ -f /etc/gtk-2.0/gtkrc && ! -f $HOME/.gtkrc-2.0 && ! -f $HOME/.gtkrc.mine ]]; then
+					if grep -q gtk-theme-name /etc/gtk-2.0/gtkrc; then
+						gtk2Theme=$(awk -F'"' '/^gtk-theme-name/ {print $2}' /etc/gtk-2.0/gtkrc)
+					fi
+					if grep -q gtk-fallback-theme-name /etc/gtk-2.0/gtkrc  && ! [ "x$gtk2Theme" = "x" ]; then
+						gtk2Theme=$(awk -F'"' '/^gtk-fallback-theme-name/ {print $2}' /etc/gtk-2.0/gtkrc)
+					fi
+
+					if grep -q icon-theme /etc/gtk-2.0/gtkrc; then
+						gtkIcons=$(awk -F'"' '/^icon-theme/ {print $2}' /etc/gtk-2.0/gtkrc)
+					fi
+					if  grep -q gtk-fallback-icon-theme /etc/gtk-2.0/gtkrc  && ! [ "x$gtkIcons" = "x" ]; then
+						gtkIcons=$(awk -F'"' '/^gtk-fallback-icon-theme/ {print $2}' /etc/gtk-2.0/gtkrc)
+					fi
+
+					if grep -q font /etc/gtk-2.0/gtkrc; then
+						gtkFont=$(awk -F'"' '/^gtk-font-name/ {print $2}' /etc/gtk-2.0/gtkrc)
+					fi
+				fi
+
+				# EXPERIMENTAL gtk3 Theme detection
+				if [ -f $HOME/.config/gtk-3.0/settings.ini ]; then
+					if grep -q gtk-theme-name $HOME/.config/gtk-3.0/settings.ini; then
+						gtk3Theme=$(awk -F'=' '/^gtk-theme-name/ {print $2}' $HOME/.config/gtk-3.0/settings.ini)
+					fi
+				fi
+
+				# Proper gtk3 Theme detection
+				#if type -p gsettings >/dev/null 2>&1; then
+				#	gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null)
+				#	gtk3Theme=${gtk3Theme//"'"}
+				#fi
+
+				# ROX-Filer icon detect only
+				if [ -a ${XDG_CONFIG_HOME:-${HOME}/.config}/rox.sourceforge.net/ROX-Filer/Options ]; then
+					gtkIcons=$(awk -F'[>,<]' '/^icon_theme/ {print $3}' ${XDG_CONFIG_HOME:-${HOME}/.config}/rox.sourceforge.net/ROX-Filer/Options)
+				fi
+
+				# E17 detection
+				if [ $E_ICON_THEME ]; then
+					gtkIcons=${E_ICON_THEME}
+					gtk2Theme="Not available."
+					gtkFont="Not available."
+				fi
+
+				# Background Detection (feh, nitrogen)
 				if [ "$background_detect" == "1" ]; then
-					gtkBackgroundFull=$(gconftool-2 -g /desktop/gnome/background/picture_filename)
-					gtkBackground=$(echo "$gtkBackgroundFull" | awk -F"/" '{print $NF}')
-				fi
-			fi
-		;;
-		'MATE'*) # MATE desktop environment
-			#if type -p gsettings >/dev/null 2&>1; then
-			gtk3Theme=$(gsettings get org.mate.interface gtk-theme)
-			# gtk3Theme=${gtk3Theme//"'"}
-			gtk2Theme=${gtk3Theme}
-			gtkIcons=$(gsettings get org.mate.interface icon-theme)
-			gtkIcons=${gtkIcons//"'"}
-			gtkFont=$(gsettings get org.mate.interface font-name)
-			gtkFont=${gtkFont//"'"}
-			#fi
-		;;
-		'XFCE'*) # Desktop Environment found as "XFCE"
-			if type -p xfconf-query >/dev/null 2>&1; then
-				gtk2Theme=$(xfconf-query -c xsettings -p /Net/ThemeName)
-			fi
-
-			if type -p xfconf-query >/dev/null 2>&1; then
-				gtkIcons=$(xfconf-query -c xsettings -p /Net/IconThemeName)
-			fi
-
-			if type -p xfconf-query >/dev/null 2>&1; then
-				gtkFont=$(xfconf-query -c xsettings -p /Gtk/FontName)
-			fi
-		;;
-		'LXDE'*)
-			if [ -f ${XDG_CONFIG_HOME:-${HOME}/.config}/lxde/config ]; then
-				lxdeconf="/lxde/config"
-			elif [ $distro == "Trisquel" ]; then
-				lxdeconf=""
-			elif [ "$distro" == "FreeBSD" ]; then
-				lxdeconf=""
-			else
-				lxdeconf="/lxsession/LXDE/desktop.conf"
-			fi
-			# TODO: Clean me.
-			if grep -q "sNet\/ThemeName" ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
-				gtk2Theme=$(awk -F'=' '/sNet\/ThemeName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
-			fi
-
-			if grep -q IconThemeName ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
-				gtkIcons=$(awk -F'=' '/sNet\/IconThemeName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
-			fi
-
-			if grep -q FontName ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf 2>/dev/null; then
-				gtkFont=$(awk -F'=' '/sGtk\/FontName/ {print $2}' ${XDG_CONFIG_HOME:-${HOME}/.config}$lxdeconf)
-			fi
-		;;
-
-		# /home/me/.config/rox.sourceforge.net/ROX-Session/Settings.xml
-
-		*)	# Lightweight or No DE Found
-			if [ -f $HOME/.gtkrc-2.0 ]; then
-				if grep -q gtk-theme $HOME/.gtkrc-2.0; then
-					gtk2Theme=$(awk -F'"' '/^gtk-theme/ {print $2}' $HOME/.gtkrc-2.0)
-				fi
-
-				if grep -q icon-theme $HOME/.gtkrc-2.0; then
-					gtkIcons=$(awk -F'"' '/^gtk-icon-theme/ {print $2}' $HOME/.gtkrc-2.0)
-				fi
-
-				if grep -q font $HOME/.gtkrc-2.0; then
-					gtkFont=$(awk -F'"' '/^gtk-font-name/ {print $2}' $HOME/.gtkrc-2.0)
-				fi
-			fi
-			# $HOME/.gtkrc.mine theme detect only
-			if [ -f $HOME/.gtkrc.mine ]; then
-				if grep -q "^include" $HOME/.gtkrc.mine; then
-					gtk2Theme=$(grep '^include.*gtkrc' $HOME/.gtkrc.mine | awk -F "/" '{ print $5 }')
-				fi
-				if grep -q "^gtk-icon-theme-name" $HOME/.gtkrc.mine; then
-					gtkIcons=$(grep '^gtk-icon-theme-name' $HOME/.gtkrc.mine | awk -F '"' '{print $2}')
-				fi
-			fi
-			# /etc/gtk-2.0/gtkrc compatability
-			if [[ -f /etc/gtk-2.0/gtkrc && ! -f $HOME/.gtkrc-2.0 && ! -f $HOME/.gtkrc.mine ]]; then
-				if grep -q gtk-theme-name /etc/gtk-2.0/gtkrc; then
-					gtk2Theme=$(awk -F'"' '/^gtk-theme-name/ {print $2}' /etc/gtk-2.0/gtkrc)
-				fi
-				if grep -q gtk-fallback-theme-name /etc/gtk-2.0/gtkrc  && ! [ "x$gtk2Theme" = "x" ]; then
-					gtk2Theme=$(awk -F'"' '/^gtk-fallback-theme-name/ {print $2}' /etc/gtk-2.0/gtkrc)
-				fi
-
-				if grep -q icon-theme /etc/gtk-2.0/gtkrc; then
-					gtkIcons=$(awk -F'"' '/^icon-theme/ {print $2}' /etc/gtk-2.0/gtkrc)
-				fi
-				if  grep -q gtk-fallback-icon-theme /etc/gtk-2.0/gtkrc  && ! [ "x$gtkIcons" = "x" ]; then
-					gtkIcons=$(awk -F'"' '/^gtk-fallback-icon-theme/ {print $2}' /etc/gtk-2.0/gtkrc)
-				fi
-
-				if grep -q font /etc/gtk-2.0/gtkrc; then
-					gtkFont=$(awk -F'"' '/^gtk-font-name/ {print $2}' /etc/gtk-2.0/gtkrc)
-				fi
-			fi
-
-			# EXPERIMENTAL gtk3 Theme detection
-			if [ -f $HOME/.config/gtk-3.0/settings.ini ]; then
-				if grep -q gtk-theme-name $HOME/.config/gtk-3.0/settings.ini; then
-					gtk3Theme=$(awk -F'=' '/^gtk-theme-name/ {print $2}' $HOME/.config/gtk-3.0/settings.ini)
-				fi
-			fi
-
-			# Proper gtk3 Theme detection
-			#if [ $(which gsettings) ] && [ "$distro" != "Mac OS X" ]; then
-			#	gtk3Theme="$(gsettings get org.gnome.desktop.interface gtk-theme | tr -d \"\'\")"
-			#fi
-			if type -p gsettings >/dev/null 2>&1; then
-				gtk3Theme=$(gsettings get org.gnome.desktop.interface gtk-theme 2>/dev/null)
-				gtk3Theme=${gtk3Theme//"'"}
-			fi
-
-			# ROX-Filer icon detect only
-			if [ -a ${XDG_CONFIG_HOME:-${HOME}/.config}/rox.sourceforge.net/ROX-Filer/Options ]; then
-				gtkIcons=$(awk -F'[>,<]' '/^icon_theme/ {print $3}' ${XDG_CONFIG_HOME:-${HOME}/.config}/rox.sourceforge.net/ROX-Filer/Options)
-			fi
-
-			# E17 detection
-			if [ $E_ICON_THEME ]; then
-				gtkIcons=${E_ICON_THEME}
-				gtk2Theme="Not available."
-				gtkFont="Not available."
-			fi
-
-			# Background Detection (feh, nitrogen)
-			if [ "$background_detect" == "1" ]; then
-				if [ -a $HOME/.fehbg ]; then
-					gtkBackgroundFull=$(awk -F"'" '/feh --bg/{print $2}' $HOME/.fehbg 2>/dev/null)
-					gtkBackground=$(echo "$gtkBackgroundFull" | awk -F"/" '{print $NF}')
-				elif [ -a ${XDG_CONFIG_HOME:-${HOME}/.config}/nitrogen/bg-saved.cfg ]; then
-					gtkBackground=$(awk -F"/" '/file=/ {print $NF}' ${XDG_CONFIG_HOME:-${HOME}/.config}/nitrogen/bg-saved.cfg)
-				fi
-			fi
-
-			# Font detection (OS X)
-			if [[ ${distro} == "Mac OS X" ]]; then
-				if ps -U ${USER} | grep [F]inder >/dev/null 2>&1; then
-					gtkFont="Not Found"
-					if [ -f ~/Library/Preferences/com.googlecode.iterm2.plist ]; then
-						gtkFont=$(str1=$(defaults read com.googlecode.iTerm2|grep -m 1 "Normal Font");echo ${str1:29:${#str1}-29-2})
+					if [ -a $HOME/.fehbg ]; then
+						gtkBackgroundFull=$(awk -F"'" '/feh --bg/{print $2}' $HOME/.fehbg 2>/dev/null)
+						gtkBackground=$(echo "$gtkBackgroundFull" | awk -F"/" '{print $NF}')
+					elif [ -a ${XDG_CONFIG_HOME:-${HOME}/.config}/nitrogen/bg-saved.cfg ]; then
+						gtkBackground=$(awk -F"/" '/file=/ {print $NF}' ${XDG_CONFIG_HOME:-${HOME}/.config}/nitrogen/bg-saved.cfg)
 					fi
 				fi
-			fi
 
-			if [ "$distro" == "Cygwin" -a "$gtkFont" == "Not Found" ]; then
-				if [ -f $HOME/.minttyrc ]; then
-					gtkFont="$(cat $HOME/.minttyrc | grep '^Font=.*' | grep -o '[0-9A-z ]*$')"
+				if [ "$distro" == "Cygwin" -a "$gtkFont" == "Not Found" ]; then
+					if [ -f $HOME/.minttyrc ]; then
+						gtkFont="$(cat $HOME/.minttyrc | grep '^Font=.*' | grep -o '[0-9A-z ]*$')"
+					fi
 				fi
-			fi
-		;;
-	esac
+			;;
+		esac
+	fi
 	if [[ "$verbosity" -eq "1" ]]; then
 		verboseOut "Finding GTK2 theme...found as '$gtk2Theme'"
 		verboseOut "Finding GTK3 theme...found as '$gtk3Theme'"
@@ -1852,7 +1876,7 @@ asciiText () {
 "                               %s")
 		;;
 
-		"Ubuntu")
+		"Ubuntu-3color")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'white') # White
 				c2=$(getColor 'light red') # Light Red
@@ -1878,6 +1902,33 @@ asciiText () {
 "$c2               /osyyyyyyo$c3++ooo+++/    %s"
 "$c2                   \`\`\`\`\` $c3+oo+++o\:    %s"
 "$c3                          \`oo++.      %s")
+		;;
+
+		"Ubuntu")
+			if [[ "$no_color" != "1" ]]; then
+				if [[ $(tput colors) -eq "256" ]]; then c1=$(getColor 'orange') # Orange if 256 support
+				else c1=$(getColor 'yellow'); fi # Bold Yellow
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c1="${my_lcolor}"; c1="${my_lcolor}"; fi
+			startline="0"
+			fulloutput=("$c1                          ./+o+-       %s"
+"$c1                  yyyyy- $c1-yyyyyy+     %s"
+"$c1               $c1://+//////$c1-yyyyyyo     %s"
+"$c1           .++ $c1.:/++++++/-$c1.+sss/\`     %s"
+"$c1         .:++o:  $c1/++++++++/:--:/-     %s"
+"$c1        o:+o+:++.$c1\`..\`\`\`.-/oo+++++/    %s"
+"$c1       .:+o:+o/.$c1          \`+sssoo+/   %s"
+"$c1  .++/+:$c1+oo+o:\`$c1             /sssooo.  %s"
+"$c1 /+++//+:$c1\`oo+o$c1               /::--:.  %s"
+"$c1 \+/+o+++$c1\`o++o$c1               ++////.  %s"
+"$c1  .++.o+$c1++oo+:\`$c1             /dddhhh.  %s"
+"$c1       .+.o+oo:.$c1          \`oddhhhh+   %s"
+"$c1        \+.++o+o\`\`-\`\`$c1\`\`.:ohdhhhhh+    %s"
+"$c1         \`:o+++ $c1\`ohhhhhhhhyo++os:     %s"
+"$c1           .o:$c1\`.syhhhhhhh/$c1.oo++o\`     %s"
+"$c1               /osyyyyyyo$c1++ooo+++/    %s"
+"$c1                   \`\`\`\`\` $c1+oo+++o\:    %s"
+"$c1                          \`oo++.      %s")
 		;;
 
 		"Debian")
@@ -2653,7 +2704,7 @@ asciiText () {
 
 
 
-		"elementary OS")
+		"elementary OS"|"elementary os")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'white') # White
 			fi
@@ -2852,6 +2903,34 @@ asciiText () {
 "${c2}                   ''")
 		;;
 
+
+		"Jiyuu Linux")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'light blue') # Light Blue
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
+			startline="0"
+			fulloutput=("${c1}+++++++++++++++++++++++.        %s"
+"${c1}ss:-......-+so/:----.os-       %s"
+"${c1}ss        +s/        os-       %s"
+"${c1}ss       :s+         os-       %s"
+"${c1}ss       os.         os-       %s"
+"${c1}ss      .so          os-       %s"
+"${c1}ss      :s+          os-       %s"
+"${c1}ss      /s/          os-       %s"
+"${c1}ss      /s:          os-       %s"
+"${c1}ss      +s-          os-       %s"
+"${c1}ss-.....os:..........os-       %s"
+"${c1}++++++++os+++++++++oooo.       %s"
+"${c1}        os.     ./oo/.         %s"
+"${c1}        os.   ./oo:            %s"
+"${c1}        os. ./oo:              %s"
+"${c1}        os oo+-                %s"
+"${c1}        os+-                   %s"
+"${c1}        /.                     %s")
+		;;
+
+
 		*)
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'white') # White
@@ -2955,13 +3034,13 @@ infoDisplay () {
 	myascii="${distro}"
 	[[ "${asc_distro}" ]] && myascii="${asc_distro}"
 	case ${myascii} in
-		"Arch Linux - Old"|"Fedora"|"Mandriva"|"Mandrake"|"Chakra"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux") labelcolor=$(getColor 'light blue');;
+		"Arch Linux - Old"|"Fedora"|"Mandriva"|"Mandrake"|"Chakra"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux") labelcolor=$(getColor 'light blue');;
 		"Arch Linux"|"Frugalware"|"Mageia") labelcolor=$(getColor 'light cyan');;
 		"Mint"|"LMDE"|"openSUSE"|"LinuxDeepin"|"DragonflyBSD"|"Manjaro"|"Manjaro-tree"|"Android") labelcolor=$(getColor 'light green');;
-		"Ubuntu"|"FreeBSD"|"Debian"|"BSD"|"Red Hat Linux"|"Peppermint"|"Cygwin"|"Fuduntu"|"NetBSD"|"Scientific Linux"|"DragonFlyBSD"|"BackTrack Linux") labelcolor=$(getColor 'light red');;
-		"CrunchBang"|"SolusOS"|"Viperr"|"elementary OS") labelcolor=$(getColor 'dark grey');;
+		"Ubuntu-3color"|"FreeBSD"|"Debian"|"BSD"|"Red Hat Linux"|"Peppermint"|"Cygwin"|"Fuduntu"|"NetBSD"|"Scientific Linux"|"DragonFlyBSD"|"BackTrack Linux") labelcolor=$(getColor 'light red');;
+		"CrunchBang"|"SolusOS"|"Viperr"|"elementary"*) labelcolor=$(getColor 'dark grey');;
 		"Gentoo"|"ParabolaGNU/Linux-libre"|"Funtoo"|"Funtoo-text") labelcolor=$(getColor 'light purple');;
-		"CentOS"|*) labelcolor=$(getColor 'yellow');;
+		"CentOS"|"Ubuntu"|*) labelcolor=$(getColor 'yellow');;
 	esac
 	[[ "$my_lcolor" ]] && labelcolor="${my_lcolor}"
 	if [[ "$no_color" == "1" ]]; then labelcolor=""; bold=""; c0=""; textcolor=""; fi
@@ -3023,11 +3102,6 @@ infoDisplay () {
 					fi
 			if [[ "${display[@]}" =~ "gtk" ]]; then
 				if [ "$distro" == "Mac OS X" ]; then
-					if [ "$gtkIcons" != "Not Found" ]; then
-						if [ -n "$gtkIcons" ]; then 
-							myicons=$(echo -e "$labelcolor Icon Theme:$textcolor $gtkIcons"); out_array=( "${out_array[@]}" "$myicons" ); ((display_index++))
-						fi
-					fi
 					if [ "$gtkFont" != "Not Found" ]; then
 						if [ -n "$gtkFont" ]; then 
 							myfont=$(echo -e "$labelcolor Font:$textcolor $gtkFont"); out_array=( "${out_array[@]}" "$myfont" ); ((display_index++))
@@ -3036,14 +3110,17 @@ infoDisplay () {
 				else
 					if [ "$gtk2Theme" != "Not Found" ]; then
 						if [ -n "$gtk2Theme" ]; then 
-							mygtk2=$(echo -e "$labelcolor GTK2 Theme:$textcolor $gtk2Theme"); out_array=( "${out_array[@]}" "$mygtk2" ); ((display_index++))
+							mygtk2="${gtk2Theme} [GTK2]"
 						fi
 					fi
 					if [ "$gtk3Theme" != "Not Found" ]; then
-						if [ -n "$gtk3Theme" ]; then 
-							mygtk3=$(echo -e "$labelcolor GTK3 Theme:$textcolor $gtk3Theme"); out_array=( "${out_array[@]}" "$mygtk3" ); ((display_index++))
+						if [ -n "$mygtk2" ]; then 
+							mygtk3=", ${gtk3Theme} [GTK3]"
+						else
+							mygtk3="${gtk3Theme} [GTK3]"
 						fi
 					fi
+					mygtk=$(echo -e "$labelcolor GTK Theme:$textcolor ${mygtk2}${mygtk3}"); out_array=( "${out_array[@]}" "$mygtk" ); ((display_index++))
 					if [ "$gtkIcons" != "Not Found" ]; then
 						if [ -n "$gtkIcons" ]; then 
 							myicons=$(echo -e "$labelcolor Icon Theme:$textcolor $gtkIcons"); out_array=( "${out_array[@]}" "$myicons" ); ((display_index++))
@@ -3153,7 +3230,11 @@ for i in "${display[@]}"; do
 	else
 		if [[ "${display[*]}" =~ "$i" ]]; then 
 			if [[ "$errorSuppress" == "1" ]]; then detect${i} 2>/dev/null
-			else detect${i}; fi
+			else 
+				exec 3> >(stderrOut)
+				detect${i} 2>&3
+				exec 3>&-
+			fi
 		fi
 	fi
 done
