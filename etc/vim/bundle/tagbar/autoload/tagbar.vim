@@ -59,6 +59,7 @@ let s:short_help      = 1
 let s:nearby_disabled = 0
 
 let s:window_expanded   = 0
+let s:expand_bufnr = -1
 let s:window_pos = {
     \ 'pre'  : { 'x' : 0, 'y' : 0 },
     \ 'post' : { 'x' : 0, 'y' : 0 }
@@ -966,12 +967,21 @@ function! s:CreateAutocommands() abort
         autocmd WinEnter   __Tagbar__ call s:SetStatusLine('current')
         autocmd WinLeave   __Tagbar__ call s:SetStatusLine('noncurrent')
 
+        autocmd WinEnter * if bufwinnr('__Tagbar__') == -1 |
+                         \     call s:ShrinkIfExpanded() |
+                         \ endif
+
         autocmd BufWritePost * call
                     \ s:AutoUpdate(fnamemodify(expand('<afile>'), ':p'), 1)
+        " BufReadPost is needed for reloading the current buffer if the file
+        " was changed by an external command; see commit 17d199f
         autocmd BufReadPost,BufEnter,FileType * call
                     \ s:AutoUpdate(fnamemodify(expand('<afile>'), ':p'), 0)
         autocmd BufDelete,BufUnload,BufWipeout * call
                     \ s:known_files.rm(fnamemodify(expand('<afile>'), ':p'))
+
+        autocmd QuickFixCmdPre  * let s:tagbar_qf_active = 1
+        autocmd QuickFixCmdPost * unlet s:tagbar_qf_active
 
         autocmd VimEnter * call s:CorrectFocusOnStartup()
     augroup END
@@ -1808,6 +1818,10 @@ function! s:InitWindow(autoclose) abort
 
     let &cpoptions = cpoptions_save
 
+    if g:tagbar_expand
+        let s:expand_bufnr = bufnr('%')
+    endif
+
     call s:LogDebugMessage('InitWindow finished')
 endfunction
 
@@ -1861,27 +1875,7 @@ function! s:CloseWindow() abort
         endfor
     endif
 
-    " If the Vim window has been expanded, and Tagbar is not open in any other
-    " tabpages, shrink the window again
-    if s:window_expanded
-        let tablist = []
-        for i in range(tabpagenr('$'))
-            call extend(tablist, tabpagebuflist(i + 1))
-        endfor
-
-        if index(tablist, tagbarbufnr) == -1
-            let &columns -= g:tagbar_width + 1
-            let s:window_expanded = 0
-            " Only restore window position if it is available and if the
-            " window hasn't been moved manually after the expanding
-            if getwinposx() != -1 &&
-             \ getwinposx() == s:window_pos.post.x &&
-             \ getwinposy() == s:window_pos.post.y
-               execute 'winpos ' . s:window_pos.pre.x .
-                           \ ' ' . s:window_pos.pre.y
-            endif
-        endif
-    endif
+    call s:ShrinkIfExpanded()
 
     if s:autocommands_done && !s:statusline_in_use
         autocmd! TagbarAutoCmds
@@ -1889,6 +1883,34 @@ function! s:CloseWindow() abort
     endif
 
     call s:LogDebugMessage('CloseWindow finished')
+endfunction
+
+" s:ShrinkIfExpanded() {{{2
+" If the Vim window has been expanded, and Tagbar is not open in any other
+" tabpages, shrink the window again
+function! s:ShrinkIfExpanded() abort
+    if !s:window_expanded || &filetype == 'tagbar' || s:expand_bufnr == -1
+        return
+    endif
+
+    let tablist = []
+    for i in range(tabpagenr('$'))
+        call extend(tablist, tabpagebuflist(i + 1))
+    endfor
+
+    if index(tablist, s:expand_bufnr) == -1
+        let &columns -= g:tagbar_width + 1
+        let s:window_expanded = 0
+        let s:expand_bufnr = -1
+        " Only restore window position if it is available and if the
+        " window hasn't been moved manually after the expanding
+        if getwinposx() != -1 &&
+         \ getwinposx() == s:window_pos.post.x &&
+         \ getwinposy() == s:window_pos.post.y
+           execute 'winpos ' . s:window_pos.pre.x .
+                       \ ' ' . s:window_pos.pre.y
+        endif
+    endif
 endfunction
 
 " s:ZoomWindow() {{{2
@@ -2893,7 +2915,12 @@ function! s:HighlightTag(openfolds, ...) abort
     let foldpat = '[' . s:icon_open . s:icon_closed . ' ]'
     let pattern = '/^\%' . tagline . 'l\s*' . foldpat . '[-+# ]\zs[^( ]\+\ze/'
     call s:LogDebugMessage("Highlight pattern: '" . pattern . "'")
-    execute 'match TagbarHighlight ' . pattern
+    if exists('g:syntax_on') " Safeguard in case syntax highlighting is disabled
+        execute 'match TagbarHighlight ' . pattern
+    else
+        execute 'match Search ' . pattern
+    endif
+
 
     if a:0 <= 1 " no line explicitly given, so assume we were in the file window
         call s:winexec(prevwinnr . 'wincmd w')
@@ -3164,6 +3191,12 @@ endfunction
 " s:AutoUpdate() {{{2
 function! s:AutoUpdate(fname, force) abort
     call s:LogDebugMessage('AutoUpdate called [' . a:fname . ']')
+
+    " This file is being loaded due to a quickfix command like vimgrep, so
+    " don't process it
+    if exists('s:tagbar_qf_active')
+        return
+    endif
 
     " Get the filetype of the file we're about to process
     let bufnr = bufnr(a:fname)
