@@ -205,7 +205,7 @@ task :env do
       { :base => "#{@vim}/xoria256.vim",           :branch => %w[master],      :files => :pathogen },
 
       {
-        :base   => "#{@src}/firefox/vimperator-labs",
+        :base   => "#{@src}/firefox-addons/vimperator-labs",
         :before => lambda { |proj|
           if proj.fetch
             system '{ git checkout master && git-hg pull --rebase --force; } >/dev/null 2>&1'
