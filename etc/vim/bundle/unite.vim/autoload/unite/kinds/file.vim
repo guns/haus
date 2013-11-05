@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: file.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 09 Oct 2013.
+" Last Modified: 05 Nov 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -110,6 +110,7 @@ function! s:kind.action_table.preview.func(candidate) "{{{
     let winnr = winnr()
     wincmd P
     doautoall BufRead
+    setlocal nomodified
     execute prev_winnr.'wincmd w'
     execute winnr.'wincmd w'
   endif
@@ -210,12 +211,38 @@ function! s:kind.action_table.diff.func(candidates)
 
   if len(a:candidates) == 1
     " :vimdiff with current buffer.
+    let winnr = winnr()
+
     if &filetype ==# 'vimfiler'
       " Move to other window.
       wincmd w
     endif
 
-    tabnew %
+    try
+      " Use selected candidates or current buffer.
+      if &filetype ==# 'vimfiler'
+        let file = get(vimfiler#get_marked_files(), 0, vimfiler#get_file())
+        if empty(file) || isdirectory(file.action__path)
+          echo 'Invalid candidate is detected.'
+          return
+        elseif len(vimfiler#get_marked_files()) > 1
+          echo 'Too many candidates!'
+          return
+        endif
+
+        let path = file.action__path
+      else
+        let path = bufname('%')
+      endif
+    finally
+      if winnr() != winnr
+        " Restore window.
+        execute winnr.'wincmd w'
+      endif
+    endtry
+
+    execute 'tabnew' path
+
     let t:title = 'vimdiff'
     call s:execute_command('vert diffsplit', a:candidates[0])
   elseif len(a:candidates) == 2
@@ -344,7 +371,9 @@ function! s:kind.action_table.vimfiler__move.func(candidates) "{{{
             \ candidates, dest_dir, 'move')
     endif
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -400,7 +429,9 @@ function! s:kind.action_table.vimfiler__copy.func(candidates) "{{{
       call unite#kinds#file#do_action(a:candidates, dest_dir, 'copy')
     endif
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 function! s:check_copy_func(filename) "{{{
@@ -471,7 +502,9 @@ function! s:kind.action_table.vimfiler__rename.func(candidate) "{{{
       call unite#kinds#file#do_rename(a:candidate.action__path, filename)
     endif
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -529,7 +562,9 @@ function! s:kind.action_table.vimfiler__newfile.func(candidate) "{{{
       execute 'doautocmd BufNewFile' fnameescape(filename)
     endfor
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -575,7 +610,9 @@ function! s:kind.action_table.vimfiler__shellcmd.func(candidate) "{{{
       call unite#start_script([['output', output]])
     endif
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -624,7 +661,9 @@ function! s:kind.action_table.vimfiler__mkdir.func(candidates) "{{{
       call unite#sources#file#move_files(dirname, a:candidates)
     endif
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -654,7 +693,9 @@ function! s:kind.action_table.vimfiler__execute.func(candidates) "{{{
       call s:System.open(path)
     endfor
   finally
-    lcd `=current_dir`
+    if isdirectory(current_dir)
+      lcd `=current_dir`
+    endif
   endtry
 endfunction"}}}
 
@@ -683,7 +724,8 @@ function! s:execute_command(command, candidate) "{{{
   endif
 
   call unite#util#smart_execute_command(
-        \ a:command, a:candidate.action__path)
+        \ a:command, unite#util#substitute_path_separator(
+        \   fnamemodify(a:candidate.action__path, ':~:.')))
 endfunction"}}}
 function! s:external(command, dest_dir, src_files) "{{{
   let dest_dir = a:dest_dir
@@ -837,9 +879,9 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
 
       " Buffer rename.
       let bufnr_save = bufnr('%')
-      execute 'buffer' bufnr
+      noautocmd execute 'buffer' bufnr
       saveas! `=new_filename`
-      execute 'buffer' bufnr_save
+      noautocmd execute 'buffer' bufnr_save
     endif
 
     if rename(old_filename, new_filename)
@@ -849,7 +891,9 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
     endif
   finally
     " Restore path.
-    lcd `=current_dir_save`
+    if isdirectory(current_dir_save)
+      lcd `=current_dir_save`
+    endif
     let &l:hidden = hidden_save
   endtry
 endfunction"}}}

@@ -2,7 +2,7 @@
 " FILE: line.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
 "          t9md <taqumd at gmail.com>
-" Last Modified: 12 Jun 2013.
+" Last Modified: 13 Oct 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -65,17 +65,8 @@ function! s:source_line.gather_candidates(args, context) "{{{
 
   let direction = a:context.source__direction
   let start = a:context.source__linenr
-  let lines = (direction ==# 'forward' || direction ==# 'backward') ?
-        \ s:get_lines(a:context, direction, start, 0) :
-        \ (s:get_lines(a:context, 'forward', start, 0)
-        \  + s:get_lines(a:context, 'backward', start-1, 0))
 
-  let _ = map(lines, "{
-        \ 'word' : v:val[1],
-        \ 'is_multiline' : 1,
-        \ 'action__line' : v:val[0],
-        \ 'action__text' : v:val[1],
-        \ }")
+  let _ = s:get_context_lines(a:context, direction, start, 0)
 
   let a:context.source__format = '%' . strlen(len(_)) . 'd: %s'
 
@@ -114,18 +105,8 @@ function! s:source_line_fast.gather_candidates(args, context) "{{{
 
   let direction = a:context.source__direction
   let start = a:context.source__linenr
-  let offset = 500
 
-  let _ = s:on_gather_candidates(direction, a:context, start, offset)
-  if direction ==# 'all'
-    let _ = s:on_gather_candidates('forward', a:context, start, offset)
-
-    if len(_) <= a:context.unite__max_candidates
-      let _ += s:on_gather_candidates('backward', a:context, start-1, offset)
-    endif
-  else
-    let _ = s:on_gather_candidates(direction, a:context, start, offset)
-  endif
+  let _ = s:get_context_lines(a:context, direction, start, 500)
 
   let a:context.source__format = '%' . strlen(len(_)) . 'd: %s'
 
@@ -142,11 +123,17 @@ function! s:on_init(args, context) "{{{
         \ (&buftype =~ 'nofile') ? expand('%:p') : bufname('%'))
   let a:context.source__bufnr = bufnr('%')
   let a:context.source__linenr = line('.')
+  let a:context.source__linemax = line('$')
   let a:context.source__is_bang =
         \ (get(a:args, 0, '') ==# '!')
 
-  let direction = get(filter(copy(a:args),
-        \ "v:val != '!'"), 0, '')
+  let options = filter(copy(a:args), "v:val != '!'")
+  let direction = get(options, 0, '')
+  if direction == ''
+    let direction = 'all'
+  endif
+  let a:context.source__wrap = get(options, 1,
+        \ (&wrapscan ? 'wrap' : 'nowrap')) ==# 'wrap'
   if direction == ''
     let direction = 'all'
   endif
@@ -198,7 +185,7 @@ function! s:on_gather_candidates(direction, context, start, offset) "{{{
     let _ += lines
     let len += len(lines)
 
-    if len >= a:context.unite__max_candidates
+    if len >= a:context.unite__max_candidates || a:offset == 0
       return _
     endif
 
@@ -213,18 +200,13 @@ function! s:get_lines(context, direction, start, offset) "{{{
   let [start, end] =
         \ a:direction ==# 'forward' ?
         \ [a:start, (a:offset == 0 ? '$' : a:start + a:offset)] :
-        \ [(a:offset == 0 ? 1 : a:start - a:offset), a:start]
-  if start <= 0
-    let start = 0
-  endif
+        \ [((a:offset == 0 || a:start == a:offset) ?
+        \    1 : a:start - a:offset), a:start]
 
   let _ = []
   let linenr = start
   for line in getbufline(a:context.source__bufnr, start, end)
-    if line != ''
-      call add(_, [linenr, line])
-    endif
-
+    call add(_, [linenr, line])
     let linenr += 1
   endfor
 
@@ -257,6 +239,24 @@ function! s:post_filter(args, context) "{{{
   for candidate in a:context.candidates
     let candidate.action__buffer_nr = a:context.source__bufnr
   endfor
+endfunction"}}}
+function! s:get_context_lines(context, direction, start, offset) "{{{
+  if a:direction ==# 'all'
+    let lines = s:on_gather_candidates('forward', a:context, 1, a:offset)
+  else
+    let lines = s:on_gather_candidates(a:direction, a:context, a:start, a:offset)
+
+    if a:context.source__wrap &&
+          \ len(lines) <= a:context.unite__max_candidates
+      let offset = a:context.unite__max_candidates - len(lines)
+      let lines += s:on_gather_candidates(
+            \ a:direction, a:context,
+            \ ((a:direction ==# 'forward') ?
+            \       1 : a:context.source__linemax), offset)
+    endif
+  endif
+
+  return lines
 endfunction"}}}
 "}}}
 
