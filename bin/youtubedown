@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.229 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.239 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -603,6 +603,15 @@ my %ciphers = (
   'vflUKrNpT' => 'r s2 r w63 r',                    # 25 Sep 2013
   'vfldWnjUz' => 'r s1 w68',                        # 30 Sep 2013
   'vflP7iCEe' => 'w7 w37 r s1',                     # 03 Oct 2013
+  'vflzVne63' => 'w59 s2 r',                        # 07 Oct 2013
+  'vflO-N-9M' => 'w9 s1 w67 r s3',                  # 09 Oct 2013
+  'vflZ4JlpT' => 's3 r s1 r w28 s1',                # 11 Oct 2013
+  'vflDgXSDS' => 's3 r s1 r w28 s1',                # 15 Oct 2013
+  'vflW444Sr' => 'r w9 r s1 w51 w27 r s1 r',        # 17 Oct 2013
+  'vflK7RoTQ' => 'w44 r w36 r w45',                 # 21 Oct 2013
+  'vflKOCFq2' => 's1 r w41 r w41 s1 w15',           # 23 Oct 2013
+  'vflcLL31E' => 's1 r w41 r w41 s1 w15',           # 28 Oct 2013
+  'vflz9bT3N' => 's1 r w41 r w41 s1 w15',           # 31 Oct 2013
 );
 
 sub decipher_sig($$$) {
@@ -1139,7 +1148,8 @@ sub scrape_youtube_url_html($$$$$) {
         $err = "$err ($title)";
       }
 
-      if ($verbose == 0 && $err =~ m/available in your country/i) {
+      if ($verbose == 0 &&
+          $err =~ m/(available|blocked it) in your country/i) {
         # With --quiet, just silently ignore country-locked video failures,
         # for "youtubefeed".
         exit (0);
@@ -1149,7 +1159,8 @@ sub scrape_youtube_url_html($$$$$) {
     }
   }
 
-  if ($verbose == 0 && $oerror =~ m/available in your country/i) {
+  if ($verbose == 0 &&
+      $oerror =~ m/(available|blocked it) in your country/i) {
     # With --quiet, just silently ignore country-locked video failures,
     # for "youtubefeed".
     # (Need to test twice because sometimes we have $args but no fmt_url_map)
