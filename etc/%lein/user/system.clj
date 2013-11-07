@@ -3,36 +3,37 @@
    http://thinkrelevance.com/blog/2013/06/04/clojure-workflow-reloaded"
   (:require [clojure.tools.namespace.repl :refer [refresh]]))
 
-(def instance
-  "Stores active application instance."
-  nil)
+;; Once so we don't lose a reference to an instance on reload
+(defonce ^{:doc "Stores active application instance."}
+  instance
+  (atom nil))
 
+;; XXX: Why does reloading only work with (eval)?!
 (defn init
   "Create a new application instance."
   []
-  (when-not instance
-    (alter-var-root #'instance (constantly (system/system)))))
+  (eval
+    `(when-not @instance
+       (reset! instance (system/system)))))
 
 (defn start
   "Start the current application instance."
   []
-  (when-not (:started (meta #'instance))
-    (alter-var-root #'instance (constantly (system/start instance)))
-    (alter-meta! #'instance assoc :started true)))
+  (eval
+    `(when @instance
+       (swap! instance (partial system/start)))))
 
 (defn stop
   "Shut down and destroy the active application instance."
   []
-  (when instance
-    (system/stop instance))
-  (alter-meta! #'instance dissoc :started)
-  (alter-var-root #'instance (constantly nil)))
+  (eval
+    `(when @instance
+       (system/stop @instance)
+       (reset! instance nil))))
 
 (defn boot []
-  (when-not instance
-    (init)
-    (start)))
+  (and (init) (start)))
 
 (defn restart []
-  (when instance (stop))
+  (stop)
   (refresh :after 'user.system/boot))

@@ -10,11 +10,11 @@
       local-url "http://api/jdk7/api/"]
   (dosync
     (alter clojure.java.javadoc/*remote-javadocs*
-           #(reduce-kv (fn [m pre url]
-                         (assoc m pre (if (= url core-url)
-                                        local-url
-                                        url)))
-                       {} %)))
+           #(reduce (fn [m [pre url]]
+                      (assoc m pre (if (= url core-url)
+                                     local-url
+                                     url)))
+                    {} %)))
   (alter-var-root #'clojure.java.javadoc/*core-java-api*
                   (constantly local-url)))
 
