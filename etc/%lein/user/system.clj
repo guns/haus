@@ -29,7 +29,8 @@
   (eval
     `(when @instance
        (system/stop @instance)
-       (reset! instance nil))))
+       (reset! instance nil)
+       instance)))
 
 (defn boot []
   (and (init) (start)))
