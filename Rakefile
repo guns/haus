@@ -282,7 +282,7 @@ task :env do
           dst = "#{proj.haus}/etc/vim/bundle/sparkup"
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
-          nil # Work is done
+          { 'sparkup.py' => 'bin/sparkup' }
         }
       },
 
