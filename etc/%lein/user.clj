@@ -70,11 +70,13 @@
      `(do (schema.core/set-fn-validation! ~value)
           (swap! warnings assoc :validate-schema? ~value)))))
 
-(defn toggle-warnings! []
-  (let [v (not *warn-on-reflection*)]
-    (toggle-warn-on-reflection! v)
-    (toggle-schema-validation! v)
-    (print-warnings-atom)))
+(defn toggle-warnings!
+  ([]
+   (toggle-warnings! (not *warn-on-reflection*)))
+  ([value]
+   (toggle-warn-on-reflection! value)
+   (toggle-schema-validation! value)
+   (print-warnings-atom)))
 
 ;;
 ;; Reloading

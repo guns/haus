@@ -305,7 +305,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#eval('(user/toggle-schema-validation!)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#eval('(user/toggle-warnings!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#eval('(user/toggle-warnings! true)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#eval('(user/toggle-warnings! false)')<CR>
     nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
 endfunction
 
