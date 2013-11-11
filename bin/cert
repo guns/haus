@@ -14,6 +14,7 @@ require 'net/http'
 require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
+require 'util/password'
 
 class Cert
   attr_reader :options
@@ -35,7 +36,7 @@ class Cert
             i[nfo] [arg ...]     Show detailed certificate information
             a[dd] arg ...        Add certificates to certfile
             r[m] arg ...         Remove certificates from certfile
-            e[xec] arg ...       Run a command with CURL_CA_BUNDLE and GIT_SSL_CAINFO set to certfile
+            e[xec] arg ...       Run a command with CA environment variables set to certfile
             c[onsole]            Open a Pry debugging session
 
         Options:
@@ -43,6 +44,14 @@ class Cert
 
       opt.on '-f', '--certfile PATH', 'Certificate file, required for some commands' do |arg|
         options.certfile = File.expand_path arg
+      end
+
+      opt.on '-k', '--keystore PATH', 'Create/Modify/Use Java Keystore file' do |arg|
+        options.keystore = File.expand_path arg
+      end
+
+      opt.on '-P', '--keystore-password PASS', 'Optionally set password for keystore' do |arg|
+        options.keystore_password = arg
       end
 
       opt.on '-s', '--self-signed', 'Select only self-signed certificates' do
@@ -130,14 +139,40 @@ class Cert
     options.certfile
   end
 
+  def keystore
+    options.keystore
+  end
+
+  def keystore_password
+    @keystore_password ||= (options.keystore_password || Util::Password.password)
+  end
+
   def certificates
     parse_certs File.read(certfile)
+  end
+
+  def write_keystore certs
+    # We generate keystores with random passwords, hence we won't know the
+    # current store's password either.
+    FileUtils.rm_f keystore
+
+    certs.each_with_index do |cert, i|
+      IO.popen [{ 'STOREPASS' => keystore_password },
+                'keytool', '-importcert', '-trustcacerts', '-noprompt',
+                '-keystore', keystore,
+                '-storepass:env', 'STOREPASS',
+                '-alias', '%s-%d' % [File.basename(keystore, '.ks'), i]], 'w' do |wr|
+        wr.puts cert.to_s
+      end
+    end
   end
 
   def write_certfile certs
     File.open certfile, 'w' do |f|
       f.puts format(certs)
     end
+
+    write_keystore certs if keystore
   end
 
   def mapcerts args = [], self_signed = options.self_signed
@@ -176,7 +211,15 @@ class Cert
   end
 
   def exec *args
-    env = { 'CURL_CA_BUNDLE' => certfile, 'GIT_SSL_CAINFO' => certfile }
+    env = {
+      'CURL_CA_BUNDLE' => certfile,
+      'GIT_SSL_CAINFO' => certfile
+    }
+    # Leiningen
+    if keystore
+      env['JVM_OPTS'] = "-Djavax.net.ssl.trustStore=#{keystore}"
+      env['LEIN_JVM_OPTS'] = env['JVM_OPTS']
+    end
     Kernel.exec env, *args
   end
 

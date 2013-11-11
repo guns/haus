@@ -455,24 +455,11 @@ task :keystore do
   load 'bin/cert'
 
   Dir.chdir 'etc/certificates' do
-    mkdir_p 'java'
-    cmd = %q(/bin/bash -c 'keytool -importcert -trustcacerts -noprompt -keystore %s -file <(cat) -storepass:env STOREPASS -alias %s')
-
     Dir['*.crt'].each do |crt|
-      cs = Cert.new.parse_certs File.read(crt)
-      ks = 'java/%s.ks' % crt.chomp(File.extname crt)
-      pw = Util::Password.password
-
-      rm_f ks
-
-      ENV['STOREPASS'] = pw
-
-      cs.each_with_index do |c, i|
-        IO.popen cmd % [ks, i], 'w' do |io|
-          io.puts c.to_s
-          io.close
-        end
-      end
+      ks = '%s.ks' % crt.chomp(File.extname crt)
+      puts "→ #{ks}"
+      c = Cert.new :certfile => crt, :keystore => ks
+      c.write_keystore c.certificates
     end
   end
 end

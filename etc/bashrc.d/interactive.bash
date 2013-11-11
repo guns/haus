@@ -1289,7 +1289,7 @@ ALIAS py='python'
 
 # Leiningen, Clojure package manager
 HAVE lein && {
-    alias lein='run cert exec -f ~/.certificates/leiningen.crt lein'
+    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks lein'
 
     # alias leine=
     # alias leing=
@@ -1506,8 +1506,17 @@ ALIAS cs='cryptsetup' && {
 }
 
 HAVE cert && {
-    cx() { run cert exec -f "~/.certificates/$1" -- "${@:2}"; }
-    _cx() { __compreply__ "$(command ls ~/.certificates/)"; }
+    cx() {
+        local certfile=$(expand_path "~/.certificates/$1")
+        local keystore=$(expand_path "~/.certificates/${1%.crt}.ks")
+
+        if [[ -e "$keystore" ]]; then
+            run cert exec -f "$certfile" -k "$keystore" -- "${@:2}"
+        else
+            run cert exec -f "$certfile" -- "${@:2}"
+        fi
+    }
+    _cx() { __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')"; }
     complete -F _cx cx
 }
 
