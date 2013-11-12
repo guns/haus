@@ -37,4 +37,4 @@
 
 (defn restart []
   (stop)
-  (refresh :after 'user.system/boot))
+  (refresh :after `boot))
