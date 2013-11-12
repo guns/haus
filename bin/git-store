@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+USAGE="Usage: git store tag path"
+
+abort() {
+    echo "$*" >&2
+    exit 1
+}
+
+store() {
+    (($# == 2)) || abort "$USAGE"
+
+    local tag="$1" path="$2"
+
+    [[ -r "$path" ]] || { abort "$path is unreadable or missing!"; }
+
+    local otype="$(git cat-file -t "$tag" 2>/dev/null)"
+
+    if [[ "$otype" && "$otype" != blob ]]; then
+        abort "$tag is an object of type $otype!"
+    fi
+
+    local sha="$(git hash-object -w "$path")"
+    git tag -f "$tag" "$sha"
+    echo "$sha"
+}
+
+if [[ "$1" == store ]]; then
+    store "${@:2}"
+else
+    store "$@"
+fi
