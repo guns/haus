@@ -153,6 +153,7 @@
     # Misc
     bs   = bisect
     ho   = hash-object
+    how  = hash-object -w
     ls   = ls-files
     lso  = ls-files -o
     lsu  = ls-files -o --exclude-standard
