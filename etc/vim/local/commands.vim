@@ -296,6 +296,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
+    nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('user.system/instance')<CR>
     nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#eval('(user.system/restart)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#eval('(when (user.system/boot) (println :start))')<CR>
     nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(when (user.system/stop) (println :stop))')<CR>
