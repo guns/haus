@@ -21,57 +21,78 @@ include Script::Skeleton
 CHANNELS = YAML.load_file File.expand_path('~/.weechat/channels.yml')
 
 KEYBINDINGS = {
-  'ctrl-C'      => '/window scroll_bottom',
-  'ctrl-Cb'     => nil,
-  'ctrl-Cc'     => nil,
-  'ctrl-Ci'     => nil,
-  'ctrl-Co'     => nil,
-  'ctrl-Cr'     => nil,
-  'ctrl-Cu'     => nil,
-  'ctrl-X'      => nil,
-  'ctrl-Xcf'    => '/shell -o echo "/connect freenode -password=$(pass irc/freenode-guns)"',
-  'ctrl-Xcm'    => '/shell -o echo "/connect mozilla -password=$(pass irc/mozilla-guns)"',
-  'ctrl-Xco'    => '/shell -o echo "/connect oftc"',
-  'ctrl-Xh'     => '/input insert /help',
-  'ctrl-Xif'    => '/shell -o echo "/msg NickServ identify guns $(pass irc/freenode-guns)"',
-  'ctrl-Xim'    => '/shell -o echo "/msg NickServ identify $(pass irc/mozilla-guns)"',
-  'ctrl-Xio'    => '/shell -o echo "/msg NickServ identify $(pass irc/oftc-guns) guns"',
-  'ctrl-Xj'     => nil,
-  'ctrl-XJ'     => '/input insert /join #',
-  'ctrl-Xjf'    => "/join -server freenode #{CHANNELS[:freenode].join ','}",
-  'ctrl-Xjm'    => "/join -server mozilla #{CHANNELS[:mozilla].join ','}",
-  'ctrl-Xm'     => '/input insert /msg ',
-  'ctrl-Xn'     => '/input insert /msg NickServ ',
-  'ctrl-Xr'     => '/RELOADALL',
-  'ctrl-Xs'     => '/input insert /list -re ',
-  'ctrl-V'      => '/input grab_key_command',
-  'meta-ctrl-?' => '/input delete_previous_word',
-  'mod4-b'      => '/bar scroll nicklist * y-90%',
-  'mod4-E'      => '/window page_down',
-  'mod4-e'      => '/window scroll_down',
-  'mod4-f'      => '/bar scroll nicklist * y+90%',
-  'mod4-g'      => '/go',
-  'mod4-i'      => '/toggle_nicklist toggle',
-  'mod4-j'      => '/buffer +1',
-  'mod4-J'      => '/buffer move +1',
-  'mod4-k'      => '/buffer -1',
-  'mod4-K'      => '/buffer move -1',
-  'mod4-p'      => '/window scroll_previous_highlight',
-  'mod4-U'      => '/input set_unread_current_buffer',
-  'mod4-u'      => '/window scroll_unread',
-  'mod4-x'      => '/input switch_active_buffer',
-  'mod4-Y'      => '/window page_up',
-  'mod4-y'      => '/window scroll_up',
-  'mod4-\''     => '/input jump_smart',
-  'mod4-\\'     => '/buffer close',
-  'mod4-|'      => '/quit',
+  'default' => {
+    'ctrl-C'      => '/window scroll_bottom',
+    'ctrl-Cb'     => nil,
+    'ctrl-Cc'     => nil,
+    'ctrl-Ci'     => nil,
+    'ctrl-Co'     => nil,
+    'ctrl-Cr'     => nil,
+    'ctrl-Cu'     => nil,
+    'ctrl-L'      => '/input hotlist_clear;/window refresh',
+    'ctrl-O'      => '/input jump_previously_visited_buffer',
+    'ctrl-]'      => '/input delete_line',
+    'meta-o'      => '/input jump_next_visited_buffer',
+    'ctrl-_'      => '/input undo',
+    'ctrl-R'      => '/input redo',
+    'mod4-/'      => '/input search_text',
+    'mod4-\''     => '/input jump_smart',
+    'mod4-p'      => '/window scroll_previous_highlight',
+    'mod4-x'      => '/input switch_active_buffer',
+    'mod4-X'      => '/input zoom_merged_buffer',
+    'ctrl-X'      => nil,
+    'ctrl-Xcf'    => '/shell -o echo "/connect freenode -password=$(pass irc/freenode-guns)"',
+    'ctrl-Xcm'    => '/shell -o echo "/connect mozilla -password=$(pass irc/mozilla-guns)"',
+    'ctrl-Xco'    => '/shell -o echo "/connect oftc"',
+    'ctrl-Xh'     => '/input insert /help',
+    'ctrl-Xif'    => '/shell -o echo "/msg NickServ identify guns $(pass irc/freenode-guns)"',
+    'ctrl-Xim'    => '/shell -o echo "/msg NickServ identify $(pass irc/mozilla-guns)"',
+    'ctrl-Xio'    => '/shell -o echo "/msg NickServ identify $(pass irc/oftc-guns) guns"',
+    'ctrl-Xj'     => nil,
+    'ctrl-XJ'     => '/input insert /join #',
+    'ctrl-Xjf'    => "/join -server freenode #{CHANNELS[:freenode].join ','}",
+    'ctrl-Xjm'    => "/join -server mozilla #{CHANNELS[:mozilla].join ','}",
+    'ctrl-Xm'     => '/input insert /msg ',
+    'ctrl-Xn'     => '/input insert /msg NickServ ',
+    'ctrl-Xr'     => '/RELOADALL',
+    'ctrl-Xs'     => '/input insert /list -re ',
+    'ctrl-V'      => '/input grab_key_command',
+    'meta-ctrl-?' => '/input delete_previous_word',
+    'mod4-e'      => '/window scroll_down',
+    'mod4-y'      => '/window scroll_up',
+    'mod4-E'      => '/window page_down',
+    'mod4-Y'      => '/window page_up',
+    'mod4-b'      => '/bar scroll nicklist * y-90%',
+    'mod4-f'      => '/bar scroll nicklist * y+90%',
+    'mod4-g'      => '/go',
+    'mod4-i'      => '/toggle_nicklist toggle',
+    'mod4-j'      => '/buffer +1',
+    'mod4-J'      => '/buffer move +1',
+    'mod4-k'      => '/buffer -1',
+    'mod4-K'      => '/buffer move -1',
+    'mod4-U'      => '/input set_unread_current_buffer',
+    'mod4-u'      => '/window scroll_unread',
+    'mod4-x'      => '/input switch_active_buffer',
+    'mod4-\\'     => '/buffer close',
+    'mod4-|'      => '/quit',
+  },
+  'search' => {
+    'ctrl-C' => '/input search_stop',
+    'ctrl-I' => '/input search_switch_where',
+    'ctrl-O' => '/input search_switch_case',
+    'ctrl-J' => '/input search_previous',
+    'ctrl-M' => '/input search_previous',
+    'ctrl-R' => '/input search_switch_regex',
+    'ctrl-P' => '/input search_previous',
+    'ctrl-N' => '/input search_next',
+  }
 }
 
-def bind key, val
-  if val.nil?
-    Weechat.exec '/mute /key unbind %s' % key
+def bind context, key, cmd
+  if cmd.nil?
+    Weechat.exec "/mute /key unbindctxt #{context} #{key}"
   else
-    Weechat.exec '/mute /key bind %s %s' % [key, val]
+    Weechat.exec "/mute /key bindctxt #{context} #{key} #{cmd}"
   end
 end
 
@@ -81,12 +102,16 @@ def bind_readline_unicode_chars
   if File.readable? inputrc
     # Ruby 1.8 lacks encoded strings
     IO.readlines(inputrc).grep /\A"\\e(.)": "(.+)"/ do
-      bind "meta-#{$1}", '/input insert %s' % $2.unpack('U').pack('U')
+      bind 'default', "meta-#{$1}", '/input insert %s' % $2.unpack('U').pack('U')
     end
   end
 end
 
 def setup
   bind_readline_unicode_chars
-  KEYBINDINGS.each { |key, val| bind key, val }
+  KEYBINDINGS.each do |context, bindings|
+    bindings.each do |key, cmd|
+      bind context, key, cmd
+    end
+  end
 end
