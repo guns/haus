@@ -58,7 +58,7 @@ let g:maplocalleader = '-'
 "
 " Bind: v_Ctrl-C => <Esc>
 xnoremap <C-c> <Esc>
-snoremap <C-s> <Esc>
+snoremap <C-c> <Esc>
 
 " Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
@@ -563,6 +563,7 @@ nnoremap <Leader>nr vip:NarrowRegion<CR>
 noremap <Leader>u :<C-u>Unite -no-split<Space>
 Mapall <4-o> :<C-u>UniteOpen<CR>
 Mapall <4-t> :<C-u>tabnew \\\| UniteOpen<CR>
+Mapall <4-V> :<C-u>vsplit \\\| UniteOpen<CR>
 Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
 Mapall <4-'> :<C-u>Unite -no-split tag<CR>
