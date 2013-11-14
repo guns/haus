@@ -468,7 +468,7 @@ function! s:ToggleMinorWindows()
     endif
 endfunction
 
-command! -bar UniteOpen execute 'Unite -no-split ' . (exists('b:git_dir') ? 'git_cached git_untracked' : 'file')
+command! -bar UniteOpen call fugitive#detect('.') | execute 'Unite -no-split ' . (exists('b:git_dir') ? 'git_cached git_untracked' : 'file')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(file, ...)

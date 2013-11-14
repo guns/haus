@@ -1033,7 +1033,7 @@ HAVE vim && {
     }
 
     # vim-fugitive
-    alias vimgit='vim -c Gstatus "$(git ls-files | sed q)"'
+    alias vimgit='vim -c "call fugitive#detect(\".\")" -c Gstatus'
     # Param: [$1] File to browse
     gitv() {
         if [[ -f "$1" ]]; then
