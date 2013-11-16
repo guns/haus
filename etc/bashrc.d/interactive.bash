@@ -1629,9 +1629,13 @@ elif __LINUX__; then
 
         alias paclog='pager /var/log/pacman.log'
         pacinstallfile() {
-            (($# == 1)) || { echo "USAGE: $FUNCNAME pkg" >&2; return 1; }
+            (($# > 0)) || { echo "USAGE: $FUNCNAME pkg …" >&2; return 1; }
             # Installing from a URL copies the package to /var/cache/pacman
-            pacman -U "file://$(expand_path "$1")"
+            local pkgs=() pkg
+            for pkg in "$@"; do
+                pkgs+=("file://$(expand_path "$pkg")")
+            done
+            pacman -U "${pkgs[@]}"
         }; _install_xspec '!*.tar.xz' pacinstallfile
     }
 
