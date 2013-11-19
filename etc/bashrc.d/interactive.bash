@@ -1288,7 +1288,7 @@ ALIAS py='python'
 
 # Leiningen, Clojure package manager
 HAVE lein && {
-    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks lein'
+    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks -- lein'
 
     # alias leine=
     # alias leing=
@@ -1380,13 +1380,7 @@ ALIAS sqlite='sqlite3' && {
             local t tables=($(sqlite3 "$1" <<< .table))
             for t in "${tables[@]}"; do
                 echo -e "\n$t:"
-                local q1="SELECT * FROM $t ORDER BY id DESC LIMIT 1;"
-                local q2="SELECT * FROM $t LIMIT 1;"
-                local sql="$(sqlite3 "$1" <<< "$q1")"
-                if [[ "$sql" =~ "SQL error near line 1: no such column: id" ]]; then
-                    local sql="$(sqlite3 "$1" <<< "$q2")"
-                fi
-                echo "$sql"
+                sqlite3 "$1" <<< "SELECT * FROM $t ORDER BY ROWID DESC LIMIT 1;"
             done
         } 2>/dev/null | pager
     }
