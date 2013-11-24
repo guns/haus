@@ -26,7 +26,8 @@
          'clojure.tools.trace
          'spyscope.core
          'redl.core
-         'redl.complete)
+         'redl.complete
+         'no.disassemble)
 
 (defmacro p [& xs]
   `(do (clojure.pprint/pprint
@@ -43,6 +44,9 @@
    `(try (clojure.tools.trace/trace-ns ~nspace)
          ~expr
          (finally (clojure.tools.trace/untrace-ns ~nspace)))))
+
+(defn disassemble [obj]
+  (println (no.disassemble/disassemble obj)))
 
 ;;
 ;; Warnings
@@ -125,7 +129,9 @@
          (clojure.string/join \newline lines))))
 
 (defn write-cheat-sheet! [pattern]
-  (let [matches (filter #(re-seq pattern (str %)) (all-ns))]
+  (let [matches (->> (all-ns)
+                     (filter #(re-seq pattern (str %)))
+                     (sort-by str))]
     (if (seq matches)
       (let [tmp (java.io.File.
                   (format "target/vim/cheat-sheet-%s.clj"

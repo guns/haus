@@ -21,7 +21,8 @@
 
 {:user {:plugins [[lein-exec "LATEST"]
                   [lein-kibit "LATEST"]
-                  [lein-ancient "LATEST"]]
+                  [lein-ancient "LATEST"]
+                  [lein-nodisassemble "LATEST"]]
         :dependencies [[org.clojure/tools.namespace "LATEST"]
                        [org.clojure/tools.trace "LATEST"]
                        [slamhound "LATEST"]
