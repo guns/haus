@@ -299,7 +299,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(user.system/stop)')<CR>
     nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#eval('(user.system/restart)')<CR>
     nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@user.system/instance')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
+    nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#eval('(user/toggle-warn-on-reflection!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
@@ -357,15 +357,6 @@ function! s:ClojureRunTests(all)
     else
         call fireplace#eval('(user/run-tests-for-current-ns)')
     endif
-endfunction
-
-function! s:ClojureSlamHound(file)
-    if &modified
-        echom "Buffer contains unsaved changes!"
-        return 1
-    endif
-    call fireplace#eval('(user/slamhound! "' . escape(a:file, '"') . '" ' . &textwidth . ')')
-    edit
 endfunction
 
 function! s:ClojureTypeScaffold()

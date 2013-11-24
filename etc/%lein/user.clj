@@ -96,17 +96,6 @@
   (catch Throwable _))
 
 ;;
-;; Manipulation
-;;
-
-(require 'slam.hound)
-
-(defn slamhound! [path textwidth]
-  (let [file (clojure.java.io/file path)]
-    (binding [clojure.pprint/*print-right-margin* textwidth]
-      (slam.hound/swap-in-reconstructed-ns-form file))))
-
-;;
 ;; Reflection
 ;;
 
