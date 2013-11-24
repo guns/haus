@@ -295,11 +295,11 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
-    nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
-    nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('user.system/instance')<CR>
+    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#eval('(user.system/boot)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(user.system/stop)')<CR>
     nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#eval('(user.system/restart)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#eval('(when (user.system/boot) (println :start))')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(when (user.system/stop) (println :stop))')<CR>
+    nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@user.system/instance')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sh  :call <SID>ClojureSlamHound(expand('%'))<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#eval('(user/toggle-warn-on-reflection!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
