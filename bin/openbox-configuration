@@ -233,6 +233,9 @@
            (if (system "killall" "-0" "pulseaudio")
              ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink)"]
              ["notify --audio=/dev/null - < <(hwctl toggle-alsa-card)"]))
+   (bindsh ["A-S-F3" "A-S-XF86AudioMute"]
+           (when (system "killall" "-0" "pulseaudio")
+             ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-source)"]))
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
