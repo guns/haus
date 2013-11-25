@@ -52,11 +52,12 @@ class Hwctl
           fnmode [fn|media]
             Set MacBook function key mode.
 
-          toggle-alsa-card [number]
-            Switch between available sound cards, or specified card number
+          toggle-alsa-card [index]
+            Switch between available sound cards, or specified card index
 
-          toggle-pulseaudio-sink
-            Toggle between available Pulseaudio output sinks
+          toggle-pulseaudio-sink [index]
+          toggle-pulseaudio-source [index]
+            Toggle between available Pulseaudio input sinks and output sources
       BANNER
     end
   end
@@ -81,21 +82,27 @@ class Hwctl
     v
   end
 
-  def pulseaudio_sinks
-    sinks = %x(pacmd list-sinks).scan(/(\*?) index: (\d+).*?alsa\.card_name = "(.*?)"/m).map do |s, i, n|
-      [s.length > 0, i, n]
+  def pulseaudio_list type
+    raise ArgumentError unless ["sink", "source"].include? type
+
+    list = %x(pacmd list-#{type}s).scan(/(\*?) index: (\d+).*?device\.description = "(.*?)"/m).map do |star, idx, desc|
+      [star.length > 0, idx, desc]
     end
 
-    until sinks[0][0]
-      sinks.rotate!
+    until list[0][0]
+      list.rotate!
     end
 
-    sinks.map { |a| a.drop 1 }
+    list.map { |a| a.drop 1 }
   end
 
-  def pulseaudio_move_inputs index
-    %x(pacmd list-sink-inputs).lines.grep(/index: (\d+)/) { $1 }.each do |input|
-      system 'pacmd', 'move-sink-input', input.to_s, index.to_s, :out => '/dev/null'
+  def pulseaudio_move type, index
+    type = { "sink" => "sink-input", "source" => "source-output" }[type]
+
+    raise ArgumentError if type.nil?
+
+    %x(pacmd list-#{type}s).lines.grep(/index: (\d+)/) { $1 }.each do |s|
+      system 'pacmd', "move-#{type}", s.to_s, index.to_s, :out => '/dev/null'
     end
   end
 
@@ -181,38 +188,47 @@ class Hwctl
     File.read sys[:fnmode]
   end
 
-  def toggle_alsa_card number = nil
+  def toggle_alsa_card index = nil
     asoundrc = File.expand_path '~/.asoundrc'
     settings = %w[defaults.pcm.card defaults.ctl.card]
     cards = Hash[File.readlines('/proc/asound/cards').grep(/\A\s*(\d+)\s*(\[.*)/) { |m|
       [$1.to_i, $2]
     }]
-    numbers = cards.keys
+    indices = cards.keys
 
     FileUtils.touch asoundrc
     buf = File.read asoundrc
 
-    next_number = number || begin
+    next_index = index || begin
       cur = buf[/^#{settings.first}\s+(\d+)/, 1]
       if cur
-        i = numbers.index cur.to_i
-        numbers[i ? (i + 1) % numbers.size : 0]
+        i = indices.index cur.to_i
+        indices[i ? (i + 1) % indices.size : 0]
       else
-        numbers.first
+        indices.first
       end
     end
 
     lines = buf.lines.reject { |l| settings.include? l[/\A\S+/] }
-    lines += settings.map { |k| "#{k} #{next_number}\n" }
+    lines += settings.map { |k| "#{k} #{next_index}\n" }
     File.open(asoundrc, 'w') { |f| f.puts lines.join }
-    cards[next_number]
+    cards[next_index]
   end
 
-  def toggle_pulseaudio_sink
-    index, name = pulseaudio_sinks.rotate.first
-    system 'pacmd', 'set-default-sink', index, :out => '/dev/null'
-    pulseaudio_move_inputs index
-    name
+  def toggle_pulseaudio type, index = nil
+    list = pulseaudio_list type
+
+    if index
+      i, desc = list.find { |(i, n)| i == index }
+      raise "No #{type} at index #{index}" if i.nil?
+    else
+      i, desc = list.rotate.first
+    end
+
+    system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
+
+    pulseaudio_move type, i
+    desc
   end
 
   def run arguments = []
@@ -225,7 +241,8 @@ class Hwctl
     when 'fan' then fan *rest
     when 'fnmode' then fnmode *rest
     when 'toggle-alsa-card' then toggle_alsa_card *rest
-    when 'toggle-pulseaudio-sink' then toggle_pulseaudio_sink *rest
+    when 'toggle-pulseaudio-sink' then toggle_pulseaudio "sink", *rest
+    when 'toggle-pulseaudio-source' then toggle_pulseaudio "source", *rest
     else abort parser.help
     end
 
