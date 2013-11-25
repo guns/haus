@@ -743,12 +743,12 @@ snippet do "do exprs" w
 endsnippet
 
 snippet dos "doseq" w
-(doseq [${0:each-bind}]
+(doseq [$0]
 	)
 endsnippet
 
 snippet dot "dotimes" w
-(dotimes [${0:bindings}]
+(dotimes [$0]
 	)
 endsnippet
 
@@ -761,16 +761,16 @@ snippet doa "doall" w
 endsnippet
 
 snippet for "for" w
-(for [$0] )
+(for [$0])
 endsnippet
 
 snippet lo "loop" w
-(loop [${0:bindings}]
+(loop [$0]
 	)
 endsnippet
 
 snippet rec "recur" w
-(recur ${0:bindings})
+(recur$0)
 endsnippet
 
 snippet whi "while" w
