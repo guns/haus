@@ -25,6 +25,7 @@
                   [lein-nodisassemble "LATEST"]]
         :dependencies [[org.clojure/tools.namespace "LATEST"]
                        [org.clojure/tools.trace "LATEST"]
+                       [criterium "LATEST"]
                        [slamhound "LATEST"]
                        [spyscope "LATEST"]
                        [redl "LATEST"]]

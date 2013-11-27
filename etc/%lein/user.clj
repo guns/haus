@@ -36,7 +36,7 @@
 
 (defmacro dump-locals []
   `(clojure.pprint/pprint
-     ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
+     ~(into (array-map) (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
 (defmacro trace
   ([expr] `(trace *ns* ~expr))
@@ -175,6 +175,10 @@
 ;; Benchmarking
 ;;
 
-(defmacro bm
-  ([expr] `(bm 10 ~expr))
-  ([n expr] `(time (dotimes [_# ~n] ~expr))))
+(require 'criterium.core)
+
+(defmacro bm [expr]
+  (criterium.core/quick-bench expr))
+
+(defmacro bench [expr]
+  (criterium.core/bench expr))
