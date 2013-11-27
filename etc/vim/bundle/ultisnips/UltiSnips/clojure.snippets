@@ -19,7 +19,7 @@ snippet load "load" w
 (clojure.core/load "$0")
 endsnippet
 
-snippet ns "ns"
+snippet ns "ns" b
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
 endsnippet
 
