@@ -1,0 +1,47 @@
+# -*- encoding: utf-8 -*-
+
+task :default => :screencast
+
+def alive? pid
+  Process.kill 0, pid rescue false
+end
+
+desc 'Resize terminal'
+task :resize do
+  system 'xrdb ~/.Xdefaults', :out => '/dev/null'
+  system 'xecho fsize 28'
+  system 'xecho geom 85 21' # 1279x697
+  system 'xecho move 0 11'
+end
+
+desc 'Toggle screen recording'
+task :screencast do
+  require 'shellwords'
+
+  scratch = File.expand_path '~/tmp/clips'
+  pidfile = File.join scratch, '.ffmpeg.pid'
+
+  mkdir_p scratch unless File.directory? scratch
+
+  if File.exists? pidfile
+    pid = File.read(pidfile).to_i
+    if alive? pid
+      puts 'Sending SIGTERM to %d' % pid
+      Process.kill :TERM, pid
+      sleep 0.1 while alive? pid
+    end
+    rm_f pidfile
+    system 'feh', '--bg-fill', File.read(File.expand_path '~/.fehbg').shellsplit.last
+  else
+    system 'xsetroot -solid black'
+
+    cmd = %W[nice -n -10 screencast --dnxhd -g 1280x720+0,0 #{scratch}/scratch.mov]
+    opts = { :in => '/dev/null', :out => "#{scratch}/scratch.out", :err => "#{scratch}/scratch.err" }
+    sleep 1
+
+    pid = spawn *cmd, opts
+    puts 'Started screencast with PID %d' % pid
+    File.open(pidfile, 'w') { |f| f.puts pid }
+    Process.detach pid
+  end
+end
