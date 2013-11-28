@@ -266,7 +266,7 @@ class Minecraft
     File.open gamedir('stdin'), 'w' do |fifo|
       begin
         fifo.sync = true
-        log = IO.popen ['tail', '-fn100', gamedir('server.log')]
+        log = IO.popen ['tail', '-fn100', gamedir('logs/latest.log')]
         loop do
           (rd,), = select [log, $stdin]
           if rd == $stdin
