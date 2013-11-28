@@ -1,19 +1,17 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
+require 'json'
 require 'pathname'
 
 class Minecraft
-  SERVER_DOWNLOAD_URL = 'https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar'
-  SERVER_JAR_BASENAME = File.basename SERVER_DOWNLOAD_URL
-
   attr_reader :options
 
   def initialize opts = {}
@@ -37,12 +35,11 @@ class Minecraft
         Options:
       BANNER
 
-      opt.on '-j', '--jar JARNAME', 'Name of server jar' do |arg|
-        raise '`--jar` argument must not be a path' if arg =~ /\//
-        options.jar = arg
+      opt.on '-j', '--jar PATH', 'Path to server jar' do |arg|
+        options.jar = File.expand_path arg
       end
 
-      opt.on '-w', '--world NAME', 'World to play. Creates new world if not found.' % options.world do |arg|
+      opt.on '-w', '--world NAME', 'Name of world to play. Creates new world if not found.' % options.world do |arg|
         options.world = arg
       end
 
@@ -112,21 +109,48 @@ class Minecraft
   # Helpers
   #
 
-  def download_official_server_jar!
-    raise 'Game directory "%s" does not exist!' % gamedir unless Dir.exists? gamedir
-    success = system 'curl', '-#L', '-o', gamedir(SERVER_JAR_BASENAME), SERVER_DOWNLOAD_URL
-    raise 'Download failed!' unless success
+  def fetch_versions
+    JSON.parse %x(curl -sL https://s3.amazonaws.com/Minecraft.Download/versions/versions.json)
   end
 
-  def setup_links jarname, name
-    world = gamedir 'saves', jarname.chomp(File.extname jarname), name
+  def latest_server_jar_url
+    release = fetch_versions['latest']['release']
+    File.join 'https://s3.amazonaws.com/Minecraft.Download/versions', release, 'minecraft_server.%s.jar' % release
+  end
+
+  def download_latest_server_jar
+    raise 'Game directory "%s" does not exist!' % gamedir unless Dir.exists? gamedir
+
+    url = latest_server_jar_url
+    path = gamedir 'jars', File.basename(url)
+    FileUtils.mkdir_p File.dirname(path)
+
+    if File.exists? path
+      puts "Skipping download, #{path} already exists."
+    else
+      success = system 'curl', '-#L', '-o', path, url
+      raise 'Download failed!' unless success
+    end
+
+    path
+  end
+
+  def link_relative src, dst
+    lsrc = Pathname.new(File.expand_path src).relative_path_from Pathname.new(File.expand_path dst).dirname
+    FileUtils.ln_s lsrc, dst
+  end
+
+  def setup_jarlink jarpath
+    FileUtils.rm_f jarlink
+    link_relative jarpath, jarlink
+  end
+
+  def setup_worldlink jarpath, worldname
+    worldpath = gamedir 'saves', File.basename(jarpath)[/(.*?)\.?/, 1], worldname
 
     FileUtils.rm_f worldlink
-    FileUtils.mkdir_p world, :mode => File.stat(gamedir).mode
-    link_relative world, worldlink
-
-    FileUtils.rm_f jarlink
-    link_relative gamedir(jarname), jarlink
+    FileUtils.mkdir_p worldpath, :mode => File.stat(gamedir).mode
+    link_relative worldpath, worldlink
   end
 
   def with_fifo
@@ -143,18 +167,17 @@ class Minecraft
     system '/bin/sh', '-c', 'type rlwrap >/dev/null 2>&1'
   end
 
-  def link_relative src, dst
-    lsrc = Pathname.new(File.expand_path src).relative_path_from Pathname.new(File.expand_path dst).dirname
-    FileUtils.ln_s lsrc, dst
-  end
-
   #
   # RC methods
   #
 
-  def fork_server_and_wait jar, memory, opts = {}
+  def update!
+    setup_jarlink download_latest_server_jar
+  end
+
+  def fork_server_and_wait memory, opts = {}
     Dir.chdir gamedir do
-      cmd = %W[java -Xmx#{memory}M -jar #{jar} nogui]
+      cmd = %W[java -Xmx#{memory}M -jar #{jarlink} nogui]
 
       begin
         pid = fork do
@@ -185,22 +208,29 @@ class Minecraft
   def start_server!
     raise 'Minecraft directory is locked!' if have_pidfile
 
-    if not File.exists? jarlink and not File.exists? worldlink
-      download_official_server_jar!
-      setup_links SERVER_JAR_BASENAME, 'default'
+    if options.jar
+      setup_jarlink options.jar
     end
 
-    if options.jar or options.world
-      setup_links options.jar || SERVER_JAR_BASENAME, options.world || 'default'
+    if not File.exists? jarlink
+      raise "Server symlink #{jarlink} is broken!\nTry running `minecraft update`."
+    end
+
+    if options.world
+      setup_worldlink read_jarlink, options.world
+    end
+
+    if not File.exists? worldlink
+      setup_worldlink read_jarlink, 'default'
     end
 
     if options.debug
-      fork_server_and_wait jarlink, options.memory, :debug => options.debug
+      fork_server_and_wait options.memory, :debug => options.debug
     else
       Process.detach fork {
-        with_fifo do |fifo|
-          fork_server_and_wait jarlink, options.memory, :stdin => fifo
-        end
+        with_fifo { |fifo|
+          fork_server_and_wait options.memory, :stdin => fifo
+        }
       }
     end
   end
@@ -230,10 +260,6 @@ class Minecraft
     end
   end
 
-  #
-  # main
-  #
-
   def start_repl!
     raise 'Minecraft server is not running!' unless have_pidfile
 
@@ -257,6 +283,10 @@ class Minecraft
     end
   end
 
+  #
+  # main
+  #
+
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size == 1
@@ -265,7 +295,7 @@ class Minecraft
     when 'start'   then start_server!
     when 'stop'    then stop_server!
     when 'restart' then stop_server!; start_server!
-    when 'update'  then download_official_server_jar!
+    when 'update'  then update!
     when 'repl'
       if ENV['RLWRAP_MINECRAFT'] or ENV['_'] =~ /rlwrap\z/ or not have_rlwrap
         start_repl!
