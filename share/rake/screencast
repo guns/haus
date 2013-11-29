@@ -36,7 +36,7 @@ task :screencast do
     system 'xsetroot -solid black'
 
     cmd = %W[nice -n -10 screencast --dnxhd -g 1280x720+0,0 #{scratch}/scratch.mov]
-    opts = { :in => '/dev/null', :out => "#{scratch}/scratch.out", :err => "#{scratch}/scratch.err" }
+    opts = { :in => '/dev/null', :out => "#{scratch}/out.log", :err => "#{scratch}/err.log" }
     sleep 1
 
     pid = spawn *cmd, opts
