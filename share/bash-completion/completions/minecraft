@@ -12,7 +12,7 @@ _minecraft() {
         COMPREPLY=($(compgen -W "$jars" -- "$cur"))
         unset IFS
     elif [[ $prev == @(-w|--world) ]]; then
-        local saves="$(__lstype__ -q '/srv/games/minecraft/saves/minecraft_server' 'File.ftype(f) == "directory"')"
+        local saves="$(__lstype__ -q '/srv/games/minecraft/saves' 'File.ftype(f) == "directory"')"
         local IFS=$'\n'
         COMPREPLY=($(compgen -W "$saves" -- "$cur"))
         unset IFS
