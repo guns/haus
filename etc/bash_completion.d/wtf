@@ -3,11 +3,15 @@
 
 _wtf()
 {
-    local cur prev words cword
+    local cur prev words cword addf
     _init_completion || return
 
     [[ $prev == -f ]] && _filedir && return 0
-    [[ $cur == -* ]] && COMPREPLY=( -f ) && return 0
+    [[ ${words[@]} == *\ -f* ]] && addf= || addf=-f
+    if [[ $cur == -* ]]; then
+        COMPREPLY=( $addf )
+        return 0
+    fi
 
     local db
 
@@ -18,9 +22,18 @@ _wtf()
         fi
         shift
     done
-    [[ -z $db ]] && db=${ACRONYMDB:-/usr/share/misc/acronyms*}
 
-    COMPREPLY=( $( compgen -W "$( cut -f 1 -s $db ) -f" -- "${cur^^}" ) )
+    if [[ -z "$db" ]]; then
+        local f
+        for f in "$ACRONYMDB" /usr/share/misc/acronyms \
+            /usr/share/games/bsdgames/acronyms; do
+            [[ -f "$f" ]] && db="$f" && break
+        done
+        [[ -z "$db" ]] && return 0
+    fi
+
+    COMPREPLY=( $( compgen -W "$( cut -f 1 -s $db* 2>/dev/null ) $addf" \
+        -- "${cur^^}" ) )
 } &&
 complete -F _wtf wtf
 
