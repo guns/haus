@@ -1,0 +1,67 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'fileutils'
+
+class MakeOverlay
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [filename]
+
+        Options:
+      BANNER
+
+      opt.on '-c', '--caption' do
+        options.caption = true
+      end
+    end
+  end
+
+  def call text, outfile = nil, caption = nil
+    lines = text.chomp.split "\n"
+    file = '%s-%s.png' % [
+      caption ? 'caption' : 'overlay',
+      lines.first.gsub(/[\n\/]/, '-').gsub(/[^\w-]/, '')
+    ]
+    outfile ||= File.expand_path file
+    cols = lines.map(&:length).max
+    label = lines.map do |line|
+      "%-#{cols}s" % line
+    end.join "\n"
+
+    FileUtils.mkdir_p File.dirname(outfile)
+
+    system *%W[
+      convert
+      -background none
+      -fill #000000
+      -bordercolor #cccccc
+      -border #{caption ? 15 : 30}
+      -font Bitstream-Vera-Sans-Mono-Bold
+      -pointsize #{caption ? 35 : 70}
+      -gravity #{caption ? 'South' : 'NorthEast'}
+      -extent 1280x720-#{caption ? '0-35' : '70-70'}
+      label:#{label} #{outfile}
+    ]
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    call $stdin.read, args.first, options.caption
+  end
+end
+
+$0 = File.basename(__FILE__) and MakeOverlay.new.run ARGV if $0 == __FILE__
