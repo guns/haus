@@ -36,7 +36,7 @@
 
 (defmacro dump-locals []
   `(clojure.pprint/pprint
-     ~(into (array-map) (map (fn [l] [`'~l l]) (reverse (keys &env))))))
+     ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
 (defmacro trace
   ([expr] `(trace *ns* ~expr))
