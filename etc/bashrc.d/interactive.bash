@@ -322,9 +322,10 @@ lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
 lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 
-# hexdump strings hexfiend
+# objdump hexdump strings hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
 ALIAS strings='strings -t x -' && lstrings() { strings -t x - "$@" | pager; }
+ALIAS ox='objdump -x'
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
@@ -775,7 +776,8 @@ ALIAS get='curl -A Mozilla/5.0 -#L' \
 }
 
 # DNS
-ALIAS digx='dig -x'
+ALIAS digx='dig -x' \
+      digs='dig +short'
 if __OS_X__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
@@ -1623,14 +1625,24 @@ elif __LINUX__; then
 
         alias paclog='pager /var/log/pacman.log'
         pacinstallfile() {
-            (($# > 0)) || { echo "USAGE: $FUNCNAME pkg …" >&2; return 1; }
+            local OPTIND OPTARG opt force
+            while getopts :f opt; do
+                case $opt in
+                f) force='--force';;
+                esac
+            done
+            shift $((OPTIND-1))
+
+            (($# > 0)) || { echo "USAGE: $FUNCNAME [-f] pkg …" >&2; return 1; }
+
             # Installing from a URL copies the package to /var/cache/pacman
             local pkgs=() pkg
             for pkg in "$@"; do
                 pkgs+=("file://$(expand_path "$pkg")")
             done
-            pacman -U "${pkgs[@]}"
-        }; _install_xspec '!*.tar.xz' pacinstallfile
+
+            pacman -U $force "${pkgs[@]}"
+        }
     }
 
     ALIAS mkpkg='makepkg' \
