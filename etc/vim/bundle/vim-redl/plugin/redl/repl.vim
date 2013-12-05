@@ -85,7 +85,7 @@ function! redl#repl#create(namespace)
     imap <buffer> <silent> <CR> <Plug>clj_repl_enter.
   endif
   if !hasmapto("<Plug>clj_repl_eval.", "i")
-    imap <buffer> <silent> <Leader>X <Plug>clj_repl_eval.
+    imap <buffer> <silent> <4-CR> <Plug>clj_repl_eval.
   endif
   if !hasmapto("<Plug>clj_repl_hat.", "n")
     nmap <buffer> <silent> ^ <Plug>clj_repl_hat.
@@ -96,9 +96,11 @@ function! redl#repl#create(namespace)
   endif
   if !hasmapto("<Plug>clj_repl_uphist.", "i")
     imap <buffer> <silent> <C-Up> <Plug>clj_repl_uphist.
+    nmap <buffer> <silent> <C-Up> i<Plug>clj_repl_uphist.
   endif
   if !hasmapto("<Plug>clj_repl_downhist.", "i")
     imap <buffer> <silent> <C-Down> <Plug>clj_repl_downhist.
+    nmap <buffer> <silent> <C-Down> i<Plug>clj_repl_downhist.
   endif
 
   call redl#repl#show_prompt()
