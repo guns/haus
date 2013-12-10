@@ -74,12 +74,12 @@ noremap 0 :zoom! 100<CR>
 
 """ Location Shortcuts {{{1
 
-noremap <C-S-lt> :tabopen about:config<CR>
+noremap <C-S-c> :tabopen about:config<CR>
 noremap <C-S-m> :tabopen about:memory<CR>
 noremap <C-S-d> :emenu Tools.DownThemAll!.DownThemAll!<CR>
 noremap <C-S-i> :emenu Tools.Web Developer.Inspector<CR>
-noremap <C-S-p> :emenu Tools.Web Developer.Scratchpad<CR>
-noremap <C-S-e> :emenu Tools.Web Developer.Style Editor<CR>
+noremap <C-S-l> :emenu Tools.Web Developer.Web Console<CR>
+noremap <C-S-n> :emenu Tools.Web Developer.Network<CR>
 noremap <C-S-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
 imap <C-S-t> <Esc><C-S-t>
 cmap <C-S-t> <Esc><C-S-t>
