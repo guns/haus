@@ -30,7 +30,8 @@
                        [spyscope "LATEST"]
                        [redl "LATEST"]]
         :resource-paths ["resources" "target/vim"]
-        :aliases {"RUN" ["trampoline" "run"]
+        :aliases {"t" ["trampoline"]
+                  "RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
                   "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}

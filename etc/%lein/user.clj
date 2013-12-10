@@ -178,7 +178,11 @@
 (require 'criterium.core)
 
 (defmacro bm [expr]
-  (criterium.core/quick-bench expr))
+  `(do (printf "%s\n\n" '~expr)
+       (criterium.core/quick-bench ~expr)
+       (newline)))
 
 (defmacro bench [expr]
-  (criterium.core/bench expr))
+  `(do (printf "%s\n\n" '~expr)
+       (criterium.core/bench ~expr)
+       (newline)))
