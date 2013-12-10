@@ -171,7 +171,7 @@ CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdmnt           /mnt
 CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
-CD_FUNC cddnsmasq       /etc/dnsmasq /opt/dnsmasq/etc
+CD_FUNC cddnsmasq       /etc/dnsmasq /opt/dnsmasq/etc && export cddnsmasq
 CD_FUNC cdnginx         /etc/nginx /opt/nginx/etc /usr/local/etc/nginx && export cdnginx # Export for vim mapping
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
@@ -1073,6 +1073,7 @@ HAVE vim && {
     alias vimbashinteractive='(cdhaus && exec vim etc/bashrc.d/interactive.bash)'
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
+    alias vimdnsmasq='(cddnsmasq && exec vim dnsmasq.conf)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
     alias vimiptables='(cdetc && exec vim iptables/iptables.sh)'
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'

@@ -355,14 +355,15 @@ noremap <Leader>eA       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/alia
 noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
 noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
 noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
+noremap <Leader>ed       :<C-u>execute 'TabOpen ' . resolve(expand($cddnsmasq . '/dnsmasq.conf'))<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh<CR>
+noremap <Leader>el       :<C-u>execute 'TabOpen ' . resolve(expand($cdsrc . '/leiningen/sample.project.clj'))<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
 noremap <Leader>eM       :<C-u>execute 'TabOpen ' . substitute(resolve(expand('~/.mutt/muttrc')), '\V%', '\\\\\%', 'g')<CR>
 noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
-noremap <Leader>ep       :<C-u>execute 'TabOpen ' . resolve(expand($cdsrc . '/leiningen/sample.project.clj'))<CR>
 noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
 noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
