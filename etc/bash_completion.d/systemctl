@@ -125,7 +125,7 @@ _systemctl () {
         fi
 
         local -A VERBS=(
-                [ALL_UNITS]='is-active is-failed is-enabled status show mask preset help list-dependencies'
+                [ALL_UNITS]='is-active is-failed is-enabled status show cat mask preset help list-dependencies'
             [ENABLED_UNITS]='disable'
            [DISABLED_UNITS]='enable'
         [REENABLABLE_UNITS]='reenable'
@@ -141,14 +141,14 @@ _systemctl () {
                      [ENVS]='set-environment unset-environment'
                [STANDALONE]='daemon-reexec daemon-reload default
                              emergency exit halt hibernate hybrid-sleep kexec list-jobs
-                             list-sockets list-units list-unit-files poweroff reboot rescue
-                             show-environment suspend get-default'
+                             list-sockets list-timers list-units list-unit-files poweroff
+                             reboot rescue show-environment suspend get-default'
                      [NAME]='snapshot load'
                      [FILE]='link'
                   [TARGETS]='set-default'
         )
 
-        for ((i=0; $i <= $COMP_CWORD; i++)); do
+        for ((i=0; i <= COMP_CWORD; i++)); do
                 if __contains_word "${COMP_WORDS[i]}" ${VERBS[*]} &&
                  ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
                         verb=${COMP_WORDS[i]}
@@ -156,7 +156,7 @@ _systemctl () {
                 fi
         done
 
-        if   [[ -z $verb ]]; then
+        if [[ -z $verb ]]; then
                 comps="${VERBS[*]}"
 
         elif __contains_word "$verb" ${VERBS[ALL_UNITS]}; then
