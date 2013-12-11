@@ -2137,6 +2137,9 @@ function! s:RailsFind()
   let res = s:sub(s:sub(s:findasymbol('partial','\1'),'^/',''),'[^/]+$','_&')
   if res != ""|return res."\n".s:findview(res)|endif
 
+  let res = s:sub(s:sub(s:findfromview('json\.(\=\s*\%(:partial\s\+=>\|partial!\)\s*','\1'),'^/',''),'[^/]+$','_&')
+  if res != ""|return res."\n".s:findview(res)|endif
+
   let res = s:sub(s:sub(s:findfromview('render\s*(\=\s*\%(:partial\s\+=>\|partial:\)\s*','\1'),'^/',''),'[^/]+$','_&')
   if res != ""|return res."\n".s:findview(res)|endif
 
@@ -3201,8 +3204,15 @@ function! s:readable_alternate_candidates(...) dict abort
     return [migration . (exists('lastmethod') && !empty(lastmethod) ? '#'.lastmethod : '')]
   elseif f =~# '\<application\.js$'
     return ['app/helpers/application_helper.rb']
+  elseif f =~# 'spec\.js$'
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js', '.js')."\n"]
   elseif self.type_name('javascript')
-    return ['app/assets/javascripts/application.js', 'public/javascripts/application.js']
+    if f =~ 'public/javascripts'
+      let to_replace = 'public/javascripts'
+    else
+      let to_replace = 'app/assets/javascripts'
+    endif
+    return [s:sub(s:sub(f, to_replace, 'spec/javascripts'), '.js', '_spec.js')."\n"]
   elseif self.type_name('db-schema') || f =~# '^db/\w\+_structure.sql$'
     return ['db/seeds.rb']
   elseif f ==# 'db/seeds.rb'
