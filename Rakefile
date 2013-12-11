@@ -24,7 +24,6 @@ task :env do
 
   @src = File.expand_path '~guns/src'
   @vim = File.expand_path '~guns/src/vimfiles'
-  @emacs = File.expand_path '~guns/src/emacsfiles'
 
   @subprojects = Hash[{
     'programs' => [
@@ -304,20 +303,6 @@ task :env do
           # Copy bash completion file
           { 'misc/bash/go' => 'etc/bash_completion.d/go' }
         }
-      }
-    ],
-
-    'emacsfiles' => [
-      {
-        :base   => "#{@emacs}/evil",
-        :branch => %w[master guns],
-        :files  => 'etc/%emacs.d/evil'
-      },
-
-      {
-        :base   => "#{@emacs}/paredit",
-        :branch => %w[master],
-        :files  => { 'paredit.el' => 'etc/%emacs.d/paredit/paredit.el' }
       }
     ],
 
