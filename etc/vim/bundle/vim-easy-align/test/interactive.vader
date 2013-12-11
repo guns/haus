@@ -2,7 +2,7 @@ Execute (Clean up test environment):
   Save g:easy_align_ignore_groups,     g:easy_align_ignore_unmatched
   Save g:easy_align_indentation,       g:easy_align_delimiter_align
   Save g:easy_align_interactive_modes, g:easy_align_bang_interactive_modes
-  Save g:easy_align_delimiters
+  Save g:easy_align_delimiters,        &tabstop
   Save mapleader
 
   " TODO: revert after test
@@ -15,10 +15,18 @@ Execute (Clean up test environment):
 
   let g:easy_align_delimiters = {}
   let mapleader = ' '
-  vnoremap <silent> <Enter>          :EasyAlign<Enter>
   vnoremap <silent> r<Enter>         :EasyAlign!<Enter>
-  vnoremap <silent> <Leader><Enter>  :LiveEasyAlign<Enter>
   vnoremap <silent> <Leader>r<Enter> :LiveEasyAlign!<Enter>
+
+  " " Legacy
+  " vnoremap <silent> <Enter>          :EasyAlign<Enter>
+  " vnoremap <silent> <Leader><Enter>  :LiveEasyAlign<Enter>
+  " nmap <leader>A <Plug>(EasyAlignOperator)
+
+  vmap <Enter>         <Plug>(EasyAlign)
+  vmap <leader><Enter> <Plug>(LiveEasyAlign)
+  nmap <leader>A       <Plug>(EasyAlign)
+  vmap <leader>.       <Plug>(EasyAlignRepeat)
 
 ###########################################################
 
@@ -32,6 +40,15 @@ Do (left-align):
   vip
   \<Enter>
   *\<Space>
+
+Expect:
+  1    22222 33   444 555   6666 7   888
+  11   222   3333 4   55    6666 77  888
+  111  22    333  444 55555 6666 7   88888
+  1111 2     33   444 555   66   777 8
+
+Do (left-align using operator map):
+  \<Space>Aip*\<Space>
 
 Expect:
   1    22222 33   444 555   6666 7   888
@@ -1499,6 +1516,107 @@ Expect:
   		           'name': 'DocumentationAPITestingSpace',
   		           'type': 'global',
   		            'url': 'http://localhost:8090/display/TEST'}
+
+###########################################################
+
+Given (Two paragraphs (requires vim-repeat)):
+  a = 1
+  bb = 2
+  ccc = 3
+  dddd = 4
+
+  d = 1
+  cc = 2
+  bbb = 3
+  aaaa = 4
+  _____ = 5
+
+Do (Align and repeat):
+  \<Space>Aip\<Enter>=
+  6G
+  .
+
+Expect:
+     a = 1
+    bb = 2
+   ccc = 3
+  dddd = 4
+
+      d = 1
+     cc = 2
+    bbb = 3
+   aaaa = 4
+  _____ = 5
+
+Do (Visual-mode operator is also repeatable):
+  vip\<Enter>\<Enter>=
+  6G
+  .
+
+Expect:
+     a = 1
+    bb = 2
+   ccc = 3
+  dddd = 4
+
+     d = 1
+    cc = 2
+   bbb = 3
+  aaaa = 4
+  _____ = 5
+
+Do (Repeatable in visual mode):
+  2GvG\<Space>.
+
+Expect:
+  a = 1
+     bb = 2
+    ccc = 3
+   dddd = 4
+
+      d = 1
+     cc = 2
+    bbb = 3
+   aaaa = 4
+  _____ = 5
+
+Given:
+  :: a : 1
+  :: bb : 2
+  :: ccc : 3
+  :: dd : 4
+  :: e : 5
+
+  :: :: a:1
+  :: :: b :2
+  :: :: ccc : 3
+  :: :: dd : 4
+  :: :: e : 5
+  :: :: f : 6
+
+Do (Blockwise-visual-operator is also repeatable):
+  fa
+  \<C-V>
+  f1
+  4j
+  \<Enter>:
+  7G
+  fa
+  .
+
+Expect:
+  :: a:   1
+  :: bb:  2
+  :: ccc:  3
+  :: dd:  4
+  :: e:   5
+
+  :: :: a:   1
+  :: :: b:   2
+  :: :: ccc:  3
+  :: :: dd:  4
+  :: :: e:   5
+  :: :: f : 6
 
 ###########################################################
 Execute:
