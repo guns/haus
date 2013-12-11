@@ -17,6 +17,7 @@ splitjoin-coffee	splitjoin.txt	/*splitjoin-coffee*
 splitjoin-contents	splitjoin.txt	/*splitjoin-contents*
 splitjoin-css	splitjoin.txt	/*splitjoin-css*
 splitjoin-eruby	splitjoin.txt	/*splitjoin-eruby*
+splitjoin-go	splitjoin.txt	/*splitjoin-go*
 splitjoin-html	splitjoin.txt	/*splitjoin-html*
 splitjoin-installation	splitjoin.txt	/*splitjoin-installation*
 splitjoin-internals	splitjoin.txt	/*splitjoin-internals*
