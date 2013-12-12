@@ -317,6 +317,10 @@
    (bind "F8" "ToggleShowDesktop")
    (bindswitch "W-Tab" "NextWindow")
    (bindswitch "W-S-Tab" "PreviousWindow")
+   (bindsh "A-Tab" ["if killall -0 skippy-xd"
+                    "then killall skippy-xd"
+                    "else skippy-xd"
+                    "fi"])
 
    ;; Subtle-esque window tiling
    (bindtile "W-C-A-s" {:x "center" :y "0"   :width "75%" :height "95%"} "south")
