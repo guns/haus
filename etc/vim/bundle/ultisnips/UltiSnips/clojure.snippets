@@ -599,6 +599,15 @@ snippet defp "defprotocol" w
 (defprotocol $0)
 endsnippet
 
+snippet defproj "defproject" b
+(defproject ${1:org.example/sample} "0.0.1-SNAPSHOT"
+	:description "$2"
+	:url "$3"
+	:license {:name "MIT License"
+	          :url "http://opensource.org/licenses/MIT"}
+	:dependencies [[org.clojure/clojure "1.5.1"]])
+endsnippet
+
 snippet defin "definline"
 (definline $1
 	[$0])
