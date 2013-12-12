@@ -405,6 +405,11 @@ alias ln='ln -v'
 alias lns='ln -s'
 alias lnsf='lns -f'
 lnnull() { run rm -rf "${1%/}" && run ln -sf /dev/null "${1%/}"; }
+lndesktop() {
+    if (($# == 1)) && [[ -L ~/Desktop ]] && [[ -d "$1" ]]; then
+        (cd; rm -f Desktop; ln -sv "$(expand_path "$1")" Desktop)
+    fi
+}
 
 # chmod chown touch
 alias chmod='chmod -v'
