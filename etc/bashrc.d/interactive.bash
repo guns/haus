@@ -502,6 +502,9 @@ ALIAS mt='mount -v' \
     umtusb() { run umount -v /mnt/usb-*; rmdir /mnt/usb-*; }
 }
 
+# fusermount
+ALIAS fumt='fusermount -u'
+
 # tar
 alias star='tar --strip-components=1'
 alias gtar='tar zcv'
