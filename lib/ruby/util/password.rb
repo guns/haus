@@ -14,9 +14,7 @@ module Util
     ASCII = (0x21..0x7e).map &:chr # Printable non-whitespace characters
     ALPHA = ASCII.grep /[a-zA-Z0-9]/
 
-    # Open a file and stream it to a block, `bit_len` bits at a time. This is
-    # done in a relatively expensive fashion, based on the assumption that the
-    # entropy in the file is more precious than clock cycles.
+    # Open a file and stream it to a block, `bit_len` bits at a time.
     #
     # Note that this is effectively an implementation of `rand(ceil)`, where
     # `ceil` is a power of 2 and the entropy source is an arbitrary file.
@@ -40,7 +38,7 @@ module Util
       buf = len = 0
       File.open source, 'r' do |f|
         loop do
-          until len > bit_len
+          until len >= bit_len
             byte = f.getbyte
             raise 'Source reached EOF' if byte.nil?
             len += 8
@@ -68,53 +66,6 @@ module Util
       end
 
       buf.join
-    end
-
-    def npass_0 len = 80, sec = tty_secret, buf = tty_buffer
-      pass = [sec, buf].map { |s| Digest::SHA1.hexdigest s }.join
-      pass *= 2 until pass.length >= len
-      pass[0, len]
-    end
-
-    def npass_1 len = 81, sec = tty_secret, buf = tty_buffer
-      # Create salt by least occurrence and last appearance
-      salt = (sec + buf).chars.inject({}) do |h, ch|
-        next h if ch =~ /\s/
-        h[ch] ||= 0
-        h[ch]  += 1
-        h
-      end.sort_by { |ch, n| n }.take(8).map(&:first).join
-
-      # Create password from different permutations of sec, buf, and salt
-      pass = [sec + buf, buf + sec, salt.reverse + sec + buf].map do |str|
-        Digest::SHA1.base64digest(str + salt).chomp '='
-      end.join
-
-      pass *= 2 until pass.length > len
-      pass[0, len]
-    end
-
-    private
-
-    # Get a passphrase from the terminal
-    def tty_secret
-      raise 'stdin is not a terminal!' unless $stdin.tty?
-      raise '`stty` is unavailable!' unless system 'command -v stty >/dev/null 2>&1'
-
-      $stderr.print 'Secret:'
-      state = %x(stty -g).chomp
-      system 'stty -echo'
-
-      $stdin.readline.chomp rescue ''
-    ensure
-      system 'stty', state
-      warn '####'
-    end
-
-    # Get a string from the terminal
-    def tty_buffer
-      raise 'stdin is not a terminal!' unless $stdin.tty?
-      ($stdin.gets nil rescue '') || ''
     end
   end
 end
