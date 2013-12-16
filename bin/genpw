@@ -32,6 +32,10 @@ class Genpw
         options.chars = ALPHA
       end
 
+      opt.on '-u', '--utf8 REGEXP', Regexp, 'UTF-8 encoded Unicode characters matching REGEXP' do |arg|
+        options.chars = utf8_chars.grep arg
+      end
+
       opt.on '-f', '--file PATH', 'Entropy source file [DEFAULT: /dev/urandom]' do |arg|
         options.source = File.expand_path arg
       end
@@ -42,9 +46,17 @@ class Genpw
     end
   end
 
+  def utf8_chars
+    @utf8_chars ||= (0x0..0x2ffff).reduce([]) { |v, n|
+      c = [n].pack('U')
+      c.valid_encoding? ? v << c : v
+    }
+  end
+
   def run arguments = []
     args = parser.parse arguments
     args = [60] if args.empty?
+    raise 'Character set is empty!' if options.chars.empty?
     args.each do |len|
       puts password(len.to_i, :chars => options.chars, :source => options.source)
     end
