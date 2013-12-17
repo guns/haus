@@ -299,6 +299,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(user.system/stop)')<CR>
     nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#eval('(user.system/restart)')<CR>
     nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@user.system/instance')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sc  :call <SID>ClojurePprint('system/config')<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#eval('(user/toggle-warn-on-reflection!)')<CR>
