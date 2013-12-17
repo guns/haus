@@ -65,6 +65,10 @@
    (set! *warn-on-reflection* value)
    (swap! warnings assoc '*warn-on-reflection* value)))
 
+(try
+  (require 'schema.core)
+  (catch Throwable _))
+
 (defmacro toggle-schema-validation!
   ([]
    `(do (toggle-schema-validation! (not (@warnings :validate-schema?)))
