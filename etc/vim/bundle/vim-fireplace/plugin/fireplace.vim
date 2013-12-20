@@ -1036,7 +1036,7 @@ function! fireplace#ns() abort
   let lines = substitute(lines, '\^\={[^{}]*}', '', '')
   let lines = substitute(lines, '\^:'.keyword_group.'\+', '', 'g')
   let ns = matchstr(lines, '\C^(\s*\%(in-ns\s*''\|ns\s\+\)\zs'.keyword_group.'\+\ze')
-  if ns !=# ''
+  if ns !=# '' && expand('%:e') !=# 'cljs'
     return ns
   endif
   if has_key(s:qffiles, expand('%:p'))
