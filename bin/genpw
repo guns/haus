@@ -56,7 +56,7 @@ class Genpw
   def run arguments = []
     args = parser.parse arguments
     args = [60] if args.empty?
-    raise 'Character set is empty!' if options.chars.empty?
+    raise 'Character set is empty!' if options.chars and options.chars.empty?
     args.each do |len|
       puts password(len.to_i, :chars => options.chars, :source => options.source)
     end
