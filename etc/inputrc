@@ -150,6 +150,7 @@ $if bash
 
     # Vim
     "\033\007e":    "\C-] vim \n"
+    "\033\007E":    "\C-]vimsession \n"
     "\C-xe ":       "\C-]vim "
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeA":       "\C-] vimaliases \n"

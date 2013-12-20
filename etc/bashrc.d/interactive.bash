@@ -1044,6 +1044,14 @@ HAVE vim && {
         '
     }
 
+    vimsession() {
+        if [[ -e Session.vim ]]; then
+            vim -S Session.vim -c "silent! ! rm -f Session.vim" -c "redraw!" "$@"
+        else
+            vim "$@"
+        fi
+    }
+
     # vim-fugitive
     alias vimgit='vim -c "call fugitive#detect(\".\")" -c Gstatus'
     # Param: [$1] File to browse
