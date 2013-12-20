@@ -867,7 +867,9 @@ HAVE nmap && {
 }
 
 HAVE ngrep && {
-    alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
+    # FIXME: https://bbs.archlinux.org/viewtopic.php?pid=1358365#p1358365
+    # alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
+    alias ngg='tcpdump -i any -w - | ngrep -c 0 -l -q -P "" -W byline -I -'
 }
 
 # scutil
@@ -1156,6 +1158,8 @@ ALIAS patch='patch --version-control never'
 
 # git
 HAVE git && {
+    alias git='GIT_SSL_CAINFO=~/.certificates/github.crt git'
+
     # Github
     # Param: $1   User name
     # Param: $2   Repository name
