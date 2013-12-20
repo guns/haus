@@ -19,7 +19,7 @@ class Genpw
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 16 do |opt|
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Generate a random string of given length(s).
 
