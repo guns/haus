@@ -427,6 +427,10 @@ Mapall <4-X> :<C-u>call setloclist(0, getqflist()) \\\| call setqflist([]) \\\| 
 " Open URLs
 Mapall <4-U> :<C-u>Open<CR>
 
+" Save session
+Mapall <4-w> :<C-u>mksession<CR>
+Mapall <4-W> :<C-u>mksession \\\| qa<CR>
+
 """ Text editing {{{1
 
 " Map Unicode character bindings from ~/.inputrc

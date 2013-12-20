@@ -44,10 +44,13 @@ if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
     set undodir=~/.cache/vim/undo
 endif
 
-" Dictionaries, etc
+" Dictionaries
 if !isdirectory(expand('~/.local/share/vim'))
     call mkdir(expand('~/.local/share/vim'), 'p', 0700)
 endif
+set dictionary+=/usr/share/dict/words
+set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
+set spellfile=~/.local/share/vim/spell.utf8.add
 
 " Searching / Matching
 set nohlsearch                  " Don't highlight matching patterns
@@ -71,9 +74,6 @@ set wildignore+=public/images/**
 if exists('&wildignorecase')
     set wildignorecase          " Case insensitive file completion on command line
 endif
-set dictionary+=/usr/share/dict/words
-set spellfile=~/.local/share/vim/spell.utf8.add
-set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
 
 " Folding
 set foldmethod=marker           " Default to vim's marker folding
@@ -103,6 +103,9 @@ set lazyredraw                  " Don't redraw while in macros
 set visualbell t_vb=            " No bells, please
 set listchars=tab:⇥\ ,trail:·
 set fillchars=fold:\ ,diff:╳,vert:│
+
+" Sessions
+set sessionoptions=curdir,folds,tabpages,winsize
 
 " Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
