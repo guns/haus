@@ -1311,7 +1311,15 @@ ALIAS py='python'
 
 # Leiningen, Clojure package manager
 HAVE lein && {
-    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks -- lein'
+    lein() {
+        if [[ "$1" == +([0-9]) ]]; then
+            local trampoline="trampoline"
+            local LEIN_JVM_OPTS+="$LEIN_JVM_OPTS -Xmx$1m -Djavax.net.ssl.trustStore=~/.certificates/leiningen.ks"
+            local JVM_OPTS+="$JVM_OPTS -Xmx$1m -Djavax.net.ssl.trustStore=~/.certificates/leiningen.ks"
+            shift
+        fi
+        LEIN_JVM_OPTS="$LEIN_JVM_OPTS" JVM_OPTS="$JVM_OPTS" run lein $trampoline "$@"
+    }
 
     # alias leine=
     # alias leing=

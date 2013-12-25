@@ -217,8 +217,8 @@ class Cert
     }
     # Leiningen
     if keystore
-      env['JVM_OPTS'] = "-Djavax.net.ssl.trustStore=#{keystore}"
-      env['LEIN_JVM_OPTS'] = env['JVM_OPTS']
+      env['JVM_OPTS'     ] = "#{ENV['JVM_OPTS'     ]} -Djavax.net.ssl.trustStore=#{keystore}"
+      env['LEIN_JVM_OPTS'] = "#{ENV['LEIN_JVM_OPTS']} -Djavax.net.ssl.trustStore=#{keystore}"
     end
     Kernel.exec env, *args
   end
