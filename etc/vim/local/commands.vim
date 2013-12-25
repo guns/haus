@@ -379,8 +379,8 @@ endfunction
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! s:Screen(command)
     let map = {
-        \ 'ruby'       : 'script/rails console || pry || irb',
-        \ 'clojure'    : 'lein repl',
+        \ 'ruby'       : 'irb',
+        \ 'clojure'    : 'lein REPL',
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'haskell'    : 'ghci',
@@ -485,19 +485,6 @@ function! s:Tabmove(n)
     else
         let nr = a:n > 0 ? tabpagenr() + a:n - 1 : tabpagenr() - a:n - 3
         execute 'tabmove ' . (nr < 0 ? 0 : nr)
-    endif
-endfunction
-
-command! -bar RunCurrentFile call <SID>RunCurrentFile() "{{{1
-function! s:RunCurrentFile()
-    let map = {
-        \ 'ruby'    : 'ruby',
-        \ 'clojure' : 'clojure'
-    \ }
-    if &filetype == 'vim'
-        source %
-    elseif has_key(map, &filetype)
-        execute 'Sh ' . map[&filetype] . ' % | $PAGER'
     endif
 endfunction
 
