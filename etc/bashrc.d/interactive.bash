@@ -406,8 +406,9 @@ alias lns='ln -s'
 alias lnsf='lns -f'
 lnnull() { run rm -rf "${1%/}" && run ln -sf /dev/null "${1%/}"; }
 lndesktop() {
-    if (($# == 1)) && [[ -L ~/Desktop ]] && [[ -d "$1" ]]; then
-        (cd; rm -f Desktop; ln -sv "$(expand_path "$1")" Desktop)
+    if (($# == 1)) && [[ ! -d ~/Desktop ]] && [[ -d "$1" ]]; then
+        local src="$(expand_path "$1")"
+        (cd; rm -f Desktop; ln -sv "$src" Desktop)
     fi
 }
 
