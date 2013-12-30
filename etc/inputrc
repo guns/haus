@@ -178,7 +178,7 @@ $if bash
     "\C-xex":       "\C-] vimxinitrc \n"
     "\C-xeX":       "\C-] vimxautostart \n"
     "\C-xf":        "\C-]vimfind "
-    "\033\007F":    "\C-] vimfile \n"
+    "\033\007F":    "\C-] vimopen \n"
     "\033\007o":    "\C-] vimopen \n"
     "\033\007t":    "\C-] vimopen \n"
     "\C-xm":        "\C-]man "
@@ -228,6 +228,7 @@ $if bash
 
     # lein REPL
     "\033\007l":    "\C-]lein REPL \n"
+    "\033\007L":    "\C-]rm target/trampolines/*; lein REPL \n"
 
     # X
     "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
