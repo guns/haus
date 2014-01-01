@@ -18,9 +18,9 @@ function! nrepl#fireplace_connection#bencode(value) abort
   elseif type(a:value) == type('')
     return strlen(a:value).':'.a:value
   elseif type(a:value) == type([])
-    return 'l'.join(map(a:value,'nrepl#fireplace_connection#bencode(v:val)'),'').'e'
+    return 'l'.join(map(copy(a:value),'nrepl#fireplace_connection#bencode(v:val)'),'').'e'
   elseif type(a:value) == type({})
-    return 'd'.join(values(map(a:value,'nrepl#fireplace_connection#bencode(v:key).nrepl#fireplace_connection#bencode(v:val)')),'').'e'
+    return 'd'.join(values(map(copy(a:value),'nrepl#fireplace_connection#bencode(v:key).nrepl#fireplace_connection#bencode(v:val)')),'').'e'
   else
     throw "Can't bencode ".string(a:value)
   endif
@@ -129,8 +129,6 @@ function! s:nrepl_process(payload) dict abort
         if index(combined[key], response[key]) < 0
           call extend(combined[key], [response[key]])
         endif
-      elseif key ==# 'out' && response.out =~# '^\b.*(.*)$'
-        let combined.stacktrace = split(response.out, "\b")
       elseif type(response[key]) == type('')
         let combined[key] = get(combined, key, '') . response[key]
       else
@@ -146,10 +144,7 @@ endfunction
 
 function! s:nrepl_eval(expr, ...) dict abort
   let payload = {"op": "eval"}
-  let payload.code = '(try (clojure.core/eval ''(do '.a:expr."\n".'))' .
-        \ ' (catch Exception e' .
-        \ '   (clojure.core/print (clojure.core/apply clojure.core/str (clojure.core/interleave (clojure.core/repeat "\b") (clojure.core/map clojure.core/str (.getStackTrace e)))))' .
-        \ '   (throw e)))'
+  let payload.code = a:expr
   let options = a:0 ? a:1 : {}
   if has_key(options, 'ns')
     let payload.ns = options.ns
@@ -165,15 +160,40 @@ function! s:nrepl_eval(expr, ...) dict abort
       echohl None
     endif
   endif
+  if has_key(options, 'file_path')
+    let payload.op = 'load-file'
+    let payload['file-path'] = options.file_path
+    let payload['file-name'] = fnamemodify(options.file_path, ':t')
+    if has_key(payload, 'ns')
+      let payload.file = "(in-ns '".payload.ns.") ".payload.code
+      call remove(payload, 'ns')
+    else
+      let payload.file = payload.code
+    endif
+    call remove(payload, 'code')
+  endif
   let response = self.process(payload)
   if has_key(response, 'ns') && !a:0
     let self.ns = response.ns
+  endif
+
+  if has_key(response, 'ex') && has_key(payload, 'session')
+    let response.stacktrace = s:extract_last_stacktrace(self)
   endif
 
   if has_key(response, 'value')
     let response.value = response.value[-1]
   endif
   return response
+endfunction
+
+function! s:extract_last_stacktrace(nrepl)
+    let format_st = '(clojure.core/symbol (clojure.core/str "\n\b" (clojure.core/apply clojure.core/str (clojure.core/interleave (clojure.core/repeat "\n") (clojure.core/map clojure.core/str (.getStackTrace *e)))) "\n\b\n"))'
+    let stacktrace = split(get(split(a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'session': a:nrepl.session}).value[0], "\n\b\n"), 1, ""), "\n")
+    call a:nrepl.call({'op': 'eval', 'code': '(nth *1 1)', 'session': a:nrepl.session})
+    call a:nrepl.call({'op': 'eval', 'code': '(nth *2 2)', 'session': a:nrepl.session})
+    call a:nrepl.call({'op': 'eval', 'code': '(nth *3 3)', 'session': a:nrepl.session})
+    return stacktrace
 endfunction
 
 function! s:nrepl_call(payload) dict abort
@@ -184,7 +204,7 @@ function! s:nrepl_call(payload) dict abort
         \ 'body = s.readpartial(8192);' .
         \ 'raise %(not an nREPL server: upgrade to Leiningen 2) if body =~ /=> $/;' .
         \ 'print body;' .
-        \ 'break if body.include?(%(6:statusl4:done)) }};' .
+        \ 'break if body =~ /6:statusl(5:error|14:session-closed)?4:done/ }};' .
         \ 'rescue; abort $!.to_s;' .
         \ 'end') . ' ' .
         \ s:shellesc(nrepl#fireplace_connection#bencode(a:payload))
@@ -242,7 +262,7 @@ def fireplace_repl_interact():
         if re.search("=> $", body) != None:
           raise Exception("not an nREPL server: upgrade to Leiningen 2")
         buffer += body
-        if string.find(body, '6:statusl4:done') != -1:
+        if re.search('6:statusl(5:error|14:session-closed)?4:done', body):
           break
       fireplace_let('out', buffer)
     except Exception, e:

@@ -494,8 +494,8 @@ function! s:qfhistory() abort
   return list
 endfunction
 
-function! fireplace#session_eval(expr) abort
-  let response = s:eval(a:expr, {'session': 1})
+function! fireplace#eval(expr, ...) abort
+  let response = s:eval(a:expr, a:0 ? a:1 : {})
 
   if !empty(get(response, 'value', '')) || !empty(get(response, 'err', ''))
     call insert(s:history, {'buffer': bufnr(''), 'code': a:expr, 'ns': fireplace#ns(), 'response': response})
@@ -526,13 +526,13 @@ function! fireplace#session_eval(expr) abort
   throw err
 endfunction
 
-function! fireplace#eval(expr) abort
-  return fireplace#session_eval(a:expr)
+function! fireplace#session_eval(expr, ...) abort
+  return fireplace#eval(a:expr, extend({'session': 1}, a:0 ? a:1 : {}))
 endfunction
 
-function! fireplace#echo_session_eval(expr) abort
+function! fireplace#echo_session_eval(expr, ...) abort
   try
-    echo fireplace#session_eval(a:expr)
+    echo fireplace#session_eval(a:expr, a:0 ? a:1 : {})
   catch /^Clojure:/
   endtry
   return ''
@@ -584,7 +584,16 @@ function! s:opfunc(type) abort
   try
     set selection=inclusive clipboard-=unnamed clipboard-=unnamedplus
     if a:type =~ '^\d\+$'
-      silent exe 'normal! ^v'.a:type.'$hy'
+      let open = '[[{(]'
+      let close = '[]})]'
+      call searchpair(open, '', close, 'r', g:fireplace#skip)
+      call setpos("']", getpos("."))
+      call searchpair(open, '', close, 'b', g:fireplace#skip)
+      while col('.') > 1 && getline('.')[col('.')-2] =~# '[#''`~@]'
+        normal! h
+      endwhile
+      call setpos("'[", getpos("."))
+      silent exe "normal! `[v`]y"
     elseif a:type =~# '^.$'
       silent exe "normal! `<" . a:type . "`>y"
     elseif a:type ==# 'line'
@@ -648,6 +657,7 @@ function! s:editop(type) abort
 endfunction
 
 function! s:Eval(bang, line1, line2, count, args) abort
+  let options = {}
   if a:args !=# ''
     let expr = a:args
   else
@@ -662,14 +672,15 @@ function! s:Eval(bang, line1, line2, count, args) abort
     if !line1 || !line2
       return ''
     endif
-    let expr = join(getline(line1, line2), "\n")
+    let options.file_path = s:buffer_path()
+    let expr = repeat("\n", line1-1).join(getline(line1, line2), "\n")
     if a:bang
       exe line1.','.line2.'delete _'
     endif
   endif
   if a:bang
     try
-      let result = fireplace#session_eval(expr)
+      let result = fireplace#eval(expr, options)
       if a:args !=# ''
         call append(a:line1, result)
         exe a:line1
@@ -680,7 +691,7 @@ function! s:Eval(bang, line1, line2, count, args) abort
     catch /^Clojure:/
     endtry
   else
-    call fireplace#echo_session_eval(expr)
+    call fireplace#echo_session_eval(expr, options)
   endif
   return ''
 endfunction
@@ -761,6 +772,7 @@ endfunction
 nnoremap <silent> <Plug>FireplacePrintLast :exe <SID>print_last()<CR>
 nnoremap <silent> <Plug>FireplacePrint  :<C-U>set opfunc=<SID>printop<CR>g@
 xnoremap <silent> <Plug>FireplacePrint  :<C-U>call <SID>printop(visualmode())<CR>
+nnoremap <silent> <Plug>FireplaceCountPrint :<C-U>call <SID>printop(v:count)<CR>
 
 nnoremap <silent> <Plug>FireplaceFilter :<C-U>set opfunc=<SID>filterop<CR>g@
 xnoremap <silent> <Plug>FireplaceFilter :<C-U>call <SID>filterop(visualmode())<CR>
@@ -803,7 +815,7 @@ function! s:setup_eval() abort
   command! -buffer -bang -bar -count=1 Last exe s:Last(<bang>0, <count>)
 
   nmap <buffer> cp <Plug>FireplacePrint
-  nmap <buffer> cpp <Plug>FireplacePrintab
+  nmap <buffer> cpp <Plug>FireplaceCountPrint
 
   nmap <buffer> c! <Plug>FireplaceFilter
   nmap <buffer> c!! <Plug>FireplaceFilterab
