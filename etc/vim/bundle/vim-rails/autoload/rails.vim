@@ -3734,7 +3734,9 @@ function! s:BufSyntax()
       unlet! b:current_syntax
       let removenorend = !exists("g:html_no_rendering")
       let g:html_no_rendering = 1
+      let isk = &l:iskeyword
       syn include @htmlTop syntax/xhtml.vim
+      let &l:iskeyword = isk
       if removenorend
           unlet! g:html_no_rendering
       endif
@@ -4489,9 +4491,6 @@ function! s:BufSettings()
       call self.setvar('surround_5',   "\r\nend")
       call self.setvar('surround_69',  "\1expr: \1\rend")
       call self.setvar('surround_101', "\r\nend")
-    endif
-    if exists(':UltiSnipsAddFiletypes') == 2
-      UltiSnipsAddFiletypes rails
     endif
   elseif ft =~# 'yaml\>' || fnamemodify(self.name(),':e') ==# 'yml'
     call self.setvar('&define',self.define_pattern())
