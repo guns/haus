@@ -26,6 +26,9 @@ if exists("g:loaded_easy_align")
 endif
 let g:loaded_easy_align = 1
 
+let s:cpo_save = &cpo
+set cpo&vim
+
 let s:easy_align_delimiters_default = {
 \  ' ': { 'pattern': ' ',  'left_margin': 0, 'right_margin': 0, 'stick_to_left': 0 },
 \  '=': { 'pattern': '===\|<=>\|\(&&\|||\|<<\|>>\)=\|=\~[#?]\?\|=>\|[:+/*!%^=><&|.-]\?=[#?]\?',
@@ -332,7 +335,7 @@ function! s:do_align(todo, modes, all_tokens, all_delims, fl, ll, fc, lc, nth, r
   let mode       = a:modes[0]
   let lines      = {}
   let min_indent = -1
-  let max = { 'pivot_len': 0.0, 'token_len': 0, 'just_len': 0, 'delim_len': 0,
+  let max = { 'pivot_len': str2float('0.0'), 'token_len': 0, 'just_len': 0, 'delim_len': 0,
         \ 'indent': 0, 'tokens': 0, 'strip_len': 0 }
   let d = a:dict
   let [f, fx] = s:parse_filter(d.filter)
@@ -1092,4 +1095,7 @@ function! easy_align#align(bang, live, visualmode, expr) range
   catch 'exit'
   endtry
 endfunction
+
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
