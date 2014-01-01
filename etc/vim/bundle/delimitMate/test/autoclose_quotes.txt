@@ -4,6 +4,7 @@ let g:delimitMate_autoclose = 1
 "''x" "''x"
 "'\<BS>x" "x"
 "'\<C-G>gx" "''x"
+# This will fail for double quote.
 "'\"x" "'\"x\"'"
 "@'x" "@'x'"
 "@#\<Left>'x" "@'x'#"
@@ -21,6 +22,8 @@ let g:delimitMate_autoclose = 0
 "@#\<Left>''x" "@'x'#"
 let g:delimitMate_expand_space = 1
 let g:delimitMate_autoclose = 1
+"'\<Space>x" "' x'"
+let g:delimitMate_expand_inside_quotes = 1
 "'\<Space>x" "' x '"
 "'\<Space>\<BS>x" "'x'"
 "abc\\''\<Space>x" "abc\\' x'"
@@ -48,3 +51,6 @@ let g:delimitMate_nesting_quotes = split(g:delimitMate_quotes, '\s\+')
 "''x" "''x"
 "'x" "'x'"
 unlet g:delimitMate_nesting_quotes
+# expand iabbreviations
+iabb def ghi
+"def'" "ghi'"

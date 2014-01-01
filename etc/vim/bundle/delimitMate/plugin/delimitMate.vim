@@ -108,6 +108,9 @@ function! s:init() "{{{
 	endif
 	call s:option_init("expand_cr", 0)
 
+	" expand_in_quotes
+	call s:option_init('expand_inside_quotes', 0)
+
 	" jump_expansion
 	call s:option_init("jump_expansion", 0)
 
@@ -178,7 +181,7 @@ function! s:Unmap() " {{{
 				\ s:g('left_delims') +
 				\ s:g('quotes_list') +
 				\ s:g('apostrophes_list') +
-				\ ['<BS>', '<S-BS>', '<Del>', '<CR>', '<Space>', '<S-Tab>', '<Esc>'] +
+				\ ['<BS>', '<C-h>', '<S-BS>', '<Del>', '<CR>', '<Space>', '<S-Tab>', '<Esc>'] +
 				\ ['<Up>', '<Down>', '<Left>', '<Right>', '<LeftMouse>', '<RightMouse>'] +
 				\ ['<C-Left>', '<C-Right>'] +
 				\ ['<Home>', '<End>', '<PageUp>', '<PageDown>', '<S-Down>', '<S-Up>', '<C-G>g']
@@ -255,13 +258,22 @@ endfunction "}}}
 "}}}
 
 " Mappers: {{{
+function! s:TriggerAbb() "{{{
+	if v:version < 703
+		    \ || ( v:version == 703 && !has('patch489') )
+		    \ || pumvisible()
+		return ''
+	endif
+	return "\<C-]>"
+endfunction "}}}
+
 function! s:NoAutoClose() "{{{
 	" inoremap <buffer> ) <C-R>=delimitMate#SkipDelim('\)')<CR>
 	for delim in s:g('right_delims') + s:g('quotes_list')
 		if delim == '|'
 			let delim = '<Bar>'
 		endif
-		exec 'inoremap <silent> <Plug>delimitMate' . delim . ' <C-R>=delimitMate#SkipDelim("' . escape(delim,'"') . '")<CR>'
+		exec 'inoremap <silent> <Plug>delimitMate' . delim . ' <C-R>=<SID>TriggerAbb().delimitMate#SkipDelim("' . escape(delim,'"') . '")<CR>'
 		exec 'silent! imap <unique> <buffer> '.delim.' <Plug>delimitMate'.delim
 	endfor
 endfunction "}}}
@@ -273,15 +285,19 @@ function! s:AutoClose() "{{{
 	while i < len(s:g('matchpairs_list'))
 		let ld = s:g('left_delims')[i] == '|' ? '<bar>' : s:g('left_delims')[i]
 		let rd = s:g('right_delims')[i] == '|' ? '<bar>' : s:g('right_delims')[i]
-		exec 'inoremap <silent> <Plug>delimitMate' . ld . ' <C-R>=delimitMate#ParenDelim("' . escape(rd, '|') . '")<CR>'
-		exec 'silent! imap <unique> <buffer> '.ld.' <Plug>delimitMate'.ld
+		exec 'inoremap <expr><silent> <Plug>delimitMate' . ld
+								\. ' <SID>TriggerAbb().delimitMate#ParenDelim("' . escape(rd, '|') . '")'
+		exec 'silent! imap <unique> <buffer> '.ld
+								\.' <Plug>delimitMate'.ld
 		let i += 1
 	endwhile
 
 	" Exit from inside the matching pair:
 	for delim in s:g('right_delims')
-		exec 'inoremap <silent> <Plug>delimitMate' . delim . ' <C-R>=delimitMate#JumpOut("\' . delim . '")<CR>'
-		exec 'silent! imap <unique> <buffer> ' . delim . ' <Plug>delimitMate'. delim
+		exec 'inoremap <expr><silent> <Plug>delimitMate' . delim
+								\. ' <SID>TriggerAbb().delimitMate#JumpOut("\' . delim . '")'
+		exec 'silent! imap <unique> <buffer> ' . delim
+								\. ' <Plug>delimitMate'. delim
 	endfor
 
 	" Add matching quote and jump to the midle, or exit if inside a pair of matching quotes:
@@ -290,8 +306,10 @@ function! s:AutoClose() "{{{
 		if delim == '|'
 			let delim = '<Bar>'
 		endif
-		exec 'inoremap <silent> <Plug>delimitMate' . delim . ' <C-R>=delimitMate#QuoteDelim("\' . delim . '")<CR>'
-		exec 'silent! imap <unique> <buffer> ' . delim . ' <Plug>delimitMate' . delim
+		exec 'inoremap <expr><silent> <Plug>delimitMate' . delim
+								\. ' <SID>TriggerAbb()."<C-R>=delimitMate#QuoteDelim(\"\\\' . delim . '\")<CR>"'
+		exec 'silent! imap <unique> <buffer> ' . delim
+								\. ' <Plug>delimitMate' . delim
 	endfor
 
 	" Try to fix the use of apostrophes (kept for backward compatibility):
@@ -305,8 +323,13 @@ endfunction "}}}
 function! s:ExtraMappings() "{{{
 	" If pair is empty, delete both delimiters:
 	inoremap <silent> <Plug>delimitMateBS <C-R>=delimitMate#BS()<CR>
-	if !hasmapto('<Plug>delimitMateBS','i') && maparg('<BS>'. 'i') == ''
-		silent! imap <unique> <buffer> <BS> <Plug>delimitMateBS
+	if !hasmapto('<Plug>delimitMateBS','i')
+	  if maparg('<BS>'. 'i') == ''
+      silent! imap <unique> <buffer> <BS> <Plug>delimitMateBS
+    endif
+	  if maparg('<C-h>'. 'i') == ''
+      silent! imap <unique> <buffer> <C-h> <Plug>delimitMateBS
+    endif
 	endif
 	" If pair is empty, delete closing delimiter:
 	inoremap <silent> <expr> <Plug>delimitMateS-BS delimitMate#WithinEmptyPair() ? "\<Del>" : "\<S-BS>"
@@ -314,22 +337,22 @@ function! s:ExtraMappings() "{{{
 		silent! imap <unique> <buffer> <S-BS> <Plug>delimitMateS-BS
 	endif
 	" Expand return if inside an empty pair:
-	inoremap <silent> <Plug>delimitMateCR <C-R>=delimitMate#ExpandReturn()<CR>
+	inoremap <expr><silent> <Plug>delimitMateCR <SID>TriggerAbb()."\<C-R>=delimitMate#ExpandReturn()\<CR>"
 	if s:g('expand_cr') && !hasmapto('<Plug>delimitMateCR', 'i') && maparg('<CR>', 'i') == ''
 		silent! imap <unique> <buffer> <CR> <Plug>delimitMateCR
 	endif
 	" Expand space if inside an empty pair:
-	inoremap <silent> <Plug>delimitMateSpace <C-R>=delimitMate#ExpandSpace()<CR>
+	inoremap <expr><silent> <Plug>delimitMateSpace <SID>TriggerAbb()."\<C-R>=delimitMate#ExpandSpace()\<CR>"
 	if s:g('expand_space') && !hasmapto('<Plug>delimitMateSpace', 'i') && maparg('<Space>', 'i') == ''
 		silent! imap <unique> <buffer> <Space> <Plug>delimitMateSpace
 	endif
 	" Jump over any delimiter:
-	inoremap <silent> <Plug>delimitMateS-Tab <C-R>=delimitMate#JumpAny()<CR>
+	inoremap <expr><silent> <Plug>delimitMateS-Tab <SID>TriggerAbb()."\<C-R>=delimitMate#JumpAny()\<CR>"
 	if s:g('tab2exit') && !hasmapto('<Plug>delimitMateS-Tab', 'i') && maparg('<S-Tab>', 'i') == ''
 		silent! imap <unique> <buffer> <S-Tab> <Plug>delimitMateS-Tab
 	endif
 	" Jump over next delimiters
-	inoremap <buffer> <Plug>delimitMateJumpMany <C-R>=delimitMate#JumpMany()<CR>
+	inoremap <expr><buffer> <Plug>delimitMateJumpMany <SID>TriggerAbb()."\<C-R>=delimitMate#JumpMany()\<CR>"
 	if !hasmapto('<Plug>delimitMateJumpMany', 'i') && maparg("<C-G>g", 'i') == ''
 		imap <silent> <buffer> <C-G>g <Plug>delimitMateJumpMany
 	endif
@@ -371,4 +394,4 @@ augroup END
 
 let &cpo = save_cpo
 " GetLatestVimScripts: 2754 1 :AutoInstall: delimitMate.vim
-" vim:foldmethod=marker:foldcolumn=4
+" vim:foldmethod=marker:foldcolumn=4:ts=2:sw=2

@@ -1,6 +1,7 @@
 'b:delimitMate_autoclose'	delimitMate.txt	/*'b:delimitMate_autoclose'*
 'b:delimitMate_balance_matchpairs'	delimitMate.txt	/*'b:delimitMate_balance_matchpairs'*
 'b:delimitMate_expand_cr'	delimitMate.txt	/*'b:delimitMate_expand_cr'*
+'b:delimitMate_expand_inside_quotes'	delimitMate.txt	/*'b:delimitMate_expand_inside_quotes'*
 'b:delimitMate_expand_space'	delimitMate.txt	/*'b:delimitMate_expand_space'*
 'b:delimitMate_jump_expansion'	delimitMate.txt	/*'b:delimitMate_jump_expansion'*
 'b:delimitMate_matchpairs'	delimitMate.txt	/*'b:delimitMate_matchpairs'*
@@ -16,6 +17,7 @@
 'delimitMate_excluded_ft'	delimitMate.txt	/*'delimitMate_excluded_ft'*
 'delimitMate_excluded_regions'	delimitMate.txt	/*'delimitMate_excluded_regions'*
 'delimitMate_expand_cr'	delimitMate.txt	/*'delimitMate_expand_cr'*
+'delimitMate_expand_inside_quotes'	delimitMate.txt	/*'delimitMate_expand_inside_quotes'*
 'delimitMate_expand_space'	delimitMate.txt	/*'delimitMate_expand_space'*
 'delimitMate_jump_expansion'	delimitMate.txt	/*'delimitMate_jump_expansion'*
 'delimitMate_matchpairs'	delimitMate.txt	/*'delimitMate_matchpairs'*
