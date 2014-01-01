@@ -4,9 +4,9 @@ OXtermColorTable	xterm-color-table.txt	/*OXtermColorTable*
 SXtermColorTable	xterm-color-table.txt	/*SXtermColorTable*
 TXtermColorTable	xterm-color-table.txt	/*TXtermColorTable*
 VXtermColorTable	xterm-color-table.txt	/*VXtermColorTable*
-XtermColorTable	xterm-color-table.txt	/*XtermColorTable*
 XtermColorTable-#	xterm-color-table.txt	/*XtermColorTable-#*
 XtermColorTable-f	xterm-color-table.txt	/*XtermColorTable-f*
 XtermColorTable-mappings	xterm-color-table.txt	/*XtermColorTable-mappings*
 XtermColorTable-t	xterm-color-table.txt	/*XtermColorTable-t*
 g:XtermColorTableDefaultOpen	xterm-color-table.txt	/*g:XtermColorTableDefaultOpen*
+xterm-color-table.txt	xterm-color-table.txt	/*xterm-color-table.txt*
