@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: matcher_default.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 19 Oct 2012.
+" Last Modified: 28 Dec 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -36,6 +36,14 @@ let s:matcher = {
       \ 'description' : 'default matcher',
       \}
 
+function! s:matcher.pattern(input) "{{{
+  let patterns = map(filter(copy(map(copy(s:default_matchers),
+        \ 'unite#get_filters(v:val)')),
+        \ "v:val != self && has_key(v:val, 'pattern')"),
+        \ 'v:val.pattern(a:input)')
+  return join(patterns,'\|')
+endfunction"}}}
+
 function! s:matcher.filter(candidates, context) "{{{
   let candidates = a:candidates
   for default in s:default_matchers
@@ -54,8 +62,7 @@ function! unite#filters#matcher_default#get() "{{{
   return s:default_matchers
 endfunction"}}}
 function! unite#filters#matcher_default#use(matchers) "{{{
-  let s:default_matchers = type(a:matchers) == type([]) ?
-        \ a:matchers : [a:matchers]
+  let s:default_matchers = unite#util#convert2list(a:matchers)
 endfunction"}}}
 
 let &cpo = s:save_cpo

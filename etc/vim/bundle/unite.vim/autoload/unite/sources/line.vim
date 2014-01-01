@@ -2,7 +2,7 @@
 " FILE: line.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
 "          t9md <taqumd at gmail.com>
-" Last Modified: 08 Nov 2013.
+" Last Modified: 26 Dec 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -28,9 +28,9 @@
 " original verion is http://d.hatena.ne.jp/thinca/20101105/1288896674
 
 call unite#util#set_default(
-      \ 'g:source_line_enable_highlight', 1)
+      \ 'g:unite_source_line_enable_highlight', 1)
 call unite#util#set_default(
-      \ 'g:source_line_search_word_highlight', 'Search')
+      \ 'g:unite_source_line_search_word_highlight', 'Search')
 
 let s:supported_search_direction = ['forward', 'backward', 'all']
 
@@ -51,9 +51,6 @@ let s:source_line = {
 
 function! s:source_line.hooks.on_init(args, context) "{{{
   call s:on_init(a:args, a:context)
-
-  call unite#print_source_message(
-        \ 'Target: ' . a:context.source__path, s:source_line.name)
 endfunction"}}}
 function! s:source_line.hooks.on_syntax(args, context) "{{{
   call s:hl_refresh(a:context)
@@ -91,7 +88,7 @@ let s:source_line.converters = [s:source_line.source__converter]
 " Misc. "{{{
 function! s:on_init(args, context) "{{{
   execute 'highlight default link uniteSource__Line_target '
-        \ . g:source_line_search_word_highlight
+        \ . g:unite_source_line_search_word_highlight
   syntax case ignore
   let a:context.source__path = unite#util#substitute_path_separator(
         \ (&buftype =~ 'nofile') ? expand('%:p') : bufname('%'))
@@ -116,9 +113,24 @@ function! s:on_init(args, context) "{{{
     let direction = 'all'
   endif
 
+  let a:context.source__input = a:context.input
+  if a:context.source__linemax > 10000 && a:context.source__input == ''
+    " Note: In huge buffer, you must input narrowing text.
+    let a:context.source__input = unite#util#input('Narrowing text: ', '')
+  endif
+
   if direction !=# 'all'
     call unite#print_source_message(
-          \ 'direction: ' . direction, s:source_line.name)
+          \ 'Direction: ' . direction, s:source_line.name)
+  endif
+
+  call unite#print_source_message(
+        \ 'Target: ' . a:context.source__path, s:source_line.name)
+
+  if a:context.source__input != ''
+    call unite#print_source_message(
+          \ 'Narrowing text: ' . a:context.source__input,
+          \ s:source_line.name)
   endif
 
   let a:context.source__direction = direction
@@ -146,8 +158,15 @@ function! s:get_lines(context, direction, start, max) "{{{
 
   let _ = []
   let linenr = start
+  let input = tolower(a:context.source__input)
+  let is_expr = input =~ '[~\\.^$\[\]*]'
   for line in getbufline(a:context.source__bufnr, start, end)
-    call add(_, [linenr, line])
+    if input == ''
+          \ || (!is_expr && stridx(tolower(line), input) >= 0)
+          \ || line =~ input
+      call add(_, [linenr, line])
+    endif
+
     let linenr += 1
   endfor
 
@@ -157,7 +176,7 @@ endfunction"}}}
 function! s:hl_refresh(context) "{{{
   silent! syntax clear uniteSource__Line_target
   syntax case ignore
-  if a:context.input == '' || !g:source_line_enable_highlight
+  if a:context.input == '' || !g:unite_source_line_enable_highlight
     return
   endif
 

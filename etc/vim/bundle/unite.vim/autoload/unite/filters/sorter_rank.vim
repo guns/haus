@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: sorter_rank.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 08 Aug 2013.
+" Last Modified: 24 Dec 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -41,103 +41,67 @@ function! s:sorter.filter(candidates, context) "{{{
     return a:candidates
   endif
 
+  return unite#filters#sorter_rank#_sort(
+        \ a:candidates, a:context.input, unite#util#has_lua())
+endfunction"}}}
+
+function! unite#filters#sorter_rank#_sort(candidates, input, has_lua) "{{{
   " Initialize.
+  let is_path = has_key(a:candidates[0], 'action__path')
   for candidate in a:candidates
     let candidate.filter__rank = 0
+    let candidate.filter__word = is_path ?
+          \ fnamemodify(candidate.word, ':t') : candidate.word
   endfor
 
-  " let is_path = has_key(a:candidates[0], 'action__path')
 
-  for input in split(a:context.input, '\\\@<! ')
-    let input = substitute(substitute(input, '\\ ', ' ', 'g'),
-          \ '\*', '', 'g')
+  let inputs = map(split(a:input, '\\\@<! '), "
+        \ tolower(substitute(substitute(v:val, '\\\\ ', ' ', 'g'),
+        \ '\\*', '', 'g'))")
 
-    " Calc rank.
-    let l1 = len(input)
+  let candidates = a:has_lua ?
+        \ s:sort_lua(a:candidates, inputs) :
+        \ s:sort_vim(a:candidates, inputs)
 
-    " for candidate in a:candidates
-    "   let word = is_path ? fnamemodify(candidate.word, ':t') : candidate.word
-    "   let index = stridx(word, input[0])
-    "   let candidate.filter__rank +=
-    "         \ len(word) + (index > 0 ? index * 2 : len(word))
-    " endfor
+  " echomsg a:input
+  " echomsg string(map(copy(candidates),
+  "       \ '[v:val.word, v:val.filter__rank]'))
 
-    if unite#util#has_lua()
-      for candidate in a:candidates
-        let candidate.filter__rank +=
-              \ s:calc_word_distance_lua(input, candidate.word, l1)
-      endfor
-    else
-      for candidate in a:candidates
-        let candidate.filter__rank +=
-              \ s:calc_word_distance(input, candidate.word, l1)
-      endfor
-    endif
-  endfor
-
-  return unite#util#has_lua() ?
-        \ s:sort_lua(a:candidates) :
-        \ unite#util#sort_by(a:candidates, 'v:val.filter__rank')
+  return candidates
 endfunction"}}}
 
-function! s:calc_word_distance(str1, str2, l1) "{{{
-  return 
-
-  let l2 = len(a:str2)
-  let p1 = range(l2+1)
-  let p2 = []
-
-  for i in range(l2+1)
-    call add(p2, 0)
-  endfor
-
-  for i in range(a:l1)
-    let p2[0] = p1[0] + 1
-    for j in range(l2)
-      let p2[j+1] = min([p1[j+1] + 1, p2[j]+1])
+function! s:sort_vim(candidates, inputs) "{{{
+  for input in a:inputs
+    for candidate in a:candidates
+      let index = stridx(candidate.filter__word, input)
+      let candidate.filter__rank += len(candidate.filter__word)
+            \ - (index >= 0 ? ((200 - len(candidate.filter__word))
+            \      / (index+1)) : 0)
     endfor
-    let [p1, p2] = [p2, p1]
   endfor
 
-  " echomsg string([a:str1, a:str2, p1[l2]])
-  return p1[l2]
+  return unite#util#sort_by(a:candidates, 'v:val.filter__rank')
 endfunction"}}}
 
-function! s:calc_word_distance_lua(str1, str2, l1) "{{{
-  lua << EOF
-  local str1 = vim.eval('a:str1')
-  local str2 = vim.eval('a:str2')
-  local l1 = vim.eval('a:l1')
-  local l2 = string.len(str2)
-  local p1 = {}
-  local p2 = {}
-
-  local cnt = 0
-  for i = 0, l2+1 do
-    p1[i] = cnt
-    p2[i] = 0
-
-    cnt = cnt + 1
-  end
-
-  for i = 0, l1 do
-    p2[0] = p1[0] + 1
-    for j = 0, l2 do
-      p2[j+1] = math.min(p1[j+1] + 1, p2[j]+1)
-    end
-  end
-
-  vim.command('let distance = ' .. p1[l2])
-EOF
-
-  " echomsg string([a:str1, a:str2, distance])
-  return distance
-endfunction"}}}
-
-function! s:sort_lua(candidates) "{{{
+function! s:sort_lua(candidates, inputs) "{{{
   lua << EOF
 do
   local candidates = vim.eval('a:candidates')
+
+  -- Calc rank
+  local inputs = vim.eval('a:inputs')
+  for i = 0, #inputs-1 do
+    for j = 0, #candidates-1 do
+      local word = candidates[j].filter__word
+      local index = string.find(string.lower(word), inputs[i], 1, true)
+
+      candidates[j].filter__rank = candidates[j].filter__rank
+        + string.len(word) - (index ~= nil
+        and ((200 - string.len(word)) / (index+1)) * 10 or 0)
+    end
+  end
+
+  -- Sort
   local t = {}
   for i = 1, #candidates do
     t[i] = candidates[i-1]
@@ -150,7 +114,6 @@ do
   end
 end
 EOF
-  " echomsg string(map(copy(a:candidates), '[v:val.word, v:val.filter__rank]'))
   return a:candidates
 endfunction"}}}
 

@@ -1,6 +1,6 @@
 " tag source for unite.vim
 " Version:     0.1.0
-" Last Change: 23 Sep 2013.
+" Last Change: 20 Dec 2013.
 " Author:      tsukkee <takayuki0510 at gmail.com>
 "              thinca <thinca+vim@gmail.com>
 "              Shougo <ShougoMatsu at gmail.com>
@@ -38,7 +38,7 @@ let s:input_cache = {}
 let s:source = {
 \   'name': 'tag',
 \   'description': 'candidates from tag file',
-\   'max_candidates': 30,
+\   'max_candidates': 200,
 \   'action_table': {},
 \   'hooks': {},
 \   'syntax': 'uniteSource__Tag',
@@ -51,8 +51,16 @@ function! s:source.hooks.on_syntax(args, context)
   syntax match uniteSource__Tag_Pat /pat:.\{-}\ze\s*$/ contained
   syntax match uniteSource__Tag_Line /line:.\{-}\ze\s*$/ contained
   highlight default link uniteSource__Tag_File Type
-  highlight default link uniteSource__Tag_Pat Special
+  highlight default link uniteSource__Tag_Pat Comment
   highlight default link uniteSource__Tag_Line Constant
+  if has('conceal')
+      syntax match uniteSource__Tag_Ignore /pat:/
+                  \ containedin=uniteSource__Tag_Pat conceal
+  else
+      syntax match uniteSource__Tag_Ignore /pat:/
+                  \ containedin=uniteSource__Tag_Pat
+      highlight default link uniteSource__Tag_Ignore Ignore
+  endif
 endfunction
 
 function! s:source.hooks.on_init(args, context)
@@ -98,21 +106,20 @@ function! s:source.async_gather_candidates(args, context)
         return []
     endif
 
-    let is_file = self.name ==# 'tag/file'
     if a:context.immediately
         while !empty(tagdata.cont.lines)
-            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), is_file)
+            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), self.name)
         endwhile
     elseif has('reltime') && has('float')
         let time = reltime()
         while str2float(reltimestr(reltime(time))) < 1.0
         \       && !empty(tagdata.cont.lines)
-            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), is_file)
+            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), self.name)
         endwhile
     else
         let i = 1000
         while 0 < i && !empty(tagdata.cont.lines)
-            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), is_file)
+            let result += s:next(tagdata, remove(tagdata.cont.lines, 0), self.name)
             let i -= 1
         endwhile
     endif
@@ -141,7 +148,6 @@ endfunction
 let s:source_files = {
 \   'name': 'tag/file',
 \   'description': 'candidates from files contained in tag file',
-\   'max_candidates': 30,
 \   'action_table': {},
 \   'hooks': {'on_init': s:source.hooks.on_init},
 \   'async_gather_candidates': s:source.async_gather_candidates,
@@ -169,14 +175,11 @@ endfunction
 
 
 " source tag/include
-let s:source_include = {
-\   'name': 'tag/include',
-\   'description': 'candidates from files contained in include tag file',
-\   'max_candidates': 30,
-\   'action_table': {},
-\   'hooks': {'on_init': s:source.hooks.on_init},
-\   'async_gather_candidates': s:source.async_gather_candidates,
-\}
+let s:source_include = deepcopy(s:source)
+let s:source_include.name = 'tag/include'
+let s:source_include.description =
+            \ 'candidates from files contained in include tag file'
+let s:source_include.max_candidates = 0
 
 function! s:source_include.hooks.on_init(args, context)
     if exists('*neocomplete#sources#include#get_include_files')
@@ -268,11 +271,13 @@ function! s:taglist_filter(input)
 
     let taglist = map(taglist(a:input), "{
     \   'word':    v:val.name,
-    \   'abbr':    printf('%s  @%s  %s',
-    \                  v:val.name,
-    \                  unite#util#substitute_path_separator(
-    \                        fnamemodify(v:val.filename, ':.')),
-    \                  'pat:' . v:val.cmd),
+    \   'abbr':    printf('%s  %s  %s',
+    \                  unite#util#truncate_smart(v:val.name, 25, 15, '..'),
+    \                  unite#util#truncate_smart('@'.fnamemodify(
+    \                     v:val.filename, ':.'), 20, 10, '..'),
+    \                  'pat:' .  matchstr(v:val.cmd,
+    \                         '^[?/]\\^\\?\\zs.\\{-1,}\\ze\\$\\?[?/]$')
+    \                  ),
     \   'kind':    'jump_list',
     \   'action__path':    unite#util#substitute_path_separator(
     \                   v:val.filename),
@@ -303,7 +308,8 @@ function! s:taglist_filter(input)
     return taglist
 endfunction
 
-function! s:next(tagdata, line, is_file)
+function! s:next(tagdata, line, name)
+    let is_file = a:name ==# 'tag/file'
     let cont = a:tagdata.cont
     " parsing tag files is faster than using taglist()
     let [name, filename, cmd, extensions] = s:parse_tag_line(
@@ -331,14 +337,17 @@ function! s:next(tagdata, line, is_file)
         let pattern = '\M' . pattern
     endif
 
-    let path = filename =~ '^\%(/\|\a\+:[/\\]\)' ? filename : cont.basedir . '/' . filename
+    let path = filename =~ '^\%(/\|\a\+:[/\\]\)' ?
+                \ filename : cont.basedir . '/' . filename
 
     let tag = {
     \   'word':    name,
-    \   'abbr':    printf('%s  @%s  %s',
-    \                  name,
-    \                  fnamemodify(path, ':.'),
-    \                  linenr ? 'line:' . linenr : 'pat:' . cmd
+    \   'abbr':    printf('%s  %s  %s',
+    \                  unite#util#truncate_smart(name, 25, 15, '..'),
+    \                  unite#util#truncate_smart('@'.fnamemodify(path,
+    \                     (a:name ==# 'tag/include' ? ':t' : ':.')), 20, 10, '..'),
+    \                  linenr ? 'line:' . linenr : 'pat:' .
+    \                      matchstr(cmd, '^[?/]\^\?\zs.\{-1,}\ze\$\?[?/]$')
     \                  ),
     \   'kind':    'jump_list',
     \   'action__path':    path,
@@ -351,7 +360,7 @@ function! s:next(tagdata, line, is_file)
     endif
     call add(a:tagdata.tags, tag)
 
-    let result = a:is_file ? [] : [tag]
+    let result = is_file ? [] : [tag]
 
     let fullpath = fnamemodify(path, ':p')
     if !has_key(a:tagdata.files, fullpath)
@@ -363,7 +372,7 @@ function! s:next(tagdata, line, is_file)
         \   "action__directory": unite#path2directory(fullpath),
         \ }
         let a:tagdata.files[fullpath] = file
-        if a:is_file
+        if is_file
             let result = [file]
         endif
     endif
@@ -448,6 +457,7 @@ function! s:action_table.jsplit.func(candidates)
     endfor
 endfunction
 
-let s:source.action_table.jump_list = s:action_table
+let s:source.action_table = s:action_table
+let s:source_include.action_table = s:action_table
 
 " vim:foldmethod=marker:fen:sw=4:sts=4

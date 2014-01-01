@@ -9,19 +9,34 @@ Context Source.run()
   if has('lua')
     It tests lua matcher.
       ShouldEqual unite#filters#lua_matcher(
-            \ [{'word' : 'foo'}], 'foo', 0), [{'word' : 'foo'}]
+            \ [{'word' : 'foo'}], { 'input' : 'foo' }, 0), [{'word' : 'foo'}]
       ShouldEqual unite#filters#lua_matcher(
-            \ [{'word' : 'foo'}], 'bar', 0), []
+            \ [{'word' : 'foo'}], { 'input' : 'bar' }, 0), []
       ShouldEqual unite#filters#lua_matcher(
-            \ [{'word' : 'Foo'}], 'foo', 0), []
+            \ [{'word' : 'Foo'}], { 'input' : 'foo'}, 0), []
       ShouldEqual unite#filters#lua_matcher(
-            \ [{'word' : 'Foo'}], 'foo', 1), [{'word' : 'Foo'}]
+            \ [{'word' : 'Foo'}], { 'input' : 'foo'}, 1), [{'word' : 'Foo'}]
       ShouldEqual unite#filters#lua_matcher(
-            \ [{'word' : 'Foo'}, {'word' : 'Bar'}], 'foo', 1), [{'word' : 'Foo'}]
+            \ [{'word' : 'Foo'}, {'word' : 'Bar'}], { 'input' : 'foo' }, 1), [{'word' : 'Foo'}]
       ShouldEqual unite#filters#lua_matcher(
             \ [{'word' : 'foo'}, {'word' : 'bar'},
             \  {'word' : 'foobar'}, {'word' : 'baz'}],
-            \ 'foo', 0), [{'word' : 'foo'}, {'word' : 'foobar'}]
+            \ { 'input' : 'foo' }, 0), [{'word' : 'foo'}, {'word' : 'foobar'}]
+      ShouldEqual unite#filters#lua_fuzzy_matcher(
+            \ [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}],
+            \ { 'input' : 'cl' }, 0), [{'word' : '/Users/core.cljs'}]
+      ShouldEqual unite#filters#lua_fuzzy_matcher(
+            \ [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}],
+            \ { 'input' : 'co' }, 0), [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}]
+      ShouldEqual unite#filters#lua_fuzzy_matcher(
+            \ [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}],
+            \ { 'input' : '/U' }, 0), [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}]
+      ShouldEqual unite#filters#lua_fuzzy_matcher(
+            \ [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}],
+            \ { 'input' : '/Us' }, 0), [{'word' : '/Users/core.cljs'}, {'word' : '/Users/core.js'}]
+      ShouldEqual unite#filters#lua_fuzzy_matcher(
+            \ [{'word' : '/unite/sources/find.vim'}],
+            \ { 'input' : '/u/s/f' }, 0), [{'word' : '/unite/sources/find.vim'}]
       End
   endif
 End

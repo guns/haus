@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: matcher_fuzzy.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 18 Nov 2013.
+" Last Modified: 26 Dec 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -38,6 +38,11 @@ let s:matcher = {
       \ 'description' : 'fuzzy matcher',
       \}
 
+function! s:matcher.pattern(input) "{{{
+  return substitute(substitute(unite#util#escape_match(a:input),
+        \ '\([[:alnum:]_-]\|\\\.\)\ze.', '\0[^/]\\{-}', 'g'), '\*\*', '*', 'g')
+endfunction"}}}
+
 function! s:matcher.filter(candidates, context) "{{{
   if a:context.input == ''
     return unite#filters#filter_matcher(
@@ -62,7 +67,7 @@ function! s:matcher.filter(candidates, context) "{{{
     endif
 
     let input = substitute(substitute(unite#util#escape_match(input),
-          \ '[[:alnum:]._/-]', '\0.*', 'g'), '\*\*', '*', 'g')
+          \ '\([[:alnum:]_-]\|\\\.\)\ze.', '\0[^/]\\{-}', 'g'), '\*\*', '*', 'g')
 
     let expr = (input =~ '^!') ?
           \ 'v:val.word !~ ' . string(input[1:]) :

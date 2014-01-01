@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: candidates.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 01 Oct 2013.
+" Last Modified: 28 Dec 2013.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -309,7 +309,7 @@ function! s:get_source_candidates(source) "{{{
         let a:source.unite__cached_candidates +=
               \ a:source.async_gather_candidates(a:source.args, context)
 
-        if context.unite__is_interactive
+        if (!context.sync && context.unite__is_interactive)
               \ || !a:source.unite__context.is_async
           break
         endif
