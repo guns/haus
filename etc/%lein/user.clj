@@ -86,8 +86,6 @@
    (toggle-schema-validation! value)
    (print-warnings-atom)))
 
-(toggle-warnings!)
-
 ;;
 ;; Reloading
 ;;

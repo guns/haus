@@ -36,6 +36,7 @@
                   "REPL" ["trampoline" "repl" ":headless"]
                   "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
+        :global-vars {*warn-on-reflection* true}
         :repl-options
         {:init-ns user
          :init (load-file (str (System/getProperty "user.home") "/.lein/user.clj"))}}}
