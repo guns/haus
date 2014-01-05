@@ -1541,7 +1541,13 @@ HAVE cert && {
             run cert exec -f "$certfile" -- "${@:2}"
         fi
     }
-    _cx() { __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')"; }
+    _cx() {
+        if ((COMP_CWORD == 1)); then
+            __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')";
+        else
+            _command_offset 2
+        fi
+    }
     complete -F _cx cx
 }
 
