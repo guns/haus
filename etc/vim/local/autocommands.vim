@@ -125,7 +125,7 @@ augroup GUNS
         \ SetWhitespace 2 8
 
     " C {{{1
-    autocmd FileType c,c++
+    autocmd FileType c,cpp
         \ setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
 
     " Nginx {{{1
