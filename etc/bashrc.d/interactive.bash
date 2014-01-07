@@ -928,58 +928,8 @@ httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 
 ### Firewalls
 
-# IPTables
-ALIAS ipt='iptables' && {
-    ALIAS IPT='ip6tables'
-    [[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
-    iptlist() {
-        {   local table
-            for table in filter nat mangle raw security; do
-                run iptables --table "$table" --list --line-numbers --verbose "$@"
-                if [[ -e /proc/net/if_inet6 ]]; then
-                    run ip6tables --table "$table" --list --verbose "$@"
-                fi
-            done
-        } 2>&1 | pager;
-    }
-    iptsave() {
-        local ipt
-        for ipt in iptables ip6tables; do
-            if type ${ipt}-save &>/dev/null; then
-                echo "${ipt}-save > /etc/iptables/$ipt.rules"
-                ${ipt}-save > /etc/iptables/$ipt.rules
-            fi
-        done
-    }
-    iptrestore() {
-        local ipt
-        for ipt in iptables ip6tables; do
-            if type ${ipt}-restore &>/dev/null; then
-                echo "${ipt}-restore < /etc/iptables/$ipt.rules"
-                ${ipt}-restore < /etc/iptables/$ipt.rules
-            fi
-        done
-    }
-    iptopen() {
-        (($#)) || { echo "USAGE: $FUNCNAME source[:port,…] …"; return 1; }
-        ruby -e '
-            def sh *args; puts args.join(" "); system *args; end
-            ARGV.each do |arg|
-                s, p = arg =~ /:/ ? arg.split(":", 2) : [arg, ""]
-                source = s ? %W[--source #{s}] : []
-                ps = p.split(",").map &:to_i
-
-                ports = case ps.size
-                when 0 then []
-                when 1 then %W[--dport #{ps.first}]
-                else        %W[--match multiport --dports #{ps.join ","}]
-                end
-
-                sh *(%w[iptables --append INPUT --protocol tcp] + source + ports + %w[--match conntrack --ctstate NEW --jump ACCEPT])
-            end
-        ' -- "$@"
-    }
-}
+# iptables
+[[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
 
 ### Editors
 

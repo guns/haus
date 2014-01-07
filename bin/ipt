@@ -1,0 +1,242 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2014 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+require 'shellwords'
+
+class Ipt
+  IPV4_TABLES = %w[filter nat mangle raw security]
+  IPV6_TABLES = IPV4_TABLES - %w[nat]
+
+  attr_reader :options
+
+  def initialize opts = {}
+    @options = OpenStruct.new opts
+    options.udp     ||= false
+    options.ipv4    ||= true
+    options.ipv6    ||= false
+    options.save4   ||= '/etc/iptables/iptables.rules'
+    options.save6   ||= '/etc/iptables/ip6tables.rules'
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        iptables and ip6tables wrapper.
+
+        Usage: #{File.basename __FILE__} [options] [command]
+
+        Commands:
+            l|list      Print rules (DEFAULT)
+            s|save      Save rules to persistent path
+            r|restore   Restore rules from persistent paths
+            a|accept    Append INPUT with match on ctstate NEW + args
+            o|open      Append INPUT with [src]:[dport,…] rules
+            f|forward   Forward traffic from [src]:[iface] to [dst]:[iface]
+            F|FLUSH     Reset iptables
+            h|help
+
+        Options:
+      BANNER
+
+      opt.on '-u', '--udp', 'Given port rules are for UDP, not TCP' do
+        options.udp = true
+      end
+
+      opt.on '-4', '--ipv4', "Toggle IPv4 commands; DEFAULT=#{options.ipv4}" do
+        options.ipv4 = !options.ipv4
+      end
+
+      opt.on '-6', '--ipv6', "Toggle IPv6 commands; DEFAULT=#{options.ipv6}" do
+        options.ipv6 = !options.ipv4
+      end
+
+      opt.on '--save4 PATH', 'Persistent iptables rules path' do |arg|
+        options.save4 = File.expand_path arg
+      end
+
+      opt.on '--save6 PATH', 'Persistent ip6tables rules path' do |arg|
+        options.save6 = File.expand_path arg
+      end
+    end
+  end
+
+  def udp?
+    options.udp
+  end
+
+  def ipv4?
+    options.ipv4
+  end
+
+  def ipv6?
+    options.ipv6
+  end
+
+  def sh *args
+    puts args.join(' ')
+    system *args
+  end
+
+  def iptables_exec *args
+    [[ipv4?, 'iptables'], [ipv6?, 'ip6tables']].each do |(truth, cmd)|
+      if truth
+        sh ([cmd] + args).shelljoin
+      end
+    end
+  end
+
+  def colon_split arg
+    arg =~ /:/ ? arg.split(':', 2) : [arg, '']
+  end
+
+  def t pair
+    prefix, value = pair
+    if value and not value.empty?
+      [prefix, value]
+    else
+      []
+    end
+  end
+
+  def page s
+    if $stdin.tty?
+      IO.popen ENV['PAGER'] || 'less', 'w' do |io|
+        io.puts s
+        io.close
+      end
+    else
+      puts s
+    end
+  end
+
+  def to_s
+    [[ipv4?, 'IPv4', 'iptables',  IPV4_TABLES],
+     [ipv6?, 'IPv6', 'ip6tables', IPV6_TABLES]].reduce '' do |s, (truth, label, cmd, tables)|
+      s << if truth
+        tables.reduce '' do |s, t|
+          s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n"
+          s << %x(#{cmd} --table #{t} --list --numeric --verbose 2>&1)
+          s << "\n"
+        end
+      else
+        ''
+      end
+    end
+  end
+
+  def save_rules!
+    [[ipv4?, 'iptables-save',  options.save4],
+     [ipv6?, 'ip6tables-save', options.save6]].each do |(truth, cmd, path)|
+      if truth
+        sh "#{cmd} > #{path.shellescape}"
+      end
+    end
+  end
+
+  def restore_rules!
+    [[ipv4?, 'iptables-restore',  options.save4],
+     [ipv6?, 'ip6tables-restore', options.save6]].each do |(truth, cmd, path)|
+      if truth and File.readable? path
+        sh "#{cmd} < #{path.shellescape}"
+      end
+    end
+  end
+
+  def accept_new_input! *args
+    iptables_exec *(%W[--append INPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
+  end
+
+  def open! *args
+    proto = udp? ? 'udp' : 'tcp'
+    args.each do |arg|
+      s, p = colon_split arg
+      src = t %W[--source #{s}]
+      ps = p.split ','
+
+      ports = case ps.size
+      when 0 then []
+      when 1 then %W[--protocol #{proto} --dport #{ps.first.to_s}]
+      else        %W[--protocol #{proto} --match multiport --dports #{ps.join ','}]
+      end
+
+      accept_new_input! *(src + ports)
+    end
+  end
+
+  def enable_kernel_forwarding!
+    sh 'echo 1 > /proc/sys/net/ipv4/ip_forward'
+  end
+
+  def forward! src, dst
+    src_addr, src_iface = colon_split src
+    dst_addr, dst_iface = colon_split dst
+
+    from_src_iface = t %W[--in-interface  #{src_iface}]
+    to_src_iface   = t %W[--out-interface #{src_iface}]
+
+    from_dst_iface = t %W[--in-interface  #{dst_iface}]
+    to_dst_iface   = t %W[--out-interface #{dst_iface}]
+
+    from_src_addr  = t %W[--source        #{src_addr}]
+    to_src_addr    = t %W[--destination   #{src_addr}]
+
+    from_dst_addr  = t %W[--source        #{dst_addr}]
+    to_dst_addr    = t %W[--destination   #{dst_addr}]
+
+    outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
+    inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
+
+    # Outbound
+    iptables_exec *(%W[--append FORWARD] + outbound + %W[--jump ACCEPT])
+    # Inbound
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[                --match conntrack --ctstate ESTABLISHED --jump ACCEPT])
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[--protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT])
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[                --match conntrack --ctstate INVALID     --jump DROP])
+    # Enable NAT
+    iptables_exec *(%W[--table nat --append POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
+
+    enable_kernel_forwarding!
+  end
+
+  def flush_tables!
+    [[ipv4?, 'iptables',  IPV4_TABLES],
+     [ipv6?, 'ip6tables', IPV6_TABLES]].each do |(truth, cmd, tables)|
+      next unless truth
+
+      # Flush rules and delete non-default chains
+      tables.each do |t|
+        sh *%W[#{cmd} --table #{t} --flush]
+        sh *%W[#{cmd} --table #{t} --delete-chain]
+      end
+
+      # Reset default policies
+      %W[INPUT FORWARD OUTPUT].each do |p|
+        sh *%W[#{cmd} --policy #{p} ACCEPT]
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.order arguments
+
+    case args.first
+    when 'l', 'list', nil then page to_s
+    when 's', 'save'      then save_rules!
+    when 'r', 'restore'   then restore_rules!
+    when 'a', 'accept'    then accept_new_input! *args.drop(1)
+    when 'o', 'open'      then open! *args.drop(1)
+    when 'f', 'forward'   then forward! *args.drop(1)
+    when 'F', 'flush'     then flush_tables!
+    when 'h', 'help'      then puts parser.help
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Ipt.new.run ARGV if $0 == __FILE__
