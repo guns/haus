@@ -16,13 +16,6 @@ let g:loaded_delimitMate = 1
 let save_cpo = &cpo
 set cpo&vim
 
-if exists("s:loaded_delimitMate") && !exists("g:delimitMate_testing")
-	" Don't define the functions if they already exist: just do the work
-	" (unless we are testing):
-	call s:DelimitMateDo()
-	finish
-endif
-
 if v:version < 700
 	echoerr "delimitMate: this plugin requires vim >= 7!"
 	finish
@@ -47,32 +40,33 @@ endfunction "}}}
 
 function! s:init() "{{{
 " Initialize variables:
-
 	" autoclose
 	call s:option_init("autoclose", 1)
-
 	" matchpairs
 	call s:option_init("matchpairs", string(&matchpairs)[1:-2])
 	call s:option_init("matchpairs_list", map(split(s:g('matchpairs'), ','), 'split(v:val, '':'')'))
+	let pairs = s:g('matchpairs_list')
+	if len(filter(pairs, 'v:val[0] ==# v:val[1]'))
+		echohl ErrorMsg
+		echom 'delimitMate: each member of a pair in delimitMate_matchpairs must be different from each other.'
+		echom 'delimitMate: invalid pairs: ' . join(map(pairs, 'join(v:val, ":")'), ', ')
+		echohl Normal
+		return 0
+	endif
 	call s:option_init("left_delims", map(copy(s:g('matchpairs_list')), 'v:val[0]'))
 	call s:option_init("right_delims", map(copy(s:g('matchpairs_list')), 'v:val[1]'))
-
 	" quotes
 	call s:option_init("quotes", "\" ' `")
 	call s:option_init("quotes_list",split(s:g('quotes'), '\s\+'))
-
 	" nesting_quotes
 	call s:option_init("nesting_quotes", [])
-
 	" excluded_regions
 	call s:option_init("excluded_regions", "Comment")
 	call s:option_init("excluded_regions_list", split(s:g('excluded_regions'), ',\s*'))
 	let enabled = len(s:g('excluded_regions_list')) > 0
 	call s:option_init("excluded_regions_enabled", enabled)
-
 	" excluded filetypes
 	call s:option_init("excluded_ft", "")
-
 	" expand_space
 	if exists("b:delimitMate_expand_space") && type(b:delimitMate_expand_space) == type("")
 		echom "b:delimitMate_expand_space is '".b:delimitMate_expand_space."' but it must be either 1 or 0!"
@@ -87,7 +81,6 @@ function! s:init() "{{{
 		let g:delimitMate_expand_space = 1
 	endif
 	call s:option_init("expand_space", 0)
-
 	" expand_cr
 	if exists("b:delimitMate_expand_cr") && type(b:delimitMate_expand_cr) == type("")
 		echom "b:delimitMate_expand_cr is '".b:delimitMate_expand_cr."' but it must be either 1 or 0!"
@@ -107,34 +100,25 @@ function! s:init() "{{{
 		echom "delimitMate: There seems to be some incompatibility with your settings that may interfer with the expansion of <CR>. See :help 'delimitMate_expand_cr' for details."
 	endif
 	call s:option_init("expand_cr", 0)
-
 	" expand_in_quotes
 	call s:option_init('expand_inside_quotes', 0)
-
 	" jump_expansion
 	call s:option_init("jump_expansion", 0)
-
 	" smart_matchpairs
 	call s:option_init("smart_matchpairs", '^\%(\w\|\!\|£\|\$\|_\|["'']\s*\S\)')
-
 	" smart_quotes
 	call s:option_init("smart_quotes", 1)
-
 	" apostrophes
 	call s:option_init("apostrophes", "")
 	call s:option_init("apostrophes_list", split(s:g('apostrophes'), ":\s*"))
-
 	" tab2exit
 	call s:option_init("tab2exit", 1)
-
 	" balance_matchpairs
 	call s:option_init("balance_matchpairs", 0)
-
 	" eol marker
 	call s:option_init("eol_marker", "")
-
-	call s:s('buffer', [])
-
+	" Everything is fine.
+	return 1
 endfunction "}}} Init()
 
 "}}}
@@ -211,33 +195,29 @@ function! s:TestMappingsDo() "{{{
 endfunction "}}}
 
 function! s:DelimitMateDo(...) "{{{
-
 	" First, remove all magic, if needed:
 	if exists("b:delimitMate_enabled") && b:delimitMate_enabled == 1
 		call s:Unmap()
 	endif
-
 	" Check if this file type is excluded:
 	if exists("g:delimitMate_excluded_ft") &&
 				\ index(split(g:delimitMate_excluded_ft, ','), &filetype, 0, 1) >= 0
-
 		" Finish here:
 		return 1
 	endif
-
 	" Check if user tried to disable using b:loaded_delimitMate
 	if exists("b:loaded_delimitMate")
 		return 1
 	endif
-
 	" Initialize settings:
-	call s:init()
-
+	if ! s:init()
+		" Something went wrong.
+		return
+	endif
 	" Now, add magic:
 	if !exists("g:delimitMate_offByDefault") || !g:delimitMate_offByDefault
 		call s:Map()
 	endif
-
 	if a:0 > 0
 		echo "delimitMate has been reset."
 	endif
@@ -254,7 +234,6 @@ function! s:DelimitMateSwitch() "{{{
 		echo "delimitMate has been enabled."
 	endif
 endfunction "}}}
-
 "}}}
 
 " Mappers: {{{
@@ -294,6 +273,7 @@ function! s:AutoClose() "{{{
 
 	" Exit from inside the matching pair:
 	for delim in s:g('right_delims')
+		let delim = delim == '|' ? '<bar>' : delim
 		exec 'inoremap <expr><silent> <Plug>delimitMate' . delim
 								\. ' <SID>TriggerAbb().delimitMate#JumpOut("\' . delim . '")'
 		exec 'silent! imap <unique> <buffer> ' . delim
@@ -362,8 +342,6 @@ endfunction "}}}
 
 " Commands: {{{
 
-call s:DelimitMateDo()
-
 " Let me refresh without re-loading the buffer:
 command! -bar DelimitMateReload call s:DelimitMateDo(1)
 
@@ -388,6 +366,7 @@ augroup delimitMate
 				\   call <SID>DelimitMateDo() |
 				\   let b:delimitMate_was_here = 1 |
 				\ endif
+	autocmd VimEnter * call <SID>DelimitMateDo()
 augroup END
 
 "}}}
