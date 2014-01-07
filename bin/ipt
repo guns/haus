@@ -53,7 +53,7 @@ class Ipt
       end
 
       opt.on '-6', '--ipv6', "Toggle IPv6 commands; DEFAULT=#{options.ipv6}" do
-        options.ipv6 = !options.ipv4
+        options.ipv6 = !options.ipv6
       end
 
       opt.on '--save4 PATH', 'Persistent iptables rules path' do |arg|
