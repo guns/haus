@@ -117,7 +117,7 @@ accept_new() { "$IPTABLES" --append INPUT "$@" --match conntrack --ctstate NEW -
 #
 
 forward_interface() {
-    (($# == 2)) || return 1;
+    test $# -eq 2 || return 1;
     local in="$1" out="$2"
     # Outbound
     iptables --append FORWARD --in-interface "$in" --out-interface "$out" --jump ACCEPT
