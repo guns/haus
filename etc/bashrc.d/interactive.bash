@@ -473,8 +473,9 @@ ALIAS mt='mount -v' \
       mthfs='mount -v -t hfsplus' \
       mtvfat='mount -v -t vfat' && {
     mtusb() {
-        ruby -r shellwords -r fileutils -e '
+        ruby -r shellwords -r set -r fileutils -e '
             options = %w[noatime nodev nodiratime noexec nosuid]
+            no_owners = Set.new %w[fat vfat hfs iso9660 ntfs udf]
             uid = ENV["SUDO_UID"] || Process.euid
             gid = ENV["SUDO_GID"] || Process.egid
 
@@ -493,7 +494,7 @@ ALIAS mt='mount -v' \
                 mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
                 FileUtils.mkdir_p mtpt
                 opts = options
-                opts += %W[uid=#{uid} gid=#{gid}] if %w[fat vfat hfs iso9660 ntfs udf].include? type
+                opts += %W[uid=#{uid} gid=#{gid}] unless no_owners.include? type
                 cmd = %W[mount -v -o #{opts.join ","} #{dev} #{mtpt}]
                 puts cmd.shelljoin
                 system *cmd
@@ -578,7 +579,7 @@ HAVE hdiutil diskutil && {
 
 # rsync
 ALIAS rsync='rsync -hh -S --partial' \
-      rsync-backup='rsync -axAX --hard-links --delete'
+      rsync-backup='rsync -axAX --hard-links --delete --ignore-errors'
 
 # dd
 HAVE dcfldd && TCOMP dd dcfldd
