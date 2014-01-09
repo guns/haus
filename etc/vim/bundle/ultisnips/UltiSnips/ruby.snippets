@@ -24,14 +24,12 @@ snippet APP "CLI app template" b
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 
 class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
-	attr_reader :options
+	DEFAULTS = {}
 
 	def initialize opts = {}
-		@options = OpenStruct.new opts
-		options.$0 ||=
+		# @foo = DEFAULTS.merge(opts).values_at :foo
 	end
 
 	def parser
@@ -46,6 +44,7 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 
 	def run arguments = []
 		args = parser.parse arguments
+		$0
 	end
 end
 
