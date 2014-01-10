@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Application
 NoDisplay=true
-Exec=gifview -a %F %f
+Exec=gifview -a --fallback-delay 8 %F %f
 Name=gifview
