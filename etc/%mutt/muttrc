@@ -84,37 +84,37 @@ macro $my_list       \Cp     <previous-thread>
 bind  $my_list,pager \\      search
 
 # Actions
-bind  index,pager c       mail
-macro index,pager m       <set-flag>N
-macro index,pager M       <clear-flag>N
-bind  index,pager S       sync-mailbox
-bind  index,pager R       group-reply
-bind  index,pager p       recall-message
-bind  index,pager B       bounce-message
-bind  index,pager E       edit
-bind  index,pager F       forward-message
-macro index,pager a       <save-entry>=ARCHIVE<enter>
-macro index,pager s       <save-entry>=self/
-bind  index,pager A       create-alias
-macro index,pager \Ca     "<pipe-message>abook --add-email<enter>"
-macro index,pager \Cd     <delete-thread>
-macro index,pager \Cu     <undelete-thread>
-macro index,pager \Cr     <read-thread>
-macro index,pager \Ct     <tag-thread>
-macro index,pager \ea     <shell-escape>abook<enter>
-bind  index,pager \es     flag-message
-bind  index       \et     untag-pattern
-macro index       \e\007a <tag-pattern>.<enter>
-macro index       \e\007t <tag-pattern>.<enter>
-macro index       \e\007T <untag-pattern>.<enter>
-macro index       =       <limit>~=<enter>
-macro index       +       <limit>~X1-<enter>
-macro index       \e\007L <limit>all<enter>
-bind  browser     .       check-new
-bind  attach      o       view-mailcap
-bind  index       <Space> collapse-thread
-bind  index       zM      collapse-all
-bind  index       zR      collapse-all
+bind  index,pager        c       mail
+macro index,pager        m       <set-flag>N
+macro index,pager        M       <clear-flag>N
+bind  index,pager        S       sync-mailbox
+bind  index,pager        R       group-reply
+bind  index,pager        p       recall-message
+bind  index,pager        B       bounce-message
+bind  index,pager        E       edit
+bind  index,attach,pager F       forward-message
+macro index,pager        a       <save-entry>=ARCHIVE<enter>
+macro index,pager        s       <save-entry>=self/
+bind  index,pager        A       create-alias
+macro index,pager        \Ca     "<pipe-message>abook --add-email<enter>"
+macro index,pager        \Cd     <delete-thread>
+macro index,pager        \Cu     <undelete-thread>
+macro index,pager        \Cr     <read-thread>
+macro index,pager        \Ct     <tag-thread>
+macro index,pager        \ea     <shell-escape>abook<enter>
+bind  index,pager        \es     flag-message
+bind  index              \et     untag-pattern
+macro index              \e\007a <tag-pattern>.<enter>
+macro index              \e\007t <tag-pattern>.<enter>
+macro index              \e\007T <untag-pattern>.<enter>
+macro index              =       <limit>~=<enter>
+macro index              +       <limit>~X1-<enter>
+macro index              \e\007L <limit>all<enter>
+bind  browser            .       check-new
+bind  attach             o       view-mailcap
+bind  index              <Space> collapse-thread
+bind  index              zM      collapse-all
+bind  index              zR      collapse-all
 
 # Editor
 bind editor \Cn history-down
