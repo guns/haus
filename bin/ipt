@@ -35,8 +35,8 @@ class Ipt
             l|list      Print rules (DEFAULT)
             s|save      Save rules to persistent path
             r|restore   Restore rules from persistent paths
-            a|accept    Append INPUT with match on ctstate NEW + args
-            o|open      Append INPUT with [src]:[dport,…] rules
+            a|accept    Accept INPUT with match on ctstate NEW + extra args
+            o|open      Accept INPUT from [src]:[dport,…] …
             f|forward   Forward traffic from [src]:[iface] to [dst]:[iface]
             F|FLUSH     Reset iptables
             h|help
