@@ -475,7 +475,7 @@ ALIAS mt='mount -v' \
     mtusb() {
         ruby -r shellwords -r set -r fileutils -e '
             options = %w[noatime nodev nodiratime noexec nosuid]
-            no_owners = Set.new %w[fat vfat hfs iso9660 ntfs udf]
+            fs_owners = Set.new %w[fat vfat hfs iso9660 ntfs udf]
             uid = ENV["SUDO_UID"] || Process.euid
             gid = ENV["SUDO_GID"] || Process.egid
 
@@ -494,7 +494,7 @@ ALIAS mt='mount -v' \
                 mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
                 FileUtils.mkdir_p mtpt
                 opts = options
-                opts += %W[uid=#{uid} gid=#{gid}] unless no_owners.include? type
+                opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
                 cmd = %W[mount -v -o #{opts.join ","} #{dev} #{mtpt}]
                 puts cmd.shelljoin
                 system *cmd
@@ -926,6 +926,9 @@ HAVE cdapi && {
 
 # Simple webserver
 httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
+
+# w3m
+ALIAS W='w3mlaunch'
 
 ### Firewalls
 
