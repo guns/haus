@@ -282,9 +282,9 @@ function! s:ClojureBufferSetup()
     imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
-    nnoremap <silent><buffer> <Leader>R        :call fireplace#eval('(user/refresh)')<CR>
+    nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(user/refresh)')<CR>
     nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
-    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#eval('(user/classpath)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#session_eval('(user/classpath)')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
@@ -295,26 +295,26 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
-    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#eval('(user.system/boot)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#eval('(user.system/stop)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#eval('(user.system/restart)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#session_eval('(user.system/boot)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#session_eval('(user.system/stop)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#session_eval('(user.system/restart)')<CR>
     nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@user.system/instance')<CR>
     nnoremap <silent><buffer> <LocalLeader>sl  :call <SID>ClojurePprint('@system/log')<CR>
     nnoremap <silent><buffer> <LocalLeader>sc  :call <SID>ClojurePprint('system/config')<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
-    nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#eval('(user/toggle-warn-on-reflection!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(user/toggle-warn-on-reflection!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
     nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(1)<CR>
-    nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#eval('(user/toggle-schema-validation!)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#eval('(user/toggle-warnings! true)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#eval('(user/toggle-warnings! false)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(user/toggle-schema-validation!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(user/toggle-warnings! true)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(user/toggle-warnings! false)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#session_eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
 endfunction
 
 function! s:ClojurePprint(expr)
-    silent call fireplace#eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
+    silent call fireplace#session_eval('(do (clojure.pprint/pprint (do ' . a:expr . ')) ' . a:expr . ')')
     Last
     normal! yG
     pclose
@@ -325,7 +325,7 @@ function! s:ClojurePprint(expr)
 endfunction
 
 function! s:ClojureStackTrace()
-    silent call fireplace#eval('(clojure.stacktrace/e)')
+    silent call fireplace#session_eval('(clojure.stacktrace/e)')
     Last
     wincmd L
 endfunction
@@ -355,9 +355,9 @@ endfunction
 function! s:ClojureRunTests(all)
     if a:all
         Require!
-        call fireplace#eval('(clojure.test/run-all-tests)')
+        call fireplace#session_eval('(clojure.test/run-all-tests)')
     else
-        call fireplace#eval('(user/run-tests-for-current-ns)')
+        call fireplace#session_eval('(user/run-tests-for-current-ns)')
     endif
 endfunction
 
@@ -366,7 +366,7 @@ function! s:ClojureTypeScaffold()
         let reg_save = [@e, @r]
         execute "normal \"ey\<Plug>(sexp_inner_element)"
         redir @r
-        call fireplace#eval('(println (user/object-scaffold ' . @e . '))')
+        call fireplace#session_eval('(println (user/object-scaffold ' . @e . '))')
     finally
         redir END
         Sscratch

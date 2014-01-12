@@ -144,39 +144,40 @@ function! s:repl.path() dict abort
   return self.connection.path()
 endfunction
 
-function! s:repl.eval(expr, options) dict abort
+function! s:repl.try(function, ...) dict abort
   try
-    let result = self.connection.eval(a:expr, a:options)
+    return call(self.connection[a:function], a:000, self.connection)
   catch /^\w\+ Connection Error:/
     call filter(s:repl_paths, 'v:val isnot self')
     call filter(s:repls, 'v:val isnot self')
     throw v:exception
   endtry
-  return result
+endfunction
+
+function! s:repl.eval(expr, options) dict abort
+  return self.try('eval', a:expr, a:options)
 endfunction
 
 function! s:repl.message(...) dict abort
-  try
-    let result = call(self.connection.message, a:000, self.connection)
-  catch /^\w\+ Connection Error:/
-    call filter(s:repl_paths, 'v:val isnot self')
-    call filter(s:repls, 'v:val isnot self')
-    throw v:exception
-  endtry
-  return result
+  return call(self.try, ['message'] + a:000, self)
 endfunction
 
 function! s:repl.require(lib) dict abort
   if !empty(a:lib) && a:lib !=# self.user_ns() && !get(self.requires, a:lib)
     let reload = has_key(self.requires, a:lib) ? ' :reload' : ''
     let self.requires[a:lib] = 0
-    let result = self.eval('(ns '.a:lib.' (:require '.a:lib.reload.'))', {'ns': self.user_ns(), 'session': 0})
+    let clone = self.try('clone')
+    try
+      let result = clone.eval('(ns '.a:lib.' (:require '.a:lib.reload.'))', {'ns': self.user_ns()})
+    finally
+      call clone.close()
+    endtry
     let self.requires[a:lib] = !has_key(result, 'ex')
     if has_key(result, 'ex')
-      return result.err
+      return result
     endif
   endif
-  return ''
+  return {}
 endfunction
 
 function! s:repl.includes_file(file) dict abort
@@ -330,7 +331,7 @@ function! s:oneoff.eval(expr, options) dict abort
         \   '      (clojure.core/spit '.s:str(s:oneoff_ex).' (clojure.core/class e))' .
         \   '      (clojure.core/spit '.s:str(s:oneoff_stk).' (clojure.core/apply clojure.core/str (clojure.core/interpose "\n" (.getStackTrace e))))))' .
         \   '  nil)')
-  let wtf = system(command)
+  let captured = system(command)
   let result = {}
   let result.value = join(readfile(s:oneoff_pr, 'b'), "\n")
   let result.out   = join(readfile(s:oneoff_out, 'b'), "\n")
@@ -339,14 +340,14 @@ function! s:oneoff.eval(expr, options) dict abort
   let result.stacktrace = readfile(s:oneoff_stk)
   call filter(result, '!empty(v:val)')
   if v:shell_error && get(result, 'ex', '') ==# ''
-    throw 'Error running Clojure: '.wtf
+    throw 'Error running Java: '.get(split(captured, "\n"), -1, '')
   else
     return result
   endif
 endfunction
 
 function! s:oneoff.require(symbol) abort
-  return ''
+  return {}
 endfunction
 
 function! s:oneoff.message(symbol) abort
@@ -366,6 +367,19 @@ function! s:buf() abort
   endif
 endfunction
 
+function! fireplace#path(...) abort
+  let buf = a:0 ? a:1 : s:buf()
+  for repl in s:repls
+    if repl.includes_file(fnamemodify(bufname(buf), ':p'))
+      return repl.path()
+    endif
+  endfor
+  if exists('*classpath#from_vim')
+    return classpath#split(classpath#from_vim(getbufvar(buf, '&path')))
+  endif
+  return []
+endfunction
+
 function! s:client(...) abort
   silent doautocmd User FireplacePreConnect
   let buf = a:0 ? a:1 : s:buf()
@@ -378,28 +392,20 @@ function! s:client(...) abort
     let previous = root
     let root = fnamemodify(root, ':h')
   endwhile
-  return fireplace#local_client(buf, 1)
-endfunction
-
-function! fireplace#client(...) abort
-  return a:0 ? s:client(a:1) : s:client()
-endfunction
-
-function! fireplace#local_client(...) abort
-  if a:0 < 2
-    silent doautocmd User FireplacePreConnect
-  endif
-  let buf = a:0 ? a:1 : s:buf()
   for repl in s:repls
     if repl.includes_file(fnamemodify(bufname(buf), ':p'))
       return repl
     endif
   endfor
-  if exists('*classpath#from_vim') && expand('%:e') ==# 'clj'
+  if exists('*classpath#from_vim') && fnamemodify(bufname(buf), ':e') =~# '^cljx\=$'
     let cp = classpath#from_vim(getbufvar(buf, '&path'))
     return extend({'classpath': cp, 'nr': bufnr(buf)}, s:oneoff)
   endif
   throw ':Connect to a REPL or install classpath.vim to evaluate code'
+endfunction
+
+function! fireplace#client(...) abort
+  return a:0 ? s:client(a:1) : s:client()
 endfunction
 
 function! fireplace#message(payload, ...)
@@ -409,12 +415,6 @@ function! fireplace#message(payload, ...)
     let payload.ns = fireplace#ns()
     if fireplace#ns() !=# client.user_ns()
       let error = client.require(fireplace#ns())
-      if !empty(error)
-        echohl ErrorMSG
-        echo error
-        echohl NONE
-        throw "Clojure: couldn't require " . fireplace#ns()
-      endif
     endif
   endif
   return call(client.message, [payload] + a:000, client)
@@ -424,11 +424,7 @@ function! fireplace#findresource(resource, ...) abort
   if a:resource ==# ''
     return ''
   endif
-  try
-    let path = a:0 ? a:1 : fireplace#local_client().path()
-  catch /^:Connect/
-    return ''
-  endtry
+  let path = a:0 ? a:1 : fireplace#path()
   let file = findfile(a:resource, escape(join(path, ','), ' '))
   if !empty(file)
     return file
@@ -489,10 +485,7 @@ function! s:eval(expr, ...) abort
     if fireplace#ns() !=# client.user_ns()
       let error = client.require(fireplace#ns())
       if !empty(error)
-        echohl ErrorMSG
-        echo error
-        echohl NONE
-        throw "Clojure: couldn't require " . fireplace#ns()
+        return error
       endif
     endif
     let options.ns = fireplace#ns()
@@ -574,10 +567,6 @@ function! fireplace#session_eval(expr, ...) abort
     let err = 'fireplace.vim: Something went wrong: '.string(response)
   endif
   throw err
-endfunction
-
-function! fireplace#eval(expr, ...) abort
-  return fireplace#session_eval(a:expr, extend({'session': 0}, a:0 ? a:1 : {}))
 endfunction
 
 function! fireplace#echo_session_eval(expr, ...) abort
@@ -736,7 +725,7 @@ function! s:Eval(bang, line1, line2, count, args) abort
   endif
   if a:bang
     try
-      let result = fireplace#eval(expr, options)
+      let result = fireplace#session_eval(expr, options)
       if a:args !=# ''
         call append(a:line1, result)
         exe a:line1
@@ -940,7 +929,6 @@ augroup END
 " Go to source {{{1
 
 function! fireplace#source(symbol) abort
-  let options = {'session': 0}
   let cmd =
         \ '(when-let [v (resolve ' . s:qsym(a:symbol) .')]' .
         \ '  (when-let [filepath (:file (meta v))]' .
@@ -999,23 +987,15 @@ augroup END
 " Go to file {{{1
 
 function! fireplace#findfile(path) abort
-  let options = {'session': 0}
-
   let path = a:path
-
   if path !~# '[/.]' && path =~# '^\k\+$'
-    let aliascmd =
-          \ '(symbol (if-let [ns ((ns-aliases *ns*) '.s:qsym(path).')]' .
-          \ '  (str (.replace (.replace (str (ns-name ns)) "-" "_") "." "/") ".clj")' .
-          \ '  "'.path.'.clj"))'
-    let path = get(split(s:eval(aliascmd, options).value, "\n"), 0, '')
-  else
-    if path !~# '/'
-      let path = tr(path, '.-', '/_')
-    endif
-    if path !~# '\.\w\+$'
-      let path .= '.clj'
-    endif
+    let path = fireplace#evalparse('((ns-aliases *ns*) '.s:qsym(path).' '.s:qsym(path).')')
+  endif
+  if path !~# '/'
+    let path = tr(path, '.-', '/_')
+  endif
+  if path !~# '\.\w\+$'
+    let path .= '.clj'
   endif
   return fireplace#findresource(path)
 endfunction

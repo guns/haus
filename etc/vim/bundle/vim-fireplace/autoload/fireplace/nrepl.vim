@@ -58,6 +58,15 @@ function! s:nrepl_close() dict abort
   return self
 endfunction
 
+function! s:nrepl_clone() dict abort
+  let client = copy(self)
+  if has_key(self, 'session')
+    let client.session = client.process({'op': 'clone'})['new-session']
+    let g:fireplace_nrepl_sessions[client.session] = client
+  endif
+  return client
+endfunction
+
 function! s:nrepl_path() dict abort
   return split(self._path[1:-1], self._path[0])
 endfunction
@@ -110,7 +119,7 @@ function! s:nrepl_eval(expr, ...) dict abort
   if has_key(options, 'session')
     let msg.session = options.session
   endif
-  let msg = self.prepare(msg)
+  let msg.id = fireplace#nrepl#next_id()
   if has_key(options, 'file_path')
     let msg.op = 'load-file'
     let msg['file-path'] = options.file_path
@@ -146,12 +155,12 @@ function! s:nrepl_eval(expr, ...) dict abort
 endfunction
 
 function! s:extract_last_stacktrace(nrepl) abort
-    let format_st = '(clojure.core/symbol (clojure.core/str "\n\b" (clojure.core/apply clojure.core/str (clojure.core/interleave (clojure.core/repeat "\n") (clojure.core/map clojure.core/str (.getStackTrace *e)))) "\n\b\n"))'
-    let stacktrace = split(get(split(a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'session': a:nrepl.session}).value[0], "\n\b\n"), 1, ""), "\n")
-    call a:nrepl.message({'op': 'eval', 'code': '(nth *1 1)', 'session': a:nrepl.session})
-    call a:nrepl.message({'op': 'eval', 'code': '(nth *2 2)', 'session': a:nrepl.session})
-    call a:nrepl.message({'op': 'eval', 'code': '(nth *3 3)', 'session': a:nrepl.session})
-    return stacktrace
+  let format_st = '(clojure.core/symbol (clojure.core/str "\n\b" (clojure.core/apply clojure.core/str (clojure.core/interleave (clojure.core/repeat "\n") (clojure.core/map clojure.core/str (.getStackTrace *e)))) "\n\b\n"))'
+  let stacktrace = split(get(split(a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'session': a:nrepl.session}).value[0], "\n\b\n"), 1, ""), "\n")
+  call a:nrepl.message({'op': 'eval', 'code': '(nth *1 1)', 'session': a:nrepl.session})
+  call a:nrepl.message({'op': 'eval', 'code': '(nth *2 2)', 'session': a:nrepl.session})
+  call a:nrepl.message({'op': 'eval', 'code': '(nth *3 3)', 'session': a:nrepl.session})
+  return stacktrace
 endfunction
 
 let s:keepalive = tempname()
@@ -202,6 +211,7 @@ endfunction
 
 let s:nrepl = {
       \ 'close': s:function('s:nrepl_close'),
+      \ 'clone': s:function('s:nrepl_clone'),
       \ 'prepare': s:function('s:nrepl_prepare'),
       \ 'call': s:function('s:nrepl_call'),
       \ 'message': s:function('s:nrepl_message'),
