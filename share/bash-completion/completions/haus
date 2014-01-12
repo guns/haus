@@ -16,8 +16,9 @@ _haus() {
             reply+=(--all --broken)
         fi
     elif [[ $prev == @(-p|--path) ]]; then
+        space=0
         _filedir -d
-        reply="${COMPREPLY[@]}"
+        reply=("${COMPREPLY[@]}")
     elif [[ $prev == @(-u|--users) ]]; then
         space=0
         reply=($(ruby -r etc -e '
@@ -35,17 +36,9 @@ _haus() {
         ' -- "$cur"))
     fi
 
-    if ((space)); then
-        local i
-        for ((i = 0; i < ${#reply[@]}; ++i)); do
-            reply[i]="${reply[i]} \
-"
-        done
-    fi
-
+    ((space)) && compopt +o nospace
     local IFS=$'\n'
     COMPREPLY=($(compgen -W "${reply[*]}" -- "$cur"))
-    unset IFS
 } && complete -F _haus -o nospace haus
 
 # vim:ft=sh:
