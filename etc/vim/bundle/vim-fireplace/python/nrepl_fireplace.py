@@ -1,7 +1,10 @@
-import sys
+import os
+import re
 import select
 import socket
-import re
+import sys
+
+from StringIO import StringIO
 
 def noop():
   pass
@@ -25,37 +28,41 @@ def vim_encode(data):
     raise TypeError("can't encode a " + type(data).__name__)
 
 def bdecode(f, char=None):
-    if char == None:
+  if char == None:
+    char = f.read(1)
+  if char == 'l':
+    l = []
+    while True:
       char = f.read(1)
-    if char == 'l':
-      l = []
-      while True:
-        char = f.read(1)
-        if char == 'e':
-          return l
-        l.append(bdecode(f, char))
-    elif char == 'd':
-      d = {}
-      while True:
-        char = f.read(1)
-        if char == 'e':
-          return d
-        key = bdecode(f, char)
-        d[key] = bdecode(f)
-    elif char == 'i':
-      i = 0
-      while True:
-        char = f.read(1)
-        if char == 'e':
-          return i
-        i = 10 * i + int(char)
-    else:
-      i = int(char)
-      while True:
-        char = f.read(1)
-        if char == ':':
-          return f.read(i)
-        i = 10 * i + int(char)
+      if char == 'e':
+        return l
+      l.append(bdecode(f, char))
+  elif char == 'd':
+    d = {}
+    while True:
+      char = f.read(1)
+      if char == 'e':
+        return d
+      key = bdecode(f, char)
+      d[key] = bdecode(f)
+  elif char == 'i':
+    i = 0
+    while True:
+      char = f.read(1)
+      if char == 'e':
+        return i
+      i = 10 * i + int(char)
+  elif char.isdigit():
+    i = int(char)
+    while True:
+      char = f.read(1)
+      if char == ':':
+        return f.read(i)
+      i = 10 * i + int(char)
+  elif char == '':
+    raise EOFError("unexpected end of bencode data")
+  else:
+    raise TypeError("unexpected type "+char+"in bencode data")
 
 
 class Connection:
@@ -89,12 +96,16 @@ class Connection:
     finally:
       f.close()
 
-  def call(self, payload):
+  def call(self, payload, terminators, selectors):
     self.send(payload)
     responses = []
     while True:
-      responses.append(self.receive())
-      if 'status' in responses[-1] and 'done' in responses[-1]['status']:
+      response = self.receive()
+      for key in selectors:
+        if response[key] != selectors[key]:
+          continue
+      responses.append(response)
+      if 'status' in response and set(terminators) & set(response['status']):
         return responses
 
 def dispatch(host, port, poll, keepalive, command, *args):
@@ -106,7 +117,7 @@ def dispatch(host, port, poll, keepalive, command, *args):
 
 def main(host, port, keepalive, command, *args):
   try:
-    sys.stdout.write(vim_encode(dispatch(host, port, noop, keepalive, command, *args)))
+    sys.stdout.write(vim_encode(dispatch(host, port, noop, keepalive, command, *[bdecode(StringIO(arg)) for arg in args])))
   except Exception, e:
     print(e)
     exit(1)

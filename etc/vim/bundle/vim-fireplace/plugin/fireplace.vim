@@ -39,14 +39,25 @@ let s:jar_contents = {}
 
 function! fireplace#jar_contents(path) abort
   if !exists('s:zipinfo')
-    let s:zipinfo = executable('zipinfo')
-  endif
-  if !has_key(s:jar_contents, a:path) && s:zipinfo
-    let s:jar_contents[a:path] = split(system('zipinfo -1 '.shellescape(a:path)), "\n")
-    if v:shell_error
-      return []
+    if executable('zipinfo')
+      let s:zipinfo = 'zipinfo -1 '
+    elseif executable('python')
+      let s:zipinfo = 'python -c '.shellescape('import zipfile, sys; print chr(10).join(zipfile.ZipFile(sys.argv[1]).namelist())').' '
+    else
+      let s:zipinfo = ''
     endif
   endif
+
+  if !has_key(s:jar_contents, a:path) && has('python')
+    python import vim, zipfile
+    python vim.command("let s:jar_contents[a:path] = split('" + "\n".join(zipfile.ZipFile(vim.eval('a:path')).namelist()) + "', \"\n\")")
+  elseif !has_key(s:jar_contents, a:path) && !empty(s:zipinfo)
+    let s:jar_contents[a:path] = split(system(s:zipinfo.shellescape(a:path)), "\n")
+    if v:shell_error
+      let s:jar_contents[a:path] = []
+    endif
+  endif
+
   return copy(get(s:jar_contents, a:path, []))
 endfunction
 
@@ -125,6 +136,10 @@ if !exists('s:repls')
   let s:repl_paths = {}
 endif
 
+function! s:repl.user_ns() abort
+  return 'user'
+endfunction
+
 function! s:repl.path() dict abort
   return self.connection.path()
 endfunction
@@ -140,11 +155,22 @@ function! s:repl.eval(expr, options) dict abort
   return result
 endfunction
 
+function! s:repl.message(...) dict abort
+  try
+    let result = call(self.connection.message, a:000, self.connection)
+  catch /^\w\+ Connection Error:/
+    call filter(s:repl_paths, 'v:val isnot self')
+    call filter(s:repls, 'v:val isnot self')
+    throw v:exception
+  endtry
+  return result
+endfunction
+
 function! s:repl.require(lib) dict abort
-  if !empty(a:lib) && a:lib !=# fireplace#user_ns() && !get(self.requires, a:lib, 0)
+  if !empty(a:lib) && a:lib !=# self.user_ns() && !get(self.requires, a:lib)
     let reload = has_key(self.requires, a:lib) ? ' :reload' : ''
     let self.requires[a:lib] = 0
-    let result = self.eval('(doto '.s:qsym(a:lib).' (require'.reload.') the-ns)', {'ns': fireplace#user_ns(), 'session': 0})
+    let result = self.eval('(ns '.a:lib.' (:require '.a:lib.reload.'))', {'ns': self.user_ns(), 'session': 0})
     let self.requires[a:lib] = !has_key(result, 'ex')
     if has_key(result, 'ex')
       return result.err
@@ -271,13 +297,17 @@ let s:oneoff_in  = tempname()
 let s:oneoff_out = tempname()
 let s:oneoff_err = tempname()
 
+function! s:oneoff.user_ns() abort
+  return 'user'
+endfunction
+
 function! s:oneoff.eval(expr, options) dict abort
   if &verbose && !empty(get(a:options, 'session', 1))
     echohl WarningMSG
     echomsg "No REPL found. Running java clojure.main ..."
     echohl None
   endif
-  if a:options.ns !=# '' && a:options.ns !=# fireplace#user_ns()
+  if a:options.ns !=# '' && a:options.ns !=# self.user_ns()
     let ns = '(require '.s:qsym(a:options.ns).') (in-ns '.s:qsym(a:options.ns).') '
   else
     let ns = ''
@@ -319,18 +349,26 @@ function! s:oneoff.require(symbol) abort
   return ''
 endfunction
 
+function! s:oneoff.message(symbol) abort
+  throw 'No live REPL connection'
+endfunction
+
 " }}}1
 " Client {{{1
 
-function! s:client() abort
-  silent doautocmd User FireplacePreConnect
+function! s:buf() abort
   if exists('s:input')
-    let buf = s:input
+    return s:input
   elseif has_key(s:qffiles, expand('%:p'))
-    let buf = s:qffiles[expand('%:p')].buffer
+    return s:qffiles[expand('%:p')].buffer
   else
-    let buf = '%'
+    return '%'
   endif
+endfunction
+
+function! s:client(...) abort
+  silent doautocmd User FireplacePreConnect
+  let buf = a:0 ? a:1 : s:buf()
   let root = simplify(fnamemodify(bufname(buf), ':p:s?[\/]$??'))
   let previous = ""
   while root !=# previous
@@ -340,42 +378,54 @@ function! s:client() abort
     let previous = root
     let root = fnamemodify(root, ':h')
   endwhile
-  return fireplace#local_client(1)
+  return fireplace#local_client(buf, 1)
 endfunction
 
-function! fireplace#client() abort
-  return s:client()
+function! fireplace#client(...) abort
+  return a:0 ? s:client(a:1) : s:client()
 endfunction
 
 function! fireplace#local_client(...) abort
-  if !a:0
+  if a:0 < 2
     silent doautocmd User FireplacePreConnect
   endif
-  if exists('s:input')
-    let buf = s:input
-  elseif has_key(s:qffiles, expand('%:p'))
-    let buf = s:qffiles[expand('%:p')].buffer
-  else
-    let buf = '%'
-  endif
+  let buf = a:0 ? a:1 : s:buf()
   for repl in s:repls
     if repl.includes_file(fnamemodify(bufname(buf), ':p'))
       return repl
     endif
   endfor
-  if exists('*classpath#from_vim')
+  if exists('*classpath#from_vim') && expand('%:e') ==# 'clj'
     let cp = classpath#from_vim(getbufvar(buf, '&path'))
-    return extend({'classpath': cp}, s:oneoff)
+    return extend({'classpath': cp, 'nr': bufnr(buf)}, s:oneoff)
   endif
   throw ':Connect to a REPL or install classpath.vim to evaluate code'
 endfunction
 
-function! fireplace#findresource(resource) abort
+function! fireplace#message(payload, ...)
+  let client = s:client()
+  let payload = copy(a:payload)
+  if !has_key(payload, 'ns')
+    let payload.ns = fireplace#ns()
+    if fireplace#ns() !=# client.user_ns()
+      let error = client.require(fireplace#ns())
+      if !empty(error)
+        echohl ErrorMSG
+        echo error
+        echohl NONE
+        throw "Clojure: couldn't require " . fireplace#ns()
+      endif
+    endif
+  endif
+  return call(client.message, [payload] + a:000, client)
+endfunction
+
+function! fireplace#findresource(resource, ...) abort
   if a:resource ==# ''
     return ''
   endif
   try
-    let path = fireplace#local_client().path()
+    let path = a:0 ? a:1 : fireplace#local_client().path()
   catch /^:Connect/
     return ''
   endtry
@@ -434,9 +484,9 @@ endfunction
 
 function! s:eval(expr, ...) abort
   let options = a:0 ? copy(a:1) : {}
-  let client = get(options, 'client', s:client())
+  let client = s:client()
   if !has_key(options, 'ns')
-    if fireplace#ns() !=# fireplace#user_ns()
+    if fireplace#ns() !=# client.user_ns()
       let error = client.require(fireplace#ns())
       if !empty(error)
         echohl ErrorMSG
@@ -639,7 +689,7 @@ endfunction
 
 function! s:editop(type) abort
   call feedkeys(&cedit . "\<Home>", 'n')
-  let input = s:input(substitute(substitute(s:opfunc(a:type), "\s*;[^\n]*", '', 'g'), '\n\+\s*', ' ', 'g'))
+  let input = s:input(substitute(substitute(s:opfunc(a:type), "\s*;[^\n\"]*\\%(\n\\@=\\|$\\)", '', 'g'), '\n\+\s*', ' ', 'g'))
   if input !=# ''
     call fireplace#echo_session_eval(input)
   endif
@@ -655,6 +705,10 @@ function! s:Eval(bang, line1, line2, count, args) abort
       let close = '[]})]'
       let [line1, col1] = searchpairpos(open, '', close, 'bcrn', g:fireplace#skip)
       let [line2, col2] = searchpairpos(open, '', close, 'rn', g:fireplace#skip)
+      if !line1 && !line2
+        let [line1, col1] = searchpairpos(open, '', close, 'brn', g:fireplace#skip)
+        let [line2, col2] = searchpairpos(open, '', close, 'crn', g:fireplace#skip)
+      endif
       while col1 > 1 && getline(line1)[col1-2] =~# '[#''`~@]'
         let col1 -= 1
       endwhile
@@ -885,26 +939,16 @@ augroup END
 " }}}1
 " Go to source {{{1
 
-function! s:decode_url(url) abort
-  let url = a:url
-  let url = substitute(url, '^\%(jar:\)\=file:\zs/\ze\w:/', '', '')
-  let url = substitute(url, '^file:', '', '')
-  let url = substitute(url, '^jar:\(.*\)!/', 'zip\1::', '')
-  let url = substitute(url, '%\(\x\x\)', '\=eval(''"\x''.submatch(1).''"'')', 'g')
-  return url
-endfunction
-
 function! fireplace#source(symbol) abort
-  let options = {'client': fireplace#local_client(), 'session': 0}
+  let options = {'session': 0}
   let cmd =
         \ '(when-let [v (resolve ' . s:qsym(a:symbol) .')]' .
         \ '  (when-let [filepath (:file (meta v))]' .
-        \ '    (when-let [url (.getResource (clojure.lang.RT/baseLoader) filepath)]' .
-        \ '      [(str url)' .
-        \ '       (:line (meta v))])))'
+        \ '    [filepath' .
+        \ '     (:line (meta v))]))'
   let result = fireplace#evalparse(cmd, options)
   if type(result) == type([])
-    return '+' . result[1] . ' ' . fnameescape(s:decode_url(result[0]))
+    return '+' . result[1] . ' ' . fireplace#findresource(result[0])
   else
     return ''
   endif
@@ -955,23 +999,16 @@ augroup END
 " Go to file {{{1
 
 function! fireplace#findfile(path) abort
-  let options = {'client': fireplace#local_client(), 'session': 0}
-
-  let cmd =
-        \ '(symbol' .
-        \ '  (or' .
-        \ '    (when-let [url (.getResource (clojure.lang.RT/baseLoader) %s)]' .
-        \ '      (str url))' .
-        \ '    ""))'
+  let options = {'session': 0}
 
   let path = a:path
 
   if path !~# '[/.]' && path =~# '^\k\+$'
-    let aliascmd = printf(cmd,
-          \ '(if-let [ns ((ns-aliases *ns*) '.s:qsym(path).')]' .
+    let aliascmd =
+          \ '(symbol (if-let [ns ((ns-aliases *ns*) '.s:qsym(path).')]' .
           \ '  (str (.replace (.replace (str (ns-name ns)) "-" "_") "." "/") ".clj")' .
-          \ '  "'.path.'.clj")')
-    let result = get(split(s:eval(aliascmd, options).value, "\n"), 0, '')
+          \ '  "'.path.'.clj"))'
+    let path = get(split(s:eval(aliascmd, options).value, "\n"), 0, '')
   else
     if path !~# '/'
       let path = tr(path, '.-', '/_')
@@ -979,16 +1016,8 @@ function! fireplace#findfile(path) abort
     if path !~# '\.\w\+$'
       let path .= '.clj'
     endif
-
-    let response = s:eval(printf(cmd, s:str(path)), options)
-    let result = get(split(get(response, 'value', ''), "\n"), 0, '')
   endif
-  let result = s:decode_url(result)
-  if result ==# ''
-    return fireplace#findresource(path)
-  else
-    return result
-  endif
+  return fireplace#findresource(path)
 endfunction
 
 function! s:GF(cmd, file) abort
@@ -1024,7 +1053,7 @@ augroup END
 " Documentation {{{1
 
 function! s:buffer_path(...) abort
-  let buffer = a:0 ? a:1 : exists('s:input') ? s:input : '%'
+  let buffer = a:0 ? a:1 : s:buf()
   if getbufvar(buffer, '&buftype') =~# '^no'
     return ''
   endif
@@ -1039,20 +1068,16 @@ function! s:buffer_path(...) abort
   return ''
 endfunction
 
-function! fireplace#user_ns() abort
-  return get(b:, 'fireplace_user_ns', 'user')
-endfunction
-
-function! fireplace#ns() abort
-  if exists('b:fireplace_ns')
-    return b:fireplace_ns
+function! fireplace#ns(...) abort
+  let buffer = a:0 ? a:1 : s:buf()
+  if getbufvar(buffer, 'fireplace_ns')
+    return getbufvar(buffer, 'fireplace_ns')
   endif
-  let lnum = 1
-  while lnum < line('$') && getline(lnum) =~# '^\s*\%(;.*\)\=$'
-    let lnum += 1
-  endwhile
+  let head = getbufline(buffer, 1, 500)
+  let blank = '^\s*\%(;.*\)\=$'
+  call filter(head, 'v:val !~# blank')
   let keyword_group = '[A-Za-z0-9_?*!+/=<>.-]'
-  let lines = join(getline(lnum, lnum+50), ' ')
+  let lines = join(head[0:49], ' ')
   let lines = substitute(lines, '"\%(\\.\|[^"]\)*"\|\\.', '', 'g')
   let lines = substitute(lines, '\^\={[^{}]*}', '', '')
   let lines = substitute(lines, '\^:'.keyword_group.'\+', '', 'g')
@@ -1060,11 +1085,8 @@ function! fireplace#ns() abort
   if ns !=# '' && expand('%:e') !=# 'cljs'
     return ns
   endif
-  if has_key(s:qffiles, expand('%:p'))
-    return s:qffiles[expand('%:p')].ns
-  endif
-  let path = s:buffer_path()
-  return s:to_ns(path ==# '' ? fireplace#user_ns() : path)
+  let path = s:buffer_path(buffer)
+  return s:to_ns(path ==# '' ? fireplace#client(buffer).user_ns() : path)
 endfunction
 
 function! s:Lookup(ns, macro, arg) abort
