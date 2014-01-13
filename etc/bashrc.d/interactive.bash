@@ -748,7 +748,7 @@ HAVE htop && {
 
 ### Switch User
 
-ALIAS s='sudo' \
+ALIAS s='sudo -H' \
       root='exec sudo -Hs'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
@@ -1356,7 +1356,7 @@ HAVE psql && {
         "$@"
     }; TCOMP exec with-pgpass
     psql() { with-pgpass command psql "${@:-postgres}"; }
-    ALIAS aspostgres='sudo -iu postgres'
+    ALIAS aspostgres='sudo -Hiu postgres'
 }
 
 ALIAS sqlite='sqlite3' && {
