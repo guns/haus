@@ -39,4 +39,5 @@
         :global-vars {*warn-on-reflection* true}
         :repl-options
         {:init-ns user
-         :init (load-file (str (System/getProperty "user.home") "/.lein/user.clj"))}}}
+         :init (do (load-file (str (System/getProperty "user.home") "/.lein/user.clj"))
+                   (user/toggle-warnings! true))}}}
