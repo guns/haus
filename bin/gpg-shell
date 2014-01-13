@@ -5,7 +5,7 @@ if [ -n "$SSH_AUTH_SOCK" ]; then
 elif [ -n "$GPG_AGENT_INFO" ]; then
     echo "GPG_AGENT_INFO already set: $GPG_AGENT_INFO"
 elif [ "$#" -gt 0 ]; then
-    run gpg-agent --enable-ssh-support --daemon "$@"
+    exec gpg-agent --enable-ssh-support --daemon "$@"
 else
-    run gpg-agent --enable-ssh-support --daemon "${SHELL:-$(command -v bash)}"
+    exec gpg-agent --enable-ssh-support --daemon "${SHELL:-$(command -v bash)}"
 fi
