@@ -1,0 +1,3 @@
+ToggleClojureHighlightReferences	vim-clojure-highlight.txt	/*ToggleClojureHighlightReferences*
+g:clojure_highlight_references	vim-clojure-highlight.txt	/*g:clojure_highlight_references*
+vim-clojure-highlight.txt	vim-clojure-highlight.txt	/*vim-clojure-highlight.txt*

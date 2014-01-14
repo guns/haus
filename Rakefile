@@ -137,6 +137,7 @@ task :env do
 
     'vimfiles' => [
       { :base => "#{@src}/jellyx.vim",             :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@src}/vim-clojure-highlight",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@src}/vim-clojure-static",     :branch => %w[master],      :files => :pathogen },
       { :base => "#{@src}/vim-sexp",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@src}/vim-slamhound",          :branch => %w[master],      :files => :pathogen },
