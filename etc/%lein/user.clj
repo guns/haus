@@ -109,14 +109,20 @@
 
 (defn cheat-sheet [nspace]
   (let [n (str nspace)
-        md (map meta (vals (ns-publics nspace)))
+        vars (vals (ns-publics nspace))
+        fn-var? #(let [f (deref %)]
+                   (or (contains? (meta %) :arglists)
+                       (fn? f)
+                       (instance? clojure.lang.MultiFn f)))
         {funs true
-         defs false} (group-by #(contains? % :arglists) md)
-        flen (apply max 0 (map (comp count str :name) funs))
-        dnames (map #(str n \/ (:name %)) defs)
+         defs false} (group-by fn-var? vars)
+        fmeta (map meta funs)
+        dmeta (map meta defs)
+        flen (apply max 0 (map (comp count str :name) fmeta))
+        dnames (map #(str n \/ (:name %)) dmeta)
         fnames (map #(format (str "%s/%-" flen "s %s") n (:name %)
                              (clojure.string/join \space (:arglists %)))
-                    funs)
+                    fmeta)
         lines (concat (sort dnames) (sort fnames))]
     (str ";;; " n " {{{1\n\n"
          (clojure.string/join \newline lines))))
