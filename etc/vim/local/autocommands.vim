@@ -30,7 +30,7 @@ augroup GUNS
 
     " Vimscript {{{1
     autocmd FileType vim
-        \ setlocal foldmethod=expr foldexpr=VimFoldExpr(v:lnum) |
+        \ setlocal noexpandtab foldmethod=expr foldexpr=VimFoldExpr(v:lnum) |
         \ SetWhitespace 8
     autocmd FileType help
         \ setlocal foldmethod=expr foldexpr=VimHelpFoldExpr(v:lnum) iskeyword+=-
