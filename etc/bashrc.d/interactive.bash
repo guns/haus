@@ -186,7 +186,6 @@ CD_FUNC cdpass          ~/.password-store
 CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src && export cdsrc # Export for edit bindings
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
-CD_FUNC cdmetasploit    "$cdsrc/metasploit" && export cdmetasploit # Export for vim autocmd
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cddesktop       ~/Desktop
 CD_FUNC cdmail          ~/Mail ~guns/Mail
@@ -891,24 +890,6 @@ HAVE scutil && {
             done
         fi
     }
-}
-
-# Metasploit Framework
-HAVE cdmetasploit && {
-    # Param: [$1]     msf($1) command
-    # Param: [${@:2}] Arguments to $1
-    msf() {
-        if (($#)); then
-            local cmd="$cdmetasploit/msf$1"
-            [[ -x "$cmd" ]] || cmd="$cdmetasploit/$1"
-            shift
-        else
-            local cmd="$cdmetasploit/msfconsole"
-        fi
-        run "$cmd" "$@"
-    }
-    _msf() { __compreply__ "$(lsx "$cdmetasploit" | sed 's/^msf//')"; }
-    complete -F _msf msf
 }
 
 # Weechat

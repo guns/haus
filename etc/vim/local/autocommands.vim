@@ -76,10 +76,6 @@ augroup GUNS
         \ execute 'noremap  <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
         \ execute 'noremap! <buffer> <C-l>     <Space>=><Space>' |
         \ SetWhitespace 2 8
-    " Metasploit doesn't follow community conventions
-    autocmd BufRead,BufNewFile $cdmetasploit/*
-        \ setlocal noexpandtab |
-        \ SetWhitespace 4 8
 
     " Python {{{1
     autocmd FileType python
