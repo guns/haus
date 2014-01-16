@@ -7,7 +7,7 @@
 (require 'clojure.java.javadoc)
 
 (let [core-url clojure.java.javadoc/*core-java-api*
-      local-url "http://api/jdk7/api/"]
+      local-url "http://api.dev/jdk7/api/"]
   (dosync
     (alter clojure.java.javadoc/*remote-javadocs*
            #(reduce (fn [m [pre url]]
