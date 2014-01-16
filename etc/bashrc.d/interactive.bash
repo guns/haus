@@ -501,6 +501,19 @@ ALIAS mt='mount -v' \
         ' -- "$@"
     }
     umtusb() { run umount -v /mnt/usb-*; rmdir /mnt/usb-*; }
+    mtlabel() {
+        (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
+        run mount "/dev/disk/by-label/$1" "${@:2}"
+    }
+    _mtlabel() {
+        if ((COMP_CWORD == 1)); then
+            __compreply__ "$(command ls -1 /dev/disk/by-label/)";
+        else
+            _load_comp mount
+            _mount
+        fi
+    }
+    complete -F _mtlabel mtlabel
 }
 
 # fusermount
