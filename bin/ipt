@@ -57,26 +57,14 @@ class Ipt
         @ipv6 = !@ipv6
       end
 
-      opt.on '--save4 PATH', 'Persistent iptables rules path' do |arg|
+      opt.on '--save4 PATH', "Persistent iptables rules path; DEFAULT=#{@save4}" do |arg|
         @save4 = File.expand_path arg
       end
 
-      opt.on '--save6 PATH', 'Persistent ip6tables rules path' do |arg|
+      opt.on '--save6 PATH', "Persistent ip6tables rules path; DEFAULT=#{@save6}" do |arg|
         @save6 = File.expand_path arg
       end
     end
-  end
-
-  def udp?
-    @udp
-  end
-
-  def ipv4?
-    @ipv4
-  end
-
-  def ipv6?
-    @ipv6
   end
 
   def sh *args
@@ -85,7 +73,7 @@ class Ipt
   end
 
   def iptables_exec *args
-    [[ipv4?, 'iptables'], [ipv6?, 'ip6tables']].each do |(truth, cmd)|
+    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(truth, cmd)|
       if truth
         sh ([cmd] + args).shelljoin
       end
@@ -117,8 +105,8 @@ class Ipt
   end
 
   def to_s
-    [[ipv4?, 'IPv4', 'iptables',  IPV4_TABLES],
-     [ipv6?, 'IPv6', 'ip6tables', IPV6_TABLES]].reduce '' do |s, (truth, label, cmd, tables)|
+    [[@ipv4, 'IPv4', 'iptables',  IPV4_TABLES],
+     [@ipv6, 'IPv6', 'ip6tables', IPV6_TABLES]].reduce '' do |s, (truth, label, cmd, tables)|
       s << if truth
         tables.reduce '' do |s, t|
           s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n"
@@ -132,8 +120,8 @@ class Ipt
   end
 
   def save_rules!
-    [[ipv4?, 'iptables-save',  @save4],
-     [ipv6?, 'ip6tables-save', @save6]].each do |(truth, cmd, path)|
+    [[@ipv4, 'iptables-save',  @save4],
+     [@ipv6, 'ip6tables-save', @save6]].each do |(truth, cmd, path)|
       if truth
         sh "#{cmd} > #{path.shellescape}"
       end
@@ -141,8 +129,8 @@ class Ipt
   end
 
   def restore_rules!
-    [[ipv4?, 'iptables-restore',  @save4],
-     [ipv6?, 'ip6tables-restore', @save6]].each do |(truth, cmd, path)|
+    [[@ipv4, 'iptables-restore',  @save4],
+     [@ipv6, 'ip6tables-restore', @save6]].each do |(truth, cmd, path)|
       if truth and File.readable? path
         sh "#{cmd} < #{path.shellescape}"
       end
@@ -154,7 +142,7 @@ class Ipt
   end
 
   def open! *args
-    proto = udp? ? 'udp' : 'tcp'
+    proto = @udp ? 'udp' : 'tcp'
     args.each do |arg|
       s, p = colon_split arg
       src = t %W[--source #{s}]
@@ -206,8 +194,8 @@ class Ipt
   end
 
   def flush_tables!
-    [[ipv4?, 'iptables',  IPV4_TABLES],
-     [ipv6?, 'ip6tables', IPV6_TABLES]].each do |(truth, cmd, tables)|
+    [[@ipv4, 'iptables',  IPV4_TABLES],
+     [@ipv6, 'ip6tables', IPV6_TABLES]].each do |(truth, cmd, tables)|
       next unless truth
 
       # Flush rules and delete non-default chains
@@ -233,7 +221,7 @@ class Ipt
     when 'a', 'accept'    then accept_new_input! *args.drop(1)
     when 'o', 'open'      then open! *args.drop(1)
     when 'f', 'forward'   then forward! *args.drop(1)
-    when 'F', 'flush'     then flush_tables!
+    when 'F', 'FLUSH'     then flush_tables!
     when 'h', 'help'      then puts parser.help
     else abort parser.help
     end
