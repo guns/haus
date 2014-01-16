@@ -108,7 +108,8 @@ task :env do
 
       {
         :base   => "#{@src}/tmux",
-        :branch => %w[master guns],
+        :branch => %w[guns],
+        :fetch  => :never,
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
           'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
