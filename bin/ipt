@@ -6,22 +6,23 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'shellwords'
 
 class Ipt
+  DEFAULTS = {
+    :udp   => false,
+    :ipv4  => true,
+    :ipv6  => false,
+    :save4 => '/etc/iptables/iptables.rules',
+    :save6 => '/etc/iptables/ip6tables.rules'
+  }
+
   IPV4_TABLES = %w[filter nat mangle raw security]
   IPV6_TABLES = IPV4_TABLES - %w[nat]
 
-  attr_reader :options
-
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.udp     ||= false
-    options.ipv4    ||= true
-    options.ipv6    ||= false
-    options.save4   ||= '/etc/iptables/iptables.rules'
-    options.save6   ||= '/etc/iptables/ip6tables.rules'
+    @udp, @ipv4, @ipv6, @save4, @save6 =
+      DEFAULTS.merge(opts).values_at :udp, :ipv4, :ipv6, :save4, :save6
   end
 
   def parser
@@ -45,37 +46,37 @@ class Ipt
       BANNER
 
       opt.on '-u', '--udp', 'Given port rules are for UDP, not TCP' do
-        options.udp = true
+        @udp = true
       end
 
-      opt.on '-4', '--ipv4', "Toggle IPv4 commands; DEFAULT=#{options.ipv4}" do
-        options.ipv4 = !options.ipv4
+      opt.on '-4', '--ipv4', "Toggle IPv4 commands; DEFAULT=#{@ipv4}" do
+        @ipv4 = !@ipv4
       end
 
-      opt.on '-6', '--ipv6', "Toggle IPv6 commands; DEFAULT=#{options.ipv6}" do
-        options.ipv6 = !options.ipv6
+      opt.on '-6', '--ipv6', "Toggle IPv6 commands; DEFAULT=#{@ipv6}" do
+        @ipv6 = !@ipv6
       end
 
       opt.on '--save4 PATH', 'Persistent iptables rules path' do |arg|
-        options.save4 = File.expand_path arg
+        @save4 = File.expand_path arg
       end
 
       opt.on '--save6 PATH', 'Persistent ip6tables rules path' do |arg|
-        options.save6 = File.expand_path arg
+        @save6 = File.expand_path arg
       end
     end
   end
 
   def udp?
-    options.udp
+    @udp
   end
 
   def ipv4?
-    options.ipv4
+    @ipv4
   end
 
   def ipv6?
-    options.ipv6
+    @ipv6
   end
 
   def sh *args
@@ -131,8 +132,8 @@ class Ipt
   end
 
   def save_rules!
-    [[ipv4?, 'iptables-save',  options.save4],
-     [ipv6?, 'ip6tables-save', options.save6]].each do |(truth, cmd, path)|
+    [[ipv4?, 'iptables-save',  @save4],
+     [ipv6?, 'ip6tables-save', @save6]].each do |(truth, cmd, path)|
       if truth
         sh "#{cmd} > #{path.shellescape}"
       end
@@ -140,8 +141,8 @@ class Ipt
   end
 
   def restore_rules!
-    [[ipv4?, 'iptables-restore',  options.save4],
-     [ipv6?, 'ip6tables-restore', options.save6]].each do |(truth, cmd, path)|
+    [[ipv4?, 'iptables-restore',  @save4],
+     [ipv6?, 'ip6tables-restore', @save6]].each do |(truth, cmd, path)|
       if truth and File.readable? path
         sh "#{cmd} < #{path.shellescape}"
       end
