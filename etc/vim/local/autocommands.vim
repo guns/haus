@@ -122,7 +122,7 @@ augroup GUNS
 
     " C {{{1
     autocmd FileType c,cpp
-        \ setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
+        \ setlocal noexpandtab foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
 
     " Nginx {{{1
     autocmd BufRead,BufNewFile */nginx/etc/*.conf,nginx.conf
