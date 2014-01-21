@@ -1650,7 +1650,7 @@ HAVE feh && {
             if ARGV.empty?
                 system "feh", File.expand_path(File.read(File.expand_path "~/.fehbg").shellsplit.last)
             else
-                system "feh", "--bg-fill", ARGV.first
+                system "feh", "--bg-center", ARGV.first
             end
         ' -- "$@"
     }
