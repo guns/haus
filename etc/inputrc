@@ -144,7 +144,6 @@ $if bash
     # Job control
     "\033\007p":    "\C-] pushd . \n"
     "\033\007P":    "\C-] popd \n"
-    "\033\007j":    "\C-] jobs \n"
     "\033\007f":    "\C-] fg \n"
     "\033\007b":    "\C-] bg \n"
 
@@ -233,6 +232,9 @@ $if bash
 
     # X
     "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
+
+    # J
+    "\033\007j":    "\C-] J \n"
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
