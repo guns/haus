@@ -22,7 +22,7 @@ set +o errtrace                         # Functions/subshells inherit errexit
 set +o functrace                        # Functions/subshells inherit DEBUG/TRACE
 set +o ignoreeof                        # Require 10 EOFs to exit shell
 set +o keyword                          # Allow var assignments after a command
-set +o noclobber                        # Don't truncate files via redirection
+set +o noclobber                        # Do not truncate files via redirection
 set +o noexec                           # Non-interactive only dry-run mode
 set +o noglob                           # Disable pathname expansion
 set +o nolog                            # "Currently ignored"
