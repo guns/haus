@@ -1,0 +1,83 @@
+snippet #! "#!" B
+#!/usr/bin/env J
+endsnippet
+
+snippet fn "fn" b
+$1 =: ${2:conjunction|verb|dyad|tacit} : 0
+	$0
+)
+endsnippet
+
+snippet = "=." w
+$1 =. $0
+endsnippet
+
+snippet do "do" w
+do. $0
+endsnippet
+
+snippet if "if" w
+if. $1
+	do. $0
+end.
+endsnippet
+
+snippet ife "ifelse" w
+if. $1
+	do. $2
+	else. $0
+end.
+endsnippet
+
+snippet el "else" w
+else. $0
+endsnippet
+
+snippet ei "elseif." w
+elseif. $1
+do. $0
+endsnippet
+
+snippet try "try" w
+try. $1
+catch. $0
+end.
+endsnippet
+
+snippet wh "while" w
+while. $1
+	do. $0
+end.
+endsnippet
+
+snippet whs "whs" w
+whilst. $1
+	do. $0
+end.
+endsnippet
+
+snippet for "for" w
+for. $1
+	do. $0
+end.
+endsnippet
+
+snippet fori "fori" w
+for_i. $1
+	do. $0
+end.
+endsnippet
+
+snippet sel "select" w
+select. $1
+	case. $2 do. $0
+end.
+endsnippet
+
+snippet case "case" w
+case. $1 do. $0
+endsnippet
+
+snippet fcase "fcase" w
+fcase. $1 do. $0
+endsnippet

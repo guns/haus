@@ -385,7 +385,8 @@ function! s:Screen(command)
         \ 'python'     : 'python',
         \ 'scheme'     : 'scheme',
         \ 'haskell'    : 'ghci',
-        \ 'javascript' : 'node'
+        \ 'javascript' : 'node',
+        \ 'j'          : 'J'
         \ }
     let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
     execute 'ScreenShell ' . cmd
