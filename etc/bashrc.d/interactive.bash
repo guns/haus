@@ -185,6 +185,7 @@ CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/
 CD_FUNC cdpass          ~/.password-store
 CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src && export cdsrc # Export for edit bindings
 CD_FUNC cdSRC           "$cdsrc/READONLY"
+CD_FUNC cdarchlinux     "$cdsrc/archlinux"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cddesktop       ~/Desktop
