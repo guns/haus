@@ -1,0 +1,8 @@
+#!/bin/sh
+# X settings should be in ~/.xinitrc
+
+cd Downloads
+
+/usr/bin/ruby -r shellwords -e 'system "feh", "--bg-center", File.read(File.expand_path "~/.fehbg").shellsplit.last' &
+/usr/bin/kupfer --no-splash &
+/usr/bin/tint2 &

@@ -1,0 +1,181 @@
+
+#            _     _       _
+#   _____  _| |__ | | ____| |
+#  / __\ \/ / '_ \| |/ / _` |
+#  \__ \>  <| | | |   < (_| |
+#  |___/_/\_\_| |_|_|\_\__,_|  guns <self@sungpae.com>
+#
+
+super + alt + control + r
+	notify -a 'Reloading bspwmrc and sxhkdrc'; \
+	pkill -USR1 -x sxhkd; \
+	~/.config/bspwm/bspwmrc
+
+super + alt + control + q
+	bspc quit
+
+#
+# Windows
+#
+
+super + q
+	bspc window --close
+
+super + Tab
+	bspc window --focus last.local
+
+alt + Tab
+	if pkill -0 skippy-xd; then pkill skippy-xd; else skippy-xd; fi
+
+super + control + f
+	bspc window --toggle floating
+
+F11
+	bspc window --toggle fullscreen
+
+super + control{_, + shift} + {h,j,k,l}
+	ACTION={--focus,--swap} DIR={left,down,up,right} \
+	CYCLE_DIR="$(if [[ "$DIR" == @(down|right) ]]; then echo "next"; else echo "prev"; fi)"; \
+	bspc window "$ACTION" "$DIR" || \
+	bspc window "$ACTION" "$CYCLE_DIR"
+
+super + control + {1-9} ; {h,j,k,l}
+	MAG=0.{1-9} DIR={left,down,up,right}; \
+	if [[ "$DIR" == @(down|right) ]]; then \
+		MAG=$(bc <<< "1 - $MAG"); \
+	fi; \
+	bspc window --ratio "$MAG"; \
+	bspc window --presel "$DIR"
+
+~button1
+	bspc pointer --grab focus
+
+super + button{1-3}
+	bspc pointer --grab {move,resize_side,resize_corner}
+
+super + !button{1-3}
+	bspc pointer --track %i %i
+
+super + @button{1-3}
+	bspc pointer --ungrab
+
+#
+# Hardware / Media control
+#
+
+{F3,XF86AudioMute}
+	ponymix toggle
+
+{F4,XF86AudioLowerVolume}
+	ponymix decrease 5
+
+{F5,XF86AudioRaiseVolume}
+	ponymix increase 5
+
+super + {F3,XF86AudioMute}
+	T='♫ alsamixer ♫'; wmctrl -a "$T" || urxvt-client -title "$T" -e alsamixer -Vall
+
+alt + {F3,XF86AudioMute}
+	if pkill -0 pulseaudio; then \
+		notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink); \
+	else \
+		notify --audio=/dev/null - < <(hwctl toggle-alsa-card); \
+	fi
+
+alt + shift + {F3,XF86AudioMute}
+	if pkill -0 pulseaudio; then \
+		notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-source); \
+	fi
+
+F8
+	notify --audio "Mouse $(if [[ "$(toggle-mouse)" -eq 1 ]]; then echo ON; else echo OFF; fi)"
+
+super + control + shift + {space,Left,Right}
+	mediactl {toggle,prev,next}
+
+{XF86Eject,Pause}
+	pkill -HUP gpg-agent; slock
+
+control + {XF86Eject,Pause}
+	pkill -HUP gpg-agent
+
+{super + XF86Eject,super + Pause,XF86Sleep}
+	sudo -n /usr/bin/systemctl-wrapper suspend
+
+super + alt + {XF86Eject,Pause,XF86Sleep}
+	sudo -n /usr/bin/systemctl-wrapper reboot
+
+super + control + alt + {XF86Eject,Pause,XF86Sleep}
+	sudo -n /usr/bin/systemctl-wrapper poweroff
+
+super + control + alt + {Left,Right,Up,Down}
+	xrandr -o {left,right,inverted,normal}
+
+#
+# Desktops
+#
+
+super + alt + space
+	bspc desktop --layout next
+
+super + alt + {j,k}
+	bspc desktop --focus {next,prev}
+
+super + alt + {l,h}
+	DIR={next,prev}; \
+	bspc window --to-desktop "$DIR"; \
+	bspc desktop --focus "$DIR"
+
+super + alt + b
+	bspc desktop --balance
+
+super + alt + button{4,5}
+	GAP=$(($(bspc config -d focused window_gap) {+,-} 6)); \
+	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
+
+#
+# Applications
+#
+
+super + space
+	kupfer
+
+super + F2
+	Thunar
+
+F9
+	wmctrl -a 'guns ❦ EVA'
+
+super + F9
+	wmctrl -a 'root ❦ EVA'
+
+alt + F9
+	urxvt-client
+
+alt + shift + F9
+	urxvt-client -e tmuxlaunch -d
+
+super + alt + F9
+	urxvt-client -icon ~/.icons/local/htop -e htop
+
+alt + F10
+	T='♻ newsbeuter ♻'; wmctrl -a "$T" || { cd ~/Downloads; urxvt-client -title "$T" -e newsbeuterlaunch; }
+
+F12
+	T='✉ Mutt ✉'; wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || { cd ~/Downloads; urxvt-client -title "$T" -e muttlaunch; }
+
+super + F12
+	urxvt-client -title '✉ Mutt ✉' -e muttlaunch --force
+
+alt + F12
+	open https://mail.google.com/
+
+super + control + e
+	urxvt-client -icon ~/.icons/local/vim -e vim
+
+super + control + t
+	T="✔ TODO ✔"; \
+	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
+	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
+
+# vim:noet:

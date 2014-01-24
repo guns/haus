@@ -359,10 +359,10 @@ noremap <Leader>ed       :<C-u>execute 'TabOpen ' . resolve(expand($cddnsmasq . 
 noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh<CR>
-noremap <Leader>el       :<C-u>execute 'TabOpen ' . substitute(expand($cdhaus . '/etc/%lein/user.clj'), '\V%', '\\\\\\%', 'g')<CR>
+noremap <Leader>el       :<C-u>execute 'TabOpen ' . expand($cdhaus . '/etc/\\\\\\%lein/user.clj')<CR>
 noremap <Leader>eL       :<C-u>execute 'TabOpen ' . resolve(expand($cdsrc . '/leiningen/sample.project.clj'))<CR>
 noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
-noremap <Leader>eM       :<C-u>execute 'TabOpen ' . substitute(resolve(expand('~/.mutt/muttrc')), '\V%', '\\\\\%', 'g')<CR>
+noremap <Leader>eM       :<C-u>execute 'TabOpen ' . expand($cdhaus . '/etc/\\\\\\%mutt/muttrc')<CR>
 noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
@@ -373,9 +373,9 @@ noremap <Leader>eT       :<C-u>execute 'TabOpen ' . resolve(expand('~/.tmux.conf
 noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/share/doc/unicode-table.txt.gz'))<CR>
 noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
 noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vimperatorrc'))<CR>
-noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/bin/openbox-configuration')) \| setfiletype clojure<CR>
+noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%config/bspwm/bspwmrc'))<CR>
 noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xinitrc'))<CR>
-noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand('~/.config/openbox/autostart'))<CR>
+noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%config/bspwm/autostart'))<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>
