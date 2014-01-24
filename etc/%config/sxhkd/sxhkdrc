@@ -118,18 +118,18 @@ super + control + alt + {Left,Right,Up,Down}
 super + alt + space
 	bspc desktop --layout next
 
-super + alt + {j,k}
-	bspc desktop --focus {next,prev}
+super + alt + {j,k,button5,button4}
+	bspc desktop --focus {next,prev,next,prev}
 
-super + alt + {l,h}
-	DIR={next,prev}; \
+super + alt + {l,h,button8,button9}
+	DIR={next,prev,next,prev}; \
 	bspc window --to-desktop "$DIR"; \
 	bspc desktop --focus "$DIR"
 
 super + alt + b
 	bspc desktop --balance
 
-super + alt + button{4,5}
+super + alt + control + button{4,5}
 	GAP=$(($(bspc config -d focused window_gap) {+,-} 6)); \
 	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
 
