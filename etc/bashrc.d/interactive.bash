@@ -1629,6 +1629,8 @@ elif __LINUX__; then
 
             pacman -U $force "${pkgs[@]}"
         }
+        _xspecs['pacinstallfile']='!*.pkg.tar.xz'
+        complete -F _filedir_xspec pacinstallfile
     }
 
     ALIAS mkpkg='makepkg' \
