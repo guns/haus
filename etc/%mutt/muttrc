@@ -145,7 +145,8 @@ bind  browser     \e\007/ exit
 set my_identity_1='\
     set from="guns <self@sungpae.com>";\
     set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
-    set smtp_pass="`pass google.com/self@sungpae.com`"'
+    set smtp_pass="`pass google.com/self@sungpae.com`";\
+    my_hdr X-PGP-Key: fp="4BC7 2AA6 B1AE 2B5A C7F7  ADCF 9D1A A266 D2BC 9C2D"'
 set my_identity_2='\
     set from="guns <sungpae@gmail.com>";\
     set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
