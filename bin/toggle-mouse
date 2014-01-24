@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+if system 'synclient', '-l'
+  state = %x(synclient -l | grep -c 'TouchpadOff.*=.*0').chomp
+  system 'synclient', "TouchpadOff=#{state}"
+else
+  id = %x(xinput list)[/mouse.*id=(\d+)/i, 1]
+  exit 1 if id.nil? or id.empty?
+  state = (%x(xinput list-props #{id}) =~ /Device Enabled.*:\s*1$/i) ? '0' : '1'
+  system %q(xinput), %q(set-prop), id, %q(Device Enabled), state
+end
+
+system 'xdotool', 'mousemove', '10000', '10000'
+puts state
