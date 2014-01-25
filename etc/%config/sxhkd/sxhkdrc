@@ -60,6 +60,34 @@ super + @button{1-3}
 	bspc pointer --ungrab
 
 #
+# Desktops
+#
+
+super + alt + space
+	bspc desktop --layout next
+
+super + alt + {j,k,button5,button4}
+	bspc desktop --focus {next,prev,next,prev}
+
+super + alt + {l,h,button8,button9}
+	DIR={next,prev,next,prev}; \
+	bspc window --to-desktop "$DIR"; \
+	bspc desktop --focus "$DIR"
+
+super + alt + {b,e}
+	bspc desktop --{balance,equalize}
+
+super + alt + control + button{4,5}
+	GAP=$(($(bspc config -d focused window_gap) {+,-} 6)); \
+	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
+
+super + alt + {Up,Down}
+	bspc desktop --flip {horizontal,vertical}
+
+super + alt + {Left,Right}
+	bspc desktop --rotate {270,90}
+
+#
 # Hardware / Media control
 #
 
@@ -112,28 +140,6 @@ super + control + alt + {XF86Eject,Pause,XF86Sleep}
 
 super + control + alt + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
-
-#
-# Desktops
-#
-
-super + alt + space
-	bspc desktop --layout next
-
-super + alt + {j,k,button5,button4}
-	bspc desktop --focus {next,prev,next,prev}
-
-super + alt + {l,h,button8,button9}
-	DIR={next,prev,next,prev}; \
-	bspc window --to-desktop "$DIR"; \
-	bspc desktop --focus "$DIR"
-
-super + alt + b
-	bspc desktop --balance
-
-super + alt + control + button{4,5}
-	GAP=$(($(bspc config -d focused window_gap) {+,-} 6)); \
-	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
 
 #
 # Applications

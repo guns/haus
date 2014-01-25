@@ -1058,7 +1058,7 @@ HAVE vim && {
     alias vimunicode='(cdhaus share/doc && exec vim unicode-table.txt.gz)'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
     alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
-    alias vimwm='(cdhaus etc/%config && exec vim -O sxhkd/sxhkdrc bspwm/bspwmrc)'
+    alias vimwm='(cdhaus etc/%config && exec vim bspwm/bspwmrc -c "set noet | vsplit sxhkd/sxhkdrc | setf sh | set noet")'
     alias vimxinitrc='vim ~/.xinitrc'
     alias vimxautostart='(cdhaus etc/%config && exec vim bspwm/autostart)'
 }
