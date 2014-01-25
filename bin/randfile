@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+
+r = ARGV.getopts('r')['r']
+glob = File.join ARGV.first || '.', r ? '**/*' : '*'
+puts Dir[glob].select { |f| File.file? f }.shuffle.first

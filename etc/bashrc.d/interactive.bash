@@ -700,15 +700,6 @@ __LINUX__ && {
     }
 }
 
-# Random file
-randfile() {
-    ruby -roptparse -e '
-        r = ARGV.getopts("r")["r"]
-        glob = File.join ARGV.first || ".", r ? "**/*" : "*"
-        puts Dir[glob].select { |f| File.file? f }.shuffle.last
-    ' -- "$@"
-}
-
 ### Processes
 
 # kill killall
