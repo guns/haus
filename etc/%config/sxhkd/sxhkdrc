@@ -73,7 +73,8 @@ super + @button{1-3}
 	ponymix increase 5
 
 super + {F3,XF86AudioMute}
-	T='♫ alsamixer ♫'; wmctrl -a "$T" || urxvt-client -title "$T" -e alsamixer -Vall
+	T='♫ alsamixer ♫'; \
+	wmctrl -a "$T" || urxvt-client -title "$T" -e alsamixer -Vall
 
 alt + {F3,XF86AudioMute}
 	if pkill -0 pulseaudio; then \
@@ -88,7 +89,8 @@ alt + shift + {F3,XF86AudioMute}
 	fi
 
 F8
-	notify --audio "Mouse $(if [[ "$(toggle-mouse)" -eq 1 ]]; then echo ON; else echo OFF; fi)"
+	STATUS=$(if [[ "$(toggle-mouse)" -eq 1 ]]; then echo ON; else echo OFF; fi); \
+	notify --audio "Mouse $STATUS"
 
 super + control + shift + {space,Left,Right}
 	mediactl {toggle,prev,next}
@@ -159,13 +161,15 @@ super + alt + F9
 	urxvt-client -icon ~/.icons/local/htop -e htop
 
 alt + F10
-	T='♻ newsbeuter ♻'; wmctrl -a "$T" || { cd ~/Downloads; urxvt-client -title "$T" -e newsbeuterlaunch; }
+	T='♻ newsbeuter ♻'; \
+	wmctrl -a "$T" || urxvt-client -cd ~/Downloads -title "$T" -e newsbeuterlaunch
 
 F12
-	T='✉ Mutt ✉'; wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || { cd ~/Downloads; urxvt-client -title "$T" -e muttlaunch; }
+	T='✉ Mutt ✉'; \
+	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || urxvt-client -cd ~/Downloads -title "$T" -e muttlaunch
 
 super + F12
-	urxvt-client -title '✉ Mutt ✉' -e muttlaunch --force
+	urxvt-client -cd ~/Downloads -title '✉ Mutt ✉' -e muttlaunch --force
 
 alt + F12
 	open https://mail.google.com/
@@ -177,5 +181,13 @@ super + control + t
 	T="✔ TODO ✔"; \
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
 	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
+
+super + control + p
+	T='♫ pianobar ♫'; \
+	wmctrl -a "$T" || urxvt-client -title "$T" -e pianobarlaunch pandora.com/f268416@rmqkr.net
+
+super + control + shift + p
+	T='♫ cmus ♫'; \
+	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -e cmus
 
 # vim:noet:
