@@ -47,6 +47,14 @@ super + control + {1-9} ; {h,j,k,l}
 	bspc window --ratio "$MAG"; \
 	bspc window --presel "$DIR"
 
+super + alt + control + {h,j,k,l}
+	bspc window --edge {left -10,down +10,up -10,right +10} || \
+	bspc window --edge {left +10,down -10,up +10,right -10}
+
+super + alt + control + shift + {h,j,k,l}
+	bspc window --edge {right -10,up +10,down -10,left +10} || \
+	bspc window --edge {right +10,up -10,down +10,left -10}
+
 ~button1
 	bspc pointer --grab focus
 
@@ -86,6 +94,9 @@ super + alt + {Up,Down}
 
 super + alt + {Left,Right}
 	bspc desktop --rotate {270,90}
+
+super + alt + w
+	feh --bg-fill "$(randfile -r ~/Media/Wallpapers)"
 
 #
 # Hardware / Media control
@@ -138,7 +149,7 @@ super + alt + {XF86Eject,Pause,XF86Sleep}
 super + control + alt + {XF86Eject,Pause,XF86Sleep}
 	sudo -n /usr/bin/systemctl-wrapper poweroff
 
-super + control + alt + {Left,Right,Up,Down}
+super + control + alt + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
 #
@@ -163,9 +174,6 @@ alt + F9
 alt + shift + F9
 	urxvt-client -e tmuxlaunch -d
 
-super + alt + F9
-	urxvt-client -icon ~/.icons/local/htop -e htop
-
 alt + F10
 	T='♻ newsbeuter ♻'; \
 	wmctrl -a "$T" || urxvt-client -cd ~/Downloads -title "$T" -e newsbeuterlaunch
@@ -180,10 +188,13 @@ super + F12
 alt + F12
 	open https://mail.google.com/
 
+super + control + t
+	urxvt-client -icon ~/.icons/local/htop -e htop
+
 super + control + e
 	urxvt-client -icon ~/.icons/local/vim -e vim
 
-super + control + t
+super + control + r
 	T="✔ TODO ✔"; \
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
 	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
@@ -195,5 +206,9 @@ super + control + p
 super + control + shift + p
 	T='♫ cmus ♫'; \
 	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -e cmus
+
+super + control + i
+	T='❡ irc ❡'; \
+	wmctrl -a "$T" || urxvt-client -cd ~/.weechat -title "$T" -e weechat-curses
 
 # vim:noet:
