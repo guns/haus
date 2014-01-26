@@ -12,7 +12,47 @@ super + alt + control + r
 	~/.config/bspwm/bspwmrc
 
 super + alt + control + q
-	bspc quit
+	bspc quit; pkill -x sxhkd
+
+#
+# Desktops
+#
+
+super + alt + space
+	bspc desktop --layout next
+
+super + alt + {j,k}
+	bspc desktop --focus {next,prev}
+
+super + alt + {l,h}
+	DIR={next,prev,next,prev}; \
+	bspc window --to-desktop "$DIR" && \
+	bspc desktop --focus "$DIR"
+
+super + alt + {1-9}
+	bspc desktop --focus ^{1-9}
+
+super + alt + shift + {1-9}
+	bspc window --to-desktop ^{1-9}
+
+super + alt + {Next,Prior,button4,button5}
+	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 5)); \
+	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
+
+super + alt + {f,v}
+	bspc desktop --flip {vertical,horizontal}
+
+super + alt + {b,e}
+	bspc desktop --{balance,equalize}
+
+super + alt + r
+	bspc desktop --rotate 90
+
+super + alt + 0
+	bspc desktop --cancel-presel
+
+super + alt + w
+	feh --bg-fill "$(randfile -r ~/Media/Wallpapers)"
 
 #
 # Windows
@@ -25,7 +65,25 @@ super + Tab
 	bspc window --focus last.local
 
 alt + Tab
-	if pkill -0 skippy-xd; then pkill skippy-xd; else skippy-xd; fi
+	if pkill -0 -x skippy-xd; then \
+		pkill -x skippy-xd; \
+		bspc window --focus focused; \
+	else \
+		skippy-xd; \
+	fi
+
+super + control + {comma,period}
+	bspc window --focus {prev,next}
+
+super + control + {h,j,k,l}
+	bspc window --presel {left,down,up,right}
+
+super + control + {1-9}
+	bspc window --ratio 0.{1-9}
+
+super + control + shift + {h,j,k,l}
+	DIR={left,down,up,right}; \
+	bspc window --swap "$DIR" || bspc window --swap "$(if [[ "$DIR" == @(down|right) ]]; then echo "next"; else echo "prev"; fi)"
 
 super + control + f
 	bspc window --toggle floating
@@ -33,27 +91,11 @@ super + control + f
 F11
 	bspc window --toggle fullscreen
 
-super + control{_, + shift} + {h,j,k,l}
-	ACTION={--focus,--swap} DIR={left,down,up,right} \
-	CYCLE_DIR="$(if [[ "$DIR" == @(down|right) ]]; then echo "next"; else echo "prev"; fi)"; \
-	bspc window "$ACTION" "$DIR" || \
-	bspc window "$ACTION" "$CYCLE_DIR"
-
-super + control + {1-9} ; {h,j,k,l}
-	MAG=0.{1-9} DIR={left,down,up,right}; \
-	if [[ "$DIR" == @(down|right) ]]; then \
-		MAG=$(bc <<< "1 - $MAG"); \
-	fi; \
-	bspc window --ratio "$MAG"; \
-	bspc window --presel "$DIR"
-
 super + alt + control + {h,j,k,l}
-	bspc window --edge {left -10,down +10,up -10,right +10} || \
-	bspc window --edge {left +10,down -10,up +10,right -10}
+	bspc window --edge {left -10,down +10,up -10,right +10}
 
 super + alt + control + shift + {h,j,k,l}
-	bspc window --edge {right -10,up +10,down -10,left +10} || \
-	bspc window --edge {right +10,up -10,down +10,left -10}
+	bspc window --edge {right -10,up +10,down -10,left +10}
 
 ~button1
 	bspc pointer --grab focus
@@ -66,37 +108,6 @@ super + !button{1-3}
 
 super + @button{1-3}
 	bspc pointer --ungrab
-
-#
-# Desktops
-#
-
-super + alt + space
-	bspc desktop --layout next
-
-super + alt + {j,k,button5,button4}
-	bspc desktop --focus {next,prev,next,prev}
-
-super + alt + {l,h,button8,button9}
-	DIR={next,prev,next,prev}; \
-	bspc window --to-desktop "$DIR"; \
-	bspc desktop --focus "$DIR"
-
-super + alt + {b,e}
-	bspc desktop --{balance,equalize}
-
-super + alt + control + button{4,5}
-	GAP=$(($(bspc config -d focused window_gap) {+,-} 6)); \
-	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
-
-super + alt + {Up,Down}
-	bspc desktop --flip {horizontal,vertical}
-
-super + alt + {Left,Right}
-	bspc desktop --rotate {270,90}
-
-super + alt + w
-	feh --bg-fill "$(randfile -r ~/Media/Wallpapers)"
 
 #
 # Hardware / Media control
@@ -113,18 +124,20 @@ super + alt + w
 
 super + {F3,XF86AudioMute}
 	T='♫ alsamixer ♫'; \
-	wmctrl -a "$T" || urxvt-client -title "$T" -e alsamixer -Vall
+	wmctrl -a "$T" || \
+	(urxvt-client -title "$T" -g 130x30 -e alsamixer -Vall; \
+	 bspc window --toggle floating=true)
 
 alt + {F3,XF86AudioMute}
-	if pkill -0 pulseaudio; then \
-		notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink); \
+	if pkill -0 -x pulseaudio; then \
+		notify --no-audio - < <(hwctl toggle-pulseaudio-sink); \
 	else \
-		notify --audio=/dev/null - < <(hwctl toggle-alsa-card); \
+		notify --no-audio - < <(hwctl toggle-alsa-card); \
 	fi
 
 alt + shift + {F3,XF86AudioMute}
-	if pkill -0 pulseaudio; then \
-		notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-source); \
+	if pkill -0 -x pulseaudio; then \
+		notify --no-audio - < <(hwctl toggle-pulseaudio-source); \
 	fi
 
 F8
@@ -135,10 +148,10 @@ super + control + shift + {space,Left,Right}
 	mediactl {toggle,prev,next}
 
 {XF86Eject,Pause}
-	pkill -HUP gpg-agent; slock
+	pkill -HUP -x gpg-agent; slock
 
 control + {XF86Eject,Pause}
-	pkill -HUP gpg-agent
+	pkill -HUP -x gpg-agent
 
 {super + XF86Eject,super + Pause,XF86Sleep}
 	sudo -n /usr/bin/systemctl-wrapper suspend
