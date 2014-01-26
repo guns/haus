@@ -213,7 +213,7 @@
    [:chainQuitKey "C-c"]
 
    ;; Openbox functions
-   (bindsh "W-C-A-r" ["notify --audio=/dev/null 'Compiling Openbox configuration.'"
+   (bindsh "W-C-A-r" ["notify --no-audio 'Compiling Openbox configuration.'"
                       "if openbox-configuration --update"
                       "then notify --audio Success"
                       "else notify Failure"
@@ -230,12 +230,12 @@
    (bindfocus ["W-F3" "W-XF86AudioMute"]
               "♫ alsamixer ♫" "urxvt-client -title %s -g 130x30 -e alsamixer -Vall")
    (bindsh ["A-F3" "A-XF86AudioMute"]
-           (if (system "pkill" "-0" "pulseaudio")
-             ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-sink)"]
-             ["notify --audio=/dev/null - < <(hwctl toggle-alsa-card)"]))
+           (if (system "pkill" "-0" "-x" "pulseaudio")
+             ["notify --no-audio - < <(hwctl toggle-pulseaudio-sink)"]
+             ["notify --no-audio - < <(hwctl toggle-alsa-card)"]))
    (bindsh ["A-S-F3" "A-S-XF86AudioMute"]
-           (when (system "pkill" "-0" "pulseaudio")
-             ["notify --audio=/dev/null - < <(hwctl toggle-pulseaudio-source)"]))
+           (when (system "pkill" "-0" "-x" "pulseaudio")
+             ["notify --no-audio - < <(hwctl toggle-pulseaudio-source)"]))
    (bindsh ["F3" "XF86AudioMute"] "ponymix toggle")
    (bindsh ["F4" "XF86AudioLowerVolume"] "ponymix decrease 5")
    (bindsh ["F5" "XF86AudioRaiseVolume"] "ponymix increase 5")
@@ -257,8 +257,8 @@
                         system %q(notify), %q(--audio), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
                       '"
                      "xdotool mousemove 10000 10000"]))
-   (bindsh ["XF86Eject" "Pause"] ["slock" "pkill -HUP gpg-agent"])
-   (bindsh ["C-XF86Eject" "C-Pause"] "pkill -HUP gpg-agent")
+   (bindsh ["XF86Eject" "Pause"] ["slock" "pkill -HUP -x gpg-agent"])
+   (bindsh ["C-XF86Eject" "C-Pause"] "pkill -HUP -x gpg-agent")
    (bindsh ["W-XF86Eject" "W-Pause" "XF86Sleep"] "sudo -n /usr/bin/systemctl-wrapper suspend")
    (bindsh ["W-A-XF86Eject" "W-A-Pause"] "sudo -n /usr/bin/systemctl-wrapper reboot")
    (bindsh ["W-C-A-XF86Eject" "W-C-A-Pause"] "sudo -n /usr/bin/systemctl-wrapper poweroff")
@@ -317,8 +317,8 @@
    (bind "F8" "ToggleShowDesktop")
    (bindswitch "W-Tab" "NextWindow")
    (bindswitch "W-S-Tab" "PreviousWindow")
-   (bindsh "A-Tab" ["if pkill -0 skippy-xd"
-                    "then pkill skippy-xd"
+   (bindsh "A-Tab" ["if pkill -0 -x skippy-xd"
+                    "then pkill -x skippy-xd"
                     "else skippy-xd"
                     "fi"])
 
