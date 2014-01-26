@@ -386,6 +386,7 @@ noremap <Leader>fd       :<C-u>setlocal filetype=diff<CR>
 noremap <Leader>fh       :<C-u>setlocal filetype=html<CR>
 noremap <Leader>fH       :<C-u>setlocal filetype=haskell<CR>
 noremap <Leader>fj       :<C-u>setlocal filetype=javascript<CR>
+noremap <Leader>fJ       :<C-u>setlocal filetype=j<CR>
 noremap <Leader>fm       :<C-u>setlocal filetype=mail<CR>
 noremap <Leader>fM       :<C-u>setlocal filetype=markdown<CR>
 noremap <Leader>fo       :<C-u>setlocal filetype=org<CR>
