@@ -72,18 +72,18 @@ alt + Tab
 		skippy-xd; \
 	fi
 
-super + control + {comma,period}
-	bspc window --focus {prev,next}
+super + control + {n,p}
+	bspc window --focus {next,prev}
 
 super + control + {h,j,k,l}
 	bspc window --presel {left,down,up,right}
 
-super + control + {1-9}
-	bspc window --ratio 0.{1-9}
-
 super + control + shift + {h,j,k,l}
 	DIR={left,down,up,right}; \
 	bspc window --swap "$DIR" || bspc window --swap "$(if [[ "$DIR" == @(down|right) ]]; then echo "next"; else echo "prev"; fi)"
+
+super + control + {1-9}
+	bspc window --ratio 0.{1-9}
 
 super + control + f
 	bspc window --toggle floating
@@ -212,11 +212,11 @@ super + control + r
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
 	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
 
-super + control + p
+super + control + m
 	T='♫ pianobar ♫'; \
 	wmctrl -a "$T" || urxvt-client -title "$T" -e pianobarlaunch pandora.com/f268416@rmqkr.net
 
-super + control + shift + p
+super + control + shift + m
 	T='♫ cmus ♫'; \
 	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -e cmus
 
