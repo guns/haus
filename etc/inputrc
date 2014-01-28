@@ -284,6 +284,16 @@ $if java
     "\C-xl":        "\C-](load-file "")\C-b\C-b"
 $endif
 
+### J REPL
+
+$if jconsole
+    "\C-xi":        "\C-]'install' jpkg ''\C-b"
+    "\C-xs":        "\C-]'search' jpkg ''\C-b
+    "\C-xu":        "\C-]'update' jpkg ''"
+    "\C-xl":        "\C-]load ''\C-b"
+    "\C-xr":        "\C-]require ''\C-b"
+$endif
+
 ### PostgreSQL
 
 $if psql

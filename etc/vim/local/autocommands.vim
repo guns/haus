@@ -203,7 +203,7 @@ augroup GUNS
 
     " Readline {{{1
     autocmd BufRead,BufNewFile *inputrc,*inputrc.d/*
-        \ SetIskeyword! |
+        \ SetWhitespace 4 |
         \ setlocal filetype=readline foldmethod=expr foldexpr=ShellFoldExpr(v:lnum)
 
     " Nethack! {{{1
