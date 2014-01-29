@@ -325,7 +325,7 @@ lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 # objdump hexdump strings hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
 ALIAS strings='strings -t x -' && lstrings() { strings -t x - "$@" | pager; }
-ALIAS ox='objdump -x'
+ox() { objdump -x "$@" | less; }
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
