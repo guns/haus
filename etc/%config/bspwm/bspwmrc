@@ -11,7 +11,7 @@ bspc monitor --reset-desktops one two three four
 bspc desktop one --layout monocle
 
 bspc config border_width            2
-bspc config window_gap              10
+bspc config window_gap              8
 bspc config bottom_padding          20
 bspc config borderless_monocle      true
 bspc config gapless_monocle         true

@@ -36,7 +36,7 @@ super + alt + shift + {1-9}
 	bspc window --to-desktop ^{1-9}
 
 super + alt + {Next,Prior,button4,button5}
-	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 5)); \
+	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 4)); \
 	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
 
 super + alt + {f,v}
