@@ -1147,7 +1147,7 @@ type ruby &>/dev/null && {
             eval "rb${suf}e() { ${bin}/ruby -e 'eval ARGV.join(%q( ))' -- \"\$@\"; }"
 
             CD_FUNC -f "cdruby${suf}" "ruby${suf} -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
-            CD_FUNC -f "cdgems${suf}" "ruby${suf} -rubygems -e \"puts File.join(Gem.dir, 'gems')\""
+            CD_FUNC -f "cdgems${suf}" "ruby${suf} -rubygems -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
@@ -1156,7 +1156,7 @@ type ruby &>/dev/null && {
                alias "gem${suf}i=run ${bin}/gem install"
                alias "gem${suf}q=run ${bin}/gem specification -r"
                alias "gem${suf}s=run ${bin}/gem search -r"
-               alias "gem${suf}u=run ${bin}/gem uninstall"
+               alias "gem${suf}r=run ${bin}/gem uninstall"
                # alias gemsync
                alias "gem${suf}outdated=run ${bin}/gem outdated"
             }
