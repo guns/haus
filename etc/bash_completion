@@ -1906,7 +1906,7 @@ _install_xspec '!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)' timid
 _install_xspec '!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|okta|p[st]m|s[3t]m|ult|umx|wav|xm)' modplugplay modplug123
 _install_xspec '!*.@(zip|z|gz|tgz)' bzme
 # konqueror not here on purpose, it's more than a web/html browser
-_install_xspec '!*.@(?([xX]|[sS])[hH][tT][mM]?([lL]))' netscape mozilla lynx galeon dillo elinks amaya firefox mozilla-firefox iceweasel google-chrome chromium-browser epiphany
+_install_xspec '!*.@(?([xX]|[sS])[hH][tT][mM]?([lL])|xpi)' netscape mozilla lynx galeon dillo elinks amaya firefox mozilla-firefox iceweasel google-chrome chromium-browser epiphany
 _install_xspec '!*.@(sxw|stw|sxg|sgl|doc?([mx])|dot?([mx])|rtf|txt|htm|html|?(f)odt|ott|odm)' oowriter
 _install_xspec '!*.@(sxi|sti|pps?(x)|ppt?([mx])|pot?([mx])|?(f)odp|otp)' ooimpress
 _install_xspec '!*.@(sxc|stc|xls?([bmx])|xlw|xlt?([mx])|[ct]sv|?(f)ods|ots)' oocalc
