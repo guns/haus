@@ -7,7 +7,7 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-application/pdf; firefox %s
+application/pdf; zathura %s
 application/pdf; pdftotext %s -; copiousoutput
 application/*; less %s
 application/*; less %s; copiousoutput
