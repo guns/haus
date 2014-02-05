@@ -9,6 +9,7 @@ g:splitjoin_normalize_whitespace	splitjoin.txt	/*g:splitjoin_normalize_whitespac
 g:splitjoin_perl_brace_on_same_line	splitjoin.txt	/*g:splitjoin_perl_brace_on_same_line*
 g:splitjoin_ruby_curly_braces	splitjoin.txt	/*g:splitjoin_ruby_curly_braces*
 g:splitjoin_ruby_heredoc_type	splitjoin.txt	/*g:splitjoin_ruby_heredoc_type*
+g:splitjoin_ruby_trailing_comma	splitjoin.txt	/*g:splitjoin_ruby_trailing_comma*
 g:splitjoin_split_mapping	splitjoin.txt	/*g:splitjoin_split_mapping*
 gJ	splitjoin.txt	/*gJ*
 gS	splitjoin.txt	/*gS*

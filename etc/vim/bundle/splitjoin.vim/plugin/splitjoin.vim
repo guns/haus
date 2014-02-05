@@ -2,7 +2,7 @@ if exists("g:loaded_splitjoin") || &cp
   finish
 endif
 
-let g:loaded_splitjoin = '0.6.0' " version number
+let g:loaded_splitjoin = '0.7.0' " version number
 let s:keepcpo          = &cpo
 set cpo&vim
 
@@ -23,6 +23,10 @@ end
 
 if !exists('g:splitjoin_ruby_heredoc_type')
   let g:splitjoin_ruby_heredoc_type = '<<-' " can be one of '<<-', '<<'
+endif
+
+if !exists('g:splitjoin_ruby_trailing_comma')
+  let g:splitjoin_ruby_trailing_comma = 1
 endif
 
 if !exists('g:splitjoin_coffee_suffix_if_clause')

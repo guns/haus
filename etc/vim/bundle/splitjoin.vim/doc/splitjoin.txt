@@ -234,6 +234,37 @@ Heredocs ~
     something
     EOF
 <
+Ternaries ~
+>
+    if condition
+      do_foo
+    else
+      do_bar
+    end
+
+    condition ? do_foo : do_bar
+<
+Cases ~
+
+Splits or joins single when clauses, if the cursors sits on the line of
+such a when, or the whole case, if you have or cursor in the line of the
+case-keyword, as shown in the example.
+>
+    case condition
+    when :a
+      do_foo
+    when :b
+      do_bar
+    else
+      do_baz
+    end
+
+    case condition
+    when :a then do_foo
+    when :b then do_bar
+    else do_baz
+    end
+>
 
 ==============================================================================
 PYTHON                                                      *splitjoin-python*
@@ -746,6 +777,26 @@ if there are braces, so the first example will always be joined to:
 >
     User.new :one, { :first_name => "Andrew", :last_name => "Radev" }
 <
+
+                                             *g:splitjoin_ruby_trailing_comma*
+>
+    g:splitjoin_ruby_trailing_comma
+<
+
+Default value: 1
+
+This controls whether to put a trailing comma on a split hash. With this set
+to 1 (the default), a hash will split like so:
+>
+    User.new :one, :first_name => "Andrew", :last_name => "Radev"
+
+    User.new :one, {
+      :first_name => "Andrew",
+      :last_name => "Radev",
+    }
+<
+Note the trailing comma for the last element.
+
 
                                          *g:splitjoin_coffee_suffix_if_clause*
 >

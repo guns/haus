@@ -29,6 +29,327 @@ describe "ruby" do
     EOF
   end
 
+  describe "ternaries" do
+    it "handles simplistic ternaries" do
+      set_file_contents <<-EOF
+        condition ? 'this' : 'that'
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        if condition
+          'this'
+        else
+          'that'
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        condition ? 'this' : 'that'
+      EOF
+    end
+
+    it "works with unless" do
+      set_file_contents <<-EOF
+        unless condition
+          x = 'a'
+        else
+          y = 'b'
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        condition ? y = 'b' : x = 'a'
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        if condition
+          y = 'b'
+        else
+          x = 'a'
+        end
+      EOF
+    end
+
+    it "extracts variable assignments" do
+      set_file_contents <<-EOF
+        if condition
+          x = 'a'
+        else
+          x = 'b'
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        x = (condition ? 'a' : 'b')
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        x = if condition
+              'a'
+            else
+              'b'
+            end
+      EOF
+    end
+
+    it "handles assignments when joining, adding parentheses" do
+      set_file_contents <<-EOF
+        x = if condition
+              'a'
+            else
+              'b'
+            end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        x = (condition ? 'a' : 'b')
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        x = if condition
+              'a'
+            else
+              'b'
+            end
+      EOF
+    end
+
+    it "handles different formatting for assignments" do
+      set_file_contents <<-EOF
+        x = unless condition
+         'something'
+        else
+         'anything'
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        x = (condition ? 'anything' : 'something')
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        x = if condition
+              'anything'
+            else
+              'something'
+            end
+      EOF
+    end
+  end
+
+  describe "when-then" do
+    it "joins when-then" do
+      set_file_contents <<-EOF
+        when condition
+          do_stuff
+        when condition
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        when condition then do_stuff
+        when condition
+      EOF
+    end
+
+    it "splits when-then" do
+      set_file_contents <<-EOF
+        when condition then do_stuff
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        when condition
+          do_stuff
+      EOF
+    end
+
+    it "works only when there is one line in the then body" do
+      set_file_contents <<-EOF
+        when condition
+          do_stuff
+          do_something_else
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        when condition
+          do_stuff
+          do_something_else
+      EOF
+    end
+  end
+
+  describe 'cases' do
+    it "joins cases with well formed when-thens" do
+      set_file_contents <<-EOF
+        case
+        when condition1
+          stuff1
+        when condition2
+          stuff2
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        case
+        when condition1 then stuff1
+        when condition2 then stuff2
+        end
+      EOF
+    end
+
+    it "passes over ill formed when thens do" do
+      set_file_contents <<-EOF
+        case
+        when condition1
+          stuff1
+        when condition2
+          stuff2
+          stuff3
+        when condition 3
+          stuff4
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        case
+        when condition1 then stuff1
+        when condition2
+          stuff2
+          stuff3
+        when condition 3 then stuff4
+        end
+      EOF
+    end
+
+    it "one-lines else as well" do
+      set_file_contents <<-EOF
+        case
+        when condition1
+          stuff1
+        when condition2
+          stuff2
+        else
+          stuff3
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        case
+        when condition1 then stuff1
+        when condition2 then stuff2
+        else stuff3
+        end
+      EOF
+    end
+
+    it "aligns thens in supercompact cases" do
+      pending('we need to add an alignment tool to the spec configuration')
+
+      set_file_contents <<-EOF
+        case
+        when cond1
+          stuff1
+        when condition2
+          stuff2
+        else
+          stuff3
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        case
+        when cond1      then stuff1
+        when condition2 then stuff2
+        else stuff3
+        end
+      EOF
+    end
+
+    it "doesn't one line else when the case is not well formed" do
+      set_file_contents <<-EOF
+        case
+        when condition1
+          stuff1
+        when condition2
+          stuff2
+          stuff3
+        else
+          stuff3
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        case
+        when condition1 then stuff1
+        when condition2
+          stuff2
+          stuff3
+        else
+          stuff3
+        end
+      EOF
+    end
+
+    it "expands/split all one liners in a case" do
+      set_file_contents <<-EOF
+        case
+        when condition1 then stuff1
+        when condition2
+          stuff2
+        else stuff3
+        end
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        case
+        when condition1
+          stuff1
+        when condition2
+          stuff2
+        else
+          stuff3
+        end
+      EOF
+    end
+  end
+
   specify "hashes" do
     set_file_contents <<-EOF
       foo = { :bar => 'baz', :one => 'two' }
@@ -40,7 +361,7 @@ describe "ruby" do
     assert_file_contents <<-EOF
       foo = {
         :bar => 'baz',
-        :one => 'two'
+        :one => 'two',
       }
     EOF
 
@@ -50,6 +371,29 @@ describe "ruby" do
     assert_file_contents <<-EOF
       foo = { :bar => 'baz', :one => 'two' }
     EOF
+  end
+
+  specify "hashes without a trailing comma" do
+    begin
+      vim.command('let g:splitjoin_ruby_trailing_comma = 0')
+
+      set_file_contents <<-EOF
+      foo = { :bar => 'baz', :one => 'two' }
+      EOF
+
+      vim.search ':bar'
+      split
+
+      assert_file_contents <<-EOF
+      foo = {
+        :bar => 'baz',
+        :one => 'two'
+      }
+      EOF
+
+    ensure
+      vim.command('let g:splitjoin_ruby_trailing_comma = 1')
+    end
   end
 
   specify "caching constructs" do
@@ -215,25 +559,29 @@ describe "ruby" do
     end
 
     it "can use the << heredoc style" do
-      set_file_contents <<-EOF
-        do
-          string = "something"
-        end
-      EOF
+      begin
+        vim.command('let g:splitjoin_ruby_heredoc_type = "<<"')
 
-      vim.search 'something'
-      vim.command('let g:splitjoin_ruby_heredoc_type = "<<"')
-      split
-
-      assert_file_contents <<-OUTER
-        do
-          string = <<EOF
-        something
+        set_file_contents <<-EOF
+          do
+            string = "something"
+          end
         EOF
-        end
-      OUTER
 
-      vim.command('let g:splitjoin_ruby_heredoc_type = "<<-"')
+        vim.search 'something'
+        split
+
+        assert_file_contents <<-OUTER
+          do
+            string = <<EOF
+          something
+          EOF
+          end
+        OUTER
+
+      ensure
+        vim.command('let g:splitjoin_ruby_heredoc_type = "<<-"')
+      end
     end
   end
 
@@ -250,7 +598,7 @@ describe "ruby" do
       assert_file_contents <<-EOF
         foo 1, 2, {
           :one => 1,
-          :two => 2
+          :two => 2,
         }
       EOF
 
@@ -316,7 +664,7 @@ describe "ruby" do
 
       assert_file_contents <<-EOF
         foo "\#{one}", {
-          :two => 3
+          :two => 3,
         }
       EOF
 
