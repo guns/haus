@@ -28,8 +28,10 @@ diff_movement     (vimscript #3180): Movement over diff hunks with ]] etc.
 fortunes_movement (vimscript #3181): Movement over email fortunes with ]] etc.
 help_movement     (vimscript #3179): Movement over Vim help sections with ]] etc.
 mail_movement     (vimscript #3182): Movement over email quotes with ]] etc.
-JumpToTrailingWhitespace (vimscript #3968): Motions to locate unwanted
-                                            whitespace at the end of lines.
+diffwindow_movement:                 Movement over changes in a diff window.
+                  (vimscript #3719)
+JumpToTrailingWhitespace:            Motions to locate unwanted whitespace at the end of lines.
+                  (vimscript #3968)
 TaskMotion        (vimscript #3990): Motions to task and TODO markers.
 ConflictMotions   (vimscript #3991): Motions to and inside SCM conflict markers.
 vim_movement      (vimscript #4002): Movement over Vim functions with ]m etc.
@@ -37,12 +39,18 @@ vbs_movement      (vimscript #4003): Movement over VBScript classes /
                                      functions / properties / subs with ]m etc.
 dosbatch_movement (vimscript #4004): Movement over MSDOS batch file functions
                                      / labels with ]m etc.
+SameSyntaxMotion  (vimscript #4338): Motions to the borders of the same syntax highlighting.
+JumpToVerticalOccurrence:            Like f{char}, but searching the same
+                  (vimscript #4841)  screen column, not line.
 
 RELATED WORKS
 - motpat.vim (vimscript #3030) offers similar functions to setup motion
   mappings, but no text objects (yet).
 - textobj-user (vimscript #2100) has support for user-defined text objects via
   regular expressions.
+- movealong.vim (vimscript #4691) provides a :Movealong command (and optional
+  mappings) that repeatedly executes a motion until a condition of a syntax,
+  pattern match, or arbitrary expression is met.
 
 USAGE
 The plugin defines several functions, which set up the appropriate mappings
@@ -64,14 +72,12 @@ This function sets up mappings starting with [ and ] for movement (with
 optional [count]) relative to the current cursor position, but rely on four
 passed jump functions instead of text patterns to do the movement.
 
-
 CountJump#TextObject#MakeWithCountSearch( mapArgs, textObjectKey, types, selectionMode, patternToBegin, patternToEnd )
 
 Defines a complete set of mappings for inner and/or outer text objects that
 support an optional [count] and are driven by search patterns for the
 beginning and end of a block. Outer text objects include the matched pattern
 text, inner ones not. Selection can be characterwise, linewise or blockwise.
-
 
 CountJump#TextObject#MakeWithJumpFunctions( mapArgs, textObjectKey, types, selectionMode, JumpToBegin, JumpToEnd )
 
@@ -80,7 +86,6 @@ invokes custom functions instead of searching for a fixed pattern. This is
 useful if the check for a match is too complex for a single regular
 expression, or if you need to adjust the match position depending on the
 circumstances.
-
 
 Often, a region can be defined as a block of continuous lines that all match a
 certain pattern (or, even more generic, where a provided predicate function
@@ -114,6 +119,14 @@ The inner text object comprises all lines of the region itself, while the
 outer text object also includes all adjacent lines above and below which do
 not themselves belong to a region.
 
+The custom Funcrefs for jumps and predicates of lines belonging to a range may
+be invoked multiple times until the CountJump function arrives at its
+destination. To help the Funcrefs to determine where in this sequence they
+are, an empty g:CountJump_Context dictionary is initialized at the start of
+each CountJump function. Funcrefs can put custom information (e.g. the
+particular comment prefix on the current line) in there and evaluate this in
+subsequent invocations.
+
 EXAMPLE
 Let's illustrate the usage by developing custom motions and text objects for
 Pascal begin..end blocks.
@@ -124,19 +137,18 @@ it:
 ][                      Go to [count] next end of a block.
 [[                      Go to [count] previous start of a block.
 []                      Go to [count] previous end of a block.
-
+>
     call CountJump#Motion#MakeBracketMotion('<buffer>', '', '', '\c^begin\n\zs', '\c^.*\nend', 0)
 The begin pattern positions the cursor on the beginning of the line following
 the "begin" keyword, the end pattern on the beginning of the line
 preceding the "end" keyword.
-
 
 We want to select a block, either including or excluding the lines with the
 begin..end keywords:
 ib                      "inner block" text object, select [count] contents of
                         a block.
 ab                      "a block" text object, select [count] blocks.
-
+>
     call CountJump#TextObject#MakeWithCountSearch('<buffer>', 'b', 'ai', 'V', '\c^begin\n', '\c^end.*$')
 
 If there is a filetype detection for Pascal files, we can simply put the
