@@ -174,32 +174,35 @@ function! s:mru.save(...) "{{{
     call extend(opts, a:1)
   endif
 
+  if empty(unite#sources#mru#variables#get_mrus(self.type))
+    " nothing to save, mru is not loaded
+    return
+  endif
+
+  let self.candidates = []
+
   " should load all candidates
-  call self.load(1)
+  call self.load(1) " load short candidates
+  call self.load(1) " load long candidates
 
   let self.candidates = unite#sources#mru#variables#get_mrus(self.type)
         \ + self.candidates
   call unite#sources#mru#variables#clear(self.type)
 
-  if empty(self.candidates)
-    " nothing to save, mru is not loaded
-    return
-  endif
-
   if self.has_external_update() && filereadable(self.mru_file.short)
     " only need to get the short list which contains the latest MRUs
     let [ver; items] = readfile(self.mru_file.short)
     if self.version_check(ver)
-      let self.candidates = s:L.uniq(extend(self.candidates,
-            \ s:convert2candidates(items)), 'v:val.action__path')
+      let self.candidates = extend(self.candidates,
+            \ s:convert2candidates(items))
     endif
   endif
+
+  let self.candidates = s:L.uniq_by(self.candidates, 'v:val.action__path')
 
   if get(opts, 'event') ==# 'VimLeavePre'
     call self.validate()
   endif
-
-  let self.candidates = s:L.uniq(self.candidates, 'v:val.action__path')
 
   call writefile([self.version] + map(copy(
       \ self.candidates[: self.limit.short - 1]),
@@ -434,14 +437,14 @@ function! s:convert2candidates(items)  "{{{
   endtry
 endfunction"}}}
 function! s:convert2dictionary(list)  "{{{
-  return { 'word' : a:list[0], 'source__time' : str2nr(a:list[1]),
-        \ 'action__path' : fnamemodify(a:list[0], ':p'), }
+  return { 'word' : a:list[0], 'source__time' : a:list[1],
+        \ 'action__path' : a:list[0] }
 endfunction"}}}
 function! s:convert2list(dict)  "{{{
-  return [ fnamemodify(a:dict.action__path, ':~'), a:dict.source__time ]
+  return [ a:dict.action__path, a:dict.source__time ]
 endfunction"}}}
 function! s:on_post_filter(args, context) "{{{
-  let a:context.candidates = s:L.uniq(
+  let a:context.candidates = s:L.uniq_by(
         \ a:context.candidates, 'v:val.action__path')
   for candidate in a:context.candidates
     let candidate.action__directory =

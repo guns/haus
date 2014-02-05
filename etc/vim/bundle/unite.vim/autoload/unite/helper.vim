@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: helpers.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 11 Jan 2014.
+" Last Modified: 31 Jan 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -54,14 +54,20 @@ function! unite#helper#call_hook(sources, hook_name) "{{{
 endfunction"}}}
 
 function! unite#helper#get_substitute_input(input) "{{{
-  let input = a:input
-
   let unite = unite#get_current_unite()
+
+  let input = a:input
+  if empty(unite.args) && input =~ '^.\{-}\%(\\\@<!\s\)\+'
+    " Ignore source name
+    let input = matchstr(input, '^.\{-}\%(\\\@<!\s\)\+\zs.*')
+  endif
+
   let substitute_patterns = reverse(unite#util#sort_by(
         \ values(unite#custom#get_profile(unite.profile_name,
         \        'substitute_patterns')),
         \ 'v:val.priority'))
   if unite.input != '' && stridx(input, unite.input) == 0
+        \ && !empty(unite.args)
     " Substitute after input.
     let input_save = input
     let input = input_save[len(unite.input) :]
@@ -264,7 +270,7 @@ endfunction"}}}
 
 function! unite#helper#get_current_candidate(...) "{{{
   let linenr = a:0 >= 1? a:1 : line('.')
-  let num = linenr <= unite#get_current_unite().prompt_linenr ?
+  let num = linenr == unite#get_current_unite().prompt_linenr ?
         \ 0 : linenr - (unite#get_current_unite().prompt_linenr+1)
 
   return get(unite#get_unite_candidates(), num, {})
@@ -357,6 +363,8 @@ endfunction"}}}
 function! unite#helper#get_choose_windows() "{{{
   return filter(range(1, winnr('$')), "v:val != winnr()
         \ && !getwinvar(v:val, '&previewwindow')
+        \ && (getwinvar(v:val, '&buftype') !~# 'nofile'
+        \   || getwinvar(v:val, '&buftype') =~# 'acwrite')
         \ && !getwinvar(v:val, '&filetype') !=# 'qf'")
 endfunction"}}}
 

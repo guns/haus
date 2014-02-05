@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: candidates.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Jan 2014.
+" Last Modified: 01 Feb 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -45,6 +45,33 @@ function! unite#candidates#_recache(input, is_force) "{{{
   let context.is_redraw = a:is_force
   let context.is_changed = a:input !=# unite.last_input
 
+  if empty(unite.args)
+    if a:input == ''
+      let sources = []
+    elseif a:input !~ '^.\{-}\%(\\\@<!\s\)\+'
+      " Use interactive source.
+      let sources = unite#init#_loaded_sources(['interactive'], context)
+    else
+      " Use specified source.
+      let [args, _] = unite#helper#parse_options_args(
+            \ matchstr(a:input, '^.\{-}\%(\\\@<!\s\)\+'))
+      try
+        let sources = unite#init#_loaded_sources(args, context)
+      catch
+        let sources = []
+      endtry
+    endif
+
+    if unite.sources !=# sources
+      let unite.sources = sources
+      let unite.source_names = unite#helper#get_source_names(sources)
+
+      " Initialize.
+      call unite#helper#call_hook(sources, 'on_init')
+      call unite#view#_set_syntax()
+    endif
+  endif
+
   for source in unite.sources
     let source.unite__candidates = []
   endfor
@@ -75,6 +102,11 @@ function! unite#candidates#_recache(input, is_force) "{{{
               \ | echohl None
         let filtered_count += 1
       endif
+    endif
+
+    if source.is_grouped
+      let source.unite__candidates =
+            \ unite#candidates#_group_post_filters(source.unite__candidates)
     endif
 
     " Call post_filter hook.
@@ -118,6 +150,11 @@ function! unite#candidates#gather(...) "{{{
     let candidates = unite#helper#call_filter(
           \ filter_name, candidates, unite.context)
   endfor
+
+  if unite.context.unique
+    " Uniq filter.
+    let candidates = unite#util#uniq_by(candidates, 'v:val.word')
+  endif
 
   return candidates
 endfunction"}}}
@@ -338,6 +375,30 @@ function! s:get_source_candidates(source) "{{{
 
   return a:source.unite__cached_candidates
         \ + a:source.unite__cached_change_candidates
+endfunction"}}}
+
+function! unite#candidates#_group_post_filters(candidates) "{{{
+  " Post filters for group
+  let groups = {}
+  for i in range(0, len(a:candidates) - 1)
+    let group = a:candidates[i].group
+    if has_key(groups, 'group')
+      call add(groups[group].indexes, i)
+    else
+      let groups[group] = { 'index' : i, 'indexes' : [i] }
+    endif
+  endfor
+
+  let _ = []
+  for [group, val] in unite#util#sort_by(items(groups), 'v:val[1].index')
+    " Add group candidate
+    call add(_, {'word' : group, 'is_dummy' : 1})
+
+    " Add children candidates
+    let _ += map(val.indexes, 'a:candidates[v:val]')
+  endfor
+
+  return _
 endfunction"}}}
 
 let &cpo = s:save_cpo

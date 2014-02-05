@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: buffer.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 22 Sep 2013.
+" Last Modified: 31 Jan 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -74,8 +74,8 @@ endfunction"}}}
 function! s:source_buffer_all.hooks.on_post_filter(args, context) "{{{
   for candidate in a:context.candidates
     let candidate.action__path =
-          \ unite#substitute_path_separator(
-          \ bufname(candidate.action__buffer_nr))
+          \ unite#util#substitute_path_separator(
+          \       fnamemodify(s:make_word(candidate.action__buffer_nr), ':p'))
     let candidate.action__directory =
           \ s:get_directory(candidate.action__buffer_nr)
   endfor
@@ -90,7 +90,8 @@ function! s:source_buffer_all.gather_candidates(args, context) "{{{
   endif
 
   let candidates = map(a:context.source__buffer_list, "{
-        \ 'word' : s:make_word(v:val.action__buffer_nr),
+        \ 'word' : unite#util#substitute_path_separator(
+        \       fnamemodify(s:make_word(v:val.action__buffer_nr), ':p')),
         \ 'abbr' : s:make_abbr(v:val.action__buffer_nr, v:val.source__flags)
         \        . s:format_time(v:val.source__time),
         \ 'action__buffer_nr' : v:val.action__buffer_nr,
@@ -123,7 +124,8 @@ function! s:source_buffer_tab.gather_candidates(args, context) "{{{
         \ 'has_key(t:unite_buffer_dictionary, v:val.action__buffer_nr)')
 
   let candidates = map(list, "{
-        \ 'word' : s:make_word(v:val.action__buffer_nr),
+        \ 'word' : unite#util#substitute_path_separator(
+        \       fnamemodify(s:make_word(v:val.action__buffer_nr), ':p')),
         \ 'abbr' : s:make_abbr(v:val.action__buffer_nr, v:val.source__flags)
         \        . s:format_time(v:val.source__time),
         \ 'action__buffer_nr' : v:val.action__buffer_nr,
@@ -137,13 +139,14 @@ function! s:make_word(bufnr) "{{{
   let filetype = getbufvar(a:bufnr, '&filetype')
   if filetype ==# 'vimfiler'
     let path = getbufvar(a:bufnr, 'vimfiler').current_dir
-    let path = printf('*vimfiler* [%s]', unite#substitute_path_separator(simplify(path)))
+    let path = printf('*vimfiler* [%s]',
+          \ unite#util#substitute_path_separator(simplify(path)))
   elseif filetype ==# 'vimshell'
     let vimshell = getbufvar(a:bufnr, 'vimshell')
     let path = printf('*vimshell*: [%s]',
-          \ unite#substitute_path_separator(simplify(vimshell.current_dir)))
+          \ unite#util#substitute_path_separator(simplify(vimshell.current_dir)))
   else
-    let path = unite#substitute_path_separator(simplify(bufname(a:bufnr)))
+    let path = unite#util#substitute_path_separator(simplify(bufname(a:bufnr)))
   endif
 
   return path
@@ -197,7 +200,7 @@ function! s:get_directory(bufnr) "{{{
   elseif filetype ==# 'vimshell'
     let dir = getbufvar(a:bufnr, 'vimshell').current_dir
   else
-    let path = unite#substitute_path_separator(bufname(a:bufnr))
+    let path = unite#util#substitute_path_separator(bufname(a:bufnr))
     let dir = unite#path2directory(path)
   endif
 

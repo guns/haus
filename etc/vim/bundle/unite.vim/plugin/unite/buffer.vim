@@ -50,8 +50,7 @@ function! s:append(path) "{{{
 
   " Append the current buffer.
   let bufnr = bufnr('%')
-
-  if exists('*gettabvar')
+  if exists('*gettabvar') && bufnr == bufnr('%')
     " Delete same buffer in other tab pages.
     for tabnr in range(1, tabpagenr('$'))
       let buffer_dict = gettabvar(tabnr, 'unite_buffer_dictionary')
@@ -62,10 +61,15 @@ function! s:append(path) "{{{
     endfor
   endif
 
-  let t:unite_buffer_dictionary[bufnr] = 1
+    if !has('vim_starting') || bufname(bufnr) != ''
+    call unite#sources#buffer#variables#append(bufnr)
+  endif
 
-  if !has('vim_starting') || bufname('%') != ''
-    call unite#sources#buffer#variables#append()
+  let t:unite_buffer_dictionary[bufnr] = 1
+  if bufname(bufnr('#')) != '' && !has_key(
+        \ unite#sources#buffer#variables#get_buffer_list(), bufnr('#'))
+    call unite#sources#buffer#variables#append(bufnr('#'))
+    let t:unite_buffer_dictionary[bufnr('#')] = 1
   endif
 endfunction"}}}
 

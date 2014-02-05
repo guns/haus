@@ -254,7 +254,6 @@ More advanced configuration example:
 	function! s:unite_my_settings()"{{{
 	  " Overwrite settings.
 
-	  nmap <buffer> <ESC>      <Plug>(unite_exit)
 	  imap <buffer> jj      <Plug>(unite_insert_leave)
 	  "imap <buffer> <C-w>     <Plug>(unite_delete_backward_path)
 
@@ -325,6 +324,9 @@ COMMANDS 					*unite-commands*
 		spaces. The list of candidates (the matches found in the source
 		by your filter string) will be ordered in the same order that
 		you specify the {sources}.
+
+		If {sources} are empty, you can input source name and args
+		manually.
 
 		For example:
 
@@ -680,8 +682,7 @@ g:unite_source_rec_async_command
 		" Using ack-grep as recursive command.
 		let g:unite_source_rec_async_command = 'ack -f --nofilter'
 <
-
-		The default value is "ag" or "find" and the args.
+		The default value is "ag" or "pt" or "find" and the args.
 
 					*g:unite_source_file_rec_async_command*
 		Note: This variable is obsolete.
@@ -786,9 +787,11 @@ g:unite_source_line_search_word_highlight
 
 g:unite_source_alias_aliases			*g:unite_source_alias_aliases*
 		Set |unite-source-alias| settings.  This variable is
-		dictionary.  The key is an alias source name, and the value is
-		a dictionary with following attributes.  Alias sources are
-		copies of original sources.
+		dictionary.  The key is an alias source name, and
+		the value is a dictionary with following attributes.  Alias
+		sources are copies of original sources.
+		If the value items are string, they will be used as base
+		source name.
 
 		source			(String)	(Required)
 		Base source name.
@@ -806,6 +809,7 @@ g:unite_source_alias_aliases			*g:unite_source_alias_aliases*
 		      \     'source': 'file_rec',
 		      \     'args': '~/',
 		      \   },
+		      \   'b' : 'buffer',
 		      \ }
 <
 		The default value is "{}".
@@ -937,16 +941,18 @@ g:unite_kind_openable_persist_open_blink_time
 		The default value is "250m"
 
 				*g:unite_kind_cdable_cd_command*
-				*g:unite_kind_openable_cd_command*
 g:unite_kind_cdable_cd_command
+				*g:unite_kind_openable_cd_command*
+g:unite_kind_openable_cd_command
 		Specify the Vim command for cd action.
 		This command must interpret |`=|.
 
 		The default value is "cd".
 
 				*g:unite_kind_cdable_lcd_command*
-				*g:unite_kind_openable_lcd_command*
 g:unite_kind_cdable_lcd_command
+				*g:unite_kind_openable_lcd_command*
+g:unite_kind_openable_lcd_command
 		Specify the Vim command for lcd action.
 		This command must interpret |`=|.
 
@@ -1924,8 +1930,12 @@ The "-buffer-name" option is same to "buffer_name" key in context.
 
 						*unite-options-sync*
 		-sync
-		Disable asynchronous mode.
+		Disable asynchronous mode like |ctrlp| plugin.
 		It is useful if you don't want to get input lag.
+
+						*unite-options-unique*
+		-unique
+		Unique candidates by word attribute.
 
 ==============================================================================
 SOURCES						*unite-sources*
@@ -1973,7 +1983,7 @@ file_mru	Nominates files you used recently as candidates, ordering
 						*unite-source-file_rec*
 file_rec	Gather files recursive and nominates all directory or file
 		names under the search directory(argument 1) or the current
-		directly(if argument is omitted) as candidates.  This may get
+		directory (if argument is omitted) as candidates.  This may get
 		Vim frozen when there are too many candidates.  The candidates
 		are cached by file_rec source.  To clear cache, use
 		|<Plug>(unite_redraw)| keymapping.
@@ -2160,6 +2170,12 @@ grep		Nominates "grep" command output as candidates.
 	  let g:unite_source_grep_default_opts =
 	  \ '--line-numbers --nocolor --nogroup --hidden --ignore ' .
 	  \  '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
+	  let g:unite_source_grep_recursive_opt = ''
+	elseif executable('pt')
+	  " Use pt in unite grep source.
+	  " https://github.com/monochromegane/the_platinum_searcher
+	  let g:unite_source_grep_command = 'pt'
+	  let g:unite_source_grep_default_opts = '--nogroup --nocolor'
 	  let g:unite_source_grep_recursive_opt = ''
 	elseif executable('ack-grep')
 	  " Use ack in unite grep source.
@@ -2480,11 +2496,12 @@ matcher_hide_hidden_files
 matcher_context	A matcher which filters the candidates with user given glob
 		pattern or regexp pattern.  In default, use glob pattern.  If
 		the pattern starts "^", will use regexp pattern(head match).
-		Note: The filter is created by hrsh7th.
+		Note: It is created by hrsh7th.
 
 					*unite-filter-matcher_project_files*
 matcher_project_files
 		Project files filter.  It removes non project files.
+		Note: It requires "action__path" in candidates.
 
 						*unite-filter-sorter_default*
 sorter_default	The default sorter used by |unite-filter-default|.
@@ -3005,6 +3022,12 @@ is_listed		Number		(Optional)
 			If the source is internal, it must be set to 0.  If
 			it's omitted, it's set to 1.
 
+					*unite-source-attribute-is_grouped*
+is_grouped		Number		(Optional)
+			Whether the source candidates are grouped.
+			Grouped candidates must have "group" attribute.
+			If it's omitted, it's set to 0.
+
 					*unite-source-attribute-description*
 description		String		(Optional)
 			The description of the source.
@@ -3138,6 +3161,13 @@ NOTATION					*unite-notation*
 				"command"], "file" (default) actions will be
 				overwritten by "command" action.  You should
 				use source default action instead of kind.
+
+			group			(String)	(Optional)
+				The candidate group name.
+				It is inserted in candidates automatically.
+				Note: It is required and used when
+				|unite-source-attribute-is_grouped| is non
+				zero.
 
 			is_dummy		(Number)	(Optional)
 				If the candidate is dummy.
@@ -3396,8 +3426,7 @@ A: You should use |<Plug>(unite_all_exit)| instead of |<Plug>(unite_exit)|.
 Q: How to make direct action (or choose action menu) to current file or given
 path?
 
-A:
->
+A: >
 	call unite#do_candidates_action('some_action',
 	\  unite#get_candidates([['file', expand('%')]]))
 <
@@ -3431,8 +3460,7 @@ https://github.com/osyo-manga/vim-powerline-unite-theme
 
 Q: I want to match candidates by filename.
 
-A:
->
+A: >
   call unite#custom#source(
         \ 'buffer,file_rec/async,file_rec,file_mru', 'matchers',
         \ ['converter_tail', 'matcher_default'])
@@ -3499,7 +3527,6 @@ Q: I want the strength of the match to overpower the order in which I list
 sources.
 
 A: You should use |unite#custom#profile()|.
-
 >
 	call unite#custom#profile('files', 'filters', 'sorter_rank')
 <
@@ -3529,6 +3556,7 @@ not easy to use. You should use file_rec source instead.
 Q: file_rec and file_rec/async cannot find all files.
 https://github.com/Shougo/unite.vim/issues/356
 https://github.com/Shougo/unite.vim/issues/370
+https://github.com/Shougo/unite.vim/issues/459
 
 A: It is feature.  cf: |g:unite_source_rec_max_cache_files|.
 And the default max candidates are limited. You can custom it by
@@ -3537,9 +3565,14 @@ And the default max candidates are limited. You can custom it by
 	call unite#custom#source('file_rec,file_rec/async',
 	\ 'max_candidates', 0)
 
-And you must clear previous cache in file_rec sources.
+And you must clear previous cache in file_rec sources and wait until the cache
+is completed("Directory traverse was completed" message is showed).
+In large files directory, to make cache is slow. So I don't recommend it.
 To clear cache, you must execute |<Plug>(unite_redraw)| in unite
 buffer(in default it is mapped to <C-l>).
+
+Note: |unite-options-sync| may be useful. It blocks Vim until the cache is
+completed.
 
 Q: I want to toggle preview window when I press "p" key.
 
@@ -3584,6 +3617,10 @@ A: You should use |unite-filter-matcher_project_files|. >
         \ 'file_mru', 'matchers',
         \ ['matcher_project_files', 'matcher_fuzzy'])
 <
+Q: I want to disable mru source.
+
+A: You should set g:loaded_unite_source_mru option. >
+  let g:loaded_unite_source_mru = 1
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:noet:fen:
