@@ -29,6 +29,7 @@ g:tagbar_status_func	tagbar.txt	/*g:tagbar_status_func*
 g:tagbar_systemenc	tagbar.txt	/*g:tagbar_systemenc*
 g:tagbar_updateonsave_maxlines	tagbar.txt	/*g:tagbar_updateonsave_maxlines*
 g:tagbar_width	tagbar.txt	/*g:tagbar_width*
+g:tagbar_zoomwidth	tagbar.txt	/*g:tagbar_zoomwidth*
 tagbar	tagbar.txt	/*tagbar*
 tagbar-autoopen	tagbar.txt	/*tagbar-autoopen*
 tagbar-commands	tagbar.txt	/*tagbar-commands*
