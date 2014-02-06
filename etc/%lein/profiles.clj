@@ -30,7 +30,6 @@
                        [slamhound "LATEST"]
                        [spyscope "LATEST"]
                        [redl "LATEST"]]
-        :resource-paths ["resources" "target/vim"]
         :aliases {"t" ["trampoline"]
                   "RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
