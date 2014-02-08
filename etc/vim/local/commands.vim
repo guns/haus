@@ -295,6 +295,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
+    nnoremap <silent><buffer> <LocalLeader>or  :call <SID>ClojureElementRedir('(comp clojure.pprint/pprint user/reflect)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>os  :call <SID>ClojureElementRedir('(comp println user/object-scaffold)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#session_eval('(user.system/boot)')<CR>
     nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#session_eval('(user.system/stop)')<CR>
     nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#session_eval('(user.system/restart)')<CR>
@@ -304,7 +306,6 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(user/toggle-warn-on-reflection!)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>ts  :call <SID>ClojureTypeScaffold()<CR>
     nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(user/toggle-schema-validation!)')<CR>
@@ -361,12 +362,12 @@ function! s:ClojureRunTests(all)
     endif
 endfunction
 
-function! s:ClojureTypeScaffold()
+function! s:ClojureElementRedir(fn)
     try
         let reg_save = [@e, @r]
         execute "normal \"ey\<Plug>(sexp_inner_element)"
         redir @r
-        call fireplace#session_eval('(println (user/object-scaffold ' . @e . '))')
+        silent call fireplace#session_eval('(' . a:fn . ' ' . @e . ')')
     finally
         redir END
         Sscratch

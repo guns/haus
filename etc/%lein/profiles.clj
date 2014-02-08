@@ -26,6 +26,7 @@
                   [jonase/eastwood "LATEST"]]
         :dependencies [[org.clojure/tools.namespace "LATEST"]
                        [org.clojure/tools.trace "LATEST"]
+                       [com.taoensso/timbre "LATEST"]
                        [criterium "LATEST"]
                        [slamhound "LATEST"]
                        [spyscope "LATEST"]
