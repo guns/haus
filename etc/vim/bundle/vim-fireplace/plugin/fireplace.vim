@@ -325,7 +325,7 @@ endfunction
 augroup fireplace_connect
   autocmd!
   autocmd FileType clojure command! -bar -complete=customlist,s:connect_complete -nargs=* Connect :FireplaceConnect <args>
-  autocmd FileType clojure command! -bar -complete=customlist,fireplace#eval_complete -bang -nargs=* Piggieback :call s:piggieback(<q-args>, <bang>0)
+  autocmd FileType clojure command!      -complete=customlist,fireplace#eval_complete -bang -nargs=* Piggieback :call s:piggieback(<q-args>, <bang>0)
 augroup END
 
 " }}}1
@@ -1146,7 +1146,7 @@ function! fireplace#ns(...) abort
   let lines = substitute(lines, '\^\={[^{}]*}', '', '')
   let lines = substitute(lines, '\^:'.keyword_group.'\+', '', 'g')
   let ns = matchstr(lines, '\C^(\s*\%(in-ns\s*''\|ns\s\+\)\zs'.keyword_group.'\+\ze')
-  if ns !=# '' && expand('%:e') !=# 'cljs'
+  if ns !=# ''
     return ns
   endif
   let path = s:buffer_path(buffer)
