@@ -127,6 +127,19 @@ function! s:Profile(...)
     endfor
 endfunction
 
+command! -bar Syntime call <SID>Syntime()
+function! s:Syntime()
+    if exists('g:__syntime_on__')
+        unlet g:__syntime_on__
+        syntime off
+        Capture syntime report
+    else
+        let g:__syntime_on__ = 1
+        syntime clear
+        syntime on
+    endif
+endfunction
+
 command! -bar SynStack call <SID>SynStack() "{{{1
 function! s:SynStack()
     " TextMate style syntax highlighting stack for word under cursor
