@@ -122,7 +122,7 @@
     dis  = diff --summary --stat
 
     fp   = format-patch
-    fps  = format-patch --stdout
+    fpo  = format-patch --stdout
 
     # Remotes
     r            = remote -v
