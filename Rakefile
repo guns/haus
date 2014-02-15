@@ -212,8 +212,8 @@ task :env do
         :base   => "#{@src}/firefox-addons/vimperator-labs",
         :before => lambda { |proj|
           if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } >/dev/null 2>&1'
-            raise 'vimperator git-hg pull failed' if not $?.exitstatus.zero?
+            system '{ git checkout master && git pull origin master; } >/dev/null 2>&1'
+            raise 'vimperator git pull failed' if not $?.exitstatus.zero?
           end
         },
         :files => lambda { |proj|
@@ -292,12 +292,7 @@ task :env do
 
       {
         :base   => "#{@src}/READONLY/go",
-        :before => lambda { |proj|
-          if proj.fetch
-            system '{ git checkout master && git-hg pull --rebase --force; } >/dev/null 2>&1'
-            raise 'go git-hg pull failed' unless $?.exitstatus.zero?
-          end
-        },
+        :branch => %w[master],
         :files => lambda { |proj|
           src = "#{proj.base}/misc/vim"
           dst = "#{proj.haus}/etc/vim/bundle/go"

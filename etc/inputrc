@@ -204,7 +204,6 @@ $if bash
     "\C-xgf":       "\C-] git f \n"
     "\C-xgF":       "\C-] git ff \n"
     "\C-xgg":       "\C-] git st \n"
-    "\C-xgh":       "\C-] git-hg pull --force --rebase \n"
     "\C-xgl":       "\C-] git lp \n"
     "\C-xgL":       "\C-] git lfp \n"
     "\C-xgp":       "\C-] git pull \n"

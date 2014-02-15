@@ -534,7 +534,6 @@ noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
 noremap  <Leader>gF       :<C-u>silent! Git ff<CR>
 noremap  <Leader>gg       :<C-u>!clear; git st<CR>
-noremap  <Leader>gh       :<C-u>!git-hg pull --force --rebase<CR>
 noremap  <Leader>gl       :<C-u>silent! Git lp<CR>
 noremap  <Leader>gL       :<C-u>silent! Git lfp<CR>
 noremap  <Leader>gp       :<C-u>silent! Git pull<CR>
