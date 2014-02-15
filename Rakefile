@@ -102,7 +102,8 @@ task :env do
         :branch => %w[master],
         :files  => {
           'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git',
-          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh'
+          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh',
+          'contrib/remote-helpers/git-remote-hg' => 'bin/git-remote-hg'
         }
       },
 
