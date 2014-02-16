@@ -1,11 +1,12 @@
 ;; Authors: Sung Pae <self@sungpae.com>
 
 (ns vim-clojure-static.test
-  (:require [clojure.java.io :as io]
+  (:require [clojure.edn :as edn]
+            [clojure.java.io :as io]
             [clojure.java.shell :as shell]
-            [clojure.edn :as edn]
             [clojure.string :as string]
-            [clojure.test :as test]))
+            [clojure.test :as test])
+  (:import (java.util List)))
 
 (defn syn-id-names
   "Map lines of clojure text to vim synID names at each column as keywords:
@@ -28,7 +29,7 @@
    %s in format spec fmt"
   [fmt s]
   (let [f (seq (format fmt \o001))
-        i (.indexOf f \o001)]
+        i (.indexOf ^List f \o001)]
     (->> s
          (drop i)
          (drop-last (- (count f) i 1)))))
@@ -48,6 +49,7 @@
    At runtime the syn-id-names of the strings (which are placed in the format
    spec) are passed to their associated predicates. The format spec should
    contain a single `%s`."
+  {:require [#'test/deftest]}
   [name & body]
   (assert (every? (fn [[fmt tests]] (and (string? fmt)
                                          (coll? tests)
@@ -69,59 +71,18 @@
                             ss λs)))
                 contexts)))))
 
-(defn vim-nfa-dump
-  "Run a patched version of Vim compiled with -DDEBUG on a new file containing
-   buffer, then move the NFA log to log-path. The patch is located at
-   vim/custom-nfa-log.patch"
-  [vim-path buffer log-path]
-  (let [file "tmp/nfa-test-file.clj"]
-    (spit file buffer)
-    (time (shell/sh vim-path "-u" "NONE" "-N" "-S" "vim/test-runtime.vim" file))
-    (shell/sh "mv" "nfa_regexp.log" log-path)))
-
-(defn compare-nfa-dumps
-  "Dump NFA logs with given buffer and syntax-files; log-files are written to
-   tmp/ and are distinguished by the hash of the buffer and syntax script.
-
-   The vim-path passed to vim-nfa-dump should either be in the VIMDEBUG
-   environment variable, or be the top vim in your PATH.
-
-   Returns the line count of each corresponding log file."
-  [buf [& syntax-files] & opts]
-  (let [{:keys [vim-path]
-         :or {vim-path (or (System/getenv "VIMDEBUG") "vim")}} opts
-        syn-path "../syntax/clojure.vim"
-        orig-syn (slurp syn-path)
-        buf-hash (hash buf)]
-    (try
-      (mapv (fn [path]
-              (let [syn-buf (slurp path)
-                    syn-hash (hash syn-buf)
-                    log-path (format "tmp/debug:%d:%d.log" buf-hash syn-hash)]
-                (spit syn-path syn-buf)
-                (vim-nfa-dump vim-path buf log-path)
-                (count (re-seq #"\n" (slurp log-path)))))
-            syntax-files)
-      (finally
-        (spit syn-path orig-syn)))))
-
-(comment
-
-  (macroexpand-1
-    '(defsyntaxtest number-literals-test
-       ["%s"
-        ["123" #(every? (partial = :clojureNumber) %)
-         "456" #(every? (partial = :clojureNumber) %)]]
-       ["#\"%s\""
-        ["^" #(= % [:clojureRegexpBoundary])]]))
-  (test #'number-literals-test)
-
-  (defn dump! [buf]
-    (compare-nfa-dumps (format "#\"\\p{%s}\"\n" buf)
-                       ["../syntax/clojure.vim" "tmp/altsyntax.vim"]))
-
-  (dump! "Ll")
-  (dump! "javaLowercase")
-  (dump! "block=UNIFIED CANADIAN ABORIGINAL SYLLABICS")
-
-  )
+(defmacro defpredicates
+  "Create two complementary predicate vars, `sym` and `!sym`, which test if
+   all members of a passed collection are equal to `kw`"
+  [sym kw]
+  `(do
+     (defn ~sym
+       ~(str "Returns true if all elements of coll equal " kw)
+       {:arglists '~'[coll]}
+       [coll#]
+       (every? (partial = ~kw) coll#))
+     (defn ~(symbol (str \! sym))
+       ~(str "Returns true if any alements of coll do not equal " kw)
+       {:arglists '~'[coll]}
+       [coll#]
+       (boolean (some (partial not= ~kw) coll#)))))
