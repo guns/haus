@@ -1,3 +1,29 @@
+"=============================================================================
+" FILE: util.vim
+" AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
+" Last Modified: 18 Feb 2014.
+" License: MIT license  {{{
+"     Permission is hereby granted, free of charge, to any person obtaining
+"     a copy of this software and associated documentation files (the
+"     "Software"), to deal in the Software without restriction, including
+"     without limitation the rights to use, copy, modify, merge, publish,
+"     distribute, sublicense, and/or sell copies of the Software, and to
+"     permit persons to whom the Software is furnished to do so, subject to
+"     the following conditions:
+"
+"     The above copyright notice and this permission notice shall be included
+"     in all copies or substantial portions of the Software.
+"
+"     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+"     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+"     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+"     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+"     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+"     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+"     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+" }}}
+"=============================================================================
+
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -8,60 +34,76 @@ function! unite#util#get_vital() "{{{
   return s:V
 endfunction"}}}
 
+function! s:get_prelude() "{{{
+  if !exists('s:Prelude')
+    let s:Prelude = unite#util#get_vital().import('Prelude')
+  endif
+  return s:Prelude
+endfunction"}}}
 function! s:get_list() "{{{
   if !exists('s:List')
     let s:List = unite#util#get_vital().import('Data.List')
   endif
   return s:List
 endfunction"}}}
-
 function! s:get_string() "{{{
   if !exists('s:String')
     let s:String = unite#util#get_vital().import('Data.String')
   endif
   return s:String
 endfunction"}}}
-
 function! s:get_message() "{{{
   if !exists('s:Message')
     let s:Message = unite#util#get_vital().import('Vim.Message')
   endif
   return s:Message
 endfunction"}}}
+function! s:get_system() "{{{
+  if !exists('s:System')
+    let s:System = unite#util#get_vital().import('System.File')
+  endif
+  return s:System
+endfunction"}}}
+function! s:get_process() "{{{
+  if !exists('s:Process')
+    let s:Process = unite#util#get_vital().import('Process')
+  endif
+  return s:Process
+endfunction"}}}
 
 " TODO use vital's
 let s:is_windows = has('win16') || has('win32') || has('win64')
 
 function! unite#util#truncate_smart(...)
-  return call(unite#util#get_vital().truncate_skipping, a:000)
+  return call(s:get_prelude().truncate_skipping, a:000)
 endfunction
 function! unite#util#truncate(...)
-  return call(unite#util#get_vital().truncate, a:000)
+  return call(s:get_prelude().truncate, a:000)
 endfunction
 function! unite#util#strchars(...)
   return call(s:get_string().strchars, a:000)
 endfunction
 function! unite#util#strwidthpart(...)
-  return call(unite#util#get_vital().strwidthpart, a:000)
+  return call(s:get_prelude().strwidthpart, a:000)
 endfunction
 function! unite#util#strwidthpart_reverse(...)
-  return call(unite#util#get_vital().strwidthpart_reverse, a:000)
+  return call(s:get_prelude().strwidthpart_reverse, a:000)
 endfunction
 function! unite#util#wcswidth(...)
-  return call(unite#util#get_vital().wcswidth, a:000)
+  return call(s:get_prelude().wcswidth, a:000)
 endfunction
 function! unite#util#wcswidth(...)
-  return call(unite#util#get_vital().wcswidth, a:000)
+  return call(s:get_prelude().wcswidth, a:000)
 endfunction
 function! unite#util#is_win(...)
   echoerr 'unite#util#is_win() is deprecated. use unite#util#is_windows() instead.'
-  return s:is_windows
+  return call(s:get_prelude().is_windows, a:000)
 endfunction
 function! unite#util#is_windows(...)
-  return s:is_windows
+  return call(s:get_prelude().is_windows, a:000)
 endfunction
 function! unite#util#is_mac(...)
-  return call(unite#util#get_vital().is_mac, a:000)
+  return call(s:get_prelude().is_mac, a:000)
 endfunction
 function! unite#util#print_error(...)
   return call(s:get_message().error, a:000)
@@ -70,10 +112,10 @@ function! unite#util#smart_execute_command(action, word)
   execute a:action . ' ' . fnameescape(a:word)
 endfunction
 function! unite#util#escape_file_searching(...)
-  return call(unite#util#get_vital().escape_file_searching, a:000)
+  return call(s:get_prelude().escape_file_searching, a:000)
 endfunction
 function! unite#util#escape_pattern(...)
-  return call(unite#util#get_vital().escape_pattern, a:000)
+  return call(s:get_prelude().escape_pattern, a:000)
 endfunction
 function! unite#util#set_default(var, val, ...)  "{{{
   if !exists(a:var) || type({a:var}) != type(a:val)
@@ -84,12 +126,12 @@ function! unite#util#set_default(var, val, ...)  "{{{
   endif
 endfunction"}}}
 function! unite#util#set_dictionary_helper(...)
-  return call(unite#util#get_vital().set_dictionary_helper, a:000)
+  return call(s:get_prelude().set_dictionary_helper, a:000)
 endfunction
 
 if unite#util#is_windows()
   function! unite#util#substitute_path_separator(...)
-    return call(unite#util#get_vital().substitute_path_separator, a:000)
+    return call(s:get_prelude().substitute_path_separator, a:000)
   endfunction
 else
   function! unite#util#substitute_path_separator(path)
@@ -98,13 +140,13 @@ else
 endif
 
 function! unite#util#path2directory(...)
-  return call(unite#util#get_vital().path2directory, a:000)
+  return call(s:get_prelude().path2directory, a:000)
 endfunction
 function! unite#util#path2project_directory(...)
-  return call(unite#util#get_vital().path2project_directory, a:000)
+  return call(s:get_prelude().path2project_directory, a:000)
 endfunction
 function! unite#util#has_vimproc(...)
-  return call(unite#util#get_vital().has_vimproc, a:000)
+  return call(s:get_process().has_vimproc, a:000)
 endfunction
 function! unite#util#has_lua()
   " Note: Disabled if_lua feature if less than 7.3.885.
@@ -116,14 +158,14 @@ function! unite#util#has_lua()
         \     &encoding ==# 'utf-8' || &encoding ==# 'latin1')
 endfunction
 function! unite#util#system(...)
-  return call(unite#util#get_vital().system, a:000)
+  return call(s:get_process().system, a:000)
 endfunction
 function! unite#util#system_passwd(...)
   return call((unite#util#has_vimproc() ?
         \ 'vimproc#system_passwd' : 'system'), a:000)
 endfunction
 function! unite#util#get_last_status(...)
-  return call(unite#util#get_vital().get_last_status, a:000)
+  return call(s:get_process().get_last_status, a:000)
 endfunction
 function! unite#util#get_last_errmsg()
   return unite#util#has_vimproc() ? vimproc#get_last_errmsg() : ''
@@ -193,7 +235,7 @@ function! unite#util#input_directory(message) "{{{
   return dir
 endfunction"}}}
 function! unite#util#iconv(...)
-  return call(unite#util#get_vital().iconv, a:000)
+  return call(s:get_process().iconv, a:000)
 endfunction
 
 function! unite#util#alternate_buffer() "{{{
@@ -269,7 +311,7 @@ function! unite#util#glob(pattern, ...) "{{{
     return split(unite#util#substitute_path_separator(glob(glob)), '\n')
   endif
 endfunction"}}}
-function! unite#util#command_with_restore_cursor(command)
+function! unite#util#command_with_restore_cursor(command) "{{{
   let pos = getpos('.')
   let current = winnr()
 
@@ -281,9 +323,9 @@ function! unite#util#command_with_restore_cursor(command)
   call setpos('.', pos)
 
   execute next 'wincmd w'
-endfunction
+endfunction"}}}
 function! unite#util#expand(path) "{{{
-  return unite#util#get_vital().substitute_path_separator(
+  return s:get_prelude().substitute_path_separator(
         \ (a:path =~ '^\~') ? substitute(a:path, '^\~', expand('~'), '') :
         \ (a:path =~ '^\$\h\w*') ? substitute(a:path,
         \               '^\$\h\w*', '\=eval(submatch(0))', '') :
@@ -329,6 +371,10 @@ endfunction"}}}
 function! unite#util#escape_match(str) "{{{
   return substitute(substitute(escape(a:str, '~\.^$[]'),
         \ '\*\@<!\*\*\@!', '[^/]*', 'g'), '\*\*\+', '.*', 'g')
+endfunction"}}}
+
+function! unite#util#open(path) "{{{
+  return s:get_system().open(a:path)
 endfunction"}}}
 
 let &cpo = s:save_cpo

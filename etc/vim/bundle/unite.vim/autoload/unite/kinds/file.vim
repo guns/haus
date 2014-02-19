@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: file.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 21 Jan 2014.
+" Last Modified: 10 Feb 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -66,7 +66,6 @@ let s:kind = {
       \ 'name' : 'file',
       \ 'default_action' : 'open',
       \ 'action_table' : {},
-      \ 'alias_table' : { 'unite__new_candidate' : 'vimfiler__newfile' },
       \ 'parents' : ['openable', 'cdable', 'uri'],
       \}
 
@@ -576,6 +575,9 @@ function! s:kind.action_table.vimfiler__newfile.func(candidate) "{{{
   endtry
 endfunction"}}}
 
+let s:kind.action_table.unite__new_candidate =
+      \ deepcopy(s:kind.action_table.vimfiler__newfile)
+
 let s:kind.action_table.vimfiler__shell = {
       \ 'description' : 'popup shell',
       \ 'is_listed' : 0,
@@ -892,6 +894,7 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
       noautocmd execute 'buffer' bufnr
       execute 'saveas!' fnameescape(new_filename)
       noautocmd execute 'buffer' bufnr_save
+      silent! execute 'bdelete!' fnameescape(old_filename)
       silent! call delete(old_filename)
     elseif rename(old_filename, new_filename)
       call unite#print_error(
