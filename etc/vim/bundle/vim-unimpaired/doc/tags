@@ -18,6 +18,7 @@
 [f	unimpaired.txt	/*[f*
 [l	unimpaired.txt	/*[l*
 [n	unimpaired.txt	/*[n*
+[ob	unimpaired.txt	/*[ob*
 [oc	unimpaired.txt	/*[oc*
 [od	unimpaired.txt	/*[od*
 [oh	unimpaired.txt	/*[oh*
@@ -51,6 +52,7 @@
 ]f	unimpaired.txt	/*]f*
 ]l	unimpaired.txt	/*]l*
 ]n	unimpaired.txt	/*]n*
+]ob	unimpaired.txt	/*]ob*
 ]oc	unimpaired.txt	/*]oc*
 ]od	unimpaired.txt	/*]od*
 ]oh	unimpaired.txt	/*]oh*
@@ -70,6 +72,7 @@
 ]xx	unimpaired.txt	/*]xx*
 ]y	unimpaired.txt	/*]y*
 ]yy	unimpaired.txt	/*]yy*
+cob	unimpaired.txt	/*cob*
 coc	unimpaired.txt	/*coc*
 cod	unimpaired.txt	/*cod*
 coh	unimpaired.txt	/*coh*
