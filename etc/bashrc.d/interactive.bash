@@ -1753,8 +1753,7 @@ ALIAS rl='rlwrap'
 ### Init
 
 if HAVE systemctl; then
-    ALIAS sd='/usr/lib/systemd/systemd' \
-          sc='systemctl' \
+    ALIAS sc='systemctl' \
           jc='journalctl --full' \
           jcb='journalctl --full -b' \
           jcf='journalctl --full -f' && {
