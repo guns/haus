@@ -1,8 +1,8 @@
-# hostnamectl(1) completion                               -*- shell-script -*-
+# systemd-delta(1) completion                      -*- shell-script -*-
 #
 # This file is part of systemd.
 #
-# Copyright 2013 Zbigniew Jędrzejewski-Szmek
+# Copyright 2014 Thomas H.P. Andersen
 #
 # systemd is free software; you can redistribute it and/or modify it
 # under the terms of the GNU Lesser General Public License as published by
@@ -17,27 +17,32 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
-__contains_word () {
+__contains_word() {
         local w word=$1; shift
         for w in "$@"; do
                 [[ $w = "$word" ]] && return
         done
 }
 
-_busctl() {
-        local i verb comps
+_systemd-delta() {
         local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
+        local comps
+
         local -A OPTS=(
-               [STANDALONE]='-h --help --version --no-pager --system --user
-                             --no-unique --no-machine'
-                      [ARG]='-H --host -M --machine --address
-                             --match'
+               [STANDALONE]='--help -h --no-pager --version'
+                      [ARG]='--diff --type -t'
         )
+
+        _init_completion || return
+
 
         if __contains_word "$prev" ${OPTS[ARG]}; then
                 case $prev in
-                        --host|-H)
-                                comps=$(compgen -A hostname)
+                        --diff)
+                                comps='yes no'
+                        ;;
+                        --type|-t)
+                                comps='masked equivalent redirected overridden unchanged extended default'
                         ;;
                 esac
                 COMPREPLY=( $(compgen -W '$comps' -- "$cur") )
@@ -49,26 +54,8 @@ _busctl() {
                 return 0
         fi
 
-        local -A VERBS=(
-                [STANDALONE]='list monitor'
-        )
-
-        for ((i=0; i < COMP_CWORD; i++)); do
-                if __contains_word "${COMP_WORDS[i]}" ${VERBS[*]} &&
-                 ! __contains_word "${COMP_WORDS[i-1]}" ${OPTS[ARG]}; then
-                        verb=${COMP_WORDS[i]}
-                        break
-                fi
-        done
-
-        if [[ -z $verb ]]; then
-                comps=${VERBS[*]}
-        elif __contains_word "$verb" ${VERBS[STANDALONE]}; then
-                comps=''
-        fi
-
         COMPREPLY=( $(compgen -W '$comps' -- "$cur") )
         return 0
 }
 
-complete -F _busctl busctl
+complete -F _systemd-delta systemd-delta
