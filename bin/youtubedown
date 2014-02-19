@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.271 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.276 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -639,6 +639,9 @@ my %ciphers = (
   'vflcY_8N0' => 's2 w36 s1 r w18 r w19 r',         # 30 Jan 2014
   'vfl9qWoOL' => 'w68 w64 w28 r',                   # 03 Feb 2014
   'vfle-mVwz' => 's3 w7 r s3 r w14 w59 s3 r',       # 04 Feb 2014
+  'vfltdb6U3' => 'w61 w5 r s2 w69 s2 r',            # 05 Feb 2014
+  'vflLjFx3B' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 10 Feb 2014
+  'vfliqjKfF' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 13 Feb 2014
 );
 
 sub decipher_sig($$$) {
@@ -700,7 +703,7 @@ sub guess_cipher(;$$) {
     ($http, $head, $body) = get_url ($url);		# Get home page
     check_http_status ($url, $http, 2);
     my ($id) = ($body =~ m@/watch\?v=([^\"\'/<>]+)@si);
-    errorI ("unparsable") unless $id;
+    errorI ("unparsable cipher") unless $id;
     $url .= "/watch\?v=$id";
 
     ($http, $head, $body) = get_url ($url);		# Get random video
@@ -708,7 +711,7 @@ sub guess_cipher(;$$) {
 
     $body =~ s/\\//gs;
     ($cipher_id) = ($body =~ m@/jsbin\\?/html5player-(.+?)\.js@s);
-    errorI ("unparsable: $url") unless $cipher_id;
+    errorI ("unparsable cipher url: $url") unless $cipher_id;
   }
 
   $url = "http://s.ytimg.com/yts/jsbin/html5player-$cipher_id.js";
@@ -718,7 +721,7 @@ sub guess_cipher(;$$) {
   my ($date) = ($head =~ m/^Last-Modified:\s+(.*)$/mi);
   $date =~ s/^[A-Z][a-z][a-z], (\d\d? [A-Z][a-z][a-z] \d{4}).*$/$1/s;
 
-  my $v = '[\$a-zA-Z][a-z\d]*';	# JS variable
+  my $v = '[\$a-zA-Z][a-zA-Z\d]*';	# JS variable
 
   # Since the script is minimized and obfuscated, we can't search for
   # specific function names, since those change. Instead we match the
@@ -730,7 +733,7 @@ sub guess_cipher(;$$) {
 
   # Find "C" in this: var A = B.sig || C (B.s)
   my (undef, $fn) = ($body =~ m/$v = ( $v ) \.sig \|\| ( $v ) \( \1 \.s \)/sx);
-  errorI ("$cipher_id: unparsable: $url") unless $fn;
+  errorI ("$cipher_id: unparsable cipher js: $url") unless $fn;
 
   # Find body of function C(D) { ... }
   ($fn) = ($body =~ m@\b function \s+ $fn \s* \( $v \) \s* { ( .*? ) }@sx);
@@ -1047,8 +1050,8 @@ sub scrape_youtube_url($$$$$) {
   if (!$urlmap) {
     # If we couldn't get a URL map out of the info URL, try harder.
 
-    if ($body =~ m/private[+\s]video/si) {  # scraping won't work.
-      error ("$id: private video");
+    if ($body =~ m/private[+\s]video|video[+\s]is[+\s]private/si) {
+      error ("$id: private video");  # scraping won't work.
     }
 
     my ($err) = ($body =~ m@reason=([^&]+)@s);
@@ -1176,7 +1179,8 @@ sub scrape_youtube_url_html($$$$$) {
       }
 
       if ($verbose == 0 &&
-          $err =~ m/(available|blocked it) in your country/i) {
+          ($err =~ m/(available|blocked it) in your country/i ||
+           $err =~ m/removed by the user/i)) {
         # With --quiet, just silently ignore country-locked video failures,
         # for "youtubefeed".
         exit (0);
@@ -1187,7 +1191,8 @@ sub scrape_youtube_url_html($$$$$) {
   }
 
   if ($verbose == 0 &&
-      $oerror =~ m/(available|blocked it) in your country/i) {
+      ($oerror =~ m/(available|blocked it) in your country/i ||
+       $oerror =~ m/removed by the user/i)) {
     # With --quiet, just silently ignore country-locked video failures,
     # for "youtubefeed".
     # (Need to test twice because sometimes we have $args but no fmt_url_map)
