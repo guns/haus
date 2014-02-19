@@ -16,9 +16,9 @@ UltiSnips                                      *snippet* *snippets* *UltiSnips*
    3.3 Snippet Search Path                      |UltiSnips-snippet-search-path|
    3.4 Warning About Select Mode Mappings       |UltiSnips-warning-smappings|
    3.5 Functions                                |UltiSnips-functions|
-      3.5.1 UltiSnips_AddSnippet                |UltiSnips_AddSnippet|
-      3.5.2 UltiSnips_Anon                      |UltiSnips_Anon|
-      3.5.3 UltiSnips_SnippetsInCurrentScope    |UltiSnips_SnippetsInCurrentScope|
+      3.5.1 UltiSnips#AddSnippet                |UltiSnips#AddSnippet|
+      3.5.2 UltiSnips#Anon                      |UltiSnips#Anon|
+      3.5.3 UltiSnips#SnippetsInCurrentScope    |UltiSnips#SnippetsInCurrentScope|
    3.6 Missing python support                   |UltiSnips-python-warning|
 4. Syntax                                       |UltiSnips-syntax|
    4.1 Adding Snippets                          |UltiSnips-adding-snippets|
@@ -124,6 +124,9 @@ permission to use his snippets.
 =============================================================================
 2. Installation and Updating                       *UltiSnips-installnupdate*
 
+The recommended way of getting ultisnips is to track SirVer/ultisnips on
+github. The master branch is always stable.
+
 Using Pathogen:                                     *UltiSnips-using-pathogen*
 
 If you are a pathogen user, you can track the official mirror of UltiSnips on
@@ -135,19 +138,10 @@ github: >
 See the pathogen documentation for more details on how to update a bundle.
 
 
-Using Bzr:                                               *UltiSnips-using-bzr*
+Using a downloaded packet:               *UltiSnips-using-a-downloaded-packet*
 
-To track the main repository on github, you will need bzr
-(http://bazaar-vcs.org/). bzr is available in all major Linux distributions
-(packaged as bzr or bazaar) and can be easily installed under Mac OS X: >
-   $ pip install bzr
-
-Using bzr, checkout UltiSnips into a directory of your choice. >
-   $ cd ~/.vim/
-   $ bzr get lp:ultisnips ultisnips_rep
-
-Then add this directory to your Vim runtime path by adding this line to your
-vimrc file. >
+Download the packet and unpack into a directory of your choice. Then add this
+directory to your Vim runtime path by adding this line to your vimrc file. >
    set runtimepath+=~/.vim/ultisnips_rep
 
 UltiSnips also needs that Vim sources files from the ftdetect/ directory.
@@ -159,15 +153,6 @@ therefore have to symlink/copy the files: >
 Restart Vim and UltiSnips should work. To access the help, use >
    :helptags ~/.vim/ultisnips_rep/doc
    :help UltiSnips
-
-To update an installation, simply pull the latest revision: >
-   $ cd ~/.vim/ultisnips_rep
-   $ bzr pull
-
-Using a downloaded packet:               *UltiSnips-using-a-downloaded-packet*
-
-Download the packet and unpack into a directory of your choice. Add the path
-to runtimepath. See |UltiSnips-using-bzr| for an example.
 
 =============================================================================
 3. Settings & Commands                                   *UltiSnips-settings*
@@ -240,30 +225,39 @@ vimrc file. >
    let g:UltiSnipsJumpForwardTrigger="<tab>"
    let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
 
+UltiSnips will only map the jump triggers while a snippet is active to
+interfer as little as possible with other mappings. 
+
+The default value for g:UltiSnipsJumpBackwardTrigger interferes with the
+built-in complete function: |i_CTRL-X_CTRL-K|. A workaround is to add the
+following to your vimrc file or switching to a plugin like Supertab or
+YouCompleteMe. >
+   inoremap <c-x><c-k> <c-x><c-k>
+
 3.2.1 Using your own trigger functions           *UltiSnips-trigger-functions*
 --------------------------------------
 
 For advanced users there are four functions that you can map directly to a
 key and that correspond to some of the triggers previously defined:
-   g:UltiSnipsExpandTrigger        <--> UltiSnips_ExpandSnippet
-   g:UltiSnipsJumpForwardTrigger   <--> UltiSnips_JumpForwards
-   g:UltiSnipsJumpBackwardTrigger  <--> UltiSnips_JumpBackwards
+   g:UltiSnipsExpandTrigger        <--> UltiSnips#ExpandSnippet
+   g:UltiSnipsJumpForwardTrigger   <--> UltiSnips#JumpForwards
+   g:UltiSnipsJumpBackwardTrigger  <--> UltiSnips#JumpBackwards
 
 If you have g:UltiSnipsExpandTrigger and g:UltiSnipsJumpForwardTrigger set
 to the same value then the function you are actually going to use is
-UltiSnips_ExpandSnippetOrJump.
+UltiSnips#ExpandSnippetOrJump.
 
-Each time any of the functions UltiSnips_ExpandSnippet,
-UltiSnips_ExpandSnippet, UltiSnips_JumpBackwards or UltiSnips_JumpBackwards is
+Each time any of the functions UltiSnips#ExpandSnippet,
+UltiSnips#ExpandSnippet, UltiSnips#JumpBackwards or UltiSnips#JumpBackwards is
 called a global variable is set that contains the return value of the
 corresponding function.
 
 The corresponding variables and functions are:
-UltiSnips_ExpandSnippet       --> g:ulti_expand_res (0: fail, 1: success)
-UltiSnips_ExpandSnippetOrJump --> g:ulti_expand_or_jump_res (0: fail,
+UltiSnips#ExpandSnippet       --> g:ulti_expand_res (0: fail, 1: success)
+UltiSnips#ExpandSnippetOrJump --> g:ulti_expand_or_jump_res (0: fail,
                                                     1: expand, 2: jump)
-UltiSnips_JumpForwards        --> g:ulti_jump_forwards_res (0: fail, 1: success)
-UltiSnips_JumpBackwards       --> g:ulti_jump_backwards_res (0: fail, 1: success)
+UltiSnips#JumpForwards        --> g:ulti_jump_forwards_res (0: fail, 1: success)
+UltiSnips#JumpBackwards       --> g:ulti_jump_backwards_res (0: fail, 1: success)
 
 To see how these return values may come in handy, suppose that you want to map
 a key to expand or jump, but if none of these actions is successful you want
@@ -274,7 +268,7 @@ Usage is as follows: You define a function >
 
    let g:ulti_expand_or_jump_res = 0 "default value, just set once
    function! Ulti_ExpandOrJump_and_getRes()
-     call UltiSnips_ExpandSnippetOrJump()
+     call UltiSnips#ExpandSnippetOrJump()
      return g:ulti_expand_or_jump_res
    endfunction
 
@@ -291,16 +285,11 @@ alternative function IMAP_Jumpfunc('', 0) is called.
 For even more advanced usage, you can directly write python functions using
 UltiSnip's python modules.
 
-The path to UltiSnip's python implementation is stored in the
-g:UltiSnipsPythonPath variable which is set automatically on load.
-
 Here is a small example funtion that expands a snippet: >
 
    function! s:Ulti_ExpandSnip()
    Python << EOF
    import sys, vim
-   new_path = vim.eval("expand('g:UltiSnipsPythonPath')")
-   sys.path.append(new_path)
    from UltiSnips import UltiSnips_Manager
    UltiSnips_Manager.expand()
    EOF
@@ -346,11 +335,6 @@ file: >
    " Traverse in reverse order
    let g:UltiSnipsDontReverseSearchPath="0"
 
-By default, whenever a snippet expand is triggered, UltiSnips will check for
-modifications to the snippet file associated with the filetype and reload it
-if necessary. This behavior can be disabled as follows: >
-   let g:UltiSnipsDoHash=0
-
 |UltiSnips-adding-snippets| explains which files are parsed for a given filetype.
 
 
@@ -389,31 +373,30 @@ complete definition as listed by the |:smap| command. >
 UltiSnips provides some functions for extending core functionality.
 
 
- 3.5.1 UltiSnips_AddSnippet                            *UltiSnips_AddSnippet*
+ 3.5.1 UltiSnips#AddSnippet                            *UltiSnips#AddSnippet*
 
-The first function is UltiSnips_AddSnippet(trigger, value, description,
-options, ...). It adds a new snippet with the provided trigger, value,
+The first function is UltiSnips#AddSnippet(trigger, value, description,
+options, filetyp="all"). It adds a new snippet with the provided trigger, value,
 description, and options to the current list of snippets. See
 |UltiSnips-syntax| for details on the meaning of the function arguments. All
-arguments are strings. An optional fifth argument can be used to specify the
-filetype for the new snippet.
+arguments are strings.
 
 
- 3.5.2 UltiSnips_Anon                                        *UltiSnips_Anon*
+ 3.5.2 UltiSnips#Anon                                        *UltiSnips#Anon*
 
-The second function is UltiSnips_Anon(value, ...). It expands an anonymous
+The second function is UltiSnips#Anon(value, ...). It expands an anonymous
 snippet. Anonymous snippets are defined on the spot, expanded and immediately
 discarded again. Anonymous snippets are not added to the global list of
 snippets, so they cannot be expanded a second time unless the function is
 called again. The function takes three optional arguments, in order: trigger,
 description, options. Arguments coincide with the arguments of the
-|UltiSnips_AddSnippet| function of the same name. The trigger and options
+|UltiSnips#AddSnippet| function of the same name. The trigger and options
 arguments can change the way the snippet expands. The description is unused at
 this point.
 
 An example use case might be this line from a reStructuredText plugin file:
 
-   inoremap <silent> $$ $$<C-R>=UltiSnips_Anon(':latex:\`$1\`', '$$')<cr>
+   inoremap <silent> $$ $$<C-R>=UltiSnips#Anon(':latex:\`$1\`', '$$')<cr>
 
 This expands the snippet whenever two $ signs are typed.
 Note: The right-hand side of the mapping starts with an immediate retype of
@@ -421,9 +404,9 @@ the '$$' trigger and passes '$$' to the function as the trigger argument.
 This is required in order for UltiSnips to have access to the characters
 typed so it can determine if the trigger matches or not.
 
- 3.5.3 UltiSnips_SnippetsInCurrentScope    *UltiSnips_SnippetsInCurrentScope*
+ 3.5.3 UltiSnips#SnippetsInCurrentScope    *UltiSnips#SnippetsInCurrentScope*
 
-A third function is UltiSnips_SnippetsInCurrentScope which is the equivalent
+A third function is UltiSnips#SnippetsInCurrentScope which is the equivalent
 of snipmate GetSnipsInCurrentScope function.
 This function simply returns a vim dictionary with the snippets whose trigger
 matches the current word.
@@ -443,7 +426,7 @@ you just have to define the function GetSnipsInCurrentScope. Put the following
 in your vimrc:
 
 function! GetSnipsInCurrentScope()
-  return UltiSnips_SnippetsInCurrentScope()
+  return UltiSnips#SnippetsInCurrentScope()
 endfunction
 
 
@@ -451,8 +434,8 @@ As a second example on how to use this function consider the following
 function and mapping definition:
 
 function! ExpandPossibleShorterSnippet()
-  if len(UltiSnips_SnippetsInCurrentScope()) == 1 "only one candidate...
-    let curr_key = keys(UltiSnips_SnippetsInCurrentScope())[0]
+  if len(UltiSnips#SnippetsInCurrentScope()) == 1 "only one candidate...
+    let curr_key = keys(UltiSnips#SnippetsInCurrentScope())[0]
     normal diw
     exe "normal a" . curr_key
     exe "normal a "
@@ -460,7 +443,7 @@ function! ExpandPossibleShorterSnippet()
   endif
   return 0
 endfunction
-inoremap <silent> <C-L> <C-R>=(ExpandPossibleShorterSnippet() == 0? '': UltiSnips_ExpandSnippet())<CR>
+inoremap <silent> <C-L> <C-R>=(ExpandPossibleShorterSnippet() == 0? '': UltiSnips#ExpandSnippet())<CR>
 
 If the trigger for your snippet is lorem, you type lor, and you have no other
 snippets whose trigger matches lor then hitting <C-L> will expand to whatever
@@ -940,15 +923,10 @@ wow<tab>Hello World ->
 Hello World                                                     HELLO WORLD
 
 Python global functions can be stored in a python module and then imported.
-This makes global functions easily accessible to all snippet files.
-
-First, add the directory modules are stored in to the python search path. For
-example, add this line to your vimrc file. >
-
-   py import sys; sys.path.append("/home/sirver/.vim/python")
-
-Now, import modules from this directory using a global snippet in your snippet
-file >
+This makes global functions easily accessible to all snippet files. Since Vim
+7.4 you can just drop python files into ~/.vim/pythonx and import them
+directly inside your snippets. For example to use
+~/.vim/pythonx/my_snippets_helpers.py  >
 
    global !p
    from my_snippet_helpers import *
@@ -986,16 +964,15 @@ Thanks for suggesting UltiSnips!
 Yours sincerely,
 Paul
 
-
 You can use <c-j> to jump to the next tabstop, and <c-k> to jump to the
 previous. The <Tab> key was not used for jumping forward because many people
 (myself included) use <Tab> for completion. See |UltiSnips-triggers| for
 help on defining different keys for tabstops.
 
-Many times it is useful to have some default text for a tabstop. The default
-text may be a value commonly used for the variable component, or it may be a
-word or phrase that reminds you what is expected for the variable component.
-To include default text, the syntax is '${1:value}'.
+It is often useful to have some default text for a tabstop. The default text
+may be a value commonly used for the variable component, or it may be a word
+or phrase that reminds you what is expected for the variable component. To
+include default text, the syntax is '${1:value}'.
 
 The following example illustrates a snippet for the shell 'case' statement.
 The tabstops use default values to remind the user of what value is expected.
@@ -1017,7 +994,6 @@ esac
 Sometimes it is useful to have a tabstop within a tabstop. To do this, simply
 include the nested tabstop as part of the default text. Consider the following
 example illustrating an HTML anchor snippet.
-
 
 ------------------- SNIP -------------------
 snippet a
@@ -1080,7 +1056,6 @@ a<tab>http://www.google.com<c-j><BS><c-j>Google ->
 <a href="http://www.google.com">
     Google
 </a>
-
 
 The default text of tabstops can also contain mirrors, transformations or
 interpolation.
@@ -1296,6 +1271,9 @@ that are aware of UltiSnips and use it to improve the user experience. This is
 an incomplete list - if you want to have your plugin listed here, just sent me
 a pull request.
 
+YouCompleteMe - comes with out of the box completion support for UltiSnips. It
+offers a really nice completion dialogue for snippets.
+
 Supertab - UltiSnips has built-in support for Supertab. Just use a recent
 enough version of both plugins and <tab> will either expand a snippet or defer
 to Supertab for expansion.
@@ -1316,8 +1294,6 @@ You can contribute snippets or patches in various ways. The methods are listed
 below in order of convenience for me. Please be as convenient as you
 can be :)
 
-* Clone the repository on launchpad (bzr clone lp:ultisnips), make fixes, push
-  the branch and send a merge request on launchpad.
 * Clone the repository on GitHub (git clone git@github.com:SirVer/ultisnips.git),
   make your changes and send a pull request on GitHub.
 * Make a patch, report a bug/feature request (see below) and attach the patch
@@ -1326,8 +1302,7 @@ can be :)
 * Send me an Email with the changed files only.
 
 You can contribute by fixing or reporting bugs in our issue tracker:
-https://bugs.launchpad.net/ultisnips
-
+https://github.com/sirver/ultisnips/issues
 
 If you like this plugin, please vote for it on its Vim script page >
     http://www.vim.org/scripts/script.php?script_id=2715
@@ -1337,19 +1312,17 @@ It is life-changing for me. Maybe it is for you too.
 =============================================================================
 7. Contact                                                *UltiSnips-contact*
 
-You can reach me at SirVer -AT- gmx -ADOT- de. You can also contact me through
-the UltiSnips launchpad project page at https://launchpad.net/ultisnips/. The
-launchpad project has an 'Answers' page where you can ask me questions and a
-bug tracker where you can report bugs and issues.
+You can reach me at SirVer -AT- gmx -ADOT- de.
 
 This project aims to be the one-for-all solution for Snippets for Vim. If you
-miss a feature or find a bug, please contact me or file a support ticket.
+miss a feature or find a bug, please contact me or add an issues to our issues
+tracker.
 
 =============================================================================
 8. Contributors                                      *UltiSnips-contributors*
 
 The primary developer of UltiSnips is SirVer (Holger Rapp). The following
-individuals have contributed code and snippets to UltiSnips.
+individuals have contributed to UltiSnips.
 
 
 8.1 Patches & Coding                                 *UltiSnips-contricoding*
@@ -1398,6 +1371,7 @@ Contributors listed in chronological order:
    Sergey Alexandrov - taketwo
    Brian Mock - saikobee
    Gernot Höflechner - LFDM
+   Marcelo D Montu - mMontu
 
 
 8.2 Snippets                                       *UltiSnips-contrisnippets*
