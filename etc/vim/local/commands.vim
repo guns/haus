@@ -325,7 +325,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(user/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(user/toggle-warnings! true)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(user/toggle-warnings! false)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#session_eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
+    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#session_eval('(load-file "' . expand('~/.lein/profiles.clj') . '")')<CR>
 endfunction
 
 function! s:ClojurePprint(expr)

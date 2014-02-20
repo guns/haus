@@ -1039,7 +1039,7 @@ HAVE vim && {
     alias vimmuttrc='(cdhaus etc/%mutt && exec vim muttrc)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
-    alias vimleinuser='(cdhaus etc/%lein && exec vim user.clj)'
+    alias vimleinprofiles='(cdhaus etc/%lein && exec vim profiles.clj)'
     alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
     alias vimscratch='vim -c Scratch'
