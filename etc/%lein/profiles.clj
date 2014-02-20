@@ -19,11 +19,12 @@
 ;;        guns <self@sungpae.com>                    /######  /#
 ;;                                                  /     ###/
 
-{:user {:plugins [[lein-exec "LATEST"]
+{:user {:plugins [[lein-ancient "LATEST"]
+                  [lein-exec "LATEST"]
+                  [jonase/eastwood "LATEST"]
                   [lein-kibit "LATEST"]
-                  [lein-ancient "LATEST"]
                   [lein-nodisassemble "LATEST"]
-                  [jonase/eastwood "LATEST"]]
+                  [lein-gorilla "LATEST"]]
         :dependencies [[org.clojure/tools.namespace "LATEST"]
                        [org.clojure/tools.trace "LATEST"]
                        [com.taoensso/timbre "LATEST"]
