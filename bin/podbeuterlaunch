@@ -1,7 +1,0 @@
-#!/bin/sh
-
-if killall -0 podbeuter >/dev/null 2>&1; then
-    exit 1
-else
-    exec cert exec -f ~/.certificates/newsbeuter.crt podbeuter
-fi

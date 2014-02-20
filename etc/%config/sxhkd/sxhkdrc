@@ -187,10 +187,6 @@ alt + F9
 alt + shift + F9
 	urxvt-client -e tmuxlaunch -d
 
-alt + F10
-	T='♻ newsbeuter ♻'; \
-	wmctrl -a "$T" || urxvt-client -cd ~/Downloads -title "$T" -e newsbeuterlaunch
-
 F12
 	T='✉ Mutt ✉'; \
 	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || urxvt-client -cd ~/Downloads -title "$T" -e muttlaunch
