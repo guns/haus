@@ -175,7 +175,7 @@ augroup GUNS
         \ setlocal filetype=muttrc
 
     " Archive browsing {{{1
-    autocmd BufReadCmd *.xpi,*.pk3
+    autocmd BufReadCmd *.pk3
         \ call zip#Browse(expand("<amatch>"))
     autocmd BufReadCmd *.gem
         \ call tar#Browse(expand("<amatch>"))
