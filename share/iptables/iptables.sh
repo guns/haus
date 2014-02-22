@@ -73,12 +73,12 @@ iptables --append    DROPINV --jump DROP
 # Inbound rules
 #
 
+# Allow established traffic
+iptables --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+
 # Allow loopback traffic
 iptables --append INPUT  --in-interface  lo --jump ACCEPT
 # iptables --append OUTPUT --out-interface lo --jump ACCEPT
-
-# Allow established traffic
-iptables --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
 
 # Allow ICMP
 iptables --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
