@@ -209,6 +209,7 @@ let g:gundo_auto_preview = 0
 let g:ScreenImpl = 'Tmux'
 
 " Plugin: UltiSnips
+let g:UltiSnipsNoPythonWarning = 1
 let g:UltiSnipsEditSplit = 'vertical'
 let g:UltiSnipsSnippetsDir = '~/.vim/bundle/ultisnips/UltiSnips'
 let g:UltiSnipsListSnippets = '<4-`>'
