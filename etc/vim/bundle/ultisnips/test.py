@@ -71,8 +71,6 @@ EA = "#" # Expand anonymous
 COMPL_KW = chr(24)+chr(14)
 COMPL_ACCEPT = chr(25)
 
-NUMBER_OF_RETRIES_FOR_EACH_TEST = 4
-
 def running_on_windows():
     if platform.system() == "Windows":
         return "Does not work on Windows."
@@ -240,7 +238,7 @@ class VimInterfaceWindows(VimInterface):
 
 class _VimTest(unittest.TestCase):
     snippets = ("dummy", "donotdefine")
-    snippets_test_file = ("", "")  # filetype, file content
+    files = {}
     text_before = " --- some text before --- \n\n"
     text_after =  "\n\n --- some text after --- "
     expected_error = ""
@@ -275,7 +273,7 @@ class _VimTest(unittest.TestCase):
         if self.expected_error:
             self.assertRegexpMatches(self.output, self.expected_error)
             return
-        for i in range(NUMBER_OF_RETRIES_FOR_EACH_TEST):
+        for i in range(self.retries):
             if self.output != wanted:
                 # Redo this, but slower
                 self.sleeptime += 0.02
@@ -291,17 +289,18 @@ class _VimTest(unittest.TestCase):
     def _options_off(self):
         pass
 
-    def _create_snippet_file(self, ft, content):
-        """Create a snippet file and makes sure that it is found on the
-        runtimepath to be parsed."""
-        self._temporary_directory = tempfile.mkdtemp(prefix="UltiSnips_Test")
-        snippet_dir = random_string(20)
-        abs_snippet_dir = os.path.join(self._temporary_directory, snippet_dir)
-        os.mkdir(abs_snippet_dir)
-        with open(os.path.join(abs_snippet_dir, "%s.snippets" % ft), "w") as snippet_file:
-            snippet_file.write(dedent(content + "\n"))
-        self.vim.send(":let g:UltiSnipsSnippetDirectories=['%s']\n" % snippet_dir)
-        self.vim.send(""":set runtimepath=$VIMRUNTIME,%s,.\n""" % self._temporary_directory)
+    def _create_file(self, file_path, content):
+        """Creates a file in the runtimepath that is created for this test."""
+        if not self._temporary_directory:
+            self._temporary_directory = tempfile.mkdtemp(prefix="UltiSnips_Test")
+            self.vim.send(""":set runtimepath=$VIMRUNTIME,.,%s\n""" % self._temporary_directory)
+        abs_path = os.path.join(self._temporary_directory, *file_path.split("/"))
+        try:
+            os.makedirs(os.path.dirname(abs_path))
+        except OSError:
+            pass
+        with open(abs_path, "w") as file_handle:
+            file_handle.write(dedent(content + "\n"))
 
     def setUp(self):
         reason_for_skipping = self.skip_if()
@@ -318,7 +317,7 @@ class _VimTest(unittest.TestCase):
         self.send_py("UltiSnips_Manager._reset()")
 
         # Make it unlikely that we do parse any shipped snippets.
-        self.send(":let g:UltiSnipsSnippetDirectories=['<un_def_ined>']\n")
+        self.send(":let g:UltiSnipsSnippetDirectories=['us']\n")
 
         # Clear the buffer
         self.send("bggVGd")
@@ -327,21 +326,23 @@ class _VimTest(unittest.TestCase):
             self.snippets = ( self.snippets, )
 
         for s in self.snippets:
-            sv,content = s[:2]
+            sv, content = s[:2]
             description = ""
             options = ""
+            priority = 0
             if len(s) > 2:
                 description = s[2]
             if len(s) > 3:
                 options = s[3]
+            if len(s) > 4:
+                priority = s[4]
 
-            self.send_py("UltiSnips_Manager.add_snippet(%r, %r, %r, %r)" %
-                (sv, content, description, options))
+            self.send_py("UltiSnips_Manager.add_snippet(%r, %r, %r, %r, priority=%i)" %
+                (sv, content, description, options, priority))
 
-        ft, file_data = self.snippets_test_file
         self._temporary_directory = ""
-        if ft:
-            self._create_snippet_file(ft, file_data)
+        for name, content in self.files.items():
+            self._create_file(name, content)
 
         if not self.interrupt:
             # Enter insert mode
@@ -378,52 +379,68 @@ class _VimTest(unittest.TestCase):
 ###########################################################################
 # Snippet Definition Parsing  {{{#
 class ParseSnippets_SimpleSnippet(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet testsnip "Test Snippet" b!
         This is a test snippet!
         endsnippet
-        """)
+        """}
     keys = "testsnip" + EX
     wanted = "This is a test snippet!"
 
 class ParseSnippets_MissingEndSnippet(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet testsnip "Test Snippet" b!
         This is a test snippet!
-        """)
+        """}
     keys = "testsnip" + EX
     wanted = "testsnip" + EX
     expected_error = r"Missing 'endsnippet' for 'testsnip' in \S+:4"
 
 class ParseSnippets_UnknownDirective(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         unknown directive
-        """)
+        """}
     keys = "testsnip" + EX
     wanted = "testsnip" + EX
     expected_error = r"Invalid line 'unknown directive' in \S+:2"
 
+class ParseSnippets_InvalidPriorityLine(_VimTest):
+    files = { "us/all.snippets": r"""
+        priority - 50
+        """}
+    keys = "testsnip" + EX
+    wanted = "testsnip" + EX
+    expected_error = r"Invalid priority '- 50' in \S+:2"
+
+class ParseSnippets_InvalidPriorityLine1(_VimTest):
+    files = { "us/all.snippets": r"""
+        priority
+        """}
+    keys = "testsnip" + EX
+    wanted = "testsnip" + EX
+    expected_error = r"Invalid priority '' in \S+:2"
+
 class ParseSnippets_ExtendsWithoutFiletype(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         extends
-        """)
+        """}
     keys = "testsnip" + EX
     wanted = "testsnip" + EX
     expected_error = r"'extends' without file types in \S+:2"
 
 class ParseSnippets_ClearAll(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet testsnip "Test snippet"
         This is a test.
         endsnippet
 
         clearsnippets
-        """)
+        """}
     keys = "testsnip" + EX
     wanted = "testsnip" + EX
 
 class ParseSnippets_ClearOne(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet testsnip "Test snippet"
         This is a test.
         endsnippet
@@ -433,12 +450,12 @@ class ParseSnippets_ClearOne(_VimTest):
         endsnippet
 
         clearsnippets toclear
-        """)
+        """}
     keys = "toclear" + EX + "\n" + "testsnip" + EX
     wanted = "toclear" + EX + "\n" + "This is a test."
 
 class ParseSnippets_ClearTwo(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet testsnip "Test snippet"
         This is a test.
         endsnippet
@@ -448,13 +465,13 @@ class ParseSnippets_ClearTwo(_VimTest):
         endsnippet
 
         clearsnippets testsnip toclear
-        """)
+        """}
     keys = "toclear" + EX + "\n" + "testsnip" + EX
     wanted = "toclear" + EX + "\n" + "testsnip" + EX
 
 
 class _ParseSnippets_MultiWord(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet /test snip/
         This is a test.
         endsnippet
@@ -466,7 +483,7 @@ class _ParseSnippets_MultiWord(_VimTest):
         snippet "snippet test" "Another snippet" b
         This is yet another test.
         endsnippet
-        """)
+        """}
 class ParseSnippets_MultiWord_Simple(_ParseSnippets_MultiWord):
     keys = "test snip" + EX
     wanted = "This is a test."
@@ -478,7 +495,7 @@ class ParseSnippets_MultiWord_Description_Option(_ParseSnippets_MultiWord):
     wanted = "This is yet another test."
 
 class _ParseSnippets_MultiWord_RE(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet /[d-f]+/ "" r
         az test
         endsnippet
@@ -490,7 +507,7 @@ class _ParseSnippets_MultiWord_RE(_VimTest):
         snippet "(test ?)+" "" r
         re-test
         endsnippet
-        """)
+        """}
 class ParseSnippets_MultiWord_RE1(_ParseSnippets_MultiWord_RE):
     keys = "abc def" + EX
     wanted = "abc az test"
@@ -502,44 +519,44 @@ class ParseSnippets_MultiWord_RE3(_ParseSnippets_MultiWord_RE):
     wanted = "re-test"
 
 class ParseSnippets_MultiWord_Quotes(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet "test snip"
         This is a test.
         endsnippet
-        """)
+        """}
     keys = "test snip" + EX
     wanted = "This is a test."
 class ParseSnippets_MultiWord_WithQuotes(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet !"test snip"!
         This is a test.
         endsnippet
-        """)
+        """}
     keys = '"test snip"' + EX
     wanted = "This is a test."
 
 class ParseSnippets_MultiWord_NoContainer(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet test snip
         This is a test.
         endsnippet
-        """)
+        """}
     keys = "test snip" + EX
     wanted = keys
     expected_error = "Invalid multiword trigger: 'test snip' in \S+:2"
 
 class ParseSnippets_MultiWord_UnmatchedContainer(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         snippet !inv snip/
         This is a test.
         endsnippet
-        """)
+        """}
     keys = "inv snip" + EX
     wanted = keys
     expected_error = "Invalid multiword trigger: '!inv snip/' in \S+:2"
 
 class ParseSnippets_Global_Python(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
         global !p
         def tex(ins):
             return "a " + ins + " b"
@@ -552,12 +569,12 @@ class ParseSnippets_Global_Python(_VimTest):
         snippet ac
         x `!p snip.rv = tex("jon")` y
         endsnippet
-        """)
+        """}
     keys = "ab" + EX + "\nac" + EX
     wanted = "x a bob b y\nx a jon b y"
 
 class ParseSnippets_Global_Local_Python(_VimTest):
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
 global !p
 def tex(ins):
     return "a " + ins + " b"
@@ -567,7 +584,7 @@ snippet ab
 x `!p first = tex("bob")
 snip.rv = "first"` `!p snip.rv = first` y
 endsnippet
-        """)
+        """}
     keys = "ab" + EX
     wanted = "x first a bob b y"
 # End: Snippet Definition Parsing  #}}}
@@ -1717,6 +1734,10 @@ class Visual_LineSelect_CheckIndentWithTS_NoOverwrite(_VimTest):
     snippets = ("test", "beg\n\t${0:${VISUAL}}\nend")
     keys = "hello\nnice\nworld" + ESC + "Vkk" + EX + "test" + EX
     wanted = "beg\n\thello\n\tnice\n\tworld\nend"
+class Visual_LineSelect_DedentLine(_VimTest):
+    snippets = ("if", "if {\n\t${VISUAL}$0\n}")
+    keys = "if" + EX + "one\n\ttwo\n\tthree" + ESC + ARR_U*2 + "V" + ARR_D + EX + "\tif" + EX
+    wanted = "if {\n\tif {\n\t\tone\n\t\ttwo\n\t}\n\tthree\n}"
 
 class VisualTransformation_SelectOneWord(_VimTest):
     snippets = ("test", r"h${VISUAL/./\U$0\E/g}b")
@@ -1932,7 +1953,7 @@ class RecTabStops_MirroredZeroTS_ECR(_VimTest):
     wanted = "[ [ one three three two ] four ]end"
 class RecTabStops_ChildTriggerContainsParentTextObjects(_VimTest):
     # https://bugs.launchpad.net/bugs/1191617
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
 global !p
 def complete(t, opts):
  if t:
@@ -1948,7 +1969,7 @@ snippet /form_for(.*){([^|]*)/ "form_for html options" rw!
 auto = autocomplete_options(t, match.group(2), attr=["id: ", "class: ", "title:  "])
 snip.rv = "form_for" + match.group(1) + "{"`$1`!p if (snip.c != auto) : snip.rv=auto`
 endsnippet
-""")
+"""}
     keys = "form_for user, namespace: some_namespace, html: {i" + EX + "i" + EX
     wanted = "form_for user, namespace: some_namespace, html: {(id: |class: |title:  )d: "
 # End: Recursive (Nested) Snippets  #}}}
@@ -2034,33 +2055,86 @@ class Multiple_ManySnippetsOneTrigger_ECR(_VimTest):
     keys = "test" + EX + " " + ESC + ESC + "ahi"
     wanted = "testhi"
 # End: Selecting Between Same Triggers  #}}}
-# Snippet Options  {{{#
-class SnippetOptions_OverwriteExisting_ECR(_VimTest):
+# Snippet Priority  {{{#
+class SnippetPriorities_MultiWordTriggerOverwriteExisting(_VimTest):
+    snippets = (
+     ("test me", "${1:Hallo}", "Types Hallo"),
+     ("test me", "${1:World}", "Types World"),
+     ("test me", "We overwrite", "Overwrite the two", "", 1),
+    )
+    keys = "test me" + EX
+    wanted = "We overwrite"
+class SnippetPriorities_DoNotCareAboutNonMatchings(_VimTest):
+    snippets = (
+     ("test1", "Hallo", "Types Hallo"),
+     ("test2", "We overwrite", "Overwrite the two", "", 1),
+    )
+    keys = "test1" + EX
+    wanted = "Hallo"
+class SnippetPriorities_OverwriteExisting(_VimTest):
     snippets = (
      ("test", "${1:Hallo}", "Types Hallo"),
      ("test", "${1:World}", "Types World"),
-     ("test", "We overwrite", "Overwrite the two", "!"),
+     ("test", "We overwrite", "Overwrite the two", "", 1),
     )
     keys = "test" + EX
     wanted = "We overwrite"
-class SnippetOptions_OverwriteTwice_ECR(_VimTest):
+class SnippetPriorities_OverwriteTwice_ECR(_VimTest):
     snippets = (
         ("test", "${1:Hallo}", "Types Hallo"),
         ("test", "${1:World}", "Types World"),
-        ("test", "We overwrite", "Overwrite the two", "!"),
-        ("test", "again", "Overwrite again", "!"),
+        ("test", "We overwrite", "Overwrite the two", "", 1),
+        ("test", "again", "Overwrite again", "", 2),
     )
     keys = "test" + EX
     wanted = "again"
-class SnippetOptions_OverwriteThenChoose_ECR(_VimTest):
+class SnippetPriorities_OverwriteThenChoose_ECR(_VimTest):
     snippets = (
         ("test", "${1:Hallo}", "Types Hallo"),
         ("test", "${1:World}", "Types World"),
-        ("test", "We overwrite", "Overwrite the two", "!"),
-        ("test", "No overwrite", "Not overwritten", ""),
+        ("test", "We overwrite", "Overwrite the two", "", 1),
+        ("test", "No overwrite", "Not overwritten", "", 1),
     )
     keys = "test" + EX + "1\n\n" + "test" + EX + "2\n"
     wanted = "We overwrite\nNo overwrite"
+class SnippetPriorities_AddedHasHigherThanFile(_VimTest):
+    files = { "us/all.snippets": r"""
+        snippet test "Test Snippet" b
+        This is a test snippet
+        endsnippet
+        """}
+    snippets = (
+        ("test", "We overwrite", "Overwrite the two", "", 1),
+    )
+    keys = "test" + EX
+    wanted = "We overwrite"
+class SnippetPriorities_FileHasHigherThanAdded(_VimTest):
+    files = { "us/all.snippets": r"""
+        snippet test "Test Snippet" b
+        This is a test snippet
+        endsnippet
+        """}
+    snippets = (
+        ("test", "We do not overwrite", "Overwrite the two", "", -1),
+    )
+    keys = "test" + EX
+    wanted = "This is a test snippet"
+class SnippetPriorities_FileHasHigherThanAdded(_VimTest):
+    files = { "us/all.snippets": r"""
+        priority -3
+        snippet test "Test Snippet" b
+        This is a test snippet
+        endsnippet
+        """}
+    snippets = (
+        ("test", "We overwrite", "Overwrite the two", "", -5),
+    )
+    keys = "test" + EX
+    wanted = "This is a test snippet"
+# End: Snippet Priority  #}}}
+
+
+# Snippet Options  {{{#
 class SnippetOptions_OnlyExpandWhenWSInFront_Expand(_VimTest):
     snippets = ("test", "Expand me!", "", "b")
     keys = "test" + EX
@@ -2278,14 +2352,6 @@ class MultiWordSnippet_Simple(_VimTest):
     snippets = ("test me", "Expand me!")
     keys = "test me" + EX
     wanted = "Expand me!"
-class MultiWord_SnippetOptions_OverwriteExisting_ECR(_VimTest):
-    snippets = (
-     ("test me", "${1:Hallo}", "Types Hallo"),
-     ("test me", "${1:World}", "Types World"),
-     ("test me", "We overwrite", "Overwrite the two", "!"),
-    )
-    keys = "test me" + EX
-    wanted = "We overwrite"
 class MultiWord_SnippetOptions_OnlyExpandWhenWSInFront_Expand(_VimTest):
     snippets = ("test it", "Expand me!", "", "b")
     keys = "test it" + EX
@@ -2395,16 +2461,16 @@ class Anon_Trigger_Opts(_AnonBase):
 class _AddFuncBase(_VimTest):
     args = ""
     def _options_on(self):
-        self.send(":call UltiSnips#AddSnippet("
+        self.send(":call UltiSnips#AddSnippetWithPriority("
                 + self.args + ')\n')
 
 class AddFunc_Simple(_AddFuncBase):
-    args = '"test", "simple expand", "desc", ""'
+    args = '"test", "simple expand", "desc", "", "all", 0'
     keys = "abc test" + EX
     wanted = "abc simple expand"
 
 class AddFunc_Opt(_AddFuncBase):
-    args = '".*test", "simple expand", "desc", "r"'
+    args = '".*test", "simple expand", "desc", "r", "all", 0'
     keys = "abc test" + EX
     wanted = "simple expand"
 # End: AddSnippet Function  #}}}
@@ -2467,7 +2533,7 @@ class ProperIndenting_AutoIndentAndNewline_ECR(_VimTest):
 class ProperIndenting_FirstLineInFile_ECR(_VimTest):
     text_before = ""
     text_after = ""
-    snippets_test_file = ("all", r"""
+    files = { "us/all.snippets": r"""
 global !p
 def complete(t, opts):
   if t:
@@ -2483,7 +2549,7 @@ endglobal
 snippet '^#?inc' "#include <>" !r
 #include <$1`!p snip.rv = complete(t[1], ['cassert', 'cstdio', 'cstdlib', 'cstring', 'fstream', 'iostream', 'sstream'])`>
 endsnippet
-        """)
+        """}
     keys = "inc" + EX + "foo"
     wanted = "#include <foo>"
 class ProperIndenting_FirstLineInFileComplete_ECR(ProperIndenting_FirstLineInFile_ECR):
@@ -3138,7 +3204,7 @@ if __name__ == '__main__':
         p = optparse.OptionParser("%prog [OPTIONS] <test case names to run>")
 
         p.set_defaults(session="vim", interrupt=False,
-                verbose=False, interface="screen")
+                verbose=False, interface="screen", retries=4)
 
         p.add_option("-v", "--verbose", dest="verbose", action="store_true",
             help="print name of tests as they are executed")
@@ -3152,6 +3218,10 @@ if __name__ == '__main__':
              "to interactively test the snippet in vim. You must give " \
              "exactly one test case on the cmdline. The test will always fail."
         )
+        p.add_option("-r", "--retries", dest="retries", type=int,
+                help="How often should each test be retried before it is "
+                "considered failed. Works around flakyness in the terminal "
+                "multiplexer and race conditions in writing to the file system.")
 
         o, args = p.parse_args()
         if o.interface not in ("screen", "tmux"):
@@ -3172,8 +3242,6 @@ if __name__ == '__main__':
             vim = VimInterfaceScreen(options.session)
         elif options.interface == "tmux":
             vim = VimInterfaceTmux(options.session)
-
-
 
     vim.focus()
 
@@ -3216,12 +3284,12 @@ if __name__ == '__main__':
         for test in s:
             test.vim = vim
             test.interrupt = options.interrupt
+            test.retries = options.retries
             if len(selected_tests):
                 id = test.id().split('.')[1]
                 if not any([ id.startswith(t) for t in selected_tests ]):
                     continue
             suite.addTest(test)
-
 
     if options.verbose:
         v = 2

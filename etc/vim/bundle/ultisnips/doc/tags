@@ -1,7 +1,7 @@
 :UltiSnipsAddFiletypes	UltiSnips.txt	/*:UltiSnipsAddFiletypes*
 :UltiSnipsEdit	UltiSnips.txt	/*:UltiSnipsEdit*
 UltiSnips	UltiSnips.txt	/*UltiSnips*
-UltiSnips#AddSnippet	UltiSnips.txt	/*UltiSnips#AddSnippet*
+UltiSnips#AddSnippetWithPriority	UltiSnips.txt	/*UltiSnips#AddSnippetWithPriority*
 UltiSnips#Anon	UltiSnips.txt	/*UltiSnips#Anon*
 UltiSnips#SnippetsInCurrentScope	UltiSnips.txt	/*UltiSnips#SnippetsInCurrentScope*
 UltiSnips-acknowledgments	UltiSnips.txt	/*UltiSnips-acknowledgments*

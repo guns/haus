@@ -169,21 +169,17 @@ class SnippetManager(object):
 
     @err_to_scratch_buffer
     def add_snippet(self, trigger, value, description,
-                    options, ft="all", globals=None):
+            options, ft="all", priority=0):
         """Add a snippet to the list of known snippets of the given 'ft'."""
         self._added_snippets_provider.add_snippet(ft, SnippetDefinition(
-            trigger, value, description, options, globals or {})
+            priority, trigger, value, description, options, {})
         )
 
     @err_to_scratch_buffer
-    def expand_anon(self, value, trigger="", description="",
-                    options="", globals=None):
+    def expand_anon(self, value, trigger="", description="", options=""):
         """Expand an anonymous snippet right here."""
-        if globals is None:
-            globals = {}
-
         before = _vim.buf.line_till_cursor
-        snip = SnippetDefinition(trigger, value, description, options, globals)
+        snip = SnippetDefinition(0, trigger, value, description, options, {})
 
         if not trigger or snip.matches(before):
             self._do_snippet(snip, before)
@@ -400,9 +396,20 @@ class SnippetManager(object):
         possible matches.
         """
         filetypes = self._filetypes[_vim.buf.number][::-1]
-        snippets = []
+        matching_snippets = defaultdict(list)
         for provider in self._snippet_providers:
-            snippets.extend(provider.get_snippets(filetypes, before, possible))
+            for snippet in provider.get_snippets(filetypes, before, possible):
+                matching_snippets[snippet.trigger].append(snippet)
+        if not matching_snippets:
+            return []
+
+        # Now filter duplicates and only keep the one with the highest
+        # priority. Only keep the snippets with the highest priority.
+        snippets = []
+        for snippets_with_trigger in matching_snippets.values():
+            highest_priority = max(s.priority for s in snippets_with_trigger)
+            snippets.extend(s for s in snippets_with_trigger
+                    if s.priority == highest_priority)
         return snippets
 
     def _do_snippet(self, snippet, before):

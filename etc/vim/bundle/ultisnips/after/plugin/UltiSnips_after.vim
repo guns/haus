@@ -6,6 +6,9 @@
 
 if exists('did_UltiSnips_after') || &cp || version < 700
 	finish
+elseif !(has('python') || has('python3'))
+    let did_UltiSnips_after=1
+    finish
 endif
 
 call UltiSnips#map_keys#MapKeys()
