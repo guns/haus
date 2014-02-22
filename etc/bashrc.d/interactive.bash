@@ -1092,7 +1092,7 @@ ALIAS mk='make' \
       mkj4='make -j4' \
       mkj8='make -j8' \
       mke='make -e' \
-      mkej='make -ej\$\(grep -c ^processor /proc/cpuinfo\)'
+      mkej='make -ej\$\(grep -c ^processor /proc/cpuinfo\)' \
       mkb='make -B' \
       mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
 
