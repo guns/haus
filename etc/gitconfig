@@ -32,7 +32,8 @@
     tool = vimdiff
 
 [push]
-    default = simple
+    # Similar to the modern default, 'simple'
+    default = current
 
 [rerere]
     enabled = true
