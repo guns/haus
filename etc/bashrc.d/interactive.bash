@@ -1332,16 +1332,6 @@ HAVE mysql && {
 }
 
 HAVE psql && {
-    with-pgpass() {
-        if [[ ! -e ~/.pgpass ]]; then
-            > ~/.pgpass
-            command chmod 0600 ~/.pgpass
-            echo "*:*:*:*:$(pass "$HOSTNAME/postgresql/guns")" > ~/.pgpass
-            ((sleep 1; command rm ~/.pgpass) &) &
-        fi
-        "$@"
-    }; TCOMP exec with-pgpass
-    psql() { with-pgpass command psql "${@:-postgres}"; }
     ALIAS aspostgres='sudo -Hiu postgres'
 }
 
