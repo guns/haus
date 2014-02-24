@@ -753,7 +753,8 @@ HAVE htop && {
 ### Switch User
 
 ALIAS s='sudo -H' \
-      root='exec sudo -Hs'
+      root='exec sudo -Hs' \
+      asguns='sudo -Hu guns'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 ### Network
