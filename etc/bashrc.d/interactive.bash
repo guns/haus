@@ -63,10 +63,8 @@ else
     export RAILS_ENV='development' RACK_ENV='development'
 fi
 
-# Node.js
-if [[ -d /opt/doctorjs/lib/jsctags && $NODE_PATH != */opt/doctorjs/lib/jsctags* ]]; then
-    export NODE_PATH="/opt/doctorjs/lib/jsctags${NODE_PATH}"
-fi
+# Go
+export GOPATH="$HOME/.go"
 
 # OS X
 if __OS_X__; then
