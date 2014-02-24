@@ -515,6 +515,9 @@ ALIAS mt='mount -v' \
     complete -F _mtlabel mtlabel
 }
 
+# findmnt
+ALIAS fm='findmnt'
+
 # fusermount
 ALIAS fumt='fusermount -u'
 
