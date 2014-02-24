@@ -19,6 +19,7 @@ class SshuttleWrapper
     options.sshuttle ||= 'sshuttle'
     options.excluded ||= Set.new
     options.commands ||= []
+    options.firewall_commands ||= []
     options.port ||= 3346 # IANA "trnsprntproxy"
   end
 
@@ -42,8 +43,8 @@ class SshuttleWrapper
         options.commands << arg
       end
 
-      opt.on '-f', '--firewall-only', 'Setup outgoing iptables rules only' do
-        options.firewall_only = true
+      opt.on '-f', '--firewall-command CMD', 'Execute CMD before appending final OUTPUT LOG+DROP' do |arg|
+        options.firewall_commands << arg
       end
 
       opt.on '-p', '--port N', Integer, 'Local proxy port [DEFAULT: %s]' % options.port do |arg|
@@ -96,6 +97,10 @@ class SshuttleWrapper
     excluded.each do |net|
       sh *%W[iptables --append OUTPUT --destination #{net} --jump ACCEPT]
     end
+    # Execute firewall hooks now
+    options.firewall_commands.each do |cmd|
+      sh cmd
+    end
     # Log the rest
     sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[OUTPUT DROPPED] '}]
   end
@@ -127,8 +132,6 @@ class SshuttleWrapper
     raise 'Could not parse ssh host argument' unless host
 
     iptables_secure_outgoing host, port
-
-    return if options.firewall_only
 
     start_server ssh_host, xargs do
       options.commands.each { |cmd| sh cmd }
