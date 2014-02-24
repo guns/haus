@@ -702,7 +702,7 @@ __LINUX__ && {
 
 ### Processes
 
-# kill killall
+# kill
 ALIAS k='kill' \
       k9='kill -9' \
       khup='kill -HUP' \
@@ -711,7 +711,7 @@ ALIAS k='kill' \
       kcont='kill -CONT' \
       kusr1='kill -USR1' \
       kquit='kill -QUIT'
-ALIAS ka='killall -v' \
+ALIAS ka='killall -e -v' \
       ka9='ka -9' \
       kahup='ka -HUP' \
       kaint='ka -INT' \
@@ -719,6 +719,14 @@ ALIAS ka='killall -v' \
       kacont='ka -CONT' \
       kausr1='ka -USR1' \
       kaquit='ka -QUIT'
+ALIAS pk='pkill -x' \
+      pk9='pk -9' \
+      pkhup='pk -HUP' \
+      pkint='pk -INT' \
+      pkstop='pk -STOP' \
+      pkcont='pk -CONT' \
+      pkusr1='pk -USR1' \
+      pkquit='pk -QUIT'
 
 # ps (traditional BSD / SysV flags seem to be the most portable)
 alias p1='ps caxo comm'

@@ -19,7 +19,7 @@ class Mediactl
   end
 
   def alive? name
-    system 'killall', '-0', name
+    system 'pkill', '-x', '-0', name
   end
 
   def pianobar cmd
