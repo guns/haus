@@ -185,8 +185,7 @@
 ;; Benchmarking
 ;;
 
-(require 'criterium.core
-         'taoensso.timbre.profiling)
+(require 'criterium.core)
 
 (defmacro bm [expr]
   `(do (printf "%s\n\n" '~expr)
@@ -198,8 +197,12 @@
        (criterium.core/bench ~expr)
        (newline)))
 
-(defmacro prof [& args]
-  `(taoensso.timbre.profiling/p ~@args))
+(try
+  (require 'taoensso.timbre.profiling)
 
-(defmacro doprofile [& body]
-  `(taoensso.timbre.profiling/profile :debug (keyword `profile#) ~@body))
+  (defmacro prof [& args]
+    `(taoensso.timbre.profiling/p ~@args))
+
+  (defmacro doprofile [& body]
+    `(taoensso.timbre.profiling/profile :debug (keyword `profile#) ~@body))
+  (catch Throwable _))
