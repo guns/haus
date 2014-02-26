@@ -24,7 +24,7 @@ class SshuttleWrapper
   end
 
   def parser
-    @parser ||= CLI::SuperParser.new nil, 20 do |opt|
+    @parser ||= CLI::SuperParser.new nil, 28 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Tunnel ALL traffic through sshuttle and prevent any other outgoing
         connections.
@@ -34,21 +34,29 @@ class SshuttleWrapper
         Options are a superset of sshuttle options, although sshuttle option
         arguments must be passed as a single shell parameter.
 
-        e.g. #{File.basename $0} --python=/usr/bin/python2 user@arch-box.com
+        e.g. #{File.basename $0} --python=/usr/bin/python2 user@host
 
         Options:
       BANNER
 
-      opt.on '-c', '--command STRING', 'Command to run after sshuttle terminates; can be specified multiple times' do |arg|
+      opt.on '-c', '--command CMD', 'Command(s) to run after sshuttle terminates' do |arg|
         options.commands << arg
       end
 
-      opt.on '-f', '--firewall-command CMD', 'Execute CMD before appending final OUTPUT LOG+DROP' do |arg|
+      opt.on '-f', '--firewall-command CMD', 'Command(s) to run before appending final OUTPUT LOG+DROP' do |arg|
         options.firewall_commands << arg
       end
 
       opt.on '-p', '--port N', Integer, 'Local proxy port [DEFAULT: %s]' % options.port do |arg|
         options.port = arg
+      end
+
+      opt.on '-x', '--exclude SUBNET', "Same as sshuttle's --exclude" do |arg|
+        options.excluded << arg
+      end
+
+      opt.on '--sshuttle PATH', 'Path to sshuttle executable [DEFAULT: %s]' % options.sshuttle do |arg|
+        options.sshuttle = File.expand_path arg
       end
 
       opt.on '-q', '--quiet' do
@@ -59,14 +67,6 @@ class SshuttleWrapper
       opt.on '-v', '--verbose' do
         options.quiet = false
         options.verbose = true
-      end
-
-      opt.on '-x', '--exclude SUBNET', "Same as sshuttle's --exclude" do |arg|
-        options.excluded << arg
-      end
-
-      opt.on '--sshuttle PATH', 'Path to sshuttle executable [DEFAULT: %s]' % options.sshuttle do |arg|
-        options.sshuttle = File.expand_path arg
       end
     end
   end
