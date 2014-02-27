@@ -1601,9 +1601,10 @@ elif __LINUX__; then
 
         alias paclog='pager /var/log/pacman.log'
         pacinstallfile() {
-            local OPTIND OPTARG opt force
+            local OPTIND OPTARG opt asdeps force
             while getopts :f opt; do
                 case $opt in
+                d) asdeps='--asdeps';;
                 f) force='--force';;
                 esac
             done
@@ -1617,7 +1618,7 @@ elif __LINUX__; then
                 pkgs+=("file://$(expand_path "$pkg")")
             done
 
-            pacman -U $force "${pkgs[@]}"
+            pacman -U $asdeps $force "${pkgs[@]}"
         }
         _xspecs['pacinstallfile']='!*.pkg.tar.xz'
         complete -F _filedir_xspec pacinstallfile
