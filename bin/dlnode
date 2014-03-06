@@ -1,0 +1,122 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2014 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+require 'uri'
+require 'shellwords'
+require 'nokogiri'
+
+class DLNode
+  DEFAULTS = {
+    :dir => '.',
+    :format => nil,
+    :user_agent => 'Mozilla/5.0'
+  }
+
+  def initialize opts = {}
+    @dir, @format, @user_agent =
+      DEFAULTS.merge(opts).values_at :dir, :format, :user_agent
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Download nested HTML resources. Uses cURL.
+
+        Usage: #{File.basename __FILE__} [options] url [node-link-regexp …] leaf-css3-selector:attr
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--dir PATH', 'Download directory; current working directory by default' do |arg|
+        @dir = File.expand_path arg
+      end
+
+      opt.on '-f', '--format BASE-%d.ext', 'Rename resources with given format spec' do |arg|
+        @format = arg
+      end
+
+      opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
+        @user_agent = arg
+      end
+    end
+  end
+
+  def get url
+    buf = IO.popen %W[curl -sfLA #{@user_agent} #{url}] do |io|
+      io.read
+    end
+
+    if $?.exitstatus.zero?
+      $stderr.print "\e[32m.\e[0m"
+      Nokogiri::HTML.parse buf
+    else
+      $stderr.print "\e[31m.\e[0m\nFAILED to fetch #{url}\n"
+    end
+  end
+
+  def url_basename url
+    File.basename URI.parse(url).path
+  end
+
+  def save! url, idx, dir, format = nil
+    f = url_basename url
+    path = File.join dir, (format ? format % [idx, File.extname(f)] : f)
+
+    warn "#{url} → #{path}"
+
+    if File.exists? path
+      warn 'File exists!'
+    else
+      cmd = %W[curl -#fLA #{@user_agent} -o #{path} #{url}]
+      system *cmd
+      if not $?.exitstatus.zero?
+        $stderr.print "\e[31mFAILED:\e[0m "
+        puts cmd.shelljoin
+      end
+    end
+  end
+
+  def get_leaves url, *patterns
+    uri = URI.parse url
+    html = get url
+
+    if patterns.size > 1
+      hrefs = html.css('a').map { |a| URI.join(url, a.attr('href')).to_s rescue nil }.compact
+      nodes = hrefs.select { |href| href =~ Regexp.new(patterns.first) }.uniq
+      nodes.map { |href| get_leaves href, *patterns.drop(1) }.flatten
+    else
+      sel, attr = patterns.first.split ':', 2
+      html.css(sel).map do |n|
+        URI.join(url, (attr ? n.attr(attr) : n.text)).to_s
+      end
+    end
+  end
+
+  def download! url, *patterns
+    urls = get_leaves url, *patterns
+
+    if urls.empty?
+      warn "\nNo resources found!"
+    else
+      warn "\nDownloading %d resource(s)" % urls.size
+      FileUtils.mkdir_p @dir
+      urls.each_with_index do |url, i|
+        save! url, i + 1, @dir, @format
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size > 1
+    download! *args
+  end
+end
+
+$0 = File.basename(__FILE__) and DLNode.new.run ARGV if $0 == __FILE__
