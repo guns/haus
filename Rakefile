@@ -148,6 +148,7 @@ task :env do
       { :base => "#{@vim}/AnsiEsc.vim",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/applescript.vim",        :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/BufOnly.vim",            :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/boxdraw",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",        :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/CountJump",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/delimitMate",            :branch => %w[master],      :files => :pathogen },

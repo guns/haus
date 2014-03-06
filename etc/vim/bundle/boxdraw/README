@@ -1,0 +1,156 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=173
+
+Summary
+-------
+ * Draw diagrams and tables using "real box drawing characters" (AKA ANSI
+art).
+ * Move rectangular/linear blocks of text around.
+ * Trace box-drawing typeset diagrams -- follow the lines, etc.
+
+Detailed description
+--------------------
+These scripts facilitate drawing simple 'ANSI' graphic containing box
+drawing characters (not just '+', '-' and '|', but REAL box drawing
+characters).  It can be useful to draw diagrams and fancy tables (at
+least, I use it this way).
+
+Upon sourcing the script defines several macros:
+
+<shift+arrow> -- moves cursor in specified direction leaving trail of
+box drawing characters, making all joins and crossings.
+g+<arrow> -- follow line of boxdrawing characters until it reaches
+intersection or ends.
+<shift+arrow> in visual mode -- move selected rectangular block in
+specified direction.
+\e -- ends box drawing mode (unmap shift+arrows macros and restore
+virtualedit value)
+\b -- restarts box drawing (map shift+arrows macros and set virtual
+      edit=all)
+\s -- selects 'single-line' boxdrawing characters
+\d -- selects 'double-line' boxdrawing characters
+\a -- convert all characters in selection into ascii '+', '-', '|' (utf8
+      only, not implemented)
+("\" prefix may be changed by changing mapleader variable, see :h mapleader)
+
+When rectangular block is selected, it can be moved around using
+<shift-arrow> keys. Unfortunately, as of version 6.1 multibyte
+characters and rectangular blocks do not live together too good, so this
+feature is experimental.
+
+When line block is selected, <shift-up> and <shift-down> moves it up or down
+nondestructively, <shift-left> decreases indent and <shift-up> increases
+indent.
+
+Currently box drawing is supported for utf8 and cp437 (DOS) encodings.
+
+Script does not use any "weird" box drawing characters from unicode set
+that are not present in, say, cp437. So, it is safe to save utf-8 file
+in any single byte encoding that contains regular single box drawing
+characters.
+This script also contains mapping that converts all boxdrawing
+characters in current selection into ascii '+', '-', '|'.
+
+If vim encoding is single byte, this script assumes cp437 (DOS). Most
+encodings have boxdrawing characters at the same place, however, some
+(notably, koi8-r) have them in different code postions.
+If you want to use it with encoding that contains such
+characters in diferent place, please drop me a note -- I will be happy
+to add support for that codepage too.
+
+To help you determine which boxdrawing characters are suppored by your
+terminal I have included file sampler.txt. Just type it (or cat it) on
+the termianal and encoding that labels the block that looks "right" will
+be your supported encoding.
+
+Note for PuTTY users
+--------------------
+
+It turns out that PuTTY does not translate Shift+Arrow combination into
+X key code (like xterm does), so mappings will not work for this
+terminal. I have modified initialization script to use <arrows> instead
+of <shift>+<arrows> in Unix environment.
+
+Perl scripts
+------------
+
+Some box-drawing related procedures are more naturally done with
+external scripts. These scripts take ascii standard input and produce
+utf8 encoded standard output.
+
+bdua2b.pl -- converts regular '+-|'-style drawing into single-line utf8
+  boxdrawing. This script has does not just blindly replace characters,
+  but instead looks to the neighbourhood and chooses boxdrawing
+  character that fits best. Use this script as a filter to convert
+  existing ascii drawings.
+  Option -ss selects single border characters, -sd -- double border,
+  -sh -- single vertical double horizontal, -sv single horizontal double
+  vertical.
+
+outline.pl -- outlines groups of similar characters in the input with
+  boxdrawing characters. Option -d makes output twice as wide, options
+  -s* select boxdrawing flavor as in previous script.
+  For example,
+
+  aaaacc
+  abbcc
+  ccbbc
+  cccb
+
+will be converted into
+
+  ┌───┬─┐
+  │┌─┬┘┌┘
+  ├┴┐└┐│
+  │ └┐├┘
+  └──┴┘
+
+or
+
+  ┌───────┬───┐
+  │ ┌───┬─┘ ┌─┘
+  ├─┴─┐ └─┐ │
+  │   └─┐ ├─┘
+  └─────┴─┘
+
+
+Both scripts were tested with ActivePerl 5.6.1.
+
+Plans:
+------
+* Support double boxes in a cleaner way.
+
+Installation
+------------
+Copy boxdraw.vim to the place where you normally keep vim scripts (e.g. ~/.vim
+or c:\vim\vimfiles) and source it every time you want to draw a diagram or nice
+table.
+
+You may wish also to add this to your menu by adding a line to your .gvimrc
+(_gvimrc) file (use actual path to boxdraw.vim):
+:menu Tools.Bo&x\ Draw :so ~/.vim/boxdraw.vim<CR>
+
+Environment
+-----------
+I run Windows and use boxdraw.vim in gvim (it supports utf-8 very
+nicely) and bd-single in vim (its support of utf-8 is kind of unclear
+for me). Both major Windows monospaced fonts (Courier New and Lucida
+Console) support wide range of Unicode characters, including box
+drawing.
+
+Why use box drawing characters?
+-------------------------------
+These characters are in Unicode standard for compatibility with wide
+range of existing 8-bit encodings that have them. The wording of Unicode
+standard discourages usage of such characters, other than for the
+purpose of converting between encodigns and storage of legacy data.
+Having said all that I found that sometimes a picture, even crude and
+primitive, is worth pages of explanations. Just about the only way to
+include picture in source code is to use ascii or "ansi" art. Ascii is
+more compatible, but "ansi" looks way better. Since I have to use
+Unicode to include cyrillic characters in comments anyway, I decided to
+stop on "ansi" art as a format of choice for in-source drawings.
+
+Author
+------
+Andrew Nikitin <nsg21@hotmail.com>
+
