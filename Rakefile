@@ -164,6 +164,7 @@ task :env do
       { :base => "#{@vim}/jslint.vim",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/lite-brite",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/matchit.zip",            :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/neomru.vim",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nerdcommenter",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nerdtree",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nginx.vim",              :branch => %w[master],      :files => :pathogen },
