@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: handlers.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 31 Jan 2014.
+" Last Modified: 21 Feb 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -242,6 +242,11 @@ function! unite#handlers#_on_buf_unload(bufname)  "{{{
   if type(unite) != type({})
     " Invalid unite.
     return
+  endif
+
+  if &l:statusline == unite#get_current_unite().statusline
+    " Restore statusline.
+    let &l:statusline = &g:statusline
   endif
 
   if unite.is_finalized
