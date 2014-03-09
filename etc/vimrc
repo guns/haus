@@ -286,7 +286,8 @@ call unite#filters#sorter_default#use(['sorter_rank'])
 
 " Plugin: EasyAlign
 let g:easy_align_delimiters = {
-    \ 't': { 'pattern': ':-' }
+    \ 't': { 'pattern': ':-' },
+    \ ';': { 'pattern': ';\+', 'ignore_groups': ['String'] }
     \ }
 
 """ MAPPINGS and AUTOCOMMANDS {{{1
