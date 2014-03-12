@@ -37,7 +37,7 @@ class DLNode
         @dir = File.expand_path arg
       end
 
-      opt.on '-f', '--format BASE-%d.ext', 'Rename resources with given format spec' do |arg|
+      opt.on '-f', '--format BASE-%02d', 'Rename resources with given format spec' do |arg|
         @format = arg
       end
 
@@ -64,9 +64,17 @@ class DLNode
     File.basename URI.parse(url).path
   end
 
+  def format_filename fmt, idx, file
+    if fmt.index '%s'
+      fmt % [idx, File.extname(file)]
+    else
+      (fmt % idx) << File.extname(file)
+    end
+  end
+
   def save! url, idx, dir, format = nil
     f = url_basename url
-    path = File.join dir, (format ? format % [idx, File.extname(f)] : f)
+    path = File.join dir, (format ? format_filename(format, idx, f) : f)
 
     warn "#{url} → #{path}"
 
@@ -78,15 +86,20 @@ class DLNode
       if not $?.exitstatus.zero?
         $stderr.print "\e[31mFAILED:\e[0m "
         puts cmd.shelljoin
+        return false
       end
     end
+
+    true
   end
 
   def get_leaves url, *patterns
     uri = URI.parse url
     html = get url
 
-    if patterns.size > 1
+    if html.nil?
+      []
+    elsif patterns.size > 1
       hrefs = html.css('a').map { |a| URI.join(url, a.attr('href')).to_s rescue nil }.compact
       nodes = hrefs.select { |href| href =~ Regexp.new(patterns.first) }.uniq
       nodes.map { |href| get_leaves href, *patterns.drop(1) }.flatten
@@ -100,6 +113,7 @@ class DLNode
 
   def download! url, *patterns
     urls = get_leaves url, *patterns
+    failures = 0
 
     if urls.empty?
       warn "\nNo resources found!"
@@ -107,8 +121,15 @@ class DLNode
       warn "\nDownloading %d resource(s)" % urls.size
       FileUtils.mkdir_p @dir
       urls.each_with_index do |url, i|
-        save! url, i + 1, @dir, @format
+        if not save! url, i + 1, @dir, @format
+          failures += 1
+        end
       end
+    end
+
+    if failures > 0
+      warn "\n#{failures} failure(s)"
+      false
     end
   end
 
