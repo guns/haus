@@ -557,12 +557,16 @@ snippet bind "binding" w
 	)
 endsnippet
 
-snippet def "def ^:const"
-(def ${1:^:const }$0)
+snippet def "def"
+(def $0)
 endsnippet
 
 snippet defd "def ^:dynamic"
 (def ^:dynamic *$0*)
+endsnippet
+
+snippet defp "def ^:private"
+(def ^:private $0)
 endsnippet
 
 snippet defo "defonce"
@@ -603,7 +607,7 @@ snippet defty "deftype" w
 (deftype $1 [$0])
 endsnippet
 
-snippet defp "defprotocol" w
+snippet defpr "defprotocol" w
 (defprotocol $0)
 endsnippet
 
