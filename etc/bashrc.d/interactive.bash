@@ -1134,7 +1134,7 @@ HAVE git && {
     # PS1 git status
     REQUIRE ~/.bashrc.d/git-prompt.sh
     gitps1() {
-        __ps1toggle__ '/\\w/\\w\$(__git_ps1 " → \[\033[3m\]%s\[\033[23m\]")'
+        __ps1toggle__ '/\\w/\\w\$(__git_ps1 "\ →\ \[\033[3m\]%s\[\033[23m\]")'
     }; gitps1
 }
 githubget() {
