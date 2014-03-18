@@ -557,10 +557,10 @@ noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
 noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
 " Plugin: vim-easy-align
-nmap <Leader>a <Plug>(EasyAlign)
-vmap <Leader>a <Plug>(EasyAlign)
-nmap <Leader>A <Plug>(LiveEasyAlign)
-vmap <Leader>A <Plug>(LiveEasyAlign)
+nmap gA     <Plug>(EasyAlign)
+vmap gA     <Plug>(EasyAlign)
+nmap g<M-a> <Plug>(LiveEasyAlign)
+vmap g<M-a> <Plug>(LiveEasyAlign)
 
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>

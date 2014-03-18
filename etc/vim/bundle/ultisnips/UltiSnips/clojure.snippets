@@ -304,6 +304,10 @@ snippet red "reduce" w
 (reduce λ $0)
 endsnippet
 
+snippet redk "reduce-kv" w
+(reduce-kv λ $0)
+endsnippet
+
 snippet fil "filter" w
 (filter λ $0)
 endsnippet
@@ -676,7 +680,7 @@ snippet try "try" w
 endsnippet
 
 snippet catch "cat" w
-(catch ${1:class} ${2:e}
+(catch ${1:Throwable} ${2:e}
 	$0)
 endsnippet
 
