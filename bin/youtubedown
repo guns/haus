@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.276 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.288 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -642,6 +642,16 @@ my %ciphers = (
   'vfltdb6U3' => 'w61 w5 r s2 w69 s2 r',            # 05 Feb 2014
   'vflLjFx3B' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 10 Feb 2014
   'vfliqjKfF' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 13 Feb 2014
+  'ima-vflxBu-5R' => 'w40 w62 r s2 w21 s3 r w7 s3', # 13 Feb 2014
+  'ima-vflrGwWV9' => 'w36 w45 r s2 r',              # 20 Feb 2014
+  'ima-vflCME3y0' => 'w8 s2 r w52',                 # 27 Feb 2014
+  'ima-vfl1LZyZ5' => 'w8 s2 r w52',                 # 27 Feb 2014
+  'ima-vfl4_saJa' => 'r s1 w19 w9 w57 w38 s3 r s2', # 01 Mar 2014
+  'ima-en_US-vflP9269H' => 'r w63 w37 s3 r w14 r',  # 06 Mar 2014
+  'ima-en_US-vflkClbFb' => 's1 w12 w24 s1 w52 w70 s2',# 07 Mar 2014
+  'ima-en_US-vflYhChiG' => 'w27 r s3',              # 10 Mar 2014
+  'ima-en_US-vflWnCYSF' => 'r s1 r s3 w19 r w35 w61 s2',# 13 Mar 2014
+  'en_US-vflbT9-GA' => 'w51 w15 s1 w22 s1 w41 r w43 r',# 17 Mar 2014
 );
 
 sub decipher_sig($$$) {
@@ -1146,6 +1156,11 @@ sub scrape_youtube_url_html($$$$$) {
     $unquote_p = 1;
   }
 
+  my $blocked_re = join ('|',
+                         ('(available|blocked it) in your country',
+                          'copyright (claim|grounds)',
+                          'removed by the user'));
+
   if (! $args) {
     # Try to find a better error message
     my (undef, $err) = ($body =~ m@<( div | h1 ) \s+
@@ -1178,24 +1193,14 @@ sub scrape_youtube_url_html($$$$$) {
         $err = "$err ($title)";
       }
 
-      if ($verbose == 0 &&
-          ($err =~ m/(available|blocked it) in your country/i ||
-           $err =~ m/removed by the user/i)) {
-        # With --quiet, just silently ignore country-locked video failures,
-        # for "youtubefeed".
-        exit (0);
-      }
-
-      error ("$id: $err");
+      $oerror = $err;
+      $http = 'HTTP/1.0 404';
     }
   }
 
-  if ($verbose == 0 &&
-      ($oerror =~ m/(available|blocked it) in your country/i ||
-       $oerror =~ m/removed by the user/i)) {
+  if ($verbose == 0 && $oerror =~ m/$blocked_re/sio) {
     # With --quiet, just silently ignore country-locked video failures,
     # for "youtubefeed".
-    # (Need to test twice because sometimes we have $args but no fmt_url_map)
     exit (0);
   }
 
@@ -1203,10 +1208,12 @@ sub scrape_youtube_url_html($$$$$) {
   # so we have to check the HTTP status late. But sometimes it doesn't return
   # 404 for pages that no longer exist. Hooray.
 
-  $http = 'HTTP/1.0 404' if ($oerror && $oerror =~ m/has been removed/);
-  error ("$id: $http$oerror") unless (check_http_status ($url, $http, 0));
-
-  errorI ("$id: no ytplayer.config$oerror") unless $args;
+  $http = 'HTTP/1.0 404'
+    if ($oerror && $oerror =~ m/$blocked_re/sio);
+  error ("$id: $http$oerror")
+    unless (check_http_status ($url, $http, 0));
+  errorI ("$id: no ytplayer.config$oerror")
+    unless $args;
 
   my ($kind, $urlmap) = ($args =~ m@"(fmt_url_map)": "(.*?)"@s);
   ($kind, $urlmap) = ($args =~ m@"(fmt_stream_map)": "(.*?)"@s)	    # VEVO
@@ -1833,7 +1840,9 @@ sub download_video_url($$$$$$$);
 sub download_video_url($$$$$$$) {
   my ($url, $title, $year, $size_p, $progress_p, $cgi_p, $force_fmt) = @_;
 
-  $error_whiteboard = '';  # reset  per-URL diagnostics
+  $error_whiteboard = '';	# reset per-URL diagnostics
+  $progress_ticks = 0;		# reset progress-bar counters
+  $progress_time = 0;
 
   # Add missing "http:"
   $url = "http://$url" unless ($url =~ m@^https?://@si);
