@@ -118,14 +118,6 @@ task :env do
       },
 
       {
-        :base   => "#{@src}/ponymix",
-        :branch => %w[master guns],
-        :files  => {
-          'bash-completion' => 'etc/bash_completion.d/ponymix'
-        }
-      },
-
-      {
         :base   => "#{@src}/systemd",
         :branch => %w[master guns],
         :files  => lambda { |proj|
