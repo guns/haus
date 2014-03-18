@@ -22,10 +22,13 @@ let s:i_cp437='-----------------------------------------------------------------
 
 let s:scriptfile=expand("<sfile>:h") 
 
+let s:running = 0
+
 "
 " Activate mode. Assigned to ,b macro.
 "
 fu! <SID>S()
+  let s:running = 1
   if has("gui_running")
     " se enc=utf8
   en
@@ -38,23 +41,23 @@ fu! <SID>S()
   if has("win32")
     :
   else
-    nm <buffer> K  :call <SID>M(1,'k')<CR>
-    nm <buffer> J  :call <SID>M(16,'j')<CR>
-    nm <buffer> H  :call <SID>M(64,'h')<CR>
-    nm <buffer> L  :call <SID>M(4,'l')<CR>
-    nm <buffer> gK :call <SID>G(0)<CR>
-    nm <buffer> gL :call <SID>G(1)<CR>
-    nm <buffer> gJ :call <SID>G(2)<CR>
-    nm <buffer> gH :call <SID>G(3)<CR>
-    vm <buffer> K  <esc>:call <SID>MB('k')<CR>
-    vm <buffer> J  <esc>:call <SID>MB('j')<CR>
-    vm <buffer> H  <esc>:call <SID>MB('h')<CR>
-    vm <buffer> L  <esc>:call <SID>MB('l')<CR>
+    nnoremap <buffer> K  :call <SID>M(1,'k')<CR>
+    nnoremap <buffer> J  :call <SID>M(16,'j')<CR>
+    nnoremap <buffer> H  :call <SID>M(64,'h')<CR>
+    nnoremap <buffer> L  :call <SID>M(4,'l')<CR>
+    nnoremap <buffer> gK :call <SID>G(0)<CR>
+    nnoremap <buffer> gL :call <SID>G(1)<CR>
+    nnoremap <buffer> gJ :call <SID>G(2)<CR>
+    nnoremap <buffer> gH :call <SID>G(3)<CR>
+    vnoremap <buffer> K  <esc>:call <SID>MB('k')<CR>
+    vnoremap <buffer> J  <esc>:call <SID>MB('j')<CR>
+    vnoremap <buffer> H  <esc>:call <SID>MB('h')<CR>
+    vnoremap <buffer> L  <esc>:call <SID>MB('l')<CR>
   en
-  vm <buffer> <Leader>a :ToAscii<cr>
-  nm <buffer> <Leader>b :call <SID>E()<CR>
-  nm <buffer> <Leader>s :call <SID>SetLT(1)<CR>
-  nm <buffer> <Leader>d :call <SID>SetLT(2)<CR>
+  " vm <buffer> <Leader>a :ToAscii<cr>
+  " nm <buffer> <Leader>b :call <SID>E()<CR>
+  " nm <buffer> <Leader>s :call <SID>SetLT(1)<CR>
+  " nm <buffer> <Leader>d :call <SID>SetLT(2)<CR>
   exec "cabbr <buffer> perl perl ".s:scriptfile
 
   let s:bdlt=1
@@ -67,6 +70,7 @@ endf
 " Deactivate mode.
 " Unmap macros, restore &ve option
 fu! <SID>E()
+  let s:running = 0
   if has("win32")
     :
   else
@@ -83,10 +87,10 @@ fu! <SID>E()
     silent! vun <buffer> H
     silent! vun <buffer> L
   en
-  silent! nun <buffer> <Leader>a
-  silent! nun <buffer> <Leader>b
-  silent! nun <buffer> <Leader>s
-  silent! nun <buffer> <Leader>d
+  " silent! nun <buffer> <Leader>a
+  " silent! nun <buffer> <Leader>b
+  " silent! nun <buffer> <Leader>s
+  " silent! nun <buffer> <Leader>d
   silent! cuna <buffer> perl
   let &ve=s:ve
   unlet s:ve
@@ -256,4 +260,5 @@ fu! s:MRB(d)
   exe "normal gvr ".l:pos.a:d."".l:size."d\"yPgvjk"
 endf
 
-command! Boxdraw call <SID>S()
+command! -bar Boxdraw if s:running | call <SID>E() | else | call <SID>S() | endif
+command! -bar -nargs=1 BoxdrawThickness call <SID>SetLT(<f-args>)
