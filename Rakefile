@@ -251,24 +251,20 @@ task :env do
               FileUtils.rm_f Dir['.Vimball*'], :verbose => false
             end
           end
-        }
+        },
+        :after  => lambda { |_| rm_f Dir['.sw*'], :verbose => false }
       },
 
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
-        :files  => lambda { |proj|
-          dst = File.join proj.haus, 'etc/vim/bundle/ultisnips'
-          FileUtils.mkdir_p dst
-
-          system *%W[rsync -a --delete --no-owner --no-group --exclude=/.git --exclude=/.gitignore --exclude=/UltiSnips #{proj.base}/ #{dst}/]
-          system *%W[rsync -a --delete --no-owner --no-group #{proj.base}/UltiSnips/ #{dst}/UltiSnips/default/]
-          snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
-
+        :files  => :pathogen,
+        :after  => lambda { |proj|
           # Allow non-privileged user to edit snippets
-          chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false if ENV.has_key? 'SUDO_USER'
-
-          nil # Return nil because the work is done
+          if ENV.has_key? 'SUDO_USER'
+            snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
+            chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false
+          end
         }
       },
 

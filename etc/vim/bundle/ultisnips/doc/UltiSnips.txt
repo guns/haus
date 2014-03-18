@@ -36,12 +36,12 @@ UltiSnips                                      *snippet* *snippets* *UltiSnips*
       4.7.1 Replacement String                  |UltiSnips-replacement-string|
       4.7.2 Demos                               |UltiSnips-demos|
    4.8 Clearing snippets                        |UltiSnips-clearing-snippets|
-5. Support for other plugins                    |UltiSnips-other-plugins|
+5. UltiSnips and Other Plugins                  |UltiSnips-other-plugins|
+   5.1 Existing Integrations                    |UltiSnips-integrations|
+   5.2 Extending UltiSnips                      |UltiSnips-extending|
 6. Helping Out                                  |UltiSnips-helping|
 7. Contact                                      |UltiSnips-contact|
 8. Contributors                                 |UltiSnips-contributors|
-   8.1 Patches & Coding                         |UltiSnips-contricoding|
-   8.2 Snippets                                 |UltiSnips-contrisnippets|
 
 This plugin only works if 'compatible' is not set.
 {Vi does not have any of these features}
@@ -135,6 +135,10 @@ github: >
    $ cd ~/.vim/
    $ git submodule add git://github.com/SirVer/ultisnips.git bundle/ultisnips
 
+If you also want the default snippets, also track >
+
+   $ git submodule add https://github.com/honza/vim-snippets.git
+
 See the pathogen documentation for more details on how to update a bundle.
 
 
@@ -154,16 +158,19 @@ Restart Vim and UltiSnips should work. To access the help, use >
    :helptags ~/.vim/ultisnips_rep/doc
    :help UltiSnips
 
+UltiSnips comes without snippets. The default snippets can be found here:
+https://github.com/honza/vim-snippets
+
 =============================================================================
 3. Settings & Commands                                   *UltiSnips-settings*
 
 3.1 Commands                                             *UltiSnips-commands*
 ------------
                                                              *:UltiSnipsEdit*
-The UltiSnipsEdit command opens the private snippet definition file for the
-current filetype for editing. If a definition file does not exist, a new file
-is opened with the appropriate name. Snippet definition files are standard
-text files and can be edited directly. UltiSnipsEdit makes it easier.
+The UltiSnipsEdit command opens a private snippet definition file for the
+current filetype. If no snippet file exists, a new file is created. If used as
+UltiSnipsEdit! all public snippet files are taken into account too. If
+multiple files match the search, the user gets to choose the file.
 
 There are several variables associated with the UltiSnipsEdit command.
 
@@ -180,7 +187,10 @@ g:UltiSnipsSnippetsDir
                             files are stored in. For example, if the variable
                             is set to "~/.vim/mydir/UltiSnips" and the current
                             'filetype' is "cpp", then :UltiSnipsEdit will open
-                            "~/.vim/mydir/UltiSnips/cpp.snippets".
+                            "~/.vim/mydir/UltiSnips/cpp.snippets". Note that
+                            directories named "snippets" are reserved for
+                            snipMate snippets and cannot be used.
+
 
                                                        *:UltiSnipsAddFiletypes*
 The UltiSnipsAddFiletypes command allows for explicit merging of other snippet
@@ -306,9 +316,10 @@ how UltiSnips loads snippets.
 Snippet definition files are stored in snippet directories. A snippet
 directory must be a subdirectory of a directory defined in the 'runtimepath'
 option. The variable g:UltiSnipsSnippetDirectories defines a list of names
-used for snippet directories. The default is shown below. >
+used for snippet directories. Note that "snippets" is reserved for snipMate
+snippets and cannot be used. The default is shown below. >
 
-   g:UltiSnipsSnippetDirectories          ["UltiSnips"]
+   let g:UltiSnipsSnippetDirectories=["UltiSnips"]
 
 UltiSnips will search each 'runtimepath' directory for the subdirectory names
 defined in g:UltiSnipsSnippetDirectories in the order they are defined. For
@@ -316,8 +327,8 @@ example, if you keep your snippets in a .vim subdirectory called
 "mycoolsnippets" and you want to make use of the default snippets that come
 with UltiSnips, add the following to your vimrc file. >
    let g:UltiSnipsSnippetDirectories=["UltiSnips", "mycoolsnippets"]
-If you do not want to use the snippets that come with UltiSnips, define the
-variable accordingly. >
+If you do not want to use the third party snippets that come with plugins,
+define the variable accordingly: >
    let g:UltiSnipsSnippetDirectories=["mycoolsnippets"]
 
 You can also redefine the search path on a buffer by buffer basis by setting
@@ -516,7 +527,7 @@ permitted in a snippet file, and they can be included anywhere in the file.
 A line beginning with the keyword 'priority' sets the priority for all
 snippets defined in the current file after this line. The default priority for
 a file is always 0. When a snippet should be expanded, UltiSnips will collect
-all snippet definitons from all sources that match the trigger and keep only
+all snippet definitions from all sources that match the trigger and keep only
 the ones with the highest priority. For example, all shipped snippets have a
 priority < 0, so that user defined snippets always overwrite shipped snippets.
 
@@ -1249,24 +1260,42 @@ snippets if you wish to replace them. Simply use the '!' option. (See
 
 
 ==============================================================================
-5. Support for other plugins             *UltiSnips-other-plugins*
+5. UltiSnips and Other Plugins                      *UltiSnips-other-plugins*
+
+5.1 Existing Integrations                            *UltiSnips-integrations*
+-------------------------
 
 UltiSnips has built-in support for some common plugins and there are others
 that are aware of UltiSnips and use it to improve the user experience. This is
 an incomplete list - if you want to have your plugin listed here, just sent me
 a pull request.
 
+                                                    *UltiSnips-snipMate*
+
+snipMate - UltiSnips is a drop in replacement for snipMate. It has many more
+features, so porting snippets is still a good idea, but switching has low
+friction now. UltiSnips is trying hard to truly emulate snipMate, for example
+recursive tabstops are not supported in snipMate snippets (but of course in
+UltiSnips snippets).
+
 YouCompleteMe - comes with out of the box completion support for UltiSnips. It
 offers a really nice completion dialogue for snippets.
+
+neocomplete - UltiSnips ships with a source for neocomplete and therefore
+offers out of the box completion dialogue support for it too.
 
 Supertab - UltiSnips has built-in support for Supertab. Just use a recent
 enough version of both plugins and <tab> will either expand a snippet or defer
 to Supertab for expansion.
 
-neocomplcache - Stanislav Golovanov (JazzCore) has made an integration plugin
-to use UltiSnips as engine inside of neocomplcache. You can find his work at
-https://github.com/JazzCore/neocomplcache-ultisnips.
+5.2 Extending UltiSnips                               *UltiSnips-extending*
+-------------------------
 
+UltiSnips allows other plugins to add new snippets on the fly. Since UltiSnips
+is written in python, the integration is also on a python basis. A small
+example can be found in `test.py`, search for AddNewSnippetSource. Please
+contact me on github if you integrate UltiSnips with your plugin so it can be
+listed in the docs.
 
 =============================================================================
 6. Helping Out                                            *UltiSnips-helping*
@@ -1307,13 +1336,7 @@ tracker.
 8. Contributors                                      *UltiSnips-contributors*
 
 The primary developer of UltiSnips is SirVer (Holger Rapp). The following
-individuals have contributed to UltiSnips.
-
-
-8.1 Patches & Coding                                 *UltiSnips-contricoding*
---------------------
-
-Contributors listed in chronological order:
+individuals have contributed to UltiSnips (in chronological order):
 
    JCEB - Jan Christoph Ebersbach
    Michael Henry
@@ -1357,60 +1380,8 @@ Contributors listed in chronological order:
    Brian Mock - saikobee
    Gernot Höflechner - LFDM
    Marcelo D Montu - mMontu
-
-
-8.2 Snippets                                       *UltiSnips-contrisnippets*
-------------
-
-Contributors listed in chronological order:
-
-   Alec Thomas
-   Ryan Wooden
-   Ches Martin
-   Gordin (g0rdin)
-   Jan Mollowitz (phux)
-   Georgi Valkov (gvalkov)
-   Miek Gieben (miek)
-   Aldis Berjoza (graudeejs)
-   Jorge Rodrigues (skeept)
-   Martin Grenfell (scrooloose)
-   Laughedelic
-   Anthony Wilson (anthonywilson)
-   Nick Anderson (nickanderson)
-   Timothy Mellor (mellort)
-   Chris Lasher (gotgenes)
-   Chen Houwu (chenhouwu)
-   Harry Zhxu (harryzhxu)
-   Pavel Puchkin (neoascetic)
-   Jacek Wysocki (exu)
-   Alexander Kondratskiy (KholdStare)
-   Martin Krauskopf (martin-krauskopf)
-   Theocrite (theocrite)
-   Ferdinand Majerech (kiith-sa)
-   Vivien Didelot
-   Øystein Walle (osse)
-   Pedro Algarvio (s0undt3ch)
-   Steven Humphrey (shumphrey)
-   Björn Winckler (b4winckler)
-   David Brown (Nali4Freedom)
-   Harry Xu (harryxu)
-   Tom Cammann (takac)
-   Paolo Cretaro (melko)
-   Sergey Alexandrov (taketwo)
-   Jaromír Hradílek (jhradilek)
-   Vangelis Tsoumenis (kioopi)
-   Rudi Grinberg (rgrinberg)
-   javipolo
-   Matthew Strawbridge (pxc)
-   Josh Strater (jstrater)
-   jinzhu
-   Rene Vergara (ravl1084)
-   Johan Haals (JHaals)
-   Danilo Bargen (dbrgn)
-   Bernhard Vallant (lazerscience)
-   Von Welch (von)
-   Nikola Petrov (nikolavp)
-   Maarten Slagter (slagtermaarten)
+   Karl Yngve Lervåg - lervag
+   Pedro Ferrari - petobens
 
 Thank you for your support.
 

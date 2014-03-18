@@ -14,8 +14,8 @@ elseif !(has('python') || has('python3'))
 endif
 
 " The Commands we define.
-command! -nargs=? -complete=customlist,UltiSnips#FileTypeComplete UltiSnipsEdit
-    \ :call UltiSnips#Edit(<q-args>)
+command! -bang -nargs=? -complete=customlist,UltiSnips#FileTypeComplete UltiSnipsEdit
+    \ :call UltiSnips#Edit(<q-bang>, <q-args>)
 
 command! -nargs=1 UltiSnipsAddFiletypes :call UltiSnips#AddFiletypes(<q-args>)
 
