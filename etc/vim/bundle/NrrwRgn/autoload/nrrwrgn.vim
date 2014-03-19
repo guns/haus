@@ -57,7 +57,7 @@ fun! <sid>Init() "{{{1
 	endif
 	let s:nrrw_rgn_lines[s:instn] = {}
 	" show some debugging messages
-	let s:nrrw_winname='Narrow_Region'
+	let s:nrrw_winname='NrrwRgn'
 
 	" Customization
 	let s:nrrw_rgn_vert = (exists("g:nrrw_rgn_vert") ? g:nrrw_rgn_vert : 0)
@@ -72,7 +72,8 @@ endfun
 
 fun! <sid>NrrwRgnWin(bang) "{{{1
 	let local_options = <sid>GetOptions(s:opts)
-	let nrrw_winname = s:nrrw_winname. '_'. s:instn
+	let bufname = substitute(expand('%:t:r'), ' ', '_', 'g')[0:8]
+	let nrrw_winname = s:nrrw_winname. '_'. bufname . '_'. s:instn
 	let nrrw_win = bufwinnr('^'.nrrw_winname.'$')
 	if nrrw_win != -1
 		exe ":noa ". nrrw_win. 'wincmd w'
@@ -177,14 +178,15 @@ fun! <sid>WriteNrrwRgn(...) "{{{1
 		" Write the buffer back to the original buffer
 		setl nomod
 		exe ":WidenRegion"
-		if bufname('') !~# 'Narrow_Region' && bufwinnr(s:nrrw_winname. '_'. s:instn) > 0
+		if bufname('') !~# 'NrrwRgn' && bufwinnr(s:nrrw_winname. '_'. s:instn) > 0
 			exe ':noa'. bufwinnr(s:nrrw_winname. '_'. s:instn). 'wincmd w'
 		endif
 	else
 		call <sid>StoreLastNrrwRgn(nrrw_instn)
-		let winnr = bufwinnr(b:orig_buf)
+		" b:orig_buf might not exists (see issue #2)
+		let winnr = (exists("b:orig_buf") ? bufwinnr(b:orig_buf) : 0)
 		" Best guess
-		if bufname('') =~# 'Narrow_Region' && winnr > 0
+		if bufname('') =~# 'NrrwRgn' && winnr > 0
 			exe ':noa'. winnr. 'wincmd w'
 		endif
 		if !exists("a:1") 
@@ -227,7 +229,7 @@ fun! <sid>UpdateOrigWin() abort
 	if !get(g:, 'nrrw_rgn_update_orig_win', 0)
 		return
 	endif
-	if bufname('') !~# 'Narrow_Region'
+	if bufname('') !~# 'NrrwRgn'
 		return
 	else
 		let instn = b:nrrw_instn
@@ -528,6 +530,7 @@ endfun
 
 fun! <sid>HideNrrwRgnLines() "{{{1
 	let char1 = <sid>ReturnComments()[0]
+	let char1 = escape(char1, '"\\')
 	let cmd='syn match NrrwRgnStart "^'.char1.' Start NrrwRgn\d\+$"'
 	exe cmd
 	let cmd='syn match NrrwRgnEnd "^'.char1.' End NrrwRgn\d\+$"'
@@ -1113,6 +1116,10 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 		"  become invalid, if CleanUp is executed)
 "	endif
 	call <sid>SaveRestoreRegister(_opts)
+	let  @/=s:o_s
+	if get(g:, 'nrrw_rgn_write_on_sync', 0)
+		write
+	endif
 	call winrestview(wsv)
 	if !close && has_key(s:nrrw_rgn_lines[instn], 'single')
 		" move back to narrowed buffer
@@ -1133,7 +1140,7 @@ fun! nrrwrgn#UnifiedDiff() "{{{1
 	let save_winposview=winsaveview()
 	let orig_win = winnr()
 	" close previous opened Narrowed buffers
-	silent! windo | if bufname('')=~'^Narrow_Region' &&
+	silent! windo | if bufname('')=~'^NrrwRgn' &&
 			\ &diff |diffoff|q!|endif
 	" minimize Window
 	" this is disabled, because this might be useful, to see everything
