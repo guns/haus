@@ -5,6 +5,7 @@ eunuch-:Locate	eunuch.txt	/*eunuch-:Locate*
 eunuch-:Move	eunuch.txt	/*eunuch-:Move*
 eunuch-:Remove	eunuch.txt	/*eunuch-:Remove*
 eunuch-:Rename	eunuch.txt	/*eunuch-:Rename*
+eunuch-:SudoEdit	eunuch.txt	/*eunuch-:SudoEdit*
 eunuch-:SudoWrite	eunuch.txt	/*eunuch-:SudoWrite*
 eunuch-:Unlink	eunuch.txt	/*eunuch-:Unlink*
 eunuch-:W	eunuch.txt	/*eunuch-:W*
