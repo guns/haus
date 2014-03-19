@@ -28,7 +28,7 @@ endfunction
 " does not end in {} or * is given to pathogen#runtime_prepend_subdirectories()
 " instead.
 function! pathogen#infect(...) abort " {{{1
-  for path in a:0 ? reverse(copy(a:000)) : ['bundle/{}']
+  for path in a:0 ? filter(reverse(copy(a:000)), 'type(v:val) == type("")') : ['bundle/{}']
     if path =~# '^[^\\/]\+$'
       call s:warn('Change pathogen#infect('.string(path).') to pathogen#infect('.string(path.'/{}').')')
       call pathogen#incubate(path . '/{}')
@@ -107,6 +107,10 @@ function! pathogen#separator() abort " {{{1
   return !exists("+shellslash") || &shellslash ? '/' : '\'
 endfunction " }}}1
 
+function! pathogen#slash() abort " {{{1
+  return pathogen#separator()
+endfunction " }}}1
+
 " Convenience wrapper around glob() which returns a list.
 function! pathogen#glob(pattern) abort " {{{1
   let files = split(glob(a:pattern),"\n")
@@ -178,10 +182,10 @@ endfunction " }}}1
 function! pathogen#incubate(...) abort " {{{1
   let sep = pathogen#separator()
   let name = a:0 ? a:1 : 'bundle/{}'
-  if "\n".s:done_bundles =~# "\\M\n".name."\n"
+  if has_key(s:done_bundles, name)
     return ""
   endif
-  let s:done_bundles .= name . "\n"
+  let s:done_bundles[name] = 1
   let list = []
   for dir in pathogen#split(&rtp)
     if dir =~# '\<after$'
@@ -212,7 +216,8 @@ function! pathogen#runtime_append_all_bundles(...) abort " {{{1
   return call('pathogen#incubate', map(copy(a:000),'v:val . "/{}"'))
 endfunction
 
-let s:done_bundles = ''
+let s:done_bundles = {}
+
 " }}}1
 
 " Invoke :helptags on all non-$VIM doc directories in runtimepath.
