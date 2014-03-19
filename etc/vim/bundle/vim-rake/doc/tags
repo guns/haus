@@ -1,3 +1,4 @@
+g:rake_legacy	rake.txt	/*g:rake_legacy*
 rake	rake.txt	/*rake*
 rake-:A	rake.txt	/*rake-:A*
 rake-:AD	rake.txt	/*rake-:AD*

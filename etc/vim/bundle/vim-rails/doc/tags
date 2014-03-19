@@ -5,8 +5,6 @@ g:rails_gem_projections	rails.txt	/*g:rails_gem_projections*
 g:rails_projections	rails.txt	/*g:rails_projections*
 macros/rails.vim	rails.txt	/*macros\/rails.vim*
 rails	rails.txt	/*rails*
-rails-'cfu'	rails.txt	/*rails-'cfu'*
-rails-'completefunc'	rails.txt	/*rails-'completefunc'*
 rails-'et'	rails.txt	/*rails-'et'*
 rails-'expandtab'	rails.txt	/*rails-'expandtab'*
 rails-'filetype'	rails.txt	/*rails-'filetype'*
