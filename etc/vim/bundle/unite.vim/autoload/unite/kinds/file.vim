@@ -1,7 +1,7 @@
 "=============================================================================
 " FILE: file.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 10 Feb 2014.
+" Last Modified: 11 Mar 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -886,20 +886,19 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
           \ fnamemodify(new_filename, ':.'))
 
     let bufnr = bufnr(unite#util#escape_file_searching(old_filename))
-    if bufnr > 0
-      setlocal hidden
-
-      " Buffer rename.
-      let bufnr_save = bufnr('%')
-      noautocmd execute 'buffer' bufnr
-      execute 'saveas!' fnameescape(new_filename)
-      noautocmd execute 'buffer' bufnr_save
-      silent! execute 'bdelete!' fnameescape(old_filename)
-      silent! call delete(old_filename)
-    elseif rename(old_filename, new_filename)
+    if rename(old_filename, new_filename)
       call unite#print_error(
             \ printf('Failed file rename: "%s" to "%s".',
             \   a:old_filename, a:new_filename))
+    endif
+
+    if bufnr > 0
+      " Buffer rename.
+      setlocal hidden
+      let bufnr_save = bufnr('%')
+      noautocmd execute 'buffer' bufnr
+      silent execute 'file' fnameescape(new_filename)
+      noautocmd execute 'buffer' bufnr_save
     endif
   finally
     " Restore path.
