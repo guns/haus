@@ -3,10 +3,16 @@
 :AckFile	ack.txt	/*:AckFile*
 :AckFromSearch	ack.txt	/*:AckFromSearch*
 :AckHelp	ack.txt	/*:AckHelp*
+:AckWindow	ack.txt	/*:AckWindow*
 :LAck	ack.txt	/*:LAck*
 :LAckAdd	ack.txt	/*:LAckAdd*
 :LAckHelp	ack.txt	/*:LAckHelp*
+:LAckWindow	ack.txt	/*:LAckWindow*
 ack	ack.txt	/*ack*
 ack-author	ack.txt	/*ack-author*
+ack-configuration	ack.txt	/*ack-configuration*
 ack-mappings	ack.txt	/*ack-mappings*
 ack.txt	ack.txt	/*ack.txt*
+g:ack_autoclose	ack.txt	/*g:ack_autoclose*
+g:ackhighlight	ack.txt	/*g:ackhighlight*
+g:ackprg	ack.txt	/*g:ackprg*
