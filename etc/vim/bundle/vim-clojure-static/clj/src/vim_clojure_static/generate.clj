@@ -105,8 +105,9 @@
                   ["Special" special-forms]
                   ;; These are duplicates from special-forms
                   ["Exception" '#{throw try catch finally}]
-                  ["Cond" '#{case cond cond-> cond->> condp if-let if-not when
-                             when-first when-let when-not}]
+                  ["Cond" '#{case cond cond-> cond->> condp if-let if-not
+                             if-some when when-first when-let when-not
+                             when-some}]
                   ;; Imperative looping constructs (not sequence functions)
                   ["Repeat" '#{doall dorun doseq dotimes while}]]
         coresyms (set/difference (set (keys (ns-publics 'clojure.core)))
@@ -161,10 +162,10 @@
        defn- defonce defprotocol defrecord defstruct deftest deftest- deftype
        extend extend-protocol extend-type fn ns proxy reify set-test}
     ;; Binding forms
-    '#{as-> binding doall dorun doseq dotimes doto for if-let let letfn
-       locking loop testing when-first when-let with-bindings with-in-str
-       with-local-vars with-open with-precision with-redefs with-redefs-fn
-       with-test}
+    '#{as-> binding doall dorun doseq dotimes doto for if-let if-some let
+       letfn locking loop testing when-first when-let when-some with-bindings
+       with-in-str with-local-vars with-open with-precision with-redefs
+       with-redefs-fn with-test}
     ;; Conditional branching
     '#{case cond-> cond->> condp if if-not when when-not while}
     ;; Exception handling
@@ -178,9 +179,9 @@
   "Vimscript literal `syntax keyword` for important identifiers."
   (->> keyword-groups
        (map (fn [[group keywords]]
-              (format "syntax match clojure%s \"\\v<%s>\"\n"
+              (format "syntax keyword clojure%s %s\n"
                       group
-                      (vim-frak-pattern (map-keyword-names keywords)))))
+                      (string/join \space (sort (map-keyword-names keywords))))))
        string/join))
 
 (def vim-completion-words
@@ -285,31 +286,6 @@
   (str "setlocal lispwords=" (string/join \, (sort lispwords)) "\n"))
 
 (comment
-  ;; Generate the vim literal definitions for pasting into the runtime files.
-  (spit "tmp/clojure-defs.vim"
-        (str generation-comment
-             clojure-version-comment
-             vim-keywords
-             \newline
-             generation-comment
-             java-version-comment
-             vim-posix-char-classes
-             vim-java-char-classes
-             vim-unicode-binary-char-classes
-             vim-unicode-category-char-classes
-             vim-unicode-script-char-classes
-             vim-unicode-block-char-classes
-             \newline
-             generation-comment
-             (vim-top-cluster (slurp "../syntax/clojure.vim"))
-             \newline
-             generation-comment
-             vim-lispwords
-             \newline
-             generation-comment
-             clojure-version-comment
-             vim-completion-words))
-
   ;; Generate an example file with all possible character property literals.
   (spit "tmp/all-char-props.clj"
         comprehensive-clojure-character-property-regexps)
