@@ -212,7 +212,7 @@ let g:ScreenImpl = 'Tmux'
 " Plugin: UltiSnips
 let g:UltiSnipsNoPythonWarning = 1
 let g:UltiSnipsEditSplit = 'vertical'
-let g:UltiSnipsSnippetsDir = '~/.vim/bundle/ultisnips/UltiSnips'
+let g:UltiSnipsSnippetsDir = '~/.vim/UltiSnips'
 let g:UltiSnipsListSnippets = '<4-`>'
 let g:UltiSnipsExpandTrigger = '<Tab>'
 let g:UltiSnipsJumpForwardTrigger = '<Tab>'

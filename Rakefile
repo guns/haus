@@ -258,13 +258,12 @@ task :env do
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
-        :files  => :pathogen,
-        :after  => lambda { |proj|
+        :files  => lambda { |proj|
           # Allow non-privileged user to edit snippets
           if ENV.has_key? 'SUDO_USER'
-            snippets = Dir["#{proj.haus}/etc/vim/bundle/ultisnips/UltiSnips/*.snippets"]
-            chown_R ENV['SUDO_USER'], nil, snippets, :verbose => false
+            chown_R ENV['SUDO_USER'], nil, "#{proj.haus}/etc/vim/UltiSnips", :verbose => false
           end
+          :pathogen
         }
       },
 
