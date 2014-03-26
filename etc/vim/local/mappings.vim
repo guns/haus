@@ -350,6 +350,7 @@ noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
+noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
 noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
 noremap <Leader>eA       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/aliases'))<CR>
 noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
@@ -598,11 +599,11 @@ Mapall <4-I> :<C-u>TagbarOpen<CR>
 
 " Plugin: CamelCaseMotion
 map  <C-Left>  <Plug>CamelCaseMotion_b
-map! <C-Left>  <C-\><C-o><C-Left>
+imap <C-Left>  <C-\><C-o><C-Left>
 map  <C-Right> <Plug>CamelCaseMotion_e
-map! <C-Right> <C-\><C-o><C-Right>
+imap <C-Right> <C-\><C-o><C-Right>
 map  <C-BS>    d<Plug>CamelCaseMotion_b
-map! <C-BS>    <C-\><C-o><C-BS>
+imap <C-BS>    <C-\><C-o><C-BS>
 
 " Plugin: splitjoin.vim
 noremap <Leader>J :SplitjoinJoin<CR>

@@ -873,6 +873,10 @@ snippet pl "println" w
 (println $0)
 endsnippet
 
+snippet OUT "(.println System/out …)" w
+(.println System/out $0)
+endsnippet
+
 snippet warn "warn" w
 (binding [*out* *err*] (prn $0))
 endsnippet
