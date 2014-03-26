@@ -259,13 +259,7 @@ task :env do
       {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
-        :files  => lambda { |proj|
-          # Allow non-privileged user to edit snippets
-          if ENV.has_key? 'SUDO_USER'
-            chown_R ENV['SUDO_USER'], nil, "#{proj.haus}/etc/vim/UltiSnips", :verbose => false
-          end
-          :pathogen
-        }
+        :files  => :pathogen
       },
 
       {
@@ -436,5 +430,14 @@ task :keystore do
       c = Cert.new :certfile => crt, :keystore => ks
       c.write_keystore c.certificates
     end
+  end
+end
+
+desc 'Change ownership of user directories'
+task :chown do
+  if ENV.has_key? 'SUDO_USER'
+    u = ENV['SUDO_USER']
+    chown_R u, nil, 'etc/vim/UltiSnips'
+    chown_R u, nil, 'etc/%local/%lib/clojure/guns'
   end
 end
