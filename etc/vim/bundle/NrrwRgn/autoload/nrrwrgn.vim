@@ -508,6 +508,18 @@ fun! <sid>CheckProtected() "{{{1
 	endif
 endfun
 
+fun! <sid>HasMatchID(instn) "{{{1
+	if exists("s:nrrw_rgn_lines[a:instn].matchid")
+		let id = s:nrrw_rgn_lines[a:instn].matchid
+		for match in getmatches()
+			if match(id, match.id) > -1
+				return 1
+			endif
+		endfor
+	endif
+	return 0
+endfun
+
 fun! <sid>DeleteMatches(instn) "{{{1
     " Make sure, we are in the correct buffer
 	" Not needed, prevents recursively narrowing
@@ -669,9 +681,12 @@ fun! <sid>BufInTab(bufnr) "{{{1
 	return 0
 endfun
 
-fun! <sid>JumpToBufinTab(tab,buf) "{{{1
+fun! <sid>JumpToBufinTab(tab,buf,instn) "{{{1
 	if a:tab
 		exe "noa tabn" a:tab
+	endif
+	if <sid>HasMatchID(a:instn)
+		call <sid>DeleteMatches(a:instn)
 	endif
 	let win = bufwinnr(a:buf)
 	if win > 0
@@ -930,6 +945,13 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 	let orig_buf = b:orig_buf
 	let orig_tab = tabpagenr()
 	let instn    = b:nrrw_instn
+	" Make sure the narrowed buffer is still valid (happens, when 2 split
+	" window of the narrowed buffer is opened.
+	if !has_key(s:nrrw_rgn_lines, instn)
+		call <sid>WarningMsg("Error writing changes back,".
+					\ "Narrowed Window invalid!")
+		return
+	endif
 	let winnr    = get(s:nrrw_rgn_lines[instn], 'winnr', winnr())
 	let close    = has_key(s:nrrw_rgn_lines[instn], 'single')
 	let vmode    = has_key(s:nrrw_rgn_lines[instn], 'vmode')
@@ -970,10 +992,14 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 	endif
 	let _opts = <sid>SaveRestoreRegister([])
 	let wsv=winsaveview()
-	call <sid>DeleteMatches(instn)
+	" Removing matches only works in the right window. So need to check,
+	" the matchid actually exists, if not, remove try to remove it later.
+	if <sid>HasMatchID(instn)
+		call <sid>DeleteMatches(instn)
+	endif
 	if exists("b:orig_buf_ro") && b:orig_buf_ro && !a:force
 		call s:WarningMsg("Original buffer protected. Can't write changes!")
-		call <sid>JumpToBufinTab(orig_tab, nrw_buf)
+		call <sid>JumpToBufinTab(orig_tab, nrw_buf, instn)
 		return
 	endif
 	if !&l:ma && !( exists("b:orig_buf_ro") && b:orig_buf_ro)
@@ -987,13 +1013,6 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 					\s:nrrw_rgn_lines[instn].start[1])
 	endif
 
-	" Make sure the narrowed buffer is still valid (happens, when 2 split
-	" window of the narrowed buffer is opened.
-	if !has_key(s:nrrw_rgn_lines, instn)
-		call <sid>WarningMsg("Error writing changes back,".
-					\ "Narrowed Window invalid!")
-		return
-	endif
 
 	" Now copy the content back into the original buffer
 
@@ -1128,7 +1147,7 @@ fun! nrrwrgn#WidenRegion(force)  "{{{1
 		call <sid>CleanUpInstn(instn)
 	endif
 	" jump back to narrowed window
-	call <sid>JumpToBufinTab(orig_tab, nrw_buf)
+	call <sid>JumpToBufinTab(orig_tab, nrw_buf, instn)
 	setl nomod
 	if a:force
 		" trigger auto command
