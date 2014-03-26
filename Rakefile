@@ -33,7 +33,7 @@ task :env do
         :files  => {
           'bin/lein'             => 'bin/lein',
           'doc/lein.1'           => 'share/man/man1/lein.1',
-          'bash_completion.bash' => 'etc/bash_completion.d/lein'
+          'bash_completion.bash' => 'etc/bashrc.d/completions/lein'
         }
       },
 
@@ -43,7 +43,7 @@ task :env do
         :files  => {
           'src/password-store.sh'               => 'bin/pass',
           'man/pass.1'                          => 'share/man/man1/pass.1',
-          'src/completion/pass.bash-completion' => 'etc/bash_completion.d/pass'
+          'src/completion/pass.bash-completion' => 'etc/bashrc.d/completions/pass'
         }
       },
 
@@ -89,11 +89,10 @@ task :env do
         :base   => "#{@src}/bash-completion",
         :branch => %w[master guns],
         :files  => lambda { |proj|
-          Hash[proj.git.ls_files('completions').map(&:first).reject do |f|
-            File.directory? File.join(proj.base, f) or File.basename(f) =~ /\A(\.|_|Makefile)/
-          end.map do |f|
-            [f, "etc/bash_completion.d/#{File.basename f}"]
-          end].merge 'bash_completion' => 'etc/bash_completion'
+          src = "#{proj.base}/completions"
+          dst = "#{proj.haus}/etc/bash_completion.d"
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
+          { 'bash_completion' => 'etc/bash_completion' }
         }
       },
 
@@ -101,7 +100,7 @@ task :env do
         :base   => "#{@src}/READONLY/git",
         :branch => %w[master],
         :files  => {
-          'contrib/completion/git-completion.bash' => 'etc/bash_completion.d/git',
+          'contrib/completion/git-completion.bash' => 'etc/bashrc.d/completions/git',
           'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh',
           'contrib/remote-helpers/git-remote-hg' => 'bin/git-remote-hg'
         }
@@ -113,7 +112,7 @@ task :env do
         :fetch  => :never,
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
-          'examples/bash_completion_tmux.sh' => 'etc/bash_completion.d/tmux'
+          'examples/bash_completion_tmux.sh' => 'etc/bashrc.d/completions/tmux'
         }
       },
 
@@ -123,8 +122,10 @@ task :env do
         :files  => lambda { |proj|
           Hash[proj.git.ls_files('shell-completion/bash').map { |fs|
             f = fs.first
-            [f, "etc/bash_completion.d/#{File.basename f}"]
-          }]
+            if f !~ /Makefile\z/
+              [f, "etc/bashrc.d/completions/#{File.basename f}"]
+            end
+          }.compact]
         }
       }
     ],
@@ -288,7 +289,7 @@ task :env do
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           # Copy bash completion file
-          { 'misc/bash/go' => 'etc/bash_completion.d/go' }
+          { 'misc/bash/go' => 'etc/bashrc.d/completions/go' }
         }
       }
     ],

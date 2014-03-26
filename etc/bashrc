@@ -126,6 +126,7 @@ source ~/.bashrc.d/functions.bash
 
 # Bash completion directories
 BASH_COMPLETION_DIRS=(
+    ~/.bashrc.d/completions
     ~/.bash_completion.d
     /usr/local/etc/bash_completion.d
     /usr/share/bash-completion/completions
