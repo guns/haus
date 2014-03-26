@@ -8,6 +8,7 @@
 require 'optparse'
 require 'ostruct'
 require 'set'
+require 'resolv'
 require 'cli/superparser'
 
 class SshuttleWrapper
@@ -52,7 +53,7 @@ class SshuttleWrapper
       end
 
       opt.on '-x', '--exclude SUBNET', "Same as sshuttle's --exclude" do |arg|
-        options.excluded << arg
+        options.excluded << resolve_cidr(arg)
       end
 
       opt.on '--sshuttle PATH', 'Path to sshuttle executable [DEFAULT: %s]' % options.sshuttle do |arg|
@@ -69,6 +70,13 @@ class SshuttleWrapper
         options.verbose = true
       end
     end
+  end
+
+  def resolve_cidr net
+    host, bits = net.split '/', 2
+    bits = nil if bits and bits.empty?
+    ip = Resolv.getaddress host
+    [ip, bits].compact.join '/'
   end
 
   def parse_ssh_host ssh_host
