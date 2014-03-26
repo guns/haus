@@ -161,21 +161,21 @@ augroup END
 " Projectile {{{
 
 let s:projections = {
-      \ '*': {'compiler': 'rake'},
+      \ '*': {'make': 'rake -f {project}/Rakefile'},
       \ 'lib/*.rb': {'command': 'lib', 'alternate': [
       \   'test/{}_test.rb', 'test/lib/{}_test.rb', 'test/unit/{}_test.rb',
       \   'spec/{}_spec.rb', 'spec/lib/{}_spec.rb', 'spec/unit/{}_spec.rb']},
       \ 'test/test_helper.rb': {'command': 'test'},
       \ 'test/*_test.rb': {
       \   'command': 'test',
-      \   'dispatch': 'testrb %',
+      \   'dispatch': 'testrb {file}',
       \   'alternate': 'lib/{}.rb'},
       \ 'test/lib/*_test.rb': {'alternate': 'lib/{}.rb'},
       \ 'test/unit/*_test.rb': {'alternate': 'lib/{}.rb'},
       \ 'spec/spec_helper.rb': {'command': 'spec'},
       \ 'spec/*_spec.rb': {
       \   'command': 'spec',
-      \   'dispatch': 'rspec %',
+      \   'dispatch': 'rspec {file}',
       \   'alternate': 'lib/{}.rb'},
       \ 'spec/lib/*_spec.rb': {'alternate': 'lib/{}.rb'},
       \ 'spec/unit/*_spec.rb': {'alternate': 'lib/{}.rb'},
@@ -191,6 +191,10 @@ function! s:ProjectileDetect() abort
     endif
     if isdirectory(b:rake_root.'/spec')
       let spec = 1
+    endif
+    if !has('win32') && b:rake_root !~# '\s' && executable(b:rake_root.'/bin/rake')
+      let projections['*'] = copy(projections['*'])
+      let projections['*'].make = '{project}/bin/' . projections['*'].make
     endif
     let projections['lib/*.rb'].alternate =
           \ filter(copy(projections['lib/*.rb'].alternate),'exists(v:val[0:3])')
@@ -437,8 +441,8 @@ function! s:DirComplete(A,L,P) abort
 endfunction
 
 if exists('g:rake_legacy')
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rcd  :cd<bang>  `=s:project().path(<q-args>)`")
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rlcd :lcd<bang> `=s:project().path(<q-args>)`")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rcd  :Cd<bang> <args>")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rlcd :Lcd<bang> <args>")
 else
   call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rcd  echoerr ':Rcd is deprecated. Use :Cd or let g:rake_legacy = 1 in vimrc'")
   call s:command("-bar -bang -nargs=? -complete=customlist,s:DirComplete Rlcd echoerr ':Rlcd is deprecated. Use :Lcd or let g:rake_legacy = 1 in vimrc'")
@@ -542,11 +546,11 @@ function! s:RComplete(A,L,P) abort
 endfunction
 
 if exists('g:rake_legacy')
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete R  :execute s:R('E','<bang>',<f-args>)")
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RS :execute s:R('S','<bang>',<f-args>)")
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RV :execute s:R('V','<bang>',<f-args>)")
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RT :execute s:R('T','<bang>',<f-args>)")
-  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RD :execute s:R('D','<bang>',<f-args>)")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete R  :A<bang> <args>|call s:warn(':R is deprecated. Use :A')")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RS :AS<bang> <args>|call s:warn(':RS is deprecated. Use :AS')")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RV :AV<bang> <args>|call s:warn(':RV is deprecated. Use :AV')")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RT :AT<bang> <args>|call s:warn(':RT is deprecated. Use :AT')")
+  call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RD :AD<bang> <args>|call s:warn(':RT is deprecated. Use :AD')")
 else
   call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete R  echoerr ':R is deprecated. Use :A or let g:rake_legacy = 1 in vimrc'")
   call s:command("-bar -bang -nargs=? -complete=customlist,s:RComplete RS echoerr ':RS is deprecated. Use :A or let g:rake_legacy = 1 in vimrc'")
@@ -574,13 +578,13 @@ function! s:navcommand(name) abort
       call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete ".type.a:name." :execute s:Edit('".type."','<bang>',s:R".a:name."(matchstr(<q-args>,'[^:#]*')).matchstr(<q-args>,'[:#].*'))", 1)
     endif
     if exists('g:rake_legacy')
-      call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".type.a:name." :execute s:Edit('".type."','<bang>',s:R".a:name."(matchstr(<q-args>,'[^:#]*')).matchstr(<q-args>,'[:#].*'))")
+      call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".type.a:name.' '.type.a:name.'<bang> <args>|call s:warn(":R'.type.a:name.' is deprecated. Use :'.type.a:name.'")')
     else
       call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".type.a:name." echoerr ':R".type.a:name." is deprecated. Use :".type.a:name." or let g:rake_legacy = 1 in vimrc'")
     endif
   endfor
   if exists('g:rake_legacy')
-    call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".a:name." :execute s:Edit('E','<bang>',s:R".a:name."(matchstr(<q-args>,'[^:#]*')).matchstr(<q-args>,'[:#].*'))")
+    call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".a:name.' E'.a:name.'<bang> <args>|call s:warn(":R'.a:name.' is deprecated. Use :E'.a:name.'")')
   else
     call s:command("-bar -bang -nargs=? -complete=customlist,s:R".a:name."Complete R".a:name." echoerr ':R".a:name." is deprecated. Use :E".a:name." or let g:rake_legacy = 1 in vimrc'")
   endif
@@ -689,7 +693,7 @@ function! s:Tags(args)
 endfunction
 
 if exists('g:rake_legacy')
-  call s:command("-bar -bang -nargs=? Rtags :execute s:Tags(<q-args>)")
+  call s:command("-bar -bang -nargs=? Rtags :Ctags<bang> <args>")
 else
   call s:command("-bar -bang -nargs=? Rtags echoerr ':Rtags is deprecated. Use :Ctags or let g:rake_legacy = 1 in vimrc'")
 endif
