@@ -9,14 +9,18 @@
 
 " Location of the ack utility
 if !exists("g:ackprg")
-  let s:ackcommand = executable('ack-grep') ? 'ack-grep' : 'ack'
-  if !executable(s:ackcommand)
+  let s:ack_default_options = " -s -H --nocolor --nogroup --column"
+  if executable('ack')
+    let g:ackprg = "ack"
+  elseif executable('ack-grep')
+    let g:ackprg = "ack-grep"
+  else
     finish
   endif
-  let g:ackprg = s:ackcommand." -H --nocolor --nogroup --column"
+  let g:ackprg .= s:ack_default_options
 endif
 
-let s:ackprg_version = eval(matchstr(system(g:ackprg . " --version"),  '[0-9.]\+'))
+let s:ackprg_version = str2nr(matchstr(system(g:ackprg . " --version"),  '[0-9.]\+'))
 
 if !exists("g:ack_apply_qmappings")
   let g:ack_apply_qmappings = !exists("g:ack_qhandler")
@@ -60,7 +64,7 @@ function! s:Ack(cmd, args)
   let grepformat_bak=&grepformat
   try
     let l:ackprg_run = g:ackprg
-    if a:cmd =~# '-g$' && s:ackprg_version > 2
+    if a:cmd =~# '-g$' && s:ackprg_version >= 2
       " remove arguments that conflict with -g
       let l:ackprg_run = substitute(l:ackprg_run, '-H\|--column', '', 'g')
     end
@@ -84,7 +88,7 @@ function! s:Ack(cmd, args)
     let l:close_cmd = ':cclose<CR>'
   endif
 
-  if l:apply_mappings
+  if l:apply_mappings && &ft == "qf"
     if !exists("g:ack_autoclose") || !g:ack_autoclose
       exec "nnoremap <buffer> <silent> q " . l:close_cmd
       exec "nnoremap <buffer> <silent> t <C-W><CR><C-W>T"

@@ -15,4 +15,5 @@ ack-mappings	ack.txt	/*ack-mappings*
 ack.txt	ack.txt	/*ack.txt*
 g:ack_autoclose	ack.txt	/*g:ack_autoclose*
 g:ackhighlight	ack.txt	/*g:ackhighlight*
+g:ackpreview	ack.txt	/*g:ackpreview*
 g:ackprg	ack.txt	/*g:ackprg*
