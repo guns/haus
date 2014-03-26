@@ -11,28 +11,8 @@ snippet #! "#!/usr/bin/env lein-exec" b
 #!/usr/bin/env lein-exec
 endsnippet
 
-snippet loadf "load-file" w
-(clojure.core/load-file "$0")
-endsnippet
-
-snippet load "load" w
-(clojure.core/load "$0")
-endsnippet
-
 snippet ns "ns" b
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
-endsnippet
-
-snippet NS "ns with schema.core" w
-(ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
-	(:require [schema.core :refer [defn]])
-	(:refer-clojure :exclude [defn]))
-endsnippet
-
-snippet nst "test ns"
-(ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}
-	(:require [$0]
-	          [clojure.test :as test :refer [deftest is testing]]))
 endsnippet
 
 snippet req "require"
@@ -869,20 +849,29 @@ snippet pr "prn" w
 (prn $0)
 endsnippet
 
-snippet pl "println" w
+snippet pl "println"
 (println $0)
 endsnippet
 
-snippet OUT "(.println System/out …)" w
+snippet (pl "println" i
+(println
+endsnippet
+
+snippet OUT "(.println System/out …)"
 (.println System/out $0)
 endsnippet
 
+snippet (OUT "(.println System/out" i
+(.println System/out
+endsnippet
+
 snippet warn "warn" w
-(binding [*out* *err*] (prn $0))
+(binding [*out* *err*]
+	$0)
 endsnippet
 
 snippet pf "printf" w
-(printf ${1:"$2"} ${0:args})
+(printf ${1:"$2"} $0)
 endsnippet
 
 snippet pp "clojure.pprint/pprint" w
