@@ -39,11 +39,11 @@ task :env do
 
       {
         :base   => "#{@src}/password-store",
-        :branch => %w[master guns],
+        :branch => %w[master],
         :files  => {
-          'src/password-store.sh'        => 'bin/pass',
-          'man/pass.1'                   => 'share/man/man1/pass.1',
-          'contrib/pass.bash-completion' => 'etc/bash_completion.d/pass'
+          'src/password-store.sh'               => 'bin/pass',
+          'man/pass.1'                          => 'share/man/man1/pass.1',
+          'src/completion/pass.bash-completion' => 'etc/bash_completion.d/pass'
         }
       },
 

@@ -1,4 +1,4 @@
-.TH PASS 1 "2012 Sept 24" ZX2C4 "Password Store"
+.TH PASS 1 "2014 March 18" ZX2C4 "Password Store"
 
 .SH NAME
 pass - stores, retrieves, generates, and synchronizes passwords securely
@@ -51,15 +51,19 @@ password names in
 .SH COMMANDS
 
 .TP
-\fBinit\fP [ \fI--reencrypt\fP, \fI-e\fP ] \fIgpg-id\fP
+\fBinit\fP [ \fI--reencrypt\fP, \fI-e\fP ] [ \fI--path=sub-folder\fP, \fI-p sub-folder\fP ] \fIgpg-id...\fP
 Initialize new password storage and use
 .I gpg-id
-for encryption. This command must be run first before a password store can be
-used. If \fI--reencrypt\fP or \fI-e\fP is specified, reencrypt all existing
-passwords in the password store using \fIgpg-id\fP. Note that use of
+for encryption. Multiple gpg-ids may be specified, in order to encrypt each
+password with multiple ids. This command must be run first before a password
+store can be used. If \fI--reencrypt\fP or \fI-e\fP is specified, reencrypt
+all existing passwords in the password store using \fIgpg-id\fP. Note that
+use of
 .BR gpg-agent (1)
 is recommended so that the batch decryption does not require as much user
-intervention.
+intervention. If \fI--path\fP or \fI-p\fP is specified, along with an argument,
+a specific gpg-id or set of gpg-ids is assigned for that specific sub folder of
+the password store.
 .TP
 \fBls\fP \fIsubfolder\fP
 List names of passwords inside the tree at
@@ -73,7 +77,7 @@ Decrypt and print a password named \fIpass-name\fP. If \fI--clip\fP or \fI-c\fP
 is specified, do not print the password but instead copy the first line to the
 clipboard using
 .BR xclip (1)
-and then restore the clipboard after 45 seconds.
+and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds.
 .TP
 \fBinsert\fP [ \fI--echo\fP, \fI-e\fP | \fI--multiline\fP, \fI-m\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name\fP
 Insert a new password into the password store called \fIpass-name\fP. This will
@@ -100,7 +104,8 @@ is specified, do not use any non-alphanumeric characters in the generated passwo
 If \fI--clip\fP or \fI-c\fP is specified, do not print the password but instead copy
 it to the clipboard using
 .BR xclip (1)
-and then restore the clipboard after 45 seconds. Prompt before overwriting an existing password,
+and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds.
+Prompt before overwriting an existing password,
 unless \fI--force\fP or \fI-f\fP is specified.
 .TP
 \fBrm\fP [ \fI--recursive\fP, \fI-r\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name\fP
@@ -114,7 +119,10 @@ If the password store is a git repository, pass \fIgit-command-args\fP as argume
 .BR git (1)
 using the password store as the git repository. If \fIgit-command-args\fP is \fBinit\fP,
 in addition to initializing the git repository, add the current contents of the password
-store to the repository in an initial commit.
+store to the repository in an initial commit. If the git config key \fIpass.signcommits\fP
+is set to \fItrue\fP, then all commits will be signed using \fIuser.signingkey\fP or the
+default git signing key. This config key may be turned on using:
+.B `pass git config --bool --add pass.signcommits true`
 .TP
 \fBhelp\fP
 Show usage message.
@@ -203,14 +211,14 @@ The generated password to Email/jasondonenfeld.com is:
 $(-QF&Q=IN2nFBx
 .TP
 Generate new alphanumeric password
-.B zx2c4@laptop ~ $ pass -n generate Email/jasondonenfeld.com 12
+.B zx2c4@laptop ~ $ pass generate -n Email/jasondonenfeld.com 12
 .br
 The generated password to Email/jasondonenfeld.com is: 
 .br
 YqFsMkBeO6di
 .TP
 Generate new password and copy it to the clipboard
-.B zx2c4@laptop ~ $ pass -c generate Email/jasondonenfeld.com 19
+.B zx2c4@laptop ~ $ pass generate -c Email/jasondonenfeld.com 19
 .br
 Copied Email/jasondonenfeld.com to clipboard. Will clear in 45 seconds.
 .TP
@@ -322,7 +330,9 @@ The default password storage directory.
 .TP
 .B ~/.password-store/.gpg-id
 Contains the default gpg key identification used for encryption and decryption.
-This should be set using the \fBinit\fP command.
+Multiple gpg keys may be specified in this file, one per line. If this file
+exists in any sub directories, passwords inside those sub directories are
+encrypted using those keys. This should be set using the \fBinit\fP command.
 
 .SH ENVIRONMENT VARIABLES
 
@@ -331,16 +341,29 @@ This should be set using the \fBinit\fP command.
 Overrides the default password storage directory.
 .TP
 .I PASSWORD_STORE_KEY
-Overrides the default gpg key identification set by \fBinit\fP.
+Overrides the default gpg key identification set by \fBinit\fP. Keys must not
+contain spaces and thus use of the hexidecimal key signature is recommended.
+Multiple keys may be specified separated by spaces. 
 .TP
 .I PASSWORD_STORE_GIT
 Overrides the default root of the git repository, which is helpful if
 \fIPASSWORD_STORE_DIR\fP is temporarily set to a sub-directory of the default
 password store.
 .TP
+.I PASSWORD_STORE_X_SELECTION
+Overrides the selection passed to \fBxclip\fP, by default \fIclipboard\fP. See
+.BR xclip (1)
+for more info.
+.TP
+.I PASSWORD_STORE_CLIP_TIME
+Specifies the number of seconds to wait before restoring the clipboard, by default
+\fI45\fP seconds.
+.TP
+.I PASSWORD_STORE_UMASK
+Sets the umask of all files modified by pass, by default \fI077\fP.
+.TP
 .I EDITOR
 The location of the text editor used by \fBedit\fP.
-
 .SH SEE ALSO
 .BR gpg2 (1),
 .BR pwgen (1),
