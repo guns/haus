@@ -1,10 +1,10 @@
 # scriptease.vim
 
-Enjoy this amalgamation of crap I use for editing runtime files.
+I make so many Vim plugins I had to make a Vim plugin for making Vim plugins.
 
 ## Features
 
-* `:PP`: Pretty print.
+* `:PP`: Pretty print.  With no argument, acts as a REPL.
 * `:Runtime`: Reload runtime files.  Like `:runtime!`, but it unlets any
   include guards first.
 * `:Disarm`: Remove a runtime file's maps, commands, and autocommands,
