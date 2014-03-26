@@ -26,8 +26,7 @@
          'clojure.tools.trace
          'spyscope.core
          'redl.core
-         'redl.complete
-         'no.disassemble)
+         'redl.complete)
 
 (defmacro p [& xs]
   `(do (clojure.pprint/pprint
@@ -46,7 +45,20 @@
          (finally (clojure.tools.trace/untrace-ns ~nspace)))))
 
 (defn disassemble [obj]
-  (println (no.disassemble/disassemble obj)))
+  (eval
+    `(do (require 'no.disassemble)
+         (println (no.disassemble/disassemble obj)))))
+
+(defn debug-slamhound! []
+  (eval
+    `(alter-var-root #'slam.hound.regrow/*debug* not)))
+
+(defmacro print-errors [& body]
+  `(try
+     ~@body
+     (catch ~Throwable e#
+       (.println System/err e#)
+       (throw e#))))
 
 ;;
 ;; Warnings
