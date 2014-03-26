@@ -642,7 +642,7 @@ function! s:Git(bang,cmd) abort
   let cmd = matchstr(a:cmd,'\v\C.{-}%($|\\@<!%(\\\\)*\|)@=')
   call s:ExecuteInTree('!'.git.' '.cmd)
   call fugitive#reload_status()
-  redraw!
+  redraw
   return matchstr(a:cmd,'\v\C\\@<!%(\\\\)*\|\zs.*')
 endfunction
 
@@ -1089,6 +1089,7 @@ function! s:Grep(cmd,bang,arg) abort
     let &grepprg = grepprg
     let &grepformat = grepformat
     execute cd.'`=dir`'
+    redraw
   endtry
 endfunction
 
