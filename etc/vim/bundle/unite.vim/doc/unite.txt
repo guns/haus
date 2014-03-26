@@ -435,6 +435,14 @@ g:unite_cursor_line_highlight		*g:unite_cursor_line_highlight*
 
 		The default value is "PmenuSel".
 
+g:unite_cursor_line_time		*g:unite_cursor_line_time*
+		Specify the cursor line highlight time.
+		If you scrolls cursor quickly less than it, unite will skip
+		cursor line highlight.
+		If it is "0.0", this feature will be disabled.
+
+		The default value is "0.10".
+
 g:unite_abbr_highlight				*g:unite_abbr_highlight*
 		Specify abbreviated candidates highlight.
 
@@ -659,6 +667,15 @@ g:unite_source_find_command		*g:unite_source_find_command*
 		Set find command.
 
 		The default value is "find".
+
+					*g:unite_source_find_default_opts*
+g:unite_source_find_default_opts
+		Set the default options for find.
+
+		" Follow symlinks
+		let g:unite_source_find_default_opts = "-L"
+
+		The default value is "".
 
 					*g:unite_source_find_max_candidates*
 g:unite_source_find_max_candidates
@@ -1921,9 +1938,10 @@ buffer		Nominates opened buffers as candidates, ordering by time
 		If argument 1 is "!", both listed and non-listed buffer are
 		displayed.
 		If argument 1 is "?", non-listed buffer is displayed.
+		If argument 1 is "+", only modified buffers are displayed.
 
 		Source arguments:
-		1. "!" or "?".
+		1. "!", "?", or "+".
 
 						*unite-source-buffer_tab*
 buffer_tab	Nominates opened buffers only in the current tab as
@@ -3486,6 +3504,8 @@ re-create cache by |<Plug>(unite_redraw)| mapping.
 
 Q: matcher_fuzzy not used by ":UniteWithBufferDir file" command.
 https://github.com/Shougo/unite.vim/issues/418
+Problem with ":Unite file_rec" with long input.
+https://github.com/Shougo/unite.vim/issues/517
 
 A: It is a feature. See |g:unite_matcher_fuzzy_max_input_length|.
 
