@@ -16,6 +16,7 @@ from UltiSnips.position import Position
 from UltiSnips.snippet.definition import UltiSnipsSnippetDefinition
 from UltiSnips.snippet.source import UltiSnipsFileSource, SnipMateFileSource, \
         find_all_snippet_files, find_snippet_files, AddedSnippetsSource
+from UltiSnips.text import escape
 from UltiSnips.vim_state import VimState, VisualContentPreserver
 
 def _ask_user(a, formatted):
@@ -40,8 +41,8 @@ def _ask_snippets(snippets):
     """ Given a list of snippets, ask the user which one they
     want to use, and return it.
     """
-    display = [as_unicode("%i: %s") % (i+1, s.description) for
-            i, s in enumerate(snippets)]
+    display = [as_unicode("%i: %s (%s)") % (i+1, escape(s.description, '\\'),
+        s.location) for i, s in enumerate(snippets)]
     return _ask_user(snippets, display)
 
 def err_to_scratch_buffer(func):
@@ -192,14 +193,14 @@ class SnippetManager(object):
         """Add a snippet to the list of known snippets of the given 'ft'."""
         self._added_snippets_source.add_snippet(ft,
                 UltiSnipsSnippetDefinition(priority, trigger, value,
-                    description, options, {}))
+                    description, options, {}, "added"))
 
     @err_to_scratch_buffer
     def expand_anon(self, value, trigger="", description="", options=""):
         """Expand an anonymous snippet right here."""
         before = _vim.buf.line_till_cursor
         snip = UltiSnipsSnippetDefinition(0, trigger, value, description,
-                options, {})
+                options, {}, "")
 
         if not trigger or snip.matches(before):
             self._do_snippet(snip, before)
@@ -439,27 +440,33 @@ class SnippetManager(object):
         elif feedkey:
             _vim.command("return %s" % _vim.escape(feedkey))
 
-    def _snips(self, before, possible):
-        """ Returns all the snippets for the given text
-        before the cursor. If possible is True, then get all
-        possible matches.
-        """
+    def _snips(self, before, partial):
+        """Returns all the snippets for the given text before the cursor. If
+        partial is True, then get also return partial matches. """
         filetypes = self._buffer_filetypes[_vim.buf.number][::-1]
         matching_snippets = defaultdict(list)
         for _, source in self._snippet_sources:
-            for snippet in source.get_snippets(filetypes, before, possible):
+            for snippet in source.get_snippets(filetypes, before, partial):
                 matching_snippets[snippet.trigger].append(snippet)
         if not matching_snippets:
             return []
 
         # Now filter duplicates and only keep the one with the highest
-        # priority. Only keep the snippets with the highest priority.
+        # priority.
         snippets = []
         for snippets_with_trigger in matching_snippets.values():
             highest_priority = max(s.priority for s in snippets_with_trigger)
             snippets.extend(s for s in snippets_with_trigger
                     if s.priority == highest_priority)
-        return snippets
+
+        # For partial matches we are done, but if we want to expand a snippet,
+        # we have to go over them again and only keep those with the maximum
+        # priority.
+        if partial:
+            return snippets
+
+        highest_priority = max(s.priority for s in snippets)
+        return [s for s in snippets if s.priority == highest_priority]
 
     def _do_snippet(self, snippet, before):
         """Expands the given snippet, and handles everything
@@ -496,6 +503,8 @@ class SnippetManager(object):
 
         self._visual_content.reset()
         self._csnippets.append(si)
+
+        si.update_textobjects()
 
         self._ignore_movements = True
         self._vstate.remember_buffer(self._csnippets[0])
