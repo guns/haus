@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.288 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.292 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -652,6 +652,9 @@ my %ciphers = (
   'ima-en_US-vflYhChiG' => 'w27 r s3',              # 10 Mar 2014
   'ima-en_US-vflWnCYSF' => 'r s1 r s3 w19 r w35 w61 s2',# 13 Mar 2014
   'en_US-vflbT9-GA' => 'w51 w15 s1 w22 s1 w41 r w43 r',# 17 Mar 2014
+  'en_US-vflAYBrl7' => 's2 r w39 w43',              # 18 Mar 2014
+  'en_US-vflS1POwl' => 'w48 s2 r s1 w4 w35',        # 19 Mar 2014
+  'en_US-vflLMtkhg' => 'w30 r w30 w39',             # 20 Mar 2014
 );
 
 sub decipher_sig($$$) {
@@ -804,13 +807,20 @@ sub auto_update($) {
   $body =~ s@(\nmy %ciphers = .*?)(\);)@$1$cipher_line\n$2@s ||
     error ("auto-update: unable to splice");
 
+  # Since I'm not using CVS any more, also update the version number.
+  $body =~ s@([\$]Revision:\s+\d+\.)(\d+)(\s+[\$])@
+             { $1 . ($2 + 1) . $3 }@sexi ||
+    error ("auto-update: unable to tick version");
+
   open (my $out, '>', $progname0) || error ("$progname0: $!");
   print $out $body;
   close $out;
   print STDERR "$progname: auto-updated $progname0\n";
 
   my ($dir) = $ENV{HOME} . '/www/hacks';
-  system ("cd '$dir' && cvs -q commit -m 'cipher auto-update' '$progname'");
+  system ("cd '$dir'" .
+          " && git commit -q -m 'cipher auto-update' '$progname'" .
+          " && git push -q");
 }
 
 
