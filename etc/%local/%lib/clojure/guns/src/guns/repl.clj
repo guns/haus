@@ -1,7 +1,7 @@
 (ns guns.repl
   (:require [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
-            [clojure.pprint :refer [pprint]]
+            [clojure.pprint :as pp]
             [clojure.reflect :as reflect]
             [clojure.string :as string]
             [clojure.test :as test]
@@ -34,16 +34,20 @@
                       {} %)))
     (alter-var-root #'javadoc/*core-java-api* (constantly local-url))))
 
+(defn set-local-pprint-values! []
+  (alter-var-root #'pp/*print-miser-width* (constantly nil))
+  (alter-var-root #'pp/*print-right-margin* (constantly 80)))
+
 ;;
 ;; Debugging
 ;;
 
 (defmacro p [& xs]
-  `(do (~pprint (zipmap '~(reverse xs) [~@(reverse xs)]))
+  `(do (~pp/pprint (zipmap '~(reverse xs) [~@(reverse xs)]))
        ~(last xs)))
 
 (defmacro dump-locals []
-  `(~pprint
+  `(~pp/pprint
      ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
 (defmacro trace
@@ -120,13 +124,15 @@
 
 (def reflect reflect/reflect)
 
+(defn fn-var? [v]
+  (let [f @v]
+    (or (contains? (meta v) :arglists)
+        (fn? f)
+        (instance? MultiFn f))))
+
 (defn cheat-sheet [ns]
   (let [nsname (str ns)
         vars (vals (ns-publics ns))
-        fn-var? #(let [f (deref %)]
-                   (or (contains? (meta %) :arglists)
-                       (fn? f)
-                       (instance? MultiFn f)))
         {funs true
          defs false} (group-by fn-var? vars)
         fmeta (map meta funs)
@@ -231,7 +237,10 @@
 
 (defn init! []
   (println "Setting javadoc URLs…")
-    (set-local-javadocs!)
+  (set-local-javadocs!)
+
+  (println "Setting clojure.pprint values…")
+  (set-local-pprint-values!)
 
   (println "Enabling warnings… ")
   (toggle-warnings! true)
