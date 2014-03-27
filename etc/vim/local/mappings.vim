@@ -297,7 +297,7 @@ noremap <4-p>     :<C-u>SynStack<CR>
 noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
 
 " Open file
-noremap <Leader>! :<C-u>execute 'silent! ! open ' . expand('%') \| redraw!<CR>
+noremap <Leader>! :<C-u>execute 'silent! ! open ' . expand('%')<CR>
 
 " Rename tmux/screen/term window
 noremap <4-,> :<C-u>execute 'Sh xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>

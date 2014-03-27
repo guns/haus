@@ -998,7 +998,7 @@ HAVE vim && {
 
     vimsession() {
         if [[ -e Session.vim ]]; then
-            vim -S Session.vim -c "silent! ! rm -f Session.vim" -c "redraw!" "$@"
+            vim -S Session.vim -c "silent! ! rm -f Session.vim" "$@"
         else
             vim "$@"
         fi
