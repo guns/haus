@@ -296,12 +296,13 @@ function! s:ClojureBufferSetup()
     imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
-    nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(user/refresh)')<CR>
+    nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)')<CR>
     nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
-    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#session_eval('(user/classpath)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#session_eval('(guns.repl/print-classpath!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
+    nnoremap <silent><buffer> <LocalLeader>i   :call fireplace#session_eval('(do (load-file "' . expand('~/.local/lib/clojure/guns/src/guns/repl.clj') . '") (guns.repl/init!))')<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me  :call <SID>ClojureMacroexpand(1)<CR>
@@ -309,23 +310,22 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
-    nnoremap <silent><buffer> <LocalLeader>or  :call <SID>ClojureElementRedir('(comp clojure.pprint/pprint user/reflect)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>os  :call <SID>ClojureElementRedir('(comp println user/object-scaffold)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#session_eval('(user.system/boot)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#session_eval('(user.system/stop)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#session_eval('(user.system/restart)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@user.system/instance')<CR>
+    nnoremap <silent><buffer> <LocalLeader>or  :call <SID>ClojureElementRedir('(comp clojure.pprint/pprint guns.repl/reflect)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>os  :call <SID>ClojureElementRedir('(comp println guns.repl/object-scaffold)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#session_eval('(guns.system/boot)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sS  :call fireplace#session_eval('(guns.system/stop)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sr  :call fireplace#session_eval('(guns.system/restart)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@guns.system/instance')<CR>
     nnoremap <silent><buffer> <LocalLeader>sl  :call <SID>ClojurePprint('@system/log')<CR>
     nnoremap <silent><buffer> <LocalLeader>sc  :call <SID>ClojurePprint('system/config')<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
-    nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(user/toggle-warn-on-reflection!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(guns.repl/toggle-warn-on-reflection!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(1)<CR>
-    nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(user/toggle-schema-validation!)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(user/toggle-warnings! true)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(user/toggle-warnings! false)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>u   :call fireplace#session_eval('(load-file "' . expand('~/.lein/user.clj') . '")')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(guns.repl/toggle-schema-validation!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(guns.repl/toggle-warnings! true)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(guns.repl/toggle-warnings! false)')<CR>
 endfunction
 
 function! s:ClojurePprint(expr)
@@ -348,13 +348,13 @@ endfunction
 function! s:ClojureCheatSheet(pattern)
     if empty(a:pattern) | return | endif
 
-    let file = fireplace#evalparse('(user/write-cheat-sheet! #"' . escape(a:pattern, '"') . '")')
+    let file = fireplace#evalparse('(guns.repl/write-cheat-sheet! #"' . escape(a:pattern, '"') . '")')
 
     if empty(file)
         redraw! " Clear command line
         echo "No matching namespaces."
     else
-        execute 'vsplit ' . file . ' | wincmd L'
+        execute 'vsplit ' . escape(file, '%') . ' | wincmd L'
     endif
 endfunction
 
@@ -372,7 +372,7 @@ function! s:ClojureRunTests(all)
         Require!
         call fireplace#session_eval('(clojure.test/run-all-tests)')
     else
-        call fireplace#session_eval('(user/run-tests-for-current-ns)')
+        call fireplace#session_eval('(guns.repl/run-tests-for-current-ns)')
     endif
 endfunction
 

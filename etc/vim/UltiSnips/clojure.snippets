@@ -1,6 +1,5 @@
 ###
 ### Clojure
-### http://java.ociweb.com/mark/clojure/article.html
 ###
 
 clearsnippets { [ ({ ([
@@ -912,32 +911,40 @@ endsnippet
 
 ### Debugging {{{1
 
-snippet P "user/p" w
-(user/p $0)
+snippet P "guns.repl/p"
+(guns.repl/p $0)
 endsnippet
 
-snippet DL "user/dump-locals" w
-(user/dump-locals)
+snippet (P "guns.repl/p" i
+(guns.repl/p
 endsnippet
 
-snippet BM "user/bm" w
-(user/bm $0)
+snippet DL "guns.repl/dump-locals" w
+(guns.repl/dump-locals)
 endsnippet
 
-snippet T "user/trace" w
-(user/trace $0)
+snippet BM "guns.repl/bm" w
+(guns.repl/bm $0)
+endsnippet
+
+snippet T "guns.repl/trace"
+(guns.repl/trace $0)
+endsnippet
+
+snippet (T "guns.repl/trace" i
+(guns.repl/trace
 endsnippet
 
 snippet SP "#spy/p" w
-#spy/p
+#spy/p $0
 endsnippet
 
 snippet SD "#spy/d" w
-#spy/d
+#spy/d $0
 endsnippet
 
 snippet ST "#spy/t" w
-#spy/t
+#spy/t $0
 endsnippet
 
 ### ClojureScript {{{1
