@@ -168,6 +168,7 @@ $if bash
     "\C-xeM":       "\C-] vimmuttrc \n"
     "\C-xen":       "\C-] vimnginx \n"
     "\C-xeo":       "\C-] vimorg \n"
+    "\C-xer":       "\C-] vimgunsrepl \n"
     "\C-xeR":       "\C-] vimhausrakefile \n"
     "\C-xes":       "\C-] vimscratch \n"
     "\C-xeS":       "\C-] vimsshconfig \n"

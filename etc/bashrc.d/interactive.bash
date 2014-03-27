@@ -164,6 +164,7 @@ CD_FUNC -n ....         ../../..
 CD_FUNC -n .....        ../../../..
 CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
+CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
 CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdmnt           /mnt
@@ -176,10 +177,10 @@ CD_FUNC cdvar           /var
 CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www /var/www
 CD_FUNC cdapi           "$cdwww/api.dev" && export cdapi # Export for `genapi`
+CD_FUNC cdgunsrepl      "$cdhaus/etc/%local/%lib/clojure/guns"
 CD_FUNC cdconfig        ~/.config
 CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
-CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
 CD_FUNC cdpass          ~/.password-store
 CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src && export cdsrc # Export for edit bindings
 CD_FUNC cdSRC           "$cdsrc/READONLY"
@@ -1043,6 +1044,7 @@ HAVE vim && {
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus etc/vim/local && exec vim commands.vim)'
     alias vimdnsmasq='(cddnsmasq && exec vim dnsmasq.conf)'
+    alias vimgunsrepl='(cdgunsrepl && exec vim src/guns/repl.clj)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
     alias vimiptables='(cdetc iptables && exec vim iptables.sh)'
     alias vimmappings='(cdhaus etc/vim/local && exec vim mappings.vim)'

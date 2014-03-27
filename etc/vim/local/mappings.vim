@@ -366,6 +366,7 @@ noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local
 noremap <Leader>eM       :<C-u>execute 'TabOpen ' . expand($cdhaus . '/etc/\\\\\\%mutt/muttrc')<CR>
 noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
+noremap <Leader>er       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%local/\\\\\\%lib/clojure/guns/src/guns/repl.clj'))<CR>
 noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
 noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
