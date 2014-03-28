@@ -9,8 +9,7 @@
             [clojure.tools.trace :as trace]
             [criterium.core :as crit]
             [no.disassemble :as no]
-            [slam.hound.regrow :as regrow]
-            [taoensso.timbre.profiling :as profiling])
+            [slam.hound.regrow :as regrow])
   (:import (clojure.lang MultiFn)
            (java.io File)
            (java.lang.reflect Method)
@@ -220,16 +219,6 @@
   `(do (printf "%s\n\n" '~expr)
        (crit/bench ~expr)
        (newline)))
-
-(defmacro prof
-  {:require [#'profiling/p]}
-  [& args]
-  `(profiling/p ~@args))
-
-(defmacro doprofile
-  {:require [#'profiling/profile]}
-  [& body]
-  `(profiling/profile :debug (keyword `profile#) ~@body))
 
 ;;
 ;; Initialization
