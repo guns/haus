@@ -1612,7 +1612,7 @@ elif __LINUX__; then
             done
             shift $((OPTIND-1))
 
-            (($# > 0)) || { echo "USAGE: $FUNCNAME [-f] pkg …" >&2; return 1; }
+            (($# > 0)) || { echo "USAGE: $FUNCNAME [-df] pkg …" >&2; return 1; }
 
             # Installing from a URL copies the package to /var/cache/pacman
             local pkgs=() pkg
