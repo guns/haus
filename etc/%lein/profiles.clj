@@ -29,7 +29,7 @@
                        [org.clojure/tools.namespace "RELEASE"]
                        [org.clojure/tools.trace "RELEASE"]
                        [redl "RELEASE"]
-                       [slamhound "LATEST"]
+                       [slamhound "[,)"]
                        [spyscope "RELEASE"]
                        [tailrecursion/boot.core "RELEASE"]]
         :aliases {"t" ["trampoline"]
