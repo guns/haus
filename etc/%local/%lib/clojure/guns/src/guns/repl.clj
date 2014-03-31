@@ -147,7 +147,7 @@
 
 (defn write-cheat-sheet! [pattern]
   (let [matches (->> (all-ns)
-                     (filter #(re-seq pattern (str %)))
+                     (filter #(re-find pattern (str %)))
                      (sort-by str))]
     (if (seq matches)
       (let [tmp (File. (format "target/cheat-sheets/%s.clj"
