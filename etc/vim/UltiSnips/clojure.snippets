@@ -61,6 +61,10 @@ snippet SH "clojure.java.shell/sh" w
 (clojure.java.shell/sh $0)
 endsnippet
 
+snippet prv "^:private" w
+^:private
+endsnippet
+
 ### Collections {{{1
 
 snippet conj "conj" w
@@ -542,6 +546,10 @@ endsnippet
 
 snippet def "def"
 (def $0)
+endsnippet
+
+snippet defc "def ^:const"
+(def ^:const $0)
 endsnippet
 
 snippet defd "def ^:dynamic"
