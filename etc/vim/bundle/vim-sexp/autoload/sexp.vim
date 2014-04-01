@@ -42,6 +42,7 @@ let s:macro_filetype_characters = {
     \ 'clojure': "#'`~@^_=",
     \ 'scheme':  "#'`,@",
     \ 'lisp':    "#'`,@",
+    \ 'timl':    "#'`~@^_*"
     \ }
 let s:default_macro_characters = s:macro_filetype_characters['scheme']
 let s:pairs = {
