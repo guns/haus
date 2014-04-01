@@ -1005,13 +1005,13 @@ HAVE vim && {
     }
 
     # vim-fugitive
-    alias vimgit='vim -c "call fugitive#detect(\".\")" -c Gstatus'
+    alias vimgit='vim -c "call fugitive#detect(\".\") | Gstatus"'
     # Param: [$1] File to browse
     gitv() {
         if [[ -f "$1" ]]; then
-            vim -c "Gitv!" "$1"
+            vim -c 'call fugitive#detect(".") | Gitv!' "$1"
         else
-            vim -c 'Gitv' -c 'tabonly' .
+            vim -c 'call fugitive#detect(".") | Gitv!'
         fi
     }
 
