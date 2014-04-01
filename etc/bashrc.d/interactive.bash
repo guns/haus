@@ -1262,17 +1262,9 @@ ALIAS py='python'
 
 ### JVM
 
-# Leiningen, Clojure package manager
+# Leiningen
 HAVE lein && {
-    lein() {
-        if [[ "$1" == +([0-9]) ]]; then
-            local trampoline="trampoline"
-            local LEIN_JVM_OPTS+="$LEIN_JVM_OPTS -Xmx$1m -Djavax.net.ssl.trustStore=~/.certificates/leiningen.ks"
-            local JVM_OPTS+="$JVM_OPTS -Xmx$1m -Djavax.net.ssl.trustStore=~/.certificates/leiningen.ks"
-            shift
-        fi
-        LEIN_JVM_OPTS="$LEIN_JVM_OPTS" JVM_OPTS="$JVM_OPTS" run lein $trampoline "$@"
-    }
+    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks -- lein'
 
     # alias leine=
     # alias leing=
@@ -1281,7 +1273,7 @@ HAVE lein && {
     alias leins='run lein search'
     # alias leinu=
     # alias leinsync=
-    alias leinoutdated='run lein ancient :all :check-clojure :allow-qualified :allow-snapshots'
+    alias leinoutdated='lein ancient :all :check-clojure :allow-qualified :allow-snapshots'
 }
 
 ALIAS java-share-dump='java -server -Xshare:dump'
