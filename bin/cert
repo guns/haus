@@ -24,7 +24,7 @@ class Cert
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 25 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Usage: #{File.basename __FILE__} [options] command [args]
 
@@ -32,12 +32,12 @@ class Cert
 
         Commands:
 
-            d[ump] [arg ...]     Dump certificates to stdout
-            i[nfo] [arg ...]     Show detailed certificate information
-            a[dd] arg ...        Add certificates to certfile
-            r[m] arg ...         Remove certificates from certfile
-            e[xec] arg ...       Run a command with CA environment variables set to certfile
-            c[onsole]            Open a Pry debugging session
+            d[ump] [arg ...]          Dump certificates to stdout
+            i[nfo] [arg ...]          Show detailed certificate information
+            a[dd] arg ...             Add certificates to certfile
+            r[m] arg ...              Remove certificates from certfile
+            e[xec] arg ...            Run a command with CA environment variables set to certfile
+            c[onsole]                 Open a Pry debugging session
 
         Options:
       BANNER
@@ -50,8 +50,8 @@ class Cert
         options.keystore = File.expand_path arg
       end
 
-      opt.on '-P', '--keystore-password PASS', 'Optionally set password for keystore' do |arg|
-        options.keystore_password = arg
+      opt.on '-P', '--keystore-pass PASS', 'Optionally set password for keystore' do |arg|
+        options.keystore_pass = arg
       end
 
       opt.on '-s', '--self-signed', 'Select only self-signed certificates' do
@@ -143,8 +143,8 @@ class Cert
     options.keystore
   end
 
-  def keystore_password
-    @keystore_password ||= (options.keystore_password || Util::Password.password)
+  def keystore_pass
+    @keystore_pass ||= (options.keystore_pass || Util::Password.password)
   end
 
   def certificates
@@ -157,7 +157,7 @@ class Cert
     FileUtils.rm_f keystore
 
     certs.each_with_index do |cert, i|
-      IO.popen [{ 'STOREPASS' => keystore_password },
+      IO.popen [{ 'STOREPASS' => keystore_pass },
                 'keytool', '-importcert', '-trustcacerts', '-noprompt',
                 '-keystore', keystore,
                 '-storepass:env', 'STOREPASS',
