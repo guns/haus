@@ -1,0 +1,12 @@
+(ns timl.ftplugin)
+(require '[timl.plugin-helper :as ph])
+
+(defmacro include-guard [& default]
+  (let [param (or (first default) 'b:did-ftplugin)]
+   `(ph/include-guard ~param)))
+
+; should append to b:undo-ftplugin
+(defmacro setlocal [& opts]
+  `(do
+     (execute (str "setlocal " ~(ph/build-option-string opts)))
+     (set! b:undo-ftplugin ~(ph/extract-option-restore opts))))

@@ -1,0 +1,59 @@
+(in-ns 'timl.core)
+
+(defn not-empty [xs] (when (seq xs) xs))
+
+(defn filter [pred coll]
+  (lazy-seq
+    (loop [s (seq coll)]
+      (when s
+        (if (chunked-seq? s)
+          (concat
+            (#*timl#coll#mutating_filter pred (chunk-first s))
+            (filter pred (chunk-rest s)))
+          (let [f (first s) r (rest s)]
+            (if (pred f)
+              (cons f (filter pred r))
+              (recur (seq r)))))))))
+
+(defn iterate [f x]
+  (cons x (lazy-seq (iterate f (f x)))))
+
+(defn repeat
+  ([x] (lazy-seq (cons x (repeat x))))
+  ([n x] (take n (repeat x))))
+
+(defn every?
+  [pred coll]
+  (cond
+   (nil? (seq coll)) true
+   (pred (first coll)) (recur pred (next coll))
+   :else false))
+
+(defn range
+  ([] (range 0 Infinity 1))
+  ([end] (range 0 end 1))
+  ([start end] (range start end 1))
+  ([start end step]
+   (let [comp (if (pos? step) < >)
+         closest #(if (comp % %2) % %2)
+         next-start (closest end (+ start (* 1024 step)))]
+     (if (comp start end)
+       (if (integer? next-start)
+         (chunk-cons
+           (#*range start (dec next-start) step)
+           (lazy-seq (range next-start end step)))
+         (cons start (range (+ start step) end step)))
+       ()))))
+
+(defn reductions [f init xs]
+  (cons init
+        (lazy-seq
+          (if xs
+            (reductions f (f init (first xs)) (rest xs))))))
+
+(defn last [xs] (if (next xs) (recur (next xs)) (first xs)))
+(defn butlast [s]
+  (loop [ret '() s s]
+    (if (next s)
+      (recur (conj ret (first s)) (next s))
+      ret)))

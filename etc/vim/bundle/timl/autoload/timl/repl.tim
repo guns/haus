@@ -1,0 +1,43 @@
+(ns timl.repl)
+
+(defn qf
+  ([] (qf *e))
+  ([e]
+   (#*timl#interactive#copen e)
+   (throw "timl#repl: exit")))
+
+(defn breakpoint-fn [env]
+  (let [str (#*input (format "%s=>> " (str (ns-name *ns*))))]
+    (when (#*len str)
+      (newline)
+      (try
+        (prn (#*timl#loader#eval (read-string str) (ns-name *ns*) env))
+        (catch "" e (set! *e e) (println (. e exception))))
+      (recur env))))
+
+(defmacro breakpoint []
+  `(timl.repl/breakpoint-fn ~(list #*eval "locals")))
+
+(defmacro breakadd []
+  `(execute "execute 'breakadd func '.(1+expand('<slnum>')).' '.matchstr(expand('<sfile>'), '.*\\.\\zs.*')"))
+(defn breakme []
+  (breakadd)
+  (+ 1 (* 2 3)))
+
+(defn compile [body]
+  (print (. (#*timl#compiler#build body) body)))
+
+(defn help-topic [sym]
+  (if (special-symbol? sym)
+    (str "timl-" sym)
+    (if-let [v (resolve sym)]
+      (:help (meta v) (. v location))
+      (str sym))))
+
+(defmacro help [sym]
+  `(throw (str "timl#repl: exit help " ~(help-topic sym))))
+
+(defmacro edit [sym]
+  `(let [m (meta (var ~sym))]
+     (if (not= (:file m "NO_SOURCE_PATH") "NO_SOURCE_PATH")
+       (throw (str "timl#repl: exit edit +" (:line m) " " (#*fnameescape (:file m)))))))

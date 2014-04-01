@@ -1,0 +1,49 @@
+(in-ns 'timl.core)
+
+(defmacro defonce [name expr]
+  `(when-not (exists? (munge (str "g:" (ns-name *ns*) "#" '~name)))
+     (def ~name ~expr)))
+
+(defmacro if-not
+  ([cond then] `(if ~cond nil ~then))
+  ([cond then else] `(if ~cond ~else ~then)))
+
+(defmacro when-not [cond & body]
+  (list 'if cond nil (cons 'do body)))
+
+(defmacro cond [& clauses]
+  (when (seq clauses)
+    (list 'if (first clauses)
+          (first (rest clauses))
+          (cons `cond (rest (rest clauses))))))
+
+(defmacro -> [x & forms]
+  (if (seq forms)
+    (let [form (first forms)
+          more (next forms)] (if more `(-> (-> ~x ~form) ~@more) (if (list? form)
+          `(~(first form) ~x ~@(rest form))
+          (list form x))))
+    x))
+
+(defmacro binding [bindings & body]
+  (if (seq bindings)
+    `(let [old# ~(first bindings)]
+       (try
+         (set! ~(first bindings) ~(first (rest bindings)))
+         (binding ~(vec (rest (rest bindings))) ~@body)
+         (finally (set! ~(first bindings) old#))))
+    `(do ~@body)))
+
+(defmacro with-out-str [& body]
+  `(let [tempname# (#*tempname)]
+     (execute "redraw")
+     (binding [&verbosefile tempname#]
+       (set! l:TimLfn (fn [] ~@body))
+       (execute "silent call timl#invoke(l:TimLfn)"))
+     (#*substitute (slurp tempname#) "^\n" "" "g")))
+
+(defmacro time [& body]
+  `(let [reltime# (#*reltime)
+        result# (do ~@body)]
+     (printf "Elapsed time: %s secs\n" (#*reltimestr (#*reltime reltime#)))
+     result#))

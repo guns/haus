@@ -60,7 +60,7 @@ augroup GUNS
     " Lisp {{{1
     autocmd BufRead,BufNewFile *.cljx
         \ setlocal filetype=clojure
-    autocmd Filetype lisp,scheme
+    autocmd Filetype lisp,scheme,timl
         \ LispBufferSetup
     autocmd Filetype clojure
         \ ClojureBufferSetup

@@ -1,0 +1,21 @@
+(ns ftplugin.timl)
+(use 'timl.ftplugin)
+(include-guard)
+
+(setlocal comments=":; ,:;;; ,:;; " commentstring="; %s")
+(setlocal define="^\\s*(def\\k*")
+(setlocal formatoptions+=cql)
+(setlocal omnifunc=timl#interactive#omnicomplete)
+
+(execute "nnoremap <silent><buffer> cp :set opfunc=timl#interactive#eval_opfunc<CR>g@")
+(execute "nnoremap <silent><buffer> cpp :<C-U>call timl#interactive#eval_opfunc(v:count)<CR>")
+(execute "nnoremap <buffer> K :execute 'help' ftplugin#timl#cursor_keyword()<CR>")
+(defn cursor-keyword []
+  (let [kw (#*expand "<cword>")
+        ns (the-ns (symbol (#*timl#interactive#ns_for_cursor)))]
+    (cond
+      (re-find "^#\\*" kw) (str (subs kw 2) "()")
+      (re-find "^&" kw)    (str "'" (subs kw 1) "'")
+      (special-symbol?     (symbol kw)) (str "timl-" kw)
+      (ns-resolve ns (symbol kw)) (. (ns-resolve ns (symbol kw)) munged)
+      :else                kw)))
