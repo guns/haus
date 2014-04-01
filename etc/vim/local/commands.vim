@@ -298,7 +298,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <Leader>r        :Require<CR>
     nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)')<CR>
     nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
-    nnoremap <silent><buffer> <LocalLeader>cp  :call fireplace#session_eval('(guns.repl/print-classpath!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>cp  :Capture call fireplace#session_eval('(guns.repl/print-classpath!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
@@ -310,6 +310,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
+    nnoremap <silent><buffer> <LocalLeader>od  :call <SID>ClojureElementRedir('guns.repl/disassemble')<CR>
     nnoremap <silent><buffer> <LocalLeader>or  :call <SID>ClojureElementRedir('(comp clojure.pprint/pprint guns.repl/reflect)')<CR>
     nnoremap <silent><buffer> <LocalLeader>os  :call <SID>ClojureElementRedir('(comp println guns.repl/object-scaffold)')<CR>
     nnoremap <silent><buffer> <LocalLeader>ss  :call fireplace#session_eval('(guns.system/boot)')<CR>
