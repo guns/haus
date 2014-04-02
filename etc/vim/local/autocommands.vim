@@ -58,10 +58,14 @@ augroup GUNS
         \ SetWhitespace 4
 
     " Lisp {{{1
+    autocmd Syntax clojure,timl,scheme,lisp
+        \ RainbowParens
     autocmd BufRead,BufNewFile *.cljx
         \ setlocal filetype=clojure
-    autocmd Filetype lisp,scheme,timl
+    autocmd Filetype lisp,scheme
         \ LispBufferSetup
+    autocmd FileType timl
+        \ TimLBufferSetup
     autocmd Filetype clojure
         \ ClojureBufferSetup
 

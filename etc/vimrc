@@ -175,6 +175,7 @@ let g:omni_sql_no_default_maps = 1
 
 " Plugin: vim-clojure-static
 let g:clojure_align_multiline_strings = 1
+let g:clojure_syntax_keywords = { 'clojureMacro': ['defproject'] }
 let g:clojure_fuzzy_indent_patterns = [
     \ '^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^for-',
     \ '^fn', '-fn$', '^at-', '-to$', '-loop$', '\v(cond|as)-\>\*', '^dosql$',

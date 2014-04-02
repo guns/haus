@@ -265,20 +265,37 @@ function! LispFoldExpr(lnum) "{{{1
     endif
 endfunction
 
+command! -bar RainbowParens call <SID>RainbowParens()
+function! s:RainbowParens()
+    " Rainbow parens
+    call rainbow_parentheses#load(0)
+    call rainbow_parentheses#load(1)
+    call rainbow_parentheses#load(2)
+    call rainbow_parentheses#activate()
+endfunction
+
 command! -bar LispBufferSetup call <SID>LispBufferSetup() "{{{1
 function! s:LispBufferSetup()
     let b:loaded_delimitMate = 1
     SetWhitespace 2 8
     setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
 
-    " Rainbow parens
-    call rainbow_parentheses#load(0)
-    call rainbow_parentheses#load(1)
-    call rainbow_parentheses#load(2)
-    call rainbow_parentheses#activate()
-
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
+endfunction
+
+command! -bar TimLBufferSetup call <SID>TimLBufferSetup() "{{{1
+function! s:TimLBufferSetup()
+    LispBufferSetup
+
+    nmap     <silent><buffer> <Leader><Leader> cp<Plug>(sexp_outer_list)``
+    imap     <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
+
+    nmap     <silent><buffer> <Leader>X        cp<Plug>(sexp_outer_top_list)``
+    imap     <silent><buffer> <Leader>X        <C-\><C-o><C-\><C-n><Leader>X
+
+    nmap     <silent><buffer> <Leader>x        cp<Plug>(sexp_inner_element)``
+    imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
 
 command! -bar ClojureBufferSetup call <SID>ClojureBufferSetup() "{{{1
@@ -295,8 +312,8 @@ function! s:ClojureBufferSetup()
     nmap     <silent><buffer> <Leader>x        <Plug>FireplacePrint<Plug>(sexp_inner_element)``
     imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 
-    nnoremap <silent><buffer> <Leader>r        :Require<CR>
-    nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)')<CR>
+    nnoremap <silent><buffer> <Leader>r        :Require \| ClojureHighlightReferences<CR>
+    nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)') \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
     nnoremap <silent><buffer> <LocalLeader>cp  :Capture call fireplace#session_eval('(guns.repl/print-classpath!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
