@@ -168,6 +168,9 @@ super + control + alt + {XF86Eject,Pause,XF86Sleep}
 super + control + alt + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
+Print
+	sleep 0.1; scrot -s -e 'mv "$f" ~/Downloads'
+
 #
 # Applications
 #
