@@ -132,7 +132,7 @@ function! timl#compiler#serialize(x) abort
       call add(keyvals, timl#coll#first(_.seq))
       let _.seq = timl#coll#next(_.seq)
     endwhile
-    return 'timl#set#create('.timl#compiler#serialize(keyvals).')'
+    return 'timl#set#coerce('.timl#compiler#serialize(keyvals).')'
 
   elseif timl#type#string(a:x) ==# 'timl.lang/Cons'
     return 'timl#cons#create('
@@ -459,7 +459,7 @@ function! s:emit_sf_recur(file, env, form) abort
   if a:env.context !=# 'return' || !has_key(a:env, 'params')
     throw 'timl#compiler: recur outside of tail position'
   endif
-  let bindings = map(copy(a:env.params), 'a:env.locals[v:val[0]]')
+  let bindings = map(copy(filter(copy(a:env.params), 'v:val[0] !=# "&"')), 'a:env.locals[v:val[0]]')
   call s:emitln(a:file, 'let ['.join(bindings, ', ').'] = ['.s:expr_args(a:file, a:env, timl#coll#next(a:form)).']')
   call s:emitln(a:file, 'continue')
 endfunction
