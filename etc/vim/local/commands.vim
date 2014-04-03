@@ -280,9 +280,9 @@ function! s:LispBufferSetup()
     SetWhitespace 2 8
     setlocal foldmethod=expr foldexpr=LispFoldExpr(v:lnum)
 
-    noremap  <silent><buffer> <4-CR> A<Space>;<Space>
-    noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
-    nnoremap <silent><buffer> gl     :<C-u>call <SID>ToggleLispwordIndenting(expand('<cword>'))<CR>
+    noremap  <silent><buffer> <4-CR>          A<Space>;<Space>
+    noremap! <silent><buffer> <4-CR>          <C-\><C-o>A<Space>;<Space>
+    nnoremap <silent><buffer> <LocalLeader>tl :<C-u>call <SID>ToggleLispwords(expand('<cword>'))<CR>
 endfunction
 
 command! -bar TimLBufferSetup call <SID>TimLBufferSetup() "{{{1
@@ -411,11 +411,11 @@ function! s:ClojureElementRedir(fn)
     endtry
 endfunction
 
-function! s:ToggleLispwordIndenting(word)
+function! s:ToggleLispwords(word)
     " Strip leading namespace qualifiers and macro characters from symbol
     let word = substitute(a:word, "\\v%(.*/|[#'`~@^,]*)(.*)", '\1', '')
 
-    if &lispwords =~# word
+    if &lispwords =~# '\V\<' . word . '\>'
         execute 'setlocal lispwords-=' . word
         echo "Removed " . word . " from lispwords."
     else
