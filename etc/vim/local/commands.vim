@@ -282,6 +282,7 @@ function! s:LispBufferSetup()
 
     noremap  <silent><buffer> <4-CR> A<Space>;<Space>
     noremap! <silent><buffer> <4-CR> <C-\><C-o>A<Space>;<Space>
+    nnoremap <silent><buffer> gl     :<C-u>call <SID>ToggleLispwordIndenting(expand('<cword>'))<CR>
 endfunction
 
 command! -bar TimLBufferSetup call <SID>TimLBufferSetup() "{{{1
@@ -408,6 +409,19 @@ function! s:ClojureElementRedir(fn)
         normal! gg"_dG"rPdd
         let [@e, @r] = reg_save
     endtry
+endfunction
+
+function! s:ToggleLispwordIndenting(word)
+    " Strip leading namespace qualifiers and macro characters from symbol
+    let word = substitute(a:word, "\\v%(.*/|[#'`~@^,]*)(.*)", '\1', '')
+
+    if &lispwords =~# word
+        execute 'setlocal lispwords-=' . word
+        echo "Removed " . word . " from lispwords."
+    else
+        execute 'setlocal lispwords+=' . word
+        echo "Added " . word . " to lispwords."
+    endif
 endfunction
 
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
