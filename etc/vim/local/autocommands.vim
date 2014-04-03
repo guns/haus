@@ -165,7 +165,7 @@ augroup GUNS
     autocmd BufRead,BufNewFile *.mail
         \ setlocal filetype=mail
     autocmd BufRead,BufNewFile vimperator-*
-        \ setlocal filetype=mail |
+        \ setlocal filetype=markdown |
         \ SetAutowrap 0 |
         \ setlocal wrap
     autocmd FileType mail
