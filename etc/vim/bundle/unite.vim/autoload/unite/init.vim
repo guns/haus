@@ -1,7 +1,6 @@
 "=============================================================================
 " FILE: init.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 05 Mar 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -70,9 +69,6 @@ function! unite#init#_context(context, ...) "{{{
   endif
   if context.tab
     let context.no_split = 1
-  endif
-  if context.quick_match
-    let context.auto_quit = 1
   endif
   if !has_key(context, 'short_source_names')
     let context.short_source_names = g:unite_enable_short_source_names

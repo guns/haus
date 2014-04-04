@@ -1,7 +1,6 @@
 "=============================================================================
 " FILE: cdable.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 10 Jan 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -110,6 +109,22 @@ function! s:kind.action_table.tabnew_cd.func(candidate) "{{{
     tabnew | call s:external_cd(a:candidate)
   elseif a:candidate.action__directory != ''
     tabnew | execute g:unite_kind_cdable_cd_command '`=a:candidate.action__directory`'
+  endif
+endfunction"}}}
+
+let s:kind.action_table.tabnew_lcd = {
+      \ 'description' : 'open a new tab page here with lcd',
+      \ 'is_tab' : 1,
+      \ }
+function! s:kind.action_table.tabnew_lcd.func(candidate) "{{{
+  if !s:check_is_directory(a:candidate.action__directory)
+    return
+  endif
+
+  if &filetype ==# 'vimfiler' || &filetype ==# 'vimshell'
+    tabnew | call s:external_cd(a:candidate)
+  elseif a:candidate.action__directory != ''
+    tabnew | execute g:unite_kind_cdable_lcd_command '`=a:candidate.action__directory`'
   endif
 endfunction"}}}
 

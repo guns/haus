@@ -1,7 +1,6 @@
 "=============================================================================
 " FILE: candidates.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" Last Modified: 01 Feb 2014.
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -144,6 +143,10 @@ function! unite#candidates#gather(...) "{{{
 
   let candidates = unite#init#_candidates(
         \ unite.candidates[: unite.candidates_pos-1])
+
+  let unite.context.unite__max_candidates = 0
+  let unite.context.input_list =
+        \ split(unite.context.input, '\\\@<! ', 1)
 
   " Post filter.
   for filter_name in unite.post_filters
