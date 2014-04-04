@@ -20,7 +20,7 @@ function! s:toggle_clojure_highlight_references()
 	if g:clojure_highlight_references
 		call s:syntax_match_references()
 	else
-		unlet! b:clojure_syntax_keywords
+		unlet! b:clojure_syntax_keywords b:clojure_syntax_without_core_keywords
 		let &syntax = &syntax
 	endif
 endfunction

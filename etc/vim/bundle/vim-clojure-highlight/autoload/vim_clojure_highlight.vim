@@ -17,10 +17,14 @@ function! vim_clojure_highlight#syntax_match_references(...)
 
 	try
 		call s:require()
+
 		let ns = "'" . fireplace#ns()
-		let hi_locals = (a:0 && a:1 == 0) ? 'false' : 'true'
-		execute fireplace#evalparse("(vim-clojure-highlight/ns-syntax-command " . ns . " " . hi_locals . ")")
+		let opts = (a:0 > 0 && !a:1) ? ' :local-vars false' : ''
+
+		execute fireplace#evalparse("(vim-clojure-highlight/ns-syntax-command " . ns . opts . ")")
 		let &syntax = &syntax
 	catch /./
 	endtry
 endfunction
+
+" vim:noet:sw=8:ts=8

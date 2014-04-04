@@ -2,25 +2,29 @@
 ;;          Joel Holdbrooks <cjholdbrooks@gmail.com>
 
 (ns vim-clojure-static.generate
-  (:require [clojure.set :as set]
+  (:require [clojure.java.io :as io]
+            [clojure.java.shell :refer [sh]]
+            [clojure.set :as set]
             [clojure.string :as string]
             [frak :as f])
   (:import (clojure.lang MultiFn)
            (java.lang Character$UnicodeBlock Character$UnicodeScript)
            (java.lang.reflect Field)
-           (java.util.regex Pattern$CharPropertyNames UnicodeProp)))
+           (java.text SimpleDateFormat)
+           (java.util Date)
+           (java.util.regex Pattern Pattern$CharPropertyNames UnicodeProp)))
 
 ;;
 ;; Helpers
 ;;
 
-(defn vim-frak-pattern
+(defn- vim-frak-pattern
   "Create a non-capturing regular expression pattern compatible with Vim."
   [strs]
   (-> (f/string-pattern strs {:escape-chars :vim})
       (string/replace #"\(\?:" "\\%\\(")))
 
-(defn property-pattern
+(defn- property-pattern
   "Vimscript very magic pattern for a character property class."
   ([s] (property-pattern s true))
   ([s braces?]
@@ -28,7 +32,7 @@
      (format "\\v\\\\[pP]\\{%s\\}" s)
      (format "\\v\\\\[pP]%s" s))))
 
-(defn syntax-match-properties
+(defn- syntax-match-properties
   "Vimscript literal `syntax match` for a character property class."
   ([group fmt props] (syntax-match-properties group fmt props true))
   ([group fmt props braces?]
@@ -36,7 +40,7 @@
            (name group)
            (property-pattern (format fmt (vim-frak-pattern props)) braces?))))
 
-(defn get-private-field
+(defn- get-private-field
   "Violate encapsulation and get the value of a private field."
   [^Class cls fieldname]
   (let [^Field field (first (filter #(= fieldname (.getName ^Field %))
@@ -44,16 +48,16 @@
     (.setAccessible field true)
     (.get field field)))
 
-(defn fn-var? [v]
+(defn- fn-var? [v]
   (let [f @v]
     (or (contains? (meta v) :arglists)
         (fn? f)
         (instance? MultiFn f))))
 
-(defn inner-class-name [^Class cls]
+(defn- inner-class-name [^Class cls]
   (string/replace (.getName cls) #".*\$(.+)" "$1"))
 
-(defn map-keyword-names [coll]
+(defn- map-keyword-names [coll]
   (reduce
     (fn [v x]
       ;; Include fully qualified versions of core vars for matching vars in
@@ -67,7 +71,7 @@
             :else (conj v (str x))))
     [] coll))
 
-(defn vim-top-cluster
+(defn- vim-top-cluster
   "Generate a Vimscript literal `syntax cluster` statement for `groups` and
    all top-level syntax groups in the given syntax buffer."
   [groups syntax-buf]
@@ -99,18 +103,18 @@
      monitor-enter monitor-exit . new set!})
 
 (def keyword-groups
-  "Special forms, constants, and every public var in clojure.core listed by
-   syntax group suffix."
-  (let [builtins [["clojureConstant" '#{nil}]
-                  ["clojureBoolean" '#{true false}]
-                  ["clojureSpecial" special-forms]
-                  ;; These are duplicates from special-forms
-                  ["clojureException" '#{throw try catch finally}]
-                  ["clojureCond" '#{case cond cond-> cond->> condp if-let
-                                    if-not if-some when when-first when-let
-                                    when-not when-some}]
+  "Special forms, constants, and every public var in clojure.core keyed by
+   syntax group name."
+  (let [exceptions '#{throw try catch finally}
+        builtins {"clojureConstant" '#{nil}
+                  "clojureBoolean" '#{true false}
+                  "clojureSpecial" (apply disj special-forms exceptions)
+                  "clojureException" exceptions
+                  "clojureCond" '#{case cond cond-> cond->> condp if-let
+                                   if-not if-some when when-first when-let
+                                   when-not when-some}
                   ;; Imperative looping constructs (not sequence functions)
-                  ["clojureRepeat" '#{doseq dotimes while}]]
+                  "clojureRepeat" '#{doseq dotimes while}}
         coresyms (set/difference (set (keys (ns-publics 'clojure.core)))
                                  (set (mapcat peek builtins)))
         group-preds [["clojureDefine" #(re-seq #"\Adef(?!ault)" (str %))]
@@ -119,9 +123,9 @@
                      ["clojureVariable" identity]]]
     (first
       (reduce
-        (fn [[v syms] [group pred]]
+        (fn [[m syms] [group pred]]
           (let [group-syms (set (filterv pred syms))]
-            [(conj v [group group-syms])
+            [(assoc m group group-syms)
              (set/difference syms group-syms)]))
         [builtins coresyms] group-preds))))
 
@@ -130,7 +134,7 @@
   (let [props (->> (get-private-field Pattern$CharPropertyNames "map")
                    (mapv (fn [[prop field]] [(inner-class-name (class field)) prop]))
                    (group-by first)
-                   (reduce (fn [m [k v]] (assoc m k (mapv peek v))) {}))
+                   (reduce-kv (fn [m k v] (assoc m k (mapv peek v))) {}))
         binary (concat (map #(.name ^UnicodeProp %) (get-private-field UnicodeProp "$VALUES"))
                        (keys (get-private-field UnicodeProp "aliases")))
         script (concat (map #(.name ^Character$UnicodeScript %) (Character$UnicodeScript/values))
@@ -179,6 +183,7 @@
 (def vim-keywords
   "Vimscript literal dictionary of important identifiers."
   (->> keyword-groups
+       sort
        (map (fn [[group keywords]]
               (->> keywords
                    map-keyword-names
@@ -271,7 +276,11 @@
     "\\c%%(In|blk\\=|block\\=)%s"
     (map string/lower-case (:block character-properties))))
 
-(def comprehensive-clojure-character-property-regexps
+(def vim-lispwords
+  "Vimscript literal `setlocal lispwords=` statement."
+  (str "setlocal lispwords=" (string/join \, (sort lispwords)) "\n"))
+
+(defn- comprehensive-clojure-character-property-regexps []
   "A string representing a Clojure literal vector of regular expressions
    containing all possible property character classes. For testing Vimscript
    syntax matching optimizations."
@@ -286,14 +295,114 @@
                            (fmt "script=" :script)
                            (fmt "block=" :block)])))
 
-(def vim-lispwords
-  "Vimscript literal `setlocal lispwords=` statement."
-  (str "setlocal lispwords=" (string/join \, (sort lispwords)) "\n"))
+;;
+;; Update functions
+;;
+
+(def ^:private CLOJURE-SECTION
+  #"(?ms)^CLOJURE.*?(?=^[\p{Lu} ]+\t*\*)")
+
+(defn- fjoin [& args]
+  (string/join \/ args))
+
+(defn- qstr [& xs]
+  (string/replace (apply str xs) "\\" "\\\\"))
+
+(defn- update-doc! [first-line-pattern src-file dst-file]
+  (let [sbuf (with-open [rdr (io/reader src-file)]
+               (->> rdr
+                    line-seq
+                    (drop-while #(not (re-find first-line-pattern %)))
+                    (string/join \newline)))
+        dbuf (slurp dst-file)
+        dmatch (re-find CLOJURE-SECTION dbuf)
+        hunk (re-find CLOJURE-SECTION sbuf)]
+    (spit dst-file (string/replace-first dbuf dmatch hunk))))
+
+(defn- copy-runtime-files! [src dst & opts]
+  (let [{:keys [tag date paths]} (apply hash-map opts)]
+    (doseq [path paths
+            :let [buf (-> (fjoin src path)
+                          slurp
+                          (string/replace "%%RELEASE_TAG%%" tag)
+                          (string/replace "%%RELEASE_DATE%%" date))]]
+      (spit (fjoin dst "runtime" path) buf))))
+
+(defn- project-replacements [dir]
+  {(fjoin dir "syntax/clojure.vim")
+   {"-*- KEYWORDS -*-"
+    (qstr generation-comment
+          clojure-version-comment
+          vim-keywords)
+    "-*- CHARACTER PROPERTY CLASSES -*-"
+    (qstr generation-comment
+          java-version-comment
+          vim-posix-char-classes
+          vim-java-char-classes
+          vim-unicode-binary-char-classes
+          vim-unicode-category-char-classes
+          vim-unicode-script-char-classes
+          vim-unicode-block-char-classes)
+    "-*- TOP CLUSTER -*-"
+    (qstr generation-comment
+          (vim-top-cluster (keys keyword-groups)
+                           (slurp (fjoin dir "syntax/clojure.vim"))))}
+
+   (fjoin dir "ftplugin/clojure.vim")
+   {"-*- LISPWORDS -*-"
+    (qstr generation-comment
+          vim-lispwords)}
+
+   (fjoin dir "autoload/clojurecomplete.vim")
+   {"-*- COMPLETION WORDS -*-"
+    (qstr generation-comment
+          clojure-version-comment
+          vim-completion-words)}})
+
+(defn- update-project!
+  "Update project runtime files in the given directory."
+  [dir]
+  (doseq [[file replacements] (project-replacements dir)]
+    (doseq [[magic-comment replacement] replacements]
+      (let [buf (slurp file)
+            pat (Pattern/compile (str "(?s)\\Q" magic-comment "\\E\\n.*?\\n\\n"))
+            rep (str magic-comment "\n" replacement "\n")
+            buf' (string/replace buf pat rep)]
+        (if (= buf buf')
+          (printf "No changes: %s\n" magic-comment)
+          (do (printf "Updating %s\n" magic-comment)
+              (spit file buf')))))))
+
+(defn- update-vim!
+  "Update Vim repository runtime files in dst/runtime"
+  [src dst]
+  (let [current-tag (string/trim-newline (:out (sh "git" "tag" "--points-at" "HEAD")))
+        current-date (.format (SimpleDateFormat. "dd MMMM YYYY") (Date.))]
+    (assert (seq current-tag) "Git HEAD is not tagged!")
+    (update-doc! #"CLOJURE\t*\*ft-clojure-indent\*"
+                 (fjoin src "doc/clojure.txt")
+                 (fjoin dst "runtime/doc/indent.txt"))
+    (update-doc! #"CLOJURE\t*\*ft-clojure-syntax\*"
+                 (fjoin src "doc/clojure.txt")
+                 (fjoin dst "runtime/doc/syntax.txt"))
+    (copy-runtime-files! src dst
+                         :tag current-tag
+                         :date current-date
+                         :paths ["autoload/clojurecomplete.vim"
+                                 "ftplugin/clojure.vim"
+                                 "indent/clojure.vim"
+                                 "syntax/clojure.vim"])))
 
 (comment
+  ;; Run this to update the project files
+  (update-project! "..")
+
+  ;; Run this to update a vim repository
+  (update-vim! ".." "../../vim")
+
   ;; Generate an example file with all possible character property literals.
   (spit "tmp/all-char-props.clj"
-        comprehensive-clojure-character-property-regexps)
+        (comprehensive-clojure-character-property-regexps))
 
   ;; Performance test: `syntax keyword` vs `syntax match`
   (vim-clojure-static.test/benchmark

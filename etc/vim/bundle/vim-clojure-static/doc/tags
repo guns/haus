@@ -1,4 +1,5 @@
 b:clojure_syntax_keywords	clojure.txt	/*b:clojure_syntax_keywords*
+b:clojure_syntax_without_core_keywords	clojure.txt	/*b:clojure_syntax_without_core_keywords*
 clojure-about	clojure.txt	/*clojure-about*
 clojure-indent	clojure.txt	/*clojure-indent*
 clojure-introduction	clojure.txt	/*clojure-introduction*
