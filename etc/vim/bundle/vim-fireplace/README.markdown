@@ -32,19 +32,19 @@ This list isn't exhaustive; see the `:help` for details.
 ### Transparent setup
 
 Fireplace.vim talks to nREPL.  With Leiningen, it connects automatically based
-on `target/repl-port`, otherwise it's just a `:Connect` away.  You can connect
-to multiple instances of nREPL for different projects, and it will use the
-right one automatically.  ClojureScript support is just as seamless with
+on `.nrepl-port`, otherwise it's just a `:Connect` away.  You can connect to
+multiple instances of nREPL for different projects, and it will use the right
+one automatically.  ClojureScript support is just as seamless with
 [Piggieback][].
 
 The only external dependency is that you have either a Vim with Python support
 compiled in, or `python` in your path.
 
 Oh, and if you don't have an nREPL connection, installing [classpath.vim][]
-lets it fall back to using `java clojure.main`, using a class path based on
-your Leiningen or Maven config.  It's a bit slow, but a two-second delay is
-vastly preferable to being forced out of my flow for a single command, in my
-book.
+lets it fall back to using `java clojure.main` for some of the basics, using a
+class path based on your Leiningen or Maven config.  It's a bit slow, but a
+two-second delay is vastly preferable to being forced out of my flow for a
+single command, in my book.
 
 [Piggieback]: https://github.com/cemerick/piggieback
 [classpath.vim]: https://github.com/tpope/vim-classpath
@@ -68,18 +68,22 @@ cursor.  `cqc` gives you a blank line in insert mode.
 
 Standard stuff here.  `:Eval` evaluates a range (`:%Eval` gets the whole
 file), `:Require` requires a namespace with `:reload` (`:Require!` does
-`:reload-all`), either the current buffer or a given argument.  There's a `cp`
-operator that evaluates a given motion (`cpp` for the outermost form under the
-cursor). `cm` and `c1m` are similar, but they only run
-`clojure.walk/macroexpand-all` and `macroexpand-1` instead of evaluating the
-form entirely.
+`:reload-all`), either the current buffer or a given argument.  `:RunTests`
+kicks off `(clojure.test/run-tests)` and loads the results into the quickfix
+list.
+
+There's a `cp` operator that evaluates a given motion (`cpp` for the
+outermost form under the cursor). `cm` and `c1m` are similar, but they only
+run `clojure.walk/macroexpand-all` and `macroexpand-1` instead of evaluating
+the form entirely.
 
 Any failed evaluation loads the stack trace into the location list, which
 can be easily accessed with `:lopen`.
 
 ### Navigating and Comprehending
 
-I'm new to Clojure, so stuff that helps me understand code is a top priority.
+I was brand new to Clojure when I started this plugin, so stuff that helped me
+understand code was a top priority.
 
 * `:Source`, `:Doc`, `:FindDoc`, and `:Apropos`, which map to the underlying
   `clojure.repl` macro (with tab complete, of course).

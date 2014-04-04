@@ -16,6 +16,7 @@ fireplace-:Last	fireplace.txt	/*fireplace-:Last*
 fireplace-:Piggieback	fireplace.txt	/*fireplace-:Piggieback*
 fireplace-:Require	fireplace.txt	/*fireplace-:Require*
 fireplace-:Require!	fireplace.txt	/*fireplace-:Require!*
+fireplace-:RunTests	fireplace.txt	/*fireplace-:RunTests*
 fireplace-:Source	fireplace.txt	/*fireplace-:Source*
 fireplace-CTRL-W_CTRL-D	fireplace.txt	/*fireplace-CTRL-W_CTRL-D*
 fireplace-K	fireplace.txt	/*fireplace-K*
