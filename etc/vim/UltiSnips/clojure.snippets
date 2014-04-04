@@ -496,7 +496,11 @@ snippet fn "fn" w
 endsnippet
 
 snippet app "apply" w
-(apply ${1:λ} ${0:args})
+(apply $0)
+endsnippet
+
+snippet OPTS "(apply hash-map $0)" w
+{:keys [$1]} (apply hash-map $0)
 endsnippet
 
 snippet comp "comp" w
