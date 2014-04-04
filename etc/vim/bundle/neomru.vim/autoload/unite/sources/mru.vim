@@ -1,7 +1,6 @@
 "=============================================================================
 " FILE: mru.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu at gmail.com>
-" Last Modified: 30 Apr 2013
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -29,7 +28,8 @@ set cpo&vim
 
 " For compatibility
 function! unite#sources#mru#define() "{{{
-  let [file_mru_source, dir_mru_source] = unite#sources#neomru#define()
+  let [file_mru_source, dir_mru_source] =
+        \ deepcopy(unite#sources#neomru#define())
   let file_mru_source.name = 'file_mru'
   let dir_mru_source.name = 'directory_mru'
   return [file_mru_source, dir_mru_source]
