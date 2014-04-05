@@ -50,7 +50,13 @@ function! s:go(type,...) abort
     endif
     call setline(lnum,line)
   endfor
-  silent doautocmd User CommentaryPost
+  let modelines = &modelines
+  try
+    set modelines=0
+    silent doautocmd User CommentaryPost
+  finally
+    let &modelines = modelines
+  endtry
 endfunction
 
 function! s:undo() abort
@@ -79,10 +85,10 @@ if !hasmapto('<Plug>Commentary') || maparg('gc','n') ==# ''
 endif
 
 if maparg('\\','n') ==# '' && maparg('\','n') ==# '' && get(g:, 'commentary_map_backslash', 1)
-  xmap \\  <Plug>Commentary
-  nmap \\  <Plug>Commentary
-  nmap \\\ <Plug>CommentaryLine
-  nmap \\u <Plug>CommentaryUndo
+  xmap \\  <Plug>Commentary:echomsg '\\ is deprecated. Use gc'<CR>
+  nmap \\  :echomsg '\\ is deprecated. Use gc'<CR><Plug>Commentary
+  nmap \\\ <Plug>CommentaryLine:echomsg '\\ is deprecated. Use gc'<CR>
+  nmap \\u <Plug>CommentaryUndo:echomsg '\\ is deprecated. Use gc'<CR>
 endif
 
 " vim:set et sw=2:

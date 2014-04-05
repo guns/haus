@@ -12,7 +12,10 @@ endif
 
 if ! exists("b:did_ftplugin")
 	" default emacs settings
-	setlocal comments-=s1:/*,mb:*,ex:*/ conceallevel=2 concealcursor="nc" tabstop=8 shiftwidth=8 commentstring=#\ %s
+	setlocal comments-=s1:/*,mb:*,ex:*/
+	setlocal commentstring=#%s
+	setlocal conceallevel=2 concealcursor="nc"
+	setlocal tabstop=8 shiftwidth=8
 
 	" register keybindings if they don't have been registered before
 	if exists("g:loaded_org")
@@ -20,13 +23,13 @@ if ! exists("b:did_ftplugin")
 	endif
 endif
 
-" load plugin just once
+" Load orgmode just once
 if &cp || exists("g:loaded_org")
     finish
 endif
 let g:loaded_org = 1
 
-" general setting plugins that should be loaded and their order
+" Default org plugins that will be loaded (in the given order)
 if ! exists('g:org_plugins') && ! exists('b:org_plugins')
 	let g:org_plugins = ['ShowHide', '|', 'Navigator', 'EditStructure', '|', 'Hyperlinks', '|', 'Todo', 'TagsProperties', 'Date', 'Agenda', 'Misc', '|', 'Export']
 endif
@@ -36,8 +39,7 @@ if ! exists('g:org_syntax_highlight_leading_stars') && ! exists('b:org_syntax_hi
 endif
 
 
-" orgmenu and document handling {{{
-
+" Menu and document handling {{{
 function! <SID>OrgRegisterMenu()
 	python ORGMODE.register_menu()
 endfunction
@@ -61,7 +63,7 @@ augroup orgmode
 	au BufDelete * :call <SID>OrgDeleteUnusedDocument(expand('<abuf>'))
 augroup END
 " }}}
-" start orgmode {{{
+" Start orgmode {{{
 " Expand our path
 python << EOF
 import vim, os, sys
@@ -80,20 +82,14 @@ from Date import Date
 import datetime
 EOF
 " }}}
-
-" Plugin integration {{{
-" * repeat integration {{{
-
-" make sure repeat plugin is load (or not)
+" 3rd Party Plugin Integration {{{
+" * Repeat {{{
 try
 	call repeat#set()
 catch
 endtry
-
 " }}}
-" * Tagbar integration {{{
-
-" tag-bar support for org-mode
+" * Tagbar {{{
 let g:tagbar_type_org = {
 			\ 'ctagstype' : 'org',
 			\ 'kinds'     : [
@@ -105,9 +101,7 @@ let g:tagbar_type_org = {
 			\ }
 
 " }}}
-" * Taglist integration {{{
-
-" taglist support for org-mode
+" * Taglist {{{
 if exists('g:Tlist_Ctags_Cmd')
 	" Pass parameters to taglist
 	let g:tlist_org_settings = 'org;s:section;h:hyperlinks'
@@ -115,8 +109,7 @@ if exists('g:Tlist_Ctags_Cmd')
 endif
 
 " }}}
-" * Calendar.vim integration {{{
-
+" * Calendar.vim {{{
 fun CalendarAction(day, month, year, week, dir)
 	let g:org_timestamp = printf("%04d-%02d-%02d Fri", a:year, a:month, a:day)
 	let datetime_date = printf("datetime.date(%d, %d, %d)", a:year, a:month, a:day)
