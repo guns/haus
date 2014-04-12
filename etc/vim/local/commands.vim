@@ -151,7 +151,7 @@ endfunction
 
 command! -nargs=? -bar -complete=file Todo call <SID>Todo(<f-args>) "{{{1
 function! s:Todo(...)
-    let words = ['TODO', 'FIXME', 'NOTE', 'WARNING', 'DEBUG', 'HACK', 'XXX']
+    let words = ['TODO', 'FIXME', 'XXX']
     let arg = a:0 ? shellescape(expand(a:1), 1) : '.'
 
     " Fugitive detects Git repos for us
@@ -321,6 +321,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
     nnoremap <silent><buffer> <LocalLeader>i   :call fireplace#session_eval('(do (load-file "' . expand('~/.local/lib/clojure/guns/src/guns/repl.clj') . '") (guns.repl/init!))')<CR>
+    nnoremap <silent><buffer> <LocalLeader>ja  :Capture call fireplace#session_eval('(guns.repl/print-jvm-args!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me  :call <SID>ClojureMacroexpand(1)<CR>
@@ -450,15 +451,15 @@ function! s:OrgBufferSetup()
     map  <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
     imap <silent> <buffer> <4-]> <C-\><C-o><Plug>OrgDemoteHeadingNormal
 
-    map  <silent> <buffer> <M-J> <Plug>OrgMoveSubtreeDownward
-    imap <silent> <buffer> <M-J> <C-\><C-o><Plug>OrgMoveSubtreeDownward
-    map  <silent> <buffer> <M-K> <Plug>OrgMoveSubtreeUpward
-    imap <silent> <buffer> <M-K> <C-\><C-o><Plug>OrgMoveSubtreeUpward
+    map  <silent> <buffer> <M-j> <Plug>OrgMoveSubtreeDownward
+    imap <silent> <buffer> <M-j> <C-\><C-o><Plug>OrgMoveSubtreeDownward
+    map  <silent> <buffer> <M-k> <Plug>OrgMoveSubtreeUpward
+    imap <silent> <buffer> <M-k> <C-\><C-o><Plug>OrgMoveSubtreeUpward
 
-    map  <silent> <buffer> <M-H> <Plug>OrgPromoteSubtreeNormal
-    imap <silent> <buffer> <M-H> <C-\><C-o><Plug>OrgPromoteSubtreeNormal
-    map  <silent> <buffer> <M-L> <Plug>OrgDemoteSubtreeNormal
-    imap <silent> <buffer> <M-L> <C-\><C-o><Plug>OrgDemoteSubtreeNormal
+    map  <silent> <buffer> <M-h> <Plug>OrgPromoteSubtreeNormal
+    imap <silent> <buffer> <M-h> <C-\><C-o><Plug>OrgPromoteSubtreeNormal
+    map  <silent> <buffer> <M-l> <Plug>OrgDemoteSubtreeNormal
+    imap <silent> <buffer> <M-l> <C-\><C-o><Plug>OrgDemoteSubtreeNormal
 
     map  <silent> <buffer> <4-CR> <Plug>OrgNewHeadingBelowNormal
     imap <silent> <buffer> <4-CR> <C-\><C-o><Plug>OrgNewHeadingBelowNormal
