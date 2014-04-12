@@ -1125,7 +1125,6 @@ endfunction
 function! s:RefreshBuffer()
   if exists("b:rails_refresh") && b:rails_refresh
     let b:rails_refresh = 0
-    call rails#buffer_setup()
     let &filetype = &filetype
     unlet! b:rails_refresh
   endif
@@ -1664,9 +1663,9 @@ function! s:readable_runner_command(bang, count, arg) dict abort
           let extra = ''
         endif
       endif
-    elseif arg =~# '^spec/.*\%(_spec\.rb\|\.feature\)$'
+    elseif arg =~# '^spec\%(/.*\%(_spec\.rb\|\.feature\)\)\=$'
       let compiler = 'rspec'
-    elseif arg =~# '^features/.*\.feature$'
+    elseif arg =~# '^features\%(/.*\.feature\)\=$'
       let compiler = 'cucumber'
     else
       let compiler = 'ruby'
@@ -4528,6 +4527,14 @@ function! rails#buffer_setup() abort
         call self.setvar('surround_101', "<% \r %>\n<% end %>")
       endif
     endif
+  endif
+  if self.type_name('test', 'spec', 'cucumber')
+    call self.setvar('dispatch', ':Rrunner')
+  else
+    call self.setvar('dispatch', ':Rake')
+  endif
+  if empty(self.getvar('start'))
+    call self.setvar('start', ':Rserver')
   endif
 endfunction
 

@@ -240,7 +240,7 @@ function! s:unregister_connection(conn) abort
   call filter(s:repl_portfiles, 'v:val.connection.transport isnot# a:conn.transport')
 endfunction
 
-function! s:register_portfile(portfile, ...) abort
+function! fireplace#register_port_file(portfile, ...) abort
   let old = get(s:repl_portfiles, a:portfile, {})
   if has_key(old, 'time') && getftime(a:portfile) !=# old.time
     call s:unregister_connection(old.connection)
@@ -413,14 +413,15 @@ function! s:oneoff.user_ns() abort
 endfunction
 
 function! s:oneoff.path() dict abort
-  return classpath#split(self.classpath)
+  return self._path
 endfunction
 
 function! s:oneoff.eval(expr, options) dict abort
   if !empty(get(a:options, 'session', 1))
     throw 'Fireplace: no live REPL connection'
   endif
-  return s:spawning_eval(self.classpath, a:expr, get(a:options, 'ns', self.user_ns()))
+  return s:spawning_eval(join(self.path(), has('win32') ? ';' : ':'),
+        \                a:expr, get(a:options, 'ns', self.user_ns()))
 endfunction
 
 function! s:oneoff.message(...) abort
@@ -452,6 +453,20 @@ function! s:includes_file(file, path) abort
   endfor
 endfunction
 
+function! s:path_extract(path)
+  let path = []
+  if a:path =~# '\.jar'
+    for elem in split(substitute(a:path, ',$', '', ''), ',')
+      if elem ==# ''
+        let path += ['.']
+      else
+        let path += split(glob(substitute(elem, '\\\ze[\\ ,]', '', 'g'), 1), "\n")
+      endif
+    endfor
+  endif
+  return path
+endfunction
+
 function! fireplace#path(...) abort
   let buf = a:0 ? a:1 : s:buf()
   for repl in s:repls
@@ -459,10 +474,7 @@ function! fireplace#path(...) abort
       return repl.path()
     endif
   endfor
-  if exists('*classpath#from_vim')
-    return classpath#split(classpath#from_vim(getbufvar(buf, '&path')))
-  endif
-  return []
+  return s:path_extract(getbufvar(buf, '&path'))
 endfunction
 
 function! fireplace#platform(...) abort
@@ -474,7 +486,7 @@ function! fireplace#platform(...) abort
 
   let portfile = findfile('.nrepl-port', '.;')
   if !empty(portfile)
-    call s:register_portfile(portfile, fnamemodify(portfile, ':h'))
+    call fireplace#register_port_file(portfile, fnamemodify(portfile, ':h'))
   endif
   silent doautocmd User FireplacePreConnect
 
@@ -493,9 +505,9 @@ function! fireplace#platform(...) abort
       return repl
     endif
   endfor
-  if exists('*classpath#from_vim') && fnamemodify(bufname(buf), ':e') =~# '^cljx\=$'
-    let cp = classpath#from_vim(getbufvar(buf, '&path'))
-    return extend({'classpath': cp, 'nr': bufnr(buf)}, s:oneoff)
+  let path = s:path_extract(getbufvar(buf, '&path'))
+  if !empty(path) && fnamemodify(bufname(buf), ':e') =~# '^cljx\=$'
+    return extend({'_path': path, 'nr': bufnr(buf)}, s:oneoff)
   endif
   throw 'Fireplace: :Connect to a REPL or install classpath.vim'
 endfunction
@@ -1240,7 +1252,8 @@ endfunction
 function! s:Lookup(ns, macro, arg) abort
   " doc is in clojure.core in older Clojure versions
   try
-    call fireplace#session_eval("(clojure.core/require '".a:ns.") (clojure.core/eval (clojure.core/list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))')
+    let response = s:eval("(clojure.core/require '".a:ns.") (clojure.core/eval (clojure.core/list (if (ns-resolve 'clojure.core '".a:macro.") 'clojure.core/".a:macro." '".a:ns.'/'.a:macro.") '".a:arg.'))', {'session': 0})
+    call s:output_response(response)
   catch /^Clojure:/
   catch /.*/
     echohl ErrorMSG
@@ -1459,7 +1472,7 @@ function! s:leiningen_connect(auto) abort
   let portfile = s:leiningen_portfile()
   if a:auto && empty(portfile) && exists(':Start') ==# 2
 
-    let cd = has('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
     let cwd = getcwd()
     try
       execute cd fnameescape(b:leiningen_root)
@@ -1481,7 +1494,7 @@ function! s:leiningen_connect(auto) abort
   if empty(portfile)
     return
   endif
-  let conn = s:register_portfile(portfile, b:leiningen_root)
+  let conn = fireplace#register_port_file(portfile, b:leiningen_root)
   if has_key(conn, 'path')
     let s:leiningen_paths[b:leiningen_root] = conn.path()
   endif
@@ -1503,8 +1516,9 @@ function! s:leiningen_init() abort
 
   compiler lein
 
-  if exists('*classpath#from_vim')
-    let s:leiningen_paths[b:leiningen_root] = classpath#split(classpath#from_vim(&path))
+  let path = s:path_extract(&path)
+  if !empty(path)
+    let s:leiningen_paths[b:leiningen_root] = path
   endif
   call s:leiningen_connect(0)
 endfunction
