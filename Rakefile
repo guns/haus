@@ -193,7 +193,7 @@ task :env do
       { :base => "#{@vim}/vim-operator-user",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-orgmode",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-rails",               :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/vim-rake",                :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-rake",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-redl",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-scriptease",          :branch => %w[master],      :files => :pathogen },
