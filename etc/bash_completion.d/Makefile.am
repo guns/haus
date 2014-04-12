@@ -266,6 +266,7 @@ bashcomp_DATA = 2to3 \
 		pm-hibernate \
 		pm-is-supported \
 		pm-powersave \
+		pngfix \
 		portinstall \
 		portsnap \
 		portupgrade \
@@ -548,6 +549,9 @@ CLEANFILES = \
 	pydoc3 \
 	python2 \
 	python3 \
+	qemu-kvm \
+	qemu-system-i386 \
+	qemu-system-x86_64 \
 	quotacheck \
 	quotaoff \
 	quotaon \
@@ -847,6 +851,10 @@ symlinks: $(targetdir) $(DATA)
 	for file in dcop ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) qdbus $(targetdir)/$$file ; \
+	done
+	for file in qemu-kvm qemu-system-i386 qemu-system-x86_64 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) qemu $(targetdir)/$$file ; \
 	done
 	for file in setquota edquota quotacheck repquota quotaon quotaoff ; do \
 		rm -f $(targetdir)/$$file && \
