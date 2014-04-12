@@ -12,6 +12,7 @@
             [slam.hound.regrow :as regrow])
   (:import (clojure.lang MultiFn)
            (java.io File)
+           (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
            (java.net URL URLClassLoader)))
 
@@ -43,6 +44,10 @@
 
 (defmacro p [& xs]
   `(do (~pp/pprint (zipmap '~(reverse xs) [~@(reverse xs)]))
+       ~(last xs)))
+
+(defmacro perr [& xs]
+  `(do (.println System/err (zipmap '~(reverse xs) [~@(reverse xs)]))
        ~(last xs)))
 
 (defmacro dump-locals []
@@ -164,8 +169,15 @@
     (mapv (fn [^URL u] (.getPath u)) (.getURLs ^URLClassLoader classloader))))
 
 (defn print-classpath! []
-  (doseq [p (classpath)]
-    (println p)))
+  (doseq [path (classpath)]
+    (println path)))
+
+(defn jvm-args []
+  (.getInputArguments (ManagementFactory/getRuntimeMXBean)))
+
+(defn print-jvm-args! []
+  (doseq [arg (jvm-args)]
+    (println arg)))
 
 (defn type-scaffold
   "https://gist.github.com/mpenet/2053633, originally by cgrand"
