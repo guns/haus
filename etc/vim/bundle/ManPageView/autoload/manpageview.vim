@@ -228,6 +228,7 @@ fun! manpageview#ManPageView(...) range
    echohl WarningMsg
    echo "***warning*** missing topic"
    echohl None
+   " sleep 2
 "   call Dret("manpageview#ManPageView 0 : missing topic")
    return 0
   endif
@@ -264,6 +265,14 @@ fun! manpageview#ManPageView(...) range
   if ext == ""
 "   DechoWF "(ManPageView) attempt to infer on filetype<".&ft.">"
 
+   " filetype: vim
+   " if &ft == "vim"
+" "	DechoWF "(ManPageView) special vim handler"
+   "  let s:specialhandler = "vim"
+   "  let retval           = manpageview#ManPageVim(topic)
+" "	call Dret("manpageview#ManPageView ".retval)
+	" return retval
+
    " filetype: perl
    if &ft == "perl" || &ft == "perldoc"
 "	DechoWF "(ManPageView) special perl handler"
@@ -297,6 +306,13 @@ fun! manpageview#ManPageView(...) range
 "    call Dret("manpageview#ManPageView ".retval)
     return retval
    endif
+
+  " elseif ext == "vim"
+" "   DechoWF "(ManPageView) special vim handler"
+  "  let s:specialhandler = "vim"
+  "  let retval           = manpageview#ManPageVim(substitute(topic,'\.vim$','',''))
+" "   call Dret("manpageview#ManPageView ".retval)
+  "  return retval
 
   elseif ext == "tex"
    let s:specialhandler = "tex"
@@ -374,6 +390,14 @@ fun! manpageview#ManPageView(...) range
    let manpageview_syntax= "man"
   endif
 "  DechoWF "(ManPageView) manpageview_syntax<".manpageview_syntax."> topic<".topic."> bknum#".bknum
+
+  " ---------------------------------------------------------------------
+  " support for searching for options from conf pages {{{3
+  " if bknum == "" && manpageview_fname =~ '\.conf$'
+  "  let manpagesrch = '^\s\+'.topic
+  "  let topic       = manpageview_fname
+  " endif
+" "  DechoWF "(ManPageView) topic<".topic."> bknum#".bknum
 
   " ---------------------------------------------------------------------
   " it was reported to me that some systems change display sizes when a {{{3
@@ -485,6 +509,7 @@ fun! manpageview#ManPageView(...) range
    echohl ErrorMsg
    echo "***sorry*** g:manpageview_winopen<".g:manpageview_winopen."> not supported"
    echohl None
+   " sleep 2
    call s:MPVRestoreSettings()
 "   call Dret("manpageview#ManPageView 0 : manpageview_winopen<".g:manpageview_winopen."> not supported")
    return 0
@@ -511,15 +536,15 @@ fun! manpageview#ManPageView(...) range
 "	DechoWF "(ManPageView) multimanpage: mapping PageUp/Down to go to preceding/succeeding topic"
 	nno <silent> <script> <buffer> <PageUp>			:call search("^NAME$",'bW')<cr>z<cr>5<c-y>
 	nno <silent> <script> <buffer> <PageDown>		:call search("^NAME$",'W')<cr>z<cr>5<c-y>
-   else
-"	DechoWF "(ManPageView) multimanpage: mapping PageUp/Down to go to ctrl-f, ctrl-b"
-    nno <silent> <script> <buffer> <PageDown>	<c-f>
-	nno <silent> <script> <buffer> <PageUp>		<c-b>
-   endif
-  else
-"   DechoWF "(ManPageView) not-multimanpage: mapping PageUp/Down to do ctrl-f, ctrl-b"
-   nno <silent> <script> <buffer> <PageDown>	<c-f>
-   nno <silent> <script> <buffer> <PageUp>		<c-b>
+   " else
+" "	DechoWF "(ManPageView) multimanpage: mapping PageUp/Down to go to ctrl-f, ctrl-b"
+   "  nno <silent> <script> <buffer> <PageDown>	<c-f>
+	" nno <silent> <script> <buffer> <PageUp>		<c-b>
+   " endif
+  " else
+" "   DechoWF "(ManPageView) not-multimanpage: mapping PageUp/Down to do ctrl-f, ctrl-b"
+   " nno <silent> <script> <buffer> <PageDown>	<c-f>
+   " nno <silent> <script> <buffer> <PageUp>		<c-b>
   endif
 
   " ---------------------------------------------------------------------
@@ -544,6 +569,7 @@ fun! manpageview#ManPageView(...) range
 
   " ---------------------------------------------------------------------
   " special manpageview buffer maps {{{3
+  " nnoremap <silent> <buffer> <space>     <c-f>
   nnoremap <silent> <buffer> <c-]>       :call manpageview#ManPageView(v:count1,expand("<cWORD>"))<cr>
 
   " -----------------------------------------
@@ -725,6 +751,7 @@ fun! manpageview#ManPageView(...) range
     echohl ErrorMsg
     echo "***warning*** sorry, no manpage exists for <".topic.">"
     echohl None
+    " sleep 2
    endif
 "   DechoWF "(ManPageView) winnr($)=".winnr("$")." ft=".&ft
 
@@ -766,8 +793,8 @@ fun! manpageview#ManPageView(...) range
 
   " ---------------------------------------------------------------------
   " Install search book maps
-  nno <silent> <buffer> <s-left>	:call manpageview#BookSearch(-v:count1)<cr>
-  nno <silent> <buffer> <s-right>	:call manpageview#BookSearch( v:count1)<cr>
+  nno <silent> <buffer> [M	:call manpageview#BookSearch(-v:count1)<cr>
+  nno <silent> <buffer> ]M	:call manpageview#BookSearch( v:count1)<cr>
 
   " ---------------------------------------------------------------------
   " if there's a search pattern, use it {{{3
@@ -846,7 +873,7 @@ fun! s:MPVSavePosn()
    exe 'sil! mksession! '.fnameescape(g:ManCurPosn)
   endif
   let &ssop       = keep_ssop
-  cnoremap <silent> q call <SID>MPVRestorePosn()<CR>
+  " cnoremap <silent> q call <SID>MPVRestorePosn()<CR>
 
 "  call Dret("s:MPVSavePosn")
 endfun
@@ -865,7 +892,7 @@ fun! s:MPVRestorePosn()
 	exe 'sil! source '.fnameescape(g:ManCurPosn)
    endif
    unlet g:ManCurPosn
-   sil! cunmap q
+   " sil! cunmap q
   endif
 
 "  call Dret("s:MPVRestorePosn")
@@ -1083,6 +1110,7 @@ fun! s:MPVInfo(type)
    echohl ErrorMsg
    echo "***sorry*** unable to view selection"
    echohl None
+   " sleep 2
   else
    call manpageview#ManPageView(0,node.".i")
    if exists("srchpat")
@@ -1100,25 +1128,25 @@ fun! MPVInfoInit()
 "  call Dfunc("MPVInfoInit()")
 
   " some mappings to imitate the default info reader
-  nmap    <buffer> <silent> K			:<c-u>call manpageview#KMap(0)<cr>
-  noremap <buffer> <silent>	]			:call <SID>MPVInfo(1)<cr>
-  noremap <buffer> <silent>	n			:call <SID>MPVInfo(1)<cr>
-  noremap <buffer> <silent>	[			:call <SID>MPVInfo(2)<cr>
-  noremap <buffer> <silent>	p			:call <SID>MPVInfo(2)<cr>
-  noremap <buffer> <silent>	u			:call <SID>MPVInfo(3)<cr>
-  noremap <buffer> <silent>	t			:call <SID>MPVInfo(4)<cr>
-  noremap <buffer> <silent>	<cr>		:call <SID>MPVInfo(5)<CR>
-  noremap <buffer> <silent>	<leftmouse>	<leftmouse>:call <SID>MPVInfo(5)<CR>
-  noremap <buffer> <silent>	?			:he manpageview-info<cr>
-  noremap <buffer> <silent>	d			:call manpageview#ManPageView(0,"dir.i")<cr>
-  noremap <buffer> <silent>	H			:help manpageview-info<cr>
-  noremap <buffer> <silent>	<Tab>		:call <SID>NextInfoLink()<CR>
-  noremap <buffer> <silent>	i			:call <SID>InfoIndexLink('i')<CR>
-  noremap <buffer> <silent>	>			:call <SID>InfoIndexLink('>')<CR>
-  noremap <buffer> <silent>	<			:call <SID>InfoIndexLink('<')<CR>
-  noremap <buffer> <silent>	,			:call <SID>InfoIndexLink('>')<CR>
-  noremap <buffer> <silent>	;			:call <SID>InfoIndexLink('<')<CR>
-  noremap <buffer> <silent> <F1>		:echo "] goto nxt node   [ goto prv node   d goto toplvl   u go up   i indx srch   > nxt indx srch   < prv indx srch   \<tab\> next hyperlink"<cr> 
+  " nmap    <buffer> <silent> K			:<c-u>call manpageview#KMap(0)<cr>
+  " noremap <buffer> <silent>	]			:call <SID>MPVInfo(1)<cr>
+  " noremap <buffer> <silent>	n			:call <SID>MPVInfo(1)<cr>
+  " noremap <buffer> <silent>	[			:call <SID>MPVInfo(2)<cr>
+  " noremap <buffer> <silent>	p			:call <SID>MPVInfo(2)<cr>
+  " noremap <buffer> <silent>	u			:call <SID>MPVInfo(3)<cr>
+  " noremap <buffer> <silent>	t			:call <SID>MPVInfo(4)<cr>
+  " noremap <buffer> <silent>	<cr>		:call <SID>MPVInfo(5)<CR>
+  " noremap <buffer> <silent>	<leftmouse>	<leftmouse>:call <SID>MPVInfo(5)<CR>
+  " noremap <buffer> <silent>	?			:he manpageview-info<cr>
+  " noremap <buffer> <silent>	d			:call manpageview#ManPageView(0,"dir.i")<cr>
+  " noremap <buffer> <silent>	H			:help manpageview-info<cr>
+  " noremap <buffer> <silent>	<Tab>		:call <SID>NextInfoLink()<CR>
+  " noremap <buffer> <silent>	i			:call <SID>InfoIndexLink('i')<CR>
+  " noremap <buffer> <silent>	>			:call <SID>InfoIndexLink('>')<CR>
+  " noremap <buffer> <silent>	<			:call <SID>InfoIndexLink('<')<CR>
+  " noremap <buffer> <silent>	,			:call <SID>InfoIndexLink('>')<CR>
+  " noremap <buffer> <silent>	;			:call <SID>InfoIndexLink('<')<CR>
+  " noremap <buffer> <silent> <F1>		:echo "] goto nxt node   [ goto prv node   d goto toplvl   u go up   i indx srch   > nxt indx srch   < prv indx srch   \<tab\> next hyperlink"<cr> 
 "  call Dret("MPVInfoInit")
 endfun
 
@@ -1130,6 +1158,7 @@ fun! s:NextInfoLink()
 		echohl ErrorMsg
 	   	echo '***sorry*** no links found' 
 	   	echohl None
+		" sleep 2
     endif
 endfun
 
@@ -1254,7 +1283,7 @@ fun! manpageview#ManPageVim(topic)
    echomsg "***warning*** unable to find man page on <".a:topic.">"
     \ ((exists("s:specialhandler"))? "using special handler for ".s:specialhandler : "")
    echohl None
-   sleep 2
+   " sleep 2
   endtry
 
   endif
@@ -1400,8 +1429,8 @@ fun! manpageview#History(mode,...)
   endif
 
   " install history maps
-  nno <silent> <buffer> <s-down>	:call manpageview#History(-v:count1)<cr>
-  nno <silent> <buffer> <s-up>		:call manpageview#History( v:count1)<cr>
+  nno <silent> <buffer> [m	:call manpageview#History(-v:count1)<cr>
+  nno <silent> <buffer> ]m		:call manpageview#History( v:count1)<cr>
 "  call Dret("manpageview#History")
 endfun
 
@@ -1431,7 +1460,7 @@ fun! manpageview#BookSearch(direction)
   let curtopic              = topic
   let keep_mpv_winopen      = g:manpageview_winopen
   let keeplz                = &lz
-  set lz
+  " set lz
   let g:manpageview_winopen = "reuse"
   let bknumlist             = ["0p","1","1p","1x","2","2x","3","3p","3x","4","4x","5","5x","5p","6","6x","6p","7","7x","8","8x","9","9x"]
   let ibk                   = index(bknumlist,bknum)
@@ -1457,7 +1486,7 @@ fun! manpageview#BookSearch(direction)
    echohl WarningMsg
    echomsg "***warning*** unable to find man page on <".topic."> with a ".((a:direction > 0)? "larger" : "smaller")." book number"
    echohl None
-   sleep 2
+   " sleep 2
   endif
   let g:manpageview_winopen = keep_mpv_winopen
 "  call Dret("manpageview#BookSearch")

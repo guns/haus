@@ -16,6 +16,25 @@ require 'haus/queue'
 
 include Haus::Loggable
 
+def dr_chip_plugin name
+  {
+    :base   => "#{@vim}/DrChip/#{name}",
+    :files  => :pathogen,
+    :before => lambda { |proj|
+      if proj.fetch
+        begin
+          system 'git checkout master >/dev/null 2>&1' or raise "#{name} checkout failed"
+          updated = system "cd %s/.. && ./update #{name.shellescape} >/dev/null 2>&1" % proj.base.shellescape
+          system 'git checkout guns >/dev/null 2>&1' or raise "#{name} checkout failed"
+          if updated
+            system 'git merge master >/dev/null 2>&1' or raise "#{name} merge failed"
+          end
+        end
+      end
+    }
+  }
+end
+
 task :env do
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
@@ -138,7 +157,6 @@ task :env do
       { :base => "#{@src}/vim-slamhound",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@src}/xterm-color-table.vim",   :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/ack.vim",                 :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/AnsiEsc.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/applescript.vim",         :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/BufOnly.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/camelcasemotion",         :branch => %w[master guns], :files => :pathogen },
@@ -237,26 +255,6 @@ task :env do
       },
 
       {
-        :base   => "#{@vim}/ManPageView",
-        :files  => :pathogen,
-        :before => lambda { |proj|
-          if proj.fetch
-            begin
-              system 'git checkout master >/dev/null 2>&1' or raise 'ManPageView checkout failed'
-              updated = system 'cd %s && rake update >/dev/null 2>&1' % proj.base.shellescape
-              system 'git checkout guns >/dev/null 2>&1' or raise 'ManPageView checkout failed'
-              if updated
-                system 'git merge master >/dev/null 2>&1' or raise 'ManPageView merge failed'
-              end
-            ensure
-              FileUtils.rm_f Dir['.Vimball*'], :verbose => false
-            end
-          end
-        },
-        :after  => lambda { |_| rm_f Dir['.sw*'], :verbose => false }
-      },
-
-      {
         :base   => "#{@vim}/ultisnips",
         :branch => %w[master guns],
         :files  => :pathogen
@@ -285,7 +283,11 @@ task :env do
           # Copy bash completion file
           { 'misc/bash/go' => 'etc/bashrc.d/completions/go' }
         }
-      }
+      },
+
+      dr_chip_plugin('AnsiEsc'),
+      dr_chip_plugin('DrawIt'),
+      dr_chip_plugin('ManPageView')
     ],
 
     'dotfiles' => [

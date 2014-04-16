@@ -26,8 +26,8 @@ com! -nargs=* -complete=shellcmd -count=0	VEMan	let g:manpageview_winopen="vspli
 com! -nargs=* -complete=shellcmd -count=0	VMan	let g:manpageview_winopen="vsplit" |call manpageview#ManPageView(0,<count>,<f-args>)
 com! -nargs=* -complete=shellcmd -count=0	TMan	let g:manpageview_winopen="tab"    |call manpageview#ManPageView(0,<count>,<f-args>)
 com! -nargs=? -complete=shellcmd -count=0	KMan	call manpageview#KMan(<q-args>)
-com! -nargs=* -complete=shellcmd -count=1	Manprev	call manpageview#History(-<count>)
-com! -nargs=* -complete=shellcmd -count=1	Mannext	call manpageview#History(<count>)
+com! -nargs=* -complete=shellcmd -count=1	Manprv	call manpageview#History(-<count>)
+com! -nargs=* -complete=shellcmd -count=1	Mannxt	call manpageview#History(<count>)
 
 " ---------------------------------------------------------------------
 "  Restore: {{{1
