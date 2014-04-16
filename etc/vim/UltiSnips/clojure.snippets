@@ -335,6 +335,10 @@ snippet rep "repeat" w
 (repeat $0)
 endsnippet
 
+snippet repe "repeatedly" w
+(repeatedly $0)
+endsnippet
+
 snippet ff "(first (filter))" w
 (first (filter λ $0))
 endsnippet
@@ -481,7 +485,11 @@ snippet bind "binding" w
 endsnippet
 
 snippet def "def"
-(def ${1:^:const }$0)
+(def $0)
+endsnippet
+
+snippet defc "def ^:const" w
+(def ^:const $0)
 endsnippet
 
 snippet defd "def ^:dynamic"
@@ -663,7 +671,7 @@ snippet ws "when-some" w
 endsnippet
 
 snippet cond "cond" w
-(cond $0 :else )
+(cond $0)
 endsnippet
 
 snippet condp "condp" w
@@ -745,8 +753,16 @@ snippet addw "add-watch" w
 (add-watch $0)
 endsnippet
 
+snippet remw "remove-watch" w
+(remove-watch $0)
+endsnippet
+
 snippet fut "future" w
 (future$0)
+endsnippet
+
+snippet futc "future-cancel" w
+(future-cancel $0)
 endsnippet
 
 snippet dosy "dosync" w
@@ -913,11 +929,11 @@ snippet BM "guns.repl/bm" w
 (guns.repl/bm $0)
 endsnippet
 
-snippet T "guns.repl/trace"
+snippet trace "guns.repl/trace"
 (guns.repl/trace $0)
 endsnippet
 
-snippet (T "guns.repl/trace" i
+snippet (trace "guns.repl/trace" i
 (guns.repl/trace
 endsnippet
 

@@ -121,6 +121,7 @@
 ;;
 
 (def refresh ctnr/refresh)
+(def refresh-all ctnr/refresh-all)
 
 ;;
 ;; Reflection
