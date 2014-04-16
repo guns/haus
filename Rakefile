@@ -18,7 +18,7 @@ include Haus::Loggable
 
 def dr_chip_plugin name
   {
-    :base   => "#{@vim}/DrChip/#{name}",
+    :base   => "#{@vim}/DrChipVimPlugins/#{name}",
     :files  => :pathogen,
     :before => lambda { |proj|
       if proj.fetch
