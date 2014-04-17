@@ -284,7 +284,7 @@ noremap <4-?>    :execute ':vimgrep /' . @/ . '/gj ##' \| set hlsearch<CR>
 " Search for non-printing ASCII characters
 noremap <Leader>- /<C-u>\v[^\x09\x20-\x7e]<CR>
 " Search for lines that exceed textwidth
-noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| set hlsearch \| normal! n<CR>
+noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| setlocal hlsearch \| normal! n<CR>
 
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>

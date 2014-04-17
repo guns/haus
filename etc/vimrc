@@ -72,7 +72,7 @@ endif
 " Folding
 set foldmethod=marker           " Default to vim's marker folding
 set foldlevelstart=99           " But don't fold anything on load
-set foldtext=getline(v:foldstart)
+set foldtext=getline(v:foldstart) " Just show the line itself when folded
 
 " Gutter / Status line
 set nonumber                    " No line numbers
@@ -121,8 +121,8 @@ set shiftround                  " Always round indents to multiple of shiftwidth
 set expandtab                   " Expand <Tab>s with spaces; death to tabs!
 
 " Global textwidth and tabstops
-SetTextwidth! 78                " Width of a standard mail message
-SetWhitespace! 8                " Set sw = sts = ts = 8
+SetTextwidth! 78                " Standard documentation width
+SetWhitespace! 8                " sw = sts = ts = 8
 
 " Joining lines
 set nojoinspaces                " Never join lines with two spaces
