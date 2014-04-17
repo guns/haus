@@ -47,7 +47,7 @@ use Socket;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.303 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my $version = q{ $Revision: 1.305 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -666,6 +666,8 @@ my %ciphers = (
   'en_US-vflZwcnOf' => 'w46 s2 w29 r s2 w51 w20 s1',# 07 Apr 2014
   'en_US-vflFqBlmB' => 'w46 s2 w29 r s2 w51 w20 s1',# 08 Apr 2014
   'en_US-vflG0UvOo' => 'w46 s2 w29 r s2 w51 w20 s1',# 09 Apr 2014
+  'en_US-vflS6PgfC' => 'w40 s2 w40 r w56 w26 r s2', # 10 Apr 2014
+  'en_US-vfl6Q1v_C' => 'w23 r s2 w55 s2',           # 15 Apr 2014
 );
 
 sub decipher_sig($$$) {
