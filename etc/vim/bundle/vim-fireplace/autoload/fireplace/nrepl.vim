@@ -33,14 +33,15 @@ function! fireplace#nrepl#for(transport) abort
   let client = copy(s:nrepl)
   let client.transport = a:transport
   let client.session = client.process({'op': 'clone', 'session': 0})['new-session']
-  let response = client.process({'op': 'eval', 'code':
-        \ '(do (println "success") (symbol (str (System/getProperty "path.separator") (System/getProperty "java.class.path"))))'})
-  let client._path = response.value[-1]
-  if has_key(response, 'out')
-    let g:fireplace_nrepl_sessions[client.session] = client
-  else
-    unlet client.session
+  let client.describe = client.process({'op': 'describe', 'verbose?': 1})
+  if client.describe.versions.nrepl.major == 0 &&
+        \ client.describe.versions.nrepl.minor < 2
+    throw 'nREPL: 0.2.0 or higher required'
   endif
+  let response = client.process({'op': 'eval', 'code':
+        \ '[(System/getProperty "path.separator") (System/getProperty "java.class.path")]', 'session': ''})
+  let client._path = split(eval(response.value[-1][5:-2]), response.value[-1][2])
+  let g:fireplace_nrepl_sessions[client.session] = client
   return client
 endfunction
 
@@ -68,7 +69,7 @@ function! s:nrepl_clone() dict abort
 endfunction
 
 function! s:nrepl_path() dict abort
-  return split(self._path[1:-1], self._path[0])
+  return self._path
 endfunction
 
 function! fireplace#nrepl#combine(responses)
@@ -145,7 +146,7 @@ function! s:nrepl_eval(expr, ...) dict abort
   endif
 
   if has_key(response, 'ex') && !empty(get(msg, 'session', 1))
-    let response.stacktrace = s:extract_last_stacktrace(self)
+    let response.stacktrace = s:extract_last_stacktrace(self, get(msg, 'session', self.session))
   endif
 
   if has_key(response, 'value')
@@ -154,12 +155,18 @@ function! s:nrepl_eval(expr, ...) dict abort
   return response
 endfunction
 
-function! s:extract_last_stacktrace(nrepl) abort
-  let format_st = '(clojure.core/symbol (clojure.core/str "\n\b" (clojure.core/apply clojure.core/str (clojure.core/interleave (clojure.core/repeat "\n") (clojure.core/map clojure.core/str (.getStackTrace *e)))) "\n\b\n"))'
-  let stacktrace = split(get(split(a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'session': a:nrepl.session}).value[0], "\n\b\n"), 1, ""), "\n")
-  call a:nrepl.message({'op': 'eval', 'code': '(nth *1 1)', 'session': a:nrepl.session})
-  call a:nrepl.message({'op': 'eval', 'code': '(nth *2 2)', 'session': a:nrepl.session})
-  call a:nrepl.message({'op': 'eval', 'code': '(nth *3 3)', 'session': a:nrepl.session})
+function! s:extract_last_stacktrace(nrepl, session) abort
+  if a:nrepl.has_op('stacktrace')
+    let stacktrace = filter(a:nrepl.message({'op': 'stacktrace', 'session': a:session}), 'has_key(v:val, "file")')
+    if !empty(stacktrace)
+      return map(stacktrace, 'v:val.class.".".v:val.method."(".v:val.file.":".v:val.line.")"')
+    endif
+  endif
+  let format_st = '(symbol (str "\n\b" (apply str (interleave (repeat "\n") (map str (.getStackTrace *e)))) "\n\b\n"))'
+  let stacktrace = split(get(split(a:nrepl.process({'op': 'eval', 'code': '['.format_st.' *3 *2 *1]', 'ns': 'user', 'session': a:session}).value[0], "\n\b\n"), 1, ""), "\n")
+  call a:nrepl.message({'op': 'eval', 'code': '(*1 1)', 'ns': 'user', 'session': a:session})
+  call a:nrepl.message({'op': 'eval', 'code': '(*2 2)', 'ns': 'user', 'session': a:session})
+  call a:nrepl.message({'op': 'eval', 'code': '(*3 3)', 'ns': 'user', 'session': a:session})
   return stacktrace
 endfunction
 
@@ -173,13 +180,6 @@ function! s:nrepl_prepare(msg) dict abort
   endif
   if empty(get(msg, 'session', 1))
     unlet msg.session
-  elseif !has_key(self, 'session')
-    if &verbose
-      echohl WarningMSG
-      echo "nREPL: server has bug preventing session support"
-      echohl None
-    endif
-    unlet! msg.session
   elseif !has_key(msg, 'session')
     let msg.session = self.session
   endif
@@ -206,6 +206,10 @@ function! s:nrepl_message(msg, ...) dict abort
   return call(self.call, [msg, ['done'], sel] + a:000, self)
 endfunction
 
+function! s:nrepl_has_op(op) dict abort
+  return has_key(self.describe.ops, a:op)
+endfunction
+
 let s:nrepl = {
       \ 'close': s:function('s:nrepl_close'),
       \ 'clone': s:function('s:nrepl_clone'),
@@ -213,5 +217,6 @@ let s:nrepl = {
       \ 'call': s:function('s:nrepl_call'),
       \ 'message': s:function('s:nrepl_message'),
       \ 'eval': s:function('s:nrepl_eval'),
+      \ 'has_op': s:function('s:nrepl_has_op'),
       \ 'path': s:function('s:nrepl_path'),
       \ 'process': s:function('s:nrepl_process')}
