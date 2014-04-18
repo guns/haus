@@ -997,8 +997,9 @@ HAVE vim && {
     }
 
     vimsession() {
-        if [[ -e Session.vim ]]; then
-            vim -S Session.vim -c "silent! ! rm -f Session.vim" "$@"
+        local session="$HOME/.cache/vim/session/${PWD#/}/Session.vim"
+        if [[ -e "$session" ]]; then
+            vim -S "$session" -c "silent! execute '! rm -f ' . v:this_session" "$@"
         else
             vim "$@"
         fi

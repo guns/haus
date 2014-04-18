@@ -652,3 +652,10 @@ function! s:CombineSelection(line1, line2, cp)
   execute 'let char = "\u'.a:cp.'"'
   execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
 endfunction
+
+command! -bar Makesession call <SID>Makesession()
+function! s:Makesession()
+    let dir = expand('~/.cache/vim/session' . getcwd())
+    call mkdir(dir, 'p')
+    execute 'mksession! ' . dir . '/Session.vim'
+endfunction

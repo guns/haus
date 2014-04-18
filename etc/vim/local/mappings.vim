@@ -432,8 +432,8 @@ Mapall <4-X> :<C-u>call setloclist(0, getqflist()) \\\| call setqflist([]) \\\| 
 Mapall <4-U> :<C-u>Open<CR>
 
 " Save session
-Mapall <4-w> :<C-u>mksession!<CR>
-Mapall <4-W> :<C-u>mksession! \\\| qa<CR>
+Mapall <4-w> :<C-u>Makesession<CR>
+Mapall <4-W> :<C-u>Makesession \\\| qa<CR>
 
 """ Text editing {{{1
 
