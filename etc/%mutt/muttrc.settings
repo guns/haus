@@ -1433,7 +1433,7 @@ set hostname="SUNGPAE"
 # ``Subject:'' field from being divided into multiple lines.
 #
 
-# set ignore_list_reply_to=no
+set ignore_list_reply_to=yes
 #
 # Name: ignore_list_reply_to
 # Type: boolean
