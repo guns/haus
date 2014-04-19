@@ -656,6 +656,8 @@ endfunction
 command! -bar Makesession call <SID>Makesession()
 function! s:Makesession()
     let dir = expand('~/.cache/vim/session' . getcwd())
-    call mkdir(dir, 'p')
+    if !isdirectory(dir)
+        call mkdir(dir, 'p')
+    endif
     execute 'mksession! ' . dir . '/Session.vim'
 endfunction
