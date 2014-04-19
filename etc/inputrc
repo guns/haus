@@ -12,6 +12,7 @@
 # set bind-tty-special-chars on # http://www.shallowsky.com/blog/linux/bash-word-erase.html
 set blink-matching-paren off
 # set byte-oriented off
+set colored-stats on
 set completion-ignore-case on
 # set completion-map-case off
 # set convert-meta off
@@ -36,6 +37,7 @@ set page-completions off
 # set revert-all-at-newline off
 set show-all-if-ambiguous on
 set show-all-if-unmodified on
+# set show-mode-in-prompt off
 set skip-completed-text on
 set visible-stats on
 # set bell-style audible # Let your terminal convert to `visible`
@@ -46,6 +48,7 @@ set completion-query-items 256
 # set editing-mode emacs
 # set history-size 0
 # set keymap emacs
+set keyseq-timeout 0
 
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p; bind -s") <(bash -c "bind -p; bind -s")
