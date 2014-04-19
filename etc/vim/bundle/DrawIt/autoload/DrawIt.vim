@@ -363,18 +363,18 @@ fun! DrawIt#DrawItStart(...)
   nmap <silent> <buffer> <script> <up>                 :silent! call <SID>MoveUp()<CR>
   nmap <silent> <buffer> <script> <down>               :silent! call <SID>MoveDown()<CR>
   nmap <silent> <buffer> <script> <LocalLeader><space> :silent! call <SID>DrawErase()<CR>
-  nmap <silent> <buffer> <script> <LocalLeader><M-L>   :silent! call <SID>DrawSpace('▷',1)<CR>
-  nmap <silent> <buffer> <script> <LocalLeader><M-H>   :silent! call <SID>DrawSpace('◁',2)<CR>
-  nmap <silent> <buffer> <script> <LocalLeader><M-K>   :silent! call <SID>DrawSpace('△',3)<CR>
-  nmap <silent> <buffer> <script> <LocalLeader><M-J>   :silent! call <SID>DrawSpace('▽',4)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader>L       :silent! call <SID>DrawSpace('▶',1)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader>H       :silent! call <SID>DrawSpace('◀',2)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader>K       :silent! call <SID>DrawSpace('▲',3)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader>J       :silent! call <SID>DrawSpace('▼',4)<CR>
   " nmap <silent> <buffer> <script> <home>		:set lz<CR>:silent! call <SID>DrawSlantUpLeft()<CR>:set nolz<CR>
   " nmap <silent> <buffer> <script> <end>			:set lz<CR>:silent! call <SID>DrawSlantDownLeft()<CR>:set nolz<CR>
   " nmap <silent> <buffer> <script> <pageup>		:set lz<CR>:silent! call <SID>DrawSlantUpRight()<CR>:set nolz<CR>
   " nmap <silent> <buffer> <script> <pagedown>	:set lz<CR>:silent! call <SID>DrawSlantDownRight()<CR>:set nolz<CR>
-  nmap <silent> <buffer> <script> <LocalLeader>L       :silent! call <SID>DrawFatRArrow()<CR>
-  nmap <silent> <buffer> <script> <LocalLeader>H       :silent! call <SID>DrawFatLArrow()<CR>
-  nmap <silent> <buffer> <script> <LocalLeader>K       :silent! call <SID>DrawFatUArrow()<CR>
-  nmap <silent> <buffer> <script> <LocalLeader>J       :silent! call <SID>DrawFatDArrow()<CR>
+  nmap <silent> <buffer> <script> <LocalLeader><M-L>   :silent! call <SID>DrawSpace('▷',1)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader><M-H>   :silent! call <SID>DrawSpace('◁',2)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader><M-K>   :silent! call <SID>DrawSpace('△',3)<CR>
+  nmap <silent> <buffer> <script> <LocalLeader><M-J>   :silent! call <SID>DrawSpace('▽',4)<CR>
   nmap <silent> <buffer> <script> <LocalLeader>f       :call <SID>Flood()<cr>
 
   " DrawItStart: Set up insertmode maps {{{3
