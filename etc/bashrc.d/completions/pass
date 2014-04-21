@@ -12,15 +12,20 @@ _pass_complete_entries () {
 	local IFS=$'\n'
 	local items=($(compgen -f $prefix$cur))
 	for item in ${items[@]}; do
-		[[ $item == $prefix.* ]] && continue
+		[[ $item =~ /\.[^/]*$ ]] && continue
 
 		# if there is a unique match, and it is a directory with one entry
 		# autocomplete the subentry as well (recursively)
 		if [[ ${#items[@]} -eq 1 && $autoexpand -eq 1 ]]; then
 			while [[ -d $item ]]; do
 				local subitems=($(compgen -f "$item/"))
-				if [[ ${#subitems[@]} -eq 1 ]]; then
-					item="${subitems[0]}"
+				local filtereditems=( )
+				for item2 in "${subitems[@]}"; do
+					[[ $item2 =~ /\.[^/]*$ ]] && continue
+					filtereditems+=( "$item2" )
+				done
+				if [[ ${#filtereditems[@]} -eq 1 ]]; then
+					item="${filtereditems[0]}"
 				else
 					break
 				fi
@@ -57,7 +62,7 @@ _pass()
 {
 	COMPREPLY=()
 	local cur="${COMP_WORDS[COMP_CWORD]}"
-	local commands="init ls find grep show insert generate edit rm git help version"
+	local commands="init ls find grep show insert generate edit rm mv cp git help version"
 	if [[ $COMP_CWORD -gt 1 ]]; then
 		local lastarg="${COMP_WORDS[$COMP_CWORD-1]}"
 		case "${COMP_WORDS[1]}" in
@@ -65,7 +70,7 @@ _pass()
 				if [[ $lastarg == "-p" || $lastarg == "--path" ]]; then
 					_pass_complete_folders
 				else
-					COMPREPLY+=($(compgen -W "-e --reencrypt -p --path" -- ${cur}))
+					COMPREPLY+=($(compgen -W "-p --path" -- ${cur}))
 					_pass_complete_keys
 				fi
 				;;
@@ -82,6 +87,10 @@ _pass()
 				;;
 			generate)
 				COMPREPLY+=($(compgen -W "-n --no-symbols -c --clip -f --force" -- ${cur}))
+				_pass_complete_entries
+				;;
+			cp|copy|mv|rename)
+				COMPREPLY+=($(compgen -W "-f --force" -- ${cur}))
 				_pass_complete_entries
 				;;
 			rm|remove|delete)

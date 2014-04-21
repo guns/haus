@@ -26,8 +26,13 @@ git_add_file() {
 	[[ -d $GIT_DIR ]] || return
 	git add "$1" || return
 	[[ -n $(git status --porcelain "$1") ]] || return
-	[[ $(git config --bool --get pass.signcommits) == "true" ]] && sign="-S" || sign=""
-	git commit $sign -m "$2"
+	git_commit "$2"
+}
+git_commit() {
+	local sign=""
+	[[ -d $GIT_DIR ]] || return
+	[[ $(git config --bool --get pass.signcommits) == "true" ]] && sign="-S"
+	git commit $sign -m "$1"
 }
 yesno() {
 	local response
@@ -36,10 +41,13 @@ yesno() {
 }
 set_gpg_recipients() {
 	GPG_RECIPIENT_ARGS=( )
+	GPG_RECIPIENTS=( )
+	local gpg_id
 
 	if [[ -n $PASSWORD_STORE_KEY ]]; then
 		for gpg_id in $PASSWORD_STORE_KEY; do
 			GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
+			GPG_RECIPIENTS+=( "$gpg_id" )
 		done
 		return
 	fi
@@ -63,6 +71,7 @@ set_gpg_recipients() {
 
 	while read -r gpg_id; do
 		GPG_RECIPIENT_ARGS+=( "-r" "$gpg_id" )
+		GPG_RECIPIENTS+=( "$gpg_id" )
 	done < "$current"
 }
 agent_check() {
@@ -74,6 +83,44 @@ agent_check() {
 	Are you sure you would like to continue without gpg-agent?
 	_EOF
 	)"
+}
+reencrypt_path() {
+	local passfile
+	local passfile_dir
+	local passfile_display
+	local passfile_temp
+	local prev_gpg_recipients
+	local gpg_keys
+	local current_keys
+	while read -r -d "" passfile; do
+		passfile_dir="${passfile%/*}"
+		passfile_dir="${passfile_dir#$PREFIX}"
+		passfile_dir="${passfile_dir#/}"
+		passfile_display="${passfile#$PREFIX/}"
+		passfile_display="${passfile_display%.gpg}"
+		passfile_temp="${passfile}.tmp.${RANDOM}.${RANDOM}.${RANDOM}.${RANDOM}.--"
+
+		set_gpg_recipients "$passfile_dir"
+		[[ $prev_gpg_recipients != "${GPG_RECIPIENTS[@]}" ]] &&
+		gpg_keys="$($GPG --list-keys --keyid-format long "${GPG_RECIPIENTS[@]}" | sed -n 's/sub *.*\/\([A-F0-9]\{16\}\) .*/\1/p' | sort -u)"
+		current_keys="$($GPG -v --list-only --keyid-format long "$passfile" 2>&1 | cut -d ' ' -f 5 | sort -u)"
+
+		if [[ $gpg_keys != "$current_keys" ]]; then
+			echo "$passfile_display: reencrypting to ${gpg_keys//$'\n'/ }"
+			$GPG -d $GPG_OPTS "$passfile" | $GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile_temp" $GPG_OPTS &&
+			mv "$passfile_temp" "$passfile" || rm -f "$passfile_temp"
+		fi
+
+		prev_gpg_recipients="${GPG_RECIPIENTS[@]}"
+	done < <(find "$PREFIX" -iname '*.gpg' -print0)
+}
+check_sneaky_paths() {
+	for path in "$@"; do
+		if [[ $path =~ /\.\.$ || $path =~ ^\.\./ || $path =~ /\.\./ || $path =~ ^\.\.$ ]]; then
+			echo "Error: You've attempted to pass a sneaky path to pass. Go home."
+			exit 1
+		fi
+	done
 }
 
 #
@@ -130,7 +177,7 @@ tmpdir() {
 GETOPT="getopt"
 SHRED="shred -f -z"
 
-# source /path/to/platform-defined-functions
+source "$(dirname "$0")/platform/$(uname | cut -d _ -f 1 | tr '[:upper:]' '[:lower:]').sh" 2>/dev/null # PLATFORM_FUNCTION_FILE
 
 #
 # END platform definable
@@ -161,9 +208,9 @@ cmd_usage() {
 	echo
 	cat <<-_EOF
 	Usage:
-	    $PROGRAM init [--reencrypt,-e] [--path=subfolder,-p subfolder] gpg-id...
+	    $PROGRAM init [--path=subfolder,-p subfolder] gpg-id...
 	        Initialize new password storage and use gpg-id for encryption.
-	        Optionally reencrypt existing passwords using new gpg-id.
+	        Selectively reencrypt existing passwords using new gpg-id.
 	    $PROGRAM [ls] [subfolder]
 	        List passwords.
 	    $PROGRAM find pass-names...
@@ -185,6 +232,10 @@ cmd_usage() {
 	        Prompt before overwriting existing password unless forced.
 	    $PROGRAM rm [--recursive,-r] [--force,-f] pass-name
 	        Remove existing password or directory, optionally forcefully.
+	    $PROGRAM mv [--force,-f] old-path new-path
+	        Renames or moves old-path to new-path, optionally forcefully, selectively reencrypting.
+	    $PROGRAM cp [--force,-f] old-path new-path
+	        Copies old-path to new-path, optionally forcefully, selectively reencrypting.
 	    $PROGRAM git git-command-args...
 	        If the password store is a git repository, execute a git command
 	        specified by git-command-args.
@@ -198,23 +249,22 @@ cmd_usage() {
 }
 
 cmd_init() {
-	local reencrypt=0
 	local id_path=""
 
 	local opts
-	opts="$($GETOPT -o ep: -l reencrypt,path: -n "$PROGRAM" -- "$@")"
+	opts="$($GETOPT -o p: -l path: -n "$PROGRAM" -- "$@")"
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
-		-e|--reencrypt) reencrypt=1; shift ;;
 		-p|--path) id_path="$2"; shift 2 ;;
 		--) shift; break ;;
 	esac done
 
 	if [[ $err -ne 0 || $# -lt 1 ]]; then
-		echo "Usage: $PROGRAM $COMMAND [--reencrypt,-e] [--path=subfolder,-p subfolder] gpg-id..."
+		echo "Usage: $PROGRAM $COMMAND [--path=subfolder,-p subfolder] gpg-id..."
 		exit 1
 	fi
+	[[ -n $id_path ]] && check_sneaky_paths "$id_path"
 	if [[ -n $id_path && ! -d $PREFIX/$id_path ]]; then
 		if [[ -e $PREFIX/$id_path ]]; then
 			echo "Error: $PREFIX/$id_path exists but is not a directory."
@@ -222,27 +272,31 @@ cmd_init() {
 		fi
 	fi
 
-	mkdir -v -p "$PREFIX/$id_path"
 	local gpg_id="$PREFIX/$id_path/.gpg-id"
+
+	if [[ $# -eq 1 && -z $1 ]]; then
+		if [[ ! -f "$gpg_id" ]]; then
+			echo "Error: $gpg_id does not exist and so cannot be removed."
+			exit 1
+		fi
+		rm -v -f "$gpg_id" || exit 1
+		if [[ -d $GIT_DIR ]]; then
+			git rm -qr "$gpg_id"
+			git_commit "Deinitialized ${gpg_id}."
+		fi
+		rmdir -p "${gpg_id%/*}" 2>/dev/null
+		exit 0
+	fi
+
+	mkdir -v -p "$PREFIX/$id_path"
 	printf "%s\n" "$@" > "$gpg_id"
 	local id_print="$(printf "%s, " "$@")"
 	echo "Password store initialized for ${id_print%, }"
 	git_add_file "$gpg_id" "Set GPG id to ${id_print%, }."
 
-	if [[ $reencrypt -eq 1 ]]; then
-		agent_check
-		local passfile
-		find "$PREFIX/$id_path" -iname '*.gpg' | while read -r passfile; do
-			fake_uniqueness_safety="$RANDOM"
-			passfile_dir="${passfile%/*}"
-			passfile_dir="${passfile_dir#$PREFIX}"
-			passfile_dir="${passfile_dir#/}"
-			set_gpg_recipients "$passfile_dir"
-			$GPG -d $GPG_OPTS "$passfile" | $GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile.new.$fake_uniqueness_safety" $GPG_OPTS &&
-			mv -v "$passfile.new.$fake_uniqueness_safety" "$passfile"
-		done
-		git_add_file "$PREFIX/$id_path" "Reencrypted password store using new GPG id ${id_print}."
-	fi
+	agent_check
+	reencrypt_path "$PREFIX/$id_path"
+	git_add_file "$PREFIX/$id_path" "Reencrypted password store using new GPG id ${id_print%, }."
 }
 
 cmd_show() {
@@ -264,6 +318,7 @@ cmd_show() {
 
 	local path="$1"
 	local passfile="$PREFIX/$path.gpg"
+	check_sneaky_paths "$path"
 	if [[ -f $passfile ]]; then
 		if [[ $clip -eq 0 ]]; then
 			exec $GPG -d $GPG_OPTS "$passfile"
@@ -317,7 +372,7 @@ cmd_grep() {
 	local passfile_dir
 	local grepresults
 	local search="$1"
-	find "$PREFIX" -iname '*.gpg' | while read -r passfile; do
+	while read -r -d "" passfile; do
 		grepresults="$($GPG -d $GPG_OPTS "$passfile" | grep --color=always "$search")"
 		[ $? -ne 0 ] && continue
 		passfile="${passfile%.gpg}"
@@ -326,7 +381,7 @@ cmd_grep() {
 		passfile="${passfile##*/}"
 		printf "\e[94m$passfile_dir/\e[1m$passfile\e[0m:\n"
 		echo "$grepresults"
-	done
+	done < <(find "$PREFIX" -iname '*.gpg' -print0)
 }
 
 cmd_insert() {
@@ -351,6 +406,7 @@ cmd_insert() {
 	fi
 	local path="$1"
 	local passfile="$PREFIX/$path.gpg"
+	check_sneaky_paths "$path"
 
 	[[ $force -eq 0 && -e $passfile ]] && yesno "An entry already exists for $path. Overwrite it?"
 
@@ -365,9 +421,9 @@ cmd_insert() {
 		local password
 		local password_again
 		while true; do
-			read -r -p "Enter password for $path: " -s password
+			read -r -p "Enter password for $path: " -s password || continue
 			echo
-			read -r -p "Retype password for $path: " -s password_again
+			read -r -p "Retype password for $path: " -s password_again || continue
 			echo
 			if [[ $password == "$password_again" ]]; then
 				$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" $GPG_OPTS <<<"$password"
@@ -391,6 +447,7 @@ cmd_edit() {
 	fi
 
 	local path="$1"
+	check_sneaky_paths "$path"
 	mkdir -p -v "$PREFIX/$(dirname "$path")"
 	set_gpg_recipients "$(dirname "$path")"
 	local passfile="$PREFIX/$path.gpg"
@@ -436,6 +493,7 @@ cmd_generate() {
 	fi
 	local path="$1"
 	local length="$2"
+	check_sneaky_paths "$path"
 	if [[ ! $length =~ ^[0-9]+$ ]]; then
 		echo "pass-length \"$length\" must be a number."
 		exit 1
@@ -477,12 +535,13 @@ cmd_delete() {
 		exit 1
 	fi
 	local path="$1"
+	check_sneaky_paths "$path"
 
 	local passfile="$PREFIX/${path%/}"
 	if [[ ! -d $passfile ]]; then
 		passfile="$PREFIX/$path.gpg"
 		if [[ ! -f $passfile ]]; then
-			echo "$path is not in the password store."
+			echo "Error: $path is not in the password store."
 			exit 1
 		fi
 	fi
@@ -492,7 +551,62 @@ cmd_delete() {
 	rm $recursive -f -v "$passfile"
 	if [[ -d $GIT_DIR && ! -e $passfile ]]; then
 		git rm -qr "$passfile"
-		git commit -m "Removed $path from store."
+		git_commit "Removed $path from store."
+	fi
+	rmdir -p "${passfile%/*}" 2>/dev/null
+}
+
+cmd_copy_move() {
+	local move=1
+	[[ $1 == "copy" ]] && move=0
+	shift
+
+	local force=0
+	local opts
+	opts="$($GETOPT -o f -l force -n "$PROGRAM" -- "$@")"
+	local err=$?
+	eval set -- "$opts"
+	while true; do case $1 in
+		-f|--force) force=1; shift ;;
+		--) shift; break ;;
+	esac done
+	if [[ $# -ne 2 ]]; then
+		echo "Usage: $PROGRAM $COMMAND [--force,-f] old-path new-path"
+		exit 1
+	fi
+	check_sneaky_paths "$@"
+	local old_path="$PREFIX/${1%/}"
+	local new_path="$PREFIX/$2"
+	local old_dir="$old_path"
+
+	if [[ ! -d $old_path ]]; then
+		old_dir="${old_path%/*}"
+		old_path="${old_path}.gpg"
+		if [[ ! -f $old_path ]]; then
+			echo "Error: $1 is not in the password store."
+			exit 1
+		fi
+	fi
+
+	mkdir -p -v "${new_path%/*}"
+	[[ -d $old_path || -d $new_path || $new_path =~ /$ ]] || new_path="${new_path}.gpg"
+
+	local interactive="-i"
+	[[ $force -eq 1 ]] && interactive="-f"
+
+	if [[ $move -eq 1 ]]; then
+		mv $interactive -v "$old_path" "$new_path" || exit 1
+		[[ -e "$new_path" ]] && reencrypt_path "$new_path"
+
+		if [[ -d $GIT_DIR && ! -e $old_path ]]; then
+			git rm -qr "$old_path"
+			git_add_file "$new_path" "Renamed ${1} to ${2}."
+		fi
+		rmdir -p "$old_dir" 2>/dev/null
+	else
+		cp $interactive -r -v "$old_path" "$new_path" || exit 1
+		[[ -e "$new_path" ]] && reencrypt_path "$new_path"
+		git_add_file "$new_path" "Copied ${1} to ${2}."
 	fi
 }
 
@@ -516,17 +630,19 @@ PROGRAM="${0##*/}"
 COMMAND="$1"
 
 case "$1" in
-	init) shift;			cmd_init "$@"; ;;
-	help|--help) shift;		cmd_usage "$@"; ;;
-	version|--version) shift;	cmd_version "$@"; ;;
-	show|ls|list) shift;		cmd_show "$@"; ;;
-	find|search) shift;		cmd_find "$@"; ;;
-	grep) shift;			cmd_grep "$@"; ;;
-	insert) shift;			cmd_insert "$@"; ;;
-	edit) shift;			cmd_edit "$@"; ;;
-	generate) shift;		cmd_generate "$@"; ;;
-	delete|rm|remove) shift;	cmd_delete "$@"; ;;
-	git) shift;			cmd_git "$@"; ;;
-	*) COMMAND="show";		cmd_show "$@"; ;;
+	init) shift;			cmd_init "$@" ;;
+	help|--help) shift;		cmd_usage "$@" ;;
+	version|--version) shift;	cmd_version "$@" ;;
+	show|ls|list) shift;		cmd_show "$@" ;;
+	find|search) shift;		cmd_find "$@" ;;
+	grep) shift;			cmd_grep "$@" ;;
+	insert) shift;			cmd_insert "$@" ;;
+	edit) shift;			cmd_edit "$@" ;;
+	generate) shift;		cmd_generate "$@" ;;
+	delete|rm|remove) shift;	cmd_delete "$@" ;;
+	rename|mv) shift;		cmd_copy_move "move" "$@" ;;
+	copy|cp) shift;			cmd_copy_move "copy" "$@" ;;
+	git) shift;			cmd_git "$@" ;;
+	*) COMMAND="show";		cmd_show "$@" ;;
 esac
 exit 0
