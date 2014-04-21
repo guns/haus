@@ -55,7 +55,7 @@ augroup GUNS
         \ setlocal filetype=sh
     autocmd FileType sh
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
-        \ SetWhitespace 4
+        \ SetWhitespace 4 8
 
     " Lisp {{{1
     autocmd Syntax clojure,timl,scheme,lisp
