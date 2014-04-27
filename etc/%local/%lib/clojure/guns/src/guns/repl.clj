@@ -1,5 +1,6 @@
 (ns guns.repl
-  (:require [clojure.java.io :as io]
+  (:require [clojure.core :as cc]
+            [clojure.java.io :as io]
             [clojure.java.javadoc :as javadoc]
             [clojure.pprint :as pp]
             [clojure.reflect :as reflect]
@@ -11,10 +12,11 @@
             [no.disassemble :as no]
             [slam.hound.regrow :as regrow])
   (:import (clojure.lang MultiFn)
-           (java.io File)
+           (java.io File PrintWriter)
            (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
-           (java.net URL URLClassLoader)))
+           (java.net URL URLClassLoader))
+  (:refer-clojure :exclude [time]))
 
 ;;
 ;; Global State
@@ -41,6 +43,10 @@
 ;;
 ;; Debugging
 ;;
+
+(defmacro with-err [& body]
+  `(binding [*out* (new ~PrintWriter System/err true)]
+     ~@body))
 
 (defmacro p [& xs]
   `(do (~pp/pprint (zipmap '~(reverse xs) [~@(reverse xs)]))
@@ -218,6 +224,11 @@
 ;;
 ;; Benchmarking
 ;;
+
+(defmacro time
+  {:requires [#'with-err #'cc/time]}
+  [& body]
+  `(with-err (cc/time ~@body)))
 
 (defmacro bm
   {:require [#'crit/quick-bench]}

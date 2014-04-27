@@ -451,8 +451,20 @@ snippet mem "memoize" w
 (memoize $0)
 endsnippet
 
-snippet time "time" w
+snippet time "time"
 (time $0)
+endsnippet
+
+snippet (time "time" i
+(time
+endsnippet
+
+snippet TIME "guns.repl/time"
+(guns.repl/time $0)
+endsnippet
+
+snippet (TIME "guns.repl/time" i
+(guns.repl/time
 endsnippet
 
 snippet compl "complement" w
@@ -652,6 +664,12 @@ endsnippet
 
 snippet wn "when-not" w
 (when-not $0)
+endsnippet
+
+snippet ifs "if-some" w
+(if-some [$0]
+	(comment then)
+	(comment else))
 endsnippet
 
 snippet ifl "if-let" w
