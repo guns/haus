@@ -23,6 +23,9 @@ export CLICOLOR='1'
 export LSCOLORS='ExFxCxDxbxegedabagacad'
 export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
 
+# Readline
+export RLWRAP_HOME="$HOME/.rlwrap"
+
 # Command flags
 command ls --color ~    &>/dev/null && GNU_COLOR_OPT='--color'
 command grep -P . <<< . &>/dev/null && GREP_PCRE_OPT='-P'
