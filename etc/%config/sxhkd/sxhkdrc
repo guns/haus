@@ -191,7 +191,7 @@ alt + F9
 	urxvt-client
 
 alt + shift + F9
-	urxvt-client -e tmuxlaunch -d
+	urxvt-client -e tmuxlaunch -nd
 
 F12
 	T='✉ Mutt ✉'; \
@@ -203,13 +203,10 @@ super + F12
 alt + F12
 	open https://mail.google.com/
 
-super + control + t
-	urxvt-client -icon ~/.icons/local/htop -e htop
-
 super + control + e
 	urxvt-client -icon ~/.icons/local/vim -e vim
 
-super + control + r
+super + control + t
 	T="✔ TODO ✔"; \
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
 	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
