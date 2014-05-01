@@ -36,7 +36,7 @@
         :aliases {"t" ["trampoline"]
                   "RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
-                  "slamhound" ["trampoline" "run" "-m" "slam.hound"]}
+                  "slamhound" ["trampoline" "with-profile" "user,dev,slamhound" "run" "-m" "slam.hound"]}
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
         :global-vars {*warn-on-reflection* true}
         :jvm-opts ["-XX:+CMSClassUnloadingEnabled"]
@@ -45,4 +45,7 @@
                                                  "/.local/lib/clojure/guns/src/guns/repl.clj"))
                                  (guns.repl/init!)
                                  (require 'spyscope.core 'spyscope.repl 'redl.core 'redl.complete))}
-        :eastwood {:all true}}}
+        :eastwood {:all true}}
+ :slamhound {:global-vars {*warn-on-reflection* false}
+             :injections [(require 'clojure.pprint)
+                          (alter-var-root #'clojure.pprint/*print-right-margin* (constantly 78))]}}
