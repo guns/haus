@@ -84,6 +84,7 @@
 #   command_not_found_handle()          4.0-alpha
 #   coproc                              4.0-alpha
 #   declare -[lu]                       4.0-alpha
+#   ${word^^} ${word,,}                 4.0-alpha
 #   mapfile                             4.0-alpha
 #   read -t 0.1                         4.0-alpha
 #   shopt -s autocd                     4.0-alpha
@@ -174,6 +175,9 @@ if [[ "$BASH_COMPLETION" ]]; then
 else
     REQUIRE ~/.bash_completion
 fi
+
+# Set environment variables
+REQUIRE ~/.bashrc.d/env.bash
 
 # Load functions, aliases, and variables
 REQUIRE ~/.bashrc.d/interactive.bash

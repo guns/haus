@@ -1,80 +1,15 @@
 ###
 ### BASH FUNCTIONS, ALIASES, and VARIABLES
 ###
+### Requires ~/.bashrc.d/functions.bash
+###
 
-# Requires ~/.bashrc.d/functions.bash
+### Command flags
 
-### Environment Variables
-
-# Bash history
-export HISTSIZE='65535'
-export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
-
-# Editor
-export EDITOR='vim'
-export VISUAL='vim'
-
-# Locales
-export LANG='en_US.UTF-8'
-export LC_COLLATE='C'                   # Traditional ASCII sorting
-
-# BSD and GNU colors
-export CLICOLOR='1'
-export LSCOLORS='ExFxCxDxbxegedabagacad'
-export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
-
-# Readline
-export RLWRAP_HOME="$HOME/.rlwrap"
-
-# Command flags
 command ls --color ~    &>/dev/null && GNU_COLOR_OPT='--color'
 command grep -P . <<< . &>/dev/null && GREP_PCRE_OPT='-P'
 command lsof +fg -h     &>/dev/null && LSOF_FLAG_OPT='+fg'
 GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
-
-# Pager
-LESS_ARY=(
-    --force                             # Force open non-regular files
-    --clear-screen                      # Print buffer from top of screen
-    --dumb                              # Do not complain about terminfo errors
-    --ignore-case                       # Like vim ignorecase + smartcase
-    --no-lessopen                       # Ignore LESSOPEN preprocessor
-    --long-prompt                       # Show position percentage
-    --RAW-CONTROL-CHARS                 # Only interpret SGR escape sequences
-    --chop-long-lines                   # Disable soft wrapping
-    --no-init                           # Prevent use of alternate screen
-    --tilde                             # Do not show nonextant lines as `~`
-    --shift 8                           # Horizontal movement in columns
-); GC_VARS LESS_ARY
-export LESS="${LESS_ARY[@]}"
-export LESSSECURE='1'                   # More secure
-export LESSHISTFILE='-'                 # No ~/.lesshst
-export LESS_TERMCAP_md=$'\033[37m'      # Begin bold
-export LESS_TERMCAP_so=$'\033[36m'      # Begin standout-mode
-export LESS_TERMCAP_us=$'\033[4;35m'    # Begin underline
-export LESS_TERMCAP_mb=$'\033[5m'       # Begin blink
-export LESS_TERMCAP_se=$'\033[0m'       # End standout-mode
-export LESS_TERMCAP_ue=$'\033[0m'       # End underline
-export LESS_TERMCAP_me=$'\033[0m'       # End mode
-export PAGER='less'                     # Should be a single word to avoid quoting problems
-
-# Ruby
-export BUNDLE_PATH="$HOME/.bundle"
-if [[ "$SSH_TTY" ]]; then
-    export RAILS_ENV='production'  RACK_ENV='production'
-else
-    export RAILS_ENV='development' RACK_ENV='development'
-fi
-
-# Go
-export GOPATH="$HOME/.go"
-
-# OS X
-if __OS_X__; then
-    # Prefer not copying Apple doubles and extended attributes
-    export COPYFILE_DISABLE=1
-    export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
-fi
 
 ### Meta Utility Functions
 
@@ -167,25 +102,25 @@ CD_FUNC -n ....         ../../..
 CD_FUNC -n .....        ../../../..
 CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
-CD_FUNC cdhaus          ~/.haus /opt/haus && export cdhaus RUBYLIB="$cdhaus/lib/ruby"
+CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdmnt           /mnt
 CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
-CD_FUNC cddnsmasq       /etc/dnsmasq /opt/dnsmasq/etc && export cddnsmasq
-CD_FUNC cdnginx         /etc/nginx /opt/nginx/etc /usr/local/etc/nginx && export cdnginx # Export for vim mapping
+CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
+CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdlog           /var/log
 CD_FUNC cdwww           /srv/http /srv/www /var/www
-CD_FUNC cdapi           "$cdwww/api.dev" && export cdapi # Export for `genapi`
+CD_FUNC -x cdapi        "$cdwww/api.dev"
 CD_FUNC cdgunsrepl      "$cdhaus/etc/%local/%lib/clojure/guns"
 CD_FUNC cdconfig        ~/.config
 CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
 CD_FUNC cdpass          ~/.password-store
-CD_FUNC cdsrc           ~/src ~guns/src /usr/local/src && export cdsrc # Export for edit bindings
+CD_FUNC -x cdsrc        ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdarchlinux     "$cdsrc/archlinux"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"

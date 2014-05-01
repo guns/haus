@@ -1,8 +1,8 @@
 ###
 ### SHELL PATH
 ###
-
-# Requires ~/.bashrc.d/functions.bash
+### Requires ~/.bashrc.d/functions.bash
+###
 
 PATH_ARY=(
     ~/{.local/,}bin                     # User programs

@@ -219,29 +219,25 @@ ALIAS() {
 
 ### `cd` wrapper creation:
 #
-# CD_FUNC foo /usr/local/foo ...
+# CD_FUNC cdfoo /usr/local/foo ...
 #
-#   * Creates shell variable $foo, suitable for use as an argument:
+#   * Creates shell variable $cdfoo, suitable for use as an argument:
 #
-#       $ cp bar $foo/subdir
+#       $ cp bar $cdfoo/subdir
 #
-#   * Creates shell function foo():
+#   * Creates shell function cdfoo():
 #
-#       $ foo               # Changes working directory to `/usr/local/foo`
-#       $ foo bar/baz       # Changes working directory to `/usr/local/foo/bar/baz`
+#       $ cdfoo             # Changes working directory to `/usr/local/foo`
+#       $ cdfoo bar/baz     # Changes working directory to `/usr/local/foo/bar/baz`
 #
-#   * Creates completion function __foo__() which completes foo():
+#   * Creates completion function __cdfoo__() which completes cdfoo():
 #
-#       $ foo <Tab>         # Returns all directories in `/usr/local/foo`
-#       $ foo bar/<Tab>     # Returns all directories in `/usr/local/foo/bar`
+#       $ cdfoo <Tab>       # Returns all directories in `/usr/local/foo`
+#       $ cdfoo bar/<Tab>   # Returns all directories in `/usr/local/foo/bar`
 #
 #   * If `/usr/local/foo` does not exist or is not a directory, and multiple
 #     arguments are given, each argument is tested until an extant directory
 #     is found. Otherwise does nothing and returns false.
-#
-# CD_FUNC -n ... ../..
-#
-#   * No check for extant directory with `-n`
 #
 # CD_FUNC -f cdgems 'ruby -rubygems -e "puts Gem.dir"'
 #
@@ -249,17 +245,23 @@ ALIAS() {
 #
 #   * Lazy evaluation; avoids costly invocations at shell init
 #
-# Option: -n     Do not check if directory exists
+# CD_FUNC -n ... ../..
+#
+#   * No check for extant directory with `-n`
+#
 # Option: -f     Parameter $2 is a shell function
+# Option: -n     Do not check if directory exists
+# Option: -x     Export shell variable
 # Param:  $1     Name of created function/variable
 # Param:  ${@:2} List of directories
 CD_FUNC() {
-    local isfunc=0 checkdir=1
+    local isfunc=0 checkdir=1 doexport=''
     local OPTIND OPTARG opt
-    while getopts :fn opt; do
+    while getopts :fnx opt; do
         case $opt in
         f) isfunc=1;;
         n) checkdir=0;;
+        x) doexport='export';;
         esac
     done
     shift $((OPTIND-1))
@@ -275,7 +277,7 @@ CD_FUNC() {
             else
                 cd \"\$($func)/\$1\"
                 # Set shell variable on first call
-                [[ \"\$$name\" ]] || $name=\"\$PWD\" 2>/dev/null
+                $doexport $name=\"\$PWD\" 2>/dev/null
             fi
         }"
     else
@@ -296,7 +298,7 @@ CD_FUNC() {
         fi
 
         # Set shell variable and function
-        eval "$name=\"$dir\"" 2>/dev/null
+        eval "$doexport $name=\"$dir\"" 2>/dev/null
         eval "$name() { cd \"$dir/\$1\"; }"
     fi
 
