@@ -351,33 +351,33 @@ noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 " Open frequently edited files
 noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
 noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
-noremap <Leader>ea       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/autocommands.vim'))<CR>
-noremap <Leader>eA       :<C-u>execute 'TabOpen ' . resolve(expand('~/.mutt/aliases'))<CR>
-noremap <Leader>eb       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc.d/interactive.bash'))<CR>
-noremap <Leader>eB       :<C-u>execute 'TabOpen ' . resolve(expand('~/.bashrc'))<CR>
-noremap <Leader>ec       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/commands.vim'))<CR>
-noremap <Leader>ed       :<C-u>execute 'TabOpen ' . resolve(expand($cddnsmasq . '/dnsmasq.conf'))<CR>
+noremap <Leader>ea       :<C-u>TabOpen ~/.vim/local/autocommands.vim<CR>
+noremap <Leader>eA       :<C-u>TabOpen ~/.mutt/aliases<CR>
+noremap <Leader>eb       :<C-u>TabOpen ~/.bashrc.d/interactive.bash<CR>
+noremap <Leader>eB       :<C-u>TabOpen ~/.bashrc<CR>
+noremap <Leader>ec       :<C-u>TabOpen ~/.vim/local/commands.vim<CR>
+noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
-noremap <Leader>ei       :<C-u>execute 'TabOpen ' . resolve(expand('~/.inputrc'))<CR>
+noremap <Leader>ei       :<C-u>TabOpen ~/.inputrc<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh<CR>
-noremap <Leader>el       :<C-u>execute 'TabOpen ' . expand($cdhaus . '/etc/\\\\\\%lein/profiles.clj')<CR>
-noremap <Leader>eL       :<C-u>execute 'TabOpen ' . resolve(expand($cdsrc . '/leiningen/sample.project.clj'))<CR>
-noremap <Leader>em       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vim/local/mappings.vim'))<CR>
-noremap <Leader>eM       :<C-u>execute 'TabOpen ' . expand($cdhaus . '/etc/\\\\\\%mutt/muttrc')<CR>
-noremap <Leader>en       :<C-u>execute 'TabOpen ' . resolve(expand($cdnginx . '/nginx.conf'))<CR>
+noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/\%lein/profiles.clj<CR>
+noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj<CR>
+noremap <Leader>em       :<C-u>TabOpen ~/.vim/local/mappings.vim<CR>
+noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/\%mutt/muttrc<CR>
+noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
-noremap <Leader>er       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%local/\\\\\\%lib/clojure/guns/src/guns/repl.clj'))<CR>
-noremap <Leader>eR       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/Rakefile'))<CR>
-noremap <Leader>es       :<C-u>execute 'TabOpen ' . resolve(expand(getcwd() . '/__Scratch__')) . ' tabnew \| Scratch'<CR>
+noremap <Leader>er       :<C-u>TabOpen $cdhaus/etc/\%local/\%lib/clojure/guns/src/guns/repl.clj<CR>
+noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile<CR>
+noremap <Leader>es       :<C-u>execute 'TabOpen ' . getcwd() . '/__Scratch__' \| Scratch<CR>
 noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
-noremap <Leader>et       :<C-u>execute 'TabOpen ' . resolve(expand(g:org_home . '/TODO.org')) . ' Org TODO'<CR>
-noremap <Leader>eT       :<C-u>execute 'TabOpen ' . resolve(expand('~/.tmux.conf'))<CR>
-noremap <Leader>eu       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/share/doc/unicode-table.txt.gz'))<CR>
-noremap <Leader>ev       :<C-u>execute 'TabOpen ' . resolve(expand($MYVIMRC))<CR>
-noremap <Leader>eV       :<C-u>execute 'TabOpen ' . resolve(expand('~/.vimperatorrc'))<CR>
-noremap <Leader>ew       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%config/bspwm/bspwmrc'))<CR>
-noremap <Leader>ex       :<C-u>execute 'TabOpen ' . resolve(expand('~/.xinitrc'))<CR>
-noremap <Leader>eX       :<C-u>execute 'TabOpen ' . resolve(expand($cdhaus . '/etc/\\\\\\%config/bspwm/autostart'))<CR>
+noremap <Leader>et       :<C-u>execute 'TabOpen ' g:org_home . '/TODO.org'<CR>
+noremap <Leader>eT       :<C-u>TabOpen ~/.tmux.conf<CR>
+noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz<CR>
+noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC<CR>
+noremap <Leader>eV       :<C-u>TabOpen ~/.vimperatorrc<CR>
+noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/bspwmrc<CR>
+noremap <Leader>ex       :<C-u>TabOpen ~/.xinitrc<CR>
+noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/autostart<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>

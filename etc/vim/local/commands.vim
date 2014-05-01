@@ -513,10 +513,13 @@ endfunction
 command! -bar UniteOpen call fugitive#detect('.') | execute 'Unite -no-split ' . (exists('b:git_dir') ? 'git_cached git_untracked' : 'file')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
-function! s:TabOpen(file, ...)
+function! s:TabOpen(path)
+    let path = substitute(a:path, '\v^(\~[^/]*)', '\=expand(submatch(1))', '')
+    let path = substitute(path, '\v(\$\w+)', '\=expand(submatch(1))', 'g')
+
     for t in range(tabpagenr('$'))
         for b in tabpagebuflist(t + 1)
-            if a:file ==# expand('#' . b . ':p')
+            if path ==# expand('#' . b . ':p')
                 execute ':' . (t + 1) . 'tabnext'
                 execute ':' . b       . 'wincmd w'
                 return
@@ -524,7 +527,7 @@ function! s:TabOpen(file, ...)
         endfor
     endfor
 
-    execute a:0 ? join(a:000) : 'tabedit ' . a:file
+    execute 'tabedit ' . fnameescape(path)
 endfunction
 
 command! -bar TabmoveNext call <SID>Tabmove(1) " {{{1
