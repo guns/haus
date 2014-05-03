@@ -32,7 +32,7 @@
                        [redl "RELEASE"]
                        [slamhound "[,)"]
                        [spyscope "RELEASE"]
-                       [tailrecursion/boot.core "RELEASE"]]
+                       #_[tailrecursion/boot.core "RELEASE"]]
         :aliases {"t" ["trampoline"]
                   "RUN" ["trampoline" "run"]
                   "REPL" ["trampoline" "repl" ":headless"]
