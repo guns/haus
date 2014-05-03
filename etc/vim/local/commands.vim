@@ -318,8 +318,9 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <Leader><M-r>    :call fireplace#session_eval('(guns.repl/refresh-all)') \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
     nnoremap <silent><buffer> <LocalLeader>cp  :Capture call fireplace#session_eval('(guns.repl/print-classpath!)') \| setfiletype plain<CR>
-    nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('.')<CR>
+    nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('\A\Q' . fireplace#ns() . '\E\z')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>CS  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
     nnoremap <silent><buffer> <LocalLeader>i   :call fireplace#session_eval('(do (load-file "' . expand('~/.local/lib/clojure/guns/src/guns/repl.clj') . '") (guns.repl/init!))')<CR>
     nnoremap <silent><buffer> <LocalLeader>ja  :Capture call fireplace#session_eval('(guns.repl/print-jvm-args!)') \| setfiletype plain<CR>
@@ -342,8 +343,9 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(guns.repl/toggle-warn-on-reflection!)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests(0)<CR>
-    nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(1)<CR>
+    nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests()<CR>
+    nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(input('Test filter: '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>TT  :call <SID>ClojureRunAllTests()<CR>
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(guns.repl/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(guns.repl/toggle-warnings! true)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(guns.repl/toggle-warnings! false)')<CR>
@@ -388,13 +390,26 @@ function! s:ClojureMacroexpand(once)
     let @m = reg_save
 endfunction
 
-function! s:ClojureRunTests(all)
-    if a:all
-        Require!
-        call fireplace#session_eval('(clojure.test/run-all-tests)')
-    else
-        call fireplace#session_eval('(guns.repl/run-tests-for-current-ns)')
+function! s:ClojureRunTests(...)
+    if a:0
+        if empty(a:1) | return | endif
+        let b:clojure_test_filter = a:1
+    elseif !exists('b:clojure_test_filter')
+        let b:clojure_test_filter = '.'
     endif
+
+    if b:clojure_test_filter == '.'
+        call fireplace#session_eval('(guns.repl/run-tests-for-current-ns)')
+    else
+        echo "\r"
+        call fireplace#session_eval('(guns.repl/run-tests-for-current-ns #"' . escape(b:clojure_test_filter, '"') . '")')
+    endif
+
+endfunction
+
+function! s:ClojureRunAllTests()
+    Require!
+    return fireplace#session_eval('(clojure.test/run-all-tests)')
 endfunction
 
 function! s:ClojureElementRedir(fn)

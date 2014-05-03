@@ -213,13 +213,22 @@
 ;; Testing
 ;;
 
-(defn run-tests-for-current-ns []
-  (let [p (re-pattern (str "\\Q" *ns* "\\E-test\\z"))
-        n (if (re-seq #"-test\z" (str *ns*))
-            *ns*
-            (first (filter #(re-seq p (str %)) (all-ns))))]
-    (require (ns-name *ns*) (ns-name n) :reload)
-    (test/run-tests n)))
+(defn run-tests-for-current-ns
+  ([]
+   (run-tests-for-current-ns nil))
+  ([var-pat]
+   (let [ns-pat (re-pattern (str "\\Q" *ns* "\\E-test\\z"))
+         ns (if (re-find #"-test\z" (str *ns*))
+              *ns*
+              (first (filter #(re-find ns-pat (str %)) (all-ns))))]
+     (require (ns-name *ns*) (ns-name ns) :reload)
+     (if var-pat
+       (let [v (->> (ns-publics ns)
+                    vals
+                    (filter (fn [v] (re-find var-pat (str (:name (meta v)))))))]
+         (printf "Running %d test%s\n" (count v) (if (= (count v) 1) "" \s))
+         (test/test-vars v))
+       (test/run-tests ns)))))
 
 ;;
 ;; Benchmarking
