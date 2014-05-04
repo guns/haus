@@ -12,7 +12,7 @@ super + alt + control + r
 	~/.config/bspwm/bspwmrc
 
 super + alt + control + q
-	bspc quit; pkill -x sxhkd
+	bspc quit
 
 #
 # Desktops
