@@ -258,14 +258,17 @@
 ;;
 
 (defn init! []
-  (println "Setting javadoc URLs…")
+  (println "Setting javadoc URLs… ")
   (set-local-javadocs!)
 
-  (println "Setting clojure.pprint values…")
+  (println "Setting clojure.pprint values… ")
   (set-local-pprint-values!)
 
   (println "Enabling warnings… ")
   (toggle-warnings! true)
+
+  (println "Enabling redl and spyscope… ")
+  (require 'spyscope.core 'spyscope.repl 'redl.core 'redl.complete)
 
   (printf "Loading guns.system… ")
   (try

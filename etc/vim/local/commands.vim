@@ -322,7 +322,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>CS  :call <SID>ClojureCheatSheet('.')<CR>
     nnoremap <silent><buffer> <LocalLeader>e   :call <SID>ClojurePprint('*e')<CR>
-    nnoremap <silent><buffer> <LocalLeader>i   :call fireplace#session_eval('(do (load-file "' . expand('~/.local/lib/clojure/guns/src/guns/repl.clj') . '") (guns.repl/init!))')<CR>
+    nnoremap <silent><buffer> <LocalLeader>i   :call fireplace#session_eval("(do (require 'guns.repl :reload) (guns.repl/init!))")<CR>
     nnoremap <silent><buffer> <LocalLeader>ja  :Capture call fireplace#session_eval('(guns.repl/print-jvm-args!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>l   :Last<CR>
     nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>

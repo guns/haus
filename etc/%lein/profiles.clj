@@ -40,11 +40,9 @@
         :signing {:gpg-key "0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"}
         :global-vars {*warn-on-reflection* true}
         :jvm-opts ["-XX:+CMSClassUnloadingEnabled"]
+        :source-paths ["/home/guns/.local/lib/clojure/guns/src"]
         :repl-options {:init-ns user
-                       :init (do (load-file (str (System/getProperty "user.home")
-                                                 "/.local/lib/clojure/guns/src/guns/repl.clj"))
-                                 (guns.repl/init!)
-                                 (require 'spyscope.core 'spyscope.repl 'redl.core 'redl.complete))}
+                       :init (do (require 'guns.repl) (guns.repl/init!))}
         :eastwood {:all true}}
  :slamhound {:global-vars {*warn-on-reflection* false}
              :injections [(require 'clojure.pprint)
