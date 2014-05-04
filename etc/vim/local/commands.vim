@@ -328,8 +328,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>m1  :call <SID>ClojureMacroexpand(0)<CR>
     nnoremap <silent><buffer> <LocalLeader>me  :call <SID>ClojureMacroexpand(1)<CR>
     nnoremap <silent><buffer> <LocalLeader>mE  :call <SID>ClojureMacroexpand(2)<CR>
-    nnoremap <silent><buffer> <LocalLeader>ns  :call <SID>ClojureViewNsGraph(input('Constraints: ', ':dependents '))<CR>
-    nnoremap <silent><buffer> <LocalLeader>nS  :call <SID>ClojureViewNsGraph(input('Constraints: ', ':dependencies '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>ns  :call <SID>ClojureViewNsGraph(input('Constraints: ', ":dependents '" . fireplace#ns() . ' '))<CR>
+    nnoremap <silent><buffer> <LocalLeader>nS  :call <SID>ClojureViewNsGraph(input('Constraints: ', ":dependencies '" . fireplace#ns() . ' '))<CR>
     nnoremap <silent><buffer> <LocalLeader>p   :call <SID>ClojurePprint('*1')<CR>
     nnoremap <silent><buffer> <LocalLeader>R   :Repl<CR>
     nnoremap <silent><buffer> <LocalLeader>r   :ReplHere<CR>
