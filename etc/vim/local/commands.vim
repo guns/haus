@@ -316,7 +316,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <Leader>r        :Require \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)') \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <Leader><M-r>    :call fireplace#session_eval('(guns.repl/refresh-all)') \| ClojureHighlightReferences<CR>
-    nnoremap <silent><buffer> <LocalLeader>C   :Connect<Space>
+    nnoremap <silent><buffer> <LocalLeader>co  :execute 'Connect nrepl://localhost:' . readfile('.nrepl-port')[0]<CR>
     nnoremap <silent><buffer> <LocalLeader>cp  :Capture call fireplace#session_eval('(guns.repl/print-classpath!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('\A\Q' . fireplace#ns() . '\E\z')<CR>
     nnoremap <silent><buffer> <LocalLeader>cS  :call <SID>ClojureCheatSheet(input('Namespace filter: '))<CR>
