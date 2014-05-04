@@ -4,18 +4,24 @@
             [clojure.java.javadoc :as javadoc]
             [clojure.pprint :as pp]
             [clojure.reflect :as reflect]
+            [clojure.set :as set]
             [clojure.string :as string]
             [clojure.test :as test]
+            [clojure.tools.namespace.file :as ctnf]
+            [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.repl :as ctnr]
             [clojure.tools.trace :as trace]
             [criterium.core :as crit]
+            [loom.graph :as graph]
+            [loom.io :as loom]
             [no.disassemble :as no]
             [slam.hound.regrow :as regrow])
-  (:import (clojure.lang MultiFn)
+  (:import (clojure.lang Keyword MultiFn Symbol)
            (java.io File PrintWriter)
            (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
-           (java.net URL URLClassLoader))
+           (java.net URL URLClassLoader URLDecoder)
+           (java.util.regex Pattern))
   (:refer-clojure :exclude [time]))
 
 ;;
@@ -162,8 +168,8 @@
                      (filter #(re-find pattern (str %)))
                      (sort-by str))]
     (if (seq matches)
-      (let [tmp (File. (format "target/cheat-sheets/%s.clj"
-                               (string/replace pattern #"[^\w-]" ".")))
+      (let [tmp (io/file (format "target/cheat-sheets/%s.clj"
+                                 (string/replace pattern #"[^\w-]" ".")))
             buf (str (string/join "\n\n" (map cheat-sheet matches))
                      "\n\n;; vim:ft=clojure:fdm=marker:")]
         (io/make-parents tmp)
@@ -172,8 +178,8 @@
       "")))
 
 (defn classpath []
-  (let [classloader (ClassLoader/getSystemClassLoader)]
-    (mapv (fn [^URL u] (.getPath u)) (.getURLs ^URLClassLoader classloader))))
+  (for [^URL url (.getURLs ^URLClassLoader (ClassLoader/getSystemClassLoader))]
+    (URLDecoder/decode (.getPath url) "UTF-8")))
 
 (defn print-classpath! []
   (doseq [path (classpath)]
@@ -194,20 +200,93 @@
                    (symbol (.getName m))
                    (map #(symbol (.getCanonicalName ^Class %)) (.getParameterTypes m))])
                 (.getMethods cls))
-        idecls (mapv (fn [[^Class cls ms]]
-                       (let [decls (map (fn [[_ s ps]] (str (list s (into ['this] ps))))
-                                        ms)
-                             typ (if (.isInterface cls) "Interface" "Superclass")]
-                         (str "  ;; " typ
-                              "\n  " (.getCanonicalName cls)
-                              "\n  " (string/join "\n  " decls))))
-                     (group-by first ms))]
+        idecls (map (fn [[^Class cls ms]]
+                      (let [decls (map (fn [[_ s ps]] (str (list s (into ['this] ps))))
+                                       ms)
+                            typ (if (.isInterface cls) "Interface" "Superclass")]
+                        (str "  ;; " typ
+                             "\n  " (.getCanonicalName cls)
+                             "\n  " (string/join "\n  " decls))))
+                    (group-by first ms))]
     idecls))
 
 (defn object-scaffold [obj]
   (let [cls (if (class? obj) obj (class obj))
         decls (->> cls supers (mapcat type-scaffold) distinct sort)]
     (string/join "\n\n" decls)))
+
+;;
+;; Namespaces
+;;
+
+(defn ns-deps
+  ([]
+   (ns-deps (classpath)))
+  ([paths]
+   (->> paths
+        (map io/file)
+        (filter #(.isDirectory ^File %))
+        (mapcat find/find-clojure-sources-in-dir)
+        (ctnf/add-files {})
+        ((fn [{deps :clojure.tools.namespace.track/deps
+               pjns :clojure.tools.namespace.track/load}]
+           {:proj-namespaces (set pjns)
+            :dependencies (:dependencies deps)
+            :dependents (:dependents deps)})))))
+
+(defn subtree
+  ([tree node]
+   (subtree tree node {}))
+  ([tree node m]
+   (let [nodes (get tree node)]
+     (if (seq nodes)
+       (reduce (fn [m n] (subtree tree n m))
+               (assoc m node nodes) nodes)
+       m))))
+
+(defn view-ns-graph*
+  "Visualize project namespace dependencies. Constraints are:
+
+   Keyword:   Graph type, one of :dependents or :dependencies
+   Symbol:    Root ns nodes
+   Pattern:   Root ns nodes, filtered by pattern
+   String:    Source directories to search for namespaces"
+  [& constraints]
+  (let [{types Keyword
+         dirs String
+         root-nodes Symbol
+         patterns Pattern} (group-by class constraints)
+        type (or (first types) :dependents)
+        dirs (or dirs (classpath))
+        {:keys [proj-namespaces] graph type} (ns-deps dirs)
+        root-nodes (if patterns
+                     (reduce
+                       (fn [s pat]
+                         (into s (filterv #(re-find pat (str %)) proj-namespaces)))
+                       (or root-nodes #{}) patterns)
+                     root-nodes)
+        graph (select-keys graph proj-namespaces)
+        graph (zipmap (keys graph)
+                      (mapv (partial set/intersection proj-namespaces)
+                            (vals graph)))
+        graph (if (or (seq root-nodes) (seq patterns))
+                (->> root-nodes
+                     (mapv (partial subtree graph))
+                     (apply merge-with set/union))
+                graph)]
+    (when (seq graph)
+      (loom/view (if (= type :dependencies)
+                   (graph/transpose (graph/digraph graph))
+                   (graph/digraph graph))))))
+
+(defmacro view-ns-graph
+  "Convenience macro for view-ns-graph*, meant for quick use from an editor.
+   Bare symbols are converted to Patterns."
+  [& constraints]
+  `(view-ns-graph* ~@(for [c constraints]
+                       (if (symbol? c)
+                         (Pattern/compile (str c))
+                         c))))
 
 ;;
 ;; Testing

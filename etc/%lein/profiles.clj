@@ -27,6 +27,7 @@
                   [lein-nodisassemble "RELEASE"]
                   [lein-vanity "RELEASE"]]
         :dependencies [[criterium "RELEASE"]
+                       [aysylu/loom "0.4.2"]
                        [org.clojure/tools.namespace "RELEASE"]
                        [org.clojure/tools.trace "RELEASE"]
                        [redl "RELEASE"]
