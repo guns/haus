@@ -247,35 +247,41 @@
 (defn view-ns-graph*
   "Visualize project namespace dependencies. Constraints are:
 
+   Boolean:   Scope selector, project namespaces only if false
    Keyword:   Graph type, one of :dependents or :dependencies
    Symbol:    Root ns nodes
    Pattern:   Root ns nodes, filtered by pattern
    String:    Source directories to search for namespaces"
   [& constraints]
-  (let [{types Keyword
+  (let [{scopes Boolean
+         graph-types Keyword
          dirs String
          root-nodes Symbol
          patterns Pattern} (group-by class constraints)
-        type (or (first types) :dependents)
+        all-namespaces? (or (last scopes) false)
+        graph-type (or (last graph-types) :dependents)
         dirs (or dirs (classpath))
-        {:keys [proj-namespaces] graph type} (ns-deps dirs)
+        {:keys [proj-namespaces] graph graph-type} (ns-deps dirs)
         root-nodes (if patterns
                      (reduce
                        (fn [s pat]
                          (into s (filterv #(re-find pat (str %)) proj-namespaces)))
                        (or root-nodes #{}) patterns)
                      root-nodes)
-        graph (select-keys graph proj-namespaces)
-        graph (zipmap (keys graph)
-                      (mapv (partial set/intersection proj-namespaces)
-                            (vals graph)))
+        graph (if all-namespaces?
+                graph
+                (-> graph
+                    (select-keys proj-namespaces)
+                    (#(zipmap (keys %)
+                              (mapv (partial set/intersection proj-namespaces)
+                                    (vals %))))))
         graph (if (or (seq root-nodes) (seq patterns))
                 (->> root-nodes
                      (mapv (partial subtree graph))
                      (apply merge-with set/union))
                 graph)]
     (when (seq graph)
-      (loom/view (if (= type :dependencies)
+      (loom/view (if (= graph-type :dependencies)
                    (graph/transpose (graph/digraph graph))
                    (graph/digraph graph))))))
 
