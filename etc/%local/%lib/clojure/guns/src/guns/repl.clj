@@ -298,6 +298,22 @@
 ;; Testing
 ;;
 
+(defn test-vars
+  "Copied from clojure.test/test-vars for backwards compat.
+
+   Groups vars by their namespace and runs test-vars on them with
+   appropriate fixtures applied."
+  {:added "1.6"}
+  [vars]
+  (doseq [[ns vars] (group-by (comp :ns meta) vars)]
+    (let [once-fixture-fn (test/join-fixtures (:clojure.test/once-fixtures (meta ns)))
+          each-fixture-fn (test/join-fixtures (:clojure.test/each-fixtures (meta ns)))]
+      (once-fixture-fn
+       (fn []
+         (doseq [v vars]
+           (when (:test (meta v))
+             (each-fixture-fn (fn [] (test/test-var v))))))))))
+
 (defn run-tests-for-current-ns
   ([]
    (run-tests-for-current-ns nil))
@@ -312,7 +328,7 @@
                     vals
                     (filter (fn [v] (re-find var-pat (str (:name (meta v)))))))]
          (printf "Running %d test%s\n" (count v) (if (= (count v) 1) "" \s))
-         (test/test-vars v))
+         (test-vars v))
        (test/run-tests ns)))))
 
 ;;
