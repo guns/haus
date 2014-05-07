@@ -47,6 +47,89 @@
   (alter-var-root #'pp/*print-right-margin* (constantly 80)))
 
 ;;
+;; Classpath and Namespaces
+;;
+
+(defn classpath []
+  (for [^URL url (.getURLs ^URLClassLoader (ClassLoader/getSystemClassLoader))]
+    (URLDecoder/decode (.getPath url) "UTF-8")))
+
+(defn ns-deps
+  ([]
+   (ns-deps (classpath)))
+  ([paths]
+   (->> paths
+        (map io/file)
+        (filter #(.isDirectory ^File %))
+        (mapcat find/find-clojure-sources-in-dir)
+        (ctnf/add-files {})
+        ((fn [{deps :clojure.tools.namespace.track/deps
+               pjns :clojure.tools.namespace.track/load}]
+           {:proj-namespaces (set pjns)
+            :dependencies (:dependencies deps)
+            :dependents (:dependents deps)})))))
+
+(defn subtree
+  ([tree node]
+   (subtree tree node {}))
+  ([tree node m]
+   (let [nodes (get tree node)]
+     (if (seq nodes)
+       (reduce (fn [m n] (subtree tree n m))
+               (assoc m node nodes) nodes)
+       m))))
+
+(defn view-ns-graph*
+  "Visualize project namespace dependencies. Constraints are:
+
+   Boolean:   Scope selector, project namespaces only if false
+   Keyword:   Graph type, one of :dependents or :dependencies
+   Symbol:    Root ns nodes
+   Pattern:   Root ns nodes, filtered by pattern
+   String:    Source directories to search for namespaces"
+  [& constraints]
+  (let [{scopes Boolean
+         graph-types Keyword
+         dirs String
+         root-nodes Symbol
+         patterns Pattern} (group-by class constraints)
+        all-namespaces? (or (last scopes) false)
+        graph-type (or (last graph-types) :dependents)
+        dirs (or dirs (classpath))
+        {:keys [proj-namespaces] graph graph-type} (ns-deps dirs)
+        root-nodes (if patterns
+                     (reduce
+                       (fn [s pat]
+                         (into s (filterv #(re-find pat (str %)) proj-namespaces)))
+                       (or root-nodes #{}) patterns)
+                     root-nodes)
+        graph (if all-namespaces?
+                graph
+                (-> graph
+                    (select-keys proj-namespaces)
+                    (#(zipmap (keys %)
+                              (mapv (partial set/intersection proj-namespaces)
+                                    (vals %))))))
+        graph (if (or (seq root-nodes) (seq patterns))
+                (->> root-nodes
+                     (mapv (partial subtree graph))
+                     (apply merge-with set/union))
+                graph)]
+    (when (seq graph)
+      (loom/view (if (= graph-type :dependencies)
+                   (graph/transpose (graph/digraph graph))
+                   (graph/digraph graph))))))
+
+(defmacro view-ns-graph
+  "Convenience macro for view-ns-graph*, meant for quick use from an editor.
+   Bare symbols are converted to Patterns."
+  [& constraints]
+  `(view-ns-graph* ~@(for [c constraints]
+                       (if (symbol? c)
+                         (Pattern/compile (str c))
+                         c))))
+
+;;
 ;; Debugging
 ;;
 
@@ -128,6 +211,28 @@
    (toggle-schema-validation! value)
    (print-warnings-atom)))
 
+(defn load-guns-lint! []
+  (load-file (str (System/getProperty "user.home")
+                  "/.local/lib/clojure/guns/src/guns/lint.clj")))
+
+(defonce load-guns-lint
+  (delay (load-guns-lint!)))
+
+(defn warn-closeable! [scope]
+  (force load-guns-lint)
+  (let [namespaces (case scope
+                     :ns [(ns-name *ns*)]
+                     :project (:proj-namespaces (ns-deps)))]
+    (doseq [ns-sym namespaces]
+      (if-let [ns (find-ns ns-sym)]
+        (try
+          (binding [*ns* ns]
+            (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
+              (prn w)))
+          (catch Throwable e
+            (printf "%s: caught %s\n" ns (.getSimpleName (class e)))))
+        (printf "%s: Namespace not loaded\n" ns-sym)))))
+
 ;;
 ;; Reloading
 ;;
@@ -177,10 +282,6 @@
         (.getAbsolutePath tmp))
       "")))
 
-(defn classpath []
-  (for [^URL url (.getURLs ^URLClassLoader (ClassLoader/getSystemClassLoader))]
-    (URLDecoder/decode (.getPath url) "UTF-8")))
-
 (defn print-classpath! []
   (doseq [path (classpath)]
     (println path)))
@@ -214,85 +315,6 @@
   (let [cls (if (class? obj) obj (class obj))
         decls (->> cls supers (mapcat type-scaffold) distinct sort)]
     (string/join "\n\n" decls)))
-
-;;
-;; Namespaces
-;;
-
-(defn ns-deps
-  ([]
-   (ns-deps (classpath)))
-  ([paths]
-   (->> paths
-        (map io/file)
-        (filter #(.isDirectory ^File %))
-        (mapcat find/find-clojure-sources-in-dir)
-        (ctnf/add-files {})
-        ((fn [{deps :clojure.tools.namespace.track/deps
-               pjns :clojure.tools.namespace.track/load}]
-           {:proj-namespaces (set pjns)
-            :dependencies (:dependencies deps)
-            :dependents (:dependents deps)})))))
-
-(defn subtree
-  ([tree node]
-   (subtree tree node {}))
-  ([tree node m]
-   (let [nodes (get tree node)]
-     (if (seq nodes)
-       (reduce (fn [m n] (subtree tree n m))
-               (assoc m node nodes) nodes)
-       m))))
-
-(defn view-ns-graph*
-  "Visualize project namespace dependencies. Constraints are:
-
-   Boolean:   Scope selector, project namespaces only if false
-   Keyword:   Graph type, one of :dependents or :dependencies
-   Symbol:    Root ns nodes
-   Pattern:   Root ns nodes, filtered by pattern
-   String:    Source directories to search for namespaces"
-  [& constraints]
-  (let [{scopes Boolean
-         graph-types Keyword
-         dirs String
-         root-nodes Symbol
-         patterns Pattern} (group-by class constraints)
-        all-namespaces? (or (last scopes) false)
-        graph-type (or (last graph-types) :dependents)
-        dirs (or dirs (classpath))
-        {:keys [proj-namespaces] graph graph-type} (ns-deps dirs)
-        root-nodes (if patterns
-                     (reduce
-                       (fn [s pat]
-                         (into s (filterv #(re-find pat (str %)) proj-namespaces)))
-                       (or root-nodes #{}) patterns)
-                     root-nodes)
-        graph (if all-namespaces?
-                graph
-                (-> graph
-                    (select-keys proj-namespaces)
-                    (#(zipmap (keys %)
-                              (mapv (partial set/intersection proj-namespaces)
-                                    (vals %))))))
-        graph (if (or (seq root-nodes) (seq patterns))
-                (->> root-nodes
-                     (mapv (partial subtree graph))
-                     (apply merge-with set/union))
-                graph)]
-    (when (seq graph)
-      (loom/view (if (= graph-type :dependencies)
-                   (graph/transpose (graph/digraph graph))
-                   (graph/digraph graph))))))
-
-(defmacro view-ns-graph
-  "Convenience macro for view-ns-graph*, meant for quick use from an editor.
-   Bare symbols are converted to Patterns."
-  [& constraints]
-  `(view-ns-graph* ~@(for [c constraints]
-                       (if (symbol? c)
-                         (Pattern/compile (str c))
-                         c))))
 
 ;;
 ;; Testing
@@ -370,6 +392,10 @@
 
   (println "Enabling redl and spyscope… ")
   (require 'spyscope.core 'spyscope.repl 'redl.core 'redl.complete)
+
+  (when (realized? load-guns-lint)
+    (println "Loading guns.lint… ")
+    (load-guns-lint!))
 
   (printf "Loading guns.system… ")
   (try

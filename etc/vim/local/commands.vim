@@ -351,6 +351,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(guns.repl/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(guns.repl/toggle-warnings! true)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(guns.repl/toggle-warnings! false)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>wc  :call fireplace#session_eval('(guns.repl/warn-closeable! :ns)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>WC  :call fireplace#session_eval('(guns.repl/warn-closeable! :project)')<CR>
 endfunction
 
 command! -bar GrepCloseable call <SID>GrepCloseable()

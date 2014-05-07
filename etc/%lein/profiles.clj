@@ -28,6 +28,8 @@
                   [lein-vanity "RELEASE"]]
         :dependencies [[criterium "RELEASE"]
                        [aysylu/loom "0.4.3-SNAPSHOT"]
+                       [org.clojure/tools.analyzer "0.1.0-beta12"]
+                       [org.clojure/tools.analyzer.jvm "0.1.0-beta12"]
                        [org.clojure/tools.namespace "RELEASE"]
                        [org.clojure/tools.trace "RELEASE"]
                        [redl "RELEASE"]
