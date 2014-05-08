@@ -25,7 +25,18 @@
             [clojure.tools.analyzer.ast :as ast]
             [clojure.tools.analyzer.jvm :as jvm])
   (:import (clojure.lang LineNumberingPushbackReader Namespace)
+           (java.io ByteArrayInputStream ByteArrayOutputStream StringReader
+                    StringWriter)
            (java.lang AutoCloseable)))
+
+(def NOP-CLOSEABLES
+  "Set of classes whose close methods are NOPs. Includes StringReader, whose
+   close method does have an effect. However, as the source is a String,
+   hardly anybody bothers closing it."
+  #{ByteArrayInputStream
+    ByteArrayOutputStream
+    StringReader
+    StringWriter})
 
 (defn ^:private analyze [form]
   (binding [ana/macroexpand-1 jvm/macroexpand-1
@@ -38,6 +49,7 @@
   (let [{:keys [op tag]} ast]
     (and (contains? #{:new :invoke} op)
          (class? tag)
+         (not (contains? NOP-CLOSEABLES tag))
          (.isAssignableFrom AutoCloseable tag))))
 
 (defn ^:private close-call? [ast]
