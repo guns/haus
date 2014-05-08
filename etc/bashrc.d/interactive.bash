@@ -124,7 +124,7 @@ CD_FUNC -x cdsrc        ~/src ~guns/src /usr/local/src
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdarchlinux     "$cdsrc/archlinux"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
-CD_FUNC cdjdk           "$cdSRC/openjdk/jdk/src/share"
+CD_FUNC cdjdk           "$cdSRC/openjdk/src/share"
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cddesktop       ~/Desktop
 CD_FUNC cdmail          ~/Mail ~guns/Mail
@@ -878,7 +878,7 @@ ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
-    alias vimnilla='command vim -u NONE -N'
+    alias vimnilla='command vim -N -u NONE -U NONE'
     vimopen() { vim -c 'UniteOpen' "$@"; }
 
     # Param: [$@] Arguments to `ff()`
