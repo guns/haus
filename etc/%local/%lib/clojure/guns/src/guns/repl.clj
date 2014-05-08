@@ -227,11 +227,19 @@
       (try
         (require ns-sym)
         (let [ns (find-ns ns-sym)]
-          (binding [*ns* ns]
-            (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
-              (prn w))))
+          (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
+            (prn w)))
+        (catch clojure.lang.ExceptionInfo e
+          (let [{:keys [column line class ast]} (.data e)]
+            (prn (array-map
+                   :ns ns-sym
+                   :error (.getMessage e)
+                   :line line
+                   :column column
+                   :form (:form ast)
+                   :class class))))
         (catch Throwable e
-          (printf "%s: caught %s\n" ns-sym (.getSimpleName (class e))))))))
+          (printf "[%s] %s\n" ns-sym e))))))
 
 ;;
 ;; Reloading

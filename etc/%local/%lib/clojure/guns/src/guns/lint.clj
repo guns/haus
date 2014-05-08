@@ -99,25 +99,24 @@
       unclosed)))
 
 (defn closeable-warnings [^Namespace ns]
-  (with-open [rdr (->> (str ns)
-                       (replace {\. \/ \- \_})
-                       (apply str)
-                       (format "%s.clj")
-                       io/resource
-                       io/reader
-                       LineNumberingPushbackReader.)]
-    (let [form (binding [*ns* ns
-                         *read-eval* false]
-                 (doall
-                   (take-while (partial not= ::done)
-                               (repeatedly #(read rdr false ::done)))))
-          errors (find-unclosed-resources form)]
-      (doall
-        (for [ast errors
-              :let [{:keys [ns line]} (:env ast)
-                    bind (:form ast)
-                    value (-> ast :init :form)]]
-          (array-map
-            :ns ns
-            :line line
-            :form (if value [bind value] bind)))))))
+  (binding [*ns* ns]
+    (with-open [rdr (->> (str ns)
+                         (replace {\. \/ \- \_})
+                         (apply str)
+                         (format "%s.clj")
+                         io/resource
+                         io/reader
+                         LineNumberingPushbackReader.)]
+      (let [form (take-while (partial not= ::done)
+                             (repeatedly #(read rdr false ::done)))
+            errors (find-unclosed-resources form)]
+        (doall
+          (for [ast errors
+                :let [{:keys [form tag env]} ast
+                      {:keys [ns line]} env
+                      value (-> ast :init :form)]]
+            (array-map
+              :ns ns
+              :line line
+              :form (if value [form value] form)
+              :class tag)))))))
