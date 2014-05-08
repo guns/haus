@@ -979,6 +979,11 @@ snippet ST "#spy/t" w
 #spy/t $0
 endsnippet
 
+snippet BP "(binding [*print-length* …]" w
+(binding [*print-length* ${1:20} *print-level* $1]
+	$0)
+endsnippet
+
 ### ClojureScript {{{1
 
 snippet .log ".log" w
