@@ -342,6 +342,7 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>si  :call <SID>ClojurePprint('@guns.system/instance')<CR>
     nnoremap <silent><buffer> <LocalLeader>sl  :call <SID>ClojurePprint('@system/log')<CR>
     nnoremap <silent><buffer> <LocalLeader>sc  :call <SID>ClojurePprint('system/config')<CR>
+    nnoremap <silent><buffer> <LocalLeader>sp  :call <SID>ClojureSetPrintLength(input('Max print length: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(guns.repl/toggle-warn-on-reflection!)')<CR>
@@ -445,6 +446,24 @@ function! s:ClojureElementRedir(fn)
         normal! gg"_dG"rPdd
         let [@e, @r] = reg_save
     endtry
+endfunction
+
+function! s:ClojureSetPrintLength(input)
+    if empty(a:input) | return | endif
+
+    let args = split(a:input)
+    if len(args) == 2
+        let [length, depth] = args
+    else
+        let length = args[0]
+        let depth = length
+    endif
+
+    redraw
+
+    echo fireplace#evalparse('(do (set! *print-length* ' . +length . ')'
+                             \ . '(set! *print-level* ' . +depth . ')'
+                             \ . '[*print-length* *print-level*])')
 endfunction
 
 function! s:ToggleLispwords(word)
