@@ -224,14 +224,14 @@
                      :ns [(ns-name *ns*)]
                      :project (:proj-namespaces (ns-deps)))]
     (doseq [ns-sym namespaces]
-      (if-let [ns (find-ns ns-sym)]
-        (try
+      (try
+        (require ns-sym)
+        (let [ns (find-ns ns-sym)]
           (binding [*ns* ns]
             (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
-              (prn w)))
-          (catch Throwable e
-            (printf "%s: caught %s\n" ns (.getSimpleName (class e)))))
-        (printf "%s: Namespace not loaded\n" ns-sym)))))
+              (prn w))))
+        (catch Throwable e
+          (printf "%s: caught %s\n" ns-sym (.getSimpleName (class e))))))))
 
 ;;
 ;; Reloading
