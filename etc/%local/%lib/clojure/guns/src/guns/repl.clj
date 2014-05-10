@@ -16,7 +16,7 @@
             [loom.io :as loom]
             [no.disassemble :as no]
             [slam.hound.regrow :as regrow])
-  (:import (clojure.lang Keyword MultiFn Symbol)
+  (:import (clojure.lang ExceptionInfo Keyword MultiFn Symbol)
            (java.io File PrintWriter)
            (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
@@ -229,7 +229,7 @@
         (let [ns (find-ns ns-sym)]
           (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
             (prn w)))
-        (catch clojure.lang.ExceptionInfo e
+        (catch ExceptionInfo e
           (let [{:keys [column line class ast]} (.data e)]
             (prn (array-map
                    :ns ns-sym
