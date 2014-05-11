@@ -4,6 +4,7 @@ Before=sleep.target
 
 [Service]
 Type=simple
+User=guns
 Environment=DISPLAY=:0
 ExecStart=<%= path 'slock' %>
 
