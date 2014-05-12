@@ -44,7 +44,8 @@
         :global-vars {*warn-on-reflection* true
                       *print-length* 500
                       *print-level* 500}
-        :jvm-opts ["-XX:+CMSClassUnloadingEnabled"]
+        :jvm-opts ["-XX:+CMSClassUnloadingEnabled"
+                   "-XX:+UseG1GC"]
         :repl-options {:init-ns user
                        :init (do (load-file (str (System/getProperty "user.home")
                                                  "/.local/lib/clojure/guns/src/guns/repl.clj"))

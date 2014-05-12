@@ -40,6 +40,7 @@
                                        local-url
                                        url)))
                       {} %)))
+    (alter-var-root #'javadoc/*feeling-lucky* (constantly false))
     (alter-var-root #'javadoc/*core-java-api* (constantly local-url))))
 
 (defn set-local-pprint-values! []
