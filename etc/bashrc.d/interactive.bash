@@ -1544,7 +1544,7 @@ elif __LINUX__; then
 
         alias paclog='pager /var/log/pacman.log'
 
-        pacunowned() {
+        pacfindunknown() {
             find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
         }; TCOMP find pacunowned
 
