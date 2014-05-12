@@ -670,9 +670,17 @@ ALIAS pk='pkill -x' \
       pkquit='pk -QUIT'
 
 # ps (traditional BSD / SysV flags seem to be the most portable)
-alias p1='ps caxo comm'
-alias psa='ps axo ucomm,pid,ppid,pgid,pcpu,pmem,state,nice,user,tt,start,command'
-alias psg='psa | grep -v "grep -i" | g'
+alias p1='ps axo comm'
+alias psa='ps axo comm,pid,ppid,pgid,sid,nlwp,pcpu,pmem,rss,start_time,user,tt,ni,pri,stat,args'
+psg() {
+    psa | ruby -e '
+        cols = ARGV[0].to_i
+        warn $stdin.readline[0...cols]
+        $stdin.readlines.grep(Regexp.new ARGV[1]).each { |l|
+            puts l[0...cols] unless l =~ /\b#{$$}\b/
+        }
+    ' -- "$COLUMNS" "$*";
+}
 alias psgv='psa | grep -v "grep -i" | gv'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
