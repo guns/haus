@@ -886,6 +886,7 @@ ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
+    alias v='vim -'
     alias vimnilla='command vim -N -u NONE -U NONE'
     vimopen() { vim -c 'UniteOpen' "$@"; }
 
