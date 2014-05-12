@@ -352,17 +352,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(guns.repl/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(guns.repl/toggle-warnings! true)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(guns.repl/toggle-warnings! false)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>wc  :call fireplace#session_eval('(guns.repl/warn-closeable! :ns)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>WC  :call fireplace#session_eval('(guns.repl/warn-closeable! :project)')<CR>
-endfunction
-
-command! -bar GrepCloseable call <SID>GrepCloseable()
-function! s:GrepCloseable()
-    let autocloseable = 'AbstractInterruptibleChannel|AbstractSelectableChannel|AbstractSelector|AsynchronousFileChannel|AsynchronousServerSocketChannel|AsynchronousSocketChannel|AudioInputStream|BufferedInputStream|BufferedOutputStream|BufferedReader|BufferedWriter|ByteArrayInputStream|ByteArrayOutputStream|CharArrayReader|CharArrayWriter|CheckedInputStream|CheckedOutputStream|CipherInputStream|CipherOutputStream|DatagramChannel|DatagramSocket|DataInputStream|DataOutputStream|DeflaterInputStream|DeflaterOutputStream|DigestInputStream|DigestOutputStream|FileCacheImageInputStream|FileCacheImageOutputStream|FileChannel|FileImageInputStream|FileImageOutputStream|FileInputStream|FileLock|FileOutputStream|FileReader|FileSystem|FileWriter|FilterInputStream|FilterOutputStream|FilterReader|FilterWriter|Formatter|ForwardingJavaFileManager|GZIPInputStream|GZIPOutputStream|ImageInputStreamImpl|ImageOutputStreamImpl|InflaterInputStream|InflaterOutputStream|InputStream|InputStream|InputStream|InputStreamReader|JarFile|JarInputStream|JarOutputStream|LineNumberInputStream|LineNumberReader|LogStream|MemoryCacheImageInputStream|MemoryCacheImageOutputStream|MLet|MulticastSocket|ObjectInputStream|ObjectOutputStream|OutputStream|OutputStream|OutputStream|OutputStreamWriter|Pipe.SinkChannel|Pipe.SourceChannel|PipedInputStream|PipedOutputStream|PipedReader|PipedWriter|PrintStream|PrintWriter|PrivateMLet|ProgressMonitorInputStream|PushbackInputStream|PushbackReader|RandomAccessFile|Reader|RMIConnectionImpl|RMIConnectionImpl_Stub|RMIConnector|RMIIIOPServerImpl|RMIJRMPServerImpl|RMIServerImpl|Scanner|SelectableChannel|Selector|SequenceInputStream|ServerSocket|ServerSocketChannel|Socket|SocketChannel|SSLServerSocket|SSLSocket|StringBufferInputStream|StringReader|StringWriter|URLClassLoader|Writer|XMLDecoder|XMLEncoder|ZipFile|ZipInputStream|ZipOutputStream'
-    let clojure_resources = 'reader|writer|input-stream|output-stream'
-    let pat = clojure_resources . '|' . autocloseable
-    execute 'normal! /\v' . pat
-    execute "Ggrep -P '" . pat . "'"
+    nnoremap <silent><buffer> <LocalLeader>wc  :call fireplace#session_eval('(require 'com.sungpae.lint-closeable) (com.sungpae.lint-closeable/warn-closeable! *ns*)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>WC  :call fireplace#session_eval('(require 'com.sungpae.lint-closeable) (com.sungpae.lint-closeable/warn-closeable!)')<CR>
 endfunction
 
 function! s:ClojurePprint(expr)

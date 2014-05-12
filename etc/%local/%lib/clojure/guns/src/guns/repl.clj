@@ -212,36 +212,6 @@
    (toggle-schema-validation! value)
    (print-warnings-atom)))
 
-(defn load-guns-lint! []
-  (load-file (str (System/getProperty "user.home")
-                  "/.local/lib/clojure/guns/src/guns/lint.clj")))
-
-(defonce load-guns-lint
-  (delay (load-guns-lint!)))
-
-(defn warn-closeable! [scope]
-  (force load-guns-lint)
-  (let [namespaces (case scope
-                     :ns [(ns-name *ns*)]
-                     :project (:proj-namespaces (ns-deps)))]
-    (doseq [ns-sym namespaces]
-      (try
-        (require ns-sym)
-        (let [ns (find-ns ns-sym)]
-          (doseq [w (eval `(guns.lint/closeable-warnings ~ns))]
-            (prn w)))
-        (catch ExceptionInfo e
-          (let [{:keys [column line class ast]} (.data e)]
-            (prn (array-map
-                   :ns ns-sym
-                   :error (.getMessage e)
-                   :line line
-                   :column column
-                   :form (:form ast)
-                   :class class))))
-        (catch Throwable e
-          (printf "[%s] %s\n" ns-sym e))))))
-
 ;;
 ;; Reloading
 ;;
@@ -401,10 +371,6 @@
 
   (println "Enabling redl and spyscope… ")
   (require 'spyscope.core 'spyscope.repl 'redl.core 'redl.complete)
-
-  (when (realized? load-guns-lint)
-    (println "Loading guns.lint… ")
-    (load-guns-lint!))
 
   (printf "Loading guns.system… ")
   (try
