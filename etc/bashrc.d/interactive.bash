@@ -1534,6 +1534,11 @@ elif __LINUX__; then
         alias pacoutdated='run pacman -Qu'
 
         alias paclog='pager /var/log/pacman.log'
+
+        pacunowned() {
+            find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
+        }; TCOMP find pacunowned
+
         pacinstallfile() {
             local OPTIND OPTARG opt asdeps force
             while getopts :f opt; do
