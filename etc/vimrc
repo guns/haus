@@ -174,9 +174,9 @@ let g:markdown_fenced_languages = ['vim', 'clojure']
 let g:clojure_align_multiline_strings = 1
 let g:clojure_syntax_keywords = { 'clojureMacro': ['defproject'] }
 let g:clojure_fuzzy_indent_patterns = [
-    \ '^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^for-',
-    \ '^fn', '-fn$', '^at-', '-to$', '-loop$', '\v(cond|as)-\>\*', '^dosql$',
-    \ '^pprint-logical-block$', '^case[*+]$'
+    \ '^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^for-', '^fn',
+    \ '-fn$', '^at-', '-to$', '-loop$', '\v(cond|as)-\>\*', '^case[*+]$',
+    \ '^pprint-logical-block$', '^eval-in-project$'
     \ ]
 let g:clojure_fuzzy_indent_blacklist = ['\v^with-%(meta|out-str|loading-context)$']
 
