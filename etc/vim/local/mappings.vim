@@ -519,6 +519,7 @@ noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 
 " Plugin: Fugitive (git) + Gitv - remember to update readline macros
 noremap  <Leader>g<Space> :<C-u>Git<Space>
+noremap  <Leader>g1       :<C-u>Git l1<CR>
 noremap  <Leader>g.       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
