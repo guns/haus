@@ -47,7 +47,7 @@
 
 (defn ^:private closeable-opening-form? [ast]
   (let [{:keys [op tag]} ast]
-    (and (contains? #{:new :invoke} op)
+    (and (contains? #{:invoke :new :static-call :instance-call} op)
          (class? tag)
          (not (contains? NOP-CLOSEABLES tag))
          (.isAssignableFrom AutoCloseable tag))))
