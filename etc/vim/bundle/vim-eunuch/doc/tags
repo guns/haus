@@ -10,6 +10,7 @@ eunuch-:SudoEdit	eunuch.txt	/*eunuch-:SudoEdit*
 eunuch-:SudoWrite	eunuch.txt	/*eunuch-:SudoWrite*
 eunuch-:Unlink	eunuch.txt	/*eunuch-:Unlink*
 eunuch-:W	eunuch.txt	/*eunuch-:W*
+eunuch-:Wall	eunuch.txt	/*eunuch-:Wall*
 eunuch-about	eunuch.txt	/*eunuch-about*
 eunuch-commands	eunuch.txt	/*eunuch-commands*
 eunuch.txt	eunuch.txt	/*eunuch.txt*

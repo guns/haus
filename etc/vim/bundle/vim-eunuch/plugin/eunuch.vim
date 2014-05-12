@@ -1,6 +1,6 @@
 " eunuch.vim - Helpers for UNIX
 " Maintainer:   Tim Pope <http://tpo.pe/>
-" Version:      1.0
+" Version:      1.1
 
 if exists('g:loaded_eunuch') || &cp || v:version < 700
   finish
@@ -147,8 +147,16 @@ if $SUDO_COMMAND =~# '^sudoedit '
   call s:SudoEditInit()
 endif
 
-command! -bar W :call s:W()
-function! s:W() abort
+command! -bar -nargs=? Wall
+      \ if empty(<q-args>) |
+      \   call s:Wall() |
+      \ else |
+      \   call system('wall', <q-args>) |
+      \ endif
+if !exists(':W') !=# 2
+  command! -bar W Wall
+endif
+function! s:Wall() abort
   let tab = tabpagenr()
   let win = winnr()
   let seen = {}
