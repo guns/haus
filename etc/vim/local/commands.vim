@@ -315,7 +315,7 @@ function! s:ClojureBufferSetup()
 
     nnoremap <silent><buffer> <Leader>r        :Require \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <Leader>R        :call fireplace#session_eval('(guns.repl/refresh)') \| ClojureHighlightReferences<CR>
-    nnoremap <silent><buffer> <Leader><M-r>    :call fireplace#session_eval('(guns.repl/refresh-all)') \| ClojureHighlightReferences<CR>
+    nnoremap <silent><buffer> <Leader><M-r>    :call fireplace#session_eval('(guns.repl/refresh-all)') \| Require! clojure.tools.analyzer.jvm \| ClojureHighlightReferences<CR>
     nnoremap <silent><buffer> <LocalLeader>co  :execute 'Connect nrepl://localhost:' . readfile('.nrepl-port')[0]<CR>
     nnoremap <silent><buffer> <LocalLeader>cp  :Capture call fireplace#session_eval('(guns.repl/print-classpath!)') \| setfiletype plain<CR>
     nnoremap <silent><buffer> <LocalLeader>cs  :call <SID>ClojureCheatSheet('\A\Q' . fireplace#ns() . '\E\z')<CR>
@@ -352,8 +352,8 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>tv  :call fireplace#session_eval('(guns.repl/toggle-schema-validation!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tw  :call fireplace#session_eval('(guns.repl/toggle-warnings! true)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tW  :call fireplace#session_eval('(guns.repl/toggle-warnings! false)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>wc  :call fireplace#session_eval('(require 'com.sungpae.lint-closeable) (com.sungpae.lint-closeable/warn-closeable! *ns*)')<CR>
-    nnoremap <silent><buffer> <LocalLeader>WC  :call fireplace#session_eval('(require 'com.sungpae.lint-closeable) (com.sungpae.lint-closeable/warn-closeable!)')<CR>
+    nnoremap <silent><buffer> <LocalLeader>wc  :call fireplace#session_eval("(do (require 'com.sungpae.warn-closeable) (com.sungpae.warn-closeable/warn-closeable! (ns-name *ns*)))")<CR>
+    nnoremap <silent><buffer> <LocalLeader>WC  :call fireplace#session_eval("(do (require 'com.sungpae.warn-closeable) (com.sungpae.warn-closeable/warn-closeable!))")<CR>
 endfunction
 
 function! s:ClojurePprint(expr)

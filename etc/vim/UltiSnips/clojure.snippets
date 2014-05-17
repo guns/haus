@@ -980,7 +980,7 @@ snippet ST "#spy/t" w
 endsnippet
 
 snippet BP "(binding [*print-length* …]" w
-(binding [*print-length* ${1:20} *print-level* $1]
+(binding [*print-length* ${1:20} *print-level* ${2:$1}]
 	$0)
 endsnippet
 
