@@ -6,8 +6,8 @@
 #
 
 # Default options
-feh -F -x -d -B black --zoom max --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1" --action9 ";feh --bg-fill %F"
+feh -F -x -d -B black --zoom max --scale-down --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1" --action9 ";feh --bg-fill %F"
 # Same as default, but full size
-fixed -F -x -d -B black --zoom 100 --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1" --action9 ";feh --bg-fill %F"
+fixed -F -x -d -B black --zoom 100 --scale-down --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1" --action9 ";feh --bg-fill %F"
 # Optimized for viewing gifs in external viewer
-gifs -g 800x600 -x -d -B black --zoom 100 --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1"
+gifs -g 800x600 -x -d -B black --zoom 100 --scale-down --action7 ";echo \"%F\"" --action8 ";gifview -a --fallback-delay 8 %F >/dev/null 2>&1"
