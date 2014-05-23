@@ -338,14 +338,10 @@ noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>SetDiff! \| SetDiff<CR>
 noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
-noremap <Leader><C-i>    :<C-u>SetIskeyword! \| SetIskeyword<CR>
-noremap <Leader><C-l>    :<C-u>setlocal list! \| setlocal list?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
-noremap <Leader><C-p>    :<C-u>setlocal paste! \| setlocal paste?<CR>
 noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-t>    :<C-u>if v:profiling \| execute 'Sh (sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
-noremap <Leader><C-v>    :<C-u>execute 'setlocal virtualedit=' . (empty(&virtualedit) ? 'all' : '') \| setlocal virtualedit?<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
 " Open frequently edited files
