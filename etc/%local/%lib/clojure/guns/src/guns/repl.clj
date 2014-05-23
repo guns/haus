@@ -30,9 +30,8 @@
 
 (defn set-local-javadocs!
   "Swap javadoc URLs to local versions."
-  []
-  (let [core-url javadoc/*core-java-api*
-        local-url "http://api.dev/jdk7/api/"]
+  [local-url]
+  (let [core-url javadoc/*core-java-api*]
     (dosync
       (alter javadoc/*remote-javadocs*
              #(reduce (fn [m [pre url]]
@@ -43,9 +42,19 @@
     (alter-var-root #'javadoc/*feeling-lucky* (constantly false))
     (alter-var-root #'javadoc/*core-java-api* (constantly local-url))))
 
-(defn set-local-pprint-values! []
+(defn set-print-length!
+  ([length]
+   (set-print-length! length length))
+  ([length level]
+   (alter-var-root #'*print-length* (constantly length))
+   (alter-var-root #'*print-level* (constantly level))
+   (set! *print-length* length)
+   (set! *print-level* level)
+   nil))
+
+(defn set-local-pprint-values! [cols]
   (alter-var-root #'pp/*print-miser-width* (constantly nil))
-  (alter-var-root #'pp/*print-right-margin* (constantly 80)))
+  (alter-var-root #'pp/*print-right-margin* (constantly cols)))
 
 ;;
 ;; Classpath and Namespaces
@@ -150,6 +159,16 @@
   `(~pp/pprint
      ~(into {} (map (fn [l] [`'~l l]) (reverse (keys &env))))))
 
+(def ^:dynamic *dump-file* "target/dump.clj")
+
+(defn truncate-dump-file! []
+  (spit *dump-file* ""))
+
+(defmacro dump! [& body]
+  `(spit *dump-file*
+         (with-out-str (~pp/pprint (do ~@body)))
+         :append true))
+
 (defmacro trace
   {:require [#'trace/trace-ns]}
   ([expr]
@@ -186,7 +205,7 @@
    (toggle-warn-on-reflection! (not *warn-on-reflection*))
    (print-warnings-atom))
   ([value]
-   (set! *warn-on-reflection* value)
+   (alter-var-root #'*warn-on-reflection* (constantly value))
    (swap! warnings assoc '*warn-on-reflection* value)))
 
 (defn toggle-schema-validation! [& _])
@@ -361,10 +380,13 @@
 
 (defn init! []
   (println "Setting javadoc URLs… ")
-  (set-local-javadocs!)
+  (set-local-javadocs! "http://api.dev/jdk7/api/")
+
+  (println "Setting *print-length* and *print-level*… ")
+  (set-print-length! 1024 64)
 
   (println "Setting clojure.pprint values… ")
-  (set-local-pprint-values!)
+  (set-local-pprint-values! 80)
 
   (println "Enabling warnings… ")
   (toggle-warnings! true)

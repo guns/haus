@@ -359,6 +359,10 @@ snippet pq "clojure.lang.PersistentQueue/EMPTY" w
 clojure.lang.PersistentQueue/EMPTY
 endsnippet
 
+snippet ju "juxt" w
+((juxt $0) $1)
+endsnippet
+
 ### Predicates and Reflection {{{1
 
 snippet cla "class" w
@@ -596,6 +600,14 @@ snippet extt "extend-type" w
 (extend-type $0)
 endsnippet
 
+snippet defmu "defmulti" w
+(defmulti $0)
+endsnippet
+
+snippet defme "defmethod" w
+(defmethod $0)
+endsnippet
+
 ### Java Interop {{{1
 
 snippet S "System/" w
@@ -808,7 +820,7 @@ snippet sw "swap!" w
 (swap! $0)
 endsnippet
 
-snippet se "set!" w
+snippet set! "set!" w
 (set! $0)
 endsnippet
 
@@ -828,6 +840,10 @@ endsnippet
 
 snippet st "str" w
 (str $0)
+endsnippet
+
+snippet sj "string/join" w
+(string/join $0)
 endsnippet
 
 snippet prs "pr-str" w

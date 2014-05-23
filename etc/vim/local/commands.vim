@@ -452,8 +452,7 @@ function! s:ClojureSetPrintLength(input)
 
     redraw
 
-    echo fireplace#evalparse('(do (set! *print-length* ' . +length . ')'
-                             \ . '(set! *print-level* ' . +depth . ')'
+    echo fireplace#evalparse('(do (guns.repl/set-print-length! ' . +length . ' ' . +depth . ')'
                              \ . '[*print-length* *print-level*])')
 endfunction
 
