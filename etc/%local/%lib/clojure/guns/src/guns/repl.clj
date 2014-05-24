@@ -16,7 +16,7 @@
             [loom.io :as loom]
             [no.disassemble :as no]
             [slam.hound.regrow :as regrow])
-  (:import (clojure.lang ExceptionInfo Keyword MultiFn Symbol)
+  (:import (clojure.lang Cons ExceptionInfo Keyword LazySeq MultiFn Symbol)
            (java.io File PrintWriter)
            (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
@@ -55,6 +55,62 @@
 (defn set-local-pprint-values! [cols]
   (alter-var-root #'pp/*print-miser-width* (constantly nil))
   (alter-var-root #'pp/*print-right-margin* (constantly cols)))
+
+;;
+;; Transformation
+;;
+
+(defn- list-like? [form]
+  (or (list? form)
+      (instance? Cons form)
+      (instance? LazySeq form)))
+
+(defn- wrap-list [form]
+  (if (list-like? form)
+    form
+    (list form)))
+
+(defn thread-form [op ^String clj-string]
+  (let [thread (fn thread [form]
+                 (if (list? form)
+                   (if (> (count form) 1)
+                     (let [[head & tail] form
+                           [x more] (case op
+                                      -> [(first tail) (next tail)]
+                                      ->> [(last tail) (butlast tail)])]
+                       (concat (wrap-list (thread x))
+                               [(if more (cons head more) head)]))
+                     (list form))
+                   form))
+        form (thread
+               (binding [*read-eval* false]
+                 (read-string clj-string)))
+        sep (if (.contains clj-string "\n")
+              \newline
+              \space)]
+    (str "(" op " " (string/join sep (mapv pr-str form)) ")")))
+
+(defn unthread-form [^String clj-string]
+  (let [unthread (fn unthread [[form & more] op]
+                   (if more
+                     (let [[head & tail] more
+                           form' (if (list-like? head)
+                                   (case op
+                                     -> (concat [(first head) ::sep form ::sep] (rest head))
+                                     ->> (concat head [::sep form]))
+                                   (list head ::sep form))]
+                       (unthread (cons form' tail) op))
+                     form))
+        [op & form] (binding [*read-eval* false]
+                      (read-string clj-string))
+        sep (if (.contains clj-string "\n")
+              "\n"
+              " ")]
+    (if (contains? '#{-> ->>} op)
+      (-> (unthread form op)
+          pr-str
+          (string/replace #"\s*\Q:guns.repl/sep\E\s*" sep))
+      clj-string)))
 
 ;;
 ;; Classpath and Namespaces

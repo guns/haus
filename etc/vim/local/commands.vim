@@ -345,6 +345,9 @@ function! s:ClojureBufferSetup()
     nnoremap <silent><buffer> <LocalLeader>sp  :call <SID>ClojureSetPrintLength(input('Max print length: '))<CR>
     nnoremap <silent><buffer> <LocalLeader>sh  :Slamhound<CR>
     nnoremap <silent><buffer> <LocalLeader>st  :call <SID>ClojureStackTrace()<CR>
+    nnoremap <silent><buffer> <LocalLeader>tf  :call <SID>ClojureFilterForm("(guns.repl/thread-form '-> %s)")<CR>
+    nnoremap <silent><buffer> <LocalLeader>tF  :call <SID>ClojureFilterForm("(guns.repl/thread-form '->> %s)")<CR>
+    nnoremap <silent><buffer> <LocalLeader>TF  :call <SID>ClojureFilterForm("(guns.repl/unthread-form %s)")<CR>
     nnoremap <silent><buffer> <LocalLeader>tr  :call fireplace#session_eval('(guns.repl/toggle-warn-on-reflection!)')<CR>
     nnoremap <silent><buffer> <LocalLeader>tt  :call <SID>ClojureRunTests()<CR>
     nnoremap <silent><buffer> <LocalLeader>tT  :call <SID>ClojureRunTests(input('Test filter: '))<CR>
@@ -384,6 +387,12 @@ function! s:ClojureCheatSheet(pattern)
     else
         execute 'vsplit ' . escape(file, '%') . ' | wincmd L'
     endif
+endfunction
+
+function! s:ClojureFilterForm(fmt)
+    execute "normal \"fy\<Plug>(sexp_outer_list)"
+    let @f = fireplace#evalparse(printf(a:fmt, '"' . escape(@f, '\"') . '"'))
+    execute "normal gv\"fp\<Plug>(sexp_indent)"
 endfunction
 
 function! s:ClojureMacroexpand(once)
