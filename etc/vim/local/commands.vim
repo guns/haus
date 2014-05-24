@@ -258,7 +258,7 @@ function! LispFoldExpr(lnum) "{{{1
     let line = getline(a:lnum)
     if line[0] ==# '('
         return '>1'
-    elseif line[0] ==# ';' && getline(a:lnum - 1)[0] !=# ';'
+    elseif line[0] ==# ';'
         return '>1'
     else
         return '='
