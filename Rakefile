@@ -100,6 +100,12 @@ task :env do
         :base => "#{@src}/READONLY/screenFetch",
         :branch => %w[master],
         :files => { 'screenfetch-dev' => 'bin/screenfetch' }
+      },
+
+      {
+        :base => "#{@src}/git-remote-hg",
+        :branch => %w[master],
+        :files => { 'git-remote-hg' => 'bin/git-remote-hg' }
       }
     ],
 
@@ -120,8 +126,7 @@ task :env do
         :branch => %w[master],
         :files  => {
           'contrib/completion/git-completion.bash' => 'etc/bashrc.d/completions/git',
-          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh',
-          'contrib/remote-helpers/git-remote-hg' => 'bin/git-remote-hg'
+          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh'
         }
       },
 
