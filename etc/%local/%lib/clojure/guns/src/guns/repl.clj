@@ -16,7 +16,7 @@
             [loom.io :as loom]
             [no.disassemble :as no]
             [slam.hound.regrow :as regrow])
-  (:import (clojure.lang Cons ExceptionInfo Keyword LazySeq MultiFn Symbol)
+  (:import (clojure.lang Cons Keyword LazySeq MultiFn Symbol)
            (java.io File PrintWriter)
            (java.lang.management ManagementFactory)
            (java.lang.reflect Method)
