@@ -104,7 +104,7 @@ task :env do
 
       {
         :base => "#{@src}/git-remote-hg",
-        :branch => %w[master],
+        :branch => %w[master guns],
         :files => { 'git-remote-hg' => 'bin/git-remote-hg' }
       }
     ],

@@ -387,6 +387,8 @@ def get_repo(url, alias):
 
     if get_config_bool('remote-hg.insecure'):
         myui.setconfig('web', 'cacerts', '')
+    elif os.environ.get('GIT_SSL_CAINFO'):
+        myui.setconfig('web', 'cacerts', os.environ.get('GIT_SSL_CAINFO'))
 
     extensions.loadall(myui)
 
