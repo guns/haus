@@ -371,7 +371,7 @@ noremap <Leader>eT       :<C-u>TabOpen ~/.tmux.conf<CR>
 noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC<CR>
 noremap <Leader>eV       :<C-u>TabOpen ~/.vimperatorrc<CR>
-noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/bspwmrc<CR>
+noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/\%config/sxhkd/sxhkdrc<CR>
 noremap <Leader>ex       :<C-u>TabOpen ~/.xinitrc<CR>
 noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/autostart<CR>
 

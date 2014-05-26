@@ -53,6 +53,9 @@ augroup GUNS
     " Shell {{{1
     autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,/etc/netctl/*
         \ setlocal filetype=sh
+    autocmd BufRead,BufNewFile sxhkdrc,bspwmrc
+        \ setlocal filetype=sh noexpandtab |
+        \ SetWhitespace 8
     autocmd FileType sh
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
         \ SetWhitespace 4 8
