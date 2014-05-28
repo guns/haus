@@ -3,6 +3,20 @@
 " Call shell commands silently, suppressing all output
 command! -nargs=+ -complete=shellcmd Sh call system(<q-args>)
 
+function! MkdirIfNotExists(dir)
+    let dir = expand(a:dir)
+    if !isdirectory(dir)
+        call mkdir(dir, 'p', 0700)
+    endif
+endfunction
+
+command! -bar Makesession call <SID>Makesession()
+function! s:Makesession()
+    let dir = '~/.cache/vim/session' . getcwd()
+    call MkdirIfNotExists(dir)
+    execute 'mksession! ' . dir . '/Session.vim'
+endfunction
+
 " Will place history in global input history instead of command history (which
 " may be a good thing in some cases), as well as offering direct control of
 " completions.
@@ -708,13 +722,4 @@ command! -range -nargs=0 Strikethrough   call s:CombineSelection(<line1>, <line2
 function! s:CombineSelection(line1, line2, cp)
   execute 'let char = "\u'.a:cp.'"'
   execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
-endfunction
-
-command! -bar Makesession call <SID>Makesession()
-function! s:Makesession()
-    let dir = expand('~/.cache/vim/session' . getcwd())
-    if !isdirectory(dir)
-        call mkdir(dir, 'p')
-    endif
-    execute 'mksession! ' . dir . '/Session.vim'
 endfunction

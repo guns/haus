@@ -30,24 +30,23 @@ source ~/.vim/local/commands.vim
 set history=1023                " Default command history = 20
 set tags^=./.tags,.tags         " Read hidden .tags files
 
+" Temporary directories
+call MkdirIfNotExists('~/.cache/vim/swap')
+call MkdirIfNotExists('~/.cache/vim/undo')
+
 " Temporary files
-if !isdirectory(expand('~/.cache/vim/undo'))
-    call mkdir(expand('~/.cache/vim/undo'), 'p', 0700)
-endif
-if isdirectory(expand('~/.cache/vim'))
-    set directory=~/.cache/vim
-    set viminfo+=n~/.cache/vim/viminfo
-    let g:netrw_home = expand('~/.cache/vim')
-endif
-if has('persistent_undo') && isdirectory(expand('~/.cache/vim/undo'))
+set directory=~/.cache/vim/swap
+set viminfo+=n~/.cache/vim/viminfo
+let g:netrw_home = expand('~/.cache/vim')
+
+" Undo
+if has('persistent_undo')
     set undofile
     set undodir=~/.cache/vim/undo
 endif
 
 " Dictionaries
-if !isdirectory(expand('~/.local/share/vim'))
-    call mkdir(expand('~/.local/share/vim'), 'p', 0700)
-endif
+call MkdirIfNotExists('~/.local/share/vim')
 set dictionary+=/usr/share/dict/words
 set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
 set spellfile=~/.local/share/vim/spell.utf8.add
@@ -283,6 +282,11 @@ let g:unite_enable_start_insert = 1
 let g:unite_data_directory = expand('~/.cache/vim/unite')
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_rank'])
+
+" Plugin: neomru
+let g:neomru#do_validate = 0
+let g:neomru#file_mru_path = expand('~/.cache/vim/neomru/file')
+let g:neomru#directory_mru_path = expand('~/.cache/vim/neomru/directory')
 
 " Plugin: EasyAlign
 let g:easy_align_delimiters = {
