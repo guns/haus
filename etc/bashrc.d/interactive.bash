@@ -887,7 +887,19 @@ ALIAS ctagsr='ctags -R'
 # Vim
 HAVE vim && {
     alias v='vim -'
-    alias vimnilla='command vim -N -u NONE -U NONE'
+    vimnilla() {
+        local OPTIND OPTARG opt dirs=()
+        while getopts :d: opt; do
+            case $opt in
+            d) dirs+=("$OPTARG");;
+            esac
+        done
+        shift $((OPTIND-1))
+
+        command vim -N -u <(ruby -r shellwords -e '
+            puts %q{set rtp^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
+        ' -- "${dirs[@]}") -U NONE "$@"
+    }
     vimopen() { vim -c 'UniteOpen' "$@"; }
 
     # Param: [$@] Arguments to `ff()`
