@@ -180,6 +180,10 @@ endfunction"}}}
 
 function! unite#helper#get_input() "{{{
   let unite = unite#get_current_unite()
+  if mode() !=# 'i'
+    return unite.context.input
+  endif
+
   " Prompt check.
   if stridx(getline(unite.prompt_linenr), unite.prompt) != 0
     let modifiable_save = &l:modifiable
@@ -283,8 +287,14 @@ endfunction"}}}
 
 function! unite#helper#get_current_candidate(...) "{{{
   let linenr = a:0 >= 1? a:1 : line('.')
-  let num = linenr == unite#get_current_unite().prompt_linenr ?
-        \ 0 : linenr - (unite#get_current_unite().prompt_linenr+1)
+  let unite = unite#get_current_unite()
+  if unite.context.prompt_direction ==# 'below'
+    let num = linenr == unite.prompt_linenr ?
+          \ -1 : linenr - line('$')
+  else
+    let num = linenr == unite.prompt_linenr ?
+          \ 0 : linenr - 1 - unite.prompt_linenr
+  endif
 
   return get(unite#get_unite_candidates(), num, {})
 endfunction"}}}
@@ -396,6 +406,49 @@ function! unite#helper#get_buffer_directory(bufnr) "{{{
 
   return dir
 endfunction"}}}
+
+function! unite#helper#cursor_prompt() "{{{
+  " Move to prompt linenr.
+  let unite = unite#get_current_unite()
+  call cursor((unite.context.prompt_direction ==# 'below' ?
+        \ line('$') : unite.init_prompt_linenr), 0)
+endfunction"}}}
+
+function! unite#helper#skip_prompt() "{{{
+  " Skip prompt linenr.
+  let unite = unite#get_current_unite()
+  if line('.') == unite.prompt_linenr
+    call cursor(line('.') + (unite.context.prompt_direction
+          \ ==# 'below' ? -1 : 1), 1)
+  endif
+endfunction"}}}
+
+if unite#util#has_lua()
+  function! unite#helper#paths2candidates(paths) "{{{
+    let candidates = []
+  lua << EOF
+do
+  local paths = vim.eval('a:paths')
+  local candidates = vim.eval('candidates')
+  for path in paths() do
+    local candidate = vim.dict()
+    candidate.word = path
+    candidate.action__path = path
+    candidates:add(candidate)
+  end
+end
+EOF
+
+    return candidates
+  endfunction"}}}
+else
+  function! unite#helper#paths2candidates(paths) "{{{
+    return map(a:paths, "{
+          \ 'word' : v:val,
+          \ 'action__path' : v:val,
+          \ }")
+  endfunction"}}}
+endif
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

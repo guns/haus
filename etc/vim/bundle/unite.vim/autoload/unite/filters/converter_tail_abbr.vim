@@ -1,6 +1,7 @@
 "=============================================================================
-" FILE: completion.vim
+" FILE: converter_tail_abbr.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
+"          Sean Mackesey <s.mackesey@gmail.com> 
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -26,45 +27,21 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#kinds#completion#define() "{{{
-  return s:kind
+function! unite#filters#converter_tail_abbr#define() "{{{
+  return s:converter
 endfunction"}}}
 
-let s:kind = {
-      \ 'name' : 'completion',
-      \ 'default_action' : 'insert',
-      \ 'action_table': {},
+let s:converter = {
+      \ 'name' : 'converter_tail_abbr',
+      \ 'description' : 'converts abbr to tail of filename',
       \}
 
-" Actions "{{{
-let s:kind.action_table.insert = {
-      \ 'description' : 'insert word',
-      \ }
-function! s:kind.action_table.insert.func(candidate) "{{{
-  call unite#kinds#common#insert_word(
-        \ a:candidate.action__complete_word,
-        \ { 'col' : a:candidate.action__complete_pos})
+function! s:converter.filter(candidates, context) "{{{
+  for candidate in a:candidates
+    let candidate.abbr = fnamemodify(get(candidate, 'action__path', candidate.word), ':t')
+  endfor
+  return a:candidates
 endfunction"}}}
-
-let s:kind.action_table.preview = {
-      \ 'description' : 'preview word in echo area',
-      \ 'is_quit' : 0,
-      \ }
-function! s:kind.action_table.preview.func(candidate) "{{{
-  echo ''
-  redraw
-
-  let complete_info = has_key(a:candidate, 'action__complete_info') ?
-        \ a:candidate.action__complete_info :
-        \ has_key(a:candidate, 'action__complete_info_lazy') ?
-        \ a:candidate.action__complete_info_lazy() :
-        \ ''
-  if complete_info != ''
-    let S = unite#util#get_vital().import('Data.String')
-    echo join(S.wrap(complete_info)[: &cmdheight-1], "\n")
-  endif
-endfunction"}}}
-"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

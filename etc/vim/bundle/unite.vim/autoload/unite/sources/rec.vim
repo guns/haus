@@ -42,11 +42,11 @@ call unite#util#set_default('g:unite_source_rec_unit', 200)
 call unite#util#set_default(
       \ 'g:unite_source_rec_async_command', (
       \  executable('ag') ?
-      \  'ag --nocolor --nogroup --hidden -g ""' :
-      \  executable('pt') ?
-      \  'pt --nocolor --nogroup -l ""' :
+      \  'ag --follow --nocolor --nogroup --hidden -g ""' :
       \  !unite#util#is_windows() && executable('find') ? 'find' : ''),
       \ 'g:unite_source_file_rec_async_command')
+call unite#util#set_default(
+      \ 'g:unite_source_rec_git_command', 'git')
 "}}}
 
 let s:Cache = unite#util#get_vital().import('System.Cache')
@@ -112,7 +112,7 @@ function! s:source_file_rec.async_gather_candidates(args, context) "{{{
             \ 'Directory traverse was completed.', self.name)
     else
       call unite#print_source_message(
-            \ 'Too many candiates.', self.name)
+            \ 'Too many candidates.', self.name)
     endif
 
     " Disable async.
@@ -120,11 +120,7 @@ function! s:source_file_rec.async_gather_candidates(args, context) "{{{
     let continuation.end = 1
   endif
 
-  let candidates = map(files, "{
-        \ 'word' : unite#util#substitute_path_separator(
-        \    fnamemodify(v:val, ':p')),
-        \ 'action__path' : v:val,
-        \ }")
+  let candidates = unite#helper#paths2candidates(files)
 
   let continuation.files += candidates
   if empty(continuation.rest)
@@ -314,7 +310,7 @@ function! s:source_file_async.gather_candidates(args, context) "{{{
   if command !~# '^find '
     let command .= ' ' . string(directory)
     if command ==# 'find'
-      let command .= ' -type '.
+      let command .= ' -follow -type '.
         \    (a:context.source__is_directory ? 'd' : 'f')
     endif
   endif
@@ -340,19 +336,12 @@ function! s:source_file_async.async_gather_candidates(args, context) "{{{
   let continuation = a:context.source__continuation
   let stdout = a:context.source__proc.stdout
 
-  let candidates = []
-  for filename in map(filter(
-        \ stdout.read_lines(-1, 100), 'v:val != ""'),
-        \ "fnamemodify(unite#util#iconv(v:val, 'char', &encoding), ':p')")
-    if filename !=# a:context.source__directory
-          \ && filename !~? a:context.source.ignore_pattern
-      call add(candidates, {
-            \ 'word' : unite#util#substitute_path_separator(
-            \    fnamemodify(filename, ':p')),
-            \ 'action__path' : filename,
-            \ })
-    endif
-  endfor
+  let candidates = unite#helper#paths2candidates(
+        \ filter(map(filter(
+        \   stdout.read_lines(-1, 100), 'v:val != ""'),
+        \   "fnamemodify(unite#util#iconv(v:val, 'char', &encoding), ':p')"),
+        \   'v:val !=# a:context.source__directory
+        \ && v:val !~? a:context.source.ignore_pattern'))
 
   if stdout.eof || (
         \  g:unite_source_rec_max_cache_files > 0 &&
@@ -364,7 +353,7 @@ function! s:source_file_async.async_gather_candidates(args, context) "{{{
             \ 'Directory traverse was completed.', self.name)
     else
       call unite#print_source_message(
-            \ 'Too many candiates.', self.name)
+            \ 'Too many candidates.', self.name)
     endif
     let a:context.is_async = 0
     let continuation.end = 1
@@ -390,6 +379,64 @@ function! s:source_file_async.hooks.on_close(args, context) "{{{
     call a:context.source__proc.kill()
   endif
 endfunction "}}}
+
+" Source git.
+let s:source_file_git = deepcopy(s:source_file_async)
+let s:source_file_git.name = 'file_rec/git'
+let s:source_file_git.description =
+      \ 'git candidates from directory by recursive'
+function! s:source_file_git.gather_candidates(args, context) "{{{
+  if !unite#util#has_vimproc()
+    call unite#print_source_message(
+          \ 'vimproc plugin is not installed.', self.name)
+    let a:context.is_async = 0
+    return []
+  endif
+
+  let a:context.source__directory = getcwd()
+  let directory = a:context.source__directory
+  if finddir('.git', ';') == ''
+    " Not in git directory.
+    call unite#print_source_message(
+          \ 'Not in git directory.', self.name)
+    let a:context.is_async = 0
+    return []
+  endif
+
+  call unite#print_source_message(
+        \ 'directory: ' . directory, self.name)
+
+  call s:init_continuation(a:context, directory)
+
+  let continuation = a:context.source__continuation
+
+  if empty(continuation.rest) || continuation.end
+    " Disable async.
+    call unite#print_source_message(
+          \ 'Directory traverse was completed.', self.name)
+    let a:context.is_async = 0
+    let continuation.end = 1
+
+    return deepcopy(continuation.files)
+  endif
+
+  let command = g:unite_source_rec_git_command
+        \ . ' ls-files --full-name ' . join(a:args)
+  let args = split(command) + a:args
+  if empty(args) || !executable(args[0])
+    call unite#print_source_message('git command : "'.
+          \ command.'" is not executable.', self.name)
+    let a:context.is_async = 0
+    return []
+  endif
+
+  let a:context.source__proc = vimproc#pgroup_open(command)
+
+  " Close handles.
+  call a:context.source__proc.stdin.close()
+
+  return []
+endfunction"}}}
 
 " Source directory.
 let s:source_directory_rec = deepcopy(s:source_file_rec)
@@ -429,9 +476,9 @@ function! s:get_path(args, context) "{{{
           \ directory, 'dir', a:context.source_name)
   endif
 
-  let directory = unite#util#expand(directory)
+  let directory = unite#util#expand(fnamemodify(directory, ':p'))
 
-  if directory =~ '/$'
+  if directory != '/' && directory =~ '/$'
     let directory = directory[: -2]
   endif
 
@@ -538,7 +585,7 @@ function! s:on_init(args, context) "{{{
   augroup END
 endfunction"}}}
 function! s:init_continuation(context, directory) "{{{
-  let cache_dir = g:unite_data_directory . '/rec/' .
+  let cache_dir = unite#get_data_directory() . '/rec/' .
         \ (a:context.source__is_directory ? 'directory' : 'file')
   let continuation = (a:context.source__is_directory) ?
         \ s:continuation.directory : s:continuation.file
@@ -547,11 +594,8 @@ function! s:init_continuation(context, directory) "{{{
         \ && s:Cache.filereadable(cache_dir, a:directory)
     " Use cache file.
 
-    let files = map(s:Cache.readfile(cache_dir, a:directory), "{
-          \   'word' : unite#util#substitute_path_separator(
-          \      fnamemodify(v:val, ':p')),
-          \   'action__path' : v:val,
-          \ }")
+    let files = unite#helper#paths2candidates(
+          \ s:Cache.readfile(cache_dir, a:directory))
 
     let continuation[a:directory] = {
           \ 'files' : files,
@@ -576,10 +620,11 @@ function! s:init_continuation(context, directory) "{{{
         \   'filereadable(v:val.action__path)')
 endfunction"}}}
 function! s:write_cache(context, directory, files) "{{{
-  let cache_dir = g:unite_data_directory . '/rec/' .
+  let cache_dir = unite#get_data_directory() . '/rec/' .
         \ (a:context.source__is_directory ? 'directory' : 'file')
 
   if g:unite_source_rec_min_cache_files > 0
+        \ && !unite#util#is_sudo()
         \ && len(a:files) >
         \ g:unite_source_rec_min_cache_files
     call s:Cache.writefile(cache_dir, a:directory,
@@ -618,6 +663,7 @@ endfunction"}}}
 function! unite#sources#rec#define() "{{{
   let sources = [ s:source_file_rec, s:source_directory_rec ]
   let sources += [ s:source_file_async, s:source_directory_async]
+  let sources += [ s:source_file_git ]
   return sources
 endfunction"}}}
 

@@ -110,8 +110,9 @@ endfunction
 function! unite#util#smart_execute_command(action, word)
   execute a:action . ' ' . fnameescape(a:word)
 endfunction
-function! unite#util#escape_file_searching(...)
-  return call(s:get_prelude().escape_file_searching, a:000)
+function! unite#util#escape_file_searching(buffer_name)
+  " You should not escape for buflisted() or bufnr()
+  return a:buffer_name
 endfunction
 function! unite#util#escape_pattern(...)
   return call(s:get_prelude().escape_pattern, a:000)
@@ -374,6 +375,12 @@ endfunction"}}}
 
 function! unite#util#open(path) "{{{
   return s:get_system().open(a:path)
+endfunction"}}}
+
+function! unite#util#is_sudo() "{{{
+  return $SUDO_USER != '' && $USER !=# $SUDO_USER
+        \ && $HOME !=# expand('~'.$USER)
+        \ && $HOME ==# expand('~'.$SUDO_USER)
 endfunction"}}}
 
 let &cpo = s:save_cpo

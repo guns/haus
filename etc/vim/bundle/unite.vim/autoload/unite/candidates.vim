@@ -116,6 +116,7 @@ function! unite#candidates#_recache(input, is_force) "{{{
     let source.unite__candidates =
           \ unite#init#_candidates_source(
           \   source.unite__context.candidates, source.name)
+    let source.unite__len_candidates = len(source.unite__candidates)
   endfor
 
   " Update async state.
@@ -135,7 +136,11 @@ function! unite#candidates#gather(...) "{{{
     let unite.candidates += source.unite__candidates
   endfor
 
-  if is_gather_all
+  if unite.context.prompt_direction ==# 'below'
+    let unite.candidates = reverse(unite.candidates)
+  endif
+
+  if is_gather_all || unite.context.prompt_direction ==# 'below'
     let unite.candidates_pos = len(unite.candidates)
   elseif unite.context.is_redraw || unite.candidates_pos == 0
     let unite.candidates_pos = line('.') + winheight(0)
@@ -143,6 +148,12 @@ function! unite#candidates#gather(...) "{{{
 
   let candidates = unite#init#_candidates(
         \ unite.candidates[: unite.candidates_pos-1])
+
+  let unite.candidates_len = len(candidates) +
+        \ len(unite.candidates[unite.candidates_pos :])
+  if unite.context.prompt_direction ==# 'below'
+    let unite.prompt_linenr = unite.candidates_len
+  endif
 
   let unite.context.unite__max_candidates = 0
   let unite.context.input_list =
@@ -214,7 +225,8 @@ function! s:recache_candidates_loop(context, is_force) "{{{
     let context.is_changed = a:context.is_changed
     let context.is_invalidate = source.unite__is_invalidate
     let context.is_list_input = a:context.is_list_input
-    let context.input_list = split(context.input, '\\\@<! ', 1)
+    let context.input_list = map(split(context.input, '\\\@<! ', 1),
+          \ "substitute(v:val, '\\\\\\ze.', '', 'g')")
     let context.path = get(filter(copy(context.input_list),
         \         "v:val !~ '^[!:]'"), 0, '')
     let context.unite__max_candidates =
@@ -298,7 +310,6 @@ function! s:recache_candidates_loop(context, is_force) "{{{
     let a:context.execute_command = context.execute_command
 
     let source.unite__candidates += source_candidates
-    let source.unite__len_candidates = len(source_candidates)
     if !empty(source_candidates)
       call add(candidate_sources,
             \ unite#helper#convert_source_name(source.name))

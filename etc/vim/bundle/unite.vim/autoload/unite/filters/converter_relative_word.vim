@@ -36,6 +36,12 @@ let s:converter = {
       \}
 
 function! s:converter.filter(candidates, context) "{{{
+  if a:context.input =~ '^\%(/\|\a\+:/\)'
+    " Use full path.
+    return unite#filters#converter_full_path#define().filter(
+          \ a:candidates, a:context)
+  endif
+
   try
     let directory = unite#util#substitute_path_separator(getcwd())
     if has_key(a:context, 'source__directory')
@@ -46,6 +52,11 @@ function! s:converter.filter(candidates, context) "{{{
             \ && a:context.input == ''
         lcd `=directory`
       endif
+    endif
+
+    if unite#util#has_lua()
+      return unite#filters#converter_relative_word#lua(
+            \ a:candidates, directory)
     endif
 
     for candidate in a:candidates
@@ -59,6 +70,31 @@ function! s:converter.filter(candidates, context) "{{{
       lcd `=old_dir`
     endif
   endtry
+
+  return a:candidates
+endfunction"}}}
+
+function! unite#filters#converter_relative_word#lua(candidates, cwd) "{{{
+  let cwd = a:cwd
+  if cwd != '/' && cwd[-1] != '/'
+    let cwd .= '/'
+  endif
+
+  lua << EOF
+  do
+  local candidates = vim.eval('a:candidates')
+  local cwd = vim.eval('cwd')
+  local home = vim.eval('unite#util#substitute_path_separator(expand("~/"))')
+  for candidate in candidates() do
+    local path = candidate.action__path or candidate.word
+    if path:find(cwd, 1, true) == 1 then
+      candidate.word = path:sub(cwd:len() + 1)
+    elseif path:find(home, 1, true) == 1 then
+      candidate.word = path:sub(home:len() + 1)
+    end
+  end
+end
+EOF
 
   return a:candidates
 endfunction"}}}

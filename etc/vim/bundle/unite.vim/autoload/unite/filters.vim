@@ -139,8 +139,10 @@ endfunction"}}}
 
 function! unite#filters#fuzzy_escape(string) "{{{
   " Escape string for lua regexp.
-  return substitute(unite#filters#escape(a:string),
-        \ '\%([[:alnum:]_-]\|%.\)\ze.', '\0.-', 'g')
+  let [head, input] = unite#filters#matcher_fuzzy#get_fuzzy_input(
+        \ unite#filters#escape(a:string))
+  return head . substitute(input,
+        \ '\%([[:alnum:]_/-]\|%.\)\ze.', '\0.-', 'g')
 endfunction"}}}
 
 function! unite#filters#escape(string) "{{{

@@ -76,13 +76,6 @@ let g:unite_candidate_icon =
       \ get(g:, 'unite_candidate_icon', ' ')
 let g:unite_force_overwrite_statusline =
       \ get(g:, 'unite_force_overwrite_statusline', 1)
-let g:unite_data_directory =
-      \ substitute(substitute(fnamemodify(
-      \ get(g:, 'unite_data_directory', '~/.cache/unite'),
-      \  ':p'), '\\', '/', 'g'), '/$', '', '')
-if !isdirectory(g:unite_data_directory)
-  call mkdir(g:unite_data_directory, 'p')
-endif
 "}}}
 
 " Wrapper command.

@@ -104,11 +104,6 @@ function! unite#start#standard(sources, ...) "{{{
 
   setlocal modifiable
 
-  " Redraw prompt.
-  silent % delete _
-  call setline(unite.prompt_linenr,
-        \ unite.prompt . unite.context.input)
-
   call unite#view#_redraw_candidates()
 
   call unite#handlers#_on_bufwin_enter(bufnr('%'))
@@ -193,6 +188,7 @@ function! unite#start#temporary(sources, ...) "{{{
     let unite.update_time_save = unite_save.update_time_save
   endif
   let unite.winnr = unite_save.winnr
+  let unite.has_preview_window = unite_save.has_preview_window
 
   " Restore current directory.
   execute 'lcd' fnameescape(cwd)
@@ -330,9 +326,6 @@ function! unite#start#resume(buffer_name, ...) "{{{
     return
   endif
 
-  let winnr = winnr()
-  let win_rest_cmd = winrestcmd()
-
   if type(getbufvar(bufnr, 'unite')) != type({})
     " Unite buffer is released.
     call unite#util#print_error(
@@ -341,6 +334,11 @@ function! unite#start#resume(buffer_name, ...) "{{{
   endif
 
   let context = getbufvar(bufnr, 'unite').context
+
+  let winnr = winnr()
+  let win_rest_cmd = context.unite__direct_switch ||
+        \ unite#helper#get_unite_winnr(context.buffer_name) > 0 ?
+        \ '' : winrestcmd()
 
   let new_context = get(a:000, 0, {})
   if has_key(new_context, 'no_start_insert')

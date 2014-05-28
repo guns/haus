@@ -90,6 +90,13 @@ function! unite#init#_context(context, ...) "{{{
     " Set buffer-name automatically.
     let context.buffer_name = join(source_names)
   endif
+  if get(context, 'auto_preview', 0)
+    let context.winheight -= &previewheight
+  endif
+  if context.prompt_direction == ''
+    let context.prompt_direction =
+          \ (context.direction =~# 'below') ? 'below' : 'top'
+  endif
 
   let context.is_changed = 0
 
@@ -203,27 +210,17 @@ endfunction"}}}
 function! unite#init#_current_unite(sources, context) "{{{
   let context = a:context
 
-  " Quit previous unite buffer.
+  " Overwrite previous unite buffer.
   if !context.create && !context.temporary
         \ && context.unite__is_interactive
     let winnr = unite#helper#get_unite_winnr(context.buffer_name)
-    if winnr > 0 && unite#helper#get_source_args(a:sources) !=#
-          \ getbufvar(winbufnr(winnr), 'unite').args
-      " Quit unite buffer.
+    if winnr > 0
       execute winnr 'wincmd w'
 
       if context.input == ''
         " Get input text.
         let context.input = unite#helper#get_input()
       endif
-
-      " Get winwidth.
-      let context.winwidth = winwidth(0)
-
-      " Get winheight.
-      let context.winheight = winheight(0)
-
-      call unite#force_quit_session()
     endif
   endif
 
@@ -268,13 +265,17 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.input = context.input
   let unite.last_input = context.input
   let unite.sidescrolloff_save = &sidescrolloff
-  let unite.prompt_linenr = 1
+  let unite.init_prompt_linenr = 1
+  let unite.prompt_linenr =
+        \ (context.input == '' && !context.start_insert
+        \  && context.prompt_direction !=# 'below') ?
+        \ 0 : unite.init_prompt_linenr
   let unite.is_async =
         \ len(filter(copy(sources),
         \  'v:val.unite__context.is_async')) > 0
   let unite.access_time = localtime()
   let unite.is_finalized = 0
-  let unite.previewd_buffer_list = []
+  let unite.previewed_buffer_list = []
   let unite.post_filters = unite#util#convert2list(
         \ unite#custom#get_profile(unite.profile_name, 'filters'))
   let unite.preview_candidate = {}
@@ -282,6 +283,7 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.max_source_name = 0
   let unite.candidates_pos = 0
   let unite.candidates = []
+  let unite.candidates_len = 0
   let unite.max_source_candidates = 0
   let unite.is_multi_line = 0
   let unite.args = unite#helper#get_source_args(a:sources)
@@ -292,8 +294,7 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.cursor_line_time = reltime()
 
   if context.here
-    let context.winheight = winheight(0) - winline() +
-          \ unite.prompt_linenr
+    let context.winheight = winheight(0) - winline() + 1
     if context.winheight < 5
       let context.winheight = 5
     endif

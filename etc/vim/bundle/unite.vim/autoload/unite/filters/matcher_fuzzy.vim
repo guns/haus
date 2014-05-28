@@ -38,8 +38,10 @@ let s:matcher = {
       \}
 
 function! s:matcher.pattern(input) "{{{
-  return substitute(substitute(unite#util#escape_match(a:input),
-        \ '\([[:alnum:]_-]\|\\\.\)\ze.', '\0.\\{-}', 'g'), '\*\*', '*', 'g')
+  let [head, input] = unite#filters#matcher_fuzzy#get_fuzzy_input(
+        \ unite#util#escape_match(a:input))
+  return substitute(head . substitute(input,
+        \ '\([[:alnum:]_/-]\|\\\.\)\ze.', '\0.\\{-}', 'g'), '\*\*', '*', 'g')
 endfunction"}}}
 
 function! s:matcher.filter(candidates, context) "{{{
@@ -48,11 +50,8 @@ function! s:matcher.filter(candidates, context) "{{{
           \ a:candidates, '', a:context)
   endif
 
-  if len(a:context.input) > g:unite_matcher_fuzzy_max_input_length
-    " Fall back to matcher_glob.
-    return unite#filters#matcher_glob#define().filter(
-          \ a:candidates, a:context)
-  endif
+  " Fix for numeric problem.
+  let $LC_NUMERIC = 'en_US.utf8'
 
   let candidates = a:candidates
   for input_orig in a:context.input_list
@@ -65,8 +64,7 @@ function! s:matcher.filter(candidates, context) "{{{
       continue
     endif
 
-    let input = substitute(substitute(unite#util#escape_match(input),
-          \ '\([[:alnum:]_-]\|\\\.\)\ze.', '\0.\\{-}', 'g'), '\*\*', '*', 'g')
+    let input = s:matcher.pattern(input)
 
     let expr = (input =~ '^!') ?
           \ 'v:val.word !~ ' . string(input[1:]) :
@@ -81,6 +79,24 @@ function! s:matcher.filter(candidates, context) "{{{
   endfor
 
   return candidates
+endfunction"}}}
+
+function! unite#filters#matcher_fuzzy#get_fuzzy_input(input) "{{{
+  let input = a:input
+  let head = ''
+  if len(input) > g:unite_matcher_fuzzy_max_input_length
+    let pos = strridx(input, '/')
+    if pos > 0
+      let head = input[: pos-1]
+      let input = input[pos :]
+    endif
+    if len(input) > g:unite_matcher_fuzzy_max_input_length
+      let head = input
+      let input = ''
+    endif
+  endif
+
+  return [head, input]
 endfunction"}}}
 
 let &cpo = s:save_cpo

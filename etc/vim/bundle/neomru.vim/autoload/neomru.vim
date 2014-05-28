@@ -153,6 +153,10 @@ function! s:mru.has_external_update() "{{{
 endfunction"}}}
 
 function! s:mru.save(...) "{{{
+  if s:is_sudo()
+    return
+  endif
+
   let opts = a:0 >= 1 && type(a:1) == type({}) ? a:1 : {}
 
   if self.has_external_update() && filereadable(self.mru_file)
@@ -385,11 +389,14 @@ function! s:uniq_by(list, f) "{{{
   return map(list, 'v:val[0]')
 endfunction"}}}
 function! s:is_file_exist(path)  "{{{
-  return a:path !~ '^\a\w\+:\|\%(' . g:neomru#file_mru_ignore_pattern . '\)'
+  return (g:neomru#file_mru_ignore_pattern == '' ||
+        \ a:path !~ '^\a\w\+:\|\%(' . g:neomru#file_mru_ignore_pattern . '\)')
         \ && getftype(a:path) ==# 'file'
 endfunction"}}}
 function! s:is_directory_exist(path)  "{{{
-  return isdirectory(a:path) && a:path !~ g:neomru#directory_mru_ignore_pattern
+  return isdirectory(a:path) &&
+        \ (g:neomru#directory_mru_ignore_pattern == '' ||
+        \  a:path !~ g:neomru#directory_mru_ignore_pattern)
 endfunction"}}}
 function! s:import(path)  "{{{
   if !filereadable(a:path)
@@ -415,6 +422,11 @@ function! s:import(path)  "{{{
 endfunction"}}}
 function! s:print_error(msg)  "{{{
   echohl Error | echomsg '[neomru] ' . a:msg | echohl None
+endfunction"}}}
+function! s:is_sudo() "{{{
+  return $SUDO_USER != '' && $USER !=# $SUDO_USER
+        \ && $HOME !=# expand('~'.$USER)
+        \ && $HOME ==# expand('~'.$SUDO_USER)
 endfunction"}}}
 "}}}
 "
