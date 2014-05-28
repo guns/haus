@@ -22,3 +22,4 @@ bspc config focused_border_color    '#F5497D'
 
 bspc rule --add kupfer.py focus=true
 bspc rule --add gifview focus=true floating=true center=true
+bspc rule --add sxiv focus=true floating=true center=true
