@@ -1356,7 +1356,7 @@ HAVE batterystat && {
 HAVE wpa_supplicant wpa_passphrase && {
     wpajoin() {
         local OPTIND OPTARG opt iface='wlan0'
-        while getopts :i opt; do
+        while getopts :i: opt; do
             case $opt in
             i) iface="$OPTARG";;
             *) echo "USAGE: $FUNCNAME [-i iface] essid [password]"; return 1
