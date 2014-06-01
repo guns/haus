@@ -201,7 +201,7 @@ augroup GUNS
         \ setlocal filetype=httplog
 
     " dnsmasq {{{1
-    autocmd BufRead,BufNewFile dnsmasq.conf*
+    autocmd BufRead,BufNewFile *dnsmasq.conf
         \ setlocal filetype=dnsmasq
 
     " Applescript (which sucks) {{{1
