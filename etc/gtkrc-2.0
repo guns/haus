@@ -15,9 +15,8 @@ gtk-can-change-accels = 1
 
 # Theming
 gtk-theme-name = "Numix"
+gtk-icon-theme-name = "Numix"
 gtk-font-name = "Segoe UI 10"
-gtk-icon-theme-name = "Numix-icons"
-# gtk-cursor-theme-name = ""
 
 # Misc options
 gtk-recent-files-max-age = 0
