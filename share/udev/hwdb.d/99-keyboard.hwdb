@@ -28,6 +28,8 @@ keyboard:usb:*
 
 # Lenovo
 keyboard:usb:v04CA*
+# Logitech
+keyboard:usb:v046D*
  KEYBOARD_KEY_700E3=leftalt     # Super_L -> Alt_L
  KEYBOARD_KEY_700E2=leftmeta    # Alt_L -> Super_L
  KEYBOARD_KEY_700E6=rightmeta   # Alt_R -> Super_R
