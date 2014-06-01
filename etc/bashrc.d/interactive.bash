@@ -1584,9 +1584,10 @@ elif __LINUX__; then
         complete -F _filedir_xspec pacinstallfile
     }
 
-    ALIAS mkpkg='makepkg' \
-          mkpkgf='makepkg -f' \
-          mkpkgs='makepkg -s'
+    ALIAS mkp='makepkg' \
+          mkpf='makepkg -f' \
+          mkps='makepkg -s' \
+          mkpa='makepkg -A'
 fi
 
 ### Media
