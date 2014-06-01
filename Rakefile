@@ -447,3 +447,14 @@ task :chown do
     chown_R u, nil, 'etc/%local/%lib/clojure/guns'
   end
 end
+
+desc 'Install udev hwdb rules to /etc/udev/hwdb.d/'
+task :hwdb do
+  dst = '/etc/udev/hwdb.d'
+  if Dir.exists? dst
+    cp_r Dir['share/udev/hwdb.d/*.hwdb'], dst
+    sh 'udevadm', 'hwdb', '--update'
+  else
+    raise '%s is not a directory, or does not exist!' % dst
+  end
+end
