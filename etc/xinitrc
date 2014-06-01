@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+for d in /etc/X11/xinit/xinitrc.d ~/.xinitrc.d; do
+    if [[ -d "$d" ]]; then
+        for f in "$d"/*; do
+            [[ -x "$f" ]] && . "$f"
+        done
+    fi
+done
+unset d f
+
+# For xdg-open
+# https://wiki.archlinux.org/index.php/Environment_Variables#Examples
+export DE=xfce
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+exec /usr/bin/gpg-agent --enable-ssh-support --daemon /usr/bin/bspwm-session
+# ~/.config/bspwm/autostart

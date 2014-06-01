@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+/usr/bin/xrdb -merge ~/.Xdefaults
+/usr/bin/xrdb -merge "~/.Xdefaults-$HOSTNAME"
