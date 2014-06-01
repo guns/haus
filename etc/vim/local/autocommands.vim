@@ -58,6 +58,7 @@ augroup GUNS
         \ SetWhitespace 8
     autocmd FileType sh
         \ setlocal iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
+        \ syntax sync fromstart |
         \ SetWhitespace 4 8
 
     " Lisp {{{1
