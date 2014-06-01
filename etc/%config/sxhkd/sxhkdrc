@@ -143,7 +143,7 @@ alt + shift + {F3,XF86AudioMute}
 		notify --no-audio - < <(hwctl toggle-pulseaudio-source); \
 	fi
 
-F6
+Scroll_Lock
 	STATUS=$(if [[ "$(toggle-mouse)" -eq 1 ]]; then echo ON; else echo OFF; fi); \
 	notify --audio "Mouse $STATUS"
 
