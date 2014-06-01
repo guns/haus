@@ -128,8 +128,7 @@ source ~/.bashrc.d/functions.bash
 # Bash completion directories
 BASH_COMPLETION_DIRS=(
     ~/.bashrc.d/completions
-    ~/.bash_completion.d
-    /usr/local/etc/bash_completion.d
+    ~/.bashrc.d/bash_completion.d
     /usr/share/bash-completion/completions
     /etc/completions
     /etc/bash_completion.d
@@ -173,7 +172,7 @@ REQUIRE ~/.bashrc.d/prompts.bash
 if [[ "$BASH_COMPLETION" ]]; then
     echo "Warning: Already sourced $BASH_COMPLETION" >&2
 else
-    REQUIRE ~/.bash_completion
+    REQUIRE ~/.bashrc.d/bash_completion
 fi
 
 # Set environment variables
