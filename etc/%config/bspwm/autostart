@@ -7,8 +7,7 @@ REQUIRE ~/.bashrc.d/path.bash
 
 cd Downloads
 
-/usr/bin/ruby -r shellwords -e 'system "feh", "--bg-fill", File.read(File.expand_path "~/.fehbg").shellsplit.last' &
+(/usr/bin/ruby -r shellwords -e 'system "feh", "--bg-fill", File.read(File.expand_path "~/.fehbg").shellsplit.last'; /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
-/usr/bin/tint2 &
 
 CLEANUP
