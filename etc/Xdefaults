@@ -16,7 +16,7 @@ Xft*hintstyle: hintslight
 
 URxvt*termName:        rxvt-unicode-256color
 URxvt*background:      rgb:00/00/00
-URxvt*foreground:      rgb:FF/EB/B6
+URxvt*foreground:      rgb:FF/EE/C0
 URxvt*pointerColor:    rgb:DD/DD/DD
 URxvt*cursorBlink:     off
 URxvt*loginShell:      on
@@ -58,7 +58,7 @@ URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
 
 XTerm*termName:     xterm-256color
 XTerm*background:   rgb:00/00/00
-XTerm*foreground:   rgb:FF/EB/B6
+XTerm*foreground:   rgb:FF/EE/C0
 XTerm*pointerColor: rgb:DD/DD/DD
 
 ! Remove SetSelection from blacklist
