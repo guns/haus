@@ -8,5 +8,5 @@ if &t_Co == 256 || has('gui_running')
     colorscheme jellyx
 else
     set list " Fall back on invisibles for showing whitespace errors
-    colorscheme peachpuff
+    colorscheme industry
 endif
