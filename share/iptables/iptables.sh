@@ -62,7 +62,7 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 unset TABLE
 
 #
-# Chains
+# Custom Chains
 #
 
 iptables --new-chain DROPINV
@@ -70,23 +70,32 @@ iptables --append    DROPINV --jump LOG  --log-prefix '[DROPINV] '
 iptables --append    DROPINV --jump DROP
 
 #
-# Inbound rules
+# Minimal Rules
 #
 
-# Allow established traffic
-iptables --append INPUT --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+minimal_passthrough() {
+    test $# -eq 1 || return 1;
+    local chain="$1" dir=
+    case "$chain" in
+    INPUT)  local dir="in";;
+    OUTPUT) local dir="out";;
+    esac
+    # Allow established traffic
+    iptables --append "$chain" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+    # Allow loopback traffic
+    iptables --append "$chain" --${dir}-interface lo --jump ACCEPT
+    # Log and drop invalid packets
+    iptables --append "$chain" --match conntrack --ctstate INVALID --jump DROPINV
+    # Allow ICMP
+    iptables --append "$chain" --protocol icmp --jump ACCEPT
+}
 
-# Allow loopback traffic
-iptables --append INPUT  --in-interface  lo --jump ACCEPT
-# iptables --append OUTPUT --out-interface lo --jump ACCEPT
+minimal_passthrough INPUT
+# minimal_passthrough OUTPUT
 
-# Allow ICMP
-iptables --append INPUT --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
-
-# Drop invalid input
-iptables --append INPUT --match conntrack --ctstate INVALID --jump DROPINV
-
-### Services
+#
+# Services
+#
 
 accept_new() { "$IPTABLES" --append INPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
 
@@ -122,9 +131,9 @@ forward_interface() {
     # Outbound
     iptables --append FORWARD --in-interface "$in" --out-interface "$out" --jump ACCEPT
     # Inbound
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in"                 --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in"                 --match conntrack --ctstate INVALID     --jump DROPINV
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate INVALID     --jump DROPINV
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --protocol icmp                         --jump ACCEPT
     # Enable NAT
     iptables --table nat --append POSTROUTING --out-interface "$out" --jump MASQUERADE
 }
