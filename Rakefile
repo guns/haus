@@ -151,6 +151,14 @@ task :env do
             end
           }.compact]
         }
+      },
+
+      {
+        :base => "#{@src}/READONLY/ipset-bash-completion",
+        :branch => %w[master],
+        :files => {
+          'ipset_bash_completion' => 'etc/bashrc.d/completions/ipset'
+        }
       }
     ],
 
