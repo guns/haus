@@ -60,7 +60,7 @@ else
 fi
 
 # Go
-export GOPATH="$HOME/.go"
+export GOPATH="$HOME/.local/install/go"
 
 # OS X
 if __OS_X__; then
