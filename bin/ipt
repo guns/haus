@@ -184,9 +184,9 @@ class Ipt
     # Outbound
     iptables_exec *(%W[--append FORWARD] + outbound + %W[--jump ACCEPT])
     # Inbound
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[                --match conntrack --ctstate ESTABLISHED --jump ACCEPT])
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[--protocol icmp --match conntrack --ctstate NEW,RELATED --jump ACCEPT])
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[                --match conntrack --ctstate INVALID     --jump DROP])
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[--match conntrack --ctstate ESTABLISHED --jump ACCEPT])
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[--match conntrack --ctstate INVALID     --jump DROP])
+    iptables_exec *(%W[--append FORWARD] + inbound + %W[--protocol icmp                         --jump ACCEPT])
     # Enable NAT
     iptables_exec *(%W[--table nat --append POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
 
