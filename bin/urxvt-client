@@ -2,7 +2,7 @@
 
 # From urxvtc(1)
 urxvtc "$@"
-if [ $? -eq 2 ]; then
+if test $? -eq 2; then
     urxvtd -q -o -f
     urxvtc "$@"
 fi
