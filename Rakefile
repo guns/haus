@@ -297,6 +297,18 @@ task :env do
         }
       },
 
+      {
+        :base => "#{@src}/READONLY/rust",
+        :branch => %w[master],
+        :files => lambda { |proj|
+          src = "#{proj.base}/src/etc/vim"
+          dst = "#{proj.haus}/etc/vim/bundle/rust"
+          FileUtils.mkdir_p dst
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
+          nil
+        }
+      },
+
       dr_chip_plugin('AnsiEsc'),
       dr_chip_plugin('DrawIt'),
       dr_chip_plugin('ManPageView')
