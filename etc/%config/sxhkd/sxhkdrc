@@ -21,8 +21,8 @@ super + alt + control + q
 super + alt + space
 	bspc desktop --layout next
 
-super + alt + {j,k}
-	bspc desktop --focus {next,prev}
+super + alt + {j,k,button1,button3}
+	bspc desktop --focus {next,prev,next,prev}
 
 super + alt + {l,h}
 	DIR={next,prev,next,prev}; \
@@ -201,7 +201,7 @@ super + F12
 	urxvt-client -cd ~/Downloads -title '✉ Mutt ✉' -e muttlaunch --force
 
 alt + F12
-	open https://mail.google.com/
+	chromium --incognito --app=https://mail.google.com/
 
 super + control + e
 	urxvt-client -icon ~/.icons/local/vim -e vim
