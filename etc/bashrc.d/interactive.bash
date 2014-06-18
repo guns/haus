@@ -429,7 +429,7 @@ ALIAS mt='mount -v' \
             (blkdevs.keys & usbdevs.keys).each do |dev|
                 label = blkdevs[dev]["LABEL"]
                 type = blkdevs[dev]["TYPE"]
-                mtpt = File.join "/mnt", label ? "usb-" + label : File.basename(usbdevs[dev])
+                mtpt = File.join "/mnt/usb", label || File.basename(usbdevs[dev])
                 FileUtils.mkdir_p mtpt
                 opts = options
                 opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
@@ -439,7 +439,7 @@ ALIAS mt='mount -v' \
             end
         ' -- "$@"
     }
-    umtusb() { run umount -v /mnt/usb-*; rmdir /mnt/usb-*; }
+    umtusb() { run umount -v /mnt/usb/*; rmdir /mnt/usb/*; }
     mtlabel() {
         (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
         run mount "/dev/disk/by-label/$1" "${@:2}"
@@ -1324,6 +1324,29 @@ ALIAS sqlite='sqlite3' && {
     }
 }
 
+HAVE abook && abook() {
+    if (($#)); then
+        ruby -r shellwords -e '
+            fmt = "{name}\x1e{nick}\x1e{email}\x1e{mobile}\x1e{phone}\x1e{workphone}\x1e{notes}"
+            buf = %x(abook --mutt-query #{ARGV.shelljoin} --outformat custom --outformatstr #{fmt.shellescape})
+            exit if $?.exitstatus != 0
+            buf.each_line do |line|
+                name, nick, email, mobile, phone, workphone, notes = line.split("\x1e").map { |f|
+                    f unless f.nil? or f.empty?
+                }
+                puts "%-20s %-16s <%s>%s" % [
+                    (nick || name),
+                    mobile || phone || workphone,
+                    email,
+                    (" " + notes if notes)
+                ]
+            end
+        ' -- "$@"
+    else
+        command abook
+    fi
+}
+
 ### Hardware control
 
 ALIAS mp='modprobe -a'
@@ -1705,10 +1728,6 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
 }
 
 ### TTY
-
-if [[ "$TERM" == linux ]]; then
-    alias vconsole-setup="loadkeys '$cdhaus/share/kbd/macbook.map.gz'; unicode_start"
-fi
 
 ALIAS rl='rlwrap'
 
