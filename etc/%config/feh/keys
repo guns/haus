@@ -29,15 +29,15 @@ orient_3          less
 orient_1          greater
 flip              backslash
 mirror            bar
-action_0          0           Return
+action_0          0
 action_1          1
 action_2          2
 action_3          3
 action_4          4
 action_5          5
-action_6          6
-action_7          7           Tab
-action_8          8           o
+action_6          6           Tab
+action_7          7           o
+action_8          8           b
 action_9          9           B
 jump_first        g
 jump_last         G
