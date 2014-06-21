@@ -1605,6 +1605,27 @@ elif __LINUX__; then
         }
         _xspecs['pacinstallfile']='!*.pkg.tar.xz'
         complete -F _filedir_xspec pacinstallfile
+
+        pacdowngrade() {
+            local OPTIND OPTARG opt sign=0
+
+            while getopts :s opt; do
+                case $opt in
+                s) sign=1;;
+                esac
+            done
+            shift $((OPTIND-1))
+
+            if ((sign)); then
+                (cd /var/cache/pacman/pkg
+                for f in "$@"; do
+                    [[ -e "$f.sig" ]] || run gpg --detach-sign "$f"
+                done)
+            fi
+            run pacman -U "${@/#//var/cache/pacman/pkg/}";
+        }
+        _pacdowngrade() { __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"; }
+        complete -F _pacdowngrade pacdowngrade
     }
 
     ALIAS mkp='makepkg' \
