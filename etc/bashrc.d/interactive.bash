@@ -231,12 +231,19 @@ if __OS_X__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
-alias lsb='lsblk -a; echo; blkid'
+HAVE lsblk && {
+    lsb() {
+        if (($#)); then
+            lsblk -a "$@"
+        else
+            lsblk -ao NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
+        fi
+    }
+    alias lsbf='lsb -f'
+    alias lsbm='lsb -m'
+    alias lsbs='lsb -S'
+}
 [[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
-for _d in /dev/disk/by-*; do
-    eval "alias ls${_d##*/by-}=\"ls $_d\""
-done
-unset _d
 # Param: $1 Directory to list
 # Param: $2 Interior of Ruby block with filename `f`
 __lstype__() {
