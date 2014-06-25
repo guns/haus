@@ -1,1 +1,1 @@
-guns ALL = (ALL) PASSWD: ALL, NOPASSWD: /usr/bin/systemctl-wrapper
+guns ALL = (ALL) PASSWD: ALL, NOPASSWD: /usr/bin/powerctl

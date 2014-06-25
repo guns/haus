@@ -157,13 +157,13 @@ control + {XF86Eject,Pause}
 	pkill -HUP -x gpg-agent
 
 {super + XF86Eject,super + Pause,XF86Sleep}
-	sudo -n /usr/bin/systemctl-wrapper suspend
+	sudo -n /usr/bin/powerctl suspend
 
 super + alt + {XF86Eject,Pause,XF86Sleep}
-	sudo -n /usr/bin/systemctl-wrapper reboot
+	sudo -n /usr/bin/powerctl reboot
 
 super + control + alt + {XF86Eject,Pause,XF86Sleep}
-	sudo -n /usr/bin/systemctl-wrapper poweroff
+	sudo -n /usr/bin/powerctl poweroff
 
 super + control + alt + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
