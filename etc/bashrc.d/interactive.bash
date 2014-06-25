@@ -893,7 +893,7 @@ ALIAS ctagsr='ctags -R'
 
 # Vim
 HAVE vim && {
-    alias v='vim -'
+    alias v='vim -c "set nomodified" -'
     vimnilla() {
         local OPTIND OPTARG opt dirs=()
         while getopts :d: opt; do
