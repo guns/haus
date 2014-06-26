@@ -11,10 +11,13 @@
 # scan code: 0x700E4   key code: rightctrl
 # scan code: 0x70029   key code: esc
 #
-# Setting two scan codes to a single modifier key code does not work!
+# cf. /usr/include/linux/input.h
 
 #
 # Replace Caps with Control
+#
+# NB. Setting two scan codes to a single _modifier_ does not work, so we
+#     repurpose Control_R as a second Menu key
 #
 
 keyboard:usb:*
@@ -34,4 +37,3 @@ keyboard:usb:v046D*
  KEYBOARD_KEY_700E2=leftmeta    # Alt_L -> Super_L
  KEYBOARD_KEY_700E6=rightmeta   # Alt_R -> Super_R
  KEYBOARD_KEY_700E7=rightalt    # Super_R -> Alt_R
- KEYBOARD_KEY_70065=esc         # Menu -> Escape
