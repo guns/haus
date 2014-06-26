@@ -113,6 +113,7 @@ CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdlog           /var/log
+CD_FUNC cdpacmancache   /var/cache/pacman/pkg
 CD_FUNC cdwww           /srv/http /srv/www /var/www
 CD_FUNC -x cdapi        "$cdwww/api.dev"
 CD_FUNC cdgunsrepl      "$cdhaus/etc/%local/%lib/clojure/guns"
@@ -646,6 +647,14 @@ __LINUX__ && {
         echo "$cmd"
         eval "$cmd"
     }
+
+    sysrq() {
+        if (($#)); then
+            echo "$@" > /proc/sys/kernel/sysrq
+        else
+            cat /proc/sys/kernel/sysrq
+        fi
+    }
 }
 
 ### Processes
@@ -764,7 +773,7 @@ else
 fi
 
 # NTP
-alias qntp='ntpd -g -q'
+ALIAS qntp='ntpd -g -q'
 
 # netcat
 HAVE nc   && complete -F _known_hosts nc
