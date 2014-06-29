@@ -7,7 +7,7 @@ REQUIRE ~/.bashrc.d/path.bash
 
 cd Downloads
 
-(/bin/sh ~/.fehbg; /usr/bin/tint2) &
+(/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
 
 CLEANUP
