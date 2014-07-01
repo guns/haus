@@ -1,11 +1,11 @@
 [Unit]
-Description=Disable magic SysRq commands on suspend
+Description=Set magic SysRq command mask on suspend
 Before=sleep.target
 StopWhenUnneeded=yes
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c '/usr/bin/cat /proc/sys/kernel/sysrq > /run/sysrq.state; echo 0 > /proc/sys/kernel/sysrq'
+ExecStart=/bin/sh -c '/usr/bin/cat /proc/sys/kernel/sysrq > /run/sysrq.state; echo 128 > /proc/sys/kernel/sysrq'
 ExecStop=/bin/sh -c '/usr/bin/cat /run/sysrq.state > /proc/sys/kernel/sysrq; /usr/bin/rm -f /run/sysrq.state'
 RemainAfterExit=yes
 
