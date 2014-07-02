@@ -1776,8 +1776,7 @@ if HAVE systemctl; then
           jcb='journalctl --full -b' \
           jcf='journalctl --full -f' && {
         alias scdaemonreload='systemctl --system daemon-reload'
-        alias sleepnow='systemctl suspend'
-        alias daemons='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
+        alias scrunning='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
     }
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
