@@ -2842,7 +2842,7 @@ set record="$folder/INBOX"
 # Also see $reflow_wrap, and $wrap.
 #
 
-# set reflow_wrap=78
+set reflow_wrap=100
 #
 # Name: reflow_wrap
 # Type: number
