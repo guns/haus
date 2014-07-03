@@ -545,7 +545,7 @@ set compose_format="Compose ★ %a attached, %l"
 # side effects (for example in regular expressions).
 #
 
-# set confirmappend=yes
+set confirmappend=no
 #
 # Name: confirmappend
 # Type: boolean
