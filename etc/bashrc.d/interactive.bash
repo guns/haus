@@ -1434,7 +1434,7 @@ ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
 # pass
 HAVE pass && {
     # We want pc() to suppress the trailing newline
-    pc() { pass "$@" | ruby -e 'print $stdin.gets("\n").chomp' | clip; }; TCOMP pass pc
+    pc() { pass "$@" | ruby -e 'print $stdin.gets("\n").chomp; warn $stdin.read' | clip; }; TCOMP pass pc
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
@@ -1776,8 +1776,9 @@ if HAVE systemctl; then
           jc='journalctl --full' \
           jcb='journalctl --full -b' \
           jcf='journalctl --full -f' && {
-        alias scdaemonreload='systemctl --system daemon-reload'
+        alias scfiles='systemctl list-unit-files'
         alias scrunning='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
+        alias scdaemonreload='systemctl --system daemon-reload'
     }
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
