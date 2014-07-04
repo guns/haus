@@ -240,9 +240,9 @@ HAVE lsblk && {
             lsblk -ao NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
         fi
     }
-    alias lsbf='lsb -f'
-    alias lsbm='lsb -m'
-    alias lsbs='lsb -S'
+    alias lsbfs='lsb -f'
+    alias lsbmode='lsb -m'
+    alias lsbscsi='lsb -S'
 }
 [[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
 # Param: $1 Directory to list
@@ -418,6 +418,7 @@ ALIAS mt='mount -v' \
       mtext4='mount -v -t ext4' \
       mthfs='mount -v -t hfsplus' \
       mtvfat='mount -v -t vfat' && {
+    rmt() { run mount -v -o remount,"$1" "${@:2}"; }
     mtusb() {
         ruby -r shellwords -r set -r fileutils -e '
             options = %w[noatime nodev nodiratime noexec nosuid]
@@ -738,11 +739,8 @@ if HAVE ip; then
 elif HAVE ifconfig; then
     alias ic='ifconfig'
 fi
-ALIAS netstatnr='netstat -nr'
 ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
       ap='airport'
-ALIAS net='netcfg' \
-      netstop='netcfg -a'
 ALIAS net='netctl' \
       netstop='netctl stop-all'
 
@@ -1496,6 +1494,9 @@ if __OS_X__; then
 fi
 
 ### Virtual Machines
+
+# Docker
+ALIAS d='docker'
 
 # VMWare
 ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
