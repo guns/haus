@@ -200,6 +200,9 @@ super + F12
 alt + F12
 	chromium --incognito --app=https://mail.google.com/
 
+super + alt + F12
+	chromium --incognito --app=https://voice.google.com/
+
 super + control + e
 	urxvt-client -icon ~/.icons/local/vim -e vim
 
