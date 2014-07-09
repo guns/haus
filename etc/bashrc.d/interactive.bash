@@ -106,7 +106,6 @@ CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC cdetc           /etc
 CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdmnt           /mnt
-CD_FUNC cdopt           /opt
 CD_FUNC cdbrew          /opt/brew
 CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
 CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
@@ -129,6 +128,7 @@ CD_FUNC cdjdk           "$cdSRC/openjdk/src/share"
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
 CD_FUNC cddesktop       ~/Desktop
 CD_FUNC cdmail          ~/Mail ~guns/Mail
+CD_FUNC cdorg           ~/Documents/Org ~guns/Documents/Org
 
 ### Bash builtins and Haus commands
 
