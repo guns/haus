@@ -1777,7 +1777,7 @@ if HAVE systemctl; then
           jcb='journalctl --full -b' \
           jcf='journalctl --full -f' && {
         alias scfiles='systemctl list-unit-files'
-        alias scrunning='ruby -e "puts %x(systemctl list-units).lines.select { |l| l.split[3] == %q(running) }"'
+        alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
     }
 else
