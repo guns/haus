@@ -1643,6 +1643,8 @@ elif __LINUX__; then
         }
         _pacdowngrade() { __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"; }
         complete -F _pacdowngrade pacdowngrade
+
+        ALIAS packey='pacman-key'
     }
 
     ALIAS mkp='makepkg' \
