@@ -567,7 +567,7 @@ ddsize() {
         raise "#{ARGV[0]} not a multiple of #{ARGV[1]}" if not (size % bs).zero?
 
         cmd = %W[#{dd} bs=#{bs} count=#{size / bs}] + ARGV.drop(2)
-        puts cmd.join(" ")
+        warn cmd.join(" ")
         exec *cmd
     ' -- "$@"
 }; TCOMP dd ddsize
@@ -747,7 +747,6 @@ ALIAS net='netctl' \
 # cURL
 ALIAS get='curl -A Mozilla/5.0 -#L' \
       geto='curl -A Mozilla/5.0 -#LO' && {
-    alias getip='CURL_CA_BUNDLE=~/.certificates/getip.sungpae.com.crt ruby -e "puts %x(curl -Is https://getip.sungpae.com)[/^X-Client-IP: (.*)/, 1]"'
     httpget() {
         ruby -r webrick -e '
             req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
@@ -767,7 +766,7 @@ ALIAS digx='dig -x' \
 if __OS_X__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
-    alias resolv='cat /etc/resolv.conf'
+    alias resolv='{ echo • /etc/resolv.conf; cat /etc/resolv.conf; echo • /etc/dnsmasq/resolv.conf; cat /etc/dnsmasq/resolv.conf; } | grep -v "^#|^[ \t]*$"'
 fi
 
 # NTP
