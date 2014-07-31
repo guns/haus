@@ -116,29 +116,29 @@ super + @button{1-3}
 # Hardware / Media control
 #
 
-{F3,XF86AudioMute}
+XF86AudioMute
 	ponymix toggle
 
-{F4,XF86AudioLowerVolume}
+XF86AudioLowerVolume
 	ponymix decrease 5
 
-{F5,XF86AudioRaiseVolume}
+XF86AudioRaiseVolume
 	ponymix increase 5
 
-super + {F3,XF86AudioMute}
+super + XF86AudioMute
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
 	(urxvt-client -title "$T" -g 130x30 -e alsamixer -Vall; \
 	 bspc window --toggle floating=true)
 
-alt + {F3,XF86AudioMute}
+alt + XF86AudioMute
 	if pkill -0 -x pulseaudio; then \
 		notify --no-audio - < <(hwctl toggle-pulseaudio-sink); \
 	else \
 		notify --no-audio - < <(hwctl toggle-alsa-card); \
 	fi
 
-alt + shift + {F3,XF86AudioMute}
+alt + shift + XF86AudioMute
 	if pkill -0 -x pulseaudio; then \
 		notify --no-audio - < <(hwctl toggle-pulseaudio-source); \
 	fi
@@ -174,9 +174,6 @@ Print
 #
 # Applications
 #
-
-super + F2
-	Thunar
 
 F9
 	wmctrl -a 'guns ❦ EVA'
