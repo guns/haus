@@ -237,7 +237,7 @@ $if bash
     "\033\007L":    "\C-]rm target/trampolines/*; rlwrap lein REPL \n"
 
     # X
-    "\C-xX":        "\C-] ((EUID > 0)) && [[ ! $WINDOWID ]] && exec startx &>/dev/null \n"
+    "\C-xX":        "\C-] ((EUID)) && [[ ! $WINDOWID ]] && exec startx \n"
 
     # J
     "\033\007j":    "\C-] J \n"
