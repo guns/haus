@@ -15,7 +15,12 @@ if ! exists("b:did_ftplugin")
 	setlocal comments-=s1:/*,mb:*,ex:*/
 	setlocal commentstring=#%s
 	setlocal conceallevel=2 concealcursor="nc"
-	setlocal tabstop=8 shiftwidth=8
+	" original emacs settings are: setlocal tabstop=6 shiftwidth=6, but because
+	" of checkbox indentation the following settings are used:
+	setlocal tabstop=6 shiftwidth=6
+
+	" expand tab for counting level of checkbox
+	setlocal expandtab
 
 	" register keybindings if they don't have been registered before
 	if exists("g:loaded_org")
@@ -31,13 +36,12 @@ let g:loaded_org = 1
 
 " Default org plugins that will be loaded (in the given order)
 if ! exists('g:org_plugins') && ! exists('b:org_plugins')
-	let g:org_plugins = ['ShowHide', '|', 'Navigator', 'EditStructure', '|', 'Hyperlinks', '|', 'Todo', 'TagsProperties', 'Date', 'Agenda', 'Misc', '|', 'Export']
+	let g:org_plugins = ['ShowHide', '|', 'Navigator', 'EditStructure', 'EditCheckbox', '|', 'Hyperlinks', '|', 'Todo', 'TagsProperties', 'Date', 'Agenda', 'Misc', '|', 'Export']
 endif
 
 if ! exists('g:org_syntax_highlight_leading_stars') && ! exists('b:org_syntax_highlight_leading_stars')
 	let g:org_syntax_highlight_leading_stars = 1
 endif
-
 
 " Menu and document handling {{{
 function! <SID>OrgRegisterMenu()

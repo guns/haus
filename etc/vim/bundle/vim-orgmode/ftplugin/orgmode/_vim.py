@@ -25,6 +25,7 @@ from orgmode.liborgmode.agenda import AgendaManager
 REPEAT_EXISTS = bool(int(vim.eval('exists("*repeat#set()")')))
 TAGSPROPERTIES_EXISTS = False
 
+cache_heading = None
 
 def realign_tags(f):
 	u"""
@@ -175,8 +176,18 @@ def indent_orgmode():
 	d = ORGMODE.get_document()
 	heading = d.current_heading(line - 1)
 	if heading and line != heading.start_vim:
-		vim.command((u'let b:indent_level = %d' % (heading.level + 1))
-				.encode(u'utf-8'))
+		heading.init_checkboxes()
+		checkbox = heading.current_checkbox()
+		level = heading.level + 1
+		if checkbox:
+			level = level + checkbox.number_of_parents * 6
+			if line != checkbox.start_vim:
+				# indent body up to the beginning of the checkbox' text
+				# if checkbox isn't indented to the proper location, the body
+				# won't be indented either
+				level = checkbox.level + len(checkbox.type) + 1 + \
+						(4 if checkbox.status else 0)
+		vim.command((u'let b:indent_level = %d' % level).encode(u'utf-8'))
 
 
 def fold_text(allow_dirty=False):
@@ -230,8 +241,18 @@ def fold_orgmode(allow_dirty=False):
 		heading = d.find_current_heading(line - 1)
 	else:
 		heading = d.current_heading(line - 1)
+
+	# if cache_heading != heading:
+		# heading.init_checkboxes()
+		# checkbox = heading.current_checkbox()
+
+	# cache_heading = heading
 	if heading:
-		if line == heading.start_vim:
+		# if checkbox:
+			# vim.command((u'let b:fold_expr = ">%d"' % heading.level + checkbox.level).encode(u'utf-8'))
+		if 0:
+			pass
+		elif line == heading.start_vim:
 			vim.command((u'let b:fold_expr = ">%d"' % heading.level).encode(u'utf-8'))
 		#elif line == heading.end_vim:
 		#	vim.command((u'let b:fold_expr = "<%d"' % heading.level).encode(u'utf-8'))
@@ -250,7 +271,6 @@ def date_to_str(date):
 		date = date.strftime(
 				u'%Y-%m-%d %a'.encode(u'utf-8')).decode(u'utf-8')
 	return date
-
 
 class OrgMode(object):
 	u""" Vim Buffer """
@@ -338,6 +358,7 @@ class OrgMode(object):
 			return self._plugins[plugin]
 		except Exception, e:
 			echoe(u'Unable to activate plugin: %s' % plugin)
+			echoe(u"%s" % e)
 			if self.debug:
 				import traceback
 				echoe(traceback.format_exc())
@@ -384,5 +405,6 @@ class OrgMode(object):
 
 
 ORGMODE = OrgMode()
+
 
 # vim: set noexpandtab:
