@@ -208,6 +208,9 @@ super + control + t
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
 	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
 
+super + control + alt + t
+	remind --query
+
 super + control + m
 	T='♫ pianobar ♫'; \
 	wmctrl -a "$T" || urxvt-client -title "$T" -e pianobarlaunch pandora.com/f268416@rmqkr.net
