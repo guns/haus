@@ -512,7 +512,9 @@ command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! s:OrgBufferSetup()
     SetWhitespace 2 8
 
-    " RECURSIVE maps for <Plug> mappings
+    nnoremap <silent> <buffer> <4-m> :<C-u>call <SID>AppendMinutesDelta()<CR>$:call search('\v\d+:\d+:\d+', 'W')<CR>
+    map  <silent> <buffer> <4-M> :<C-u>call <SID>CalculateDailyMinutes()<CR><Plug>OrgJumpToNextSkipChildrenNormal
+
     map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
     imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
     map  <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
@@ -537,6 +539,34 @@ function! s:OrgBufferSetup()
     silent! iunmap <buffer> <C-d>
     silent! iunmap <buffer> <C-t>
 endfunction
+
+if has('ruby')
+    function! s:AppendMinutesDelta()
+ruby << EORUBY
+        require 'time'
+        line = VIM::Buffer.current.line
+        if not line.include? '=>'
+            begin
+                from, to = line.scan(/\d+:\d+:\d+/).take(2).map { |s| Time.parse s }
+                VIM::Buffer.current.line = '%s => %sm' % [line, ((to - from)/60.0).round]
+            rescue
+            end
+        end
+EORUBY
+    endfunction
+
+    function! s:CalculateDailyMinutes()
+        execute "normal v\<Plug>OrgAInnerTreeVisual" . '"my'
+ruby << EORUBY
+        line = VIM::Buffer.current.line
+        if not line.include? '=>'
+            buf = VIM.evaluate '@m'
+            total = buf.scan(/ => (\d+)m/).flatten.map(&:to_i).reduce :+
+            VIM::Buffer.current.line = '%s => TOTAL: %sm' % [line, total]
+        end
+EORUBY
+    endfunction
+endif
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! s:Open(word)
@@ -720,6 +750,6 @@ command! -range -nargs=0 DoubleUnderline call s:CombineSelection(<line1>, <line2
 command! -range -nargs=0 Strikethrough   call s:CombineSelection(<line1>, <line2>, '0336')
 
 function! s:CombineSelection(line1, line2, cp)
-  execute 'let char = "\u'.a:cp.'"'
-  execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
+    execute 'let char = "\u'.a:cp.'"'
+    execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
 endfunction

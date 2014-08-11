@@ -130,3 +130,9 @@ endsnippet
 snippet M "echom join(map(split()))" w
 echom join(map(split("$0", ','), 'v:val . ": " . string(eval(v:val))'), ', ')
 endsnippet
+
+snippet RUBY "RUBY" w
+ruby << ${1:EORUBY}
+	$0
+$1
+endsnippet
