@@ -573,7 +573,7 @@ Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
 Mapall <4-'> :<C-u>Unite -no-split tag<CR>
 Mapall <4-f> :<C-u>Unite -no-split file<CR>
-Mapall <4-F> :<C-u>Unite -no-split file_rec<CR>
+Mapall <4-F> :<C-u>UniteWithBufferDir -no-split file<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
