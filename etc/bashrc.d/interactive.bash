@@ -692,10 +692,11 @@ alias psa='ps axo comm,pid,ppid,pgid,sid,nlwp,pcpu,pmem,rss,start_time,user,tt,n
 psg() {
     psa | ruby -e '
         cols = ARGV[0].to_i
-        warn $stdin.readline[0...cols]
-        $stdin.readlines.grep(Regexp.new ARGV[1]).each { |l|
-            puts l[0...cols] unless l =~ /\b#{$$}\b/
-        }
+        header = $stdin.readline[0...cols]
+        lines = $stdin.readlines.grep(Regexp.new ARGV[1]).reject { |l| l =~ /\b#{$$}\b/ }
+        abort if lines.empty?
+        warn header
+        lines.each { |l| puts l[0...cols] }
     ' -- "$COLUMNS" "$*";
 }
 alias psgv='psa | grep -v "grep -i" | gv'
