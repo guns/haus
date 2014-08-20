@@ -101,7 +101,7 @@ $include ~/.inputrc.d/utf-8
 
 $if bash
     # Meta
-    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
+    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || if [[ -x /proc/self/exe ]]; then exec /proc/self/exe; else exec ${BASH:-/bin/bash}; fi \n"
     "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-x\\":       "\C-] nohist \n"
