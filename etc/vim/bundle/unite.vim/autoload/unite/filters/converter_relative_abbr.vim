@@ -38,14 +38,15 @@ let s:converter = {
 function! s:converter.filter(candidates, context) "{{{
   try
     let directory = unite#util#substitute_path_separator(getcwd())
+    let old_dir = directory
+
     if has_key(a:context, 'source__directory')
-      let old_dir = directory
       let directory = substitute(
             \ a:context.source__directory, '*', '', 'g')
 
       if directory !=# old_dir && isdirectory(directory)
             \ && a:context.input == ''
-        lcd `=directory`
+        call unite#util#lcd(directory)
       endif
     endif
 
@@ -64,7 +65,7 @@ function! s:converter.filter(candidates, context) "{{{
   finally
     if has_key(a:context, 'source__directory')
           \ && directory !=# old_dir
-      lcd `=old_dir`
+      call unite#util#lcd(old_dir)
     endif
   endtry
 

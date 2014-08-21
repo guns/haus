@@ -125,9 +125,6 @@ function! unite#util#set_default(var, val, ...)  "{{{
           \ {alternate_var} : a:val
   endif
 endfunction"}}}
-function! unite#util#set_dictionary_helper(...)
-  return call(s:get_prelude().set_dictionary_helper, a:000)
-endfunction
 
 if unite#util#is_windows()
   function! unite#util#substitute_path_separator(...)
@@ -283,22 +280,6 @@ function! s:buflisted(bufnr) "{{{
 endfunction"}}}
 
 function! unite#util#glob(pattern, ...) "{{{
-  if a:pattern =~ "'"
-    " Use glob('*').
-    let cwd = getcwd()
-    let base = unite#util#substitute_path_separator(
-          \ fnamemodify(a:pattern, ':h'))
-    lcd `=base`
-
-    let files = map(split(unite#util#substitute_path_separator(
-          \ glob('*')), '\n'), "base . '/' . v:val")
-
-    lcd `=cwd`
-
-    return files
-  endif
-
-  " let is_force_glob = get(a:000, 0, 0)
   let is_force_glob = get(a:000, 0, 1)
 
   if !is_force_glob && (a:pattern =~ '\*$' || a:pattern == '*')
@@ -307,8 +288,11 @@ function! unite#util#glob(pattern, ...) "{{{
   else
     " Escape [.
     let glob = escape(a:pattern, '?={}[]')
+    let glob2 = escape(substitute(a:pattern,
+          \ '[^/]*$', '', '') . '.*', '?={}[]')
 
-    return split(unite#util#substitute_path_separator(glob(glob)), '\n')
+    return unite#util#uniq(split(unite#util#substitute_path_separator(glob(glob)), '\n')
+          \ + split(unite#util#substitute_path_separator(glob(glob2)), '\n'))
   endif
 endfunction"}}}
 function! unite#util#command_with_restore_cursor(command) "{{{
@@ -377,10 +361,22 @@ function! unite#util#open(path) "{{{
   return s:get_system().open(a:path)
 endfunction"}}}
 
+function! unite#util#read_lines(source, timeout) "{{{
+  let lines = []
+  for _ in range(a:timeout / 100)
+    let lines += a:source.read_lines(-1, 100)
+  endfor
+  return lines
+endfunction"}}}
+
 function! unite#util#is_sudo() "{{{
   return $SUDO_USER != '' && $USER !=# $SUDO_USER
         \ && $HOME !=# expand('~'.$USER)
         \ && $HOME ==# expand('~'.$SUDO_USER)
+endfunction"}}}
+
+function! unite#util#lcd(dir) "{{{
+  execute 'lcd' fnameescape(a:dir)
 endfunction"}}}
 
 let &cpo = s:save_cpo

@@ -107,11 +107,9 @@ function! unite#filters#lua_fuzzy_matcher(candidates, context, ignorecase) "{{{
     return []
   endif
 
-  let pattern = unite#filters#fuzzy_escape(a:context.input)
-
   lua << EOF
 do
-  local pattern = vim.eval('pattern')
+  local pattern = vim.eval('unite#filters#fuzzy_escape(a:context.input)')
   local input = vim.eval('a:context.input')
   local candidates = vim.eval('a:candidates')
   if vim.eval('&ignorecase') ~= 0 then
@@ -147,10 +145,36 @@ endfunction"}}}
 
 function! unite#filters#escape(string) "{{{
   " Escape string for lua regexp.
-  return substitute(substitute(substitute(a:string,
+  return substitute(substitute(substitute(substitute(a:string,
+        \ '\\ ', ' ', 'g'),
         \ '[%\[\]().+?^$-]', '%\0', 'g'),
         \ '\*\@<!\*\*\@!', '.*', 'g'),
         \ '\*\*\+', '.*', 'g')
+endfunction"}}}
+
+function! unite#filters#lua_filter_head(candidates, input) "{{{
+lua << EOF
+do
+  local input = vim.eval('tolower(a:input)')
+  local candidates = vim.eval('a:candidates')
+  for i = #candidates-1, 0, -1 do
+    local word = candidates[i].action__path
+        or candidates[i].word
+    if string.find(string.lower(word), input, 1, true) ~= 1 then
+      candidates[i] = nil
+    end
+  end
+end
+EOF
+
+  return a:candidates
+endfunction"}}}
+
+function! unite#filters#vim_filter_head(candidates, input) "{{{
+  let input = tolower(a:input)
+  return filter(a:candidates,
+        \ "stridx(tolower(get(v:val, 'action__path',
+        \      v:val.word)), input) == 0")
 endfunction"}}}
 
 let &cpo = s:save_cpo

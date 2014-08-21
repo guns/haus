@@ -32,7 +32,6 @@ function! unite#helper#call_hook(sources, hook_name) "{{{
     return
   endif
 
-  let _ = []
   for source in a:sources
     if !has_key(source.hooks, a:hook_name)
       continue
@@ -76,7 +75,8 @@ function! unite#helper#get_substitute_input(input) "{{{
     let head = ''
   endif
 
-  let inputs = unite#helper#get_substitute_input_loop(input, substitute_patterns)
+  let inputs = unite#helper#get_substitute_input_loop(
+        \ input, substitute_patterns)
 
   return map(inputs, 'head . v:val')
 endfunction"}}}
@@ -178,10 +178,15 @@ function! unite#helper#get_marked_candidates() "{{{
         \ 'v:val.unite__is_marked'), 'v:val.unite__marked_time')
 endfunction"}}}
 
-function! unite#helper#get_input() "{{{
+function! unite#helper#get_input(...) "{{{
+  let is_force = get(a:000, 0, 0)
   let unite = unite#get_current_unite()
-  if mode() !=# 'i'
+  if !is_force && mode() !=# 'i'
     return unite.context.input
+  endif
+
+  if unite.prompt_linenr == 0
+    return ''
   endif
 
   " Prompt check.
@@ -254,10 +259,10 @@ function! unite#helper#get_unite_winnr(buffer_name) "{{{
     if !empty(buffer_context) &&
           \ buffer_context.buffer_name ==# a:buffer_name
       if buffer_context.temporary
-            \ && !empty(filter(copy(buffer_context.old_buffer_info),
+            \ && !empty(filter(copy(buffer_context.unite__old_buffer_info),
             \ 'v:val.buffer_name ==# buffer_context.buffer_name'))
         " Disable resume.
-        let buffer_context.old_buffer_info = []
+        let buffer_context.unite__old_buffer_info = []
       endif
       return winnr
     endif
@@ -272,10 +277,10 @@ function! unite#helper#get_unite_bufnr(buffer_name) "{{{
     if !empty(buffer_context) &&
           \ buffer_context.buffer_name ==# a:buffer_name
       if buffer_context.temporary
-            \ && !empty(filter(copy(buffer_context.old_buffer_info),
+            \ && !empty(filter(copy(buffer_context.unite__old_buffer_info),
             \ 'v:val.buffer_name ==# buffer_context.buffer_name'))
         " Disable resume.
-        let buffer_context.old_buffer_info = []
+        let buffer_context.unite__old_buffer_info = []
       endif
 
       return bufnr
@@ -289,7 +294,9 @@ function! unite#helper#get_current_candidate(...) "{{{
   let linenr = a:0 >= 1? a:1 : line('.')
   let unite = unite#get_current_unite()
   if unite.context.prompt_direction ==# 'below'
-    let num = linenr == unite.prompt_linenr ?
+    let num = unite.prompt_linenr == 0 ?
+          \ linenr - line('$') - 1 :
+          \ linenr == unite.prompt_linenr ?
           \ -1 : linenr - line('$')
   else
     let num = linenr == unite.prompt_linenr ?
@@ -443,12 +450,25 @@ EOF
   endfunction"}}}
 else
   function! unite#helper#paths2candidates(paths) "{{{
-    return map(a:paths, "{
+    return map(copy(a:paths), "{
           \ 'word' : v:val,
           \ 'action__path' : v:val,
           \ }")
   endfunction"}}}
 endif
+
+function! unite#helper#get_candidate_directory(candidate) "{{{
+  return has_key(a:candidate, 'action__directory') ?
+        \ a:candidate.action__directory :
+        \ unite#util#path2directory(a:candidate.action__path)
+endfunction"}}}
+
+function! unite#helper#is_prompt(line) "{{{
+  let prompt_linenr = unite#get_current_unite().prompt_linenr
+  let context = unite#get_context()
+  return (context.prompt_direction ==# 'below' && a:line >= prompt_linenr)
+        \ || (context.prompt_direction !=# 'below' && a:line <= prompt_linenr)
+endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

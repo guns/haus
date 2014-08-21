@@ -42,38 +42,12 @@ if exists('g:unite_lcd_command')
 endif
 "}}}
 " Global options definition. "{{{
-let g:unite_update_time =
-      \ get(g:, 'unite_update_time', 500)
-let g:unite_prompt =
-      \ get(g:, 'unite_prompt', '> ')
-let g:unite_enable_start_insert =
-      \ get(g:, 'unite_enable_start_insert', 0)
-let g:unite_split_rule =
-      \ get(g:, 'unite_split_rule', 'topleft')
-let g:unite_enable_split_vertically =
-      \ get(g:, 'unite_enable_split_vertically', 0)
-let g:unite_winheight =
-      \ get(g:, 'unite_winheight', 20)
-let g:unite_winwidth =
-      \ get(g:, 'unite_winwidth', 90)
 let g:unite_quick_match_table =
       \ get(g:, 'unite_quick_match_table', {
       \     'a' : 0, 's' : 1, 'd' : 2, 'f' : 3, 'g' : 4, 'h' : 5, 'j' : 6, 'k' : 7, 'l' : 8, ';' : 9,
       \     'q' : 10, 'w' : 11, 'e' : 12, 'r' : 13, 't' : 14, 'y' : 15, 'u' : 16, 'i' : 17, 'o' : 18, 'p' : 19,
       \     '1' : 20, '2' : 21, '3' : 22, '4' : 23, '5' : 24, '6' : 25, '7' : 26, '8' : 27, '9' : 28, '0' : 29,
       \ })
-let g:unite_abbr_highlight =
-      \ get(g:, 'unite_abbr_highlight', 'Normal')
-let g:unite_cursor_line_highlight =
-      \ get(g:, 'unite_cursor_line_highlight', 'PmenuSel')
-let g:unite_cursor_line_time =
-      \ get(g:, 'unite_cursor_line_time', '0.10')
-let g:unite_enable_short_source_names =
-      \ get(g:, 'unite_enable_short_source_names', 0)
-let g:unite_marked_icon =
-      \ get(g:, 'unite_marked_icon', '*')
-let g:unite_candidate_icon =
-      \ get(g:, 'unite_candidate_icon', ' ')
 let g:unite_force_overwrite_statusline =
       \ get(g:, 'unite_force_overwrite_statusline', 1)
 "}}}
@@ -92,14 +66,11 @@ command! -nargs=+ -complete=customlist,unite#complete#source
       \ call s:call_unite_current_dir(<q-args>)
 function! s:call_unite_current_dir(args) "{{{
   let [args, options] = unite#helper#parse_options_args(a:args)
-  if !has_key(options, 'input')
+  if !has_key(options, 'path')
     let path = &filetype ==# 'vimfiler' ?
           \ b:vimfiler.current_dir :
           \ unite#util#substitute_path_separator(fnamemodify(getcwd(), ':p'))
-    if path !~ '/$'
-      let path .= '/'
-    endif
-    let options.input = escape(path, ' ')
+    let options.path = path
   endif
 
   call unite#start(args, options)
@@ -110,12 +81,8 @@ command! -nargs=+ -complete=customlist,unite#complete#source
       \ call s:call_unite_buffer_dir(<q-args>)
 function! s:call_unite_buffer_dir(args) "{{{
   let [args, options] = unite#helper#parse_options_args(a:args)
-  if !has_key(options, 'input')
-    let path = unite#helper#get_buffer_directory(bufnr('%'))
-    if path !~ '/$'
-      let path .= '/'
-    endif
-    let options.input = escape(path, ' ')
+  if !has_key(options, 'path')
+    let options.path = unite#helper#get_buffer_directory(bufnr('%'))
   endif
 
   call unite#start(args, options)
@@ -126,15 +93,23 @@ command! -nargs=+ -complete=customlist,unite#complete#source
       \ call s:call_unite_project_dir(<q-args>)
 function! s:call_unite_project_dir(args) "{{{
   let [args, options] = unite#helper#parse_options_args(a:args)
-  if !has_key(options, 'input')
+  if !has_key(options, 'path')
     let path = &filetype ==# 'vimfiler' ?
           \ b:vimfiler.current_dir :
           \ unite#util#substitute_path_separator(getcwd())
-    let path = unite#util#path2project_directory(path)
-    if path !~ '/$'
-      let path .= '/'
-    endif
-    let options.input = escape(path, ' ')
+    let options.path = unite#util#path2project_directory(path)
+  endif
+
+  call unite#start(args, options)
+endfunction"}}}
+
+command! -nargs=+ -complete=customlist,unite#complete#source
+      \ UniteWithInputDirectory call s:call_unite_input_directory(<q-args>)
+function! s:call_unite_input_directory(args) "{{{
+  let [args, options] = unite#helper#parse_options_args(a:args)
+  if !has_key(options, 'path')
+    let options.path = unite#util#substitute_path_separator(
+          \ input('Input narrowing directory: ', '', 'dir'))
   endif
 
   call unite#start(args, options)
@@ -157,22 +132,6 @@ function! s:call_unite_input(args) "{{{
   let [args, options] = unite#helper#parse_options_args(a:args)
   if !has_key(options, 'input')
     let options.input = input('Input narrowing text: ', '')
-  endif
-
-  call unite#start(args, options)
-endfunction"}}}
-
-command! -nargs=+ -complete=customlist,unite#complete#source
-      \ UniteWithInputDirectory call s:call_unite_input_directory(<q-args>)
-function! s:call_unite_input_directory(args) "{{{
-  let [args, options] = unite#helper#parse_options_args(a:args)
-  if !has_key(options, 'input')
-    let path = unite#util#substitute_path_separator(
-          \ input('Input narrowing directory: ', '', 'dir'))
-    if isdirectory(path) && path !~ '/$'
-      let path .= '/'
-    endif
-    let options.input = path
   endif
 
   call unite#start(args, options)

@@ -30,19 +30,18 @@ set cpo&vim
 call unite#util#set_default(
       \ 'g:unite_source_rec_ignore_pattern',
       \'\%(^\|/\)\.$\|\~$\|\.\%(o\|exe\|dll\|bak\|DS_Store\|zwc\|pyc\|sw[po]\|class\)$'.
-      \'\|\%(^\|/\)\%(\.hg\|\.git\|\.bzr\|\.svn\|tags\%(-.*\)\?\)\%($\|/\)',
+      \'\|\%(^\|/\)\%(\.hg\|\.git\|\.bzr\|\.svn\|tags\%(-\a\+\)\?\)\%($\|/\)',
       \ 'g:unite_source_file_rec_ignore_pattern')
 call unite#util#set_default(
       \ 'g:unite_source_rec_min_cache_files', 100,
       \ 'g:unite_source_file_rec_min_cache_files')
 call unite#util#set_default(
-      \ 'g:unite_source_rec_max_cache_files', 2000,
+      \ 'g:unite_source_rec_max_cache_files', 20000,
       \ 'g:unite_source_file_rec_max_cache_files')
-call unite#util#set_default('g:unite_source_rec_unit', 200)
+call unite#util#set_default('g:unite_source_rec_unit',
+      \ unite#util#is_windows() ? 1000 : 2000)
 call unite#util#set_default(
       \ 'g:unite_source_rec_async_command', (
-      \  executable('ag') ?
-      \  'ag --follow --nocolor --nogroup --hidden -g ""' :
       \  !unite#util#is_windows() && executable('find') ? 'find' : ''),
       \ 'g:unite_source_file_rec_async_command')
 call unite#util#set_default(
@@ -86,8 +85,6 @@ function! s:source_file_rec.gather_candidates(args, context) "{{{
 
   if empty(continuation.rest) || continuation.end
     " Disable async.
-    call unite#print_source_message(
-          \ 'Directory traverse was completed.', self.name)
     let a:context.is_async = 0
     let continuation.end = 1
   endif
@@ -100,17 +97,13 @@ function! s:source_file_rec.async_gather_candidates(args, context) "{{{
 
   let [continuation.rest, files] =
         \ s:get_files(a:context, continuation.rest,
-        \   1, g:unite_source_rec_unit,
-        \   a:context.source.ignore_pattern)
+        \   1, g:unite_source_rec_unit)
 
   if empty(continuation.rest) || (
         \  g:unite_source_rec_max_cache_files > 0 &&
         \    len(continuation.files) >
         \        g:unite_source_rec_max_cache_files)
-    if empty(continuation.rest)
-      call unite#print_source_message(
-            \ 'Directory traverse was completed.', self.name)
-    else
+    if !empty(continuation.rest)
       call unite#print_source_message(
             \ 'Too many candidates.', self.name)
     endif
@@ -134,15 +127,6 @@ endfunction"}}}
 function! s:source_file_rec.hooks.on_init(args, context) "{{{
   let a:context.source__is_directory = 0
   call s:on_init(a:args, a:context)
-endfunction"}}}
-function! s:source_file_rec.hooks.on_post_filter(args, context) "{{{
-  let directory = unite#util#substitute_path_separator(
-        \ fnamemodify(a:context.source__directory, ':p'))
-  for candidate in filter(a:context.candidates,
-        \ "v:val.action__path !=# directory")
-    let candidate.action__directory =
-          \ unite#util#path2directory(candidate.action__path)
-  endfor
 endfunction"}}}
 
 function! s:source_file_rec.vimfiler_check_filetype(args, context) "{{{
@@ -189,7 +173,7 @@ function! s:source_file_rec.vimfiler_gather_candidates(args, context) "{{{
   let old_dir = getcwd()
   if path !=# old_dir
         \ && isdirectory(path)
-    lcd `=path`
+    call unite#util#lcd(path)
   endif
 
   let exts = unite#util#is_windows() ?
@@ -202,7 +186,7 @@ function! s:source_file_rec.vimfiler_gather_candidates(args, context) "{{{
 
   if path !=# old_dir
         \ && isdirectory(path)
-    lcd `=old_dir`
+    call unite#util#lcd(old_dir)
   endif
 
   return deepcopy(candidates)
@@ -220,7 +204,7 @@ function! s:source_file_rec.vimfiler_dummy_candidates(args, context) "{{{
   let old_dir = getcwd()
   if path !=# old_dir
         \ && isdirectory(path)
-    lcd `=path`
+    call unite#util#lcd(path)
   endif
 
   let exts = unite#util#is_windows() ?
@@ -236,7 +220,7 @@ function! s:source_file_rec.vimfiler_dummy_candidates(args, context) "{{{
 
   if path !=# old_dir
         \ && isdirectory(path)
-    lcd `=old_dir`
+    call unite#util#lcd(old_dir)
   endif
 
   return deepcopy(candidates)
@@ -267,13 +251,6 @@ function! s:source_file_async.gather_candidates(args, context) "{{{
   endif
 
   let directory = a:context.source__directory
-  if directory == ''
-    " Not in project directory.
-    call unite#print_source_message(
-          \ 'Not in project directory.', self.name)
-    let a:context.is_async = 0
-    return []
-  endif
 
   call unite#print_source_message(
         \ 'directory: ' . directory, self.name)
@@ -284,8 +261,6 @@ function! s:source_file_async.gather_candidates(args, context) "{{{
 
   if empty(continuation.rest) || continuation.end
     " Disable async.
-    call unite#print_source_message(
-          \ 'Directory traverse was completed.', self.name)
     let a:context.is_async = 0
     let continuation.end = 1
 
@@ -307,14 +282,21 @@ function! s:source_file_async.gather_candidates(args, context) "{{{
   endif
 
   " Note: If find command and args used, uses whole command line.
-  if command !~# '^find '
+  if args[0] ==# 'find'
     let command .= ' ' . string(directory)
-    if command ==# 'find'
-      let command .= ' -follow -type '.
-        \    (a:context.source__is_directory ? 'd' : 'f')
+
+    if g:unite_source_rec_async_command ==# 'find'
+      " Default option.
+      let command .= ' -path ''*/\.git/*'' -prune -o -type l -print -o -type '
+            \ . (a:context.source__is_directory ? 'd' : 'f') . ' -print'
     endif
+  else
+    let command .= ' ' . string(directory)
   endif
-  let a:context.source__proc = vimproc#pgroup_open(command)
+
+  " Note: "pt" needs pty.
+  let a:context.source__proc = vimproc#pgroup_open(command,
+        \ fnamemodify(args[0], ':t') ==# 'pt')
 
   " Close handles.
   call a:context.source__proc.stdin.close()
@@ -326,7 +308,7 @@ function! s:source_file_async.async_gather_candidates(args, context) "{{{
   let stderr = a:context.source__proc.stderr
   if !stderr.eof
     " Print error.
-    let errors = filter(stderr.read_lines(-1, 100),
+    let errors = filter(unite#util#read_lines(stderr, 100),
           \ "v:val !~ '^\\s*$'")
     if !empty(errors)
       call unite#print_source_error(errors, self.name)
@@ -336,22 +318,21 @@ function! s:source_file_async.async_gather_candidates(args, context) "{{{
   let continuation = a:context.source__continuation
   let stdout = a:context.source__proc.stdout
 
-  let candidates = unite#helper#paths2candidates(
-        \ filter(map(filter(
-        \   stdout.read_lines(-1, 100), 'v:val != ""'),
-        \   "fnamemodify(unite#util#iconv(v:val, 'char', &encoding), ':p')"),
-        \   'v:val !=# a:context.source__directory
-        \ && v:val !~? a:context.source.ignore_pattern'))
+  let paths = map(filter(
+        \   unite#util#read_lines(stdout, 2000), 'v:val != ""'),
+        \   "unite#util#iconv(v:val, 'char', &encoding)")
+  if unite#util#is_windows()
+    let paths = map(paths, 'unite#util#substitute_path_separator(v:val)')
+  endif
+
+  let candidates = unite#helper#paths2candidates(paths)
 
   if stdout.eof || (
         \  g:unite_source_rec_max_cache_files > 0 &&
         \    len(continuation.files) >
         \        g:unite_source_rec_max_cache_files)
     " Disable async.
-    if stdout.eof
-      call unite#print_source_message(
-            \ 'Directory traverse was completed.', self.name)
-    else
+    if !stdout.eof
       call unite#print_source_message(
             \ 'Too many candidates.', self.name)
     endif
@@ -412,8 +393,6 @@ function! s:source_file_git.gather_candidates(args, context) "{{{
 
   if empty(continuation.rest) || continuation.end
     " Disable async.
-    call unite#print_source_message(
-          \ 'Directory traverse was completed.', self.name)
     let a:context.is_async = 0
     let continuation.end = 1
 
@@ -421,7 +400,7 @@ function! s:source_file_git.gather_candidates(args, context) "{{{
   endif
 
   let command = g:unite_source_rec_git_command
-        \ . ' ls-files --full-name ' . join(a:args)
+        \ . ' ls-files ' . join(a:args)
   let args = split(command) + a:args
   if empty(args) || !executable(args[0])
     call unite#print_source_message('git command : "'.
@@ -436,6 +415,13 @@ function! s:source_file_git.gather_candidates(args, context) "{{{
   call a:context.source__proc.stdin.close()
 
   return []
+endfunction"}}}
+function! s:source_file_git.async_gather_candidates(args, context) "{{{
+  return map(s:source_file_async.async_gather_candidates(
+        \ a:args, a:context), "{
+        \   'word' : a:context.source__directory . '/' . v:val.word,
+        \   'action__path' : a:context.source__directory . '/' . v:val.word,
+        \}")
 endfunction"}}}
 
 " Source directory.
@@ -467,16 +453,17 @@ function! s:get_path(args, context) "{{{
   let args = unite#helper#parse_project_bang(a:args)
   let directory = get(args, 0, '')
   if directory == ''
-    let directory = isdirectory(a:context.input) ?
-          \ a:context.input : getcwd()
+    let directory = isdirectory(a:context.path) ?
+          \ a:context.path : getcwd()
   endif
 
-  if a:context.is_restart
+  if a:context.unite__is_restart
     let directory = unite#util#input('Target: ',
           \ directory, 'dir', a:context.source_name)
   endif
 
-  let directory = unite#util#expand(fnamemodify(directory, ':p'))
+  let directory = unite#util#substitute_path_separator(
+        \ fnamemodify(unite#util#expand(directory), ':p'))
 
   if directory != '/' && directory =~ '/$'
     let directory = directory[: -2]
@@ -484,7 +471,7 @@ function! s:get_path(args, context) "{{{
 
   return directory
 endfunction"}}}
-function! s:get_files(context, files, level, max_unit, ignore_pattern) "{{{
+function! s:get_files(context, files, level, max_unit) "{{{
   let continuation_files = []
   let ret_files = []
   let files_index = 0
@@ -492,14 +479,14 @@ function! s:get_files(context, files, level, max_unit, ignore_pattern) "{{{
   for file in a:files
     let files_index += 1
 
-    if file =~ '/\.\+$' || file =~? a:ignore_pattern
+    if file =~? '/\.\+$\|/\%(\.hg\|\.git\|\.bzr\|\.svn\)/'
       continue
     endif
 
     if isdirectory(file)
       if getftype(file) ==# 'link'
-        let file = s:resolve(file)
-        if file == ''
+        let real_file = s:resolve(file)
+        if real_file == ''
           continue
         endif
       endif
@@ -517,19 +504,19 @@ function! s:get_files(context, files, level, max_unit, ignore_pattern) "{{{
       let child_index = 0
       let children = exists('*vimproc#readdir') ?
             \ vimproc#readdir(file) :
-            \ unite#util#glob(file.'/*') + unite#util#glob(file.'/.*')
+            \ unite#util#glob(file.'/*')
       for child in children
         let child = substitute(child, '\/$', '', '')
         let child_index += 1
 
-        if child =~ '/\.\+$' || child =~? a:ignore_pattern
+        if child =~? '/\.\+$\|/\%(\.hg\|\.git\|\.bzr\|\.svn\)/'
           continue
         endif
 
         if isdirectory(child)
           if getftype(child) ==# 'link'
-            let child = s:resolve(child)
-            if child == ''
+            let real_file = s:resolve(child)
+            if real_file == ''
               continue
             endif
           endif
@@ -542,7 +529,7 @@ function! s:get_files(context, files, level, max_unit, ignore_pattern) "{{{
           if a:level < 5 && ret_files_len < a:max_unit
             let [continuation_files_child, ret_files_child] =
                   \ s:get_files(a:context, [child], a:level + 1,
-                  \  a:max_unit - ret_files_len, a:ignore_pattern)
+                  \  a:max_unit - ret_files_len)
             let continuation_files += continuation_files_child
 
             if !a:context.source__is_directory
@@ -602,8 +589,7 @@ function! s:init_continuation(context, directory) "{{{
           \ 'rest' : [],
           \ 'directory' : a:directory, 'end' : 1,
           \ }
-  elseif a:context.is_redraw
-        \ || !has_key(continuation, a:directory)
+  else
     let a:context.is_async = 1
 
     let continuation[a:directory] = {
@@ -623,7 +609,7 @@ function! s:write_cache(context, directory, files) "{{{
   let cache_dir = unite#get_data_directory() . '/rec/' .
         \ (a:context.source__is_directory ? 'directory' : 'file')
 
-  if g:unite_source_rec_min_cache_files > 0
+  if g:unite_source_rec_min_cache_files >= 0
         \ && !unite#util#is_sudo()
         \ && len(a:files) >
         \ g:unite_source_rec_min_cache_files

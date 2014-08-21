@@ -27,14 +27,14 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! unite#handlers#_on_insert_enter()  "{{{
-  let unite = unite#get_current_unite()
-  let unite.is_insert = 1
-
   if &filetype !=# 'unite'
     return
   endif
 
   setlocal modifiable
+
+  let unite = unite#get_current_unite()
+  let unite.is_insert = 1
 
   if unite.prompt_linenr != 0
     return
@@ -42,7 +42,8 @@ function! unite#handlers#_on_insert_enter()  "{{{
 
   " Restore prompt
   let unite.prompt_linenr = unite.init_prompt_linenr
-  call append(0, '')
+  call append((unite.context.prompt_direction ==# 'below' ?
+        \ '$' : 0), '')
   call unite#view#_redraw_prompt()
 endfunction"}}}
 function! unite#handlers#_on_insert_leave()  "{{{
@@ -62,7 +63,7 @@ endfunction"}}}
 function! unite#handlers#_on_cursor_hold_i()  "{{{
   let unite = unite#get_current_unite()
 
-  call s:change_highlight()
+  call unite#view#_change_highlight()
 
   if unite.max_source_candidates > unite.redraw_hold_candidates
     call s:check_redraw()
@@ -87,6 +88,9 @@ function! unite#handlers#_on_cursor_moved_i()  "{{{
     startinsert!
   endif
 endfunction"}}}
+function! unite#handlers#_on_text_changed()  "{{{
+  call s:check_redraw()
+endfunction"}}}
 function! unite#handlers#_on_bufwin_enter(bufnr)  "{{{
   silent! let unite = getbufvar(a:bufnr, 'unite')
   if type(unite) != type({})
@@ -103,7 +107,7 @@ function! unite#handlers#_on_bufwin_enter(bufnr)  "{{{
 
   call s:restore_statusline()
 
-  if !unite.context.no_split && winnr('$') != 1
+  if unite.context.split && winnr('$') != 1
     call unite#view#_resize_window()
   endif
 
@@ -124,7 +128,7 @@ function! unite#handlers#_on_cursor_hold()  "{{{
   if &filetype ==# 'unite'
     " Redraw.
     call unite#redraw()
-    call s:change_highlight()
+    call unite#view#_change_highlight()
 
     let unite = unite#get_current_unite()
     let is_async = unite.is_async
@@ -160,14 +164,8 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   let prompt_linenr = unite.prompt_linenr
   let context = unite.context
 
-  if prompt_linenr > 0
-    if line('.') == prompt_linenr && !&l:modifiable
-      let &l:modifiable = col('.') > len(context.prompt)
-    endif
-    if line('.') != prompt_linenr && &l:modifiable
-      setlocal nomodifiable
-    endif
-  endif
+  let &l:modifiable = line('.') == prompt_linenr
+        \ && col('.') >= len(context.prompt)
 
   if line('.') == 1
     nnoremap <silent><buffer> <Plug>(unite_loop_cursor_up)
@@ -196,15 +194,22 @@ function! unite#handlers#_on_cursor_moved()  "{{{
     call s:cursor_down()
   endif
 
-  if exists('b:current_syntax') && !context.no_cursor_line
-    2match
+  if exists('b:current_syntax')
+    call unite#view#_clear_match()
 
-    if line('.') == prompt_linenr || mode('.') == 'i' ||
-          \ split(reltimestr(reltime(unite.cursor_line_time)))[0]
-          \    > g:unite_cursor_line_time
+    let is_prompt = (prompt_linenr == 0 &&
+          \ (context.prompt_direction == 'below'
+          \   && line('.') == line('$') || line('.') == 1))
+          \ || line('.') == prompt_linenr
+    if is_prompt || mode('.') == 'i'
+          \ || abs(line('.') - unite.prev_line) != 1
+          \ || split(reltimestr(reltime(unite.cursor_line_time)))[0]
+          \    > context.cursor_line_time
       call unite#view#_set_cursor_line()
     endif
+
     let unite.cursor_line_time = reltime()
+    let unite.prev_line = line('.')
   endif
 
   if context.auto_preview
@@ -223,7 +228,7 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   endif
 
   let height =
-        \ (unite.context.no_split
+        \ (!unite.context.split
         \  || unite.context.winheight == 0) ?
         \ winheight(0) : unite.context.winheight
   let candidates = unite#candidates#_gather_pos(height)
@@ -252,7 +257,7 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   endif"}}}
 endfunction"}}}
 function! unite#handlers#_on_buf_unload(bufname)  "{{{
-  2match
+  call unite#view#_clear_match()
 
   " Save unite value.
   silent! let unite = getbufvar(a:bufname, 'unite')
@@ -294,54 +299,6 @@ function! unite#handlers#_on_insert_char_pre()  "{{{
   call unite#handlers#_on_cursor_moved()
 endfunction"}}}
 
-function! s:change_highlight()  "{{{
-  if &filetype !=# 'unite'
-        \ || !exists('b:current_syntax')
-    return
-  endif
-
-  let unite = unite#get_current_unite()
-  if empty(unite)
-    return
-  endif
-
-  let context = unite#get_context()
-  let prompt_linenr = unite.prompt_linenr
-  if !context.no_cursor_line
-    call unite#view#_set_cursor_line()
-  endif
-
-  silent! syntax clear uniteCandidateInputKeyword
-
-  if !context.is_changed || unite#helper#get_input() == ''
-    return
-  endif
-
-  syntax case ignore
-
-  for input_str in unite#helper#get_substitute_input(
-        \ unite#helper#get_input())
-    let input_list = map(filter(split(input_str, '\\\@<! '),
-          \ "v:val !~ '^[!:]'"),
-          \ "substitute(v:val, '\\\\ ', ' ', 'g')")
-
-    for source in filter(copy(unite.sources), "v:val.syntax != ''")
-      for matcher in filter(copy(map(filter(
-            \ copy(source.filters),
-            \ "type(v:val) == type('')"), 'unite#get_filters(v:val)')),
-            \ "has_key(v:val, 'pattern')")
-        let patterns = map(copy(input_list),
-              \ "escape(matcher.pattern(v:val), '/~')")
-
-        silent! execute 'syntax match uniteCandidateInputKeyword'
-              \ '/'.join(patterns, '\|').'/'
-              \ 'containedin='.source.syntax.' contained'
-      endfor
-    endfor
-  endfor
-
-  syntax case match
-endfunction"}}}
 function! unite#handlers#_save_updatetime()  "{{{
   let unite = unite#get_current_unite()
 
@@ -382,7 +339,7 @@ function! s:check_redraw() "{{{
   if line('.') == prompt_linenr || unite.context.is_redraw
     " Redraw.
     call unite#redraw()
-    call s:change_highlight()
+    call unite#view#_change_highlight()
   endif
 endfunction"}}}
 

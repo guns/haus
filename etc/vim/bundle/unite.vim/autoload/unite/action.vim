@@ -299,12 +299,12 @@ function! unite#action#take(action_name, candidate, is_parent_action) "{{{
         \   candidate_head.source, candidate_head.kind)
         \ : a:action_name
 
-  if !has_key(action_table, a:action_name)
-    " throw 'unite.vim: no such action ' . a:action_name
+  if !has_key(action_table, action_name)
+    " throw 'unite.vim: no such action ' . action_name
     return 1
   endif
 
-  let action = action_table[a:action_name]
+  let action = action_table[action_name]
   " Convert candidates.
   call action.func(
         \ (action.is_selectable && type(a:candidate) != type([])) ?
@@ -343,6 +343,7 @@ function! unite#action#do(action_name, ...) "{{{
   let action_tables = s:get_candidates_action_table(
         \ a:action_name, candidates, sources)
 
+  let old_context = {}
   if !empty(new_context)
     " Set new context.
     let new_context = extend(
@@ -356,39 +357,36 @@ function! unite#action#do(action_name, ...) "{{{
   let is_redraw = 0
   let _ = []
   for table in action_tables
+    if !empty(unite#helper#get_marked_candidates())
+      call s:clear_marks(candidates)
+      call unite#force_redraw()
+      let is_redraw = 0
+    endif
+
     " Check quit flag.
     if table.action.is_quit && unite.profile_name !=# 'action'
           \ && !table.action.is_start
-          \ && !(table.action.is_tab && unite.context.no_quit)
+          \ && !(table.action.is_tab && !unite.context.quit)
       call unite#all_quit_session(0)
       let is_quit = 1
     endif
 
-    if table.action.is_start && !empty(unite#helper#get_marked_candidates())
-      call s:clear_marks(candidates)
-      call unite#force_redraw()
-      let is_redraw = 0
-    elseif table.action.is_selectable
-      let is_redraw = 1
-    endif
-
+    let save_shortmess = &shortmess
     try
+      set shortmess+=A
       call add(_, table.action.func(table.candidates))
-    catch /^Vim\%((\a\+)\)\=:E325/
-      " Ignore catch.
-      call unite#print_error(v:exception)
-      call unite#print_error('Warning: Swap file was found while executing action!')
-      call unite#print_error('Action name is ' . table.action.name)
     catch
       call unite#print_error(v:throwpoint)
       call unite#print_error(v:exception)
       call unite#print_error('Error occured while executing action!')
       call unite#print_error('Action name is ' . table.action.name)
+    finally
+      let &shortmess = save_shortmess
     endtry
 
     " Executes command.
     if unite.context.execute_command != ''
-      execute context.execute_command
+      execute unite.context.execute_command
     endif
 
     " Check invalidate cache flag.
@@ -401,7 +399,7 @@ function! unite#action#do(action_name, ...) "{{{
     endif
   endfor
 
-  if (!is_quit || unite.context.no_quit) && unite.context.keep_focus
+  if (!is_quit || !unite.context.quit) && unite.context.keep_focus
     let winnr = bufwinnr(unite.bufnr)
 
     if winnr > 0
@@ -441,15 +439,13 @@ function! unite#action#do_candidates(action_name, candidates, ...) "{{{
 endfunction"}}}
 
 function! unite#action#_get_candidate_action_table(candidate, sources) "{{{
-  let Self = unite#get_self_functions()[-1]
-
   return unite#action#get_action_table(
-        \ a:candidate.source, a:candidate.kind, Self, 0, a:sources)
+        \ a:candidate.source, a:candidate.kind,
+        \ unite#get_self_functions()[-1], 0, a:sources)
 endfunction"}}}
 
 function! s:get_candidates_action_table(action_name, candidates, sources) "{{{
   let action_tables = []
-  let Self = unite#get_self_functions()[-1]
   for candidate in a:candidates
     let action_table = unite#action#_get_candidate_action_table(
           \ candidate, a:sources)

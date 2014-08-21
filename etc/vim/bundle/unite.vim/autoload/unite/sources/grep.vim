@@ -67,6 +67,7 @@ function! s:source.hooks.on_init(args, context) "{{{
     return
   endif
 
+  let target = ''
   if type(get(a:args, 0, '')) == type([])
     let args = a:args
 
@@ -117,6 +118,13 @@ function! s:source.hooks.on_init(args, context) "{{{
     let a:context.source__input = unite#util#input('Pattern: ')
   endif
 
+  call unite#print_source_message('Pattern: '
+        \ . a:context.source__input, s:source.name)
+
+  if target != ''
+    call unite#print_source_message('Target: ' . target, s:source.name)
+  endif
+
   let a:context.source__directory =
         \ (len(targets) == 1) ?
         \ unite#util#substitute_path_separator(
@@ -132,9 +140,9 @@ function! s:source.hooks.on_init(args, context) "{{{
     endif
 
     if get(vimfiler, 'source', '') ==# 'ssh'
-      let [hostname, port, path] =
+      let [hostname, port] =
             \ unite#sources#ssh#parse_path(
-            \  vimfiler.source.':'.vimfiler.current_dir)
+            \  vimfiler.source.':'.vimfiler.current_dir)[:1]
       let a:context.source__ssh_path =
             \ printf('%s://%s:%s/', vimfiler.source, hostname, port)
 
@@ -178,8 +186,6 @@ function! s:source.hooks.on_post_filter(args, context) "{{{
   for candidate in a:context.candidates
     let candidate.kind = [((a:context.source__ssh_path != '') ?
           \ 'file/ssh' : 'file'), 'jump_list']
-    let candidate.action__directory =
-          \ unite#util#path2directory(candidate.action__path)
     let candidate.action__col_pattern = a:context.source__input
     let candidate.is_multiline = 1
   endfor
@@ -224,8 +230,8 @@ function! s:source.gather_candidates(args, context) "{{{
     \)
   if a:context.source__ssh_path != ''
     " Use ssh command.
-    let [hostname, port, path] =
-          \ unite#sources#ssh#parse_path(a:context.source__ssh_path)
+    let [hostname, port] =
+          \ unite#sources#ssh#parse_path(a:context.source__ssh_path)[:1]
     let cmdline = substitute(substitute(
           \ g:unite_kind_file_ssh_command . ' ' . cmdline,
           \   '\<HOSTNAME\>', hostname, 'g'), '\<PORT\>', port, 'g')
@@ -252,14 +258,13 @@ function! s:source.async_gather_candidates(args, context) "{{{
 
   if !has_key(a:context, 'source__proc')
     let a:context.is_async = 0
-    call unite#print_source_message('Completed.', s:source.name)
     return []
   endif
 
   let stderr = a:context.source__proc.stderr
   if !stderr.eof
     " Print error.
-    let errors = filter(stderr.read_lines(-1, 100),
+    let errors = filter(unite#util#read_lines(stderr, 100),
           \ "v:val !~ '^\\s*$'")
     if !empty(errors)
       call unite#print_source_error(errors, s:source.name)
@@ -270,12 +275,10 @@ function! s:source.async_gather_candidates(args, context) "{{{
   if stdout.eof
     " Disable async.
     let a:context.is_async = 0
-    call unite#print_source_message('Completed.', s:source.name)
-
     call a:context.source__proc.waitpid()
   endif
 
-  let candidates = map(stdout.read_lines(-1, 100),
+  let candidates = map(unite#util#read_lines(stdout, 1000),
           \ "unite#util#iconv(v:val, g:unite_source_grep_encoding, &encoding)")
   if variables.default_opts =~ '^-[^-]*l'
         \ || a:context.source__extra_opts =~ '^-[^-]*l'
@@ -286,12 +289,6 @@ function! s:source.async_gather_candidates(args, context) "{{{
     let candidates = map(filter(candidates,
           \  'v:val =~ "^.\\+:.\\+$"'),
           \ '[v:val, split(v:val[2:], ":", 1)]')
-  endif
-
-  if a:context.source__ssh_path != ''
-    " Use ssh command.
-    let [hostname, port, path] = unite#sources#ssh#parse_path(
-          \     a:context.source__ssh_path)
   endif
 
   let _ = []

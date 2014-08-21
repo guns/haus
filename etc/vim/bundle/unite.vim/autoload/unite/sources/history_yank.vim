@@ -55,7 +55,7 @@ function! unite#sources#history_yank#_append() "{{{
 
   if g:unite_source_history_yank_save_clipboard
     " Skip if registers are identical.
-    if @" != @+
+    if @" !=# @+
       call s:add_register('+')
     endif
   endif
@@ -82,7 +82,6 @@ let s:source = {
 function! s:source.gather_candidates(args, context) "{{{
   call s:load()
 
-  let max_width = winwidth(0) - 5
   return map(copy(s:yank_histories), "{
         \ 'word' : v:val[0],
         \ 'is_multiline' : 1,
@@ -152,6 +151,7 @@ function! s:add_register(name) "{{{
   let len_history = len(reg[0])
   " Ignore too long yank.
   if len_history < 2 || len_history > 100000
+        \ || reg[0] =~ '[\x00-\x09\x10-\x1a\x1c-\x1f]\{3,}'
     return
   endif
 

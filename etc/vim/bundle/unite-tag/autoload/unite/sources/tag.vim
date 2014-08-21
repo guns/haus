@@ -1,6 +1,5 @@
 " tag source for unite.vim
-" Version:     0.1.0
-" Last Change: 29 Mar 2014.
+" Version:     0.2.0
 " Author:      tsukkee <takayuki0510 at gmail.com>
 "              thinca <thinca+vim@gmail.com>
 "              Shougo <ShougoMatsu at gmail.com>
@@ -34,9 +33,29 @@ let g:unite_source_tag_max_name_length =
 let g:unite_source_tag_max_fname_length =
     \ get(g:, 'unite_source_tag_max_fname_length', 20)
 
+" When enabled, use multi-byte aware string truncate method
+let g:unite_source_tag_strict_truncate_string =
+    \ get(g:, 'unite_source_tag_strict_truncate_string', 1)
+
+let g:unite_source_tag_show_location =
+    \ get(g:, 'unite_source_tag_show_location', 1)
+
+let g:unite_source_tag_show_fname =
+    \ get(g:, 'unite_source_tag_show_fname', 1)
+
 " cache
 let s:tagfile_cache = {}
 let s:input_cache = {}
+
+" cache directory
+let s:cache_dir = unite#get_data_directory() . '/tag'
+if !isdirectory(s:cache_dir)
+    call mkdir(s:cache_dir, 'p')
+endif
+
+" use vital
+let V = vital#of('unite')
+let s:C = V.import('System.Cache')
 
 " source
 let s:source = {
@@ -97,6 +116,7 @@ function! s:source.gather_candidates(args, context)
 endfunction
 
 function! s:source.async_gather_candidates(args, context)
+    " caching has done
     if empty(a:context.source__continuation)
         let a:context.is_async = 0
         call unite#print_message(
@@ -110,16 +130,20 @@ function! s:source.async_gather_candidates(args, context)
         return []
     endif
 
+    let is_file = self.name ==# 'tag/file'
+    " gather all candidates if 'immediately' flag is set
     if a:context.immediately
         while !empty(tagdata.cont.lines)
             let result += s:next(tagdata, remove(tagdata.cont.lines, 0), self.name)
         endwhile
+    " gather candidates per 0.05s if 'reltime' and 'float' are enable
     elseif has('reltime') && has('float')
         let time = reltime()
         while str2float(reltimestr(reltime(time))) < 1.0
         \       && !empty(tagdata.cont.lines)
             let result += s:next(tagdata, remove(tagdata.cont.lines, 0), self.name)
         endwhile
+    " otherwise, gather candidates per 100 items
     else
         let i = 1000
         while 0 < i && !empty(tagdata.cont.lines)
@@ -128,8 +152,8 @@ function! s:source.async_gather_candidates(args, context)
         endwhile
     endif
 
+    " show progress
     call unite#clear_message()
-
     let len = tagdata.cont.lnum
     let progress = (len - len(tagdata.cont.lines)) * 100 / len
     call unite#print_message(
@@ -138,10 +162,16 @@ function! s:source.async_gather_candidates(args, context)
                 \           a:context.source__cont_number, a:context.source__cont_max,
                 \           tagdata.cont.tagfile, progress))
 
+    " when caching has done
     if empty(tagdata.cont.lines)
+        let tagfile = tagdata.cont.tagfile
+
         call remove(tagdata, 'cont')
         call remove(a:context.source__continuation, 0)
         let a:context.source__cont_number += 1
+
+        " output parse results to file
+        call s:write_cache(tagfile)
     endif
 
     return s:pre_filter(result, a:args)
@@ -227,7 +257,7 @@ function! s:source_include.gather_candidates(args, context)
     return s:pre_filter(result, a:args)
 endfunction
 
-
+" filter defined by unite's parameter (e.g. Unite tag:filter)
 function! s:pre_filter(result, args)
     if !empty(a:args)
         let arg = a:args[0]
@@ -248,8 +278,15 @@ function! s:get_tagdata(tagfile)
     if !filereadable(tagfile)
         return {}
     endif
-    if !has_key(s:tagfile_cache, tagfile) ||
-                \ s:tagfile_cache[tagfile].time != getftime(tagfile)
+
+    " try to read date from cache file
+    call s:read_cache(tagfile)
+
+    " set cache structure when:
+    " - cache file is not available
+    " - cache data is expired
+    if !has_key(s:tagfile_cache, tagfile)
+                \ || s:tagfile_cache[tagfile].time != getftime(tagfile)
         let lines = readfile(tagfile)
         let s:tagfile_cache[tagfile] = {
         \   'time': getftime(tagfile),
@@ -276,9 +313,9 @@ function! s:taglist_filter(input)
     let taglist = map(taglist(a:input), "{
     \   'word':    v:val.name,
     \   'abbr':    printf('%s  %s  %s',
-    \                  unite#util#truncate_smart(v:val.name,
+    \                  s:truncate(v:val.name,
     \                     g:unite_source_tag_max_name_length, 15, '..'),
-    \                  unite#util#truncate_smart('@'.fnamemodify(
+    \                  s:truncate('@'.fnamemodify(
     \                     v:val.filename, ':.'),
     \                     g:unite_source_tag_max_fname_length, 10, '..'),
     \                  'pat:' .  matchstr(v:val.cmd,
@@ -314,11 +351,25 @@ function! s:taglist_filter(input)
     return taglist
 endfunction
 
+function! s:truncate(str, max, footer_width, sep)
+    if g:unite_source_tag_strict_truncate_string
+        return unite#util#truncate_smart(a:str, a:max, a:footer_width, a:sep)
+    else
+        let l = len(a:str)
+        if l <= a:max
+            return a:str . repeat(' ', a:max - l)
+        else
+            return a:str[0 : (l - a:footer_width-len(a:sep))]
+                        \ .a:sep.a:str[-a:footer_width : -1]
+        endif
+    endif
+endfunction
+
 function! s:next(tagdata, line, name)
     let is_file = a:name ==# 'tag/file'
     let cont = a:tagdata.cont
     " parsing tag files is faster than using taglist()
-    let [name, filename, cmd, extensions] = s:parse_tag_line(
+    let [name, filename, cmd] = s:parse_tag_line(
     \    cont.encoding != '' ? iconv(a:line, cont.encoding, &encoding)
     \                        : a:line)
 
@@ -336,7 +387,11 @@ function! s:next(tagdata, line, name)
         let linenr = cmd - 0
     else
         " remove / or ? at the head and the end
-        let pattern = matchstr(cmd, '^\([/?]\)\?\zs.*\ze\1$')
+        if cmd =~ '^[/?]'
+            let pattern = cmd[1:-2]
+        else
+            let pattern = cmd
+        endif
         " unescape /
         let pattern = substitute(pattern, '\\\/', '/', 'g')
         " use 'nomagic'
@@ -344,19 +399,28 @@ function! s:next(tagdata, line, name)
     endif
 
     let path = filename =~ '^\%(/\|\a\+:[/\\]\)' ?
-                \ filename : cont.basedir . '/' . filename
+                \ filename :
+                \ unite#util#substitute_path_separator(
+                \   fnamemodify(cont.basedir . '/' . filename, ':p:.'))
+
+    let abbr = s:truncate(name, g:unite_source_tag_max_name_length, 15, '..')
+    if g:unite_source_tag_show_fname
+        let abbr .= '  '.
+                    \ s:truncate('@'.fnamemodify(path,
+                    \   (a:name ==# 'tag/include' ? ':t' : ':.')),
+                    \   g:unite_source_tag_max_fname_length, 10, '..')
+    endif
+    if g:unite_source_tag_show_location
+        if linenr
+            let abbr .= '  line:' . linenr
+        else
+            let abbr .= '  ' . matchstr(cmd, '^[?/]\^\?\zs.\{-1,}\ze\$\?[?/]$')
+        endif
+    endif
 
     let tag = {
     \   'word':    name,
-    \   'abbr':    printf('%s  %s  %s',
-    \                  unite#util#truncate_smart(name,
-    \                      g:unite_source_tag_max_name_length, 15, '..'),
-    \                  unite#util#truncate_smart('@'.fnamemodify(path,
-    \                     (a:name ==# 'tag/include' ? ':t' : ':.')),
-    \                     g:unite_source_tag_max_fname_length, 10, '..'),
-    \                  linenr ? 'line:' . linenr : 'pat:' .
-    \                      matchstr(cmd, '^[?/]\^\?\zs.\{-1,}\ze\$\?[?/]$')
-    \                  ),
+    \   'abbr':    abbr,
     \   'kind':    'jump_list',
     \   'action__path':    path,
     \   'action__tagname': name
@@ -401,35 +465,36 @@ endfunction
 " 4. parsing extension_fields
 function! s:parse_tag_line(line)
     " 0.
-    if stridx(a:line, '!') == 0
+    if a:line[0] == '!'
         let enc = matchstr(a:line, '\C^!_TAG_FILE_ENCODING\t\zs\S\+\ze\t')
-        return ['', enc, '', []]
+        return ['', enc, '']
     endif
 
     " 1.
     let tokens = split(a:line, ';"')
-    if len(tokens) > 1
+    let tokens_len = len(tokens)
+    if tokens_len > 2
         let former = join(tokens[0:-2], ';"')
-        let extensions = split(tokens[-1], "\t")
+    elseif tokens_len == 2
+        let former = tokens[0]
     else
         let former = a:line
-        let extensions  = []
     endif
 
     " 2.
     let fields = split(former, "\t")
     if len(fields) < 3
-        return ['', '', '', []]
+        return ['', '', '']
     endif
 
     " 3.
-    let name = remove(fields, 0)
-    let file = remove(fields, 0)
-    let cmd = join(fields, "\t")
+    let name = fields[0]
+    let file = fields[1]
+    let cmd = len(fields) == 3 ? fields[2] : join(fields[2:-1], "\t")
 
     " 4. TODO
 
-    return [name, file, cmd, extensions]
+    return [name, file, cmd]
 endfunction
 " " test case
 " let s:test = 'Hoge	test.php	/^function Hoge()\/*$\/;"	f	test:*\/ {$/;"	f'
@@ -437,6 +502,22 @@ endfunction
 " let s:test = 'Hoge	Hoge/Fuga.php	/^class Hoge$/;"	c	line:15'
 " echomsg string(s:parse_tag_line(s:test))
 
+" cache to file
+function s:filename_to_cachename(filename)
+    return s:cache_dir . '/' . substitute(a:filename, '[\/]', '+=', 'g')
+endfunction
+
+function s:write_cache(filename)
+    call s:C.writefile(s:cache_dir, a:filename,
+                \ [string(s:tagfile_cache[a:filename])])
+endfunction
+
+function s:read_cache(filename)
+    if !s:C.check_old_cache(s:cache_dir, a:filename)
+        let data = s:C.readfile(s:cache_dir, a:filename)
+        sandbox let s:tagfile_cache[a:filename] = eval(data[0])
+    endif
+endfunction
 
 " action
 let s:action_table = {}
