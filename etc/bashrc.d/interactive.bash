@@ -870,8 +870,8 @@ HAVE scutil && {
 }
 
 # Weechat
-HAVE weechat-curses && {
-    ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat-curses)'
+HAVE weechat && {
+    ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat)'
 }
 
 # Local api server @ `$cdapi`

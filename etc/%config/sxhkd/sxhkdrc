@@ -221,6 +221,6 @@ super + control + shift + m
 
 super + control + i
 	T='❡ irc ❡'; \
-	wmctrl -a "$T" || urxvt-client -cd ~/.weechat -title "$T" -e weechat-curses
+	wmctrl -a "$T" || urxvt-client -cd ~/.weechat -title "$T" -e weechat
 
 # vim:noet:
