@@ -106,6 +106,19 @@ task :env do
         :base => "#{@src}/git-remote-hg",
         :branch => %w[master guns],
         :files => { 'git-remote-hg' => 'bin/git-remote-hg' }
+      },
+
+      {
+        :base => "#{@src}/READONLY/weechat-scripts",
+        :branch => %w[master],
+        :files => {
+          'perl/buffers.pl'           => 'etc/%weechat/%perl/%autoload/buffers.pl',
+          'perl/launcher.pl'          => 'etc/%weechat/%perl/%autoload/launcher.pl',
+          'python/country.py'         => 'etc/%weechat/%python/%autoload/country.py',
+          'python/go.py'              => 'etc/%weechat/%python/%autoload/go.py',
+          'python/shell.py'           => 'etc/%weechat/%python/%autoload/shell.py',
+          'python/toggle_nicklist.py' => 'etc/%weechat/%python/%autoload/toggle_nicklist.py'
+        }
       }
     ],
 
@@ -422,24 +435,6 @@ task :service do
     File.open dst, 'w' do |f|
       f.puts ERB.new(File.read service).result(binding)
     end
-  end
-end
-
-desc 'Update WeeChat scripts'
-task :weechat do
-  %w[
-    http://www.weechat.org/files/scripts/buffers.pl
-    http://www.weechat.org/files/scripts/launcher.pl
-    http://www.weechat.org/files/scripts/country.py
-    http://www.weechat.org/files/scripts/go.py
-    http://www.weechat.org/files/scripts/shell.py
-    http://www.weechat.org/files/scripts/toggle_nicklist.py
-  ].each do |url|
-    file = 'etc/%%weechat/%%%s/%%autoload/%s' % [
-      { '.pl' => 'perl', '.py' => 'python' }[File.extname url],
-      File.basename(url)
-    ]
-    sh 'curl', '-#L', '-o' + file, url
   end
 end
 
