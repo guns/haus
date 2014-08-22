@@ -163,11 +163,16 @@ clip() {
 	echo "Copied $2 to clipboard. Will clear in $CLIP_TIME seconds."
 }
 tmpdir() {
+	[[ -n $SECURE_TMPDIR ]] && return
 	local warn=1
 	[[ $1 == "nowarn" ]] && warn=0
 	local template="$PROGRAM.XXXXXXXXXXXXX"
 	if [[ -d /dev/shm && -w /dev/shm && -x /dev/shm ]]; then
-		SECURE_TMPDIR="$(TMPDIR=/dev/shm mktemp -d -t "$template")"
+		SECURE_TMPDIR="$(mktemp -d "/dev/shm/$template")"
+		remove_tmpfile() {
+			rm -rf "$SECURE_TMPDIR"
+		}
+		trap remove_tmpfile INT TERM EXIT
 	else
 		[[ $warn -eq 1 ]] && yesno "$(cat <<-_EOF
 		Your system does not have /dev/shm, which means that it may
@@ -177,7 +182,12 @@ tmpdir() {
 		Are you sure you would like to continue?
 		_EOF
 		)"
-		SECURE_TMPDIR="$(mktemp -d -t "$template")"
+		SECURE_TMPDIR="$(mktemp -d "${TMPDIR:-/tmp}/$template")"
+		shred_tmpfile() {
+			find "$SECURE_TMPDIR" -type f -exec $SHRED {} +
+			rm -rf "$SECURE_TMPDIR"
+		}
+		trap shred_tmpfile INT TERM EXIT
 	fi
 
 }
@@ -200,7 +210,7 @@ cmd_version() {
 	============================================
 	= pass: the standard unix password manager =
 	=                                          =
-	=                  v1.6.2                  =
+	=                  v1.6.3                  =
 	=                                          =
 	=             Jason A. Donenfeld           =
 	=               Jason@zx2c4.com            =
@@ -235,7 +245,7 @@ cmd_usage() {
 	        Insert a new password or edit an existing password using ${EDITOR:-vi}.
 	    $PROGRAM generate [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name pass-length
 	        Generate a new password of pass-length with optionally no symbols.
-	        Optionally put it on the clipboard and clear board after 45 seconds.
+	        Optionally put it on the clipboard and clear board after $CLIP_TIME seconds.
 	        Prompt before overwriting existing password unless forced.
 	        Optionally replace only the first line of an existing file with a new password.
 	    $PROGRAM rm [--recursive,-r] [--force,-f] pass-name
@@ -350,7 +360,7 @@ cmd_grep() {
 		passfile="${passfile##*/}"
 		printf "\e[94m%s/\e[1m%s\e[0m:\n" "$passfile_dir" "$passfile"
 		echo "$grepresults"
-	done < <(find "$PREFIX" -iname '*.gpg' -print0)
+	done < <(find -L "$PREFIX" -iname '*.gpg' -print0)
 }
 
 cmd_insert() {
@@ -409,15 +419,9 @@ cmd_edit() {
 	mkdir -p -v "$PREFIX/$(dirname "$path")"
 	set_gpg_recipients "$(dirname "$path")"
 	local passfile="$PREFIX/$path.gpg"
-	local template="$PROGRAM.XXXXXXXXXXXXX"
 
 	tmpdir #Defines $SECURE_TMPDIR
-	local tmp_file="$(TMPDIR="$SECURE_TMPDIR" mktemp -t "$template")"
-	eval "shred_tmpfile() {
-		$SHRED '$tmp_file'
-		rm -rf '$SECURE_TMPDIR' '$tmp_file'
-	}"
-	trap shred_tmpfile INT TERM EXIT
+	local tmp_file="$(mktemp -u "$SECURE_TMPDIR/XXXXX")-${path//\//-}.txt"
 
 
 	local action="Add"
@@ -425,10 +429,10 @@ cmd_edit() {
 		$GPG -d -o "$tmp_file" "${GPG_OPTS[@]}" "$passfile" || exit 1
 		action="Edit"
 	fi
-	"${EDITOR:-vi}" "$tmp_file"
+	${EDITOR:-vi} "$tmp_file"
+	[[ -f $tmp_file ]] || die "New password not saved."
 	while ! $GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" "$tmp_file"; do
-		echo "GPG encryption failed. Retrying."
-		sleep 1
+		yesno "GPG encryption failed. Would you like to try again?"
 	done
 	git_add_file "$passfile" "$action password for $path using ${EDITOR:-vi}."
 }
@@ -567,7 +571,6 @@ cmd_git() {
 		git config --local diff.gpg.textconv "$GPG -d ${GPG_OPTS[*]}"
 	elif [[ -d $GIT_DIR ]]; then
 		tmpdir nowarn #Defines $SECURE_TMPDIR. We don't warn, because at most, this only copies encrypted files.
-		trap "rm -rf '$SECURE_TMPDIR'" INT TERM EXIT
 		export TMPDIR="$SECURE_TMPDIR"
 		git "$@"
 	else
