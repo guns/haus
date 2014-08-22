@@ -6,6 +6,9 @@ _ant()
     _init_completion || return
 
     case $prev in
+        -h|-help|--h|--help|-projecthelp|-p|-version|-diagnostics)
+            return 0
+            ;;
         -buildfile|-file|-f)
             _filedir 'xml'
             return 0
@@ -45,6 +48,15 @@ _ant()
                 break
             fi
         done
+        if [[ $i -eq $cword ]]; then
+            for i in $ANT_ARGS; do
+                if [[ $prev == -@(?(build)file|f) ]]; then
+                    buildfile=$i
+                    break
+                fi
+                prev=$i
+            done
+        fi
         [[ ! -f $buildfile ]] && return 0
 
         # parse buildfile for targets

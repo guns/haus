@@ -2,8 +2,8 @@
 
 _slapt_src()
 {
-    local cur prev words cword
-    _init_completion -n : || return
+    local cur prev words cword split
+    _init_completion -s -n : || return
 
     case "$prev" in
         --config|-c)
@@ -15,6 +15,8 @@ _slapt_src()
             return
             ;;
     esac
+
+    $split && return
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_help "$1" --help )' -- "$cur" ) )
@@ -39,6 +41,11 @@ _slapt_src()
     for (( i=${#words[@]}-1; i>0; i-- )); do
         if [[ ${words[i]} == -@(c|-config) ]]; then
             config="${words[i+1]}"
+            __expand_tilde_by_ref config
+            break
+        fi
+        if [[ ${words[i]} == --config=?* ]]; then
+            config="${words[i]#*=}"
             break
         fi
     done
@@ -47,11 +54,12 @@ _slapt_src()
     if [[ "$cur" == *:* ]]; then
         local name=${cur%:*}
         local version=${cur##*:}
-        COMPREPLY=( $( slapt-src --config "$config" --search "^$name" 2> \
-            /dev/null | sed -ne "/^$cur/{s/^$name:\([^ ]*\) .*$/\1/;p}" ) )
+        COMPREPLY=( $( LC_ALL=C "$1" --config "$config" --search "^$name" 2> \
+            /dev/null | LC_ALL=C sed -ne \
+            "/^$cur/{s/^$name:\([^ ]*\) .*$/\1/;p}" ) )
     else
-        COMPREPLY=( $( slapt-src --config "$config" --search "^$cur" 2> \
-            /dev/null | sed -ne "/^$cur/{s/ .*$//;p}" ) )
+        COMPREPLY=( $( LC_ALL=C "$1" --config "$config" --search "^$cur" 2> \
+            /dev/null | LC_ALL=C sed -ne "/^$cur/{s/ .*$//;p}" ) )
     fi
 } && complete -F _slapt_src slapt-src
 

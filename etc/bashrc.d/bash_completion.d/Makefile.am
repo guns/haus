@@ -5,6 +5,7 @@ bashcomp_DATA = 2to3 \
 		abook \
 		aclocal \
 		acpi \
+		adb \
 		add_members \
 		alias \
 		ant \
@@ -513,6 +514,7 @@ CLEANFILES = \
 	mogrify \
 	montage \
 	mplayer2 \
+	mpv \
 	msgsnarf \
 	muttng \
 	ncal \
@@ -785,7 +787,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) mcrypt $(targetdir)/$$file ; \
 	done
-	for file in mplayer2 mencoder gmplayer kplayer ; do \
+	for file in mplayer2 mencoder gmplayer kplayer mpv ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) mplayer $(targetdir)/$$file ; \
 	done
