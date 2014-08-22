@@ -36,7 +36,7 @@
 (gtk_accel_path "<Actions>/GeneralActions/NextUnreadItem" "e")
 ; (gtk_accel_path "<Actions>/ItemActions/LaunchItemInTab" "")
 ; (gtk_accel_path "<Actions>/AddActions/NewFolder" "")
-(gtk_accel_path "<Actions>/ItemActions/ToggleItemReadStatus" "t")
+(gtk_accel_path "<Actions>/ItemActions/ToggleItemReadStatus" "m")
 ; (gtk_accel_path "<Actions>/AddActions/NewNewsBin" "")
 (gtk_accel_path "<Actions>/FeedActions/MarkFeedAsRead" "<Shift>m")
 ; (gtk_accel_path "<Actions>/GeneralActions/ToggleOfflineMode" "")
