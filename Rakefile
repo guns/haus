@@ -154,6 +154,14 @@ task :env do
       },
 
       {
+        :base   => "#{@src}/systemd",
+        :branch => %w[master guns],
+        :files  => {
+          'shell-completion/bash/systemctl.in' => 'etc/bashrc.d/completions/systemctl'
+        }
+      },
+
+      {
         :base => "#{@src}/READONLY/ipset-bash-completion",
         :branch => %w[master],
         :files => {
