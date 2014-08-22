@@ -154,19 +154,6 @@ task :env do
       },
 
       {
-        :base   => "#{@src}/systemd",
-        :branch => %w[master guns],
-        :files  => lambda { |proj|
-          Hash[proj.git.ls_files('shell-completion/bash').map { |fs|
-            f = fs.first
-            if f !~ /Makefile\z/
-              [f, "etc/bashrc.d/completions/#{File.basename f}"]
-            end
-          }.compact]
-        }
-      },
-
-      {
         :base => "#{@src}/READONLY/ipset-bash-completion",
         :branch => %w[master],
         :files => {
