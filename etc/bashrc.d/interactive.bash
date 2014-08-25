@@ -1817,6 +1817,8 @@ if __OS_X__; then
     ALIAS screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
 fi
 
-ALIAS kf='kupfer'
+ALIAS kf='kupfer' && {
+    alias kfstart='(cddownloads && bgrun kupfer --no-splash)'
+}
 
 : # Return true
