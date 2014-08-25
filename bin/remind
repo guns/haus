@@ -92,7 +92,7 @@ class Remind
     def activate
       # Report time remaining on SIGUSR1
       trap :USR1 do
-        s = remaining.reject(&:zero?).last == 1 ? 's' : ''
+        s = remaining == [0, 0, 1] ? 's' : ''
         Util::Notification.new(
           :message => '%s remain%s' % [remaining(:verbose), s],
           :title   => (notification.message if notification.is_a? Util::Notification)
