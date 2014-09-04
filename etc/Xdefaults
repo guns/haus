@@ -46,7 +46,7 @@ URxvt.url-select.launcher: open
 URxvt.url-select.button:   3
 
 ! keysym-list: Super + Character <ESC-BEL-char>
-URxvt.keysym.Mod4-0x20:      list\033\007 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+URxvt.keysym.Mod4-0x20:      list	\033\007	 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~	
 URxvt.keysym.Mod4-Return:    \033\007\015
 URxvt.keysym.Mod4-Backspace: \033\007\177
 
