@@ -91,6 +91,12 @@ super + control + {1-9}
 super + control + f
 	bspc window --toggle floating
 
+super + control + a
+	bspc window --toggle sticky
+
+super + control + x
+	bspc window --toggle pseudo_tiled
+
 F11
 	bspc window --toggle fullscreen
 
