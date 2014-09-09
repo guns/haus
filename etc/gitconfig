@@ -148,6 +148,9 @@
     giw  = grep -Piw
     gifw = grep -Fiw
 
+    # SVN
+    sf = svn fetch
+
     # Misc
     bs   = bisect
     ho   = hash-object

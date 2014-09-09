@@ -1775,9 +1775,10 @@ ALIAS rl='rlwrap'
 
 if HAVE systemctl; then
     ALIAS sc='systemctl' \
-          jc='journalctl --full' \
-          jcb='journalctl --full -b' \
-          jcf='journalctl --full -f' && {
+          jc='journalctl' \
+          jcb='journalctl -b' \
+          jce='journalctl -e' \
+          jcf='journalctl -f' && {
         alias scfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
