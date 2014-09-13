@@ -15,12 +15,13 @@ class DLNode
   DEFAULTS = {
     :dir => '.',
     :format => nil,
+    :index => 1,
     :user_agent => 'Mozilla/5.0'
   }
 
   def initialize opts = {}
-    @dir, @format, @user_agent =
-      DEFAULTS.merge(opts).values_at :dir, :format, :user_agent
+    @dir, @format, @index, @user_agent =
+      DEFAULTS.merge(opts).values_at :dir, :format, :index, :user_agent
   end
 
   def parser
@@ -39,6 +40,10 @@ class DLNode
 
       opt.on '-f', '--format BASE-%02d', 'Rename resources with given format spec' do |arg|
         @format = arg
+      end
+
+      opt.on '-i', '--index N', Integer, 'Start index from N [DEFAULT: %s]' % @index do |arg|
+        @index = arg
       end
 
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
@@ -121,7 +126,7 @@ class DLNode
       warn "\nDownloading %d resource(s)" % urls.size
       FileUtils.mkdir_p @dir
       urls.each_with_index do |url, i|
-        if not save! url, i + 1, @dir, @format
+        if not save! url, i + @index, @dir, @format
           failures += 1
         end
       end
