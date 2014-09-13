@@ -94,7 +94,7 @@ super + control + f
 super + control + a
 	bspc window --toggle sticky
 
-super + control + x
+super + control + d
 	bspc window --toggle pseudo_tiled
 
 F11
