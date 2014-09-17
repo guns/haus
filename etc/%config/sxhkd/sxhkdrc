@@ -7,7 +7,7 @@
 #
 
 super + alt + control + r
-	notify -a 'Reloading bspwmrc and sxhkdrc'; \
+	notify --audio 'Reloading bspwmrc and sxhkdrc'; \
 	pkill -USR1 -x sxhkd; \
 	~/.config/bspwm/bspwmrc
 
@@ -68,8 +68,7 @@ super + Tab
 	bspc window --focus last.local
 
 alt + Tab
-	if pkill -0 -x skippy-xd; then \
-		pkill -x skippy-xd; \
+	if pkill -x skippy-xd; then \
 		bspc window --focus focused; \
 	else \
 		skippy-xd; \
@@ -161,6 +160,14 @@ super + control + shift + {space,Left,Right}
 
 control + {XF86Eject,Pause}
 	pkill -HUP -x gpg-agent
+
+alt + {XF86Eject,Pause}
+	if pkill -x xautolock; then \
+		notify --audio 'DISABLED xautolock'; \
+	else \
+		xautolock-wrapper; \
+		notify --audio 'Enabled xautolock'; \
+	fi
 
 {super + XF86Eject,super + Pause,XF86Sleep}
 	sudo -n /usr/bin/powerctl suspend
