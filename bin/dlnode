@@ -38,8 +38,12 @@ class DLNode
         @dir = File.expand_path arg
       end
 
-      opt.on '-f', '--format BASE-%02d', 'Rename resources with given format spec' do |arg|
-        @format = arg
+      opt.on '-f', '--format [DIR/]BASE-%02d', 'Rename resources with given format spec' do |arg|
+        if arg =~ %r{.+/.+}
+          @dir, _, @format = arg.rpartition '/'
+        else
+          @format = arg
+        end
       end
 
       opt.on '-i', '--index N', Integer, 'Start index from N [DEFAULT: %s]' % @index do |arg|
