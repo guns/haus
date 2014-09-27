@@ -17,12 +17,13 @@ class Dlnode
     :format => nil,
     :index => 1,
     :start => 1,
-    :user_agent => 'Mozilla/5.0'
+    :user_agent => 'Mozilla/5.0',
+    :curl_opts => []
   }
 
   def initialize opts = {}
-    @dir, @format, @index, @start, @user_agent =
-      DEFAULTS.merge(opts).values_at :dir, :format, :index, :start, :user_agent
+    @dir, @format, @index, @start, @user_agent, @curl_opts =
+      DEFAULTS.merge(opts).values_at :dir, :format, :index, :start, :user_agent, :curl_opts
   end
 
   def parser
@@ -55,11 +56,15 @@ class Dlnode
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
         @user_agent = arg
       end
+
+      opt.on '-O', '--curl-opts OPTS', 'Extra options to pass directly to cURL' do |arg|
+        @curl_opts = arg.shellsplit
+      end
     end
   end
 
   def get url
-    buf = IO.popen %W[curl -sfLA #{@user_agent} #{url}] do |io|
+    buf = IO.popen ['curl', *@curl_opts, '-sfLA', @user_agent, url] do |io|
       io.read
     end
 
@@ -92,7 +97,9 @@ class Dlnode
     if File.exists? path
       warn 'File exists!'
     else
-      cmd = %W[curl -#fLA #{opts[:user_agent] || DEFAULTS[:user_agent]} -o #{path} #{url}]
+      cmd = ['curl', *opts[:curl_opts],
+             '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
+             '-o', path, url]
       system *cmd
       if not $?.exitstatus.zero?
         $stderr.print "\e[31mFAILED:\e[0m "
@@ -133,7 +140,10 @@ class Dlnode
       FileUtils.mkdir_p @dir
       Δ = @start - @index
       urls.drop(Δ).each_with_index do |url, i|
-        if not save! url, i + @index + Δ, @dir, :format => @format, :user_agent => @user_agent
+        if not save! url, i + @index + Δ, @dir,
+                     :format => @format,
+                     :user_agent => @user_agent,
+                     :curl_opts => @curl_opts
           failures += 1
         end
       end
