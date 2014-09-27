@@ -11,17 +11,18 @@ require 'uri'
 require 'shellwords'
 require 'nokogiri'
 
-class DLNode
+class Dlnode
   DEFAULTS = {
     :dir => '.',
     :format => nil,
     :index => 1,
+    :start => 1,
     :user_agent => 'Mozilla/5.0'
   }
 
   def initialize opts = {}
-    @dir, @format, @index, @user_agent =
-      DEFAULTS.merge(opts).values_at :dir, :format, :index, :user_agent
+    @dir, @format, @index, @start, @user_agent =
+      DEFAULTS.merge(opts).values_at :dir, :format, :index, :start, :user_agent
   end
 
   def parser
@@ -46,8 +47,9 @@ class DLNode
         end
       end
 
-      opt.on '-i', '--index N', Integer, 'Start index from N [DEFAULT: %s]' % @index do |arg|
-        @index = arg
+      opt.on '-i', '--index N[:START]', 'Begin index at N, and skip until START' % @index do |arg|
+        @index, @start = arg.split(':', 2).map &:to_i
+        @start = @index if @start.nil? or @start < @index
       end
 
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
@@ -81,16 +83,16 @@ class DLNode
     end
   end
 
-  def save! url, idx, dir, format = nil
+  def save! url, idx, dir, opts = {}
     f = url_basename url
-    path = File.join dir, (format ? format_filename(format, idx, f) : f)
+    path = File.join dir, (opts[:format] ? format_filename(opts[:format], idx, f) : f)
 
     warn "#{url} → #{path}"
 
     if File.exists? path
       warn 'File exists!'
     else
-      cmd = %W[curl -#fLA #{@user_agent} -o #{path} #{url}]
+      cmd = %W[curl -#fLA #{opts[:user_agent] || DEFAULTS[:user_agent]} -o #{path} #{url}]
       system *cmd
       if not $?.exitstatus.zero?
         $stderr.print "\e[31mFAILED:\e[0m "
@@ -129,8 +131,9 @@ class DLNode
     else
       warn "\nDownloading %d resource(s)" % urls.size
       FileUtils.mkdir_p @dir
-      urls.each_with_index do |url, i|
-        if not save! url, i + @index, @dir, @format
+      Δ = @start - @index
+      urls.drop(Δ).each_with_index do |url, i|
+        if not save! url, i + @index + Δ, @dir, :format => @format, :user_agent => @user_agent
           failures += 1
         end
       end
@@ -149,4 +152,4 @@ class DLNode
   end
 end
 
-$0 = File.basename(__FILE__) and DLNode.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Dlnode.new.run ARGV if $0 == __FILE__
