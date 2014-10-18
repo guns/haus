@@ -1602,7 +1602,7 @@ elif __LINUX__; then
 
         pacinstallfile() {
             local OPTIND OPTARG opt asdeps force
-            while getopts :f opt; do
+            while getopts :df opt; do
                 case $opt in
                 d) asdeps='--asdeps';;
                 f) force='--force';;
