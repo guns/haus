@@ -26,7 +26,7 @@ augroup GUNS
     autocmd QuickFixCmdPost *
         \ cwindow | topleft lwindow
     autocmd FileType qf
-        \ execute 'noremap <buffer> <C-l> :<C-u>call setqflist([]) \| call setloclist(0, []) \| quit<CR>'
+        \ execute 'noremap <buffer> x :<C-u>call setqflist([]) \| call setloclist(0, []) \| quit<CR>'
 
     " Vimscript {{{1
     autocmd FileType vim
