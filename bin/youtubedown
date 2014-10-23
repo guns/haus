@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Copyright © 2007-2013 Jamie Zawinski <jwz@jwz.org>
+# Copyright © 2007-2014 Jamie Zawinski <jwz@jwz.org>
 #
 # Permission to use, copy, modify, distribute, and sell this software and its
 # documentation for any purpose is hereby granted without fee, provided that
@@ -17,6 +17,7 @@
 #  --suffix          Append the video ID to each written file name.
 #  --size            Instead of downloading it all, print video dimensions.
 #		     This requires "mplayer" and/or "ffmpeg".
+#  --list            List the underlying URLs of a playlist.
 #
 # For playlists, it will download each video to its own file.
 #
@@ -44,14 +45,16 @@ require 5;
 use diagnostics;
 use strict;
 use Socket;
+use IPC::Open2;
+use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my $version = q{ $Revision: 1.305 $ }; $version =~ s/^[^0-9]+([0-9.]+).*$/$1/;
+my ($version) = ('$Revision: 1.420 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
-use POSIX qw(locale_h);
+use POSIX qw(locale_h strftime);
 setlocale(LC_ALL, "en_US");
 
 my $verbose = 1;
@@ -86,6 +89,8 @@ my $noerror = 0;
 
 sub error($) {
   my ($err) = @_;
+
+  utf8::decode ($err);  # Pack multi-byte UTF-8 back into wide chars.
 
   if (defined ($ENV{HTTP_HOST})) {
     $err =~ s/&/&amp;/gs;
@@ -135,18 +140,6 @@ sub errorI($) {
 }
 
 
-sub de_entify($) {
-  my ($text) = @_;
-  $text =~ s/&([a-zA-Z])(uml|acute|grave|tilde|cedil|circ|slash);/$1/g;
-  $text =~ s/&lt;/</g;
-  $text =~ s/&gt;/>/g;
-  $text =~ s/&amp;/&/g;
-  $text =~ s/&(quot|ldquo|rdquo);/"/g;
-  $text =~ s/&(rsquo|apos);/'/g;
-  return $text;
-}
-
-
 sub url_quote($) {
   my ($u) = @_;
   $u =~ s|([^-a-zA-Z0-9.\@/_\r\n])|sprintf("%%%02X", ord($1))|ge;
@@ -160,13 +153,21 @@ sub url_unquote($) {
   return $u;
 }
 
+# Converts &, <, >, " and any UTF8 characters to HTML entities.
+# Does not convert '.
+#
 sub html_quote($) {
-  my ($u) = @_;
-  $u =~ s/&/&amp;/g;
-  $u =~ s/</&lt;/g;
-  $u =~ s/>/&gt;/g;
-  $u =~ s/\"/&quot;/g;
-  return $u;
+  my ($s) = @_;
+  return HTML::Entities::encode_entities ($s,
+    # Exclude "=042 &=046 <=074 >=076
+    '^ \t\n\040\041\043-\045\047-\073\075\077-\176');
+}
+
+# Convert any HTML entities to Unicode characters.
+#
+sub html_unquote($) {
+  my ($s) = @_;
+  return HTML::Entities::decode_entities ($s);
 }
 
 
@@ -212,6 +213,9 @@ sub get_url_1($;$$$$$$) {
   $expect_bytes = -$expect_bytes if ($expect_bytes && $expect_bytes < 0);
 
   error ("can't do HEAD and write to a file") if ($head_p && $to_file);
+
+  # Why does this happen sometimes with intermediate URLs. Bleh.
+  $url =~ s/^https:/http:/si;
 
   error ("not an HTTP URL, try rtmpdump: $url") if ($url =~ m@^rtmp@i);
   error ("not an HTTP URL: $url") unless ($url =~ m@^(http|feed)://@i);
@@ -266,6 +270,11 @@ sub get_url_1($;$$$$$$) {
 
   $extra_headers = '' unless defined ($extra_headers);
   $extra_headers .= "\nReferer: $referer" if ($referer);
+
+  # If we're only reading the first N bytes, don't ask for more.
+  $extra_headers .= "Range: bytes=0-" . ($max_bytes-1) . "\r\n"
+    if ($max_bytes);
+
   if ($extra_headers) {
     $extra_headers =~ s/\r\n/\n/gs;
     $extra_headers =~ s/\r/\n/gs;
@@ -303,6 +312,8 @@ sub get_url_1($;$$$$$$) {
   my $out;
 
   if ($to_file) {
+    utf8::encode($to_file);   # Unpack wide chars into multi-byte UTF-8.
+
     # Must be 2-arg open for ">-" when $outfile is '-'.
     open ($out, ">$to_file") || error ("$to_file: $!");
     binmode ($out);
@@ -387,10 +398,11 @@ sub get_url($;$$$$$$$) {
 
   my $orig_url = $url;
   my $redirect_count = 0;
-  my $max_redirects  = 10;
+  my $max_redirects  = 20;
   my $error_count    = 0;
   my $max_errors     = ($retry_p ? 10 : 0);
-  my $error_delay    = 1;
+  my $error_delay    = 0;
+  my $total_delay    = 0;
 
   do {
     my ($http, $head, $body) = 
@@ -427,16 +439,26 @@ sub get_url($;$$$$$$$) {
       }
 
       if ($redirect_count++ > $max_redirects) {
-        error ("too many redirects ($max_redirects) from $orig_url");
+        error ("too many redirects ($max_redirects after $total_delay secs) ".
+               "from $orig_url");
+      } elsif ($redirect_count++ > $max_redirects / 2) {
+        $url = $orig_url;  # Back to zero.
+        $error_delay = ($error_delay + 1) * 1.7;
+        my $s = int ($error_delay);
+        print STDERR "$progname: looping redirects; retrying $url in $s...\n"
+          if ($verbose > 1);
+        sleep ($s);
+        $total_delay += $s;
       }
 
     } elsif ( $http =~ m@^HTTP/[0-9.]+ 404@ &&	# Fucking Vimeo...
               ++$error_count <= $max_errors) {
+      $error_delay = ($error_delay + 1) * 1.2;
       my $s = int ($error_delay);
       print STDERR "$progname: ignoring 404 and retrying $url in $s...\n"
         if ($verbose > 1);
       sleep ($s);
-      $error_delay = ($error_delay + 1) * 1.2;
+      $total_delay += $s;
 
     } else {
       return ($http, $head, $body, $url);
@@ -445,11 +467,11 @@ sub get_url($;$$$$$$$) {
 }
 
 
-sub check_http_status($$$) {
-  my ($url, $http, $err_p) = @_;
+sub check_http_status($$$$) {
+  my ($id, $url, $http, $err_p) = @_;
   return 1 if ($http =~ m@^HTTP/[0-9.]+ 20\d@si);
-  errorI ("$http: $url") if ($err_p > 1 && $verbose);
-  error  ("$http: $url") if ($err_p);
+  errorI ("$id: $http: $url") if ($err_p > 1 && $verbose);
+  error  ("$id: $http: $url") if ($err_p);
   return 0;
 }
 
@@ -464,7 +486,9 @@ sub video_file_size($) {
   # Don't let it run for more than N CPU-seconds.
   my $limit = "ulimit -t 10";
 
-  $file =~ s/"/\\"/gs;
+   my $size = (stat($file))[7];
+
+  $file =~ s/([\"\`\$])/\\$1/gs;
   my $cmd = "mplayer -identify -frames 0 -vc null -vo null -ao null \"$file\"";
 
   $cmd = "$limit; $cmd";
@@ -500,12 +524,155 @@ sub video_file_size($) {
     }
   }
 
-  my $size = (stat($file))[7];
   return ($w, $h, $size);
 }
 
 
-# Downloads the first 200 KB of the URL, then runs mplayer to find out
+sub which($) {
+  my ($cmd) = @_;
+ foreach my $dir (split (/:/, $ENV{PATH})) {
+    my $cmd2 = "$dir/$cmd";
+    return $cmd2 if (-x "$cmd2");
+  }
+  return undef;
+}
+
+# When MacOS web browsers download a file, they write metadata into the
+# file's extended attributes saying where and when it was downloaded,
+# which can be seen in "Get Info" in the Finder.  We do that too, to
+# make it easier to figure out the original URL that a video file came
+# from.
+#
+# To extract it:
+#
+#    xattr -px com.apple.metadata:kMDItemWhereFroms FILE |
+#      xxd -r -p | plutil -convert xml1 - -o -
+#
+# Unfortunately, in CGI-mode, the file is actually being downloaded by
+# the browser itself, so the metadata URL that gets written is the
+# youtubedown.cgi URL.  The original URL info is still buried in there,
+# but it's messier.
+#
+sub write_file_metadata_url($$$) {
+  my ($file, $id, $url) = @_;
+
+  my $now = time();
+
+  my $xattr = which ("xattr");
+  my $plutil = which ("plutil");
+  my $mp4tags = which ("mp4tags");   # port install mp4v2
+  if (! $xattr) {
+    print STDERR "$progname: $file: no metadata: xattr not found on \$PATH\n"
+      if ($verbose > 1);
+    return;
+  }
+
+  my $date = strftime ('%Y-%m-%dT%H:%M:%SZ', gmtime($now));
+
+  my $plhead = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" .
+                "<!DOCTYPE plist PUBLIC" .
+                " \"-//Apple//DTD PLIST 1.0//EN\"" .
+                " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" .
+                "<plist version=\"1.0\">\n");
+  my $date_plist = ($plhead .
+                    "<array>\n" .
+                    "\t<date>$date</date>\n" .
+                    "</array>\n" .
+                    "</plist>");
+  my $url_plist = ($plhead .
+                   "<array>\n" .
+                    "\t<string>" . html_quote($url) . "</string>\n" .
+                    "</array>\n" .
+                    "</plist>");
+
+  # Convert the plists to binary form if possible. Probably not strictly
+  # necessary.
+  #
+  if ($plutil) {
+    foreach ($date_plist, $url_plist) {
+      my ($in, $out);
+      my $pid = open2 ($out, $in, 
+                       ($plutil,
+                        '-convert', 'binary1',
+                        '-', '-o', '-'));
+      print $in $_;
+      close ($in);
+      waitpid ($pid, 0);
+      local $/ = undef;  # read entire file
+      $_ = <$out>;
+    }
+  }
+
+  # I suppose setting the quarantine flag is also the proper thing to do.
+  #
+  my $quarantine = join (';', ('0002',   # downloaded but never opened
+                               sprintf("%08x", $now),
+                               $progname,
+                               "org.jwz.$progname"));
+
+  # Convert the data to hex, to shield nulls from xattr.
+  #
+  foreach ($date_plist, $url_plist, $quarantine) {
+    s/(.)/{ sprintf("%02X ", ord($1)); }/gsex;
+  }
+
+  # Now run xattr for each attribute to dump it into the file.
+  #
+  error ("$file does not exist") unless (-f $file);
+  foreach ([$url_plist,  'com.apple.metadata:kMDItemWhereFroms'],
+           [$date_plist, 'com.apple.metadata:kMDItemDownloadedDate'],
+           [$quarantine, 'com.apple.quarantine']) {
+    my ($val, $key) = @$_;
+    my @cmd = ($xattr, "-w", "-x", $key, $val, $file);
+    print STDERR "\n$progname: exec: '" . join("' '", @cmd) . "'\n"
+      if ($verbose > 3);
+    system (@cmd);
+    my $exit_value  = $? >> 8;
+    my $signal_num  = $? & 127;
+    my $dumped_core = $? & 128;
+    error ("$cmd[0]: core dumped!") if ($dumped_core);
+    error ("$cmd[0]: signal $signal_num!") if ($signal_num);
+    error ("$cmd[0]: exited with $exit_value!") if ($exit_value);
+  }
+
+  # If we can, also store the URL inside the file's metadata tags.
+  # This shows up in the "Video / Description" field in iTunes
+  # rather than in "Info / Comments".
+  #
+  if ($mp4tags && $file =~ m/\.mp4$/si) {
+    my @cmd = ($mp4tags, "-m", $url, $file);
+    print STDERR "\n$progname: exec: " . join(" ", @cmd) . "\n"
+      if ($verbose > 3);
+
+    open (my $oe, '>&', \*STDERR);   # close stderr, don't care about it.
+    open (my $oo, '>&', \*STDOUT);
+    open (STDOUT, '>', '/dev/null') unless $verbose;
+    open (STDERR, '>', '/dev/null') unless $verbose;
+
+    system (@cmd);
+
+    open (STDOUT, '>&', $oo);
+    open (STDERR, '>&', $oe);
+
+    if ($verbose) {
+      my $exit_value  = $? >> 8;
+      my $signal_num  = $? & 127;
+      my $dumped_core = $? & 128;
+      print STDERR "$progname: $cmd[0]: core dumped!\n"
+        if ($dumped_core);
+      print STDERR "$progname: $cmd[0]: signal $signal_num!\n"
+        if ($signal_num);
+    print STDERR "$progname: $cmd[0]: exited with $exit_value!\n"
+      if ($exit_value);
+    }
+  }
+
+  print STDERR "$progname: $id: added metadata\n"
+    if ($verbose > 1);
+}
+
+
+# Downloads the first 380 KB of the URL, then runs mplayer to find out
 # the dimensions of the video.
 #
 sub video_url_size($$$) {
@@ -519,13 +686,16 @@ sub video_url_size($$$) {
   my $bytes = 380 * 1024;	   # Need a lot of data to get size from HD
 
   my ($http, $head, $body) = get_url ($url, undef, undef, 0, $file, $bytes, 0);
-  check_http_status ($url, $http, 2);  # internal error if still 403
+  check_http_status ($id, $url, $http, 2);  # internal error if still 403
 
-  my ($ct) = ($head =~ m/^content-type:\s*([^\s;&]+)/mi);
+  my ($ct)   = ($head =~ m@^Content-Type:   \s* ( [^\s;]+ ) @mix);
+  my ($size) = ($head =~ m@^Content-Range:  \s* bytes \s+ [-\d]+ / (\d+) @mix);
+     ($size) = ($head =~ m@^Content-Length: \s* (\d+) @mi)
+       unless $size;
+
   errorI ("$id: expected video, got \"$ct\" in $url")
     if ($ct =~ m/text/i);
 
-  my ($size) = ($head =~ m/^content-length:\s*(\d+)/mi);
   $size = -1 unless defined($size); # WTF?
 
   my ($w, $h) = video_file_size ($file);
@@ -561,114 +731,189 @@ sub video_url_size($$$) {
 # - wN = swap 0th and Nth character.
 #
 my %ciphers = (
-  'vflNzKG7n' => 's3 r s2 r s1 r w67',   	    # 30 Jan 2013, untested
-  'vfllMCQWM' => 's2 w46 r w27 s2 w43 s2 r',	    # 15 Feb 2013, untested
-  'vflJv8FA8' => 's1 w51 w52 r',		    # 12 Mar 2013, untested
-  'vflR_cX32' => 's2 w64 s3',			    # 11 Apr 2013, untested
-  'vflveGye9' => 'w21 w3 s1 r w44 w36 r w41 s1',    # 02 May 2013, untested
-  'vflj7Fxxt' => 'r s3 w3 r w17 r w41 r s2',	    # 14 May 2013, untested
-  'vfltM3odl' => 'w60 s1 w49 r s1 w7 r s2 r',	    # 23 May 2013
-  'vflDG7-a-' => 'w52 r s3 w21 r s3 r',  	    # 06 Jun 2013
-  'vfl39KBj1' => 'w52 r s3 w21 r s3 r',  	    # 12 Jun 2013
-  'vflmOfVEX' => 'w52 r s3 w21 r s3 r',  	    # 21 Jun 2013
-  'vflJwJuHJ' => 'r s3 w19 r s2',		    # 25 Jun 2013
-  'vfl_ymO4Z' => 'r s3 w19 r s2',		    # 26 Jun 2013
-  'vfl26ng3K' => 'r s2 r',			    # 08 Jul 2013
-  'vflcaqGO8' => 'w24 w53 s2 w31 w4',		    # 11 Jul 2013
-  'vflQw-fB4' => 's2 r s3 w9 s3 w43 s3 r w23',      # 16 Jul 2013
-  'vflSAFCP9' => 'r s2 w17 w61 r s1 w7 s1',         # 18 Jul 2013
-  'vflART1Nf' => 's3 r w63 s2 r s1',                # 22 Jul 2013
-  'vflLC8JvQ' => 'w34 w29 w9 r w39 w24',            # 25 Jul 2013
-  'vflm_D8eE' => 's2 r w39 w55 w49 s3 w56 w2',      # 30 Jul 2013
-  'vflTWC9KW' => 'r s2 w65 r',                      # 31 Jul 2013
-  'vflRFcHMl' => 's3 w24 r',                        # 04 Aug 2013
-  'vflM2EmfJ' => 'w10 r s1 w45 s2 r s3 w50 r',      # 06 Aug 2013
-  'vflz8giW0' => 's2 w18 s3',                       # 07 Aug 2013
-  'vfl_wGgYV' => 'w60 s1 r s1 w9 s3 r s3 r',        # 08 Aug 2013
-  'vfl1HXdPb' => 'w52 r w18 r s1 w44 w51 r s1',     # 12 Aug 2013
-  'vflkn6DAl' => 'w39 s2 w57 s2 w23 w35 s2',        # 15 Aug 2013
-  'vfl2LOvBh' => 'w34 w19 r s1 r s3 w24 r',         # 16 Aug 2013
-  'vfl-bxy_m' => 'w48 s3 w37 s2',                   # 20 Aug 2013
-  'vflZK4ZYR' => 'w19 w68 s1',                      # 21 Aug 2013
-  'vflh9ybst' => 'w48 s3 w37 s2',                   # 21 Aug 2013
-  'vflapUV9V' => 's2 w53 r w59 r s2 w41 s3',        # 27 Aug 2013
-  'vflg0g8PQ' => 'w36 s3 r s2',                     # 28 Aug 2013
-  'vflHOr_nV' => 'w58 r w50 s1 r s1 r w11 s3',      # 30 Aug 2013
-  'vfluy6kdb' => 'r w12 w32 r w34 s3 w35 w42 s2',   # 05 Sep 2013
-  'vflkuzxcs' => 'w22 w43 s3 r s1 w43',             # 10 Sep 2013
-  'vflGNjMhJ' => 'w43 w2 w54 r w8 s1',              # 12 Sep 2013
-  'vfldJ8xgI' => 'w11 r w29 s1 r s3',               # 17 Sep 2013
-  'vfl79wBKW' => 's3 r s1 r s3 r s3 w59 s2',        # 19 Sep 2013
-  'vflg3FZfr' => 'r s3 w66 w10 w43 s2',             # 24 Sep 2013
-  'vflUKrNpT' => 'r s2 r w63 r',                    # 25 Sep 2013
-  'vfldWnjUz' => 'r s1 w68',                        # 30 Sep 2013
-  'vflP7iCEe' => 'w7 w37 r s1',                     # 03 Oct 2013
-  'vflzVne63' => 'w59 s2 r',                        # 07 Oct 2013
-  'vflO-N-9M' => 'w9 s1 w67 r s3',                  # 09 Oct 2013
-  'vflZ4JlpT' => 's3 r s1 r w28 s1',                # 11 Oct 2013
-  'vflDgXSDS' => 's3 r s1 r w28 s1',                # 15 Oct 2013
-  'vflW444Sr' => 'r w9 r s1 w51 w27 r s1 r',        # 17 Oct 2013
-  'vflK7RoTQ' => 'w44 r w36 r w45',                 # 21 Oct 2013
-  'vflKOCFq2' => 's1 r w41 r w41 s1 w15',           # 23 Oct 2013
-  'vflcLL31E' => 's1 r w41 r w41 s1 w15',           # 28 Oct 2013
-  'vflz9bT3N' => 's1 r w41 r w41 s1 w15',           # 31 Oct 2013
-  'vfliZsE79' => 'r s3 w49 s3 r w58 s2 r s2',       # 05 Nov 2013
-  'vfljOFtAt' => 'r s3 r s1 r w69 r',               # 07 Nov 2013
-  'vflqSl9GX' => 'w32 r s2 w65 w26 w45 w24 w40 s2', # 14 Nov 2013
-  'vflFrKymJ' => 'w32 r s2 w65 w26 w45 w24 w40 s2', # 15 Nov 2013
-  'vflKz4WoM' => 'w50 w17 r w7 w65',                # 19 Nov 2013
-  'vflhdWW8S' => 's2 w55 w10 s3 w57 r w25 w41',     # 21 Nov 2013
-  'vfl66X2C5' => 'r s2 w34 s2 w39',                 # 26 Nov 2013
-  'vflCXG8Sm' => 'r s2 w34 s2 w39',                 # 02 Dec 2013
-  'vfl_3Uag6' => 'w3 w7 r s2 w27 s2 w42 r',         # 04 Dec 2013
-  'vflQdXVwM' => 's1 r w66 s2 r w12',               # 10 Dec 2013
-  'vflCtc3aO' => 's2 r w11 r s3 w28',               # 12 Dec 2013
-  'vflCt6YZX' => 's2 r w11 r s3 w28',               # 17 Dec 2013
-  'vflG49soT' => 'w32 r s3 r s1 r w19 w24 s3',      # 18 Dec 2013
-  'vfl4cHApe' => 'w25 s1 r s1 w27 w21 s1 w39',      # 06 Jan 2014
-  'vflwMrwdI' => 'w3 r w39 r w51 s1 w36 w14',       # 06 Jan 2014
-  'vfl4AMHqP' => 'r s1 w1 r w43 r s1 r',            # 09 Jan 2014
-  'vfln8xPyM' => 'w36 w14 s1 r s1 w54',             # 10 Jan 2014
-  'vflVSLmnY' => 's3 w56 w10 r s2 r w28 w35',       # 13 Jan 2014
-  'vflkLvpg7' => 'w4 s3 w53 s2',                    # 15 Jan 2014
-  'vflbxes4n' => 'w4 s3 w53 s2',                    # 15 Jan 2014
-  'vflmXMtFI' => 'w57 s3 w62 w41 s3 r w60 r',       # 23 Jan 2014
-  'vflYDqEW1' => 'w24 s1 r s2 w31 w4 w11 r',        # 24 Jan 2014
-  'vflapGX6Q' => 's3 w2 w59 s2 w68 r s3 r s1',      # 28 Jan 2014
-  'vflLCYwkM' => 's3 w2 w59 s2 w68 r s3 r s1',      # 29 Jan 2014
-  'vflcY_8N0' => 's2 w36 s1 r w18 r w19 r',         # 30 Jan 2014
-  'vfl9qWoOL' => 'w68 w64 w28 r',                   # 03 Feb 2014
-  'vfle-mVwz' => 's3 w7 r s3 r w14 w59 s3 r',       # 04 Feb 2014
-  'vfltdb6U3' => 'w61 w5 r s2 w69 s2 r',            # 05 Feb 2014
-  'vflLjFx3B' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 10 Feb 2014
-  'vfliqjKfF' => 'w40 w62 r s2 w21 s3 r w7 s3',     # 13 Feb 2014
-  'ima-vflxBu-5R' => 'w40 w62 r s2 w21 s3 r w7 s3', # 13 Feb 2014
-  'ima-vflrGwWV9' => 'w36 w45 r s2 r',              # 20 Feb 2014
-  'ima-vflCME3y0' => 'w8 s2 r w52',                 # 27 Feb 2014
-  'ima-vfl1LZyZ5' => 'w8 s2 r w52',                 # 27 Feb 2014
-  'ima-vfl4_saJa' => 'r s1 w19 w9 w57 w38 s3 r s2', # 01 Mar 2014
-  'ima-en_US-vflP9269H' => 'r w63 w37 s3 r w14 r',  # 06 Mar 2014
-  'ima-en_US-vflkClbFb' => 's1 w12 w24 s1 w52 w70 s2',# 07 Mar 2014
-  'ima-en_US-vflYhChiG' => 'w27 r s3',              # 10 Mar 2014
-  'ima-en_US-vflWnCYSF' => 'r s1 r s3 w19 r w35 w61 s2',# 13 Mar 2014
-  'en_US-vflbT9-GA' => 'w51 w15 s1 w22 s1 w41 r w43 r',# 17 Mar 2014
-  'en_US-vflAYBrl7' => 's2 r w39 w43',              # 18 Mar 2014
-  'en_US-vflS1POwl' => 'w48 s2 r s1 w4 w35',        # 19 Mar 2014
-  'en_US-vflLMtkhg' => 'w30 r w30 w39',             # 20 Mar 2014
-  'en_US-vflbJnZqE' => 'w26 s1 w15 w3 w62 w54 w22', # 24 Mar 2014
-  'en_US-vflgd5txb' => 'w26 s1 w15 w3 w62 w54 w22', # 25 Mar 2014
-  'en_US-vflTm330y' => 'w26 s1 w15 w3 w62 w54 w22', # 26 Mar 2014
-  'en_US-vflnwMARr' => 's3 r w24 s2',               # 27 Mar 2014
-  'en_US-vflTq0XZu' => 'r w7 s3 w28 w52 r',         # 31 Mar 2014
-  'en_US-vfl8s5-Vs' => 'w26 s1 w14 r s3 w8',        # 01 Apr 2014
-  'en_US-vfl7i9w86' => 'w26 s1 w14 r s3 w8',        # 02 Apr 2014
-  'en_US-vflA-1YdP' => 'w26 s1 w14 r s3 w8',        # 03 Apr 2014
-  'en_US-vflZwcnOf' => 'w46 s2 w29 r s2 w51 w20 s1',# 07 Apr 2014
-  'en_US-vflFqBlmB' => 'w46 s2 w29 r s2 w51 w20 s1',# 08 Apr 2014
-  'en_US-vflG0UvOo' => 'w46 s2 w29 r s2 w51 w20 s1',# 09 Apr 2014
-  'en_US-vflS6PgfC' => 'w40 s2 w40 r w56 w26 r s2', # 10 Apr 2014
-  'en_US-vfl6Q1v_C' => 'w23 r s2 w55 s2',           # 15 Apr 2014
+  'vflNzKG7n' => 's3 r s2 r s1 r w67',				  # 30 Jan 2013
+  'vfllMCQWM' => 's2 w46 r w27 s2 w43 s2 r',			  # 15 Feb 2013
+  'vflJv8FA8' => 's1 w51 w52 r',				  # 12 Mar 2013
+  'vflR_cX32' => 's2 w64 s3',					  # 11 Apr 2013
+  'vflveGye9' => 'w21 w3 s1 r w44 w36 r w41 s1',		  # 02 May 2013
+  'vflj7Fxxt' => 'r s3 w3 r w17 r w41 r s2',			  # 14 May 2013
+  'vfltM3odl' => 'w60 s1 w49 r s1 w7 r s2 r',			  # 23 May 2013
+  'vflDG7-a-' => 'w52 r s3 w21 r s3 r',				  # 06 Jun 2013
+  'vfl39KBj1' => 'w52 r s3 w21 r s3 r',				  # 12 Jun 2013
+  'vflmOfVEX' => 'w52 r s3 w21 r s3 r',				  # 21 Jun 2013
+  'vflJwJuHJ' => 'r s3 w19 r s2',				  # 25 Jun 2013
+  'vfl_ymO4Z' => 'r s3 w19 r s2',				  # 26 Jun 2013
+  'vfl26ng3K' => 'r s2 r',					  # 08 Jul 2013
+  'vflcaqGO8' => 'w24 w53 s2 w31 w4',				  # 11 Jul 2013
+  'vflQw-fB4' => 's2 r s3 w9 s3 w43 s3 r w23',			  # 16 Jul 2013
+  'vflSAFCP9' => 'r s2 w17 w61 r s1 w7 s1',			  # 18 Jul 2013
+  'vflART1Nf' => 's3 r w63 s2 r s1',				  # 22 Jul 2013
+  'vflLC8JvQ' => 'w34 w29 w9 r w39 w24',			  # 25 Jul 2013
+  'vflm_D8eE' => 's2 r w39 w55 w49 s3 w56 w2',			  # 30 Jul 2013
+  'vflTWC9KW' => 'r s2 w65 r',					  # 31 Jul 2013
+  'vflRFcHMl' => 's3 w24 r',					  # 04 Aug 2013
+  'vflM2EmfJ' => 'w10 r s1 w45 s2 r s3 w50 r',			  # 06 Aug 2013
+  'vflz8giW0' => 's2 w18 s3',					  # 07 Aug 2013
+  'vfl_wGgYV' => 'w60 s1 r s1 w9 s3 r s3 r',			  # 08 Aug 2013
+  'vfl1HXdPb' => 'w52 r w18 r s1 w44 w51 r s1',			  # 12 Aug 2013
+  'vflkn6DAl' => 'w39 s2 w57 s2 w23 w35 s2',			  # 15 Aug 2013
+  'vfl2LOvBh' => 'w34 w19 r s1 r s3 w24 r',			  # 16 Aug 2013
+  'vfl-bxy_m' => 'w48 s3 w37 s2',				  # 20 Aug 2013
+  'vflZK4ZYR' => 'w19 w68 s1',					  # 21 Aug 2013
+  'vflh9ybst' => 'w48 s3 w37 s2',				  # 21 Aug 2013
+  'vflapUV9V' => 's2 w53 r w59 r s2 w41 s3',			  # 27 Aug 2013
+  'vflg0g8PQ' => 'w36 s3 r s2',					  # 28 Aug 2013
+  'vflHOr_nV' => 'w58 r w50 s1 r s1 r w11 s3',			  # 30 Aug 2013
+  'vfluy6kdb' => 'r w12 w32 r w34 s3 w35 w42 s2',		  # 05 Sep 2013
+  'vflkuzxcs' => 'w22 w43 s3 r s1 w43',				  # 10 Sep 2013
+  'vflGNjMhJ' => 'w43 w2 w54 r w8 s1',				  # 12 Sep 2013
+  'vfldJ8xgI' => 'w11 r w29 s1 r s3',				  # 17 Sep 2013
+  'vfl79wBKW' => 's3 r s1 r s3 r s3 w59 s2',			  # 19 Sep 2013
+  'vflg3FZfr' => 'r s3 w66 w10 w43 s2',				  # 24 Sep 2013
+  'vflUKrNpT' => 'r s2 r w63 r',				  # 25 Sep 2013
+  'vfldWnjUz' => 'r s1 w68',					  # 30 Sep 2013
+  'vflP7iCEe' => 'w7 w37 r s1',					  # 03 Oct 2013
+  'vflzVne63' => 'w59 s2 r',					  # 07 Oct 2013
+  'vflO-N-9M' => 'w9 s1 w67 r s3',				  # 09 Oct 2013
+  'vflZ4JlpT' => 's3 r s1 r w28 s1',				  # 11 Oct 2013
+  'vflDgXSDS' => 's3 r s1 r w28 s1',				  # 15 Oct 2013
+  'vflW444Sr' => 'r w9 r s1 w51 w27 r s1 r',			  # 17 Oct 2013
+  'vflK7RoTQ' => 'w44 r w36 r w45',				  # 21 Oct 2013
+  'vflKOCFq2' => 's1 r w41 r w41 s1 w15',			  # 23 Oct 2013
+  'vflcLL31E' => 's1 r w41 r w41 s1 w15',			  # 28 Oct 2013
+  'vflz9bT3N' => 's1 r w41 r w41 s1 w15',			  # 31 Oct 2013
+  'vfliZsE79' => 'r s3 w49 s3 r w58 s2 r s2',			  # 05 Nov 2013
+  'vfljOFtAt' => 'r s3 r s1 r w69 r',				  # 07 Nov 2013
+  'vflqSl9GX' => 'w32 r s2 w65 w26 w45 w24 w40 s2',		  # 14 Nov 2013
+  'vflFrKymJ' => 'w32 r s2 w65 w26 w45 w24 w40 s2',		  # 15 Nov 2013
+  'vflKz4WoM' => 'w50 w17 r w7 w65',				  # 19 Nov 2013
+  'vflhdWW8S' => 's2 w55 w10 s3 w57 r w25 w41',			  # 21 Nov 2013
+  'vfl66X2C5' => 'r s2 w34 s2 w39',				  # 26 Nov 2013
+  'vflCXG8Sm' => 'r s2 w34 s2 w39',				  # 02 Dec 2013
+  'vfl_3Uag6' => 'w3 w7 r s2 w27 s2 w42 r',			  # 04 Dec 2013
+  'vflQdXVwM' => 's1 r w66 s2 r w12',				  # 10 Dec 2013
+  'vflCtc3aO' => 's2 r w11 r s3 w28',				  # 12 Dec 2013
+  'vflCt6YZX' => 's2 r w11 r s3 w28',				  # 17 Dec 2013
+  'vflG49soT' => 'w32 r s3 r s1 r w19 w24 s3',			  # 18 Dec 2013
+  'vfl4cHApe' => 'w25 s1 r s1 w27 w21 s1 w39',			  # 06 Jan 2014
+  'vflwMrwdI' => 'w3 r w39 r w51 s1 w36 w14',			  # 06 Jan 2014
+  'vfl4AMHqP' => 'r s1 w1 r w43 r s1 r',			  # 09 Jan 2014
+  'vfln8xPyM' => 'w36 w14 s1 r s1 w54',				  # 10 Jan 2014
+  'vflVSLmnY' => 's3 w56 w10 r s2 r w28 w35',			  # 13 Jan 2014
+  'vflkLvpg7' => 'w4 s3 w53 s2',				  # 15 Jan 2014
+  'vflbxes4n' => 'w4 s3 w53 s2',				  # 15 Jan 2014
+  'vflmXMtFI' => 'w57 s3 w62 w41 s3 r w60 r',			  # 23 Jan 2014
+  'vflYDqEW1' => 'w24 s1 r s2 w31 w4 w11 r',			  # 24 Jan 2014
+  'vflapGX6Q' => 's3 w2 w59 s2 w68 r s3 r s1',			  # 28 Jan 2014
+  'vflLCYwkM' => 's3 w2 w59 s2 w68 r s3 r s1',			  # 29 Jan 2014
+  'vflcY_8N0' => 's2 w36 s1 r w18 r w19 r',			  # 30 Jan 2014
+  'vfl9qWoOL' => 'w68 w64 w28 r',				  # 03 Feb 2014
+  'vfle-mVwz' => 's3 w7 r s3 r w14 w59 s3 r',			  # 04 Feb 2014
+  'vfltdb6U3' => 'w61 w5 r s2 w69 s2 r',			  # 05 Feb 2014
+  'vflLjFx3B' => 'w40 w62 r s2 w21 s3 r w7 s3',			  # 10 Feb 2014
+  'vfliqjKfF' => 'w40 w62 r s2 w21 s3 r w7 s3',			  # 13 Feb 2014
+  'ima-vflxBu-5R' => 'w40 w62 r s2 w21 s3 r w7 s3',		  # 13 Feb 2014
+  'ima-vflrGwWV9' => 'w36 w45 r s2 r',				  # 20 Feb 2014
+  'ima-vflCME3y0' => 'w8 s2 r w52',				  # 27 Feb 2014
+  'ima-vfl1LZyZ5' => 'w8 s2 r w52',				  # 27 Feb 2014
+  'ima-vfl4_saJa' => 'r s1 w19 w9 w57 w38 s3 r s2',		  # 01 Mar 2014
+  'ima-en_US-vflP9269H' => 'r w63 w37 s3 r w14 r',		  # 06 Mar 2014
+  'ima-en_US-vflkClbFb' => 's1 w12 w24 s1 w52 w70 s2',		  # 07 Mar 2014
+  'ima-en_US-vflYhChiG' => 'w27 r s3',				  # 10 Mar 2014
+  'ima-en_US-vflWnCYSF' => 'r s1 r s3 w19 r w35 w61 s2',	  # 13 Mar 2014
+  'en_US-vflbT9-GA' => 'w51 w15 s1 w22 s1 w41 r w43 r',		  # 17 Mar 2014
+  'en_US-vflAYBrl7' => 's2 r w39 w43',				  # 18 Mar 2014
+  'en_US-vflS1POwl' => 'w48 s2 r s1 w4 w35',			  # 19 Mar 2014
+  'en_US-vflLMtkhg' => 'w30 r w30 w39',				  # 20 Mar 2014
+  'en_US-vflbJnZqE' => 'w26 s1 w15 w3 w62 w54 w22',		  # 24 Mar 2014
+  'en_US-vflgd5txb' => 'w26 s1 w15 w3 w62 w54 w22',		  # 25 Mar 2014
+  'en_US-vflTm330y' => 'w26 s1 w15 w3 w62 w54 w22',		  # 26 Mar 2014
+  'en_US-vflnwMARr' => 's3 r w24 s2',				  # 27 Mar 2014
+  'en_US-vflTq0XZu' => 'r w7 s3 w28 w52 r',			  # 31 Mar 2014
+  'en_US-vfl8s5-Vs' => 'w26 s1 w14 r s3 w8',			  # 01 Apr 2014
+  'en_US-vfl7i9w86' => 'w26 s1 w14 r s3 w8',			  # 02 Apr 2014
+  'en_US-vflA-1YdP' => 'w26 s1 w14 r s3 w8',			  # 03 Apr 2014
+  'en_US-vflZwcnOf' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 07 Apr 2014
+  'en_US-vflFqBlmB' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 08 Apr 2014
+  'en_US-vflG0UvOo' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 09 Apr 2014
+  'en_US-vflS6PgfC' => 'w40 s2 w40 r w56 w26 r s2',		  # 10 Apr 2014
+  'en_US-vfl6Q1v_C' => 'w23 r s2 w55 s2',			  # 15 Apr 2014
+  'en_US-vflMYwWq8' => 'w51 w32 r s1 r s3',			  # 17 Apr 2014
+  'en_US-vflGC4r8Z' => 'w17 w34 w66 s3',			  # 24 Apr 2014
+  'en_US-vflyEvP6v' => 's1 r w26',				  # 29 Apr 2014
+  'en_US-vflm397e5' => 's1 r w26',				  # 01 May 2014
+  'en_US-vfldK8353' => 'r s3 w32',				  # 03 May 2014
+  'en_US-vflPTD6yH' => 'w59 s1 w66 s3 w10 r w55 w70 s1',	  # 06 May 2014
+  'en_US-vfl7KJl0G' => 'w59 s1 w66 s3 w10 r w55 w70 s1',	  # 07 May 2014
+  'en_US-vflhUwbGZ' => 'w49 r w60 s2 w61 s3',			  # 12 May 2014
+  'en_US-vflzEDYyE' => 'w49 r w60 s2 w61 s3',			  # 13 May 2014
+  'en_US-vflimfEzR' => 'r s2 w68 w28',				  # 15 May 2014
+  'en_US-vfl_nbW1R' => 'r w8 r s3',				  # 20 May 2014
+  'en_US-vfll7obaF' => 'w48 w17 s2',				  # 22 May 2014
+  'en_US-vfluBAJ91' => 'w13 s1 w39',				  # 27 May 2014
+  'en_US-vfldOnicU' => 's2 r w7 w21 r',				  # 28 May 2014
+  'en_US-vflbbaSdm' => 'w46 r s3 w19 r s2 w15',			  # 03 Jun 2014
+  'en_US-vflIpxel5' => 'r w16 w35',				  # 04 Jun 2014
+  'en_US-vfloyxzv5' => 'r w30 s3 r s3 r',			  # 11 Jun 2014
+  'en_US-vflmY-xcZ' => 'w25 r s1 w49 w52',			  # 12 Jun 2014
+  'en_US-vflMVaJmz' => 'w12 s3 w56 r s2 r',			  # 17 Jun 2014
+  'en_US-vflgt97Vg' => 'r s1 r',				  # 19 Jun 2014
+  'en_US-vfl19qQQ_' => 's2 w55 s2 r w39 s2 w5 r s3',		  # 23 Jun 2014
+  'en_US-vflws3c7_' => 'r s1 w52',				  # 24 Jun 2014
+  'en_US-vflPqsNqq' => 'r s1 w52',				  # 25 Jun 2014
+  'en_US-vflycBCEX' => 'w12 s1 r s3 w17 s1 w9 r',		  # 26 Jun 2014
+  'en_US-vflhZC-Jn' => 'w69 w70 s3',				  # 01 Jul 2014
+  'en_US-vfl9r3Wpv' => 'r s3 w57',				  # 07 Jul 2014
+  'en_US-vfl6UPpbU' => 'w37 r s1',				  # 08 Jul 2014
+  'en_US-vfl_oxbbV' => 'w37 r s1',				  # 09 Jul 2014
+  'en_US-vflXGBaUN' => 'w37 r s1',				  # 10 Jul 2014
+  'en_US-vflM1arS5' => 's1 r w42 r s1 w27 r w54',		  # 11 Jul 2014
+  'en_US-vfl0Cbn9e' => 'w15 w44 r w24 s3 r w2 w50',		  # 14 Jul 2014
+  'en_US-vfl5aDZwb' => 'w15 w44 r w24 s3 r w2 w50',		  # 15 Jul 2014
+  'en_US-vflqZIm5b' => 'w1 w32 s1 r s3 r s3 r',			  # 17 Jul 2014
+  'en_US-vflBb0OQx' => 'w53 r w9 s2 r s1',			  # 22 Jul 2014
+  'en_US-vflCGk6yw/html5player' => 's2 w28 w44 w26 w40 w64 r s1', # 24 Jul 2014
+  'en_US-vflNUsYw0/html5player' => 'r s3 w7',                     # 30 Jul 2014
+  'en_US-vflId8cpZ/html5player' => 'w30 w21 w26 s1 r s1 w30 w11 w20',# 31 Jul 2014
+  'en_US-vflEyBLiy/html5player' => 'w44 r w15 s2 w40 r s1',       # 01 Aug 2014
+  'en_US-vflHkCS5P/html5player' => 's2 r s3 r w41 s1 r s1 r',     # 05 Aug 2014
+  'en_US-vflArxUZc/html5player' => 'r w12 r s3 w14 w61 r',        # 07 Aug 2014
+  'en_US-vflCsMU2l/html5player' => 'r s2 r w64 s1 r s3',          # 11 Aug 2014
+  'en_US-vflY5yrKt/html5player' => 'w8 r s2 w37 s1 w21 s3',       # 12 Aug 2014
+  'en_US-vfl4b4S6W/html5player' => 'w40 s1 r w40 s3 r w47 r',     # 13 Aug 2014
+  'en_US-vflLKRtyE/html5player' => 'w5 r s1 r s2 r',              # 18 Aug 2014
+  'en_US-vflrSlC04/html5player' => 'w28 w58 w19 r s1 r s1 r',     # 19 Aug 2014
+  'en_US-vflC7g_iA/html5player' => 'w28 w58 w19 r s1 r s1 r',     # 20 Aug 2014
+  'en_US-vfll1XmaE/html5player' => 'r w9 w23 w29 w36 s2 r',       # 21 Aug 2014
+  'en_US-vflWRK4zF/html5player' => 'r w63 r s3',                  # 26 Aug 2014
+  'en_US-vflQSzMIW/html5player' => 'r s1 w40 w70 s2 w28 s1',      # 27 Aug 2014
+  'en_US-vfltYLx8B/html5player' => 's3 w19 w24',                  # 29 Aug 2014
+  'en_US-vflWnljfv/html5player' => 's2 w60 s3 w42 r w40 s2 w68 w20',# 02 Sep 2014
+  'en_US-vflDJ-wUY/html5player' => 's2 w18 s2 w68 w15 s1 w45 s1 r',# 04 Sep 2014
+  'en_US-vfllxLx6Z/html5player' => 'r s1 w40 w70 s2 w28 s1',      # 04 Sep 2014
+  'en_US-vflI3QYI2/html5player' => 's3 w22 r s3 w19 s1 r',        # 08 Sep 2014
+  'en_US-vfl-ZO7j_/html5player' => 's3 w21 s1',                   # 09 Sep 2014
+  'en_US-vflWGRWFI/html5player' => 'r w27 r s1 r',                # 12 Sep 2014
+  'en_US-vflJkTW89/html5player' => 'w12 s1 w67 r w39 w65 s3 r s1',# 15 Sep 2014
+  'en_US-vflB8RV2U/html5player' => 'r w26 r w28 w38 r s3',        # 16 Sep 2014
+  'en_US-vflBFNwmh/html5player' => 'r w26 r w28 w38 r s3',        # 17 Sep 2014
+  'en_US-vflE7vgXe/html5player' => 'w46 w22 r w33 r s3 w18 r s3', # 18 Sep 2014
+  'en_US-vflx8EenD/html5player' => 'w8 s3 w45 w46 s2 w29 w25 w56 w2',# 23 Sep 2014
+  'en_US-vflfgwjRj/html5player' => 'r s2 w56 r s3',               # 24 Sep 2014
+  'en_US-vfl15y_l6/html5player' => 'w8 s3 w45 w46 s2 w29 w25 w56 w2',# 25 Sep 2014
+  'en_US-vflYqHPcx/html5player' => 's3 r w1 r',                   # 30 Sep 2014
+  'en_US-vflcoeQIS/html5player' => 's3 r w64 r s3 r w68',         # 01 Oct 2014
+  'en_US-vflz7mN60/html5player' => 's2 w16 w39',                  # 02 Oct 2014
+  'en_US-vfl4mDBLZ/html5player' => 'r w54 r s2 w49',              # 06 Oct 2014
+  'en_US-vflKzH-7N/html5player' => 'r w54 r s2 w49',              # 08 Oct 2014
+  'en_US-vflgoB_xN/html5player' => 's2 w16 w39',                  # 09 Oct 2014
+  'en_US-vflPyRPNk/html5player' => 'r w34 w9 w56 r s3 r w30',     # 12 Oct 2014
+  'en_US-vflG0qgr5/html5player' => 's2 w16 w39',                  # 14 Oct 2014
+  'en_US-vflzDhHvc/html5player' => 'w26 s1 r w8 w24 w18 r s2 r',  # 15 Oct 2014
+  'en_US-vflbeC7Ip/html5player' => 'r w21 r s2 r',                # 16 Oct 2014
+  'en_US-vflBaDm_Z/html5player' => 's3 w5 s1 w20 r',              # 20 Oct 2014
 );
+
 
 sub decipher_sig($$$) {
   my ($id, $cipher, $signature) = @_;
@@ -724,30 +969,36 @@ sub guess_cipher(;$$) {
 
   my $url = "http://www.youtube.com/";
   my ($http, $head, $body);
+  my $id = '-';
 
   if (! $cipher_id) {
     ($http, $head, $body) = get_url ($url);		# Get home page
-    check_http_status ($url, $http, 2);
-    my ($id) = ($body =~ m@/watch\?v=([^\"\'/<>]+)@si);
-    errorI ("unparsable cipher") unless $id;
+    check_http_status ('-', $url, $http, 2);
+    ($id) = ($body =~ m@/watch\?v=([^\"\'/<>]+)@si);
+    errorI ("unparsable cipher in $url") unless $id;
     $url .= "/watch\?v=$id";
 
     ($http, $head, $body) = get_url ($url);		# Get random video
-    check_http_status ($url, $http, 2);
+    check_http_status ($id, $url, $http, 2);
 
     $body =~ s/\\//gs;
     ($cipher_id) = ($body =~ m@/jsbin\\?/html5player-(.+?)\.js@s);
-    errorI ("unparsable cipher url: $url") unless $cipher_id;
+    errorI ("$id: unparsable cipher url: $url") unless $cipher_id;
   }
 
+  $cipher_id =~ s@\\@@gs;
   $url = "http://s.ytimg.com/yts/jsbin/html5player-$cipher_id.js";
+
   ($http, $head, $body) = get_url ($url);
-  check_http_status ($url, $http, 2);
+  check_http_status ($id, $url, $http, 2);
 
   my ($date) = ($head =~ m/^Last-Modified:\s+(.*)$/mi);
   $date =~ s/^[A-Z][a-z][a-z], (\d\d? [A-Z][a-z][a-z] \d{4}).*$/$1/s;
 
   my $v = '[\$a-zA-Z][a-zA-Z\d]*';	# JS variable
+
+  $v = "$v(?:\.$v)?";   # Also allow "a.b" where "a" would be used as a var.
+
 
   # Since the script is minimized and obfuscated, we can't search for
   # specific function names, since those change. Instead we match the
@@ -762,10 +1013,11 @@ sub guess_cipher(;$$) {
   errorI ("$cipher_id: unparsable cipher js: $url") unless $fn;
 
   # Find body of function C(D) { ... }
-  ($fn) = ($body =~ m@\b function \s+ $fn \s* \( $v \) \s* { ( .*? ) }@sx);
-  errorI ("$cipher_id: unparsable fn") unless $fn;
+  my ($fn2) = ($body =~ m@\b function \s+ \Q$fn\E \s* \( $v \)
+                          \s* { ( .*? ) } @sx);
+  errorI ("$cipher_id: unparsable fn \"$fn\"") unless $fn2;
 
-  my $fn2 = $fn;
+  $fn = $fn2;
 
   # They inline the swapper if it's used only once.
   # Convert "var b=a[0];a[0]=a[63%a.length];a[63]=b;" to "a=swap(a,63);".
@@ -782,10 +1034,32 @@ sub guess_cipher(;$$) {
       push @cipher, "r";
     } elsif ($c =~ m@^ ( $v ) = \1 . $v \( (\d+) \) $@sx) {    # A=A.slice(N);
       push @cipher, "s$2";
-    } elsif ($c =~ m@^ ( $v ) = $v \( \1 , ( \d+ ) \) $@sx) {  # A=swap(A,N);
-      push @cipher, "w$2";
+
+    } elsif ($c =~ m@^ ( $v ) = ( $v ) \( \1 , ( \d+ ) \) $@sx ||  # A=F(A,N);
+             $c =~ m@^ (    )   ( $v ) \( $v , ( \d+ ) \) $@sx) {  # F(A,N);
+      my $f = $2;
+      my $n = $3;
+      $f =~ s/^.*\.//gs;  # C.D => D
+      # Find function D, of the form: C={ ... D:function(a,b) { ... }, ... }
+      my ($fn3) = ($body =~ m@ \b \Q$f\E: \s*
+                               function \s* \( .*? \) \s*
+                                ( { [^{}]+ } )
+                             @sx);
+      # Look at body of D to decide what it is.
+      if ($fn3 =~ m@ var \s ( $v ) = ( $v ) \[ 0 \]; @sx) {  # swap
+        push @cipher, "w$n";
+      } elsif ($fn3 =~ m@ \b $v \. reverse\( @sx) {          # reverse
+        push @cipher, "r";
+      } elsif ($fn3 =~ m@ return \s* $v \. slice @sx ||      # slice
+               $fn3 =~ m@ \b $v \. splice @sx) {             # splice
+        push @cipher, "s$n";
+      } else {
+        $fn =~ s/;/;\n\t    /gs;
+        errorI ("unrecognized cipher body $f($n) = $fn3\n\tin: $fn");
+      }
     } elsif ($c =~ m@^ return \s+ $v \. $v \(""\) $@sx) { # return A.join("");
     } else {
+      $fn =~ s/;/;\n\t    /gs;
       errorI ("$cipher_id: unparsable: $c\n\tin: $fn");
     }
   }
@@ -798,7 +1072,7 @@ sub guess_cipher(;$$) {
 
   if ($verbose > 1) {
     my $c2 = "  '$cipher_id' => '$cipher',";
-    $c2 = sprintf ("%-52s# %s", $c2, $date);
+    $c2 = sprintf ("%-66s# %s", $c2, $date);
     auto_update($c2) if ($selftest_p && $selftest_p == 2);
     print STDERR "$progname: current cipher is:\n$c2\n";
   }
@@ -830,10 +1104,12 @@ sub auto_update($) {
   close $out;
   print STDERR "$progname: auto-updated $progname0\n";
 
+  # This part isn't expected to work for you.
   my ($dir) = $ENV{HOME} . '/www/hacks';
   system ("cd '$dir'" .
           " && git commit -q -m 'cipher auto-update' '$progname'" .
-          " && git push -q");
+          " && git push -q")
+    if -d $dir;
 }
 
 
@@ -842,11 +1118,11 @@ sub auto_update($) {
 #
 sub decipher_selftest() {
   my $tests = {
-   'UNKNOWN 88' . "\t" .
-   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGHIJ.' .		# 88
-   'LMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvw' =>
-   'Pqponmlkjihgfedrba`_u]\\[ZYXWVUTSRQcONML.' .
-   'JIHGFEDCBA@?>=<;:9876543210/x-#+*)(\'&%$",',
+#   'UNKNOWN 88' . "\t" .
+#   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGHIJ.' .		# 88
+#   'LMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvw' =>
+#   'Pqponmlkjihgfedrba`_u]\\[ZYXWVUTSRQcONML.' .
+#   'JIHGFEDCBA@?>=<;:9876543210/x-#+*)(\'&%$",',
 
    'vflmOfVEX' . "\t" .
    ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGHIJ.' .		# 87
@@ -866,23 +1142,23 @@ sub decipher_selftest() {
    'lrqponmskjihgfedcba`_^] [ZYXWVUTS!QPONMLK.' .
    'IHGFEDCBA@?>=<;:9876543210/x-,+*)(\'&%$#',
 
-   'UNKNOWN 84' . "\t" .
-   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGH.' .		# 84
-   'JKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrs' =>
-   'srqponmlkjihgfedcba`_^]\\[ZYXWVUTSRQPONMLKJ.' .
-   'HGFE"CBA@?>=<;#9876543210/x-,+*)(\'&%$:',
+#   'UNKNOWN 84' . "\t" .
+#   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGH.' .		# 84
+#   'JKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrs' =>
+#   'srqponmlkjihgfedcba`_^]\\[ZYXWVUTSRQPONMLKJ.' .
+#   'HGFE"CBA@?>=<;#9876543210/x-,+*)(\'&%$:',
 
-   'UNKNOWN 83' . "\t" .
-   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGH.' .		# 83
-   'JKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqr' =>
-   'Tqponmlkjihgfedcba`_^]\\[ZYX"VUrSRQPONMLKJ.' .
-   'HGFEWCBA@?>=<;:9876543210/x-,+*)(\'&%$#D',
+#   'UNKNOWN 83' . "\t" .
+#   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFGH.' .		# 83
+#   'JKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqr' =>
+#   'Tqponmlkjihgfedcba`_^]\\[ZYX"VUrSRQPONMLKJ.' .
+#   'HGFEWCBA@?>=<;:9876543210/x-,+*)(\'&%$#D',
 
-   'UNKNOWN 82' . "\t" .
-   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFG.' .		# 82
-   'IJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopq' =>
-   'Donmlkjihgfedqba`_^]\\[ZYXWVUTSRQPONMLKJIAGFE.' .
-   'C c@?>=<;:9876543210/x-,+*)(\'&%$#"!B',
+#   'UNKNOWN 82' . "\t" .
+#   ' !"#$%&\'()*+,-x/0123456789:;<=>?@ABCDEFG.' .		# 82
+#   'IJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopq' =>
+#   'Donmlkjihgfedqba`_^]\\[ZYXWVUTSRQPONMLKJIAGFE.' .
+#   'C c@?>=<;:9876543210/x-,+*)(\'&%$#"!B',
 
    'vflmOfVEX' . "\t" .
    '5AEEAE0EC39677BC65FD9021CCD115F1F2DBD5A59E4.' .		# Real examples
@@ -916,6 +1192,12 @@ sub decipher_selftest() {
 #  'D225BE11FBCBD59C62F163A57BF8EC1B47897485E85E' =>  # from "get_video_info"
    '7110BC60F69EED0EDF4DED56EBF7369CB77E7F22.' .
    'A1B0DDDE4DF6238DE4E01A049E6AB1C52CFBEDFE',
+
+   'en_US-vfl0Cbn9e' . "\t" .
+   '9977B9CA5435687412E6E3436260447A98CA0268.' .
+   '83C3A50B214CE0D9279695F4B5A31FEFEC4CFAA9AA5' =>
+   '1937B9CA5435687912E6E3436260447A98CA0268.' .
+   '83C4A50B274CE0D9275695F4B5A31FEFEC4CFAA9',
   };
 
   my %verified;
@@ -1010,8 +1292,8 @@ sub apply_signature($$$$$) {
 # - width and height, if known
 # - size in bytes, if known
 #
-sub scrape_youtube_url($$$$$) {
-  my ($url, $id, $title, $size_p, $force_fmt) = @_;
+sub scrape_youtube_url($$$$$$) {
+  my ($url, $id, $title, $size_p, $list_p, $force_fmt) = @_;
 
   my $info_url = ("http://www.youtube.com/get_video_info?video_id=$id" .
                   "&el=vevo");	# Needed for VEVO, works on non-VEVO.
@@ -1022,7 +1304,7 @@ sub scrape_youtube_url($$$$$) {
   # '&gl=US' .
   # '&hl=en'
 
-  my ($kind, $urlmap, $body, $fmtlist, $rental);
+  my ($kind, $urlmap, $body, $fmtlist, $rental, $realtime);
 
   my $retries = 5;
   my $err = undef;
@@ -1031,7 +1313,7 @@ sub scrape_youtube_url($$$$$) {
 
     my ($http, $head);
     ($http, $head, $body) = get_url ($info_url);
-    $err = (check_http_status ($url, $http, 0) ? undef : $http);
+    $err = (check_http_status ($id, $url, $http, 0) ? undef : $http);
 
     ($kind, $urlmap) = ($body =~ m@&(fmt_url_map)=([^&]+)@si);
     ($kind, $urlmap) = ($body =~ m@&(fmt_stream_map)=([^&]+)@si)	# VEVO
@@ -1041,11 +1323,12 @@ sub scrape_youtube_url($$$$$) {
     print STDERR "$progname: $id: found $kind in JSON\n"
       if ($kind && $verbose > 1);
 
-    ($fmtlist) = ($body =~ m@&fmt_list=([^&]+)@si);
-    ($title)   = ($body =~ m@&title=([^&]+)@si) unless $title;
-    ($rental)  = ($body =~ m@&ypc_video_rental_bar_text=([^&]+)@si);
+    ($fmtlist)  = ($body =~ m@&fmt_list=([^&]+)@si);
+    ($title)    = ($body =~ m@&title=([^&]+)@si) unless $title;
+    ($rental)   = ($body =~ m@&ypc_video_rental_bar_text=([^&]+)@si);
+    ($realtime) = ($body =~ m@&(livestream|live_playback)=([^&]+)@si);
 
-    last if ($urlmap && $title);
+    last if ($rental || $realtime || ($urlmap && $title));
 
     if ($verbose) {
       if (!$urlmap) {
@@ -1060,6 +1343,9 @@ sub scrape_youtube_url($$$$$) {
 
   $err = "can't download rental videos"
     if (!$err && !$urlmap && $rental);
+
+  $err = "can't download livestream videos"
+    if (!$err && !$urlmap && $realtime);
 
   error ("$progname: $id: $err")
     if $err;
@@ -1100,7 +1386,8 @@ sub scrape_youtube_url($$$$$) {
     print STDERR "$progname: $id: no fmt_url_map$err.  Scraping HTML...\n"
       if ($verbose > 1);
 
-    return scrape_youtube_url_html ($url, $id, $size_p, $force_fmt, $err);
+    return scrape_youtube_url_html ($url, $id, $size_p, $list_p,
+                                    $force_fmt, $err);
   }
 
   $urlmap  = url_unquote ($urlmap);
@@ -1113,7 +1400,7 @@ sub scrape_youtube_url($$$$$) {
   my $cipher = undef; # initially assume signature is not enciphered
   my $year   = undef; # no published date in get_video_info
   return scrape_youtube_url_2 ($id, $urlmap, $fmtlist, $cipher, $title, $year,
-                               $size_p, $force_fmt);
+                               $size_p, $list_p, $force_fmt);
 }
 
 
@@ -1126,7 +1413,7 @@ sub get_youtube_year($) {
                   "&safeSearch=none" .
                   "&strict=true");
   my ($http, $head, $body) = get_url ($data_url, undef, undef, 0, undef);
-  return undef unless check_http_status ($data_url, $http, 0);
+  return undef unless check_http_status ($id, $data_url, $http, 0);
 
   my ($year, $mon, $dotm, $hh, $mm, $ss) = 
     ($body =~ m@<published>(\d{4})-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)@si);
@@ -1140,7 +1427,7 @@ sub get_vimeo_year($) {
   my ($id) = @_;
   my $data_url = "http://vimeo.com/api/v2/video/$id.xml";
   my ($http, $head, $body) = get_url ($data_url, undef, undef, 0, undef);
-  return undef unless check_http_status ($data_url, $http, 0);
+  return undef unless check_http_status ($id, $data_url, $http, 0);
 
   my ($year, $mon, $dotm, $hh, $mm, $ss) = 
     ($body =~ m@<upload_date>(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)@si);
@@ -1153,8 +1440,8 @@ sub get_vimeo_year($) {
 # We need to do that for "embedding disable" videos,
 # and for videos that have enciphered signatures.
 #
-sub scrape_youtube_url_html($$$$$) {
-  my ($url, $id, $size_p, $force_fmt, $oerror) = @_;
+sub scrape_youtube_url_html($$$$$$) {
+  my ($url, $id, $size_p, $list_p, $force_fmt, $oerror) = @_;
 
   my ($http, $head, $body) = get_url ($url);
 
@@ -1182,7 +1469,8 @@ sub scrape_youtube_url_html($$$$$) {
   my $blocked_re = join ('|',
                          ('(available|blocked it) in your country',
                           'copyright (claim|grounds)',
-                          'removed by the user'));
+                          'removed by the user',
+                          'is not available'));
 
   if (! $args) {
     # Try to find a better error message
@@ -1212,7 +1500,7 @@ sub scrape_youtube_url_html($$$$$) {
 
       my ($title) = ($body =~ m@<title>\s*(.*?)\s*</title>@si);
       if ($title) {
-        $title = munge_title (url_unquote ($title));
+        $title = munge_title (html_unquote ($title));
         $err = "$err ($title)";
       }
 
@@ -1234,7 +1522,7 @@ sub scrape_youtube_url_html($$$$$) {
   $http = 'HTTP/1.0 404'
     if ($oerror && $oerror =~ m/$blocked_re/sio);
   error ("$id: $http$oerror")
-    unless (check_http_status ($url, $http, 0));
+    unless (check_http_status ($id, $url, $http, 0));
   errorI ("$id: no ytplayer.config$oerror")
     unless $args;
 
@@ -1253,6 +1541,7 @@ sub scrape_youtube_url_html($$$$$) {
     if ($kind && $verbose > 1);
 
   my ($cipher) = ($body =~ m@/jsbin\\?/html5player-(.+?)\.js@s);
+  $cipher =~ s@\\@@gs if $cipher;
 
   my ($fmtlist) = ($args =~ m@"fmt_list": "(.*?)"@s);
   $fmtlist =~ s/\\//g if $fmtlist;
@@ -1260,22 +1549,22 @@ sub scrape_youtube_url_html($$$$$) {
   $fmtlist = url_unquote ($fmtlist || '');
 
   my ($title) = ($body =~ m@<title>\s*(.*?)\s*</title>@si);
-  $title = munge_title (url_unquote ($title));
+  $title = munge_title (html_unquote ($title));
 
   my $year = $1   # might be a published date in the HTML.
     if ($body =~ m@<SPAN \b [^<>]* ID=[\'\"]eow-date[\'\"] [^<>]* >
                    [^<>]* \b ( \d{4} ) \s* <@gsix);
 
   return scrape_youtube_url_2 ($id, $urlmap, $fmtlist, $cipher, $title, $year,
-                               $size_p, $force_fmt);
+                               $size_p, $list_p, $force_fmt);
 }
 
 
 # Parses the given fmt_url_map to determine the preferred URL of the
 # underlying Youtube video.
 #
-sub scrape_youtube_url_2($$$$$$$$$) {
-  my ($id, $urlmap, $fmtlist, $cipher, $title, $year, $size_p,
+sub scrape_youtube_url_2($$$$$$$$$$) {
+  my ($id, $urlmap, $fmtlist, $cipher, $title, $year, $size_p, $list_p,
       $force_fmt) = @_;
 
   print STDERR "\n$progname: urlmap:\n" if ($verbose > 3);
@@ -1346,7 +1635,7 @@ sub scrape_youtube_url_2($$$$$$$$$) {
       my $x = $fmt . "/" . $urlct{$fmt};
       $append_suffix_p = $x;
       download_video_url ($url, $title, $year,
-                          ($size_p ? $append_suffix_p : 0),
+                          ($size_p ? $append_suffix_p : 0), $list_p,
                           undef, 0, $fmt);
     }
     exit (0);
@@ -1442,6 +1731,9 @@ sub scrape_youtube_url_2($$$$$$$$$) {
   #   http://www.youtube.com/watch?v=pc4ANivCCgs
   #   15-Nov-2013: First sighting of formats 59 and 78.
   #
+  #   http://www.youtube.com/watch?v=WQzVhOZnku8
+  #   3-Sep-2014: First sighting of a 24/7 realtime stream.
+  #
   # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
   # disagrees with the above to some extent.  Which is more accurate?
   #
@@ -1516,7 +1808,8 @@ sub scrape_youtube_url_2($$$$$$$$$) {
       print STDERR "$progname: $id: enciphered. Scraping HTML...\n"
         if ($verbose > 1);
       $url = 'http://www.youtube.com/watch?v=' . $id;
-      return scrape_youtube_url_html ($url, $id, $size_p, $force_fmt, '');
+      return scrape_youtube_url_html ($url, $id, $size_p, $list_p,
+                                      $force_fmt, '');
     }
   }
 
@@ -1531,9 +1824,11 @@ sub scrape_youtube_url_2($$$$$$$$$) {
   #
   my ($http, $head, $body);
   ($http, $head, $body, $url) = get_url ($url, undef, undef, 1);
-  check_http_status ($url, $http, 2);  # internal error if still 403
-  my ($ct)   = ($head =~ m/^content-type:\s*([^\s;]+)/mi);
-  my ($size) = ($head =~ m/^content-length:\s*(\d+)/mi);
+  check_http_status ($id, $url, $http, 2);  # internal error if still 403
+  my ($ct)   = ($head =~ m@^Content-Type:   \s* ( [^\s;]+ ) @mix);
+  my ($size) = ($head =~ m@^Content-Range:  \s* bytes \s+ [-\d]+ / (\d+) @mix);
+     ($size) = ($head =~ m@^Content-Length: \s* (\d+) @mix)
+       unless $size;
 
   errorI ("couldn't find video for $url") unless $ct;
 
@@ -1571,11 +1866,11 @@ sub scrape_vimeo_url($$) {
 
   my ($http, $head, $body) = get_url ($info_url, $referer, $hdrs);
 
-  if (!check_http_status ($info_url, $http, 0)) {
+  if (!check_http_status ($id, $info_url, $http, 0)) {
     my ($err) = ($body =~ m@\"display_message\":\"(.*?)\"[,\}]@si);
     $err = 'unknown error' unless $err;
     $err =~ s@<[^<>]*>@@gsi;
-    if ($err =~ m/private[+\s]video/si) {
+    if ($err =~ m/private[+\s]video|proper[+\s]permission/si) {
       print STDERR "$progname: $id: private video.  Scraping HTML...\n"
         if ($verbose > 1);
       return scrape_vimeo_private ($url, $id);
@@ -1585,7 +1880,7 @@ sub scrape_vimeo_url($$) {
   }
 
   my ($title) = ($body =~ m@<H4>([^<>]+)</@si);
-  $title = de_entify ($title) if $title;
+  $title = html_unquote ($title) if $title;
   $title =~ s/^Download //si;
 
   my ($w, $h, $size, $selection);
@@ -1618,8 +1913,10 @@ sub scrape_vimeo_url($$) {
   my $ct;
   ($http, $head, $body) = get_url ($url, $referer, $hdrs, 0, undef, 1);
 
-  ($ct)   = ($head =~ m/^content-type:\s*([^\s;]+)/mi);
-  ($size) = ($head =~ m/^content-length:\s*(\d+)/mi);
+  ($ct)   = ($head =~ m@^Content-Type:   \s* ( [^\s;]+ ) @mix);
+  ($size) = ($head =~ m@^Content-Range:  \s* bytes \s+ [-\d]+ / (\d+) @mix);
+  ($size) = ($head =~ m@^Content-Length: \s* (\d+) @mix)
+    unless $size;
   my $year = undef; # no published date in HTML
 
   errorI ("couldn't find video for $url") unless $ct;
@@ -1645,13 +1942,18 @@ sub scrape_vimeo_private($$) {
   #  $url = "http://vimeo.com/$id";
   # No longer true? Instead, look at the URL inside "files" which has sig.
 
+  # Sometimes these videos are both private and unembeddable, and then 
+  # we get a 403.
+
   my ($http, $head, $body) = get_url ($url, $referer);
-  if (! check_http_status ($url, $http, 0)) {
+  if (! check_http_status ($id, $url, $http, 0)) {
     exit (1) if ($verbose <= 0); # Skip silently if --quiet.
-    errorI ("$id: $http: scraping private video failed");
+    error ("$id: scraping private video failed");
   }
 
-  my ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si);
+  my ($title) = ($body =~ m@"title":"(.*?)",@s);
+     ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si) unless $title;
+
   my ($sig)   = ($body  =~ m@"signature":"([a-fA-F\d]+)"@s);
   my ($time)  = ($body  =~ m@"timestamp":"?(\d+)"?@s);
   my ($files) = ($body  =~ m@("hd":{.*?})@s);
@@ -1690,6 +1992,15 @@ sub scrape_vimeo_private($$) {
 }
 
 
+# This is all completely horrible: try to convert the random crap people
+# throw into Youtube video titles into something more consistent.
+#
+# - Aims for "Artist -- Title" instead of various other ways of spelling that.
+# - Omits noise phrases like "official music video" and "high quality".
+# - Downcases things that appear to be gratuitously in all-caps.
+#
+# This likely does stupid things on Youtube things that aren't music videos.
+#
 sub munge_title($) {
   my ($title) = @_;
 
@@ -1697,71 +2008,153 @@ sub munge_title($) {
 
   utf8::decode ($title);  # Pack multi-byte UTF-8 back into wide chars.
 
-  # Crud added by the sites themselves.
+  $title =~ s/ \\[ux] { ([a-z0-9]+)   } / chr(hex($1)) /gsexi;  # \u{XXXXXX}
+  $title =~ s/ \\[ux]   ([a-z0-9]{4})   / chr(hex($1)) /gsexi;  # \uXXXX
 
-  $title =~ s/\s+/ /gsi;
-  $title =~ s/^Youtube - //si;
-  $title =~ s/- Youtube$//si;
+  $title =~ s/[\x{2012}-\x{2013}]/-/gs;		# various dashes
+  $title =~ s/[\x{2014}-\x{2015}]/--/gs;	# various long dashes
+  $title =~ s/\x{2018}/`/gs;			# backquote
+  $title =~ s/\x{2019}/'/gs;			# quote
+  $title =~ s/[\x{201c}\x{201d}]/"/gs;		# ldquo, rdquo
+  $title =~ s/`/'/gs;
+
+  $title =~ s/\\//gs; # I think we can just omit other backslashes entirely.
+
+  $title =~ s/^\s+|\s+$//gs;
+  $title =~ s/\s+/ /gs;
+
+  $title =~ s/^Youtube -+ //si;
+  $title =~ s/ -+ Youtube$//si;
   $title =~ s/ on Vimeo\s*$//si;
-  $title = '' if ($title eq 'Broadcast Yourself.');
-  $title =~ s@: @ - @sg;    # colons, slashes not allowed.
-  $title =~ s@[:/]@ @sg;
-  $title =~ s@\s+$@@gs;
-  $title =~ s@&[^;]+;@@sg; # Fuck it, just omit all entities.
+  $title =~ s/Broadcast Yourself\.?$//si;
+
+  $title =~ s/\b ( ( HD | TV | HDTV | HQ | 720\s*p? | 1080\s*p? |
+                     High [-\s]* Qual (ity)? |
+                     EP | MV | performance |
+                     SXSW ( \s* Music )? ( \s* \d{4} )? |
+                     Showcasing \s Artist |
+                     Presents 
+                   )
+                   \b \s* )+ //gsix;
+
+  $title =~ s/\b Official
+                 ( [-\s]* ( Video | Clip | Music | Audio | Stereo | Lyric ))+
+              \b//gsix;
+  $title =~ s/\b Music ( [-\s]* ( Video | Clip ))+ \b//gsix;
+
+
+  $title =~ s/\s+/ /gs;
+
+  # Lose now-empty parens
+  1 while ($title =~ s/\(\s*\)//gs);
+  1 while ($title =~ s/\[\s*\]//gs);
+  1 while ($title =~ s/\{\s*\}//gs);
+
+  # Trailing crap
+  $title =~ s/[-;:,\s]+$//gs;
+
+  # Don't confuse "Directed By" with "A by B"
+  $title =~ s/\bDirected by\b/Dir./gsi;
+
+  my ($artist, $track, $junk);
+
+  ($title, $junk) = ($1, $2)
+    if ($title =~ m/^(.*)\s+(Dir\. .*)/si);
+
+
+  ($track, $artist) = ($1, $2)			# TRACK performed by ARTIST
+    if (!$artist &&				# TRACK by ARTIST
+        $title =~ m/^ ( .+? ) \b
+                      (?: performed \s+ )? by \b ( .+ )$/six);
+
+  ($artist, $track) = ($1, $2)			# ARTIST performing TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) \b (?: perform | performing )
+                    \b ( .+ )$/six);
+
+  ($track, $artist) = ($1, $2)				# "TRACK" ARTIST
+    if (!$artist &&
+        $title =~ m/^ \" ( .+? ) \" [,\s]+ ( .+ )$/six);
+
+  ($artist, $track, $junk) = ($1, $2, $3 || $junk)	# ARTIST "TRACK" JUNK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) [,\s]+ \" ( .+ ) \" ( .*? ) $/six);
+
+
+  ($track, $artist) = ($1, $2)				# 'TRACK' ARTIST
+    if (!$artist &&
+        $title =~ m/^ \' ( .+? ) \' [,\s]+ ( .+ )$/six);
+
+  ($artist, $track, $junk) = ($1, $2, $3 || $junk)	# ARTIST 'TRACK' JUNK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) [,\s]+ \' ( .+ ) \' ( .*? ) $/six);
+
+
+  ($artist, $track) = ($1, $2)				# ARTIST -- TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) \s* --+ \s* ( .+ )$/six);
+
+  ($artist, $track) = ($1, $2)				# ARTIST: TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) \s* :+  \s* ( .+ )$/six);
+
+
+  ($artist, $track) = ($1, $2)				# ARTIST-- TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? )     --+ \s* ( .+ )$/six);
+
+  ($artist, $track) = ($1, $2)				# ARTIST - TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? ) \s+ -   \s+ ( .+ )$/six);
+
+  ($artist, $track) = ($1, $2)				# ARTIST- TRACK
+    if (!$artist &&
+        $title =~ m/^ ( .+? )     -+  \s* ( .+ )$/six);
+
+
+  ($artist, $junk) = ($1, $2)				# Junk in $artist
+    if ($artist && !$junk &&
+        $artist =~ m/^ ( .+? ) \s+ -+ \s+ ( .+? ) $/six);
+
+
+  if ($junk) {
+    $junk = '' unless ($junk =~ m/[a-z]/i);
+    $junk =~ s@^\s*\(\s*(.+?)\s*\)\s*$@$1@si; # de-parenthesize
+  }
+
+  foreach my $s ($artist, $track, $junk, $title) {
+    next unless $s;
+    $s =~ s/^ [-\s\"\'\`\|.,;:]+ |
+              [-\s\"\'\`\|.,;:]+ $ //gsx;
+
+    # If there are no lower case letters, capitalize all
+    # fully-upper-case words.
+    $s =~ s/\b([[:upper:]])([[:upper:]\d]+)\b/$1\L$2/gsi
+      unless ($s =~ m/[a-z]/s);
+  }
+
+  # Stahhhhhp...
+  $junk = '' if ($junk && $junk =~ m/ ^ \s* ( official | video ) \s* $/six);
+
+
+  if ($artist) {
+    $title = "$artist - $track";
+    $title .= " ($junk)" if $junk;
+  }
+
+  $title =~ s@\s*[/:]+\s*@ - @gs;  # no colons or slashes
 
   $title =~ s@\.(mp[34]|m4[auv]|mov|mqv|flv|wmv)\b@@si;
 
-  # Do some simple rewrites / clean-ups to dumb things people do
-  # when titling their videos.
-
-  # yes I know it's a video
-  $title =~ s/\s*[\[\(][^\[\(]*?\s*\b(video|hd|hq|high quality)[\]\)]\s*$//gsi;
-  $title =~ s@\[audio\]@ @gsi;
-  $title =~ s@\[mv\]@ @gsi;
-  $title =~ s/(official\s*)?(music\s*)?video(\s*clip)?\b//gsi;
-  $title =~ s/\s\(official\)//gsi;
-  $title =~ s/[-:\s]*SXSW[\d ]*Showcas(e|ing) Artist\b//gsi;
-  $title =~ s/^.*\bPresents -+ //gsi;
-  $title =~ s/ \| / - /gsi;
-  $title =~ s/ - Director - .*$//si;
-  $title =~ s/\bHD\s*(720|1080)\s*[pi]\b//si;
-
-  $title =~ s/'s\s+[\'\"](.*)[\'\"]/ - $1/gsi;      # foo's "bar" => foo - bar
-  $title =~ s/^([^\"]+) [\'\"](.*)[\'\"]/$1 - $2/gsi; # foo "bar" => foo - bar
-
-  $title =~ s/ -+ *-+ / - /gsi;   # collapse dashes to a single dash
-  $title =~ s/~/-/gsi;
-  $title =~ s/\s*\{\s*\}\s*$//gsi;	# lose trailing " { }"
-  $title =~ s/\s*\(\s*\)\s*$//gsi;	# lose trailing " ( )"
-
-  $title =~ s/[^][[:alnum:]!?()]+$//gsi;  # lose trailing non-alpha-or-paren
-
   $title =~ s/\s+/ /gs;
-  $title =~ s/^\s+|\s+$//gs;
-
-  # If there are no dashes, insert them after the leading upper case words.
-  $title =~ s/^((?:[[:upper:]\d]+\s+)+)(.+)/$1-- $2/si
-    unless ($title =~ m/ -/s);
-
-  # If there are no dashes, insert them before the trailing upper case words.
-  $title =~ s/^(.+?)((\s+[[:upper:]\d]+)+)$/$1 --$2/si
-    unless ($title =~ m/ -/s);
-
-  # Capitalize all fully-upper-case words.
-  $title =~ s/\b([[:upper:]])([[:upper:]\d]+)\b/$1\L$2/gsi;
-
-# $title =~ s/\b([[:alpha:]])([[:alnum:]\']+)\b/$1\L$2/gsi   # capitalize words
-#   if ($title !~ m/[[:lower:]]/s);                    # if it's all upper case
-
-
-  $title =~ s/ \(\)//gs;
-  $title =~ s/ \[\]//gs;
 
   # Don't allow the title to begin with "." or it writes a hidden file.
-  $title =~ s/^([.,\s])/_$1/gs;
+  # And dash causes a stdout dump.
+  $title =~ s/^[-.,\s]+//gs;
 
   return $title;
 }
+
 
 
 # Does any version of the file exist with the usual video suffixes?
@@ -1771,6 +2164,7 @@ sub file_exists_with_suffix($) {
   my ($f) = @_;
   foreach my $ext (@video_extensions) {
     my $ff = "$f.$ext";
+    utf8::encode($ff);   # Unpack wide chars into multi-byte UTF-8.
     return ($ff) if -f ($ff);
   }
   return undef;
@@ -1781,8 +2175,8 @@ sub file_exists_with_suffix($) {
 # the highest-resolution underlying video.  The HTML also lists the
 # video dimensions and file size, if possible.
 #
-sub cgi_output($$$$$$$) {
-  my ($title, $file, $id, $url, $w, $h, $size) = @_;
+sub cgi_output($$$$$$$$) {
+  my ($title, $file, $id, $orig_url, $url, $w, $h, $size) = @_;
 
   if (! ($w && $h)) {
     ($w, $h, $size) = video_url_size ($title, $id, $url);
@@ -1791,8 +2185,8 @@ sub cgi_output($$$$$$$) {
   $size = -1 unless defined($size);
 
   my $ss = ($size <= 0        ? '<SPAN CLASS="err">size unknown</SPAN>' :
-            $size > 1024*1024 ? sprintf ("%dM", $size/(1024*1024)) :
-            $size > 1024      ? sprintf ("%dK", $size/1024) :
+            $size > 1024*1024 ? sprintf ("%.0fM", $size/(1024*1024)) :
+            $size > 1024      ? sprintf ("%.0fK", $size/1024) :
             "$size bytes");
   my $wh = ($w && $h ? "$w &times; $h" : "resolution unknown");
   $wh = '<SPAN CLASS="err">' . $wh . '</SPAN>'
@@ -1837,7 +2231,8 @@ sub cgi_output($$$$$$$) {
   utf8::encode ($file);   # Unpack wide chars into multi-byte UTF-8.
   $url = ($ENV{SCRIPT_NAME} . 
           '/' . url_quote($file) .
-          '?' . ($proxy_p? 'proxy' : 'redir') .
+          '?src=' . url_quote($orig_url) .
+          '&' . ($proxy_p? 'proxy' : 'redir') .
           '=' . url_quote($url));
   $url = html_quote ($url);
   $title = html_quote ($title);
@@ -1859,13 +2254,11 @@ sub cgi_output($$$$$$$) {
 }
 
 
-sub download_video_url($$$$$$$);
-sub download_video_url($$$$$$$) {
-  my ($url, $title, $year, $size_p, $progress_p, $cgi_p, $force_fmt) = @_;
+# There are so many ways to specify URLs of videos... Turn them all into
+# something sane and parsable.
 
-  $error_whiteboard = '';	# reset per-URL diagnostics
-  $progress_ticks = 0;		# reset progress-bar counters
-  $progress_time = 0;
+sub canonical_url($) {
+  my ($url) = @_;
 
   # Add missing "http:"
   $url = "http://$url" unless ($url =~ m@^https?://@si);
@@ -1894,19 +2287,6 @@ sub download_video_url($$$$$$$) {
     $url = "http://www.$site.com/view_play_list?p=$id";
     $playlist_p = 1;
 
-  # Youtube /watch/??v= or /watch#!v= or /v/ URLs. 
-  } elsif ($url =~ m@^https?:// (?:[a-z]+\.)?
-                     (youtube) (?:-nocookie)? (?:\.googleapis)? \.com/+
-                     (?: (?: watch/? )? (?: \? | \#! ) v= |
-                         v/ |
-                         embed/ |
-                         .*? &v= |
-                         [^/\#?&]+ \#p(?: /[a-zA-Z\d] )* /
-                     )
-                     ([^<>?&,\'\"]+) ($|[?&]) @sx) {
-    ($site, $id) = ($1, $2);
-    $url = "http://www.$site.com/watch?v=$id";
-
   # Youtube "/verify_age" URLs.
   } elsif ($url =~ 
            m@^https?://(?:[a-z]+\.)?(youtube) (?:-nocookie)? \.com/+
@@ -1925,8 +2305,19 @@ sub download_video_url($$$$$$$) {
       $url =~ s@&.*$@@s;
     }
     $url = "http://www.$site.com$url" if ($url =~ m@^/@s);
-    return download_video_url ($url, $title, $year, $size_p, undef, $cgi_p,
-                               $force_fmt);
+
+  # Youtube /watch/?v= or /watch#!v= or /v/ URLs. 
+  } elsif ($url =~ m@^https?:// (?:[a-z]+\.)?
+                     (youtube) (?:-nocookie)? (?:\.googleapis)? \.com/+
+                     (?: (?: watch/? )? (?: \? | \#! ) v= |
+                         v/ |
+                         embed/ |
+                         .*? &v= |
+                         [^/\#?&]+ \#p(?: /[a-zA-Z\d] )* /
+                     )
+                     ([^<>?&,\'\"]+) ($|[?&]) @sx) {
+    ($site, $id) = ($1, $2);
+    $url = "http://www.$site.com/watch?v=$id";
 
   # Youtube "/user" and "/profile" URLs.
   } elsif ($url =~ m@^https?://(?:[a-z]+\.)?(youtube) (?:-nocookie)? \.com/
@@ -1936,8 +2327,11 @@ sub download_video_url($$$$$$$) {
     $url = "http://www.$site.com/watch?v=$id";
     error ("unparsable user next_url: $url") unless $id;
 
-  # Vimeo /NNNNNN URLs (and player.vimeo.com/video/NNNNNN)
-  } elsif ($url =~ m@^https?://(?:[a-z]+\.)?(vimeo)\.com/(?:video/)?(\d+)@s) {
+  # Vimeo /NNNNNN URLs
+  # and player.vimeo.com/video/NNNNNN
+  # and vimeo.com/m/NNNNNN
+  } elsif ($url =~ 
+           m@^https?://(?:[a-z]+\.)?(vimeo)\.com/(?:video/|m/)?(\d+)@s) {
     ($site, $id) = ($1, $2);
 
   # Vimeo /videos/NNNNNN URLs.
@@ -1955,13 +2349,43 @@ sub download_video_url($$$$$$$) {
     ($site, $id) = ($1, $2);
 
   } else {
-    error ("no ID in $url" . ($title ? " ($title)" : ""))
-      unless ($id);
+    error ("unparsable URL: $url");
   }
 
-  if ($playlist_p) {
-    return download_playlist ($id, $url, $title, $size_p, $cgi_p);
+  return ($url, $id, $site);
+}
+
+
+sub download_video_url($$$$$$$$);
+sub download_video_url($$$$$$$$) {
+  my ($url, $title, $year, $size_p, $list_p,
+      $progress_p, $cgi_p, $force_fmt) = @_;
+
+  $error_whiteboard = '';	# reset per-URL diagnostics
+  $progress_ticks = 0;		# reset progress-bar counters
+  $progress_time = 0;
+
+  if ($title) {
+    $title =~ s@\s*[/:]+\s*@ - @gs;  # no colons or slashes
   }
+
+  my ($id, $site);
+  ($url, $id, $site) = canonical_url ($url);
+
+  if ($url =~ m@view_play_list@s) {
+    return download_playlist ($id, $url, $title, $size_p, $list_p, $cgi_p);
+  }
+
+  if ($list_p) {
+    if ($list_p > 1) {
+      print STDOUT "$id\t$title\n";
+    } else {
+      print STDOUT "http://www.$site.com/watch?v=$id\n";
+    }
+    return;
+  }
+
+  my $orig_url = $url;   # URL of the page, not of the video data.
 
   my $suf = ($append_suffix_p eq '1' ? "$id" :
              $append_suffix_p ? "$id $append_suffix_p" : "");
@@ -1980,10 +2404,10 @@ sub download_video_url($$$$$$$) {
   # info to find out the title and thus the file name.
   #
   if (defined($title)) {
-    $title  = munge_title ($title);
-    my $ff = file_exists_with_suffix (de_entify ("$title$suf"));
+    utf8::decode ($title);  # Pack multi-byte UTF-8 back into wide chars.
+    my $ff = file_exists_with_suffix ("$title$suf");
 
-    if (! $size_p) {
+    if (! ($size_p || $list_p)) {
       $err = "$id: exists: $ff"  if ($ff && !$err);
       if ($err) {
         exit (1) if ($verbose <= 0); # Skip silently if --quiet.
@@ -1998,7 +2422,7 @@ sub download_video_url($$$$$$$) {
   #
   if ($site eq 'youtube') {
     ($ct, $url, $title2, $year, $w, $h, $size) = 
-      scrape_youtube_url ($url, $id, $title, $size_p, $force_fmt);
+      scrape_youtube_url ($url, $id, $title, $size_p, $list_p, $force_fmt);
   } else {
     error ("--fmt only works with Youtube") if (defined($force_fmt));
     ($ct, $url, $title2, $year, $w, $h, $size) = scrape_vimeo_url ($url, $id);
@@ -2024,7 +2448,7 @@ sub download_video_url($$$$$$$) {
     }
   }
 
-  my $file = de_entify ("$title$suf");
+  my $file = "$title$suf";
   if    ($ct =~ m@/(x-)?flv$@si)  { $file .= '.flv';  }   # proper extensions
   elsif ($ct =~ m@/(x-)?webm$@si) { $file .= '.webm'; }
   elsif ($ct =~ m@/quicktime$@si) { $file .= '.mov';  }
@@ -2037,20 +2461,20 @@ sub download_video_url($$$$$$$) {
     # for "--fmt all"
     my $ii = $id . ($size_p eq '1' || $size_p eq '2' ? '' : ":$size_p");
 
-    my $ss = ($size > 1024*1024 ? sprintf ("%dM", $size/(1024*1024)) :
-              $size > 1024 ? sprintf ("%dK", $size/1024) :
+    my $ss = ($size > 1024*1024 ? sprintf ("%.0fM", $size/(1024*1024)) :
+              $size > 1024 ? sprintf ("%.0fK", $size/1024) :
               "$size bytes");
 
     print STDOUT "$ii\t${w} x ${h}\t$ss\t$title\n";
 
   } elsif ($cgi_p) {
-    cgi_output ($title, $file, $id, $url, $w, $h, $size);
+    cgi_output ($title, $file, $id, $orig_url, $url, $w, $h, $size);
 
   } else {
 
     # Might be checking twice, if --title was specified.
     if (! $err) {
-      my $ff = file_exists_with_suffix (de_entify ("$title$suf"));
+      my $ff = file_exists_with_suffix ("$title$suf");
       $err = "$id: exists: $ff"  if ($ff);
     }
     if ($err) {
@@ -2063,12 +2487,14 @@ sub download_video_url($$$$$$$) {
     my $expect_bytes = ($size ? ($progress_p ? $size : -$size) : undef);
     my ($http, $head, $body) = get_url ($url, undef, undef, 0, $file, undef,
                                         undef, $expect_bytes);
-    check_http_status ($url, $http, 2);  # internal error if still 403
+    check_http_status ($id, $url, $http, 2);  # internal error if still 403
 
     if (! -s $file) {
       unlink ($file);
       error ("$file: failed: $url");
     }
+
+    write_file_metadata_url ($file, $id, $orig_url);
 
     if ($verbose) {
 
@@ -2077,8 +2503,8 @@ sub download_video_url($$$$$$$) {
       ($w, $h, $size) = video_file_size ($file);
 
       $size = -1 unless $size;
-      my $ss = ($size > 1024*1024 ? sprintf ("%dM", $size/(1024*1024)) :
-                $size > 1024 ? sprintf ("%dK", $size/1024) :
+      my $ss = ($size > 1024*1024 ? sprintf ("%.0fM", $size/(1024*1024)) :
+                $size > 1024 ? sprintf ("%.0fK", $size/1024) :
                 "$size bytes");
       $ss .= ", $w x $h" if ($w && $h);
       print STDERR "$progname: wrote       \"$file\", $ss\n";
@@ -2087,8 +2513,8 @@ sub download_video_url($$$$$$$) {
 }
 
 
-sub download_playlist($$$$$) {
-  my ($id, $url, $title, $size_p, $cgi_p) = @_;
+sub download_playlist($$$$$$) {
+  my ($id, $url, $title, $size_p, $list_p, $cgi_p) = @_;
 
   my $start = 0;
   while (1) {
@@ -2104,7 +2530,7 @@ sub download_playlist($$$$$) {
                     "&strict=true");
 
     my ($http, $head, $body) = get_url ($data_url, undef, undef, 0, undef);
-    check_http_status ($url, $http, 1);
+    check_http_status ($id, $url, $http, 1);
 
     ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si)
       unless $title;
@@ -2130,7 +2556,8 @@ sub download_playlist($$$$$) {
 
       eval {
         $noerror = 1;
-        download_video_url ($u2, $t2, $year, $size_p, undef, $cgi_p, undef);
+        download_video_url ($u2, $t2, $year, $size_p, $list_p, 
+                            undef, $cgi_p, undef);
         $noerror = 0;
       };
       print STDERR "$progname: $@" if $@;
@@ -2169,7 +2596,7 @@ sub do_cgi() {
 #                             $ENV{SCRIPT_NAME} =~ m@^.*/(.*)@s);
   }
 
-  my ($url, $redir, $proxy);
+  my ($url, $orig_url, $redir, $proxy);
   foreach (split (/&/, $args)) {
     my ($key, $val) = m/^([^=]+)=(.*)$/;
     $key = url_unquote ($key);
@@ -2177,6 +2604,7 @@ sub do_cgi() {
     if    ($key eq 'url')   { $url = $val; }
     elsif ($key eq 'redir') { $redir = $val; }
     elsif ($key eq 'proxy') { $proxy = $val; }
+    elsif ($key eq 'src')   { $orig_url = $val; } # Unused: only informative.
     else { error ("unknown option: $key"); }
   }
 
@@ -2206,7 +2634,7 @@ sub do_cgi() {
   } elsif ($url) {
     error ("extraneous crap in URL: $ENV{PATH_INFO}")
       if (defined($ENV{PATH_INFO}) && $ENV{PATH_INFO} ne "");
-    download_video_url ($url, undef, undef, 0, undef, 1, undef);
+    download_video_url ($url, undef, undef, 0, 0, undef, 1, undef);
 
   } else {
     error ("no URL specified for CGI");
@@ -2237,6 +2665,7 @@ sub main() {
   my @urls = ();
   my $title = undef;
   my $size_p = 0;
+  my $list_p = 0;
   my $progress_p = 0;
   my $fmt = undef;
   my $expect = undef;
@@ -2248,9 +2677,10 @@ sub main() {
     elsif (m/^-v+$/)         { $verbose += length($_)-1; }
     elsif (m/^--?q(uiet)?$/) { $verbose--; }
     elsif (m/^--?progress$/) { $progress_p++; }
-    elsif (m/^--?suffix$/)   { $append_suffix_p++; }
+    elsif (m/^--?suffix$/)   { $append_suffix_p = 1; }
     elsif (m/^--?title$/)    { $expect = $_; $title = shift @ARGV; }
     elsif (m/^--?size$/)     { $expect = $_; $size_p++; }
+    elsif (m/^--?list$/)     { $expect = $_; $list_p++; }
     elsif (m/^--?fmt$/)      { $expect = $_; $fmt = shift @ARGV; }
     elsif (m/^--?guess$/)    { $guessp++; }
     elsif (m/^-./)           { usage; }
@@ -2287,7 +2717,8 @@ sub main() {
   usage unless ($#urls >= 0);
   foreach (@urls) {
     my ($title, $fmt, $url) = @$_;
-    download_video_url ($url, $title, undef, $size_p, $progress_p, 0, $fmt);
+    download_video_url ($url, $title, undef, $size_p, $list_p,
+                        $progress_p, 0, $fmt);
   }
 }
 
