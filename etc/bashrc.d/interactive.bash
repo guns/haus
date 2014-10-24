@@ -1386,10 +1386,6 @@ if __OS_X__; then
     alias pmassertions='pmset -g assertions'
 fi
 
-HAVE batterystat && {
-    alias logbatterystat='batterystat --json >> ~/Documents/Notes/batterystat.json'
-}
-
 HAVE wpa_supplicant wpa_passphrase && {
     wpajoin() {
         local OPTIND OPTARG opt iface='wlan0'
@@ -1404,6 +1400,47 @@ HAVE wpa_supplicant wpa_passphrase && {
         local pass="$2"; [[ $pass ]] || pass=$(printf "pass: " >&2; read r; echo "$r")
         bgrun wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
     }
+}
+
+HAVE iwlist && iwscan() {
+    ruby -e '
+        aps, t = [], {}
+
+        %x(iwlist scan 2>/dev/null).each_line do |line|
+            if line =~ /^\s*Cell \d+|^$/
+                aps << t unless t.empty?
+                t = { :ie => [], :rates => [] }
+                t[:mac] = line[/Address:\s*(\S+)/, 1]
+            elsif line.index "ESSID:"
+                t[:essid] = line[/ESSID:"(.*)"/, 1]
+            elsif line.index "Frequency:"
+                t[:freq] = line[/Frequency:(.*)/, 1]
+            elsif line.index "Quality="
+                t[:quality] = line[/Quality=(\S+)/, 1]
+                t[:signal] = line[/Signal level=(.* dBm)/, 1]
+            elsif line.index "Encryption key:"
+                t[:encryption] = line[/Encryption key:(on|off)/, 1] == "on"
+            elsif line =~ /\s*IE: (?!Unknown:)/
+                t[:ie] << line[/\s*IE: (.*)/, 1]
+            elsif line =~ %r{\d+ Mb/s}
+                t[:rates].concat line.scan(%r{(\d+) Mb/s}).flatten.map(&:to_i)
+            end
+        end
+
+        puts aps.map { |t|
+            "ESSID: %s\nAddress: %s\nQuality: %s\nSignal: %s\nFrequency: %s\nRates: %s Mb/s\nEncryption: %s%s%s" % [
+                t[:essid].inspect,
+                t[:mac],
+                t[:quality],
+                t[:signal],
+                t[:freq],
+                (t[:rates] || []).sort.join(" "),
+                t[:encryption] ? "on" : "OFF",
+                ("\n" if t[:ie].any?),
+                (t[:ie] || []).map { |l| "  #{l}" }.join("\n")
+            ]
+        }.join("\n\n")
+    '
 }
 
 ### Encryption
