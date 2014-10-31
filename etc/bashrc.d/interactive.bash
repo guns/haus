@@ -268,10 +268,11 @@ lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
 lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 
-# objdump hexdump strings hexfiend
+# objdump hexdump strings readelf hexfiend
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
-ALIAS strings='strings -t x -' && lstrings() { strings -t x - "$@" | pager; }
-ox() { objdump -x "$@" | pager; }
+ALIAS strings='strings -a -t x -' && lstrings() { strings -a -t x - "$@" | pager; }
+HAVE objdump && ox() { objdump -x "$@" | pager; }
+HAVE readelf && dy() { readelf -d "$@" | pager; }
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
