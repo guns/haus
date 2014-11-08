@@ -272,7 +272,7 @@ lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
 ALIAS strings='strings -a -t x -' && lstrings() { strings -a -t x - "$@" | pager; }
 HAVE objdump && ox() { objdump -x "$@" | pager; }
-HAVE readelf && dy() { readelf -d "$@" | pager; }
+HAVE readelf && dl() { readelf -d "$@" | pager; }
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
