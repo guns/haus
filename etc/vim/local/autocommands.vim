@@ -247,6 +247,10 @@ augroup GUNS
     autocmd BufRead,BufNewFile psql.edit.*
         \ setlocal filetype=sql
 
+    " Rust {{{1
+    autocmd FileType rust
+        \ SetWhitespace 4
+
     " Plugin: Unite.vim {{{1
     autocmd FileType unite
         \ silent! syntax clear Tab TrailingWS |
