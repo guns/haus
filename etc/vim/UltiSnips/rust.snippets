@@ -1,18 +1,28 @@
-snippet f "fn" b
-fn $1($2) {
+snippet fn "fn" b
+fn $1($2) ${3:-> $4 }{
 	$0
 }
 endsnippet
 
-snippet pl "println!" w
-println!("$0");
+snippet pfn "pub fn" w
+pub fn $1($2) ${3:-> $4 }{
+	$0
+}
 endsnippet
 
-snippet l "let" w
+snippet pr "print!" w
+print!("$0")
+endsnippet
+
+snippet pl "println!" w
+println!("$0")
+endsnippet
+
+snippet l "let" b
 let $0;
 endsnippet
 
-snippet lm "let mut" w
+snippet lm "let mut" b
 let mut $0;
 endsnippet
 
@@ -24,4 +34,125 @@ endsnippet
 
 snippet ife "if {} else {}" w
 if $1 { $2 } else { $0 }
+endsnippet
+
+snippet S "struct" w
+struct $1 {
+	$0
+}
+endsnippet
+
+snippet E "enum" w
+enum $1 {
+	$0
+}
+endsnippet
+
+snippet M "match" w
+match $1 {
+	_ => $0
+}
+endsnippet
+
+snippet = "=> " w
+=> $0
+endsnippet
+
+snippet for "for" w
+for $1 in $2 {
+	$0
+}
+endsnippet
+
+snippet wh "while" w
+while $1 {
+	$0
+}
+endsnippet
+
+snippet lo "loop" w
+loop {
+	$0
+}
+endsnippet
+
+snippet br "break" w
+break;
+endsnippet
+
+snippet con "continue" w
+continue;
+endsnippet
+
+snippet st "&str" w
+&str
+endsnippet
+
+snippet St "String" w
+String
+endsnippet
+
+snippet .i ".iter()" i
+.iter()
+endsnippet
+
+snippet .tos ".to_string()" i
+.to_string()
+endsnippet
+
+snippet .ass ".as_string()" i
+.as_string()
+endsnippet
+
+snippet .asl ".as_slice()" i
+.as_slice()
+endsnippet
+
+snippet .l ".len()" i
+.len()
+endsnippet
+
+snippet vec "vec!" w
+vec![$0]
+endsnippet
+
+snippet .sl ".slice()" i
+.slice($1, $2)
+endsnippet
+
+snippet ra "range()" i
+range($1, $2)
+endsnippet
+
+snippet io "std::io" w
+std::io
+endsnippet
+
+snippet u "use" b
+use $0;
+endsnippet
+
+snippet fs "from_str()" w
+from_str($0)
+endsnippet
+
+snippet mod "mod" w
+mod $1 {
+	$0
+}
+endsnippet
+
+snippet #T "#[test]" b
+#[test]
+fn $1() {
+	$0
+}
+endsnippet
+
+snippet #C "#[cfg()]" w
+#[cfg($0)]
+endsnippet
+
+snippet ase "assert_eq!" w
+assert_eq!($0)
 endsnippet
