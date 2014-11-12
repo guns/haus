@@ -642,7 +642,7 @@ listen() {
 
 ALIAS iotop='iotop --only'
 
-# Linux /proc /sys
+# Linux /proc /sys swap
 __LINUX__ && {
     drop_caches() {
         local cmd='echo 3 > /proc/sys/vm/drop_caches'
@@ -657,6 +657,8 @@ __LINUX__ && {
             cat /proc/sys/kernel/sysrq
         fi
     }
+
+    alias swapin='swapoff -av; swapon -av'
 }
 
 ### Processes
@@ -1636,7 +1638,7 @@ elif __LINUX__; then
 
         pacfindunknown() {
             find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
-        }; TCOMP find pacunowned
+        }; TCOMP find pacfindunknown
 
         pacinstallfile() {
             local OPTIND OPTARG opt asdeps force
