@@ -116,8 +116,9 @@ inoremap <C-e> <End>
 
 """ Emacs: Ctrl-Y (paste-unnamed-register) {{{1
 
-" Transfer scroll-window-up, insert-character-above, accept-completion,
-" and copy-modeless-selection to (nvoic)<4-y> to free (nvoic)<C-y>
+" Transfer scroll-window-up, insert-character-above, accept-completion, and
+" copy-modeless-selection to (nvoic)<4-y> to free (nvoic)<C-y>, mostly to
+" mirror <4-e> above.
 " Bind:   4-y =>   Ctrl-Y
 " Bind: v_4-y => v_Ctrl-Y
 " Bind: o_4-y => o_Ctrl-Y
