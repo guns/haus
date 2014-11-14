@@ -100,6 +100,8 @@ augroup GUNS
     " X?HTML/XML {{{1
     autocmd FileType html,xhtml,xml
         \ setlocal iskeyword+=- |
+        \ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
+        \ execute 'noremap! <buffer> <M-CR> <br>' |
         \ SetWhitespace 2 8
 
     " HAML/SASS/YAML {{{1
