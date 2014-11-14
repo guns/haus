@@ -60,23 +60,39 @@ class Mem # {{{1
     def initialize *args
       super
 
-      # Parse free(1) since the output of /proc/meminfo seems to be volatile
-      free = %x(free -b).split "\n"
-      keys = free.first.split
-      scan = lambda { |r| Hash[keys.zip free.find { |l| l =~ r }.scan(/\d+/).map { |n| (n.to_f / (2**20)).round }] }
+      meminfo = {}
 
-      @mem = OpenStruct.new scan.call(/\AMem/i)
-      mem.active = mem.used - mem.buffers - mem.cached
+      File.read('/proc/meminfo').each_line do |line|
+        key, _, kb = line.partition ':'
+        meminfo[key] = kb.to_i * (1 << 10)
+      end
+
+      @mem = OpenStruct.new
+      mem.mem_total = meminfo['MemTotal']
+      mem.free = meminfo['MemFree']
+      mem.buffers = meminfo['Buffers']
+      mem.cached = meminfo['Cached']
+      mem.slab_reclaimable = meminfo['SReclaimable']
+      mem.slab_unreclaimable = meminfo['SUnreclaim']
+      mem.active = mem.mem_total - mem.free - mem.buffers - mem.cached - mem.slab_reclaimable - mem.slab_unreclaimable
       mem.values = [
-        [mem.active,  :green, :bold],
-        [mem.buffers, :yellow],
-        [mem.cached,  :magenta]
+        [mib(mem.active), :green, :bold],
+        [mib(mem.slab_unreclaimable), :green],
+        [mib(mem.slab_reclaimable), :cyan],
+        [mib(mem.cached), :yellow],
+        [mib(mem.buffers), :magenta]
       ]
-      mem.total ||= 0
+      mem.total = mib mem.mem_total
 
-      @swap        = OpenStruct.new scan.call(/\ASwap/i)
-      swap.values  = [[swap.used, :red]]
-      swap.total ||= 0
+      @swap = OpenStruct.new
+      swap.swap_total = meminfo['SwapTotal']
+      swap.used = swap.swap_total - meminfo['SwapFree']
+      swap.values = [[mib(swap.used), :red]]
+      swap.total = mib swap.swap_total
+    end
+
+    def mib bytes
+      (bytes.to_f / 2**20).round
     end
   end # }}}2
 
