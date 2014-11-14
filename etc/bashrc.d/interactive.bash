@@ -574,7 +574,7 @@ ddsize() {
 }; TCOMP dd ddsize
 
 # free
-ALIAS free='free -m'
+ALIAS free='free --human'
 
 # Plist dumper
 ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
