@@ -363,6 +363,7 @@ noremap <Leader>em       :<C-u>TabOpen ~/.vim/local/mappings.vim<CR>
 noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/\%mutt/muttrc<CR>
 noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
+noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf<CR>
 noremap <Leader>er       :<C-u>TabOpen $cdhaus/etc/\%local/\%lib/clojure/guns/src/guns/repl.clj<CR>
 noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile<CR>
 noremap <Leader>es       :<C-u>execute 'TabOpen ' . getcwd() . '/__Scratch__' \| Scratch<CR>
