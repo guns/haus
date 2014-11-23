@@ -289,6 +289,7 @@ noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| 
 
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>
+noremap <Leader>t :<C-u>tag<Space>
 noremap <Leader>T :<C-u>Ctags<CR>
 noremap <Leader>U :<C-u>UndoRemove<CR>
 noremap <4-!>     :<C-u>make!<CR>
@@ -573,7 +574,6 @@ Mapall <4-t> :<C-u>tabnew \\\| UniteOpen<CR>
 Mapall <4-V> :<C-u>vsplit \\\| UniteOpen<CR>
 Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
-Mapall <4-'> :<C-u>Unite -no-split tag<CR>
 Mapall <4-f> :<C-u>Unite -no-split file<CR>
 Mapall <4-F> :<C-u>UniteWithBufferDir -no-split file<CR>
 

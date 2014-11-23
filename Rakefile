@@ -211,6 +211,7 @@ task :env do
       { :base => "#{@vim}/timl",                    :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/tir_black",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/unite.vim",               :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/unite-argument",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/unite-git",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/unite-tag",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-abolish",             :branch => %w[master],      :files => :pathogen },
