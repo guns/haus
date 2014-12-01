@@ -412,9 +412,9 @@ task :remotes => :env do
   end
 end
 
-desc 'Import all terminfo files in share/terminfo'
+desc 'Import all terminfo files'
 task :tic do
-  Dir['share/terminfo/*'].each { |f| sh 'tic', f }
+  Dir['etc/%terminfo/*/*'].each { |f| sh 'tic', f }
 end
 
 desc 'Install service files in lib/systemd to /usr/local/lib/systemd'
