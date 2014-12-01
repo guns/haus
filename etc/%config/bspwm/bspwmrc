@@ -20,6 +20,7 @@ bspc config focused_border_color    '#F5497D'
 bspc rule --add kupfer.py focus=true
 bspc rule --add gifview focus=true floating=true center=true
 bspc rule --add sxiv focus=true floating=true center=true
+bspc rule --add skype focus=true floating=true
 
 bspc monitor --reset-desktops one two three four
 bspc desktop one --layout monocle
