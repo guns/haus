@@ -4,8 +4,16 @@ if [ -n "$SSH_AUTH_SOCK" ]; then
     echo "SSH_AUTH_SOCK already set: $SSH_AUTH_SOCK"
 elif [ -n "$GPG_AGENT_INFO" ]; then
     echo "GPG_AGENT_INFO already set: $GPG_AGENT_INFO"
-elif [ "$#" -gt 0 ]; then
-    exec gpg-agent --enable-ssh-support --daemon "$@"
+fi
+
+PINENTRY_PROGRAM=
+
+if [ "$(id -u)" -eq 0 ]; then
+    PINENTRY_PROGRAM='--pinentry-program=/usr/bin/pinentry-curses'
+fi
+
+if [ "$#" -eq 0 ]; then
+    exec gpg-agent --enable-ssh-support "$PINENTRY_PROGRAM" --daemon "${SHELL:-$(command -v bash)}"
 else
-    exec gpg-agent --enable-ssh-support --daemon "${SHELL:-$(command -v bash)}"
+    exec gpg-agent --enable-ssh-support "$PINENTRY_PROGRAM" --daemon "$@"
 fi

@@ -1470,7 +1470,10 @@ ALIAS ssl='openssl' && {
 # GnuPG
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
-ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'
+if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
+    ALIAS gpgverify='gpg --verify-files'
+    alias gpgagentcurses='run gpg-agent --daemon --pinentry-program=/usr/bin/pinentry-curses'
+fi
 
 # pass
 HAVE pass && {
