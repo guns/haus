@@ -15,5 +15,9 @@ export DE=xfce
 export QT_STYLE_OVERRIDE=gtk
 export _JAVA_AWT_WM_NONREPARENTING=1
 
+# WINE
+export WINEARCH=win32
+export WINEDLLOVERRIDES=winemenubuilder.exe=d
+
 exec /usr/bin/gpg-agent --enable-ssh-support --daemon /usr/bin/bspwm-session
 # ~/.config/bspwm/autostart
