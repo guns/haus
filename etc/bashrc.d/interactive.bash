@@ -1473,7 +1473,7 @@ ALIAS ssl='openssl' && {
 if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
     ALIAS gpgverify='gpg --verify-files' \
           gpgsign='gpg --detach-sign'
-    alias gpgagentcurses='run gpg-agent --daemon --enable-ssh-support --pinentry-program=/usr/bin/pinentry-curses'
+    alias gpgagentcurses='run gpg-agent --daemon --pinentry-program=/usr/bin/pinentry-curses'
 fi
 
 # pass
