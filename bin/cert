@@ -212,8 +212,9 @@ class Cert
 
   def exec *args
     env = {
-      'CURL_CA_BUNDLE' => certfile,
-      'GIT_SSL_CAINFO' => certfile
+      'CURL_CA_BUNDLE' => certfile, # curl
+      'GIT_SSL_CAINFO' => certfile, # git
+      'SSL_CERT_FILE'  => certfile  # ruby
     }
     # Leiningen
     if keystore
