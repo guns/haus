@@ -189,10 +189,10 @@ Print
 #
 
 F9
-	wmctrl -a 'guns ❦ EVA'
+	wmctrl -a "guns ❦ $HOSTNAME"
 
 super + F9
-	wmctrl -a 'root ❦ EVA'
+	wmctrl -a "root ❦ $HOSTNAME"
 
 alt + F9
 	urxvt-client
