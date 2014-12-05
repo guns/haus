@@ -13,7 +13,7 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 if [ "$#" -eq 0 ]; then
-    exec gpg-agent --enable-ssh-support "$PINENTRY_PROGRAM" --daemon "${SHELL:-$(command -v bash)}"
+    exec gpg-agent --enable-ssh-support $PINENTRY_PROGRAM --daemon "${SHELL:-$(command -v bash)}"
 else
-    exec gpg-agent --enable-ssh-support "$PINENTRY_PROGRAM" --daemon "$@"
+    exec gpg-agent --enable-ssh-support $PINENTRY_PROGRAM --daemon "$@"
 fi
