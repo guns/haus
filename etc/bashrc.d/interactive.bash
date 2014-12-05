@@ -1370,6 +1370,7 @@ HAVE abook && abook() {
 
 ALIAS mp='modprobe -a'
 ALIAS sens='sensors'
+ALIAS trim='fstrim -av'
 
 ALIAS rfk='rfkill' && {
     alias rfdisable='run rfkill block all'
