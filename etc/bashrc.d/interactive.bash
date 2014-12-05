@@ -1471,8 +1471,9 @@ ALIAS ssl='openssl' && {
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
 if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
-    ALIAS gpgverify='gpg --verify-files'
-    alias gpgagentcurses='run gpg-agent --daemon --pinentry-program=/usr/bin/pinentry-curses'
+    ALIAS gpgverify='gpg --verify-files' \
+          gpgsign='gpg --detach-sign'
+    alias gpgagentcurses='run gpg-agent --daemon --enable-ssh-support --pinentry-program=/usr/bin/pinentry-curses'
 fi
 
 # pass
@@ -1823,7 +1824,7 @@ if HAVE systemctl; then
           jcb='journalctl -b' \
           jce='journalctl -e' \
           jcf='journalctl -f' && {
-        alias scfiles='systemctl list-unit-files'
+        alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
     }
