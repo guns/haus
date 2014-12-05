@@ -1141,14 +1141,15 @@ type ruby &>/dev/null && {
 
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
-               # alias geme
-               alias "gem${suf}g=run ${bin}/gem list | g"
-               alias "gem${suf}i=run ${bin}/gem install"
-               alias "gem${suf}q=run ${bin}/gem specification -r"
-               alias "gem${suf}s=run ${bin}/gem search -r"
-               alias "gem${suf}r=run ${bin}/gem uninstall"
-               # alias gemsync
-               alias "gem${suf}outdated=run ${bin}/gem outdated"
+                local cx='cert exec -f ~/.certificates/rubygems.crt --'
+                # alias geme
+                alias "gem${suf}g=$cx ${bin}/gem list | g"
+                alias "gem${suf}i=$cx ${bin}/gem install"
+                alias "gem${suf}q=$cx ${bin}/gem specification -r"
+                alias "gem${suf}s=$cx ${bin}/gem search -r"
+                alias "gem${suf}r=$cx ${bin}/gem uninstall"
+                # alias gemsync
+                alias "gem${suf}outdated=$cx ${bin}/gem outdated"
             }
 
             # IRB
