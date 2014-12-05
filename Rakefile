@@ -197,7 +197,6 @@ task :env do
       { :base => "#{@vim}/neomru.vim",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/nerdcommenter",           :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/nerdtree",                :branch => %w[master guns], :files => :pathogen },
-      { :base => "#{@vim}/nginx.vim",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/NrrwRgn",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/rainbow_parentheses.vim", :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/refheap.vim",             :branch => %w[master guns], :files => :pathogen },
@@ -312,6 +311,18 @@ task :env do
         :files => lambda { |proj|
           src = "#{proj.base}/src/etc/vim"
           dst = "#{proj.haus}/etc/vim/bundle/rust"
+          FileUtils.mkdir_p dst
+          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
+          nil
+        }
+      },
+
+      {
+        :base => "#{@src}/nginx",
+        :branch => %w[master vim],
+        :files => lambda { |proj|
+          src = "#{proj.base}/contrib/vim"
+          dst = "#{proj.haus}/etc/vim/bundle/nginx"
           FileUtils.mkdir_p dst
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           nil

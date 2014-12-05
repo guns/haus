@@ -135,8 +135,6 @@ augroup GUNS
         \ setlocal noexpandtab foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
 
     " Nginx {{{1
-    autocmd BufRead,BufNewFile */nginx/etc/*.conf,nginx.conf
-        \ setlocal filetype=nginx
     autocmd FileType nginx
         \ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=- |
         \ SetWhitespace 4 8
