@@ -57,6 +57,7 @@ noremap <Leader>\\ :nohlsearch<CR>
 """ Tabs and Buffers {{{1
 
 noremap <Tab> gt
+noremap <S-Tab> gT
 noremap <C-j> gt
 noremap <C-k> gT
 noremap J gt
@@ -72,7 +73,12 @@ cnoremap <C-S-o> <Esc>:tabonly<CR>
 noremap \- :zoom! -10<CR>
 noremap = :zoom! +10<CR>
 noremap 0 :zoom! 100<CR>
+noremap D :javascript gBrowser.treeStyleTab._closeChildTabs(gBrowser.mCurrentTab);<CR>
 noremap w :javascript TreeStyleTabService.toggleAutoHide(TreeStyleTabService.getTabBrowserFromChild(this));<CR>
+
+""" Bookmarks
+
+noremap a <NOP>
 
 """ Location Shortcuts {{{1
 
