@@ -1689,6 +1689,7 @@ elif __LINUX__; then
             # Installing from a URL copies the package to /var/cache/pacman
             local pkgs=() pkg
             for pkg in "$@"; do
+                mv -v "/var/cache/pacman/pkg/$(basename "$pkg")" /tmp/
                 pkgs+=("file://$(expand_path "$pkg")")
             done
 
