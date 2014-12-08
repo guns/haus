@@ -26,28 +26,28 @@ _getent()
 
     case $db in
         passwd)
-            COMPREPLY=( $( compgen -u "$cur"  ) )
+            COMPREPLY=( $( compgen -u -- "$cur" ) )
             return 0
             ;;
         group)
-            COMPREPLY=( $( compgen -g "$cur"  ) )
+            COMPREPLY=( $( compgen -g -- "$cur" ) )
             return 0
             ;;
         services)
-            COMPREPLY=( $( compgen -s "$cur"  ) )
+            COMPREPLY=( $( compgen -s -- "$cur" ) )
             return 0
             ;;
         hosts)
-            COMPREPLY=( $( compgen -A hostname "$cur"  ) )
+            COMPREPLY=( $( compgen -A hostname -- "$cur" ) )
             return 0
             ;;
         protocols|networks|ahosts|ahostsv4|ahostsv6|rpc)
-            COMPREPLY=( $( compgen -W "$( getent $db | \
+            COMPREPLY=( $( compgen -W "$( $1 $db | \
                 awk '{ print $1 }' )" -- "$cur" ) )
             return 0
             ;;
         aliases|shadow|gshadow)
-            COMPREPLY=( $( compgen -W "$( getent $db | cut -d: -f1 )" \
+            COMPREPLY=( $( compgen -W "$( $1 $db | cut -d: -f1 )" \
                 -- "$cur" ) )
             return 0
             ;;
