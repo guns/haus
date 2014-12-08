@@ -475,6 +475,7 @@ ALIAS fumt='fusermount -u'
 alias star='tar --strip-components=1'
 alias gtar='tar zcv'
 alias btar='tar jcv'
+alias xtar='tar Jcv'
 alias lstar='tar tvf'
 # Option: -S Strip one level of directories
 # Param:  $@ Arguments to `tar`
@@ -487,6 +488,7 @@ untar() {
 suntar() { untar -S "$@"; }
 guntar() { untar -z "$@"; }
 buntar() { untar -j "$@"; }
+xuntar() { untar -J "$@"; }
 
 # open
 alias op='open 2>/dev/null'
@@ -1122,6 +1124,24 @@ githubget() {
     (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
     local user="${1%%/*}" repo="${1#*/}" branch="${2:master}"
     run curl -#L "https://github.com/$user/$repo/tarball/$branch"
+}
+
+archivesrc() {
+    local d;
+    for d in "$@"; do
+        local dirname="$(basename "$d")"
+        local archive="$cdsrc/ARCHIVE/$dirname".tar.xz
+        pushd .
+        cd "$d"
+        git fdx
+        git gc --aggressive --prune=all
+        cd ..
+        if run tar acf "$cdsrc/ARCHIVE/$dirname".tar.xz "${d%/}"; then
+            run rm -rf "$d"
+            command du -h "$archive"
+        fi
+        popd
+    done
 }
 
 ### Ruby
