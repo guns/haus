@@ -33,7 +33,7 @@ class Notify
       end
 
       opt.on '-a', '--audio=[FILE]', 'Play given audio file instead of speaking message' do |arg|
-        notifier.audio = arg || File.expand_path('~/.sounds/message-received.mp3')
+        notifier.audio = arg || File.expand_path('~/.local/sounds/message-received.mp3')
       end
 
       opt.on '-n', '--no-audio' do
