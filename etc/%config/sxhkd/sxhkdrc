@@ -200,6 +200,9 @@ alt + F9
 alt + shift + F9
 	urxvt-client -e tmuxlaunch -nd
 
+super + alt + shift + F9
+	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo -H tmuxlaunch -d
+
 F12
 	T='✉ Mutt ✉'; \
 	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || \
