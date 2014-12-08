@@ -133,8 +133,8 @@ XF86AudioRaiseVolume
 super + XF86AudioMute
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
-	(urxvt-client -title "$T" -g 130x30 -e alsamixer -Vall; \
-	 bspc window --toggle floating=true)
+	{ urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall; \
+	  bspc window --toggle floating=true; }
 
 alt + XF86AudioMute
 	if pkill -0 -x pulseaudio; then \
@@ -202,10 +202,11 @@ alt + shift + F9
 
 F12
 	T='✉ Mutt ✉'; \
-	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || urxvt-client -cd ~/Downloads -title "$T" -e muttlaunch
+	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || \
+	urxvt-client -cd ~/Downloads -title "$T" -icon ~/.icons/haus/mail.svg -e muttlaunch
 
 super + F12
-	urxvt-client -cd ~/Downloads -title '✉ Mutt ✉' -e muttlaunch --force
+	urxvt-client -cd ~/Downloads -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
 alt + F12
 	chromium --incognito --app=https://mail.google.com/
@@ -214,26 +215,26 @@ super + alt + F12
 	chromium --incognito --app=https://voice.google.com/
 
 super + control + e
-	urxvt-client -icon ~/.icons/local/vim -e vim
+	urxvt-client -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
 	T="✔ TODO ✔"; \
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
-	urxvt-client -title %s -icon ~/.icons/local/vim -e vim -c 'Org! TODO'
+	urxvt-client -title "$T" -icon ~/.icons/haus/vim.svg -e vim -c 'Org! TODO'
 
 super + control + alt + t
 	remind --query
 
 super + control + m
 	T='♫ pianobar ♫'; \
-	wmctrl -a "$T" || urxvt-client -title "$T" -e pianobarlaunch pandora.com/f268416@rmqkr.net
+	wmctrl -a "$T" || urxvt-client -title "$T" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/a6286098@drdrb.net
 
 super + control + shift + m
 	T='♫ cmus ♫'; \
-	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -e cmus
+	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
 
 super + control + i
 	T='❡ irc ❡'; \
-	wmctrl -a "$T" || urxvt-client -cd ~/.weechat -title "$T" -e weechat
+	wmctrl -a "$T" || urxvt-client -cd ~/.weechat -title "$T" -icon ~/.icons/haus/irc.svg -e weechat
 
 # vim:noet:

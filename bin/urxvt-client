@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # From urxvtc(1)
-urxvtc "$@"
+urxvtc -icon ~/.icons/haus/terminal.svg "$@"
 if test $? -eq 2; then
     urxvtd -q -o -f
-    urxvtc "$@"
+    urxvtc -icon ~/.icons/haus/terminal.svg "$@"
 fi

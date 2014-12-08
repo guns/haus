@@ -1,5 +1,6 @@
 [Desktop Entry]
 Type=Application
 NoDisplay=true
-Exec=urxvt-client -g 80x40 -e less %F
 Name=urxvt-less
+Exec=urxvt-client -g 80x40 -icon ~/.icons/haus/text-x-generic.svg -e less %F
+Icon=text-x-generic
