@@ -1024,6 +1024,8 @@ HAVE vim && {
     alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias vimdnsmasq='(cddnsmasq && exec vim dnsmasq.conf)'
+    alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
+    alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimgunsrepl='(cdgunsrepl && exec vim src/guns/repl.clj)'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
     alias vimiptables='(cdetc && exec vim iptables/iptables.sh)'
