@@ -114,8 +114,8 @@
 # http://wiki.bash-hackers.org/scripting/bashchanges
 #
 if (( ((${BASH_VERSINFO[0]} << 8) | ${BASH_VERSINFO[1]}) < 0x0401 )); then
-    # Load a minimal bash environment
-    . ~/.bashrc.d/minimal.bash
+    PS_COLOR="${PS_COLOR:-32}" . ~/.bashrc.d/prompts.bash
+    printf "\nGNU Bash $BASH_VERSION\n\nPlease upgrade to version 4.1+\n\n"
     return
 fi
 
