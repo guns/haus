@@ -185,7 +185,7 @@ fprintf(${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%
 endsnippet
 
 snippet deb "call debugger" w
-raise(SIGTRAP);
+__asm__("int $3");
 endsnippet
 
 snippet fdeb "printf debug to file" w
