@@ -419,36 +419,8 @@ ALIAS mt='mount -v' \
       mthfs='mount -v -t hfsplus' \
       mtvfat='mount -v -t vfat' && {
     rmt() { run mount -v -o remount,"$1" "${@:2}"; }
-    mtusb() {
-        ruby -r shellwords -r set -r fileutils -e '
-            options = %w[noatime nodev nodiratime noexec nosuid]
-            fs_owners = Set.new %w[fat vfat hfs iso9660 ntfs udf]
-            uid = ENV["SUDO_UID"] || Process.euid
-            gid = ENV["SUDO_GID"] || Process.egid
-
-            blkdevs = Hash[%x(blkid).lines.map do |l|
-                f, kvs = l.split(":", 2)
-                [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
-            end]
-
-            usbdevs = Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
-                [File.expand_path(File.readlink(l), File.dirname(l)), l]
-            end]
-
-            (blkdevs.keys & usbdevs.keys).each do |dev|
-                label = blkdevs[dev]["LABEL"]
-                type = blkdevs[dev]["TYPE"]
-                mtpt = File.join "/mnt/usb", label || File.basename(usbdevs[dev])
-                FileUtils.mkdir_p mtpt
-                opts = options
-                opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
-                cmd = %W[mount -v -o #{opts.join ","} #{dev} #{mtpt}]
-                puts cmd.shelljoin
-                system *cmd
-            end
-        ' -- "$@"
-    }
-    umtusb() { run umount -v /mnt/usb/*; rmdir /mnt/usb/*; }
+    alias mtusb='mountusb' \
+          umtusb='umountusb'
     mtlabel() {
         (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
         run mount "/dev/disk/by-label/$1" "${@:2}"

@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'set'
+require 'shellwords'
+require 'fileutils'
+
+options = %w[noatime nodev noexec nosuid]
+fs_owners = Set.new %w[adfs affs debugfs devpts fat vfat msdos umsdos hfs hpfs
+                       iso9660 ntfs proc tmpfs udf usbfs]
+uid = ENV["SUDO_UID"] || Process.euid
+gid = ENV["SUDO_GID"] || Process.egid
+
+blkdevs = Hash[%x(blkid).lines.map do |l|
+  f, kvs = l.split(":", 2)
+  [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
+end]
+
+usbdevs = Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
+  [File.expand_path(File.readlink(l), File.dirname(l)), l]
+end]
+
+(blkdevs.keys & usbdevs.keys).each do |dev|
+  label = blkdevs[dev]["LABEL"]
+  type = blkdevs[dev]["TYPE"]
+  mtpt = File.join "/mnt/usb", label || File.basename(usbdevs[dev])
+  FileUtils.mkdir_p mtpt
+  opts = options
+  opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
+  cmd = %W[mount -v -t #{type} -o #{opts.join ","} #{dev} #{mtpt}]
+  puts cmd.join(' ')
+  system *cmd
+end
