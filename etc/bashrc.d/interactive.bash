@@ -482,31 +482,7 @@ ALIAS rsync='rsync -hh -S --partial' \
 
 # dd
 HAVE dcfldd && TCOMP dd dcfldd
-ddsize() {
-    [[ $# -ge 2 ]] || { echo "Usage: $FUNCNAME size block-size [dd-args]"; return 1; }
-    ruby -e '
-        size, bs = ARGV.take(2).map do |arg|
-            arg.scan(/([\d\.]+)(\D*)/).reduce 0 do |sum, (num, unit)|
-                sum + case unit
-                when /\Ag\z/i then num.to_f * 2**30
-                when /\Am\z/i then num.to_f * 2**20
-                when /\Ak\z/i then num.to_f * 2**10
-                else               num.to_f
-                end
-            end.round
-        end
-
-        dd = %w[dcfldd dd].map { |c| %x(/bin/sh -c "command -v #{c}").chomp }.find do |path|
-            File.executable? path
-        end
-
-        raise "#{ARGV[0]} not a multiple of #{ARGV[1]}" if not (size % bs).zero?
-
-        cmd = %W[#{dd} bs=#{bs} count=#{size / bs}] + ARGV.drop(2)
-        warn cmd.join(" ")
-        exec *cmd
-    ' -- "$@"
-}; TCOMP dd ddsize
+HAVE ddsize && TCOMP dd ddsize
 
 # free
 ALIAS free='free --human'
