@@ -373,44 +373,6 @@ alias md='mkdir -vp'
 alias df='df -h'
 alias du='du -h'
 alias dus='du -s'
-# Param: [$@] Files to list
-dusort() {
-    ruby -r shellwords -e '
-        fs              = ARGV.empty? ? Dir["*", ".*"].reject { |f| f == "." || f == ".." } : ARGV
-        idx, size,      = -1, fs.count
-        res, pool, lock = [], [], Mutex.new
-        label           = "\r%#{size.to_s.length}d/#{size}"
-
-        # Threading mostly for for user feedback.
-        # Will usually be slower than a single call to `du`
-        4.times do
-            pool << Thread.new do
-                loop do
-                    i = lock.synchronize { idx += 1 }
-                    break if i >= size
-                    $stderr.print label % (i+1)
-                    # du -k is a POSIX flag
-                    res[i] = [%x(du -k -s #{fs[i].shellescape})[/^\d+/].to_i * 1024, fs[i]]
-                end
-            end
-        end
-
-        pool.each &:join
-        print "\r"
-
-        ps = res.sort_by { |s,f| s }.map do |s,f|
-            case s
-            when 0...2**10     then [                   s.to_s, "B", f]
-            when 2**10...2**20 then [  "%d" % (s.to_f / 2**10), "K", f]
-            when 2**20...2**30 then ["%.2f" % (s.to_f / 2**20), "M", f]
-            else                    ["%.2f" % (s.to_f / 2**30), "G", f]
-            end
-        end
-
-        fmt = "%#{ps.map { |s,u,f| s.length }.max}s %s  %s"
-        ps.each { |p| puts fmt % p }
-    ' -- "$@"
-}
 
 # mount
 ALIAS mt='mount -v' \
