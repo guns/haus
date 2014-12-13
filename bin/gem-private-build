@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'fileutils'
+
+abort 'Usage: $FUNCNAME spec suffix [outdir]' unless (2..3) === ARGV.size
+
+specfile, suffix, outdir = ARGV
+spec = Gem::Specification.load specfile
+spec.version = '%s.%s' % [spec.version, suffix]
+gem = Gem::Builder.new(spec).build
+FileUtils.mv gem, outdir if outdir
