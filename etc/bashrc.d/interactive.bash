@@ -669,7 +669,12 @@ ALIAS digx='dig -x' \
 if __OS_X__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
-    alias resolv='{ echo • /etc/resolv.conf; cat /etc/resolv.conf; echo • /etc/dnsmasq/resolv.conf; cat /etc/dnsmasq/resolv.conf; } | grep -v "^#|^[ \t]*$"'
+    alias resolv='{
+        printf "\e[32;1m/etc/resolv.conf\e[0m\n"
+        cat /etc/resolv.conf
+        printf "\n\e[32;1m/etc/dnsmasq/resolv.conf\e[0m\n"
+        cat /etc/dnsmasq/resolv.conf
+    } | grep -vP "^#|^\s*$"'
 fi
 
 # NTP
