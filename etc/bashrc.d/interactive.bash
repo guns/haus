@@ -418,9 +418,9 @@ ALIAS mt='mount -v' \
       mtext4='mount -v -t ext4' \
       mthfs='mount -v -t hfsplus' \
       mtvfat='mount -v -t vfat' && {
-    rmt() { run mount -v -o remount,"$1" "${@:2}"; }
     alias mtusb='mountusb' \
           umtusb='umountusb'
+    remt() { run mount -v -o remount,"$1" "${@:2}"; }
     mtlabel() {
         (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
         run mount "/dev/disk/by-label/$1" "${@:2}"
