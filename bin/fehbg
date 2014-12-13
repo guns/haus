@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+if ARGV.empty?
+  system "feh", File.expand_path(File.read(File.expand_path "~/.fehbg").shellsplit.last)
+else
+  system "feh", "--bg-fill", ARGV.first
+end
