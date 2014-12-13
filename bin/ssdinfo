@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+abort 'Usage: ssdinfo block-device' if ARGV.size > 1
+
+blockdev = ARGV[0] || '/dev/sda'
+
+buf = IO.popen ['smartctl', '-a', blockdev] { |rd| rd.read }
+model = buf[/Device Model:\s*(.*)/, 1]
+gib_written = buf[/Total_LBAs_Written.*/].split.last.to_i * 512.0 / 2**30
+
+puts <<-EOF % [model, gib_written]
+#{blockdev}: %s
+Total Writes: %0.1f GiB
+EOF
