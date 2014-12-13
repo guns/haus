@@ -1555,7 +1555,6 @@ HAVE cmus && {
 
 HAVE ffmpeg && {
     alias voicerecording='sleep 0.5; ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -af bandreject=frequency=60:width_type=q:width=1.0 -y'
-    # alias screenrecording='ffmpeg'
 }
 
 # VLC
@@ -1591,18 +1590,6 @@ HAVE mkvmerge && mkvmergeout() {
 ### X
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
-
-# Subtle WM
-ALIAS subtlecheck='subtle --check'
-
-# Xmonad
-HAVE xmonad && xmonadrecompile() {
-    if ! ps axo ucomm | grep '^ghc' &>/dev/null; then
-        { run xmonad --recompile && run xmonad --restart && notify --audio; } || notify 'Xmonad compile failure'
-    else
-        notify 'GHC seems to be busy'
-    fi
-}
 
 # GTK
 HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
