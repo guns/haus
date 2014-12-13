@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'webrick'
+
+if ARGV.include? '-h' or ARGV.size > 1
+  puts "Usage: httpget [path]\n\nTranslate an HTTP GET request into a curl request."
+  exit
+end
+
+req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
+req.parse $stdin
+cmd = %W[curl -#LA #{req.header["user-agent"].first || "Mozilla/5.0"}]
+cmd << "-o" << ARGV.first unless ARGV.empty?
+cmd << req.request_uri.to_s
+warn cmd.inspect
+exec *cmd

@@ -661,19 +661,7 @@ ALIAS net='netctl' \
 
 # cURL
 ALIAS get='curl -A Mozilla/5.0 -#L' \
-      geto='curl -A Mozilla/5.0 -#LO' && {
-    httpget() {
-        ruby -r webrick -e '
-            req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
-            req.parse $stdin
-            cmd = %W[curl -#LA #{req.header["user-agent"].first || "Mozilla/5.0"}]
-            cmd << "-o" << ARGV.first unless ARGV.empty?
-            cmd << req.request_uri.to_s
-            warn cmd.inspect
-            exec *cmd
-        ' -- "$@"
-    }
-}
+      geto='curl -A Mozilla/5.0 -#LO'
 
 # DNS
 ALIAS digx='dig -x' \
