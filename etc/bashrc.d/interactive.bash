@@ -1198,18 +1198,7 @@ HAVE psql && {
 }
 
 ALIAS sqlite='sqlite3' && {
-    # Param: $1 SQLite db
-    sqliteschema() {
-        {   sqlite3 "$1" <<< .schema
-            local t tables=($(sqlite3 "$1" <<< .table))
-            for t in "${tables[@]}"; do
-                echo -e "\n$t:"
-                sqlite3 "$1" <<< "SELECT * FROM $t ORDER BY ROWID DESC LIMIT 1;"
-            done
-        } 2>/dev/null | pager
-    }
-
-    sqlite-firefox-dump-history() {
+    sqlite-firefox-history() {
         (($# == 1)) || { echo "Usage: $FUNCNAME path/to/places.sqlite"; return 1; }
         # http://unfocusedbrain.com/site/2010/03/09/dumping-firefoxs-places-sqlite/
         sqlite3 "$@" <<-EOF
