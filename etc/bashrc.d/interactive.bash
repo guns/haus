@@ -686,41 +686,8 @@ HAVE tcpdump && {
 
 # ssh scp
 ALIAS ssh='ssh -2' \
-      ssh-password='ssh -o \"PreferredAuthentications password\"' \
-      ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host && {
-    ssh-install-authorized-keys() {
-        ruby -r etc -r fileutils -r set -e '
-            auth = "authorized_keys"
-
-            ARGV.each do |arg|
-                user = Etc.getpwnam arg
-
-                Dir.chdir File.join(user.dir, ".ssh") do
-                    authpath = File.join user.dir, ".ssh", auth
-
-                    if File.symlink? auth and File.readlink(auth) == "/dev/null"
-                        warn "%s is linked to /dev/null" % authpath
-                        next
-                    end
-
-                    pubkeys = Dir["*.pub"].reduce(Set.new) { |s, f| s.merge File.read(f).split("\n") }
-                    authkeys = Set.new File.exists?(auth) ? File.read(auth).split("\n") : []
-
-                    next if pubkeys.subset? authkeys
-
-                    FileUtils.cp auth, "authorized_keys.old" if File.exists? auth
-
-                    ks = (pubkeys - authkeys).to_a
-                    warn "Adding %s key%s to %s" % [ks.count, ks.count == 1 ? "" : "s", authpath]
-
-                    File.open auth, "a" do |f|
-                        f.puts ks
-                    end
-                end
-            end
-        ' -- "${@:-$USER}"
-    }
-}
+      ssh-password='ssh -o \"PreferredAuthentications password\"'
+alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
 ALIAS scp='scp -2' \
       scpr='scp -r' \
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'

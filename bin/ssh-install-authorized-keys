@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'etc'
+require 'fileutils'
+require 'set'
+
+auth = "authorized_keys"
+
+(ARGV.empty? ? [Etc.getlogin] : ARGV).each do |arg|
+  user = Etc.getpwnam arg
+
+  Dir.chdir File.join(user.dir, ".ssh") do
+    authpath = File.join user.dir, ".ssh", auth
+
+    if File.symlink? auth and File.readlink(auth) == "/dev/null"
+      warn "%s is linked to /dev/null" % authpath
+      next
+    end
+
+    pubkeys = Dir["*.pub"].reduce(Set.new) { |s, f| s.merge File.read(f).split("\n") }
+    authkeys = Set.new File.exists?(auth) ? File.read(auth).split("\n") : []
+
+    next if pubkeys.subset? authkeys
+
+    FileUtils.cp auth, "authorized_keys.old" if File.exists? auth
+
+    ks = (pubkeys - authkeys).to_a
+    warn "Adding %s key%s to %s" % [ks.count, ks.count == 1 ? "" : "s", authpath]
+
+    File.open auth, "a" do |f|
+      f.puts ks
+    end
+  end
+end
