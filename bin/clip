@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if type xsel; then
+    exec xsel -ib "$@"
+elif type xclip; then
+    exec xclip -i -selection clipboard "$@"
+elif type pbcopy; then
+    exec pbcopy "$@"
+else
+    printf "No known clipboard programs available!\n"
+    exit 1
+fi

@@ -1592,17 +1592,6 @@ HAVE mkvmerge && mkvmergeout() {
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
 
-# Clipboard
-clip() {
-    if type xsel &>/dev/null; then
-        xsel -ib "$@"
-    elif type xclip &>/dev/null; then
-        xclip -i -selection clipboard "$@"
-    elif type pbcopy &>/dev/null; then
-        pbcopy "$@"
-    fi
-}
-
 # Subtle WM
 ALIAS subtlecheck='subtle --check'
 
