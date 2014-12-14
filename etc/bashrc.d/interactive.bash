@@ -368,6 +368,7 @@ ALIAS chownr='chown -R'
 
 # mkdir
 alias md='mkdir -vp'
+alias rmd='rmdir -vp'
 
 # df du
 alias df='df -h'
