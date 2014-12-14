@@ -1,6 +1,5 @@
 [Desktop Entry]
 Type=Application
-NoDisplay=true
 Name=urxvt-hexdump
 Exec=urxvt-client -g 80x40 -icon ~/.icons/haus/binary.svg -e /bin/sh -c "hexdump -C %F | less"
 Icon=binary
