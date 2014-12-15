@@ -38,7 +38,7 @@ class Usertmpfiles
         options.config_file = File.expand_path arg
       end
 
-      opt.on '-u', '--users A,B,C', Array do |arg|
+      opt.on '-u', '--users A,B,C', Array, 'Can also be set in config file' do |arg|
         options.users = Set.new arg
       end
 
@@ -60,8 +60,12 @@ class Usertmpfiles
     File.expand_path path.sub(%r{\A~(/.*)?}, "#{home}\\1")
   end
 
+  def config
+    @config ||= YAML.load_file options.config_file
+  end
+
   def tmpfiles home
-    Hash[YAML.load_file(options.config_file).map do |type, files|
+    Hash[config.select { |(k, _)| k == 'directory' || k == 'file' }.map do |type, files|
       fs = files.map do |f|
         if f =~ /\Aglob:(.*)/
           Dir.glob(tilde_expand_path $1, home).select { |f| [type, 'link'].include? File.ftype(f) }
@@ -74,7 +78,7 @@ class Usertmpfiles
   end
 
   def users
-    (options.users || [Process.euid]).map do |u|
+    (options.users || config['users'] || [Process.euid]).map do |u|
       u.is_a?(Integer) ? Etc.getpwuid(u) : Etc.getpwnam(u)
     end
   end
