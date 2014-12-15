@@ -116,7 +116,6 @@ task :env do
           'perl/launcher.pl'          => 'etc/%weechat/%perl/%autoload/launcher.pl',
           'python/country.py'         => 'etc/%weechat/%python/%autoload/country.py',
           'python/go.py'              => 'etc/%weechat/%python/%autoload/go.py',
-          'python/shell.py'           => 'etc/%weechat/%python/%autoload/shell.py',
           'python/toggle_nicklist.py' => 'etc/%weechat/%python/%autoload/toggle_nicklist.py'
         }
       }
@@ -426,23 +425,6 @@ end
 desc 'Import all terminfo files'
 task :tic do
   Dir['etc/%terminfo/*/*'].each { |f| sh 'tic', f }
-end
-
-desc 'Install service files in lib/systemd to /usr/local/lib/systemd'
-task :service do
-  require 'erb'
-
-  def path cmd
-    %x(/bin/sh -c "command -v #{cmd.shellescape}").chomp
-  end
-
-  Dir['share/systemd/**/*.service.erb'].each do |service|
-    dst = File.join '/usr/local/lib/systemd', service[%r{share/systemd/(.*)}, 1].chomp('.erb')
-    puts dst
-    File.open dst, 'w' do |f|
-      f.puts ERB.new(File.read service).result(binding)
-    end
-  end
 end
 
 desc 'Create Java keystores for certs'
