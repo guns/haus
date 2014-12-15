@@ -44,7 +44,6 @@ task :merge do
     Hash[YAML.load(sshbuf).map { |f, buf| [f, WeeChatLog.new(buf)] }]
   end
 
-
   (local_logs.keys | remote_logs.keys).each do |file|
     l, r = local_logs[file], remote_logs[file]
 
@@ -71,4 +70,9 @@ task :merge do
   end
 
   exit # Stop processing ARGV
+end
+
+desc 'Archive old logs'
+task :archive do
+  sh 'cd logs; tar Jcv *.weechatlog > "$(date --iso-8601=seconds).tar.xz" && rm *.weechatlog'
 end
