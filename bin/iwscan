@@ -3,30 +3,26 @@
 
 abort 'iwlist not in PATH' unless system '/bin/sh -c "command -v iwlist >/dev/null"'
 
-aps, t = [], {}
+buf = %x(iwlist scan 2>/dev/null)
+buf.slice! /.*?Cell \d+ - /m
 
-%x(iwlist scan 2>/dev/null).each_line do |line|
-  if line =~ /^\s*Cell \d+|^$/
-    aps << t unless t.empty?
-    t = { :ie => [], :rates => [] }
-    t[:mac] = line[/Address:\s*(\S+)/, 1]
-  elsif line.index "ESSID:"
-    t[:essid] = line[/ESSID:"(.*)"/, 1]
-  elsif line.index "Frequency:"
-    t[:freq] = line[/Frequency:(.*)/, 1]
-  elsif line.index "Quality="
-    t[:quality] = line[/Quality=(\S+)/, 1]
-    t[:signal] = line[/Signal level=(.* dBm)/, 1]
-  elsif line.index "Encryption key:"
-    t[:encryption] = line[/Encryption key:(on|off)/, 1] == "on"
-  elsif line =~ /\s*IE: (?!Unknown:)/
-    t[:ie] << line[/\s*IE: (.*)/, 1]
-  elsif line =~ %r{\d+ Mb/s}
-    t[:rates].concat line.scan(%r{(\d+) Mb/s}).flatten.map(&:to_i)
+aps = buf.split(/\s+Cell \d+ -/).map do |cell|
+  t = { :ie => [], :rates => [] }
+  cell.each_line do |line|
+    case line
+    when /Address:\s*(\S+)/ then t[:mac] = $1
+    when /ESSID:"(.*)"/ then t[:essid] = $1
+    when /Frequency:(.*)/ then t[:freq] = $1
+    when /Quality=(\S+)\s*Signal level=(.* dBm)/ then t[:quality], t[:signal] = $1, $2
+    when /Encryption key:(on|off)/ then t[:encryption] = $1 == 'on'
+    when /\s*IE: (?!Unknown:)(.*)/ then t[:ie] << $1
+    when /(\d+) Mb\/s/ then t[:rates].concat line.scan(/(\d+) Mb\/s/).flatten.map(&:to_i)
+    end
   end
+  t
 end
 
-puts aps.map { |t|
+puts aps.sort_by { |t| [-t[:signal].to_i, t[:essid]] }.map { |t|
   "ESSID: %s\nAddress: %s\nQuality: %s\nSignal: %s\nFrequency: %s\nRates: %s Mb/s\nEncryption: %s%s%s" % [
     t[:essid].inspect,
     t[:mac],
