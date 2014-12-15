@@ -1494,9 +1494,11 @@ elif __LINUX__; then
             (($# > 0)) || { echo "USAGE: $FUNCNAME [-df] pkg …" >&2; return 1; }
 
             # Installing from a URL copies the package to /var/cache/pacman
-            local pkgs=() pkg
+            local pkgs=() pkg f
             for pkg in "$@"; do
-                mv -v "/var/cache/pacman/pkg/$(basename "$pkg")" /tmp/
+                for f in "/var/cache/pacman/pkg/$(basename "$pkg")"{,.sig}; do
+                    [[ -e "$f" ]] && mv -v "$f" /tmp/
+                done
                 pkgs+=("file://$(expand_path "$pkg")")
             done
 
