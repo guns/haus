@@ -30,3 +30,4 @@ bspc rule --add skype focus=true floating=true
 bspc rule --add sxiv focus=true floating=true center=true
 bspc rule --add vlc focus=true floating=true
 bspc rule --add xsensors focus=true floating=true
+bspc rule --add Toplevel focus=true floating=true
