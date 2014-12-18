@@ -835,16 +835,6 @@ HAVE vim && {
         (( ${#args[@]} )) && run vim "${args[@]}"
     }
 
-    # Diff mode for pacnew files
-    vimpacnew() {
-        ruby -r shellwords -e '
-            files = %x(find . -name "*.pacnew" \\( -type f -o -type l \\) -print0).split "\0"
-            exec "vim", *files.reduce([]) { |as, f|
-                as << "-c" << "edit #{f.shellescape} | diffthis | vsplit #{f.chomp(".pacnew").shellescape} | diffthis | tabnew"
-            }, "-c", "tabclose | tabfirst" if files.any?
-        '
-    }
-
     vimsession() {
         local session="$HOME/.cache/vim/session/$(pwd -P)/Session.vim"
         if [[ -e "$session" ]]; then

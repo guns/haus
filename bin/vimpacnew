@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+def vimcmd f
+  "edit #{f.shellescape} | diffthis | vsplit #{f.chomp(".pacnew").shellescape} | diffthis | tabnew"
+end
+
+Dir.chdir ARGV.first || '.' do
+  files = Dir['**/*.pacnew']
+
+  if files.any?
+    exec "vim", *files.reduce([]) { |args, f| args << "-c" << vimcmd(f) }, "-c", "tabclose | tabfirst"
+  end
+end
