@@ -156,7 +156,7 @@ super + control + shift + {space,Left,Right}
 	mediactl {toggle,prev,next}
 
 {XF86Eject,Pause}
-	pkill -HUP -x gpg-agent; slock
+	pkill -HUP -x gpg-agent; sudo -n /usr/bin/powerctl slock
 
 control + {XF86Eject,Pause}
 	pkill -HUP -x gpg-agent
