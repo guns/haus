@@ -1466,6 +1466,7 @@ elif __LINUX__; then
         alias pacoutdated='run pacman -Qu'
 
         alias paclog='pager /var/log/pacman.log'
+        alias pacforeign='run pacman -Qm'
 
         pacfindunknown() {
             find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
