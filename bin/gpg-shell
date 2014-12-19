@@ -8,7 +8,7 @@ fi
 
 PINENTRY_PROGRAM=
 
-if [ "$(id -u)" -eq 0 ]; then
+if [ "$(id -u)" -eq 0 ] || [ -n "$SSH_TTY" ]; then
     PINENTRY_PROGRAM='--pinentry-program=/usr/bin/pinentry-curses'
 fi
 
