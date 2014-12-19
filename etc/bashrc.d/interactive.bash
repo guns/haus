@@ -1250,6 +1250,12 @@ if __OS_X__; then
     alias pmassertions='pmset -g assertions'
 fi
 
+HAVE hdparm && {
+    alias hdpowerstatus='hdparm -C'
+    alias hdstandby='hdparm -y'
+    alias hdsleep='hdparm -Y'
+}
+
 HAVE wpa_supplicant wpa_passphrase && {
     wpajoin() {
         local OPTIND OPTARG opt iface='wlan0'
