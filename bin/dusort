@@ -2,8 +2,16 @@
 # -*- encoding: utf-8 -*-
 
 require 'shellwords'
+require 'optparse'
 
-fs    = ARGV.empty? ? Dir["*", ".*"].reject { |f| f == "." || f == ".." } : ARGV
+opts = { :jobs => 4 }
+
+args = OptionParser.new do |opt|
+  opt.banner = "USAGE: dusort [options] [files]\n\nOptions:\n"
+  opt.on('-j', '--jobs=N') { |n| opts[:jobs] = n.to_i }
+end.parse ARGV
+
+fs    = args.empty? ? Dir["*", ".*"].reject { |f| f == "." || f == ".." } : args
 idx   = -1
 size  = fs.count
 res   = []
@@ -13,7 +21,7 @@ label = "\r%#{size.to_s.length}d/#{size}"
 
 # Threading mostly for for user feedback.
 # Will usually be slower than a single call to `du`
-4.times do
+opts[:jobs].times do
   pool << Thread.new do
     loop do
       i = lock.synchronize { idx += 1 }
