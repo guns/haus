@@ -4,11 +4,13 @@
 . ~/.bashrc.d/functions.bash
 REQUIRE ~/.bashrc.d/env.bash
 REQUIRE ~/.bashrc.d/path.bash
+CLEANUP
 
+pushd .
 cd Downloads
 
 (/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
 xautolock-wrapper &
 
-CLEANUP
+popd
