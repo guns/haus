@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 run umount -v /mnt/usb/*
-rmdir /mnt/usb/*
+rmdir -p /mnt/usb/*
