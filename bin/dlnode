@@ -17,13 +17,73 @@ class Dlnode
     :format => nil,
     :index => 1,
     :start => 1,
+    :no_download => false,
+    :send_referer => false,
     :user_agent => 'Mozilla/5.0',
     :curl_opts => []
   }
 
+  class Resource
+    attr_accessor :url, :referer
+
+    def initialize url = nil, referer = nil
+      @url = url
+      @referer = referer
+    end
+
+    def blank? x
+      x.nil? or x.empty?
+    end
+
+    def parse_pattern pattern
+      a, b, c = pattern.split /(?<!\\):/, 3
+
+      sel    = blank?(a) ? 'a'                         : a
+      attr   = blank?(b) ? (sel == 'a' ? 'href' : nil) : b
+      regexp = blank?(c) ? nil                         : Regexp.new(c)
+
+      [sel, attr, regexp]
+    end
+
+    def fetch_html opts = {}
+      curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
+      user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
+
+      buf = IO.popen ['curl', *curl_opts, '-sfLA', user_agent, *(referer ? ['-e', referer] : []), url] do |io|
+        io.read
+      end
+
+      if $?.exitstatus.zero?
+        $stderr.print "\e[32m.\e[0m"
+        Nokogiri::HTML.parse buf
+      else
+        $stderr.print "\e[31m.\e[0m\nFAILED to fetch #{url}\n"
+        nil
+      end
+    end
+
+    def fetch_leaves patterns = [], opts = {}
+      html = fetch_html opts
+
+      return [] if html.nil?
+
+      sel, attr, regexp = parse_pattern patterns.first
+      rest = patterns.drop 1
+
+      urls = html.css(sel).map { |leaf| URI.join(url, attr ? leaf.attr(attr) : leaf.text).to_s rescue nil }.compact
+      urls = urls.grep regexp if regexp
+      resources = urls.map { |u| Resource.new u, (url if opts[:send_referer]) }
+
+      if rest.any?
+        resources.flat_map { |r| r.fetch_leaves rest, opts }
+      else
+        resources
+      end
+    end
+  end
+
   def initialize opts = {}
-    @dir, @format, @index, @start, @user_agent, @curl_opts =
-      DEFAULTS.merge(opts).values_at :dir, :format, :index, :start, :user_agent, :curl_opts
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -31,7 +91,10 @@ class Dlnode
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Download nested HTML resources. Uses cURL.
 
-        Usage: #{File.basename __FILE__} [options] url [node-link-regexp …] leaf-css3-selector:attr
+        Usage: #{File.basename __FILE__} [options] url [selector=a]:[attribute=href]:[regexp] …
+
+        dlnode http://files.example.com/ a:href:subhost.com 'a[id=download]:href:\\.tar\\.gz$'
+        dlnode http://files.example.com/ ::subhost.com form[rel=lolcat]:: img[class=lolcat]:src:
 
         Options:
       BANNER
@@ -53,6 +116,14 @@ class Dlnode
         @start = @index if @start.nil? or @start < @index
       end
 
+      opt.on '-n', '--no-download', 'Do not download resources, but print the commands that would be executed' do |arg|
+        @no_download = true
+      end
+
+      opt.on '-r', '--send-referer', 'Send HTTP Referer (sic) headers when fetching resources' do
+        @send_referer = true
+      end
+
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
         @user_agent = arg
       end
@@ -60,19 +131,6 @@ class Dlnode
       opt.on '-O', '--curl-opts OPTS', 'Extra options to pass directly to cURL' do |arg|
         @curl_opts = arg.shellsplit
       end
-    end
-  end
-
-  def get url
-    buf = IO.popen ['curl', *@curl_opts, '-sfLA', @user_agent, url] do |io|
-      io.read
-    end
-
-    if $?.exitstatus.zero?
-      $stderr.print "\e[32m.\e[0m"
-      Nokogiri::HTML.parse buf
-    else
-      $stderr.print "\e[31m.\e[0m\nFAILED to fetch #{url}\n"
     end
   end
 
@@ -88,77 +146,81 @@ class Dlnode
     end
   end
 
-  def save! url, idx, dir, opts = {}
-    f = url_basename url
+  # Returns tuple of arguments for exec: […, path, url]
+  def command resource, idx, dir, opts = {}
+    f = url_basename resource.url
     path = File.join dir, (opts[:format] ? format_filename(opts[:format], idx, f) : f)
 
-    warn "#{url} → #{path}"
-
-    if File.exists? path
-      warn 'File exists!'
-    else
-      cmd = ['curl', *opts[:curl_opts],
-             '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
-             '-o', path, url]
-      system *cmd
-      if not $?.exitstatus.zero?
-        $stderr.print "\e[31mFAILED:\e[0m "
-        puts cmd.shelljoin
-        return false
-      end
-    end
-
-    true
+    ['curl', *opts[:curl_opts],
+     '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
+     *(resource.referer ? ['-e', resource.referer] : []),
+     '-o', path, resource.url]
   end
 
-  def get_leaves url, *patterns
-    uri = URI.parse url
-    html = get url
+  def map_commands resources, opts = {}
+    Δ = opts[:start] - opts[:index]
 
-    if html.nil?
-      []
-    elsif patterns.size > 1
-      hrefs = html.css('a').map { |a| URI.join(url, a.attr('href')).to_s rescue nil }.compact
-      nodes = hrefs.select { |href| href =~ Regexp.new(patterns.first) }.uniq
-      nodes.map { |href| get_leaves href, *patterns.drop(1) }.flatten
-    else
-      sel, attr = patterns.first.split ':', 2
-      html.css(sel).map do |n|
-        URI.join(url, (attr ? n.attr(attr) : n.text)).to_s
-      end
+    resources.drop(Δ).map.with_index do |r, i|
+      command r, i + opts[:index] + Δ, opts[:dir],
+              :format => opts[:format],
+              :user_agent => opts[:user_agent],
+              :curl_opts => opts[:curl_opts]
     end
   end
 
   def download! url, *patterns
-    urls = get_leaves url, *patterns
-    failures = 0
+    opts = {
+      :index => @index,
+      :start => @start,
+      :dir => @dir,
+      :format => @format,
+      :send_referer => @send_referer,
+      :user_agent => @user_agent,
+      :curl_opts => @curl_opts
+    }
+    resources = Resource.new(url).fetch_leaves patterns, opts
+    cmds = map_commands resources, opts
 
-    if urls.empty?
+    if cmds.empty?
       warn "\nNo resources found!"
+      false
+    elsif @no_download
+      warn "\n%d resource(s)" % resources.size
+      puts cmds.map(&:shelljoin)
+      true
     else
-      warn "\nDownloading %d resource(s)" % urls.size
+      warn "\nDownloading %d resource(s)" % resources.size
+
       FileUtils.mkdir_p @dir
-      Δ = @start - @index
-      urls.drop(Δ).each_with_index do |url, i|
-        if not save! url, i + @index + Δ, @dir,
-                     :format => @format,
-                     :user_agent => @user_agent,
-                     :curl_opts => @curl_opts
-          failures += 1
+
+      failed = []
+
+      cmds.each do |cmd|
+        path, url = cmd[-2..-1]
+
+        warn "#{url} → #{path}"
+
+        if File.exists? path
+          warn 'File exists!'
+        else
+          system *cmd
+          failed << cmd if not $?.exitstatus.zero?
         end
       end
-    end
 
-    if failures > 0
-      warn "\n#{failures} failure(s)"
-      false
+      if failed.any?
+        $stderr.print "\e[31mFAILED:\e[0m "
+        failed.each { |cmd| puts cmd.shelljoin }
+      end
+
+      failed.empty?
     end
   end
 
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size > 1
-    download! *args
+    download! *args or abort
   end
 end
 
