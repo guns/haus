@@ -87,17 +87,25 @@ super + control + shift + {h,j,k,l}
 super + control + {1-9}
 	bspc window --ratio 0.{1-9}
 
+# -t, --toggle floating|fullscreen|pseudo_tiled|locked|sticky|private[=on|off]
+
 super + control + f
 	bspc window --toggle floating
 
-super + control + a
-	bspc window --toggle sticky
+F11
+	bspc window --toggle fullscreen
 
 super + control + d
 	bspc window --toggle pseudo_tiled
 
-F11
-	bspc window --toggle fullscreen
+super + control + x
+	bspc window --toggle locked
+
+super + control + s
+	bspc window --toggle sticky
+
+super + control + z
+	bspc window --toggle private
 
 super + alt + control + {h,j,k,l}
 	bspc window --edge {left -10,down +10,up -10,right +10}
