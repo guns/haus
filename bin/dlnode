@@ -23,6 +23,47 @@ class Dlnode
     :curl_opts => []
   }
 
+  def self.extract_resources resource, pattern, opts
+    html_str = resource.fetch opts
+
+    return [] if html_str.nil?
+
+    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
+      begin
+        path = pattern.attribute ? el.attr(pattern.attribute) : el.text
+        u = URI.join(resource.url, path).to_s if path
+      rescue URI::InvalidURIError
+      end
+      if u
+        r = Resource.new u, (resource.url if opts[:send_referer])
+        r = nil if pattern.regexp and u !~ pattern.regexp
+      end
+      r ? v << r : v
+    end
+  end
+
+  class Pattern
+    attr_accessor :selector, :attribute, :regexp
+
+    def initialize pattern_str
+      @selector, @attribute, @regexp = parse pattern_str
+    end
+
+    def blank? x
+      x.nil? or x.empty?
+    end
+
+    def parse pattern_str
+      a, b, c = pattern_str.split /(?<!\\):/, 3
+
+      sel  = blank?(a) ? 'a'                         : a
+      attr = blank?(b) ? (sel == 'a' ? 'href' : nil) : b
+      rgx  = blank?(c) ? nil                         : Regexp.new(c)
+
+      [sel, attr, rgx]
+    end
+  end
+
   class Resource
     attr_accessor :url, :referer
 
@@ -31,21 +72,7 @@ class Dlnode
       @referer = referer
     end
 
-    def blank? x
-      x.nil? or x.empty?
-    end
-
-    def parse_pattern pattern
-      a, b, c = pattern.split /(?<!\\):/, 3
-
-      sel    = blank?(a) ? 'a'                         : a
-      attr   = blank?(b) ? (sel == 'a' ? 'href' : nil) : b
-      regexp = blank?(c) ? nil                         : Regexp.new(c)
-
-      [sel, attr, regexp]
-    end
-
-    def fetch_html opts = {}
+    def fetch opts = {}
       curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
       user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
 
@@ -55,24 +82,16 @@ class Dlnode
 
       if $?.exitstatus.zero?
         $stderr.print "\e[32m.\e[0m"
-        Nokogiri::HTML.parse buf
+        buf
       else
-        $stderr.print "\e[31m.\e[0m\nFAILED to fetch #{url}\n"
+        $stderr.print "\e[31m.\e[0m\nFAILED to GET #{url}\n"
         nil
       end
     end
 
     def fetch_leaves patterns = [], opts = {}
-      html = fetch_html opts
-
-      return [] if html.nil?
-
-      sel, attr, regexp = parse_pattern patterns.first
-      rest = patterns.drop 1
-
-      urls = html.css(sel).map { |leaf| URI.join(url, attr ? leaf.attr(attr) : leaf.text).to_s rescue nil }.compact
-      urls = urls.grep regexp if regexp
-      resources = urls.map { |u| Resource.new u, (url if opts[:send_referer]) }
+      p, *rest = patterns
+      resources = ::Dlnode.extract_resources self, p, opts
 
       if rest.any?
         resources.flat_map { |r| r.fetch_leaves rest, opts }
@@ -168,7 +187,7 @@ class Dlnode
     end
   end
 
-  def download! url, *patterns
+  def download! url, *pattern_args
     opts = {
       :index => @index,
       :start => @start,
@@ -178,15 +197,16 @@ class Dlnode
       :user_agent => @user_agent,
       :curl_opts => @curl_opts
     }
+    patterns = pattern_args.map { |p| Pattern.new p }
     resources = Resource.new(url).fetch_leaves patterns, opts
-    cmds = map_commands resources, opts
+    commands = map_commands resources, opts
 
-    if cmds.empty?
+    if commands.empty?
       warn "\nNo resources found!"
       false
     elsif @no_download
       warn "\n%d resource(s)" % resources.size
-      puts cmds.map(&:shelljoin)
+      puts commands.map(&:shelljoin)
       true
     else
       warn "\nDownloading %d resource(s)" % resources.size
@@ -195,7 +215,7 @@ class Dlnode
 
       failed = []
 
-      cmds.each do |cmd|
+      commands.each do |cmd|
         path, url = cmd[-2..-1]
 
         warn "#{url} → #{path}"
