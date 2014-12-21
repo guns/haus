@@ -133,8 +133,7 @@ XF86AudioRaiseVolume
 super + XF86AudioMute
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
-	{ urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall; \
-	  bspc window --toggle floating=true; }
+	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
 alt + XF86AudioMute
 	if pkill -0 -x pulseaudio; then \
@@ -206,10 +205,10 @@ super + alt + shift + F9
 F12
 	T='✉ Mutt ✉'; \
 	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || \
-	urxvt-client -cd ~/Downloads -title "$T" -icon ~/.icons/haus/mail.svg -e muttlaunch
+	urxvt-client -cd ~/Downloads -g 120x40 -title "$T" -icon ~/.icons/haus/mail.svg -e muttlaunch
 
 super + F12
-	urxvt-client -cd ~/Downloads -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
+	urxvt-client -cd ~/Downloads -g 120x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
 alt + F12
 	chromium --incognito --app=https://mail.google.com/

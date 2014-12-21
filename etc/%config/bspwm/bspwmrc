@@ -16,6 +16,7 @@ bspc config focus_follows_pointer   true
 bspc config history_aware_focus     true
 bspc config remove_disabled_monitor true
 bspc config focused_border_color    '#F5497D'
+bspc config external_rules_command  "$HOME/.config/bspwm/external-rules"
 
 bspc monitor --reset-desktops one two three four
 bspc desktop one --layout monocle
@@ -28,6 +29,7 @@ bspc rule --add gifview focus=true floating=true center=true
 bspc rule --add kupfer.py focus=true
 bspc rule --add skype focus=true floating=true
 bspc rule --add sxiv focus=true floating=true center=true
+bspc rule --add Thunar focus=true floating=true
+bspc rule --add Toplevel focus=true floating=true
 bspc rule --add vlc focus=true floating=true
 bspc rule --add xsensors focus=true floating=true
-bspc rule --add Toplevel focus=true floating=true

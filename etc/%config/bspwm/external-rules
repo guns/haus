@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# wid="$1"
+# class="$2"
+# instance="$3"
+
+case "$(xtitle "$1")" in
+'✉ Mutt ✉'     ) echo 'focus=true floating=true';;
+'♫ alsamixer ♫') echo 'focus=true floating=true';;
+esac
