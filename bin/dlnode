@@ -23,21 +23,29 @@ class Dlnode
     :curl_opts => []
   }
 
+  def self.urijoin base, path
+    URI.join(base, path).to_s
+  rescue URI::InvalidURIError
+  end
+
   def self.extract_resources resource, pattern, opts
     html_str = resource.fetch opts
 
     return [] if html_str.nil?
 
     Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
-      begin
+      if not pattern.attribute and el.name == 'form'
+        form_data = el.css('input').map { |i| [i['name'], i['value']] }
+        path = el.attr 'action'
+      else
         path = pattern.attribute ? el.attr(pattern.attribute) : el.text
-        u = URI.join(resource.url, path).to_s if path
-      rescue URI::InvalidURIError
       end
-      if u
-        r = Resource.new u, (resource.url if opts[:send_referer])
-        r = nil if pattern.regexp and u !~ pattern.regexp
+
+      if path and url = urijoin(resource.url, path)
+        r = Resource.new url, form_data, (resource.url if opts[:send_referer])
+        r = nil if pattern.regexp and url !~ pattern.regexp
       end
+
       r ? v << r : v
     end
   end
@@ -65,26 +73,35 @@ class Dlnode
   end
 
   class Resource
-    attr_accessor :url, :referer
+    attr_accessor :url, :referer, :form_data
 
-    def initialize url = nil, referer = nil
+    def initialize url = nil, form_data = nil, referer = nil
       @url = url
+      @form_data = form_data
       @referer = referer
     end
 
-    def fetch opts = {}
+    def command opts = {}
       curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
       user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
 
-      buf = IO.popen ['curl', *curl_opts, '-sfLA', user_agent, *(referer ? ['-e', referer] : []), url] do |io|
-        io.read
-      end
+      cmd = ['curl', *curl_opts, '-sfLA', user_agent, *(referer ? ['-e', referer] : [])]
+
+      form_data.each do |kv|
+        cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
+      end if form_data
+
+      cmd << url
+    end
+
+    def fetch opts = {}
+      buf = IO.popen(command opts) { |io| io.read }
 
       if $?.exitstatus.zero?
         $stderr.print "\e[32m.\e[0m"
         buf
       else
-        $stderr.print "\e[31m.\e[0m\nFAILED to GET #{url}\n"
+        $stderr.print "\e[31m.\e[0m\nFAILED to %s %s\n" % [form_data ? 'POST' : 'GET', url]
         nil
       end
     end
