@@ -85,11 +85,13 @@ class Dlnode
       curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
       user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
 
-      cmd = ['curl', *curl_opts, '-sfLA', user_agent, *(referer ? ['-e', referer] : [])]
+      cmd = ['curl', '-sfLA', user_agent, *(referer ? ['-e', referer] : [])]
 
       form_data.each do |kv|
         cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
       end if form_data
+
+      cmd.concat curl_opts
 
       cmd << url
     end
@@ -187,10 +189,10 @@ class Dlnode
     f = url_basename resource.url
     path = File.join dir, (opts[:format] ? format_filename(opts[:format], idx, f) : f)
 
-    ['curl', *opts[:curl_opts],
-     '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
-     *(resource.referer ? ['-e', resource.referer] : []),
-     '-o', path, resource.url]
+    ['curl', '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
+             *(resource.referer ? ['-e', resource.referer] : []),
+             *opts[:curl_opts],
+             '-o', path, resource.url]
   end
 
   def map_commands resources, opts = {}
