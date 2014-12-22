@@ -318,7 +318,8 @@ function! s:kind.action_table.vimfiler__newfile.func(candidate) "{{{
       call writefile([], filename)
 
       call unite#action#do(
-            \ (vimfiler_current_dir == '' ? 'open' : g:vimfiler_edit_action),
+            \ (vimfiler_current_dir == '' ?
+            \   'open' : vimfiler#get_context().edit_action),
             \ [file], { 'no_quit' : 1 })
 
       execute 'doautocmd BufNewFile' fnameescape(filename)
@@ -565,6 +566,7 @@ function! s:search_cursor(filename, dest_dir, candidate) "{{{
   endif
 
   if a:filename ==# a:dest_dir
+        \ && vimfiler#exists_another_vimfiler()
     " Search from another vimfiler
     call vimfiler#mappings#switch_another_vimfiler()
     call vimfiler#view#_force_redraw_screen()

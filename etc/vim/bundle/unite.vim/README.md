@@ -103,10 +103,6 @@ https://github.com/Shougo/neomru.vim
 
 ## Screen shots
 
-unite file source
------------------
-![Unite file source.](http://gyazo.com/7379f1041084632c66faef9caf3e1f09.png)
-
 unite action source
 -------------------
 ![Unite action source.](http://gyazo.com/c5c000170f28926aaf83d0c47bc5fcbb.png)
@@ -162,6 +158,13 @@ unite menu source with customization
 	        \'Gcd'],
 	    \]
 	nnoremap <silent>[menu]g :Unite -silent -start-insert menu:git<CR>
+
+## Video
+
+https://www.youtube.com/watch?v=fwqhBSxhGU0&hd=1
+
+It is a good introduction about the possibilities of Unite by ReneFroger.
+
 
 ## Special Thanks
 

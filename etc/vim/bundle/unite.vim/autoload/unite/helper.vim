@@ -44,7 +44,7 @@ function! unite#helper#call_hook(sources, hook_name) "{{{
       call unite#print_error(v:throwpoint)
       call unite#print_error(v:exception)
       call unite#print_error(
-            \ '[unite.vim] Error occured in calling hook "' . a:hook_name . '"!')
+            \ '[unite.vim] Error occurred in calling hook "' . a:hook_name . '"!')
       call unite#print_error(
             \ '[unite.vim] Source name is ' . source.name)
     endtry
@@ -126,17 +126,15 @@ function! unite#helper#parse_options(args) "{{{
   let options = {}
   for arg in split(a:args, '\%(\\\@<!\s\)\+')
     let arg = substitute(arg, '\\\( \)', '\1', 'g')
-
     let arg_key = substitute(arg, '=\zs.*$', '', '')
-    let matched_list = filter(copy(unite#variables#options()),
-          \  'v:val ==# arg_key')
-    for option in matched_list
-      let key = substitute(substitute(option, '-', '_', 'g'), '=$', '', '')[1:]
-      let options[key] = (option =~ '=$') ?
-            \ arg[len(option) :] : 1
-    endfor
 
-    if empty(matched_list)
+    let name = substitute(tr(arg_key, '-', '_'), '=$', '', '')
+    let value = (arg_key =~ '=$') ? arg[len(arg_key) :] : 1
+
+    if arg_key =~ '^-custom-'
+          \ || index(unite#variables#options(), arg_key) >= 0
+      let options[name[1:]] = value
+    else
       call add(args, arg)
     endif
   endfor
@@ -195,8 +193,7 @@ function! unite#helper#get_input(...) "{{{
     setlocal modifiable
 
     " Restore prompt.
-    call setline(unite.prompt_linenr, unite.prompt
-          \ . getline(unite.prompt_linenr))
+    call setline(unite.prompt_linenr, unite.prompt)
 
     let &l:modifiable = modifiable_save
   endif
@@ -211,9 +208,10 @@ function! unite#helper#get_source_names(sources) "{{{
 endfunction"}}}
 
 function! unite#helper#get_postfix(prefix, is_create, ...) "{{{
+  let prefix = substitute(a:prefix, '@\d\+$', '', '')
   let buffers = get(a:000, 0, range(1, bufnr('$')))
   let buflist = sort(filter(map(buffers,
-        \ 'bufname(v:val)'), 'stridx(v:val, a:prefix) >= 0'))
+        \ 'bufname(v:val)'), 'stridx(v:val, prefix) >= 0'))
   if empty(buflist)
     return ''
   endif
@@ -223,24 +221,11 @@ function! unite#helper#get_postfix(prefix, is_create, ...) "{{{
 endfunction"}}}
 
 function! unite#helper#convert_source_name(source_name) "{{{
-  let context = unite#get_context()
-  return !context.short_source_names ? a:source_name :
+  let unite = unite#get_current_unite()
+  return (len(unite.sources) == 1 ||
+        \  !unite.context.short_source_names) ? a:source_name :
         \ a:source_name !~ '\A'  ? a:source_name[:1] :
         \ substitute(a:source_name, '\a\zs\a\+', '', 'g')
-endfunction"}}}
-
-function! unite#helper#loaded_source_names_with_args() "{{{
-  return map(copy(unite#loaded_sources_list()), "
-        \ join(insert(filter(copy(v:val.args),
-        \  'type(v:val) <= 1'),
-        \   unite#helper#convert_source_name(v:val.name)), ':')
-        \ . (v:val.unite__orig_len_candidates == 0 ? '' :
-        \      v:val.unite__orig_len_candidates ==
-        \            v:val.unite__len_candidates ?
-        \            '(' .  v:val.unite__len_candidates . ')' :
-        \      printf('(%s/%s)', v:val.unite__len_candidates,
-        \      v:val.unite__orig_len_candidates))
-        \ ")
 endfunction"}}}
 
 function! unite#helper#invalidate_cache(source_name)  "{{{
@@ -303,6 +288,8 @@ function! unite#helper#get_current_candidate(...) "{{{
           \ 0 : linenr - 1 - unite.prompt_linenr
   endif
 
+  let unite.candidate_cursor = num
+
   return get(unite#get_unite_candidates(), num, {})
 endfunction"}}}
 
@@ -332,6 +319,21 @@ function! unite#helper#call_filter(filter_name, candidates, context) "{{{
   endif
 
   return filter.filter(a:candidates, a:context)
+endfunction"}}}
+function! unite#helper#call_source_filters(filters, candidates, context, source) "{{{
+  let candidates = a:candidates
+  for Filter in a:filters
+    if type(Filter) == type('')
+      let candidates = unite#helper#call_filter(
+            \ Filter, candidates, a:context)
+    else
+      let candidates = call(Filter, [candidates, a:context], a:source)
+    endif
+
+    unlet Filter
+  endfor
+
+  return candidates
 endfunction"}}}
 
 function! unite#helper#get_source_args(sources) "{{{

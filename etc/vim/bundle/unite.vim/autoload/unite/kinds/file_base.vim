@@ -27,9 +27,6 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " Variables  "{{{
-if !exists('g:unite_kind_file_vertical_preview')
-  let g:unite_kind_file_vertical_preview = 0
-endif
 if !exists('g:unite_kind_file_preview_max_filesize')
   let g:unite_kind_file_preview_max_filesize = 1000000
 endif
@@ -53,17 +50,13 @@ let s:kind.action_table.open = {
       \ }
 function! s:kind.action_table.open.func(candidates) "{{{
   for candidate in a:candidates
-    if buflisted(unite#util#escape_file_searching(
-          \ candidate.action__path))
-      execute 'buffer' bufnr(unite#util#escape_file_searching(
-          \ candidate.action__path))
+    if buflisted(candidate.action__path)
+      execute 'buffer' bufnr(candidate.action__path)
     else
       call s:execute_command('edit', candidate)
     endif
 
-    call unite#remove_previewed_buffer_list(
-          \ bufnr(unite#util#escape_file_searching(
-          \       candidate.action__path)))
+    call unite#remove_previewed_buffer_list(bufnr(candidate.action__path))
   endfor
 endfunction"}}}
 
@@ -72,9 +65,7 @@ let s:kind.action_table.preview = {
       \ 'is_quit' : 0,
       \ }
 function! s:kind.action_table.preview.func(candidate) "{{{
-  let buflisted = buflisted(
-        \ unite#util#escape_file_searching(
-        \ a:candidate.action__path))
+  let buflisted = buflisted(a:candidate.action__path)
   if !filereadable(a:candidate.action__path)
     return
   endif
@@ -88,17 +79,7 @@ function! s:kind.action_table.preview.func(candidate) "{{{
   endif
 
   " If execute this command, unite.vim will be affected by events.
-  if g:unite_kind_file_vertical_preview
-    let unite_winwidth = winwidth(0)
-    noautocmd silent execute 'vertical pedit!'
-          \ fnameescape(a:candidate.action__path)
-    wincmd P
-    let target_winwidth = (unite_winwidth + winwidth(0)) / 2
-    execute 'wincmd p | vert resize ' . target_winwidth
-  else
-    noautocmd silent execute 'pedit!'
-          \ fnameescape(a:candidate.action__path)
-  endif
+  call unite#view#_preview_file(a:candidate.action__path)
 
   let winnr = winnr()
   wincmd P
@@ -106,9 +87,7 @@ function! s:kind.action_table.preview.func(candidate) "{{{
     if !buflisted
       doautocmd BufRead
       setlocal nomodified
-      call unite#add_previewed_buffer_list(
-            \ unite#util#escape_file_searching(
-            \       a:candidate.action__path))
+      call unite#add_previewed_buffer_list(a:candidate.action__path)
     endif
   finally
     execute winnr.'wincmd w'
@@ -188,14 +167,13 @@ function! s:kind.action_table.wunix.func(candidates) "{{{
   let current_bufnr = bufnr('%')
 
   for candidate in a:candidates
-    let is_listed = buflisted(
-          \ unite#util#escape_file_searching(candidate.action__path))
+    let is_listed = buflisted(candidate.action__path)
     call s:kind.action_table.open.func([candidate])
     write ++fileformat=mac
     if is_listed
       call s:kind.action_table.open.func([candidate])
     else
-      let bufnr = bufnr(unite#util#escape_file_searching(candidate.action__path))
+      let bufnr = bufnr(candidate.action__path)
       silent execute bufnr 'bdelete'
     endif
   endfor

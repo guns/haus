@@ -230,6 +230,7 @@ function! unite#view#_redraw(is_force, winnr, is_gather_all) "{{{
 
     " Redraw.
     call unite#view#_redraw_candidates(is_gather_all)
+    call unite#view#_change_highlight()
     let unite.context.is_redraw = 0
   finally
     if empty(unite.args) && getpos('.') !=# pos
@@ -354,7 +355,7 @@ function! unite#view#_change_highlight()  "{{{
 
     for source in filter(copy(unite.sources), "v:val.syntax != ''")
       for matcher in filter(copy(map(filter(
-            \ copy(source.filters),
+            \ copy(source.matchers),
             \ "type(v:val) == type('')"), 'unite#get_filters(v:val)')),
             \ "has_key(v:val, 'pattern')")
         let patterns = map(copy(input_list),
@@ -431,36 +432,6 @@ function! unite#view#_resize_window() "{{{
   let context.unite__old_winheight = winheight(winnr())
   let context.unite__old_winwidth = winwidth(winnr())
 endfunction"}}}
-
-" @vimlint(EVL102, 1, l:max_source_name)
-" @vimlint(EVL102, 1, l:context)
-function! unite#view#_convert_lines(candidates, ...) "{{{
-  let quick_match_table = get(a:000, 0, {})
-
-  let unite = unite#get_current_unite()
-  let context = unite#get_context()
-  let [max_width, max_source_name] = unite#helper#adjustments(
-        \ winwidth(0), unite.max_source_name, 2)
-
-  " Create key table.
-  let keys = {}
-  for [key, number] in items(quick_match_table)
-    let keys[number] = key . '|'
-  endfor
-
-  return map(copy(a:candidates),
-        \ "(v:val.is_dummy ? '  ' :
-        \   v:val.unite__is_marked ? context.marked_icon . ' ' :
-        \   empty(quick_match_table) ? context.candidate_icon . ' ' :
-        \   get(keys, v:key, '  '))
-        \ . (unite.max_source_name == 0 ? ''
-        \   : unite#util#truncate(unite#helper#convert_source_name(
-        \     (v:val.is_dummy ? '' : v:val.source)), max_source_name))
-        \ . unite#util#truncate_wrap(v:val.unite__abbr, " . max_width
-        \    .  ", (context.truncate ? 0 : max_width/2), '..')")
-endfunction"}}}
-" @vimlint(EVL102, 0, l:max_source_name)
-" @vimlint(EVL102, 0, l:context)
 
 function! unite#view#_do_auto_preview() "{{{
   let unite = unite#get_current_unite()
@@ -564,14 +535,15 @@ function! unite#view#_init_cursor() "{{{
   let positions = unite#custom#get_profile(
         \ unite.profile_name, 'unite__save_pos')
   let key = unite#loaded_source_names_string()
-  let is_restore = has_key(positions, key) && context.select <= 0 &&
-        \   positions[key].candidate ==#
+  let is_restore = context.restore
+        \ && has_key(positions, key) && context.select <= 0
+        \ && positions[key].candidate ==#
         \     unite#helper#get_current_candidate(positions[key].pos[1])
 
   if context.start_insert && !context.auto_quit
     let unite.is_insert = 1
 
-    if is_restore && unite.is_resume
+    if is_restore && context.resume
           \ && positions[key].pos[1] != unite.prompt_linenr
       " Restore position.
       call setpos('.', positions[key].pos)
@@ -641,8 +613,6 @@ function! unite#view#_quit(is_force, ...)  "{{{
   let unite = b:unite
   let context = unite.context
 
-  let key = unite#loaded_source_names_string()
-
   " Clear mark.
   for source in unite#loaded_sources_list()
     for candidate in source.unite__cached_candidates
@@ -650,26 +620,7 @@ function! unite#view#_quit(is_force, ...)  "{{{
     endfor
   endfor
 
-  " Save position.
-  let positions = unite#custom#get_profile(
-        \ unite.profile_name, 'unite__save_pos')
-  if key != ''
-    let positions[key] = {
-          \ 'pos' : getpos('.'),
-          \ 'candidate' : unite#helper#get_current_candidate(),
-          \ }
-
-    if context.input != ''
-      " Save input.
-      let inputs = unite#custom#get_profile(
-            \ unite.profile_name, 'unite__inputs')
-      if !has_key(inputs, key)
-        let inputs[key] = []
-      endif
-      call insert(filter(inputs[key],
-            \ 'v:val !=# unite.context.input'), context.input)
-    endif
-  endif
+  call unite#view#_save_position()
 
   if a:is_force || context.quit
     let bufname = bufname('%')
@@ -783,6 +734,38 @@ function! unite#view#_clear_match() "{{{
   endif
 endfunction"}}}
 
+function! unite#view#_save_position() "{{{
+  let unite = b:unite
+  let context = unite.context
+
+  let key = unite#loaded_source_names_string()
+  if key == ''
+    return
+  endif
+
+  " Save position.
+  let positions = unite#custom#get_profile(
+        \ unite.profile_name, 'unite__save_pos')
+
+  let positions[key] = {
+        \ 'pos' : getpos('.'),
+        \ 'candidate' : unite#helper#get_current_candidate(),
+        \ }
+
+  if context.input == ''
+    return
+  endif
+
+  " Save input.
+  let inputs = unite#custom#get_profile(
+        \ unite.profile_name, 'unite__inputs')
+  if !has_key(inputs, key)
+    let inputs[key] = []
+  endif
+  call insert(filter(inputs[key],
+        \ 'v:val !=# unite.context.input'), context.input)
+endfunction"}}}
+
 " Message output.
 function! unite#view#_print_error(message) "{{{
   let message = s:msg2list(a:message)
@@ -855,19 +838,78 @@ function! unite#view#_match_line(highlight, line, id) "{{{
         \ matchadd(a:highlight, '^\%'.a:line.'l.*', 10, a:id)
 endfunction"}}}
 
-function! unite#view#_get_status_string() "{{{
+function! unite#view#_get_status_plane_string() "{{{
+  return (b:unite.is_async ? '[async] ' : '') .
+        \ join(map(copy(unite#loaded_sources_list()), "
+        \ (v:val.unite__len_candidates == 0) ? '_' :
+        \ join(insert(filter(copy(v:val.args),
+        \  'type(v:val) <= 1'),
+        \   unite#helper#convert_source_name(v:val.name)), ':')
+        \ . (v:val.unite__len_candidates == 0 ? '' :
+        \      v:val.unite__orig_len_candidates ==
+        \            v:val.unite__len_candidates ?
+        \            '(' .  v:val.unite__len_candidates . ')' :
+        \      printf('(%s/%s)', v:val.unite__len_candidates,
+        \      v:val.unite__orig_len_candidates))
+        \ "))
+endfunction"}}}
+
+function! unite#view#_get_status_head_string() "{{{
   if !exists('b:unite')
     return ''
   endif
 
-  let head = (b:unite.is_async ? '[async] ' : '') .
-        \ join(unite#helper#loaded_source_names_with_args(), ', ')
-  let tail = b:unite.context.path != '' ? ' ['. b:unite.context.path.']' :
-        \    b:unite.is_async ? '' :
-        \    ' |' . substitute(get(b:unite.msgs, 0, ''), '^\[.\{-}\]', '', '')
-  let tail = unite#util#strwidthpart(tail,
-        \ winwidth(0) - (unite#util#wcswidth('*unite* : ' . head) + 10))
-  return head . tail
+  return b:unite.is_async ? '[async] ' : ''
+endfunction"}}}
+function! unite#view#_get_status_tail_string() "{{{
+  if !exists('b:unite')
+    return ''
+  endif
+
+  return b:unite.context.path != '' ? '['. b:unite.context.path.']' :
+        \    (b:unite.is_async || get(b:unite.msgs, 0, '') == '') ? '' :
+        \    substitute(get(b:unite.msgs, 0, ''), '^\[.\{-}\]\s*', '', '')
+endfunction"}}}
+
+function! unite#view#_get_source_name_string(source) "{{{
+  return (a:source.unite__len_candidates == 0) ? '_' :
+        \ join(insert(filter(copy(a:source.args),
+        \  'type(v:val) <= 1'),
+        \   unite#helper#convert_source_name(a:source.name)), ':')
+endfunction"}}}
+function! unite#view#_get_source_candidates_string(source) "{{{
+  return a:source.unite__len_candidates == 0 ? '' :
+        \      a:source.unite__orig_len_candidates ==
+        \            a:source.unite__len_candidates ?
+        \            '(' . a:source.unite__len_candidates . ')' :
+        \      printf('(%s/%s)', a:source.unite__len_candidates,
+        \      a:source.unite__orig_len_candidates)
+endfunction"}}}
+
+function! unite#view#_get_status_string(unite) "{{{
+  let statusline = "%#uniteStatusHead# %{unite#view#_get_status_head_string()}%*"
+  let cnt = 0
+  if empty(a:unite.sources)
+    let statusline .= "%#uniteStatusSourceNames#interactive%*"
+    let statusline .= "%#uniteStatusSourceCandidates#%{"
+    let statusline .= "unite#view#_get_source_candidates_string("
+    let statusline .= "unite#loaded_sources_list()[0])} %*"
+  else
+    for cnt in range(0, len(a:unite.sources)-1)
+      let statusline .= "%#uniteStatusSourceNames#%{"
+      let statusline .= "unite#view#_get_source_name_string("
+      let statusline .= "b:unite.sources[".cnt."])}"
+      let statusline .= "%#uniteStatusSourceCandidates#%{"
+      let statusline .= "unite#view#_get_source_candidates_string("
+      let statusline .= "b:unite.sources[".cnt."])} %*"
+    endfor
+  endif
+
+  let statusline .= "%=%#uniteStatusMessage# %{unite#view#_get_status_tail_string()} %*"
+  let statusline .= "%#LineNR#%{printf('%'.len(b:unite.candidates_len"
+  let statusline .= "+b:unite.prompt_linenr).'d/%d',line('.'),"
+  let statusline .= "b:unite.candidates_len+b:unite.prompt_linenr)}%*"
+  return statusline
 endfunction"}}}
 
 function! unite#view#_add_previewed_buffer_list(bufnr) "{{{
@@ -877,6 +919,21 @@ endfunction"}}}
 function! unite#view#_remove_previewed_buffer_list(bufnr) "{{{
   let unite = unite#get_current_unite()
   call filter(unite.previewed_buffer_list, 'v:val != a:bufnr')
+endfunction"}}}
+
+function! unite#view#_preview_file(filename) "{{{
+  let context = unite#get_context()
+  if context.vertical_preview
+    let unite_winwidth = winwidth(0)
+    noautocmd silent execute 'vertical pedit!'
+          \ fnameescape(a:filename)
+    wincmd P
+    let target_winwidth = (unite_winwidth + winwidth(0)) / 2
+    execute 'wincmd p | vert resize ' . target_winwidth
+  else
+    noautocmd silent execute 'pedit!'
+          \ fnameescape(a:filename)
+  endif
 endfunction"}}}
 
 function! s:clear_previewed_buffer_list() "{{{
@@ -892,6 +949,36 @@ function! s:clear_previewed_buffer_list() "{{{
 
   let unite.previewed_buffer_list = []
 endfunction"}}}
+
+" @vimlint(EVL102, 1, l:max_source_name)
+" @vimlint(EVL102, 1, l:context)
+function! unite#view#_convert_lines(candidates, ...) "{{{
+  let quick_match_table = get(a:000, 0, {})
+
+  let unite = unite#get_current_unite()
+  let context = unite#get_context()
+  let [max_width, max_source_name] = unite#helper#adjustments(
+        \ winwidth(0), unite.max_source_name, 2)
+
+  " Create key table.
+  let keys = {}
+  for [key, number] in items(quick_match_table)
+    let keys[number] = key . '|'
+  endfor
+
+  return map(copy(a:candidates),
+        \ "(v:val.is_dummy ? '  ' :
+        \   v:val.unite__is_marked ? context.marked_icon . ' ' :
+        \   empty(quick_match_table) ? context.candidate_icon . ' ' :
+        \   get(keys, v:key, '  '))
+        \ . (unite.max_source_name == 0 ? ''
+        \   : unite#util#truncate(unite#helper#convert_source_name(
+        \     (v:val.is_dummy ? '' : v:val.source)), max_source_name))
+        \ . unite#util#truncate_wrap(v:val.unite__abbr, " . max_width
+        \    .  ", (context.truncate ? 0 : max_width/2), '..')")
+endfunction"}}}
+" @vimlint(EVL102, 0, l:max_source_name)
+" @vimlint(EVL102, 0, l:context)
 
 function! s:set_syntax() "{{{
   let unite = unite#get_current_unite()

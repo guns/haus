@@ -101,8 +101,6 @@ function! s:source_buffer_all.gather_candidates(args, context) "{{{
 
   let candidates = map(a:context.source__buffer_list, "{
         \ 'word' : unite#util#substitute_path_separator(
-        \       filereadable(s:make_word(v:val.action__buffer_nr)) ?
-        \         fnamemodify(s:make_word(v:val.action__buffer_nr), ':p') :
         \         s:make_word(v:val.action__buffer_nr)),
         \ 'abbr' : s:make_abbr(v:val.action__buffer_nr, v:val.source__flags)
         \        . s:format_time(v:val.source__time),
@@ -130,12 +128,18 @@ function! s:source_buffer_tab.gather_candidates(args, context) "{{{
           \                   a:context.source__is_minus)
   endif
 
-  if !exists('t:unite_buffer_dictionary')
-    let t:unite_buffer_dictionary = {}
+  if !exists('g:loaded_tabpagebuffer')
+    call unite#print_source_message(
+          \ 'tabpagebuffer plugin is not installed.', self.name)
+    return []
+  endif
+
+  if !exists('t:tabpagebuffer')
+    return []
   endif
 
   let list = filter(copy(a:context.source__buffer_list),
-        \ 'has_key(t:unite_buffer_dictionary, v:val.action__buffer_nr)')
+        \ 'has_key(t:tabpagebuffer, v:val.action__buffer_nr)')
 
   let candidates = map(list, "{
         \ 'word' : unite#util#substitute_path_separator(

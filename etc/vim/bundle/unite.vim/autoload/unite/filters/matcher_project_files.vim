@@ -36,7 +36,8 @@ let s:matcher = {
       \}
 
 function! s:matcher.filter(candidates, context) "{{{
-  let project = unite#util#path2project_directory(getcwd()) . '/'
+  let path = a:context.path != '' ? a:context.path : getcwd()
+  let project = unite#util#path2project_directory(path) . '/'
 
   return filter(a:candidates, "!has_key(v:val, 'action__path')
         \ || stridx(v:val.action__path, project) == 0")

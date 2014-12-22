@@ -30,14 +30,14 @@ set cpo&vim
 call unite#util#set_default(
       \ 'g:unite_kind_file_delete_file_command',
       \ unite#util#is_windows() && !executable('rm') ? '' :
-      \ executable('trash-put') ? 'trash-put $srcs' :
       \ executable('rmtrash') ? 'rmtrash $srcs' :
+      \ executable('trash-put') ? 'trash-put $srcs' :
       \ 'rm $srcs')
 call unite#util#set_default(
       \ 'g:unite_kind_file_delete_directory_command',
       \ unite#util#is_windows() && !executable('rm') ? '' :
-      \ executable('trash-put') ? 'trash-put $srcs' :
       \ executable('rmtrash') ? 'rmtrash $srcs' :
+      \ executable('trash-put') ? 'trash-put $srcs' :
       \ 'rm -r $srcs')
 call unite#util#set_default(
       \ 'g:unite_kind_file_copy_file_command',
@@ -195,7 +195,7 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
     let new_filename = unite#util#substitute_path_separator(
           \ fnamemodify(new_filename, ':.'))
 
-    let bufnr = bufnr(unite#util#escape_file_searching(old_filename))
+    let bufnr = bufnr(old_filename)
     if bufnr > 0
       " Buffer rename.
       setlocal hidden

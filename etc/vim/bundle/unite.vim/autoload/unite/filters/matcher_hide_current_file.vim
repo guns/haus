@@ -1,7 +1,6 @@
 "=============================================================================
-" FILE: converter_file_directory.vim
-" AUTHOR:  Shougo Matsushita <Shougo.Matsu (at) gmail.com>
-"          basyura <basyura (at) gmail.com>
+" FILE: matcher_hide_current_file.vim
+" AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -27,43 +26,25 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#filters#converter_file_directory#define() "{{{
-  return s:converter
+function! unite#filters#matcher_hide_current_file#define() "{{{
+  return s:matcher
 endfunction"}}}
 
-let s:converter = {
-      \ 'name' : 'converter_file_directory',
-      \ 'description' : 'converter to separate file and directory',
+let s:matcher = {
+      \ 'name' : 'matcher_hide_current_file',
+      \ 'description' : 'hide current file matcher',
       \}
 
-function! s:converter.filter(candidates, context)
-  let candidates = copy(a:candidates)
+function! s:matcher.filter(candidates, context) "{{{
+  if bufname(unite#get_current_unite().prev_bufnr) == ''
+    return a:candidates
+  endif
 
-  let max = min([max(map(copy(candidates), "
-        \ strwidth(s:convert_to_abbr(
-        \  get(v:val, 'action__path', v:val.word)))"))+2,
-        \ get(g:, 'unite_converter_file_directory_width', 45)])
-
-  for candidate in candidates
-    let path = get(candidate, 'action__path', candidate.word)
-
-    let abbr = s:convert_to_abbr(path)
-    let abbr = unite#util#truncate(abbr, max) . ' '
-    let path = unite#util#substitute_path_separator(
-          \ fnamemodify(path, ':~:.:h'))
-    if path ==# '.'
-      let path = ''
-    endif
-    let candidate.abbr = abbr . path
-  endfor
-
-  return candidates
-endfunction
-
-function! s:convert_to_abbr(path)
-  return printf('%s (%s)', fnamemodify(a:path, ':p:t'),
-        \ fnamemodify(a:path, ':p:h:t'))
-endfunction
+  let file = unite#util#substitute_path_separator(
+        \ fnamemodify(bufname(unite#get_current_unite().prev_bufnr), ':p'))
+  return filter(a:candidates, "
+        \ get(v:val, 'action__path', v:val.word) !=# file")
+endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
