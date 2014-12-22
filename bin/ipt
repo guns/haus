@@ -81,7 +81,8 @@ class Ipt
   end
 
   def colon_split arg
-    arg =~ /:/ ? arg.split(':', 2) : [arg, '']
+    a, b = arg.split ':', 2
+    [a, b || '']
   end
 
   def t pair
