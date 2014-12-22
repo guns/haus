@@ -1298,6 +1298,7 @@ ALIAS ssl='openssl' && {
 if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
     ALIAS gpgverify='gpg --verify-files' \
           gpgsign='gpg --detach-sign'
+    alias xgpgshell='exec gpg-shell'
 fi
 
 # pass
