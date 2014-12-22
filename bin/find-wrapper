@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+require 'optparse'
+
+class FindWrapper
+  DEFAULTS = { :pred => nil, :noop => false }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [find-args]
+
+        Options:
+      BANNER
+
+      opt.on '-n', '--noop' do
+        @noop = true
+      end
+
+      opt.on '-p', '--pred find-expr', 'Insert find-expr after the path argument' do |arg|
+        @pred = arg.shellsplit
+      end
+    end
+  end
+
+  def make_command arguments, pred = nil
+    cmd = %w[find]
+
+    return cmd << '.' if arguments.empty?
+
+    args = arguments.dup
+
+    cmd.push File.directory?(args.first) ? args.shift.chomp('/') : '.'
+    cmd.concat pred if pred
+
+    if args.first =~ /\A-.*|\A\(\z/
+      cmd.concat args
+    elsif args.any?
+      pattern = args.shift
+      pattern = case pattern
+                when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
+                when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
+                when /\$\z/       then '*%s' % pattern.chomp('$')
+                else                   '*%s*' % pattern
+                end
+      cmd.push '-iname', pattern, *args
+    end
+
+    cmd.push '-print', '-delete' if cmd.delete '-delete'
+
+    cmd
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    cmd = make_command args, @pred
+    warn "\e[32;1m%s\e[0m" % cmd.shelljoin
+    exec *cmd unless @noop
+  end
+end
+
+$0 = File.basename(__FILE__) and FindWrapper.new.run ARGV if $0 == __FILE__

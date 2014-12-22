@@ -278,36 +278,14 @@ HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
 }
 
 # find
-# Param: [$1] Directory to search, if extant
-# Param: [$@] Options to find
-f() {
-    ruby -r shellwords -e '
-        cmd, args = ["find"], ARGV.empty? ? ["."] : ARGV.dup
-        cmd.push File.directory?(args.first) ? args.shift.chomp("/") : "."
-        if args.first =~ /\A-.*|\A\(\z/
-            cmd.concat args
-        elsif args.any?
-            pattern = args.shift
-            pattern = case pattern
-            when /\A\^.*\$\z/ then pattern.sub(/\^/,"").chomp("$")
-            when /\A\^/       then "%s*" % pattern.sub(/\^/,"")
-            when /\$\z/       then "*%s" % pattern.chomp("$")
-            else                   "*%s*" % pattern
-            end
-            cmd.push "-iname", pattern, *args
-        end
-        cmd.push "-print", "-delete" if cmd.delete "-delete"
-        warn "\e[32;1m%s\e[0m" % cmd.shelljoin
-        exec *cmd
-    ' -- "$@"
-}; TCOMP find f
-f1() { f "$@" -maxdepth 1; };               TCOMP find f1
-ff() { f "$@" \( -type f -o -type l \); };  TCOMP find ff
-fF() { f "$@" -type f; };                   TCOMP find fF
-fd() { f "$@" -type d; };                   TCOMP find fd
-fl() { f "$@" -type l; };                   TCOMP find fl
-fnewer() { f "$@" -newer /tmp/timestamp; }; TCOMP find fnewer
-stamp() { run touch /tmp/timestamp; }
+f()  { find-wrapper                                    --  "$@"; }; TCOMP find f
+f1() { find-wrapper --pred '-maxdepth 1'               --  "$@"; }; TCOMP find f1
+ff() { find-wrapper --pred '( -type f -o -type l )'    --  "$@"; }; TCOMP find ff
+fF() { find-wrapper --pred '-type f'                   --  "$@"; }; TCOMP find fF
+fd() { find-wrapper --pred '-type d'                   --  "$@"; }; TCOMP find fd
+fl() { find-wrapper --pred '-type l'                   --  "$@"; }; TCOMP find fl
+fnewer() { find-wrapper --pred '-newer /tmp/timestamp' --  "$@"; }; TCOMP find fnewer
+tstamp() { run touch /tmp/timestamp; }
 cdf() {
     cd "$(ruby -r find -e '
         pat, dst = Regexp.new(ARGV.first), "."
