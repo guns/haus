@@ -23,33 +23,6 @@ class Dlnode
     :curl_opts => []
   }
 
-  def self.urijoin base, path
-    URI.join(base, path).to_s
-  rescue URI::InvalidURIError
-  end
-
-  def self.extract_resources resource, pattern, opts
-    html_str = resource.fetch opts
-
-    return [] if html_str.nil?
-
-    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
-      if not pattern.attribute and el.name == 'form'
-        form_data = el.css('input').map { |i| [i['name'], i['value']] }
-        path = el.attr 'action'
-      else
-        path = pattern.attribute ? el.attr(pattern.attribute) : el.text
-      end
-
-      if path and url = urijoin(resource.url, path)
-        r = Resource.new url, form_data, (resource.url if opts[:send_referer])
-        r = nil if pattern.regexp and url !~ pattern.regexp
-      end
-
-      r ? v << r : v
-    end
-  end
-
   class Pattern
     attr_accessor :selector, :attribute, :regexp
 
@@ -81,6 +54,33 @@ class Dlnode
       @referer = referer
     end
 
+    def urijoin base, path
+      URI.join(base, path).to_s
+    rescue URI::InvalidURIError
+    end
+
+    def extract_resources pattern, opts
+      html_str = fetch opts
+
+      return [] if html_str.nil?
+
+      Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
+        if not pattern.attribute and el.name == 'form'
+          form_data = el.css('input').map { |i| [i['name'], i['value']] }
+          path = el.attr 'action'
+        else
+          path = pattern.attribute ? el.attr(pattern.attribute) : el.text
+        end
+
+        if path and u = urijoin(url, path)
+          r = Resource.new u, form_data, (url if opts[:send_referer])
+          r = nil if pattern.regexp and u !~ pattern.regexp
+        end
+
+        r ? v << r : v
+      end
+    end
+
     def command opts = {}
       curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
       user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
@@ -110,7 +110,7 @@ class Dlnode
 
     def fetch_leaves patterns = [], opts = {}
       p, *rest = patterns
-      resources = ::Dlnode.extract_resources self, p, opts
+      resources = extract_resources p, opts
 
       if rest.any?
         resources.flat_map { |r| r.fetch_leaves rest, opts }
