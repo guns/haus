@@ -4,12 +4,22 @@
 abort 'Usage: ssdinfo block-device' if ARGV.size > 1
 
 blockdev = ARGV[0] || '/dev/sda'
-
 buf = IO.popen ['smartctl', '-a', blockdev] { |rd| rd.read }
-model = buf[/Device Model:\s*(.*)/, 1]
-gib_written = buf[/Total_LBAs_Written.*/].split.last.to_i * 512.0 / 2**30
+int = ->(pattern) { buf[pattern].split.last.to_i }
 
-puts <<-EOF % [model, gib_written]
-#{blockdev}: %s
-Total Writes: %0.1f GiB
-EOF
+info = [
+  [blockdev,              buf[/Device Model:\s*(.*)/, 1]],
+  ['Capacity',            buf[/Capacity:\s*(.*)/, 1]],
+  ['Firmware Version',    buf[/Firmware Version:\s*(.*)/, 1]],
+  ['Total Writes',        '%0.1f GiB' % (int[/Total_LBAs_Written.*/] * 512.0 / 2**30)],
+  ['P/E Cycles',          int[/Wear_Leveling_Count.*/]],
+  ['SMART Test',          buf[/SMART.*test result:\s*(.*)/, 1]],
+  ['Power On Hours',      int[/Power_On_Hours.*/]],
+  ['Reallocated Sectors', int[/Reallocated_Sector_Ct.*/]],
+]
+
+klen = info.map { |(k, _)| k.size }.max
+
+info.each do |(k, v)|
+  puts "%-#{klen + 1}s %s" % [k + ':', v]
+end
