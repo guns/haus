@@ -233,6 +233,9 @@ $if bash
     "\033\007i":    "\C-] irb \n"
     "\033\007I":    "\C-] pry \n"
 
+    # ncdu
+    "\033\007d":    "\C-] ncdu \n"
+
     # lein REPL
     "\033\007l":    "\C-]rlwrap lein REPL \n"
     "\033\007L":    "\C-]rm target/trampolines/*; rlwrap lein REPL \n"
