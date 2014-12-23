@@ -301,21 +301,6 @@ cdf() {
 alias cp='cp -v'
 alias cpr='cp -r'
 alias mv='mv -v'
-swap-files() {
-    ruby -r fileutils -r digest/sha1 -e "
-        include FileUtils::Verbose
-
-        abort 'Usage: $FUNCNAME f₁ f₂' unless ARGV.size == 2
-        ARGV.each { |f| raise %Q(No permissions to write #{f.inspect}) unless File.lstat(f).writable? }
-
-        f₁, f₂ = ARGV
-        tmp = f₁ + '.' + Digest::SHA1.hexdigest(f₁)
-        abort '%s exists!' % tmp if File.exists? tmp
-        mv f₁,  tmp
-        mv f₂,  f₁
-        mv tmp, f₂
-    " -- "$@"
-}
 
 # rm
 alias rm='rm -v'
