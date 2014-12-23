@@ -6,8 +6,4 @@
 #
 
 # Default options
-feh -F -x -d -B black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F"
-# Same as default, but full size
-fixed -F -x -d -B black --zoom 100 --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F"
-# Optimized for viewing gifs in external viewer
-gifs -g 800x600 -x -d -B black --zoom 100 --scale-down --action9 ";open %F"
+feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F"
