@@ -230,7 +230,7 @@ super + control + e
 super + control + t
 	T="✔ TODO ✔"; \
 	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
-	urxvt-client -title "$T" -icon ~/.icons/haus/vim.svg -e vim -c 'Org! TODO'
+	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim -c 'Org! TODO'
 
 super + control + alt + t
 	remind --query
