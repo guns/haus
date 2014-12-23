@@ -65,7 +65,10 @@ super + q
 	bspc window --close
 
 super + Tab
-	bspc window --focus last.local
+	bspc window --focus next
+
+super + shift + Tab
+	bspc window --focus prev
 
 alt + Tab
 	if pkill -x skippy-xd; then \
@@ -73,9 +76,6 @@ alt + Tab
 	else \
 		skippy-xd; \
 	fi
-
-super + control + {n,p}
-	bspc window --focus {next,prev}
 
 super + control + {h,j,k,l}
 	bspc window --presel {left,down,up,right}
@@ -95,7 +95,7 @@ super + control + f
 F11
 	bspc window --toggle fullscreen
 
-super + control + d
+super + control + p
 	bspc window --toggle pseudo_tiled
 
 super + control + x
