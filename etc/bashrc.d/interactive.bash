@@ -1301,6 +1301,9 @@ ALIAS cs='cryptsetup' && {
         fi
     }; TCOMP umount csumount
     alias csdump='cryptsetup luksDump'
+    __crypt_names__() { __compreply__ "$(cat /sys/block/*/dm/name)"; }
+    alias cssuspend='cryptsetup luksSuspend'; complete -F __crypt_names__ cssuspend
+    alias csresume='cryptsetup luksResume'; complete -F __crypt_names__ csresume
 }
 
 HAVE cert && {
