@@ -346,7 +346,7 @@ ALIAS mt='mount -v' \
       mtvfat='mount -v -t vfat' && {
     alias mtusb='mountusb' \
           umtusb='umountusb'
-    remt() { run mount -v -o remount,"$1" "${@:2}"; }
+    remt() { run mount -v -o "remount,$2" "$1" "${@:3}"; }
     mtlabel() {
         (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
         run mount "/dev/disk/by-label/$1" "${@:2}"
