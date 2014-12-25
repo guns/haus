@@ -36,8 +36,8 @@ class Genpw
         options.chars = utf8_chars.grep arg
       end
 
-      opt.on '-f', '--file PATH', 'Entropy source file [DEFAULT: /dev/urandom]' do |arg|
-        options.source = File.expand_path arg
+      opt.on '-f', '--file PATH', 'Entropy source file; - for stdin [DEFAULT: /dev/urandom]' do |arg|
+        options.source = arg == '-' ? $stdin : File.expand_path(arg)
       end
 
       opt.on '-r', '--random', 'Read characters from /dev/random' do
