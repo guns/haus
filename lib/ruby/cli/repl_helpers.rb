@@ -58,13 +58,20 @@ module CLI
 
           if self.verbose_inspect = !verbose_inspect
             alias_method :__inspect__, :inspect
+
+            def bin
+              buf = '%04b' % self
+              n = buf.size % 4
+              ('0' * (n.zero? ? 0 : 4 - n) << buf).scan(/\d{4}/).join ' '
+            end
+
             def inspect
               hex = '%x' % self
               hex = '0' + hex unless hex.length.even?
-              bin = '%04b' % self
-              '%d 0%0o 0x%s (%s)' % [self, self, hex, bin.reverse.scan(/\d{1,4}/).join(' ').reverse]
+              '%d 0%0o 0x%s (%s)' % [self, self, hex, bin]
             end
           else
+            remove_method :bin
             remove_method :inspect
             alias_method :inspect, :__inspect__
           end
