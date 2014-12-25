@@ -185,9 +185,9 @@ class Dlnode
   end
 
   # Returns tuple of arguments for exec: […, path, url]
-  def command resource, idx, dir, opts = {}
+  def command resource, idx, opts = options
     f = url_basename resource.url
-    path = File.join dir, (opts[:format] ? format_filename(opts[:format], idx, f) : f)
+    path = File.join opts[:dir], (opts[:format] ? format_filename(opts[:format], idx, f) : f)
 
     ['curl', '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
              *(resource.referer ? ['-e', resource.referer] : []),
@@ -195,19 +195,20 @@ class Dlnode
              '-o', path, resource.url]
   end
 
-  def map_commands resources, opts = {}
+  def map_commands resources, opts = options
     Δ = opts[:start] - opts[:index]
 
     resources.drop(Δ).map.with_index do |r, i|
-      command r, i + opts[:index] + Δ, opts[:dir],
+      command r, i + opts[:index] + Δ,
+              :dir => opts[:dir],
               :format => opts[:format],
               :user_agent => opts[:user_agent],
               :curl_opts => opts[:curl_opts]
     end
   end
 
-  def download! url, *pattern_args
-    opts = {
+  def options
+    {
       :index => @index,
       :start => @start,
       :dir => @dir,
@@ -216,6 +217,10 @@ class Dlnode
       :user_agent => @user_agent,
       :curl_opts => @curl_opts
     }
+  end
+
+  def download! url, *pattern_args
+    opts = options
     patterns = pattern_args.map { |p| Pattern.new p }
     resources = Resource.new(url).fetch_leaves patterns, opts
     commands = map_commands resources, opts
@@ -228,16 +233,15 @@ class Dlnode
       puts commands.map(&:shelljoin)
       true
     else
-      warn "\nDownloading %d resource(s)" % resources.size
-
       FileUtils.mkdir_p @dir
 
+      n = resources.size
       failed = []
 
-      commands.each do |cmd|
+      commands.each_with_index do |cmd, i|
         path, url = cmd[-2..-1]
 
-        warn "#{url} → #{path}"
+        warn "[#{i+1}/#{n}] #{url} → #{path}"
 
         if File.exists? path
           warn 'File exists!'
