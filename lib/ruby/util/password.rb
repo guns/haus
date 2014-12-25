@@ -44,10 +44,13 @@ module Util
             len += 8
             buf <<= 8
             buf |= byte
+            # puts "byte:  %08b\nbuf:   %0#{len}b (%d/%d)\n" % [byte, buf, len, bit_len]
           end
-          yield (buf >> (len - bit_len))
           len -= bit_len
+          # puts "FLUSH: %0#{bit_len}b" % (buf >> len)
+          yield buf >> len
           buf &= ~(~0 << len)
+          # puts "buf:   %0#{len}b (%d/%d)" % [buf, len, bit_len]
         end
       end
     end
