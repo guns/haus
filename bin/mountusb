@@ -4,8 +4,22 @@
 require 'set'
 require 'shellwords'
 require 'fileutils'
+require 'optparse'
 
-options = %w[noatime nodev noexec nosuid]
+mountoptions = %w[noatime nodev noexec nosuid]
+
+parser = OptionParser.new do |opt|
+  opt.banner = 'USAGE: mountusb [-o mountoptions] [label-pattern]'
+  opt.on('-o', '--options a,b,c', Array, "DEFAULT: #{mountoptions}") { |arg| mountoptions.concat arg }
+end
+
+args = parser.parse ARGV
+case args.size
+when 1 then label_pattern = Regexp.compile args.first
+when 0 then label_pattern = nil
+else abort parser.help
+end
+
 fs_owners = Set.new %w[adfs affs debugfs devpts fat vfat msdos umsdos hfs hpfs
                        iso9660 ntfs proc tmpfs udf usbfs]
 uid = ENV["SUDO_UID"] || Process.euid
@@ -23,11 +37,12 @@ end]
 (blkdevs.keys & usbdevs.keys).each do |dev|
   label = blkdevs[dev]["LABEL"]
   type = blkdevs[dev]["TYPE"]
+  next if label_pattern and label !~ label_pattern
   mtpt = File.join "/mnt/usb", label || File.basename(usbdevs[dev])
   FileUtils.mkdir_p mtpt
-  opts = options
+  opts = mountoptions.dup
   opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
   cmd = %W[mount -v -t #{type} -o #{opts.join ","} #{dev} #{mtpt}]
-  puts cmd.join(' ')
+  warn cmd.join(' ')
   system *cmd
 end
