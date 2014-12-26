@@ -1,0 +1,7 @@
+#!/bin/sh
+
+for dm in /sys/block/*/dm; do
+    printf "%s: %s\n" \
+           "$(cat "$dm/name")" \
+           "$(if [[ $(cat "$dm/suspended") -eq 1 ]]; then echo "suspended"; else echo "active"; fi)"
+done
