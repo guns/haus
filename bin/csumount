@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+abort 'USAGE: csumount mountpoint' if ARGV.size != 1
+
+def sh *argv
+  warn argv.shelljoin
+  system *argv
+end
+
+mountpoint = ARGV.first
+dm_name = File.basename File.expand_path(mountpoint)
+
+if sh 'umount', mountpoint
+  sh 'cryptsetup', 'luksClose', dm_name
+end
+
+exit $?.exitstatus

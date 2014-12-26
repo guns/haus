@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+require 'shellwords'
+
+def sh *argv
+  warn argv.shelljoin
+  system *argv
+end
+
+options = {}
+
+parser = OptionParser.new do |opt|
+  opt.banner = "USAGE: csmount [options] device mountpoint\n\nOptions:\n"
+  opt.on('-h', '--header PATH') { |arg| options[:header] = File.expand_path arg }
+  opt.on('-k', '--key-file PATH') { |arg| options[:keyfile] = File.expand_path arg }
+  opt.on('-o', '--mount-options OPTS') { |arg| options[:mountoptions] = arg.shellsplit }
+  opt.on('-O', '--cryptsetup-options OPTS') { |arg| options[:cryptsetupoptions] = arg.shellsplit }
+end
+
+args = parser.parse ARGV
+abort parser.help if args.size != 2
+device, mountpoint = args
+dm_name = File.basename File.expand_path(mountpoint)
+
+cscmd = ['cryptsetup']
+cscmd.concat ['--header', options[:header]]    if options[:header]
+cscmd.concat ['--key-file', options[:keyfile]] if options[:keyfile]
+cscmd.concat options[:cryptsetupoptions]       if options[:cryptsetupoptions]
+cscmd.concat ['luksOpen', device, dm_name]
+
+if sh *cscmd
+  sh 'mount',
+    *(['-o', options[:mountoptions]] if options[:mountoptions]),
+    "/dev/mapper/#{dm_name}", mountpoint
+end
+
+exit $?.exitstatus
