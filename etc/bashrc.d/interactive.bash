@@ -1250,12 +1250,6 @@ ALIAS ssl='openssl' && {
     }
 }
 
-# NSS
-[[ -e /usr/lib/libnssckbi.so ]] && {
-    alias disable-nss-roots='chmod 0 /usr/lib/libnssckbi.so'
-    alias enable-nss-roots='chmod 0644 /usr/lib/libnssckbi.so'
-}
-
 # GnuPG
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
