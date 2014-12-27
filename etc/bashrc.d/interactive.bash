@@ -935,7 +935,7 @@ HAVE git && {
         (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
         local user="${1%%/*}" repo="${1#*/}" branch
         [[ $2 ]] && branch="--branch $2"
-        run git clone $branch "git@github.com:${user}/${repo}.git"
+        run git clone $branch "git@github.com:${user}/${repo}"
     }
 
     # PS1 git status
