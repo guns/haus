@@ -92,7 +92,7 @@ super + control + f
 F11
 	bspc window --toggle fullscreen
 
-super + control + p
+super + control + shift + p
 	bspc window --toggle pseudo_tiled
 
 super + control + x
@@ -101,7 +101,7 @@ super + control + x
 super + control + s
 	bspc window --toggle sticky
 
-super + control + z
+super + control + p
 	bspc window --toggle private
 
 super + alt + control + {h,j,k,l}
