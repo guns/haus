@@ -339,17 +339,14 @@ alias du='du -h'
 alias dus='du -s'
 
 # mount
-ALIAS mt='mount -v' \
-      umt='umount -v' \
-      mtext4='mount -v -t ext4' \
-      mthfs='mount -v -t hfsplus' \
-      mtvfat='mount -v -t vfat' && {
+ALIAS mt='mount -v -o noatime' \
+      umt='umount -v' && {
     alias mtusb='mountusb' \
           umtusb='umountusb'
     remt() { run mount -v -o "remount,$2" "$1" "${@:3}"; }
     mtlabel() {
         (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
-        run mount "/dev/disk/by-label/$1" "${@:2}"
+        run mount -o noatime "/dev/disk/by-label/$1" "${@:2}"
     }
     _mtlabel() {
         if ((COMP_CWORD == 1)); then
@@ -366,7 +363,8 @@ ALIAS mt='mount -v' \
 ALIAS fm='findmnt'
 
 # fusermount
-ALIAS fumt='fusermount -u'
+ALIAS fusermt='fusermount -o noatime' \
+      fuserumt='fusermount -u'
 
 # tar
 alias star='tar --strip-components=1'
