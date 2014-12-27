@@ -64,11 +64,8 @@ super + alt + w
 super + q
 	bspc window --close
 
-super + Tab
-	bspc window --focus next
-
-super + shift + Tab
-	bspc window --focus prev
+super + {Tab,shift + Tab}
+	bspc window --focus {prev,next}
 
 alt + Tab
 	if pkill -x skippy-xd; then \
