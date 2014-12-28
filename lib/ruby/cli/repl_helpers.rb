@@ -48,6 +48,14 @@ module CLI
     end
     alias :na :notify
 
+    def slurp path
+      File.read path
+    end
+
+    def spit path, buf
+      File.open(path, 'w') { |f| f.write buf }
+    end
+
     # Toggle number inspect style
     def toggle_verbose_numbers
       [Fixnum, Bignum].each do |klass|
