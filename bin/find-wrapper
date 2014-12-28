@@ -32,7 +32,7 @@ class FindWrapper
   def make_command arguments, pred = nil
     cmd = %w[find]
 
-    return cmd << '.' if arguments.empty?
+    return cmd.concat ['.', *pred] if arguments.empty?
 
     args = arguments.dup
 
