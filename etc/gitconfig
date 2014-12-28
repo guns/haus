@@ -71,24 +71,24 @@
     cp  = cherry-pick
 
     # Log
-    l    = log --relative-date --decorate --graph --show-signature
-    lf   = log --relative-date --decorate --graph --show-signature --first-parent --no-merges
-    lst  = log --relative-date --decorate --graph --show-signature --stat
-    lfst = log --relative-date --decorate --graph --show-signature --stat --first-parent --no-merges
+    l    = log --decorate --graph --show-signature
+    lf   = log --decorate --graph --show-signature --first-parent --no-merges
+    lst  = log --decorate --graph --show-signature --stat
+    lfst = log --decorate --graph --show-signature --stat --first-parent --no-merges
 
-    lp   = log --relative-date --decorate --patch --show-signature --stat
-    lfp  = log --relative-date --decorate --patch --show-signature --stat --first-parent --no-merges
-    lpw  = log --relative-date --decorate --patch --show-signature --stat -w
-    wlp  = log --relative-date --decorate --patch --show-signature --stat --color-words=.
-    wlpw = log --relative-date --decorate --patch --show-signature --stat --color-words=. -w
+    lp   = log --decorate --patch --show-signature --stat
+    lfp  = log --decorate --patch --show-signature --stat --first-parent --no-merges
+    lpw  = log --decorate --patch --show-signature --stat -w
+    wlp  = log --decorate --patch --show-signature --stat --color-words=.
+    wlpw = log --decorate --patch --show-signature --stat --color-words=. -w
 
-    l1   = log --relative-date --decorate --patch --show-signature --stat -1
-    l1w  = log --relative-date --decorate --patch --show-signature --stat -1 -w
-    wl1  = log --relative-date --decorate --patch --show-signature --stat -1 --color-words=.
+    l1   = log --decorate --patch --show-signature --stat -1
+    l1w  = log --decorate --patch --show-signature --stat -1 -w
+    wl1  = log --decorate --patch --show-signature --stat -1 --color-words=.
 
-    f    = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s'
-    fa   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --all
-    ff   = log --graph --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ar%C(magenta)%d %C(reset)%s' --first-parent --no-merges
+    f    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s'
+    fa   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all
+    ff   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges
 
     lg   = log --patch -G
     lgi  = log --patch -i -G
