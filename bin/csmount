@@ -31,7 +31,7 @@ cscmd.concat options[:cryptsetupoptions]       if options[:cryptsetupoptions]
 cscmd.concat ['luksOpen', device, dm_name]
 
 if sh *cscmd
-  sh 'mount', '-o', *options[:mountoptions], "/dev/mapper/#{dm_name}", mountpoint
+  sh 'mount', '-o', options[:mountoptions].join(','), "/dev/mapper/#{dm_name}", mountpoint
 end
 
 exit $?.exitstatus
