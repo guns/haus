@@ -34,12 +34,20 @@ class Dlnode
       x.nil? or x.empty?
     end
 
+    def default_attr sel
+      case sel
+      when 'a' then 'href'
+      when 'img' then 'src'
+      else nil
+      end
+    end
+
     def parse pattern_str
       a, b, c = pattern_str.split /(?<!\\):/, 3
 
-      sel  = blank?(a) ? 'a'                         : a
-      attr = blank?(b) ? (sel == 'a' ? 'href' : nil) : b
-      rgx  = blank?(c) ? nil                         : Regexp.new(c)
+      sel  = blank?(a) ? 'a'               : a
+      attr = blank?(b) ? default_attr(sel) : b
+      rgx  = blank?(c) ? nil               : Regexp.new(c)
 
       [sel, attr, rgx]
     end
