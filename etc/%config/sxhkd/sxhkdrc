@@ -140,6 +140,9 @@ super + XF86AudioMute
 	wmctrl -a "$T" || \
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
+super + shift + XF86AudioMute
+	wmctrl -a 'Volume Control' || pavucontrol
+
 alt + XF86AudioMute
 	if pkill -0 -x pulseaudio; then \
 		notify --no-audio - < <(hwctl toggle-pulseaudio-sink); \
