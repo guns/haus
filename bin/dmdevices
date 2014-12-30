@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
 
-for dm in /sys/block/*/dm; do
-    printf "%s: %s\n" \
-           "$(cat "$dm/name")" \
-           "$(if [[ $(cat "$dm/suspended") -eq 1 ]]; then echo "suspended"; else echo "active"; fi)"
-done
+Dir['/sys/block/*/dm'].each do |dm|
+  puts '%s: %s' % [
+    File.read("#{dm}/name").chomp,
+    File.read("#{dm}/suspended").chomp == '1' ? 'suspended' : 'active'
+  ]
+end
