@@ -299,8 +299,11 @@ cdf() {
 
 # cp mv
 alias cp='cp -v'
+alias cpn='cp -n'
 alias cpr='cp -r'
+alias cprn='cpr -n'
 alias mv='mv -v'
+alias mvn='mv -n'
 
 # rm
 alias rm='rm -v'
