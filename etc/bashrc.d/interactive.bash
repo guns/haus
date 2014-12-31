@@ -1418,29 +1418,6 @@ elif __LINUX__; then
             find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
         }; TCOMP find pacfindunknown
 
-        pacinstallfile() {
-            local OPTIND OPTARG opt asdeps force
-            while getopts :df opt; do
-                case $opt in
-                d) asdeps='--asdeps';;
-                f) force='--force';;
-                esac
-            done
-            shift $((OPTIND-1))
-
-            (($# > 0)) || { echo "USAGE: $FUNCNAME [-df] pkg …" >&2; return 1; }
-
-            # Installing from a URL copies the package to /var/cache/pacman
-            local pkgs=() pkg f
-            for pkg in "$@"; do
-                for f in "/var/cache/pacman/pkg/$(basename "$pkg")"{,.sig}; do
-                    [[ -e "$f" ]] && mv -v "$f" /tmp/
-                done
-                pkgs+=("file://$(expand_path "$pkg")")
-            done
-
-            pacman -U $asdeps $force "${pkgs[@]}"
-        }
         _xspecs['pacinstallfile']='!*.pkg.tar.xz'
         complete -F _filedir_xspec pacinstallfile
 

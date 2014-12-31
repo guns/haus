@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+require 'fileutils'
+require 'shellwords'
+
+opts = []
+
+pkgs = OptionParser.new do |opt|
+  opt.banner = 'USAGE: pacinstallfile [options] pkg …'
+  opt.on('-d', '--asdeps') { opts << '--asdeps' }
+  opt.on('-f', '--force') { opts << '--force' }
+end.parse ARGV
+
+abort parser.help if pkgs.empty?
+
+cache = pkgs.flat_map { |p| Dir["/var/cache/pacman/pkg/#{File.basename p}{,.sig}"] }
+
+if cache.any?
+  puts cache
+  print 'Move conflicting cached packages? [y/N] '
+  abort if $stdin.gets !~ /\Ay\Z/i
+  FileUtils.mv cache, '/tmp', :verbose => true
+end
+
+cmd = ['pacman', '-U', *opts, *pkgs.map { |p| "file://#{File.expand_path p}" }]
+puts cmd.shelljoin
+exec *cmd
