@@ -1528,6 +1528,7 @@ if HAVE systemctl; then
           jcb='journalctl -b' \
           jce='journalctl -e' \
           jcf='journalctl -f' && {
+        alias sctimers='systemctl list-timers'
         alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
