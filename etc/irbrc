@@ -11,12 +11,12 @@ require 'rubygems' # for backwards compatibility
 require 'irb/completion'
 require 'fileutils'
 begin
-  require 'cli/repl_helpers'
+  require 'nerv/cli/repl_helpers'
 rescue LoadError
 end
 
 include FileUtils
-include CLI::ReplHelpers if defined? CLI::ReplHelpers
+include NERV::CLI::ReplHelpers if defined? NERV::CLI::ReplHelpers
 
 # re-add working directory for ruby 1.9.2+
 $:.unshift Dir.pwd

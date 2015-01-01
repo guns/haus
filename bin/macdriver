@@ -11,7 +11,7 @@ require 'fileutils'
 require 'yaml'
 require 'rubygems' # Ruby 1.8 compat
 require 'plist'
-require 'util/directed_graph'
+require 'nerv/util/directed_graph'
 
 class Macdriver
   # Aliases for some important driver classes. Returns key if no alias exists.
@@ -129,7 +129,7 @@ class Macdriver
   def graph
     @graph ||= begin
       if options.reload or not File.exists? options.cache_file
-        dg = Util::DirectedGraph.new kextlist
+        dg = NERV::Util::DirectedGraph.new kextlist
         File.open(options.cache_file, 'w', 0644) { |f| f.puts dg.to_yaml }
         dg
       else

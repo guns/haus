@@ -8,9 +8,9 @@ $:.unshift 'lib/ruby'
 
 require 'shellwords'
 require 'digest/sha1'
-require 'project/update'
-require 'project/subproject'
-require 'util/notification'
+require 'nerv/project/update'
+require 'nerv/project/subproject'
+require 'nerv/util/notification'
 require 'haus/logger'
 require 'haus/queue'
 
@@ -332,7 +332,7 @@ task :env do
         :files  => 'etc/%urxvt/ext',
       }
     ]
-  }.map { |k, ps| [k, ps.map { |p| Project::Subproject.new p }] }]
+  }.map { |k, ps| [k, ps.map { |p| NERV::Project::Subproject.new p }] }]
 end
 
 desc 'Start a Pry or IRB console within the rake environment'
@@ -348,7 +348,7 @@ end
 
 desc 'Update vim plugin helptags'
 task :tags do
-  Project::Update.helptags
+  NERV::Project::Update.helptags
 end
 
 desc 'Update subprojects (extra arguments are regexp filters)'
@@ -358,11 +358,11 @@ task :update => :env do
   opts[:fetch  ] = ENV['FETCH'] == '1' if ENV['FETCH']
   opts[:filter ] = ARGV.drop_while { |a| a != 'update' }.drop 1
 
-  if Project::Update.new(@subprojects, opts).call
-    Project::Update.helptags
-    Util::Notification.new(:message => 'Haus update complete.').call
+  if NERV::Project::Update.new(@subprojects, opts).call
+    NERV::Project::Update.helptags
+    NERV::Util::Notification.new(:message => 'Haus update complete.').call
   else
-    Util::Notification.new(:message => 'Haus update failed.').call
+    NERV::Util::Notification.new(:message => 'Haus update failed.').call
   end
 
   exit # Stop processing tasks!
@@ -422,7 +422,6 @@ end
 desc 'Create Java keystores for certs'
 task :keystore do
   require 'shellwords'
-  require 'util/password'
   load 'bin/cert'
 
   Dir.chdir 'etc/certificates' do

@@ -7,10 +7,10 @@
 
 require 'optparse'
 require 'ostruct'
-require 'util/password'
+require 'nerv/util/password'
 
 class Genpw
-  include Util::Password
+  include NERV::Util::Password
 
   attr_reader :options
 

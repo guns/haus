@@ -10,7 +10,7 @@ require 'ostruct'
 require 'time' # Time.parse
 require 'date'
 require 'json'
-require 'cli/meter'
+require 'nerv/cli/meter'
 require 'haus/logger'
 
 class Batterystat
@@ -100,8 +100,8 @@ class Batterystat
       sw = "#{dsn}/#{dsn}".length # Summary width
 
       lines = []
-      lines.push CLI::Meter.new("⚡ [%s] %#{sw}s mAh", [[cur, color(cur.to_f/max)]], max, :width => width).to_s
-      lines.push CLI::Meter.new("❤ [%s] %#{sw}s mAh", [[max, color(max.to_f/dsn)]], dsn, :width => width).to_s
+      lines.push NERV::CLI::Meter.new("⚡ [%s] %#{sw}s mAh", [[cur, color(cur.to_f/max)]], max, :width => width).to_s
+      lines.push NERV::CLI::Meter.new("❤ [%s] %#{sw}s mAh", [[max, color(max.to_f/dsn)]], dsn, :width => width).to_s
       lines.push ''
       if data['IsCharging']
         lines << 'Time to full: %d minutes' % data['AvgTimeToFull']

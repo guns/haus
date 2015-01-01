@@ -8,7 +8,7 @@
 # http://peter.upfold.org.uk/blog/2008/10/10/applescript-to-enable-socks-proxy-on-mac-os-x/
 
 require 'ostruct'
-require 'cli/superparser'
+require 'nerv/cli/superparser'
 
 class SSHProxy
   attr_reader :options, :active, :ssh_pid
@@ -23,7 +23,7 @@ class SSHProxy
   end
 
   def parser
-    @parser ||= CLI::SuperParser.new nil, 24 do |opt|
+    @parser ||= NERV::CLI::SuperParser.new nil, 24 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Create an SSH tunnel and configure it as a SOCKS proxy server for the
         system.

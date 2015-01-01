@@ -7,13 +7,13 @@
 #
 
 begin
-  require 'cli/repl_helpers'
+  require 'nerv/cli/repl_helpers'
   require 'pry-nav'
 rescue LoadError
 end
 
-if defined? CLI::ReplHelpers
-  include CLI::ReplHelpers
+if defined? NERV::CLI::ReplHelpers
+  include NERV::CLI::ReplHelpers
 end
 
 if defined? PryNav
