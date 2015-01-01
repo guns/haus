@@ -56,13 +56,10 @@ URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
 
 !!! XTERM
 
-XTerm*termName:     xterm-256color
-XTerm*background:   rgb:00/00/00
-XTerm*foreground:   rgb:FF/EE/C0
-XTerm*pointerColor: rgb:DD/DD/DD
-
-! Remove SetSelection from blacklist
-XTerm*disallowedWindowOps: 20,21,SetXprop
-XTerm*faceName:            Consolas:pixelsize=14
-XTerm*utf8:                1
-XTerm*metaSendsEscape:     on
+XTerm*termName:        xterm-256color
+XTerm*background:      rgb:00/00/00
+XTerm*foreground:      rgb:FF/EE/C0
+XTerm*pointerColor:    rgb:DD/DD/DD
+XTerm*faceName:        Consolas:pixelsize=14
+XTerm*utf8:            1
+XTerm*metaSendsEscape: on
