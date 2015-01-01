@@ -13,7 +13,8 @@ class FileManagerSearch
   DEFAULTS = {
     :linkdir => File.expand_path('~/.local/share/file-manager-search'),
     :flatten => ':',
-    :zenity => false
+    :zenity => false,
+    :recursive => true
   }
 
   def initialize opts = {}
@@ -36,6 +37,10 @@ class FileManagerSearch
         @flatten = arg
       end
 
+      opt.on '-n', '--no-recursive' do
+        @recursive = false
+      end
+
       opt.on '-z', '--zenity', 'Use zenity to obtain missing queries' do
         @zenity = true
       end
@@ -43,10 +48,11 @@ class FileManagerSearch
   end
 
   def get_query
+    prompt = "#{@recursive ? 'Recursive' : 'Flat'} search query: "
     if @zenity
-      %x(zenity --entry --text="Search query:")
+      %x(zenity --entry --text="#{prompt}")
     else
-      print 'Search query: '
+      print prompt
       $stdin.gets
     end.chomp
   end
@@ -89,7 +95,12 @@ class FileManagerSearch
   def make_links! path, query
     return false if query.nil? or query.empty?
 
-    globpat = File.join path, '**', make_find_pattern(query)
+    globpat = if @recursive
+      File.join path, '**', make_find_pattern(query)
+    else
+      File.join path, make_find_pattern(query)
+    end
+
     sources = Dir.glob globpat, File::FNM_CASEFOLD
     return false if sources.empty?
 
