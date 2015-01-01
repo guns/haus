@@ -29,6 +29,15 @@ class FindWrapper
     end
   end
 
+  def make_find_pattern pattern
+    case pattern
+    when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
+    when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
+    when /\$\z/       then '*%s' % pattern.chomp('$')
+    else                   '*%s*' % pattern
+    end
+  end
+
   def make_command arguments, pred = nil
     cmd = %w[find]
 
@@ -42,14 +51,7 @@ class FindWrapper
     if args.first =~ /\A-.*|\A\(\z/
       cmd.concat args
     elsif args.any?
-      pattern = args.shift
-      pattern = case pattern
-                when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
-                when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
-                when /\$\z/       then '*%s' % pattern.chomp('$')
-                else                   '*%s*' % pattern
-                end
-      cmd.push '-iname', pattern, *args
+      cmd.push '-iname', make_find_pattern(args.shift), *args
     end
 
     cmd.push '-print', '-delete' if cmd.delete '-delete'
