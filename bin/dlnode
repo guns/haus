@@ -34,22 +34,19 @@ class Dlnode
       x.nil? or x.empty?
     end
 
-    def default_attr sel
-      case sel
+    def default_attribute elem
+      case elem
       when 'a' then 'href'
       when 'img' then 'src'
-      else nil
       end
     end
 
     def parse pattern_str
       a, b, c = pattern_str.split /(?<!\\):/, 3
 
-      sel  = blank?(a) ? 'a'               : a
-      attr = blank?(b) ? default_attr(sel) : b
-      rgx  = blank?(c) ? nil               : Regexp.new(c)
-
-      [sel, attr, rgx]
+      [blank?(a) ? 'a' : a,
+       blank?(b) ? nil : b,
+       blank?(c) ? nil : Regexp.new(c)]
     end
   end
 
@@ -77,7 +74,8 @@ class Dlnode
           form_data = el.css('input').map { |i| [i['name'], i['value']] }
           path = el.attr 'action'
         else
-          path = pattern.attribute ? el.attr(pattern.attribute) : el.text
+          attr = pattern.attribute || pattern.default_attribute(el.name)
+          path = attr ? el.attr(attr) : el.text
         end
 
         if path and u = urijoin(url, path)
