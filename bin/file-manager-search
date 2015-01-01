@@ -1,0 +1,120 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2014 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'pathname'
+require 'fileutils'
+
+class FileManagerSearch
+  DEFAULTS = {
+    :linkdir => File.expand_path('~/.local/share/file-manager-search'),
+    :flatten => ':',
+    :zenity => false
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] path [query]
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--linkdir PATH', 'DEFAULT: %s' % DEFAULTS[:linkdir] do |arg|
+        @linkdir = File.expand_path arg
+      end
+
+      opt.on '-f', '--flatten STRING', 'DEFAULT: %s' % DEFAULTS[:flatten] do |arg|
+        @flatten = arg
+      end
+
+      opt.on '-z', '--zenity', 'Use zenity to obtain missing queries' do
+        @zenity = true
+      end
+    end
+  end
+
+  def get_query
+    if @zenity
+      %x(zenity --entry --text="Search query:")
+    else
+      print 'Search query: '
+      $stdin.gets
+    end.chomp
+  end
+
+  # Copied from find-wrapper
+  def make_find_pattern pattern
+    case pattern
+    when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
+    when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
+    when /\$\z/       then '*%s' % pattern.chomp('$')
+    else                   '*%s*' % pattern
+    end
+  end
+
+  # Copied from haus/queue
+  #
+  # Returns the relative path between the `physical` (non-link-traversed)
+  # paths of given files.
+  def relpath source, destination
+    # We don't need the destination leaf
+    src, dst = [source, File.dirname(destination)].map do |file|
+      base = nil
+
+      # Find the deepest existing node (not :extant?; we are avoiding links)
+      Pathname.new(file).ascend do |p|
+        if p.exist?
+          base = p
+          break
+        end
+      end
+
+      # Rebase if necessary
+      Pathname.new base ? file.sub(/\A#{base}/, base.realpath.to_s) : file
+    end
+
+    src.relative_path_from(dst).to_s
+  end
+
+  # Returns search directory
+  def make_links! path, query
+    return false if query.nil? or query.empty?
+
+    globpat = File.join path, '**', make_find_pattern(query)
+    sources = Dir.glob globpat, File::FNM_CASEFOLD
+    return false if sources.empty?
+
+    dstdir = File.join @linkdir, query.tr('/', '-')
+    FileUtils.rm_r dstdir if File.directory? dstdir
+    FileUtils.mkdir_p dstdir
+
+    sources.each do |src|
+      dst = File.join dstdir, File.expand_path(src).split('/').join(@flatten)
+      FileUtils.ln_s relpath(src, dst), dst, :verbose => true
+    end
+
+    dstdir
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless (1..2).include? args.size
+    path, query = args
+    if dir = make_links!(path, query || get_query)
+      puts dir
+    else
+      abort
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and FileManagerSearch.new.run ARGV if $0 == __FILE__
