@@ -16,23 +16,16 @@ GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
 # Lists of aliases and functions
 showfunctions() { set | grep '^[^ ]* ()'; }
 showconflicts() {
-    {
-        local cmd buf
+    local cmd buf
 
-        builtin alias | command perl -pe 's:alias (.*?)=.*:\1:p' | while builtin read cmd; do
-            buf="$(command type -a "$cmd")"
-            if (($(grep -c "$cmd is " <<< "$buf") > 1)); then
-                builtin printf "$buf\0"
-            fi
-        done
-
-        showfunctions | awk '{print $1}' | while builtin read cmd; do
-            buf="$(command type -a "$cmd" | grep "$cmd is ")"
-            if (($(grep -c . <<< "$buf") > 1)); then
-                builtin printf "$buf\0"
-            fi
-        done
-    } | ruby -e 'puts $stdin.read.scan(/(.*?)\0/m).flatten.sort.join("\n\n")'
+    cat <(builtin alias | ruby -e 'puts $stdin.read.scan(/^alias (.*?)=/).map! { |(a)| a }') \
+        <(showfunctions | awk '{print $1}') |
+    while builtin read cmd; do
+        buf="$(command type -a "$cmd" | grep "$cmd is ")"
+        if (($(grep -c . <<< "$buf") > 1)); then
+            builtin printf "%s\n\n" "$buf"
+        fi
+    done
 }
 
 # Return absolute path
