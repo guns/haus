@@ -1,0 +1,4 @@
+rxvt-unicode-256color|rxvt-unicode terminal with 256 colors (X Window System),
+	colors#256,
+	pairs#32767,
+	use=rxvt-unicode,

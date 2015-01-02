@@ -416,7 +416,7 @@ end
 
 desc 'Import all terminfo files'
 task :tic do
-  Dir['etc/%terminfo/*/*'].each { |f| sh 'tic', f }
+  Dir['share/terminfo/*.terminfo'].each { |f| sh 'tic', f }
 end
 
 desc 'Create Java keystores for certs'
