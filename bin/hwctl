@@ -11,7 +11,7 @@ require 'fileutils'
 
 class Hwctl
   SYSTEM = {
-    :macbook => {
+    'macbook' => {
       :backlight        => '/sys/class/backlight/intel_backlight/brightness',
       :backlight_max    => '/sys/class/backlight/intel_backlight/max_brightness',
       :backlight_actual => '/sys/class/backlight/intel_backlight/actual_brightness',
@@ -19,6 +19,15 @@ class Hwctl
       :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
       :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
       :coretemps        => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
+    },
+    'imac' => {
+      :backlight        => '/sys/class/backlight/apple_backlight/brightness',
+      :backlight_max    => '/sys/class/backlight/apple_backlight/max_brightness',
+      :backlight_actual => '/sys/class/backlight/apple_backlight/actual_brightness',
+      :fnmode           => nil,
+      :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
+      :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
+      :coretemps        => nil
     }
   }
 
@@ -26,7 +35,6 @@ class Hwctl
 
   def initialize opts = {}
     @options = OpenStruct.new opts
-    options.system ||= SYSTEM[:macbook]
   end
 
   def parser
@@ -34,35 +42,42 @@ class Hwctl
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Linux hardware control wrapper.
 
-        Usage: #{File.basename __FILE__} command [args]
+        Usage: #{File.basename __FILE__} [options] command [args]
 
-        Commands:
-          b[acklight] [pct]
-            Query or set backlight as a percentage. Argument can be signed for
-            relative adjustment.
+          Commands:
+            b[acklight] [pct]
+              Query or set backlight as a percentage. Argument can be signed
+              for relative adjustment.
 
-          backlight-permissions mode user group
-            Set backlight control file permissions.
+            backlight-permissions mode user group
+              Set backlight control file permissions.
 
-          fan base-speed [temp:speed …]
-            Manually set fan speeds (in RPM) at given temps (in Celsius).
-            Polls every 10 seconds and speeds are not ramped. Fan control is
-            handed back to the kernel on exit.
+            fan base-speed [temp:speed …]
+              Manually set fan speeds (in RPM) at given temps (in Celsius).
+              Polls every 10 seconds and speeds are not ramped. Fan control is
+              handed back to the kernel on exit.
 
-          fnmode [fn|media]
-            Set MacBook function key mode.
+            fnmode [fn|media]
+              Set laptop function key mode.
 
-          toggle-alsa-card [index]
-            Switch between available sound cards, or specified card index
+            toggle-alsa-card [index]
+              Switch between available sound cards, or specified card index
 
-          toggle-pulseaudio-sink [index]
-          toggle-pulseaudio-source [index]
-            Toggle between available Pulseaudio input sinks and output sources
+            toggle-pulseaudio-sink [index]
+            toggle-pulseaudio-source [index]
+              Toggle between available Pulseaudio input sinks and output sources
+
+          Options:
       BANNER
+
+      opt.on '-s', '--system KEY', 'KEY=%s' % SYSTEM.keys.join('|') do |arg|
+        options.system = SYSTEM[arg]
+      end
     end
   end
 
   def sys
+    raise 'System specific path required, but no --system specified' unless options.system
     options.system
   end
 
