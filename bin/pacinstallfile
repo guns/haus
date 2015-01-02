@@ -19,8 +19,8 @@ cache = pkgs.flat_map { |p| Dir["/var/cache/pacman/pkg/#{File.basename p}{,.sig}
 
 if cache.any?
   puts cache
-  print 'Move conflicting cached packages? [y/N] '
-  abort if $stdin.gets !~ /\Ay\Z/i
+  print 'Move conflicting cached packages? [Y/n] '
+  abort if $stdin.gets =~ /\An\Z/i
   FileUtils.mv cache, '/tmp', :verbose => true
 end
 
