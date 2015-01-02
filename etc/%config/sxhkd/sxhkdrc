@@ -126,31 +126,31 @@ super + @button{1-3}
 # Hardware / Media control
 #
 
-XF86AudioMute
+{XF86AudioMute,super + KP_Enter}
 	ponymix toggle
 
-XF86AudioLowerVolume
+{XF86AudioLowerVolume,super + KP_Subtract}
 	ponymix decrease 5
 
-XF86AudioRaiseVolume
+{XF86AudioRaiseVolume,super + KP_Add}
 	ponymix increase 5
 
-super + XF86AudioMute
+{super + XF86AudioMute,super + shift + KP_Enter}
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
-super + shift + XF86AudioMute
+{super + shift + XF86AudioMute,super + alt + KP_Enter}
 	wmctrl -a 'Volume Control' || pavucontrol
 
-alt + XF86AudioMute
+alt + {XF86AudioMute,KP_Enter}
 	if pkill -0 -x pulseaudio; then \
 		notify --no-audio - < <(hwctl toggle-pulseaudio-sink); \
 	else \
 		notify --no-audio - < <(hwctl toggle-alsa-card); \
 	fi
 
-alt + shift + XF86AudioMute
+alt + shift + {XF86AudioMute,KP_Enter}
 	if pkill -0 -x pulseaudio; then \
 		notify --no-audio - < <(hwctl toggle-pulseaudio-source); \
 	fi
