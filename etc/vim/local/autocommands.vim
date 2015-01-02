@@ -149,7 +149,7 @@ augroup GUNS
         \ SetWhitespace 4 8
 
     " XDefaults {{{1
-    autocmd BufRead,BufNewFile *Xdefaults
+    autocmd BufRead,BufNewFile *Xdefaults*
         \ setlocal filetype=xdefaults
 
     " UltiSnips snippets {{{1
