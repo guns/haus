@@ -57,8 +57,11 @@ REQUIRE() {
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
 # Simple platform checks
-__OS_X__()  { [[ "$MACHTYPE" == *darwin* ]]; }; GC_FUNC __OS_X__
-__LINUX__() { [[ "$MACHTYPE" == *linux*  ]]; }; GC_FUNC __LINUX__
+case "$MACHTYPE" in
+*linux*)  eval '__LINUX__() { return 0; }; __OS_X__() { return 1; }';;
+*darwin*) eval '__LINUX__() { return 1; }; __OS_X__() { return 0; }';;
+esac
+GC_FUNC __LINUX__ __OS_X__
 
 ### Security check
 #
