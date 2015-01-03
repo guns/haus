@@ -1,8 +1,6 @@
 ###
 ### Environment variables
 ###
-### Requires ~/.bashrc.d/functions.bash
-###
 
 # Bash history
 export HISTSIZE='65535'
@@ -25,7 +23,7 @@ export LS_COLORS='di=01;34:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su
 export RLWRAP_HOME="$HOME/.rlwrap"
 
 # Pager
-LESS_ARY=(
+LESSOPTS=(
     --force                             # Force open non-regular files
     --clear-screen                      # Print buffer from top of screen
     --dumb                              # Do not complain about terminfo errors
@@ -37,8 +35,8 @@ LESS_ARY=(
     --no-init                           # Prevent use of alternate screen
     --tilde                             # Do not show nonextant lines as `~`
     --shift 8                           # Horizontal movement in columns
-); GC_VARS LESS_ARY
-export LESS="${LESS_ARY[@]}"
+)
+export LESS="${LESSOPTS[@]}"
 export LESSSECURE='1'                   # More secure
 export LESSHISTFILE='-'                 # No ~/.lesshst
 export LESS_TERMCAP_md=$'\033[37m'      # Begin bold
@@ -49,6 +47,7 @@ export LESS_TERMCAP_se=$'\033[0m'       # End standout-mode
 export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
+unset LESSOPTS
 
 # Ruby
 export RUBYLIB="$HOME/.local/lib/ruby"
@@ -63,7 +62,7 @@ fi
 export GOPATH="$HOME/.local/pkg/go"
 
 # OS X
-if __OS_X__; then
+if [[ "$MACHTYPE" == *darwin* ]]; then
     # Prefer not copying Apple doubles and extended attributes
     export COPYFILE_DISABLE=1
     export COPY_EXTENDED_ATTRIBUTES_DISABLE=1

@@ -1,10 +1,8 @@
 #!/bin/bash
 # X settings should be in ~/.xinitrc
 
-. ~/.bashrc.d/functions.bash
-REQUIRE ~/.bashrc.d/env.bash
-REQUIRE ~/.bashrc.d/path.bash
-CLEANUP
+. ~/.bashrc.d/env.bash
+. ~/.bashrc.d/path.bash
 
 pushd .
 cd Downloads

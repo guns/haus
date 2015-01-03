@@ -60,27 +60,6 @@ case "$MACHTYPE" in
 esac
 GC_FUNC __LINUX__ __OS_X__
 
-### Processes array variable PATH_ARY and exports PATH.
-#
-# PATH_ARY may consist of directories or colon-delimited PATH strings.
-# Duplicate, non-searchable, and non-extant directories are pruned, as well
-# directories that are not owned by the current user or root.
-EXPORT_PATH() {
-    export PATH="$(ruby -e '
-        print ARGV.map { |arg|
-            arg.split(":").map { |p| File.symlink?(p) ? File.expand_path(File.readlink(p), File.dirname(p)) : p }
-        }.flatten.uniq.select { |path|
-            if File.directory? path and File.executable? path
-                stat = File.stat path
-                stat.uid == Process.euid or stat.uid.zero?
-            end
-        }.join(":")
-    ' "${PATH_ARY[@]}")"
-
-    # We want to sweep this variable
-    GC_VARS PATH_ARY
-}; GC_FUNC EXPORT_PATH
-
 ### Lazy completion transfer function:
 #
 # The Bash-completion project v2.0 introduces dynamic loading of completions,
