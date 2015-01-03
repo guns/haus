@@ -84,10 +84,11 @@ CHECK_SECLIST() {
                 require "etc"
                 fmt = "%s is trusted, but is owned by %s!"
                 abort fmt % [path.inspect, Etc.getpwuid(stat.uid).name.inspect]
-            elsif not ((mode = stat.mode) & 0002).zero?
-                abort "%s is trusted, but is world writable!" % path.inspect
-            elsif not (mode & 0020).zero?
-                abort "%s is trusted, but is group writable!" % path.inspect
+            elsif not (stat.mode & 0022).zero?
+                abort "%s is trusted, but is %s writable!" % [
+                    path.inspect,
+                    (stat.mode & 0002) != 0 ? "world" : "group"
+                ]
             end
         end
     ' "${__SECLIST__[@]}"; then
