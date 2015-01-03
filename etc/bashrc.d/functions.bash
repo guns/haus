@@ -44,8 +44,7 @@ ABORT() {
 ### Source file and abort on failure
 # Param: $1 Filename
 REQUIRE() {
-    [[ -e "$1" ]] || ABORT "\"$1\" does not exist!"
-    [[ -r "$1" ]] || ABORT "No permissions to read \"$1\""
+    [[ -r "$1" ]] || ABORT "Unable to source \"$1\""
     source "$1"   || ABORT "\`source $1\` returned false!"
 }; GC_FUNC REQUIRE
 
