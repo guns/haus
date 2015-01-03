@@ -3,7 +3,7 @@
 
 require 'fileutils'
 
-abort 'Usage: $FUNCNAME spec suffix [outdir]' unless (2..3) === ARGV.size
+abort 'Usage: gem-private-build spec suffix [outdir]' unless (2..3) === ARGV.size
 
 specfile, suffix, outdir = ARGV
 spec = Gem::Specification.load specfile

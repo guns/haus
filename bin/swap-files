@@ -6,7 +6,7 @@ require 'digest/sha1'
 
 include FileUtils::Verbose
 
-abort 'Usage: $FUNCNAME f₁ f₂' unless ARGV.size == 2
+abort 'Usage: swap-files f₁ f₂' unless ARGV.size == 2
 ARGV.each { |f| raise %Q(No permissions to write #{f.inspect}) unless File.lstat(f).writable? }
 
 f₁, f₂ = ARGV.map { |f| f.chomp '/' }
