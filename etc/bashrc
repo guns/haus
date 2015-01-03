@@ -135,28 +135,6 @@ BASH_COMPLETION_DIRS=(
     /opt/brew/etc/bash_completion.d
 )
 
-# Check shell init files before proceeding
-__SECLIST__+=(
-    /etc/profile                        # System POSIX init
-    /etc/bash.bashrc                    # System interactive bash init
-    /etc/bash.bash.logout               # System bash logout
-    /etc/inputrc                        # System readline
-    ~/.bash_profile                     # Bash login init (1)
-    ~/.bash_login                       # Bash login init (2)
-    ~/.profile                          # POSIX login init (3)
-    ~/.bashrc                           # Bash interactive init
-    ~/.bash_logout                      # Bash logout
-    ~/.inputrc                          # User readline
-    ~/.bashrc.d/*                       # Extra bash init files
-    ~/.bash_local                       # Local bash init
-    "$ENV"                              # POSIX init override
-    "$BASH_ENV"                         # Bash init override
-    "$INPUTRC"                          # Readline override
-    ~/.bash_history                     # Bash history file
-    ~/.bash_completion                  # Bash completion script
-    "${BASH_COMPLETION_DIRS[@]}"        # Extra bash completion scripts
-); CHECK_SECLIST
-
 ### SHELL CONFIGURATION ###
 
 # Set shell path
@@ -182,9 +160,6 @@ REQUIRE ~/.bashrc.d/env.bash
 REQUIRE ~/.bashrc.d/interactive.bash
 
 ### DENOUEMENT ###
-
-# One last check
-CHECK_SECLIST
 
 # Happy Hacking
 GREETINGS

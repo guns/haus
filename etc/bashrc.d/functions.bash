@@ -7,16 +7,13 @@
 # Bash 3.1+ compatible.
 
 ### Temporary collections
-# __SECLIST__ contains files that should be checked for loose privileges.
 # __GC_FUNC__ contains functions to be unset after shell init.
 # __GC_VARS__ contains variables to be unset after shell init.
-__SECLIST__=()
-__GC_FUNC__=(SECLIST GC_FUNC GC_VARS)
-__GC_VARS__=(__SECLIST__ __GC_FUNC__ __GC_VARS__)
+__GC_FUNC__=(GC_FUNC GC_VARS)
+__GC_VARS__=(__GC_FUNC__ __GC_VARS__)
 
 # Corresponding accumulation functions for convenience
 # Param: $@ List of file/function/variable names
-SECLIST() { __SECLIST__+=("$@"); }
 GC_FUNC() { __GC_FUNC__+=("$@"); }
 GC_VARS() { __GC_VARS__+=("$@"); }
 
@@ -63,48 +60,11 @@ case "$MACHTYPE" in
 esac
 GC_FUNC __LINUX__ __OS_X__
 
-### Security check
-#
-# Check to see if current user or root owns and has sole write privileges
-# on all files in SECLIST.
-#
-# Clears SECLIST on success and aborts on failure.
-CHECK_SECLIST() {
-    # Don't spin up a ruby interpreter if we don't have to
-    (( ${#__SECLIST__[@]} )) || return
-
-    if ruby -e '
-        ARGV.each do |file|
-            next if file.empty?
-            path = File.expand_path file
-            next unless File.exists? path
-            stat = File.stat path
-
-            if stat.uid != Process.euid and not stat.uid.zero?
-                require "etc"
-                fmt = "%s is trusted, but is owned by %s!"
-                abort fmt % [path.inspect, Etc.getpwuid(stat.uid).name.inspect]
-            elsif not (stat.mode & 0022).zero?
-                abort "%s is trusted, but is %s writable!" % [
-                    path.inspect,
-                    (stat.mode & 0002) != 0 ? "world" : "group"
-                ]
-            end
-        end
-    ' "${__SECLIST__[@]}"; then
-        __SECLIST__=()
-    else
-        ABORT "\nYour shell is at risk of being compromised."
-    fi
-}; GC_FUNC CHECK_SECLIST
-
 ### Processes array variable PATH_ARY and exports PATH.
 #
 # PATH_ARY may consist of directories or colon-delimited PATH strings.
 # Duplicate, non-searchable, and non-extant directories are pruned, as well
 # directories that are not owned by the current user or root.
-#
-# Valid paths are added to __SECLIST__ and reviewed.
 EXPORT_PATH() {
     export PATH="$(ruby -e '
         print ARGV.map { |arg|
@@ -119,12 +79,6 @@ EXPORT_PATH() {
 
     # We want to sweep this variable
     GC_VARS PATH_ARY
-
-    # We also want to check permissions before proceeding
-    local IFS=$':'
-    __SECLIST__+=($PATH)
-    unset IFS
-    CHECK_SECLIST
 }; GC_FUNC EXPORT_PATH
 
 ### Lazy completion transfer function:
