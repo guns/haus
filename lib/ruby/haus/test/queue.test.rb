@@ -84,7 +84,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :add_link do
     it 'must noop and return nil when src does not exist' do
-      @q.add_link('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
+      @q.add_link('/foo/bar/with/baz', "#{$user.dir}/baz").must_be_nil
       @q.links.empty?.must_equal true
     end
 
@@ -139,14 +139,14 @@ class Haus::QueueSpec < MiniTest::Spec
 
       it 'must remove the destination before linking' do
         @assertion.call lambda { |src, dst|
-          FileUtils.mkdir_p File.join(dst, 'sparkle')
-          FileUtils.touch File.join(dst, 'sparkle', 'pony')
+          FileUtils.mkdir_p File.join(dst, 'baz')
+          FileUtils.touch File.join(dst, 'baz', 'bar')
         }, nil
       end
 
       it 'must add links that point to non-extant files' do
         @assertion.call lambda { |src, dst|
-          FileUtils.ln_sf '/magic/pony/land', src # Change source to broken symlink
+          FileUtils.ln_sf '/foo/bar/land', src # Change source to broken symlink
         }, nil
       end
     end
@@ -154,7 +154,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
   describe :add_copy do
     it 'must noop and return nil when src does not exist' do
-      @q.add_copy('/magic/pony/with/sparkles', "#{$user.dir}/sparkles").must_be_nil
+      @q.add_copy('/foo/bar/with/baz', "#{$user.dir}/baz").must_be_nil
       @q.copies.empty?.must_equal true
     end
 
@@ -173,7 +173,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must not add broken but identical symlinks' do
       fs = $user.hausfile
-      fs.each { |f| FileUtils.ln_sf '/new/world/pony', f }
+      fs.each { |f| FileUtils.ln_sf '/new/world/bar', f }
       res = @q.add_copy *fs
       res.must_be_nil
       @q.copies.must_be_empty
@@ -231,29 +231,29 @@ class Haus::QueueSpec < MiniTest::Spec
         @assertion.call lambda { |src, dst|
           FileUtils.rm_f src
           FileUtils.mkdir_p [src, dst]
-          File.open("#{src}/pony", 'w') { |f| f.write 'PONY!' }
-          File.open("#{dst}/pony", 'w') { |f| f.write 'HORSE!' }
+          File.open("#{src}/bar", 'w') { |f| f.write 'BAR!' }
+          File.open("#{dst}/bar", 'w') { |f| f.write 'BAZ!' }
         }
       end
 
       it 'must remove destination before copying' do
         @assertion.call lambda { |src, dst| File.open(dst, 'w') { |f| f.write dst } }
         @assertion.call lambda { |src, dst|
-          FileUtils.mkdir_p File.join(dst, 'sparkle')
-          FileUtils.touch File.join(dst, 'sparkle', 'pony')
+          FileUtils.mkdir_p File.join(dst, 'baz')
+          FileUtils.touch File.join(dst, 'baz', 'bar')
         }
       end
 
       it 'must copy symlinks as is' do
         @assertion.call lambda { |src, dst| FileUtils.ln_sf '/etc/passwd', src }
-        @assertion.call lambda { |src, dst| FileUtils.ln_sf '/magic/pony/rides', src }
+        @assertion.call lambda { |src, dst| FileUtils.ln_sf '/foo/bar/rides', src }
       end
     end
   end
 
   describe :add_deletion do
     it 'must noop and return nil when dst does not exist' do
-      @q.add_deletion('/magical/pony/with/sparkle/action').must_be_nil
+      @q.add_deletion('/foo/bar/with/baz/quux').must_be_nil
       @q.deletions.empty?.must_equal true
     end
 
@@ -683,9 +683,9 @@ class Haus::QueueSpec < MiniTest::Spec
       @q.add_copy '/etc/passwd', @targets[1]
       @q.add_modification(@targets[2]) {}
       @q.add_deletion @targets[3]
-      @q.add_link '/etc/passwd', '/magical/pony/with/sparkles'
-      @q.add_copy '/etc/passwd', '/magical/pony/with/flying/action'
-      @q.add_modification('/magical/pony/in/the/sky') { |f| f }
+      @q.add_link '/etc/passwd', '/foo/bar/with/baz'
+      @q.add_copy '/etc/passwd', '/foo/bar/with/flying/quux'
+      @q.add_modification('/foo/bar/in/the/sky') { |f| f }
     end
 
     after do
@@ -940,7 +940,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
     describe :relpath do
       it 'must return a relative path to a source' do
-        @q.send(:relpath, '/magic/pony/ride', '/magic/sparkle/action').must_equal '../pony/ride'
+        @q.send(:relpath, '/foo/bar/ride', '/foo/baz/quux').must_equal '../bar/ride'
       end
 
       it 'must follow the `physical` directory structure, without following symlinks' do

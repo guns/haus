@@ -106,14 +106,14 @@ class Haus
     #
     # e.g.
     #
-    #   FileUtils.touch %w[/opt/haus/etc/%config/ponyrc
-    #                      /opt/haus/etc/%config/pony.d/myponyrc
-    #                      /opt/haus/etc/%super/%awesome/pony.conf]
+    #   FileUtils.touch %w[/opt/haus/etc/%config/foorc
+    #                      /opt/haus/etc/%config/foo.d/myfoorc
+    #                      /opt/haus/etc/%foo/%bar/baz.conf]
     #
     #   Haus::Task.new(%w[--path /opt/haus]).hierfiles
-    #   => ["/opt/haus/etc/%config/ponyrc",
-    #       "/opt/haus/etc/%config/pony.d",
-    #       "/opt/haus/etc/%super/%awesome/pony.conf"]
+    #   => ["/opt/haus/etc/%config/foorc",
+    #       "/opt/haus/etc/%config/foo.d",
+    #       "/opt/haus/etc/%foo/%bar/baz.conf"]
     #
     def hierfiles
       paths = []

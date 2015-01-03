@@ -53,7 +53,7 @@ REQUIRE() {
 # Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
-# Simple platform checks
+### Platform predicates
 case "$MACHTYPE" in
 *linux*)  eval '__LINUX__() { return 0; }; __OS_X__() { return 1; }';;
 *darwin*) eval '__LINUX__() { return 1; }; __OS_X__() { return 0; }';;
@@ -63,8 +63,8 @@ GC_FUNC __LINUX__ __OS_X__
 ### Lazy completion transfer function:
 #
 # The Bash-completion project v2.0 introduces dynamic loading of completions,
-# which greatly shortens shell initialization time. A result of this is that
-# completions can no longer be simply transferred using:
+# which greatly shortens shell initialization time. A consequence of this is
+# that completions can no longer be simply transferred using:
 #
 #   eval "$({ complete -p $source || echo :; } 2>/dev/null)" $target
 #
@@ -120,13 +120,13 @@ TCOMP() {
 #
 #   * Skips alias and returns false if command does not exist:
 #
-#       ALIAS pony='/bin/magic-pony'            => (no alias)
-#       ALIAS unicorn='magic-pony --with-horn'  => (no alias)
+#       ALIAS x='/bin/no-such-command'          => (no alias)
+#       ALIAS y='no-such-command --option'      => (no alias)
 #       echo $!                                 => `1`
 #
 #   * Early termination:
 #
-#       ALIAS mp='magic-pony' ls='ls -Ahl'      => `ls` remains unaliased
+#       ALIAS x='no-such-command' ls='ls -Ahl'  => `ls` remains unaliased
 #
 # NOTE: In order to attain acceptable performance, this function is not
 #       parameter compatible with the `alias` builtin!

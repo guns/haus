@@ -276,8 +276,8 @@ class Haus::TaskSpec < MiniTest::Spec
 
   describe :run do
     it 'must return the remaining ARGV after options parsing' do
-      h = Haus::Noop.new %w[--force --quiet magic pony]
-      h.run.must_equal %w[magic pony]
+      h = Haus::Noop.new %w[--force --quiet foo bar]
+      h.run.must_equal %w[foo bar]
     end
   end
 end

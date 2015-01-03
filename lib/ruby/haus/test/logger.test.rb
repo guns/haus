@@ -86,9 +86,9 @@ class Haus
         it 'must write the arguments as a formatted line to the io device' do
           with_filetty do
             l = Haus::Logger.new
-            l.log ['PONY', :magenta], ' MAGIC!'
+            l.log ['FOO', :magenta], ' BAR!'
             $stdout.rewind
-            $stdout.read.must_equal "\e[35mPONY\e[0m MAGIC!\n"
+            $stdout.read.must_equal "\e[35mFOO\e[0m BAR!\n"
           end
         end
       end
