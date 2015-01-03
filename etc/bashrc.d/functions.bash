@@ -79,34 +79,40 @@ GC_FUNC __LINUX__ __OS_X__
 TCOMP() {
     local src="$1" alias="$2"
 
-    eval "__${FUNCNAME}_${alias}__() {
-        # Unset self and remove extant compspec
-        unset \"__${FUNCNAME}_${alias}__\" 2>/dev/null
+    eval "__TCOMP_${alias}__() {
+        # Unset self and remove existing compspec
+        unset \"__TCOMP_${alias}__\" 2>/dev/null
         complete -r \"$alias\"
 
         # Load completion through bash-completion 2.0 dynamic loading function
         if complete -p \"$src\" &>/dev/null || _load_comp \"$src\"; then
             while true; do
                 local cspec=\"\$(complete -p \"$src\" 2>/dev/null)\"
-                local cfunc=\"\$(sed -ne \"s/.*-F \\(.*\\) .*/\1/p\" <<< \"\$cspec\")\"
-                if [[ \"\$cfunc\" == __${FUNCNAME}_*__ ]]; then
+                local cfunc=\"\$(sed -ne \"s/.*-F \\\\([^[:space:]]*\\\\) .*/\\\\1/p\" <<< \"\$cspec\")\"
+                if [[ \"\$cfunc\" == __TCOMP_*__ ]]; then
                     # If this is another lazy completion, call now to load
                     \$cfunc
                 else
                     break
                 fi
             done
+
             # Dynamic load may have loaded empty compspec
-            [[ \$cspec ]] || return 1
-            # If a compspec was successfully loaded, transfer to target and invoke
+            [[ \"\$cspec\" ]] || return 1
+
+            # Transfer compspec target
             eval \"\$cspec\" \"$alias\"
-            if [[ \$cfunc ]]; then
+
+            # Invoke compspec to complete current request
+            if [[ \"\$cfunc\" ]]; then
+                # compgen -F does not work!
                 _xfunc \"$src\" \"\$cfunc\"
-            elif [[ \$cspec == complete\ * ]]; then
-                COMPREPLY=(\$(compgen \$(sed -ne \"s/complete \(.*\) $src.*/\1/p\" <<< \"\$cspec\") \"\${COMP_WORDS[COMP_CWORD]}\"))
+            elif [[ \"\$cspec\" == 'complete '* ]]; then
+                COMPREPLY=(\$(compgen \$(sed -ne \"s/^complete \\\\(.*\\\\) ${src}.*/\\\\1/p\" <<< \"\$cspec\") \\
+                                      \"\${COMP_WORDS[COMP_CWORD]}\"))
             fi
         fi
-    }; complete -F \"__${FUNCNAME}_${alias}__\" \"$alias\""
+    }; complete -F \"__TCOMP_${alias}__\" \"$alias\""
 }; GC_FUNC TCOMP
 
 ### Smarter aliasing function:
