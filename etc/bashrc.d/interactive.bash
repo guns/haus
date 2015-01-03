@@ -249,10 +249,10 @@ ALIAS g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT" \
       gv='g -v'
 alias wcl='grep -c .'
 
-# ack
-ALIAS acki='ack -i' \
-      ackq='ack -Q' \
-      ackiq='ack -iQ'
+# ag
+ALIAS agi='ag -i' \
+      agq='ag -Q' \
+      agiq='ag -iQ'
 
 # cat less tail
 alias c='cat'
