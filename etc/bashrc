@@ -125,16 +125,6 @@ unalias -a
 # Load init functions
 source ~/.bashrc.d/functions.bash
 
-# Bash completion directories
-BASH_COMPLETION_DIRS=(
-    ~/.bashrc.d/completions
-    ~/.bashrc.d/bash_completion.d
-    /usr/share/bash-completion/completions
-    /etc/completions
-    /etc/bash_completion.d
-    /opt/brew/etc/bash_completion.d
-)
-
 ### SHELL CONFIGURATION ###
 
 # Set shell path
@@ -150,6 +140,14 @@ REQUIRE ~/.bashrc.d/prompts.bash
 if [[ "$BASH_COMPLETION" ]]; then
     echo "Warning: Already sourced $BASH_COMPLETION" >&2
 else
+    BASH_COMPLETION_DIRS=(
+        ~/.bashrc.d/completions
+        ~/.bashrc.d/bash_completion.d
+        /usr/share/bash-completion/completions
+        /etc/completions
+        /etc/bash_completion.d
+        /opt/brew/etc/bash_completion.d
+    )
     REQUIRE ~/.bashrc.d/bash_completion
 fi
 
