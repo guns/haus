@@ -2,43 +2,32 @@
 ### BASH PROMPTS
 ###
 
-EXPORT_PROMPTS() {
-    # Environment overrides
-    local delim="$PS_DELIM" color="$PS_COLOR"
-
-    if [[ "$SSH_TTY" ]]; then
-        delim="${delim:-■}" # Tunnel
-        if ((EUID > 0)); then
-            color="${color:-36}"
-        else
-            color="${color:-31}"
-        fi
+if [[ "$SSH_TTY" ]]; then
+    PS_DELIM="${PS_DELIM:-■}" # SSH tunnel
+    if ((EUID > 0)); then
+        PS_COLOR="${PS_COLOR:-36}"
     else
-        delim="${delim:-§}" # Section
-        if ((EUID > 0)); then
-            color="${color:-37}"
-        else
-            color="${color:-35}"
-        fi
+        PS_COLOR="${PS_COLOR:-31}"
     fi
-
-    if [[ "$USER" == test ]]; then
-        color="${PS_COLOR:-36}"
+else
+    PS_DELIM="${PS_DELIM:-§}" # Section
+    if ((EUID > 0)); then
+        PS_COLOR="${PS_COLOR:-37}"
+    else
+        PS_COLOR="${PS_COLOR:-35}"
     fi
+fi
 
-    # Interactive prompts need to surround escapes with RL_PROMPT_*_IGNORE,
-    # which have special escapes in Bash: \[ \]
-    export PS1="\[\e[0;${color}m\]\\H \[\e[1m\]${delim}\[\e[22m\] \\w\\n\[\e[0;${color}m\]\\u\\$\[\e[0m\] "
-    export PS2="\[\e[0;${color}m\]${USER//?/░}░\[\e[0m\] "
-    export PS4='• '
-}
+# Interactive prompts need to surround escapes with RL_PROMPT_*_IGNORE,
+# which have special escapes in Bash: \[ \]
+export PS1="\[\e[0;${PS_COLOR}m\]\\H \[\e[1m\]${PS_DELIM}\[\e[22m\] \\w\\n\[\e[0;${PS_COLOR}m\]\\u\\$\[\e[0m\] "
+export PS2="\[\e[0;${PS_COLOR}m\]${USER//?/░}░\[\e[0m\] "
+export PS4='• '
+unset PS_DELIM PS_COLOR
 
 # Show exit status of last command if non-zero
-PROMPT_COMMAND='__EXITSTATUS__'
 __EXITSTATUS__() {
     local s=$?
-    ((s)) && echo -ne "\033[3;31m($s)\033[0m "
+    ((s)) && printf "\033[3;31m($s)\033[0m "
 }
-
-EXPORT_PROMPTS
-unset EXPORT_PROMPTS
+PROMPT_COMMAND='__EXITSTATUS__'
