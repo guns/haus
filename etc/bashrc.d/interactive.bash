@@ -1033,8 +1033,8 @@ type ruby &>/dev/null && {
             alias "rb${suf}=${bin}/ruby"
             eval "rb${suf}e() { ${bin}/ruby -e 'eval ARGV.join(%q( ))' -- \"\$@\"; }"
 
-            CD_FUNC -f "cdruby${suf}" "ruby${suf} -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
-            CD_FUNC -f "cdgems${suf}" "ruby${suf} -rubygems -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
+            CD_FUNC -e "cdruby${suf}" "ruby${suf} -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
+            CD_FUNC -e "cdgems${suf}" "ruby${suf} -rubygems -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {

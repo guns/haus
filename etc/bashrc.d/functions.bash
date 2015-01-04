@@ -2,8 +2,8 @@
 ### BASH INITIALIZATION FUNCTIONS
 ###
 
-# Helper functions for defining a bash environment.
-# All functions and variables can be unset by calling `CLEANUP`.
+# Helper functions for defining a bash environment. All functions and
+# variables in this file can be unset by calling `CLEANUP`.
 # Bash 3.1+ compatible.
 
 ### Temporary collections
@@ -12,7 +12,7 @@
 __GC_FUNC__=(GC_FUNC GC_VARS)
 __GC_VARS__=(__GC_FUNC__ __GC_VARS__)
 
-# Corresponding accumulation functions for convenience
+# Corresponding accumulation convenience functions.
 # Param: $@ List of file/function/variable names
 GC_FUNC() { __GC_FUNC__+=("$@"); }
 GC_VARS() { __GC_VARS__+=("$@"); }
@@ -117,13 +117,13 @@ TCOMP() {
 
 ### Smarter aliasing function:
 #
-#   * Lazily transfers completions to the alias using TCOMP():
+#   * Lazily transfer completions to an alias using TCOMP():
 #
 #       complete -p exec                        => complete -F _command exec
 #       ALIAS x exec && complete -p x           => complete -F __TCOMP_x__ x
 #       x <TAB>; complete -p x                  => complete -F _command x
 #
-#   * Skips alias and returns false if command does not exist:
+#   * Skip alias and return false if command does not exist:
 #
 #       ALIAS x='/bin/no-such-command'          => (no alias)
 #       ALIAS y='no-such-command --option'      => (no alias)
@@ -183,7 +183,7 @@ ALIAS() {
 #     arguments are given, each argument is tested until an extant directory
 #     is found. Otherwise does nothing and returns false.
 #
-# CD_FUNC -f cdgems 'ruby -rubygems -e "puts Gem.dir"'
+# CD_FUNC -e cdgems 'ruby -rubygems -e "puts Gem.dir"'
 #
 #   * Shell variable $cdgems only created after first invocation
 #
@@ -193,33 +193,33 @@ ALIAS() {
 #
 #   * No check for extant directory with `-n`
 #
-# Option: -f     Parameter $2 is a shell function
+# Option: -e     Parameter $2 is a shell expression
 # Option: -n     Do not check if directory exists
 # Option: -x     Export shell variable
 # Param:  $1     Name of created function/variable
-# Param:  ${@:2} List of directories
+# Param:  ${@:2} List of directories, or a shell expression with `-e`
 CD_FUNC() {
-    local isfunc=0 checkdir=1 doexport=''
+    local isexpr=0 checkdir=1 doexport=''
     local OPTIND OPTARG opt
-    while getopts :fnx opt; do
+    while getopts :enx opt; do
         case $opt in
-        f) isfunc=1;;
+        e) isexpr=1;;
         n) checkdir=0;;
         x) doexport='export';;
         esac
     done
     shift $((OPTIND-1))
 
-    local name func dir
+    local name expr dir
 
-    if ((isfunc)); then
-        name="$1" func="$2"
+    if ((isexpr)); then
+        name="$1" expr="$2"
 
         eval "$name() {
             if [[ \"\$$name\" ]]; then
                 cd \"\$$name/\$1\"
             else
-                cd \"\$($func)/\$1\"
+                cd \"\$($expr)/\$1\"
                 # Set shell variable on first call
                 $doexport $name=\"\$PWD\" 2>/dev/null
             fi
@@ -248,37 +248,19 @@ CD_FUNC() {
 
     # Set completion function
     eval "__${name}__() {
-        local cur=\"\${COMP_WORDS[COMP_CWORD]}\"
-        local words=\"\$(
-            # Change to base directory
-            \"$name\"
-
-            local base line
-            # If the current word doesn't have a slash, this is the first comp
-            if [[ \"\$cur\" != */* ]]; then
-                command ls -A1 | while read line; do
-                    [[ -d \"\$line\" ]] && echo \"\${line%/}/\"
-                done
-            else
-                # Chomp the trailing slash and dequote
-                base=\"\$(eval printf %s \"\${cur%/}\")\"
-
-                # If this directory doesn't exist, try its parent
-                [[ -d \"\$base\" ]] || base=\"\${base%/*}\"
-
-                # Return directories
-                command ls -A1 \"\$base\" | while read line; do
-                    [[ -d \"\$base/\$line\" ]] && echo \"\$base/\${line%/}/\"
-                done
-            fi
-        )\"
-
-        local IFS=\$'\\n'
-        COMPREPLY=(\$(grep -i \"^\$cur.*\" <<< \"\$words\"))
+        local cur=\"\${COMP_WORDS[COMP_CWORD]}\" file
+        COMPREPLY=()
+        pushd . &>/dev/null
+        # Change to base directory
+        \"$name\"
+        for file in \"\$cur\"*; do
+            [[ -d \"\$file\" ]] && COMPREPLY+=(\"\$file\"/)
+        done
+        popd &>/dev/null
     }"
 
     # Complete the shell function
-    complete -o nospace -o filenames -F "__${name}__" "$name"
+    complete -o nospace -F "__${name}__" "$name"
 }; GC_FUNC CD_FUNC
 
 ### Init script wrapper creation:
