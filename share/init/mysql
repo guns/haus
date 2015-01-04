@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NAME='mysqld'
-PROGRAM="${PROGRAM:=/opt/brew/bin/mysqld_safe}"
+PROGRAM="${PROGRAM:-/opt/brew/bin/mysqld_safe}"
 PIDFILE="/srv/db/mysql/$NAME.pid"
 OPTIONS=(--pid-file="$PIDFILE")
 

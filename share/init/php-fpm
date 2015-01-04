@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NAME='php-fpm'
-PROGRAM="${PROGRAM:=/opt/brew/sbin/$NAME}"
+PROGRAM="${PROGRAM:-/opt/brew/sbin/$NAME}"
 PIDFILE="/var/run/$NAME.pid"
 CONF="/opt/brew/etc/$NAME.conf"
 OPTIONS=(--fpm-config="$CONF")

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NAME='postgres'
-PROGRAM="${PROGRAM:=/opt/brew/bin/pg_ctl}"
+PROGRAM="${PROGRAM:-/opt/brew/bin/pg_ctl}"
 USER='nobody'
 DATADIR='/srv/db/postgres'
 LOGFILE="$DATADIR/server.log"

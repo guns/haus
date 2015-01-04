@@ -228,7 +228,7 @@ nohist() {
         unset HISTFILE
         xecho title 'nohist'
     else
-        HISTFILE="${HISTFILE_DISABLED:=$HOME/.bash_history}"
+        HISTFILE="${HISTFILE_DISABLED:-$HOME/.bash_history}"
         unset HISTFILE_DISABLED
         xecho title 'HIST'
     fi

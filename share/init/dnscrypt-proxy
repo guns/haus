@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 NAME='dnscrypt-proxy'
-PROGRAM="${PROGRAM:=/opt/dnscrypt-proxy/sbin/$NAME}"
+PROGRAM="${PROGRAM:-/opt/dnscrypt-proxy/sbin/$NAME}"
 PIDFILE="/var/run/$NAME.pid"
 USER='nobody'
 HOST='127.0.0.2'
