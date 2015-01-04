@@ -388,8 +388,8 @@ alias chown='chown -v'
 ALIAS chownr='chown -R'
 
 # mkdir
-alias md='mkdir -vp'
-alias rd='rmdir -vp'
+ALIAS md='mkdir -vp'
+ALIAS rd='rmdir -vp'
 
 # df du
 alias df='df -h'
@@ -625,28 +625,23 @@ alias p1='ps axo comm'
 alias psa='ps axo comm,pid,ppid,pgid,sid,nlwp,pcpu,pmem,rss,start_time,user,tt,ni,pri,stat,args'
 psg() {
     psa | ruby -e '
-        cols = ARGV[0].to_i
-        header = $stdin.readline[0...cols]
-        lines = $stdin.readlines.grep(Regexp.new ARGV[1]).reject { |l| l =~ /\b#{$$}\b/ }
+        header = $stdin.readline
+        lines = $stdin.readlines.grep(Regexp.new ARGV[0]).reject { |l| l =~ /\b#{$$}\b/ }
         abort if lines.empty?
-        warn header
-        lines.each { |l| puts l[0...cols] }
-    ' -- "$COLUMNS" "$*";
+        puts header
+        puts lines
+    ' -- "$*" | pager
 }
 alias psgv='psa | grep -v "grep -i" | gv'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
-    alias __psr__='psa -r'
-    alias __psm__='psa -m'
+    psr() { psa -r "$@" | pager; }
+    psm() { psa -m "$@" | pager; }
 # GNU/Linux ps supports `k` and `--sort`
 else
-    alias __psr__='psa k-pcpu'
-    alias __psm__='psa k-rss'
+    psr() { psa k-pcpu "$@" | pager; }
+    psm() { psa k-rss  "$@" | pager; }
 fi
-psr() { __psr__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
-psm() { __psm__ | sed "s/\(.\{$COLUMNS\}\).*/\1/ ; $((LINES-2))q"; }
-alias psrl='__psr__ | pager'
-alias psml='__psm__ | pager'
 ALIAS pst='pstree'
 
 # htop
