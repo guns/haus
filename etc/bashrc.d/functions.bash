@@ -54,8 +54,8 @@ HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
 ### Platform predicates
 case "$MACHTYPE" in
-*linux*)  eval '__LINUX__() { return 0; }; __DARWIN__() { return 1; }';;
-*darwin*) eval '__LINUX__() { return 1; }; __DARWIN__() { return 0; }';;
+*linux*)  __LINUX__() { return 0; }; __DARWIN__() { return 1; };;
+*darwin*) __LINUX__() { return 1; }; __DARWIN__() { return 0; };;
 esac
 GC_FUNC __LINUX__ __DARWIN__
 
@@ -101,7 +101,7 @@ TCOMP() {
             [[ \"\$cspec\" ]] || return 1
 
             # Transfer compspec target
-            eval \"\$cspec\" \"$alias\"
+            \$cspec \"$alias\"
 
             # Invoke compspec to complete current request
             if [[ \"\$cfunc\" ]]; then
