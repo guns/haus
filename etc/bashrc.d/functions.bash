@@ -290,6 +290,7 @@ RC_FUNC() {
             break
         fi
     done
+
     [[ "$dir" ]] || return 1
 
     # Shell function
@@ -302,12 +303,13 @@ RC_FUNC() {
         local words
 
         if [[ \"\$prev\" == \"\${COMP_WORDS[0]}\" ]]; then
-            words=\"\$(command ls -1 \"$dir/\")\"
+            pushd . &>/dev/null
+            cd \"$dir\"
+            COMPREPLY=(\"\$cur\"*)
+            popd &>/dev/null
         else
-            words='start stop restart'
+            COMPREPLY=(\$(compgen -W 'start stop restart' -- \"\$cur\"))
         fi
-
-        COMPREPLY=(\$(compgen -W \"\$words\" -- \$cur))
     }"
 
     # Complete the shell function
@@ -317,8 +319,11 @@ RC_FUNC() {
 ### HAPPY HACKING
 
 GREETINGS() {
-    local date="$(date +%H:%M:%S\ %Z)" color
-    local hour="${date%%:*}"; hour="${hour#0}"
+    local date="$(date +%H:%M:%S\ %Z)"
+    local hour="${date%%:*}"
+    local color
+
+    hour="${hour#0}"
 
     if   ((hour < 6 || hour > 21)); then color='34' # night
     elif ((hour < 10));             then color='36' # morning
