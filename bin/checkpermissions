@@ -1,0 +1,126 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'etc'
+
+class Checkpermissions
+  USER_FILE_PATTERN = Regexp.compile %q(\A%s/) % File.expand_path('~')
+
+  DEFAULTS = {
+    :default_mask => 0022
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 32 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] spec …
+
+        Options:
+      BANNER
+
+      opt.on '-m', '--default-mask OCTAL_MASK', 'DEFAULT: %04o' % DEFAULTS[:default_mask] do |arg|
+        @default_mask = arg.to_i 8
+      end
+    end
+  end
+
+  def readlink path
+    File.expand_path File.readlink(path), File.dirname(path)
+  end
+
+  def reflective_path? path
+    File.symlink?(path) and readlink(path) =~ %r{\A/proc/self/}
+  end
+
+  def compile_specs spec_arguments
+    specs = []
+
+    spec_arguments.each do |arg|
+      path, user, group, mask, options = arg.split ':', 5
+
+      next if path.nil?
+      path = File.expand_path path
+      next if not File.exists? path
+
+      owner_uid = user ? Etc.getpwnam(user).uid : (path =~ USER_FILE_PATTERN ? Process.euid : 0)
+      owner_gid = Etc.getgrnam(group).gid if group
+      mask = mask ? mask.to_i(8) : @default_mask
+      opts = options ? options.split(',') : []
+
+      if File.directory? path and not opts.include? 'no-recurse'
+        specs.concat Dir.glob(File.join(path, '**/*'), File::FNM_DOTMATCH).map { |p|
+          [p, owner_uid, owner_gid, mask]
+        }
+      else
+        specs.push [path, owner_uid, owner_gid, mask]
+      end
+    end
+
+    specs
+  end
+
+  def check specs
+    errors = []
+
+    specs.each do |(path, owner_uid, owner_gid, mask)|
+      if reflective_path? path
+        warn "Skipping magic symlink #{path} → #{readlink path}"
+        next
+      end
+
+      begin
+        stat = File.stat path
+      rescue Errno::ENOENT => e
+        if File.symlink? path
+           warn "Skipping broken symlink #{path}"
+        else
+          raise e
+        end
+        next
+      end
+
+      if owner_uid and stat.uid != owner_uid and stat.uid != 0
+        errors << "\e[31m%s: Expected owner %s, but is owned by %s\e[0m" % [
+          path,
+          Etc.getpwuid(owner_uid).name.inspect,
+          Etc.getpwuid(stat.uid).name.inspect
+        ]
+      elsif owner_gid and stat.gid != owner_gid and stat.gid != 0
+        errors << "\e[31m%s: Expected group owner %s, but is group owned by %s\e[0m" % [
+          path,
+          Etc.getgrgid(owner_gid).name.inspect,
+          Etc.getgrgid(stat.gid).name.inspect
+        ]
+      elsif not (stat.mode & mask).zero?
+        errors << "\e[31m%s: Mode %04o violates mask %04o\e[0m" % [
+          path,
+          stat.mode,
+          mask
+        ]
+      end
+    end
+
+    errors
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    errors = check compile_specs(args)
+    if errors.any?
+      puts errors
+      abort
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Checkpermissions.new.run ARGV if $0 == __FILE__

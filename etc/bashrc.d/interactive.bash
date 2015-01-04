@@ -89,66 +89,39 @@ __ps1toggle__() {
     done
 }
 
-# Check shell init files and paths for loose permissions
-checkpermissions() {
-    local rclist=(
-        /etc/profile                        # System POSIX init
-        /etc/profile.d/**                   # System POSIX init
-        /etc/bash.bashrc                    # System interactive bash init
-        /etc/bash.bash.logout               # System bash logout
-        /etc/inputrc                        # System readline
-        ~/.bash_profile                     # Bash login init (1)
-        ~/.bash_login                       # Bash login init (2)
-        ~/.profile                          # POSIX login init (3)
-        ~/.bashrc                           # Bash interactive init
-        ~/.bash_logout                      # Bash logout
-        ~/.inputrc                          # User readline
-        ~/.bashrc.d/**                      # Extra bash init files
-        ~/.bash_local                       # Local bash init
-        "$ENV"                              # POSIX init override
-        "$BASH_ENV"                         # Bash init override
-        "$INPUTRC"                          # Readline override
-        ~/.bash_history                     # Bash history file
-        ~/.bash_completion                  # Bash completion script
+# Check shell init files and system paths for loose permissions
+checkperm() {
+    # path:user:group:octal-mask:options; all fields optional
+    local specs=(
+        /etc/.git:root:root:0077:no-recurse
+        /etc:root
+        ~/.profile
+        ~/.bashrc
+        ~/.bash_profile
+        ~/.bash_login
+        ~/.bash_logout
+        ~/.bashrc.d
+        ~/.bash_local
+        ~/.bash_history
+        ~/.bash_completion
+        ~/.bash_completion.d
+        ~/.inputrc
+        "$BASH_ENV"
+        "$ENV"
+        "$HISTFILE"
+        "$HOSTFILE"
+        "$INPUTRC"
+        "$MAIL"
+        "$TMPDIR"
+        "${COPROC[@]}"
+        "${MAPFILE[@]}"
     )
 
     local IFS=':'
-    local paths=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]})
+    specs+=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]} $MAILPATH)
     unset IFS
 
-    local dir
-    for dir in "${paths[@]}"; do
-        rclist+=("$dir"/**)
-    done
-
-    ruby -r etc -e '
-        home = Regexp.compile "\\A" + File.expand_path("~") + "/"
-        ok = true
-
-        ARGV.each do |file|
-            next if file.empty?
-            path = File.expand_path file
-            next if not File.exists? path
-            stat = File.stat path
-            uid = path =~ home ? Process.euid : 0
-
-            if stat.uid != uid and stat.uid != 0
-                puts "\e[31m%s is trusted, but is owned by %s\e[0m" % [
-                    path,
-                    Etc.getpwuid(stat.uid).name.inspect
-                ]
-                ok = false
-            elsif not (stat.mode & 0022).zero?
-                puts "\e[31m%s is trusted, but is %s writable\e[0m" % [
-                    path,
-                    (stat.mode & 0002) != 0 ? "world" : "group"
-                ]
-                ok = false
-            end
-        end
-
-        exit ok
-    ' -- "${rclist[@]}"
+    checkpermissions -- "${specs[@]}"
 }
 
 ### Directories
