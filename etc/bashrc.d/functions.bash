@@ -133,25 +133,27 @@ TCOMP() {
 #
 #       ALIAS x='no-such-command' ls='ls -Ahl'  => `ls` remains unaliased
 #
-# NOTE: In order to attain acceptable performance, this function is not
-#       parameter compatible with the `alias` builtin!
+# NOTES:
+#
+#   Whitespace and other shell metacharacters in source commands must be
+#   backslash escaped. Quoting with ['"] will not work!
+#
+#   In order to attain acceptable performance, this function is not parameter
+#   compatible with the `alias` builtin.
 #
 # Param: $@ name=value ...
 ALIAS() {
     local arg
     for arg in "$@"; do
-        # Split argument into "name=cmd opts"; eval preserves user's intended
-        # word splitting, but consumes the actual quotes and backslashes
-        local name="${arg%%=*}"
-        eval "local val=(${arg#*=})"
-        local cmd="${val[0]}" opts="${val[@]:1}"
+        local cmd _
+        local lhs="${arg%%=*}"
+        read cmd _ <<< "${arg#*=}"
 
         if HAVE "$cmd"; then
-            # Escape spaces in cmd; doesn't escape other shell metacharacters!
-            builtin alias "$name=${cmd// /\\ } ${opts[@]}"
+            builtin alias "$arg"
             # Transfer completions to the new alias
-            if [[ "$name" != "$cmd" ]]; then
-                TCOMP "$cmd" "$name"
+            if [[ "$lhs" != "$cmd" ]]; then
+                TCOMP "$cmd" "$lhs"
             fi
         else
             return 1

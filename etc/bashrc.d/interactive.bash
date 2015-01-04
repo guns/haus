@@ -706,7 +706,7 @@ HAVE tcpdump && {
 
 # ssh scp
 ALIAS ssh='ssh -2' \
-      ssh-password='ssh -o \"PreferredAuthentications password\"'
+      ssh-password='ssh -o "PreferredAuthentications password"'
 alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
 ALIAS scp='scp -2' \
       scpr='scp -r'
