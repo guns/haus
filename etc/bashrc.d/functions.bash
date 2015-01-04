@@ -331,5 +331,5 @@ GREETINGS() {
     else                                 color='35' # evening
     fi
 
-    echo -e "\n\e[1;32mGNU Bash \e[0;3m($BASH_VERSION)\e[0m ✶ \e[1;${color}m$date\e[0m\n"
+    printf "\n\e[1;32mGNU Bash \e[0;3m($BASH_VERSION)\e[0m ✶ \e[1;${color}m$date\e[0m\n\n" >&2
 }; GC_FUNC GREETINGS
