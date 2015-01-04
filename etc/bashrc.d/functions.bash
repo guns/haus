@@ -249,14 +249,18 @@ CD_FUNC() {
     # Set completion function
     eval "__${name}__() {
         local cur=\"\${COMP_WORDS[COMP_CWORD]}\" file
-        COMPREPLY=()
-        pushd . &>/dev/null
-        # Change to base directory
-        \"$name\"
-        for file in \"\$cur\"*; do
-            [[ -d \"\$file\" ]] && COMPREPLY+=(\"\$file\"/)
-        done
-        popd &>/dev/null
+        local IFS=\$'\x1F'
+        COMPREPLY=(\$(
+            # Change to base directory
+            \"$name\"
+            # Ignore case and dequote current word when globbing
+            shopt -s nocaseglob
+            for file in \"\$(eval printf %s \"\$cur\")\"*; do
+                if [[ -d \"\$file\" ]]; then
+                    printf '%s/\x1F' \$(sed -e 's/\\([^[:alnum:]%+,.\\/@^_-]\\)/\\\\\\1/g' <<< \"\$file\")
+                fi
+            done
+        ))
     }"
 
     # Complete the shell function
