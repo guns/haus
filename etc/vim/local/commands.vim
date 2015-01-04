@@ -97,9 +97,9 @@ function! s:SetDiff(bang)
     if empty(a:bang)
         setlocal diff?
     elseif &diff
-        windo if expand('%:t') !=# 'index' && &buftype !~# '\vnofile|quickfix|help' | diffoff | endif
+        windo if expand('%:t') !=# 'index' && &buftype !~# '\vquickfix|help' | diffoff | endif
     else
-        windo if expand('%:t') !=# 'index' && &buftype !~# '\vnofile|quickfix|help' | diffthis | endif
+        windo if expand('%:t') !=# 'index' && &buftype !~# '\vquickfix|help' | diffthis | endif
     endif
 endfunction
 
