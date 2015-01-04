@@ -283,7 +283,7 @@ alias l1g='l1 | g'
 alias l1gv='l1 | gv'
 alias lsg='ls | g'
 alias lsgv='ls | gv'
-if __OS_X__; then
+if __DARWIN__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
@@ -524,7 +524,7 @@ ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
 }
 
 # Remove logs and caches
-if __OS_X__; then
+if __DARWIN__; then
     flushcache() {
         local dir cachedirs=(
             "$HOME/Library/Preferences/Macromedia/Flash Player"
@@ -686,7 +686,7 @@ ALIAS get='curl -A Mozilla/5.0 -#L' \
 # DNS
 ALIAS digx='dig -x' \
       digs='dig +short'
-if __OS_X__; then
+if __DARWIN__; then
     alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
 else
     alias resolv='{
@@ -1255,7 +1255,7 @@ ALIAS rfk='rfkill' && {
     alias rfenable='run rfkill unblock all'
 }
 
-if __OS_X__; then
+if __DARWIN__; then
     # Show all pmset settings by default
     # Param: [$@] Arguments to `pmset`
     pmset() {
@@ -1360,7 +1360,7 @@ java-import-keystore() {
     run keytool -storepass changeit -importcert -file "$1" -keystore "$2"
 }
 
-if __OS_X__; then
+if __DARWIN__; then
     alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
     alias security-dump-certificates='run security export -t certs'
 fi
@@ -1397,7 +1397,7 @@ fi
 
 ### Package Managers
 
-if __OS_X__; then
+if __DARWIN__; then
     # MacPorts package manager
     ALIAS port='port -c' && {
         porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
@@ -1607,7 +1607,7 @@ ALIAS lctl='launchctl' \
 
 ### GUI programs
 
-if __OS_X__; then
+if __DARWIN__; then
     # LaunchBar
     HAVE /Applications/LaunchBar.app/Contents/MacOS/LaunchBar && {
         alias lb='open -a /Applications/LaunchBar.app'

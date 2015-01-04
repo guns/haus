@@ -54,10 +54,10 @@ HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
 
 ### Platform predicates
 case "$MACHTYPE" in
-*linux*)  eval '__LINUX__() { return 0; }; __OS_X__() { return 1; }';;
-*darwin*) eval '__LINUX__() { return 1; }; __OS_X__() { return 0; }';;
+*linux*)  eval '__LINUX__() { return 0; }; __DARWIN__() { return 1; }';;
+*darwin*) eval '__LINUX__() { return 1; }; __DARWIN__() { return 0; }';;
 esac
-GC_FUNC __LINUX__ __OS_X__
+GC_FUNC __LINUX__ __DARWIN__
 
 ### Lazy completion transfer function:
 #
