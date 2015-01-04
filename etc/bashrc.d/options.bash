@@ -56,7 +56,7 @@
     shopt -u extdebug
     shopt -s extglob                        # ✔ extended pattern matching features
     shopt -s extquote
-    shopt -s failglob                       # ✔ patterns which fail to match filenames during pathname expansion result in an expansion error
+    shopt -u failglob
     shopt -s force_fignore
     shopt -s globstar                       # ✔ ** used in a pathname expansion context will match all files and zero or more directories and subdirectories. If the pattern is followed by a /, only directories and subdirectories match
     shopt -u gnu_errfmt
