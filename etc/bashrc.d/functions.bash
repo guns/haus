@@ -23,15 +23,15 @@ CLEANUP() {
     unset "${__GC_VARS__[@]}"
 }; GC_FUNC CLEANUP
 
-### Abort the login process.
+### Abort shell initialization
 # Param: $* Error message
 ABORT() {
     # Explain
     (($#)) && echo -e "$*\n" >&2
 
     # Stack trace
-    local i
-    for ((i = 0; i < ${#BASH_SOURCE[@]} - 1; ++i)); do
+    local i n=$((${#BASH_SOURCE[@]} - 1))
+    for ((i = 0; i < n; ++i)); do
         echo "-> ${BASH_SOURCE[i+1]}:${BASH_LINENO[i]}:${FUNCNAME[i]}" >&2
     done
 
@@ -140,8 +140,8 @@ TCOMP() {
 ALIAS() {
     local arg
     for arg in "$@"; do
-        # Split argument into name and (array)value; eval preserves user's
-        # quoting and escaping (for the most part)
+        # Split argument into "name=cmd opts"; eval preserves user's intended
+        # word splitting, but consumes the actual quotes and backslashes
         local name="${arg%%=*}"
         eval "local val=(${arg#*=})"
         local cmd="${val[0]}" opts="${val[@]:1}"

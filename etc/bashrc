@@ -165,5 +165,5 @@ GREETINGS
 # Run local init script
 [[ -e ~/.bash_local ]] && REQUIRE ~/.bash_local
 
-# Cleanup
+# Sweep up init environment
 CLEANUP
