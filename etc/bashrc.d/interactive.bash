@@ -13,6 +13,8 @@ GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
 
 ### Meta Utility Functions
 
+alias bashnilla='env -i bash --norc --noprofile'
+
 # Lists of aliases and functions
 showfunctions() { set | grep '^[^ ]* ()'; }
 showconflicts() {
