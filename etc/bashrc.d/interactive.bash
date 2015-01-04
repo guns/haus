@@ -324,10 +324,10 @@ lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable?
 lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 
 # objdump hexdump strings readelf hexfiend
-ALIAS hex='hexdump -C'         && hexl()     { hexdump -C "$@" | pager; }
-ALIAS strings='strings -a -t x -' && lstrings() { strings -a -t x - "$@" | pager; }
-HAVE objdump && ox() { objdump -x "$@" | pager; }
-HAVE readelf && dl() { readelf -d "$@" | pager; }
+HAVE hexdump && { hex() { hexdump -C "$@" | pager; }; TCOMP hexdump hex; }
+HAVE objdump && { ox() { objdump -x "$@" | pager; }; TCOMP objdump ox; }
+HAVE readelf && { dl() { readelf -d "$@" | pager; }; TCOMP readelf dl; }
+HAVE strings && strings() { command strings -a -tx - "$@" | pager; }
 HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
     alias hexfiend='open -a "/Applications/Hex Fiend.app"'
 }
@@ -725,9 +725,9 @@ HAVE sshuttle && {
 # lsof
 ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
     alias lsif='lsof -i'
-    alias lsifr="\lsof -Pi $LSOF_FLAG_OPT"
+    alias lsifr="command lsof -Pi $LSOF_FLAG_OPT"
     alias lsifudp='lsif | grep UDP'
-    alias lsiflisten='lsif | grep -w "\(LISTEN\)\|UDP"'
+    alias lsiflisten='lsif | grep -w "LISTEN\|UDP"'
     alias lsifconnect='lsif | grep -- "->"'
     alias lsifconnectr='lsifr | grep -- "->"'
     alias lsuf='lsof -U'
