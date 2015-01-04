@@ -124,7 +124,7 @@ task :env do
     'completions' => [
       {
         :base   => "#{@src}/bash-completion",
-        :branch => %w[master guns],
+        :branch => %w[master haus],
         :files  => lambda { |proj|
           src = "#{proj.base}/completions"
           dst = "#{proj.haus}/etc/bashrc.d/bash_completion.d"
