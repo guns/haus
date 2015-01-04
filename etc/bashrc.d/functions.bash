@@ -91,7 +91,7 @@ TCOMP() {
                 local cfunc=\"\$(sed -ne \"s/.*-F \\\\([^[:space:]]*\\\\) .*/\\\\1/p\" <<< \"\$cspec\")\"
                 if [[ \"\$cfunc\" == __TCOMP_*__ ]]; then
                     # If this is another lazy completion, call now to load
-                    \$cfunc
+                    \"\$cfunc\"
                 else
                     break
                 fi
@@ -249,7 +249,7 @@ CD_FUNC() {
         local cur=\"\${COMP_WORDS[COMP_CWORD]}\"
         local words=\"\$(
             # Change to base directory
-            $name
+            \"$name\"
 
             local base line
             # If the current word doesn't have a slash, this is the first comp

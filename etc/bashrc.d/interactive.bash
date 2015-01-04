@@ -748,7 +748,7 @@ HAVE scutil && {
             for pref in "${keys[@]}"; do
                 scutil --set $pref "$*"
             done
-            $FUNCNAME
+            "$FUNCNAME"
         else
             for pref in  "${keys[@]}"; do
                 printf "$pref: "
