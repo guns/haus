@@ -4,7 +4,7 @@
 
 # Bash history
 export HISTSIZE='65535'
-export HISTIGNORE='&:cd:.+(.):ls:lc: *' # Ignore dups, common commands, and leading spaces
+export HISTIGNORE='&:cd:.+(.):ls: *'    # Ignore dups, common commands, and lines with leading spaces
 
 # Editor
 export EDITOR='vim'
@@ -52,11 +52,6 @@ unset LESSOPTS
 # Ruby
 export RUBYLIB="$HOME/.local/lib/ruby"
 export BUNDLE_PATH="$HOME/.bundle"
-if [[ "$SSH_TTY" ]]; then
-    export RAILS_ENV='production'  RACK_ENV='production'
-else
-    export RAILS_ENV='development' RACK_ENV='development'
-fi
 
 # Go
 export GOPATH="$HOME/.local/pkg/go"
