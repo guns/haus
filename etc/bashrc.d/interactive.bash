@@ -117,6 +117,12 @@ checkperm() {
         "${MAPFILE[@]}"
     )
 
+    # Swapfiles
+    local f
+    for f in $(sed '1d; s/\(^[^ ]*\).*/\1/' '/proc/swaps'); do
+        specs+=("$f":root:root:0177)
+    done
+
     local IFS=':'
     specs+=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]} $MAILPATH)
     unset IFS

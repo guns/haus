@@ -24,6 +24,13 @@ class Checkpermissions
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] spec …
 
+        Specs are:
+
+            path:user:group:octal-mask:opt1,opt2
+
+        All fields are optional, and the only spec option is 'no-recurse',
+        which can be added to a directory to prevent checking its contents.
+
         Options:
       BANNER
 
