@@ -15,25 +15,15 @@ class Lninstall
   attr_reader :options, :queue
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
+    @options = OpenStruct.new({:relative => true}.merge(opts))
     @queue   = Haus::Queue.new options
   end
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
-        Link the program executables, man pages, and init scripts of an
-        installation to another directory tree. Also works in reverse.
-
-        For instance:
-
-            #{File.basename __FILE__} /opt/bash /usr/local
-
-        is functionally equivalent to:
-
-            mkdir -p /usr/local/bin /usr/local/share/man/man1
-            ln -s /opt/bash/bin/bash /usr/local/bin/bash
-            ln -s /opt/bash/share/man/man1/bash.1 /usr/local/share/man/man1/bash.1
+        Link the program executables, man pages, and init scripts of one
+        directory tree to another. Also works in reverse.
 
         Usage: #{File.basename __FILE__} [options] src dst
 
@@ -42,6 +32,10 @@ class Lninstall
 
       opt.on '-a', '--all', 'Also link init, headers, libraries, and all of share/' do
         options.init = options.libs = options.share = true
+      end
+
+      opt.on '-A', '--absolute', 'Create absolute links instead of relative links' do
+        queue.options.relative = false
       end
 
       opt.on '-i', '--init', 'Also link init files' do
@@ -54,10 +48,6 @@ class Lninstall
 
       opt.on '-s', '--share', 'Also link all files in share/' do
         options.share = true
-      end
-
-      opt.on '-r', '--relative', 'Create relative links instead of absolute links' do
-        queue.options.relative = true
       end
 
       opt.on '-f', '--force', 'Overwrite all files without prompting' do
