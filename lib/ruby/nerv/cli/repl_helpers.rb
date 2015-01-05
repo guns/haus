@@ -8,26 +8,63 @@ module NERV; end
 module NERV::CLI; end
 
 module NERV::CLI::ReplHelpers
-  # Invoke interactive_editor or Pry edit
-  def edit *args
-    ::NERV::CLI::ReplHelpers.send :remove_method, :edit
-    unless $0 == 'pry'
+  unless $0 == 'pry'
+    def pry
+      require 'pry'
+      binding.send $stdin.tty? ? :pry : :remote_pry
+    end
+
+    # Invoke interactive_editor or Pry edit
+    def edit *args
+      ::NERV::CLI::ReplHelpers.send :remove_method, :edit
       require 'interactive_editor'
       alias :edit :vim
       vim *args
     end
   end
 
+  # We often drop into a ruby console to act as a command shell
+  def listfiles pat = '*', opts = {}
+    Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
+  end
+  alias :ls :listfiles unless $0 == 'pry'
+  alias :fs :listfiles
+  alias :sh :system
+
+  # View integers as dec, oct, hex, and bin
+  def toggle_verbose_numbers
+    [Fixnum, Bignum].each do |klass|
+      klass.module_eval do
+        class << self
+          attr_accessor :verbose_inspect
+        end
+
+        if self.verbose_inspect = !verbose_inspect
+          alias_method :__inspect__, :inspect
+
+          def bin
+            buf = '%04b' % self
+            n = buf.size % 4
+            ('0' * (n.zero? ? 0 : 4 - n) << buf).scan(/\d{4}/).join ' '
+          end
+
+          def inspect
+            hex = '%x' % self
+            hex = '0' + hex unless hex.length.even?
+            '%d 0%0o 0x%s (%s)' % [self, self, hex, bin]
+          end
+        else
+          remove_method :bin
+          remove_method :inspect
+          alias_method :inspect, :__inspect__
+        end
+      end
+    end
+  end
+
   # Pretty print, returning nil
   def pp *args
     require 'pp'
-    super
-    nil
-  end
-
-  # Awesome print, returning nil
-  def ap *args
-    require 'ap'
     super
     nil
   end
@@ -58,34 +95,13 @@ module NERV::CLI::ReplHelpers
     File.open(path, 'w') { |f| f.write buf }
   end
 
-  # Toggle number inspect style
-  def toggle_verbose_numbers
-    [Fixnum, Bignum].each do |klass|
-      klass.module_eval do
-        class << self
-          attr_accessor :verbose_inspect
-        end
+  # Nokogiri shortcuts
+  def noko buf
+    require 'nokogiri'
+    Nokogiri::HTML.parse buf
+  end
 
-        if self.verbose_inspect = !verbose_inspect
-          alias_method :__inspect__, :inspect
-
-          def bin
-            buf = '%04b' % self
-            n = buf.size % 4
-            ('0' * (n.zero? ? 0 : 4 - n) << buf).scan(/\d{4}/).join ' '
-          end
-
-          def inspect
-            hex = '%x' % self
-            hex = '0' + hex unless hex.length.even?
-            '%d 0%0o 0x%s (%s)' % [self, self, hex, bin]
-          end
-        else
-          remove_method :bin
-          remove_method :inspect
-          alias_method :inspect, :__inspect__
-        end
-      end
-    end
+  def nokoslurp path
+    noko slurp(path)
   end
 end

@@ -6,18 +6,18 @@
 #  |___|  |___|__| |___|   guns <self@sungpae.com>
 #
 
+require 'fileutils'
+require 'nerv/cli/repl_helpers'
+
+include FileUtils
+include NERV::CLI::ReplHelpers
+
+$:.unshift Dir.pwd
+
 begin
-  require 'nerv/cli/repl_helpers'
   require 'pry-nav'
-rescue LoadError
-end
-
-if defined? NERV::CLI::ReplHelpers
-  include NERV::CLI::ReplHelpers
-end
-
-if defined? PryNav
   Pry.commands.alias_command 'c', 'continue'
   Pry.commands.alias_command 's', 'step'
   Pry.commands.alias_command 'n', 'next'
+rescue LoadError
 end
