@@ -42,9 +42,7 @@ class Haus
     end
 
     # Parameter can be a Hash or an OpenStruct;
-    # Raises RuntimeError if options is frozen
     def options= opts
-      raise "can't modify frozen array" if options.frozen?
       @options = opts.is_a?(Hash) ? OpenStruct.new(opts) : opts.dup
     end
 
