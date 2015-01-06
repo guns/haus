@@ -15,17 +15,16 @@ GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
 
 alias bashnilla='env -i bash --norc --noprofile'
 
-# Lists of aliases and functions
-showfunctions() { set | grep '^[^ ]* ()'; }
-showconflicts() {
+# Show commands shadowed by aliases and functions
+shadowenv() {
     local cmd buf
 
-    cat <(builtin alias | ruby -e 'puts $stdin.read.scan(/^alias (.*?)=/).map! { |(a)| a }') \
-        <(showfunctions | awk '{print $1}') |
+    cat <(alias | ruby -e 'puts $stdin.read.scan(/^alias (.*?)=/).map { |(a)| a }') \
+        <(set | grep '^[^ ]* ()' | awk '{print $1}') |
     while builtin read cmd; do
-        buf="$(command type -a "$cmd" | grep "$cmd is ")"
+        buf="$(type -a "$cmd" | grep "$cmd is ")"
         if (($(grep -c . <<< "$buf") > 1)); then
-            builtin printf "%s\n\n" "$buf"
+            printf "%s\n\n" "$buf"
         fi
     done
 }
