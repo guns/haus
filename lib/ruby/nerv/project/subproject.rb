@@ -1,5 +1,6 @@
 # -*- encoding: utf-8 -*-
 
+require 'git'
 require 'haus/queue'
 require 'haus/options'
 require 'haus/logger'
@@ -48,9 +49,8 @@ class NERV::Project::Subproject
     Process.euid = euid if euid
   end
 
-  # Lazy require
   def git
-    @git ||= (require 'git'; Git.open base)
+    @git ||= Git.open base
   end
 
   def git_update
