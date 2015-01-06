@@ -39,21 +39,20 @@ __prepend_path__() {
     local var="$1"
 
     if (($# == 1)); then
-        ruby -e 'puts "%s=%s" % [ARGV[0], ENV[ARGV[0]]]' -- "$var"
+        ruby -e 'puts [ARGV[0], ENV[ARGV[0]]].join("=")' -- "$var"
         return
     fi
 
-    local dir path="$(eval "echo \$$var")" newpath
+    local dir newpath
     for dir in "${@:2}"; do
         if newpath="$(ruby -e '
-            paths = ARGV[0].split ":"
-            dir   = File.expand_path ARGV[1]
+            paths = ENV[ARGV[0]].split ":"
+            dir = File.expand_path ARGV[1]
             abort unless File.directory? dir
             puts paths.reject { |d| d == dir }.unshift(dir).join(":")
-        ' -- "$path" "$dir")"; then
-            path="$newpath"
-            export "$var=$path"
-            echo "$var=$path"
+        ' -- "$var" "$dir")"; then
+            export "$var=$newpath"
+            echo "$var=$newpath"
         fi
     done
 }
