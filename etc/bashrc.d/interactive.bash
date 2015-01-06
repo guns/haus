@@ -64,7 +64,7 @@ __ps1toggle__() {
     declare -p __ps1stack__ &>/dev/null || __ps1stack__=("$PS1")
 
     # Check for existing transformation
-    local idx count=${#__ps1stack__[@]} exists
+    local idx count=${#__ps1stack__[@]} exists=0
     for ((idx = 1; idx < count; ++idx)); do
         if [[ "$*" == "${__ps1stack__[idx]}" ]]; then
             exists=1
@@ -93,16 +93,16 @@ checkperm() {
     local specs=(
         /etc/.git:root:root:0077:no-recurse
         /etc:root
-        ~/.profile
         ~/.bashrc
         ~/.bash_profile
         ~/.bash_login
+        ~/.profile
         ~/.bash_logout
         ~/.bashrc.d
-        ~/.bash_local
         ~/.bash_history
         ~/.bash_completion
         ~/.bash_completion.d
+        ~/.bash_local
         ~/.inputrc
         "$BASH_ENV"
         "$ENV"
@@ -136,9 +136,9 @@ CD_FUNC -n ....         ../../..
 CD_FUNC -n .....        ../../../..
 CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
+CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC cdetc           /etc
-CD_FUNC cdrcd           /etc/rc.d /usr/local/etc/rc.d
 CD_FUNC cdmnt           /mnt
 CD_FUNC cdbrew          /opt/brew
 CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
