@@ -166,7 +166,7 @@ super + control + shift + {space,Left,Right}
 	pkill -HUP -x gpg-agent; sudo -n /usr/bin/powerctl slock
 
 control + {XF86Eject,Pause}
-	pkill -HUP -x gpg-agent
+	pkill -HUP -x gpg-agent && notify --audio 'SIGHUP gpg-agent'
 
 alt + {XF86Eject,Pause}
 	if pkill -x xautolock; then \
