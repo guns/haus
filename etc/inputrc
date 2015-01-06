@@ -136,6 +136,8 @@ $if bash
     "\C-xn":        "\C-]cdnginx "
     "\C-x\C-o":     "\C-] cdorg \n"
     "\C-xo":        "\C-]cdorg "
+    "\C-x\C-p":     "\C-] cdpass \n"
+    "\C-xP":        "\C-]cdpass "
     "\C-x\C-s":     "\C-] cdsrc \n"
     "\C-xs":        "\C-]cdsrc "
     "\C-xS":        "\C-]cdSRC "
@@ -246,6 +248,10 @@ $if bash
 
     # J
     "\033\007j":    "\C-] J \n"
+
+    # password-store
+    "\C-xp":        "\C-]pass "
+    "\C-xP":        "\C-]passclip "
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"

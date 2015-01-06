@@ -1292,8 +1292,7 @@ fi
 
 # pass
 HAVE pass && {
-    # We want pc() to suppress the trailing newline
-    pc() { pass "$@" | ruby -e 'print $stdin.gets("\n").chomp; warn $stdin.read' | clip; }; TCOMP pass pc
+    TCOMP pass passclip
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
     passiclip() { passi "$@" | clip; }; TCOMP pass passiclip

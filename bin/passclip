@@ -1,0 +1,3 @@
+#!/bin/sh
+
+pass "$@" | ruby -e 'print $stdin.gets("\n").chomp; warn $stdin.read' | clip
