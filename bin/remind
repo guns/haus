@@ -93,7 +93,8 @@ class Remind
       # Report time remaining on SIGUSR1
       trap :USR1 do
         s = remaining == [0, 0, 1] ? 's' : ''
-        Util::Notification.new(
+        NERV::Util::Notification.new(
+          :icon    => 'indicator-remindor', # SIC
           :message => '%s remain%s' % [remaining(:verbose), s],
           :title   => (notification.message if notification.is_a? NERV::Util::Notification)
         ).call
@@ -119,6 +120,7 @@ class Remind
 
   def initialize time = (Time.now + 300).to_s, opts = {}
     @alarm = Alarm.new time, {
+      :icon   => 'stock_todo',
       :title  => 'Reminder',
       :sticky => true
     }.merge(opts)
@@ -158,6 +160,12 @@ class Remind
       opt.on '-q', '--query', 'Send SIGUSR1 to all instances of remind' do
         query
         exit
+      end
+
+      opt.on '-n', '--no-sticky', 'Allow notification to time out' do
+        if alarm.notification.is_a? NERV::Util::Notification
+          alarm.notification.sticky = false
+        end
       end
 
       opt.on '-t', '--terminate', 'Send SIGTERM to all instances of remind' do

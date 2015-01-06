@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 if [[ $(xfconf-query -c thunar -p /misc-thumbnail-mode) == THUNAR_THUMBNAIL_MODE_ONLY_LOCAL ]]; then
-    pkill -x tumblerd && notify -a "Terminated tumblerd"
+    pkill -x tumblerd && notify --alert 'Terminated tumblerd'
     MODE=THUNAR_THUMBNAIL_MODE_NEVER
 else
     MODE=THUNAR_THUMBNAIL_MODE_ONLY_LOCAL
 fi
 
-xfconf-query -c thunar -p /misc-thumbnail-mode -s $MODE
-notify -a $MODE
+xfconf-query -c thunar -p /misc-thumbnail-mode -s "$MODE"
+notify --icon thunar --title 'Thumbnail mode' --no-audio "$MODE"

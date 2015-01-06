@@ -213,8 +213,25 @@ nohist() {
 }
 
 # notify
-ALIAS n='notify' \
-      na='notify --audio'
+HAVE notify && {
+    n() {
+        local exitstatus=$?
+        local OPTIND OPTARG opt opts=()
+        while getopts :asi: opt; do
+            case $opt in
+            a) opts+=(--alert);;
+            s) opts+=(--sticky);;
+            esac
+        done
+        shift $((OPTIND-1))
+        if (($#)); then
+            notify "${opts[@]}" "$@"
+        else
+            notify -? "$exitstatus"
+        fi
+    }
+    alias na='n -a'
+}
 
 # run bgrun
 HAVE run   && TCOMP exec run

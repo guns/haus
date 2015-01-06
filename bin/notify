@@ -24,27 +24,57 @@ class Notify
         Options:
       BANNER
 
-      opt.on '-t', '--title TITLE', 'Title for notification, if applicable' do |arg|
-        notifier.title = arg
+      opt.on '-a', '--alert' do
+        notifier.apply_preset 'alert'
       end
 
-      opt.on '-s', '--sticky', 'Set notification to sticky, if applicable' do
-        notifier.sticky = true
+      opt.on '-s', '--success' do
+        notifier.apply_preset 'success'
       end
 
-      opt.on '-a', '--audio=[FILE]', 'Play given audio file instead of speaking message' do |arg|
-        notifier.audio = arg || File.expand_path('~/.local/share/sounds/message-received.mp3')
+      opt.on '-e', '--error' do
+        notifier.apply_preset 'error'
+      end
+
+      opt.on '-p', '--preset PRESET', "One of #{NERV::Util::Notification::PRESETS.keys.join '|'}" do |arg|
+        notifier.apply_preset arg
+      end
+
+      opt.on '-f', '--file PATH', 'Play given audio file instead of speaking message' do |arg|
+        notifier.audio = File.expand_path arg
+      end
+
+      opt.on '-i', '--icon ICON' do |arg|
+        notifier.icon = arg
       end
 
       opt.on '-n', '--no-audio' do
         notifier.audio = nil
+      end
+
+      opt.on '-t', '--title TITLE' do |arg|
+        notifier.title = arg
+      end
+
+      opt.on '-S', '--sticky' do
+        notifier.sticky = true
+      end
+
+      opt.on '-? EXITVALUE' do |arg|
+        if arg =~ /\A0\z/
+          notifier.apply_preset 'success'
+          notifier.message = 'OK'
+        else
+          notifier.apply_preset 'error'
+          notifier.message = "$? is #{arg}"
+        end
       end
     end
   end
 
   def run arguments = []
     msg = parser.parse(arguments).join ' '
-    notifier.message = msg == '-' ? $stdin.read.chomp : (msg.empty? ? 'Attention' : msg)
+    notifier.message = msg == '-' ? $stdin.read.chomp : (msg.empty? ? notifier.message || 'Attention' : msg)
     notifier.call
   end
 end

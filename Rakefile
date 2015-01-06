@@ -360,9 +360,9 @@ task :update => :env do
 
   if NERV::Project::Update.new(@subprojects, opts).call
     NERV::Project::Update.helptags
-    NERV::Util::Notification.new(:message => 'Haus update complete.').call
+    NERV::Util::Notification.new(:preset => 'success', :message => 'Haus update complete.').call
   else
-    NERV::Util::Notification.new(:message => 'Haus update failed.').call
+    NERV::Util::Notification.new(:preset => 'error', :message => 'Haus update failed.').call
   end
 
   exit # Stop processing tasks!

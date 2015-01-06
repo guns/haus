@@ -99,7 +99,7 @@ mouse_scroll_down = none
 # Battery
 battery = 1
 battery_low_status = 10
-battery_low_cmd = notify-send "battery low"
+battery_low_cmd = notify --preset battery-low
 battery_hide = 0
 bat1_font = sans 8
 bat2_font = sans 6

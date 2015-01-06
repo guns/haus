@@ -215,8 +215,8 @@
    ;; Openbox functions
    (bindsh "W-C-A-r" ["notify --no-audio 'Compiling Openbox configuration.'"
                       "if openbox-configuration --update"
-                      "then notify --audio Success"
-                      "else notify Failure"
+                      "then notify --success Success"
+                      "else notify --error Failure"
                       "fi"])
    (bind "W-C-A-S-r" "Restart")
    (bind "W-C-A-q" ["Exit" [:prompt "false"]])
@@ -247,14 +247,14 @@
    (if (system "synclient" "-l")
      (bindsh "W-F8" ["OFF=$(synclient -l | grep -c 'TouchpadOff.*=.*0')"
                      "synclient TouchpadOff=$OFF"
-                     "notify --audio Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"
+                     "notify --alert Touchpad $(if ((OFF)); then echo OFF; else echo ON; fi)"
                      "xdotool mousemove 10000 10000"])
      (bindsh "W-F8" ["ruby -e '
                         id = %x(xinput list)[/mouse.*id=(\\d+)/i, 1]
                         exit if id.nil? or id.empty?
                         state = !!(%x(xinput list-props #{id}) =~ /Device Enabled.*:\\s*1$/i)
                         system %q(xinput), %q(set-prop), id, %q(Device Enabled), (state ? 0 : 1).to_s
-                        system %q(notify), %q(--audio), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
+                        system %q(notify), %q(--alert), %Q(Mouse #{state ? %q(OFF) : %q(ON)})
                       '"
                      "xdotool mousemove 10000 10000"]))
    (bindsh ["XF86Eject" "Pause"] ["slock" "pkill -HUP -x gpg-agent"])
@@ -297,8 +297,8 @@
                       "if [[ $WM_PID != +([0-9]) ]]"
                       "then notify COULD NOT DETERMINE PID"
                       "elif [[ $(awk '{print $3}' /proc/$WM_PID/stat) == T ]]"
-                      "then kill -CONT $WM_PID; notify --audio CONT $WM_PID"
-                      "else kill -STOP $WM_PID; notify --audio STOP $WM_PID"
+                      "then kill -CONT $WM_PID; notify --alert CONT $WM_PID"
+                      "else kill -STOP $WM_PID; notify --alert STOP $WM_PID"
                       "fi"])
 
    ;; Desktop switching
