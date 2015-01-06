@@ -81,7 +81,7 @@ module NERV::CLI::ReplHelpers
   def notify
     @notify ||= begin
       require 'nerv/util/notification'
-      NERV::Util::Notification.new :audio => File.expand_path('~/.local/sounds/message-received.mp3')
+      NERV::Util::Notification.new :audio => File.expand_path('~/.local/share/sounds/message-received.mp3')
     end
     @notify.call; nil
   end
