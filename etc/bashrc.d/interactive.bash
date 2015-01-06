@@ -1245,7 +1245,7 @@ if __DARWIN__; then
 fi
 
 HAVE hdparm && {
-    alias hdpowerstatus='hdparm -C'
+    hdpowerstatus() { hdparm -C $(lsblk --scsi --noheadings | awk '{print "/dev/"$1}'); }
     alias hdstandby='hdparm -y'
     alias hdsleep='hdparm -Y'
 }
