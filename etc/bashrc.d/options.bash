@@ -48,7 +48,7 @@
     shopt -u compat41
     shopt -u compat42
     shopt -s complete_fullquote
-    shopt -u direxpand
+    shopt -s direxpand                      # ✔ bash replaces directory names with the results of word expansion when performing filename completion
     shopt -s dirspell                       # ✔ bash attempts spelling correction on directory names during word completion
     shopt -s dotglob                        # ✔ bash includes filenames beginning with a `.' in the results of pathname expansion
     shopt -u execfail
