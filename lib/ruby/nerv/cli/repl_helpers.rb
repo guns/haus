@@ -79,7 +79,11 @@ module NERV::CLI::ReplHelpers
   end
 
   def slurp path
-    File.read path
+    if path =~ %r{\A\w+://}
+      IO.popen(['curl', '-AMozilla/5.0', '-#L', path]) { |io| io.read }
+    else
+      File.read path
+    end
   end
 
   def spit path, buf
