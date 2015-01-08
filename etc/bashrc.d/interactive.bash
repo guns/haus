@@ -140,11 +140,12 @@ CD_FUNC -n .......      ../../../../../..
 CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC cdetc           /etc
+CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 CD_FUNC cdmnt           /mnt
-CD_FUNC cdbrew          /opt/brew
 CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
 CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
+CD_FUNC cdTMP           /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg
@@ -160,10 +161,10 @@ CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdarchlinux     "$cdsrc/archlinux"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cdjdk           "$cdSRC/openjdk/src/share"
+CD_FUNC cddesktop       ~/Desktop ~guns/Desktop
+CD_FUNC cddocuments     ~/Documents ~guns/Documents
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
-CD_FUNC cddesktop       ~/Desktop
 CD_FUNC cdmail          ~/Mail ~guns/Mail
-CD_FUNC cdorg           ~/Documents/Org ~guns/Documents/Org
 
 ### Bash builtins and Haus commands
 
