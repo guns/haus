@@ -283,18 +283,6 @@ if __DARWIN__; then
     alias ls@='ls -@'
     alias lse='ls -e'
 fi
-HAVE lsblk && {
-    lsb() {
-        if (($#)); then
-            lsblk -a "$@"
-        else
-            lsblk -ao NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
-        fi
-    }
-    alias lsbfs='lsb -f'
-    alias lsbmode='lsb -m'
-    alias lsbscsi='lsb -S'
-}
 [[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
 # Param: $1 Directory to list
 # Param: $2 Interior of Ruby block with filename `f`
@@ -1261,10 +1249,28 @@ if __DARWIN__; then
     alias pmassertions='pmset -g assertions'
 fi
 
+
+HAVE lsblk && {
+    lsb() {
+        if (($#)); then
+            lsblk -a "$@"
+        else
+            lsblk -ao NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
+        fi
+    }
+    alias lsbfs='lsb -f'
+    alias lsbmode='lsb -m'
+    alias lsbscsi='lsb -S'
+    blockdevices() {
+        lsblk --scsi --noheadings | awk '{print "/dev/"$1}'
+    }
+    _blockdevices() { __compreply__ "$(blockdevices)"; }
+}
+
 HAVE hdparm && {
-    hdpowerstatus() { hdparm -C $(lsblk --scsi --noheadings | awk '{print "/dev/"$1}'); }
-    alias hdstandby='hdparm -y'
-    alias hdsleep='hdparm -Y'
+    hdpowerstatus() { hdparm -C $(blockdevices); }
+    alias hdstandby='hdparm -y'; complete -F _blockdevices hdstandby
+    alias hdsleep='hdparm -Y'; complete -F _blockdevices hdsleep
 }
 
 HAVE wpa_supplicant wpa_passphrase && {
@@ -1456,7 +1462,7 @@ elif __LINUX__; then
         alias pacupgrade='run pacman -Syu'
         alias pacoutdated='run pacman -Qu'
 
-        alias pacclean='run pacman -Sc'
+        alias pacclean='run pacman -Sc --noconfirm'
         alias pacforeign='run pacman -Qm'
         alias paclog='pager /var/log/pacman.log'
 
