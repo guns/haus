@@ -336,13 +336,15 @@ cdf() {
     ' -- "$@")"
 }; TCOMP find cdf
 
-# cp mv
-alias cp='cp -v'
-alias cpn='cp -n'
-alias cpr='cp -r'
-alias cprn='cpr -n'
-alias mv='mv -v'
-alias mvn='mv -n'
+# cp
+alias cp='command cp -v -i'
+alias cpf='command cp -v -f'
+alias cpr='command cp -v -r -i'
+alias cprf='command cp -v -r -f'
+
+# mv
+alias mv='command mv -v -i'
+alias mvf='command mv -v -f'
 
 # rm
 alias rm='rm -v'
