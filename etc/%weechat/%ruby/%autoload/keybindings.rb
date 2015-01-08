@@ -74,7 +74,6 @@ KEYBINDINGS = {
     'mod4-_'      => '/buffer move -1',
     'mod4-U'      => '/input set_unread_current_buffer',
     'mod4-u'      => '/window scroll_unread',
-    'mod4-x'      => '/input switch_active_buffer',
     'mod4-\\'     => '/buffer close',
     'mod4-|'      => '/quit',
   },
