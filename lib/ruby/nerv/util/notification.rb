@@ -4,6 +4,8 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
+require 'cgi'
+
 module NERV; end
 module NERV::Util; end
 
@@ -91,7 +93,7 @@ class NERV::Util::Notification
       cmd << '--urgency=critical' if sticky
       cmd << "--icon=#{icon}" if icon
       cmd << title if title and not title.empty?
-      cmd << message.to_s
+      cmd << CGI.escape_html(message.to_s)
       forkexec *cmd
     elsif have 'growlnotify'
       cmd  = %W[growlnotify -m #{message}]
