@@ -9,6 +9,9 @@ for d in /etc/X11/xinit/xinitrc.d ~/.xinitrc.d; do
 done
 unset d f
 
+. ~/.bashrc.d/env.bash
+. ~/.bashrc.d/path.bash
+
 # For xdg-open
 # https://wiki.archlinux.org/index.php/Environment_Variables#Examples
 export DE=xfce
@@ -19,5 +22,16 @@ export _JAVA_AWT_WM_NONREPARENTING=1
 export WINEARCH=win32
 export WINEDLLOVERRIDES=winemenubuilder.exe=d
 
-exec /usr/bin/gpg-agent --enable-ssh-support --daemon /usr/bin/bspwm-session
-# ~/.config/bspwm/autostart
+# Autostart
+pushd .
+cd ~/tmp
+
+/usr/bin/sxhkd &
+/usr/bin/pulseaudio --start &
+(/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
+/usr/bin/kupfer --no-splash &
+xautolock-wrapper &
+
+popd
+
+exec /usr/bin/gpg-agent --enable-ssh-support --daemon /usr/bin/bspwm
