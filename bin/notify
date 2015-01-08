@@ -28,6 +28,10 @@ class Notify
         notifier.apply_preset 'alert'
       end
 
+      opt.on '-w', '--warning' do
+        notifier.apply_preset 'warning'
+      end
+
       opt.on '-s', '--success' do
         notifier.apply_preset 'success'
       end

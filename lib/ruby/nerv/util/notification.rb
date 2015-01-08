@@ -16,6 +16,13 @@ class NERV::Util::Notification
       :icon    => nil,
       :sticky  => false,
     },
+    'warning' => {
+      :title   => 'Warning',
+      :message => nil,
+      :audio   => File.expand_path('~/.local/share/sounds/warning.ogg'),
+      :icon    => 'dialog-warning',
+      :sticky  => false,
+    },
     'success' => {
       :title   => 'Success',
       :message => nil,
@@ -27,7 +34,7 @@ class NERV::Util::Notification
       :title   => 'Error',
       :message => nil,
       :audio   => File.expand_path('~/.local/share/sounds/error.ogg'),
-      :icon    => 'error',
+      :icon    => 'dialog-error',
       :sticky  => false,
     },
     'new-mail' => {
