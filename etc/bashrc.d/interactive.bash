@@ -351,7 +351,7 @@ alias rm='rm -v'
 alias rmf='rm -f'
 alias rmrf='rm -rf'
 rm-craplets() {
-    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' \) -type f -print -delete
+    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name '._*' \) -type f -print -delete
 }
 
 # ln
