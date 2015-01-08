@@ -59,7 +59,7 @@ class NERV::Util::Notification
   end
 
   def apply_preset key
-    preset = PRESETS[key]
+    preset   = PRESETS[key]
     @title   = preset[:title]
     @message = preset[:message]
     @audio   = preset[:audio]

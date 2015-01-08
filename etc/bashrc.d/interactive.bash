@@ -217,7 +217,7 @@ HAVE notify && {
     n() {
         local exitstatus=$?
         local OPTIND OPTARG opt opts=()
-        while getopts :asi: opt; do
+        while getopts :as: opt; do
             case $opt in
             a) opts+=(--alert);;
             s) opts+=(--sticky);;
@@ -940,12 +940,12 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
-      mkj='make -j\$\(grep -c ^processor /proc/cpuinfo\)' \
+      mkj='make -j$(grep -c ^processor /proc/cpuinfo)' \
       mkj2='make -j2' \
       mkj4='make -j4' \
       mkj8='make -j8' \
       mke='make -e' \
-      mkej='make -ej\$\(grep -c ^processor /proc/cpuinfo\)' \
+      mkej='make -ej$(grep -c ^processor /proc/cpuinfo)' \
       mkb='make -B' \
       mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
 
@@ -982,9 +982,9 @@ HAVE git && {
     }; gitps1
 }
 githubget() {
-    (($# == 2 || $# == 3)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
-    local user="${1%%/*}" repo="${1#*/}" branch="${2:master}"
-    run curl -#L "https://github.com/$user/$repo/tarball/$branch"
+    (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
+    local user="${1%%/*}" repo="${1#*/}" branch="${2:-master}"
+    run cert exec -f ~/.certificates/github.crt -- curl -#L "https://github.com/$user/$repo/tarball/$branch"
 }
 
 archivesrc() {
