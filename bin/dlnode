@@ -17,10 +17,13 @@ class Dlnode
     :format => nil,
     :index => 1,
     :start => 1,
+    :max_time => nil,
     :no_download => false,
     :send_referer => false,
     :user_agent => 'Mozilla/5.0',
-    :curl_opts => []
+    :curl_opts => [],
+    :retry => nil,
+    :verbose => false
   }
 
   class Pattern
@@ -53,10 +56,12 @@ class Dlnode
   class Resource
     attr_accessor :url, :referer, :form_data
 
-    def initialize url = nil, form_data = nil, referer = nil
+    def initialize url = nil, form_data = nil, referer = nil, _retry = 0, verbose = false
       @url = url
       @form_data = form_data
       @referer = referer
+      @retry = _retry
+      @verbose = verbose
     end
 
     def urijoin base, path
@@ -79,7 +84,7 @@ class Dlnode
         end
 
         if path and u = urijoin(url, path)
-          r = Resource.new u, form_data, (url if opts[:send_referer])
+          r = Resource.new u, form_data, (url if opts[:send_referer]), @retry, @verbose
           r = nil if pattern.regexp and u !~ pattern.regexp
         end
 
@@ -90,8 +95,11 @@ class Dlnode
     def command opts = {}
       curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
       user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
+      ref = ['-e', referer] if referer
+      _retry = ['--retry', opts[:retry].to_s] if opts[:retry]
+      max_time = ['--max-time', opts[:max_time].to_s] if opts[:max_time]
 
-      cmd = ['curl', '-sfLA', user_agent, *(referer ? ['-e', referer] : [])]
+      cmd = ['curl', '-sfLA', user_agent, *ref, *_retry, *max_time]
 
       form_data.each do |kv|
         cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
@@ -103,7 +111,9 @@ class Dlnode
     end
 
     def fetch opts = {}
-      buf = IO.popen(command opts) { |io| io.read }
+      cmd = command opts
+      warn cmd.shelljoin if @verbose
+      buf = IO.popen(cmd) { |io| io.read }
 
       if $?.exitstatus.zero?
         $stderr.print "\e[32m.\e[0m"
@@ -121,6 +131,7 @@ class Dlnode
       if rest.any?
         resources.flat_map { |r| r.fetch_leaves rest, opts }
       else
+        warn "Empty branch: #{url}" if @verbose and resources.empty?
         resources
       end
     end
@@ -160,12 +171,20 @@ class Dlnode
         @start = @index if @start.nil? or @start < @index
       end
 
+      opt.on '-m', '--max-time N', Integer, 'Same as `curl --max-time`' do |arg|
+        @max_time = arg
+      end
+
       opt.on '-n', '--no-download', 'Do not download resources, but print the commands that would be executed' do |arg|
         @no_download = true
       end
 
-      opt.on '-r', '--send-referer', 'Send HTTP Referer (sic) headers when fetching resources' do
-        @send_referer = true
+      opt.on '-r', '--retry N', Integer, "DEFAULT: #{DEFAULTS[:retry]}" do |arg|
+        @retry = arg
+      end
+
+      opt.on '-v', '--verbose' do
+        @verbose = true
       end
 
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
@@ -174,6 +193,10 @@ class Dlnode
 
       opt.on '-O', '--curl-opts OPTS', 'Extra options to pass directly to cURL' do |arg|
         @curl_opts = arg.shellsplit
+      end
+
+      opt.on '-R', '--send-referer', 'Send HTTP Referer (sic) headers when fetching resources' do
+        @send_referer = true
       end
     end
   end
@@ -194,9 +217,14 @@ class Dlnode
   def command resource, idx, opts = options
     f = url_basename resource.url
     path = File.join opts[:dir], (opts[:format] ? format_filename(opts[:format], idx, f) : f)
+    ref = ['-e', resource.referer] if resource.referer
+    _retry = ['--retry', opts[:retry].to_s] if opts[:retry]
+    max_time = ['--max-time', opts[:max_time].to_s] if opts[:max_time]
 
     ['curl', '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
-             *(resource.referer ? ['-e', resource.referer] : []),
+             *ref,
+             *_retry,
+             *max_time,
              *opts[:curl_opts],
              '-o', path, resource.url]
   end
@@ -209,7 +237,8 @@ class Dlnode
               :dir => opts[:dir],
               :format => opts[:format],
               :user_agent => opts[:user_agent],
-              :curl_opts => opts[:curl_opts]
+              :curl_opts => opts[:curl_opts],
+              :retry => opts[:retry]
     end
   end
 
@@ -221,14 +250,16 @@ class Dlnode
       :format => @format,
       :send_referer => @send_referer,
       :user_agent => @user_agent,
-      :curl_opts => @curl_opts
+      :curl_opts => @curl_opts,
+      :retry => @retry,
+      :max_time => @max_time
     }
   end
 
   def download! url, *pattern_args
     opts = options
     patterns = pattern_args.map { |p| Pattern.new p }
-    resources = Resource.new(url).fetch_leaves patterns, opts
+    resources = Resource.new(url, nil, nil, @retry, @verbose).fetch_leaves patterns, opts
     commands = map_commands resources, opts
 
     if commands.empty?
@@ -239,7 +270,7 @@ class Dlnode
       puts commands.map(&:shelljoin)
       true
     else
-      puts
+      $stderr.puts
       FileUtils.mkdir_p @dir
 
       n = resources.size
@@ -253,13 +284,14 @@ class Dlnode
         if File.exists? path
           warn 'File exists!'
         else
+          warn cmd.shelljoin if @verbose
           system *cmd
           failed << cmd if not $?.exitstatus.zero?
         end
       end
 
       if failed.any?
-        $stderr.print "\e[31mFAILED:\e[0m "
+        $stderr.puts "\e[31mFAILED:\e[0m "
         failed.each { |cmd| puts cmd.shelljoin }
       end
 
