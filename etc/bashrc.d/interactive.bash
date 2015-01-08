@@ -93,6 +93,7 @@ checkperm() {
     local specs=(
         /etc/.git:root:root:0077:no-recurse
         /etc:root
+        "~:$USER:$USER:0077:no-recurse"
         ~/.bashrc
         ~/.bash_profile
         ~/.bash_login
