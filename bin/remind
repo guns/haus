@@ -18,6 +18,7 @@ class Remind
     end
 
     attr_reader :time, :notification
+    attr_writer :message
 
     def time= arg
       @time = case arg
@@ -28,6 +29,14 @@ class Remind
       else
         # Add one second so `1m` does not return `59 seconds`
         Time.now.localtime + seconds(arg) + 1
+      end
+    end
+
+    def message
+      if notification.is_a? NERV::Util::Notification
+        notification.message
+      else
+        @message
       end
     end
 
@@ -94,9 +103,9 @@ class Remind
       trap :USR1 do
         s = remaining == [0, 0, 1] ? 's' : ''
         NERV::Util::Notification.new(
-          :icon    => 'indicator-remindor', # SIC
+          :icon    => 'preferences-system-time',
           :message => '%s remain%s' % [remaining(:verbose), s],
-          :title   => (notification.message if notification.is_a? NERV::Util::Notification)
+          :title   => "Time remaining until #{message.inspect}"
         ).call
       end
 
@@ -120,7 +129,7 @@ class Remind
 
   def initialize time = (Time.now + 300).to_s, opts = {}
     @alarm = Alarm.new time, {
-      :icon   => 'stock_todo',
+      :icon   => 'stock_tasks',
       :title  => 'Reminder',
       :sticky => true
     }.merge(opts)
@@ -155,6 +164,7 @@ class Remind
 
       opt.on '-c', '--command STRING', 'Command to run in place of a notification' do |arg|
         alarm.notification = arg
+        alarm.message = arg
       end
 
       opt.on '-q', '--query', 'Send SIGUSR1 to all instances of remind' do
@@ -190,7 +200,9 @@ class Remind
     alarm.time = args.first
 
     if args.size > 1 and alarm.notification.is_a? NERV::Util::Notification
-      alarm.notification.message = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
+      msg = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
+      msg = 'Timer complete' if msg.nil? or msg.empty?
+      alarm.notification.message = msg
     end
 
     pid = fork { alarm.activate }
