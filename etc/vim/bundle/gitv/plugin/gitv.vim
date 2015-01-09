@@ -262,7 +262,7 @@ endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
         let cmd  = "log " . a:extraArgs
-        let cmd .= " --no-color --decorate=full --pretty=format:\"%d %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
+        let cmd .= " --no-color --decorate=full --date=short --pretty=format:\"%d %s__SEP__%ad__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
         if a:filePath != ''
             let cmd .= ' -- ' . a:filePath
@@ -369,7 +369,7 @@ fu! s:GetFinalOutputForHashes(hashes) "{{{
         let git       = fugitive#buffer().repo().git_command()
         let cmd       = 'for hash in ' . join(a:hashes, " ") . '; '
         let cmd      .= "do "
-        let cmd      .= git.' log --no-color --decorate=full --pretty=format:"%d %s__SEP__%ar__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
+        let cmd      .= git.' log --no-color --decorate=full --date=short --pretty=format:"%d %s__SEP__%ad__SEP__%an__SEP__[%h]%n" --graph -1 ${hash}; '
         let cmd      .= 'done'
         let finalCmd  = "bash -c " . shellescape(cmd)
 
