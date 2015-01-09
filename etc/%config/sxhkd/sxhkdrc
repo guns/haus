@@ -300,4 +300,4 @@ super + control + shift + m
 	T='♫ cmus ♫'; \
 	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
 
-# vim:noet:
+# vim:noet:foldmethod=marker:
