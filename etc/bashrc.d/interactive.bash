@@ -1469,6 +1469,7 @@ elif __LINUX__; then
         alias pacclean='run pacman -Sc --noconfirm'
         alias pacforeign='run pacman -Qm'
         alias paclog='pager /var/log/pacman.log'
+        alias pacowner='run pacman -Qo'
 
         pacfindunknown() {
             find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
