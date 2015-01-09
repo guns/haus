@@ -346,37 +346,41 @@ noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-t>    :<C-u>if v:profiling \| execute 'Sh (sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
 
-" Open frequently edited files
+" Edit shortcuts
 noremap <Leader>e<Space> :<C-u>call Prompt('tabedit ', '', 'file')<CR>
-noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
-noremap <Leader>ea       :<C-u>TabOpen ~/.vim/local/autocommands.vim<CR>
-noremap <Leader>eA       :<C-u>TabOpen ~/.mutt/aliases<CR>
-noremap <Leader>eb       :<C-u>TabOpen ~/.bashrc.d/interactive.bash<CR>
-noremap <Leader>eB       :<C-u>TabOpen ~/.bashrc<CR>
-noremap <Leader>ec       :<C-u>TabOpen ~/.vim/local/commands.vim<CR>
-noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf<CR>
 noremap <Leader>ee       :<C-u>edit<CR>
-noremap <Leader>ei       :<C-u>TabOpen ~/.inputrc<CR>
-noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh<CR>
-noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/\%lein/profiles.clj<CR>
-noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj<CR>
-noremap <Leader>em       :<C-u>TabOpen ~/.vim/local/mappings.vim<CR>
-noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/\%mutt/muttrc<CR>
-noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf<CR>
+noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
+" VIMEDITBINDINGS
+noremap <Leader>ea       :<C-u>TabOpen $cdhaus/etc/vim/local/autocommands.vim \| lcd $cdhaus<CR>
+noremap <Leader>eA       :<C-u>TabOpen ~/.mutt/aliases \| lcd ~/.mutt<CR>
+noremap <Leader>eb       :<C-u>TabOpen $cdhaus/etc/bashrc.d/interactive.bash \| lcd $cdhaus<CR>
+noremap <Leader>eB       :<C-u>TabOpen $cdhaus/etc/bashrc \| lcd $cdhaus<CR>
+noremap <Leader>ec       :<C-u>TabOpen $cdhaus/etc/vim/local/commands.vim \| lcd $cdhaus<CR>
+noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf \| lcd $cddnsmasq<CR>
+noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
+noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
+noremap <Leader>ei       :<C-u>TabOpen $cdhaus/etc/inputrc \| lcd $cdhaus<CR>
+noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh \| lcd /etc<CR>
+noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/\%lein/profiles.clj \| lcd $cdhaus<CR>
+noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj \| lcd $cdsrc<CR>
+noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
+noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/\%mutt/muttrc \| lcd $cdhaus<CR>
+noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf \| lcd $cdnginx<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
-noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf<CR>
-noremap <Leader>er       :<C-u>TabOpen $cdhaus/etc/\%local/\%lib/clojure/guns/src/guns/repl.clj<CR>
-noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile<CR>
-noremap <Leader>es       :<C-u>execute 'TabOpen ' . getcwd() . '/__Scratch__' \| Scratch<CR>
-noremap <Leader>eS       :<C-u>vnew \| wincmd L \| Scratch<CR>
-noremap <Leader>et       :<C-u>execute 'TabOpen ' g:org_home . '/TODO.org'<CR>
-noremap <Leader>eT       :<C-u>TabOpen ~/.tmux.conf<CR>
-noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz<CR>
-noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC<CR>
-noremap <Leader>eV       :<C-u>TabOpen ~/.vimperatorrc<CR>
-noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/\%config/sxhkd/sxhkdrc<CR>
-noremap <Leader>ex       :<C-u>TabOpen ~/.xinitrc<CR>
-noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/autostart<CR>
+noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
+noremap <Leader>er       :<C-u>TabOpen $cdgunsrepl/src/guns/repl.clj \| lcd $cdgunsrepl<CR>
+noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile \| lcd $cdhaus<CR>
+noremap <Leader>es       :<C-u>execute 'TabOpen ' . $PWD . '/__Scratch__' \| Scratch<CR>
+noremap <Leader>eS       :<C-u>TabOpen /etc/ssh/ssh_config \| lcd /etc<CR>
+noremap <Leader>et       :<C-u>Org TODO<CR>
+noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
+noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz \| lcd $cdhaus<CR>
+noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>
+noremap <Leader>eV       :<C-u>TabOpen $cdhaus/etc/vimperatorrc \| lcd $cdhaus<CR>
+noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/\%config/bspwm/bspwmrc \| lcd $cdhaus<CR>
+noremap <Leader>eW       :<C-u>TabOpen $cdhaus/etc/\%config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
+noremap <Leader>ex       :<C-u>TabOpen $cdhaus/etc/xinitrc \| lcd $cdhaus<CR>
+noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/Xdefaults \| lcd $cdhaus<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>

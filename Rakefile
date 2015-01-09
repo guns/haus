@@ -453,3 +453,9 @@ task :hwdb do
     raise '%s is not a directory, or does not exist!' % dst
   end
 end
+
+desc 'Edit common bash/vim/readline bindings'
+task :vimeditbindings do
+  fs = %w[etc/bashrc.d/interactive.bash etc/vim/local/mappings.vim etc/inputrc]
+  system 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMEDITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
+end

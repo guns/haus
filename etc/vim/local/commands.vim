@@ -594,12 +594,13 @@ command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(path)
     let path = substitute(a:path, '\v^(\~[^/]*)', '\=expand(submatch(1))', '')
     let path = substitute(path, '\v(\$\w+)', '\=expand(submatch(1))', 'g')
+    let path = resolve(path)
 
     for t in range(tabpagenr('$'))
         for b in tabpagebuflist(t + 1)
             if path ==# expand('#' . b . ':p')
-                execute ':' . (t + 1) . 'tabnext'
-                execute ':' . b       . 'wincmd w'
+                execute ':' . (t + 1)     . 'tabnext'
+                execute ':' . bufwinnr(b) . 'wincmd w'
                 return
             endif
         endfor

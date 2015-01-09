@@ -151,7 +151,7 @@ CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg
 CD_FUNC cdwww           /srv/http /srv/www /var/www
 CD_FUNC -x cdapi        "$cdwww/api.dev"
-CD_FUNC cdgunsrepl      "$cdhaus/etc/%local/%lib/clojure/guns"
+CD_FUNC -x cdgunsrepl   "$cdhaus/etc/%local/%lib/clojure/guns"
 CD_FUNC cdconfig        ~/.config
 CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
@@ -879,7 +879,7 @@ HAVE vim && {
         urxvt-client -e vim /tmp/.vimstartuptime
     }
 
-    # Frequently edited files
+    # VIMEDITBINDINGS
     alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
     alias vimaliases='(cd ~/.mutt && exec vim aliases)'
     alias vimbashinteractive='(cdhaus && exec vim etc/bashrc.d/interactive.bash)'
@@ -887,28 +887,29 @@ HAVE vim && {
     alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
     alias vimdnsmasq='(cddnsmasq && exec vim dnsmasq.conf)'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
-    alias vimsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
-    alias vimgunsrepl='(cdgunsrepl && exec vim src/guns/repl.clj)'
+    alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias viminputrc='(cdhaus && exec vim etc/inputrc)'
     alias vimiptables='(cdetc && exec vim iptables/iptables.sh)'
+    alias vimleinprofiles='(cdhaus && exec vim etc/%lein/profiles.clj)'
+    alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'
     alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
     alias vimmuttrc='(cdhaus && exec vim etc/%mutt/muttrc)'
     alias vimnginx='(cdnginx && exec vim nginx.conf)'
     alias vimorg='vim -c Org!'
     alias vimpacman='(cdetc && exec vim pacman.conf)'
-    alias vimleinprofiles='(cdhaus && exec vim etc/%lein/profiles.clj)'
-    alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'
+    alias vimgunsrepl='(cdgunsrepl && exec vim src/guns/repl.clj)'
     alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
     alias vimscratch='vim -c Scratch'
-    alias vimsshconfig='(cd ~/.ssh && exec vim config)'
+    alias vimsshconfig='(cdetc && exec vim ssh/ssh_config)'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
     alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
     alias vimrc='(cdhaus && exec vim etc/vimrc)'
     alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
-    alias vimwm='(cdhaus && exec vim -O etc/%config/{bspwm/bspwmrc,sxhkd/sxhkdrc})'
-    alias vimxinitrc='vim ~/.xinitrc'
-    alias vimxautostart='(cdhaus && exec vim etc/%config/bspwm/autostart)'
+    alias vimwm='(cdhaus && exec vim etc/%config/bspwm/bspwmrc)'
+    alias vimwmkeybindings='(cdhaus && exec vim etc/%config/sxhkd/sxhkdrc)'
+    alias vimxinitrc='(cdhaus && exec vim etc/xinitrc)'
+    alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
 }
 
 ### Terminal Multiplexers
