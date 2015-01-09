@@ -911,9 +911,6 @@ HAVE vim && {
     alias vimxautostart='(cdhaus && exec vim etc/%config/bspwm/autostart)'
 }
 
-# Emacs
-HAVE emacs && alias emacsparedit='PAREDIT=1 emacs'
-
 ### Terminal Multiplexers
 
 # Tmux
