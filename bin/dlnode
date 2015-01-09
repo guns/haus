@@ -56,12 +56,10 @@ class Dlnode
   class Resource
     attr_accessor :url, :referer, :form_data
 
-    def initialize url = nil, form_data = nil, referer = nil, _retry = 0, verbose = false
+    def initialize url = nil, form_data = nil, referer = nil
       @url = url
       @form_data = form_data
       @referer = referer
-      @retry = _retry
-      @verbose = verbose
     end
 
     def urijoin base, path
@@ -84,7 +82,7 @@ class Dlnode
         end
 
         if path and u = urijoin(url, path)
-          r = Resource.new u, form_data, (url if opts[:send_referer]), @retry, @verbose
+          r = Resource.new u, form_data, (url if opts[:send_referer])
           r = nil if pattern.regexp and u !~ pattern.regexp
         end
 
@@ -112,7 +110,7 @@ class Dlnode
 
     def fetch opts = {}
       cmd = command opts
-      warn cmd.shelljoin if @verbose
+      warn cmd.shelljoin if opts[:verbose]
       buf = IO.popen(cmd) { |io| io.read }
 
       if $?.exitstatus.zero?
@@ -131,7 +129,13 @@ class Dlnode
       if rest.any?
         resources.flat_map { |r| r.fetch_leaves rest, opts }
       else
-        warn "Empty branch: #{url}" if @verbose and resources.empty?
+        if opts[:verbose]
+          if resources.empty?
+            warn "\e[31mEmpty branch: #{url}\e[0m"
+          else
+            warn "\e[32mBranch #{url} leaf count: #{resources.size}\e[0m"
+          end
+        end
         resources
       end
     end
@@ -252,14 +256,15 @@ class Dlnode
       :user_agent => @user_agent,
       :curl_opts => @curl_opts,
       :retry => @retry,
-      :max_time => @max_time
+      :max_time => @max_time,
+      :verbose => @verbose
     }
   end
 
   def download! url, *pattern_args
     opts = options
     patterns = pattern_args.map { |p| Pattern.new p }
-    resources = Resource.new(url, nil, nil, @retry, @verbose).fetch_leaves patterns, opts
+    resources = Resource.new(url).fetch_leaves patterns, opts
     commands = map_commands resources, opts
 
     if commands.empty?
