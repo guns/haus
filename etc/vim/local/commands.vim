@@ -12,7 +12,8 @@ endfunction
 
 command! -bar Makesession call <SID>Makesession()
 function! s:Makesession()
-    let dir = '~/.cache/vim/session' . getcwd()
+    " Use $PWD instead of getcwd() to avoid window-local cwd
+    let dir = '~/.cache/vim/session' . $PWD
     call MkdirIfNotExists(dir)
     execute 'mksession! ' . dir . '/Session.vim'
 endfunction
