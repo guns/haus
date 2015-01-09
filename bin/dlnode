@@ -13,15 +13,16 @@ require 'nokogiri'
 
 class Dlnode
   DEFAULTS = {
+    :cookie_jar => nil,
     :dir => '.',
     :format => nil,
     :index => 1,
     :start => 1,
     :max_time => nil,
+    :connect_timeout => nil,
     :no_download => false,
     :send_referer => false,
     :user_agent => 'Mozilla/5.0',
-    :curl_opts => [],
     :retry => nil,
     :verbose => false
   }
@@ -91,19 +92,14 @@ class Dlnode
     end
 
     def command opts = {}
-      curl_opts  = opts[:curl_opts ] || ::Dlnode::DEFAULTS[:curl_opts ]
-      user_agent = opts[:user_agent] || ::Dlnode::DEFAULTS[:user_agent]
-      ref = ['-e', referer] if referer
-      _retry = ['--retry', opts[:retry].to_s] if opts[:retry]
-      max_time = ['--max-time', opts[:max_time].to_s] if opts[:max_time]
-
-      cmd = ['curl', '-sfLA', user_agent, *ref, *_retry, *max_time]
+      ref = ['--referer', referer] if referer
+      cmd = ['curl', '--silent', *Dlnode.common_curl_args(opts), *ref]
 
       form_data.each do |kv|
         cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
       end if form_data
 
-      cmd.concat curl_opts
+      cmd.concat opts[:curl_opts] if opts[:curl_opts]
 
       cmd << url
     end
@@ -158,6 +154,10 @@ class Dlnode
         Options:
       BANNER
 
+      opt.on '-c', '--cookie-jar PATH', 'Same as `curl --cookie-jar`' do |arg|
+        @cookie_jar = File.expand_path arg
+      end
+
       opt.on '-d', '--dir PATH', 'Download directory; current working directory by default' do |arg|
         @dir = File.expand_path arg
       end
@@ -175,7 +175,7 @@ class Dlnode
         @start = @index if @start.nil? or @start < @index
       end
 
-      opt.on '-m', '--max-time N', Integer, 'Same as `curl --max-time`' do |arg|
+      opt.on '-m', '--max-time SECONDS', Integer, 'Same as `curl --max-time`' do |arg|
         @max_time = arg
       end
 
@@ -185,6 +185,10 @@ class Dlnode
 
       opt.on '-r', '--retry N', Integer, "DEFAULT: #{DEFAULTS[:retry]}" do |arg|
         @retry = arg
+      end
+
+      opt.on '-t', '--connect-timeout SECONDS', Integer, 'Same as `curl --connect-timeout`' do |arg|
+        @connect_timeout = arg
       end
 
       opt.on '-v', '--verbose' do
@@ -205,6 +209,15 @@ class Dlnode
     end
   end
 
+  def self.common_curl_args opts = {}
+    args = ['--fail', '--location', '--user-agent', opts[:user_agent] || DEFAULTS[:user_agent]]
+    args.concat ['--cookie-jar', opts[:cookie_jar]] if opts[:cookie_jar]
+    args.concat ['--retry', opts[:retry].to_s] if opts[:retry]
+    args.concat ['--max-time', opts[:max_time].to_s] if opts[:max_time]
+    args.concat ['--connect-timeout', opts[:connect_timeout].to_s] if opts[:connect_timeout]
+    args
+  end
+
   def url_basename url
     File.basename URI.parse(url).path
   end
@@ -217,20 +230,18 @@ class Dlnode
     end
   end
 
-  # Returns tuple of arguments for exec: […, path, url]
+  # Returns array of arguments for exec: […, path, url]
   def command resource, idx, opts = options
     f = url_basename resource.url
     path = File.join opts[:dir], (opts[:format] ? format_filename(opts[:format], idx, f) : f)
-    ref = ['-e', resource.referer] if resource.referer
-    _retry = ['--retry', opts[:retry].to_s] if opts[:retry]
-    max_time = ['--max-time', opts[:max_time].to_s] if opts[:max_time]
+    ref = ['--referer', resource.referer] if resource.referer
 
-    ['curl', '-#fLA', opts[:user_agent] || DEFAULTS[:user_agent],
+    ['curl', '--progress-bar',
+             *Dlnode.common_curl_args(opts),
              *ref,
-             *_retry,
-             *max_time,
              *opts[:curl_opts],
-             '-o', path, resource.url]
+             '--output', path,
+             resource.url]
   end
 
   def map_commands resources, opts = options
@@ -238,6 +249,7 @@ class Dlnode
 
     resources.drop(Δ).map.with_index do |r, i|
       command r, i + opts[:index] + Δ,
+              :cookie_jar => opts[:cookie_jar],
               :dir => opts[:dir],
               :format => opts[:format],
               :user_agent => opts[:user_agent],
@@ -250,6 +262,7 @@ class Dlnode
     {
       :index => @index,
       :start => @start,
+      :cookie_jar => @cookie_jar,
       :dir => @dir,
       :format => @format,
       :send_referer => @send_referer,
@@ -257,6 +270,7 @@ class Dlnode
       :curl_opts => @curl_opts,
       :retry => @retry,
       :max_time => @max_time,
+      :connect_timeout => @connect_timeout,
       :verbose => @verbose
     }
   end
