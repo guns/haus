@@ -26,36 +26,6 @@ class Mem # {{{1
     end
   end # }}}2
 
-  class DarwinGraph < Graph # {{{2
-    def initialize *args
-      super
-
-      # Memory usage from vm_stat
-      stat = %x(vm_stat)
-      page = (stat[/page size of (\d+) bytes/, 1] || 4096).to_i
-      @mem = OpenStruct.new Hash[stat.scan(/^Pages (.*):\s+(\d+)\.$/).map do |key, val|
-        [key.gsub(/\W+/, '_'), ((val.to_f * page) / 2**20).round]
-      end]
-
-      # OS X 10.6+ has a `speculative` field
-      mem.speculative ||= 0
-      mem.total = mem.wired_down + mem.active + mem.inactive + mem.speculative + mem.free
-      mem.values = [
-        [mem.wired_down,  :green, :bold],
-        [mem.active,      :green],
-        [mem.inactive,    :yellow],
-        [mem.speculative, :magenta]
-      ]
-
-      # Swap usage from sysctl
-      @swap = OpenStruct.new Hash[%x(sysctl vm.swapusage).scan(/(total|used|free)\s*=\s*(\d+(?:\.\d+)?)/).map do |key, val|
-        [key, val.to_f.round]
-      end]
-
-      swap.values = [[swap.used, :red]]
-    end
-  end # }}}2
-
   class LinuxGraph < Graph # {{{2
     def initialize *args
       super
@@ -101,16 +71,15 @@ class Mem # {{{1
   def initialize opts = {}
     @options = OpenStruct.new opts
     @graph   = case RUBY_PLATFORM
-    when /darwin/i then DarwinGraph.new options.width
     when /linux/i  then LinuxGraph.new options.width
-    else raise 'OS X and Linux only'
+    else raise 'Only Linux supported at the moment'
     end
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Show RAM and swap usage. OS X and Linux.
+        Show RAM and swap usage.
 
         Usage: #{File.basename __FILE__} [options]
 

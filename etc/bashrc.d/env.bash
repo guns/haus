@@ -55,10 +55,3 @@ export BUNDLE_PATH="$HOME/.bundle"
 
 # Go
 export GOPATH="$HOME/.local/pkg/go"
-
-# OS X
-if [[ "$MACHTYPE" == *darwin* ]]; then
-    # Prefer not copying Apple doubles and extended attributes
-    export COPYFILE_DISABLE=1
-    export COPY_EXTENDED_ATTRIBUTES_DISABLE=1
-fi

@@ -1,12 +1,9 @@
 #!/bin/sh
 
-# OS X's open is the model
-if [ -x /usr/bin/open ]; then
-    exec /usr/bin/open "$@"
 # We don't want to start GUI applications as root
-elif [ "$EUID" -eq 0 ]; then
+if [ "$EUID" -eq 0 ]; then
     if [ -n "$SUDO_USER" ]; then
-        exec sudo -u "$SUDO_USER" "$0" "$@" >/dev/null 2>&1 &
+        exec sudo -u "$SUDO_USER" "$0" "$@" >/dev/null 2>&1
     else
         echo 'Refusing to xdg-open as root!' >&2
         exit 1

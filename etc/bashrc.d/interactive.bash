@@ -281,10 +281,6 @@ alias l1g='l1 | g'
 alias l1gv='l1 | gv'
 alias lsg='ls | g'
 alias lsgv='ls | gv'
-if __DARWIN__; then
-    alias ls@='ls -@'
-    alias lse='ls -e'
-fi
 [[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
 # Param: $1 Directory to list
 # Param: $2 Interior of Ruby block with filename `f`
@@ -511,35 +507,6 @@ ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
     }
 }
 
-# Remove logs and caches
-if __DARWIN__; then
-    flushcache() {
-        local dir cachedirs=(
-            "$HOME/Library/Preferences/Macromedia/Flash Player"
-            "$HOME/Library/Application Support/Microsoft/Silverlight"
-            "$HOME/Library/Caches"
-            "$HOME/Library/Logs"
-        )
-
-        ((EUID == 0)) && cachedirs+=(
-            /Library/Caches
-            /Library/Logs
-            /var/log
-            /opt/nginx/var/log
-        )
-
-        for dir in "${cachedirs[@]}"; do
-            if [[ ! -d "$dir" ]]; then
-                echo "Does not exist: \`$dir\`"
-            elif [[ -w "$dir" ]]; then
-                run find "$dir/" -type f -print -delete
-            else
-                echo "No permissions to write \`$dir\`"
-            fi
-        done
-    }
-fi
-
 # MIME type handlers
 ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
 
@@ -666,19 +633,19 @@ ALIAS net='netctl' \
 ALIAS get='curl -A Mozilla/5.0 -#L' \
       geto='curl -A Mozilla/5.0 -#LO'
 
-# DNS
+# dig
 ALIAS digx='dig -x' \
       digs='dig +short'
-if __DARWIN__; then
-    alias resolv='ruby -e "puts %x(scutil --dns).scan(/resolver #\d\s+nameserver\[0\]\s+:\s+[\h.]+/)"'
-else
-    alias resolv='{
+
+# DNS resolvers
+resolv() {
+    {
         printf "\e[32;1m/etc/resolv.conf\e[0m\n"
         cat /etc/resolv.conf
         printf "\n\e[32;1m/etc/dnsmasq/resolv.conf\e[0m\n"
         cat /etc/dnsmasq/resolv.conf
-    } | grep -vP "^#|^\s*$"'
-fi
+    } | grep -vP '^#|^\s*$'
+}
 
 # NTP
 ALIAS qntp='ntpd -g -q'
@@ -1236,22 +1203,6 @@ ALIAS rfk='rfkill' && {
     alias rfenable='run rfkill unblock all'
 }
 
-if __DARWIN__; then
-    # Show all pmset settings by default
-    # Param: [$@] Arguments to `pmset`
-    pmset() {
-        if (($#)); then
-            command pmset "$@"
-        else
-            run command pmset -g custom
-        fi
-    }
-
-    alias noidle='pmset noidle'
-    alias pmassertions='pmset -g assertions'
-fi
-
-
 HAVE lsblk && {
     lsb() {
         if (($#)); then
@@ -1358,11 +1309,6 @@ java-import-keystore() {
     run keytool -storepass changeit -importcert -file "$1" -keystore "$2"
 }
 
-if __DARWIN__; then
-    alias list-keychains='find {~,,/System}/Library/Keychains -type f -maxdepth 1'
-    alias security-dump-certificates='run security export -t certs'
-fi
-
 ### Virtual Machines
 
 # Docker
@@ -1395,34 +1341,7 @@ fi
 
 ### Package Managers
 
-if __DARWIN__; then
-    # MacPorts package manager
-    ALIAS port='port -c' && {
-        porte() { local fs=() f; for f in "$@"; do fs+=("$(port file "$f")"); done; vim "${fs[@]}"; }
-        alias portg='run port -c installed | g'
-        alias porti='run port -c install'
-        alias portq='run port -c info'
-        alias ports='run port -c search'
-        alias portr='run port -c uninstall'
-        alias portsync='run port -c selfupdate'
-        # alias portoutdated
-    }
-
-    # Homebrew package manager
-    HAVE brew && {
-        alias brewe='run brew edit'
-        alias brewg='run brew list | g'
-        alias brewi='run brew install'
-        alias brewq='run brew info'
-        alias brews='run brew search'
-        alias brewr='run brew uninstall'
-        alias brewsync='run sh -c "cd \"$(brew --prefix)\" && git checkout master && git pull && \
-                                   git checkout guns && git merge master -m "Merge master into guns" && git push github --all"'
-        alias brewoutdated='brew outdated'
-
-        alias brewprefix='brew --prefix'
-    }
-elif __LINUX__; then
+if __LINUX__; then
     # Aptitude package manager
     ALIAS apt='aptitude' && {
         apte() { vim "$(apt-file "$@")"; }
@@ -1534,9 +1453,6 @@ HAVE ffmpeg && {
     alias vlc='open -a /Applications/VLC.app'
 }
 
-# Quick Look (OS X)
-HAVE qlmanage && alias ql='qlmanage -p'
-
 # youtubedown
 ALIAS youtubedown='youtubedown --verbose --progress' && {
     youtubedownformats() {
@@ -1605,23 +1521,6 @@ ALIAS lctl='launchctl' \
 }
 
 ### GUI programs
-
-if __DARWIN__; then
-    # LaunchBar
-    HAVE /Applications/LaunchBar.app/Contents/MacOS/LaunchBar && {
-        alias lb='open -a /Applications/LaunchBar.app'
-        # Param: $* Text to display
-        largetext() {
-            ruby -e '
-                input = ARGV.first.empty? ? $stdin.read : ARGV.first
-                msg = %Q(tell application "Launchbar" to display in large type #{input.inspect})
-                system *%W[osascript -e #{msg}]
-            ' -- "$*"
-        }
-    }
-
-    ALIAS screensaverengine='/System/Library/Frameworks/ScreenSaver.framework/Resources/ScreenSaverEngine.app/Contents/MacOS/ScreenSaverEngine'
-fi
 
 ALIAS kf='kupfer' && {
     alias kfstart='(cddownloads && bgrun kupfer --no-splash)'

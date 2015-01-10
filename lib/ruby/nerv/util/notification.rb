@@ -109,14 +109,10 @@ class NERV::Util::Notification
     if audio == :voice
       if have 'espeak'
         forkexec 'espeak', message
-      elsif RUBY_PLATFORM =~ /darwin/i and have 'say'
-        forkexec 'say', message
       end
     elsif File.readable? audio
       if have 'play'
         forkexec 'play', '-q', audio
-      elsif have 'afplay'
-        forkexec 'afplay', audio
       end
     end
   end

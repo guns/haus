@@ -146,7 +146,6 @@ else
         /usr/share/bash-completion/completions
         /etc/completions
         /etc/bash_completion.d
-        /opt/brew/etc/bash_completion.d
     )
     REQUIRE ~/.bashrc.d/bash_completion
 fi
