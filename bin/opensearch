@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -24,13 +24,28 @@ class Opensearch
     end
   end
 
+  def try
+    yield
+  rescue URI::InvalidComponentError, NoMethodError
+  end
+
+  # URI API changed around ruby 2.2.0
+  def set_value uri, key, val
+    try { uri.send "#{key}=", val } or
+    try { uri.send "set_#{key}", val } or
+    try { uri.instance_variable_set "@#{key}", val } or
+    raise "Unable to set #{key}=#{val} for #{uri}"
+  end
+
   def format url
     # URI#check_query erroneously raises on curly braces
     uri = URI.parse url
-    %w[path query fragment].each do |x|
-      uri.send "set_#{x}", uri.send(x).gsub('***', '{searchTerms}') if uri.send x
+    %w[path query fragment].each do |k|
+      if v = uri.send(k)
+        set_value uri, k, v.gsub('***', '{searchTerms}')
+      end
     end
-    URI.join(uri).to_s
+    uri.to_s
   end
 
   def document name, url, method = 'GET'
