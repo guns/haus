@@ -45,29 +45,29 @@
     ai     = add --all --interactive
     af     = add --all --force
     ap     = add --all --patch
-    ac     = !git add --all . && git commit -a
-    acv    = !git add --all . && git commit -a -v
-    acva   = !git add --all . && git commit -a -v --amend
-    acm    = !git add --all . && git commit -a -m
+    ac     = !git add --all . && git commit --all
+    acv    = !git add --all . && git commit --all --verbose
+    acva   = !git add --all . && git commit --all --verbose --amend
+    acm    = !git add --all . && git commit --all --message
     rs     = reset
     rshard = reset --hard
 
     # Committing
     c    = commit
-    cv   = commit -v
-    cva  = commit -v --amend
-    cm   = commit -m
-    ca   = commit -a
-    cav  = commit -a -v
-    cava = commit -a -v --amend
-    cam  = commit -a -m
+    cv   = commit --verbose
+    cva  = commit --verbose --amend
+    cm   = commit --message
+    ca   = commit --all
+    cav  = commit --all --verbose
+    cava = commit --all --verbose --amend
+    cam  = commit --all --message
 
     # Merging and rebasing
     m   = merge --no-ff --stat --log --edit
     mm  = merge --no-ff --stat --log --no-edit
     mf  = merge --ff-only --no-edit
     rb  = rebase
-    rbi = rebase -i
+    rbi = rebase --interactive
     cp  = cherry-pick
 
     # Log
@@ -78,12 +78,12 @@
 
     lp   = log --decorate --patch --show-signature --stat
     lfp  = log --decorate --patch --show-signature --stat --first-parent --no-merges
-    lpw  = log --decorate --patch --show-signature --stat -w
+    lpw  = log --decorate --patch --show-signature --stat --ignore-all-space
     wlp  = log --decorate --patch --show-signature --stat --color-words=.
-    wlpw = log --decorate --patch --show-signature --stat --color-words=. -w
+    wlpw = log --decorate --patch --show-signature --stat --color-words=. --ignore-all-space
 
     l1   = log --decorate --patch --show-signature --stat -1
-    l1w  = log --decorate --patch --show-signature --stat -1 -w
+    l1w  = log --decorate --patch --show-signature --stat -1 --ignore-all-space
     wl1  = log --decorate --patch --show-signature --stat -1 --color-words=.
 
     f    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s'
@@ -91,32 +91,32 @@
     ff   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges
 
     lg   = log --patch -G
-    lgi  = log --patch -i -G
+    lgi  = log --patch -G --regexp-ignore-case
 
     # Branches
     br   = branch -vv
-    bra  = branch -avv
-    brd  = branch -d
+    bra  = branch --all -vv
+    brd  = branch --delete
     brdd = branch -D
-    brm  = branch -m
+    brm  = branch --move
     co   = checkout
     cob  = checkout -b
-    cot  = checkout -t
+    cot  = checkout --track
     sb   = show-branch --color
 
     # Tags
     t   = tag
-    td  = tag -d
-    ts  = tag -s
-    tsf = tag -s -f
+    td  = tag --delete
+    ts  = tag --sign
+    tsf = tag --sign --force
 
     # Diff and patch
     di   = diff
-    diw  = diff -w
+    diw  = diff --ignore-all-space
     wdi  = diff --color-words=.
 
     dih  = diff HEAD
-    dihw = diff HEAD -w
+    dihw = diff HEAD --ignore-all-space
     wdih = diff HEAD --color-words=.
 
     dic  = diff --cached
@@ -126,27 +126,27 @@
     fpo  = format-patch --stdout
 
     # Remotes
-    r            = remote -v
+    r            = remote --verbose
     up           = remote update --prune
     shallowclone = clone --depth=1
 
     # Stash
     sta     = stash
-    stap    = stash -p
-    stau    = stash -u
-    staup   = stash -u -p
+    stap    = stash --patch
+    stau    = stash --include-untracked
+    staup   = stash --include-untracked --patch
     stal    = stash list
     stapop  = stash pop
-    stashow = stash show -p
+    stashow = stash show --patch
 
     # Grep
-    g    = grep -P
-    gi   = grep -Pi
-    gw   = grep -Pw
-    gf   = grep -F
-    gif  = grep -Fi
-    giw  = grep -Piw
-    gifw = grep -Fiw
+    g    = grep --perl-regexp 
+    gi   = grep --perl-regexp --ignore-case
+    gw   = grep --perl-regexp --word-regexp
+    gf   = grep --fixed-strings
+    gif  = grep --fixed-strings --ignore-case
+    giw  = grep --perl-regexp --ignore-case --word-regexp
+    gifw = grep --fixed-strings --ignore-case --word-regexp
 
     # SVN
     sf = svn fetch
@@ -156,12 +156,12 @@
     ho   = hash-object
     how  = hash-object -w
     ls   = ls-files
-    lso  = ls-files -o
-    lsu  = ls-files -o --exclude-standard
+    lso  = ls-files --others
+    lsu  = ls-files --others --exclude-standard
     st   = status --short
     sm   = submodule
-    fd   = clean -fd
-    fdx  = clean -fdx
+    fd   = clean --force -d
+    fdx  = clean --force -d -x
     rl   = reflog
     rp   = rev-parse
     rtmu = read-tree -mu
