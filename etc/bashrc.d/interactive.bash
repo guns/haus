@@ -323,16 +323,9 @@ fd() { find-wrapper --pred '-type d'                   --  "$@"; }; TCOMP find f
 fl() { find-wrapper --pred '-type l'                   --  "$@"; }; TCOMP find fl
 fnewer() { find-wrapper --pred '-newer /tmp/timestamp' --  "$@"; }; TCOMP find fnewer
 tstamp() { run touch /tmp/timestamp; }
-cdf() {
-    cd "$(ruby -r find -e '
-        pat, dst = Regexp.new(ARGV.first), "."
-        Find.find "." do |path|
-            next unless File.directory? path
-            (dst = path; break) if path =~ pat
-        end
-        puts dst
-    ' -- "$@")"
-}; TCOMP find cdf
+
+# Breadth-first search and chdir
+cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
 
 # cp
 alias cp='command cp -v -i'

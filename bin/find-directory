@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'set'
+
+class FindDirectory
+  DEFAULTS = { :dir => '.' }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Find and output the first matching directory found in a breadth-first search.
+
+        Usage: #{File.basename __FILE__} regexp [root-dir]
+      BANNER
+    end
+  end
+
+  # Adapted from OptionParser
+  def parse_as_regexp str
+    %r"\A/((?:\\.|[^\\])*)/([[:alpha:]]+)?\z|.*".match str do |m|
+      all, s, o = m.to_a
+      f = 0
+      if o
+        f |= Regexp::IGNORECASE if /i/ =~ o
+        f |= Regexp::MULTILINE if /m/ =~ o
+        f |= Regexp::EXTENDED if /x/ =~ o
+        k = o.delete("imx")
+        k = nil if k.empty?
+      end
+      Regexp.new s || all, f, k
+    end
+  end
+
+  def child_dirs dir
+    Dir.entries(dir).sort.reduce [] do |v, d|
+      next v if d == '.' or d == '..'
+      path = File.join dir, d
+      if File.directory? path
+        v << path
+      else
+        v
+      end
+    end
+  rescue Errno::EACCES
+    []
+  end
+
+  def bfs dir, pattern
+    queue = child_dirs dir
+    visited = Set.new
+    while queue.any?
+      d = queue.shift
+      return d if File.basename(d) =~ pattern
+      visited << d
+      queue.concat child_dirs(d).reject { |x| visited.include? x }
+    end
+    nil
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless (1..2) === args.size
+    rgx, dir = args
+    if path = bfs(dir || '.', parse_as_regexp(rgx))
+      puts path
+    else
+      abort
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and FindDirectory.new.run ARGV if $0 == __FILE__
