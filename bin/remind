@@ -105,7 +105,7 @@ class Remind
         NERV::Util::Notification.new(
           :icon    => 'preferences-system-time',
           :message => '%s remain%s' % [remaining(:verbose), s],
-          :title   => "Time remaining until #{message.inspect}"
+          :title   => "Time remaining until #{message ? message.inspect : 'reminder'}"
         ).call
       end
 
