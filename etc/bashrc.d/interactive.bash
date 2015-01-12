@@ -349,19 +349,6 @@ rm-craplets() {
 alias ln='ln --verbose --interactive'
 alias lns='ln --symbolic'
 alias lnsf='lns --force'
-lnrel() {
-    ruby -r fileutils -r optparse -r haus/utils -e '
-        include FileUtils::Verbose
-        force = false
-        parser = OptionParser.new { |opt| opt.on("-f", "--force") { force = true } }
-        args = parser.parse ARGV
-        abort "USAGE: lnrel src dst" unless args.size == 2
-        src, lnk = args
-        dst = Haus::Utils.relpath src, lnk
-        rm_f lnk if force
-        ln_s dst, lnk
-    ' -- "$@"
-}
 lndesktop() {
     (($# == 1)) && [[ -L ~/Desktop || ! -e ~/Desktop ]] && [[ -d "$1" ]] && lnrel --force "$1" ~/Desktop
 }
