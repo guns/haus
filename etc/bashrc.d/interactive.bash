@@ -1207,9 +1207,6 @@ HAVE lsblk && {
     alias lsbfs='lsb -f'
     alias lsbmode='lsb -m'
     alias lsbscsi='lsb -S'
-    blockdevices() {
-        lsblk --scsi --noheadings | awk '{print "/dev/"$1}'
-    }
     _blockdevices() { __compreply__ "$(blockdevices)"; }
 }
 

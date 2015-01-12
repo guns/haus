@@ -1,0 +1,3 @@
+#!/bin/sh
+
+lsblk --scsi --noheadings | awk '{print "/dev/"$1}'
