@@ -6,56 +6,10 @@
 
 ### Command flags
 
-command ls --color ~    &>/dev/null && GNU_COLOR_OPT='--color'
-command grep -P . <<< . &>/dev/null && GREP_PCRE_OPT='-P'
-command lsof +fg -h     &>/dev/null && LSOF_FLAG_OPT='+fg'
-GC_VARS GNU_COLOR_OPT GREP_PCRE_OPT LSOF_FLAG_OPT
+command ls --color ~ &>/dev/null && GNU_COLOR_OPT='--color'
+GC_VARS GNU_COLOR_OPT
 
-### Meta Utility Functions
-
-alias bashnilla='env -i bash --norc --noprofile'
-
-# Show commands shadowed by aliases and functions
-shadowenv() {
-    local cmd buf
-
-    cat <(alias | ruby -e 'puts $stdin.read.scan(/^alias (.*?)=/).map { |(a)| a }') \
-        <(set | grep '^[^ ]* ()' | awk '{print $1}') |
-    while builtin read cmd; do
-        buf="$(type -a "$cmd" | grep "$cmd is ")"
-        if (($(grep -c . <<< "$buf") > 1)); then
-            printf "%s\n\n" "$buf"
-        fi
-    done
-}
-
-# Return absolute path
-# Param: $1 Filename
-expand_path() { ruby -e 'print File.expand_path(ARGV.first)' -- "$1"; }
-
-# Param: $1       PATH-style envvar name
-# Param: [${@:2}] List of directories to prepend
-__prepend_path__() {
-    local var="$1"
-
-    if (($# == 1)); then
-        ruby -e 'puts [ARGV[0], ENV[ARGV[0]]].join("=")' -- "$var"
-        return
-    fi
-
-    local dir newpath
-    for dir in "${@:2}"; do
-        if newpath="$(ruby -e '
-            paths = ENV[ARGV[0]].split ":"
-            dir = File.expand_path ARGV[1]
-            abort unless File.directory? dir
-            puts paths.reject { |d| d == dir }.unshift(dir).join(":")
-        ' -- "$var" "$dir")"; then
-            export "$var=$newpath"
-            echo "$var=$newpath"
-        fi
-    done
-}
+### Utility Functions
 
 # Toggle PS1 transformations
 # Param: $* Interior of bash parameter expansion: '/\\u/\\u is a luser'
@@ -86,6 +40,421 @@ __ps1toggle__() {
         eval "PS1=\"\${PS1$expr}\""
     done
 }
+
+# Param: $1       PATH-style envvar name
+# Param: [${@:2}] List of directories to prepend
+__prepend_path__() {
+    local var="$1"
+
+    if (($# == 1)); then
+        ruby -e 'puts [ARGV[0], ENV[ARGV[0]]].join("=")' -- "$var"
+        return
+    fi
+
+    local dir newpath
+    for dir in "${@:2}"; do
+        if newpath="$(ruby -e '
+            paths = ENV[ARGV[0]].split ":"
+            dir = File.expand_path ARGV[1]
+            abort unless File.directory? dir
+            puts paths.reject { |d| d == dir }.unshift(dir).join(":")
+        ' -- "$var" "$dir")"; then
+            export "$var=$newpath"
+            echo "$var=$newpath"
+        fi
+    done
+}
+
+# Param: $1 Directory to list
+# Param: $2 Interior of Ruby block with filename `f`
+__lstype__() {
+    ruby -e '
+        Dir.chdir ARGV.first do
+            puts Dir.entries(".").reject { |e| e =~ /\A\.{1,2}\z/ }.select { |f| eval ARGV[1] }.sort
+        end
+    ' -- "$@"
+}
+
+### Completion Functions
+
+__longopt__() {
+    complete -F _longopt "$@"
+}
+
+__compreply__() {
+    local cur
+    _get_comp_words_by_ref cur
+    COMPREPLY=($(compgen -W "$*" -- "$cur"));
+}
+
+__cryptnames__() {
+    __compreply__ "$(cat /sys/block/*/dm/name)"
+}
+
+__lsdisk__() {
+    __compreply__ "$(lsdisk)"
+}
+
+__partitions__() {
+    __compreply__ "$(awk 'NR > 2 {print "/dev/"$NF}' /proc/partitions)"
+}
+
+_api() {
+    __compreply__ "$(command ls -1 "$cdapi")"
+}
+
+_pacdowngrade() {
+    __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"
+}
+
+_mtlabel() {
+    if ((COMP_CWORD == 1)); then
+        __compreply__ "$(command ls -1 /dev/disk/by-label/)";
+    else
+        type _mount &>/dev/null || _load_comp mount
+        _mount
+    fi
+}
+
+_mtusb() {
+    local prev
+    _get_comp_words_by_ref prev
+    if [[ "$prev" == '-o' || "$prev" == '--options' ]]; then
+        type _mount &>/dev/null || _load_comp mount
+        _mount
+    fi
+}
+
+_cx() {
+    if ((COMP_CWORD == 1)); then
+        __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')";
+    else
+        _command_offset 2
+    fi
+}
+
+_rackenv() {
+    __compreply__ production development testing
+}
+
+### DIRECTORYBINDINGS
+
+CD_FUNC -n ..           ..
+CD_FUNC -n ...          ../..
+CD_FUNC -n ....         ../../..
+CD_FUNC -n .....        ../../../..
+CD_FUNC -n ......       ../../../../..
+CD_FUNC -n .......      ../../../../../..
+CD_FUNC -n ........     ../../../../../../..
+CD_FUNC -x cdhaus       ~/.haus /opt/haus
+CD_FUNC cdetc           /etc
+CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
+CD_FUNC cdmnt           /mnt
+CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
+CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
+CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
+CD_FUNC cdTMP           /tmp
+CD_FUNC cdvar           /var
+CD_FUNC cdlog           /var/log
+CD_FUNC cdpacmancache   /var/cache/pacman/pkg
+CD_FUNC cdwww           /srv/http /srv/www /var/www
+CD_FUNC -x cdapi        "$cdwww/api.dev"
+CD_FUNC -x cdgunsrepl   "$cdhaus/etc/%local/%lib/clojure/guns"
+CD_FUNC cdconfig        ~/.config
+CD_FUNC cdlocal         ~/.local /usr/local
+CD_FUNC cdLOCAL         /usr/local
+CD_FUNC cdpass          ~/.password-store
+CD_FUNC -x cdsrc        ~/src ~guns/src /usr/local/src
+CD_FUNC cdSRC           "$cdsrc/READONLY"
+CD_FUNC cdarchlinux     "$cdsrc/archlinux"
+CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
+CD_FUNC cdjdk           "$cdSRC/openjdk/src/share"
+CD_FUNC cddesktop       ~/Desktop ~guns/Desktop
+CD_FUNC cddocuments     ~/Documents ~guns/Documents
+CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
+
+### Bash builtins and Haus commands
+
+# Show commands shadowed by aliases and functions
+shadowenv() {
+    local cmd buf
+
+    cat <(alias | ruby -e 'puts $stdin.read.scan(/^alias (.*?)=/).map { |(a)| a }') \
+        <(set | grep '^[^ ]* ()' | awk '{print $1}') |
+    while builtin read cmd; do
+        buf="$(type -a "$cmd" | grep "$cmd is ")"
+        if (($(grep --count . <<< "$buf") > 1)); then
+            printf "%s\n\n" "$buf"
+        fi
+    done
+}
+
+alias bashnilla='env --ignore-environment bash --norc --noprofile'
+ALIAS cv='command -v'
+alias h='history'
+alias j='jobs'
+alias o='echo'
+alias rehash='hash -r'
+ALIAS t='type --' \
+      ta='type -a --' \
+      tp='type -P --'
+ALIAS x='exec'
+alias wrld='while read l; do'; TCOMP exec wrld
+ALIAS comp='complete -p'
+
+# PATH prefixing functions
+path() { __prepend_path__ PATH "$@"; }
+ldpath() { __prepend_path__ LD_LIBRARY_PATH "$@"; }
+
+# Toggle xtrace, verbose mode
+setx() {
+    if [[ "$SHELLOPTS" =~ :?xtrace:? ]]; then
+        set +xv
+    else
+        set -xv
+    fi
+}
+
+# Toggle history
+nohist() {
+    if [[ "$HISTFILE" ]]; then
+        HISTFILE_DISABLED="$HISTFILE"
+        unset HISTFILE
+        xecho title '[nohist]'
+    else
+        HISTFILE="${HISTFILE_DISABLED:-$HOME/.bash_history}"
+        unset HISTFILE_DISABLED
+        xecho title '[HISTORY-ENABLED]'
+    fi
+    __ps1toggle__ '/\\H/[nohist] \\H'
+}
+
+# notify
+HAVE notify && {
+    n() {
+        local exitstatus=$?
+        if (($#)); then
+            notify "$@"
+        else
+            notify -? "$exitstatus"
+        fi
+    }
+    alias na='notify --alert'
+    __longopt__ notify n na
+}
+
+# run bgrun
+HAVE run   && TCOMP exec run
+HAVE bgrun && TCOMP exec bgrun
+
+### Files, Disks, and Memory
+
+# grep
+ALIAS g="grep --ignore-case $GNU_COLOR_OPT $(grep --perl-regexp . <<< . &>/dev/null && printf %s --perl-regexp)" \
+      gw='g --word-regexp' \
+      gv='g --invert-match' \
+      gc='grep --count .'
+
+# ag
+ALIAS agi='ag --ignore-case' \
+      agq='ag --literal' \
+      aga='ag --all-types' \
+      agu='ag --unrestricted'
+
+# cat tail less
+alias c='cat'
+alias tf='tail --follow'
+if ALIAS l='less' \
+         L='l -+S' \
+         lf='l +F'; then
+    pager() { less -+c --quit-if-one-screen "$@"; }
+else
+    pager() { cat "$@"; }
+fi
+
+# syslog follow
+if [[ -e /var/log/everything.log ]]; then
+    ALIAS lfsyslog='less +F --follow-name /var/log/everything.log'
+    alias tfsyslog='tail --follow=name /var/log/everything.log'
+elif [[ -e /var/log/system.log ]]; then
+    ALIAS lfsyslog='less +F --follow-name /var/log/system.log'
+    alias tfsyslog='tail --follow=name /var/log/system.log'
+elif [[ -e /var/log/syslog ]]; then
+    ALIAS lfsyslog='less +F --follow-name /var/log/syslog'
+    alias tfsyslog='tail --follow=name /var/log/syslog'
+elif [[ -e /var/log/messages ]]; then
+    ALIAS lfsyslog='less +F --follow-name /var/log/messages'
+    alias tfsyslog='tail --follow=name /var/log/messages'
+fi
+
+# ls
+alias ls="ls -l --almost-all --human-readable $GNU_COLOR_OPT"
+alias lc="command ls -C $GNU_COLOR_OPT"
+alias lsd='ls --directory'
+lsr() { ls --recursive "${@:-.}" | pager; }
+lst() { ls -t "${@:-.}" | pager; }
+alias l1='command ls -1'
+alias l1g='l1 | g'
+alias l1gv='l1 | gv'
+alias lsg='ls | g'
+alias lsgv='ls | gv'
+alias lsmapper='ls /dev/mapper'
+alias lsid='ls /dev/disk/by-id'
+alias lslabel='ls /dev/disk/by-label'
+alias lsuuid='ls /dev/disk/by-uuid'
+ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
+lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
+lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
+lsD() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
+
+# objdump hexdump strings readelf hexfiend
+HAVE hexdump && { hex() { hexdump --canonical --no-squeezing "$@" | pager; }; TCOMP hexdump hex; }
+HAVE objdump && { ox() { objdump --all-headers "$@" | pager; }; TCOMP objdump ox; }
+HAVE readelf && { dl() { readelf --dynamic "$@" | pager; }; TCOMP readelf dl; }
+HAVE strings && strings() { command strings --all --radix=x "$@" | pager; }
+
+# find
+f()  { find-wrapper                                    --  "$@"; }; TCOMP find f
+f1() { find-wrapper --pred '-maxdepth 1'               --  "$@"; }; TCOMP find f1
+ff() { find-wrapper --pred '( -type f -o -type l )'    --  "$@"; }; TCOMP find ff
+fF() { find-wrapper --pred '-type f'                   --  "$@"; }; TCOMP find fF
+fx() { find-wrapper --pred '-type f -executable'       --  "$@"; }; TCOMP find fF
+fl() { find-wrapper --pred '-type l'                   --  "$@"; }; TCOMP find fl
+fd() { find-wrapper --pred '-type d'                   --  "$@"; }; TCOMP find fd
+fstamp() { find-wrapper --pred '-newer /tmp/timestamp' --  "$@"; }; TCOMP find fstamp
+timestamp() { run touch /tmp/timestamp; }
+
+# Breadth-first search and chdir
+cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
+
+# cp
+alias cp='command cp --verbose --interactive'
+alias cpf='command cp --verbose --force'
+alias cpr='command cp --verbose --recursive --interactive'
+alias cprf='command cp --verbose --recursive --force'
+
+# mv
+alias mv='command mv --verbose --interactive'
+alias mvf='command mv --verbose --force'
+
+# rm
+alias rm='rm --verbose'
+alias rmf='rm --force'
+alias rmrf='rmf --recursive'
+rm-craplets() {
+    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name '._*' \) -type f -print -delete
+}
+
+# ln
+alias ln='ln --verbose --interactive'
+alias lns='ln --symbolic'
+alias lnsf='lns --force'
+lnrel() {
+    ruby -r fileutils -r optparse -r haus/utils -e '
+        include FileUtils::Verbose
+        force = false
+        parser = OptionParser.new { |opt| opt.on("-f", "--force") { force = true } }
+        args = parser.parse ARGV
+        abort "USAGE: lnrel src dst" unless args.size == 2
+        src, lnk = args
+        dst = Haus::Utils.relpath src, lnk
+        rm_f lnk if force
+        ln_s dst, lnk
+    ' -- "$@"
+}
+lndesktop() {
+    (($# == 1)) && [[ -L ~/Desktop || ! -e ~/Desktop ]] && [[ -d "$1" ]] && lnrel --force "$1" ~/Desktop
+}
+lnnull() { run rm --recursive --force "${1%/}" && run ln --symbolic --force /dev/null "${1%/}"; }
+
+# chmod chown touch
+alias chmod='chmod --verbose'
+alias chmodr='chmod --recursive'
+alias chmodx='chmod +x'
+alias chown='chown --verbose'
+ALIAS chownr='chown --recursive'
+
+# mkdir
+alias md='mkdir --verbose --parents'; complete -o dirnames md
+alias rd='rmdir --verbose --parents'; complete -o dirnames rd
+
+# df du
+alias df='df --human-readable'
+alias du='du --human-readable'
+alias dus='du --summarize'
+
+# mount
+ALIAS mt='mount --verbose --options noatime' \
+      umt='umount --verbose' && {
+    alias mtusb='mountusb'; complete -F _mtusb mtusb
+    alias umtusb='umountusb'
+    remt() { run mount --verbose --options "remount,$1" "${@:2}"; }; TCOMP umount remt
+    mtlabel() {
+        (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
+        run mount --options noatime "/dev/disk/by-label/$1" "${@:2}"
+    }; complete -F _mtlabel mtlabel
+}
+
+# findmnt
+ALIAS fm='findmnt'
+
+# fusermount
+ALIAS fusermt='fusermount -o noatime' \
+      fuserumt='fusermount -u'
+
+# tar (BSD style options are the most portable)
+alias star='tar --strip-components=1'
+alias gtar='tar --gzip --create --verbose'
+alias btar='tar --bzip2 --create --verbose'
+alias xtar='tar --xz --create --verbose'
+alias lstar='tar --list --verbose --file'
+untar() {
+    local opts=() file
+    [[ "$1" == --strip-components=* ]] && { opts+=("$1"); shift; }
+    [[ -f "$1" ]] && file='--file';
+    run tar --extract --verbose $file "$@" "${opts[@]}"
+}
+suntar() { untar --strip-components=1 "$@"; }
+guntar() { untar --gunzip "$@"; }
+buntar() { untar --bzip2 "$@"; }
+xuntar() { untar --xz "$@"; }
+
+# open
+alias op='open 2>/dev/null'
+
+# rsync
+ALIAS rsync='rsync -hhh --sparse --partial' \
+      rsync-backup='rsync --archive --one-file-system --acls --xattrs --hard-links --delete --ignore-errors'
+
+# dd
+HAVE dcfldd && TCOMP dd dcfldd
+HAVE ddsize && TCOMP dd ddsize
+
+# free
+ALIAS free='free --human'
+
+# iotop
+ALIAS iotop='iotop --only'
+
+# Linux /proc /sys
+[[ -w /proc/sys/vm/drop_caches ]] && drop_caches() {
+    local cmd='echo 3 > /proc/sys/vm/drop_caches'
+    echo "$cmd"
+    eval "$cmd"
+}
+[[ -w /proc/sys/kernel/sysrq ]] && sysrq() {
+    if (($#)); then
+        echo "$@" > /proc/sys/kernel/sysrq
+    else
+        cat /proc/sys/kernel/sysrq
+    fi
+}
+
+# Return absolute path
+expand_path() { ruby -e 'print File.expand_path(ARGV.first)' -- "$1"; }
+
+# Swap
+ALIAS swapin='swapoff --all --verbose; swapon --all --verbose'
 
 # Check shell init files and system paths for loose permissions
 checkperm() {
@@ -129,438 +498,27 @@ checkperm() {
     checkpermissions -- "${specs[@]}"
 }
 
-### DIRECTORYBINDINGS
-
-CD_FUNC -n ..           ..
-CD_FUNC -n ...          ../..
-CD_FUNC -n ....         ../../..
-CD_FUNC -n .....        ../../../..
-CD_FUNC -n ......       ../../../../..
-CD_FUNC -n .......      ../../../../../..
-CD_FUNC -n ........     ../../../../../../..
-CD_FUNC -x cdhaus       ~/.haus /opt/haus
-CD_FUNC cdetc           /etc
-CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
-CD_FUNC cdmnt           /mnt
-CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
-CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
-CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
-CD_FUNC cdTMP           /tmp
-CD_FUNC cdvar           /var
-CD_FUNC cdlog           /var/log
-CD_FUNC cdpacmancache   /var/cache/pacman/pkg
-CD_FUNC cdwww           /srv/http /srv/www /var/www
-CD_FUNC -x cdapi        "$cdwww/api.dev"
-CD_FUNC -x cdgunsrepl   "$cdhaus/etc/%local/%lib/clojure/guns"
-CD_FUNC cdconfig        ~/.config
-CD_FUNC cdlocal         ~/.local /usr/local
-CD_FUNC cdLOCAL         /usr/local
-CD_FUNC cdpass          ~/.password-store
-CD_FUNC -x cdsrc        ~/src ~guns/src /usr/local/src
-CD_FUNC cdSRC           "$cdsrc/READONLY"
-CD_FUNC cdarchlinux     "$cdsrc/archlinux"
-CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
-CD_FUNC cdjdk           "$cdSRC/openjdk/src/share"
-CD_FUNC cddesktop       ~/Desktop ~guns/Desktop
-CD_FUNC cddocuments     ~/Documents ~guns/Documents
-CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
-CD_FUNC cdmail          ~/Mail ~guns/Mail
-
-### Bash builtins and Haus commands
-
-ALIAS cv='command -v'
-alias h='history'
-ALIAS j='jobs'
-alias o='echo'
-alias p='pushd .'
-alias pp='popd'
-alias rehash='hash -r'
-ALIAS t='type --' \
-      ta='type -a --' \
-      tp='type -P --'
-ALIAS x='exec'
-alias wrld='while read l; do'; TCOMP exec wrld
-ALIAS comp='complete -p'
-__compreply__() {
-    local cur
-    _get_comp_words_by_ref cur
-    COMPREPLY=($(compgen -W "$*" -- "$cur"));
-}
-
-# PATH prefixer
-path() { __prepend_path__ PATH "$@"; }
-ldpath() { __prepend_path__ LD_LIBRARY_PATH "$@"; }
-
-# Toggle xtrace, verbose mode
-setx() {
-    if [[ "$SHELLOPTS" =~ :?xtrace:? ]]; then
-        set +xv
-    else
-        set -xv
-    fi
-}
-
-# Toggle history
-nohist() {
-    if [[ "$HISTFILE" ]]; then
-        HISTFILE_DISABLED="$HISTFILE"
-        unset HISTFILE
-        xecho title 'nohist'
-    else
-        HISTFILE="${HISTFILE_DISABLED:-$HOME/.bash_history}"
-        unset HISTFILE_DISABLED
-        xecho title 'HIST'
-    fi
-    __ps1toggle__ '/\\H/[nohist] \\H'
-}
-
-# notify
-HAVE notify && {
-    n() {
-        local exitstatus=$?
-        local OPTIND OPTARG opt opts=()
-        while getopts :as: opt; do
-            case $opt in
-            a) opts+=(--alert);;
-            s) opts+=(--sticky);;
-            esac
-        done
-        shift $((OPTIND-1))
-        if (($#)); then
-            notify "${opts[@]}" "$@"
-        else
-            notify -? "$exitstatus"
-        fi
-    }
-    alias na='n -a'
-}
-
-# run bgrun
-HAVE run   && TCOMP exec run
-HAVE bgrun && TCOMP exec bgrun
-
-### Files, Disks, and Memory
-
-# grep
-ALIAS g="grep -i $GREP_PCRE_OPT $GNU_COLOR_OPT" \
-      gw='g -w' \
-      gv='g -v'
-alias wcl='grep -c .'
-
-# ag
-ALIAS agi='ag -i' \
-      agq='ag -Q' \
-      agiq='ag -iQ'
-
-# cat less tail
-alias c='cat'
-ALIAS l='less' \
-      L='l +S' \
-      lf='l +F' && pager() { less -+c --quit-if-one-screen "$@"; }
-ALIAS tf='tail -f'
-
-if [[ -e /var/log/everything.log ]]; then
-    ALIAS lfsyslog='lf /var/log/everything.log'
-    ALIAS tfsyslog='tf /var/log/everything.log'
-elif [[ -e /var/log/system.log ]]; then
-    ALIAS lfsyslog='lf /var/log/system.log'
-    ALIAS tfsyslog='tf /var/log/system.log'
-elif [[ -e /var/log/syslog ]]; then
-    ALIAS lfsyslog='lf /var/log/syslog'
-    ALIAS tfsyslog='tf /var/log/syslog'
-fi
-
-# ls
-alias ls="ls -Ahl $GNU_COLOR_OPT"
-alias lc='ls -C'
-alias lsd='ls -d'
-alias lsr='ls -R'; lsrl() { ls -R "${@:-.}" | pager; }
-alias lst='ls -t'; lstl() { ls -t "${@:-.}" | pager; }
-alias l1='command ls -1'
-alias l1g='l1 | g'
-alias l1gv='l1 | gv'
-alias lsg='ls | g'
-alias lsgv='ls | gv'
-[[ -d /dev/mapper ]] && alias lsmapper='ls /dev/mapper'
-# Param: $1 Directory to list
-# Param: $2 Interior of Ruby block with filename `f`
-__lstype__() {
-    ruby -e '
-        if ARGV.first == "-q"
-            require "shellwords"
-            quote = true
-            ARGV.shift
-        end
-        Dir.chdir ARGV.first do
-            fs = Dir.entries(".").reject { |e| e =~ /\A\.{1,2}\z/ }.select { |f|
-                eval ARGV[1]
-            }.sort
-            fs.map! { |f| f.shellescape.shellescape } if quote
-            puts fs
-        end
-    ' -- "$@"
-}
-ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
-lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
-lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
-lsdir() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
-
-# objdump hexdump strings readelf hexfiend
-HAVE hexdump && { hex() { hexdump -C "$@" | pager; }; TCOMP hexdump hex; }
-HAVE objdump && { ox() { objdump -x "$@" | pager; }; TCOMP objdump ox; }
-HAVE readelf && { dl() { readelf -d "$@" | pager; }; TCOMP readelf dl; }
-HAVE strings && strings() { command strings -a -tx - "$@" | pager; }
-HAVE '/Applications/Hex Fiend.app/Contents/MacOS/Hex Fiend' && {
-    alias hexfiend='open -a "/Applications/Hex Fiend.app"'
-}
-
-# find
-f()  { find-wrapper                                    --  "$@"; }; TCOMP find f
-f1() { find-wrapper --pred '-maxdepth 1'               --  "$@"; }; TCOMP find f1
-ff() { find-wrapper --pred '( -type f -o -type l )'    --  "$@"; }; TCOMP find ff
-fF() { find-wrapper --pred '-type f'                   --  "$@"; }; TCOMP find fF
-fd() { find-wrapper --pred '-type d'                   --  "$@"; }; TCOMP find fd
-fl() { find-wrapper --pred '-type l'                   --  "$@"; }; TCOMP find fl
-fnewer() { find-wrapper --pred '-newer /tmp/timestamp' --  "$@"; }; TCOMP find fnewer
-tstamp() { run touch /tmp/timestamp; }
-
-# Breadth-first search and chdir
-cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
-
-# cp
-alias cp='command cp -v -i'
-alias cpf='command cp -v -f'
-alias cpr='command cp -v -r -i'
-alias cprf='command cp -v -r -f'
-
-# mv
-alias mv='command mv -v -i'
-alias mvf='command mv -v -f'
-
-# rm
-alias rm='rm -v'
-alias rmf='rm -f'
-alias rmrf='rm -rf'
-rm-craplets() {
-    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name '._*' \) -type f -print -delete
-}
-
-# ln
-alias ln='ln -v'
-alias lns='ln -s'
-alias lnsf='lns -f'
-lnnull() { run rm -rf "${1%/}" && run ln -sf /dev/null "${1%/}"; }
-lndesktop() {
-    if (($# == 1)) && [[ ! -d ~/Desktop ]] && [[ -d "$1" ]]; then
-        local src="$(expand_path "$1")"
-        (cd; rm -f Desktop; ln -sv "$src" Desktop)
-    fi
-}
-
-# chmod chown touch
-alias chmod='chmod -v'
-alias chmodr='chmod -R'
-alias chmodx='chmod +x'
-alias chown='chown -v'
-ALIAS chownr='chown -R'
-
-# mkdir
-ALIAS md='mkdir -vp'
-ALIAS rd='rmdir -vp'
-
-# df du
-alias df='df -h'
-alias du='du -h'
-alias dus='du -s'
-
-# mount
-ALIAS mt='mount -v -o noatime' \
-      umt='umount -v' && {
-    alias mtusb='mountusb' \
-          umtusb='umountusb'
-    remt() { run mount -v -o "remount,$2" "$1" "${@:3}"; }
-    mtlabel() {
-        (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
-        run mount -o noatime "/dev/disk/by-label/$1" "${@:2}"
-    }
-    _mtlabel() {
-        if ((COMP_CWORD == 1)); then
-            __compreply__ "$(command ls -1 /dev/disk/by-label/)";
-        else
-            _load_comp mount
-            _mount
-        fi
-    }
-    complete -F _mtlabel mtlabel
-}
-
-# findmnt
-ALIAS fm='findmnt'
-
-# fusermount
-ALIAS fusermt='fusermount -o noatime' \
-      fuserumt='fusermount -u'
-
-# tar
-alias star='tar --strip-components=1'
-alias gtar='tar zcv'
-alias btar='tar jcv'
-alias xtar='tar Jcv'
-alias lstar='tar tvf'
-# Option: -S Strip one level of directories
-# Param:  $@ Arguments to `tar`
-untar() {
-    local opts=() f
-    [[ "$1" == '-S' ]] && { opts+=(--strip-components=1); shift; }
-    [[ -f "$1" ]] && f='f';
-    run tar xv$f "$@" "${opts[@]}"
-}
-suntar() { untar -S "$@"; }
-guntar() { untar -z "$@"; }
-buntar() { untar -j "$@"; }
-xuntar() { untar -J "$@"; }
-
-# open
-alias op='open 2>/dev/null'
-
-# pax
-ALIAS gpax='pax -z' && {
-    # Param: $1 pax archive
-    lspax() {
-        local zip
-        [[ "$1" == *.gz ]] && zip='-z'
-        pax "$zip" < "$1"
-    }
-
-    unpax() {
-        # Param: $1 pax archive
-        # Param: $2 Directory to extract to
-        ruby -r fileutils -r shellwords -e "
-            abort 'Usage: $FUNCNAME archive basedir' unless ARGV.size == 2
-
-            include FileUtils::Verbose
-
-            archive, basedir = ARGV.map { |f| File.expand_path f }
-            zip = '-z' if File.extname(archive) == '.gz'
-            cmd = %Q(pax -r #{zip} < #{archive.shellescape})
-
-            mkdir_p basedir
-            chdir basedir
-            puts cmd
-            system cmd
-        " -- "$@"
-    }
-}
-
-# pkgutil
-HAVE pkgutil && {
-    # Param: $1 Package file
-    # Param: $2 Directory to extract to
-    pkgexpand() {
-        (($# == 2)) || { echo "Usage: $FUNCNAME pkg dir"; return 1; }
-        run pkgutil --expand "$1" "$2";
-    }
-}
-
-# hdiutil diskutil
-HAVE hdiutil diskutil && {
-    alias disklist='diskutil list'
-    alias diskinfo='diskutil info'
-    alias corestorage='diskutil coreStorage'
-    alias hattach='hdiutil attach'
-    alias hdetach='hdiutil detach'
-    alias hmount='hdiutil mount'
-    alias humount='hdiutil unmount'
-}
-
-# rsync
-ALIAS rsync='rsync -hh -S --partial' \
-      rsync-backup='rsync -axAX --hard-links --delete --ignore-errors'
-
-# dd
-HAVE dcfldd && TCOMP dd dcfldd
-HAVE ddsize && TCOMP dd ddsize
-
-# free
-ALIAS free='free --human'
-
-# Plist dumper
-ALIAS pbuddy='/usr/libexec/PlistBuddy' && {
-    alias pprint='pbuddy -c Print'
-    # Param: $1 Application directory
-    appvers() {
-        while (($#)); do
-            local base="$1"
-            shift
-            [[ -e "$base/Contents/Info.plist" ]] || continue
-            /usr/libexec/PlistBuddy -c Print "$base/Contents/Info.plist" |
-                awk -F= '/CFBundleShortVersionString/{print $2}' |
-                sed 's/[ ";]//g'
-        done
-    }
-}
-
-# MIME type handlers
-ALIAS lsregister='/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister'
-
-# Filesystem watcher
-listen() {
-    (($# == 2)) || { echo "Usage: $FUNCNAME path shellcmd"; return 1; }
-
-    ruby -r listen -e '
-        arg = File.expand_path ARGV[0]
-        cmd = ARGV[1]
-        d, f = File.directory?(arg) ? [arg, nil] : [File.dirname(arg), File.basename(arg)]
-        λ = Proc.new { |m,a,r| system cmd unless m.empty? }
-        l = Listen.to d
-        l.filter Regexp.new("\\A" + Regexp.escape(f) + "\\z") if f
-        l.change &λ
-        l.start!
-    ' -- "$1" "$2"
-}
-
-ALIAS iotop='iotop --only'
-
-# Linux /proc /sys swap
-__LINUX__ && {
-    drop_caches() {
-        local cmd='echo 3 > /proc/sys/vm/drop_caches'
-        echo "$cmd"
-        eval "$cmd"
-    }
-
-    sysrq() {
-        if (($#)); then
-            echo "$@" > /proc/sys/kernel/sysrq
-        else
-            cat /proc/sys/kernel/sysrq
-        fi
-    }
-
-    alias swapin='swapoff -av; swapon -av'
-}
-
 ### Processes
 
 # kill
 ALIAS k='kill' \
-      k9='kill -9' \
+      k9='kill -KILL' \
       khup='kill -HUP' \
       kint='kill -INT' \
       kstop='kill -STOP' \
       kcont='kill -CONT' \
       kusr1='kill -USR1' \
       kquit='kill -QUIT'
-ALIAS ka='killall -e -v' \
-      ka9='ka -9' \
+ALIAS ka='killall --exact --verbose' \
+      ka9='ka -KILL' \
       kahup='ka -HUP' \
       kaint='ka -INT' \
       kastop='ka -STOP' \
       kacont='ka -CONT' \
       kausr1='ka -USR1' \
       kaquit='ka -QUIT'
-ALIAS pk='pkill -x' \
-      pk9='pk -9' \
+ALIAS pk='pkill --exact' \
+      pk9='pk -KILL' \
       pkhup='pk -HUP' \
       pkint='pk -INT' \
       pkstop='pk -STOP' \
@@ -580,7 +538,7 @@ psg() {
         puts lines
     ' -- "$*" | pager
 }
-alias psgv='psa | grep -v "grep -i" | gv'
+alias psgv='psa | grep --invert-match "grep --ignore-case" | gv'
 # BSD ps supports `-r` and `-m`
 if ps ax -r &>/dev/null; then
     psr() { psa -r "$@" | pager; }
@@ -590,54 +548,55 @@ else
     psr() { psa k-pcpu "$@" | pager; }
     psm() { psa k-rss  "$@" | pager; }
 fi
+
+# pstree
 ALIAS pst='pstree'
 
-# htop
-HAVE htop && {
-    # Satisfy ncurses hard-coded TERM names
-    alias htop='envtmux htop'
-
-    # htop writes its config file on exit
-    htopsave() { (cd && exec gzip -c .htoprc > "$cdhaus/share/conf/htoprc.gz") }
-    htoprestore() { (cd && exec gunzip -c "$cdhaus/share/conf/htoprc.gz" > .htoprc) }
-}
+# htop: Satisfy ncurses hard-coded TERM names
+HAVE htop && alias htop='envtmux htop'
 
 ### Switch User
 
-ALIAS s='sudo -H' \
-      root='exec sudo -Hs' \
-      asguns='sudo -Hu guns'
+ALIAS s='sudo --set-home' \
+      root='exec sudo --set-home --shell' \
+      asguns='sudo --set-home --user guns'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
 ### Network
 
-if HAVE ip; then
+# ip
+HAVE ip && {
     alias a='ip addr'
     alias cidr='ip route list scope link | awk "{print \$1; exit}"'
-elif HAVE ifconfig; then
-    alias ic='ifconfig'
-fi
-ALIAS airport='/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport' \
-      ap='airport'
+}
+
+# ifconfig
+HAVE ifconfig && alias ic='ifconfig'
+
+# netctl
 ALIAS net='netctl' \
       netstop='netctl stop-all'
 
 # cURL
-ALIAS get='curl -A Mozilla/5.0 -#L' \
-      geto='curl -A Mozilla/5.0 -#LO'
+ALIAS get='curl --user-agent Mozilla/5.0 --progress-bar --location' \
+      geto='curl --user-agent Mozilla/5.0 --progress-bar --location --remote-name'
 
 # dig
 ALIAS digx='dig -x' \
-      digs='dig +short'
+      digshort='dig +short'
 
 # DNS resolvers
 resolv() {
     {
-        printf "\e[32;1m/etc/resolv.conf\e[0m\n"
-        cat /etc/resolv.conf
-        printf "\n\e[32;1m/etc/dnsmasq/resolv.conf\e[0m\n"
-        cat /etc/dnsmasq/resolv.conf
-    } | grep -vP '^#|^\s*$'
+        [[ -e /etc/resolv.conf ]] && {
+            printf "\e[32;1m/etc/resolv.conf\e[0m\n"
+            cat /etc/resolv.conf
+        }
+        [[ -e /etc/dnsmasq/resolv.conf ]] && {
+            printf "\n\e[32;1m/etc/dnsmasq/resolv.conf\e[0m\n"
+            cat /etc/dnsmasq/resolv.conf
+        }
+    } | grep --invert-match --perl-regexp '^#|^\s*$'
 }
 
 # NTP
@@ -659,85 +618,58 @@ alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-hos
 ALIAS scp='scp -2' \
       scpr='scp -r'
 HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
-HAVE ssh-proxy && TCOMP ssh ssh-proxy
 HAVE sshuttle && {
     TCOMP ssh sshuttle
     TCOMP ssh sshuttle-wrapper
 }
 
 # lsof
-ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT" && {
+HAVE lsof && {
+    command lsof +fg -h &>/dev/null && LSOF_FLAG_OPT='+fg'
+    ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT"
     alias lsif='lsof -i'
     alias lsifr="command lsof -Pi $LSOF_FLAG_OPT"
     alias lsifudp='lsif | grep UDP'
-    alias lsiflisten='lsif | grep -w "LISTEN\|UDP"'
+    alias lsiflisten='lsif | grep --word-regexp "LISTEN\|UDP"'
     alias lsifconnect='lsif | grep -- "->"'
     alias lsifconnectr='lsifr | grep -- "->"'
     alias lsuf='lsof -U'
+    unset LSOF_FLAG_OPT
 }
 
 # nmap
-HAVE nmap && {
-    alias nmapsweep='run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(cidr)"'
-}
+ALIAS nmapsweep='nmap -sU -sS --top-ports 50 -O -PE -PP -PM "$(cidr)"'
 
-HAVE ngrep && {
-    # FIXME: https://bbs.archlinux.org/viewtopic.php?pid=1358365#p1358365
-    # alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
-    alias ngg='tcpdump -i any -w - | ngrep -c 0 -l -q -P "" -W byline -I -'
-}
-
-# scutil
-HAVE scutil && {
-    # Param: [$*] New hostname
-    sethostname() {
-        local pref keys=(ComputerName LocalHostName HostName)
-        if (($#)); then
-            for pref in "${keys[@]}"; do
-                scutil --set $pref "$*"
-            done
-            "$FUNCNAME"
-        else
-            for pref in  "${keys[@]}"; do
-                printf "$pref: "
-                scutil --get $pref
-            done
-        fi
-    }
-}
+# ngrep
+ALIAS ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
 
 # Weechat
-HAVE weechat && {
-    ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat)'
-}
+HAVE weechat && ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat)'
 
 # Local api server @ `$cdapi`
 HAVE cdapi && {
     # Param: $@ API Site names
     api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
-    _api() { __compreply__ "$(lsdir "$cdapi")"; }
     complete -F _api api
 }
 
 # Simple webserver
-httpserver() { rackup -b 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
-
-# w3m
-ALIAS W='w3mlaunch'
+httpserver() { rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 
 ### Firewalls
 
 # iptables
-[[ -x /etc/iptables/iptables.sh ]] && alias iptables.sh='run /etc/iptables/iptables.sh'
+ALIAS iptables.sh='/etc/iptables/iptables.sh'
 
 ### Editors
 
 # Exuberant ctags
-ALIAS ctagsr='ctags -R'
+ALIAS ctagsr='ctags --recurse'
 
 # Vim
 HAVE vim && {
     alias v='vim -c "set nomodified" -'
+
     vimnilla() {
         local OPTIND OPTARG opt dirs=()
         while getopts :d: opt; do
@@ -751,6 +683,7 @@ HAVE vim && {
             puts %q{set rtp^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
         ' -- "${dirs[@]}") -U NONE "$@"
     }
+
     vimopen() { vim -c 'UniteOpen' "$@"; }
 
     # Param: [$@] Arguments to `ff()`
@@ -785,7 +718,7 @@ HAVE vim && {
                 page="${@:i:1}"
             fi
 
-            command man -w "$page" || continue
+            command man --where "$page" || continue
 
             if ((pages++)); then
                 args+=(-c "tabedit | OMan $sec $page")
@@ -800,7 +733,7 @@ HAVE vim && {
     vimsession() {
         local session="$HOME/.cache/vim/session/$(pwd -P)/Session.vim"
         if [[ -e "$session" ]]; then
-            vim -S "$session" -c "silent! execute '! rm -f ' . v:this_session" "$@"
+            vim -S "$session" -c "silent! execute '! rm --force ' . v:this_session" "$@"
         else
             vim "$@"
         fi
@@ -879,7 +812,7 @@ ALIAS tm='tmux' && {
     HAVE tmuxlaunch && alias xtmuxlaunch='exec tmuxlaunch'
 
     tmuxeval() {
-        local vars=$(sed "s:^:export :g" <(tmux show-environment | grep -E "^[A-Z_]+=[a-zA-Z0-9/.-]+$"))
+        local vars=$(sed "s:^:export :g" <(tmux show-environment | grep --extended-regexp "^[A-Z_]+=[a-zA-Z0-9/.-]+$"))
         echo "$vars"
         eval "$vars"
     }
@@ -902,23 +835,21 @@ ALIAS mk='make' \
       mkclean='make clean' \
       mkdistclean='make distclean' \
       mkinstall='make install' \
-      mkj='make -j$(grep -c ^processor /proc/cpuinfo)' \
-      mkj2='make -j2' \
-      mkj4='make -j4' \
-      mkj8='make -j8' \
-      mke='make -e' \
-      mkej='make -ej$(grep -c ^processor /proc/cpuinfo)' \
-      mkb='make -B' \
-      mkbj='mkj -B' && cdmkinstall() { (cd "$@"; make install) }
+      mkdebug='make debug' \
+      mkj='make --jobs=$(grep --count ^processor /proc/cpuinfo)' \
+      mke='make --environment-overrides' \
+      mkej='mkj --environment-overrides' \
+      mkb='make --always-make' \
+      mkbj='mkj --always-make'
 
 ### SCM
 
 # diff patch
-ALIAS di='diff -U3' \
-      diw='di -w' \
-      dir='di -r' \
-      diq='di -q' \
-      dirq='di -rq'
+ALIAS di='diff --unified=3' \
+      diw='di --ignore-all-space' \
+      dir='di --recursive' \
+      diq='di --brief' \
+      dirq='dir --brief'
 ALIAS patch='patch --version-control never'
 
 # git
@@ -946,7 +877,7 @@ HAVE git && {
 githubget() {
     (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
     local user="${1%%/*}" repo="${1#*/}" branch="${2:-master}"
-    run cert exec -f ~/.certificates/github.crt -- curl -#L "https://github.com/$user/$repo/tarball/$branch"
+    run cert exec --certfile ~/.certificates/github.crt -- curl --progress-bar --location "https://github.com/$user/$repo/tarball/$branch"
 }
 
 archivesrc() {
@@ -960,8 +891,8 @@ archivesrc() {
         git gc --aggressive --prune=all
         cd ..
         if run tar acf "$cdsrc/ARCHIVE/$dirname".tar.xz "${d%/}"; then
-            run rm -rf "$d"
-            command du -h "$archive"
+            run rm --recursive --force "$d"
+            command du --human-readable "$archive"
         fi
         popd >/dev/null
     done
@@ -984,12 +915,12 @@ type ruby &>/dev/null && {
 
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
-                local cx='cert exec -f ~/.certificates/rubygems.crt --'
+                local cx='cert exec --certfile ~/.certificates/rubygems.crt --'
                 # alias geme
                 alias "gem${suf}g=$cx ${bin}/gem list | g"
                 alias "gem${suf}i=$cx ${bin}/gem install"
-                alias "gem${suf}q=$cx ${bin}/gem specification -r"
-                alias "gem${suf}s=$cx ${bin}/gem search -r"
+                alias "gem${suf}q=$cx ${bin}/gem specification --remote"
+                alias "gem${suf}s=$cx ${bin}/gem search --remote"
                 alias "gem${suf}r=$cx ${bin}/gem uninstall"
                 # alias gemsync
                 alias "gem${suf}outdated=$cx ${bin}/gem outdated"
@@ -1005,13 +936,13 @@ type ruby &>/dev/null && {
             # Rake
             ALIAS "rake${suf}=${bin}/rake" \
                   "rk${suf}=rake${suf}" \
-                  "rk${suf}t=rake${suf} -T"
+                  "rk${suf}t=rake${suf} --tasks"
 
             # Useful gem executables
             ALIAS "b${suf}=${bin}/bundle" \
                   "bx${suf}=${bin}/bundle exec" \
                   "brk${suf}=${bin}/bundle exec rake" \
-                  "brk${suf}t=${bin}/bundle exec rake -T" \
+                  "brk${suf}t=${bin}/bundle exec rake --tasks" \
                   "binstall${suf}=${bin}/bundle install"
         }
     }; GC_FUNC RUBY_VERSION_SETUP
@@ -1035,7 +966,7 @@ type ruby &>/dev/null && {
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
 
     # Rails
-    r() {
+    rails() {
         if [[ -x script/rails ]]; then
             run script/rails "$@"
         else
@@ -1047,7 +978,7 @@ type ruby &>/dev/null && {
     rackenv() {
         (($#)) && export RAILS_ENV="$1" RACK_ENV="$1"
         echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
-    }
+    }; complete -F _rackenv rackenv
 
     rklink() {
         case $# in
@@ -1058,7 +989,7 @@ type ruby &>/dev/null && {
 
         local src="$cdhaus/share/rake/$fname"
         if [[ -e "$src" ]]; then
-            ln -s "$src" Rakefile
+            ln --symbolic "$src" Rakefile
         else
             echo "$src does not exist!"
             return 1
@@ -1068,13 +999,14 @@ type ruby &>/dev/null && {
 
 ### Python
 
-ALIAS py='python'
+ALIAS py='python' \
+      py2='python2'
 
 ### JVM
 
 # Leiningen
 HAVE lein && {
-    alias lein='run cert exec -f ~/.certificates/leiningen.crt -k ~/.certificates/leiningen.ks -- lein'
+    alias lein='run cert exec --certfile ~/.certificates/leiningen.crt --keystore ~/.certificates/leiningen.ks -- lein'
 
     # alias leine=
     # alias leing=
@@ -1085,9 +1017,6 @@ HAVE lein && {
     # alias leinsync=
     alias leinoutdated='lein ancient :all :check-clojure :allow-qualified :allow-snapshots'
 }
-
-ALIAS java-share-dump='java -server -Xshare:dump'
-ALIAS ngstop='ng ng-stop'
 
 ### JavaScript
 
@@ -1140,56 +1069,20 @@ HAVE cabal && {
 ### Databases
 
 HAVE mysql && {
-    mysql() { command mysql -uroot -p"$(pass "$HOSTNAME/mysql/root")" "${@:-mysql}"; }
-    ALIAS mysqldump="mysqldump -uroot -p\"\\\$(pass "$HOSTNAME/mysql/root")\""
-    ALIAS mysqladmin="mysqladmin -uroot -p\"\\\$(pass "$HOSTNAME/mysql/root")\""
+    mysql() { command mysql --user=root --password="$(pass "$HOSTNAME/mysql/root")" "${@:-mysql}"; }
+    ALIAS mysqldump="mysqldump --user=root --password=\"\\\$(pass "$HOSTNAME/mysql/root")\""
+    ALIAS mysqladmin="mysqladmin --user=root --password\"\\\$(pass "$HOSTNAME/mysql/root")\""
 }
 
 HAVE psql && {
-    ALIAS aspostgres='sudo -Hiu postgres'
-}
-
-ALIAS sqlite='sqlite3' && {
-    sqlite-firefox-history() {
-        (($# == 1)) || { echo "Usage: $FUNCNAME path/to/places.sqlite"; return 1; }
-        # http://unfocusedbrain.com/site/2010/03/09/dumping-firefoxs-places-sqlite/
-        sqlite3 "$@" <<-EOF
-            SELECT datetime(moz_historyvisits.visit_date/1000000, 'unixepoch'), moz_places.url, moz_places.title, moz_places.visit_count
-            FROM moz_places, moz_historyvisits
-            WHERE moz_places.id = moz_historyvisits.place_id
-            ORDER BY moz_historyvisits.visit_date DESC;
-	EOF
-    }
-}
-
-HAVE abook && abook() {
-    if (($#)); then
-        ruby -r shellwords -e '
-            fmt = "{name}\x1e{nick}\x1e{email}\x1e{mobile}\x1e{phone}\x1e{workphone}\x1e{notes}"
-            buf = %x(abook --mutt-query #{ARGV.shelljoin} --outformat custom --outformatstr #{fmt.shellescape})
-            exit if $?.exitstatus != 0
-            buf.each_line do |line|
-                name, nick, email, mobile, phone, workphone, notes = line.split("\x1e").map { |f|
-                    f unless f.nil? or f.empty?
-                }
-                puts "%-20s %-16s <%s>%s" % [
-                    (nick || name),
-                    mobile || phone || workphone,
-                    email,
-                    (" " + notes if notes)
-                ]
-            end
-        ' -- "$@"
-    else
-        command abook
-    fi
+    ALIAS aspostgres='sudo --set-home --login --user postgres'
 }
 
 ### Hardware control
 
-ALIAS mp='modprobe -a'
+ALIAS mp='modprobe --all'
 ALIAS sens='sensors'
-ALIAS trim='fstrim -av'
+ALIAS trim='fstrim --all --verbose'
 
 ALIAS rfk='rfkill' && {
     alias rfdisable='run rfkill block all'
@@ -1199,21 +1092,20 @@ ALIAS rfk='rfkill' && {
 HAVE lsblk && {
     lsb() {
         if (($#)); then
-            lsblk -a "$@"
+            lsblk --all "$@"
         else
-            lsblk -ao NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
+            lsblk --all --output NAME,SIZE,RM,RO,TYPE,FSTYPE,LABEL,MOUNTPOINT
         fi
     }
-    alias lsbfs='lsb -f'
-    alias lsbmode='lsb -m'
-    alias lsbscsi='lsb -S'
-    _blockdevices() { __compreply__ "$(blockdevices)"; }
+    alias lsbfs='lsb --fs'
+    alias lsbmode='lsb --perms'
+    alias lsbscsi='lsb --scsi'
 }
 
 HAVE hdparm && {
-    hdpowerstatus() { hdparm -C $(blockdevices); }
-    alias hdstandby='hdparm -y'; complete -F _blockdevices hdstandby
-    alias hdsleep='hdparm -Y'; complete -F _blockdevices hdsleep
+    hdpowerstatus() { hdparm -C $(lsdisk); }
+    alias hdstandby='hdparm -y'; complete -F __lsdisk__ hdstandby
+    alias hdsleep='hdparm -Y'; complete -F __lsdisk__ hdsleep
 }
 
 HAVE wpa_supplicant wpa_passphrase && {
@@ -1260,193 +1152,145 @@ fi
 HAVE pass && {
     TCOMP pass passclip
     passl() { pass "$@" | pager; }; TCOMP pass passl
-    passi() { pass insert -fm "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
-    passiclip() { passi "$@" | clip; }; TCOMP pass passiclip
+    passnew() { pass insert --force --multiline "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passi
+    passnewclip() { passi "$@" | clip; }; TCOMP pass passiclip
 }
 
 # cryptsetup
 ALIAS cs='cryptsetup' && {
     TCOMP umount csumount
-    alias csdump='cryptsetup luksDump'
-    __crypt_names__() { __compreply__ "$(cat /sys/block/*/dm/name)"; }
-    alias cssuspend='cryptsetup luksSuspend'; complete -F __crypt_names__ cssuspend
-    alias csresume='cryptsetup luksResume'; complete -F __crypt_names__ csresume
+    alias csdump='cryptsetup luksDump'; complete -F __partitions__ csdump
+    alias cssuspend='cryptsetup luksSuspend'; complete -F __cryptnames__ cssuspend
+    alias csresume='cryptsetup luksResume'; complete -F __cryptnames__ csresume
 }
 
 HAVE cert && {
     cx() {
-        local certfile=$(expand_path "~/.certificates/$1")
-        local keystore=$(expand_path "~/.certificates/${1%.crt}.ks")
+        local certfile="$HOME/.certificates/$1"
+        local keystore="$HOME/.certificates/${1%.crt}.ks"
 
         if [[ -e "$keystore" ]]; then
-            run cert exec -f "$certfile" -k "$keystore" -- "${@:2}"
+            run cert exec --certfile "$certfile" --keystore "$keystore" -- "${@:2}"
         else
-            run cert exec -f "$certfile" -- "${@:2}"
-        fi
-    }
-    _cx() {
-        if ((COMP_CWORD == 1)); then
-            __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')";
-        else
-            _command_offset 2
+            run cert exec --certfile "$certfile" -- "${@:2}"
         fi
     }
     complete -F _cx cx
 }
 
-java-import-keystore() {
+HAVE keytool && java-import-keystore() {
     (($# == 2)) || { echo "USAGE: $FUNCNAME crtfile keystore"; return 1; }
     run keytool -storepass changeit -importcert -file "$1" -keystore "$2"
 }
 
-### Virtual Machines
-
-# Docker
-ALIAS d='docker'
-
-# VMWare
-ALIAS vmrun='/Library/Application\ Support/VMware\ Fusion/vmrun' && {
-    vmtoggle() {
-        if ifconfig vmnet1 &>/dev/null; then
-            local flag='--stop'
-        else
-            local flag='--start'
-        fi
-
-        run "/Library/Application Support/VMware Fusion/boot.sh" $flag
-    }
-}
-
-# VirtualBox
-if [[ -d /Applications/VirtualBox.app ]]; then
-    vboxtoggle() {
-        local ids=(org.virtualbox.kext.VBoxDrv org.virtualbox.kext.VBoxNetAdp org.virtualbox.kext.VBoxNetFlt org.virtualbox.kext.VBoxUSB)
-        if [[ -z $(kextstat -l -b "${ids[0]}") ]]; then
-            run macdriver load -r /Library/Extensions "${ids[@]}"
-        else
-            run macdriver unload -r /Library/Extensions "${ids[@]}"
-        fi
-    }
-fi
-
 ### Package Managers
 
-if __LINUX__; then
-    # Aptitude package manager
-    ALIAS apt='aptitude' && {
-        apte() { vim "$(apt-file "$@")"; }
-        alias aptg='run dpkg --list | g'
-        alias apti='run aptitude install'
-        aptq() {
-            local pkg
-            for pkg in "$@"; do
-                aptitude show "$pkg"
-                dpkg --listfiles "$pkg"
-            done
-        }
-        alias apts='run aptitude search'
-        alias aptr='run aptitude remove'
-        alias aptsync='run aptitude update'
-        alias aptupgrade='run aptitude safe-upgrade'
-        # alias aptoutdated
+# Aptitude
+ALIAS apt='aptitude' && {
+    apte() { vim "$(apt-file "$@")"; }
+    alias aptg='run dpkg --list | g'
+    alias apti='run aptitude install'
+    aptq() {
+        local pkg
+        for pkg in "$@"; do
+            aptitude show "$pkg"
+            dpkg --listfiles "$pkg"
+        done
     }
+    alias apts='run aptitude search'
+    alias aptr='run aptitude remove'
+    alias aptsync='run aptitude update'
+    alias aptupgrade='run aptitude safe-upgrade'
+    # alias aptoutdated
+}
 
-    # Pacman package manager
-    ALIAS pac='pacman' && {
-        # alias pace
-        alias pacg='run pacman -Qs'
-        alias paci='run pacman -S --needed'
-        pacq() {
-            local pkg
-            for pkg in "$@"; do
-                if pacman -Qi "$pkg"; then
-                    pactree -r "$pkg"; echo
-                    pacman -Ql "$pkg"; echo
-                else
-                    pacman -Si "$pkg"
-                fi
-            done 2>/dev/null | pager
-        }
-        alias pacs='run pacman -Ss'
-        alias pacr='run pacman -Rs'
-        alias pacsync='run pacman -Sy'
-        alias pacupgrade='run pacman -Syu'
-        alias pacoutdated='run pacman -Qu'
-
-        alias pacclean='run pacman -Sc --noconfirm'
-        alias pacforeign='run pacman -Qm'
-        alias paclog='pager /var/log/pacman.log'
-        alias pacowner='run pacman -Qo'
-
-        pacfindunknown() {
-            find "$@" -exec pacman -Qo -- {} + 2>&1 >/dev/null
-        }; TCOMP find pacfindunknown
-
-        _xspecs['pacinstallfile']='!*.pkg.tar.xz'
-        complete -F _filedir_xspec pacinstallfile
-
-        pacdowngrade() {
-            local OPTIND OPTARG opt sign=0
-
-            while getopts :s opt; do
-                case $opt in
-                s) sign=1;;
-                esac
-            done
-            shift $((OPTIND-1))
-
-            if ((sign)); then
-                (cd /var/cache/pacman/pkg
-                for f in "$@"; do
-                    [[ -e "$f.sig" ]] || run gpg --detach-sign "$f"
-                done)
+# Pacman
+ALIAS pac='pacman' && {
+    # alias pace
+    alias pacg='run pacman --query --search'
+    alias paci='run pacman --sync --needed'
+    pacq() {
+        local pkg
+        for pkg in "$@"; do
+            if pacman --query --info "$pkg"; then
+                pactree --reverse "$pkg"; echo
+                pacman --query --list "$pkg"; echo
+            else
+                pacman --sync --info "$pkg"
             fi
-            run pacman -U "${@/#//var/cache/pacman/pkg/}";
-        }
-        _pacdowngrade() { __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"; }
-        complete -F _pacdowngrade pacdowngrade
+        done 2>/dev/null | pager
+    }
+    alias pacs='run pacman --sync --search'
+    alias pacr='run pacman --remove --recursive'
+    alias pacsync='run pacman --sync --refresh'
+    alias pacupgrade='run pacman --sync --refresh --sysupgrade'
+    alias pacoutdated='run pacman --query --upgrades'
 
-        ALIAS packey='pacman-key'
+    alias pacclean='run pacman --sync --clean --noconfirm'
+    alias pacforeign='run pacman --query --foreign'
+    alias paclog='pager /var/log/pacman.log'
+    alias pacowner='run pacman --query --owns'
+
+    ALIAS packey='pacman-key'
+
+    pkgbuild() {
+        run cp --no-clobber --verbose /usr/share/pacman/PKGBUILD.proto "${1:-.}/PKGBUILD"
     }
 
-    ALIAS mkp='makepkg' \
-          mkpf='makepkg -f' \
-          mkps='makepkg -s' \
-          mkpa='makepkg -A'
-fi
+    pacfindunknown() {
+        find "$@" -exec pacman --query --owns -- {} + 2>&1 >/dev/null
+    }; TCOMP find pacfindunknown
+
+    _xspecs['pacinstallfile']='!*.pkg.tar.xz'
+    complete -F _filedir_xspec pacinstallfile
+
+    pacdowngrade() {
+        local OPTIND OPTARG opt sign=0
+
+        while getopts :s opt; do
+            case $opt in
+            s) sign=1;;
+            esac
+        done
+        shift $((OPTIND-1))
+
+        if ((sign)); then
+            (cd /var/cache/pacman/pkg
+            for f in "$@"; do
+                [[ -e "$f.sig" ]] || run gpg --detach-sign "$f"
+            done)
+        fi
+        run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
+    }
+    complete -F _pacdowngrade pacdowngrade
+}
+
+ALIAS mkp='makepkg' \
+      mkpf='makepkg --force' \
+      mkps='makepkg --syncdeps' \
+      mkpa='makepkg --ignorearch'
 
 ### Media
 
 # Imagemagick
-ALIAS geometry='identify -format \"%w %h\"'
+ALIAS geometry='identify -format "%w %h"'
 
 # feh
 HAVE feh && {
-    ALIAS fshow='feh -r' \
-          frand='feh -rz' \
-          ftime='feh -Smtime'
+    ALIAS fshow='feh --recursive' \
+          frand='feh --recursive --randomize' \
+          ftime='feh --sort mtime'
     alias fmove='fehmove'
     alias fcopy='fehmove --copy'
 }
 
 # cmus
-HAVE cmus && {
-    alias cmus='envtmux cmus'
-}
-
-HAVE ffmpeg && {
-    alias voicerecording='sleep 0.5; ffmpeg -f alsa -ac 2 -i pulse -acodec pcm_s16le -af bandreject=frequency=60:width_type=q:width=1.0 -y'
-}
-
-# VLC
-[[ -x /Applications/VLC.app/Contents/MacOS/VLC ]] && {
-    alias vlc='open -a /Applications/VLC.app'
-}
+HAVE cmus && alias cmus='envtmux cmus'
 
 # youtubedown
 ALIAS youtubedown='youtubedown --verbose --progress' && {
     youtubedownformats() {
-        youtubedown --verbose --size "$@" 2>&1 | ruby -Eiso-8859-1 -e '
+        youtubedown --verbose --size "$@" 2>&1 | ruby -E iso-8859-1 -e '
             puts input = $stdin.readlines
             fmts = input.find { |l| l =~ /available formats:/ }[/formats:(.*);/, 1].scan /\d+/
             buf = File.readlines %x(/bin/sh -c "command -v youtubedown").chomp
@@ -1473,7 +1317,7 @@ HAVE startx && alias xstartx='exec startx &>/dev/null'
 HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
     local dir
     for dir in ~/.icons/*; do
-        [[ -d "$dir" ]] && run gtk-update-icon-cache -f -t "$dir"
+        [[ -d "$dir" ]] && run gtk-update-icon-cache --force --ignore-theme-index "$dir"
     done
 }
 
@@ -1486,9 +1330,9 @@ ALIAS rl='rlwrap'
 if HAVE systemctl; then
     ALIAS sc='systemctl' \
           jc='journalctl' \
-          jcb='journalctl -b' \
-          jce='journalctl -e' \
-          jcf='journalctl -f' && {
+          jcb='journalctl --boot' \
+          jce='journalctl --pager-end' \
+          jcf='journalctl --follow' && {
         alias sctimers='systemctl list-timers'
         alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
@@ -1497,18 +1341,6 @@ if HAVE systemctl; then
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
-
-ALIAS lctl='launchctl' \
-      lctlload='launchctl load -w' \
-      lctlunload='launchctl unload -w' && {
-    lctlreload() { run launchctl unload -w "$@"; run launchctl load -w "$@"; }
-    lctlfind() {
-        local dir
-        for dir in {/System,~,}/Library/Launch{Agents,Daemons}; do
-            [[ -d "$dir" ]] && f "$dir" "$@"
-        done
-    }
-}
 
 ### GUI programs
 

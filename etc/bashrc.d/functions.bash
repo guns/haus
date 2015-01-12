@@ -6,7 +6,6 @@
 # variables in this file can be unset by calling `CLEANUP`.
 # Bash 3.1+ compatible.
 
-### Temporary collections
 # __GC_FUNC__ contains functions to be unset after shell init.
 # __GC_VARS__ contains variables to be unset after shell init.
 __GC_FUNC__=(GC_FUNC GC_VARS)
@@ -17,7 +16,7 @@ __GC_VARS__=(__GC_FUNC__ __GC_VARS__)
 GC_FUNC() { __GC_FUNC__+=("$@"); }
 GC_VARS() { __GC_VARS__+=("$@"); }
 
-# Sweep garbage collection lists
+# Unset temporary functions and variables
 CLEANUP() {
     unset -f "${__GC_FUNC__[@]}"
     unset "${__GC_VARS__[@]}"
@@ -27,7 +26,7 @@ CLEANUP() {
 # Param: $* Error message
 ABORT() {
     # Explain
-    (($#)) && echo -e "$*\n" >&2
+    (($#)) && printf "%s\n\n" "$*" >&2
 
     # Stack trace
     local i n=$((${#BASH_SOURCE[@]} - 1))
@@ -37,7 +36,7 @@ ABORT() {
 
     # Clean up, send interrupt signal, and suspend execution
     CLEANUP
-    echo -e "\n\e[1;3;31mAborting shell initialization.\e[0m\n" >&2
+    printf "\n\e[1;3;31mAborting shell initialization.\e[0m\n\n" >&2
     while true; do kill -INT $$; sleep 60; done
 }; GC_FUNC ABORT
 
@@ -51,13 +50,6 @@ REQUIRE() {
 ### Simple wrapper around `type`
 # Param: $@ List of commands/aliases/functions
 HAVE() { type "$@" &>/dev/null; }; GC_FUNC HAVE
-
-### Platform predicates
-case "$MACHTYPE" in
-*linux*) __LINUX__() { return 0; };;
-*)       __LINUX__() { return 1; };;
-esac
-GC_FUNC __LINUX__
 
 ### Lazy completion transfer function:
 #
