@@ -129,7 +129,7 @@ checkperm() {
     checkpermissions -- "${specs[@]}"
 }
 
-### Directories
+### DIRECTORYBINDINGS
 
 CD_FUNC -n ..           ..
 CD_FUNC -n ...          ../..

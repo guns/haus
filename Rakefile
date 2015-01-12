@@ -457,5 +457,11 @@ end
 desc 'Edit common bash/vim/readline bindings'
 task :vimeditbindings do
   fs = %w[etc/bashrc.d/interactive.bash etc/vim/local/mappings.vim etc/inputrc]
-  system 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMEDITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
+  exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMEDITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
+end
+
+desc 'Edit bash/readline directory bindings'
+task :dirbindings do
+  fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
+  exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
 end
