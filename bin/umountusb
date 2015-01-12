@@ -1,6 +1,3 @@
 #!/bin/sh
 
-run umount -v /mnt/usb/*
-v="$?"
-rmdir -p /mnt/usb/* >/dev/null 2>&1
-exit "$v"
+exec mountusb --unmount "$@"

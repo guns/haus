@@ -1,48 +1,129 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 require 'set'
+require 'etc'
 require 'shellwords'
 require 'fileutils'
 require 'optparse'
+require 'haus/utils'
 
-mountoptions = %w[noatime nodev noexec nosuid]
+class Mountusb
+  OWNER_FILESYSTEMS = Set.new %w[adfs affs debugfs devpts fat vfat msdos
+                                 umsdos hfs hpfs iso9660 ntfs proc tmpfs
+                                 udf usbfs]
 
-parser = OptionParser.new do |opt|
-  opt.banner = 'USAGE: mountusb [-o mountoptions] [label-pattern]'
-  opt.on('-o', '--options a,b,c', Array, "DEFAULT: #{mountoptions}") { |arg| mountoptions.concat arg }
+  DEFAULTS = {
+    :mountoptions => %w[noatime nodev noexec nosuid],
+    :dir => '/mnt/usb',
+    :uid => ENV['SUDO_UID'] || Process.euid,
+    :gid => ENV['SUDO_GID'] || Process.egid,
+    :unmount => false
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [label-pattern]
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--dir PATH', "DEFAULT: #{@dir}" do |arg|
+        @dir = File.expand_path arg
+      end
+
+      opt.on '-o', '--options a,b,c', Array, "DEFAULT: #{@mountoptions.join ','}" do |arg|
+        @mountoptions.concat arg
+      end
+
+      opt.on '-u', '--uid UID', "Default: #{@uid}" do |arg|
+        @uid = arg =~ /\A\d+\z/ ? arg.to_i : Etc.getpwnam(arg).uid
+      end
+
+      opt.on '-g', '--gid GID', "Default: #{@gid}" do |arg|
+        @gid = arg =~ /\A\d+\z/ ? arg.to_i : Etc.getgrnam(arg).gid
+      end
+
+      opt.on '--unmount' do
+        @unmount = true
+      end
+    end
+  end
+
+  def blockdevices
+    Hash[%x(blkid).lines.map do |l|
+      f, kvs = l.split(":", 2)
+      [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
+    end]
+  end
+
+  def usbdevices
+    Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
+      [File.expand_path(File.readlink(l), File.dirname(l)), l]
+    end]
+  end
+
+  def sh *cmd
+    warn cmd.shelljoin
+    system *cmd
+  end
+
+  def mount! label_pattern = nil
+    blkdevs = blockdevices
+    usbdevs = usbdevices
+
+    (blkdevs.keys & usbdevs.keys).each do |dev|
+      label = blkdevs[dev]["LABEL"]
+      type = blkdevs[dev]["TYPE"]
+
+      next if label_pattern and label !~ label_pattern
+
+      mtpt = File.join @dir, label || File.basename(usbdevs[dev])
+      FileUtils.mkdir_p mtpt
+
+      opts = @mountoptions.dup
+
+      if OWNER_FILESYSTEMS.include? type
+        opts << "uid=#{@uid}" if @uid
+        opts << "gid=#{@gid}" if @gid
+      end
+
+      sh 'mount', '-v', '-t', type, '-o', opts.join(','), dev, mtpt
+    end
+  end
+
+  def unmount! label_pattern
+    Dir[File.join @dir, '*'].each do |mtpt|
+      next if label_pattern and File.basename(mtpt) !~ label_pattern
+      sh 'umount', '-v', mtpt
+      FileUtils.rmdir mtpt
+    end
+    FileUtils.rmdir @dir
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    case args.size
+    when 1 then label_pattern = Haus::Utils.regexp_parse args.first
+    when 0 then label_pattern = nil
+    else abort parser.help
+    end
+
+    if @unmount
+      unmount! label_pattern
+    else
+      mount! label_pattern
+    end
+  end
 end
 
-args = parser.parse ARGV
-case args.size
-when 1 then label_pattern = Regexp.compile args.first
-when 0 then label_pattern = nil
-else abort parser.help
-end
-
-fs_owners = Set.new %w[adfs affs debugfs devpts fat vfat msdos umsdos hfs hpfs
-                       iso9660 ntfs proc tmpfs udf usbfs]
-uid = ENV["SUDO_UID"] || Process.euid
-gid = ENV["SUDO_GID"] || Process.egid
-
-blkdevs = Hash[%x(blkid).lines.map do |l|
-  f, kvs = l.split(":", 2)
-  [f, Hash[kvs.shellsplit.map { |kv| kv.split "=" }]]
-end]
-
-usbdevs = Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
-  [File.expand_path(File.readlink(l), File.dirname(l)), l]
-end]
-
-(blkdevs.keys & usbdevs.keys).each do |dev|
-  label = blkdevs[dev]["LABEL"]
-  type = blkdevs[dev]["TYPE"]
-  next if label_pattern and label !~ label_pattern
-  mtpt = File.join "/mnt/usb", label || File.basename(usbdevs[dev])
-  FileUtils.mkdir_p mtpt
-  opts = mountoptions.dup
-  opts += %W[uid=#{uid} gid=#{gid}] if fs_owners.include? type
-  cmd = %W[mount -v -t #{type} -o #{opts.join ","} #{dev} #{mtpt}]
-  warn cmd.join(' ')
-  system *cmd
-end
+$0 = File.basename(__FILE__) and Mountusb.new.run ARGV if $0 == __FILE__
