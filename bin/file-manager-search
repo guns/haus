@@ -8,6 +8,7 @@
 require 'optparse'
 require 'pathname'
 require 'fileutils'
+require 'haus/utils'
 
 class FileManagerSearch
   DEFAULTS = {
@@ -67,30 +68,6 @@ class FileManagerSearch
     end
   end
 
-  # Copied from haus/queue
-  #
-  # Returns the relative path between the `physical` (non-link-traversed)
-  # paths of given files.
-  def relpath source, destination
-    # We don't need the destination leaf
-    src, dst = [source, File.dirname(destination)].map do |file|
-      base = nil
-
-      # Find the deepest existing node (not :extant?; we are avoiding links)
-      Pathname.new(file).ascend do |p|
-        if p.exist?
-          base = p
-          break
-        end
-      end
-
-      # Rebase if necessary
-      Pathname.new base ? file.sub(/\A#{base}/, base.realpath.to_s) : file
-    end
-
-    src.relative_path_from(dst).to_s
-  end
-
   # Returns search directory
   def make_links! path, query
     return false if query.nil? or query.empty?
@@ -110,7 +87,7 @@ class FileManagerSearch
 
     sources.each do |src|
       dst = File.join dstdir, File.expand_path(src).split('/').join(@flatten)
-      FileUtils.ln_s relpath(src, dst), dst, :verbose => true
+      FileUtils.ln_s Haus::Utils.relpath(src, dst), dst, :verbose => true
     end
 
     dstdir

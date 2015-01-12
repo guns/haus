@@ -6,6 +6,7 @@ require 'ostruct'
 require 'pathname'
 require 'haus/logger'
 require 'haus/ls_colors'
+require 'haus/utils'
 
 class Haus
   #
@@ -330,30 +331,8 @@ class Haus
       options.logger.fmt *args
     end
 
-    # Returns the relative path between the `physical` (non-link-traversed)
-    # paths of given files.
-    def relpath source, destination
-      # We don't need the destination leaf
-      src, dst = [source, File.dirname(destination)].map do |file|
-        base = nil
-
-        # Find the deepest existing node (not :extant?; we are avoiding links)
-        Pathname.new(file).ascend do |p|
-          if p.exist?
-            base = p
-            break
-          end
-        end
-
-        # Rebase if necessary
-        Pathname.new base ? file.sub(/\A#{base}/, base.realpath.to_s) : file
-      end
-
-      src.relative_path_from(dst).to_s
-    end
-
     def linked? src, dst
-      (options.relative ? relpath(src, dst) : src) == File.readlink(dst)
+      File.readlink(dst) == (options.relative ? Haus::Utils.relpath(src, dst) : src)
     end
 
     # Compare two files:
@@ -449,7 +428,7 @@ class Haus
 
     def execute_links fopts
       links.each do |src, dst|
-        srcpath = options.relative ? relpath(src, dst) : src
+        srcpath = options.relative ? Haus::Utils.relpath(src, dst) : src
 
         # NOTE: utf8 char
         prefix = extant?(dst) ? ['-+ LINKING ', :yellow, :italic] : ['++ LINKING ', :green, :italic]
@@ -480,7 +459,9 @@ class Haus
         if File.ftype(src) == 'link'
           lsrc = File.readlink src
           # Leave absolute paths alone, but recalculate relative paths
-          srcpath = lsrc =~ %r{\A/} ? lsrc : relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
+          srcpath = lsrc =~ %r{\A/} ?
+                    lsrc :
+                    Haus::Utils.relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
           FileUtils.ln_s srcpath, dst, fopts
         else
           # NOTE: Explicit :dereference_root option required for 1.8.6
