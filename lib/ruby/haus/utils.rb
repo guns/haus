@@ -28,4 +28,20 @@ module Haus::Utils
 
     src.relative_path_from(dst).to_s
   end
+
+  # Adapted from OptionParser
+  def regexp_parse str
+    %r"\A/((?:\\.|[^\\])*)/([[:alpha:]]+)?\z|.*".match str do |m|
+      all, s, o = m.to_a
+      f = 0
+      if o
+        f |= Regexp::IGNORECASE if /i/ =~ o
+        f |= Regexp::MULTILINE if /m/ =~ o
+        f |= Regexp::EXTENDED if /x/ =~ o
+        k = o.delete("imx")
+        k = nil if k.empty?
+      end
+      Regexp.new s || all, f, k
+    end
+  end
 end

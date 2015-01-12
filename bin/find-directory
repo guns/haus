@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'set'
+require 'haus/utils'
 
 class FindDirectory
   DEFAULTS = { :dir => '.' }
@@ -22,22 +23,6 @@ class FindDirectory
 
         Usage: #{File.basename __FILE__} regexp [root-dir]
       BANNER
-    end
-  end
-
-  # Adapted from OptionParser
-  def parse_as_regexp str
-    %r"\A/((?:\\.|[^\\])*)/([[:alpha:]]+)?\z|.*".match str do |m|
-      all, s, o = m.to_a
-      f = 0
-      if o
-        f |= Regexp::IGNORECASE if /i/ =~ o
-        f |= Regexp::MULTILINE if /m/ =~ o
-        f |= Regexp::EXTENDED if /x/ =~ o
-        k = o.delete("imx")
-        k = nil if k.empty?
-      end
-      Regexp.new s || all, f, k
     end
   end
 
@@ -71,7 +56,7 @@ class FindDirectory
     args = parser.parse arguments
     abort parser.help unless (1..2) === args.size
     rgx, dir = args
-    if path = bfs(dir || '.', parse_as_regexp(rgx))
+    if path = bfs(dir || '.', Haus::Utils.regexp_parse(rgx))
       puts path
     else
       abort
