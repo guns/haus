@@ -1,0 +1,27 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+require 'fileutils'
+
+rules_file = '/etc/udev/rules.d/10-network.rules'
+
+parser = OptionParser.new 'USAGE: udev-add-persistent-network-device name mac' do |opt|
+  opt.on '-f', '--rules-file PATH', 'DEFAULT: %s' % rules_file do |arg|
+    rules_file = File.expand_path arg
+  end
+end
+
+args = parser.parse ARGV
+abort parser.help unless args.size == 2
+name, mac = args
+abort '%s does not look like a MAC address' % mac unless mac =~ /\A(\h\h:){5}\h\h\z/
+rule = %Q(SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="#{mac}", NAME="#{name}")
+
+FileUtils.mkdir_p File.dirname(rules_file)
+
+warn "Writing to %s:\n%s" % [rules_file, rule]
+
+File.open rules_file, 'a' do |f|
+  f.puts rule
+end
