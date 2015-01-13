@@ -927,6 +927,15 @@ set editor="vim"
 # It defaults to the value of the $VISUAL, or $EDITOR, environment
 # variable, or to the string ``vi'' if neither of those are set.
 #
+# The $editor string may contain a %s escape, which will be replaced by the name
+# of the file to be edited.  If the %s escape does not appear in $editor, a
+# space and the name to be edited are appended.
+#
+# The resulting string is then executed by running
+# sh -c 'string'
+#
+# where string is the expansion of $editor described above.
+#
 
 # set encode_from=no
 #
@@ -2575,6 +2584,31 @@ set postponed="$folder/DRAFTS"
 # in the mailbox specified by this variable.
 #
 # Also see the $postpone variable.
+#
+
+set postpone_encrypt=yes
+#
+# Name: postpone_encrypt
+# Type: boolean
+# Default: no
+#
+#
+# When set, postponed messages that are marked for encryption will be
+# encrypted using the key in $postpone_encrypt_as before saving.
+# (Crypto only)
+#
+
+set postpone_encrypt_as="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
+#
+# Name: postpone_encrypt_as
+# Type: string
+# Default: ""
+#
+#
+# This is the key used to encrypt postponed messages.  It should be in
+# keyid form (e.g. 0x00112233 for PGP or the hash-value that OpenSSL
+# generates for S/MIME).
+# (Crypto only)
 #
 
 # set preconnect=""
