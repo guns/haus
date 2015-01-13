@@ -37,6 +37,9 @@ super + alt + {l,h}
 super + alt + {1-9}
 	bspc desktop --focus ^{1-9}
 
+super + alt + shift + {1-9}
+	bspc window --to-desktop ^{1-9}
+
 super + alt + control + {1-9}
 	bspc desktop --swap ^{1-9}
 
@@ -85,9 +88,6 @@ super + control + shift + {h,j,k,l}
 
 super + control + {1-9}
 	bspc window --ratio 0.{1-9}
-
-super + control + shift + {1-9}
-	bspc window --to-desktop ^{1-9}
 
 # -t, --toggle floating|fullscreen|pseudo_tiled|locked|sticky|private[=on|off]
 
