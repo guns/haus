@@ -73,7 +73,7 @@ snip.rv = (snip.basename or 'unnamed') + '-submit'
 endsnippet
 
 snippet h1 "XHTML <h1>"
-<h1 id="${1/[\w\d]+|( )/(?1:-:\L$0\E)/g}">${1}</h1>
+<h1>${1}</h1>
 endsnippet
 
 snippet head "XHTML <head>"
@@ -129,8 +129,14 @@ endsnippet
 
 snippet ul "unordered list"
 <ul>
-$0
+	$0
 </ul>
+endsnippet
+
+snippet ol "ordered list"
+<ol>
+	$0
+</ol>
 endsnippet
 
 snippet td "table cell"
