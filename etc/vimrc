@@ -132,6 +132,9 @@ set nojoinspaces                " Never join lines with two spaces
 " Key behavior
 set backspace=2                 " Familiar backspace behavior
 
+" Increment / decrement
+set nrformats=                  " Always inc/dec in base 10
+
 """ GLOBAL VARIABLES {{{1
 
 let g:__NAMED_KEYCODES__ = {
