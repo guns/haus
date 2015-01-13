@@ -99,4 +99,9 @@ module NERV::CLI::ReplHelpers
   def nokoslurp path
     noko slurp(path)
   end
+
+  def uri x
+    require 'uri'
+    URI.parse x
+  end
 end

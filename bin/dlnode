@@ -146,7 +146,7 @@ class Dlnode
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Download nested HTML resources. Uses cURL.
 
-        Usage: #{File.basename __FILE__} [options] url [selector=a]:[attribute=href]:[regexp] …
+        Usage: #{File.basename __FILE__} [options] url-or-path [selector=a]:[attribute=href]:[regexp] …
 
         dlnode http://files.example.com/ a:href:subhost.com 'a[id=download]:href:\\.tar\\.gz$'
         dlnode http://files.example.com/ ::subhost.com form[rel=lolcat]:: img[class=lolcat]:src:
@@ -321,7 +321,9 @@ class Dlnode
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size > 1
-    download! *args or abort
+    url, *rest = args
+    url = "file://#{url}" if url !~ %r{\w+://}
+    download! url, *rest or abort
   end
 end
 
