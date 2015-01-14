@@ -66,8 +66,13 @@ unset TABLE
 #
 
 iptables --new-chain DROPINV
-iptables --append    DROPINV --jump LOG  --log-prefix '[DROPINV] '
+iptables --append    DROPINV --jump LOG --log-prefix '[DROPINV] '
 iptables --append    DROPINV --jump DROP
+
+# iptables --new-chain REJECTLOG
+# iptables --append    REJECTLOG --jump LOG --log-prefix '[REJECTLOG] '
+# iptables --append    REJECTLOG --protocol tcp --jump REJECT --reject-with tcp-reset
+# iptables --append    REJECTLOG --jump DROP
 
 #
 # Minimal Rules
@@ -92,6 +97,13 @@ minimal_passthrough() {
 
 minimal_passthrough INPUT
 # minimal_passthrough OUTPUT
+
+#
+# Filters
+#
+
+# Filter by ipset
+# iptables --append OUTPUT --match set --match-set exfiltration dst --jump REJECTLOG
 
 #
 # Services
