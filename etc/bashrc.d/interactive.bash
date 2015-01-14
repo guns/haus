@@ -595,7 +595,7 @@ HAVE ncat && complete -F _known_hosts ncat
 
 # tcpdump
 HAVE tcpdump && {
-    alias pcapdump='tcpdump -n -XX -r'
+    alias pcapdump='tcpdump -A -r'
 }
 
 # ssh scp
