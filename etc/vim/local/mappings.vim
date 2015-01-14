@@ -56,14 +56,16 @@ let g:maplocalleader = '-'
 "   * Complete (don't cancel) visual block insertions
 "   * Alway break out of Select mode
 "
+" Bind: i_Ctrl-C => <Esc>
 " Bind: v_Ctrl-C => <Esc>
+inoremap <C-c> <Esc>
 xnoremap <C-c> <Esc>
 snoremap <C-c> <Esc>
 
 " Since our mappings never timeout, a single ESC will hang indefinitely,
 " waiting for a Meta/Mod4 sequence. We will use Ctrl-C as our primary escape,
 " and double ESC as our secondary.
-noremap! <Esc><Esc> <Esc>
+noremap! <Esc><Esc> <C-c>
 
 """ Emacs: Ctrl-A (start-of-line) {{{1
 
