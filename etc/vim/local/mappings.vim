@@ -252,10 +252,9 @@ noremap ;     <NOP>
 noremap <M-,> ,
 noremap ,     ;
 
-" Since c_4-; opens the command line window, map <4-;> to do the same in (nvo)
+" Since C-; opens the command line window, map <4-;> to do the same in (nvo)
 " Also bind some more ; -> : aliases.
 noremap <4-;> q:
-noremap q;    q:
 noremap @;    @:
 
 " Alias (nvo); to (nvo): for quick access to the command line
