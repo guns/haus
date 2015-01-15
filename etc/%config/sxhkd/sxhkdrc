@@ -171,6 +171,11 @@ alt + {XF86Eject,Pause}
 {XF86AudioRaiseVolume,super + KP_Add}
 	ponymix increase 5
 
+super + alt + control + {XF86AudioMute,KP_Enter}
+	notify --no-audio --title 'Volume' --icon gnome-alsamixer-icon 'Muting for 30 seconds'; \
+	remind 30s -c 'ponymix unmute'; \
+	ponymix mute
+
 {super + XF86AudioMute,super + shift + KP_Enter}
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
