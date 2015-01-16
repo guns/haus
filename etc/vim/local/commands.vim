@@ -1,6 +1,5 @@
 """ Library of commands
 
-" Call shell commands silently, suppressing all output
 command! -nargs=+ -complete=shellcmd Sh call system(<q-args>)
 
 function! MkdirIfNotExists(dir)
@@ -15,7 +14,7 @@ function! s:Makesession()
     " Use $PWD instead of getcwd() to avoid window-local cwd
     let dir = '~/.cache/vim/session' . $PWD
     call MkdirIfNotExists(dir)
-    execute 'mksession! ' . dir . '/Session.vim'
+    execute 'mksession! ' . fnameescape(dir) . '/Session.vim'
 endfunction
 
 " Will place history in global input history instead of command history (which
