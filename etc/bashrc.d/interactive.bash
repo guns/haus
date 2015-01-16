@@ -147,7 +147,7 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
-CD_FUNC cdetc           /etc
+CD_FUNC -x cdetc        /etc
 CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 CD_FUNC cdmnt           /mnt
 CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
@@ -760,36 +760,36 @@ HAVE vim && {
     }
 
     # VIMEDITBINDINGS
-    alias vimautocommands='(cdhaus && exec vim etc/vim/local/autocommands.vim)'
-    alias vimaliases='(cd ~/.mutt && exec vim aliases)'
-    alias vimbashinteractive='(cdhaus && exec vim etc/bashrc.d/interactive.bash)'
-    alias vimbashrc='(cdhaus && exec vim etc/bashrc)'
-    alias vimcommands='(cdhaus && exec vim etc/vim/local/commands.vim)'
-    alias vimdnsmasq='(cddnsmasq && exec vim dnsmasq.conf)'
+    alias vimautocommands='vim "$cdhaus/etc/vim/local/autocommands.vim" -c "lcd \$cdhaus"'
+    alias vimaliases='vim ~/.mutt/aliases -c "lcd ~/.mutt"'
+    alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
+    alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
+    alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
+    alias vimdnsmasq='vim "$cddnsmasq/dnsmasq.conf" -c "lcd \$cddnsmasq"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
-    alias viminputrc='(cdhaus && exec vim etc/inputrc)'
-    alias vimiptables='(cdetc && exec vim iptables/iptables.sh)'
-    alias vimleinprofiles='(cdhaus && exec vim etc/%lein/profiles.clj)'
+    alias viminputrc='vim "$cdhaus/etc/inputrc" -c "lcd \$cdhaus"'
+    alias vimiptables='vim "$cdetc/iptables/iptables.sh" -c "lcd \$cdetc"'
+    alias vimleinprofiles='vim "$cdhaus/etc/%lein/profiles.clj" -c "lcd \$cdhaus"'
     alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'
-    alias vimmappings='(cdhaus && exec vim etc/vim/local/mappings.vim)'
-    alias vimmuttrc='(cdhaus && exec vim etc/%mutt/muttrc)'
-    alias vimnginx='(cdnginx && exec vim nginx.conf)'
+    alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'
+    alias vimmuttrc='vim "$cdhaus/etc/%mutt/muttrc" -c "lcd \$cdhaus"'
+    alias vimnginx='vim "$cdnginx/nginx.conf" -c "lcd \$cdnginx"'
     alias vimorg='vim -c Org!'
-    alias vimpacman='(cdetc && exec vim pacman.conf)'
-    alias vimgunsrepl='(cdgunsrepl && exec vim src/guns/repl.clj)'
-    alias vimhausrakefile='(cdhaus && exec vim Rakefile)'
+    alias vimpacman='vim "$cdetc/pacman.conf" -c "lcd \$cdetc"'
+    alias vimgunsrepl='vim "$cdgunsrepl/src/guns/repl.clj" -c "lcd \$cdgunsrepl"'
+    alias vimhausrakefile='vim "$cdhaus/Rakefile" -c "lcd \$cdhaus"'
     alias vimscratch='vim -c Scratch'
-    alias vimsshconfig='(cdetc && exec vim ssh/ssh_config)'
+    alias vimsshconfig='vim "$cdetc/ssh/ssh_config" -c "lcd \$cdetc"'
     alias vimtodo='vim -c "Org! TODO"'
-    alias vimtmux='(cdhaus && exec vim etc/tmux.conf)'
-    alias vimunicode='(cdhaus && exec vim share/doc/unicode-table.txt.gz)'
-    alias vimrc='(cdhaus && exec vim etc/vimrc)'
-    alias vimperatorrc='(cdhaus && exec vim etc/vimperatorrc)'
-    alias vimwm='(cdhaus && exec vim etc/%config/bspwm/bspwmrc)'
-    alias vimwmkeybindings='(cdhaus && exec vim etc/%config/sxhkd/sxhkdrc)'
-    alias vimxinitrc='(cdhaus && exec vim etc/xinitrc)'
-    alias vimxdefaults='(cdhaus && exec vim etc/Xdefaults)'
+    alias vimtmux='vim "$cdhaus/etc/tmux.conf" -c "lcd \$cdhaus"'
+    alias vimunicode='vim "$cdhaus/share/doc/unicode-table.txt.gz" -c "lcd \$cdhaus"'
+    alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'
+    alias vimperatorrc='vim "$cdhaus/etc/vimperatorrc" -c "lcd \$cdhaus"'
+    alias vimwm='vim "$cdhaus/etc/%config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
+    alias vimwmkeybindings='vim "$cdhaus/etc/%config/sxhkd/sxhkdrc" -c "lcd \$cdhaus"'
+    alias vimxinitrc='vim "$cdhaus/etc/xinitrc" -c "lcd \$cdhaus"'
+    alias vimxdefaults='vim "$cdhaus/etc/Xdefaults" -c "lcd \$cdhaus"'
 }
 
 ### Terminal Multiplexers
