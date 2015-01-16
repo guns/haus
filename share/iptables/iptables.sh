@@ -65,14 +65,14 @@ unset TABLE
 # Custom Chains
 #
 
-iptables --new-chain DROPINV
-iptables --append    DROPINV --jump LOG --log-prefix '[DROPINV] '
-iptables --append    DROPINV --jump DROP
+iptables --new-chain INVALID
+iptables --append    INVALID --jump LOG --log-prefix '[INVALID] '
+iptables --append    INVALID --jump DROP
 
-# iptables --new-chain REJECTLOG
-# iptables --append    REJECTLOG --jump LOG --log-prefix '[REJECTLOG] '
-# iptables --append    REJECTLOG --protocol tcp --jump REJECT --reject-with tcp-reset
-# iptables --append    REJECTLOG --jump DROP
+# iptables --new-chain LOGREJECT
+# iptables --append    LOGREJECT --jump LOG --log-prefix '[LOGREJECT] '
+# iptables --append    LOGREJECT --protocol tcp --jump REJECT --reject-with tcp-reset
+# iptables --append    LOGREJECT --jump DROP
 
 #
 # Minimal Rules
@@ -90,7 +90,7 @@ minimal_passthrough() {
     # Allow loopback traffic
     iptables --append "$chain" --${dir}-interface lo --jump ACCEPT
     # Log and drop invalid packets
-    iptables --append "$chain" --match conntrack --ctstate INVALID --jump DROPINV
+    iptables --append "$chain" --match conntrack --ctstate INVALID --jump INVALID
     # Allow ICMP
     iptables --append "$chain" --protocol icmp --jump ACCEPT
 }
@@ -103,7 +103,7 @@ minimal_passthrough INPUT
 #
 
 # Filter by ipset
-# iptables --append OUTPUT --match set --match-set exfiltration dst --jump REJECTLOG
+# iptables --append OUTPUT --match set --match-set exfiltration dst --jump LOGREJECT
 
 #
 # Services
@@ -144,7 +144,7 @@ forward_interface() {
     iptables --append FORWARD --in-interface "$in" --out-interface "$out" --jump ACCEPT
     # Inbound
     iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate INVALID     --jump DROPINV
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate INVALID     --jump INVALID
     iptables --append FORWARD --in-interface "$out" --out-interface "$in" --protocol icmp                         --jump ACCEPT
     # Enable NAT
     iptables --table nat --append POSTROUTING --out-interface "$out" --jump MASQUERADE
@@ -157,7 +157,7 @@ forward_host() {
     iptables --append FORWARD --source "$host" --jump ACCEPT
     # Inbound
     iptables --append FORWARD --destination "$host" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    iptables --append FORWARD --destination "$host" --match conntrack --ctstate INVALID     --jump DROPINV
+    iptables --append FORWARD --destination "$host" --match conntrack --ctstate INVALID     --jump INVALID
     iptables --append FORWARD --destination "$host" --protocol icmp                         --jump ACCEPT
     # Enable NAT
     iptables --table nat --append POSTROUTING --source "$host" --jump MASQUERADE
