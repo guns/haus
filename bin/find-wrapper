@@ -23,7 +23,7 @@ class FindWrapper
         @noop = true
       end
 
-      opt.on '-p', '--pred find-expr', 'Insert find-expr after the path argument' do |arg|
+      opt.on '-p', '--predicate find-expr', 'Insert find-expr after the path argument' do |arg|
         @pred = arg.shellsplit
       end
     end
