@@ -155,6 +155,7 @@ CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdTMP           /tmp
 CD_FUNC cdvar           /var
+CD_FUNC cdcontainer     /var/lib/container
 CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg
 CD_FUNC cdwww           /srv/http /srv/www /var/www
@@ -449,7 +450,8 @@ checkperm() {
     local specs=(
         /etc/.git:root:root:0077:no-recurse
         /etc:root
-        "~:$USER:$USER:0077:no-recurse"
+        /var/lib/container:root:root:0077:no-recurse
+        ~:"$USER":"$USER":0077:no-recurse
         ~/.bashrc
         ~/.bash_profile
         ~/.bash_login
