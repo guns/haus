@@ -51,7 +51,7 @@ class FindWrapper
     if args.first =~ /\A-.*|\A\(\z/
       cmd.concat args
     elsif args.any?
-      cmd.push '-iname', make_find_pattern(args.shift), *args
+      cmd.push *args, '-iname', make_find_pattern(args.shift)
     end
 
     cmd.push '-print', '-delete' if cmd.delete '-delete'
