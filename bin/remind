@@ -90,7 +90,7 @@ class Remind
         when 3 then '%s, %s, and %s' % ary
         end
       else
-        [h,m,s]
+        [h, m, s]
       end
     end
 
@@ -101,7 +101,7 @@ class Remind
     def activate
       # Report time remaining on SIGUSR1
       trap :USR1 do
-        s = remaining == [0, 0, 1] ? 's' : ''
+        s = remaining.reverse.find { |n| n != 0 } == 1 ? 's' : ''
         NERV::Util::Notification.new(
           :icon    => 'preferences-system-time',
           :message => '%s remain%s' % [remaining(:verbose), s],
