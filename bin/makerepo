@@ -1,32 +1,17 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-require 'set'
-
-LIB_DIR = '/var/lib/pacman/local'
 CACHE_DIR = '/var/cache/pacman/pkg'
-ARCH = %x(uname -m).chomp
 HOSTNAME = ENV['HOSTNAME'] || %x(hostname).chomp
 
-cache = Set.new Dir[File.join CACHE_DIR, '*.pkg.tar.xz']
+Dir.chdir CACHE_DIR do
+  packages = Dir['*.pkg.tar.xz']
 
-packages = Dir[File.join LIB_DIR, '*'].reduce [] do |v, f|
-  base = File.join CACHE_DIR, File.basename(f)
-  if cache.include? (any = base + '-any.pkg.tar.xz')
-    v << any
-  elsif cache.include? (arch = base + '-' + ARCH + '.pkg.tar.xz')
-    v << arch
-  else
-    v
-  end
-end
-
-Dir.chdir '/var/cache/pacman/pkg' do
   packages.each do |pkg|
-    if not File.exists? pkg + '.sig'
+    unless File.exists? pkg + '.sig'
       system 'gpg', '--detach-sign', pkg
     end
   end
 
-  system 'repo-add', '--sign', "#{HOSTNAME}.db.tar.gz", *packages
+  system 'repo-add', '--new', '--sign', "#{HOSTNAME}.db.tar.gz", *packages
 end
