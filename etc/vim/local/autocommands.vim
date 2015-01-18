@@ -238,7 +238,9 @@ augroup GUNS
 
     " systemd {{{1
     autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service{,.erb},*.socket,*.swap,*.target,*.timer,
-        \ setlocal filetype=systemd noexpandtab
+        \ setlocal filetype=systemd
+    autocmd FileType systemd
+        \ setlocal noexpandtab
 
     " PostgreSQL {{{1
     autocmd BufRead,BufNewFile psql.edit.*
