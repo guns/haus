@@ -547,7 +547,6 @@ HAVE htop && alias htop='envtmux htop'
 ### Switch User
 
 ALIAS s='sudo --set-home' \
-      root='exec sudo --set-home --shell' \
       asguns='sudo --set-home --user guns'
 HAVE su && alias xsu='exec su' && TCOMP su xsu
 
