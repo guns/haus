@@ -35,7 +35,7 @@ qreddit:             https://www.reddit.com/search?q=***
 qrotten:             https://www.rottentomatoes.com/search/?search=***
 qrubydocs:           https://ruby-doc.com/search.html?q=***
 qrubygems:           https://rubygems.org/search?query=***
-qrust:               http://doc.rust-lang.org/std/index.html?search=***
+qrustdocs:           http://doc.rust-lang.org/std/index.html?search=***
 qserverfault:        https://serverfault.com/search?q=***
 qspanish:            http://www.spanishdict.com/translate/***
 qstackoverflow:      https://stackoverflow.com/search?q=***
