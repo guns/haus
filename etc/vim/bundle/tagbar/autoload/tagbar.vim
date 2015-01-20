@@ -83,6 +83,11 @@ let s:last_highlight_tline = 0
 let s:debug = 0
 let s:debug_file = ''
 
+let s:warnings = {
+    \ 'type': [],
+    \ 'encoding': 0
+\ }
+
 " s:Init() {{{2
 function! s:Init(silent) abort
     if s:checked_ctags == 2 && a:silent
@@ -408,10 +413,7 @@ function! s:InitTypes() abort
     \ }
     let s:known_types.java = type_java
     " JavaScript {{{3
-    " JavaScript is weird -- it does have scopes, but ctags doesn't seem to
-    " properly generate the information for them, instead it simply uses the
-    " complete name. So ctags has to be fixed before I can do anything here.
-    " Alternatively jsctags/doctorjs will be used if available.
+    " jsctags/doctorjs will be used if available.
     let type_javascript = s:TypeInfo.New()
     let type_javascript.ctagstype = 'javascript'
     let jsctags = s:CheckFTCtags('jsctags', 'javascript')
@@ -435,12 +437,23 @@ function! s:InitTypes() abort
         let type_javascript.ctagsargs  = '-f -'
     else
         let type_javascript.kinds = [
-            \ {'short' : 'v', 'long' : 'global variables', 'fold' : 0, 'stl' : 0},
-            \ {'short' : 'c', 'long' : 'classes',          'fold' : 0, 'stl' : 1},
-            \ {'short' : 'p', 'long' : 'properties',       'fold' : 0, 'stl' : 0},
-            \ {'short' : 'm', 'long' : 'methods',          'fold' : 0, 'stl' : 1},
-            \ {'short' : 'f', 'long' : 'functions',        'fold' : 0, 'stl' : 1}
+            \ {'short': 'v', 'long': 'global variables', 'fold': 0, 'stl': 0},
+            \ {'short': 'c', 'long': 'classes',          'fold': 0, 'stl': 1},
+            \ {'short': 'p', 'long': 'properties',       'fold': 0, 'stl': 0},
+            \ {'short': 'm', 'long': 'methods',          'fold': 0, 'stl': 1},
+            \ {'short': 'f', 'long': 'functions',        'fold': 0, 'stl': 1},
         \ ]
+        let type_javascript.sro        = '.'
+        let type_javascript.kind2scope = {
+            \ 'c' : 'class',
+            \ 'f' : 'function',
+            \ 'm' : 'method',
+            \ 'p' : 'property',
+        \ }
+        let type_javascript.scope2kind = {
+            \ 'class'    : 'c',
+            \ 'function' : 'f',
+        \ }
     endif
     let s:known_types.javascript = type_javascript
     " Lisp {{{3
@@ -804,6 +817,10 @@ function! s:InitTypes() abort
     let s:known_types.yacc = type_yacc
     " }}}3
 
+    for [type, typeinfo] in items(s:known_types)
+        let typeinfo.ftype = type
+    endfor
+
     call s:LoadUserTypeDefs()
 
     for typeinfo in values(s:known_types)
@@ -831,6 +848,7 @@ function! s:LoadUserTypeDefs(...) abort
     let transformed = {}
     for [type, def] in items(defdict)
         let transformed[type] = s:TransformUserTypeDef(def)
+        let transformed[type].ftype = type
     endfor
 
     for [key, value] in items(transformed)
@@ -940,11 +958,14 @@ function! s:MapKeys() abort
         \ ['togglefold',    'ToggleFold()'],
         \ ['openallfolds',  'SetFoldLevel(99, 1)'],
         \ ['closeallfolds', 'SetFoldLevel(0, 1)'],
+        \ ['nextfold',      'GotoNextFold()'],
+        \ ['prevfold',      'GotoPrevFold()'],
         \
-        \ ['togglesort', 'ToggleSort()'],
-        \ ['zoomwin',    'ZoomWindow()'],
-        \ ['close',      'CloseWindow()'],
-        \ ['help',       'ToggleHelp()'],
+        \ ['togglesort',      'ToggleSort()'],
+        \ ['toggleautoclose', 'ToggleAutoclose()'],
+        \ ['zoomwin',         'ZoomWindow()'],
+        \ ['close',           'CloseWindow()'],
+        \ ['help',            'ToggleHelp()'],
     \ ]
 
     for [map, func] in maps
@@ -1092,7 +1113,7 @@ function! s:CtagsErrMsg(errmsg, infomsg, silent, ...) abort
     endif
 
     if !a:silent
-        echoerr a:errmsg
+        call s:warning(a:errmsg)
         echomsg a:infomsg
 
         if ctags_cmd == ''
@@ -1137,7 +1158,7 @@ function! s:CheckFTCtags(bin, ftype) abort
     endif
 
     if exists('g:tagbar_type_' . a:ftype)
-        execute 'let userdef = ' . 'g:tagbar_type_' . a:ftype
+        let userdef = g:tagbar_type_{a:ftype}
         if has_key(userdef, 'ctagsbin')
             return userdef.ctagsbin
         else
@@ -1270,7 +1291,6 @@ endfunction
 " s:BaseTag.getClosedParentTline() {{{3
 function! s:BaseTag.getClosedParentTline() abort dict
     let tagline  = self.tline
-    let fileinfo = self.fileinfo
 
     " Find the first closed parent, starting from the top of the hierarchy.
     let parents   = []
@@ -1353,7 +1373,6 @@ endfunction
 
 " s:NormalTag.strfmt() {{{3
 function! s:NormalTag.strfmt() abort dict
-    let fileinfo = self.fileinfo
     let typeinfo = self.typeinfo
 
     let suffix = get(self.fields, 'signature', '')
@@ -1392,6 +1411,12 @@ function! s:NormalTag.getPrototype(short) abort dict
         let prototype = self.prototype
     else
         let bufnr = self.fileinfo.bufnr
+
+        if self.fields.line == 0 || !bufloaded(bufnr)
+            " No linenumber available or buffer not loaded (probably due to
+            " 'nohidden'), try the pattern instead
+            return substitute(self.pattern, '^\\V\\^\\C\s*\(.*\)\\$$', '\1', '')
+        endif
 
         let line = getbufline(bufnr, self.fields.line)[0]
         let list = split(line, '\zs')
@@ -1450,7 +1475,6 @@ endfunction
 
 " s:PseudoTag.strfmt() {{{3
 function! s:PseudoTag.strfmt() abort dict
-    let fileinfo = self.fileinfo
     let typeinfo = self.typeinfo
 
     let suffix = get(self.fields, 'signature', '')
@@ -1742,8 +1766,14 @@ function! s:OpenWindow(flags) abort
     endif
 
     let s:window_opening = 1
-    let openpos = g:tagbar_left ? 'topleft vertical ' : 'botright vertical '
-    exe 'silent keepalt ' . openpos . g:tagbar_width . 'split ' . '__Tagbar__'
+    if g:tagbar_vertical == 0
+        let openpos = g:tagbar_left ? 'topleft vertical ' : 'botright vertical '
+        let width = g:tagbar_width
+    else
+        let openpos = g:tagbar_left ? 'leftabove ' : 'rightbelow '
+        let width = g:tagbar_vertical
+    endif
+    exe 'silent keepalt ' . openpos . width . 'split ' . '__Tagbar__'
     unlet s:window_opening
 
     call s:InitWindow(autoclose)
@@ -1808,11 +1838,11 @@ function! s:InitWindow(autoclose) abort
     setlocal foldmethod&
     setlocal foldexpr&
 
+    let w:autoclose = a:autoclose
+
     call s:SetStatusLine('current')
 
     let s:new_window = 1
-
-    let w:autoclose = a:autoclose
 
     if has('balloon_eval')
         setlocal balloonexpr=TagbarBalloonExpr()
@@ -1847,9 +1877,8 @@ function! s:CloseWindow() abort
     " Close the preview window if it was opened by us
     if s:pwin_by_tagbar
         pclose
+        let tagbarwinnr = bufwinnr('__Tagbar__')
     endif
-
-    let tagbarbufnr = winbufnr(tagbarwinnr)
 
     if winnr() == tagbarwinnr
         if winbufnr(2) != -1
@@ -1982,7 +2011,8 @@ function! s:ProcessFile(fname, ftype) abort
 
     " If the file has only been updated preserve the fold states, otherwise
     " create a new entry
-    if s:known_files.has(a:fname) && !empty(s:known_files.get(a:fname))
+    if s:known_files.has(a:fname) && !empty(s:known_files.get(a:fname)) &&
+     \ s:known_files.get(a:fname).ftype == a:ftype
         let fileinfo = s:known_files.get(a:fname)
         let typeinfo = fileinfo.typeinfo
         call fileinfo.reset()
@@ -2131,7 +2161,8 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
                           \ '--excmd=pattern',
                           \ '--fields=nksSa',
                           \ '--extra=',
-                          \ '--sort=no'
+                          \ '--sort=no',
+                          \ '--append=no'
                           \ ]
 
         " Include extra type definitions
@@ -2139,15 +2170,18 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
             let ctags_args += ['--options=' . expand(a:typeinfo.deffile)]
         endif
 
-        let ctags_type = a:typeinfo.ctagstype
+        " Third-party programs may not necessarily make use of this
+        if has_key(a:typeinfo, 'ctagstype')
+            let ctags_type = a:typeinfo.ctagstype
 
-        let ctags_kinds = ''
-        for kind in a:typeinfo.kinds
-            let ctags_kinds .= kind.short
-        endfor
+            let ctags_kinds = ''
+            for kind in a:typeinfo.kinds
+                let ctags_kinds .= kind.short
+            endfor
 
-        let ctags_args += ['--language-force=' . ctags_type]
-        let ctags_args += ['--' . ctags_type . '-kinds=' . ctags_kinds]
+            let ctags_args += ['--language-force=' . ctags_type]
+            let ctags_args += ['--' . ctags_type . '-kinds=' . ctags_kinds]
+        endif
     endif
 
     if has_key(a:typeinfo, 'ctagsbin')
@@ -2173,7 +2207,7 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
         if bufwinnr("__Tagbar__") != -1 &&
          \ (!s:known_files.has(a:realfname) ||
          \ !empty(s:known_files.get(a:realfname)))
-            echoerr 'Tagbar: Could not execute ctags for ' . a:fname . '!'
+            call s:warning('Tagbar: Could not execute ctags for ' . a:realfname . '!')
             echomsg 'Executed command: "' . ctags_cmd . '"'
             if !empty(ctags_output)
                 call s:debug('Command output:')
@@ -2266,10 +2300,14 @@ function! s:ParseTagline(part1, part2, typeinfo, fileinfo) abort
         call taginfo.initFoldState()
     catch /^Vim(\a\+):E716:/ " 'Key not present in Dictionary'
         " The tag has a 'kind' that doesn't exist in the type definition
-        call s:debug('ERROR Unknown tag kind: ' . taginfo.fields.kind)
-        echoerr 'Unknown tag kind encountered: ' . taginfo.fields.kind
-              \ 'Your ctags and Tagbar configurations are out of sync!'
-              \ 'Please read '':help tagbar-extend''.'
+        call s:debug('Warning: Unknown tag kind: ' . taginfo.fields.kind)
+        if index(s:warnings.type, a:typeinfo.ftype) == -1
+            call s:warning('Unknown tag kind encountered: ' .
+                \ '"' . taginfo.fields.kind . '".' .
+                \ ' Your ctags and Tagbar configurations are out of sync!' .
+                \ ' Please read '':help tagbar-extend''.')
+            call add(s:warnings.type, a:typeinfo.ftype)
+        endif
     endtry
 
     return taginfo
@@ -2815,9 +2853,12 @@ function! s:PrintHelp() abort
         silent  put ='\" ' . s:get_map_str('togglefold') . ': Toggle fold'
         silent  put ='\" ' . s:get_map_str('openallfolds') . ': Open all folds'
         silent  put ='\" ' . s:get_map_str('closeallfolds') . ': Close all folds'
+        silent  put ='\" ' . s:get_map_str('nextfold') . ': Go to next fold'
+        silent  put ='\" ' . s:get_map_str('prevfold') . ': Go to previous fold'
         silent  put ='\"'
         silent  put ='\" ---------- Misc -----------'
         silent  put ='\" ' . s:get_map_str('togglesort') . ': Toggle sort'
+        silent  put ='\" ' . s:get_map_str('toggleautoclose') . ': Toggle autoclose option'
         silent  put ='\" ' . s:get_map_str('zoomwin') . ': Zoom window in/out'
         silent  put ='\" ' . s:get_map_str('close') . ': Close window'
         silent  put ='\" ' . s:get_map_str('help') . ': Toggle help'
@@ -3009,18 +3050,13 @@ endfunction
 
 " s:ShowInPreviewWin() {{{2
 function! s:ShowInPreviewWin() abort
-    let taginfo = s:GetTagInfo(line('.'), 1)
+    let pos = getpos('.')
+    let taginfo = s:GetTagInfo(pos[1], 1)
 
     if empty(taginfo) || !taginfo.isNormalTag()
         return
     endif
 
-    call s:GotoFileWindow(taginfo.fileinfo, 1)
-    call s:mark_window()
-
-    " Check whether the preview window is already open and open it if not.
-    " This has to be done before the :psearch below so the window is relative
-    " to the Tagbar window.
     let pwin_open = 0
     for win in range(1, winnr('$'))
         if getwinvar(win, '&previewwindow')
@@ -3029,12 +3065,30 @@ function! s:ShowInPreviewWin() abort
         endif
     endfor
 
+    " We want the preview window to be relative to the file window in normal
+    " (horizontal) mode, and relative to the Tagbar window in vertical mode,
+    " to make the best use of space.
+    if g:tagbar_vertical == 0
+        call s:GotoFileWindow(taginfo.fileinfo, 1)
+        call s:mark_window()
+    endif
+
+    " Open the preview window if it is not already open. This has to be done
+    " explicitly before the :psearch below to better control its positioning.
     if !pwin_open
-        silent! execute
+        silent execute
             \ g:tagbar_previewwin_pos . ' pedit ' . taginfo.fileinfo.fpath
+        if g:tagbar_vertical != 0
+            silent execute 'vertical resize ' . g:tagbar_width
+        endif
         " Remember that the preview window was opened by Tagbar so we can
         " safely close it by ourselves
         let s:pwin_by_tagbar = 1
+    endif
+
+    if g:tagbar_vertical != 0
+        call s:GotoFileWindow(taginfo.fileinfo, 1)
+        call s:mark_window()
     endif
 
     " Use psearch instead of pedit since pedit essentially reloads the file
@@ -3052,8 +3106,9 @@ function! s:ShowInPreviewWin() abort
     call s:goto_win('P', 1)
     normal! zv
     normal! zz
-    call s:goto_markedwin()
+    call s:goto_markedwin(1)
     call s:goto_tagbar(1)
+    call cursor(pos[1], pos[2])
 endfunction
 
 " s:ShowPrototype() {{{2
@@ -3185,7 +3240,7 @@ endfunction
 " s:SetFoldLevel() {{{2
 function! s:SetFoldLevel(level, force) abort
     if a:level < 0
-        echoerr 'Foldlevel can''t be negative'
+        call s:warning('Foldlevel can''t be negative')
         return
     endif
 
@@ -3234,8 +3289,6 @@ endfunction
 
 " s:OpenParents() {{{2
 function! s:OpenParents(...) abort
-    let tagline = 0
-
     if a:0 == 1
         let tag = a:1
     else
@@ -3246,6 +3299,67 @@ function! s:OpenParents(...) abort
         call tag.openParents()
         call s:RenderKeepView()
     endif
+endfunction
+
+" s:GotoNextFold() {{{2
+function! s:GotoNextFold() abort
+    let curlinenr = line('.')
+    let newlinenr = line('.')
+
+    let range = range(line('.') + 1, line('$'))
+
+    for linenr in range
+        let taginfo = s:GetTagInfo(linenr, 0)
+
+        if empty(taginfo)
+            continue
+        elseif !empty(get(taginfo, 'children', [])) || taginfo.isKindheader()
+            let newlinenr = linenr
+            break
+        endif
+    endfor
+
+    if curlinenr != newlinenr
+        execute linenr
+        call winline()
+    endif
+
+    redraw
+endfunction
+
+" s:GotoPrevFold() {{{2
+function! s:GotoPrevFold() abort
+    let curlinenr = line('.')
+    let newlinenr = line('.')
+    let curtag = s:GetTagInfo(curlinenr, 0)
+    let curparent = get(curtag, 'parent', {})
+
+    let range = range(line('.') - 1, 1, -1)
+
+    for linenr in range
+        let taginfo = s:GetTagInfo(linenr, 0)
+
+        if empty(taginfo)
+            continue
+        " Check for the first tag that is either:
+        " - the last tag in an open fold, that is skip all tags that have the
+        "   same parent as the current one, or
+        " - a closed parent fold.
+        elseif (!empty(taginfo.parent) && taginfo.parent != curparent &&
+              \ empty(get(taginfo, 'children', []))) ||
+             \ ((!empty(get(taginfo, 'children', [])) || taginfo.isKindheader()) &&
+              \ taginfo.isFolded())
+            let newlinenr = linenr
+            break
+        endif
+    endfor
+
+    if curlinenr != newlinenr
+        execute linenr
+        call winline()
+    endif
+
+    redraw
 endfunction
 
 " Helper functions {{{1
@@ -3299,7 +3413,7 @@ function! s:AutoUpdate(fname, force) abort
     if s:known_files.has(a:fname)
         let curfile = s:known_files.get(a:fname)
         " if a:force || getbufvar(curfile.bufnr, '&modified') ||
-        if a:force || empty(curfile) ||
+        if a:force || empty(curfile) || curfile.ftype != sftype ||
          \ (filereadable(a:fname) && getftime(a:fname) > curfile.mtime)
             call s:debug('File data outdated, updating [' . a:fname . ']')
             call s:ProcessFile(a:fname, sftype)
@@ -3484,9 +3598,11 @@ function! s:EscapeCtagsCmd(ctags_bin, args, ...) abort
     call s:debug('Escaped ctags command: ' . ctags_cmd)
 
     if ctags_cmd == ''
-        echoerr 'Tagbar: Encoding conversion failed!'
-              \ 'Please make sure your system is set up correctly'
-              \ 'and that Vim is compiled with the "+iconv" feature.'
+        if !s:warnings.encoding
+            call s:warning('Tagbar: Ctags command encoding conversion failed!' .
+                \ ' Please read ":h g:tagbar_systemenc".')
+            let s:warnings.encoding = 1
+        endif
     endif
 
     return ctags_cmd
@@ -3498,6 +3614,12 @@ endfunction
 " http://vim.1045645.n5.nabble.com/bad-default-shellxquote-in-Widows-td1208284.html
 function! s:ExecuteCtags(ctags_cmd) abort
     call s:debug('Executing ctags command: ' . a:ctags_cmd)
+
+    if has('unix')
+        " Reset shell in case it is set to something incompatible like fish
+        let shell_save = &shell
+        set shell=sh
+    endif
 
     if exists('+shellslash')
         let shellslash_save = &shellslash
@@ -3526,6 +3648,10 @@ function! s:ExecuteCtags(ctags_cmd) abort
 
     if exists('+shellslash')
         let &shellslash = shellslash_save
+    endif
+
+    if has('unix')
+        let &shell = shell_save
     endif
 
     return ctags_output
@@ -3665,6 +3791,12 @@ function! s:ToggleHideNonPublicTags() abort
     call s:SetStatusLine('current')
 endfunction
 
+" s:ToggleAutoclose() {{{2
+function! s:ToggleAutoclose() abort
+    let g:tagbar_autoclose = !g:tagbar_autoclose
+    call s:SetStatusLine('current')
+endfunction
+
 " s:IsValidFile() {{{2
 function! s:IsValidFile(fname, ftype) abort
     call s:debug('Checking if file is valid [' . a:fname . ']')
@@ -3726,13 +3858,21 @@ function! s:SetStatusLine(current)
         let fname = ''
     endif
 
+    let flags = []
+    let flags += exists('w:autoclose') && w:autoclose ? ['c'] : []
+    let flags += g:tagbar_autoclose ? ['C'] : []
+    let flags += g:tagbar_hide_nonpublic ? ['v'] : []
+
     if exists('g:tagbar_status_func')
-        let args = [current, sort, fname]
+        let args = [current, sort, fname, flags]
         let &l:statusline = call(g:tagbar_status_func, args)
     else
         let colour = current ? '%#StatusLine#' : '%#StatusLineNC#'
-        let hide = g:tagbar_hide_nonpublic ? '[h] ' : ''
-        let text = colour . '[' . sort . '] ' . hide . fname
+        let flagstr = join(flags, '')
+        if flagstr != ''
+            let flagstr = '[' . flagstr . '] '
+        endif
+        let text = colour . '[' . sort . '] ' . flagstr . fname
         let &l:statusline = text
     endif
 
@@ -3749,7 +3889,7 @@ function! s:QuitIfOnlyWindow() abort
     endif
 
     let curwinnr = winnr()
-    let prevwinnr = winnr('#')
+    let prevwinnr = winnr('#') == 0 ? curwinnr : winnr('#')
     call s:goto_win(tagbarwinnr, 1)
 
     " Check if there is more than one window
@@ -3779,12 +3919,7 @@ function! s:NextNormalWindow() abort
         let buf = winbufnr(i)
 
         " skip unlisted buffers
-        if buflisted(buf) == 0
-            continue
-        endif
-
-        " skip un-modifiable buffers
-        if getbufvar(buf, '&modifiable') != 1
+        if !buflisted(buf)
             continue
         endif
 
@@ -3839,14 +3974,22 @@ endfunction
 
 " s:goto_markedwin() {{{2
 " Go to a previously marked window and delete the mark.
-function! s:goto_markedwin() abort
+function! s:goto_markedwin(...) abort
+    let noauto = a:0 > 0 ? a:1 : 0
     for window in range(1, winnr('$'))
-        call s:goto_win(window)
+        call s:goto_win(window, noauto)
         if exists('w:tagbar_mark')
             unlet w:tagbar_mark
             break
         endif
     endfor
+endfunction
+
+" s:warning() {{{2
+function! s:warning(msg) abort
+    echohl WarningMsg
+    echomsg a:msg
+    echohl None
 endfunction
 
 " TagbarBalloonExpr() {{{2
@@ -4056,7 +4199,7 @@ function! tagbar#gettypeconfig(type) abort
     let typeinfo = get(s:known_types, a:type, {})
 
     if empty(typeinfo)
-        echoerr 'Unknown type ' . a:type . '!'
+        call s:warning('Unknown type ' . a:type . '!')
         return
     endif
 
@@ -4082,6 +4225,11 @@ function! tagbar#gettypeconfig(type) abort
     let output .= "\\ }"
 
     silent put =output
+endfunction
+
+" tagbar#inspect() {{{2
+function! tagbar#inspect(var) abort
+    return get(s:, a:var)
 endfunction
 
 " Modeline {{{1
