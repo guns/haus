@@ -319,7 +319,7 @@ f()  { find-wrapper                                         --  "$@"; }; TCOMP f
 f1() { find-wrapper --predicate '-maxdepth 1'               --  "$@"; }; TCOMP find f1
 ff() { find-wrapper --predicate '( -type f -o -type l )'    --  "$@"; }; TCOMP find ff
 fF() { find-wrapper --predicate '-type f'                   --  "$@"; }; TCOMP find fF
-fx() { find-wrapper --predicate '-type f -executable'       --  "$@"; }; TCOMP find fF
+fx() { find-wrapper --predicate '-type f -executable'       --  "$@"; }; TCOMP find fx
 fl() { find-wrapper --predicate '-type l'                   --  "$@"; }; TCOMP find fl
 fd() { find-wrapper --predicate '-type d'                   --  "$@"; }; TCOMP find fd
 fstamp() { find-wrapper --predicate '-newer /tmp/timestamp' --  "$@"; }; TCOMP find fstamp
