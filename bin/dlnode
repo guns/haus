@@ -248,13 +248,7 @@ class Dlnode
     Δ = opts[:start] - opts[:index]
 
     resources.drop(Δ).map.with_index do |r, i|
-      command r, i + opts[:index] + Δ,
-              :cookie_jar => opts[:cookie_jar],
-              :dir => opts[:dir],
-              :format => opts[:format],
-              :user_agent => opts[:user_agent],
-              :curl_opts => opts[:curl_opts],
-              :retry => opts[:retry]
+      command r, i + opts[:index] + Δ, opts
     end
   end
 
