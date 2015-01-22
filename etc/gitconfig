@@ -71,27 +71,42 @@
     cp  = cherry-pick
 
     # Log
-    l    = log --decorate --graph --show-signature
-    lf   = log --decorate --graph --show-signature --first-parent --no-merges
-    lst  = log --decorate --graph --show-signature --stat
-    lfst = log --decorate --graph --show-signature --stat --first-parent --no-merges
+    l     = log --decorate --graph --show-signature
+    lf    = log --decorate --graph --show-signature --first-parent --no-merges
+    lfr   = log --decorate --graph --show-signature --first-parent --no-merges --date=relative
+    lst   = log --decorate --graph --show-signature --stat
+    lstr  = log --decorate --graph --show-signature --stat --date=relative
+    lfst  = log --decorate --graph --show-signature --stat --first-parent --no-merges
+    lfstr = log --decorate --graph --show-signature --stat --first-parent --no-merges --date=relative
 
-    lp   = log --decorate --patch --show-signature --stat
-    lfp  = log --decorate --patch --show-signature --stat --first-parent --no-merges
-    lpw  = log --decorate --patch --show-signature --stat --ignore-all-space
-    wlp  = log --decorate --patch --show-signature --stat --color-words=.
-    wlpw = log --decorate --patch --show-signature --stat --color-words=. --ignore-all-space
+    lp    = log --decorate --patch --show-signature --stat
+    lpr   = log --decorate --patch --show-signature --stat --date=relative
+    lfp   = log --decorate --patch --show-signature --stat --first-parent --no-merges
+    lfpr  = log --decorate --patch --show-signature --stat --first-parent --no-merges --date=relative
+    lpw   = log --decorate --patch --show-signature --stat --ignore-all-space
+    lpwr  = log --decorate --patch --show-signature --stat --ignore-all-space --date=relative
+    wlp   = log --decorate --patch --show-signature --stat --color-words=.
+    wlpr  = log --decorate --patch --show-signature --stat --color-words=. --date=relative
+    wlpwr = log --decorate --patch --show-signature --stat --color-words=. --ignore-all-space --date=relative
 
-    l1   = log --decorate --patch --show-signature --stat -1
-    l1w  = log --decorate --patch --show-signature --stat -1 --ignore-all-space
-    wl1  = log --decorate --patch --show-signature --stat -1 --color-words=.
+    l1    = log --decorate --patch --show-signature --stat -1
+    l1r   = log --decorate --patch --show-signature --stat -1 --date=relative
+    l1w   = log --decorate --patch --show-signature --stat -1 --ignore-all-space
+    l1wr  = log --decorate --patch --show-signature --stat -1 --ignore-all-space --date=relative
+    wl1   = log --decorate --patch --show-signature --stat -1 --color-words=.
+    wl1r  = log --decorate --patch --show-signature --stat -1 --color-words=. --date=relative
 
-    f    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s'
-    fa   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all
-    ff   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges
+    f     = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s'
+    fr    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --date=relative
+    fa    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all
+    far   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all --date=relative
+    ff    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges
+    ffr   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges --date=relative
 
-    lg   = log --patch -G
-    lgi  = log --patch -G --regexp-ignore-case
+    lg    = log --patch -G
+    lgr   = log --patch -G --date=relative
+    lgi   = log --patch -G --regexp-ignore-case
+    lgir  = log --patch -G --regexp-ignore-case --date=relative
 
     # Branches
     br   = branch -vv
