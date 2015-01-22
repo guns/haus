@@ -430,7 +430,7 @@ ALIAS iotop='iotop --only'
     echo "$cmd"
     eval "$cmd"
 }
-[[ -w /proc/sys/kernel/sysrq ]] && sysrq() {
+[[ -e /proc/sys/kernel/sysrq ]] && sysrq() {
     if (($#)); then
         echo "$@" > /proc/sys/kernel/sysrq
     else
