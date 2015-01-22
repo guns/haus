@@ -1276,9 +1276,11 @@ HAVE feh && {
 HAVE cmus && alias cmus='envtmux cmus'
 
 # pulseaudio
-ALIAS pastart='pulseaudio --start' \
-      pakill='pulseaudio --kill' \
-      parestart='pulseaudio --kill; pulseaudio --start'
+HAVE pulseaudio && {
+    alias pastart='run pulseaudio --start'
+    alias pakill='run pulseaudio --kill'
+    alias parestart='run pulseaudio --kill; run pulseaudio --start'
+}
 
 # youtubedown
 ALIAS youtubedown='youtubedown --verbose --progress' && {
