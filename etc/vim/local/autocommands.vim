@@ -248,6 +248,7 @@ augroup GUNS
 
     " Rust {{{1
     autocmd FileType rust
+        \ execute 'noremap! <buffer> <C-l> <Space>=><Space>' |
         \ SetWhitespace 4
 
     " sudo {{{1

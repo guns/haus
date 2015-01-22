@@ -476,6 +476,9 @@ noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//
 " with nothing for ASCII arrow
 noremap! <C-l> ->
 
+" Insert paired angle brackets
+noremap! <M-,> <><Left>
+
 " Indent lines (à la TextMate)
 nnoremap <4-[> a<C-d><Esc>
 nnoremap <4-]> a<C-t><Esc>
