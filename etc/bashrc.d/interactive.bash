@@ -351,7 +351,7 @@ alias ln='ln --verbose --interactive'
 alias lns='ln --symbolic'
 alias lnsf='lns --force'
 lndesktop() {
-    (($# == 1)) && [[ -L ~/Desktop || ! -e ~/Desktop ]] && [[ -d "$1" ]] && lnrel --force "$1" ~/Desktop
+    (($# == 1)) && [[ -L ~/Desktop || ! -e ~/Desktop ]] && [[ -d "$1" ]] && lnrelative --force "$1" ~/Desktop
 }
 lnnull() { run rm --recursive --force "${1%/}" && run ln --symbolic --force /dev/null "${1%/}"; }
 
