@@ -250,6 +250,10 @@ augroup GUNS
     autocmd FileType rust
         \ SetWhitespace 4
 
+    " sudo {{{1
+    autocmd BufRead,BufNewFile *sudoers.d/*
+        \ setlocal filetype=sudoers
+
     " Plugin: Unite.vim {{{1
     autocmd FileType unite
         \ silent! syntax clear Tab TrailingWS |
