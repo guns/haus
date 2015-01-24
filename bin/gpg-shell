@@ -2,14 +2,10 @@
 
 export GPG_TTY="$(tty)"
 
-PINENTRY_PROGRAM=
-
-if [ "$(id -u)" -eq 0 ] || [ -n "$SSH_TTY" ]; then
-    PINENTRY_PROGRAM='--pinentry-program=/usr/bin/pinentry-curses'
-fi
+PINENTRY_PROGRAM="--pinentry-program=${PINENTRY_PROGRAM:-/usr/bin/pinentry-curses}"
 
 if [ "$#" -eq 0 ]; then
-    exec gpg-agent $PINENTRY_PROGRAM --daemon "${SHELL:-$(command -v bash)}"
+    exec gpg-agent "$PINENTRY_PROGRAM" --daemon "${SHELL:-$(command -v bash)}"
 else
-    exec gpg-agent $PINENTRY_PROGRAM --daemon "$@"
+    exec gpg-agent "$PINENTRY_PROGRAM" --daemon "$@"
 fi
