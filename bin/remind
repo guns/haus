@@ -199,10 +199,15 @@ class Remind
 
     alarm.time = args.first
 
-    if args.size > 1 and alarm.notification.is_a? NERV::Util::Notification
-      msg = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
-      msg = 'Timer complete' if msg.nil? or msg.empty?
-      alarm.notification.message = msg
+    if alarm.notification.is_a? NERV::Util::Notification
+      case args.size
+      when 1
+        alarm.notification.message = "Time's up."
+      else
+        msg = (args.size == 2 and args[1] == '-') ? $stdin.read : args.drop(1).join(' ')
+        msg = 'Timer complete' if msg.nil? or msg.empty?
+        alarm.notification.message = msg
+      end
     end
 
     pid = fork { alarm.activate }
