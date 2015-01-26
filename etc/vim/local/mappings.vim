@@ -310,10 +310,10 @@ noremap <4-.> :<C-u>cd %:h \| echo getcwd()<CR>
 
 """ Buffer commands {{{1
 
-" REPLACE linewise-downward with nothing to alias toggle-fold
+" REPLACE linewise-downward with NOTHING to alias toggle-fold
 nnoremap <C-j> za
 
-" REPLACE ex-mode with nothing to alias (n)Q as :quit
+" REPLACE ex-mode with NOTHING to alias (n)Q as :quit
 nnoremap Q :quit<CR>
 
 " Save / Quit Buffer
@@ -456,7 +456,7 @@ cnoremap <4-CR> <End>;
 noremap  <M-BS> db
 noremap! <M-BS> <C-w>
 
-" REPLACE switch-keyboard-language with nothing to alias (nvoi)<C-_>
+" REPLACE switch-keyboard-language with NOTHING to alias (nvoi)<C-_>
 " as undo-and-return-to-normal-mode
 noremap  <C-_> :<C-u>undo<CR>
 inoremap <C-_> <Esc>:<C-u>undo<CR>
@@ -473,7 +473,7 @@ vnoremap <4-a> <Esc>VggoG
 noremap <silent> <Leader>k :<C-u>let b:__reg_slash__ = @/<CR>m`:%s/\v[ \t\r]+$//e<CR>:let @/ = b:__reg_slash__ \| unlet b:__reg_slash__<CR>``
 
 " REPLACE insertmode-go-to-normal-mode and command-line-insert-longest-match
-" with nothing for ASCII arrow
+" with NOTHING for ASCII arrow
 noremap! <C-l> ->
 
 " Insert paired angle brackets
@@ -567,10 +567,11 @@ noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
 noremap <Leader>M :<C-u>call Prompt('HMan ', '', 'shellcmd')<CR>
 
 " Plugin: vim-easy-align
-nmap gA     <Plug>(EasyAlign)
-vmap gA     <Plug>(EasyAlign)
-nmap g<M-a> <Plug>(LiveEasyAlign)
-vmap g<M-a> <Plug>(LiveEasyAlign)
+" REPLACE (nv)ga print-ascii with NOTHING to alias EasyAlign
+nmap ga <Plug>(EasyAlign)
+vmap ga <Plug>(EasyAlign)
+nmap gA <Plug>(LiveEasyAlign)
+vmap gA <Plug>(LiveEasyAlign)
 
 " Plugin: NrrwRgn
 nnoremap <Leader>nr vip:NarrowRegion<CR>
