@@ -1,7 +1,21 @@
-snippet fn "fn" b
+snippet fn "fn" w
 fn $1($2) ${3:-> $4 }{
 	$0
 }
+endsnippet
+
+snippet F "fn decl" w
+fn $1($2) ${3:-> $4};
+endsnippet
+
+snippet mfn "method fn" w
+fn $1(&self$2) ${3:-> $4 }{
+	$0
+}
+endsnippet
+
+snippet se "&self" w
+&self
 endsnippet
 
 snippet pfn "pub fn" w
@@ -54,6 +68,12 @@ match $1 {
 }
 endsnippet
 
+snippet I "impl" w
+impl $1 {
+	$0
+}
+endsnippet
+
 snippet = "=> " w
 => $0
 endsnippet
@@ -96,6 +116,10 @@ snippet .i ".iter()" i
 .iter()
 endsnippet
 
+snippet it "iter::" w
+iter::
+endsnippet
+
 snippet .tos ".to_string()" i
 .to_string()
 endsnippet
@@ -116,12 +140,24 @@ snippet vec "vec!" w
 vec![$0]
 endsnippet
 
+snippet V "Vec<>" w
+Vec<$1>
+endsnippet
+
 snippet .sl ".slice()" i
 .slice($1, $2)
 endsnippet
 
 snippet ra "range()" i
 range($1, $2)
+endsnippet
+
+snippet ras "range_step()" w
+range_step($1, $2, $3)
+endsnippet
+
+snippet fmt "format!" w
+format!(%0)
 endsnippet
 
 snippet io "std::io" w
@@ -132,14 +168,26 @@ snippet u "use" b
 use $0;
 endsnippet
 
-snippet fs "from_str()" w
-from_str($0)
-endsnippet
-
 snippet mod "mod" w
 mod $1 {
 	$0
 }
+endsnippet
+
+snippet map "map" w
+map(|$1| $0)
+endsnippet
+
+snippet fol "fold" w
+fold($1, |$2, $3| $0)
+endsnippet
+
+snippet :n "::new()" i
+::new($1)
+endsnippet
+
+snippet hm "HashMap" w
+HashMap
 endsnippet
 
 snippet #T "#[test]" b
@@ -167,4 +215,31 @@ endsnippet
 
 snippet B "Box<>" w
 Box<$0>
+endsnippet
+
+snippet uns "unsafe {}" w
+unsafe {
+	$0
+}
+endsnippet
+
+snippet C "C" w
+extern crate $0;
+endsnippet
+
+snippet CRATE "CRATE" w
+#![crate_type = "lib"]
+#![crate_name = "$0"]
+endsnippet
+
+snippet ubench "use bench" w
+extern crate test;
+use test::Bencher;
+endsnippet
+
+snippet bfn "bench fn" w
+#[bench]
+fn bench_$1(b: &mut Bencher) {
+	b.iter(|| $0);
+}
 endsnippet
