@@ -139,7 +139,7 @@ augroup GUNS
     " Ini conf gitconfig {{{1
     autocmd BufRead,BufNewFile *gitconfig
         \ setlocal filetype=gitconfig
-    autocmd BufRead,BufNewFile *.INI
+    autocmd BufRead,BufNewFile *.INI,*.toml
         \ setlocal filetype=dosini
     autocmd FileType dosini,gitconfig
         \ SetWhitespace 4 8
