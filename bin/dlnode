@@ -10,6 +10,7 @@ require 'fileutils'
 require 'uri'
 require 'shellwords'
 require 'nokogiri'
+require 'haus/utils'
 
 class Dlnode
   DEFAULTS = {
@@ -28,10 +29,10 @@ class Dlnode
   }
 
   class Pattern
-    attr_accessor :selector, :attribute, :regexp
+    attr_accessor :selector, :attribute, :regexp, :gsub
 
     def initialize pattern_str
-      @selector, @attribute, @regexp = parse pattern_str
+      @selector, @attribute, @regexp, @gsub = parse pattern_str
     end
 
     def blank? x
@@ -46,11 +47,17 @@ class Dlnode
     end
 
     def parse pattern_str
-      a, b, c = pattern_str.split /(?<!\\):/, 3
+      a, b, c, d = pattern_str.split /(?<!\\):/, 4
 
       [blank?(a) ? 'a' : a,
        blank?(b) ? nil : b,
-       blank?(c) ? nil : Regexp.new(c)]
+       blank?(c) ? nil : Haus::Utils.regexp_parse(c),
+       blank?(d) ? nil : parse_gsub(d)]
+    end
+
+    def parse_gsub gsub_str
+      pat, rep = gsub_str.split /(?<!\\),/, 2
+      [Haus::Utils.regexp_parse(pat), rep]
     end
   end
 
@@ -66,12 +73,19 @@ class Dlnode
     def urijoin base, path
       URI.join(base, path).to_s
     rescue URI::InvalidURIError
+      # Maybe the path isn't properly escaped
+      begin
+        URI.join(base, URI.escape(path)).to_s
+      rescue URI::InvalidURIError
+      end
     end
 
     def extract_resources pattern, opts
       html_str = fetch opts
 
       return [] if html_str.nil?
+
+      html_str.gsub! *pattern.gsub if pattern.gsub
 
       Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
         if not pattern.attribute and el.name == 'form'
