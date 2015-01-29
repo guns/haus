@@ -33,8 +33,12 @@ bspc rule --add kupfer.py   focus=true floating=true center=true
 bspc rule --add liferea     focus=true private=true
 bspc rule --add pavucontrol focus=true floating=true center=true
 bspc rule --add skype       focus=true floating=true
-bspc rule --add sxiv        focus=true floating=true fullscreen=true
+bspc rule --add sxiv        focus=true floating=true center=true fullscreen=true
 bspc rule --add Thunar      focus=true floating=true follow=true
-bspc rule --add Toplevel    focus=true floating=true
 bspc rule --add vlc         focus=true floating=true
 bspc rule --add xsensors    focus=true floating=true sticky=true
+
+# Firefox modal windows
+bspc rule --add Cookies     focus=true floating=true
+bspc rule --add Places      focus=true floating=true
+bspc rule --add Toplevel    focus=true floating=true

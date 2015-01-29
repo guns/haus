@@ -257,17 +257,14 @@ super + alt + shift + F9
 F10
 	wmctrl -xa 'Firefox' || exec firefox
 
-super + shift + F10
+shift + F10
 	exec firefox
-
-super + alt + shift + F10
-	exec firefox -private-window
 
 super + F10
 	wmctrl -xa 'Chromium' || exec chromium
 
 super + alt + F10
-	wmctrl -xa 'Chromium' || exec chromium --incognito
+	exec firefox -private-window -P alternate
 
 alt + F10
 	wmctrl -a 'Liferea' || exec liferea
@@ -281,10 +278,10 @@ super + F12
 	urxvt-client -cd ~/Downloads -g 120x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
 alt + F12
-	chromium --incognito https://mail.google.com/
+	open https://mail.google.com/
 
 super + alt + F12
-	chromium --incognito https://voice.google.com/
+	open https://voice.google.com/
 
 super + control + e
 	urxvt-client -icon ~/.icons/haus/vim.svg -e vim
