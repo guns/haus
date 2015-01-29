@@ -90,7 +90,7 @@ noremap <C-S-i> :emenu Tools.Web Developer.Inspector<CR>
 noremap <C-S-l> :emenu Tools.Web Developer.Web Console<CR>
 noremap <C-S-n> :emenu Tools.Web Developer.Network<CR>
 noremap <C-S-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
-noremap <C-S-p> :emenu File.New Private Window<CR>
+noremap <C-S-p> :emenu Edit.Preferences<CR>
 imap <C-S-t> <Esc><C-S-t>
 cmap <C-S-t> <Esc><C-S-t>
 
