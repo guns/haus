@@ -54,7 +54,7 @@ __prepend_path__() {
     local dir newpath
     for dir in "${@:2}"; do
         if newpath="$(ruby -e '
-            paths = ENV[ARGV[0]].split ":"
+            paths = (ENV[ARGV[0]] || "").split ":"
             dir = File.expand_path ARGV[1]
             abort unless File.directory? dir
             puts paths.reject { |d| d == dir }.unshift(dir).join(":")
