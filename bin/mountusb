@@ -13,7 +13,7 @@ require 'optparse'
 require 'haus/utils'
 
 class Mountusb
-  OWNER_FILESYSTEMS = Set.new %w[adfs affs debugfs devpts fat vfat msdos
+  OWNED_FILESYSTEMS = Set.new %w[adfs affs debugfs devpts fat vfat msdos
                                  umsdos hfs hpfs iso9660 ntfs proc tmpfs
                                  udf usbfs]
 
@@ -92,7 +92,7 @@ class Mountusb
 
       opts = @mountoptions.dup
 
-      if OWNER_FILESYSTEMS.include? type
+      if OWNED_FILESYSTEMS.include? type
         opts << "uid=#{@uid}" if @uid
         opts << "gid=#{@gid}" if @gid
       end
