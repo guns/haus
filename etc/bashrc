@@ -93,6 +93,7 @@
 #   shopt -s globstar (**/*)            4.0-alpha
 #   {0x..0y}                            4.0-alpha
 #   |&                                  4.0-alpha
+#   shell-forward-word,...              4.0-beta
 #   ACL perm support                    4.1-alpha
 #   BASHOPTS                            4.1-alpha
 #   BASH_XTRACEFD                       4.1-alpha

@@ -100,6 +100,10 @@ $include ~/.inputrc.d/utf-8
 ### bash
 
 $if bash
+    # Rebinds
+    "\eb":          shell-backward-word
+    "\ef":          shell-forward-word
+
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
     "\033\007r":    "\C-] tmuxeval \n"
