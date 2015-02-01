@@ -4,6 +4,7 @@
 require 'etc'
 require 'fileutils'
 require 'set'
+require 'haus/utils'
 
 auth = "authorized_keys"
 
@@ -13,7 +14,7 @@ auth = "authorized_keys"
   Dir.chdir File.join(user.dir, ".ssh") do
     authpath = File.join user.dir, ".ssh", auth
 
-    if File.symlink? auth and File.readlink(auth) == "/dev/null"
+    if File.symlink? auth and Haus::Utils.readlink(auth) == "/dev/null"
       warn "%s is linked to /dev/null" % authpath
       next
     end

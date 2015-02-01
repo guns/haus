@@ -68,7 +68,7 @@ class Mountusb
 
   def usbdevices
     Hash[Dir["/dev/disk/by-id/usb-*"].map do |l|
-      [File.expand_path(File.readlink(l), File.dirname(l)), l]
+      [Haus::Utils.readlink(l), l]
     end]
   end
 

@@ -3,6 +3,7 @@
 require 'find'
 require 'shellwords'
 require 'haus/task'
+require 'haus/utils'
 
 class Haus
   class Unlink < Task
@@ -43,7 +44,7 @@ class Haus
           haus = Regexp.compile '\A%s/' % options.path
           all_dotfiles user.dir do |dst|
             if File.symlink? dst
-              src = File.expand_path File.readlink(dst), File.dirname(dst)
+              src = Haus::Utils.readlink dst
               if src =~ haus
                 if options.all or (options.broken and not queue.extant? src)
                   queue.add_deletion dst
@@ -54,7 +55,7 @@ class Haus
         else
           hausfiles user do |src, dst|
             begin
-              if File.symlink? dst and File.expand_path(File.readlink(dst), File.dirname(dst)) == src
+              if File.symlink? dst and Haus::Utils.readlink(dst) == src
                 queue.add_deletion dst
               end
             rescue Errno::ENOENT

@@ -7,6 +7,11 @@ class Haus; end
 module Haus::Utils
   extend self
 
+  # Read a symlink, returning an expanded absolute path string
+  def readlink path
+    File.expand_path File.readlink(path), File.dirname(path)
+  end
+
   # Returns the relative path between the `physical` (non-link-traversed)
   # paths of given files.
   def relpath source, destination

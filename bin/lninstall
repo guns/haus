@@ -10,6 +10,7 @@ require 'ostruct'
 require 'fileutils'
 require 'set'
 require 'haus/queue'
+require 'haus/utils'
 
 class Lninstall
   attr_reader :options, :queue
@@ -131,15 +132,11 @@ class Lninstall
     end
   end
 
-  def readlink link
-    File.expand_path File.readlink(link), File.dirname(link)
-  end
-
   # Returns a list of all files in dst that link to files in src;
   # the files returned may have different basenames than their sources
   def dst_files
     @dst_files ||= source_files(dst).select do |f|
-      File.symlink? f and src_files.include? readlink(f)
+      File.symlink? f and src_files.include? Haus::Utils.readlink(f)
     end
   end
 

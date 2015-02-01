@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'etc'
+require 'haus/utils'
 
 class Checkpermissions
   USER_FILE_PATTERN = Regexp.compile %q(\A%s/) % File.expand_path('~')
@@ -40,12 +41,8 @@ class Checkpermissions
     end
   end
 
-  def readlink path
-    File.expand_path File.readlink(path), File.dirname(path)
-  end
-
-  def reflective_path? path
-    File.symlink?(path) and readlink(path) =~ %r{\A/proc/self/}
+  def ignore_link? path
+    File.symlink?(path) and Haus::Utils.readlink(path) =~ %r{\A/proc/self/|\A/dev/null\z}
   end
 
   def compile_specs spec_arguments
@@ -79,8 +76,8 @@ class Checkpermissions
     errors = []
 
     specs.each do |(path, owner_uid, owner_gid, mask)|
-      if reflective_path? path
-        warn "Skipping magic symlink #{path} → #{readlink path}"
+      if ignore_link? path
+        warn "Skipping symlink #{path} → #{Haus::Utils.readlink path}"
         next
       end
 

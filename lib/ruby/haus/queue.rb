@@ -331,6 +331,8 @@ class Haus
       options.logger.fmt *args
     end
 
+    # Compare the results of File.readlink(dst) directly to enable switching
+    # link styles
     def linked? src, dst
       File.readlink(dst) == (options.relative ? Haus::Utils.relpath(src, dst) : src)
     end
@@ -352,7 +354,7 @@ class Haus
       case astat.ftype
       when 'link'
         # Expand relative links before comparing
-        asrc, bsrc = [a, b].map { |f| File.expand_path File.readlink(f), File.join(f, '..') }
+        asrc, bsrc = [a, b].map { |f| Haus::Utils.readlink f }
         asrc == bsrc
       when 'directory'
         # Dir::entries just calls readdir(3), so we filter the dot directories
@@ -459,9 +461,9 @@ class Haus
         if File.ftype(src) == 'link'
           lsrc = File.readlink src
           # Leave absolute paths alone, but recalculate relative paths
-          srcpath = lsrc =~ %r{\A/} ?
-                    lsrc :
-                    Haus::Utils.relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
+          srcpath = lsrc[0] == '/' \
+                    ? lsrc \
+                    : Haus::Utils.relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
           FileUtils.ln_s srcpath, dst, fopts
         else
           # NOTE: Explicit :dereference_root option required for 1.8.6
