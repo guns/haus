@@ -73,6 +73,7 @@ cnoremap <C-S-o> <Esc>:tabonly<CR>
 noremap \- :zoom! -10<CR>
 noremap = :zoom! +10<CR>
 noremap 0 :zoom! 100<CR>
+noremap d :emenu File.Close Tab<CR>
 noremap D :javascript gBrowser.treeStyleTab._closeChildTabs(gBrowser.mCurrentTab);<CR>
 noremap w :javascript TreeStyleTabService.toggleAutoHide(TreeStyleTabService.getTabBrowserFromChild(this));<CR>
 
