@@ -20,6 +20,7 @@ noremap <C-a> <NOP>
 
 set hintchars=sadfjklewcmpgh
 set editor='urxvt -e vim'
+set titlestring='Mozilla Firefox'
 
 """ Command line mappings {{{1
 
