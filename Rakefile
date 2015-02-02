@@ -193,6 +193,7 @@ task :env do
       { :base => "#{@vim}/refheap.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/regbuf.vim",              :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/reporoot.vim",            :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/rust.vim",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/scratch.vim",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/screen.vim",              :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/Shebang",                 :branch => %w[master guns], :files => :pathogen },
@@ -293,18 +294,6 @@ task :env do
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           # Copy bash completion file
           { 'misc/bash/go' => 'etc/bashrc.d/completions/go' }
-        }
-      },
-
-      {
-        :base => "#{@src}/READONLY/rust",
-        :branch => %w[master],
-        :files => lambda { |proj|
-          src = "#{proj.base}/src/etc/vim"
-          dst = "#{proj.haus}/etc/vim/bundle/rust"
-          FileUtils.mkdir_p dst
-          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
-          nil
         }
       },
 
