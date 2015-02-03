@@ -454,3 +454,28 @@ task :dirbindings do
   fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
   exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
 end
+
+namespace :opensearch do
+  desc 'Remove XML files'
+  task :clean do
+    rm Dir['etc/%local/%share/%kupfer/searchplugins/*.xml']
+  end
+
+  desc 'Generate XML files'
+  task :generate => :clean do
+    require 'yaml'
+    load 'bin/opensearch'
+
+    o = Opensearch.new
+
+    Dir.chdir 'etc/%local/%share/%kupfer/searchplugins' do
+      YAML.load_file(File.expand_path 'search-engines.yml').each do |name, arg|
+        url, method = arg
+        puts '%s => %s (%s)' % [name, url, method || 'GET']
+        File.open '%s.xml' % name, 'w' do |f|
+          f.puts o.document(name, url, method || 'GET')
+        end
+      end
+    end
+  end
+end
