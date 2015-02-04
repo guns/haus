@@ -19,6 +19,7 @@
 'delimitMate_expand_cr'	delimitMate.txt	/*'delimitMate_expand_cr'*
 'delimitMate_expand_inside_quotes'	delimitMate.txt	/*'delimitMate_expand_inside_quotes'*
 'delimitMate_expand_space'	delimitMate.txt	/*'delimitMate_expand_space'*
+'delimitMate_insert_eol_marker'	delimitMate.txt	/*'delimitMate_insert_eol_marker'*
 'delimitMate_jump_expansion'	delimitMate.txt	/*'delimitMate_jump_expansion'*
 'delimitMate_matchpairs'	delimitMate.txt	/*'delimitMate_matchpairs'*
 'delimitMate_nesting_quotes'	delimitMate.txt	/*'delimitMate_nesting_quotes'*
@@ -27,6 +28,8 @@
 'delimitMate_smart_matchpairs'	delimitMate.txt	/*'delimitMate_smart_matchpairs'*
 'delimitMate_smart_quotes'	delimitMate.txt	/*'delimitMate_smart_quotes'*
 'loaded_delimitMate'	delimitMate.txt	/*'loaded_delimitMate'*
+:DelimitMateOff	delimitMate.txt	/*:DelimitMateOff*
+:DelimitMateOn	delimitMate.txt	/*:DelimitMateOn*
 :DelimitMateReload	delimitMate.txt	/*:DelimitMateReload*
 :DelimitMateSwitch	delimitMate.txt	/*:DelimitMateSwitch*
 :DelimitMateTest	delimitMate.txt	/*:DelimitMateTest*
@@ -37,6 +40,7 @@ delimitMate#WithinEmptyPair()	delimitMate.txt	/*delimitMate#WithinEmptyPair()*
 delimitMate-contents	delimitMate.txt	/*delimitMate-contents*
 delimitMate.txt	delimitMate.txt	/*delimitMate.txt*
 delimitMateAutoClose	delimitMate.txt	/*delimitMateAutoClose*
+delimitMateAutocmds	delimitMate.txt	/*delimitMateAutocmds*
 delimitMateBackspace	delimitMate.txt	/*delimitMateBackspace*
 delimitMateBalance	delimitMate.txt	/*delimitMateBalance*
 delimitMateCommands	delimitMate.txt	/*delimitMateCommands*
@@ -56,3 +60,5 @@ delimitMateSmartMatchpairs	delimitMate.txt	/*delimitMateSmartMatchpairs*
 delimitMateSmartQuotes	delimitMate.txt	/*delimitMateSmartQuotes*
 delimitMateSyntax	delimitMate.txt	/*delimitMateSyntax*
 delimitMateTodo	delimitMate.txt	/*delimitMateTodo*
+delimitMate_map	delimitMate.txt	/*delimitMate_map*
+delimitMate_unmap	delimitMate.txt	/*delimitMate_unmap*
