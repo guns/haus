@@ -886,6 +886,17 @@ archivesrc() {
     done
 }
 
+### Benchmarking
+
+HAVE perf && perfstat() {
+    local repeat=1
+    if [[ "$1" == +([0-9]) ]]; then
+        local repeat="$1"
+        shift
+    fi
+    run perf stat --repeat="$repeat" "$@" 2>&1 >/dev/null
+}
+
 ### Ruby
 
 type ruby &>/dev/null && {
