@@ -240,7 +240,7 @@ super + F2
 	exec thunar ~/Downloads
 
 F9
-	wmctrl -a "guns ❦ $HOSTNAME"
+	wmctrl -a "$USER ❦ $HOSTNAME"
 
 super + F9
 	wmctrl -a "root ❦ $HOSTNAME"
