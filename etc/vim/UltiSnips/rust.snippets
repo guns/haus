@@ -14,14 +14,30 @@ fn $1(&self$2) ${3:-> $4 }{
 }
 endsnippet
 
-snippet se "&self" w
-&self
-endsnippet
-
 snippet pfn "pub fn" w
 pub fn $1($2) ${3:-> $4 }{
 	$0
 }
+endsnippet
+
+snippet ufn "unsafe fn" w
+unsafe fn $1($2) ${3:-> $4};
+endsnippet
+
+snippet pufn "pub unsafe fn" w
+pub unsafe fn $1($2) ${3:-> $4};
+endsnippet
+
+snippet f "||" w
+|$1| $0
+endsnippet
+
+snippet mf "mf" w
+move |$1| $0
+endsnippet
+
+snippet se "&self" w
+&self
 endsnippet
 
 snippet pr "print!" w
@@ -64,8 +80,12 @@ endsnippet
 
 snippet M "match" w
 match $1 {
-	_ => $0
+	${2:_ => $0}
 }
+endsnippet
+
+snippet ret "return" w
+return $0;
 endsnippet
 
 snippet I "impl" w
@@ -157,7 +177,7 @@ range_step($1, $2, $3)
 endsnippet
 
 snippet fmt "format!" w
-format!(%0)
+format!($0)
 endsnippet
 
 snippet io "std::io" w
@@ -209,6 +229,10 @@ snippet mu "&mut" w
 &mut $0
 endsnippet
 
+snippet .uw "unwrap" i
+.unwrap()
+endsnippet
+
 snippet b "box" w
 box $0
 endsnippet
@@ -218,9 +242,7 @@ Box<$0>
 endsnippet
 
 snippet uns "unsafe {}" w
-unsafe {
-	$0
-}
+unsafe {$0}
 endsnippet
 
 snippet C "C" w
