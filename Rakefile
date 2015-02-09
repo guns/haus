@@ -285,6 +285,12 @@ task :env do
       },
 
       {
+        :base   => "#{@vim}/vim-go",
+        :branch => %w[master],
+        :files => :pathogen
+      },
+
+      {
         :base => "#{@src}/nginx",
         :branch => %w[master vim],
         :files => lambda { |proj|
