@@ -285,19 +285,6 @@ task :env do
       },
 
       {
-        :base   => "#{@src}/READONLY/go",
-        :branch => %w[master],
-        :files => lambda { |proj|
-          src = "#{proj.base}/misc/vim"
-          dst = "#{proj.haus}/etc/vim/bundle/go"
-          FileUtils.mkdir_p dst
-          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
-          # Copy bash completion file
-          { 'misc/bash/go' => 'etc/bashrc.d/completions/go' }
-        }
-      },
-
-      {
         :base => "#{@src}/nginx",
         :branch => %w[master vim],
         :files => lambda { |proj|
