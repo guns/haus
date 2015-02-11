@@ -2477,6 +2477,8 @@ set pager_stop=yes
 #
 #
 # If set, mutt will use a possibly-running gpg-agent(1) process.
+# Note that as of version 2.1, GnuPG no longer exports GPG_AGENT_INFO, so
+# mutt no longer verifies if the agent is running.
 # (PGP only)
 #
 
@@ -3399,16 +3401,15 @@ set signature="~/.mutt/signature"
 # (S/MIME only)
 #
 
-# set smime_encrypt_with=""
+# set smime_encrypt_with="aes256"
 #
 # Name: smime_encrypt_with
 # Type: string
-# Default: ""
+# Default: "aes256"
 #
 #
 # This sets the algorithm that should be used for encryption.
-# Valid choices are ``des'', ``des3'', ``rc2-40'', ``rc2-64'', ``rc2-128''.
-# If unset, ``3des'' (TripleDES) is used.
+# Valid choices are ``aes128'', ``aes192'', ``aes256'', ``des'', ``des3'', ``rc2-40'', ``rc2-64'', ``rc2-128''.
 # (S/MIME only)
 #
 
