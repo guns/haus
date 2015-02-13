@@ -253,6 +253,19 @@ augroup GUNS
         \ SetTextwidth 78 |
         \ SetWhitespace 4
 
+    " Golang {{{1
+    autocmd FileType go
+        \ execute 'noremap! <buffer> <C-h>          <-'                      |
+        \ execute 'noremap! <buffer> <C-l>          <Space>:=<Space>'        |
+        \ execute 'nmap     <buffer> K              <Plug>(go-doc-vertical)' |
+        \ execute 'nmap     <buffer> <C-w><C-]>     <Plug>(go-def-split)'    |
+        \ execute 'nmap     <buffer> <C-]>          <Plug>(go-def)'          |
+        \ execute 'nmap     <buffer> [d             <Plug>(go-def-vertical)' |
+        \ execute 'nmap     <buffer> ]d             <Plug>(go-def)'          |
+        \ execute 'nmap     <buffer> <LocalLeader>i <Plug>(go-info)'         |
+        \ execute 'nmap     <buffer> <LocalLeader>r <Plug>(go-run)'          |
+        \ execute 'nmap     <buffer> <LocalLeader>R :<C-u>GoRun %<CR>'
+
     " sudo {{{1
     autocmd BufRead,BufNewFile *sudoers.d/*
         \ setlocal filetype=sudoers

@@ -206,6 +206,7 @@ ALIAS comp='complete -p'
 # PATH prefixing functions
 path() { __prepend_path__ PATH "$@"; }
 ldpath() { __prepend_path__ LD_LIBRARY_PATH "$@"; }
+gopath() { __prepend_path__ GOPATH "$@"; }
 
 # Toggle xtrace, verbose mode
 setx() {

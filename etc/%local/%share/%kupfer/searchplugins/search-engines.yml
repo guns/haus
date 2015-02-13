@@ -17,6 +17,8 @@ qenglish:            https://english.stackexchange.com/search?q=***
 qetymology:          http://www.etymonline.com/index.php?search=***
 qflickr:             https://www.flickr.com/search/?q=***
 qgithub:             https://github.com/search?q=***
+qgodoc:              https://godoc.org/?q=***
+qgolang:             https://golang.org/search?q=***
 qgoogle:             https://www.google.com/search?pws=0&tbs=li:1&q=***
 qgroups:             https://groups.google.com/groups/search?q=***
 qhnsearch:           https://hn.algolia.com/#!/all/sort_by_date/prefix/0/***

@@ -315,6 +315,16 @@ let g:easy_align_delimiters = {
     \ ';': { 'pattern': ';\+', 'ignore_groups': ['String'] }
     \ }
 
+" Plugin: vim-go
+let g:play_browser_command = 'open'
+let g:go_def_mapping_enabled = 0
+let g:go_snippet_engine = ''
+let g:go_highlight_operators = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_build_constraints = 1
+
 """ MAPPINGS and AUTOCOMMANDS {{{1
 
 " Set modifiers and load modifier mapping functions
