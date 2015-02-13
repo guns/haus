@@ -894,7 +894,8 @@ HAVE perf && perfstat() {
         local repeat="$1"
         shift
     fi
-    run perf stat --repeat="$repeat" "$@" 2>&1 >/dev/null
+    local events='cycles,instructions,cache-references,cache-misses,branches,branch-misses,page-faults,context-switches,cpu-migrations,task-clock'
+    run perf stat --event="$events" --repeat="$repeat" "$@" 2>&1 >/dev/null
 }
 
 ### Ruby
