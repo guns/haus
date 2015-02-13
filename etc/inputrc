@@ -260,8 +260,7 @@ $if bash
     "\033\007j":    "\C-] J \n"
 
     # password-store
-    "\C-xp":        "\C-]pass "
-    "\C-xP":        "\C-]passclip "
+    "\C-xp":        "\C-]passclip "
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
