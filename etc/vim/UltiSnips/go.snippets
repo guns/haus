@@ -36,6 +36,10 @@ snippet sf "fmt.Sprintf()" w
 fmt.Sprintf($0)
 endsnippet
 
+snippet ssc "fmt.Sscan()" w
+fmt.Sscan($0)
+endsnippet
+
 snippet C "Constant declaration" b
 const ${1:name}${2/(.+)/ /}${2:type} = ${0:value}
 endsnippet
@@ -171,6 +175,10 @@ endsnippet
 
 snippet mk "make()" w
 make($0)
+endsnippet
+
+snippet N "new()" w
+new($0)
 endsnippet
 
 # functions
