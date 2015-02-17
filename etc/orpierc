@@ -14,6 +14,7 @@ set conserve_memory="false"
 # keys for "edit" operations, which affect the data that
 # is currently being entered
 bind "n"              edit_minus
+bind ""             edit_backspace
 bind "<space>"        edit_backspace
 bind "<return>"       edit_enter
 bind "`"              edit_scientific_notation_base
@@ -88,11 +89,13 @@ bind "E"              browse_edit
 # keys for abbrev mode operations
 bind "'"              abbrev_exit
 bind "<return>"       abbrev_enter
+bind ""             abbrev_backspace
 bind "<space>"        abbrev_backspace
 
 # keys for variable edit mode operations
 bind "@"              variable_cancel
 bind "<return>"       variable_enter
+bind ""             variable_backspace
 bind "<space>"        variable_backspace
 bind "<tab>"          variable_complete
 
