@@ -256,8 +256,11 @@ $if bash
     # X
     "\C-xX":        "\C-] ((EUID)) && [[ ! $WINDOWID ]] && exec startx \n"
 
+    # Orpie
+    "\033\007j":    "\C-] orpie \n"
+
     # J
-    "\033\007j":    "\C-] J \n"
+    "\033\007J":    "\C-] J \n"
 
     # password-store
     "\C-xp":        "\C-]passclip "
