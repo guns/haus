@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-/usr/bin/xhost si:localuser:root
