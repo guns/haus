@@ -548,6 +548,26 @@ EORUBY
     endfunction
 endif
 
+command! -bar GoBufferSetup call <SID>GoBufferSetup()
+function! s:GoBufferSetup()
+    noremap! <buffer> <C-h>          <-
+    noremap! <buffer> <C-l>          <Space>:=<Space>
+    nmap     <buffer> K              <Plug>(go-doc-vertical)
+    nmap     <buffer> <C-]>          <Plug>(go-describe)
+    nmap     <buffer> <C-w><C-]>     :<C-u>vsplit<CR><Plug>(go-describe)
+    nmap     <buffer> ]d             <Plug>(go-def)
+    nmap     <buffer> [d             <Plug>(go-def-vertical)
+    nmap     <buffer> <LocalLeader>b :<C-u>GoBuild<CR>
+    nmap     <buffer> <LocalLeader>d :<C-u>GoDrop<Space>
+    nmap     <buffer> <LocalLeader>i :<C-u>GoImport<Space>
+    nmap     <buffer> <LocalLeader>I :<C-u>GoImportAs<Space>
+    nmap     <buffer> <LocalLeader>l :<C-u>GoLint<CR>
+    nmap     <buffer> <LocalLeader>R :<C-u>GoRun %<CR>
+    nmap     <buffer> <LocalLeader>r <Plug>(go-run)
+    nmap     <buffer> <LocalLeader>t :<C-u>GoTest<CR>
+    nmap     <buffer> <LocalLeader>v :<C-u>GoVet<CR>
+endfunction
+
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
 function! s:Open(word)
     " Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.

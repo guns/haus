@@ -50,11 +50,17 @@ const (
 )
 endsnippet
 
-snippet bench "Benchmark" w
+snippet bench "Benchmark" b
 func Benchmark$1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		$0
 	}
+}
+endsnippet
+
+snippet test "Test" b
+func Test$1(t *testing.T) {
+	$0
 }
 endsnippet
 
@@ -74,6 +80,12 @@ endsnippet
 
 snippet TS "TS" b
 type $1 struct {
+	$0
+}
+endsnippet
+
+snippet TI "type interface" b
+type $1 interface {
 	$0
 }
 endsnippet
