@@ -50,6 +50,14 @@ const (
 )
 endsnippet
 
+snippet bench "Benchmark" w
+func Benchmark$1(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		$0
+	}
+}
+endsnippet
+
 snippet L "len()" w
 len($0)
 endsnippet
