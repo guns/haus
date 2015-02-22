@@ -76,8 +76,9 @@ function! go#tool#ExecuteInDir(cmd) abort
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
     let dir = getcwd()
     try
-        execute cd.'`=expand("%:p:h")`'
-        let out = system(a:cmd)
+        let gopath = substitute($GOPATH, '\v(.*)?:', '\1', '')
+        let godir = substitute(expand('%:p:h'), '\v^/home/guns/src', gopath . '/src/github.com/guns', '')
+        let out = system('cd '.fnameescape(godir).'; '.a:cmd)
     finally
         execute cd.'`=dir`'
     endtry

@@ -562,8 +562,8 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>i :<C-u>GoImport<Space>
     nmap     <buffer> <LocalLeader>I :<C-u>GoImportAs<Space>
     nmap     <buffer> <LocalLeader>l :<C-u>GoLint<CR>
-    nmap     <buffer> <LocalLeader>R :<C-u>GoRun %<CR>
-    nmap     <buffer> <LocalLeader>r <Plug>(go-run)
+    nmap     <buffer> <LocalLeader>r <Plug>(go-rename)
+    nmap     <buffer> <LocalLeader>R :<C-u>GoRun<CR>
     nmap     <buffer> <LocalLeader>t :<C-u>GoTest<CR>
     nmap     <buffer> <LocalLeader>v :<C-u>GoVet<CR>
 endfunction

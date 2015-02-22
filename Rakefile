@@ -197,6 +197,7 @@ task :env do
       { :base => "#{@vim}/splitjoin.vim",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/tagbar",                  :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/timl",                    :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/ultisnips",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/unite.vim",               :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/unite-argument",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/unite-git",               :branch => %w[master],      :files => :pathogen },
@@ -210,6 +211,7 @@ task :env do
       { :base => "#{@vim}/vim-eunuch",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fireplace",           :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-fugitive",            :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-go",                  :branch => %w[master nerv], :files => :pathogen },
       { :base => "#{@vim}/vim-git",                 :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-javascript",          :branch => %w[master],      :files => :pathogen },
@@ -262,12 +264,6 @@ task :env do
       },
 
       {
-        :base   => "#{@vim}/ultisnips",
-        :branch => %w[master guns],
-        :files  => :pathogen
-      },
-
-      {
         :base   => "#{@vim}/sparkup",
         :branch => %w[master guns],
         :files  => lambda { |proj|
@@ -277,12 +273,6 @@ task :env do
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           { 'sparkup.py' => 'bin/sparkup' }
         }
-      },
-
-      {
-        :base   => "#{@vim}/vim-go",
-        :branch => %w[master],
-        :files => :pathogen
       },
 
       {

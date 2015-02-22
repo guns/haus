@@ -10,7 +10,8 @@ import (
 endsnippet
 
 snippet /^P/ "Package declaration" r
-package ${0:main}
+package ${1:`!v expand('%:t:r')`}
+
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
@@ -128,7 +129,7 @@ uint
 endsnippet
 
 snippet ap "append" w
-append($0)
+$1 = append(${1}, $0)
 endsnippet
 
 snippet forr "For range loop" !b
@@ -184,7 +185,7 @@ case ${1:condition}:
 	${0:${VISUAL}}
 endsnippet
 
-snippet cased "Default clause" !b
+snippet def "Default clause" !b
 default:
 	${0:${VISUAL}}
 endsnippet
@@ -195,6 +196,10 @@ endsnippet
 
 snippet mk "make()" w
 make($0)
+endsnippet
+
+snippet cp "copy()" w
+copy($0)
 endsnippet
 
 snippet N "new()" w
