@@ -49,7 +49,7 @@ bind ";"              function_eval
 
 # keys for "command" operations, which do not take an argument
 bind "d"              command_drop
-bind "|"              command_clear
+bind "\\"             command_clear
 bind "<pageup>"       command_swap
 bind "<pagedown>"     command_swap
 bind "<return>"       command_dup
@@ -79,7 +79,6 @@ bind "r"              browse_rolldown
 bind "R"              browse_rollup
 bind "v"              browse_view
 bind "<return>"       browse_echo
-bind "\\"             browse_drop
 bind "d"              browse_drop
 bind "D"              browse_dropn
 bind "k"              browse_keep
