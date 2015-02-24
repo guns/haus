@@ -222,11 +222,9 @@ nohist() {
     if [[ "$HISTFILE" ]]; then
         HISTFILE_DISABLED="$HISTFILE"
         unset HISTFILE
-        xecho title '[nohist]'
     else
         HISTFILE="${HISTFILE_DISABLED:-$HOME/.bash_history}"
         unset HISTFILE_DISABLED
-        xecho title '[HISTORY-ENABLED]'
     fi
     __ps1toggle__ '/\\H/[nohist] \\H'
 }

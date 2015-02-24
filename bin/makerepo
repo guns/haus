@@ -28,5 +28,5 @@ Dir.chdir '/var/cache/pacman/pkg' do
     end
   end
 
-  system 'repo-add', '--sign', "#{HOSTNAME}.db.tar.gz", *packages
+  system 'repo-add', '--new', '--sign', "#{HOSTNAME}.db.tar.gz", *packages
 end
