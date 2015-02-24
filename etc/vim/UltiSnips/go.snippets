@@ -37,8 +37,16 @@ snippet sf "fmt.Sprintf()" w
 fmt.Sprintf($0)
 endsnippet
 
+snippet ef "fmt.Errorf()" w
+fmt.Errorf($0)
+endsnippet
+
 snippet ssc "fmt.Sscan()" w
 fmt.Sscan($0)
+endsnippet
+
+snippet ppl "pretty.Println()" w
+pretty.Println($0)
 endsnippet
 
 snippet C "Constant declaration" b
@@ -242,6 +250,10 @@ endsnippet
 # types and variables
 snippet M "map" w
 map[${1:keytype}]${0:valtype}
+endsnippet
+
+snippet str "string()" w
+string($0)
 endsnippet
 
 snippet del "delete" w
