@@ -829,6 +829,28 @@ ALIAS mk='make' \
       mkb='make --always-make' \
       mkbj='mkj --always-make'
 
+# golang
+HAVE go && {
+    __go__() {
+        local cmd="$1"
+        shift
+
+        local flags=() n=0
+        while [[ "$1" == -* ]]; do
+            if ((n == 0)); then
+                flags+=(-gcflags)
+            fi
+            flags+=("$1")
+            ((++n))
+            shift
+        done
+
+        run go "$cmd" "${flags[@]}" "$@"
+    }
+    gobuild() { __go__ build "$@"; }
+    gotest() { __go__ test "$@"; }
+}
+
 ### SCM
 
 # diff patch
