@@ -264,7 +264,7 @@ super + F10
 	wmctrl -xa 'Chromium' || exec chromium
 
 super + alt + F10
-	exec firefox -private-window -P alternate
+	exec firefox --private-window -P alternate
 
 alt + F10
 	wmctrl -a 'Liferea' || exec liferea
