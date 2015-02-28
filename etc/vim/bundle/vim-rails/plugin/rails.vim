@@ -26,6 +26,9 @@ function! RailsDetect(...) abort
     return 1
   endif
   let fn = fnamemodify(a:0 ? a:1 : expand('%'), ':p')
+  if fn =~# ':[\/]\{2\}'
+    return 0
+  endif
   if !isdirectory(fn)
     let fn = fnamemodify(fn, ':h')
   endif
@@ -41,6 +44,9 @@ endfunction
 
 if !exists('g:did_load_ftplugin')
   filetype plugin on
+endif
+if !exists('g:loaded_projectionist')
+  runtime! plugin/projectionist.vim
 endif
 
 augroup railsPluginDetect
@@ -73,8 +79,11 @@ augroup railsPluginDetect
   autocmd Syntax ruby,eruby,yaml,haml,javascript,coffee,sass,scss
         \ if RailsDetect() | call rails#buffer_syntax() | endif
 
-  autocmd User ProjectileDetect
-        \ if RailsDetect() | call projectile#append(b:rails_root, {}) | endif
+  autocmd User ProjectionistDetect
+        \ if RailsDetect(get(g:, 'projectionist_file', '')) |
+        \   call projectionist#append(b:rails_root,
+        \     {'*': {'make': split(rails#app().rake_command('static'))}}) |
+        \ endif
 augroup END
 
 command! -bar -bang -nargs=* -complete=dir Rails execute rails#new_app_command(<bang>0,<f-args>)

@@ -63,10 +63,8 @@ rails-:Rcd	rails.txt	/*rails-:Rcd*
 rails-:Rcontroller	rails.txt	/*rails-:Rcontroller*
 rails-:Rdbext	rails.txt	/*rails-:Rdbext*
 rails-:Rdestroy	rails.txt	/*rails-:Rdestroy*
-rails-:Redit	rails.txt	/*rails-:Redit*
 rails-:Renvironment	rails.txt	/*rails-:Renvironment*
 rails-:Rextract	rails.txt	/*rails-:Rextract*
-rails-:Rfind	rails.txt	/*rails-:Rfind*
 rails-:Rfixtures	rails.txt	/*rails-:Rfixtures*
 rails-:Rfunctionaltest	rails.txt	/*rails-:Rfunctionaltest*
 rails-:Rgenerate	rails.txt	/*rails-:Rgenerate*
@@ -144,9 +142,7 @@ rails-snippets	rails.txt	/*rails-snippets*
 rails-surround	rails.txt	/*rails-surround*
 rails-syntax	rails.txt	/*rails-syntax*
 rails-syntax-assertions	rails.txt	/*rails-syntax-assertions*
-rails-syntax-classes	rails.txt	/*rails-syntax-classes*
 rails-syntax-keywords	rails.txt	/*rails-syntax-keywords*
-rails-syntax-strings	rails.txt	/*rails-syntax-strings*
 rails-syntax-yaml	rails.txt	/*rails-syntax-yaml*
 rails-type-navigation	rails.txt	/*rails-type-navigation*
 rails-vim-integration	rails.txt	/*rails-vim-integration*
