@@ -62,11 +62,13 @@ sub on_start {
 
 	if ($self->x_resource('matcher.pattern')) {
 		@{$self->{pattern}} = ($self->x_resource('matcher.pattern'));
-	} elsif ($self->x_resource('matcher.pattern.1')) {
-		my $current = 1;
+	} elsif ($self->x_resource('matcher.pattern.0')) {
+		my $current = 0;
 
-		while ($self->x_resource("matcher.pattern.$current")) {
-			push @{$self->{pattern}}, $self->x_resource("matcher.pattern.$current");
+		while (defined (my $res = $self->x_resource("matcher.pattern.$current"))) {
+			$res = $self->locale_decode($res);
+			utf8::encode $res;
+			push @{$self->{pattern}}, qr($res)x;
 			$current++;
 		}
 	} else {
@@ -105,6 +107,12 @@ sub line_update {
 	}
 
 	()
+}
+
+sub on_action {
+    my ($self, $action) = @_;
+
+    on_user_command($self, "url-select:" . $action);
 }
 
 
@@ -165,9 +173,25 @@ sub on_button_press {
 	           urxvt::ShiftMask | urxvt::ControlMask;
 
 	if ($event->{button} == $self->{button} && ($event->{state} & $mask) == $self->{state}) {
-		$self->{button_pressed} = 1;
-		$self->{button_col} = $event->{col};
-		$self->{button_row} = $event->{row};
+		my $col = $event->{col};
+		my $row = $event->{row};
+		my $line = $self->line($row);
+		my $text = $line->t;
+
+		for my $pattern (@{$self->{pattern}}) {
+			while ($text =~ /$pattern/g) {
+				my ($url, $beg, $end) = ($&, $-[0], $+[0]);
+				--$end if $url =~ s/["')]$//;
+
+				if ($col >= $beg && $col <= $end) {
+					$self->{button_pressed} = 1;
+					$self->{button_col} = $col;
+					$self->{button_row} = $row;
+					$self->{button_url} = $url;
+					return 1;
+				}
+			}
+		}
 	}
 
 	()
@@ -183,20 +207,8 @@ sub on_button_release {
 		$self->{button_pressed} = 0;
 
 		if ($col == $self->{button_col} && $row == $self->{button_row}) {
-			my $line = $self->line($row);
-			my $text = $line->t;
-
-			for my $pattern (@{$self->{pattern}}) {
-				while ($text =~ /$pattern/g) {
-					my ($url, $beg, $end) = ($&, $-[0], $+[0]);
-					--$end if $url =~ s/["')]$//;
-
-					if ($col >= $beg && $col <= $end) {
-						$self->exec_async(@{$self->{browser}}, $url);
-						return 1;
-					}
-				}
-			}
+			$self->exec_async(@{$self->{browser}}, $self->{button_url});
+			return 1;
 		}
 	}
 
