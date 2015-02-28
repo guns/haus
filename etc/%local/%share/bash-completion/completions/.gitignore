@@ -28,6 +28,7 @@ composite
 conjure
 cowthink
 createdb
+createuser
 dcop
 declare
 dfutool
@@ -36,6 +37,7 @@ dpkg-deb
 dpkg-query
 dpkg-reconfigure
 dropdb
+dropuser
 edquota
 f77
 f95

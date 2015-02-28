@@ -127,7 +127,7 @@ task :env do
         :branch => %w[master haus],
         :files  => lambda { |proj|
           src = "#{proj.base}/completions"
-          dst = "#{proj.haus}/etc/bashrc.d/bash_completion.d"
+          dst = "#{proj.haus}/etc/%local/%share/bash-completion/completions"
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           { 'bash_completion' => 'etc/bashrc.d/bash_completion' }
         }

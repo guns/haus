@@ -143,9 +143,8 @@ if [[ "$BASH_COMPLETION" ]]; then
 else
     BASH_COMPLETION_DIRS=(
         ~/.bashrc.d/completions
-        ~/.bashrc.d/bash_completion.d
+        ~/.local/share/bash-completion/completions
         /usr/share/bash-completion/completions
-        /etc/completions
         /etc/bash_completion.d
     )
     REQUIRE ~/.bashrc.d/bash_completion

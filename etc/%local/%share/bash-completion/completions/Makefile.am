@@ -303,7 +303,7 @@ bashcomp_DATA = 2to3 \
 		_renice \
 		_repomanage \
 		reportbug \
-		reptyr \
+		_reptyr \
 		resolvconf \
 		rfkill \
 		ri \
@@ -348,6 +348,7 @@ bashcomp_DATA = 2to3 \
 		_svnadmin \
 		_svnlook \
 		sync_members \
+		synclient \
 		sysbench \
 		sysctl \
 		tar \
@@ -446,6 +447,7 @@ CLEANFILES = \
 	conjure \
 	cowthink \
 	createdb \
+	createuser \
 	dcop \
 	declare \
 	dfutool \
@@ -454,6 +456,7 @@ CLEANFILES = \
 	dpkg-query \
 	dpkg-reconfigure \
 	dropdb \
+	dropuser \
 	edquota \
 	f77 \
 	f95 \
@@ -828,7 +831,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) pm-hibernate $(targetdir)/$$file ; \
 	done
-	for file in createdb dropdb ; do \
+	for file in createdb createuser dropdb dropuser ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) psql $(targetdir)/$$file ; \
 	done
