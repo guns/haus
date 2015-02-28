@@ -1,4 +1,4 @@
-# vim-javascript v0.9.0
+# vim-javascript v0.10.0
 
 JavaScript bundle for vim, this bundle provides syntax and indent plugins.
 
@@ -26,12 +26,12 @@ then simply perform the following commands to fix your current buffer:
 
 Add to vimrc:
 
-    Bundle "pangloss/vim-javascript"
+    Plugin "pangloss/vim-javascript"
 
 And install it:
 
     :so ~/.vimrc
-    :BundleInstall
+    :PluginInstall
 
 ### Install with [pathogen](https://github.com/tpope/vim-pathogen)
 
@@ -55,17 +55,27 @@ Enables JavaScript code folding.
 
 Default Value: 1
 
-#### g:javascript_conceal
-
-Enables concealing characters. For example, `function` is replaced with `ƒ`
-
-Default Value: 0
 
 #### javascript_ignore_javaScriptdoc
 
 Disables JSDoc syntax highlighting
 
 Default Value: 0
+
+#### Concealing Characters
+
+You can customize concealing characters by defining one or more of the following
+variables:
+
+    let g:javascript_conceal_function   = "ƒ"
+    let g:javascript_conceal_null       = "ø"
+    let g:javascript_conceal_this       = "@"
+    let g:javascript_conceal_return     = "⇚"
+    let g:javascript_conceal_undefined  = "¿"
+    let g:javascript_conceal_NaN        = "ℕ"
+    let g:javascript_conceal_prototype  = "¶"
+    let g:javascript_conceal_static     = "•"
+    let g:javascript_conceal_super      = "Ω"
 
 ## Contributing
 
