@@ -1,3 +1,7 @@
+if exists('g:loaded_ack')
+  finish
+endif
+
 if !exists("g:ack_default_options")
   let g:ack_default_options = " -s -H --nocolor --nogroup --column"
 endif
@@ -26,8 +30,8 @@ let s:ack_mappings = {
       \ "t": "<C-W><CR><C-W>T",
       \ "T": "<C-W><CR><C-W>TgT<C-W>j",
       \ "o": "<CR>",
-      \ "O": "<CR><C-W><C-W>:ccl<CR>",
-      \ "go": "<CR><C-W>j",
+      \ "O": "<CR><C-W>p<C-W>c",
+      \ "go": "<CR><C-W>p",
       \ "h": "<C-W><CR><C-W>K",
       \ "H": "<C-W><CR><C-W>K<C-W>b",
       \ "v": "<C-W><CR><C-W>H<C-W>b<C-W>J<C-W>t",
@@ -69,3 +73,7 @@ command! -bang -nargs=* -complete=help AckHelp       call ack#AckHelp('grep<bang
 command! -bang -nargs=* -complete=help LAckHelp      call ack#AckHelp('lgrep<bang>', <q-args>)
 command! -bang -nargs=* -complete=help AckWindow     call ack#AckWindow('grep<bang>', <q-args>)
 command! -bang -nargs=* -complete=help LAckWindow    call ack#AckWindow('lgrep<bang>', <q-args>)
+
+let g:loaded_ack = 1
+
+" vim:set et sw=2 ts=2 tw=78 fdm=marker

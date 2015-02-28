@@ -21,9 +21,11 @@ g:ack_apply_lmappings	ack.txt	/*g:ack_apply_lmappings*
 g:ack_apply_qmappings	ack.txt	/*g:ack_apply_qmappings*
 g:ack_autoclose	ack.txt	/*g:ack_autoclose*
 g:ack_autofold_results	ack.txt	/*g:ack_autofold_results*
+g:ack_default_options	ack.txt	/*g:ack_default_options*
 g:ack_lhandler	ack.txt	/*g:ack_lhandler*
 g:ack_mappings	ack.txt	/*g:ack_mappings*
 g:ack_qhandler	ack.txt	/*g:ack_qhandler*
+g:ack_use_dispatch	ack.txt	/*g:ack_use_dispatch*
 g:ackhighlight	ack.txt	/*g:ackhighlight*
 g:ackpreview	ack.txt	/*g:ackpreview*
 g:ackprg	ack.txt	/*g:ackprg*
