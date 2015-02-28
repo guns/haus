@@ -41,13 +41,11 @@ class EditCheckbox(object):
 		nc._heading = h
 
 		# default checkbox level
-		level = h.level
+		level = h.level + 1
 		start = vim.current.window.cursor[0] - 1
 		# if no checkbox is found, insert at current line with indent level=1
 		if c is None:
-			if h.checkboxes:
-				level = h.first_checkbox.level
-				h.checkboxes.append(nc)
+			h.checkboxes.append(nc)
 		else:
 			l = c.get_parent_list()
 			idx = c.get_index_in_parent_list()
@@ -73,11 +71,31 @@ class EditCheckbox(object):
 			if t[-1] in OrderListType:
 				try:
 					num = int(t[:-1]) + (1 if below else -1)
+					if num < 0:
+						# don't decrease to numbers below zero
+						echom(u"Can't decrement further than '0'")
+						return
 					t = '%d%s' % (num, t[-1])
 				except ValueError:
 					try:
 						char = ord(t[:-1]) + (1 if below else -1)
-						t = '%s%s' % (chr(char), t[-1])
+						if below:
+							if char == 91:
+								# stop incrementing at Z (90)
+								echom(u"Can't increment further than 'Z'")
+								return
+							elif char == 123:
+								# increment from z (122) to A
+								char = 65
+						else:
+							if char == 96:
+								# stop decrementing at a (97)
+								echom(u"Can't decrement further than 'a'")
+								return
+							elif char == 64:
+								# decrement from A (65) to z
+								char = 122
+						t = u'%s%s' % (chr(char), t[-1])
 					except ValueError:
 						pass
 			nc.type = t
@@ -91,15 +109,16 @@ class EditCheckbox(object):
 				start = c.start
 		nc.level = level
 
-		vim.current.window.cursor = (start + 1, 0)
-
 		if below:
-			vim.command("normal o")
-		else:
-			vim.command("normal O")
+			start += 1
+		# vim's buffer behave just opposite to Python's list when inserting a
+		# new item.  The new entry is appended in vim put prepended in Python!
+		vim.current.buffer[start:start] = [unicode(nc)]
 
-		insert_at_cursor(str(nc))
-		vim.command("call feedkeys('a')")
+		# update checkboxes status
+		cls.update_checkboxes_status()
+
+		vim.command((u'exe "normal %dgg"|startinsert!' % (start + 1, )).encode(u'utf-8'))
 
 	@classmethod
 	def toggle(cls, checkbox=None):
@@ -124,10 +143,13 @@ class EditCheckbox(object):
 		else:
 			c = checkbox
 
-		if c.status == Checkbox.STATUS_OFF:
+		if c.status == Checkbox.STATUS_OFF or c.status is None:
 			# set checkbox status on if all children are on
 			if not c.children or c.are_children_all(Checkbox.STATUS_ON):
 				c.toggle()
+				d.write_checkbox(c)
+			elif c.status is None:
+				c.status = Checkbox.STATUS_OFF
 				d.write_checkbox(c)
 
 		elif c.status == Checkbox.STATUS_ON:
@@ -169,6 +191,8 @@ class EditCheckbox(object):
 	def update_checkboxes_status(cls):
 		d = ORGMODE.get_document()
 		h = d.current_heading()
+		if h is None:
+			return
 		# init checkboxes for current heading
 		h.init_checkboxes()
 
@@ -197,7 +221,7 @@ class EditCheckbox(object):
 				current_status = None
 			# the checkbox needs to have status
 			else:
-				total +=  1
+				total += 1
 
 			# count number of status in this checkbox level
 			if current_status == Checkbox.STATUS_OFF:
