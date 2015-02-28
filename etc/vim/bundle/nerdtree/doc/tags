@@ -1,9 +1,9 @@
-'NERDChristmasTree'	NERD_tree.txt	/*'NERDChristmasTree'*
 'NERDTreeAutoCenter'	NERD_tree.txt	/*'NERDTreeAutoCenter'*
 'NERDTreeAutoCenterThreshold'	NERD_tree.txt	/*'NERDTreeAutoCenterThreshold'*
 'NERDTreeAutoDeleteBuffer'	NERD_tree.txt	/*'NERDTreeAutoDeleteBuffer'*
 'NERDTreeBookmarksFile'	NERD_tree.txt	/*'NERDTreeBookmarksFile'*
-'NERDTreeCasadeOpenSingleChildDir'	NERD_tree.txt	/*'NERDTreeCasadeOpenSingleChildDir'*
+'NERDTreeBookmarksSort'	NERD_tree.txt	/*'NERDTreeBookmarksSort'*
+'NERDTreeCascadeOpenSingleChildDir'	NERD_tree.txt	/*'NERDTreeCascadeOpenSingleChildDir'*
 'NERDTreeCaseSensitiveSort'	NERD_tree.txt	/*'NERDTreeCaseSensitiveSort'*
 'NERDTreeChDirMode'	NERD_tree.txt	/*'NERDTreeChDirMode'*
 'NERDTreeDirArrows'	NERD_tree.txt	/*'NERDTreeDirArrows'*
@@ -13,6 +13,7 @@
 'NERDTreeMinimalUI'	NERD_tree.txt	/*'NERDTreeMinimalUI'*
 'NERDTreeMouseMode'	NERD_tree.txt	/*'NERDTreeMouseMode'*
 'NERDTreeQuitOnOpen'	NERD_tree.txt	/*'NERDTreeQuitOnOpen'*
+'NERDTreeRespectWildIgnore'	NERD_tree.txt	/*'NERDTreeRespectWildIgnore'*
 'NERDTreeShowBookmarks'	NERD_tree.txt	/*'NERDTreeShowBookmarks'*
 'NERDTreeShowFiles'	NERD_tree.txt	/*'NERDTreeShowFiles'*
 'NERDTreeShowHidden'	NERD_tree.txt	/*'NERDTreeShowHidden'*
