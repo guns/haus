@@ -337,12 +337,15 @@ function! s:unlet_for(files) abort
   for file in a:files
     if filereadable(file)
       let lines = readfile(file)
-      for i in range(len(lines)-1)
-        let unlet = matchstr(lines[i], '^if exists([''"]\%(\g:\)\=\zs\w\+\ze[''"]')
-        if unlet !=# '' && lines[i+1] =~# '^ *finish\>' && index(guards, unlet) == -1
-          call extend(guards, [unlet])
-        endif
-      endfor
+      if len(lines)
+        for i in range(len(lines)-1)
+          let unlet = matchstr(lines[i], '^if \+\%(( *\)\?exists *( *[''"]\%(\g:\)\=\zs\w\+\ze[''"]')
+          if unlet !=# '' && (lines[i+1] =~# '^ *finish\>' || lines[i] =~# '| *finish\>')
+                \ && index(guards, unlet) == -1
+            call extend(guards, [unlet])
+          endif
+        endfor
+      endif
     endif
   endfor
   if empty(guards)
@@ -381,8 +384,8 @@ function! s:runtime(bang, ...) abort
     if empty(files[0])
       let files = ['%']
     endif
-    if &modified && &autowrite
-      let predo = 'silent write|'
+    if &modified && (&autowrite || &autowriteall)
+      let predo = 'silent wall|'
     endif
   else
     for ft in split(&filetype, '\.')
@@ -727,17 +730,25 @@ function! s:helptopic()
   endif
 endfunction
 
+function! s:build_path()
+  let old_path = substitute(&path, '\v^\.,/%(usr|emx)/include,,,?', '', '')
+  let new_path = escape(&runtimepath, ' ')
+  return !empty(old_path) ? old_path.','.new_path : new_path
+endfunction
+
 " }}}1
 " Settings {{{1
 
 function! s:setup() abort
   setlocal suffixesadd=.vim keywordprg=:help
   let b:dispatch = ':Runtime'
+  command! -bar -bang -buffer Console Runtime|PP
 endfunction
 
 augroup scriptease
   autocmd!
-  autocmd FileType vim,help let &l:path = escape(&runtimepath, ' ')
+  autocmd FileType vim,help let &l:path = s:build_path()
+  autocmd FileType help command! -bar -bang -buffer Console PP
   autocmd FileType vim call s:setup()
   " Recent versions of vim.vim set iskeyword to include ":", which breaks among
   " other things tags. :(
@@ -746,12 +757,16 @@ augroup scriptease
 augroup END
 
 " }}}1
-" Projectile {{{1
+" Projectionist {{{1
 
-function! s:projectile_detect() abort
-  let path = s:sub(s:findinrtp(g:projectile_file)[0], '[\/]after$', '')
+function! s:projectionist_detect() abort
+  let file = get(g:, 'projectionist_file', '')
+  let path = s:sub(s:findinrtp(file)[0], '[\/]after$', '')
   if !empty(path)
-    call projectile#append(path, {
+    let reload = ":Runtime ./{open}autoload,plugin{close}/**/*.vim"
+    call projectionist#append(path, {
+          \ "*": {"start": reload},
+          \ "*.vim": {"start": reload},
           \ "plugin/*.vim":   {"command": "plugin", "alternate": "autoload/{}.vim"},
           \ "autoload/*.vim": {"command": "autoload", "alternate": "plugin/{}.vim"},
           \ "compiler/*.vim": {"command": "compiler"},
@@ -760,13 +775,13 @@ function! s:projectile_detect() abort
           \ "ftplugin/*.vim": {"command": "ftplugin", "alternate": ["indent/{}.vim", "syntax/{}.vim"]},
           \ "indent/*.vim":   {"command": "indent", "alternate": ["syntax/{}.vim", "ftplugin/{}.vim"]},
           \ "after/*.vim":    {"command": "after"},
-          \ "doc/*.txt":      {"command": "doc"}})
+          \ "doc/*.txt":      {"command": "doc", "start": reload}})
   endif
 endfunction
 
-augroup scriptease_projectile
+augroup scriptease_projectionist
   autocmd!
-  autocmd User ProjectileDetect call s:projectile_detect()
+  autocmd User ProjectionistDetect call s:projectionist_detect()
 augroup END
 
 " }}}1
