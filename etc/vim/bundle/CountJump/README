@@ -47,7 +47,7 @@ RELATED WORKS
 - motpat.vim (vimscript #3030) offers similar functions to setup motion
   mappings, but no text objects (yet).
 - textobj-user (vimscript #2100) has support for user-defined text objects via
-  regular expressions.
+  regular expressions, but they don't support selecting multiple via [count].
 - movealong.vim (vimscript #4691) provides a :Movealong command (and optional
   mappings) that repeatedly executes a motion until a condition of a syntax,
   pattern match, or arbitrary expression is met.
