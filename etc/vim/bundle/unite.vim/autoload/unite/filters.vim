@@ -217,13 +217,15 @@ EOF
 
   return a:candidates
 endfunction"}}}
+" @vimlint(EVL102, 1, l:pattern)
 function! unite#filters#vim_filter_patterns(candidates, patterns, whites) "{{{
   let pattern = join(a:patterns, '\|')
   let white = join(a:whites, '\|')
   return filter(a:candidates,
         \ "get(v:val, 'action__path', v:val.word) !~? pattern
-        \  || get(v:val, 'action__path', v:val.word) =~? white")
+        \  || (white != '' && get(v:val, 'action__path', v:val.word) =~? white)")
 endfunction"}}}
+" @vimlint(EVL102, 0, l:pattern)
 
 function! unite#filters#globs2patterns(globs) "{{{
   return unite#util#has_lua() ?
@@ -231,39 +233,39 @@ function! unite#filters#globs2patterns(globs) "{{{
           \ unite#filters#globs2vim_patterns(a:globs)
 endfunction"}}}
 function! unite#filters#globs2vim_patterns(globs) "{{{
-  let patterns = []
-  for glob in a:globs
-    if glob !~ '^/'
-      let glob = '/' . glob
-    endif
-    let glob = escape(glob, '~.^$')
-    let glob = substitute(glob, '//', '/', 'g')
-    let glob = substitute(glob, '\*\@<!\*\*\@!', '[^/]*', 'g')
-    let glob = substitute(glob, '\\\@<!\*\*\+', '.*', 'g')
-    let glob = substitute(glob, '\\\@<!?', '[^/]', 'g')
-    let glob .= '$'
-    call add(patterns, glob)
-  endfor
-
-  return patterns
+  return map(copy(a:globs), 's:glob2_pattern(v:val, 0)')
 endfunction"}}}
 function! unite#filters#globs2lua_patterns(globs) "{{{
-  let patterns = []
-  for glob in a:globs
-    if glob !~ '^/'
-      let glob = '/' . glob
-    endif
-    let glob = tolower(glob)
+  return map(copy(a:globs), 's:glob2_pattern(v:val, 1)')
+endfunction"}}}
+function! s:glob2_pattern(glob, is_lua) abort "{{{
+  let glob = a:glob
+
+  if glob !~ '^/'
+    let glob = '/' . glob
+  endif
+  let glob = tolower(glob)
+  let glob = substitute(glob, '^\.\ze/',
+        \ unite#util#substitute_path_separator(getcwd()), '')
+  let glob = substitute(glob, '/$', '/**', '')
+
+  if a:is_lua
     let glob = substitute(glob, '//', '/', 'g')
     let glob = substitute(glob, '[%().+^$-]', '%\0', 'g')
     let glob = substitute(glob, '\*\@<!\*\*\@!', '[^/]*', 'g')
     let glob = substitute(glob, '\\\@<!\*\*\+', '.*', 'g')
     let glob = substitute(glob, '\\\@<!?', '[^/]', 'g')
-    let glob .= '$'
-    call add(patterns, glob)
-  endfor
+  else
+    let glob = escape(glob, '~.^$')
+    let glob = substitute(glob, '//', '/', 'g')
+    let glob = substitute(glob, '\*\@<!\*\*\@!', '[^/]*', 'g')
+    let glob = substitute(glob, '\\\@<!\*\*\+', '.*', 'g')
+    let glob = substitute(glob, '\\\@<!?', '[^/]', 'g')
+  endif
 
-  return patterns
+  let glob .= '$'
+
+  return glob
 endfunction"}}}
 
 let &cpo = s:save_cpo

@@ -65,7 +65,8 @@ function! unite#handlers#_on_cursor_hold_i()  "{{{
 
   call unite#view#_change_highlight()
 
-  if unite.max_source_candidates > unite.redraw_hold_candidates
+  if unite.redraw_hold_candidates > 0
+        \ && unite.max_source_candidates > unite.redraw_hold_candidates
     call s:check_redraw()
   endif
 
@@ -79,12 +80,14 @@ function! unite#handlers#_on_cursor_moved_i()  "{{{
   let unite = unite#get_current_unite()
   let prompt_linenr = unite.prompt_linenr
 
-  if unite.max_source_candidates <= unite.redraw_hold_candidates
+  if unite.redraw_hold_candidates <= 0
+        \ || unite.max_source_candidates <= unite.redraw_hold_candidates
     call s:check_redraw()
   endif
 
   " Prompt check.
-  if line('.') == prompt_linenr && col('.') <= len(unite.prompt)
+  if line('.') == prompt_linenr
+        \ && col('.') <= len(unite#get_context().prompt)
     startinsert!
   endif
 endfunction"}}}
@@ -166,8 +169,8 @@ function! unite#handlers#_on_cursor_moved()  "{{{
   let prompt_linenr = unite.prompt_linenr
   let context = unite.context
 
-  let &l:modifiable = line('.') == prompt_linenr
-        \ && col('.') >= len(context.prompt)
+  let &l:modifiable =
+        \ line('.') == prompt_linenr && col('.') >= 1
 
   if line('.') == 1
     nnoremap <silent><buffer> <Plug>(unite_loop_cursor_up)
@@ -206,7 +209,7 @@ function! unite#handlers#_on_cursor_moved()  "{{{
     if is_prompt || mode('.') == 'i' || unite.is_async
           \ || abs(line('.') - unite.prev_line) != 1
           \ || split(reltimestr(reltime(unite.cursor_line_time)))[0]
-          \    > context.cursor_line_time
+          \    > string(context.cursor_line_time)
       call unite#view#_set_cursor_line()
     endif
 

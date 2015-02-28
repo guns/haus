@@ -88,7 +88,8 @@ function! unite#init#_context(context, ...) "{{{
     let context.horizontal = 1
     let context.direction = 'belowright'
   endif
-  if &l:modified && !&l:hidden
+  if (!&l:hidden && &l:modified)
+        \ || (&l:hidden && &l:bufhidden =~# 'unload\|delete\|wipe')
     " Split automatically.
     let context.split = 1
   endif
@@ -96,7 +97,7 @@ function! unite#init#_context(context, ...) "{{{
     " Set buffer-name automatically.
     let context.buffer_name = join(source_names)
   endif
-  if context.auto_preview
+  if context.auto_preview && !context.unite__is_restart
     let context.winheight -= &previewheight
   endif
   if context.prompt_direction == ''
@@ -163,7 +164,7 @@ function! unite#init#_unite_buffer() "{{{
     match
     if has('conceal')
       setlocal conceallevel=3
-      setlocal concealcursor=n
+      setlocal concealcursor=niv
     endif
     if exists('+cursorcolumn')
       setlocal nocursorcolumn
@@ -205,6 +206,12 @@ function! unite#init#_unite_buffer() "{{{
       " Enable auto narrow feature.
       autocmd plugin-unite TextChanged <buffer>
             \ call unite#handlers#_on_text_changed()
+    endif
+
+    if context.prompt != ''
+      execute printf(
+            \ 'silent! sign define unite_prompt text=%s texthl=unitePrompt',
+            \ unite.context.prompt)
     endif
   endif
 
@@ -278,6 +285,7 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.prev_line = 0
   let unite.update_time_save = &updatetime
   let unite.statusline = unite#view#_get_status_string(unite)
+  let unite.original_context = deepcopy(a:context)
 
   " Create new buffer name.
   let postfix = unite#helper#get_postfix(
@@ -285,7 +293,6 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.buffer_name .= postfix
 
   let unite.real_buffer_name = buffer_name . postfix
-  let unite.prompt = context.prompt
   let unite.input = context.input
   let unite.last_input = context.input
   let unite.last_path = context.path
@@ -319,6 +326,7 @@ function! unite#init#_current_unite(sources, context) "{{{
   let unite.disabled_max_candidates = 0
   let unite.cursor_line_time = reltime()
   let unite.match_id = 11
+  let unite.sign_offset = 0
 
   if context.here
     let context.winheight = winheight(0) - winline() + 1
@@ -382,11 +390,11 @@ function! unite#init#_candidates(candidates) "{{{
       let abbr = candidate.unite__abbr
       let candidate.unite__abbr = ''
 
-      while abbr !~ '^\s\+$'
+      while abbr != ''
         let trunc_abbr = unite#util#strwidthpart(
               \ abbr, max_width)
         let candidate.unite__abbr .= trunc_abbr . "~\n"
-        let abbr = '  ' . abbr[len(trunc_abbr):]
+        let abbr = abbr[len(trunc_abbr):]
       endwhile
 
       let candidate.unite__abbr =
@@ -411,8 +419,7 @@ function! unite#init#_candidates(candidates) "{{{
           \   context.max_multi_lines-1]
       let candidate_multi = (cnt != 0) ?
             \ deepcopy(candidate) : candidate
-      let candidate_multi.unite__abbr =
-            \ (cnt == 0 ? '+ ' : '| ') . multi
+      let candidate_multi.unite__abbr = multi
 
       if cnt != 0
         let candidate_multi.is_dummy = 1
@@ -427,10 +434,6 @@ function! unite#init#_candidates(candidates) "{{{
 
   " Multiline check.
   if is_multiline || context.multi_line
-    for candidate in filter(copy(candidates), '!v:val.is_multiline')
-      let candidate.unite__abbr = '  ' . candidate.unite__abbr
-    endfor
-
     let unite.is_multi_line = 1
   endif
 
@@ -750,6 +753,8 @@ function! unite#init#_sources(...) "{{{
       let source.white_globs = unite#util#convert2list(
             \ get(custom_source, 'white_globs',
             \    get(source, 'white_globs', [])))
+      let source.syntax = get(custom_source, 'syntax',
+            \    get(source, 'syntax', ''))
 
       let source.unite__len_candidates = 0
       let source.unite__orig_len_candidates = 0

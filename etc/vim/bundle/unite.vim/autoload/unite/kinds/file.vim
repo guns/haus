@@ -195,6 +195,11 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
     let new_filename = unite#util#substitute_path_separator(
           \ fnamemodify(new_filename, ':.'))
 
+    " create if the destination directory does not exist
+    if !isdirectory(fnamemodify(new_filename, ':h'))
+      call mkdir(fnamemodify(new_filename, ':h'), 'p')
+    endif
+
     let bufnr = bufnr(old_filename)
     if bufnr > 0
       " Buffer rename.
@@ -210,9 +215,9 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
       noautocmd silent execute 'buffer' bufnr_save
     endif
 
-    if rename(old_filename, new_filename)
+    if !unite#util#move(old_filename, new_filename)
       call unite#print_error(
-            \ printf('Failed file rename: "%s" to "%s".',
+            \ printf('Failed rename: "%s" to "%s".',
             \   a:old_filename, a:new_filename))
     endif
   finally

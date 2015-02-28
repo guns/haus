@@ -188,17 +188,19 @@ function! unite#helper#get_input(...) "{{{
   endif
 
   " Prompt check.
-  if stridx(getline(unite.prompt_linenr), unite.prompt) != 0
+  if unite.context.prompt != '' &&
+        \ getline(unite.prompt_linenr)[: len(unite.context.prompt)-1]
+        \   !=# unite.context.prompt
     let modifiable_save = &l:modifiable
     setlocal modifiable
 
     " Restore prompt.
-    call setline(unite.prompt_linenr, unite.prompt)
+    call setline(unite.prompt_linenr, unite.context.prompt)
 
     let &l:modifiable = modifiable_save
   endif
 
-  return getline(unite.prompt_linenr)[len(unite.prompt):]
+  return getline(unite.prompt_linenr)[len(unite.context.prompt):]
 endfunction"}}}
 
 function! unite#helper#get_source_names(sources) "{{{
@@ -211,13 +213,17 @@ function! unite#helper#get_postfix(prefix, is_create, ...) "{{{
   let prefix = substitute(a:prefix, '@\d\+$', '', '')
   let buffers = get(a:000, 0, range(1, bufnr('$')))
   let buflist = sort(filter(map(buffers,
-        \ 'bufname(v:val)'), 'stridx(v:val, prefix) >= 0'))
+        \ 'bufname(v:val)'), 'stridx(v:val, prefix) >= 0'), 's:sort_buffer_name')
   if empty(buflist)
     return ''
   endif
 
   return a:is_create ? '@'.(matchstr(buflist[-1], '@\zs\d\+$') + 1)
         \ : matchstr(buflist[-1], '@\d\+$')
+endfunction"}}}
+
+function! s:sort_buffer_name(lhs, rhs) "{{{
+  return matchstr(a:lhs, '@\zs\d\+$') - matchstr(a:rhs, '@\zs\d\+$')
 endfunction"}}}
 
 function! unite#helper#convert_source_name(source_name) "{{{

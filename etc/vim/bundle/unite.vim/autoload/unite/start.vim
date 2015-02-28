@@ -103,7 +103,11 @@ function! unite#start#standard(sources, ...) "{{{
 
   setlocal modifiable
 
-  call unite#view#_redraw_candidates()
+  if context.force_redraw
+    call unite#force_redraw()
+  else
+    call unite#view#_redraw_candidates()
+  endif
 
   call unite#handlers#_on_bufwin_enter(bufnr('%'))
 
@@ -158,9 +162,9 @@ function! unite#start#temporary(sources, ...) "{{{
   let context.unite__old_winwidth = 0
   let context.unite__old_winheight = 0
   let context.unite__is_resize = 0
-  let context.unite__is_restart = 0
   let context.quick_match = 0
   let context.resume = 0
+  let context.force_redraw = 0
 
   if context.script
     " Set buffer-name automatically.
@@ -313,7 +317,6 @@ function! unite#start#resume(buffer_name, ...) "{{{
   endif
 
   let context = getbufvar(bufnr, 'unite').context
-  let context.resume = 1
 
   let prev_bufnr = bufnr('%')
   let winnr = winnr()
@@ -345,8 +348,13 @@ function! unite#start#resume(buffer_name, ...) "{{{
   let unite.is_finalized = 0
   let unite.preview_candidate = {}
   let unite.highlight_candidate = {}
+  let unite.context.resume = 1
 
   call unite#set_current_unite(unite)
+
+  if context.force_redraw
+    call unite#force_redraw()
+  endif
 
   if has_key(new_context, 'input')
     call unite#mappings#narrowing(new_context.input)
@@ -488,7 +496,7 @@ function! s:get_unite_buffer(buffer_name) "{{{
     let bufnr = s:get_resume_buffer(a:buffer_name)
   endif
 
-  if type(getbufvar(bufnr, 'unite')) != type({})
+  if bufnr > 0 && type(getbufvar(bufnr, 'unite')) != type({})
     " Unite buffer is released.
     call unite#util#print_error(
           \ printf('Invalid unite buffer(%d) is detected.', bufnr))

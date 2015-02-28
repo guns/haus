@@ -364,6 +364,10 @@ function! unite#util#open(path) "{{{
   return s:get_system().open(a:path)
 endfunction"}}}
 
+function! unite#util#move(src, dest) "{{{
+  return s:get_system().move(a:src, a:dest)
+endfunction"}}}
+
 function! unite#util#read_lines(source, timeout) "{{{
   let lines = []
   for _ in range(a:timeout / 100)
@@ -373,9 +377,7 @@ function! unite#util#read_lines(source, timeout) "{{{
 endfunction"}}}
 
 function! unite#util#is_sudo() "{{{
-  return $SUDO_USER != '' && $USER !=# $SUDO_USER
-        \ && $HOME !=# expand('~'.$USER)
-        \ && $HOME ==# expand('~'.$SUDO_USER)
+  return 0
 endfunction"}}}
 
 function! unite#util#lcd(dir) "{{{
