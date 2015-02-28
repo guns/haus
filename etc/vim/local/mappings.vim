@@ -573,9 +573,6 @@ vmap ga <Plug>(EasyAlign)
 nmap gA <Plug>(LiveEasyAlign)
 vmap gA <Plug>(LiveEasyAlign)
 
-" Plugin: NrrwRgn
-nnoremap <Leader>nr vip:NarrowRegion<CR>
-
 " Plugin: Unite.vim
 noremap <Leader>u :<C-u>Unite -no-split<Space>
 Mapall <4-o> :<C-u>UniteOpen<CR>

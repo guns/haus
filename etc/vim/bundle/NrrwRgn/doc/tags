@@ -18,8 +18,10 @@ NR-multi-example	NarrowRegion.txt	/*NR-multi-example*
 NarrowRegion	NarrowRegion.txt	/*NarrowRegion*
 NrrwRgn-config	NarrowRegion.txt	/*NrrwRgn-config*
 NrrwRgn-feedback	NarrowRegion.txt	/*NrrwRgn-feedback*
+NrrwRgn-func	NarrowRegion.txt	/*NrrwRgn-func*
 NrrwRgn-history	NarrowRegion.txt	/*NrrwRgn-history*
 NrrwRgn-hook	NarrowRegion.txt	/*NrrwRgn-hook*
 NrrwRgn-manual	NarrowRegion.txt	/*NrrwRgn-manual*
 NrrwRgn.txt	NarrowRegion.txt	/*NrrwRgn.txt*
 NrrwRgnPlugin	NarrowRegion.txt	/*NrrwRgnPlugin*
+nrrwrgn#NrrwRgnStatus()	NarrowRegion.txt	/*nrrwrgn#NrrwRgnStatus()*

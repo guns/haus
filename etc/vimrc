@@ -244,7 +244,6 @@ let g:tagbar_type_rust = {
 " Plugin: NrrwRgn
 let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 160
-let g:nrrw_rgn_write_on_sync = 1
 
 " Plugin: Regbuf
 let g:regbuf_open_command = 'vnew'
