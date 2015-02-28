@@ -10,7 +10,7 @@ import (
 endsnippet
 
 snippet /^P/ "Package declaration" r
-package ${1:`!v expand('%:t:r')`}
+package ${1:`!v expand('%:h:r')`}
 
 endsnippet
 
@@ -198,7 +198,7 @@ default:
 	${0:${VISUAL}}
 endsnippet
 
-snippet def "defer" w
+snippet D "defer" w
 defer $0
 endsnippet
 
