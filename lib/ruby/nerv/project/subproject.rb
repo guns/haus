@@ -39,6 +39,8 @@ class NERV::Project::Subproject
       Process.gid = user.gid
       Process.uid = user.uid
       Process.euid = user.uid
+      home = ENV['HOME']
+      ENV['HOME'] = user.dir
       yield
     else
       yield
@@ -47,6 +49,7 @@ class NERV::Project::Subproject
     Process.gid = gid if gid
     Process.uid = uid if uid
     Process.euid = euid if euid
+    ENV['HOME'] = home if home
   end
 
   def git

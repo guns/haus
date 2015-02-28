@@ -43,7 +43,8 @@ class NERV::Project::Update
     threads.times do |n|
       pool << Thread.new do
         loop do
-          proj = lock.synchronize { subprojects[idx+=1] }
+          lock.synchronize { idx += 1 }
+          proj = subprojects[idx]
           break if proj.nil? or not exceptions.empty?
 
           # Subproject#call is not thread-safe since it changes the CWD, so
@@ -58,7 +59,6 @@ class NERV::Project::Update
           end
         end
       end
-      sleep 0.1 # Avoid deadlocks on launch
     end
 
     pool.each &:join
