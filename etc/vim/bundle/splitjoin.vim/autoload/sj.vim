@@ -229,7 +229,7 @@ endfunction
 
 " Searching for patterns {{{1
 "
-" function! sj#SearchUnderCursor(pattern, flags) {{{2
+" function! sj#SearchUnderCursor(pattern, flags, skip) {{{2
 "
 " Searches for a match for the given pattern under the cursor. Returns the
 " result of the |search()| call if a match was found, 0 otherwise.
@@ -248,7 +248,7 @@ function! sj#SearchUnderCursor(pattern, ...)
   endif
 endfunction
 
-" function! sj#SearchposUnderCursor(pattern, flags) {{{2
+" function! sj#SearchposUnderCursor(pattern, flags, skip) {{{2
 "
 " Searches for a match for the given pattern under the cursor. Returns the
 " start and (end + 1) column positions of the match. If nothing was found,
@@ -256,13 +256,21 @@ endfunction
 "
 " Moves the cursor unless the 'n' flag is given.
 "
+" Respects the skip expression if it's given.
+"
 " See sj#SearchUnderCursor for the behaviour of a:flags
 "
 function! sj#SearchposUnderCursor(pattern, ...)
-  if a:0 > 0
+  if a:0 >= 1
     let given_flags = a:1
   else
     let given_flags = ''
+  endif
+
+  if a:0 >= 2
+    let skip = a:2
+  else
+    let skip = ''
   endif
 
   let lnum        = line('.')
@@ -282,7 +290,7 @@ function! sj#SearchposUnderCursor(pattern, ...)
 
     " find the start of the pattern
     call search(pattern, 'bcW', lnum)
-    let search_result = search(pattern, 'cW'.extra_flags, lnum)
+    let search_result = sj#SearchSkip(pattern, skip, 'cW'.extra_flags, lnum)
     if search_result <= 0
       return [0, 0]
     endif
@@ -290,7 +298,7 @@ function! sj#SearchposUnderCursor(pattern, ...)
 
     " find the end of the pattern
     call sj#PushCursor()
-    call search(pattern, 'cWe', lnum)
+    call sj#SearchSkip(pattern, skip, 'cWe', lnum)
     let match_end = col('.')
 
     " set the end of the pattern to the next character, or EOL. Extra logic
@@ -304,7 +312,7 @@ function! sj#SearchposUnderCursor(pattern, ...)
     endif
     call sj#PopCursor()
 
-    if match_start > col || match_end <= col
+    if !sj#ColBetween(col, match_start, match_end)
       " then the cursor is not in the pattern
       return [0, 0]
     else
@@ -337,8 +345,8 @@ function! sj#SearchSkip(pattern, skip, ...)
     let flags = ''
   endif
 
-  if stridx(flags, 'n') > -1 || stridx(flags, 'c') > -1
-    echoerr "Doesn't work with 'n' or 'c' flags, was given: ".flags
+  if stridx(flags, 'n') > -1
+    echoerr "Doesn't work with 'n' flag, was given: ".flags
     return
   endif
 
@@ -354,6 +362,10 @@ function! sj#SearchSkip(pattern, skip, ...)
   let skip_match = 1
   while skip_match
     let match = search(pattern, flags, stopline, timeout)
+
+    " remove 'c' flag for any run after the first
+    let flags = substitute(flags, 'c', '', 'g')
+
     if match && eval(skip)
       let skip_match = 1
     else
@@ -362,6 +374,25 @@ function! sj#SearchSkip(pattern, skip, ...)
   endwhile
 
   return match
+endfunction
+
+function! sj#SkipSyntax(...)
+  let syntax_groups = a:000
+  let skip_pattern  = '\%('.join(syntax_groups, '\|').'\)'
+
+  return "synIDattr(synID(line('.'),col('.'),1),'name') =~ '".skip_pattern."'"
+endfunction
+
+" Checks if the current position of the cursor is within the given limits.
+"
+function! sj#CursorBetween(start, end)
+  return sj#ColBetween(col('.'), a:start, a:end)
+endfunction
+
+" Checks if the given column is within the given limits.
+"
+function! sj#ColBetween(col, start, end)
+  return a:start <= a:col && a:end > a:col
 endfunction
 
 " Regex helpers {{{1
@@ -386,6 +417,31 @@ function! sj#ExtractRx(expr, pat, sub)
   endif
 
   return substitute(a:expr, rx, a:sub, '')
+endfunction
+
+" Compatibility {{{1
+"
+" Functionality that is present in newer versions of Vim, but needs a
+" compatibility layer for older ones.
+"
+" function! sj#Keeppatterns(command) {{{2
+"
+" Executes the given command, but attempts to keep search patterns as they
+" were.
+"
+function! sj#Keeppatterns(command)
+  if exists(':keeppatterns')
+    exe 'keeppatterns '.a:command
+  else
+    let histnr = histnr('search')
+
+    exe a:command
+
+    if histnr != histnr('search')
+      call histdel('search', -1)
+      let @/ = histget('search', -1)
+    endif
+  endif
 endfunction
 
 " Splitjoin-specific helpers {{{1
@@ -461,7 +517,7 @@ function! sj#LocateBracesOnLine(open, close, ...)
 
   " optional skip parameter
   if a:0 > 0
-    let skip = s:SkipSyntax(a:1)
+    let skip = sj#SkipSyntax(a:1)
   else
     let skip = ''
   endif
@@ -521,11 +577,4 @@ function! sj#ParseJsonObjectBody(from, to)
   let parser = sj#argparser#js#Construct(a:from, a:to, getline('.'))
   call parser.Process()
   return parser.args
-endfunction
-
-function! s:SkipSyntax(...)
-  let syntax_groups = a:000
-  let skip_pattern  = '\%('.join(syntax_groups, '\|').'\)'
-
-  return "synIDattr(synID(line('.'),col('.'),1),'name') =~ '".skip_pattern."'"
 endfunction

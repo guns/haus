@@ -80,6 +80,31 @@ describe "coffee" do
         else
           foo = 'qux'
     EOF
+
+    vim.search 'bar'
+    join
+
+    set_file_contents <<-EOF
+      do ->
+        foo = if bar? then 'baz' else 'qux'
+    EOF
+  end
+
+  specify "joining ternary operator without any assignment magic" do
+    set_file_contents <<-EOF
+      if bar?
+        foo = "baz"
+      else
+        baz = "qux"
+    EOF
+    setup_coffee_filetype
+
+    vim.search 'bar'
+    join
+
+    assert_file_contents <<-EOF
+      if bar? then foo = "baz" else baz = "qux"
+    EOF
   end
 
   specify "object literals" do
@@ -99,9 +124,48 @@ describe "coffee" do
     assert_file_contents 'one = { one: "two", three: "four" }'
   end
 
+  specify "function calls with object literals" do
+    set_file_contents 'foo = functionCall(one, two, three: four, five: six)'
+    setup_coffee_filetype
+
+    split
+
+    assert_file_contents <<-EOF
+      foo = functionCall one, two,
+        three: four
+        five: six
+    EOF
+
+    join
+
+    assert_file_contents 'foo = functionCall one, two, { three: four, five: six }'
+  end
+
   specify "strings" do
     set_file_contents <<-EOF
       foo = "example with \#{interpolation} and \\"nested\\" quotes"
+    EOF
+    setup_coffee_filetype
+
+    vim.search 'example'
+    split
+
+    assert_file_contents <<-EOF
+      foo = """
+        example with \#{interpolation} and "nested" quotes
+      """
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      foo = "example with \#{interpolation} and \\"nested\\" quotes"
+    EOF
+  end
+
+  specify "triple strings" do
+    set_file_contents <<-EOF
+      foo = """example with \#{interpolation} and "nested" quotes"""
     EOF
     setup_coffee_filetype
 

@@ -45,6 +45,40 @@ function! sj#coffee#SplitIfClause()
   endif
 endfunction
 
+function! sj#coffee#JoinIfElseClause()
+  let if_line      = getline('.')
+  let else_line    = getline(line('.') + 2)
+  let base_indent  = indent('.')
+  let if_pattern   = '\v^\s*(if|unless|while|until|for)\s'
+  let else_pattern = '\v^\s*else$'
+
+  if if_line !~ if_pattern || else_line !~ else_pattern
+    return 0
+  endif
+
+  let if_clause   = sj#Trim(if_line)
+  let true_body   = sj#Trim(getline(line('.') + 1))
+  let else_clause = sj#Trim(else_line)
+  let false_body  = sj#Trim(getline(line('.') + 3))
+
+  let assignment_pattern = '^\(\w\+\)\s*=\s*'
+  if true_body =~ assignment_pattern && false_body =~ assignment_pattern
+    " it might start with the assignment of a single variable, let's see
+    let match_index = matchend(true_body, assignment_pattern)
+    if strpart(true_body, 0, match_index) == strpart(false_body, 0, match_index)
+      " assignment, change the components a bit
+      let if_clause  = strpart(true_body, 0, match_index).if_clause
+      let true_body  = strpart(true_body, match_index)
+      let false_body = strpart(false_body, match_index)
+    endif
+  endif
+
+  call sj#ReplaceMotion('Vjjj', if_clause.' then '.true_body.' else '.false_body)
+  call sj#SetIndent(line('.'), base_indent)
+
+  return 1
+endfunction
+
 function! sj#coffee#JoinIfClause()
   let line        = getline('.')
   let base_indent = indent('.')
@@ -90,28 +124,60 @@ endfunction
 
 function! sj#coffee#SplitObjectLiteral()
   let [from, to] = sj#LocateBracesOnLine('{', '}')
+  let bracket    = '{'
+
+  if from < 0 && to < 0
+    let [from, to] = sj#LocateBracesOnLine('(', ')')
+    let bracket    = '('
+  endif
 
   if from < 0 && to < 0
     return 0
-  else
-    let indent = indent('.')
-    let pairs  = sj#ParseJsonObjectBody(from + 1, to - 1)
-    let body   = "\n".join(pairs, "\n")
-    call sj#ReplaceMotion('Va{', body)
-
-    " clean the remaining whitespace
-    s/\s\+$//e
-
-    call sj#SetIndent(line('.') + 1, line('.') + len(pairs), indent + &sw)
-
-    if g:splitjoin_align
-      let body_start = line('.') + 1
-      let body_end   = body_start + len(pairs) - 1
-      call sj#Align(body_start, body_end, 'json_object')
-    endif
-
-    return 1
   endif
+
+  let lineno = line('.')
+  let indent = indent(lineno)
+  let pairs  = sj#ParseJsonObjectBody(from + 1, to - 1)
+
+  " Some are arguments, some are real pairs
+  let arguments  = []
+  while len(pairs) > 0
+    let item = pairs[0]
+
+    if item =~ '^\k\+:'
+      " we've reached the pairs, stop here
+      break
+    else
+      call add(arguments, remove(pairs, 0))
+    endif
+  endwhile
+
+  if len(pairs) == 0
+    " nothing to split
+    return 0
+  endif
+
+  if len(arguments) > 0
+    let argument_list = ' '.join(arguments, ', ').', '
+  else
+    let argument_list = ''
+  endif
+
+  let body = argument_list."\n".join(pairs, "\n")
+  call sj#ReplaceMotion('Va'.bracket, body)
+
+  " clean the remaining whitespace
+  s/\s\+$//e
+
+  call sj#SetIndent(lineno + 1, lineno + len(pairs), indent + &sw)
+
+  if g:splitjoin_align
+    let body_start = lineno + 1
+    let body_end   = body_start + len(pairs) - 1
+    call sj#Align(body_start, body_end, 'json_object')
+  endif
+
+  return 1
 endfunction
 
 function! sj#coffee#JoinObjectLiteral()
@@ -133,6 +199,32 @@ function! sj#coffee#JoinObjectLiteral()
   endif
   let body = getline('.').' { '.join(lines, ', ').' }'
   call sj#ReplaceLines(start_line - 1, end_line, body)
+
+  return 1
+endfunction
+
+function! sj#coffee#SplitTripleString()
+  if search('["'']\{3}.\{-}["'']\{3}\s*$', 'Wbc', line('.')) <= 0
+    return 0
+  endif
+
+  let start_col = col('.')
+  let quote       = getline('.')[col('.') - 1]
+  let double_quote = repeat(quote, 2)
+  let triple_quote = repeat(quote, 3)
+
+  normal! lll
+  if search(double_quote.'\zs'.quote, 'W', line('.')) <= 0
+    return 0
+  endif
+  let end_col = col('.')
+
+  let body     = sj#GetCols(start_col, end_col)
+  let new_body = substitute(body, '^'.triple_quote.'\(.*\)'.triple_quote.'$', '\1', '')
+  let new_body = triple_quote."\n".new_body."\n".triple_quote
+
+  call sj#ReplaceCols(start_col, end_col, new_body)
+  normal! j>>j<<
 
   return 1
 endfunction

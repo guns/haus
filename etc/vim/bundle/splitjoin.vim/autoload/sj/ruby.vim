@@ -14,39 +14,47 @@ function! sj#ruby#JoinIfClause()
   let line    = getline('.')
   let pattern = '\v^\s*(if|unless|while|until)'
 
-  if line =~ pattern
-    let if_line_no = line('.')
-    let else_line_pattern = '^'.repeat(' ', indent(if_line_no)).'else\s*$'
-    let end_line_pattern = '^'.repeat(' ', indent(if_line_no)).'end\s*$'
-
-    let else_line_no = search(else_line_pattern, 'W')
-    call cursor(if_line_no, 1)
-    let end_line_no = search(end_line_pattern, 'W')
-
-    if else_line_no && else_line_no < end_line_no
-      return 0
-    endif
-
-    if end_line_no > 0
-      let lines = sj#GetLines(if_line_no, end_line_no)
-
-      let if_line  = lines[0]
-      let end_line = lines[-1]
-      let body     = join(lines[1:-2], "\n")
-
-      let if_line = sj#Trim(if_line)
-      let body    = sj#Trim(body)
-      let body    = s:JoinLines(body)
-
-      let replacement = body.' '.if_line
-
-      call sj#ReplaceLines(if_line_no, end_line_no, replacement)
-
-      return 1
-    endif
+  if line !~ pattern
+    return 0
   endif
 
-  return 0
+  let if_line_no = line('.')
+  let else_line_pattern = '^'.repeat(' ', indent(if_line_no)).'else\s*\%(#.*\)\=$'
+  let end_line_pattern = '^'.repeat(' ', indent(if_line_no)).'end\s*\%(#.*\)\=$'
+
+  let else_line_no = search(else_line_pattern, 'W')
+  call cursor(if_line_no, 1)
+  let end_line_no = search(end_line_pattern, 'W')
+
+  if end_line_no <= 0
+    return 0
+  endif
+
+  if else_line_no && else_line_no < end_line_no
+    return 0
+  endif
+
+  let [result, offset] = s:HandleComments(if_line_no, end_line_no)
+  if !result
+    return 1
+  endif
+  let if_line_no += offset
+  let end_line_no += offset
+
+  let lines = sj#GetLines(if_line_no, end_line_no)
+
+  let if_line  = lines[0]
+  let end_line = lines[-1]
+  let body     = join(lines[1:-2], "\n")
+
+  let if_line = sj#Trim(if_line)
+  let body    = sj#Trim(body)
+  let body    = s:JoinLines(body)
+
+  let replacement = body.' '.if_line
+
+  call sj#ReplaceLines(if_line_no, end_line_no, replacement)
+  return 1
 endfunction
 
 function! sj#ruby#SplitTernaryClause()
@@ -117,6 +125,14 @@ function! sj#ruby#JoinTernaryClause()
     end
 
     if clause_is_valid
+      let [result, offset] = s:HandleComments(if_line_no, end_line_no)
+      if !result
+        return 1
+      endif
+      let if_line_no   += offset
+      let else_line_no += offset
+      let end_line_no  += offset
+
       let upper_body = getline(if_line_no + 1)
       let lower_body = getline(else_line_no + 1)
       let upper_body = sj#Trim(upper_body)
@@ -172,7 +188,6 @@ function! sj#ruby#JoinCase()
         let counter = counter + 1
       endif
     endfor
-
 
     " try to join else for extremely well formed cases and use
     " an alignment tool (optional)
@@ -282,24 +297,32 @@ function! sj#ruby#JoinWhenThen()
   return 0
 endfunction
 
-" TODO rewrite using SearchUnderCursor?
 function! sj#ruby#SplitBlock()
-  let line    = getline('.')
   let pattern = '\v\{(\s*\|.{-}\|)?\s*(.{-})\s*\}'
 
-  if line !~ pattern
+  if sj#SearchUnderCursor('\v%(\k|!|\-\>|\?|\))\s*\zs'.pattern) <= 0
     return 0
   endif
 
-  let [start, end] = sj#LocateBracesOnLine('{', '}', 'rubyString', 'rubyInterpolationDelimiter')
+  let start = col('.')
+  normal! %
+  let end = col('.')
 
-  if start < 0
+  if start == end
+    " the cursor hasn't moved, bail out
     return 0
   endif
 
   let body = sj#GetMotion('Va{')
+  let multiline_block = 'do\1\n\2\nend'
+
+  normal! %
+  if search('\S\%#', 'Wbn')
+    let multiline_block = ' '.multiline_block
+  endif
+
   let body = join(split(body, '\s*;\s*'), "\n")
-  let replacement = substitute(body, '^'.pattern.'$', 'do\1\n\2\nend', '')
+  let replacement = substitute(body, '^'.pattern.'$', multiline_block, '')
 
   call sj#ReplaceMotion('Va{', replacement)
 
@@ -314,25 +337,32 @@ function! sj#ruby#JoinBlock()
     let do_line_no = search(do_pattern, 'bcW', line('.'))
   endif
 
-  if do_line_no > 0
-    let end_line_no = searchpair(do_pattern, '', '\<end\>', 'W')
-
-    let lines = sj#GetLines(do_line_no, end_line_no)
-    let lines = sj#TrimList(lines)
-
-    let do_line  = substitute(lines[0], do_pattern, '{\1', '')
-    let body     = join(lines[1:-2], '; ')
-    let body     = sj#Trim(body)
-    let end_line = substitute(lines[-1], 'end', '}', '')
-
-    let replacement = do_line.' '.body.' '.end_line
-
-    call sj#ReplaceLines(do_line_no, end_line_no, replacement)
-
-    return 1
-  else
+  if do_line_no <= 0
     return 0
-  end
+  endif
+
+  let end_line_no = searchpair(do_pattern, '', '\<end\>', 'W')
+
+  let [result, offset] = s:HandleComments(do_line_no, end_line_no)
+  if !result
+    return 1
+  endif
+  let do_line_no += offset
+  let end_line_no += offset
+
+  let lines = sj#GetLines(do_line_no, end_line_no)
+  let lines = sj#TrimList(lines)
+
+  let do_line  = substitute(lines[0], do_pattern, '{\1', '')
+  let body     = join(lines[1:-2], '; ')
+  let body     = sj#Trim(body)
+  let end_line = substitute(lines[-1], 'end', '}', '')
+
+  let replacement = do_line.' '.body.' '.end_line
+
+  call sj#ReplaceLines(do_line_no, end_line_no, replacement)
+
+  return 1
 endfunction
 
 function! sj#ruby#SplitCachingConstruct()
@@ -380,69 +410,18 @@ function! sj#ruby#JoinHash()
   endif
 endfunction
 
-function! s:JoinHashWithCurlyBraces()
-  normal! $
-
-  let original_body = sj#GetMotion('Vi{')
-  let body = original_body
-
-  if g:splitjoin_normalize_whitespace
-    let body = substitute(body, '\s\+=>\s\+', ' => ', 'g')
-    let body = substitute(body, '\s\+\k\+\zs:\s\+', ': ', 'g')
-  endif
-
-  " remove trailing comma
-  let body = substitute(body, ',\ze\_s*$', '', '')
-
-  if body != original_body
-    call sj#ReplaceMotion('Vi{', body)
-  endif
-
-  normal! Va{J
-
-  return 1
-endfunction
-
-function! s:JoinHashWithRoundBraces()
-  normal! $
-
-  let body = sj#GetMotion('Vi(',)
-  if g:splitjoin_normalize_whitespace
-    let body = substitute(body, '\s*=>\s*', ' => ', 'g')
-  endif
-
-  " remove trailing comma
-  let body = substitute(body, ',\ze\_s*$', '', '')
-
-  let body = join(sj#TrimList(split(body, "\n")), ' ')
-  call sj#ReplaceMotion('Va(', '('.body.')')
-
-  return 1
-endfunction
-
-function! s:JoinHashWithoutBraces()
-  let start_lineno = line('.')
-  let end_lineno   = start_lineno
-  let lineno       = nextnonblank(start_lineno + 1)
-  let line         = getline(lineno)
-  let indent       = repeat(' ', indent(lineno))
-
-  while lineno <= line('$') && ((line =~ '^'.indent && line =~ '=>') || line =~ '^\s*)')
-    let end_lineno = lineno
-    let lineno     = nextnonblank(lineno + 1)
-    let line       = getline(lineno)
-  endwhile
-
-  call cursor(start_lineno, 0)
-  exe "normal! V".(end_lineno - start_lineno)."jJ"
-endfunction
-
 function! sj#ruby#SplitOptions()
+  " Variables:
+  "
+  " option_type:   ['option', 'hash']
+  " function_type: ['with_spaces', 'with_round_braces']
+  "
+
   call sj#PushCursor()
   let [from, to] = sj#argparser#ruby#LocateHash()
   call sj#PopCursor()
 
-  if from < 0
+  if from < 0 || !sj#CursorBetween(from, to)
     call sj#PushCursor()
     let [from, to, function_type] = sj#argparser#ruby#LocateFunction()
     call sj#PopCursor()
@@ -456,11 +435,37 @@ function! sj#ruby#SplitOptions()
     return 0
   endif
 
+  " with options, we may not know the end, but we do know the start
+  if option_type == 'option' && to < 0 && !sj#CursorBetween(from, col('$'))
+    return 0
+  endif
+
+  " if we know both start and end, but the cursor is not there, bail out
+  if option_type == 'option' && to >= 0 && !sj#CursorBetween(from, to)
+    return 0
+  endif
+
   let [from, to, args, opts, hash_type] = sj#argparser#ruby#ParseArguments(from, to, getline('.'))
 
-  if len(opts) < 1
-    " no options found, leave it as it is
-    return 0
+  if len(opts) < 1 && len(args) > 0 && option_type == 'option'
+    " no options found, but there are arguments, split those
+    let replacement = join(args, ",\n")
+
+    if !g:splitjoin_ruby_hanging_args
+      let replacement = "\n".replacement."\n"
+    elseif len(args) == 1
+      " if there's only one argument, there's nothing to do in the "hanging"
+      " case
+      return 0
+    endif
+
+    if function_type == 'with_spaces'
+      let replacement = "(".replacement.")"
+      let from -= 1 " Also replace the space before the argument list
+    endif
+
+    call sj#ReplaceCols(from, to, replacement)
+    return 1
   endif
 
   let replacement = ''
@@ -472,29 +477,47 @@ function! sj#ruby#SplitOptions()
   endif
 
   " add opening brace
-  if !g:splitjoin_ruby_curly_braces && option_type == 'option' && function_type == 'with_round_braces' && len(args) > 0
-    " Example: User.new(:one, :two => 'three')
-    "
-    let replacement .= "\n"
-    let alignment_start += 1
-  elseif !g:splitjoin_ruby_curly_braces && option_type == 'option' && function_type == 'with_spaces' && len(args) > 0
-    " Example: User.new :one, :two => 'three'
-    "
-    let replacement .= "\n"
-    let alignment_start += 1
-  elseif !g:splitjoin_ruby_curly_braces && option_type == 'option' && function_type == 'with_round_braces' && len(args) == 0
-    " Example: User.new(:two => 'three')
-    "
-    " no need to add anything
-  elseif g:splitjoin_ruby_curly_braces && (option_type == 'hash' || function_type == 'with_round_braces')
-    " Example: one = {:two => 'three'}
-    "
-    let replacement .= "{\n"
-    let alignment_start += 1
-  elseif g:splitjoin_ruby_curly_braces
-    " add braces in all other cases
-    let replacement .= " {\n"
-    let alignment_start += 1
+  if g:splitjoin_ruby_curly_braces
+
+    if option_type == 'hash'
+      " Example: one = {:two => 'three'}
+      "
+      let replacement .= "{\n"
+      let alignment_start += 1
+    elseif function_type == 'with_round_braces' && len(args) > 0
+      " Example: create(:inquiry, :state => state)
+      "
+      let replacement .= " {\n"
+      let alignment_start += 1
+    elseif function_type == 'with_round_braces' && len(args) == 0
+      " Example: create(one: 'two', three: 'four')
+      "
+      let replacement .= "{\n"
+      let alignment_start += 1
+    else
+      " add braces in all other cases
+      let replacement .= " {\n"
+      let alignment_start += 1
+    endif
+
+  else " !g:splitjoin_ruby_curly_braces
+
+    if option_type == 'option' && function_type == 'with_round_braces' && len(args) > 0
+      " Example: User.new(:one, :two => 'three')
+      "
+      let replacement .= "\n"
+      let alignment_start += 1
+    elseif option_type == 'option' && function_type == 'with_spaces' && len(args) > 0
+      " Example: User.new :one, :two => 'three'
+      "
+      let replacement .= "\n"
+      let alignment_start += 1
+    elseif option_type == 'option' && function_type == 'with_round_braces' && len(args) == 0
+      " Example: User.new(:two => 'three')
+      "
+      " no need to add anything
+    endif
+
   endif
 
   " add options
@@ -524,18 +547,6 @@ function! sj#ruby#SplitOptions()
   endif
 
   return 1
-endfunction
-
-" Helper functions
-
-function! s:JoinLines(text)
-  let lines = sj#TrimList(split(a:text, "\n"))
-
-  if len(lines) > 1
-    return '('.join(lines, '; ').')'
-  else
-    return join(lines, '; ')
-  endif
 endfunction
 
 function! sj#ruby#JoinContinuedMethodCall()
@@ -638,4 +649,265 @@ function! sj#ruby#SplitString()
   endif
 
   return 1
+endfunction
+
+function! sj#ruby#SplitArrayLiteral()
+  if synIDattr(synID(line('.'), col('.'), 1), "name") !~ 'rubyString\%(Delimiter\)\='
+    return 0
+  endif
+
+  let lineno = line('.')
+  let indent = indent('.')
+
+  if search('%[wiWI]', 'Wbce', line('.')) <= 0 &&
+        \ search('%[wiWI]', 'Wce', line('.')) <= 0
+    return 0
+  endif
+
+  if col('.') == col('$')
+    " we're at the end of the line, bail out
+    return 0
+  endif
+
+  normal! l
+  let opening_bracket = getline('.')[col('.') - 1]
+
+  if col('.') == col('$')
+    " we're at the end of the line, bail out
+    return 0
+  endif
+  normal! l
+
+  let closing_bracket = s:ArrayLiteralClosingBracket(opening_bracket)
+
+  let array_pattern = '\%(\k\|\s\)*\ze\V'.closing_bracket
+  let [start_col, end_col] = sj#SearchposUnderCursor(array_pattern)
+  if start_col <= 0
+    return 0
+  endif
+
+  if start_col == end_col - 1
+    " just insert a newline, nothing inside the list
+    exe "normal! i\<cr>"
+    call sj#SetIndent(end_col, indent)
+    return 1
+  endif
+
+  let array_body = sj#GetCols(start_col, end_col - 1)
+  let array_items = split(array_body, '\s\+')
+  call sj#ReplaceCols(start_col, end_col - 1, "\n".join(array_items, "\n")."\n")
+
+  call sj#SetIndent(lineno + 1, lineno + len(array_items), indent + &sw)
+  call sj#SetIndent(lineno + len(array_items) + 1, indent)
+
+  return 0
+endfunction
+
+function! sj#ruby#JoinArrayLiteral()
+  if synIDattr(synID(line('.'), col('.'), 1), "name") != 'rubyStringDelimiter'
+    return 0
+  endif
+
+  if search('%[wiWI].$', 'Wce', line('.')) <= 0
+    return 0
+  endif
+
+  let opening_bracket = getline('.')[col('.') - 1]
+  let closing_bracket = s:ArrayLiteralClosingBracket(opening_bracket)
+
+  let start_lineno = line('.')
+  let end_lineno   = start_lineno + 1
+  let end_pattern  = '^\s*\V'.closing_bracket.'\m\s*$'
+  let word_pattern =  '^\%(\k\|\s\)*$'
+
+  while end_lineno <= line('$') && getline(end_lineno) !~ end_pattern
+    if getline(end_lineno) !~ word_pattern
+      return 0
+    endif
+    let end_lineno += 1
+  endwhile
+
+  if getline(end_lineno) !~ end_pattern
+    return 0
+  endif
+
+  if end_lineno - start_lineno < 1
+    " nothing to join, bail out
+    return 0
+  endif
+
+  if end_lineno - start_lineno == 1
+    call sj#Keeppatterns('s/\n\_s*//')
+    return 1
+  endif
+
+  let words = sj#TrimList(sj#GetLines(start_lineno + 1, end_lineno - 1))
+  call sj#ReplaceLines(start_lineno + 1, end_lineno, join(words, ' ').closing_bracket)
+  exe start_lineno
+  call sj#Keeppatterns('s/\n\_s*//')
+
+  return 1
+endfunction
+
+" Helper functions
+
+function! s:JoinHashWithCurlyBraces()
+  normal! $
+
+  let original_body = sj#GetMotion('Vi{')
+  let body = original_body
+
+  if g:splitjoin_normalize_whitespace
+    let body = substitute(body, '\s\+=>\s\+', ' => ', 'g')
+    let body = substitute(body, '\s\+\k\+\zs:\s\+', ': ', 'g')
+  endif
+
+  " remove trailing comma
+  let body = substitute(body, ',\ze\_s*$', '', '')
+
+  if body != original_body
+    call sj#ReplaceMotion('Vi{', body)
+  endif
+
+  normal! Va{J
+
+  return 1
+endfunction
+
+function! s:JoinHashWithRoundBraces()
+  normal! $
+
+  let body = sj#GetMotion('Vi(',)
+  if g:splitjoin_normalize_whitespace
+    let body = substitute(body, '\s*=>\s*', ' => ', 'g')
+  endif
+
+  " remove trailing comma
+  let body = substitute(body, ',\ze\_s*$', '', '')
+
+  let body = join(sj#TrimList(split(body, "\n")), ' ')
+  call sj#ReplaceMotion('Va(', '('.body.')')
+
+  return 1
+endfunction
+
+function! s:JoinHashWithoutBraces()
+  let start_lineno = line('.')
+  let end_lineno   = start_lineno
+  let lineno       = nextnonblank(start_lineno + 1)
+  let line         = getline(lineno)
+  let indent       = repeat(' ', indent(lineno))
+
+  while lineno <= line('$') && ((line =~ '^'.indent && line =~ '=>') || line =~ '^\s*)')
+    let end_lineno = lineno
+    let lineno     = nextnonblank(lineno + 1)
+    let line       = getline(lineno)
+  endwhile
+
+  call cursor(start_lineno, 0)
+  exe "normal! V".(end_lineno - start_lineno)."jJ"
+endfunction
+
+function! s:JoinLines(text)
+  let lines = sj#TrimList(split(a:text, "\n"))
+
+  if len(lines) > 1
+    return '('.join(lines, '; ').')'
+  else
+    return join(lines, '; ')
+  endif
+endfunction
+
+function! s:HandleComments(start_line_no, end_line_no)
+  let start_line_no = a:start_line_no
+  let end_line_no   = a:end_line_no
+
+  let [success, failure] = [1, 0]
+  let offset = 0
+
+  let comments = s:FindComments(start_line_no, end_line_no)
+
+  if len(comments) > 1
+    echomsg "Splitjoin: Can't join this due to the inline comments. Please remove them first."
+    return [failure, 0]
+  endif
+
+  if len(comments) == 1
+    let [start_line_no, end_line_no] = s:MigrateComments(comments, a:start_line_no, a:end_line_no)
+    let offset = start_line_no - a:start_line_no
+  else
+    let offset = 0
+  endif
+
+  return [success, offset]
+endfunction
+
+function! s:FindComments(start_line_no, end_line_no)
+  call sj#PushCursor()
+
+  let comments = []
+
+  for lineno in range(a:start_line_no, a:end_line_no)
+    exe lineno
+    normal! 0
+
+    while search('\s*#.*$', 'W', lineno) > 0
+      let col = col('.')
+
+      normal! f#
+      if synIDattr(synID(lineno, col('.'), 1), "name") == 'rubyComment'
+        let comment = sj#GetCols(col, col('$'))
+        call add(comments, [lineno, col, comment])
+        break
+      endif
+    endwhile
+  endfor
+
+  call sj#PopCursor()
+
+  return comments
+endfunction
+
+function! s:MigrateComments(comments, start_line_no, end_line_no)
+  call sj#PushCursor()
+
+  let start_line_no = a:start_line_no
+  let end_line_no   = a:end_line_no
+
+  for [line, col, _c] in a:comments
+    call cursor(line, col)
+    normal! "_D
+  endfor
+
+  for [_l, _c, comment] in a:comments
+    call append(start_line_no - 1, comment)
+
+    exe start_line_no
+    normal! ==
+
+    let start_line_no = start_line_no + 1
+    let end_line_no   = end_line_no + 1
+  endfor
+
+  call sj#PopCursor()
+
+  return [start_line_no, end_line_no]
+endfunction
+
+function! s:ArrayLiteralClosingBracket(opening_bracket)
+  let opening_bracket = a:opening_bracket
+
+  if opening_bracket == '{'
+    let closing_bracket = '}'
+  elseif opening_bracket == '('
+    let closing_bracket = ')'
+  elseif opening_bracket == '<'
+    let closing_bracket = '>'
+  elseif opening_bracket == '['
+    let closing_bracket = ']'
+  else
+    let closing_bracket = opening_bracket
+  endif
+
+  return closing_bracket
 endfunction

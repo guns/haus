@@ -2,7 +2,7 @@ if exists("g:loaded_splitjoin") || &cp
   finish
 endif
 
-let g:loaded_splitjoin = '0.7.0' " version number
+let g:loaded_splitjoin = '0.8.0' " version number
 let s:keepcpo          = &cpo
 set cpo&vim
 
@@ -26,7 +26,11 @@ if !exists('g:splitjoin_ruby_heredoc_type')
 endif
 
 if !exists('g:splitjoin_ruby_trailing_comma')
-  let g:splitjoin_ruby_trailing_comma = 1
+  let g:splitjoin_ruby_trailing_comma = 0
+endif
+
+if !exists('g:splitjoin_ruby_hanging_args')
+  let g:splitjoin_ruby_hanging_args = 1
 endif
 
 if !exists('g:splitjoin_coffee_suffix_if_clause')
@@ -35,6 +39,10 @@ endif
 
 if !exists('g:splitjoin_perl_brace_on_same_line')
   let g:splitjoin_perl_brace_on_same_line = 1
+endif
+
+if !exists('g:splitjoin_python_brackets_on_separate_lines')
+  let g:splitjoin_python_brackets_on_separate_lines = 0
 endif
 
 if !exists('g:splitjoin_join_mapping')
@@ -55,11 +63,11 @@ nnoremap <silent> <plug>SplitjoinSplit :<c-u>call <SID>Split()<cr>
 nnoremap <silent> <plug>SplitjoinJoin  :<c-u>call <SID>Join()<cr>
 
 if g:splitjoin_join_mapping != ''
-  exe 'nnoremap <silent> '.g:splitjoin_join_mapping.' :<c-u>call <SID>Mapping(g:splitjoin_join_mapping, "SplitjoinJoin")<cr>'
+  exe 'nnoremap <silent> '.g:splitjoin_join_mapping.' :<c-u>call <SID>Mapping(g:splitjoin_join_mapping, "<SID>Join")<cr>'
 endif
 
 if g:splitjoin_split_mapping != ''
-  exe 'nnoremap <silent> '.g:splitjoin_split_mapping.' :<c-u>call <SID>Mapping(g:splitjoin_split_mapping, "SplitjoinSplit")<cr>'
+  exe 'nnoremap <silent> '.g:splitjoin_split_mapping.' :<c-u>call <SID>Mapping(g:splitjoin_split_mapping, "<SID>Split")<cr>'
 endif
 
 " Internal Functions:
@@ -81,7 +89,7 @@ function! s:Split()
 
       if call(callback, [])
         silent! call repeat#set("\<plug>SplitjoinSplit")
-        break
+        return 1
       endif
 
     finally
@@ -90,6 +98,7 @@ function! s:Split()
   endfor
 
   call winrestview(saved_view)
+  return 0
 endfunction
 
 function! s:Join()
@@ -106,23 +115,24 @@ function! s:Join()
 
       if call(callback, [])
         silent! call repeat#set("\<plug>SplitjoinJoin")
-        break
+        return 1
       endif
 
     finally
       call sj#PopCursor()
     endtry
   endfor
+
+  return 0
 endfunction
 
-" Used to create a mapping for the given a:command that falls back to the
-" built-in key sequence (a:mapping) if the command did not change the buffer.
+" Used to create a mapping for the given a:function that falls back to the
+" built-in key sequence (a:mapping) if the function returns 0, meaning it
+" didn't do anything.
 "
-function! s:Mapping(mapping, command)
+function! s:Mapping(mapping, function)
   if !v:count
-    let tick = b:changedtick
-    exe a:command
-    if tick == b:changedtick
+    if !call(a:function, [])
       execute 'normal! '.a:mapping
     endif
   else

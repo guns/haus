@@ -41,8 +41,9 @@ function! sj#js#JoinObjectLiteral()
     endif
 
     let body = join(lines, ' ')
+    let body = '{'.body.'}'
 
-    call sj#ReplaceMotion('Va{', '{ '.body.' }')
+    call sj#ReplaceMotion('Va{', body)
 
     return 1
   else
@@ -50,19 +51,42 @@ function! sj#js#JoinObjectLiteral()
   endif
 endfunction
 
-function! sj#js#SplitArray()
+function! sj#js#JoinFunction()
+  let line = getline('.')
+
+  if line =~ 'function\%(\s\+\k\+\)\=(.*) {\s*$'
+    call search('{', 'c', line('.'))
+    let body = sj#GetMotion('Vi{')
+
+    let lines = split(body, ';\=\s*\n')
+    let lines = sj#TrimList(lines)
+    let body = join(lines, '; ').';'
+    let body = '{ '.body.' }'
+
+    call sj#ReplaceMotion('Va{', body)
+
+    return 1
+  else
+    return 0
+  endif
+endfunction
+
+function! s:SplitList(delimiter)
+  let start = a:delimiter[0]
+  let end   = a:delimiter[1]
+
   let lineno = line('.')
   let indent = indent('.')
 
-  let [from, to] = sj#LocateBracesOnLine('[', ']')
+  let [from, to] = sj#LocateBracesOnLine(start, end)
 
   if from < 0 && to < 0
     return 0
   endif
 
   let items = sj#ParseJsonObjectBody(from + 1, to - 1)
-  let body  = "[\n".join(items, ",\n")."\n]"
-  call sj#ReplaceMotion('Va[', body)
+  let body  = start."\n".join(items, ",\n")."\n".end
+  call sj#ReplaceMotion('Va'.start, body)
 
   " built-in js indenting doesn't indent this properly
   for l in range(lineno + 1, lineno + len(items))
@@ -75,21 +99,76 @@ function! sj#js#SplitArray()
   return 1
 endfunction
 
-function! sj#js#JoinArray()
+function! sj#js#SplitArray()
+  return s:SplitList(['[', ']'])
+endfunction
+
+function! sj#js#SplitArgs()
+  return s:SplitList(['(', ')'])
+endfunction
+
+function! s:JoinList(delimiter)
+  let start = a:delimiter[0]
+  let end   = a:delimiter[1]
+
   let line = getline('.')
 
-  if line !~ '[\s*$'
+  if line !~ start . '\s*$'
     return 0
   endif
 
-  call search('[', 'c', line('.'))
-  let body = sj#GetMotion('Vi[')
+  call search(start, 'c', line('.'))
+  let body = sj#GetMotion('Vi'.start)
 
   let lines = split(body, "\n")
   let lines = sj#TrimList(lines)
   let body  = sj#Trim(join(lines, ' '))
 
-  call sj#ReplaceMotion('Va[', '['.body.']')
+  call sj#ReplaceMotion('Va'.start, start.body.end)
 
+  return 1
+endfunction
+
+function! sj#js#JoinArray()
+  return s:JoinList(['[', ']'])
+endfunction
+
+function! sj#js#JoinArgs()
+  return s:JoinList(['(', ')'])
+endfunction
+
+function! sj#js#SplitOneLineIf()
+  let line = getline('.')
+  if line =~ '^\s*if (.\+) .\+;'
+    let lines = []
+    " use regular vim movements to know where we have to split
+    normal! ^w%
+    let end_if = getpos('.')[2]
+    call add(lines, line[0:end_if] . '{')
+    call add(lines, sj#Trim(line[end_if :]))
+    call add(lines, '}')
+
+    call sj#ReplaceMotion('V', join(lines, "\n"))
+
+    return 1
+  else
+    return 0
+  endif
+endfunction
+
+function! sj#js#JoinOneLineIf()
+  let if_line_no = line('.')
+  let if_line = getline('.')
+  let end_line_no = if_line_no + 2
+  let end_line = getline(end_line_no)
+
+  if if_line !~ '^\s*if (.+) {' && end_line !~ '^\s*}\s*$'
+    return 0
+  endif
+
+  let body = sj#Trim(getline(if_line_no + 1))
+  let new  = if_line[:-2] . body
+
+  call sj#ReplaceLines(if_line_no, end_line_no, new)
   return 1
 endfunction

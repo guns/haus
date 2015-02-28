@@ -29,6 +29,22 @@ describe "ruby" do
     EOF
   end
 
+  specify "if-clauses with comments" do
+    set_file_contents <<-EOF
+      if 6 * 9 == 42
+        return "the answer" # comment
+      end
+    EOF
+
+    vim.search 'if'
+    join
+
+    assert_file_contents <<-EOF
+      # comment
+      return "the answer" if 6 * 9 == 42
+    EOF
+  end
+
   describe "ternaries" do
     it "handles simplistic ternaries" do
       set_file_contents <<-EOF
@@ -48,6 +64,23 @@ describe "ruby" do
       join
 
       assert_file_contents <<-EOF
+        condition ? 'this' : 'that'
+      EOF
+    end
+
+    it "handles comments" do
+      set_file_contents <<-EOF
+        if condition
+          'this' # comment
+        else
+          'that'
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        # comment
         condition ? 'this' : 'that'
       EOF
     end
@@ -361,7 +394,7 @@ describe "ruby" do
     assert_file_contents <<-EOF
       foo = {
         :bar => 'baz',
-        :one => 'two',
+        :one => 'two'
       }
     EOF
 
@@ -431,11 +464,96 @@ describe "ruby" do
   end
 
   describe "blocks" do
-    it "splitjoins {}-blocks and do-end blocks" do
+    it "splitjoins {}-blocks prepended by ?" do
       set_file_contents <<-EOF
-        Bar.new { |b| puts b.to_s }
+        pens.any?{ |pen| pen.name.to_sym.in? names.flatten }
       EOF
 
+      vim.search('to_sym')
+      split
+
+      assert_file_contents <<-EOF
+        pens.any? do |pen|
+          pen.name.to_sym.in? names.flatten
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        pens.any? { |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+    end
+
+    it "splitjoins {}-blocks prepended by !" do
+      set_file_contents <<-EOF
+        pens.find!{ |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+
+      vim.search('to_sym')
+      split
+
+      assert_file_contents <<-EOF
+        pens.find! do |pen|
+          pen.name.to_sym.in? names.flatten
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        pens.find! { |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+    end
+
+    it "splitjoins {}-blocks prepended by -> ()" do
+      set_file_contents <<-EOF
+        -> (pen){ |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+
+      vim.search('to_sym')
+      split
+
+      assert_file_contents <<-EOF
+       -> (pen) do |pen|
+         pen.name.to_sym.in? names.flatten
+       end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        -> (pen) { |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+    end
+
+    it "splitjoins {}-blocks prepended by ->" do
+      set_file_contents <<-EOF
+        -> { |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+
+      vim.search('to_sym')
+      split
+
+      assert_file_contents <<-EOF
+       -> do |pen|
+         pen.name.to_sym.in? names.flatten
+       end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        -> { |pen| pen.name.to_sym.in? names.flatten }
+      EOF
+    end
+
+    it "splitjoins {}-blocks without leading whitespace" do
+      set_file_contents <<-EOF
+        Bar.new{ |b| puts b.to_s }
+      EOF
+
+      vim.search('puts')
       split
 
       assert_file_contents <<-EOF
@@ -451,11 +569,54 @@ describe "ruby" do
       EOF
     end
 
+    it "splitjoins {}-blocks with arguments and do-end blocks" do
+      set_file_contents <<-EOF
+        Bar.new { |b| puts b.to_s }
+      EOF
+
+      vim.search('puts')
+      split
+
+      assert_file_contents <<-EOF
+        Bar.new do |b|
+          puts b.to_s
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        Bar.new { |b| puts b.to_s }
+      EOF
+    end
+
+    it 'splitjoins {}-blocks without arguments and do-end blocks' do
+      set_file_contents <<-EOF
+        this { block doesnt, get: mangled }
+      EOF
+
+      vim.search 'block'
+      split
+
+      assert_file_contents <<-EOF
+        this do
+          block doesnt, get: mangled
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        this { block doesnt, get: mangled }
+      EOF
+    end
+
     it "handles trailing code" do
       set_file_contents <<-EOF
         Bar.new { |one| two }.map(&:name)
       EOF
 
+      vim.search 'one'
       split
 
       assert_file_contents <<-EOF
@@ -483,6 +644,22 @@ describe "ruby" do
         foo("\#{one}") do
           two
         end
+      EOF
+    end
+
+    it "migrates inline comments when joining" do
+      set_file_contents <<-EOF
+        foo do
+          example # comment
+        end
+      EOF
+
+      vim.search 'do'
+      join
+
+      assert_file_contents <<-EOF
+        # comment
+        foo { example }
       EOF
     end
   end
@@ -585,6 +762,87 @@ describe "ruby" do
     end
   end
 
+  describe "method arguments" do
+    specify "with hanging args" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 1')
+
+      set_file_contents(<<-EOF)
+        params.permit(:title, :action, :subject_type, :subject_id, :own)
+      EOF
+
+      vim.search(':title')
+      split
+
+      assert_file_contents(<<-EOF)
+        params.permit(:title,
+                      :action,
+                      :subject_type,
+                      :subject_id,
+                      :own)
+      EOF
+    end
+
+    specify "without hanging args" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 0')
+
+      set_file_contents(<<-EOF)
+        params.permit(:title, :action, :subject_type, :subject_id, :own)
+      EOF
+
+      vim.search(':title')
+      split
+
+      assert_file_contents(<<-EOF)
+        params.permit(
+          :title,
+          :action,
+          :subject_type,
+          :subject_id,
+          :own
+        )
+      EOF
+    end
+
+    specify "without brackets" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 0')
+
+      set_file_contents(<<-EOF)
+        params.permit :title, :action, :subject_type, :subject_id, :own
+      EOF
+
+      vim.search(':title')
+      split
+
+      assert_file_contents(<<-EOF)
+        params.permit(
+          :title,
+          :action,
+          :subject_type,
+          :subject_id,
+          :own
+        )
+      EOF
+    end
+
+    specify "with spaces around brackets" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 0')
+
+      set_file_contents(<<-EOF)
+        foo = bar( "one", "two" )
+      EOF
+
+      vim.search('one')
+      split
+
+      assert_file_contents(<<-EOF)
+        foo = bar(
+          "one",
+          "two"
+        )
+      EOF
+    end
+  end
+
   describe "method options" do
     specify "with curly braces" do
       vim.command('let g:splitjoin_ruby_curly_braces = 1')
@@ -593,6 +851,7 @@ describe "ruby" do
         foo 1, 2, :one => 1, :two => 2
       EOF
 
+      vim.search(':one')
       split
 
       assert_file_contents <<-EOF
@@ -616,6 +875,7 @@ describe "ruby" do
         foo 1, 2, :one => 1, :two => 2
       EOF
 
+      vim.search(':one')
       split
 
       assert_file_contents <<-EOF
@@ -638,6 +898,7 @@ describe "ruby" do
         foo(:one => 1, :two => 2)
       EOF
 
+      vim.search 'one'
       split
 
       assert_file_contents <<-EOF
@@ -652,6 +913,24 @@ describe "ruby" do
       EOF
     end
 
+    specify "with arguments, round braces, curly braces" do
+      vim.command('let g:splitjoin_ruby_curly_braces = 1')
+
+      set_file_contents <<-EOF
+        foo(one, :two => 2, :three => 3)
+      EOF
+
+      vim.search 'one'
+      split
+
+      assert_file_contents <<-EOF
+        foo(one, {
+          :two => 2,
+          :three => 3,
+        })
+      EOF
+    end
+
     specify "doesn't get confused by interpolation" do
       vim.command('let g:splitjoin_ruby_curly_braces = 1')
 
@@ -659,7 +938,7 @@ describe "ruby" do
         foo "\#{one}", :two => 3
       EOF
 
-      vim.search 'foo'
+      vim.search ':two'
       split
 
       assert_file_contents <<-EOF
@@ -673,6 +952,48 @@ describe "ruby" do
       assert_file_contents <<-EOF
         foo "\#{one}", { :two => 3 }
       EOF
+    end
+  end
+
+  describe "array literals" do
+    specify "simple case with {" do
+      set_file_contents "array = %w{one two three}"
+
+      vim.search 'one'
+      split
+
+      assert_file_contents <<-EOF
+        array = %w{
+          one
+          two
+          three
+        }
+      EOF
+
+      vim.search '%w{'
+      join
+
+      assert_file_contents "array = %w{one two three}"
+    end
+
+    specify "simple case with |" do
+      set_file_contents "array = %w|one two three|"
+
+      vim.search 'one'
+      split
+
+      assert_file_contents <<-EOF
+        array = %w|
+          one
+          two
+          three
+        |
+      EOF
+
+      vim.search '%w|'
+      join
+
+      assert_file_contents "array = %w|one two three|"
     end
   end
 end

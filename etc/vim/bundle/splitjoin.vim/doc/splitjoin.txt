@@ -18,6 +18,8 @@ CONTENTS                                      *splitjoin* *splitjoin-contents*
     YAML...................................: |splitjoin-yaml|
     Eruby..................................: |splitjoin-eruby|
     Go.....................................: |splitjoin-go|
+    TeX....................................: |splitjoin-tex|
+    C......................................: |splitjoin-c|
     Settings...............................: |splitjoin-settings|
     Internals..............................: |splitjoin-internals|
     Issues.................................: |splitjoin-issues|
@@ -210,6 +212,36 @@ curly braces are present after splitting or joining.
 
     foo 1, 2, { :one => 1, :two => 2 }
 <
+Method arguments ~
+
+These only get split if there is no option hash at the end.
+
+The variable |g:splitjoin_ruby_hanging_args| controls whether the arguments
+will be left "hanging", aligned near the brackets, or if the brackets will be
+put on their own lines.
+
+Joining for the "hanging" style doesn't really work, since there's no easy,
+reliable way to detect the continued arguments. However, a simple vanilla-vim
+J should do the trick.
+>
+    params.permit(:title, :action, :subject_type, :subject_id, :own)
+
+    params.permit(:title,
+                  :action,
+                  :subject_type,
+                  :subject_id,
+                  :own)
+
+    # with g:splitjoin_ruby_hanging_args == 0
+
+    params.permit(
+      :title,
+      :action,
+      :subject_type,
+      :subject_id,
+      :own
+    )
+<
 Caching constructs  ~
 >
     @two ||= 1 + 1
@@ -265,6 +297,16 @@ case-keyword, as shown in the example.
     else do_baz
     end
 >
+Array literals ~
+>
+    list = %w{one two three}
+
+    list = %w{
+    one
+    two
+    three
+    }
+<
 
 ==============================================================================
 PYTHON                                                      *splitjoin-python*
@@ -341,6 +383,36 @@ just like explained above.
       die;
     }
 <
+Lists ~
+
+>
+    my @var = ['one', 'two', 'three'];
+
+    my @var = [
+      'one',
+      'two',
+      'three'
+    ];
+
+    my @var = ('one', 'two', 'three');
+
+    my @var = (
+      'one',
+      'two',
+      'three'
+    );
+<
+Word lists ~
+
+>
+    my @var = qw(one two three);
+
+    my @var = qw(
+      one
+      two
+      three
+    );
+<
 
 ==============================================================================
 COFFEESCRIPT                                                *splitjoin-coffee*
@@ -367,8 +439,13 @@ the suffix format.
 <
 Ternary operator ~
 
-Only splitting is available at this time, since joining an if-else clause into
-a ternary operator is more complicated.
+Splitting takes into account the entire line. If the line starts with
+assignment, it tries to squeeze in the assignment part on both lines.
+
+Joining attempts to do the same process in reverse -- if the same variable is
+being assigned to different things in both cases, that variable is moved out
+in front of the if-clause. Otherwise, it just joins the if-then-else without
+any magic.
 >
     foo = if bar? then 'baz' else 'qux'
 
@@ -376,6 +453,8 @@ a ternary operator is more complicated.
       foo = 'baz'
     else
       foo = 'qux'
+
+    foo = if bar? then 'baz' else 'qux'
 <
 Object literals ~
 >
@@ -384,6 +463,17 @@ Object literals ~
     one =
       one: "two"
       three: "four"
+<
+Object literals in function calls ~
+
+Only splitting works this way for now, the reverse direction falls back to the
+normal object literal joining.
+>
+    foo = functionCall(one, two, three: four, five: six)
+
+    foo = functionCall one, two,
+        three: four
+        five: six
 <
 Multiline strings ~
 
@@ -441,7 +531,7 @@ you're using a plugin to set a specific "json" filetype instead, you could
 copy the "ftplugin/javascript/splitjoin.vim" file's contents into a
 "ftplugin/json.vim" file.
 >
-    var one = { one: "two", three: "four" };
+    var one = {one: "two", three: "four"};
 
     var one = {
       one: "two",
@@ -457,13 +547,27 @@ Arrays ~
       'three',
       'four'
     ];
+
 <
+
+Function Arguments ~
+
+>
+    var foo = bar('one', 'two', 'three');
+
+    var foo = bar(
+      'one',
+      'two',
+      'three'
+    );
+<
+
+
 Functions ~
 
 When the cursor is on the "function" keyword, the script attempts to split the
 curly braces of the function. This is a bit more convenient for the common
-use-case of one-line to multi-line functions. Joining functions also works,
-because it falls back to the above object joining.
+use-case of one-line to multi-line functions.
 >
     var callback = function (something, other) { something_else; };
 
@@ -472,6 +576,15 @@ because it falls back to the above object joining.
     };
 <
 
+One-line if conditionals ~
+>
+    if (isTrue()) {
+      doSomething();
+    }
+
+
+    if (isTrue()) doSomething;
+<
 ==============================================================================
 PHP                                                            *splitjoin-php*
 
@@ -493,6 +606,22 @@ Short arrays ~
       'three',
       'four'
     ]
+<
+If-clauses ~
+>
+    if ($foo) { $a = "bar"; }
+
+    if ($foo) {
+      $a = "bar";
+    }
+<
+PHP markers ~
+>
+    <?php echo "OK"; ?>
+
+    <?php
+    echo "OK";
+    ?>
 <
 
 ==============================================================================
@@ -534,12 +663,27 @@ HTML                                                          *splitjoin-html*
 
 Tags ~
 >
-    <div class="foo">bar</div>
+   <div class="foo">bar</div>
 
     <div class="foo">
       bar
     </div>
 <
+
+Attributes ~
+>
+    <button class="foo bar" ng-click="click()" ng-class="{ clicked: clicked }">
+      Click me!
+    </button>
+
+    <button
+      class="foo bar"
+      ng-click="click()"
+      ng-class="{ clicked: clicked }">
+      Click me!
+    </button>
+<
+
 
 ==============================================================================
 CSS                                                             *splitjoin-css*
@@ -652,6 +796,49 @@ Structs ~
         two: "asdf",
         three: []int{1, 2, 3},
     }
+<
+
+==============================================================================
+TEX                                                              *splitjoin-tex*
+
+Begin-end blocks ~
+>
+    \begin{align*} x = y\\  y = z \end{align*}
+
+    \begin{align*}
+      x = y\\
+      y = z
+    \end{align*}
+<
+Enumerations ~
+>
+    \begin{enumerate} \item item1 \item item2 \end{enumerate}
+
+    \begin{enumerate}
+       \item item1
+       \item item2
+    \end{enumerate}
+<
+
+==============================================================================
+C                                                                *splitjoin-c*
+
+If clauses ~
+>
+    if (val1 && val2 || val3);
+
+    if (val1
+            && val2
+            || val3);
+<
+Function calls ~
+>
+    myfunction(arg1, arg2, arg3, arg4);
+
+    myfunction(arg1,
+            arg2,
+            arg3,
+            arg4);
 <
 
 ==============================================================================
@@ -801,10 +988,10 @@ if there are braces, so the first example will always be joined to:
     g:splitjoin_ruby_trailing_comma
 <
 
-Default value: 1
+Default value: 0
 
 This controls whether to put a trailing comma on a split hash. With this set
-to 1 (the default), a hash will split like so:
+to 1, a hash will split like so:
 >
     User.new :one, :first_name => "Andrew", :last_name => "Radev"
 
@@ -815,6 +1002,27 @@ to 1 (the default), a hash will split like so:
 <
 Note the trailing comma for the last element.
 
+                                              *g:splitjoin_ruby_hanging_args*
+>
+    g:splitjoin_ruby_hanging_args
+<
+
+Default value: 1
+
+This controls whether to split function arguments in the "hanging" style:
+>
+    params.permit(:title,
+                  :action,
+                  :subject)
+<
+If it is set to 0, the result will be:
+>
+    params.permit(
+      :title,
+      :action,
+      :subject
+    )
+>
 
                                          *g:splitjoin_coffee_suffix_if_clause*
 >
@@ -886,6 +1094,32 @@ If it's set to "<<", the result is this:
     EOF
     end
 <
+                               *g:splitjoin_python_brackets_on_separate_lines*
+>
+    g:splitjoin_python_brackets_on_separate_lines
+<
+
+Default value: 0
+
+If set to 1, then python will split lists and tuples so that the opening and
+closing bracket are placed on separate lines. If it's 0, the first argument
+will remain where it is, and the rest will be split on separate lines.
+
+Example:
+>
+    # let g:splitjoin_python_brackets_on_separate_lines = 0
+    some_method(
+            one,
+            two
+            )
+
+    # let g:splitjoin_python_brackets_on_separate_lines = 1
+    some_method(one,
+            two)
+<
+The first example might look a bit odd, but if you have the python-pep8-indent
+plugin (https://github.com/hynek/vim-python-pep8-indent), it should look quite
+reasonable.
 
 ==============================================================================
 INTERNALS                                                *splitjoin-internals*

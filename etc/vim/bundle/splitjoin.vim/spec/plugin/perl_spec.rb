@@ -8,7 +8,7 @@ describe "perl" do
     vim.set(:shiftwidth, 2)
   end
 
-  specify "if-clauses" do
+  specify "suffix if-clauses" do
     set_file_contents 'print "a = $a\n" if $debug;'
 
     split
@@ -22,6 +22,18 @@ describe "perl" do
     join
 
     assert_file_contents 'print "a = $a\n" if $debug;'
+  end
+
+  specify "postfix if-clauses" do
+    set_file_contents 'if ($debug) { print "a = $a\\n"; }'
+
+    split
+
+    assert_file_contents <<-EOF
+      if ($debug) {
+        print "a = $a\\n";
+      }
+    EOF
   end
 
   specify "and/or control flow" do
@@ -55,5 +67,59 @@ describe "perl" do
     join
 
     assert_file_contents "my $info = {name => $name, age => $age};"
+  end
+
+  specify "square-bracketed list" do
+    set_file_contents "my @var = ['one', 'two', 'three'];"
+
+    split
+
+    assert_file_contents <<-EOF
+      my @var = [
+        'one',
+        'two',
+        'three'
+      ];
+    EOF
+
+    join
+
+    assert_file_contents "my @var = ['one', 'two', 'three'];"
+  end
+
+  specify "round-bracketed list" do
+    set_file_contents "my @var = ('one', 'two', 'three');"
+
+    split
+
+    assert_file_contents <<-EOF
+      my @var = (
+        'one',
+        'two',
+        'three'
+      );
+    EOF
+
+    join
+
+    assert_file_contents "my @var = ('one', 'two', 'three');"
+  end
+
+  specify "word lists" do
+    set_file_contents "my @var = qw(one two three);"
+
+    split
+
+    assert_file_contents <<-EOF
+      my @var = qw(
+      one
+      two
+      three
+      );
+    EOF
+
+    join
+
+    assert_file_contents "my @var = qw(one two three);"
   end
 end

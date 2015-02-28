@@ -1,4 +1,4 @@
-function! sj#perl#SplitIfClause()
+function! sj#perl#SplitSuffixIfClause()
   let pattern = '\(.*\) \(if\|unless\|while\|until\) \(.*\);\s*$'
 
   if g:splitjoin_perl_brace_on_same_line
@@ -8,6 +8,24 @@ function! sj#perl#SplitIfClause()
   endif
 
   return s:Split(pattern, replacement)
+endfunction
+
+function! sj#perl#SplitPrefixIfClause()
+  let pattern = '\<if\s*(.\{-})\s*{.*}'
+
+  if search(pattern, 'Wbc') <= 0
+    return 0
+  endif
+
+  normal! f(
+  normal %
+  normal! f{
+
+  let body = sj#GetMotion('Va{')
+  let body = substitute(body, '^{\s*\(.\{-}\)\s*}$', "{\n\\1\n}", '')
+  call sj#ReplaceMotion('Va{', body)
+
+  return 1
 endfunction
 
 function! sj#perl#JoinIfClause()
@@ -102,6 +120,103 @@ function! sj#perl#JoinHash()
   let body = join(lines, ', ')
 
   call sj#ReplaceMotion('Va{', '{'.body.'}')
+  return 1
+endfunction
+
+function! sj#perl#SplitSquareBracketedList()
+  let [from, to] = sj#LocateBracesOnLine('[', ']')
+  if from < 0 && to < 0
+    return 0
+  endif
+
+  let items = sj#ParseJsonObjectBody(from + 1, to - 1)
+  let body  = "[\n".join(items, ",\n")."\n]"
+  call sj#ReplaceMotion('Va[', body)
+
+  return 1
+endfunction
+
+function! sj#perl#SplitRoundBracketedList()
+  let [from, to] = sj#LocateBracesOnLine('(', ')')
+  if from < 0 && to < 0
+    return 0
+  endif
+
+  let items = sj#ParseJsonObjectBody(from + 1, to - 1)
+  let body  = "(\n".join(items, ",\n")."\n)"
+  call sj#ReplaceMotion('Va(', body)
+
+  return 1
+endfunction
+
+function! sj#perl#SplitWordList()
+  let [from, to] = sj#LocateBracesOnLine('qw(', ')')
+  if from < 0 && to < 0
+    return 0
+  endif
+
+  call search('qw\zs(', 'b', line('.'))
+  let remainder_of_line = getline('.')[col('.') - 1 : -1]
+
+  if remainder_of_line !~ '\%(\w\|\s\)\+)'
+    return 0
+  endif
+
+  let items = split(matchstr(remainder_of_line, '\%(\w\|\s\)\+'), '\s\+')
+  let body  = "(\n".join(items, "\n")."\n)"
+  call sj#ReplaceMotion('Va(', body)
+
+  return 1
+endfunction
+
+function! sj#perl#JoinSquareBracketedList()
+  let line = getline('.')
+
+  if search('[\s*$', 'c', line('.')) <= 0
+    return 0
+  endif
+
+  let body = sj#GetMotion('Vi[')
+
+  let lines = split(body, ",\n")
+  let lines = sj#TrimList(lines)
+  let body = join(lines, ', ')
+
+  call sj#ReplaceMotion('Va[', '['.body.']')
+  return 1
+endfunction
+
+function! sj#perl#JoinRoundBracketedList()
+  let line = getline('.')
+
+  if search('(\s*$', 'c', line('.')) <= 0
+    return 0
+  endif
+
+  let body = sj#GetMotion('Vi(')
+
+  let lines = split(body, ",\n")
+  let lines = sj#TrimList(lines)
+  let body = join(lines, ', ')
+
+  call sj#ReplaceMotion('Va(', '('.body.')')
+  return 1
+endfunction
+
+function! sj#perl#JoinWordList()
+  let line = getline('.')
+
+  if search('qw\zs(\s*$', 'c', line('.')) <= 0
+    return 0
+  endif
+
+  let body = sj#GetMotion('Vi(')
+
+  let lines = split(body, "\n")
+  let lines = sj#TrimList(lines)
+  let body = join(lines, ' ')
+
+  call sj#ReplaceMotion('Va(', '('.body.')')
   return 1
 endfunction
 
