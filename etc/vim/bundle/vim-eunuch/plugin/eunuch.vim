@@ -21,15 +21,22 @@ function! s:separator()
   return !exists('+shellslash') || &shellslash ? '/' : '\\'
 endfunction
 
-command! -bar -bang Unlink :
+command! -bar -bang Unlink
+      \ if <bang>1 && &modified |
+      \   edit |
+      \ elseif delete(expand('%')) |
+      \   echoerr 'Failed to delete "'.expand('%').'"' |
+      \ else |
+      \   edit! |
+      \ endif
+
+command! -bar -bang Remove
       \ let s:file = fnamemodify(bufname(<q-args>),':p') |
       \ execute 'bdelete<bang>' |
       \ if !bufloaded(s:file) && delete(s:file) |
       \   echoerr 'Failed to delete "'.s:file.'"' |
       \ endif |
       \ unlet s:file
-
-command! -bar -bang Remove :Unlink<bang>
 
 command! -bar -nargs=1 -bang -complete=file Move :
       \ let s:src = expand('%:p') |
@@ -77,8 +84,8 @@ command! -bar -bang -nargs=? -complete=dir Mkdir
       \  silent keepalt execute 'file' s:fnameescape(expand('%')) |
       \ endif
 
-command! -bar -bang -complete=file -nargs=+ Find   :call s:Grep(<q-bang>, <q-args>, 'find')
-command! -bar -bang -complete=file -nargs=+ Locate :call s:Grep(<q-bang>, <q-args>, 'locate')
+command! -bar -bang -complete=file -nargs=+ Find   exe s:Grep(<q-bang>, <q-args>, 'find')
+command! -bar -bang -complete=file -nargs=+ Locate exe s:Grep(<q-bang>, <q-args>, 'locate')
 function! s:Grep(bang,args,prg) abort
   let grepprg = &l:grepprg
   let grepformat = &l:grepformat
@@ -89,7 +96,12 @@ function! s:Grep(bang,args,prg) abort
     if &shellpipe ==# '2>&1| tee' || &shellpipe ==# '|& tee'
       let &shellpipe = "| tee"
     endif
-    execute 'grep'.a:bang.' '.a:args
+    execute 'grep! '.a:args
+    if empty(a:bang) && !empty(getqflist())
+      return 'cfirst'
+    else
+      return ''
+    endif
   finally
     let &l:grepprg = grepprg
     let &l:grepformat = grepformat
@@ -179,7 +191,7 @@ augroup shebang_chmod
         \     let b:chmod_post = '+x' |
         \   endif |
         \ endif
-  autocmd BufWritePost,FileWritePost *
+  autocmd BufWritePost,FileWritePost * nested
         \ if exists('b:chmod_post') && executable('chmod') |
         \   silent! execute '!chmod '.b:chmod_post.' "<afile>"' |
         \   edit |

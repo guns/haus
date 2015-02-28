@@ -71,7 +71,9 @@ function! <SID>SetVimNumberOption(modeline, emacs_name, vim_name)
     let value = <SID>FindParameterValue(a:modeline, a:emacs_name, '\d\+')
     if strlen(value)
         exec 'setlocal ' . a:vim_name . '=' . value
+        return 1
     endif
+    return 0
 endfunc
 
 function! <SID>SetVimToggleOption(modeline, emacs_name, vim_name, nil_value)
@@ -103,9 +105,13 @@ function! ParseEmacsModeLine()
             call <SID>SetVimModeOption(modeline)
 
             call <SID>SetVimNumberOption(modeline, 'fill-column',        'textwidth')
-            call <SID>SetVimNumberOption(modeline, 'tab-width',          'shiftwidth')
-            call <SID>SetVimNumberOption(modeline, 'tab-width',          'softtabstop')
-            call <SID>SetVimNumberOption(modeline, 'tab-width',          'tabstop')
+            if <SID>SetVimNumberOption(modeline,   'tab-width',          'tabstop')
+                " - When shiftwidth is zero, the 'tabstop' value is used.
+                "   Use the shiftwidth() function to get the effective shiftwidth value.
+                " - When 'sts' is negative, the value of 'shiftwidth' is used.
+                setlocal shiftwidth=0
+                setlocal softtabstop=-1
+            endif
 
             call <SID>SetVimToggleOption(modeline, 'buffer-read-only',   'readonly',     0)
             call <SID>SetVimToggleOption(modeline, 'indent-tabs-mode',   'expandtab',    1)
