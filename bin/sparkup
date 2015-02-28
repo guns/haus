@@ -35,11 +35,11 @@ class HtmlDialect(Dialect):
         'cc:ie': {
             'opening_tag': '<!--[if IE]>',
             'closing_tag': '<![endif]-->'},
-        'cc:ie6': {
-            'opening_tag': '<!--[if lte IE 6]>',
+        'cc:ie8': {
+            'opening_tag': '<!--[if lte IE 8]>',
             'closing_tag': '<![endif]-->'},
-        'cc:ie7': {
-            'opening_tag': '<!--[if lte IE 7]>',
+        'cc:ie9': {
+            'opening_tag': '<!--[if lte IE 9]>',
             'closing_tag': '<![endif]-->'},
         'cc:noie': {
             'opening_tag': '<!--[if !IE]><!-->',
@@ -48,6 +48,28 @@ class HtmlDialect(Dialect):
             'expand': True,
             'opening_tag': '<?php',
             'closing_tag': '?>',
+            },
+        'erb:p': {
+            'opening_tag': '<%= ',
+            'closing_tag': ' %>',
+            },
+        'erb:c': {
+            'opening_tag': '%<# ',
+            'closing_tag': ' %>',
+            },
+        'erb:d': {
+            'opening_tag': '<% ',
+            'closing_tag': ' %>',
+            },
+        'erb:b': {
+            'expand': True,
+            'opening_tag' : '<% $2 %>',
+            'closing_tag' : '<% end %>',
+            },
+        'erb:bp': {
+            'expand': True,
+            'opening_tag' : '<%= $2 %>',
+            'closing_tag' : '<% end %>',
             },
         'html:4t': {
             'expand': True,
@@ -165,11 +187,11 @@ class HtmlDialect(Dialect):
             },
         'script:jquery': {
             'name': 'script',
-            'attributes': { 'src': 'http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js' }
+            'attributes': { 'src': 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js' }
             },
         'script:jquery2': {
             'name': 'script',
-            'attributes': { 'src': 'http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js' }
+            'attributes': { 'src': 'http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js' }
             },
         'script:jsapi': {
             'name': 'script',
@@ -203,13 +225,9 @@ class HtmlDialect(Dialect):
             'name': 'link',
             'attributes': { 'rel': 'alternate', 'type': 'application/atom+xml', 'title': 'Atom', 'href': '' },
             },
-        'meta:ie7': {
+        'meta:ieedge': {
             'name': 'meta',
-            'attributes': { 'http-equiv': 'X-UA-Compatible', 'content': 'IE=7' },
-            },
-        'meta:ie8': {
-            'name': 'meta',
-            'attributes': { 'http-equiv': 'X-UA-Compatible', 'content': 'IE=8' },
+            'attributes': { 'http-equiv': 'X-UA-Compatible', 'content': 'IE=edge' },
             },
         'form:get': {
             'name': 'form',
@@ -241,9 +259,11 @@ class HtmlDialect(Dialect):
         'radio': 'input:radio',
         'input:r': 'input:radio',
         'text': 'input:text',
+        'pass': 'input:password',
         'passwd': 'input:password',
         'password': 'input:password',
         'pw': 'input:password',
+        'input': 'input:text',
         'input:t': 'input:text',
         'linkcss': 'link:css',
         'scriptsrc': 'script:src',
@@ -269,7 +289,7 @@ class HtmlDialect(Dialect):
         'jssrc': 'script:src',
         }
     short_tags = (
-        'area', 'base', 'basefont', 'br', 'embed', 'hr', \
+        'area', 'base', 'basefont', 'br', 'embed', 'hr',
         'input', 'img', 'link', 'param', 'meta')
     required = {
         'a':      {'href':''},
@@ -286,9 +306,7 @@ class HtmlDialect(Dialect):
         'object': {'data': '', 'type': ''},
         'param':  {'name': '', 'value': ''},
         'form':   {'action': '', 'method': 'post'},
-        'table':  {'cellspacing': '0'},
         'input':  {'type': '', 'name': '', 'value': ''},
-        'base':   {'href': ''},
         'area':   {'shape': '', 'coords': '', 'href': '', 'alt': ''},
         'select': {'name': ''},
         'option': {'value': ''},
@@ -504,8 +522,8 @@ class Element:
     """An element.
     """
 
-    def __init__(self, token=None, parent=None, count=None, local_count=None, \
-                 parser=None, opening_tag=None, closing_tag=None, \
+    def __init__(self, token=None, parent=None, count=None, local_count=None,
+                 parser=None, opening_tag=None, closing_tag=None,
                  attributes=None, name=None, text=None):
         """Constructor.
 
@@ -599,7 +617,7 @@ class Element:
         guide = ''
         start_guide = ''
         end_guide = ''
-        if ((self.name == 'div') and \
+        if ((self.name == 'div') and
             (('id' in self.attributes) or ('class' in self.attributes))):
 
             if (self.parser.options.has('post-tag-guides')):
@@ -663,10 +681,13 @@ class Element:
         elif self.name != '' or \
             self.opening_tag is not None or \
             self.closing_tag is not None:
+            between_tags = self.text
+            if self.parser.options.has('open-empty-tags'):
+                between_tags += "\n\n" + indent
             output = "%s%s%s%s%s%s%s%s" % \
-                (start_guide, indent, self.get_opening_tag(), \
-                self.text, \
-                self.get_closing_tag(), \
+                (start_guide, indent, self.get_opening_tag(),
+                between_tags,
+                self.get_closing_tag(),
                 guide, end_guide, "\n")
 
         # Else, it's an empty-named element (like the root). Pass.
@@ -857,7 +878,8 @@ class Token:
 
         # Get the tag name. Default to DIV if none given.
         name = re.findall('^([\w\-:]*)', self.str)[0]
-        name = name.lower().replace('-', ':')
+        if self.parser.options.options['namespaced-elements'] == True:
+            name = name.lower().replace('-', ':')
 
         # Find synonyms through this thesaurus
         synonyms = self.parser.dialect.synonyms
@@ -1092,7 +1114,8 @@ class Options:
         except: return False
 
     options = {
-        'indent-spaces': 4
+        'indent-spaces': 4,
+        'namespaced-elements': False,
     }
     cmdline_keys = [
         ('h', 'help', 'Shows help'),
@@ -1108,6 +1131,7 @@ class Options:
         ('', 'end-guide-format=', 'To be documented'),   # << TODO
         ('', 'xml', 'Skip html attribute fillings'),
         ('', 'no-html5-self-closing', 'Use HTML4 <br /> instead of HTML5 <br>'),
+        ('', 'open-empty-tags', 'leaves an empty space between empty tags instead of leaving them on one line'),
     ]
 
     # Property: router
