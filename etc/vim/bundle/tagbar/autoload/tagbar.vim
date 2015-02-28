@@ -1261,6 +1261,8 @@ function! s:BaseTag._getPrefix() abort dict
     if g:tagbar_show_visibility
         if has_key(self.fields, 'access')
             let prefix .= get(s:visibility_symbols, self.fields.access, ' ')
+        elseif has_key(self.fields, 'file')
+            let prefix .= s:visibility_symbols.private
         else
             let prefix .= ' '
         endif
@@ -2159,7 +2161,7 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
                           \ '-',
                           \ '--format=2',
                           \ '--excmd=pattern',
-                          \ '--fields=nksSa',
+                          \ '--fields=nksSaf',
                           \ '--extra=',
                           \ '--sort=no',
                           \ '--append=no'
@@ -2202,6 +2204,8 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
     let ctags_output = s:ExecuteCtags(ctags_cmd)
 
     if v:shell_error || ctags_output =~ 'Warning: cannot open source file'
+        call s:debug('Command output:')
+        call s:debug(ctags_output)
         " Only display an error message if the Tagbar window is open and we
         " haven't seen the error before.
         if bufwinnr("__Tagbar__") != -1 &&
@@ -2210,8 +2214,6 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
             call s:warning('Tagbar: Could not execute ctags for ' . a:realfname . '!')
             echomsg 'Executed command: "' . ctags_cmd . '"'
             if !empty(ctags_output)
-                call s:debug('Command output:')
-                call s:debug(ctags_output)
                 echomsg 'Command output:'
                 for line in split(ctags_output, '\n')
                     echomsg line
@@ -2260,6 +2262,10 @@ function! s:ParseTagline(part1, part2, typeinfo, fileinfo) abort
         let key = strpart(field, 0, delimit)
         " Remove all tabs that may illegally be in the value
         let val = substitute(strpart(field, delimit + 1), '\t', '', 'g')
+        " File-restricted scoping
+        if key == "file"
+            let taginfo.fields[key] = 'yes'
+        endif
         if len(val) > 0
             if key == 'line' || key == 'column'
                 let taginfo.fields[key] = str2nr(val)
@@ -2832,7 +2838,7 @@ endfunction
 " s:PrintHelp() {{{2
 function! s:PrintHelp() abort
     if !g:tagbar_compact && s:short_help
-        silent 0put ='\" Press <F1> or ? for help'
+        silent 0put ='\" Press ' . s:get_map_str('help') . ' for help'
         silent  put _
     elseif !s:short_help
         silent 0put ='\" Tagbar keybindings'
@@ -3615,8 +3621,8 @@ endfunction
 function! s:ExecuteCtags(ctags_cmd) abort
     call s:debug('Executing ctags command: ' . a:ctags_cmd)
 
-    if has('unix')
-        " Reset shell in case it is set to something incompatible like fish
+    if &shell =~# 'fish$'
+        " Reset shell since fish isn't really compatible
         let shell_save = &shell
         set shell=sh
     endif
@@ -3650,7 +3656,7 @@ function! s:ExecuteCtags(ctags_cmd) abort
         let &shellslash = shellslash_save
     endif
 
-    if has('unix')
+    if exists('shell_save')
         let &shell = shell_save
     endif
 
