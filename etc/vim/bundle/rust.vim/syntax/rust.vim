@@ -26,7 +26,7 @@ syn keyword   rustKeyword     fn nextgroup=rustFuncName skipwhite skipempty
 syn keyword   rustKeyword     for in if impl let
 syn keyword   rustKeyword     loop once pub
 syn keyword   rustKeyword     return super
-syn keyword   rustKeyword     unsafe virtual where while
+syn keyword   rustKeyword     unsafe where while
 syn keyword   rustKeyword     use nextgroup=rustModPath skipwhite skipempty
 " FIXME: Scoped impl's name is also fallen in this category
 syn keyword   rustKeyword     mod trait struct enum type nextgroup=rustIdentifier skipwhite skipempty
@@ -56,7 +56,7 @@ syn match rustMacroRepeatCount ".\?[*+]" contained
 syn match rustMacroVariable "$\w\+"
 
 " Reserved (but not yet used) keywords {{{2
-syn keyword   rustReservedKeyword alignof be do offsetof priv pure sizeof typeof unsized yield abstract final override macro
+syn keyword   rustReservedKeyword alignof become do offsetof priv pure sizeof typeof unsized yield abstract virtual final override macro
 
 " Built-in types {{{2
 syn keyword   rustType        isize usize float char bool u8 u16 u32 u64 f32
@@ -144,10 +144,10 @@ syn region    rustDerive      start="derive(" end=")" contained contains=rustDer
 syn keyword   rustDeriveTrait contained Clone Hash RustcEncodable RustcDecodable Encodable Decodable PartialEq Eq PartialOrd Ord Rand Show Debug Default FromPrimitive Send Sync Copy
 
 " Number literals
-syn match     rustDecNumber   display "\<[0-9][0-9_]*\%([iu]\%(s\|8\|16\|32\|64\)\)\="
-syn match     rustHexNumber   display "\<0x[a-fA-F0-9_]\+\%([iu]\%(s\|8\|16\|32\|64\)\)\="
-syn match     rustOctNumber   display "\<0o[0-7_]\+\%([iu]\%(s\|8\|16\|32\|64\)\)\="
-syn match     rustBinNumber   display "\<0b[01_]\+\%([iu]\%(s\|8\|16\|32\|64\)\)\="
+syn match     rustDecNumber   display "\<[0-9][0-9_]*\%([iu]\%(size\|8\|16\|32\|64\)\)\="
+syn match     rustHexNumber   display "\<0x[a-fA-F0-9_]\+\%([iu]\%(size\|8\|16\|32\|64\)\)\="
+syn match     rustOctNumber   display "\<0o[0-7_]\+\%([iu]\%(size\|8\|16\|32\|64\)\)\="
+syn match     rustBinNumber   display "\<0b[01_]\+\%([iu]\%(size\|8\|16\|32\|64\)\)\="
 
 " Special case for numbers of the form "1." which are float literals, unless followed by
 " an identifier, which makes them integer literals with a method call or field access,
