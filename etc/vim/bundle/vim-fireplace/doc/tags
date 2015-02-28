@@ -1,9 +1,4 @@
 fireplace	fireplace.txt	/*fireplace*
-fireplace-:A	fireplace.txt	/*fireplace-:A*
-fireplace-:AS	fireplace.txt	/*fireplace-:AS*
-fireplace-:AT	fireplace.txt	/*fireplace-:AT*
-fireplace-:AV	fireplace.txt	/*fireplace-:AV*
-fireplace-:Apropos	fireplace.txt	/*fireplace-:Apropos*
 fireplace-:Connect	fireplace.txt	/*fireplace-:Connect*
 fireplace-:Djump	fireplace.txt	/*fireplace-:Djump*
 fireplace-:Doc	fireplace.txt	/*fireplace-:Doc*
@@ -35,11 +30,11 @@ fireplace-cpr	fireplace.txt	/*fireplace-cpr*
 fireplace-cq	fireplace.txt	/*fireplace-cq*
 fireplace-cqc	fireplace.txt	/*fireplace-cqc*
 fireplace-cqp	fireplace.txt	/*fireplace-cqp*
+fireplace-cqq	fireplace.txt	/*fireplace-cqq*
 fireplace-documentation	fireplace.txt	/*fireplace-documentation*
 fireplace-eval	fireplace.txt	/*fireplace-eval*
 fireplace-gf	fireplace.txt	/*fireplace-gf*
 fireplace-i_CTRL-R_(	fireplace.txt	/*fireplace-i_CTRL-R_(*
-fireplace-leiningen	fireplace.txt	/*fireplace-leiningen*
 fireplace-navigating	fireplace.txt	/*fireplace-navigating*
 fireplace-piggieback	fireplace.txt	/*fireplace-piggieback*
 fireplace.txt	fireplace.txt	/*fireplace.txt*

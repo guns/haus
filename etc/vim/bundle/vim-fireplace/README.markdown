@@ -4,14 +4,14 @@ There's a REPL in fireplace, but you probably wouldn't have noticed if I hadn't
 told you.  Such is the way with fireplace.vim.  By the way, this plugin is for
 Clojure.
 
-Fireplace.vim used to be called foreplay.vim, but it was renamed so Java
-developers wouldn't have to speak in hushed tones.
-
 ## Installation
 
-Fireplace.vim doesn't provide indenting or syntax highlighting, so you'll want
-[a set of Clojure runtime files](https://github.com/guns/vim-clojure-static).
-You might also want [classpath.vim][] to run code when no REPL is available.
+First, set up [cider-nrepl][].  (If you skip this step, fireplace.vim will
+make do with eval, which mostly works.) Next, fireplace.vim doesn't provide
+indenting or syntax highlighting, so you'll want [a set of Clojure runtime
+files](https://github.com/guns/vim-clojure-static) if you're on a version of
+Vim earlier than 7.4.  You might also want [leiningen.vim][] for assorted
+static project support.
 
 If you don't have a preferred installation method, I recommend
 installing [pathogen.vim](https://github.com/tpope/vim-pathogen), and
@@ -19,8 +19,6 @@ then simply copy and paste:
 
     cd ~/.vim/bundle
     git clone git://github.com/tpope/vim-fireplace.git
-    git clone git://github.com/tpope/vim-classpath.git
-    git clone git://github.com/guns/vim-clojure-static.git
 
 Once help tags have been generated, you can view the manual with
 `:help fireplace`.
@@ -40,14 +38,16 @@ one automatically.  ClojureScript support is just as seamless with
 The only external dependency is that you have either a Vim with Python support
 compiled in, or `python` in your path.
 
-Oh, and if you don't have an nREPL connection, installing [classpath.vim][]
+Oh, and if you don't have an nREPL connection, installing [leiningen.vim][]
 lets it fall back to using `java clojure.main` for some of the basics, using a
-class path based on your Leiningen or Maven config.  It's a bit slow, but a
-two-second delay is vastly preferable to being forced out of my flow for a
-single command, in my book.
+class path based on your Leiningen config.  It's a bit slow, but a two-second
+delay is vastly preferable to being forced out of my flow for a single
+command, in my book.
 
+[cider-nrepl]: https://github.com/clojure-emacs/cider-nrepl
 [Piggieback]: https://github.com/cemerick/piggieback
 [classpath.vim]: https://github.com/tpope/vim-classpath
+[leiningen.vim]: https://github.com/tpope/vim-leiningen
 
 ### Not quite a REPL
 
@@ -73,7 +73,7 @@ kicks off `(clojure.test/run-tests)` and loads the results into the quickfix
 list.
 
 There's a `cp` operator that evaluates a given motion (`cpp` for the
-outermost form under the cursor). `cm` and `c1m` are similar, but they only
+innermost form under the cursor). `cm` and `c1m` are similar, but they only
 run `clojure.walk/macroexpand-all` and `macroexpand-1` instead of evaluating
 the form entirely.
 
@@ -85,7 +85,7 @@ can be easily accessed with `:lopen`.
 I was brand new to Clojure when I started this plugin, so stuff that helped me
 understand code was a top priority.
 
-* `:Source`, `:Doc`, `:FindDoc`, and `:Apropos`, which map to the underlying
+* `:Source`, `:Doc`, and `:FindDoc`, which map to the underlying
   `clojure.repl` macro (with tab complete, of course).
 
 * `K` is mapped to look up the symbol under the cursor with `doc`.
@@ -108,15 +108,13 @@ Because why not?  It works in the quasi-REPL too.
 
 > Why does it take so long for Vim to startup?
 
-See the [classpath.vim FAQ][].  You can uninstall classpath.vim if you only
-care about nREPL support.
-
-[classpath.vim FAQ]: https://github.com/tpope/vim-classpath#FAQ
+That's either [classpath.vim][] or [leiningen.vim][].
 
 ## Self-Promotion
 
 Like fireplace.vim? Follow the repository on
-[GitHub](https://github.com/tpope/vim-fireplace). And if
+[GitHub](https://github.com/tpope/vim-fireplace) and vote for it on
+[vim.org](http://www.vim.org/scripts/script.php?script_id=4978).  And if
 you're feeling especially charitable, follow [tpope](http://tpo.pe/) on
 [Twitter](http://twitter.com/tpope) and
 [GitHub](https://github.com/tpope).
