@@ -10,7 +10,7 @@ let g:loaded_bundler = 1
 if !exists('g:dispatch_compilers')
   let g:dispatch_compilers = {}
 endif
-call extend(g:dispatch_compilers, {'bundle exec': ''})
+let g:dispatch_compilers['bundle exec'] = ''
 
 " Utility {{{1
 
@@ -193,13 +193,13 @@ function! s:Setup(path) abort
   endif
 endfunction
 
-function! s:ProjectileDetect() abort
-  if s:Detect(g:projectile_file)
-    call projectile#append(b:bundler_root, {
+function! s:ProjectionistDetect() abort
+  if s:Detect(get(g:, 'projectionist_file', ''))
+    call projectionist#append(b:bundler_root, {
           \ 'Gemfile': {'dispatch': ['bundle', '--gemfile={file}'], 'alternate': 'Gemfile.lock'},
           \ 'Gemfile.lock': {'alternate': 'Gemfile'}})
     for projections in bundler#project().projections_list()
-      call projectile#append(b:bundler_root, projections)
+      call projectionist#append(b:bundler_root, projections)
     endfor
   endif
 endfunction
@@ -211,8 +211,8 @@ augroup bundler
         \ if empty(&filetype) |
         \   call s:Setup(expand('<afile>:p')) |
         \ endif
-  autocmd User ProjectileDetect call s:ProjectileDetect()
-  autocmd User ProjectileActivate
+  autocmd User ProjectionistDetect call s:ProjectionistDetect()
+  autocmd User ProjectionistActivate
         \ if exists('b:bundler_root') && !exists(':Bopen') |
         \   silent doautocmd User Bundler |
         \ endif
@@ -317,7 +317,7 @@ function! s:project_paths(...) dict abort
     for config in [expand('~/.bundle/config'), self.path('.bundle/config')]
       if filereadable(config)
         let body = join(readfile(config), "\n")
-        let bundle_path = matchstr(body, "\\C\\<BUNDLE_PATH: '\\=\\zs[^\n']*")
+        let bundle_path = matchstr(body, "\\C\\<BUNDLE_PATH: [\"']\\=\\zs[^\n'\"]*")
         if !empty(bundle_path)
           if body =~# '\C\<BUNDLE_DISABLE_SHARED_GEMS:'
             let gem_paths = [self.path(bundle_path, 'ruby', abi_version)]
@@ -443,7 +443,7 @@ function! s:project_projections_list() dict abort
     endif
     for path in self.sorted()
       if filereadable(path . '/lib/projections.json')
-        call add(list, projectile#json_parse(readfile(path . '/lib/projections.json')))
+        call add(list, projectionist#json_parse(readfile(path . '/lib/projections.json')))
       endif
     endfor
   endif
@@ -459,7 +459,6 @@ let s:buffer_prototype = {}
 
 function! s:buffer(...) abort
   let buffer = {'#': bufnr(a:0 ? a:1 : '%')}
-  let g:buffer = buffer
   call extend(extend(buffer,s:buffer_prototype,'keep'),s:abstract_prototype,'keep')
   if buffer.getvar('bundler_root') !=# ''
     return buffer
@@ -523,11 +522,16 @@ function! s:Bundle(bang,arg)
   endtry
 endfunction
 
-function! s:BundleComplete(A,L,P)
-  if a:L =~# '^\S\+\s\+\%(show\|update\) '
-    return s:completion_filter(keys(s:project().paths()),a:A)
+function! s:BundleComplete(A, L, P) abort
+  return bundler#complete(a:A, a:L, a:P, bundler#project())
+endfunction
+
+function! bundler#complete(A, L, P, ...) abort
+  let project = a:0 ? a:1 : bundler#project(getcwd())
+  if !empty(project) && a:L =~# '\s\+\%(show\|update\) '
+    return s:completion_filter(keys(project.paths()), a:A)
   endif
-  return s:completion_filter(['install','update','exec','package','config','check','list','show','outdated','console','viz','benchmark'],a:A)
+  return s:completion_filter(['install','update','exec','package','config','check','list','show','outdated','console','viz','benchmark'], a:A)
 endfunction
 
 function! s:SetupMake() abort
@@ -561,8 +565,8 @@ augroup bundler_make
         \ if expand('<afile>:t') ==? 'gemfile' |
         \   call s:SetupMake() |
         \ endif
-  autocmd QuickFixCmdPre make,lmake call s:QuickFixCmdPreMake()
-  autocmd QuickFixCmdPost make,lmake call s:QuickFixCmdPostMake()
+  autocmd QuickFixCmdPre *make* call s:QuickFixCmdPreMake()
+  autocmd QuickFixCmdPost *make* call s:QuickFixCmdPostMake()
 augroup END
 
 " }}}1

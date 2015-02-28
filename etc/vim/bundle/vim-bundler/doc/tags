@@ -9,7 +9,7 @@ bundler-:Bvsplit	bundler.txt	/*bundler-:Bvsplit*
 bundler-about	bundler.txt	/*bundler-about*
 bundler-api	bundler.txt	/*bundler-api*
 bundler-commands	bundler.txt	/*bundler-commands*
-bundler-projectile	bundler.txt	/*bundler-projectile*
+bundler-projectionist	bundler.txt	/*bundler-projectionist*
 bundler.txt	bundler.txt	/*bundler.txt*
 g:gem_projections	bundler.txt	/*g:gem_projections*
 lib/projections.json	bundler.txt	/*lib\/projections.json*
