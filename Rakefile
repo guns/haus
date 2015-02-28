@@ -144,7 +144,7 @@ task :env do
 
       {
         :base   => "#{@src}/tmux",
-        :branch => %w[guns],
+        :branch => %w[nerv],
         :fetch  => :never,
         :files  => {
           'examples/tmux.vim' => 'etc/vim/bundle/tmux/syntax/tmux.vim',
@@ -277,7 +277,7 @@ task :env do
 
       {
         :base => "#{@src}/nginx",
-        :branch => %w[master vim],
+        :branch => %w[master],
         :files => lambda { |proj|
           src = "#{proj.base}/contrib/vim"
           dst = "#{proj.haus}/etc/vim/bundle/nginx"
