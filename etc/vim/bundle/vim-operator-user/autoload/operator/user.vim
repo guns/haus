@@ -1,6 +1,6 @@
 " operator-user - Define your own operator easily
-" Version: 0.0.9
-" Copyright (C) 2009-2014 Kana Natsuno <http://whileimautomaton.net/>
+" Version: 0.1.0
+" Copyright (C) 2009-2015 Kana Natsuno <http://whileimautomaton.net/>
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -36,6 +36,13 @@ function! operator#user#define_ex_command(name, ex_command)  "{{{2
   \        'operator#user#_do_ex_command',
   \        'call operator#user#_set_ex_command(' . string(a:ex_command) . ')'
   \      )
+endfunction
+
+
+
+
+function! operator#user#register()  "{{{2
+  return s:register
 endfunction
 
 
