@@ -54,13 +54,12 @@ use diagnostics;
 use strict;
 use IO::Socket;
 use IO::Socket::SSL;
-use IPC::Open2;
 use IPC::Open3;
 use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.487 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.488 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -559,13 +558,16 @@ sub video_file_size($) {
   {
     my ($in, $out, $err);
     $err = Symbol::gensym;
-    my $pid = open3 ($out, $in, $err, @cmd);
-    close ($in);
-    close ($out);
-    waitpid ($pid, 0);
-    local $/ = undef;  # read entire file
-    $result = <$err>;
-    close ($err);
+    my $pid = eval { open3 ($in, $out, $err, @cmd) };
+    if ($pid) {
+      close ($in);
+      close ($out);
+      local $/ = undef;  # read entire file
+      while (<$err>) {
+        $result .= $_;
+      }
+      waitpid ($pid, 0);
+    }
   }
 
   print STDERR "\n$result\n" if ($verbose > 3);
@@ -651,29 +653,37 @@ sub write_file_metadata_url($$$) {
   #
   if ($plutil) {
     foreach my $s ($date_plist, $url_plist) {
-      my ($in, $out);
-      my $pid = open2 ($out, $in,
-                       ($plutil,
-                        '-convert', 'binary1',
-                        '-', '-o', '-'));
-      print $in $s;
-      close ($in);
-      waitpid ($pid, 0);
+      my ($in, $out, $err);
+      $err = Symbol::gensym;
+      my $pid = eval { open3 ($in, $out, $err,
+                              ($plutil,
+                               '-convert', 'binary1',
+                               '-', '-o', '-')) };
+      if (!$pid) {
+        print STDERR "$progname: $id: $plutil: $!\n";
+      } else {
+        close ($err);
+        print $in $s;
+        close ($in);
 
-      if ($?) {
+        local $/ = undef;  # read entire file
+        my $s2 = '';
+        while (<$out>) {
+          $s2 .= $_;
+        }
+        $s = $s2 if $s2;
+
+        waitpid ($pid, 0);
         my $exit_value  = $? >> 8;
         my $signal_num  = $? & 127;
         my $dumped_core = $? & 128;
+
         print STDERR "$progname: $id: $plutil: core dumped!"
           if ($dumped_core);
         print STDERR "$progname: $id: $plutil: signal $signal_num!"
           if ($signal_num);
         print STDERR "$progname: $id: $plutil: exited with $exit_value!"
           if ($exit_value);
-      } else {
-        local $/ = undef;  # read entire file
-        my $s2 = <$out>;
-        $s = $s2 if $s2;
       }
     }
   }
@@ -726,16 +736,19 @@ sub write_file_metadata_url($$$) {
 
     my ($in, $out, $err);
     $err = Symbol::gensym;
-    my $pid = open3 ($out, $in, $err, @cmd);
-    close ($in);   # don't care about stdout
-    close ($err);  # don't care about stderr
-    close ($out);
-    waitpid ($pid, 0);
+    my $pid = eval { open3 ($in, $out, $err, @cmd) };
+    if (!$pid) {
+      print STDERR "$progname: $cmd[0]: $!\n";
+    } else {
+      close ($in);
+      close ($out);
+      close ($err);
 
-    if ($verbose > 0) {
+      waitpid ($pid, 0);
       my $exit_value  = $? >> 8;
       my $signal_num  = $? & 127;
       my $dumped_core = $? & 128;
+
       print STDERR "$progname: $cmd[0]: core dumped!\n"
         if ($dumped_core);
       print STDERR "$progname: $cmd[0]: signal $signal_num!\n"
@@ -2916,40 +2929,48 @@ sub mux_downloaded_files($$$$$$) {
 
 
   {
+    my $result = '';
     my ($in, $out, $err);
     $err = Symbol::gensym;
-    my $pid = open3 ($out, $in, $err, @cmd);
-    close ($in);
-    close ($out);
+    my $pid = eval { open3 ($in, $out, $err, @cmd) };
+    if (!$pid) {
+      $err = "exec: $cmd[0]: $!";
+    } else {
+      close ($in);
+      close ($out);
+      local $/ = undef;  # read entire file
+      while (<$err>) {
+        $result .= $_;
+      }
 
-    waitpid ($pid, 0);
-    my $exit_value  = $? >> 8;
-    my $signal_num  = $? & 127;
-    my $dumped_core = $? & 128;
+      waitpid ($pid, 0);
+      my $exit_value  = $? >> 8;
+      my $signal_num  = $? & 127;
+      my $dumped_core = $? & 128;
 
-    local $/ = undef;  # read entire file
-    my $result = <$err>;
-    close ($err);
+      if ($verbose > 2) {
+        $_ = $result;
+        s/^/$cmd[0]: /gm;
+        print STDERR "$_\n";
+      }
 
-    if ($verbose > 2) {
-      $_ = $result;
-      s/^/$cmd[0]: /gm;
-      print STDERR "$_\n";
+      $err = undef;
+      $err = "$id: $cmd[0]: core dumped!" if ($dumped_core);
+      $err = "$id: $cmd[0]: signal $signal_num!" if ($signal_num);
+      $err = "$id: $cmd[0]: exited with $exit_value!" if ($exit_value); 
     }
-
-    $err = undef;
-    $err = "$id: $cmd[0]: core dumped!" if ($dumped_core);
-    $err = "$id: $cmd[0]: signal $signal_num!" if ($signal_num);
-    $err = "$id: $cmd[0]: exited with $exit_value!" if ($exit_value); 
 
     if ($err) {
       unlink ($muxed_file);  # It's not a download, and it's broken.
       if ($verbose < 2) {
         my @L = split(/(?:\r?\n)+/, $result);
-        $result = join ("\n", @L[-5 .. -1]);     # only last 5 lines
+        $result = join ("\n", @L[-5 .. -1])     # only last 5 lines
+          if (@L > 5);
       }
-      $result =~ s/^/$cmd[0]: /gm;
-      $err .= "\n\n$result\n";
+      if ($result) {
+        $result =~ s/^/$cmd[0]: /gm;
+        $err .= "\n\n$result\n";
+      }
       error ($err);
     }
   }
@@ -2959,7 +2980,8 @@ sub mux_downloaded_files($$$$$$) {
   my $s3 = (stat($muxed_file))[7] || 0;
   
   $s1 = $s1 + $s2;
-  if ($s3 < $s1 * 0.98) {
+  if ($s1 > (1024 * 1024) &&
+      $s3 < $s1 * 0.98) {
     $s1 = fmt_size ($s1);
     $s3 = fmt_size ($s3);
     error ("$id: $cmd[0] wrote a short file! Got $s3, expected $s1");
