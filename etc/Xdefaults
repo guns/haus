@@ -35,7 +35,7 @@ URxvt*font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslig
             xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
 
 ! Perl extensions
-URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select
+URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select,osc-xterm-clipboard
 
 ! urxvt-perls
 URxvt.keysym.Mod4-c:       perl:clipboard:copy
