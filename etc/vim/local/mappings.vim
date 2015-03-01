@@ -371,7 +371,7 @@ noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
 noremap <Leader>er       :<C-u>TabOpen $cdgunsrepl/src/guns/repl.clj \| lcd $cdgunsrepl<CR>
 noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile \| lcd $cdhaus<CR>
-noremap <Leader>es       :<C-u>execute 'TabOpen ' . $PWD . '/__Scratch__' \| Scratch<CR>
+noremap <Leader>es       :<C-u>vsplit \| Scratch<CR>
 noremap <Leader>eS       :<C-u>TabOpen /etc/ssh/ssh_config \| lcd /etc<CR>
 noremap <Leader>et       :<C-u>Org TODO<CR>
 noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
