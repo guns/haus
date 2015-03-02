@@ -27,7 +27,6 @@ unset i n
 
 # [(floating|fullscreen|pseudo_tiled|locked|sticky|private|center|follow|manage|focus|border)=(on|off)]
 
-bspc rule --add feh         focus=true floating=true center=true
 bspc rule --add gifview     focus=true floating=true center=true
 bspc rule --add kupfer.py   focus=true floating=true center=true
 bspc rule --add liferea     focus=true private=true
