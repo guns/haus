@@ -1170,7 +1170,7 @@ set folder_format="%2C %t %N %f%> %D"
 # $indent_string.
 #
 
-# set from=""
+set from="NONE"
 #
 # Name: from
 # Type: e-mail address
