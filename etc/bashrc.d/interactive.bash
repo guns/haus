@@ -1175,7 +1175,7 @@ HAVE pass && {
     TCOMP pass passclip
     passl() { pass "$@" | pager; }; TCOMP pass passl
     passnew() { pass insert --force --multiline "$1" < <(genpw "${@:2}") &>/dev/null; pass "$1"; }; TCOMP pass passnew
-    passnewclip() { passnew "$@" | clip; }; TCOMP pass passiclip
+    passnewclip() { passnew "$@" | clip; }; TCOMP pass passnewclip
 }
 
 # cryptsetup
