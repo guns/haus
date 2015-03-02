@@ -141,24 +141,6 @@ macro index,pager \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list
 macro index,pager \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
 bind  browser     \e\007/ exit
 
-# Identities
-set my_identity_1='\
-    set from="guns <self@sungpae.com>";\
-    set smtp_url="smtp://self@sungpae.com@smtp.gmail.com:587";\
-    set smtp_pass="`pass google.com/self@sungpae.com`";\
-    my_hdr X-PGP-Key: fp="4BC7 2AA6 B1AE 2B5A C7F7  ADCF 9D1A A266 D2BC 9C2D"'
-set my_identity_2='\
-    set from="guns <sungpae@gmail.com>";\
-    set smtp_url="smtp://sungpae@gmail.com@smtp.gmail.com:587";\
-    set smtp_pass="`pass google.com/sungpae@gmail.com`"'
-macro $my_list,pager,compose \Cx? "<enter-command>set ?from<enter>"
-macro $my_list,pager,compose \Cx0 "<enter-command>unset from; unset smtp_url; unset smtp_pass<enter><forget-passphrase>"
-macro $my_list,pager,compose \Cx1 "<enter-command>$my_identity_1<enter><refresh><enter-command>set ?from<enter>"
-macro $my_list,pager,compose \Cx2 "<enter-command>$my_identity_2<enter><refresh><enter-command>set ?from<enter>"
-reply-hook '!~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_1"
-reply-hook '~h ^delivered-to:\ sungpae@gmail\.com' "$my_identity_2"
-send-hook '!~s ^Re:' "$my_identity_1"
-
 # Hooks
 folder-hook . "set record='^'" # Save sent mail to current folder
 folder-hook . "push <current-top><refresh>"
