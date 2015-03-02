@@ -557,7 +557,7 @@ function! s:GoBufferSetup()
     nmap     <buffer> <C-w><C-]>         <Plug>(go-def-split)
     nmap     <buffer> [d                 <Plug>(go-info)
     nmap     <buffer> ]d                 <Plug>(go-describe)
-    nmap     <buffer> <LocalLeader>b     :<C-u>GoBuild<CR>
+    nmap     <buffer> <LocalLeader>b     <Plug>(go-build)
     nmap     <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     nmap     <buffer> <LocalLeader>D     :<C-u>GoDrop<Space>
     nmap     <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
@@ -565,9 +565,10 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader><M-i> :<C-u>GoImport<Space>
     nmap     <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-rename)
-    nmap     <buffer> <LocalLeader>R     :<C-u>GoRun<CR>
-    nmap     <buffer> <LocalLeader>t     :<C-u>GoTest<CR>
-    nmap     <buffer> <LocalLeader>v     :<C-u>GoVet<CR>
+    nmap     <buffer> <LocalLeader>R     <Plug>(go-run)
+    nmap     <buffer> <LocalLeader>t     <Plug>(go-test)
+    nmap     <buffer> <LocalLeader>T     <Plug>(go-test-compile)
+    nmap     <buffer> <LocalLeader>v     <Plug>(go-vet)
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
