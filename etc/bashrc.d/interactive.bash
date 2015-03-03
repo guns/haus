@@ -840,9 +840,9 @@ HAVE go && {
         while [[ "$1" == -* ]]; do
             if ((n == 0)); then
                 flags+=(-gcflags)
+                ((++n))
             fi
             flags+=("$1")
-            ((++n))
             shift
         done
 
