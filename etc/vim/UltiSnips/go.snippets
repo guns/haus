@@ -141,7 +141,7 @@ $1 = append(${1}, $0)
 endsnippet
 
 snippet forr "For range loop" !b
-for ${1:${2:i}, ${3:e}} := range ${4:collection} {
+for ${1:i} := range ${2} {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -162,11 +162,16 @@ if ${1} := ${2} {
 }
 endsnippet
 
-snippet ife "if else" w
-if {
+snippet ife "if {} else {}" w
+if $1 {
 	$0
 } else {
-	//
+}
+endsnippet
+
+snippet ifer "if err != nil { return err }" w
+if ${1:err} != nil {
+	return $1
 }
 endsnippet
 
