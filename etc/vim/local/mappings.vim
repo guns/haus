@@ -640,6 +640,8 @@ let g:sexp_mappings = {
     \ 'sexp_move_to_next_top_element':  ']]',
     \ 'sexp_select_prev_element':       '[e',
     \ 'sexp_select_next_element':       ']e',
+    \ 'sexp_indent':                    '==',
+    \ 'sexp_indent_top':                '=-',
     \ 'sexp_round_head_wrap_list':      '<Leader>i',
     \ 'sexp_round_tail_wrap_list':      '<Leader>I',
     \ 'sexp_square_head_wrap_list':     '<Leader>[',

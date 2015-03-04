@@ -56,6 +56,8 @@ g:sexp_filetypes	vim-sexp.txt	/*g:sexp_filetypes*
 g:sexp_insert_after_wrap	vim-sexp.txt	/*g:sexp_insert_after_wrap*
 g:sexp_mappings	vim-sexp.txt	/*g:sexp_mappings*
 g:sexp_maxlines	vim-sexp.txt	/*g:sexp_maxlines*
+sexp-changelog	vim-sexp.txt	/*sexp-changelog*
+sexp-explicit-mappings	vim-sexp.txt	/*sexp-explicit-mappings*
 sexp-introduction	vim-sexp.txt	/*sexp-introduction*
 sexp-mappings	vim-sexp.txt	/*sexp-mappings*
 sexp-options	vim-sexp.txt	/*sexp-options*
