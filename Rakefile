@@ -296,7 +296,7 @@ task :env do
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master],
-        :files  => 'etc/%urxvt/ext',
+        :files  => 'etc/%urxvt/ext/urxvt-perls',
       }
     ]
   }.map { |k, ps| [k, ps.map { |p| NERV::Project::Subproject.new p }] }]
