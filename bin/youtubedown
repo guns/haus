@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.488 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.491 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -205,8 +205,11 @@ sub fmt_bps($) {
 my $progress_ticks = 0;
 my $progress_time = 0;
 
-sub draw_progress($) {
-  my ($ratio) = @_;
+sub draw_progress($;$) {
+  my ($ratio, $cgi_p) = @_;
+
+  my $cols = ($cgi_p ? 100 : 72);
+  my $ticks = int($cols * $ratio);
 
   my $now = time();
   my $eof = ($ratio == -1);
@@ -214,8 +217,15 @@ sub draw_progress($) {
 
   return if ($progress_time == $now && !$eof);
 
-  my $cols = 72;
-  my $ticks = int($cols * $ratio);
+  if ($cgi_p) {			# See comment on "X-Heartbeat" in do_cgi().
+    while ($ticks > $progress_ticks) {
+      print STDOUT ".";
+      $progress_ticks++;
+    }
+    $progress_time = $now;
+    $progress_ticks = 0 if ($eof);
+    return;
+  }
 
   if ($ticks > $progress_ticks) {
     my $pct = sprintf("%3d%%", 100 * $ratio);
@@ -361,7 +371,7 @@ sub get_url_1($;$$$$$$) {
   my ($cl) = ($head =~ m@^Content-Length: \s* (\d+) @mix);
   $cl = $max_bytes if ($max_bytes && (!$cl || $max_bytes < $cl));
 
-  $progress_p = 0 unless ($cl && $cl > 0);
+  $progress_p = 0 if (($progress_p || '') ne 'cgi' && ($cl || 0) <= 0);
 
   my $out;
 
@@ -390,6 +400,7 @@ sub get_url_1($;$$$$$$) {
   my $bytes = 0;
   my $body = '';
 
+  my $cgi_p = ($progress_p && $progress_p eq 'cgi');
   if (! $head_p) {
     # If we're doing HEAD, don't bother reading the body.
     # For some reason there's a big delay before Youtube sends that EOF.
@@ -410,19 +421,28 @@ sub get_url_1($;$$$$$$) {
       $bytes += length($buf);
       $buf = '';
 
-      draw_progress ($bytes / $cl) if ($progress_p);
+      draw_progress ($bytes / $cl, $cgi_p) if ($progress_p);
       last if ($max_bytes && $bytes >= $max_bytes);
     }
   }
-  draw_progress (-1) if ($progress_p);
+  draw_progress (-1, $cgi_p) if ($progress_p);
 
   if ($to_file) {
     close $out || error ("$to_file: $!");
-    print STDERR "  <== [ body ]: $bytes bytes to file \"$to_file\"\n"
-      if ($verbose > 3);
-  } else {
-    print STDERR "  <== [ body ]: $bytes bytes\n"
-      if ($verbose == 4);
+  }
+
+  if ($verbose > 3) {
+    if ($to_file) {
+      print STDERR "  <== [ body ]: $bytes bytes to file \"$to_file\"\n";
+    } else {
+      print STDERR "  <== [ body ]: $bytes bytes\n";
+      if ($verbose > 4 && $head =~ m@^Content-Type: *text/@mi) {
+        foreach (split(/\n/, $body)) {
+          s/\r$//gs;
+          print STDERR "  <== $_\n";
+        }
+      }
+    }
   }
 
   close $S;
@@ -775,7 +795,10 @@ sub video_url_size($$$;$) {
   unlink $file;
   push @rm_r, $file;
 
-  my $bytes = 380 * 1024;	   # Need a lot of data to get size from HD
+  # Need a lot of data to get size from 1080p.
+  # This used to be 320 KB, but I see 640x360 140 MB videos where we can't
+  # get the size without 680 KB.
+  my $bytes = 680 * 1024;
 
   my ($http, $head, $body) = get_url ($url, $url, undef, 0, $file, $bytes);
   check_http_status ($id, $url, $http, 2);  # internal error if still 403
@@ -1047,6 +1070,7 @@ my %ciphers = (
   'en_US-vflF2Mg88/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 19 Feb 2015
   'en_US-vflQTSOsS/html5player' => 's3 r w23 s1 w19 w43 w36',     # 24 Feb 2015
   'en_US-vflbaqfRh/html5player' => 's3 r w23 s1 w19 w43 w36',     # 25 Feb 2015
+  'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',                # 04 Mar 2015
 );
 
 
@@ -1779,147 +1803,76 @@ sub load_youtube_formats($$) {
 
 
 # Returns a hash of: 
-#  [ title: "T", N: [ ...video info... ]]
-# But since it's Vimeo, there's only one video.
+#  [ title: "T",
+#    N: [ ...video info... ],
+#    M: [ ...video info... ], ... ]
 #
 sub load_vimeo_formats($$) {
   my ($id, $url) = @_;
 
-  # Vimeo's New Way, May 2012.
+  # Vimeo's new way, 3-Mar-2015.
+  # The "/NNNN?action=download" page no longer exists. There is JSON now.
 
-  my $info_url = "http://vimeo.com/$id?action=download";
+  my $info_url = ("https://player.vimeo.com/video/$id/config" .
+                  "?bypass_privacy=1");  # Not sure if this does anything
   my $referer = $url;
-  my $hdrs = ("X-Requested-With: XMLHttpRequest\n");
 
-  #### This is no longer working on some, e.g. http://vimeo.com/70949607
+  # Test cases:
   #
-  # It may need some new headers. I'm seeing the HTML5 player send:
-  #
-  #   X-Playback-Session-Id: 5B0FE3D3-DBC5-4F95-857F-BEA8D81B674F
-  #   Cookie: html_player=1
-  #   Accept-Encoding: identity
-  #
-  # But I haven't made any of that work yet, even when just trying
-  # to duplicate it from the command line.
+  #   https://vimeo.com/120401488
+  #     Has a Download link on the page that lists 270p, 360p, 720p, 1080p
+  #     The config url only lists 270p, 360p, 1080p
+  #   https://vimeo.com/70949607
+  #     No download link on the page
+  #     The config URL gives us 270p, 360p, 1080p
+  #   https://vimeo.com/104323624
+  #     No download link, only one size, 360p
+  #   https://vimeo.com/117166426
+  #     A private video
+  #   https://vimeo.com/88309465
+  #     "removed as a result of a third-party notification"
+  #   https://vimeo.com/83711059
+  #     Permission denied, but downloadable anyway
 
-
-  my ($http, $head, $body) = get_url ($info_url, $referer, $hdrs);
+  my ($http, $head, $body) = get_url ($info_url, $referer);
 
   if (!check_http_status ($id, $info_url, $http, 0)) {
-    my ($err) = ($body =~ m@\"display_message\": *\"(.*?)\"[,\}]@si);
-    $err = 'unknown error' unless $err;
-    $err =~ s@<[^<>]*>@@gsi;
-    if ($err =~ m/private[+\s]video|proper[+\s]permission/si) {
-      print STDERR "$progname: $id: private video.  Scraping HTML...\n"
-        if ($verbose > 1);
-      return load_vimeo_formats_private ($id, $url);
-    } else {
-      error ("$id: error: $err");
+    my ($err) = ($body =~ m@ { "message" : \s* " ( .+? ) " , @six);
+    $err = "Private video" if ($err && $err =~ m/privacy setting/si);
+    error ("$id: $err") if $err;
+    errorI ("$id: no video info");
+  }
+
+  my ($title) = ($body =~ m@   "title" : \s* " (.+?) " @six);
+  my ($files) = ($body =~ m@ { "h264"  : \s* \{ ( .+? \} ) \} , @six);
+
+  my %fmts;
+
+  if ($files) {
+    errorI ("$id: no title") unless $title;
+    $fmts{title} = $title;
+    my $i = 0;
+    foreach my $f (split (/\},?\s*/, $files)) {
+      my ($fmt)  = ($f =~ m@^ " (.+?) ": @six);
+      my ($url2) = ($f =~ m@ "url"    : \s* " (.*?) " @six);
+      my ($w)    = ($f =~ m@ "width"  : \s*   (\d+)   @six);
+      my ($h)    = ($f =~ m@ "height" : \s*   (\d+)   @six);
+      errorI ("$id: unparsable video formats")
+        unless ($fmt && $url2 && $w && $h);
+      print STDERR "$progname: $fmt: ${w}x$h: $url2\n"
+        if ($verbose > 2);
+      my %v = ( fmt  => $i,
+                url  => $url2,
+                content_type => 'video/mpeg',
+                w    => $w,
+                h    => $h,
+                # size => undef,
+                # abr  => undef,
+              );
+      $fmts{$i} = \%v;
+      $i++;
     }
   }
-
-  my ($title) = ($body =~ m@<H4>([^<>]+)</@si);
-  $title = html_unquote ($title) if $title;
-  $title =~ s/^Download //si;
-
-  my $max = 0;
-
-  my %fmts;
-  $fmts{title} = $title;
-
-  my $i = 0;
-  $body =~ s@<A \b [^<>]*?
-                HREF=\"([^\"]+)\" [^<>]*?
-                DOWNLOAD=\"[^\"]+? _(\d+)x(\d+) \.
-             .*? </A>
-             .*? ( \d+ ) \s* MB
-            @{
-              my ($url2, $w, $h, $size) = ($1, $2, $3, $4);
-              $url2 = "http://vimeo.com$url2" if ($url2 =~ m|^/|s);
-              print STDERR "$progname: $id: ${w}x$h ${size}MB: $url2\n"
-                if ($verbose > 2);
-
-              my %v = ( fmt  => $i,
-                        url  => $url2,
-                        content_type => 'video/mpeg',
-                        w    => $w,
-                        h    => $h,
-                        size => $size * 1024 * 1024,
-                      # abr  => undef,
-                        );
-              $fmts{$i} = \%v;
-              $i++;
-              '';
-            }@gsexi;
-
-  return \%fmts;
-}
-
-
-# Like load_vimeo_formats() but scrapes the HTML instead.
-# Only knows WxH, not size, but works on videos marked non-downloadable.
-#
-sub load_vimeo_formats_private($$) {
-  my ($id, $url) = @_;
-
-  # Grab the iframe embed document, because the other page is 404.
-  $url = "http://player.vimeo.com/video/$id/";
-
-  # Send a referer to dodge "The creator of this video has not given you
-  # permission to embed it on this domain."
-  my $referer = $url;
-
-  # Note: while "http://player.vimeo.com/video/$id/" contains a signature,
-  # it is one that doesn't work!  We need the one from the main HTML page.
-  # Also note that User-Agent must be the same on both this URL and the
-  # play_redirect URL: it seems to be part of what the signature signs.
-  #  $url = "http://vimeo.com/$id";
-  # No longer true? Instead, look at the URL inside "files" which has sig.
-
-  # Sometimes these videos are both private and unembeddable, and then 
-  # we get a 403.
-
-  my ($http, $head, $body) = get_url ($url, $referer);
-  if (! check_http_status ($id, $url, $http, 0)) {
-    exit (1) if ($verbose <= 0); # Skip silently if --quiet.
-    error ("$id: scraping private video failed");
-  }
-
-  my ($title) = ($body =~ m@"title": *"(.*?)",@s);
-     ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si) unless $title;
-
-  my ($sig)   = ($body  =~ m@"signature" *:"([a-fA-F\d]+)"@s);
-  my ($time)  = ($body  =~ m@"timestamp" *:"?(\d+)"?@s);
-
-  my %fmts;
-  $fmts{title} = $title;
-
-  my $i = 0;
-  $body =~ s@"(hd|sd|mobile)" \s* : \s* { ( .*? ) }
-            @{
-              my ($profile, $fields) = ($1, $2);
-              my ($url2) = ($fields =~ m/"url"    \s* : \s* "(.*?)" /sx);
-              my ($w)    = ($fields =~ m/"width"  \s* : \s*  (\d+)  /sx);
-              my ($h)    = ($fields =~ m/"height" \s* : \s*  (\d+)  /sx);
-
-              $url2 = "http://vimeo.com$url2" if ($url2 =~ m|^/|s);
-              print STDERR "$progname: $id: ${w}x$h: $url2\n"
-                if ($verbose > 2);
-
-              my %v = ( fmt  => $i,
-                        url  => $url2,
-                        content_type => 'video/mpeg',
-                        w    => $w,
-                        h    => $h,
-                      # size => ...,
-                      # abr  => undef,
-                        );
-              $fmts{$i} = \%v;
-              $i++;
-              '';
-            }@gsexi;
-
-  errorI ("$id: vimeo HTML unparsable") unless ($sig && $time && $i > 0);
 
   return \%fmts;
 }
@@ -1972,6 +1925,25 @@ sub pick_download_format($$$$$) {
 
   if ($site eq 'vimeo') {
     # On Vimeo, just pick the entry with the largest size and/or resolution.
+
+    # No muxing needed on Vimeo
+    $force_fmt = undef if ($force_fmt && $force_fmt eq 'mux');
+
+    if (defined($force_fmt)) {
+      error ("vimeo --fmt must be digits: $force_fmt")
+        unless ($force_fmt =~ m/^\d+$/s);
+      foreach my $k (keys %$fmts) {
+        if ($k eq $force_fmt) {
+          print STDERR "$progname: $id: forced #$k (" .
+                       $fmts->{$k}->{w} . " x " . 
+                       $fmts->{$k}->{h} . ")\n"
+            if ($verbose > 1);
+          return $k;
+        }
+      }
+      error ("$id: format $force_fmt does not exist");
+    }
+
     my $best = undef;
     foreach my $k (keys %$fmts) {
       next if ($k eq 'title');
@@ -3342,8 +3314,8 @@ sub do_cgi($) {
     $args = $2;
     # for cmd-line debugging
     $ENV{SCRIPT_NAME} = $1 unless defined($ENV{SCRIPT_NAME});
-#    $ENV{PATH_INFO} = $1 if (!$ENV{PATH_INFO} && 
-#                             $ENV{SCRIPT_NAME} =~ m@^.*/(.*)@s);
+    $ENV{PATH_INFO} = $1 if (!$ENV{PATH_INFO} && 
+                             $ENV{SCRIPT_NAME} =~ m@^.*/(.*)@s);
   }
 
   my ($url, $orig_url, $redir, $proxy, $ct);
@@ -3405,8 +3377,24 @@ sub do_cgi($) {
         unlink ($video_file, $audio_file, $muxed_file);
         push @rm_r, ($video_file, $audio_file, $muxed_file);
 
-        get_url ($proxy, undef, undef, 0, $video_file);
-        get_url ($audio, undef, undef, 0, $audio_file);
+        # So we're downloading two files and muxing them before we have any
+        # bytes we can send to the client.  That means that several minutes
+        # could go by with 0 data being written, which might make Apache or
+        # the browser time out and drop the connection.  So, before we have
+        # any real content to write, we write an "X-Heartbeat: ...." header,
+        # spitting out a new "." every few seconds.  This means the client
+        # header block doesn't actually close until we have the body (which
+        # is necessary in order to have the true Content-Length) but we have
+        # technically not fallen fully idle.  Let's hope Apache and the
+        # client fall for that trick.
+
+        my $progress_p = 'cgi';
+        my $hdr = "X-Heartbeat: ";
+        print STDOUT $hdr;
+        get_url ($proxy, undef, undef, 0, $video_file, undef, undef, 'cgi');
+        print STDOUT "\n$hdr";
+        get_url ($audio, undef, undef, 0, $audio_file, undef, undef, 'cgi');
+        print STDOUT "\n";  # close $hdr
 
         my %v1 = ( file => $video_file );
         my %v2 = ( file => $audio_file );
@@ -3423,12 +3411,12 @@ sub do_cgi($) {
         my $size = $st[7];
         unlink ($muxed_file);
 
-        binmode (STDOUT, ':raw');
         print STDOUT ("Content-Type: $ct\n" .
                       "Content-Length: $size\n" .
                       "Content-Disposition: attachment; filename=\"$title\"\n".
                       "\n");
 
+        binmode (STDOUT, ':raw');
         local $/ = undef;  # read entire file
         while (<$in>) {
           print STDOUT $_;
