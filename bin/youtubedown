@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.491 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.493 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -436,7 +436,8 @@ sub get_url_1($;$$$$$$) {
       print STDERR "  <== [ body ]: $bytes bytes to file \"$to_file\"\n";
     } else {
       print STDERR "  <== [ body ]: $bytes bytes\n";
-      if ($verbose > 4 && $head =~ m@^Content-Type: *text/@mi) {
+      if ($verbose > 4 &&
+          $head =~ m@^Content-Type: *(text/|application/json)@mi) {
         foreach (split(/\n/, $body)) {
           s/\r$//gs;
           print STDERR "  <== $_\n";
@@ -1071,6 +1072,7 @@ my %ciphers = (
   'en_US-vflQTSOsS/html5player' => 's3 r w23 s1 w19 w43 w36',     # 24 Feb 2015
   'en_US-vflbaqfRh/html5player' => 's3 r w23 s1 w19 w43 w36',     # 25 Feb 2015
   'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',                # 04 Mar 2015
+  'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',    # 04 Mar 2015
 );
 
 
@@ -1813,8 +1815,25 @@ sub load_vimeo_formats($$) {
   # Vimeo's new way, 3-Mar-2015.
   # The "/NNNN?action=download" page no longer exists. There is JSON now.
 
+  # This URL is *often* all that we need:
+  #
   my $info_url = ("https://player.vimeo.com/video/$id/config" .
                   "?bypass_privacy=1");  # Not sure if this does anything
+
+  # But if we scrape the HTML page for the version of the config URL
+  # that has "&s=XXXXX" on it (some kind of signature, I presume) then
+  # we *sometimes* get HD when we would not have gotten it with the
+  # other URL:
+  #
+  my ($http, $head, $body) = get_url ($url);
+  if (check_http_status ($id, $url, $http, 0)) {
+    if ($body =~ m@(\bhttps?://[^/]+/video/\d+/config\?[^\s\"\'<>]+)@si) {
+      $info_url = html_unquote($1);
+    } else {
+      print STDERR "$progname: $id: no info URL\n" if ($verbose > 1);
+    }
+  }
+
   my $referer = $url;
 
   # Test cases:
@@ -1826,15 +1845,19 @@ sub load_vimeo_formats($$) {
   #     No download link on the page
   #     The config URL gives us 270p, 360p, 1080p
   #   https://vimeo.com/104323624
-  #     No download link, only one size, 360p
+  #     No download link
+  #     Simple info URL gives us only one size, 360p
+  #     Signed info URL gives us 720p and 360p
   #   https://vimeo.com/117166426
   #     A private video
   #   https://vimeo.com/88309465
+  #     "HTTP/1.1 451 Unavailable For Legal Reasons"
   #     "removed as a result of a third-party notification"
   #   https://vimeo.com/83711059
-  #     Permission denied, but downloadable anyway
+  #     The HTML page is 404, but the simple info URL works,
+  #     and the video is downloadable anyway!
 
-  my ($http, $head, $body) = get_url ($info_url, $referer);
+  ($http, $head, $body) = get_url ($info_url, $referer);
 
   if (!check_http_status ($id, $info_url, $http, 0)) {
     my ($err) = ($body =~ m@ { "message" : \s* " ( .+? ) " , @six);
