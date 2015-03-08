@@ -73,6 +73,26 @@ func Test$1(t *testing.T) {
 }
 endsnippet
 
+snippet ase "assert.Equal()" w
+assert.Equal(t, $0)
+endsnippet
+
+snippet asf "assert.False()" w
+assert.False(t, $0)
+endsnippet
+
+snippet ast "assert.True()" w
+assert.True(t, $0)
+endsnippet
+
+snippet asn "assert.Nil()" w
+assert.Nil(t, $0)
+endsnippet
+
+snippet aser "assert.Error()" w
+assert.Error(t, $0)
+endsnippet
+
 snippet L "len()" w
 len($0)
 endsnippet
@@ -242,6 +262,16 @@ snippet fn "Closure" w
 func(${1})${2/(.+)/ /}${2:type} {
 	${0:${VISUAL}}
 }
+endsnippet
+
+snippet gof "go func" w
+go func() {
+	${0:${VISUAL}}
+}()
+endsnippet
+
+snippet fd "function decl" w
+func($1) ${2/(.+)/ /}${2:type}
 endsnippet
 
 snippet r "return" w
