@@ -61,6 +61,7 @@ fun! <sid>Init() abort "{{{1
 	let s:nrrw_rgn_hl	= get(g:, 'nrrw_rgn_hl', 'WildMenu')
 	let s:nrrw_rgn_nohl = get(g:, 'nrrw_rgn_nohl', 0)
 	let s:debug         = (exists("s:debug") ? s:debug : 0)
+	let s:float         = has("float")
 	if v:version < 704
 		call s:WarningMsg('NrrwRgn needs Vim > 7.4 or it might not work correctly')
 	endif
@@ -196,7 +197,10 @@ fun! <sid>WriteNrrwRgn(...) abort "{{{1
 		" b:orig_buf might not exists (see issue #2)
 		let winnr = (exists("b:orig_buf") ? bufwinnr(b:orig_buf) : 0)
 		" Best guess
-		if bufname('') =~# 'NrrwRgn' && winnr > 0
+		if bufname('') =~# 'NrrwRgn' && winnr == -1 && exists("b:orig_buf") &&
+					\ bufexists(b:orig_buf)
+			exe ':noa '. b:orig_buf. 'b'
+		elseif bufname('') =~# 'NrrwRgn' && winnr > 0
 			exe ':noa'. winnr. 'wincmd w'
 		endif
 		if !exists("a:1") 
@@ -283,18 +287,18 @@ fun! <sid>NrrwRgnAuCmd(instn) abort "{{{1
 	" else disable auto commands for a:instn
 	if !a:instn
 		exe "aug NrrwRgn". b:nrrw_instn
-			au!
-			au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
-			au BufWinLeave,BufWipeout,BufDelete <buffer> nested
-						\ :call s:WriteNrrwRgn()
-			au CursorMoved <buffer> :call s:UpdateOrigWin()
-			" When switching buffer in the original buffer,
-			" make sure the highlighting of the narrowed buffer will
-			" be removed"
-			exe "au BufWinLeave <buffer=".b:orig_buf.
-			  \ "> if <sid>HasMatchID(".b:nrrw_instn.")|call <sid>DeleteMatches(".
-			  \ b:nrrw_instn.")|endif"
-			aug end
+		au!
+		au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
+		au BufWinLeave,BufWipeout,BufDelete <buffer> nested
+					\ :call s:WriteNrrwRgn()
+		au CursorMoved <buffer> :call s:UpdateOrigWin()
+		" When switching buffer in the original buffer,
+		" make sure the highlighting of the narrowed buffer will
+		" be removed"
+		exe "au BufWinLeave <buffer=".b:orig_buf.
+			\ "> if <sid>HasMatchID(".b:nrrw_instn.")|call <sid>DeleteMatches(".
+			\ b:nrrw_instn.")|endif"
+		aug end
 	else
 		exe "aug NrrwRgn".  a:instn
 		au!
@@ -323,9 +327,15 @@ fun! <sid>NrrwRgnAuCmd(instn) abort "{{{1
 		\   !has_key(s:nrrw_rgn_lines[a:instn], 'disable') &&
 		\    has_key(s:nrrw_rgn_lines[a:instn], 'winnr'))
 			" Skip to original window and remove highlighting
-			exe "noa" s:nrrw_rgn_lines[a:instn].winnr "wincmd w"
+			if bufwinnr(s:nrrw_rgn_lines[a:instn].orig_buf) == -1
+				exe "noa ". s:nrrw_rgn_lines[a:instn].orig_buf. "b"
+			else
+				exe "noa ". bufwinnr(s:nrrw_rgn_lines[a:instn].winnr). "wincmd w"
+			endif
 			call <sid>DeleteMatches(a:instn)
-			noa wincmd p
+			if winnr('$') > 1
+				noa wincmd p
+			endif
 			call <sid>CleanUpInstn(a:instn)
 		endif
 	endif
@@ -712,22 +722,28 @@ fun! <sid>GetVSizes(win,lines) abort "{{{1
     else
         let lines_parent = winheight(a:win)
 	endif
-	let size_min = get(g:, 'nrrw_rgn_size_min', 10)
-	let size_max = get(g:, 'nrrw_rgn_size_max', lines_parent)
-	if has("float")
+	let size_min = get(g:, 'nrrw_rgn_rel_min', 10)
+	let size_max = get(g:, 'nrrw_rgn_rel_max', lines_parent)
+	if s:float
 		let ratio = 1.0*a:lines/lines_parent
 		if ratio < size_min/100.0
 			let ratio = size_min
 		elseif ratio > size_max/100.0
 			let ratio = size_max
 		endif
-		let h_rel_max = get(g:, 'nrrw_rgn_h_rel_max', 80)
-		let size_max = min([lines_parent, float2nr(ceil(h_rel_max/100.0*lines_parent))])
+		let size_max = min([lines_parent, float2nr(ceil(size_max/100.0*lines_parent))])
 		let size_min = min([lines_parent, float2nr(ceil(ratio*lines_parent))])
 	else
+		let ratio = <sid>Nrrw_divnear(a:lines*100, lines_parent)
+		if ratio < size_min
+			let ratio = size_min
+		elseif ratio > size_max
+			let ratio = size_max
+		endif
+		let size_max = min([lines_parent, <sid>Nrrw_divceil(size_max*lines_parent, 100)])
+		let size_min = min([lines_parent, <sid>Nrrw_divceil(ratio*lines_parent, 100)])
 		" If Vim is compiled without float?
 		" Currently: no-op
-		return [lines_parent, lines_parent]
 	endif
     return [size_min, size_max]
 endfu
@@ -738,15 +754,14 @@ fun! <sid>GetHSizes(win) abort "{{{1
     else
         let columns_parent = winwidth(a:win)
 	endif
-	let w_rel_max = get(g:, 'nrrw_rgn_w_rel_max', 80)
-	let w_rel_min = get(g:, 'nrrw_rgn_w_rel_min', 50)
-	if has("float")
+	let w_rel_max = get(g:, 'nrrw_rgn_rel_max', 80)
+	let w_rel_min = get(g:, 'nrrw_rgn_rel_min', 10)
+	if s:float
 		let size_max = min([columns_parent, float2nr(ceil(w_rel_max/100.0*columns_parent))])
 		let size_min = min([columns_parent, float2nr(ceil(w_rel_min/100.0*columns_parent))])
 	else
-		" If Vim is compiled without float?
-		" Currently: no-op
-		return [columns_parent, columns_parent]
+		let size_max = min([lines_parent, <sid>Nrrw_divceil(w_rel_max*lines_parent, 100)])
+		let size_min = min([lines_parent, <sid>Nrrw_divceil(ratio*lines_parent, 100)])
 	endif
     return [size_min, size_max]
 endfu
@@ -791,17 +806,29 @@ fun! <sid>ReturnComments() abort "{{{1
 	return [c_s, c_e]
 endfun
 
-fun! <sid>AdjustWindowSize(bang) abort "{{{1
+fun! <sid>AdjustWindowSize(bang, size) abort "{{{1
 	" Resize window
 	if !a:bang && !s:nrrw_rgn_vert
-		if get(g:, 'nrrw_rgn_resize_window', 'absolute') is? "absolute" && len(a) < s:nrrw_rgn_wdth
+		if get(g:, 'nrrw_rgn_resize_window', 'absolute') is? "absolute" && len(a:size) < s:nrrw_rgn_wdth
 			" Resize narrowed window to size of buffer
-			exe "sil resize" len(a)+1
+			exe "sil resize" len(a:size)+1
 		elseif get(g:, 'nrrw_rgn_resize_window', 'absolute') is? "relative" 
 			" size narrowed window by percentage
 			exe <sid>ResizeWindow(<sid>GetSizes(winnr(), line('$'))[0])
 		endif
 	endif
+endfu
+fun! <sid>Nrrw_divnear(n, d) abort "{{{1
+    let m = n % d
+    let q = n / d
+    let r = m*2 >= d ? 1 : 0
+    return q+r
+endfu
+
+fun! <sid>Nrrw_divceil(n, d) abort "{{{1
+    let q = n / d
+    let r = q*d == n ? 0 : 1
+    return q + r
 endfu
 fun! nrrwrgn#NrrwRgnDoPrepare(...) abort "{{{1
 	let bang = (a:0 > 0 && !empty(a:1))
@@ -863,7 +890,7 @@ fun! nrrwrgn#NrrwRgnDoPrepare(...) abort "{{{1
 	let b:orig_buf = orig_buf
 	let s:nrrw_rgn_lines[s:instn].winnr  = bufwinnr(orig_buf)
 	call setline(1, buffer)
-	call <sid>AdjustWindowSize(bang)
+	call <sid>AdjustWindowSize(bang, buffer)
 	setl nomod
 	let b:nrrw_instn = s:instn
 	call <sid>SetupBufLocalCommands()
@@ -946,7 +973,7 @@ fun! nrrwrgn#NrrwRgn(mode, ...) range  abort "{{{1
 	let b:orig_buf = orig_buf
 	let s:nrrw_rgn_lines[s:instn].orig_buf  = orig_buf
 	call setline(1, a)
-	call <sid>AdjustWindowSize(bang)
+	call <sid>AdjustWindowSize(bang, a)
 	let b:nrrw_instn = s:instn
 	setl nomod
 	call <sid>SetupBufLocalCommands()
