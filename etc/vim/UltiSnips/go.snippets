@@ -93,6 +93,10 @@ snippet aser "assert.Error()" w
 assert.Error(t, $0)
 endsnippet
 
+snippet asd "assert.InDelta()" w
+assert.InDelta(t, $0)
+endsnippet
+
 snippet L "len()" w
 len($0)
 endsnippet
@@ -154,6 +158,10 @@ endsnippet
 
 snippet ui "uint" w
 uint
+endsnippet
+
+snippet B "BS" w
+[]byte
 endsnippet
 
 snippet ap "append" w
@@ -247,7 +255,7 @@ func main() {
 endsnippet
 
 snippet /^fm/ "Method" r
-func (${1:receiver} ${2:type}) ${3:name}(${4:params})${5/(.+)/ /}${5:type} {
+func (${1:receiver} *${2:type}) ${3:name}(${4:params})${5/(.+)/ /}${5:type} {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -271,7 +279,7 @@ go func() {
 endsnippet
 
 snippet fd "function decl" w
-func($1) ${2/(.+)/ /}${2:type}
+func($1)${2/(.+)/ /}${2:type}
 endsnippet
 
 snippet r "return" w

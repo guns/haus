@@ -389,6 +389,7 @@ noremap <Leader>f?       :<C-u>setlocal filetype?<CR>
 noremap <Leader>fc       :<C-u>setlocal filetype=c<CR>
 noremap <Leader>fC       :<C-u>setlocal filetype=clojure<CR>
 noremap <Leader>fd       :<C-u>setlocal filetype=diff<CR>
+noremap <Leader>fg       :<C-u>setlocal filetype=go<CR>
 noremap <Leader>fh       :<C-u>setlocal filetype=html<CR>
 noremap <Leader>fH       :<C-u>setlocal filetype=haskell<CR>
 noremap <Leader>fj       :<C-u>setlocal filetype=javascript<CR>

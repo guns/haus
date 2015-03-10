@@ -561,8 +561,7 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     nmap     <buffer> <LocalLeader>D     :<C-u>GoDrop<Space>
     nmap     <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
-    nmap     <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>
-    nmap     <buffer> <LocalLeader><M-i> :<C-u>GoImport<Space>
+    nmap     <buffer> <LocalLeader>I     <Plug>(go-implements)
     nmap     <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-referrers)
