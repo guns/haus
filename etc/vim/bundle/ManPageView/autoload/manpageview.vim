@@ -1,7 +1,7 @@
 " manpagevim : extra commands for manual-handling
 " Author:	Charles E. Campbell
-" Date:		Mar 04, 2014
-" Version:	25n	 ASTRO-ONLY
+" Date:		Feb 21, 2015
+" Version:	25q	 ASTRO-ONLY
 "
 " Please read :help manpageview for usage, options, etc
 "
@@ -14,7 +14,7 @@
 if &cp || exists("g:loaded_manpageview")
  finish
 endif
-let g:loaded_manpageview = "v25n"
+let g:loaded_manpageview = "v25q"
 if v:version < 702
  echohl WarningMsg
  echo "***warning*** this version of manpageview needs vim 7.2 or later"
@@ -102,7 +102,7 @@ if !exists("g:manpageview_pgm_pm") && executable("perldoc")
  let g:manpageview_options_pm = "-f"
 endif
 if !exists("g:manpageview_php_url")
- let g:manpageview_php_url     = "http://www.php.net/"
+ let g:manpageview_php_url     = "http://php.net/"
 endif
 if !exists("g:manpageview_pgm_php") && (executable("links") || executable("elinks"))
 "  DechoWF "installed php help support via manpageview"
@@ -432,7 +432,6 @@ fun! manpageview#ManPageView(...) range
     wincmd s
 	sil! enew!
     wincmd _
-    3wincmd -
    else
 	sil! enew!
    endif
@@ -550,7 +549,8 @@ fun! manpageview#ManPageView(...) range
   " ---------------------------------------------------------------------
   " allow K to use <cWORD> when in man pages {{{3
   if manpageview_syntax == "man"
-   nmap <silent> <script> <buffer>	K   :<c-u>call manpageview#KMap(1)<cr>
+   nmap <silent> <script> <buffer>	K			:<c-u>call manpageview#KMap(1)<cr>
+   nno  <silent> <script> <buffer> <leftmouse>  <leftmouse>:call manpageview#KMap(1)<cr>
   endif
 
   " ---------------------------------------------------------------------

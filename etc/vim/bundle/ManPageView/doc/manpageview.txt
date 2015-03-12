@@ -1,8 +1,8 @@
-*manpageview.txt*	Man Page Viewer			Mar 04, 2014
+*manpageview.txt*	Man Page Viewer			Feb 21, 2015
 
 Author:  Charles E. Campbell  <NdrchipO@ScampbellPfamily.AbizM>
 	 (remove NOSPAM from Campbell's email first)
-Copyright: (c) 2004-2014 by Charles E. Campbell		*manpageview-copyright*
+Copyright: (c) 2004-2015 by Charles E. Campbell		*manpageview-copyright*
 	 The VIM LICENSE applies to ManPageView.vim and ManPageView.txt
 	 (see |copyright|) except use "ManPageView" instead of "Vim"
 	 no warranty, express or implied.  use at-your-own-risk.
@@ -104,6 +104,10 @@ Copyright: (c) 2004-2014 by Charles E. Campbell		*manpageview-copyright*
 	In the case of an url (http://...), the K map will invoke
 	the program given in |g:manpageview_K_http|  on the url in
 	an attempt to show the site in a new tab.
+
+					*manpageview-leftmouse*
+	The leftmouse button also does a manpageview using the
+	word under the mouse.
 
 
 	MAN					*manpageview-.man*
@@ -431,6 +435,7 @@ Copyright: (c) 2004-2014 by Charles E. Campbell		*manpageview-copyright*
 				  PageUp/PageDown map directions.  He also
 				  pointed out that the K map didn't work on
 				  some info pages properly.  Fixed.
+		Jul 23, 2014	* changed www.php.net to php.net (php support)
 	v23:	May 18, 2009	* on the third attempt to get a manpage, if
 				  the user provided no explicit
 				  |g:manpageview_iconv| setting, then the
