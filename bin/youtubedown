@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.494 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.502 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -247,12 +247,9 @@ sub draw_progress($;$) {
 
 # Loads the given URL, returns: $http, $head, $body.
 #
-sub get_url_1($;$$$$$$) {
-  my ($url, $referer, $extra_headers, $head_p, $to_file, $max_bytes,
-      $progress_p) = @_;
+sub get_url_1($;$$$$) {
+  my ($url, $referer, $to_file, $max_bytes, $progress_p) = @_;
   
-  error ("can't do HEAD and write to a file") if ($head_p && $to_file);
-
   error ("not an HTTP URL, try rtmpdump: $url") if ($url =~ m@^rtmp@i);
   error ("not an HTTP URL: $url") unless ($url =~ m@^(https?|feed)://@i);
 
@@ -290,13 +287,11 @@ sub get_url_1($;$$$$$$) {
 
   my $user_agent = "Chrome 27/Windows: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.116 Safari/537.36";
 
-  my $hdrs = (($head_p ? "HEAD " : "GET ") .
-              $path .
-              " HTTP/1.0\r\n" .
+  my $hdrs = ("GET " . $path . " HTTP/1.0\r\n" .
               "Host: $ohost\r\n" .
               "User-Agent: $user_agent\r\n");
 
-  $extra_headers = '' unless defined ($extra_headers);
+  my $extra_headers = '';
   $extra_headers .= "\nReferer: $referer" if ($referer);
 
   # If we're only reading the first N bytes, don't ask for more.
@@ -401,29 +396,30 @@ sub get_url_1($;$$$$$$) {
   my $body = '';
 
   my $cgi_p = ($progress_p && $progress_p eq 'cgi');
-  if (! $head_p) {
-    # If we're doing HEAD, don't bother reading the body.
-    # For some reason there's a big delay before Youtube sends that EOF.
 
-    while (1) {
-      if ($buf eq '') {
-        my $size = sysread ($S, $buf, $bufsiz);
-        print STDERR "  read C $size ($bytes)\n" if ($verbose > 5);
-        last if (!defined($size) || $size <= 0);
-      }
-
-      if ($to_file) {
-        print $out $buf;
-      } else {
-        $body .= $buf;
-      }
-
-      $bytes += length($buf);
-      $buf = '';
-
-      draw_progress ($bytes / $cl, $cgi_p) if ($progress_p);
-      last if ($max_bytes && $bytes >= $max_bytes);
+  while (1) {
+    if ($buf eq '') {
+      my $size = sysread ($S, $buf, $bufsiz);
+      print STDERR "  read C $size ($bytes)\n" if ($verbose > 5);
+      last if (!defined($size) || $size <= 0);
     }
+
+    if ($to_file) {
+      print $out $buf;
+    } else {
+      $body .= $buf;
+    }
+
+    $bytes += length($buf);
+    $buf = '';
+
+    draw_progress ($bytes / $cl, $cgi_p) if ($progress_p);
+
+    # If we do a read while at EOF, sometimes Youtube hangs for ~30 seconds
+    # before sending back the EOF, so just stop reading as soon as we have
+    # reached the Content-Length or $max_bytes.
+    #
+    last if ($cl && $bytes >= $cl);
   }
   draw_progress (-1, $cgi_p) if ($progress_p);
 
@@ -437,7 +433,7 @@ sub get_url_1($;$$$$$$) {
     } else {
       print STDERR "  <== [ body ]: $bytes bytes\n";
       if ($verbose > 4 &&
-          $head =~ m@^Content-Type: *(text/|application/json)@mi) {
+          $head =~ m@^Content-Type: *(text/|application/(json|x-www-))@mi) {
         foreach (split(/\n/, $body)) {
           s/\r$//gs;
           print STDERR "  <== $_\n";
@@ -458,8 +454,8 @@ sub get_url_1($;$$$$$$) {
   if ($to_file && $cl && $bytes < $cl-1) {
     my $pct = int (100 * $bytes / $cl);
     $pct = sprintf ("%.2f", 100 * $bytes / $cl) if ($pct == 100);
-    print STDERR "$progname: WARNING: got only $pct%" .
-      " ($bytes instead of $cl) of \"$to_file\"\n";
+    unlink ($to_file);   # No way to resume partials, so just delete it.
+    error ("got only $pct% ($bytes instead of $cl) of \"$to_file\"");
   }
 
   return ($http, $head, $body);
@@ -469,25 +465,18 @@ sub get_url_1($;$$$$$$) {
 # Loads the given URL, processes redirects.
 # Returns: $http, $head, $body, $final_redirected_url.
 #
-sub get_url($;$$$$$$$) {
-  my ($url, $referer, $headers, $head_p, $to_file, $max_bytes, $retry_p,
-      $progress_p) = @_;
+sub get_url($;$$$$) {
+  my ($url, $referer, $to_file, $max_bytes, $progress_p) = @_;
 
-  print STDERR "$progname: " . ($head_p ? "HEAD" : "GET") . " $url\n"
-    if ($verbose > 2);
+  print STDERR "$progname: GET $url\n" if ($verbose > 2);
 
   my $orig_url = $url;
   my $redirect_count = 0;
   my $max_redirects  = 20;
-  my $error_count    = 0;
-  my $max_errors     = ($retry_p ? 10 : 0);
-  my $error_delay    = 0;
-  my $total_delay    = 0;
 
   do {
     my ($http, $head, $body) = 
-      get_url_1 ($url, $referer, $headers, $head_p, $to_file, $max_bytes,
-                 $progress_p);
+      get_url_1 ($url, $referer, $to_file, $max_bytes, $progress_p);
 
     $http =~ s/[\r\n]+$//s;
 
@@ -518,27 +507,8 @@ sub get_url($;$$$$$$$) {
         error ("no Location with \"$http\"");
       }
 
-      if ($redirect_count++ > $max_redirects) {
-        error ("too many redirects ($max_redirects after $total_delay secs) ".
-               "from $orig_url");
-      } elsif ($redirect_count++ > $max_redirects / 2) {
-        $url = $orig_url;  # Back to zero.
-        $error_delay = ($error_delay + 1) * 1.7;
-        my $s = int ($error_delay);
-        print STDERR "$progname: looping redirects; retrying $url in $s...\n"
-          if ($verbose > 1);
-        sleep ($s);
-        $total_delay += $s;
-      }
-
-    } elsif ( $http =~ m@^HTTP/[0-9.]+ 404@ &&	# Fucking Vimeo...
-              ++$error_count <= $max_errors) {
-      $error_delay = ($error_delay + 1) * 1.2;
-      my $s = int ($error_delay);
-      print STDERR "$progname: ignoring 404 and retrying $url in $s...\n"
-        if ($verbose > 1);
-      sleep ($s);
-      $total_delay += $s;
+      error ("too many redirects ($max_redirects) from $orig_url")
+        if ($redirect_count++ > $max_redirects);
 
     } else {
       return ($http, $head, $body, $url);
@@ -801,7 +771,7 @@ sub video_url_size($$$;$) {
   # get the size without 680 KB.
   my $bytes = 680 * 1024;
 
-  my ($http, $head, $body) = get_url ($url, $url, undef, 0, $file, $bytes);
+  my ($http, $head, $body) = get_url ($url, $url, $file, $bytes);
   check_http_status ($id, $url, $http, 2);  # internal error if still 403
 
      ($ct)   = ($head =~ m@^Content-Type:   \s* ( [^\s;]+ ) @mix);
@@ -1074,6 +1044,7 @@ my %ciphers = (
   'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',                # 04 Mar 2015
   'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',    # 04 Mar 2015
   'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',                # 05 Mar 2015
+  'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',           # 10 Mar 2015
 );
 
 
@@ -1489,9 +1460,6 @@ sub youtube_parse_urlmap($$$) {
       $e = url_unquote($e) if ($e);
     }
 
-    error ("$id: RTMPE DRM: not supported")
-      if (!$v && $urlmap =~ m/rtmpe(=|%3D)yes/s);	# Well, fuck.
-
     errorI ("$id: unparsable urlmap entry: no itag: $_") unless ($k);
     errorI ("$id: unparsable urlmap entry: no url: $_")  unless ($v);
 
@@ -1530,7 +1498,15 @@ sub youtube_parse_urlmap($$$) {
                           $sig2 ? $cipher : undef,
                           $sig || $sig2);
 
-    print STDERR "\t\t$k\t$v$e\n" if ($verbose > 3);
+    # Finally! The "ratebypass" parameter turns off rate limiting!
+    # But we can't add it to a URL that signs the "ratebypass" parameter,
+    # which (currently, at least) is format 18, which is not rate-limited
+    # anyway.
+    #
+    $v .= '&ratebypass=yes'
+      unless ($v =~ m@sparams=[^?&]*ratebypass@);
+
+    print STDERR "\t\t$k\t$v\t$e\n" if ($verbose > 3);
 
     my %v = ( fmt  => $k,
               url  => $v,
@@ -1687,7 +1663,8 @@ sub load_youtube_formats($$) {
   # '&gl=US' .
   # '&hl=en'
 
-  my ($title, $kind, $kind2, $urlmap, $urlmap2, $body, $rental, $realtime);
+  my ($title, $kind, $kind2, $urlmap, $urlmap2, $body, $rental, $realtime,
+      $rtmpe_p);
 
   my $retries = 5;
   my $err = undef;
@@ -1715,11 +1692,12 @@ sub load_youtube_formats($$) {
     ($title)    = ($body =~ m@&title=([^&]+)@si) unless $title;
     ($rental)   = ($body =~ m@&ypc_video_rental_bar_text=([^&]+)@si);
     ($realtime) = ($body =~ m@&(livestream|live_playback)=([^&]+)@si);
+    $rtmpe_p    = ($urlmap && $urlmap =~ m/rtmpe(=|%3D|%253D)yes/s);
 
-    last if ($rental || $realtime || ($urlmap2 && $title));
+    last if ($rental || $realtime || $rtmpe_p || ($urlmap2 && $title));
 
     if ($verbose > 0) {
-      if (!$urlmap) {
+      if (!$urlmap2) {
         print STDERR "$progname: $id: no urlmap, retrying...\n";
       } else {
         print STDERR "$progname: $id: no title, retrying...\n";
@@ -1735,7 +1713,10 @@ sub load_youtube_formats($$) {
   $err = "can't download livestream videos"
     if (!$err && !$urlmap && $realtime);
 
-  if ($verbose <= 0 && $err && $err =~ m/livestream/sio) {
+  $err = "can't download RTMPE DRM videos"
+    if (!$err && $rtmpe_p);
+
+  if ($verbose <= 0 && $err && $err =~ m/livestream|rtmpe/sio) {
     # With --quiet, just silently ignore livestream failures,
     # for "youtubefeed".
     exit (0);
@@ -1794,12 +1775,6 @@ sub load_youtube_formats($$) {
 
   errorI ("$id: no formats available") unless (defined($fmts));
 
-  if ($verbose > 1) {
-    my @all = sort { $a <=> $b } keys(%$fmts);
-    print STDERR "$progname: $id: available formats: " . join(', ', @all) .
-      "\n";
-  }
-
   $fmts->{title} = $title;
   return $fmts;
 }
@@ -1854,21 +1829,40 @@ sub load_vimeo_formats($$) {
   #   https://vimeo.com/88309465
   #     "HTTP/1.1 451 Unavailable For Legal Reasons"
   #     "removed as a result of a third-party notification"
+  #   https://vimeo.com/121870373
+  #     A private video that isn't 404 for some reason
   #   https://vimeo.com/83711059
   #     The HTML page is 404, but the simple info URL works,
   #     and the video is downloadable anyway!
 
   ($http, $head, $body) = get_url ($info_url, $referer);
 
+  my $err = undef;
   if (!check_http_status ($id, $info_url, $http, 0)) {
-    my ($err) = ($body =~ m@ { "message" : \s* " ( .+? ) " , @six);
+    ($err) = ($body =~ m@ { "message" : \s* " ( .+? ) " , @six);
     $err = "Private video" if ($err && $err =~ m/privacy setting/si);
-    error ("$id: $err") if $err;
-    errorI ("$id: no video info");
+    $err = $http . ($err ? ": $err" : "");
+  } else {
+    $http = '';  # 200
   }
 
   my ($title) = ($body =~ m@   "title" : \s* " (.+?) " @six);
   my ($files) = ($body =~ m@ { "h264"  : \s* \{ ( .+? \} ) \} , @six);
+
+  # Sometimes we get empty-ish data for "Private Video", but HTTP 200.
+  $err = "No video info (Private?)"
+    if (!$err && !$title && !$files);
+
+  if ($err) {
+    if ($verbose <= 0 && $err =~ m/Private/s) {
+      # With --quiet, just silently ignore private videos,
+      # for "youtubefeed".
+      exit (0);
+    }
+
+    error ("$id: $err") if ($http || $err =~ m/Private/s);
+    errorI ("$id: $err");
+  }
 
   my %fmts;
 
@@ -1910,7 +1904,7 @@ sub get_youtube_year($) {
                   "&fields=published" .
                   "&safeSearch=none" .
                   "&strict=true");
-  my ($http, $head, $body) = get_url ($data_url, undef, undef, 0);
+  my ($http, $head, $body) = get_url ($data_url);
   return undef unless check_http_status ($id, $data_url, $http, 0);
 
   my ($year, $mon, $dotm, $hh, $mm, $ss) = 
@@ -1924,7 +1918,7 @@ sub get_youtube_year($) {
 sub get_vimeo_year($) {
   my ($id) = @_;
   my $data_url = "http://vimeo.com/api/v2/video/$id.xml";
-  my ($http, $head, $body) = get_url ($data_url, undef, undef, 0);
+  my ($http, $head, $body) = get_url ($data_url);
   return undef unless check_http_status ($id, $data_url, $http, 0);
 
   my ($year, $mon, $dotm, $hh, $mm, $ss) = 
@@ -2137,6 +2131,12 @@ sub pick_download_format($$$$$) {
   #   First sighting of a video where we must mux to get the best
   #   non-HD version.
   #
+  #   http://www.youtube.com/watch?v=Ol61WOSzLF8
+  #   10-Mar-2015: locked with RTMPE DRM
+  #   There's a generic rtmpe: URL in "conn" and a bunch of options
+  #   in "stream", but I don't know how to put those together into
+  #   an invocation of "rtmpdump" that does anything at all.
+  #
   # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
   # disagrees with the above to some extent.  Which is more accurate?
   # (Oh great, they deleted that table from Wikipedia. Lovely.)
@@ -2153,9 +2153,11 @@ sub pick_download_format($$$$$) {
     my $w = $fmt->{w};
     my $h = $fmt->{h};
 
-    $known_formats{$id}->{desc} = ($w && $h ? "$w x $h $v" :
-                                   $b ? "$b kbps $a" :
-                                   "???");
+    $known_formats{$id}->{desc} = (($w && $h ? "$w x $h $v" :
+                                    $b ? "$b kbps $a" :
+                                    "???") .
+                                   ($w && $h && $b ? '' :
+                                    $w ? ' v/o' : ' a/o'));
 
     error ("W and H flipped: $id") if ($w && $h && $w < $h);
 
@@ -2301,11 +2303,25 @@ sub pick_download_format($$$$$) {
       if (@unk);
   }
 
+  if ($verbose > 1) {
+    print STDERR "$progname: $id: available formats:\n";
+    foreach my $k (sort { ($a =~ m/^\d+$/s ? $a : 0) <=>
+                          ($b =~ m/^\d+$/s ? $b : 0) }
+                   keys(%$fmts)) {
+      next if ($k eq 'title');
+      print STDERR sprintf("%s:   %3d (%s)\n",
+                           $progname, $k,
+                           $known_formats{$k}->{desc} || '?');
+    }
+  }
+
   if ($vfmt && $afmt) {
-    print STDERR "$progname: $id: picked $vfmt + $afmt (" .
-                 $known_formats{$vfmt}->{desc} . " + " .
-                 $known_formats{$afmt}->{desc} . ")\n"
-      if ($verbose > 1);
+    if ($verbose > 1) {
+      my $d1 = $known_formats{$vfmt}->{desc};
+      my $d2 = $known_formats{$afmt}->{desc};
+      foreach ($d1, $d2) { s@ [av]/?o$@@si; }
+      print STDERR "$progname: $id: picked $vfmt + $afmt ($d1 + $d2)\n";
+    }
     return ($vfmt, $afmt);
   } else {
     # Either not muxing, or muxing not available/necessary.
@@ -3195,8 +3211,8 @@ sub download_video_url($$$$$$$) {
       print STDERR "$progname: reading \"$file\"\n" if ($verbose > 0);
 
       my $start_time = time();
-      my ($http, $head, $body) = get_url ($url2, undef, undef, 0, $file,
-                                          undef, 0, $progress_p);
+      my ($http, $head, $body) = get_url ($url2, undef, $file,
+                                          undef, $progress_p);
       my $download_time = time() - $start_time;
 
       check_http_status ($id, $url, $http, 2);  # internal error if still 403
@@ -3272,7 +3288,7 @@ sub download_youtube_playlist($$$$$$$$) {
                     "&safeSearch=none" .
                     "&strict=true");
 
-    my ($http, $head, $body) = get_url ($data_url, undef, undef, 0);
+    my ($http, $head, $body) = get_url ($data_url);
     check_http_status ($id, $url, $http, 1);
 
     ($title) = ($body =~ m@<title>\s*([^<>]+?)\s*</title>@si)
@@ -3338,8 +3354,8 @@ sub do_cgi($) {
     $args = $2;
     # for cmd-line debugging
     $ENV{SCRIPT_NAME} = $1 unless defined($ENV{SCRIPT_NAME});
-    $ENV{PATH_INFO} = $1 if (!$ENV{PATH_INFO} && 
-                             $ENV{SCRIPT_NAME} =~ m@^.*/(.*)@s);
+#    $ENV{PATH_INFO} = $1 if (!$ENV{PATH_INFO} && 
+#                             $ENV{SCRIPT_NAME} =~ m@^.*/(.*)@s);
   }
 
   my ($url, $orig_url, $redir, $proxy, $ct);
@@ -3415,9 +3431,9 @@ sub do_cgi($) {
         my $progress_p = 'cgi';
         my $hdr = "X-Heartbeat: ";
         print STDOUT $hdr;
-        get_url ($proxy, undef, undef, 0, $video_file, undef, undef, 'cgi');
+        get_url ($proxy, undef, $video_file, undef, 'cgi');
         print STDOUT "\n$hdr";
-        get_url ($audio, undef, undef, 0, $audio_file, undef, undef, 'cgi');
+        get_url ($audio, undef, $audio_file, undef, 'cgi');
         print STDOUT "\n";  # close $hdr
 
         my %v1 = ( file => $video_file );
@@ -3451,7 +3467,7 @@ sub do_cgi($) {
         # Otherwise we can just stream it without involving the disk.
         print STDOUT "Content-Disposition: attachment; filename=\"$title\"\n";
         binmode (STDOUT, ':raw');
-        get_url ($proxy, undef, undef, 0, '-');
+        get_url ($proxy, undef, '-');
       }
     }
 
