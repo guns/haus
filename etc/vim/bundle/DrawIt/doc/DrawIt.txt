@@ -1,9 +1,9 @@
-DrawIt.txt*	The DrawIt Tool				Dec 03, 2013
+DrawIt.txt*	The DrawIt Tool				Dec 12, 2014
 
 Authors:  Charles E. Campbell  <NdrchipO@ScampbellPfamily.AbizM>
           Sylvain Viart             <molo@multimania.com>
 	  (remove NOSPAM from Campbell's email first)
-Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
+Copyright:    Copyright (C) 2004-2014 Charles E. Campbell
 	      Permission is hereby granted to use and distribute this code,
 	      with or without modifications, provided that this copyright
 	      notice is copied with it. Like anything else that's free,
@@ -40,7 +40,7 @@ Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
 							*drawit-manual*
  /===============+============================================================\
  || Starting &   |                                                           ||
- || Stopping     | Explanation                                               ||
+ || Stopping     | Explanation                      Links:                   ||
  ++--------------+-----------------------------------------------------------++
  ||  \di         | start DrawIt                     |drawit-start|             ||
  ||  \ds         | stop  DrawIt                     |drawit-stop|              ||
@@ -53,13 +53,13 @@ Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
  ||  :DrawIt[!]  | start/stop DrawIt                |drawit-start| |drawit-stop| ||
  ||              |                                                           ||
  ++==============+===========================================================++
- ||   Maps       | Explanation                                               ||
+ ||   Maps       | Explanation                                     Links:    ||
  ++--------------+-----------------------------------------------------------++
  ||              | The DrawIt routines use a replace, move, and              ||
  ||              | replace/insert strategy.  The package also lets one insert||
  ||              | spaces, draw arrows by using the following characters or  ||
  ||              | keypad characters:                                        ||
- ||              +-----------------------------------------------------------++
+ ||              |                                                           ||
  || <left>       | move and draw left                         |drawit-drawing| ||
  || <right>      | move and draw right, inserting lines/space as needed      ||
  || <up>         | move and draw up, inserting lines/space as needed         ||
@@ -95,30 +95,31 @@ Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
  ||              | routine must first be used to create such a block.  The   ||
  ||              | canvas routine will query the user for the number of      ||
  ||              | lines to hold |'textwidth'| spaces.                         ||
- ||              +-----------------------------------------------------------++
- || \a           | draw arrow from corners of visual-block selected region   ||  |drawit-a|
- || \b           | draw box on visual-block selected region                  ||  |drawit-b|
- || \c           | the canvas routine (will query user, see above)           ||  |drawit-c|
- || \e           | draw an ellipse on visual-block selected region           ||  |drawit-e|
- || \f           | flood figure with a character (you will be prompted)      ||  |drawit-f|
- || \l           | draw line from corners of visual-block selected region    ||  |drawit-l|
- || \s           | spacer: appends spaces up to the textwidth (default: 78)  ||  |drawit-s|
+ ||      Links:  |                                                           ||
+ || \a  |drawit-a| | draw arrow from corners of visual-block selected region   ||
+ || \b  |drawit-b| | draw box on visual-block selected region                  ||
+ || \c  |drawit-c| | the canvas routine (will query user, see above)           ||
+ || \e  |drawit-e| | draw an ellipse on visual-block selected region           ||
+ || \f  |drawit-f| | flood figure with a character (you will be prompted)      ||
+ || \g  |drawit-g| | draw grid (using previous spacing, or 10x10)              ||
+ || \l  |drawit-l| | draw line from corners of visual-block selected region    ||
+ || \s  |drawit-s| | spacer: appends spaces up to the textwidth (default: 78)  ||
  ||              |                                                           ||
- ++==============+===========================================================++
- || Function and Explanation                                                 ||
- ++--------------+-----------------------------------------------------------++
+ ++===========+==============================================================++
+ || Functions |    Explanation                                       Links:  ||
+ ++-----------+--------------------------------------------------------------++
  ||  :call SetDrawIt('vertical','horizontal','crossing','\','/','X','*')     ||
  ||            set drawing characters for motions for moving                 ||
  ||            and for the ellipse drawing boundary        |drawit-setdrawit|  ||
- ||  default   motion                                                        ||
- ||  |         up/down,                                                      ||
- ||  -         left/right,                                                   ||
- ||  +         -| crossing,                                                  ||
- ||  \         downright,                                                    ||
- ||  /         downleft, and                                                 ||
- ||  X         \/ crossing                                                   ||
- ++=======================+==================================================++
- ||  Commands             | Explanation                                      ||
+ ||  default | motion                                                        ||
+ ||  |       | up/down,                                                      ||
+ ||  -       | left/right,                                                   ||
+ ||  +       | -| crossing,                                                  ||
+ ||  \       | downright,                                                    ||
+ ||  /       | downleft, and                                                 ||
+ ||  X       | \/ crossing                                                   ||
+ ++==========+============+==================================================++
+ ||  Commands             | Explanation                             Links:   ||
  ++-----------------------+--------------------------------------------------++
  ||  :SetBrush a-z        | sets brush (register) to given register          ||
  ||  :'<,'>SetBrush a-z   | yanks visual block to brush      |drawit-brush|||    ||
@@ -132,6 +133,8 @@ Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
  ||  :DIellipse           | draw a ellipse                   |:DIellipse|      ||
  ||  :DIflood             | flood figure with a character    |:DIflood|        ||
  ||  :DIflood             | draw a line                      |:DIline|         ||
+ ||  :DIgrid dr dc        | toggle a rough grid              |:DIgrid|         ||
+ ||  :DIoff               | turn DrawIt off                  |:DIoff|          ||
  ||  :DIspacer            | append spaces up to textwidth    |:DIspacer|       ||
  \============================================================================/
 
@@ -139,7 +142,22 @@ Copyright:    Copyright (C) 2004-2013 Charles E. Campbell
 ==============================================================================
 3. DrawIt Usage						*drawit-usage* {{{1
 
+INSTALLING						*drawit-install*
+
+DrawIt is distributed as a |vimball|; to install DrawIt: >
+
+	vi DrawIt.vba
+	:so %
+	:q
+
+These commands will put DrawIt into your .vim/plugin and .vim/autoload
+directories.  Only a little bit of DrawIt (.vim/plugin/DrawItPlugin.vim)
+is actually always loaded; only when DrawIt is used will the main portion of
+DrawIt be loaded.  Thus DrawIt supports fast vim startup.
+
+
 STARTING						*drawit-start* {{{2
+
 \di           (starts in normal     drawing mode)       *drawit-\di*
 :DrawIt       (starts in normal     drawing mode)       *drawit-DrawIt*
 :DIstart      (starts in normal     drawing mode)       *drawit-DIstart*
@@ -149,12 +167,14 @@ STARTING						*drawit-start* {{{2
 :DIsngl       (starts in single-bar drawing mode)       *drawit-DIsngl*
 :DIdbl        (starts in double-bar drawing mode)       *drawit-DIdbl*
 
-Typically one puts <drawit.vim> into the .vim/plugin directory
-(vimfiles\plugin for Windows) where it becomes always available.  It uses a
-minimal interface (\di: you can think of it as *D*raw*I*t or *D*rawIt
-*I*nitialize) to start it and (\ds: *D*rawIt *S*top) to stop it.  Instead of
-using "\" you may specify your own preference for a map leader (see
-|mapleader|).
+DrawIt supports a number of different ways to start up as shown above; in
+addition, you may use gvim and the DrChip menu.
+
+To stop DrawIt, use \ds (*d*rawit *s*top) or :DIstop.
+
+DrawIt also supports the use of |mapleader|; with that, you may specify
+what you with as the maps' leading kickoff character.  This document
+will use the default '\'.
 
 With a trailing 'S', :DIstart will begin in single-bar mode (see |drawit-sngl|).
 With a trailing 'D', :DIstart will begin in double-bar mode (see |drawit-dbl|).
@@ -164,10 +184,12 @@ single-bar or double-bar mode, respectively.
 A message, "[DrawIt]", will appear on the message line.
 
 
+                                                        *drawit-off*
 STOPPING						*drawit-stop* {{{2
 \ds
-:DIstop
 :DrawIt!
+:DIstop
+:DIoff
 
 When you are done with DrawIt, use \ds to stop DrawIt mode.  Stopping DrawIt
 will restore your usual options and remove the maps DrawIt set up.
@@ -305,6 +327,7 @@ VISUAL BLOCK MODE FOR ARROWS LINES BOXES AND ELLIPSES	*drawit-visblock* {{{2
 \b : draw box on visual-block selected region			*drawit-b*
 \c : the canvas routine (will query user, see above)		*drawit-c*
 \e : draw an ellipse on visual-block selected region		*drawit-e*
+\g : draw a grid (uses previous spacing, or 10x10)		*drawit-g*
 \f : flood figure with a character (you will be prompted)	*drawit-f*
 \l : draw line from corners of visual-block selected region	*drawit-l*
 \s : spacer: appends spaces up to the textwidth (default: 78)	*drawit-s*
@@ -317,7 +340,12 @@ VISUAL BLOCK MODE FOR ARROWS LINES BOXES AND ELLIPSES	*drawit-visblock* {{{2
 *:DIellipse* : draw an ellipse on visual-block selected region
 *:DIflood*   : flood figure with a character (you will be prompted)
 *:DIline*    : draw line from corners of visual-block selected region
+*:DIoff*     : another way to turn DrawIt off
 *:DIspacer*  : spacer: appends spaces up to the textwidth (default: 78)
+*:DIgrid* [ dr ] [ dc ] : displays a rough grid with spacing of drxdc
+             rows by colums.  Use :DIgrid to turn the grid off.
+	     You may find |'cursorcolumn'| and |'cursorline| of use, too,
+	     when desiring to visually align your drawing.
 
 	Discussion: ~
 The DrawIt package has been merged with Sylvain Viart's drawing package (by
@@ -329,12 +357,12 @@ block specification (|drawit-e|).
 One may create a block of spaces for these maps to operate in; the "canvas"
 routine (\c) will help create such blocks.  First, the s:Canvas() routine will
 query the user for the number of lines s/he wishes to have, and will then fill
-those lines with spaces out to the |'textwidth'| if user has specified it;
+those lines with spaces out to the |'textwidth'| if the user has specified it;
 otherwise, the display width will be used.
 
 Although most of the maps use visual-block selection, that isn't true of the
 \f map.  Instead, it assume that you have already drawn some closed figure and
-want to fill it with some character.
+want to fill it with some character (flooding).
 
 The Sylvain Viart functions and the ellipse drawing function depend upon using
 visual block mode.  As a typical use: >
@@ -433,6 +461,8 @@ DRAWIT MODES						*drawit-modes* {{{2
 
 	14	Dec 03, 2013	* added commands for visual block mode
 				  |:DIarrow| |:DIbox| |:DIcanvas| etc
+				* Implemented |:DIgrid|
+		Oct 24, 2014	* added LineStyle submenu
 	13	Sep 05, 2013	* improved s:Strlen() -- now uses |strdisplaywidth()|
 				  if available.
 		Sep 13, 2013	* (Paul Wagland) found a case where lines were

@@ -25,7 +25,7 @@ def dr_chip_plugin name
         begin
           system 'git checkout master >/dev/null 2>&1' or raise "#{name} checkout failed"
           updated = system "cd %s/.. && ./update #{name.shellescape} >/dev/null 2>&1" % proj.base.shellescape
-          system 'git checkout guns >/dev/null 2>&1' or raise "#{name} checkout failed"
+          system 'git checkout nerv >/dev/null 2>&1' or raise "#{name} checkout failed"
           if updated
             system 'git merge master >/dev/null 2>&1' or raise "#{name} merge failed"
           end

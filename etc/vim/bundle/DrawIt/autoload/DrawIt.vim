@@ -3,8 +3,8 @@
 " Maintainer:	Charles E. Campbell
 " Authors:		Charles E. Campbell <NdrOchipS@PcampbellAfamily.Mbiz> - NOSPAM
 "   			Sylvain Viart (molo@multimania.com)
-" Version:		14b	ASTRO-ONLY
-" Date:			Dec 03, 2013
+" Version:		14e	ASTRO-ONLY
+" Date:			Dec 12, 2014
 "
 " Quick Setup: {{{1
 "              tar -oxvf DrawIt.tar
@@ -41,7 +41,7 @@
 if &cp || exists("g:loaded_DrawIt")
  finish
 endif
-let g:loaded_DrawIt= "v14b"
+let g:loaded_DrawIt= "v14e"
 if v:version < 700
  echohl WarningMsg
  echo "***warning*** this version of DrawIt needs vim 7.0"
@@ -255,7 +255,7 @@ fun! DrawIt#DrawItStart(...)
   " call SaveUserMaps("bn","","><^v","DrawIt")
   " call SaveUserMaps("bv",usermaplead,"abceflsy","DrawIt")
   " call SaveUserMaps("bn","","<c-v>","DrawIt")
-  " call SaveUserMaps("bn",usermaplead,"h><v^","DrawIt")
+  " call SaveUserMaps("bn",usermaplead,"gh><v^","DrawIt")
   " call SaveUserMaps("bn","","<left>","DrawIt")
   " call SaveUserMaps("bn","","<right>","DrawIt")
   " call SaveUserMaps("bn","","<up>","DrawIt")
@@ -376,6 +376,7 @@ fun! DrawIt#DrawItStart(...)
   nmap <silent> <buffer> <script> <LocalLeader><M-K>   :silent! call <SID>DrawSpace('△',3)<CR>
   nmap <silent> <buffer> <script> <LocalLeader><M-J>   :silent! call <SID>DrawSpace('▽',4)<CR>
   nmap <silent> <buffer> <script> <LocalLeader>f       :call <SID>Flood()<cr>
+  nmap <silent> <buffer> <script> <LocalLeader>g       :call <SID>ToggleGrid()<cr>
 
   " DrawItStart: Set up insertmode maps {{{3
   " if exists("g:drawit_insertmode") && g:drawit_insertmode
@@ -429,14 +430,17 @@ fun! DrawIt#DrawItStart(...)
  " DrawItStart: Menu support {{{3
  if has("gui_running") && has("menu") && &go =~# 'm'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Stop\ \ DrawIt<tab>\\ds				<Leader>ds'
-  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Toggle\ Erase\ Mode<tab><space>	<space>'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Append\ Blanks<tab>\\s					<Leader>s'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Draw\ Arrow<tab>\\a					<Leader>a'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Draw\ Box<tab>\\b						<Leader>b'
-  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Make\ Blank\ Zone<tab>\\c			<Leader>c'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Make\ Blank\ Zone<tab>\\c				<Leader>c'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Draw\ Ellipse<tab>\\e					<Leader>e'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Draw\ Flood<tab>\\e					<Leader>f'
   exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Draw\ Line<tab>\\l						<Leader>l'
-  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Append\ Blanks<tab>\\s				<Leader>s'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.LineStyle.Normal<tab>:DInrml			:DInrmle<cr>'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.LineStyle.Single<tab>:DIsngl			:DIsngle<cr>'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.LineStyle.Double<tab>:DIdbl			:DIdbl<cr>'
+  exe 'menu '.g:DrChipTopLvlMenu.'DrawIt.Toggle\ Erase\ Mode<tab><space>		<space>'
   exe 'silent! unmenu '.g:DrChipTopLvlMenu.'DrawIt.Start\ DrawIt'
  endif
  
@@ -449,6 +453,8 @@ fun! DrawIt#DrawItStart(...)
 " com! -nargs=0 -range	DIflood     call s:Flood()
 " com! -nargs=0 -range	DIline      call s:CallBox('DrawPlainLine')
 " com! -nargs=0 -range	DIspacer	call s:Spacer(line("'<"), line("'>"),0)
+" com! -nargs=*			DIgrid		call s:ToggleGrid(<f-args>)
+" com! -nargs=*			DIoff		call DrawIt#DrawItStop()
 " call Dret("DrawItStart")
 endfun
 
@@ -2448,6 +2454,67 @@ fun! s:Strlen(x)
   return ret
 endfun
 
+" ---------------------------------------------------------------------
+" s:ToggleGrid: toggle presence of a grid drawn with colorcolumns and matchadd {{{2
+"  Original Author:	ib from stackoverflow
+"  Modified By:		Charles E Campbell
+fun! s:ToggleGrid(...)
+"  call Dfunc("s:ToggleGrid(...) a:0=".a:0)
+  " if matchadd() doesn't exist, can't do this
+  if !exists("*matchadd")
+   echohl WarningMsg
+   echo "***warning*** your vim doesn't support matchadd(), so it can't make grids"
+   echohl None
+"   call Dret("s:ToggleGrid : this vim doesn't support matchadd()")
+   return
+  endif
+
+  " toggle grid
+  if exists('b:grid_row_grp') || exists('b:grid_prev_cc')
+   call matchdelete(b:grid_row_grp)
+   let &colorcolumn = b:grid_prev_cc
+   unlet b:grid_row_grp b:grid_prev_cc
+"   call Dret("s:ToggleGrid : turned grid off")
+   return
+  endif
+
+  if a:0 == 0
+   if !exists("s:lastdr")
+	let s:lastdr= 10
+   endif
+   if !exists("s:lastdc")
+	let s:lastdc= 10
+   endif
+   let [dr,dc] = [s:lastdr,s:lastdc]
+  elseif a:0 == 1
+   let [dr,dc] = [a:1,s:lastdc]
+  else
+   let [dr, dc] = [a:1, a:2]
+  endif
+  let s:lastdr = dr
+  let s:lastdc = dc
+
+  if a:0 < 4
+   let [i, nr, nc] = [1, line('$'), 0]
+   while i <= nr
+    let k  = virtcol('$')
+    let nc = nc < k ? k : nc
+    let i += 1
+   endwhile
+  else
+   let [nr, nc] = [a:3, a:4]
+  endif
+  let rows = range(dr, nr, dr)
+  let cols = range(dc, nc, dc)
+
+  let pat            = '\V' . join(map(rows, '"\\%" . v:val . "l"'), '\|')
+  let b:grid_row_grp = matchadd('ColorColumn', pat)
+  let b:grid_prev_cc = &colorcolumn
+  let &colorcolumn   = join(cols, ',')
+
+"  call Dret("s:ToggleGrid : turned grid on with dr=".dr." dc=".dc)
+endfun
+
 " =====================================================================
 "  DrawIt Functions: (by Sylvain Viart) {{{1
 " =====================================================================
@@ -2500,7 +2567,7 @@ endf
 " ---------------------------------------------------------------------
 " s:CallBox: call the specified function using the current visual selection box {{{2
 fun! s:CallBox(func_name) range
-  "  call Dfunc("s:CallBox(func_name<".a:func_name.">)")
+"  "  call Dfunc("s:CallBox(func_name<".a:func_name.">)")
 
   if exists("b:xmouse_start")
    let xdep = b:xmouse_start

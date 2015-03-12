@@ -4,7 +4,9 @@
 :DIcircle	DrawIt.txt	/*:DIcircle*
 :DIellipse	DrawIt.txt	/*:DIellipse*
 :DIflood	DrawIt.txt	/*:DIflood*
+:DIgrid	DrawIt.txt	/*:DIgrid*
 :DIline	DrawIt.txt	/*:DIline*
+:DIoff	DrawIt.txt	/*:DIoff*
 :DIspacer	DrawIt.txt	/*:DIspacer*
 drawit	DrawIt.txt	/*drawit*
 drawit-DIdbl	DrawIt.txt	/*drawit-DIdbl*
@@ -24,12 +26,15 @@ drawit-e	DrawIt.txt	/*drawit-e*
 drawit-erase	DrawIt.txt	/*drawit-erase*
 drawit-example	DrawIt.txt	/*drawit-example*
 drawit-f	DrawIt.txt	/*drawit-f*
+drawit-g	DrawIt.txt	/*drawit-g*
 drawit-history	DrawIt.txt	/*drawit-history*
+drawit-install	DrawIt.txt	/*drawit-install*
 drawit-l	DrawIt.txt	/*drawit-l*
 drawit-manual	DrawIt.txt	/*drawit-manual*
 drawit-modes	DrawIt.txt	/*drawit-modes*
 drawit-move	DrawIt.txt	/*drawit-move*
 drawit-moving	DrawIt.txt	/*drawit-moving*
+drawit-off	DrawIt.txt	/*drawit-off*
 drawit-options	DrawIt.txt	/*drawit-options*
 drawit-protect	DrawIt.txt	/*drawit-protect*
 drawit-s	DrawIt.txt	/*drawit-s*
