@@ -11,10 +11,11 @@
 """ Mapleader and Escape {{{1
 
 let g:mapleader = "<C-x>"
-imap <Leader> <Esc><Leader>
-cmap <Leader> <Esc><Leader>
-noremap <C-x> <NOP>
-noremap <C-a> <NOP>
+
+imap    <Leader> <Esc><Leader>
+cmap    <Leader> <Esc><Leader>
+noremap <C-x>    <NOP>
+noremap <C-a>    <NOP>
 
 """ Settings {{{1
 
@@ -24,13 +25,12 @@ set titlestring='Mozilla Firefox'
 
 """ Command line mappings {{{1
 
-noremap <Leader>; :help<Space>
-noremap <Leader>m :emenu<Space>
-noremap <Leader>s :set<Space>
-noremap <Leader><C-r> :source ~/.vimperatorrc<CR>
-
-cnoremap <C-n> <Down>
-cnoremap <C-p> <Up>
+noremap  <Leader>;     :help<Space>
+noremap  <Leader>m     :emenu<Space>
+noremap  <Leader>s     :set<Space>
+noremap  <Leader><C-r> :source ~/.vimperatorrc<CR>
+cnoremap <C-n>         <Down>
+cnoremap <C-p>         <Up>
 
 """ Movement {{{1
 
@@ -45,38 +45,39 @@ noremap B b
 
 """ Links and Search {{{1
 
-noremap ; F
-noremap "'" f
-noremap , ;
-noremap f /
-noremap \\ /
-noremap Y y
-noremap <C-a> <F6>
-noremap ga <F6>
+noremap ;          F
+noremap "'"        f
+noremap ,          ;
+noremap f          /
+noremap \\         /
+noremap Y          y
+noremap <C-a>      <F6>
+noremap ga         <F6>
 noremap <Leader>\\ :nohlsearch<CR>
 
 """ Tabs and Buffers {{{1
 
-noremap <Tab> gt
-noremap <S-Tab> gT
-noremap <C-j> gt
-noremap <C-k> gT
-noremap J gt
-noremap K gT
-noremap <C-h> H
-noremap <C-l> L
-noremap t :tabnew<CR><F6>
-noremap _ :tabmove -1<CR>
-noremap + :tabmove +1<CR>
-noremap <C-S-o> :tabonly<CR>
+noremap  <Tab>   gt
+noremap  <S-Tab> gT
+map      <C-j>   gt
+map      <C-k>   gT
+noremap  J       gt
+noremap  K       gT
+noremap  <C-n>   :javascript (function() { var t = gBrowser.treeStyleTab.getNextSiblingTab(gBrowser.mCurrentTab);     if (t) { t.click(); } else { var ts = gBrowser.treeStyleTab.getSiblingTabs(gBrowser.mCurrentTab); var t = ts[0];           if (t) t.click(); } })()<CR>
+noremap  <C-p>   :javascript (function() { var t = gBrowser.treeStyleTab.getPreviousSiblingTab(gBrowser.mCurrentTab); if (t) { t.click(); } else { var ts = gBrowser.treeStyleTab.getSiblingTabs(gBrowser.mCurrentTab); var t = ts[ts.length-1]; if (t) t.click(); } })()<CR>
+noremap  <C-h>   H
+noremap  <C-l>   L
+noremap  t       :tabnew<CR><F6>
+noremap  <C-S-o> :tabonly<CR>
 inoremap <C-S-o> <Esc>:tabonly<CR>
 cnoremap <C-S-o> <Esc>:tabonly<CR>
-noremap \- :zoom! -10<CR>
-noremap = :zoom! +10<CR>
-noremap 0 :zoom! 100<CR>
-noremap d :emenu File.Close Tab<CR>
-noremap D :javascript gBrowser.treeStyleTab._closeChildTabs(gBrowser.mCurrentTab);<CR>
-noremap w :javascript TreeStyleTabService.toggleAutoHide(TreeStyleTabService.getTabBrowserFromChild(this));<CR>
+noremap  \-      :zoom! -10<CR>
+noremap  =       :zoom! +10<CR>
+noremap  0       :zoom! 100<CR>
+noremap  d       :emenu File.Close Tab<CR>
+noremap  D       :javascript gBrowser.treeStyleTab._closeChildTabs(gBrowser.mCurrentTab);<CR>
+map      X       Dd
+noremap  w       :javascript TreeStyleTabService.autoHideWindow.toggleMode();<CR>
 
 """ Bookmarks
 
@@ -93,8 +94,8 @@ noremap <C-S-l> :emenu Tools.Web Developer.Web Console<CR>
 noremap <C-S-n> :emenu Tools.Web Developer.Network<CR>
 noremap <C-S-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
 noremap <C-S-p> :emenu Edit.Preferences<CR>
-imap <C-S-t> <Esc><C-S-t>
-cmap <C-S-t> <Esc><C-S-t>
+imap    <C-S-t> <Esc><C-S-t>
+cmap    <C-S-t> <Esc><C-S-t>
 
 """ Colors {{{1
 
