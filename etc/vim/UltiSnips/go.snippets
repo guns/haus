@@ -49,10 +49,6 @@ snippet PL "pretty.Println()" w
 pretty.Println($0)
 endsnippet
 
-snippet C "Constant declaration" b
-const ${1:name}${2/(.+)/ /}${2:type} = ${0:value}
-endsnippet
-
 snippet iota "Iota constant generator" b
 const (
 	${1:constant}${2/(.+)/ /}${2:type} = iota
@@ -99,6 +95,10 @@ endsnippet
 
 snippet L "len()" w
 len($0)
+endsnippet
+
+snippet C "cap()" w
+cap($0)
 endsnippet
 
 snippet S "struct" w
