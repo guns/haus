@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.502 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.505 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -550,6 +550,9 @@ sub video_file_size($) {
     my ($in, $out, $err);
     $err = Symbol::gensym;
     my $pid = eval { open3 ($in, $out, $err, @cmd) };
+
+    # If ffmpeg doesn't exist, or dumps core, just ignore it.
+    # There's nothing we can do about it anyway.
     if ($pid) {
       close ($in);
       close ($out);
@@ -615,106 +618,114 @@ sub write_file_metadata_url($$$) {
   my $xattr = which ("xattr");
   my $plutil = which ("plutil");
   my $mp4tags = which ("mp4tags");   # port install mp4v2
-  if (! $xattr) {
-    print STDERR "$progname: $file: no metadata: xattr not found on \$PATH\n"
-      if ($verbose > 1);
-    return;
-  }
 
-  my $date = strftime ('%Y-%m-%dT%H:%M:%SZ', gmtime($now));
+  my $added = 0;
+  my $ok = 1;
 
-  my $plhead = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" .
-                "<!DOCTYPE plist PUBLIC" .
-                " \"-//Apple//DTD PLIST 1.0//EN\"" .
-                " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" .
-                "<plist version=\"1.0\">\n");
-  my $date_plist = ($plhead .
-                    "<array>\n" .
-                    "\t<date>$date</date>\n" .
-                    "</array>\n" .
-                    "</plist>");
-  my $url_plist = ($plhead .
-                   "<array>\n" .
-                    "\t<string>" . html_quote($url) . "</string>\n" .
-                    "</array>\n" .
-                    "</plist>");
+  if ($xattr) {
+    my $date = strftime ('%Y-%m-%dT%H:%M:%SZ', gmtime($now));
 
-  # Convert the plists to binary form if possible. Probably not strictly
-  # necessary.
-  #
-  if ($plutil) {
-    foreach my $s ($date_plist, $url_plist) {
-      my ($in, $out, $err);
-      $err = Symbol::gensym;
-      my $pid = eval { open3 ($in, $out, $err,
-                              ($plutil,
-                               '-convert', 'binary1',
-                               '-', '-o', '-')) };
-      if (!$pid) {
-        print STDERR "$progname: $id: $plutil: $!\n";
-      } else {
-        close ($err);
-        print $in $s;
-        close ($in);
+    my $plhead = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" .
+                  "<!DOCTYPE plist PUBLIC" .
+                  " \"-//Apple//DTD PLIST 1.0//EN\"" .
+                  " \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" .
+                  "<plist version=\"1.0\">\n");
+    my $date_plist = ($plhead .
+                      "<array>\n" .
+                      "\t<date>$date</date>\n" .
+                      "</array>\n" .
+                      "</plist>");
+    my $url_plist = ($plhead .
+                     "<array>\n" .
+                      "\t<string>" . html_quote($url) . "</string>\n" .
+                      "</array>\n" .
+                      "</plist>");
 
-        local $/ = undef;  # read entire file
-        my $s2 = '';
-        while (<$out>) {
-          $s2 .= $_;
+    # Convert the plists to binary form if possible. Probably not strictly
+    # necessary.
+    #
+    if ($plutil) {
+      foreach my $s ($date_plist, $url_plist) {
+        my ($in, $out, $err);
+        $err = Symbol::gensym;
+        my $pid = eval { open3 ($in, $out, $err,
+                                ($plutil,
+                                 '-convert', 'binary1',
+                                 '-', '-o', '-')) };
+        # If there are errors converting the plist, just ignore them.
+        # It's not critical to convert. Though an error would be weird.
+        if (!$pid) {
+          print STDERR "$progname: $id: $plutil: $!\n";
+        } else {
+          close ($err);
+          print $in $s;
+          close ($in);
+
+          local $/ = undef;  # read entire file
+          my $s2 = '';
+          while (<$out>) {
+            $s2 .= $_;
+          }
+          $s = $s2 if $s2;
+
+          waitpid ($pid, 0);
+          if ($?) {
+            my $exit_value  = $? >> 8;
+            my $signal_num  = $? & 127;
+            my $dumped_core = $? & 128;
+            print STDERR "$progname: $id: $plutil: core dumped!"
+              if ($dumped_core);
+            print STDERR "$progname: $id: $plutil: signal $signal_num!"
+              if ($signal_num);
+            print STDERR "$progname: $id: $plutil: exited with $exit_value!"
+              if ($exit_value);
+          }
         }
-        $s = $s2 if $s2;
+      }
+    }
 
-        waitpid ($pid, 0);
+    # I suppose setting the quarantine flag is also the proper thing to do.
+    #
+    my $quarantine = join (';', ('0002',   # downloaded but never opened
+                                 sprintf("%08x", $now),
+                                 $progname,
+                                 "org.jwz.$progname"));
+
+    # Convert the data to hex, to shield nulls from xattr.
+    #
+    foreach ($date_plist, $url_plist, $quarantine) {
+      s/(.)/{ sprintf("%02X ", ord($1)); }/gsex;
+    }
+
+    # Now run xattr for each attribute to dump it into the file.
+    #
+    error ("$file does not exist") unless (-f $file);
+    foreach ([$url_plist,  'com.apple.metadata:kMDItemWhereFroms'],
+             [$date_plist, 'com.apple.metadata:kMDItemDownloadedDate'],
+             [$quarantine, 'com.apple.quarantine']) {
+      my ($val, $key) = @$_;
+      my @cmd = ($xattr, "-w", "-x", $key, $val, $file);
+      print STDERR "\n$progname: exec: '" . join("' '", @cmd) . "'\n"
+        if ($verbose > 3);
+      system (@cmd);
+      $added = 1;
+      if ($?) {
+        $ok = 0;
         my $exit_value  = $? >> 8;
         my $signal_num  = $? & 127;
         my $dumped_core = $? & 128;
-
-        print STDERR "$progname: $id: $plutil: core dumped!"
+        print STDERR "$progname: $id: $cmd[0]: core dumped!\n"
           if ($dumped_core);
-        print STDERR "$progname: $id: $plutil: signal $signal_num!"
+        print STDERR "$progname: $id: $cmd[0]: signal $signal_num!\n"
           if ($signal_num);
-        print STDERR "$progname: $id: $plutil: exited with $exit_value!"
+        print STDERR "$progname: $id: $cmd[0]: exited with $exit_value!\n"
           if ($exit_value);
       }
     }
+  } elsif ($verbose > 1) {
+    print STDERR "$progname: $id: no metadata: xattr not found on \$PATH\n";
   }
 
-  # I suppose setting the quarantine flag is also the proper thing to do.
-  #
-  my $quarantine = join (';', ('0002',   # downloaded but never opened
-                               sprintf("%08x", $now),
-                               $progname,
-                               "org.jwz.$progname"));
-
-  # Convert the data to hex, to shield nulls from xattr.
-  #
-  foreach ($date_plist, $url_plist, $quarantine) {
-    s/(.)/{ sprintf("%02X ", ord($1)); }/gsex;
-  }
-
-  # Now run xattr for each attribute to dump it into the file.
-  #
-  error ("$file does not exist") unless (-f $file);
-  foreach ([$url_plist,  'com.apple.metadata:kMDItemWhereFroms'],
-           [$date_plist, 'com.apple.metadata:kMDItemDownloadedDate'],
-           [$quarantine, 'com.apple.quarantine']) {
-    my ($val, $key) = @$_;
-    my @cmd = ($xattr, "-w", "-x", $key, $val, $file);
-    print STDERR "\n$progname: exec: '" . join("' '", @cmd) . "'\n"
-      if ($verbose > 3);
-    system (@cmd);
-    if ($?) {
-      my $exit_value  = $? >> 8;
-      my $signal_num  = $? & 127;
-      my $dumped_core = $? & 128;
-      print STDERR "$progname: $cmd[0]: core dumped!\n"
-        if ($dumped_core);
-      print STDERR "$progname: $cmd[0]: signal $signal_num!\n"
-        if ($signal_num);
-      print STDERR "$progname: $cmd[0]: exited with $exit_value!\n"
-        if ($exit_value);
-    }
-  }
 
   # If we can, also store the URL inside the file's metadata tags.
   # This shows up in the "Video / Description" field in iTunes
@@ -728,29 +739,37 @@ sub write_file_metadata_url($$$) {
     my ($in, $out, $err);
     $err = Symbol::gensym;
     my $pid = eval { open3 ($in, $out, $err, @cmd) };
+    $added = 1;
     if (!$pid) {
-      print STDERR "$progname: $cmd[0]: $!\n";
+      print STDERR "$progname: $id: $cmd[0]: $!\n";
+      $ok = 0;
     } else {
       close ($in);
       close ($out);
       close ($err);
 
       waitpid ($pid, 0);
-      my $exit_value  = $? >> 8;
-      my $signal_num  = $? & 127;
-      my $dumped_core = $? & 128;
+      if ($?) {
+        $ok = 0;
+        my $exit_value  = $? >> 8;
+        my $signal_num  = $? & 127;
+        my $dumped_core = $? & 128;
 
-      print STDERR "$progname: $cmd[0]: core dumped!\n"
-        if ($dumped_core);
-      print STDERR "$progname: $cmd[0]: signal $signal_num!\n"
-        if ($signal_num);
-      print STDERR "$progname: $cmd[0]: exited with $exit_value!\n"
-        if ($exit_value);
+        if ($verbose) {
+          # mp4tags fucks up not-infrequently. Be quieter about it.
+          print STDERR "$progname: $id: $cmd[0]: core dumped!\n"
+            if ($dumped_core);
+          print STDERR "$progname: $id: $cmd[0]: signal $signal_num!\n"
+            if ($signal_num);
+          print STDERR "$progname: $id: $cmd[0]: exited with $exit_value!\n"
+            if ($exit_value);
+        }
+      }
     }
   }
 
   print STDERR "$progname: $id: added metadata\n"
-    if ($verbose > 1);
+    if ($added && $ok && $verbose > 1);
 }
 
 
@@ -771,7 +790,7 @@ sub video_url_size($$$;$) {
   # get the size without 680 KB.
   my $bytes = 680 * 1024;
 
-  my ($http, $head, $body) = get_url ($url, $url, $file, $bytes);
+  my ($http, $head, $body) = get_url ($url, undef, $file, $bytes);
   check_http_status ($id, $url, $http, 2);  # internal error if still 403
 
      ($ct)   = ($head =~ m@^Content-Type:   \s* ( [^\s;]+ ) @mix);
@@ -1045,6 +1064,7 @@ my %ciphers = (
   'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',    # 04 Mar 2015
   'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',                # 05 Mar 2015
   'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',           # 10 Mar 2015
+  'en_US-vflA6e-lH/html5player' => 's1 w4 s1 w39 s3 r',           # 13 Mar 2015
 );
 
 
@@ -3485,9 +3505,10 @@ sub do_cgi($) {
 
 
 sub usage() {
-  print STDERR "usage: $progname [--verbose] [--quiet] [--size]" .
-		       " [--progress] [--suffix] [--fmt N] [--no-mux]\n" .
-               "\t\t   [--title title] youtube-or-vimeo-urls ...\n";
+  print STDERR "usage: $progname" .
+                 " [--verbose] [--quiet] [--size] [--progress] [--suffix]\n" .
+           "\t\t   [--fmt N] [--no-mux] [--title title]\n" .
+           "\t\t   youtube-or-vimeo-urls ...\n";
   exit 1;
 }
 
