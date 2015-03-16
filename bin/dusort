@@ -28,7 +28,7 @@ opts[:jobs].times do
       break if i >= size
       $stderr.print label % (i+1)
       # du -k is a POSIX flag
-      res[i] = [%x(du -k -s #{fs[i].shellescape})[/^\d+/].to_i * 1024, fs[i]]
+      res[i] = [%x(du -k -s -- #{fs[i].shellescape})[/^\d+/].to_i * 1024, fs[i]]
     end
   end
 end
