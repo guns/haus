@@ -43,8 +43,15 @@ endfunction
 function! go#tool#ShowErrors(out)
     let errors = []
     for line in split(a:out, '\n')
+        let i = stridx(line, "\r")
+        if i > -1
+            let line = line[i+1:]
+        endif
         let fatalerrors = matchlist(line, '^\(fatal error:.*\)$')
         let tokens = matchlist(line, '^\s*\(.\{-}\):\(\d\+\):\s*\(.*\)')
+        if empty(tokens)
+            let tokens = matchlist(line, '\v<Location:\s*(.+):(\d+)\s*(.*)')
+        endif
 
         if !empty(fatalerrors)
             call add(errors, {"text": fatalerrors[1]})
