@@ -61,7 +61,7 @@ class Cert
   end
 
   def parse_certs string
-    certs = string.scan /-+BEGIN CERTIFICATE-+\n.*?\n-+END CERTIFICATE-+/m
+    certs = string.force_encoding('ASCII-8BIT').scan /-+BEGIN CERTIFICATE-+\n.*?\n-+END CERTIFICATE-+/m
 
     if certs.any?
       certs.map { |pem| OpenSSL::X509::Certificate.new pem }

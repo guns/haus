@@ -291,11 +291,11 @@ class Dlnode
 
     if commands.empty?
       warn "\nNo resources found!"
-      false
+      :no_resources
     elsif @no_download
       warn "\n%d resource(s)" % resources.size
       puts commands.map(&:shelljoin)
-      true
+      :ok
     else
       $stderr.puts
       FileUtils.mkdir_p @dir
@@ -320,9 +320,10 @@ class Dlnode
       if failed.any?
         $stderr.puts "\e[31mFAILED:\e[0m "
         failed.each { |cmd| puts cmd.shelljoin }
+        :fail
+      else
+        :ok
       end
-
-      failed.empty?
     end
   end
 
@@ -331,7 +332,11 @@ class Dlnode
     abort parser.help unless args.size > 1
     url, *rest = args
     url = "file://#{url}" if url !~ %r{\w+://}
-    download! url, *rest or abort
+
+    case download! url, *rest
+    when :no_resources then exit 2
+    when :fail then exit 1
+    end
   end
 end
 
