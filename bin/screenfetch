@@ -2,7 +2,7 @@
 
 # screenFetch - a CLI Bash script to show system/theme info in screenshots
 
-# Copyright (c) 2010-2014 Brett Bohnenkamper <kittykatt@kittykatt.us>
+# Copyright (c) 2010-2015 Brett Bohnenkamper <kittykatt@kittykatt.us>
 
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ display_type="ASCII"
 
 # WM & DE process names
 # Removed WM's: compiz
-wmnames=( fluxbox openbox blackbox xfwm4 metacity kwin icewm pekwm fvwm dwm awesome wmaker stumpwm musca xmonad i3 ratpoison scrotwm spectrwm wmfs wmii beryl subtle e16 enlightenment sawfish emerald monsterwm dminiwm compiz Finder herbstluftwm notion bspwm cinnamon 2bwm echinus swm budgie-wm )
+wmnames=( fluxbox openbox blackbox xfwm4 metacity kwin icewm pekwm fvwm dwm awesome wmaker stumpwm musca xmonad.* i3 ratpoison scrotwm spectrwm wmfs wmii beryl subtle e16 enlightenment sawfish emerald monsterwm dminiwm compiz Finder herbstluftwm notion bspwm cinnamon 2bwm echinus swm budgie-wm )
 denames=( gnome-session xfce-mcs-manage xfce4-session xfconfd ksmserver lxsession gnome-settings-daemon mate-session mate-settings-daemon Finder )
 
 # Screenshot Settings
@@ -193,10 +193,10 @@ displayHelp() {
 	printf "  ${0} [OPTIONAL FLAGS]\n\n"
 	printf "screenFetch - a CLI Bash script to show system/theme info in screenshots.\n\n"
 	printf "${underline}Supported GNU/Linux Distributions${c0}:\n"
-	printf "	Arch Linux (Old and Current Logos), Antergos, Chakra, CentOS, Debian,\n"
+	printf "	Arch Linux (Old and Current Logos), Antergos, Chakra, Chapeau, CentOS, Debian,\n"
 	printf "	CrunchBang, Raspbian, elementary OS, Evolve OS, Fedora, Frugalware, Fuduntu,\n"
 	printf "	Gentoo, Funtoo, Jiyuu Linux, LinuxDeepin, Kali Linux, KaOS, Korora, Mageia,\n"
-	printf "	Mandriva, Manjaro, Linux Mint, LMDE, openSUSE, Parabola GNU/Linux-libre,\n"
+	printf "	Mandriva, Manjaro, Linux Mint, LMDE, Logos, openSUSE, Parabola GNU/Linux-libre,\n"
 	printf "	Peppermint, Red Hat Enterprise Linux, Sabayon, Scientific Linux, Slackware,\n"
 	printf "	SolusOS, TinyCore, Trisquel, Ubuntu, Viperr and Void.\n\n"
 	printf "${underline}Other Supported Systems${c0}:\n"
@@ -353,11 +353,17 @@ detectdistro () {
 					distro="Antergos"
 					distro_release="n/a"
 				fi
+				if grep -q -i 'logos' /etc/os-release; then
+					distro="Logos"
+					distro_release="n/a"
+				fi
 			elif [[ "${distro_detect}" == "Chakra" ]]; then
 				distro="Chakra"
 				distro_release=""
 			elif [[ "${distro_detect}" == "CentOS" ]]; then
 				distro="CentOS"
+			elif [[ "${distro_detect}" == "Chapeau" ]]; then
+				distro="Chapeau"
 			elif [[ "${distro_detect}" == "Debian" ]]; then
 				if [[ -f /etc/crunchbang-lsb-release || -f /etc/lsb-release-crunchbang ]]; then
 					distro="CrunchBang"
@@ -497,6 +503,7 @@ detectdistro () {
 				[[ "${distro}" == "Void" || "${distro}" == "void" ]] && distro="Void"
 				[[ "${distro}" == "evolveos" ]] && distro="Evolve OS"
 				[[ "${distro}" == "antergos" || "${distro}" == "Antergos" ]] && distro="Antergos"
+				[[ "${distro}" == "logos" || "${distro}" == "Logos" ]] && distro="Logos"
 				[[ "${distro}" == "Arch" ]] && distro="Arch Linux"
 				[[ "${distro}" == "Archarm" || "${distro}" == "archarm" ]] && distro="Arch Linux"
 				[[ "${distro}" == "elementary" ]] && distro="elementary OS"
@@ -639,6 +646,7 @@ detectdistro () {
 		evolveos) distro="Evolve OS";;
 		fedora) distro="Fedora" ;;
 		korora) distro="Korora" ;;
+		chapeau) distro="Chapeau" ;;
 		mageia) distro="Mageia" ;;
 		mandriva) distro="Mandriva" ;;
 		mandrake) distro="Mandrake" ;;
@@ -651,6 +659,7 @@ detectdistro () {
 		raspbian) distro="Raspbian" ;;
 		freebsd) distro="FreeBSD" ;;
 		freebsd*old) distro="FreeBSD - Old" ;;
+		logos) distro="Logos" ;;
 		openbsd) distro="OpenBSD" ;;
 		dragonflybsd) distro="DragonFlyBSD" ;;
 		netbsd) distro="NetBSD" ;;
@@ -748,10 +757,10 @@ detectpkgs () {
 	case "${distro}" in
 		'Arch Linux'|'Parabola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'|'KaOS') pkgs=$(pacman -Qq | wc -l) ;;
 		'Frugalware') pkgs=$(pacman-g2 -Q | wc -l) ;;
-		'Fuduntu'|'Ubuntu'|'Mint'|'SolusOS'|'Debian'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS') pkgs=$(dpkg --get-selections | wc -l) ;;
+		'Fuduntu'|'Ubuntu'|'Mint'|'SolusOS'|'Debian'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS') pkgs=$(dpkg --get-selections | grep -v deinstall$ | wc -l) ;;
 		'Slackware') pkgs=$(ls -1 /var/log/packages | wc -l) ;;
 		'Gentoo'|'Sabayon'|'Funtoo') pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
-		'Fedora'|'Korora'|'openSUSE'|'Red Hat Enterprise Linux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Viperr') pkgs=$(rpm -qa | wc -l) ;;
+		'Fedora'|'Korora'|'Chapeau'|'openSUSE'|'Red Hat Enterprise Linux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Viperr') pkgs=$(rpm -qa | wc -l) ;;
 		'Void') pkgs=$(xbps-query -l|wc -l);;
 		'Evolve OS') pkgs=$(pisi list-installed | wc -l);;
 		'Mac OS X')
@@ -1327,7 +1336,7 @@ detectwm () {
 						'wmii') WM="wmii";;
 						'xfwm4') WM="Xfwm4";;
 						'i3') WM="i3";;
-						'xmonad') WM="XMonad";;
+						'xmonad.*') WM="XMonad";;
 					esac
 				fi
 
@@ -1788,7 +1797,7 @@ detectgtk () {
 
 				if [ "$distro" == "Cygwin" -a "$gtkFont" == "Not Found" ]; then
 					if [ -f "$HOME/.minttyrc" ]; then
-						gtkFont="$(cat "$HOME/.minttyrc" | grep '^Font=.*' | grep -o '[0-9A-z ]*$')"
+						gtkFont="$(grep '^Font=.*' "$HOME/.minttyrc" | grep -o '[0-9A-z ]*$')"
 					fi
 				fi
 			;;
@@ -2058,7 +2067,7 @@ asciiText () {
 "$c1 \+/+o+++$c3\`o++o$c2               ++////.  %s"
 "$c1  .++.o+$c3++oo+:\`$c2             /dddhhh.  %s"
 "$c3       .+.o+oo:.$c2          \`oddhhhh+   %s"
-"$c3        \+.++o+o\`\`-\`\`$c2\`\`.:ohdhhhhh+    %s"
+"$c3        \+.++o+o\`$c2\`-\`\`\`\`.:ohdhhhhh+    %s"
 "$c3         \`:o+++ $c2\`ohhhhhhhhyo++os:     %s"
 "$c3           .o:$c2\`.syhhhhhhh/$c3.oo++o\`     %s"
 "$c2               /osyyyyyyo$c3++ooo+++/    %s"
@@ -2286,6 +2295,35 @@ asciiText () {
 "$c2 :------"$c1":://:"$c2"-------------::         %s"
 "$c2 :---------------------://           %s"
 "                                     %s")
+		;;
+
+		"Chapeau")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'white') # White
+				c2=$(getColor 'light green') # Light Green
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; fi
+			startline="0"
+			fulloutput=("$c2               .-/-.                  %s"
+"$c2             ////////.               %s"
+"$c2           ////////"$c1"y+"$c2"//.             %s"
+"$c2         ////////"$c1"mMN"$c2"/////.           %s"
+"$c2       ////////"$c1"mMN+"$c2"////////.         %s"
+"$c2     ////////////////////////.       %s"
+"$c2   /////////+"$c1"shhddhyo"$c2"+////////.      %s"
+"$c2  ////////"$c1"ymMNmdhhdmNNdo"$c2"///////.     %s"
+"$c2 ///////+"$c1"mMms"$c2"////////"$c1"hNMh"$c2"///////.    %s"
+"$c2 ///////"$c1"NMm+"$c2"//////////"$c1"sMMh"$c2"///////    %s"
+"$c2 //////"$c1"oMMNmmmmmmmmmmmmMMm"$c2"///////    %s"
+"$c2 //////"$c1"+MMmssssssssssssss+"$c2"///////    %s"
+"$c2 \`//////"$c1"yMMy"$c2"////////////////////     %s"
+"$c2  \`//////"$c1"smMNhso++oydNm"$c2"////////      %s"
+"$c2   \`///////"$c1"ohmNMMMNNdy+"$c2"///////       %s"
+"$c2     \`//////////"$c1"++"$c2"//////////         %s"
+"$c2        \`////////////////.           %s"
+"$c2            -////////-              %s"
+"                                    %s")
+
 		;;
 
 		"Korora")
@@ -3000,7 +3038,31 @@ asciiText () {
 "                                 %s")
 		;;
 
-
+    		"Logos")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'green') # Green
+				c2=$(getColor 'white') # White
+			fi
+			startline="0"
+			fulloutput=(
+"$c1    ..:.:.               $c2%s"
+"$c1   ..:.:.:.:.            $c2%s"
+"$c1  ..:.:.:.:.:.:.         $c2%s"
+"$c1 ..:.:.:.:.:.:.:.:.      $c2%s"
+"$c1   .:.::;.::::..:.:.:.   $c2%s"
+"$c1      .:.:.::.::.::.;;/  $c2%s"
+"$c1         .:.::.::://///  $c2%s"
+"$c1            ..;;///////  $c2%s"
+"$c1            ///////////  $c2%s"
+"$c1         //////////////  $c2%s"
+"$c1      /////////////////  $c2%s"
+"$c1   ///////////////////   $c2%s"
+"$c1 //////////////////      $c2%s"
+"$c1  //////////////         $c2%s"
+"$c1   //////////            $c2%s"
+"$c1    //////               $c2%s"
+"$c1     //                  $c2%s")
+		;;
 		"Manjaro-tree")
 			if [[ "$no_color" != "1" ]]; then
 				c1="\e[1;32m" # Green
@@ -3460,7 +3522,7 @@ infoDisplay () {
 	myascii="${distro}"
 	[[ "${asc_distro}" ]] && myascii="${asc_distro}"
 	case ${myascii} in
-		"Arch Linux - Old"|"Fedora"|"Korora"|"Mandriva"|"Mandrake"|"Chakra"|"ChromeOS"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux"|"Antergos"|"KaOS") labelcolor=$(getColor 'light blue');;
+		"Arch Linux - Old"|"Fedora"|"Korora"|"Chapeau"|"Mandriva"|"Mandrake"|"Chakra"|"ChromeOS"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux"|"Antergos"|"KaOS"|"Logos") labelcolor=$(getColor 'light blue');;
 		"Arch Linux"|"Frugalware"|"Mageia"|"Deepin") labelcolor=$(getColor 'light cyan');;
 		"Mint"|"LMDE"|"openSUSE"|"LinuxDeepin"|"DragonflyBSD"|"Manjaro"|"Manjaro-tree"|"Android"|"Void") labelcolor=$(getColor 'light green');;
 		"Ubuntu-3color"|"FreeBSD"|"FreeBSD - Old"|"Debian"|"Raspbian"|"BSD"|"Red Hat Enterprise Linux"|"Peppermint"|"Cygwin"|"Fuduntu"|"NetBSD"|"Scientific Linux"|"DragonFlyBSD"|"BackTrack Linux") labelcolor=$(getColor 'light red');;
@@ -3707,7 +3769,7 @@ for i in "${display[@]}"; do
 			if [[ "${display[*]}" =~ "$i" ]]; then 
 				if [[ "$errorSuppress" == "1" ]]; then detect${i} 2>/dev/null
 				else 
-					exec 3> stderrOut
+					exec 3> >(stderrOut)
 					detect${i} 2>&3
 					exec 3>&-
 				fi

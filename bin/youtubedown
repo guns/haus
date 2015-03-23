@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.505 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.509 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -84,9 +84,9 @@ my $html_head =
    "  <TITLE></TITLE>\n" .
    " <STYLE TYPE=\"text/css\">\n" .
    "  body { font-family: Arial,Helvetica,sans-serif; font-size: 12pt;\n" .
-   "         color: #000; background: #FF0; }\n" .
+   "         color: #000; background: #FF0; white-space: nowrap; }\n" .
    "  a { font-weight: bold; }\n" .
-   "  .err { font-weight: bold; color: #F00; }\n" .
+   "  .err { font-weight: bold; color: #F00; white-space: normal; }\n" .
    " </STYLE>\n" .
    " </HEAD>\n" .
    " <BODY>\n");
@@ -1065,6 +1065,9 @@ my %ciphers = (
   'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',                # 05 Mar 2015
   'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',           # 10 Mar 2015
   'en_US-vflA6e-lH/html5player' => 's1 w4 s1 w39 s3 r',           # 13 Mar 2015
+  'en_US-vflu7AB7p/html5player' => 's1 w4 s1 w39 s3 r',           # 16 Mar 2015
+  'en_US-vflQb7e_A/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 18 Mar 2015
+  'en_US-vflicH9X6/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 20 Mar 2015
 );
 
 
