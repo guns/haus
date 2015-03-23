@@ -9,12 +9,13 @@ def sh *argv
   system *argv
 end
 
-options = { :mountoptions => ['noatime'] }
+options = { :mountoptions => ['noatime'], :mount => true }
 
 parser = OptionParser.new do |opt|
   opt.banner = "USAGE: csmount [options] device mountpoint\n\nOptions:\n"
   opt.on('-h', '--header PATH') { |arg| options[:header] = File.expand_path arg }
   opt.on('-k', '--key-file PATH') { |arg| options[:keyfile] = File.expand_path arg }
+  opt.on('-n', '--no-mount') { options[:mount] = false }
   opt.on('-o', '--mount-options OPTS') { |arg| options[:mountoptions].concat arg.shellsplit }
   opt.on('-O', '--cryptsetup-options OPTS') { |arg| options[:cryptsetupoptions] = arg.shellsplit }
 end
@@ -30,7 +31,7 @@ cscmd.concat ['--key-file', options[:keyfile]] if options[:keyfile]
 cscmd.concat options[:cryptsetupoptions]       if options[:cryptsetupoptions]
 cscmd.concat ['luksOpen', device, dm_name]
 
-if sh *cscmd
+if sh *cscmd and options[:mount]
   sh 'mount', '-o', options[:mountoptions].join(','), "/dev/mapper/#{dm_name}", mountpoint
 end
 
