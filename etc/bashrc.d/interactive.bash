@@ -1316,16 +1316,9 @@ HAVE pulseaudio && {
     alias parestart='run pulseaudio --kill; run pulseaudio --start'
 }
 
-# youtubedown
-ALIAS youtubedown='youtubedown --verbose --progress' && {
-    youtubedownformats() {
-        youtubedown --verbose --size "$@" 2>&1 | ruby -E iso-8859-1 -e '
-            puts input = $stdin.readlines
-            fmts = input.find { |l| l =~ /available formats:/ }[/formats:(.*);/, 1].scan /\d+/
-            buf = File.readlines %x(/bin/sh -c "command -v youtubedown").chomp
-            puts fmts.map { |f| buf.grep /^  # #{f}/ }
-        '
-    }
+# youtube-dl
+HAVE youtube-dl && {
+    alias yt='cert exec -f ~/.certificates/google.com.crt -- youtube-dl --user-agent Mozilla/5.0'; TCOMP youtube-dl yt
 }
 
 # mkvmerge
@@ -1366,6 +1359,9 @@ if HAVE systemctl; then
         alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
+
+        alias cups-start='systemctl start org.cups.cupsd.service'
+        alias cups-stop='systemctl stop org.cups.cupsd.service'
     }
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
