@@ -14,6 +14,7 @@ require 'haus/utils'
 
 class Dlnode
   DEFAULTS = {
+    :base_uri => nil,
     :cookie_jar => nil,
     :dir => '.',
     :format => nil,
@@ -64,10 +65,11 @@ class Dlnode
   class Resource
     attr_accessor :url, :referer, :form_data
 
-    def initialize url = nil, form_data = nil, referer = nil
+    def initialize url = nil, opts = {}
       @url = url
-      @form_data = form_data
-      @referer = referer
+      @form_data = opts[:form_data]
+      @referer = opts[:referer]
+      @base_uri = opts[:base_uri]
     end
 
     def urijoin base, path
@@ -97,7 +99,7 @@ class Dlnode
         end
 
         if path and u = urijoin(url, path)
-          r = Resource.new u, form_data, (url if opts[:send_referer])
+          r = Resource.new u, :form_data => form_data, :referer => (url if opts[:send_referer] and url !~ %r{\Afile://})
           r = nil if pattern.regexp and u !~ pattern.regexp
         end
 
@@ -167,6 +169,10 @@ class Dlnode
 
         Options:
       BANNER
+
+      opt.on '-b', '--base-uri URL', 'Set an alternate base uri for relative links in file:// urls' do |arg|
+        @base_uri = arg
+      end
 
       opt.on '-c', '--cookie-jar PATH', 'Same as `curl --cookie-jar`' do |arg|
         @cookie_jar = File.expand_path arg
@@ -286,7 +292,7 @@ class Dlnode
   def download! url, *pattern_args
     opts = options
     patterns = pattern_args.map { |p| Pattern.new p }
-    resources = Resource.new(url).fetch_leaves patterns, opts
+    resources = Resource.new(url, :base_uri => @base_uri).fetch_leaves patterns, opts
     commands = map_commands resources, opts
 
     if commands.empty?
@@ -331,7 +337,7 @@ class Dlnode
     args = parser.parse arguments
     abort parser.help unless args.size > 1
     url, *rest = args
-    url = "file://#{url}" if url !~ %r{\w+://}
+    url = "file://#{URI.escape File.expand_path(url)}" if url !~ %r{\w+://}
 
     case download! url, *rest
     when :no_resources then exit 2
