@@ -17,7 +17,13 @@ endsnippet
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
 snippet /^CS/ "Constants declaration" r
 const (
-	${1:constant}${2/(.+)/ /}${2:type} = ${0:value}
+	$0
+)
+endsnippet
+
+snippet /^VS/ "Variables declaration" r
+var (
+	$0
 )
 endsnippet
 
@@ -301,24 +307,6 @@ endsnippet
 
 snippet del "delete" w
 delete($0)
-endsnippet
-
-snippet ; "Variable declaration :=" w
-${1} := ${0}
-endsnippet
-
-snippet :: "Variable decl" w
-var ${1:name} ${2:type} = ${3}
-endsnippet
-
-snippet V "Variable declaration" !b
-var ${1:name}${2/(.+)/ /}${2:type}${3: = ${4:value}}
-endsnippet
-
-snippet VS "Variables declaration" !b
-var (
-	${1:name}${2/(.+)/ /}${2:type}${3: = ${0:value} }
-)
 endsnippet
 
 # vim:ft=snippets:
