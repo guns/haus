@@ -120,7 +120,7 @@ set formatoptions=crqln1
 set autoindent                  " Set the cursor at same indent as line above
 set copyindent                  " Use existing indents for new indents
 set shiftround                  " Always round indents to multiple of shiftwidth
-set expandtab                   " Expand <Tab>s with spaces; death to tabs!
+set expandtab                   " Prefer spaces to tabs by default
 
 " Global textwidth and tabstops
 SetTextwidth! 78                " Standard documentation width
