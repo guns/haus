@@ -19,6 +19,8 @@ require 'nerv/util/password'
 class Cert
   attr_reader :options
 
+  CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
+
   def initialize opts = {}
     @options = OpenStruct.new opts
   end
@@ -61,7 +63,7 @@ class Cert
   end
 
   def parse_certs string
-    certs = string.force_encoding('ASCII-8BIT').scan /-+BEGIN CERTIFICATE-+\n.*?\n-+END CERTIFICATE-+/m
+    certs = string.force_encoding('ASCII-8BIT').scan(CERTIFICATE_PATTERN)
 
     if certs.any?
       certs.map { |pem| OpenSSL::X509::Certificate.new pem }
