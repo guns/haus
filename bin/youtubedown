@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.509 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.511 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -1038,36 +1038,38 @@ my %ciphers = (
   'en_US-vflIlILAX/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 04 Dec 2014
   'en_US-vflEegqdq/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 10 Dec 2014
   'en_US-vflkOb-do/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 11 Dec 2014
-  'en_US-vfllt8pl6/html5player' => 'r w17 w33 w53',               # 16 Dec 2014
+  'en_US-vfllt8pl6/html5player' => 'r w17 w33 w53',		  # 16 Dec 2014
   'en_US-vflsXGZP2/html5player' => 's3 w38 s1 w16 r w20 w69 s2 w15',# 18 Dec 2014
-  'en_US-vflw4H1P-/html5player' => 'w8 r s1',                     # 23 Dec 2014
-  'en_US-vflmgJnmS/html5player' => 's3 w20 r w34 r s1 r',         # 06 Jan 2015
-  'en_US-vfl86Quee/html5player' => 's3 r w25 w29 r w17 s2 r',     # 15 Jan 2015
-  'en_US-vfl19kCnd/html5player' => 'r w29 s1 r s1 r w4 w28',      # 17 Jan 2015
-  'en_US-vflbHLA_P/html5player' => 'r w20 r w20 s2 r',            # 20 Jan 2015
-  'en_US-vfl_ZlzZL/html5player' => 'w61 r s1 w31 w36 s1',         # 22 Jan 2015
-  'en_US-vflbeV8LH/html5player' => 'w61 r s1 w31 w36 s1',         # 26 Jan 2015
-  'en_US-vflhJatih/html5player' => 's2 w44 r s3 w17 s1',          # 28 Jan 2015
-  'en_US-vflvmwLwg/html5player' => 's2 w44 r s3 w17 s1',          # 29 Jan 2015
-  'en_US-vflljBsG4/html5player' => 's2 w44 r s3 w17 s1',          # 02 Feb 2015
-  'en_US-vflT5ziDW/html5player' => 's2 w44 r s3 w17 s1',          # 03 Feb 2015
-  'en_US-vflwImypH/html5player' => 's3 r w23 s2 w29 r w44',       # 05 Feb 2015
+  'en_US-vflw4H1P-/html5player' => 'w8 r s1',			  # 23 Dec 2014
+  'en_US-vflmgJnmS/html5player' => 's3 w20 r w34 r s1 r',	  # 06 Jan 2015
+  'en_US-vfl86Quee/html5player' => 's3 r w25 w29 r w17 s2 r',	  # 15 Jan 2015
+  'en_US-vfl19kCnd/html5player' => 'r w29 s1 r s1 r w4 w28',	  # 17 Jan 2015
+  'en_US-vflbHLA_P/html5player' => 'r w20 r w20 s2 r',		  # 20 Jan 2015
+  'en_US-vfl_ZlzZL/html5player' => 'w61 r s1 w31 w36 s1',	  # 22 Jan 2015
+  'en_US-vflbeV8LH/html5player' => 'w61 r s1 w31 w36 s1',	  # 26 Jan 2015
+  'en_US-vflhJatih/html5player' => 's2 w44 r s3 w17 s1',	  # 28 Jan 2015
+  'en_US-vflvmwLwg/html5player' => 's2 w44 r s3 w17 s1',	  # 29 Jan 2015
+  'en_US-vflljBsG4/html5player' => 's2 w44 r s3 w17 s1',	  # 02 Feb 2015
+  'en_US-vflT5ziDW/html5player' => 's2 w44 r s3 w17 s1',	  # 03 Feb 2015
+  'en_US-vflwImypH/html5player' => 's3 r w23 s2 w29 r w44',	  # 05 Feb 2015
   'en_US-vflQkSGin/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 10 Feb 2015
   'en_US-vflqnkATr/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 11 Feb 2015
   'en_US-vflZvrDTQ/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 12 Feb 2015
   'en_US-vflKjOTVq/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 17 Feb 2015
   'en_US-vfluEf7CP/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 18 Feb 2015
   'en_US-vflF2Mg88/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 19 Feb 2015
-  'en_US-vflQTSOsS/html5player' => 's3 r w23 s1 w19 w43 w36',     # 24 Feb 2015
-  'en_US-vflbaqfRh/html5player' => 's3 r w23 s1 w19 w43 w36',     # 25 Feb 2015
-  'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',                # 04 Mar 2015
-  'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',    # 04 Mar 2015
-  'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',                # 05 Mar 2015
-  'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',           # 10 Mar 2015
-  'en_US-vflA6e-lH/html5player' => 's1 w4 s1 w39 s3 r',           # 13 Mar 2015
-  'en_US-vflu7AB7p/html5player' => 's1 w4 s1 w39 s3 r',           # 16 Mar 2015
+  'en_US-vflQTSOsS/html5player' => 's3 r w23 s1 w19 w43 w36',	  # 24 Feb 2015
+  'en_US-vflbaqfRh/html5player' => 's3 r w23 s1 w19 w43 w36',	  # 25 Feb 2015
+  'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',		  # 04 Mar 2015
+  'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',	  # 04 Mar 2015
+  'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',		  # 05 Mar 2015
+  'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',		  # 10 Mar 2015
+  'en_US-vflA6e-lH/html5player' => 's1 w4 s1 w39 s3 r',		  # 13 Mar 2015
+  'en_US-vflu7AB7p/html5player' => 's1 w4 s1 w39 s3 r',		  # 16 Mar 2015
   'en_US-vflQb7e_A/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 18 Mar 2015
   'en_US-vflicH9X6/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 20 Mar 2015
+  'en_US-vflvDDxpc/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 23 Mar 2015
+  'en_US-vflSp2y2y/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 24 Mar 2015
 );
 
 
@@ -2828,6 +2830,10 @@ sub cgi_output($$$@) {
 
 sub canonical_url($) {
   my ($url) = @_;
+
+  # Forgive pinheaddery.
+  $url =~ s@&amp;@&@gs;
+  $url =~ s@&amp;@&@gs;
 
   # Add missing "http:"
   $url = "http://$url" unless ($url =~ m@^https?://@si);
