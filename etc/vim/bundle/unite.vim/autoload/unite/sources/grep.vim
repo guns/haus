@@ -63,12 +63,10 @@ function! s:source.hooks.on_init(args, context) "{{{
     return
   endif
 
-  let target = ''
   if type(get(a:args, 0, '')) == type([])
     let args = a:args
 
     let a:context.source__target = args[0]
-    let targets = a:context.source__target
   else
     let args = unite#helper#parse_project_bang(a:args)
 
@@ -92,21 +90,25 @@ function! s:source.hooks.on_init(args, context) "{{{
       let target = default
     endif
 
+    let targets = [target]
     if target == '%' || target == '#'
-      let target = bufname(target)
+      let targets = [bufname(target)]
     elseif target ==# '$buffers'
-      let target = join(map(filter(range(1, bufnr('$')),
+      let targets = map(filter(range(1, bufnr('$')),
             \ 'buflisted(v:val) && filereadable(bufname(v:val))'),
-            \ 'bufname(v:val)'))
+            \ 'bufname(v:val)')
     elseif target == '**'
       " Optimized.
-      let target = '.'
+      let targets = ['.']
     endif
 
-    let a:context.source__target = [target]
+    if target != ''
+      call unite#print_source_message('Target: ' . target, s:source.name)
+    endif
 
-    let targets = map(filter(split(target), 'v:val !~ "^-"'),
-          \ 'substitute(v:val, "\\*\\+$", "", "")')
+    let a:context.source__target =
+          \ map(filter(targets, 'v:val !~ "^-"'),
+          \   'substitute(v:val, "\\*\\+$", "", "")')
   endif
 
   let a:context.source__extra_opts = get(args, 1, '')
@@ -120,14 +122,10 @@ function! s:source.hooks.on_init(args, context) "{{{
   call unite#print_source_message('Pattern: '
         \ . a:context.source__input, s:source.name)
 
-  if target != ''
-    call unite#print_source_message('Target: ' . target, s:source.name)
-  endif
-
   let a:context.source__directory =
-        \ (len(targets) == 1) ?
+        \ (len(a:context.source__target) == 1) ?
         \ unite#util#substitute_path_separator(
-        \  unite#util#expand(targets[0])) : ''
+        \  unite#util#expand(a:context.source__target[0])) : ''
 endfunction"}}}
 function! s:source.hooks.on_syntax(args, context) "{{{
   if !unite#util#has_vimproc()
@@ -241,7 +239,7 @@ function! s:source.async_gather_candidates(args, context) "{{{
   let stderr = a:context.source__proc.stderr
   if !stderr.eof
     " Print error.
-    let errors = filter(unite#util#read_lines(stderr, 100),
+    let errors = filter(unite#util#read_lines(stderr, 200),
           \ "v:val !~ '^\\s*$'")
     if !empty(errors)
       call unite#print_source_error(errors, s:source.name)
