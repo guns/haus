@@ -558,11 +558,13 @@ function! s:GoBufferSetup()
     nmap     <buffer> [d                 <Plug>(go-info)
     nmap     <buffer> ]d                 <Plug>(go-describe)
     nmap     <buffer> <LocalLeader>b     <Plug>(go-build)
-    nmap     <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
-    nmap     <buffer> <LocalLeader>D     :<C-u>GoDrop<Space>
-    nmap     <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
+    noremap  <buffer> <LocalLeader>B     :<C-u>GoBuild -gcflags=-m<CR>
+    noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
+    noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR><Space>
+    noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
+    noremap  <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
     nmap     <buffer> <LocalLeader>I     <Plug>(go-implements)
-    nmap     <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
+    noremap  <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>t     <Plug>(go-test)
@@ -594,6 +596,11 @@ function! s:Qfdo(expr)
         execute item['bufnr'] . 'buffer!'
         execute item['lnum'] . a:expr
     endfor
+endfunction
+
+command! -nargs=* -bar Grepqflist call <SID>Grepqflist(<q-args>)
+function! s:Grepqflist(pat)
+    call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) =~# a:pat || v:val['text'] =~# a:pat"))
 endfunction
 
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
