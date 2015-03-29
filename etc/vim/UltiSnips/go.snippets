@@ -107,10 +107,8 @@ snippet C "cap()" w
 cap($0)
 endsnippet
 
-snippet S "struct" w
-struct {
-	$0
-}
+snippet S "[]string" w
+[]string
 endsnippet
 
 snippet T "type" b
@@ -139,6 +137,12 @@ endsnippet
 snippet fori "for i := 0 …" w
 for ${1:i} := ${2:0}; $1 ${3:<} ${4:n}; ${5:$1++} {
 	$0
+}
+endsnippet
+
+snippet forin "For range loop" !b
+for ${1:i} := range ${2} {
+	${0:${VISUAL}}
 }
 endsnippet
 
@@ -172,12 +176,6 @@ endsnippet
 
 snippet ap "append" w
 $1 = append(${1}, $0)
-endsnippet
-
-snippet forr "For range loop" !b
-for ${1:i} := range ${2} {
-	${0:${VISUAL}}
-}
 endsnippet
 
 snippet ra "range" w
@@ -311,6 +309,10 @@ endsnippet
 
 snippet del "delete" w
 delete($0)
+endsnippet
+
+snippet unsp "unsafe.Pointer" w
+unsafe.Pointer($0)
 endsnippet
 
 # vim:ft=snippets:
