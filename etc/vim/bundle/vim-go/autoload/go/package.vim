@@ -57,7 +57,7 @@ function! go#package#Paths()
 endfunction
 
 function! go#package#ImportPath(arg)
-    let path = fnamemodify(resolve(a:arg), ':p')
+    let path = fnamemodify(a:arg, ':p')
     let dirs = go#package#Paths()
 
     for dir in dirs

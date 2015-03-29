@@ -4,7 +4,7 @@ endif
 
 function! go#errcheck#Run(...) abort
     if a:0 == 0
-        let package = go#package#ImportPath(expand('%:p:h'))
+        let package = go#package#ImportPath(go#tool#GopathDir(expand('%:p:h')))
         if package == -1
             echohl Error | echomsg "vim-go: package is not inside GOPATH src" | echohl None
             return
@@ -19,7 +19,7 @@ function! go#errcheck#Run(...) abort
     endif
 
     echon "vim-go: " | echohl Identifier | echon "errcheck analysing ..." | echohl None
-    let out = system(bin_path . ' ' . package)
+    let out = system(bin_path . ' -asserts -blank ' . package)
     if v:shell_error
         let errors = []
         let mx = '^\(.\{-}\):\(\d\+\):\(\d\+\)\s*\(.*\)'

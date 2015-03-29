@@ -79,13 +79,17 @@ function! go#tool#ShowErrors(out)
     endif
 endfunction
 
+" FIXME: This is horrible
+function! go#tool#GopathDir(dir) abort
+    let gopath = substitute($GOPATH, '\v(.*)?:', '\1', '')
+    return substitute(a:dir, '\v^/home/guns/src', gopath . '/src/github.com/guns', '')
+endfunction
+
 function! go#tool#ExecuteInDir(cmd) abort
     let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
     let dir = getcwd()
     try
-        let gopath = substitute($GOPATH, '\v(.*)?:', '\1', '')
-        let godir = substitute(expand('%:p:h'), '\v^/home/guns/src', gopath . '/src/github.com/guns', '')
-        let out = system('cd '.fnameescape(godir).'; '.a:cmd)
+        let out = system('cd '.fnameescape(go#tool#GopathDir(expand("%:p:h"))).'; '.a:cmd)
     finally
         execute cd.'`=dir`'
     endtry
