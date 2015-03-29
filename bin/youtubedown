@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.511 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.514 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -835,241 +835,247 @@ sub video_url_size($$$;$) {
 # - sN = slice from character N to the end;
 # - wN = swap 0th and Nth character.
 #
+# The first number is the "sts" parameter from the html5player file,
+# which is a timestamp or other ID code corresponding to this algorithm.
+# Requesting get_video_info with that number will return URLs using the
+# corresponding cipher algorithm.
+#
 my %ciphers = (
-  'vflNzKG7n' => 's3 r s2 r s1 r w67',				  # 30 Jan 2013
-  'vfllMCQWM' => 's2 w46 r w27 s2 w43 s2 r',			  # 15 Feb 2013
-  'vflJv8FA8' => 's1 w51 w52 r',				  # 12 Mar 2013
-  'vflR_cX32' => 's2 w64 s3',					  # 11 Apr 2013
-  'vflveGye9' => 'w21 w3 s1 r w44 w36 r w41 s1',		  # 02 May 2013
-  'vflj7Fxxt' => 'r s3 w3 r w17 r w41 r s2',			  # 14 May 2013
-  'vfltM3odl' => 'w60 s1 w49 r s1 w7 r s2 r',			  # 23 May 2013
-  'vflDG7-a-' => 'w52 r s3 w21 r s3 r',				  # 06 Jun 2013
-  'vfl39KBj1' => 'w52 r s3 w21 r s3 r',				  # 12 Jun 2013
-  'vflmOfVEX' => 'w52 r s3 w21 r s3 r',				  # 21 Jun 2013
-  'vflJwJuHJ' => 'r s3 w19 r s2',				  # 25 Jun 2013
-  'vfl_ymO4Z' => 'r s3 w19 r s2',				  # 26 Jun 2013
-  'vfl26ng3K' => 'r s2 r',					  # 08 Jul 2013
-  'vflcaqGO8' => 'w24 w53 s2 w31 w4',				  # 11 Jul 2013
-  'vflQw-fB4' => 's2 r s3 w9 s3 w43 s3 r w23',			  # 16 Jul 2013
-  'vflSAFCP9' => 'r s2 w17 w61 r s1 w7 s1',			  # 18 Jul 2013
-  'vflART1Nf' => 's3 r w63 s2 r s1',				  # 22 Jul 2013
-  'vflLC8JvQ' => 'w34 w29 w9 r w39 w24',			  # 25 Jul 2013
-  'vflm_D8eE' => 's2 r w39 w55 w49 s3 w56 w2',			  # 30 Jul 2013
-  'vflTWC9KW' => 'r s2 w65 r',					  # 31 Jul 2013
-  'vflRFcHMl' => 's3 w24 r',					  # 04 Aug 2013
-  'vflM2EmfJ' => 'w10 r s1 w45 s2 r s3 w50 r',			  # 06 Aug 2013
-  'vflz8giW0' => 's2 w18 s3',					  # 07 Aug 2013
-  'vfl_wGgYV' => 'w60 s1 r s1 w9 s3 r s3 r',			  # 08 Aug 2013
-  'vfl1HXdPb' => 'w52 r w18 r s1 w44 w51 r s1',			  # 12 Aug 2013
-  'vflkn6DAl' => 'w39 s2 w57 s2 w23 w35 s2',			  # 15 Aug 2013
-  'vfl2LOvBh' => 'w34 w19 r s1 r s3 w24 r',			  # 16 Aug 2013
-  'vfl-bxy_m' => 'w48 s3 w37 s2',				  # 20 Aug 2013
-  'vflZK4ZYR' => 'w19 w68 s1',					  # 21 Aug 2013
-  'vflh9ybst' => 'w48 s3 w37 s2',				  # 21 Aug 2013
-  'vflapUV9V' => 's2 w53 r w59 r s2 w41 s3',			  # 27 Aug 2013
-  'vflg0g8PQ' => 'w36 s3 r s2',					  # 28 Aug 2013
-  'vflHOr_nV' => 'w58 r w50 s1 r s1 r w11 s3',			  # 30 Aug 2013
-  'vfluy6kdb' => 'r w12 w32 r w34 s3 w35 w42 s2',		  # 05 Sep 2013
-  'vflkuzxcs' => 'w22 w43 s3 r s1 w43',				  # 10 Sep 2013
-  'vflGNjMhJ' => 'w43 w2 w54 r w8 s1',				  # 12 Sep 2013
-  'vfldJ8xgI' => 'w11 r w29 s1 r s3',				  # 17 Sep 2013
-  'vfl79wBKW' => 's3 r s1 r s3 r s3 w59 s2',			  # 19 Sep 2013
-  'vflg3FZfr' => 'r s3 w66 w10 w43 s2',				  # 24 Sep 2013
-  'vflUKrNpT' => 'r s2 r w63 r',				  # 25 Sep 2013
-  'vfldWnjUz' => 'r s1 w68',					  # 30 Sep 2013
-  'vflP7iCEe' => 'w7 w37 r s1',					  # 03 Oct 2013
-  'vflzVne63' => 'w59 s2 r',					  # 07 Oct 2013
-  'vflO-N-9M' => 'w9 s1 w67 r s3',				  # 09 Oct 2013
-  'vflZ4JlpT' => 's3 r s1 r w28 s1',				  # 11 Oct 2013
-  'vflDgXSDS' => 's3 r s1 r w28 s1',				  # 15 Oct 2013
-  'vflW444Sr' => 'r w9 r s1 w51 w27 r s1 r',			  # 17 Oct 2013
-  'vflK7RoTQ' => 'w44 r w36 r w45',				  # 21 Oct 2013
-  'vflKOCFq2' => 's1 r w41 r w41 s1 w15',			  # 23 Oct 2013
-  'vflcLL31E' => 's1 r w41 r w41 s1 w15',			  # 28 Oct 2013
-  'vflz9bT3N' => 's1 r w41 r w41 s1 w15',			  # 31 Oct 2013
-  'vfliZsE79' => 'r s3 w49 s3 r w58 s2 r s2',			  # 05 Nov 2013
-  'vfljOFtAt' => 'r s3 r s1 r w69 r',				  # 07 Nov 2013
-  'vflqSl9GX' => 'w32 r s2 w65 w26 w45 w24 w40 s2',		  # 14 Nov 2013
-  'vflFrKymJ' => 'w32 r s2 w65 w26 w45 w24 w40 s2',		  # 15 Nov 2013
-  'vflKz4WoM' => 'w50 w17 r w7 w65',				  # 19 Nov 2013
-  'vflhdWW8S' => 's2 w55 w10 s3 w57 r w25 w41',			  # 21 Nov 2013
-  'vfl66X2C5' => 'r s2 w34 s2 w39',				  # 26 Nov 2013
-  'vflCXG8Sm' => 'r s2 w34 s2 w39',				  # 02 Dec 2013
-  'vfl_3Uag6' => 'w3 w7 r s2 w27 s2 w42 r',			  # 04 Dec 2013
-  'vflQdXVwM' => 's1 r w66 s2 r w12',				  # 10 Dec 2013
-  'vflCtc3aO' => 's2 r w11 r s3 w28',				  # 12 Dec 2013
-  'vflCt6YZX' => 's2 r w11 r s3 w28',				  # 17 Dec 2013
-  'vflG49soT' => 'w32 r s3 r s1 r w19 w24 s3',			  # 18 Dec 2013
-  'vfl4cHApe' => 'w25 s1 r s1 w27 w21 s1 w39',			  # 06 Jan 2014
-  'vflwMrwdI' => 'w3 r w39 r w51 s1 w36 w14',			  # 06 Jan 2014
-  'vfl4AMHqP' => 'r s1 w1 r w43 r s1 r',			  # 09 Jan 2014
-  'vfln8xPyM' => 'w36 w14 s1 r s1 w54',				  # 10 Jan 2014
-  'vflVSLmnY' => 's3 w56 w10 r s2 r w28 w35',			  # 13 Jan 2014
-  'vflkLvpg7' => 'w4 s3 w53 s2',				  # 15 Jan 2014
-  'vflbxes4n' => 'w4 s3 w53 s2',				  # 15 Jan 2014
-  'vflmXMtFI' => 'w57 s3 w62 w41 s3 r w60 r',			  # 23 Jan 2014
-  'vflYDqEW1' => 'w24 s1 r s2 w31 w4 w11 r',			  # 24 Jan 2014
-  'vflapGX6Q' => 's3 w2 w59 s2 w68 r s3 r s1',			  # 28 Jan 2014
-  'vflLCYwkM' => 's3 w2 w59 s2 w68 r s3 r s1',			  # 29 Jan 2014
-  'vflcY_8N0' => 's2 w36 s1 r w18 r w19 r',			  # 30 Jan 2014
-  'vfl9qWoOL' => 'w68 w64 w28 r',				  # 03 Feb 2014
-  'vfle-mVwz' => 's3 w7 r s3 r w14 w59 s3 r',			  # 04 Feb 2014
-  'vfltdb6U3' => 'w61 w5 r s2 w69 s2 r',			  # 05 Feb 2014
-  'vflLjFx3B' => 'w40 w62 r s2 w21 s3 r w7 s3',			  # 10 Feb 2014
-  'vfliqjKfF' => 'w40 w62 r s2 w21 s3 r w7 s3',			  # 13 Feb 2014
-  'ima-vflxBu-5R' => 'w40 w62 r s2 w21 s3 r w7 s3',		  # 13 Feb 2014
-  'ima-vflrGwWV9' => 'w36 w45 r s2 r',				  # 20 Feb 2014
-  'ima-vflCME3y0' => 'w8 s2 r w52',				  # 27 Feb 2014
-  'ima-vfl1LZyZ5' => 'w8 s2 r w52',				  # 27 Feb 2014
-  'ima-vfl4_saJa' => 'r s1 w19 w9 w57 w38 s3 r s2',		  # 01 Mar 2014
-  'ima-en_US-vflP9269H' => 'r w63 w37 s3 r w14 r',		  # 06 Mar 2014
-  'ima-en_US-vflkClbFb' => 's1 w12 w24 s1 w52 w70 s2',		  # 07 Mar 2014
-  'ima-en_US-vflYhChiG' => 'w27 r s3',				  # 10 Mar 2014
-  'ima-en_US-vflWnCYSF' => 'r s1 r s3 w19 r w35 w61 s2',	  # 13 Mar 2014
-  'en_US-vflbT9-GA' => 'w51 w15 s1 w22 s1 w41 r w43 r',		  # 17 Mar 2014
-  'en_US-vflAYBrl7' => 's2 r w39 w43',				  # 18 Mar 2014
-  'en_US-vflS1POwl' => 'w48 s2 r s1 w4 w35',			  # 19 Mar 2014
-  'en_US-vflLMtkhg' => 'w30 r w30 w39',				  # 20 Mar 2014
-  'en_US-vflbJnZqE' => 'w26 s1 w15 w3 w62 w54 w22',		  # 24 Mar 2014
-  'en_US-vflgd5txb' => 'w26 s1 w15 w3 w62 w54 w22',		  # 25 Mar 2014
-  'en_US-vflTm330y' => 'w26 s1 w15 w3 w62 w54 w22',		  # 26 Mar 2014
-  'en_US-vflnwMARr' => 's3 r w24 s2',				  # 27 Mar 2014
-  'en_US-vflTq0XZu' => 'r w7 s3 w28 w52 r',			  # 31 Mar 2014
-  'en_US-vfl8s5-Vs' => 'w26 s1 w14 r s3 w8',			  # 01 Apr 2014
-  'en_US-vfl7i9w86' => 'w26 s1 w14 r s3 w8',			  # 02 Apr 2014
-  'en_US-vflA-1YdP' => 'w26 s1 w14 r s3 w8',			  # 03 Apr 2014
-  'en_US-vflZwcnOf' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 07 Apr 2014
-  'en_US-vflFqBlmB' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 08 Apr 2014
-  'en_US-vflG0UvOo' => 'w46 s2 w29 r s2 w51 w20 s1',		  # 09 Apr 2014
-  'en_US-vflS6PgfC' => 'w40 s2 w40 r w56 w26 r s2',		  # 10 Apr 2014
-  'en_US-vfl6Q1v_C' => 'w23 r s2 w55 s2',			  # 15 Apr 2014
-  'en_US-vflMYwWq8' => 'w51 w32 r s1 r s3',			  # 17 Apr 2014
-  'en_US-vflGC4r8Z' => 'w17 w34 w66 s3',			  # 24 Apr 2014
-  'en_US-vflyEvP6v' => 's1 r w26',				  # 29 Apr 2014
-  'en_US-vflm397e5' => 's1 r w26',				  # 01 May 2014
-  'en_US-vfldK8353' => 'r s3 w32',				  # 03 May 2014
-  'en_US-vflPTD6yH' => 'w59 s1 w66 s3 w10 r w55 w70 s1',	  # 06 May 2014
-  'en_US-vfl7KJl0G' => 'w59 s1 w66 s3 w10 r w55 w70 s1',	  # 07 May 2014
-  'en_US-vflhUwbGZ' => 'w49 r w60 s2 w61 s3',			  # 12 May 2014
-  'en_US-vflzEDYyE' => 'w49 r w60 s2 w61 s3',			  # 13 May 2014
-  'en_US-vflimfEzR' => 'r s2 w68 w28',				  # 15 May 2014
-  'en_US-vfl_nbW1R' => 'r w8 r s3',				  # 20 May 2014
-  'en_US-vfll7obaF' => 'w48 w17 s2',				  # 22 May 2014
-  'en_US-vfluBAJ91' => 'w13 s1 w39',				  # 27 May 2014
-  'en_US-vfldOnicU' => 's2 r w7 w21 r',				  # 28 May 2014
-  'en_US-vflbbaSdm' => 'w46 r s3 w19 r s2 w15',			  # 03 Jun 2014
-  'en_US-vflIpxel5' => 'r w16 w35',				  # 04 Jun 2014
-  'en_US-vfloyxzv5' => 'r w30 s3 r s3 r',			  # 11 Jun 2014
-  'en_US-vflmY-xcZ' => 'w25 r s1 w49 w52',			  # 12 Jun 2014
-  'en_US-vflMVaJmz' => 'w12 s3 w56 r s2 r',			  # 17 Jun 2014
-  'en_US-vflgt97Vg' => 'r s1 r',				  # 19 Jun 2014
-  'en_US-vfl19qQQ_' => 's2 w55 s2 r w39 s2 w5 r s3',		  # 23 Jun 2014
-  'en_US-vflws3c7_' => 'r s1 w52',				  # 24 Jun 2014
-  'en_US-vflPqsNqq' => 'r s1 w52',				  # 25 Jun 2014
-  'en_US-vflycBCEX' => 'w12 s1 r s3 w17 s1 w9 r',		  # 26 Jun 2014
-  'en_US-vflhZC-Jn' => 'w69 w70 s3',				  # 01 Jul 2014
-  'en_US-vfl9r3Wpv' => 'r s3 w57',				  # 07 Jul 2014
-  'en_US-vfl6UPpbU' => 'w37 r s1',				  # 08 Jul 2014
-  'en_US-vfl_oxbbV' => 'w37 r s1',				  # 09 Jul 2014
-  'en_US-vflXGBaUN' => 'w37 r s1',				  # 10 Jul 2014
-  'en_US-vflM1arS5' => 's1 r w42 r s1 w27 r w54',		  # 11 Jul 2014
-  'en_US-vfl0Cbn9e' => 'w15 w44 r w24 s3 r w2 w50',		  # 14 Jul 2014
-  'en_US-vfl5aDZwb' => 'w15 w44 r w24 s3 r w2 w50',		  # 15 Jul 2014
-  'en_US-vflqZIm5b' => 'w1 w32 s1 r s3 r s3 r',			  # 17 Jul 2014
-  'en_US-vflBb0OQx' => 'w53 r w9 s2 r s1',			  # 22 Jul 2014
-  'en_US-vflCGk6yw/html5player' => 's2 w28 w44 w26 w40 w64 r s1', # 24 Jul 2014
-  'en_US-vflNUsYw0/html5player' => 'r s3 w7',			  # 30 Jul 2014
-  'en_US-vflId8cpZ/html5player' => 'w30 w21 w26 s1 r s1 w30 w11 w20',# 31 Jul 2014
-  'en_US-vflEyBLiy/html5player' => 'w44 r w15 s2 w40 r s1',	  # 01 Aug 2014
-  'en_US-vflHkCS5P/html5player' => 's2 r s3 r w41 s1 r s1 r',	  # 05 Aug 2014
-  'en_US-vflArxUZc/html5player' => 'r w12 r s3 w14 w61 r',	  # 07 Aug 2014
-  'en_US-vflCsMU2l/html5player' => 'r s2 r w64 s1 r s3',	  # 11 Aug 2014
-  'en_US-vflY5yrKt/html5player' => 'w8 r s2 w37 s1 w21 s3',	  # 12 Aug 2014
-  'en_US-vfl4b4S6W/html5player' => 'w40 s1 r w40 s3 r w47 r',	  # 13 Aug 2014
-  'en_US-vflLKRtyE/html5player' => 'w5 r s1 r s2 r',		  # 18 Aug 2014
-  'en_US-vflrSlC04/html5player' => 'w28 w58 w19 r s1 r s1 r',	  # 19 Aug 2014
-  'en_US-vflC7g_iA/html5player' => 'w28 w58 w19 r s1 r s1 r',	  # 20 Aug 2014
-  'en_US-vfll1XmaE/html5player' => 'r w9 w23 w29 w36 s2 r',	  # 21 Aug 2014
-  'en_US-vflWRK4zF/html5player' => 'r w63 r s3',		  # 26 Aug 2014
-  'en_US-vflQSzMIW/html5player' => 'r s1 w40 w70 s2 w28 s1',	  # 27 Aug 2014
-  'en_US-vfltYLx8B/html5player' => 's3 w19 w24',		  # 29 Aug 2014
-  'en_US-vflWnljfv/html5player' => 's2 w60 s3 w42 r w40 s2 w68 w20',# 02 Sep 2014
-  'en_US-vflDJ-wUY/html5player' => 's2 w18 s2 w68 w15 s1 w45 s1 r',# 04 Sep 2014
-  'en_US-vfllxLx6Z/html5player' => 'r s1 w40 w70 s2 w28 s1',	  # 04 Sep 2014
-  'en_US-vflI3QYI2/html5player' => 's3 w22 r s3 w19 s1 r',	  # 08 Sep 2014
-  'en_US-vfl-ZO7j_/html5player' => 's3 w21 s1',			  # 09 Sep 2014
-  'en_US-vflWGRWFI/html5player' => 'r w27 r s1 r',		  # 12 Sep 2014
-  'en_US-vflJkTW89/html5player' => 'w12 s1 w67 r w39 w65 s3 r s1',# 15 Sep 2014
-  'en_US-vflB8RV2U/html5player' => 'r w26 r w28 w38 r s3',	  # 16 Sep 2014
-  'en_US-vflBFNwmh/html5player' => 'r w26 r w28 w38 r s3',	  # 17 Sep 2014
-  'en_US-vflE7vgXe/html5player' => 'w46 w22 r w33 r s3 w18 r s3', # 18 Sep 2014
-  'en_US-vflx8EenD/html5player' => 'w8 s3 w45 w46 s2 w29 w25 w56 w2',# 23 Sep 2014
-  'en_US-vflfgwjRj/html5player' => 'r s2 w56 r s3',		  # 24 Sep 2014
-  'en_US-vfl15y_l6/html5player' => 'w8 s3 w45 w46 s2 w29 w25 w56 w2',# 25 Sep 2014
-  'en_US-vflYqHPcx/html5player' => 's3 r w1 r',			  # 30 Sep 2014
-  'en_US-vflcoeQIS/html5player' => 's3 r w64 r s3 r w68',	  # 01 Oct 2014
-  'en_US-vflz7mN60/html5player' => 's2 w16 w39',		  # 02 Oct 2014
-  'en_US-vfl4mDBLZ/html5player' => 'r w54 r s2 w49',		  # 06 Oct 2014
-  'en_US-vflKzH-7N/html5player' => 'r w54 r s2 w49',		  # 08 Oct 2014
-  'en_US-vflgoB_xN/html5player' => 's2 w16 w39',		  # 09 Oct 2014
-  'en_US-vflPyRPNk/html5player' => 'r w34 w9 w56 r s3 r w30',	  # 12 Oct 2014
-  'en_US-vflG0qgr5/html5player' => 's2 w16 w39',		  # 14 Oct 2014
-  'en_US-vflzDhHvc/html5player' => 'w26 s1 r w8 w24 w18 r s2 r',  # 15 Oct 2014
-  'en_US-vflbeC7Ip/html5player' => 'r w21 r s2 r',		  # 16 Oct 2014
-  'en_US-vflBaDm_Z/html5player' => 's3 w5 s1 w20 r',		  # 20 Oct 2014
-  'en_US-vflr38Js6/html5player' => 'w43 s1 r',			  # 21 Oct 2014
-  'en_US-vflg1j_O9/html5player' => 's2 r s3 r s3 r w2',		  # 22 Oct 2014
-  'en_US-vflPOfApl/html5player' => 's2 w38 r s3 r',		  # 28 Oct 2014
-  'en_US-vflMSJ2iW/html5player' => 's2 r w4 w22 s2 r s2',	  # 29 Oct 2014
-  'en_US-vflckDNUK/html5player' => 's3 r w66 r s3 w1 w12 r',	  # 30 Oct 2014
-  'en_US-vflKCJBPS/html5player' => 'w15 w2 s1 r s3 r',		  # 31 Oct 2014
-  'en_US-vflcF0gLP/html5player' => 's3 w10 s1 r w28 s1 w40 w64 r',# 04 Nov 2014
-  'en_US-vflpRHqKc/html5player' => 'w39 r w48 r',		  # 05 Nov 2014
-  'en_US-vflbcuqSZ/html5player' => 'r s1 w27 s2 w5 w7 w51 r',	  # 06 Nov 2014
-  'en_US-vflHf2uUU/html5player' => 'r s1 w27 s2 w5 w7 w51 r',	  # 11 Nov 2014
-  'en_US-vfln6g5Eq/html5player' => 'w1 r s3 r s2 w10 s3 r',	  # 12 Nov 2014
-  'en_US-vflM7pYrM/html5player' => 'r s2 r w3 r w11 r',		  # 15 Nov 2014
-  'en_US-vflP2rJ1-/html5player' => 'r s2 r w3 r w11 r',		  # 18 Nov 2014
-  'en_US-vflXs0FWW/html5player' => 'w63 s1 r w46 s2 r s3',	  # 20 Nov 2014
-  'en_US-vflEhuJxd/html5player' => 'w63 s1 r w46 s2 r s3',	  # 21 Nov 2014
-  'en_US-vflp3wlqE/html5player' => 'w22 s3 r',			  # 24 Nov 2014
-  'en_US-vfl5_7-l5/html5player' => 'w22 s3 r',			  # 25 Nov 2014
-  'en_US-vfljnKokH/html5player' => 's3 w15 s2 w30 w11',		  # 26 Nov 2014
-  'en_US-vflIlILAX/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 04 Dec 2014
-  'en_US-vflEegqdq/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 10 Dec 2014
-  'en_US-vflkOb-do/html5player' => 'r w7 w19 w38 s3 w41 s1 r w1', # 11 Dec 2014
-  'en_US-vfllt8pl6/html5player' => 'r w17 w33 w53',		  # 16 Dec 2014
-  'en_US-vflsXGZP2/html5player' => 's3 w38 s1 w16 r w20 w69 s2 w15',# 18 Dec 2014
-  'en_US-vflw4H1P-/html5player' => 'w8 r s1',			  # 23 Dec 2014
-  'en_US-vflmgJnmS/html5player' => 's3 w20 r w34 r s1 r',	  # 06 Jan 2015
-  'en_US-vfl86Quee/html5player' => 's3 r w25 w29 r w17 s2 r',	  # 15 Jan 2015
-  'en_US-vfl19kCnd/html5player' => 'r w29 s1 r s1 r w4 w28',	  # 17 Jan 2015
-  'en_US-vflbHLA_P/html5player' => 'r w20 r w20 s2 r',		  # 20 Jan 2015
-  'en_US-vfl_ZlzZL/html5player' => 'w61 r s1 w31 w36 s1',	  # 22 Jan 2015
-  'en_US-vflbeV8LH/html5player' => 'w61 r s1 w31 w36 s1',	  # 26 Jan 2015
-  'en_US-vflhJatih/html5player' => 's2 w44 r s3 w17 s1',	  # 28 Jan 2015
-  'en_US-vflvmwLwg/html5player' => 's2 w44 r s3 w17 s1',	  # 29 Jan 2015
-  'en_US-vflljBsG4/html5player' => 's2 w44 r s3 w17 s1',	  # 02 Feb 2015
-  'en_US-vflT5ziDW/html5player' => 's2 w44 r s3 w17 s1',	  # 03 Feb 2015
-  'en_US-vflwImypH/html5player' => 's3 r w23 s2 w29 r w44',	  # 05 Feb 2015
-  'en_US-vflQkSGin/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 10 Feb 2015
-  'en_US-vflqnkATr/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 11 Feb 2015
-  'en_US-vflZvrDTQ/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 12 Feb 2015
-  'en_US-vflKjOTVq/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 17 Feb 2015
-  'en_US-vfluEf7CP/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 18 Feb 2015
-  'en_US-vflF2Mg88/html5player' => 'w70 r w66 s1 w70 w26 r w48',  # 19 Feb 2015
-  'en_US-vflQTSOsS/html5player' => 's3 r w23 s1 w19 w43 w36',	  # 24 Feb 2015
-  'en_US-vflbaqfRh/html5player' => 's3 r w23 s1 w19 w43 w36',	  # 25 Feb 2015
-  'en_US-vflcL_htG/html5player' => 'w20 s3 w37 r',		  # 04 Mar 2015
-  'en_US-vflTbHYa9/html5player' => 's3 w44 s1 r s1 r s3 r s3',	  # 04 Mar 2015
-  'en_US-vflT9SJ6t/html5player' => 'w66 r s3 w60',		  # 05 Mar 2015
-  'en_US-vfl6xsolJ/html5player' => 's1 w4 s1 w39 s3 r',		  # 10 Mar 2015
-  'en_US-vflA6e-lH/html5player' => 's1 w4 s1 w39 s3 r',		  # 13 Mar 2015
-  'en_US-vflu7AB7p/html5player' => 's1 w4 s1 w39 s3 r',		  # 16 Mar 2015
-  'en_US-vflQb7e_A/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 18 Mar 2015
-  'en_US-vflicH9X6/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 20 Mar 2015
-  'en_US-vflvDDxpc/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 23 Mar 2015
-  'en_US-vflSp2y2y/html5player' => 'w19 w35 r s2 r s1 w64 s2 w53',# 24 Mar 2015
+  'vflNzKG7n' => '135957536242 s3 r s2 r s1 r w67',		  # 30 Jan 2013
+  'vfllMCQWM' => '136089118952 s2 w46 r w27 s2 w43 s2 r',	  # 15 Feb 2013
+  'vflJv8FA8' => '136304655662 s1 w51 w52 r',			  # 12 Mar 2013
+  'vflR_cX32' => '1580 s2 w64 s3',				  # 11 Apr 2013
+  'vflveGye9' => '1582 w21 w3 s1 r w44 w36 r w41 s1',		  # 02 May 2013
+  'vflj7Fxxt' => '1583 r s3 w3 r w17 r w41 r s2',		  # 14 May 2013
+  'vfltM3odl' => '1584 w60 s1 w49 r s1 w7 r s2 r',		  # 23 May 2013
+  'vflDG7-a-' => '1586 w52 r s3 w21 r s3 r',			  # 06 Jun 2013
+  'vfl39KBj1' => '1586 w52 r s3 w21 r s3 r',			  # 12 Jun 2013
+  'vflmOfVEX' => '1586 w52 r s3 w21 r s3 r',			  # 21 Jun 2013
+  'vflJwJuHJ' => '1588 r s3 w19 r s2',				  # 25 Jun 2013
+  'vfl_ymO4Z' => '1588 r s3 w19 r s2',				  # 26 Jun 2013
+  'vfl26ng3K' => '15888 r s2 r',				  # 08 Jul 2013
+  'vflcaqGO8' => '15897 w24 w53 s2 w31 w4',			  # 11 Jul 2013
+  'vflQw-fB4' => '15902 s2 r s3 w9 s3 w43 s3 r w23',		  # 16 Jul 2013
+  'vflSAFCP9' => '15904 r s2 w17 w61 r s1 w7 s1',		  # 18 Jul 2013
+  'vflART1Nf' => '15908 s3 r w63 s2 r s1',			  # 22 Jul 2013
+  'vflLC8JvQ' => '15910 w34 w29 w9 r w39 w24',			  # 25 Jul 2013
+  'vflm_D8eE' => '15916 s2 r w39 w55 w49 s3 w56 w2',		  # 30 Jul 2013
+  'vflTWC9KW' => '15917 r s2 w65 r',				  # 31 Jul 2013
+  'vflRFcHMl' => '15921 s3 w24 r',				  # 04 Aug 2013
+  'vflM2EmfJ' => '15920 w10 r s1 w45 s2 r s3 w50 r',		  # 06 Aug 2013
+  'vflz8giW0' => '15919 s2 w18 s3',				  # 07 Aug 2013
+  'vfl_wGgYV' => '15923 w60 s1 r s1 w9 s3 r s3 r',		  # 08 Aug 2013
+  'vfl1HXdPb' => '15926 w52 r w18 r s1 w44 w51 r s1',		  # 12 Aug 2013
+  'vflkn6DAl' => '15932 w39 s2 w57 s2 w23 w35 s2',		  # 15 Aug 2013
+  'vfl2LOvBh' => '15933 w34 w19 r s1 r s3 w24 r',		  # 16 Aug 2013
+  'vfl-bxy_m' => '15936 w48 s3 w37 s2',				  # 20 Aug 2013
+  'vflZK4ZYR' => '15938 w19 w68 s1',				  # 21 Aug 2013
+  'vflh9ybst' => '15936 w48 s3 w37 s2',				  # 21 Aug 2013
+  'vflapUV9V' => '15943 s2 w53 r w59 r s2 w41 s3',		  # 27 Aug 2013
+  'vflg0g8PQ' => '15944 w36 s3 r s2',				  # 28 Aug 2013
+  'vflHOr_nV' => '15947 w58 r w50 s1 r s1 r w11 s3',		  # 30 Aug 2013
+  'vfluy6kdb' => '15953 r w12 w32 r w34 s3 w35 w42 s2',		  # 05 Sep 2013
+  'vflkuzxcs' => '15958 w22 w43 s3 r s1 w43',			  # 10 Sep 2013
+  'vflGNjMhJ' => '15956 w43 w2 w54 r w8 s1',			  # 12 Sep 2013
+  'vfldJ8xgI' => '15964 w11 r w29 s1 r s3',			  # 17 Sep 2013
+  'vfl79wBKW' => '15966 s3 r s1 r s3 r s3 w59 s2',		  # 19 Sep 2013
+  'vflg3FZfr' => '15969 r s3 w66 w10 w43 s2',			  # 24 Sep 2013
+  'vflUKrNpT' => '15973 r s2 r w63 r',				  # 25 Sep 2013
+  'vfldWnjUz' => '15976 r s1 w68',				  # 30 Sep 2013
+  'vflP7iCEe' => '15981 w7 w37 r s1',				  # 03 Oct 2013
+  'vflzVne63' => '15982 w59 s2 r',				  # 07 Oct 2013
+  'vflO-N-9M' => '15986 w9 s1 w67 r s3',			  # 09 Oct 2013
+  'vflZ4JlpT' => '15988 s3 r s1 r w28 s1',			  # 11 Oct 2013
+  'vflDgXSDS' => '15988 s3 r s1 r w28 s1',			  # 15 Oct 2013
+  'vflW444Sr' => '15995 r w9 r s1 w51 w27 r s1 r',		  # 17 Oct 2013
+  'vflK7RoTQ' => '15996 w44 r w36 r w45',			  # 21 Oct 2013
+  'vflKOCFq2' => '16 s1 r w41 r w41 s1 w15',			  # 23 Oct 2013
+  'vflcLL31E' => '16 s1 r w41 r w41 s1 w15',			  # 28 Oct 2013
+  'vflz9bT3N' => '16 s1 r w41 r w41 s1 w15',			  # 31 Oct 2013
+  'vfliZsE79' => '16010 r s3 w49 s3 r w58 s2 r s2',		  # 05 Nov 2013
+  'vfljOFtAt' => '16014 r s3 r s1 r w69 r',			  # 07 Nov 2013
+  'vflqSl9GX' => '16023 w32 r s2 w65 w26 w45 w24 w40 s2',	  # 14 Nov 2013
+  'vflFrKymJ' => '16023 w32 r s2 w65 w26 w45 w24 w40 s2',	  # 15 Nov 2013
+  'vflKz4WoM' => '16027 w50 w17 r w7 w65',			  # 19 Nov 2013
+  'vflhdWW8S' => '16030 s2 w55 w10 s3 w57 r w25 w41',		  # 21 Nov 2013
+  'vfl66X2C5' => '16031 r s2 w34 s2 w39',			  # 26 Nov 2013
+  'vflCXG8Sm' => '16031 r s2 w34 s2 w39',			  # 02 Dec 2013
+  'vfl_3Uag6' => '16034 w3 w7 r s2 w27 s2 w42 r',		  # 04 Dec 2013
+  'vflQdXVwM' => '16047 s1 r w66 s2 r w12',			  # 10 Dec 2013
+  'vflCtc3aO' => '16051 s2 r w11 r s3 w28',			  # 12 Dec 2013
+  'vflCt6YZX' => '16051 s2 r w11 r s3 w28',			  # 17 Dec 2013
+  'vflG49soT' => '16057 w32 r s3 r s1 r w19 w24 s3',		  # 18 Dec 2013
+  'vfl4cHApe' => '16059 w25 s1 r s1 w27 w21 s1 w39',		  # 06 Jan 2014
+  'vflwMrwdI' => '16058 w3 r w39 r w51 s1 w36 w14',		  # 06 Jan 2014
+  'vfl4AMHqP' => '16060 r s1 w1 r w43 r s1 r',			  # 09 Jan 2014
+  'vfln8xPyM' => '16080 w36 w14 s1 r s1 w54',			  # 10 Jan 2014
+  'vflVSLmnY' => '16081 s3 w56 w10 r s2 r w28 w35',		  # 13 Jan 2014
+  'vflkLvpg7' => '16084 w4 s3 w53 s2',				  # 15 Jan 2014
+  'vflbxes4n' => '16084 w4 s3 w53 s2',				  # 15 Jan 2014
+  'vflmXMtFI' => '16092 w57 s3 w62 w41 s3 r w60 r',		  # 23 Jan 2014
+  'vflYDqEW1' => '16094 w24 s1 r s2 w31 w4 w11 r',		  # 24 Jan 2014
+  'vflapGX6Q' => '16093 s3 w2 w59 s2 w68 r s3 r s1',		  # 28 Jan 2014
+  'vflLCYwkM' => '16093 s3 w2 w59 s2 w68 r s3 r s1',		  # 29 Jan 2014
+  'vflcY_8N0' => '16100 s2 w36 s1 r w18 r w19 r',		  # 30 Jan 2014
+  'vfl9qWoOL' => '16104 w68 w64 w28 r',				  # 03 Feb 2014
+  'vfle-mVwz' => '16103 s3 w7 r s3 r w14 w59 s3 r',		  # 04 Feb 2014
+  'vfltdb6U3' => '16106 w61 w5 r s2 w69 s2 r',			  # 05 Feb 2014
+  'vflLjFx3B' => '16107 w40 w62 r s2 w21 s3 r w7 s3',		  # 10 Feb 2014
+  'vfliqjKfF' => '16107 w40 w62 r s2 w21 s3 r w7 s3',		  # 13 Feb 2014
+  'ima-vflxBu-5R' => '16107 w40 w62 r s2 w21 s3 r w7 s3',	  # 13 Feb 2014
+  'ima-vflrGwWV9' => '16119 w36 w45 r s2 r',			  # 20 Feb 2014
+  'ima-vflCME3y0' => '16128 w8 s2 r w52',			  # 27 Feb 2014
+  'ima-vfl1LZyZ5' => '16128 w8 s2 r w52',			  # 27 Feb 2014
+  'ima-vfl4_saJa' => '16130 r s1 w19 w9 w57 w38 s3 r s2',	  # 01 Mar 2014
+  'ima-en_US-vflP9269H' => '16129 r w63 w37 s3 r w14 r',	  # 06 Mar 2014
+  'ima-en_US-vflkClbFb' => '16136 s1 w12 w24 s1 w52 w70 s2',	  # 07 Mar 2014
+  'ima-en_US-vflYhChiG' => '16137 w27 r s3',			  # 10 Mar 2014
+  'ima-en_US-vflWnCYSF' => '16142 r s1 r s3 w19 r w35 w61 s2',	  # 13 Mar 2014
+  'en_US-vflbT9-GA' => '16146 w51 w15 s1 w22 s1 w41 r w43 r',	  # 17 Mar 2014
+  'en_US-vflAYBrl7' => '16144 s2 r w39 w43',			  # 18 Mar 2014
+  'en_US-vflS1POwl' => '16145 w48 s2 r s1 w4 w35',		  # 19 Mar 2014
+  'en_US-vflLMtkhg' => '16149 w30 r w30 w39',			  # 20 Mar 2014
+  'en_US-vflbJnZqE' => '16151 w26 s1 w15 w3 w62 w54 w22',	  # 24 Mar 2014
+  'en_US-vflgd5txb' => '16151 w26 s1 w15 w3 w62 w54 w22',	  # 25 Mar 2014
+  'en_US-vflTm330y' => '16151 w26 s1 w15 w3 w62 w54 w22',	  # 26 Mar 2014
+  'en_US-vflnwMARr' => '16156 s3 r w24 s2',			  # 27 Mar 2014
+  'en_US-vflTq0XZu' => '16160 r w7 s3 w28 w52 r',		  # 31 Mar 2014
+  'en_US-vfl8s5-Vs' => '16158 w26 s1 w14 r s3 w8',		  # 01 Apr 2014
+  'en_US-vfl7i9w86' => '16158 w26 s1 w14 r s3 w8',		  # 02 Apr 2014
+  'en_US-vflA-1YdP' => '16158 w26 s1 w14 r s3 w8',		  # 03 Apr 2014
+  'en_US-vflZwcnOf' => '16164 w46 s2 w29 r s2 w51 w20 s1',	  # 07 Apr 2014
+  'en_US-vflFqBlmB' => '16164 w46 s2 w29 r s2 w51 w20 s1',	  # 08 Apr 2014
+  'en_US-vflG0UvOo' => '16164 w46 s2 w29 r s2 w51 w20 s1',	  # 09 Apr 2014
+  'en_US-vflS6PgfC' => '16170 w40 s2 w40 r w56 w26 r s2',	  # 10 Apr 2014
+  'en_US-vfl6Q1v_C' => '16172 w23 r s2 w55 s2',			  # 15 Apr 2014
+  'en_US-vflMYwWq8' => '16177 w51 w32 r s1 r s3',		  # 17 Apr 2014
+  'en_US-vflGC4r8Z' => '16184 w17 w34 w66 s3',			  # 24 Apr 2014
+  'en_US-vflyEvP6v' => '16189 s1 r w26',			  # 29 Apr 2014
+  'en_US-vflm397e5' => '16189 s1 r w26',			  # 01 May 2014
+  'en_US-vfldK8353' => '16192 r s3 w32',			  # 03 May 2014
+  'en_US-vflPTD6yH' => '16196 w59 s1 w66 s3 w10 r w55 w70 s1',	  # 06 May 2014
+  'en_US-vfl7KJl0G' => '16196 w59 s1 w66 s3 w10 r w55 w70 s1',	  # 07 May 2014
+  'en_US-vflhUwbGZ' => '16200 w49 r w60 s2 w61 s3',		  # 12 May 2014
+  'en_US-vflzEDYyE' => '16200 w49 r w60 s2 w61 s3',		  # 13 May 2014
+  'en_US-vflimfEzR' => '16205 r s2 w68 w28',			  # 15 May 2014
+  'en_US-vfl_nbW1R' => '16206 r w8 r s3',			  # 20 May 2014
+  'en_US-vfll7obaF' => '16212 w48 w17 s2',			  # 22 May 2014
+  'en_US-vfluBAJ91' => '16216 w13 s1 w39',			  # 27 May 2014
+  'en_US-vfldOnicU' => '16217 s2 r w7 w21 r',			  # 28 May 2014
+  'en_US-vflbbaSdm' => '16221 w46 r s3 w19 r s2 w15',		  # 03 Jun 2014
+  'en_US-vflIpxel5' => '16225 r w16 w35',			  # 04 Jun 2014
+  'en_US-vfloyxzv5' => '16232 r w30 s3 r s3 r',			  # 11 Jun 2014
+  'en_US-vflmY-xcZ' => '16230 w25 r s1 w49 w52',		  # 12 Jun 2014
+  'en_US-vflMVaJmz' => '16236 w12 s3 w56 r s2 r',		  # 17 Jun 2014
+  'en_US-vflgt97Vg' => '16240 r s1 r',				  # 19 Jun 2014
+  'en_US-vfl19qQQ_' => '16241 s2 w55 s2 r w39 s2 w5 r s3',	  # 23 Jun 2014
+  'en_US-vflws3c7_' => '16243 r s1 w52',			  # 24 Jun 2014
+  'en_US-vflPqsNqq' => '16243 r s1 w52',			  # 25 Jun 2014
+  'en_US-vflycBCEX' => '16247 w12 s1 r s3 w17 s1 w9 r',		  # 26 Jun 2014
+  'en_US-vflhZC-Jn' => '16252 w69 w70 s3',			  # 01 Jul 2014
+  'en_US-vfl9r3Wpv' => '16255 r s3 w57',			  # 07 Jul 2014
+  'en_US-vfl6UPpbU' => '16259 w37 r s1',			  # 08 Jul 2014
+  'en_US-vfl_oxbbV' => '16259 w37 r s1',			  # 09 Jul 2014
+  'en_US-vflXGBaUN' => '16259 w37 r s1',			  # 10 Jul 2014
+  'en_US-vflM1arS5' => '16262 s1 r w42 r s1 w27 r w54',		  # 11 Jul 2014
+  'en_US-vfl0Cbn9e' => '16265 w15 w44 r w24 s3 r w2 w50',	  # 14 Jul 2014
+  'en_US-vfl5aDZwb' => '16265 w15 w44 r w24 s3 r w2 w50',	  # 15 Jul 2014
+  'en_US-vflqZIm5b' => '16268 w1 w32 s1 r s3 r s3 r',		  # 17 Jul 2014
+  'en_US-vflBb0OQx' => '16272 w53 r w9 s2 r s1',		  # 22 Jul 2014
+  'en_US-vflCGk6yw/html5player' => '16275 s2 w28 w44 w26 w40 w64 r s1', # 24 Jul 2014
+  'en_US-vflNUsYw0/html5player' => '16280 r s3 w7',		  # 30 Jul 2014
+  'en_US-vflId8cpZ/html5player' => '16282 w30 w21 w26 s1 r s1 w30 w11 w20', # 31 Jul 2014
+  'en_US-vflEyBLiy/html5player' => '16283 w44 r w15 s2 w40 r s1',  # 01 Aug 2014
+  'en_US-vflHkCS5P/html5player' => '16287 s2 r s3 r w41 s1 r s1 r', # 05 Aug 2014
+  'en_US-vflArxUZc/html5player' => '16289 r w12 r s3 w14 w61 r',  # 07 Aug 2014
+  'en_US-vflCsMU2l/html5player' => '16292 r s2 r w64 s1 r s3',	  # 11 Aug 2014
+  'en_US-vflY5yrKt/html5player' => '16294 w8 r s2 w37 s1 w21 s3', # 12 Aug 2014
+  'en_US-vfl4b4S6W/html5player' => '16295 w40 s1 r w40 s3 r w47 r', # 13 Aug 2014
+  'en_US-vflLKRtyE/html5player' => '16298 w5 r s1 r s2 r',	  # 18 Aug 2014
+  'en_US-vflrSlC04/html5player' => '16300 w28 w58 w19 r s1 r s1 r', # 19 Aug 2014
+  'en_US-vflC7g_iA/html5player' => '16300 w28 w58 w19 r s1 r s1 r', # 20 Aug 2014
+  'en_US-vfll1XmaE/html5player' => '16303 r w9 w23 w29 w36 s2 r', # 21 Aug 2014
+  'en_US-vflWRK4zF/html5player' => '16307 r w63 r s3',		  # 26 Aug 2014
+  'en_US-vflQSzMIW/html5player' => '16309 r s1 w40 w70 s2 w28 s1', # 27 Aug 2014
+  'en_US-vfltYLx8B/html5player' => '16310 s3 w19 w24',		  # 29 Aug 2014
+  'en_US-vflWnljfv/html5player' => '16311 s2 w60 s3 w42 r w40 s2 w68 w20', # 02 Sep 2014
+  'en_US-vflDJ-wUY/html5player' => '16316 s2 w18 s2 w68 w15 s1 w45 s1 r', # 04 Sep 2014
+  'en_US-vfllxLx6Z/html5player' => '16309 r s1 w40 w70 s2 w28 s1', # 04 Sep 2014
+  'en_US-vflI3QYI2/html5player' => '16318 s3 w22 r s3 w19 s1 r',   # 08 Sep 2014
+  'en_US-vfl-ZO7j_/html5player' => '16322 s3 w21 s1',		   # 09 Sep 2014
+  'en_US-vflWGRWFI/html5player' => '16324 r w27 r s1 r',	   # 12 Sep 2014
+  'en_US-vflJkTW89/html5player' => '16328 w12 s1 w67 r w39 w65 s3 r s1', # 15 Sep 2014
+  'en_US-vflB8RV2U/html5player' => '16329 r w26 r w28 w38 r s3',   # 16 Sep 2014
+  'en_US-vflBFNwmh/html5player' => '16329 r w26 r w28 w38 r s3',   # 17 Sep 2014
+  'en_US-vflE7vgXe/html5player' => '16331 w46 w22 r w33 r s3 w18 r s3', # 18 Sep 2014
+  'en_US-vflx8EenD/html5player' => '16334 w8 s3 w45 w46 s2 w29 w25 w56 w2', # 23 Sep 2014
+  'en_US-vflfgwjRj/html5player' => '16336 r s2 w56 r s3',	   # 24 Sep 2014
+  'en_US-vfl15y_l6/html5player' => '16334 w8 s3 w45 w46 s2 w29 w25 w56 w2', # 25 Sep 2014
+  'en_US-vflYqHPcx/html5player' => '16341 s3 r w1 r',		   # 30 Sep 2014
+  'en_US-vflcoeQIS/html5player' => '16344 s3 r w64 r s3 r w68',	   # 01 Oct 2014
+  'en_US-vflz7mN60/html5player' => '16345 s2 w16 w39',		   # 02 Oct 2014
+  'en_US-vfl4mDBLZ/html5player' => '16348 r w54 r s2 w49',	   # 06 Oct 2014
+  'en_US-vflKzH-7N/html5player' => '16348 r w54 r s2 w49',	   # 08 Oct 2014
+  'en_US-vflgoB_xN/html5player' => '16345 s2 w16 w39',		   # 09 Oct 2014
+  'en_US-vflPyRPNk/html5player' => '16353 r w34 w9 w56 r s3 r w30', # 12 Oct 2014
+  'en_US-vflG0qgr5/html5player' => '16345 s2 w16 w39',		   # 14 Oct 2014
+  'en_US-vflzDhHvc/html5player' => '16358 w26 s1 r w8 w24 w18 r s2 r', # 15 Oct 2014
+  'en_US-vflbeC7Ip/html5player' => '16359 r w21 r s2 r',	   # 16 Oct 2014
+  'en_US-vflBaDm_Z/html5player' => '16363 s3 w5 s1 w20 r',	   # 20 Oct 2014
+  'en_US-vflr38Js6/html5player' => '16364 w43 s1 r',		   # 21 Oct 2014
+  'en_US-vflg1j_O9/html5player' => '16365 s2 r s3 r s3 r w2',	   # 22 Oct 2014
+  'en_US-vflPOfApl/html5player' => '16371 s2 w38 r s3 r',	   # 28 Oct 2014
+  'en_US-vflMSJ2iW/html5player' => '16366 s2 r w4 w22 s2 r s2',	   # 29 Oct 2014
+  'en_US-vflckDNUK/html5player' => '16373 s3 r w66 r s3 w1 w12 r', # 30 Oct 2014
+  'en_US-vflKCJBPS/html5player' => '16374 w15 w2 s1 r s3 r',	   # 31 Oct 2014
+  'en_US-vflcF0gLP/html5player' => '16375 s3 w10 s1 r w28 s1 w40 w64 r', # 04 Nov 2014
+  'en_US-vflpRHqKc/html5player' => '16377 w39 r w48 r',		   # 05 Nov 2014
+  'en_US-vflbcuqSZ/html5player' => '16379 r s1 w27 s2 w5 w7 w51 r', # 06 Nov 2014
+  'en_US-vflHf2uUU/html5player' => '16379 r s1 w27 s2 w5 w7 w51 r', # 11 Nov 2014
+  'en_US-vfln6g5Eq/html5player' => '16385 w1 r s3 r s2 w10 s3 r',  # 12 Nov 2014
+  'en_US-vflM7pYrM/html5player' => '16387 r s2 r w3 r w11 r',	   # 15 Nov 2014
+  'en_US-vflP2rJ1-/html5player' => '16387 r s2 r w3 r w11 r',	   # 18 Nov 2014
+  'en_US-vflXs0FWW/html5player' => '16392 w63 s1 r w46 s2 r s3',   # 20 Nov 2014
+  'en_US-vflEhuJxd/html5player' => '16392 w63 s1 r w46 s2 r s3',   # 21 Nov 2014
+  'en_US-vflp3wlqE/html5player' => '16396 w22 s3 r',		   # 24 Nov 2014
+  'en_US-vfl5_7-l5/html5player' => '16396 w22 s3 r',		   # 25 Nov 2014
+  'en_US-vfljnKokH/html5player' => '16400 s3 w15 s2 w30 w11',	   # 26 Nov 2014
+  'en_US-vflIlILAX/html5player' => '16407 r w7 w19 w38 s3 w41 s1 r w1', # 04 Dec 2014
+  'en_US-vflEegqdq/html5player' => '16407 r w7 w19 w38 s3 w41 s1 r w1', # 10 Dec 2014
+  'en_US-vflkOb-do/html5player' => '16407 r w7 w19 w38 s3 w41 s1 r w1', # 11 Dec 2014
+  'en_US-vfllt8pl6/html5player' => '16419 r w17 w33 w53',	   # 16 Dec 2014
+  'en_US-vflsXGZP2/html5player' => '16420 s3 w38 s1 w16 r w20 w69 s2 w15', # 18 Dec 2014
+  'en_US-vflw4H1P-/html5player' => '16427 w8 r s1',		   # 23 Dec 2014
+  'en_US-vflmgJnmS/html5player' => '16421 s3 w20 r w34 r s1 r',	   # 06 Jan 2015
+  'en_US-vfl86Quee/html5player' => '16450 s3 r w25 w29 r w17 s2 r', # 15 Jan 2015
+  'en_US-vfl19kCnd/html5player' => '16444 r w29 s1 r s1 r w4 w28', # 17 Jan 2015
+  'en_US-vflbHLA_P/html5player' => '16451 r w20 r w20 s2 r',	   # 20 Jan 2015
+  'en_US-vfl_ZlzZL/html5player' => '16455 w61 r s1 w31 w36 s1',	   # 22 Jan 2015
+  'en_US-vflbeV8LH/html5player' => '16455 w61 r s1 w31 w36 s1',	   # 26 Jan 2015
+  'en_US-vflhJatih/html5player' => '16462 s2 w44 r s3 w17 s1',	   # 28 Jan 2015
+  'en_US-vflvmwLwg/html5player' => '16462 s2 w44 r s3 w17 s1',	   # 29 Jan 2015
+  'en_US-vflljBsG4/html5player' => '16462 s2 w44 r s3 w17 s1',	   # 02 Feb 2015
+  'en_US-vflT5ziDW/html5player' => '16462 s2 w44 r s3 w17 s1',	   # 03 Feb 2015
+  'en_US-vflwImypH/html5player' => '16471 s3 r w23 s2 w29 r w44',  # 05 Feb 2015
+  'en_US-vflQkSGin/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 10 Feb 2015
+  'en_US-vflqnkATr/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 11 Feb 2015
+  'en_US-vflZvrDTQ/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 12 Feb 2015
+  'en_US-vflKjOTVq/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 17 Feb 2015
+  'en_US-vfluEf7CP/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 18 Feb 2015
+  'en_US-vflF2Mg88/html5player' => '16475 w70 r w66 s1 w70 w26 r w48', # 19 Feb 2015
+  'en_US-vflQTSOsS/html5player' => '16489 s3 r w23 s1 w19 w43 w36',    # 24 Feb 2015
+  'en_US-vflbaqfRh/html5player' => '16489 s3 r w23 s1 w19 w43 w36',    # 25 Feb 2015
+  'en_US-vflcL_htG/html5player' => '16491 w20 s3 w37 r',	  # 04 Mar 2015
+  'en_US-vflTbHYa9/html5player' => '16498 s3 w44 s1 r s1 r s3 r s3', # 04 Mar 2015
+  'en_US-vflT9SJ6t/html5player' => '16497 w66 r s3 w60',	  # 05 Mar 2015
+  'en_US-vfl6xsolJ/html5player' => '16503 s1 w4 s1 w39 s3 r',	  # 10 Mar 2015
+  'en_US-vflA6e-lH/html5player' => '16503 s1 w4 s1 w39 s3 r',	  # 13 Mar 2015
+  'en_US-vflu7AB7p/html5player' => '16503 s1 w4 s1 w39 s3 r',	  # 16 Mar 2015
+  'en_US-vflQb7e_A/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 18 Mar 2015
+  'en_US-vflicH9X6/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 20 Mar 2015
+  'en_US-vflvDDxpc/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 23 Mar 2015
+  'en_US-vflSp2y2y/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 24 Mar 2015
+  'en_US-vflFAPa9H/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 25 Mar 2015
 );
 
 
@@ -1091,6 +1097,8 @@ sub decipher_sig($$$) {
   }
 
   $c =~ s/([^\s])([a-z])/$1 $2/gs;
+  my ($sts) = $1 if ($c =~ s/^(\d+)\s*//si);
+
   foreach my $c (split(/\s+/, $c)) {
     if    ($c eq '')           { }
     elsif ($c eq 'r')          { @s = reverse (@s);  }
@@ -1108,7 +1116,7 @@ sub decipher_sig($$$) {
   my $L1 = length($orig);
   my $L2 = length($signature);
   if ($verbose > 4 && $signature ne $orig) {
-    print STDERR ("$progname: $id: translated sig, $cipher:\n" .
+    print STDERR ("$progname: $id: translated sig, $sts $cipher:\n" .
                   "$progname:  old: $L1: $orig\n" .
                   "$progname:  new: $L2: $signature\n");
   }
@@ -1162,6 +1170,11 @@ sub guess_cipher(;$$) {
   my $v = '[\$a-zA-Z][a-zA-Z\d]*';	# JS variable
 
   $v = "$v(?:\.$v)?";   # Also allow "a.b" where "a" would be used as a var.
+
+
+  # First, find the sts parameter:
+  my ($sts) = ($body =~ m/\bsts:(\d+)\b/si);
+  errorI ("$cipher_id: no sts parameter: $url") unless $sts;
 
 
   # Since the script is minimized and obfuscated, we can't search for
@@ -1227,7 +1240,7 @@ sub guess_cipher(;$$) {
       errorI ("$cipher_id: unparsable: $c\n\tin: $fn");
     }
   }
-  my $cipher = join(' ', @cipher);
+  my $cipher = "$sts " . join(' ', @cipher);
 
   if ($selftest_p) {
     return $cipher if defined($ciphers{$cipher_id});
@@ -1679,8 +1692,24 @@ sub load_youtube_formats_html($$$) {
 sub load_youtube_formats($$) {
   my ($id, $url) = @_;
 
+  my $cipher = undef;
+  my $sts = undef;
+
+  # Let's just use an old cipher. Doing this allows us to download
+  # videos that are both enciphered and "content warning".
+  # But note that not all old ciphers work! This one happens to. For now.
+  $cipher = 'vflNzKG7n';
+
+  if ($cipher) {
+    $sts = $1 if ($ciphers{$cipher} =~ m/^\s*(\d+)\s/si);
+    errorI ("$cipher: no sts") unless $sts;
+  }
+
   my $info_url = ("http://www.youtube.com/get_video_info?video_id=$id" .
-                  "&el=vevo");	# Needed for VEVO, works on non-VEVO.
+                  # Avoid the "playback restricted" error. This is a referer.
+                  '&eurl=' . url_quote ($url) .
+                  ($sts ? '&sts=' . $sts : '')
+                 );
   # Maybe these instead of Vevo?
   # '&el=detailpage' .
   # '&ps=default' .
@@ -1768,7 +1797,7 @@ sub load_youtube_formats($$) {
 
     # Use both url_encoded_fmt_stream_map and adaptive_fmts.
     $urlmap .= ",$urlmap2" if $urlmap2;
-    $fmts = youtube_parse_urlmap ($id, $urlmap, undef);
+    $fmts = youtube_parse_urlmap ($id, $urlmap, $cipher);
   }
 
   if (! defined($fmts)) {
@@ -1790,7 +1819,6 @@ sub load_youtube_formats($$) {
       $err = " (\"$err\")";
     }
 
-    my $cipher = undef;
     ($urlmap, $urlmap2, $cipher) = load_youtube_formats_html ($id, $url, $err);
 
     # Use both url_encoded_fmt_stream_map and adaptive_fmts.
@@ -2161,6 +2189,28 @@ sub pick_download_format($$$$$) {
   #   There's a generic rtmpe: URL in "conn" and a bunch of options
   #   in "stream", but I don't know how to put those together into
   #   an invocation of "rtmpdump" that does anything at all.
+  #
+  #   https://www.youtube.com/watch?v=g_uoH6hJilc
+  #   28-Mar-2015: enciphered Vevo
+  #
+  # Example URLs that have use_cipher_signature=True:
+  #
+  # http://www.youtube.com/watch?v=ktoaj1IpTbw  Chvrches
+  # http://www.youtube.com/watch?v=ttqMGYHhFFA  Metric
+  # http://www.youtube.com/watch?v=28Vu8c9fDG4  Emika
+  # http://www.youtube.com/watch?v=_mDxcDjg9P4  Vampire Weekend
+  # http://www.youtube.com/watch?v=8UVNT4wvIGY  Gotye
+  # http://www.youtube.com/watch?v=OhhOU5FUPBE  Black Sabbath
+  # http://www.youtube.com/watch?v=1ltcDfZMA3U  Maps
+  # http://www.youtube.com/watch?v=UxxajLWwzqY  Icona Pop
+  #
+  # This video is both enciphered and "content warning", so we can't download
+  # it. Update: it is no longer "content warning". It used to be but it
+  # changed!
+  # http://www.youtube.com/watch?v=7wL9NUZRZ4I  Bowie
+  #
+  # Can't download, because it is both enciphered and "content warning":
+  # http://www.youtube.com/watch?v=07FYdnEawAQ Timberlake
   #
   # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
   # disagrees with the above to some extent.  Which is more accurate?
