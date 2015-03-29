@@ -832,6 +832,8 @@ ALIAS mk='make' \
 
 # golang
 HAVE go && {
+    alias go='cert exec -f ~/.certificates/golang.crt -- go'
+
     __go__() {
         local cmd="$1"
         shift
