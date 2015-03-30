@@ -18,7 +18,7 @@ class Hwctl
       :fnmode           => '/sys/module/hid_apple/parameters/fnmode',
       :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
       :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
-      :coretemps        => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
+      :temps            => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
     },
     'imac' => {
       :backlight        => '/sys/class/backlight/apple_backlight/brightness',
@@ -27,7 +27,7 @@ class Hwctl
       :fnmode           => nil,
       :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
       :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
-      :coretemps        => nil
+      :temps            => nil
     },
     'it8728' => {
       :backlight        => nil,
@@ -36,7 +36,7 @@ class Hwctl
       :fnmode           => nil,
       :fan_manual       => '/sys/devices/platform/it87.2608/pwm2_enable',
       :fan_speed        => '/sys/devices/platform/it87.2608/pwm2',
-      :coretemps        => Dir["/sys/devices/platform/coretemp.0/hwmon/hwmon0/temp*_input"]
+      :temps            => ['/sys/devices/platform/it87.2608/temp1_input']
     },
   }
 
@@ -130,8 +130,8 @@ class Hwctl
     end
   end
 
-  def get_coretemps
-    sys[:coretemps].map { |f| File.read(f).to_i }
+  def get_temps
+    sys[:temps].map { |f| File.read(f).to_i }
   end
 
   def backlight setting = nil
@@ -177,9 +177,9 @@ class Hwctl
     else
       loop do
         # Take two samples, since the values tend to jump around
-        temp = get_coretemps.max
+        temp = get_temps.max
         sleep 1
-        temp += get_coretemps.max
+        temp += get_temps.max
         temp /= 2000
 
         i = table.find_index { |t, sp| temp < t }
