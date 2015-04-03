@@ -10,8 +10,7 @@ import (
 endsnippet
 
 snippet /^P/ "Package declaration" r
-package ${1:`!v expand('%:h:r')`}
-
+package ${1:`!v expand('%:p:h:t')`}
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
