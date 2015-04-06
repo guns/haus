@@ -5,10 +5,14 @@ require 'set'
 
 LIB_DIR = '/var/lib/pacman/local'
 CACHE_DIR = '/var/cache/pacman/pkg'
-ARCH = %x(uname -m).chomp
 HOSTNAME = ENV['HOSTNAME'] || %x(hostname).chomp
+DB = "#{CACHE_DIR}/#{HOSTNAME}.db.tar.gz"
+DB_MTIME = File.exists?(DB) ? File.stat(DB).mtime : Time.at(0)
+ARCH = %x(uname -m).chomp
 
-cache = Set.new Dir[File.join CACHE_DIR, '*.pkg.tar.xz']
+cache = Set.new Dir[File.join CACHE_DIR, '*.pkg.tar.xz'].select { |f|
+  File.stat(f).ctime > DB_MTIME
+}
 
 packages = Dir[File.join LIB_DIR, '*'].reduce [] do |v, f|
   base = File.join CACHE_DIR, File.basename(f)
@@ -21,12 +25,10 @@ packages = Dir[File.join LIB_DIR, '*'].reduce [] do |v, f|
   end
 end
 
-Dir.chdir '/var/cache/pacman/pkg' do
-  packages.each do |pkg|
-    if not File.exists? pkg + '.sig'
-      system 'gpg', '--detach-sign', pkg
-    end
+packages.each do |pkg|
+  if not File.exists? pkg + '.sig'
+    system 'gpg', '--detach-sign', pkg
   end
-
-  system 'repo-add', '--new', '--sign', "#{HOSTNAME}.db.tar.gz", *packages
 end
+
+system 'repo-add', '--new', '--sign', DB, *packages
