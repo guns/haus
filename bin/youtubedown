@@ -59,7 +59,7 @@ use HTML::Entities;
 
 my $progname0 = $0;
 my $progname = $0; $progname =~ s@.*/@@g;
-my ($version) = ('$Revision: 1.514 $' =~ m/\s(\d[.\d]+)\s/s);
+my ($version) = ('$Revision: 1.521 $' =~ m/\s(\d[.\d]+)\s/s);
 
 # Without this, [:alnum:] doesn't work on non-ASCII.
 use locale;
@@ -786,9 +786,14 @@ sub video_url_size($$$;$) {
   push @rm_r, $file;
 
   # Need a lot of data to get size from 1080p.
+  #
   # This used to be 320 KB, but I see 640x360 140 MB videos where we can't
   # get the size without 680 KB.
-  my $bytes = 680 * 1024;
+  #
+  # And now I see a 624 x 352, 180 MB, 50 minute video that gets
+  # "error reading header: -541478725" unless we read 910 KB.
+  #
+  my $bytes = 910 * 1024;
 
   my ($http, $head, $body) = get_url ($url, undef, $file, $bytes);
   check_http_status ($id, $url, $http, 2);  # internal error if still 403
@@ -838,12 +843,13 @@ sub video_url_size($$$;$) {
 # The first number is the "sts" parameter from the html5player file,
 # which is a timestamp or other ID code corresponding to this algorithm.
 # Requesting get_video_info with that number will return URLs using the
-# corresponding cipher algorithm.
+# corresponding cipher algorithm. Except sometimes those old 'sts' values
+# stop working!  See below.
 #
 my %ciphers = (
   'vflNzKG7n' => '135957536242 s3 r s2 r s1 r w67',		  # 30 Jan 2013
-  'vfllMCQWM' => '136089118952 s2 w46 r w27 s2 w43 s2 r',	  # 15 Feb 2013
-  'vflJv8FA8' => '136304655662 s1 w51 w52 r',			  # 12 Mar 2013
+  'vfllMCQWM' => '136089118952 s2 w46 r w27 s2 w43 s2 r',	  # 14 Feb 2013
+  'vflJv8FA8' => '136304655662 s1 w51 w52 r',			  # 11 Mar 2013
   'vflR_cX32' => '1580 s2 w64 s3',				  # 11 Apr 2013
   'vflveGye9' => '1582 w21 w3 s1 r w44 w36 r w41 s1',		  # 02 May 2013
   'vflj7Fxxt' => '1583 r s3 w3 r w17 r w41 r s2',		  # 14 May 2013
@@ -1076,6 +1082,9 @@ my %ciphers = (
   'en_US-vflvDDxpc/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 23 Mar 2015
   'en_US-vflSp2y2y/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 24 Mar 2015
   'en_US-vflFAPa9H/html5player' => '16510 w19 w35 r s2 r s1 w64 s2 w53', # 25 Mar 2015
+  'en_US-vflImsVHZ/html5player' => '16518 r w1 r w17 s2 r',       # 30 Mar 2015
+  'en_US-vfllLRozy/html5player' => '16518 r w1 r w17 s2 r',       # 31 Mar 2015
+  'en_US-vfldudhuW/html5player' => '16518 r w1 r w17 s2 r',       # 02 Apr 2015
 );
 
 
@@ -1355,7 +1364,6 @@ sub decipher_selftest() {
    '3091D200B71AA36948AC517EC7DB161377428B35.' .
    '099E8280F1CD26E4F47F5EBED0422C88CAF6AA84',
 
-   # This one seems to be used by "content restricted" videos?
    'vfl_ymO4Z' . "\t" .
    '7272B1BA35548BA3939F9CE39C4E72A98BB78ABB28.' .		# 86
    '560A7424D42FF070C115935232F8BDB8A1F3E05C05C' =>
@@ -1406,26 +1414,6 @@ sub decipher_selftest() {
 # decipher_selftest(); exit();
 
 
-
-
-# Example URLs that have use_cipher_signature=True:
-#
-# http://www.youtube.com/watch?v=ktoaj1IpTbw  Chvrches
-# http://www.youtube.com/watch?v=ttqMGYHhFFA  Metric
-# http://www.youtube.com/watch?v=28Vu8c9fDG4  Emika
-# http://www.youtube.com/watch?v=_mDxcDjg9P4  Vampire Weekend
-# http://www.youtube.com/watch?v=8UVNT4wvIGY  Gotye
-# http://www.youtube.com/watch?v=OhhOU5FUPBE  Black Sabbath
-# http://www.youtube.com/watch?v=1ltcDfZMA3U  Maps
-# http://www.youtube.com/watch?v=UxxajLWwzqY  Icona Pop
-#
-# This video is both enciphered and "content warning", so we can't download it.
-# Update: it is no longer "content warning". It used to be but it changed!
-# http://www.youtube.com/watch?v=7wL9NUZRZ4I  Bowie
-# Here's one we can't download:
-# http://www.youtube.com/watch?v=07FYdnEawAQ Timberlake
-
-
 # Replace the signature in the URL, deciphering it first if necessary.
 #
 sub apply_signature($$$$$) {
@@ -1471,6 +1459,8 @@ sub apply_signature($$$$$) {
 sub youtube_parse_urlmap($$$) {
   my ($id, $urlmap, $cipher) = @_;
 
+  my $cipher_printed_p = 0;
+
   my %fmts;
   foreach (split (/,/, $urlmap)) {
     # Format used to be: "N|url,N|url,N|url"
@@ -1505,6 +1495,13 @@ sub youtube_parse_urlmap($$$) {
 
     $v =~ s@^.*?\|@@s;  # VEVO
 
+    if ($verbose > 1 && !$cipher_printed_p) {
+      print STDERR "$progname: $id: " .
+                   ($sig2 ? "enciphered" : "non-enciphered") .
+                   ($sig2 && $cipher ? " ($cipher)" : "") . "\n";
+      $cipher_printed_p = 1;
+    }
+
     # If we have an enciphered sig, but don't know the cipher, we have to
     # go through the HTML path.
     #
@@ -1520,17 +1517,21 @@ sub youtube_parse_urlmap($$$) {
     # even when the signatures are not enciphered.  The only way to tell
     # is if the URLs in the map contain "s=" instead of "sig=".
     #
-    # If the urlmap from get_video_info has an enciphered signature,
-    # we have no way of knowing what cipher is in use!  So in that case
-    # we need to scrape the HTML, since from there we can pull the
-    # cipher ID out of the Javascript.
+    # If we loaded get_video_info with the "sts" parameter, meaning we told
+    # it what cipher to use, then the returned URLs have that cipher, and 
+    # all is good.  However, if we had omitted the "sts" parameter, then
+    # the URLs come back with some unknown cipher (it's not the last cipher
+    # in the list, for example) so we can't decode it.
     #
-    # This is, in fact, utter lunacy.
+    # So in the bad old days, we didn't use "sts", and when we got an
+    # enciphered video, we had to scrape the HTML to find the real cipher.
+    # This had the shitty side effect that when a video was both enciphered
+    # and was "content warning", we couldn't download it at all.
     #
-    # Shitty side effect: it's not possible to download enciphered
-    # videos that are marked as "adults only", since in that case the
-    # HTML doesn't contain the url_map.  The url_map is in get_video_info,
-    # but those signatures don't work.
+    # But now that we always pass "sts" to get_video_info, this isn't a
+    # problem any more.  I think that in this modern world, we never actually
+    # need to scrape HTML any more, because we should always know a working
+    # cipher ahead of time.
     #
     $v = apply_signature ($id, $k, $v,
                           $sig2 ? $cipher : undef,
@@ -1562,14 +1563,17 @@ sub youtube_parse_urlmap($$$) {
 }
 
 
-# This version parses the HTML instead of get_video_info.
-# We need to do that for "embedding disable" videos,
-# and for videos that have enciphered signatures.
+# This version parses the HTML instead of get_video_info,
+# in the case where get_video_info didn't work.
+# #### But does that case still exist, now that we use "sts"?
 #
 sub load_youtube_formats_html($$$) {
   my ($id, $url, $oerror) = @_;
 
   my ($http, $head, $body) = get_url ($url);
+
+  my ($title) = ($body =~ m@<title>\s*(.*?)\s*</title>@si);
+  $title = munge_title (html_unquote ($title || ''));
 
   my $unquote_p = 1;
   my ($args) = ($body =~ m@'SWF_ARGS' *: *{(.*?)}@s);
@@ -1624,12 +1628,7 @@ sub load_youtube_formats_html($$$) {
       $err =~ s/\.(: )/$1/gs;
       $err =~ s/\.$//gs;
 
-      my ($title) = ($body =~ m@<title>\s*(.*?)\s*</title>@si);
-      $title =~ s/\s*\bYoutube\b\s*//gsi;
-      if ($title) {
-        $title = munge_title (html_unquote ($title));
-        $err = "$err ($title)";
-      }
+      $err = "$err ($title)" if ($title);
 
       $oerror = $err;
       $http = 'HTTP/1.0 404';
@@ -1679,7 +1678,7 @@ sub load_youtube_formats_html($$$) {
   my ($cipher) = ($body =~ m@/jsbin\\?/html5player-(.+?)\.js@s);
   $cipher =~ s@\\@@gs if $cipher;
 
-  return ($urlmap, $urlmap2, $cipher);
+  return ($title, $urlmap, $urlmap2, $cipher);
 }
 
 
@@ -1697,8 +1696,22 @@ sub load_youtube_formats($$) {
 
   # Let's just use an old cipher. Doing this allows us to download
   # videos that are both enciphered and "content warning".
-  # But note that not all old ciphers work! This one happens to. For now.
-  $cipher = 'vflNzKG7n';
+  #
+  # But not all old ciphers work!  Though all of them used to.
+  #
+  # Current theory is that as of 4-Mar-2015, only 'sts' values >= 16497
+  # work. Which means the first three still work, and more recent ones.
+  #
+  # And as of 31-Mar-2015, 16497 stopped working, but the next one, 16503,
+  # still works.  So they are expiring them now, after something less than
+  # a month.  But the three really old ones (135957536242, etc.)  still
+  # work -- possibly only because those are larger numbers?
+  #
+  # The large sts numbers are time_t in 1/100th sec. The smaller numbers are
+  # who-knows-what, and are sorted alphabetically rather than numerically,
+  # so "1588" == "15880" and "16" == "16000".  Yeah, really.
+  #
+  $cipher = 'vflNzKG7n';  # This is our oldest cipher, 30-Jan-2013.
 
   if ($cipher) {
     $sts = $1 if ($ciphers{$cipher} =~ m/^\s*(\d+)\s/si);
@@ -1710,15 +1723,8 @@ sub load_youtube_formats($$) {
                   '&eurl=' . url_quote ($url) .
                   ($sts ? '&sts=' . $sts : '')
                  );
-  # Maybe these instead of Vevo?
-  # '&el=detailpage' .
-  # '&ps=default' .
-  # '&eurl=' .
-  # '&gl=US' .
-  # '&hl=en'
-
   my ($title, $kind, $kind2, $urlmap, $urlmap2, $body, $rental, $realtime,
-      $rtmpe_p);
+      $rtmpe_p, $embed_p);
 
   my $retries = 5;
   my $err = undef;
@@ -1739,20 +1745,29 @@ sub load_youtube_formats($$) {
     ($kind2, $urlmap2) = ($body =~ m@&(adaptive_fmts)=([^&]+)@si)	# 2014
       unless $urlmap2;
 
-    $kind = $kind2 if $kind2;
-    print STDERR "$progname: $id: found $kind in JSON\n"
-      if ($kind && $verbose > 1);
-
     ($title)    = ($body =~ m@&title=([^&]+)@si) unless $title;
     ($rental)   = ($body =~ m@&ypc_video_rental_bar_text=([^&]+)@si);
-    ($realtime) = ($body =~ m@&(livestream|live_playback)=([^&]+)@si);
+    ($realtime) = ($body =~ m@&(?:livestream|live_playback|hlsvp)=([^&]+)@si);
+    ($embed_p)  = ($body =~ m@&allow_embed=([^&]+)@si);
     $rtmpe_p    = ($urlmap && $urlmap =~ m/rtmpe(=|%3D|%253D)yes/s);
 
-    last if ($rental || $realtime || $rtmpe_p || ($urlmap2 && $title));
+    $embed_p = 0 if (!defined($embed_p) &&
+                     $body =~ m/on[\s+]other[\s+]websites/s);
+
+    $kind = $kind2 if $kind2;
+    print STDERR "$progname: $id: found $kind in JSON" .
+                 (defined($embed_p)
+                  ? ($embed_p ? " (embeddable)" : " (non-embeddable)")
+                  : "") .
+                 "\n"
+      if ($kind && $verbose > 1);
+
+    last if ($rental || $realtime || $rtmpe_p || ($urlmap2 && $title) ||
+             (defined($embed_p) && !$embed_p));
 
     if ($verbose > 0) {
       if (!$urlmap2) {
-        print STDERR "$progname: $id: no urlmap, retrying...\n";
+        print STDERR "$progname: $id: no adaptive_fmts, retrying...\n";
       } else {
         print STDERR "$progname: $id: no title, retrying...\n";
       }
@@ -1786,8 +1801,11 @@ sub load_youtube_formats($$) {
   my $fmts = undef;
 
   if (! $urlmap) {
-    $err = '' unless $err;
-    print STDERR "$progname: $id: no fmt_url_map$err.  Scraping HTML...\n"
+    print STDERR "$progname: $id: no fmt_url_map" .
+                 (defined($embed_p)
+                  ? ($embed_p ? " (embeddable)" : " (non-embeddable)")
+                  : "") .
+                 ", scraping HTML.\n"
       if ($verbose > 1);
   }
 
@@ -1802,8 +1820,9 @@ sub load_youtube_formats($$) {
 
   if (! defined($fmts)) {
 
-    # We couldn't get a URL map out of the info URL, or it was enciphered.
+    # We couldn't get a URL map out of the info URL.
     # Scrape the HTML instead.
+    #### Does this even happen any more, now that we use "sts"?
 
     if ($body =~ m/private[+\s]video|video[+\s]is[+\s]private/si) {
       error ("$id: private video");  # scraping won't work.
@@ -1819,7 +1838,8 @@ sub load_youtube_formats($$) {
       $err = " (\"$err\")";
     }
 
-    ($urlmap, $urlmap2, $cipher) = load_youtube_formats_html ($id, $url, $err);
+    ($title, $urlmap, $urlmap2, $cipher) =
+      load_youtube_formats_html ($id, $url, $err);
 
     # Use both url_encoded_fmt_stream_map and adaptive_fmts.
     $urlmap .= ",$urlmap2" if $urlmap2;
@@ -2116,6 +2136,10 @@ sub pick_download_format($$$$$) {
    315 => { v => 'webm', w => 3840, h => 2160, a => undef               },
   );
   #
+  # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
+  # disagrees with the above to some extent.  Which is more accurate?
+  # (Oh great, they deleted that table from Wikipedia. Lovely.)
+  #
   # fmt=38/37/22 are only available if upload was that exact resolution.
   #
   # For things uploaded in 2009 and earlier, fmt=18 was higher resolution
@@ -2190,31 +2214,51 @@ sub pick_download_format($$$$$) {
   #   in "stream", but I don't know how to put those together into
   #   an invocation of "rtmpdump" that does anything at all.
   #
-  #   https://www.youtube.com/watch?v=g_uoH6hJilc
-  #   28-Mar-2015: enciphered Vevo
+  #   http://www.youtube.com/watch?v=1ltcDfZMA3U  Maps
+  #   29-Mar-2015: formerly playable in US region, but no longer
   #
-  # Example URLs that have use_cipher_signature=True:
+  #   http://www.youtube.com/watch?v=ttqMGYHhFFA  Metric
+  #   29-Mar-2015: Formerly enciphered, but no longer
   #
-  # http://www.youtube.com/watch?v=ktoaj1IpTbw  Chvrches
-  # http://www.youtube.com/watch?v=ttqMGYHhFFA  Metric
-  # http://www.youtube.com/watch?v=28Vu8c9fDG4  Emika
-  # http://www.youtube.com/watch?v=_mDxcDjg9P4  Vampire Weekend
-  # http://www.youtube.com/watch?v=8UVNT4wvIGY  Gotye
-  # http://www.youtube.com/watch?v=OhhOU5FUPBE  Black Sabbath
-  # http://www.youtube.com/watch?v=1ltcDfZMA3U  Maps
-  # http://www.youtube.com/watch?v=UxxajLWwzqY  Icona Pop
+  #   http://www.youtube.com/watch?v=7wL9NUZRZ4I  Bowie
+  #   29-Mar-2015: Formerly enciphered and content warning; no longer CW.
   #
-  # This video is both enciphered and "content warning", so we can't download
-  # it. Update: it is no longer "content warning". It used to be but it
-  # changed!
-  # http://www.youtube.com/watch?v=7wL9NUZRZ4I  Bowie
+  #   http://www.youtube.com/watch?v=07FYdnEawAQ Timberlake
+  #   29-Mar-2015: enciphered and "content warning" (HTML scraping fails)
   #
-  # Can't download, because it is both enciphered and "content warning":
-  # http://www.youtube.com/watch?v=07FYdnEawAQ Timberlake
+  #   http://youtube.com/watch?v=HtVdAasjOgU
+  #   29-Mar-2015: content warning, but non-enciphered
   #
-  # The table on http://en.wikipedia.org/wiki/YouTube#Quality_and_codecs
-  # disagrees with the above to some extent.  Which is more accurate?
-  # (Oh great, they deleted that table from Wikipedia. Lovely.)
+  #   http://www.youtube.com/watch?v=__2ABJjxzNo
+  #   29-Mar-2015: has url_encoded_fmt_stream_map but not adaptive_fmts
+  #
+  #   http://www.youtube.com/watch?v=lqQg6PlCWgI
+  #   29-Mar-2015: finite-length archive of a formerly livestreamed video.
+  #   We currently can't download this, but it's doable.
+  #   See dna/backstage/src/slideshow/slideshow-youtube-frame.pl
+  #
+  #   Enciphered:
+  #   http://www.youtube.com/watch?v=ktoaj1IpTbw  Chvrches
+  #   http://www.youtube.com/watch?v=28Vu8c9fDG4  Emika
+  #   http://www.youtube.com/watch?v=_mDxcDjg9P4  Vampire Weekend
+  #   http://www.youtube.com/watch?v=8UVNT4wvIGY  Gotye
+  #   http://www.youtube.com/watch?v=OhhOU5FUPBE  Black Sabbath
+  #   http://www.youtube.com/watch?v=UxxajLWwzqY  Icona Pop
+  #
+  #   http://www.youtube.com/watch?v=g_uoH6hJilc
+  #   28-Mar-2015: enciphered Vevo (Years & Years) on which CTF was failing
+  #
+  #   http://www.youtube.com/watch?v=ccyE1Kz8AgM
+  #   28-Mar-2015: not viewable in US (US is not on the include list)
+  #
+  #   http://www.youtube.com/watch?v=ccyE1Kz8AgM
+  #   28-Mar-2015: blocked in US (US is on the exclude list)
+  #
+  #   http://www.youtube.com/watch?v=GjxOqc5hhqA
+  #   28-Mar-2015: says "please sign in", but when signed in, it's private
+  #
+  #   http://www.youtube.com/watch?v=UlS_Rnb5WM4
+  #   28-Mar-2015: non-embeddable (Pogo)
 
 
   # Divide %known_formats into muxed, video-only and audio-only lists.
@@ -3354,6 +3398,8 @@ sub download_youtube_playlist($$$$$$$$) {
   my ($id, $url, $title, $size_p, $list_p, $progress_p, $cgi_p,
       $force_fmt) = @_;
 
+  my @playlist = ();
+
   my $start = 0;
   while (1) {
 
@@ -3377,9 +3423,6 @@ sub download_youtube_playlist($$$$$$$$) {
     $body =~ s@(<entry)@\001$1@gs;
     my @entries = split(m/\001/, $body);
     shift @entries;
-    print STDERR "$progname: playlist \"$title\" (" . ($#entries+1) .
-                 " entries)\n"
-      if ($verbose > 1 && $start == 0);
 
     my $i = $start;
     foreach my $entry (@entries) {
@@ -3391,24 +3434,31 @@ sub download_youtube_playlist($$$$$$$$) {
                      ([^<>?&,\'\"]+))@sxi);
       $t2 = munge_title ($t2);
       $t2 = sprintf("%s: %02d: %s", $title, ++$i, $t2);
-      my $year = undef;
-
-      eval {
-        $noerror = 1;
-        download_video_url ($u2, $t2, $size_p, $list_p, $progress_p,
-                            $cgi_p, $force_fmt);
-        $noerror = 0;
-      };
-      print STDERR "$progname: $@" if $@;
-
-      # With "--size", only get the size of the first video.
-      # With "--size --size", get them all.
-      last if ($size_p == 1);
+      push @playlist, [$t2, $u2];
     }
+
+    # With "--size", only get the size of the first video.
+    # With "--size --size", get them all.
     last if ($size_p == 1);
 
     $start += $chunk;
     last unless @entries;
+  }
+
+  print STDERR "$progname: playlist \"$title\" (" . scalar (@playlist) .
+                 " entries)\n"
+    if ($verbose > 1);
+
+  foreach my $P (@playlist) {
+    my ($t2, $u2) = @$P;
+    eval {
+      $noerror = 1;
+      download_video_url ($u2, $t2, $size_p, $list_p, $progress_p,
+                          $cgi_p, $force_fmt);
+      $noerror = 0;
+    };
+    print STDERR "$progname: $@" if $@;
+    last if ($size_p == 1);
   }
 }
 
