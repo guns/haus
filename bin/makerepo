@@ -81,7 +81,7 @@ class Makerepo
     end
   end
 
-  def write
+  def write_db
     system 'repo-add', '--new', '--sign', dbpath, *packages
   end
 
@@ -89,7 +89,8 @@ class Makerepo
     args = parser.parse arguments
     abort parser.help if args.any?
     delete_db if @delete
-    write
+    sign_packages
+    write_db
   end
 end
 
