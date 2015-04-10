@@ -19,7 +19,8 @@
 ;;        guns <self@sungpae.com>                    /######  /#
 ;;                                                  /     ###/
 
-{:user {:plugins [[lein-warn-closeable "[,)"]
+{:user {:plugins [[cider/cider-nrepl "RELEASE"]
+                  #_[lein-warn-closeable "[,)"]
                   [jonase/eastwood "RELEASE"]
                   [lein-ancient "RELEASE"]
                   [lein-exec "RELEASE"]
@@ -27,9 +28,9 @@
                   [lein-nevam "RELEASE"]
                   [lein-nodisassemble "RELEASE"]
                   [lein-vanity "RELEASE"]]
-        :dependencies [[com.sungpae/warn-closeable "[,)"]
+        :dependencies [#_[com.sungpae/warn-closeable "[,)"]
                        [slamhound "[,)"]
-                       [aysylu/loom "0.4.3-SNAPSHOT"]
+                       [aysylu/loom "RELEASE"]
                        [criterium "RELEASE"]
                        [org.clojure/tools.namespace "RELEASE"]
                        [org.clojure/tools.trace "RELEASE"]
