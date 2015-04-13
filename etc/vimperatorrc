@@ -31,6 +31,7 @@ noremap  <Leader>s     :set<Space>
 noremap  <Leader><C-r> :source ~/.vimperatorrc<CR>
 cnoremap <C-n>         <Down>
 cnoremap <C-p>         <Up>
+noremap  <F1>          i<F1>
 
 """ Movement {{{1
 
