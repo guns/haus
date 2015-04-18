@@ -47,6 +47,7 @@ export LESS_TERMCAP_se=$'\033[0m'       # End standout-mode
 export LESS_TERMCAP_ue=$'\033[0m'       # End underline
 export LESS_TERMCAP_me=$'\033[0m'       # End mode
 export PAGER='less'                     # Should be a single word to avoid quoting problems
+export SYSTEMD_LESS="${LESSOPTS[@]}"
 unset LESSOPTS
 
 # Ruby
