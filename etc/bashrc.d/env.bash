@@ -56,3 +56,25 @@ export BUNDLE_PATH="$HOME/.bundle"
 
 # Go
 export GOPATH="$HOME/.local/pkg/go"
+
+# For xdg-open
+# https://wiki.archlinux.org/index.php/Environment_Variables#Examples
+export DE='xfce'
+
+# Qt
+export QT_STYLE_OVERRIDE='gtk'
+
+# Java
+export _JAVA_AWT_WM_NONREPARENTING='1'
+
+# WINE
+export WINEARCH='win32'
+export WINEDLLOVERRIDES='winemenubuilder.exe=d'
+
+# GnuPG
+if [[ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne "$$" ]]; then
+    export SSH_AUTH_SOCK="${HOME}/.gnupg/S.gpg-agent.ssh"
+fi
+
+# rxvt-unicode
+export URXVT_PERL_LIB="$HOME/.urxvt/ext/urxvt-perls"
