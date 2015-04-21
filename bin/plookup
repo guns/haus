@@ -69,7 +69,7 @@ class Plookup
       Regexp.new Regexp.escape(pattern), flags
     end
 
-    services.map { |f| File.readlines f }.flatten.grep rgx
+    services.flat_map { |f| File.readlines f }.grep rgx
   end
 
   def pp lines

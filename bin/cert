@@ -178,7 +178,7 @@ class Cert
   end
 
   def mapcerts args = [], self_signed = options.self_signed
-    certs = args.map do |arg|
+    certs = args.flat_map do |arg|
       if arg == '-'
         parse_certs $stdin.read
       elsif File.readable? arg
@@ -186,7 +186,7 @@ class Cert
       else
         get_chain arg
       end
-    end.flatten.compact
+    end.compact
 
     self_signed ? certs.select { |c| self_signed? c } : certs
   end

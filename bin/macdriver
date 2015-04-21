@@ -165,7 +165,7 @@ class Macdriver
 
   def kextload id
     if options.repositories
-      sh 'kextload', *options.repositories.map { |r| ['-r', r] }.flatten, '-b', id
+      sh 'kextload', *options.repositories.flat_map { |r| ['-r', r] }, '-b', id
     else
       sh 'kextload', '-b', id
     end
