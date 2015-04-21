@@ -88,7 +88,7 @@ set abort_nosubject=no
 # prompt will never be aborted.
 #
 
-# set abort_unmodified=yes
+set abort_unmodified=no
 #
 # Name: abort_unmodified
 # Type: quadoption
