@@ -1333,6 +1333,29 @@ HAVE mkvmerge && mkvmergeout() {
     ' -- "$@"
 }
 
+# ffmpeg
+HAVE ffmpeg && change-aspect-ratio() {
+    (($# == 2 || $# == 3)) || { echo "USAGE: $FUNCNAME aspect-ratio path [new-path]"; return 1; }
+    ruby -r securerandom -r fileutils -e '
+        ratio, src, dst = ARGV
+        inplace = false
+
+        if dst == nil
+            inplace = true
+            dst = SecureRandom.uuid + File.extname(src)
+            raise if File.exists? dst
+        end
+
+        begin
+            if system *%W[ffmpeg -i #{src} -vcodec copy -acodec copy -aspect #{ratio} #{dst}]
+                FileUtils.mv dst, src if inplace
+            end
+        ensure
+            FileUtils.rm dst if inplace
+        end
+    ' -- "$@"
+}
+
 ### X
 
 HAVE startx && alias xstartx='exec startx &>/dev/null'
