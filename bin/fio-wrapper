@@ -1,0 +1,169 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+
+class FioWrapper
+  DEFAULTS = {
+    :readonly => false,
+    :time => 10,
+    :bw_max => 500000,
+    :iops_max => 100000,
+    :lat_max => 500,
+    :log_basename => 'test',
+    :fio2gnuplot_path => File.expand_path('../../lib/fio/fio2gnuplot-custom', __FILE__)
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Usage: #{File.basename __FILE__} [options] COMMAND [args]
+
+        Commands:
+
+            test        args: testdir logdir
+            graph       args: logdir …
+            compare     args: logdir …
+
+        Options:
+      BANNER
+
+      opt.on '-r', '--readonly', "DEFAULT: #{@readonly}" do
+        @readonly = true
+      end
+
+      opt.on '-t', '--time SEC', Integer, "DEFAULT: #{@time}" do |arg|
+        @time = arg
+      end
+
+      opt.on '-B', '--bw-max N', Integer, "DEFAULT: #{@bw_max}" do |arg|
+        @bw_max = arg
+      end
+
+      opt.on '-I', '--iops-max N', Integer, "DEFAULT: #{@iops_max}" do |arg|
+        @iops_max = arg
+      end
+
+      opt.on '-L', '--lat-max N', Integer, "DEFAULT: #{@lat_max}" do |arg|
+        @lat_max = arg
+      end
+
+      opt.on '--log-basename NAME', "DEFAULT: #{@log_basename}" do |arg|
+        @log_basename = arg
+      end
+
+      opt.on '--fio2gnuplot-path PATH', "DEFAULT: #{@fio2gnuplot_path}" do |arg|
+        @fio2gnuplot_path = File.expand_path arg
+      end
+    end
+  end
+
+  def make_config testfile, opts = {}
+    log_basename = opts[:log_basename] || @log_basename
+    readonly = opts[:readonly] || @readonly
+    time = opts[:time] || @time
+
+    cfg = <<-EOF
+# Do some important numbers on SSD drives, to gauge what kind of
+# performance you might get out of them.
+#
+# Sequential read and write speeds are tested, these are expected to be
+# high. Random reads should also be fast, random writes are where crap
+# drives are usually separated from the good drives.
+#
+# This uses a queue depth of 4. New SATA SSD's will support up to 32
+# in flight commands, so it may also be interesting to increase the queue
+# depth and compare. Note that most real-life usage will not see that
+# large of a queue depth, so 4 is more representative of normal use.
+#
+[global]
+bs=4k
+ioengine=libaio
+iodepth=4
+direct=1
+runtime=#{time}
+filename=#{File.expand_path testfile}
+write_bw_log=#{log_basename}
+write_lat_log=#{log_basename}
+write_iops_log=#{log_basename}
+
+[seq-read]
+rw=read
+stonewall
+
+[rand-read]
+rw=randread
+stonewall
+    EOF
+
+    unless readonly
+      cfg << <<-EOF
+
+[seq-write]
+rw=write
+stonewall
+
+[rand-write]
+rw=randwrite
+stonewall
+      EOF
+    end
+
+    cfg
+  end
+
+  def test testfile, outdir, config_opts = {}
+    cfg = make_config testfile, config_opts
+    FileUtils.mkdir_p outdir
+    Dir.chdir outdir do
+      IO.popen ['fio', '/dev/stdin'], 'w' do |io|
+        io.puts cfg
+      end
+    end
+  end
+
+  def graph *logdirs
+    env = { 'BW_MAX' => @bw_max.to_s, 'IOPS_MAX' => @iops_max.to_s, 'LAT_MAX' => @lat_max.to_s }
+    logdirs.each do |logdir|
+      Dir.chdir logdir do
+        begin
+          dir = File.basename Dir.pwd
+          %w[bw iops lat].each do |type|
+            system env, *%W[#{@fio2gnuplot_path} -p test_#{type}.*.log -g -t #{dir + '-' + type}]
+          end
+        ensure
+          FileUtils.rm Dir['*.png'].reject { |p| p =~ /raw\.png\z/ }
+        end
+      end
+    end
+  end
+
+  def compare *dirs
+    system('feh', *dirs.flat_map { |d|
+      Dir.glob("#{d.chomp '/'}/*.png")
+    }.sort_by { |f|
+      f =~ /(.*)\/.*(_\w+)\./
+      [$2, $1]
+    })
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    case args[0]
+    when 't', 'test' then test *args.drop(1)
+    when 'g', 'graph' then graph *args.drop(1)
+    when 'c', 'compare' then compare *args.drop(1)
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and FioWrapper.new.run ARGV if $0 == __FILE__
