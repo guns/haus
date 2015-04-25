@@ -27,7 +27,7 @@ module NERV::CLI::ReplHelpers
   def listfiles pat = '*', opts = {}
     Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
   end
-  alias :ls :listfiles unless $0 == 'pry'
+  alias :ls :listfiles unless defined? Pry
   alias :fs :listfiles
   alias :sh :system
 
