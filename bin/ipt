@@ -111,7 +111,7 @@ class Ipt
       s << if truth
         tables.reduce '' do |s, t|
           s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n"
-          s << %x(#{cmd} --table #{t} --list --numeric --verbose 2>&1)
+          s << %x(#{cmd} --table #{t} --list --line-numbers --numeric --verbose 2>&1)
           s << "\n"
         end
       else
