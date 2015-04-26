@@ -1158,7 +1158,7 @@ ALIAS ssl='openssl' && {
         2) local host="$1" port="$2";;
         *) echo "Usage: $FUNCNAME host [port]"; return 1
         esac
-        run openssl s_client -crlf -connect "$host:$port"
+        run openssl s_client -showcerts -crlf -connect "$host:$port"
     }
 }
 

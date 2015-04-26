@@ -91,15 +91,11 @@ class Cert
 
   def ssl_get host, port = nil
     server = "#{host}:#{port || 443}".shellescape
-    certs = parse_certs %x(openssl s_client -connect #{server} < /dev/null 2>/dev/null)
-    raise 'Multiple certificates returned from %s' % host if certs.count > 1
-    certs.first
+    parse_certs %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
   end
 
   def http_get url
-    certs = parse_certs Net::HTTP.get(URI.parse url)
-    raise 'Multiple certificates returned from %s' % url if certs.count > 1
-    certs.first
+    parse_certs Net::HTTP.get(URI.parse url)
   end
 
   def get url
@@ -111,12 +107,12 @@ class Cert
 
   def get_chain url
     chain = []
-    cert = get url
+    certs = get url
 
     loop do
-      chain.push cert
-      break unless cert.extensions.find { |e| e.oid == 'authorityInfoAccess' and e.value =~ /URI:(http.*?\.crt)/ }
-      break unless cert = http_get($1)
+      chain.concat certs
+      break unless certs.last.extensions.find { |e| e.oid == 'authorityInfoAccess' and e.value =~ /URI:(http.*?\.crt)/ }
+      break unless certs = http_get($1)
     end
 
     chain
