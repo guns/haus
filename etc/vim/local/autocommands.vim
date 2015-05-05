@@ -53,7 +53,7 @@ augroup GUNS
         \ SetAutowrap 1
 
     " Shell {{{1
-    autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,/etc/netctl/*
+    autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,bash-fc-*
         \ setlocal filetype=sh
     autocmd BufRead,BufNewFile sxhkdrc,bspwmrc
         \ setlocal filetype=sh noexpandtab |
