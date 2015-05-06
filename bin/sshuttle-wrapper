@@ -15,6 +15,11 @@ class SshuttleWrapper
   attr_reader :options
   attr_accessor :original_rules
 
+  DNS_SERVERS = [
+    %w[23.226.227.93 443],
+    %w[208.67.220.220 443]
+  ]
+
   def initialize opts = {}
     @options = OpenStruct.new opts
     options.sshuttle ||= 'sshuttle'
@@ -95,8 +100,10 @@ class SshuttleWrapper
     sh *%W[iptables --policy OUTPUT DROP]
     # except for outbound loopback
     sh *%W[iptables --append OUTPUT --out-interface lo --jump ACCEPT]
-    # dnscrypt-proxy queries to OpenDNS
-    sh *%W[iptables --append OUTPUT --protocol udp --destination 208.67.220.220 --destination-port 443 --jump ACCEPT]
+    # dnscrypt-proxy queries to DNS servers
+    DNS_SERVERS.each do |addr, port|
+      sh *%W[iptables --append OUTPUT --protocol udp --destination #{addr} --destination-port #{port} --jump ACCEPT]
+    end
     # local redirects to the sshuttle daemon (from the gateway interface)
     sh *%W[iptables --append OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{options.port} --jump ACCEPT]
     # traffic to the remote proxy server
