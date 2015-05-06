@@ -246,9 +246,12 @@ super + F9
 	wmctrl -a "root ❦ $HOSTNAME"
 
 alt + F9
+	wmctrl -a "root ❦ MK-"
+
+shift + F9
 	urxvt-client
 
-alt + shift + F9
+super + shift + F9
 	urxvt-client -e tmuxlaunch -nd
 
 super + alt + shift + F9
@@ -258,13 +261,10 @@ F10
 	wmctrl -xa 'Firefox' || exec firefox
 
 shift + F10
-	exec firefox
+	exec firefox --no-remote
 
 super + F10
 	wmctrl -xa 'Chromium' || exec chromium
-
-super + alt + F10
-	exec firefox --private-window -P alternate
 
 alt + F10
 	wmctrl -a 'Liferea' || exec liferea
