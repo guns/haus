@@ -67,24 +67,6 @@ task :env do
       },
 
       {
-        :base   => "#{@src}/jwzhacks",
-        :before => lambda { |proj|
-          if proj.fetch
-            raise unless system 'git checkout master >/dev/null 2>&1'
-            system './update.sh >/dev/null 2>&1'
-            if not %x(git status --short).empty?
-              proj.git.add
-              proj.git.commit 'UPDATE'
-            end
-            raise unless system 'git checkout guns >/dev/null 2>&1'
-            raise 'Merge failed' unless system 'git merge master >/dev/null 2>&1'
-          end
-          system 'git checkout guns >/dev/null 2>&1'
-        },
-        :files => { 'youtubedown' => 'bin/youtubedown' }
-      },
-
-      {
         :base   => "#{@src}/READONLY/speedtest-cli",
         :branch => %w[master],
         :files  => { 'speedtest-cli' => 'bin/speedtest-cli' }
