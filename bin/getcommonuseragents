@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'nokogiri'
+
+URL = 'https://techblog.willshouse.com/2012/01/03/most-common-user-agents/'
+AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36'
+html = IO.popen(['curl', '--user-agent', AGENT, '--silent', '--location', URL]) { |io| io.read }
+
+puts Nokogiri::HTML.parse(html).css('textarea.get-the-list').text
