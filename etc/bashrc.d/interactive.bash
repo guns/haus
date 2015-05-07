@@ -566,8 +566,8 @@ ALIAS net='netctl' \
       netstop='netctl stop-all'
 
 # cURL
-ALIAS get='curl --user-agent Mozilla/5.0 --progress-bar --location' \
-      geto='curl --user-agent Mozilla/5.0 --progress-bar --location --remote-name'
+ALIAS get='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" --progress-bar --location' \
+    geto='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" --progress-bar --location --remote-name'
 
 # dig
 ALIAS digx='dig -x' \
@@ -1320,7 +1320,8 @@ HAVE pulseaudio && {
 
 # youtube-dl
 HAVE youtube-dl && {
-    alias yt='cert exec -f ~/.certificates/google.com.crt -- youtube-dl --user-agent Mozilla/5.0'; TCOMP youtube-dl yt
+    alias yt='youtube-dl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"'
+    TCOMP youtube-dl yt
 }
 
 # mkvmerge

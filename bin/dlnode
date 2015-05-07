@@ -24,7 +24,7 @@ class Dlnode
     :connect_timeout => nil,
     :no_download => false,
     :send_referer => false,
-    :user_agent => 'Mozilla/5.0',
+    :user_agent => 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36',
     :retry => nil,
     :verbose => false
   }
