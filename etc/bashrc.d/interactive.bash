@@ -832,8 +832,6 @@ ALIAS mk='make' \
 
 # golang
 HAVE go && {
-    alias go='cert exec -f ~/.certificates/golang.crt -- go'
-
     __go__() {
         local cmd="$1"
         shift
@@ -889,7 +887,7 @@ HAVE git && {
 githubget() {
     (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
     local user="${1%%/*}" repo="${1#*/}" branch="${2:-master}"
-    run cert exec --certfile ~/.certificates/github.crt -- curl --progress-bar --location "https://github.com/$user/$repo/tarball/$branch"
+    curl --progress-bar --location "https://github.com/$user/$repo/tarball/$branch"
 }
 
 archivesrc() {
@@ -939,15 +937,14 @@ type ruby &>/dev/null && {
 
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
-                local cx='cert exec --certfile ~/.certificates/rubygems.crt --'
                 # alias geme
-                alias "gem${suf}g=$cx ${bin}/gem list | g"
-                alias "gem${suf}i=$cx ${bin}/gem install"
-                alias "gem${suf}q=$cx ${bin}/gem specification --remote"
-                alias "gem${suf}s=$cx ${bin}/gem search --remote"
-                alias "gem${suf}r=$cx ${bin}/gem uninstall"
+                alias "gem${suf}g=${bin}/gem list | g"
+                alias "gem${suf}i=${bin}/gem install"
+                alias "gem${suf}q=${bin}/gem specification --remote"
+                alias "gem${suf}s=${bin}/gem search --remote"
+                alias "gem${suf}r=${bin}/gem uninstall"
                 # alias gemsync
-                alias "gem${suf}outdated=$cx ${bin}/gem outdated"
+                alias "gem${suf}outdated=${bin}/gem outdated"
             }
 
             # IRB
@@ -1030,8 +1027,6 @@ ALIAS py='python' \
 
 # Leiningen
 HAVE lein && {
-    alias lein='run cert exec --certfile ~/.certificates/leiningen.crt --keystore ~/.certificates/leiningen.ks -- lein'
-
     # alias leine=
     # alias leing=
     alias leini='run lein install'
