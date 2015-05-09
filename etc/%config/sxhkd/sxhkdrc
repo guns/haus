@@ -261,7 +261,7 @@ F10
 	wmctrl -xa 'Firefox' || exec firefox
 
 shift + F10
-	exec firefox --no-remote
+	exec firefox
 
 super + F10
 	wmctrl -xa 'Chromium' || exec chromium
