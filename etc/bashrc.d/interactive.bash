@@ -1391,7 +1391,7 @@ fi
 ### GUI programs
 
 ALIAS kf='kupfer' && {
-    alias kfstart='(cddownloads && bgrun kupfer --no-splash)'
+    alias kfrestart='pkill kupfer; (cddownloads && bgrun kupfer --no-splash)'
 }
 
 : # Return true
