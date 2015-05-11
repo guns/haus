@@ -246,7 +246,7 @@ super + F9
 	wmctrl -a "root ❦ $HOSTNAME"
 
 alt + F9
-	wmctrl -a "root ❦ MK-"
+	wmctrl -a "❦ MK-"
 
 shift + F9
 	urxvt-client
