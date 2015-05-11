@@ -415,8 +415,8 @@ ALIAS rsync='rsync -hhh --sparse --partial' \
       rsync-backup='rsync --archive --one-file-system --acls --xattrs --hard-links --delete --ignore-errors'
 
 # dd
-HAVE dcfldd && TCOMP dd dcfldd
-HAVE ddsize && TCOMP dd ddsize
+ALIAS dd='dcfldd' && TCOMP dd dcfldd
+HAVE ddsize       && TCOMP dd ddsize
 
 # free
 ALIAS free='free --human'
