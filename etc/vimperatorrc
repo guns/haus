@@ -95,6 +95,7 @@ noremap <C-S-l> :emenu Tools.Web Developer.Web Console<CR>
 noremap <C-S-n> :emenu Tools.Web Developer.Network<CR>
 noremap <C-S-t> :emenu Tools.Web Developer.Developer Toolbar<CR>
 noremap <C-S-p> :emenu Edit.Preferences<CR>
+noremap <C-S-u> <F6>chrome://umatrix/content/dashboard.html#user-rules<CR>
 imap    <C-S-t> <Esc><C-S-t>
 cmap    <C-S-t> <Esc><C-S-t>
 
