@@ -372,16 +372,28 @@ alias du='du --human-readable'
 alias dus='du --summarize'
 
 # mount
-ALIAS mt='mount --verbose --options noatime' \
-      umt='umount --verbose' && {
-    alias mtusb='mountusb'; complete -F _mtusb mtusb
-    alias umtusb='umountusb'
-    remt() { run mount --verbose --options "remount,$1" "${@:2}"; }; TCOMP umount remt
-    mtlabel() {
-        (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
-        run mount --options noatime "/dev/disk/by-label/$1" "${@:2}"
-    }; complete -F _mtlabel mtlabel
+mt() {
+    if (($#)); then
+        run mount --verbose --options noatime "$@"
+    else
+        mount --verbose
+    fi
 }
+ALIAS umt='umount --verbose'
+remt() {
+    if (($#)); then
+        run mount --verbose --options "remount,$1" "${@:2}"
+    else
+        echo "USAGE: $FUNCNAME mount-opts mountpoint"
+        return 1
+    fi
+}; TCOMP umount remt
+alias mtusb='mountusb'; complete -F _mtusb mtusb
+alias umtusb='umountusb'
+mtlabel() {
+    (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
+    run mount --options noatime "/dev/disk/by-label/$1" "${@:2}"
+}; complete -F _mtlabel mtlabel
 
 # findmnt
 ALIAS fm='findmnt'
@@ -390,7 +402,7 @@ ALIAS fm='findmnt'
 ALIAS fusermt='fusermount -o noatime' \
       fuserumt='fusermount -u'
 
-# tar (BSD style options are the most portable)
+# tar
 alias star='tar --strip-components=1'
 alias gtar='tar --gzip --create --verbose'
 alias btar='tar --bzip2 --create --verbose'
