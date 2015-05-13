@@ -10,6 +10,7 @@ require 'fileutils'
 
 class FioWrapper
   DEFAULTS = {
+    :iodepth => 4,
     :readonly => false,
     :time => 10,
     :bw_max => 500000,
@@ -36,6 +37,10 @@ class FioWrapper
 
         Options:
       BANNER
+
+      opt.on '-d', '--iodepth N', Integer, "DEFAULT: #{@iodepth}" do |arg|
+        @iodepth = arg
+      end
 
       opt.on '-r', '--readonly', "DEFAULT: #{@readonly}" do
         @readonly = true
@@ -70,6 +75,7 @@ class FioWrapper
   def make_config testfile, opts = {}
     log_basename = opts[:log_basename] || @log_basename
     readonly = opts[:readonly] || @readonly
+    iodepth = opts[:iodepth] || @iodepth
     time = opts[:time] || @time
 
     cfg = <<-EOF
@@ -88,7 +94,7 @@ class FioWrapper
 [global]
 bs=4k
 ioengine=libaio
-iodepth=4
+iodepth=#{iodepth}
 direct=1
 runtime=#{time}
 filename=#{File.expand_path testfile}
