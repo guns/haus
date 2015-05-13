@@ -167,6 +167,7 @@ stonewall
     case args[0]
     when 't', 'test' then test *args.drop(1)
     when 'g', 'graph' then graph *args.drop(1)
+    when 'T', 'testgraph' then (test *args.drop(1); graph args[2])
     when 'c', 'compare' then compare *args.drop(1)
     end
   end
