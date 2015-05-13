@@ -150,7 +150,7 @@ alt + {XF86Eject,Pause}
 	if pgrep -x xautolock; then \
 		pkill -x xautolock; \
 	else \
-		xautolock-wrapper; \
+		xautolock-launch; \
 	fi; \
 	if pgrep -x xautolock; then \
 		notify --alert --icon system-lock-screen --title xautolock 'enabled'; \

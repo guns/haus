@@ -11,7 +11,7 @@ require 'set'
 require 'resolv'
 require 'nerv/cli/superparser'
 
-class SshuttleWrapper
+class SSHProxy
   attr_reader :options
 
   DNS_SERVERS = [
@@ -165,4 +165,4 @@ class SshuttleWrapper
   end
 end
 
-$0 = File.basename(__FILE__) and SshuttleWrapper.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and SSHProxy.new.run ARGV if $0 == __FILE__

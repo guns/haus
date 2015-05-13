@@ -26,7 +26,7 @@ cd ~/Downloads
 /usr/bin/pulseaudio --start &
 (/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
-xautolock-wrapper &
+xautolock-launch &
 
 popd
 
