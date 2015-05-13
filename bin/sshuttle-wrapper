@@ -13,7 +13,6 @@ require 'nerv/cli/superparser'
 
 class SshuttleWrapper
   attr_reader :options
-  attr_accessor :original_rules
 
   DNS_SERVERS = [
     %w[23.226.227.93 443],
