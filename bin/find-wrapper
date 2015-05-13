@@ -62,8 +62,12 @@ class FindWrapper
   def run arguments = []
     args = parser.parse arguments
     cmd = make_command args, @pred
-    warn "\e[32;1m%s\e[0m" % cmd.shelljoin
-    exec *cmd unless @noop
+    if @noop
+      puts cmd.shelljoin
+    else
+      warn "\e[32;1m%s\e[0m" % cmd.shelljoin
+      exec *cmd
+    end
   end
 end
 
