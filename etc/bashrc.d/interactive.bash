@@ -656,6 +656,9 @@ HAVE cdapi && {
 # Simple webserver
 httpserver() { rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
 
+# mitmproxy
+alias localmitmproxy='envtmux localmitmproxy'
+
 ### Firewalls
 
 # iptables
