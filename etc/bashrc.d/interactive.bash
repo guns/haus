@@ -775,6 +775,10 @@ HAVE vim && {
         urxvt-client -e vim /tmp/.vimstartuptime
     }
 
+    vimsysctl() {
+        (cd /etc/; vimdiff /etc/sysctl.d/99-sysctl.conf <(sysctl -a | sed "s/^/# /") -c "windo setf sysctl")
+    }
+
     # VIMEDITBINDINGS
     alias vimautocommands='vim "$cdhaus/etc/vim/local/autocommands.vim" -c "lcd \$cdhaus"'
     alias vimaliases='vim ~/.mutt/aliases -c "lcd ~/.mutt"'
