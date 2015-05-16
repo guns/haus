@@ -579,7 +579,7 @@ ALIAS net='netctl' \
 
 # cURL
 ALIAS get='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" --progress-bar --location' \
-    geto='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" --progress-bar --location --remote-name'
+      geto='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" --progress-bar --location --remote-name'
 
 # dig
 ALIAS digx='dig -x' \
