@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2014 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'openssl'
 require 'shellwords'
 require 'fileutils'
@@ -17,12 +16,17 @@ require 'digest/sha2'
 require 'nerv/util/password'
 
 class Cert
-  attr_reader :options
+  DEFAULTS = {
+    :certfile => nil,
+    :keystore => nil,
+    :keystore_pass => nil,
+    :self_signed => false
+  }
 
   CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -45,19 +49,19 @@ class Cert
       BANNER
 
       opt.on '-f', '--certfile PATH', 'Certificate file, required for some commands' do |arg|
-        options.certfile = File.expand_path arg
+        @certfile = File.expand_path arg
       end
 
       opt.on '-k', '--keystore PATH', 'Create/Modify/Use Java Keystore file' do |arg|
-        options.keystore = File.expand_path arg
+        @keystore = File.expand_path arg
       end
 
       opt.on '-P', '--keystore-pass PASS', 'Optionally set password for keystore' do |arg|
-        options.keystore_pass = arg
+        @keystore_pass = arg
       end
 
       opt.on '-s', '--self-signed', 'Select only self-signed certificates' do
-        options.self_signed = true
+        @self_signed = true
       end
     end
   end
@@ -132,34 +136,30 @@ class Cert
   end
 
   def certfile
-    raise "'certfile' is unset" if options.certfile.nil?
-    FileUtils.touch options.certfile unless File.exists? options.certfile
-    options.certfile
-  end
-
-  def keystore
-    options.keystore
+    raise "'certfile' is unset" if @certfile.nil?
+    FileUtils.touch @certfile unless File.exists? @certfile
+    @certfile
   end
 
   def keystore_pass
-    @keystore_pass ||= (options.keystore_pass || NERV::Util::Password.password)
+    @keystore_pass ||= (@keystore_pass || NERV::Util::Password.password)
   end
 
   def certificates
     parse_certs File.read(certfile)
   end
 
-  def write_keystore certs
+  def write_keystore keystore_path, certs
     # We generate keystores with random passwords, hence we won't know the
     # current store's password either.
-    FileUtils.rm_f keystore
+    FileUtils.rm_f keystore_path
 
     certs.each_with_index do |cert, i|
       IO.popen [{ 'STOREPASS' => keystore_pass },
                 'keytool', '-importcert', '-trustcacerts', '-noprompt',
-                '-keystore', keystore,
+                '-keystore', keystore_path,
                 '-storepass:env', 'STOREPASS',
-                '-alias', '%s-%d' % [File.basename(keystore, '.ks'), i]], 'w' do |wr|
+                '-alias', '%s-%d' % [File.basename(keystore_path, '.ks'), i]], 'w' do |wr|
         wr.puts cert.to_s
       end
     end
@@ -170,10 +170,10 @@ class Cert
       f.puts format(certs)
     end
 
-    write_keystore certs if keystore
+    write_keystore @keystore, certs if @keystore
   end
 
-  def mapcerts args = [], self_signed = options.self_signed
+  def mapcerts args = [], self_signed = @self_signed
     certs = args.flat_map do |arg|
       if arg == '-'
         parse_certs $stdin.read
@@ -215,9 +215,9 @@ class Cert
       'SSL_CERT_FILE'  => certfile  # ruby
     }
     # Leiningen
-    if keystore
-      env['JVM_OPTS'     ] = "#{ENV['JVM_OPTS'     ]} -Djavax.net.ssl.trustStore=#{keystore}"
-      env['LEIN_JVM_OPTS'] = "#{ENV['LEIN_JVM_OPTS']} -Djavax.net.ssl.trustStore=#{keystore}"
+    if @keystore
+      env['JVM_OPTS'     ] = "#{ENV['JVM_OPTS'     ]} -Djavax.net.ssl.trustStore=#{@keystore.shellescape}"
+      env['LEIN_JVM_OPTS'] = "#{ENV['LEIN_JVM_OPTS']} -Djavax.net.ssl.trustStore=#{@keystore.shellescape}"
     end
     Kernel.exec env, *args
   end
@@ -239,7 +239,7 @@ class Cert
     when 'r', 'rm' then rm *rest
     when 'x', 'e', 'exec' then exec *rest
     when 'c', 'console' then console *rest
-    when nil then options.certfile ? dump : abort(parser.help)
+    when nil then @certfile ? dump : abort(parser.help)
     else abort parser.help
     end
   end
