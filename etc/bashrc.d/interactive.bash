@@ -839,10 +839,7 @@ HAVE screen && {
 
 # make
 ALIAS mk='make' \
-      mkclean='make clean' \
-      mkdistclean='make distclean' \
       mkinstall='make install' \
-      mkdebug='make debug' \
       mkj='make --jobs=$(grep --count ^processor /proc/cpuinfo)' \
       mke='make --environment-overrides' \
       mkej='mkj --environment-overrides' \
