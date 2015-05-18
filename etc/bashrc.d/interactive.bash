@@ -883,7 +883,6 @@ ALIAS patch='patch --version-control never'
 
 # git
 HAVE git && {
-    alias git='GIT_SSL_CAINFO=~/.certificates/github.crt git'
     alias gitgc='run git gc --aggressive --prune=all'
 
     # Github
