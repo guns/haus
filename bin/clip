@@ -7,6 +7,6 @@ elif type xclip; then
 elif type pbcopy; then
     exec pbcopy "$@"
 else
-    printf "No known clipboard programs available!\n"
+    printf "No known clipboard programs available!\n" >&2
     exit 1
 fi
