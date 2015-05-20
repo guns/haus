@@ -1,12 +1,21 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2014-2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
+require 'rubygems'
+require 'rubygems/package'
 require 'fileutils'
 
 abort 'Usage: gem-private-build spec suffix [outdir]' unless (2..3) === ARGV.size
 
 specfile, suffix, outdir = ARGV
+outdir = File.expand_path outdir || '.'
 spec = Gem::Specification.load specfile
 spec.version = '%s.%s' % [spec.version, suffix]
-gem = Gem::Builder.new(spec).build
-FileUtils.mv gem, outdir if outdir
+Dir.chdir File.dirname(specfile) do
+  gem = Gem::Package.build spec
+  FileUtils.mv gem, outdir unless outdir == File.expand_path('.')
+end
