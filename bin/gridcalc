@@ -1,21 +1,18 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011-2012 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'rational'
 
 class Gridcalc
-  attr_reader :options
+  DEFAULTS = { :ratio => 1, :width => 0 }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.ratio ||= 1
-    options.width ||= 0
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -31,52 +28,53 @@ class Gridcalc
 
       opt.on '-c', '--columns N',
              'Show solutions that have N columns, where N is an',
-             'Integer or Range: `-n 24` or `-n 12..24`' do |arg|
-        options.columns = arg
+             'Integer or Range: `-c 24` or `-c 12..24`' do |arg|
+        @columns = arg
       end
 
       opt.on '-r', '--ratio N',
              'Show solutions that have a minumum column:gutter width ratio',
              'expressed as a ratio `-r 3:2` or a number `-r 1.5`',
-             "Default: #{options.ratio.to_s.tr '/',':'}" do |arg|
-        options.ratio = arg
+             "Default: #{@ratio.to_s.tr '/', ':'}" do |arg|
+        @ratio = arg
       end
     end
   end
 
   def ratio
-    case r = options.ratio
-    when Numeric           then Rational r.to_s # Floats are unreliable!
-    when /^\d+(?:\.\d+)?$/ then Rational r
-    when /^\d+:\d+$/       then Rational *r.split(':')
-    else raise ArgumentError, 'must be in the form of /\d+:\d+/'
+    case r = @ratio
+    when Numeric             then Rational r.to_s # Rational from a string yields better precision than from a float
+    when /\A\d+(?:\.\d+)?\z/ then Rational r
+    when /\A\d+:\d+\z/       then Rational *r.split(':')
+    else raise ArgumentError
     end
   end
 
   def columns
-    case cols = options.columns
-    when NilClass         then nil
-    when Integer          then [cols]
-    when /^\d+$/          then [cols.to_i]
-    when /^\d+\.\.\d+$/   then Range.new *cols.split('..').map(&:to_i)
-    when /^\d+\.\.\.\d+$/ then Range.new *cols.split('...').map(&:to_i), true
-    else raise ArgumentError, 'must be an Integer, Range, or nil'
+    case cols = @columns
+    when NilClass           then nil
+    when Integer            then [cols]
+    when /\A\d+\z/          then [cols.to_i]
+    when /\A\d+\.\.\d+\z/   then Range.new *cols.split('..').map(&:to_i)
+    when /\A\d+\.\.\.\d+\z/ then Range.new *cols.split('...').map(&:to_i), true
+    else raise ArgumentError
     end
   end
 
   def solutions
     table   = []
-    mincw   = ratio.numerator
-    mingw   = ratio.denominator
-    maxcols = (options.width + mingw) / (mincw + mingw)
+    r       = ratio
+    mincw   = r.numerator
+    mingw   = r.denominator
+    maxcols = (@width + mingw) / (mincw + mingw)
 
     (columns || (2..maxcols)).each do |n|
-      (options.width / n).downto mincw do |cw|
-        gutters = options.width - (n * cw)
+      (@width / n).downto mincw do |cw|
+        gutters = @width - (n * cw)
         next unless (gutters % (n - 1)).zero? # Only whole pixels
 
         gw = gutters / (n - 1)
-        break if not gw.zero? and (cw / gw) < ratio # Too small, throw it back
+        break if not gw.zero? and (cw / gw) < r # Too small, throw it back
 
         table << [n, cw, gw]
       end
@@ -99,7 +97,7 @@ class Gridcalc
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.size != 1
-    options.width = args.first.to_i
+    @width = args.first.to_i
     puts to_s
   end
 end

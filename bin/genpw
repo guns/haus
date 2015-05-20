@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010-2014 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -10,12 +10,13 @@ require 'ostruct'
 require 'nerv/util/password'
 
 class Genpw
-  include NERV::Util::Password
-
-  attr_reader :options
+  DEFAULTS = {
+    :chars => nil,
+    :source => nil
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -29,19 +30,19 @@ class Genpw
       BANNER
 
       opt.on '-a', '--alpha', 'Alphanumeric characters only' do
-        options.chars = ALPHA
+        @chars = NERV::Util::Password::ALPHA
       end
 
       opt.on '-u', '--utf8 REGEXP', Regexp, 'UTF-8 encoded Unicode characters matching REGEXP' do |arg|
-        options.chars = utf8_chars.grep arg
+        @chars = utf8_chars.grep arg
       end
 
       opt.on '-f', '--file PATH', 'Entropy source file; - for stdin [DEFAULT: /dev/urandom]' do |arg|
-        options.source = arg == '-' ? $stdin : File.expand_path(arg)
+        @source = arg == '-' ? $stdin : File.expand_path(arg)
       end
 
       opt.on '-r', '--random', 'Read characters from /dev/random' do
-        options.source = '/dev/random'
+        @source = '/dev/random'
       end
     end
   end
@@ -56,9 +57,9 @@ class Genpw
   def run arguments = []
     args = parser.parse arguments
     args = [60] if args.empty?
-    raise 'Character set is empty!' if options.chars and options.chars.empty?
+    raise 'Character set is empty!' if @chars and @chars.empty?
     args.each do |len|
-      puts password(len.to_i, :chars => options.chars, :source => options.source)
+      puts NERV::Util::Password.password(len.to_i, :chars => @chars, :source => @source)
     end
   end
 end

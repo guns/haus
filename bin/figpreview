@@ -1,22 +1,23 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011-2013 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'digest/md5'
 require 'shellwords'
 
 class Figpreview
-  attr_reader :options
+  DEFAULTS = {
+    :width => 1000,
+    :kerning => 0,
+    :message => nil
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.width   ||= 1000
-    options.kerning ||= 0
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -30,11 +31,11 @@ class Figpreview
       BANNER
 
       opt.on '-k', '--kerning NUMBER', Integer, 'Set letter spacing; value from 0..3; 0 by default' do |arg|
-        options.kerning = arg
+        @kerning = arg
       end
 
-      opt.on '-w', '--width NUMBER', Integer, "Wrapping width; #{options.width} by default" do |arg|
-        options.width = arg
+      opt.on '-w', '--width NUMBER', Integer, "Wrapping width; #{@width} by default" do |arg|
+        @width = arg
       end
 
       opt.on '-l', '--list', 'List all unique figlet fonts' do
@@ -43,18 +44,18 @@ class Figpreview
       end
 
       opt.on '-r', '--random', 'Pick a single random font' do
-        options.random = true
+        @random = true
       end
     end
   end
 
   def kerning
-    case options.kerning
+    case @kerning
     when 0 then '-S'
     when 1 then '-s'
     when 2 then '-k'
     when 3 then '-W'
-    else raise ArgumentError, 'options.kerning must be within 0..3'
+    else raise ArgumentError, 'kerning must be within 0..3'
     end
   end
 
@@ -77,8 +78,8 @@ class Figpreview
   end
 
   def generate flf
-    msg = options.message || File.basename(flf, '.flf')
-    cmd = ['figlet', kerning, '-l', '-w', options.width.to_s, '-f', flf, msg]
+    msg = @message || File.basename(flf, '.flf')
+    cmd = ['figlet', kerning, '-l', '-w', @width.to_s, '-f', flf, msg]
     ary = %x(#{cmd.shelljoin}).split("\n").map &:rstrip
     a,z = [:index, :rindex].map { |m| ary.send(m) { |l| not l.empty? } }
     "\n%s\n\n" % ary[(a || 0)..(z || ary.size)].join("\n")
@@ -89,13 +90,13 @@ class Figpreview
   end
 
   def inspect
-    "figlet #{kerning} -l -w #{options.width}"
+    "figlet #{kerning} -l -w #{@width}"
   end
 
   def run arguments = []
     args = parser.parse arguments
-    options.message = args.join ' ' unless args.empty?
-    puts options.random ? generate(fonts.shuffle.last) : to_s
+    @message = args.join ' ' unless args.empty?
+    puts @random ? generate(fonts.shuffle.last) : to_s
   end
 end
 

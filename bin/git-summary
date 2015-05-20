@@ -1,15 +1,19 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+#
 # git-summary, inspired by TJ Holowaychuk's git-extras
 
 require 'optparse'
 
 class GitSummary
-  attr_accessor :root
+  DEFAULTS = { :root => File.expand_path('.') }
 
-  def initialize root = nil
-    @root = root || '.'
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -37,11 +41,11 @@ class GitSummary
   end
 
   def to_s
-    Dir.chdir root do
-      [ 'Project : %s'  % project_name,
-        'Commits : %d'  % commit_count,
-        'Files   : %d'  % file_count,
-        "Authors :\n%s" % authors
+    Dir.chdir @root do
+      [ 'Project: %s'  % project_name,
+        'Commits: %d'  % commit_count,
+        'Files:   %d'  % file_count,
+        "Authors:\n%s" % authors
       ].join "\n"
     end
   end

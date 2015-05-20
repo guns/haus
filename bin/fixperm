@@ -1,12 +1,11 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010-2013 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'find'
 require 'haus/logger'
 require 'haus/ls_colors'
@@ -14,11 +13,14 @@ require 'haus/ls_colors'
 class Fixperm
   include Haus::Loggable
 
-  attr_reader :options
+  DEFAULTS = {
+    :umask => File.umask,
+    :recurse => false,
+    :noop => false
+  }
 
   def initialize opts = {}
-    @options        = OpenStruct.new opts
-    options.umask ||= File.umask
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
@@ -35,32 +37,32 @@ class Fixperm
       BANNER
 
       opt.on '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
-        options.umask = arg.to_i 8
+        @umask = arg.to_i 8
       end
 
       opt.on '-r', '--recurse', 'Recurse into directories' do
-        options.recurse = true
+        @recurse = true
       end
 
       opt.on '-n', '--noop', 'Only show what would happen' do
-        options.noop = true
+        @noop = true
       end
     end
   end
 
   def normalize files
-    (options.recurse ? files.flat_map { |f| Find.find(f).to_a } : files).each do |f|
+    (@recurse ? files.flat_map { |f| Find.find(f).to_a } : files).each do |f|
       stat = File.stat f
       mode = if stat.ftype == 'directory' or File.basename(File.dirname File.expand_path(f)) =~ /\As?bin\z/
-        (0777 & ~options.umask)
+        (0777 & ~@umask)
       else
-        (0666 & ~options.umask)
+        (0666 & ~@umask)
       end
 
       next if stat.ftype == 'link' or (stat.mode & 0777) == mode
 
       log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [f, Haus::LSColors[f]]
-      File.chmod mode, f unless options.noop
+      File.chmod mode, f unless @noop
     end
   end
 

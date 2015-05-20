@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011-2013 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -12,54 +12,61 @@ require 'pathname'
 require 'sdoc'
 
 class Genapi
-  attr_reader :options, :sdoc
+  DEFAULTS = {
+    :lang => :ruby,
+    :apidir => ENV['cdapi'],
+    :outdir => nil,
+    :index => nil,
+    :title => nil,
+    :force => false,
+    :sdoc => RDoc::RDoc.new
+  }
 
   def initialize opts = {}
-    @sdoc    = RDoc::RDoc.new
-    @options = OpenStruct.new opts
-    options.lang   ||= :ruby
-    options.apidir ||= ENV['cdapi']
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options] dir
+        Usage: #{File.basename __FILE__} [options] project_dir
 
         Options:
       BANNER
 
       opt.on '-o', '--outdir DIR' do |arg|
-        options.outdir = arg
+        @outdir = arg
       end
 
       opt.on '-i', '--index PATH', 'Use PATH as index page' do |arg|
-        options.index = arg
+        @index = arg
       end
 
       opt.on '-t', '--title TITLE' do |arg|
-        options.title = arg
+        @title = arg
       end
 
       opt.on '-f', '--force' do
-        options.force = true
+        @force = true
       end
     end
   end
 
   def check_output_directory path
     if File.exists? path
-      options.force ? FileUtils.rm_rf(path) : raise("#{path.inspect} already exists!")
+      @force ? FileUtils.rm_rf(path) : raise("#{path.inspect} already exists!")
     end
   end
 
-  def ruby_sdoc
+  def ruby_sdoc project_dir
     # We need to expand these before the chdir
-    index, outdir, apidir = %w[index outdir apidir].map { |m| File.expand_path options.send(m) if options.send m }
+    index = File.expand_path @index if @index
+    outdir = File.expand_path @outdir if @outdir
+    apidir = File.expand_path @apidir if @apidir
 
-    Dir.chdir options.directory do
+    Dir.chdir project_dir do
       project = File.basename Dir.pwd
-      title   = options.title || project
+      title   = @title || project
 
       main = if index
         Pathname.new(index).relative_path_from Pathname.new(Dir.pwd)
@@ -79,13 +86,13 @@ class Genapi
       args.push "--main=#{main}" if main
 
       puts 'Generating with `%s`' % args.join(' ')
-      sdoc.document args
+      @sdoc.document args
     end
   end
 
-  def call
-    case options.lang
-    when :ruby    then ruby_sdoc
+  def call project_dir
+    case @lang
+    when :ruby then ruby_sdoc project_dir
     else raise 'No language specified'
     end
   end
@@ -93,8 +100,7 @@ class Genapi
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.size == 1
-    options.directory = args.first
-    call
+    call args.first
   end
 end
 
