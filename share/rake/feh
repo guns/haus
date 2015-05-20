@@ -11,7 +11,7 @@ end
 
 desc 'Build feh'
 task :build do
-  sh env, 'make', '-j%d' % (ENV['JOBS'] || (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue nil) || 2).to_i
+  sh env, 'make', '-j%d' % (ENV['JOBS'] || (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue nil) || 1).to_i
 end
 
 desc 'Install feh'
