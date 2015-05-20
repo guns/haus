@@ -12,6 +12,132 @@ require 'shellwords'
 require 'nokogiri'
 require 'haus/utils'
 
+class Dlnode; end
+
+class Dlnode::Pattern
+  attr_accessor :selector, :attribute, :regexp, :gsub
+
+  def initialize pattern_str
+    @selector, @attribute, @regexp, @gsub = parse pattern_str
+  end
+
+  def blank? x
+    x.nil? or x.empty?
+  end
+
+  def default_attribute elem
+    case elem
+    when 'a' then 'href'
+    when 'img' then 'src'
+    end
+  end
+
+  def parse pattern_str
+    a, b, c, d = pattern_str.split /(?<!\\):/, 4
+
+    [blank?(a) ? 'a' : a,
+     blank?(b) ? nil : b,
+     blank?(c) ? nil : Haus::Utils.regexp_parse(c),
+     blank?(d) ? nil : parse_gsub(d)]
+  end
+
+  def parse_gsub gsub_str
+    pat, rep = gsub_str.split /(?<!\\),/, 2
+    [Haus::Utils.regexp_parse(pat), rep]
+  end
+end
+
+class Dlnode::Resource
+  attr_accessor :url, :referer, :form_data
+
+  def initialize url = nil, opts = {}
+    @url = url
+    @form_data = opts[:form_data]
+    @referer = opts[:referer]
+    @base_uri = opts[:base_uri]
+  end
+
+  def urijoin base, path
+    URI.join(base, path).to_s
+  rescue URI::InvalidURIError
+    # Maybe the path isn't properly escaped
+    begin
+      URI.join(base, URI.escape(path)).to_s
+    rescue URI::InvalidURIError
+    end
+  end
+
+  def extract_resources pattern, opts
+    html_str = fetch opts
+
+    return [] if html_str.nil?
+
+    html_str.gsub! *pattern.gsub if pattern.gsub
+
+    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
+      if not pattern.attribute and el.name == 'form'
+        form_data = el.css('input').map { |i| [i['name'], i['value']] }
+        path = el.attr 'action'
+      else
+        attr = pattern.attribute || pattern.default_attribute(el.name)
+        path = attr ? el.attr(attr) : el.text
+      end
+
+      if path and u = urijoin(url, path)
+        r = self.class.new u, :form_data => form_data, :referer => (url if opts[:send_referer] and url !~ %r{\Afile://})
+        r = nil if pattern.regexp and u !~ pattern.regexp
+      end
+
+      r ? v << r : v
+    end
+  end
+
+  def command opts = {}
+    ref = ['--referer', referer] if referer
+    cmd = ['curl', '--silent', *Dlnode.common_curl_args(opts), *ref]
+
+    form_data.each do |kv|
+      cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
+    end if form_data
+
+    cmd.concat opts[:curl_opts] if opts[:curl_opts]
+
+    cmd << url
+  end
+
+  def fetch opts = {}
+    cmd = command opts
+    warn cmd.shelljoin if opts[:verbose]
+    buf = IO.popen(cmd) { |io| io.read }
+
+    if $?.exitstatus.zero?
+      $stderr.print "\e[32m.\e[0m"
+      buf
+    else
+      $stderr.print "\e[31m.\e[0m\nFAILED to %s %s\n" % [form_data ? 'POST' : 'GET', url]
+      nil
+    end
+  end
+
+  def fetch_leaves patterns = [], opts = {}
+    p, *rest = patterns
+    resources = extract_resources p, opts
+
+    if rest.any?
+      resources.flat_map { |r| r.fetch_leaves rest, opts }
+    else
+      if opts[:verbose]
+        if resources.empty?
+          warn "\e[31mEmpty branch: #{url}\e[0m"
+        else
+          warn "\e[32mBranch #{url} leaf count: #{resources.size}\e[0m"
+        end
+      end
+      resources
+    end
+  end
+end
+
 class Dlnode
   DEFAULTS = {
     :base_uri => nil,
@@ -29,136 +155,12 @@ class Dlnode
     :verbose => false
   }
 
-  class Pattern
-    attr_accessor :selector, :attribute, :regexp, :gsub
-
-    def initialize pattern_str
-      @selector, @attribute, @regexp, @gsub = parse pattern_str
-    end
-
-    def blank? x
-      x.nil? or x.empty?
-    end
-
-    def default_attribute elem
-      case elem
-      when 'a' then 'href'
-      when 'img' then 'src'
-      end
-    end
-
-    def parse pattern_str
-      a, b, c, d = pattern_str.split /(?<!\\):/, 4
-
-      [blank?(a) ? 'a' : a,
-       blank?(b) ? nil : b,
-       blank?(c) ? nil : Haus::Utils.regexp_parse(c),
-       blank?(d) ? nil : parse_gsub(d)]
-    end
-
-    def parse_gsub gsub_str
-      pat, rep = gsub_str.split /(?<!\\),/, 2
-      [Haus::Utils.regexp_parse(pat), rep]
-    end
-  end
-
-  class Resource
-    attr_accessor :url, :referer, :form_data
-
-    def initialize url = nil, opts = {}
-      @url = url
-      @form_data = opts[:form_data]
-      @referer = opts[:referer]
-      @base_uri = opts[:base_uri]
-    end
-
-    def urijoin base, path
-      URI.join(base, path).to_s
-    rescue URI::InvalidURIError
-      # Maybe the path isn't properly escaped
-      begin
-        URI.join(base, URI.escape(path)).to_s
-      rescue URI::InvalidURIError
-      end
-    end
-
-    def extract_resources pattern, opts
-      html_str = fetch opts
-
-      return [] if html_str.nil?
-
-      html_str.gsub! *pattern.gsub if pattern.gsub
-
-      Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
-        if not pattern.attribute and el.name == 'form'
-          form_data = el.css('input').map { |i| [i['name'], i['value']] }
-          path = el.attr 'action'
-        else
-          attr = pattern.attribute || pattern.default_attribute(el.name)
-          path = attr ? el.attr(attr) : el.text
-        end
-
-        if path and u = urijoin(url, path)
-          r = Resource.new u, :form_data => form_data, :referer => (url if opts[:send_referer] and url !~ %r{\Afile://})
-          r = nil if pattern.regexp and u !~ pattern.regexp
-        end
-
-        r ? v << r : v
-      end
-    end
-
-    def command opts = {}
-      ref = ['--referer', referer] if referer
-      cmd = ['curl', '--silent', *Dlnode.common_curl_args(opts), *ref]
-
-      form_data.each do |kv|
-        cmd << '--form-string' << kv.map { |e| URI.encode_www_form_component e }.join('=')
-      end if form_data
-
-      cmd.concat opts[:curl_opts] if opts[:curl_opts]
-
-      cmd << url
-    end
-
-    def fetch opts = {}
-      cmd = command opts
-      warn cmd.shelljoin if opts[:verbose]
-      buf = IO.popen(cmd) { |io| io.read }
-
-      if $?.exitstatus.zero?
-        $stderr.print "\e[32m.\e[0m"
-        buf
-      else
-        $stderr.print "\e[31m.\e[0m\nFAILED to %s %s\n" % [form_data ? 'POST' : 'GET', url]
-        nil
-      end
-    end
-
-    def fetch_leaves patterns = [], opts = {}
-      p, *rest = patterns
-      resources = extract_resources p, opts
-
-      if rest.any?
-        resources.flat_map { |r| r.fetch_leaves rest, opts }
-      else
-        if opts[:verbose]
-          if resources.empty?
-            warn "\e[31mEmpty branch: #{url}\e[0m"
-          else
-            warn "\e[32mBranch #{url} leaf count: #{resources.size}\e[0m"
-          end
-        end
-        resources
-      end
-    end
-  end
-
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts[k] || DEFAULTS[k] }
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 28 do |opt|
+    @parser ||= OptionParser.new nil, 32 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Download nested HTML resources. Uses cURL.
 
