@@ -6,4 +6,4 @@
 #
 
 # Default options
-feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F" --action ";echo %F"
+feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F" --action ";echo %F"
