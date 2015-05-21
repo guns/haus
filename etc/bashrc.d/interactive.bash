@@ -1302,6 +1302,7 @@ ALIAS pac='pacman' && {
 
 ALIAS mkp='makepkg' \
       mkpf='makepkg --force' \
+      mkpc='makepkg --cleanbuild --force' \
       mkps='makepkg --syncdeps' \
       mkpa='makepkg --ignorearch'
 
