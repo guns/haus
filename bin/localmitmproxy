@@ -12,6 +12,7 @@ class Localmitmproxy
   DEFAULTS = {
     :intercept_ports => [80, 443, 8080, 8443],
     :proxy_port => 3346,
+    :dump => false
   }
 
   def initialize opts = {}
@@ -25,6 +26,10 @@ class Localmitmproxy
 
         Options:
       BANNER
+
+      opt.on '-d', '--dump' do |arg|
+        @dump = true
+      end
 
       opt.on '-p', '--intercept-ports A,B,C', Array, "DEFAULT: #{@intercept_ports.join ','}" do |arg|
         @intercept_ports = arg.map &:to_i
@@ -50,9 +55,13 @@ class Localmitmproxy
     sh *%W[iptables --table nat --delete OUTPUT 1]
   end
 
+  def mitmprog
+    @dump ? 'mitmdump' : 'mitmproxy'
+  end
+
   def start! *mitmproxy_args
     with_redirected_ports @intercept_ports, @proxy_port do
-      sh *(%W[mitmproxy --transparent --host --bind-address 127.0.0.1 --port #{@proxy_port}] + mitmproxy_args)
+      sh *(%W[#{mitmprog} --transparent --host --bind-address 127.0.0.1 --port #{@proxy_port}] + mitmproxy_args)
     end
   end
 
