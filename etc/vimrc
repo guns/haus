@@ -294,6 +294,8 @@ let g:splitjoin_join_mapping = ''
 if g:__FEATURES__['ag']
     let g:ackprg = 'ag --nogroup --nocolor --column'
 endif
+let g:ack_apply_qmappings = 0
+let g:ack_apply_lmappings = 0
 
 " Plugin: Unite.vim
 let g:unite_enable_start_insert = 1
