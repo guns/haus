@@ -1,0 +1,34 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'shellwords'
+
+%x(pacman --query --groups nerv nerv-alt).each_line do |line|
+  pkg = line.split[1]
+  upstream = pkg[/(.*)-(nerv|alt)$/, 1]
+
+  if upstream.nil?
+    warn "∄ #{pkg}"
+    next
+  end
+
+  v2 = %x(pacman --sync --info #{upstream.shellescape} 2>/dev/null)[/Version\s*:\s*(.*)/, 1]
+
+  if $?.exitstatus != 0
+    warn "∄ #{pkg}"
+    next
+  end
+
+  v1 = %x(pacman --query --info #{pkg.shellescape})[/Version\s*:\s*\S*?(\d.*)/, 1]
+  cmp = %x(vercmp #{v1.shellescape} #{v2.shellescape}).to_i
+
+  if cmp < 0
+    puts "✖ #{pkg}: #{v1} < #{v2}"
+  else
+    warn "✔ #{pkg}"
+  end
+end

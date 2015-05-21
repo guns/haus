@@ -1298,6 +1298,30 @@ ALIAS pac='pacman' && {
         run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
     }
     complete -F _pacdowngrade pacdowngrade
+
+    pacckalts() {
+        ruby -r shellwords -e '
+            %x(pacman --query --groups nerv nerv-alt).lines.map { |l| l.split[1] }.each { |pkg|
+                upstream = pkg[/(.*)-(nerv|alt)$/, 1]
+                if upstream.nil?
+                    warn "∄ #{pkg}"
+                    next
+                end
+                v2 = %x(pacman --sync --info #{upstream.shellescape} 2>/dev/null)[/Version\s*:\s*(.*)/, 1]
+                if $?.exitstatus != 0
+                    warn "∄ #{pkg}"
+                    next
+                end
+                v1 = %x(pacman --query --info #{pkg.shellescape})[/Version\s*:\s*(.*)/, 1]
+                cmp = %x(vercmp v1 v2).to_i
+                if cmp > 0
+                    puts "✖ #{pkg}: #{v1} < #{v2}"
+                else
+                    warn "✔ #{pkg}"
+                end
+            }
+        '
+    }
 }
 
 ALIAS mkp='makepkg' \
