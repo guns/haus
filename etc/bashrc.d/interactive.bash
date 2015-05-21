@@ -229,6 +229,7 @@ nohist() {
     fi
     __ps1toggle__ '/\\H/[nohist] \\H'
 }
+[[ "$NOHIST" ]] && nohist
 
 # notify
 HAVE notify && {
