@@ -5,9 +5,27 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
+require 'optparse'
 require 'shellwords'
 
-%x(pacman --query --groups nerv nerv-alt).each_line do |line|
+@groups = %w[nerv nerv-alt]
+@verbose = false
+
+OptionParser.new nil, 24 do |opt|
+  opt.on '-g', '--groups A,B,C', Array, "DEFAULT: #{@groups.join(',')}" do |arg|
+    @groups = arg
+  end
+
+  opt.on '-v', '--verbose' do
+    @verbose = true
+  end
+end.parse ARGV
+
+def warn msg
+  $stderr.puts msg if @verbose
+end
+
+%x(pacman --query --groups #{@groups.shelljoin}).each_line do |line|
   pkg = line.split[1]
   upstream = pkg[/(.*)-(nerv|alt)$/, 1]
 
