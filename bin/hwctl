@@ -6,44 +6,18 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'fileutils'
+require 'yaml'
 
 class Hwctl
-  SYSTEM = {
-    'macbook' => {
-      :backlight        => '/sys/class/backlight/intel_backlight/brightness',
-      :backlight_max    => '/sys/class/backlight/intel_backlight/max_brightness',
-      :backlight_actual => '/sys/class/backlight/intel_backlight/actual_brightness',
-      :fnmode           => '/sys/module/hid_apple/parameters/fnmode',
-      :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
-      :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
-      :temps            => Dir["/sys/devices/platform/coretemp.0/temp*_input"]
-    },
-    'imac' => {
-      :backlight        => '/sys/class/backlight/apple_backlight/brightness',
-      :backlight_max    => '/sys/class/backlight/apple_backlight/max_brightness',
-      :backlight_actual => '/sys/class/backlight/apple_backlight/actual_brightness',
-      :fnmode           => nil,
-      :fan_manual       => '/sys/devices/platform/applesmc.768/fan1_manual',
-      :fan_speed        => '/sys/devices/platform/applesmc.768/fan1_output',
-      :temps            => nil
-    },
-    'it8728' => {
-      :backlight        => nil,
-      :backlight_max    => nil,
-      :backlight_actual => nil,
-      :fnmode           => nil,
-      :fan_manual       => '/sys/devices/platform/it87.2608/pwm2_enable',
-      :fan_speed        => '/sys/devices/platform/it87.2608/pwm2',
-      :temps            => ['/sys/devices/platform/it87.2608/temp1_input']
-    },
+  DEFAULTS = {
+    :config => '/etc/hwctl.yml',
+    :state_file => '/var/run/hwctl-state.yml',
+    :sys => nil,
   }
 
-  attr_reader :options
-
   def initialize opts = {}
-    @options = OpenStruct.new opts
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
@@ -58,36 +32,66 @@ class Hwctl
               Query or set backlight as a percentage. Argument can be signed
               for relative adjustment.
 
+            bp mode user group
             backlight-permissions mode user group
               Set backlight control file permissions.
 
-            fan base-speed [temp:speed …]
-              Manually set fan speeds (in RPM) at given temps (in Celsius).
-              Polls every 10 seconds and speeds are not ramped. Fan control is
-              handed back to the kernel on exit.
+            fan
+              Dump fan state to stdout.
+            fan pct
+              Set fan speeds as to given percentage. Writes current fan state
+              to #{@state_file}
+            fan [i]nteractive
+              Read fan speeds as a percentage on stdin. Fan control state is
+              restored on exit.
+            fan [r]estore
+              Restore fan state from #{@state_file}
 
             fnmode [fn|media]
-              Set laptop function key mode.
-
-            toggle-alsa-card [index]
-              Switch between available sound cards, or specified card index
+            fnmode [2|1]
+              Query or set laptop function key mode.
 
             toggle-pulseaudio-sink [index]
             toggle-pulseaudio-source [index]
-              Toggle between available Pulseaudio input sinks and output sources
+              Set or toggle between available Pulseaudio output sinks and
+              input sources.
 
           Options:
       BANNER
 
-      opt.on '-s', '--system KEY', 'KEY=%s' % SYSTEM.keys.join('|') do |arg|
-        options.system = SYSTEM[arg]
+      opt.on '-c', '--config PATH', "DEFAULT: #{@config}" do |arg|
+        @config = File.expand_path arg
+      end
+
+      opt.on '-f', '--state-file PATH', "DEFAULT: #{@state_file}" do |arg|
+        @state_file = File.expand_path arg
       end
     end
   end
 
   def sys
-    raise 'System specific path required, but no --system specified' unless options.system
-    options.system
+    @sys ||= begin
+      cfg = YAML.load_file @config
+      %w[fan_manual fan_speed].each do |k|
+        cfg[k] = [cfg[k]] unless cfg[k].is_a? Array
+      end
+      cfg
+    end
+  end
+
+  def state_saved?
+    File.readable? @state_file
+  end
+
+  def state
+    YAML.load_file @state_file if state_saved?
+  end
+
+  def write_state map
+    warn ":: Writing fan state to #{@state_file}"
+    File.open @state_file, 'w', 0600 do |f|
+      f.puts map.to_yaml
+    end
   end
 
   def brightness cur, max
@@ -99,7 +103,7 @@ class Hwctl
     v = max if value > max
     v = 0 if value < 0
 
-    File.open sys[:backlight], 'w' do |f|
+    File.open sys['backlight'], 'w' do |f|
       f.puts v
     end
 
@@ -131,12 +135,12 @@ class Hwctl
   end
 
   def get_temps
-    sys[:temps].map { |f| File.read(f).to_i }
+    sys['temps'].map { |f| File.read(f).to_i }
   end
 
   def backlight setting = nil
-    max = File.read(sys[:backlight_max]).to_i
-    cur = File.read(sys[:backlight_actual]).to_i
+    max = File.read(sys['backlight_max']).to_i
+    cur = File.read(sys['backlight_actual']).to_i
 
     case setting
     when nil           then brightness cur, max
@@ -147,101 +151,94 @@ class Hwctl
   end
 
   def backlight_permissions mode, user, group
-    f = sys[:backlight]
+    f = sys['backlight']
     FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
     FileUtils.chown user, group, f
     s = File.stat f
     '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
   end
 
-  def fan base_speed, *temps_speeds
-    table = [[-1000, base_speed.to_i]] + temps_speeds.map { |s|
-      raise 'Fan speed arguments must be in form of °C:RPM' unless s =~ /\A\d+:\d+\z/
-      temp, speed = s.split ':'
-      [temp.to_i, speed.to_i]
-    }
-    last_index = table.size - 1
+  def current_fan_state
+    s = { 'fan_manual' => {}, 'fan_speed' => {} }
+    sys['fan_manual'].each { |f| s['fan_manual'][f] = File.read(f).chomp }
+    sys['fan_speed'].each { |f| s['fan_speed'][f] = File.read(f).chomp }
+    s
+  end
 
-    original_fan_manual = File.read sys[:fan_manual]
-    if original_fan_manual != '1'
-      puts 'Assuming manual control of fan via: ' + sys[:fan_manual]
-      File.open(sys[:fan_manual], 'w') { |f| f.puts '1' }
-    end
+  def set_fan_speeds arg
+    state = current_fan_state
+    write_state state unless state_saved?
 
-    current_index = nil
-
-    if last_index.zero?
-      puts 'Setting constant fan speed %s' % base_speed
-      File.open(sys[:fan_speed], 'w') { |f| f.puts base_speed }
-      sleep
-    else
-      loop do
-        # Take two samples, since the values tend to jump around
-        temp = get_temps.max
-        sleep 1
-        temp += get_temps.max
-        temp /= 2000
-
-        i = table.find_index { |t, sp| temp < t }
-
-        index = case i
-        when 0 then raise 'Erroneous temperature reading: %d' % temp
-        when nil then last_index
-        else i - 1
-        end
-
-        if current_index != index
-          speed = table[index][1]
-          puts "Temp: %d, Speed: %d" % [temp, speed]
-          File.open(sys[:fan_speed], 'w') { |f| f.puts speed }
-          current_index = index
-        end
-
-        sleep 9
+    sys['fan_manual'].each do |switch|
+      if state['fan_manual'][switch] != '1'
+        warn ":: #{switch} -> 1"
+        File.open(switch, 'w') { |f| f.puts '1' }
       end
     end
+
+    max = 255.0
+
+    pct = case arg
+    when /\A[+-]\d+\z/ then arg.to_f/100.0 + state['fan_speed'].to_a[0][1].to_i/max
+    when /\A\d+\z/     then arg.to_i/100.0
+    else raise ArgumentError
+    end
+
+    n = (0xff * pct).round.to_s
+
+    sys['fan_speed'].each do |dial|
+      warn ":: #{dial} -> #{n}"
+      File.open(dial, 'w') { |f| f.puts n }
+    end
+
+    '%d %.2f%%' % [n, pct * 100]
+  end
+
+  def set_fan_speeds_interactively
+    loop do
+      input = $stdin.gets "\n"
+      break if input.nil?
+      set_fan_speeds input.chomp rescue ArgumentError
+    end
   ensure
-    if original_fan_manual != '1'
-      File.open(sys[:fan_manual], 'w') { |f| f.puts original_fan_manual || '0' }
-      puts 'Released manual fan control!'
+    restore_fan_state @state_file
+  end
+
+  def restore_fan_state file
+    return false unless state_saved?
+
+    warn ":: Restoring fan state from #{@state_file}"
+    s = YAML.load_file file
+    s.values_at('fan_speed', 'fan_manual').each do |h|
+      h.each do |(k, v)|
+        warn ":: #{k} -> #{v}"
+        File.open k, 'w' do |f|
+          f.puts v
+        end
+      end
+    end
+    FileUtils.rm_f file, :verbose => true
+    "Restored fan state"
+  end
+
+  def fan arg = nil
+    case arg
+    when 'r', 'restore'     then restore_fan_state @state_file
+    when 'i', 'interactive' then set_fan_speeds_interactively
+    when /\A[+-]?\d+\z/     then set_fan_speeds arg
+    when nil                then current_fan_state.to_yaml
+    else raise ArgumentError
     end
   end
 
   def fnmode type = nil
     case type
-    when 2, 'fn'    then File.open(sys[:fnmode], 'w') { |f| f.puts '2' }
-    when 1, 'media' then File.open(sys[:fnmode], 'w') { |f| f.puts '1' }
-    when nil        then nil
+    when '2', 'fn'    then File.open(sys['fnmode'], 'w') { |f| f.puts '2' }
+    when '1', 'media' then File.open(sys['fnmode'], 'w') { |f| f.puts '1' }
+    when nil          then nil
     else raise ArgumentError
     end
-    File.read sys[:fnmode]
-  end
-
-  def toggle_alsa_card index = nil
-    asoundrc = File.expand_path '~/.asoundrc'
-    settings = %w[defaults.pcm.card defaults.ctl.card]
-    cards = Hash[File.readlines('/proc/asound/cards').grep(/\A\s*(\d+)\s*(\[.*)/) { |m|
-      [$1.to_i, $2]
-    }]
-    indices = cards.keys
-
-    FileUtils.touch asoundrc
-    buf = File.read asoundrc
-
-    next_index = index || begin
-      cur = buf[/^#{settings.first}\s+(\d+)/, 1]
-      if cur
-        i = indices.index cur.to_i
-        indices[i ? (i + 1) % indices.size : 0]
-      else
-        indices.first
-      end
-    end
-
-    lines = buf.lines.reject { |l| settings.include? l[/\A\S+/] }
-    lines += settings.map { |k| "#{k} #{next_index}\n" }
-    File.open(asoundrc, 'w') { |f| f.puts lines.join }
-    cards[next_index]
+    File.read sys['fnmode']
   end
 
   def toggle_pulseaudio type, index = nil
@@ -265,17 +262,17 @@ class Hwctl
     rest = args.drop 1
 
     out = case args.first
-    when 'b', 'backlight' then backlight *rest
-    when 'backlight-permissions' then backlight_permissions *rest
-    when 'fan' then fan *rest
-    when 'fnmode' then fnmode *rest
-    when 'toggle-alsa-card' then toggle_alsa_card *rest
-    when 'toggle-pulseaudio-sink' then toggle_pulseaudio "sink", *rest
-    when 'toggle-pulseaudio-source' then toggle_pulseaudio "source", *rest
+    when 'b', 'backlight'              then backlight *rest
+    when 'bp', 'backlight-permissions' then backlight_permissions *rest
+    when 'fan'                         then fan *rest
+    when 'fnmode'                      then fnmode *rest
+    when 'toggle-pulseaudio-sink'      then toggle_pulseaudio 'sink', *rest
+    when 'toggle-pulseaudio-source'    then toggle_pulseaudio 'source', *rest
     else abort parser.help
     end
 
     puts out if out
+    abort if out == false
   end
 end
 
