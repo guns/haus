@@ -4,14 +4,15 @@
 # http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy
 
 require 'optparse'
-require 'ostruct'
 
 class RubyHierarchy
-  attr_reader :options
+  DEFAULTS = {
+    :root => nil,
+    :indent => 2
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.indent ||= 2
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
@@ -27,11 +28,11 @@ class RubyHierarchy
       BANNER
 
       opt.on '-e', '--exceptions', 'Show exception hierarchy; same as specifying Exception as the root node' do
-        options.root = 'Exception'
+        @root = 'Exception'
       end
 
       opt.on '-i', '--indent N', Integer, 'Indent step size' do |arg|
-        options.indent = arg
+        @indent = arg
       end
 
       opt.on '-r', '--require a,b,c', Array, 'Libraries to require before building tree' do |arg|
@@ -41,7 +42,7 @@ class RubyHierarchy
   end
 
   def to_hash
-    root = Kernel.const_get options.root if options.root
+    root = Kernel.const_get @root if @root
     tree = {}
 
     ObjectSpace.each_object Class do |leaf|
@@ -65,9 +66,9 @@ class RubyHierarchy
   def reduce tree, buf = '', indent = 0
     tree.keys.sort_by { |k| k.to_s }.each do |k|
       buf << "%s%s\n" % [' ' * indent, k]
-      indent += options.indent
+      indent += @indent
       reduce tree[k], buf, indent # Recurse!
-      indent -= options.indent
+      indent -= @indent
     end
 
     buf
@@ -76,7 +77,7 @@ class RubyHierarchy
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.size > 1
-    options.root = args.first if args.first
+    @root = args.first if args.first
     puts to_s
   end
 end

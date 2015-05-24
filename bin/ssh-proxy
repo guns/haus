@@ -1,32 +1,37 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2014 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'set'
 require 'resolv'
 require 'nerv/cli/superparser'
 
 class SSHProxy
-  attr_reader :options
-
   DNS_SERVERS = [
     %w[23.226.227.93 443],
     %w[208.67.220.220 443]
   ]
 
+  DEFAULTS = {
+    :sshuttle => 'sshuttle',
+    :excluded => nil,
+    :commands => nil,
+    :firewall_commands => nil,
+    :port => 3346,
+    :dns => true,
+    :quiet => false,
+    :verbose => false,
+  }
+
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.sshuttle ||= 'sshuttle'
-    options.excluded ||= Set.new
-    options.commands ||= []
-    options.firewall_commands ||= []
-    options.port ||= 3346 # IANA "trnsprntproxy"
-    options.dns ||= true
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @excluded ||= Set.new
+    @commands ||= []
+    @firewall_commands ||= []
   end
 
   def parser
@@ -46,37 +51,37 @@ class SSHProxy
       BANNER
 
       opt.on '-c', '--command CMD', 'Command(s) to run after sshuttle terminates' do |arg|
-        options.commands << arg
+        @commands << arg
       end
 
       opt.on '-f', '--firewall-command CMD', 'Command(s) to run before appending final OUTPUT LOG+DROP' do |arg|
-        options.firewall_commands << arg
+        @firewall_commands << arg
       end
 
       opt.on '-n', '--no-dns', 'Do not forward local DNS requests' do
-        options.dns = false
+        @dns = false
       end
 
-      opt.on '-p', '--port N', Integer, 'Local proxy port [DEFAULT: %s]' % options.port do |arg|
-        options.port = arg
+      opt.on '-p', '--port N', Integer, 'Local proxy port [DEFAULT: %s]' % @port do |arg|
+        @port = arg
       end
 
       opt.on '-x', '--exclude SUBNET', "Same as sshuttle's --exclude" do |arg|
-        options.excluded << resolve_cidr(arg)
+        @excluded << resolve_cidr(arg)
       end
 
-      opt.on '--sshuttle PATH', 'Path to sshuttle executable [DEFAULT: %s]' % options.sshuttle do |arg|
-        options.sshuttle = File.expand_path arg
+      opt.on '--sshuttle PATH', 'Path to sshuttle executable [DEFAULT: %s]' % @sshuttle do |arg|
+        @sshuttle = File.expand_path arg
       end
 
       opt.on '-q', '--quiet' do
-        options.quiet = true
-        options.verbose = false
+        @quiet = true
+        @verbose = false
       end
 
       opt.on '-v', '--verbose' do
-        options.quiet = false
-        options.verbose = true
+        @quiet = false
+        @verbose = true
       end
     end
   end
@@ -94,11 +99,11 @@ class SSHProxy
   end
 
   def sh *args
-    warn args.join(' ') unless options.quiet
+    warn args.join(' ') unless @quiet
     system *args or raise "#{args.join(' ').inspect} failed with status #{$?.exitstatus}"
   end
 
-  def iptables_secure_outgoing host, port, excluded = options.excluded
+  def iptables_secure_outgoing host, port, excluded = @excluded
     # Drop all outgoing by default
     sh *%W[iptables --flush OUTPUT]
     sh *%W[iptables --policy OUTPUT DROP]
@@ -107,9 +112,9 @@ class SSHProxy
     # dnscrypt-proxy queries to DNS servers
     DNS_SERVERS.each do |addr, port|
       sh *%W[iptables --append OUTPUT --protocol udp --destination #{addr} --destination-port #{port} --jump ACCEPT]
-    end unless options.dns
+    end unless @dns
     # local redirects to the sshuttle daemon (from the gateway interface)
-    sh *%W[iptables --append OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{options.port} --jump ACCEPT]
+    sh *%W[iptables --append OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{@port} --jump ACCEPT]
     # traffic to the remote proxy server
     sh *%W[iptables --append OUTPUT --protocol tcp --destination #{host} --destination-port #{port} --jump ACCEPT]
     # and any excluded subnets
@@ -117,7 +122,7 @@ class SSHProxy
       sh *%W[iptables --append OUTPUT --destination #{net} --jump ACCEPT]
     end
     # Execute firewall hooks now
-    options.firewall_commands.each do |cmd|
+    @firewall_commands.each do |cmd|
       sh cmd
     end
     # Log the rest
@@ -125,14 +130,14 @@ class SSHProxy
   end
 
   def start_server ssh_host, xargs = []
-    cmd = %W[#{options.sshuttle} --listen 127.0.0.1:#{options.port} --remote #{ssh_host}]
-    cmd << '--dns' if options.dns
-    options.excluded.each { |net| cmd << '--exclude' << net }
+    cmd = %W[#{@sshuttle} --listen 127.0.0.1:#{@port} --remote #{ssh_host}]
+    cmd << '--dns' if @dns
+    @excluded.each { |net| cmd << '--exclude' << net }
     cmd.concat xargs
     cmd << '0/0'
 
-    warn cmd.join(' ') unless options.quiet
-    pid = fork { exec *cmd, :err => options.verbose ? $stderr : '/dev/null' }
+    warn cmd.join(' ') unless @quiet
+    pid = fork { exec *cmd, :err => @verbose ? $stderr : '/dev/null' }
 
     trap :INT do
       trap :INT, 'DEFAULT'
@@ -154,7 +159,7 @@ class SSHProxy
     iptables_secure_outgoing host, port
 
     start_server ssh_host, xargs do
-      options.commands.each { |cmd| sh cmd }
+      @commands.each { |cmd| sh cmd }
     end
   end
 

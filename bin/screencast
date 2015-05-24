@@ -1,21 +1,24 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2013 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'ostruct'
+require 'shellwords'
 
 class Screencast
-  attr_reader :options
+  DEFAULTS = {
+    :audio => true,
+    :rate => 25,
+    :codec => 'libx264',
+    :delay => 0
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.audio ||= true
-    options.rate ||= 25
-    options.codec ||= 'libx264'
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
@@ -32,34 +35,39 @@ class Screencast
       BANNER
 
       opt.on '-d', '--delay SECONDS', Integer, 'Seconds to wait before recording' do |arg|
-        options.delay = arg
+        @delay = arg
       end
 
       opt.on '-g', '--geometry WxH+X,Y', 'Geometry and offset of capture area' do |arg|
-        options.geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:,(\d+)))/)[1..-1]
+        @geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:,(\d+)))/)[1..-1]
       end
 
       opt.on '-n', '--no-audio', 'Do not record audio' do
-        options.audio = false
+        @audio = false
       end
 
       opt.on '-r', '--rate FPS', Integer, 'Set capture FPS' do |arg|
-        options.rate = arg
+        @rate = arg
       end
 
       opt.on '-w', '--window', 'Set capture area to interactively chosen window' do
-        options.window = true
+        @window = true
       end
 
       opt.on '-W', '--window-id ID', 'Set capture area to given window ID' do |arg|
-        options.window = true
-        options.window_id = arg
+        @window = true
+        @window_id = arg
       end
 
       opt.on '-x', '--dnxhd', 'Use the DNxHD codec' do
-        options.codec = 'dnxhd'
+        @codec = 'dnxhd'
       end
     end
+  end
+
+  def sh *args
+    warn args.shelljoin
+    system *args
   end
 
   def parse_geometry geometry
@@ -164,7 +172,7 @@ class Screencast
       -af bandreject=frequency=60:width_type=q:width=1.0
     ] if opts[:audio]
 
-    exec 'ffmpeg', *copts, file
+    sh 'ffmpeg', *copts, file
   end
 
   def run arguments = []
@@ -174,19 +182,19 @@ class Screencast
 
     file = args.first
     if File.directory? file
-      file = File.join file, timestamp + (options.codec == 'dnxhd' ? '.mov' : '.mkv')
+      file = File.join file, timestamp + (@codec == 'dnxhd' ? '.mov' : '.mkv')
     end
 
-    geometry = options.window ? get_window_geometry(options.window_id)
-                              : (options.geometry || current_screen_geometry)
+    geometry = @window ? get_window_geometry(@window_id)
+                       : (@geometry || current_screen_geometry)
 
-    countdown options.delay if options.delay
+    countdown @delay
 
     record file, geometry,
-      :codec => options.codec,
-      :rate => options.rate,
-      :display => current_display,
-      :audio => options.audio
+           :codec => @codec,
+           :rate => @rate,
+           :display => current_display,
+           :audio => @audio
   end
 end
 

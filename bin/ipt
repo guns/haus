@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2014 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -21,8 +21,7 @@ class Ipt
   IPV6_TABLES = IPV4_TABLES - %w[nat]
 
   def initialize opts = {}
-    @udp, @ipv4, @ipv6, @save4, @save6 =
-      DEFAULTS.merge(opts).values_at :udp, :ipv4, :ipv6, :save4, :save6
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser

@@ -6,18 +6,24 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'fileutils'
 require 'set'
 require 'haus/queue'
 require 'haus/utils'
 
 class Lninstall
-  attr_reader :options, :queue
+  DEFAULTS = {
+    :init => false,
+    :libs => false,
+    :share => false,
+    :uninstall => false,
+    :src => nil,
+    :dst => nil
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new({:relative => true}.merge(opts))
-    @queue   = Haus::Queue.new options
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @queue = Haus::Queue.new :relative => true
   end
 
   def parser
@@ -32,51 +38,49 @@ class Lninstall
       BANNER
 
       opt.on '-a', '--all', 'Also link init, headers, libraries, and all of share/' do
-        options.init = options.libs = options.share = true
+        @init = @libs = @share = true
       end
 
       opt.on '-A', '--absolute', 'Create absolute links instead of relative links' do
-        queue.options.relative = false
+        @queue.options.relative = false
       end
 
       opt.on '-i', '--init', 'Also link init files' do
-        options.init = true
+        @init = true
       end
 
       opt.on '-l', '--libs', 'Also link header files and libraries' do
-        options.libs = true
+        @libs = true
       end
 
       opt.on '-s', '--share', 'Also link all files in share/' do
-        options.share = true
+        @share = true
       end
 
       opt.on '-f', '--force', 'Overwrite all files without prompting' do
-        queue.options.force = true
+        @queue.options.force = true
       end
 
       opt.on '-n', '--noop', 'Make no changes, but show what would have been done' do
-        queue.options.noop = true
+        @queue.options.noop = true
       end
 
       opt.on '-q', '--quiet', 'Produce no output' do
-        queue.options.quiet = true
+        @queue.options.quiet = true
       end
 
       opt.on '-u', '--uninstall', 'Unlink files in `dst` that link to corresponding files in `src`' do
-        options.uninstall = true
+        @uninstall = true
       end
     end
   end
 
-  attr_writer :src, :dst
-
   def src
-    File.expand_path options.src rescue nil
+    File.expand_path @src rescue nil
   end
 
   def dst
-    File.expand_path options.dst rescue nil
+    File.expand_path @dst rescue nil
   end
 
   def dirpaths patterns
@@ -120,9 +124,9 @@ class Lninstall
 
   def source_files base
     fs = program_files base
-    fs.merge init_files(base)    if options.init  or options.uninstall
-    fs.merge library_files(base) if options.libs  or options.uninstall
-    fs.merge share_files(base)   if options.share or options.uninstall
+    fs.merge init_files(base)    if @init  or @uninstall
+    fs.merge library_files(base) if @libs  or @uninstall
+    fs.merge share_files(base)   if @share or @uninstall
     fs
   end
 
@@ -142,18 +146,18 @@ class Lninstall
 
   def install
     src_files.each do |f|
-      queue.add_link f, f.sub(%r{\A#{src}(.*)}, dst + '\1')
+      @queue.add_link f, f.sub(%r{\A#{src}(.*)}, dst + '\1')
     end
 
-    queue.execute
+    @queue.execute
   end
 
   def uninstall
     dst_files.each do |f|
-      queue.add_deletion f
+      @queue.add_deletion f
     end
 
-    if queue.execute
+    if @queue.execute
       dst_files.map { |f| File.dirname f }.uniq.each do |d|
         FileUtils.rmdir d if Dir.entries(d).reject { |e| e == '.' || e == '..' }.empty?
       end
@@ -164,8 +168,8 @@ class Lninstall
     args = parser.parse arguments
     abort parser.help unless args.size == 2
 
-    options.src, options.dst = args
-    options.uninstall ? uninstall : install
+    @src, @dst = args
+    @uninstall ? uninstall : install
   end
 end
 

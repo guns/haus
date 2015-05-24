@@ -1,19 +1,18 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2013 Sung Pae <self@sungpae.com>
+# Copyright (c) 2013-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'fileutils'
 
 class MakeOverlay
-  attr_reader :options
+  DEFAULTS = { :caption => false }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
@@ -25,7 +24,7 @@ class MakeOverlay
       BANNER
 
       opt.on '-c', '--caption' do
-        options.caption = true
+        @caption = true
       end
     end
   end
@@ -60,7 +59,7 @@ class MakeOverlay
 
   def run arguments = []
     args = parser.parse arguments
-    call $stdin.read, args.first, options.caption
+    call $stdin.read, args.first, @caption
   end
 end
 

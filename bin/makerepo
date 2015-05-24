@@ -10,9 +10,12 @@ require 'set'
 require 'fileutils'
 
 class Makerepo
-  DEFAULTS = { :delete => false, :name => nil }
-  LIB_DIR = '/var/lib/pacman/local'
-  CACHE_DIR = '/var/cache/pacman/pkg'
+  DEFAULTS = {
+    :delete => false,
+    :name => nil,
+    :cache_dir => '/var/cache/pacman/pkg',
+    :lib_dir => '/var/lib/pacman/local',
+  }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -33,6 +36,14 @@ class Makerepo
       opt.on '-n', '--name NAME', 'Basename of pkg db [DEFAULT %s]' % hostname do |arg|
         @name = arg
       end
+
+      opt.on '-C', '--cache-dir PATH', "DEFAULT: #{@cache_dir}" do |arg|
+        @cache_dir = File.expand_path arg
+      end
+
+      opt.on '-L', '--lib-dir PATH', "DEFAULT: #{@lib_dir}" do |arg|
+        @lib_dir = File.expand_path arg
+      end
     end
   end
 
@@ -45,7 +56,7 @@ class Makerepo
   end
 
   def dbpath
-    @dbpath ||= "#{CACHE_DIR}/#{@name || hostname}.db.tar.gz"
+    @dbpath ||= "#{@cache_dir}/#{@name || hostname}.db.tar.gz"
   end
 
   def dbmtime
@@ -53,14 +64,14 @@ class Makerepo
   end
 
   def cached_packages
-    @cached_packages ||= Set.new Dir[File.join CACHE_DIR, '*.pkg.tar.xz'].select { |f|
+    @cached_packages ||= Set.new Dir[File.join @cache_dir, '*.pkg.tar.xz'].select { |f|
       File.stat(f).ctime > dbmtime
     }
   end
 
   def packages
-    @packages ||= Dir[File.join LIB_DIR, '*'].reduce [] do |v, f|
-      base = File.join CACHE_DIR, File.basename(f)
+    @packages ||= Dir[File.join @lib_dir, '*'].reduce [] do |v, f|
+      base = File.join @cache_dir, File.basename(f)
       if cached_packages.include? (pkg = "#{base}-any.pkg.tar.xz")
         v << pkg
       elsif cached_packages.include? (pkg = "#{base}-#{arch}.pkg.tar.xz")

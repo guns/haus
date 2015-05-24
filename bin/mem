@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2010-2014 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -9,69 +9,68 @@ require 'optparse'
 require 'ostruct'
 require 'nerv/cli/meter'
 
-class Mem # {{{1
-  class Graph # {{{2
-    attr_accessor :width, :mem, :swap
+class Mem; end
 
-    def initialize width = nil
-      @width = width
+class Mem::Graph
+  attr_accessor :width, :mem, :swap
+
+  def initialize width = nil
+    @width = width
+  end
+
+  def to_s
+    len = ([mem.total, swap.total].max.to_s.length * 2) + 1
+    memm = NERV::CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values, mem.total, :width => width).to_s
+    return memm.to_s if swap.total.zero?
+    swpm = NERV::CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
+    [memm, swpm].join "\n"
+  end
+end
+
+class Mem::LinuxGraph < Mem::Graph
+  def initialize *args
+    super
+
+    meminfo = {}
+
+    File.read('/proc/meminfo').each_line do |line|
+      key, _, kb = line.partition ':'
+      meminfo[key] = kb.to_i * (1 << 10)
     end
 
-    def to_s
-      len = ([mem.total, swap.total].max.to_s.length * 2) + 1
-      memm = NERV::CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values, mem.total, :width => width).to_s
-      return memm.to_s if swap.total.zero?
-      swpm = NERV::CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
-      [memm, swpm].join "\n"
-    end
-  end # }}}2
+    @mem = OpenStruct.new
+    mem.mem_total = meminfo['MemTotal']
+    mem.free = meminfo['MemFree']
+    mem.buffers = meminfo['Buffers']
+    mem.cached = meminfo['Cached']
+    mem.slab_reclaimable = meminfo['SReclaimable']
+    mem.slab_unreclaimable = meminfo['SUnreclaim']
+    mem.active = mem.mem_total - mem.free - mem.buffers - mem.cached - mem.slab_reclaimable - mem.slab_unreclaimable
+    mem.values = [
+      [mib(mem.active), :green, :bold],
+      [mib(mem.slab_unreclaimable), :green],
+      [mib(mem.slab_reclaimable), :cyan],
+      [mib(mem.cached), :yellow],
+      [mib(mem.buffers), :magenta]
+    ]
+    mem.total = mib mem.mem_total
 
-  class LinuxGraph < Graph # {{{2
-    def initialize *args
-      super
+    @swap = OpenStruct.new
+    swap.swap_total = meminfo['SwapTotal']
+    swap.used = swap.swap_total - meminfo['SwapFree']
+    swap.values = [[mib(swap.used), :red]]
+    swap.total = mib swap.swap_total
+  end
 
-      meminfo = {}
+  def mib bytes
+    (bytes.to_f / 2**20).round
+  end
+end
 
-      File.read('/proc/meminfo').each_line do |line|
-        key, _, kb = line.partition ':'
-        meminfo[key] = kb.to_i * (1 << 10)
-      end
-
-      @mem = OpenStruct.new
-      mem.mem_total = meminfo['MemTotal']
-      mem.free = meminfo['MemFree']
-      mem.buffers = meminfo['Buffers']
-      mem.cached = meminfo['Cached']
-      mem.slab_reclaimable = meminfo['SReclaimable']
-      mem.slab_unreclaimable = meminfo['SUnreclaim']
-      mem.active = mem.mem_total - mem.free - mem.buffers - mem.cached - mem.slab_reclaimable - mem.slab_unreclaimable
-      mem.values = [
-        [mib(mem.active), :green, :bold],
-        [mib(mem.slab_unreclaimable), :green],
-        [mib(mem.slab_reclaimable), :cyan],
-        [mib(mem.cached), :yellow],
-        [mib(mem.buffers), :magenta]
-      ]
-      mem.total = mib mem.mem_total
-
-      @swap = OpenStruct.new
-      swap.swap_total = meminfo['SwapTotal']
-      swap.used = swap.swap_total - meminfo['SwapFree']
-      swap.values = [[mib(swap.used), :red]]
-      swap.total = mib swap.swap_total
-    end
-
-    def mib bytes
-      (bytes.to_f / 2**20).round
-    end
-  end # }}}2
-
-  attr_reader :options, :graph
-
+class Mem
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    @graph   = case RUBY_PLATFORM
-    when /linux/i  then LinuxGraph.new options.width
+    @graph = case RUBY_PLATFORM
+    when /linux/i  then LinuxGraph.new @width
     else raise 'Only Linux supported at the moment'
     end
   end
@@ -87,15 +86,19 @@ class Mem # {{{1
       BANNER
 
       opt.on '-w', '--width COLUMNS', Integer, 'Set output to given width' do |arg|
-        graph.width = arg
+        self.width = arg
       end
     end
+  end
+
+  def width= n
+    @graph.width = n
   end
 
   def run arguments = []
     args = parser.parse arguments
     abort parser.help unless args.empty?
-    puts graph.to_s
+    puts @graph.to_s
   end
 end
 

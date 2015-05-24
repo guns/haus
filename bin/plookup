@@ -1,50 +1,45 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2011-2012 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'ostruct'
 require 'set'
+require 'haus/utils'
 
 class Plookup
-  attr_reader :options
+  DEFAULTS = {
+    :file => nil,
+    :ugly => false,
+  }
 
   def initialize opts = {}
-    @options = OpenStruct.new opts
-    options.flags ||= Set.new
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options] port|string|regexp ...
+        Usage: #{File.basename __FILE__} [options] port|regexp ...
 
         Options:
       BANNER
 
       opt.on '-f', '--file PATH', 'Services file; defaults to:', services.join(' + ') do |arg|
-        options.file = arg
-      end
-
-      opt.on '-i', '--ignore-case', 'Case-insensitive search' do
-        options.flags << Regexp::IGNORECASE
-      end
-
-      opt.on '-r', '--regexp', 'Interpret pattern as a Ruby regular expression' do
-        options.regexp = true
+        @file = arg
       end
 
       opt.on '-u', '--ugly', 'Do not pretty print results' do
-        options.ugly = true
+        @ugly = true
       end
     end
   end
 
   def services
-    fs = (options.file ? [options.file] : [
+    fs = (@file ? [@file] : [
       '/etc/services',
       File.expand_path('../../share/nmap/nmap-services', %x(/bin/sh -c 'command -v nmap').chomp)
     ]).select { |f| File.exists? f }
@@ -54,19 +49,14 @@ class Plookup
     fs
   end
 
-  def flags
-    options.flags.inject(0) { |n,f| n|f }
-  end
-
   def grep pattern
-    rgx = if options.regexp
-      Regexp.new pattern, flags
-    elsif pattern =~ /\A\d+\z/
-      # Restrict search to port numbers
-      Regexp.new '\s%s/\w' % pattern, flags
-    else
-      # String search
-      Regexp.new Regexp.escape(pattern), flags
+    rgx = case pattern
+    # Restrict search to port numbers
+    when /\A0x(\h+)\z/ then Regexp.new '\s%d/\w' % $1.to_i(16)
+    when /\A\d+\z/     then Regexp.new '\s%s/\w' % pattern
+    # Case insensitive search by default
+    when %r{\A[^/]}    then Regexp.new pattern, Regexp::IGNORECASE
+    else Haus::Utils.regexp_parse pattern
     end
 
     services.flat_map { |f| File.readlines f }.grep rgx
@@ -89,7 +79,7 @@ class Plookup
     args = parser.parse arguments
     abort parser.help if args.empty?
 
-    args.each { |arg| puts options.ugly ? grep(arg) : pp(grep arg) }
+    args.each { |arg| puts @ugly ? grep(arg) : pp(grep arg) }
   end
 end
 
