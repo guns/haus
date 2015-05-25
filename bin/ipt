@@ -10,15 +10,14 @@ require 'shellwords'
 
 class Ipt
   DEFAULTS = {
-    :udp   => false,
-    :ipv4  => true,
-    :ipv6  => false,
-    :save4 => '/etc/iptables/iptables.rules',
-    :save6 => '/etc/iptables/ip6tables.rules'
+    :protocol => 'tcp',
+    :ipv4     => true,
+    :ipv6     => false,
+    :save4    => '/etc/iptables/iptables.rules',
+    :save6    => '/etc/iptables/ip6tables.rules'
   }
 
-  IPV4_TABLES = %w[filter nat mangle raw security]
-  IPV6_TABLES = IPV4_TABLES - %w[nat]
+  TABLES = %w[filter nat mangle raw security]
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -44,16 +43,24 @@ class Ipt
         Options:
       BANNER
 
-      opt.on '-u', '--udp', 'Given port rules are for UDP, not TCP' do
-        @udp = true
+      opt.on '-a', '--all', 'IPv4 + IPv6' do
+        @ipv4, @ipv6 = true, true
       end
 
-      opt.on '-4', '--ipv4', "Toggle IPv4 commands; DEFAULT=#{@ipv4}" do
-        @ipv4 = !@ipv4
+      opt.on '-4', '--ipv4', 'IPv4 only (default)' do
+        @ipv4, @ipv6 = true, false
       end
 
-      opt.on '-6', '--ipv6', "Toggle IPv6 commands; DEFAULT=#{@ipv6}" do
-        @ipv6 = !@ipv6
+      opt.on '-6', '--ipv6', 'IPv6 only' do
+        @ipv4, @ipv6 = false, true
+      end
+
+      opt.on '-P', '--protocol PROTO', 'Protocol when matching port numbers' do |arg|
+        @protocol = arg
+      end
+
+      opt.on '-U', '--udp', 'Same as `--protocol udp`' do
+        @protocol = 'udp'
       end
 
       opt.on '--save4 PATH', "Persistent iptables rules path; DEFAULT=#{@save4}" do |arg|
@@ -67,15 +74,13 @@ class Ipt
   end
 
   def sh *args
-    puts args.join(' ')
+    warn args.join(' ')
     system *args
   end
 
   def iptables_exec *args
-    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(truth, cmd)|
-      if truth
-        sh ([cmd] + args).shelljoin
-      end
+    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(enabled, cmd)|
+      sh cmd, *args if enabled
     end
   end
 
@@ -84,7 +89,7 @@ class Ipt
     [a, b || '']
   end
 
-  def t pair
+  def maybe_pair pair
     prefix, value = pair
     if value and not value.empty?
       [prefix, value]
@@ -97,7 +102,6 @@ class Ipt
     if $stdin.tty?
       IO.popen ENV['PAGER'] || 'less', 'w' do |io|
         io.puts s
-        io.close
       end
     else
       puts s
@@ -105,35 +109,27 @@ class Ipt
   end
 
   def to_s
-    [[@ipv4, 'IPv4', 'iptables',  IPV4_TABLES],
-     [@ipv6, 'IPv6', 'ip6tables', IPV6_TABLES]].reduce '' do |s, (truth, label, cmd, tables)|
-      s << if truth
-        tables.reduce '' do |s, t|
+    TABLES.reduce '' do |s, t|
+      [[@ipv4, 'IPv4', 'iptables'], [@ipv6, 'IPv6', 'ip6tables']].each do |(enabled, label, cmd)|
+        if enabled
           s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n"
           s << %x(#{cmd} --table #{t} --list --line-numbers --numeric --verbose 2>&1)
           s << "\n"
         end
-      else
-        ''
       end
+      s
     end
   end
 
   def save_rules!
-    [[@ipv4, 'iptables-save',  @save4],
-     [@ipv6, 'ip6tables-save', @save6]].each do |(truth, cmd, path)|
-      if truth
-        sh "#{cmd} > #{path.shellescape}"
-      end
+    [[@ipv4, 'iptables-save', @save4], [@ipv6, 'ip6tables-save', @save6]].each do |(enabled, cmd, path)|
+      sh "#{cmd} > #{path.shellescape}" if enabled
     end
   end
 
   def restore_rules!
-    [[@ipv4, 'iptables-restore',  @save4],
-     [@ipv6, 'ip6tables-restore', @save6]].each do |(truth, cmd, path)|
-      if truth and File.readable? path
-        sh "#{cmd} < #{path.shellescape}"
-      end
+    [[@ipv4, 'iptables-restore', @save4], [@ipv6, 'ip6tables-restore', @save6]].each do |(enabled, cmd, path)|
+      sh "#{cmd} < #{path.shellescape}" if enabled and File.readable? path
     end
   end
 
@@ -142,41 +138,36 @@ class Ipt
   end
 
   def open! *args
-    proto = @udp ? 'udp' : 'tcp'
     args.each do |arg|
       s, p = colon_split arg
-      src = t %W[--source #{s}]
+      src = maybe_pair %W[--source #{s}]
       ps = p.split ','
 
       ports = case ps.size
       when 0 then []
-      when 1 then %W[--protocol #{proto} --dport #{ps.first.to_s}]
-      else        %W[--protocol #{proto} --match multiport --dports #{ps.join ','}]
+      when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
+      else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
       end
 
       accept_new_input! *(src + ports)
     end
   end
 
-  def enable_kernel_forwarding!
-    sh 'echo 1 > /proc/sys/net/ipv4/ip_forward'
-  end
-
   def forward! src, dst
     src_addr, src_iface = colon_split src
     dst_addr, dst_iface = colon_split dst
 
-    from_src_iface = t %W[--in-interface  #{src_iface}]
-    to_src_iface   = t %W[--out-interface #{src_iface}]
+    from_src_iface = maybe_pair %W[--in-interface  #{src_iface}]
+    to_src_iface   = maybe_pair %W[--out-interface #{src_iface}]
 
-    from_dst_iface = t %W[--in-interface  #{dst_iface}]
-    to_dst_iface   = t %W[--out-interface #{dst_iface}]
+    from_dst_iface = maybe_pair %W[--in-interface  #{dst_iface}]
+    to_dst_iface   = maybe_pair %W[--out-interface #{dst_iface}]
 
-    from_src_addr  = t %W[--source        #{src_addr}]
-    to_src_addr    = t %W[--destination   #{src_addr}]
+    from_src_addr  = maybe_pair %W[--source        #{src_addr}]
+    to_src_addr    = maybe_pair %W[--destination   #{src_addr}]
 
-    from_dst_addr  = t %W[--source        #{dst_addr}]
-    to_dst_addr    = t %W[--destination   #{dst_addr}]
+    from_dst_addr  = maybe_pair %W[--source        #{dst_addr}]
+    to_dst_addr    = maybe_pair %W[--destination   #{dst_addr}]
 
     outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
     inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
@@ -189,17 +180,14 @@ class Ipt
     iptables_exec *(%W[--append FORWARD] + inbound + %W[--protocol icmp                         --jump ACCEPT])
     # Enable NAT
     iptables_exec *(%W[--table nat --append POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
-
-    enable_kernel_forwarding!
   end
 
   def flush_tables!
-    [[@ipv4, 'iptables',  IPV4_TABLES],
-     [@ipv6, 'ip6tables', IPV6_TABLES]].each do |(truth, cmd, tables)|
-      next unless truth
+    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(enabled, cmd)|
+      next unless enabled
 
       # Flush rules and delete non-default chains
-      tables.each do |t|
+      TABLES.each do |t|
         sh *%W[#{cmd} --table #{t} --flush]
         sh *%W[#{cmd} --table #{t} --delete-chain]
       end

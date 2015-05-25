@@ -36,7 +36,7 @@ test -x "$IPTABLES" || { echo "Could not execute $IPTABLES" >&2; exit 1; }
 iptables() { "$IPTABLES" "$@"; }
 
 # Flush rules and delete non-default chains
-for TABLE in raw mangle nat filter security; do
+for TABLE in filter nat mangle raw security; do
     iptables --table "$TABLE" --flush
     iptables --table "$TABLE" --delete-chain
 done
@@ -50,7 +50,7 @@ iptables --policy OUTPUT  ACCEPT
 test -n "$IP6TABLES" || IP6TABLES="$(command -v ip6tables)"
 test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
     printf 'Filtering IPv6... '
-    for TABLE in raw mangle filter security; do
+    for TABLE in filter nat mangle raw security; do
         "$IP6TABLES" --table "$TABLE" --flush
         "$IP6TABLES" --table "$TABLE" --delete-chain
     done
