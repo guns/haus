@@ -1,4 +1,0 @@
-#!/bin/sh
-
-# https://github.com/kumarshantanu/lein-exec/
-lein exec "$@"
