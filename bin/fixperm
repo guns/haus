@@ -14,13 +14,14 @@ class Fixperm
   include Haus::Loggable
 
   DEFAULTS = {
-    :umask => File.umask,
+    :umask => nil,
     :recurse => false,
     :noop => false
   }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @umask ||= File.umask
   end
 
   def parser

@@ -13,16 +13,18 @@ require 'sdoc'
 class Genapi
   DEFAULTS = {
     :lang => :ruby,
-    :apidir => ENV['cdapi'],
+    :apidir => nil,
     :outdir => nil,
     :index => nil,
     :title => nil,
     :force => false,
-    :sdoc => RDoc::RDoc.new
+    :sdoc => nil
   }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @apidir ||= ENV['cdapi']
+    @sdoc ||= RDoc::RDoc.new
   end
 
   def parser

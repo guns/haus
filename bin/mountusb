@@ -20,13 +20,15 @@ class Mountusb
   DEFAULTS = {
     :mountoptions => %w[noatime nodev noexec nosuid],
     :dir => '/mnt/usb',
-    :uid => ENV['SUDO_UID'] || Process.euid,
-    :gid => ENV['SUDO_GID'] || Process.egid,
+    :uid => nil,
+    :gid => nil,
     :unmount => false
   }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @uid ||= ENV['SUDO_UID'] || Process.euid
+    @gid ||= ENV['SUDO_GID'] || Process.egid
   end
 
   def parser

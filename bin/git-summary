@@ -10,10 +10,11 @@
 require 'optparse'
 
 class GitSummary
-  DEFAULTS = { :root => File.expand_path('.') }
+  DEFAULTS = { :root => nil }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @root ||= File.expand_path '.'
   end
 
   def parser
