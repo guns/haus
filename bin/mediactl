@@ -24,7 +24,9 @@ class Mediactl
 
   def pianobar cmd
     fifo = File.expand_path '~/.config/pianobar/ctl'
-    File.open(fifo, 'w') { |f| f.puts cmd } if alive? 'pianobar' and File.pipe? fifo
+    if alive? 'pianobar' and File.pipe? fifo
+      File.open(fifo, 'w') { |f| f.puts cmd }
+    end
   end
 
   def cmus cmd
