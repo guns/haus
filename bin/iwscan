@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2014-2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 abort 'iwlist not in PATH' unless system '/bin/sh -c "command -v iwlist >/dev/null"'
 
@@ -10,13 +14,13 @@ aps = buf.split(/\s+Cell \d+ -/).map do |cell|
   t = { :ie => [], :rates => [] }
   cell.each_line do |line|
     case line
-    when /Address:\s*(\S+)/ then t[:mac] = $1
-    when /ESSID:"(.*)"/ then t[:essid] = $1
-    when /Frequency:(.*)/ then t[:freq] = $1
+    when /Address:\s*(\S+)/                      then t[:mac] = $1
+    when /ESSID:"(.*)"/                          then t[:essid] = $1
+    when /Frequency:(.*)/                        then t[:freq] = $1
     when /Quality=(\S+)\s*Signal level=(.* dBm)/ then t[:quality], t[:signal] = $1, $2
-    when /Encryption key:(on|off)/ then t[:encryption] = $1 == 'on'
-    when /\s*IE: (?!Unknown:)(.*)/ then t[:ie] << $1
-    when /(\d+) Mb\/s/ then t[:rates].concat line.scan(/(\d+) Mb\/s/).flatten.map(&:to_i)
+    when /Encryption key:(on|off)/               then t[:encryption] = $1 == 'on'
+    when /\s*IE: (?!Unknown:)(.*)/               then t[:ie] << $1
+    when /(\d+) Mb\/s/                           then t[:rates].concat line.scan(/(\d+) Mb\/s/).flatten.map(&:to_i)
     end
   end
   t

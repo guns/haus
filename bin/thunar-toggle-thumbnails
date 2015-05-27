@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# Copyright (c) 2013-2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 if [[ $(xfconf-query -c thunar -p /misc-thumbnail-mode) == THUNAR_THUMBNAIL_MODE_ONLY_LOCAL ]]; then
     pkill -x tumblerd && notify --warning --icon process-stop 'Terminated tumblerd'

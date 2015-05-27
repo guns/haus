@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'fileutils'
@@ -20,7 +24,7 @@ rule = %Q(SUBSYSTEM=="net", ACTION=="add", ATTR{address}=="#{mac}", NAME="#{name
 
 FileUtils.mkdir_p File.dirname(rules_file)
 
-warn "Writing to %s:\n%s" % [rules_file, rule]
+warn "Appending %s:\n%s" % [rules_file, rule]
 
 File.open rules_file, 'a' do |f|
   f.puts rule

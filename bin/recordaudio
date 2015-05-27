@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+#
 # Record with ffmpeg, filtering out AC hum
 
 sleep 0.5
