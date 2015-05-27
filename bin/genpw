@@ -6,7 +6,6 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
-require 'ostruct'
 require 'nerv/util/password'
 
 class Genpw
