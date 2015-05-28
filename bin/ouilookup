@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'yaml'
+require 'haus/utils'
+
+class Ouilookup
+  DEFAULTS = {
+    :ouidb_path => File.expand_path('../../lib/ouilookup/oui.yml', __FILE__)
+  }
+
+  UPDATE_URL = 'http://standards-oui.ieee.org/oui.txt'
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] pattern …
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--ouidb-path PATH', "DEFAULT: #{@ouidb_path}" do |arg|
+        @ouidb_path = File.expand_path arg
+      end
+
+      opt.on '-u', '--update=[FILE]', "Update #{@ouidb_path} from a file or #{UPDATE_URL}" do |arg|
+        @update = arg ? File.expand_path(arg) : UPDATE_URL
+      end
+    end
+  end
+
+  def slurp path
+    if path =~ %r{\A\w+://}
+      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36', '--progress-bar', '--location', path]) { |io| io.read }
+    else
+      File.read path
+    end
+  end
+
+  def update_db! dbpath, update_path_or_url
+    db = {}
+    buf = slurp update_path_or_url
+
+    buf.scan(/(\h\h)-(\h\h)-(\h\h)\s*\(hex\)\s*([^\n]+)\n.*?\n\s*([^\n]+)\n\n/m).each do |(a, b, c, name, country)|
+      db[(a.to_i(16) << 16) + (b.to_i(16) << 8) + c.to_i(16)] = "#{name}\t#{country}"
+    end
+
+    File.open dbpath, 'w' do |f|
+      f.puts db.to_yaml
+    end
+
+    system 'gzip', dbpath
+  end
+
+  def ouidb
+    @ouidb ||= begin
+      if File.exists? @ouidb_path + '.gz'
+        IO.popen ['gzip', '-cd', @ouidb_path + '.gz'] do |io|
+          YAML.load io.read
+        end
+      elsif File.exists? @ouidb_path
+        YAML.load_file @ouidb_path
+      else
+        raise "Could not find oui db at #{@ouidb_path}{.gz,}"
+      end
+    end
+  end
+
+  def grep pattern
+    case pattern
+    when /\A(\h\h):?(\h\h):?(\h\h)/
+      mac = ($1.to_i(16) << 16) + ($2.to_i(16) << 8) + $3.to_i(16)
+      if o = ouidb[mac]
+        return "%06X\t%-32s\t%s" % [mac, *o.split("\t")]
+      else
+        return nil
+      end
+    when %r{\A[^/]}
+      pat = Regexp.new pattern, Regexp::IGNORECASE
+    else
+      pat = Haus::Utils.regexp_parse pattern
+    end
+
+    lines = []
+
+    ouidb.each do |(k, v)|
+      lines << "%06X\t%-32s\t%s" % [k, *v.split("\t")] if v =~ pat
+    end
+
+    lines if lines.any?
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    if @update
+      abort parser.help if args.any?
+      update_db! @ouidb_path, @update
+    elsif args.empty?
+      abort parser.help
+    else
+      args.each { |pattern| puts grep(pattern) }
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Ouilookup.new.run ARGV if $0 == __FILE__
