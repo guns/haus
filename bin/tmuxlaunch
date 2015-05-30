@@ -1,15 +1,18 @@
 #!/bin/bash
 #
-# Simple tmux wrapper
+# Copyright (c) 2011-2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+#
+# tmux wrapper
 
 if [[ $TMUX ]]; then
     echo '$TMUX is already set!' >&2
     exit 1
 fi
 
-NEW=0
 DETACH=''
-WRAPPER=''
+NEW=0
 SESSION=''
 CONF="set-option -g default-terminal %s\nsource-file ~/.tmux.conf\n"
 
@@ -19,33 +22,31 @@ else
     TMUX_TERM='tmux'
 fi
 
-while getopts :dngst: OPT; do
+while getopts :dnt: OPT; do
     case $OPT in
     d) DETACH='-d';;
     n) NEW=1;;
-    g) WRAPPER='gpg-shell';;
-    s) WRAPPER='ssh-shell';;
     t) SESSION="$OPTARG";;
-    *) echo "Usage: ${0##*/} [-dngs] [-t session] [args …]" >&2; exit 1
+    *) echo "Usage: ${0##*/} [-dn] [-t session] [args …]" >&2; exit 1
     esac
 done
 shift $((OPTIND-1))
 
 exec_tmux() {
-    exec $WRAPPER tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
+    exec tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
 }
 
 if ((NEW)); then
     exec_tmux new-session "$@"
 elif [[ $SESSION ]]; then
     if tmux has-session -t "$SESSION" >/dev/null 2>&1; then
-        exec_tmux attach-session -t "$SESSION" "$@" $DETACH
+        exec_tmux attach-session -t "$SESSION" $DETACH "$@"
     else
         exec_tmux new-session -s "$SESSION" "$@"
     fi
 else
     if tmux has-session >/dev/null 2>&1; then
-        exec_tmux attach-session "$@" $DETACH
+        exec_tmux attach-session $DETACH "$@"
     else
         exec_tmux new-session "$@"
     fi
