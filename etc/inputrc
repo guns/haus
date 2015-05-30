@@ -299,6 +299,10 @@ $if ruby
     "\033\007e":    "\C-] edit \n"
     "\C-x\C-e":     "\C-] edit \n"
     "\C-xe":        "\C-]edit "
+
+    # Pry
+    "\C-xd":        "\C-]show-doc "
+    "\C-xs":        "\C-]show-source "
 $endif
 
 ### Clojure REPL
