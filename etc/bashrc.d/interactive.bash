@@ -618,7 +618,6 @@ ALIAS ssh='ssh -2' \
 alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
 ALIAS scp='scp -2' \
       scpr='scp -r'
-HAVE ssh-shell && alias xssh-shell='exec ssh-shell'
 HAVE sshuttle && {
     TCOMP ssh sshuttle
     TCOMP ssh sshuttle-wrapper
@@ -1155,7 +1154,7 @@ HAVE wpa_supplicant wpa_passphrase && {
         shift $((OPTIND-1))
         local ssid="$1"; [[ $ssid ]] || ssid=$(printf "ssid: " >&2; read r; echo "$r")
         local pass="$2"; [[ $pass ]] || pass=$(printf "pass: " >&2; read r; echo "$r")
-        bgrun wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
+        run wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
     }
 }
 
@@ -1180,7 +1179,6 @@ if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
     ALIAS gpgverify='gpg --verify-files' \
           gpgsign='gpg --detach-sign'
     alias gpgkilldaemons='run gpgconf --kill gpg-agent; run gpgconf --kill dirmngr'
-    alias xgpgshell='exec gpg-shell'
 fi
 
 # pass
@@ -1298,30 +1296,6 @@ ALIAS pac='pacman' && {
         run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
     }
     complete -F _pacdowngrade pacdowngrade
-
-    pacckalts() {
-        ruby -r shellwords -e '
-            %x(pacman --query --groups nerv nerv-alt).lines.map { |l| l.split[1] }.each { |pkg|
-                upstream = pkg[/(.*)-(nerv|alt)$/, 1]
-                if upstream.nil?
-                    warn "∄ #{pkg}"
-                    next
-                end
-                v2 = %x(pacman --sync --info #{upstream.shellescape} 2>/dev/null)[/Version\s*:\s*(.*)/, 1]
-                if $?.exitstatus != 0
-                    warn "∄ #{pkg}"
-                    next
-                end
-                v1 = %x(pacman --query --info #{pkg.shellescape})[/Version\s*:\s*(.*)/, 1]
-                cmp = %x(vercmp v1 v2).to_i
-                if cmp > 0
-                    puts "✖ #{pkg}: #{v1} < #{v2}"
-                else
-                    warn "✔ #{pkg}"
-                end
-            }
-        '
-    }
 }
 
 ALIAS mkp='makepkg' \

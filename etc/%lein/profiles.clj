@@ -23,7 +23,6 @@
                   #_[lein-warn-closeable "[,)"]
                   [jonase/eastwood "RELEASE"]
                   [lein-ancient "RELEASE"]
-                  [lein-exec "RELEASE"]
                   [lein-kibit "RELEASE"]
                   [lein-nevam "RELEASE"]
                   [lein-nodisassemble "RELEASE"]

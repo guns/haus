@@ -6,10 +6,6 @@ clearsnippets { [ ({ ([
 
 ### Meta {{{1
 
-snippet #! "#!/usr/bin/env lein-exec" b
-#!/usr/bin/env lein-exec
-endsnippet
-
 snippet ns "ns" b
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
 endsnippet
