@@ -1,6 +1,5 @@
 # -*- encoding: utf-8 -*-
 
-require 'ostruct'
 require 'haus/logger'
 
 module NERV; end
