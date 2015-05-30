@@ -51,6 +51,10 @@ end
 \$0 = File.basename(__FILE__) and $1.new.run ARGV if \$0 == __FILE__
 endsnippet
 
+snippet JOBS "/proc/cpuinfo scan" w
+File.read('/proc/cpuinfo').scan(/^processor/i).size
+endsnippet
+
 
 ### SYNTAX HELPERS {{{
 
@@ -99,7 +103,7 @@ require 'ap'; ap $0
 endsnippet
 
 snippet opt "opt.on"
-${1:opt}.on ${2:'-${3:o}', }${4:'--${5:option}'}${6:, ${7:Class}}${8:, '${9:Desc}'} do${10: |arg|}
+${1:opt}.on ${2:'-${3:o}', }${4:'--${5:option}'}${6:, ${7:Class}}${8:, "$9"} do ${10:|arg|}
 	$0
 end
 endsnippet
@@ -108,7 +112,7 @@ snippet sw "summary_width =" w
 summary_width = $0
 endsnippet
 
-snippet beg "begin .. end" b
+snippet beg "begin .. end" w
 begin
 	$0
 ${1:rescue$2}
