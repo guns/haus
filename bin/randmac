@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Randmac
+  DEFAULTS = { :prefix => nil, :colons => true }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] [prefix]
+
+        Options:
+      BANNER
+
+      opt.on '-n', '--no-colons' do
+        @colons = false
+      end
+    end
+  end
+
+  def randmac
+    n = rand 0x1000000000000
+    if @prefix
+      n >>= 24
+      n |= @prefix << 24
+    end
+    s = '%012X' % n
+    @colons ? s.scan(/\h\h/).join(':') : s
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size > 1
+    @prefix = args.first.to_i(16) & 0xffffff if args.any?
+    puts randmac
+  end
+end
+
+$0 = File.basename(__FILE__) and Randmac.new.run ARGV if $0 == __FILE__
