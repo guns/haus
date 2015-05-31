@@ -1330,7 +1330,7 @@ HAVE pulseaudio && {
 
 # youtube-dl
 HAVE youtube-dl && {
-    alias yt='youtube-dl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"'
+    alias yt='youtube-dl --output "%(title)s" --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36"'
     TCOMP youtube-dl yt
 }
 
