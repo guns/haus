@@ -28,8 +28,8 @@ class Ouilookup
         Options:
       BANNER
 
-      opt.on '-d', '--ouidb-path PATH', "DEFAULT: #{@ouidb_path}" do |arg|
-        @ouidb_path = File.expand_path arg
+      opt.on '-d', '--ouidb-path PATH', "DEFAULT: #{@ouidb_path} (`-` for stdin/stdout)" do |arg|
+        @ouidb_path = arg == '-' ? nil : File.expand_path(arg)
       end
 
       opt.on '-u', '--update=[FILE]', "Update #{@ouidb_path} from a file or #{UPDATE_URL}" do |arg|
@@ -54,21 +54,24 @@ class Ouilookup
       db[(a.to_i(16) << 16) + (b.to_i(16) << 8) + c.to_i(16)] = "#{name}\t#{country}"
     end
 
-    File.open dbpath, 'w' do |f|
-      f.puts db.to_yaml
+    if dbpath.nil?
+      puts db.to_yaml
+    else
+      File.open(dbpath, 'w') { |f| f.puts db.to_yaml }
+      system 'gzip', dbpath
     end
-
-    system 'gzip', dbpath
   end
 
   def ouidb
     @ouidb ||= begin
-      if File.exists? @ouidb_path + '.gz'
+      if @ouidb_path.nil?
+        YAML.load $stdin.read
+      elsif File.exists? @ouidb_path
+        YAML.load_file @ouidb_path
+      elsif File.exists? @ouidb_path + '.gz'
         IO.popen ['gzip', '-cd', @ouidb_path + '.gz'] do |io|
           YAML.load io.read
         end
-      elsif File.exists? @ouidb_path
-        YAML.load_file @ouidb_path
       else
         raise "Could not find oui db at #{@ouidb_path}{.gz,}"
       end
