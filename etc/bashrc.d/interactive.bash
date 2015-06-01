@@ -497,7 +497,7 @@ checkperm() {
     specs+=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]} $MAILPATH)
     unset IFS
 
-    checkpermissions -- "${specs[@]}"
+    checkpermissions "$@" -- "${specs[@]}"
 }
 
 ### Processes
