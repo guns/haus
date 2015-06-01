@@ -21,32 +21,54 @@ OptionParser.new nil, 24 do |opt|
   end
 end.parse ARGV
 
+$write_lock = Mutex.new
+
 def warn msg
-  $stderr.puts msg if @verbose
+  $write_lock.synchronize { $stderr.puts msg if @verbose }
 end
 
-%x(pacman --query --groups #{@groups.shelljoin}).each_line do |line|
+def log msg
+  $write_lock.synchronize { puts msg }
+end
+
+def check_line line
   pkg = line.split[1]
   upstream = pkg[/(.*)-(nerv|alt)$/, 1]
 
   if upstream.nil?
     warn "∄ #{pkg}"
-    next
+    return
   end
 
   v2 = %x(pacman --sync --info #{upstream.shellescape} 2>/dev/null)[/Version\s*:\s*(.*)/, 1]
 
   if $?.exitstatus != 0
     warn "∄ #{pkg}"
-    next
+    return
   end
 
   v1 = %x(pacman --query --info #{pkg.shellescape})[/Version\s*:\s*\S*?(\d.*)/, 1]
   cmp = %x(vercmp #{v1.shellescape} #{v2.shellescape}).to_i
 
   if cmp < 0
-    puts "✖ #{pkg}: #{v1} < #{v2}"
+    log "✖ #{pkg}: #{v1} < #{v2}"
   else
     warn "✔ #{pkg}"
   end
 end
+
+lines = %x(pacman --query --groups #{@groups.shelljoin}).lines
+lock, i, pool = Mutex.new, -1, []
+
+(File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1).times do
+  pool << Thread.new do
+    loop do
+      n = lock.synchronize { i += 1 }
+      line = lines[n]
+      break if line.nil?
+      check_line line
+    end
+  end
+end
+
+pool.each &:join
