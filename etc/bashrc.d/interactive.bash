@@ -614,14 +614,24 @@ HAVE tcpdump && {
 
 # ssh scp
 ALIAS ssh='ssh -2' \
-      ssh-password='ssh -o "PreferredAuthentications password"'
-alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
+      ssh-password='ssh -o "PreferredAuthentications password"' && {
+    alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
+    ssh-bits() {
+        local f fs=()
+        if (($#)); then
+            fs+=("$@")
+        else
+            fs+=(~/.ssh/*.pub)
+        fi
+        for f in "${fs[@]}"; do
+            printf "%s\t%s\n" "$f" "$(ssh-keygen -l -f "$f")"
+        done | column --table --separator $'\t' --output-separator ' │ '
+    }
+}
 ALIAS scp='scp -2' \
       scpr='scp -r'
-HAVE sshuttle && {
-    TCOMP ssh sshuttle
-    TCOMP ssh sshuttle-wrapper
-}
+HAVE sshuttle  && TCOMP ssh sshuttle
+HAVE ssh-proxy && TCOMP ssh ssh-proxy
 
 # lsof
 HAVE lsof && {
