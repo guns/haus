@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-/usr/bin/dispwin ~/.local/share/color-profiles/AdobeRGB1998.icc
