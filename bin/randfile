@@ -7,6 +7,7 @@
 
 require 'optparse'
 
-r = ARGV.getopts('r')['r']
+r, d = ARGV.getopts('r', 'd').values_at 'r', 'd'
+filter = d ? lambda { |f| File.directory? f } : lambda { |f| File.file? f }
 glob = File.join ARGV.first || '.', r ? '**/*' : '*'
-puts Dir[glob].select { |f| File.file? f }.shuffle.first
+puts Dir[glob].select { |f| filter.call f }.shuffle.first
