@@ -13,7 +13,6 @@ require 'net/http'
 require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
-require 'nerv/util/password'
 
 class Cert
   DEFAULTS = {
@@ -142,7 +141,7 @@ class Cert
   end
 
   def keystore_pass
-    @keystore_pass ||= (@keystore_pass || NERV::Util::Password.password)
+    @keystore_pass ||= @keystore_pass || (require 'nerv/util/password'; NERV::Util::Password.password)
   end
 
   def certificates
