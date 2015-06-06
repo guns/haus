@@ -53,12 +53,12 @@ class Localmitmproxy
   end
 
   def with_redirected_ports intercept_ports, proxy_port
-    sh *%W[iptables --table nat --insert OUTPUT 1 --match owner --uid-owner 0 --jump RETURN]
-    sh *%W[iptables --table nat --insert OUTPUT 2 --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
+    sh *%W[iptables --table nat --append OUTPUT --match owner --uid-owner 0 --jump RETURN]
+    sh *%W[iptables --table nat --append OUTPUT --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
     yield
   ensure
-    sh *%W[iptables --table nat --delete OUTPUT 2]
-    sh *%W[iptables --table nat --delete OUTPUT 1]
+    sh *%W[iptables --table nat --delete OUTPUT --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
+    sh *%W[iptables --table nat --delete OUTPUT --match owner --uid-owner 0 --jump RETURN]
   end
 
   def mitmprog
