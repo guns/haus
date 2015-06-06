@@ -264,7 +264,7 @@ class Hwctl
     out = case args.first
     when 'b', 'backlight'              then backlight *rest
     when 'bp', 'backlight-permissions' then backlight_permissions *rest
-    when 'fan'                         then fan *rest
+    when 'f', 'fan'                    then fan *rest
     when 'fnmode'                      then fnmode *rest
     when 'toggle-pulseaudio-sink'      then toggle_pulseaudio 'sink', *rest
     when 'toggle-pulseaudio-source'    then toggle_pulseaudio 'source', *rest
