@@ -570,10 +570,7 @@ HAVE su && alias xsu='exec su' && TCOMP su xsu
 ### Network
 
 # ip
-HAVE ip && {
-    alias a='ip addr'
-    alias cidr='ip route list scope link | awk "{print \$1; exit}"'
-}
+HAVE ip && alias a='ip addr'
 
 # ifconfig
 HAVE ifconfig && alias ic='ifconfig'
