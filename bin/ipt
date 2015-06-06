@@ -183,19 +183,15 @@ class Ipt
   end
 
   def flush_tables!
-    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(enabled, cmd)|
-      next unless enabled
+    # Flush rules and delete non-default chains
+    TABLES.each do |t|
+      iptables_exec *%W[--table #{t} --flush]
+      iptables_exec *%W[--table #{t} --delete-chain]
+    end
 
-      # Flush rules and delete non-default chains
-      TABLES.each do |t|
-        sh *%W[#{cmd} --table #{t} --flush]
-        sh *%W[#{cmd} --table #{t} --delete-chain]
-      end
-
-      # Reset default policies
-      %W[INPUT FORWARD OUTPUT].each do |p|
-        sh *%W[#{cmd} --policy #{p} ACCEPT]
-      end
+    # Reset default policies
+    %W[INPUT FORWARD OUTPUT].each do |p|
+      iptables_exec *%W[--policy #{p} ACCEPT]
     end
   end
 
