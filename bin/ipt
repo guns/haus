@@ -195,6 +195,10 @@ class Ipt
     end
   end
 
+  def set_policy! target, table
+    iptables_exec *%W[--policy #{table} #{target}]
+  end
+
   def run arguments = []
     args = parser.order arguments
 
@@ -206,6 +210,8 @@ class Ipt
     when 'o', 'open'      then open! *args.drop(1)
     when 'f', 'forward'   then forward! *args.drop(1)
     when 'F', 'FLUSH'     then flush_tables!
+    when 'A', 'ACCEPT'    then set_policy! :ACCEPT, *args.drop(1)
+    when 'D', 'DROP'      then set_policy! :DROP, *args.drop(1)
     when 'h', 'help'      then puts parser.help
     else abort parser.help
     end
