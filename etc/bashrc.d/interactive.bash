@@ -637,9 +637,9 @@ HAVE ssh-proxy && TCOMP ssh ssh-proxy
 # lsof
 HAVE lsof && {
     command lsof +fg -h &>/dev/null && LSOF_FLAG_OPT='+fg'
-    ALIAS lsof="lsof -Pn $LSOF_FLAG_OPT"
+    ALIAS lsof="lsof -Pwn $LSOF_FLAG_OPT"
     alias lsif='lsof -i'
-    alias lsifr="command lsof -Pi $LSOF_FLAG_OPT"
+    alias lsifr="command lsof -Pwi $LSOF_FLAG_OPT"
     alias lsifudp='lsif | grep UDP'
     alias lsiflisten='lsif | grep --word-regexp "LISTEN\|UDP"'
     alias lsifconnect='lsif | grep -- "->"'
