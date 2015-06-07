@@ -239,7 +239,7 @@ augroup GUNS
         \ OrgBufferSetup
 
     " systemd {{{1
-    autocmd BufNewFile,BufRead *.automount,*.mount,*.path,*.service{,.erb},*.socket,*.swap,*.target,*.timer,
+    autocmd BufNewFile,BufRead */systemd/**/*.{automount,mount,path,service,socket,swap,target,timer}*
         \ setlocal filetype=systemd
     autocmd FileType systemd
         \ setlocal noexpandtab

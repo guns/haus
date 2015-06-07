@@ -137,6 +137,12 @@ _rackenv() {
     __compreply__ production development testing
 }
 
+__systemd_units__() {
+    __compreply__ "$({ systemctl list-unit-files; systemctl list-units --all; } | while read -r a b; do
+        [[ $a =~ @\. ]] || echo " $a"
+    done)"
+}
+
 ### DIRECTORYBINDINGS
 
 CD_FUNC -n ..           ..
@@ -1407,6 +1413,7 @@ if HAVE systemctl; then
         alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
         alias scdaemonreload='systemctl --system daemon-reload'
+        alias scedit='systemctl edit --full'; complete -F __systemd_units__ scedit
 
         alias cups-start='run systemctl start org.cups.cupsd.service'
         alias cups-stop='run systemctl stop org.cups.cupsd.service'
