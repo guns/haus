@@ -1347,8 +1347,8 @@ HAVE pulseaudio && {
 
 # youtube-dl
 HAVE youtube-dl && {
-    yt()    { youtube-dl --output "%(title)s" --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" "$@"; }
-    ytvlc() { youtube-dl --output -           --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" "$@"  | vlc -; }
+    yt()  { youtube-dl --no-playlist --output "%(title)s" --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" "$@"; }
+    ytv() { youtube-dl --no-playlist --output -           --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36" "$@"  | vlc -; }
     TCOMP youtube-dl yt
 }
 
