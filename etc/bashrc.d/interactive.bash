@@ -99,15 +99,15 @@ __partitions__() {
     __compreply__ "$(awk 'NR > 2 {print "/dev/"$NF}' /proc/partitions)"
 }
 
-_api() {
+__api__() {
     __compreply__ "$(command ls -1 "$cdapi")"
 }
 
-_pacdowngrade() {
+__pacdowngrade__() {
     __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"
 }
 
-_mtlabel() {
+__mtlabel__() {
     if ((COMP_CWORD == 1)); then
         __compreply__ "$(command ls -1 /dev/disk/by-label/)";
     else
@@ -116,7 +116,7 @@ _mtlabel() {
     fi
 }
 
-_mtusb() {
+__mtusb__() {
     local prev
     _get_comp_words_by_ref prev
     if [[ "$prev" == '-o' || "$prev" == '--options' ]]; then
@@ -125,7 +125,7 @@ _mtusb() {
     fi
 }
 
-_cx() {
+__cx__() {
     if ((COMP_CWORD == 1)); then
         __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')";
     else
@@ -133,7 +133,7 @@ _cx() {
     fi
 }
 
-_rackenv() {
+__rackenv__() {
     __compreply__ production development testing
 }
 
@@ -399,12 +399,12 @@ remt() {
         return 1
     fi
 }; TCOMP umount remt
-alias mtusb='mountusb'; complete -F _mtusb mtusb
+alias mtusb='mountusb'; complete -F __mtusb__ mtusb
 alias umtusb='umountusb'
 mtlabel() {
     (($# >= 2)) || { echo "$FUNCNAME label mount-args" >&2; return 1; }
     run mount --options noatime "/dev/disk/by-label/$1" "${@:2}"
-}; complete -F _mtlabel mtlabel
+}; complete -F __mtlabel__ mtlabel
 
 # findmnt
 ALIAS fm='findmnt'
@@ -667,7 +667,7 @@ HAVE weechat && ((EUID > 0)) && alias irc='(cd ~/.weechat && envtmux weechat)'
 HAVE cdapi && {
     # Param: $@ API Site names
     api() { local d; for d in "$@"; do open "http://${cdapi##*/}/$d"; done; }
-    complete -F _api api
+    complete -F __api__ api
 }
 
 # Simple webserver
@@ -1031,7 +1031,7 @@ type ruby &>/dev/null && {
     rackenv() {
         (($#)) && export RAILS_ENV="$1" RACK_ENV="$1"
         echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
-    }; complete -F _rackenv rackenv
+    }; complete -F __rackenv__ rackenv
 
     rklink() {
         case $# in
@@ -1225,7 +1225,7 @@ HAVE cert && {
             run cert exec --certfile "$certfile" -- "${@:2}"
         fi
     }
-    complete -F _cx cx
+    complete -F __cx__ cx
 }
 
 HAVE keytool && java-import-keystore() {
@@ -1312,7 +1312,7 @@ ALIAS pac='pacman' && {
         fi
         run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
     }
-    complete -F _pacdowngrade pacdowngrade
+    complete -F __pacdowngrade__ pacdowngrade
 }
 
 ALIAS mkp='makepkg' \
