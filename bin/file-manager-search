@@ -59,7 +59,7 @@ class FileManagerSearch
   end
 
   # Copied from find-wrapper
-  def make_find_pattern pattern
+  def make_find_glob pattern
     case pattern
     when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
     when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
@@ -73,9 +73,9 @@ class FileManagerSearch
     return false if query.nil? or query.empty?
 
     globpat = if @recursive
-      File.join path, '**', make_find_pattern(query)
+      File.join path, '**', make_find_glob(query)
     else
-      File.join path, make_find_pattern(query)
+      File.join path, make_find_glob(query)
     end
 
     sources = Dir.glob globpat, File::FNM_CASEFOLD

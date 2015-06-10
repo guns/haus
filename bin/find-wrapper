@@ -16,7 +16,7 @@ class FindWrapper
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 28 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] [find-args]
 
@@ -33,7 +33,7 @@ class FindWrapper
     end
   end
 
-  def make_find_pattern pattern
+  def make_find_glob pattern
     case pattern
     when /\A\^.*\$\z/ then pattern.sub(/\^/, '').chomp('$')
     when /\A\^/       then '%s*' % pattern.sub(/\^/, '')
@@ -57,7 +57,7 @@ class FindWrapper
     elsif args.any?
       pat = args[0]
       test = pat.index('/') ? '-ipath' : '-iname'
-      cmd.push test, make_find_pattern(pat), *args.drop(1)
+      cmd.push test, make_find_glob(pat), *args.drop(1)
     end
 
     cmd.push '-print', '-delete' if cmd.delete '-delete'
