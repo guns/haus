@@ -28,7 +28,7 @@ class Hwctl
         Usage: #{File.basename __FILE__} [options] command [args]
 
           Commands:
-            b[acklight] [pct]
+            [b]acklight [pct]
               Query or set backlight as a percentage. Argument can be signed
               for relative adjustment.
 
@@ -36,15 +36,15 @@ class Hwctl
             backlight-permissions mode user group
               Set backlight control file permissions.
 
-            fan
+            [f]an
               Dump fan state to stdout.
-            fan pct
+            [f]an pct
               Set fan speeds as to given percentage. Writes current fan state
               to #{@state_file}
-            fan [i]nteractive
+            [f]an [i]nteractive
               Read fan speeds as a percentage on stdin. Fan control state is
               restored on exit.
-            fan [r]estore
+            [f]an [r]estore
               Restore fan state from #{@state_file}
 
             fnmode [fn|media]
