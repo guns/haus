@@ -109,6 +109,7 @@ $if bash
     "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-x\\":       "\C-] nohist \n"
+    "\C-x|":        "\C-] nohist \n [[ $TMUX ]] && tmux set-environment NOHIST 1 \n"
     "\C-x$":        "\C-a "$(\C-e)"\C-a"
     "\C-x<":        "\C-a <(\C-e)\C-a"
     "\C-x\"":       "\C-a \"\C-e\"\C-a"
