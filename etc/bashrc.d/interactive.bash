@@ -1406,7 +1406,8 @@ if HAVE systemctl; then
           jc='journalctl' \
           jcb='journalctl --boot' \
           jce='journalctl --pager-end' \
-          jcf='journalctl --follow' && {
+          jcf='journalctl --follow' \
+          jcverify='journalctl --verify' && {
         alias sctimers='systemctl list-timers'
         alias scunitfiles='systemctl list-unit-files'
         alias scrunning='systemctl list-units --state=running'
