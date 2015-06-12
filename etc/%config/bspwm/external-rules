@@ -7,6 +7,7 @@
 case "$(xtitle "$1")" in
 '✉ Mutt ✉'           ) echo 'focus=true floating=true center=true';;
 '✔ TODO ✔'           ) echo 'focus=true floating=true center=true';;
+'✎ VIM ✎'            ) echo 'focus=true floating=true center=true';;
 '♫ alsamixer ♫'      ) echo 'focus=true floating=true center=true';;
 'Firefox Preferences') echo 'focus=true floating=true center=true';;
 esac

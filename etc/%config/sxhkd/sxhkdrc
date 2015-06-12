@@ -284,7 +284,7 @@ super + alt + F12
 	open https://voice.google.com/
 
 super + control + e
-	urxvt-client -icon ~/.icons/haus/vim.svg -e vim
+	urxvt-client -g 80x40 -title '✎ VIM ✎' -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
 	T="✔ TODO ✔"; \
