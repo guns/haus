@@ -113,6 +113,7 @@ bashcomp_DATA = 2to3 \
 		getent \
 		gkrellm \
 		gnatmake \
+		gnokii \
 		gnome-mplayer \
 		gpasswd \
 		gpg \
@@ -165,6 +166,7 @@ bashcomp_DATA = 2to3 \
 		javaws \
 		jpegoptim \
 		jps \
+		jshint \
 		k3b \
 		kcov \
 		kill \
@@ -429,6 +431,7 @@ CLEANFILES = \
 	automake-1.13 \
 	autossh \
 	autoupdate \
+	bsdtar \
 	btdownloadcurses.py \
 	btdownloadgui.py \
 	c++ \
@@ -588,6 +591,7 @@ CLEANFILES = \
 	smbtree \
 	sparc-koji \
 	spovray \
+	star \
 	stream \
 	sudoedit \
 	tightvncviewer \
