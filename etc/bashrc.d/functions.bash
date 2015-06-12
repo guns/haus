@@ -98,7 +98,7 @@ TCOMP() {
             # Invoke compspec to complete current request
             if [[ \"\$cfunc\" ]]; then
                 # compgen -F does not work!
-                _xfunc \"$src\" \"\$cfunc\"
+                _xfunc \"$src\" \"\$cfunc\" \"\$@\"
             elif [[ \"\$cspec\" == 'complete '* ]]; then
                 COMPREPLY=(\$(compgen \$(sed -ne \"s/^complete \\\\(.*\\\\) ${src}.*/\\\\1/p\" <<< \"\$cspec\") \\
                                       \"\${COMP_WORDS[COMP_CWORD]}\"))
