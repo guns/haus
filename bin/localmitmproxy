@@ -37,7 +37,7 @@ class Localmitmproxy
         @intercept_ports = arg.map &:to_i
       end
 
-      opt.on '-P', '--proxy-port PORT', Integer, "DEFAULT: #{@port}" do |arg|
+      opt.on '-P', '--proxy-port PORT', Integer, "DEFAULT: #{@proxy_port}" do |arg|
         @proxy_port = arg
       end
 
