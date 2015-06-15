@@ -4,7 +4,7 @@ endif
 
 function! go#errcheck#Run(...) abort
     if a:0 == 0
-        let package = go#package#ImportPath(go#tool#GopathDir(expand('%:p:h')))
+        let package = go#package#ImportPath(expand('%:p:h'))
         if package == -1
             echohl Error | echomsg "vim-go: package is not inside GOPATH src" | echohl None
             return
