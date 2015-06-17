@@ -60,7 +60,7 @@ function! go#tool#ShowErrors(out)
         let fatalerrors = matchlist(line, '^\(fatal error:.*\)$')
         let tokens = matchlist(line, '^\s*\(.\{-}\):\(\d\+\):\s*\(.*\)')
         if empty(tokens)
-            let tokens = matchlist(line, '\v<Location:\s*(.+):(\d+)\s*(.*)')
+            let tokens = matchlist(line, '\v<Error Trace:\s*(.+):(\d+)\s*(.*)')
         endif
 
         if !empty(fatalerrors)

@@ -226,7 +226,7 @@ endfunction
 function! go#cmd#Vet(bang)
     call go#cmd#autowrite()
     echon "vim-go: " | echohl Identifier | echon "calling vet..." | echohl None
-    let out = go#tool#ExecuteInDir('go vet')
+    let out = go#tool#ExecuteInDir('go tool vet -test=true .')
     if v:shell_error
         call go#tool#ShowErrors(out)
     else
