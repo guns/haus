@@ -864,10 +864,18 @@ ALIAS mk='make' \
 # golang
 HAVE go && {
     __go__() {
+        local OPTIND OPTARG opt prefix
+        while getopts :p: opt; do
+            case $opt in
+            p) prefix="$OPTARG";;
+            esac
+        done
+        shift $((OPTIND-1))
+
         local cmd="$1"
         shift
 
-        local flags=() n=0
+        local flags=("$prefix") n=0
         while [[ "$1" == -* ]]; do
             if ((n == 0)); then
                 flags+=(-gcflags)
@@ -881,6 +889,8 @@ HAVE go && {
     }
     gobuild() { __go__ build "$@"; }
     gotest() { __go__ test "$@"; }
+    gorace() { __go__ -p '-race' test "$@"; }
+    gobench() { __go__ -p "-bench=${1:-.}" -- test "${@:2}"; }
 }
 
 ### SCM
