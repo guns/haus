@@ -960,6 +960,11 @@ HAVE perf && perfstat() {
     run perf stat --event="$events" --repeat="$repeat" "$@" 2>&1 >/dev/null
 }
 
+type -P time &>/dev/null && {
+    alias T='command time -f "\nCPU: %e (%S/%U/%P)\nMEM: %t kB avg, %M max kB\nIO:  %I fsin, %O fsout, %r sockin, %s sockout, %k signals, %x exit"'
+    TCOMP exec T
+}
+
 ### Ruby
 
 type ruby &>/dev/null && {
