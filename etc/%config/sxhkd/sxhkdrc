@@ -229,6 +229,9 @@ Scroll_Lock
 		notify --warning --icon dialog-warning --title Mouse "DISABLED"; \
 	fi
 
+shift + Scroll_Lock
+	xdotool mousemove 10000 10000
+
 #
 # Applications {{{1
 #
