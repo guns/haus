@@ -66,8 +66,6 @@ augroup GUNS
     " Lisp {{{1
     autocmd Syntax clojure,timl,scheme,lisp
         \ RainbowParens
-    autocmd BufRead,BufNewFile *.cljx
-        \ setlocal filetype=clojure
     autocmd Filetype lisp,scheme
         \ LispBufferSetup
     autocmd FileType timl
