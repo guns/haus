@@ -26,6 +26,10 @@ var (
 )
 endsnippet
 
+snippet pr "println" w
+println($0)
+endsnippet
+
 snippet pf "fmt.Printf()" w
 fmt.Printf($0)
 endsnippet
@@ -212,6 +216,12 @@ endsnippet
 
 snippet el "else" w
 else {
+	$0
+}
+endsnippet
+
+snippet eli "else if" w
+else if $1 {
 	$0
 }
 endsnippet
