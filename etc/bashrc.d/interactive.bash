@@ -235,7 +235,14 @@ nohist() {
     fi
     __ps1toggle__ '/\\H/[nohist] \\H'
 }
-[[ "$NOHIST" ]] && nohist
+((NOHIST == 1)) && nohist
+
+# Repeat
+r() {
+    for ((i = 0; i < "$1"; ++i)); do
+        "${@:2}"
+    done
+}
 
 # notify
 HAVE notify && {
@@ -887,8 +894,8 @@ HAVE go && {
 
         run go "$cmd" "${flags[@]}" "$@"
     }
-    gobuild() { __go__ build "$@"; }
-    gotest() { __go__ test "$@"; }
+    gobuild() { __go__ -p '-v' build "$@"; }
+    gotest() { __go__ -p '-v' test "$@"; }
     gorace() { __go__ -p '-race' test "$@"; }
     gobench() { __go__ -p "-bench=${1:-.}" -- test "${@:2}"; }
 }
@@ -961,7 +968,7 @@ HAVE perf && perfstat() {
 }
 
 type -P time &>/dev/null && {
-    alias T='command time -f "\nCPU: %e (%S/%U/%P)\nMEM: %t kB avg, %M max kB\nIO:  %I fsin, %O fsout, %r sockin, %s sockout, %k signals, %x exit"'
+    T() { command time -f "\nCPU: %e (%S/%U/%P)\nMEM: %t kB avg, %M max kB\nIO:  %I fsin, %O fsout, %r sockin, %s sockout, %k signals, %x exit" "$@"; }
     TCOMP exec T
 }
 
