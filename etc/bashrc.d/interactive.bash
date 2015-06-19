@@ -1207,6 +1207,9 @@ ALIAS ssl='openssl' && {
         esac
         run openssl s_client -showcerts -crlf -connect "$host:$port"
     }
+
+    aesencrypt() { if (($#)); then openssl aes-256-cbc    -in "$@"; else openssl aes-256-cbc;    fi; }
+    aesdecrypt() { if (($#)); then openssl aes-256-cbc -d -in "$@"; else openssl aes-256-cbc -d; fi; }
 }
 
 # GnuPG
