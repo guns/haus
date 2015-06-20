@@ -20,6 +20,18 @@ const (
 )
 endsnippet
 
+snippet CO "const" w
+const $1 = $0
+endsnippet
+
+snippet V "var" w
+var ${1:name} ${0:type}
+endsnippet
+
+snippet VE "var err error" w
+var err error
+endsnippet
+
 snippet /^VS/ "Variables declaration" r
 var (
 	$0
@@ -118,7 +130,7 @@ snippet T "type" b
 type $0
 endsnippet
 
-snippet TS "TS" b
+snippet ST "TS" b
 type $1 struct {
 	$0
 }
@@ -273,19 +285,19 @@ func main() {
 endsnippet
 
 snippet /^fm/ "Method" r
-func (${1:receiver} *${2:type}) ${3:name}(${4:params})${5/(.+)/ /}${5:type} {
+func (${1:receiver} *${2:type}) ${3:name}(${4:params})${5/(.+)/ /}(${5:type}) {
 	${0:${VISUAL}}
 }
 endsnippet
 
 snippet /^f/ "Function" !r
-func ${1}(${2})${3/(.+)/ /}${3:type} {
+func ${1}(${2})${3/(.+)/ /}(${3:type}) {
 	${0:${VISUAL}}
 }
 endsnippet
 
 snippet fn "Closure" w
-func(${1})${2/(.+)/ /}${2:type} {
+func(${1})${2/(.+)/ /}(${2:type}) {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -296,8 +308,24 @@ go func() {
 }()
 endsnippet
 
+snippet O "file, err := os.Open(…)" w
+${1:file}, ${2:err} ${3::}= os.Open($4)
+if $2 != nil {
+	return ${5:$2}
+}
+${6:defer }$1.Close()
+endsnippet
+
+snippet W "file, err := os.Create(…)" w
+${1:file}, ${2:err} ${3::}= os.Create($4)
+if $2 != nil {
+	return ${5:$2}
+}
+${6:defer }$1.Close()
+endsnippet
+
 snippet fd "function decl" w
-func($1)${2/(.+)/ /}${2:type}
+func($1)${2/(.+)/ /}(${2:type})
 endsnippet
 
 snippet r "return" w
@@ -323,6 +351,14 @@ endsnippet
 
 snippet unsp "unsafe.Pointer" w
 unsafe.Pointer($0)
+endsnippet
+
+snippet TA "time.After()" w
+time.After($1 * time.$0)
+endsnippet
+
+snippet TS "time.Sleep()" w
+time.Sleep($1 * time.$0)
 endsnippet
 
 # vim:ft=snippets:

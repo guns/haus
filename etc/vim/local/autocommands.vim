@@ -28,7 +28,8 @@ augroup GUNS
     autocmd FileType qf
         \ execute 'noremap <buffer> x :<C-u>call setqflist([]) \| call setloclist(0, []) \| cclose<CR>' |
         \ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| call setqflist([]) \| topleft lwindow \| cclose<CR>' |
-        \ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>'
+        \ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>' |
+        \ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>'
 
     " Vimscript {{{1
     autocmd FileType vim
@@ -141,7 +142,7 @@ augroup GUNS
         \ setlocal filetype=gitconfig
     autocmd BufRead,BufNewFile *.INI,*.toml
         \ setlocal filetype=dosini
-    autocmd BufRead,BufNewFile */etc/*/hosts
+    autocmd BufRead,BufNewFile */etc/*/*hosts
         \ setlocal filetype=conf
     autocmd FileType dosini,gitconfig
         \ SetWhitespace 4 8

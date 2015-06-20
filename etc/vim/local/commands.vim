@@ -558,18 +558,34 @@ function! s:GoBufferSetup()
     nmap     <buffer> [d                 <Plug>(go-info)
     nmap     <buffer> ]d                 <Plug>(go-describe)
     nmap     <buffer> <LocalLeader>b     <Plug>(go-build)
-    noremap  <buffer> <LocalLeader>B     :<C-u>GoBuild -gcflags=-m<CR>
+    noremap  <buffer> <LocalLeader>B     :<C-u>GoOptimizations<CR>
     noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR><Space>
     noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
     noremap  <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
     nmap     <buffer> <LocalLeader>I     <Plug>(go-implements)
     noremap  <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
-    nmap     <buffer> <LocalLeader>r     <Plug>(go-rename)
-    nmap     <buffer> <LocalLeader>R     <Plug>(go-referrers)
+    nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
+    nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>t     <Plug>(go-test)
     nmap     <buffer> <LocalLeader>T     <Plug>(go-test-compile)
     nmap     <buffer> <LocalLeader>v     <Plug>(go-vet)
+endfunction
+
+command! -bar GoOptimizations call <SID>GoOptimizations()
+function! s:GoOptimizations()
+     GoBuild -gcflags=-m
+     let visited = {}
+     let qflist = getqflist()
+     let newqflist = []
+     for item in qflist
+         let k = string(item)
+         if !has_key(visited, k)
+             let visited[k] = item
+             call add(newqflist, item)
+         endif
+     endfor
+     call setqflist(newqflist)
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
@@ -598,9 +614,10 @@ function! s:Qfdo(expr)
     endfor
 endfunction
 
-command! -nargs=* -bar Grepqflist call <SID>Grepqflist(<q-args>)
-function! s:Grepqflist(pat)
-    call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) =~# a:pat || v:val['text'] =~# a:pat"))
+command! -nargs=* -bar Grepqflist   call <SID>Grepqflist(1, <q-args>)
+command! -nargs=* -bar Removeqflist call <SID>Grepqflist(0, <q-args>)
+function! s:Grepqflist(match, pat)
+    call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) " . (a:match ? '=~#' : '!~#') . " a:pat || v:val['text'] =~# a:pat"))
 endfunction
 
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
