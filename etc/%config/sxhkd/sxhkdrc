@@ -254,11 +254,14 @@ alt + F9
 shift + F9
 	urxvt-client
 
+alt + shift + F9
+	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo --set-home --login bash -c 'chown 0 "$(tty)"; exec "$SHELL"'
+
 super + shift + F9
 	urxvt-client -e tmuxlaunch -nd
 
 super + alt + shift + F9
-	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo -H tmuxlaunch -d
+	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo --set-home --login bash -c 'chown 0 "$(tty)"; exec "'$(command -v tmuxlaunch)'" -d'
 
 F10
 	wmctrl -xa 'Firefox' || exec firefox
