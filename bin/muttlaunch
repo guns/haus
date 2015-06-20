@@ -29,7 +29,7 @@ class Muttlaunch
   end
 
   def active?
-    system 'pkill', '-x', '-0', 'mutt'
+    system 'pkill', '--exact', '-0', 'mutt'
   end
 
   def unicode_bindings

@@ -13,7 +13,7 @@
 
 super + alt + control + r
 	notify --alert --icon gnome-window-manager --title sxhkd 'Reloading bspwmrc and sxhkdrc'; \
-	pkill -USR1 -x sxhkd; \
+	pkill --exact -USR1 sxhkd; \
 	~/.config/bspwm/bspwmrc
 
 super + alt + control + q
@@ -73,7 +73,7 @@ super + {Tab,shift + Tab}
 	bspc window --focus {next,prev}
 
 alt + Tab
-	if pkill -x skippy-xd; then \
+	if pkill --exact skippy-xd; then \
 		bspc window --focus focused; \
 	else \
 		skippy-xd; \
@@ -132,7 +132,7 @@ super + @button{1-3}
 #
 
 {XF86Eject,Pause}
-	pkill -HUP -x gpg-agent; sudo -n /usr/bin/powerctl slock
+	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
 
 {super + XF86Eject,super + Pause,XF86Sleep}
 	sudo -n /usr/bin/powerctl suspend
@@ -144,11 +144,11 @@ super + alt + control + {XF86Eject,Pause,XF86Sleep}
 	sudo -n /usr/bin/powerctl poweroff
 
 control + {XF86Eject,Pause}
-	pkill -HUP -x gpg-agent && notify --alert --icon gnupg --title gpg-agent 'SIGHUP'
+	pkill --exact -HUP gpg-agent && notify --alert --icon gnupg --title gpg-agent 'SIGHUP'
 
 alt + {XF86Eject,Pause}
 	if pgrep -x xautolock; then \
-		pkill -x xautolock; \
+		pkill --exact xautolock; \
 	else \
 		xautolock-launch; \
 	fi; \
@@ -185,14 +185,14 @@ super + alt + control + {XF86AudioMute,KP_Enter}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
 
 alt + {XF86AudioMute,KP_Enter}
-	if pkill -0 -x pulseaudio; then \
+	if pkill --exact -0 pulseaudio; then \
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(hwctl toggle-pulseaudio-sink); \
 	else \
 		notify --no-audio --icon gnome-alsamixer-icon --title ALSA - < <(hwctl toggle-alsa-card); \
 	fi
 
 alt + shift + {XF86AudioMute,KP_Enter}
-	if pkill -0 -x pulseaudio; then \
+	if pkill --exact -0 pulseaudio; then \
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(hwctl toggle-pulseaudio-source); \
 	fi
 
