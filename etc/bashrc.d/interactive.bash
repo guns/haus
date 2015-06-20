@@ -898,6 +898,16 @@ HAVE go && {
     gotest() { __go__ -p '-v' test "$@"; }
     gorace() { __go__ -p '-race' test "$@"; }
     gobench() { __go__ -p "-bench=${1:-.}" -- test "${@:2}"; }
+    goupgrade() {
+        pushd .
+        cdgo
+        local pkg
+        go list ./... | while read pkg; do
+            [[ "$pkg" == github.com/guns/* ]] && continue
+            run go get -u "$@" "$pkg"
+        done
+        popd
+    }
 }
 
 ### SCM
