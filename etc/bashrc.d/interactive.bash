@@ -895,7 +895,7 @@ HAVE go && {
         run go "$cmd" "${flags[@]}" "$@"
     }
     gobuild() { __go__ -p '-v' build "$@"; }
-    gotest() { __go__ -p '-v' test "$@"; }
+    gotest() { __go__ test "$@"; }
     gorace() { __go__ -p '-race' test "$@"; }
     gobench() { __go__ -p "-bench=${1:-.}" -- test "${@:2}"; }
     goupgrade() {

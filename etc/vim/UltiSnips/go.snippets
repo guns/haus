@@ -14,13 +14,13 @@ package ${1:`!v expand('%:p:h:t')`}
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
-snippet /^CS/ "Constants declaration" r
+snippet cs "Constants declaration" w
 const (
 	$0
 )
 endsnippet
 
-snippet CO "const" w
+snippet co "const" w
 const $1 = $0
 endsnippet
 
@@ -28,11 +28,11 @@ snippet V "var" w
 var ${1:name} ${0:type}
 endsnippet
 
-snippet VE "var err error" w
+snippet ve "var err error" w
 var err error
 endsnippet
 
-snippet /^VS/ "Variables declaration" r
+snippet vs "Variables declaration" w
 var (
 	$0
 )
@@ -62,11 +62,15 @@ snippet ef "fmt.Errorf()" w
 fmt.Errorf($0)
 endsnippet
 
+snippet en "errors.New()" w
+errors.New($0)
+endsnippet
+
 snippet ssc "fmt.Sscan()" w
 fmt.Sscan($0)
 endsnippet
 
-snippet PL "pretty.Println()" w
+snippet pp "pretty.Println()" w
 pretty.Println($0)
 endsnippet
 
@@ -130,13 +134,13 @@ snippet T "type" b
 type $0
 endsnippet
 
-snippet ST "TS" b
+snippet ts "type struct" w
 type $1 struct {
 	$0
 }
 endsnippet
 
-snippet TI "type interface" b
+snippet ti "type interface" b
 type $1 interface {
 	$0
 }
@@ -161,32 +165,40 @@ for ${1:i} := range ${2} {
 }
 endsnippet
 
-snippet fl "float32" w
-float32
-endsnippet
-
-snippet FL "float64" w
+snippet fl "float64" w
 float64
 endsnippet
 
-snippet u8 "uint8" w
-uint8
-endsnippet
-
-snippet u6 "uint64" w
-uint64
-endsnippet
-
-snippet u3 "uint32" w
-uint32
+snippet f3 "float32" w
+float32
 endsnippet
 
 snippet ui "uint" w
 uint
 endsnippet
 
-snippet B "BS" w
+snippet u8 "uint8" w
+uint8
+endsnippet
+
+snippet u1 "uint16" w
+uint16
+endsnippet
+
+snippet u3 "uint32" w
+uint32
+endsnippet
+
+snippet u6 "uint64" w
+uint64
+endsnippet
+
+snippet B "[]byte" w
 []byte
+endsnippet
+
+snippet bb "bytes.Buffer" w
+bytes.Buffer
 endsnippet
 
 snippet ap "append" w
@@ -226,6 +238,12 @@ if ${1:err} != nil {
 }
 endsnippet
 
+snippet ife= "if err := f(); err != nil …" w
+if ${1:err} ${2::}= $3; $1 != nil {
+	return $1$0
+}
+endsnippet
+
 snippet el "else" w
 else {
 	$0
@@ -248,6 +266,7 @@ endsnippet
 snippet sel "select" !b
 select {
 case ${0}:
+default:
 }
 endsnippet
 
@@ -261,7 +280,7 @@ default:
 	${0:${VISUAL}}
 endsnippet
 
-snippet D "defer" w
+snippet de "defer" w
 defer $0
 endsnippet
 
@@ -308,6 +327,10 @@ go func() {
 }()
 endsnippet
 
+snippet rf "ioutil.ReadFile()" w
+ioutil.ReadFile($0)
+endsnippet
+
 snippet O "file, err := os.Open(…)" w
 ${1:file}, ${2:err} ${3::}= os.Open($4)
 if $2 != nil {
@@ -324,6 +347,10 @@ if $2 != nil {
 ${6:defer }$1.Close()
 endsnippet
 
+snippet md "os.MkdirAll" w
+${1:err} ${2::}= os.Mkdir${3:All}($4, ${5:0755})
+endsnippet
+
 snippet fd "function decl" w
 func($1)${2/(.+)/ /}(${2:type})
 endsnippet
@@ -334,6 +361,10 @@ endsnippet
 
 snippet cl "close" w
 close($0)
+endsnippet
+
+snippet pan "panic()" w
+panic(${0:err})
 endsnippet
 
 # types and variables
@@ -349,15 +380,15 @@ snippet del "delete" w
 delete($0)
 endsnippet
 
-snippet unsp "unsafe.Pointer" w
+snippet up "unsafe.Pointer" w
 unsafe.Pointer($0)
 endsnippet
 
-snippet TA "time.After()" w
+snippet after "time.After()" w
 time.After($1 * time.$0)
 endsnippet
 
-snippet TS "time.Sleep()" w
+snippet sleep "time.Sleep()" w
 time.Sleep($1 * time.$0)
 endsnippet
 
