@@ -145,15 +145,6 @@
     up           = remote update --prune
     shallowclone = clone --depth=1
 
-    # Stash
-    sta     = stash
-    stap    = stash --patch
-    stau    = stash --include-untracked
-    staup   = stash --include-untracked --patch
-    stal    = stash list
-    stapop  = stash pop
-    stashow = stash show --patch
-
     # Grep
     g    = grep --perl-regexp 
     gi   = grep --perl-regexp --ignore-case
