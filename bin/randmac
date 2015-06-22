@@ -41,7 +41,7 @@ class Randmac
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.size > 1
-    @prefix = args.first.delete(':').to_i(16) & 0xffffff if args.any?
+    @prefix = args.first.delete(':')[/\h{0,6}/].to_i(16) & 0xffffff if args.any?
     puts randmac
   end
 end
