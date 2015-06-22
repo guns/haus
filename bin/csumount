@@ -7,18 +7,21 @@
 
 require 'shellwords'
 
-abort 'USAGE: csumount mountpoint' if ARGV.size != 1
+abort 'USAGE: csumount mountpoint' if ARGV.empty?
 
 def sh *argv
   warn argv.shelljoin
   system *argv
 end
 
-mountpoint = ARGV.first
-dm_name = File.basename File.expand_path(mountpoint)
+ARGV.each do |mtpt|
+  dm_name = File.basename File.expand_path(mtpt)
 
-if sh 'umount', mountpoint
-  sh 'cryptsetup', 'luksClose', dm_name
+  if sh 'umount', mtpt
+    sh 'cryptsetup', 'luksClose', dm_name
+  end
+
+  break if $?.exitstatus != 0
 end
 
 exit $?.exitstatus
