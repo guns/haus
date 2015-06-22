@@ -12,6 +12,9 @@
 # scan code: 0x70029   key code: esc
 #
 # cf. /usr/include/linux/input.h
+#
+# Note that the `keyboard:` prefix was recognized up to systemd 219, while the
+# `evdev:input:` prefix is recognized from systemd 220+
 
 #
 # Replace Caps with Control
@@ -21,6 +24,7 @@
 #
 
 keyboard:usb:*
+evdev:input:b*
  KEYBOARD_KEY_70039=leftctrl    # CapsLock -> Control_L
  KEYBOARD_KEY_700E0=rightctrl   # Control_L -> Control_R
  KEYBOARD_KEY_700E4=compose     # Control_R -> Menu
@@ -31,8 +35,10 @@ keyboard:usb:*
 
 # Lenovo
 keyboard:usb:v04CA*
+evdev:input:b*v04CA*
 # Logitech
 keyboard:usb:v046D*
+evdev:input:b*v046D*
  KEYBOARD_KEY_700E3=leftalt     # Super_L -> Alt_L
  KEYBOARD_KEY_700E2=leftmeta    # Alt_L -> Super_L
  KEYBOARD_KEY_700E6=rightmeta   # Alt_R -> Super_R
