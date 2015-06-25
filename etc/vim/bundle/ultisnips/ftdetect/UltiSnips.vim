@@ -7,8 +7,11 @@ if exists("vimpager")
 endif
 
 if has("autocmd") && (has("python") || has("python3"))
-   augroup UltiSnipsFileType
-      au!
-      autocmd FileType * call UltiSnips#FileTypeChanged()
-   augroup END
+    augroup UltiSnipsFileType
+        au!
+        autocmd FileType * call UltiSnips#FileTypeChanged()
+    augroup END
+
+    " restore 'filetypedetect' group declaration
+    augroup filetypedetect
 endif
