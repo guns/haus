@@ -120,11 +120,6 @@ fun! <sid>NrrwRgnWin(bang) abort "{{{1
 			exe cmd
 		else
 			try
-				" if hidden is set, set the original buffer to be modified, so
-				" that :q won't accidently quit vim
-				if &hid
-					setl modified
-				endif
 				enew
 				if bufexists(s:nrrw_winname. '_'. s:instn)
 					" avoid E95
@@ -237,7 +232,7 @@ fun! <sid>WriteNrrwRgn(...) abort "{{{1
 		call s:WarningMsg("Original buffer does no longer exist! Aborting!")
 		return
 	endif
-	if &l:mod && exists("a:1") && a:1
+	if exists("a:1") && a:1
 		" Write the buffer back to the original buffer
 		let _wsv = winsaveview()
 		setl nomod
@@ -335,15 +330,26 @@ fun! <sid>UpdateOrigWin() abort "{{{
 	endtry
 endfun!
 
+fun! <sid>SetupBufWriteCmd(instn) "{{{1
+	if !exists("#NrrwRgn".a:instn."#BufWriteCmd#<buffer>")
+		if s:debug
+			echo "Setting up BufWriteCmd!"
+		endif
+		au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
+	endif
+endfu
 fun! <sid>NrrwRgnAuCmd(instn) abort "{{{1
 	" If a:instn==0, then enable auto commands
 	" else disable auto commands for a:instn
 	if !a:instn
 		exe "aug NrrwRgn". b:nrrw_instn
 		au!
-		au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
-		au BufWinLeave,BufWipeout,BufDelete <buffer> nested
+		"au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
+		" don't clean up on BufWinLeave autocommand, that breaks
+		" :b# and returning back to that buffer later (see issue #44)
+		au BufWipeout,BufDelete <buffer> nested
 					\ :call s:WriteNrrwRgn()
+		"au BufWriteCmd <buffer> nested :call s:WriteNrrwRgn(1)
 		au CursorMoved <buffer> :call s:UpdateOrigWin()
 		" When switching buffer in the original buffer,
 		" make sure the highlighting of the narrowed buffer will
@@ -354,7 +360,9 @@ fun! <sid>NrrwRgnAuCmd(instn) abort "{{{1
 			\ "> if <sid>HasMatchID(".b:nrrw_instn.")|call <sid>DeleteMatches(".
 			\ b:nrrw_instn.")|endif"
 		endif
+		call s:SetupBufWriteCmd(b:nrrw_instn)
 		aug end
+		au BufWinEnter <buffer> call s:SetupBufWriteCmd(b:nrrw_instn)
 	else
 		exe "aug NrrwRgn".  a:instn
 		au!
@@ -782,7 +790,7 @@ fun! <sid>SetupBufLocalCommands() abort "{{{1
 	com! -buffer NRNoSyncOnWrite :call nrrwrgn#ToggleSyncWrite(0)
 endfun
 
-fun! <sid>SetupBufLocalMaps() abort "{{{1
+fun! <sid>SetupBufLocalMaps(bang) abort "{{{1
 	if !hasmapto('<Plug>NrrwrgnWinIncr', 'n')
 		nmap <buffer> <Leader><Space> <Plug>NrrwrgnWinIncr
 	endif
@@ -790,6 +798,12 @@ fun! <sid>SetupBufLocalMaps() abort "{{{1
 		nmap <buffer><unique> <Plug>NrrwrgnWinIncr NrrwRgnIncr
 	endif
 	nnoremap <buffer><silent><script><expr> NrrwRgnIncr <sid>ToggleWindowSize()
+	if a:bang && winnr('$') == 1
+		" Map away :q and :q! in single window mode, so that :q won't
+		" accidently quit vim.
+		cabbr <buffer> q  <c-r>=(getcmdtype()==':'&&getcmdpos()==1 ? ':bd' : ':q')<cr>
+		cabbr <buffer> q! <c-r>=(getcmdtype()==':'&&getcmdpos()==1 ? ':bd!' : ':q!')<cr>
+	endif
 endfun
 
 fun! <sid>NrrwDivNear(n, d) abort "{{{1
@@ -1040,7 +1054,7 @@ fun! nrrwrgn#NrrwRgnDoMulti(...) abort "{{{1
 	setl nomod
 	let b:nrrw_instn = s:instn
 	call <sid>SetupBufLocalCommands()
-	call <sid>SetupBufLocalMaps()
+	call <sid>SetupBufLocalMaps(bang)
 	call <sid>NrrwRgnAuCmd(0)
 	call <sid>SetOptions(local_options)
 	call <sid>CleanRegions()
@@ -1122,7 +1136,7 @@ fun! nrrwrgn#NrrwRgn(mode, ...) range  abort "{{{1
 	let b:nrrw_instn = s:instn
 	setl nomod
 	call <sid>SetupBufLocalCommands()
-	call <sid>SetupBufLocalMaps()
+	call <sid>SetupBufLocalMaps(bang)
 	call <sid>NrrwRgnAuCmd(0)
 	call <sid>SetOptions(local_options)
 	if has_key(s:nrrw_aucmd, "create")
@@ -1308,7 +1322,7 @@ fun! nrrwrgn#WidenRegion(force)  abort "{{{1
 		" then where we started, else we might accidentally
 		" set a match in the narrowed window (might happen if the
 		" user typed Ctrl-W o in the narrowed window)
-		if !has_key(s:nrrw_rgn_lines[instn], 'single') && winnr != winnr()
+		if !(has_key(s:nrrw_rgn_lines[instn], 'single') || winnr != winnr())
 			call <sid>AddMatches(<sid>GeneratePattern(
 				\s:nrrw_rgn_lines[instn].start[1:2],
 				\s:nrrw_rgn_lines[instn].end[1:2],
@@ -1340,11 +1354,12 @@ fun! nrrwrgn#WidenRegion(force)  abort "{{{1
 		exe b:nrrw_aucmd_written
 	endif
 	call winrestview(wsv)
-	if !close && has_key(s:nrrw_rgn_lines[instn], 'single')
+	"if !close && has_key(s:nrrw_rgn_lines[instn], 'single')
+	if has_key(s:nrrw_rgn_lines[instn], 'single')
 		" move back to narrowed buffer
 		noa b #
-	elseif close
-		call <sid>CleanUpInstn(instn)
+	"elseif close
+	"	call <sid>CleanUpInstn(instn)
 	endif
 	let bufnr = bufnr('')
 	" jump back to narrowed window
