@@ -26,7 +26,6 @@ shebang = {
 	'ruby':       '#!/usr/bin/env ruby',
 	'perl':       '#!/usr/bin/env perl',
 	'php':        '#!/usr/bin/env php',
-	'clojure':    '#!/usr/bin/env lein-exec',
 }
 if not vim.current.buffer[0].startswith('#!'):
 	filetype = vim.eval('&filetype')
