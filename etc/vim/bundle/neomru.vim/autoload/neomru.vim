@@ -209,6 +209,9 @@ function! s:mru.load(...)  "{{{
     return
   endif
 
+  if self.type ==# 'file'
+  endif
+
   " Assume properly saved and sorted. unique sort is not necessary here
   call extend(self.candidates, items)
 
@@ -299,8 +302,13 @@ function! neomru#_import_file(path) "{{{
       \  expand('~/.unite/file_mru'))
   endif
 
-  let s:file_mru.candidates = s:uniq(
-        \ s:file_mru.candidates + s:import(path))
+  let candidates = s:file_mru.candidates
+  let candidates += s:import(path)
+
+  " Load from v:oldfiles
+  let candidates += map(v:oldfiles, "s:substitute_path_separator(v:val)")
+
+  let s:file_mru.candidates = s:uniq(candidates)
   call s:file_mru.save()
 endfunction"}}}
 function! neomru#_import_directory(path) "{{{
@@ -396,14 +404,16 @@ function! s:uniq_by(list, f) "{{{
   return map(list, 'v:val[0]')
 endfunction"}}}
 function! s:is_file_exist(path)  "{{{
-  return (g:neomru#file_mru_ignore_pattern == '' ||
-        \ a:path !~ '^\a\w\+:\|\%(' . g:neomru#file_mru_ignore_pattern . '\)')
-        \ && getftype(a:path) ==# 'file'
+  return a:path =~ '^\h\w\+:'
+        \ || (getftype(a:path) ==# 'file'
+        \     && (g:neomru#file_mru_ignore_pattern == ''
+        \         || a:path !~ g:neomru#file_mru_ignore_pattern))
 endfunction"}}}
 function! s:is_directory_exist(path)  "{{{
-  return isdirectory(a:path) &&
-        \ (g:neomru#directory_mru_ignore_pattern == '' ||
-        \  a:path !~ g:neomru#directory_mru_ignore_pattern)
+  return a:path =~ '^\h\w\+:'
+        \ || (isdirectory(a:path)
+        \     && (g:neomru#directory_mru_ignore_pattern == ''
+        \        || a:path !~ g:neomru#directory_mru_ignore_pattern))
 endfunction"}}}
 function! s:import(path)  "{{{
   if !filereadable(a:path)

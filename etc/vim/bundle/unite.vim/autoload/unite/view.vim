@@ -719,6 +719,7 @@ function! unite#view#_bottom_cursor() "{{{
 endfunction"}}}
 function! unite#view#_clear_match() "{{{
   if &filetype ==# 'unite'
+    silent! highlight! link CursorLine CursorColumn
     setlocal nocursorline
   endif
 endfunction"}}}
@@ -830,6 +831,7 @@ endfunction"}}}
 
 function! unite#view#_match_line(highlight, line, id) "{{{
   if &filetype ==# 'unite'
+    silent! highlight! link CursorLine PmenuSel
     setlocal cursorline
     return
   endif
