@@ -326,19 +326,19 @@ function! s:Opener._reuseWindow()
         return 1
     endif
 
-    if self._reuse == 'currenttab'
-        return 0
-    endif
+    " if self._reuse == 'currenttab'
+    "     return 0
+    " endif
 
-    "check other tabs
-    let tabnr = self._path.tabnr()
-    if tabnr
-        call self._checkToCloseTree(1)
-        call nerdtree#exec('normal! ' . tabnr . 'gt')
-        let winnr = bufwinnr('^' . self._path.str() . '$')
-        call nerdtree#exec(winnr . "wincmd w")
-        return 1
-    endif
+    " "check other tabs
+    " let tabnr = self._path.tabnr()
+    " if tabnr
+    "     call self._checkToCloseTree(1)
+    "     call nerdtree#exec('normal! ' . tabnr . 'gt')
+    "     let winnr = bufwinnr('^' . self._path.str() . '$')
+    "     call nerdtree#exec(winnr . "wincmd w")
+    "     return 1
+    " endif
 
     return 0
 endfunction
