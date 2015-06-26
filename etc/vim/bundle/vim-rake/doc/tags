@@ -27,4 +27,5 @@ rake-:Rtask	rake.txt	/*rake-:Rtask*
 rake-:Rtest	rake.txt	/*rake-:Rtest*
 rake-about	rake.txt	/*rake-about*
 rake-commands	rake.txt	/*rake-commands*
+rake-ruby-c-extensions	rake.txt	/*rake-ruby-c-extensions*
 rake.txt	rake.txt	/*rake.txt*

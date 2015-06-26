@@ -121,8 +121,9 @@ The standard Rails load path is prepended to 'path', enabling |:find| to work:
 File Under Cursor - gf ~
 						*rails-gf*
 The |gf| command, which normally edits the current file under the cursor, has
-been remapped to take context into account. |CTRL-W_f| (open in new window)
-and |CTRL-W_gf| (open in new tab) are also remapped.
+been remapped to take context into account.  |CTRL-W_f| (open in new window),
+|CTRL-W_gf| (open in new tab), and |c_CTRL-R_CTRL-F| (insert filename on
+command line) are also remapped.
 
 Example uses of |gf|, and where they might lead.
 (* indicates cursor position)
@@ -393,7 +394,9 @@ view			test:functionals TEST=...	spec SPEC=...
 fixtures		db:fixtures:load FIXTURES=...
 migration		db:migrate:redo VERSION=...
 config/routes.rb	routes
+db/schema.rb		db:migrate:status
 db/seeds.rb		db:seed
+README			about
 
 Additionally, when :Rake is given a line number (e.g., :.Rake), the following
 additional tasks can be invoked:
@@ -460,8 +463,8 @@ A limited amount of completion with <Tab> is supported.
 
 						*rails-:Rserver*
 :Rserver {options}	Launches rails server {options} in the background.
-			On win32, this means |!start|.  Otherwise, the
-			--daemon option is passed in.
+			If dispatch.vim's :Start is available, that is used.
+			Otherwise, the --daemon option is passed in.
 
 						*rails-:Rserver!*
 :Rserver! {options}	Kill the pid found in tmp/pids/server.pid and then

@@ -6,7 +6,7 @@
 if exists('g:autoloaded_rails') || &cp
   finish
 endif
-let g:autoloaded_rails = '5.1'
+let g:autoloaded_rails = '5.2'
 
 " Utility Functions {{{1
 
@@ -119,7 +119,11 @@ function! s:push_chdir(...)
 endfunction
 
 function! s:app_path(...) dict
-  return join([self.root]+a:000,'/')
+  if a:0 && a:1 =~# '\%(^\|^\w*:\)[\/]'
+    return a:1
+  else
+    return join([self.root]+a:000,'/')
+  endif
 endfunction
 
 function! s:app_has_path(path) dict
@@ -242,7 +246,7 @@ function! s:lastopeningline(pattern,limit,start)
 endfunction
 
 function! s:readable_define_pattern() dict abort
-  if self.name() =~ '\.yml$'
+  if self.name() =~ '\.yml\%(\.example\)\=$'
     return '^\%(\h\k*:\)\@='
   endif
   let define = '^\s*def\s\+\(self\.\)\='
@@ -251,6 +255,12 @@ function! s:readable_define_pattern() dict abort
   endif
   if self.name() =~# '/schema\.rb$'
     let define .= "\\\|^\\s*create_table\\s\\+[:'\"]"
+  endif
+  if self.name() =~# '/\.erb$'
+    let define .= '\|\<id=["'']\='
+  endif
+  if self.name() =~# '/\.haml$'
+    let define .= '\|^\s*\%(%\w*\)\=\%(\.[[:alnum:]_-]\+\)*#'
   endif
   if self.type_name('test')
     let define .= '\|^\s*test\s*[''"]'
@@ -502,6 +512,7 @@ function! s:error(str)
   echomsg a:str
   echohl None
   let v:errmsg = a:str
+  return ''
 endfunction
 
 function! s:debug(str)
@@ -843,7 +854,7 @@ function! s:app_stylesheet_suffix() dict abort
     let candidates = map(filter(
           \ s:readfile(self.path('config/application.rb')),
           \ 'v:val =~ "^ *config.sass.preferred_syntax *= *:[A-Za-z-]\\+ *$"'
-          \ ), '".css.".matchstr(v:val,"[A-Za-z-]\\+\\ze *$")')
+          \ ), '".".matchstr(v:val,"[A-Za-z-]\\+\\ze *$")')
     call self.cache.set('stylesheet_suffix', get(candidates, 0, default))
   endif
   return self.cache.get('stylesheet_suffix')
@@ -853,7 +864,8 @@ function! s:app_has(feature) dict
   let map = {
         \'test': 'test/',
         \'spec': 'spec/',
-        \'bundler': 'Gemfile',
+        \'bundler': 'Gemfile|gems.locked',
+        \'rails3': 'config/application.rb',
         \'cucumber': 'features/',
         \'turnip': 'spec/acceptance/',
         \'sass': 'public/stylesheets/sass/',
@@ -865,7 +877,8 @@ function! s:app_has(feature) dict
   let features = self.cache.get('features')
   if !has_key(features,a:feature)
     let path = get(map,a:feature,a:feature.'/')
-    let features[a:feature] = rails#app().has_path(path)
+    let features[a:feature] =
+          \ !empty(filter(split(path, '|'), 'self.has_path(v:val)'))
   endif
   return features[a:feature]
 endfunction
@@ -895,14 +908,12 @@ function! s:app_ruby_script_command(cmd) dict abort
   endif
 endfunction
 
-function! s:app_prepare_rails_command(cmd) dict abort
-  if self.has_path('.zeus.sock') && a:cmd =~# '^\%(console\|dbconsole\|destroy\|generate\|server\|runner\)\>'
-    return 'zeus '.a:cmd
-  elseif self.has_path('bin/rails')
+function! s:app_static_rails_command(cmd) dict abort
+  if self.has_path('bin/rails')
     let cmd = 'bin/rails '.a:cmd
   elseif self.has_path('script/rails')
     let cmd = 'script/rails '.a:cmd
-  elseif self.has_path('script/' . matchstr(a:cmd, '\w\+'))
+  elseif !self.has('rails3')
     let cmd = 'script/'.a:cmd
   elseif self.has('bundler')
     return 'bundle exec rails ' . a:cmd
@@ -910,6 +921,13 @@ function! s:app_prepare_rails_command(cmd) dict abort
     return 'rails '.a:cmd
   endif
   return self.ruby_script_command(cmd)
+endfunction
+
+function! s:app_prepare_rails_command(cmd) dict abort
+  if self.has_path('.zeus.sock') && a:cmd =~# '^\%(console\|dbconsole\|destroy\|generate\|server\|runner\)\>'
+    return 'zeus '.a:cmd
+  endif
+  return self.static_rails_command(a:cmd)
 endfunction
 
 function! s:app_start_rails_command(cmd, ...) dict abort
@@ -926,7 +944,8 @@ function! s:app_start_rails_command(cmd, ...) dict abort
   call s:push_chdir(1)
   try
     if exists(':Start') == 2
-      exe 'Start'.(a:0 && a:1 ? '!' : '').' -title=rails\ '.title.' '.cmd
+      let title = escape(fnamemodify(self.path(), ':t').' '.title, ' ')
+      exe 'Start'.(a:0 && a:1 ? '!' : '').' -title='.title.' '.cmd
     elseif has("win32")
       exe "!start ".cmd
     else
@@ -964,7 +983,7 @@ function! s:app_eval(ruby,...) dict abort
   return v:shell_error == 0 ? results : def
 endfunction
 
-call s:add_methods('app', ['ruby_command','ruby_script_command','prepare_rails_command','execute_rails_command','start_rails_command','eval'])
+call s:add_methods('app', ['ruby_command','ruby_script_command','static_rails_command','prepare_rails_command','execute_rails_command','start_rails_command','eval'])
 
 " }}}1
 " Commands {{{1
@@ -1137,6 +1156,23 @@ endfunction
 " }}}1
 " Rake {{{1
 
+function! s:qf_pre() abort
+  let dir = substitute(matchstr(','.&l:errorformat, ',chdir \zs\%(\\.\|[^,]\)*'), '\\,' ,',', 'g')
+  let cwd = getcwd()
+  if !empty(dir) && dir !=# cwd
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
+    execute 'lcd' fnameescape(dir)
+    let s:qf_post = cd . ' ' . fnameescape(cwd)
+  endif
+endfunction
+
+augroup railsPluginMake
+  autocmd!
+  autocmd QuickFixCmdPre  *make* call s:qf_pre()
+  autocmd QuickFixCmdPost *make*
+        \ if exists('s:qf_post') | execute remove(s:, 'qf_post') | endif
+augroup END
+
 function! s:app_rake_tasks() dict abort
   if self.cache.needs('rake_tasks')
     call s:push_chdir()
@@ -1149,7 +1185,7 @@ function! s:app_rake_tasks() dict abort
     if v:shell_error != 0
       return []
     endif
-    call map(lines,'matchstr(v:val,"^rake\\s\\+\\zs\\S*")')
+    call map(lines,'matchstr(v:val,"^rake\\s\\+\\zs[^][ ]\\+")')
     call filter(lines,'v:val != ""')
     call self.cache.set('rake_tasks',s:uniq(['default'] + lines))
   endif
@@ -1158,27 +1194,17 @@ endfunction
 
 call s:add_methods('app', ['rake_tasks'])
 
-let g:rails#rake_errorformat = '%D(in\ %f),'
-      \.'%\\s%#from\ %f:%l:%m,'
-      \.'%\\s%#from\ %f:%l:,'
-      \.'%\\s%##\ %f:%l:%m,'
-      \.'%\\s%##\ %f:%l,'
-      \.'%\\s%#[%f:%l:\ %#%m,'
-      \.'%\\s%#%f:%l:\ %#%m,'
-      \.'%\\s%#%f:%l:,'
-      \.'%m\ [%f:%l]:,'
-      \.'%+Erake\ aborted!,'
-      \.'%+EDon''t\ know\ how\ to\ build\ task\ %.%#,'
-      \.'%+Einvalid\ option:%.%#,'
-      \.'%+Irake\ %\\S%\\+%\\s%\\+#\ %.%#'
-
 function! s:make(bang, args, ...)
   if exists(':Make') == 2
     exe 'Make'.(a:bang ? '! ' : ' ').a:args
   else
     exe 'make! '.a:args
+    let qf = &l:buftype ==# 'quickfix'
     if !a:bang
       exe (a:0 ? a:1 : 'cwindow')
+      if !qf && &l:buftype ==# 'quickfix'
+        wincmd p
+      endif
     endif
   endif
 endfunction
@@ -1190,15 +1216,10 @@ function! s:Rake(bang,lnum,arg)
   let old_errorformat = &l:errorformat
   let old_compiler = get(b:, 'current_compiler', '')
   try
-    call s:push_chdir(1)
+    compiler rails
     let b:current_compiler = 'rake'
-    if !empty(findfile('compiler/rake.vim', escape(&rtp, ' ')))
-      compiler rake
-    else
-      let &l:errorformat = g:rails#rake_errorformat
-      let b:current_compiler = 'rake'
-    endif
     let &l:makeprg = rails#app().rake_command()
+    let &l:errorformat .= ',chdir '.escape(self.path(), ',')
     let arg = a:arg
     if &filetype =~# '^ruby\>' && arg == ''
       let mnum = s:lastmethodline(lnum)
@@ -1220,9 +1241,9 @@ function! s:Rake(bang,lnum,arg)
     let self.options['last_rake_task'] = arg
     let withrubyargs = '-r ./config/boot -r '.s:rquote(self.path('config/environment')).' -e "puts \%((in \#{Dir.getwd}))" '
     if arg =~# '^notes\>'
-      let &l:errorformat = '%-P%f:,\ \ *\ [%*[\ ]%l]\ [%t%*[^]]] %m,\ \ *\ [%*[\ ]%l] %m,%-Q'
+      let &l:errorformat = '%-P%f:,\ \ *\ [%\ %#%l]\ [%t%*[^]]] %m,\ \ *\ [%[\ ]%#%l] %m,%-Q'
       call s:make(a:bang, arg)
-    elseif arg =~# '^\%(stats\|routes\|secret\|time:zones\|db:\%(charset\|collation\|fixtures:identify\>.*\|migrate:status\|version\)\)\%([: ]\|$\)'
+    elseif arg =~# '^\%(stats\|routes\|secret\|middleware\|time:zones\|db:\%(charset\|collation\|fixtures:identify\>.*\|migrate:status\|version\)\)\%([: ]\|$\)'
       let &l:errorformat = '%D(in\ %f),%+G%.%#'
       call s:make(a:bang, arg, 'copen')
     else
@@ -1235,7 +1256,6 @@ function! s:Rake(bang,lnum,arg)
     if empty(b:current_compiler)
       unlet b:current_compiler
     endif
-    call s:pop_command()
   endtry
 endfunction
 
@@ -1267,7 +1287,7 @@ function! s:readable_test_file_candidates() dict abort
     let tests = [
           \ 'test/models/' . self.model_name() . '_test.rb',
           \ 'test/unit/' . self.model_name() . '_test.rb']
-  elseif f =~# '\<app/.*\.rb'
+  elseif f =~# '\<app/.*/.*\.rb'
     let file = fnamemodify(f,":r")
     let test_file = s:sub(file,'<app/','test/') . '_test.rb'
     let spec_file = s:sub(file,'<app/','spec/') . '_spec.rb'
@@ -1277,7 +1297,7 @@ function! s:readable_test_file_candidates() dict abort
           \ '<test/mailers/', 'test/functional/'),
           \ '<test/controllers/', 'test/functional/')
     let tests = s:uniq([test_file, old_test_file, spec_file])
-  elseif f =~# '\<\(test\|spec\)/\%(\1_helper\.rb$\|support\>\)' || f =~# '\%(\<spec/\)\@<!\<features/.*\.rb$'
+  elseif f =~# '\<\(test\|spec\)/\%(\1_helper\.rb$\|support\>\)' || f =~# '\%(\<spec/\|\<test/\)\@<!\<features/.*\.rb$'
     let tests = [matchstr(f, '.*\<\%(test\|spec\|features\)\>')]
   elseif self.type_name('test', 'spec', 'cucumber')
     let tests = [f]
@@ -1312,13 +1332,13 @@ function! s:readable_default_rake_task(...) dict abort
 
   if self.getvar('&buftype') == 'quickfix'
     return '-'
-  elseif self.getline(lnum) =~# '# rake '
+  elseif self.getline(lnum) =~# '# rake \S'
     return matchstr(self.getline(lnum),'\C# rake \zs.*')
   elseif self.getline(self.last_method_line(lnum)-1) =~# '# rake '
     return matchstr(self.getline(self.last_method_line(lnum)-1),'\C# rake \zs.*')
   elseif self.getline(self.last_method_line(lnum)) =~# '# rake '
     return matchstr(self.getline(self.last_method_line(lnum)),'\C# rake \zs.*')
-  elseif self.getline(1) =~# '# rake ' && !lnum
+  elseif self.getline(1) =~# '# rake \S' && !lnum
     return matchstr(self.getline(1),'\C# rake \zs.*')
   endif
 
@@ -1355,28 +1375,28 @@ function! s:readable_default_rake_task(...) dict abort
     endif
   elseif self.type_name('db-migration')
     let ver = matchstr(self.name(),'\<db/migrate/0*\zs\d*\ze_')
-    if ver != ""
+    if !empty(ver)
       let method = self.last_method(lnum)
       if method == "down" || lnum == 1
         return "db:migrate:down VERSION=".ver
       elseif method == "up" || lnum == line('$')
         return "db:migrate:up VERSION=".ver
       else
-        return "db:migrate:down db:migrate:up VERSION=".ver
+        return "db:migrate:redo VERSION=".ver
       endif
     else
       return 'db:migrate'
     endif
   elseif self.name() =~# '\<db/seeds\.rb$'
     return 'db:seed'
+  elseif self.name() =~# '\<db/\|\<config/database\.'
+    return 'db:migrate:status'
+  elseif self.name() =~# '\<config\.ru$'
+    return 'middleware'
+  elseif self.name() =~# '\<README'
+    return 'about'
   elseif self.type_name('controller') && lnum
-    let lm = self.last_method(lnum)
-    if lm != ''
-      " rake routes doesn't support ACTION... yet...
-      return 'routes CONTROLLER='.self.controller_name().' ACTION='.lm
-    else
-      return 'routes CONTROLLER='.self.controller_name()
-    endif
+    return 'routes CONTROLLER='.self.controller_name()
   else
     let test = self.test_file()
     let with_line = test
@@ -1384,7 +1404,7 @@ function! s:readable_default_rake_task(...) dict abort
       let with_line .= (lnum > 0 ? ':'.lnum : '')
     endif
     if empty(test)
-      return ''
+      return '--tasks'
     elseif test =~# '^test\>'
       let opts = ''
       if test ==# self.name()
@@ -1437,8 +1457,8 @@ call s:add_methods('app', ['rake_command'])
 " }}}1
 " Preview {{{1
 
-function! s:initOpenURL()
-  if !exists(":OpenURL") == 2
+function! s:initOpenURL() abort
+  if exists(":OpenURL") != 2
     if exists(":Browse") == 2
       command -bar -nargs=1 OpenURL :Browse <args>
     elseif has("gui_mac") || has("gui_macvim") || exists("$SECURITYSESSIONID")
@@ -1446,7 +1466,7 @@ function! s:initOpenURL()
     elseif has("gui_win32")
       command -bar -nargs=1 OpenURL :!start cmd /cstart /b <args>
     elseif executable("xdg-open")
-      command -bar -nargs=1 OpenURL :!xdg-open <args>
+      command -bar -nargs=1 OpenURL :!xdg-open <args> &
     elseif executable("sensible-browser")
       command -bar -nargs=1 OpenURL :!sensible-browser <args>
     elseif executable('launchy')
@@ -1523,9 +1543,20 @@ endfunction
 
 call s:add_methods('readable', ['preview_urls'])
 
+function! s:app_server_pid() dict abort
+  for type in ['server', 'unicorn']
+    let pidfile = self.path('tmp/pids/'.type.'.pid')
+    if filereadable(pidfile)
+      let pid = get(readfile(pidfile, 'b', 1), 0, 0)
+      if pid
+        return pid
+      endif
+    endif
+  endfor
+endfunction
+
 function! s:app_server_binding() dict abort
-  let pidfile = self.path('tmp/pids/server.pid')
-  let pid = get(readfile(pidfile, 'b', 1), 0, 0)
+  let pid = self.server_pid()
   if pid
     if self.cache.has('server')
       let old = self.cache.get('server')
@@ -1549,7 +1580,7 @@ function! s:app_server_binding() dict abort
   return ''
 endfunction
 
-call s:add_methods('app', ['server_binding'])
+call s:add_methods('app', ['server_pid', 'server_binding'])
 
 function! s:Preview(bang, lnum, uri) abort
   let binding = rails#app().server_binding()
@@ -1611,8 +1642,8 @@ function! s:BufScriptWrappers()
   command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_generate Generate      :execute rails#app().generator_command(<bang>0,'generate',<f-args>)
   command! -buffer -bar -nargs=*       -complete=customlist,s:Complete_destroy  Rdestroy      :execute rails#app().generator_command(1,'destroy',<f-args>)
   command! -buffer -bar -nargs=*       -complete=customlist,s:Complete_destroy  Destroy       :execute rails#app().generator_command(1,'destroy',<f-args>)
-  command! -buffer -bar -nargs=? -bang -complete=customlist,s:Complete_server   Rserver       :execute rails#app().server_command(<bang>0,<q-args>)
-  command! -buffer -bar -nargs=? -bang -complete=customlist,s:Complete_server   Server        :execute rails#app().server_command(<bang>0,<q-args>)
+  command! -buffer -bar -nargs=? -bang -complete=customlist,s:Complete_server   Rserver       :execute rails#app().server_command(<bang>0, 1, <q-args>)
+  command! -buffer -bar -nargs=? -bang -complete=customlist,s:Complete_server   Server        :execute rails#app().server_command(0, <bang>0, <q-args>)
   command! -buffer -bang -nargs=? -range=0 -complete=customlist,s:Complete_edit Rrunner       :execute rails#buffer().runner_command(<bang>0, <count>?<line1>:0, <q-args>)
   command! -buffer -bang -nargs=? -range=0 -complete=customlist,s:Complete_edit Runner        :execute rails#buffer().runner_command(<bang>0, <count>?<line1>:0, <q-args>)
   command! -buffer       -nargs=1 -range=0 -complete=customlist,s:Complete_ruby Rp            :execute rails#app().output_command(<count>==<line2>?<count>:-1, 'p begin '.<q-args>.' end')
@@ -1651,10 +1682,20 @@ function! s:app_script_command(bang,...) dict
     return
   endif
   let str = join(map(copy(a:000), 's:rquote(v:val)'), ' ')
-  if a:bang || str =~# '^\%(c\|console\|db\|dbconsole\|s\|server\)\>'
+  if str =~# '^\%(c\|console\|db\|dbconsole\|s\|server\)\S\@!' && str !~# ' -d\| --daemon\| --help'
     return self.start_rails_command(str, a:bang)
   else
-    return self.execute_rails_command(str)
+    let [mp, efm, cc] = [&l:mp, &l:efm, get(b:, 'current_compiler', '')]
+    try
+      compiler rails
+      let &l:makeprg = self.prepare_rails_command('$*')
+      let &l:errorformat .= ',chdir '.escape(self.path(), ',')
+      call s:make(a:bang, str)
+    finally
+      let [&l:mp, &l:efm, b:current_compiler] = [mp, efm, cc]
+      if empty(cc) | unlet! b:current_compiler | endif
+    endtry
+    return ''
   endif
 endfunction
 
@@ -1662,7 +1703,6 @@ function! s:readable_runner_command(bang, count, arg) dict abort
   let old_makeprg = &l:makeprg
   let old_errorformat = &l:errorformat
   let old_compiler = get(b:, 'current_compiler', '')
-  call s:push_chdir(1)
   try
     if !empty(a:arg)
       let arg = a:arg
@@ -1721,11 +1761,12 @@ function! s:readable_runner_command(bang, count, arg) dict abort
       let &l:makeprg = 'bundle exec ' . &l:makeprg
     endif
 
+    let &l:errorformat .= ',chdir '.escape(self.app().path(), ',')
+
     call s:make(a:bang, arg . extra)
     return ''
 
   finally
-    call s:pop_command()
     let &l:errorformat = old_errorformat
     let &l:makeprg = old_makeprg
     let b:current_compiler = old_compiler
@@ -1754,7 +1795,7 @@ function! s:app_output_command(count, code) dict
   return ''
 endfunction
 
-function! rails#get_binding_for(pid)
+function! rails#get_binding_for(pid) abort
   if empty(a:pid)
     return ''
   endif
@@ -1780,14 +1821,11 @@ function! rails#get_binding_for(pid)
   return ''
 endfunction
 
-function! s:app_server_command(bang,arg) dict
-  if a:arg =~# '--help'
-    call self.execute_rails_command('server '.a:arg)
-    return ''
-  endif
-  let pidfile = self.path('tmp/pids/server.pid')
-  if a:bang && executable("ruby")
-    let pid = get(s:readfile(pidfile), 0, 0)
+function! s:app_server_command(kill, bg, arg) dict abort
+  let arg = empty(a:arg) ? '' : ' '.a:arg
+  let flags = ' -d\| --daemon\| --help'
+  if a:kill || a:arg =~# '^ *[!-]$' || (a:bg && arg =~# flags)
+    let pid = self.server_pid()
     if pid
       echo "Killing server with pid ".pid
       if !has("win32")
@@ -1796,21 +1834,26 @@ function! s:app_server_command(bang,arg) dict
       endif
       call system("ruby -e 'Process.kill(9,".pid.")'")
       sleep 100m
+    else
+      echo "No server running"
     endif
-    if a:arg == "-"
+    if a:arg =~# '^ *[-!]$'
       return
     endif
   endif
-  if (exists(':Start') == 2) || has('win32')
-    call self.start_rails_command('server '.a:arg, 1)
+  if exists(':Start') == 0 && !has('win32') && arg !~# flags
+    let arg .= ' -d'
+  endif
+  if a:arg =~# flags
+    call self.execute_rails_command('server '.a:arg)
   else
-    call self.execute_rails_command('server '.a:arg.' -d')
+    call self.start_rails_command('server '.a:arg, a:bg)
   endif
   return ''
 endfunction
 
 function! s:color_efm(pre, before, after)
-   return a:pre . '%\S%\+  %#' . a:before . "\e[0m  %#" . a:after . ',' .
+   return a:pre . '%\e%\S%\+  %#' . a:before . '%\e[0m  %#' . a:after . ',' .
          \ a:pre . '%\s %#'.a:before.'  %#'.a:after . ','
 endfunction
 
@@ -1818,11 +1861,9 @@ let s:efm_generate =
       \ s:color_efm('%-G', 'invoke', '%f') .
       \ s:color_efm('%-G', 'conflict', '%f') .
       \ s:color_efm('%-G', 'run', '%f') .
-      \ s:color_efm('%-G', 'create', ' ') .
-      \ s:color_efm('%-G', 'exist', ' ') .
-      \ s:color_efm('Overwrite%.%#', '%m', '%f') .
-      \ s:color_efm('', '%m', ' %f') .
-      \ s:color_efm('', '%m', '%f') .
+      \ s:color_efm('%-G', '%\w%\+', ' ') .
+      \ 'Overwrite%.%#%\S%\+  %#%m%\e[0m  %#%f,' .
+      \ s:color_efm('', '%m%\>', '%f') .
       \ '%-G%.%#'
 
 function! s:app_generator_command(bang,...) dict
@@ -1833,11 +1874,9 @@ function! s:app_generator_command(bang,...) dict
   let old_errorformat = &l:errorformat
   try
     let &l:makeprg = self.prepare_rails_command(cmd)
-    let &l:errorformat = s:efm_generate
-    call s:push_chdir(1)
+    let &l:errorformat = s:efm_generate . ',chdir '.escape(self.path(), ',')
     noautocmd make!
   finally
-    call s:pop_command()
     let &l:errorformat = old_errorformat
     let &l:makeprg = old_makeprg
   endtry
@@ -1850,48 +1889,62 @@ endfunction
 
 call s:add_methods('app', ['generators','script_command','output_command','server_command','generator_command'])
 
-function! s:Complete_script(ArgLead,CmdLine,P)
+function! s:Complete_script(ArgLead, CmdLine, P) abort
+  return rails#complete_rails(a:ArgLead, a:CmdLine, a:P, rails#app())
+endfunction
+
+function! rails#complete_rails(ArgLead, CmdLine, P, ...) abort
+  if a:0
+    let app = a:1
+  else
+    let manifest = findfile('config/environment.rb', escape(getcwd(), ' ,;').';')
+    let app = empty(manifest) ? {} : rails#app(fnamemodify(manifest, ':p:h:h'))
+  endif
   let cmd = s:sub(a:CmdLine,'^\u\w*\s+','')
-  if cmd !~ '^[ A-Za-z0-9_=:-]*$'
-    return []
+  if cmd =~# '^new\s\+'
+    return split(glob(a:ArgLead.'*/'), "\n")
+  elseif empty(app)
+    return s:completion_filter(['new'], a:ArgLead)
   elseif cmd =~# '^\w*$'
     return s:completion_filter(['generate', 'console', 'server', 'dbconsole', 'application', 'destroy', 'plugin', 'runner'],a:ArgLead)
-  elseif cmd =~# '^\%(generate\|destroy\)\s\+'.a:ArgLead.'$'
-    return s:completion_filter(rails#app().generators(),a:ArgLead)
-  elseif cmd =~# '^\%(generate\|destroy\)\s\+\w\+\s\+'.a:ArgLead.'$'
+  elseif cmd =~# '^\%([gd]\|generate\|destroy\)\s\+'.a:ArgLead.'$'
+    return s:completion_filter(app.generators(),a:ArgLead)
+  elseif cmd =~# '^\%([gd]\|generate\|destroy\)\s\+\w\+\s\+'.a:ArgLead.'$'
     let target = matchstr(cmd,'^\w\+\s\+\%(\w\+:\)\=\zs\w\+\ze\s\+')
     if target =~# '^\w*controller$'
       return filter(s:controllerList(a:ArgLead,"",""),'v:val !=# "application"')
     elseif target ==# 'generator'
-      return s:completion_filter(map(rails#app().relglob('lib/generators/','*'),'s:sub(v:val,"/$","")'), a:ArgLead)
+      return s:completion_filter(map(app.relglob('lib/generators/','*'),'s:sub(v:val,"/$","")'), a:ArgLead)
     elseif target ==# 'helper'
-      return s:autocamelize(rails#app().relglob('app/helpers/','**/*','_helper.rb'),a:ArgLead)
+      return s:autocamelize(app.relglob('app/helpers/','**/*','_helper.rb'),a:ArgLead)
     elseif target ==# 'integration_test' || target ==# 'integration_spec' || target ==# 'feature'
       return s:autocamelize(
-            \ rails#app().relglob('test/integration/','**/*','_test.rb') +
-            \ rails#app().relglob('spec/features/', '**/*', '_spec.rb') +
-            \ rails#app().relglob('spec/requests/', '**/*', '_spec.rb') +
-            \ rails#app().relglob('features/', '**/*', '.feature'), a:ArgLead)
+            \ app.relglob('test/integration/','**/*','_test.rb') +
+            \ app.relglob('spec/features/', '**/*', '_spec.rb') +
+            \ app.relglob('spec/requests/', '**/*', '_spec.rb') +
+            \ app.relglob('features/', '**/*', '.feature'), a:ArgLead)
     elseif target ==# 'migration' || target ==# 'session_migration'
       return s:migrationList(a:ArgLead,"","")
     elseif target ==# 'mailer'
       return s:mailerList(a:ArgLead,"","")
-      return s:completion_filter(rails#app().relglob("app/mailers/","**/*",".rb"),a:ArgLead)
+      return s:completion_filter(app.relglob("app/mailers/","**/*",".rb"),a:ArgLead)
     elseif target =~# '^\w*\%(model\|resource\)$' || target =~# '\w*scaffold\%(_controller\)\=$'
-      return s:completion_filter(rails#app().relglob('app/models/','**/*','.rb'), a:ArgLead)
+      return s:completion_filter(app.relglob('app/models/','**/*','.rb'), a:ArgLead)
     else
       return []
     endif
-  elseif cmd =~# '^\%(generate\|destroy\)\s\+scaffold\s\+\w\+\s\+'.a:ArgLead.'$'
+  elseif cmd =~# '^\%([gd]\|generate\|destroy\)\s\+scaffold\s\+\w\+\s\+'.a:ArgLead.'$'
     return filter(s:controllerList(a:ArgLead,"",""),'v:val !=# "application"')
-    return s:completion_filter(rails#app().environments())
-  elseif cmd =~# '^\%(console\)\s\+\(--\=\w\+\s\+\)\='.a:ArgLead."$"
-    return s:completion_filter(rails#app().environments()+["-s","--sandbox"],a:ArgLead)
-  elseif cmd =~# '^\%(server\)\s\+.*-e\s\+'.a:ArgLead."$"
-    return s:completion_filter(rails#app().environments(),a:ArgLead)
-  elseif cmd =~# '^\%(server\)\s\+'
+    return s:completion_filter(app.environments())
+  elseif cmd =~# '^\%(c\|console\)\s\+\(--\=\w\+\s\+\)\='.a:ArgLead."$"
+    return s:completion_filter(app.environments()+["-s","--sandbox"],a:ArgLead)
+  elseif cmd =~# '^\%(db\|dbconsole\)\s\+\(--\=\w\+\s\+\)\='.a:ArgLead."$"
+    return s:completion_filter(app.environments()+["-p","--include-password"],a:ArgLead)
+  elseif cmd =~# '^\%(s\|server\)\s\+.*-e\s\+'.a:ArgLead."$"
+    return s:completion_filter(app.environments(),a:ArgLead)
+  elseif cmd =~# '^\%(s\|server\)\s\+'
     if a:ArgLead =~# '^--environment='
-      return s:completion_filter(map(copy(rails#app().environments()),'"--environment=".v:val'),a:ArgLead)
+      return s:completion_filter(map(copy(app.environments()),'"--environment=".v:val'),a:ArgLead)
     else
       return filter(["-p","-b","-c","-d","-u","-e","-P","-h","--port=","--binding=","--config=","--daemon","--debugger","--environment=","--pid=","--help"],'s:startswith(v:val,a:ArgLead)')
     endif
@@ -1933,36 +1986,47 @@ function! s:BufNavCommands()
   command! -buffer -bar -nargs=? -complete=customlist,s:Complete_cd Lcd  :lcd `=rails#app().path(<q-args>)`
   command! -buffer -bar -nargs=? -complete=customlist,s:Complete_cd Rcd   :cd `=rails#app().path(<q-args>)`
   command! -buffer -bar -nargs=? -complete=customlist,s:Complete_cd Rlcd :lcd `=rails#app().path(<q-args>)`
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related A     :call s:Alternate('<bang>', <line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AE    :call s:Alternate('E<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AS    :call s:Alternate('S<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AV    :call s:Alternate('V<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AT    :call s:Alternate('T<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AD    :call s:Alternate('D<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AR    :call s:Alternate('D<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related R     :call s:Related('<bang>' ,<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RE    :call s:Related('E<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RS    :call s:Related('S<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RV    :call s:Related('V<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RT    :call s:Related('T<bang>',<line1>,<line2>,<count>,<f-args>)
-  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RD    :call s:Related('D<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related A     :exe s:Alternate('E<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AE    :exe s:Alternate('E<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AS    :exe s:Alternate('S<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AV    :exe s:Alternate('V<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AT    :exe s:Alternate('T<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AD    :exe s:Alternate('D<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related AR    :exe s:Alternate('D<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related R     :exe   s:Related('E<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RE    :exe   s:Related('E<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RS    :exe   s:Related('S<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RV    :exe   s:Related('V<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RT    :exe   s:Related('T<bang>',<line1>,<line2>,<count>,<f-args>)
+  command! -buffer -bar -nargs=* -range=0 -complete=customlist,s:Complete_related RD    :exe   s:Related('D<bang>',<line1>,<line2>,<count>,<f-args>)
 endfunction
 
-function! s:djump(def)
+function! s:jumpargs(file, jump) abort
+  let file = fnameescape(a:file)
+  if empty(a:jump)
+    return file
+  elseif a:jump =~# '^\d\+$'
+    return '+' . a:jump . ' ' . file
+  else
+    return '+A#' . a:jump . ' ' . file
+  endif
+endfunction
+
+function! s:jump(def, ...) abort
   let def = s:sub(a:def,'^[#:]','')
+  let edit = s:editcmdfor(a:0 ? a:1 : '')
+  if edit !~# 'edit'
+    exe edit
+  endif
   if def =~ '^\d\+$'
     exe def
-  elseif def =~ '^!'
-    if expand('%') !~ '://' && !isdirectory(expand('%:p:h'))
-      call mkdir(expand('%:p:h'),'p')
-    endif
-  elseif def != ''
+  elseif def !~# '^$\|^!'
     let ext = matchstr(def,'\.\zs.*')
     let def = matchstr(def,'[^.]*')
     let include = &l:include
     try
       setlocal include=
-      exe 'djump '.def
+      exe 'djump' def
     catch /^Vim(djump):E387/
     catch
       let error = 1
@@ -1979,7 +2043,7 @@ function! s:djump(def)
         if !success
           try
             setlocal include=
-            exe 'djump '.def
+            exe 'djump' def
           catch
           finally
             let &l:include = include
@@ -1992,11 +2056,11 @@ function! s:djump(def)
 endfunction
 
 function! s:Find(count,cmd,...)
-  let str = ""
+  let cmd = (a:count==1?'' : a:count) . a:cmd
   if a:0
     let i = 1
     while i < a:0
-      let str .= s:escarg(a:{i}) . " "
+      let cmd .= ' ' . s:escarg(a:{i})
       let i += 1
     endwhile
     let file = a:{i}
@@ -2008,25 +2072,10 @@ function! s:Find(count,cmd,...)
       let file = s:RailsIncludefind(file)
     endif
   else
-    let file = s:RailsFind()
+    let file = s:cfile()
     let tail = ""
   endif
-  call s:findedit((a:count==1?'' : a:count).a:cmd,file.tail,str)
-endfunction
-
-function! s:Edit(count,cmd,...)
-  if a:0
-    let str = ""
-    let i = 1
-    while i < a:0
-      let str .= s:escarg(a:{i}) . " "
-      let i += 1
-    endwhile
-    let file = a:{i}
-    call s:findedit(s:editcmdfor(a:cmd),file,str)
-  else
-    exe s:editcmdfor(a:cmd)
-  endif
+  return s:find(cmd, file . tail)
 endfunction
 
 function! s:fuzzyglob(arg)
@@ -2057,12 +2106,11 @@ function! s:Complete_cd(ArgLead, CmdLine, CursorPos)
   return filter(all,'s:startswith(v:val,a:ArgLead)')
 endfunction
 
-function! RailsIncludeexpr()
-  " Is this foolproof?
-  if mode() =~ '[iR]' || expand("<cfile>") != v:fname
-    return s:RailsIncludefind(v:fname)
+function! rails#includeexpr(fname) abort
+  if mode() =~# '[iR]' || expand('<cfile>') !=# a:fname
+    return s:RailsIncludefind(a:fname)
   else
-    return s:RailsIncludefind(v:fname,1)
+    return s:RailsIncludefind(a:fname, 1)
   endif
 endfunction
 
@@ -2109,7 +2157,12 @@ function! s:findfromview(func,repl)
   return s:findit('\s*\%(<%\)\==\=\s*\<\%('.a:func.'\)\s*(\=\s*[@:'."'".'"]\(\f\+\)\>['."'".'"]\=\s*\%(%>\s*\)\=',a:repl)
 endfunction
 
-function! s:RailsFind()
+function! s:findasset(path, ext, pre, post) abort
+  let asset = rails#app().resolve_asset(a:path, a:ext)
+  return len(asset) ? asset : rails#app().path(a:pre . a:path . a:post)
+endfunction
+
+function! s:cfile(...) abort
   if filereadable(expand("<cfile>"))
     return expand("<cfile>")
   endif
@@ -2117,6 +2170,40 @@ function! s:RailsFind()
   " UGH
   let buffer = rails#buffer()
   let format = s:format()
+
+  let ssext = ['css', 'css.*', 'scss', 'sass']
+  if buffer.type_name('stylesheet')
+    let res = s:findit('^\s*\*=\s*require\s*["'']\=\([^"'' ]*\)', '\1')
+    if !empty(res)
+      return s:findasset(res, ssext, "app/assets/stylesheets/", ".css")
+    endif
+    let res = s:findit('^\s*@import\s*\%(url(\)\=["'']\=\([^"'' ]*\)', '\1')
+    if res != ""
+      let base = expand('%:p:h')
+      let rel = s:sub(res, '\ze[^/]*$', '_')
+      for ext in ['css', 'css.scss', 'css.sass', 'scss', 'sass']
+        for name in [res.'.'.ext, res.'.'.ext.'.erb', rel.'.'.ext, rel.'.'.ext.'.erb']
+          if filereadable(base.'/'.name)
+            return base.'/'.name
+          endif
+        endfor
+      endfor
+      let asset = rails#app().resolve_asset(res, ssext)
+      if empty(asset) && expand('%:e') =~# '^s[ac]ss$'
+        let asset = rails#app().resolve_asset(rel, ssext)
+      endif
+      return empty(asset) ? 'app/assets/stylesheets/'.res : asset
+    endif
+  endif
+
+  let jsext = ['js', 'js.*', 'jst', 'jst.*', 'coffee']
+  if buffer.type_name('javascript')
+    let res = s:findit('^\s*//=\s*require\s*["'']\=\([^"'' ]*\)', '\1')
+    if !empty(res)
+      return s:findasset(res, jsext, "app/assets/javascript/", ".js")
+    endif
+    return expand("<cfile>")
+  endif
 
   let res = s:findit('\v\s*<require\s*\(=\s*File.dirname\(__FILE__\)\s*\+\s*[:'."'".'"](\f+)>.=',expand('%:h').'/\1')
   if res != ""|return res.(fnamemodify(res,':e') == '' ? '.rb' : '')|endif
@@ -2164,9 +2251,9 @@ function! s:RailsFind()
 
   if !buffer.type_name('controller', 'mailer')
     let res = s:sub(s:sub(s:findasymbol('layout','\1'),'^/',''),'[^/]+$','_&')
-    if res != ""|return res."\n".s:findview(res)|endif
+    if res != ""|return s:findview(res)|endif
     let res = s:sub(s:sub(s:findfromview('render\s*(\=\s*\%(:layout\s\+=>\|layout:\)\s*','\1'),'^/',''),'[^/]+$','_&')
-    if res != ""|return res."\n".s:findview(res)|endif
+    if res != ""|return s:findview(res)|endif
   endif
 
   let res = s:findamethod('layout','\=s:findlayout(submatch(1))')
@@ -2188,13 +2275,13 @@ function! s:RailsFind()
   if res != ""|return s:findview(res)|endif
 
   let res = s:sub(s:sub(s:findasymbol('partial','\1'),'^/',''),'[^/]+$','_&')
-  if res != ""|return res."\n".s:findview(res)|endif
+  if res != ""|return s:findview(res)|endif
 
   let res = s:sub(s:sub(s:findfromview('json\.(\=\s*\%(:partial\s\+=>\|partial!\)\s*','\1'),'^/',''),'[^/]+$','_&')
-  if res != ""|return res."\n".s:findview(res)|endif
+  if res != ""|return s:findview(res)|endif
 
   let res = s:sub(s:sub(s:findfromview('render\s*(\=\s*\%(:partial\s\+=>\|partial:\)\s*','\1'),'^/',''),'[^/]+$','_&')
-  if res != ""|return res."\n".s:findview(res)|endif
+  if res != ""|return s:findview(res)|endif
 
   let res = s:findamethod('render\>\s*\%(:\%(template\|action\)\s\+=>\|template:\|action:\)\s*','\1')
   if res != ""|return s:findview(res)|endif
@@ -2203,58 +2290,31 @@ function! s:RailsFind()
   if !buffer.type_name('controller', 'mailer')
     let res = s:sub(res,'[^/]+$','_&')
   endif
-  if res != ""|return res."\n".s:findview(res)|endif
+  if res != ""|return s:findview(res)|endif
 
   let res = s:findamethod('redirect_to\s*(\=\s*\%\(:action\s\+=>\|\<action:\)\s*','\1')
   if res != ""|return res|endif
 
   let res = s:findfromview('image[_-]\%(\|path\|url\)\|\%(path\|url\)_to_image','\1')
   if res != ""
-    return rails#app().resolve_asset(res)."\npublic/images/".res
+    return s:findasset(res, [], 'public/images/', '')
   endif
 
-  let ssext = ['css', 'css.*', 'scss', 'sass']
   let res = s:findfromview('stylesheet[_-]\%(link_tag\|path\|url\)\|\%(path\|url\)_to_stylesheet','\1')
   if res != ""
-    return rails#app().resolve_asset(res, ssest)."\npublic/stylesheets/".res.".css"
-  endif
-  if buffer.type_name('stylesheet')
-    let res = s:findit('^\s*\*=\s*require\s*["'']\=\([^"'' ]*\)', '\1')
-    if res != ""|return rails#app().resolve_asset(res, ssext)."\napp/assets/stylesheets/".res.".css"|endif
-    let res = s:findit('^\s*@import\s*\%(url(\)\=["'']\=\([^"'' ]*\)', '\1')
-    if res != ""
-      let base = expand('%:h')
-      let rel = s:sub(res, '\ze[^/]*$', '_')
-      for ext in ['css', 'css.scss', 'css.sass', 'scss', 'sass']
-        for name in [res.'.'.ext, res.'.'.ext.'.erb', rel.'.'.ext, rel.'.'.ext.'.erb']
-          if filereadable(base.'/'.name)
-            return base.'/'.name
-          endif
-        endfor
-      endfor
-      let asset = rails#app().resolve_asset(res, ssext)
-      if empty(asset) && expand('%:e') =~# '^s[ac]ss$'
-        let asset = rails#app().resolve_asset(rel, ssext)
-      endif
-      return empty(asset) ? 'app/assets/stylesheets/'.res : asset
-    endif
+    return s:findasset(res, ssext, 'public/stylesheets/', '.css')
   endif
 
-  let jsext = ['js', 'js.*', 'jst', 'jst.*', 'coffee']
   let res = s:sub(s:findfromview('javascript_\%(include_tag\|path\|url\)\|\%(path\|url\)_to_javascript','\1'),'/defaults>','/application')
   if res != ""
-    return rails#app().resolve_asset(res, jsext)."\npublic/javascripts/".res.".js"
-  endif
-  if buffer.type_name('javascript')
-    let res = s:findit('^\s*//=\s*require\s*["'']\=\([^"'' ]*\)', '\1')
-    if res != ""|return rails#app().resolve_asset(res, jsext)."\napp/assets/javascripts/".res.".js"|endif
+    return s:findasset(res, jsext, 'public/javascripts/', '.js')
   endif
 
   if buffer.type_name('controller', 'mailer')
     let contr = s:controller()
     let view = s:findit('\s*\<def\s\+\(\k\+\)\>(\=','/\1')
     if view !=# ''
-      let res = s:findview(contr.'/'.view)
+      let res = rails#buffer().resolve_view(contr.view)
       if res != ""|return res|endif
     endif
   endif
@@ -2271,6 +2331,11 @@ function! s:RailsFind()
   return res
 endfunction
 
+function! rails#cfile(...) abort
+  let cfile = s:find('find', s:cfile())[5:-1]
+  return empty(cfile) && a:0 && a:1 is# 'delegate' ? "\<C-R>\<C-F>" : cfile
+endfunction
+
 function! s:app_named_route_file(route) dict abort
   call self.route_names()
   if self.cache.has("named_routes") && has_key(self.cache.get("named_routes"),a:route)
@@ -2281,9 +2346,17 @@ endfunction
 
 function! s:app_route_names() dict abort
   if self.cache.needs("named_routes")
+    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
+    let cwd = getcwd()
     let routes = {}
-    for line in split(system(self.rake_command().' routes'), "\n")
-      let matches = matchlist(line, '^ \+\(\w\+\) \+\(\u\+\) \+\(\S\+\) \+\(\w\+#\w\+\)')
+    try
+      execute cd fnameescape(rails#app().path())
+      let output = system(self.rake_command().' routes')
+    finally
+      execute cd fnameescape(cwd)
+    endtry
+    for line in split(output, "\n")
+      let matches = matchlist(line, '^ \+\(\l\w*\) \{-\}\(\u*\) \+\(\S\+\) \+\(\w\+#\w\+\)')
       if !empty(matches)
         let [_, name, method, path, handler; __] = matches
         let routes[name] = {'method': method, 'path': path, 'handler': handler}
@@ -2297,11 +2370,9 @@ endfunction
 
 call s:add_methods('app', ['route_names','named_route_file'])
 
-function! s:RailsIncludefind(str,...)
-  if a:str ==# "ApplicationController"
-    return "application_controller.rb\napp/controllers/application.rb"
-  elseif a:str ==# "Test::Unit::TestCase"
-    return "test/unit/testcase.rb"
+function! s:RailsIncludefind(str,...) abort
+  if a:str ==# "ApplicationController" && rails#app().has_path('app/controllers/application.rb')
+    return 'application.rb'
   endif
   let str = a:str
   if a:0 == 1
@@ -2401,72 +2472,8 @@ endfunction
 
 function! s:app_commands() dict abort
   let commands = {}
-
-  let commands.environment = [
-        \ {'pattern': 'config/environments/*.rb'},
-        \ {'pattern': 'config/application.rb'},
-        \ {'pattern': 'config/environment.rb'}]
-  let commands.helper = [{
-        \ 'pattern': 'app/helpers/*_helper.rb',
-        \ 'template': "module %SHelper\nend",
-        \ 'affinity': 'controller'}]
-  let commands.initializer = [
-        \ {'pattern': 'config/initializers/*.rb'},
-        \ {'pattern': 'config/routes.rb'}]
-  let commands.lib = [
-        \ {'pattern': 'lib/*.rb'},
-        \ {'pattern': 'Gemfile'}]
-  let commands.mailer = [
-        \ {'pattern': 'app/mailers/*.rb', 'template': "class %S < ActionMailer::Base\nend", 'affinity': 'controller'},
-        \ {'pattern': 'app/models/*.rb', 'template': "class %S < ActionMailer::Base\nend", 'affinity': 'controller', 'complete': 0}]
-  let commands.job = [{
-        \ 'pattern': 'app/jobs/*_job.rb',
-        \ 'template': "class %SJob < ActiveJob::Base\nend"}]
-  let commands.model = [{
-        \ 'pattern': 'app/models/*.rb',
-        \ 'template': "class %S\nend",
-        \ 'affinity': 'model'}]
-  let commands.task = [
-        \ {'pattern': 'lib/tasks/*.rake'},
-        \ {'pattern': 'Rakefile'}]
-
-  let commands['unit test'] = map(filter([
-        \ ['test', 'test/unit/*_test.rb', "require 'test_helper'\n\nclass %STest < ActiveSupport::TestCase\nend", 'model', 1],
-        \ ['test', 'test/models/*_test.rb', "require 'test_helper'\n\nclass %STest < ActiveSupport::TestCase\nend", 'model', 1],
-        \ ['test', 'test/helpers/*_test.rb', "require 'test_helper'\n\nclass %STest < ActionView::TestCase\nend", '', 1],
-        \ ['test', 'test/helpers/*_helper_test.rb', "require 'test_helper'\n\nclass %SHelperTest < ActionView::TestCase\nend", 'controller', 0],
-        \ ['spec', 'spec/models/*_spec.rb', "require 'spec_helper'\n\ndescribe %S do\nend", 'model', 1],
-        \ ['spec', 'spec/helpers/*_spec.rb', "require 'spec_helper'\n\ndescribe %S do\nend", '', 1],
-        \ ['spec', 'spec/helpers/*_helper_spec.rb', "require 'spec_helper'\n\ndescribe %SHelper do\nend", 'controller', 0]],
-        \ 'rails#app().has(v:val[0])'),
-        \ '{"pattern": v:val[1], "template": v:val[2], "affinity": v:val[3], "complete": v:val[4]}')
-  let commands['functional test'] = map(filter([
-        \ ['test', 'test/functional/*_test.rb', "require 'test_helper'\n\nclass %STest < ActionController::TestCase\nend", '', 1],
-        \ ['test', 'test/functional/*_controller_test.rb', "require 'test_helper'\n\nclass %SControllerTest < ActionController::TestCase\nend", 'controller', 0],
-        \ ['test', 'test/controllers/*_test.rb', "require 'test_helper'\n\nclass %STest < ActionController::TestCase\nend", '', 1],
-        \ ['test', 'test/controllers/*_controller_test.rb', "require 'test_helper'\n\nclass %SControllerTest < ActionController::TestCase\nend", 'controller', 0],
-        \ ['test', 'test/mailers/', "require 'test_helper'\n\nclass %STest < ActionMailer::TestCase\nend", 'model', 1],
-        \ ['spec', 'spec/controllers/*_spec.rb', "require 'spec_helper'\n\ndescribe %S do\nend", '', 1],
-        \ ['spec', 'spec/controllers/*_controller_spec.rb', "require 'spec_helper'\n\ndescribe %SController do\nend", 'controller', 0],
-        \ ['spec', 'spec/mailers/*_spec.rb', "require 'spec_helper'\n\ndescribe %S do\nend", 'controller', 0]],
-        \ 'rails#app().has(v:val[0])'),
-        \ '{"pattern": v:val[1], "template": v:val[2], "affinity": v:val[3], "complete": v:val[4]}')
-  let commands['integration test'] = map(filter([
-        \ ['test', 'test/integration/*_test.rb', "require 'test_helper'\n\nclass %STest < ActionDispatch::IntegrationTest\nend"],
-        \ ['spec', 'spec/features/*_spec.rb', "require 'spec_helper'\n\ndescribe \"%h\" do\nend"],
-        \ ['spec', 'spec/requests/*_spec.rb', "require 'spec_helper'\n\ndescribe \"%h\" do\nend"],
-        \ ['spec', 'spec/integration/*_spec.rb', "require 'spec_helper'\n\ndescribe \"%h\" do\nend"],
-        \ ['cucumber', 'features/*.feature', "Feature: %h"],
-        \ ['turnip', 'spec/acceptance/*.feature', "Feature: %h"],
-        \ ['test', 'test/test_helper.rb', ""],
-        \ ['cucumber', 'features/support/env.rb', ""],
-        \ ['spec', 'spec/rails_helper.rb', ""],
-        \ ['spec', 'spec/spec_helper.rb', ""]],
-        \ 'rails#app().has(v:val[0])'),
-        \ '{"pattern": v:val[1], "template": v:val[2]}')
-
   let all = self.projections()
-  for pattern in reverse(sort(keys(all), function('rails#lencmp')))
+  for pattern in sort(keys(all), function('rails#lencmp'))
     let projection = all[pattern]
     for name in s:split(get(projection, 'command', get(projection, 'type', get(projection, 'name', ''))))
       let command = {
@@ -2475,7 +2482,7 @@ function! s:app_commands() dict abort
       if !has_key(commands, name)
         let commands[name] = []
       endif
-      call extend(commands[name], [command])
+      call insert(commands[name], command)
     endfor
   endfor
   call filter(commands, '!empty(v:val)')
@@ -2494,7 +2501,6 @@ endfunction
 
 function! s:BufProjectionCommands()
   call s:addfilecmds("view")
-  call s:addfilecmds("controller")
   call s:addfilecmds("migration")
   call s:addfilecmds("schema")
   call s:addfilecmds("layout")
@@ -2514,7 +2520,7 @@ function! s:completion_filter(results, A, ...) abort
   if exists('*projectionist#completion_filter')
     return projectionist#completion_filter(a:results, a:A, a:0 ? a:1 : '/')
   endif
-  let results = sort(type(a:results) == type("") ? split(a:results,"\n") : copy(a:results))
+  let results = s:uniq(sort(type(a:results) == type("") ? split(a:results,"\n") : copy(a:results)))
   call filter(results,'v:val !~# "\\~$"')
   if a:A =~# '\*'
     let regex = s:gsub(a:A,'\*','.*')
@@ -2676,7 +2682,7 @@ function! s:define_navcommand(name, projection, ...) abort
           \ (prefix =~# 'D' ? '-range=0 ' : '') .
           \ '-complete=customlist,'.s:sid.'CommandList ' .
           \ prefix . name . ' :execute s:CommandEdit(' .
-          \ string((prefix =~# 'D' ? '<line1>' : '') . s:sub(prefix, '^R', '') . "<bang>") . ',' .
+          \ string((prefix =~# 'D' ? '<line1>' : '') . prefix . "<bang>") . ',' .
           \ string(a:name) . ',' . string(a:projection) . ',<f-args>)' .
           \ (a:0 ? '|' . a:1 : '')
   endfor
@@ -2715,18 +2721,8 @@ function! s:LegacyCommandEdit(cmd, target, prefix, suffix)
   if a:target == ""
     return s:error("E471: Argument required")
   endif
-  let jump = matchstr(a:target, '[#!].*\|:\d*\%(:in\)\=$')
-  let f = s:sub(a:target, '[#!].*|:\d*%(:in)=$', '')
-  if jump =~ '^!'
-    let cmd = s:editcmdfor(cmd)
-  endif
-  if f == '.'
-    let f = s:sub(f,'\.$','')
-  else
-    let f .= a:suffix.jump
-  endif
-  let f = a:prefix.f
-  return s:findedit(cmd,f)
+  let f = a:prefix . s:sub(a:target, '\ze[#!:]|$', a:suffix)
+  return s:open(a:cmd, f)
 endfunction
 
 function! s:app_migration(file) dict
@@ -2786,7 +2782,7 @@ function! s:migrationEdit(cmd,...)
   endif
   let migr = arg == "." ? "db/migrate" : rails#app().migration(arg)
   if migr != ''
-    return s:findedit(cmd,migr)
+    return s:open(cmd, migr)
   else
     return s:error("Migration not found".(arg=='' ? '' : ': '.arg))
   endif
@@ -2802,7 +2798,7 @@ function! s:schemaEdit(cmd,...)
       let schema = 'db/'.s:environment().'_structure.sql'
     endif
   endif
-  return s:findedit(cmd,schema.(a:0 ? '#'.a:1 : ''))
+  return s:open(cmd,schema.(a:0 && a:1 !=# '.' ? '#'.a:1 : ''))
 endfunction
 
 function! s:fixturesEdit(cmd,...)
@@ -2822,7 +2818,7 @@ function! s:fixturesEdit(cmd,...)
   if file =~ '\.\w\+$' && rails#app().find_file(c.e, dirs) ==# ''
     return s:edit(a:cmd,file)
   else
-    return s:findedit(a:cmd, rails#app().find_file(c.e, dirs, ['.yml', '.csv', '.rb'], file))
+    return s:open(a:cmd, rails#app().find_file(c.e, dirs, ['.yml', '.csv', '.rb'], file))
   endif
 endfunction
 
@@ -2844,7 +2840,6 @@ let s:view_types = split('rhtml,erb,rxml,builder,rjs,haml',',')
 
 function! s:readable_resolve_view(name, ...) dict abort
   let name = a:name
-  let pre = 'app/views/'
   if name !~# '/'
     let controller = self.controller_name(1)
     let found = ''
@@ -2859,13 +2854,13 @@ function! s:readable_resolve_view(name, ...) dict abort
   if name =~# '/' && !self.app().has_path(fnamemodify('app/views/'.name, ':h'))
     return ''
   elseif name =~# '\.[[:alnum:]_+]\+\.\w\+$' || name =~# '\.\%('.join(s:view_types,'\|').'\)$'
-    return pre.name
+    return self.app().path('app/views/'.name)
   else
     for format in ['.'.self.format(a:0 ? a:1 : 0), '']
       let found = self.app().relglob('', 'app/views/'.name.format.'.*')
       call sort(found, s:function('s:dotcmp'))
       if !empty(found)
-        return found[0]
+        return self.app().path(found[0])
       endif
     endfor
   endif
@@ -2892,9 +2887,9 @@ function! s:app_resolve_asset(name, ...) dict abort
   let path = join(map(paths, 'escape(v:val, " ,")'), ',')
   let exact = findfile(a:name, path)
   if !empty(exact)
-    return exact
+    return fnamemodify(exact, ':p')
   endif
-  if a:0
+  if a:0 && !empty(a:1)
     for candidate in map(split(globpath(path, a:name . '.*'), "\n"), 'fnamemodify(v:val, ":p")')
       for ext in a:1
         let pat = '[\\/]'.s:gsub(s:gsub(a:name.'.'.ext, '\.', '\\.'), '\*', '.*') . '\%(\.erb\)\=$'
@@ -2910,8 +2905,9 @@ endfunction
 call s:add_methods('readable', ['resolve_view', 'resolve_layout'])
 call s:add_methods('app', ['resolve_asset'])
 
-function! s:findview(name)
-  return rails#buffer().resolve_view(a:name, line('.'))
+function! s:findview(name) abort
+  let view = rails#buffer().resolve_view(a:name, line('.'))
+  return empty(view) ? a:name : view
 endfunction
 
 function! s:findlayout(name)
@@ -2937,21 +2933,17 @@ function! s:viewEdit(cmd, ...) abort
     return s:error("Cannot find view without controller")
   endif
   let found = rails#buffer().resolve_view(view, line('.'))
-  let djump = a:0 ? matchstr(a:1,'!.*\|#\zs.*\|:\zs\d*\ze\%(:in\)\=$') : ''
+  let djump = a:0 ? matchstr(a:1,'!.*\|#.*\|:\d*\ze\%(:in\)\=$') : ''
   if !empty(found)
-    call s:edit(a:cmd,found)
-    call s:djump(djump)
-    return ''
+    return s:edit(a:cmd,found.djump)
   elseif a:0 && a:1 =~# '!'
     let file = 'app/views/'.view
     if !rails#app().has_path(fnamemodify(file, ':h'))
       call mkdir(rails#app().path(fnamemodify(file, ':h')), 'p')
     endif
-    call s:edit(a:cmd, file)
-    call s:djump(djump)
-    return ''
+    return s:edit(a:cmd, file.djump)
   else
-    return s:findedit(a:cmd,view)
+    return s:open(a:cmd, view)
   endif
 endfunction
 
@@ -2964,28 +2956,6 @@ function! s:layoutEdit(cmd,...)
     let file = "app/views/layouts/application.html.erb"
   endif
   return s:edit(a:cmd,s:sub(file,'^/',''))
-endfunction
-
-function! s:controllerEdit(cmd,...)
-  let suffix = '.rb'
-  let template = "class %S < ApplicationController\nend"
-  if a:0 == 0
-    let controller = s:controller(1)
-    if rails#buffer().type_name() =~# '^view\%(-layout\|-partial\)\@!'
-      let jump = '#'.expand('%:t:r')
-    else
-      let jump = ''
-    endif
-  else
-    let controller = matchstr(a:1, '[^#!]*')
-    let jump = matchstr(a:1, '[#!].*')
-  endif
-  if rails#app().has_file("app/controllers/".controller."_controller.rb") || !rails#app().has_file("app/controllers/".controller.".rb")
-    let template = "class %SController < ApplicationController\nend"
-    let suffix = "_controller".suffix
-  endif
-  return rails#buffer().open_command(a:cmd, controller . jump, 'controller',
-        \ [{'template': template, 'pattern': 'app/controllers/*'.suffix}])
 endfunction
 
 function! s:stylesheetEdit(cmd,...)
@@ -3021,7 +2991,7 @@ function! s:javascriptEdit(cmd,...)
     elseif !isdirectory(rails#app().path('app/assets/javascripts'))
       return s:LegacyCommandEdit(a:cmd,name,'public/javascripts/','.js')
     elseif rails#app().has_gem('coffee-rails')
-      return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.js.coffee')
+      return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.coffee')
     else
       return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.js')
     endif
@@ -3038,7 +3008,7 @@ endfunction
 " }}}1
 " Alternate/Related {{{1
 
-function! s:findcmdfor(cmd)
+function! s:findcmdfor(cmd) abort
   let bang = ''
   if a:cmd =~ '\!$'
     let bang = '!'
@@ -3059,7 +3029,7 @@ function! s:findcmdfor(cmd)
   elseif cmd == 'V'
     return 'vert '.num.'sfind'.bang
   elseif cmd == 'T'
-    return num.'tabfind'.bang
+    return num.'tab sfind'.bang
   elseif cmd == 'D'
     return num.'read'.bang
   else
@@ -3067,10 +3037,10 @@ function! s:findcmdfor(cmd)
   endif
 endfunction
 
-function! s:editcmdfor(cmd)
+function! s:editcmdfor(cmd) abort
   let cmd = s:findcmdfor(a:cmd)
   let cmd = s:sub(cmd,'<sfind>','split')
-  let cmd = s:sub(cmd,'find>','edit')
+  let cmd = s:sub(cmd,'<find>','edit')
   return cmd
 endfunction
 
@@ -3093,15 +3063,16 @@ function! s:projection_pairs(options)
 endfunction
 
 function! s:r_warning(cmd) abort
-  if empty(a:cmd) && !exists('s:r_warning')
-    let s:r_warning = 1
-    return '|echohl WarningMsg|echomsg ":R navigation commands are deprecated. Use :E commands instead."|echohl None'
+  if a:cmd =~# 'R\|^$'
+    let old = s:sub(a:cmd, '^$', 'R')
+    let instead = s:sub(s:sub(a:cmd, '^R', ''), '^$', 'E')
+    return '|echohl WarningMsg|echomsg ":'.old.' navigation commands are deprecated. Use :'.instead.' commands instead."|echohl None'
   endif
   return ''
 endfunction
 
 function! s:readable_open_command(cmd, argument, name, projections) dict abort
-  let cmd = s:editcmdfor(a:cmd)
+  let cmd = s:editcmdfor(s:sub(a:cmd, '^R', ''))
   let djump = ''
   if a:argument =~ '[#!]\|:\d*\%(:in\)\=$'
     let djump = matchstr(a:argument,'!.*\|#\zs.*\|:\zs\d*\ze\%(:in\)\=$')
@@ -3131,7 +3102,7 @@ function! s:readable_open_command(cmd, argument, name, projections) dict abort
     endif
     if !empty(file) && self.app().has_path(file)
       let file = fnamemodify(self.app().path(file), ':.')
-      return cmd . ' ' . s:fnameescape(file) . '|exe ' . s:sid . 'djump('.string(djump) . ')'.s:r_warning(a:cmd)
+      return cmd . ' ' . s:jumpargs(file, djump) . s:r_warning(a:cmd)
     endif
   endfor
   if empty(argument)
@@ -3179,64 +3150,47 @@ endfunction
 
 call s:add_methods('readable', ['open_command'])
 
-function! s:findedit(cmd,files,...) abort
-  let cmd = s:findcmdfor(a:cmd)
-  let files = type(a:files) == type([]) ? copy(a:files) : split(a:files,"\n")
-  if len(files) == 1
-    let file = files[0]
-  else
-    let file = get(filter(copy(files),'rails#app().has_file(s:sub(v:val,"#.*|:\\d*$",""))'),0,get(files,0,''))
-  endif
-  if file =~ '[#!]\|:\d*\%(:in\)\=$'
-    let djump = matchstr(file,'!.*\|#\zs.*\|:\zs\d*\ze\%(:in\)\=$')
-    let file = s:sub(file,'[#!].*|:\d*%(:in)=$','')
-  else
-    let djump = ''
-  endif
-  if file == ''
-    let testcmd = "edit"
-  elseif rails#app().has_path(file.'/')
-    let arg = file == "." ? rails#app().path() : rails#app().path(file)
-    let testcmd = s:editcmdfor(cmd).' '.(a:0 ? a:1 . ' ' : '').s:escarg(arg)
-    exe testcmd
-    return ''
-  elseif rails#app().path() =~ '://' || cmd =~ 'edit' || cmd =~ 'split'
-    if file !~ '^/' && file !~ '^\w:' && file !~ '://'
-      let file = s:escarg(rails#app().path(file))
+function! s:find(cmd, file) abort
+  let djump = matchstr(a:file,'!.*\|#\zs.*\|:\zs\d*\ze\%(:in\)\=$')
+  let file = s:sub(a:file,'[#!].*|:\d*%(:in)=$','')
+  let cmd = (empty(a:cmd) ? '' : s:findcmdfor(a:cmd)) . ' '
+  if djump =~# '!'
+    if empty(a:cmd) || file !~# '\%(^\|:\)[\/]'
+      throw "Cannot create directory here"
+    else
+      if !isdirectory(fnamemodify(file, ':h'))
+        call mkdir(fnamemodify(file, ':h'), 'p')
+      endif
+      return s:editcmdfor(cmd) . s:fnameescape(file)
     endif
-    let testcmd = s:editcmdfor(cmd).' '.(a:0 ? a:1 . ' ' : '').file
   else
-    let testcmd = cmd.' '.(a:0 ? a:1 . ' ' : '').file
+    return cmd . s:jumpargs(file, djump)
   endif
-  try
-    exe testcmd
-    call s:djump(djump)
-  catch
-    call s:error(s:sub(v:exception,'^.{-}:\zeE',''))
-  endtry
-  return ''
 endfunction
 
-function! s:edit(cmd,file,...)
-  let cmd = s:editcmdfor(a:cmd)
-  let cmd .= ' '.(a:0 ? a:1 . ' ' : '')
-  let file = a:file
-  if file !~ '^/' && file !~ '^\w:' && file !~ '://'
-    exe cmd."`=fnamemodify(rails#app().path(file),':.')`"
-  else
-    exe cmd.file
-  endif
-  return ''
+function! s:open(cmd, file) abort
+  return s:find(a:cmd, rails#app().path(a:file))
+endfunction
+
+function! s:edit(cmd, file) abort
+  return s:open(s:editcmdfor(a:cmd), a:file)
 endfunction
 
 function! s:Alternate(cmd,line1,line2,count,...)
   if a:0
-    if a:count && a:cmd !~# 'D'
+    if a:1 =~# '^#\h' && a:cmd !~# 'D'
+      return s:jump(a:1[1:-1], a:cmd)
+    elseif a:count && a:cmd !~# 'D'
       return call('s:Find',[1,a:line1.a:cmd]+a:000)
-    elseif a:count
-      return call('s:Edit',[1,a:line1.a:cmd]+a:000)
     else
-      return call('s:Edit',[1,a:cmd]+a:000)
+      let cmd = s:editcmdfor((a:count ? a:count : '').a:cmd)
+      let i = 1
+      while i < a:0
+        let cmd .= ' ' . s:escarg(a:{i})
+        let i += 1
+      endwhile
+      let file = a:{i}
+      return s:find(cmd, file)
     endif
   else
     let file = get(b:, a:count ? 'rails_related' : 'rails_alternate')
@@ -3244,9 +3198,10 @@ function! s:Alternate(cmd,line1,line2,count,...)
       let file = rails#buffer().alternate(a:count)
     endif
     if !empty(file)
-      call s:findedit(a:cmd,file)
+      return s:edit(a:cmd, file)
     else
       call s:warn("No alternate file is defined")
+      return ''
     endif
   endif
 endfunction
@@ -3335,6 +3290,10 @@ function! s:readable_alternate_candidates(...) dict abort
     return ['Gemfile.lock']
   elseif f ==# 'Gemfile.lock'
     return ['Gemfile']
+  elseif f ==# 'gems.rb'
+    return ['gems.locked']
+  elseif f ==# 'gems.locked'
+    return ['gems.rb']
   elseif f =~# '^db/migrate/'
     let migrations = sort(self.app().relglob('db/migrate/','*','.rb'))
     let me = matchstr(f,'\<db/migrate/\zs.*\ze\.rb$')
@@ -3349,11 +3308,11 @@ function! s:readable_alternate_candidates(...) dict abort
   elseif f =~# '\<application\.js$'
     return ['app/helpers/application_helper.rb']
   elseif f =~# 'spec\.js$'
-    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js', '.js')."\n"]
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js', '.js')]
   elseif f =~# 'spec\.coffee$'
-    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.coffee', '.coffee')."\n"]
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.coffee', '.coffee')]
   elseif f =~# 'spec\.js\.coffee$'
-    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js.coffee', '.js.coffee')."\n"]
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js.coffee', '.js.coffee')]
   elseif self.type_name('javascript')
     if f =~ 'public/javascripts'
       let to_replace = 'public/javascripts'
@@ -3370,7 +3329,7 @@ function! s:readable_alternate_candidates(...) dict abort
       let suffix = '.js'
       let suffix_replacement = '_spec.js'
     endif
-    return [s:sub(s:sub(f, to_replace, 'spec/javascripts'), suffix, suffix_replacement)."\n"]
+    return [s:sub(s:sub(f, to_replace, 'spec/javascripts'), suffix, suffix_replacement)]
   elseif self.type_name('db-schema') || f =~# '^db/\w*structure.sql$'
     return ['db/seeds.rb']
   elseif f ==# 'db/seeds.rb'
@@ -3486,7 +3445,7 @@ function! s:Extract(bang,...) range abort
     let erub2 = ''
   endif
   let spaces = matchstr(getline(first),"^ *")
-  let renderstr = "render '".fnamemodify(file,":r:r")."'"
+  let renderstr = 'render "'.fnamemodify(file,":r:r").'"'
   if ext =~? '^\%(rhtml\|erb\|dryml\)$'
     let renderstr = "<%= ".renderstr." %>"
   elseif ext == "rxml" || ext == "builder"
@@ -3838,6 +3797,7 @@ function! rails#buffer_syntax()
       if buffer.type_name('db-migration','db-schema')
         syn keyword rubyRailsMigrationMethod create_table change_table drop_table rename_table create_join_table drop_join_table
         syn keyword rubyRailsMigrationMethod add_column rename_column change_column change_column_default change_column_null remove_column remove_columns
+        syn keyword rubyRailsMigrationMethod add_foreign_key remove_foreign_key
         syn keyword rubyRailsMigrationMethod add_timestamps remove_timestamps
         syn keyword rubyRailsMigrationMethod add_reference remove_reference add_belongs_to remove_belongs_to
         syn keyword rubyRailsMigrationMethod add_index remove_index rename_index
@@ -3856,7 +3816,7 @@ function! rails#buffer_syntax()
           syn keyword rubyRailsTestControllerMethod assert_response assert_redirected_to assert_template assert_recognizes assert_generates assert_routing assert_dom_equal assert_dom_not_equal assert_select assert_select_rjs assert_select_encoded assert_select_email assert_tag assert_no_tag
         endif
       elseif buffer.type_name('spec')
-        syn keyword rubyRailsTestMethod describe context it its specify shared_context shared_examples shared_examples_for shared_context include_examples include_context it_should_behave_like it_behaves_like before after around subject fixtures controller_name helper_name scenario feature background
+        syn keyword rubyRailsTestMethod describe context it its specify shared_context shared_examples shared_examples_for shared_context include_examples include_context it_should_behave_like it_behaves_like before after around subject fixtures controller_name helper_name scenario feature background given described_class
         syn match rubyRailsTestMethod '\<let\>!\='
         syn keyword rubyRailsTestMethod violated pending expect expect_any_instance_of allow allow_any_instance_of double instance_double mock mock_model stub_model xit
         syn match rubyRailsTestMethod '\.\@<!\<stub\>!\@!'
@@ -3867,6 +3827,8 @@ function! rails#buffer_syntax()
           syn keyword rubyRailsMethod polymorphic_path polymorphic_url
           if buffer.type_name('spec-view')
             syn keyword rubyRailsTestViewMethod render rendered assign
+          elseif buffer.type_name('spec-helper')
+            syn keyword RubyRailsTestHelperMethod helper
           endif
         endif
       endif
@@ -3951,6 +3913,7 @@ function! s:HiDefaults()
   hi def link rubyRailsFilterMethod           rubyRailsMethod
   hi def link rubyRailsTestControllerMethod   rubyRailsTestMethod
   hi def link rubyRailsTestViewMethod         rubyRailsTestMethod
+  hi def link rubyRailsTestHelperMethod       rubyRailsTestMethod
   hi def link rubyRailsTestMethod             rubyRailsMethod
   hi def link rubyRailsRakeMethod             rubyRailsMethod
   hi def link rubyRailsMethod                 railsMethod
@@ -4043,19 +4006,27 @@ endfunction
 " }}}1
 " Mappings {{{1
 
-function! s:BufMappings()
-  nnoremap <buffer> <silent> <Plug>RailsFind       :<C-U>call <SID>Find(v:count1,'E')<CR>
-  nnoremap <buffer> <silent> <Plug>RailsSplitFind  :<C-U>call <SID>Find(v:count1,'S')<CR>
-  nnoremap <buffer> <silent> <Plug>RailsVSplitFind :<C-U>call <SID>Find(v:count1,'V')<CR>
-  nnoremap <buffer> <silent> <Plug>RailsTabFind    :<C-U>call <SID>Find(v:count1,'T')<CR>
-  if !hasmapto("<Plug>RailsFind")
-    nmap <buffer> gf              <Plug>RailsFind
+nnoremap <SID>: :<C-U><C-R>=v:count ? v:count : ''<CR>
+function! s:BufMappings() abort
+  cmap <buffer><script><expr> <Plug><cfile>   rails#cfile('delegate')
+  nmap <buffer><silent> <Plug>RailsFind       <SID>:find <Plug><cfile><CR>
+  nmap <buffer><silent> <Plug>RailsSplitFind  <SID>:sfind <Plug><cfile><CR>
+  nmap <buffer><silent> <Plug>RailsTabFind    <SID>:tabfind <Plug><cfile><CR>
+  let pattern = '^$\|_gf(v:count\|[Rr]uby\|[Rr]ails'
+  if mapcheck('gf', 'n') =~# pattern
+    nmap <buffer> gf         <Plug>RailsFind
   endif
-  if !hasmapto("<Plug>RailsSplitFind")
-    nmap <buffer> <C-W>f          <Plug>RailsSplitFind
+  if mapcheck('<C-W>f', 'n') =~# pattern
+    nmap <buffer> <C-W>f     <Plug>RailsSplitFind
   endif
-  if !hasmapto("<Plug>RailsTabFind")
-    nmap <buffer> <C-W>gf         <Plug>RailsTabFind
+  if mapcheck('<C-W><C-F>', 'n') =~# pattern
+    nmap <buffer> <C-W><C-F> <Plug>RailsSplitFind
+  endif
+  if mapcheck('<C-W>gf', 'n') =~# pattern
+    nmap <buffer> <C-W>gf    <Plug>RailsTabFind
+  endif
+  if mapcheck('<C-R><C-F>', 'c') =~# pattern
+    cmap <buffer> <C-R><C-F> <Plug><cfile>
   endif
 
   nmap <buffer> [r :<C-U>A<CR>
@@ -4535,10 +4506,203 @@ function! s:combine_projections(dest, src, ...) abort
   return a:dest
 endfunction
 
+let s:default_projections = {
+      \ 'config/environments/*.rb': {'type': 'environment'},
+      \ 'config/application.rb': {'type': 'environment'},
+      \ 'app/controllers/*_controller.rb': {
+      \   'type': 'controller',
+      \   'template': ["class {camelcase|capitalize|colons}Controller < ApplicationController", "end"],
+      \   'affinity': 'controller'},
+      \ 'app/helpers/*_helper.rb': {
+      \   'type': 'helper',
+      \   'template': ["module {camelcase|capitalize|colons}Helper", "end"],
+      \   'affinity': 'controller'},
+      \ 'config/initializers/*.rb': {'type': 'initializer'},
+      \ 'config/routes.rb': {'type': 'initializer'},
+      \ 'app/jobs/*_job.rb': {
+      \   'type': 'job',
+      \   'template': "class {camelcase|capitalize|colons}Job < ActiveJob::Base\nend"},
+      \ 'lib/*.rb': {'type': 'lib'},
+      \ 'Gemfile': {'type': 'lib'},
+      \ 'gems.rb': {'type': 'lib'},
+      \ 'app/mailers/*.rb': {
+      \    'type': 'mailer',
+      \    'template': "class {camelcase|capitalize|colons} < ActionMailer::Base\nend",
+      \    'affinity': 'controller'},
+      \ 'app/models/*.rb': {
+      \    'type': 'model',
+      \    'template': "class %S\nend",
+      \    'affinity': 'model'},
+      \ 'lib/tasks/*.rake': {'type': 'task'},
+      \ 'Rakefile': {'type': 'task'}}
+
+let s:has_projections = {
+      \ "cucumber": {
+      \   "features/*.feature": {
+      \     "template": ["Feature: {underscore|capitalize|blank}"],
+      \     "type": "integration test"
+      \   },
+      \   "features/support/env.rb": {"type": "integration test"}
+      \ },
+      \ "spec": {
+      \   "spec/controllers/*_spec.rb": {
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe {camelcase|capitalize|colons} do",
+      \       "end"
+      \     ],
+      \     "type": "functional test"
+      \   },
+      \   "spec/features/*_spec.rb": {
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe \"{underscore|capitalize|blank}\" do",
+      \       "end"
+      \     ],
+      \     "type": "integration test"
+      \   },
+      \   "spec/helpers/*_spec.rb": {
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe {camelcase|capitalize|colons} do",
+      \       "end"
+      \     ],
+      \     "type": "unit test"
+      \   },
+      \   "spec/integration/*_spec.rb": {
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe \"{underscore|capitalize|blank}\" do",
+      \       "end"
+      \     ],
+      \     "type": "integration test"
+      \   },
+      \   "spec/mailers/*_spec.rb": {
+      \     "affinity": "controller",
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe {camelcase|capitalize|colons} do",
+      \       "end"
+      \     ],
+      \     "type": "functional test"
+      \   },
+      \   "spec/models/*_spec.rb": {
+      \     "affinity": "model",
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe {camelcase|capitalize|colons} do",
+      \       "end"
+      \     ],
+      \     "type": "unit test"
+      \   },
+      \   "spec/rails_helper.rb": {"type": "integration test"},
+      \   "spec/requests/*_spec.rb": {
+      \     "template": [
+      \       "require 'spec_helper'",
+      \       "",
+      \       "describe \"{underscore|capitalize|blank}\" do",
+      \       "end"
+      \     ],
+      \     "type": "integration test"
+      \   },
+      \   "spec/spec_helper.rb": {"type": "integration test"}
+      \ },
+      \ "test": {
+      \   "test/controllers/*_test.rb": {
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActionController::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "functional test"
+      \   },
+      \   "test/functional/*_test.rb": {
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActionController::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "functional test"
+      \   },
+      \   "test/helpers/*_test.rb": {
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActionView::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "unit test"
+      \   },
+      \   "test/integration/*_test.rb": {
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActionDispatch::IntegrationTest",
+      \       "end"
+      \     ],
+      \     "type": "integration test"
+      \   },
+      \   "test/mailers/": {
+      \     "affinity": "model",
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActionMailer::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "functional test"
+      \   },
+      \   "test/models/*_test.rb": {
+      \     "affinity": "model",
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActiveSupport::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "unit test"
+      \   },
+      \   "test/test_helper.rb": {"type": "integration test"},
+      \   "test/unit/*_test.rb": {
+      \     "affinity": "model",
+      \     "template": [
+      \       "require 'test_helper'",
+      \       "",
+      \       "class {camelcase|capitalize|colons}Test < ActiveSupport::TestCase",
+      \       "end"
+      \     ],
+      \     "type": "unit test"
+      \   }
+      \ },
+      \ "turnip": {
+      \   "spec/acceptance/*.feature": {
+      \     "template": ["Feature: {underscore|capitalize|blank}"],
+      \     "type": "integration test"
+      \   }
+      \ }
+      \}
+
+
 let s:projections_for_gems = {}
 function! s:app_projections() dict abort
-  let dict = {}
-  call s:combine_projections(dict, get(g:, 'rails_projections', ''), {'check': 1})
+  let dict = deepcopy(s:default_projections)
+  if !self.has('rails3')
+    let dict['config/environment.rb'] = remove(dict, 'config/application.rb')
+  endif
+  for [k, v] in items(s:has_projections)
+    if self.has(k)
+      call s:combine_projections(dict, v)
+    endif
+  endfor
+  call s:combine_projections(dict, get(g:, 'rails_projections', ''))
   for gem in keys(get(g:, 'rails_gem_projections', {}))
     if self.has_gem(gem)
       call s:combine_projections(dict, g:rails_gem_projections[gem])
@@ -4764,7 +4928,7 @@ function! rails#buffer_setup() abort
   if stridx(&tags,rp.'/tags') == -1
     let &l:tags = rp . '/tags,' . rp . '/tmp/tags,' . &tags
   endif
-  call self.setvar('&includeexpr','RailsIncludeexpr()')
+  call self.setvar('&includeexpr','rails#includeexpr(v:fname)')
   call self.setvar('&suffixesadd', s:sub(self.getvar('&suffixesadd'),'^$','.rb'))
   let ft = self.getvar('&filetype')
   if ft =~# '^ruby\>'
@@ -4783,17 +4947,21 @@ function! rails#buffer_setup() abort
   elseif ft =~# 'yaml\>' || fnamemodify(self.name(),':e') ==# 'yml'
     call self.setvar('&define',self.define_pattern())
   elseif ft =~# '^eruby\>'
+    call self.setvar('&define',self.define_pattern())
     if exists("g:loaded_ragtag")
       call self.setvar('ragtag_stylesheet_link_tag', "<%= stylesheet_link_tag '\r' %>")
       call self.setvar('ragtag_javascript_include_tag', "<%= javascript_include_tag '\r' %>")
       call self.setvar('ragtag_doctype_index', 10)
     endif
   elseif ft =~# '^haml\>'
+    call self.setvar('&define',self.define_pattern())
     if exists("g:loaded_ragtag")
       call self.setvar('ragtag_stylesheet_link_tag', "= stylesheet_link_tag '\r'")
       call self.setvar('ragtag_javascript_include_tag', "= javascript_include_tag '\r'")
       call self.setvar('ragtag_doctype_index', 10)
     endif
+  elseif ft =~# 'html\>'
+    call self.setvar('&define', '\<id=["'']\=')
   endif
   if ft =~# '^eruby\>' || ft =~# '^yaml\>'
     if exists("g:loaded_surround")
@@ -4813,17 +4981,32 @@ function! rails#buffer_setup() abort
       endif
     endif
   endif
-  if self.type_name('test', 'spec', 'cucumber')
-    call self.setvar('dispatch', ':Runner')
-  elseif self.name() ==# 'Rakefile'
-    call self.setvar('dispatch', ':Rake default')
-  elseif self.name() =~# '^\%(app\|config\|db\|lib\|log\)'
-    call self.setvar('dispatch', ':Rake')
-  elseif self.name() =~# '^public'
-    call self.setvar('dispatch', ':Preview')
+
+  compiler rails
+  let b:current_compiler = 'rake'
+  let &l:makeprg = self.app().rake_command('static')
+  let &l:errorformat .= ',chdir '.escape(self.app().path(), ',')
+
+  if exists(':Dispatch') == 2 && !exists('g:autoloaded_dispatch')
+    runtime! autoload/dispatch.vim
   endif
-  if empty(self.getvar('start'))
-    call self.setvar('start', ':Rserver')
+  if exists('*dispatch#dir_opt')
+    let dir = dispatch#dir_opt(self.app().path())
+  endif
+
+  if self.name() =~# '^public'
+    call self.setvar('dispatch', ':Preview')
+  elseif self.type_name('test', 'spec', 'cucumber')
+    call self.setvar('dispatch', ':Runner')
+  elseif self.name() =~# '^\%(app\|config\|db\|lib\|log\|README\|Rakefile\)'
+    if exists('dir')
+      call self.setvar('dispatch',
+            \ dir . '-compiler=rails ' .
+            \ self.app().rake_command('static') .
+            \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
+    else
+      call self.setvar('dispatch', ':Rake')
+    endif
   endif
 endfunction
 
