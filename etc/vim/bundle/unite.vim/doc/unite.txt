@@ -85,7 +85,13 @@ USAGE						*unite-usage*
 >
 	:Unite -input=foo file
 <
-
+	You don't have to use |:execute| for dynamic arguments.
+	You can use evaluation cmdline by ``.
+	Note: In the evaluation, The special characters(spaces,  "\" and ":")
+	are escaped automatically.
+>
+        :Unite -buffer-name=search%`bufnr('%')` line:forward:wrap<CR>
+<
 Invoking unite will create a horizontal split buffer by default.
 >
 	:Unite file
@@ -256,8 +262,8 @@ More advanced configuration example:
 	  imap <buffer> '     <Plug>(unite_quick_match_default_action)
 	  nmap <buffer> '     <Plug>(unite_quick_match_default_action)
 	  imap <buffer><expr> x
-	          \ unite#smart_map('x', "\<Plug>(unite_quick_match_choose_action)")
-	  nmap <buffer> x     <Plug>(unite_quick_match_choose_action)
+	          \ unite#smart_map('x', "\<Plug>(unite_quick_match_jump)")
+	  nmap <buffer> x     <Plug>(unite_quick_match_jump)
 	  nmap <buffer> <C-z>     <Plug>(unite_toggle_transpose_window)
 	  imap <buffer> <C-z>     <Plug>(unite_toggle_transpose_window)
 	  imap <buffer> <C-y>     <Plug>(unite_narrowing_path)
@@ -458,6 +464,12 @@ g:unite_redraw_hold_candidates		*g:unite_redraw_hold_candidates*
 		If lua is enabled, the default value is 20000, otherwise
 		10000.
 
+g:unite_enable_auto_select		*g:unite_enable_auto_select*
+		If it is 1, unite skip first candidate when cursor is on the
+		prompt line.
+
+		The default value is 1.
+
 SOURCES VARIABLES 				*unite-sources-variables*
 
 					*g:unite_source_buffer_time_format*
@@ -517,16 +529,20 @@ g:unite_source_rec_async_command
 		" Using ag as recursive command.
 		let g:unite_source_rec_async_command =
                 \ 'ag --follow --nocolor --nogroup --hidden -g ""'
-
-		" Using pt as recursive command.
-		let g:unite_source_rec_async_command =
-		\ 'pt --nocolor --nogroup -g .'
 <
-		The default value is "find" and the args.
+		The default value is "find -L" which follows symbolic links
+		to have the same behaviour as file_rec, and the
+		args(|g:unite_source_rec_find_args|).
 		Because, "find" command is fastest.
 		Note: In windows environment, you must install file list
 		command and specify the variable.
 
+					*g:unite_source_rec_find_args*
+g:unite_source_rec_find_args
+		Specify the find arguments in file_rec/async source.
+
+		The default value is ['-path', '*/.git/*', '-prune', '-o',
+		'-type', 'l', '-print'].
 
 					*g:unite_source_rec_git_command*
 g:unite_source_rec_git_command
@@ -838,12 +854,6 @@ g:unite_winwidth				*g:unite_winwidth*
 		Note: This variable is deprecated.  Please use
 		|unite#custom#profile()| and |unite-options-winwidth| instead.
 
-g:unite_cursor_line_highlight		*g:unite_cursor_line_highlight*
-		Specify the cursor line highlight group.
-		Note: This variable is deprecated.  Please use
-		|unite#custom#profile()| and
-		|unite-options-cursor-line-highlight| instead.
-
 				*g:unite_enable_short_source_names*
 g:unite_enable_short_source_names
 		If this variable is 1, unite buffer will show short source
@@ -986,10 +996,10 @@ Normal mode mappings.
 		quick match.  This doesn't work when there are marked
 		candidates.
 
-				*<Plug>(unite_quick_match_choose_action)*
-<Plug>(unite_quick_match_choose_action)
-		Chooses an action of the selected candidate with using quick
-		match.  This doesn't work when there are marked candidates.
+				*<Plug>(unite_quick_match_jump)*
+<Plug>(unite_quick_match_jump)
+		Jump to the selected candidate with using quick
+		match.
 
 <Plug>(unite_input_directory)		*<Plug>(unite_input_directory)*
 		Narrows with inputting directory name.
@@ -1021,6 +1031,10 @@ Normal mode mappings.
 
 <Plug>(unite_new_candidate)			*<Plug>(unite_new_candidate)*
 		Add new candidate in cursor source.
+
+<Plug>(unite_smart_preview)			*<Plug>(unite_smart_preview)*
+		When you selected a candidate, runs preview action.
+		But if preview window is already visible, will close it.
 
 Insert mode mappings.
 
@@ -1099,9 +1113,9 @@ Insert mode mappings.
 <Plug>(unite_quick_match_default_action)
 		The same as |<Plug>(unite_quick_match_default_action)|.
 
-				*i_<Plug>(unite_quick_match_choose_action)*
-<Plug>(unite_quick_match_choose_action)
-		The same as |<Plug>(unite_quick_match_choose_action)|.
+				*i_<Plug>(unite_quick_match_jump)*
+<Plug>(unite_quick_match_jump)
+		The same as |<Plug>(unite_quick_match_jump)|.
 
 <Plug>(unite_input_directory)		*i_<Plug>(unite_input_directory)*
 		The same as |<Plug>(unite_input_directory)|.
@@ -1186,6 +1200,7 @@ N		|<Plug>(unite_new_candidate)|
 .		|<Plug>(unite_narrowing_dot)|
 <2-LeftMouse>	|<Plug>(unite_do_default_action)|
 <RightMouse>	|<Plug>(unite_exit)|
+p		|<Plug>(unite_smart_preview)|
 <CR>		In case when you selected a candidate, runs default action
 b		In case when you selected a candidate, runs bookmark action
 d		In case when you selected a candidate, runs delete action
@@ -1193,7 +1208,6 @@ e		In case when you selected a candidate, runs narrow action
 t		In case when you selected a candidate, runs tabopen action
 yy		In case when you selected a candidate, runs yank action
 o		In case when you selected a candidate, runs open action
-p		In case when you selected a candidate, runs preview action
 x		In case when you selected a candidate, runs
 		|<Plug>(unite_quick_match_default_action)|
 
@@ -1831,6 +1845,15 @@ the context dictionary.
 						*unite-options-direction*
 		-direction={direction}
 		Defines split position rule.
+
+		When it is "dynamictop", if each item's length is less than
+		the current window's width, the direction becomes "aboveleft",
+		otherwise - "topleft".
+		Similarly for "dynamicbottom", the direction becomes
+		"belowright" or "botright".
+		It is useful to always make best effort to show all items
+		without shortening.
+
 		Default: "topleft"
 
 						*unite-options-verbose*
@@ -1870,11 +1893,6 @@ the context dictionary.
 		animation source.
 		Note: Must be smaller than 'updatetime'.
 		Default: "200"
-
-					*unite-options-cursor-line-highlight*
-		-cursor-line-highlight={highlight-name}
-		Change cursor line highlight.
-		Default: "PmenuSel"
 
 					*unite-options-abbr-highlight*
 		-abbr-highlight={highlight-name}
@@ -1953,7 +1971,12 @@ the context dictionary.
 						*unite-options-truncate*
 		-truncate
 		Truncate lines longer than the window's width.
-		Default: no-truncate
+		Default: truncate
+
+						*unite-options-truncate-width*
+		-truncate-width
+		Truncate percentage of lines.
+		Default: 50(%)
 
 						*unite-options-tab*
 		-tab
@@ -2015,6 +2038,16 @@ the context dictionary.
 		|<Plug>(unite_redraw)|.
 		Default: no-force-redraw
 
+						*unite-options-previewheight*
+		-previewheight={height}
+		Change preview window height in unite buffer.
+		Default: 'previewheight'
+
+						*unite-options-no-buffer*
+		-no-buffer
+		Don't create unite buffer.
+		Default: buffer
+
 ==============================================================================
 SOURCES						*unite-sources*
 
@@ -2037,7 +2070,6 @@ file/new	Nominates a new input file as a candidate.
 file/async	Similar to |unite-source-file|, but get files asynchronously.
 
 						*unite-source-file_rec*
-						*unite-source-rec*
 file_rec, rec	Gather files recursive and nominates all file names under the
 		search directory (argument 1) or the current directory (if
 		argument is omitted) as candidates.  This may freeze Vim when
@@ -2061,19 +2093,30 @@ file_rec, rec	Gather files recursive and nominates all file names under the
 		-custom-grep-search-word-highlight  : search word highlight
 
 						*unite-source-file_rec/async*
-						*unite-source-rec/async*
 file_rec/async	Similar to |unite-source-file_rec|, but get files asynchronously.
-rec/async	Note: Requires vimproc.
+		Note: Requires |vimproc|.
 		Note: Requires the "ag" or "find" command.
 		Note: Windows "find" command is not supported.
-		Note: If you edit one of the files in Vim, the
-		file_rec/async source will update its cache.
+		Note: If you edit one of the files in Vim, the source will
+		update its cache.
 		Note: If there are more than
 		|g:unite_source_file_rec_max_cache_files| candidates,
 		caching will be disabled.
 
 		Source arguments:
-		1. the search directory.
+		1. the target directories splitted by newlines.
+
+						*unite-source-file_rec/neovim*
+file_rec/neovim	Similar to |unite-source-file_rec|, but get files
+		asynchronously by neovim job APIs.
+		Note: Requires neovim.
+		Note: Requires the "ag" or "find" command.
+		Note: Windows "find" command is not supported.
+		Note: If you edit one of the files in Vim, the source will
+		update its cache.
+
+		Source arguments:
+		1. the target directories splitted by newlines.
 
 						*unite-source-file_rec/git*
 file_rec/git	Similar to |unite-source-file_rec|, but get files by "git
@@ -2218,7 +2261,7 @@ grep		Nominates "grep" command output as candidates.
 		http://github.com/Shougo/vimproc
 
 		Source arguments:
-		1. the target directory.
+		1. the target directories splitted by newlines.
 		2. "grep" options.
 		3. the narrowing pattern (if you omit it, |unite-options-input|
 		or input prompt is used).
@@ -2271,7 +2314,7 @@ vimgrep		Nominates |vimgrep| command output as candidates.
 		Note: The source clears quickfix list.
 
 		Source arguments:
-		1. the target directory.
+		1. the target directories splitted by newlines.
 		2. the narrowing pattern.
 
 						*unite-source-find*
@@ -2284,7 +2327,7 @@ find		Nominates "find" command output as candidates.
 		Please install UNIX Tools find for Windows.
 
 		Source arguments:
-		1. the target directory.
+		1. the target directories splitted by newlines.
 		2. "find" options.
 		Max candidates: |g:unite_source_find_max_candidates|
 
@@ -2384,10 +2427,28 @@ script		Nominates the candidates generated by scripts.
 						*unite-source-history/unite*
 history/unite	Nominates the history of the unite executions.
 
+						*unite-source-file_list*
+file_list	Nominates files in the filelist.
+		It is useful if you want to create filelist manually.
+
+		Source arguments:
+		1. filelist path(Required).
+
 						*unite-source-arg-!*
 		If argument 1 is "!", use the project directory instead of
 		the current directory.  The project directory has ".git",
 		".svn", ".hg".
+		Further directories can be specified, eg: !/foo/bar
+
+						*unite-source-arg-?*
+		If argument 1 is "?", use the buffer directory instead of
+		the current directory.
+		Further directories can be specified, eg: ?/foo/bar
+
+						*unite-source-arg-?!*
+		If argument 1 is "?!", use the project directory searching
+		from the buffer directory instead of the current directory.
+		Further directories can be specified, eg: ?!/foo/bar
 
 ==============================================================================
 KINDS						*unite-kinds*
@@ -2642,6 +2703,8 @@ matcher_project_ignore_files
 		It does support whitelist feature(Ex: "!glob" pattern).
 		It uses same pattern as "ignore_globs".
 		Note: It does not support non glob ignore files in .hgignore.
+		Note: This feature is very slow.  You should not use it in
+		large projects.
 
 						*unite-filter-sorter_default*
 sorter_default	The default sorter used by |unite-filter-default|.
@@ -2828,7 +2891,6 @@ Opens a file into a new buffer.  This kind extends |unite-action-openable| and
 	rename		Change the file name.
 	exrename	Batch rename selected files.
 	grep		Grep the files.
-	grep_directory	Grep the files in the directories.
 	wunix		Write by unix fileformat.
 	read		|:read| files. It is useful to insert template files.
 	diff		diff with the other candidate or current buffer.

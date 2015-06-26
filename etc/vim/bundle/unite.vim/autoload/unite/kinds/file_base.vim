@@ -54,6 +54,12 @@ function! s:kind.action_table.open.func(candidates) "{{{
       execute 'buffer' bufnr(candidate.action__path)
     else
       call s:execute_command('edit', candidate)
+
+      if isdirectory(candidate.action__path)
+            \ && exists('g:loaded_vimfiler')
+            \ && get(g:, 'vimfiler_as_default_explorer', 0)
+        call vimfiler#handler#_event_handler('BufReadCmd')
+      endif
     endif
 
     call unite#remove_previewed_buffer_list(bufnr(candidate.action__path))
@@ -268,26 +274,42 @@ let s:kind.action_table.grep = {
       \ }
 function! s:kind.action_table.grep.func(candidates) "{{{
   call unite#start_script([
-        \ ['grep', map(copy(a:candidates), 'v:val.action__path'),
+        \ ['grep', join(map(copy(a:candidates), 'v:val.action__path'), "\n"),
         \ ]], { 'no_quit' : 1, 'no_empty' : 1 })
 endfunction "}}}
 
-let s:kind.action_table.grep_directory = {
-      \   'description': 'grep this directory',
+" For vimgrep
+let s:kind.action_table.vimgrep = {
+  \   'description': 'vimgrep this files',
+  \   'is_quit': 1,
+  \   'is_invalidate_cache': 1,
+  \   'is_selectable': 1,
+  \   'is_start' : 1,
+  \ }
+function! s:kind.action_table.vimgrep.func(candidates) "{{{
+  call unite#start_script([
+        \ ['vimgrep', join(map(copy(a:candidates),
+        \ 'substitute(v:val.action__path, "/$", "", "g")'), "\n"),
+        \ ]], { 'no_quit' : 1 })
+endfunction "}}}
+
+" For find.
+let s:kind.action_table.find = {
+      \   'description': 'find this directory',
       \   'is_quit': 1,
       \   'is_invalidate_cache': 1,
-      \   'is_selectable': 1,
       \   'is_start' : 1,
       \ }
-function! s:kind.action_table.grep_directory.func(candidates) "{{{
-  call unite#start_script([
-        \ ['grep', map(copy(a:candidates), 'v:val.action__path'),
-        \ ]], { 'no_quit' : 1, 'no_empty' : 1 })
+function! s:kind.action_table.find.func(candidate) "{{{
+  call unite#start_script([['find',
+        \ unite#helper#get_candidate_directory(a:candidate)]],
+        \ {'no_quit' : 1})
 endfunction "}}}
 "}}}
 
 function! s:execute_command(command, candidate) "{{{
-  let dir = unite#util#path2directory(a:candidate.action__path)
+  let dir = unite#util#path2directory(
+        \ unite#util#expand(a:candidate.action__path))
   " Auto make directory.
   if dir !~ '^\a\+:' && !isdirectory(dir) && !unite#util#is_sudo()
         \ && unite#util#input_yesno(
@@ -296,7 +318,7 @@ function! s:execute_command(command, candidate) "{{{
   endif
 
   call unite#util#smart_execute_command(
-        \ a:command, unite#util#substitute_path_separator(
+        \ a:command, unite#util#expand(
         \   fnamemodify(a:candidate.action__path, ':~:.')))
 endfunction"}}}
 

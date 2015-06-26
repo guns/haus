@@ -121,10 +121,15 @@ function! unite#helper#adjustments(currentwinwidth, the_max_source_name, size) "
   endif
 endfunction"}}}
 
-function! unite#helper#parse_options(args) "{{{
+function! unite#helper#parse_options(cmdline) "{{{
   let args = []
   let options = {}
-  for arg in split(a:args, '\%(\\\@<!\s\)\+')
+
+  " Eval
+  let cmdline = (a:cmdline =~ '\\\@<!`.*\\\@<!`') ?
+        \ s:eval_cmdline(a:cmdline) : a:cmdline
+
+  for arg in split(cmdline, '\%(\\\@<!\s\)\+')
     let arg = substitute(arg, '\\\( \)', '\1', 'g')
     let arg_key = substitute(arg, '=\zs.*$', '', '')
 
@@ -141,9 +146,9 @@ function! unite#helper#parse_options(args) "{{{
 
   return [args, options]
 endfunction"}}}
-function! unite#helper#parse_options_args(args) "{{{
+function! unite#helper#parse_options_args(cmdline) "{{{
   let _ = []
-  let [args, options] = unite#helper#parse_options(a:args)
+  let [args, options] = unite#helper#parse_options(a:cmdline)
   for arg in args
     " Add source name.
     let source_name = matchstr(arg, '^[^:]*')
@@ -162,19 +167,73 @@ function! unite#helper#parse_options_user(args) "{{{
   let options.unite__is_manual = 1
   return [args, options]
 endfunction"}}}
+function! s:eval_cmdline(cmdline) abort "{{{
+  let cmdline = ''
+  let prev_match = 0
+  let match = match(a:cmdline, '\\\@<!`.\{-}\\\@<!`')
+  while match >= 0
+    if match - prev_match > 0
+      let cmdline .= a:cmdline[prev_match : match - 1]
+    endif
+    let prev_match = matchend(a:cmdline,
+          \ '\\\@<!`.\{-}\\\@<!`', match)
+    sandbox let cmdline .= escape(eval(
+          \ a:cmdline[match+1 : prev_match - 2]), '\: ')
 
-function! unite#helper#parse_project_bang(args) "{{{
-  let args = filter(copy(a:args), "v:val != '!'")
+    let match = match(a:cmdline, '\\\@<!`.\{-}\\\@<!`', prev_match)
+  endwhile
+  if prev_match >= 0
+    let cmdline .= a:cmdline[prev_match :]
+  endif
+
+  return cmdline
+endfunction"}}}
+
+function! unite#helper#parse_source_args(args) "{{{
+  let args = copy(a:args)
   if empty(args)
-    let args = ['']
+    return []
   endif
 
-  if get(a:args, 0, '') == '!'
-    " Use project directory.
-    let args[0] = unite#util#path2project_directory(args[0], 1)
-  endif
-
+  let args[0] = unite#helper#parse_source_path(args[0])
   return args
+endfunction"}}}
+
+function! unite#helper#parse_source_path(path) "{{{
+  " Expand ?!/buffer_project_subdir, !/project_subdir and ?/buffer_subdir
+  if a:path =~ '^?!'
+    " Use project directory from buffer directory
+    let path = unite#helper#get_buffer_directory(bufnr('%'))
+    let path = unite#util#substitute_path_separator(
+      \ unite#util#path2project_directory(path) . a:path[2:])
+  elseif a:path =~ '^!'
+    " Use project directory from cwd
+    let path = &filetype ==# 'vimfiler' ?
+          \ b:vimfiler.current_dir :
+          \ unite#util#substitute_path_separator(getcwd())
+    let path = unite#util#substitute_path_separator(
+      \ unite#util#path2project_directory(path) . a:path[1:])
+  elseif a:path =~ '^?'
+    " Use buffer directory
+    let path = unite#util#substitute_path_separator(
+      \ unite#helper#get_buffer_directory(bufnr('%')) . a:path[1:])
+  else
+    let path = a:path
+  endif
+
+  " Don't assume empty path means current directory.
+  " Let the sources customize default rules.
+  if path != ''
+    let pathlist = path =~ "\n" ? split(path, "\n") : [path]
+    for pathitem in pathlist
+      " resolve .. in the paths
+      let pathitem = resolve(unite#util#substitute_path_separator(
+            \ fnamemodify(unite#util#expand(pathitem), ':p')))
+    endfor
+    let path = join(pathlist, "\n")
+  endif
+
+  return path
 endfunction"}}}
 
 function! unite#helper#get_marked_candidates() "{{{
@@ -306,9 +365,8 @@ function! unite#helper#get_current_candidate(...) "{{{
 endfunction"}}}
 
 function! unite#helper#get_current_candidate_linenr(num) "{{{
-  let num = 0
-
   let candidate_num = 0
+  let num = 0
   for candidate in unite#get_unite_candidates()
     if !candidate.is_dummy
       let candidate_num += 1
@@ -316,12 +374,20 @@ function! unite#helper#get_current_candidate_linenr(num) "{{{
 
     let num += 1
 
-    if candidate_num >= a:num+1
+    if candidate_num >= a:num
       break
     endif
   endfor
 
-  return unite#get_current_unite().prompt_linenr + num
+  let unite = unite#get_current_unite()
+  if unite.context.prompt_direction ==# 'below'
+    let num = num * -1
+    if unite.prompt_linenr == 0
+      let num += line('$') + 1
+    endif
+  endif
+
+  return unite.prompt_linenr + num
 endfunction"}}}
 
 function! unite#helper#call_filter(filter_name, candidates, context) "{{{
@@ -334,15 +400,15 @@ function! unite#helper#call_filter(filter_name, candidates, context) "{{{
 endfunction"}}}
 function! unite#helper#call_source_filters(filters, candidates, context, source) "{{{
   let candidates = a:candidates
-  for Filter in a:filters
-    if type(Filter) == type('')
+  for l:Filter in a:filters
+    if type(l:Filter) == type('')
       let candidates = unite#helper#call_filter(
-            \ Filter, candidates, a:context)
+            \ l:Filter, candidates, a:context)
     else
-      let candidates = call(Filter, [candidates, a:context], a:source)
+      let candidates = call(l:Filter, [candidates, a:context], a:source)
     endif
 
-    unlet Filter
+    unlet l:Filter
   endfor
 
   return candidates
@@ -482,6 +548,25 @@ function! unite#helper#is_prompt(line) "{{{
   let context = unite#get_context()
   return (context.prompt_direction ==# 'below' && a:line >= prompt_linenr)
         \ || (context.prompt_direction !=# 'below' && a:line <= prompt_linenr)
+endfunction"}}}
+
+function! unite#helper#relative_target(target) "{{{
+  let target = unite#util#substitute_path_separator(fnamemodify(
+        \ substitute(a:target, '[^:]\zs/$', '', ''), ':.'))
+  if target == unite#util#substitute_path_separator(getcwd())
+    return '.'
+  endif
+  if unite#util#is_windows()
+    let drive_letter = matchstr(a:target, '^\a:')
+    let target = strpart(target, 0, 1) ==# '/' && drive_letter !=# '' ?
+          \ drive_letter . target : target
+  endif
+  return target
+endfunction"}}}
+
+function! unite#helper#join_targets(targets) "{{{
+  return join(map(copy(a:targets),
+        \    "unite#util#escape_shell(unite#helper#relative_target(v:val))"))
 endfunction"}}}
 
 let &cpo = s:save_cpo

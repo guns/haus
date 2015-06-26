@@ -78,6 +78,11 @@ function! unite#start#standard(sources, ...) "{{{
   let current_unite.last_path = context.path
   call unite#candidates#_recache(context.input, context.is_redraw)
 
+  if !context.buffer
+    call unite#variables#disable_current_unite()
+    return
+  endif
+
   if !current_unite.is_async &&
         \ (context.force_immediately
         \ || context.immediately || !context.empty) "{{{
@@ -138,6 +143,10 @@ function! unite#start#temporary(sources, ...) "{{{
           \ 'pos' : getpos('.'),
           \ 'profile_name' : unite.profile_name,
           \ })
+
+    if unite.context.unite__is_manual
+      call unite#sources#history_unite#add(unite)
+    endif
   else
     let context = {}
     let context = unite#init#_context(context,
@@ -349,8 +358,12 @@ function! unite#start#resume(buffer_name, ...) "{{{
   let unite.preview_candidate = {}
   let unite.highlight_candidate = {}
   let unite.context.resume = 1
-  let unite.context.unite__old_winwidth = 0
-  let unite.context.unite__old_winheight = 0
+  if context.winwidth != 0
+    let unite.context.unite__old_winwidth = 0
+  endif
+  if context.winheight != 0
+    let unite.context.unite__old_winheight = 0
+  endif
 
   call unite#set_current_unite(unite)
 
@@ -365,7 +378,6 @@ function! unite#start#resume(buffer_name, ...) "{{{
 
   call unite#view#_resize_window()
   call unite#view#_init_cursor()
-  call unite#view#_bottom_cursor()
 endfunction"}}}
 
 function! unite#start#resume_from_temporary(context)  "{{{
@@ -427,13 +439,13 @@ function! unite#start#_pos(buffer_name, direction, count) "{{{
     return
   endif
 
-  let unite.candidate_cursor = next
-
   let candidate = unite.candidates[next]
 
   " Immediately action.
   silent call unite#action#do_candidates(
         \ unite.context.default_action, [candidate], unite.context)
+
+  let unite.candidate_cursor = next
 
   call unite#view#_redraw_echo(printf('[%d/%d] %s',
         \ unite.candidate_cursor+1, len(unite.candidates),

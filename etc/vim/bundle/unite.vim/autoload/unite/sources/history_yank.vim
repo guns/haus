@@ -47,8 +47,6 @@ function! unite#sources#history_yank#define() "{{{
   return s:source
 endfunction"}}}
 function! unite#sources#history_yank#_append() "{{{
-  call s:load()
-
   let prev_histories = copy(s:yank_histories)
 
   call s:add_register('"')
@@ -62,12 +60,6 @@ function! unite#sources#history_yank#_append() "{{{
 
   if prev_histories !=# s:yank_histories
     " Updated.
-
-    if g:unite_source_history_yank_limit < len(s:yank_histories)
-      let s:yank_histories =
-            \ s:yank_histories[ : g:unite_source_history_yank_limit - 1]
-    endif
-
     call s:save()
   endif
 endfunction"}}}
@@ -84,6 +76,7 @@ function! s:source.gather_candidates(args, context) "{{{
 
   return map(copy(s:yank_histories), "{
         \ 'word' : v:val[0],
+        \ 'abbr' : printf('%-2d - %s', v:key, v:val[0]),
         \ 'is_multiline' : 1,
         \ 'action__regtype' : v:val[1],
         \ }")
@@ -111,6 +104,15 @@ function! s:save()  "{{{
     return
   endif
 
+  call s:load()
+
+  let s:yank_histories = unite#util#uniq(s:yank_histories)
+
+  if g:unite_source_history_yank_limit < len(s:yank_histories)
+    let s:yank_histories =
+          \ s:yank_histories[ : g:unite_source_history_yank_limit - 1]
+  endif
+
   call writefile([string(s:yank_histories)],
         \              g:unite_source_history_yank_file)
   let s:yank_histories_file_mtime = getftime(g:unite_source_history_yank_file)
@@ -127,18 +129,24 @@ function! s:load()  "{{{
   endif
 
   try
-    sandbox let s:yank_histories = eval(file[0])
+    sandbox let yank_histories = eval(file[0])
 
     " Type check.
-    let history = s:yank_histories[0]
+    let history = yank_histories[0]
     let history[0] = history[0]
   catch
-    let s:yank_histories = []
+    let yank_histories = []
   endtry
 
-  let s:yank_histories_file_mtime = getftime(g:unite_source_history_yank_file)
-
+  let s:yank_histories += yank_histories
   let s:yank_histories = unite#util#uniq(s:yank_histories)
+
+  if g:unite_source_history_yank_limit < len(s:yank_histories)
+    let s:yank_histories =
+          \ s:yank_histories[ : g:unite_source_history_yank_limit - 1]
+  endif
+
+  let s:yank_histories_file_mtime = getftime(g:unite_source_history_yank_file)
 endfunction"}}}
 
 function! s:add_register(name) "{{{
