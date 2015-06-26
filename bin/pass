@@ -6,7 +6,7 @@
 umask "${PASSWORD_STORE_UMASK:-077}"
 set -o pipefail
 
-GPG_OPTS=( "--quiet" "--yes" "--compress-algo=none" "--no-encrypt-to" )
+GPG_OPTS=( $PASSWORD_STORE_GPG_OPTS "--quiet" "--yes" "--compress-algo=none" "--no-encrypt-to" )
 GPG="gpg"
 export GPG_TTY="${GPG_TTY:-$(tty 2>/dev/null)}"
 which gpg2 &>/dev/null && GPG="gpg2"
@@ -83,7 +83,7 @@ set_gpg_recipients() {
 
 reencrypt_path() {
 	local prev_gpg_recipients="" gpg_keys="" current_keys="" index passfile
-	local groups="$($GPG --list-config --with-colons | grep "^cfg:group:.*")"
+	local groups="$($GPG $PASSWORD_STORE_GPG_OPTS --list-config --with-colons | grep "^cfg:group:.*")"
 	while read -r -d "" passfile; do
 		local passfile_dir="${passfile%/*}"
 		passfile_dir="${passfile_dir#$PREFIX}"
@@ -100,9 +100,9 @@ reencrypt_path() {
 				IFS=";" eval 'GPG_RECIPIENTS+=( $group )' # http://unix.stackexchange.com/a/92190
 				unset GPG_RECIPIENTS[$index]
 			done
-			gpg_keys="$($GPG --list-keys --with-colons "${GPG_RECIPIENTS[@]}" | sed -n 's/sub:[^:]*:[^:]*:[^:]*:\([^:]*\):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[a-zA-Z]*e[a-zA-Z]*:.*/\1/p' | LC_ALL=C sort -u)"
+			gpg_keys="$($GPG $PASSWORD_STORE_GPG_OPTS --list-keys --with-colons "${GPG_RECIPIENTS[@]}" | sed -n 's/sub:[^:]*:[^:]*:[^:]*:\([^:]*\):[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[^:]*:[a-zA-Z]*e[a-zA-Z]*:.*/\1/p' | LC_ALL=C sort -u)"
 		fi
-		current_keys="$($GPG -v --no-secmem-warning --no-permission-warning --list-only --keyid-format long "$passfile" 2>&1 | cut -d ' ' -f 5 | LC_ALL=C sort -u)"
+		current_keys="$($GPG $PASSWORD_STORE_GPG_OPTS -v --no-secmem-warning --no-permission-warning --list-only --keyid-format long "$passfile" 2>&1 | cut -d ' ' -f 5 | LC_ALL=C sort -u)"
 
 		if [[ $gpg_keys != "$current_keys" ]]; then
 			echo "$passfile_display: reencrypting to ${gpg_keys//$'\n'/ }"
@@ -322,7 +322,7 @@ cmd_show() {
 		else
 			echo "${path%\/}"
 		fi
-		tree -C -l --noreport "$PREFIX/$path" | tail -n +2 | sed 's/\.gpg\(\x1B\[[0-9]\+m\)\{0,1\}\( ->\|$\)/\1\2/g' # remove .gpg at end of line, but keep colors
+		tree -C -l --noreport "$PREFIX/$path" | tail -n +2 | sed -E 's/\.gpg(\x1B\[[0-9]+m)?( ->|$)/\1\2/g' # remove .gpg at end of line, but keep colors
 	elif [[ -z $path ]]; then
 		die "Error: password store is empty. Try \"pass init\"."
 	else
@@ -334,7 +334,7 @@ cmd_find() {
 	[[ -z "$@" ]] && die "Usage: $PROGRAM $COMMAND pass-names..."
 	IFS="," eval 'echo "Search Terms: $*"'
 	local terms="*$(printf '%s*|*' "$@")"
-	tree -C -l --noreport -P "${terms%|*}" --prune --matchdirs --ignore-case "$PREFIX" | tail -n +2 | sed 's/\.gpg\(\x1B\[[0-9]\+m\)\{0,1\}\( ->\|$\)/\1\2/g'
+	tree -C -l --noreport -P "${terms%|*}" --prune --matchdirs --ignore-case "$PREFIX" | tail -n +2 | sed -E 's/\.gpg(\x1B\[[0-9]+m)?( ->|$)/\1\2/g'
 }
 
 cmd_grep() {
@@ -378,7 +378,7 @@ cmd_insert() {
 	if [[ $multiline -eq 1 ]]; then
 		echo "Enter contents of $path and press Ctrl+D when finished:"
 		echo
-		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}"
+		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" || exit 1
 	elif [[ $noecho -eq 1 ]]; then
 		local password password_again
 		while true; do
@@ -411,7 +411,7 @@ cmd_edit() {
 	local passfile="$PREFIX/$path.gpg"
 
 	tmpdir #Defines $SECURE_TMPDIR
-	local tmp_file="$(mktemp -u "$SECURE_TMPDIR/XXXXX")-${path//\//-}.txt"
+	local tmp_file="$(mktemp -u "$SECURE_TMPDIR/XXXXXX")-${path//\//-}.txt"
 
 
 	local action="Add"
