@@ -870,34 +870,10 @@ ALIAS mk='make' \
 
 # golang
 HAVE go && {
-    __go__() {
-        local OPTIND OPTARG opt prefix
-        while getopts :p: opt; do
-            case $opt in
-            p) prefix="$OPTARG";;
-            esac
-        done
-        shift $((OPTIND-1))
-
-        local cmd="$1"
-        shift
-
-        local flags=("$prefix") n=0
-        while [[ "$1" == -* ]]; do
-            if ((n == 0)); then
-                flags+=(-gcflags)
-                ((++n))
-            fi
-            flags+=("$1")
-            shift
-        done
-
-        run go "$cmd" "${flags[@]}" "$@"
-    }
-    gobuild() { __go__ -p '-v' build "$@"; }
-    gotest() { __go__ test "$@"; }
-    gorace() { __go__ -p '-race' test "$@"; }
-    gobench() { __go__ -p "-bench=${1:-.}" -- test "${@:2}"; }
+    gobuild() { run go build -v "$@"; }
+    gotest() { run go test -run="${1:-.}" "${@:2}"; }
+    gorace() { run go test -race -run="${1:-.}" "${@:2}"; }
+    gobench() { run go test -bench="${1:-.}" "${@:2}"; }
     goupgrade() {
         pushd .
         cdgo
