@@ -71,6 +71,7 @@ NERDTreeAbout	NERD_tree.txt	/*NERDTreeAbout*
 NERDTreeAddKeyMap()	NERD_tree.txt	/*NERDTreeAddKeyMap()*
 NERDTreeAddMenuItem()	NERD_tree.txt	/*NERDTreeAddMenuItem()*
 NERDTreeAddMenuSeparator()	NERD_tree.txt	/*NERDTreeAddMenuSeparator()*
+NERDTreeAddPathFilter()	NERD_tree.txt	/*NERDTreeAddPathFilter()*
 NERDTreeAddSubmenu()	NERD_tree.txt	/*NERDTreeAddSubmenu()*
 NERDTreeBookmarkCommands	NERD_tree.txt	/*NERDTreeBookmarkCommands*
 NERDTreeBookmarkTable	NERD_tree.txt	/*NERDTreeBookmarkTable*
@@ -88,5 +89,6 @@ NERDTreeMenuAPI	NERD_tree.txt	/*NERDTreeMenuAPI*
 NERDTreeOptionDetails	NERD_tree.txt	/*NERDTreeOptionDetails*
 NERDTreeOptionSummary	NERD_tree.txt	/*NERDTreeOptionSummary*
 NERDTreeOptions	NERD_tree.txt	/*NERDTreeOptions*
+NERDTreePathListenerAPI	NERD_tree.txt	/*NERDTreePathListenerAPI*
 NERDTreeRender()	NERD_tree.txt	/*NERDTreeRender()*
 NERD_tree.txt	NERD_tree.txt	/*NERD_tree.txt*
