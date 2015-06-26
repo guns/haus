@@ -10,7 +10,7 @@ import (
 endsnippet
 
 snippet /^P/ "Package declaration" r
-package ${1:`!v expand('%:p:h:t')`}
+package `!v expand('%:p:h:t')`
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
@@ -130,18 +130,36 @@ snippet S "[]string" w
 []string
 endsnippet
 
+snippet st "struct{}" w
+struct{}
+endsnippet
+
 snippet T "type" b
 type $0
 endsnippet
 
-snippet ts "type struct" w
-type $1 struct {
+snippet ts "type ()" w
+type (
+	$0
+)
+endsnippet
+
+snippet TS "type struct" w
+${2:/*
+ * ${1/./\u$0/g} STRUCT
+ */
+
+}type ${1} struct {
 	$0
 }
 endsnippet
 
-snippet ti "type interface" b
-type $1 interface {
+snippet TI "type interface" b
+${2:/*
+ * ${1/./\u$0/g} INTERFACE
+ */
+
+}type ${1} interface {
 	$0
 }
 endsnippet
@@ -193,6 +211,26 @@ snippet u6 "uint64" w
 uint64
 endsnippet
 
+snippet I "int" w
+int
+endsnippet
+
+snippet i8 "int8" w
+int8
+endsnippet
+
+snippet i1 "int16" w
+int16
+endsnippet
+
+snippet i3 "int32" w
+int32
+endsnippet
+
+snippet i6 "int64" w
+int64
+endsnippet
+
 snippet B "[]byte" w
 []byte
 endsnippet
@@ -234,7 +272,7 @@ endsnippet
 
 snippet ifer "if err != nil { return err }" w
 if ${1:err} != nil {
-	return $1
+	return $1$0
 }
 endsnippet
 
@@ -266,8 +304,8 @@ endsnippet
 snippet sel "select" !b
 select {
 case ${0}:
-default:
-}
+${1:default:
+}}
 endsnippet
 
 snippet case "Case clause" !b
@@ -381,15 +419,19 @@ delete($0)
 endsnippet
 
 snippet up "unsafe.Pointer" w
-unsafe.Pointer($0)
+unsafe.Pointer
 endsnippet
 
 snippet after "time.After()" w
-time.After($1 * time.$0)
+time.After($1 * time.${0:Millisecond})
 endsnippet
 
 snippet sleep "time.Sleep()" w
-time.Sleep($1 * time.$0)
+time.Sleep($1 * time.${0:Millisecond})
+endsnippet
+
+snippet ch "chan" w
+chan $0
 endsnippet
 
 # vim:ft=snippets:

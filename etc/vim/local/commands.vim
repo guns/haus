@@ -559,17 +559,24 @@ function! s:GoBufferSetup()
     nmap     <buffer> ]d                 <Plug>(go-describe)
     nmap     <buffer> <LocalLeader>b     <Plug>(go-build)
     noremap  <buffer> <LocalLeader>B     :<C-u>GoOptimizations<CR>
+    noremap  <buffer> <LocalLeader>C     :<C-u>GoCoverage<CR>
     noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR><Space>
     noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
-    noremap  <buffer> <LocalLeader>i     :<C-u>GoImports<CR>
-    nmap     <buffer> <LocalLeader>I     <Plug>(go-implements)
+    nmap     <buffer> <LocalLeader>i     <Plug>(go-implements)
+    noremap  <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>
     noremap  <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>t     <Plug>(go-test)
-    nmap     <buffer> <LocalLeader>T     <Plug>(go-test-compile)
+    nmap     <buffer> <LocalLeader>T     <Plug>(go-test-func)
     nmap     <buffer> <LocalLeader>v     <Plug>(go-vet)
+endfunction
+
+function! s:CompareQuickfix(p, q)
+    let p = bufname(a:p['bufnr'])
+    let q = bufname(a:q['bufnr'])
+    return p > q ? 1 : (p < q ? -1 : (a:p['lnum'] > a:q['lnum'] ? 1 : -1))
 endfunction
 
 command! -bar GoOptimizations call <SID>GoOptimizations()
@@ -585,7 +592,7 @@ function! s:GoOptimizations()
              call add(newqflist, item)
          endif
      endfor
-     call setqflist(newqflist)
+     call setqflist(sort(newqflist, "s:CompareQuickfix"))
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1

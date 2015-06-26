@@ -225,6 +225,7 @@ let g:tagbar_autofocus = 1
 let g:tagbar_autoshowtag = 1
 let g:tagbar_compact = 1
 let g:tagbar_sort = 0
+let g:tagbar_width = 60
 let g:tagbar_type_rust = {
     \ 'ctagstype': 'rust',
     \ 'kinds': [
@@ -299,6 +300,7 @@ let g:ack_apply_lmappings = 0
 
 " Plugin: Unite.vim
 let g:unite_enable_start_insert = 1
+let g:unite_enable_auto_select = 0
 let g:unite_data_directory = expand('~/.cache/vim/unite')
 call unite#filters#matcher_default#use(['matcher_fuzzy'])
 call unite#filters#sorter_default#use(['sorter_selecta'])
@@ -318,6 +320,7 @@ let g:easy_align_delimiters = {
 " Plugin: vim-go
 let g:play_browser_command = 'open'
 let g:go_def_mapping_enabled = 0
+let g:go_fmt_command = 'goimports'
 let g:go_fmt_fail_silently = 1
 let g:go_snippet_engine = ''
 let g:go_highlight_operators = 1
