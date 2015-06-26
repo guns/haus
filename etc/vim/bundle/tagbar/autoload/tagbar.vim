@@ -1028,7 +1028,7 @@ function! s:CreateAutocommands() abort
 endfunction
 
 " s:CheckForExCtags() {{{2
-" Test whether the ctags binary is actually Exuberant Ctags and not GNU ctags
+" Test whether the ctags binary is actually Exuberant Ctags and not BSD ctags
 " (or something else)
 function! s:CheckForExCtags(silent) abort
     call s:debug('Checking for Exuberant Ctags')
@@ -1086,9 +1086,9 @@ function! s:CheckForExCtags(silent) abort
 
     let ctags_output = s:ExecuteCtags(ctags_cmd)
 
-    if v:shell_error || ctags_output !~# 'Exuberant Ctags'
+    if v:shell_error || ctags_output !~# '\(Exuberant\|Universal\) Ctags'
         let errmsg = 'Tagbar: Ctags doesn''t seem to be Exuberant Ctags!'
-        let infomsg = 'GNU ctags will NOT WORK.' .
+        let infomsg = 'BSD ctags will NOT WORK.' .
             \ ' Please download Exuberant Ctags from ctags.sourceforge.net' .
             \ ' and install it in a directory in your $PATH' .
             \ ' or set g:tagbar_ctags_bin.'
@@ -1145,6 +1145,11 @@ function! s:CheckExCtagsVersion(output) abort
 
     if a:output =~ 'Exuberant Ctags Development'
         call s:debug("Found development version, assuming compatibility")
+        return 1
+    endif
+
+    if a:output =~ 'Universal Ctags'
+        call s:debug("Found Universal Ctags, assuming compatibility")
         return 1
     endif
 
@@ -3665,7 +3670,7 @@ function! s:ExecuteCtags(ctags_cmd) abort
         call s:debug(v:statusmsg)
         redraw!
     else
-        let ctags_output = system(a:ctags_cmd)
+        silent let ctags_output = system(a:ctags_cmd)
     endif
 
     if &shell =~ 'cmd\.exe'
