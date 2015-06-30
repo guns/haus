@@ -56,6 +56,7 @@ export BUNDLE_PATH="$HOME/.bundle"
 
 # Go
 export GOPATH="$HOME/.local/pkg/go"
+export GOMAXPROCS="$(grep -c ^processor /proc/cpuinfo)"
 
 # For xdg-open
 # https://wiki.archlinux.org/index.php/Environment_Variables#Examples
