@@ -1282,8 +1282,8 @@ ALIAS pac='pacman' && {
     alias pacs='run pacman --sync --search'
     alias pacr='run pacman --remove --recursive'
     alias pacsync='run pacman --sync --refresh'
-    alias pacupgrade='run pacman --sync --refresh --sysupgrade'
-    alias pacoutdated='run pacman --query --upgrades'
+    alias pacupgrade='run pacman --sync --refresh --sysupgrade && run pacckalts'
+    alias pacoutdated='run pacman --query --upgrades; run pacckalts'
 
     alias pacclean='run pacman --sync --clean --noconfirm'
     alias pacforeign='run pacman --query --foreign'
