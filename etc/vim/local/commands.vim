@@ -624,7 +624,7 @@ endfunction
 command! -nargs=* -bar Grepqflist   call <SID>Grepqflist(1, <q-args>)
 command! -nargs=* -bar Removeqflist call <SID>Grepqflist(0, <q-args>)
 function! s:Grepqflist(match, pat)
-    call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) " . (a:match ? '=~#' : '!~#') . " a:pat || v:val['text'] =~# a:pat"))
+    call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) . v:val['text'] " . (a:match ? '=~' : '!~') . " a:pat"))
 endfunction
 
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
@@ -742,8 +742,12 @@ function! s:Org(bang, ...)
 
     if a:0
         for f in a:000
-            execute tab . 'edit ' . join([g:org_home, f . '.org'], '/')
-            execute 'lcd ' . g:org_home
+            if filereadable(f . '.org')
+                execute tab . 'edit ' . f . '.org'
+            else
+                execute tab . 'edit ' . join([g:org_home, f . '.org'], '/')
+                execute 'lcd ' . g:org_home
+            endif
         endfor
     else
         if empty(a:bang) | tabnew | endif
