@@ -276,7 +276,7 @@ if ${1:err} != nil {
 }
 endsnippet
 
-snippet ife= "if err := f(); err != nil …" w
+snippet ifle "if err := f(); err != nil …" w
 if ${1:err} ${2::}= $3; $1 != nil {
 	return $1$0
 }
@@ -324,6 +324,12 @@ endsnippet
 
 snippet mk "make()" w
 make($0)
+endsnippet
+
+snippet mkc "make(chan …); close(…)" w
+$1 := make(chan $2, $3)
+$0
+close($1)
 endsnippet
 
 snippet cp "copy()" w
@@ -422,16 +428,78 @@ snippet up "unsafe.Pointer" w
 unsafe.Pointer
 endsnippet
 
-snippet after "time.After()" w
-time.After($1 * time.${0:Millisecond})
+snippet tt "time.Time" w
+time.Time
 endsnippet
 
-snippet sleep "time.Sleep()" w
-time.Sleep($1 * time.${0:Millisecond})
+snippet af "time.After()" w
+time.After($1 * $0)
+endsnippet
+
+snippet aff "time.AfterFunc()" w
+time.AfterFunc($1 * $0) {
+	$0
+})
+endsnippet
+
+snippet sl "time.Sleep()" w
+time.Sleep($1 * $0)
+endsnippet
+
+snippet tn "time.Now()" w
+time.Now()
+endsnippet
+
+snippet td "time.Duration" w
+time.Duration
+endsnippet
+
+snippet tN "time.Nanosecond" w
+time.Nanosecond
+endsnippet
+
+snippet tM "time.Microsecond" w
+time.Microsecond
+endsnippet
+
+snippet tm "time.Millisecond" w
+time.Millisecond
+endsnippet
+
+snippet tS "time.Second" w
+time.Second
 endsnippet
 
 snippet ch "chan" w
 chan $0
+endsnippet
+
+snippet wg "sync.WaitGroup" w
+sync.WaitGroup
+endsnippet
+
+snippet alu "atomic.LoadUint32" w
+atomic.LoadUint32($0)
+endsnippet
+
+snippet ali "atomic.LoadInt32" w
+atomic.LoadInt32($0)
+endsnippet
+
+snippet asu "atomic.StoreUint32" w
+atomic.StoreUint32($0)
+endsnippet
+
+snippet asi "atomic.StoreInt32" w
+atomic.StoreInt32($0)
+endsnippet
+
+snippet aau "atomic.AddUint32" w
+atomic.AddUint32($0)
+endsnippet
+
+snippet aai "atomic.AddInt32" w
+atomic.AddInt32($0)
 endsnippet
 
 # vim:ft=snippets:

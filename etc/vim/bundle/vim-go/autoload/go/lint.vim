@@ -22,7 +22,7 @@ function! go#lint#Run() abort
 		return 
 	endif
 
-    silent cexpr system(bin_path . " " . shellescape(expand('%')))
+    silent cexpr system(bin_path . " .")
     cwindow
 endfunction
 
