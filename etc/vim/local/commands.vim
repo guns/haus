@@ -180,7 +180,13 @@ endfunction
 
 command! -bar Ctags call <SID>Ctags() "{{{1
 function! s:Ctags()
-    let cmd = (&filetype == 'javascript') ? 'jsctags.js -f .jstags ' . shellescape(expand('%')) : 'ctags -R'
+    if &filetype == 'javascript'
+        let cmd = 'jsctags.js -f .jstags' . shellescape(expand('%'))
+    elseif &filetype == 'go'
+        let cmd = 'gotags -R -f .tags .'
+    else
+        let cmd = 'ctags -R'
+    endif
     execute 'Sh (' . cmd . '; notify -? $?) >/dev/null 2>&1 &' | echo cmd
 endfunction
 
