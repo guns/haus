@@ -175,6 +175,7 @@ $if bash
     # VIMEDITBINDINGS
     "\C-xea":       "\C-] vimautocommands \n"
     "\C-xeA":       "\C-] vimaliases \n"
+    "\C-xeh":       "\C-] vimbashhistory \n"
     "\C-xeb":       "\C-] vimbashinteractive \n"
     "\C-xeB":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"

@@ -804,6 +804,7 @@ HAVE vim && {
     # VIMEDITBINDINGS
     alias vimautocommands='vim "$cdhaus/etc/vim/local/autocommands.vim" -c "lcd \$cdhaus"'
     alias vimaliases='vim ~/.mutt/aliases -c "lcd ~/.mutt"'
+    alias vimbashhistory='vim ~/.bash_history'
     alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
