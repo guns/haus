@@ -567,15 +567,16 @@ function! s:GoBufferSetup()
     noremap  <buffer> <LocalLeader>B     :<C-u>GoOptimizations<CR>
     noremap  <buffer> <LocalLeader>C     :<C-u>GoCoverage<CR>
     noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
-    noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR><Space>
+    noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR>
     noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
     nmap     <buffer> <LocalLeader>i     <Plug>(go-implements)
     noremap  <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>
     noremap  <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
+    noremap  <buffer> <LocalLeader>L     :<C-u>!go list -f "{{.GoFiles}}"<Space>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
-    nmap     <buffer> <LocalLeader>t     <Plug>(go-test)
-    nmap     <buffer> <LocalLeader>T     <Plug>(go-test-func)
+    nmap     <buffer> <LocalLeader>t     :<C-u>GoTest -tags\ test<CR>
+    nmap     <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags\ test<CR>
     nmap     <buffer> <LocalLeader>v     <Plug>(go-vet)
 endfunction
 

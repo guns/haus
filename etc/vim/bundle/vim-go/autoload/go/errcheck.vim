@@ -19,7 +19,7 @@ function! go#errcheck#Run(...) abort
     endif
 
     echon "vim-go: " | echohl Identifier | echon "errcheck analysing ..." | echohl None
-    let out = system(bin_path . ' -asserts -blank ' . package)
+    let out = system(bin_path . ' -blank ' . package)
     if v:shell_error
         let errors = []
         let mx = '^\(.\{-}\):\(\d\+\):\(\d\+\)\s*\(.*\)'

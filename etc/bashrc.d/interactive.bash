@@ -855,9 +855,10 @@ ALIAS mk='make' \
 # golang
 HAVE go && {
     gobuild() { run go build -v "$@"; }
-    gotest() { run go test -run="${1:-.}" "${@:2}"; }
-    gorace() { run go test -race -run="${1:-.}" "${@:2}"; }
+    gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
+    gorace() { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
     gobench() { run go test -bench="${1:-.}" "${@:2}"; }
+    golist() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     goupgrade() {
         pushd .
         cdgo
