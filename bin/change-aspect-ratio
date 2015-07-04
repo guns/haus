@@ -1,0 +1,57 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'securerandom'
+require 'fileutils'
+
+class ChangeAspectRatio
+  DEFAULTS = {}
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] aspect-ratio path [new-path]
+
+        Options:
+      BANNER
+    end
+  end
+
+  def sh *args
+    warn args.join(' ')
+    system *args
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless [2, 3] === ARGV.size
+
+    ratio, src, dst = args
+    inplace = false
+
+    if dst == nil
+      inplace = true
+      loop do
+        dst = SecureRandom.uuid + File.extname(src)
+        break unless File.exists? dst
+      end
+    end
+
+    begin
+      if sh *%W[ffmpeg -i #{src} -vcodec copy -acodec copy -aspect #{ratio} #{dst}]
+        FileUtils.mv dst, src if inplace
+      end
+    ensure
+      FileUtils.rm dst if inplace
+    end
+  end
+end

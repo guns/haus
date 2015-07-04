@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+abort "USAGE: #{File.basename __FILE__} out-file input-files …" if ARGV.size < 2
+
+out, *inputs = ARGV
+args = [inputs.first] + (["+"] * (inputs.size - 1)).zip(inputs.drop 1)
+exec "mkvmerge", "-o", out, *args.flatten

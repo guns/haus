@@ -466,9 +466,6 @@ ALIAS iotop='iotop --only'
     fi
 }
 
-# Return absolute path
-expand_path() { ruby -e 'print File.expand_path(ARGV.first)' -- "$1"; }
-
 # Swap
 ALIAS swapin='swapoff --all --verbose; swapon --all --verbose'
 
@@ -694,20 +691,6 @@ ALIAS ctagsr='ctags --recurse'
 # Vim
 HAVE vim && {
     alias v='vim -c "set nomodified" -'
-
-    vimnilla() {
-        local OPTIND OPTARG opt dirs=()
-        while getopts :d: opt; do
-            case $opt in
-            d) dirs+=("$OPTARG");;
-            esac
-        done
-        shift $((OPTIND-1))
-
-        command vim -N -u <(ruby -r shellwords -e '
-            puts %q{set rtp^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
-        ' -- "${dirs[@]}") -U NONE "$@"
-    }
 
     vimopen() { vim -c 'UniteOpen' "$@"; }
 
@@ -1359,39 +1342,6 @@ HAVE pulseaudio && {
 HAVE youtube-dl && {
     TCOMP youtube-dl yt
     TCOMP youtube-dl ytv
-}
-
-# mkvmerge
-HAVE mkvmerge && mkvmergeout() {
-    (($# > 1)) || { echo "USAGE: $FUNCNAME out-file [input-files …]"; return 1; }
-    ruby -e '
-        out, *inputs = ARGV
-        args = [inputs.first] + (["+"] * (inputs.size - 1)).zip(inputs.drop 1)
-        system "mkvmerge", "-o", out, *args.flatten
-    ' -- "$@"
-}
-
-# ffmpeg
-HAVE ffmpeg && change-aspect-ratio() {
-    (($# == 2 || $# == 3)) || { echo "USAGE: $FUNCNAME aspect-ratio path [new-path]"; return 1; }
-    ruby -r securerandom -r fileutils -e '
-        ratio, src, dst = ARGV
-        inplace = false
-
-        if dst == nil
-            inplace = true
-            dst = SecureRandom.uuid + File.extname(src)
-            raise if File.exists? dst
-        end
-
-        begin
-            if system *%W[ffmpeg -i #{src} -vcodec copy -acodec copy -aspect #{ratio} #{dst}]
-                FileUtils.mv dst, src if inplace
-            end
-        ensure
-            FileUtils.rm dst if inplace
-        end
-    ' -- "$@"
 }
 
 ### X

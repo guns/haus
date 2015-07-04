@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+max = ARGV.map(&:size).max
+
+ARGV.each do |f|
+  puts "%-#{max}s %s" % [f, %x(ffprobe -i #{f.shellescape} -show_entries format=duration -v quiet -print_format flat)[/="(.*)"/, 1]]
+end

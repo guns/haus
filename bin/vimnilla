@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+DIRS=()
+
+while getopts :d: OPT; do
+    case $OPT in
+        d) DIRS+=("$OPTARG");;
+    esac
+done
+shift $((OPTIND-1))
+
+VIMRC="$(ruby -r shellwords -e '
+    puts %q{set rtp^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
+' -- "${DIRS[@]}")"
+
+command vim -N -u <(echo "$VIMRC") -U <(echo "$VIMRC") "$@"
