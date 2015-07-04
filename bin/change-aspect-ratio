@@ -33,7 +33,7 @@ class ChangeAspectRatio
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless [2, 3] === ARGV.size
+    abort parser.help unless (2..3) === ARGV.size
 
     ratio, src, dst = args
     inplace = false
@@ -51,7 +51,9 @@ class ChangeAspectRatio
         FileUtils.mv dst, src if inplace
       end
     ensure
-      FileUtils.rm dst if inplace
+      FileUtils.rm_f dst if inplace
     end
   end
 end
+
+$0 = File.basename(__FILE__) and ChangeAspectRatio.new.run ARGV if $0 == __FILE__
