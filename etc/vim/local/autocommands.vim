@@ -71,6 +71,8 @@ augroup GUNS
         \ LispBufferSetup
     autocmd FileType timl
         \ TimLBufferSetup
+    autocmd BufRead *.clj
+        \ try | silent! Require | catch /^Fireplace/ | endtry
     autocmd Filetype clojure
         \ ClojureBufferSetup
 
