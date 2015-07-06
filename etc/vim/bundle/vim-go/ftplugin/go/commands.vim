@@ -107,6 +107,6 @@ command! -nargs=* -complete=customlist,go#package#Complete GoImportAs call go#im
 command! GoLint call go#lint#Run()
 
 " -- errcheck
-command! -nargs=? -complete=customlist,go#package#Complete GoErrCheck call go#errcheck#Run(<f-args>)
+command! -nargs=? -bang -complete=customlist,go#package#Complete GoErrCheck call go#errcheck#Run('<bang>', <f-args>)
 
 " vim:ts=4:sw=4:et

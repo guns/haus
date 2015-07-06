@@ -568,6 +568,7 @@ function! s:GoBufferSetup()
     noremap  <buffer> <LocalLeader>C     :<C-u>GoCoverage<CR>
     noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR>
+    noremap  <buffer> <LocalLeader>E     :<C-u>GoErrCheck!<CR>
     noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
     nmap     <buffer> <LocalLeader>i     <Plug>(go-implements)
     noremap  <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>

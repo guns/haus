@@ -2,7 +2,7 @@ if !exists("g:go_errcheck_bin")
     let g:go_errcheck_bin = "errcheck"
 endif
 
-function! go#errcheck#Run(...) abort
+function! go#errcheck#Run(bang, ...) abort
     if a:0 == 0
         let package = go#package#ImportPath(expand('%:p:h'))
         if package == -1
@@ -19,7 +19,11 @@ function! go#errcheck#Run(...) abort
     endif
 
     echon "vim-go: " | echohl Identifier | echon "errcheck analysing ..." | echohl None
-    let out = system(bin_path . ' -blank ' . package)
+    if a:bang == '!'
+        let out = system(bin_path . ' -blank -asserts ' . package)
+    else
+        let out = system(bin_path . ' ' . package)
+    endif
     if v:shell_error
         let errors = []
         let mx = '^\(.\{-}\):\(\d\+\):\(\d\+\)\s*\(.*\)'
