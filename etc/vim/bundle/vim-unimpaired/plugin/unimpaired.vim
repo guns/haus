@@ -28,6 +28,12 @@ function! s:MapNextFamily(map,cmd)
     execute 'nmap <silent> [<C-'.a:map.'> '.map.'PFile'
     execute 'nmap <silent> ]<C-'.a:map.'> '.map.'NFile'
   endif
+  if exists(':'.a:cmd.'newer')
+    execute 'nnoremap <silent> '.map.'Older :<C-U>exe "'.cmd.'older'.end
+    execute 'nnoremap <silent> '.map.'Newer :<C-U>exe "'.cmd.'newer'.end
+    execute 'nmap <silent> [<M-'.a:map.'> '.map.'Older'
+    execute 'nmap <silent> ]<M-'.a:map.'> '.map.'Newer'
+  endif
 endfunction
 
 call s:MapNextFamily('a','')
@@ -110,7 +116,7 @@ onoremap <silent> <Plug>unimpairedContextPrevious :call <SID>ContextMotion(1)<CR
 onoremap <silent> <Plug>unimpairedContextNext     :call <SID>ContextMotion(0)<CR>
 
 function! s:Context(reverse)
-  call search('^@@ .* @@\|^[<=>|]\{7}[<=>|]\@!', a:reverse ? 'bW' : 'W')
+  call search('^\(@@ .* @@\|[<=>|]\{7}[<=>|]\@!\)', a:reverse ? 'bW' : 'W')
 endfunction
 
 function! s:ContextMotion(reverse)
