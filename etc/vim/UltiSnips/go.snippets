@@ -94,8 +94,12 @@ func Test$1(t *testing.T) {
 }
 endsnippet
 
+snippet as "assert" w
+assert.$1(t, $0)
+endsnippet
+
 snippet ase "assert.Equal()" w
-assert.Equal(t, $0)
+assert.Equal(t, ${1:expected}, $0)
 endsnippet
 
 snippet asf "assert.False()" w
@@ -114,8 +118,12 @@ snippet aser "assert.Error()" w
 assert.Error(t, $0)
 endsnippet
 
-snippet asd "assert.InDelta()" w
-assert.InDelta(t, $0)
+snippet asr "assert.Regexp()" w
+assert.Regexp(t, \`$1\`, $0)
+endsnippet
+
+snippet asit "assert.IsType()" w
+assert.IsType(t, $0)
 endsnippet
 
 snippet L "len()" w
@@ -183,7 +191,7 @@ for ${1:j} := ${2:0}; $1 ${3:<} ${4:n}; ${5:$1++} {
 }
 endsnippet
 
-snippet forr "For range loop" !b
+snippet F "For range loop" !b
 for ${1:i} := range ${2} {
 	${0:${VISUAL}}
 }
@@ -458,7 +466,7 @@ $1 ${2::}= time.NewTicker($3 * $4)
 $0$1.Stop()
 endsnippet
 
-snippet ts "time.Sleep()" w
+snippet sl "time.Sleep()" w
 time.Sleep($1 * $0)
 endsnippet
 
@@ -482,7 +490,7 @@ snippet tm "time.Millisecond" w
 time.Millisecond
 endsnippet
 
-snippet tS "time.Second" w
+snippet ts "time.Second" w
 time.Second
 endsnippet
 
@@ -494,6 +502,18 @@ snippet wg "sync.WaitGroup" w
 sync.WaitGroup
 endsnippet
 
+snippet sc "strconv" w
+strconv.
+endsnippet
+
+snippet ita "strconv.Itoa" w
+strconv.Itoa($0)
+endsnippet
+
+snippet ati "strconv.Atoi" w
+strconv.Atoi($0)
+endsnippet
+
 snippet alu "atomic.LoadUint32" w
 atomic.LoadUint32($0)
 endsnippet
@@ -502,12 +522,20 @@ snippet ali "atomic.LoadInt32" w
 atomic.LoadInt32($0)
 endsnippet
 
+snippet alp "atomic.LoadUintptr" w
+atomic.LoadUintptr($0)
+endsnippet
+
 snippet asu "atomic.StoreUint32" w
 atomic.StoreUint32($0)
 endsnippet
 
 snippet asi "atomic.StoreInt32" w
 atomic.StoreInt32($0)
+endsnippet
+
+snippet asp "atomic.StoreUintptr" w
+atomic.StoreUintptr($0)
 endsnippet
 
 snippet aau "atomic.AddUint32" w
