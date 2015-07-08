@@ -24,10 +24,10 @@ augroup GUNS
 
     " Quickfix / Location List
     autocmd QuickFixCmdPost *
-        \ cwindow
+        \ cwindow | wincmd p
     autocmd FileType qf
-        \ execute 'noremap <buffer> x :<C-u>call setqflist([]) \| call setloclist(0, []) \| cclose<CR>' |
-        \ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| call setqflist([]) \| topleft lwindow \| cclose<CR>' |
+        \ execute 'noremap <buffer> x :<C-u>call setloclist(0, []) \| lclose \| call setqflist([]) \| cclose<CR>' |
+        \ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| topleft lwindow \| call setqflist([]) \| cclose<CR>' |
         \ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>' |
         \ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>'
 
