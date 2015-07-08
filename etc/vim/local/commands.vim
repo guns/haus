@@ -680,24 +680,6 @@ function! s:Tabmove(n)
     endif
 endfunction
 
-command! -bar RunCurrentMiniTestCase call <SID>RunCurrentMiniTestCase() "{{{1
-" Run a single MiniTest::Spec test case
-function! s:RunCurrentMiniTestCase()
-    " Get the line number for the last assertion
-    let line = search('\vit .* do', 'bcnW')
-    if !line | return | endif
-
-    " Construct the test name
-    let rbstr = matchlist(getline(line), '\vit (.*) do')[1]
-    let reg_save = @r
-    execute 'ruby VIM.command(%q(let @r = "%s") % ' . rbstr . '.gsub(/\W+/, %q(_)).downcase)'
-    let name = @r
-    let @r = reg_save
-
-    " Run the test
-    execute 'Sh ruby % --name /test.*' . name . '/ | $PAGER'
-endfunction
-
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! s:MapReadlineUnicodeBindings()
     let inputrc = expand('~/.inputrc.d/utf-8')

@@ -81,8 +81,7 @@ augroup GUNS
         \ setlocal filetype=ruby
     autocmd FileType ruby,eruby
         \ setlocal makeprg=rake iskeyword+=? iskeyword+=! |
-        \ execute 'noremap  <buffer> <Leader>R :<C-u>RunCurrentMiniTestCase<CR>' |
-        \ execute 'noremap! <buffer> <C-l>     <Space>=><Space>' |
+        \ execute 'noremap! <buffer> <C-l> <Space>=><Space>' |
         \ SetWhitespace 2 8
 
     " Python {{{1
