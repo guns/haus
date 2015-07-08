@@ -354,13 +354,14 @@ noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'f
 " VIMEDITBINDINGS
 noremap <Leader>ea       :<C-u>TabOpen $cdhaus/etc/vim/local/autocommands.vim \| lcd $cdhaus<CR>
 noremap <Leader>eA       :<C-u>TabOpen ~/.mutt/aliases \| lcd ~/.mutt<CR>
-noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
 noremap <Leader>eb       :<C-u>TabOpen $cdhaus/etc/bashrc.d/interactive.bash \| lcd $cdhaus<CR>
 noremap <Leader>eB       :<C-u>TabOpen $cdhaus/etc/bashrc \| lcd $cdhaus<CR>
 noremap <Leader>ec       :<C-u>TabOpen $cdhaus/etc/vim/local/commands.vim \| lcd $cdhaus<CR>
-noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf \| lcd $cddnsmasq<CR>
+noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf \| lcd $cdetc<CR>
 noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
+noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
+noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc \| setlocal filetype=conf<CR>
 noremap <Leader>ei       :<C-u>TabOpen $cdhaus/etc/inputrc \| lcd $cdhaus<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/iptables/iptables.sh \| lcd /etc<CR>
 noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/\%lein/profiles.clj \| lcd $cdhaus<CR>
