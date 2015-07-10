@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+puts %x(dig +short txt _netblocks.google.com).scan(/ip4:(\S+)/).join(" ")
