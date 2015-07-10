@@ -790,7 +790,7 @@ HAVE vim && {
     alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
-    alias vimdnsmasq='vim "$cddnsmasq/dnsmasq.conf" -c "lcd "\$cdetc"'
+    alias vimdnsmasq='vim "$cddnsmasq/dnsmasq.conf" -c "lcd \$cdetc"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'
