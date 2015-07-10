@@ -24,7 +24,7 @@ augroup GUNS
 
     " Quickfix / Location List
     autocmd QuickFixCmdPost *
-        \ cwindow | wincmd p
+        \ cwindow | if len(getqflist()) > 0 | wincmd p | endif
     autocmd FileType qf
         \ execute 'noremap <buffer> x :<C-u>call setloclist(0, []) \| lclose \| call setqflist([]) \| cclose<CR>' |
         \ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| topleft lwindow \| call setqflist([]) \| cclose<CR>' |
