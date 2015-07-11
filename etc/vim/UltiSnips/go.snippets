@@ -286,7 +286,7 @@ endsnippet
 
 snippet ifer "if err != nil { return err }" w
 if ${1:err} != nil {
-	return $1$0
+	return $0$1
 }
 endsnippet
 
@@ -385,7 +385,15 @@ go func() {
 endsnippet
 
 snippet rf "ioutil.ReadFile()" w
-ioutil.ReadFile($0)
+$1, ${2:err} ${3::}= ioutil.ReadFile($0)
+endsnippet
+
+snippet rall "ioutil.ReadAll()" w
+$1, ${2:err} ${3::}= ioutil.ReadAll($0)
+endsnippet
+
+snippet wf "ioutil.WriteFile()" w
+${1:err} ${2::}= ioutil.WriteFile(${3:path}, ${4:bytes}, ${5:0644})
 endsnippet
 
 snippet O "file, err := os.Open(…)" w
@@ -393,7 +401,10 @@ ${1:file}, ${2:err} ${3::}= os.Open($4)
 if $2 != nil {
 	return ${5:$2}
 }
-${6:defer }$1.Close()
+$0
+if $2 = $1.Close(); $2 != nil {
+	return $5
+}
 endsnippet
 
 snippet W "file, err := os.Create(…)" w
@@ -401,7 +412,14 @@ ${1:file}, ${2:err} ${3::}= os.Create($4)
 if $2 != nil {
 	return ${5:$2}
 }
-${6:defer }$1.Close()
+$0
+if $2 = $1.Close(); $2 != nil {
+	return $5
+}
+endsnippet
+
+snippet rm "os.Remove()" w
+${1:err} ${2::}= os.Remove($0)
 endsnippet
 
 snippet md "os.MkdirAll" w
@@ -522,8 +540,8 @@ snippet ali "atomic.LoadInt32" w
 atomic.LoadInt32($0)
 endsnippet
 
-snippet alp "atomic.LoadUintptr" w
-atomic.LoadUintptr($0)
+snippet alp "atomic.LoadPointer" w
+atomic.LoadPointer($0)
 endsnippet
 
 snippet asu "atomic.StoreUint32" w
@@ -534,8 +552,8 @@ snippet asi "atomic.StoreInt32" w
 atomic.StoreInt32($0)
 endsnippet
 
-snippet asp "atomic.StoreUintptr" w
-atomic.StoreUintptr($0)
+snippet asp "atomic.StorePointer" w
+atomic.StorePointer($0)
 endsnippet
 
 snippet aau "atomic.AddUint32" w
