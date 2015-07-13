@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'csv'
+
+URL = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
+
+csv = IO.popen ['curl', URL] do |io|
+  CSV.parse io.read
+end
+
+csv.shift if csv[0][0] == 'Name'
+
+puts csv.map { |row|
+  title, fullname, desc, loc, coord, url, version, dnssec, nologs, namecoin, addr, name, pubkey, pubkey_txt = row
+  host, port = addr.split ':', 2
+
+  <<-EOF
+# #{fullname}
+# #{desc}
+# #{loc}#{" (#{coord})" if coord}
+# #{url} (#{title})
+# NOLOGS: #{nologs}, DNSSEC: #{dnssec}, Namecoin: #{namecoin}
+# Version: #{version}
+# DNSCRYPT_PROVIDER_NAME=#{name}
+# DNSCRYPT_PROVIDER_KEY=#{pubkey}
+# DNSCRYPT_RESOLVERIP=#{host}
+# DNSCRYPT_RESOLVERPORT=#{port || '443'}
+  EOF
+}.join("\n")
