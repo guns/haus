@@ -625,7 +625,7 @@ function! s:Qfdo(expr)
     let qflist = getqflist()
     for item in qflist
         execute item['bufnr'] . 'buffer!'
-        execute item['lnum'] . a:expr
+        execute a:expr
     endfor
 endfunction
 
