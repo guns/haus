@@ -1922,7 +1922,7 @@ set menu_scroll=yes
 # The name of the MH sequence used for unseen messages.
 #
 
-set mime_forward=yes
+set mime_forward=ask-no
 #
 # Name: mime_forward
 # Type: quadoption
