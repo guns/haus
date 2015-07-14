@@ -20,19 +20,19 @@ elif ${1:[[ $2 ]]}; then
 	$0
 endsnippet
 
-snippet for "for loop"
+snippet fori "for loop"
 for ((${1:i} = 0; $1 < ${2:count}; ${3:++$1})); do
 	$0
 done
 endsnippet
 
-snippet for- "reverse for loop" w
+snippet fori- "reverse for loop" w
 for ((${1:i} = ${2:count}; $1 >= 0; ${3:--$1})); do
 	$0
 done
 endsnippet
 
-snippet fori "for in loop"
+snippet for "for in loop"
 for ${1:var} in ${2:"\$@"}; do
 	$0
 done

@@ -154,9 +154,10 @@ endsnippet
 
 snippet ST "type struct" w
 ${2:/*
- * ${1/./\u$0/g} STRUCT
- */
 
+${1/./\u$0/g} STRUCT
+
+*/
 }type ${1} struct {
 	$0
 }
@@ -164,9 +165,10 @@ endsnippet
 
 snippet IF "type interface" b
 ${2:/*
- * ${1/./\u$0/g} INTERFACE
- */
 
+${1/./\u$0/g} INTERFACE
+
+*/
 }type ${1} interface {
 	$0
 }
@@ -530,6 +532,18 @@ endsnippet
 
 snippet ati "strconv.Atoi" w
 strconv.Atoi($0)
+endsnippet
+
+snippet fi "strconv.FormatInt" w
+strconv.FormatInt($0, ${1:10})
+endsnippet
+
+snippet fu "strconv.FormatUint" w
+strconv.FormatUint($0, ${1:10})
+endsnippet
+
+snippet ff "strconv.FormatFloat" w
+strconv.FormatFloat($0, '${1:beEfgG}', ${2:prec}, ${3:32|64})
 endsnippet
 
 snippet alu "atomic.LoadUint32" w

@@ -388,7 +388,8 @@ noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/Xdefaults \| lcd $cdhaus<CR>
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>
 noremap <Leader>f?       :<C-u>setlocal filetype?<CR>
-noremap <Leader>fc       :<C-u>setlocal filetype=c<CR>
+noremap <Leader>fa       :<C-u>setlocal filetype=asm<CR>
+noremap <Leader>fc       :<C-u>setlocal filetype=conf<CR>
 noremap <Leader>fC       :<C-u>setlocal filetype=clojure<CR>
 noremap <Leader>fd       :<C-u>setlocal filetype=diff<CR>
 noremap <Leader>fg       :<C-u>setlocal filetype=go<CR>
