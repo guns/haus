@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+ARGV.each do |f|
+  url = File.read(f).chomp
+  if url =~ %r{\A\w+://}
+    system 'open', url
+  end
+end
