@@ -859,7 +859,8 @@ HAVE go && {
     gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace() { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
     gobench() { run go test -bench="${1:-.}" "${@:2}"; }
-    golist() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
+    golistfiles() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
+    golistimports() { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
     goupgrade() {
         pushd .
         cdgo
