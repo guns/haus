@@ -31,6 +31,7 @@ qmaps:               https://maps.google.com/maps?q=***
 qmaven:              https://search.maven.org/#search%7Cga%7C1%7C***
 qnewegg:             http://www.newegg.com/Product/ProductList.aspx?Submit=ENE&Description=***
 qnews:               https://news.google.com/news?q=***
+qnull:               http://0.0.0.0/***
 qoctopart:           https://octopart.com/parts/search?q=***
 qphysics:            https://physics.stackexchange.com/search?q=***
 qreddit:             https://www.reddit.com/search?q=***
