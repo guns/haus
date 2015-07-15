@@ -122,8 +122,6 @@ augroup GUNS
 
     " JavaScript {{{1
     autocmd FileType javascript
-        \ let b:jslint_disabled = 1 |
-        \ execute 'noremap <buffer> <Leader><C-l> :JSLintToggle<CR>' |
         \ setlocal tags+=./.jstags,.jstags |
         \ SetWhitespace 2 8
     autocmd FileType coffee
