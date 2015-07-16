@@ -70,6 +70,9 @@ user_pref("general.warnOnAboutConfig", false);
 // Disable closing other tabs warning
 user_pref("browser.tabs.warnOnCloseOtherTabs", false);
 
+// Disable Geolocation
+user_pref("geo.enabled", false);
+
 // Disable Pocket
 user_pref("browser.pocket.api", "");
 user_pref("browser.pocket.enabled", false);
@@ -89,6 +92,23 @@ user_pref("loop.oauth.google.scope", "");
 user_pref("loop.ringtone", "");
 user_pref("loop.server", "");
 user_pref("loop.support_url", "");
+
+// Disable WebRTC
+user_pref("media.getusermedia.aec_enabled", false);
+user_pref("media.getusermedia.agc_enabled", false);
+user_pref("media.getusermedia.browser.enabled", false);
+user_pref("media.getusermedia.noise_enabled", false);
+user_pref("media.getusermedia.screensharing.allow_on_old_platforms", false);
+user_pref("media.getusermedia.screensharing.allowed_domains", "");
+user_pref("media.getusermedia.screensharing.enabled", false);
+user_pref("media.peerconnection.default_iceservers", "");
+user_pref("media.peerconnection.enabled", false);
+user_pref("media.peerconnection.ice.loopback", false);
+user_pref("media.peerconnection.identity.enabled", false);
+user_pref("media.peerconnection.turn.disable", true);
+user_pref("media.peerconnection.use_document_iceservers", false);
+user_pref("media.peerconnection.video.enabled", false);
+user_pref("media.peerconnection.video.h264_enabled", false);
 
 // Scrub external URLs
 user_pref("app.feedback.baseURL", "");
