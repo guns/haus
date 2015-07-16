@@ -31,14 +31,18 @@ class Ipt
         Usage: #{File.basename __FILE__} [options] [command]
 
         Commands:
-            l|list      Print rules (DEFAULT)
-            s|save      Save rules to persistent path
-            r|restore   Restore rules from persistent paths
-            a|accept    Accept INPUT with match on ctstate NEW + extra args
-            o|open      Accept INPUT from [src]:[dport,…] …
-            f|forward   Forward traffic from [src]:[iface] to [dst]:[iface]
-            F|FLUSH     Reset iptables
-            h|help
+            l│list      Print rules (DEFAULT)
+            s│save      Save rules to persistent path
+            r│restore   Restore rules from persistent paths
+            i│in        Accept INPUT from [src]:[dport,…] …
+            I│IN        Accept INPUT with match on ctstate NEW + extra args
+            o│out       Allow OUTPUT to [src]:[dport,…] …
+            O│OUT       Allow OUTPUT with match on ctstate NEW + extra args
+            f│forward   Forward traffic from [src]:[iface] to [dst]:[iface]
+            F│FLUSH     Reset iptables
+            A│ACCEPT    Set policy of tables to ACCEPT
+            D│DROP      Set policy of tables to DROP
+            h│help
 
         Options:
       BANNER
@@ -133,11 +137,7 @@ class Ipt
     end
   end
 
-  def accept_new_input! *args
-    iptables_exec *(%W[--append INPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
-  end
-
-  def open! *args
+  def accept! *args
     args.each do |arg|
       s, p = colon_split arg
       src = maybe_pair %W[--source #{s}]
@@ -149,8 +149,32 @@ class Ipt
       else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
       end
 
-      accept_new_input! *(src + ports)
+      accept_input! *(src + ports)
     end
+  end
+
+  def allow! *args
+    args.each do |arg|
+      s, p = colon_split arg
+      src = maybe_pair %W[--destination #{s}]
+      ps = p.split ','
+
+      ports = case ps.size
+      when 0 then []
+      when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
+      else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
+      end
+
+      allow_output! *(src + ports)
+    end
+  end
+
+  def accept_input! *args
+    iptables_exec *(%W[--insert INPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
+  end
+
+  def allow_output! *args
+    iptables_exec *(%W[--insert OUTPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
   end
 
   def forward! src, dst
@@ -173,13 +197,13 @@ class Ipt
     inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
 
     # Outbound
-    iptables_exec *(%W[--append FORWARD] + outbound + %W[--jump ACCEPT])
+    iptables_exec *(%W[--insert FORWARD 1] + outbound + %W[--jump ACCEPT])
     # Inbound
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[--match conntrack --ctstate ESTABLISHED --jump ACCEPT])
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[--match conntrack --ctstate INVALID     --jump DROP])
-    iptables_exec *(%W[--append FORWARD] + inbound + %W[--protocol icmp                         --jump ACCEPT])
+    iptables_exec *(%W[--insert FORWARD 2] + inbound + %W[--match conntrack --ctstate ESTABLISHED --jump ACCEPT])
+    iptables_exec *(%W[--insert FORWARD 3] + inbound + %W[--match conntrack --ctstate INVALID     --jump DROP])
+    iptables_exec *(%W[--insert FORWARD 4] + inbound + %W[--protocol icmp                         --jump ACCEPT])
     # Enable NAT
-    iptables_exec *(%W[--table nat --append POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
+    iptables_exec *(%W[--table nat --insert POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
   end
 
   def flush_tables!
@@ -195,8 +219,10 @@ class Ipt
     end
   end
 
-  def set_policy! target, table
-    iptables_exec *%W[--policy #{table} #{target}]
+  def set_policy! target, *tables
+    tables.each do |table|
+      iptables_exec *%W[--policy #{table} #{target}]
+    end
   end
 
   def run arguments = []
@@ -206,8 +232,10 @@ class Ipt
     when 'l', 'list', nil then page to_s
     when 's', 'save'      then save_rules!
     when 'r', 'restore'   then restore_rules!
-    when 'a', 'accept'    then accept_new_input! *args.drop(1)
-    when 'o', 'open'      then open! *args.drop(1)
+    when 'i', 'in'        then accept! *args.drop(1)
+    when 'I', 'IN'        then accept_input! *args.drop(1)
+    when 'o', 'out'       then allow! *args.drop(1)
+    when 'O', 'OUT'       then allow_output! *args.drop(1)
     when 'f', 'forward'   then forward! *args.drop(1)
     when 'F', 'FLUSH'     then flush_tables!
     when 'A', 'ACCEPT'    then set_policy! :ACCEPT, *args.drop(1)

@@ -11,11 +11,6 @@ require 'resolv'
 require 'nerv/cli/superparser'
 
 class SSHProxy
-  DNS_SERVERS = [
-    %w[23.226.227.93 443],
-    %w[208.67.220.220 443]
-  ]
-
   DEFAULTS = {
     :sshuttle => 'sshuttle',
     :excluded => nil,
@@ -109,10 +104,10 @@ class SSHProxy
     sh *%W[iptables --policy OUTPUT DROP]
     # except for outbound loopback
     sh *%W[iptables --append OUTPUT --out-interface lo --jump ACCEPT]
-    # dnscrypt-proxy queries to DNS servers
-    DNS_SERVERS.each do |addr, port|
-      sh *%W[iptables --append OUTPUT --protocol udp --destination #{addr} --destination-port #{port} --jump ACCEPT]
-    end unless @dns
+    # DNS queries
+    if not @dns
+      sh *%W[iptables --append OUTPUT --match set --match-set DNS dst --protocol udp --match multiport --destination-ports 53,443 --jump ACCEPT]
+    end
     # local redirects to the sshuttle daemon (from the gateway interface)
     sh *%W[iptables --append OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{@port} --jump ACCEPT]
     # traffic to the remote proxy server
@@ -126,7 +121,7 @@ class SSHProxy
       sh cmd
     end
     # Log the rest
-    sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[OUTPUT DROPPED] '}]
+    sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[SSHPROXY-DROPOUTPUT] '}]
   end
 
   def start_server ssh_host, xargs = []
