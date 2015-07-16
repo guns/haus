@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-puts %x(dig +short txt _netblocks.google.com).scan(/ip4:(\S+)/).join(" ")
+require 'resolv'
+
+puts Resolv::DNS.open { |dns|
+  dns.getresource('_netblocks.google.com', Resolv::DNS::Resource::IN::TXT).data
+}.scan(/ip4:(\S+)/).join(" ")
