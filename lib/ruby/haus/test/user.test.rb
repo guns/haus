@@ -20,7 +20,7 @@ class Haus::UserSpec < MiniTest::Spec
     end
 
     it 'must default to the current user' do
-      Haus::User.new.name.must_equal Etc.getlogin
+      Haus::User.new.name.must_equal ENV['USER'] || Etc.getlogin
     end
 
     it 'must accept the name of a user as a string' do
@@ -78,7 +78,7 @@ class Haus::UserSpec < MiniTest::Spec
       @user.distrusts(tmp_path).must_match /world writable/
 
       # Current-user owned group-writable directory
-      user = Haus::User.new Etc.getlogin
+      user = Haus::User.new ENV['USER'] || Etc.getlogin
       file_path = Tempfile.new(user.name).path
       file_stat = File.stat file_path
       file_stat.uid.must_equal user.uid
@@ -87,7 +87,7 @@ class Haus::UserSpec < MiniTest::Spec
     end
 
     it 'must return nil when a path is fully trusted' do
-      user = Haus::User.new Etc.getlogin
+      user = Haus::User.new ENV['USER'] || Etc.getlogin
       path = Tempfile.new(user.name).path
       stat = File.stat path
       stat.uid.must_equal user.uid

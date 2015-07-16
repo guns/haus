@@ -5,7 +5,7 @@ require 'etc'
 class Haus
   class User < Struct::Passwd
     # Argument can either be a username or UID
-    def initialize user = Etc.getlogin
+    def initialize user = ENV['USER'] || Etc.getlogin
       entry = case user
       when Integer then Etc.getpwuid user
       when String  then Etc.getpwnam user

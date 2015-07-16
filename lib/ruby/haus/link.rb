@@ -32,6 +32,7 @@ class Haus
     end
 
     def run
+      return nil if queue.executed?
       args = super
       raise options.to_s if args.size > 0
       queue.options = options

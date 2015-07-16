@@ -5,6 +5,7 @@ $:.unshift File.expand_path('../../..', __FILE__)
 require 'fileutils'
 require 'haus/link'
 require 'haus/test/helper/dotfile_spec'
+require 'pathname'
 
 class Haus::LinkSpec < DotfileSpec
   before do
@@ -16,8 +17,8 @@ class Haus::LinkSpec < DotfileSpec
   end
 
   describe :options do
-    it 'must provide a --relative option' do
-      must_provide_option :relative, %w[-r --relative], true
+    it 'must provide an --absolute option' do
+      must_provide_option :relative, %w[-a --absolute], false
     end
   end
 
@@ -50,8 +51,8 @@ class Haus::LinkSpec < DotfileSpec
 
     it 'must link all sources as dotfiles' do
       must_result_in_dotfiles do |jobs|
-        jobs.each_value do |s,d|
-          File.readlink(d).must_equal s
+        jobs.each_value do |src, dst|
+          File.readlink(dst).must_equal Haus::Utils.relpath(src, dst)
         end
       end
     end

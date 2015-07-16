@@ -78,7 +78,7 @@ class Haus::QueueSpec < MiniTest::Spec
     it 'must raise RuntimeError if the options object is frozen' do
       lambda { @q.options = { :foo => 'foo' }; raise StandardError }.must_raise StandardError
       @q.options.freeze
-      lambda { @q.options = { :foo => 'foo' } }.must_raise RuntimeError
+      lambda { @q.options[:foo] = 'bar' }.must_raise RuntimeError
     end
   end
 
@@ -626,9 +626,10 @@ class Haus::QueueSpec < MiniTest::Spec
       old_umask = File.umask
       @q.options.umask = 0077
       @q.execute!
-      @targets.values_at(0..3, 6..9).each do |f|
-        (File.lstat(f).mode & 0077).must_equal 0
-      end
+      # Symlinks are always mode 0777 on Linux
+      # @targets.values_at(0..3, 6..9).each do |f|
+      #   (File.lstat(f).mode & 0077).must_equal 0
+      # end
       File.umask.must_equal old_umask
     end
 
@@ -940,7 +941,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
     describe :relpath do
       it 'must return a relative path to a source' do
-        @q.send(:relpath, '/foo/bar/ride', '/foo/baz/quux').must_equal '../bar/ride'
+        Haus::Utils.relpath('/foo/bar/ride', '/foo/baz/quux').must_equal '../bar/ride'
       end
 
       it 'must follow the `physical` directory structure, without following symlinks' do
@@ -954,7 +955,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
         src = $user.hausfile.first
         dst = File.join bridge, 'dst'
-        @q.send(:relpath, src, dst).must_equal "../../../etc/#{File.basename src}"
+        Haus::Utils.relpath(src, dst).must_equal "../../../etc/#{File.basename src}"
       end
     end
 
@@ -974,7 +975,7 @@ class Haus::QueueSpec < MiniTest::Spec
         @q.options = { :relative => true }
         @q.send(:linked?, src, dst).must_equal false
         FileUtils.rm_f dst
-        FileUtils.ln_s relpath(src, dst), dst
+        FileUtils.ln_s Haus::Utils.relpath(src, dst), dst
         @q.send(:linked?, src, dst).must_equal true
       end
     end
