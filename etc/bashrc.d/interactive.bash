@@ -639,8 +639,11 @@ ALIAS ssh='ssh -2' \
 }
 ALIAS scp='scp -2' \
       scpr='scp -r'
-HAVE sshuttle  && TCOMP ssh sshuttle
-HAVE ssh-proxy && TCOMP ssh ssh-proxy
+
+# sshuttle
+HAVE sshuttle         && TCOMP ssh sshuttle
+HAVE ssh-proxy        && TCOMP ssh ssh-proxy
+HAVE sshuttle-domains && TCOMP ssh sshuttle-domains
 
 # lsof
 HAVE lsof && {

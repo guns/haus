@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'resolv'
+
+if ARGV.size < 2
+  abort "USAGE: #{File.basename $0} user@host domain …"
+end
+
+remote, *domains = ARGV
+
+ips = domains.flat_map do |d|
+  as = Resolv.getaddresses d
+  as.empty? ? [d] : as
+end.uniq
+
+cmd = %W[sshuttle --verbose --remote #{ARGV[0]}] + ips
+
+puts cmd.join(" ")
+exec *cmd
