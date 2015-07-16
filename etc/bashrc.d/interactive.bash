@@ -166,7 +166,7 @@ CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg
 CD_FUNC cdwww           /srv/http /srv/www /var/www
 CD_FUNC -x cdapi        "$cdwww/api.dev"
-CD_FUNC -x cdgunsrepl   "$cdhaus/etc/%local/%lib/clojure/guns"
+CD_FUNC -x cdgunsrepl   "$cdhaus/etc/:local/:lib/clojure/guns"
 CD_FUNC cdconfig        ~/.config
 CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
@@ -797,10 +797,10 @@ HAVE vim && {
     alias vimbadhosts='vim "$cdetc/badhosts" -c "lcd \$cdetc" -c "setlocal filetype=conf"'
     alias viminputrc='vim "$cdhaus/etc/inputrc" -c "lcd \$cdhaus"'
     alias vimiptables='vim "$cdetc/iptables/iptables.sh" -c "lcd \$cdetc"'
-    alias vimleinprofiles='vim "$cdhaus/etc/%lein/profiles.clj" -c "lcd \$cdhaus"'
+    alias vimleinprofiles='vim "$cdhaus/etc/:lein/profiles.clj" -c "lcd \$cdhaus"'
     alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'
     alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'
-    alias vimmuttrc='vim "$cdhaus/etc/%mutt/muttrc" -c "lcd \$cdhaus"'
+    alias vimmuttrc='vim "$cdhaus/etc/:mutt/muttrc" -c "lcd \$cdhaus"'
     alias vimnginx='vim "$cdnginx/nginx.conf" -c "lcd \$cdnginx"'
     alias vimorg='vim -c Org!'
     alias vimpacman='vim "$cdetc/pacman.conf" -c "lcd \$cdetc"'
@@ -813,8 +813,8 @@ HAVE vim && {
     alias vimunicode='vim "$cdhaus/share/doc/unicode-table.txt.gz" -c "lcd \$cdhaus"'
     alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'
     alias vimperatorrc='vim "$cdhaus/etc/vimperatorrc" -c "lcd \$cdhaus"'
-    alias vimwm='vim "$cdhaus/etc/%config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
-    alias vimwmkeybindings='vim "$cdhaus/etc/%config/sxhkd/sxhkdrc" -c "lcd \$cdhaus"'
+    alias vimwm='vim "$cdhaus/etc/:config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
+    alias vimwmkeybindings='vim "$cdhaus/etc/:config/sxhkd/sxhkdrc" -c "lcd \$cdhaus"'
     alias vimxinitrc='vim "$cdhaus/etc/xinitrc" -c "lcd \$cdhaus"'
     alias vimxdefaults='vim "$cdhaus/etc/Xdefaults" -c "lcd \$cdhaus"'
 }
