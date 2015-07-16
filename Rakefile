@@ -35,6 +35,10 @@ def dr_chip_plugin name
   }
 end
 
+def vimdiffcmd a, b
+  "edit #{b.shellescape} | diffthis | vsplit #{a.shellescape} | diffthis | tabnew"
+end
+
 task :env do
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
@@ -410,6 +414,13 @@ desc 'Edit bash/readline directory bindings'
 task :dirbindings do
   fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
   exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
+end
+
+desc 'Vimdiff iptables.sh and ipset.conf'
+task :vimdiffiptables do
+  fs = ['/etc/iptables/iptables.sh', 'share/iptables/iptables.sh',
+        '/etc/ipset.conf',           'share/ipset/ipset.conf']
+  exec 'vim', *fs.each_slice(2).reduce([]) { |v, p| v << '-c' << vimdiffcmd(*p) }, '-c', 'tabclose | tabfirst'
 end
 
 namespace :opensearch do

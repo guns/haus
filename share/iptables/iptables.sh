@@ -153,13 +153,19 @@ allow_output --protocol tcp --match multiport --dports 80,443
 allow_output --match set --match-set SSH dst --protocol tcp --match multiport --dports 22
 
 # DNS
-allow_output --match set --match-set DNS dst --protocol udp --dport 53
+allow_output --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
 
 # NTP
 allow_output --match set --match-set NTP dst --protocol udp --dport 123
 
 # sshuttle
 allow_output --destination 127.0.0.1 --protocol tcp --dport 3346
+
+# LAN
+allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
+
+# Git
+allow_output --match set --match-set GIT dst --protocol tcp --dport 9418
 
 # Final DROP rule
 iptables --append OUTPUT --jump DROPOUTPUT
