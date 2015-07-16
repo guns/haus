@@ -44,7 +44,7 @@ done
 # Set default policies
 iptables --policy INPUT   DROP
 iptables --policy FORWARD DROP
-iptables --policy OUTPUT  ACCEPT
+iptables --policy OUTPUT  DROP
 
 # Block IPv6 until hell freezes over
 test -n "$IP6TABLES" || IP6TABLES="$(command -v ip6tables)"
@@ -69,10 +69,21 @@ iptables --new-chain INVALID
 iptables --append    INVALID --jump LOG --log-prefix '[INVALID] '
 iptables --append    INVALID --jump DROP
 
-# iptables --new-chain LOGREJECT
-# iptables --append    LOGREJECT --jump LOG --log-prefix '[LOGREJECT] '
-# iptables --append    LOGREJECT --protocol tcp --jump REJECT --reject-with tcp-reset
-# iptables --append    LOGREJECT --jump DROP
+iptables --new-chain DROPINPUT
+iptables --append    DROPINPUT --jump LOG --log-prefix '[DROPINPUT] '
+iptables --append    DROPINPUT --protocol tcp --jump REJECT --reject-with tcp-reset
+iptables --append    DROPINPUT --jump DROP
+
+iptables --new-chain DROPOUTPUT
+iptables --append    DROPOUTPUT --jump LOG --log-prefix '[DROPOUTPUT] '
+iptables --append    DROPOUTPUT --protocol tcp --jump REJECT --reject-with tcp-reset
+iptables --append    DROPOUTPUT --jump DROP
+
+iptables --new-chain DROPFORWARD
+iptables --append    DROPFORWARD --jump LOG --log-prefix '[DROPFORWARD] '
+iptables --append    DROPFORWARD --protocol tcp --jump REJECT --reject-with tcp-reset
+iptables --append    DROPFORWARD --jump DROP
+
 
 #
 # Minimal Rules
@@ -96,45 +107,65 @@ minimal_passthrough() {
 }
 
 minimal_passthrough INPUT
-# minimal_passthrough OUTPUT
+minimal_passthrough OUTPUT
 
 #
-# Filters
+# INPUT
 #
 
-# Filter by ipset
-# iptables --append OUTPUT --match set --match-set exfiltration dst --jump LOGREJECT
-
-#
-# Services
-#
-
-accept_new() { "$IPTABLES" --append INPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+accept_input() { iptables --append INPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
 
 # SSH
-# accept_new --protocol tcp --dport 22
+# accept_input --protocol tcp --dport 22
 
 # HTTP
-# accept_new --protocol tcp --dport 80
-# accept_new --protocol tcp --dport 443
-# accept_new --protocol tcp --match multiport --dports 80,443
+# accept_input --protocol tcp --dport 80
+# accept_input --protocol tcp --dport 443
+# accept_input --protocol tcp --match multiport --dports 80,443
 
 # DHCP
-# accept_new --protocol udp --in-interface eth0 --sport 67:68 --dport 67:68
+# accept_input --protocol udp --in-interface eth0 --sport 67:68 --dport 67:68
 
 # DNS
-# accept_new --protocol udp --in-interface eth0 --dport 53
+# accept_input --protocol udp --in-interface eth0 --dport 53
 
 # NFS
-# accept_new --protocol udp --dport 111
-# accept_new --protocol tcp --match multiport --dports 111,2049,32767
+# accept_input --protocol udp --dport 111
+# accept_input --protocol tcp --match multiport --dports 111,2049,32767
 
 # Samba
-# accept_new --protocol udp --dport 137:138
-# accept_new --protocol tcp --match multiport --dports 139,445
+# accept_input --protocol udp --dport 137:138
+# accept_input --protocol tcp --match multiport --dports 139,445
+
+# Final DROP rule
+iptables --append INPUT --jump DROPINPUT
 
 #
-# NAT
+# OUTPUT
+#
+
+allow_output() { iptables --append OUTPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+
+# HTTP
+allow_output --protocol tcp --match multiport --dports 80,443
+
+# SSH
+allow_output --match set --match-set SSH dst --protocol tcp --match multiport --dports 22
+
+# DNS
+allow_output --match set --match-set DNS dst --protocol udp --dport 53
+
+# NTP
+allow_output --match set --match-set NTP dst --protocol udp --dport 123
+
+# sshuttle
+allow_output --destination 127.0.0.1 --protocol tcp --dport 3346
+
+# Final DROP rule
+iptables --append OUTPUT --jump DROPOUTPUT
+
+#
+# FORWARD
 #
 
 forward_interface() {
@@ -164,5 +195,8 @@ forward_host() {
 }
 
 # forward_interface eth0 wlan0
+
+# Final DROP rule
+iptables --append FORWARD --jump DROPFORWARD
 
 echo 'OK'
