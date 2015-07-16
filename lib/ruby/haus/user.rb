@@ -21,7 +21,7 @@ class Haus
 
     # Return hierfile as a home dotfile
     def hier src, prefix
-      dir + '/.' + src.sub(%r{\A#{prefix}/?}, '').split('/').map { |d| d.sub /\A%/, '' }.join('/')
+      dir + '/.' + src.sub(%r{\A#{prefix}/?}, '').split('/').map { |d| d.sub /\A:/, '' }.join('/')
     end
 
     # Returns a string describing why the given path is not trusted, where

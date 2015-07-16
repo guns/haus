@@ -87,11 +87,11 @@ class Haus
           touch f
           [File.expand_path(d), dot(d)]
         when :hier
-          d = '%' + randstr
+          d = ':' + randstr
           f = File.join d, randstr
           mkdir d
           touch f
-          dst = File.join dir, d.sub(/\A%/, '.'), File.basename(f)
+          dst = File.join dir, d.sub(/\A:/, '.'), File.basename(f)
           garbage.push File.dirname(dst) # Explicitly remove parent
           [File.expand_path(f), dst]
         when :link
