@@ -9,12 +9,12 @@ end
 
 remote, *domains = ARGV
 
-ips = domains.flat_map do |d|
+addrs = domains.flat_map do |d|
   as = Resolv.getaddresses d
   as.empty? ? [d] : as
 end.uniq
 
-cmd = %W[sshuttle --verbose --listen 127.0.0.1:3346 --remote #{ARGV[0]}] + ips
+cmd = %W[sshuttle --verbose --listen 127.0.0.1:4 --remote #{ARGV[0]}] + addrs
 
 puts cmd.join(" ")
 exec *cmd

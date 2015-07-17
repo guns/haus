@@ -11,7 +11,7 @@ require 'shellwords'
 class Localmitmproxy
   DEFAULTS = {
     :intercept_ports => [80, 443, 8080, 8443],
-    :proxy_port => 3346,
+    :proxy_port => 4,
     :dump => false,
     :stream => nil
   }

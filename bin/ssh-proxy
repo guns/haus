@@ -16,7 +16,7 @@ class SSHProxy
     :excluded => nil,
     :commands => nil,
     :firewall_commands => nil,
-    :port => 3346,
+    :port => 4,
     :dns => true,
     :quiet => false,
     :verbose => false,
