@@ -28,6 +28,7 @@ cd ~/Downloads
 /usr/bin/kupfer --no-splash &
 xautolock-launch &
 dropoutputnotify &
+gpg-connect-agent /bye &
 
 popd
 
