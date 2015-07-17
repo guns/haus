@@ -390,6 +390,7 @@ task :chown do
     u = ENV['SUDO_USER']
     chown_R u, nil, 'etc/vim/UltiSnips'
     chown_R u, nil, 'etc/:local/:lib/clojure/guns'
+    chown_R u, nil, 'etc/:local/:pkg/:go/:src/:github.com/:guns/dropoutputnotify'
   end
 end
 
