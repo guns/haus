@@ -255,6 +255,22 @@ snippet bb "bytes.Buffer" w
 bytes.Buffer
 endsnippet
 
+snippet bi "bytes.Index()" w
+bytes.Index(${1:haystack}, ${0:needle})
+endsnippet
+
+snippet bib "bytes.IndexByte()" w
+bytes.IndexByte(${1:haystack}, ${0:needle})
+endsnippet
+
+snippet si "strings.Index()" w
+strings.Index(${1:haystack}, ${0:needle})
+endsnippet
+
+snippet sib "strings.IndexByte()" w
+strings.IndexByte(${1:haystack}, ${0:needle})
+endsnippet
+
 snippet ap "append" w
 $1 = append(${1}, $0)
 endsnippet
@@ -580,6 +596,10 @@ endsnippet
 
 snippet aai "atomic.AddInt32" w
 atomic.AddInt32($0)
+endsnippet
+
+snippet ns "bufio.NewScanner()" w
+bufio.NewScanner($0)
 endsnippet
 
 # vim:ft=snippets:
