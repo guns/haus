@@ -66,6 +66,7 @@ if exists('+breakindent')
 endif
 
 " Completions
+set completeopt-=preview        " Disable omnicomplete preview window
 set wildmode=list:longest       " Bash style command line completion
 if exists('&wildignorecase')
     set wildignorecase          " Case insensitive file completion on command line
