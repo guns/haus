@@ -161,11 +161,11 @@ allow_output --match set --match-set DNS dst --protocol udp --match multiport --
 # NTP
 allow_output --match set --match-set NTP dst --protocol udp --dport 123
 
-# LAN
-allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
-
 # REDIRECT to local sshuttle proxy from gateway interface
 allow_output --destination 127.0.0.1 --protocol tcp --dport 4
+
+# LAN
+allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
 
 # Final DROP rule
 iptables --append OUTPUT --jump DROPOUTPUT
