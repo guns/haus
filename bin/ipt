@@ -10,11 +10,13 @@ require 'shellwords'
 
 class Ipt
   DEFAULTS = {
-    :protocol => 'tcp',
-    :ipv4     => true,
-    :ipv6     => false,
-    :save4    => '/etc/iptables/iptables.rules',
-    :save6    => '/etc/iptables/ip6tables.rules'
+    :protocol           => 'tcp',
+    :ipv4               => true,
+    :ipv6               => false,
+    :save4              => '/etc/iptables/iptables.rules',
+    :save6              => '/etc/iptables/ip6tables.rules',
+    :drop_input_target  => 'DROPINPUT',
+    :drop_output_target => 'DROPOUTPUT'
   }
 
   TABLES = %w[filter nat mangle raw security]
@@ -24,11 +26,12 @@ class Ipt
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 32 do |opt|
+      prog = File.basename __FILE__
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         iptables and ip6tables wrapper.
 
-        Usage: #{File.basename __FILE__} [options] [command]
+        Usage: #{prog} [options] [command]
 
         Commands:
             l│list      Print rules (DEFAULT)
@@ -36,12 +39,19 @@ class Ipt
             r│restore   Restore rules from persistent paths
             i│in        Accept INPUT from [src]:[dport,…] …
             I│IN        Accept INPUT with match on ctstate NEW + extra args
+           di│dropin    Drop INPUT from [src]:[dport,…] …
+           DI│DROPIN    Drop INPUT with match on ctstate NEW + extra args
             o│out       Allow OUTPUT to [src]:[dport,…] …
             O│OUT       Allow OUTPUT with match on ctstate NEW + extra args
+           do│dropout   Drop OUTPUT to [src]:[dport,…] …
+           DO│DROPOUT   Drop OUTPUT with match on ctstate NEW + extra args
             f│forward   Forward traffic from [src]:[iface] to [dst]:[iface]
             F│FLUSH     Reset iptables
-            A│ACCEPT    Set policy of tables to ACCEPT
-            D│DROP      Set policy of tables to DROP
+            p│policy    Set policy of tables to (A)ccept|(D)rop
+             │            e.g. #{prog} p A INPUT OUTPUT FORWARD
+            d│delete    Delete rules
+             │            e.g. #{prog} in 192.168.1.0/24
+             │                 #{prog} delete in 192.168.1.0/24
             h│help
 
         Options:
@@ -67,6 +77,14 @@ class Ipt
         @protocol = 'udp'
       end
 
+      opt.on '--drop-input-target TARGET', "Preferred --jump target when dropping INPUT packets; DEFAULT=#{@drop_input_target}" do |arg|
+        @drop_input_target = arg
+      end
+
+      opt.on '--drop-output-target TARGET', "Preferred --jump target when dropping OUTPUT packets; DEFAULT=#{@drop_output_target}" do |arg|
+        @drop_output_target = arg
+      end
+
       opt.on '--save4 PATH', "Persistent iptables rules path; DEFAULT=#{@save4}" do |arg|
         @save4 = File.expand_path arg
       end
@@ -78,14 +96,17 @@ class Ipt
   end
 
   def sh *args
-    warn args.join(' ')
+    # Hack to suppress output on [:out, :err] => '/dev/null'
+    warn args.join(' ') unless args.last.is_a? Hash
     system *args
   end
 
   def iptables_exec *args
-    [[@ipv4, 'iptables'], [@ipv6, 'ip6tables']].each do |(enabled, cmd)|
-      sh cmd, *args if enabled
+    n = 0
+    [[@ipv4, 'iptables', 1<<0], [@ipv6, 'ip6tables', 1<<1]].each do |(enabled, cmd, bit)|
+      n |= (sh cmd, *args if enabled) ? bit : 0
     end
+    n
   end
 
   def colon_split arg
@@ -137,47 +158,117 @@ class Ipt
     end
   end
 
-  def accept! *args
-    args.each do |arg|
-      s, p = colon_split arg
-      src = maybe_pair %W[--source #{s}]
-      ps = p.split ','
+  def match_addr src_or_dst, addr
+      h, p = colon_split addr
+      src = maybe_pair %W[--#{src_or_dst} #{h}]
 
+      ps = p.split ','
       ports = case ps.size
       when 0 then []
       when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
       else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
       end
 
-      accept_input! *(src + ports)
+      src + ports
+  end
+
+  def accept_input_rule *args
+    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', 'ACCEPT']
+  end
+
+  def drop_input_rule *args
+    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', drop_input_target]
+  end
+
+  def allow_output_rule *args
+    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', 'ACCEPT']
+  end
+
+  def drop_output_rule *args
+    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', drop_output_target]
+  end
+
+  def check_and_insert! *rule
+    if iptables_exec('--check', *rule, [:out, :err] => '/dev/null') == 0
+      iptables_exec '--insert', *rule
+    end
+  end
+
+  def check_and_delete! *rule
+    if not iptables_exec('--check', *rule, [:out, :err] => '/dev/null') == 0
+      iptables_exec '--delete', *rule
+    end
+  end
+
+  def accept! *args
+    args.each do |arg|
+      check_and_insert! *accept_input_rule(*match_addr(:source, arg))
+    end
+  end
+
+  def delete_accept! *args
+    args.each do |arg|
+      check_and_delete! *accept_input_rule(*match_addr(:source, arg))
+    end
+  end
+
+  def dropin! *args
+    args.each do |arg|
+      check_and_insert! *drop_input_rule(*match_addr(:source, arg))
+    end
+  end
+
+  def delete_dropin! *args
+    args.each do |arg|
+      check_and_delete! *drop_input_rule(*match_addr(:source, arg))
     end
   end
 
   def allow! *args
     args.each do |arg|
-      s, p = colon_split arg
-      src = maybe_pair %W[--destination #{s}]
-      ps = p.split ','
-
-      ports = case ps.size
-      when 0 then []
-      when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
-      else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
-      end
-
-      allow_output! *(src + ports)
+      check_and_insert! *allow_output_rule(*match_addr(:destination, arg))
     end
   end
 
-  def accept_input! *args
-    iptables_exec *(%W[--insert INPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
+  def delete_allow! *args
+    args.each do |arg|
+      check_and_delete! *allow_output_rule(*match_addr(:destination, arg))
+    end
   end
 
-  def allow_output! *args
-    iptables_exec *(%W[--insert OUTPUT] + args + %W[--match conntrack --ctstate NEW --jump ACCEPT])
+  def dropout! *args
+    args.each do |arg|
+      check_and_insert! *drop_output_rule(*match_addr(:destination, arg))
+    end
   end
 
-  def forward! src, dst
+  def delete_dropout! *args
+    args.each do |arg|
+      check_and_delete! *drop_output_rule(*match_addr(:destination, arg))
+    end
+  end
+
+  def drop_input_target
+    @__drop_input_target ||= begin
+      if system 'iptables', '--list-rules', @drop_input_target, [:out, :err] => '/dev/null'
+        @drop_input_target
+      else
+        'DROP'
+      end
+    end
+  end
+
+  def drop_output_target
+    @__drop_output_target ||= begin
+      if system 'iptables', '--list-rules', @drop_output_target, [:out, :err] => '/dev/null'
+        @drop_output_target
+      else
+        'DROP'
+      end
+    end
+  end
+
+  def forwarding_rules src, dst
     src_addr, src_iface = colon_split src
     dst_addr, dst_iface = colon_split dst
 
@@ -196,14 +287,45 @@ class Ipt
     outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
     inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
 
-    # Outbound
-    iptables_exec *(%W[--insert FORWARD 1] + outbound + %W[--jump ACCEPT])
-    # Inbound
-    iptables_exec *(%W[--insert FORWARD 2] + inbound + %W[--match conntrack --ctstate ESTABLISHED --jump ACCEPT])
-    iptables_exec *(%W[--insert FORWARD 3] + inbound + %W[--match conntrack --ctstate INVALID     --jump DROP])
-    iptables_exec *(%W[--insert FORWARD 4] + inbound + %W[--protocol icmp                         --jump ACCEPT])
-    # Enable NAT
-    iptables_exec *(%W[--table nat --insert POSTROUTING] + from_src_addr + to_dst_iface + to_dst_addr + %W[--jump MASQUERADE])
+    [
+      # Outbound
+      ['FORWARD', '1', *outbound, '--jump', 'ACCEPT'],
+      # Inbound
+      ['FORWARD', '2', *inbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', 'ACCEPT'],
+      ['FORWARD', '3', *inbound, '--match', 'conntrack', '--ctstate', 'INVALID',     '--jump', 'DROP'],
+      ['FORWARD', '4', *inbound, '--protocol', 'icmp',                               '--jump', 'ACCEPT'],
+      # Enable NAT
+      ['POSTROUTING', '--table', 'nat', *from_src_addr, *to_dst_iface, *to_dst_addr, '--jump', 'MASQUERADE']
+    ]
+  end
+
+  def forward! src, dst
+    forwarding_rules(src, dst).each do |rule|
+      check_and_insert! *rule
+    end
+  end
+
+  def delete_forward! src, dst
+    forwarding_rules(src, dst).each do |rule|
+      rule.delete_at 1 if rule[1] =~ /\A\d+\z/
+      check_and_delete! *rule
+    end
+  end
+
+  def delete! *args
+    case args.first
+    when 'i', 'in'        then delete_accept! *args.drop(1)
+    when 'I', 'IN'        then check_and_delete! *accept_input_rule(*args.drop(1))
+    when 'di', 'dropin'   then delete_dropin! *args.drop(1)
+    when 'DI', 'DROPIN'   then check_and_delete! *drop_input_rule(*args.drop(1))
+    when 'o', 'out'       then delete_allow! *args.drop(1)
+    when 'O', 'OUT'       then check_and_delete! *allow_output_rule(*args.drop(1))
+    when 'do', 'dropout'  then delete_dropout! *args.drop(1)
+    when 'DO', 'DROPOUT'  then check_and_delete! *drop_output_rule(*args.drop(1))
+    when 'f', 'forward'   then delete_forward! *args.drop(1)
+    else
+      iptables_exec '--delete', *args
+    end
   end
 
   def flush_tables!
@@ -220,8 +342,14 @@ class Ipt
   end
 
   def set_policy! target, *tables
+    policy = case target
+    when /\Aa/i then 'ACCEPT'
+    when /\Ad/i then 'DROP'
+    else
+      raise "Unknown policy: #{target}"
+    end
     tables.each do |table|
-      iptables_exec *%W[--policy #{table} #{target}]
+      iptables_exec *%W[--policy #{table} #{policy}]
     end
   end
 
@@ -233,13 +361,17 @@ class Ipt
     when 's', 'save'      then save_rules!
     when 'r', 'restore'   then restore_rules!
     when 'i', 'in'        then accept! *args.drop(1)
-    when 'I', 'IN'        then accept_input! *args.drop(1)
+    when 'I', 'IN'        then check_and_insert! *accept_input_rule(*args.drop(1))
+    when 'di', 'dropin'   then dropin! *args.drop(1)
+    when 'DI', 'DROPIN'   then check_and_insert! *drop_input_rule(*args.drop(1))
     when 'o', 'out'       then allow! *args.drop(1)
-    when 'O', 'OUT'       then allow_output! *args.drop(1)
+    when 'O', 'OUT'       then check_and_insert! *allow_output_rule(*args.drop(1))
+    when 'do', 'dropout'  then dropout! *args.drop(1)
+    when 'DO', 'DROPOUT'  then check_and_insert! *drop_output_rule(*args.drop(1))
     when 'f', 'forward'   then forward! *args.drop(1)
     when 'F', 'FLUSH'     then flush_tables!
-    when 'A', 'ACCEPT'    then set_policy! :ACCEPT, *args.drop(1)
-    when 'D', 'DROP'      then set_policy! :DROP, *args.drop(1)
+    when 'p', 'policy'    then set_policy! *args.drop(1)
+    when 'd', 'delete'    then delete! *args.drop(1)
     when 'h', 'help'      then puts parser.help
     else abort parser.help
     end
