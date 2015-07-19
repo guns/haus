@@ -159,17 +159,30 @@ class Ipt
   end
 
   def match_addr src_or_dst, addr
-      h, p = colon_split addr
-      src = maybe_pair %W[--#{src_or_dst} #{h}]
+    if addr[0..3] == 'set:'
+      addr = addr[4..-1]
+      isipset = true
+    end
 
-      ps = p.split ','
-      ports = case ps.size
-      when 0 then []
-      when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
-      else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
+    h, p = colon_split addr
+    if isipset
+      if h and h.size > 0
+        src = ['--match', 'set', '--match-set', h, src_or_dst.to_s]
+      else
+        src = []
       end
+    else
+      src = maybe_pair [src_or_dst == :src ? '--source' : '--destination', h]
+    end
 
-      src + ports
+    ps = p.split ','
+    ports = case ps.size
+            when 0 then []
+            when 1 then %W[--protocol #{@protocol} --dport #{ps.first.to_s}]
+            else        %W[--protocol #{@protocol} --match multiport --dports #{ps.join ','}]
+            end
+
+    src + ports
   end
 
   def accept_input_rule *args
@@ -202,49 +215,49 @@ class Ipt
 
   def accept! *args
     args.each do |arg|
-      check_and_insert! *accept_input_rule(*match_addr(:source, arg))
+      check_and_insert! *accept_input_rule(*match_addr(:src, arg))
     end
   end
 
   def delete_accept! *args
     args.each do |arg|
-      check_and_delete! *accept_input_rule(*match_addr(:source, arg))
+      check_and_delete! *accept_input_rule(*match_addr(:src, arg))
     end
   end
 
   def dropin! *args
     args.each do |arg|
-      check_and_insert! *drop_input_rule(*match_addr(:source, arg))
+      check_and_insert! *drop_input_rule(*match_addr(:src, arg))
     end
   end
 
   def delete_dropin! *args
     args.each do |arg|
-      check_and_delete! *drop_input_rule(*match_addr(:source, arg))
+      check_and_delete! *drop_input_rule(*match_addr(:src, arg))
     end
   end
 
   def allow! *args
     args.each do |arg|
-      check_and_insert! *allow_output_rule(*match_addr(:destination, arg))
+      check_and_insert! *allow_output_rule(*match_addr(:dst, arg))
     end
   end
 
   def delete_allow! *args
     args.each do |arg|
-      check_and_delete! *allow_output_rule(*match_addr(:destination, arg))
+      check_and_delete! *allow_output_rule(*match_addr(:dst, arg))
     end
   end
 
   def dropout! *args
     args.each do |arg|
-      check_and_insert! *drop_output_rule(*match_addr(:destination, arg))
+      check_and_insert! *drop_output_rule(*match_addr(:dst, arg))
     end
   end
 
   def delete_dropout! *args
     args.each do |arg|
-      check_and_delete! *drop_output_rule(*match_addr(:destination, arg))
+      check_and_delete! *drop_output_rule(*match_addr(:dst, arg))
     end
   end
 
