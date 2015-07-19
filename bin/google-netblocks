@@ -5,4 +5,4 @@ require 'resolv'
 
 puts Resolv::DNS.open { |dns|
   dns.getresource('_netblocks.google.com', Resolv::DNS::Resource::IN::TXT).data
-}.scan(/ip4:(\S+)/).join(" ")
+}.scan(/ip4:(\S+)/).join("\n")
