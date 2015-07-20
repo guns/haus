@@ -190,7 +190,7 @@ class Ipt
   end
 
   def drop_input_rule *args
-    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', drop_input_target]
+    ['INPUT', *args, '--jump', drop_input_target]
   end
 
   def allow_output_rule *args
@@ -198,7 +198,7 @@ class Ipt
   end
 
   def drop_output_rule *args
-    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', drop_output_target]
+    ['OUTPUT', *args, '--jump', drop_output_target]
   end
 
   def check_and_insert! *rule
