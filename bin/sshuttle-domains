@@ -28,6 +28,8 @@ if args.size < 2
   abort "USAGE: #{File.basename $0} user@host domain …"
 end
 
+$0 = File.basename __FILE__ if $0 == __FILE__
+
 remote, *domains = args
 
 addrs = domains.flat_map do |d|
