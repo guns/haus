@@ -645,7 +645,7 @@ ALIAS scp='scp -2' \
 
 # sshuttle
 HAVE sshuttle         && TCOMP ssh sshuttle
-HAVE ssh-proxy        && TCOMP ssh ssh-proxy
+HAVE sshuttle-proxy   && TCOMP ssh sshuttle-proxy
 HAVE sshuttle-domains && TCOMP ssh sshuttle-domains
 
 # lsof
@@ -726,7 +726,7 @@ HAVE vim && {
             page="${@:i:1}"
             sec=''
 
-            if [[ $page == +([0-9]) ]]; then
+            if [[ "$page" == +([0-9]) ]]; then
                 sec="$page"
                 ((++i))
                 page="${@:i:1}"

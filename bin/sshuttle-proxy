@@ -10,7 +10,7 @@ require 'set'
 require 'resolv'
 require 'nerv/cli/superparser'
 
-class SSHProxy
+class SshuttleProxy
   DEFAULTS = {
     :sshuttle => 'sshuttle',
     :excluded => nil,
@@ -121,7 +121,7 @@ class SSHProxy
       sh cmd
     end
     # Log the rest
-    sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[SSHPROXY-DROPOUTPUT] '}]
+    sh *%W[iptables --append OUTPUT --jump LOG --log-prefix #{'[DROPOUTPUT] '}]
   end
 
   def start_server ssh_host, xargs = []
@@ -165,4 +165,4 @@ class SSHProxy
   end
 end
 
-$0 = File.basename(__FILE__) and SSHProxy.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and SshuttleProxy.new.run ARGV if $0 == __FILE__
