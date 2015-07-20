@@ -800,7 +800,7 @@ HAVE vim && {
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'
-    alias vimbadhosts='vim "$cdetc/badhosts" -c "lcd \$cdetc" -c "setlocal filetype=conf"'
+    alias vimbadhosts='vim "$cdetc/badhosts" -c "lcd \$cdetc"'
     alias vimiptables='vim "$cdetc/iptables/iptables.sh" -c "lcd \$cdetc"'
     alias vimipset='vim "$cdetc/ipset.conf" -c "lcd \$cdetc"'
     alias vimleinprofiles='vim "$cdhaus/etc/:lein/profiles.clj" -c "lcd \$cdhaus"'

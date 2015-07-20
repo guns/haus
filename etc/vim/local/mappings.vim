@@ -361,7 +361,7 @@ noremap <Leader>ed       :<C-u>TabOpen $cddnsmasq/dnsmasq.conf \| lcd $cdetc<CR>
 noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
 noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
-noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc \| setlocal filetype=conf<CR>
+noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc<CR>
 noremap <Leader>ei       :<C-u>TabOpen $cdetc/iptables/iptables.sh \| lcd $cdetc<CR>
 noremap <Leader>eI       :<C-u>TabOpen $cdetc/ipset.conf \| lcd $cdetc<CR>
 noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/:lein/profiles.clj \| lcd $cdhaus<CR>
