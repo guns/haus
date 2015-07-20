@@ -333,16 +333,19 @@ HAVE readelf && { dl() { readelf --dynamic "$@" | pager; }; TCOMP readelf dl; }
 HAVE strings && strings() { command strings --all --radix=x "$@" | pager; }
 
 # find
-f()  { find-wrapper                                      --  "$@"; }; TCOMP find f
-f1() { find-wrapper --predicate '-maxdepth 1'            --  "$@"; }; TCOMP find f1
-ff() { find-wrapper --predicate '( -type f -o -type l )' --  "$@"; }; TCOMP find ff
-fF() { find-wrapper --predicate '-type f'                --  "$@"; }; TCOMP find fF
-fx() { find-wrapper --predicate '-type f -executable'    --  "$@"; }; TCOMP find fx
-fl() { find-wrapper --predicate '-type l'                --  "$@"; }; TCOMP find fl
-fd() { find-wrapper --predicate '-type d'                --  "$@"; }; TCOMP find fd
+f()  { find-wrapper                                      -- "$@"; }; TCOMP find f
+f1() { find-wrapper --predicate '-maxdepth 1'            -- "$@"; }; TCOMP find f1
+ff() { find-wrapper --predicate '( -type f -o -type l )' -- "$@"; }; TCOMP find ff
+fF() { find-wrapper --predicate '-type f'                -- "$@"; }; TCOMP find fF
+fx() { find-wrapper --predicate '-type f -executable'    -- "$@"; }; TCOMP find fx
+fl() { find-wrapper --predicate '-type l'                -- "$@"; }; TCOMP find fl
+fd() { find-wrapper --predicate '-type d'                -- "$@"; }; TCOMP find fd
 
 # Breadth-first search and chdir
 cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
+
+# xargs
+alias x0='xargs -0'
 
 # cp
 alias cp='command cp --verbose --interactive'

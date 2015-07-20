@@ -9,7 +9,10 @@ require 'optparse'
 require 'shellwords'
 
 class FindWrapper
-  DEFAULTS = { :pred => nil, :noop => false }
+  DEFAULTS = {
+    :pred => nil,
+    :noop => false,
+  }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -60,7 +63,13 @@ class FindWrapper
       cmd.push test, make_find_glob(pat), *args.drop(1)
     end
 
-    cmd.push '-print', '-delete' if cmd.delete '-delete'
+    if cmd.delete '-print0'
+      cmd.push '-print0'
+    else
+      cmd.push '-print'
+    end
+
+    cmd.push '-delete' if cmd.delete '-delete'
 
     cmd
   end
