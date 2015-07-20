@@ -104,7 +104,7 @@ class Ipt
   def iptables_exec *args
     n = 0
     [[@ipv4, 'iptables', 1<<0], [@ipv6, 'ip6tables', 1<<1]].each do |(enabled, cmd, bit)|
-      n |= (sh cmd, *args if enabled) ? bit : 0
+      n |= (sh cmd, '--wait', *args if enabled) ? bit : 0
     end
     n
   end
