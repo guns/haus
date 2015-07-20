@@ -32,7 +32,7 @@ func getvalue(s string, key string) string {
 	return ""
 }
 
-func putdropouts(s *bufio.Scanner, c chan string) {
+func putdropouts(c chan string, s *bufio.Scanner) {
 	for s.Scan() {
 		l := s.Text()
 		if strings.Index(l, label) == -1 {
@@ -72,7 +72,7 @@ func main() {
 	s := bufio.NewScanner(stdout)
 	dmesg.Start()
 
-	go putdropouts(s, c)
+	go putdropouts(c, s)
 	time.Sleep(1 * time.Second) // A moment to drain the dmesg buffer
 	go notifydropouts(c)
 
