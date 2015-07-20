@@ -1,20 +1,49 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
+require 'optparse'
 require 'resolv'
 
-if ARGV.size < 2
+def sh *args
+  warn args.join(' ')
+  system *args
+rescue SignalException
+  nil
+end
+
+@port = 4
+@sshuttle_options = []
+
+args = OptionParser.new nil, 28 do |opt|
+  opt.on '-p', '--port N', Integer, "Local proxy port [DEFAULT: #{@port}]" do |arg|
+    @port = arg
+  end
+
+  opt.on '-O', '--sshuttle-options OPTS', "Extra arguments to pass to sshuttle" do |arg|
+    @sshuttle_options.concat arg
+  end
+end.parse ARGV
+
+if args.size < 2
   abort "USAGE: #{File.basename $0} user@host domain …"
 end
 
-remote, *domains = ARGV
+remote, *domains = args
 
 addrs = domains.flat_map do |d|
   as = Resolv.getaddresses d
   as.empty? ? [d] : as
 end.uniq
 
-cmd = %W[sshuttle --verbose --listen 127.0.0.1:4 --remote #{ARGV[0]}] + addrs
+rule = %W[OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{@port} --jump ACCEPT]
 
-puts cmd.join(" ")
-exec *cmd
+begin
+  if not system 'iptables', '--wait', '--check', *rule, [:out, :err] => '/dev/null'
+    sh 'iptables', '--wait', '--insert', *rule
+  end
+  sh 'sshuttle', '--verbose', '--listen', "127.0.0.1:#{@port}", '--remote', ARGV[0], *@sshuttle_options, *addrs
+ensure
+  if system 'iptables', '--wait', '--check', *rule, [:out, :err] => '/dev/null'
+    sh 'iptables', '--wait', '--delete', *rule
+  end
+end
