@@ -271,5 +271,9 @@ augroup GUNS
         \ nmap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)") |
         \ imap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)")
 
+    " password-store {{{1
+    autocmd BufRead,BufNewFile /dev/shm/pass.*
+        \ setlocal nobackup noswapfile noundofile
+
 " }}}1
 augroup END
