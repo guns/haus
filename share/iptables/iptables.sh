@@ -152,14 +152,14 @@ iptables --append OUTPUT --match set --match-set IDENTITY dst --jump DROPOUTPUT
 # HTTP
 allow_output --protocol tcp --match multiport --dports 80,443
 
-# SSH
-allow_output --match set --match-set SSH dst --protocol tcp --match multiport --dports 22
-
 # DNS
 allow_output --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
 
 # NTP
 allow_output --match set --match-set NTP dst --protocol udp --dport 123
+
+# SSH
+allow_output --match set --match-set SSH dst --protocol tcp --match multiport --dports 22
 
 # LAN
 # allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
