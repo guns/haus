@@ -48,7 +48,7 @@ class Dlnode::Pattern
 end
 
 class Dlnode::Resource
-  attr_accessor :url, :referer, :form_data
+  attr_accessor :url, :referer, :form_data, :base_uri
 
   def initialize url = nil, opts = {}
     @url = url
@@ -83,8 +83,8 @@ class Dlnode::Resource
         path = attr ? el.attr(attr) : el.text
       end
 
-      if path and u = urijoin(url, path)
-        r = self.class.new u, :form_data => form_data, :referer => (url if opts[:send_referer] and url !~ %r{\Afile://})
+      if path and u = urijoin(base_uri || url, path)
+        r = self.class.new u, :form_data => form_data, :base_uri => base_uri, :referer => (url if opts[:send_referer] and url !~ %r{\Afile://})
         r = nil if pattern.regexp and u !~ pattern.regexp
       end
 
