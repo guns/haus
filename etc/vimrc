@@ -73,7 +73,7 @@ if exists('&wildignorecase')
 endif
 
 " Folding
-set foldmethod=syntax           " Default to syntax folding
+set foldmethod=manual           " Default to manual folding (the folding code is nasty)
 set foldlevelstart=99           " But don't fold anything on load
 set foldtext=getline(v:foldstart) " Just show the line itself when folded
 

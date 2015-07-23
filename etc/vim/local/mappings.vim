@@ -328,7 +328,7 @@ noremap <Leader>sa       :<C-u>let cbuf = expand('%:p') \| execute 'args `git ls
 noremap <Leader>?sa      :<C-u>Capture args<CR>
 noremap <Leader>sc       :<C-u>call Prompt('colorscheme ', '', 'color')<CR>
 noremap <Leader>?sc      :<C-u>colorscheme<CR>
-noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'marker')<CR>
+noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'syntax')<CR>
 noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
 noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '0') \| syntax sync fromstart<CR>
 noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
