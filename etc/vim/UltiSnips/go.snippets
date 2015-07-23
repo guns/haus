@@ -82,6 +82,7 @@ endsnippet
 
 snippet bench "Benchmark" b
 func Benchmark$1(b *testing.B) {
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		$0
 	}
@@ -100,6 +101,10 @@ endsnippet
 
 snippet ase "assert.Equal()" w
 assert.Equal(t, ${1:expected}, $0)
+endsnippet
+
+snippet asne "assert.NotEqual()" w
+assert.NotEqual(t, ${1:expected}, $0)
 endsnippet
 
 snippet asf "assert.False()" w
@@ -308,7 +313,7 @@ if ${1:err} != nil {
 }
 endsnippet
 
-snippet ifle "if err := f(); err != nil …" w
+snippet ifER "if err := f(); err != nil …" w
 if ${1:err} ${2::}= $3; $1 != nil {
 	return $1$0
 }
