@@ -862,9 +862,10 @@ ALIAS mk='make' \
 # golang
 HAVE go && {
     gobuild() { run go build -v "$@"; }
+    goinstall() { run go install -v "$@"; }
     gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace() { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
-    gobench() { run go test -bench="${1:-.}" "${@:2}"; }
+    gobench() { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
     golistfiles() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports() { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
     goupgrade() {
