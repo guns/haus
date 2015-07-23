@@ -84,9 +84,8 @@ iptables --append    DROPFORWARD --jump LOG --log-prefix '[DROPFORWARD] '
 iptables --append    DROPFORWARD --protocol tcp --jump REJECT --reject-with tcp-reset
 iptables --append    DROPFORWARD --jump DROP
 
-
 #
-# Minimal Rules
+# Functions
 #
 
 minimal_passthrough() {
@@ -106,14 +105,40 @@ minimal_passthrough() {
     iptables --append "$chain" --protocol icmp --jump ACCEPT
 }
 
-minimal_passthrough INPUT
-minimal_passthrough OUTPUT
+accept_input() { iptables --append INPUT  "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+allow_output() { iptables --append OUTPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+
+forward_interface() {
+    test $# -eq 2 || return 1
+    local in="$1" out="$2"
+    # Outbound
+    iptables --append FORWARD --in-interface "$in" --out-interface "$out" --jump ACCEPT
+    # Inbound
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate INVALID     --jump INVALID
+    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --protocol icmp                         --jump ACCEPT
+    # Enable NAT
+    iptables --table nat --append POSTROUTING --out-interface "$out" --jump MASQUERADE
+}
+
+forward_host() {
+    test $# -eq 1 || return 1
+    local host="$1"
+    # Outbound
+    iptables --append FORWARD --source "$host" --jump ACCEPT
+    # Inbound
+    iptables --append FORWARD --destination "$host" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
+    iptables --append FORWARD --destination "$host" --match conntrack --ctstate INVALID     --jump INVALID
+    iptables --append FORWARD --destination "$host" --protocol icmp                         --jump ACCEPT
+    # Enable NAT
+    iptables --table nat --append POSTROUTING --source "$host" --jump MASQUERADE
+}
 
 #
 # INPUT
 #
 
-accept_input() { iptables --append INPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+minimal_passthrough INPUT
 
 # SSH
 # accept_input --protocol tcp --dport 22
@@ -144,7 +169,7 @@ iptables --append INPUT --jump DROPINPUT
 # OUTPUT
 #
 
-allow_output() { iptables --append OUTPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+minimal_passthrough OUTPUT
 
 # Domains that need stable source IPs
 iptables --append OUTPUT --match set --match-set IDENTITY dst --jump DROPOUTPUT
@@ -170,32 +195,6 @@ iptables --append OUTPUT --jump DROPOUTPUT
 #
 # FORWARD
 #
-
-forward_interface() {
-    test $# -eq 2 || return 1
-    local in="$1" out="$2"
-    # Outbound
-    iptables --append FORWARD --in-interface "$in" --out-interface "$out" --jump ACCEPT
-    # Inbound
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --match conntrack --ctstate INVALID     --jump INVALID
-    iptables --append FORWARD --in-interface "$out" --out-interface "$in" --protocol icmp                         --jump ACCEPT
-    # Enable NAT
-    iptables --table nat --append POSTROUTING --out-interface "$out" --jump MASQUERADE
-}
-
-forward_host() {
-    test $# -eq 1 || return 1
-    local host="$1"
-    # Outbound
-    iptables --append FORWARD --source "$host" --jump ACCEPT
-    # Inbound
-    iptables --append FORWARD --destination "$host" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    iptables --append FORWARD --destination "$host" --match conntrack --ctstate INVALID     --jump INVALID
-    iptables --append FORWARD --destination "$host" --protocol icmp                         --jump ACCEPT
-    # Enable NAT
-    iptables --table nat --append POSTROUTING --source "$host" --jump MASQUERADE
-}
 
 # forward_interface eth0 wlan0
 
