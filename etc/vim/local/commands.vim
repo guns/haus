@@ -569,16 +569,16 @@ function! s:GoBufferSetup()
     noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
     noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR>
-    noremap  <buffer> <LocalLeader>E     :<C-u>GoErrCheck!<CR>
+    noremap  <buffer> <LocalLeader>E     :<C-u>GoErrCheck -asserts -blank<CR>
     nmap     <buffer> <LocalLeader>i     <Plug>(go-implements)
     noremap  <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>
-    noremap  <buffer> <LocalLeader>l     :<C-u>GoLint<CR>
+    noremap  <buffer> <LocalLeader>l     :<C-u>GoLint .<CR>
     noremap  <buffer> <LocalLeader>L     :<C-u>!go list -f "{{.GoFiles}}"<Space>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
-    nmap     <buffer> <LocalLeader>t     :<C-u>GoTest -tags\ test<CR>
-    nmap     <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags\ test<CR>
-    nmap     <buffer> <LocalLeader>v     <Plug>(go-vet)
+    nmap     <buffer> <LocalLeader>t     :<C-u>GoTest -tags test<CR>
+    nmap     <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags test<CR>
+    nmap     <buffer> <LocalLeader>v     :<C-u>GoVet -test=true .<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)
