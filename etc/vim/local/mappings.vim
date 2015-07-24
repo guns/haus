@@ -563,8 +563,8 @@ noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
 noremap  <4-G>            q:iGgrep! -Pi<Space>
-nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/)<CR>
-vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/)<CR>
+nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/, 1)<CR>
+vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/, 1)<CR>
 
 " Plugin: Manpageview
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>
