@@ -173,6 +173,7 @@ minimal_passthrough OUTPUT
 
 # Domains that need stable source IPs
 iptables --append OUTPUT --match set --match-set IDENTITY dst --jump DROPOUTPUT
+iptables --append OUTPUT --match set --match-set GOOGLE   dst --jump DROPOUTPUT
 
 # HTTP
 allow_output --protocol tcp --match multiport --dports 80,443
