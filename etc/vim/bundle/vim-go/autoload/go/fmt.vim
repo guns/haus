@@ -113,7 +113,7 @@ function! go#fmt#Format(withGoimport)
 
         " Replace current file with temp file, then reload buffer
         call rename(l:tmpname, expand('%'))
-        edit!
+        silent edit!
         let &syntax = &syntax
 
         " only clear quickfix if it was previously set, this prevents closing
