@@ -576,9 +576,9 @@ function! s:GoBufferSetup()
     noremap  <buffer> <LocalLeader>L     :<C-u>!go list -f "{{.GoFiles}}"<Space>
     nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
-    nmap     <buffer> <LocalLeader>t     :<C-u>GoTest -tags test<CR>
-    nmap     <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags test<CR>
-    nmap     <buffer> <LocalLeader>v     :<C-u>GoVet -test=true .<CR>
+    noremap  <buffer> <LocalLeader>t     :<C-u>GoTest -tags test<CR>
+    noremap  <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags test<CR>
+    noremap  <buffer> <LocalLeader>v     :<C-u>GoVet -test=true -shadowstrict=true .<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)
@@ -702,9 +702,11 @@ command! -bar CapturePane call <SID>CapturePane() "{{{1
 function! s:CapturePane()
     " Tmux-esque capture-pane
     let buf = bufnr('%')
-    let tab = len(tabpagebuflist()) > 1
+    let only = len(tabpagebuflist()) == 1 " Only window in current tab?
     wincmd q
-    execute 'normal! ' . (tab ? 'gT' : 'gt')
+    if !only
+        tabprevious
+    endif
     execute buf . 'sbuffer'
     wincmd L
 endfunction
