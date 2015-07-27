@@ -1,0 +1,74 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Addbookmark
+  DEFAULTS = {
+    :dir => File.expand_path('~/Documents/Bookmarks'),
+    :zenity => false
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] URL bookmark-name
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--dir PATH', "Directory to place bookmark file [DEFAULT: #{@dir}]" do |arg|
+        @dir = File.expand_path arg
+      end
+
+      opt.on '-z', '--zenity', "Read URL and bookmark name with zenity" do |arg|
+        @zenity = true
+      end
+    end
+  end
+
+  def write_bookmark url, name
+    return if (url || '').empty? or (name || '').empty?
+
+    File.open File.join(@dir, name + ".url"), 'w' do |f|
+      f.puts url
+    end
+  end
+
+  def query prompt
+    if @zenity
+      %x(zenity --entry --text="#{prompt}")
+    else
+      print "#{prompt} "
+      $stdin.gets "\n"
+    end.chomp
+  end
+
+  def query_url
+    query 'Bookmark URL'
+  end
+
+  def query_name
+    query 'Bookmark name'
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    case args.size
+    when 2 then write_bookmark *args
+    when 1 then write_bookmark args[0], query_name
+    when 0 then write_bookmark query_url, query_name
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Addbookmark.new.run ARGV if $0 == __FILE__
