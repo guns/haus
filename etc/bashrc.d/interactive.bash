@@ -978,6 +978,7 @@ type ruby &>/dev/null && {
                 alias "gem${suf}s=${bin}/gem search --remote"
                 alias "gem${suf}r=${bin}/gem uninstall"
                 # alias gemsync
+                alias "gem${suf}upgrade=${bin}/gem update"
                 alias "gem${suf}outdated=${bin}/gem outdated"
             }
 
