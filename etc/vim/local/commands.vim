@@ -556,29 +556,38 @@ endif
 
 command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
-    noremap! <buffer> <C-h>              <-
-    noremap! <buffer> <C-l>              <Space>:=<Space>
-    nmap     <buffer> K                  <Plug>(go-doc)
-    nmap     <buffer> <C-]>              <Plug>(go-def)
-    nmap     <buffer> <C-w><C-]>         <Plug>(go-def-split)
-    nmap     <buffer> [d                 <Plug>(go-info)
-    nmap     <buffer> ]d                 <Plug>(go-describe)
-    nmap     <buffer> <LocalLeader>b     <Plug>(go-build)
-    noremap  <buffer> <LocalLeader>B     :<C-u>GoOptimizations<CR>
-    noremap  <buffer> <LocalLeader>C     :<C-u>GoCoverage<CR>
-    noremap  <buffer> <LocalLeader>d     :<C-u>GoDoc<Space>
-    noremap  <buffer> <LocalLeader>D     :<C-u>GoDef<Space>
-    noremap  <buffer> <LocalLeader>e     :<C-u>GoErrCheck<CR>
-    noremap  <buffer> <LocalLeader>E     :<C-u>GoErrCheck -asserts -blank<CR>
-    nmap     <buffer> <LocalLeader>i     <Plug>(go-implements)
-    noremap  <buffer> <LocalLeader>I     :<C-u>GoImportAs<Space>
-    noremap  <buffer> <LocalLeader>l     :<C-u>GoLint .<CR>
-    noremap  <buffer> <LocalLeader>L     :<C-u>!go list -f "{{.GoFiles}}"<Space>
-    nmap     <buffer> <LocalLeader>r     <Plug>(go-referrers)
-    nmap     <buffer> <LocalLeader>R     <Plug>(go-rename)
-    noremap  <buffer> <LocalLeader>t     :<C-u>GoTest -tags test<CR>
-    noremap  <buffer> <LocalLeader>T     :<C-u>GoTestFunc -tags test<CR>
-    noremap  <buffer> <LocalLeader>v     :<C-u>GoVet -test=true -shadowstrict=true .<CR>
+    silent GoOracleScope .
+
+    noremap! <buffer> <C-h>          <-
+    noremap! <buffer> <C-l>          <Space>:=<Space>
+    nmap     <buffer> K              <Plug>(go-doc-vertical)
+    nmap     <buffer> <C-]>          <Plug>(go-def)
+    nmap     <buffer> <C-w><C-]>     <Plug>(go-def-split)
+    nmap     <buffer> [c             <Plug>(go-callers)
+    nmap     <buffer> ]c             <Plug>(go-callees)
+    nmap     <buffer> [d             <Plug>(go-info)
+    nmap     <buffer> ]d             <Plug>(go-describe)
+    nmap     <buffer> <LocalLeader>b <Plug>(go-build)
+    noremap  <buffer> <LocalLeader>B :<C-u>GoOptimizations<CR>
+    nmap     <buffer> <LocalLeader>c <Plug>(go-channelpeers)
+    nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
+    noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
+    noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
+    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck ./...<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -asserts -blank ./...<CR>
+    nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
+    vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
+    nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
+    nmap     <buffer> <LocalLeader>I <Plug>(go-install)
+    noremap  <buffer> <LocalLeader>l :<C-u>GoLint ./...<CR>
+    noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope ""<CR>
+    noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope .<CR>
+    nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
+    nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
+    nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
+    noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
+    noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
+    noremap  <buffer> <LocalLeader>v :<C-u>GoVet -test=true -shadowstrict=true .<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)
