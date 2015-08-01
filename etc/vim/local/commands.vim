@@ -556,8 +556,6 @@ endif
 
 command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
-    silent GoOracleScope .
-
     noremap! <buffer> <C-h>          <-
     noremap! <buffer> <C-l>          <Space>:=<Space>
     nmap     <buffer> K              <Plug>(go-doc-vertical)
@@ -580,8 +578,8 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
     nmap     <buffer> <LocalLeader>I <Plug>(go-install)
     noremap  <buffer> <LocalLeader>l :<C-u>GoLint ./...<CR>
-    noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope ""<CR>
-    noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope .<CR>
+    noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope .<CR>
+    noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope ""<CR>
     nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
