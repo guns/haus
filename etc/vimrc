@@ -312,10 +312,11 @@ let g:neomru#file_mru_path = expand('~/.cache/vim/neomru/file')
 let g:neomru#directory_mru_path = expand('~/.cache/vim/neomru/directory')
 
 " Plugin: EasyAlign
+let g:easy_align_ignore_groups = ['Comment', 'String', 'Quote']
 let g:easy_align_delimiters = {
     \ 'l': { 'pattern': '->' },
     \ 't': { 'pattern': ':-' },
-    \ ';': { 'pattern': ';\+', 'ignore_groups': ['String'] }
+    \ ';': { 'pattern': ';\+', 'ignore_groups': ['String', 'Quote'] }
     \ }
 
 " Plugin: vim-go
