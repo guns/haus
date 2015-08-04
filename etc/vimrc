@@ -320,11 +320,12 @@ let g:easy_align_delimiters = {
     \ }
 
 " Plugin: vim-go
-let g:play_browser_command = 'open'
+let g:go_play_browser_command = 'open'
 let g:go_jump_to_error = 0
 let g:go_fmt_command = 'goimports'
-let g:go_fmt_fail_silently = 1
 let g:go_snippet_engine = ''
+let g:go_doc_keywordprg_enabled = 0
+let g:go_def_mapping_enabled = 0
 let g:go_highlight_operators = 1
 let g:go_highlight_functions = 1
 let g:go_highlight_methods = 1
