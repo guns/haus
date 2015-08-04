@@ -48,7 +48,7 @@ endif
 " Dictionaries
 call MkdirIfNotExists('~/.local/share/vim')
 set dictionary+=/usr/share/dict/words
-set thesaurus+=~/.local/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
+set thesaurus+=~/.local/share/vim/mthesaur.txt " http://www.gutenberg.org/dirs/etext02/mthes10.zip
 set spellfile=~/.local/share/vim/spell.utf8.add
 
 " Searching / Matching
