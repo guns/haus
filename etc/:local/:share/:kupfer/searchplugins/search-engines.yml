@@ -21,6 +21,7 @@ qgodoc:              https://godoc.org/?q=***
 qgolang:             https://golang.org/search?q=***
 qgoogle:             https://www.google.com/search?pws=0&tbs=li:1&q=***
 qgroups:             https://groups.google.com/groups/search?q=***
+qgutenberg:          https://www.gutenberg.org/ebooks/search/?query=***
 qhnsearch:           https://hn.algolia.com/?query=***&sort=byPopularity&prefix&page=0&dateRange=all&type=all
 qiconfinder:         https://www.iconfinder.com/search/?q=***
 qifixit:             https://www.ifixit.com/search?x=0&y=0&query=***
