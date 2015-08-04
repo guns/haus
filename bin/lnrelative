@@ -15,9 +15,10 @@ force = false
 parser = OptionParser.new { |opt| opt.on('-f', '--force') { force = true } }
 args = parser.parse ARGV
 
-abort 'USAGE: lnrelative src dst' unless args.size == 2
+abort 'USAGE: lnrelative src [dst]' unless (1..2) === args.size
 
 src, lnk = args
+lnk ||= '.'
 dst = Haus::Utils.relpath src, lnk
 rm_f lnk if force
 ln_s dst, lnk
