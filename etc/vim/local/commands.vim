@@ -632,6 +632,7 @@ function! s:Qfdo(expr)
     let qflist = getqflist()
     for item in qflist
         execute item['bufnr'] . 'buffer!'
+        call cursor(item['lnum'], item['col'])
         execute a:expr
     endfor
 endfunction
