@@ -16,6 +16,7 @@ require 'digest/sha2'
 
 class Cert
   DEFAULTS = {
+    :one => false,
     :certfile => nil,
     :keystore => nil,
     :keystore_pass => nil,
@@ -38,6 +39,7 @@ class Cert
         Commands:
 
             d[ump] [arg ...]          Dump certificates to stdout
+            p[ublickey] [arg ...]     Dump public keys to stdout
             i[nfo] [arg ...]          Show detailed certificate information
             a[dd] arg ...             Add certificates to certfile
             r[m] arg ...              Remove certificates from certfile
@@ -46,6 +48,10 @@ class Cert
 
         Options:
       BANNER
+
+      opt.on '-1', '--one', 'Select only the first certificate / public key' do
+        @one = true
+      end
 
       opt.on '-f', '--certfile PATH', 'Certificate file, required for some commands' do |arg|
         @certfile = File.expand_path arg
@@ -186,23 +192,31 @@ class Cert
     self_signed ? certs.select { |c| self_signed? c } : certs
   end
 
+  def take certs
+    @one ? certs.take(1) : certs
+  end
+
   def dump *args
-    puts format(args.empty? ? certificates : mapcerts(args))
+    puts format(take(args.empty? ? certificates : mapcerts(args)))
+  end
+
+  def publickey *args
+    puts (take(args.empty? ? certificates : mapcerts(args))).map(&:public_key)
   end
 
   def info *args
-    puts (args.empty? ? certificates : mapcerts(args)).map(&:to_text)
+    puts (take(args.empty? ? certificates : mapcerts(args))).map(&:to_text)
   end
 
   def add *args
-    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
+    write_certfile take(mapcerts args).reduce(certificates) { |certs, root|
       certs << root unless certs.find { |c| equal? c, root }
       certs
     }
   end
 
   def rm *args
-    write_certfile mapcerts(args).reduce(certificates) { |certs, root|
+    write_certfile take(mapcerts args).reduce(certificates) { |certs, root|
       certs.reject { |c| equal? c, root }
     }
   end
@@ -233,6 +247,7 @@ class Cert
 
     case args.first
     when 'd', 'dump' then dump *rest
+    when 'p', 'publickey' then publickey *rest
     when 'i', 'info' then info *rest
     when 'a', 'add' then add *rest
     when 'r', 'rm' then rm *rest
