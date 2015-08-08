@@ -7,20 +7,25 @@
 #  /____/
 
 [user]
-    name  = guns
+    name = guns
     email = self@sungpae.com
     signingkey = 0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D
 
+[advice]
+    statusHints = false
+    implicitIdentity = false
+
 [core]
-    whitespace   = trailing-space,space-before-tab
-    ignorecase   = false
+    whitespace = trailing-space,space-before-tab
+    ignorecase = false
 
 [color]
     ui = auto
 
-[color.diff]
-    meta           = blue
-    mnemonicprefix = true
+[color "diff"]
+    meta = 244
+    func = 244
+    whitespace = 89 reverse
 
 [diff]
     renames = copies
@@ -79,34 +84,34 @@
     lfst  = log --decorate --graph --show-signature --stat --first-parent --no-merges
     lfstr = log --decorate --graph --show-signature --stat --first-parent --no-merges --date=relative
 
-    lp    = log --decorate --patch --show-signature --stat
-    lpr   = log --decorate --patch --show-signature --stat --date=relative
-    lfp   = log --decorate --patch --show-signature --stat --first-parent --no-merges
-    lfpr  = log --decorate --patch --show-signature --stat --first-parent --no-merges --date=relative
-    lpw   = log --decorate --patch --show-signature --stat --ignore-all-space
-    lpwr  = log --decorate --patch --show-signature --stat --ignore-all-space --date=relative
-    wlp   = log --decorate --patch --show-signature --stat --color-words=.
-    wlpr  = log --decorate --patch --show-signature --stat --color-words=. --date=relative
-    wlpwr = log --decorate --patch --show-signature --stat --color-words=. --ignore-all-space --date=relative
+    lp    = log --decorate --patch --show-signature --stat --ws-error-highlight=all
+    lpr   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --date=relative
+    lfp   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --first-parent --no-merges
+    lfpr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
+    lpw   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --ignore-all-space
+    lpwr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --ignore-all-space --date=relative
+    wlp   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=.
+    wlpr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=. --date=relative
+    wlpwr = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
 
-    l1    = log --decorate --patch --show-signature --stat -1
-    l1r   = log --decorate --patch --show-signature --stat -1 --date=relative
-    l1w   = log --decorate --patch --show-signature --stat -1 --ignore-all-space
-    l1wr  = log --decorate --patch --show-signature --stat -1 --ignore-all-space --date=relative
-    wl1   = log --decorate --patch --show-signature --stat -1 --color-words=.
-    wl1r  = log --decorate --patch --show-signature --stat -1 --color-words=. --date=relative
+    l1    = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1
+    l1r   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --date=relative
+    l1w   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --ignore-all-space
+    l1wr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
+    wl1   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --color-words=.
+    wl1r  = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --color-words=. --date=relative
 
-    f     = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s'
-    fr    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --date=relative
-    fa    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all
-    far   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --all --date=relative
-    ff    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges
-    ffr   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(blue)%ad%C(magenta)%d %C(reset)%s' --first-parent --no-merges --date=relative
+    f     = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s'
+    fr    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --date=relative
+    fa    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --all
+    far   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --all --date=relative
+    ff    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges
+    ffr   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges --date=relative
 
     lg    = log --patch -G
-    lgr   = log --patch -G --date=relative
-    lgi   = log --patch -G --regexp-ignore-case
-    lgir  = log --patch -G --regexp-ignore-case --date=relative
+    lgr   = log --patch --date=relative -G
+    lgi   = log --patch --regexp-ignore-case -G
+    lgir  = log --patch --regexp-ignore-case --date=relative -G
 
     # Branches
     br   = branch -vv
@@ -126,16 +131,16 @@
     tsf = tag --sign --force
 
     # Diff and patch
-    di   = diff
-    diw  = diff --ignore-all-space
-    wdi  = diff --color-words=.
+    di   = diff --ws-error-highlight=all
+    diw  = diff --ws-error-highlight=all --ignore-all-space
+    wdi  = diff --ws-error-highlight=all --color-words=.
 
-    dih  = diff HEAD
-    dihw = diff HEAD --ignore-all-space
-    wdih = diff HEAD --color-words=.
+    dih  = diff HEAD --ws-error-highlight=all
+    dihw = diff HEAD --ws-error-highlight=all --ignore-all-space
+    wdih = diff HEAD --ws-error-highlight=all --color-words=.
 
-    dic  = diff --cached
-    dis  = diff --summary --stat
+    dic  = diff --ws-error-highlight=all --cached
+    dis  = diff --ws-error-highlight=all --summary --stat
 
     fp   = format-patch
     fpo  = format-patch --stdout
@@ -146,7 +151,7 @@
     shallowclone = clone --depth=1
 
     # Grep
-    g    = grep --perl-regexp 
+    g    = grep --perl-regexp
     gi   = grep --perl-regexp --ignore-case
     gw   = grep --perl-regexp --word-regexp
     gf   = grep --fixed-strings
