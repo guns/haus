@@ -340,6 +340,14 @@ fF() { find-wrapper --predicate '-type f'                -- "$@"; }; TCOMP find 
 fx() { find-wrapper --predicate '-type f -executable'    -- "$@"; }; TCOMP find fx
 fl() { find-wrapper --predicate '-type l'                -- "$@"; }; TCOMP find fl
 fd() { find-wrapper --predicate '-type d'                -- "$@"; }; TCOMP find fd
+f.() {
+    local f
+    for d in .*; do
+        [[ -d "$d" ]] || continue
+        [[ "$d" == . || "$d" == .. ]] && continue
+        f "$d" "$@" 2>/dev/null
+    done
+}
 
 # Breadth-first search and chdir
 cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
