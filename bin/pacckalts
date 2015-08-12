@@ -8,14 +8,9 @@
 require 'optparse'
 require 'shellwords'
 
-@groups = %w[nerv nerv-alt]
 @verbose = false
 
 OptionParser.new nil, 24 do |opt|
-  opt.on '-g', '--groups A,B,C', Array, "DEFAULT: #{@groups.join(',')}" do |arg|
-    @groups = arg
-  end
-
   opt.on '-v', '--verbose' do
     @verbose = true
   end
@@ -32,8 +27,8 @@ def log msg
 end
 
 def check_line line
-  pkg = line.split[1]
-  upstream = pkg[/(.*)-(nerv|alt)$/, 1]
+  pkg = line.split[0]
+  upstream = pkg[/(.*)-(nerv|alt|git)$/, 1]
 
   if upstream.nil?
     warn "∄ #{pkg}"
@@ -57,7 +52,7 @@ def check_line line
   end
 end
 
-lines = %x(pacman --query --groups #{@groups.shelljoin}).lines
+lines = %x(pacman --query --foreign).lines
 lock, i, pool = Mutex.new, -1, []
 
 (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1).times do
