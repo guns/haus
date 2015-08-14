@@ -229,7 +229,7 @@ super + Print
 	fi
 
 {Scroll_Lock,super + F6}
-	if [[ "$(toggle-mouse)" -eq 1 ]]; then \
+	if [[ "$(toggle-mouse)" == true ]]; then \
 		notify --alert --icon input-mouse --title Mouse "enabled"; \
 	else \
 		notify --warning --icon dialog-warning --title Mouse "DISABLED"; \
