@@ -1,0 +1,86 @@
+<?xml encoding="UTF-8" version="1.0"?>
+<actions>
+<action>
+	<icon>Terminal</icon>
+	<name>Open Terminal Here</name>
+	<unique-id>1418017900066220-1</unique-id>
+	<command>urxvt-client -icon ~/.icons/haus/terminal.svg -cd %f</command>
+	<description>Example for a custom action</description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>gthumb</icon>
+	<name>Toggle Thumbnails</name>
+	<unique-id>1420081021579914-6</unique-id>
+	<command>thunar-toggle-thumbnails</command>
+	<description>Toggle thumbnail generation and kill tumblerd</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>kupfer</icon>
+	<name>Open in Kupfer</name>
+	<unique-id>1420081001716656-5</unique-id>
+	<command>kupfer %F</command>
+	<description>Grab selected files in Kupfer</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>gpicview</icon>
+	<name>Slideshow</name>
+	<unique-id>1420081854629195-2</unique-id>
+	<command>feh -r %F</command>
+	<description>View all images in current directory</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>gpicview</icon>
+	<name>Slideshow - mtime</name>
+	<unique-id>1420081845629111-1</unique-id>
+	<command>feh -r -Smtime %F</command>
+	<description>Show all images sorted by reverse mtime</description>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>spacefm-find</icon>
+	<name>Recursive Search</name>
+	<unique-id>1420150337081155-4</unique-id>
+	<command>d=&quot;$(file-manager-search --zenity %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
+	<description>Search for files recursively in selected directory</description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>spacefm-find</icon>
+	<name>Flat search</name>
+	<unique-id>1420150346880911-5</unique-id>
+	<command>d=&quot;$(file-manager-search --zenity --no-recursive %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
+	<description>Search for files in selected directory</description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+</actions>
