@@ -1,0 +1,4 @@
+#!/bin/sh
+
+run udevadm hwdb --update
+run udevadm trigger
