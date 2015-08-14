@@ -25,6 +25,7 @@ URxvt*saveLines:       1023
 URxvt*scrollBar:       off
 URxvt*scrollBar_right: on
 URxvt*visualBell:      on
+! URxvt*letterSpace:     -1
 
 URxvt*pointerBlank:      on
 URxvt*pointerBlankDelay: 65535
