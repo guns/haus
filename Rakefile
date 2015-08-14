@@ -391,6 +391,8 @@ task :chown do
     chown_R u, nil, 'etc/vim/UltiSnips'
     chown_R u, nil, 'etc/:local/:lib/clojure/guns'
     chown_R u, nil, 'etc/:local/:pkg/:go/:src/:github.com/:guns/dropoutputnotify'
+    chown_R u, nil, 'etc/:config/:kupfer'
+    chown_R u, nil, 'etc/:config/Thunar'
   end
 end
 
