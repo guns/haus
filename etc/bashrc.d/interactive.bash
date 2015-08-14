@@ -484,6 +484,7 @@ ALIAS swapin='swapoff --all --verbose; swapon --all --verbose'
 checkperm() {
     # path:user:group:octal-mask:options; all fields optional
     local specs=(
+        /boot:root:root:0077:no-recurse
         /etc/.git:root:root:0077:no-recurse
         /etc:root
         /var/lib/{machines,container}:root:root:0077:no-recurse
