@@ -203,6 +203,12 @@ super + alt + control + {space,Left,Right}
 # Miscellaneous {{{
 #
 
+{XF86MonBrightnessDown,super + shift + KP_Subtract}
+	hwctl backlight -5
+
+{XF86MonBrightnessUp,super + shift + KP_Add}
+	hwctl backlight +5
+
 super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
