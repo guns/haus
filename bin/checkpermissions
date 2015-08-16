@@ -13,7 +13,9 @@ class Checkpermissions
   USER_FILE_PATTERN = Regexp.compile %q(\A%s/) % File.expand_path('~')
 
   DEFAULTS = {
-    :default_mask => 0022
+    :default_mask => 0022,
+    :quiet => false,
+    :verbose => false
   }
 
   def initialize opts = {}
@@ -29,14 +31,34 @@ class Checkpermissions
 
             path:user:group:octal-mask:opt1,opt2
 
-        All fields are optional, and the only spec option is 'no-recurse',
-        which can be added to a directory to prevent checking its contents.
+        The path is mandatory, but the spec will be ignored if the path does
+        not exist.
+
+        The user is optional, and defaults to the current user if the path is
+        in the current user's home directory, and user 0 otherwise.
+
+        The group is optional and will not be checked by default.
+
+        The octal-mask is optional and defaults to 0022.
+
+        There are two options:
+
+            no-recurse:   Do not recurse into a directory
+            glob:         Interpret the path as a glob
 
         Options:
       BANNER
 
       opt.on '-m', '--default-mask OCTAL_MASK', 'DEFAULT: %04o' % DEFAULTS[:default_mask] do |arg|
         @default_mask = arg.to_i 8
+      end
+
+      opt.on '-q', '--quiet' do
+        @quiet = true
+      end
+
+      opt.on '-v', '--verbose' do
+        @verbose = true
       end
     end
   end
@@ -49,23 +71,34 @@ class Checkpermissions
     specs = []
 
     spec_arguments.each do |arg|
-      path, user, group, mask, options = arg.split ':', 5
+      path, user, group, mask, options = arg.split(':', 5).map { |x| x.empty? ? nil : x }
+
+      opts = options ? options.split(',') : []
+      glob = opts.include? 'glob'
+      no_recurse = opts.include? 'no-recurse'
 
       next if path.nil?
+
+      if glob
+        paths = Dir.glob File.expand_path(path)
+        opts.delete 'glob'
+        specs.concat compile_specs(paths.map { |p| [p, user, group, mask, opts.join(',')].join ':' })
+        next
+      end
+
       path = File.expand_path path
       next if not File.exists? path
 
       owner_uid = user ? Etc.getpwnam(user).uid : (path =~ USER_FILE_PATTERN ? Process.euid : 0)
       owner_gid = Etc.getgrnam(group).gid if group
       mask = mask ? mask.to_i(8) : @default_mask
-      opts = options ? options.split(',') : []
 
-      if File.directory? path and not opts.include? 'no-recurse'
+      specs.push [path, owner_uid, owner_gid, mask]
+
+      if File.directory? path and not no_recurse
         specs.concat Dir.glob(File.join(path, '**/*'), File::FNM_DOTMATCH).map { |p|
           [p, owner_uid, owner_gid, mask]
         }
-      else
-        specs.push [path, owner_uid, owner_gid, mask]
       end
     end
 
@@ -77,7 +110,7 @@ class Checkpermissions
 
     specs.each do |(path, owner_uid, owner_gid, mask)|
       if ignore_link? path
-        warn "Skipping symlink #{path} → #{Haus::Utils.readlink path}"
+        warn ":: Skipping symlink #{path} → #{Haus::Utils.readlink path}" unless @quiet
         next
       end
 
@@ -85,12 +118,14 @@ class Checkpermissions
         stat = File.stat path
       rescue Errno::ENOENT => e
         if File.symlink? path
-           warn "Skipping broken symlink #{path}"
+           warn ":: Skipping broken symlink #{path}" unless @quiet
         else
           raise e
         end
         next
       end
+
+      warn path if @verbose
 
       if owner_uid and stat.uid != owner_uid and stat.uid != 0
         errors << "\e[31m%s: Expected owner %s, but is owned by %s\e[0m" % [
