@@ -406,6 +406,7 @@ mt() {
         mount --verbose
     fi
 }
+ALIAS mtro='mt --read-only'
 ALIAS umt='umount --verbose'
 remt() {
     if (($#)); then
