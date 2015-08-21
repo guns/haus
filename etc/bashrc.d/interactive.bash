@@ -1349,6 +1349,13 @@ ALIAS pac='pacman' && {
         run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
     }
     complete -F __pacdowngrade__ pacdowngrade
+
+    aurclone() {
+        local name
+        for name in "$@"; do
+            run git clone "https://aur.archlinux.org/${name}.git"
+        done
+    }
 }
 
 ALIAS mkp='makepkg' \
