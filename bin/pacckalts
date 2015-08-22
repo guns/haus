@@ -28,7 +28,7 @@ end
 
 def check_line line
   pkg = line.split[0]
-  upstream = pkg[/(.*)-(nerv|alt|git)$/, 1]
+  upstream = pkg[/(.*)-(nerv|alt|git|developer)$/, 1]
 
   if upstream.nil?
     warn "∄ #{pkg}"
