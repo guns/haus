@@ -212,7 +212,7 @@ super + alt + control + {space,Left,Right}
 super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
-Print
+shift + Print
 	if scrot -e 'mv "$f" ~/Downloads'; then \
 		notify --success 'Screenshot saved to ~/Downloads'; \
 	else \
