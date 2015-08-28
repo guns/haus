@@ -185,7 +185,10 @@ allow_output --match set --match-set DNS dst --protocol udp --match multiport --
 allow_output --match set --match-set NTP dst --protocol udp --dport 123
 
 # SSH
-allow_output --match set --match-set SSH dst --protocol tcp --match multiport --dports 22
+allow_output --match set --match-set SSH dst --protocol tcp --dport 22
+
+# GIT
+allow_output --match set --match-set GIT dst --protocol tcp --dport 9418
 
 # LAN
 # allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
