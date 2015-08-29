@@ -263,6 +263,10 @@ augroup GUNS
     autocmd BufRead,BufNewFile *sudoers.d/*
         \ setlocal filetype=sudoers
 
+    " sshconfig {{{1
+    autocmd FileType sshconfig
+        \ setlocal noexpandtab
+
     " Plugin: Unite.vim {{{1
     autocmd FileType unite
         \ silent! syntax clear Tab TrailingWS |
