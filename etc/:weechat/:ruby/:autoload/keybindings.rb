@@ -4,6 +4,7 @@
 # Distributed under the terms of the GNU General Public License v3.0.
 # http://www.gnu.org/licenses/gpl-3.0.html
 
+require 'rubygems'
 require 'weechat'
 require 'yaml'
 include Weechat
