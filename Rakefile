@@ -414,7 +414,7 @@ task :vimeditbindings do
 end
 
 desc 'Edit bash/readline directory bindings'
-task :dirbindings do
+task :vimdirbindings do
   fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
   exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
 end

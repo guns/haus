@@ -103,6 +103,7 @@ $if bash
     # Rebinds
     "\eb":          shell-backward-word
     "\ef":          shell-forward-word
+    "\C-xE":        edit-and-execute-command
 
     # Meta
     "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
@@ -132,7 +133,7 @@ $if bash
     "\C-x\C-d":     "\C-] cddownloads \n"
     "\C-xd":        "\C-]cddownloads "
     "\C-xD":        "\C-]cddesktop "
-    "\C-xE":        "\C-]cdetc "
+    "\C-x\C-e":     "\C-] cdetc \n"
     "\C-xG":        "\C-]cdgo "
     "\C-x\C-h":     "\C-] cdhaus \n"
     "\C-xh":        "\C-]cdhaus "
