@@ -388,11 +388,12 @@ desc 'Change ownership of user directories'
 task :chown do
   if ENV.has_key? 'SUDO_USER'
     u = ENV['SUDO_USER']
-    chown_R u, nil, 'etc/vim/UltiSnips'
-    chown_R u, nil, 'etc/:local/:lib/clojure/guns'
-    chown_R u, nil, 'etc/:local/:pkg/:go/:src/:github.com/:guns/dropoutputnotify'
     chown_R u, nil, 'etc/:config/:kupfer'
     chown_R u, nil, 'etc/:config/Thunar'
+    chown_R u, nil, 'etc/:local/:lib/clojure/guns'
+    chown_R u, nil, 'etc/:local/:pkg/:go/:src/:github.com/:guns/dropoutputnotify'
+    chown_R u, nil, 'etc/:weechat'
+    chown_R u, nil, 'etc/vim/UltiSnips'
   end
 end
 
