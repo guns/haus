@@ -9,7 +9,6 @@ $:.unshift 'lib/ruby'
 require 'shellwords'
 require 'digest/sha1'
 require 'nerv/project/update'
-require 'nerv/project/subproject'
 require 'nerv/util/notification'
 require 'haus/logger'
 require 'haus/queue'
@@ -40,6 +39,8 @@ def vimdiffcmd a, b
 end
 
 task :env do
+  require 'nerv/project/subproject' # Lazy load 'git' gem
+
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
 
