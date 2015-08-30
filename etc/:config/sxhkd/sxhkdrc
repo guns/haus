@@ -213,16 +213,15 @@ super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
 shift + Print
-	if scrot -e 'mv "$f" ~/Downloads'; then \
+	if maim ~/Downloads/"$(date "+screenshot-%Y-%m-%d-%H:%M:%S.png")"; then \
 		notify --success 'Screenshot saved to ~/Downloads'; \
 	else \
 		notify --error 'Screenshot failed'; \
 	fi
 
 super + Print
-	notify --alert --icon simplescreenrecorder --title scrot 'Window/Selection screenshot mode'; \
-	sleep 0.1; \
-	if scrot -s -e 'mv "$f" ~/Downloads'; then \
+	notify --alert --icon simplescreenrecorder --title maim 'Window/Selection screenshot mode'; \
+	if maim --select ~/Downloads/"$(date "+screenshot-%Y-%m-%d-%H:%M:%S.png")"; then \
 		notify --success 'Screenshot saved to ~/Downloads'; \
 	else \
 		notify --error 'Screenshot failed'; \
