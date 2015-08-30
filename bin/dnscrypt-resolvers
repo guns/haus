@@ -2,20 +2,26 @@
 # -*- encoding: utf-8 -*-
 
 require 'csv'
+require 'fileutils'
 
-URL = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
+url = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
+sig = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv.sig'
 
-csv = IO.popen ['curl', URL] do |io|
-  CSV.parse io.read
-end
+Dir.chdir '/tmp' do
+  begin
+    [url, sig].each { |u| system 'curl', '-O', u }
 
-csv.shift if csv[0][0] == 'Name'
+    abort unless system 'gpg', '--verify-files', File.basename(sig)
 
-puts csv.map { |row|
-  title, fullname, desc, loc, coord, url, version, dnssec, nologs, namecoin, addr, name, pubkey, pubkey_txt = row
-  host, port = addr.split ':', 2
+    csv = CSV.parse File.read(File.basename url)
 
-  <<-EOF
+    csv.shift if csv[0][0] == 'Name'
+
+    puts csv.map { |row|
+      title, fullname, desc, loc, coord, url, version, dnssec, nologs, namecoin, addr, name, pubkey, pubkey_txt = row
+      host, port = addr.split ':', 2
+
+      <<-EOF
 # #{fullname}
 # #{desc}
 # #{loc}#{" (#{coord})" if coord}
@@ -26,5 +32,9 @@ puts csv.map { |row|
 # DNSCRYPT_PROVIDER_KEY=#{pubkey}
 # DNSCRYPT_RESOLVERIP=#{host}
 # DNSCRYPT_RESOLVERPORT=#{port || '443'}
-  EOF
-}.join("\n")
+      EOF
+    }.join("\n")
+  ensure
+    FileUtils.rm_f [url, sig].map { |f| File.basename f }
+  end
+end
