@@ -64,7 +64,7 @@ class Getmalwarehosts
     warn "# Reading #{path}" if $stdout.tty?
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--progress', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.90 Safari/537.36', path] do |io|
+      IO.popen ['curl', '--progress', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36', path] do |io|
         io.read
       end
     else
