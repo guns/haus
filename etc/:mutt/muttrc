@@ -20,8 +20,8 @@ source $alias_file
 
 # Mailboxes
 mailboxes $spoolfile $mbox $postponed `list-files ~/Mail/self`
-macro index,pager \" "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
-macro browser     \" <exit>\"
+macro index,pager gs "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
+macro browser     gs <exit>gs
 
 # Mailing lists
 lists .*@googlegroups.com vim.*@vim.org
