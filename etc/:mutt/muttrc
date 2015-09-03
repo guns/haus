@@ -135,8 +135,8 @@ macro pager w       \e\0074
 
 # notmuchfs macros
 macro index,pager,browser \e\007r "<shell-escape>notmuch new<enter>"
-macro index,pager,browser \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify --warning --icon mail      --title mutt 'notmuchfs mounted')   >/dev/null 2>&1 &<enter>"
-macro index,pager,browser \e\007N "<shell-escape>(cd $folder; rake umount    && notify --alert   --icon usermount --title mutt 'notmuchfs unmounted') >/dev/null 2>&1 &<enter>"
+macro index,pager,browser \e\007n "<shell-escape>mutt-notmuchfs mount  ~/Mail/.search ~/Mail/.notmuchfs ~/Mail >/dev/null 2>&1 &<enter>"
+macro index,pager,browser \e\007N "<shell-escape>mutt-notmuchfs umount ~/Mail/.search                          >/dev/null 2>&1 &<enter>"
 macro index,pager         \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/SEARCH\`<enter><change-folder>?<toggle-mailboxes>"
 bind  browser             \e\007/ exit
 macro index,pager         \e\007f "\e\007n<shell-escape>cd $folder/.search; mutt-make-mail-search-directory $folder/.search/ $folder/SEARCH/<enter>\e\007/"

@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+def mount mountpoint, backing_dir, mail_dir
+  if File.read('/proc/mounts') =~ /^notmuchfs\s+#{mountpoint}\s+fuse\.notmuchfs/
+    warn "#{mountpoint} is already mounted."
+    false
+  else
+    system *%W[
+      notmuchfs #{mountpoint}
+      -o noatime
+      -o backing_dir=#{backing_dir}
+      -o mail_dir=#{mail_dir}
+      -o mutt_2476_workaround
+      -o nonempty
+    ]
+  end
+end
+
+def umount mountpoint
+  system 'fusermount', '-u', mountpoint
+end
+
+case ARGV.first
+when 'mount'
+  if mount *ARGV.drop(1)
+    system 'notify', '--warning', '--icon', 'mail', '--title', 'mutt', 'notmuchfs mounted'
+  end
+when 'umount'
+  if umount *ARGV.drop(1)
+    system 'notify', '--alert', '--icon', 'usermount', '--title', 'mutt', 'notmuchfs unmounted'
+  end
+else
+  abort "USAGE: #{File.basename __FILE__} mount mountpoint backing_dir mail_dir\n" <<
+        "       #{File.basename __FILE__} umount mountpoint"
+end
