@@ -481,6 +481,11 @@ ALIAS iotop='iotop --only'
 # Swap
 ALIAS swapin='swapoff --all --verbose; swapon --all --verbose'
 
+# attributes
+ALIAS ls@='lsattr -a'
+ALIAS chimmutable='chattr -V +i' \
+      chmutable='chattr -V -i'
+
 # Check shell init files and system paths for loose permissions
 checkperm() {
     # path:user:group:octal-mask:opt1,opt2
