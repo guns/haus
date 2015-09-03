@@ -19,8 +19,8 @@ source ~/.mutt/muttrc.settings
 source $alias_file
 
 # Mailboxes
-mailboxes $spoolfile $mbox $postponed `list-files ~/Mail/self` `list-files ~/Mail/SEARCH`
-macro index,pager gs "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` \`list-files ~/Mail/SEARCH\`<enter><change-folder>?<toggle-mailboxes>"
+mailboxes $spoolfile $mbox $postponed `list-files ~/Mail/self`
+macro index,pager gs "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
 macro browser     gs <exit>gs
 
 # Mailing lists
@@ -135,13 +135,13 @@ macro pager w       \e\0074
 
 # notmuchfs macros
 macro index,pager,browser \e\007r "<shell-escape>notmuch new<enter>"
-macro index,pager,browser \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify --warning --icon mail --title mutt 'notmuchfs mounted')      >/dev/null 2>&1 &<enter>"
-macro index,pager,browser \e\007N "<shell-escape>(cd $folder; rake umount    && notify --alert --icon usermount --title mutt 'notmuchfs unmounted') >/dev/null 2>&1 &<enter>"
-macro index,pager         \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/.search\`<enter><change-folder>?<toggle-mailboxes>"
+macro index,pager,browser \e\007n "<shell-escape>(cd $folder; rake notmuchfs && notify --warning --icon mail      --title mutt 'notmuchfs mounted')   >/dev/null 2>&1 &<enter>"
+macro index,pager,browser \e\007N "<shell-escape>(cd $folder; rake umount    && notify --alert   --icon usermount --title mutt 'notmuchfs unmounted') >/dev/null 2>&1 &<enter>"
+macro index,pager         \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/SEARCH\`<enter><change-folder>?<toggle-mailboxes>"
 bind  browser             \e\007/ exit
-macro index,pager         \e\007f "\e\007n<shell-escape>cd $folder/.search; prompt_mkdir $folder/.search/<enter>\e\007/"
+macro index,pager         \e\007f "\e\007n<shell-escape>cd $folder/.search; mutt-make-mail-search-directory $folder/.search/ $folder/SEARCH/<enter>\e\007/"
 macro browser             \e\007f "<exit>\e\007f"
-macro index,pager         \e\007? "\e\007n<shell-escape>rmdir $folder/.search/* >/dev/null 2>&1 &<enter>"
+macro index,pager         \e\007? "\e\007n<shell-escape>mutt-remove-mail-search-directories $folder/.search/ $folder/SEARCH/<enter>"
 macro browser             \e\007? "<exit>\e\007?\e\007/"
 
 # Hooks

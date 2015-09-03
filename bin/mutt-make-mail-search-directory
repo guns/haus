@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'fileutils'
+
+abort "USAGE: #{File.basename __FILE__} directory-dir link-dir" unless ARGV.size == 2
+
+dirs, links = ARGV.take 2
+
+print 'Search: '
+s = $stdin.gets
+
+abort if s.nil? or s == "\n"
+
+s.chomp!
+
+abort if Dir.exists? s
+
+search_dir = File.join dirs, s.gsub(%r{[\x00/]}, '.')
+link       = File.join links, File.basename(search_dir)
+
+FileUtils.mkdir_p search_dir
+FileUtils.ln_sf search_dir, link

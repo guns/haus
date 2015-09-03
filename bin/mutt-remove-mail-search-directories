@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'fileutils'
+
+abort "USAGE: #{File.basename __FILE__} directory-dir link-dir" unless ARGV.size == 2
+
+dirs, links = ARGV.take 2
+
+Dir[File.join(dirs, '*')].each do |d|
+  FileUtils.rmdir d rescue nil
+end
+
+Dir[File.join(links, '*')].each do |f|
+  next unless File.ftype(f) == 'link'
+  next if File.directory? "#{f}/"
+  FileUtils.rm_f f
+end
