@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'fileutils'
+require 'securerandom'
+require 'shellwords'
+
+abort "USAGE: #{File.basename __FILE__} out-file input-files …" if ARGV.size < 2
+
+outfile, *inputs = ARGV
+
+begin
+  list = ".ffconcat-#{SecureRandom.hex}"
+  raise if File.exists? list
+  File.open list, 'w' do |f|
+    f.puts inputs.map { |i| "file #{i.shellescape}" }
+  end
+  system 'ffmpeg', '-f', 'concat', '-i', list, '-c', 'copy', outfile
+ensure
+  FileUtils.rm_f list
+end
