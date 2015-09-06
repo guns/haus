@@ -38,7 +38,7 @@ class Screencast
       end
 
       opt.on '-g', '--geometry WxH+X,Y', 'Geometry and offset of capture area' do |arg|
-        @geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:,(\d+)))/)[1..-1]
+        @geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:[,+](\d+)))/)[1..-1]
       end
 
       opt.on '-n', '--no-audio', 'Do not record audio' do
@@ -97,7 +97,7 @@ class Screencast
   end
 
   def timestamp
-    Time.now.strftime '%Y-%m-%d:%H:%M:%S'
+    Time.now.strftime '%Y-%m-%d_%H-%M-%S'
   end
 
   def countdown delay
