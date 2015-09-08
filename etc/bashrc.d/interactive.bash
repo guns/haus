@@ -211,9 +211,9 @@ alias wrld='while read l; do'; TCOMP exec wrld
 ALIAS comp='complete -p'
 
 # PATH prefixing functions
-path() { __prepend_path__ PATH "$@"; }
+path()   { __prepend_path__ PATH            "$@"; }
 ldpath() { __prepend_path__ LD_LIBRARY_PATH "$@"; }
-gopath() { __prepend_path__ GOPATH "$@"; }
+gopath() { __prepend_path__ GOPATH          "$@"; }
 
 # Toggle xtrace, verbose mode
 setx() {
@@ -283,13 +283,9 @@ ALIAS agi='ag --ignore-case' \
 # cat tail less
 alias c='cat'
 alias tf='tail --follow'
-if ALIAS l='less' \
-         L='l -+S' \
-         lf='l +F'; then
-    pager() { less -+c --quit-if-one-screen "$@"; }
-else
-    pager() { cat "$@"; }
-fi
+alias l='less'
+alias L='l -+S'
+alias lf='l +F'
 
 # syslog follow
 if [[ -e /var/log/everything.log ]]; then
@@ -369,9 +365,6 @@ alias mvf='command mv --verbose --force'
 alias rm='rm --verbose'
 alias rmf='rm --force'
 alias rmrf='rmf --recursive'
-rm-craplets() {
-    run find "${1:-.}" \( -name '.DS_Store' -o -name 'Thumbs.db' -o -name '._*' \) -type f -print -delete
-}
 
 # ln
 alias ln='ln --verbose --interactive'

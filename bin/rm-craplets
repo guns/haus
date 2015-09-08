@@ -1,0 +1,3 @@
+#!/bin/sh
+
+run find "${1:-.}" \( -name .DS_Store -o -name Thumbs.db -o -name '._*' \) -type f -print -delete
