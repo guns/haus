@@ -347,7 +347,7 @@ f.() {
         [[ "$d" == . || "$d" == .. ]] && continue
         f "$d" "$@" 2>/dev/null
     done
-}
+}; TCOMP find f.
 
 # Breadth-first search and chdir
 cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
