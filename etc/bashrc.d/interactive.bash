@@ -420,8 +420,8 @@ mtlabel() {
 ALIAS fm='findmnt'
 
 # fusermount
-ALIAS fusermt='fusermount -o noatime' \
-      fuserumt='fusermount -u'
+ALIAS fusemt='fusermount -o noatime' \
+      fuseumt='fusermount -u'
 
 # tar
 alias star='tar --strip-components=1'
