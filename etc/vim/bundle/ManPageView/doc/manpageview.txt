@@ -1,4 +1,4 @@
-*manpageview.txt*	Man Page Viewer			Feb 21, 2015
+*manpageview.txt*	Man Page Viewer			Jun 01, 2015
 
 Author:  Charles E. Campbell  <NdrchipO@ScampbellPfamily.AbizM>
 	 (remove NOSPAM from Campbell's email first)
@@ -105,8 +105,8 @@ Copyright: (c) 2004-2015 by Charles E. Campbell		*manpageview-copyright*
 	the program given in |g:manpageview_K_http|  on the url in
 	an attempt to show the site in a new tab.
 
-					*manpageview-leftmouse*
-	The leftmouse button also does a manpageview using the
+					*manpageview-s-leftmouse*
+	The <s-leftmouse> button also does a manpageview using the
 	word under the mouse.
 
 
@@ -436,6 +436,11 @@ Copyright: (c) 2004-2015 by Charles E. Campbell		*manpageview-copyright*
 				  pointed out that the K map didn't work on
 				  some info pages properly.  Fixed.
 		Jul 23, 2014	* changed www.php.net to php.net (php support)
+		Jun 01, 2015	* leftmouse used in a manpage was doing the
+				  same as K (|manpageview-K|).  This interfered
+				  with being able to click and drag to pick
+				  up text.  So the map has been moved to
+				  <s-leftmouse> instead.
 	v23:	May 18, 2009	* on the third attempt to get a manpage, if
 				  the user provided no explicit
 				  |g:manpageview_iconv| setting, then the

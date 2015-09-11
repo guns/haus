@@ -1,7 +1,7 @@
 " manpagevim : extra commands for manual-handling
 " Author:	Charles E. Campbell
-" Date:		Feb 21, 2015
-" Version:	25q	 ASTRO-ONLY
+" Date:		Jun 22, 2015
+" Version:	25s	 ASTRO-ONLY
 "
 " Please read :help manpageview for usage, options, etc
 "
@@ -14,7 +14,7 @@
 if &cp || exists("g:loaded_manpageview")
  finish
 endif
-let g:loaded_manpageview = "v25q"
+let g:loaded_manpageview = "v25s"
 if v:version < 702
  echohl WarningMsg
  echo "***warning*** this version of manpageview needs vim 7.2 or later"
@@ -23,7 +23,7 @@ if v:version < 702
 endif
 let s:keepcpo= &cpo
 set cpo&vim
-"DechoTabOn
+"DechoRemOn
 
 " ---------------------------------------------------------------------
 " Set up default manual-window opening option: {{{1
@@ -222,6 +222,7 @@ fun! manpageview#ManPageView(...) range
 "   DechoWF '(ManPageView) ‣a:{i='.i.'}<'.a:{i}.'>: topic<'.(exists("topic")? topic : 'n/a').'> bknum#'.(exists("bknum")? bknum : 'n/a')
    let i= i + 1
   endwhile
+"  DechoWF "(ManPageView) done parsing input arguments for topic and booknumber"
 
   " sanity check
   if !exists("topic") || topic == ""
@@ -234,6 +235,7 @@ fun! manpageview#ManPageView(...) range
   endif
 
   " default book number
+"  DechoWF "(ManPageView) set up default book number"
   if !exists("bknum")
    let bknum= 0
   endif
@@ -262,50 +264,50 @@ fun! manpageview#ManPageView(...) range
 
   " ---------------------------------------------------------------------
   " infer the appropriate extension based on the filetype {{{3
-  if ext == ""
-"   DechoWF "(ManPageView) attempt to infer on filetype<".&ft.">"
+  " if ext == ""
+" "   DechoWF "(ManPageView) attempt to infer on filetype<".&ft.">"
 
-   " filetype: vim
-   " if &ft == "vim"
+  "  " filetype: vim
+  "  if &ft == "vim"
 " "	DechoWF "(ManPageView) special vim handler"
-   "  let s:specialhandler = "vim"
-   "  let retval           = manpageview#ManPageVim(topic)
+  "   let s:specialhandler = "vim"
+  "   let retval           = manpageview#ManPageVim(topic)
 " "	call Dret("manpageview#ManPageView ".retval)
 	" return retval
 
-   " filetype: perl
-   if &ft == "perl" || &ft == "perldoc"
-"	DechoWF "(ManPageView) special perl handler"
-    let s:specialhandler = "perl"
-    let ext              = "pl"
+  "  " filetype: perl
+  "  elseif &ft == "perl" || &ft == "perldoc"
+" "	DechoWF "(ManPageView) special perl handler"
+  "   let s:specialhandler = "perl"
+  "   let ext              = "pl"
 
-   " filetype:  php
-   elseif &ft == "php" || &ft == "manphp"
-"	DechoWF "(ManPageView) special php handler"
-    let s:specialhandler = "php"
-    let ext              = "php"
+  "  " filetype:  php
+  "  elseif &ft == "php" || &ft == "manphp"
+" "	DechoWF "(ManPageView) special php handler"
+  "   let s:specialhandler = "php"
+  "   let ext              = "php"
 
-	" filetype:  python
-   elseif &ft == "python" || &ft == "pydoc"
-"	DechoWF "(ManPageView) special python handler"
-    let s:specialhandler = "python"
-    let ext              = "py"
+	" " filetype:  python
+  "  elseif &ft == "python" || &ft == "pydoc"
+" "	DechoWF "(ManPageView) special python handler"
+  "   let s:specialhandler = "python"
+  "   let ext              = "py"
 
-   " filetype: info
-   elseif &ft == "info"
-"	DechoWF "(ManPageView) special info handler"
-    let s:specialhandler = "info"
-    let ext              = "i"
+  "  " filetype: info
+  "  elseif &ft == "info"
+" "	DechoWF "(ManPageView) special info handler"
+  "   let s:specialhandler = "info"
+  "   let ext              = "i"
 
-   " filetype: tex
-   elseif &ft == "tex"
-"	DechoWF "(ManPageView) special tex handler"
-    let s:specialhandler = "tex"
-    let ext              = "tex"
-    let retval = manpageview#ManPageTexLookup(0,topic)
-"    call Dret("manpageview#ManPageView ".retval)
-    return retval
-   endif
+  "  " filetype: tex
+  "  elseif &ft == "tex"
+" "	DechoWF "(ManPageView) special tex handler"
+  "   let s:specialhandler = "tex"
+  "   let ext              = "tex"
+  "   let retval = manpageview#ManPageTexLookup(0,topic)
+" "    call Dret("manpageview#ManPageView ".retval)
+  "   return retval
+  "  endif
 
   " elseif ext == "vim"
 " "   DechoWF "(ManPageView) special vim handler"
@@ -314,12 +316,12 @@ fun! manpageview#ManPageView(...) range
 " "   call Dret("manpageview#ManPageView ".retval)
   "  return retval
 
-  elseif ext == "tex"
-   let s:specialhandler = "tex"
-   let retval           = manpageview#ManPageTexLookup(0,substitute(topic,'\.tex$',"",""))
-"   call Dret("manpageview#ManPageView ".retval)
-   return retval
-  endif
+  " elseif ext == "tex"
+  "  let s:specialhandler = "tex"
+  "  let retval           = manpageview#ManPageTexLookup(0,substitute(topic,'\.tex$',"",""))
+" "   call Dret("manpageview#ManPageView ".retval)
+  "  return retval
+  " endif
 "  DechoWF "(ManPageView) ext<".ext.">"
 
   " ---------------------------------------------------------------------
@@ -549,8 +551,8 @@ fun! manpageview#ManPageView(...) range
   " ---------------------------------------------------------------------
   " allow K to use <cWORD> when in man pages {{{3
   if manpageview_syntax == "man"
-   nmap <silent> <script> <buffer>	K			:<c-u>call manpageview#KMap(1)<cr>
-   nno  <silent> <script> <buffer> <leftmouse>  <leftmouse>:call manpageview#KMap(1)<cr>
+   nmap <silent> <script> <buffer>	K				:<c-u>call manpageview#KMap(1)<cr>
+   nno  <silent> <script> <buffer> <s-leftmouse>	<leftmouse>:call manpageview#KMap(1)<cr>
   endif
 
   " ---------------------------------------------------------------------
@@ -1220,6 +1222,7 @@ endfun
 " manpageview#ManPageVim: {{{2
 fun! manpageview#ManPageVim(topic)
 "  call Dfunc("manpageview#ManPageVim(topic<".a:topic.">)")
+"  DechoWF "(ManPageVim) g:manpageview_winopen<".(exists("g:manpageview_winopen")? g:manpageview_winopen : 'n/a').">"
   if g:manpageview_winopen == "only"
    " OMan
    exe "help ".fnameescape(a:topic)
@@ -1275,7 +1278,8 @@ fun! manpageview#ManPageVim(topic)
    endif
   else
 
-   " Man
+   " Man   or  hsplit
+"   call Decho("try..catch..endtry#1: a:topic<".a:topic.">")
   try
    exe "help ".fnameescape(a:topic)
   catch /^Vim\%((\a\+)\)\=:E149/
@@ -1285,6 +1289,7 @@ fun! manpageview#ManPageVim(topic)
    echohl None
    " sleep 2
   endtry
+"   call Decho("try..catch..endtry#2")
 
   endif
 
