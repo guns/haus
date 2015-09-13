@@ -499,7 +499,7 @@ function! s:OrgBufferSetup()
     SetWhitespace 2 8
 
     nnoremap <silent> <buffer> <4-m> :<C-u>call <SID>AppendMinutesDelta()<CR>$:call search('\v\d+:\d+:\d+', 'W')<CR>
-    map  <silent> <buffer> <4-M> :<C-u>call <SID>CalculateDailyMinutes()<CR><Plug>OrgJumpToNextSkipChildrenNormal
+    map  <silent> <buffer> <4-M> :<C-u>call <SID>CalculateTotalMinutes()<CR>
 
     map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
     imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
@@ -551,6 +551,42 @@ ruby << EORUBY
             VIM::Buffer.current.line = '%s => TOTAL: %sm' % [line, total]
         end
 EORUBY
+    endfunction
+
+    function! s:CalculateTotalInvoiceMinutes()
+ruby << EORUBY
+        buf = VIM::Buffer.current
+        dates, minutes = [], []
+        (1..buf.count).each do |i|
+            if buf[i] =~ /\*\s*(.+) => TOTAL: (\d+)m/
+                dates << $1
+                minutes << $2
+            end
+        end
+        lines = []
+        dw = dates.map(&:size).max
+        sum = minutes.map(&:to_i).reduce(&:+)
+        mw = sum.to_s.size
+        lines << ("─" * (dw+1) << "┬" << "─" * (mw+2))
+        fmt = "%-#{dw}s │ %#{mw}dm"
+        dates.zip(minutes).each do |dm|
+            lines << fmt % dm
+        end
+        lines << ("─" * (dw+1) << "┼" << "─" * (mw+2))
+        lines << (" " * (dw-5) << "TOTAL │ #{sum}m")
+        lines.each_with_index do |l, i|
+            buf.append i, l
+        end
+EORUBY
+    endfunction
+
+    function! s:CalculateTotalMinutes()
+        if getpos('.')[1] == 1 && len(getline(1)) == 0
+            call s:CalculateTotalInvoiceMinutes()
+        else
+            call s:CalculateDailyMinutes()
+            execute "normal \<Plug>OrgJumpToNextSkipChildrenNormal"
+        endif
     endfunction
 endif
 
