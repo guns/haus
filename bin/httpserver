@@ -1,0 +1,3 @@
+#!/bin/sh
+
+rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' --port 8080 --host '*' "$@"

@@ -711,9 +711,6 @@ HAVE cdapi && {
     complete -F __api__ api
 }
 
-# Simple webserver
-httpserver() { rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' "$@"; }
-
 # mitmproxy
 alias localmitmproxy='envtmux localmitmproxy'
 
