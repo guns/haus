@@ -905,7 +905,7 @@ HAVE go && {
         cdgo
         local pkg
         go list ./... | while read pkg; do
-            [[ "$pkg" == github.com/guns/* || "$pkg" == */example/* ]] && continue
+            [[ "$pkg" == github.com/guns/* || "$pkg" == nerv/* || "$pkg" == */example/* ]] && continue
             run go get -u "$@" "$pkg"
         done
         popd
