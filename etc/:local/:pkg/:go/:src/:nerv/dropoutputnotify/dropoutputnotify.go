@@ -7,9 +7,14 @@ package main
 import (
 	"bufio"
 	"html"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
+
+	"github.com/guns/mbwatch/process"
 )
 
 const (
@@ -58,6 +63,15 @@ func notifydropouts(c chan string) {
 	}
 }
 
+func terminateonsignal(p *os.Process) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGHUP)
+	<-signals
+	signal.Stop(signals)
+	process.Terminate(p, time.Second)
+	close(signals)
+}
+
 func main() {
 	dmesg := exec.Command("dmesg", "--follow", "--raw", "--facility", "kern", "--level", "warn")
 	stdout, err := dmesg.StdoutPipe()
@@ -70,6 +84,7 @@ func main() {
 
 	s := bufio.NewScanner(stdout)
 	dmesg.Start()
+	go terminateonsignal(dmesg.Process)
 
 	go putdropouts(c, s)
 	time.Sleep(1 * time.Second) // A moment to drain the dmesg buffer
