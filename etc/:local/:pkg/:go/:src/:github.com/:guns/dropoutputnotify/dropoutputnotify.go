@@ -7,7 +7,6 @@ package main
 import (
 	"bufio"
 	"html"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -76,7 +75,5 @@ func main() {
 	time.Sleep(1 * time.Second) // A moment to drain the dmesg buffer
 	go notifydropouts(c)
 
-	// Always terminate the process in case of panic
-	defer dmesg.Process.Signal(os.Interrupt)
 	dmesg.Wait()
 }
