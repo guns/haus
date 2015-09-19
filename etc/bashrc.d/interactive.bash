@@ -348,6 +348,9 @@ f.() {
 # Breadth-first search and chdir
 cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
 
+# cd physical path
+cdp() { cd "$(pwd -P)"; }
+
 # xargs
 alias x0='xargs -0'
 
