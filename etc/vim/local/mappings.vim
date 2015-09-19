@@ -12,6 +12,9 @@
 " <Leader>
 "   Command line shortcuts
 
+" Map Unicode character bindings from ~/.inputrc
+MapReadlineUnicodeBindings
+
 """ Mapleader {{{1
 
 " Transfer decrement-number to (nvoic)<M-x> to free (nvo)<C-x>
@@ -444,9 +447,6 @@ Mapall <4-w> :<C-u>Makesession<CR>
 Mapall <4-W> :<C-u>Makesession \\\| qa<CR>
 
 """ Text editing {{{1
-
-" Map Unicode character bindings from ~/.inputrc
-MapReadlineUnicodeBindings
 
 " Insert other special characters
 nnoremap <M-CR> i\n<C-\><C-o><C-\><C-n>
