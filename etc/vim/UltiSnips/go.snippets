@@ -366,13 +366,12 @@ case ${1:condition}:
 	${0:${VISUAL}}
 endsnippet
 
-snippet def "Default clause" !b
-default:
-	${0:${VISUAL}}
-endsnippet
-
 snippet de "defer" w
 defer $0
+endsnippet
+
+snippet def "defer func() {}" w
+defer func() { $0 }()
 endsnippet
 
 snippet mk "make()" w
