@@ -1018,8 +1018,10 @@ type ruby &>/dev/null && {
             # IRB
             if [[ "$suf" == 18* ]]; then
                 ALIAS "irb${suf}=${bin}/irb -Ku"
+                ALIAS "irb${suf}m=${bin}/irb -Ku -m"
             else
                 ALIAS "irb${suf}=${bin}/irb"
+                ALIAS "irb${suf}m=${bin}/irb -m"
             fi
 
             # Rake
