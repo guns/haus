@@ -7,10 +7,10 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-application/pdf; zathura %s
-application/pdf; pdftotext %s -; copiousoutput
-application/*; less %s
-application/*; less %s; copiousoutput
-image/*; feh %s
-text/html; firefox %s
-text/html; elinks -dump -force-html %s; copiousoutput
+application/pdf ; zathura %s                                  ; nametemplate=%s.pdf
+application/pdf ; pdftotext %s -                              ; nametemplate=%s.pdf  ; copiousoutput
+application/*   ; less %s
+application/*   ; less %s                                     ; copiousoutput
+image/*         ; feh %s
+text/html       ; firefox %s                                  ; nametemplate=%s.html
+text/html       ; w3m -dump -cols 78 -I utf-8 -T text/html %s ; nametemplate=%s.html ; copiousoutput
