@@ -1,5 +1,60 @@
 # Snippets for Go
 
+snippet APP "CLI application template" b
+/*
+ * Copyright (c) 2015 Sung Pae <self@sungpae.com>
+ */
+
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/jessevdk/go-flags"
+)
+
+const usagesummary = \`[options]\`
+
+type options struct {
+}
+
+func validateOptions(opts *options) error {
+	switch {
+	default:
+		return nil
+	}
+}
+
+// getopts reads os.Args, may write stdout/stderr, and may abort the program!
+func getopts() (*options, []string) {
+	opts := new(options)
+	parser := flags.NewParser(opts, flags.Default)
+	parser.Usage = usagesummary
+
+	args, err := parser.Parse()
+	if err != nil {
+		os.Exit(1)
+	}
+
+	if err := validateOptions(opts); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	$0if len(args) == 0 {
+		parser.WriteHelp(os.Stderr)
+		os.Exit(1)
+	}
+
+	return opts, args
+}
+
+func main() {
+	// opts, args := getopts()
+}
+endsnippet
+
 # when to abbriviate and when not?
 # b doesn't work here, because it ignores whitespace
 # optional local name?
@@ -293,7 +348,7 @@ strings.IndexByte(${1:haystack}, ${0:needle})
 endsnippet
 
 snippet ap "append" w
-$1 = append(${1}, $0)
+${1} = append($1, $0)
 endsnippet
 
 snippet ra "range" w
@@ -532,6 +587,14 @@ endsnippet
 
 snippet td "time.Duration" w
 time.Duration
+endsnippet
+
+snippet tl "time.Local" w
+time.Local
+endsnippet
+
+snippet tu "time.UTC" w
+time.UTC
 endsnippet
 
 snippet tN "time.Nanosecond" w
