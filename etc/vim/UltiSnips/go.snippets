@@ -64,8 +64,12 @@ import (
 )
 endsnippet
 
-snippet /^P/ "Package declaration" r
+snippet /^p/ "package lib" r
 package `!v expand('%:p:h:t')`
+endsnippet
+
+snippet /^P/ "package main" r
+package main
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
@@ -111,6 +115,10 @@ endsnippet
 
 snippet fpl "fmt.Fprintln()" w
 fmt.Fprintln($0)
+endsnippet
+
+snippet warn "warn" w
+fmt.Fprint${1:ln}(os.Stderr, $0)
 endsnippet
 
 snippet pl "fmt.Println()" w
@@ -587,6 +595,10 @@ endsnippet
 
 snippet td "time.Duration" w
 time.Duration
+endsnippet
+
+snippet tD "time.Date" w
+time.Date(${1:y}, ${2:m}, ${3:d}, ${4:0}, ${5:0}, ${6:0}, ${7:0}, ${8:time.Local})
 endsnippet
 
 snippet tl "time.Local" w
