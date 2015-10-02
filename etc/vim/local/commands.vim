@@ -607,13 +607,14 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck ./...<CR>
-    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -asserts -blank ./...<CR>
+    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -ignore=fmt:^$ ./...<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -asserts -blank -ignore=fmt:^$ ./...<CR>
     nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
     vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
     nmap     <buffer> <LocalLeader>I <Plug>(go-install)
-    noremap  <buffer> <LocalLeader>l :<C-u>GoLint ./...<CR>
+    noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
+    noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0 ./...<CR>
     noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope .<CR>
     noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope ""<CR>
     nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
@@ -621,7 +622,7 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
     noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
     noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
-    noremap  <buffer> <LocalLeader>v :<C-u>GoVet -test=true -shadowstrict=true .<CR>
+    noremap  <buffer> <LocalLeader>v :<C-u>GoVet -test -shadowstrict .<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)
