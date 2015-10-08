@@ -439,8 +439,17 @@ snippet de "defer" w
 defer $0
 endsnippet
 
-snippet def "defer func() {}" w
-defer func() { $0 }()
+snippet def "defer func() { _ = … }" w
+defer func() { _ = $0 }()
+endsnippet
+
+snippet defe "defer func() { …; err = }" w
+defer func() {
+	${1:e} := $0
+	if ${2:err} == nil {
+		$2 = $1
+	}
+}()
 endsnippet
 
 snippet mk "make()" w
