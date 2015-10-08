@@ -1367,7 +1367,8 @@ ALIAS mkp='makepkg' \
       mkpf='makepkg --force' \
       mkpc='makepkg --cleanbuild --force' \
       mkps='makepkg --syncdeps' \
-      mkpa='makepkg --ignorearch'
+      mkpa='makepkg --ignorearch' \
+      mkpo='makepkg --nobuild'
 
 ### Media
 
