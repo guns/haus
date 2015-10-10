@@ -29,6 +29,7 @@ cd ~/Downloads
 xautolock-launch &
 dropoutputnotify &
 gpg-connect-agent /bye &
+numlockx on &
 
 popd
 
