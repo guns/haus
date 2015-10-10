@@ -31,9 +31,9 @@ class Fiobench
 
         Commands:
 
-            [t]est        args: testdir logdir
+            [t]est        args: testfile logdir
             [g]raph       args: logdir …
-            [T]estgraph   args: testdir logdir
+            [T]estgraph   args: testfile logdir
             [c]ompare     args: logdir …
 
         Options:
