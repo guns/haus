@@ -34,6 +34,11 @@ func abort(err error) {
 	os.Exit(1)
 }
 
+func abortWithHelp(parser *flags.Parser) {
+	parser.WriteHelp(os.Stderr)
+	os.Exit(1)
+}
+
 func getopts(arguments []string) (parser *flags.Parser, opts *options, args []string) {
 	opts = new(options)
 	var err error
@@ -714,6 +719,14 @@ endsnippet
 
 snippet uu "*url.URL" w
 *url.URL
+endsnippet
+
+snippet TN "trigger.New()" w
+trigger.New()
+endsnippet
+
+snippet TT "*trigger.Trigger" w
+*trigger.Trigger
 endsnippet
 
 # vim:ft=snippets:
