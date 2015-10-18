@@ -12,5 +12,5 @@ desc 'Update'
 task :update do
   mkdir_p 'syntax'
   fetch 'syntax/pgsql.vim', 'http://www.gunduz.org/postgresql/pgsql.vim'
-  fetch 'syntax/nhdes.vim', 'http://bilious.alt.org/~paxed/nethack/nhdes.vim'
+  fetch 'syntax/nhdes.vim', 'https://bilious.alt.org/~paxed/nethack/nhdes.vim'
 end
