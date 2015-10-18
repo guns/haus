@@ -66,8 +66,7 @@ function! s:matcher.filter(candidates, context) "{{{
   let $LC_NUMERIC = 'en_US.utf8'
 
   let candidates = a:candidates
-  for input_orig in a:context.input_list
-    let input = substitute(unite#util#expand(input_orig), '\\ ', ' ', 'g')
+  for input in a:context.input_list
     if input == '!' || input == ''
       continue
     elseif input =~ '^:'
@@ -76,14 +75,14 @@ function! s:matcher.filter(candidates, context) "{{{
       continue
     endif
 
-    let input = s:matcher.pattern(input)
+    let pattern = s:matcher.pattern(input)
 
-    let expr = (input =~ '^!') ?
-          \ 'v:val.word !~ ' . string(input[1:]) :
-          \ 'v:val.word =~ ' . string(input)
+    let expr = (pattern =~ '^!') ?
+          \ 'v:val.word !~ ' . string(pattern[1:]) :
+          \ 'v:val.word =~ ' . string(pattern)
     if input !~ '^!' && unite#util#has_lua()
       let expr = 'if_lua_fuzzy'
-      let a:context.input = input_orig
+      let a:context.input_lua = input
     endif
 
     let candidates = unite#filters#filter_matcher(

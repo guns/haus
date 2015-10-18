@@ -53,11 +53,14 @@ function! s:source_buffer_all.hooks.on_init(args, context) "{{{
         \ (get(a:args, 0, '') ==# '+')
   let a:context.source__is_minus =
         \ (get(a:args, 0, '') ==# '-')
+  let a:context.source__is_terminal =
+        \ (get(a:args, 0, '') ==# 't')
   let a:context.source__buffer_list =
         \ s:get_buffer_list(a:context.source__is_bang,
         \                   a:context.source__is_question,
         \                   a:context.source__is_plus,
-        \                   a:context.source__is_minus)
+        \                   a:context.source__is_minus,
+        \                   a:context.source__is_terminal)
 endfunction"}}}
 function! s:source_buffer_all.hooks.on_syntax(args, context) "{{{
   syntax match uniteSource__Buffer_Name /[^/ \[\]]\+\s/
@@ -96,7 +99,8 @@ function! s:source_buffer_all.gather_candidates(args, context) "{{{
           \ s:get_buffer_list(a:context.source__is_bang,
           \                   a:context.source__is_question,
           \                   a:context.source__is_plus,
-          \                   a:context.source__is_minus)
+          \                   a:context.source__is_minus,
+          \                   a:context.source__is_terminal)
   endif
 
   let candidates = map(a:context.source__buffer_list, "{
@@ -110,7 +114,7 @@ function! s:source_buffer_all.gather_candidates(args, context) "{{{
   return candidates
 endfunction"}}}
 function! s:source_buffer_all.complete(args, context, arglead, cmdline, cursorpos) "{{{
-  return ['!', '?', '+', '-']
+  return ['!', '?', '+', '-', 't']
 endfunction"}}}
 
 let s:source_buffer_tab = deepcopy(s:source_buffer_all)
@@ -125,21 +129,26 @@ function! s:source_buffer_tab.gather_candidates(args, context) "{{{
           \ s:get_buffer_list(a:context.source__is_bang,
           \                   a:context.source__is_question,
           \                   a:context.source__is_plus,
-          \                   a:context.source__is_minus)
+          \                   a:context.source__is_minus,
+          \                   a:context.source__is_terminal)
   endif
 
-  if !exists('g:loaded_tabpagebuffer')
+  if !exists('g:loaded_tabpagebuffer') && !exists('g:CtrlSpaceLoaded')
     call unite#print_source_message(
-          \ 'tabpagebuffer plugin is not installed.', self.name)
+          \ 'tabpagebuffer or ctrlspace plugin is not installed.', self.name)
     return []
   endif
 
-  if !exists('t:tabpagebuffer')
+  if exists('t:tabpagebuffer')
+    let bufferlist = t:tabpagebuffer
+  elseif exists('t:CtrlSpaceList')
+    let bufferlist = t:CtrlSpaceList
+  else
     return []
   endif
 
   let list = filter(copy(a:context.source__buffer_list),
-        \ 'has_key(t:tabpagebuffer, v:val.action__buffer_nr)')
+        \ 'has_key(bufferlist, v:val.action__buffer_nr)')
 
   let candidates = map(list, "{
         \ 'word' : unite#util#substitute_path_separator(
@@ -214,7 +223,7 @@ function! s:compare(candidate_a, candidate_b) "{{{
       \ (a:candidate_b.action__buffer_nr == unite#get_current_unite().prev_bufnr ? -1 :
       \ a:candidate_b.source__time - a:candidate_a.source__time)
 endfunction"}}}
-function! s:get_buffer_list(is_bang, is_question, is_plus, is_minus) "{{{
+function! s:get_buffer_list(is_bang, is_question, is_plus, is_minus, is_terminal) "{{{
   " Get :ls flags.
   redir => output
   silent! ls
@@ -230,7 +239,7 @@ function! s:get_buffer_list(is_bang, is_question, is_plus, is_minus) "{{{
   let bufnr = 1
   let buffer_list = unite#sources#buffer#variables#get_buffer_list()
   while bufnr <= bufnr('$')
-    if s:is_listed(a:is_bang, a:is_question, a:is_plus, a:is_minus, bufnr)
+    if s:is_listed(a:is_bang, a:is_question, a:is_plus, a:is_minus, a:is_terminal, bufnr)
       let dict = get(buffer_list, bufnr, {
             \ 'action__buffer_nr' : bufnr,
             \ 'source__time' : 0,
@@ -247,12 +256,17 @@ function! s:get_buffer_list(is_bang, is_question, is_plus, is_minus) "{{{
   return list
 endfunction"}}}
 
-function! s:is_listed(is_bang, is_question, is_plus, is_minus, bufnr) "{{{
+function! s:is_listed(is_bang, is_question, is_plus, is_minus, is_terminal, bufnr) "{{{
+  let bufname = bufname(a:bufnr)
+  let buftype = getbufvar(a:bufnr, '&buftype')
   return bufexists(a:bufnr) &&
         \ (a:is_question ? !buflisted(a:bufnr) :
         \    (a:is_bang || buflisted(a:bufnr)))
         \ && (!a:is_plus || getbufvar(a:bufnr, '&mod'))
-        \ && (!a:is_minus || getbufvar(a:bufnr, '&buftype') !~# 'nofile')
+        \ && (!a:is_minus || buftype == ''
+        \                     && bufname != ''
+        \                     && !isdirectory(bufname))
+        \ && (!a:is_terminal || buftype ==# 'terminal' )
         \ && (getbufvar(a:bufnr, '&filetype') !=# 'unite'
         \      || getbufvar(a:bufnr, 'unite').buffer_name !=#
         \         unite#get_current_unite().buffer_name)

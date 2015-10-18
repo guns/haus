@@ -41,7 +41,7 @@ function! unite#candidates#_recache(input, is_force) "{{{
       let &ignorecase = context.ignorecase
     endif
 
-    let context.is_redraw = a:is_force
+    let context.is_redraw = a:is_force || context.is_redraw
     let context.is_changed = a:input !=# unite.last_input
           \ || context.path !=# unite.last_path
 
@@ -127,11 +127,6 @@ function! unite#candidates#_recache(input, is_force) "{{{
         endif
       endif
 
-      if source.is_grouped
-        let source.unite__candidates =
-              \ unite#candidates#_group_post_filters(source.unite__candidates)
-      endif
-
       " Call post_filter hook.
       let source.unite__context.candidates =
             \ source.unite__candidates
@@ -149,6 +144,7 @@ function! unite#candidates#_recache(input, is_force) "{{{
           \           'v:val.unite__context.is_async')) > 0
   finally
     let &ignorecase = ignorecase_save
+    let context.is_redraw = 0
   endtry
 
   call unite#handlers#_save_updatetime()
@@ -191,12 +187,6 @@ function! unite#candidates#gather(...) "{{{
   let unite.context.input_list =
         \ split(unite.context.input, '\\\@<! ', 1)
 
-  " Post filter.
-  for filter_name in unite.post_filters
-    let candidates = unite#helper#call_filter(
-          \ filter_name, candidates, unite.context)
-  endfor
-
   let unite.candidates_len = len(candidates) +
         \ len(unite.candidates[unite.candidates_pos :])
 
@@ -223,12 +213,6 @@ function! unite#candidates#_gather_pos(offset) "{{{
   let unite = unite#get_current_unite()
   let candidates = unite.candidates[unite.candidates_pos :
         \ unite.candidates_pos + a:offset - 1]
-
-  " Post filter.
-  for filter_name in unite.post_filters
-    let candidates = unite#helper#call_filter(
-          \ filter_name, candidates, unite.context)
-  endfor
 
   let unite.candidates_pos += len(candidates)
 
@@ -266,7 +250,8 @@ function! s:recache_candidates_loop(context, is_force) "{{{
     let context.is_changed = a:context.is_changed
     let context.is_invalidate = source.unite__is_invalidate
     let context.is_list_input = a:context.is_list_input
-    let context.input_list = split(context.input, '\\\@<! ', 1)
+    let context.input_list =
+          \ unite#helper#get_input_list(context.input)
     let context.unite__max_candidates =
           \ (unite.disabled_max_candidates ? 0 : source.max_candidates)
     if context.unite__is_vimfiler
@@ -281,8 +266,27 @@ function! s:recache_candidates_loop(context, is_force) "{{{
     let context.candidates = source_candidates
     call unite#helper#call_hook([source], 'on_pre_filter')
 
+    " Restore current filters.
+    if empty(unite.current_matchers)
+      let unite.current_matchers = unite#util#convert2list(
+            \ unite#custom#get_profile(unite.profile_name, 'matchers'))
+    endif
+    if empty(unite.current_sorters)
+      let unite.current_sorters = unite#util#convert2list(
+            \ unite#custom#get_profile(unite.profile_name, 'sorters'))
+    endif
+    if empty(unite.current_converters)
+      let unite.current_converters = unite#util#convert2list(
+            \ unite#custom#get_profile(unite.profile_name, 'converters'))
+    endif
+
     " Set filters.
-    let sorters = source.sorters
+    let matchers = !empty(unite.current_matchers) ?
+          \ unite.current_matchers : source.matchers
+    let sorters = !empty(unite.current_sorters) ?
+          \ unite.current_sorters : source.sorters
+    let converters = !empty(unite.current_converters) ?
+          \ unite.current_converters : source.converters
     if sorters ==# ['sorter_nothing']
           \ || unite.context.unite__is_vimfiler
       let sorters = []
@@ -299,14 +303,14 @@ function! s:recache_candidates_loop(context, is_force) "{{{
     if !unite.context.unite__is_vimfiler
       " Call filters.
       let source_candidates = unite#helper#call_source_filters(
-            \ source.matchers + source.sorters,
+            \ matchers + sorters,
             \ source_candidates, context, source)
       if context.unite__max_candidates > 0
         let source_candidates = source_candidates[:
               \ context.unite__max_candidates - 1]
       endif
       let source_candidates = unite#helper#call_source_filters(
-            \ source.converters, source_candidates, context, source)
+            \ converters, source_candidates, context, source)
     endif
 
     " Get execute_command.
@@ -354,8 +358,13 @@ function! s:get_source_candidates(source) "{{{
       endif
     endif
 
-    if context.is_redraw || a:source.unite__is_invalidate
-      " Recaching.
+    " Recaching.
+    if (context.is_redraw || a:source.unite__is_invalidate)
+          \ && (!has_key(a:source, 'async_gather_candidates')
+          \     || has_key(a:source, 'gather_candidates'))
+      " Note: If the source has not gather_candidates, the recaching is
+      " disabled.
+
       let a:source.unite__cached_candidates = []
 
       let funcname = 'gather_candidates'
@@ -396,9 +405,9 @@ function! s:get_source_candidates(source) "{{{
     call unite#print_error(v:throwpoint)
     call unite#print_error(v:exception)
     call unite#print_error(
-          \ '[unite.vim] Error occurred in ' . funcname . '!')
+          \ 'Error occurred in ' . funcname . '!')
     call unite#print_error(
-          \ '[unite.vim] Source name is ' . a:source.name)
+          \ 'Source name is ' . a:source.name)
 
     return []
   endtry
@@ -427,30 +436,6 @@ function! s:ignore_candidates(candidates, context) "{{{
   endif
 
   return candidates
-endfunction"}}}
-
-function! unite#candidates#_group_post_filters(candidates) "{{{
-  " Post filters for group
-  let groups = {}
-  for i in range(0, len(a:candidates) - 1)
-    let group = a:candidates[i].group
-    if has_key(groups, group)
-      call add(groups[group].indexes, i)
-    else
-      let groups[group] = { 'index' : i, 'indexes' : [i] }
-    endif
-  endfor
-
-  let _ = []
-  for [group, val] in unite#util#sort_by(items(groups), 'v:val[1].index')
-    " Add group candidate
-    call add(_, {'word' : group, 'is_dummy' : 1})
-
-    " Add children candidates
-    let _ += map(val.indexes, 'a:candidates[v:val]')
-  endfor
-
-  return _
 endfunction"}}}
 
 let &cpo = s:save_cpo

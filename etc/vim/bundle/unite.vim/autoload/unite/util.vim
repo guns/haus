@@ -101,8 +101,9 @@ endfunction
 function! unite#util#is_mac(...)
   return call(s:get_prelude().is_mac, a:000)
 endfunction
-function! unite#util#print_error(...)
-  return call(s:get_message().error, a:000)
+function! unite#util#print_error(msg)
+  let msg = '[unite.vim] ' . a:msg
+  return call(s:get_message().error, [msg])
 endfunction
 function! unite#util#smart_execute_command(action, word)
   execute a:action . ' ' . fnameescape(a:word)
@@ -121,7 +122,13 @@ function! unite#util#escape_pattern(...)
 endfunction
 function! unite#util#set_default(var, val, ...)  "{{{
   if !exists(a:var) || type({a:var}) != type(a:val)
+    if exists(a:var) && type({a:var}) != type(a:val)
+      call unite#print_error(printf(
+            \ 'Current %s is wrong type.  Ignored your config.', a:var))
+    endif
+
     let alternate_var = get(a:000, 0, '')
+    unlet! {a:var}
 
     let {a:var} = exists(alternate_var) ?
           \ {alternate_var} : a:val
@@ -240,6 +247,7 @@ endfunction
 function! unite#util#alternate_buffer() "{{{
   let unite = unite#get_current_unite()
   if s:buflisted(unite.prev_bufnr)
+        \ && getbufvar(unite.prev_bufnr, '&filetype') !=# "unite"
     execute 'buffer' unite.prev_bufnr
     return
   endif
@@ -278,8 +286,8 @@ endfunction"}}}
 function! s:buflisted(bufnr) "{{{
   return (getbufvar(a:bufnr, '&bufhidden') == '' || buflisted(a:bufnr)) &&
         \ (exists('t:tabpagebuffer') ?
-        \   has_key(t:tabpagebuffer, a:bufnr) && bufloaded(a:bufnr) :
-        \   bufloaded(a:bufnr))
+        \   has_key(t:tabpagebuffer, a:bufnr) && buflisted(a:bufnr) :
+        \   buflisted(a:bufnr))
 endfunction"}}}
 
 function! unite#util#glob(pattern, ...) "{{{

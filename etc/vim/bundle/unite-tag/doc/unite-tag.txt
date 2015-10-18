@@ -32,9 +32,9 @@ including |tags|.
 
 Requirement:
 - |unite.vim| (Recommend latest version at https://github.com/Shougo/unite.vim)
-Note: Using tag/include source (Either one)
-- |neocomplcache|(Recommend latest version at https://github.com/Shougo/neocomplcache)
-- |neocomplete|(Recommend latest version at https://github.com/Shougo/neocomplete)
+Note: Using tag/include source
+- |neoinclude| (Recommend latest version at
+  https://github.com/Shougo/neoinclude.vim)
 
 Latest version:
 https://github.com/tsukkee/unite-tag
@@ -53,7 +53,7 @@ To select files including tags, execute |:Unite| with argument of tag/file
 <
 To select include tags generated like |tagbar| or |ctrlp|, execute
 |:Unite| with argument of tag/include.
-Note: |neocomplcache| or |neocomplete| is needed.
+Note: |neoinclude| is needed.
 >
 	:Unite tag/include
 <
@@ -87,6 +87,12 @@ g:unite_source_tag_max_name_length	*g:unite_source_tag_max_name_length*
 	Max length of tag name field in candidate.
 	The default value is 25.
 
+
+g:unite_source_tag_max_kind_length	*g:unite_source_tag_max_kind_length*
+	Max length of tag kind field in candidate.
+	The default value is 8.
+
+
 g:unite_source_tag_max_fname_length	*g:unite_source_tag_max_fname_length*
 	Max length of file name field in candidate.
 	The default value is 20.
@@ -98,13 +104,18 @@ g:unite_source_tag_strict_truncate_string
 	The default value is 1.
 
 
-g:unite_source_tag_show_location	*g:unite_source_tag_show_location*
-	Show source location field.
+g:unite_source_tag_show_fname		*g:unite_source_tag_show_fname*
+	Show file name field.
 	The default value is 1.
 
 
-g:unite_source_tag_show_fname		*g:unite_source_tag_show_fname*
-	Show file name field.
+g:unite_source_tag_show_kind		*g:unite_source_tag_show_kind*
+	Show kind field.
+	The default value is 1.
+
+
+g:unite_source_tag_show_location	*g:unite_source_tag_show_location*
+	Show source location field.
 	The default value is 1.
 
 
@@ -119,8 +130,8 @@ FAQ							*unite-tag-faq*
 Q: I want to open files without generating tags files like ctrlp.vim or
 tagbar plugin.
 
-A: You can use "tag/include" source. But it needs |neocomplcache| or
-|neocomplete| plugin. It uses automatically generated tag files.
+A: You can use "tag/include" source. But it needs |neoinclude| plugin. It uses
+automatically generated tag files.
 
 ==============================================================================
 vim:tw=78:fo=tcq2mM:ts=8:ft=help:norl

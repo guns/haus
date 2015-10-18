@@ -44,9 +44,9 @@ function! unite#helper#call_hook(sources, hook_name) "{{{
       call unite#print_error(v:throwpoint)
       call unite#print_error(v:exception)
       call unite#print_error(
-            \ '[unite.vim] Error occurred in calling hook "' . a:hook_name . '"!')
+            \ 'Error occurred in calling hook "' . a:hook_name . '"!')
       call unite#print_error(
-            \ '[unite.vim] Source name is ' . source.name)
+            \ 'Source name is ' . source.name)
     endtry
   endfor
 endfunction"}}}
@@ -567,6 +567,31 @@ endfunction"}}}
 function! unite#helper#join_targets(targets) "{{{
   return join(map(copy(a:targets),
         \    "unite#util#escape_shell(unite#helper#relative_target(v:val))"))
+endfunction"}}}
+
+function! unite#helper#is_pty(command) "{{{
+  " Note: "pt" and "ack" and "ag" needs pty.
+  " It is too bad.
+  return fnamemodify(a:command, ':t:r') =~#
+        \ '^pt$\|^ack\%(-grep\)\?$\|^ag$'
+endfunction"}}}
+
+function! unite#helper#complete_search_history(arglead, cmdline, cursorpos) "{{{
+  return filter(map(unite#util#uniq(s:histget('search')
+        \                           + s:histget('input')),
+        \           "substitute(v:val, '^\\\\<\\|\\\\>$', '', 'g')"),
+        \ "stridx(tolower(v:val), tolower(a:arglead)) == 0")
+endfunction"}}}
+
+function! unite#helper#get_input_list(input) abort "{{{
+  return map(split(a:input, '\\\@<! ', 1), "
+        \ substitute(unite#util#expand(v:val), '\\\\ ', ' ', 'g')")
+endfunction"}}}
+
+function! s:histget(type) abort "{{{
+  return filter(map(reverse(range(1, histnr(a:type))),
+        \           'histget(a:type, v:val)'),
+        \       'v:val != ""')
 endfunction"}}}
 
 let &cpo = s:save_cpo

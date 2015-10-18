@@ -26,7 +26,7 @@
 " Variables  "{{{
 call unite#util#set_default('g:unite_source_find_command', 'find')
 call unite#util#set_default('g:unite_source_find_default_opts', '')
-call unite#util#set_default('g:unite_source_find_max_candidates', 100)
+call unite#util#set_default('g:unite_source_find_default_expr', '-name ')
 "}}}
 
 function! unite#sources#find#define() "{{{
@@ -36,7 +36,7 @@ endfunction "}}}
 
 let s:source = {
       \ 'name': 'find',
-      \ 'max_candidates': g:unite_source_find_max_candidates,
+      \ 'max_candidates': 100,
       \ 'hooks' : {},
       \ 'matchers' : ['matcher_regexp'],
       \ 'ignore_globs' : [
@@ -64,7 +64,8 @@ function! s:source.hooks.on_init(args, context) "{{{
           \ printf('"%s" %s %s ',
           \   g:unite_source_find_command,
           \   g:unite_source_find_default_opts,
-          \   unite#helper#join_targets(a:context.source__targets)), '-name ')
+          \   unite#helper#join_targets(a:context.source__targets)),
+          \   g:unite_source_find_default_expr)
   endif
 endfunction"}}}
 function! s:source.hooks.on_close(args, context) "{{{

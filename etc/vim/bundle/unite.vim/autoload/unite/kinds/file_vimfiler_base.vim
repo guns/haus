@@ -94,7 +94,7 @@ function! s:kind.action_table.vimfiler__move.func(candidates) "{{{
     call unite#util#lcd(vimfiler_current_dir)
 
     if g:unite_kind_file_move_command == ''
-      call unite#print_error("Please install mv.exe.")
+      call unite#print_error('Please install mv.exe.')
       return 1
     endif
 
@@ -171,7 +171,7 @@ function! s:kind.action_table.vimfiler__copy.func(candidates) "{{{
 
     if g:unite_kind_file_copy_file_command == ''
           \ || g:unite_kind_file_copy_directory_command == ''
-      call unite#print_error("Please install cp.exe.")
+      call unite#print_error('Please install cp.exe.')
       return 1
     endif
 
@@ -220,7 +220,7 @@ let s:kind.action_table.vimfiler__delete = {
 function! s:kind.action_table.vimfiler__delete.func(candidates) "{{{
   if g:unite_kind_file_delete_file_command == ''
         \ || g:unite_kind_file_delete_directory_command == ''
-    call unite#print_error("Please install rm.exe.")
+    call unite#print_error('Please install rm.exe.')
     return 1
   endif
 
@@ -317,12 +317,7 @@ function! s:kind.action_table.vimfiler__newfile.func(candidate) "{{{
 
       call writefile([], filename)
 
-      call unite#action#do(
-            \ (vimfiler_current_dir == '' ?
-            \   'open' : vimfiler#get_context().edit_action),
-            \ [file], { 'no_quit' : 1 })
-
-      execute 'doautocmd BufNewFile' fnameescape(filename)
+      call s:search_cursor(filename, '', {})
     endfor
   finally
     if isdirectory(current_dir)
@@ -513,7 +508,7 @@ function! s:kind.action_table.vimfiler__external_filer.func(candidate) "{{{
       let output = unite#util#system(filer . "'" . path . "' &")
     endif
     if output != ''
-      call unite#util#print_error('[unite] ' . output)
+      call unite#util#print_error(output)
     endif
   finally
     if isdirectory(current_dir)
@@ -541,11 +536,11 @@ function! s:move_to_other_drive(candidate, filename) "{{{
   " move command doesn't supported directory over drive move in Windows.
   if g:unite_kind_file_copy_file_command == ''
         \ || g:unite_kind_file_copy_directory_command == ''
-    call unite#print_error("Please install cp.exe.")
+    call unite#print_error('Please install cp.exe.')
     return 1
   elseif g:unite_kind_file_delete_file_command == ''
           \ || g:unite_kind_file_delete_directory_command == ''
-    call unite#print_error("Please install rm.exe.")
+    call unite#print_error('Please install rm.exe.')
     return 1
   endif
 

@@ -1,7 +1,6 @@
 "=============================================================================
-" FILE: converter_tail_abbr.vim
+" FILE: converter_abbr_word.vim
 " AUTHOR:  Shougo Matsushita <Shougo.Matsu@gmail.com>
-"          Sean Mackesey <s.mackesey@gmail.com> 
 " License: MIT license  {{{
 "     Permission is hereby granted, free of charge, to any person obtaining
 "     a copy of this software and associated documentation files (the
@@ -27,20 +26,20 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#filters#converter_tail_abbr#define() "{{{
+function! unite#filters#converter_abbr_word#define() "{{{
   return s:converter
 endfunction"}}}
 
 let s:converter = {
-      \ 'name' : 'converter_tail_abbr',
-      \ 'description' : 'converts abbr to tail of filename',
+      \ 'name' : 'converter_abbr_word',
+      \ 'description' : 'abbr to word converter',
       \}
 
 function! s:converter.filter(candidates, context) "{{{
   for candidate in a:candidates
-    let candidate.abbr = fnamemodify(get(candidate,
-          \ 'action__path', candidate.word), ':t')
+    let candidate.word = get(candidate, 'abbr', candidate.word)
   endfor
+
   return a:candidates
 endfunction"}}}
 

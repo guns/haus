@@ -289,20 +289,6 @@ More advanced configuration example:
 	  " Runs "split" action by <C-s>.
 	  imap <silent><buffer><expr> <C-s>     unite#do_action('split')
 	endfunction"}}}
-
-	if executable('jvgrep')
-	  " For jvgrep.
-	  let g:unite_source_grep_command = 'jvgrep'
-	  let g:unite_source_grep_default_opts = '-i --exclude ''\.(git|svn|hg|bzr)'''
-	  let g:unite_source_grep_recursive_opt = '-R'
-	endif
-
-	" For ack.
-	if executable('ack-grep')
-	  " let g:unite_source_grep_command = 'ack-grep'
-	  " let g:unite_source_grep_default_opts = '-i --no-heading --no-color -k -H'
-	  " let g:unite_source_grep_recursive_opt = ''
-	endif
 <
 ==============================================================================
 INTERFACE					*unite-interface*
@@ -521,17 +507,19 @@ g:unite_source_rec_unit
 					*g:unite_source_rec_async_command*
 g:unite_source_rec_async_command
 		Specify the filelist command and arguments in file_rec/async
-		source.
+		source.  It is arguments List.
 >
 		" Using ack-grep as recursive command.
-		let g:unite_source_rec_async_command = 'ack -f --nofilter'
+		let g:unite_source_rec_async_command =
+		\ ['ack', '-f', '--nofilter']
 
 		" Using ag as recursive command.
 		let g:unite_source_rec_async_command =
-                \ 'ag --follow --nocolor --nogroup --hidden -g ""'
+                \ ['ag', '--follow', '--nocolor', '--nogroup',
+		\  '--hidden', '-g', '']
 <
-		The default value is "find -L" which follows symbolic links
-		to have the same behaviour as file_rec, and the
+		The default value is ["find", "-L"] which follows symbolic
+		links to have the same behaviour as file_rec, and the
 		args(|g:unite_source_rec_find_args|).
 		Because, "find" command is fastest.
 		Note: In windows environment, you must install file list
@@ -570,12 +558,6 @@ g:unite_source_grep_default_opts
 <
 		The default value is "-inH".
 
-					*g:unite_source_grep_max_candidates*
-g:unite_source_grep_max_candidates
-		Set the max number of |unite-source-grep| candidates.
-
-		The default value is 100.
-
 				*g:unite_source_grep_search_word_highlight*
 g:unite_source_grep_search_word_highlight
 		Specify the search word highlight.
@@ -607,11 +589,11 @@ g:unite_source_find_default_opts
 
 		The default value is "".
 
-					*g:unite_source_find_max_candidates*
-g:unite_source_find_max_candidates
-		Set the max number of |unite-source-find| candidates.
+					*g:unite_source_find_default_expr*
+g:unite_source_find_default_expr
+		Set the default expression for find.
 
-		The default value is 100.
+		The default value is "-name ".
 
 					*g:unite_source_line_enable_highlight*
 g:unite_source_line_enable_highlight
@@ -736,12 +718,12 @@ g:unite_source_history_yank_file
 		Example:
 >
 		let g:unite_source_history_yank_file=$HOME.'/.vim/yankring.txt'
+<
+					*g:unite_source_history_save_registers*
+g:unite_source_history_yank_save_registers
+		Specify the save registers to yank history.
 
-					*g:unite_source_history_save_clipboard*
-g:unite_source_history_yank_save_clipboard
-		If defined and not 0, unite saves the clipboard register value.
-
-		The default value is 0.
+		The default value is ['"'].
 
 					*g:unite_source_process_enable_confirm*
 g:unite_source_process_enable_confirm
@@ -1188,7 +1170,9 @@ M		|<Plug>(unite_disable_max_candidates)|
 <C-l>		|<Plug>(unite_redraw)|
 <C-h>		|<Plug>(unite_delete_backward_path)|
 gg		|<Plug>(unite_cursor_top)|
+<C-Home>	|<Plug>(unite_cursor_top)|
 G		|<Plug>(unite_cursor_bottom)|
+<C-End>		|<Plug>(unite_cursor_bottom)|$
 j		|<Plug>(unite_loop_cursor_down)|
 <Down>		|<Plug>(unite_loop_cursor_down)|
 k		|<Plug>(unite_loop_cursor_up)|
@@ -1360,17 +1344,39 @@ unite#get_status_string()			 *unite#get_status_string()*
 		Returns unite status string.  It is useful to customize the
 		statusline.
 
-					*unite#mappings#set_current_filters()*
-unite#mappings#set_current_filters({filters})
-		Changes current unite buffer filters.
+					*unite#mappings#set_current_matchers()*
+unite#mappings#set_current_matchers({matchers})
+		Changes current unite buffer matchers.
 		Example:
 >
-  nnoremap <buffer><expr> S      unite#mappings#set_current_filters(
-        \ empty(unite#mappings#get_current_filters()) ? ['sorter_reverse'] : [])
+  nnoremap <buffer><expr> M      unite#mappings#set_current_matchers(
+        \ empty(unite#mappings#get_current_matchers()) ?
+	\ ['matcher_migemo'] : [])
 <
-					*unite#mappings#get_current_filters()*
-unite#mappings#get_current_filters()
-		Gets current unite buffer filters.
+					*unite#mappings#set_current_sorters()*
+unite#mappings#set_current_sorters({sorters})
+		Changes current unite buffer sorters.
+		Example:
+>
+  nnoremap <buffer><expr> S      unite#mappings#set_current_sorters(
+        \ empty(unite#mappings#get_current_matchers()) ?
+	\ ['sorter_reverse'] : [])
+<
+				*unite#mappings#set_current_converters()*
+unite#mappings#set_current_converters({matchers})
+		Changes current unite buffer matchers.
+
+				*unite#mappings#get_current_matchers()*
+unite#mappings#get_current_matchers()
+		Gets current unite buffer matchers.
+
+				*unite#mappings#get_current_sorters()*
+unite#mappings#get_current_sorters()
+		Gets current unite buffer sorters.
+
+				*unite#mappings#get_current_converters()*
+unite#mappings#get_current_converters()
+		Gets current unite buffer converters.
 
 						*unite#custom#profile()*
 						*unite#set_profile()*
@@ -1435,11 +1441,23 @@ unite#custom#profile({profile-name}, {option-name}, {value})
 		      \ 'priority' : 1000,
 		      \ })
 <
+		matchers			(List)
+		Specify a list of matcher names.  The filters are called
+		instead of the source filters.  If you change filters
+		dynamically,
+		use |unite#mappings#set_current_matchers()| instead.
 
-		filters				(List)
-		Specify a list of filter names.  The filters are called after
-		combining all candidates.  If you change filters dynamically,
-		use |unite#mappings#set_current_filters()| instead.
+		sorters				(List)
+		Specify a list of sorter names.  The filters are called
+		instead of the source sorters.  If you change filters
+		dynamically,
+		use |unite#mappings#set_current_sorters()| instead.
+
+		converters			(List)
+		Specify a list of converter names.  The filters are called
+		instead of the source converters.  If you change filters
+		dynamically,
+		use |unite#mappings#set_current_converters()| instead.
 
 		context				(Dictionary)
 		Specify default {context} value in unite buffer.
@@ -1737,6 +1755,12 @@ the context dictionary.
 		Visible prompt if narrowing text is empty.
 		Note: It is old prompt behavior.
 		Default: no-prompt-visible
+
+						*unite-options-prompt-focus*
+		-prompt-focus
+		Move to prompt if unite enters insert mode.
+		Note: It is old prompt behavior.
+		Default: no-prompt-focus
 
 						*unite-options-prompt-direction*
 		-prompt-direction="top" or "below"
@@ -2048,6 +2072,11 @@ the context dictionary.
 		Don't create unite buffer.
 		Default: buffer
 
+						*unite-options-match-input*
+		-match-input
+		Enable input keyword match highlight.
+		Default: match-input
+
 ==============================================================================
 SOURCES						*unite-sources*
 
@@ -2093,7 +2122,8 @@ file_rec, rec	Gather files recursive and nominates all file names under the
 		-custom-grep-search-word-highlight  : search word highlight
 
 						*unite-source-file_rec/async*
-file_rec/async	Similar to |unite-source-file_rec|, but get files asynchronously.
+file_rec/async	Similar to |unite-source-file_rec|, but get files
+		asynchronously with |g:unite_source_rec_async_command|.
 		Note: Requires |vimproc|.
 		Note: Requires the "ag" or "find" command.
 		Note: Windows "find" command is not supported.
@@ -2102,15 +2132,17 @@ file_rec/async	Similar to |unite-source-file_rec|, but get files asynchronously.
 		Note: If there are more than
 		|g:unite_source_file_rec_max_cache_files| candidates,
 		caching will be disabled.
+		Note: In windows environment, you must define
+		|g:unite_source_rec_async_command| variable.
 
 		Source arguments:
 		1. the target directories splitted by newlines.
 
 						*unite-source-file_rec/neovim*
 file_rec/neovim	Similar to |unite-source-file_rec|, but get files
-		asynchronously by neovim job APIs.
-		Note: Requires neovim.
-		Note: Requires the "ag" or "find" command.
+		asynchronously by neovim job APIs with
+		|g:unite_source_rec_async_command|.
+		Note: Requires neovim and the "find" command.
 		Note: Windows "find" command is not supported.
 		Note: If you edit one of the files in Vim, the source will
 		update its cache.
@@ -2157,17 +2189,22 @@ buffer		Nominates opened buffers as candidates, ordering by time
 		If argument 1 is "?", non-listed buffers are displayed.
 		If argument 1 is "+", only modified buffers are displayed.
 		If argument 1 is "-", only file buffers are displayed.
+		If argument 1 is "t", only terminal buffers are displayed.
 
 		Source arguments:
-		1. "!", "?", "+" or "-".
+		1. "!", "?", "+", "-", or "t"
 
 						*unite-source-buffer_tab*
 buffer_tab	Nominates opened buffers only in the current tab as
 		candidates, ordering by time series.
 		Arguments are the same as for |unite-source-buffer|.
 
-		Note: This source requires |tabpagebuffer|.  Please install.
+		Note: This source requires |tabpagebuffer| or |ctrlspace|.
+
+		Please install:
 		http://github.com/Shougo/tabpagebuffer.vim
+		or
+		http://github.com/szw/vim-ctrlspace
 
 		Source arguments:
 		1. "!", "?", "+" or "-".
@@ -2185,6 +2222,13 @@ tab		Nominates opened tabs as candidates, regarding t:cwd as the
 
 						*unite-source-register*
 register	Nominates the strings stored in registers as candidates.
+
+		Source arguments:
+		1. register names
+
+		Example: >
+	nnoremap <silent> ,ur  :<C-u>Unite
+	\ register:abcdef<CR>
 
 						*unite-source-bookmark*
 bookmark	Nominates files or directories you bookmarked as candidates.
@@ -2216,6 +2260,7 @@ window		Nominates opened windows as candidates, ordering by time
 
 		Source arguments:
 		1. "no-current" removes current window from candidates.
+		2. "all" gathers all tab windows candidates.
 
 						*unite-source-window/gui*
 window/gui	Nominates opened GUI windows as candidates.
@@ -2290,8 +2335,8 @@ grep		Nominates "grep" command output as candidates.
 	  " Use ag in unite grep source.
 	  let g:unite_source_grep_command = 'ag'
 	  let g:unite_source_grep_default_opts =
-	  \ '-i --line-numbers --nocolor --nogroup --hidden --ignore ' .
-	  \  '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
+	  \ '-i --vimgrep --hidden --ignore ' .
+	  \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
 	  let g:unite_source_grep_recursive_opt = ''
 	elseif executable('pt')
 	  " Use pt in unite grep source.
@@ -2305,6 +2350,12 @@ grep		Nominates "grep" command output as candidates.
 	  let g:unite_source_grep_default_opts =
 	  \ '-i --no-heading --no-color -k -H'
 	  let g:unite_source_grep_recursive_opt = ''
+	elseif executable('jvgrep')
+	  " For jvgrep.
+	  let g:unite_source_grep_command = 'jvgrep'
+	  let g:unite_source_grep_default_opts =
+	  \ '-i --exclude ''\.(git|svn|hg|bzr)'''
+	  let g:unite_source_grep_recursive_opt = '-R'
 	endif
 <
 						*unite-source-vimgrep*
@@ -2400,6 +2451,9 @@ history/yank	Nominates yanked words.
 		|g:unite_source_history_yank_enable| is 1.
 		Note: This source is disabled when
 		|g:unite_source_history_yank_enable| is 0 or not defined.
+
+		Source arguments:
+		1. register names
 
 						*unite-source-process*
 process		Nominates processes.
@@ -2734,12 +2788,12 @@ sorter_rank	Matched rank order sorter.  The higher the matched word is or
 		call unite#custom#source('buffer,file,file_rec',
 		\ 'sorters', 'sorter_rank')
 <
-						*unite-filter-sorter_selecta
+						*unite-filter-sorter_selecta*
 sorter_selecta	Another matched rank order sorter. Uses the scoring algorithm
 		from selecta: https://github.com/garybernhardt/selecta.
 		If the matched length is shorter, the rank is higher.
 		This sorter is useful for file candidate source.
-		Note: This sorter requires |if_ruby| support.
+		Note: This sorter requires |if_python| support.
 >
 		call unite#custom#source('buffer,file,file_rec',
 		\ 'sorters', 'sorter_selecta')
@@ -2777,6 +2831,10 @@ converter_relative_abbr
 		corresponding relative path.
 		Specification of this term is similar to
 		|unite-filter-converter_relative_word|.
+
+					*unite-filter-converter_abbr_word*
+converter_abbr_word
+		A converter which converts a candidate's abbr into a word.
 
 					*unite-filter-converter_tail*
 converter_tail
@@ -2939,6 +2997,7 @@ additional actions.
 command						*unite-action-command*
 	execute		Execute the command.
 	edit		Input the command into the command line.
+	grep		Grep the command.
 
 window						*unite-action-window*
 This kind extends actions of |unite-action-cdable|.
@@ -3239,13 +3298,6 @@ is_listed		Number		(Optional)
 			If the source is internal, it must be set to 0.
 			Defaults to 1.
 
-					*unite-source-attribute-is_grouped*
-is_grouped		Number		(Optional)
-			Whether the source candidates are grouped.
-			Defaults to 0.
-			Grouped candidates must have "group" attribute; see
-			|unite-notation-{candidate}|
-
 					*unite-source-attribute-description*
 description		String		(Optional)
 			User-friendly description of the source.
@@ -3375,13 +3427,6 @@ NOTATION					*unite-notation*
 				"command"], "file" (default) actions will be
 				overwritten by "command" action.  You should
 				use source default action instead of kind.
-
-			group			(String)	(Optional)
-				The candidate group name.
-				It is inserted in candidates automatically.
-				Note: Required and used when
-				|unite-source-attribute-is_grouped| is non
-				zero.
 
 			is_dummy		(Number)	(Optional)
 				If the candidate is dummy.
@@ -3587,23 +3632,41 @@ pattern			Function		(Optional)
 ==============================================================================
 EXTERNAL SOURCES				*unite-external-sources*
 
-tag source :
+MRU sources:
+
+https://github.com/Shougo/neomru.vim
+
+tag source:
 
 https://github.com/tsukkee/unite-tag
 
-Quick Fix source :
+Quick Fix source:
 
 https://github.com/osyo-manga/unite-quickfix
 
-Outline source :
+Outline source:
 
 https://github.com/Shougo/unite-outline (newer)
 https://github.com/h1mesuke/unite-outline (original)
 
-Help source :
+Help source:
 
 https://github.com/Shougo/unite-help (newer/vimproc required)
-https://github.com/tsukkee/unite-help (original)
+https://github.com/tsukkee/unite-help (original) >
+
+	" Execute help.
+	nnoremap <C-h>  :<C-u>Unite -start-insert help<CR>
+	" Execute help by cursor keyword.
+	nnoremap <silent> g<C-h>  :<C-u>UniteWithCursorWord help<CR>
+
+BibBTex source:
+
+https://github.com/termoshtt/unite-bibtex (faster, configurable)
+https://github.com/msprev/unite-bibtex
+
+Vim history sources:
+
+https://github.com/thinca/vim-unite-history
 
 And so on...
 
@@ -3853,6 +3916,21 @@ A: You can change below highlights by |:highlight|.
 "uniteStatusNormal", "uniteStatusHead"
 "uniteStatusSourceNames", "uniteStatusSourceCandidates"
 "uniteStatusMessage", "uniteStatusLineNR"
+
+Q: "ag" does not work in grep source.
+
+A: Please check |unite-source-grep| example.
+
+Q: How can I specify source args split by newlines for grep or file_rec
+sources?
+
+A: You can use eval arguments feature.
+>
+	Unite grep:`=glob('/dir1/*.txt')."\n".glob('/dir2/*.txt')`
+<
+Q: Unite's cursor does not move to prompt line automatically.
+
+A: You can use |unite-options-prompt-focus| option for it.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:noet:fen:

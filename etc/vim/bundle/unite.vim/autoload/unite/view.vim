@@ -245,6 +245,16 @@ function! unite#view#_redraw(is_force, winnr, is_gather_all) "{{{
     endif
   endtry
 
+  if context.immediately && len(unite.current_candidates) == 1
+    " Immediately action.
+    call unite#action#do(
+          \ context.default_action, [unite.current_candidates[0]])
+
+    " Note: It is workaround
+    " Change updatetime to leave insertmode
+    set updatetime=10
+    stopinsert
+  endif
   if context.auto_preview
     call unite#view#_do_auto_preview()
   endif
@@ -338,6 +348,11 @@ function! unite#view#_change_highlight()  "{{{
 
   call unite#view#_set_cursor_line()
 
+  let context = unite.context
+  if !context.match_input
+    return
+  endif
+
   silent! syntax clear uniteCandidateInputKeyword
 
   syntax case ignore
@@ -348,9 +363,7 @@ function! unite#view#_change_highlight()  "{{{
       continue
     endif
 
-    let input_list = map(filter(split(input_str, '\\\@<! '),
-          \ "v:val !~ '^[!:]'"),
-          \ "substitute(v:val, '\\\\ ', ' ', 'g')")
+    let input_list = unite#helper#get_input_list(input_str)
 
     for source in filter(copy(unite.sources), "v:val.syntax != ''")
       for matcher in filter(copy(map(filter(
@@ -719,7 +732,6 @@ function! unite#view#_bottom_cursor() "{{{
 endfunction"}}}
 function! unite#view#_clear_match() "{{{
   if &filetype ==# 'unite'
-    silent! highlight! link CursorLine CursorColumn
     setlocal nocursorline
   endif
 endfunction"}}}
@@ -759,7 +771,7 @@ endfunction"}}}
 
 " Message output.
 function! unite#view#_print_error(message) "{{{
-  let message = s:msg2list(a:message)
+  let message = map(s:msg2list(a:message), '"[unite.vim] " . v:val')
   let unite = unite#get_current_unite()
   if !empty(unite)
     let unite.err_msgs += message
@@ -831,7 +843,6 @@ endfunction"}}}
 
 function! unite#view#_match_line(highlight, line, id) "{{{
   if &filetype ==# 'unite'
-    silent! highlight! link CursorLine PmenuSel
     setlocal cursorline
     return
   endif
@@ -931,8 +942,7 @@ function! unite#view#_preview_file(filename) "{{{
   let context = unite#get_context()
   if context.vertical_preview
     let unite_winwidth = winwidth(0)
-    noautocmd silent execute 'vertical pedit!'
-          \ fnameescape(a:filename)
+    silent execute 'vertical pedit!' fnameescape(a:filename)
     wincmd P
     let target_winwidth = (unite_winwidth + winwidth(0)) / 2
     execute 'wincmd p | vert resize ' . target_winwidth
@@ -940,8 +950,7 @@ function! unite#view#_preview_file(filename) "{{{
     let previewheight_save = &previewheight
     try
       let &previewheight = context.previewheight
-      noautocmd silent execute 'pedit!'
-            \ fnameescape(a:filename)
+      silent execute 'pedit!' fnameescape(a:filename)
     finally
       let &previewheight = previewheight_save
     endtry
@@ -957,7 +966,6 @@ function! unite#view#_close_preview_window() "{{{
     if !empty(preview_windows)
       " Close preview window.
       noautocmd pclose!
-
     endif
   endif
 

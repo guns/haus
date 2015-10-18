@@ -32,7 +32,6 @@ call unite#util#set_default(
       \ 'g:unite_source_grep_default_opts', '-inH')
 
 call unite#util#set_default('g:unite_source_grep_recursive_opt', '-r')
-call unite#util#set_default('g:unite_source_grep_max_candidates', 100)
 call unite#util#set_default('g:unite_source_grep_search_word_highlight', 'Search')
 call unite#util#set_default('g:unite_source_grep_encoding', 'char')
 "}}}
@@ -43,7 +42,7 @@ endfunction "}}}
 
 let s:source = {
       \ 'name': 'grep',
-      \ 'max_candidates': g:unite_source_grep_max_candidates,
+      \ 'max_candidates': 100,
       \ 'hooks' : {},
       \ 'syntax' : 'uniteSource__Grep',
       \ 'matchers' : 'matcher_regexp',
@@ -98,7 +97,8 @@ function! s:source.hooks.on_init(args, context) "{{{
   let a:context.source__input = get(a:args, 2, a:context.input)
   if a:context.source__input == '' || a:context.unite__is_restart
     let a:context.source__input = unite#util#input('Pattern: ',
-          \ a:context.source__input)
+          \ a:context.source__input,
+          \ 'customlist,unite#helper#complete_search_history')
   endif
 
   call unite#print_source_message('Pattern: '
@@ -115,11 +115,13 @@ function! s:source.hooks.on_syntax(args, context) "{{{
   endif
 
   syntax case ignore
+  syntax match uniteSource__GrepHeader /[^:]*: \d\+: \(\d\+: \)\?/ contained
+        \ containedin=uniteSource__Grep
   syntax match uniteSource__GrepFile /[^:]*: / contained
-        \ containedin=uniteSource__Grep
+        \ containedin=uniteSource__GrepHeader
         \ nextgroup=uniteSource__GrepLineNR
-  syntax match uniteSource__GrepLineNR /\d\+:/ contained
-        \ containedin=uniteSource__Grep
+  syntax match uniteSource__GrepLineNR /\d\+: / contained
+        \ containedin=uniteSource__GrepHeader
         \ nextgroup=uniteSource__GrepPattern
   execute 'syntax match uniteSource__GrepPattern /'
         \ . substitute(a:context.source__input, '\([/\\]\)', '\\\1', 'g')
@@ -198,7 +200,8 @@ function! s:source.gather_candidates(args, context) "{{{
 
     let a:context.source__proc = vimproc#plineopen3(
           \ vimproc#util#iconv(cmdline, &encoding,
-          \ g:unite_source_grep_encoding), 1)
+          \ g:unite_source_grep_encoding),
+          \ unite#helper#is_pty(command))
   finally
     let $TERM = save_term
   endtry
@@ -232,46 +235,60 @@ function! s:source.async_gather_candidates(args, context) "{{{
     call a:context.source__proc.waitpid()
   endif
 
-  let candidates = map(unite#util#read_lines(stdout, 1000),
+  let lines = map(unite#util#read_lines(stdout, 1000),
           \ "unite#util#iconv(v:val, g:unite_source_grep_encoding, &encoding)")
   if default_opts =~ '^-[^-]*l'
         \ || a:context.source__extra_opts =~ '^-[^-]*l'
-    let candidates = map(filter(candidates,
-          \ 'v:val != ""'),
+    let lines = map(filter(lines, 'v:val != ""'),
           \ '[v:val, [v:val[2:], 0]]')
   else
-    let candidates = map(filter(candidates,
-          \  'v:val =~ "^.\\+:.\\+$"'),
+    let lines = map(filter(lines, 'v:val =~ "^.\\+:.\\+$"'),
           \ '[v:val, split(v:val[2:], ":", 1)]')
   endif
 
-  let _ = []
-  for candidate in candidates
-    if len(candidate[1]) <= 1 || candidate[1][1] !~ '^\d\+$'
+  let candidates = []
+  for [line, fields] in lines
+    let col = 0
+
+    if len(fields) <= 1 || fields[1] !~ '^\d\+$'
       let path = a:context.source__targets[0]
-      if len(candidate[1]) <= 1
-        let line = candidate[0][:1][0]
-        let text = candidate[1][0]
+      if len(fields) <= 1
+        let linenr = line[:1][0]
+        let text = fields[0]
       else
-        let line = candidate[0][:1].candidate[1][0]
-        let text = join(candidate[1][1:], ':')
+        let linenr = line[:1] . fields[0]
+        let text = join(fields[1:], ':')
       endif
     else
-      let path = candidate[0][:1].candidate[1][0]
-      let line = candidate[1][1]
-      let text = join(candidate[1][2:], ':')
+      let path = line[:1] . fields[0]
+      let linenr = fields[1]
+      let text = join(fields[2:], ':')
+      if text =~ '^\d\+:'
+        let col = matchstr(text, '^\d\+')
+        let text = text[len(col)+1 :]
+      endif
     endif
 
-    call add(_, {
-          \ 'word' : printf('%s: %s: %s', path, line, text),
+    if path ==# '.'
+      call unite#print_source_error(
+            \ 'Your grep configuration is wrong.'
+            \ . ' Please check ":help unite-source-grep" example.',
+            \ s:source.name)
+      break
+    endif
+
+    call add(candidates, {
+          \ 'word' : printf('%s: %s: %s', path,
+          \                 linenr . (col != 0 ? ': '.col : ''), text),
           \ 'action__path' :
           \ unite#util#substitute_path_separator(
           \   fnamemodify(path, ':p')),
-          \ 'source__info' : [path, line, text]
+          \ 'action__col' : col,
+          \ 'source__info' : [path, linenr, text]
           \ })
   endfor
 
-  return _
+  return candidates
 endfunction "}}}
 
 function! s:source.complete(args, context, arglead, cmdline, cursorpos) "{{{

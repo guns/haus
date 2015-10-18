@@ -67,6 +67,13 @@ function! unite#kinds#jump_list#define() "{{{
       call s:adjust_scroll(s:best_winline())
       call s:clear_highlight()
     endfor
+
+    " Add search history
+    let context = unite#get_context()
+    if len(context.input_list) == 1
+          \ && context.input != ''
+      call histadd("search", context.input)
+    endif
   endfunction"}}}
 
   let kind.action_table.preview = {
@@ -176,7 +183,7 @@ function! s:jump(candidate, is_highlight) "{{{
     let line = 1
   endif
   if line !~ '^\d\+$'
-    call unite#print_error('unite: jump_list: Invalid action__line format.')
+    call unite#print_error('jump_list: Invalid action__line format.')
     return
   endif
 
@@ -233,7 +240,7 @@ function! s:jump(candidate, is_highlight) "{{{
       if lnum == start_lnum
         " Not found.
         call unite#print_error(
-              \ "unite: jump_list: Target position is not found.")
+              \ 'jump_list: Target position is not found.')
         call cursor(1, 1)
         return
       endif
