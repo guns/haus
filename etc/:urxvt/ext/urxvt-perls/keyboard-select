@@ -20,8 +20,9 @@
 #   Ctrl-f/b:   Scroll down/up one screen
 #   Ctrl-d/u:   Scroll down/up half a screen
 #   v/V/Ctrl-v: Toggle normal/linewise/blockwise selection
-#   y/Return:   Copy selection to primary buffer, Return: deactivate afterwards
-#   q/Escape:   Deactivate keyboard selection mode
+#   y/Return:   Copy selection to primary buffer, Return: quit afterwards
+#   Y:          Copy selected lines to primary buffer or cursor line and quit
+#   q/Escape:   Quit keyboard selection mode
 
 
 use strict;
@@ -126,29 +127,30 @@ sub key_press {
 		}
 	} elsif ($keysym == 0xff1b || lc($key) eq 'q') {
 		deactivate($self);
-	} elsif ($key eq 'y' || $keysym == 0xff0d) {
+	} elsif (lc($key) eq 'y' || $keysym == 0xff0d) {
+		my $quit = 0;
+		if ($key eq 'Y' && $self->{select} ne 'l') {
+			$quit = !$self->{select};
+			toggle_select($self, 'l');
+		}
 		if ($self->{select}) {
-			if ($self->{select} eq 'b') {
-				$self->selection($self->{selection});
-				$self->selection_grab($event->{time});
-			} else {
-				my ($br, $bc, $er, $ec) = calc_span($self);
-				$ec = $self->line($er)->l if $self->{select} eq 'l';
-				$self->selection_beg($br, $bc);
-				$self->selection_end($er, $ec);
-				$self->selection_make($event->{time});
-			}
-			if ($key eq 'y') {
-				if ($self->{select} ne 'b') {
-					$self->selection_beg(1, 0);
-					$self->selection_end(1, 0);
-				}
+			my ($br, $bc, $er, $ec) = calc_span($self);
+			$ec = $self->line($er)->l if $self->{select} eq 'l';
+			$self->selection_beg($br, $bc);
+			$self->selection_end($er, $ec);
+			$self->selection_make($event->{time}, $self->{select} eq 'b');
+			if (lc($key) eq 'y') {
+				$self->selection_beg(1, 0);
+				$self->selection_end(1, 0);
 				$self->{select} = '';
 				status_area($self);
 				$self->want_refresh();
 			} else {
-				deactivate($self);
+				$quit = 1;
 			}
+		}
+		if ($quit) {
+			deactivate($self); 
 		}
 	} elsif ($key eq 'V') {
 		toggle_select($self, 'l');
@@ -381,7 +383,6 @@ sub refresh {
 		my ($br, $bc, $er, $ec) = calc_span($self);
 
 		if ($self->{select} eq 'b') {
-			delete $self->{selection} if $self->{selection};
 			my $co = $self->line($cr)->offset_of($cr, $cc);
 			my $dollar = $self->{dollar} && $co >= $self->{dollar} - 1;
 
@@ -390,14 +391,12 @@ sub refresh {
 				my $line = $self->line($r);
 				if ($bc < $line->l) {
 					$ec = $line->l if $dollar;
-					$self->{selection} .= substr($line->t, $bc, $ec - $bc);
 					my ($br, $bc) = $line->coord_of($bc);
 					my ($er, $ec) = $line->coord_of($ec <= $line->l ? $ec : $line->l);
 					$self->scr_xor_span($br, $bc, $er, $ec, urxvt::RS_RVid);
 				} elsif ($r == $cr) {
 					$reverse_cursor = 0;
 				}
-				$self->{selection} .= "\n" if $line->end < $er;
 				$r = $line->end + 1;
 			}
 		} else {
@@ -477,7 +476,6 @@ sub deactivate {
 	$self->selection_end(1, 0);
 
 	delete $self->{overlay} if $self->{overlay};
-	delete $self->{selection} if $self->{selection};
 
 	$self->disable("key_press", "refresh_begin", "refresh_end", "tt_write");
 	$self->screen_cur($self->{oldcr}, $self->{oldcc});
