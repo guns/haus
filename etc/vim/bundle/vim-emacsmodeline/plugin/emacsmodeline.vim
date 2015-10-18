@@ -38,23 +38,21 @@ if (!exists("g:emacs_modelines"))
     let g:emacs_modelines=5
 endif
 
+" Note: Entries to emacsModeDict must be lowercase. E. g. 'makefile' instead of 'Makefile'.
+let s:emacsModeDictDefault = {
+    \ 'c++':          'cpp',
+    \ 'shell-script': 'sh',
+    \ 'makefile':     'make',
+    \ 'js':           'javascript',
+    \ 'protobuf':     'proto',
+\ }
+
 if (!exists('g:emacsModeDict'))
     let g:emacsModeDict = {}
 endif
 
-" Note: Entries to emacsModeDict must be lowercase. E. g. 'makefile' instead of 'Makefile'.
-
-if (!has_key(g:emacsModeDict, 'c++'))
-    let g:emacsModeDict['c++'] = 'cpp'
-endif
-
-if (!has_key(g:emacsModeDict, 'shell-script'))
-    let g:emacsModeDict['shell-script'] = 'sh'
-endif
-
-if (!has_key(g:emacsModeDict, 'makefile'))
-    let g:emacsModeDict['makefile'] = 'make'
-endif
+" Add all default entries to the mode dict, keeping any user-defined entries
+call extend(g:emacsModeDict, s:emacsModeDictDefault, "keep")
 
 function! <SID>FindParameterValue(modeline, emacs_name, value)
     let pattern = '\c' . '\(^\|.*;\)\s*' . a:emacs_name . ':\s*\(' . a:value . '\)\s*\($\|;.*\)'
