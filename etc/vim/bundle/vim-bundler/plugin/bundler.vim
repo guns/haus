@@ -168,7 +168,7 @@ function! s:FindBundlerLock(path) abort
   let ofn = ""
   let nfn = fn
   while fn != ofn
-    if filereadable(fn.'/Gemfile')
+    if filereadable(fn.'/Gemfile.lock')
       return s:sub(simplify(fnamemodify(fn,':p')),'[\\/]$','/Gemfile.lock')
     elseif filereadable(fn.'/gems.locked')
       return s:sub(simplify(fnamemodify(fn,':p')),'[\\/]$','/gems.locked')
@@ -184,6 +184,14 @@ function! s:Detect(path) abort
     let lock = s:FindBundlerLock(a:path)
     if !empty(lock)
       let b:bundler_lock = lock
+    elseif !empty(getbufvar('#', 'bundler_lock'))
+      let lock = getbufvar('#', 'bundler_lock')
+      for path in values(s:project(lock).paths())
+        if strpart(a:path, 0, len(path)) ==# path
+          let b:bundler_lock = lock
+          break
+        endif
+      endfor
     endif
   endif
   return exists('b:bundler_lock')
@@ -326,10 +334,10 @@ function! s:project_paths(...) dict abort
       exe chdir s:fnameescape(self.path())
 
       if len(gem_paths) == 0
-        let gem_paths = split(system(prefix.'ruby -rubygems -e "print Gem.path.join(%(;))"'), ';')
+        let gem_paths = split(system(prefix.'ruby -rubygems -e '.s:shellesc('print Gem.path.join(%(;))')), ';')
       endif
 
-      let abi_version = system('ruby -rrbconfig -e "print RbConfig::CONFIG[\"ruby_version\"]"')
+      let abi_version = system('ruby -rrbconfig -e '.s:shellesc('print RbConfig::CONFIG["ruby_version"]'))
       exe chdir s:fnameescape(cwd)
     finally
       exe chdir s:fnameescape(cwd)
