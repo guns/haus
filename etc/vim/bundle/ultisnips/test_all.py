@@ -39,7 +39,8 @@ import os
 import platform
 import subprocess
 import unittest
-from test.vim_interface import (create_directory, tempfile, VimInterfaceTmux)
+from test.vim_interface import (
+    create_directory, tempfile, VimInterfaceTmux, VimInterfaceTmuxNeovim)
 
 
 def plugin_cache_dir():
@@ -100,6 +101,20 @@ if __name__ == '__main__':
                      'multiplexer and race conditions in writing to the file system.')
         p.add_option('-x', '--exitfirst', dest='exitfirst', action='store_true',
                      help='exit instantly on first error or failed test.')
+        p.add_option('--vim', dest='vim', type=str, default='vim',
+                     help='executable to run when launching vim.')
+        p.add_option('--interface', dest='interface', type=str, default='tmux',
+                     help="Interface to use. Use 'tmux' with vanilla Vim and 'tmux_nvim' "
+                     'with Neovim.')
+        p.add_option('--python-host-prog', dest='python_host_prog', type=str, default='',
+                     help='Neovim needs a variable to tell it which python interpretor to use for '
+                     'py blocks. This needs to be set to point to the correct python interpretor. '
+                     'It is ignored for vanilla Vim.')
+        p.add_option('--python3-host-prog', dest='python3_host_prog', type=str, default='',
+                     help='See --python-host-prog.')
+        p.add_option('--expected-python-version', dest='expected_python_version', type=str, default='',
+                     help='If set, each test will check sys.version inside of vim to '
+                     'verify we are testing against the expected Python version.')
 
         o, args = p.parse_args()
         return o, args
@@ -118,7 +133,15 @@ if __name__ == '__main__':
 
         all_test_suites = unittest.defaultTestLoader.discover(start_dir='test')
 
-        vim = VimInterfaceTmux(options.session)
+        vim = None
+        vim_flavor = 'vim'
+        if options.interface == 'tmux':
+            vim = VimInterfaceTmux(options.vim, options.session)
+            vim_flavor = 'vim'
+        else:
+            vim = VimInterfaceTmuxNeovim(options.vim, options.session)
+            vim_flavor = 'neovim'
+
         if not options.clone_plugins and platform.system() == 'Windows':
             raise RuntimeError(
                 'TODO: TestSuite is broken under windows. Volunteers wanted!.')
@@ -134,7 +157,11 @@ if __name__ == '__main__':
             test.interrupt = options.interrupt
             test.retries = options.retries
             test.test_plugins = options.plugins
+            test.python_host_prog = options.python_host_prog
+            test.python3_host_prog = options.python3_host_prog
+            test.expected_python_version = options.expected_python_version
             test.vim = vim
+            test.vim_flavor = vim_flavor
             all_other_plugins.update(test.plugins)
 
             if len(selected_tests):
@@ -151,7 +178,7 @@ if __name__ == '__main__':
 
         v = 2 if options.verbose else 1
         successfull = unittest.TextTestRunner(verbosity=v,
-                                          failfast=options.exitfirst).run(suite).wasSuccessful()
+                                              failfast=options.exitfirst).run(suite).wasSuccessful()
         return 0 if successfull else 1
     sys.exit(main())
 

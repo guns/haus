@@ -8,6 +8,8 @@ from functools import wraps
 import os
 import platform
 import traceback
+import vim
+from contextlib import contextmanager
 
 from UltiSnips import _vim
 from UltiSnips._diff import diff, guess_edit
@@ -18,6 +20,7 @@ from UltiSnips.snippet.source import UltiSnipsFileSource, SnipMateFileSource, \
     find_all_snippet_files, find_snippet_files, AddedSnippetsSource
 from UltiSnips.text import escape
 from UltiSnips.vim_state import VimState, VisualContentPreserver
+from UltiSnips.buffer_proxy import use_proxy_buffer, suspend_proxy_edits
 
 
 def _ask_user(a, formatted):
@@ -83,7 +86,7 @@ class SnippetManager(object):
         self.expand_trigger = expand_trigger
         self.forward_trigger = forward_trigger
         self.backward_trigger = backward_trigger
-        self._inner_mappings_in_place = False
+        self._inner_state_up = False
         self._supertab_keys = None
 
         self._csnippets = []
@@ -94,11 +97,16 @@ class SnippetManager(object):
 
         self._snippet_sources = []
 
+        self._snip_expanded_in_action = False
+        self._inside_action = False
+
+        self._last_inserted_char = ''
+
         self._added_snippets_source = AddedSnippetsSource()
         self.register_snippet_source('ultisnips_files', UltiSnipsFileSource())
         self.register_snippet_source('added', self._added_snippets_source)
 
-        enable_snipmate = True
+        enable_snipmate = '1'
         if _vim.eval("exists('g:UltiSnipsEnableSnipMate')") == '1':
             enable_snipmate = _vim.eval('g:UltiSnipsEnableSnipMate')
         if enable_snipmate == '1':
@@ -205,19 +213,22 @@ class SnippetManager(object):
 
     @err_to_scratch_buffer
     def add_snippet(self, trigger, value, description,
-                    options, ft='all', priority=0, context=None):
+                    options, ft='all', priority=0, context=None, actions={}):
         """Add a snippet to the list of known snippets of the given 'ft'."""
         self._added_snippets_source.add_snippet(ft,
-                                                UltiSnipsSnippetDefinition(priority, trigger, value,
-                                                                           description, options, {}, 'added',
-                                                                           context))
+            UltiSnipsSnippetDefinition(priority, trigger, value,
+                                       description, options, {}, 'added',
+                                       context, actions))
 
     @err_to_scratch_buffer
-    def expand_anon(self, value, trigger='', description='', options='', context=None):
+    def expand_anon(
+        self, value, trigger='', description='', options='',
+        context=None, actions={}
+    ):
         """Expand an anonymous snippet right here."""
         before = _vim.buf.line_till_cursor
         snip = UltiSnipsSnippetDefinition(0, trigger, value, description,
-                                          options, {}, '', context)
+                                          options, {}, '', context, actions)
 
         if not trigger or snip.matches(before):
             self._do_snippet(snip, before)
@@ -269,11 +280,12 @@ class SnippetManager(object):
     @err_to_scratch_buffer
     def _cursor_moved(self):
         """Called whenever the cursor moved."""
-        if not self._csnippets and self._inner_mappings_in_place:
-            self._unmap_inner_keys()
+        if not self._csnippets and self._inner_state_up:
+            self._teardown_inner_state()
         self._vstate.remember_position()
         if _vim.eval('mode()') not in 'in':
             return
+
 
         if self._ignore_movements:
             self._ignore_movements = False
@@ -333,8 +345,11 @@ class SnippetManager(object):
             self._csnippets[0].update_textobjects()
             self._vstate.remember_buffer(self._csnippets[0])
 
-    def _map_inner_keys(self):
-        """Map keys that should only be defined when a snippet is active."""
+    def _setup_inner_state(self):
+        """Map keys and create autocommands that should only be defined when a
+        snippet is active."""
+        if self._inner_state_up:
+            return
         if self.expand_trigger != self.forward_trigger:
             _vim.command('inoremap <buffer> <silent> ' + self.forward_trigger +
                          ' <C-R>=UltiSnips#JumpForwards()<cr>')
@@ -344,19 +359,45 @@ class SnippetManager(object):
                      ' <C-R>=UltiSnips#JumpBackwards()<cr>')
         _vim.command('snoremap <buffer> <silent> ' + self.backward_trigger +
                      ' <Esc>:call UltiSnips#JumpBackwards()<cr>')
-        self._inner_mappings_in_place = True
 
-    def _unmap_inner_keys(self):
-        """Unmap keys that should not be active when no snippet is active."""
-        if not self._inner_mappings_in_place:
+        # Setup the autogroups.
+        _vim.command('augroup UltiSnips')
+        _vim.command('autocmd!')
+        _vim.command('autocmd CursorMovedI * call UltiSnips#CursorMoved()')
+        _vim.command('autocmd CursorMoved * call UltiSnips#CursorMoved()')
+
+        _vim.command(
+            'autocmd InsertLeave * call UltiSnips#LeavingInsertMode()')
+
+        _vim.command('autocmd BufLeave * call UltiSnips#LeavingBuffer()')
+        _vim.command(
+            'autocmd CmdwinEnter * call UltiSnips#LeavingBuffer()')
+        _vim.command(
+            'autocmd CmdwinLeave * call UltiSnips#LeavingBuffer()')
+
+        # Also exit the snippet when we enter a unite complete buffer.
+        _vim.command('autocmd Filetype unite call UltiSnips#LeavingBuffer()')
+
+        _vim.command('augroup END')
+
+        _vim.command('silent doautocmd <nomodeline> User UltiSnipsEnterFirstSnippet')
+        self._inner_state_up = True
+
+    def _teardown_inner_state(self):
+        """Reverse _setup_inner_state."""
+        if not self._inner_state_up:
             return
         try:
+            _vim.command('silent doautocmd <nomodeline> User UltiSnipsExitLastSnippet')
             if self.expand_trigger != self.forward_trigger:
                 _vim.command('iunmap <buffer> %s' % self.forward_trigger)
                 _vim.command('sunmap <buffer> %s' % self.forward_trigger)
             _vim.command('iunmap <buffer> %s' % self.backward_trigger)
             _vim.command('sunmap <buffer> %s' % self.backward_trigger)
-            self._inner_mappings_in_place = False
+            _vim.command('augroup UltiSnips')
+            _vim.command('autocmd!')
+            _vim.command('augroup END')
+            self._inner_state_up = False
         except _vim.error:
             # This happens when a preview window was opened. This issues
             # CursorMoved, but not BufLeave. We have no way to unmap, until we
@@ -402,41 +443,69 @@ class SnippetManager(object):
         """The current snippet should be terminated."""
         self._csnippets.pop()
         if not self._csnippets:
-            self._unmap_inner_keys()
+            self._teardown_inner_state()
 
     def _jump(self, backwards=False):
-        """Helper method that does the actual jump."""
-        jumped = False
-        # If next tab has length 1 and the distance between itself and
-        # self._ctab is 1 then there is 1 less CursorMove events.  We
-        # cannot ignore next movement in such case.
-        ntab_short_and_near = False
-        if self._cs:
-            ntab = self._cs.select_next_tab(backwards)
-            if ntab:
-                if self._cs.snippet.has_option('s'):
-                    lineno = _vim.buf.cursor.line
-                    _vim.buf[lineno] = _vim.buf[lineno].rstrip()
-                _vim.select(ntab.start, ntab.end)
-                jumped = True
-                if (self._ctab is not None
-                        and ntab.start - self._ctab.end == Position(0, 1)
-                        and ntab.end - ntab.start == Position(0, 1)):
-                    ntab_short_and_near = True
-                if ntab.number == 0:
-                    self._current_snippet_is_done()
+        # we need to set 'onemore' there, because of limitations of the vim
+        # API regarding cursor movements; without that test
+        # 'CanExpandAnonSnippetInJumpActionWhileSelected' will fail
+        with _vim.toggle_opt('ve', 'onemore'):
+            """Helper method that does the actual jump."""
+            jumped = False
+
+            # We need to remember current snippets stack here because of
+            # post-jump action on the last tabstop should be able to access
+            # snippet instance which is ended just now.
+            stack_for_post_jump = self._csnippets[:]
+
+            # If next tab has length 1 and the distance between itself and
+            # self._ctab is 1 then there is 1 less CursorMove events.  We
+            # cannot ignore next movement in such case.
+            ntab_short_and_near = False
+
+            if self._cs:
+                snippet_for_action = self._cs
+            elif stack_for_post_jump:
+                snippet_for_action = stack_for_post_jump[-1]
             else:
-                # This really shouldn't happen, because a snippet should
-                # have been popped when its final tabstop was used.
-                # Cleanup by removing current snippet and recursing.
-                self._current_snippet_is_done()
-                jumped = self._jump(backwards)
-            self._ctab = ntab
-        if jumped:
-            self._vstate.remember_position()
-            self._vstate.remember_unnamed_register(self._ctab.current_text)
-            if not ntab_short_and_near:
-                self._ignore_movements = True
+                snippet_for_action = None
+
+            if self._cs:
+                ntab = self._cs.select_next_tab(backwards)
+                if ntab:
+                    if self._cs.snippet.has_option('s'):
+                        lineno = _vim.buf.cursor.line
+                        _vim.buf[lineno] = _vim.buf[lineno].rstrip()
+                    _vim.select(ntab.start, ntab.end)
+                    jumped = True
+                    if (self._ctab is not None
+                            and ntab.start - self._ctab.end == Position(0, 1)
+                            and ntab.end - ntab.start == Position(0, 1)):
+                        ntab_short_and_near = True
+                    if ntab.number == 0:
+                        self._current_snippet_is_done()
+                    self._ctab = ntab
+                else:
+                    # This really shouldn't happen, because a snippet should
+                    # have been popped when its final tabstop was used.
+                    # Cleanup by removing current snippet and recursing.
+                    self._current_snippet_is_done()
+                    jumped = self._jump(backwards)
+            if jumped:
+                self._vstate.remember_position()
+                self._vstate.remember_unnamed_register(self._ctab.current_text)
+                if not ntab_short_and_near:
+                    self._ignore_movements = True
+
+            if len(stack_for_post_jump) > 0 and ntab is not None:
+                with use_proxy_buffer(stack_for_post_jump, self._vstate):
+                    snippet_for_action.snippet.do_post_jump(
+                        ntab.number,
+                        -1 if backwards else 1,
+                        stack_for_post_jump,
+                        snippet_for_action
+                    )
+
         return jumped
 
     def _leaving_insert_mode(self):
@@ -478,7 +547,7 @@ class SnippetManager(object):
         elif feedkey:
             _vim.command('return %s' % _vim.escape(feedkey))
 
-    def _snips(self, before, partial):
+    def _snips(self, before, partial, autotrigger_only=False):
         """Returns all the snippets for the given text before the cursor.
 
         If partial is True, then get also return partial matches.
@@ -489,7 +558,7 @@ class SnippetManager(object):
         clear_priority = None
         cleared = {}
         for _, source in self._snippet_sources:
-            source.ensure(filetypes)
+            source.ensure(filetypes, cached=autotrigger_only)
 
         # Collect cleared information from sources.
         for _, source in self._snippet_sources:
@@ -502,7 +571,14 @@ class SnippetManager(object):
                     cleared[key] = value
 
         for _, source in self._snippet_sources:
-            for snippet in source.get_snippets(filetypes, before, partial):
+            possible_snippets = source.get_snippets(
+                filetypes,
+                before,
+                partial,
+                autotrigger_only
+            )
+
+            for snippet in possible_snippets:
                 if ((clear_priority is None or snippet.priority > clear_priority)
                         and (snippet.trigger not in cleared or
                              snippet.priority > cleared[snippet.trigger])):
@@ -530,51 +606,84 @@ class SnippetManager(object):
     def _do_snippet(self, snippet, before):
         """Expands the given snippet, and handles everything that needs to be
         done with it."""
-        self._map_inner_keys()
+        self._setup_inner_state()
+
+        self._snip_expanded_in_action = False
 
         # Adjust before, maybe the trigger is not the complete word
         text_before = before
         if snippet.matched:
             text_before = before[:-len(snippet.matched)]
 
-        if self._cs:
-            start = Position(_vim.buf.cursor.line, len(text_before))
-            end = Position(_vim.buf.cursor.line, len(before))
+        with use_proxy_buffer(self._csnippets, self._vstate):
+            with self._action_context():
+                cursor_set_in_action = snippet.do_pre_expand(
+                    self._visual_content.text,
+                    self._csnippets
+                )
 
-            # It could be that our trigger contains the content of TextObjects
-            # in our containing snippet. If this is indeed the case, we have to
-            # make sure that those are properly killed. We do this by
-            # pretending that the user deleted and retyped the text that our
-            # trigger matched.
-            edit_actions = [
-                ('D', start.line, start.col, snippet.matched),
-                ('I', start.line, start.col, snippet.matched),
-            ]
-            self._csnippets[0].replay_user_edits(edit_actions)
+        if cursor_set_in_action:
+            text_before = _vim.buf.line_till_cursor
+            before = _vim.buf.line_till_cursor
 
-            si = snippet.launch(text_before, self._visual_content,
-                                self._cs.find_parent_for_new_to(start), start, end)
-        else:
-            start = Position(_vim.buf.cursor.line, len(text_before))
-            end = Position(_vim.buf.cursor.line, len(before))
-            si = snippet.launch(text_before, self._visual_content,
-                                None, start, end)
+        with suspend_proxy_edits():
+            if self._cs:
+                start = Position(_vim.buf.cursor.line, len(text_before))
+                end = Position(_vim.buf.cursor.line, len(before))
 
-        self._visual_content.reset()
-        self._csnippets.append(si)
+                # If cursor is set in pre-action, then action was modified
+                # cursor line, in that case we do not need to do any edits, it
+                # can break snippet
+                if not cursor_set_in_action:
+                    # It could be that our trigger contains the content of
+                    # TextObjects in our containing snippet. If this is indeed
+                    # the case, we have to make sure that those are properly
+                    # killed. We do this by pretending that the user deleted
+                    # and retyped the text that our trigger matched.
+                    edit_actions = [
+                        ('D', start.line, start.col, snippet.matched),
+                        ('I', start.line, start.col, snippet.matched),
+                    ]
+                    self._csnippets[0].replay_user_edits(edit_actions)
 
-        si.update_textobjects()
+                si = snippet.launch(text_before, self._visual_content,
+                    self._cs.find_parent_for_new_to(start),
+                    start, end
+                )
+            else:
+                start = Position(_vim.buf.cursor.line, len(text_before))
+                end = Position(_vim.buf.cursor.line, len(before))
+                si = snippet.launch(text_before, self._visual_content,
+                                    None, start, end)
 
-        self._vstate.remember_buffer(self._csnippets[0])
+            self._visual_content.reset()
+            self._csnippets.append(si)
 
-        self._jump()
+            si.update_textobjects()
 
-    def _try_expand(self):
+            with use_proxy_buffer(self._csnippets, self._vstate):
+                with self._action_context():
+                    snippet.do_post_expand(
+                        si._start, si._end, self._csnippets
+                    )
+
+            self._vstate.remember_buffer(self._csnippets[0])
+
+            if not self._snip_expanded_in_action:
+                self._jump()
+            elif self._cs.current_text != '':
+                self._jump()
+            else:
+                self._current_snippet_is_done()
+
+            if self._inside_action:
+                self._snip_expanded_in_action = True
+
+
+    def _try_expand(self, autotrigger_only=False):
         """Try to expand a snippet in the current place."""
         before = _vim.buf.line_till_cursor
-        if not before:
-            return False
-        snippets = self._snips(before, False)
+        snippets = self._snips(before, False, autotrigger_only)
         if snippets:
             # prefer snippets with context if any
             snippets_with_context = [s for s in snippets if s.context]
@@ -659,3 +768,29 @@ class SnippetManager(object):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
         return file_to_edit
+
+    @contextmanager
+    def _action_context(self):
+        try:
+            old_flag = self._inside_action
+            self._inside_action = True
+            yield
+        finally:
+            self._inside_action = old_flag
+
+    @err_to_scratch_buffer
+    def _track_change(self):
+        inserted_char = _vim.eval('v:char')
+        try:
+            if inserted_char == '':
+                before = _vim.buf.line_till_cursor
+                if before and before[-1] == self._last_inserted_char:
+                    self._try_expand(autotrigger_only=True)
+        finally:
+            self._last_inserted_char = inserted_char
+
+
+UltiSnips_Manager = SnippetManager(  # pylint:disable=invalid-name
+    vim.eval('g:UltiSnipsExpandTrigger'),
+    vim.eval('g:UltiSnipsJumpForwardTrigger'),
+    vim.eval('g:UltiSnipsJumpBackwardTrigger'))

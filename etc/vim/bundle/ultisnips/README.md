@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/SirVer/ultisnips.svg?branch=master)](https://travis-ci.org/SirVer/ultisnips)
 [![Stories in Ready](https://badge.waffle.io/SirVer/ultisnips.png?label=ready&title=Ready)](https://waffle.io/SirVer/ultisnips)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/SirVer/ultisnips?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 UltiSnips
 =========
@@ -60,3 +61,10 @@ discussed in the videos.
 - [Episode 2: Creating Basic Snippets](http://www.sirver.net/blog/2012/01/08/second-episode-of-ultisnips-screencast/)
 - [Episode 3: What's new in version 2.0](http://www.sirver.net/blog/2012/02/05/third-episode-of-ultisnips-screencast/)
 - [Episode 4: Python Interpolation](http://www.sirver.net/blog/2012/03/31/fourth-episode-of-ultisnips-screencast/)
+
+Also the excellent [Vimcasts](http://vimcasts.org) dedicated three episodes to
+UltiSnips:
+
+- [Meet UltiSnips](http://vimcasts.org/episodes/meet-ultisnips/)
+- [Using Python interpolation in UltiSnips snippets](http://vimcasts.org/episodes/ultisnips-python-interpolation/)
+- [Using selected text in UltiSnips snippets](http://vimcasts.org/episodes/ultisnips-visual-placeholder/)
