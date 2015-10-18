@@ -10,6 +10,7 @@ g:neomru#file_mru_ignore_pattern	neomru.txt	/*g:neomru#file_mru_ignore_pattern*
 g:neomru#file_mru_limit	neomru.txt	/*g:neomru#file_mru_limit*
 g:neomru#file_mru_path	neomru.txt	/*g:neomru#file_mru_path*
 g:neomru#filename_format	neomru.txt	/*g:neomru#filename_format*
+g:neomru#follow_links	neomru.txt	/*g:neomru#follow_links*
 g:neomru#time_format	neomru.txt	/*g:neomru#time_format*
 g:neomru#update_interval	neomru.txt	/*g:neomru#update_interval*
 g:unite_source_directory_mru_ignore_pattern	neomru.txt	/*g:unite_source_directory_mru_ignore_pattern*
