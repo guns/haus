@@ -77,7 +77,7 @@ TCOMP() {
         complete -r \"$alias\"
 
         # Load completion through bash-completion 2.0 dynamic loading function
-        if complete -p \"$src\" &>/dev/null || _load_comp \"$src\"; then
+        if complete -p \"$src\" &>/dev/null || __load_completion \"$src\"; then
             while true; do
                 local cspec=\"\$(complete -p \"$src\" 2>/dev/null)\"
                 local cfunc=\"\$(sed -ne \"s/.*-F \\\\([^[:space:]]*\\\\) .*/\\\\1/p\" <<< \"\$cspec\")\"
