@@ -111,7 +111,7 @@ __mtlabel__() {
     if ((COMP_CWORD == 1)); then
         __compreply__ "$(command ls -1 /dev/disk/by-label/)";
     else
-        type _mount &>/dev/null || _load_comp mount
+        type _mount &>/dev/null || __load_completion mount
         _mount
     fi
 }
@@ -120,7 +120,7 @@ __mtusb__() {
     local prev
     _get_comp_words_by_ref prev
     if [[ "$prev" == '-o' || "$prev" == '--options' ]]; then
-        type _mount &>/dev/null || _load_comp mount
+        type _mount &>/dev/null || __load_completion mount
         _mount
     fi
 }

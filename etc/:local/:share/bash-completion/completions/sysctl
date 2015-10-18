@@ -6,6 +6,9 @@ _sysctl()
     _init_completion || return
 
     case $prev in
+        --help|--version)
+            return
+            ;;
         -p)
             _filedir conf
             return
@@ -13,7 +16,9 @@ _sysctl()
     esac
 
     if [[ $cur == -* ]]; then
-        COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
+        local opts="$( _parse_help "$1" )"
+        [[ $opts ]] || opts="$( _parse_usage "$1" )"
+        COMPREPLY=( $( compgen -W "$opts" -- "$cur" ) )
     else
         local suffix=
         [[ $prev == -w ]] && suffix==

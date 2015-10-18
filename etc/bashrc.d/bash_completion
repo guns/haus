@@ -38,7 +38,7 @@ else
     set +v
 fi
 
-[[ "$BASH_COMPLETION_DIRS" ]] || BASH_COMPLETION_DIRS=(/etc/completions /etc/bash_completion.d)
+[[ "$BASH_COMPLETION_DIRS" ]] || BASH_COMPLETION_DIRS=(/usr/share/bash-completion/completions)
 readonly BASH_COMPLETION_DIRS
 
 # Blacklisted completions, causing problems with our code.
@@ -318,8 +318,8 @@ __get_cword_at_cursor_by_ref()
             ]]; do
                 # Strip first character
                 cur="${cur:1}"
-                # Decrease cursor position
-                ((index--))
+                # Decrease cursor position, staying >= 0
+                [[ $index -gt 0 ]] && ((index--))
             done
 
             # Does found word match cword?
@@ -448,8 +448,8 @@ _get_cword()
             ]]; do
                 # Strip first character
                 cur="${cur:1}"
-                # Decrease cursor position
-                ((index--))
+                # Decrease cursor position, staying >= 0
+                [[ $index -gt 0 ]] && ((index--))
             done
 
             # Does found word matches cword?
@@ -1917,7 +1917,7 @@ _install_xspec '!*.@(mp3|ogg|pls|m3u)' gqmpeg freeamp
 _install_xspec '!*.fig' xfig
 _install_xspec '!*.@(mid?(i)|cmf)' playmidi
 _install_xspec '!*.@(mid?(i)|rmi|rcp|[gr]36|g18|mod|xm|it|x3m|s[3t]m|kar)' timidity
-_install_xspec '!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|okta|p[st]m|s[3t]m|ult|umx|wav|xm)' modplugplay modplug123
+_install_xspec '!*.@(669|abc|am[fs]|d[bs]m|dmf|far|it|mdl|m[eo]d|mid?(i)|mt[2m]|oct|okt?(a)|p[st]m|s[3t]m|ult|umx|wav|xm)' modplugplay modplug123
 _install_xspec '!*.@(zip|z|gz|tgz)' bzme
 # konqueror not here on purpose, it's more than a web/html browser
 _install_xspec '!*.@(?([xX]|[sS])[hH][tT][mM]?([lL])|[xX][pP][iI])' netscape mozilla lynx galeon dillo elinks amaya epiphany
@@ -1953,19 +1953,15 @@ _minimal()
 complete -F _minimal ''
 
 
-# @param $1 Basename of completion file to load
-_load_comp()
+__load_completion()
 {
-    local dir compfile
+    local cmd="$1" dir compfile
 
-    # Try all directories in BASH_COMPLETION_DIRS
     for dir in "${BASH_COMPLETION_DIRS[@]}"; do
-        # $1=_EmptycmD_ already for empty cmds in bash 4.3, set to it for earlier
-        local cmd="${1:-_EmptycmD_}"
         for compfile in "${cmd##*/}" "${cmd##*/}".bash _"${cmd##*/}"; do
             compfile="$dir/$compfile"
             # Avoid trying to source dirs; https://bugzilla.redhat.com/903540
-            [[ -f "$compfile" ]] && . "$compfile" &>/dev/null && return 0 # Return 0 for TCOMP -- guns
+            [[ -f "$compfile" ]] && . "$compfile" &>/dev/null && return 0
         done
     done
 
@@ -1975,10 +1971,13 @@ _load_comp()
 # set up dynamic completion loading
 _completion_loader()
 {
-    _load_comp "$1" && return 124
+    # $1=_EmptycmD_ already for empty cmds in bash 4.3, set to it for earlier
+    local cmd="${1:-_EmptycmD_}"
+
+    __load_completion "$cmd" && return 124
 
     # Need to define *something*, otherwise there will be no completion at all.
-    complete -F _minimal -- "${1:-_EmptycmD_}" && return 124
+    complete -F _minimal -- "$cmd" && return 124
 } &&
 complete -D -F _completion_loader
 
@@ -1992,7 +1991,7 @@ _xfunc()
     local srcfile=$1
     shift
     declare -F $1 &>/dev/null || {
-        _load_comp "$srcfile"
+        __load_completion "$srcfile"
     }
     "$@"
 }

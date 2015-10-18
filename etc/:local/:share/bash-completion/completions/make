@@ -20,9 +20,13 @@ function _make_target_extract_script()
     fi
 
     cat <<EOF
-    1,/^# * Files/                d;            # skip until files section
-    /^# * Not a target/,/^$/      d;            # skip not target blocks
-    /^${prefix_pat}/,/^$/!        d;            # skip anything user dont want
+    1,/^# * Make data base/           d;        # skip any makefile output
+    /^# * Finished Make data base/,/^# * Make data base/{
+                                      d;        # skip any makefile output
+    }
+    /^# * Variables/,/^# * Files/     d;        # skip until files section
+    /^# * Not a target/,/^$/          d;        # skip not target blocks
+    /^${prefix_pat}/,/^$/!            d;        # skip anything user dont want
 
     # The stuff above here describes lines that are not
     #  explicit targets or not targets other than special ones
@@ -61,9 +65,16 @@ function _make_target_extract_script()
       /^\.POSIX:/                 d;            # special target
       /^\.NOEXPORT:/              d;            # special target
       /^\.MAKE:/                  d;            # special target
+EOF
 
-      /^[^a-zA-Z0-9]/             d;            # convention for hidden tgt
+    # don't complete with hidden targets unless we are doing a partial completion
+    if [[ -z "${prefix_pat}" || "${prefix_pat}" = */ ]]; then
+      cat <<EOF
+      /^${prefix_pat}[^a-zA-Z0-9]/d             # convention for hidden tgt
+EOF
+    fi
 
+    cat <<EOF
       h;                                        # hold target
       d;                                        # delete line
     }

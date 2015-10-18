@@ -42,6 +42,7 @@ bashcomp_DATA = 2to3 \
 		change_pw \
 		check_db \
 		check_perms \
+		checksec \
 		_chfn \
 		chgrp \
 		chkconfig \
@@ -255,6 +256,7 @@ bashcomp_DATA = 2to3 \
 		pack200 \
 		passwd \
 		patch \
+		pdftotext \
 		perl \
 		pgrep \
 		pidof \
@@ -521,7 +523,6 @@ CLEANFILES = \
 	mogrify \
 	montage \
 	mplayer2 \
-	mpv \
 	msgsnarf \
 	muttng \
 	ncal \
