@@ -1,5 +1,6 @@
 SplitjoinJoin	splitjoin.txt	/*SplitjoinJoin*
 SplitjoinSplit	splitjoin.txt	/*SplitjoinSplit*
+b:splitjoin_align	splitjoin.txt	/*b:splitjoin_align*
 b:splitjoin_join_callbacks	splitjoin.txt	/*b:splitjoin_join_callbacks*
 b:splitjoin_split_callbacks	splitjoin.txt	/*b:splitjoin_split_callbacks*
 g:splitjoin_align	splitjoin.txt	/*g:splitjoin_align*

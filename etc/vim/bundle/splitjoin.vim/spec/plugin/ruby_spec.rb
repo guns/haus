@@ -8,6 +8,12 @@ describe "ruby" do
     vim.set(:shiftwidth, 2)
   end
 
+  after :each do
+    vim.command('silent! unlet g:splitjoin_ruby_trailing_comma')
+    vim.command('silent! unlet g:splitjoin_ruby_heredoc_type')
+    vim.command('silent! unlet g:splitjoin_ruby_hanging_args')
+  end
+
   specify "if-clauses" do
     set_file_contents <<-EOF
       return "the answer" if 6 * 9 == 42
@@ -186,6 +192,28 @@ describe "ruby" do
             else
               'something'
             end
+      EOF
+    end
+
+    it "handles ivars" do
+      set_file_contents <<-EOF
+        @variable.nil? ? do_something : do_something_else
+      EOF
+
+      split
+
+      assert_file_contents <<-EOF
+        if @variable.nil?
+          do_something
+        else
+          do_something_else
+        end
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        @variable.nil? ? do_something : do_something_else
       EOF
     end
   end
@@ -407,26 +435,21 @@ describe "ruby" do
   end
 
   specify "hashes without a trailing comma" do
-    begin
-      vim.command('let g:splitjoin_ruby_trailing_comma = 0')
+    vim.command('let g:splitjoin_ruby_trailing_comma = 0')
 
-      set_file_contents <<-EOF
+    set_file_contents <<-EOF
       foo = { :bar => 'baz', :one => 'two' }
-      EOF
+    EOF
 
-      vim.search ':bar'
-      split
+    vim.search ':bar'
+    split
 
-      assert_file_contents <<-EOF
+    assert_file_contents <<-EOF
       foo = {
         :bar => 'baz',
         :one => 'two'
       }
-      EOF
-
-    ensure
-      vim.command('let g:splitjoin_ruby_trailing_comma = 1')
-    end
+    EOF
   end
 
   specify "caching constructs" do
@@ -764,29 +787,24 @@ describe "ruby" do
     end
 
     it "can use the << heredoc style" do
-      begin
-        vim.command('let g:splitjoin_ruby_heredoc_type = "<<"')
+      vim.command('let g:splitjoin_ruby_heredoc_type = "<<"')
 
-        set_file_contents <<-EOF
-          do
-            string = "something"
-          end
+      set_file_contents <<-EOF
+        do
+          string = "something"
+        end
+      EOF
+
+      vim.search 'something'
+      split
+
+      assert_file_contents <<-OUTER
+        do
+          string = <<EOF
+        something
         EOF
-
-        vim.search 'something'
-        split
-
-        assert_file_contents <<-OUTER
-          do
-            string = <<EOF
-          something
-          EOF
-          end
-        OUTER
-
-      ensure
-        vim.command('let g:splitjoin_ruby_heredoc_type = "<<-"')
-      end
+        end
+      OUTER
     end
   end
 
@@ -885,7 +903,7 @@ describe "ruby" do
       assert_file_contents <<-EOF
         foo 1, 2, {
           :one => 1,
-          :two => 2,
+          :two => 2
         }
       EOF
 
@@ -954,7 +972,7 @@ describe "ruby" do
       assert_file_contents <<-EOF
         foo(one, {
           :two => 2,
-          :three => 3,
+          :three => 3
         })
       EOF
     end
@@ -971,7 +989,7 @@ describe "ruby" do
 
       assert_file_contents <<-EOF
         foo "\#{one}", {
-          :two => 3,
+          :two => 3
         }
       EOF
 

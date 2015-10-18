@@ -59,7 +59,7 @@ endfunction
 
 function! sj#ruby#SplitTernaryClause()
   let line    = getline('.')
-  let ternary_pattern = '\v(\w.*) \? (.*) : (.*)'
+  let ternary_pattern = '\v(\@{0,2}\w.*) \? (.*) : (.*)'
   let assignment_pattern = '\v^\s*\w* \= '
 
   if line =~ ternary_pattern
@@ -202,7 +202,7 @@ function! sj#ruby#JoinCase()
         let next_line = sj#Trim(next_line)
         let replacement = else_line.' '.next_line
         call sj#ReplaceLines(else_line_no, else_line_no + 1, replacement)
-        if g:splitjoin_align
+        if sj#settings#Read('align')
           call sj#Align(line_no + 1, else_line_no, 'when_then')
         endif
       endif
@@ -316,7 +316,7 @@ function! sj#ruby#SplitProcShorthand()
 endfunction
 
 function! sj#ruby#SplitBlock()
-  let pattern = '\v\{(\s*\|.{-}\|)?\s*(.{-})\s*\}'
+  let pattern = '\v\{(\s*\|.{-}\|)?\s*(.*)\s*\}'
 
   if sj#SearchUnderCursor('\v%(\k|!|\-\>|\?|\))\s*\zs'.pattern) <= 0
     return 0
@@ -341,6 +341,8 @@ function! sj#ruby#SplitBlock()
 
   let body = join(split(body, '\s*;\s*'), "\n")
   let replacement = substitute(body, '^'.pattern.'$', multiline_block, '')
+  " remove leftover whitespace
+  let replacement = substitute(replacement, '\s*\n', '\n', 'g')
 
   call sj#ReplaceMotion('Va{', replacement)
 
@@ -472,7 +474,7 @@ function! sj#ruby#SplitOptions()
     " no options found, but there are arguments, split those
     let replacement = join(args, ",\n")
 
-    if !g:splitjoin_ruby_hanging_args
+    if !sj#settings#Read('ruby_hanging_args')
       let replacement = "\n".replacement."\n"
     elseif len(args) == 1
       " if there's only one argument, there's nothing to do in the "hanging"
@@ -498,7 +500,7 @@ function! sj#ruby#SplitOptions()
   endif
 
   " add opening brace
-  if g:splitjoin_ruby_curly_braces
+  if sj#settings#Read('ruby_curly_braces')
 
     if option_type == 'hash'
       " Example: one = {:two => 'three'}
@@ -521,7 +523,7 @@ function! sj#ruby#SplitOptions()
       let alignment_start += 1
     endif
 
-  else " !g:splitjoin_ruby_curly_braces
+  else " !sj#settings#Read('ruby_curly_braces')
 
     if option_type == 'option' && function_type == 'with_round_braces' && len(args) > 0
       " Example: User.new(:one, :two => 'three')
@@ -545,10 +547,10 @@ function! sj#ruby#SplitOptions()
   let replacement .= join(opts, ",\n")
 
   " add closing brace
-  if !g:splitjoin_ruby_curly_braces && option_type == 'option' && function_type == 'with_round_braces'
+  if !sj#settings#Read('ruby_curly_braces') && option_type == 'option' && function_type == 'with_round_braces'
     " no need to add anything
-  elseif g:splitjoin_ruby_curly_braces || option_type == 'hash' || len(args) == 0
-    if g:splitjoin_ruby_trailing_comma
+  elseif sj#settings#Read('ruby_curly_braces') || option_type == 'hash' || len(args) == 0
+    if sj#settings#Read('ruby_trailing_comma')
       let replacement .= ','
     endif
 
@@ -557,7 +559,7 @@ function! sj#ruby#SplitOptions()
 
   call sj#ReplaceCols(from, to, replacement)
 
-  if g:splitjoin_align && hash_type != 'mixed'
+  if sj#settings#Read('align') && hash_type != 'mixed'
     let alignment_end = alignment_start + len(opts) - 1
 
     if hash_type == 'classic'
@@ -657,17 +659,17 @@ function! sj#ruby#SplitString()
     let string_body = substitute(string_body, "\\''", "'", 'g')
   endif
 
-  if g:splitjoin_ruby_heredoc_type == '<<-'
+  if sj#settings#Read('ruby_heredoc_type') == '<<-'
     call sj#ReplaceCols(match_start, match_end - 1, '<<-EOF')
     let replacement = getline('.')."\n".string_body."EOF"
     call sj#ReplaceMotion('V', replacement)
-  elseif g:splitjoin_ruby_heredoc_type == '<<'
+  elseif sj#settings#Read('ruby_heredoc_type') == '<<'
     call sj#ReplaceCols(match_start, match_end - 1, '<<EOF')
     let replacement = getline('.')."\n".string_body."EOF"
     call sj#ReplaceMotion('V', replacement)
     exe (line('.') + 1).','.(line('.') + 2).'s/^\s*//'
   else
-    throw 'Unknown value for g:splitjoin_ruby_heredoc_type, "'.g:splitjoin_ruby_heredoc_type.'"'
+    throw 'Unknown value for option "ruby_heredoc_type", "'.g:splitjoin_ruby_heredoc_type.'"'
   endif
 
   return 1
@@ -779,7 +781,7 @@ function! s:JoinHashWithCurlyBraces()
   let original_body = sj#GetMotion('Vi{')
   let body = original_body
 
-  if g:splitjoin_normalize_whitespace
+  if sj#settings#Read('normalize_whitespace')
     let body = substitute(body, '\s\+=>\s\+', ' => ', 'g')
     let body = substitute(body, '\s\+\k\+\zs:\s\+', ': ', 'g')
   endif
@@ -800,7 +802,7 @@ function! s:JoinHashWithRoundBraces()
   normal! $
 
   let body = sj#GetMotion('Vi(',)
-  if g:splitjoin_normalize_whitespace
+  if sj#settings#Read('normalize_whitespace')
     let body = substitute(body, '\s*=>\s*', ' => ', 'g')
   endif
 
