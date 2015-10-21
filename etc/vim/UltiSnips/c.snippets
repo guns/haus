@@ -189,9 +189,11 @@ __asm__("int \$3");
 endsnippet
 
 snippet fdeb "printf debug to file" w
-FILE *_f = fopen("/tmp/${1:debug.log}", "a");
-fprintf(_f, "$0");
-fclose(_f);
+{
+	FILE *_f = fopen("/tmp/${1:debug.log}", "a");
+	fprintf(_f, "$0");
+	fclose(_f);
+}
 endsnippet
 
 snippet so "sizeof" w
