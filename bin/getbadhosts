@@ -17,13 +17,13 @@ class Getmalwarehosts
 
   # https://raw.githubusercontent.com/gorhill/uMatrix/master/assets/umatrix/hosts-files.json
   HOSTS_FILE_URLS = [
-    "http://dns-bh.sagadc.org/immortal_domains.txt",
-    "http://hosts-file.net/.%5Cad_servers.txt",
-    "http://malwaredomains.lehigh.edu/files/justdomains",
+    "https://malwaredomains.lehigh.edu/files/immortal_domains.txt",
+    "https://malwaredomains.lehigh.edu/files/justdomains",
     "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
+    "http://www.malwaredomainlist.com/hostslist/hosts.txt",
+    "http://hosts-file.net/ad_servers.txt",
     "http://someonewhocares.org/hosts/hosts",
     "http://winhelp2002.mvps.org/hosts.txt",
-    "http://www.malwaredomainlist.com/hostslist/hosts.txt",
   ]
 
   def initialize opts = {}
