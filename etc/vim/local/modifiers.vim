@@ -52,7 +52,7 @@ for n in range(0x20, 0x7e)
     execute 'Setmap <4-' . char . "> \<Esc>\<C-g>" . key
 endfor
 
-unlet namedkeys n
+unlet namedkeys n key char
 
 """ Special Keys {{{1
 
