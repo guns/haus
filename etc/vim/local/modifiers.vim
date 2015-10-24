@@ -1,8 +1,5 @@
 """ Modifier Normalization
 
-" NOTE: This file contains non-printing characters!
-"       It is advisable to edit or view this file in Vim
-
 " http://vim.wikia.com/wiki/Fix_meta-keys_that_break_out_of_Insert_mode
 " http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
 
@@ -33,7 +30,7 @@ for n in range(0x20, 0x7e)
     "  * Esc-[ is the CSI prefix (Control Sequence Introducer)
     "  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
     if char !=# '[' && char !=# 'O'
-        execute 'Setmap <M-' . char . '> ' . key
+        execute 'Setmap <M-' . char . "> \<Esc>" . key
     endif
 
     " Super / Mod4
@@ -41,58 +38,58 @@ for n in range(0x20, 0x7e)
     "    accomplished in rxvt-unicode using the keysym-list extension:
     "
     "    ~/.Xdefaults:
-    "       URxvt.keysym.Mod4-0x20: list\033\007 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+    "       URxvt.keysym.Mod4-0x20: list	\033\007	 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~	
     "
-    "   Note that literal <US> (0x1f) characters are used as delimiters as the
+    "   Note that literal tab characters are used as delimiters as the
     "   resource argument contains a list of all printable ASCII characters.
-    execute 'Setmap <4-' . char . '> <Esc>' . key
+    execute 'Setmap <4-' . char . "> \<Esc>\<C-g>" . key
 endfor
 
 """ Special Keys {{{1
 
 " Backspace
-Setmap <C-BS>       <C-h>
-Setmap <M-BS>       <Esc><BS>
+execute "Setmap <C-BS>       \<C-h>"
+execute "Setmap <M-BS>       \<Esc><BS>"
 
 " Return
-Setmap <M-CR>       
-Setmap <4-CR>       <Esc><CR>
+execute "Setmap <M-CR>       \<Esc>\<CR>"
+execute "Setmap <4-CR>       \<Esc>\<C-g>\<CR>"
 
 " Backslash
-Setmap <M-Bslash>   \\
+execute "Setmap <M-Bslash>   \<Esc>\\"
 
 " Arrow keys
 if exists('$TMUX')
-    Setmap <C-Up>       [A
-    Setmap <C-Down>     [B
-    Setmap <C-Right>    [C
-    Setmap <C-Left>     [D
+    execute "Setmap <C-Up>       \<Esc>[A"
+    execute "Setmap <C-Down>     \<Esc>[B"
+    execute "Setmap <C-Right>    \<Esc>[C"
+    execute "Setmap <C-Left>     \<Esc>[D"
 else
-    Setmap <C-Up>       Oa
-    Setmap <C-Down>     Ob
-    Setmap <C-Right>    Oc
-    Setmap <C-Left>     Od
+    execute "Setmap <C-Up>       \<Esc>Oa"
+    execute "Setmap <C-Down>     \<Esc>Ob"
+    execute "Setmap <C-Right>    \<Esc>Oc"
+    execute "Setmap <C-Left>     \<Esc>Od"
 endif
 
-Setmap <S-Up>       [a
-Setmap <S-Down>     [b
-Setmap <S-Right>    [c
-Setmap <S-Left>     [d
+execute "Setmap <S-Up>       \<Esc>[a"
+execute "Setmap <S-Down>     \<Esc>[b"
+execute "Setmap <S-Right>    \<Esc>[c"
+execute "Setmap <S-Left>     \<Esc>[d"
 
-Setmap <M-Up>       <Esc><Up>
-Setmap <M-Down>     <Esc><Down>
-Setmap <M-Right>    <Esc><Right>
-Setmap <M-Left>     <Esc><Left>
+execute "Setmap <M-Up>       \<Esc><Up>"
+execute "Setmap <M-Down>     \<Esc><Down>"
+execute "Setmap <M-Right>    \<Esc><Right>"
+execute "Setmap <M-Left>     \<Esc><Left>"
 
-Setmap <4-Up>       <Esc>a
-Setmap <4-Down>     <Esc>b
-Setmap <4-Right>    <Esc>c
-Setmap <4-Left>     <Esc>d
+execute "Setmap <4-Up>       \<Esc>\<C-g>\<C-g>a"
+execute "Setmap <4-Down>     \<Esc>\<C-g>\<C-g>b"
+execute "Setmap <4-Right>    \<Esc>\<C-g>\<C-g>c"
+execute "Setmap <4-Left>     \<Esc>\<C-g>\<C-g>d"
 
-Setmap <4-S-Up>     <Esc>A
-Setmap <4-S-Down>   <Esc>B
-Setmap <4-S-Right>  <Esc>C
-Setmap <4-S-Left>   <Esc>D
+execute "Setmap <4-S-Up>     \<Esc>\<C-g>\<C-g>A"
+execute "Setmap <4-S-Down>   \<Esc>\<C-g>\<C-g>B"
+execute "Setmap <4-S-Right>  \<Esc>\<C-g>\<C-g>C"
+execute "Setmap <4-S-Left>   \<Esc>\<C-g>\<C-g>D"
 
 """ Cleanup {{{1
 
