@@ -4,7 +4,6 @@
 " http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
 
 " Set value of keycode or map in all modes {{{1
-command! -nargs=+ Setmap call <SID>Setmap(<f-args>)
 function! s:Setmap(map, seq)
     try
         " Some named values can be `set'
@@ -37,7 +36,7 @@ for n in range(0x20, 0x7e)
     "  * Esc-[ is the CSI prefix (Control Sequence Introducer)
     "  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
     if char !=# '[' && char !=# 'O'
-        execute 'Setmap <M-' . char . "> \<Esc>" . key
+        call s:Setmap('<M-' . char . '>', "\<Esc>" . key)
     endif
 
     " Super / Mod4
@@ -49,58 +48,55 @@ for n in range(0x20, 0x7e)
     "
     "   Note that literal tab characters are used as delimiters as the
     "   resource argument contains a list of all printable ASCII characters.
-    execute 'Setmap <4-' . char . "> \<Esc>\<C-g>" . key
+    call s:Setmap('<4-' . char . '>', "\<Esc>\<C-g>" . key)
 endfor
 
-unlet namedkeys n key char
+unlet namedkeys n char key
 
 """ Special Keys {{{1
 
 " Backspace
-execute "Setmap <C-BS>       \<C-h>"
-execute "Setmap <M-BS>       \<Esc><BS>"
+call s:Setmap("<C-BS>", "\<C-h>")
+call s:Setmap("<M-BS>", "\<Esc><BS>")
 
 " Return
-execute "Setmap <M-CR>       \<Esc>\<CR>"
-execute "Setmap <4-CR>       \<Esc>\<C-g>\<CR>"
+call s:Setmap("<M-CR>", "\<Esc>\<CR>")
+call s:Setmap("<4-CR>", "\<Esc>\<C-g>\<CR>")
 
 " Backslash
-execute "Setmap <M-Bslash>   \<Esc>\\"
+call s:Setmap("<M-Bslash>", "\<Esc>\\")
 
 " Arrow keys
 if exists('$TMUX')
-    execute "Setmap <C-Up>       \<Esc>[A"
-    execute "Setmap <C-Down>     \<Esc>[B"
-    execute "Setmap <C-Right>    \<Esc>[C"
-    execute "Setmap <C-Left>     \<Esc>[D"
+    call s:Setmap("<C-Up>",    "\<Esc>[A")
+    call s:Setmap("<C-Down>",  "\<Esc>[B")
+    call s:Setmap("<C-Right>", "\<Esc>[C")
+    call s:Setmap("<C-Left>",  "\<Esc>[D")
 else
-    execute "Setmap <C-Up>       \<Esc>Oa"
-    execute "Setmap <C-Down>     \<Esc>Ob"
-    execute "Setmap <C-Right>    \<Esc>Oc"
-    execute "Setmap <C-Left>     \<Esc>Od"
+    call s:Setmap("<C-Up>",    "\<Esc>Oa")
+    call s:Setmap("<C-Down>",  "\<Esc>Ob")
+    call s:Setmap("<C-Right>", "\<Esc>Oc")
+    call s:Setmap("<C-Left>",  "\<Esc>Od")
 endif
 
-execute "Setmap <S-Up>       \<Esc>[a"
-execute "Setmap <S-Down>     \<Esc>[b"
-execute "Setmap <S-Right>    \<Esc>[c"
-execute "Setmap <S-Left>     \<Esc>[d"
+call s:Setmap("<S-Up>",    "\<Esc>[a")
+call s:Setmap("<S-Down>",  "\<Esc>[b")
+call s:Setmap("<S-Right>", "\<Esc>[c")
+call s:Setmap("<S-Left>",  "\<Esc>[d")
 
-execute "Setmap <M-Up>       \<Esc><Up>"
-execute "Setmap <M-Down>     \<Esc><Down>"
-execute "Setmap <M-Right>    \<Esc><Right>"
-execute "Setmap <M-Left>     \<Esc><Left>"
+call s:Setmap("<M-Up>",    "\<Esc><Up>")
+call s:Setmap("<M-Down>",  "\<Esc><Down>")
+call s:Setmap("<M-Right>", "\<Esc><Right>")
+call s:Setmap("<M-Left>",  "\<Esc><Left>")
 
-execute "Setmap <4-Up>       \<Esc>\<C-g>\<C-g>a"
-execute "Setmap <4-Down>     \<Esc>\<C-g>\<C-g>b"
-execute "Setmap <4-Right>    \<Esc>\<C-g>\<C-g>c"
-execute "Setmap <4-Left>     \<Esc>\<C-g>\<C-g>d"
+call s:Setmap("<4-Up>",    "\<Esc>\<C-g>\<C-g>a")
+call s:Setmap("<4-Down>",  "\<Esc>\<C-g>\<C-g>b")
+call s:Setmap("<4-Right>", "\<Esc>\<C-g>\<C-g>c")
+call s:Setmap("<4-Left>",  "\<Esc>\<C-g>\<C-g>d")
 
-execute "Setmap <4-S-Up>     \<Esc>\<C-g>\<C-g>A"
-execute "Setmap <4-S-Down>   \<Esc>\<C-g>\<C-g>B"
-execute "Setmap <4-S-Right>  \<Esc>\<C-g>\<C-g>C"
-execute "Setmap <4-S-Left>   \<Esc>\<C-g>\<C-g>D"
+call s:Setmap("<4-S-Up>",    "\<Esc>\<C-g>\<C-g>A")
+call s:Setmap("<4-S-Down>",  "\<Esc>\<C-g>\<C-g>B")
+call s:Setmap("<4-S-Right>", "\<Esc>\<C-g>\<C-g>C")
+call s:Setmap("<4-S-Left>",  "\<Esc>\<C-g>\<C-g>D")
 
-""" Cleanup {{{1
-
-delcommand  Setmap
 delfunction s:Setmap
