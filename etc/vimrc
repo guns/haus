@@ -138,13 +138,6 @@ set nrformats=                  " Always inc/dec in base 10
 
 """ GLOBAL VARIABLES {{{1
 
-let g:__NAMED_KEYCODES__ = {
-    \ ' ': 'Space',
-    \ '\': 'Bslash',
-    \ '|': 'Bar',
-    \ '<': 'lt'
-\ }
-
 " Set default arguments to par
 if g:__FEATURES__['par']
     let $PARINIT = 'B=_A_a.,?'

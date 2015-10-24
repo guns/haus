@@ -1,4 +1,4 @@
-""" Modifier Normalization
+""" Modifier Setup: Alt and Mod4
 
 " http://vim.wikia.com/wiki/Fix_meta-keys_that_break_out_of_Insert_mode
 " http://vim.wikia.com/wiki/Mapping_fast_keycodes_in_terminal_Vim
@@ -16,13 +16,20 @@ function! s:Setmap(map, seq)
     endtry
 endfunction
 
-" Normalize Modifier + ASCII printable chars {{{1
+let namedkeys = {
+    \ ' ': 'Space',
+    \ '\': 'Bslash',
+    \ '|': 'Bar',
+    \ '<': 'lt'
+\ }
+
+" Map {Alt,Mod4} + ASCII printable chars {{{1
 for n in range(0x20, 0x7e)
     let char = nr2char(n)
     let key  = char
 
-    if has_key(g:__NAMED_KEYCODES__, char)
-        let char = g:__NAMED_KEYCODES__[char]
+    if has_key(namedkeys, char)
+        let char = namedkeys[char]
         let key  = '<' . char . '>'
     endif
 
@@ -34,7 +41,7 @@ for n in range(0x20, 0x7e)
     endif
 
     " Super / Mod4
-    "  * Assumes terminal sends <ESC><BEL> as Mod4 prefix; this can be
+    "  * Assumes terminal sends \033\007 as the Mod4 prefix. This can be
     "    accomplished in rxvt-unicode using the keysym-list extension:
     "
     "    ~/.Xdefaults:
@@ -44,6 +51,8 @@ for n in range(0x20, 0x7e)
     "   resource argument contains a list of all printable ASCII characters.
     execute 'Setmap <4-' . char . "> \<Esc>\<C-g>" . key
 endfor
+
+unlet namedkeys n
 
 """ Special Keys {{{1
 
