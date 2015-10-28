@@ -201,7 +201,7 @@ class Cert
   end
 
   def publickey *args
-    puts (take(args.empty? ? certificates : mapcerts(args))).map(&:public_key)
+    puts (take(args.empty? ? certificates : mapcerts(args))).map { |c| c.public_key.export }
   end
 
   def info *args
