@@ -19,15 +19,10 @@
 #
 # Replace Caps with Control
 #
-# NB. Setting two scan codes to a single _modifier_ does not work, so we
-#     repurpose Control_R as a second Menu key
-#
 
 keyboard:usb:*
 evdev:input:b*
  KEYBOARD_KEY_70039=leftctrl    # CapsLock -> Control_L
- KEYBOARD_KEY_700E0=rightctrl   # Control_L -> Control_R
- KEYBOARD_KEY_700E4=compose     # Control_R -> Menu
 
 #
 # Swap Alt and Super
