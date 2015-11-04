@@ -547,6 +547,12 @@ snippet md "os.MkdirAll" w
 ${1:err} ${2::}= os.Mkdir${3:All}($4, ${5:0755})
 endsnippet
 
+snippet dne "if file does not exist" w
+if _, ${1:err} ${2::}= os.Stat($3); os.IsNotExist(err) {
+	$0
+}
+endsnippet
+
 snippet fd "function decl" w
 func($1)${2/(.+)/ /}(${2:int})
 endsnippet
