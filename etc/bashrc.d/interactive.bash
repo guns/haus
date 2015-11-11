@@ -1421,6 +1421,7 @@ ALIAS rl='rlwrap'
 if HAVE systemctl; then
     ALIAS sc='systemctl' \
           jc='journalctl' \
+          mc='machinectl' \
           jcb='journalctl --boot' \
           jce='journalctl --pager-end' \
           jcf='journalctl --follow' \
