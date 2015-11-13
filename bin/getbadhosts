@@ -8,7 +8,7 @@
 require 'optparse'
 require 'set'
 
-class Getmalwarehosts
+class Getbadhosts
   DEFAULTS = {
     :ipv4_only => false,
     :loopback => false,
@@ -17,14 +17,16 @@ class Getmalwarehosts
 
   # https://raw.githubusercontent.com/gorhill/uMatrix/master/assets/umatrix/hosts-files.json
   HOSTS_FILE_URLS = [
-    "https://malwaredomains.lehigh.edu/files/immortal_domains.txt",
-    "https://malwaredomains.lehigh.edu/files/justdomains",
+    "http://malwaredomains.lehigh.edu/files/immortal_domains.txt",
+    "http://malwaredomains.lehigh.edu/files/justdomains",
     "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
     "http://www.malwaredomainlist.com/hostslist/hosts.txt",
     "http://hosts-file.net/ad_servers.txt",
     "http://someonewhocares.org/hosts/hosts",
     "http://winhelp2002.mvps.org/hosts.txt",
   ]
+
+  BADHOSTS = %w[facebook.com facebook.net fbcdn.com]
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -86,7 +88,7 @@ class Getmalwarehosts
   end
 
   def generate_hosts urls
-    domains, hosts = Set.new, ''
+    domains, hosts = Set.new(BADHOSTS), ''
 
     urls.each { |u| domains.merge extract_domains(get u) }
 
@@ -113,4 +115,4 @@ class Getmalwarehosts
   end
 end
 
-$0 = File.basename(__FILE__) and Getmalwarehosts.new.run ARGV if $0 == __FILE__
+$0 = File.basename(__FILE__) and Getbadhosts.new.run ARGV if $0 == __FILE__
