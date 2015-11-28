@@ -278,7 +278,9 @@ ALIAS g="grep --ignore-case $GNU_COLOR_OPT $(grep --perl-regexp . <<< . &>/dev/n
 ALIAS agi='ag --ignore-case' \
       agq='ag --literal' \
       aga='ag --all-types' \
-      agu='ag --unrestricted'
+      agu='ag --unrestricted' \
+      agia='ag --ignore-case --all-types' \
+      agiu='ag --ignore-case --unrestricted'
 
 # cat tail less
 alias c='cat'
