@@ -52,6 +52,7 @@ class Ipt
             d│delete    Delete rules
              │            e.g. #{prog} in 192.168.1.0/24
              │                 #{prog} delete in 192.168.1.0/24
+            z│zero      Reset counts in all tables
             h│help
 
         Options:
@@ -366,6 +367,12 @@ class Ipt
     end
   end
 
+  def zero_tables!
+    TABLES.each do |t|
+      iptables_exec '--table', t, '--zero'
+    end
+  end
+
   def run arguments = []
     args = parser.order arguments
 
@@ -385,6 +392,7 @@ class Ipt
     when 'F',  'FLUSH'     then flush_tables!
     when 'p',  'policy'    then set_policy! *args.drop(1)
     when 'd',  'delete'    then delete! *args.drop(1)
+    when 'z',  'zero'      then zero_tables!
     when 'h',  'help'      then puts parser.help
     else abort parser.help
     end
