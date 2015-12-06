@@ -1279,29 +1279,33 @@ HAVE keytool && java-import-keystore() {
 ### Package Managers
 
 # Aptitude
-ALIAS apt='aptitude' && {
-    apte() { vim "$(apt-file "$@")"; }
+HAVE apt && {
+    alias apti='run apt install'
+    alias aptr='run apt remove'
+    alias apts='run apt search'
     alias aptg='run dpkg --list | g'
-    alias apti='run aptitude install'
     aptq() {
         local pkg
         for pkg in "$@"; do
-            aptitude show "$pkg"
+            apt show "$pkg"
             dpkg --listfiles "$pkg"
         done
     }
-    alias apts='run aptitude search'
-    alias aptr='run aptitude remove'
-    alias aptsync='run aptitude update'
-    alias aptupgrade='run aptitude safe-upgrade'
-    # alias aptoutdated
+    alias aptsync='run apt update'
+    alias aptupgrade='run apt update; run apt full-upgrade'
+    alias aptoutdated='run apt list --upgradable'
+    alias aptclean='run apt-get autoclean; run apt-get --yes autoremove'
+    # alias aptforeign=
+    alias aptlog='pager /var/log/apt/history.log'
+    alias aptowner='run dpkg --search'
 }
 
 # Pacman
 ALIAS pac='pacman' && {
-    # alias pace
-    alias pacg='run pacman --query --search'
     alias paci='run pacman --sync --needed'
+    alias pacr='run pacman --remove --recursive'
+    alias pacs='run pacman --sync --search'
+    alias pacg='run pacman --query --search'
     pacq() {
         local pkg
         for pkg in "$@"; do
@@ -1313,12 +1317,9 @@ ALIAS pac='pacman' && {
             fi
         done 2>/dev/null | pager
     }
-    alias pacs='run pacman --sync --search'
-    alias pacr='run pacman --remove --recursive'
     alias pacsync='run pacman --sync --refresh'
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
     alias pacoutdated='run pacman --query --upgrades; run pacckalts'
-
     alias pacclean='run pacman --sync --clean --noconfirm'
     alias pacforeign='run pacman --query --foreign'
     alias paclog='pager /var/log/pacman.log'
