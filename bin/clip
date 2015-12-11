@@ -1,9 +1,9 @@
 #!/bin/sh
 
 if type xsel; then
-    exec xsel -ib "$@"
+    exec xsel --input --clipboard "$@"
 elif type xclip; then
-    exec xclip -i -selection clipboard "$@"
+    exec xclip -in -selection clipboard "$@"
 elif type pbcopy; then
     exec pbcopy "$@"
 else
