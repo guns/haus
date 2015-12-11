@@ -27,6 +27,7 @@ unset i n
 
 # [(floating|fullscreen|pseudo_tiled|locked|sticky|private|center|follow|manage|focus|border)=(on|off)]
 
+bspc rule --add audacious           focus=true floating=true
 bspc rule --add FLTK                focus=true floating=true
 bspc rule --add gifview             focus=true floating=true
 bspc rule --add kupfer.py           focus=true floating=true
