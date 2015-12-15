@@ -108,7 +108,7 @@ endsnippet
 snippet getopts "getopts"
 ${1:local OPTIND OPTARG opt
 }while getopts :${2:flags} ${3:opt}; do
-	case \$$3 in
+	case "\$$3" in
 	${4:flag}) $0;;
 	esac
 done
