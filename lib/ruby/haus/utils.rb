@@ -38,7 +38,7 @@ module Haus::Utils
   def regexp_parse str
     %r"\A/((?:\\.|[^\\])*)/([[:alpha:]]+)?\z|.*".match str do |m|
       all, s, o = m.to_a
-      f = 0
+      f = str =~ /\p{Lu}/ ? 0 : Regexp::IGNORECASE
       if o
         f |= Regexp::IGNORECASE if /i/ =~ o
         f |= Regexp::MULTILINE if /m/ =~ o
