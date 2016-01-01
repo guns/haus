@@ -337,7 +337,7 @@ noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '0') \| syntax
 noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
 noremap <Leader>st       :<C-u>SetTextwidth<Space>
 noremap <Leader>?st      :<C-u>SetTextwidth<CR>
-noremap <Leader>sw       :<C-u>SetWhitespace<Space>
+noremap <Leader>sw       :<C-u>SetWhitespace!<Space>
 noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
