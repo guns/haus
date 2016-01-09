@@ -917,6 +917,10 @@ HAVE go && {
     }
 }
 
+### Debuggers
+
+ALIAS gdbrun='gdb -ex=run'
+
 ### SCM
 
 # diff patch
