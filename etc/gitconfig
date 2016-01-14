@@ -68,8 +68,8 @@
     cam  = commit --all --message
 
     # Merging and rebasing
-    m   = merge --no-ff --stat --log --edit
-    mm  = merge --no-ff --stat --log --no-edit
+    m   = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --edit
+    mm  = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --no-edit
     mf  = merge --ff-only --no-edit
     rb  = rebase
     rbi = rebase --interactive
@@ -114,15 +114,17 @@
     lgir  = log --patch --regexp-ignore-case --date=relative -G
 
     # Branches
-    br   = branch -vv
-    bra  = branch --all -vv
-    brd  = branch --delete
-    brdd = branch -D
-    brm  = branch --move
-    co   = checkout
-    cob  = checkout -b
-    cot  = checkout --track
-    sb   = show-branch --color
+    br       = branch -vv
+    bra      = branch --all -vv
+    brd      = branch --delete
+    brdd     = branch -D
+    brm      = branch --move
+    co       = checkout
+    cob      = checkout -b
+    cot      = checkout --track
+    coours   = checkout --ours
+    cotheirs = checkout --theirs
+    sb       = show-branch --color
 
     # Tags
     t   = tag
