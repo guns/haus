@@ -310,9 +310,11 @@ super + control + shift + m
 F8
 	T='❴ pass ❵'; \
 	wmctrl -a "$T" || \
-	\{ urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
-	   sleep 0.1; \
-	   xdotool getactivewindow windowmove 0 0; \
-	   xdotool type passclip\ $'\t'; \}
+	\{ \
+		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
+		sleep 0.1; \
+		xdotool getactivewindow windowmove --sync 0 0; \
+		xdotool type passclip\ $'\t'; \
+	\}
 
 # vim:noet:foldmethod=marker:
