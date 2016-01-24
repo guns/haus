@@ -26,8 +26,6 @@ class Getbadhosts
     "http://winhelp2002.mvps.org/hosts.txt",
   ]
 
-  BADHOSTS = %w[facebook.com facebook.net fbcdn.com]
-
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
@@ -88,7 +86,7 @@ class Getbadhosts
   end
 
   def generate_hosts urls
-    domains, hosts = Set.new(BADHOSTS), ''
+    domains, hosts = Set.new, ''
 
     urls.each { |u| domains.merge extract_domains(get u) }
 
