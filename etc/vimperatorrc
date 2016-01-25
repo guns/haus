@@ -68,7 +68,7 @@ noremap  <C-n>   :javascript (function() { var t = gBrowser.treeStyleTab.getNext
 noremap  <C-p>   :javascript (function() { var t = gBrowser.treeStyleTab.getPreviousSiblingTab(gBrowser.mCurrentTab); if (t) { t.click(); } else { var ts = gBrowser.treeStyleTab.getSiblingTabs(gBrowser.mCurrentTab); var t = ts[ts.length-1]; if (t) t.click(); } })()<CR>
 noremap  <C-h>   H
 noremap  <C-l>   L
-noremap  t       :tabnew<CR><A-d>
+noremap  t       :emenu File.New Tab<CR><A-d>
 noremap  <C-S-o> :tabonly<CR>
 inoremap <C-S-o> <Esc>:tabonly<CR>
 cnoremap <C-S-o> <Esc>:tabonly<CR>
