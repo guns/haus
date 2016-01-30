@@ -528,14 +528,17 @@ vmap ' <Plug>VSurround'
 " Plugin: Shebang
 noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 
-" Plugin: Fugitive (git) + Gitv - remember to update readline macros
+" Plugin: Fugitive (git) + Gitv
+" VIMGITBINDINGS
 noremap  <Leader>g<Space> :<C-u>Git<Space>
 noremap  <Leader>g1       :<C-u>Git l1<CR>
-noremap  <Leader>g.       :<C-u>execute 'Git di ' . fnameescape(expand('%'))<CR>
+noremap  <Leader>g.       :<C-u>Git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
+noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
+noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
 noremap  <Leader>gc.      :<C-u>Gcommit %<CR>

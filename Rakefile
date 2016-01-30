@@ -408,16 +408,22 @@ task :hwdb do
   end
 end
 
-desc 'Edit common bash/vim/readline bindings'
+desc 'Edit bash/readline directory bindings'
+task :vimdirbindings do
+  fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
+  exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
+end
+
+desc 'Edit bash/vim/readline edit shortcut bindings'
 task :vimeditbindings do
   fs = %w[etc/bashrc.d/interactive.bash etc/vim/local/mappings.vim etc/inputrc]
   exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMEDITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
 end
 
-desc 'Edit bash/readline directory bindings'
-task :vimdirbindings do
-  fs = %w[etc/bashrc.d/interactive.bash etc/inputrc]
-  exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /DIRECTORYBINDINGS$\<CR>zt"'
+desc 'Edit vim/readline git bindings'
+task :vimgitbindings do
+  fs = %w[etc/vim/local/mappings.vim etc/inputrc]
+  exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMGITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
 end
 
 desc 'Vimdiff iptables.sh and ipset.conf'

@@ -206,7 +206,7 @@ $if bash
     "\C-xex":       "\C-] vimxinitrc \n"
     "\C-xeX":       "\C-] vimxdefaults \n"
 
-    # Git
+    # VIMGITBINDINGS
     "\C-xg ":       "\C-]git "
     "\C-xg1":       "\C-] git l1 \n"
     "\C-xg.":       "\C-] git di . \n"
@@ -214,6 +214,8 @@ $if bash
     "\C-xgaa":      "\C-] git aa \n"
     "\C-xgac":      "\C-] git acv \n"
     "\C-xgap":      "\C-] git ap \n"
+    "\C-xgaw.":     "\C-] git aw . \n"
+    "\C-xgawa":     "\C-] git aw \"$(git rev-parse --show-toplevel)\" \n"
     "\C-xgb":       "\C-]vim -c 'Gblame -w' "
     "\C-xgB":       "\C-]vim -c Gbrowse "
     "\C-xgc.":      "\C-] git cv . \n"
