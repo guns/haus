@@ -104,9 +104,11 @@ augroup GUNS
         \ SetWhitespace 2 8
 
     " HAML/SASS/YAML {{{1
+    autocmd BufRead,BufNewFile *.rul
+        \ setlocal filetype=yaml
     autocmd FileType haml,sass,yaml
         \ setlocal iskeyword+=- |
-        \ SetWhitespace 2 8
+        \ SetWhitespace 2
     autocmd FileType haml
         \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> %br' |
