@@ -780,9 +780,9 @@ HAVE vim && {
     }
 
     vimsession() {
-        local session="$HOME/.cache/vim/session/$(pwd -P)/Session.vim"
+        local session="$HOME/.cache/vim/session/$(pwd)/Session.vim"
         if [[ -e "$session" ]]; then
-            vim -S "$session" -c "silent! execute '! rm --force ' . v:this_session" "$@"
+            vim -S "$(ruby -rshellwords -e "print ARGV[0].shellescape" "$session")" -c "silent! execute '! rm --force ' . fnameescape(v:this_session)" "$@"
         else
             vim "$@"
         fi
