@@ -207,6 +207,8 @@ noremap  <C-k> <NOP>
 noremap  <M-\> <C-k>
 noremap! <C-k> <NOP>
 noremap! <M-\> <C-k>
+snoremap <C-k> <NOP>
+snoremap <M-\> <C-k>
 
 " Set (nvoic)<C-k> to kill-to-end-of-line
 " Bind:   Ctrl-K => D
