@@ -369,7 +369,7 @@ alias mvf='command mv --verbose --force'
 # rm
 alias rm='rm --verbose'
 alias rmf='rm --force'
-alias rmrf='rmf --recursive'
+alias rmrf='rm --recursive --force --one-file-system'
 
 # ln
 alias ln='ln --verbose --interactive'
