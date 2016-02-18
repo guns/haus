@@ -305,7 +305,7 @@ elif [[ -e /var/log/messages ]]; then
 fi
 
 # ls
-alias ls="ls -l --almost-all --human-readable $GNU_COLOR_OPT"
+alias ls="ls -l --almost-all --human-readable --quoting-style=literal --show-control-chars $GNU_COLOR_OPT"
 alias lc="command ls -C $GNU_COLOR_OPT"
 alias lsd='ls --directory'
 lsr() { ls --recursive "${@:-.}" | pager; }
