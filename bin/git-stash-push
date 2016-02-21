@@ -1,0 +1,17 @@
+#!/bin/bash
+
+usage() { echo "USAGE: git stash-push [message]" >&2; }
+
+while getopts :h opt; do
+    case "$opt" in
+    h) usage; exit;;
+    esac
+done
+shift $((OPTIND-1))
+
+if (($#)); then
+    git stash store -m "$*" "$(git stash create "$*")"
+else
+    HASH="$(git stash create)"
+    git stash store -m "$HASH" "$HASH"
+fi
