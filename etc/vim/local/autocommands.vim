@@ -107,8 +107,9 @@ augroup GUNS
     autocmd BufRead,BufNewFile *.rul
         \ setlocal filetype=yaml
     autocmd FileType haml,sass,yaml
-        \ setlocal iskeyword+=- |
         \ SetWhitespace 2
+    autocmd FileType haml,sass
+        \ setlocal iskeyword+=-
     autocmd FileType haml
         \ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> %br' |
