@@ -624,8 +624,8 @@ ALIAS net='netctl' \
       netstop='netctl stop-all'
 
 # cURL
-ALIAS get='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" --progress-bar --location' \
-      geto='curl --user-agent "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" --progress-bar --location --remote-name'
+ALIAS get='curl --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4" --progress-bar --location' \
+      geto='curl --user-agent "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4" --progress-bar --location --remote-name'
 
 # dig
 ALIAS digx='dig -x' \
