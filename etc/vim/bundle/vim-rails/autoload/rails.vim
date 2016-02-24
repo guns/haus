@@ -724,22 +724,19 @@ function! s:readable_calculate_file_type() dict abort
   elseif f =~ '\<app/mailers/.*\.rb'
     let r = "mailer"
   elseif f =~ '\<app/models/'
-    let top = join(s:readfile(full_path,50),"\n")
-    let class = matchstr(top,'\<Acti\w\w\u\w\+\%(::\h\w*\)\+\>')
-    if class == "ActiveResource::Base"
-      let class = "ares"
-      let r = "model-ares"
-    elseif class == 'ActionMailer::Base'
-      let r = "mailer"
-    elseif class != ''
-      let class = tolower(s:gsub(class,'[^A-Z]',''))
-      let r = "model-".class
-    elseif f =~ '_mailer\.rb$'
-      let r = "mailer"
+    let top = "\n".join(s:readfile(full_path,50),"\n")
+    let class = matchstr(top,"\n".'class\s\+\S\+\s*<\s*\<\zs\S\+\>')
+    let type = tolower(matchstr(class, '^Application\zs[A-Z]\w*$\|^Acti\w\w\zs[A-Z]\w*\ze::Base'))
+    if type ==# 'mailer' || f =~ '_mailer\.rb$'
+      let r = 'mailer'
+    elseif class ==# 'ActiveRecord::Observer'
+      let r = 'model-observer'
+    elseif !empty(type)
+      let r = 'model-'.type
     elseif top =~ '\<\%(self\.\%(table_name\|primary_key\)\|has_one\|has_many\|belongs_to\)\>'
-      let r = "model-arb"
+      let r = 'model-record'
     else
-      let r = "model"
+      let r = 'model'
     endif
   elseif f =~ '\<app/views/.*/_\w\+\%(\.[[:alnum:]_+]\+\)\=\.\w\+$'
     let r = "view-partial-" . e
@@ -867,6 +864,7 @@ function! s:app_has(feature) dict
         \'bundler': 'Gemfile|gems.locked',
         \'rails2': 'script/about',
         \'rails3': 'config/application.rb',
+        \'rails5': 'app/assets/config/manifest.js|config/initializers/application_controller_renderer.rb',
         \'cucumber': 'features/',
         \'turnip': 'spec/acceptance/',
         \'sass': 'public/stylesheets/sass/',
@@ -1038,16 +1036,11 @@ function! s:Log(bang,arg)
 endfunction
 
 function! rails#new_app_command(bang,...) abort
-  if !a:0 && a:bang
-    echo "rails.vim ".g:autoloaded_rails
-  elseif !a:0 || a:1 !=# 'new'
+  if !a:0 || a:1 !=# 'new'
     return 'echoerr '.string('Usage: rails new <path>')
   endif
 
   let args = copy(a:000)
-  if a:bang
-    let args += ['--force']
-  endif
 
   if &shellpipe !~# 'tee' && index(args, '--skip') < 0 && index(args, '--force') < 0
     let args += ['--skip']
@@ -1210,7 +1203,7 @@ function! s:make(bang, args, ...)
   endif
 endfunction
 
-function! s:Rake(bang,lnum,arg)
+function! s:Rake(bang, lnum, arg) abort
   let self = rails#app()
   let lnum = a:lnum < 0 ? 0 : a:lnum
   let old_makeprg = &l:makeprg
@@ -1222,16 +1215,6 @@ function! s:Rake(bang,lnum,arg)
     let &l:makeprg = rails#app().rake_command()
     let &l:errorformat .= ',chdir '.escape(self.path(), ',')
     let arg = a:arg
-    if &filetype =~# '^ruby\>' && arg == ''
-      let mnum = s:lastmethodline(lnum)
-      let str = getline(mnum)."\n".getline(mnum+1)."\n".getline(mnum+2)."\n"
-      let pat = '\s\+\zs.\{-\}\ze\%(\n\|\s\s\|#{\@!\|$\)'
-      let mat = matchstr(str,'#\s*rake'.pat)
-      let mat = s:sub(mat,'\s+$','')
-      if mat != ""
-        let arg = mat
-      endif
-    endif
     if arg == ''
       let arg = rails#buffer().default_rake_task(lnum)
     endif
@@ -1240,7 +1223,6 @@ function! s:Rake(bang,lnum,arg)
       let arg = get(self.options,'last_rake_task','')
     endif
     let self.options['last_rake_task'] = arg
-    let withrubyargs = '-r ./config/boot -r '.s:rquote(self.path('config/environment')).' -e "puts \%((in \#{Dir.getwd}))" '
     if arg =~# '^notes\>'
       let &l:errorformat = '%-P%f:,\ \ *\ [%\ %#%l]\ [%t%*[^]]] %m,\ \ *\ [%[\ ]%#%l] %m,%-Q'
       call s:make(a:bang, arg)
@@ -1331,16 +1313,17 @@ function! s:readable_default_rake_task(...) dict abort
   let app = self.app()
   let lnum = a:0 ? (a:1 < 0 ? 0 : a:1) : 0
 
+  let taskpat = '\C# rake\s\+\zs.\{-\}\ze\%(\s\s\|#\|$\)'
   if self.getvar('&buftype') == 'quickfix'
     return '-'
   elseif self.getline(lnum) =~# '# rake \S'
     return matchstr(self.getline(lnum),'\C# rake \zs.*')
-  elseif self.getline(self.last_method_line(lnum)-1) =~# '# rake '
-    return matchstr(self.getline(self.last_method_line(lnum)-1),'\C# rake \zs.*')
-  elseif self.getline(self.last_method_line(lnum)) =~# '# rake '
-    return matchstr(self.getline(self.last_method_line(lnum)),'\C# rake \zs.*')
-  elseif self.getline(1) =~# '# rake \S' && !lnum
-    return matchstr(self.getline(1),'\C# rake \zs.*')
+  elseif self.getline(self.last_method_line(lnum)-1) =~# taskpat
+    return matchstr(self.getline(self.last_method_line(lnum)-1), taskpat)
+  elseif self.getline(self.last_method_line(lnum)) =~# taskpat
+    return matchstr(self.getline(self.last_method_line(lnum)), taskpat)
+  elseif self.getline(1) =~# taskpat && !lnum
+    return matchstr(self.getline(1), taskpat)
   endif
 
   let placeholders = {}
@@ -1370,10 +1353,11 @@ function! s:readable_default_rake_task(...) dict abort
     let line = getline(mnum)
     " We can't grab the namespace so only run tasks at the start of the line
     if line =~# '^\%(task\|file\)\>'
-      return self.last_method(lnum)
+      let task = self.last_method(lnum)
     else
-      return matchstr(self.getline(1),'\C# rake \zs.*')
+      let task = matchstr(self.getline(1),'\C# rake \zs.*')
     endif
+    return s:sub(task, '^$', '--tasks')
   elseif self.type_name('db-migration')
     let ver = matchstr(self.name(),'\<db/migrate/0*\zs\d*\ze_')
     if !empty(ver)
@@ -1406,6 +1390,8 @@ function! s:readable_default_rake_task(...) dict abort
     endif
     if empty(test)
       return '--tasks'
+    elseif test =~# '^test\>' && self.app().has('rails5')
+      return 'test '.s:rquote(with_line)
     elseif test =~# '^test\>'
       let opts = ''
       if test ==# self.name()
@@ -1637,9 +1623,9 @@ endfunction
 " Script Wrappers {{{1
 
 function! s:BufScriptWrappers()
-  command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_script   Rscript       :execute empty(<q-args>) ? rails#app().script_command(<bang>0, 'console') : rails#app().script_command(<bang>0,<f-args>)
+  command! -buffer -bang -bar -nargs=? -complete=customlist,s:Complete_script   Rscript       :execute 'Rails<bang>' empty(<q-args>) ? 'console' : <q-args>
   command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_environments Console   :Rails<bang> console <args>
-  command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_script   Rails         :execute rails#app().script_command(<bang>0,<f-args>)
+  command! -buffer -bang -bar -nargs=? -count -complete=customlist,s:Complete_script Rails    :execute s:Rails(<bang>0, !<count> && <line1> ? -1 : <count>, <q-args>)
   command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_generate Rgenerate     :execute rails#app().generator_command(<bang>0,'generate',<f-args>)
   command! -buffer -bang -bar -nargs=* -complete=customlist,s:Complete_generate Generate      :execute rails#app().generator_command(<bang>0,'generate',<f-args>)
   command! -buffer -bar -nargs=*       -complete=customlist,s:Complete_destroy  Rdestroy      :execute rails#app().generator_command(1,'destroy',<f-args>)
@@ -1657,7 +1643,7 @@ function! s:app_generators() dict abort
     let paths = [self.path('vendor/plugins/*'), self.path('lib'), expand("~/.rails")]
     if !empty(self.gems())
       let gems = values(self.gems())
-      let paths += map(gems, 'v:val . "/lib/rails"')
+      let paths += map(copy(gems), 'v:val . "/lib/rails"')
       let paths += map(gems, 'v:val . "/lib"')
       let builtin = []
     else
@@ -1674,24 +1660,35 @@ function! s:app_generators() dict abort
   return self.cache.get('generators')
 endfunction
 
-function! s:app_script_command(bang,...) dict
-  let msg = "rails.vim ".g:autoloaded_rails
-  if a:0 == 0 && a:bang && rails#buffer().type_name() == ''
-    echo msg." (Rails)"
-    return
-  elseif a:0 == 0 && a:bang
-    echo msg." (Rails-".rails#buffer().type_name().")"
-    return
+function! s:Rails(bang, count, arg) abort
+  if !empty(a:arg)
+    let str = a:arg
+  elseif rails#buffer().type_name('spec', 'cucumber')
+    return rails#buffer().runner_command(a:bang, a:count, '')
+  elseif rails#buffer().type_name('test') && !rails#app().has('rails5')
+    return rails#buffer().runner_command(a:bang, a:count, '')
+  elseif rails#buffer().name() =~# '^\%(app\|config\|db\|lib\|log\|README\|Rakefile\|test\|spec\|features\)'
+    let str = rails#buffer().default_rake_task(a:count)
+    if str ==# '--tasks'
+      let str = ''
+    else
+      let rake = 1
+    endif
+  else
+    let str = ''
   endif
-  let str = join(map(copy(a:000), 's:rquote(v:val)'), ' ')
   if str =~# '^\%(c\|console\|db\|dbconsole\|s\|server\)\S\@!' && str !~# ' -d\| --daemon\| --help'
-    return self.start_rails_command(str, a:bang)
+    return rails#app().start_rails_command(str, a:bang)
   else
     let [mp, efm, cc] = [&l:mp, &l:efm, get(b:, 'current_compiler', '')]
     try
       compiler rails
-      let &l:makeprg = self.prepare_rails_command('$*')
-      let &l:errorformat .= ',chdir '.escape(self.path(), ',')
+      if exists('rake') && !rails#app().has('rails5')
+        let &l:makeprg = rails#app().rake_command()
+      else
+        let &l:makeprg = rails#app().prepare_rails_command('$*')
+      endif
+      let &l:errorformat .= ',chdir '.escape(rails#app().path(), ',')
       call s:make(a:bang, str)
     finally
       let [&l:mp, &l:efm, b:current_compiler] = [mp, efm, cc]
@@ -1713,7 +1710,7 @@ function! s:readable_runner_command(bang, count, arg) dict abort
     else
       let arg = self.test_file()
       if empty(arg)
-        let arg = a:arg
+        let arg = self.name()
       endif
     endif
 
@@ -1726,7 +1723,7 @@ function! s:readable_runner_command(bang, count, arg) dict abort
     if arg =~# '^test/.*_test\.rb$'
       let compiler = 'rubyunit'
       if a:count > 0
-        let method = file.last_method(lnum)
+        let method = file.last_method(a:count)
         if method =~ '^test_'
           let extra = ' -n'.method
         else
@@ -1896,7 +1893,7 @@ function! s:app_generator_command(bang,...) dict
   endif
 endfunction
 
-call s:add_methods('app', ['generators','script_command','output_command','server_command','generator_command'])
+call s:add_methods('app', ['generators','output_command','server_command','generator_command'])
 
 function! s:Complete_script(ArgLead, CmdLine, P) abort
   return rails#complete_rails(a:ArgLead, a:CmdLine, a:P, rails#app())
@@ -1915,7 +1912,13 @@ function! rails#complete_rails(ArgLead, CmdLine, P, ...) abort
   elseif empty(app)
     return s:completion_filter(['new'], a:ArgLead)
   elseif cmd =~# '^\w*$'
-    return s:completion_filter(['generate', 'console', 'server', 'dbconsole', 'application', 'destroy', 'plugin', 'runner'],a:ArgLead)
+    let cmds = ['generate', 'console', 'server', 'dbconsole', 'destroy', 'plugin', 'runner']
+    if app.has('rails5')
+      call extend(cmds, app.rake_tasks())
+    endif
+    return s:completion_filter(cmds, a:ArgLead)
+  elseif cmd =~# '^\%([rt]\|runner\|test\|test:db\)\s\+'
+    return s:completion_filter(app.relglob('', s:fuzzyglob(a:ArgLead)), a:ArgLead)
   elseif cmd =~# '^\%([gd]\|generate\|destroy\)\s\+'.a:ArgLead.'$'
     return s:completion_filter(app.generators(),a:ArgLead)
   elseif cmd =~# '^\%([gd]\|generate\|destroy\)\s\+\w\+\s\+'.a:ArgLead.'$'
@@ -3269,9 +3272,12 @@ function! s:readable_alternate_candidates(...) dict abort
   let f = self.name()
   let placeholders = {}
   if a:0 && a:1
+    let placeholders.lnum = a:1
+    let placeholders.line = a:1
     let lastmethod = self.last_method(a:1)
     if !empty(lastmethod)
       let placeholders.d = lastmethod
+      let placeholders.define = lastmethod
     endif
     let projected = self.projected('related', placeholders)
     if !empty(projected)
@@ -3301,13 +3307,13 @@ function! s:readable_alternate_candidates(...) dict abort
       return [controller, controller2, mailer, model]
     elseif self.type_name('controller')
       return [s:sub(s:sub(f,'/controllers/','/helpers/'),'%(_controller)=\.rb$','_helper.rb')]
-    elseif self.type_name('model-arb')
+    elseif self.type_name('model-record')
       let table_name = matchstr(join(self.getline(1,50),"\n"),'\n\s*self\.table_name\s*=\s*[:"'']\zs\w\+')
       if table_name == ''
         let table_name = rails#pluralize(s:gsub(s:sub(fnamemodify(f,':r'),'.{-}<app/models/',''),'/','_'))
       endif
       return ['db/schema.rb#'.table_name]
-    elseif self.type_name('model-aro')
+    elseif self.type_name('model-observer')
       return [s:sub(f,'_observer\.rb$','.rb')]
     elseif self.type_name('db-schema') && !empty(lastmethod)
       return ['app/models/' . rails#singularize(lastmethod) . '.rb']
@@ -3332,6 +3338,8 @@ function! s:readable_alternate_candidates(...) dict abort
     return ['app/helpers/application_helper.rb']
   elseif f =~# 'spec\.js$'
     return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.js', '.js')]
+  elseif f =~# 'Spec\.js$'
+    return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), 'Spec.js', '.js')]
   elseif f =~# 'spec\.coffee$'
     return [s:sub(s:sub(f, 'spec/javascripts', 'app/assets/javascripts'), '_spec.coffee', '.coffee')]
   elseif f =~# 'spec\.js\.coffee$'
@@ -3348,6 +3356,9 @@ function! s:readable_alternate_candidates(...) dict abort
     elseif f =~ '.coffee$'
       let suffix = '.coffee'
       let suffix_replacement = '_spec.coffee'
+    elseif f =~ '[A-Z][a-z]\+\.js$'
+      let suffix = '.js'
+      let suffix_replacement = 'Spec.js'
     else
       let suffix = '.js'
       let suffix_replacement = '_spec.js'
@@ -3756,18 +3767,18 @@ function! rails#buffer_syntax()
       if buffer.type_name() == ''
         syn keyword rubyRailsMethod params request response session headers cookies flash
       endif
-      if buffer.type_name() ==# 'model' || buffer.type_name('model-arb')
+      if buffer.type_name() ==# 'model' || buffer.type_name('model-record')
         syn keyword rubyRailsARMethod default_scope enum named_scope scope serialize store
         syn keyword rubyRailsARAssociationMethod belongs_to has_one has_many has_and_belongs_to_many composed_of accepts_nested_attributes_for
         syn keyword rubyRailsARCallbackMethod before_create before_destroy before_save before_update before_validation before_validation_on_create before_validation_on_update
         syn keyword rubyRailsARCallbackMethod after_create after_destroy after_save after_update after_validation after_validation_on_create after_validation_on_update
         syn keyword rubyRailsARCallbackMethod around_create around_destroy around_save around_update
         syn keyword rubyRailsARCallbackMethod after_commit after_find after_initialize after_rollback after_touch
-        syn keyword rubyRailsARClassMethod attr_accessible attr_protected attr_readonly has_secure_password store_accessor
-        syn keyword rubyRailsARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_size_of validates_uniqueness_of validates_with
+        syn keyword rubyRailsARClassMethod attr_accessible attr_protected attr_readonly has_secure_password has_secure_token store_accessor
+        syn keyword rubyRailsARValidationMethod validate validates validate_on_create validate_on_update validates_acceptance_of validates_associated validates_confirmation_of validates_each validates_exclusion_of validates_format_of validates_inclusion_of validates_length_of validates_numericality_of validates_presence_of validates_absence_of validates_size_of validates_uniqueness_of validates_with
         syn keyword rubyRailsMethod logger
       endif
-      if buffer.type_name('model-aro')
+      if buffer.type_name('model-observer')
         syn keyword rubyRailsARMethod observe
       endif
       if buffer.type_name('mailer')
@@ -3808,7 +3819,7 @@ function! rails#buffer_syntax()
           exe "syn keyword rubyRailsUserMethod ".join(rails#app().user_assertions())
         endif
         syn keyword rubyRailsTestMethod refute refute_empty refute_equal refute_in_delta refute_in_epsilon refute_includes refute_instance_of refute_kind_of refute_match refute_nil refute_operator refute_predicate refute_respond_to refute_same
-        syn keyword rubyRailsTestMethod add_assertion assert assert_block assert_equal assert_in_delta assert_instance_of assert_kind_of assert_match assert_nil assert_no_match assert_not assert_not_equal assert_not_nil assert_not_same assert_nothing_raised assert_nothing_thrown assert_operator assert_raise assert_respond_to assert_same assert_send assert_throws assert_recognizes assert_generates assert_routing flunk fixtures fixture_path use_transactional_fixtures use_instantiated_fixtures assert_difference assert_no_difference assert_valid
+        syn keyword rubyRailsTestMethod add_assertion assert assert_block assert_equal assert_includes assert_in_delta assert_instance_of assert_kind_of assert_match assert_nil assert_no_match assert_not assert_not_equal assert_not_nil assert_not_same assert_nothing_raised assert_nothing_thrown assert_operator assert_raise assert_respond_to assert_same assert_send assert_throws assert_recognizes assert_generates assert_routing flunk fixtures fixture_path use_transactional_fixtures use_instantiated_fixtures assert_difference assert_no_difference assert_valid
         syn keyword rubyRailsTestMethod test setup teardown
         if !buffer.type_name('test-unit')
           syn match   rubyRailsTestControllerMethod  '\.\@<!\<\%(get\|post\|put\|patch\|delete\|head\|process\|assigns\)\>'
@@ -4313,7 +4324,7 @@ function! s:BufAbbreviations()
       Rabbrev rst( respond_to
       " ))
     endif
-    if buffer.type_name() ==# 'model' || buffer.type_name('model-arb')
+    if buffer.type_name() ==# 'model' || buffer.type_name('model-record')
       Rabbrev bt(    belongs_to
       Rabbrev ho(    has_one
       Rabbrev hm(    has_many
@@ -4519,6 +4530,10 @@ let s:default_projections = {
       \  "README": {"alternate": "config/database.yml"},
       \  "README.*": {"alternate": "config/database.yml"},
       \  "Rakefile": {"type": "task"},
+      \  "app/channels/*_channel.rb": {
+      \    "template": ["class {camelcase|capitalize|colons}Channel < ActionCable::Channel", "end"],
+      \    "type": "channel"
+      \  },
       \  "app/controllers/*_controller.rb": {
       \    "affinity": "controller",
       \    "template": [
@@ -5047,16 +5062,23 @@ function! rails#buffer_setup() abort
     call self.setvar('dispatch', dir . dispatch[0])
   elseif self.name() =~# '^public'
     call self.setvar('dispatch', ':Preview')
-  elseif self.type_name('test', 'spec', 'cucumber')
+  elseif self.type_name('spec', 'cucumber')
     call self.setvar('dispatch', ':Runner')
-  elseif self.name() =~# '^\%(app\|config\|db\|lib\|log\|README\|Rakefile\)'
-    if exists('dir')
+  elseif self.type_name('test') && !self.app().has('rails5')
+    call self.setvar('dispatch', ':Runner')
+  elseif self.name() =~# '^\%(app\|config\|db\|lib\|log\|README\|Rakefile\|test\|spec\|features\)'
+    if !exists('dir')
+      call self.setvar('dispatch', ':Rails')
+    elseif self.app().has('rails5')
+      call self.setvar('dispatch',
+            \ dir .
+            \ self.app().ruby_script_command('bin/rails') .
+            \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
+    else
       call self.setvar('dispatch',
             \ dir . '-compiler=rails ' .
             \ self.app().rake_command('static') .
             \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
-    else
-      call self.setvar('dispatch', ':Rake')
     endif
   endif
 endfunction
