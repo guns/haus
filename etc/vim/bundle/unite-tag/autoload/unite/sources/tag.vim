@@ -24,7 +24,7 @@
 " }}}
 
 " define source
-function! unite#sources#tag#define()
+function! unite#sources#tag#define() abort
     return [s:source, s:source_files, s:source_include]
 endfunction
 
@@ -75,7 +75,7 @@ let s:source = {
 \   'syntax': 'uniteSource__Tag',
 \}
 
-function! s:source.hooks.on_syntax(args, context)
+function! s:source.hooks.on_syntax(args, context) abort
   syntax match uniteSource__Tag_File /  @.\{-}  /ms=s+2,me=e-2
               \ containedin=uniteSource__Tag contained
               \ nextgroup=uniteSource__Tag_Kind,
@@ -98,12 +98,12 @@ function! s:source.hooks.on_syntax(args, context)
   endif
 endfunction
 
-function! s:source.hooks.on_init(args, context)
+function! s:source.hooks.on_init(args, context) abort
     let a:context.source__tagfiles = tagfiles()
     let a:context.source__name = 'tag'
 endfunction
 
-function! s:source.gather_candidates(args, context)
+function! s:source.gather_candidates(args, context) abort
     let a:context.source__continuation = []
     if a:context.input != ''
         return s:taglist_filter(a:context.input, self.name)
@@ -128,7 +128,7 @@ function! s:source.gather_candidates(args, context)
     return s:pre_filter(result, a:args)
 endfunction
 
-function! s:source.async_gather_candidates(args, context)
+function! s:source.async_gather_candidates(args, context) abort
     " caching has done
     if empty(a:context.source__continuation)
         let a:context.is_async = 0
@@ -200,7 +200,7 @@ let s:source_files = {
 \   'async_gather_candidates': s:source.async_gather_candidates,
 \}
 
-function! s:source_files.gather_candidates(args, context)
+function! s:source_files.gather_candidates(args, context) abort
     let a:context.source__continuation = []
     let files = {}
     for tagfile in a:context.source__tagfiles
@@ -229,7 +229,7 @@ let s:source_include.description =
             \ 'candidates from files contained in include tag file'
 let s:source_include.max_candidates = 0
 
-function! s:source_include.hooks.on_init(args, context)
+function! s:source_include.hooks.on_init(args, context) abort
     if get(g:, 'loaded_neoinclude', 0)
         if empty(neoinclude#include#get_tag_files())
             NeoIncludeMakeCache
@@ -241,7 +241,7 @@ function! s:source_include.hooks.on_init(args, context)
     let a:context.source__name = 'tag/include'
 endfunction
 
-function! s:source_include.gather_candidates(args, context)
+function! s:source_include.gather_candidates(args, context) abort
     if empty(a:context.source__tagfiles)
         call unite#print_message(
         \    printf('[%s] Nothing include files.', a:context.source__name))
@@ -268,22 +268,33 @@ function! s:source_include.gather_candidates(args, context)
 endfunction
 
 " filter defined by unite's parameter (e.g. Unite tag:filter)
-function! s:pre_filter(result, args)
-    if !empty(a:args)
-        let arg = a:args[0]
-        if arg !=# ''
-            if arg ==# '/'
-                let pat = arg[1 : ]
-                call filter(a:result, 'v:val.word =~? pat')
-            else
-                call filter(a:result, 'v:val.word == arg')
-            endif
-        endif
+function! s:pre_filter(result, args) abort
+    if empty(a:args)
+        return unite#util#uniq_by(a:result, 'v:val.abbr')
     endif
+
+    for arg in a:args
+        if arg ==# ''
+            continue
+        endif
+        if arg ==# '%'
+            " Current buffer tags
+            let bufname = (&ft==#'unite' ?
+                        \ bufname(b:unite.prev_bufnr) : expand('%:p'))
+            call filter(a:result, 'v:val.action__path ==# bufname')
+        elseif arg =~# '/'
+            " Pattern matching name
+            let pat = arg[1 : ]
+            call filter(a:result, 'v:val.word =~? pat')
+        else
+            " Normal matching name
+            call filter(a:result, 'v:val.word ==# arg')
+        endif
+    endfor
     return unite#util#uniq_by(a:result, 'v:val.abbr')
 endfunction
 
-function! s:get_tagdata(tagfile, context)
+function! s:get_tagdata(tagfile, context) abort
     let tagfile = fnamemodify(a:tagfile, ':p')
     if !filereadable(tagfile)
         return {}
@@ -315,7 +326,7 @@ function! s:get_tagdata(tagfile, context)
     return s:tagfile_cache[tagfile]
 endfunction
 
-function! s:taglist_filter(input, name)
+function! s:taglist_filter(input, name) abort
     let key = string(tagfiles()).a:input
     if has_key(s:input_cache, key)
         return s:input_cache[key]
@@ -341,7 +352,7 @@ function! s:taglist_filter(input, name)
     \                  ),
     \   'kind':    'jump_list',
     \   'action__path':    unite#util#substitute_path_separator(
-    \                   v:val.filename),
+    \                   fnamemodify(v:val.filename, ':p')),
     \   'action__tagname': v:val.name,
     \   'source__cmd': v:val.cmd,
     \}")
@@ -372,7 +383,7 @@ function! s:taglist_filter(input, name)
     return taglist
 endfunction
 
-function! s:truncate(str, max, footer_width, sep)
+function! s:truncate(str, max, footer_width, sep) abort
     if g:unite_source_tag_strict_truncate_string
         return unite#util#truncate_smart(a:str, a:max, a:footer_width, a:sep)
     else
@@ -386,7 +397,7 @@ function! s:truncate(str, max, footer_width, sep)
     endif
 endfunction
 
-function! s:next(tagdata, line, name)
+function! s:next(tagdata, line, name) abort
     let is_file = a:name ==# 'tag/file'
     let cont = a:tagdata.cont
     " parsing tag files is faster than using taglist()
@@ -446,11 +457,13 @@ function! s:next(tagdata, line, name)
                     \        matchstr(cmd, '^[?/]\^\?\zs.\{-1,}\ze\$\?[?/]$')
     endif
 
+    let fullpath = unite#util#substitute_path_separator(
+                \ fnamemodify(path, ':p'))
     let tag = {
     \   'word':    name,
     \   'abbr':    abbr,
     \   'kind':    'jump_list',
-    \   'action__path':    path,
+    \   'action__path':    fullpath,
     \   'action__tagname': name
     \}
     if linenr
@@ -462,7 +475,6 @@ function! s:next(tagdata, line, name)
 
     let result = is_file ? [] : [tag]
 
-    let fullpath = fnamemodify(path, ':p')
     if !has_key(a:tagdata.files, fullpath)
         let file = {
         \   'word': fullpath,
@@ -491,7 +503,7 @@ endfunction
 " 3. the first part is tag_name, the second part is file_name
 "    and ex_cmd is taken by joining remain parts with <TAB>
 " 4. parsing extension_fields
-function! s:parse_tag_line(line)
+function! s:parse_tag_line(line) abort
     " 0.
     if a:line[0] == '!'
         let enc = matchstr(a:line, '\C^!_TAG_FILE_ENCODING\t\zs\S\+\ze\t')
@@ -531,16 +543,16 @@ endfunction
 " echomsg string(s:parse_tag_line(s:test))
 
 " cache to file
-function! s:filename_to_cachename(filename)
+function! s:filename_to_cachename(filename) abort
     return s:cache_dir . '/' . substitute(a:filename, '[\/]', '+=', 'g')
 endfunction
 
-function! s:write_cache(filename)
+function! s:write_cache(filename) abort
     call s:C.writefile(s:cache_dir, a:filename,
                 \ [string(s:tagfile_cache[a:filename])])
 endfunction
 
-function! s:read_cache(filename)
+function! s:read_cache(filename) abort
     if !s:C.check_old_cache(s:cache_dir, a:filename)
         let data = s:C.readfile(s:cache_dir, a:filename)
         sandbox let s:tagfile_cache[a:filename] = eval(data[0])
@@ -569,14 +581,14 @@ let s:action_table = {}
 let s:action_table.jump = {
 \   'description': 'jump to the selected tag'
 \}
-function! s:action_table.jump.func(candidate)
+function! s:action_table.jump.func(candidate) abort
     execute "tjump" a:candidate.action__tagname
 endfunction
 
 let s:action_table.select = {
 \   'description': 'list the tags matching the selected tag pattern'
 \}
-function! s:action_table.select.func(candidate)
+function! s:action_table.select.func(candidate) abort
     execute "tselect" a:candidate.action__tagname
 endfunction
 
@@ -584,7 +596,7 @@ let s:action_table.jsplit = {
 \   'description': 'split window and jump to the selected tag',
 \   'is_selectable': 1
 \}
-function! s:action_table.jsplit.func(candidates)
+function! s:action_table.jsplit.func(candidates) abort
     for c in a:candidates
         execute "stjump" c.action__tagname
     endfor
