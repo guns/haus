@@ -18,6 +18,7 @@ gundo_playback_delay	gundo.txt	/*gundo_playback_delay*
 gundo_preview_bottom	gundo.txt	/*gundo_preview_bottom*
 gundo_preview_height	gundo.txt	/*gundo_preview_height*
 gundo_preview_statusline	gundo.txt	/*gundo_preview_statusline*
+gundo_return_on_revert	gundo.txt	/*gundo_return_on_revert*
 gundo_right	gundo.txt	/*gundo_right*
 gundo_tree_statusline	gundo.txt	/*gundo_tree_statusline*
 gundo_width	gundo.txt	/*gundo_width*
