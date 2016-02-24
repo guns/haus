@@ -26,7 +26,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#sources#tab#define() "{{{
+function! unite#sources#tab#define() abort "{{{
   return s:source
 endfunction"}}}
 
@@ -38,7 +38,7 @@ let s:source = {
       \ 'default_kind' : 'tab',
       \}
 
-function! s:source.gather_candidates(args, context) "{{{
+function! s:source.gather_candidates(args, context) abort "{{{
   let list = range(1, tabpagenr('$'))
   let arg = get(a:args, 0, '')
   if arg ==# 'no-current'
@@ -97,13 +97,10 @@ function! s:source.gather_candidates(args, context) "{{{
 
     if len(tabpagebuflist(i)) > 1
       " Get tab windows list.
-      let tabnr = tabpagenr()
-      execute 'tabnext' i
-      let abbr .= "\n" . join(map(range(1, winnr('$')),
-            \ "printf('%s %d: %s', repeat(' ', 1), v:val,
-            \ (bufname(winbufnr(v:val)) == '' ?
-            \ '[No Name]' : bufname(winbufnr(v:val))))"), "\n")
-      execute 'tabnext' tabnr
+      for [winnr, bufnr] in map(tabpagebuflist(i), "[v:key, v:val]")
+        let abbr .= "\n" . printf('%s %d: %s', repeat(' ', 1), (winnr+1),
+              \ (bufname(bufnr) == '' ? '[No Name]' : bufname(bufnr)))
+      endfor
     endif
 
     call add(candidates, {
@@ -116,10 +113,10 @@ function! s:source.gather_candidates(args, context) "{{{
 
   return candidates
 endfunction"}}}
-function! s:source.complete(args, context, arglead, cmdline, cursorpos) "{{{
+function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort "{{{
   return ['no-current']
 endfunction"}}}
-function! s:source.hooks.on_syntax(args, context) "{{{
+function! s:source.hooks.on_syntax(args, context) abort "{{{
   syntax match uniteSource__Tab_title /\[.\{-}\]/
         \ contained containedin=uniteSource__Tab
   highlight default link uniteSource__Tab_title Function

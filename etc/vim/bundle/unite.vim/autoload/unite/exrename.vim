@@ -25,11 +25,11 @@
 " }}}
 "=============================================================================
 let s:PREFIX = unite#util#is_windows() ? '[exrename]' : '*exrename*'
-function! s:void(exrename)
+function! s:void(exrename) abort
 endfunction
 let s:VOID = function('s:void')
 
-function! unite#exrename#create_buffer(candidates, ...) "{{{
+function! unite#exrename#create_buffer(candidates, ...) abort "{{{
   let options = extend({
         \ 'cwd': getcwd(),
         \ 'bufnr': bufnr('%'),
@@ -80,7 +80,8 @@ function! unite#exrename#create_buffer(candidates, ...) "{{{
       let candidate.action__path = b:exrename.cwd . candidate.action__path
     endif
     " make sure that the 'action__path' exists
-    if !filewritable(candidate.action__path) && !isdirectory(candidate.action__path)
+    if !filewritable(candidate.action__path)
+          \ && !isdirectory(candidate.action__path)
       redraw
       echo candidate.action__path "does not exist. Skip."
       continue
@@ -97,7 +98,8 @@ function! unite#exrename#create_buffer(candidates, ...) "{{{
       let filename = filename[len(b:exrename.cwd) :]
     endif
     " directory should end with a trailing slash (to distinguish easily)
-    if get(candidate, 'vimfiler__is_directory', get(candidate, 'kind', '') == 'directory')
+    if get(candidate, 'vimfiler__is_directory',
+          \ get(candidate, 'kind', '') == 'directory')
       let filename .= '/'
     endif
 
@@ -115,11 +117,11 @@ function! unite#exrename#create_buffer(candidates, ...) "{{{
   setlocal nomodified
 endfunction"}}}
 
-function! s:is_absolute(path) "{{{
+function! s:is_absolute(path) abort "{{{
   return a:path =~# '^\%(\a\a\+:\)\|^\%(\a:\|/\)'
 endfunction "}}}
 
-function! s:do_rename() "{{{
+function! s:do_rename() abort "{{{
   if line('$') != len(b:exrename.filenames)
     echohl Error | echo 'Invalid rename buffer!' | echohl None
     return
@@ -141,7 +143,12 @@ function! s:do_rename() "{{{
       if new_file !~ '^\%(\a\a\+:\)\|^\%(\a:\|/\)'
         let new_file = b:exrename.cwd . new_file
       endif
-      call unite#kinds#file#do_rename(old_file, new_file)
+
+      if unite#kinds#file#do_rename(old_file, new_file)
+        " Rename error
+        continue
+      endif
+
       " update b:exrename
       let b:exrename.filenames[linenr - 1] = getline(linenr)
       let b:exrename.candidates[linenr - 1].action__path = new_file
@@ -159,7 +166,7 @@ function! s:do_rename() "{{{
   endif
 endfunction"}}}
 
-function! s:exit(bufnr) "{{{
+function! s:exit(bufnr) abort "{{{
   if !bufexists(a:bufnr)
     return
   endif
@@ -173,7 +180,7 @@ function! s:exit(bufnr) "{{{
   silent execute 'bdelete!' a:bufnr
 endfunction "}}}
 
-function! s:check_lines() "{{{
+function! s:check_lines() abort "{{{
   if !exists('b:exrename')
     return
   endif
@@ -184,7 +191,7 @@ function! s:check_lines() "{{{
   endif
 endfunction "}}}
 
-function! s:custom_alternate_buffer() "{{{
+function! s:custom_alternate_buffer() abort "{{{
   if bufnr('%') != bufnr('#') && buflisted(bufnr('#'))
     buffer #
   endif

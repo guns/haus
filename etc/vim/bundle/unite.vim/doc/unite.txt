@@ -1,7 +1,7 @@
 *unite.txt*	Unite and create user interfaces.
 
 Version: 6.2
-Author : Shougo <Shougo.Matsu@gmail.com>
+Author:  Shougo <Shougo.Matsu@gmail.com>
 Documentation Author: ujihisa <ujihisa at gmail com>
 License: MIT license  {{{
     Permission is hereby granted, free of charge, to any person obtaining
@@ -196,12 +196,6 @@ it is recommended to use |unite-source-file_rec/async| source, which requires
 >
 	nnoremap <leader>r :<C-u>Unite -start-insert file_rec/async:!<CR>
 <
-Search through yank history. First, this must be enabled to track yank
-history, then the mapping set.
->
-	let g:unite_source_history_yank_enable = 1
-	nnoremap <leader>y :<C-u>Unite history/yank<CR>
-<
 Since you can pass in multiple sources into unite you can easily create a
 mapping that will open up a unite pane with the sources you frequently use.
 To see buffers, recent files then bookmarks:
@@ -266,8 +260,6 @@ More advanced configuration example:
 	  nmap <buffer> x     <Plug>(unite_quick_match_jump)
 	  nmap <buffer> <C-z>     <Plug>(unite_toggle_transpose_window)
 	  imap <buffer> <C-z>     <Plug>(unite_toggle_transpose_window)
-	  imap <buffer> <C-y>     <Plug>(unite_narrowing_path)
-	  nmap <buffer> <C-y>     <Plug>(unite_narrowing_path)
 	  nmap <buffer> <C-j>     <Plug>(unite_toggle_auto_preview)
 	  nmap <buffer> <C-r>     <Plug>(unite_narrowing_input_history)
 	  imap <buffer> <C-r>     <Plug>(unite_narrowing_input_history)
@@ -640,6 +632,12 @@ g:unite_source_menu_menus			*g:unite_source_menu_menus*
 		Menu candidates.  If candidates type is a dictionary, keys are
 		ignored, but you can refer to the map attribute described below.
 
+		file_candidates
+				(List)			(Optional)
+		Menu candidates for files.
+		The first item is used for word.  The second item is file
+		path.
+
 		command_candidates
 				(List or Dictionary)	(Optional)
 		Menu candidates for commands.
@@ -686,44 +684,18 @@ g:unite_source_menu_menus			*g:unite_source_menu_menus*
 		      \   ['python', 'VimShellInteractive python'],
 		      \ ]
 
+		let g:unite_source_menu_menus.zsh = {
+		      \     'description' : 'zsh files',
+		      \ }
+		let g:unite_source_menu_menus.zsh.file_candidates = [
+		      \       ['zshenv'    , '~/.zshenv'],
+		      \       ['zshrc'     , '~/.zshrc'],
+		      \       ['zplug'     , '~/.zplug'],
+		      \ ]
+
 		nnoremap <silent> sm  :<C-u>Unite menu:test<CR>
 <
 		The default value is "{}".
-
-					*g:unite_source_history_yank_enable*
-g:unite_source_history_yank_enable
-		If defined and not 0, unite enables
-		|unite-source-history/yank|.
-
-		Note: This value has to be set in .vimrc.
-
-		This variable is not defined by default.
-
-					*g:unite_source_history_yank_limit*
-g:unite_source_history_yank_limit
-		The maximum number of |unite-source-history/yank| to save.
-
-		The default value is 100.
-
-					*g:unite_source_history_yank_file*
-g:unite_source_history_yank_file
-		Specify the file to write the information of yank history.
-		If this variable is empty, saving history is disabled.
-
-
-		The default value is |g:unite_data_directory|; '/history_yank'
-		If you want to use another value than what's defined in
-		|g:unite_data_directory| you have to specify the full path.
-
-		Example:
->
-		let g:unite_source_history_yank_file=$HOME.'/.vim/yankring.txt'
-<
-					*g:unite_source_history_save_registers*
-g:unite_source_history_yank_save_registers
-		Specify the save registers to yank history.
-
-		The default value is ['"'].
 
 					*g:unite_source_process_enable_confirm*
 g:unite_source_process_enable_confirm
@@ -732,6 +704,11 @@ g:unite_source_process_enable_confirm
 		really want to do that.
 
 		The default value is 1.
+
+					*g:unite_source_output_shellcmd_colors*
+g:unite_source_output_shellcmd_colors
+		A list of colors correspond to coloring in escape sequence.
+		0-8 as normal colors, 9-15 as highlight colors.
 
 KIND VARIABLES					*unite-kind-variables*
 
@@ -1105,9 +1082,6 @@ Insert mode mappings.
 				*i_<Plug>(unite_toggle_transpose_window)*
 <Plug>(unite_toggle_selected_candidates)
 		The same as |<Plug>(unite_toggle_transpose_window)|.
-
-<Plug>(unite_narrowing_path)		*i_<Plug>(unite_narrowing_path)*
-		The same as |<Plug>(unite_narrowing_path)|.
 
 				*i_<Plug>(unite_narrowing_input_history)*
 <Plug>(unite_narrowing_input_history)
@@ -2267,7 +2241,7 @@ window/gui	Nominates opened GUI windows as candidates.
 		Note: "wmctrl" command is needed.  For Linux only.
 
 						*unite-source-output*
-output		Nominates executed Vim command as candidates.
+output		Nominates executed Vim command output as candidates.
 
 		Source arguments:
 		1. Vim command.
@@ -2282,15 +2256,25 @@ output		Nominates executed Vim command as candidates.
 		" It outputs "foo bar" by dummy.
 		:Unite output:echo:"foo:bar":!
 <
+						*unite-source-output/shellcmd*
+output/shellcmd
+		Nominates executed shell command output as candidates.
+
+		Source arguments:
+		1. Shell command.
+		2. command args (but you cannot use "!" by itself)
+
+		If the last argument is "!", it prints by dummy candidates.
+		This behavior is useful for output message.
+>
+		" It outputs "ls" output.
+		:Unite -log -wrap output/shellcmd:ls
+<
 						*unite-source-command*
 command		Nominates Vim Ex commands as candidates.
-		Note: To gather Vim internal commands, unite.vim uses
-		|neocomplcache| functions.
 
 						*unite-source-function*
 function	Nominates functions as candidates.
-		Note: To gather Vim internal functions, unite.vim uses
-		|neocomplcache| functions.
 
 						*unite-source-mapping*
 mapping		Nominates Vim mappings as candidates.
@@ -2310,7 +2294,7 @@ grep		Nominates "grep" command output as candidates.
 		2. "grep" options.
 		3. the narrowing pattern (if you omit it, |unite-options-input|
 		or input prompt is used).
-		Max candidates: |g:unite_source_grep_max_candidates|
+		Max candidates: 100
 
 		Special Target:
 		%         : Current buffer name
@@ -2329,35 +2313,70 @@ grep		Nominates "grep" command output as candidates.
 <
 		Settings Example:
 >
-	let g:unite_source_grep_max_candidates = 200
-
-	if executable('ag')
-	  " Use ag in unite grep source.
+	if executable('hw')
+	  " Use hw (highway)
+	  " https://github.com/tkengo/highway
+	  let g:unite_source_grep_command = 'hw'
+	  let g:unite_source_grep_default_opts = '--no-group --no-color'
+	  let g:unite_source_grep_recursive_opt = ''
+	elseif executable('ag')
+	  " Use ag (the silver searcher)
+	  " https://github.com/ggreer/the_silver_searcher
 	  let g:unite_source_grep_command = 'ag'
 	  let g:unite_source_grep_default_opts =
 	  \ '-i --vimgrep --hidden --ignore ' .
 	  \ '''.hg'' --ignore ''.svn'' --ignore ''.git'' --ignore ''.bzr'''
 	  let g:unite_source_grep_recursive_opt = ''
 	elseif executable('pt')
-	  " Use pt in unite grep source.
+	  " Use pt (the platinum searcher)
 	  " https://github.com/monochromegane/the_platinum_searcher
 	  let g:unite_source_grep_command = 'pt'
 	  let g:unite_source_grep_default_opts = '--nogroup --nocolor'
 	  let g:unite_source_grep_recursive_opt = ''
 	elseif executable('ack-grep')
-	  " Use ack in unite grep source.
+	  " Use ack
+	  " http://beyondgrep.com/
 	  let g:unite_source_grep_command = 'ack-grep'
 	  let g:unite_source_grep_default_opts =
 	  \ '-i --no-heading --no-color -k -H'
 	  let g:unite_source_grep_recursive_opt = ''
 	elseif executable('jvgrep')
-	  " For jvgrep.
+	  " Use jvgrep
+	  " https://github.com/mattn/jvgrep
 	  let g:unite_source_grep_command = 'jvgrep'
 	  let g:unite_source_grep_default_opts =
 	  \ '-i --exclude ''\.(git|svn|hg|bzr)'''
 	  let g:unite_source_grep_recursive_opt = '-R'
 	endif
 <
+						*unite-source-grep-git*
+grep/git	Nominates "git grep" command output at the current
+		working directory as candidates. This source require to be
+		executed on a git repository.
+
+		Note: This source requires |vimproc|.  Please install.
+		http://github.com/Shougo/vimproc
+
+		Source arguments:
+		1. the target directories in the git repository splitted by
+		   newlines. If the directory starts from "/", the "/" will
+		   be substituted to the repository root path.
+		2. "git grep" options.
+		3. the narrowing pattern (if you omit it, |unite-options-input|
+		or input prompt is used).
+		Max candidates: 100
+
+		Special Target:
+		%         : Current buffer name
+		#         : Alternate buffer name
+		$buffers  : All buffer names
+		/         : Git repository root
+
+		Example:
+>
+	:Unite grep/git:/:--cached:file
+<
+
 						*unite-source-vimgrep*
 vimgrep		Nominates |vimgrep| command output as candidates.
 		This source is slower than |unite-source-grep|, but it can
@@ -2391,11 +2410,11 @@ line		Nominates current buffer lines as candidates.
 		Max candidates: 100
 		Source arguments:
 		1. the search direction:
-		"all"      : Search from buffer top
-		"forward"  : Search from the current to the buffer top
-		"backward" : Search from the current to the buffer bottom
-		"buffers"  : Search from all buffers
-		"args"     : Search from argument buffers
+		"all":       Search from buffer top
+		"forward":   Search from the current to the buffer top
+		"backward":  Search from the current to the buffer bottom
+		"buffers":   Search from all buffers
+		"args":      Search from argument buffers
 		Note: If the direction is "all" or omitted, it searches from
 		buffer top.
 		2. the wrap option. "wrap" or "nowrap". This is used when the
@@ -2403,7 +2422,7 @@ line		Nominates current buffer lines as candidates.
 		'wrapscan' option will be used.
 
 		Source custom options:
-		-custom-line-enable-highlight : enable buffer highlight
+		-custom-line-enable-highlight: enable buffer highlight
 
 		Example: >
 	nnoremap <silent> /  :<C-u>Unite -buffer-name=search
@@ -2443,17 +2462,6 @@ menu		Nominates menus.
 
 		Source arguments:
 		1. menu name.
-
-						*unite-source-history/yank*
-history/yank	Nominates yanked words.
-		Note: Ignores yanked words which are too long.
-		To use this source, set
-		|g:unite_source_history_yank_enable| is 1.
-		Note: This source is disabled when
-		|g:unite_source_history_yank_enable| is 0 or not defined.
-
-		Source arguments:
-		1. register names
 
 						*unite-source-process*
 process		Nominates processes.
@@ -2872,12 +2880,10 @@ internally.
 	yank		Yank the candidate "word" or "action__text".
 	yank_escape	Yank the escaped candidate "word" or "action__text".
 	ex		Input the escaped candidate text into command line.
-	insert		Input the candidate word or text into the current
-			buffer.
+	insert		Insert the candidate word or text before the cursor.
 	insert_directory
-			Input the candidate directory into the current buffer.
-	append		Append the candidate word or text into the current
-			buffer.
+			Insert the candidate directory before the cursor.
+	append		Insert the candidate word or text after the cursor.
 	preview		Preview the candidate text.
 	echo		Echo candidates for debug.
 
@@ -2955,6 +2961,7 @@ Opens a file into a new buffer.  This kind extends |unite-action-openable| and
 	dirdiff		|:DirDiff| with the other candidate.
 			(|DirDiff.vim| plugin is needed.)
 	backup		Simple backup files.
+	argadd		Add to the argument list.
 
 buffer						*unite-action-buffer*
 This kind extends |unite-action-file|.
@@ -3000,11 +3007,12 @@ command						*unite-action-command*
 	grep		Grep the command.
 
 window						*unite-action-window*
-This kind extends actions of |unite-action-cdable|.
-	open		Move to the window.
+This kind extends actions of |unite-action-cdable| and |unite-action-openable|.
+	jump		Move to the window.
 	delete		Close the window.
 	only		Close all windows except the window.
 	preview		Preview the window.
+	open		Open the window buffer.
 
 completion					*unite-action-completion*
 	insert		Insert the candidate.
@@ -3632,6 +3640,9 @@ pattern			Function		(Optional)
 ==============================================================================
 EXTERNAL SOURCES				*unite-external-sources*
 
+history/yank source:
+https://github.com/Shougo/neoyank.vim
+
 MRU sources:
 
 https://github.com/Shougo/neomru.vim
@@ -3783,7 +3794,7 @@ A: >
 Q: Unite adds unite buffer to jumplist automatically.
 https://github.com/Shougo/unite.vim/issues/278
 
-A: You can use |unite-options-wipe| option.  But it is used, you cannot use
+A: You can use |unite-options-wipe| option.  But if it is used, you cannot use
 the |:UniteResume| feature.
 
 Q: unite.vim is too slow.
@@ -3931,6 +3942,12 @@ A: You can use eval arguments feature.
 Q: Unite's cursor does not move to prompt line automatically.
 
 A: You can use |unite-options-prompt-focus| option for it.
+
+Q: I want to specify file pattern in grep source.
+
+A: You cannot.  Because original grep does not support the feature.
+But if you use "ag" command, you can use it like below. >
+	Unite grep::-G\ \\.txt$
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:noet:fen:

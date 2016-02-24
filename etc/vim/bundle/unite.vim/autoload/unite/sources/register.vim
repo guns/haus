@@ -26,7 +26,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#sources#register#define() "{{{
+function! unite#sources#register#define() abort "{{{
   return s:source
 endfunction"}}}
 
@@ -37,18 +37,18 @@ let s:source = {
       \ 'default_kind' : 'word',
       \}
 
-function! s:source.gather_candidates(args, context) "{{{
+function! s:source.gather_candidates(args, context) abort "{{{
   let candidates = []
 
   let registers = split(get(a:args, 0, ''), '\zs')
 
-  for reg in [
-        \ '"', '+', '*',
-        \ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        \ 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-        \ 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        \ 'u', 'v', 'w', 'x', 'y', 'z',
-        \ '-', '.', ':', '#', '%', '/', '=',
+  for reg in (has('clipboard') ? ['+', '*'] : []) + [
+        \   '"',
+        \   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+        \   'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        \   'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        \   'u', 'v', 'w', 'x', 'y', 'z',
+        \   '-', '.', ':', '#', '%', '/', '=',
         \ ]
     let register = getreg(reg, 1)
     if (empty(registers) && register != ''
@@ -75,7 +75,7 @@ let s:source.action_table.delete = {
       \ 'is_quit' : 0,
       \ 'is_selectable' : 1,
       \ }
-function! s:source.action_table.delete.func(candidates) "{{{
+function! s:source.action_table.delete.func(candidates) abort "{{{
   for candidate in a:candidates
     silent! call setreg(candidate.action__register, '')
   endfor
@@ -86,7 +86,7 @@ let s:source.action_table.edit = {
       \ 'is_invalidate_cache' : 1,
       \ 'is_quit' : 0,
       \ }
-function! s:source.action_table.edit.func(candidate) "{{{
+function! s:source.action_table.edit.func(candidate) abort "{{{
   let register = getreg(a:candidate.action__register, 1)
   let register = substitute(register, '\r\?\n', '\\n', 'g')
   let new_value = substitute(input('', register), '\\n', '\n', 'g')

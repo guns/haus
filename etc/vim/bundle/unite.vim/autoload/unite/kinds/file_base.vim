@@ -32,7 +32,7 @@ if !exists('g:unite_kind_file_preview_max_filesize')
 endif
 "}}}
 
-function! unite#kinds#file_base#define() "{{{
+function! unite#kinds#file_base#define() abort "{{{
   return s:kind
 endfunction"}}}
 
@@ -48,7 +48,7 @@ let s:kind.action_table.open = {
       \ 'description' : 'open files',
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.open.func(candidates) "{{{
+function! s:kind.action_table.open.func(candidates) abort "{{{
   for candidate in a:candidates
     if buflisted(candidate.action__path)
       execute 'buffer' bufnr(candidate.action__path)
@@ -70,7 +70,7 @@ let s:kind.action_table.preview = {
       \ 'description' : 'preview file',
       \ 'is_quit' : 0,
       \ }
-function! s:kind.action_table.preview.func(candidate) "{{{
+function! s:kind.action_table.preview.func(candidate) abort "{{{
   let buflisted = buflisted(a:candidate.action__path)
   if !filereadable(a:candidate.action__path)
     return
@@ -91,9 +91,9 @@ function! s:kind.action_table.preview.func(candidate) "{{{
   wincmd P
   try
     if !buflisted
-      doautocmd BufRead
+      silent doautocmd BufRead
       setlocal nomodified
-      call unite#add_previewed_buffer_list(a:candidate.action__path)
+      call unite#add_previewed_buffer_list(bufnr('%'))
     endif
   finally
     execute winnr.'wincmd w'
@@ -106,7 +106,7 @@ let s:kind.action_table.mkdir = {
       \ 'is_quit' : 0,
       \ 'is_invalidate_cache' : 1,
       \ }
-function! s:kind.action_table.mkdir.func(candidate) "{{{
+function! s:kind.action_table.mkdir.func(candidate) abort "{{{
   let dirname = input('New directory name: ',
         \ a:candidate.action__path, 'dir')
   redraw
@@ -129,7 +129,7 @@ let s:kind.action_table.rename = {
       \ 'is_invalidate_cache' : 1,
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.rename.func(candidates) "{{{
+function! s:kind.action_table.rename.func(candidates) abort "{{{
   for candidate in a:candidates
     let filename = unite#util#substitute_path_separator(
           \ unite#util#expand(input(printf('New file name: %s -> ',
@@ -147,7 +147,7 @@ let s:kind.action_table.backup = {
       \ 'is_invalidate_cache' : 1,
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.backup.func(candidates) "{{{
+function! s:kind.action_table.backup.func(candidates) abort "{{{
   for candidate in a:candidates
     let filename = candidate.action__path . '.' . strftime('%y%m%d_%H%M')
 
@@ -159,7 +159,7 @@ let s:kind.action_table.read = {
       \ 'description' : ':read files',
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.read.func(candidates) "{{{
+function! s:kind.action_table.read.func(candidates) abort "{{{
   for candidate in a:candidates
     call s:execute_command('read', candidate)
   endfor
@@ -169,7 +169,7 @@ let s:kind.action_table.wunix = {
       \ 'description' : 'write by unix fileformat',
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.wunix.func(candidates) "{{{
+function! s:kind.action_table.wunix.func(candidates) abort "{{{
   let current_bufnr = bufnr('%')
 
   for candidate in a:candidates
@@ -191,7 +191,7 @@ let s:kind.action_table.diff = {
       \ 'description' : 'diff with the other candidate or current buffer',
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.diff.func(candidates)
+function! s:kind.action_table.diff.func(candidates) abort "{{{
   if !empty(filter(copy(a:candidates), 'isdirectory(v:val.action__path)'))
     echo 'Invalid files.'
     return
@@ -209,11 +209,12 @@ function! s:kind.action_table.diff.func(candidates)
     try
       " Use selected candidates or current buffer.
       if &filetype ==# 'vimfiler'
-        let file = get(vimfiler#get_marked_files(), 0, vimfiler#get_file())
+        let file = get(vimfiler#get_marked_files(
+              \ b:vimfiler), 0, vimfiler#get_file(b:vimfiler))
         if empty(file) || isdirectory(file.action__path)
           echo 'Invalid candidate is detected.'
           return
-        elseif len(vimfiler#get_marked_files()) > 1
+        elseif len(vimfiler#get_marked_files(b:vimfiler)) > 1
           echo 'Too many candidates!'
           return
         endif
@@ -241,13 +242,13 @@ function! s:kind.action_table.diff.func(candidates)
   else
     echo 'Too many candidates!'
   endif
-endfunction
+endfunction"}}}
 
 let s:kind.action_table.dirdiff = {
       \ 'description' : ':DirDiff with the other candidate',
       \ 'is_selectable' : 1,
       \ }
-function! s:kind.action_table.dirdiff.func(candidates)
+function! s:kind.action_table.dirdiff.func(candidates) abort "{{{
   if !exists(':DirDiff')
     echo 'DirDiff.vim is not installed.'
     return
@@ -262,7 +263,7 @@ function! s:kind.action_table.dirdiff.func(candidates)
     execute 'DirDiff' unite#helper#get_candidate_directory(a:candidates[0])
           \ unite#helper#get_candidate_directory(a:candidates[1])
   endif
-endfunction
+endfunction"}}}
 
 " For grep.
 let s:kind.action_table.grep = {
@@ -270,7 +271,7 @@ let s:kind.action_table.grep = {
       \   'is_selectable': 1,
       \   'is_start' : 1,
       \ }
-function! s:kind.action_table.grep.func(candidates) "{{{
+function! s:kind.action_table.grep.func(candidates) abort "{{{
   call unite#start_script([
         \ ['grep', join(map(copy(a:candidates), 'v:val.action__path'), "\n"),
         \ ]], { 'no_quit' : 1, 'no_empty' : 1 })
@@ -282,7 +283,7 @@ let s:kind.action_table.vimgrep = {
   \   'is_selectable': 1,
   \   'is_start' : 1,
   \ }
-function! s:kind.action_table.vimgrep.func(candidates) "{{{
+function! s:kind.action_table.vimgrep.func(candidates) abort "{{{
   call unite#start_script([
         \ ['vimgrep', join(map(copy(a:candidates),
         \ 'substitute(v:val.action__path, "/$", "", "g")'), "\n"),
@@ -294,14 +295,25 @@ let s:kind.action_table.find = {
       \   'description': 'find this directory',
       \   'is_start' : 1,
       \ }
-function! s:kind.action_table.find.func(candidate) "{{{
+function! s:kind.action_table.find.func(candidate) abort "{{{
   call unite#start_script([['find',
         \ unite#helper#get_candidate_directory(a:candidate)]],
         \ {'no_quit' : 1})
 endfunction "}}}
+
+let s:kind.action_table.argadd = {
+      \ 'description' : 'add candidates into the argument list',
+      \ 'is_selectable' : 1,
+      \ }
+function! s:kind.action_table.argadd.func(candidates) abort "{{{
+  for candidate in a:candidates
+    execute 'argadd' fnameescape(candidate.action__path)
+  endfor
+endfunction"}}}
+
 "}}}
 
-function! s:execute_command(command, candidate) "{{{
+function! s:execute_command(command, candidate) abort "{{{
   let dir = unite#util#path2directory(
         \ unite#util#expand(a:candidate.action__path))
   " Auto make directory.
@@ -323,7 +335,7 @@ let s:kind.action_table.exrename = {
       \   'is_invalidate_cache': 1,
       \   'is_selectable': 1,
       \ }
-function! s:kind.action_table.exrename.func(candidates)
+function! s:kind.action_table.exrename.func(candidates) abort "{{{
   let context = unite#get_context()
   let buffer_name = context.buffer_name
   if buffer_name ==# 'default'
@@ -332,7 +344,7 @@ function! s:kind.action_table.exrename.func(candidates)
   call unite#exrename#create_buffer(a:candidates, {
         \ 'buffer_name': buffer_name,
         \})
-endfunction
+endfunction"}}}
 
 let &cpo = s:save_cpo
 unlet s:save_cpo

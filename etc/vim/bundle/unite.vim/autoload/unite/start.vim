@@ -26,7 +26,7 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#start#standard(sources, ...) "{{{
+function! unite#start#standard(sources, ...) abort "{{{
   " Check command line window.
   if unite#util#is_cmdwin()
     call unite#print_error(
@@ -38,13 +38,6 @@ function! unite#start#standard(sources, ...) "{{{
   let context = get(a:000, 0, {})
   let context = unite#init#_context(context,
         \ unite#helper#get_source_names(a:sources))
-
-  if empty(a:sources)
-    echohl Comment
-    call unite#view#_redraw_echo(
-          \ '[unite.vim] interactive mode: Please input source name')
-    echohl None
-  endif
 
   if context.resume
     " Check resume buffer.
@@ -63,6 +56,13 @@ function! unite#start#standard(sources, ...) "{{{
       return
     endif
   endif"}}}
+
+  if empty(a:sources)
+    echohl Comment
+    call unite#view#_redraw_echo(
+          \ '[unite.vim] interactive mode: Please input source name')
+    echohl None
+  endif
 
   try
     call unite#init#_current_unite(a:sources, context)
@@ -90,6 +90,9 @@ function! unite#start#standard(sources, ...) "{{{
 
     if empty(candidates)
       " Ignore.
+      call unite#view#_print_warning(
+            \ 'unite buffer "'
+            \ . current_unite.buffer_name.'" candidates are empty')
       call unite#variables#disable_current_unite()
       return
     elseif (context.immediately && len(candidates) == 1)
@@ -119,7 +122,7 @@ function! unite#start#standard(sources, ...) "{{{
   call unite#view#_init_cursor()
 endfunction"}}}
 
-function! unite#start#script(sources, ...) "{{{
+function! unite#start#script(sources, ...) abort "{{{
   " Start unite from script.
 
   let context = get(a:000, 0, {})
@@ -131,7 +134,7 @@ function! unite#start#script(sources, ...) "{{{
         \ unite#start#standard(a:sources, context)
 endfunction"}}}
 
-function! unite#start#temporary(sources, ...) "{{{
+function! unite#start#temporary(sources, ...) abort "{{{
   " Get current context.
   let old_context = unite#get_context()
   let unite = unite#get_current_unite()
@@ -203,12 +206,14 @@ function! unite#start#temporary(sources, ...) "{{{
   endif
   let unite.winnr = unite_save.winnr
   let unite.has_preview_window = unite_save.has_preview_window
+  let unite.prev_winsaveview = unite_save.prev_winsaveview
+  let unite.win_rest_cmd = unite_save.win_rest_cmd
 
   " Restore current directory.
   execute 'lcd' fnameescape(cwd)
 endfunction"}}}
 
-function! unite#start#vimfiler_check_filetype(sources, ...) "{{{
+function! unite#start#vimfiler_check_filetype(sources, ...) abort "{{{
   let context = get(a:000, 0, {})
   let context = unite#init#_context(context,
         \ unite#helper#get_source_names(a:sources))
@@ -250,7 +255,7 @@ function! unite#start#vimfiler_check_filetype(sources, ...) "{{{
   return []
 endfunction"}}}
 
-function! unite#start#get_candidates(sources, ...) "{{{
+function! unite#start#get_candidates(sources, ...) abort "{{{
   let unite_save = unite#get_current_unite()
 
   try
@@ -274,7 +279,7 @@ function! unite#start#get_candidates(sources, ...) "{{{
   return candidates
 endfunction"}}}
 
-function! unite#start#get_vimfiler_candidates(sources, ...) "{{{
+function! unite#start#get_vimfiler_candidates(sources, ...) abort "{{{
   let unite_save = unite#get_current_unite()
 
   try
@@ -311,7 +316,7 @@ function! unite#start#get_vimfiler_candidates(sources, ...) "{{{
   return candidates
 endfunction"}}}
 
-function! unite#start#resume(buffer_name, ...) "{{{
+function! unite#start#resume(buffer_name, ...) abort "{{{
   " Check command line window.
   if unite#util#is_cmdwin()
     call unite#print_error(
@@ -329,6 +334,7 @@ function! unite#start#resume(buffer_name, ...) "{{{
 
   let prev_bufnr = bufnr('%')
   let winnr = winnr()
+  let prev_winsaveview = winsaveview()
   let win_rest_cmd = context.unite__direct_switch ||
         \ unite#helper#get_unite_winnr(context.buffer_name) > 0 ?
         \ '' : winrestcmd()
@@ -348,6 +354,7 @@ function! unite#start#resume(buffer_name, ...) "{{{
   let unite.winnr = winnr
   let unite.prev_bufnr = prev_bufnr
   let unite.prev_winnr = winnr
+  let unite.prev_winsaveview = prev_winsaveview
   if !context.unite__direct_switch
     let unite.win_rest_cmd = win_rest_cmd
   endif
@@ -358,6 +365,8 @@ function! unite#start#resume(buffer_name, ...) "{{{
   let unite.preview_candidate = {}
   let unite.highlight_candidate = {}
   let unite.context.resume = 1
+  let unite.context.buffer_name =
+        \ (a:buffer_name == '' ? 'default' : a:buffer_name)
   if context.winwidth != 0
     let unite.context.unite__old_winwidth = 0
   endif
@@ -380,7 +389,7 @@ function! unite#start#resume(buffer_name, ...) "{{{
   call unite#view#_init_cursor()
 endfunction"}}}
 
-function! unite#start#resume_from_temporary(context)  "{{{
+function! unite#start#resume_from_temporary(context) abort  "{{{
   if empty(a:context.unite__old_buffer_info)
     return
   endif
@@ -404,7 +413,7 @@ function! unite#start#resume_from_temporary(context)  "{{{
   call unite#redraw()
 endfunction"}}}
 
-function! unite#start#complete(sources, ...) "{{{
+function! unite#start#complete(sources, ...) abort "{{{
   let sources = type(a:sources) == type('') ?
         \ [a:sources] : a:sources
   let context = {
@@ -420,7 +429,7 @@ function! unite#start#complete(sources, ...) "{{{
         \  string(sources), string(context))
 endfunction "}}}
 
-function! unite#start#_pos(buffer_name, direction, count) "{{{
+function! unite#start#_pos(buffer_name, direction, count) abort "{{{
   let bufnr = s:get_unite_buffer(a:buffer_name)
   if bufnr < 0
     return
@@ -468,7 +477,7 @@ function! unite#start#_pos(buffer_name, direction, count) "{{{
   endtry
 endfunction"}}}
 
-function! s:get_candidates(sources, context) "{{{
+function! s:get_candidates(sources, context) abort "{{{
   try
     let current_unite = unite#init#_current_unite(a:sources, a:context)
   catch /^unite.vim: Invalid /
@@ -496,7 +505,7 @@ function! s:get_candidates(sources, context) "{{{
   return candidates
 endfunction"}}}
 
-function! s:get_unite_buffer(buffer_name) "{{{
+function! s:get_unite_buffer(buffer_name) abort "{{{
   if a:buffer_name == ''
     " Use last unite buffer.
     if !exists('t:unite') ||
@@ -519,7 +528,7 @@ function! s:get_unite_buffer(buffer_name) "{{{
 
   return bufnr
 endfunction"}}}
-function! s:get_resume_buffer(buffer_name) "{{{
+function! s:get_resume_buffer(buffer_name) abort "{{{
   let buffer_name = a:buffer_name
   if buffer_name !~ '@\d\+$'
     " Add postfix.

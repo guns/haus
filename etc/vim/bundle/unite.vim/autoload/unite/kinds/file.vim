@@ -55,7 +55,7 @@ call unite#util#set_default('g:unite_kind_file_use_trashbox',
       \ unite#util#is_windows() && unite#util#has_vimproc())
 "}}}
 
-function! unite#kinds#file#define() "{{{
+function! unite#kinds#file#define() abort "{{{
   return s:kind
 endfunction"}}}
 
@@ -69,7 +69,7 @@ let s:kind = {
       \              'file_vimfiler_base', 'cdable', 'uri'],
       \}
 
-function! s:external(command, dest_dir, src_files) "{{{
+function! s:external(command, dest_dir, src_files) abort "{{{
   let dest_dir = a:dest_dir
   if dest_dir =~ '[^:]/$'
     " Delete last /.
@@ -91,9 +91,9 @@ function! s:external(command, dest_dir, src_files) "{{{
 
   return unite#util#get_last_status()
 endfunction"}}}
-function! s:input_overwrite_method(dest, src) "{{{
+function! s:input_overwrite_method(dest, src) abort "{{{
   redraw
-  echo 'File is already exists!'
+  echo 'File already exists!'
   echo printf('dest: %s %d bytes %s', a:dest, getfsize(a:dest),
         \ strftime('%y/%m/%d %H:%M', getftime(a:dest)))
   echo printf('src:  %s %d bytes %s', a:src, getfsize(a:src),
@@ -111,11 +111,11 @@ function! s:input_overwrite_method(dest, src) "{{{
 
   return method
 endfunction"}}}
-function! unite#kinds#file#complete_overwrite_method(arglead, cmdline, cursorpos) "{{{
+function! unite#kinds#file#complete_overwrite_method(arglead, cmdline, cursorpos) abort "{{{
   return filter(['force', 'time', 'underbar', 'no', 'rename'],
         \ 'stridx(v:val, a:arglead) == 0')
 endfunction"}}}
-function! s:check_over_write(dest_dir, filename, overwrite_method, is_reset_method) "{{{
+function! s:check_over_write(dest_dir, filename, overwrite_method, is_reset_method) abort "{{{
   let is_reset_method = a:is_reset_method
   let dest_filename = a:dest_dir . fnamemodify(a:filename, ':t')
   let is_continue = 0
@@ -165,9 +165,9 @@ function! s:check_over_write(dest_dir, filename, overwrite_method, is_reset_meth
 
   return [dest_filename, overwrite_method, is_reset_method, is_continue]
 endfunction"}}}
-function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
+function! unite#kinds#file#do_rename(old_filename, new_filename) abort "{{{
   if a:old_filename ==# a:new_filename
-    return
+    return 0
   endif
 
   if a:old_filename !=? a:new_filename &&
@@ -175,7 +175,7 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
     " Failed.
     call unite#print_error(
           \ printf('file: "%s" is already exists!', a:new_filename))
-    return
+    return 1
   endif
 
   " Convert to relative path.
@@ -219,17 +219,18 @@ function! unite#kinds#file#do_rename(old_filename, new_filename) "{{{
       call unite#print_error(
             \ printf('Failed rename: "%s" to "%s".',
             \   a:old_filename, a:new_filename))
+      return 1
     endif
   finally
     " Restore path.
-    if isdirectory(current_dir_save)
-      call unite#util#lcd(current_dir_save)
-    endif
+    call unite#util#lcd(current_dir_save)
     let &l:hidden = hidden_save
   endtry
+
+  return 0
 endfunction"}}}
 
-function! unite#kinds#file#do_action(candidates, dest_dir, action_name) "{{{
+function! unite#kinds#file#do_action(candidates, dest_dir, action_name) abort "{{{
   let overwrite_method = ''
   let is_reset_method = 1
   let dest_filename = ''
@@ -301,11 +302,11 @@ function! unite#kinds#file#do_action(candidates, dest_dir, action_name) "{{{
   endif
   return dest_filename
 endfunction"}}}
-function! s:check_delete_func(filename) "{{{
+function! s:check_delete_func(filename) abort "{{{
   return isdirectory(a:filename) ?
         \ 'delete_directory' : 'delete_file'
 endfunction"}}}
-function! s:check_copy_func(filename) "{{{
+function! s:check_copy_func(filename) abort "{{{
   return isdirectory(a:filename) ?
         \ 'copy_directory' : 'copy_file'
 endfunction"}}}

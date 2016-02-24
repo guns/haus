@@ -27,7 +27,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 " Define default mappings.
-function! unite#mappings#define_default_mappings() "{{{
+function! unite#mappings#define_default_mappings() abort "{{{
   " Plugin keymappings "{{{
   nnoremap <silent><buffer> <Plug>(unite_exit)
         \ :<C-u>call <SID>exit()<CR>
@@ -318,19 +318,19 @@ function! unite#mappings#define_default_mappings() "{{{
         \ unite#do_action('open')
 endfunction"}}}
 
-function! s:nowait_map(mode) "{{{
+function! s:nowait_map(mode) abort "{{{
   return a:mode.'map <buffer>'
         \ . ((v:version > 703 || (v:version == 703 && has('patch1261'))) ?
         \ '<nowait>' : '')
 endfunction "}}}
 
-function! s:nowait_expr(map) "{{{
+function! s:nowait_expr(map) abort "{{{
   return a:map . ' <buffer><silent><expr>'
         \ . ((v:version > 703 || (v:version == 703 && has('patch1261'))) ?
         \ '<nowait>' : '')
 endfunction "}}}
 
-function! unite#mappings#narrowing(word, ...) "{{{
+function! unite#mappings#narrowing(word, ...) abort "{{{
   let is_escape = get(a:000, 0, 1)
 
   setlocal modifiable
@@ -346,39 +346,39 @@ function! unite#mappings#narrowing(word, ...) "{{{
   startinsert!
 endfunction"}}}
 
-function! unite#mappings#do_action(...) "{{{
+function! unite#mappings#do_action(...) abort "{{{
   return call('unite#action#do', a:000)
 endfunction"}}}
 
-function! unite#mappings#set_current_matchers(matchers) "{{{
+function! unite#mappings#set_current_matchers(matchers) abort "{{{
   let unite = unite#get_current_unite()
   let unite.current_matchers = a:matchers
   let unite.context.is_redraw = 1
   return mode() ==# 'i' ? "a\<BS>" : "g\<ESC>"
 endfunction"}}}
-function! unite#mappings#set_current_sorters(sorters) "{{{
+function! unite#mappings#set_current_sorters(sorters) abort "{{{
   let unite = unite#get_current_unite()
   let unite.current_sorters = a:sorters
   let unite.context.is_redraw = 1
   return mode() ==# 'i' ? "a\<BS>" : "g\<ESC>"
 endfunction"}}}
-function! unite#mappings#set_current_converters(converters) "{{{
+function! unite#mappings#set_current_converters(converters) abort "{{{
   let unite = unite#get_current_unite()
   let unite.current_converters = a:converters
   let unite.context.is_redraw = 1
   return mode() ==# 'i' ? "a\<BS>" : "g\<ESC>"
 endfunction"}}}
-function! unite#mappings#get_current_matchers() "{{{
+function! unite#mappings#get_current_matchers() abort "{{{
   return unite#get_current_unite().current_matchers
 endfunction"}}}
-function! unite#mappings#get_current_sorters() "{{{
+function! unite#mappings#get_current_sorters() abort "{{{
   return unite#get_current_unite().current_sorters
 endfunction"}}}
-function! unite#mappings#get_current_converters() "{{{
+function! unite#mappings#get_current_converters() abort "{{{
   return unite#get_current_unite().current_converters
 endfunction"}}}
 
-function! s:smart_imap(map) "{{{
+function! s:smart_imap(map) abort "{{{
   call s:clear_complete()
   if line('.') == b:unite.prompt_linenr
         \ && col('.') <= len(b:unite.context.prompt)
@@ -388,7 +388,7 @@ function! s:smart_imap(map) "{{{
           \     "\<ESC>" . b:unite.prompt_linenr . 'Gzb$a' : '') . a:map
   endif
 endfunction"}}}
-function! s:smart_imap2(map) "{{{
+function! s:smart_imap2(map) abort "{{{
   call s:clear_complete()
   if line('.') == b:unite.prompt_linenr
         \ && col('.') >= col('$')
@@ -399,7 +399,7 @@ function! s:smart_imap2(map) "{{{
   endif
 endfunction"}}}
 
-function! s:do_new_candidate_action() "{{{
+function! s:do_new_candidate_action() abort "{{{
   if empty(unite#helper#get_current_candidate())
     " Get source name.
     if len(unite#get_sources()) != 1
@@ -418,7 +418,7 @@ function! s:do_new_candidate_action() "{{{
 endfunction"}}}
 
 " key-mappings functions.
-function! s:exit() "{{{
+function! s:exit() abort "{{{
   let context = unite#get_context()
 
   call unite#force_quit_session()
@@ -428,10 +428,10 @@ function! s:exit() "{{{
     close
   endif
 endfunction"}}}
-function! s:all_exit() "{{{
+function! s:all_exit() abort "{{{
   call unite#all_quit_session()
 endfunction"}}}
-function! s:restart() "{{{
+function! s:restart() abort "{{{
   let unite = unite#get_current_unite()
   let context = unite.context
   let context.resume = 0
@@ -441,7 +441,7 @@ function! s:restart() "{{{
   call unite#force_quit_session()
   call unite#start(sources, context)
 endfunction"}}}
-function! s:delete_backward_path() "{{{
+function! s:delete_backward_path() abort "{{{
   let context = unite#get_context()
   if context.input != ''
     call unite#mappings#narrowing(
@@ -451,13 +451,17 @@ function! s:delete_backward_path() "{{{
     call unite#redraw()
   endif
 endfunction"}}}
-function! s:toggle_mark(map) "{{{
+function! s:toggle_mark(map) abort "{{{
   call unite#helper#skip_prompt()
 
   let candidate = unite#helper#get_current_candidate()
+  if empty(candidate)
+    return
+  endif
   if !get(candidate, 'is_dummy', 0)
     let candidate.unite__is_marked = !candidate.unite__is_marked
-    let candidate.unite__marked_time = localtime()
+    let candidate.unite__marked_time = has('reltime') && has('float') ?
+          \ str2float(reltimestr(reltime())) : localtime()
 
     call unite#view#_redraw_line()
   endif
@@ -467,11 +471,11 @@ function! s:toggle_mark(map) "{{{
         \ || a:map ==# 'k' && context.prompt_direction ==# 'below') ?
         \ unite#mappings#cursor_down(1) : unite#mappings#cursor_up(1)
 endfunction"}}}
-function! s:toggle_mark_all_candidates() "{{{
+function! s:toggle_mark_all_candidates() abort "{{{
   call unite#view#_redraw_all_candidates()
   call s:toggle_mark_candidates(1, line('$'))
 endfunction"}}}
-function! s:toggle_mark_candidates(start, end) "{{{
+function! s:toggle_mark_candidates(start, end) abort "{{{
   if a:start < 0
     " Ignore.
     return
@@ -482,7 +486,12 @@ function! s:toggle_mark_candidates(start, end) "{{{
   let pos = getpos('.')
   try
     call cursor(a:start, 1)
+    let prev = -1
     for _ in range(a:start, a:end)
+      if line('.') == prev || line('.') < a:start || line('.') > a:end
+        break
+      endif
+      let prev = line('.')
       if line('.') == unite.prompt_linenr
         call unite#helper#skip_prompt()
       else
@@ -499,10 +508,10 @@ function! s:toggle_mark_candidates(start, end) "{{{
     call unite#view#_bottom_cursor()
   endtry
 endfunction"}}}
-function! s:quick_help() "{{{
+function! s:quick_help() abort "{{{
   call unite#start_temporary([['mapping', bufnr('%')]], {}, 'mapping-help')
 endfunction"}}}
-function! s:choose_action() "{{{
+function! s:choose_action() abort "{{{
   let candidates = unite#helper#get_marked_candidates()
   if empty(candidates)
     if empty(unite#helper#get_current_candidate())
@@ -514,39 +523,41 @@ function! s:choose_action() "{{{
 
   call unite#mappings#_choose_action(candidates)
 endfunction"}}}
-function! unite#mappings#_choose_action(candidates, ...) "{{{
+function! unite#mappings#_choose_action(candidates, ...) abort "{{{
   call filter(a:candidates,
         \ '!has_key(v:val, "is_dummy") || !v:val.is_dummy')
   if empty(a:candidates)
     return
   endif
 
-  let unite = unite#get_current_unite()
   let context = deepcopy(get(a:000, 0, {}))
-  let context.source__sources = unite.sources
+  let context.source__sources = unite#init#_loaded_sources(
+        \ unite#util#uniq(map(copy(a:candidates),
+        \                 'v:val.source')), context)
   let context.buffer_name = 'action'
   let context.profile_name = 'action'
   let context.start_insert = 1
   let context.truncate = 1
 
-  call call((has_key(context, 'vimfiler__current_directory') ?
+  call call((has_key(context, 'vimfiler__current_directory')
+        \    || &filetype !=# 'unite' ?
         \ 'unite#start' : 'unite#start_temporary'),
         \ [[[unite#sources#action#define(), a:candidates]], context])
 endfunction"}}}
-function! s:insert_enter(key) "{{{
+function! s:insert_enter(key) abort "{{{
   setlocal modifiable
 
   let unite = unite#get_current_unite()
 
   return (line('.') != unite.prompt_linenr) ?
         \ (unite.context.prompt_focus ?
-        \     unite.prompt_linenr.'GA' : '0i') :
+        \     unite.prompt_linenr.'GA' : 'gI') :
         \ (a:key == 'i' && col('.') <= 1
         \     || a:key == 'a' && col('.') < 1) ?
         \     'A' :
         \     a:key
 endfunction"}}}
-function! s:insert_enter2() "{{{
+function! s:insert_enter2() abort "{{{
   nnoremap <expr><buffer> <Plug>(unite_insert_enter)
         \ <SID>insert_enter('i')
   nnoremap <expr><buffer> <Plug>(unite_insert_head)
@@ -568,14 +579,14 @@ function! s:insert_enter2() "{{{
   call unite#view#_bottom_cursor()
   startinsert!
 endfunction"}}}
-function! s:insert_leave() "{{{
+function! s:insert_leave() abort "{{{
   call unite#helper#skip_prompt()
 endfunction"}}}
-function! s:redraw() "{{{
+function! s:redraw() abort "{{{
   call unite#clear_message()
   call unite#force_redraw()
 endfunction"}}}
-function! s:rotate_source(is_next) "{{{
+function! s:rotate_source(is_next) abort "{{{
   let unite = unite#get_current_unite()
 
   for _ in unite#loaded_sources_list()
@@ -593,7 +604,7 @@ function! s:rotate_source(is_next) "{{{
 
   call unite#view#_redraw_candidates()
 endfunction"}}}
-function! s:print_candidate() "{{{
+function! s:print_candidate() abort "{{{
   let candidate = unite#helper#get_current_candidate()
   if empty(candidate)
     " Ignore.
@@ -603,7 +614,7 @@ function! s:print_candidate() "{{{
   echo 'abbr: ' . candidate.unite__abbr
   echo 'word: ' . candidate.word
 endfunction"}}}
-function! s:print_message_log() "{{{
+function! s:print_message_log() abort "{{{
   for msg in unite#get_current_unite().msgs
     echohl Comment | echo msg | echohl None
   endfor
@@ -611,7 +622,7 @@ function! s:print_message_log() "{{{
     echohl WarningMsg | echo msg | echohl None
   endfor
 endfunction"}}}
-function! s:cursor_top() "{{{
+function! s:cursor_top() abort "{{{
   let unite = unite#get_current_unite()
   if v:count == 0
     execute 'normal!' (unite.prompt_linenr == 1 ? '2' : '') . 'gg0z.'
@@ -622,7 +633,7 @@ function! s:cursor_top() "{{{
     execute 'normal!' v:count . 'gg0z.'
   endif
 endfunction"}}}
-function! s:cursor_bottom() "{{{
+function! s:cursor_bottom() abort "{{{
   if v:count == 0
     call unite#view#_redraw_all_candidates()
     normal! G
@@ -634,7 +645,7 @@ function! s:cursor_bottom() "{{{
     execute 'normal!' v:count . 'G'
   endif
 endfunction"}}}
-function! s:insert_selected_candidate() "{{{
+function! s:insert_selected_candidate() abort "{{{
   let candidate = unite#helper#get_current_candidate()
   if empty(candidate)
     " Ignore.
@@ -643,7 +654,7 @@ function! s:insert_selected_candidate() "{{{
 
   call unite#mappings#narrowing(candidate.word)
 endfunction"}}}
-function! unite#mappings#_quick_match(is_jump) "{{{
+function! unite#mappings#_quick_match(is_jump) abort "{{{
   if !empty(unite#helper#get_marked_candidates())
     call unite#util#print_error('Marked candidates is detected.')
     return
@@ -692,14 +703,14 @@ function! unite#mappings#_quick_match(is_jump) "{{{
           \ unite.context.default_action, [candidate])
   endif
 endfunction"}}}
-function! s:input_directory() "{{{
+function! s:input_directory() abort "{{{
   let path = unite#util#substitute_path_separator(
         \ input('Input narrowing directory: ',
         \         unite#helper#get_input(), 'dir'))
   let path = path.(path == '' || path =~ '/$' ? '' : '/')
   call unite#mappings#narrowing(path)
 endfunction"}}}
-function! unite#mappings#loop_cursor_up(mode) "{{{
+function! unite#mappings#loop_cursor_up(mode) abort "{{{
   " Loop.
   call unite#view#_redraw_all_candidates()
 
@@ -709,7 +720,7 @@ function! unite#mappings#loop_cursor_up(mode) "{{{
 
   call cursor(line('$'), 1)
 endfunction"}}}
-function! unite#mappings#loop_cursor_down(mode) "{{{
+function! unite#mappings#loop_cursor_down(mode) abort "{{{
   " Loop.
   call unite#view#_redraw_all_candidates()
 
@@ -719,7 +730,7 @@ function! unite#mappings#loop_cursor_down(mode) "{{{
 
   call cursor(1, 1)
 endfunction"}}}
-function! unite#mappings#cursor_up(is_skip_not_matched) "{{{
+function! unite#mappings#cursor_up(is_skip_not_matched) abort "{{{
   let is_insert = mode() ==# 'i'
   let prompt_linenr = unite#get_current_unite().prompt_linenr
 
@@ -748,7 +759,7 @@ function! unite#mappings#cursor_up(is_skip_not_matched) "{{{
     return cnt == 1 ? 'k' : cnt.'k'
   endif
 endfunction"}}}
-function! unite#mappings#cursor_down(is_skip_not_matched) "{{{
+function! unite#mappings#cursor_down(is_skip_not_matched) abort "{{{
   let is_insert = mode() ==# 'i'
   let prompt_linenr = unite#get_current_unite().prompt_linenr
 
@@ -777,7 +788,7 @@ function! unite#mappings#cursor_down(is_skip_not_matched) "{{{
     return cnt == 1 ? 'j' : cnt.'j'
   endif
 endfunction"}}}
-function! s:smart_preview() "{{{
+function! s:smart_preview() abort "{{{
   if b:unite.preview_candidate !=#
         \ unite#helper#get_current_candidate()
     call unite#view#_do_auto_preview()
@@ -787,7 +798,7 @@ function! s:smart_preview() "{{{
 
   call unite#view#_resize_window()
 endfunction"}}}
-function! s:toggle_transpose_window() "{{{
+function! s:toggle_transpose_window() abort "{{{
   " Toggle vertical/horizontal view.
   let context = unite#get_context()
   let direction = context.vertical ?
@@ -798,7 +809,7 @@ function! s:toggle_transpose_window() "{{{
 
   let context.vertical = !context.vertical
 endfunction"}}}
-function! s:toggle_auto_preview() "{{{
+function! s:toggle_auto_preview() abort "{{{
   let unite = unite#get_current_unite()
   let context = unite#get_context()
   let context.auto_preview = !context.auto_preview
@@ -814,27 +825,27 @@ function! s:toggle_auto_preview() "{{{
 
   call unite#view#_resize_window()
 endfunction"}}}
-function! s:toggle_auto_highlight() "{{{
+function! s:toggle_auto_highlight() abort "{{{
   let context = unite#get_context()
   let context.auto_highlight = !context.auto_highlight
 endfunction"}}}
-function! s:disable_max_candidates() "{{{
+function! s:disable_max_candidates() abort "{{{
   let unite = unite#get_current_unite()
   let unite.disabled_max_candidates = 1
 
   call unite#force_redraw()
   call unite#view#_redraw_all_candidates()
 endfunction"}}}
-function! s:narrowing_input_history() "{{{
+function! s:narrowing_input_history() abort "{{{
   call unite#start_temporary(
         \ [unite#sources#history_input#define()],
         \ { 'old_source_names_string' : unite#loaded_source_names_string() },
         \ 'history/input')
 endfunction"}}}
-function! s:narrowing_dot() "{{{
+function! s:narrowing_dot() abort "{{{
   call unite#mappings#narrowing(unite#helper#get_input().'.')
 endfunction"}}}
-function! s:get_quick_match_table() "{{{
+function! s:get_quick_match_table() abort "{{{
   let unite = unite#get_current_unite()
   let offset = unite.context.prompt_direction ==# 'below' ?
         \ (unite.prompt_linenr == 0 ?
@@ -860,7 +871,7 @@ function! s:get_quick_match_table() "{{{
 endfunction"}}}
 
 
-function! s:complete() "{{{
+function! s:complete() abort "{{{
   let unite = unite#get_current_unite()
   let input = matchstr(unite#get_input(), '\h\w*$')
   let cur_text = unite#get_input()[: -len(input)-1]
@@ -893,7 +904,7 @@ function! s:complete() "{{{
 
   return repeat("\<C-h>", unite#util#strchars(input)) . candidate
 endfunction"}}}
-function! s:clear_complete() "{{{
+function! s:clear_complete() abort "{{{
   let unite = unite#get_current_unite()
   if has_key(unite, 'complete_cur_text')
     call remove(unite, 'complete_cur_text')

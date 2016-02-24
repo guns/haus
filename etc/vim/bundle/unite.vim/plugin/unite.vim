@@ -66,16 +66,16 @@ command! -nargs=* -complete=customlist,unite#complete#buffer_name
       \ UniteResume
       \ call s:call_unite_resume(<q-args>)
 
-command! -nargs=? -complete=customlist,unite#complete#buffer_name
+command! -nargs=? -bar -complete=customlist,unite#complete#buffer_name
       \ UniteClose call unite#view#_close(<q-args>)
 
-command! -count=1 -nargs=? -complete=customlist,unite#complete#buffer_name
+command! -count=1 -bar -nargs=? -complete=customlist,unite#complete#buffer_name
       \ UniteNext call unite#start#_pos(<q-args>, 'next', expand('<count>'))
-command! -count=1 -nargs=? -complete=customlist,unite#complete#buffer_name
+command! -count=1 -bar -nargs=? -complete=customlist,unite#complete#buffer_name
       \ UnitePrevious call unite#start#_pos(<q-args>, 'previous', expand('<count>'))
-command! -nargs=? -complete=customlist,unite#complete#buffer_name
+command! -nargs=? -bar -complete=customlist,unite#complete#buffer_name
       \ UniteFirst call unite#start#_pos(<q-args>, 'first', 1)
-command! -nargs=? -complete=customlist,unite#complete#buffer_name
+command! -nargs=? -bar -complete=customlist,unite#complete#buffer_name
       \ UniteLast call unite#start#_pos(<q-args>, 'last', 1)
 
 function! s:call_unite(command, args, line1, line2) abort "{{{
@@ -113,7 +113,7 @@ function! s:call_unite(command, args, line1, line2) abort "{{{
 
   call unite#start(args, context)
 endfunction"}}}
-function! s:call_unite_resume(args) "{{{
+function! s:call_unite_resume(args) abort "{{{
   let [args, context] = unite#helper#parse_options(a:args)
 
   call unite#resume(join(args), context)

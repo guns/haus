@@ -26,8 +26,18 @@
 let s:save_cpo = &cpo
 set cpo&vim
 
-function! unite#sources#window#define() "{{{
+function! unite#sources#window#define() abort "{{{
   return s:source
+endfunction"}}}
+
+function! unite#sources#window#sorter(candidates, context) abort "{{{
+  return unite#util#sort_by(a:candidates, '
+  \   -get(
+  \     gettabwinvar(
+  \       v:val.action__tab_nr, v:val.action__window_nr,
+  \       "unite_window", {}),
+  \     "time", 0)
+  \ ')
 endfunction"}}}
 
 let s:source = {
@@ -36,19 +46,23 @@ let s:source = {
       \ 'syntax' : 'uniteSource__Window',
       \ 'hooks' : {},
       \ 'default_kind' : 'window',
+      \ 'sorters': function('unite#sources#window#sorter'),
       \}
 
-function! s:source.hooks.on_init(args, context) "{{{
+function! s:source.hooks.on_init(args, context) abort "{{{
+  let no_current = index(a:args, 'no-current') >= 0
   if index(a:args, 'all') >= 0
     let a:context.source__candidates = []
+    let cur_tabnr = tabpagenr()
     for tabnr in range(1, tabpagenr('$'))
-      let a:context.source__candidates += s:get_windows(a:args, tabnr)
+      let a:context.source__candidates +=
+            \ s:get_windows(tabnr == cur_tabnr && no_current, tabnr)
     endfor
   else
-    let a:context.source__candidates = s:get_windows(a:args, tabpagenr())
+    let a:context.source__candidates = s:get_windows(no_current, tabpagenr())
   endif
 endfunction"}}}
-function! s:source.hooks.on_syntax(args, context) "{{{
+function! s:source.hooks.on_syntax(args, context) abort "{{{
   syntax match uniteSource__Window_prefix /\d\+: \[.\{-}\]/
         \ contained containedin=uniteSource__Window
   highlight default link uniteSource__Window_prefix Constant
@@ -59,66 +73,41 @@ function! s:source.hooks.on_syntax(args, context) "{{{
         \ contained containedin=uniteSource__Window
   highlight default link uniteSource__Window_directory PreProc
 endfunction"}}}
-function! s:source.gather_candidates(args, context) "{{{
+function! s:source.gather_candidates(args, context) abort "{{{
   return a:context.source__candidates
 endfunction"}}}
-function! s:source.complete(args, context, arglead, cmdline, cursorpos) "{{{
+function! s:source.complete(args, context, arglead, cmdline, cursorpos) abort "{{{
   return ['no-current', 'all']
 endfunction"}}}
 
 " Misc
-function! s:compare(candidate_a, candidate_b) "{{{
-  return getwinvar(a:candidate_b, 'unite_window').time - getwinvar(a:candidate_a, 'unite_window').time
-endfunction"}}}
-
-function! s:get_windows(args, tabnr) abort "{{{
-  let current = tabpagenr()
-  if a:tabnr != tabpagenr()
-    execute 'tabnext' a:tabnr
-  endif
-
-  let list = range(1, winnr('$'))
-  for i in list
-    " Set default value.
-    if type(getwinvar(i, 'unite_window')) == type('')
-      call setwinvar(i, 'unite_window', {
-            \ 'time' : 0,
-            \ 'cwd' : getcwd(),
-            \ })
-    endif
-  endfor
-
-  unlet list[winnr()-1]
-  call sort(list, 's:compare')
-  if index(a:args, 'no-current') < 0 || current != tabpagenr()
+function! s:get_windows(no_current, tabnr) abort "{{{
+  let list = range(1, tabpagewinnr(a:tabnr, '$'))
+  unlet list[tabpagewinnr(a:tabnr)-1]
+  if !a:no_current
     " Add current window.
-    call add(list, winnr())
+    call add(list, tabpagewinnr(a:tabnr))
   endif
 
+  let buffers = tabpagebuflist(a:tabnr)
   let candidates = []
   for i in list
-    let window = getwinvar(i, 'unite_window')
-    let bufname = bufname(winbufnr(i))
+    let bufname = bufname(buffers[i-1])
     if empty(bufname)
       let bufname = '[No Name]'
     endif
 
     call add(candidates, {
           \ 'word' : bufname,
-          \ 'abbr' : printf('%d: [%d/%d] %s %s(%s)',
-          \      a:tabnr, i, winnr('$'),
-          \      (i == winnr() ? '%' : i == winnr('#') ? '#' : ' '),
-          \      bufname, window.cwd),
+          \ 'abbr' : printf('%d: [%d/%d] %s %s',
+          \      a:tabnr, i, tabpagewinnr(a:tabnr, '$'),
+          \      (i == tabpagewinnr(a:tabnr) ? '%' :
+          \       i == tabpagewinnr(a:tabnr, '#') ? '#' : ' '),
+          \      bufname),
           \ 'action__tab_nr' : a:tabnr,
           \ 'action__window_nr' : i,
-          \ 'action__buffer_nr' : winbufnr(i),
-          \ 'action__directory' : window.cwd,
           \ })
   endfor
-
-  if current != tabpagenr()
-    execute 'tabnext' current
-  endif
 
   return candidates
 endfunction"}}}
