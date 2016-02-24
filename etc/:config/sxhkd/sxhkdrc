@@ -314,7 +314,7 @@ F8
 		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
 		sleep 0.1; \
 		xdotool getactivewindow windowmove --sync 0 0; \
-		xdotool type passclip\ $'\t'; \
+		xdotool type 'passclip '; \
 	\}
 
 # vim:noet:foldmethod=marker:
