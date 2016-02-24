@@ -247,22 +247,22 @@ function! s:setup_paste() abort
   let s:mouse = &mouse
   set paste
   set mouse=
+  augroup unimpaired_paste
+    autocmd!
+    autocmd InsertLeave *
+          \ if exists('s:paste') |
+          \   let &paste = s:paste |
+          \   let &mouse = s:mouse |
+          \   unlet s:paste |
+          \   unlet s:mouse |
+          \ endif |
+          \ autocmd! unimpaired_paste
+  augroup END
 endfunction
 
 nnoremap <silent> <Plug>unimpairedPaste :call <SID>setup_paste()<CR>
 
 nnoremap <silent> yp  :call <SID>setup_paste()<CR>i
-
-augroup unimpaired_paste
-  autocmd!
-  autocmd InsertLeave *
-        \ if exists('s:paste') |
-        \   let &paste = s:paste |
-        \   let &mouse = s:mouse |
-        \   unlet s:paste |
-        \   unlet s:mouse |
-        \ endif
-augroup END
 
 " }}}1
 " Put {{{1
