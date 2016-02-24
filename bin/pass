@@ -15,6 +15,7 @@ which gpg2 &>/dev/null && GPG="gpg2"
 PREFIX="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
 X_SELECTION="${PASSWORD_STORE_X_SELECTION:-clipboard}"
 CLIP_TIME="${PASSWORD_STORE_CLIP_TIME:-45}"
+GENERATED_LENGTH="${PASSWORD_STORE_GENERATED_LENGTH:-25}"
 
 export GIT_DIR="${PASSWORD_STORE_GIT:-$PREFIX}/.git"
 export GIT_WORK_TREE="${PASSWORD_STORE_GIT:-$PREFIX}"
@@ -223,7 +224,7 @@ cmd_usage() {
 	        List passwords.
 	    $PROGRAM find pass-names...
 	    	List passwords that match pass-names.
-	    $PROGRAM [show] [--clip,-c] pass-name
+	    $PROGRAM [show] [--clip[=line-number],-c[line-number]] pass-name
 	        Show existing password and optionally put it on the clipboard.
 	        If put on the clipboard, it will be cleared in $CLIP_TIME seconds.
 	    $PROGRAM grep search-string
@@ -234,8 +235,8 @@ cmd_usage() {
 	        overwriting existing password unless forced.
 	    $PROGRAM edit pass-name
 	        Insert a new password or edit an existing password using ${EDITOR:-vi}.
-	    $PROGRAM generate [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name pass-length
-	        Generate a new password of pass-length with optionally no symbols.
+	    $PROGRAM generate [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]
+	        Generate a new password of pass-length (or $GENERATED_LENGTH if unspecified) with optionally no symbols.
 	        Optionally put it on the clipboard and clear board after $CLIP_TIME seconds.
 	        Prompt before overwriting existing password unless forced.
 	        Optionally replace only the first line of an existing file with a new password.
@@ -278,32 +279,32 @@ cmd_init() {
 		rm -v -f "$gpg_id" || exit 1
 		if [[ -d $GIT_DIR ]]; then
 			git rm -qr "$gpg_id"
-			git_commit "Deinitialize ${gpg_id}."
+			git_commit "Deinitialize ${gpg_id}${id_path:+ ($id_path)}."
 		fi
 		rmdir -p "${gpg_id%/*}" 2>/dev/null
 	else
 		mkdir -v -p "$PREFIX/$id_path"
 		printf "%s\n" "$@" > "$gpg_id"
 		local id_print="$(printf "%s, " "$@")"
-		echo "Password store initialized for ${id_print%, }"
-		git_add_file "$gpg_id" "Set GPG id to ${id_print%, }."
+		echo "Password store initialized for ${id_print%, }${id_path:+ ($id_path)}"
+		git_add_file "$gpg_id" "Set GPG id to ${id_print%, }${id_path:+ ($id_path)}."
 	fi
 
 	reencrypt_path "$PREFIX/$id_path"
-	git_add_file "$PREFIX/$id_path" "Reencrypt password store using new GPG id ${id_print%, }."
+	git_add_file "$PREFIX/$id_path" "Reencrypt password store using new GPG id ${id_print%, }${id_path:+ ($id_path)}."
 }
 
 cmd_show() {
-	local opts clip=0
-	opts="$($GETOPT -o c -l clip -n "$PROGRAM" -- "$@")"
+	local opts clip_location clip=0
+	opts="$($GETOPT -o c:: -l clip:: -n "$PROGRAM" -- "$@")"
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
-		-c|--clip) clip=1; shift ;;
+		-c|--clip) clip=1; clip_location="${2:-1}"; shift 2 ;;
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--clip,-c] [pass-name]"
+	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--clip[=line-number],-c[line-number]] [pass-name]"
 
 	local path="$1"
 	local passfile="$PREFIX/$path.gpg"
@@ -312,8 +313,9 @@ cmd_show() {
 		if [[ $clip -eq 0 ]]; then
 			$GPG -d "${GPG_OPTS[@]}" "$passfile" || exit $?
 		else
-			local pass="$($GPG -d "${GPG_OPTS[@]}" "$passfile" | head -n 1)"
-			[[ -n $pass ]] || exit 1
+			[[ $clip_location =~ ^[0-9]+$ ]] || die "Clip location '$clip_location' is not a number."
+			local pass="$($GPG -d "${GPG_OPTS[@]}" "$passfile" | tail -n +${clip_location} | head -n 1)"
+			[[ -n $pass ]] || die "There is no password to put on the clipboard at line ${clip_location}."
 			clip "$pass" "$path"
 		fi
 	elif [[ -d $PREFIX/$path ]]; then
@@ -366,7 +368,7 @@ cmd_insert() {
 	esac done
 
 	[[ $err -ne 0 || ( $multiline -eq 1 && $noecho -eq 0 ) || $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND [--echo,-e | --multiline,-m] [--force,-f] pass-name"
-	local path="$1"
+	local path="${1%/}"
 	local passfile="$PREFIX/$path.gpg"
 	check_sneaky_paths "$path"
 
@@ -378,7 +380,7 @@ cmd_insert() {
 	if [[ $multiline -eq 1 ]]; then
 		echo "Enter contents of $path and press Ctrl+D when finished:"
 		echo
-		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" || exit 1
+		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" || die "Password encryption aborted."
 	elif [[ $noecho -eq 1 ]]; then
 		local password password_again
 		while true; do
@@ -387,16 +389,16 @@ cmd_insert() {
 			read -r -p "Retype password for $path: " -s password_again || exit 1
 			echo
 			if [[ $password == "$password_again" ]]; then
-				$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$password"
+				$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$password" || die "Password encryption aborted."
 				break
 			else
-				echo "Error: the entered passwords do not match."
+				die "Error: the entered passwords do not match."
 			fi
 		done
 	else
 		local password
 		read -r -p "Enter password for $path: " -e password
-		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$password"
+		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$password" || die "Password encryption aborted."
 	fi
 	git_add_file "$passfile" "Add given password for $path to store."
 }
@@ -404,7 +406,7 @@ cmd_insert() {
 cmd_edit() {
 	[[ $# -ne 1 ]] && die "Usage: $PROGRAM $COMMAND pass-name"
 
-	local path="$1"
+	local path="${1%/}"
 	check_sneaky_paths "$path"
 	mkdir -p -v "$PREFIX/$(dirname "$path")"
 	set_gpg_recipients "$(dirname "$path")"
@@ -441,9 +443,9 @@ cmd_generate() {
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 || $# -ne 2 || ( $force -eq 1 && $inplace -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name pass-length"
+	[[ $err -ne 0 || ( $# -ne 2 && $# -ne 1 ) || ( $force -eq 1 && $inplace -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]"
 	local path="$1"
-	local length="$2"
+	local length="${2:-$GENERATED_LENGTH}"
 	check_sneaky_paths "$path"
 	[[ ! $length =~ ^[0-9]+$ ]] && die "Error: pass-length \"$length\" must be a number."
 	mkdir -p -v "$PREFIX/$(dirname "$path")"
@@ -455,7 +457,7 @@ cmd_generate() {
 	local pass="$(pwgen -s $symbols $length 1)"
 	[[ -n $pass ]] || exit 1
 	if [[ $inplace -eq 0 ]]; then
-		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$pass"
+		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$pass" || die "Password encryption aborted."
 	else
 		local passfile_temp="${passfile}.tmp.${RANDOM}.${RANDOM}.${RANDOM}.${RANDOM}.--"
 		if $GPG -d "${GPG_OPTS[@]}" "$passfile" | sed $'1c \\\n'"$(sed 's/[\/&]/\\&/g' <<<"$pass")"$'\n' | $GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile_temp" "${GPG_OPTS[@]}"; then
@@ -490,11 +492,10 @@ cmd_delete() {
 	local path="$1"
 	check_sneaky_paths "$path"
 
-	local passfile="$PREFIX/${path%/}"
-	if [[ ! -d $passfile ]]; then
-		passfile="$PREFIX/$path.gpg"
-		[[ ! -f $passfile ]] && die "Error: $path is not in the password store."
-	fi
+	local passdir="$PREFIX/${path%/}"
+	local passfile="$PREFIX/$path.gpg"
+	[[ -f $passfile && -d $passdir && $path == */ || ! -f $passfile ]] && passfile="$passdir"
+	[[ -e $passfile ]] || die "Error: $path is not in the password store."
 
 	[[ $force -eq 1 ]] || yesno "Are you sure you would like to delete $path?"
 
@@ -520,17 +521,18 @@ cmd_copy_move() {
 	[[ $# -ne 2 ]] && die "Usage: $PROGRAM $COMMAND [--force,-f] old-path new-path"
 	check_sneaky_paths "$@"
 	local old_path="$PREFIX/${1%/}"
-	local new_path="$PREFIX/$2"
 	local old_dir="$old_path"
+	local new_path="$PREFIX/$2"
 
-	if [[ ! -d $old_path ]]; then
+	if ! [[ -f $old_path.gpg && -d $old_path && $1 == */ || ! -f $old_path.gpg ]]; then
 		old_dir="${old_path%/*}"
 		old_path="${old_path}.gpg"
-		[[ ! -f $old_path ]] && die "Error: $1 is not in the password store."
 	fi
+	echo "$old_path"
+	[[ -e $old_path ]] || die "Error: $1 is not in the password store."
 
 	mkdir -p -v "${new_path%/*}"
-	[[ -d $old_path || -d $new_path || $new_path =~ /$ ]] || new_path="${new_path}.gpg"
+	[[ -d $old_path || -d $new_path || $new_path == */ ]] || new_path="${new_path}.gpg"
 
 	local interactive="-i"
 	[[ ! -t 0 || $force -eq 1 ]] && interactive="-f"
