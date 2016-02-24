@@ -30,6 +30,10 @@ function! sj#ruby#JoinIfClause()
     return 0
   endif
 
+  if end_line_no - if_line_no != 2
+    return 0
+  endif
+
   if else_line_no && else_line_no < end_line_no
     return 0
   endif
@@ -49,7 +53,6 @@ function! sj#ruby#JoinIfClause()
 
   let if_line = sj#Trim(if_line)
   let body    = sj#Trim(body)
-  let body    = s:JoinLines(body)
 
   let replacement = body.' '.if_line
 
@@ -316,7 +319,7 @@ function! sj#ruby#SplitProcShorthand()
 endfunction
 
 function! sj#ruby#SplitBlock()
-  let pattern = '\v\{(\s*\|.{-}\|)?\s*(.*)\s*\}'
+  let pattern = '\v\{\s*(\|.{-}\|)?\s*(.*)\s*\}'
 
   if sj#SearchUnderCursor('\v%(\k|!|\-\>|\?|\))\s*\zs'.pattern) <= 0
     return 0
@@ -332,7 +335,7 @@ function! sj#ruby#SplitBlock()
   endif
 
   let body = sj#GetMotion('Va{')
-  let multiline_block = 'do\1\n\2\nend'
+  let multiline_block = 'do \1\n\2\nend'
 
   normal! %
   if search('\S\%#', 'Wbn')
@@ -351,6 +354,7 @@ endfunction
 
 function! sj#ruby#JoinBlock()
   let do_pattern = '\<do\>\(\s*|.*|\s*\)\?$'
+  let end_pattern = '\%(^\|[^.:@$]\)\@<=\<end:\@!\>'
 
   let do_line_no = search(do_pattern, 'cW', line('.'))
   if do_line_no <= 0
@@ -361,7 +365,7 @@ function! sj#ruby#JoinBlock()
     return 0
   endif
 
-  let end_line_no = searchpair(do_pattern, '', '\<end\>', 'W')
+  let end_line_no = searchpair(do_pattern, '', end_pattern, 'W')
 
   let [result, offset] = s:HandleComments(do_line_no, end_line_no)
   if !result
@@ -550,7 +554,7 @@ function! sj#ruby#SplitOptions()
   if !sj#settings#Read('ruby_curly_braces') && option_type == 'option' && function_type == 'with_round_braces'
     " no need to add anything
   elseif sj#settings#Read('ruby_curly_braces') || option_type == 'hash' || len(args) == 0
-    if sj#settings#Read('ruby_trailing_comma')
+    if sj#settings#Read('ruby_trailing_comma') || sj#settings#Read('trailing_comma')
       let replacement .= ','
     endif
 
@@ -830,16 +834,6 @@ function! s:JoinHashWithoutBraces()
 
   call cursor(start_lineno, 0)
   exe "normal! V".(end_lineno - start_lineno)."jJ"
-endfunction
-
-function! s:JoinLines(text)
-  let lines = sj#TrimList(split(a:text, "\n"))
-
-  if len(lines) > 1
-    return '('.join(lines, '; ').')'
-  else
-    return join(lines, '; ')
-  endif
 endfunction
 
 function! s:HandleComments(start_line_no, end_line_no)

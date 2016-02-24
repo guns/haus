@@ -19,6 +19,27 @@ function! sj#go#JoinImports()
   endif
 endfunction
 
+function! sj#go#SplitVars()
+  if getline('.') =~ '^\(var\|type\|const\) \k\+ .*$'
+    s/^\(var\|type\|const\) \(\k\+ .*\)$/\1 (\r\2\r)/
+    normal! k==
+    return 1
+  else
+    return 0
+  endif
+endfunction
+
+function! sj#go#JoinVars()
+  if getline('.') =~ '^\(var\|type\|const\) ($' &&
+        \ getline(line('.') + 1) =~ '^\s*\k\+ .*$' &&
+        \ getline(line('.') + 2) =~ '^)$'
+    s/^\(var\|type\|const\) (\_s\+\(\k\+ .*\)\_s\+)$/\1 \2/
+    return 1
+  else
+    return 0
+  endif
+endfunction
+
 function! sj#go#SplitStruct()
   let [start, end] = sj#LocateBracesOnLine('{', '}', 'goString', 'goComment')
   if start < 0 && end < 0

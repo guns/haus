@@ -14,6 +14,7 @@ describe "go" do
     EOF
     setup_go_filetype
 
+    vim.search('import')
     split
 
     # In case there is no Go installed, deindent everything:
@@ -26,10 +27,56 @@ describe "go" do
     )
     EOF
 
+    vim.search('import')
     join
 
     assert_file_contents <<-EOF
       import "fmt"
+    EOF
+  end
+
+  specify "var/const modifiers" do
+    set_file_contents <<-EOF
+      var foo string
+      const bar string
+      type ChanDir int
+    EOF
+    setup_go_filetype
+
+    vim.search('var')
+    split
+    vim.search('const')
+    split
+    vim.search('type')
+    split
+
+    # In case there is no Go installed, deindent everything:
+    vim.normal 'gg9<<9<<'
+    vim.write
+
+    assert_file_contents <<-EOF
+    var (
+    foo string
+    )
+    const (
+    bar string
+    )
+    type (
+    ChanDir int
+    )
+    EOF
+
+    vim.search('var')
+    join
+    vim.search('const')
+    join
+    vim.search('type')
+    join
+
+    assert_file_contents <<-EOF
+      var foo string
+      const bar string
+      type ChanDir int
     EOF
   end
 
