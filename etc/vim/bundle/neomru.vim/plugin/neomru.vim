@@ -43,7 +43,7 @@ command! -nargs=? -complete=file NeoMRUImportDirectory
 
 augroup neomru
   autocmd!
-  autocmd BufEnter,VimEnter,BufNew,BufWinEnter,BufWritePost *
+  autocmd BufEnter,VimEnter,BufWinEnter,BufWritePost *
         \ call s:append(expand('<amatch>'))
   autocmd VimLeavePre *
         \ call neomru#_save({'event' : 'VimLeavePre'})
@@ -51,7 +51,7 @@ augroup END
 
 let g:loaded_neomru = 1
 
-function! s:append(path) "{{{
+function! s:append(path) abort "{{{
   if bufnr('%') != expand('<abuf>')
         \ || a:path == ''
     return

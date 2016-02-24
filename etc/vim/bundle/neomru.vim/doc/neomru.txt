@@ -30,6 +30,7 @@ Configuration Examples	|neomru-examples|
 Interface		|neomru-interface|
   Variables		  |neomru-variables|
   Sources		  |neomru-sources|
+  Commands		  |neomru-commands|
 FAQ			|neomru-faq|
 
 ==============================================================================
@@ -186,6 +187,7 @@ COMMANDS 					*neomru-commands*
 
 :NeoMRUReload					*:NeoMRUReload*
 		Reload MRU files.
+		It validates the MRU files.
 
 :NeoMRUSave					*:NeoMRUSave*
 		Save MRU files manually.
