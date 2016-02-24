@@ -6,7 +6,6 @@
 'NERDTreeCascadeOpenSingleChildDir'	NERD_tree.txt	/*'NERDTreeCascadeOpenSingleChildDir'*
 'NERDTreeCaseSensitiveSort'	NERD_tree.txt	/*'NERDTreeCaseSensitiveSort'*
 'NERDTreeChDirMode'	NERD_tree.txt	/*'NERDTreeChDirMode'*
-'NERDTreeDirArrows'	NERD_tree.txt	/*'NERDTreeDirArrows'*
 'NERDTreeHighlightCursorline'	NERD_tree.txt	/*'NERDTreeHighlightCursorline'*
 'NERDTreeHijackNetrw'	NERD_tree.txt	/*'NERDTreeHijackNetrw'*
 'NERDTreeIgnore'	NERD_tree.txt	/*'NERDTreeIgnore'*
@@ -76,8 +75,6 @@ NERDTreeAddSubmenu()	NERD_tree.txt	/*NERDTreeAddSubmenu()*
 NERDTreeBookmarkCommands	NERD_tree.txt	/*NERDTreeBookmarkCommands*
 NERDTreeBookmarkTable	NERD_tree.txt	/*NERDTreeBookmarkTable*
 NERDTreeBookmarks	NERD_tree.txt	/*NERDTreeBookmarks*
-NERDTreeChangelog	NERD_tree.txt	/*NERDTreeChangelog*
-NERDTreeCredits	NERD_tree.txt	/*NERDTreeCredits*
 NERDTreeFunctionality	NERD_tree.txt	/*NERDTreeFunctionality*
 NERDTreeGlobalCommands	NERD_tree.txt	/*NERDTreeGlobalCommands*
 NERDTreeInvalidBookmarks	NERD_tree.txt	/*NERDTreeInvalidBookmarks*
