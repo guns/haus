@@ -179,3 +179,4 @@
     rl   = reflog
     rp   = rev-parse
     rtmu = read-tree -mu
+    sp   = stash-push
