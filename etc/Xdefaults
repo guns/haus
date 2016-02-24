@@ -8,39 +8,48 @@
 
 !!! XFT
 
-Xft*antialias: on
-Xft*hinting:   on
-Xft*hintstyle: hintslight
+Xft.antialias: on
+Xft.hinting:   on
+Xft.hintstyle: hintslight
+
+!!! XTERM
+
+XTerm.termName:        xterm-256color
+XTerm.background:      rgb:00/00/00
+XTerm.foreground:      rgb:FF/EE/C0
+XTerm.pointerColor:    rgb:DD/DD/DD
+XTerm.faceName:        Consolas:pixelsize=14
+XTerm.utf8:            always
+XTerm.utf8Fonts:       always
+XTerm.metaSendsEscape: on
 
 !!! RXVT-UNICODE
 
-URxvt*termName:        rxvt-unicode-256color
-URxvt*background:      rgb:00/00/00
-URxvt*foreground:      rgb:FF/EE/C0
-URxvt*pointerColor:    rgb:DD/DD/DD
-URxvt*cursorBlink:     off
-URxvt*loginShell:      on
-URxvt*ptySttySize:     on
-URxvt*saveLines:       1023
-URxvt*scrollBar:       off
-URxvt*scrollBar_right: on
-URxvt*visualBell:      on
-! URxvt*letterSpace:     -1
-
-URxvt*pointerBlank:      on
-URxvt*pointerBlankDelay: 65535
-URxvt*scrollTtyKeypress: on
+URxvt.termName:          rxvt-unicode-256color
+URxvt.background:        rgb:00/00/00
+URxvt.foreground:        rgb:FF/EE/C0
+URxvt.pointerColor:      rgb:DD/DD/DD
+! URxvt.letterSpace:       -1
+URxvt.loginShell:        on
+URxvt.pointerBlank:      on
+URxvt.pointerBlankDelay: 65535
+URxvt.saveLines:         65535
+URxvt.scrollBar:         off
+URxvt.scrollTtyKeypress: on
+URxvt.visualBell:        on
 
 ! Explicit multiple fonts for code point search
-URxvt*font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+URxvt.font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
             xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
 
 ! Perl extensions
-URxvt.perl-ext-common: keysym-list,selection,readline,clipboard,keyboard-select,url-select,osc-xterm-clipboard
+URxvt.perl-ext-common: eval,keysym-list,readline,selection,selection-to-clipboard,keyboard-select,url-select
+
+! eval: Copy/paste
+URxvt.keysym.Mod4-c: eval:selection_to_clipboard
+URxvt.keysym.Mod4-v: eval:paste_clipboard
 
 ! urxvt-perls
-URxvt.keysym.Mod4-c:       perl:clipboard:copy
-URxvt.keysym.Mod4-v:       perl:clipboard:paste
 URxvt.keysym.Mod4-Meta-i:  perl:keyboard-select:activate
 URxvt.keysym.Mod4-Meta-u:  perl:url-select:select_next
 URxvt.url-select.launcher: open
@@ -54,13 +63,3 @@ URxvt.keysym.Mod4-Backspace: \033\007\177
 ! keysym-list: Super + Arrow keys <Esc-BEL-BEL-char>
 URxvt.keysym.Mod4-Left:       list:\033\007\007:dacb:
 URxvt.keysym.Mod4-Shift-Left: list:\033\007\007:DACB:
-
-!!! XTERM
-
-XTerm*termName:        xterm-256color
-XTerm*background:      rgb:00/00/00
-XTerm*foreground:      rgb:FF/EE/C0
-XTerm*pointerColor:    rgb:DD/DD/DD
-XTerm*faceName:        Consolas:pixelsize=14
-XTerm*utf8:            1
-XTerm*metaSendsEscape: on

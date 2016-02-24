@@ -280,7 +280,7 @@ task :env do
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master],
-        :files  => 'etc/:urxvt/ext/urxvt-perls',
+        :files  => 'etc/:urxvt/ext',
       }
     ]
   }.map { |k, ps| [k, ps.map { |p| NERV::Project::Subproject.new p }] }]
