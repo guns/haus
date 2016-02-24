@@ -8,7 +8,9 @@ from functools import wraps
 import os
 import platform
 import traceback
+import sys
 import vim
+import re
 from contextlib import contextmanager
 
 from UltiSnips import _vim
@@ -57,7 +59,7 @@ def err_to_scratch_buffer(func):
     def wrapper(self, *args, **kwds):
         try:
             return func(self, *args, **kwds)
-        except:  # pylint: disable=bare-except
+        except Exception as e:  # pylint: disable=bare-except
             msg = \
                 """An error occured. This is either a bug in UltiSnips or a bug in a
 snippet definition. If you think this is a bug, please report it to
@@ -65,7 +67,28 @@ https://github.com/SirVer/ultisnips/issues/new.
 
 Following is the full stack trace:
 """
+
             msg += traceback.format_exc()
+            if hasattr(e, 'snippet_info'):
+                msg += "\nSnippet, caused error:\n"
+                msg += re.sub(
+                    '^(?=\S)', '  ', e.snippet_info, flags=re.MULTILINE
+                )
+            # snippet_code comes from _python_code.py, it's set manually for
+            # providing error message with stacktrace of failed python code
+            # inside of the snippet.
+            if hasattr(e, 'snippet_code'):
+                _, _, tb = sys.exc_info()
+                tb_top = traceback.extract_tb(tb)[-1]
+                msg += "\nExecuted snippet code:\n"
+                lines = e.snippet_code.split("\n")
+                for number, line in enumerate(lines, 1):
+                    msg += str(number).rjust(3)
+                    prefix = "   " if line else ""
+                    if tb_top[1] == number:
+                        prefix = " > "
+                    msg += prefix + line + "\n"
+
             # Vim sends no WinLeave msg here.
             self._leaving_buffer()  # pylint:disable=protected-access
             _vim.new_scratch_buffer(msg)
@@ -112,6 +135,8 @@ class SnippetManager(object):
         if enable_snipmate == '1':
             self.register_snippet_source('snipmate_files',
                                          SnipMateFileSource())
+
+        self._should_update_textobjects = False
 
         self._reinit()
 
@@ -160,10 +185,10 @@ class SnippetManager(object):
             self._handle_failure(self.expand_trigger)
 
     @err_to_scratch_buffer
-    def snippets_in_current_scope(self):
+    def snippets_in_current_scope(self, searchAll):
         """Returns the snippets that could be expanded to Vim as a global
         variable."""
-        before = _vim.buf.line_till_cursor
+        before =  '' if searchAll else _vim.buf.line_till_cursor
         snippets = self._snips(before, True)
 
         # Sort snippets alphabetically
@@ -171,6 +196,8 @@ class SnippetManager(object):
         for snip in snippets:
             description = snip.description[snip.description.find(snip.trigger) +
                                            len(snip.trigger) + 2:]
+
+            location = snip.location if snip.location else ''
 
             key = as_unicode(snip.trigger)
             description = as_unicode(description)
@@ -185,6 +212,18 @@ class SnippetManager(object):
                 "let g:current_ulti_dict['{key}'] = '{val}'").format(
                     key=key.replace("'", "''"),
                     val=description.replace("'", "''")))
+
+            if searchAll:
+                _vim.command(as_unicode(
+                    ("let g:current_ulti_dict_info['{key}'] = {{"
+                     "'description': '{description}',"
+                     "'location': '{location}',"
+                     "}}")).format(
+                        key=key.replace("'", "''"),
+                        location=location.replace("'", "''"),
+                        description=description.replace("'", "''")))
+
+
 
     @err_to_scratch_buffer
     def list_snippets(self):
@@ -280,6 +319,8 @@ class SnippetManager(object):
     @err_to_scratch_buffer
     def _cursor_moved(self):
         """Called whenever the cursor moved."""
+        self._should_update_textobjects = False
+
         if not self._csnippets and self._inner_state_up:
             self._teardown_inner_state()
         self._vstate.remember_position()
@@ -446,11 +487,14 @@ class SnippetManager(object):
             self._teardown_inner_state()
 
     def _jump(self, backwards=False):
+        """Helper method that does the actual jump."""
+        if self._should_update_textobjects:
+            self._cursor_moved()
+
         # we need to set 'onemore' there, because of limitations of the vim
         # API regarding cursor movements; without that test
         # 'CanExpandAnonSnippetInJumpActionWhileSelected' will fail
         with _vim.toggle_opt('ve', 'onemore'):
-            """Helper method that does the actual jump."""
             jumped = False
 
             # We need to remember current snippets stack here because of
@@ -609,6 +653,7 @@ class SnippetManager(object):
         self._setup_inner_state()
 
         self._snip_expanded_in_action = False
+        self._should_update_textobjects = False
 
         # Adjust before, maybe the trigger is not the complete word
         text_before = before
@@ -725,15 +770,14 @@ class SnippetManager(object):
         if _vim.eval("exists('g:UltiSnipsSnippetsDir')") == '1':
             snippet_dir = _vim.eval('g:UltiSnipsSnippetsDir')
         else:
+            home = _vim.eval('$HOME')
             if platform.system() == 'Windows':
-                snippet_dir = os.path.join(_vim.eval('$HOME'),
-                                           'vimfiles', 'UltiSnips')
+                snippet_dir = os.path.join(home, 'vimfiles', 'UltiSnips')
             elif _vim.eval("has('nvim')") == '1':
-                snippet_dir = os.path.join(_vim.eval('$HOME'),
-                                           '.nvim', 'UltiSnips')
+                xdg_home_config = _vim.eval('$XDG_CONFIG_HOME') or os.path.join(home, ".config")
+                snippet_dir = os.path.join(xdg_home_config, 'nvim', 'UltiSnips')
             else:
-                snippet_dir = os.path.join(_vim.eval('$HOME'),
-                                           '.vim', 'UltiSnips')
+                snippet_dir = os.path.join(home, '.vim', 'UltiSnips')
 
         filetypes = []
         if requested_ft:
@@ -780,6 +824,8 @@ class SnippetManager(object):
 
     @err_to_scratch_buffer
     def _track_change(self):
+        self._should_update_textobjects = True
+
         inserted_char = _vim.eval('v:char')
         try:
             if inserted_char == '':

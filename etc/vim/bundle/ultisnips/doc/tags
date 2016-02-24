@@ -11,7 +11,6 @@ UltiSnips-buffer-proxy	UltiSnips.txt	/*UltiSnips-buffer-proxy*
 UltiSnips-character-escaping	UltiSnips.txt	/*UltiSnips-character-escaping*
 UltiSnips-clearing-snippets	UltiSnips.txt	/*UltiSnips-clearing-snippets*
 UltiSnips-commands	UltiSnips.txt	/*UltiSnips-commands*
-UltiSnips-contact	UltiSnips.txt	/*UltiSnips-contact*
 UltiSnips-context-snippets	UltiSnips.txt	/*UltiSnips-context-snippets*
 UltiSnips-contributors	UltiSnips.txt	/*UltiSnips-contributors*
 UltiSnips-custom-autocommands	UltiSnips.txt	/*UltiSnips-custom-autocommands*
@@ -40,6 +39,7 @@ UltiSnips-settings	UltiSnips.txt	/*UltiSnips-settings*
 UltiSnips-shellcode	UltiSnips.txt	/*UltiSnips-shellcode*
 UltiSnips-snipMate	UltiSnips.txt	/*UltiSnips-snipMate*
 UltiSnips-snippet-actions	UltiSnips.txt	/*UltiSnips-snippet-actions*
+UltiSnips-snippet-options	UltiSnips.txt	/*UltiSnips-snippet-options*
 UltiSnips-snippet-search-path	UltiSnips.txt	/*UltiSnips-snippet-search-path*
 UltiSnips-syntax	UltiSnips.txt	/*UltiSnips-syntax*
 UltiSnips-tabstops	UltiSnips.txt	/*UltiSnips-tabstops*
