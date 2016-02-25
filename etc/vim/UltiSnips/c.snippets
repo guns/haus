@@ -34,8 +34,8 @@ endsnippet
 
 ### DECLARATIONS
 
-snippet main "int main(int argc, char const **argv)" b
-int main(int argc, char const **argv)
+snippet main "int main(int argc, char *argv[])" b
+int main(int argc, char *argv[])
 {
 	$0
 	return 0;
@@ -51,14 +51,14 @@ int main(void)
 endsnippet
 
 snippet f "Function" b
-${1:type} ${2:fn}($3)
+${1:type} ${2:fn}(${3:void})
 {
 	$0
 }
 endsnippet
 
 snippet fd "Function declaration" b
-${1:type fn}($0);
+${1:type fn}(${0:void});
 endsnippet
 
 snippet td "typedef" b
