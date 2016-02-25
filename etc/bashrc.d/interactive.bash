@@ -919,7 +919,7 @@ HAVE go && {
 
 ### Debuggers
 
-ALIAS gdbrun='gdb -ex=run'
+ALIAS gdbrun='gdb -ex=run --args'
 
 ### SCM
 
