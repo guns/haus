@@ -1263,17 +1263,24 @@ ALIAS cs='cryptsetup' && {
 }
 
 HAVE cert && {
-    cx() {
+    # Duplicated in bin/cert
+    cx() {(
         local certfile="$HOME/.certificates/$1"
         local keystore="$HOME/.certificates/${1%.crt}.ks"
 
+        export CURL_CA_BUNDLE="$certfile" # curl
+        export GIT_SSL_CAINFO="$certfile" # git
+        export SSL_CERT_FILE="$certfile" # ruby
+
+        # Leiningen
         if [[ -e "$keystore" ]]; then
-            run cert exec --certfile "$certfile" --keystore "$keystore" -- "${@:2}"
-        else
-            run cert exec --certfile "$certfile" -- "${@:2}"
+            export JVM_OPTS="$JVM_OPTS -Djavax.net.ssl.trustStore=${keystore}"
+            export LEIN_JVM_OPTS="$LEIN_JVM_OPTS -Djavax.net.ssl.trustStore=${keystore}"
         fi
-    }
-    complete -F __cx__ cx
+
+        # Eval to pick up aliases
+        eval "${@:2}"
+    )}; complete -F __cx__ cx
 }
 
 HAVE keytool && java-import-keystore() {

@@ -201,6 +201,7 @@ class Cert
     }
   end
 
+  # Duplicated in interactive.bash/cx()
   def exec *args
     env = {
       'CURL_CA_BUNDLE' => certfile, # curl
