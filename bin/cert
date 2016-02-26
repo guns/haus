@@ -103,28 +103,8 @@ class Cert
     parse_certs %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
   end
 
-  def http_get url
-    parse_certs Net::HTTP.get(URI.parse url)
-  end
-
-  def get url
-    case url
-    when %r{\Ahttp://} then http_get url
-    else ssl_get *parse_server_arg(url)
-    end
-  end
-
   def get_chain url
-    chain = []
-    certs = get url
-
-    loop do
-      chain.concat certs
-      break unless certs.last.extensions.find { |e| e.oid == 'authorityInfoAccess' and e.value =~ /URI:(http.*?\.crt)/ }
-      break unless certs = http_get($1)
-    end
-
-    chain
+    ssl_get *parse_server_arg(url)
   end
 
   def format certs
