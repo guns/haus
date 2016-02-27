@@ -82,7 +82,7 @@ class Cert
 
   def parse_certs string
     if @text_only
-      return string.force_encoding('ASCII-8BIT').scan(ANY_CERTIFICATE_PATTERN).map { |pem| x509_text pem }
+      return string.force_encoding('ASCII-8BIT').scan(ANY_CERTIFICATE_PATTERN)
     end
 
     certs = string.force_encoding('ASCII-8BIT').scan(X509_CERTIFICATE_PATTERN)
@@ -119,19 +119,27 @@ class Cert
     %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
   end
 
-  def format certs
-    return certs if @text_only
+  def header cert
+    der = cert.to_der
+    [
+      'Subject: %s' % cert.subject,
+      'Issuer:  %s' % cert.issuer,
+      'SHA256:  %s' % Digest::SHA256.hexdigest(der),
+      'SHA1:    %s' % Digest::SHA1.hexdigest(der),
+      'MD5:     %s' % Digest::MD5.hexdigest(der),
+    ]
+  end
 
-    certs.map do |c|
-      der = c.to_der
-      [ 'Subject: %s' % c.subject,
-        'Issuer:  %s' % c.issuer,
-        'SHA256:  %s' % Digest::SHA256.hexdigest(der),
-        'SHA1:    %s' % Digest::SHA1.hexdigest(der),
-        'MD5:     %s' % Digest::MD5.hexdigest(der),
-        c.to_s
-      ].join "\n"
-    end.join
+  def format certs
+    if @text_only
+      certs.map do |pem|
+        buf = x509_text pem
+        cert = OpenSSL::X509::Certificate.new buf.force_encoding('ASCII-8BIT')
+        [buf[/(.*)^-+BEGIN/m, 1], *header(cert), cert.to_s].join "\n"
+      end.join "\n"
+    else
+      certs.map { |c| (header(c) << c.to_s).join "\n" }.join "\n"
+    end
   end
 
   def certfile
