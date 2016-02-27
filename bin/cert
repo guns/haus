@@ -13,6 +13,7 @@ require 'net/http'
 require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
+require 'open3'
 
 class Cert
   DEFAULTS = {
@@ -20,10 +21,13 @@ class Cert
     :certfile => nil,
     :keystore => nil,
     :keystore_pass => nil,
-    :self_signed => false
+    :self_signed => false,
+    :text_only => false
   }
 
-  CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
+  X509_CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
+  TRUSTED_CERTIFICATE_PATTERN = /-+BEGIN TRUSTED CERTIFICATE-+\n.*?\n-+END TRUSTED CERTIFICATE-+/m
+  ANY_CERTIFICATE_PATTERN = /-+BEGIN(?: X509| TRUSTED)? CERTIFICATE-+\n.*?\n-+END(?: X509| TRUSTED)? CERTIFICATE-+/m
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -39,6 +43,7 @@ class Cert
         Commands:
 
             d[ump] [arg ...]          Dump certificates to stdout
+            D[UMP] [arg ...]          Dump certificates after filtering through `openssl x509 -text`
             p[ublickey] [arg ...]     Dump public keys to stdout
             i[nfo] [arg ...]          Show detailed certificate information
             a[dd] arg ...             Add certificates to certfile
@@ -71,11 +76,22 @@ class Cert
     end
   end
 
+  def x509_text certbuf
+    Open3.popen2('openssl', 'x509', '-text') { |i, o| i.puts certbuf; i.close; o.read }
+  end
+
   def parse_certs string
-    certs = string.force_encoding('ASCII-8BIT').scan(CERTIFICATE_PATTERN)
+    if @text_only
+      return string.force_encoding('ASCII-8BIT').scan(ANY_CERTIFICATE_PATTERN).map { |pem| x509_text pem }
+    end
+
+    certs = string.force_encoding('ASCII-8BIT').scan(X509_CERTIFICATE_PATTERN)
 
     if certs.any?
       certs.map { |pem| OpenSSL::X509::Certificate.new pem }
+    elsif (certs = string.force_encoding('ASCII-8BIT').scan(TRUSTED_CERTIFICATE_PATTERN)).any?
+      warn '!! Reading OpenSSL TRUSTED CERTIFICATE without trust bits!'
+      parse_certs certs.map { |pem| x509_text pem }.join("\n")
     else
       # Maybe DER format?
       [OpenSSL::X509::Certificate.new(string)]
@@ -100,14 +116,12 @@ class Cert
 
   def ssl_get host, port = nil
     server = "#{host}:#{port || 443}".shellescape
-    parse_certs %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
-  end
-
-  def get_chain url
-    ssl_get *parse_server_arg(url)
+    %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
   end
 
   def format certs
+    return certs if @text_only
+
     certs.map do |c|
       der = c.to_der
       [ 'Subject: %s' % c.subject,
@@ -165,7 +179,7 @@ class Cert
       elsif File.readable? arg
         parse_certs File.read(arg)
       else
-        get_chain arg
+        parse_certs ssl_get(*parse_server_arg(arg))
       end
     end.compact
 
@@ -185,7 +199,7 @@ class Cert
   end
 
   def info *args
-    puts (take(args.empty? ? certificates : mapcerts(args))).map(&:to_text)
+    puts (take(args.empty? ? certificates : mapcerts(args))).map { |c| c.to_text + c.to_s }
   end
 
   def add *args
@@ -228,6 +242,7 @@ class Cert
 
     case args.first
     when 'd', 'dump' then dump *rest
+    when 'D', 'DUMP' then @text_only = true; dump *rest
     when 'p', 'publickey' then publickey *rest
     when 'i', 'info' then info *rest
     when 'a', 'add' then add *rest
