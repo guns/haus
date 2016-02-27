@@ -127,7 +127,7 @@ __mtusb__() {
 
 __cx__() {
     if ((COMP_CWORD == 1)); then
-        __compreply__ "$(command ls -1 ~/.certificates/ | grep '\.crt$')";
+        __compreply__ "$(command ls -1 /etc/ca-certificates/trust-source/anchors/ | grep '\.crt$')";
     else
         _command_offset 2
     fi
@@ -1256,8 +1256,8 @@ ALIAS cs='cryptsetup' && {
 HAVE cert && {
     # Duplicated in bin/cert
     cx() {(
-        local certfile="$HOME/.certificates/$1"
-        local keystore="$HOME/.certificates/${1%.crt}.ks"
+        local certfile="/etc/ca-certificates/trust-source/anchors/$1"
+        local keystore="/etc/ca-certificates/trust-source/anchors/${1%.crt}.ks"
 
         export CURL_CA_BUNDLE="$certfile" # curl
         export GIT_SSL_CAINFO="$certfile" # git

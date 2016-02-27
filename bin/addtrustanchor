@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'uri'
+require 'fileutils'
+require 'optparse'
+
+TRUST_ANCHORS_DIR = '/etc/ca-certificates/trust-source/anchors'
+
+dir = TRUST_ANCHORS_DIR
+
+OptionParser.new nil, 20 do |opt|
+  opt.banner = <<-BANNER.gsub /^ +/, ''
+    Usage: #{File.basename __FILE__} [options]
+
+    Options:
+  BANNER
+
+  opt.on '-d', '--dir DIR', "Default: #{TRUST_ANCHORS_DIR}" do |arg|
+    dir = File.expand_path arg
+  end
+end
+
+abort if ARGV.size != 1
+
+domain = URI.parse(ARGV[0]).host || ARGV[0]
+cert = File.join dir, "#{domain}.crt"
+
+system 'cert', 'add', '--certfile', cert, domain
+system 'vim', '-O', cert, "#{ENV['cdhaus']}/share/ca-certificates/mozilla.crt"
+
+if File.read(cert).index 'BEGIN CERTIFICATE'
+  if dir == TRUST_ANCHORS_DIR
+    system 'update-ca-trust'
+    puts 'Updated CA trust'
+  end
+else
+  FileUtils.rm_f cert
+  puts "Removed #{cert}"
+  abort
+end

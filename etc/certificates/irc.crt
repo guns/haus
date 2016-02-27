@@ -43,6 +43,7 @@ xhM/hX6DZOZTLqoG8kksh6KmOthsnjqo6Mn5RnyRTwuvboVa9Eb9pwmMvx9SKNku
 xYiJzb3vNVAWSj4GdaHaWw7vkbA4O1+pn99Y0GDWS/b1EgzfOMqo3nCPhYnRyO5p
 jFxC3xW7kJDqbw==
 -----END CERTIFICATE-----
+
 Subject: /C=US/ST=Indiana/L=Indianapolis/O=Software in the Public Interest/OU=hostmaster/CN=Certificate Authority/emailAddress=hostmaster@spi-inc.org
 Issuer:  /C=US/ST=Indiana/L=Indianapolis/O=Software in the Public Interest/OU=hostmaster/CN=Certificate Authority/emailAddress=hostmaster@spi-inc.org
 SHA256:  80b1d6ec2d4cb684640133cf3722c540db2b6cc93eeca4f02ba12a6a27721a2c
@@ -94,6 +95,7 @@ T7jYhkalMwIsJWE3KpLIrIF0aGOHM3a9BX9e1dUCbb2v/ypaqknsmHlHU5H2DjRa
 yaXG67Ljxay2oHA1u8hRadDytaIybrw/oDc5fHE2pgXfDBLkFqfF1stjo5VwP+YE
 o2A=
 -----END CERTIFICATE-----
+
 Subject: /C=US/ST=CA/L=Mountain View/O=Mozilla Corporation/CN=irc.mozilla.org
 Issuer:  /C=US/O=DigiCert Inc/CN=DigiCert SHA2 Secure Server CA
 SHA256:  f38ab4612445f3adc86e936f297dac0c534e846789aa3263ed242739e78b5ab0
@@ -130,6 +132,7 @@ WsAwcb7biehL9BTzmfnyorNFtlPnxso9siIW0yphiux2XcnNq81Ch6RRVENIrh+J
 e9tDBOXHo7h19+BBpoQahKzcTuiCHLrdEWgamCYkYVjI3gWIGQW+xZ5ramh7mXYf
 fJzeFV9x5LbGM5S8lBLIdj+mmKPwNoCsLn1oSWpW6IlI
 -----END CERTIFICATE-----
+
 Subject: /C=US/O=DigiCert Inc/CN=DigiCert SHA2 Secure Server CA
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert Global Root CA
 SHA256:  154c433c491929c5ef686e838e323664a00e6a0d822ccc958fb4dab03e49a08f
@@ -162,6 +165,7 @@ CwUAA4IBAQAjPt9L0jFCpbZ+QlwaRMxp0Wi0XUvgBCFsS+JtzLHgl4+mUwnNqipl
 c+LJMto4JQtV05od8GiG7S5BNO98pVAdvzr508EIDObtHopYJeS4d60tbvVS3bR0
 j6tJLp07kzQoH3jOlOrHvdPJbRzeXDLz
 -----END CERTIFICATE-----
+
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert Global Root CA
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert Global Root CA
 SHA256:  4348a0e9444c78cb265e058d5e8944b4d84f9662bd26db257f8934a443c70161
@@ -189,6 +193,7 @@ PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
 YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
 CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 -----END CERTIFICATE-----
+
 Subject: /OU=Domain Control Validated/OU=Gandi Standard Wildcard SSL/CN=*.freenode.net
 Issuer:  /C=FR/ST=Paris/L=Paris/O=Gandi/CN=Gandi Standard SSL CA 2
 SHA256:  cb7607bbd5a49ba59e1fbbfdbd2b853320c0b5ab39a120ce002d8c5eaf6d30df
@@ -223,6 +228,7 @@ QsmcIQ6DHSMQ+pwFUoDSoBGzlmJSGMiHgoRxaOFrIPdf061vD6DlGSyQ90oE/6HL
 dR5jIdwxnDkYBOH/7poGehtSA/uyaGNB63J0VdiVq7MtUTJj40LIsewFBwR1iinI
 ccRUOZHQUA2AzFMte3JrmI6HGTonhO1ORGS196nEYW78
 -----END CERTIFICATE-----
+
 Subject: /C=FR/ST=Paris/L=Paris/O=Gandi/CN=Gandi Standard SSL CA 2
 Issuer:  /C=US/ST=New Jersey/L=Jersey City/O=The USERTRUST Network/CN=USERTrust RSA Certification Authority
 SHA256:  b9f2164323638dce0b92218b43c41c1b2b2696389329db19f5cf7ad49b5cb372
@@ -262,6 +268,7 @@ KA5R2d4On3XNDgOVyvnFqSot/kGkoUeuDcL5OWYzSlvhhChZbH2UF3bkRYKtcCD9
 m9T8bJUox04FB6b9HbwZ4ui3uRGKLXASUoWNjDNKD/yZkuBjcNqllEdjB+dYxzFf
 BT02Vf6Dsuimrdfp5gJ0iHRc2jTbkNJtUQoj1iM=
 -----END CERTIFICATE-----
+
 Subject: /C=US/ST=New Jersey/L=Jersey City/O=The USERTRUST Network/CN=USERTrust RSA Certification Authority
 Issuer:  /C=SE/O=AddTrust AB/OU=AddTrust External TTP Network/CN=AddTrust External CA Root
 SHA256:  1a5174980a294a528a110726d5855650266c48d9883bea692b67b6d726da98c5
