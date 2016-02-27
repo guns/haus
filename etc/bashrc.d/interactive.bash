@@ -1057,7 +1057,7 @@ type ruby &>/dev/null && {
     RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
 
     # RUBYOPT
-    rbopt() { run env RUBYOPT=$1 "${@:2}"; }
+    rbopt() { run env RUBYOPT="$1" "${@:2}"; }
 
     # PATH variables
     rubylib() { __prepend_path__ RUBYLIB "$@"; }
