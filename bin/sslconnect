@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+case $# in
+1) HOST="$1" PORT='443';;
+2) HOST="$1" PORT="$2";;
+*) echo "Usage: sslconnect host [port]"; return 1
+esac
+
+run openssl s_client -showcerts -crlf -connect "$HOST:$PORT"

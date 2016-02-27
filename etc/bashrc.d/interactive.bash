@@ -1224,15 +1224,6 @@ HAVE wpa_supplicant wpa_passphrase && {
 
 # OpenSSL
 ALIAS ssl='openssl' && {
-    sslconnect() {
-        case $# in
-        1) local host="$1" port='443';;
-        2) local host="$1" port="$2";;
-        *) echo "Usage: $FUNCNAME host [port]"; return 1
-        esac
-        run openssl s_client -showcerts -crlf -connect "$host:$port"
-    }
-
     aesencrypt() { if (($#)); then openssl aes-256-cbc    -in "$@"; else openssl aes-256-cbc;    fi; }
     aesdecrypt() { if (($#)); then openssl aes-256-cbc -d -in "$@"; else openssl aes-256-cbc -d; fi; }
 }
