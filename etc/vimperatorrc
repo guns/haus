@@ -89,9 +89,6 @@ noremap a <NOP>
 noremap <C-S-p>   :emenu Edit.Preferences<CR>
 noremap <C-S-a>   :emenu Tools.Add-ons<CR>
 noremap <C-S-d>   :emenu Tools.DownThemAll!.DownThemAll!<CR>
-noremap <C-S-i>   :emenu Tools.Web Developer.Inspector<CR>
-noremap <C-S-l>   :emenu Tools.Web Developer.Web Console<CR>
-noremap <C-S-n>   :emenu Tools.Web Developer.Network<CR>
 noremap <C-S-t>   :emenu Tools.Web Developer.Toggle Tools<CR>
 noremap <C-S-b>   :tabopen chrome://umatrix/content/popup.html<CR>
 noremap <C-S-m>   :tabopen chrome://umatrix/content/dashboard.html#user-rules<CR>
