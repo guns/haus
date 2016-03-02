@@ -168,7 +168,7 @@ $if bash
     "\C-xe ":       "\C-]vim "
     "\C-xee":       "\C-] vim \n"
     "\C-xf":        "\C-]vimfind "
-    "\033\007F":    "\C-] vimopen \n"
+    "\033\007F":    "\C-] vimfind \n"
     "\033\007o":    "\C-] vimopen \n"
     "\033\007t":    "\C-] vimopen \n"
     "\C-xm":        "\C-]man "

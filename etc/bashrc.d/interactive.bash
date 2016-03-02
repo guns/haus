@@ -748,7 +748,7 @@ HAVE vim && {
         if (( ${#files[@]} )); then
             vim "${files[@]}"
         else
-            vimopen
+            vim -c 'Unite -no-split file_rec'
         fi
     }; TCOMP find vimfind
 
