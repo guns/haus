@@ -601,14 +601,16 @@ function! s:GoBufferSetup()
     nmap     <buffer> ]c             <Plug>(go-callees)
     nmap     <buffer> [d             <Plug>(go-info)
     nmap     <buffer> ]d             <Plug>(go-describe)
+    nmap     <buffer> <LocalLeader>a <Plug>(go-alternate-edit)
+    nmap     <buffer> <LocalLeader>A <Plug>(go-alternate-vertical)
     nmap     <buffer> <LocalLeader>b <Plug>(go-build)
     noremap  <buffer> <LocalLeader>B :<C-u>GoOptimizations<CR>
     nmap     <buffer> <LocalLeader>c <Plug>(go-channelpeers)
     nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath -ignore=fmt:^$ ./...<CR>
-    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -abspath -asserts -blank -ignore=fmt:^$ ./...<CR>
+    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath -ignore=fmt:. ./...<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -abspath -asserts -blank -ignore=fmt:. ./...<CR>
     nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
     vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
