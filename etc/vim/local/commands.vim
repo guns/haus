@@ -609,14 +609,14 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath -ignore=fmt:. ./...<CR>
-    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -abspath -asserts -blank -ignore=fmt:. ./...<CR>
+    noremap  <buffer> <LocalLeader>e :<C-u>execute 'GoErrCheck -abspath -ignore=fmt:. ' . join(systemlist('glide novendor'))<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>execute 'GoErrCheck -abspath -asserts -blank -ignore=fmt:. ' . join(systemlist('glide novendor'))<CR>
     nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
     vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
     nmap     <buffer> <LocalLeader>I <Plug>(go-install)
     noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
-    noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0 ./...<CR>
+    noremap  <buffer> <LocalLeader>L :<C-u>execute 'GoLint -min_confidence=0 ' . join(systemlist('glide novendor'))<CR>
     noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope .<CR>
     noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope ""<CR>
     nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)

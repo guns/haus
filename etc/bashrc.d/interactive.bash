@@ -906,16 +906,7 @@ HAVE go && {
     gobench() { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
     golistfiles() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports() { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
-    goupgrade() {
-        pushd .
-        cdgo
-        local pkg
-        go list ./... | while read pkg; do
-            [[ "$pkg" == github.com/guns/* || "$pkg" == nerv/* || "$pkg" == */example/* ]] && continue
-            run go get -u "$@" "$pkg"
-        done
-        popd
-    }
+    ALIAS gl='glide'
 }
 
 ### Debuggers
