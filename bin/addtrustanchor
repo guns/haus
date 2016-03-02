@@ -19,7 +19,7 @@ OptionParser.new nil, 20 do |opt|
   opt.on '-d', '--dir DIR', "Default: #{TRUST_ANCHORS_DIR}" do |arg|
     dir = File.expand_path arg
   end
-end
+end.parse!
 
 abort if ARGV.size != 1
 
