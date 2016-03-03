@@ -4,8 +4,6 @@ if type xsel; then
     exec xsel --input --clipboard "$@"
 elif type xclip; then
     exec xclip -in -selection clipboard "$@"
-elif type pbcopy; then
-    exec pbcopy "$@"
 else
     printf "No known clipboard programs available!\n" >&2
     exit 1
