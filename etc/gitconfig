@@ -68,6 +68,10 @@
     cava = commit --all --verbose --amend
     cam  = commit --all --message
 
+    # Stash
+    s    = stash
+    sp   = stash-push
+
     # Merging and rebasing
     m   = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --edit
     mm  = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --no-edit
@@ -77,30 +81,30 @@
     cp  = cherry-pick
 
     # Log
-    l     = log --decorate --graph --show-signature
-    lf    = log --decorate --graph --show-signature --first-parent --no-merges
-    lfr   = log --decorate --graph --show-signature --first-parent --no-merges --date=relative
-    lst   = log --decorate --graph --show-signature --stat
-    lstr  = log --decorate --graph --show-signature --stat --date=relative
-    lfst  = log --decorate --graph --show-signature --stat --first-parent --no-merges
-    lfstr = log --decorate --graph --show-signature --stat --first-parent --no-merges --date=relative
+    l     = log --decorate --show-signature --graph
+    lf    = log --decorate --show-signature --graph --first-parent --no-merges
+    lfr   = log --decorate --show-signature --graph --first-parent --no-merges --date=relative
+    lst   = log --decorate --show-signature --graph --stat
+    lstr  = log --decorate --show-signature --graph --stat --date=relative
+    lfst  = log --decorate --show-signature --graph --stat --first-parent --no-merges
+    lfstr = log --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
 
-    lp    = log --decorate --patch --show-signature --stat --ws-error-highlight=all
-    lpr   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --date=relative
-    lfp   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --first-parent --no-merges
-    lfpr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
-    lpw   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --ignore-all-space
-    lpwr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --ignore-all-space --date=relative
-    wlp   = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=.
-    wlpr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=. --date=relative
-    wlpwr = log --decorate --patch --show-signature --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
+    lp    = log --decorate --show-signature --patch --stat --ws-error-highlight=all
+    lpr   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --date=relative
+    lfp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges
+    lfpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
+    lpw   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space
+    lpwr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space --date=relative
+    wlp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=.
+    wlpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --date=relative
+    wlpwr = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
 
-    l1    = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1
-    l1r   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --date=relative
-    l1w   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --ignore-all-space
-    l1wr  = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
-    wl1   = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --color-words=.
-    wl1r  = log --decorate --patch --show-signature --stat --ws-error-highlight=all -1 --color-words=. --date=relative
+    l1    = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1
+    l1r   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --date=relative
+    l1w   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space
+    l1wr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
+    wl1   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=.
+    wl1r  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=. --date=relative
 
     f     = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s'
     fr    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --date=relative
@@ -113,6 +117,9 @@
     lgr   = log --patch --date=relative -G
     lgi   = log --patch --regexp-ignore-case -G
     lgir  = log --patch --regexp-ignore-case --date=relative -G
+
+    sl    = stash list --decorate --show-signature --stat
+    slp   = stash list --decorate --show-signature --patch --stat --ws-error-highlight=all
 
     # Branches
     br       = branch -vv
@@ -179,4 +186,3 @@
     rl   = reflog
     rp   = rev-parse
     rtmu = read-tree -mu
-    sp   = stash-push
