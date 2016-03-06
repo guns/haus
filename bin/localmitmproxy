@@ -13,6 +13,7 @@ class Localmitmproxy
     :intercept_ports => [80, 443, 8080, 8443],
     :proxy_port => 8,
     :dump => false,
+    :bind_address => nil,
     :stream => nil
   }
 
@@ -27,6 +28,10 @@ class Localmitmproxy
 
         Options:
       BANNER
+
+      opt.on '-b', '--bind-address ADDR', 'DEFAULT: bind to all interfaces' do |arg|
+        @bind_address = arg
+      end
 
       opt.on '-d', '--dump', 'Invoke mitmdump and set `--stream 0`' do |arg|
         @dump = true
@@ -69,7 +74,8 @@ class Localmitmproxy
 
   def start! *mitmproxy_args
     with_redirected_ports @intercept_ports, @proxy_port do
-      sh *(%W[#{mitmprog} --transparent --host --bind-address 127.0.0.1 --port #{@proxy_port}] \
+      sh *(%W[#{mitmprog} --transparent --host --port #{@proxy_port}] \
+           + (@bind_address ? ['--bind-address', @bind_address] : []) \
            + (@stream ? ['--stream', @stream] : []) \
            + mitmproxy_args)
     end
