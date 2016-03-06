@@ -178,39 +178,51 @@ func Test$1(t *testing.T) {
 endsnippet
 
 snippet as "assert" w
-assert.$1(t, $0)
+if !(${1}) {
+	t.Errorf("expected: $1${2:, actual: %v}$0")
+}
 endsnippet
 
-snippet ase "assert.Equal()" w
-assert.Equal(t, ${1:expected}, $0)
+snippet asf "assert false" w
+if ${1} {
+	t.Errorf("expected: !($1)${2:, actual: %v}$0")
+}
 endsnippet
 
-snippet asne "assert.NotEqual()" w
-assert.NotEqual(t, ${1:expected}, $0)
+snippet ase "assert equal" w
+if ${1:actual} != ${2:expected} {
+	t.Errorf("%v != %v", $1, $2$0)
+}
 endsnippet
 
-snippet asf "assert.False()" w
-assert.False(t, $0)
+snippet asde "assert deep equal" w
+if !reflect.DeepEqual(${1:actual}, ${2:expected}) {
+	t.Errorf("%v != %v", $1, $2$0)
+}
 endsnippet
 
-snippet ast "assert.True()" w
-assert.True(t, $0)
+snippet asn "assert nil" w
+if ${1:err} != nil {
+	t.Errorf("unexpected${2: error}: %v", $1$0)
+}
 endsnippet
 
-snippet asn "assert.Nil()" w
-assert.Nil(t, $0)
+snippet aser "assert error" w
+if ${1:err} == nil {
+	t.Errorf("expected $1 to be an error, but got nil"$0)
+}
 endsnippet
 
-snippet aser "assert.Error()" w
-assert.Error(t, $0)
+snippet asm "assert match" w
+if !regexp.MatchString(\`${1}\`, ${3}) {
+	t.Errorf(\`/$1/ !~ $3\`$0)
+}
 endsnippet
 
-snippet asr "assert.Regexp()" w
-assert.Regexp(t, \`$1\`, $0)
-endsnippet
-
-snippet asit "assert.IsType()" w
-assert.IsType(t, $0)
+snippet ast "assert type" w
+if reflect.TypeOf($1) != reflect.TypeOf($2) {
+	t.Errorf("expected type %v, but got type %v", reflect.TypeOf($2), reflect.TypeOf($1)$0)
+}
 endsnippet
 
 snippet L "len()" w
@@ -240,23 +252,13 @@ type (
 endsnippet
 
 snippet ST "type struct" w
-${2:/*
-
-${1/./\u$0/g} STRUCT
-
-*/
-}type ${1} struct {
+type ${1} struct {
 	$0
 }
 endsnippet
 
 snippet IF "type interface" b
-${2:/*
-
-${1/./\u$0/g} INTERFACE
-
-*/
-}type ${1} interface {
+type ${1} interface {
 	$0
 }
 endsnippet
@@ -688,35 +690,47 @@ strconv.FormatFloat($0, '${1:beEfgG}', ${2:prec}, ${3:32|64})
 endsnippet
 
 snippet alu "atomic.LoadUint32" w
-atomic.LoadUint32($0)
+atomic.LoadUint32(${0:addr})
 endsnippet
 
 snippet ali "atomic.LoadInt32" w
-atomic.LoadInt32($0)
+atomic.LoadInt32(${0:addr})
 endsnippet
 
 snippet alp "atomic.LoadPointer" w
-atomic.LoadPointer($0)
+atomic.LoadPointer(${0:addr})
 endsnippet
 
 snippet asu "atomic.StoreUint32" w
-atomic.StoreUint32($0)
+atomic.StoreUint32(${1:addr}, ${0:val})
 endsnippet
 
 snippet asi "atomic.StoreInt32" w
-atomic.StoreInt32($0)
+atomic.StoreInt32(${1:addr}, ${0:val})
 endsnippet
 
 snippet asp "atomic.StorePointer" w
-atomic.StorePointer($0)
+atomic.StorePointer(${1:addr}, ${0:val})
 endsnippet
 
 snippet aau "atomic.AddUint32" w
-atomic.AddUint32($0)
+atomic.AddUint32(${1:addr}, ${0:Δ})
 endsnippet
 
 snippet aai "atomic.AddInt32" w
-atomic.AddInt32($0)
+atomic.AddInt32(${1:addr}, ${0:Δ})
+endsnippet
+
+snippet acasi "atomic.CompareAndSwapInt32" w
+atomic.CompareAndSwapInt32(${1:addr}, ${2:old}, ${0:new})
+endsnippet
+
+snippet acasu "atomic.CompareAndSwapUint32" w
+atomic.CompareAndSwapUint32(${1:addr}, ${2:old}, ${0:new})
+endsnippet
+
+snippet acasp "atomic.CompareAndSwapPointer" w
+atomic.CompareAndSwapPointer(${1:addr}, ${2:old}, ${0:new})
 endsnippet
 
 snippet ns "bufio.NewScanner()" w
@@ -733,6 +747,10 @@ endsnippet
 
 snippet TT "*trigger.Trigger" w
 *trigger.Trigger
+endsnippet
+
+snippet deb "breakpoint" w
+runtime.Breakpoint()
 endsnippet
 
 # vim:ft=snippets:

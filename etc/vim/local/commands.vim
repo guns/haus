@@ -609,8 +609,8 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-    noremap  <buffer> <LocalLeader>e :<C-u>execute 'GoErrCheck -abspath -ignore=fmt:. ' . join(systemlist('glide novendor'))<CR>
-    noremap  <buffer> <LocalLeader>E :<C-u>execute 'GoErrCheck -abspath -asserts -blank -ignore=fmt:. ' . join(systemlist('glide novendor'))<CR>
+    noremap  <buffer> <LocalLeader>e :<C-u>execute 'GoErrCheck -abspath ' . join(systemlist('glide novendor'))<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>execute 'GoErrCheck -abspath -asserts -blank ' . join(systemlist('glide novendor'))<CR>
     nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
     vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)

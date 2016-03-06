@@ -899,6 +899,7 @@ ALIAS mk='make' \
 
 # golang
 HAVE go && {
+    goget() { run go get -u -v "$@"; }
     gobuild() { run go build -v "$@"; }
     goinstall() { run go install -v "$@"; }
     gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
@@ -906,7 +907,13 @@ HAVE go && {
     gobench() { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
     golistfiles() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports() { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
-    ALIAS gl='glide'
+    ALIAS gl='glide' && {
+        alias glinit='run glide init'
+        alias glget='run glide get --all-dependencies'
+        alias glupdate='run glide update --all-dependencies'
+        alias glclean='run glide install --delete'
+        alias gllist='run glide list'
+    }
 }
 
 ### Debuggers

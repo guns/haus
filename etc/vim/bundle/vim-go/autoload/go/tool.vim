@@ -44,15 +44,8 @@ function! go#tool#ParseErrors(lines)
     let errors = []
 
     for line in a:lines
-        let i = stridx(line, "\r")
-        if i > -1
-            let line = line[i+1:]
-        endif
         let fatalerrors = matchlist(line, '^\(fatal error:.*\)$')
         let tokens = matchlist(line, '^\s*\(.\{-}\):\(\d\+\):\s*\(.*\)')
-        if empty(tokens)
-            let tokens = matchlist(line, '\v<Error Trace:\s*(.+):(\d+)\s*(.*)')
-        endif
 
         if !empty(fatalerrors)
             call add(errors, {"text": fatalerrors[1]})
