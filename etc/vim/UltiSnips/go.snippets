@@ -162,7 +162,7 @@ const (
 )
 endsnippet
 
-snippet bench "Benchmark" b
+snippet b "Benchmark" b
 func Benchmark$1(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -171,7 +171,7 @@ func Benchmark$1(b *testing.B) {
 }
 endsnippet
 
-snippet test "Test" b
+snippet t "Test" b
 func Test$1(t *testing.T) {
 	$0
 }
@@ -465,7 +465,7 @@ endsnippet
 
 snippet mkc "make(chan …); close(…)" w
 $1 := make(chan $2, $3)
-$0close($1)
+${0:defer }close($1)
 endsnippet
 
 snippet cp "copy()" w
@@ -665,6 +665,14 @@ snippet wg "sync.WaitGroup" w
 sync.WaitGroup
 endsnippet
 
+snippet sm "sync.Mutex" w
+sync.Mutex
+endsnippet
+
+snippet srw "sync.RWMutex" w
+sync.RWMutex
+endsnippet
+
 snippet sc "strconv" w
 strconv.
 endsnippet
@@ -714,11 +722,11 @@ atomic.StorePointer(${1:addr}, ${0:val})
 endsnippet
 
 snippet aau "atomic.AddUint32" w
-atomic.AddUint32(${1:addr}, ${0:Δ})
+atomic.AddUint32(${1:addr}, ${0:delta})
 endsnippet
 
 snippet aai "atomic.AddInt32" w
-atomic.AddInt32(${1:addr}, ${0:Δ})
+atomic.AddInt32(${1:addr}, ${0:delta})
 endsnippet
 
 snippet acasi "atomic.CompareAndSwapInt32" w
