@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if (($# < 2)); then
+    echo "USAGE: sqliteconcat outdb db1 [db2 …]" >&2
+    exit 1
+fi
+
+set -e
+
+DB="$1"
+for db in "${@:2}"; do
+    echo "Inserting from $db" >&2
+    sqlite3 "$DB" < <(sqlite3 "$db" .dump | sed 's/^CREATE TABLE/CREATE TABLE IF NOT EXISTS/')
+done
