@@ -769,6 +769,9 @@ set crypt_use_gpgme=yes
 # you need to set this option in .muttrc; it won't have any effect when
 # used interactively.
 #
+# Note that the GPGME backend does not support creating old-style inline
+# (traditional) PGP encrypted or signed messages (see $pgp_autoinline).
+#
 
 # set crypt_use_pka=no
 #
@@ -1458,6 +1461,30 @@ set hostname="GUNS"
 # Also see $use_domain and $hidden_host.
 #
 
+# set idn_decode=yes
+#
+# Name: idn_decode
+# Type: boolean
+# Default: yes
+#
+#
+# When set, Mutt will show you international domain names decoded.
+# Note: You can use IDNs for addresses even if this is unset.
+# This variable only affects decoding. (IDN only)
+#
+
+# set idn_encode=yes
+#
+# Name: idn_encode
+# Type: boolean
+# Default: yes
+#
+#
+# When set, Mutt will encode international domain names using
+# IDN.  Unset this if your SMTP server can handle newer (RFC 6531)
+# UTF-8 encoded domains. (IDN only)
+#
+
 # set ignore_linear_white_space=no
 #
 # Name: ignore_linear_white_space
@@ -1584,6 +1611,8 @@ set include=yes
 #         stashed the message: list name or recipient name
 #         if not sent to a list
 # %P      progress indicator for the built-in pager (how much of the file has been displayed)
+# %r      comma separated list of ``To:'' recipients
+# %R      comma separated list of ``Cc:'' recipients
 # %s      subject of the message
 # %S      status of the message (``N''/``D''/``d''/``!''/``r''/*)
 # %t      ``To:'' field (recipients)
@@ -2120,7 +2149,8 @@ set pager_stop=yes
 # This option controls whether Mutt generates old-style inline
 # (traditional) PGP encrypted or signed messages under certain
 # circumstances.  This can be overridden by use of the pgp menu,
-# when inline is not required.
+# when inline is not required.  The GPGME backend does not support
+# this option.
 #
 # Note that Mutt might automatically use PGP/MIME for messages
 # which consist of more than a single MIME part.  Mutt can be
@@ -2201,6 +2231,22 @@ set pager_stop=yes
 #
 # This is a format string, see the $pgp_decode_command command for
 # possible printf(3)-like sequences.
+# (PGP only)
+#
+
+# set pgp_decryption_okay=""
+#
+# Name: pgp_decryption_okay
+# Type: regular expression
+# Default: ""
+#
+#
+# If you assign text to this variable, then an encrypted PGP
+# message is only considered successfully decrypted if the output
+# from $pgp_decrypt_command contains the text.  This is used to
+# protect against a spoofed encrypted message, with multipart/encrypted
+# headers but containing a block that is not actually encrypted.
+# (e.g. simply signed and ascii armored text).
 # (PGP only)
 #
 
@@ -2897,8 +2943,9 @@ set query_command="abook --mutt-query %s"
 # Controls whether or not Mutt recalls postponed messages
 # when composing a new message.
 #
-# Setting this variable to is not generally useful, and thus not
-# recommended.
+# Setting this variable to yes is not generally useful, and thus not
+# recommended.  Note that the <recall-message> function can be used
+# to manually recall postponed messages.
 #
 # Also see $postponed variable.
 #
@@ -2917,6 +2964,22 @@ set record="$folder/INBOX"
 #
 # The value of $record is overridden by the $force_name and
 # $save_name variables, and the ``fcc-hook'' command.
+#
+
+# set reflow_space_quotes=yes
+#
+# Name: reflow_space_quotes
+# Type: boolean
+# Default: yes
+#
+#
+# This option controls how quotes from format=flowed messages are displayed
+# in the pager and when replying (with $text_flowed unset).
+# When set, this option adds spaces after each level of quote marks, turning
+# ">>>foo" into "> > > foo".
+#
+# Note: If $reflow_text is unset, this option has no effect.
+# Also, this option does not affect replies when $text_flowed is set.
 #
 
 # set reflow_text=yes
@@ -3416,6 +3479,7 @@ set signature="~/.mutt/signature"
 # %k      The key-pair specified with $smime_default_key
 # %c      One or more certificate IDs.
 # %a      The algorithm used for encryption.
+# %d      The message digest algorithm specified with $smime_sign_digest_alg.
 # %C      CA location:  Depending on whether $smime_ca_location
 #                    points to a directory or file, this expands to
 #                    ``-CApath $smime_ca_location'' or ``-CAfile $smime_ca_location''.
@@ -3596,6 +3660,18 @@ set signature="~/.mutt/signature"
 #
 # This is a format string, see the $smime_decrypt_command command for
 # possible printf(3)-like sequences.
+# (S/MIME only)
+#
+
+# set smime_sign_digest_alg="sha256"
+#
+# Name: smime_sign_digest_alg
+# Type: string
+# Default: "sha256"
+#
+#
+# This sets the algorithm that should be used for the signature message digest.
+# Valid choices are ``md5'', ``sha1'', ``sha224'', ``sha256'', ``sha384'', ``sha512''.
 # (S/MIME only)
 #
 
@@ -4367,18 +4443,6 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # sending messages.  If unset, no ``From:'' header field will be
 # generated unless the user explicitly sets one using the ``my_hdr''
 # command.
-#
-
-# set use_idn=yes
-#
-# Name: use_idn
-# Type: boolean
-# Default: yes
-#
-#
-# When set, Mutt will show you international domain names decoded.
-# Note: You can use IDNs for addresses even if this is unset.
-# This variable only affects decoding.
 #
 
 # set use_ipv6=yes
