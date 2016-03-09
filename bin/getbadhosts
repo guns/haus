@@ -64,7 +64,7 @@ class Getbadhosts
     warn "# Reading #{path}" if $stdout.tty?
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--progress', '--location', '--user-agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4', path] do |io|
+      IO.popen ['curl', '--progress', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.116 Safari/537.36', path] do |io|
         io.read
       end
     else
