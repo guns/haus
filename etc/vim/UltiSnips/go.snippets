@@ -368,6 +368,10 @@ snippet sib "strings.IndexByte()" w
 strings.IndexByte(${1:haystack}, ${0:needle})
 endsnippet
 
+snippet sj "strings.Join()" w
+strings.Join(${1:strings}, ${0:sep})
+endsnippet
+
 snippet ap "append" w
 ${1} = append($1, $0)
 endsnippet
@@ -759,6 +763,14 @@ endsnippet
 
 snippet deb "breakpoint" w
 runtime.Breakpoint()
+endsnippet
+
+snippet rr "regexp.Regexp" w
+*regexp.Regexp
+endsnippet
+
+snippet rmc "regexp.MustCompile" w
+regexp.MustCompile(\`$0\`)
 endsnippet
 
 # vim:ft=snippets:
