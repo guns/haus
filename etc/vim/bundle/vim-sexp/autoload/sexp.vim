@@ -38,6 +38,7 @@ let s:closing_bracket = '\v\)|\]|\}'
 let s:delimiter = s:bracket . '|\s'
 let s:string_region = '\vstring|regex|pattern'
 let s:ignored_region = s:string_region . '|comment|character'
+let s:match_ignored_region_fn = 's:syntax_match(s:ignored_region, line("."), col("."))'
 let s:macro_filetype_characters = {
     \ 'clojure': "#'`~@^_=",
     \ 'scheme':  "#'`,@",
@@ -102,13 +103,12 @@ endfunction
 " Accepts alternate beginning and ending patterns as optional parameters.
 function! s:nearest_bracket(closing, ...)
     let flags = a:closing ? 'nW' : 'bnW'
-    let skip = 's:syntax_match(s:ignored_region, line("."), col("."))'
     let stopline = g:sexp_maxlines > 0
                    \ ? max([1, line('.') + ((a:closing ? 1 : -1) * g:sexp_maxlines)])
                    \ : 0
     let open = a:0 ? a:1 : s:opening_bracket
     let close = a:0 ? a:2 : s:closing_bracket
-    let [line, col] = searchpairpos(open, '', close, flags, skip, stopline)
+    let [line, col] = searchpairpos(open, '', close, flags, s:match_ignored_region_fn, stopline)
     return line > 0 ? [0, line, col, 0] : [0, 0, 0, 0]
 endfunction
 
@@ -162,11 +162,10 @@ endfunction
 function! s:current_top_list_bracket_by_maxlines(closing)
     let [_b, cursorline, cursorcol, _o] = getpos('.')
     let flags = a:closing ? 'cnr' : 'bcnr'
-    let skip = 's:syntax_match(s:ignored_region, line("."), col("."))'
     let stopline = g:sexp_maxlines > 0
                    \ ? max([1, cursorline + ((a:closing ? 1 : -1) * g:sexp_maxlines)])
                    \ : 0
-    let [topline, topcol] = searchpairpos(s:opening_bracket, '', s:closing_bracket, flags, skip, stopline)
+    let [topline, topcol] = searchpairpos(s:opening_bracket, '', s:closing_bracket, flags, s:match_ignored_region_fn, stopline)
 
     if topline > 0
         return [0, topline, topcol, 0]
@@ -188,7 +187,8 @@ function! s:current_string_terminal(end)
         return [0, 0, 0, 0]
     endif
 
-    let [termline, termcol] = [cursorline, cursorcol]
+    let termline = cursorline
+    let termcol = cursorcol
 
     " We can't rely on va" or on searchpairpos() because they don't work well
     " on symmetric patterns.
@@ -202,7 +202,8 @@ function! s:current_string_terminal(end)
         if line < 1 | break | endif
 
         if s:syntax_match(s:string_region, line, col)
-            let [termline, termcol] = [line, col]
+            let termline = line
+            let termcol = col
             call cursor(line, col)
         else
             break
@@ -214,7 +215,8 @@ function! s:current_string_terminal(end)
     if !a:end
         let [_b, l, c, _o] = s:current_macro_character_terminal(1)
         if l > 0
-            let [termline, termcol] = [l, c + 1]
+            let termline = l
+            let termcol = c + 1
         endif
     endif
 
@@ -231,7 +233,8 @@ function! s:current_comment_terminal(end)
         return [0, 0, 0, 0]
     endif
 
-    let [termline, termcol] = [cursorline, cursorcol]
+    let termline = cursorline
+    let termcol = cursorcol
 
     while 1
         let [line, col] = s:findpos('\v\_.', a:end)
@@ -239,7 +242,8 @@ function! s:current_comment_terminal(end)
         if line < 1 | break | endif
 
         if s:is_comment(line, col)
-            let [termline, termcol] = [line, col]
+            let termline = line
+            let termcol = col
             call cursor(line, col)
         else
             break
@@ -260,7 +264,8 @@ function! s:current_atom_terminal(end)
         return [0, 0, 0, 0]
     endif
 
-    let [termline, termcol] = [cursorline, cursorcol]
+    let termline = cursorline
+    let termcol = cursorcol
 
     while 1
         let [line, col] = s:findpos('\v.', a:end, cursorline)
@@ -268,7 +273,8 @@ function! s:current_atom_terminal(end)
         if line < 1 | break | endif
 
         if s:is_atom(line, col)
-            let [termline, termcol] = [line, col]
+            let termline = line
+            let termcol = col
             call cursor(line, col)
         else
             break
@@ -295,7 +301,8 @@ function! s:current_macro_character_terminal(end)
         return [0, 0, 0, 0]
     endif
 
-    let [termline, termcol] = [cursorline, cursorcol]
+    let termline = cursorline
+    let termcol = cursorcol
 
     while 1
         let [line, col] = s:findpos('\v.', a:end, cursorline)
@@ -303,7 +310,8 @@ function! s:current_macro_character_terminal(end)
         if line < 1 | break | endif
 
         if stridx(macro, getline(line)[col - 1]) >= 0
-            let [termline, termcol] = [line, col]
+            let termline = line
+            let termcol = col
             call cursor(line, col)
         else
             break
@@ -488,7 +496,8 @@ function! s:adjacent_whitespace_terminal(pos, trailing)
         let char = getline(line)[col - 1]
 
         if empty(char) || char =~# '\v\s'
-            let [termline, termcol] = [line, col]
+            let termline = line
+            let termcol = col
             call cursor(line, col)
         else
             break
@@ -513,7 +522,8 @@ endfunction
 " This behavior diverges from the behavior of the native text object aw in
 " that it allows multiline whitespace selections.
 function! s:terminals_with_whitespace(start, end)
-    let [start, end] = [a:start, a:end]
+    let start = a:start
+    let end = a:end
     let ws_end = s:adjacent_whitespace_terminal(end, 1)
 
     " There is trailing whitespace
@@ -559,19 +569,19 @@ function! s:positions_with_element_terminals(positions)
 
     if head[1] > 0 && tail[1] > 0
         " Find any unbalanced brackets in our selection
-        let bcount = s:count_brackets(head, tail, s:bracket, s:opening_bracket)
+        let [bra, ket] = s:count_brackets(head, tail, s:bracket, s:opening_bracket)
 
         " Extend head for every ket
-        if bcount['ket'] > 0
+        if ket > 0
             call s:setcursor(head)
-            call sexp#docount(bcount['ket'], 's:move_to_nearest_bracket', 0)
+            call sexp#docount(ket, 's:move_to_nearest_bracket', 0)
             let head = getpos('.')
         endif
 
         " And tail for every bra
-        if bcount['bra'] > 0
+        if bra > 0
             call s:setcursor(tail)
-            call sexp#docount(bcount['bra'], 's:move_to_nearest_bracket', 1)
+            call sexp#docount(bra, 's:move_to_nearest_bracket', 1)
             let tail = getpos('.')
         endif
     endif
@@ -580,12 +590,13 @@ function! s:positions_with_element_terminals(positions)
     return [head, tail]
 endfunction
 
-" Returns dict { 'bra': number, 'ket': number }, which indicates the number
-" of unpaired opening brackets ('bra') and the number of unpaired closing
-" brackets ('ket') in the selection from start to end.
+" Returns [bra, ket], which indicates the number of unpaired opening brackets
+" ('bra') and the number of unpaired closing brackets ('ket') in the selection
+" from start to end.
 function! s:count_brackets(start, end, all_brackets, opening_brackets)
     let cursor = getpos('.')
-    let bcount = { 'bra': 0, 'ket': 0 }
+    let bra = 0
+    let ket = 0
 
     call s:setcursor(a:start)
 
@@ -603,12 +614,12 @@ function! s:count_brackets(start, end, all_brackets, opening_brackets)
         if cmp > 0 | break | endif
 
         if getline(line)[col - 1] =~# a:opening_brackets
-            let bcount['bra'] += 1
+            let bra += 1
         else
-            if bcount['bra'] > 0
-                let bcount['bra'] -= 1
+            if bra > 0
+                let bra -= 1
             else
-                let bcount['ket'] += 1
+                let ket += 1
             endif
         endif
 
@@ -622,7 +633,7 @@ function! s:count_brackets(start, end, all_brackets, opening_brackets)
     endwhile
 
     call s:setcursor(cursor)
-    return bcount
+    return [bra, ket]
 endfunction
 
 " Returns the number of elements in the given range
@@ -1282,8 +1293,8 @@ function! s:insert_brackets_around_current_element(bra, ket, at_tail, headspace)
     call s:insert_brackets_around_visual_marks(a:bra, a:ket, a:at_tail, a:headspace)
 endfunction
 
-" Capture element adjacent to current list, given the starting position of
-" the enclosing list's bracket plus leading macro characters (spos) and the
+" Capture element adjacent to current list, given the starting position of the
+" enclosing list's bracket minus leading macro characters (spos) and the
 " position of the bracket itself (bpos).
 function! s:stackop_capture(last, spos, bpos)
     call s:setcursor(a:spos)
@@ -1312,9 +1323,6 @@ function! s:stackop_capture(last, spos, bpos)
         execute 'silent! normal! "_d' . blen . 'l'
         call s:setcursor(nextpos)
         execute 'silent! normal! "bP'
-        if blen > 1
-            execute 'silent! normal! ' . (blen - 1) . 'h'
-        endif
     endif
 
     let @b = reg_save
@@ -1322,7 +1330,7 @@ function! s:stackop_capture(last, spos, bpos)
 endfunction
 
 " Emit terminal element in current list, given the starting position of the
-" enclosing list's bracket plus leading macro characters (spos) and the
+" enclosing list's bracket minus leading macro characters (spos) and the
 " position of the bracket itself (bpos).
 function! s:stackop_emit(last, spos, bpos)
     " Move inwards onto the terminal element, then find the penultimate
@@ -1343,8 +1351,10 @@ function! s:stackop_emit(last, spos, bpos)
 
     let nextpos = s:current_element_terminal(a:last)
 
-    " Ensure the new ultimate element is actually contained
-    if s:compare_pos(nextpos, a:spos) != (a:last ? -1 : 1)
+    " Ensure that this new ultimate element is different than the last and
+    " that it is actually contained
+    if s:compare_pos(nextpos, [0, l, c, 0]) == 0
+        \ || s:compare_pos(nextpos, a:spos) != (a:last ? -1 : 1)
         \ || s:compare_pos(nextpos, s:nearest_bracket(!a:last)) != (a:last ? 1 : -1)
         return 0
     endif
@@ -1365,7 +1375,7 @@ function! s:stackop_emit(last, spos, bpos)
         execute 'silent! normal! "bP'
         call s:setcursor(a:spos)
         execute 'silent! normal! "_d' . blen . 'l'
-        call s:setcursor(a:spos[1] == nextpos[1] ? s:pos_with_col_offset(nextpos, -blen) : nextpos)
+        call s:setcursor(a:spos[1] == nextpos[1] ? s:pos_with_col_offset(nextpos, -1) : nextpos)
     endif
 
     let @b = reg_save
@@ -1386,13 +1396,12 @@ function! s:swap_current_selection(mode, next, pairwise)
         let @a = nr2char(0x02) . @a . nr2char(0x03)
     endif
 
-    let marks = {}
-    let marks['a'] = s:get_visual_marks()
+    let amarks = s:get_visual_marks()
 
     " Record the sibling element
-    call s:setcursor(marks['a'][!!a:next])
+    call s:setcursor(amarks[!!a:next])
     call s:set_marks_around_adjacent_element('n', a:next)
-    if a:pairwise
+    if a:pairwise && s:can_set_visual_marks
         let mark = a:next ? "'>" : "'<"
         call s:setcursor(getpos(mark))
         call setpos(mark, s:nearest_element_terminal(a:next, a:next))
@@ -1400,31 +1409,41 @@ function! s:swap_current_selection(mode, next, pairwise)
     endif
     call s:select_current_marks(a:mode)
     silent! normal! "by
-    let marks['b'] = s:get_visual_marks()
+    let bmarks = s:get_visual_marks()
 
     " Abort if we are already at the head or tail of the current list or at
     " the top or bottom of the file. In these cases the start/end mark will be
     " the same in the direction of movement.
-    if s:compare_pos(marks['a'][a:next], marks['b'][a:next]) == 0
+    if s:compare_pos(amarks[a:next], bmarks[a:next]) == 0
+        let [@a, @b] = reg_save
         return 0
     endif
 
     " We change the buffer from the bottom up so that the marks remain
     " accurate.
-    let b = a:next ? 'b' : 'a'
-    let a = a:next ? 'a' : 'b'
+    if a:next
+        let areg = 'a'
+        let breg = 'b'
+        let aswapmarks = amarks
+        let bswapmarks = bmarks
+    else
+        let areg = 'b'
+        let breg = 'a'
+        let aswapmarks = bmarks
+        let bswapmarks = amarks
+    endif
 
-    call s:set_visual_marks(marks[b])
+    call s:set_visual_marks(bswapmarks)
     call s:select_current_marks('v')
-    execute 'silent! normal! "' . a . 'p'
+    execute 'silent! normal! "' . areg . 'p'
 
-    call s:set_visual_marks(marks[a])
+    call s:set_visual_marks(aswapmarks)
     call s:select_current_marks('v')
-    execute 'silent! normal! "' . b . 'p'
+    execute 'silent! normal! "' . breg . 'p'
 
     " Set marks around next element using the ^B and ^C markers
     if a:next
-        call s:setcursor(marks['a'][0])
+        call s:setcursor(amarks[0])
 
         let [sl, sc] = s:findpos(nr2char(0x02), 1)
         call cursor(sl, sc)
@@ -1444,7 +1463,7 @@ function! s:swap_current_selection(mode, next, pairwise)
     elseif a:next
         call s:setcursor(getpos("'<"))
     else
-        call s:setcursor(marks['b'][0])
+        call s:setcursor(bmarks[0])
     endif
 
     let [@a, @b] = reg_save
