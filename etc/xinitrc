@@ -26,10 +26,10 @@ cd ~/Downloads
 /usr/bin/pulseaudio --start &
 (/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
-orage &
+/usr/bin/orage &
 xautolock-launch &
 dropoutputnotify &
-gpg-connect-agent /bye &
+/usr/bin/gpg-connect-agent /bye &
 
 popd
 
