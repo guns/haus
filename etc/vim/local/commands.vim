@@ -597,8 +597,8 @@ function! s:GoBufferSetup()
     nmap     <buffer> K              <Plug>(go-doc-vertical)
     nmap     <buffer> <C-]>          <Plug>(go-def)
     nmap     <buffer> <C-w><C-]>     <Plug>(go-def-split)
-    nmap     <buffer> [c             <Plug>(go-callers)
-    nmap     <buffer> ]c             <Plug>(go-callees)
+    nmap     <buffer> [C             <Plug>(go-callers)
+    nmap     <buffer> ]C             <Plug>(go-callees)
     nmap     <buffer> [d             <Plug>(go-info)
     nmap     <buffer> ]d             <Plug>(go-describe)
     nmap     <buffer> <LocalLeader>a <Plug>(go-alternate-edit)
@@ -681,6 +681,7 @@ command! -nargs=* -bar Grepqflist   call <SID>Grepqflist(1, <q-args>)
 command! -nargs=* -bar Removeqflist call <SID>Grepqflist(0, <q-args>)
 function! s:Grepqflist(match, pat)
     call setqflist(filter(getqflist(), "bufname(v:val['bufnr']) . v:val['text'] " . (a:match ? '=~' : '!~') . " a:pat"))
+    call setloclist(0, filter(getloclist(0), "bufname(v:val['bufnr']) . v:val['text'] " . (a:match ? '=~' : '!~') . " a:pat"))
 endfunction
 
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
