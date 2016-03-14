@@ -4,12 +4,12 @@
 require 'csv'
 require 'fileutils'
 
-url = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
+url = 'https://download.dnscrypt.org/dnscrypt-proxy/dnscrypt-resolvers.csv'
 sig = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv.sig'
 
 Dir.chdir '/tmp' do
   begin
-    [url, sig].each { |u| system 'curl', '-O', u }
+    [url, sig].each { |u| system 'curl', '--silent', '-O', u }
 
     abort unless system 'gpg', '--verify-files', File.basename(sig)
 
