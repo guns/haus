@@ -1429,7 +1429,7 @@ if HAVE systemctl; then
     ALIAS sc='systemctl' \
           scu='systemctl --user' \
           jc='journalctl' \
-          jc='journalctl --user' \
+          jcu='journalctl --user' \
           mc='machinectl' \
           jcb='journalctl --boot' \
           jce='journalctl --pager-end' \
