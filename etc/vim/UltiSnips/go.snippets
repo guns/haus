@@ -409,7 +409,7 @@ if ${1:err} != nil {
 }
 endsnippet
 
-snippet ifER "if err := f(); err != nil …" w
+snippet ifle "if err := f(); err != nil …" w
 if ${1:err} ${2::}= $3; $1 != nil {
 	return $1$0
 }
