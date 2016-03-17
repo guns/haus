@@ -28,7 +28,15 @@ class EditCheckbox(object):
 		self.commands = []
 
 	@classmethod
-	def new_checkbox(cls, below=None):
+	def new_checkbox(cls, below=None, plain=None):
+		'''
+		if below is:
+			True -> create new list below current line
+			False/None -> create new list above current line
+		if plain is:
+			True -> create a plainlist item
+			False/None -> create an empty checkbox
+		'''
 		d = ORGMODE.get_document()
 		h = d.current_heading()
 		if h is None:
@@ -99,21 +107,24 @@ class EditCheckbox(object):
 					except ValueError:
 						pass
 			nc.type = t
-			if not c.status:
-				nc.status = None
 			level = c.level
 
 			if below:
 				start = c.end_of_last_child
 			else:
 				start = c.start
+
+		if plain:  	# only create plainlist item when requested
+			nc.status = None
 		nc.level = level
 
 		if below:
 			start += 1
 		# vim's buffer behave just opposite to Python's list when inserting a
 		# new item.  The new entry is appended in vim put prepended in Python!
+		vim.current.buffer.append("") # workaround for neovim
 		vim.current.buffer[start:start] = [unicode(nc)]
+		del vim.current.buffer[-1] # restore from workaround for neovim
 
 		# update checkboxes status
 		cls.update_checkboxes_status()
@@ -145,7 +156,7 @@ class EditCheckbox(object):
 
 		if c.status == Checkbox.STATUS_OFF or c.status is None:
 			# set checkbox status on if all children are on
-			if not c.children or c.are_children_all(Checkbox.STATUS_ON):
+			if c.all_children_status()[0] == 0 or c.are_children_all(Checkbox.STATUS_ON):
 				c.toggle()
 				d.write_checkbox(c)
 			elif c.status is None:
@@ -153,7 +164,7 @@ class EditCheckbox(object):
 				d.write_checkbox(c)
 
 		elif c.status == Checkbox.STATUS_ON:
-			if not c.children or c.is_child_one(Checkbox.STATUS_OFF):
+			if c.all_children_status()[0] == 0 or c.is_child_one(Checkbox.STATUS_OFF):
 				c.toggle()
 				d.write_checkbox(c)
 
@@ -213,7 +224,7 @@ class EditCheckbox(object):
 		for c in checkbox.all_siblings():
 			current_status = c.status
 			# if this checkbox is not leaf, its status should determine by all its children
-			if c.children:
+			if c.all_children_status()[0] > 0:
 				current_status = cls._update_checkboxes_status(c.first_child)
 
 			# don't update status if the checkbox has no status
@@ -239,7 +250,9 @@ class EditCheckbox(object):
 
 		parent_status = Checkbox.STATUS_INT
 		# all silbing checkboxes are off status
-		if status_off == total:
+		if total == 0:
+			pass
+		elif status_off == total:
 			parent_status = Checkbox.STATUS_OFF
 		# all silbing checkboxes are on status
 		elif status_on == total:
@@ -259,6 +272,7 @@ class EditCheckbox(object):
 
 		Key bindings and other initialization should be done here.
 		"""
+# checkbox related operation
 		add_cmd_mapping_menu(
 			self,
 			name=u'OrgCheckBoxNewAbove',
@@ -286,6 +300,21 @@ class EditCheckbox(object):
 			function=u':silent! py ORGMODE.plugins[u"EditCheckbox"].update_checkboxes_status()<CR>',
 			key_mapping=u'<localleader>c#',
 			menu_desrc=u'Update Subtasks'
+		)
+# plainlist related operation
+		add_cmd_mapping_menu(
+			self,
+			name=u'OrgPlainListItemNewAbove',
+			function=u':py ORGMODE.plugins[u"EditCheckbox"].new_checkbox(plain=True)<CR>',
+			key_mapping=u'<localleader>cL',
+			menu_desrc=u'New PlainList Item Above'
+		)
+		add_cmd_mapping_menu(
+			self,
+			name=u'OrgPlainListItemNewBelow',
+			function=u':py ORGMODE.plugins[u"EditCheckbox"].new_checkbox(below=True, plain=True)<CR>',
+			key_mapping=u'<localleader>cl',
+			menu_desrc=u'New PlainList Item Below'
 		)
 
 # vim: set noexpandtab:
