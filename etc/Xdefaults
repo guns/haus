@@ -14,14 +14,14 @@ Xft.hintstyle: hintslight
 
 !!! XTERM
 
-XTerm.termName:        xterm-256color
-XTerm.background:      rgb:00/00/00
-XTerm.foreground:      rgb:FF/EE/C0
-XTerm.pointerColor:    rgb:DD/DD/DD
-XTerm.faceName:        Consolas:pixelsize=14
-XTerm.utf8:            always
-XTerm.utf8Fonts:       always
-XTerm.metaSendsEscape: on
+XTerm*termName:        xterm-256color
+XTerm*background:      rgb:00/00/00
+XTerm*foreground:      rgb:FF/EE/C0
+XTerm*pointerColor:    rgb:DD/DD/DD
+XTerm*faceName:        Consolas:pixelsize=14
+XTerm*utf8:            always
+XTerm*utf8Fonts:       always
+XTerm*metaSendsEscape: on
 
 !!! RXVT-UNICODE
 
