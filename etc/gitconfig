@@ -113,10 +113,10 @@
     ff    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges
     ffr   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges --date=relative
 
-    lg    = log --patch -G
-    lgr   = log --patch --date=relative -G
-    lgi   = log --patch --regexp-ignore-case -G
-    lgir  = log --patch --regexp-ignore-case --date=relative -G
+    lg    = log --patch --grep
+    lgr   = log --patch --date=relative --grep
+    lgi   = log --patch --regexp-ignore-case --grep
+    lgir  = log --patch --regexp-ignore-case --date=relative --grep
 
     sl    = stash list --decorate --show-signature --stat
     slp   = stash list --decorate --show-signature --patch --stat --ws-error-highlight=all
