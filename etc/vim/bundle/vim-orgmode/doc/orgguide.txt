@@ -1175,7 +1175,22 @@ Remapping shortcuts~
 <
 
 ------------------------------------------------------------------------------
-Syntax highlighting and indentation~
+Alternate behavior~
+  vim-orgmode provides some variables for users to customize certain behaviors
+  of their orgmode if so desired.
+
+                                                      *g:org_prefer_insert_mode*
+  Default: 1
+  Defines if vim-orgmode will automatically jump into Insert Mode after a new
+  heading/checkbox/plainlist instance is created through keyboard bindings. If
+  value is set to 0, orgmode will retain it's original mode.
+  Example:
+>
+  let org_prefer_insert_mode = 1
+<
+
+------------------------------------------------------------------------------
+syntax highlighting and indentation~
   Syntax highlighting is customizable to fit nicely with the user's
   colorscheme.
 
@@ -1305,7 +1320,7 @@ Structure and Source Code~
     ├── tests                   - Tests to verify the consistency and
     │                             correctness of orgmode and the plugins
     ├── build_vmb.vim           - Build file for creating a Vimball
-    ├── install-vbm.vim         - Local installation of vbm via make target
+    ├── install-vmb.vim         - Local installation of vmb via make target
     ├── LICENSE                 - License Information
     ├── README.org              - README :)
     └── Makefile                - make commands
@@ -1417,10 +1432,10 @@ Building a Vimball~
   following command in the root folder of this plugin.  Please make sure that
   vim is installed on your computer:
 >
-  make vbm
+  make vmb
 <
 
-  For installing the plugin form the resulting orgmode.vbm.gz file, please
+  For installing the plugin form the resulting orgmode.vmb.gz file, please
   refer to the Installation section.
 
 ------------------------------------------------------------------------------
