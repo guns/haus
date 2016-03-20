@@ -666,11 +666,10 @@ function! s:Open(word)
     endif
 endfunction
 
-command! -nargs=? -complete=command -bar Qfdo call <SID>Qfdo(<q-args>) "{{{1
-function! s:Qfdo(expr)
-    " Run a command over all lines in the quickfix buffer
-    let qflist = getqflist()
-    for item in qflist
+command! -nargs=? -complete=command -bar Qfdo call <SID>Listdo(getqflist(), <q-args>) "{{{1
+command! -nargs=? -complete=command -bar Locdo call <SID>Listdo(getloclist(0), <q-args>) "{{{1
+function! s:Listdo(list, expr)
+    for item in a:list
         execute item['bufnr'] . 'buffer!'
         call cursor(item['lnum'], item['col'])
         execute a:expr
