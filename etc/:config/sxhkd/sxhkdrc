@@ -31,33 +31,32 @@ super + alt + {j,k,button1,button3}
 
 super + alt + {l,h}
 	DIR={next,prev,next,prev}; \
-	bspc window --to-desktop "$DIR" && \
-	bspc desktop --focus "$DIR"
+	NODE="$(bspc query --nodes --node focused)"; \
+	bspc node --to-desktop "$DIR" && \
+	bspc desktop --focus "$DIR" && \
+	bspc node --focus "$NODE"
 
 super + alt + {1-9}
 	bspc desktop --focus ^{1-9}
 
 super + alt + shift + {1-9}
-	bspc window --to-desktop ^{1-9}
+	bspc node --to-desktop ^{1-9}
 
 super + alt + control + {1-9}
 	bspc desktop --swap ^{1-9}
 
 super + alt + {f,v}
-	bspc desktop --flip {vertical,horizontal}
+	bspc node @/ --flip {vertical,horizontal}
 
-super + alt {r, shift + r}
-	bspc desktop --rotate {90,270}
+super + alt + {r,shift + r}
+	bspc node @/ --rotate {90,270}
 
 super + alt + {b,e}
-	bspc desktop --{balance,equalize}
+	bspc node @/ --{balance,equalize}
 
 super + alt + {Next,Prior,button4,button5}
 	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 4)); \
 	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
-
-super + alt + 0
-	bspc desktop --cancel-presel
 
 super + alt + w
 	feh --bg-fill "$(randfile -r ~/Media/Wallpapers)"
@@ -67,53 +66,50 @@ super + alt + w
 #
 
 super + q
-	bspc window --close
+	bspc node --close
 
 super + {Tab,shift + Tab}
-	bspc window --focus {next,prev}
+	bspc node --focus {next,prev}
 
 alt + Tab
 	if pkill --exact skippy-xd; then \
-		bspc window --focus focused; \
+		bspc node --focus focused; \
 	else \
 		skippy-xd; \
 	fi
 
 super + control + {h,j,k,l}
-	bspc window --presel {left,down,up,right}
+	bspc node --presel-dir ~{west,south,north,east}
 
 super + control + shift + {h,j,k,l}
-	DIR={left,down,up,right}; \
-	bspc window --swap "$DIR" || bspc window --swap "$(if [[ "$DIR" == @(down|right) ]]; then echo "next"; else echo "prev"; fi)"
+	bspc node --swap {west,south,north,east}
 
 super + control + {1-9}
-	bspc window --ratio 0.{1-9}
-
-# -t, --toggle floating|fullscreen|pseudo_tiled|locked|sticky|private[=on|off]
+	bspc node --presel-ratio 0.{1-9}
 
 super + control + f
-	bspc window --toggle floating
+	bspc node --state ~floating
 
 F11
-	bspc window --toggle fullscreen
+	bspc node --state ~fullscreen
 
 super + control + shift + p
-	bspc window --toggle pseudo_tiled
+	bspc node --state ~pseudo_tiled
 
 super + control + x
-	bspc window --toggle locked
+	bspc node --flag locked
 
 super + control + s
-	bspc window --toggle sticky
+	bspc node --flag sticky
 
 super + control + p
-	bspc window --toggle private
+	bspc node --flag private
 
 super + alt + control + {h,j,k,l}
-	bspc window --edge {left -10,down +10,up -10,right +10}
+	bspc node @{west --ratio -10,south --ratio +10,north --ratio -10,east --ratio +10}
 
 super + alt + control + shift + {h,j,k,l}
-	bspc window --edge {left +10,down -10,up +10,right -10}
+	bspc node @{west --ratio +10,south --ratio -10,north --ratio +10,east --ratio -10}
 
 ~button1
 	bspc pointer --grab focus

@@ -5,12 +5,11 @@
 # instance="$3"
 
 case "$(xtitle "$1")" in
-'✉ Mutt ✉'           ) echo 'focus=true floating=true';;
-'✔ TODO ✔'           ) echo 'focus=true floating=true';;
-'✎ VIM ✎'            ) echo 'focus=true floating=true';;
-'♫ alsamixer ♫'      ) echo 'focus=true floating=true';;
-'❴ pass ❵'           ) echo 'focus=true floating=true';;
-'Page Info - '*      ) echo 'focus=true floating=true';;
-'Firefox Preferences') echo 'focus=true floating=true';;
-'Event Tester'       ) echo 'focus=true floating=true';;
+'✉ Mutt ✉'           ) echo 'state=floating';;
+'✔ TODO ✔'           ) echo 'state=floating';;
+'✎ VIM ✎'            ) echo 'state=floating';;
+'♫ alsamixer ♫'      ) echo 'state=floating';;
+'❴ pass ❵'           ) echo 'state=floating';;
+'Page Info - '*      ) echo 'state=floating';;
+'Event Tester'       ) echo 'state=floating';;
 esac
