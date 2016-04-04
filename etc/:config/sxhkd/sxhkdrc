@@ -51,8 +51,8 @@ super + alt + {f,v}
 super + alt + {r,shift + r}
 	bspc node @/ --rotate {90,270}
 
-super + alt + {b,e}
-	bspc node @/ --{balance,equalize}
+super + alt + {b,c,e}
+	bspc node @/ --{balance,circulate forward,equalize}
 
 super + alt + {Next,Prior,button4,button5}
 	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 4)); \
