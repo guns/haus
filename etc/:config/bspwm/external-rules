@@ -12,4 +12,5 @@ case "$(xtitle "$1")" in
 '❴ pass ❵'           ) echo 'state=floating';;
 'Page Info - '*      ) echo 'state=floating';;
 'Event Tester'       ) echo 'state=floating';;
+'DownThemAll!'*      ) echo 'state=floating';;
 esac

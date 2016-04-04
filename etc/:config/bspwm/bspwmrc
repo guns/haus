@@ -41,12 +41,11 @@ bspc rule --add 'Orage Preferences' state=floating
 bspc rule --add Pavucontrol         state=floating
 bspc rule --add qjackctl            state=floating
 bspc rule --add Sxiv                state=floating state=fullscreen
-bspc rule --add Thunar              state=floating follow=true
-bspc rule --add Transmission-gtk    state=floating follow=true
+bspc rule --add Thunar              state=floating
+bspc rule --add Transmission-gtk    state=floating
 bspc rule --add Vlc                 state=floating
 bspc rule --add Xsensors            state=floating sticky=true
 
 # Firefox modal windows
-bspc rule --add Cookies             floating=true
-bspc rule --add Places              floating=true
-bspc rule --add Toplevel            floating=true
+bspc rule --add Cookies             state=floating
+bspc rule --add Places              state=floating
