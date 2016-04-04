@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2016 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'shellwords'
+require 'fileutils'
+
+class OptimizeIMG
+  DEFAULTS = {
+    :tmpname => '__optimize__',
+    :quality => 80,
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] image …
+
+        Options:
+      BANNER
+
+      opt.on '-q', '--quality PCT', Integer, "DEFAULT: #{@quality}" do |arg|
+        @quality = arg
+      end
+
+      opt.on '-t', '--tmpname BASENAME', "DEFAULT: #{@tmpname}" do |arg|
+        @tmpname = arg
+      end
+    end
+  end
+
+  def sh *args
+    warn args.shelljoin
+    system *args
+  end
+
+  def optimize path, tmpname, quality
+    tmp = tmpname + File.extname(path)
+    raise "#{path} already exists!" if File.exists? tmp
+    if sh 'convert', '-quality', quality.to_s, path, tmp
+      FileUtils.mv tmp, path, :verbose => true
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    args.each do |path|
+      if not optimize path, @tmpname, @quality
+        abort
+      end
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and OptimizeIMG.new.run ARGV if $0 == __FILE__
