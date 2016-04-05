@@ -14,7 +14,7 @@ gtk-key-theme-name = "Emacs"
 gtk-can-change-accels = 1
 
 # Theming
-gtk-theme-name = "Numix"
+gtk-theme-name = "Arc-Darker"
 gtk-icon-theme-name = "Numix-Bevel"
 gtk-font-name = "Segoe UI 10"
 
