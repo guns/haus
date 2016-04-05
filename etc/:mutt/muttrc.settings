@@ -1450,13 +1450,13 @@ set hostname="GUNS"
 # as the domain part (after ``@'') for local email addresses as well as
 # Message-Id headers.
 #
-# Its value is determined at startup as follows: If the node's name
-# as returned by the uname(3) function contains the hostname and the
-# domain, these are used to construct $hostname. If there is no
-# domain part returned, Mutt will look for a ``domain'' or ``search''
-# line in /etc/resolv.conf to determine the domain. Optionally, Mutt
-# can be compiled with a fixed domain name in which case a detected
-# one is not used.
+# Its value is determined at startup as follows: the node's
+# hostname is first determined by the uname(3) function.  The
+# domain is then looked up using the gethostname(2) and
+# getaddrinfo(3) functions.  If those calls are unable to
+# determine the domain, the full value returned by uname is used.
+# Optionally, Mutt can be compiled with a fixed domain name in
+# which case a detected one is not used.
 #
 # Also see $use_domain and $hidden_host.
 #
@@ -3064,6 +3064,41 @@ set reply_to=yes
 # When set, the cursor will be automatically advanced to the next
 # (possibly undeleted) message whenever a command that modifies the
 # current message is executed.
+#
+
+# set resume_draft_files=no
+#
+# Name: resume_draft_files
+# Type: boolean
+# Default: no
+#
+#
+# If set, draft files (specified by -H on the command
+# line) are processed similarly to when resuming a postponed
+# message.  Recipients are not prompted for; send-hooks are not
+# evaluated; no alias expansion takes place; user-defined headers
+# and signatures are not added to the message.
+#
+
+# set resume_edited_draft_files=yes
+#
+# Name: resume_edited_draft_files
+# Type: boolean
+# Default: yes
+#
+#
+# If set, draft files previously edited (via -E -H on
+# the command line) will have $resume_draft_files automatically
+# set when they are used as a draft file again.
+#
+# The first time a draft file is saved, mutt will add a header,
+# X-Mutt-Resume-Draft to the saved file.  The next time the draft
+# file is read in, if mutt sees the header, it will set
+# $resume_draft_files.
+#
+# This option is designed to prevent multiple signatures,
+# user-defined headers, and other processing effects from being
+# made multiple times to the draft file.
 #
 
 # set reverse_alias=no
