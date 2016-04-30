@@ -213,24 +213,8 @@ task :env do
       { :base => "#{@vim}/vim-unimpaired",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-varnish",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-visual-star-search",  :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vimperator.vim",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",         :branch => %w[master guns], :files => :pathogen },
-
-      {
-        :base   => "#{@src}/firefox-addons/vimperator-labs",
-        :before => lambda { |proj|
-          if proj.fetch
-            system '{ git checkout master && git pull origin master; } >/dev/null 2>&1'
-            raise 'vimperator git pull failed' if not $?.exitstatus.zero?
-          end
-        },
-        :files => lambda { |proj|
-          src = "#{proj.base}/vimperator/contrib/vim"
-          dst = "#{proj.haus}/etc/vim/bundle/vimperator"
-          FileUtils.mkdir_p dst
-          system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
-          nil # Work is done
-        }
-      },
 
       {
         :base   => "#{@vim}/misc-vimscripts",
