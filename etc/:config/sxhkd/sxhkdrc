@@ -243,6 +243,19 @@ F2
 super + F2
 	exec thunar ~/Downloads
 
+F8
+	T='❴ pass ❵'; \
+	wmctrl -a "$T" || \
+	\{ \
+		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
+		sleep 0.1; \
+		xdotool getactivewindow windowmove --sync 0 0; \
+		xdotool type 'passclip '; \
+	\}
+
+super + F8
+	california
+
 F9
 	wmctrl -a "$USER ❦ $HOSTNAME"
 
@@ -302,15 +315,5 @@ super + control + m
 super + control + shift + m
 	T='♫ cmus ♫'; \
 	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
-
-F8
-	T='❴ pass ❵'; \
-	wmctrl -a "$T" || \
-	\{ \
-		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
-		sleep 0.1; \
-		xdotool getactivewindow windowmove --sync 0 0; \
-		xdotool type 'passclip '; \
-	\}
 
 # vim:noet:foldmethod=marker:

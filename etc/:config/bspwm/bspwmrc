@@ -31,6 +31,7 @@ for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
 
 bspc rule --add Audacious           state=floating
+bspc rule --add California          state=floating
 bspc rule --add FLTK                state=floating
 bspc rule --add Gifview             state=floating
 bspc rule --add Kupfer.py           state=floating focus=true

@@ -26,7 +26,6 @@ cd ~/Downloads
 /usr/bin/pulseaudio --start &
 (/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/kupfer --no-splash &
-/usr/bin/orage &
 xautolock-launch &
 dropoutputnotify &
 /usr/bin/gpg-connect-agent /bye &
