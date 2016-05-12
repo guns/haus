@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2016 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'shellwords'
+require 'fileutils'
+
+class Uz
+  DEFAULTS = {
+    :delete => false,
+    :noop => false,
+    :outdir => '.',
+    :overwrite => false
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-d', '--delete' do
+        @delete = true
+      end
+
+      opt.on '-n', '--noop' do
+        @noop = true
+      end
+
+      opt.on '-o', '--outdir PATH' do |arg|
+        @outdir = File.expand_path arg
+      end
+
+      opt.on '-O', '--overwrite' do
+        @overwrite = true
+      end
+    end
+  end
+
+  def sh *args
+    warn ":: #{args.shelljoin}"
+    system *args unless @noop
+  end
+
+  def cmdargs tempdir, file
+    ['7z', 'x', "-o#{tempdir}", "-ao#{@overwrite ? 'a' : 's'}", file]
+  end
+
+  def extract! *files
+    files.each do |f|
+      dir = File.join @outdir, File.basename(f, File.extname(f))
+      sh *cmdargs(dir, f)
+      exit $?.exitstatus if $? and $?.exitstatus != 0
+      FileUtils.rm_f f, :verbose => true, :noop => @noop if @delete
+
+      out = Dir.glob(File.join(dir, '*'), File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
+      if out.size == 1
+        outf = File.join @outdir, out[0]
+        raise "#{outf} already exists! Leaving #{out[0]}" if File.exists? outf and not @overwrite
+        FileUtils.mv out, @outdir, :verbose => true, :noop => @noop
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+    extract! *args
+  end
+end
+
+$0 = File.basename(__FILE__) and Uz.new.run ARGV if $0 == __FILE__
