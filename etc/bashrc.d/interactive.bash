@@ -609,6 +609,10 @@ ALIAS pst='pstree'
 # htop: Satisfy ncurses hard-coded TERM names
 HAVE htop && alias htop='envtmux htop'
 
+### Documentation
+
+ALIAS info='info --vi-keys'
+
 ### Switch User
 
 ALIAS s='sudo --set-home' \
