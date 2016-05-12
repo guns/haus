@@ -1,13 +1,11 @@
-SplitjoinJoin	splitjoin.txt	/*SplitjoinJoin*
-SplitjoinSplit	splitjoin.txt	/*SplitjoinSplit*
+:SplitjoinJoin	splitjoin.txt	/*:SplitjoinJoin*
+:SplitjoinSplit	splitjoin.txt	/*:SplitjoinSplit*
 b:splitjoin_align	splitjoin.txt	/*b:splitjoin_align*
 b:splitjoin_join_callbacks	splitjoin.txt	/*b:splitjoin_join_callbacks*
 b:splitjoin_split_callbacks	splitjoin.txt	/*b:splitjoin_split_callbacks*
 g:splitjoin_align	splitjoin.txt	/*g:splitjoin_align*
 g:splitjoin_join_mapping	splitjoin.txt	/*g:splitjoin_join_mapping*
 g:splitjoin_split_mapping	splitjoin.txt	/*g:splitjoin_split_mapping*
-gJ	splitjoin.txt	/*gJ*
-gS	splitjoin.txt	/*gS*
 splitjoin	splitjoin.txt	/*splitjoin*
 splitjoin-c	splitjoin.txt	/*splitjoin-c*
 splitjoin-coffee	splitjoin.txt	/*splitjoin-coffee*
