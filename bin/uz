@@ -57,18 +57,20 @@ class Uz
   end
 
   def extract! *files
-    files.each do |f|
-      dir = File.join @outdir, File.basename(f, File.extname(f))
-      sh *cmdargs(dir, f)
+    files.each do |file|
+      dir = File.join @outdir, File.basename(file, File.extname(file))
+      sh *cmdargs(dir, file)
       exit $?.exitstatus if $? and $?.exitstatus != 0
-      FileUtils.rm_f f, :verbose => true, :noop => @noop if @delete
 
-      out = Dir.glob(File.join(dir, '*'), File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
+      out = Dir.entries(dir).reject { |f| f =~ /\A\.{1,2}\z/ }
       if out.size == 1
         outf = File.join @outdir, out[0]
         raise "#{outf} already exists! Leaving #{out[0]}" if File.exists? outf and not @overwrite
-        FileUtils.mv out, @outdir, :verbose => true, :noop => @noop
+        FileUtils.mv File.join(dir, out[0]), outf, :verbose => true, :noop => @noop
+        FileUtils.rmdir dir, :verbose => true, :noop => @noop
       end
+
+      FileUtils.rm_f file, :verbose => true, :noop => @noop if @delete
     end
   end
 
