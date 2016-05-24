@@ -10,7 +10,7 @@ toggle_aliasing   a
 toggle_caption    c
 toggle_filenames  d
 toggle_exif       x
-save_filelist
+save_filelist     C-s
 toggle_pause      p
 toggle_info       i
 toggle_keep_vp    v
