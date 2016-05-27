@@ -254,6 +254,7 @@ $if bash
 
     # ncdu
     "\033\007d":    "\C-] ncdu \n"
+    "\033\007D":    "\C-] ncdu -x \n"
 
     # lein REPL
     "\033\007l":    "\C-]rlwrap lein REPL \n"
