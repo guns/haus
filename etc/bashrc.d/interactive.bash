@@ -486,7 +486,7 @@ ALIAS chimmutable='chattr -V +i' \
       chmutable='chattr -V -i'
 
 # Check shell init files and system paths for loose permissions
-checkperm() {
+ckperm() {
     # path:user:group:octal-mask:opt1,opt2
     local specs=(
         /boot:::0077:no-recurse
@@ -543,7 +543,7 @@ checkperm() {
     done
 
     local IFS=':'
-    specs+=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]} $MAILPATH)
+    specs+=($PATH $LD_LIBRARY_PATH ${BASH_COMPLETION_DIRS[@]} $MAIL $MAILPATH)
     unset IFS
 
     checkpermissions "$@" -- "${specs[@]}"
