@@ -23,12 +23,12 @@ pushd .
 cd ~/Downloads
 
 /usr/bin/sxhkd &
-/usr/bin/pulseaudio --start &
-(/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
-/usr/bin/kupfer --no-splash &
-xautolock-launch &
-dropoutputnotify &
 /usr/bin/gpg-connect-agent /bye &
+(/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
+/usr/bin/pulseaudio --start &
+/usr/bin/kupfer --no-splash &
+dropoutputnotify &
+xautolock-launch &
 
 popd
 

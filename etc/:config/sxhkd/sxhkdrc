@@ -254,7 +254,7 @@ F8
 	\}
 
 super + F8
-	california
+	orage
 
 F9
 	wmctrl -a "$USER ❦ $HOSTNAME"
