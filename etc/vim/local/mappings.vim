@@ -503,6 +503,9 @@ vnoremap <M-k> :move-2<CR>gv=gv
 vnoremap <M-h> <Esc>`<<Left>i_<Esc>mz"_xgvx`zPgv<Left>o<Left>o
 vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 
+" Add numbers in a selection
+vnoremap + :AddNumbersInSelection<CR>
+
 " Web queries
 for [g:lhs, g:rhs] in [['d', 'qdictionary'],
                      \ ['e', 'qetymology'],

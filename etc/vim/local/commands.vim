@@ -811,7 +811,7 @@ function! CwordOrSel(...) " {{{1
     try
         let reg_save = @v
         if a:0 && a:1
-            normal! gv"vy
+            silent normal! gv"vy
             return @v
         else
             return expand('<cword>')
@@ -819,6 +819,17 @@ function! CwordOrSel(...) " {{{1
     finally
         let @v = reg_save
     endtry
+endfunction
+
+command! -bar -range AddNumbersInSelection call <SID>AddNumbersInSelection()
+function! s:AddNumbersInSelection()
+    let s = CwordOrSel(1)
+ruby << EORUBY
+    require 'bigdecimal'
+    print VIM.evaluate('s').scan(/(?:[+-])?\d+(?:\.\d+)?/).reduce(0) { |Σ, n|
+        Σ + BigDecimal.new(n)
+    }.to_s('F')
+EORUBY
 endfunction
 
 " Modify selected text using combining diacritics
