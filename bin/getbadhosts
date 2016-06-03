@@ -10,20 +10,21 @@ require 'set'
 
 class Getbadhosts
   DEFAULTS = {
-    :ipv4_only => false,
+    :all => false,
     :loopback => false,
-    :all => false
+    :ipv4_only => false,
   }
 
   # https://raw.githubusercontent.com/gorhill/uMatrix/master/assets/umatrix/hosts-files.json
   HOSTS_FILE_URLS = [
     "http://malwaredomains.lehigh.edu/files/immortal_domains.txt",
     "http://malwaredomains.lehigh.edu/files/justdomains",
-    "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
-    "http://www.malwaredomainlist.com/hostslist/hosts.txt",
+    "https://mirror.cedia.org.ec/malwaredomains/justdomains",
+    "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
+    "https://www.malwaredomainlist.com/hostslist/hosts.txt",
     "http://hosts-file.net/ad_servers.txt",
     "http://someonewhocares.org/hosts/hosts",
-    "http://winhelp2002.mvps.org/hosts.txt",
+    "https://winhelp2002.mvps.org/hosts.txt",
   ]
 
   def initialize opts = {}
@@ -46,16 +47,16 @@ class Getbadhosts
         Options:
       BANNER
 
-      opt.on '-4', '--ipv4-only' do
-        @ipv4_only = true
+      opt.on '-a', '--all', 'Use both the default lists and urls specified on the command line' do
+        @all = true
       end
 
       opt.on '-l', '--loopback', 'Generate loopback addresses instead of null (illegal) addresses' do
         @loopback = true
       end
 
-      opt.on '-a', '--all', 'Use both the default lists and urls specified on the command line' do
-        @all = true
+      opt.on '-4', '--ipv4-only' do
+        @ipv4_only = true
       end
     end
   end
