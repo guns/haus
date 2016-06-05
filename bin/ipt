@@ -111,8 +111,12 @@ class Ipt
   end
 
   def colon_split arg
-    a, b = arg.split ':', 2
-    [a, b || '']
+    i = arg.rindex ':'
+    if i == nil
+      [arg, '']
+    else
+      [arg[0...i], arg[i+1..-1]]
+    end
   end
 
   def maybe_pair pair
@@ -292,11 +296,11 @@ class Ipt
     from_dst_iface = maybe_pair %W[--in-interface  #{dst_iface}]
     to_dst_iface   = maybe_pair %W[--out-interface #{dst_iface}]
 
-    from_src_addr  = maybe_pair %W[--source        #{src_addr}]
-    to_src_addr    = maybe_pair %W[--destination   #{src_addr}]
+    from_src_addr  = match_addr :src, src_addr
+    to_src_addr    = match_addr :dst, src_addr
 
-    from_dst_addr  = maybe_pair %W[--source        #{dst_addr}]
-    to_dst_addr    = maybe_pair %W[--destination   #{dst_addr}]
+    from_dst_addr  = match_addr :src, dst_addr
+    to_dst_addr    = match_addr :dst, dst_addr
 
     outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
     inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
