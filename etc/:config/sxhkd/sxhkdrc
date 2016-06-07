@@ -88,13 +88,25 @@ super + control + {1-9}
 	bspc node --presel-ratio 0.{1-9}
 
 super + control + f
-	bspc node --state ~floating
+	if bspc query --nodes --node focused.floating; then \
+		bspc node --state tiled; \
+	else \
+		bspc node --state floating; \
+	fi
 
 F11
-	bspc node --state ~fullscreen
+	if bspc query --nodes --node focused.fullscreen; then \
+		bspc node --state tiled; \
+	else \
+		bspc node --state fullscreen; \
+	fi
 
 super + control + shift + p
-	bspc node --state ~pseudo_tiled
+	if bspc query --nodes --node focused.pseudo_tiled; then \
+		bspc node --state tiled; \
+	else \
+		bspc node --state pseudo_tiled; \
+	fi
 
 super + control + x
 	bspc node --flag locked
