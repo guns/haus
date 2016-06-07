@@ -12,6 +12,7 @@ require 'fileutils'
 class Uz
   DEFAULTS = {
     :delete => false,
+    :ignore_errors => false,
     :noop => false,
     :outdir => '.',
     :overwrite => false
@@ -31,6 +32,10 @@ class Uz
 
       opt.on '-d', '--delete' do
         @delete = true
+      end
+
+      opt.on '-i', '--ignore-errors' do
+        @ignore_errors = true
       end
 
       opt.on '-n', '--noop' do
@@ -60,7 +65,9 @@ class Uz
     files.each do |file|
       dir = File.join @outdir, File.basename(file, File.extname(file))
       sh *cmdargs(dir, file)
-      exit $?.exitstatus if $? and $?.exitstatus != 0
+      unless @ignore_errors
+        exit $?.exitstatus if $? and $?.exitstatus != 0
+      end
 
       out = Dir.entries(dir).reject { |f| f =~ /\A\.{1,2}\z/ }
       if out.size == 1
