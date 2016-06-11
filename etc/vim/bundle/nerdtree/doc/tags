@@ -6,6 +6,7 @@
 'NERDTreeCascadeOpenSingleChildDir'	NERD_tree.txt	/*'NERDTreeCascadeOpenSingleChildDir'*
 'NERDTreeCaseSensitiveSort'	NERD_tree.txt	/*'NERDTreeCaseSensitiveSort'*
 'NERDTreeChDirMode'	NERD_tree.txt	/*'NERDTreeChDirMode'*
+'NERDTreeCreatePrefix'	NERD_tree.txt	/*'NERDTreeCreatePrefix'*
 'NERDTreeHighlightCursorline'	NERD_tree.txt	/*'NERDTreeHighlightCursorline'*
 'NERDTreeHijackNetrw'	NERD_tree.txt	/*'NERDTreeHijackNetrw'*
 'NERDTreeIgnore'	NERD_tree.txt	/*'NERDTreeIgnore'*
