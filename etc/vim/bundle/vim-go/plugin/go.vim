@@ -4,21 +4,22 @@ if exists("g:go_loaded_install")
 endif
 let g:go_loaded_install = 1
 
-
 " these packages are used by vim-go and can be automatically installed if
 " needed by the user with GoInstallBinaries
 let s:packages = [
             \ "github.com/nsf/gocode",
-            \ "github.com/alecthomas/gometalinter", 
+            \ "github.com/alecthomas/gometalinter",
             \ "golang.org/x/tools/cmd/goimports",
-            \ "github.com/rogpeppe/godef",
-            \ "golang.org/x/tools/cmd/oracle",
+            \ "golang.org/x/tools/cmd/guru",
             \ "golang.org/x/tools/cmd/gorename",
             \ "github.com/golang/lint/golint",
+            \ "github.com/rogpeppe/godef",
             \ "github.com/kisielk/errcheck",
             \ "github.com/jstemmer/gotags",
             \ "github.com/klauspost/asmfmt/cmd/asmfmt",
             \ "github.com/fatih/motion",
+            \ "github.com/zmb3/gogetdoc",
+            \ "github.com/josharian/impl",
             \ ]
 
 " These commands are available on any filetypes
@@ -53,7 +54,7 @@ function! s:GoInstallBinaries(updateBinaries)
     let old_path = $PATH
 
     " vim's executable path is looking in PATH so add our go_bin path to it
-    let $PATH = $PATH . go#util#PathListSep() .go_bin_path
+    let $PATH = go_bin_path . go#util#PathListSep() . $PATH
 
     " when shellslash is set on MS-* systems, shellescape puts single quotes
     " around the output string. cmd on Windows does not handle single quotes
@@ -65,13 +66,16 @@ function! s:GoInstallBinaries(updateBinaries)
         set noshellslash
     endif
 
-    let cmd = "go get -u -v "
+    let cmd = "go get -v "
+    if get(g:, "go_get_update", 1) != 0
+        let cmd .= "-u "
+    endif
 
-    let s:go_version = matchstr(system("go version"), '\d.\d.\d')
+    let s:go_version = matchstr(go#util#System("go version"), '\d.\d.\d')
 
     " https://github.com/golang/go/issues/10791
     if s:go_version > "1.4.0" && s:go_version < "1.5.0"
-        let cmd .= "-f " 
+        let cmd .= "-f "
     endif
 
     for pkg in s:packages
@@ -91,8 +95,8 @@ function! s:GoInstallBinaries(updateBinaries)
             endif
 
 
-            let out = system(cmd . shellescape(pkg))
-            if v:shell_error
+            let out = go#util#System(cmd . shellescape(pkg))
+            if go#util#ShellError() != 0
                 echo "Error installing ". pkg . ": " . out
             endif
         endif

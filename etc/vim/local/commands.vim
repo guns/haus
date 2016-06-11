@@ -606,8 +606,8 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader>b <Plug>(go-build)
     noremap  <buffer> <LocalLeader>B :<C-u>GoOptimizations<CR>
     nmap     <buffer> <LocalLeader>c <Plug>(go-channelpeers)
-    nmap     <buffer> <LocalLeader>C <Plug>(go-coverlay)
-    nmap     <buffer> <LocalLeader><M-c> <Plug>(go-clearlay)
+    nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
+    nmap     <buffer> <LocalLeader><M-c> <Plug>(go-coverage-clear)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
     noremap  <buffer> <LocalLeader>e :<C-u>execute 'GoErrCheck -ignore=fmt:^$ -abspath ' . join(systemlist('glide novendor'))<CR>

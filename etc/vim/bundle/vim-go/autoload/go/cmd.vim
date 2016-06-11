@@ -191,12 +191,16 @@ function! go#cmd#Test(bang, compile, ...)
     " don't run the test, only compile it. Useful to capture and fix errors or
     " to create a test binary.
     if a:compile
-        call add(args, "-c")
+        let compile_file = "vim-go-test-compile"
+        call extend(args, ["-c", "-o", compile_file])
     endif
 
     if a:0
         " expand all wildcards(i.e: '%' to the current file name)
         let goargs = map(copy(a:000), "expand(v:val)")
+        if !has('nvim')
+            let goargs = go#util#Shelllist(goargs, 1)
+        endif
 
         call extend(args, goargs, 1)
     else
@@ -213,11 +217,16 @@ function! go#cmd#Test(bang, compile, ...)
 
     if has('nvim')
         if get(g:, 'go_term_enabled', 0)
-            call go#term#new(a:bang, ["go"] + args)
+            let id = go#term#new(a:bang, ["go"] + args)
         else
-            call go#jobcontrol#Spawn(a:bang, "test", args)
+            let id = go#jobcontrol#Spawn(a:bang, "test", args)
         endif
-        return
+
+        if a:compile
+            call go#jobcontrol#AddHandler(function('s:test_compile_handler'))
+            let s:test_compile_handlers[id] = compile_file
+        endif
+        return id
     endif
 
     call go#cmd#autowrite()
@@ -229,7 +238,11 @@ function! go#cmd#Test(bang, compile, ...)
 
     let l:listtype = "quickfix"
 
-    if v:shell_error
+    if a:compile
+        call delete(compile_file)
+    endif
+
+    if go#util#ShellError() != 0
         let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
         let dir = getcwd()
         try
@@ -272,7 +285,7 @@ function! go#cmd#TestFunc(bang, ...)
     "
     " for the full list
     " :help search
-    let test = search("func Test", "bcnW")
+    let test = search('func \(Test\|Example\)', "bcnW")
 
     if test == 0
         echo "vim-go: [test] no test found immediate to cursor"
@@ -290,36 +303,6 @@ function! go#cmd#TestFunc(bang, ...)
     call call('go#cmd#Test', args)
 endfunction
 
-" Coverage creates a new cover profile with 'go test -coverprofile' and opens
-" a new HTML coverage page from that profile.
-function! go#cmd#Coverage(bang, ...)
-    let l:tmpname=tempname()
-
-    let command = "go test -coverprofile=" . l:tmpname . ' ' . go#util#Shelljoin(a:000)
-
-
-    let l:listtype = "quickfix"
-    call go#cmd#autowrite()
-    let out = go#tool#ExecuteInDir(command)
-    if v:shell_error
-        let errors = go#tool#ParseErrors(split(out, '\n'))
-        call go#list#Populate(l:listtype, errors)
-        call go#list#Window(l:listtype, len(errors))
-        if !empty(errors) && !a:bang
-            call go#list#JumpToFirst(l:listtype)
-        endif
-    else
-        " clear previous location list 
-        call go#list#Clean(l:listtype)
-        call go#list#Window(l:listtype)
-
-        let openHTML = 'go tool cover -html='.l:tmpname
-        call go#tool#ExecuteInDir(openHTML)
-    endif
-
-    call delete(l:tmpname)
-endfunction
-
 " Generate runs 'go generate' in similar fashion to go#cmd#Build()
 function! go#cmd#Generate(bang, ...)
     let default_makeprg = &makeprg
@@ -329,7 +312,7 @@ function! go#cmd#Generate(bang, ...)
 
     " :make expands '%' and '#' wildcards, so they must also be escaped
     let goargs = go#util#Shelljoin(map(copy(a:000), "expand(v:val)"), 1)
-    if v:shell_error
+    if go#util#ShellError() != 0
         let &makeprg = "go generate " . goargs
     else
         let gofiles = go#util#Shelljoin(go#tool#Files(), 1)
@@ -360,6 +343,21 @@ function! go#cmd#Generate(bang, ...)
 
     let &makeprg = default_makeprg
     let $GOPATH = old_gopath
+endfunction
+
+
+" -----------------------
+" | Neovim job handlers |
+" -----------------------
+let s:test_compile_handlers = {}
+
+function! s:test_compile_handler(job, exit_status, data)
+    if !has_key(s:test_compile_handlers, a:job.id)
+        return
+    endif
+    let l:compile_file = s:test_compile_handlers[a:job.id]
+    call delete(l:compile_file)
+    unlet s:test_compile_handlers[a:job.id]
 endfunction
 
 " vim:ts=4:sw=4:et
