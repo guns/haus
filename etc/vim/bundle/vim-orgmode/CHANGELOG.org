@@ -4,24 +4,43 @@
   This log is kept according to the [[http://keepachangelog.com/][Keep a CHANGELOG]] manifesto
 ** 0.6.0                  					 :unreleased:
 *** Added
-    - Keybinding to create plainlist item directlyi(=<localleader>c[l/L]= for
-      plainlist item [below/above]). (closes issue #190)
+    - Add =Python3= support. (closes issue #226, merge PR #231)
+    - Implementing agenda overview for current buffer. (merges PR #229)
+    - =g:org_aggressive_conceal=, if value =1=, will conceal all simple format
+      identifying characters, default =0=. (merges PR #188)
+    - (testing on `g:org_aggressive_conceal=1' mode) Add possibility to escape
+      format indicating characters from leading inline markup, by escaping with
+      "\".
     - Add alternative behavior: refrain from entering insert mode after
       heading/checkbox creation through keybindings. Activate by setting
       =g:org_prefer_insert_mode= to 0. (closes issue #211)
+    - Add export as LaTeX beamer slides (merges PR #206)
+    - Keybinding to create plainlist item directly. (closes issue #190)
+*** Changed
+    - In [[syntax/org.vim][syntax/org.vim]], changed `\@<=' with computational faster `\zs'
+    - Using =<localleader>c[n/N]= to create new plainlist item following
+      current plainlist item. Now these keybindings will unconditionally
+      create empty checkbox. (issue #190)
 *** Deprecated
     - Nothing
 *** Removed
-    - Using =<localleader>c[n/N]= to create new plainlist item following
-      current plainlist item. Now these keybindings will unconditionally create
-      empty checkbox.
+    - Removed the requirement for TODO state keywords to be upper-case.
 *** Fixed
-    - Return to right window before setting todo (closes issue #220)
+    - Silenced =W18= warning when non-ASCII coded TODO keywords are used. (merges #236)
+    - Fix non-English locale support issue in OrgDate and Agenda. (merges #234,
+      closes #230)
+    - Fix =concealcursor= mis-setting. (from ="nc"= to =nc=)
+    - Fix duplicate =InsertLeave= autocmd for =tag_complete=. (close issue
+      #223)
+    - Fix utl error when =\= or white space is in the link by
+      auto-escaping(issue #220)
+    - Fix typo vbm -> vmb (merges PR #219.)
+      instance in document on NeoVim.(closes issue #213)
     - Fix toggling checkboxes with plain embedded lists (closes issue #209)
+    - Return to right window before setting todo (closes issue #202)
     - Fix link to calendar-vim (closes issue #197)
     - Fix `out of bound` issue when creating heading/checkbox after last
       instance in document on NeoVim.
-    - Fix typo vbm -> vmb (merge PR #219.)
 ** 0.5.0 <2015-10-10 Sat>							 :released:
 *** Added
     - show link description in headings when folded, instead of the whole

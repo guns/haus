@@ -24,33 +24,35 @@ u"""
 import datetime
 import re
 
+from orgmode.py3compat.encode_compatibility import *
+
 # <2011-09-12 Mon>
-_DATE_REGEX = re.compile(r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w>")
+_DATE_REGEX = re.compile(r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w>", re.UNICODE)
 # [2011-09-12 Mon]
-_DATE_PASSIVE_REGEX = re.compile(r"\[(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w\]")
+_DATE_PASSIVE_REGEX = re.compile(r"\[(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w\]", re.UNICODE)
 
 # <2011-09-12 Mon 10:20>
 _DATETIME_REGEX = re.compile(
-	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d{1,2}):(\d\d)>")
+	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d{1,2}):(\d\d)>", re.UNICODE)
 # [2011-09-12 Mon 10:20]
 _DATETIME_PASSIVE_REGEX = re.compile(
-	r"\[(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d{1,2}):(\d\d)\]")
+	r"\[(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d{1,2}):(\d\d)\]", re.UNICODE)
 
 # <2011-09-12 Mon>--<2011-09-13 Tue>
 _DATERANGE_REGEX = re.compile(
 	# <2011-09-12 Mon>--
 	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w>--"
 	# <2011-09-13 Tue>
-	"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w>")
+	"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w>", re.UNICODE)
 # <2011-09-12 Mon 10:00>--<2011-09-12 Mon 11:00>
 _DATETIMERANGE_REGEX = re.compile(
 	# <2011-09-12 Mon 10:00>--
 	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d\d):(\d\d)>--"
 	# <2011-09-12 Mon 11:00>
-	"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d\d):(\d\d)>")
+	"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d\d):(\d\d)>", re.UNICODE)
 # <2011-09-12 Mon 10:00--12:00>
 _DATETIMERANGE_SAME_DAY_REGEX = re.compile(
-	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d\d):(\d\d)-(\d\d):(\d\d)>")
+	r"<(\d\d\d\d)-(\d\d)-(\d\d) [A-Z]\w\w (\d\d):(\d\d)-(\d\d):(\d\d)>", re.UNICODE)
 
 
 def get_orgdate(data):
@@ -184,7 +186,10 @@ class OrgDate(datetime.date):
 			return self.strftime(u'[%Y-%m-%d %a]')
 
 	def __str__(self):
-		return self.__unicode__().encode(u'utf-8')
+		return u_encode(self.__unicode__())
+
+	def strftime(self, fmt):
+		return u_decode(datetime.date.strftime(self, u_encode(fmt)))
 
 
 class OrgDateTime(datetime.datetime):
@@ -213,7 +218,10 @@ class OrgDateTime(datetime.datetime):
 			return self.strftime(u'[%Y-%m-%d %a %H:%M]')
 
 	def __str__(self):
-		return self.__unicode__().encode(u'utf-8')
+		return u_encode(self.__unicode__())
+
+	def strftime(self, fmt):
+		return u_decode(datetime.datetime.strftime(self, u_encode(fmt)))
 
 
 class OrgTimeRange(object):
@@ -281,6 +289,6 @@ class OrgTimeRange(object):
 					self.end.strftime(u'%Y-%m-%d %a'))
 
 	def __str__(self):
-		return self.__unicode__().encode(u'utf-8')
+		return u_encode(self.__unicode__())
 
 # vim: set noexpandtab:

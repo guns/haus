@@ -1,8 +1,17 @@
 " Support org authoring markup as closely as possible
 " (we're adding two markdown-like variants for =code= and blockquotes)
 " -----------------------------------------------------------------------------
+"
+" Do we use aggresive conceal?
+if exists("b:org_aggressive_conceal")
+    let s:conceal_aggressively=b:org_aggressive_conceal
+elseif exists("g:org_aggressive_conceal")
+    let s:conceal_aggressively=g:org_aggressive_conceal
+else
+    let s:conceal_aggressively=0
+endif
 
-" Inline markup
+" Inline markup {{{1
 " *bold*, /italic/, _underline_, +strike-through+, =code=, ~verbatim~
 " Note:
 " - /italic/ is rendered as reverse in most terms (works fine in gVim, though)
@@ -15,16 +24,32 @@
 " FIXME: Always make org_bold syntax define before org_heading syntax
 "        to make sure that org_heading syntax got higher priority(help :syn-priority) than org_bold.
 "        If there is any other good solution, please help fix it.
-syntax region org_bold      start="\S\@<=\*\|\*\S\@="   end="\S\@<=\*\|\*\S\@="  keepend oneline
-syntax region org_italic    start="\S\@<=\/\|\/\S\@="   end="\S\@<=\/\|\/\S\@="  keepend oneline
-syntax region org_underline start="\S\@<=_\|_\S\@="       end="\S\@<=_\|_\S\@="    keepend oneline
-syntax region org_code      start="\S\@<==\|=\S\@="       end="\S\@<==\|=\S\@="    keepend oneline
-syntax region org_code      start="\S\@<=`\|`\S\@="       end="\S\@<='\|'\S\@="    keepend oneline
-syntax region org_verbatim  start="\S\@<=\~\|\~\S\@="     end="\S\@<=\~\|\~\S\@="  keepend oneline
+"  \\\\*sinuate*
+if (s:conceal_aggressively == 1)
+   syntax region org_bold      matchgroup=org_border_bold start="[^ \\]\zs\*\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\*\|\(^\|[^\\]\)\@<=\*\S\@="     end="[^ \\]\zs\*\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\*\|[^\\]\zs\*\S\@="  concealends oneline
+   syntax region org_italic    matchgroup=org_border_ital start="[^ \\]\zs\/\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\/\|\(^\|[^\\]\)\@<=\/\S\@="     end="[^ \\]\zs\/\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\/\|[^\\]\zs\/\S\@="  concealends oneline
+   syntax region org_underline matchgroup=org_border_undl start="[^ \\]\zs_\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs_\|\(^\|[^\\]\)\@<=_\S\@="        end="[^ \\]\zs_\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs_\|[^\\]\zs_\S\@="     concealends oneline
+   syntax region org_code      matchgroup=org_border_code start="[^ \\]\zs=\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs=\|\(^\|[^\\]\)\@<==\S\@="        end="[^ \\]\zs=\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs=\|[^\\]\zs=\S\@="     concealends oneline
+   syntax region org_code      matchgroup=org_border_code start="[^ \\]\zs`\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs`\|\(^\|[^\\]\)\@<=`\S\@="        end="[^ \\]\zs'\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs'\|[^\\]\zs'\S\@="     concealends oneline
+   syntax region org_verbatim  matchgroup=org_border_verb start="[^ \\]\zs\~\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\~\|\(^\|[^\\]\)\@<=\~\S\@="     end="[^ \\]\zs\~\|\(\(^\|[^\\]\)\zs\(\\\\\)\+\)\zs\~\|[^\\]\zs\~\S\@="  concealends oneline
+else
+    syntax region org_bold      start="\S\zs\*\|\*\S\@="     end="\S\zs\*\|\*\S\@="  keepend oneline
+    syntax region org_italic    start="\S\zs\/\|\/\S\@="     end="\S\zs\/\|\/\S\@="  keepend oneline
+    syntax region org_underline start="\S\zs_\|_\S\@="       end="\S\zs_\|_\S\@="    keepend oneline
+    syntax region org_code      start="\S\zs=\|=\S\@="       end="\S\zs=\|=\S\@="    keepend oneline
+    syntax region org_code      start="\S\zs`\|`\S\@="       end="\S\zs'\|'\S\@="    keepend oneline
+    syntax region org_verbatim  start="\S\zs\~\|\~\S\@="     end="\S\zs\~\|\~\S\@="  keepend oneline
+endif
 
 hi def org_bold      term=bold      cterm=bold      gui=bold
 hi def org_italic    term=italic    cterm=italic    gui=italic
 hi def org_underline term=underline cterm=underline gui=underline
+
+if (s:conceal_aggressively == 1)
+    hi link org_border_bold org_bold
+    hi link org_border_ital org_italic
+    hi link org_border_undl org_underline
+endif
 
 " Headings: {{{1
 " Load Settings: {{{2
@@ -193,8 +218,8 @@ if !exists('g:loaded_org_syntax')
 					break
 				endif
 			endfor
-			exec 'syntax match org_todo_keyword_' . l:_i . ' /\*\{1,\}\s\{1,\}\zs' . l:_i .'\(\s\|$\)/ ' . a:todo_headings
-			exec 'hi def link org_todo_keyword_' . l:_i . ' ' . l:group
+			silent! exec 'syntax match org_todo_keyword_' . l:_i . ' /\*\{1,\}\s\{1,\}\zs' . l:_i .'\(\s\|$\)/ ' . a:todo_headings
+			silent! exec 'hi def link org_todo_keyword_' . l:_i . ' ' . l:group
 		endfor
 	endfunction
 endif
@@ -204,28 +229,29 @@ unlet! s:todo_headings
 
 " Timestamps: {{{1
 "<2003-09-16 Tue>
-syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \a\a\a>\)/
+"<2003-09-16 Sáb>
+syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \k\k\k>\)/
 "<2003-09-16 Tue 12:00>
-syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d>\)/
+syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d>\)/
 "<2003-09-16 Tue 12:00-12:30>
-syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d-\d\d:\d\d>\)/
+syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d-\d\d:\d\d>\)/
 
 "<2003-09-16 Tue>--<2003-09-16 Tue>
-syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \a\a\a>--<\d\d\d\d-\d\d-\d\d \a\a\a>\)/
+syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \k\k\k>--<\d\d\d\d-\d\d-\d\d \k\k\k>\)/
 "<2003-09-16 Tue 12:00>--<2003-09-16 Tue 12:00>
-syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d>--<\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d>\)/
+syn match org_timestamp /\(<\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d>--<\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d>\)/
 
 syn match org_timestamp /\(<%%(diary-float.\+>\)/
 
 "[2003-09-16 Tue]
-syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \a\a\a\]\)/
+syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \k\k\k\]\)/
 "[2003-09-16 Tue 12:00]
-syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d\]\)/
+syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d\]\)/
 
 "[2003-09-16 Tue]--[2003-09-16 Tue]
-syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \a\a\a\]--\[\d\d\d\d-\d\d-\d\d \a\a\a\]\)/
+syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \k\k\k\]--\[\d\d\d\d-\d\d-\d\d \k\k\k\]\)/
 "[2003-09-16 Tue 12:00]--[2003-09-16 Tue 12:00]
-syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d\]--\[\d\d\d\d-\d\d-\d\d \a\a\a \d\d:\d\d\]\)/
+syn match org_timestamp_inactive /\(\[\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d\]--\[\d\d\d\d-\d\d-\d\d \k\k\k \d\d:\d\d\]\)/
 
 syn match org_timestamp_inactive /\(\[%%(diary-float.\+\]\)/
 
@@ -243,7 +269,11 @@ hi def link org_table_separator Type
 
 " Hyperlinks: {{{1
 syntax match hyperlink	"\[\{2}[^][]*\(\]\[[^][]*\)\?\]\{2}" contains=hyperlinkBracketsLeft,hyperlinkURL,hyperlinkBracketsRight containedin=ALL
-syntax match hyperlinkBracketsLeft	contained "\[\{2}"     conceal
+if (s:conceal_aggressively == 1)
+    syntax match hyperlinkBracketsLeft	contained "\[\{2}#\?"     conceal
+else
+    syntax match hyperlinkBracketsLeft	contained "\[\{2}"     conceal
+endif
 syntax match hyperlinkURL				    contained "[^][]*\]\[" conceal
 syntax match hyperlinkBracketsRight	contained "\]\{2}"     conceal
 hi def link hyperlink Underlined
@@ -298,11 +328,18 @@ hi def link org_title           Title
 " TODO: http://vim.wikia.com/wiki/Different_syntax_highlighting_within_regions_of_a_file
 syntax match  org_verbatim /^\s*>.*/
 syntax match  org_code     /^\s*:.*/
+
 syntax region org_verbatim start="^\s*#+BEGIN_.*"      end="^\s*#+END_.*"      keepend contains=org_block_delimiter
 syntax region org_code     start="^\s*#+BEGIN_SRC"     end="^\s*#+END_SRC"     keepend contains=org_block_delimiter
 syntax region org_code     start="^\s*#+BEGIN_EXAMPLE" end="^\s*#+END_EXAMPLE" keepend contains=org_block_delimiter
+
 hi def link org_code     String
 hi def link org_verbatim String
+
+if (s:conceal_aggressively==1)
+    hi link org_border_code     org_code
+    hi link org_border_verb     org_verbatim
+endif
 
 " Properties: {{{1
 syn region Error matchgroup=org_properties_delimiter start=/^\s*:PROPERTIES:\s*$/ end=/^\s*:END:\s*$/ contains=org_property keepend

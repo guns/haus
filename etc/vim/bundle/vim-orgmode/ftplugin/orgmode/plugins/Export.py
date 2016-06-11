@@ -10,6 +10,7 @@ from orgmode.menu import Submenu, ActionEntry, add_cmd_mapping_menu
 from orgmode.keybinding import Keybinding, Plug, Command
 from orgmode import settings
 
+from orgmode.py3compat.py_py3_string import *
 
 class Export(object):
 	u"""
@@ -90,6 +91,15 @@ class Export(object):
 			echom(u'Export successful: %s.%s' % (vim.eval(u'expand("%:r")'), 'pdf'))
 
 	@classmethod
+	def tobeamer(cls):
+		u"""Export the current buffer as beamer pdf using emacs orgmode."""
+		ret = cls._export(u'org-beamer-export-to-pdf')
+		if ret != 0:
+			echoe(u'PDF export failed.')
+		else:
+			echom(u'Export successful: %s.%s' % (vim.eval(u'expand("%:r")'), 'pdf'))
+
+	@classmethod
 	def tohtml(cls):
 		u"""Export the current buffer as html using emacs orgmode."""
 		ret = cls._export(u'org-html-export-to-html')
@@ -130,15 +140,23 @@ class Export(object):
 		add_cmd_mapping_menu(
 			self,
 			name=u'OrgExportToPDF',
-			function=u':py ORGMODE.plugins[u"Export"].topdf()<CR>',
+			function=u':%s ORGMODE.plugins[u"Export"].topdf()<CR>' % VIM_PY_CALL,
 			key_mapping=u'<localleader>ep',
 			menu_desrc=u'To PDF (via Emacs)'
+		)
+		# to Beamer PDF
+		add_cmd_mapping_menu(
+			self,
+			name=u'OrgExportToBeamerPDF',
+			function=u':%s ORGMODE.plugins[u"Export"].tobeamer()<CR>' % VIM_PY_CALL,
+			key_mapping=u'<localleader>eb',
+			menu_desrc=u'To Beamer PDF (via Emacs)'
 		)
 		# to latex
 		add_cmd_mapping_menu(
 			self,
 			name=u'OrgExportToLaTeX',
-			function=u':py ORGMODE.plugins[u"Export"].tolatex()<CR>',
+			function=u':%s ORGMODE.plugins[u"Export"].tolatex()<CR>' % VIM_PY_CALL,
 			key_mapping=u'<localleader>el',
 			menu_desrc=u'To LaTeX (via Emacs)'
 		)
@@ -146,7 +164,7 @@ class Export(object):
 		add_cmd_mapping_menu(
 			self,
 			name=u'OrgExportToHTML',
-			function=u':py ORGMODE.plugins[u"Export"].tohtml()<CR>',
+			function=u':%s ORGMODE.plugins[u"Export"].tohtml()<CR>' % VIM_PY_CALL,
 			key_mapping=u'<localleader>eh',
 			menu_desrc=u'To HTML (via Emacs)'
 		)
@@ -154,7 +172,7 @@ class Export(object):
 		add_cmd_mapping_menu(
 			self,
 			name=u'OrgExportToMarkdown',
-			function=u':py ORGMODE.plugins[u"Export"].tomarkdown()<CR>',
+			function=u':%s ORGMODE.plugins[u"Export"].tomarkdown()<CR>' % VIM_PY_CALL,
 			key_mapping=u'<localleader>em',
 			menu_desrc=u'To Markdown (via Emacs)'
 		)

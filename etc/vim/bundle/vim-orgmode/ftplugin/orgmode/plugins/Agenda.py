@@ -11,6 +11,9 @@ from orgmode import settings
 from orgmode.keybinding import Keybinding, Plug, Command
 from orgmode.menu import Submenu, ActionEntry, add_cmd_mapping_menu
 
+from orgmode.py3compat.encode_compatibility import *
+from orgmode.py3compat.unicode_compatibility import *
+from orgmode.py3compat.py_py3_string import *
 
 class Agenda(object):
 	u"""
@@ -51,15 +54,15 @@ class Agenda(object):
 			u'setlocal modifiable',
 			u'setlocal nonumber',
 			# call opendoc() on enter the original todo item
-			u'nnoremap <silent> <buffer> <CR> :exec "py ORGMODE.plugins[u\'Agenda\'].opendoc()"<CR>',
-			u'nnoremap <silent> <buffer> <TAB> :exec "py ORGMODE.plugins[u\'Agenda\'].opendoc(switch=True)"<CR>',
-			u'nnoremap <silent> <buffer> <S-CR> :exec "py ORGMODE.plugins[u\'Agenda\'].opendoc(split=True)"<CR>',
+			u'nnoremap <silent> <buffer> <CR> :exec "%s ORGMODE.plugins[u\'Agenda\'].opendoc()"<CR>' % VIM_PY_CALL,
+			u'nnoremap <silent> <buffer> <TAB> :exec "%s ORGMODE.plugins[u\'Agenda\'].opendoc(switch=True)"<CR>' % VIM_PY_CALL,
+			u'nnoremap <silent> <buffer> <S-CR> :exec "%s ORGMODE.plugins[u\'Agenda\'].opendoc(split=True)"<CR>' % VIM_PY_CALL,
 			# statusline
 			u'setlocal statusline=Org\\ %s' % bufname]
 		if vim_commands:
 			cmds.extend(vim_commands)
 		for cmd in cmds:
-			vim.command(cmd.encode(u'utf-8'))
+			vim.command(u_encode(cmd))
 
 	@classmethod
 	def _get_agendadocuments(self):
@@ -77,7 +80,10 @@ class Agenda(object):
 				u"g:org_agenda_files=['~/org/index.org'] to add "
 				u"files to the agenda view."))
 			return
+		return self._load_agendafiles(agenda_files)
 
+	@classmethod
+	def _load_agendafiles(self, agenda_files):
 		# glob for files in agenda_files
 		resolved_files = []
 		for f in agenda_files:
@@ -90,7 +96,7 @@ class Agenda(object):
 
 		# load the agenda files into buffers
 		for agenda_file in agenda_files:
-			vim.command((u'badd %s' % agenda_file.replace(" ", "\ ")).encode(u'utf-8'))
+			vim.command(u_encode(u'badd %s' % agenda_file.replace(" ", "\ ")))
 
 		# determine the buffer nr of the agenda files
 		agenda_nums = [get_bufnumber(fn) for fn in agenda_files]
@@ -116,7 +122,7 @@ class Agenda(object):
 
 		# reload source file if it is not loaded
 		if get_bufname(bufnr) is None:
-			vim.command((u'badd %s' % bufname).encode(u'utf-8'))
+			vim.command(u_encode(u'badd %s' % bufname))
 			bufnr = get_bufnumber(bufname)
 			tmp = cls.line2doc[row]
 			cls.line2doc[bufnr] = tmp
@@ -124,21 +130,37 @@ class Agenda(object):
 			del cls.line2doc[row]
 
 		if split:
-			vim.command((u"sbuffer %s" % bufnr).encode(u'utf-8'))
+			vim.command(u_encode(u"sbuffer %s" % bufnr))
 		elif switch:
-			vim.command(u"wincmd w".encode(u'utf-8'))
-			vim.command((u"buffer %d" % bufnr).encode(u'utf-8'))
+			vim.command(u_encode(u"wincmd w"))
+			vim.command(u_encode(u"buffer %d" % bufnr))
 		else:
-			vim.command((u"buffer %s" % bufnr).encode(u'utf-8'))
-		vim.command((u"normal! %dgg <CR>" % (destrow + 1)).encode(u'utf-8'))
+			vim.command(u_encode(u"buffer %s" % bufnr))
+		vim.command(u_encode(u"normal! %dgg <CR>" % (destrow + 1)))
 
 	@classmethod
 	def list_next_week(cls):
 		agenda_documents = cls._get_agendadocuments()
 		if not agenda_documents:
 			return
+		cls.list_next_week_for(agenda_documents)
+
+	@classmethod
+	def list_next_week_for_buffer(cls):
+		agenda_documents = vim.current.buffer.name
+		loaded_agendafiles = cls._load_agendafiles([agenda_documents])
+		cls.list_next_week_for(loaded_agendafiles)
+
+
+	@classmethod
+	def list_next_week_for(cls, agenda_documents):
 		raw_agenda = ORGMODE.agenda_manager.get_next_week_and_active_todo(
 			agenda_documents)
+
+		# if raw_agenda is empty, return directly
+		if not raw_agenda:
+			vim.command('echom "All caught-up. No agenda or active todo next week."')
+			return
 
 		# create buffer at bottom
 		cmd = [u'setlocal filetype=orgagenda', ]
@@ -180,23 +202,30 @@ class Agenda(object):
 			cls.line2doc[len(final_agenda)] = (get_bufname(h.document.bufnr), h.document.bufnr, h.start)
 
 		# show agenda
-		vim.current.buffer[:] = [i.encode(u'utf-8') for i in final_agenda]
-		vim.command(u'setlocal nomodifiable  conceallevel=2 concealcursor=nc'.encode(u'utf-8'))
+		vim.current.buffer[:] = [u_encode(i) for i in final_agenda]
+		vim.command(u_encode(u'setlocal nomodifiable  conceallevel=2 concealcursor=nc'))
 		# try to jump to the positon of today
 		try:
-			vim.command((u'normal! %sgg<CR>' % today_row).encode(u'utf-8'))
+			vim.command(u_encode(u'normal! %sgg<CR>' % today_row))
 		except:
 			pass
 
 	@classmethod
-	def list_all_todos(cls):
+	def list_all_todos(cls, current_buffer=False):
 		u"""
-		List all todos in all agenda files in one buffer.
+		List all todos in:
+			current_buffer = False 		all agenda files
+			current_buffer = True 		current org_file
+		in one buffer.
 		"""
-		agenda_documents = cls._get_agendadocuments()
-		if not agenda_documents:
+		if current_buffer:
+			agenda_documents = vim.current.buffer.name
+			loaded_agendafiles = cls._load_agendafiles([agenda_documents])
+		else:
+			loaded_agendafiles = cls._get_agendadocuments()
+		if not loaded_agendafiles:
 			return
-		raw_agenda = ORGMODE.agenda_manager.get_todo(agenda_documents)
+		raw_agenda = ORGMODE.agenda_manager.get_todo(loaded_agendafiles)
 
 		cls.line2doc = {}
 		# create buffer at bottom
@@ -211,8 +240,8 @@ class Agenda(object):
 			cls.line2doc[len(final_agenda)] = (get_bufname(h.document.bufnr), h.document.bufnr, h.start)
 
 		# show agenda
-		vim.current.buffer[:] = [i.encode(u'utf-8') for i in final_agenda]
-		vim.command(u'setlocal nomodifiable  conceallevel=2 concealcursor=nc'.encode(u'utf-8'))
+		vim.current.buffer[:] = [u_encode(i) for i in final_agenda]
+		vim.command(u_encode(u'setlocal nomodifiable  conceallevel=2 concealcursor=nc'))
 
 	@classmethod
 	def list_timeline(cls):
@@ -236,8 +265,8 @@ class Agenda(object):
 			cls.line2doc[len(final_agenda)] = (get_bufname(h.document.bufnr), h.document.bufnr, h.start)
 
 		# show agenda
-		vim.current.buffer[:] = [i.encode(u'utf-8') for i in final_agenda]
-		vim.command(u'setlocal nomodifiable conceallevel=2 concealcursor=nc'.encode(u'utf-8'))
+		vim.current.buffer[:] = [u_encode(i) for i in final_agenda]
+		vim.command(u_encode(u'setlocal nomodifiable conceallevel=2 concealcursor=nc'))
 
 	def register(self):
 		u"""
@@ -248,21 +277,35 @@ class Agenda(object):
 		add_cmd_mapping_menu(
 			self,
 			name=u"OrgAgendaTodo",
-			function=u':py ORGMODE.plugins[u"Agenda"].list_all_todos()',
+			function=u'%s ORGMODE.plugins[u"Agenda"].list_all_todos()' % VIM_PY_CALL,
 			key_mapping=u'<localleader>cat',
 			menu_desrc=u'Agenda for all TODOs'
 		)
 		add_cmd_mapping_menu(
 			self,
+			name=u"OrgBufferAgendaTodo",
+			function=u'%s ORGMODE.plugins[u"Agenda"].list_all_todos(current_buffer=True)' % VIM_PY_CALL,
+			key_mapping=u'<localleader>caT',
+			menu_desrc=u'Agenda for all TODOs based on current buffer'
+		)
+		add_cmd_mapping_menu(
+			self,
 			name=u"OrgAgendaWeek",
-			function=u':py ORGMODE.plugins[u"Agenda"].list_next_week()',
+			function=u'%s ORGMODE.plugins[u"Agenda"].list_next_week()' % VIM_PY_CALL,
 			key_mapping=u'<localleader>caa',
 			menu_desrc=u'Agenda for the week'
 		)
 		add_cmd_mapping_menu(
 			self,
+			name=u"OrgBufferAgendaWeek",
+			function=u'%s ORGMODE.plugins[u"Agenda"].list_next_week_for_buffer()' % VIM_PY_CALL,
+			key_mapping=u'<localleader>caA',
+			menu_desrc=u'Agenda for the week based on current buffer'
+		)
+		add_cmd_mapping_menu(
+			self,
 			name=u'OrgAgendaTimeline',
-			function=u':py ORGMODE.plugins[u"Agenda"].list_timeline()',
+			function=u'%s ORGMODE.plugins[u"Agenda"].list_timeline()' % VIM_PY_CALL,
 			key_mapping=u'<localleader>caL',
 			menu_desrc=u'Timeline for this buffer'
 		)

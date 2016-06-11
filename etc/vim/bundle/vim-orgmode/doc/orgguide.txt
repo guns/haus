@@ -154,7 +154,7 @@ via the 'Org' menu. Most are only usable in command mode.
     <C-S-Right>     - next keyword set
 
   Plain List:~
-    <localleader>cl or <CR>     - insert plainlist item below 
+    <localleader>cl or <CR>     - insert plainlist item below
     <localleader>cL or <C-S-CR> - insert plainlist item above
 
   Checkboxes:~
@@ -174,12 +174,15 @@ via the 'Org' menu. Most are only usable in command mode.
   Agenda:~
     <localleader>caa    - agenda for the week
     <localleader>cat    - agenda of all TODOs
+    <localleader>caA    - agenda for the week for current buffer
+    <localleader>caT    - agenda of all TODOs for current buffer
 
     Not yet implemented in vim-orgmode~
-    <localleader>caT    - timeline for current buffer
+    <localleader>caL    - timeline of current buffer
 
   Export:~
     <localleader>ep     - export as PDF
+    <localleader>eb     - export as Beamer PDF
     <localleader>eh     - export as HTML
     <localleader>el     - export as LaTeX
 
@@ -1076,6 +1079,7 @@ Currently, the export to pdf, html, latex and markdown is supported via the
 following commands and the 'export' menu:
 >
   :OrgExportToPDF
+  :OrgExportToBeamerPDF
   :OrgExportToHTML
   :OrgExportToLaTeX
   :OrgExportToMarkdown
@@ -1193,6 +1197,17 @@ Alternate behavior~
 syntax highlighting and indentation~
   Syntax highlighting is customizable to fit nicely with the user's
   colorscheme.
+
+                                                      *g:org_aggressive_conceal*
+  Default: 0
+  Defines if format indicating characters for inline markups(bold, italic,
+  inline code, verbatims, in-file hyper-link, etc.) are displayed. Format
+  indicating characters will be concealed if value is `1`, rendering a much
+  cleaner view. However, since this feature is newly introduced(<2016-04-08>)
+  and still need further testing. It is inactive by default. Example:
+>
+  let g:org_aggressive_conceal = 0
+<
 
                                                 *g:org_heading_highlight_colors*
   Default: ['Title', 'Constant', 'Identifier', 'Statement', 'PreProc', 'Type',
