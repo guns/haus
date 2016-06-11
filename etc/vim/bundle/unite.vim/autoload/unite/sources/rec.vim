@@ -54,7 +54,7 @@ call unite#util#set_default(
       \ 'g:unite_source_rec_git_command', 'git')
 "}}}
 
-let s:Cache = unite#util#get_vital().import('System.Cache')
+let s:Cache = unite#util#get_vital_cache()
 
 let s:continuation = { 'directory' : {}, 'file' : {} }
 
@@ -222,10 +222,8 @@ function! s:source_file_rec.vimfiler_dummy_candidates(args, context) abort "{{{
   let exts = unite#util#is_windows() ?
         \ escape(substitute($PATHEXT . ';.LNK', ';', '\\|', 'g'), '.') : ''
 
-  let is_relative_path = path !~ '^\%(/\|\a\+:/\)'
-
   " Set vimfiler property.
-  let candidates = [ unite#sources#file#create_file_dict(path, is_relative_path) ]
+  let candidates = [ unite#sources#file#create_file_dict(path, '') ]
   for candidate in candidates
     call unite#sources#file#create_vimfiler_dict(candidate, exts)
   endfor
@@ -569,7 +567,12 @@ function! s:source_file_git.gather_candidates(args, context) abort "{{{
     return []
   endif
 
-  if finddir('.git', ';') == ''
+  let directory = fnamemodify(finddir('.git', ';'), ':p:h:h')
+  if directory == ''
+    let directory = fnamemodify(findfile('.git', ';'), ':p:h')
+  endif
+  let directory = unite#util#substitute_path_separator(directory)
+  if directory == ''
     " Not in git directory.
     call unite#print_source_message(
           \ 'Not in git directory.', self.name)
@@ -579,8 +582,6 @@ function! s:source_file_git.gather_candidates(args, context) abort "{{{
 
   let a:context.source__directory =
         \ unite#util#substitute_path_separator(getcwd()) . '/'
-  let directory = unite#util#substitute_path_separator(
-        \   fnamemodify(finddir('.git', ';'), ':p:h:h'))
 
   call unite#print_source_message(
         \ 'directory: ' . directory, self.name)

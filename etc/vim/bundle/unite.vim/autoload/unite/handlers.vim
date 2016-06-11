@@ -74,7 +74,7 @@ function! unite#handlers#_on_cursor_hold_i() abort  "{{{
     call s:check_redraw()
   endif
 
-  if unite.is_async && &l:modifiable
+  if unite.is_async && &l:modifiable && !has('timers')
     " Ignore key sequences.
     call feedkeys("a\<BS>", 'n')
   endif
@@ -112,6 +112,7 @@ function! unite#handlers#_on_bufwin_enter(bufnr) abort  "{{{
     execute bufwinnr(a:bufnr) 'wincmd w'
   endif
 
+  call unite#handlers#_init_timer()
   call unite#handlers#_save_updatetime()
 
   call s:restore_statusline()
@@ -158,7 +159,7 @@ function! unite#handlers#_on_cursor_hold() abort  "{{{
     endfor
   endif
 
-  if is_async
+  if is_async && !has('timers')
     " Ignore key sequences.
     call feedkeys("g\<ESC>" . (v:count > 0 ? v:count : ''), 'n')
   endif
@@ -313,6 +314,7 @@ function! unite#handlers#_save_updatetime() abort  "{{{
 
   if unite.is_async && unite.context.update_time > 0
         \ && &updatetime > unite.context.update_time
+        \ && !has('timers')
     let unite.update_time_save = &updatetime
     let &updatetime = unite.context.update_time
   endif
@@ -326,6 +328,7 @@ function! unite#handlers#_restore_updatetime() abort  "{{{
 
   if unite.context.update_time > 0
         \ && &updatetime < unite.update_time_save
+        \ && !has('timers')
     let &updatetime = unite.update_time_save
   endif
 endfunction"}}}
@@ -339,6 +342,33 @@ function! s:restore_statusline() abort  "{{{
   if &l:statusline != unite.statusline
     " Restore statusline.
     let &l:statusline = unite.statusline
+  endif
+endfunction"}}}
+
+function! s:timer_handler(timer) abort "{{{
+  if mode() ==# 'i'
+    if &filetype ==# 'unite'
+      call unite#handlers#_on_cursor_hold_i()
+    endif
+  else
+    call unite#handlers#_on_cursor_hold()
+  endif
+
+  if !empty(filter(range(1, winnr('$')),
+          \ "getbufvar(winbufnr(v:val), '&filetype') ==# 'unite'"))
+          \ || !exists('s:timer')
+    return
+  endif
+
+  call timer_stop(s:timer)
+  unlet s:timer
+endfunction"}}}
+function! unite#handlers#_init_timer() abort  "{{{
+  if has('timers') && !exists('s:timer')
+    let s:timer = timer_start(500,
+          \ function('s:timer_handler'), {'repeat': -1})
+    autocmd plugin-unite VimLeavePre *
+          \ if exists('s:timer') | call timer_stop(s:timer) | endif
   endif
 endfunction"}}}
 

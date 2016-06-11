@@ -536,6 +536,7 @@ function! unite#mappings#_choose_action(candidates, ...) abort "{{{
         \                 'v:val.source')), context)
   let context.buffer_name = 'action'
   let context.profile_name = 'action'
+  let context.default_action = 'default'
   let context.start_insert = 1
   let context.truncate = 1
 
@@ -692,7 +693,7 @@ function! unite#mappings#_quick_match(is_jump) abort "{{{
   endif
 
   if candidate.is_dummy
-    call unite#util#print_error('Canceled.')
+    call unite#util#print_error('Dummy.')
     return
   endif
 
@@ -862,11 +863,13 @@ function! s:get_quick_match_table() abort "{{{
   let table = deepcopy(g:unite_quick_match_table)
   if unite.context.prompt_direction ==# 'below'
     let max = len(unite.current_candidates)
-    call map(table, 'max - v:val')
+    call map(table, 'max - v:val + offset')
+  else
+    for key in keys(table)
+      let table[key] = unite#helper#get_current_candidate_linenr(
+            \ table[key]+offset-1)
+    endfor
   endif
-  for key in keys(table)
-    let table[key] += offset
-  endfor
   return table
 endfunction"}}}
 

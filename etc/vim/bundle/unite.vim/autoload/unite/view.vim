@@ -234,7 +234,7 @@ function! unite#view#_redraw(is_force, winnr, is_gather_all) abort "{{{
         call cursor(line('$'), 0)
         call unite#view#_bottom_cursor()
       endif
-    else
+    elseif !context.log
       call unite#view#_search_cursor(current_candidate)
     endif
 
@@ -582,13 +582,6 @@ function! unite#view#_init_cursor() abort "{{{
     call unite#view#_redraw_candidates(1)
   endif
 
-  if context.quick_match
-    call unite#helper#cursor_prompt()
-    call unite#view#_bottom_cursor()
-
-    call unite#mappings#_quick_match(0)
-  endif
-
   if !is_restore &&
         \ (line('.') <= winheight(0)
         \ || (context.prompt_direction ==# 'below'
@@ -607,6 +600,13 @@ function! unite#view#_init_cursor() abort "{{{
   let unite.prev_line = line('.')
   call unite#view#_set_cursor_line()
   call unite#handlers#_on_cursor_moved()
+
+  if context.quick_match
+    call unite#helper#cursor_prompt()
+    call unite#view#_bottom_cursor()
+
+    call unite#mappings#_quick_match(0)
+  endif
 endfunction"}}}
 
 function! unite#view#_quit(is_force, ...) abort  "{{{
@@ -657,7 +657,9 @@ function! unite#view#_quit(is_force, ...) abort  "{{{
       execute unite.win_rest_cmd
       noautocmd execute unite.prev_winnr 'wincmd w'
     endif
-    call setpos('.', unite.prev_pos)
+    if context.quit
+      call setpos('.', unite.prev_pos)
+    endif
   else
     call unite#view#_close_preview_window()
 

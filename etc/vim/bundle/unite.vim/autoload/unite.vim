@@ -27,12 +27,15 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 augroup plugin-unite
-  autocmd CursorHold *
-        \ call unite#handlers#_on_cursor_hold()
 augroup END
 
+if !has('timers')
+  autocmd plugin-unite CursorHold *
+        \ call unite#handlers#_on_cursor_hold()
+endif
+
 function! unite#version() abort "{{{
-  return str2nr(printf('%02d%02d', 6, 2))
+  return str2nr(printf('%02d%02d', 6, 3))
 endfunction"}}}
 
 " User functions. "{{{

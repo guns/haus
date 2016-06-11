@@ -170,7 +170,6 @@ function! unite#start#temporary(sources, ...) abort "{{{
   let context.auto_preview = 0
   let context.auto_highlight = 0
   let context.unite__is_vimfiler = 0
-  let context.default_action = 'default'
   let context.unite__old_winwidth = 0
   let context.unite__old_winheight = 0
   let context.unite__is_resize = 0
@@ -481,6 +480,29 @@ function! unite#start#_pos(buffer_name, direction, count) abort "{{{
     execute prev_winnr . 'wincmd w'
   endtry
 endfunction"}}}
+
+function! unite#start#_do_command(cmd)
+  let bufnr = s:get_unite_buffer('')
+  if bufnr < 0
+    return
+  endif
+
+  let unite = getbufvar(bufnr, 'unite')
+  if empty(unite.candidates)
+    return
+  endif
+
+  " The step by step is done backwards because, if the command happens to
+  " include or exclude lines in the file, the remaining candidates don't have
+  " its position changed when the default action is applied.
+
+  silent! UniteLast
+  silent! execute a:cmd
+  while unite.candidate_cursor > 0
+    silent! UnitePrevious
+    silent! execute a:cmd
+  endwhile
+endfunction
 
 function! s:get_candidates(sources, context) abort "{{{
   try

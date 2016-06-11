@@ -369,6 +369,14 @@ function! unite#action#do(action_name, ...) abort "{{{
           \ && !table.action.is_start
           \ && !(table.action.is_tab && !unite.context.quit)
       call unite#all_quit_session(0)
+      if unite.context.file_quit && &buftype =~# 'nofile'
+        " Switch to file buffer.
+        let winnr = get(filter(range(1, winnr('$')),
+              \ "getwinvar(v:val, '&buftype') !~# 'nofile'"), 0, 0)
+        if winnr > 0
+          execute winnr.'wincmd w'
+        endif
+      endif
       let is_quit = 1
     endif
 
