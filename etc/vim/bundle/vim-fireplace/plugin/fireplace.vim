@@ -270,6 +270,7 @@ let s:piggieback = copy(s:repl)
 function! s:repl.piggieback(arg, ...) abort
   if a:0 && a:1
     if len(self.piggiebacks)
+      let result = fireplace#session_eval(':cljs/quit', {})
       call remove(self.piggiebacks, 0)
     endif
     return {}
@@ -1064,7 +1065,12 @@ function! s:Eval(bang, line1, line2, count, args) abort
       return ''
     endif
     let options.file_path = s:buffer_path()
-    let expr = repeat("\n", line1-1).repeat(" ", col1-1)
+    if expand('%:e') ==# 'cljs'
+      "leading line feed don't work on cljs repl
+      let expr = ''
+    else
+      let expr = repeat("\n", line1-1).repeat(" ", col1-1)
+    endif
     if line1 == line2
       let expr .= getline(line1)[col1-1 : col2-1]
     else
@@ -1650,6 +1656,7 @@ augroup END
 
 function! fireplace#capture_test_run(expr, ...) abort
   let expr = '(try'
+        \ . ' ' . (a:0 ? a:1 : '')
         \ . ' (require ''clojure.test)'
         \ . ' (binding [clojure.test/report (fn [m]'
         \ .  ' (case (:type m)'
@@ -1663,7 +1670,7 @@ function! fireplace#capture_test_run(expr, ...) abort
         \ .        ' (println "expected:" (pr-str (:expected m)))'
         \ .        ' (println "  actual:" (pr-str (:actual m)))))'
         \ .    ' ((.getRawRoot #''clojure.test/report) m)))]'
-        \ . ' ' . (a:0 ? a:1 : '') . a:expr . ')'
+        \ . ' ' . a:expr . ')'
         \ . ' (catch Exception e'
         \ . '   (println (str e))'
         \ . '   (println (clojure.string/join "\n" (.getStackTrace e)))))'
