@@ -10,6 +10,7 @@ from UltiSnips import _vim
 from UltiSnips.compatibility import as_unicode
 from UltiSnips.indent_util import IndentUtil
 from UltiSnips.text_objects._base import NoneditableTextObject
+from UltiSnips.vim_state import _Placeholder
 import UltiSnips.snippet_manager
 
 
@@ -27,6 +28,14 @@ class _Tabs(object):
         if ts is None:
             return ''
         return ts.current_text
+
+    def __setitem__(self, no, value):
+        ts = self._to._get_tabstop(
+            self._to,
+            int(no))  # pylint:disable=protected-access
+        if ts is None:
+            return
+        ts.overwrite(value)
 
 _VisualContent = namedtuple('_VisualContent', ['mode', 'text'])
 
@@ -87,12 +96,15 @@ class SnippetUtil(object):
 
     """
 
-    def __init__(self, initial_indent, vmode, vtext, context):
+    def __init__(self, initial_indent, vmode, vtext, context, parent):
         self._ind = IndentUtil()
         self._visual = _VisualContent(vmode, vtext)
         self._initial_indent = self._ind.indent_to_spaces(initial_indent)
         self._reset('')
         self._context = context
+        self._start = parent.start
+        self._end = parent.end
+        self._parent = parent
 
     def _reset(self, cur):
         """Gets the snippet ready for another update.
@@ -200,6 +212,13 @@ class SnippetUtil(object):
         return self._visual
 
     @property
+    def p(self):
+        if self._parent.current_placeholder:
+            return self._parent.current_placeholder
+        else:
+            return _Placeholder('', 0, 0)
+
+    @property
     def context(self):
         return self._context
 
@@ -241,6 +260,24 @@ class SnippetUtil(object):
         """ Sets instance return value to comments[index] """
         self.rv = self.comments[index]
 
+    @property
+    def snippet_start(self):
+        """
+        Returns start of the snippet in format (line, column).
+        """
+        return self._start
+
+    @property
+    def snippet_end(self):
+        """
+        Returns end of the snippet in format (line, column).
+        """
+        return self._end
+
+    @property
+    def buffer(self):
+        return _vim.buf
+
 
 class PythonCode(NoneditableTextObject):
 
@@ -257,9 +294,9 @@ class PythonCode(NoneditableTextObject):
                 mode = snippet.visual_content.mode
                 context = snippet.context
                 break
-            except AttributeError:
+            except AttributeError as e:
                 snippet = snippet._parent  # pylint:disable=protected-access
-        self._snip = SnippetUtil(token.indent, mode, text, context)
+        self._snip = SnippetUtil(token.indent, mode, text, context, snippet)
 
         self._codes = ((
             'import re, os, vim, string, random',
