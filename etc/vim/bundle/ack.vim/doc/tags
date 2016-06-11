@@ -25,6 +25,7 @@ g:ack_default_options	ack.txt	/*g:ack_default_options*
 g:ack_lhandler	ack.txt	/*g:ack_lhandler*
 g:ack_mappings	ack.txt	/*g:ack_mappings*
 g:ack_qhandler	ack.txt	/*g:ack_qhandler*
+g:ack_use_cword_for_empty_search	ack.txt	/*g:ack_use_cword_for_empty_search*
 g:ack_use_dispatch	ack.txt	/*g:ack_use_dispatch*
 g:ackhighlight	ack.txt	/*g:ackhighlight*
 g:ackpreview	ack.txt	/*g:ackpreview*
@@ -33,5 +34,6 @@ go:	ack_quick_help.txt	/*go:*
 gv:	ack_quick_help.txt	/*gv:*
 h:	ack_quick_help.txt	/*h:*
 o:	ack_quick_help.txt	/*o:*
+q:	ack_quick_help.txt	/*q:*
 t:	ack_quick_help.txt	/*t:*
 v:	ack_quick_help.txt	/*v:*
