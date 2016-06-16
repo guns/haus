@@ -19,9 +19,7 @@ class Archivesrc
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options]
-
-        Options:
+        Usage: #{File.basename __FILE__} [options] project-dir …
       BANNER
     end
   end
@@ -60,7 +58,7 @@ class Archivesrc
     abort parser.help if args.empty?
 
     args.each do |dir|
-      archive dir
+      archive dir.chomp('/')
     end
   end
 end
