@@ -964,24 +964,6 @@ githubget() {
     curl --progress-bar --location "https://github.com/$user/$repo/tarball/$branch"
 }
 
-archivesrc() {
-    local d
-    for d in "$@"; do
-        local dirname="$(basename "$d")"
-        local archive="$cdsrc/ARCHIVE/$dirname".tar.xz
-        pushd . >/dev/null
-        cd "$d"
-        git fdx
-        git gc --aggressive --prune=all
-        cd ..
-        if run tar acf "$cdsrc/ARCHIVE/$dirname".tar.xz "${d%/}"; then
-            run rm --recursive --force "$d"
-            command du --human-readable "$archive"
-        fi
-        popd >/dev/null
-    done
-}
-
 ### Benchmarking
 
 HAVE perf && perfstat() {
