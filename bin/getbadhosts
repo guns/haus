@@ -11,6 +11,7 @@ require 'set'
 class Getbadhosts
   DEFAULTS = {
     :all => false,
+    :jobs => 4,
     :loopback => false,
     :ipv4_only => false,
   }
@@ -19,16 +20,17 @@ class Getbadhosts
   HOSTS_FILE_URLS = [
     "http://malwaredomains.lehigh.edu/files/immortal_domains.txt",
     "http://malwaredomains.lehigh.edu/files/justdomains",
-    "https://mirror.cedia.org.ec/malwaredomains/justdomains",
+    "http://mirror.cedia.org.ec/malwaredomains/justdomains",
     "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
     "https://www.malwaredomainlist.com/hostslist/hosts.txt",
     "http://hosts-file.net/ad_servers.txt",
     "http://someonewhocares.org/hosts/hosts",
-    "https://winhelp2002.mvps.org/hosts.txt",
+    "http://winhelp2002.mvps.org/hosts.txt",
   ]
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+    @errlock = Mutex.new
   end
 
   def parser
@@ -51,6 +53,10 @@ class Getbadhosts
         @all = true
       end
 
+      opt.on '-j', '--jobs N', Integer, "Number of concurrent network threads [DEFAULT: #{@jobs}]" do |n|
+        @jobs = n
+      end
+
       opt.on '-l', '--loopback', 'Generate loopback addresses instead of null (illegal) addresses' do
         @loopback = true
       end
@@ -62,10 +68,10 @@ class Getbadhosts
   end
 
   def get path
-    warn "# Reading #{path}" if $stdout.tty?
+    @errlock.synchronize { warn ":: Reading #{path}" }
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--progress', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', path] do |io|
+      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36', path] do |io|
         io.read
       end
     else
@@ -76,7 +82,7 @@ class Getbadhosts
   def extract_domains buf
     ds = []
     buf.each_line do |l|
-      n = l.index('#')
+      n = l.index '#'
       ws = (n ? l[0...n] : l).split
       case ws.size
       when 2 then ds << ws[1]
@@ -86,16 +92,28 @@ class Getbadhosts
     ds
   end
 
-  def generate_hosts urls
-    domains, hosts = Set.new, ''
+  def get_domains urls
+    idx, domains, pool, ilock, dlock = -1, [], [], Mutex.new, Mutex.new
 
-    urls.each { |u| domains.merge extract_domains(get u) }
-
-    ds = domains.sort_by do |d|
-      ws = d.split '.'
-      ws.size > 2 ? ws[-2..-1].join : d
+    @jobs.times do
+      pool << Thread.new do
+        loop do
+          ilock.synchronize { idx += 1 }
+          u = urls[idx]
+          break if u.nil?
+          ds = extract_domains get(u)
+          dlock.synchronize { domains.concat ds }
+        end
+      end
     end
 
+    pool.each &:join
+    domains.uniq.sort_by { |d| d.split('.').reverse }
+  end
+
+  def generate_hosts urls
+    hosts = []
+    ds = get_domains urls
     ip4, ip6 = @loopback ? %w[127.0.0.1 ::1] : %w[0.0.0.0 ::]
 
     if @ipv4_only
