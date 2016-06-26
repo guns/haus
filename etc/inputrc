@@ -235,7 +235,7 @@ $if bash
     "\C-xgr":       "\C-] git rs \n"
     "\C-xgs":       "\C-] git stash --include-untracked \n"
     "\C-xgS":       "\C-] git stash pop \n"
-    "\C-xg\es":     "\C-] git stash list -p \n"
+    "\C-xg\es":     "\C-] git stash list --patch \n"
     "\C-xgu":       "\C-] git fetch origin --tags --prune \n"
     "\C-xgU":       "\C-] git up \n"
     "\C-xgv":       "\C-] gitv \n"
@@ -243,7 +243,7 @@ $if bash
     "\C-xgw":       "\C-] git wdi \n"
     "\C-xgW":       "\C-] git wlp \n"
     "\033\007g":    "\C-] vimgit \n"
-    "\033\007G":    "\C-]vim .gitignore -c \"Ggrep -Pi \"\C-b"
+    "\033\007G":    "\C-]vim .gitignore -c \"Ggrep --ignore-case \"\C-b"
 
     # Ack
     "\033\007A":    "\C-]vim -c \"Ack \"\C-b"

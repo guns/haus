@@ -7,182 +7,197 @@
 #  /____/
 
 [user]
-    name = guns
-    email = self@sungpae.com
-    signingkey = 0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D
+	name = guns
+	email = self@sungpae.com
+	signingKey = 0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D
 
 [advice]
-    statusHints = false
-    implicitIdentity = false
+	statusHints = false
+	implicitIdentity = false
+
+[color.diff]
+	meta = 244
+	func = 244
+	whitespace = 89 reverse
 
 [core]
-    whitespace = trailing-space,space-before-tab
-    ignorecase = false
-
-[color]
-    ui = auto
-
-[color "diff"]
-    meta = 244
-    func = 244
-    whitespace = 89 reverse
+	whitespace = trailing-space,space-before-tab
+	ignoreCase = false
+	quotePath = false
 
 [diff]
-    renames = copies
+	algorithm = histogram
+	renames = copies
+	compactionHeuristic = true
+
+[grep]
+	patternType = perl
 
 [interactive]
-    singlekey = true
+	singleKey  = true
+	diffFilter = diff-highlight
 
 [merge]
-    tool = vimdiff
+	ff = false
+	tool = vimdiff
+
+[pager]
+	log  = diff-highlight | less
+	show = diff-highlight | less
+	diff = diff-highlight | less
+
+[pull]
+	ff = true
 
 [push]
-    # Similar to the modern default, 'simple'
-    default = current
+	followTags = true
+
+[pretty]
+	singleline = format:%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s
 
 [rerere]
-    enabled = true
+	enabled = true
 
 [alias]
-    # Index operations
-    a      = add --all
-    aa     = add --all .
-    ai     = add --all --interactive
-    af     = add --all --force
-    ap     = add --all --patch
-    aw     = !"f() { git diff --ignore-all-space \"$@\" | git apply --cached --ignore-whitespace; }; f"
-    ac     = !git add --all . && git commit --all
-    acv    = !git add --all . && git commit --all --verbose
-    acva   = !git add --all . && git commit --all --verbose --amend
-    acm    = !git add --all . && git commit --all --message
-    rs     = reset
-    rshard = reset --hard
+	# Index operations
+	a      = add --all
+	aa     = add --all .
+	ai     = add --all --interactive
+	af     = add --all --force
+	ap     = add --all --patch
+	aw     = !"f() { git diff --ignore-all-space \"$@\" | git apply --cached --ignore-whitespace; }; f"
+	ac     = !git add --all . && git commit --all
+	acv    = !git add --all . && git commit --all --verbose
+	acva   = !git add --all . && git commit --all --verbose --amend
+	acm    = !git add --all . && git commit --all --message
+	rs     = reset
+	rshard = reset --hard
 
-    # Committing
-    c    = commit
-    cv   = commit --verbose
-    cva  = commit --verbose --amend
-    cm   = commit --message
-    ca   = commit --all
-    cav  = commit --all --verbose
-    cava = commit --all --verbose --amend
-    cam  = commit --all --message
+	# Commit
+	c    = commit
+	cv   = commit --verbose
+	cva  = commit --verbose --amend
+	cm   = commit --message
+	ca   = commit --all
+	cav  = commit --all --verbose
+	cava = commit --all --verbose --amend
+	cam  = commit --all --message
 
-    # Stash
-    s    = stash
-    sp   = stash-push
+	# Stash
+	s    = stash
+	sp   = stash-push
 
-    # Merging and rebasing
-    m   = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --edit
-    mm  = merge --no-ff --stat --log --strategy-option ignore-space-at-eol --no-edit
-    mf  = merge --ff-only --no-edit
-    rb  = rebase
-    rbi = rebase --interactive
-    cp  = cherry-pick
+	# Merging and rebasing
+	m   = merge --stat --log --strategy-option=ignore-space-at-eol --edit
+	mm  = merge --stat --log --strategy-option=ignore-space-at-eol --no-edit
+	mf  = merge --ff-only --no-edit
+	rb  = rebase
+	rbi = rebase --interactive
+	cp  = cherry-pick
 
-    # Log
-    l     = log --decorate --show-signature --graph
-    lf    = log --decorate --show-signature --graph --first-parent --no-merges
-    lfr   = log --decorate --show-signature --graph --first-parent --no-merges --date=relative
-    lst   = log --decorate --show-signature --graph --stat
-    lstr  = log --decorate --show-signature --graph --stat --date=relative
-    lfst  = log --decorate --show-signature --graph --stat --first-parent --no-merges
-    lfstr = log --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
+	# Log
+	l     = log --decorate --show-signature --graph
+	lf    = log --decorate --show-signature --graph --first-parent --no-merges
+	lfr   = log --decorate --show-signature --graph --first-parent --no-merges --date=relative
+	lst   = log --decorate --show-signature --graph --stat
+	lstr  = log --decorate --show-signature --graph --stat --date=relative
+	lfst  = log --decorate --show-signature --graph --stat --first-parent --no-merges
+	lfstr = log --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
 
-    lp    = log --decorate --show-signature --patch --stat --ws-error-highlight=all
-    lpr   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --date=relative
-    lfp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges
-    lfpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
-    lpw   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space
-    lpwr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space --date=relative
-    wlp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=.
-    wlpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --date=relative
-    wlpwr = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
+	lp    = log --decorate --show-signature --patch --stat --ws-error-highlight=all
+	lpr   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --date=relative
+	lfp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges
+	lfpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
+	lpw   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space
+	lpwr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space --date=relative
+	wlp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=.
+	wlpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --date=relative
+	wlpwr = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
 
-    l1    = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1
-    l1r   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --date=relative
-    l1w   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space
-    l1wr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
-    wl1   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=.
-    wl1r  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=. --date=relative
+	l1    = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1
+	l1r   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --date=relative
+	l1w   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space
+	l1wr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
+	wl1   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=.
+	wl1r  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=. --date=relative
 
-    f     = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s'
-    fr    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --date=relative
-    fa    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --all
-    far   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --all --date=relative
-    ff    = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges
-    ffr   = log --graph --date=short --pretty=format:'%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s' --ws-error-highlight=all --first-parent --no-merges --date=relative
+	f     = log --graph --date=short --pretty=singleline
+	fr    = log --graph --date=short --pretty=singleline
+	fa    = log --graph --date=short --pretty=singleline
+	far   = log --graph --date=short --pretty=singleline
+	ff    = log --graph --date=short --pretty=singleline
+	ffr   = log --graph --date=short --pretty=singleline
 
-    lg    = log --patch --grep
-    lgr   = log --patch --date=relative --grep
-    lgi   = log --patch --regexp-ignore-case --grep
-    lgir  = log --patch --regexp-ignore-case --date=relative --grep
+	lg    = log --patch --grep
+	lgr   = log --patch --date=relative --grep
+	lgi   = log --patch --regexp-ignore-case --grep
+	lgir  = log --patch --regexp-ignore-case --date=relative --grep
 
-    sl    = stash list --decorate --show-signature --stat
-    slp   = stash list --decorate --show-signature --patch --stat --ws-error-highlight=all
+	sl    = stash list --decorate --show-signature --stat
+	slp   = stash list --decorate --show-signature --patch --stat --ws-error-highlight=all
 
-    # Branches
-    br       = branch -vv
-    bra      = branch --all -vv
-    brd      = branch --delete
-    brdd     = branch -D
-    brm      = branch --move
-    co       = checkout
-    cob      = checkout -b
-    cot      = checkout --track
-    coours   = checkout --ours
-    cotheirs = checkout --theirs
-    sb       = show-branch --color
+	# Branches
+	br       = branch -vv
+	bra      = branch --all -vv
+	brd      = branch --delete
+	brdd     = branch --delete --force
+	brm      = branch --move
+	co       = checkout
+	cob      = checkout -b
+	cot      = checkout --track
+	coours   = checkout --ours
+	cotheirs = checkout --theirs
+	sb       = show-branch --color
 
-    # Tags
-    t   = tag
-    td  = tag --delete
-    ts  = tag --sign
-    tsf = tag --sign --force
+	# Tags
+	t   = tag
+	td  = tag --delete
+	ts  = tag --sign
+	tsf = tag --sign --force
 
-    # Diff and patch
-    di   = diff --ws-error-highlight=all
-    diw  = diff --ws-error-highlight=all --ignore-all-space
-    wdi  = diff --ws-error-highlight=all --color-words=.
+	# Diff and patch
+	di   = diff --ws-error-highlight=all
+	diw  = diff --ws-error-highlight=all --ignore-all-space
+	wdi  = diff --ws-error-highlight=all --color-words=.
 
-    dih  = diff HEAD --ws-error-highlight=all
-    dihw = diff HEAD --ws-error-highlight=all --ignore-all-space
-    wdih = diff HEAD --ws-error-highlight=all --color-words=.
+	dih  = diff HEAD --ws-error-highlight=all
+	dihw = diff HEAD --ws-error-highlight=all --ignore-all-space
+	wdih = diff HEAD --ws-error-highlight=all --color-words=.
 
-    dic  = diff --ws-error-highlight=all --cached
-    dis  = diff --ws-error-highlight=all --summary --stat
+	dic  = diff --ws-error-highlight=all --cached
+	dis  = diff --ws-error-highlight=all --summary --stat
 
-    fp   = format-patch
-    fpo  = format-patch --stdout
+	fp   = format-patch
+	fpo  = format-patch --stdout
 
-    # Remotes
-    r            = remote --verbose
-    up           = remote update --prune
-    shallowclone = clone --depth=1
+	# Remotes
+	r            = remote --verbose
+	up           = remote update --prune
+	shallowclone = clone --depth=1
 
-    # Grep
-    g    = grep --perl-regexp
-    gi   = grep --perl-regexp --ignore-case
-    gw   = grep --perl-regexp --word-regexp
-    gf   = grep --fixed-strings
-    gif  = grep --fixed-strings --ignore-case
-    giw  = grep --perl-regexp --ignore-case --word-regexp
-    gifw = grep --fixed-strings --ignore-case --word-regexp
+	# Grep
+	g    = grep
+	gw   = grep --word-regexp
+	gi   = grep --ignore-case
+	giw  = grep --ignore-case --word-regexp
+	gf   = grep --fixed-strings
+	gif  = grep --fixed-strings --ignore-case
+	gifw = grep --fixed-strings --ignore-case --word-regexp
 
-    # SVN
-    sf = svn fetch
+	# SVN
+	sf = svn fetch
 
-    # Misc
-    bs   = bisect
-    ho   = hash-object
-    how  = hash-object -w
-    ls   = ls-files
-    lso  = ls-files --others
-    lsu  = ls-files --others --exclude-standard
-    st   = status --short
-    sm   = submodule
-    fd   = clean --force -d
-    fdx  = clean --force -d -x
-    rl   = reflog
-    rp   = rev-parse
-    rtmu = read-tree -mu
+	# Misc
+	bs   = bisect
+	ho   = hash-object
+	how  = hash-object -w
+	ls   = ls-files
+	lso  = ls-files --others
+	lsu  = ls-files --others --exclude-standard
+	st   = status --short
+	sm   = submodule
+	fd   = clean --force -d
+	fdx  = clean --force -d -x
+	rl   = reflog
+	rp   = rev-parse
+	rtmu = read-tree -m -u

@@ -540,17 +540,17 @@ noremap  <Leader>g1       :<C-u>Git l1<CR>
 noremap  <Leader>g.       :<C-u>Git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
-noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit<CR>
+noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit --verbose<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
 noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
-noremap  <Leader>gc.      :<C-u>Gcommit %<CR>
-noremap  <Leader>gca      :<C-u>Gcommit -a<CR>
-noremap  <Leader>gcA      :<C-u>Gcommit --amend<CR>
-noremap  <Leader>gcc      :<C-u>Gcommit<CR>
-noremap  <Leader>gcv      :<C-u>Gcommit<CR>
+noremap  <Leader>gc.      :<C-u>Gcommit --verbose %<CR>
+noremap  <Leader>gca      :<C-u>Gcommit --verbose --all<CR>
+noremap  <Leader>gcA      :<C-u>Gcommit --verbose --amend<CR>
+noremap  <Leader>gcc      :<C-u>Gcommit --verbose<CR>
+noremap  <Leader>gcv      :<C-u>Gcommit --verbose<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
@@ -570,9 +570,9 @@ noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
-noremap  <4-G>            q:iGgrep! -Pi<Space>
-nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/, 1)<CR>
-vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! -F -- ' . shellescape(@/, 1)<CR>
+noremap  <4-G>            q:iGgrep! -i<Space>
+nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
+vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
 
 " Plugin: Manpageview
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>

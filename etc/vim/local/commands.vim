@@ -170,11 +170,11 @@ function! s:Todo(...)
 
     " Fugitive detects Git repos for us
     if exists(':Ggrep')
-        execute 'silent! Ggrep! -Ew "' . join(words,'|') . '" ' . (a:0 ? arg : shellescape(getcwd(), 1))
+        execute 'silent! Ggrep! --word-regexp "' . join(words,'|') . '" ' . (a:0 ? arg : shellescape(getcwd(), 1))
     elseif exists(':Ack')
-        execute 'silent! Ack! -w "' . join(words,'\|') . '" ' . arg
+        execute 'silent! Ack! --word-regexp "' . join(words,'\|') . '" ' . arg
     else
-        execute 'silent! grep! -r -Ew "' . join(words,'\|') . '" ' . arg
+        execute 'silent! grep! --recursive --perl-regexp --word-regexp "' . join(words,'\|') . '" ' . arg
     endif
 endfunction
 
