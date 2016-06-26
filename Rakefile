@@ -123,7 +123,8 @@ task :env do
         :branch => %w[master],
         :files  => {
           'contrib/completion/git-completion.bash' => 'etc/bashrc.d/completions/git',
-          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh'
+          'contrib/completion/git-prompt.sh' => 'etc/bashrc.d/git-prompt.sh',
+          'contrib/diff-highlight/diff-highlight' => 'bin/diff-highlight',
         }
       },
 

@@ -147,7 +147,8 @@ augroup GUNS
     autocmd BufRead,BufNewFile */etc/*hosts,*/etc/ipset.conf
         \ setlocal filetype=conf
     autocmd FileType dosini,gitconfig
-        \ SetWhitespace 4 8
+        \ setlocal noexpandtab |
+        \ SetWhitespace 8
 
     " Apache {{{1
     autocmd FileType apache
