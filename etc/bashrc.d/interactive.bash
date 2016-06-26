@@ -1370,8 +1370,8 @@ ALIAS geometry='identify -format "%w %h"'
 
 # feh
 HAVE feh && {
-    ALIAS fshow='feh --recursive' \
-          frand='feh --recursive --randomize' \
+    ALIAS fshow='feh --theme=DIR --recursive' \
+          frand='feh --theme=DIR --recursive --randomize' \
           ftime='feh --sort mtime'
     alias fmove='fehmove'
     alias fcopy='fehmove --copy'

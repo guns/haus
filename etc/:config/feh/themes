@@ -5,5 +5,5 @@
 #  |__| |_____|__|__|  guns <self@sungpae.com>
 #
 
-# Default options
-feh --fullscreen --sort dirname --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F" --action ";echo %F"
+feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F" --action ";echo %F"
+DIR --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --action7 ";feh --bg-center %F" --action8 ";feh --bg-fill %F" --action9 ";open %F" --action ";echo %F" --sort dirname
