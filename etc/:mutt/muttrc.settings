@@ -682,19 +682,19 @@ set crypt_opportunistic_encrypt=yes
 #
 # Setting this variable will cause Mutt to automatically enable and
 # disable encryption, based on whether all message recipient keys
-# can be located by mutt.
+# can be located by Mutt.
 #
-# When this option is enabled, mutt will determine the encryption
-# setting each time the TO, CC, and BCC lists are edited.  If
-# $edit_headers is set, mutt will also do so each time the message
+# When this option is enabled, Mutt will enable/disable encryption
+# each time the TO, CC, and BCC lists are edited.  If
+# $edit_headers is set, Mutt will also do so each time the message
 # is edited.
 #
-# While this is set, encryption settings can't be manually changed.
-# The pgp or smime menus provide an option to disable the option for
-# a particular message.
+# While this is set, encryption can't be manually enabled/disabled.
+# The pgp or smime menus provide a selection to temporarily disable
+# this option for the current message.
 #
 # If $crypt_autoencrypt or $crypt_replyencrypt enable encryption for
-# a message, this option will be disabled for the message.  It can
+# a message, this option will be disabled for that message.  It can
 # be manually re-enabled in the pgp or smime menus.
 # (Crypto only)
 #
@@ -1712,6 +1712,32 @@ set include=yes
 #
 # When $mark_old is set, Mutt does not consider the mailbox to contain new
 # mail if only old messages exist.
+#
+
+# set mail_check_stats=no
+#
+# Name: mail_check_stats
+# Type: boolean
+# Default: no
+#
+#
+# When set, mutt will periodically calculate message
+# statistics of a mailbox while polling for new mail.  It will
+# check for unread, flagged, and total message counts.  Because
+# this operation is more performance intensive, it defaults to
+# unset, and has a separate option, $mail_check_stats_interval, to
+# control how often to update these counts.
+#
+
+# set mail_check_stats_interval=60
+#
+# Name: mail_check_stats_interval
+# Type: number
+# Default: 60
+#
+#
+# When $mail_check_stats is set, this variable configures
+# how often (in seconds) mutt will update message counts.
 #
 
 set mailcap_path="~/.mailcap"
