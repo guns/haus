@@ -6,9 +6,10 @@
 
 DIRS=()
 
-while getopts :d: OPT; do
+while getopts :d:h OPT; do
     case $OPT in
         d) DIRS+=("$OPTARG");;
+        h) echo 'vimnilla [-d plugin-dir] …'; exit;;
     esac
 done
 shift $((OPTIND-1))
