@@ -303,6 +303,8 @@ command! -bar ClojureBufferSetup call <SID>ClojureBufferSetup() "{{{1
 function! s:ClojureBufferSetup()
     LispBufferSetup
 
+    nmap     <silent><buffer> K                <Plug>FireplaceK
+
     vmap     <silent><buffer> <Leader><Leader> <Plug>FireplacePrint
     nmap     <silent><buffer> <Leader><Leader> <Plug>FireplacePrint<Plug>(sexp_outer_list)``
     imap     <silent><buffer> <Leader><Leader> <C-\><C-o><C-\><C-n><Leader><Leader>
