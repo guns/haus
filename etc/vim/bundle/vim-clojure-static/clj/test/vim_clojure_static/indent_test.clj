@@ -23,3 +23,8 @@
                :in "test-side-effects-in-indentexpr.in"
                :out "test-side-effects-in-indentexpr.out"
                :keys "/α\\<CR>:call GetClojureIndent()\\<CR>rxj:call GetClojureIndent()\\<CR>ry"))
+
+(deftest test-reader-conditional-indent
+  (test-indent "reader conditionals are indented like maps"
+               :in "test-reader-conditional-indent.in"
+               :out "test-reader-conditional-indent.out"))
