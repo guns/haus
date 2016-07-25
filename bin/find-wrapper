@@ -7,11 +7,27 @@
 
 require 'optparse'
 require 'shellwords'
+require 'set'
 
 class FindWrapper
   DEFAULTS = {
     :pred => nil,
     :noop => false,
+  }
+
+  GLOBAL_OPTIONS = {
+    '-d'                     => 0,
+    '-depth'                 => 0,
+    '-help'                  => 0,
+    '--help'                 => 0,
+    '-ignore_readdir_race'   => 0,
+    '-maxdepth'              => 1,
+    '-mindepth'              => 1,
+    '-mount'                 => 0,
+    '-noignore_readdir_race' => 0,
+    '-noleaf'                => 0,
+    '-version'               => 0,
+    '-xdev'                  => 0,
   }
 
   def initialize opts = {}
@@ -53,6 +69,16 @@ class FindWrapper
     args = arguments.dup
 
     cmd.push File.directory?(args.first) ? args.shift.chomp('/') : '.'
+
+    GLOBAL_OPTIONS.each do |(k, v)|
+      if i = args.index(k)
+        (v+1).times do
+          cmd.push args[i]
+          args.delete_at i
+        end
+      end
+    end
+
     cmd.concat pred if pred
 
     if args.first =~ /\A-.*|\A\(\z/
