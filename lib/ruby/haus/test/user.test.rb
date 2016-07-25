@@ -44,7 +44,7 @@ class Haus::UserSpec < MiniTest::Spec
 
   describe :hier do
     it 'must return a hierfile path as a home dotfile path' do
-      feh_themes = Haus::User.new($user.name).hier "#{$user.etc}/:config/:feh/themes", $user.etc
+      feh_themes = Haus::User.new($user.name).hier "#{$user.etc}/_config/_feh/themes", $user.etc
       feh_themes.must_equal "#{$user.dir}/.config/feh/themes"
     end
   end

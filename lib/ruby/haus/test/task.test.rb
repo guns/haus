@@ -191,7 +191,7 @@ class Haus::TaskSpec < MiniTest::Spec
       hierdir = File.dirname user.hausfile(:hier).first
       FileUtils.rm_rf Dir["#{hierdir}/*"]
 
-      %w[foorc :foo.d/myfoorc :foo.d/config node/barrc].each do |rel|
+      %w[foorc _foo.d/myfoorc _foo.d/config node/barrc].each do |rel|
         path = File.join hierdir, rel
         FileUtils.mkdir_p File.dirname(path)
         FileUtils.touch path
@@ -218,10 +218,10 @@ class Haus::TaskSpec < MiniTest::Spec
       @task.hierdir?(src).must_equal false
     end
 
-    it 'must return false when argument does not begin with a `:` character' do
+    it 'must return false when argument does not begin with a `_` character' do
       begin
         testdir  = $user.hausfile(:dir).first
-        testhier = File.join File.dirname(testdir), ':' + File.basename(testdir)
+        testhier = File.join File.dirname(testdir), '_' + File.basename(testdir)
         FileUtils.mkdir_p [testdir, testhier]
         @task.hierdir?(testdir).must_equal false
         @task.hierdir?(testhier).must_equal true

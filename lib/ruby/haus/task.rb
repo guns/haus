@@ -100,20 +100,20 @@ class Haus
     end
 
     # Returns hierfiles (files and directories within directories that begin
-    # with `:`) in HAUS_PATH/etc/*
+    # with `_`) in HAUS_PATH/etc/*
     #
     # Only the nodes of the tree are returned.
     #
     # e.g.
     #
-    #   FileUtils.touch %w[/opt/haus/etc/:config/foorc
-    #                      /opt/haus/etc/:config/foo.d/myfoorc
-    #                      /opt/haus/etc/:foo/:bar/baz.conf]
+    #   FileUtils.touch %w[/opt/haus/etc/_config/foorc
+    #                      /opt/haus/etc/_config/foo.d/myfoorc
+    #                      /opt/haus/etc/_foo/_bar/baz.conf]
     #
     #   Haus::Task.new(%w[--path /opt/haus]).hierfiles
-    #   => ["/opt/haus/etc/:config/foorc",
-    #       "/opt/haus/etc/:config/foo.d",
-    #       "/opt/haus/etc/:foo/:bar/baz.conf"]
+    #   => ["/opt/haus/etc/_config/foorc",
+    #       "/opt/haus/etc/_config/foo.d",
+    #       "/opt/haus/etc/_foo/_bar/baz.conf"]
     #
     def hierfiles
       paths = []
@@ -121,7 +121,7 @@ class Haus
       Dir["#{etc}/*"].select { |f| hierdir? f }.each do |hier|
         Find.find hier do |f|
           # Move on if the file is itself a hier dir or a dotfile
-          next if File.basename(f) =~ /\A(:|\.)/
+          next if File.basename(f) =~ /\A(_|\.)/
 
           # This is a non-hier node
           paths.push f
@@ -135,7 +135,7 @@ class Haus
     end
 
     def hierdir? path
-      !!(File.directory? path and File.basename(path) =~ /\A:/)
+      !!(File.directory? path and File.basename(path)[0] == '_')
     end
 
     #
