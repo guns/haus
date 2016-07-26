@@ -369,10 +369,10 @@ noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
 noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc<CR>
 noremap <Leader>ei       :<C-u>TabOpen $cdetc/iptables/iptables.sh \| lcd $cdetc<CR>
 noremap <Leader>eI       :<C-u>TabOpen $cdetc/ipset.conf \| lcd $cdetc<CR>
-noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/:lein/profiles.clj \| lcd $cdhaus<CR>
+noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/_lein/profiles.clj \| lcd $cdhaus<CR>
 noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj \| lcd $cdsrc<CR>
 noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
-noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/:mutt/muttrc \| lcd $cdhaus<CR>
+noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/_mutt/muttrc \| lcd $cdhaus<CR>
 noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf \| lcd $cdnginx<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
@@ -385,8 +385,8 @@ noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
 noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz \| lcd $cdhaus<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>
 noremap <Leader>eV       :<C-u>TabOpen $cdhaus/etc/vimperatorrc \| lcd $cdhaus<CR>
-noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/:config/bspwm/bspwmrc \| lcd $cdhaus<CR>
-noremap <Leader>eW       :<C-u>TabOpen $cdhaus/etc/:config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
+noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/_config/bspwm/bspwmrc \| lcd $cdhaus<CR>
+noremap <Leader>eW       :<C-u>TabOpen $cdhaus/etc/_config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
 noremap <Leader>ex       :<C-u>TabOpen $cdhaus/etc/xinitrc \| lcd $cdhaus<CR>
 noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/Xdefaults \| lcd $cdhaus<CR>
 

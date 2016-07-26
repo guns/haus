@@ -182,7 +182,7 @@ augroup GUNS
         \ SetAutowrap 1
 
     " Mutt {{{1
-    autocmd BufRead,BufNewFile ~/.mutt/*rc,/opt/haus/etc/:mutt/muttrc*
+    autocmd BufRead,BufNewFile ~/.mutt/*rc,/opt/haus/etc/_mutt/muttrc*
         \ setlocal filetype=muttrc
 
     " Archive browsing {{{1

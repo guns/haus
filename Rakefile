@@ -97,11 +97,11 @@ task :env do
         :base => "#{@src}/READONLY/weechat-scripts",
         :branch => %w[master],
         :files => {
-          'perl/buffers.pl'           => 'etc/:weechat/:perl/:autoload/buffers.pl',
-          'perl/launcher.pl'          => 'etc/:weechat/:perl/:autoload/launcher.pl',
-          'python/country.py'         => 'etc/:weechat/:python/:autoload/country.py',
-          'python/go.py'              => 'etc/:weechat/:python/:autoload/go.py',
-          'python/toggle_nicklist.py' => 'etc/:weechat/:python/:autoload/toggle_nicklist.py'
+          'perl/buffers.pl'           => 'etc/_weechat/_perl/_autoload/buffers.pl',
+          'perl/launcher.pl'          => 'etc/_weechat/_perl/_autoload/launcher.pl',
+          'python/country.py'         => 'etc/_weechat/_python/_autoload/country.py',
+          'python/go.py'              => 'etc/_weechat/_python/_autoload/go.py',
+          'python/toggle_nicklist.py' => 'etc/_weechat/_python/_autoload/toggle_nicklist.py'
         }
       }
     ],
@@ -112,7 +112,7 @@ task :env do
         :branch => %w[master haus],
         :files  => lambda { |proj|
           src = "#{proj.base}/completions"
-          dst = "#{proj.haus}/etc/:local/:share/bash-completion/completions"
+          dst = "#{proj.haus}/etc/_local/_share/bash-completion/completions"
           system *%W[rsync -a --delete --no-owner --no-group #{src}/ #{dst}/]
           { 'bash_completion' => 'etc/bashrc.d/bash_completion' }
         }
@@ -265,7 +265,7 @@ task :env do
       {
         :base   => "#{@src}/urxvt-perls",
         :branch => %w[master],
-        :files  => 'etc/:urxvt/ext',
+        :files  => 'etc/_urxvt/ext',
       }
     ]
   }.map { |k, ps| [k, ps.map { |p| NERV::Project::Subproject.new p }] }]
@@ -374,10 +374,10 @@ desc 'Change ownership of user directories'
 task :chown do
   if ENV.has_key? 'SUDO_USER'
     u = ENV['SUDO_USER']
-    chown_R u, nil, 'etc/:config/:kupfer'
-    chown_R u, nil, 'etc/:config/Thunar'
-    chown_R u, nil, 'etc/:local/:lib/clojure/guns'
-    chown_R u, nil, 'etc/:weechat'
+    chown_R u, nil, 'etc/_config/_kupfer'
+    chown_R u, nil, 'etc/_config/Thunar'
+    chown_R u, nil, 'etc/_local/_lib/clojure/guns'
+    chown_R u, nil, 'etc/_weechat'
     chown_R u, nil, 'etc/vim/UltiSnips'
   end
 end
@@ -421,7 +421,7 @@ end
 namespace :opensearch do
   desc 'Remove XML files'
   task :clean do
-    rm Dir['etc/:local/:share/:kupfer/searchplugins/*.xml']
+    rm Dir['etc/_local/_share/_kupfer/searchplugins/*.xml']
   end
 
   desc 'Generate XML files'
@@ -431,7 +431,7 @@ namespace :opensearch do
 
     o = Opensearch.new
 
-    Dir.chdir 'etc/:local/:share/:kupfer/searchplugins' do
+    Dir.chdir 'etc/_local/_share/_kupfer/searchplugins' do
       YAML.load_file(File.expand_path 'search-engines.yml').each do |name, arg|
         url, method = arg
         puts '%s => %s (%s)' % [name, url, method || 'GET']
