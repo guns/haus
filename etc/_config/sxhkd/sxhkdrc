@@ -275,7 +275,7 @@ super + F9
 	wmctrl -a "root ❦ $HOSTNAME"
 
 alt + F9
-	wmctrl -a "❦ MACH-"
+	wmctrl -a "❦ EVA-"
 
 shift + F9
 	urxvt-client
