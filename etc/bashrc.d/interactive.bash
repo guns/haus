@@ -517,6 +517,7 @@ ckperm() {
         ~/.bash_completion.d
         ~/.bash_local
         ~/.inputrc
+        ~/.mitmproxy:::0077
         ~/.password-store:::0077
         ~/.rnd:::0177
         ~/.ssh:::0077:no-recurse
