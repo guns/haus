@@ -15,6 +15,8 @@ class Ouilookup
   }
 
   UPDATE_URL = 'http://standards-oui.ieee.org/oui.txt'
+  YAML_OPTS = { :line_width => -1 }
+  FMT = "%06X\t%-60s\t%s"
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -47,17 +49,23 @@ class Ouilookup
   end
 
   def update_db! dbpath, update_path_or_url
-    db = {}
-    buf = slurp update_path_or_url
+    rows, db = [], {}
+    ps = slurp(update_path_or_url).split("\r\n\r\n").drop 1
 
-    buf.scan(/(\h\h)-(\h\h)-(\h\h)\s*\(hex\)\s*([^\n]+)\n.*?\n\s*([^\n]+)\n\n/m).each do |(a, b, c, name, country)|
-      db[(a.to_i(16) << 16) + (b.to_i(16) << 8) + c.to_i(16)] = "#{name}\t#{country}"
+    ps.each do |p|
+      ls = p.lines
+      a, b, c = ls[0].split[0].split('-').map { |x| x.to_i 16 }
+      name = ls[0].split("\t", 2)[1].strip
+      country = ls.last.split("\t", 2)[1].strip
+      rows.push [(a << 16) + (b << 8) + c, "#{name}\t#{country}"]
     end
 
+    rows.sort!.each { |(k, v)| db[k] = v }
+
     if dbpath.nil?
-      puts db.to_yaml
+      puts db.to_yaml(YAML_OPTS)
     else
-      File.open(dbpath, 'w') { |f| f.puts db.to_yaml }
+      File.open(dbpath, 'w') { |f| f.puts db.to_yaml(YAML_OPTS) }
       system 'gzip', dbpath
     end
   end
@@ -83,7 +91,7 @@ class Ouilookup
     when /\A(\h\h):?(\h\h):?(\h\h)/
       mac = ($1.to_i(16) << 16) + ($2.to_i(16) << 8) + $3.to_i(16)
       if o = ouidb[mac]
-        return "%06X\t%-32s\t%s" % [mac, *o.split("\t")]
+        return FMT % [mac, *o.split("\t")]
       else
         return nil
       end
@@ -96,7 +104,11 @@ class Ouilookup
     lines = []
 
     ouidb.each do |(k, v)|
-      lines << "%06X\t%-32s\t%s" % [k, *v.split("\t")] if v =~ pat
+      vs = v.split "\t"
+      if vs.size < 2
+        vs << '' until vs.size >= 2
+      end
+      lines << FMT % [k, *vs] if v =~ pat
     end
 
     lines if lines.any?
