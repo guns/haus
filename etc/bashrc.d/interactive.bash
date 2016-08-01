@@ -494,6 +494,7 @@ ckperm() {
 
         /etc
         /etc/crypttab:::0077
+        /etc/pacman.d/gnupg:::0077:no-recurse
         /etc/pacman.d/gnupg/*.d/:::0077:glob
         /etc/pacman.d/gnupg/secring*:::0077:glob
         /etc/ssh/*key:::0077:glob
