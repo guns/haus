@@ -4,6 +4,7 @@
   This log is kept according to the [[http://keepachangelog.com/][Keep a CHANGELOG]] manifesto
 ** 0.6.0                  					 :unreleased:
 *** Added
+    - Introduced sphinx documentation to Python modules. (PR #237)
     - Add =Python3= support. (closes issue #226, merge PR #231)
     - Implementing agenda overview for current buffer. (merges PR #229)
     - =g:org_aggressive_conceal=, if value =1=, will conceal all simple format
@@ -17,6 +18,8 @@
     - Add export as LaTeX beamer slides (merges PR #206)
     - Keybinding to create plainlist item directly. (closes issue #190)
 *** Changed
+    - Changed default value for =g:org_indent= from =1= to =0=. (issue #243)
+    - Revamped TODO keyword cycling rules. (PR #237)
     - In [[syntax/org.vim][syntax/org.vim]], changed `\@<=' with computational faster `\zs'
     - Using =<localleader>c[n/N]= to create new plainlist item following
       current plainlist item. Now these keybindings will unconditionally
@@ -26,6 +29,11 @@
 *** Removed
     - Removed the requirement for TODO state keywords to be upper-case.
 *** Fixed
+    - Fixed python3 compatible issue within =CalendarAction=. (merges #242, closes #241)
+    - Tree promoting/demoting no longer destroy list and checkbox structure.
+      (closes #217)
+    - Fixed bug when promote/demote headings when it contain lists. (merges
+      #239, partly fixed #217)
     - Silenced =W18= warning when non-ASCII coded TODO keywords are used. (merges #236)
     - Fix non-English locale support issue in OrgDate and Agenda. (merges #234,
       closes #230)

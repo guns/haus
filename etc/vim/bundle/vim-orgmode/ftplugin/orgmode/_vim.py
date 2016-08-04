@@ -31,6 +31,7 @@ cache_heading = None
 from orgmode.py3compat.unicode_compatibility import *
 from orgmode.py3compat.encode_compatibility import *
 
+
 def realign_tags(f):
 	u"""
 	Update tag alignment, dependency to TagsProperties plugin!
@@ -78,7 +79,7 @@ def apply_count(f):
 			# visual count is not implemented yet
 			#if not count:
 			#	count = int(vim.eval(u'v:prevcount'.encode(u'utf-8')))
-		except Exception as e:
+		except BaseException as e:
 			pass
 
 		res = f(*args, **kwargs)
@@ -96,7 +97,7 @@ def echo(message):
 	multiple lines are printed
 	"""
 	for m in message.split(u'\n'):
-		vim.command(u_encode((u':echo "%s"' % m)))
+		vim.command(u_encode(u':echo "%s"' % m))
 
 
 def echom(message):
@@ -138,7 +139,7 @@ def get_user_input(message):
 	Return the input or None if there is no input.
 	"""
 	vim.command(u_encode(u'call inputsave()'))
-	vim.command(u_encode((u"let user_input = input('" + message + u": ')")))
+	vim.command(u_encode(u"let user_input = input('" + message + u": ')"))
 	vim.command(u_encode(u'call inputrestore()'))
 	try:
 		return u_decode(vim.eval(u_encode(u'user_input')))
@@ -182,7 +183,6 @@ def indent_orgmode():
 		checkbox = heading.current_checkbox()
 		level = heading.level + 1
 		if checkbox:
-			level = level + checkbox.number_of_parents * 6
 			if line != checkbox.start_vim:
 				# indent body up to the beginning of the checkbox' text
 				# if checkbox isn't indented to the proper location, the body
@@ -353,7 +353,7 @@ class OrgMode(object):
 			if self.debug:
 				echo(u'Plugin registered: %s' % plugin)
 			return self._plugins[plugin]
-		except Exception as e:
+		except BaseException as e:
 			echoe(u'Unable to activate plugin: %s' % plugin)
 			echoe(u"%s" % e)
 			if self.debug:
@@ -389,7 +389,7 @@ class OrgMode(object):
 		if isinstance(plugins, basestring):
 			try:
 				self.register_plugin(plugins)
-			except Exception as e:
+			except BaseException as e:
 				import traceback
 				traceback.print_exc()
 		elif isinstance(plugins, list) or \
@@ -397,7 +397,7 @@ class OrgMode(object):
 			for p in plugins:
 				try:
 					self.register_plugin(p)
-				except Exception as e:
+				except BaseException as e:
 					echoe('Error in %s plugin:' % p)
 					import traceback
 					traceback.print_exc()

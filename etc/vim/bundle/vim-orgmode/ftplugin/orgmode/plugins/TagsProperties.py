@@ -60,6 +60,7 @@ class TagsProperties(object):
 
 		ignorecase = bool(int(settings.get(u'org_tag_completion_ignorecase', int(vim.eval(u'&ignorecase')))))
 		possible_tags = []
+		# TODO current tags never used...
 		current_tags = heading.tags
 		for t in all_tags:
 			if ignorecase:
@@ -68,7 +69,7 @@ class TagsProperties(object):
 			elif t.startswith(current_tag):
 				possible_tags.append(t)
 
-		vim.command(u_encode((u'let b:org_complete_tags = [%s]' % u', '.join([u'"%s%s:%s"' % (head, i, tail) for i in possible_tags]))))
+		vim.command(u_encode(u'let b:org_complete_tags = [%s]' % u', '.join([u'"%s%s:%s"' % (head, i, tail) for i in possible_tags])))
 
 	@classmethod
 	@repeat
@@ -107,7 +108,7 @@ class TagsProperties(object):
 			# user pressed <Esc> abort any further processing
 			return
 
-		heading.tags = [x for x in u_decode(tags).strip().strip(u':').split(u':') if x.strip() != u'']
+		tags = [x for x in u_decode(tags).strip().strip(u':').split(u':') if x.strip() != u'']
 		if tags:
 			searchstring = u'\\('
 			first = True

@@ -245,6 +245,7 @@ let g:regbuf_edit_open_command = '80vnew'
 " Plugin: Org
 let g:org_home = isdirectory('~/Documents/Org') ? '~/Documents/Org' : '~guns/Documents/Org'
 let g:org_agenda_files = [g:org_home . '/TODO.org']
+let g:org_indent = 1
 
 " Plugin: rainbow_parentheses.vim
 let g:rbpt_colorpairs = [
