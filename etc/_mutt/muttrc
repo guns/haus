@@ -26,8 +26,8 @@ macro browser     gs <exit>gs
 # Mailing lists
 lists .*@googlegroups.com vim.*@vim.org
 
-# Prefer text/html with implicit_autoview over a badly formatted text/plain
-alternative_order text/html text/plain
+# Prefer text/plain
+alternative_order text/plain text/html
 
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
