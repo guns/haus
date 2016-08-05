@@ -50,3 +50,4 @@ bspc rule --add Xsensors            state=floating sticky=true
 # Firefox modal windows
 bspc rule --add Cookies             state=floating
 bspc rule --add Places              state=floating
+bspc rule --add Toplevel            state=floating
