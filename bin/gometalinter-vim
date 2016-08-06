@@ -7,77 +7,93 @@
 #
 # Default linters:
 #
-# aligncheck  (github.com/opennota/check/cmd/aligncheck)
-#       aligncheck .
-#       :^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
-# gocyclo  (github.com/alecthomas/gocyclo)
-#       gocyclo -over {mincyclo} .
-#       :^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$
-# golint  (github.com/golang/lint/golint)
-#       golint -min_confidence {min_confidence} .
-#       :PATH:LINE:COL:MESSAGE
-# ineffassign  (github.com/gordonklaus/ineffassign)
-#       ineffassign -n .
-#       :PATH:LINE:COL:MESSAGE
-# vet
-#       go tool vet ./*.go
-#       :PATH:LINE:MESSAGE
-# unconvert  (github.com/mdempsky/unconvert)
-#       unconvert .
-#       :PATH:LINE:COL:MESSAGE
-# errcheck  (github.com/kisielk/errcheck)
-#       errcheck -abspath .
-#       :^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+)\t(?P<message>.*)$
-# goimports  (golang.org/x/tools/cmd/goimports)
-#       goimports -l ./*.go
-#       :^(?P<path>[^\n]+)$
-# lll  (github.com/walle/lll/cmd/lll)
-#       lll -g -l {maxlinelength} ./*.go
-#       :PATH:LINE:MESSAGE
-# structcheck  (github.com/opennota/check/cmd/structcheck)
-#       structcheck {tests=-t} .
-#       :^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
-# test
-#       go test
-#       :^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$
-# deadcode  (github.com/tsenart/deadcode)
-#       deadcode .
-#       :^deadcode: (?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-# dupl  (github.com/mibk/dupl)
-#       dupl -plumbing -threshold {duplthreshold} ./*.go
-#       :^(?P<path>[^\s][^:]+?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$
-# goconst  (github.com/jgautheron/goconst/cmd/goconst)
-#       goconst -min-occurrences {min_occurrences} .
-#       :PATH:LINE:COL:MESSAGE
-# gofmt
-#       gofmt -l -s ./*.go
-#       :^(?P<path>[^\n]+)$
-# testify
-#       go test
-#       :Location:\s+(?P<path>[^:]+):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)
-# gotype  (golang.org/x/tools/cmd/gotype)
-#       gotype -e {tests=-a} .
-#       :PATH:LINE:COL:MESSAGE
-# interfacer  (github.com/mvdan/interfacer/cmd/interfacer)
-#       interfacer ./
-#       :PATH:LINE:COL:MESSAGE
-# varcheck  (github.com/opennota/check/cmd/varcheck)
-#       varcheck .
-#       :^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>\w+)$
-# vetshadow
-#       go tool vet --shadow ./*.go
-#       :PATH:LINE:MESSAGE
+#   test
+#         go test {path}
+#         ^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$
+#   varcheck  (github.com/opennota/check/cmd/varcheck)
+#         varcheck {path}
+#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$
+#   vet
+#         go tool vet {path}/*.go
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
+#   aligncheck  (github.com/opennota/check/cmd/aligncheck)
+#         aligncheck {path}
+#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
+#   dupl  (github.com/mibk/dupl)
+#         dupl -plumbing -threshold {duplthreshold} {path}/*.go
+#         ^(?P<path>[^\s][^:]+?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$
+#   gosimple  (honnef.co/go/simple/cmd/gosimple)
+#         gosimple {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   lll  (github.com/walle/lll/cmd/lll)
+#         lll -g -l {maxlinelength} {path}/*.go
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
+#   deadcode  (github.com/tsenart/deadcode)
+#         deadcode {path}
+#         ^deadcode: (?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   errcheck  (github.com/kisielk/errcheck)
+#         errcheck -abspath {path}
+#         ^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$
+#   unused  (honnef.co/go/unused/cmd/unused)
+#         unused {path}
+#         ^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   interfacer  (github.com/mvdan/interfacer/cmd/interfacer)
+#         interfacer {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   structcheck  (github.com/opennota/check/cmd/structcheck)
+#         structcheck {tests=-t} {path}
+#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
+#   testify
+#         go test {path}
+#         Location:\s+(?P<path>[^:]+):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)
+#   unconvert  (github.com/mdempsky/unconvert)
+#         unconvert {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   gas  (github.com/HewlettPackard/gas)
+#         gas -fmt=csv {path}/*.go
+#         ^(?P<path>.*?\.go+),(?P<line>\d+),(?P<message>[^,]+,[^,]+,[^,]+)
+#   goconst  (github.com/jgautheron/goconst/cmd/goconst)
+#         goconst -min-occurrences {min_occurrences} -min-length {min_const_length} {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   golint  (github.com/golang/lint/golint)
+#         golint -min_confidence {min_confidence} {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   ineffassign  (github.com/gordonklaus/ineffassign)
+#         ineffassign -n {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   vetshadow
+#         go tool vet --shadow {path}/*.go
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
+#   misspell  (github.com/client9/misspell/cmd/misspell)
+#         misspell -j 1 {path}/*.go
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   staticcheck  (honnef.co/go/staticcheck/cmd/staticcheck)
+#         staticcheck {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   gocyclo  (github.com/alecthomas/gocyclo)
+#         gocyclo -over {mincyclo} {path}
+#         ^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$
+#   gofmt
+#         gofmt -l -s {path}/*.go
+#         ^(?P<path>[^\n]+)$
+#   goimports  (golang.org/x/tools/cmd/goimports)
+#         goimports -l {path}/*.go
+#         ^(?P<path>[^\n]+)$
+#   gotype  (golang.org/x/tools/cmd/gotype)
+#         gotype -e {tests=-a} {path}
+#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
 #
 # Severity override map (default is "warning"):
 #
-# gotype -> error
-# test -> error
-# testify -> error
-# vet -> error
+#   gotype -> error
+#   test -> error
+#   testify -> error
+#   vet -> error
 #
 # Flags:
 #       --help                Show context-sensitive help (also try --help-long
 #                             and --help-man).
+#       --vendored-linters    Use vendored linters (recommended).
 #       --fast                Only run fast linters.
 #   -i, --install             Attempt to install all known linters.
 #   -u, --update              Pass -u to go tool when installing.
@@ -95,6 +111,7 @@
 #       --line-length=80      Report lines longer than N (using lll).
 #       --min-confidence=.80  Minimum confidence interval to pass to golint.
 #       --min-occurrences=3   Minimum occurrences to pass to goconst.
+#       --min-const-length=3  Minimumum constant length.
 #       --dupl-threshold=50   Minimum token sequence as a clone for dupl.
 #       --sort=none ...       Sort output by any of none, path, line, column,
 #                             severity, message, linter.
@@ -106,7 +123,7 @@
 #       --json                Generate structured JSON rather than standard
 #                             line-based output.
 #   -D, --disable=LINTER ...  List of linters to disable
-#                             (testify,test,gofmt,goimports,lll).
+#                             (testify,test,gofmt,goimports,lll,misspell,unused).
 #   -E, --enable=LINTER ...   Enable previously disabled linters.
 #       --linter=NAME:COMMAND:PATTERN ...
 #                             Specify a linter.
@@ -120,35 +137,42 @@
 # Args:
 #   [<path>]  Directory to lint. Defaults to ".". <path>/... will recurse.
 
-# gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/Default linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + s[2].strip; m }.sort], $stdout, 1000'
+# gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/Default linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
 
 linters = \
-{"aligncheck"  => "aligncheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
- "deadcode"    => "deadcode .:^deadcode: (?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "dupl"        => "dupl -plumbing -threshold {duplthreshold} ./*.go:^(?P<path>[^\\s][^:]+?\\.go):(?P<line>\\d+)-\\d+:\\s*(?P<message>.*)$",
- "errcheck"    => "errcheck -ignore=fmt:^$ -abspath .:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+)\\t(?P<message>.*)$",
- "goconst"     => "goconst -min-occurrences {min_occurrences} .:PATH:LINE:COL:MESSAGE",
- "gocyclo"     => "gocyclo -over {mincyclo} .:^(?P<cyclo>\\d+)\\s+\\S+\\s(?P<function>\\S+)\\s+(?P<path>[^:]+):(?P<line>\\d+):(\\d+)$",
- "gofmt"       => "gofmt -l -s ./*.go:^(?P<path>[^\\n]+)$",
- "goimports"   => "goimports -l ./*.go:^(?P<path>[^\\n]+)$",
- "golint"      => "golint -min_confidence {min_confidence} .:PATH:LINE:COL:MESSAGE",
- "gotype"      => "gotype -e {tests=-a} .:PATH:LINE:COL:MESSAGE",
- "ineffassign" => "ineffassign -n .:PATH:LINE:COL:MESSAGE",
- "interfacer"  => "interfacer ./:PATH:LINE:COL:MESSAGE",
- "lll"         => "lll -g -l {maxlinelength} ./*.go:PATH:LINE:MESSAGE",
- "structcheck" => "structcheck {tests=-t} .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
- # "test"        => "go test:^--- FAIL: .*$\\s+(?P<path>[^:]+):(?P<line>\\d+): (?P<message>.*)$",
- # "testify"     => "go test:Location:\\s+(?P<path>[^:]+):(?P<line>\\d+)$\\s+Error:\\s+(?P<message>[^\\n]+)",
- "unconvert"   => "unconvert .:PATH:LINE:COL:MESSAGE",
- "varcheck"    => "varcheck .:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>\\w+)$",
- "vet"         => "go tool vet -test -shadowstrict ./*.go:PATH:LINE:MESSAGE",
- # "vetshadow"   => "go tool vet --shadow ./*.go:PATH:LINE:MESSAGE"
-}.reduce([]) { |v, entry|
+{"aligncheck"  => "aligncheck {path}:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
+ "deadcode"    => "deadcode {path}:^deadcode: (?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "dupl"        => "dupl -plumbing -threshold {duplthreshold} {path}/*.go:^(?P<path>[^\\s][^:]+?\\.go):(?P<line>\\d+)-\\d+:\\s*(?P<message>.*)$",
+ "errcheck"    => "errcheck -ignore=fmt:^$ -abspath {path}:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):[\\s\\t]+(?P<message>.*)$",
+ "gas"         => "gas -fmt=csv {path}/*.go:^(?P<path>.*?\\.go+),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
+ "goconst"     => "goconst -min-occurrences {min_occurrences} -min-length {min_const_length} {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "gocyclo"     => "gocyclo -over {mincyclo} {path}:^(?P<cyclo>\\d+)\\s+\\S+\\s(?P<function>\\S+)\\s+(?P<path>[^:]+):(?P<line>\\d+):(\\d+)$",
+ "gofmt"       => "gofmt -l -s {path}/*.go:^(?P<path>[^\\n]+)$",
+ "goimports"   => "goimports -l {path}/*.go:^(?P<path>[^\\n]+)$",
+ "golint"      => "golint -min_confidence {min_confidence} {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "gosimple"    => "gosimple {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "gotype"      => "gotype -e {tests=-a} {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "ineffassign" => "ineffassign -n {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "interfacer"  => "interfacer {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "lll"         => "lll -g -l {maxlinelength} {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
+ "misspell"    => "misspell -j 1 {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "staticcheck" => "staticcheck {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "structcheck" => "structcheck {tests=-t} {path}:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
+ # "test"        => "go test {path}:^--- FAIL: .*$\\s+(?P<path>[^:]+):(?P<line>\\d+): (?P<message>.*)$",
+ # "testify"     => "go test {path}:Location:\\s+(?P<path>[^:]+):(?P<line>\\d+)$\\s+Error:\\s+(?P<message>[^\\n]+)",
+ "unconvert"   => "unconvert {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "unused"      => "unused {path}:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "varcheck"    => "varcheck {path}:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):[\\s\\t]+(?P<message>.*)$",
+ "vet"         => "go tool vet -test -shadowstrict {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
+ # "vetshadow"   => "go tool vet --shadow {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$"
+}
+.reduce([]) { |v, entry|
   v << '--linter=%s:%s' % entry
   v << '--enable=%s' % entry[0]
 }
 
 exec 'gometalinter',
+     '--vendored-linters',
      '--concurrency=4',
      '--vendor',
      '--cyclo-over=10',
