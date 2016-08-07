@@ -82,7 +82,7 @@ function! go#lint#Gometa(autosave, ...) abort
     let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
 
-    if !a:autosave
+    if !a:autosave && g:go_jump_to_error
       call go#list#JumpToFirst(l:listtype)
     endif
   endif

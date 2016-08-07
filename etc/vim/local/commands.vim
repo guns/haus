@@ -596,9 +596,8 @@ command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
     noremap! <buffer> <C-h>          <-
     noremap! <buffer> <C-l>          <Space>:=<Space>
-    nmap     <buffer> K              <Plug>(go-doc-vertical)
     nmap     <buffer> <C-]>          <Plug>(go-def)
-    nmap     <buffer> <C-w><C-]>     <Plug>(go-def-split)
+    nmap     <buffer> <C-w><C-]>     <Plug>(go-def-vertical)
     nmap     <buffer> [C             <Plug>(go-callers)
     nmap     <buffer> ]C             <Plug>(go-callees)
     nmap     <buffer> [d             <Plug>(go-info)
@@ -612,16 +611,14 @@ function! s:GoBufferSetup()
     nmap     <buffer> <LocalLeader><M-c> <Plug>(go-coverage-clear)
     noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
     noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-    noremap  <buffer> <LocalLeader>e :<C-u>execute 'GoErrCheck -ignore=fmt:^$ -abspath ' . join(systemlist('glide novendor'))<CR>
-    noremap  <buffer> <LocalLeader>E :<C-u>execute 'GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank ' . join(systemlist('glide novendor'))<CR>
+    noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -ignore=fmt:^$ -abspath<CR>
+    noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank<CR>
     nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
     vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
     nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
     nmap     <buffer> <LocalLeader>I <Plug>(go-install)
     noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
-    noremap  <buffer> <LocalLeader>L :<C-u>execute 'GoLint -min_confidence=0 ' . join(systemlist('glide novendor'))<CR>
-    noremap  <buffer> <LocalLeader>o :<C-u>GoOracleScope .<CR>
-    noremap  <buffer> <LocalLeader>O :<C-u>GoOracleScope ""<CR>
+    noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
     nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
     nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
     nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
