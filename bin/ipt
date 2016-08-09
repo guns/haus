@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'shellwords'
+require 'set'
 
 class Ipt
   DEFAULTS = {
@@ -16,7 +17,8 @@ class Ipt
     :save4              => '/etc/iptables/iptables.rules',
     :save6              => '/etc/iptables/ip6tables.rules',
     :drop_input_target  => 'DROPINPUT',
-    :drop_output_target => 'DROPOUTPUT'
+    :drop_output_target => 'DROPOUTPUT',
+    :wait               => false,
   }
 
   TABLES = %w[filter nat mangle raw security]
@@ -68,6 +70,10 @@ class Ipt
 
       opt.on '-6', '--ipv6', 'IPv6 only' do
         @ipv4, @ipv6 = false, true
+      end
+
+      opt.on '-w', '--wait', 'Modify firewall, wait for EOF on stdin, then revert changes' do
+        @wait = true
       end
 
       opt.on '-P', '--protocol PROTO', 'Protocol when matching port numbers' do |arg|
@@ -330,6 +336,18 @@ class Ipt
     end
   end
 
+  REVERSIBLE_COMMANDS = Set.new [
+    'i',  'in',
+    'I',  'IN',
+    'di', 'dropin',
+    'DI', 'DROPIN',
+    'o',  'out',
+    'O',  'OUT',
+    'do', 'dropout',
+    'DO', 'DROPOUT',
+    'f',  'forward',
+  ]
+
   def delete! *args
     case args.first
     when 'i',  'in'      then delete_accept! *args.drop(1)
@@ -377,9 +395,7 @@ class Ipt
     end
   end
 
-  def run arguments = []
-    args = parser.order arguments
-
+  def exec! *args
     case args.first
     when 'l',  'list', nil then page to_s
     when 's',  'save'      then save_rules!
@@ -399,6 +415,21 @@ class Ipt
     when 'z',  'zero'      then zero_tables!
     when 'h',  'help'      then puts parser.help
     else abort parser.help
+    end
+  end
+
+  def run arguments = []
+    args = parser.order arguments
+
+    if @wait and not REVERSIBLE_COMMANDS.include? args.first
+      abort "#{args.first} is not a reversible command!"
+    end
+
+    exec! *args
+
+    if @wait
+      $stdin.gets nil
+      delete! *args
     end
   end
 end
