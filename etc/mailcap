@@ -12,5 +12,5 @@ application/pdf ; pdftotext %s -                              ; nametemplate=%s.
 application/*   ; less %s
 application/*   ; less %s                                     ; copiousoutput
 image/*         ; feh %s
-text/html       ; firefox %s                                  ; nametemplate=%s.html
+text/html       ; open %s                                     ; nametemplate=%s.html
 text/html       ; w3m -dump -cols 78 -I utf-8 -T text/html %s ; nametemplate=%s.html ; copiousoutput
