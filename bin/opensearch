@@ -14,10 +14,11 @@ class Opensearch
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
-        Create and use opensearch xml files.
+        Create, use, and serve opensearch xml files.
 
         Usage: #{File.basename __FILE__} generate name search-url [GET|POST]
                #{File.basename __FILE__} search file query ...
+               #{File.basename __FILE__} serve file
 
         The string '***' will be replaced with '{searchTerms}' in search-url.
       BANNER
@@ -64,6 +65,31 @@ class Opensearch
     system 'open', url
   end
 
+  def serve file
+    require 'webrick'
+
+    server = WEBrick::HTTPServer.new :BindAddress => 'localhost',
+                                     :Port => 8080,
+                                     :DocumentRoot => File.dirname(File.expand_path(file))
+
+    server.mount_proc '/install' do |req, res|
+      res.body = <<-HTML
+      <html>
+      <head>
+        <link rel="search"
+              type="application/opensearchdescription+xml"
+              title="#{File.basename file, File.extname(file)}"
+              href="#{File.basename file}">
+      </head>
+      </html>
+      HTML
+    end
+
+    server.start
+  rescue Interrupt
+    server.shutdown
+  end
+
   def run arguments = []
     args = parser.parse arguments
     rest = args.drop 1
@@ -71,6 +97,7 @@ class Opensearch
     case args.first
     when 'generate' then puts document(*rest)
     when 'search' then puts search(*rest)
+    when 'serve' then serve *rest
     else abort parser.help
     end
   end
