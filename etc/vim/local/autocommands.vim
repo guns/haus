@@ -176,9 +176,9 @@ augroup GUNS
         \ SetAutowrap 0 |
         \ setlocal wrap synmaxcol=0
     autocmd FileType mail
-        \ setlocal iskeyword+=- |
+        \ setlocal noexpandtab iskeyword+=- |
         \ SetTextwidth 72 |
-        \ SetWhitespace 4 8 |
+        \ SetWhitespace 8 |
         \ SetAutowrap 1
 
     " Mutt {{{1
