@@ -54,7 +54,7 @@ func getopts(arguments []string) (parser *flags.Parser, opts *options, args []st
 		abort(err)
 	}
 
-	if err := opts.validate(); err != nil {
+	if err = opts.validate(); err != nil {
 		abort(err)
 	}
 
