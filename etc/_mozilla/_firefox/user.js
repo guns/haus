@@ -215,6 +215,7 @@ user_pref("gecko.handlerService.schemes.irc.0.uriTemplate", "");
 user_pref("gecko.handlerService.schemes.ircs.0.uriTemplate", "");
 user_pref("gecko.handlerService.schemes.mailto.0.uriTemplate", "");
 user_pref("gecko.handlerService.schemes.mailto.1.uriTemplate", "");
+user_pref("gecko.handlerService.schemes.webcal.0.uriTemplate", "");
 user_pref("geo.wifi.uri", "");
 user_pref("identity.fxaccounts.auth.uri", "");
 user_pref("identity.fxaccounts.remote.force_auth.uri", "");
