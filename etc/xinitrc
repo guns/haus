@@ -27,7 +27,7 @@ cd ~/Downloads
 (/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
 /usr/bin/pulseaudio --start &
 /usr/bin/kupfer --no-splash &
-dropoutputnotify &
+iptablesnotify &
 xautolock-launch &
 
 popd
