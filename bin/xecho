@@ -82,7 +82,7 @@ class Xecho
   end
 
   def fontset
-    %x(xrdb -query).lines.grep(/\*font:/).last[/\*font:\s*(.*)/, 1]
+    %x(xrdb -query).lines.grep(/[*.]font:/).last[/[*.]font:\s*(.*)/, 1]
   end
 
   def sh cmd
