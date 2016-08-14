@@ -1005,11 +1005,11 @@ type ruby &>/dev/null && {
             # Rubygems package manager
             ALIAS "gem${suf}=${bin}/gem" && {
                 # alias geme
-                alias "gem${suf}g=${bin}/gem list | g"
                 alias "gem${suf}i=${bin}/gem install"
-                alias "gem${suf}q=${bin}/gem specification --remote"
-                alias "gem${suf}s=${bin}/gem search --remote"
                 alias "gem${suf}r=${bin}/gem uninstall"
+                alias "gem${suf}s=${bin}/gem search --remote"
+                alias "gem${suf}g=${bin}/gem list | g"
+                alias "gem${suf}q=${bin}/gem specification --remote"
                 # alias gemsync
                 alias "gem${suf}upgrade=${bin}/gem update"
                 alias "gem${suf}outdated=${bin}/gem outdated"
@@ -1107,20 +1107,6 @@ HAVE lein && {
     alias leinoutdated='lein ancient :all :check-clojure :allow-qualified :allow-snapshots'
 }
 
-### JavaScript
-
-# node package manager
-ALIAS npm='npm --global' && {
-    # alias npme
-    alias npmg='run npm ls | g'
-    alias npmi='run npm install --global'
-    alias npmq='run npm view'
-    alias npms='run npm search'
-    alias npmu='run npm rm --global'
-    # alias npmsync
-    # alias npmoutdated
-}
-
 ### Perl
 
 ALIAS perlpe='perl -pe' \
@@ -1139,20 +1125,6 @@ ALIAS perlpe='perl -pe' \
             }
         ' -- "$@"
     }
-}
-
-### Haskell
-
-# cabal package manager
-HAVE cabal && {
-    # alias cabale
-    alias cabalg='run cabal list installed'
-    alias cabali='run cabal install'
-    alias cabalq='run cabal info'
-    alias cabals='run cabal list'
-    alias cabalu='run ghc-pkg unregister'
-    alias cabalsync='run cabal update'
-    # alias cabaloutdated
 }
 
 ### Databases
@@ -1323,6 +1295,13 @@ ALIAS pac='pacman' && {
 
     ALIAS packey='pacman-key'
 
+    ALIAS mkp='makepkg' \
+          mkpf='makepkg --force' \
+          mkpc='makepkg --cleanbuild --force' \
+          mkps='makepkg --syncdeps' \
+          mkpa='makepkg --ignorearch' \
+          mkpo='makepkg --nobuild'
+
     pkgbuild() {
         run cp --no-clobber --verbose /usr/share/pacman/PKGBUILD.proto "${1:-.}/PKGBUILD"
     }
@@ -1362,12 +1341,17 @@ ALIAS pac='pacman' && {
     }
 }
 
-ALIAS mkp='makepkg' \
-      mkpf='makepkg --force' \
-      mkpc='makepkg --cleanbuild --force' \
-      mkps='makepkg --syncdeps' \
-      mkpa='makepkg --ignorearch' \
-      mkpo='makepkg --nobuild'
+# npm
+HAVE npm && {
+    alias npmi='run npm install'
+    alias npmr='run npm uninstall'
+    alias npms='run npm search'
+    alias npmg='run npm ls | g'
+    alias npmq='run npm view'
+    # alias npmsync
+    # alias npmupgrade
+    alias npmoutdated='run npmoutdated'
+}
 
 ### Media
 
