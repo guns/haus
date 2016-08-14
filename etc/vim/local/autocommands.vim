@@ -97,11 +97,11 @@ augroup GUNS
         \ SetWhitespace 2 8
 
     " X?HTML/XML {{{1
-    autocmd FileType html,xhtml,xml
-        \ setlocal iskeyword+=- |
+    autocmd FileType html,xhtml,xml,gohtmltmpl
+        \ setlocal iskeyword+=- noexpandtab |
         \ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> <br>' |
-        \ SetWhitespace 2 8
+        \ SetWhitespace 8
 
     " HAML/SASS/YAML {{{1
     autocmd BufRead,BufNewFile *.rul
@@ -129,6 +129,9 @@ augroup GUNS
         \ SetWhitespace 2 8
     autocmd FileType coffee
         \ SetWhitespace 2 8
+    autocmd FileType json
+        \ setlocal noexpandtab |
+        \ SetWhitespace 8
 
     " C {{{1
     autocmd FileType c,cpp
