@@ -485,6 +485,11 @@ ALIAS ls@='lsattr -a'
 ALIAS chimmutable='chattr -V +i' \
       chmutable='chattr -V -i'
 
+# inotifywait
+HAVE inotifywait && fwatch() {
+    while inotifywait -e close_write -r "$1"; do eval "${@:2}"; sleep 0.5; done
+}
+
 # Check shell init files and system paths for loose permissions
 ckperm() {
     # path:user:group:octal-mask:opt1,opt2
@@ -908,7 +913,7 @@ ALIAS mk='make' \
 # golang
 HAVE go && {
     goget() { run go get -u -v "$@"; }
-    gobuild() { run go build -v "$@"; }
+    gobuild() { run go build -i -v "$@"; }
     goinstall() { run go install -v "$@"; }
     gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace() { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
