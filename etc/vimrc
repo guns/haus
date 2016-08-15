@@ -313,6 +313,9 @@ let g:easy_align_delimiters = {
     \ ';': { 'pattern': ';\+', 'ignore_groups': ['String', 'Quote'] }
     \ }
 
+" Plugin: sparkup
+let g:sparkupMapsNormal = 1
+
 " Plugin: vim-go
 " let g:go_test_timeout= '10s'
 let g:go_play_browser_command = 'open'

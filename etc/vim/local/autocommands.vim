@@ -102,6 +102,8 @@ augroup GUNS
         \ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
         \ execute 'noremap! <buffer> <M-CR> <br>' |
         \ SetWhitespace 8
+    autocmd FileType gohtmltmpl
+        \ runtime ftplugin/html/sparkup.vim
 
     " HAML/SASS/YAML {{{1
     autocmd BufRead,BufNewFile *.rul
