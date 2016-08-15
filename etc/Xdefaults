@@ -45,10 +45,6 @@ URxvt.font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslig
 ! Perl extensions
 URxvt.perl-ext-common: eval,keysym-list,readline,selection,selection-to-clipboard,keyboard-select,url-select
 
-! eval: Copy/paste
-URxvt.keysym.Mod4-c: eval:selection_to_clipboard
-URxvt.keysym.Mod4-v: eval:paste_clipboard
-
 ! urxvt-perls
 URxvt.keysym.Mod4-Meta-i:  perl:keyboard-select:activate
 URxvt.keysym.Mod4-Meta-u:  perl:url-select:select_next
@@ -124,7 +120,7 @@ URxvt.keysym.Mod4-0x5f:      \033\007\137
 URxvt.keysym.Mod4-0x60:      \033\007\140
 URxvt.keysym.Mod4-0x61:      \033\007\141
 URxvt.keysym.Mod4-0x62:      \033\007\142
-! URxvt.keysym.Mod4-0x63:      \033\007\143     # Mod4-c
+URxvt.keysym.Mod4-c:         eval: selection_to_clipboard
 URxvt.keysym.Mod4-0x64:      \033\007\144
 URxvt.keysym.Mod4-0x65:      \033\007\145
 URxvt.keysym.Mod4-0x66:      \033\007\146
@@ -143,7 +139,7 @@ URxvt.keysym.Mod4-0x72:      \033\007\162
 URxvt.keysym.Mod4-0x73:      \033\007\163
 URxvt.keysym.Mod4-0x74:      \033\007\164
 URxvt.keysym.Mod4-0x75:      \033\007\165
-! URxvt.keysym.Mod4-0x76:      \033\007\166     # Mod4-v
+URxvt.keysym.Mod4-v:         eval: paste_clipboard
 URxvt.keysym.Mod4-0x77:      \033\007\167
 URxvt.keysym.Mod4-0x78:      \033\007\170
 URxvt.keysym.Mod4-0x79:      \033\007\171
