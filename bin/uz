@@ -15,6 +15,7 @@ class Uz
     :ignore_errors => false,
     :noop => false,
     :outdir => '.',
+    :password => nil,
     :overwrite => false
   }
 
@@ -46,6 +47,10 @@ class Uz
         @outdir = File.expand_path arg
       end
 
+      opt.on '-p', '--password STRING' do |arg|
+        @password = arg
+      end
+
       opt.on '-O', '--overwrite' do
         @overwrite = true
       end
@@ -58,7 +63,9 @@ class Uz
   end
 
   def cmdargs tempdir, file
-    ['7z', 'x', "-o#{tempdir}", "-ao#{@overwrite ? 'a' : 's'}", file]
+    cmd = ['7z', 'x', "-o#{tempdir}", "-ao#{@overwrite ? 'a' : 's'}"]
+    cmd << "-p#{@password}" if @password
+    cmd << file
   end
 
   def extract! *files
@@ -71,6 +78,8 @@ class Uz
 
       out = Dir.entries(dir).reject { |f| f =~ /\A\.{1,2}\z/ }
       if out.size == 1
+        FileUtils.mv dir, dir + '__uztmp__', :verbose => true, :noop => @noop
+        dir << '__uztmp__'
         outf = File.join @outdir, out[0]
         raise "#{outf} already exists! Leaving #{out[0]}" if File.exists? outf and not @overwrite
         FileUtils.mv File.join(dir, out[0]), outf, :verbose => true, :noop => @noop
