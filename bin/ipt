@@ -428,8 +428,11 @@ class Ipt
     exec! *args
 
     if @wait
-      $stdin.gets nil
-      delete! *args
+      begin
+        $stdin.gets nil
+      ensure
+        delete! *args
+      end
     end
   end
 end
