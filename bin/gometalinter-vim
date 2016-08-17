@@ -7,81 +7,7 @@
 #
 # Default linters:
 #
-#   test
-#         go test {path}
-#         ^--- FAIL: .*$\s+(?P<path>[^:]+):(?P<line>\d+): (?P<message>.*)$
-#   varcheck  (github.com/opennota/check/cmd/varcheck)
-#         varcheck {path}
-#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$
-#   vet
-#         go tool vet {path}/*.go
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
-#   aligncheck  (github.com/opennota/check/cmd/aligncheck)
-#         aligncheck {path}
-#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
-#   dupl  (github.com/mibk/dupl)
-#         dupl -plumbing -threshold {duplthreshold} {path}/*.go
-#         ^(?P<path>[^\s][^:]+?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$
-#   gosimple  (honnef.co/go/simple/cmd/gosimple)
-#         gosimple {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   lll  (github.com/walle/lll/cmd/lll)
-#         lll -g -l {maxlinelength} {path}/*.go
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
-#   deadcode  (github.com/tsenart/deadcode)
-#         deadcode {path}
-#         ^deadcode: (?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   errcheck  (github.com/kisielk/errcheck)
-#         errcheck -abspath {path}
-#         ^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):[\s\t]+(?P<message>.*)$
-#   unused  (honnef.co/go/unused/cmd/unused)
-#         unused {path}
-#         ^(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   interfacer  (github.com/mvdan/interfacer/cmd/interfacer)
-#         interfacer {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   structcheck  (github.com/opennota/check/cmd/structcheck)
-#         structcheck {tests=-t} {path}
-#         ^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
-#   testify
-#         go test {path}
-#         Location:\s+(?P<path>[^:]+):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)
-#   unconvert  (github.com/mdempsky/unconvert)
-#         unconvert {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   gas  (github.com/HewlettPackard/gas)
-#         gas -fmt=csv {path}/*.go
-#         ^(?P<path>.*?\.go+),(?P<line>\d+),(?P<message>[^,]+,[^,]+,[^,]+)
-#   goconst  (github.com/jgautheron/goconst/cmd/goconst)
-#         goconst -min-occurrences {min_occurrences} -min-length {min_const_length} {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   golint  (github.com/golang/lint/golint)
-#         golint -min_confidence {min_confidence} {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   ineffassign  (github.com/gordonklaus/ineffassign)
-#         ineffassign -n {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   vetshadow
-#         go tool vet --shadow {path}/*.go
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):\s*(?P<message>.*)$
-#   misspell  (github.com/client9/misspell/cmd/misspell)
-#         misspell -j 1 {path}/*.go
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   staticcheck  (honnef.co/go/staticcheck/cmd/staticcheck)
-#         staticcheck {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
-#   gocyclo  (github.com/alecthomas/gocyclo)
-#         gocyclo -over {mincyclo} {path}
-#         ^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>[^:]+):(?P<line>\d+):(\d+)$
-#   gofmt
-#         gofmt -l -s {path}/*.go
-#         ^(?P<path>[^\n]+)$
-#   goimports  (golang.org/x/tools/cmd/goimports)
-#         goimports -l {path}/*.go
-#         ^(?P<path>[^\n]+)$
-#   gotype  (golang.org/x/tools/cmd/gotype)
-#         gotype -e {tests=-a} {path}
-#         ^(?P<path>[^\s][^\r\n:]+?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+# …
 #
 # Severity override map (default is "warning"):
 #
@@ -122,6 +48,8 @@
 #       --errors              Only show errors.
 #       --json                Generate structured JSON rather than standard
 #                             line-based output.
+#       --enable-gc           Enable GC for linters (useful on large
+#                             repositories).
 #   -D, --disable=LINTER ...  List of linters to disable
 #                             (testify,test,gofmt,goimports,lll,misspell,unused).
 #   -E, --enable=LINTER ...   Enable previously disabled linters.
