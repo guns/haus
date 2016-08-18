@@ -6,43 +6,35 @@
 "     \_/  |_|_| |_| |_|  guns <self@sungpae.com>
 "
 
-""" INITIALIZE {{{1
+""" INITIALIZE
 
 " Clear all autocommands
 autocmd!
 
-" Load plugins via Pathogen
+" Load and activate plugins
 call pathogen#infect()
 filetype plugin indent on
 
-" Global dictionary of available features
-let g:__FEATURES__ = {
-    \ "par": !empty(system("/bin/sh -c 'command -v par'")),
-    \ "ag": !empty(system("/bin/sh -c 'command -v ag'"))
-    \ }
-
-" Load commands and functions; no side effects from sourcing
+" Load commands and functions
 source ~/.vim/local/commands.vim
 
-""" USER INTERFACE {{{1
+""" USER INTERFACE
 
 " Meta
-set history=1023                " Default command history = 20
-set tags^=./.tags,.tags         " Read hidden .tags files
-
-" Temporary directories
-call MkdirIfNotExists('~/.cache/vim/swap')
-call MkdirIfNotExists('~/.cache/vim/undo')
+set history=1024
+set tags^=./.tags,.tags " Read hidden .tags
 
 " Temporary files
 set directory=~/.cache/vim/swap
+call MkdirIfNotExists(&directory)
 set viminfo+=n~/.cache/vim/viminfo
 let g:netrw_home = expand('~/.cache/vim')
 
 " Undo
 if has('persistent_undo')
-    set undofile
-    set undodir=~/.cache/vim/undo
+	set undofile
+	set undodir=~/.cache/vim/undo
+	call MkdirIfNotExists(&undodir)
 endif
 
 " Dictionaries
@@ -52,54 +44,55 @@ set thesaurus+=~/.local/share/vim/mthesaur.txt " http://www.gutenberg.org/dirs/e
 set spellfile=~/.local/share/vim/spell.utf8.add
 
 " Searching / Matching
-set nohlsearch                  " Don't highlight matching patterns
-set incsearch                   " Highlight as we search
-set ignorecase                  " Set case insensitivity
-set smartcase                   " Unless there's a capital letter
+set hlsearch   " Highlight matches
+set incsearch  " Highlight as we search
+set ignorecase " Ignore case
+set smartcase  " Unless there's a capital letter
 
 " Line wrapping
-set nowrap                      " Don't wrap lines
-set nolinebreak                 " And don't break on words
-set showbreak=…                 " And give us a nice visual indicator
+set nowrap                " Don't wrap lines
+set display=lastline,uhex " Show truncated lines with @@@
+set showbreak=…           " But if you do, show a nice visual indicator
 if exists('+breakindent')
-    set breakindent
+	set breakindent       " and preserve indentation on soft wraps
 endif
 
 " Completions
-set completeopt-=preview        " Disable omnicomplete preview window
-set wildmode=list:longest       " Bash style command line completion
+set completeopt-=preview  " Disable omnicomplete preview window
+set wildmode=list:longest " Bash-like command line completion
 if exists('&wildignorecase')
-    set wildignorecase          " Case insensitive file completion on command line
+	set wildignorecase    " Ignore case on command line
 endif
 
 " Folding
-set foldmethod=manual           " Default to manual folding (the folding code is nasty)
-set foldlevelstart=99           " But don't fold anything on load
+set foldlevelstart=99             " Don't fold anything on load
 set foldtext=getline(v:foldstart) " Just show the line itself when folded
 
 " Gutter / Status line
-set nonumber                    " No line numbers
-set ruler                       " Show current position at bottom
-set showcmd                     " Show (partial) command in status line
+set ruler   " Show current position at bottom
+set showcmd " Show (partial) command in status line
 
 " Messages
-set report=0                    " Report back on all changes
-set shortmess=aoOstTAI          " Shorten all messages, except for "written"
+set report=0            " Report back on all changes
+set shortmess=aoOstTAIc " Shorten most messages
 
 " Clipboard
-set clipboard=unnamed           " Use X11 PRIMARY clipboard (selection) only
+set clipboard=unnamed           " Use X11 PRIMARY
+if has('unnamedplus')
+	set clipboard+=unnamedplus  " and X11 CLIPBOARD if available
+endif
 
 " Timeouts
-set notimeout ttimeout          " Wait for mappings, but timeout on key codes
+set notimeout ttimeout " Wait for mappings, but timeout on key codes
 
 " Cursor behavior
-set nostartofline               " Leave my cursor position alone!
+set nostartofline " Leave my cursor position alone!
 
 " Display
-set lazyredraw                  " Don't redraw while in macros
-set visualbell t_vb=            " No bells, please
-set listchars=tab:⇥\ ,trail:·
-set fillchars=fold:\ ,diff:╳,vert:│
+set lazyredraw       " Don't redraw while in macros
+set visualbell t_vb= " No bells, please
+set listchars=tab:⇥\ ,trail:·,nbsp:░
+set fillchars=vert:│,fold:\ ,diff:╳
 
 " Sessions
 set sessionoptions=curdir,folds,tabpages,winsize
@@ -107,61 +100,48 @@ set sessionoptions=curdir,folds,tabpages,winsize
 " Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
 
-""" TEXT EDITING {{{1
+""" TEXT EDITING
 
 " c  Autowrap comments to textwidth
 " r  Autoinsert comment leader with <Enter>
 " q  Allow formatting of comments with :gq
-" l  Don't format already long lines
 " n  Recognize numbered lists
+" l  Don't format already long lines
 " 1  Don't break a line after a 1-letter word
-set formatoptions=crqln1
-
-" Indenting / Tabs
-set autoindent                  " Set the cursor at same indent as line above
-set copyindent                  " Use existing indents for new indents
-set shiftround                  " Always round indents to multiple of shiftwidth
-set expandtab                   " Prefer spaces to tabs by default
+" j  Remove comment leader when joining lines
+set formatoptions=crqln1j
 
 " Global textwidth and tabstops
-SetTextwidth! 78                " Standard documentation width
-SetWhitespace! 8                " sw = sts = ts = 8
+SetTextwidth! 78 " Standard documentation width
+SetWhitespace! 8 " sw = sts = ts = 8
 
-" Joining lines
-set nojoinspaces                " Never join lines with two spaces
+" Misc
+set nojoinspaces               " Never join lines with two spaces
+set backspace=indent,eol,start " Familiar backspace behavior
+set nrformats-=octal           " Use base10 inc/dec on 0[0-7] strings
 
-" Key behavior
-set backspace=2                 " Familiar backspace behavior
-
-" Increment / decrement
-set nrformats=                  " Always inc/dec in base 10
-
-""" GLOBAL VARIABLES {{{1
+""" GLOBAL VARIABLES
 
 " Set default arguments to par
-if g:__FEATURES__['par']
-    let $PARINIT = 'B=_A_a.,?'
-endif
+let $PARINIT = 'B=_A_a.,?'
+
+" C
+let g:c_comment_strings = 1
 
 " Bash
 let g:is_bash = 1
 let g:readline_has_bash = 1
-let g:sh_minlines = 1000
 
 " Ruby
 let g:ruby_operators = 1
 
 " Vim
 let g:vim_indent_cont = 4
-let g:vimsyn_folding = 'afmpPrt'
 
 " Javadoc
-let g:java_css = 1
 let g:java_javascript = 1
+let g:java_css = 1
 let g:java_vb = 1
-
-" TeX
-let g:tex_fold_enabled = 1
 
 " SQL
 let g:omni_sql_no_default_maps = 1
@@ -173,10 +153,10 @@ let g:markdown_fenced_languages = ['vim', 'clojure']
 let g:clojure_align_multiline_strings = 1
 let g:clojure_syntax_keywords = { 'clojureMacro': ['defproject'] }
 let g:clojure_fuzzy_indent_patterns = [
-    \ '^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^for-', '^fn',
-    \ '-fn$', '^at-', '-to$', '-loop$', '\v(cond|as)-\>\*', '^case[*+]$',
-    \ '^pprint-logical-block$', '^eval-in-project$'
-    \ ]
+	\ '^with-', '^def', '^let', '^when-', 'ing$', '-for$', '^for-', '^fn',
+	\ '-fn$', '^at-', '-to$', '-loop$', '\v(cond|as)-\>\*', '^case[*+]$',
+	\ '^pprint-logical-block$', '^eval-in-project$'
+	\ ]
 let g:clojure_fuzzy_indent_blacklist = ['\v^with-%(meta|out-str|loading-context)$']
 
 " Plugin: NERDTree
@@ -220,19 +200,19 @@ let g:tagbar_compact = 1
 let g:tagbar_sort = 0
 let g:tagbar_width = 60
 let g:tagbar_type_rust = {
-    \ 'ctagstype': 'rust',
-    \ 'kinds': [
-    \   'c:CONSTANTS',
-    \   'g:Enumerations',
-    \   's:Structures',
-    \   'T:Types',
-    \   't:Traits',
-    \   'm:Modules',
-    \   'd:Macros',
-    \   'f:Functions',
-    \   'i:Trait Implementations',
-    \   ]
-    \ }
+	\ 'ctagstype': 'rust',
+	\ 'kinds': [
+	\	'c:CONSTANTS',
+	\	'g:Enumerations',
+	\	's:Structures',
+	\	'T:Types',
+	\	't:Traits',
+	\	'm:Modules',
+	\	'd:Macros',
+	\	'f:Functions',
+	\	'i:Trait Implementations',
+	\	]
+	\ }
 
 " Plugin: NrrwRgn
 let g:nrrw_rgn_vert = 1
@@ -249,36 +229,37 @@ let g:org_indent = 1
 
 " Plugin: rainbow_parentheses.vim
 let g:rbpt_colorpairs = [
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [235, '#1c1c1c'],
-    \ [236, '#303030'],
-    \ [237, '#3a3a3a'],
-    \ [238, '#444444'],
-    \ [239, '#4e4e4e'],
-    \ [240, '#585858'],
-    \ [241, '#606060'],
-    \ [242, '#666666'],
-    \ [243, '#767676'],
-    \ [244, '#808080'],
-    \ [245, '#8a8a8a']]
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [235, '#1c1c1c'],
+	\ [236, '#303030'],
+	\ [237, '#3a3a3a'],
+	\ [238, '#444444'],
+	\ [239, '#4e4e4e'],
+	\ [240, '#585858'],
+	\ [241, '#606060'],
+	\ [242, '#666666'],
+	\ [243, '#767676'],
+	\ [244, '#808080'],
+	\ [245, '#8a8a8a'],
+	\ ]
 let g:rbpt_max = len(g:rbpt_colorpairs)
 
 " Plugin: splitjoin.vim
@@ -286,9 +267,7 @@ let g:splitjoin_split_mapping = ''
 let g:splitjoin_join_mapping = ''
 
 " Plugin: Ack.vim
-if g:__FEATURES__['ag']
-    let g:ackprg = 'ag --nogroup --nocolor --column'
-endif
+let g:ackprg = 'ag --nogroup --nocolor --column'
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
 
@@ -308,10 +287,10 @@ let g:neomru#directory_mru_path = expand('~/.cache/vim/neomru/directory')
 " Plugin: EasyAlign
 let g:easy_align_ignore_groups = ['Comment', 'String', 'Quote']
 let g:easy_align_delimiters = {
-    \ 'l': { 'pattern': '->' },
-    \ 't': { 'pattern': ':-' },
-    \ ';': { 'pattern': ';\+', 'ignore_groups': ['String', 'Quote'] }
-    \ }
+	\ 'l': { 'pattern': '->' },
+	\ 't': { 'pattern': ':-' },
+	\ ';': { 'pattern': ';\+', 'ignore_groups': ['String', 'Quote'] }
+	\ }
 
 " Plugin: sparkup
 let g:sparkupMapsNormal = 1
@@ -376,7 +355,7 @@ let g:go_metalinter_deadline = "10s"
 let g:go_template_autocreate = 0
 " let g:go_template_file = "hello_world.go"
 
-""" MAPPINGS and AUTOCOMMANDS {{{1
+""" MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions
 source ~/.vim/local/modifiers.vim
@@ -387,10 +366,10 @@ source ~/.vim/local/mappings.vim
 " Autocommands
 source ~/.vim/local/autocommands.vim
 
-""" TERMINAL and GUI SETTINGS {{{1
+""" TERMINAL and GUI SETTINGS
 
 if has('gui_running')
-    source ~/.vim/local/gvimrc.vim
+	source ~/.vim/local/gvimrc.vim
 else
-    source ~/.vim/local/tty.vim
+	source ~/.vim/local/tty.vim
 endif

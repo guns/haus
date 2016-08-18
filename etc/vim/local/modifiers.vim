@@ -5,50 +5,50 @@
 
 " Set value of keycode or map in all modes {{{1
 function! s:Setmap(map, seq)
-    try
-        " Some named values can be `set'
-        execute 'set ' . a:map . '=' . a:seq
-    catch
-        " The rest can simply be mapped
-        execute 'map  <special> ' . a:seq . ' ' . a:map
-        execute 'map! <special> ' . a:seq . ' ' . a:map
-    endtry
+	try
+		" Some named values can be `set'
+		execute 'set ' . a:map . '=' . a:seq
+	catch
+		" The rest can simply be mapped
+		execute 'map  <special> ' . a:seq . ' ' . a:map
+		execute 'map! <special> ' . a:seq . ' ' . a:map
+	endtry
 endfunction
 
 let namedkeys = {
-    \ ' ': 'Space',
-    \ '\': 'Bslash',
-    \ '|': 'Bar',
-    \ '<': 'lt'
-\ }
+	\ ' ': 'Space',
+	\ '\': 'Bslash',
+	\ '|': 'Bar',
+	\ '<': 'lt'
+	\ }
 
 " Map {Alt,Mod4} + ASCII printable chars {{{1
 for n in range(0x20, 0x7e)
-    let char = nr2char(n)
-    let key  = char
+	let char = nr2char(n)
+	let key  = char
 
-    if has_key(namedkeys, char)
-        let char = namedkeys[char]
-        let key  = '<' . char . '>'
-    endif
+	if has_key(namedkeys, char)
+		let char = namedkeys[char]
+		let key  = '<' . char . '>'
+	endif
 
-    " Escaped Meta (i.e. not 8-bit mode)
-    "  * Esc-[ is the CSI prefix (Control Sequence Introducer)
-    "  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
-    if char !=# '[' && char !=# 'O'
-        call s:Setmap('<M-' . char . '>', "\<Esc>" . key)
-    endif
+	" Escaped Meta (i.e. not 8-bit mode)
+	"  * Esc-[ is the CSI prefix (Control Sequence Introducer)
+	"  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
+	if char !=# '[' && char !=# 'O'
+		call s:Setmap('<M-' . char . '>', "\<Esc>" . key)
+	endif
 
-    " Super / Mod4
-    "  * Assumes terminal sends \033\007 as the Mod4 prefix. This can be
-    "    accomplished in rxvt-unicode using the keysym-list extension:
-    "
-    "    ~/.Xdefaults:
-    "       URxvt.keysym.Mod4-0x20: list	\033\007	 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~	
-    "
-    "   Note that literal tab characters are used as delimiters as the
-    "   resource argument contains a list of all printable ASCII characters.
-    call s:Setmap('<4-' . char . '>', "\<Esc>\<C-g>" . key)
+	" Super / Mod4
+	"  * Assumes terminal sends \033\007 as the Mod4 prefix. This can be
+	"    accomplished in rxvt-unicode via the keysym feature:
+	"
+	"    ~/.Xdefaults:
+	"       URxvt.keysym.Mod4-0x20:      \033\007\040
+	"       URxvt.keysym.Mod4-0x21:      \033\007\041
+	"       …
+	"       URxvt.keysym.Mod4-0x7e:      \033\007\176
+	call s:Setmap('<4-' . char . '>', "\<Esc>\<C-g>" . key)
 endfor
 
 unlet namedkeys n char key
@@ -68,15 +68,15 @@ call s:Setmap("<M-Bslash>", "\<Esc>\\")
 
 " Arrow keys
 if exists('$TMUX')
-    call s:Setmap("<C-Up>",    "\<Esc>[A")
-    call s:Setmap("<C-Down>",  "\<Esc>[B")
-    call s:Setmap("<C-Right>", "\<Esc>[C")
-    call s:Setmap("<C-Left>",  "\<Esc>[D")
+	call s:Setmap("<C-Up>",    "\<Esc>[A")
+	call s:Setmap("<C-Down>",  "\<Esc>[B")
+	call s:Setmap("<C-Right>", "\<Esc>[C")
+	call s:Setmap("<C-Left>",  "\<Esc>[D")
 else
-    call s:Setmap("<C-Up>",    "\<Esc>Oa")
-    call s:Setmap("<C-Down>",  "\<Esc>Ob")
-    call s:Setmap("<C-Right>", "\<Esc>Oc")
-    call s:Setmap("<C-Left>",  "\<Esc>Od")
+	call s:Setmap("<C-Up>",    "\<Esc>Oa")
+	call s:Setmap("<C-Down>",  "\<Esc>Ob")
+	call s:Setmap("<C-Right>", "\<Esc>Oc")
+	call s:Setmap("<C-Left>",  "\<Esc>Od")
 endif
 
 call s:Setmap("<S-Up>",    "\<Esc>[a")

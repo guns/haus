@@ -415,12 +415,12 @@ noremap <Leader>fy       :<C-u>setlocal filetype=yaml<CR>
 
 " Window focus / position
 for [g:lhs, g:rhs] in [['Left', 'h'], ['Down', 'j'], ['Up', 'k'], ['Right', 'l']]
-    execute 'Mapall <4-'   . g:lhs . '> :<C-u>wincmd ' . g:rhs .          '<CR>'
-    execute 'Mapall <4-S-' . g:lhs . '> :<C-u>wincmd ' . toupper(g:rhs) . '<CR>'
+	execute 'Mapall <4-'   . g:lhs . '> :<C-u>wincmd ' . g:rhs .          '<CR>'
+	execute 'Mapall <4-S-' . g:lhs . '> :<C-u>wincmd ' . toupper(g:rhs) . '<CR>'
 endfor
 for g:lhs in ['h', 'j', 'k', 'l']
-    execute 'Mapall <4-' . g:lhs          . '> :<C-u>wincmd ' . g:lhs          . '<CR>'
-    execute 'Mapall <4-' . toupper(g:lhs) . '> :<C-u>wincmd ' . toupper(g:lhs) . '<CR>'
+	execute 'Mapall <4-' . g:lhs          . '> :<C-u>wincmd ' . g:lhs          . '<CR>'
+	execute 'Mapall <4-' . toupper(g:lhs) . '> :<C-u>wincmd ' . toupper(g:lhs) . '<CR>'
 endfor
 unlet g:lhs g:rhs
 
@@ -513,12 +513,12 @@ for [g:lhs, g:rhs] in [['d', 'qdictionary'],
                      \ ['s', 'qsymbolhound'],
                      \ ['t', 'qthesaurus'],
                      \ ['w', 'qwikipedia']]
-    let g:fmt = 'noremap <Leader>q' . g:lhs .
-        \ ' :<C-u>execute "Sh opensearch search ' .
-        \ '~guns/.local/share/kupfer/searchplugins/' . g:rhs . '.xml "' .
-        \ '. shellescape(CwordOrSel(%d))<CR>'
-    execute 'n' . printf(g:fmt, 0)
-    execute 'v' . printf(g:fmt, 1)
+	let g:fmt = 'noremap <Leader>q' . g:lhs .
+	          \ ' :<C-u>execute "Sh opensearch search ' .
+	          \ '~guns/.local/share/kupfer/searchplugins/' . g:rhs . '.xml "' .
+	          \ '. shellescape(CwordOrSel(%d))<CR>'
+	execute 'n' . printf(g:fmt, 0)
+	execute 'v' . printf(g:fmt, 1)
 endfor
 unlet g:lhs g:rhs g:fmt
 
@@ -634,49 +634,49 @@ imap <4-/>      <C-\><C-n><4-/>
 
 " Plugin: vim-sexp
 let g:sexp_mappings = {
-    \ 'sexp_outer_list':                'af',
-    \ 'sexp_inner_list':                'if',
-    \ 'sexp_outer_top_list':            'aF',
-    \ 'sexp_inner_top_list':            'iF',
-    \ 'sexp_outer_string':              'as',
-    \ 'sexp_inner_string':              'is',
-    \ 'sexp_outer_element':             'ae',
-    \ 'sexp_inner_element':             'ie',
-    \ 'sexp_move_to_prev_bracket':      '(',
-    \ 'sexp_move_to_next_bracket':      ')',
-    \ 'sexp_move_to_prev_element_head': '<M-b>',
-    \ 'sexp_move_to_next_element_head': '<M-w>',
-    \ 'sexp_move_to_prev_element_tail': '<M-B>',
-    \ 'sexp_move_to_next_element_tail': '<M-e>',
-    \ 'sexp_move_to_prev_top_element':  '[[',
-    \ 'sexp_move_to_next_top_element':  ']]',
-    \ 'sexp_select_prev_element':       '[e',
-    \ 'sexp_select_next_element':       ']e',
-    \ 'sexp_indent':                    '==',
-    \ 'sexp_indent_top':                '=-',
-    \ 'sexp_round_head_wrap_list':      '<Leader>i',
-    \ 'sexp_round_tail_wrap_list':      '<Leader>I',
-    \ 'sexp_square_head_wrap_list':     '<Leader>[',
-    \ 'sexp_square_tail_wrap_list':     '<Leader>]',
-    \ 'sexp_curly_head_wrap_list':      '<Leader>{',
-    \ 'sexp_curly_tail_wrap_list':      '<Leader>}',
-    \ 'sexp_round_head_wrap_element':   '<Leader>w',
-    \ 'sexp_round_tail_wrap_element':   '<Leader>W',
-    \ 'sexp_square_head_wrap_element':  '<Leader>e[',
-    \ 'sexp_square_tail_wrap_element':  '<Leader>e]',
-    \ 'sexp_curly_head_wrap_element':   '<Leader>e{',
-    \ 'sexp_curly_tail_wrap_element':   '<Leader>e}',
-    \ 'sexp_splice_list':               '<Leader>@',
-    \ 'sexp_raise_list':                '<Leader>o',
-    \ 'sexp_raise_element':             '<Leader>O',
-    \ 'sexp_swap_list_backward':        '<M-k>',
-    \ 'sexp_swap_list_forward':         '<M-j>',
-    \ 'sexp_swap_element_backward':     '<M-h>',
-    \ 'sexp_swap_element_forward':      '<M-l>',
-    \ 'sexp_emit_head_element':         '<M-S-j>',
-    \ 'sexp_emit_tail_element':         '<M-S-k>',
-    \ 'sexp_capture_prev_element':      '<M-S-h>',
-    \ 'sexp_capture_next_element':      '<M-S-l>',
-    \ 'sexp_insert_at_list_head':       '<Leader>h',
-    \ 'sexp_insert_at_list_tail':       '<Leader>l',
-    \ }
+	\ 'sexp_outer_list':                'af',
+	\ 'sexp_inner_list':                'if',
+	\ 'sexp_outer_top_list':            'aF',
+	\ 'sexp_inner_top_list':            'iF',
+	\ 'sexp_outer_string':              'as',
+	\ 'sexp_inner_string':              'is',
+	\ 'sexp_outer_element':             'ae',
+	\ 'sexp_inner_element':             'ie',
+	\ 'sexp_move_to_prev_bracket':      '(',
+	\ 'sexp_move_to_next_bracket':      ')',
+	\ 'sexp_move_to_prev_element_head': '<M-b>',
+	\ 'sexp_move_to_next_element_head': '<M-w>',
+	\ 'sexp_move_to_prev_element_tail': '<M-B>',
+	\ 'sexp_move_to_next_element_tail': '<M-e>',
+	\ 'sexp_move_to_prev_top_element':  '[[',
+	\ 'sexp_move_to_next_top_element':  ']]',
+	\ 'sexp_select_prev_element':       '[e',
+	\ 'sexp_select_next_element':       ']e',
+	\ 'sexp_indent':                    '==',
+	\ 'sexp_indent_top':                '=-',
+	\ 'sexp_round_head_wrap_list':      '<Leader>i',
+	\ 'sexp_round_tail_wrap_list':      '<Leader>I',
+	\ 'sexp_square_head_wrap_list':     '<Leader>[',
+	\ 'sexp_square_tail_wrap_list':     '<Leader>]',
+	\ 'sexp_curly_head_wrap_list':      '<Leader>{',
+	\ 'sexp_curly_tail_wrap_list':      '<Leader>}',
+	\ 'sexp_round_head_wrap_element':   '<Leader>w',
+	\ 'sexp_round_tail_wrap_element':   '<Leader>W',
+	\ 'sexp_square_head_wrap_element':  '<Leader>e[',
+	\ 'sexp_square_tail_wrap_element':  '<Leader>e]',
+	\ 'sexp_curly_head_wrap_element':   '<Leader>e{',
+	\ 'sexp_curly_tail_wrap_element':   '<Leader>e}',
+	\ 'sexp_splice_list':               '<Leader>@',
+	\ 'sexp_raise_list':                '<Leader>o',
+	\ 'sexp_raise_element':             '<Leader>O',
+	\ 'sexp_swap_list_backward':        '<M-k>',
+	\ 'sexp_swap_list_forward':         '<M-j>',
+	\ 'sexp_swap_element_backward':     '<M-h>',
+	\ 'sexp_swap_element_forward':      '<M-l>',
+	\ 'sexp_emit_head_element':         '<M-S-j>',
+	\ 'sexp_emit_tail_element':         '<M-S-k>',
+	\ 'sexp_capture_prev_element':      '<M-S-h>',
+	\ 'sexp_capture_next_element':      '<M-S-l>',
+	\ 'sexp_insert_at_list_head':       '<Leader>h',
+	\ 'sexp_insert_at_list_tail':       '<Leader>l',
+	\ }
