@@ -133,7 +133,7 @@ $if bash
     "\C-xd":        "\C-]cddownloads "
     "\C-xD":        "\C-]cddesktop "
     "\C-xE":        "\C-]cdetc "
-    "\C-xG":        "\C-]cdgo "
+    "\C-xG":        "\C-]cdgo ; cdf "
     "\C-x\C-h":     "\C-] cdhaus \n"
     "\C-xh":        "\C-]cdhaus "
     "\C-x\C-l":     "\C-] cdlocal \n"
