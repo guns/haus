@@ -4,7 +4,7 @@
 
 clearsnippets { [ ({ ([
 
-### Meta {{{1
+### Meta
 
 snippet ns "ns" b
 (ns ${1:`!v tr(substitute(expand("%:p:r"), '\v.*(src|test)/', '', ''), '/_', '.-')`}$0)
@@ -61,7 +61,7 @@ snippet prv "^:private" w
 ^:private $0
 endsnippet
 
-### Collections {{{1
+### Collections
 
 snippet conj "conj" w
 (conj $0)
@@ -359,7 +359,7 @@ snippet ju "juxt" w
 ((juxt $0) $1)
 endsnippet
 
-### Predicates and Reflection {{{1
+### Predicates and Reflection
 
 snippet cla "class" w
 (class $0)
@@ -425,7 +425,7 @@ snippet zer "zero?" w
 (zero? $0)
 endsnippet
 
-### Functions {{{1
+### Functions
 
 snippet fn "fn" w
 (fn [$1] $0)
@@ -479,7 +479,7 @@ snippet --- "->>" w
 (->> $0)
 endsnippet
 
-### Definitions {{{1
+### Definitions
 
 snippet let "let" w
 (let [$0]
@@ -604,7 +604,7 @@ snippet defme "defmethod" w
 (defmethod $0)
 endsnippet
 
-### Java Interop {{{1
+### Java Interop
 
 snippet S "System/" w
 System/$0
@@ -631,7 +631,7 @@ snippet SB "StringBuilder" w
 StringBuilder
 endsnippet
 
-### Exception Handling {{{1
+### Exception Handling
 
 snippet thr "throw" w
 (throw $0)
@@ -652,7 +652,7 @@ snippet fin "finally" w
 	$0)
 endsnippet
 
-### Conditionals and Logic {{{1
+### Conditionals and Logic
 
 snippet = "=" w
 (= $0)
@@ -724,7 +724,7 @@ snippet or "or" w
 (or $0)
 endsnippet
 
-### Expressions, Iteration, and Looping {{{1
+### Expressions, Iteration, and Looping
 
 snippet do "do exprs" w
 (do $0)
@@ -773,7 +773,7 @@ snippet tram "trampoline" w
 (trampoline $0)
 endsnippet
 
-### Concurrency {{{1
+### Concurrency
 
 snippet sleep "Thread/sleep" w
 (Thread/sleep $0)
@@ -832,7 +832,7 @@ snippet put "put" w
 (put! $0)
 endsnippet
 
-### Strings and Numbers {{{1
+### Strings and Numbers
 
 snippet st "str" w
 (str $0)
@@ -866,7 +866,7 @@ snippet randn "rand-nth" w
 (rand-nth $0)
 endsnippet
 
-### IO {{{1
+### IO
 
 snippet io "io!" w
 (io! $0)
@@ -934,7 +934,7 @@ snippet sp "spit" w
 (spit $0)
 endsnippet
 
-### Testing {{{1
+### Testing
 
 snippet is "clojure.test/is" w
 (is $0)
@@ -945,7 +945,7 @@ snippet test "testing" w
 	)
 endsnippet
 
-### Debugging {{{1
+### Debugging
 
 snippet P "guns.repl/p"
 (guns.repl/p $0)
@@ -996,7 +996,7 @@ snippet BP "(binding [*print-length* …]" w
 	$0)
 endsnippet
 
-### ClojureScript {{{1
+### ClojureScript
 
 snippet .log ".log" w
 (js/console.log $0)
