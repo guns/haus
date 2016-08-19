@@ -35,7 +35,7 @@ function! unite#view#_redraw_prompt() abort "{{{
   let modifiable_save = &l:modifiable
   try
     setlocal modifiable
-    call setline(unite.prompt_linenr,
+    silent! call setline(unite.prompt_linenr,
           \ unite.context.prompt . unite.context.input)
 
     silent! syntax clear uniteInputLine
@@ -640,6 +640,14 @@ function! unite#view#_quit(is_force, ...) abort  "{{{
 
     if winnr('$') == 1 || !context.split
       call unite#util#alternate_buffer()
+
+      if g:unite_restore_alternate_file
+            \ && bufexists(unite.alternate_bufnr)
+            \ && bufnr('%') != unite.alternate_bufnr
+            \ && unite.alternate_bufnr > 0
+        silent! execute 'buffer!' unite.alternate_bufnr
+        silent! buffer! #
+      endif
     elseif is_all || !context.temporary
       close!
       if unite.winnr != winnr() && unite.winnr <= winnr('$')
