@@ -737,6 +737,7 @@ alias localmitmproxy='envtmux localmitmproxy'
 
 # iptables
 ALIAS iptables.sh='/etc/iptables/iptables.sh'
+alias iptw='ipt --wait'
 
 ### Editors
 
