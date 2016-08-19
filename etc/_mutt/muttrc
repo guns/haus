@@ -19,8 +19,8 @@ source ~/.mutt/muttrc.settings
 source $alias_file
 
 # Mailboxes
-mailboxes $spoolfile $mbox $postponed `list-files ~/Mail/self`
-macro index,pager gs "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
+mailboxes $spoolfile $mbox $postponed $trash `list-files ~/Mail/self`
+macro index,pager gs "<enter-command>unmailboxes *; mailboxes \$spoolfile \$mbox \$postponed \$trash \`list-files ~/Mail/self\` <enter><change-folder>?<toggle-mailboxes>"
 macro browser     gs <exit>gs
 
 # Mailing lists
@@ -56,6 +56,7 @@ macro $my_list,pager gg <Home>
 macro $my_list,pager G  <End>
 macro index,pager    gi <change-folder>$spoolfile<Enter>
 macro index,pager    ga <change-folder>$mbox<Enter>
+macro index,pager    gt <change-folder>$trash<Enter>
 macro index,pager    gS <change-folder>=self/[Gmail].Spam<Enter>
 macro index,pager    \' <change-folder>?<toggle-mailboxes>
 bind  browser        \' exit

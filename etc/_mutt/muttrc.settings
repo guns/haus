@@ -1098,7 +1098,9 @@ set folder_format="%2C %t %N %f%> %D"
 # %F      file permissions
 # %g      group name (or numeric gid, if missing)
 # %l      number of hard links
-# %N      N if folder has new mail, blank otherwise
+# %m      number of messages in the mailbox *
+# %n      number of unread messages in the mailbox *
+# %N      N if mailbox has new mail, blank otherwise
 # %s      size in bytes
 # %t      ``*'' if the file is tagged, blank otherwise
 # %u      owner name (or numeric uid, if missing)
@@ -1108,6 +1110,12 @@ set folder_format="%2C %t %N %f%> %D"
 #
 #
 # For an explanation of ``soft-fill'', see the $index_format documentation.
+#
+# * = can be optionally printed if nonzero
+#
+# %m, %n, and %N only work for monitored mailboxes.
+# %m requires $mail_check_stats to be set.
+# %n requires $mail_check_stats to be set (except for IMAP mailboxes).
 #
 
 # set followup_to=yes
@@ -4380,6 +4388,21 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # recipient.  The fifth character is used to indicate mail that was sent
 # by you.  The sixth character is used to indicate when a mail
 # was sent to a mailing-list you subscribe to.
+#
+
+set trash="$folder/TRASH"
+#
+# Name: trash
+# Type: path
+# Default: ""
+#
+#
+# If set, this variable specifies the path of the trash folder where the
+# mails marked for deletion will be moved, instead of being irremediably
+# purged.
+#
+# NOTE: When you delete a message in the trash folder, it is really
+# deleted, so that you have a way to clean the trash.
 #
 
 # set ts_icon_format="M%?n?AIL&ail?"
