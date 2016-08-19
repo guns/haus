@@ -43,7 +43,7 @@ class Dlnode::Pattern
 
   def parse_gsub gsub_str
     pat, rep = gsub_str.split /(?<!\\),/, 2
-    [Haus::Utils.regexp_parse(pat), rep]
+    [Haus::Utils.regexp_parse(pat), rep || '']
   end
 end
 
@@ -164,7 +164,7 @@ class Dlnode
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Download nested HTML resources. Uses cURL.
 
-        Usage: #{File.basename __FILE__} [options] url-or-path [selector=a]:[attribute=href]:[regexp] …
+        Usage: #{File.basename __FILE__} [options] url-or-path [selector=a]:[attribute=href]:[regexp]:[gsub] …
 
         dlnode http://files.example.com/ a:href:subhost.com 'a[id=download]:href:\\.tar\\.gz$'
         dlnode http://files.example.com/ ::subhost.com form[rel=lolcat]:: img[class=lolcat]:src:
