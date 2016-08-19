@@ -1,5 +1,6 @@
 gitv	gitv.txt	/*gitv*
 gitv-author	gitv.txt	/*gitv-author*
+gitv-browser-mappings	gitv.txt	/*gitv-browser-mappings*
 gitv-changelog	gitv.txt	/*gitv-changelog*
 gitv-config-options	gitv.txt	/*gitv-config-options*
 gitv-installation	gitv.txt	/*gitv-installation*
