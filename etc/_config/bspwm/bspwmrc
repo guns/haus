@@ -30,6 +30,7 @@ n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
 
+bspc rule --add Asunder             state=floating
 bspc rule --add Audacious           state=floating
 bspc rule --add FLTK                state=floating
 bspc rule --add Gifview             state=floating
