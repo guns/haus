@@ -15,6 +15,8 @@ T:	ack_quick_help.txt	/*T:*
 ack	ack.txt	/*ack*
 ack-author	ack.txt	/*ack-author*
 ack-configuration	ack.txt	/*ack-configuration*
+ack-ignore	ack.txt	/*ack-ignore*
+ack-issues-and-faq	ack.txt	/*ack-issues-and-faq*
 ack-mappings	ack.txt	/*ack-mappings*
 ack.txt	ack.txt	/*ack.txt*
 g:ack_apply_lmappings	ack.txt	/*g:ack_apply_lmappings*
