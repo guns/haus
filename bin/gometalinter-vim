@@ -67,12 +67,14 @@
 
 # gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/Default linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
 
+gas_rules = %w[tls_old exec rand tls_good tls_ok templates httpoxy perms unsafe hardcoded tempfile rsa sql crypto bind].map { |r| "-rule #{r}" }.join ' '
+
 linters = \
 {"aligncheck"  => "aligncheck {path}:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
  "deadcode"    => "deadcode {path}:^deadcode: (?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "dupl"        => "dupl -plumbing -threshold {duplthreshold} {path}/*.go:^(?P<path>[^\\s][^:]+?\\.go):(?P<line>\\d+)-\\d+:\\s*(?P<message>.*)$",
- "errcheck"    => "errcheck -ignore=fmt:^$ -abspath {path}:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):[\\s\\t]+(?P<message>.*)$",
- "gas"         => "gas -fmt=csv {path}/*.go:^(?P<path>.*?\\.go+),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
+ "errcheck"    => "errcheck -abspath {path}:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):[\\s\\t]+(?P<message>.*)$",
+ "gas"         => "gas -fmt=csv #{gas_rules} {path}/*.go:^(?P<path>.*?\\.go+),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
  "goconst"     => "goconst -min-occurrences {min_occurrences} -min-length {min_const_length} {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "gocyclo"     => "gocyclo -over {mincyclo} {path}:^(?P<cyclo>\\d+)\\s+\\S+\\s(?P<function>\\S+)\\s+(?P<path>[^:]+):(?P<line>\\d+):(\\d+)$",
  "gofmt"       => "gofmt -l -s {path}/*.go:^(?P<path>[^\\n]+)$",
