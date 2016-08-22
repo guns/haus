@@ -111,8 +111,8 @@ exec 'gometalinter',
      '--dupl-threshold=50',
      '--sort=path',
      '--tests',
-     '--deadline=15s',
+     '--deadline=30s',
      '--disable-all',
      *(ENV['DEBUG'] ? ['--debug'] : []),
      *linters,
-     './...'
+     '.'
