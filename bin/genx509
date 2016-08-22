@@ -1,0 +1,135 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2016 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'shellwords'
+
+class GenX509
+  DEFAULTS = {
+    :altnames => nil,
+    :cacert => nil,
+    :cakey => nil,
+    :dir => File.expand_path('.'),
+    :self_signed => false,
+    :days => 365
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Usage: #{File.basename __FILE__} [options] basename subject
+
+        Example:
+
+            #{File.basename __FILE__} -c
+
+        Options:
+      BANNER
+
+      opt.on '-a', '--altnames A,B,C', Array, "Comma separated list of subjectAltName entries" do |arg|
+        @altnames = arg
+      end
+
+      opt.on '-c', '--cacert CERTPATH', 'CA certificate' do |arg|
+        @cacert = File.expand_path arg
+      end
+
+      opt.on '-k', '--cakey KEYPATH', 'CA private key' do |arg|
+        @cakey = File.expand_path arg
+      end
+
+      opt.on '-d', '--dir DIR', "DEFAULT: #{@dir}" do |arg|
+        @dir = arg
+      end
+
+      opt.on '-s', '--self-signed', 'Generate a self-signed certificate instead of a CSR' do
+        @self_signed = true
+      end
+
+      opt.on '-D', '--days N', Integer, "DEFAULT: #{@days}" do |arg|
+        @days = args
+      end
+    end
+  end
+
+  def sh *args
+    puts ":: #{args.shelljoin}"
+    system *args
+  end
+
+  def common_name subject
+    subject[/\/CN=(.*?)(?=\/|\z)/, 1]
+  end
+
+  def subject_alt_names altnames
+    altnames.map.with_index { |name, i| "DNS.#{i+1}:#{name}" }.join ','
+  end
+
+  def genrsa basename
+    out = basename + '.key'
+    sh 'openssl', 'genrsa', '-out', out, '4096'
+    out
+  end
+
+  def gencsr basename, subject, keyfile
+    out = basename + '.csr'
+    sh *%W[openssl req -new -utf8 -extensions v3_ca -key #{keyfile} -subj #{subject} -out #{out}]
+    out
+  end
+
+  def write_extfile path, altnames
+    File.open path, 'w' do |f|
+      f.puts <<-EOF.gsub /^\s*/, ''
+        basicConstraints = CA:FALSE
+        subjectAltName = #{subject_alt_names altnames}
+        extendedKeyUsage = serverAuth
+      EOF
+    end
+  end
+
+  def genselfx509 basename, altnames, days, keyfile, csrfile
+    out = basename + '.crt'
+    extfile = basename + '.cnf'
+    write_extfile extfile, altnames
+    sh *%W[openssl x509 -req -days #{days} -signkey #{keyfile} -extfile #{extfile} -in #{csrfile} -out #{out}]
+    out
+  end
+
+  def genx509 basename, altnames, days, cacert, cakey, csrpath
+    out = basename + '.crt'
+    extfile = basename + '.cnf'
+    write_extfile extfile, altnames
+    sh *%W[openssl x509 -req -days #{days} -CA #{cacert} -CAkey #{cakey} -CAcreateserial -extfile #{extfile} -in #{csrpath} -out #{out}]
+    out
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size != 2
+
+    File.umask 0077
+
+    basename, subject = args
+
+    Dir.chdir @dir do
+      keyfile = genrsa basename
+      csrfile = gencsr basename, subject, keyfile
+
+      if @self_signed
+        genselfx509 basename, @altnames || common_name(subject), @days, keyfile, csrfile
+      elsif @cacert and @cakey
+        genx509 basename, @altnames || common_name(subject), @days, @cacert, @cakey, csrfile
+      end
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and GenX509.new.run ARGV if $0 == __FILE__
