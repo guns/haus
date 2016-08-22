@@ -15,7 +15,7 @@ endsnippet
 
 ### STATEMENTS ###
 
-snippet req "require (node.js)" b
+snippet req "require (node.js)" w
 require('$1')
 endsnippet
 
@@ -98,7 +98,7 @@ typeof $0
 endsnippet
 
 snippet : "key: value"
-${1:key}: ${0:value}
+${1}: ${0},
 endsnippet
 
 snippet get "Get Elements"
@@ -125,4 +125,12 @@ endsnippet
 
 snippet up "user_pref()" b
 user_pref("$1", $0);
+endsnippet
+
+snippet ? "? :" w
+$1 ? $2 : $0
+endsnippet
+
+snippet N "new" w
+new $0
 endsnippet

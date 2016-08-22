@@ -121,7 +121,7 @@ augroup GUNS
 		\ setlocal filetype=gitconfig
 	autocmd BufRead,BufNewFile *.INI,*.toml
 		\ setlocal filetype=dosini
-	autocmd BufRead,BufNewFile */etc/*hosts,*/etc/ipset.conf
+	autocmd BufRead,BufNewFile */etc/*hosts,ipset.conf,Caddyfile
 		\ setlocal filetype=conf
 
 	" XDefaults

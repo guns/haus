@@ -608,7 +608,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader><M-c> <Plug>(go-coverage-clear)
 	noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
 	noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
-	noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -ignore=fmt:^$ -abspath<CR>
+	noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath<CR>
 	noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank<CR>
 	nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
