@@ -621,7 +621,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
 	noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
 	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
-	noremap  <buffer> <LocalLeader>v :<C-u>GoVet -test -shadowstrict .<CR>
+	nmap     <buffer> <LocalLeader>v <Plug>(go-vet)
 endfunction
 
 function! s:CompareQuickfix(p, q)

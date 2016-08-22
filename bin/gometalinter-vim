@@ -93,9 +93,8 @@ linters = \
  "unconvert"   => "unconvert {path}:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "unused"      => "unused {path}:^(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "varcheck"    => "varcheck {path}:^(?:[^:]+: )?(?P<path>[^:]+):(?P<line>\\d+):(?P<col>\\d+):[\\s\\t]+(?P<message>.*)$",
- "vet"         => "go tool vet -test -shadowstrict {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
- # "vetshadow"   => "go tool vet --shadow {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$"
-}
+ "vet"         => "go tool vet {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
+ "vetshadow"   => "go tool vet --shadow {path}/*.go:^(?P<path>[^\\s][^\\r\\n:]+?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$"}
 .reduce([]) { |v, entry|
   v << '--linter=%s:%s' % entry
   v << '--enable=%s' % entry[0]
