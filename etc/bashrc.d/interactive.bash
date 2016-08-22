@@ -490,9 +490,6 @@ HAVE inotifywait && fwatch() {
     while inotifywait -e close_write -r "$1"; do eval "${@:2}"; sleep 0.5; done
 }
 
-# setcap
-ALIAS setcapbindallow='setcap cap_net_bind_service=+ep'
-
 # Check shell init files and system paths for loose permissions
 ckperm() {
     # path:user:group:octal-mask:opt1,opt2

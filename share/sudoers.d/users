@@ -1,2 +1,3 @@
 guns   ALL = (ALL) PASSWD: ALL
+guns   ALL = (ALL) NOPASSWD: /usr/bin/setcapallowbind
 %power ALL = (ALL) NOPASSWD: /usr/bin/powerctl
