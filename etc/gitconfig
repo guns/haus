@@ -152,8 +152,7 @@
 	# Tags
 	t   = tag
 	td  = tag --delete
-	ts  = tag --sign
-	tsf = tag --sign --force
+	ts  = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\"; }; f"
 
 	# Diff and patch
 	di   = diff --ws-error-highlight=all
