@@ -29,7 +29,10 @@ class GenX509
 
         Example:
 
-            #{File.basename __FILE__} -c
+            $ #{File.basename __FILE__} -a foo.com,www.foo.com foo.com /CN=foo.com
+            …
+            $ ls
+            foo.com.cnf  foo.com.crt  foo.com.csr  foo.com.key
 
         Options:
       BANNER
