@@ -14,7 +14,6 @@ class GenX509
     :cacert => nil,
     :cakey => nil,
     :dir => File.expand_path('.'),
-    :self_signed => false,
     :days => 365
   }
 
@@ -27,12 +26,44 @@ class GenX509
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Usage: #{File.basename __FILE__} [options] basename subject
 
+        Quickly generate self-signed certificates for local development.
+
+        For convenience, certificates for common names of the form
+        `example.com` or `www.example.com` will also include subject
+        alternative names for both. Use --altnames to override.
+
+        Supplying both a --cacert and a --cakey signs the certificate with the
+        CA key.
+
         Example:
 
-            $ #{File.basename __FILE__} -a foo.com,www.foo.com foo.com /CN=foo.com
+            $ #{File.basename __FILE__} mysite /CN=www.mysite.dev
             …
             $ ls
-            foo.com.cnf  foo.com.crt  foo.com.csr  foo.com.key
+            mysite.cnf  mysite.crt  mysite.csr  mysite.key
+            $ openssl x509 -text < mysite.crt
+            Certificate:
+                …
+                Signature Algorithm: sha256WithRSAEncryption
+                    Issuer: CN=www.mysite.dev
+                    …
+                    Subject: CN=www.mysite.dev
+                    Subject Public Key Info:
+                        Public Key Algorithm: rsaEncryption
+                            Public-Key: (4096 bit)
+                            …
+                    X509v3 extensions:
+                        X509v3 Basic Constraints:
+                            CA:FALSE
+                        X509v3 Subject Alternative Name:
+                            DNS:mysite.dev, DNS:www.mysite.dev
+                        X509v3 Extended Key Usage:
+                            TLS Web Server Authentication
+                Signature Algorithm: sha256WithRSAEncryption
+                    …
+            -----BEGIN CERTIFICATE-----
+            …
+            -----END CERTIFICATE-----
 
         Options:
       BANNER
@@ -53,10 +84,6 @@ class GenX509
         @dir = arg
       end
 
-      opt.on '-s', '--self-signed', 'Generate a self-signed certificate instead of a CSR' do
-        @self_signed = true
-      end
-
       opt.on '-D', '--days N', Integer, "DEFAULT: #{@days}" do |arg|
         @days = args
       end
@@ -72,8 +99,29 @@ class GenX509
     subject[/\/CN=(.*?)(?=\/|\z)/, 1]
   end
 
+  def www_altnames domain
+    ps = domain.split '.'
+    if ps.size == 2
+      [domain, "www.#{domain}"]
+    elsif ps.size == 3 and ps[0] == 'www'
+      [ps[1..-1].join('.'), domain]
+    else
+      [domain]
+    end
+  end
+
   def subject_alt_names altnames
     altnames.map.with_index { |name, i| "DNS.#{i+1}:#{name}" }.join ','
+  end
+
+  def write_extfile path, altnames
+    File.open path, 'w' do |f|
+      f.puts <<-EOF.gsub /^\s*/, ''
+        basicConstraints = CA:FALSE
+        subjectAltName = #{subject_alt_names altnames}
+        extendedKeyUsage = serverAuth
+      EOF
+    end
   end
 
   def genrsa basename
@@ -86,16 +134,6 @@ class GenX509
     out = basename + '.csr'
     sh *%W[openssl req -new -utf8 -extensions v3_ca -key #{keyfile} -subj #{subject} -out #{out}]
     out
-  end
-
-  def write_extfile path, altnames
-    File.open path, 'w' do |f|
-      f.puts <<-EOF.gsub /^\s*/, ''
-        basicConstraints = CA:FALSE
-        subjectAltName = #{subject_alt_names altnames}
-        extendedKeyUsage = serverAuth
-      EOF
-    end
   end
 
   def genselfx509 basename, altnames, days, keyfile, csrfile
@@ -125,11 +163,12 @@ class GenX509
     Dir.chdir @dir do
       keyfile = genrsa basename
       csrfile = gencsr basename, subject, keyfile
+      altnames = @altnames || www_altnames(common_name subject)
 
-      if @self_signed
-        genselfx509 basename, @altnames || common_name(subject), @days, keyfile, csrfile
-      elsif @cacert and @cakey
-        genx509 basename, @altnames || common_name(subject), @days, @cacert, @cakey, csrfile
+      if @cacert and @cakey
+        genx509 basename, altnames, @days, @cacert, @cakey, csrfile
+      else
+        genselfx509 basename, altnames, @days, keyfile, csrfile
       end
     end
   end
