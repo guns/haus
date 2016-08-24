@@ -9,7 +9,7 @@ view CONTACT = name, email, address, address2, city, state, zip, country, phone,
 
 set preserve_fields = all
 set show_all_emails = true
-set index_format = " {name:25} {mobile:16|mobile|phone|workphone} {email:30} {notes}"
+set index_format = " {name:25} {mobile:20|mobile|phone|workphone} {email:30} {notes}"
 set mutt_command = muttlaunch
 set www_command = xdg-open
 set address_style = us

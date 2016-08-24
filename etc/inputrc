@@ -174,7 +174,7 @@ $if bash
     "\C-xm":        "\C-]man "
     # VIMEDITBINDINGS
     "\C-xea":       "\C-] vimautocommands \n"
-    "\C-xeA":       "\C-] vimaliases \n"
+    "\C-xeA":       "\C-] vimabook \n"
     "\C-xeb":       "\C-] vimbashinteractive \n"
     "\C-xeB":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"

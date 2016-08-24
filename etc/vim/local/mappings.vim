@@ -358,7 +358,7 @@ noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
 " VIMEDITBINDINGS
 noremap <Leader>ea       :<C-u>TabOpen $cdhaus/etc/vim/local/autocommands.vim \| lcd $cdhaus<CR>
-noremap <Leader>eA       :<C-u>TabOpen ~/.mutt/aliases \| lcd ~/.mutt<CR>
+noremap <Leader>eA       :<C-u>TabOpen ~/.abook/addressbook \| lcd ~/.abook<CR>
 noremap <Leader>eb       :<C-u>TabOpen $cdhaus/etc/bashrc.d/interactive.bash \| lcd $cdhaus<CR>
 noremap <Leader>eB       :<C-u>TabOpen $cdhaus/etc/bashrc \| lcd $cdhaus<CR>
 noremap <Leader>ec       :<C-u>TabOpen $cdhaus/etc/vim/local/commands.vim \| lcd $cdhaus<CR>
