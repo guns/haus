@@ -29,7 +29,7 @@ func (opts *options) validate() error {
 
 func abort(err error) {
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error()) // About to exit, ignore
+		fmt.Fprintln(os.Stderr, err.Error())
 	}
 	os.Exit(1)
 }
@@ -790,6 +790,12 @@ endsnippet
 
 snippet sN "signal.Notify" w
 signal.Notify(${1:sigch}, syscall.SIG$0)
+endsnippet
+
+snippet hh "http.Handler fn" b
+func $1(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
+	$0
+}
 endsnippet
 
 #
