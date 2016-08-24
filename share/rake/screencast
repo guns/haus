@@ -31,7 +31,7 @@ task :screencast do
       sleep 0.1 while alive? pid
     end
     rm_f pidfile
-    system 'feh', '--bg-fill', File.read(File.expand_path '~/.fehbg').shellsplit.last
+    system 'nitrogen', '--restore'
   else
     system 'xsetroot -solid black'
 

@@ -37,6 +37,7 @@ bspc rule --add Gifview             state=floating
 bspc rule --add Kupfer.py           state=floating focus=true
 bspc rule --add Liferea             split_dir=west split_ratio=0.3 private=true
 bspc rule --add melt                state=floating
+bspc rule --add Nitrogen            state=floating
 bspc rule --add Orage               state=floating
 bspc rule --add 'Orage Preferences' state=floating
 bspc rule --add Pavucontrol         state=floating

@@ -58,9 +58,6 @@ super + alt + {Next,Prior,button4,button5}
 	GAP=$(($(bspc config -d focused window_gap) {+,-,+,-} 4)); \
 	bspc config -d focused window_gap $((GAP < 0 ? 0 : GAP))
 
-super + alt + w
-	feh --bg-fill "$(randfile -r ~/Media/Wallpapers)"
-
 #
 # Windows {{{1
 #
@@ -319,6 +316,9 @@ super + control + t
 
 super + alt + control + t
 	remind --query
+
+super + control + w
+	wmctrl -a 'nitrogen' || exec nitrogen
 
 super + control + m
 	T='♫ pianobar ♫'; \

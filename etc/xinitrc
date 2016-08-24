@@ -24,7 +24,7 @@ cd ~/Downloads
 
 /usr/bin/sxhkd &
 /usr/bin/gpg-connect-agent /bye &
-(/bin/sh ~/.fehbg; exec /usr/bin/tint2) &
+(nitrogen --restore; exec /usr/bin/tint2) &
 /usr/bin/pulseaudio --start &
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
