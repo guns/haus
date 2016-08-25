@@ -53,3 +53,8 @@ bspc rule --add Xsensors            state=floating sticky=true
 bspc rule --add Cookies             state=floating
 bspc rule --add Places              state=floating
 bspc rule --add Toplevel            state=floating
+
+# Set wallpapers after xrandr call
+killall --exact tint2
+nitrogen --restore
+bgrun tint2
