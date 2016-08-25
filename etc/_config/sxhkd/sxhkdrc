@@ -318,7 +318,7 @@ super + alt + control + t
 	remind --query
 
 super + control + w
-	wmctrl -a 'nitrogen' || exec nitrogen
+	wmctrl -a 'nitrogen' || exec nitrogen --sort=rtime
 
 super + control + m
 	T='♫ pianobar ♫'; \
