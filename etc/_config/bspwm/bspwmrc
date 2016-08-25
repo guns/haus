@@ -28,6 +28,7 @@ case "$(bspc query --monitors | grep --count .)" in
     xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
     bspc monitor VGA1 --reset-desktops 1 2 3 4
     bspc monitor HDMI2 --reset-desktops 5 6 7 8
+    bspc desktop 1 --layout monocle
     bspc desktop 5 --layout monocle
     ;;
 *)
@@ -66,6 +67,9 @@ bspc rule --add Places              state=floating
 bspc rule --add Toplevel            state=floating
 
 # Set wallpapers after xrandr call
-killall --exact tint2
 nitrogen --restore
-bgrun tint2
+if pkill --exact -0 tint2; then
+    pkill --exact SIGUSR1
+else
+    tint2 &
+fi
