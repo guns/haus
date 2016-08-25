@@ -23,8 +23,18 @@ bspc config bottom_padding            20
 bspc config border_width              2
 bspc config window_gap                8
 
-bspc monitor --reset-desktops α β γ δ
-bspc desktop α --layout monocle
+case "$(bspc query --monitors | grep --count .)" in
+2)
+    xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
+    bspc monitor VGA1 --reset-desktops 1 2 3 4
+    bspc monitor HDMI2 --reset-desktops 5 6 7 8
+    bspc desktop 5 --layout monocle
+    ;;
+*)
+    bspc monitor --reset-desktops 1 2 3 4
+    bspc desktop 1 --layout monocle
+    ;;
+esac
 
 n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
@@ -34,6 +44,7 @@ bspc rule --add Asunder             state=floating
 bspc rule --add Audacious           state=floating
 bspc rule --add FLTK                state=floating
 bspc rule --add Gifview             state=floating
+bspc rule --add jetbrains-studio    state=floating
 bspc rule --add Kupfer.py           state=floating focus=true
 bspc rule --add Liferea             split_dir=west split_ratio=0.3 private=true
 bspc rule --add melt                state=floating
