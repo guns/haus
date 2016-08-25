@@ -307,12 +307,14 @@ super + F12
 	urxvt-client -cd ~/Downloads -g 120x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
 super + control + e
-	urxvt-client -g 80x40 -title '✎ VIM ✎' -icon ~/.icons/haus/vim.svg -e vim
+	T='✎ VIM ✎'; \
+        wmctrl -a "$T" || \
+	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
-	T="✔ TODO ✔"; \
-	wmctrl -a "$T" || wmctrl -a "TODO.org" || \
-	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim -c 'Org! TODO'
+	T='> pty >'; \
+        wmctrl -a "$T" || \
+	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/terminal.svg
 
 super + alt + control + t
 	remind --query
