@@ -1355,7 +1355,7 @@ HAVE npm && {
 ### Media
 
 # Imagemagick
-ALIAS geometry='identify -format "%w %h"'
+ALIAS geometry='identify -format "%wx%h"'
 
 # feh
 HAVE feh && {
