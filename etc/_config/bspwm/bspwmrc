@@ -41,25 +41,25 @@ n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
 
-bspc rule --add Asunder             state=floating
-bspc rule --add Audacious           state=floating
-bspc rule --add FLTK                state=floating
-bspc rule --add Gifview             state=floating
-bspc rule --add jetbrains-studio    state=floating
-bspc rule --add Kupfer.py           state=floating focus=true
-bspc rule --add Liferea             split_dir=west split_ratio=0.3 private=true
-bspc rule --add melt                state=floating
-bspc rule --add Nitrogen            state=floating
-bspc rule --add Orage               state=floating
-bspc rule --add 'Orage Preferences' state=floating
-bspc rule --add Pavucontrol         state=floating
-bspc rule --add Qalculate-gtk       state=floating
-bspc rule --add qjackctl            state=floating
-bspc rule --add Sxiv                state=fullscreen
-bspc rule --add Thunar              state=floating
-bspc rule --add Transmission-gtk    state=floating
-bspc rule --add Vlc                 state=floating
-bspc rule --add Xsensors            state=floating sticky=true
+bspc rule --add Asunder                state=floating
+bspc rule --add Audacious              state=floating
+bspc rule --add FLTK                   state=floating
+bspc rule --add Gifview                state=floating
+bspc rule --add sun-awt-X11-XFramePeer state=tiled
+bspc rule --add Kupfer.py              state=floating focus=true
+bspc rule --add Liferea                split_dir=west split_ratio=0.3 private=true
+bspc rule --add melt                   state=floating
+bspc rule --add Nitrogen               state=floating
+bspc rule --add Orage                  state=floating
+bspc rule --add 'Orage Preferences'    state=floating
+bspc rule --add Pavucontrol            state=floating
+bspc rule --add Qalculate-gtk          state=floating
+bspc rule --add qjackctl               state=floating
+bspc rule --add Sxiv                   state=fullscreen
+bspc rule --add Thunar                 state=floating
+bspc rule --add Transmission-gtk       state=floating
+bspc rule --add Vlc                    state=floating
+bspc rule --add Xsensors               state=floating sticky=true
 
 # Firefox modal windows
 bspc rule --add Cookies             state=floating
