@@ -308,12 +308,12 @@ super + F12
 
 super + control + e
 	T='✎ VIM ✎'; \
-        wmctrl -a "$T" || \
+	wmctrl -a "$T" || \
 	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
 	T='> pty >'; \
-        wmctrl -a "$T" || \
+	wmctrl -a "$T" || \
 	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/terminal.svg
 
 super + alt + control + t

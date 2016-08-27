@@ -23,20 +23,6 @@ bspc config bottom_padding            20
 bspc config border_width              2
 bspc config window_gap                8
 
-case "$(bspc query --monitors | grep --count .)" in
-2)
-    xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
-    bspc monitor VGA1 --reset-desktops 1 2 3 4
-    bspc monitor HDMI2 --reset-desktops 5 6 7 8
-    bspc desktop 1 --layout monocle
-    bspc desktop 5 --layout monocle
-    ;;
-*)
-    bspc monitor --reset-desktops 1 2 3 4
-    bspc desktop 1 --layout monocle
-    ;;
-esac
-
 n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
@@ -62,9 +48,23 @@ bspc rule --add Vlc                    state=floating
 bspc rule --add Xsensors               state=floating sticky=true
 
 # Firefox modal windows
-bspc rule --add Cookies             state=floating
-bspc rule --add Places              state=floating
-bspc rule --add Toplevel            state=floating
+bspc rule --add Cookies                state=floating
+bspc rule --add Places                 state=floating
+bspc rule --add Toplevel               state=floating
+
+case "$(bspc query --monitors | grep --count .)" in
+2)
+    xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
+    bspc monitor VGA1 --reset-desktops 1 2 3 4
+    bspc monitor HDMI2 --reset-desktops 5 6 7 8
+    bspc desktop 1 --layout monocle
+    bspc desktop 5 --layout monocle
+    ;;
+*)
+    bspc monitor --reset-desktops 1 2 3 4
+    bspc desktop 1 --layout monocle
+    ;;
+esac
 
 # Set wallpapers after xrandr call
 nitrogen --restore

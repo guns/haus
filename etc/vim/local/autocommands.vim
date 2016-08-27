@@ -49,8 +49,11 @@ augroup GUNS
 		\ SetAutowrap 1
 
 	" Shell
-	autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,bash-fc-*,sxhkdrc,bspwmrc
+	autocmd BufRead,BufNewFile *profile,rc.conf,PKGBUILD,bash-fc-*,bspwmrc
 		\ setlocal filetype=sh
+	autocmd BufRead,BufNewFile sxhkdrc
+		\ setlocal filetype=sh noexpandtab |
+		\ SetWhitespace 8
 	autocmd FileType sh
 		\ setlocal expandtab iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
 		\ SetWhitespace 4 8
