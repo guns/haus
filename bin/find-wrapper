@@ -85,7 +85,8 @@ class FindWrapper
       cmd.concat args
     elsif args.any?
       pat = args[0]
-      test = pat.index('/') ? '-ipath' : '-iname'
+      i = pat =~ /\p{Lu}/ ? '' : 'i'
+      test = pat.index('/') ? "-#{i}path" : "-#{i}name"
       cmd.push test, make_find_glob(pat), *args.drop(1)
     end
 
