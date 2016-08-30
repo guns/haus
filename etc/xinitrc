@@ -28,6 +28,7 @@ cd ~/Downloads
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
 xautolock-launch &
+(sleep 0.5; exec /usr/bin/tint2) & # Delay for bspwmrc to set wallpaper
 
 popd
 
