@@ -1288,7 +1288,15 @@ ALIAS pac='pacman' && {
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
     alias pacoutdated='run pacman --query --upgrades; run pacckalts'
     alias pacclean='run pacman --sync --clean --noconfirm'
-    alias pacforeign='run pacman --query --foreign'
+    pacforeign() {
+        ruby -e '
+            puts %x(pacman --query --foreign --info).split("\n\n").reduce([]) { |pkgs, pkg|
+                (pkg[/Groups\s*:\s*(.*)/, 1].split & %w[nerv nerv-alt]).empty? \
+                    ? pkgs << pkg[/Name\s*:\s*(.*)/, 1] \
+                    : pkgs
+            }
+        '
+    }
     alias paclog='pager /var/log/pacman.log'
     alias pacowner='run pacman --query --owns'
 
@@ -1337,6 +1345,15 @@ ALIAS pac='pacman' && {
         for name in "$@"; do
             run git clone "https://aur.archlinux.org/${name}.git"
         done
+    }
+
+    HAVE pacaur && {
+        alias aur="AURDEST=\"$cdarchlinux/aur\" pacaur"; TCOMP pacaur aur
+        # alias auri
+        alias aurs='aur --search'
+        # alias aurg
+        alias aurq='aur --info'
+        alias auroutdated='aur --check'
     }
 }
 
