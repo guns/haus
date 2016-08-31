@@ -10,6 +10,7 @@ case "$(xtitle "$1")" in
 '✎ VIM ✎'            ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
 '♫ pianobar ♫'       ) echo 'state=floating';;
+'⚙ htop ⚙'           ) echo 'state=floating';;
 'cmus'               ) echo 'state=floating';;
 '❴ pass ❵'           ) echo 'state=floating';;
 'Page Info - '*      ) echo 'state=floating';;
