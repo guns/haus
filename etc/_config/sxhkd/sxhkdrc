@@ -258,7 +258,6 @@ F8
 	\{ \
 		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
 		sleep 0.1; \
-		xdotool getactivewindow windowmove --sync 0 0; \
 		xdotool type 'passclip '; \
 	\}
 
@@ -312,7 +311,7 @@ super + control + e
 	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
-	T='> pty >'; \
+	T='☎ pty ☎'; \
 	wmctrl -a "$T" || \
 	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/terminal.svg
 
@@ -323,11 +322,11 @@ super + control + w
 	wmctrl -a 'nitrogen' || exec nitrogen --sort=rtime
 
 super + control + m
-	T='♫ pianobar ♫'; \
-	wmctrl -a "$T" || urxvt-client -title "$T" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/a6286098@drdrb.net
+	P='♫ pianobar ♫'; C='cmus'; \
+	wmctrl -a "$P" || wmctrl -a "$C" || urxvt-client -title "$P" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/a6286098@drdrb.net
 
 super + control + shift + m
-	T='♫ cmus ♫'; \
-	wmctrl -a "$T" || urxvt-client -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
+	P='♫ pianobar ♫'; C='cmus'; \
+	wmctrl -a "$C" || wmctrl -a "$P" || urxvt-client -cd ~/Media/Music -title "$C" -icon ~/.icons/haus/music.svg -e cmus
 
 # vim:noet:foldmethod=marker:
