@@ -78,3 +78,4 @@ esac
 
 # Set wallpapers after xrandr call
 nitrogen --restore
+rm -f "/run/user/$UID/wallpaper.lock"

@@ -28,7 +28,8 @@ cd ~/Downloads
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
 xautolock-launch &
-(sleep 0.5; exec /usr/bin/tint2) & # Delay for bspwmrc to set wallpaper
+WALLPAPER="/run/user/$UID/wallpaper.lock"
+(inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
 
 popd
 
