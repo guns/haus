@@ -28,7 +28,7 @@ cd ~/Downloads
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
 xautolock-launch &
-WALLPAPER="/run/user/$UID/wallpaper.lock"
+WALLPAPER="/run/user/$EUID/wallpaper.lock"
 (inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
 
 popd
