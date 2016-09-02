@@ -29,6 +29,7 @@ cd ~/Downloads
 iptablesnotify &
 xautolock-launch &
 WALLPAPER="/run/user/$EUID/wallpaper.lock"
+> "$WALLPAPER"
 (inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
 
 popd
