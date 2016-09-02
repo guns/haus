@@ -7,7 +7,7 @@
 case "$(xtitle "$1")" in
 '✉ Mutt ✉'           ) echo 'state=floating';;
 '☎ pty ☎'            ) echo 'state=floating';;
-'✎ VIM ✎'            ) echo 'state=floating';;
+*' - VIM'            ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
 '♫ pianobar ♫'       ) echo 'state=floating';;
 '⚙ htop ⚙'           ) echo 'state=floating';;

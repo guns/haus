@@ -310,9 +310,9 @@ alt + F12
 	orage
 
 super + control + e
-	T='✎ VIM ✎'; \
+	T=' - VIM'; \
 	wmctrl -a "$T" || \
-	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/vim.svg -e vim
+	urxvt-client -g 80x40 -title "VIM $T" -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
 	T='☎ pty ☎'; \
