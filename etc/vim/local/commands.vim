@@ -632,7 +632,7 @@ endfunction
 
 command! -bar GoOptimizations call <SID>GoOptimizations()
 function! s:GoOptimizations()
-	GoBuild -gcflags=-m\ -d=ssa/check_bce/debug=1
+	GoBuild -gcflags=-m\ -d=ssa/check_bce,ssa/prove
 	let visited = {}
 	let qflist = getqflist()
 	let newqflist = []
