@@ -177,6 +177,14 @@ func Test$1(t *testing.T) {
 }
 endsnippet
 
+snippet table "table driven test" b
+data := ${1}{}
+
+for _, row := range data {
+	$0
+}
+endsnippet
+
 snippet as "assert" w
 if !(${1}) {
 	t.Errorf("expected: $1${2:, actual: %v}$0")
@@ -453,7 +461,7 @@ ${1:default:
 endsnippet
 
 snippet case "Case clause" !b
-case ${1:condition}:
+case ${1}:
 	${0:${VISUAL}}
 endsnippet
 
