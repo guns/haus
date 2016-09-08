@@ -619,6 +619,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
+	nmap     <buffer> <LocalLeader>S :<C-u>execute 'Sscratch' \| execute 'normal! gg"_dG' \| r!go build -gcflags=-S<CR>
 	noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
 	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
 	nmap     <buffer> <LocalLeader>v <Plug>(go-vet)

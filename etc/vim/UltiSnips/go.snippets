@@ -164,7 +164,6 @@ endsnippet
 
 snippet b "Benchmark" b
 func Benchmark$1(b *testing.B) {
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		$0
 	}
