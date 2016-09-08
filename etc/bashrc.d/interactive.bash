@@ -913,14 +913,18 @@ ALIAS mk='make' \
 
 # golang
 HAVE go && {
-    goget() { run go get -u -v "$@"; }
-    gobuild() { run go build -i -v "$@"; }
-    goinstall() { run go install -v "$@"; }
-    gotest() { run go test -tags test -run="${1:-.}" "${@:2}"; }
-    gorace() { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
-    gobench() { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
-    golistfiles() { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
-    golistimports() { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
+    goget()           { run go get -u -v "$@"; }
+    gobuild()         { run go build -i -v "$@"; }
+    goassemble()      { run go build -v -gcflags=-S "$@"; }
+    gooptimizations() { run go build -v -gcflags='-m -d=ssa/check_bce,ssa/prove' "$@"; }
+    goinstall()       { run go install -v "$@"; }
+    gotest()          { run go test -tags test -run="${1:-.}" "${@:2}"; }
+    gorace()          { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
+    gobench()         { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
+    gogenerate()      { run go generate "$@"; }
+    golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
+    golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
+
     ALIAS gl='glide' && {
         alias glget='run glide --verbose get --all-dependencies --strip-vendor'
         alias glupdate='run glide --verbose update --all-dependencies --strip-vendor'
@@ -1286,7 +1290,7 @@ ALIAS pac='pacman' && {
     }
     alias pacsync='run pacman --sync --refresh'
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
-    alias pacoutdated='run pacman --query --upgrades; run pacckalts'
+    alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacaur --check $(pacforeign)'
     alias pacclean='run pacman --sync --clean --noconfirm'
     pacforeign() {
         ruby -e '
