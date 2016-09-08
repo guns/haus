@@ -4,7 +4,7 @@
 	<icon>Terminal</icon>
 	<name>Open Terminal Here</name>
 	<unique-id>1418017900066220-1</unique-id>
-	<command>urxvt-client -icon ~/.icons/haus/terminal.svg -cd %f</command>
+	<command>urxvt-client -g 80x40 -title &apos;☎ urxvt ☎&apos; -icon ~/.icons/haus/terminal.svg -cd %f</command>
 	<description>Example for a custom action</description>
 	<patterns>*</patterns>
 	<directories/>

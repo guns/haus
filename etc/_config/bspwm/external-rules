@@ -6,15 +6,15 @@
 
 case "$(xtitle "$1")" in
 '✉ Mutt ✉'           ) echo 'state=floating';;
-'☎ pty ☎'            ) echo 'state=floating';;
-*' - VIM'            ) echo 'state=floating';;
+'☎ urxvt ☎'          ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
 '♫ pianobar ♫'       ) echo 'state=floating';;
 '⚙ htop ⚙'           ) echo 'state=floating';;
-'cmus'               ) echo 'state=floating';;
 '❴ pass ❵'           ) echo 'state=floating';;
+'cmus'               ) echo 'state=floating';;
 'Page Info - '*      ) echo 'state=floating';;
 'Event Tester'       ) echo 'state=floating';;
 'DownThemAll!'*      ) echo 'state=floating';;
 'xzoom x2'           ) echo 'state=floating';;
+*' - VIM'            ) echo 'state=floating';;
 esac

@@ -315,7 +315,7 @@ super + control + e
 	urxvt-client -g 80x40 -title "VIM $T" -icon ~/.icons/haus/vim.svg -e vim
 
 super + control + t
-	T='☎ pty ☎'; \
+	T='☎ urxvt ☎'; \
 	wmctrl -a "$T" || \
 	urxvt-client -g 80x40 -title "$T" -icon ~/.icons/haus/terminal.svg
 
