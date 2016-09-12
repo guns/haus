@@ -15,7 +15,7 @@
 act_help = h
 act_songlove = L
 act_songban = B
-#act_stationaddmusic = a
+act_stationaddmusic = A
 #act_bookmark = b
 #act_stationcreate = c
 #act_stationdelete = d
