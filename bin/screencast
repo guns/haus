@@ -175,6 +175,7 @@ class Screencast
       -af bandreject=frequency=60:width_type=q:width=1.0
     ] if opts[:audio]
 
+    warn 'geometry: %dx%d+%d,%d' % geometry
     sh 'ffmpeg', *copts, file
   end
 

@@ -1415,6 +1415,9 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
     done
 }
 
+# slop
+ALIAS xgeom='slop'
+
 ### TTY
 
 ALIAS rl='rlwrap'
