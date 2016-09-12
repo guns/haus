@@ -55,6 +55,7 @@ let s:statusline_in_use = 0
 " 0: not checked yet; 1: checked and found; 2: checked and not found
 let s:checked_ctags       = 0
 let s:checked_ctags_types = 0
+let s:ctags_is_uctags     = 0
 let s:ctags_types         = {}
 
 let s:new_window      = 1
@@ -154,6 +155,34 @@ function! s:InitTypes() abort
         \ {'short' : 'v', 'long' : 'variables',   'fold' : 0, 'stl' : 1}
     \ ]
     let s:known_types.aspvbs = type_aspvbs
+    " Asymptote {{{3
+    " Asymptote gets parsed well using filetype = c
+    let type_asy = s:TypeInfo.New()
+    let type_asy.ctagstype = 'c'
+    let type_asy.kinds     = [
+        \ {'short' : 'd', 'long' : 'macros',      'fold' : 1, 'stl' : 0},
+        \ {'short' : 'p', 'long' : 'prototypes',  'fold' : 1, 'stl' : 0},
+        \ {'short' : 'g', 'long' : 'enums',       'fold' : 0, 'stl' : 1},
+        \ {'short' : 'e', 'long' : 'enumerators', 'fold' : 0, 'stl' : 0},
+        \ {'short' : 't', 'long' : 'typedefs',    'fold' : 0, 'stl' : 0},
+        \ {'short' : 's', 'long' : 'structs',     'fold' : 0, 'stl' : 1},
+        \ {'short' : 'u', 'long' : 'unions',      'fold' : 0, 'stl' : 1},
+        \ {'short' : 'm', 'long' : 'members',     'fold' : 0, 'stl' : 0},
+        \ {'short' : 'v', 'long' : 'variables',   'fold' : 0, 'stl' : 0},
+        \ {'short' : 'f', 'long' : 'functions',   'fold' : 0, 'stl' : 1}
+    \ ]
+    let type_asy.sro        = '::'
+    let type_asy.kind2scope = {
+        \ 'g' : 'enum',
+        \ 's' : 'struct',
+        \ 'u' : 'union'
+    \ }
+    let type_asy.scope2kind = {
+        \ 'enum'   : 'g',
+        \ 'struct' : 's',
+        \ 'union'  : 'u'
+    \ }
+    let s:known_types.asy = type_asy
     " Awk {{{3
     let type_awk = s:TypeInfo.New()
     let type_awk.ctagstype = 'awk'
@@ -568,6 +597,12 @@ function! s:InitTypes() abort
         \ 'class'    : 'c',
         \ 'function' : 'f'
     \ }
+    if s:ctags_is_uctags
+        " Universal Ctags treats member functions differently from normal
+        " functions
+        let type_python.kind2scope.m = 'member'
+        let type_python.scope2kind.member = 'm'
+    endif
     let s:known_types.python = type_python
     let s:known_types.pyrex  = type_python
     let s:known_types.cython = type_python
@@ -1143,13 +1178,14 @@ endfunction
 function! s:CheckExCtagsVersion(output) abort
     call s:debug('Checking Exuberant Ctags version')
 
-    if a:output =~ 'Exuberant Ctags Development'
-        call s:debug("Found development version, assuming compatibility")
+    if a:output =~ 'Universal Ctags'
+        call s:debug("Found Universal Ctags, assuming compatibility")
+        let s:ctags_is_uctags = 1
         return 1
     endif
 
-    if a:output =~ 'Universal Ctags'
-        call s:debug("Found Universal Ctags, assuming compatibility")
+    if a:output =~ 'Exuberant Ctags Development'
+        call s:debug("Found development version, assuming compatibility")
         return 1
     endif
 
@@ -2176,6 +2212,7 @@ function! s:ExecuteCtagsOnFile(fname, realfname, typeinfo) abort
                           \ '--excmd=pattern',
                           \ '--fields=nksSaf',
                           \ '--extra=',
+                          \ '--file-scope=yes',
                           \ '--sort=no',
                           \ '--append=no'
                           \ ]
