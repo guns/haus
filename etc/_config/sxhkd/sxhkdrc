@@ -327,7 +327,7 @@ super + control + w
 
 super + control + m
 	P='♫ pianobar ♫'; C='cmus'; \
-	wmctrl -a "$P" || wmctrl -a "$C" || urxvt-client -title "$P" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/a6286098@drdrb.net
+	wmctrl -a "$P" || wmctrl -a "$C" || urxvt-client -title "$P" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/g2813859@mvrht.com
 
 super + control + shift + m
 	P='♫ pianobar ♫'; C='cmus'; \
