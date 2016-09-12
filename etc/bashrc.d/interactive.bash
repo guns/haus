@@ -915,7 +915,7 @@ ALIAS mk='make' \
 HAVE go && {
     goget()           { run go get -u -v "$@"; }
     gobuild()         { run go build -i -v "$@"; }
-    goassemble()      { run go build -v -gcflags=-S "$@"; }
+    goassemble()      { go build -v -gcflags=-S "$@" 2>&1 | ruby -e 'puts $stdin.read.gsub(%r{\(#{Regexp.escape Dir.pwd}/}, %q{(})'; }
     gooptimizations() { run go build -v -gcflags='-m -d=ssa/check_bce,ssa/prove' "$@"; }
     goinstall()       { run go install -v "$@"; }
     gotest()          { run go test -tags test -run="${1:-.}" "${@:2}"; }

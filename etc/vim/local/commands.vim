@@ -651,8 +651,9 @@ command! -bar GoAssemble call <SID>GoAssemble()
 function! s:GoAssemble()
 	let cmd = stridx(expand('%'), '_test') > -1 ? 'test -run=✖' : 'build'
 	Sscratch
+	setfiletype plain
 	normal! gg"_dG
-	execute 'r!go ' . cmd . ' -gcflags=-S'
+	execute 'r!go ' . cmd . ' -gcflags=-S 2>&1 | ruby -e "puts \$stdin.read.gsub(/\\(\#{Regexp.escape Dir.pwd}\\//, \%q{(})"'
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
