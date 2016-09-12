@@ -48,6 +48,8 @@
 #       --errors              Only show errors.
 #       --json                Generate structured JSON rather than standard
 #                             line-based output.
+#       --checkstyle          Generate checkstyle XML rather than standard
+#                             line-based output.
 #       --enable-gc           Enable GC for linters (useful on large
 #                             repositories).
 #   -D, --disable=LINTER ...  List of linters to disable
