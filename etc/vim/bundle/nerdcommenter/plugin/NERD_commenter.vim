@@ -750,6 +750,10 @@ function s:CommentBlock(top, bottom, lSide, rSide, forceNested )
                 let theLine = s:ConvertLeadingSpacesToTabs(theLine)
             endif
 
+            if g:NERDTrimTrailingWhitespace == 1
+              let theLine = s:TrimTrailingWhitespace(theLine)
+            endif
+
             call setline(currentLine, theLine)
         endif
 
@@ -820,6 +824,10 @@ function s:CommentLines(forceNested, align, firstLine, lastLine)
             let theLine = s:ConvertLeadingSpacesToTabs(theLine)
         endif
 
+        if g:NERDTrimTrailingWhitespace == 1
+            let theLine = s:TrimTrailingWhitespace(theLine)
+        endif
+
         " we are done with this line
         call setline(currentLine, theLine)
         let currentLine = currentLine + 1
@@ -880,6 +888,11 @@ function s:CommentLinesMinimal(firstLine, lastLine)
     if lineHasLeadingTabs
         let theLine = s:ConvertLeadingSpacesToTabs(theLine)
     endif
+
+    if g:NERDTrimTrailingWhitespace == 1
+        let theLine = s:TrimTrailingWhitespace(theLine)
+    endif
+
     call setline(a:lastLine, theLine)
 endfunction
 
@@ -999,6 +1012,9 @@ function s:CommentLinesSexy(topline, bottomline)
             let theLine = s:ConvertLeadingSpacesToTabs(theLine)
         endif
 
+        if g:NERDTrimTrailingWhitespace == 1
+            let theLine = s:TrimTrailingWhitespace(theLine)
+        endif
 
         " set the line and move onto the next one
         call setline(currentLine, theLine)
@@ -1051,6 +1067,10 @@ function s:CommentLinesToggle(forceNested, firstLine, lastLine)
         " restore leading tabs if appropriate
         if lineHasLeadingTabs
             let theLine = s:ConvertLeadingSpacesToTabs(theLine)
+        endif
+
+        if g:NERDTrimTrailingWhitespace == 1
+            let theLine = s:TrimTrailingWhitespace(theLine)
         endif
 
         " we are done with this line
