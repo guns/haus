@@ -131,7 +131,7 @@ syn keyword     goPredefinedIdentifiers    nil iota
 syn keyword     goBoolean                  true false
 
 hi def link     goBuiltins                 Keyword
-hi def link     goPredefinedIdentifiers    Identifier
+hi def link     goPredefinedIdentifiers    Boolean
 hi def link     goBoolean                  Boolean
 
 " Comments; their contents

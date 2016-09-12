@@ -602,7 +602,6 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>a <Plug>(go-alternate-edit)
 	nmap     <buffer> <LocalLeader>A <Plug>(go-alternate-vertical)
 	nmap     <buffer> <LocalLeader>b <Plug>(go-build)
-	noremap  <buffer> <LocalLeader>B :<C-u>GoOptimizations<CR>
 	nmap     <buffer> <LocalLeader>c <Plug>(go-channelpeers)
 	nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
 	nmap     <buffer> <LocalLeader><M-c> <Plug>(go-coverage-clear)
@@ -616,6 +615,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>I <Plug>(go-install)
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
 	noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
+	noremap  <buffer> <LocalLeader>o :<C-u>GoOptimizations<CR>
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
