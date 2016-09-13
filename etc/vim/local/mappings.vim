@@ -546,11 +546,11 @@ noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
-noremap  <Leader>gc.      :<C-u>Gcommit --verbose %<CR>
-noremap  <Leader>gca      :<C-u>Gcommit --verbose --all<CR>
-noremap  <Leader>gcA      :<C-u>Gcommit --verbose --amend<CR>
-noremap  <Leader>gcc      :<C-u>Gcommit --verbose<CR>
-noremap  <Leader>gcv      :<C-u>Gcommit --verbose<CR>
+noremap  <Leader>gc.      :<C-u>Gcommit %<CR>
+noremap  <Leader>gca      :<C-u>Gcommit --all<CR>
+noremap  <Leader>gcA      :<C-u>Gcommit --amend<CR>
+noremap  <Leader>gcc      :<C-u>Gcommit<CR>
+noremap  <Leader>gcv      :<C-u>Gcommit<CR>
 noremap  <Leader>gd       :<C-u>Git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! Git f<CR>
