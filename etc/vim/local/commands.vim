@@ -622,6 +622,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>S :<C-u>GoAssemble<CR>
 	noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
 	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
+	noremap  <buffer> <LocalLeader><M-t> :<C-u>GoTest -tags test -race<CR>
 	nmap     <buffer> <LocalLeader>v <Plug>(go-vet)
 endfunction
 
