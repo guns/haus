@@ -122,11 +122,11 @@
 	wl1r  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=. --date=relative
 
 	f     = log --graph --date=short --pretty=singleline
-	fr    = log --graph --date=short --pretty=singleline
-	fa    = log --graph --date=short --pretty=singleline
-	far   = log --graph --date=short --pretty=singleline
-	ff    = log --graph --date=short --pretty=singleline
-	ffr   = log --graph --date=short --pretty=singleline
+	fr    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --date=relative
+	fa    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --all
+	far   = log --graph --date=short --pretty=singleline --ws-error-highlight=all --all --date=relative
+	ff    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --first-parent --no-merges
+	ffr   = log --graph --date=short --pretty=singleline --ws-error-highlight=all --first-parent --no-merges --date=relative
 
 	lg    = log --patch --grep
 	lgr   = log --patch --date=relative --grep
