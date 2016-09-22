@@ -78,9 +78,6 @@ set shortmess=aoOstTAIc " Shorten most messages
 
 " Clipboard
 set clipboard=unnamed           " Use X11 PRIMARY
-if has('unnamedplus')
-	set clipboard+=unnamedplus  " and X11 CLIPBOARD if available
-endif
 
 " Timeouts
 set notimeout ttimeout " Wait for mappings, but timeout on key codes
