@@ -745,7 +745,7 @@ alias iptw='ipt --wait'
 ALIAS ctagsr='ctags --recurse'
 
 # Vim
-HAVE vim && {
+ALIAS e='vim' && {
     alias v='vim -c "set nomodified" -'
 
     vimopen() { vim -c 'UniteOpen' "$@"; }
