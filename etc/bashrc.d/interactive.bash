@@ -926,9 +926,9 @@ HAVE go && {
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
 
     ALIAS gl='glide' && {
-        alias glget='run glide --verbose get --all-dependencies --strip-vendor'
-        alias glupdate='run glide --verbose update --all-dependencies --strip-vendor'
-        alias glinstall='run glide --verbose install --strip-vendor'
+        alias glget='run glide get --all-dependencies --strip-vendor'
+        alias glupdate='run glide update --all-dependencies --strip-vendor'
+        alias glinstall='run glide install --strip-vendor'
     }
 }
 
