@@ -177,7 +177,11 @@ func Test$1(t *testing.T) {
 endsnippet
 
 snippet table "table driven test" b
-data := ${1}{}
+data := []struct{
+	$1
+}{
+	{$2},
+}
 
 for _, row := range data {
 	$0
@@ -221,13 +225,9 @@ if ${1:err} == nil {
 endsnippet
 
 snippet asm "assert match" w
-if ${3:ok}, ${4:err} := regexp.MatchString(\`${1}\`, ${2}); !$3 || $4 != nil {
-	if !$3 {
-		t.Errorf(\`/$1/ !~ $2\`$0)
-	}
-	if $4 != nil {
-		t.Errorf("unexpected error: %v", $4)
-	}
+${1:r} := regexp.MustCompile(${2})
+if !$1.MatchString(${3}) {
+	t.Errorf("%v !~ %v", $3, $2)$0
 }
 endsnippet
 
