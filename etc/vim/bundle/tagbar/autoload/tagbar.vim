@@ -1002,11 +1002,12 @@ function! s:MapKeys() abort
         \ ['nextfold',      'GotoNextFold()'],
         \ ['prevfold',      'GotoPrevFold()'],
         \
-        \ ['togglesort',      'ToggleSort()'],
-        \ ['toggleautoclose', 'ToggleAutoclose()'],
-        \ ['zoomwin',         'ZoomWindow()'],
-        \ ['close',           'CloseWindow()'],
-        \ ['help',            'ToggleHelp()'],
+        \ ['togglesort',            'ToggleSort()'],
+        \ ['togglecaseinsensitive', 'ToggleCaseInsensitive()'],
+        \ ['toggleautoclose',       'ToggleAutoclose()'],
+        \ ['zoomwin',               'ZoomWindow()'],
+        \ ['close',                 'CloseWindow()'],
+        \ ['help',                  'ToggleHelp()'],
     \ ]
 
     for [map, func] in maps
@@ -1032,10 +1033,8 @@ function! s:CreateAutocommands() abort
 
     augroup TagbarAutoCmds
         autocmd!
-        autocmd BufEnter   __Tagbar__ nested call s:QuitIfOnlyWindow()
-        autocmd BufEnter   __Tagbar__ call s:ShowPrototype(1)
-        autocmd WinEnter   __Tagbar__ call s:SetStatusLine('current')
-        autocmd WinLeave   __Tagbar__ call s:SetStatusLine('noncurrent')
+        autocmd WinEnter   __Tagbar__ call s:SetStatusLine()
+        autocmd WinLeave   __Tagbar__ call s:SetStatusLine()
 
         autocmd WinEnter * nested call s:QuitIfOnlyWindow()
         autocmd WinEnter * if bufwinnr('__Tagbar__') == -1 |
@@ -1260,7 +1259,7 @@ function! s:BaseTag._init(name) abort dict
     let self.name          = a:name
     let self.fields        = {}
     let self.fields.line   = 0
-    let self.fields.column = 1
+    let self.fields.column = 0
     let self.prototype     = ''
     let self.path          = ''
     let self.fullpath      = a:name
@@ -1889,7 +1888,7 @@ function! s:InitWindow(autoclose) abort
 
     let w:autoclose = a:autoclose
 
-    call s:SetStatusLine('current')
+    call s:SetStatusLine()
 
     let s:new_window = 1
 
@@ -2616,7 +2615,8 @@ function! s:CompareByKind(tag1, tag2) abort
             let name2 = a:tag2.name
         endif
 
-        if name1 <=# name2
+        let ci = g:tagbar_case_insensitive
+        if (((!ci) && (name1 <=# name2)) || (ci && (name1 <=? name2)))
             return -1
         else
             return 1
@@ -2653,7 +2653,7 @@ function! s:ToggleSort() abort
     call fileinfo.sortTags()
 
     call s:RenderContent()
-    call s:SetStatusLine('current')
+    call s:SetStatusLine()
 
     " If we were on a tag before sorting then jump to it, otherwise restore
     " the cursor to the current line
@@ -2927,6 +2927,7 @@ function! s:PrintHelp() abort
         silent  put ='\"'
         silent  put ='\" ---------- Misc -----------'
         silent  put ='\" ' . s:get_map_str('togglesort') . ': Toggle sort'
+        silent  put ='\" ' . s:get_map_str('togglecaseinsensitive') . ': Toggle case insensitive sort option'
         silent  put ='\" ' . s:get_map_str('toggleautoclose') . ': Toggle autoclose option'
         silent  put ='\" ' . s:get_map_str('zoomwin') . ': Zoom window in/out'
         silent  put ='\" ' . s:get_map_str('close') . ': Close window'
@@ -3095,9 +3096,15 @@ function! s:JumpToTag(stay_in_tagbar) abort
         let taginfo.fileinfo.fline[curline] = taginfo
     endif
 
-    " Center the tag in the window and jump to the correct column if available
+    " Center the tag in the window and jump to the correct column if
+    " available, otherwise try to find it in the line
     normal! z.
-    call cursor(taginfo.fields.line, taginfo.fields.column)
+    if taginfo.fields.column > 0
+        call cursor(taginfo.fields.line, taginfo.fields.column)
+    else
+        call cursor(taginfo.fields.line, 1)
+        call search(taginfo.name, 'c', line('.'))
+    endif
 
     normal! zv
 
@@ -3523,6 +3530,7 @@ function! s:AutoUpdate(fname, force) abort
     endif
 
     call s:HighlightTag(0)
+    call s:SetStatusLine()
     call s:debug('AutoUpdate finished successfully')
 endfunction
 
@@ -3855,15 +3863,63 @@ endfunction
 
 " s:ToggleHideNonPublicTags() {{{2
 function! s:ToggleHideNonPublicTags() abort
+    let fileinfo = s:known_files.getCurrent(0)
+    if empty(fileinfo)
+        return
+    endif
+
+    " Save the tag the cursor is currently on
+    let curline = line('.')
+    let taginfo = s:GetTagInfo(curline, 0)
+
+    match none
+
     let g:tagbar_hide_nonpublic = !g:tagbar_hide_nonpublic
     call s:RenderKeepView()
-    call s:SetStatusLine('current')
+    call s:SetStatusLine()
+
+    " If we were on a tag before sorting then jump to it, otherwise restore
+    " the cursor to the current line
+    if !empty(taginfo)
+        execute taginfo.tline
+    else
+        execute curline
+    endif
+endfunction
+
+" s:ToggleCaseInsensitive() {{{2
+function! s:ToggleCaseInsensitive() abort
+    let fileinfo = s:known_files.getCurrent(0)
+    if empty(fileinfo)
+        return
+    endif
+
+    " Save the tag the cursor is currently on
+    let curline = line('.')
+    let taginfo = s:GetTagInfo(curline, 0)
+
+    match none
+
+    let g:tagbar_case_insensitive = !g:tagbar_case_insensitive
+
+    call fileinfo.sortTags()
+
+    call s:RenderKeepView()
+    call s:SetStatusLine()
+
+    " If we were on a tag before sorting then jump to it, otherwise restore
+    " the cursor to the current line
+    if !empty(taginfo)
+        execute taginfo.tline
+    else
+        execute curline
+    endif
 endfunction
 
 " s:ToggleAutoclose() {{{2
 function! s:ToggleAutoclose() abort
     let g:tagbar_autoclose = !g:tagbar_autoclose
-    call s:SetStatusLine('current')
+    call s:SetStatusLine()
 endfunction
 
 " s:IsValidFile() {{{2
@@ -3905,7 +3961,7 @@ function! s:IsValidFile(fname, ftype) abort
 endfunction
 
 " s:SetStatusLine() {{{2
-function! s:SetStatusLine(current)
+function! s:SetStatusLine()
     " Make sure we're actually in the Tagbar window
     let tagbarwinnr = bufwinnr('__Tagbar__')
     if tagbarwinnr == -1
@@ -3917,7 +3973,6 @@ function! s:SetStatusLine(current)
     else
         let in_tagbar = 1
     endif
-    let current = a:current == 'current'
 
     let sort = g:tagbar_sort ? 'Name' : 'Order'
 
@@ -3930,13 +3985,14 @@ function! s:SetStatusLine(current)
     let flags = []
     let flags += exists('w:autoclose') && w:autoclose ? ['c'] : []
     let flags += g:tagbar_autoclose ? ['C'] : []
+    let flags += (g:tagbar_sort && g:tagbar_case_insensitive) ? ['i'] : []
     let flags += g:tagbar_hide_nonpublic ? ['v'] : []
 
     if exists('g:tagbar_status_func')
-        let args = [current, sort, fname, flags]
+        let args = [in_tagbar, sort, fname, flags]
         let &l:statusline = call(g:tagbar_status_func, args)
     else
-        let colour = current ? '%#StatusLine#' : '%#StatusLineNC#'
+        let colour = in_tagbar ? '%#StatusLine#' : '%#StatusLineNC#'
         let flagstr = join(flags, '')
         if flagstr != ''
             let flagstr = '[' . flagstr . '] '
@@ -3978,8 +4034,15 @@ function! s:QuitIfOnlyWindow() abort
         endif
     endif
 
-    call s:goto_win(prevwinnr, 1)
-    call s:goto_win(curwinnr, 1)
+    " Check that prevwinnr is still a valid window number
+    if prevwinnr != tagbarwinnr && prevwinnr <= winnr('$')
+        call s:goto_win(prevwinnr, 1)
+    endif
+
+    " Check that curwinnr is still a valid window number
+    if curwinnr <= winnr('$')
+        call s:goto_win(curwinnr, 1)
+    endif
 endfunction
 
 " s:NextNormalWindow() {{{2
@@ -3987,8 +4050,8 @@ function! s:NextNormalWindow() abort
     for i in range(1, winnr('$'))
         let buf = winbufnr(i)
 
-        " skip unlisted buffers
-        if !buflisted(buf)
+        " skip unlisted buffers, except for netrw
+        if !buflisted(buf) && getbufvar(buf, '&filetype') != 'netrw'
             continue
         endif
 

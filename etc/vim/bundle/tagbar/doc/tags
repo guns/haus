@@ -13,6 +13,7 @@ g:tagbar_autoclose	tagbar.txt	/*g:tagbar_autoclose*
 g:tagbar_autofocus	tagbar.txt	/*g:tagbar_autofocus*
 g:tagbar_autopreview	tagbar.txt	/*g:tagbar_autopreview*
 g:tagbar_autoshowtag	tagbar.txt	/*g:tagbar_autoshowtag*
+g:tagbar_case_insensitive	tagbar.txt	/*g:tagbar_case_insensitive*
 g:tagbar_compact	tagbar.txt	/*g:tagbar_compact*
 g:tagbar_ctags_bin	tagbar.txt	/*g:tagbar_ctags_bin*
 g:tagbar_expand	tagbar.txt	/*g:tagbar_expand*
