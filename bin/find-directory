@@ -10,7 +10,7 @@ require 'set'
 require 'haus/utils'
 
 class FindDirectory
-  DEFAULTS = { :dir => '.' }
+  DEFAULTS = { :dir => '.', :full_path => false }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -23,6 +23,10 @@ class FindDirectory
 
         Usage: #{File.basename __FILE__} regexp [root-dir]
       BANNER
+
+      opt.on '-p', '--full-path', "Match the full path, not just the basename" do
+        @full_path = true
+      end
     end
   end
 
@@ -45,7 +49,11 @@ class FindDirectory
     visited = Set.new
     while queue.any?
       d = queue.shift
-      return d if File.basename(d) =~ pattern
+      if @full_path
+        return d if File.expand_path(d) =~ pattern
+      else
+        return d if File.basename(d) =~ pattern
+      end
       visited << d
       queue.concat child_dirs(d).reject { |x| visited.include? x }
     end
