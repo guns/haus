@@ -275,13 +275,11 @@ ALIAS g="grep --ignore-case $GNU_COLOR_OPT $(grep --perl-regexp . <<< . &>/dev/n
       gv='g --invert-match' \
       gc='grep --count .'
 
-# ag
-ALIAS agi='ag --ignore-case' \
-      agq='ag --literal' \
-      aga='ag --all-types' \
-      agu='ag --unrestricted' \
-      agia='ag --ignore-case --all-types' \
-      agiu='ag --ignore-case --unrestricted'
+# ripgrep
+ALIAS rgi='rg --ignore-case' \
+      rgf='rg --fixed-strings' \
+      rgu='rg -uuu' \
+      rgiu='rg --ignore-case -uuu'
 
 # cat tail less
 alias c='cat'
