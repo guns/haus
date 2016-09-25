@@ -158,12 +158,13 @@ let g:clojure_fuzzy_indent_blacklist = ['\v^with-%(meta|out-str|loading-context)
 
 " Plugin: NERDTree
 let g:NERDTreeBookmarksFile = expand('~/.cache/vim/NERDTreeBookmarks')
-let g:NERDTreeDirArrows = 1
 let g:NERDTreeMinimalUI = 1
 let g:NERDTreeMouseMode = 2
 let g:NERDTreeQuitOnOpen = 0
 let g:NERDTreeShowHidden = 1
 let g:NERDTreeSortOrder = []
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '▾'
 
 " Plugin: NERDCommenter
 let g:NERDSpaceDelims = 1
