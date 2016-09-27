@@ -265,7 +265,7 @@ let g:splitjoin_split_mapping = ''
 let g:splitjoin_join_mapping = ''
 
 " Plugin: Ack.vim
-let g:ackprg = 'rg --line-number --column'
+let g:ackprg = 'rg --vimgrep'
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
 
