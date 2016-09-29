@@ -84,6 +84,10 @@ iptables --append    DROPFORWARD --jump LOG --log-prefix '[DROPFORWARD] '
 iptables --append    DROPFORWARD --protocol tcp --jump REJECT --reject-with tcp-reset
 iptables --append    DROPFORWARD --jump DROP
 
+iptables --new-chain ACCEPTINPUT
+iptables --append    ACCEPTINPUT --jump LOG --log-prefix '[ACCEPTINPUT] '
+iptables --append    ACCEPTINPUT --jump ACCEPT
+
 #
 # Functions
 #
@@ -105,7 +109,7 @@ minimal_passthrough() {
     iptables --append "$chain" --protocol icmp --jump ACCEPT
 }
 
-accept_input() { iptables --append INPUT  "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
+accept_input() { iptables --append INPUT  "$@" --match conntrack --ctstate NEW --jump ACCEPTINPUT; }
 allow_output() { iptables --append OUTPUT "$@" --match conntrack --ctstate NEW --jump ACCEPT; }
 
 forward_interface() {
@@ -148,9 +152,6 @@ minimal_passthrough INPUT
 # accept_input --protocol tcp --dport 443
 # accept_input --protocol tcp --match multiport --dports 80,443
 
-# DHCP
-# accept_input --protocol udp --in-interface eth0 --sport 67:68 --dport 67:68
-
 # DNS
 # accept_input --protocol udp --in-interface eth0 --dport 53
 
@@ -162,6 +163,12 @@ minimal_passthrough INPUT
 # accept_input --protocol udp --dport 137:138
 # accept_input --protocol tcp --match multiport --dports 139,445
 
+# DHCP
+# accept_input --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
+
+# VM
+# accept_input --in-interface vboxnet0
+
 # Final DROP rule
 iptables --append INPUT --jump DROPINPUT
 
@@ -171,27 +178,25 @@ iptables --append INPUT --jump DROPINPUT
 
 minimal_passthrough OUTPUT
 
-# Domains that need stable source IPs
-iptables --append OUTPUT --match set --match-set IDENTITY dst --jump DROPOUTPUT
-iptables --append OUTPUT --match set --match-set GOOGLE   dst --jump DROPOUTPUT
+# Blacklisted domains
+iptables --append OUTPUT --match set --match-set EXFILTRATION dst --jump DROPOUTPUT
+iptables --append OUTPUT --match set --match-set IDENTITY     dst --jump DROPOUTPUT
+iptables --append OUTPUT --match set --match-set GOOGLE       dst --jump DROPOUTPUT
 
 # HTTP
 allow_output --protocol tcp --match multiport --dports 80,443
 
-# DNS
+# Whitelisted domains
 allow_output --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
-
-# NTP
 allow_output --match set --match-set NTP dst --protocol udp --dport 123
-
-# SSH
 allow_output --match set --match-set SSH dst --protocol tcp --dport 22
-
-# GIT
 allow_output --match set --match-set GIT dst --protocol tcp --dport 9418
 
 # LAN
-# allow_output --destination "$(ip route list scope link | cut -d' ' -f1)"
+# allow_output --destination "$(ip route list scope link | awk '{print $1}')"
+
+# VM
+# allow_output --out-interface vboxnet0
 
 # Final DROP rule
 iptables --append OUTPUT --jump DROPOUTPUT
