@@ -1143,7 +1143,6 @@ HAVE psql && {
 ### Hardware control
 
 ALIAS mp='modprobe --all'
-ALIAS sens='sensors'
 ALIAS trim='fstrim --all --verbose'
 
 ALIAS rfk='rfkill' && {
