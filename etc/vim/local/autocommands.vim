@@ -172,6 +172,8 @@ augroup GUNS
 	" dnsmasq
 	autocmd BufRead,BufNewFile *dnsmasq.conf
 		\ setlocal filetype=dnsmasq
+	autocmd FileType dnsmasq
+		\ setlocal expandtab
 
 	" Nethack!
 	autocmd BufRead,BufNewFile *.des

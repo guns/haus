@@ -157,7 +157,6 @@ CD_FUNC -x cdetc        /etc
 CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cdmnt           /mnt
-CD_FUNC -x cddnsmasq    /etc/dnsmasq /opt/dnsmasq/etc
 CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdTMP           /tmp
@@ -846,7 +845,7 @@ ALIAS e='vim' && {
     alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
-    alias vimdnsmasq='vim "$cddnsmasq/dnsmasq.conf" -c "lcd \$cdetc"'
+    alias vimdnsmasq='vim "$cdetc/dnsmasq.conf" -c "lcd \$cdetc"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'
