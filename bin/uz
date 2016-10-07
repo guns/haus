@@ -24,9 +24,11 @@ class Uz
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
-        Usage: #{File.basename __FILE__} [options]
+        Convenient wrapper around `7z x`
+
+        Usage: #{File.basename __FILE__} [options] archive …
 
         Options:
       BANNER
@@ -58,7 +60,7 @@ class Uz
   end
 
   def sh *args
-    warn ":: #{args.shelljoin}"
+    warn "\e[32;1m:: #{args.shelljoin}\e[0m"
     system *args unless @noop
   end
 
