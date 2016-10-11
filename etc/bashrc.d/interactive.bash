@@ -649,9 +649,9 @@ resolv() {
             printf "\e[32;1m/etc/resolv.conf\e[0m\n"
             cat /etc/resolv.conf
         }
-        [[ -e /etc/dnsmasq/resolv.conf ]] && {
-            printf "\n\e[32;1m/etc/dnsmasq/resolv.conf\e[0m\n"
-            cat /etc/dnsmasq/resolv.conf
+        [[ -e /etc/dnsmasq.resolv.conf ]] && {
+            printf "\n\e[32;1m/etc/dnsmasq.resolv.conf\e[0m\n"
+            cat /etc/dnsmasq.resolv.conf
         }
     } | grep --invert-match --perl-regexp '^#|^\s*$'
 }
