@@ -148,9 +148,30 @@ class Ipt
     TABLES.reduce '' do |s, t|
       [[@ipv4, 'IPv4', 'iptables'], [@ipv6, 'IPv6', 'ip6tables']].each do |(enabled, label, cmd)|
         if enabled
-          s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n"
-          s << %x(#{cmd} --table #{t} --list --line-numbers --numeric --verbose 2>&1)
-          s << "\n"
+          buf = %x(#{cmd} --table #{t} --list --line-numbers --numeric --verbose 2>&1)
+          lines, w = [], [0]*10
+
+          buf.each_line do |line|
+            line.chomp!
+
+            if line =~ /^\s*$|^Chain/
+              lines << line
+              next
+            end
+
+            words = line.split /\s+/, 11
+            (0..9).each do |j|
+              n = words[j].size
+              w[j] = n if n > w[j]
+            end
+
+            lines << words
+          end
+
+          fmt = "%-#{w[0]}s  %#{w[1]}s  %#{w[2]}s  %-#{w[3]}s  %-#{w[4]}s  %-#{w[5]}s  %-#{w[6]}s  %-#{w[7]}s  %-#{w[8]}s  %-#{w[9]}s  %s"
+          buf = lines.map { |x| Array === x ? fmt % x : x }.join "\n"
+
+          s << "─── #{label} #{t} #{'─' * (80 - 5 - label.length - 1 - t.length)}\n\n#{buf}\n\n"
         end
       end
       s
