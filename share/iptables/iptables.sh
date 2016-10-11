@@ -45,9 +45,9 @@ reset_rules() {
     done
 
     # Set default filter policies
-    "$cmd" --policy INPUT   DROP
-    "$cmd" --policy FORWARD DROP
-    "$cmd" --policy OUTPUT  DROP
+    "$cmd" --policy INPUT   "$policy"
+    "$cmd" --policy FORWARD "$policy"
+    "$cmd" --policy OUTPUT  "$policy"
 }
 
 new_chain() {
