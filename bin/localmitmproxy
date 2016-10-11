@@ -59,12 +59,12 @@ class Localmitmproxy
 
   def with_redirected_ports intercept_ports, proxy_port
     sh *%W[iptables --insert OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{proxy_port} --jump ACCEPT]
-    sh *%W[iptables --table nat --insert OUTPUT 1 --match owner --uid-owner 0 --jump RETURN]
-    sh *%W[iptables --table nat --insert OUTPUT 2 --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
+    sh *%W[iptables --table nat --insert PREROUTING --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
+    sh *%W[iptables --table nat --insert POSTROUTING --match owner --uid-owner 0 --jump RETURN]
     yield
   ensure
-    sh *%W[iptables --table nat --delete OUTPUT --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
-    sh *%W[iptables --table nat --delete OUTPUT --match owner --uid-owner 0 --jump RETURN]
+    sh *%W[iptables --table nat --delete POSTROUTING --match owner --uid-owner 0 --jump RETURN]
+    sh *%W[iptables --table nat --delete PREROUTING --protocol tcp --match multiport --dports #{intercept_ports.join ','} --jump REDIRECT --to-port #{proxy_port}]
     sh *%W[iptables --delete OUTPUT --protocol tcp --destination 127.0.0.1 --destination-port #{proxy_port} --jump ACCEPT]
   end
 
