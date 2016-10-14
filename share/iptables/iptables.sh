@@ -36,6 +36,7 @@ test -x "$IPTABLES" || { echo "Could not execute $IPTABLES" >&2; exit 1; }
 iptables() { "$IPTABLES" "$@"; }
 
 reset_rules() {
+    test $# -eq 2 || return 1
     local cmd="$1" policy="$2" table=
 
     # Flush rules and delete non-default chains
@@ -51,7 +52,9 @@ reset_rules() {
 }
 
 new_chain() {
+    test $# -eq 2 || test $# -eq 3 || return 1
     local name="$1" target="$2" tcp="$3"
+
     iptables --new-chain "$name"
     iptables --append    "$name" --jump LOG --log-prefix "[$name] "
     if [[ "$tcp" == "tcp-reset" ]]; then
@@ -63,18 +66,16 @@ new_chain() {
 minimal_passthrough() {
     test $# -eq 1 || return 1
     local chain="$1" dir=
+
     case "$chain" in
     INPUT)  local dir='in';;
     OUTPUT) local dir='out';;
     esac
-    # Allow established traffic
-    iptables --append "$chain" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-    # Allow traffic over loopback
-    iptables --append "$chain" --${dir}-interface lo --jump ACCEPT
-    # Log and drop invalid packets
-    iptables --append "$chain" --match conntrack --ctstate INVALID --jump INVALID
-    # Allow ICMP
-    iptables --append "$chain" --protocol icmp --jump ACCEPT
+
+    iptables --append "$chain" --match conntrack --ctstate ESTABLISHED --jump ACCEPT  # Allow established traffic
+    iptables --append "$chain" --match conntrack --ctstate INVALID     --jump INVALID # Log and drop invalid packets
+    iptables --append "$chain" --${dir}-interface lo                   --jump ACCEPT  # Allow traffic over loopback
+    iptables --append "$chain" --protocol icmp                         --jump ACCEPT  # Allow ICMP
 }
 
 accept_input()  { iptables --append INPUT   "$@" --match conntrack --ctstate NEW --jump ACCEPTINPUT; }
@@ -148,9 +149,9 @@ drop_input
 # drop_forward --match set --match-set BLACKLIST dst
 
 # Forward host
-# iptables --append FORWARD --source      "$HOST"                                         --jump ACCEPT
 # iptables --append FORWARD --destination "$HOST" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
 # iptables --append FORWARD --destination "$HOST" --match conntrack --ctstate INVALID     --jump INVALID
+# iptables --append FORWARD --source      "$HOST"                                         --jump ACCEPT
 # iptables --append FORWARD --destination "$HOST" --protocol icmp                         --jump ACCEPT
 
 drop_forward
@@ -171,7 +172,6 @@ minimal_passthrough OUTPUT
 # allow_output --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
 # allow_output --match set --match-set SSH dst --protocol tcp --dport 22
 # allow_output --match set --match-set NTP dst --protocol udp --dport 123
-# allow_output --match set --match-set GIT dst --protocol tcp --dport 9418
 
 # LAN
 # allow_output --destination 192.168.1.0/24
