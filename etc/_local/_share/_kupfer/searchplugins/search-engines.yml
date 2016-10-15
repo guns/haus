@@ -26,7 +26,7 @@ qgutenberg:          https://www.gutenberg.org/ebooks/search/?query=***
 qhnsearch:           https://hn.algolia.com/?query=***&sort=byPopularity&prefix&page=0&dateRange=all&type=all
 qiconfinder:         https://www.iconfinder.com/search/?q=***
 qifixit:             https://www.ifixit.com/search?x=0&y=0&query=***
-qimages:             https://duckduckgo.com/?iax=1&ia=images&q=***
+qimages:             https://www.google.com/search?tbm=isch&pws=0&tbs:li=1&q=***
 qintel:              http://ark.intel.com/search?q=***
 qjquery:             https://jquery.com/?s=***
 qmaps:               https://maps.google.com/maps?q=***
