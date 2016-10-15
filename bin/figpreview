@@ -51,11 +51,12 @@ class Figpreview
 
   def kerning
     case @kerning
-    when 0 then '-S'
-    when 1 then '-s'
-    when 2 then '-k'
-    when 3 then '-W'
-    else raise ArgumentError, 'kerning must be within 0..3'
+    when -1 then '-o'
+    when 0  then '-S'
+    when 1  then '-s'
+    when 2  then '-k'
+    when 3  then '-W'
+    else raise ArgumentError, 'kerning must be within -1..3'
     end
   end
 
@@ -68,8 +69,13 @@ class Figpreview
       table = {}
 
       fontdirs.each do |base|
-        Dir["#{base}/figlet/{,fonts/}*.flf"].each do |flf|
-          table.store Digest::MD5.hexdigest(File.read(flf).lines.drop(1).join), flf
+        Dir["#{base}/figlet/{,fonts/}*.[ft]lf"].each do |font|
+          case File.extname(font)
+          when '.flf'
+            table.store Digest::MD5.hexdigest(File.read(font).lines.drop(1).join), font
+          when '.tlf'
+            table.store Digest::MD5.hexdigest(File.read(font)), font
+          end
         end
       end
 
@@ -77,16 +83,19 @@ class Figpreview
     end
   end
 
-  def generate flf
-    msg = @message || File.basename(flf, '.flf')
-    cmd = ['figlet', kerning, '-l', '-w', @width.to_s, '-f', flf, msg]
-    ary = %x(#{cmd.shelljoin}).split("\n").map &:rstrip
-    a,z = [:index, :rindex].map { |m| ary.send(m) { |l| not l.empty? } }
-    "\n%s\n\n" % ary[(a || 0)..(z || ary.size)].join("\n")
+  def generate font
+    msg = @message || File.basename(font, File.extname(font))
+    case File.extname(font)
+    when '.flf'
+      cmd = ['figlet', kerning, '-l', '-w', @width.to_s, '-f', font, msg]
+    when '.tlf'
+      cmd = ['toilet', kerning, '-w', @width.to_s, '-d', File.dirname(font), '-f', File.basename(font), msg]
+    end
+    "\n%s\n\n" % %x(#{cmd.shelljoin})
   end
 
   def to_s
-    fonts.map { |flf| "#{File.basename flf, '.flf'}:\n#{generate flf}" }.join "\n"
+    fonts.map { |font| "#{File.basename font}:\n#{generate font}" }.join "\n"
   end
 
   def inspect
