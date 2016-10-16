@@ -11,7 +11,6 @@ qcodepoints:         https://codepoints.net/search?q=***
 qdefine:             https://www.google.com/search?pws=0&tbs=li:1&q=define:***
 qdictionary:         https://en.wiktionary.org/wiki/?search=***
 qdockerhub:          https://hub.docker.com/search/?q=***&page=1&isAutomated=0&isOfficial=0&starCount=0&pullCount=0
-qdownforeveryone:    http://www.downforeveryoneorjustme.com/***
 qduckduckgo:         https://duckduckgo.com/?q=***
 qebay:               https://www.ebay.com/sch/i.html?_nkw=***
 qenglish:            https://english.stackexchange.com/search?q=***
@@ -34,7 +33,7 @@ qmaven:              https://search.maven.org/#search%7Cga%7C1%7C***
 qnewegg:             http://www.newegg.com/Product/ProductList.aspx?Submit=ENE&Description=***
 qnews:               https://news.google.com/news?q=***
 qnpm:                https://www.npmjs.com/search?q=***
-qnull:               http://0.0.0.0/***
+qnull:               http://0.0.0.0/null/***
 qoctopart:           https://octopart.com/parts/search?q=***
 qphysics:            https://physics.stackexchange.com/search?q=***
 qreddit:             https://www.reddit.com/search?q=***
@@ -52,7 +51,6 @@ qtwitter:            https://twitter.com/search?q=***
 qultimateguitartabs: http://www.ultimate-guitar.com/search.php?value=***&search_type=title
 qurbandictionary:    https://www.urbandictionary.com/define.php?term=***
 qvideo:              https://www.google.com/search?tbm=vid&pws=0&tbs:li=1&q=***
-qwallhaven:          http://alpha.wallhaven.cc/search?q=***
 qwikipedia:          https://en.wikipedia.org/wiki/?search=***
 qwolfram:            https://www.wolframalpha.com/input/?i=***
 qyoutube:            https://www.youtube.com/results?search_query=***
