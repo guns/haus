@@ -18,10 +18,13 @@ class FindDirectory
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
         Find and output the first matching directory found in a breadth-first search.
 
-        Usage: #{File.basename __FILE__} regexp [root-dir]
+        Usage: #{File.basename __FILE__} [options] regexp
+               #{File.basename __FILE__} [options] root-dir regexp
+
+        Options:
       BANNER
 
       opt.on '-p', '--full-path', "Match the full path, not just the basename" do
@@ -62,8 +65,14 @@ class FindDirectory
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless (1..2) === args.size
-    rgx, dir = args
+
+    case args.size
+    when 1 then rgx = args[0]
+    when 2 then dir, rgx = args
+    else
+      abort parser.help
+    end
+
     if path = bfs(dir || '.', Haus::Utils.regexp_parse(rgx))
       puts path
     else
