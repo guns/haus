@@ -88,6 +88,12 @@ task :env do
       },
 
       {
+        :base => "#{@src}/READONLY/git-imerge",
+        :branch => %w[111],
+        :files => { 'git-imerge' => 'bin/git-imerge' }
+      },
+
+      {
         :base => "#{@src}/git-remote-hg",
         :branch => %w[master guns],
         :files => { 'git-remote-hg' => 'bin/git-remote-hg' }
