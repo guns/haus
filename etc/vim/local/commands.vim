@@ -216,8 +216,10 @@ function! CFoldExpr(lnum)
 endfunction
 
 function! DiffFoldExpr(lnum) "{{{1
-	if getline(a:lnum) =~# '\v^diff>'
+	if getline(a:lnum) =~# '\v^commit>'
 		return '>1'
+	elseif getline(a:lnum) =~# '\v^diff>'
+		return '>2'
 	elseif getline(a:lnum - 3) =~# '\v^-- ' ||
 	     \ getline(a:lnum) =~# '\v^Only in '
 		return '0'
