@@ -51,8 +51,7 @@ load-module module-native-protocol-unix
 
 ### Network access (may be configured with paprefs, so leave this commented
 ### here if you plan to use paprefs)
-load-module module-native-protocol-tcp auth-ip-acl=127.0.0.1;10.127.127.2
-# load-module module-native-protocol-tcp listen=127.0.0.1 auth-ip-acl=127.0.0.1
+load-module module-native-protocol-tcp listen=10.127.127.1 auth-ip-acl=10.127.127.2
 
 ### Automatically restore the default sink/source when changed by the user
 ### during runtime
