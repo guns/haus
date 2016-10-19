@@ -39,6 +39,7 @@
 
 [merge]
 	ff = false
+	renormalize = true
 	tool = vimdiff
 
 [pager]
@@ -54,9 +55,6 @@
 
 [pretty]
 	singleline = format:%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s
-
-[rerere]
-	enabled = true
 
 [alias]
 	# Index operations
