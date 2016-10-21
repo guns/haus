@@ -14,6 +14,7 @@ require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
 require 'open3'
+require 'base64'
 
 class Cert
   DEFAULTS = {
@@ -124,6 +125,7 @@ class Cert
     [
       'Subject: %s' % cert.subject,
       'Issuer:  %s' % cert.issuer,
+      'base64:  sha256//%s' % Base64.encode64(Digest::SHA256.digest(cert.public_key.to_der)).chomp,
       'SHA256:  %s' % Digest::SHA256.hexdigest(der),
       'SHA1:    %s' % Digest::SHA1.hexdigest(der),
       'MD5:     %s' % Digest::MD5.hexdigest(der),
