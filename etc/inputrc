@@ -293,6 +293,10 @@ $if ruby
     # Re-exec (see above)
     "\C-x\C-x":     "\C-] exec $0 \n"
 
+    # Parens
+    "\C-x(":	    "\C-a(\C-e)\C-a"
+    "\C-x)":	    "\C-a(\C-e)"
+
     # Hashrocket
     "\C-l":         " => "
     "\C-x\C-l":     clear-screen
