@@ -4,16 +4,16 @@
 require 'csv'
 require 'fileutils'
 
-url = 'https://download.dnscrypt.org/dnscrypt-proxy/dnscrypt-resolvers.csv'
-sig = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv.sig'
+URL = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
+SIG = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv.sig'
 
 Dir.chdir '/tmp' do
   begin
-    [url, sig].each { |u| system 'curl', '--silent', '-O', u }
+    [URL, SIG].each { |u| system 'curl', '--silent', '-O', u }
 
-    abort unless system 'gpg', '--verify-files', File.basename(sig)
+    abort unless system 'gpg', '--verify-files', File.basename(SIG)
 
-    csv = CSV.parse File.read(File.basename url)
+    csv = CSV.parse File.read(File.basename URL)
 
     csv.shift if csv[0][0] == 'Name'
 
@@ -35,6 +35,6 @@ Dir.chdir '/tmp' do
       EOF
     }.join("\n")
   ensure
-    FileUtils.rm_f [url, sig].map { |f| File.basename f }
+    FileUtils.rm_f [URL, SIG].map { |f| File.basename f }
   end
 end
