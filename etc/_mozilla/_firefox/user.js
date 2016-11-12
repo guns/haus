@@ -95,6 +95,19 @@ user_pref("network.warnOnAboutNetworking", false);
 // Disable Geolocation
 user_pref("geo.enabled", false);
 
+// Disable more telemetry
+user_pref("datareporting.policy.dataSubmissionEnabled", false);
+
+// Disable session restore
+user_pref("browser.sessionstore.interval", 2147483647);
+user_pref("browser.sessionstore.max_resumed_crashes", 0);
+user_pref("browser.sessionstore.max_serialize_back", 0);
+user_pref("browser.sessionstore.max_serialize_forward", 0);
+user_pref("browser.sessionstore.max_tabs_undo", 0);
+user_pref("browser.sessionstore.max_windows_undo", 0);
+user_pref("browser.sessionstore.resume_from_crash", false);
+user_pref("browser.sessionstore.upgradeBackup.maxUpgradeBackups", 0);
+
 // Disable Pocket
 user_pref("browser.pocket.api", "");
 user_pref("browser.pocket.enabledLocales", "");
