@@ -317,6 +317,7 @@ alias lsmapper='ls /dev/mapper'
 alias lsid='ls /dev/disk/by-id'
 alias lslabel='ls /dev/disk/by-label'
 alias lsuuid='ls /dev/disk/by-uuid'
+alias lsdbus='find /usr/share/dbus-1 -name "*.service" | sort'
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
