@@ -325,7 +325,10 @@ lsD() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
 
 # objdump hexdump strings readelf hexfiend
 HAVE hexdump && { hex() { hexdump --canonical --no-squeezing "$@" | pager; }; TCOMP hexdump hex; }
-HAVE objdump && { ox() { objdump --all-headers "$@" | pager; }; TCOMP objdump ox; }
+HAVE objdump && {
+    ox() { objdump --all-headers "$@" | pager; }; TCOMP objdump ox
+    disas() { objdump -D -M intel-mnemonic "$@" | pager; }
+}
 HAVE readelf && { dl() { readelf --dynamic "$@" | pager; }; TCOMP readelf dl; }
 HAVE strings && strings() { command strings --all --radix=x "$@" | pager; }
 

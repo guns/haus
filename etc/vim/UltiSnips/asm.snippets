@@ -1,0 +1,23 @@
+snippet def "%define" b
+%define $0
+endsnippet
+
+snippet ifd "%ifdef" b
+%ifdef $0
+%endif
+endsnippet
+
+snippet ifn "%ifndef" b
+%ifndef $0
+%endif
+endsnippet
+
+snippet once "include guard" b
+%ifndef $1
+%define $1 $0
+%endif
+endsnippet
+
+snippet inc "include" b
+%include "$0"
+endsnippet

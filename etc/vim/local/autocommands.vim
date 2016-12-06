@@ -235,4 +235,10 @@ augroup GUNS
 	autocmd BufRead,BufNewFile /dev/shm/pass.*
 		\ setlocal nobackup noswapfile noundofile
 
+	" ASM
+	autocmd FileType asm
+		\ setlocal smartindent |
+		\ execute 'noremap <buffer> <4-CR> :setlocal virtualedit=all<CR>:call cursor(".", 32)<CR>i; <C-o>:setlocal virtualedit=<CR>' |
+		\ execute 'imap    <buffer> <4-CR> <C-\><C-n><4-CR>'
+
 augroup END
