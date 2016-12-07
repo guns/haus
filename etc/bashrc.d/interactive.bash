@@ -903,6 +903,9 @@ HAVE screen && {
 
 ### Compilers
 
+# gcc
+ALIAS gccas='gcc -S -masm=intel'
+
 # make
 ALIAS mk='make' \
       mkinstall='make install' \
