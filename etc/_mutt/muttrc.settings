@@ -269,6 +269,7 @@ set assumed_charset="utf-8"
 # %D      deleted flag
 # %d      description
 # %e      MIME content-transfer-encoding
+# %F      filename for content-disposition header
 # %f      filename
 # %I      disposition (``I'' for inline, ``A'' for attachment)
 # %m      major MIME type
@@ -1081,6 +1082,16 @@ set fast_reply=yes
 # (PGP only)
 #
 
+set flag_safe=yes
+#
+# Name: flag_safe
+# Type: boolean
+# Default: no
+#
+#
+# If set, flagged messages cannot be deleted.
+#
+
 set folder="~/Mail"
 #
 # Name: folder
@@ -1819,6 +1830,18 @@ set mailcap_path="~/.mailcap"
 # messages to the cur directory.  Note that setting this option may
 # slow down polling for new messages in large folders, since mutt has
 # to scan all cur messages.
+#
+
+# set mark_macro_prefix="'"
+#
+# Name: mark_macro_prefix
+# Type: string
+# Default: "'"
+#
+#
+# Prefix for macros created using mark-message.  A new macro
+# automatically generated with <mark-message>a will be composed
+# from this prefix and the letter a.
 #
 
 # set mark_old=yes
@@ -3362,7 +3385,10 @@ set send_charset="us-ascii:utf-8"
 #
 # Specifies the program and arguments used to deliver mail sent by Mutt.
 # Mutt expects that the specified program interprets additional
-# arguments as recipient addresses.
+# arguments as recipient addresses.  Mutt appends all recipients after
+# adding a -- delimiter (if not already present).  Additional
+# flags, such as for $use_8bitmime, $use_envelope_from,
+# $dsn_notify, or $dsn_return will be added before the delimiter.
 #
 
 # set sendmail_wait=0
