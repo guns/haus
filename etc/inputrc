@@ -297,8 +297,8 @@ $if ruby
     "\C-x\C-x":     "\C-] exec $0 \n"
 
     # Parens
-    "\C-x(":	    "\C-a(\C-e)\C-a"
-    "\C-x)":	    "\C-a(\C-e)"
+    "\C-x(":        "\C-a(\C-e)\C-a"
+    "\C-x)":        "\C-a(\C-e)"
 
     # Hashrocket
     "\C-l":         " => "
@@ -316,6 +316,9 @@ $if ruby
     # Pry
     "\C-xd":        "\C-]show-doc "
     "\C-xs":        "\C-]show-source "
+
+    # toggle_verbose_numbers
+    "\033\007t":    "\C-] toggle_verbose_numbers \n"
 $endif
 
 ### Clojure REPL
