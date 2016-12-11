@@ -215,6 +215,19 @@ function! CFoldExpr(lnum)
 	endif
 endfunction
 
+function! AsmFoldExpr(lnum) "{{{1
+	let line = getline(a:lnum)
+	if line =~# '\v^\w\S*:'
+		return '>2'
+	elseif line =~# '\v^section|segment'
+		return '>1'
+	elseif getline(a:lnum - 1) =~ "\v^\s*ret"
+		return '0'
+	else
+		return '='
+	endif
+endfunction
+
 function! DiffFoldExpr(lnum) "{{{1
 	if getline(a:lnum) =~# '\v^commit>'
 		return '>1'

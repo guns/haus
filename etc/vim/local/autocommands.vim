@@ -237,8 +237,10 @@ augroup GUNS
 
 	" ASM
 	autocmd FileType asm
-		\ setlocal smartindent |
-		\ execute 'noremap <buffer> <4-CR> :setlocal virtualedit=all<CR>:call cursor(".", 32)<CR>i; <C-o>:setlocal virtualedit=<CR>' |
-		\ execute 'imap    <buffer> <4-CR> <C-\><C-n><4-CR>'
+		\ setlocal smartindent foldmethod=expr foldexpr=AsmFoldExpr(v:lnum) |
+		\ execute 'noremap  <buffer> <4-CR> :setlocal virtualedit=all<CR>:call cursor(".", 32)<CR>i; <C-o>:setlocal virtualedit=<CR>' |
+		\ execute 'imap     <buffer> <4-CR> <C-\><C-n><4-CR>' |
+		\ execute 'inoremap <buffer> <C-h>  <Space>←<Space>' |
+		\ execute 'inoremap <buffer> <C-l>  <Space>→<Space>'
 
 augroup END
