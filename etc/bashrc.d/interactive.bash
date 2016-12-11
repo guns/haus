@@ -488,7 +488,7 @@ ALIAS chimmutable='chattr -V +i' \
 
 # inotifywait
 HAVE inotifywait && fwatch() {
-    while inotifywait -e close_write -r "$1"; do eval "${@:2}"; sleep 0.5; done
+    while inotifywait -q -e close_write -r "$1"; do clear; eval "${@:2}"; sleep 0.5; done
 }
 
 # Check shell init files and system paths for loose permissions
