@@ -219,8 +219,10 @@ function! AsmFoldExpr(lnum) "{{{1
 	let line = getline(a:lnum)
 	if line =~# '\v^\w\S*:'
 		return '>2'
-	elseif line =~# '\v^section|segment'
+	elseif line =~# '\v^(section|segment)'
 		return '>1'
+	elseif line[:1] =~# '\v^;;'
+		return '1'
 	elseif getline(a:lnum - 1) =~ "\v^\s*ret"
 		return '0'
 	else
