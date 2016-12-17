@@ -157,7 +157,7 @@ CD_FUNC -x cdetc        /etc
 CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cdmnt           /mnt
-CD_FUNC -x cdnginx      /etc/nginx /opt/nginx/etc /usr/local/etc/nginx
+CD_FUNC -x cdnginx      /etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdTMP           /tmp
 CD_FUNC cdvar           /var
@@ -978,16 +978,6 @@ githubget() {
 }
 
 ### Benchmarking
-
-HAVE perf && perfstat() {
-    local repeat=1
-    if [[ "$1" == +([0-9]) ]]; then
-        local repeat="$1"
-        shift
-    fi
-    local events='cycles,instructions,cache-references,cache-misses,branches,branch-misses,page-faults,context-switches,cpu-migrations,task-clock'
-    run perf stat --event="$events" --repeat="$repeat" "$@" 2>&1 >/dev/null
-}
 
 type -P time &>/dev/null && {
     T() { command time -f "\nCPU: %e (%S/%U/%P)\nMEM: %t kB avg, %M max kB\nIO:  %I fsin, %O fsout, %r sockin, %s sockout, %k signals, %x exit" "$@"; }
