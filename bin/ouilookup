@@ -42,7 +42,7 @@ class Ouilookup
 
   def slurp path
     if path =~ %r{\A\w+://}
-      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36', '--progress-bar', '--location', path]) { |io| io.read }
+      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36', '--progress-bar', '--location', path]) { |io| io.read }
     else
       File.read path
     end
