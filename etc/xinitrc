@@ -27,7 +27,7 @@ cd ~/Downloads
 /usr/bin/pulseaudio --start &
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
-xautolock-launch &
+xautolock-launch 30 &
 WALLPAPER="/run/user/$EUID/wallpaper.lock"
 > "$WALLPAPER"
 (inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
