@@ -15,7 +15,7 @@ gtk-can-change-accels = 1
 
 # Theming
 gtk-theme-name = "Arc-Darker"
-gtk-icon-theme-name = "Numix-Bevel"
+gtk-icon-theme-name = "Paper"
 gtk-font-name = "Segoe UI 10"
 
 # Misc options
