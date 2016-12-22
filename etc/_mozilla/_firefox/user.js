@@ -69,6 +69,8 @@ user_pref("app.update.auto", false);
 user_pref("app.update.enabled", false);
 // Disable searchplugin updates
 user_pref("browser.search.update", false);
+// Disable addon updates
+user_pref("extensions.update.autoUpdateDefault", false);
 // Disable OCSP
 user_pref("security.OCSP.enabled", 0);
 
