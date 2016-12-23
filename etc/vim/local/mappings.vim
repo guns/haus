@@ -337,6 +337,7 @@ noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'syntax')<CR>
 noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
 noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '0') \| syntax sync fromstart<CR>
 noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
+noremap <Leader>ss       :<C-u>syntax sync fromstart<CR>
 noremap <Leader>st       :<C-u>SetTextwidth<Space>
 noremap <Leader>?st      :<C-u>SetTextwidth<CR>
 noremap <Leader>sw       :<C-u>SetWhitespace!<Space>
