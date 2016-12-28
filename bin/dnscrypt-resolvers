@@ -28,11 +28,10 @@ Dir.chdir '/tmp' do
 # #{url} (#{title})
 # NOLOGS: #{nologs}, DNSSEC: #{dnssec}, Namecoin: #{namecoin}
 # Version: #{version}
-# DNSCRYPT_PROVIDER_NAME=#{name}
-# DNSCRYPT_PROVIDER_KEY=#{pubkey}
-# DNSCRYPT_RESOLVERIP=#{host}
-# DNSCRYPT_RESOLVERPORT=#{port || '443'}
-      EOF
+ProviderName    #{name}
+ProviderKey     #{pubkey}
+ResolverAddress #{host}#{port ? ":#{port}" : ""}
+EOF
     }.join("\n")
   ensure
     FileUtils.rm_f [URL, SIG].map { |f| File.basename f }
