@@ -64,13 +64,13 @@ if &t_Co == 256
 	let s:icolor = 'rgb:00/CC/FF'
 	let s:ncolor = 'rgb:FF/F5/9B'
 
-	if exists('$TMUX') || &term =~ '\v^tmux'
+	if &term[0:3] ==# 'tmux' || (exists('$TMUX') && &term[0:3] ==# "tmux")
 		let &t_SI = "\033Ptmux;\033\033]12;" . s:icolor . "\007\033\\"
 		let &t_EI = "\033Ptmux;\033\033]12;" . s:ncolor . "\007\033\\"
-	elseif &term =~ '\v^screen'
+	elseif &term[0:5] ==# 'screen'
 		let &t_SI = "\033P\033]12;" . s:icolor . "\007\033\\"
 		let &t_EI = "\033P\033]12;" . s:ncolor . "\007\033\\"
-	elseif &term =~ '\v^u?rxvt|^xterm'
+	elseif &term[0:3] ==# 'rxvt' || &term[0:4] ==# 'xterm'
 		let &t_SI = "\033]12;" . s:icolor . "\007"
 		let &t_EI = "\033]12;" . s:ncolor . "\007"
 	endif
