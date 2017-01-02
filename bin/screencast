@@ -41,11 +41,15 @@ class Screencast
         @geometry = arg.match(/(\d+)(?:x(\d+)(?:\+(\d+))(?:[,+](\d+)))/)[1..-1]
       end
 
-      opt.on '-n', '--no-audio', 'Do not record audio' do
+      opt.on '-n', '--dry-run', "Print command to be executed, but do not run it" do
+        @dry_run = true
+      end
+
+      opt.on '-N', '--no-audio', 'Do not record audio' do
         @audio = false
       end
 
-      opt.on '-r', '--rate FPS', Integer, 'Set capture FPS' do |arg|
+      opt.on '-r', '--framerate FPS', Integer, 'Set capture FPS' do |arg|
         @rate = arg
       end
 
@@ -65,7 +69,7 @@ class Screencast
 
   def sh *args
     warn args.shelljoin
-    system *args
+    system *args unless @dry_run
   end
 
   def parse_geometry geometry
@@ -113,7 +117,7 @@ class Screencast
     display = opts[:display] || ':0.0'
 
     copts = %W[-y -threads auto]
-    copts += %W[-f x11grab -r #{opts[:rate]} -s #{dimensions} -i #{display}#{offset}]
+    copts += %W[-f x11grab -framerate #{opts[:rate]} -s #{dimensions} -i #{display}#{offset}]
     copts += %W[-f alsa -ac 2 -i pulse] if opts[:audio]
 
     copts += case opts[:codec]
@@ -121,7 +125,6 @@ class Screencast
       %W[
         -vcodec libx264
         -preset ultrafast
-        -tune animation
         -crf 0
       ]
     when 'dnxhd'
