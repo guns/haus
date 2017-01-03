@@ -12,7 +12,7 @@ Personal programs, libraries, configuration, and documentation.
 
 Copyrights belong to respective authors, but are otherwise:
 
-Copyright (c) 2009-2015 Sung Pae <self@sungpae.com>
+Copyright (c) 2009-2017 Sung Pae <self@sungpae.com>
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation

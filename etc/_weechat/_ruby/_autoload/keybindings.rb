@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2015 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2017 Sung Pae <self@sungpae.com>
 # Distributed under the terms of the GNU General Public License v3.0.
 # http://www.gnu.org/licenses/gpl-3.0.html
 

@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 # PP.pp Hash[nokoslurp('https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains').css('table').find{|t| t.to_s.index '.ac'}.css('tr').drop(1).map{|r| k,*v = r.text.delete("\u00A0").split("\n").values_at(1,2,3,4).map(&:strip); [k, v]}], $stdout, 1024
 
