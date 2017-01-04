@@ -406,10 +406,10 @@ mt() {
         mount --verbose
     fi
 }; TCOMP mount mt
-alias mtb='mt --bind'
-alias mtro='mt --read-only'
-alias mtbro='mt --bind --read-only'
-alias umt='umount --verbose'
+ALIAS mtb='mt --bind'
+ALIAS mtro='mt --read-only'
+ALIAS mtbro='mt --bind --read-only'
+ALIAS umt='umount --verbose'
 remt() {
     if (($#)); then
         run mount --verbose --options "remount,$1" "${@:2}"
