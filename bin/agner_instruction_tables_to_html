@@ -1,0 +1,109 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2017 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'fileutils'
+require 'nokogiri'
+
+class AgnerInstructionTablesToHtml
+  DEFAULTS = {
+    :outdir => '.'
+  }
+
+  STYLES = [
+    'tr:nth-child(even) { background-color: #dddddd; }',
+    '.NAVIGATION { font-size: 10px; }'
+  ]
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+        Split Agner Fog's spreadsheet of CPU instruction tables into usable
+        HTML files.
+
+        Download the spreadsheet from:
+
+            http://agner.org/optimize/instruction_tables.ods
+
+        Export it from LibreOffice Calc as an XHTML document, and feed the
+        file to this script.
+
+        Usage: #{File.basename __FILE__} [options] xhtml
+
+        Options:
+      BANNER
+
+      opt.on '-o', '--outdir PATH' do |arg|
+        @outdir = File.expand_path arg
+      end
+    end
+  end
+
+  def process! buf
+    html = Nokogiri::HTML buf
+    tmpl = html.clone
+    tables = html.css 'body > table'
+
+    tmpl.at('body').inner_html = ''
+    tmpl.at('head').add_child %q{<link rel="stylesheet" href="styles.css" type="text/css" media="screen" charset="utf-8">}
+
+    tables.map do |t|
+      doc = tmpl.clone
+      doc.title = t.css('tr:first > td:first > p:first').text
+      doc.at('body').add_child(t)
+      doc
+    end
+  end
+
+  def navigation v
+    node = Nokogiri::XML::Node.new 'ul', v[0]
+    node['class'] = 'NAVIGATION'
+    v.each do |doc|
+      item = Nokogiri::XML::Node.new('li', doc)
+      link = Nokogiri::XML::Node.new('a', doc)
+      link['href'] = "#{doc.title}.html"
+      link.content = doc.title
+      item.add_child link
+      node.add_child item
+    end
+    node
+  end
+
+  def write_documents v
+    FileUtils.mkdir_p @outdir
+    Dir.chdir @outdir do
+      File.open 'styles.css', 'w' do |f|
+        f.puts STYLES.join("\n")
+      end
+
+      nav = navigation v
+
+      File.open 'index.html', 'w' do |f|
+        f.puts "<html>#{nav.to_html}</html>"
+      end
+
+      v.each do |doc|
+        File.open "#{doc.title}.html", 'w' do |f|
+          doc.at('body').add_child nav
+          f.puts doc.to_html
+        end
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help unless args.size == 1
+    write_documents process!(File.read args[0])
+  end
+end
+
+$0 = File.basename(__FILE__) and AgnerInstructionTablesToHtml.new.run ARGV if $0 == __FILE__
