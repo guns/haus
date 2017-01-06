@@ -48,6 +48,10 @@ class Haus
         list[command][:help] = msg
       end
 
+      def usage_tail msg
+        list[command][:usage_tail] = msg
+      end
+
       def summary
         list.map { |k,v| '    %-8s%s' % [k, v[:desc]] }.join "\n"
       end
@@ -162,7 +166,7 @@ class Haus
 
         opt.banner = <<-BANNER.gsub /^ +/, ''
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
-          Usage: haus #{self.class.command} [options]
+          Usage: haus #{self.class.command} [options] #{meta[:usage_tail]}
 
           Options:
         BANNER

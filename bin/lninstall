@@ -18,7 +18,8 @@ class Lninstall
     :share => false,
     :uninstall => false,
     :src => nil,
-    :dst => nil
+    :dst => nil,
+    :pattern => nil
   }
 
   def initialize opts = {}
@@ -32,7 +33,7 @@ class Lninstall
         Link the program executables, man pages, and init scripts of one
         directory tree to another. Also works in reverse.
 
-        Usage: #{File.basename __FILE__} [options] src dst
+        Usage: #{File.basename __FILE__} [options] src dst [pattern]
 
         Options:
       BANNER
@@ -146,6 +147,7 @@ class Lninstall
 
   def install
     src_files.each do |f|
+      next if @pattern and f !~ @pattern
       @queue.add_link f, f.sub(%r{\A#{src}(.*)}, dst + '\1')
     end
 
@@ -154,6 +156,7 @@ class Lninstall
 
   def uninstall
     dst_files.each do |f|
+      next if @pattern and f !~ @pattern
       @queue.add_deletion f
     end
 
@@ -166,9 +169,10 @@ class Lninstall
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help unless args.size == 2
+    abort parser.help unless args.size == 2 or args.size == 3
 
-    @src, @dst = args
+    @src, @dst, pat = args
+    @pattern = Haus::Utils.regexp_parse pat if pat
     @uninstall ? uninstall : install
   end
 end

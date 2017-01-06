@@ -9,6 +9,7 @@ class Haus
   class Unlink < Task
     desc 'Remove dotfile symlinks'
     help 'Remove dotfile symlinks'
+    usage_tail '[pattern]'
 
     def options
       super.tap do |opt|
@@ -38,7 +39,7 @@ class Haus
       end
     end
 
-    def enqueue
+    def enqueue pattern = nil
       users.each do |user|
         if options.all or options.broken
           haus = Regexp.compile '\A%s/' % options.path
@@ -46,6 +47,7 @@ class Haus
             if File.symlink? dst
               src = Haus::Utils.readlink dst
               if src =~ haus
+                next if pattern and dst !~ pattern
                 if options.all or (options.broken and not queue.extant? src)
                   queue.add_deletion dst
                 end
@@ -56,6 +58,7 @@ class Haus
           hausfiles user do |src, dst|
             begin
               if File.symlink? dst and Haus::Utils.readlink(dst) == src
+                next if pattern and dst !~ pattern
                 queue.add_deletion dst
               end
             rescue Errno::ENOENT
@@ -71,9 +74,9 @@ class Haus
     def run
       return nil if queue.executed?
       args = super
-      raise options.to_s if args.size > 0
+      raise options.to_s if args.size > 1
       queue.options = options
-      enqueue
+      enqueue args[0] ? Haus::Utils::regexp_parse(args[0]) : nil
       queue.execute
     end
   end

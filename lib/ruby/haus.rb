@@ -59,7 +59,7 @@ class Haus
     task[:class].new(args[1..-1]).run or exit 1
   rescue StandardError => e
     log ["[#{e.class}] ", :red, :bold], e.to_s
-    log e.backtrace.join("\n") if options.debug
+    log e.backtrace.join "\n"
     exit 1
   end
 end
