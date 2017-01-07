@@ -1443,6 +1443,7 @@ if HAVE systemctl; then
 
         alias cups-start='run systemctl start org.cups.cupsd.service'
         alias cups-stop='run systemctl stop org.cups.cupsd.service'
+        alias cups-restart='run systemctl restart org.cups.cupsd.service'
     }
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
