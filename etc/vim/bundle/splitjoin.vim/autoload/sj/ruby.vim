@@ -206,8 +206,13 @@ function! sj#ruby#JoinCase()
         let replacement = else_line.' '.next_line
         call sj#ReplaceLines(else_line_no, else_line_no + 1, replacement)
         if sj#settings#Read('align')
-          call sj#Align(line_no + 1, else_line_no, 'when_then')
+          call sj#Align(line_no + 1, else_line_no - 1, 'when_then')
         endif
+      endif
+    else
+      " no else line
+      if sj#settings#Read('align')
+        call sj#Align(line_no + 1, new_end_line_no - 1, 'when_then')
       endif
     endif
 
@@ -581,6 +586,51 @@ function! sj#ruby#SplitOptions()
   return 1
 endfunction
 
+function! sj#ruby#SplitArray()
+  call sj#PushCursor()
+  let [from, to] = sj#LocateBracesOnLine('[', ']', [
+        \ 'rubyInterpolationDelimiter',
+        \ 'rubyString',
+        \ 'rubyStringDelimiter',
+        \ 'rubySymbolDelimiter'
+        \ ])
+  call sj#PopCursor()
+
+  if from < 0
+    return 0
+  endif
+
+  let [from, to, args; _rest] = sj#argparser#ruby#ParseArguments(from + 1, to - 1, getline('.'))
+  if from < 0
+    return 0
+  endif
+
+  let replacement = "\n".join(args, ",\n")."\n"
+  call sj#ReplaceCols(from, to, replacement)
+  return 1
+endfunction
+
+function! sj#ruby#JoinArray()
+  normal! $
+
+  if getline('.')[col('.') - 1] != '['
+    return 0
+  endif
+
+  let syntax_group = synIDattr(synID(line('.'), col('.'), 1), "name")
+  if index(['rubyStringDelimiter', 'rubySymbolDelimiter'], syntax_group) >= 0
+    return 0
+  endif
+
+  let body = sj#Trim(sj#GetMotion('Vi['))
+  " remove trailing comma
+  let body = substitute(body, ',\ze\_s*$', '', '')
+  let body = join(sj#TrimList(split(body, ",\s*\n")), ', ')
+  call sj#ReplaceMotion('Va[', '['.body.']')
+
+  return 1
+endfunction
+
 function! sj#ruby#JoinContinuedMethodCall()
   if getline('.') !~ '\.$'
     return 0
@@ -737,7 +787,8 @@ function! sj#ruby#SplitArrayLiteral()
 endfunction
 
 function! sj#ruby#JoinArrayLiteral()
-  if synIDattr(synID(line('.'), col('.'), 1), "name") != 'rubyStringDelimiter'
+  let syntax_group = synIDattr(synID(line('.'), col('.'), 1), "name")
+  if index(['rubyStringDelimiter', 'rubySymbolDelimiter'], syntax_group) < 0
     return 0
   endif
 

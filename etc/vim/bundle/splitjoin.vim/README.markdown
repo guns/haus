@@ -9,6 +9,8 @@ following default keybindings, which can be customized:
 * `gJ` (with the cursor on the first line of a block) to join a block into a
   single-line statement.
 
+![Demo](http://i.andrewradev.com/df1c7b895602352d7ce3122196c3e6df.gif)
+
 I usually work with ruby and a lot of expressions can be written very concisely
 on a single line. A good example is the "if" statement:
 
@@ -61,15 +63,9 @@ This currently works for:
   * C if clauses and function calls
   * Do-blocks in Elixir
 
-For more information, try `:help splitjoin`, or take a look at the help file
-online at
+For more information, including examples for all of those languages, try `:help
+splitjoin`, or take a look at the help file online at
 [doc/splitjoin.txt](https://github.com/AndrewRadev/splitjoin.vim/blob/master/doc/splitjoin.txt)
-
-For more examples and corner cases, you can explore the "examples" directory
-here:
-[examples](https://github.com/AndrewRadev/splitjoin.vim/tree/master/examples).
-It's not present in the downloadable zip file to avoid cluttering your vimfiles
-with useless stuff.
 
 ## Contributing
 

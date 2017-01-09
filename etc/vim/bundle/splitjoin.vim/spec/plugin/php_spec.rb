@@ -25,8 +25,6 @@ describe "php" do
   end
 
   specify "square-bracketed lists" do
-    pending('PHP indentation seems to differ locally and on travis')
-
     set_file_contents '<?php $foo = [1, 2, 3]; ?>'
 
     split
@@ -67,6 +65,36 @@ describe "php" do
     assert_file_contents <<-EOF
       <?php
       if ($foo) { $a = "bar"; }
+      ?>
+    EOF
+  end
+
+  specify "else-clauses" do
+    set_file_contents <<-EOF
+      <?php
+      if ($foo) { $a = "bar"; }
+      else { $a = "baz"; }
+      ?>
+    EOF
+
+    vim.search('else')
+    split
+
+    assert_file_contents <<-EOF
+      <?php
+      if ($foo) { $a = "bar"; }
+      else {
+        $a = "baz";
+      }
+      ?>
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      <?php
+      if ($foo) { $a = "bar"; }
+      else { $a = "baz"; }
       ?>
     EOF
   end
