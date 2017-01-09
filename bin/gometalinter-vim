@@ -9,25 +9,29 @@
 #
 # Aggregate and normalise the output of a whole bunch of Go linters.
 #
-# Default linters:
-#
-# …
-#
-# Severity override map (default is "warning"):
-#
-#   gotype -> error
-#   test -> error
-#   testify -> error
-#   vet -> error
-#
 # Flags:
 #       --help                Show context-sensitive help (also try --help-long
 #                             and --help-man).
+#       --config=CONFIG       Load JSON configuration from file.
+#   -D, --disable=LINTER ...  Disable previously enabled linters.
+#   -E, --enable=LINTER ...   Enable previously disabled linters.
+#       --linter=NAME:COMMAND:PATTERN ...
+#                             Define a linter.
+#       --message-overrides=LINTER:MESSAGE ...
+#                             Override message from linter. {message} will be
+#                             expanded to the original message.
+#       --severity=LINTER:SEVERITY ...
+#                             Map of linter severities.
+#       --disable-all         Disable all linters.
+#       --enable-all          Enable all linters.
+#       --format={{.Path}}:{{.Line}}:{{if .Col}}{{.Col}}{{end}}:{{.Severity}}: {{.Message}} ({{.Linter}})
+#                             Output format.
 #       --vendored-linters    Use vendored linters (recommended).
 #       --fast                Only run fast linters.
 #   -i, --install             Attempt to install all known linters.
 #   -u, --update              Pass -u to go tool when installing.
 #   -f, --force               Pass -f to go tool when installing.
+#       --download-only       Pass -d to go tool when installing.
 #   -d, --debug               Display messages for failed linters, etc.
 #   -j, --concurrency=16      Number of concurrent linters to run.
 #   -e, --exclude=REGEXP ...  Exclude messages matching these regular expressions.
@@ -56,23 +60,12 @@
 #                             line-based output.
 #       --enable-gc           Enable GC for linters (useful on large
 #                             repositories).
-#   -D, --disable=LINTER ...  List of linters to disable
-#                             (testify,test,gofmt,goimports,lll,misspell,unused).
-#   -E, --enable=LINTER ...   Enable previously disabled linters.
-#       --linter=NAME:COMMAND:PATTERN ...
-#                             Specify a linter.
-#       --message-overrides=LINTER:MESSAGE ...
-#                             Override message from linter. {message} will be
-#                             expanded to the original message.
-#       --severity=LINTER:SEVERITY ...
-#                             Map of linter severities.
-#       --disable-all         Disable all linters.
-#       --enable-all          Enable all linters.
+#       --aggregate           Aggregate issues reported by several linters.
 #
 # Args:
-#   [<path>]  Directory to lint. Defaults to ".". <path>/... will recurse.
+#   [<path>]  Directories to lint. Defaults to ".". <path>/... will recurse.
 
-# gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/Default linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
+# gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
 
 gas_rules = %w[tls_old exec rand tls_good tls_ok templates httpoxy perms unsafe hardcoded tempfile rsa sql crypto bind].map { |r| "-rule #{r}" }.join ' '
 
@@ -81,7 +74,7 @@ linters = \
  "deadcode"    => "deadcode {path}:^deadcode: (?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "dupl"        => "dupl -plumbing -threshold {duplthreshold} {path}/*.go:^(?P<path>.*?\\.go):(?P<line>\\d+)-\\d+:\\s*(?P<message>.*)$",
  "errcheck"    => "errcheck -abspath {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "gas"         => "gas -fmt=csv #{gas_rules} {path}/*.go:^(?P<path>.*?\\.go),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
+ "gas"         => "gas -fmt=csv {path}/*.go:^(?P<path>.*?\\.go),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
  "goconst"     => "goconst -min-occurrences {min_occurrences} -min-length {min_const_length} {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "gocyclo"     => "gocyclo -over {mincyclo} {path}:^(?P<cyclo>\\d+)\\s+\\S+\\s(?P<function>\\S+)\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(\\d+)$",
  "gofmt"       => "gofmt -l -s {path}/*.go:^(?P<path>.*?\\.go)$",
@@ -100,8 +93,8 @@ linters = \
  "unconvert"   => "unconvert {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "unused"      => "unused {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "varcheck"    => "varcheck {path}:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "vet"         => "go tool vet {path}/*.go:^(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
- "vetshadow"   => "go tool vet --shadow {path}/*.go:^(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$"}
+ "vet"         => "go tool vet {path}/*.go:^(?:vet:.*?\\.go:\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*))|(?:(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*))$",
+ "vetshadow"   => "go tool vet --shadow {path}/*.go:^(?:vet:.*?\\.go:\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*))|(?:(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*))$"}
 .reduce([]) { |v, entry|
   v << '--linter=%s:%s' % entry
   v << '--enable=%s' % entry[0]
