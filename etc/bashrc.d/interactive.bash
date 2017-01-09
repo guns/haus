@@ -284,8 +284,8 @@ ALIAS rgi='rg --ignore-case' \
 alias c='cat'
 alias tf='tail --follow=name --retry'
 alias l='less'
-alias L='l -+S'
-alias lf='l +F'
+alias L='less -+S'
+alias lf='less +F'
 
 # syslog follow
 if [[ -e /var/log/everything.log ]]; then
