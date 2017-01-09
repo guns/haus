@@ -13,8 +13,9 @@ class Source(Base):
         Base.__init__(self, vim)
 
         self.name = 'file_mru'
-        self.kind = 'jump_list'
+        self.kind = 'file'
 
     def gather_candidates(self, context):
-        return self.vim.eval('neomru#_get_mrus().file.'
-                             +'gather_candidates([], {"is_redraw": 0})')
+        return [{'word': x, 'action__path': x} for x
+                in self.vim.eval('neomru#_get_mrus().file.'
+                                 +'gather_candidates([], {"is_redraw": 0})')]
