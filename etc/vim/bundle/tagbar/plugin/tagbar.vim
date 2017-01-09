@@ -4,7 +4,7 @@
 " Author:      Jan Larres <jan@majutsushi.net>
 " Licence:     Vim licence
 " Website:     http://majutsushi.github.com/tagbar/
-" Version:     2.6.1
+" Version:     2.7
 " Note:        This plugin was heavily inspired by the 'Taglist' plugin by
 "              Yegappan Lakshmanan and uses a small amount of code from it.
 "
@@ -75,6 +75,7 @@ function! s:setup_options() abort
         \ ['vertical', 0],
         \ ['width', 40],
         \ ['zoomwidth', 1],
+        \ ['silent', 0],
     \ ]
 
     for [opt, val] in options

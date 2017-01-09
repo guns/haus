@@ -3,7 +3,7 @@
 Author:         Jan Larres <jan@majutsushi.net>
 Licence:        Vim licence, see |license|
 Homepage:       http://majutsushi.github.com/tagbar/
-Version:        2.6.1
+Version:        2.7
 
 ==============================================================================
 Contents                                            *tagbar* *tagbar-contents*
@@ -76,7 +76,7 @@ auto-generated name.
 
 Another case where pseudo-tags appear is in C++ implementation files. Since
 classes are usually defined in a header file but the member methods and
-variables in the implementation file the class itself won't generate a tag
+variables are in the implementation file the class itself won't generate a tag
 in that file.
 
 Since pseudo-tags don't really exist they cannot be jumped to from the Tagbar
@@ -721,6 +721,18 @@ default statusline:
         let g:tagbar_status_func = 'TagbarStatusFunc'
 <
 
+                                                           *g:tagbar_silent*
+g:tagbar_silent~
+Default: 0
+
+By default if the cursor is over a tag in the tagbar window, information
+about the tag is echoed out. Set this option to disable that behavior.
+
+Example:
+>
+        let g:tagbar_silent = 1
+<
+
 ------------------------------------------------------------------------------
 HIGHLIGHT COLOURS                                           *tagbar-highlight*
 
@@ -1257,12 +1269,18 @@ have been missed.
 If the bug does seem to be in Tagbar then you can use Tagbar's debug mode to
 try to find the source of the problem. Usually you would use it like this:
 
-  1. Open Vim without loading any files.
-  2. Run :TagbarDebug.
-  3. Open the file you are having problems with.
-  4. Open Tagbar. If the problem is with the statusline functionality this
+  1. Remove the |tagbar-statusline| support from your vimrc if you use it, and
+     make sure you don't have any autocommands that load Tagbar on startup.
+  2. Open Vim without loading any files.
+  3. Run :TagbarDebug.
+  4. Open the file you are having problems with.
+  5. Open Tagbar. If the problem is with the statusline functionality this
      step may not be necessary.
-  5. Exit Vim.
+  6. Exit Vim.
+
+Note that it is important that the "TagbarDebug" command gets called before
+any other call to a Tagbar command or function, so step 1 is important to get
+a complete log.
 
 This should leave a file called "tagbardebug.log" in the current directory.
 See |tagbar-commands| for more information on the debug commands. When you
@@ -1323,6 +1341,22 @@ Known issues~
 
 ==============================================================================
 8. History                                                    *tagbar-history*
+
+2.7 (2017-01-09)
+    - Added support for Universal Ctags, courtesy of Dmytro Konstantinov
+    - Added option to arrange Tagbar window vertically
+    - Added case-insensitive sort option, courtesy of Martin Vuille
+    - Added option to configure zoom width
+    - Added option to hide non-public tags
+    - Added "silent" option to disable the display of tag information in the
+      command line, courtesy of Anmol Sethi
+    - Added mappings for moving between folds
+    - Improved handling of calling :bdelete/:bwipeout/:quit when Tagbar is
+      open
+    - Improved handling of multiple tabs with separate Tagbar instances,
+      courtesy of Martin Vuille
+    - Better handling of various errors to allow Tagbar to continue working
+    - Various other small improvements and bugfixes
 
 2.6.1 (2014-01-23)
     - Automatically close the preview window when jumping to a tag
