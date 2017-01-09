@@ -89,7 +89,7 @@ task :env do
 
       {
         :base => "#{@src}/READONLY/git-imerge",
-        :branch => %w[111],
+        :branch => %w[master],
         :files => { 'git-imerge' => 'bin/git-imerge' }
       },
 
@@ -271,7 +271,7 @@ task :env do
     'dotfiles' => [
       {
         :base   => "#{@src}/urxvt-perls",
-        :branch => %w[master],
+        :branch => %w[master nerv],
         :files  => 'etc/_urxvt/ext',
       }
     ]

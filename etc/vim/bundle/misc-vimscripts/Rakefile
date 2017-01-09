@@ -1,9 +1,10 @@
 # -*- encoding: utf-8 -*-
 
 require 'net/http'
+require 'shellwords'
 
 def fetch file, url
-  File.open(file, 'w') { |f| f.puts Net::HTTP.get(URI.parse url) }
+  File.open(file, 'w') { |f| f.puts %x(curl -L #{url.shellescape}) }
 end
 
 task :default => :update
@@ -11,6 +12,6 @@ task :default => :update
 desc 'Update'
 task :update do
   mkdir_p 'syntax'
-  fetch 'syntax/pgsql.vim', 'http://www.gunduz.org/postgresql/pgsql.vim'
+  fetch 'syntax/pgsql.vim', 'https://www.gunduz.org/postgresql/pgsql.vim'
   fetch 'syntax/nhdes.vim', 'https://bilious.alt.org/~paxed/nethack/nhdes.vim'
 end
