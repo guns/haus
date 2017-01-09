@@ -270,13 +270,9 @@ let g:ackprg = 'rg --vimgrep'
 let g:ack_apply_qmappings = 0
 let g:ack_apply_lmappings = 0
 
-" Plugin: Unite.vim
-let g:unite_enable_start_insert = 1
-let g:unite_enable_auto_select = 0
-let g:unite_force_overwrite_statusline = 0
-let g:unite_data_directory = expand('~/.cache/vim/unite')
-call unite#filters#matcher_default#use(['matcher_fuzzy'])
-call unite#filters#sorter_default#use(['sorter_selecta'])
+" Plugin: Denite.vim
+call denite#custom#alias('source', 'git', 'file_rec')
+call denite#custom#var('git', 'command', ['git', 'ls-files', '-co', '--exclude-standard'])
 
 " Plugin: neomru
 let g:neomru#do_validate = 0

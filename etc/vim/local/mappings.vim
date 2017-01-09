@@ -571,7 +571,7 @@ noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus<CR>
-noremap  <4-G>            q:iGgrep! -i<Space>
+noremap  <4-G>            :<C-u>Ggrep! -i<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
 vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
 
@@ -586,22 +586,22 @@ vmap ga <Plug>(EasyAlign)
 nmap gA <Plug>(LiveEasyAlign)
 vmap gA <Plug>(LiveEasyAlign)
 
-" Plugin: Unite.vim
-noremap <Leader>u :<C-u>Unite -no-split<Space>
-Mapall <4-o> :<C-u>UniteOpen<CR>
-Mapall <4-t> :<C-u>tabnew \\\| UniteOpen<CR>
-Mapall <4-V> :<C-u>vsplit \\\| UniteOpen<CR>
-Mapall <4-b> :<C-u>Unite -no-split file_mru<CR>
-Mapall <4-B> :<C-u>tabnew \\\| Unite -no-split file_mru<CR>
-Mapall <4-f> :<C-u>Unite -no-split file<CR>
-Mapall <4-F> :<C-u>Unite -no-split file_rec<CR>
+" Plugin: Denite.vim
+noremap <Leader>u :<C-u>Denite<Space>
+Mapall <4-o> :<C-u>DeniteOpen<CR>
+Mapall <4-t> :<C-u>tabnew \\\| DeniteOpen<CR>
+Mapall <4-V> :<C-u>vsplit \\\| DeniteOpen<CR>
+Mapall <4-b> :<C-u>Denite file_mru<CR>
+Mapall <4-B> :<C-u>tabnew \\\| Denite file_mru<CR>
+Mapall <4-f> :<C-u>Denite file<CR>
+Mapall <4-F> :<C-u>Denite file_rec<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>
 Mapall <4-D> :<C-u>NERDTreeFind<CR>
 
 " Plugin: Ack.vim
-Mapall <4-A> q:iAck!<Space>
+Mapall <4-A> :<C-u>Ack!<Space>
 
 " Plugin: Gundo
 Mapall <4-u> :GundoToggle<CR>

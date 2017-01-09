@@ -721,7 +721,7 @@ function! s:ToggleMinorWindows()
 	endif
 endfunction
 
-command! -bar UniteOpen call fugitive#detect('.') | execute 'Unite -no-split ' . (exists('b:git_dir') ? 'git_cached git_untracked' : 'file_rec')
+command! -bar DeniteOpen call fugitive#detect('.') | execute 'Denite ' . (exists('b:git_dir') ? 'git' : 'file_rec')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(path)
@@ -816,7 +816,7 @@ function! s:Org(bang, ...)
 		endfor
 	else
 		if empty(a:bang) | tabnew | endif
-		execute 'lcd ' . g:org_home | Unite -no-split git_cached git_untracked
+		execute 'lcd ' . g:org_home | Denite git
 	endif
 endfunction
 

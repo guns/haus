@@ -751,7 +751,7 @@ ALIAS ctagsr='ctags --recurse'
 ALIAS e='vim' && {
     alias v='vim -c "set nomodified" -'
 
-    vimopen() { vim -c 'UniteOpen' "$@"; }
+    vimopen() { vim -c 'DeniteOpen' "$@"; }
 
     # Param: [$@] Arguments to `ff()`
     vimfind() {
@@ -765,7 +765,7 @@ ALIAS e='vim' && {
         if (( ${#files[@]} )); then
             vim "${files[@]}"
         else
-            vim -c 'Unite -no-split file_rec'
+            vim -c 'Denite file_rec'
         fi
     }; TCOMP find vimfind
 

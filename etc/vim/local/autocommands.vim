@@ -223,14 +223,6 @@ augroup GUNS
 	autocmd BufRead,BufNewFile *sudoers.d/*
 		\ setlocal filetype=sudoers
 
-	" Plugin: Unite.vim
-	autocmd FileType unite
-		\ silent! syntax clear Tab TrailingWS |
-		\ let b:loaded_delimitMate = 1 |
-		\ BufReMapall <4-Bslash> <Plug>(unite_all_exit) |
-		\ nmap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)") |
-		\ imap <silent><buffer><expr> <Space> unite#smart_map("\<Plug>(unite_choose_action)", "\<Plug>(unite_toggle_mark_current_candidate)")
-
 	" password-store
 	autocmd BufRead,BufNewFile /dev/shm/pass.*
 		\ setlocal nobackup noswapfile noundofile
