@@ -282,7 +282,7 @@ ALIAS rgi='rg --ignore-case' \
 
 # cat tail less
 alias c='cat'
-alias tf='tail --follow'
+alias tf='tail --follow=name --retry'
 alias l='less'
 alias L='l -+S'
 alias lf='l +F'
@@ -290,16 +290,16 @@ alias lf='l +F'
 # syslog follow
 if [[ -e /var/log/everything.log ]]; then
     ALIAS lfsyslog='less +F --follow-name /var/log/everything.log'
-    alias tfsyslog='tail --follow=name /var/log/everything.log'
+    alias tfsyslog='tail --follow=name --retry /var/log/everything.log'
 elif [[ -e /var/log/system.log ]]; then
     ALIAS lfsyslog='less +F --follow-name /var/log/system.log'
-    alias tfsyslog='tail --follow=name /var/log/system.log'
+    alias tfsyslog='tail --follow=name --retry /var/log/system.log'
 elif [[ -e /var/log/syslog ]]; then
     ALIAS lfsyslog='less +F --follow-name /var/log/syslog'
-    alias tfsyslog='tail --follow=name /var/log/syslog'
+    alias tfsyslog='tail --follow=name --retry /var/log/syslog'
 elif [[ -e /var/log/messages ]]; then
     ALIAS lfsyslog='less +F --follow-name /var/log/messages'
-    alias tfsyslog='tail --follow=name /var/log/messages'
+    alias tfsyslog='tail --follow=name --retry /var/log/messages'
 fi
 
 # ls
