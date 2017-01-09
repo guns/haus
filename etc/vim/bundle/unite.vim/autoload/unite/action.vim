@@ -1,26 +1,7 @@
 "=============================================================================
 " FILE: action.vim
 " AUTHOR: Shougo Matsushita <Shougo.Matsu@gmail.com>
-" License: MIT license  {{{
-"     Permission is hereby granted, free of charge, to any person obtaining
-"     a copy of this software and associated documentation files (the
-"     "Software"), to deal in the Software without restriction, including
-"     without limitation the rights to use, copy, modify, merge, publish,
-"     distribute, sublicense, and/or sell copies of the Software, and to
-"     permit persons to whom the Software is furnished to do so, subject to
-"     the following conditions:
-"
-"     The above copyright notice and this permission notice shall be included
-"     in all copies or substantial portions of the Software.
-"
-"     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-"     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-"     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-"     IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-"     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-"     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-"     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-" }}}
+" License: MIT license
 "=============================================================================
 
 let s:save_cpo = &cpo
@@ -319,8 +300,8 @@ function! unite#action#do(action_name, ...) abort "{{{
 
   call unite#redraw()
 
-  let candidates = get(a:000, 0,
-        \ unite#helper#get_marked_candidates())
+  let candidates = empty(a:000) ?
+        \ unite#helper#get_marked_candidates() : a:1
   let new_context = get(a:000, 1, {})
   let sources = get(a:000, 2, {})
 
@@ -446,13 +427,15 @@ endfunction"}}}
 
 function! unite#action#do_candidates(action_name, candidates, ...) abort "{{{
   let context = get(a:000, 0, {})
+  let sources = get(a:000, 1, [])
   let context = unite#init#_context(context)
   let context.unite__is_interactive = 0
   let context.unite__disable_hooks = 1
-  call unite#set_context(context)
+  call unite#init#_current_unite(sources, context)
 
   return unite#action#do(
-        \ a:action_name, a:candidates, context)
+        \ a:action_name, a:candidates, context,
+        \ values(unite#get_all_sources()))
 endfunction"}}}
 
 function! unite#action#_get_candidate_action_table(candidate, sources) abort "{{{

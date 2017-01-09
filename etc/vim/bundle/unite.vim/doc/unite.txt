@@ -1,27 +1,9 @@
 *unite.txt*	Unite and create user interfaces.
 
-Version: 6.3
+Version: 6.4
 Author:  Shougo <Shougo.Matsu@gmail.com>
 Documentation Author: ujihisa <ujihisa at gmail com>
-License: MIT license  {{{
-    Permission is hereby granted, free of charge, to any person obtaining
-    a copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-}}}
+License: MIT license
 
 CONTENTS					*unite-contents*
 
@@ -46,6 +28,7 @@ Create source		|unite-create-source|
 Create kind		|unite-create-kind|
 Create filter		|unite-create-filter|
 External source		|unite-external-sources|
+Denite			|unite-denite|
 FAQ			|unite-faq|
 
 ==============================================================================
@@ -1336,7 +1319,7 @@ unite#start_complete({sources}, [{context}])	*unite#start_complete()*
 unite#get_candidates({sources}, [, {context}])	*unite#get_candidates()*
 		Get a list of all source candidates.  A unite buffer is not
 		created.  This function may not work with some sources.
-		The arguments are the same as with |unite#start()|.
+		The arguments are the same as |unite#start()|.
 		Note: the max_candidates source option is ignored.
 
 						*unite#action#do_candidates()*
@@ -1644,6 +1627,10 @@ unite#custom#source({source-name}, {option-name}, {value})
 		Example: >
 		call unite#custom#source('file_rec', 'ignore_globs',
 		\ split(&wildignore, ','))
+
+		" Ignore ignore1 and ignore2/ignore3.
+		call unite#custom#source('file_rec', 'ignore_globs',
+		\ ['./ignore1', './ignore2/ignore3'])
 <
 		white_globs			(List) or (String)
 		Specify the whitelist glob pattern list not to ignore
@@ -2868,10 +2855,8 @@ sorter_ftime
 
 						*unite-filter-sorter_rank*
 sorter_rank
-		Matched rank order sorter.  The higher the matched word is or
-		the longer the matched length is, the higher the rank is.
-		This sorter is useful for file candidate source.
-		Note: This sorter is slow.
+		It is the same as |unite-filter-sorter_rank|.
+		Note: This sorter requires |:python| or |:python3| support.
 >
 		call unite#custom#source('buffer,file,file_rec',
 		\ 'sorters', 'sorter_rank')
@@ -2882,7 +2867,7 @@ sorter_selecta
 		from selecta: https://github.com/garybernhardt/selecta.
 		If the matched length is shorter, the rank is higher.
 		This sorter is useful for file candidate source.
-		Note: This sorter requires |:python| support.
+		Note: This sorter requires |:python| or |:python3| support.
 >
 		call unite#custom#source('buffer,file,file_rec',
 		\ 'sorters', 'sorter_selecta')
@@ -3775,6 +3760,23 @@ And so on...
 
 See Wiki page(Japanese).
 https://github.com/Shougo/unite.vim/wiki/unite-plugins
+
+==============================================================================
+DENITE						*unite-denite*
+
+						*unite-denite-source-unite*
+unite		Nominates an unite candidate as a candidate.
+		Note: It doesn't support the all unite sources.
+
+		Source arguments:
+		1. the source name.
+
+						*unite-denite-kind-unite*
+unite		Unite candidates.
+						*unite-denite-action-unite*
+	do		Do "default" action
+	delete		Do "delete" action
+	preview		Do "preview" action
 
 ==============================================================================
 FAQ						*unite-faq*
