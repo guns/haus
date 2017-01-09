@@ -30,8 +30,12 @@ If no COMMAND is specified, COMMAND defaults to either
 .B show
 or
 .BR ls ,
-depending on the type of specifier in ARGS. Otherwise COMMAND must be one of
-the valid commands listed below.
+depending on the type of specifier in ARGS. Alternatively, if \fIPASSWORD_STORE_ENABLE_EXTENSIONS\fP
+is set to "true", and the file \fI.extensions/COMMAND.bash\fP exists inside the
+password store and is executable, then it is sourced into the environment,
+passing any arguments and environment variables.
+
+Otherwise COMMAND must be one of the valid commands listed below.
 
 Several of the commands below rely on or provide additional functionality if
 the password store directory is also a git repository. If the password store
@@ -86,12 +90,15 @@ List names of passwords inside the tree that match \fIpass-names\fP by using the
 .BR tree (1)
 program. This command is alternatively named \fBsearch\fP.
 .TP
-\fBshow\fP [ \fI--clip\fP[=\fIline-number\fP], \fI-c\fP[\fIline-number\fP] ] \fIpass-name\fP
+\fBshow\fP [ \fI--clip\fP[=\fIline-number\fP], \fI-c\fP[\fIline-number\fP] ] [ \fI--qrcode\fP[=\fIline-number\fP], \fI-q\fP[\fIline-number\fP] ] \fIpass-name\fP
 Decrypt and print a password named \fIpass-name\fP. If \fI--clip\fP or \fI-c\fP
 is specified, do not print the password but instead copy the first (or otherwise specified)
 line to the clipboard using
 .BR xclip (1)
-and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds.
+and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds. If \fI--qrcode\fP
+or \fI-q\fP is specified, do not print the password but instead display a QR code using
+.BR qrencode (1)
+either to the terminal or graphically if supported.
 .TP
 \fBinsert\fP [ \fI--echo\fP, \fI-e\fP | \fI--multiline\fP, \fI-m\fP ] [ \fI--force\fP, \fI-f\fP ] \fIpass-name\fP
 Insert a new password into the password store called \fIpass-name\fP. This will
@@ -112,16 +119,19 @@ difficult-to-erase disk sectors. If \fI/dev/shm\fP is not accessible, fallback t
 the ordinary \fITMPDIR\fP location, and print a warning.
 .TP
 \fBgenerate\fP [ \fI--no-symbols\fP, \fI-n\fP ] [ \fI--clip\fP, \fI-c\fP ] [ \fI--in-place\fP, \fI-i\fP | \fI--force\fP, \fI-f\fP ] \fIpass-name [pass-length]\fP
-Generate a new password using
-.BR pwgen (1)
-of length \fIpass-length\fP (or \fIPASSWORD_STORE_GENERATED_LENGTH\fP if unspecified)
-and insert into \fIpass-name\fP. If \fI--no-symbols\fP or \fI-n\fP
-is specified, do not use any non-alphanumeric characters in the generated password.
+Generate a new password using \fB/dev/urandom\fP of length \fIpass-length\fP
+(or \fIPASSWORD_STORE_GENERATED_LENGTH\fP if unspecified) and insert into
+\fIpass-name\fP. If \fI--no-symbols\fP or \fI-n\fP is specified, do not use
+any non-alphanumeric characters in the generated password. The character sets used
+in generating passwords can be changed with the \fIPASSWORD_STORE_CHARACTER_SET\fP and
+\fIPASSWORD_STORE_CHARACTER_SET_NO_SYMBOLS\fP environment variables, described below.
 If \fI--clip\fP or \fI-c\fP is specified, do not print the password but instead copy
 it to the clipboard using
 .BR xclip (1)
-and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds.
-Prompt before overwriting an existing password,
+and then restore the clipboard after 45 (or \fIPASSWORD_STORE_CLIP_TIME\fP) seconds. If \fI--qrcode\fP
+or \fI-q\fP is specified, do not print the password but instead display a QR code using
+.BR qrencode (1)
+either to the terminal or graphically if supported. Prompt before overwriting an existing password,
 unless \fI--force\fP or \fI-f\fP is specified. If \fI--in-place\fP or \fI-i\fP is
 specified, do not interactively prompt, and only replace the first line of the password
 file with the new generated password, keeping the remainder of the file intact.
@@ -384,6 +394,9 @@ Contains the default gpg key identification used for encryption and decryption.
 Multiple gpg keys may be specified in this file, one per line. If this file
 exists in any sub directories, passwords inside those sub directories are
 encrypted using those keys. This should be set using the \fBinit\fP command.
+.TP
+.B ~/.password-store/.extensions
+The directory containing extension files.
 
 .SH ENVIRONMENT VARIABLES
 
@@ -420,13 +433,41 @@ Sets the umask of all files modified by pass, by default \fI077\fP.
 The default password length if the \fIpass-length\fP parameter to \fBgenerate\fP
 is unspecified.
 .TP
+.I PASSWORD_STORE_CHARACTER_SET
+The character set to be used in password generation for \fBgenerate\fP. This value
+is to be interpreted by \fBtr\fP. See
+.BR tr (1)
+for more info.
+.TP
+.I PASSWORD_STORE_CHARACTER_SET_NO_SYMBOLS
+The character set to be used in no-symbol password generation for \fBgenerate\fP,
+when \fI--no-symbols\fP, \fI-n\fP is specified. This value is to be interpreted
+by \fBtr\fP. See
+.BR tr (1)
+for more info.
+.TP
+.I PASSWORD_STORE_ENABLE_EXTENSIONS
+This environment variable must be set to "true" for extensions to be enabled.
+.TP
+.I PASSWORD_STORE_EXTENSIONS_DIR
+The location to look for executable extension files, by default
+\fIPASSWORD_STORE_DIR/.extensions\fP.
+.TP
+.I PASSWORD_STORE_SIGNING_KEY
+If this environment variable is set, then all \fB.gpg-id\fP files and extension files
+must be signed using a detached signature using the GPG key specified by the full 40 character
+upper-case fingerprint in this variable. If multiple fingerprints are specified, each
+separated by a whitespace character, then signatures must match at least one.
+The \fBinit\fP command will keep signatures of \fB.gpg-id\fP files up to date.
+.TP
 .I EDITOR
 The location of the text editor used by \fBedit\fP.
 .SH SEE ALSO
 .BR gpg2 (1),
-.BR pwgen (1),
+.BR tr (1),
 .BR git (1),
-.BR xclip (1).
+.BR xclip (1),
+.BR qrencode (1).
 
 .SH AUTHOR
 .B pass

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2012 - 2014 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
+# Copyright (C) 2012 - 2016 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.
 # This file is licensed under the GPLv2+. Please see COPYING for more information.
 
 umask "${PASSWORD_STORE_UMASK:-077}"
@@ -13,9 +13,12 @@ which gpg2 &>/dev/null && GPG="gpg2"
 [[ -n $GPG_AGENT_INFO || $GPG == "gpg2" ]] && GPG_OPTS+=( "--batch" "--use-agent" )
 
 PREFIX="${PASSWORD_STORE_DIR:-$HOME/.password-store}"
+EXTENSIONS="${PASSWORD_STORE_EXTENSIONS_DIR:-$PREFIX/.extensions}"
 X_SELECTION="${PASSWORD_STORE_X_SELECTION:-clipboard}"
 CLIP_TIME="${PASSWORD_STORE_CLIP_TIME:-45}"
 GENERATED_LENGTH="${PASSWORD_STORE_GENERATED_LENGTH:-25}"
+CHARACTER_SET="${PASSWORD_STORE_CHARACTER_SET:-[:graph:]}"
+CHARACTER_SET_NO_SYMBOLS="${PASSWORD_STORE_CHARACTER_SET_NO_SYMBOLS:-[:alnum:]}"
 
 export GIT_DIR="${PASSWORD_STORE_GIT:-$PREFIX}/.git"
 export GIT_WORK_TREE="${PASSWORD_STORE_GIT:-$PREFIX}"
@@ -46,6 +49,17 @@ die() {
 	echo "$@" >&2
 	exit 1
 }
+verify_file() {
+	[[ -n $PASSWORD_STORE_SIGNING_KEY ]] || return 0
+	[[ -f $1.sig ]] || die "Signature for $1 does not exist."
+	local fingerprints="$(gpg $PASSWORD_STORE_GPG_OPTS --verify --status-fd=1 "$1.sig" "$1" 2>/dev/null | sed -n 's/\[GNUPG:\] VALIDSIG \([A-F0-9]\{40\}\) .* \([A-F0-9]\{40\}\)$/\1\n\2/p')"
+	local fingerprint found=0
+	for fingerprint in $PASSWORD_STORE_SIGNING_KEY; do
+		[[ $fingerprint =~ ^[A-F0-9]{40}$ ]] || continue
+		[[ $fingerprints == *$fingerprint* ]] && { found=1; break; }
+	done
+	[[ $found -eq 1 ]] || die "Signature for $1 is invalid."
+}
 set_gpg_recipients() {
 	GPG_RECIPIENT_ARGS=( )
 	GPG_RECIPIENTS=( )
@@ -74,6 +88,8 @@ set_gpg_recipients() {
 		cmd_usage
 		exit 1
 	fi
+
+	verify_file "$current"
 
 	local gpg_id
 	while read -r gpg_id; do
@@ -154,6 +170,23 @@ clip() {
 	) 2>/dev/null & disown
 	echo "Copied $2 to clipboard. Will clear in $CLIP_TIME seconds."
 }
+
+qrcode() {
+	if [[ -n $DISPLAY || -n $WAYLAND_DISPLAY ]]; then
+		if type feh >/dev/null 2>&1; then
+			echo -n "$1" | qrencode --size 10 -o - | feh -x --title "pass: $2" -g +200+200 -
+			return
+		elif type gm >/dev/null 2>&1; then
+			echo -n "$1" | qrencode --size 10 -o - | gm display -title "pass: $2" -geometry +200+200 -
+			return
+		elif type display >/dev/null 2>&1; then
+			echo -n "$1" | qrencode --size 10 -o - | display -title "pass: $2" -geometry +200+200 -
+			return
+		fi
+	fi
+	echo -n "$1" | qrencode -t utf8
+}
+
 tmpdir() {
 	[[ -n $SECURE_TMPDIR ]] && return
 	local warn=1
@@ -288,6 +321,16 @@ cmd_init() {
 		local id_print="$(printf "%s, " "$@")"
 		echo "Password store initialized for ${id_print%, }${id_path:+ ($id_path)}"
 		git_add_file "$gpg_id" "Set GPG id to ${id_print%, }${id_path:+ ($id_path)}."
+		if [[ -n $PASSWORD_STORE_SIGNING_KEY ]]; then
+			local signing_keys=( ) key
+			for key in $PASSWORD_STORE_SIGNING_KEY; do
+				signing_keys+=( --default-key $key )
+			done
+			gpg "${GPG_OPTS[@]}" "${signing_keys[@]}" --detach-sign "$gpg_id" || die "Could not sign .gpg_id."
+			key="$(gpg --verify --status-fd=1 "$gpg_id.sig" "$gpg_id" 2>/dev/null | sed -n 's/\[GNUPG:\] VALIDSIG [A-F0-9]\{40\} .* \([A-F0-9]\{40\}\)$/\1/p')"
+			[[ -n $key ]] || die "Signing of .gpg_id unsuccessful."
+			git_add_file "$gpg_id.sig" "Signing new GPG id with ${key//[$IFS]/,}."
+		fi
 	fi
 
 	reencrypt_path "$PREFIX/$id_path"
@@ -295,28 +338,33 @@ cmd_init() {
 }
 
 cmd_show() {
-	local opts clip_location clip=0
-	opts="$($GETOPT -o c:: -l clip:: -n "$PROGRAM" -- "$@")"
+	local opts selected_line clip=0 qrcode=0
+	opts="$($GETOPT -o q::c:: -l qrcode::,clip:: -n "$PROGRAM" -- "$@")"
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
-		-c|--clip) clip=1; clip_location="${2:-1}"; shift 2 ;;
+		-q|--qrcode) qrcode=1; selected_line="${2:-1}"; shift 2 ;;
+		-c|--clip) clip=1; selected_line="${2:-1}"; shift 2 ;;
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 ]] && die "Usage: $PROGRAM $COMMAND [--clip[=line-number],-c[line-number]] [pass-name]"
+	[[ $err -ne 0 || ( $qrcode -eq 1 && $clip -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--clip[=line-number],-c[line-number]] [--qrcode[=line-number],-q[line-number]] [pass-name]"
 
 	local path="$1"
 	local passfile="$PREFIX/$path.gpg"
 	check_sneaky_paths "$path"
 	if [[ -f $passfile ]]; then
-		if [[ $clip -eq 0 ]]; then
+		if [[ $clip -eq 0 && $qrcode -eq 0 ]]; then
 			$GPG -d "${GPG_OPTS[@]}" "$passfile" || exit $?
 		else
-			[[ $clip_location =~ ^[0-9]+$ ]] || die "Clip location '$clip_location' is not a number."
-			local pass="$($GPG -d "${GPG_OPTS[@]}" "$passfile" | tail -n +${clip_location} | head -n 1)"
-			[[ -n $pass ]] || die "There is no password to put on the clipboard at line ${clip_location}."
-			clip "$pass" "$path"
+			[[ $selected_line =~ ^[0-9]+$ ]] || die "Clip location '$selected_line' is not a number."
+			local pass="$($GPG -d "${GPG_OPTS[@]}" "$passfile" | tail -n +${selected_line} | head -n 1)"
+			[[ -n $pass ]] || die "There is no password to put on the clipboard at line ${selected_line}."
+			if [[ $clip -eq 1 ]]; then
+				clip "$pass" "$path"
+			elif [[ $qrcode -eq 1 ]]; then
+				qrcode "$pass" "$path"
+			fi
 		fi
 	elif [[ -d $PREFIX/$path ]]; then
 		if [[ -z $path ]]; then
@@ -431,19 +479,20 @@ cmd_edit() {
 }
 
 cmd_generate() {
-	local opts clip=0 force=0 symbols="-y" inplace=0
-	opts="$($GETOPT -o ncif -l no-symbols,clip,in-place,force -n "$PROGRAM" -- "$@")"
+	local opts qrcode=0 clip=0 force=0 characters="$CHARACTER_SET" inplace=0 pass
+	opts="$($GETOPT -o nqcif -l no-symbols,qrcode,clip,in-place,force -n "$PROGRAM" -- "$@")"
 	local err=$?
 	eval set -- "$opts"
 	while true; do case $1 in
-		-n|--no-symbols) symbols=""; shift ;;
+		-n|--no-symbols) characters="$CHARACTER_SET_NO_SYMBOLS"; shift ;;
+		-q|--qrcode) qrcode=1; shift ;;
 		-c|--clip) clip=1; shift ;;
 		-f|--force) force=1; shift ;;
 		-i|--in-place) inplace=1; shift ;;
 		--) shift; break ;;
 	esac done
 
-	[[ $err -ne 0 || ( $# -ne 2 && $# -ne 1 ) || ( $force -eq 1 && $inplace -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--no-symbols,-n] [--clip,-c] [--in-place,-i | --force,-f] pass-name [pass-length]"
+	[[ $err -ne 0 || ( $# -ne 2 && $# -ne 1 ) || ( $force -eq 1 && $inplace -eq 1 ) || ( $qrcode -eq 1 && $clip -eq 1 ) ]] && die "Usage: $PROGRAM $COMMAND [--no-symbols,-n] [--clip,-c] [--qrcode,-q] [--in-place,-i | --force,-f] pass-name [pass-length]"
 	local path="$1"
 	local length="${2:-$GENERATED_LENGTH}"
 	check_sneaky_paths "$path"
@@ -454,8 +503,8 @@ cmd_generate() {
 
 	[[ $inplace -eq 0 && $force -eq 0 && -e $passfile ]] && yesno "An entry already exists for $path. Overwrite it?"
 
-	local pass="$(pwgen -s $symbols $length 1)"
-	[[ -n $pass ]] || exit 1
+	read -r -n $length pass < <(LC_ALL=C tr -dc "$characters" < /dev/urandom)
+	[[ ${#pass} -eq $length ]] || die "Could not generate password from /dev/urandom."
 	if [[ $inplace -eq 0 ]]; then
 		$GPG -e "${GPG_RECIPIENT_ARGS[@]}" -o "$passfile" "${GPG_OPTS[@]}" <<<"$pass" || die "Password encryption aborted."
 	else
@@ -471,10 +520,12 @@ cmd_generate() {
 	[[ $inplace -eq 1 ]] && verb="Replace"
 	git_add_file "$passfile" "$verb generated password for ${path}."
 
-	if [[ $clip -eq 0 ]]; then
-		printf "\e[1m\e[37mThe generated password for \e[4m%s\e[24m is:\e[0m\n\e[1m\e[93m%s\e[0m\n" "$path" "$pass"
-	else
+	if [[ $clip -eq 1 ]]; then
 		clip "$pass" "$path"
+	elif [[ $qrcode -eq 1 ]]; then
+		qrcode "$pass" "$path"
+	else
+		printf "\e[1m\e[37mThe generated password for \e[4m%s\e[24m is:\e[0m\n\e[1m\e[93m%s\e[0m\n" "$path" "$pass"
 	fi
 }
 
@@ -571,6 +622,32 @@ cmd_git() {
 	fi
 }
 
+cmd_extension_or_show() {
+	if ! cmd_extension "$@"; then
+		COMMAND="show"
+		cmd_show "$@"
+	fi
+}
+
+SYSTEM_EXTENSION_DIR=""
+cmd_extension() {
+	check_sneaky_paths "$1"
+	local user_extension system_extension extension
+	[[ -n $SYSTEM_EXTENSION_DIR ]] && system_extension="$SYSTEM_EXTENSION_DIR/$1.bash"
+	[[ $PASSWORD_STORE_ENABLE_EXTENSIONS == true ]] && user_extension="$EXTENSIONS/$1.bash"
+	if [[ -n $user_extension && -f $user_extension && -x $user_extension ]]; then
+		verify_file "$user_extension"
+		extension="$user_extension"
+	elif [[ -n $system_extension && -f $system_extension && -x $system_extension ]]; then
+		extension="$system_extension"
+	else
+		return 1
+	fi
+	shift
+	source "$extension" "$@"
+	return 0
+}
+
 #
 # END subcommand functions
 #
@@ -592,6 +669,6 @@ case "$1" in
 	rename|mv) shift;		cmd_copy_move "move" "$@" ;;
 	copy|cp) shift;			cmd_copy_move "copy" "$@" ;;
 	git) shift;			cmd_git "$@" ;;
-	*) COMMAND="show";		cmd_show "$@" ;;
+	*)				cmd_extension_or_show "$@" ;;
 esac
 exit 0
