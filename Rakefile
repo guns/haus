@@ -166,7 +166,7 @@ task :env do
       { :base => "#{@vim}/camelcasemotion",         :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/CountJump",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/delimitMate",             :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/denite.nvim",             :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/denite.nvim",             :branch => %w[master nerv], :files => :pathogen },
       { :base => "#{@vim}/diff_movement",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/gitv",                    :branch => %w[master haus], :files => :pathogen },
       { :base => "#{@vim}/gundo.vim",               :branch => %w[master],      :files => :pathogen },

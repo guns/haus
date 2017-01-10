@@ -593,7 +593,7 @@ Mapall <4-t> :<C-u>tabnew \\\| DeniteOpen<CR>
 Mapall <4-V> :<C-u>vsplit \\\| DeniteOpen<CR>
 Mapall <4-b> :<C-u>Denite file_mru<CR>
 Mapall <4-B> :<C-u>tabnew \\\| Denite file_mru<CR>
-Mapall <4-f> :<C-u>Denite file<CR>
+Mapall <4-f> :<C-u>DeniteBufferDir file_rec<CR>
 Mapall <4-F> :<C-u>Denite file_rec<CR>
 
 " Plugin: NERDTree

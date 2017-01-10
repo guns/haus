@@ -16,7 +16,7 @@ class Base(object):
         self.syntax_name = ''
         self.kind = 'base'
         self.matchers = ['matcher_fuzzy']
-        self.sorters = ['sorter_rank']
+        self.sorters = ['sorter_sublime']
         self.converters = []
         self.context = {}
         self.vars = {}
