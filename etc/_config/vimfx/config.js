@@ -17,14 +17,6 @@ vimfx.set('prevent_autofocus', true);
 // Commands
 //
 
-let {commands} = vimfx.modes.normal;
-
-function addLocationCommand(name, url) {
-	vimfx.addCommand({ name: name, description: `Open ${url}`}, ({vim}) => {
-		vim.window.gBrowser.loadOneTab(url, {inBackground: false});
-	})
-}
-
 vimfx.addCommand({
 	name: 'tst_toggle_window',
 	description: 'Toggle TreeStyleTabs window',
@@ -66,6 +58,12 @@ vimfx.addCommand({
 		if (ts[ts.length-1]) ts[ts.length-1].click();
 	}
 });
+
+function addLocationCommand(name, url) {
+	vimfx.addCommand({ name: name, description: `Open ${url}`}, ({vim}) => {
+		vim.window.gBrowser.loadOneTab(url, {inBackground: false});
+	})
+}
 
 addLocationCommand('open_addons', 'about:addons');
 addLocationCommand('open_config', 'about:config');
