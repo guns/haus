@@ -73,5 +73,5 @@ export WINEDLLOVERRIDES='winemenubuilder.exe=d'
 
 # GnuPG
 if [[ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne "$$" ]]; then
-    export SSH_AUTH_SOCK="/var/run/user/${SUDO_UID:-$EUID}/gnupg/S.gpg-agent.ssh"
+    export SSH_AUTH_SOCK="/run/user/${SUDO_UID:-$EUID}/gnupg/S.gpg-agent.ssh"
 fi
