@@ -742,17 +742,6 @@ function! s:TabOpen(path)
 	execute 'tabedit ' . fnameescape(path)
 endfunction
 
-command! -bar TabmoveNext call <SID>Tabmove(1) " {{{1
-command! -bar TabmovePrev call <SID>Tabmove(-1)
-function! s:Tabmove(n)
-	if version >= 703 && has('patch591')
-		execute 'tabmove ' . printf('%+d', a:n)
-	else
-		let nr = a:n > 0 ? tabpagenr() + a:n - 1 : tabpagenr() - a:n - 3
-		execute 'tabmove ' . (nr < 0 ? 0 : nr)
-	endif
-endfunction
-
 command! -bar MapReadlineUnicodeBindings call <SID>MapReadlineUnicodeBindings() "{{{1
 function! s:MapReadlineUnicodeBindings()
 	let inputrc = expand('~/.inputrc.d/utf-8')

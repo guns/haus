@@ -435,8 +435,8 @@ Mapall <4-t> :<C-u>tabnew<CR>
 Mapall <4-T> :<C-u>tabnew<CR>
 Mapall <4-{> :<C-u>tabprevious<CR>
 Mapall <4-}> :<C-u>tabnext<CR>
-Mapall <4-_> :<C-u>TabmovePrev<CR>
-Mapall <4-+> :<C-u>TabmoveNext<CR>
+Mapall <4-_> :<C-u>tabmove -1<CR>
+Mapall <4-+> :<C-u>tabmove +1<CR>
 
 " Quickfix, location, preview windows
 Mapall <4-x> :<C-u>ToggleMinorWindows<CR>
