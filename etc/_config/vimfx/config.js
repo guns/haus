@@ -50,7 +50,7 @@ vimfx.addCommand({
 	description: 'Select previous TST sibling tab',
 }, ({vim}) => {
 	let b = vim.window.gBrowser;
-	var t = b.treeStyleTab.getPreviousSiblingTab(b.mCurrentTab);
+	let t = b.treeStyleTab.getPreviousSiblingTab(b.mCurrentTab);
 	if (t) {
 		t.click();
 	} else {
@@ -59,22 +59,23 @@ vimfx.addCommand({
 	}
 });
 
-function addLocationCommand(name, url) {
+function addLocationShortcut(keys, name, url) {
 	vimfx.addCommand({ name: name, description: `Open ${url}`}, ({vim}) => {
 		vim.window.gBrowser.loadOneTab(url, {inBackground: false});
-	})
+	});
+	vimfx.set(`custom.mode.normal.${name}`, keys);
 }
-
-addLocationCommand('open_addons', 'about:addons');
-addLocationCommand('open_config', 'about:config');
-addLocationCommand('open_preferences', 'about:preferences');
-addLocationCommand('open_umatrix_background', 'chrome://umatrix/content/popup.html');
-addLocationCommand('open_umatrix_rules', 'chrome://umatrix/content/dashboard.html#user-rules');
-addLocationCommand('open_umatrix_logger', 'chrome://umatrix/content/logger-ui.html');
 
 //
 // Bindings
 //
+
+addLocationShortcut('<C-A>', 'open_addons',             'about:addons');
+addLocationShortcut('<C-C>', 'open_config',             'about:config');
+addLocationShortcut('<C-P>', 'open_preferences',        'about:preferences');
+addLocationShortcut('<C-B>', 'open_umatrix_background', 'chrome://umatrix/content/popup.html');
+addLocationShortcut('<C-M>', 'open_umatrix_rules',      'chrome://umatrix/content/dashboard.html#user-rules');
+addLocationShortcut('<C-L>', 'open_umatrix_logger',     'chrome://umatrix/content/logger-ui.html');
 
 const BINDINGS = [
 	['copy_current_url',        'yy Y'],
@@ -83,12 +84,6 @@ const BINDINGS = [
 	['follow_in_tab',           ';'],
 	['history_back',            '<C-h> H'],
 	['history_forward',         '<C-l> L'],
-	['open_addons',             '<C-A>', true],
-	['open_config',             '<C-C>', true],
-	['open_preferences',        '<C-P>', true],
-	['open_umatrix_background', '<C-B>', true],
-	['open_umatrix_rules',      '<C-M>', true],
-	['open_umatrix_logger',     '<C-L>', true],
 	['reload_config_file',      '<C-x>r'],
 	['scroll_half_page_down',   'f'],
 	['scroll_half_page_up',     'b'],
