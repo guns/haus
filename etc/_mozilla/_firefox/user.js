@@ -79,6 +79,12 @@ user_pref("browser.newtabpage.enabled", false);
 user_pref("browser.newtabpage.enhanced", false);
 
 /*
+ * Extensions
+ */
+
+user_pref("extensions.VimFx.config_file_directory", "~/.config/vimfx");
+
+/*
  * Hidden Preferences
  */
 
