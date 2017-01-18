@@ -385,7 +385,7 @@ noremap <Leader>et       :<C-u>Org TODO<CR>
 noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
 noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt.gz \| lcd $cdhaus<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>
-noremap <Leader>eV       :<C-u>TabOpen $cdhaus/etc/vimperatorrc \| lcd $cdhaus<CR>
+noremap <Leader>eV       :<C-u>TabOpen $cdhaus/etc/_config/vimfx/config.js \| lcd $cdhaus<CR>
 noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/_config/bspwm/bspwmrc \| lcd $cdhaus<CR>
 noremap <Leader>eW       :<C-u>TabOpen $cdhaus/etc/_config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
 noremap <Leader>ex       :<C-u>TabOpen $cdhaus/etc/xinitrc \| lcd $cdhaus<CR>

@@ -217,7 +217,6 @@ task :env do
       { :base => "#{@vim}/vim-unimpaired",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-varnish",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-visual-star-search",  :branch => %w[master],      :files => :pathogen },
-      { :base => "#{@vim}/vimperator.vim",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",         :branch => %w[master guns], :files => :pathogen },
 
       {
