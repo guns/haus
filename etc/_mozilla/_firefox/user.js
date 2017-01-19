@@ -88,6 +88,9 @@ user_pref("extensions.VimFx.config_file_directory", "~/.config/vimfx");
  * Hidden Preferences
  */
 
+// Arrow key scroll distance
+user_pref("toolkit.scrollbox.verticalScrollDistance", 8);
+
 // Allow unsigned extensions
 user_pref("xpinstall.signatures.required", false);
 
