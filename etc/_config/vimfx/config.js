@@ -79,6 +79,7 @@ addLocationShortcut('<C-L>', 'open_umatrix_logger',     'chrome://umatrix/conten
 
 const BINDINGS = [
 	['copy_current_url',        'yy Y'],
+	['enter_mode_ignore',       'I <Insert>'],
 	['find',                    '\\ /'],
 	['follow',                  "'"],
 	['follow_in_focused_tab',   ';'],
@@ -86,6 +87,7 @@ const BINDINGS = [
 	['follow_multiple',         'a;'],
 	['history_back',            '<C-h> H'],
 	['history_forward',         '<C-l> L'],
+	['quote',                   'i'],
 	['reload_config_file',      '<C-x>r'],
 	['scroll_half_page_down',   'f'],
 	['scroll_half_page_up',     'b'],
