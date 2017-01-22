@@ -89,6 +89,7 @@ user_pref("extensions.VimFx.config_file_directory", "~/.config/vimfx");
  */
 
 // Arrow key scroll distance
+user_pref("toolkit.scrollbox.horizontalScrollDistance", 16);
 user_pref("toolkit.scrollbox.verticalScrollDistance", 8);
 
 // Allow unsigned extensions
@@ -272,4 +273,5 @@ user_pref("toolkit.crashreporter.infoURL", "");
 user_pref("toolkit.telemetry.infoURL", "");
 user_pref("toolkit.telemetry.server", "");
 user_pref("webchannel.allowObject.urlWhitelist", "");
+user_pref("webextensions.storage.sync.serverURL", "");
 user_pref("xpinstall.signatures.devInfoURL", "");
