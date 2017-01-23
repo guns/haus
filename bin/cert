@@ -108,11 +108,11 @@ class Cert
   end
 
   def self_signed? cert
-    cert.subject.eql? cert.issuer
+    cert.subject.cmp(cert.issuer) == 0
   end
 
   def equal? cert1, cert2
-    cert1.subject.eql? cert2.subject and cert1.issuer.eql? cert2.issuer
+    cert1.to_der == cert2.to_der
   end
 
   def ssl_get host, port = nil
