@@ -11,7 +11,7 @@ require 'haus/utils'
 
 class Ouilookup
   DEFAULTS = {
-    :ouidb_path => File.expand_path('../../lib/ouilookup/oui.yml', __FILE__)
+    :ouidb_path => File.expand_path('../../share/ouilookup/oui.yml', __FILE__)
   }
 
   UPDATE_URL = 'http://standards-oui.ieee.org/oui.txt'
