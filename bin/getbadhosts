@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'set'
+require 'uri'
 
 class Getbadhosts
   DEFAULTS = {
@@ -19,13 +20,13 @@ class Getbadhosts
   # https://raw.githubusercontent.com/gorhill/uMatrix/master/assets/umatrix/hosts-files.json
   HOSTS_FILE_URLS = [
     "http://malwaredomains.lehigh.edu/files/immortal_domains.txt",
-    "http://malwaredomains.lehigh.edu/files/justdomains",
     "http://mirror.cedia.org.ec/malwaredomains/justdomains",
     "https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=1&mimetype=plaintext",
     "https://www.malwaredomainlist.com/hostslist/hosts.txt",
     "http://hosts-file.net/ad_servers.txt",
     "http://someonewhocares.org/hosts/hosts",
     "http://winhelp2002.mvps.org/hosts.txt",
+    "http://malwaredomains.lehigh.edu/files/justdomains",
   ]
 
   def initialize opts = {}
@@ -71,7 +72,7 @@ class Getbadhosts
     @errlock.synchronize { warn ":: Reading #{path}" }
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36', path] do |io|
+      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36', path] do |io|
         io.read
       end
     else
@@ -85,8 +86,8 @@ class Getbadhosts
       n = l.index '#'
       ws = (n ? l[0...n] : l).split
       case ws.size
-      when 2 then ds << ws[1]
-      when 1 then ds << ws[0]
+      when 2 then ds << URI.parse('http://' + ws[1]).hostname
+      when 1 then ds << URI.parse('http://' + ws[0]).hostname
       end
     end
     ds
@@ -101,7 +102,12 @@ class Getbadhosts
           ilock.synchronize { idx += 1 }
           u = urls[idx]
           break if u.nil?
-          ds = extract_domains get(u)
+          begin
+            ds = extract_domains get(u)
+          rescue URI::InvalidURIError
+            sleep 1 # Might be rate limiting
+            ds = extract_domains get(u)
+          end
           dlock.synchronize { domains.concat ds }
         end
       end
