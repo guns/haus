@@ -1363,6 +1363,24 @@ ALIAS pac='pacman' && {
     }
 }
 
+# dnf
+HAVE dnf && {
+    alias dnfi='run dnf install'
+    alias dnfr='run dnf remove'
+    alias dnfs='run dnf search'
+    alias dnfg='rpm --query --all | g'
+    dnfq() {
+        local pkg
+        for pkg in "$@"; do
+            dnf info "$pkg" && dnf repoquery -l "$pkg"
+        done 2>/dev/null | pager
+    }
+    # dnfsync
+    alias dnfupgrade='run dnf upgrade'
+    alias dnfoutdated='run dnf check-update'
+    alias dnfclean='run dnf clean all'
+}
+
 # npm
 HAVE npm && {
     alias npmi='run npm install'
@@ -1431,21 +1449,20 @@ if HAVE systemctl; then
           scu='systemctl --user' \
           jc='journalctl' \
           jcu='journalctl --user' \
-          mc='machinectl' \
           jcb='journalctl --boot' \
           jce='journalctl --pager-end' \
           jcf='journalctl --follow' \
-          jcverify='journalctl --verify' && {
-        alias sctimers='systemctl list-timers'
-        alias scunitfiles='systemctl list-unit-files'
-        alias scrunning='systemctl list-units --state=running'
-        alias scdaemonreload='systemctl --system daemon-reload'
-        alias scedit='systemctl edit --full'; complete -F __systemd_units__ scedit
+          jcverify='journalctl --verify' \
+          mc='machinectl'
+    alias sctimers='systemctl list-timers'
+    alias scunitfiles='systemctl list-unit-files'
+    alias scrunning='systemctl list-units --state=running'
+    alias scdaemonreload='systemctl --system daemon-reload'
+    alias scedit='systemctl edit --full'; complete -F __systemd_units__ scedit
 
-        alias cups-start='run systemctl start org.cups.cupsd.service'
-        alias cups-stop='run systemctl stop org.cups.cupsd.service'
-        alias cups-restart='run systemctl restart org.cups.cupsd.service'
-    }
+    alias cups-start='run systemctl start org.cups.cupsd.service'
+    alias cups-stop='run systemctl stop org.cups.cupsd.service'
+    alias cups-restart='run systemctl restart org.cups.cupsd.service'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
