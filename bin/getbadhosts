@@ -71,7 +71,7 @@ class Getbadhosts
     @errlock.synchronize { warn ":: Reading #{path}" }
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.99 Safari/537.36', path] do |io|
+      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36', path] do |io|
         io.read
       end
     else
