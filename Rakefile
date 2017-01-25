@@ -416,8 +416,8 @@ end
 
 desc 'Vimdiff iptables.sh and ipset.conf'
 task :vimdiffiptables do
-  fs = ['/etc/iptables/iptables.sh', 'share/iptables/iptables.sh',
-        '/etc/ipset.conf',           'share/ipset/ipset.conf']
+  fs = ['/etc/iptables.sh', 'share/iptables/iptables.sh',
+        '/etc/ipset.conf',  'share/ipset/ipset.conf']
   exec 'vim', *fs.each_slice(2).reduce([]) { |v, p| v << '-c' << vimdiffcmd(*p) }, '-c', 'tabclose | tabfirst'
 end
 

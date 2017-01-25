@@ -739,7 +739,7 @@ alias localmitmproxy='envtmux localmitmproxy'
 ### Firewalls
 
 # iptables
-ALIAS iptables.sh='/etc/iptables/iptables.sh'
+ALIAS iptables.sh='/etc/iptables.sh'
 alias iptw='ipt --wait'
 
 ### Editors
@@ -857,7 +857,7 @@ ALIAS e='vim' && {
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'
     alias vimbadhosts='vim "$cdetc/badhosts" -c "lcd \$cdetc"'
-    alias vimiptables='vim "$cdetc/iptables/iptables.sh" -c "lcd \$cdetc"'
+    alias vimiptables='vim "$cdetc/iptables.sh" -c "lcd \$cdetc"'
     alias vimipset='vim "$cdetc/ipset.conf" -c "lcd \$cdetc"'
     alias vimleinprofiles='vim "$cdhaus/etc/_lein/profiles.clj" -c "lcd \$cdhaus"'
     alias vimleinsampleproject='vim "$cdsrc/leiningen/sample.project.clj"'

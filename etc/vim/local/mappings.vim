@@ -369,7 +369,7 @@ noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git re
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
 noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
 noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc<CR>
-noremap <Leader>ei       :<C-u>TabOpen $cdetc/iptables/iptables.sh \| lcd $cdetc<CR>
+noremap <Leader>ei       :<C-u>TabOpen $cdetc/iptables.sh \| lcd $cdetc<CR>
 noremap <Leader>eI       :<C-u>TabOpen $cdetc/ipset.conf \| lcd $cdetc<CR>
 noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/_lein/profiles.clj \| lcd $cdhaus<CR>
 noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj \| lcd $cdsrc<CR>
