@@ -852,6 +852,7 @@ ALIAS e='vim' && {
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
     alias vimdnsmasq='vim "$cdetc/dnsmasq.conf" -c "lcd \$cdetc"'
+    alias vimdnscrypt='vim "$cdetc/dnscrypt-proxy.conf" -c "lcd \$cdetc"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'

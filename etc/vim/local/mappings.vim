@@ -364,6 +364,7 @@ noremap <Leader>eb       :<C-u>TabOpen $cdhaus/etc/bashrc.d/interactive.bash \| 
 noremap <Leader>eB       :<C-u>TabOpen $cdhaus/etc/bashrc \| lcd $cdhaus<CR>
 noremap <Leader>ec       :<C-u>TabOpen $cdhaus/etc/vim/local/commands.vim \| lcd $cdhaus<CR>
 noremap <Leader>ed       :<C-u>TabOpen $cdetc/dnsmasq.conf \| lcd $cdetc<CR>
+noremap <Leader>eD       :<C-u>TabOpen $cdetc/dnscrypt-proxy.conf \| lcd $cdetc<CR>
 noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
 noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>

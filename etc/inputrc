@@ -179,6 +179,7 @@ $if bash
     "\C-xeB":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
     "\C-xed":       "\C-] vimdnsmasq \n"
+    "\C-xeD":       "\C-] vimdnscrypt \n"
     "\C-xege":      "\C-] vimgitexclude \n"
     "\C-xegs":      "\C-] vimgitsparsecheckout \n"
     "\C-xeh":       "\C-] vimbashhistory \n"
