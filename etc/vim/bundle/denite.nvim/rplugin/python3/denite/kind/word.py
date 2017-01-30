@@ -14,24 +14,3 @@ class Kind(Base):
 
         self.name = 'word'
         self.default_action = 'append'
-
-    def action_append(self, context):
-        for target in context['targets']:
-            paste(self.vim, target['action__text'], 'p', 'v')
-
-
-def paste(vim, word, command, regtype):
-    if regtype == '':
-        regtype = 'v'
-
-    # Paste.
-    old_reg = [vim.call('getreg', '"'), vim.call('getregtype', '"')]
-
-    vim.call('setreg', '"', word, regtype)
-    try:
-        vim.command('normal! ""' + command)
-    finally:
-        vim.call('setreg', '"', old_reg[0], old_reg[1])
-
-    # Open folds
-    vim.command('normal! zv')

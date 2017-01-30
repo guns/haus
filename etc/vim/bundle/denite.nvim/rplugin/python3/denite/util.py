@@ -38,11 +38,8 @@ def debug(vim, expr):
 
 
 def error(vim, expr):
-    if hasattr(vim, 'err_write'):
-        string = (expr if isinstance(expr, str) else str(expr))
-        return vim.err_write('[denite] ' + string + '\n')
-    else:
-        vim.call('denite#util#print_error', expr)
+    string = (expr if isinstance(expr, str) else str(expr))
+    vim.call('denite#util#print_error', string)
 
 
 def clear_cmdline(vim):
@@ -58,8 +55,7 @@ def regex_convert_str_vim(string):
 
 
 def regex_convert_py_vim(expr):
-    return re.sub(r'([/~])', r'\\\1',
-                  re.sub(r'(?!\\)([+?()])', r'\\\1', expr))
+    return r'\v' + re.sub(r'(?!\\)([/~])', r'\\\1', expr)
 
 
 def escape_fuzzy(string, camelcase):

@@ -61,6 +61,7 @@ function! denite#init#_context() abort
         \ 'encoding': &encoding,
         \ 'is_windows': has('win32') || has('win64'),
         \ 'selected_icon': '*',
+        \ 'messages': [],
         \}
 endfunction
 function! denite#init#_user_options() abort
@@ -98,6 +99,7 @@ function! denite#init#_user_options() abort
         \ 'use_default_mappings': v:true,
         \ 'vertical_preview': v:false,
         \ 'winheight': 20,
+		\ 'winminheight': -1,
         \}
 endfunction
 function! denite#init#_deprecated_options() abort

@@ -1,3 +1,6 @@
+from denite.util import debug
+
+
 def _redraw(prompt, params):
     return prompt.denite.redraw()
 
@@ -89,20 +92,48 @@ def _restart(prompt, params):
 
 
 def _toggle_select(prompt, params):
-    return prompt.denite.toggle_select_cursor_candidate()
+    index = prompt.denite._cursor + prompt.denite._win_cursor - 1
+    _toggle_select_candidate(prompt, index)
+    return prompt.denite.update_buffer()
+
+
+def _toggle_select_candidate(prompt, index):
+    if index in prompt.denite._selected_candidates:
+        prompt.denite._selected_candidates.remove(index)
+    else:
+        prompt.denite._selected_candidates.append(index)
+
+
+def _toggle_select_all(prompt, params):
+    for index in range(0, prompt.denite._candidates_len):
+        _toggle_select_candidate(prompt, index)
+    return prompt.denite.update_buffer()
 
 
 def _toggle_select_down(prompt, params):
-    prompt.denite.toggle_select_cursor_candidate()
+    _toggle_select(prompt, params)
     return prompt.denite.move_to_next_line()
 
 
 def _toggle_select_up(prompt, params):
-    prompt.denite.toggle_select_cursor_candidate()
+    _toggle_select(prompt, params)
     return prompt.denite.move_to_prev_line()
 
 
+def _print_messages(prompt, params):
+    for mes in prompt.denite._context['messages']:
+        debug(prompt.nvim, mes)
+
+
+def _change_path(prompt, params):
+    path = prompt.nvim.call('input', 'Path: ',
+                            prompt.denite._context['path'], 'dir')
+    prompt.denite._context['path'] = path
+    return prompt.denite.restart()
+
+
 DEFAULT_ACTION_RULES = [
+    ('denite:change_path', _change_path),
     ('denite:choose_action', _choose_action),
     ('denite:do_action', _do_action),
     ('denite:enter_mode', _enter_mode),
@@ -125,9 +156,11 @@ DEFAULT_ACTION_RULES = [
     ('denite:scroll_window_downwards', _scroll_window_downwards),
     ('denite:scroll_window_upwards', _scroll_window_upwards),
     ('denite:suspend', _suspend),
+    ('denite:print_messages', _print_messages),
     ('denite:toggle_select', _toggle_select),
     ('denite:toggle_select_down', _toggle_select_down),
     ('denite:toggle_select_up', _toggle_select_up),
+    ('denite:toggle_select_all', _toggle_select_all),
 ]
 
 DEFAULT_ACTION_KEYMAP = {
@@ -185,14 +218,17 @@ DEFAULT_ACTION_KEYMAP = {
         ('<C-D>', '<denite:scroll_window_downwards>', 'noremap'),
         ('<C-F>', '<denite:scroll_page_forwards>', 'noremap'),
         ('<C-B>', '<denite:scroll_page_backwards>', 'noremap'),
+        ('q', '<denite:quit>', 'noremap'),
+        ('<C-L>', '<denite:redraw>', 'noremap'),
+        ('<C-R>', '<denite:restart>', 'noremap'),
+        ('<Space>', '<denite:toggle_select_down>', 'noremap'),
+        ('*', '<denite:toggle_select_all>', 'noremap'),
+        ('M', '<denite:print_messages>', 'noremap'),
+        ('P', '<denite:change_path>', 'noremap'),
         # Denite specific actions
         ('p', '<denite:do_action:preview>', 'noremap'),
         ('d', '<denite:do_action:delete>', 'noremap'),
         ('n', '<denite:do_action:new>', 'noremap'),
         ('t', '<denite:do_action:tabopen>', 'noremap'),
-        ('q', '<denite:quit>', 'noremap'),
-        ('<C-L>', '<denite:redraw>', 'noremap'),
-        ('<C-R>', '<denite:restart>', 'noremap'),
-        ('<Space>', '<denite:toggle_select_down>', 'noremap'),
     ],
 }

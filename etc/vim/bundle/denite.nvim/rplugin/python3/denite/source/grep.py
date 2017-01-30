@@ -60,6 +60,7 @@ class Source(Base):
             'pattern_opt': ['-e'],
             'separator': ['--'],
             'final_opts': ['.'],
+            'min_interactive_pattern': 3,
         }
         self.matchers = ['matcher_ignore_globs', 'matcher_regexp']
 
@@ -99,7 +100,11 @@ class Source(Base):
         arg = args.get(2, [])
         if arg:
             if isinstance(arg, str):
-                arg = [arg]
+                if arg == '!':
+                    # Interactive mode
+                    context['is_interactive'] = True
+                else:
+                    arg = [arg]
             elif not isinstance(arg, list):
                 raise AttributeError('`args[2]` needs to be a `str` or `list`')
         else:
@@ -132,26 +137,39 @@ class Source(Base):
             'contained containedin=' + self.syntax_name)
 
     def gather_candidates(self, context):
+        if context['event'] == 'interactive':
+            # Update input
+            self.on_close(context)
+
+            if (not context['input'] or
+                    len(context['input']) <
+                    self.vars['min_interactive_pattern']):
+                return []
+
+            context['__patterns'] = [context['input']]
+
         if context['__proc']:
             return self.__async_gather_candidates(context, 0.5)
 
         if not context['__patterns']:
             return []
 
-        commands = []
-        commands += self.vars['command']
-        commands += self.vars['default_opts']
-        commands += self.vars['recursive_opts']
-        commands += context['__arguments']
+        args = []
+        args += self.vars['command']
+        args += self.vars['default_opts']
+        args += self.vars['recursive_opts']
+        args += context['__arguments']
         for pattern in context['__patterns']:
-            commands += self.vars['pattern_opt'] + [pattern]
-        commands += self.vars['separator']
+            args += self.vars['pattern_opt'] + [pattern]
+        args += self.vars['separator']
         if context['__paths']:
-            commands += context['__paths']
+            args += context['__paths']
         else:
-            commands += self.vars['final_opts']
+            args += self.vars['final_opts']
 
-        context['__proc'] = process.Process(commands, context, context['path'])
+        self.print_message(context, args)
+
+        context['__proc'] = process.Process(args, context, context['path'])
         return self.__async_gather_candidates(context, 2.0)
 
     def __async_gather_candidates(self, context, timeout):

@@ -25,7 +25,7 @@ function! denite#helper#complete(arglead, cmdline, cursorpos) abort
     let _ += filter(map(globpath(&runtimepath,
           \             'rplugin/python3/denite/source/*.py', 1, 1),
           \             "fnamemodify(v:val, ':t:r')"),
-          \         "v:val !=# 'base'")
+          \         "v:val !=# 'base' && v:val !=# '__init__'")
   endif
 
   return uniq(sort(filter(_, 'stridx(v:val, a:arglead) == 0')))
@@ -128,7 +128,7 @@ function! s:eval_cmdline(cmdline) abort
     endif
     let prev_match = matchend(a:cmdline,
           \ '\\\@<!`.\{-}\\\@<!`', match)
-    let cmdline .= escape(eval(a:cmdline[match+1 : prev_match - 2]), '\: ')
+    let cmdline .= escape(eval(a:cmdline[match+1 : prev_match - 2]), '\ ')
 
     let match = match(a:cmdline, '\\\@<!`.\{-}\\\@<!`', prev_match)
   endwhile

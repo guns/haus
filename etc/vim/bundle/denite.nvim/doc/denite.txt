@@ -93,7 +93,11 @@ EXAMPLES						*denite-examples*
 	" For ripgrep
 	" Note: It is slower than ag
 	call denite#custom#var('file_rec', 'command',
-	\ ['rg', '--files', '--glob', '!.git'])
+	\ ['rg', '--files', '--glob', '!.git', ''])
+	" For Pt(the platinum searcher)
+	" NOTE: It also supports windows.
+	call denite#custom#var('file_rec', 'command',
+	\ ['pt', '--follow', '--nocolor', '--nogroup', '-g:', ''])
 
 	" Change mappings.
 	call denite#custom#map(
@@ -157,6 +161,11 @@ EXAMPLES						*denite-examples*
 	call denite#custom#var('grep', 'pattern_opt', ['--regexp'])
 	call denite#custom#var('grep', 'separator', ['--'])
 	call denite#custom#var('grep', 'final_opts', [])
+	" Pt command on grep source
+	call denite#custom#var('grep', 'command',
+	\ ['pt', '--nogroup', '--nocolor', '--smart-case', '--hidden'])
+	call denite#custom#var('grep', 'default_opts', [])
+	call denite#custom#var('grep', 'recursive_opts', [])
 
 	call denite#custom#source('file_mru', 'converters',
 	      \ ['converter_relative_word'])
@@ -215,7 +224,7 @@ COMMANDS 						*denite-commands*
 >
         :Denite -buffer-name=search%`bufnr('%')` line<CR>
 <
-		{options} are options for a denite buffer: |denite-options|
+		{options} are options for Denite buffer: |denite-options|
 
 :DeniteBufferDir [{options}] {sources}			*:DeniteBufferDir*
 		Equivalent to |:Denite| except that it targets the buffer
@@ -262,6 +271,10 @@ are on the neovim-prompt's builtin actions/mappings.
 		Recall previous command-line from history.
 		Like |c_<S-Up>| in a native Vim's command-line.
 		Note this is a neovim-prompt's builtin action.
+
+				*denite-map-change_path*
+<denite:change_path>
+		Change and restart Denite buffer.
 
 				*denite-map-choose_action*
 <denite:choose_action>
@@ -352,7 +365,6 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:jump_to_next_source>
 		Jump to the first candidate of the next source.
 
-				*denite-map-jump_to_prev_source*
 				*denite-map-jump_to_previous_source*
 <denite:jump_to_previous_source>
 		Jump to the first candidate of the previous source.
@@ -410,7 +422,6 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:move_to_next_line>
 		Move to next line.
 
-				*denite-map-move_to_prev_line*
 				*denite-map-move_to_previous_line*
 <denite:move_to_previous_line>
 		Move to previous line.
@@ -422,6 +433,40 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-move_to_last_line*
 <denite:move_to_last_line>
 		Move to last line.
+
+				*denite-map-paste_from_register*
+<denite:paste_from_register>
+		Paste the text from a specified register.
+		Like |c_<C-R>| in a Vim's native command-line.
+		Note this is a neovim-prompt's builtin action.
+
+				*denite-map-paste_from_default_register*
+<denite:paste_from_default_register>
+		Paste the text from a default register (|v:register|).
+		Note this is a neovim-prompt's builtin action.
+
+				*denite-map-print_messages*
+<denite:print_messages>
+		Output denite messages to |:messages|.
+		Note: You cannot read the messages in Denite window.
+		It is for debug only.
+
+				*denite-map-quit*
+<denite:quit>
+		Close current Denite buffer.
+
+				*denite-map-redraw*
+<denite:redraw>
+		Clear the cache and redraw the candidates.
+
+				*denite-map-restart*
+<denite:restart>
+		Restart Denite buffer.
+
+				*denite-map-suspend*
+<denite:suspend>
+		Suspend current Denite buffer.
+		You can resume the Denite buffer by <CR> mapping.
 
 				*denite-map-scroll_window_downwards*
 <denite:scroll_window_downwards>
@@ -447,9 +492,19 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:scroll_up>
 		Scroll up.
 
+				*denite-map-toggle_insert_mode*
+<denite:toggle_insert_mode>
+		Toggle insert mode (insert or overstrike).
+		Like |c_<Insert>| in a Vim's native command-line.
+		Note this is a neovim-prompt's builtin action.
+
 				*denite-map-toggle_select*
 <denite:toggle_select>
 		Toggle cursor candidate select.
+
+				*denite-map-toggle_select_all*
+<denite:toggle_select_all>
+		Toggle all candidates.
 
 				*denite-map-toggle_select_down*
 <denite:toggle_select_down>
@@ -458,40 +513,6 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-toggle_select_up*
 <denite:toggle_select_up>
 		Toggle cursor candidate select and move to previous line.
-
-				*denite-map-paste_from_register*
-<denite:paste_from_register>
-		Paste the text from a specified register.
-		Like |c_<C-R>| in a Vim's native command-line.
-		Note this is a neovim-prompt's builtin action.
-
-				*denite-map-paste_from_default_register*
-<denite:paste_from_default_register>
-		Paste the text from a default register (|v:register|).
-		Note this is a neovim-prompt's builtin action.
-
-				*denite-map-quit*
-<denite:quit>
-		Close current Denite buffer.
-
-				*denite-map-redraw*
-<denite:redraw>
-		Clear the cache and redraw the candidates.
-
-				*denite-map-restart*
-<denite:restart>
-		Restart Denite buffer.
-
-				*denite-map-suspend*
-<denite:suspend>
-		Suspend current Denite buffer.
-		You can resume the Denite buffer by <CR> mapping.
-
-				*denite-map-toggle_insert_mode*
-<denite:toggle_insert_mode>
-		Toggle insert mode (insert or overstrike).
-		Like |c_<Insert>| in a Vim's native command-line.
-		Note this is a neovim-prompt's builtin action.
 
 				*denite-map-yank_to_register*
 <denite:yank_to_register>
@@ -574,6 +595,9 @@ q		<denite:quit>
 <C-L>		<denite:redraw>
 <C-R>		<denite:restart>
 <Space>		<denite:toggle_select_down>
+*		<denite:toggle_select_all>
+M		<denite:print_messages>
+P		<denite:change_path>
 
 ------------------------------------------------------------------------------
 FUNCTIONS						*denite-functions*
@@ -766,7 +790,7 @@ OPTIONS							*denite-options*
 
 						*denite-options-auto-resize*
 -auto-resize
-		Auto resize the denite window height automatically.
+		Auto resize the Denite window height automatically.
 		Default: false
 
 						*denite-options-buffer-name*
@@ -795,7 +819,7 @@ OPTIONS							*denite-options*
 
 						*denite-options-direction*
 -direction={direction}
-		Specify the denite window direction as {direction}.
+		Specify the Denite window direction as {direction}.
 		Default: "botright"
 
 						*denite-options-empty*
@@ -892,6 +916,21 @@ OPTIONS							*denite-options*
 		Open the preview window vertically.
 		Default: false
 
+						*denite-options-winheight*
+-winheight={window-height}
+		Set the height of the Denite window. If auto-resize is set,
+		|denite-options-winheight| is the maximum size of the window.
+
+		Default: 20
+
+						*denite-options-winminheight*
+-winminheight={window-height}
+		Set the minimum height of an auto-resize window.
+		Note: a value of -1 for |denite-options-winminheight| leaves
+		the minimum height unset.
+		
+		Default: -1
+
 ==============================================================================
 SOURCES							*denite-sources*
 
@@ -909,6 +948,9 @@ buffer		Gather buffers and jump to the buffer.
 		exclude_filetypes
 				  the list of excluded filetypes
 				  (default is ['denite'])
+
+						*denite-source-change*
+change		Gather results of |:changes|.
 
 						*denite-source-colorscheme*
 colorscheme	Gather colorschemes and change the colorscheme.
@@ -988,6 +1030,9 @@ grep		Gather grep results and nominates them.
 			1. string or list of arguments
 			2. pattern string or list of patterns
 
+		Note: If the args 2 is "!", it is the interactive mode.
+		The results are updated when the input is changed.
+
 		Source custom variables:
 		command		the default grep command
 				(default: ["grep"])
@@ -1004,6 +1049,10 @@ grep		Gather grep results and nominates them.
 
 						*denite-source-help*
 help		Search through doc tags
+
+
+						*denite-source-jump*
+jump		Gather results of |:jumps|.
 
 
 						*denite-source-line*
@@ -1026,6 +1075,9 @@ menu		Gather custom menus.
 				include menus previously defined in Unite
 				configurations.
 
+						*denite-source-register*
+register	Gather the registers.
+
 						*denite-source-outline*
 outline		Gather outline and jump to the target.
 
@@ -1047,6 +1099,9 @@ KINDS							*denite-kinds*
 
 All candidates can support below actions.
 
+append		Insert the candidate word or text after the cursor.
+echo		Print the candidates to denite messages.
+replace		Replace the selected text to the candidate word.
 yank		Yank the candidate word.
 
 Kind Specific candidates can support below actions.
@@ -1153,8 +1208,6 @@ word		An interface to paste the text.
 
 						*denite-kind-word-actions*
 			append (default)
-				Insert the candidate word or text after the
-				cursor.
 
 ==============================================================================
 FILTERS							*denite-filters*
@@ -1317,9 +1370,19 @@ __{name}	(Unknown)			(Optional)
 		candidates		(List)
 			The current candidates.
 
+		event			(String)
+			The gather event.
+			"gather": normal gather update
+			"interactive": interactive update
+			"async": asynchronous update
+
 		is_async		(Bool)
 			If the gather is asynchronous, the source must set
 			it "True".
+
+		is_interactive		(Bool)
+			If the gather is updated interactively, the source
+			must set it "True".
 
 ------------------------------------------------------------------------------
 CANDIDATE ATTRIBUTES			*denite-candidate-attributes*
@@ -1330,7 +1393,7 @@ word		(String)			(Required)
 
 					*denite-candidate-attribute-abbr*
 abbr		(String)			(Optional)
-		The string displayed in denite buffer.  If it is omitted, word
+		The string displayed in Denite buffer.  If it is omitted, word
 		attribute is used instead.  It is not used for matching
 		inputs.
 
@@ -1392,7 +1455,7 @@ Q: denite can support Vim8?
 
 A: Yes.
 
-Q: I want to change the cursor line color in denite buffer.
+Q: I want to change the cursor line color in Denite buffer.
 
 A: denite uses 'cursorline' feature.
 So you can change the color by |hl-CursorLine| highlight.
