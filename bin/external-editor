@@ -1,0 +1,3 @@
+#!/bin/sh
+
+urxvt-client -g 80x40 -icon ~/.icons/haus/vim.svg -e vim "$@"
