@@ -7,6 +7,28 @@
 
 require 'resolv'
 
+def get_txt conn, domain
+  conn.getresource(domain, Resolv::DNS::Resource::IN::TXT).data
+end
+
+def get_cidr txt
+  txt.scan(/ip4:(\S+)/).flatten
+end
+
+def get_includes txt
+  txt.scan(/include:(\S+)/).flatten
+end
+
 puts Resolv::DNS.open { |dns|
-  dns.getresource('_netblocks.google.com', Resolv::DNS::Resource::IN::TXT).data
-}.scan(/ip4:(\S+)/).join("\n")
+  txt = get_txt dns, '_spf.google.com'
+  netblocks = get_cidr txt
+  includes = get_includes txt
+
+  while includes.any?
+    txt = get_txt dns, includes.shift
+    netblocks += get_cidr txt
+    includes += get_includes txt
+  end
+
+  netblocks.uniq
+}
