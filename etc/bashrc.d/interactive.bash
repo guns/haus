@@ -706,14 +706,19 @@ HAVE sshuttle-domains && TCOMP ssh sshuttle-domains
 # lsof
 HAVE lsof && {
     command lsof +fg -h &>/dev/null && LSOF_FLAG_OPT='+fg'
-    ALIAS lsof="lsof -Pwn $LSOF_FLAG_OPT"
+    ALIAS lsof="lsof +c0 -Pwn $LSOF_FLAG_OPT"
     alias lsif='lsof -i'
-    alias lsifr="command lsof -Pwi $LSOF_FLAG_OPT"
+    alias lsifr="command lsof +c0 -Pwi $LSOF_FLAG_OPT"
     alias lsifudp='lsif | grep UDP'
     alias lsiflisten='lsif | grep --word-regexp "LISTEN\|UDP"'
     alias lsifconnect='lsif | grep -- "->"'
     alias lsifconnectr='lsifr | grep -- "->"'
     alias lsuf='lsof -U'
+    needs-restarting() {
+        ruby -e 'puts %x(lsof +c0).lines.select { |l|
+            "%-32s%s" % [$1, $2] if l =~ %r[^(\S+).*\s(/usr/.*) \(deleted\)$]
+        }.sort'
+    }
     unset LSOF_FLAG_OPT
 }
 
