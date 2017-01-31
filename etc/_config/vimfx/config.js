@@ -59,6 +59,10 @@ vimfx.addCommand({
 	}
 });
 
+vimfx.addCommand({ name: 'zoom_in',    description: 'Zoom in'    }, ({vim}) => { vim.window.FullZoom.enlarge(); });
+vimfx.addCommand({ name: 'zoom_out',   description: 'Zoom out'   }, ({vim}) => { vim.window.FullZoom.reduce();  });
+vimfx.addCommand({ name: 'zoom_reset', description: 'Zoom reset' }, ({vim}) => { vim.window.FullZoom.reset();   });
+
 function addLocationShortcut(keys, name, url) {
 	vimfx.addCommand({ name: name, description: `Open ${url}`}, ({vim}) => {
 		vim.window.gBrowser.loadOneTab(url, {inBackground: false});
@@ -110,6 +114,9 @@ const BINDINGS = [
 	['tst_toggle_window',       'w', true],
 	['window_new',              'W'],
 	['window_new_private',      '<A-w>'],
+	['zoom_in',                 '+', true],
+	['zoom_out',                '-', true],
+	['zoom_reset',              '=', true],
 ];
 
 for (let [command, keys, custom] of BINDINGS) {
