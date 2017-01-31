@@ -198,7 +198,7 @@ class Prompt:
                 STATUS_PROGRESS, the prompt mainloop immediately terminated.
                 Returning None is equal to returning STATUS_PROGRESS.
         """
-        self.nvim.call('inputsave')
+        # self.nvim.call('inputsave')
 
     def on_update(self, status):
         """Update the prompt status and return the status.
