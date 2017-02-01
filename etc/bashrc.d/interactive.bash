@@ -348,6 +348,20 @@ f.() {
         f "$d" "$@" 2>/dev/null
     done
 }; TCOMP find f.
+fft() {
+    local OPTIND OPTARG opt print0=0
+    while getopts :0 opt; do
+        case "$opt" in
+        0) print0=1;;
+        esac
+    done
+    shift $((OPTIND-1))
+    find-wrapper --predicate '( -type f -o -type l ) -print0' -- "$@" | ruby -e '
+        xs = $stdin.read.split("\0").sort_by { |f| File.mtime f }.reverse
+        puts ARGV[0] == "0" ? xs : xs.join("\0")
+    ' "$print0"
+}; TCOMP find fft
+alias fft0='fft -0'; TCOMP find fft0
 
 # Breadth-first search and chdir
 cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
