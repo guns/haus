@@ -120,18 +120,6 @@ super + alt + control + {h,j,k,l}
 super + alt + control + shift + {h,j,k,l}
 	bspc node @{west --ratio +10,south --ratio -10,north --ratio +10,east --ratio -10}
 
-~button1
-	bspc pointer --grab focus
-
-super + button{1-3}
-	bspc pointer --grab {move,resize_side,resize_corner}
-
-super + !button{1-3}
-	bspc pointer --track %i %i
-
-super + @button{1-3}
-	bspc pointer --ungrab
-
 #
 # Power {{{1
 #

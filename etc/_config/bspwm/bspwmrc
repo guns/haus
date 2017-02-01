@@ -15,17 +15,22 @@ bspc config presel_feedback_color     '#1B0D4B'
 # bspc config status_prefix
 bspc config external_rules_command    "$HOME/.config/bspwm/external-rules"
 # bspc config initial_polarity
-bspc config history_aware_focus       true
-bspc config focus_by_distance         true
 bspc config borderless_monocle        true
 bspc config gapless_monocle           true
 # bspc config paddingless_monocle
 # bspc config single_monocle
+# bspc config pointer_motion_interval
+bspc config pointer_modifier          mod4
+bspc config pointer_action1           move
+bspc config pointer_action2           resize_side
+bspc config pointer_action3           resize_corner
+bspc config click_to_focus            true
 bspc config focus_follows_pointer     true
 # bspc config pointer_follows_focus
 # bspc config pointer_follows_monitor
 # bspc config ignore_ewmh_focus
 # bspc config center_pseudo_tiled
+# bspc config honor_size_hints
 bspc config remove_disabled_monitor   true
 bspc config remove_unplugged_monitors true
 # bspc config merge_overlapping_monitors
@@ -33,8 +38,8 @@ bspc config remove_unplugged_monitors true
 # bspc config right_padding
 bspc config bottom_padding            20
 # bspc config left_padding
-bspc config border_width              2
 bspc config window_gap                8
+bspc config border_width              2
 
 n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
