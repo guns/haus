@@ -95,7 +95,6 @@ class Denite(object):
             yield source.name, entire, partial
 
     def on_init(self, context):
-        self._vim.call('inputsave')
         self._current_sources = []
         for [name, args] in [[x['name'], x['args']]
                              for x in context['sources']]:
