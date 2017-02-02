@@ -1,0 +1,87 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2017 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+# https://superuser.com/questions/556029/how-do-i-convert-a-video-to-gif-using-ffmpeg-with-reasonable-quality/556031#556031
+#
+# Generate a palette:
+#
+#   ffmpeg -i input.flv -vf fps=10,scale=320:-1:flags=lanczos,palettegen palette.png
+#
+# Output the GIF using the palette:
+#
+#   ffmpeg -i input.flv -i palette.png -filter_complex "fps=10,scale=320:-1:flags=lanczos[x];[x][1:v]paletteuse" output.gif
+#
+
+require 'optparse'
+require 'shellwords'
+require 'fileutils'
+
+class FF2gif
+  DEFAULTS = {
+    :fps => 15,
+    :scale => nil,
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Convert videos to GIFs with ffmpeg.
+
+        Usage: #{File.basename __FILE__} [options] video …
+
+        Options:
+      BANNER
+
+      opt.on '-r', '--fps N', Integer, "DEFAULT=#{@fps}" do |arg|
+        @fps = arg
+      end
+
+      opt.on '-s', '--scale WIDTH[:HEIGHT]' do |arg|
+        xs = arg.split ':', 2
+        case xs.size
+        when 2 then @scale = xs.map(&:to_i)
+        when 1 then @scale = [xs[0].to_i, -1]
+        end
+      end
+    end
+  end
+
+  def sh *args
+    warn ":: #{args.shelljoin}"
+    system *args
+    raise unless $?.exitstatus.zero?
+  end
+
+  def convert file
+    output = '%s/%s.gif' % [File.dirname(file), File.basename(file, File.extname(file))]
+    palette = '%s/%s__palette__.png' % [File.dirname(file), File.basename(file, File.extname(file))]
+    filters = []
+    filters << "fps=#{@fps}" if @fps
+    filters << "scale=#{@scale.join ':'}:flags=lanczos" if @scale
+
+    raise "File already exists: #{palette}" if File.exists? palette
+
+    begin
+      sh 'ffmpeg', '-i', file, '-vf', (filters + ['palettegen']).join(','), palette
+      sh 'ffmpeg', '-i', file, '-i', palette, '-filter_complex', "#{filters.join ','}[x];[x][1:v]paletteuse", output
+    ensure
+      FileUtils.rm_f palette
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size == 0
+    args.each { |f| convert f }
+  end
+end
+
+$0 = File.basename(__FILE__) and FF2gif.new.run ARGV if $0 == __FILE__
