@@ -992,12 +992,16 @@ detecthost () {
 
 # Kernel Version Detection - Begin
 detectkernel () {
+	if [[ "$distro" == "OpenBSD" ]]; then
+		kernel=$(sysctl kern.version|awk -F'[ =:]' 'NR==1{print $3" "$4" "$5}')
+	else
 	# compatibility for older versions of OS X:
 	kernel=$(uname -m && uname -sr)
 	kernel=${kernel//$'\n'/ }
 	#kernel=( $(uname -srm) )
 	#kernel="${kernel[${#kernel[@]}-1]} ${kernel[@]:0:${#kernel[@]}-1}"
 	verboseOut "Finding kernel version...found as '${kernel}'"
+fi
 }
 # Kernel Version Detection - End
 
@@ -1049,11 +1053,18 @@ detectpkgs () {
 	case "${distro}" in
 		'Alpine Linux') pkgs=$(apk info | wc -l) ;;
 		'Arch Linux'|'Parabola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'|'Netrunner'|'KaOS'|'Obarun'|'SwagArch') pkgs=$(pacman -Qq | wc -l) ;;
+		'Chrome OS')
+			if [ -d "/usr/local/lib/crew/packages" ]; then
+				pkgs=$(ls -l /usr/local/etc/crew/meta/*.filelist | wc -l)
+			else
+				pkgs=$(ls -d /var/db/pkg/*/* | wc -l)
+			fi
+		;;
 		'Dragora') pkgs=$(ls -1 /var/db/pkg | wc -l) ;;
 		'Frugalware') pkgs=$(pacman-g2 -Q | wc -l) ;;
 		'Debian'|'Ubuntu'|'Mint'|'Fuduntu'|'KDE neon'|'Devuan'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS'|'gNewSense'|'BunsenLabs'|'SteamOS'|'Parrot Security'|'GrombyangOS') pkgs=$(dpkg -l | grep -c ^i) ;;
 		'Slackware') pkgs=$(ls -1 /var/log/packages | wc -l) ;;
-		'Gentoo'|'Sabayon'|'Funtoo'|'Chrome OS'|'Kogaion') pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
+		'Gentoo'|'Sabayon'|'Funtoo'|'Kogaion') pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
 		'NixOS') pkgs=$(ls -d -1 /nix/store/*/ | wc -l) ;;
 		'Fedora'|'Fux'|'Korora'|'BLAG'|'Chapeau'|'openSUSE'|'SUSE Linux Enterprise'|'Red Hat Enterprise Linux'|'ROSA'|'Oracle Linux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Mer'|'SailfishOS'|'PCLinuxOS'|'Viperr'|'Qubes OS'|'Red Star OS') pkgs=$(rpm -qa | wc -l) ;;
 		'Void') pkgs=$(xbps-query -l | wc -l) ;;
@@ -1091,7 +1102,7 @@ detectpkgs () {
 				pkg info | wc -l | awk '{print $1}'; else pkg_info | wc -l | tr -d ' '; fi)
 		;;
 		'OpenBSD')
-			pkgs=$(pkg_info | wc -l | awk '{sub(" ", "");print $1}')
+			pkgs=$(pkg_info | grep -c .)
 		;;
 		'FreeBSD')
 			pkgs=$(if TMPDIR=/dev/null ASSUME_ALWAYS_YES=1 PACKAGESITE=file:///nonexistent pkg info pkg >/dev/null 2>&1; then
@@ -1374,8 +1385,8 @@ detectmem () {
 		used_mem=$(($round_mem - $avail_mem))
 		usedmem=$(($used_mem / 1024^2 ))
 	elif [ "$distro" == "OpenBSD" ]; then
-		totalmem=$(($(sysctl -n hw.physmem) / 1024^2))
-		usedmem=$(($(vmstat | sed -n 3p | awk '{ print $4 }') / 1024))
+		totalmem=$(($(sysctl -n hw.physmem) / 1024 / 1024))
+		usedmem=$(($(vmstat | awk '!/[a-z]/{print $4}') / 1024))
 	elif [ "$distro" == "NetBSD" ]; then
 		phys_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
 		totalmem=$((${phys_mem} / 1024))
@@ -1397,15 +1408,15 @@ detectmem () {
 		mem_info=$(echo $(echo $(mem_info=${mem_info// /}; echo ${mem_info//kB/})))
 		for m in $mem_info; do
 			case ${m//:*} in
-				"MemTotal") memused=$((memused+=${m//*:})); memtotal=${m//*:} ;;
-				"ShMem") memused=$((memused+=${m//*:})) ;;
-				"MemFree"|"Buffers"|"Cached"|"SReclaimable") memused=$((memused-=${m//*:})) ;;
+				"MemTotal") usedmem=$((usedmem+=${m//*:})); totalmem=${m//*:} ;;
+				"ShMem") usedmem=$((usedmem+=${m//*:})) ;;
+				"MemFree"|"Buffers"|"Cached"|"SReclaimable") usedmem=$((usedmem-=${m//*:})) ;;
 			esac
 		done
-		memused=$((memused / 1024))
-		memtotal=$((memtotal / 1024))
+		usedmem=$((usedmem / 1024))
+		totalmem=$((totalmem / 1024))
 	fi
-	mem="${memused}MiB / ${memtotal}MiB"
+	mem="${usedmem}MiB / ${totalmem}MiB"
 	verboseOut "Finding current RAM usage...found as '$mem'"
 }
 # Memory Detection - End
@@ -2288,16 +2299,23 @@ detectgtk () {
 				#fi
 			;;
 			'XFCE'*) # Desktop Environment found as "XFCE"
-				if type -p xfconf-query >/dev/null 2>&1; then
-					gtk2Theme=$(xfconf-query -c xsettings -p /Net/ThemeName)
-				fi
+				if [ "$distro" == "BunsenLabs" ] ; then
+					gtk2Theme=$(awk -F'"' '/^gtk-theme/ {print $2}' $HOME/.gtkrc-2.0)
+					gtk3Theme=$(awk -F'=' '/^gtk-theme-name/ {print $2}' $HOME/.config/gtk-3.0/settings.ini)
+					gtkIcons=$(awk -F'"' '/^gtk-icon-theme/ {print $2}' $HOME/.gtkrc-2.0)
+					gtkFont=$(awk -F'"' '/^gtk-font-name/ {print $2}' $HOME/.gtkrc-2.0)
+				else
+					if type -p xfconf-query >/dev/null 2>&1; then
+						gtk2Theme=$(xfconf-query -c xsettings -p /Net/ThemeName)
+					fi
 
-				if type -p xfconf-query >/dev/null 2>&1; then
-					gtkIcons=$(xfconf-query -c xsettings -p /Net/IconThemeName)
-				fi
+					if type -p xfconf-query >/dev/null 2>&1; then
+						gtkIcons=$(xfconf-query -c xsettings -p /Net/IconThemeName)
+					fi
 
-				if type -p xfconf-query >/dev/null 2>&1; then
-					gtkFont=$(xfconf-query -c xsettings -p /Gtk/FontName)
+					if type -p xfconf-query >/dev/null 2>&1; then
+						gtkFont=$(xfconf-query -c xsettings -p /Gtk/FontName)
+					fi
 				fi
 			;;
 			'LXDE'*)
