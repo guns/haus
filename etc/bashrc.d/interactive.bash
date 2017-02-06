@@ -1460,7 +1460,7 @@ ALIAS xgeom='slop'
 
 ### TTY
 
-ALIAS rl='rlwrap'
+ALIAS rl='rlwrap' && TCOMP exec rl
 
 ### Init
 
