@@ -114,7 +114,7 @@ class Getbadhosts
     end
 
     pool.each &:join
-    domains.uniq.sort_by { |d| d.split('.').reverse }
+    domains.uniq.sort_by { |d| d.downcase.split('.').reverse }
   end
 
   def generate_hosts urls
