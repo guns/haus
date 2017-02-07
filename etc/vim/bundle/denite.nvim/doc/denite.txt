@@ -890,6 +890,11 @@ OPTIONS							*denite-options*
 		Quit the denite buffer after the action is executed.
 		Default: true
 
+						*denite-options-refresh*
+-refresh
+		Refresh the candidates when |denite-options-resume| is true.
+		Default: false
+
 							*denite-options-resume*
 -resume
 		Reuse the previous buffer.  If none exist, a new denite
@@ -1046,6 +1051,8 @@ grep		Gather grep results and nominates them.
 
 		Note: If the args 2 is "!", it is the interactive mode.
 		The results are updated when the input is changed.
+		Note: If the args 2 is empty, |denite-options-input| or user
+		input pattern is used.
 
 		Source custom variables:
 		command		the default grep command
@@ -1510,6 +1517,11 @@ A: >
 
 	:Denite -resume -select=+1 -immediately
 	:Denite -resume -select=-1 -immediately
+
+Q: I want to close denite buffer if grep results are empty.
+
+A: >
+	:Denite -no-empty grep
 
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*
