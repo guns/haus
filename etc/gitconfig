@@ -92,6 +92,7 @@
 	rb  = rebase
 	rbi = rebase --interactive
 	cp  = cherry-pick
+	cpn = cherry-pick --no-commit
 
 	# Log
 	l     = log --decorate --show-signature --graph
