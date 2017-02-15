@@ -37,9 +37,8 @@ class Haus
       @annotations = {}.freeze
 
       # Array#shuffle and Enumerable#take unavailable in 1.8.6
-      time = Time.now.strftime '%Y-%m-%d'
-      salt = ('a'..'z').sort_by { rand }[0..7].join
-      @archive_path = "/tmp/haus-#{time}-#{salt}.tar.gz".freeze
+      time = Time.now.strftime '%Y-%m-%d.%H-%M-%S.%N'
+      @archive_path = "/tmp/haus-#{time}.tar.gz".freeze
     end
 
     # Parameter can be a Hash or an OpenStruct;
