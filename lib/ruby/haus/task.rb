@@ -184,12 +184,12 @@ class Haus
           opt.force = true
         end
 
-        opt.on_tail '-n', '--noop', 'Do not make any changes, but show what would happen' do
-          opt.noop = true
-        end
-
         opt.on_tail '-q', '--quiet', 'Produce no output; confirmation prompts fail silently' do
           opt.quiet = true
+        end
+
+        opt.on_tail '-N', '--noop', 'Do not make any changes, but show what would happen' do
+          opt.noop = true
         end
       end
     end

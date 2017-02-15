@@ -8,10 +8,19 @@ class Haus
     help "Copy dotfiles from #{Options.new.path}/etc/*"
     usage_tail '[pattern]'
 
+    def options
+      super.tap do |opt|
+        opt.on '-n', '--no-overwrite', 'Do not overwrite existing files' do
+          opt.no_overwrite = true
+        end
+      end
+    end
+
     def enqueue pattern = nil
       users.each do |user|
         hausfiles user do |src, dst|
           next if pattern and src !~ pattern
+          next if options.no_overwrite and File.exists? dst
           if reason = user.distrusts(src)
             queue.annotate dst, ["WARNING: Source #{reason}", :red]
           end

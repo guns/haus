@@ -18,6 +18,10 @@ class Haus
         opt.on '-a', '--absolute', 'Create absolute links instead of relative links' do
           opt.relative = false
         end
+
+        opt.on '-n', '--no-overwrite', 'Do not overwrite existing files' do
+          opt.no_overwrite = true
+        end
       end
     end
 
@@ -25,6 +29,7 @@ class Haus
       users.each do |user|
         hausfiles user do |src, dst|
           next if pattern and src !~ pattern
+          next if options.no_overwrite and File.exists? dst
           if reason = user.distrusts(src)
             queue.annotate dst, ["WARNING: Source #{reason}", :red]
           end
