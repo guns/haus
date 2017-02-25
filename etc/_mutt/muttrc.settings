@@ -267,9 +267,9 @@ set assumed_charset="utf-8"
 # %C      charset
 # %c      requires charset conversion (``n'' or ``c'')
 # %D      deleted flag
-# %d      description
+# %d      description (if none, falls back to %F)
 # %e      MIME content-transfer-encoding
-# %F      filename for content-disposition header
+# %F      filename in content-disposition header (if none, falls back to %f)
 # %f      filename
 # %I      disposition (``I'' for inline, ``A'' for attachment)
 # %m      major MIME type
@@ -4501,6 +4501,19 @@ set trash="$folder/TRASH"
 #
 # When set, Mutt will jump to the next unread message, if any,
 # when the current thread is uncollapsed.
+#
+
+# set uncollapse_new=yes
+#
+# Name: uncollapse_new
+# Type: boolean
+# Default: yes
+#
+#
+# When set, Mutt will automatically uncollapse any collapsed thread
+# that receives a new message. When unset, collapsed threads will
+# remain collapsed. the presence of the new message will still affect
+# index sorting, though.
 #
 
 # set use_8bitmime=no
