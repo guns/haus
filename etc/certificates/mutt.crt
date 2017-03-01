@@ -1,5 +1,6 @@
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=imap.gmail.com
 Issuer:  /C=US/O=Google Inc/CN=Google Internet Authority
+base64:  sha256//cE1RZQ1Fa7nkrXXXaGdRBGkmGdUVUmSuN+O3kz0Kc5Y=
 SHA256:  37e2c0a44c64792b3945f8acd1dc205a389abbd13f5b93fb82b5f80b4ca43280
 SHA1:    6d1b5b5ee0180ab493b71d3b94534b5ab937d042
 MD5:     2307e65204ec0e45659b391063f0e795
@@ -27,6 +28,7 @@ is72sIrAeprsVU8PbNsllUamWsIjKr3DH5xQdH54hDtzQojY
 
 Subject: /C=US/O=Google Inc/CN=Google Internet Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+base64:  sha256//trlUMquuV/4CDLK3T0+fkXPIxwivyecyrOIyeQR8bQU=
 SHA256:  250da2691be97c9a33ceef7e311c14fb01846e058a99cea9bd1125bd25a0cad5
 SHA1:    dd7a7f131ddba33d3e8670179483e6fea6987d6a
 MD5:     33a0ea980e3d6e261d772d82df66007d
@@ -50,6 +52,7 @@ UUIuOss4jHg7y/j7lYe8vJD5UDI=
 
 Subject: /C=US/ST=California/L=Mountain View/O=Google Inc/CN=smtp.gmail.com
 Issuer:  /C=US/O=Google Inc/CN=Google Internet Authority
+base64:  sha256//cFgFQNGibVUdqxwh5iyH/40DtKc3uzeQh4wROJvtiME=
 SHA256:  263fad75d97294b56806302f30c105e95f39cc22dee01825501f85432c37cfee
 SHA1:    34b43e6671d8ac5a47767fb7cde43108f4a5dda8
 MD5:     96ac76529f17e41d2807803a8e00a841
@@ -77,6 +80,7 @@ raoUPFuD3IH+zP/FGj5LPQirjnJLUvuFDsiM4eowPUthQad9SGWWdz6hCx8HpEUZ
 
 Subject: /C=US/O=Google Inc/CN=Google Internet Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+base64:  sha256//trlUMquuV/4CDLK3T0+fkXPIxwivyecyrOIyeQR8bQU=
 SHA256:  250da2691be97c9a33ceef7e311c14fb01846e058a99cea9bd1125bd25a0cad5
 SHA1:    dd7a7f131ddba33d3e8670179483e6fea6987d6a
 MD5:     33a0ea980e3d6e261d772d82df66007d
@@ -100,6 +104,7 @@ UUIuOss4jHg7y/j7lYe8vJD5UDI=
 
 Subject: /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
 Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+base64:  sha256///1aAzXOlcD2gSBegdf1GJQanNQbEuBoVg+9UlHjSZHY=
 SHA256:  08297a4047dba23680c731db6e317653ca7848e1bebd3a0b0179a707f92cf178
 SHA1:    d23209ad23d314232174e40d7f9d62139786633a
 MD5:     67cb9dc013248a829bb2171ed11becd4
@@ -125,6 +130,7 @@ A4GBAFjOKer89961zgK5F7WF0bnj4JXMJTENAKaSbn+2kmOeUJXRmm/kEd5jhW6Y
 
 Subject: /C=AU/ST=Victoria/L=Melbourne/O=FastMail Pty Ltd/CN=*.messagingengine.com
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance CA-3
+base64:  sha256//aQp7HGiQbppJ0wCMo+LDBebRLfSmXiQKldBSbm0T+MU=
 SHA256:  608a012651b4006d1282d0558e7669d2856dc32248d6e1b845a8832434ff35e0
 SHA1:    54137524fe721f0cbb8a6a0e1e280ade50482e29
 MD5:     09c9bfc1abc7a4e1ec8e6df6d206fbe6
@@ -164,6 +170,7 @@ YlvLUzezkWFR19pVOg72tg==
 
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance CA-3
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
+base64:  sha256//emrYgpjLplsXa6OnqyXuj5BgQDPaapisB5WfVm+jrFQ=
 SHA256:  21eb37ab4cf6ef8965ec1766409ca76b8b2e03f2d1a388df734208e86deee679
 SHA1:    42857855fb0ea43f54c9911e30e7791d8ce82705
 MD5:     c68b9930c8578d416f8c094e6adb0c90
@@ -206,6 +213,7 @@ Ib4p1I5eFdZCSucyb6Sxa1GDWL4/bcf72gMhy2oWGU4K8K2Eyl2Us1p292E=
 
 Subject: /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
 Issuer:  /C=US/O=DigiCert Inc/OU=www.digicert.com/CN=DigiCert High Assurance EV Root CA
+base64:  sha256//WoiWRyIOVNa9ihaBciRSC7XHjliYS9VwUGOIud4PB18=
 SHA256:  7431e5f4c3c1ce4690774f0b61e05440883ba9a01ed00ba6abd7806ed3b118cf
 SHA1:    5fb7ee0633e259dbad0c4c9ae6d38f1a61c7dc25
 MD5:     d474de575c39b2d39c8583c5c065498a
@@ -231,4 +239,32 @@ hS9OMPagMRYjyOfiZRYzy78aG6A9+MpeizGLYAiJLQwGXFK3xPkKmNEVX58Svnw2
 Yzi9RKR/5CYrCsSXaQ3pjOLAEFe4yHYSkVXySGnYvCoCWw9E1CAx2/S6cCZdkGCe
 vEsXCS+0yx5DaMkHJ8HSXPfqIbloEpw8nL+e/IBcm2PN7EeqJSdnoDfzAIJ9VNep
 +OkuE6N36B9K
+-----END CERTIFICATE-----
+
+Subject: /C=US/O=GeoTrust Inc./CN=GeoTrust Global CA
+Issuer:  /C=US/O=Equifax/OU=Equifax Secure Certificate Authority
+base64:  sha256//h6801m+z8v3zbgkRHpq6L29Esgfzhj89C1SyUCOQmqU=
+SHA256:  3c35cc963eb004451323d3275d05b353235053490d9cd83729a2faf5e7ca1cc0
+SHA1:    7359755c6df9a0abc3060bce369564c8ec4542a3
+MD5:     2e7db2a31d0e3da4b25f49b9542a2e1a
+-----BEGIN CERTIFICATE-----
+MIIDfTCCAuagAwIBAgIDErvmMA0GCSqGSIb3DQEBBQUAME4xCzAJBgNVBAYTAlVT
+MRAwDgYDVQQKEwdFcXVpZmF4MS0wKwYDVQQLEyRFcXVpZmF4IFNlY3VyZSBDZXJ0
+aWZpY2F0ZSBBdXRob3JpdHkwHhcNMDIwNTIxMDQwMDAwWhcNMTgwODIxMDQwMDAw
+WjBCMQswCQYDVQQGEwJVUzEWMBQGA1UEChMNR2VvVHJ1c3QgSW5jLjEbMBkGA1UE
+AxMSR2VvVHJ1c3QgR2xvYmFsIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+CgKCAQEA2swYYzD99BcjGlZ+W988bDjkcbd4kdS8odhM+KhDtgPpTSEHCIjaWC9m
+OSm9BXiLnTjoBbdqfnGk5sRgprDvgOSJKA+eJdbtg/OtppHHmMlCGDUUna2YRpIu
+T8rxh0PBFpVXLVDviS2Aelet8u5fa9IAjbkU+BQVNdnARqN7csiRv8lVK83Qlz6c
+JmTM386DGXHKTubU1XupGc1V3sjs0l44U+VcT4wt/lAjNvxm5suOpDkZALeVAjmR
+Cw7+OC7RHQWa9k0+bw8HHa8sHo9gOeL6NlMTOdReJivbPagUvTLrGAMoUgRx5asz
+PeE4uwc2hGKceeoWMPRfwCvocWvk+QIDAQABo4HwMIHtMB8GA1UdIwQYMBaAFEjm
+aPkr0rKV10fYIyAQTzOYkJ/UMB0GA1UdDgQWBBTAephojYn7qwVkDBF9qn1luMrM
+TjAPBgNVHRMBAf8EBTADAQH/MA4GA1UdDwEB/wQEAwIBBjA6BgNVHR8EMzAxMC+g
+LaArhilodHRwOi8vY3JsLmdlb3RydXN0LmNvbS9jcmxzL3NlY3VyZWNhLmNybDBO
+BgNVHSAERzBFMEMGBFUdIAAwOzA5BggrBgEFBQcCARYtaHR0cHM6Ly93d3cuZ2Vv
+dHJ1c3QuY29tL3Jlc291cmNlcy9yZXBvc2l0b3J5MA0GCSqGSIb3DQEBBQUAA4GB
+AHbhEm5OSxYShjAGsoEIz/AIx8dxfmbuwu3UOx//8PDITtZDOLC5MH0Y0FWDomrL
+NhGc6Ehmo21/uBPUR/6LWlxz/K7ZGzIZOKuXNBSqltLroxwUCEm2u+WR74M26x1W
+b8ravHNjkOR/ez4iyz0H7V84dJzjA1BOoa+Y7mHyhD8S
 -----END CERTIFICATE-----
