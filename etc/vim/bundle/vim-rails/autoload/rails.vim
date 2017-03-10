@@ -1396,8 +1396,6 @@ function! s:readable_default_rake_task(...) dict abort
     endif
     if empty(test)
       return '--tasks'
-    elseif test =~# '^test\>' && self.app().has('rails5')
-      return 'test TEST='.s:rquote(with_line)
     elseif test =~# '^test\>'
       let opts = ''
       if test ==# self.name()
@@ -1406,7 +1404,9 @@ function! s:readable_default_rake_task(...) dict abort
           let opts = ' TESTOPTS=-n'.method
         endif
       endif
-      if test =~# '^test/\%(unit\|models\|jobs\)\>'
+      if self.app().has('rails5')
+        return 'test TEST='.s:rquote(test).opts
+      elseif test =~# '^test/\%(unit\|models\|jobs\)\>'
         return 'test:units TEST='.s:rquote(test).opts
       elseif test =~# '^test/\%(functional\|controllers\)\>'
         return 'test:functionals TEST='.s:rquote(test).opts
@@ -1669,9 +1669,7 @@ endfunction
 function! s:Rails(bang, count, arg) abort
   if !empty(a:arg)
     let str = a:arg
-  elseif rails#buffer().type_name('spec', 'cucumber')
-    return rails#buffer().runner_command(a:bang, a:count, '')
-  elseif rails#buffer().type_name('test') && !rails#app().has('rails5')
+  elseif rails#buffer().type_name('test', 'spec', 'cucumber') && !rails#app().has('rails5')
     return rails#buffer().runner_command(a:bang, a:count, '')
   elseif rails#buffer().name() =~# '^\%(app\|config\|db\|lib\|log\|README\|Rakefile\|test\|spec\|features\)'
     let str = rails#buffer().default_rake_task(a:count)
@@ -1692,6 +1690,8 @@ function! s:Rails(bang, count, arg) abort
       if exists('rake') && !rails#app().has('rails5')
         let &l:makeprg = rails#app().rake_command()
       else
+        let str = s:gsub(str, '<TEST\w*\=', '')
+        let str = s:gsub(str, '<CONTROLLER\=', '-c ')
         let &l:makeprg = rails#app().prepare_rails_command('$*')
       endif
       let &l:errorformat .= ',chdir '.escape(rails#app().path(), ',')
@@ -3000,8 +3000,9 @@ endfunction
 function! s:specEdit(cmd,...) abort
   let describe = s:sub(s:sub(rails#camelize(a:0 ? a:1 : ''), '^[^:]*::', ''), '!.*', '')
   return rails#buffer().open_command(a:cmd, a:0 ? a:1 : '', 'spec', [
-        \ {'pattern': 'spec/*_spec.rb', 'template': "require 'spec_helper'\n\ndescribe ".describe." do\nend"},
-        \ {'pattern': 'spec/spec_helper.rb'}])
+        \ {'pattern': 'spec/*_spec.rb', 'template': "require 'rails_helper'\n\ndescribe ".describe." do\nend"},
+        \ {'pattern': 'spec/spec_helper.rb'},
+        \ {'pattern': 'spec/rails_helper.rb'}])
 endfunction
 
 " }}}1
