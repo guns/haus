@@ -587,14 +587,12 @@ function! sj#ruby#SplitOptions()
 endfunction
 
 function! sj#ruby#SplitArray()
-  call sj#PushCursor()
-  let [from, to] = sj#LocateBracesOnLine('[', ']', [
+  let [from, to] = sj#LocateBracesAroundCursor('[', ']', [
         \ 'rubyInterpolationDelimiter',
         \ 'rubyString',
         \ 'rubyStringDelimiter',
         \ 'rubySymbolDelimiter'
         \ ])
-  call sj#PopCursor()
 
   if from < 0
     return 0
@@ -849,12 +847,14 @@ function! s:JoinHashWithCurlyBraces()
   " remove trailing comma
   let body = substitute(body, ',\ze\_s*$', '', '')
 
-  if body != original_body
-    call sj#ReplaceMotion('Vi{', body)
+  let body = join(sj#TrimList(split(body, "\n")), ' ')
+  if sj#settings#Read('curly_brace_padding')
+    let body = '{ '.body.' }'
+  else
+    let body = '{'.body.'}'
   endif
 
-  normal! Va{J
-
+  call sj#ReplaceMotion('va{', body)
   return 1
 endfunction
 

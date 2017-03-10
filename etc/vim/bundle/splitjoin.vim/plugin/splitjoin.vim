@@ -12,6 +12,7 @@ set cpo&vim
 call sj#settings#SetDefault('normalize_whitespace',                    1)
 call sj#settings#SetDefault('trailing_comma',                          0)
 call sj#settings#SetDefault('align',                                   0)
+call sj#settings#SetDefault('curly_brace_padding',                     1)
 call sj#settings#SetDefault('ruby_curly_braces',                       1)
 call sj#settings#SetDefault('ruby_heredoc_type',                       '<<-')
 call sj#settings#SetDefault('ruby_trailing_comma',                     0)
@@ -21,6 +22,7 @@ call sj#settings#SetDefault('coffee_suffix_if_clause',                 1)
 call sj#settings#SetDefault('perl_brace_on_same_line',                 1)
 call sj#settings#SetDefault('python_brackets_on_separate_lines',       0)
 call sj#settings#SetDefault('handlebars_closing_bracket_on_same_line', 0)
+call sj#settings#SetDefault('handlebars_hanging_arguments',            0)
 
 if !exists('g:splitjoin_join_mapping')
   let g:splitjoin_join_mapping = 'gJ'

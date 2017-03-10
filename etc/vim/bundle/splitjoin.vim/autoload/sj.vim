@@ -118,7 +118,11 @@ endfunction
 function! sj#ReplaceLines(start, end, text)
   let interval = a:end - a:start
 
-  return sj#ReplaceMotion(a:start.'GV'.interval.'j', a:text)
+  if interval == 0
+    return sj#ReplaceMotion(a:start.'GV', a:text)
+  else
+    return sj#ReplaceMotion(a:start.'GV'.interval.'j', a:text)
+  endif
 endfunction
 
 " function! sj#ReplaceCols(start, end, text) {{{2
@@ -471,6 +475,8 @@ function! s:Tabularize(from, to, type)
     let pattern = '^[^=]*\zs='
   elseif a:type == 'when_then'
     let pattern = 'then'
+  elseif a:type == 'equals'
+    let pattern = '='
   else
     return
   endif
@@ -485,6 +491,8 @@ function! s:Align(from, to, type)
     let pattern = 'lp0W0 :\s*\zs'
   elseif a:type == 'when_then'
     let pattern = 'l: then'
+  elseif a:type == 'equals'
+    let pattern = '='
   else
     return
   endif
@@ -534,6 +542,36 @@ function! sj#LocateBracesOnLine(open, close, ...)
     let to = col('.')
 
     return [from, to]
+  else
+    return [-1, -1]
+  endif
+endfunction
+
+" Returns a pair with the column positions of the closest opening and closing
+" braces on the current line, but only if the cursor is between them.
+"
+" The optional parameter is the list of syntax groups to skip while searching.
+"
+" If a pair is not found around the cursor, returns [-1, -1]
+"
+" Examples:
+"
+"   let [start, end] = sj#LocateBracesAroundCursor('{', '}')
+"   let [start, end] = sj#LocateBracesAroundCursor('{', '}', ['rubyString'])
+"   let [start, end] = sj#LocateBracesAroundCursor('[', ']')
+"
+function! sj#LocateBracesAroundCursor(open, close, ...)
+  let args = [a:open, a:close]
+  if a:0 > 0
+    call extend(args, a:000)
+  endif
+
+  call sj#PushCursor()
+  let [start, end] = call('sj#LocateBracesOnLine', args)
+  call sj#PopCursor()
+
+  if sj#CursorBetween(start, end)
+    return [start, end]
   else
     return [-1, -1]
   endif

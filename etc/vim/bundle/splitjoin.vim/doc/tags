@@ -33,7 +33,9 @@ splitjoin-yaml	splitjoin.txt	/*splitjoin-yaml*
 splitjoin.txt	splitjoin.txt	/*splitjoin.txt*
 splitjoin_align	splitjoin.txt	/*splitjoin_align*
 splitjoin_coffee_suffix_if_clause	splitjoin.txt	/*splitjoin_coffee_suffix_if_clause*
+splitjoin_curly_brace_padding	splitjoin.txt	/*splitjoin_curly_brace_padding*
 splitjoin_handlebars_closing_bracket_on_same_line	splitjoin.txt	/*splitjoin_handlebars_closing_bracket_on_same_line*
+splitjoin_handlebars_hanging_arguments	splitjoin.txt	/*splitjoin_handlebars_hanging_arguments*
 splitjoin_normalize_whitespace	splitjoin.txt	/*splitjoin_normalize_whitespace*
 splitjoin_perl_brace_on_same_line	splitjoin.txt	/*splitjoin_perl_brace_on_same_line*
 splitjoin_python_brackets_on_separate_lines	splitjoin.txt	/*splitjoin_python_brackets_on_separate_lines*
