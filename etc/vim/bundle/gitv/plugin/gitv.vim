@@ -222,7 +222,7 @@ fu! s:SanitizeReservedArgs(extraArgs) "{{{
     let selectedFiles = sort(selectedFiles)
     return [join(splitArgs[0:-len(selectedFiles) - 1], ' '), join(selectedFiles, ' ')]
 endfu "}}}
-fu! s:ReapplyReservedArgs(extraArgs, filePath) "{{{
+fu! s:ReapplyReservedArgs(extraArgs) "{{{
     let options = a:extraArgs[0]
     if s:RebaseIsEnabled()
         return [options, '']
@@ -377,7 +377,7 @@ fu! s:ToggleArg(args, toggle) "{{{
 endf "}}}
 fu! s:ConstructAndExecuteCmd(direction, commitCount, extraArgs, filePath, range) "{{{
     if a:range == [] "no range, setup and execute the command
-        let extraArgs = s:ReapplyReservedArgs(a:extraArgs, a:filePath)
+        let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
         let cmd  = "log " 
         let cmd .= " --date=short --no-color --decorate=full --pretty=format:\"%d__START__ %s__SEP__%ar__SEP__%an__SEP__[%h]\" --graph -"
         let cmd .= a:commitCount
@@ -407,7 +407,7 @@ fu! s:ConstructRangeBuffer(commitCount, extraArgs, filePath, range) "{{{
     %delete
 
     "necessary as order is important; can't just iterate over keys(slices)
-    let extraArgs = s:ReapplyReservedArgs(a:extraArgs, a:filePath)
+    let extraArgs = s:ReapplyReservedArgs(a:extraArgs)
     let hashCmd       = "log " . extraArgs[0]
     let hashCmd      .= " --no-color --pretty=format:%H -".a:commitCount." -- " . a:filePath
     let [result, cmd] = s:RunGitCommand(hashCmd, 0)
@@ -1616,24 +1616,30 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
 
     " get refs
     if a:first != a:last || type(a:fromPlaceholder) != 1 " string
-        let from = s:RebaseGetRefs(from)
-        if !len(from)
+        let fromRefs = s:RebaseGetRefs(from)
+        if !len(fromRefs)
             return []
         endif
+    else
+        let fromRefs = from
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
-        let onto = s:RebaseGetRefs(onto)
+        let ontoRefs = s:RebaseGetRefs(onto)
         if !len(onto)
             return []
         endif
+    else
+        let ontoRefs = onto
     endif
 
     " set placeholder
     if a:first == a:last
         if type(a:fromPlaceholder) == 1
-            let from = a:fromPlaceholder
+            unlet fromRefs
+            let fromRefs = a:fromPlaceholder
         elseif type(a:ontoPlaceholder) == 1
-            let onto = a:ontoPlaceholder
+            unlet ontoRefs
+            let ontoRefs = a:ontoPlaceholder
         else
             echoerr 'A default must be given.'
             return []
@@ -1642,19 +1648,23 @@ fu! s:RebaseGetRange(first, last, fromPlaceholder, ontoPlaceholder) "{{{
 
     " get choices
     if a:first != a:last || type(a:fromPlaceholder) != 1
-        let from = s:RebaseGetChoice(from, 'from')
-        if from == ''
+        let fromChoice = s:RebaseGetChoice(fromRefs, 'from')
+        if fromChoice == ''
             return []
         endif
+    else
+        let fromChoice = fromRefs
     endif
     if a:first != a:last || type(a:ontoPlaceholder) != 1
-        let onto = s:RebaseGetChoice(onto, 'onto')
-        if onto == ''
+        let ontoChoice = s:RebaseGetChoice(onto, 'onto')
+        if ontoChoice == ''
             return []
         endif
+    else
+        let ontoChoice = ontoRefs
     endif
 
-    return [from, onto]
+    return [fromChoice, ontoChoice]
 endf "}}}
 fu! s:Rebase() range "{{{
     if s:IsFileMode()
@@ -1688,11 +1698,12 @@ fu! s:SetRebaseEditor() "{{{
         " replace default instructions with stored instructions
         let $GIT_SEQUENCE_EDITOR='function gitv_edit() {'
         for sha in keys(b:Gitv_RebaseInstructions)
+            let short = sha[0:6]
             let instruction = b:Gitv_RebaseInstructions[sha].instruction
-            let $GIT_SEQUENCE_EDITOR .= ' SHA_'.sha.'='.instruction.';'
+            let $GIT_SEQUENCE_EDITOR .= ' SHA_'.short.'='.instruction.';'
             if exists('b:Gitv_RebaseInstructions[sha].cmd')
                 let cmd = b:Gitv_RebaseInstructions[sha].cmd
-                let $GIT_SEQUENCE_EDITOR .= ' CMD_'.sha.'='.shellescape(cmd).';'
+                let $GIT_SEQUENCE_EDITOR .= ' CMD_'.short.'='.shellescape(cmd).';'
             endif
         endfor
         let $GIT_SEQUENCE_EDITOR .= 'while read line; do
