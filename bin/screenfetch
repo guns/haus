@@ -2,7 +2,7 @@
 
 # screenFetch - a CLI Bash script to show system/theme info in screenshots
 
-# Copyright (c) 2010-2016 Brett Bohnenkamper <kittykatt@kittykatt.us>
+# Copyright (c) 2010-2017 Brett Bohnenkamper <kittykatt@kittykatt.us>
 
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@
 #LC_ALL=C
 
 
-scriptVersion="3.7.0"
+scriptVersion="3.8.0"
 
 ######################
 # Settings for fetcher
@@ -389,7 +389,7 @@ detectdistro () {
 				done
 			fi
 			case "${distro_detect}" in
-				"CentOS"|"Chapeau"|"Deepin"|"Devuan"|"Fedora"|"gNewSense"|"Jiyuu Linux"|"Kogaion"|"Korora"|"Mageia"|"Netrunner"|"NixOS"|"Pardus"|"Raspbian"|"Sabayon"|"Solus"|"SteamOS"|"Trisquel"|"Ubuntu"|"GrombyangOS")
+				"CentOS"|"Chapeau"|"Deepin"|"Devuan"|"Fedora"|"gNewSense"|"Jiyuu Linux"|"Kogaion"|"Korora"|"Mageia"|"Netrunner"|"NixOS"|"Pardus"|"Raspbian"|"Sabayon"|"Solus"|"SteamOS"|"Trisquel"|"Ubuntu"|"GrombyangOS"|"Scientific Linux")
 					# no need to fix $distro/$distro_codename/$distro_release
 					distro="${distro_detect}"
 					;;
@@ -470,6 +470,12 @@ detectdistro () {
 					else
 						distro="Gentoo"
 					fi
+					. /etc/portage/make.conf #detecting release stable/testing/experimental
+					case $ACCEPT_KEYWORDS in
+        				[a-z]*) distro_release=stable       ;;
+        				~*)     distro_release=testing      ;;
+        				'**')   distro_release=experimental ;; #experimental usually includes git-versions.
+					esac
 					;;
 				"LinuxDeepin")
 					distro="LinuxDeepin"
@@ -995,13 +1001,13 @@ detectkernel () {
 	if [[ "$distro" == "OpenBSD" ]]; then
 		kernel=$(sysctl kern.version|awk -F'[ =:]' 'NR==1{print $3" "$4" "$5}')
 	else
-	# compatibility for older versions of OS X:
-	kernel=$(uname -m && uname -sr)
-	kernel=${kernel//$'\n'/ }
-	#kernel=( $(uname -srm) )
-	#kernel="${kernel[${#kernel[@]}-1]} ${kernel[@]:0:${#kernel[@]}-1}"
-	verboseOut "Finding kernel version...found as '${kernel}'"
-fi
+		# compatibility for older versions of OS X:
+		kernel=$(uname -m && uname -sr)
+		kernel=${kernel//$'\n'/ }
+		#kernel=( $(uname -srm) )
+		#kernel="${kernel[${#kernel[@]}-1]} ${kernel[@]:0:${#kernel[@]}-1}"
+		verboseOut "Finding kernel version...found as '${kernel}'"
+	fi
 }
 # Kernel Version Detection - End
 
@@ -1323,6 +1329,35 @@ detectgpu () {
 }
 # GPU Detection - End
 
+# Detect Intel GPU  #works in dash
+# Run it only on Intel Processors if GPU is unknown
+DetectIntelGPU() {
+	gpu=$(awk '{print $2}' /proc/fb)
+
+	case $gpu in
+		*intel*) gpu=intel ;;
+	esac
+
+        if [ $gpu = intel ]; then
+		#Detect CPU
+		local CPU=$(uname -p | awk '{print $3}')
+		CPU=${CPU#*'-'}; #Detect CPU number
+
+          	#Detect Intel GPU
+	  	case $CPU in
+	  	[3-6][3-9][0-5]|[3-6][3-9][0-5][K-Y])  gpu='Intel HD Graphics'            ;; #1st
+	            2[1-5][0-3][0-2]*|2390T|2600S)     gpu='Intel HD Graphics 2000'       ;; #2nd
+		    2[1-5][1-7][0-8]*|2105|2500K)      gpu='Intel HD Graphics 3000'       ;; #2nd
+		    32[1-5]0*|3[4-5][5-7]0*|33[3-4]0*) gpu='Intel HD Graphics 2500'       ;; #3rd
+		    3570K|3427U)                       gpu='Intel HD Graphics 4000'       ;; #3rd
+		    4[3-7][0-9][0-5]*)                 gpu='Intel HD Graphics 4600'       ;; #4th Haswell
+		    5[5-6]75[C-R]|5350H)               gpu='Intel Iris Pro Graphics 6200' ;; #5th Broadwell
+		                                                                             #6th Skylake
+                                                                                             #7th Kabylake
+                                                                                             #8th Cannonlake
+	   	esac
+        fi
+}
 
 # Disk Usage Detection - Begin
 detectdisk () {
@@ -3066,22 +3101,23 @@ asciiText () {
 			fi
 			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; fi
 			startline="0"
-			fulloutput=("$c2                                     %s"
-"$c2                                     %s"
-"$c2                                     %s"
-"$c2                                     %s"
-"$c2                                     %s"
-"$c2       ______   Sürüm 1.0            %s"
-"$c2       | ____| __ __ __  __TM        %s"
-"$c2       | |___ | | | |\ \/ /          %s"
-"$c2       | ____|| | | | \  /           %s"
-"$c2       | |    | |_| | /  \           %s"
-"$c2       |_|    |_____|/ /\_\          %s"
-"$c2                    /_/              %s"
-"$c2                                     %s"
-"$c2                                     %s"
-"$c2                                     %s"
-"                                     %s")
+			fulloutput=(
+"${c2}           --/+osssso+/--           %s" 
+"${c2}        -/oshhhhhhhhhhhhso/-        %s"
+"${c2}      :oyhhhhhso+//+oshhhhhso:      %s"
+"${c2}    -+yhhhh+.   ss+/   .+hhhhs+-    %s"
+"${c2}   :/hhhh/     shhhy/     /hhhh/:   %s"
+"${c2}  ./hhhh- .++:..dhhb..:++. -hhhh/.  %s"
+"${c2}  +ohhh: -hoyhohhoohhohyoh- :hhho+  %s"
+"${c2}  /hhhh   shhy-ohyyho-yhhs   hhhh/  %s"
+"${c2}  /hhhh    shy\+hhhh+/yhs    hhhh/  %s"
+"${c2}  +ohhh:  .:d. +:ys:+ .b:.  :hhho+  %s"
+"${c2}  ./hhhh- do  /  oo  \  ob -hhhh/.  %s"
+"${c2}   :/hhhh/   -   ss   -   /hhhh/:   %s"
+"${c2}    -+shhhh+.    //    .+hhhhs+-    %s"
+"${c2}      :oshhhhhso+//+oshhhhhso:      %s"
+"${c2}        -/oshhhhhhhhhhhhso/-        %s"
+"${c2}           --/+osssso+/--           %s")
 		;;
 
 		"Chapeau")
@@ -5244,7 +5280,6 @@ if [[ -f "$HOME/.screenfetchOR" ]]; then
 	source $HOME/.screenfetchOR
 fi
 
-
 if [[ "$overrideDisplay" ]]; then
 	verboseOut "Found 'd' flag in syntax. Overriding display..."
 	OLDIFS=$IFS
@@ -5289,7 +5324,7 @@ if [[ "$overrideDisplay" ]]; then
 fi
 
 # Check for android
-if [ -f /system/build.prop ]; then
+if [ -f /system/build.prop ] && [ "${distro}" != "SailfishOS" ]; then
 	distro="Android"
 	detectmem
 	detectuptime
@@ -5315,6 +5350,11 @@ for i in "${display[@]}"; do
 		fi
 	fi
 done
+
+if [ "$gpu" = 'Not Found' ] ; then
+DetectIntelGPU
+fi
+
 
 infoDisplay
 [ "$screenshot" == "1" ] && takeShot

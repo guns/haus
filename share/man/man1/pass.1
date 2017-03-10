@@ -33,19 +33,22 @@ or
 depending on the type of specifier in ARGS. Alternatively, if \fIPASSWORD_STORE_ENABLE_EXTENSIONS\fP
 is set to "true", and the file \fI.extensions/COMMAND.bash\fP exists inside the
 password store and is executable, then it is sourced into the environment,
-passing any arguments and environment variables.
+passing any arguments and environment variables. Extensions existing in a
+system-wide directory, only installable by the administrator, are always enabled.
 
 Otherwise COMMAND must be one of the valid commands listed below.
 
 Several of the commands below rely on or provide additional functionality if
 the password store directory is also a git repository. If the password store
 directory is a git repository, all password store modification commands will
-cause a corresponding git commit. See the \fIEXTENDED GIT EXAMPLE\fP section
-for a detailed description using \fBinit\fP and
+cause a corresponding git commit. Sub-directories may be separate nested git
+repositories, and pass will use the inner-most directory relative to the
+current password. See the \fIEXTENDED GIT EXAMPLE\fP section for a detailed
+description using \fBinit\fP and
 .BR git (1).
 
 The \fBinit\fP command must be run before other commands in order to initialize
-the password store with the correct gpg key id. Passwords are encrypting using
+the password store with the correct gpg key id. Passwords are encrypted using
 the gpg key set with \fBinit\fP.
 
 There is a corresponding bash completion script for use with tab completing
@@ -406,13 +409,8 @@ Overrides the default password storage directory.
 .TP
 .I PASSWORD_STORE_KEY
 Overrides the default gpg key identification set by \fBinit\fP. Keys must not
-contain spaces and thus use of the hexidecimal key signature is recommended.
+contain spaces and thus use of the hexadecimal key signature is recommended.
 Multiple keys may be specified separated by spaces. 
-.TP
-.I PASSWORD_STORE_GIT
-Overrides the default root of the git repository, which is helpful if
-\fIPASSWORD_STORE_DIR\fP is temporarily set to a sub-directory of the default
-password store.
 .TP
 .I PASSWORD_STORE_GPG_OPTS
 Additional options to be passed to all invocations of GPG.
@@ -454,7 +452,7 @@ The location to look for executable extension files, by default
 \fIPASSWORD_STORE_DIR/.extensions\fP.
 .TP
 .I PASSWORD_STORE_SIGNING_KEY
-If this environment variable is set, then all \fB.gpg-id\fP files and extension files
+If this environment variable is set, then all \fB.gpg-id\fP files and non-system extension files
 must be signed using a detached signature using the GPG key specified by the full 40 character
 upper-case fingerprint in this variable. If multiple fingerprints are specified, each
 separated by a whitespace character, then signatures must match at least one.
