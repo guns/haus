@@ -1,14 +1,16 @@
 # ============================================================================
-# FILE: outlint.py
+# FILE: outline.py
 # AUTHOR: Yasumasa Tamura (tamura.yasumasa _at_ gmail.com)
 # License: MIT license
 # ============================================================================
 
 from .base import Base
 from subprocess import check_output, CalledProcessError
+from denite.util import parse_tagline
+import re
+import tempfile
 
 OUTLINE_HIGHLIGHT_SYNTAX = [
-    {'name': 'Line', 'link': 'Constant',   're': '\d\+'},
     {'name': 'Name', 'link': 'Identifier', 're': '\s\S\+\%(\s\+\[\)\@='},
     {'name': 'Type', 'link': 'Type',       're': '\[.\{-}\]'},
     {'name': 'Ref',  'link': 'Comment',    're': '\s\s.\+'}
@@ -24,7 +26,7 @@ class Source(Base):
         self.kind = 'file'
         self.vars = {
             'command': ['ctags'],
-            'options': ['-x'],
+            'options': [],
             'ignore_types': [],
             'encoding': 'utf-8'
         }
@@ -43,33 +45,31 @@ class Source(Base):
                     self.syntax_name, syn['name'], syn['link']))
 
     def gather_candidates(self, context):
-        command = []
-        command += self.vars['command']
-        command += self.vars['options']
-        command += [context['__path']]
+        with tempfile.NamedTemporaryFile(mode='w') as tf:
+            args = []
+            args += self.vars['command']
+            args += self.vars['options']
+            args += ['-o', tf.name]
+            args += [context['__path']]
+            self.print_message(context, args)
 
-        try:
-            outline = check_output(command).decode(self.vars['encoding'])
-        except CalledProcessError:
-            return []
+            try:
+                check_output(args).decode(self.vars['encoding'], 'replace')
+            except CalledProcessError:
+                return []
 
-        candidates = []
-        for line in [l for l in outline.split('\n') if l != '']:
-            info = self._parse_outline_info(line)
-            if info['type'] not in self.vars['ignore_types']:
-                candidates.append({
-                    'word': '{line} {name} [{type}]  {ref}'.format(**info),
-                    'action__path': context['__path'],
-                    'action__line': info['line']
-                })
+            candidates = []
+            with open(tf.name) as f:
+                for line in f:
+                    if re.match('!', line) or not line:
+                        continue
+                    info = parse_tagline(line.rstrip())
+                    if info['type'] in self.vars['ignore_types']:
+                        continue
+
+                    candidates.append({
+                        'word': '{name} [{type}]  {ref}'.format(**info),
+                        'action__path': context['__path'],
+                        'action__pattern': info['pattern']
+                    })
         return candidates
-
-    def _parse_outline_info(self, line):
-        elem = [e for e in line.split(' ') if e != '']
-        return {
-            'name': elem[0],
-            'type': elem[1],
-            'line': int(elem[2]),
-            'file': elem[3],
-            'ref': ' '.join(elem[4:])
-        }

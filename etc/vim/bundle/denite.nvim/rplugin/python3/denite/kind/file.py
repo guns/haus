@@ -5,6 +5,7 @@
 # ============================================================================
 
 import re
+import os
 from itertools import filterfalse
 
 from .openable import Kind as Openable
@@ -18,8 +19,10 @@ class Kind(Openable):
         self.name = 'file'
         self.default_action = 'open'
         self.persist_actions += ['preview', 'highlight']
+        self._previewed_target = {}
 
     def action_open(self, context):
+        cwd = self.vim.call('getcwd')
         for target in context['targets']:
             path = target['action__path']
             match_path = '^{0}$'.format(path)
@@ -28,6 +31,8 @@ class Kind(Openable):
                 # URI
                 self.vim.call('denite#util#open', path)
                 return
+            if path.startswith(cwd):
+                path = os.path.relpath(path, cwd)
 
             if self.vim.call('bufwinnr', match_path) <= 0:
                 self.vim.call(
@@ -61,12 +66,9 @@ class Kind(Openable):
     def __preview(self, context, highlight):
         target = context['targets'][0]
         path = target['action__path'].replace('/./', '/')
-        line = int(target.get('action__line', 0))
-        col = int(target.get('action__col', 0))
 
         preview_window = self.__get_preview_window()
-        if (preview_window and preview_window.buffer.name == path and
-                line == 0 and col == 0):
+        if (preview_window and self._previewed_target == target):
             self.vim.command('pclose!')
         else:
             prev_id = self.vim.call('win_getid')
@@ -78,8 +80,12 @@ class Kind(Openable):
                 self.vim.call('matchaddpos', 'Search',
                               [int(target.get('action__line', 0))])
             self.vim.call('win_gotoid', prev_id)
+            self._previewed_target = target
 
     def __jump(self, context, target):
+        if 'action__pattern' in target:
+            self.vim.call('search', target['action__pattern'], 'w')
+
         line = int(target.get('action__line', 0))
         col = int(target.get('action__col', 0))
 
@@ -99,6 +105,7 @@ class Kind(Openable):
         # Open folds
         self.vim.command('normal! zv')
 
+    # Needed for openable actions
     def __winid(self, target):
         path = target['action__path']
         bufnr = self.vim.call('bufnr', path)

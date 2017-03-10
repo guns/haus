@@ -6,8 +6,9 @@
 
 from .base import Base
 from denite.process import Process
+from os import path, pardir
 from os.path import relpath, isabs, isdir, join
-from denite.util import parse_command
+from denite.util import parse_command, abspath
 
 
 class Source(Base):
@@ -30,10 +31,14 @@ class Source(Base):
                 '-path', '*/.git/*', '-prune', '-o',
                 '-type', 'l', '-print', '-o', '-type', 'f', '-print']
 
+        if context['is_windows'] and not self.vars['command']:
+            scantree = join(path.split(__file__)[0], pardir, 'scantree.py')
+            self.vars['command'] = ['python', scantree, ':directory']
+
         context['__proc'] = None
         directory = context['args'][0] if len(
             context['args']) > 0 else context['path']
-        context['__directory'] = self.vim.call('expand', directory)
+        context['__directory'] = abspath(self.vim, directory)
 
     def on_close(self, context):
         if context['__proc']:

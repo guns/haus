@@ -33,6 +33,23 @@ INTRODUCTION						*denite-introduction*
 displaying lists of information from within NeoVim/Vim. It can display and
 search through any arbitrary source, from files and directories to buffers.
 
+* Theoretically faster while the main process is executed by python
+
+* Theoretically more stable while no other processes can be performed when
+denite.nvim is executed.
+
+* The implementation is relatively simple than unite.vim
+
+* Denite.nvim has great potential to implement a new feature
+
+* To send the pull request by Python3 is easier than Vim script
+
+* There are a lot of useful tools to keep code simple (linter, tester, etc...)
+in Python3.
+
+* The unite.vim is officially obsolete, minor bugs (or even major bugs) are
+not fixed anymore
+
 ==============================================================================
 USAGE							*denite-usage*
 
@@ -339,6 +356,34 @@ are on the neovim-prompt's builtin actions/mappings.
 		Delete an entire text.
 		Note this is a neovim-prompt's builtin action.
 
+				*denite-map-caret_to_next_word*
+<denite:move_caret_to_next_word>
+		Move caret to beginning of next word, like |w| in normal mode in vim buffer.
+
+				*denite-map-caret_to_end_of_word*
+<denite:move_caret_to_end_of_word>
+		Move caret to end of word, like |e| in normal mode in vim buffer.
+
+				*denite-map-change_word*
+<denite:change_word>
+		Change word, like |cw| in normal mode in vim buffer.
+
+				*denite-map-change_line*
+<denite:change_line>
+		Change line, like |cc| in normal mode in vim buffer.
+
+				*denite-map-append*
+<denite:append>
+		Append, like |a| in normal mode in vim buffer.
+
+				*denite-map-append_to_line*
+<denite:append_to_line>
+		Append to line, like |A| in normal mode in vim buffer.
+
+				*denite-map-insert_to_head*
+<denite:insert_to_head>
+		Insert at head of line, like |I| in normal mode in vim buffer.
+
 				*denite-map-do_action*
 <denite:do_action:{action}>
 		Close current Denite buffer and fire {action} action.
@@ -593,8 +638,22 @@ All mode mappings (override by mode mappings).
 {key}		{mapping}
 --------	-----------------------------
 i		<denite:enter_mode:insert>
+I		<denite:insert_to_head>
+a		<denite:append>
+A		<denite:append_to_line>
 j		<denite:move_to_next_line>
+h		<denite:move_caret_to_left>
+l		<denite:move_caret_to_right>
 k		<denite:move_to_previous_line>
+b		<denite:move_caret_to_one_word_left>
+w		<denite:move_caret_to_next_word>
+e		<denite:move_caret_to_end_of_word>
+0		<denite:move_caret_to_head>
+$		<denite:move_caret_to_tail>
+c		<denite:change_word>
+cc		<denite:change_line>
+cw		<denite:change_word>
+dd		<denite:delete_entire_text>
 gg		<denite:move_to_first_line>
 G		<denite:move_to_last_line>
 <C-U>		<denite:scroll_window_upwards>
@@ -631,6 +690,7 @@ denite#custom#filter({filter-name}, {variable-name}, {value})
 denite#custom#option({buffer-name}, {option-name}, {value})
 		Set {option-name} option to {value} in {buffer-name}
 		buffer.
+		If {buffer-name} is "_", the options are used for all buffers.
 		Note: The all options are in |denite-options|.  However, "-" is
 		substituted to "_", and "-" prefix is removed.
 
@@ -834,6 +894,15 @@ OPTIONS							*denite-options*
 						*denite-options-direction*
 -direction={direction}
 		Specify the Denite window direction as {direction}.
+
+		When it is "dynamictop", if each item's length is less than
+		the current window's width, the direction becomes "aboveleft",
+		otherwise - "topleft".
+		Similarly for "dynamicbottom", the direction becomes
+		"belowright" or "botright".
+		It is useful to always make best effort to show all items
+		without shortening.
+
 		Default: "botright"
 
 						*denite-options-empty*
@@ -981,6 +1050,9 @@ directory_rec	Gather directories recursive and nominates all directory names
 
 		Source args:
 			0. the search directory
+			Note: The directory is not expanded argument by
+			|expand()|.  The environment variable is only
+			expanded.
 
 		Source custom variables:
 		command		 the default get directories command
@@ -1005,6 +1077,9 @@ file_rec	Gather files recursive and nominates all file names under the
 
 		Source args:
 			0. the search directory
+			Note: The directory is not expanded argument by
+			|expand()|.  The environment variable is only
+			expanded.
 
 		Source custom variables:
 		command		the default get files command.
@@ -1025,6 +1100,10 @@ file_rec	Gather files recursive and nominates all file names under the
 					\ "-path", "*/.svn/*", "-prune", "-o",
 					\ '-type', 'l', '-print', '-o',
 					\ '-type', 'f', '-print'])
+					
+				In windows if no command is specified file_rec
+				uses a python script scantree.py to get the list
+				of files using scandir or os.walk.
 <
 		min_cache_files	the minimum number of files that
 				it saves the caches.
@@ -1109,7 +1188,7 @@ outline		Gather outline and jump to the target.
 		command 	the default command to get outline
 				(default: ['ctags'])
 		options 	the default options for command
-				(default: ['-x'])
+				(default: [])
 		ignore_types 	the list of ignore types
 				(default: [])
 		encoding 	the text encoding
@@ -1138,6 +1217,9 @@ buffer		An interface to open the buffer.
 			open (default)
 				Open the buffer.
 
+			delete
+				Delete the buffer.
+
 						*denite-kind-command*
 command		An interface to execute the command.
 
@@ -1163,6 +1245,9 @@ directory	An interface to change directory.
 			open
 				Open the directory.
 
+			narrow
+				Narrow by the directory.
+
 						*denite-kind-file*
 file		An interface to jump to the file position.
 		It extends |denite-kind-openable|.
@@ -1175,6 +1260,10 @@ file		An interface to jump to the file position.
 
 			action__col		(Number)	(Optional)
 				The column number in the file you'll jump
+				into.
+
+			action__pattern		(String)	(Optional)
+				The search pattern in the file you'll jump
 				into.
 
 						*denite-kind-file-actions*
@@ -1243,7 +1332,7 @@ matcher_cpsm
 		https://github.com/nixprime/cpsm
 		Note: You must use Python3 support enabled cpsm. >
 			$ PY3=ON ./install.sh
-
+<
 						*denite-filter-matcher_fuzzy*
 matcher_fuzzy
 		A matcher which filters the candidates with user given fuzzy
@@ -1424,12 +1513,77 @@ abbr		(String)			(Optional)
 ==============================================================================
 CREATE KIND						*denite-create-kind*
 
-Note: Not implemented yet...
+Custom Kind can be created to contain extra actions for your custom source.
+Before create your new kind, you should have a look at existing kinds in
+rplugin/python3/denite/kind/*.py
+
+Instead of create new kind from scratch, you can extend one of the existing
+Kind class, let's take "openable" for example: >
+
+    from ..kind.openable import Kind as Openable
+
+    class Kind(Openable):
+        def __init__(self, vim):
+            super().__init__(vim)
+            self.name = 'mykind'
+
+        def action_open(self, context):
+            target = context['targets'][0]
+            path = target['action__path']
+            # assume you have a MyEdit command
+            self.vim.call('MyEdit', path)
+>
+After create new Kind class, alias it to your source by >
+
+    self.kind = Kind(vim)
+<
+in the "__init__" method of your source class.
 
 ------------------------------------------------------------------------------
 KIND ATTRIBUTES					*denite-kind-attributes*
 
-Note: Not implemented yet...
+					*denite-kind-attribute-__init__*
+__init__	(Function)
+		Kind constructor.  It is always called in initializing.  It
+		must call super() constructor.  This function takes {self} and
+		{vim} as its parameters.
+
+					*denite-kind-attribute-name*
+name 		(String) 			(Required)
+		The name of a Kind.
+
+					*denite-kind-attribute-default_action*
+default_action  (String)
+		Default action name.
+
+					*denite-kind-attribute-persist_actions*
+persist_actions (List) 				(Optional)
+		List of action names which not close Denite buffer after
+		executed.
+
+					*denite-kind-attribute-redraw_actions*
+redraw_actions (List) 				(Optional)
+		List of action names which redraw Denite buffer after
+		executed.
+
+					*denite-kind-attribute-action_*
+action_{name} (Function) 			(Optional)
+		Custom action logic with {name} as action name. The function
+		is passed with {self} and {context}.
+		
+		To get the seleted candidate list, you could use "targets"
+		attribute in {context}: >
+
+                    targets = context['targets']
+<
+
+		To get the source context, you could use "source" attribute in
+		{context}: >
+
+		    source_context = context['source']
+<
+		Note: If the candidates source is not single, the "source"
+		attribute is empty.
 
 ==============================================================================
 CREATE FILTER						*denite-create-filter*

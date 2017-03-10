@@ -8,7 +8,7 @@
 from .base import Base
 from denite.process import Process
 from os.path import relpath, isabs, join
-from denite.util import parse_command
+from denite.util import parse_command, abspath
 
 
 class Source(Base):
@@ -34,7 +34,7 @@ class Source(Base):
         context['__proc'] = None
         directory = context['args'][0] if len(
             context['args']) > 0 else context['path']
-        context['__directory'] = self.vim.call('expand', directory)
+        context['__directory'] = abspath(self.vim, directory)
 
     def on_close(self, context):
         if context['__proc']:
@@ -70,14 +70,16 @@ class Source(Base):
         if not outs:
             return []
         if isabs(outs[0]):
-            candidates = [{'word': relpath(x, start=context['__directory']),
-                           'action__path': x}
-                          for x in outs
-                          if x != '' and x != context['__directory']]
+            candidates = [{
+                'word': relpath(x, start=context['__directory']),
+                'abbr': relpath(x, start=context['__directory']) + '/',
+                'action__path': x
+            } for x in outs if x != '' and x != context['__directory']]
         else:
-            candidates = [{'word': x, 'action__path':
-                           join(context['__directory'], x)}
-                          for x in outs if x != '' and x != '.']
+            candidates = [{
+                'word': x, 'abbr': x + '/',
+                'action__path': join(context['__directory'], x)
+            } for x in outs if x != '' and x != '.']
         context['__current_candidates'] += candidates
         if (len(context['__current_candidates']) >=
                 self.vars['min_cache_files']):

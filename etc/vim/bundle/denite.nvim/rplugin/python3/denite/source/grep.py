@@ -4,10 +4,10 @@
 # License: MIT license
 # ============================================================================
 
-import os
 import shlex
 
 from denite import util, process
+from os.path import relpath
 
 from .base import Base
 
@@ -79,13 +79,13 @@ class Source(Base):
         arg = args.get(0, [])
         if arg:
             if isinstance(arg, str):
-                arg = [self.vim.call('expand', arg)]
+                arg = [arg]
             elif not isinstance(arg, list):
                 raise AttributeError('`args[0]` needs to be a `str` or `list`')
         # Windows needs to specify the directory.
         elif context['is_windows']:
             arg = [context['path']]
-        context['__paths'] = arg
+        context['__paths'] = [util.abspath(self.vim, x) for x in arg]
 
         # arguments
         arg = args.get(1, [])
@@ -108,7 +108,7 @@ class Source(Base):
             elif not isinstance(arg, list):
                 raise AttributeError('`args[2]` needs to be a `str` or `list`')
         elif context['input']:
-            arg = context['input']
+            arg = [context['input']]
         else:
             pattern = util.input(self.vim, context, 'Pattern: ')
             if pattern:
@@ -184,19 +184,9 @@ class Source(Base):
         candidates = []
 
         for line in outs:
-            if context['__paths']:
-                if len(context['__paths']) == 1:
-                    result = util.parse_jump_line(context['__paths'][0], line)
-                    if result:
-                        candidates.append(_candidate(result, os.path.relpath(
-                            result[0], start=context['__paths'][0])))
-                else:
-                    result = util.parse_jump_line('', line)
-                    if result:
-                        candidates.append(_candidate(result, result[0]))
-            else:
-                result = util.parse_jump_line(context['path'], line)
-                if result:
-                    candidates.append(_candidate(result, os.path.relpath(
-                        result[0], start=context['path'])))
+            result = util.parse_jump_line(context['path'], line)
+            if not result:
+                continue
+            path = relpath(result[0], start=context['path'])
+            candidates.append(_candidate(result, path))
         return candidates
