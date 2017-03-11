@@ -36,6 +36,7 @@ qnpm:                https://www.npmjs.com/search?q=***
 qnull:               http://0.0.0.0/null/***
 qoctopart:           https://octopart.com/parts/search?q=***
 qphysics:            https://physics.stackexchange.com/search?q=***
+qpostgresql:         https://www.postgresql.org/search/?q=***&a=1&submit=Search
 qreddit:             https://www.reddit.com/search?q=***
 qrotten:             https://www.rottentomatoes.com/search/?search=***
 qrubydocs:           https://ruby-doc.com/search.html?q=***
