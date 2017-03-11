@@ -608,6 +608,9 @@ endif
 
 command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
+	set laststatus=2
+	setlocal statusline=%f\ %{go#statusline#Show()}%=%-15(%l,%c%)%P
+
 	noremap! <buffer> <C-h>          <-
 	noremap! <buffer> <C-l>          <Space>:=<Space>
 	nmap     <buffer> <C-]>          <Plug>(go-def)
