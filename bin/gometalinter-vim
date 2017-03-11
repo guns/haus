@@ -10,7 +10,7 @@
 # Aggregate and normalise the output of a whole bunch of Go linters.
 #
 # Flags:
-#       --help                Show context-sensitive help (also try --help-long
+#   -h, --help                Show context-sensitive help (also try --help-long
 #                             and --help-man).
 #       --config=CONFIG       Load JSON configuration from file.
 #   -D, --disable=LINTER ...  Disable previously enabled linters.
@@ -33,7 +33,7 @@
 #   -f, --force               Pass -f to go tool when installing.
 #       --download-only       Pass -d to go tool when installing.
 #   -d, --debug               Display messages for failed linters, etc.
-#   -j, --concurrency=16      Number of concurrent linters to run.
+#   -j, --concurrency=4       Number of concurrent linters to run.
 #   -e, --exclude=REGEXP ...  Exclude messages matching these regular expressions.
 #   -I, --include=REGEXP ...  Include messages matching these regular expressions.
 #   -s, --skip=DIR... ...     Skip directories with this name when expanding
@@ -86,6 +86,7 @@ linters = \
  "interfacer"  => "interfacer {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "lll"         => "lll -g -l {maxlinelength} {path}/*.go:^(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
  "misspell"    => "misspell -j 1 {path}/*.go:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "safesql"     => "safesql {path}:^- (?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+)$",
  "staticcheck" => "staticcheck {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "structcheck" => "structcheck {tests=-t} {path}:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
  # "test"        => "go test {path}:^--- FAIL: .*$\\s+(?P<path>.*?\\.go):(?P<line>\\d+): (?P<message>.*)$",
