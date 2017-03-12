@@ -780,7 +780,7 @@ trigger.New()
 endsnippet
 
 snippet TT "*trigger.T" w
-*trigger.Trigger
+*trigger.T
 endsnippet
 
 snippet deb "breakpoint" w
@@ -803,6 +803,24 @@ snippet hh "http.Handler fn" b
 func $1(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
 	$0
 }
+endsnippet
+
+snippet cwt "context.WithTimeout" w
+ctx, cancel := context.WithTimeout($0)
+defer cancel()
+endsnippet
+
+snippet cwd "context.WithDeadline" w
+ctx, cancel := context.WithDeadline($0)
+defer cancel()
+endsnippet
+
+snippet cb "context.Background" w
+context.Background()
+endsnippet
+
+snippet cc "context.Context" w
+context.Context
 endsnippet
 
 #

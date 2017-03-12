@@ -1,0 +1,55 @@
+snippet ct "create table" b
+CREATE TABLE ${1} (
+	id serial PRIMARY KEY,
+	$0
+);
+endsnippet
+
+snippet dt "drop table" w
+DROP TABLE${1: IF EXISTS} $0;
+endsnippet
+
+snippet ii "insert into" w
+INSERT INTO ${1} VALUES ($0);
+endsnippet
+
+snippet ts "timestamptz" w
+timestamp with time zone
+endsnippet
+
+snippet cu "created/updated" b
+created_at timestamp with time zone NOT NULL,
+updated_at timestamp with time zone NOT NULL
+endsnippet
+
+snippet pk "primary key" w
+PRIMARY KEY
+endsnippet
+
+snippet r "references" w
+REFERENCES ${1}${2: (${3:id})}
+endsnippet
+
+snippet u "unique" w
+UNIQUE
+endsnippet
+
+snippet nn "not null" w
+NOT NULL
+endsnippet
+
+snippet odr "on delete restrict" w
+ON DELETE RESTRICT
+endsnippet
+
+snippet odc "on delete cascade" w
+ON DELETE CASCADE
+endsnippet
+
+snippet our "on update restrict" w
+ON UPDATE RESTRICT
+endsnippet
+
+snippet ouc "on update cascade" w
+ON UPDATE CASCADE
+endsnippet
