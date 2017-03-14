@@ -15,12 +15,13 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-const usagesummary = \`[options]\`
+const usage = \`[options]\`
 
 type options struct {
+	Help bool \`short:"h" long:"help"\`
 }
 
-func (opts *options) validate() error {
+func validate(opts *options, args []string) error {
 	switch {
 	default:
 		return nil
@@ -34,17 +35,12 @@ func abort(err error) {
 	os.Exit(1)
 }
 
-func abortWithHelp(parser *flags.Parser) {
-	parser.WriteHelp(os.Stderr)
-	os.Exit(1)
-}
-
-func getopts(arguments []string) (parser *flags.Parser, opts *options, args []string) {
+func getopts(arguments []string) (opts *options, args []string) {
 	opts = new(options)
 	var err error
 
-	parser = flags.NewNamedParser(path.Base(arguments[0]), flags.HelpFlag|flags.PassDoubleDash)
-	parser.Usage = usagesummary
+	parser := flags.NewNamedParser(path.Base(arguments[0]), flags.PassDoubleDash)
+	parser.Usage = usage
 
 	if _, err = parser.AddGroup("Options", "", opts); err != nil {
 		abort(err)
@@ -54,15 +50,20 @@ func getopts(arguments []string) (parser *flags.Parser, opts *options, args []st
 		abort(err)
 	}
 
-	if err = opts.validate(); err != nil {
+	if opts.Help {
+		parser.WriteHelp(os.Stderr)
+		os.Exit(0)
+	}
+
+	if err = validate(opts, args); err != nil {
 		abort(err)
 	}
 
-	return parser, opts, args
+	return opts, args
 }
 
 func main() {
-	$0// parser, opts, args := getopts(os.Args)
+	$0// opts, args := getopts(os.Args)
 }
 endsnippet
 
@@ -138,6 +139,18 @@ endsnippet
 
 snippet sf "fmt.Sprintf()" w
 fmt.Sprintf($0)
+endsnippet
+
+snippet lf "log.Printf" w
+log.Printf($0)
+endsnippet
+
+snippet lp "log.Print" w
+log.Print($0)
+endsnippet
+
+snippet ll "log.Println" w
+log.Println($0)
 endsnippet
 
 snippet ef "fmt.Errorf()" w
@@ -801,6 +814,12 @@ endsnippet
 
 snippet hh "http.Handler fn" b
 func $1(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
+	$0
+}
+endsnippet
+
+snippet hhm "http.Handler method" b
+func (${1:app *App}) $2(w http.ResponseWriter, r *http.Request${3:, ps httprouter.Params}) {
 	$0
 }
 endsnippet
