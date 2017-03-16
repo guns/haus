@@ -70,7 +70,7 @@ endsnippet
 # when to abbriviate and when not?
 # b doesn't work here, because it ignores whitespace
 # optional local name?
-snippet /^I/ "Import declaration" r
+snippet im "Import declaration" b
 import (
 	"${0:fmt}"
 )
@@ -203,31 +203,31 @@ endsnippet
 
 snippet as "assert" w
 if !(${1}) {
-	t.Errorf("expected: $1${2:, actual: %v}$0")
+	t.Errorf("expected: $1${2:, actual: %#v}$0")
 }
 endsnippet
 
 snippet asf "assert false" w
 if ${1} {
-	t.Errorf("expected: !($1)${2:, actual: %v}$0")
+	t.Errorf("expected: !($1)${2:, actual: %#v}$0")
 }
 endsnippet
 
 snippet ase "assert equal" w
 if ${1:actual} != ${2:expected} {
-	t.Errorf("%v != %v", $1, $2$0)
+	t.Errorf("%#v != %#v", $1, $2$0)
 }
 endsnippet
 
 snippet asde "assert deep equal" w
 if !reflect.DeepEqual(${1:actual}, ${2:expected}) {
-	t.Errorf("%v != %v", $1, $2$0)
+	t.Errorf("%#v != %#v", $1, $2$0)
 }
 endsnippet
 
 snippet asn "assert nil" w
 if ${1:err} != nil {
-	t.Errorf("unexpected${2: error}: %v", $1$0)
+	t.Errorf("unexpected${2: error}: %#v", $1$0)
 }
 endsnippet
 
@@ -240,7 +240,7 @@ endsnippet
 snippet asm "assert match" w
 ${1:r} := regexp.MustCompile(${2})
 if !$1.MatchString(${3}) {
-	t.Errorf("%v !~ %v", $3, $2)$0
+	t.Errorf("%#v !~ %#v", $3, $2)$0
 }
 endsnippet
 
@@ -518,7 +518,7 @@ func main() {
 }
 endsnippet
 
-snippet /^fm/ "Method" r
+snippet /^m/ "Method" r
 func (${1:receiver} *${2:int}) ${3:name}(${4:params})${5/(.+)/ /}(${5:int}) {
 	${0:${VISUAL}}
 }
@@ -813,13 +813,13 @@ signal.Notify(${1:sigch}, syscall.SIG$0)
 endsnippet
 
 snippet hh "http.Handler fn" b
-func $1(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
+func ${1:name}(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
 	$0
 }
 endsnippet
 
 snippet hhm "http.Handler method" b
-func (${1:app *App}) $2(w http.ResponseWriter, r *http.Request${3:, ps httprouter.Params}) {
+func (${1:app *App}) ${2:name}(w http.ResponseWriter, r *http.Request${3:, ps httprouter.Params}) {
 	$0
 }
 endsnippet
