@@ -14,6 +14,10 @@ let b:did_indent = 1
 setlocal indentexpr=GetJavascriptIndent()
 setlocal autoindent nolisp nosmartindent
 setlocal indentkeys+=0],0)
+" Testable with something like:
+" vim  -eNs "+filetype plugin indent on" "+syntax on" "+set ft=javascript" \
+"	"+norm! gg=G" '+%print' '+:q!' testfile.js \
+"	| diff -uBZ testfile.js -
 
 let b:undo_indent = 'setlocal indentexpr< smartindent< autoindent< indentkeys<'
 
@@ -32,7 +36,7 @@ if exists('*shiftwidth')
   endfunction
 else
   function s:sw()
-    return &sw
+    return &l:shiftwidth == 0 ? &l:tabstop : &l:shiftwidth
   endfunction
 endif
 
@@ -58,8 +62,8 @@ let s:syng_com = 'comment\|doc'
 " Expression used to check whether we should skip a match with searchpair().
 let s:skip_expr = "synIDattr(synID(line('.'),col('.'),0),'name') =~? '".s:syng_strcom."'"
 
-function s:parse_cino(f)
-  silent! return float2nr(eval(substitute(substitute(join(split(
+function s:parse_cino(f) abort
+  return float2nr(eval(substitute(substitute(join(split(
         \ matchstr(&cino,'.*'.a:f.'\zs[^,]*'), 's',1), '*'.s:W)
         \ , '^-\=\zs\*','',''), '^-\=\zs\.','0.','')))
 endfunction
@@ -136,22 +140,12 @@ function s:expr_col()
   let bal = 0
   while search('\m[{}?:;]','bW')
     if eval(s:skip_expr) | continue | endif
-    if s:looking_at() == '}'
-      if s:GetPair('{','}','bW',s:skip_expr,200) <= 0
-        return
-      endif
-    elseif s:looking_at() == '{'
-      return getpos('.')[1:2] != b:js_cache[1:] && !s:IsBlock()
-    elseif s:looking_at() == ';'
-      return
-    elseif s:looking_at() == ':'
-      let bal -= getline('.')[max([col('.')-2,0]):col('.')] !~ '::'
-    else
-      let bal += 1
-      if bal > 0
-        return 1
-      endif
-    endif
+    " switch (looking_at())
+    exe {   '}': "if s:GetPair('{','}','bW',s:skip_expr,200) <= 0 | return | endif",
+          \ ';': "return",
+          \ '{': "return getpos('.')[1:2] != b:js_cache[1:] && !s:IsBlock()",
+          \ ':': "let bal -= getline('.')[max([col('.')-2,0]):col('.')] !~ '::'",
+          \ '?': "let bal += 1 | if bal > 0 | return 1 | endif" }[s:looking_at()]
   endwhile
 endfunction
 
@@ -162,11 +156,19 @@ let s:continuation = get(g:,'javascript_continuation',
       \ '\C\%([-+<>=,.~!?/*^%|&:]\|\<\%(typeof\|new\|delete\|void\|in\|instanceof\|await\)\)') . '$'
 
 function s:continues(ln,con)
-  return !cursor(a:ln, match(' '.a:con,s:continuation)) &&
-        \ eval(['s:syn_at(line("."),col(".")) !~? "regex"',
-        \ 'getline(".")[col(".")-2] != tr(s:looking_at(),">","=")',
-        \ 's:previous_token() != "."','s:expr_col()',1][
-        \ match(matchlist(s:looking_at(),'\(\/\)\|\([-+>]\)\|\(\l\)\|\(:\)')[1:],'.')])
+  if !cursor(a:ln, match(' '.a:con,s:continuation))
+    let teol = s:looking_at()
+    if teol == '/'
+      return s:syn_at(line('.'),col('.')) !~? 'regex'
+    elseif teol =~ '[-+>]'
+      return getline('.')[col('.')-2] != tr(teol,'>','=')
+    elseif teol =~ '\l'
+      return s:previous_token() != '.'
+    elseif teol == ':'
+      return s:expr_col()
+    endif
+    return 1
+  endif
 endfunction
 
 " get the line of code stripped of comments and move cursor to the last
@@ -184,21 +186,20 @@ endfunction
 
 " Find line above 'lnum' that isn't empty or in a comment
 function s:PrevCodeLine(lnum)
-  let l:n = prevnonblank(a:lnum)
+  let [l:pos, l:n] = [getpos('.')[1:2], prevnonblank(a:lnum)]
   while l:n
-    if getline(l:n) =~ '^\s*\/[/*]' 
-      if (stridx(getline(l:n),'`') > 0 || getline(l:n-1)[-1:] == '\') &&
-            \ s:syn_at(l:n,1) =~? s:syng_str
-        return l:n
-      endif
+    if getline(l:n) =~ '^\s*\/[/*]'
       let l:n = prevnonblank(l:n-1)
-    elseif getline(l:n) =~ '\([/*]\)\1\@![/*]' && s:syn_at(l:n,1) =~? s:syng_com
-      let l:n = s:save_pos('eval',
-            \ 'cursor('.l:n.',1) + search(''\m\/\*'',"bW")')
+    elseif stridx(getline(l:n), '*/') + 1 && s:syn_at(l:n,1) =~? s:syng_com
+      call cursor(l:n,1)
+      keepjumps norm! [*
+      let l:n = search('\m\S','nbW')
     else
-      return l:n
+      break
     endif
   endwhile
+  call call('cursor',l:pos)
+  return l:n
 endfunction
 
 " Check if line 'lnum' has a balanced amount of parentheses.
@@ -224,11 +225,11 @@ function s:OneScope(lnum)
   let pline = s:Trim(a:lnum)
   let kw = 'else do'
   if pline[-1:] == ')' && s:GetPair('(', ')', 'bW', s:skip_expr, 100) > 0
-    call s:previous_token()
-    let kw = 'for if let while with'
-    if index(split('await each'),s:token()) + 1
+    if s:previous_token() =~# '^\%(await\|each\)$'
       call s:previous_token()
       let kw = 'for'
+    else
+      let kw = 'for if let while with'
     endif
   endif
   return pline[-2:] == '=>' || index(split(kw),s:token()) + 1 &&
@@ -263,6 +264,9 @@ function s:IsBlock()
     if match(s:stack,'\cxml\|jsx') + 1 && s:syn_at(line('.'),col('.')-1) =~? 'xml\|jsx'
       return char != '{'
     elseif char =~ '\k'
+      if char ==# 'type'
+        return s:previous_token() !~# '^\%(im\|ex\)port$'
+      endif
       return index(split('return const let import export extends yield default delete var await void typeof throw case new of in instanceof')
             \ ,char) < (line('.') != l:n) || s:save_pos('s:previous_token') == '.'
     elseif char == '>'
