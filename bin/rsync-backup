@@ -1,0 +1,3 @@
+#!/bin/sh
+
+run rsync -hhh --sparse --partial --archive --one-file-system --acls --xattrs --hard-links --delete --ignore-errors "$@"

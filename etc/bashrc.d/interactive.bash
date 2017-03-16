@@ -467,8 +467,7 @@ xuntar() { untar --xz "$@"; }
 alias op='open 2>/dev/null'
 
 # rsync
-ALIAS rsync='rsync -hhh --sparse --partial' \
-      rsync-backup='rsync --archive --one-file-system --acls --xattrs --hard-links --delete --ignore-errors'
+ALIAS rsync='rsync -hhh --sparse --partial' && TCOMP rsync rsync-backup
 
 # dd
 ALIAS dd='dcfldd' && TCOMP dd dcfldd
