@@ -33,7 +33,7 @@ module NERV::CLI::ReplHelpers
 
   # View integers as dec, oct, hex, and bin
   def toggle_verbose_numbers
-    [Fixnum, Bignum].each do |klass|
+    [Fixnum, Bignum, Integer].each do |klass|
       klass.module_eval do
         class << self
           attr_accessor :verbose_inspect
