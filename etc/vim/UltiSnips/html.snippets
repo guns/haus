@@ -14,14 +14,9 @@ endglobal
 # HTML TAGS #
 #############
 snippet input "Input with Label"
-<label for="${2:${1/[[:alpha:]]+|( )/(?1:-:\L$0)/g}}">$1</label><input type="${3:text/submit/hidden/button}" name="${4:$2}" value="$5"${6: id="${7:$2}"}`!p x(snip)`>
-
+<label for="${2:${1/\w+|( )/(?1:-:\L$0\E)/g}}">$1</label>
+<input type="${3:text/submit/hidden/button/password}" name="${4:$2}"${4: value="$6"}${7: id="${8:$2}"}`!p x(snip)`>
 endsnippet
-
-snippet input "XHTML   <input>"
-<input type="${1:text/submit/hidden/button}" name="${2:some-name}" value="$3"${4: id="${5:$2}"}`!p x(snip)`>
-endsnippet
-
 
 snippet opt "Option"
 <option${1: value="${2:option}"}>${3:$2}</option>
@@ -34,7 +29,6 @@ snippet select "Select Box"
 	$0
 </select>
 endsnippet
-
 
 snippet textarea "XHTML   <textarea>"
 <textarea name="${1:Name}" rows="${2:8}" cols="${3:40}">$0</textarea>
@@ -98,8 +92,8 @@ endsnippet
 
 snippet head "XHTML <head>"
 <head>
-	<meta http-equiv="Content-type" content="text/html; charset=utf-8"`!p x(snip)`>
 	<title>${1:`!p snip.rv = snip.basename or "Page Title"`}</title>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"`!p x(snip)`>
 	$0
 </head>
 endsnippet
@@ -188,8 +182,8 @@ snippet html5 "HTML5 Template"
 <!DOCTYPE html>
 <html>
 <head>
+	<meta charset="utf-8">
 	<title>${1}</title>
-	<meta charset="utf-8" />
 </head>
 <body>
 	$0
@@ -197,7 +191,7 @@ snippet html5 "HTML5 Template"
 </html>
 endsnippet
 
-snippet t "tag"
+snippet t "tag" w
 <${1}>$0</${1/(\S+).*/$1/}>
 endsnippet
 

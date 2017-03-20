@@ -1,1 +1,53 @@
 extends html
+
+snippet def "define" w
+{{define "$1"}}$0{{end}}
+endsnippet
+
+snippet if "if" w
+{{if $1}}$0{{end}}
+endsnippet
+
+snippet ife "if else" w
+{{if $1}}$0{{else}}{{end}}
+endsnippet
+
+snippet el "else" w
+{{else}}
+endsnippet
+
+snippet ra "range" w
+{{range $1}}$0{{end}}
+endsnippet
+
+snippet te "template" w
+{{template $0}}
+endsnippet
+
+snippet bl "block" w
+{{block $1}}$0{{end}}
+endsnippet
+
+snippet wi "with" w
+{{with $1}}$0{{end}}
+endsnippet
+
+snippet in "index" w
+{{index $0}}
+endsnippet
+
+snippet pr "print" w
+{{print $0}}
+endsnippet
+
+snippet pf "printf" w
+{{printf $0}}
+endsnippet
+
+snippet pl "println" w
+{{println $0}}
+endsnippet
+
+snippet cc "cc" w
+{{/* $0 */}}
+endsnippet

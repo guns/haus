@@ -397,6 +397,10 @@ snippet sj "strings.Join()" w
 strings.Join(${1:strings}, ${0:sep})
 endsnippet
 
+snippet fj "filepath.Join()" w
+filepath.Join($0)
+endsnippet
+
 snippet ap "append" w
 ${1} = append($1, $0)
 endsnippet
@@ -574,6 +578,10 @@ $0
 if $2 = $1.Close(); $2 != nil {
 	return $5
 }
+endsnippet
+
+snippet OF "open file" w
+os.OpenFile(${1:path}, os.O_CREATE$0, ${2:0644})
 endsnippet
 
 snippet rm "os.Remove()" w
@@ -812,15 +820,24 @@ snippet sN "signal.Notify" w
 signal.Notify(${1:sigch}, syscall.SIG$0)
 endsnippet
 
-snippet hh "http.Handler fn" b
-func ${1:name}(w http.ResponseWriter, r *http.Request${2:, ps httprouter.Params}) {
+snippet hf "http.Handler fn" b
+func ${1:name}(w http.ResponseWriter, r *http.Request) {
 	$0
 }
 endsnippet
 
-snippet hhm "http.Handler method" b
-func (${1:app *App}) ${2:name}(w http.ResponseWriter, r *http.Request${3:, ps httprouter.Params}) {
+snippet hm "http.Handler method" b
+func (${1:app *App}) ${2:name}(w http.ResponseWriter, r *http.Request) {
 	$0
+}
+endsnippet
+
+snippet hM "http.Handler middleware" b
+func ${1:(${2:app *App}) }${3:name}(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		$0
+		h.ServeHTTP(w, r)
+	})
 }
 endsnippet
 
@@ -840,14 +857,6 @@ endsnippet
 
 snippet cc "context.Context" w
 context.Context
-endsnippet
-
-#
-# SQL
-#
-
-snippet nn "NOT NULL" w
-NOT NULL
 endsnippet
 
 # vim:ft=snippets:
