@@ -35,6 +35,7 @@ qnews:               https://news.google.com/news?q=***
 qnpm:                https://www.npmjs.com/search?q=***
 qnull:               http://0.0.0.0/null/***
 qoctopart:           https://octopart.com/parts/search?q=***
+qowasp:              https://www.owasp.org/index.php?search=***
 qphysics:            https://physics.stackexchange.com/search?q=***
 qpostgresql:         https://www.postgresql.org/search/?q=***&a=1&submit=Search
 qreddit:             https://www.reddit.com/search?q=***
