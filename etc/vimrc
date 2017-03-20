@@ -146,6 +146,10 @@ let g:omni_sql_no_default_maps = 1
 " Markdown
 let g:markdown_fenced_languages = ['vim', 'clojure']
 
+" HTML
+let g:html_indent_inctags = "p"
+let g:html_indent_autotags = "html"
+
 " Plugin: vim-clojure-static
 let g:clojure_align_multiline_strings = 1
 let g:clojure_syntax_keywords = { 'clojureMacro': ['defproject'] }
@@ -216,6 +220,7 @@ let g:tagbar_type_rust = {
 " Plugin: NrrwRgn
 let g:nrrw_rgn_vert = 1
 let g:nrrw_rgn_wdth = 160
+let g:nrrw_rgn_write_on_sync = 1
 
 " Plugin: Regbuf
 let g:regbuf_open_command = 'vnew'
@@ -313,7 +318,7 @@ let g:go_fmt_command = 'goimports'
 " let g:go_doc_command = "godoc"
 " let g:go_doc_options = ''
 " let g:go_bin_path = ""
-" let g:go_snippet_engine = "ultisnips"
+let g:go_snippet_engine = ""
 " let g:go_snippet_case_type = "snakecase"
 " let g:go_get_update = 1
 " let g:go_guru_scope = []
