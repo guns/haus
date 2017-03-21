@@ -51,7 +51,7 @@
 #                             severity, message, linter.
 #   -t, --tests               Include test files for linters that support this
 #                             option
-#       --deadline=5s         Cancel linters if they have not completed within
+#       --deadline=30s        Cancel linters if they have not completed within
 #                             this duration.
 #       --errors              Only show errors.
 #       --json                Generate structured JSON rather than standard
@@ -90,6 +90,7 @@ linters = \
  # "test"        => "go test {path}:^--- FAIL: .*$\\s+(?P<path>.*?\\.go):(?P<line>\\d+): (?P<message>.*)$",
  # "testify"     => "go test {path}:Location:\\s+(?P<path>.*?\\.go):(?P<line>\\d+)$\\s+Error:\\s+(?P<message>[^\\n]+)",
  "unconvert"   => "unconvert {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "unparam"     => "unparam {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "unused"      => "unused {path}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "varcheck"    => "varcheck {path}:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "vet"         => "go tool vet {path}/*.go:^(?:vet:.*?\\.go:\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*))|(?:(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*))$",
