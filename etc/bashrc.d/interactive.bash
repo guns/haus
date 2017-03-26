@@ -950,11 +950,12 @@ HAVE go && {
     gogenerate()      { run go generate "$@"; }
     golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
+    godocserver()     { run godoc -http="127.0.0.1:$((0xD0C))"; }
 
-    ALIAS gl='glide' && {
-        alias glget='run glide get --all-dependencies --strip-vendor'
-        alias glupdate='run glide update --all-dependencies --strip-vendor'
-        alias glinstall='run glide install --strip-vendor'
+    HAVE gb && {
+        alias gbb='run gb build'
+        alias gbv='run gb vendor'
+        alias gbvf='run gb vendor fetch'
     }
 }
 
