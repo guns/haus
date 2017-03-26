@@ -397,8 +397,20 @@ snippet sj "strings.Join()" w
 strings.Join(${1:strings}, ${0:sep})
 endsnippet
 
+snippet stl "strings.ToLower" w
+strings.ToLower($0)
+endsnippet
+
+snippet sts "strings.TrimSpace" w
+strings.TrimSpace($0)
+endsnippet
+
 snippet fj "filepath.Join()" w
 filepath.Join($0)
+endsnippet
+
+snippet pj "path.Join" w
+path.Join($0)
 endsnippet
 
 snippet ap "append" w
@@ -423,13 +435,6 @@ endsnippet
 
 snippet : "key: value" w
 $1: $0,
-endsnippet
-
-snippet ife "if {} else {}" w
-if $1 {
-	$0
-} else {
-}
 endsnippet
 
 snippet ifer "if err != nil { return err }" w
@@ -843,6 +848,10 @@ func ${1:(${2:app *App}) }${3:name}(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+endsnippet
+
+snippet hargs "w http.ResponseWriter, r *http.Request" w
+w http.ResponseWriter, r *http.Request
 endsnippet
 
 snippet cwt "context.WithTimeout" w
