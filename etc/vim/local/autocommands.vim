@@ -94,6 +94,8 @@ augroup GUNS
 	" HAML/SASS/YAML
 	autocmd BufRead,BufNewFile *.rul
 		\ setlocal filetype=yaml
+	autocmd FileType yaml
+		\ SetWhitespace 2
 	autocmd FileType haml,sass
 		\ setlocal iskeyword+=-
 	autocmd FileType haml
