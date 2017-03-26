@@ -2,13 +2,14 @@
 
 set -e
 
+PACKAGES=(
+    github.com/kr/pretty
+    golang.org/x/tools/cmd/benchcmp
+    github.com/motemen/gor
+    github.com/derekparker/delve/cmd/dlv
+    github.com/constabulary/gb/...
+)
+
 run vim -c 'setfiletype go | exe "GoUpdateBinaries" | quit'
 run gometalinter --install --update
-run go get -u -v github.com/Masterminds/glide \
-                 github.com/derekparker/delve/cmd/dlv \
-                 github.com/kr/pretty \
-                 github.com/motemen/gore \
-                 golang.org/x/tools/cmd/benchcmp \
-                 github.com/UnnoTed/fileb0x \
-                 github.com/mattes/migrate \
-                 github.com/vattle/sqlboiler
+run go get -u -v "${PACKAGES[@]}"
