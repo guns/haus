@@ -25,6 +25,7 @@ splitjoin-perl	splitjoin.txt	/*splitjoin-perl*
 splitjoin-php	splitjoin.txt	/*splitjoin-php*
 splitjoin-python	splitjoin.txt	/*splitjoin-python*
 splitjoin-ruby	splitjoin.txt	/*splitjoin-ruby*
+splitjoin-rust	splitjoin.txt	/*splitjoin-rust*
 splitjoin-settings	splitjoin.txt	/*splitjoin-settings*
 splitjoin-tex	splitjoin.txt	/*splitjoin-tex*
 splitjoin-usage	splitjoin.txt	/*splitjoin-usage*
@@ -36,6 +37,7 @@ splitjoin_coffee_suffix_if_clause	splitjoin.txt	/*splitjoin_coffee_suffix_if_cla
 splitjoin_curly_brace_padding	splitjoin.txt	/*splitjoin_curly_brace_padding*
 splitjoin_handlebars_closing_bracket_on_same_line	splitjoin.txt	/*splitjoin_handlebars_closing_bracket_on_same_line*
 splitjoin_handlebars_hanging_arguments	splitjoin.txt	/*splitjoin_handlebars_hanging_arguments*
+splitjoin_html_attributes_bracket_on_new_line	splitjoin.txt	/*splitjoin_html_attributes_bracket_on_new_line*
 splitjoin_normalize_whitespace	splitjoin.txt	/*splitjoin_normalize_whitespace*
 splitjoin_perl_brace_on_same_line	splitjoin.txt	/*splitjoin_perl_brace_on_same_line*
 splitjoin_python_brackets_on_separate_lines	splitjoin.txt	/*splitjoin_python_brackets_on_separate_lines*
