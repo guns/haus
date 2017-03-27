@@ -24,7 +24,9 @@ rails-:AS	rails.txt	/*rails-:AS*
 rails-:AT	rails.txt	/*rails-:AT*
 rails-:AV	rails.txt	/*rails-:AV*
 rails-:Cd	rails.txt	/*rails-:Cd*
+rails-:Console	rails.txt	/*rails-:Console*
 rails-:Ctags	rails.txt	/*rails-:Ctags*
+rails-:Destroy	rails.txt	/*rails-:Destroy*
 rails-:Econtroller	rails.txt	/*rails-:Econtroller*
 rails-:Eenvironment	rails.txt	/*rails-:Eenvironment*
 rails-:Efixtures	rails.txt	/*rails-:Efixtures*
@@ -45,7 +47,11 @@ rails-:Estylesheet	rails.txt	/*rails-:Estylesheet*
 rails-:Etask	rails.txt	/*rails-:Etask*
 rails-:Eunittest	rails.txt	/*rails-:Eunittest*
 rails-:Eview	rails.txt	/*rails-:Eview*
+rails-:Extract	rails.txt	/*rails-:Extract*
+rails-:Generate	rails.txt	/*rails-:Generate*
 rails-:Lcd	rails.txt	/*rails-:Lcd*
+rails-:Preview	rails.txt	/*rails-:Preview*
+rails-:Preview!	rails.txt	/*rails-:Preview!*
 rails-:R	rails.txt	/*rails-:R*
 rails-:RD	rails.txt	/*rails-:RD*
 rails-:RE	rails.txt	/*rails-:RE*
@@ -98,7 +104,10 @@ rails-:Rstylesheet	rails.txt	/*rails-:Rstylesheet*
 rails-:Rtags	rails.txt	/*rails-:Rtags*
 rails-:Rtask	rails.txt	/*rails-:Rtask*
 rails-:Runittest	rails.txt	/*rails-:Runittest*
+rails-:Runner	rails.txt	/*rails-:Runner*
 rails-:Rview	rails.txt	/*rails-:Rview*
+rails-:Server	rails.txt	/*rails-:Server*
+rails-:Server!	rails.txt	/*rails-:Server!*
 rails-:autocmd	rails.txt	/*rails-:autocmd*
 rails-abbreviations	rails.txt	/*rails-abbreviations*
 rails-abolish	rails.txt	/*rails-abolish*
