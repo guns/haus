@@ -376,6 +376,7 @@ let s:delimiterMap = {
     \ 'sgmldecl': { 'left': '--', 'right': '--' },
     \ 'sgmllnx': { 'left': '<!--', 'right': '-->' },
     \ 'sh': { 'left': '#' },
+    \ 'shader_test': { 'left': '#' },
     \ 'sicad': { 'left': '*' },
     \ 'sile': { 'left': '%' },
     \ 'simula': { 'left': '%', 'leftAlt': '--' },
