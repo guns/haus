@@ -27,6 +27,8 @@ IMPROVEMENTS:
 * Document 'noshowmode' requirement for echo_go_info [gh-1197]
 * Improve godoc view for vertical splits [gh-1195]
 * Set GOPATH for both possible go guru execution paths (sync and async) [gh-1193]
+* Improve docs for :GoDef usage [gh-1242]
+* Highlight trimming syntax for Go templates [gh-1235]
 
 BUG FIXES:
 
@@ -44,6 +46,7 @@ BUG FIXES:
 * Fix `:GoAddTags` not working if any field comment would contain `{}` [gh-1189]
 * Respect go_fmt_options when running goimports [gh-1211]
 * Set the filename in the location-list when there is an error with :GoFmt [gh-1199]
+* Fux `:GoInstall` to accept additional arguments if async mode was enabled [gh-1246]
 
 BACKWARDS INCOMPATIBILITIES:
 
