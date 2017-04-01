@@ -311,7 +311,8 @@ noremap <Leader>! :<C-u>execute 'silent! ! open ' . expand('%')<CR>
 noremap <4-,> :<C-u>execute 'Sh xecho title ' . shellescape(fnamemodify(getcwd(), ':p:h:t'))<CR>
 
 " Change directory to current file's parent
-noremap <4-.> :<C-u>cd %:h \| echo getcwd()<CR>
+noremap <4-.>  :<C-u>cd %:h \| echo getcwd()<CR>
+noremap <4-lt> :<C-u>cd .. \| echo getcwd()<CR>
 
 """ Buffer commands {{{1
 
