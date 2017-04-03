@@ -715,6 +715,15 @@ function! s:Grepqflist(match, pat)
 	call setloclist(0, filter(getloclist(0), "bufname(v:val['bufnr']) . v:val['text'] " . (a:match ? '=~' : '!~') . " a:pat"))
 endfunction
 
+command! -bar ClearQuickfix call <SID>ClearQuickfix()
+function! s:ClearQuickfix()
+	if getwininfo(bufwinid('%'))[0]['loclist']
+		call setloclist(0, []) | lclose
+	else
+		call setqflist([]) | cclose
+	end
+endfunction
+
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
 function! s:ToggleMinorWindows()
 	if empty(filter(map(tabpagebuflist(), 'getbufvar(v:val, "&buftype")'), 'v:val == "quickfix"'))
