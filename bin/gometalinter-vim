@@ -5,13 +5,12 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 #
-# usage: gometalinter [<flags>] [<path>...]
+# usage: gometalinter [<flags>] [<path> ...]
 #
 # Aggregate and normalise the output of a whole bunch of Go linters.
 #
 # Flags:
-#   -h, --help                Show context-sensitive help (also try --help-long
-#                             and --help-man).
+#   -h, --help                Show context-sensitive help.
 #       --config=CONFIG       Load JSON configuration from file.
 #   -D, --disable=LINTER ...  Disable previously enabled linters.
 #   -E, --enable=LINTER ...   Enable previously disabled linters.
