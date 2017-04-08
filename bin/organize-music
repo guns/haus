@@ -1,0 +1,173 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2017 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'find'
+require 'fileutils'
+require 'digest/sha1'
+require 'taglib'
+
+class OrganizeMusic
+  DEFAULTS = {
+    :copy => false,
+    :outdir => '.',
+    :verbose => false,
+    :noop => false,
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Organize music files using metadata. Requires taglib-ruby.
+
+        Usage: #{File.basename __FILE__} [options] path …
+
+        Options:
+      BANNER
+
+      opt.on '-c', '--copy', 'Copy files instead of moving them' do
+        @copy = true
+      end
+
+      opt.on '-d', '--outdir DIR' do |arg|
+        if File.exists? arg and not File.directory? arg
+          abort "outdir #{arg.inspect} exists and is not a directory"
+        end
+        @outdir = arg
+      end
+
+      opt.on '-n', '--noop' do
+        @noop = true
+      end
+
+      opt.on '-v', '--verbose' do
+        @verbose = true
+      end
+    end
+  end
+
+  def fopts
+    { :noop => @noop }
+  end
+
+  def log msg, sgr = '32'
+    warn "\e[#{sgr}m#{msg}\e[0m"
+  end
+
+  def blank? x
+    x.nil? or x.size == 0
+  end
+
+  def open file
+    TagLib::FileRef.open file do |fileref|
+      if fileref.null?
+        log "IGNORING untagged file #{file.inspect}", 33 if @verbose
+        return
+      else
+        puts file if @verbose
+      end
+      yield fileref.tag
+    end
+  end
+
+  def v x, default = 'UNKNOWN'
+    case x
+    when String
+      blank?(x) ? default : x
+    when Integer
+      x == 0 ? default : '%02d ' % x
+    else
+      raise ArgumentError
+    end
+  end
+
+  def newpath file, tag, suffix = nil
+    ext = File.extname file
+
+    dst = File.join @outdir, '%s - %s/%s%s' % [
+      v(tag.artist),
+      v(tag.album),
+      v(tag.track, ''),
+      v(tag.title, File.basename(file, File.extname(file)).sub(/\A#{'%02d' % tag.track} */, '')),
+    ]
+
+    if suffix
+      dst << ".#{suffix}"
+    end
+
+    dst << ext
+  end
+
+  def hexdigest file
+    Digest::SHA1.hexdigest File.read(file)
+  end
+
+  def move src, dst
+    if File.expand_path(src) == File.expand_path(dst)
+      log "IGNORING move of #{src.inspect} to itself", '33' if @verbose
+      return
+    elsif File.exists? dst
+      # NB. This is an expensive safeguard, but if it's redundant the two
+      #     files will hopefully be in the kernel disk cache
+      if hexdigest(src) != hexdigest(dst)
+        log "REFUSING to overwrite #{dst.inspect} with #{src.inspect}", '31;1'
+        return
+      else
+        log "WARNING: Overwriting #{dst.inspect} with #{src.inspect}", '35'
+      end
+    end
+
+    FileUtils.mkdir_p File.dirname(dst), fopts
+
+    if @copy
+      FileUtils.cp src, dst, fopts
+    else
+      FileUtils.mv src, dst, fopts
+      FileUtils.rmdir File.expand_path(File.dirname(src)), fopts.merge(:parents => true)
+    end
+  end
+
+  def rename! src
+    open src do |tag|
+      dst = newpath src, tag
+
+      if File.exists? dst
+        src_hash = hexdigest src
+        dst_hash = hexdigest dst
+
+        if src_hash != dst_hash
+          dst = newpath src, tag, src_hash
+        end
+      end
+
+      # At this point dst does not exist, or it is the same file as src
+      move src, dst
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.size == 0
+
+    args.each do |arg|
+      if File.directory? arg
+        Find.find arg do |f|
+          next if File.directory? f
+          rename! f
+        end
+      else
+        rename! arg
+      end
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and OrganizeMusic.new.run ARGV if $0 == __FILE__
