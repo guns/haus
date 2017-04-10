@@ -162,6 +162,7 @@ CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdTMP           /tmp
 CD_FUNC cdvar           /var
 CD_FUNC cdmachines      /var/lib/machines
+CD_FUNC cdpostgres      /var/lib/postgres
 CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg
 CD_FUNC cdwww           /srv/http /srv/www /var/www
