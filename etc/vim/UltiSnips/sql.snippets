@@ -18,8 +18,8 @@ timestamp with time zone
 endsnippet
 
 snippet cu "created/updated" b
-created_at timestamp with time zone NOT NULL,
-updated_at timestamp with time zone NOT NULL
+created_at timestamp with time zone DEFAULT now() NOT NULL,
+updated_at timestamp with time zone DEFAULT now() NOT NULL
 endsnippet
 
 snippet pk "primary key" w
@@ -64,4 +64,12 @@ endsnippet
 
 snippet ouc "on update cascade" w
 ON UPDATE CASCADE
+endsnippet
+
+snippet ci "create index" w
+CREATE${1: UNIQUE} INDEX${2: CONCURRENTLY} ${3:name} ON ${4:table} ($0);
+endsnippet
+
+snippet di "di" w
+DROP INDEX${1: CONCURRENTLY}${2: IF EXISTS} ${0:name…}${4: CASCADE};
 endsnippet

@@ -96,7 +96,7 @@ const $1 = $0
 endsnippet
 
 snippet V "var" w
-var ${1:name} ${0:int}
+var ${1:name} ${0:type}
 endsnippet
 
 snippet ve "var err error" w
@@ -171,7 +171,7 @@ endsnippet
 
 snippet iota "Iota constant generator" b
 const (
-	${1:constant}${2/(.+)/ /}${2:int} = iota
+	${1:constant}${2/(.+)/ /}${2:type} = iota
 )
 endsnippet
 
@@ -499,6 +499,8 @@ defer func() {
 	${1:e} := $0
 	if ${2:err} == nil {
 		$2 = $1
+	} else {
+		$2 = errors.New($2.Error() + ", " + $1.Error())
 	}
 }()
 endsnippet
@@ -528,19 +530,19 @@ func main() {
 endsnippet
 
 snippet /^m/ "Method" r
-func (${1:receiver} *${2:int}) ${3:name}(${4:params})${5/(.+)/ /}(${5:int}) {
+func (${1:receiver} *${2:type}) ${3:name}(${4:params})${5/(.+)/ /}(${5}) {
 	${0:${VISUAL}}
 }
 endsnippet
 
 snippet /^f/ "Function" !r
-func ${1}(${2})${3/(.+)/ /}(${3:int}) {
+func ${1}(${2})${3/(.+)/ /}(${3}) {
 	${0:${VISUAL}}
 }
 endsnippet
 
 snippet fn "Closure" w
-func(${1})${2/(.+)/ /}(${2:int}) {
+func(${1})${2/(.+)/ /}(${2}) {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -604,7 +606,7 @@ if _, ${1:err} ${2::}= os.Stat($3); os.IsNotExist(err) {
 endsnippet
 
 snippet fd "function decl" w
-func($1)${2/(.+)/ /}(${2:int})
+func($1)${2/(.+)/ /}(${2})
 endsnippet
 
 snippet r "return" w
@@ -870,6 +872,22 @@ endsnippet
 
 snippet cc "context.Context" w
 context.Context
+endsnippet
+
+snippet ze "zap.Error(err)" w
+zap.Error(${1:err})
+endsnippet
+
+snippet zs "zap.String()" w
+zap.String("$1", $0)
+endsnippet
+
+snippet ior "io.Reader" w
+io.Reader
+endsnippet
+
+snippet iow "io.Writer" w
+io.Writer
 endsnippet
 
 # vim:ft=snippets:
