@@ -63,11 +63,9 @@ you should read `:help provider-python`.
 
 * quickmatch feature
 
-* file and file:new source
+* file:new source
 
 * `--no-split`, `--tab` option
-
-* tag and tag:include source
 
 * [`defx`](https://github.com/Shougo/defx.nvim) support
 

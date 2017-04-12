@@ -268,6 +268,8 @@ COMMANDS 						*denite-commands*
 :DeniteProjectDir [{options}] {sources}			*:DeniteProjectDir*
 		Equivalent to |:Denite| except that it targets the project
 		directory.
+		Note: You can change the rooted directory by
+		|denite-options-path| instead of |getcwd()|.
 
 ------------------------------------------------------------------------------
 KEY MAPPINGS 						*denite-key-mappings*
@@ -995,6 +997,11 @@ OPTIONS							*denite-options*
 		Enable statusline.
 		Default: true
 
+						*denite-options-updatetime*
+-updatetime={time}
+		Specify the buffer updatetime when narrowing.
+		Default: 500
+
 					*denite-options-use-default-mappings*
 -use-default-mappings
 		Enable default key mappings.
@@ -1051,6 +1058,9 @@ change		Gather results of |:changes|.
 						*denite-source-colorscheme*
 colorscheme	Gather colorschemes and change the colorscheme.
 
+						*denite-source-command*
+command		Gather commands and put on ex-mode.
+
 						*denite-source-command-history*
 command_history	Gather command histories and run it.
 
@@ -1073,6 +1083,10 @@ directory_rec	Gather directories recursive and nominates all directory names
 		command		 the default get directories command
 				(default is used "find" command in Unix
 				environment)
+
+						*denite-source-file*
+file
+		Gather files from the user input.
 
 						*denite-source-file_old*
 file_old
@@ -1128,14 +1142,11 @@ file_rec	Gather files recursive and nominates all file names under the
 filetype	Gather filetypes and change the filetype of the current
 		buffer.
 
-						*denite-source-command*
-command		Gather commands and put on ex-mode.
-
 						*denite-source-grep*
 grep		Gather grep results and nominates them.
-		The source executes [command, default_opts, recursive_opts, args[1]...,
-		`pattern_opt, args[2]`..., separator, args[0]... or final_opts]
-		command line.
+		The source executes [command, default_opts, recursive_opts,
+		args[1]..., `pattern_opt, args[2]`..., separator, args[0]...
+		or final_opts] command line.
 		Note: The command result must be "path:linenr:text" pattern.
 
 		Source args:
@@ -1208,6 +1219,10 @@ outline		Gather outline and jump to the target.
 				(default: [])
 		encoding 	the text encoding
 				(default: 'utf-8')
+
+						*denite-source-tag*
+tag		Gather results of |tagfiles()|.
+
 
 ==============================================================================
 KINDS							*denite-kinds*
@@ -1419,10 +1434,17 @@ kind		(String) or (Kind)		(Optional)
 		The candidates kind name or source specific Kind object.
 
 					*denite-source-attribute-syntax_name*
-syntax_name		(String)			(Optional)
+syntax_name		(String)		(Optional)
 		The source syntax highlight name.
 
 		If you omit it, "deniteSource_{source-name}" is used.
+
+				*denite-source-attribute-max_candidates*
+max_candidates		(Number)		(Optional)
+		If the candidates are more than it, denite will ignore the
+		filtering in asynchronous mode.
+
+		If you omit it, 10000 is used.
 
 					*denite-source-attribute-matchers*
 matchers	(List)				(Optional)
@@ -1693,6 +1715,12 @@ Q: I want to close denite buffer if grep results are empty.
 
 A: >
 	:Denite -no-empty grep
+
+Q: grep source is very slow.
+
+A: Because your machine is very slow.  The modern grep command like ripgrep is
+optimized for modern multi core processors.  It uses 4 processes heavily.
+More than a quad core CPU is recommended.  A dual core CPU is very slow.
 
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*

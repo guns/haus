@@ -46,7 +46,8 @@ function! denite#helper#call_denite(command, args, line1, line2) abort
   elseif a:command ==# 'DeniteBufferDir'
     let context.path = fnamemodify(bufname('%'), ':p:h')
   elseif a:command ==# 'DeniteProjectDir'
-    let context.path = denite#util#path2project_directory(getcwd())
+    let context.path = denite#util#path2project_directory(
+          \ get(context, 'path', getcwd()))
   endif
 
   call denite#start(args, context)
@@ -138,6 +139,21 @@ function! s:eval_cmdline(cmdline) abort
 
   return cmdline
 endfunction
+
+function! denite#helper#has_cmdline() abort
+  if !exists('*getcompletion')
+    return 0
+  endif
+
+  try
+    call getcompletion('', 'cmdline')
+  catch
+    return 0
+  endtry
+
+  return 1
+endfunction
+
 
 function! denite#helper#_set_oldfiles(oldfiles) abort
   let v:oldfiles = a:oldfiles

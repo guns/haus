@@ -45,19 +45,21 @@ class Denite(object):
 
     def gather_candidates(self, context):
         for source in self._current_sources:
-            source.context['is_redraw'] = context['is_redraw']
-            source.context['messages'] = context['messages']
-            source.context['mode'] = context['mode']
-            source.context['prev_input'] = context['input']
-            source.context['event'] = 'gather'
+            ctx = source.context
+            ctx['is_redraw'] = context['is_redraw']
+            ctx['messages'] = context['messages']
+            ctx['mode'] = context['mode']
+            ctx['prev_input'] = context['input']
+            ctx['event'] = 'gather'
+            ctx['async_timeout'] = 0.01
 
             candidates = self._gather_source_candidates(
                 source.context, source)
 
-            source.context['all_candidates'] = candidates
-            source.context['candidates'] = candidates
+            ctx['all_candidates'] = candidates
+            ctx['candidates'] = candidates
 
-            context['messages'] = source.context['messages']
+            context['messages'] = ctx['messages']
 
     def _gather_source_candidates(self, context, source):
         max_len = context['max_candidate_width'] * 2
@@ -70,16 +72,21 @@ class Denite(object):
         for source in self._current_sources:
             ctx = source.context
             ctx['input'] = context['input']
-            if ctx['is_interactive'] and ctx['prev_input'] != ctx['input']:
+            ctx['mode'] = context['mode']
+            ctx['async_timeout'] = 0.05 if ctx['mode'] != 'insert' else 0.03
+            if ctx['prev_input'] != ctx['input'] and ctx['is_interactive']:
                 ctx['event'] = 'interactive'
                 ctx['all_candidates'] = self._gather_source_candidates(
                     ctx, source)
-                ctx['prev_input'] = ctx['input']
+            ctx['prev_input'] = ctx['input']
             entire = ctx['all_candidates']
             if ctx['is_async']:
                 ctx['event'] = 'async'
                 entire += self._gather_source_candidates(ctx, source)
-            if not entire:
+            if not entire or (ctx['is_async'] and
+                              len(entire) > source.max_candidates and
+                              ctx['input']):
+                yield source.name, entire, []
                 continue
             partial = []
             ctx['candidates'] = entire
