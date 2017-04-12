@@ -24,6 +24,7 @@ rails-:AS	rails.txt	/*rails-:AS*
 rails-:AT	rails.txt	/*rails-:AT*
 rails-:AV	rails.txt	/*rails-:AV*
 rails-:Cd	rails.txt	/*rails-:Cd*
+rails-:Clogfile	rails.txt	/*rails-:Clogfile*
 rails-:Console	rails.txt	/*rails-:Console*
 rails-:Ctags	rails.txt	/*rails-:Ctags*
 rails-:Destroy	rails.txt	/*rails-:Destroy*
@@ -61,7 +62,6 @@ rails-:RV	rails.txt	/*rails-:RV*
 rails-:Rabbrev	rails.txt	/*rails-:Rabbrev*
 rails-:Rabbrev!	rails.txt	/*rails-:Rabbrev!*
 rails-:Rails	rails.txt	/*rails-:Rails*
-rails-:Rails-new	rails.txt	/*rails-:Rails-new*
 rails-:Rake	rails.txt	/*rails-:Rake*
 rails-:Rake!	rails.txt	/*rails-:Rake!*
 rails-:Rcd	rails.txt	/*rails-:Rcd*
@@ -115,16 +115,18 @@ rails-about	rails.txt	/*rails-about*
 rails-alternate	rails.txt	/*rails-alternate*
 rails-alternate-related	rails.txt	/*rails-alternate-related*
 rails-autocommands	rails.txt	/*rails-autocommands*
-rails-commands	rails.txt	/*rails-commands*
 rails-config/projections.json	rails.txt	/*rails-config\/projections.json*
 rails-configuration	rails.txt	/*rails-configuration*
 rails-dbext	rails.txt	/*rails-dbext*
+rails-default-task	rails.txt	/*rails-default-task*
+rails-exec	rails.txt	/*rails-exec*
 rails-gf	rails.txt	/*rails-gf*
 rails-global-settings	rails.txt	/*rails-global-settings*
 rails-integration	rails.txt	/*rails-integration*
 rails-introduction	rails.txt	/*rails-introduction*
 rails-license	rails.txt	/*rails-license*
 rails-migrations	rails.txt	/*rails-migrations*
+rails-misc	rails.txt	/*rails-misc*
 rails-navigation	rails.txt	/*rails-navigation*
 rails-options	rails.txt	/*rails-options*
 rails-partials	rails.txt	/*rails-partials*
@@ -141,11 +143,9 @@ rails-projection-template	rails.txt	/*rails-projection-template*
 rails-projection-test	rails.txt	/*rails-projection-test*
 rails-projections	rails.txt	/*rails-projections*
 rails-rake	rails.txt	/*rails-rake*
-rails-rake-defaults	rails.txt	/*rails-rake-defaults*
 rails-refactoring	rails.txt	/*rails-refactoring*
 rails-related	rails.txt	/*rails-related*
 rails-rspec	rails.txt	/*rails-rspec*
-rails-scripts	rails.txt	/*rails-scripts*
 rails-snippets	rails.txt	/*rails-snippets*
 rails-surround	rails.txt	/*rails-surround*
 rails-syntax	rails.txt	/*rails-syntax*
