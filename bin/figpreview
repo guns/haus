@@ -13,7 +13,9 @@ class Figpreview
   DEFAULTS = {
     :width => 1000,
     :kerning => 0,
-    :message => nil
+    :message => nil,
+    :figlet => true,
+    :toilet => true,
   }
 
   def initialize opts = {}
@@ -46,6 +48,16 @@ class Figpreview
       opt.on '-r', '--random', 'Pick a single random font' do
         @random = true
       end
+
+      opt.on '-F', '--figlet-only', 'Only preview .flf fonts' do
+        @figlet = true
+        @toilet = false
+      end
+
+      opt.on '-T', '--toilet-only', 'Only preview .tlf fonts' do
+        @figlet = false
+        @toilet = true
+      end
     end
   end
 
@@ -68,8 +80,14 @@ class Figpreview
     @fonts ||= begin
       table = {}
 
+      ext = case
+      when @figlet && @toilet then '[ft]lf'
+      when @figlet            then 'flf'
+      when @toilet            then 'tlf'
+      end
+
       fontdirs.each do |base|
-        Dir["#{base}/figlet/{,fonts/}*.[ft]lf"].each do |font|
+        Dir["#{base}/figlet/{,fonts/}*.#{ext}"].each do |font|
           case File.extname(font)
           when '.flf'
             table.store Digest::MD5.hexdigest(File.read(font).lines.drop(1).join), font
