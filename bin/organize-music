@@ -78,12 +78,23 @@ class OrganizeMusic
     end
   end
 
+  def sanitize x
+    case x
+    when String
+      x.tr('/', '_').gsub(/[^\p{Print}]/, '_')
+    else
+      x
+    end
+  end
+
   def v x, default = 'UNKNOWN'
     case x
     when String
-      blank?(x) ? default : x
+      blank?(x) ? default : sanitize(x)
     when Integer
       x == 0 ? default : '%02d ' % x
+    when nil
+      default
     else
       raise ArgumentError
     end
