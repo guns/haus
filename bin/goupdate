@@ -8,6 +8,8 @@ PACKAGES=(
     github.com/motemen/gore
     github.com/derekparker/delve/cmd/dlv
     github.com/constabulary/gb/...
+    github.com/jteeuwen/go-bindata/...
+    github.com/oschwald/geoip2-golang
 )
 
 run vim -c 'setfiletype go | exe "GoUpdateBinaries" | quit'
