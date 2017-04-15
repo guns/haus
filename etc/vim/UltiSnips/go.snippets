@@ -175,7 +175,7 @@ const (
 )
 endsnippet
 
-snippet b "Benchmark" b
+snippet /^b/ "Benchmark" r
 func Benchmark$1(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		$0
@@ -503,6 +503,10 @@ defer func() {
 		$2 = errors.New($2.Error() + ", " + $1.Error())
 	}
 }()
+endsnippet
+
+snippet ej "errjoin.Join" w
+errjoin.Join("${1:; }", $0)
 endsnippet
 
 snippet mk "make()" w
@@ -888,6 +892,14 @@ endsnippet
 
 snippet iow "io.Writer" w
 io.Writer
+endsnippet
+
+snippet hes "hex.EncodeToString()" w
+hex.EncodeToString($0)
+endsnippet
+
+snippet hds "hex.DecodeString()" w
+${1:${2:bs}, ${3:err} ${4::}= }hex.DecodeString($0)
 endsnippet
 
 # vim:ft=snippets:
