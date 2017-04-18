@@ -589,7 +589,7 @@ nmap gA <Plug>(LiveEasyAlign)
 vmap gA <Plug>(LiveEasyAlign)
 
 " Plugin: Denite.vim
-noremap <Leader>u :<C-u>Denite<Space>
+noremap <Leader>d :<C-u>Denite<Space>
 Mapall <4-o> :<C-u>DeniteOpen<CR>
 Mapall <4-t> :<C-u>tabnew \\\| DeniteOpen<CR>
 Mapall <4-V> :<C-u>vsplit \\\| DeniteOpen<CR>
