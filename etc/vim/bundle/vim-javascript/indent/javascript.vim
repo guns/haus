@@ -11,6 +11,7 @@ endif
 let b:did_indent = 1
 
 " indent correctly if inside <script>
+" vim/vim@690afe1 for the switch from cindent
 let b:html_indent_script1 = 'inc'
 
 " Now, set up our indentation expression and keys that trigger it.
@@ -195,6 +196,10 @@ function s:PrevCodeLine(lnum)
   let [l:pos, l:n] = [getpos('.')[1:2], prevnonblank(a:lnum)]
   while l:n
     if getline(l:n) =~ '^\s*\/[/*]'
+      if (stridx(getline(l:n),'`') > 0 || getline(l:n-1)[-1:] == '\') &&
+            \ s:syn_at(l:n,1) =~? s:syng_str
+        return l:n
+      endif
       let l:n = prevnonblank(l:n-1)
     elseif stridx(getline(l:n), '*/') + 1 && s:syn_at(l:n,1) =~? s:syng_com
       call cursor(l:n,1)
