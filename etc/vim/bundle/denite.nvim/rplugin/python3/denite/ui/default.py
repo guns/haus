@@ -73,8 +73,6 @@ class Default(object):
                 self.move_to_next_line()
             elif context['cursor_pos'] == '-1':
                 self.move_to_prev_line()
-            if self.check_empty():
-                return self._result
             if context['refresh']:
                 self.redraw()
         else:
@@ -94,14 +92,10 @@ class Default(object):
             self._current_mode = context['mode']
             self._is_multi = len(sources) > 1
 
-            self._denite.start(self._context)
-
-            self._denite.on_init(self._context)
-
-            self._initialized = True
-
-            self._denite.gather_candidates(self._context)
+            self.init_denite()
+            self.gather_candidates()
             self.update_candidates()
+
             if self.check_empty():
                 return self._result
 
@@ -125,10 +119,13 @@ class Default(object):
         return self._result
 
     def init_buffer(self):
+        self._displayed_texts = []
+
         self._winheight = int(self._context['winheight'])
         self._prev_winid = self._vim.call('win_getid')
         self._prev_bufnr = self._vim.current.buffer.number
         self._prev_tabpagenr = self._vim.call('tabpagenr')
+        self._prev_buflist = self._vim.call('tabpagebuflist')
         self._winrestcmd = self._vim.call('winrestcmd')
         self._winsaveview = self._vim.call('winsaveview')
         self._scroll = int(self._context['scroll'])
@@ -258,7 +255,6 @@ class Default(object):
     def update_candidates(self):
         pattern = ''
         sources = ''
-        self._selected_candidates = []
         self._candidates = []
         for name, entire, partial in self._denite.filter_candidates(
                 self._context):
@@ -453,7 +449,8 @@ class Default(object):
         self._vim.call('win_gotoid', self._prev_winid)
         self._vim.command('silent bdelete! ' + str(self._bufnr))
 
-        if self._vim.call('tabpagenr') == self._prev_tabpagenr:
+        if (self._vim.call('tabpagenr') == self._prev_tabpagenr and
+                self._vim.call('tabpagebuflist') == self._prev_buflist):
             self._vim.command(self._winrestcmd)
 
         # Note: Does not work for line source
@@ -472,8 +469,7 @@ class Default(object):
         return [self._candidates[x] for x in self._selected_candidates]
 
     def redraw(self):
-        self._context['is_redraw'] = True
-        self._denite.gather_candidates(self._context)
+        self.gather_candidates()
         if self.update_candidates():
             self.update_buffer()
         else:
@@ -488,11 +484,21 @@ class Default(object):
 
     def restart(self):
         self.quit_buffer()
-        self._denite.on_init(self._context)
-        self._denite.gather_candidates(self._context)
+        self.init_denite()
+        self.gather_candidates()
         self.init_buffer()
         self.update_candidates()
         self.update_buffer()
+
+    def init_denite(self):
+        self._denite.start(self._context)
+        self._denite.on_init(self._context)
+        self._initialized = True
+
+    def gather_candidates(self):
+        self._context['is_redraw'] = True
+        self._selected_candidates = []
+        self._denite.gather_candidates(self._context)
 
     def do_action(self, action_name):
         candidates = self.get_selected_candidates()

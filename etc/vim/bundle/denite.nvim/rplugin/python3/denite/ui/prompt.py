@@ -1,5 +1,5 @@
 from .action import DEFAULT_ACTION_RULES
-from datetime import timedelta
+from datetime import timedelta, datetime
 from ..prompt.prompt import (
     ACTION_KEYSTROKE_PATTERN,
     Prompt,
@@ -18,6 +18,7 @@ class DenitePrompt(Prompt):
         self.action.unregister('prompt:cancel', fail_silently=True)
 
         self.__previous_text = self.text
+        self.__timeout = datetime.now()
 
     @property
     def text(self):
@@ -43,13 +44,6 @@ class DenitePrompt(Prompt):
     def highlight_cursor(self):
         return self.context.get('highlight_cursor', 'Cursor')
 
-    @property
-    def timeout(self):
-        # Use updatetime option
-        return timedelta(
-            milliseconds=int(self.context['updatetime'])
-        )
-
     def on_init(self):
         # NOTE:
         # 'inputsave' is not required to be called while denite call it
@@ -69,6 +63,9 @@ class DenitePrompt(Prompt):
         return super().on_update(status)
 
     def on_harvest(self):
+        if self.__timeout > datetime.now():
+            return
+
         if self.denite.update_candidates():
             if self.context['reversed']:
                 self.denite.init_cursor()
@@ -93,3 +90,7 @@ class DenitePrompt(Prompt):
         elif self.denite.current_mode == 'insert':
             # Updating text from a keystroke is a feature of 'insert' mode
             self.update_text(str(keystroke))
+
+        self.__timeout = datetime.now() + timedelta(
+                milliseconds=int(self.context['updatetime'])
+            )
