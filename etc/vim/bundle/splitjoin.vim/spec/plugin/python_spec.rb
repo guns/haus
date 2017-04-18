@@ -92,7 +92,7 @@ describe "python" do
   end
 
   specify "splitting within a string" do
-    pending('python default indentation update')
+    pending 'Python indentation broken on TravisCI'
 
     set_file_contents <<-EOF
       run("one", "two", "three {}".format(four))
