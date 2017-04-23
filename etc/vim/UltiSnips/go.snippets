@@ -401,6 +401,14 @@ snippet stl "strings.ToLower" w
 strings.ToLower($0)
 endsnippet
 
+snippet shp "strings.HasPrefix" w
+strings.HasPrefix(${1:string}, ${0:prefix})
+endsnippet
+
+snippet shs "strings.HasSuffix" w
+strings.HasSuffix(${1:string}, ${0:suffix})
+endsnippet
+
 snippet sts "strings.TrimSpace" w
 strings.TrimSpace($0)
 endsnippet
@@ -900,6 +908,10 @@ endsnippet
 
 snippet hds "hex.DecodeString()" w
 ${1:${2:bs}, ${3:err} ${4::}= }hex.DecodeString($0)
+endsnippet
+
+snippet ctc "subtle.ConstantTimeCompare" w
+subtle.ConstantTimeCompare($0)
 endsnippet
 
 # vim:ft=snippets:
