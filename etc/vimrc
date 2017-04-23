@@ -77,7 +77,7 @@ set report=0            " Report back on all changes
 set shortmess=aoOstTAIc " Shorten most messages
 
 " Clipboard
-set clipboard=unnamed           " Use X11 PRIMARY
+set clipboard=unnamed " Use X11 PRIMARY
 
 " Timeouts
 set notimeout ttimeout " Wait for mappings, but timeout on key codes
