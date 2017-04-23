@@ -143,6 +143,7 @@ class Dlnode
     :base_uri => nil,
     :cookie_jar => nil,
     :dir => '.',
+    :dir_from_url => false,
     :format => nil,
     :index => 1,
     :start => 1,
@@ -182,6 +183,10 @@ class Dlnode
 
       opt.on '-d', '--dir PATH', 'Download directory; current working directory by default' do |arg|
         @dir = File.expand_path arg
+      end
+
+      opt.on '-D', '--dir-from-url', 'Set --dir to munged domain + path' do |arg|
+        @dir_from_url = true
       end
 
       opt.on '-f', '--format [DIR/]BASE-%02d', 'Rename resources with given format spec' do |arg|
@@ -340,6 +345,11 @@ class Dlnode
     abort parser.help unless args.size > 1
     url, *rest = args
     url = "file://#{URI.escape File.expand_path(url)}" if url !~ %r{\w+://}
+
+    if @dir_from_url and @dir == DEFAULTS[:dir]
+      u = URI.parse url
+      @dir = [u.host, u.path].map { |x| x.tr('/', '-').gsub(/[^\p{Print}]/, '_') }.join
+    end
 
     case download! url, *rest
     when :no_resources then exit 2
