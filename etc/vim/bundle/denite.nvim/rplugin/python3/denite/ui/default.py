@@ -54,6 +54,8 @@ class Default(object):
             self._context,
             weakref.proxy(self)
         )
+        self._guicursor = ''
+        self._previous_status = ''
 
     def start(self, sources, context):
         if re.search('\[Command Line\]$', self._vim.current.buffer.name):
@@ -73,6 +75,10 @@ class Default(object):
                 self.move_to_next_line()
             elif context['cursor_pos'] == '-1':
                 self.move_to_prev_line()
+
+            if self.check_empty():
+                return self._result
+
             if context['refresh']:
                 self.redraw()
         else:
@@ -131,6 +137,8 @@ class Default(object):
         self._scroll = int(self._context['scroll'])
         if self._scroll == 0:
             self._scroll = round(self._winheight / 2)
+        self._guicursor = self._vim.options['guicursor']
+        self._vim.options['guicursor'] = 'n-v-c:None'
 
         if self._winid > 0 and self._vim.call(
                 'win_gotoid', self._winid):
@@ -294,8 +302,10 @@ class Default(object):
     def update_buffer(self):
         self.update_status()
 
-        self._vim.command('silent! syntax clear deniteMatchedRange')
-        self._vim.command('silent! syntax clear deniteMatchedChar')
+        if self._vim.call('hlexists', 'deniteMatchedRange'):
+            self._vim.command('silent! syntax clear deniteMatchedRange')
+        if self._vim.call('hlexists', 'deniteMatchedChar'):
+            self._vim.command('silent! syntax clear deniteMatchedChar')
         if self._matched_pattern != '':
             self._vim.command(
                 'silent! syntax match deniteMatchedRange /%s/ contained' % (
@@ -311,12 +321,8 @@ class Default(object):
                 self._context['input'].replace(' ', '')
             ))
 
-        del self._vim.current.buffer[:]
-        self._vim.current.buffer.append(self._displayed_texts)
-        del self._vim.current.buffer[0]
+        self._vim.current.buffer[:] = self._displayed_texts
         self.resize_buffer()
-
-        self._options['modified'] = False
 
         self.move_cursor()
 
@@ -326,12 +332,17 @@ class Default(object):
             self._cursor + self._win_cursor,
             self._candidates_len)
         mode = '-- ' + self._current_mode.upper() + ' -- '
-        self._bufvars['denite_statusline_mode'] = mode
-        self._bufvars['denite_statusline_sources'] = self._statusline_sources
-        self._bufvars['denite_statusline_path'] = (
-            '[' + self._context['path'] + ']')
-        self._bufvars['denite_statusline_linenr'] = linenr
-        self._vim.command('redrawstatus')
+        path = '[' + self._context['path'] + ']'
+        bufvars = self._bufvars
+
+        status = mode + self._statusline_sources + path + linenr
+        if status != self._previous_status:
+            bufvars['denite_statusline_mode'] = mode
+            bufvars['denite_statusline_sources'] = self._statusline_sources
+            bufvars['denite_statusline_path'] = path
+            bufvars['denite_statusline_linenr'] = linenr
+            self._vim.command('redrawstatus')
+            self._previous_status = status
 
     def update_cursor(self):
         self.update_displayed_texts()
@@ -366,7 +377,8 @@ class Default(object):
             elif (self._candidates_len < self._winheight):
                 winheight = self._candidates_len
 
-        self._vim.command('resize ' + str(winheight))
+        if self._vim.current.window.height != winheight:
+            self._vim.command('resize ' + str(winheight))
 
     def check_empty(self):
         if self._candidates and self._context['immediately']:
@@ -382,7 +394,8 @@ class Default(object):
     def move_cursor(self):
         if self._win_cursor > self._vim.call('line', '$'):
             self._win_cursor = self._vim.call('line', '$')
-        self._vim.call('cursor', [self._win_cursor, 1])
+        if self._win_cursor != self._vim.call('line', '.'):
+            self._vim.call('cursor', [self._win_cursor, 1])
 
         if self._context['auto_preview']:
             self.do_action('preview')
@@ -439,6 +452,7 @@ class Default(object):
         self._vim.command('highlight! link CursorLine CursorLine')
         if self._vim.call('exists', '#ColorScheme'):
             self._vim.command('silent doautocmd ColorScheme')
+        self._vim.options['guicursor'] = self._guicursor
 
     def quit_buffer(self):
         self.cleanup()
@@ -449,9 +463,9 @@ class Default(object):
         self._vim.call('win_gotoid', self._prev_winid)
         self._vim.command('silent bdelete! ' + str(self._bufnr))
 
-        if (self._vim.call('tabpagenr') == self._prev_tabpagenr and
-                self._vim.call('tabpagebuflist') == self._prev_buflist):
-            self._vim.command(self._winrestcmd)
+        # if (self._vim.call('tabpagenr') == self._prev_tabpagenr and
+        #         self._vim.call('tabpagebuflist') == self._prev_buflist):
+        #     self._vim.command(self._winrestcmd)
 
         # Note: Does not work for line source
         # if self._vim.current.buffer.number == self._prev_bufnr:
