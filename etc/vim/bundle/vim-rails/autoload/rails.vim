@@ -42,16 +42,17 @@ function! s:endswith(string,suffix)
 endfunction
 
 function! s:uniq(list) abort
+  if exists('*uniq')
+    return uniq(a:list)
+  endif
   let i = 0
   let seen = {}
   while i < len(a:list)
-    if (a:list[i] ==# '' && exists('empty')) || has_key(seen,a:list[i])
-      call remove(a:list,i)
-    elseif a:list[i] ==# ''
-      let i += 1
-      let empty = 1
+    let key = string(a:list[i])
+    if has_key(seen, key)
+      call remove(a:list, i)
     else
-      let seen[a:list[i]] = 1
+      let seen[key] = 1
       let i += 1
     endif
   endwhile
@@ -1208,7 +1209,7 @@ function! s:app_rake_tasks() dict abort
   if self.cache.needs('rake_tasks')
     call s:push_chdir()
     try
-      let output = system(self.rake_command().' -T')
+      let output = system(self.rake_command('norails').' -T')
       let lines = split(output, "\n")
     finally
       call s:pop_command()
@@ -1216,7 +1217,7 @@ function! s:app_rake_tasks() dict abort
     if v:shell_error != 0
       return []
     endif
-    call map(lines,'matchstr(v:val,"^rake\\s\\+\\zs[^][ ]\\+")')
+    call map(lines,'matchstr(v:val,"^\\S\\+\\s\\+\\zs[^][ ]\\+")')
     call filter(lines,'v:val != ""')
     call self.cache.set('rake_tasks',s:uniq(['default'] + lines))
   endif
@@ -1249,7 +1250,7 @@ function! s:Rake(bang, lnum, arg) abort
   try
     compiler rails
     let b:current_compiler = 'rake'
-    let &l:makeprg = rails#app().rake_command()
+    let &l:makeprg = rails#app().rake_command('norails')
     let &l:errorformat .= ',chdir '.escape(self.path(), ',')
     let arg = a:arg
     if arg == ''
@@ -1350,11 +1351,11 @@ function! s:readable_default_rake_task(...) dict abort
   let app = self.app()
   let lnum = a:0 ? (a:1 < 0 ? 0 : a:1) : 0
 
-  let taskpat = '\C# rake\s\+\zs.\{-\}\ze\%(\s\s\|#\|$\)'
+  let taskpat = '\C# ra\%(ils\|ke\)\s\+\zs.\{-\}\ze\%(\s\s\|#\|$\)'
   if self.getvar('&buftype') == 'quickfix'
     return '-'
-  elseif self.getline(lnum) =~# '# rake \S'
-    return matchstr(self.getline(lnum),'\C# rake \zs.*')
+  elseif self.getline(lnum) =~# '# ra\%(ils\|ke\) \S'
+    return matchstr(self.getline(lnum),'\C# ra\%(ils\|ke\) \zs.*')
   elseif self.getline(self.last_method_line(lnum)-1) =~# taskpat
     return matchstr(self.getline(self.last_method_line(lnum)-1), taskpat)
   elseif self.getline(self.last_method_line(lnum)) =~# taskpat
@@ -1418,7 +1419,11 @@ function! s:readable_default_rake_task(...) dict abort
   elseif self.name() =~# '\<README'
     return 'about'
   elseif self.type_name('controller') && lnum
-    return 'routes CONTROLLER='.self.controller_name()
+    if self.app().has('rails5')
+      return 'routes -c '.self.controller_name()
+    else
+      return 'routes CONTROLLER='.self.controller_name()
+    endif
   else
     let test = self.test_file()
     let with_line = test
@@ -1459,15 +1464,29 @@ function! s:readable_default_rake_task(...) dict abort
   endif
 endfunction
 
+function! s:rake2rails(task) abort
+  let task = s:gsub(a:task, '^--task$', '')
+  let task = s:gsub(task, '<TEST\w*\=', '')
+  return task
+endfunction
+
+function! s:readable_default_rails_task(...) dict abort
+  return s:rake2rails(call(self.default_rake_task, a:000, self))
+endfunction
+
 function! s:app_rake_command(...) dict abort
+  let cmd = 'rake'
+  if self.has('rails5') && get(a:, 1, '') !=# 'norails' && get(g:, 'rails_make', '') ==# 'rails'
+    let cmd = 'rails'
+  endif
   if get(a:, 1, '') !=# 'static' && self.has_path('.zeus.sock') && executable('zeus')
-    return 'zeus rake'
-  elseif self.has_path('bin/rake')
-    return self.ruby_script_command('bin/rake')
+    return 'zeus ' . cmd
+  elseif self.has_path('bin/' . cmd)
+    return self.ruby_script_command('bin/' . cmd)
   elseif self.has('bundler')
-    return 'bundle exec rake'
+    return 'bundle exec ' . cmd
   else
-    return 'rake'
+    return cmd
   endif
 endfunction
 
@@ -1475,7 +1494,7 @@ function! rails#complete_rake(A,L,P)
   return s:completion_filter(rails#app().rake_tasks(), a:A, ':')
 endfunction
 
-call s:add_methods('readable', ['test_file_candidates', 'test_file', 'default_rake_task'])
+call s:add_methods('readable', ['test_file_candidates', 'test_file', 'default_rake_task', 'default_rails_task'])
 call s:add_methods('app', ['rake_command'])
 
 " }}}1
@@ -1719,8 +1738,7 @@ function! s:Rails(bang, count, arg) abort
       if exists('rake') && !rails#app().has('rails5')
         let &l:makeprg = rails#app().rake_command()
       else
-        let str = s:gsub(str, '<TEST\w*\=', '')
-        let str = s:gsub(str, '<CONTROLLER\=', '-c ')
+        let str = s:rake2rails(str)
         let &l:makeprg = rails#app().prepare_rails_command('$*')
       endif
       let &l:errorformat .= ',chdir '.escape(rails#app().path(), ',')
@@ -1951,6 +1969,7 @@ function! rails#complete_rails(ArgLead, CmdLine, P, ...) abort
     if app.has('rails5')
       call extend(cmds, app.rake_tasks())
     endif
+    call sort(cmds)
     return s:completion_filter(cmds, a:ArgLead)
   elseif cmd =~# '^\%([rt]\|runner\|test\|test:db\)\s\+'
     return s:completion_filter(app.relglob('', s:fuzzyglob(a:ArgLead)), a:ArgLead)
@@ -4003,7 +4022,7 @@ function! rails#log_syntax()
     syn match railslogEscape      '\e\[[0-9;]*m'
     syn match railslogEscapeMN    '\e\[[0-9;]*m' nextgroup=railslogModelNum,railslogEscapeMN skipwhite contained
   endif
-  syn match   railslogQfFileName  "^[^|]*|\@=" nextgroup=railslogQfSeparator
+  syn match   railslogQfFileName  "^[^()|]*|\@=" nextgroup=railslogQfSeparator
   syn match   railslogQfSeparator "|" nextgroup=railslogQfLineNr contained
   syn match   railslogQfLineNr    "[^|]*" contained contains=railslogQfError
   syn match   railslogQfError     "error" contained
@@ -4080,6 +4099,9 @@ endfunction
 
 nnoremap <SID>: :<C-U><C-R>=v:count ? v:count : ''<CR>
 function! s:BufMappings() abort
+  if &includeexpr !~# 'rails#'
+    return
+  endif
   cmap <buffer><script><expr> <Plug><cfile>   rails#cfile('delegate')
   nmap <buffer><silent> <Plug>RailsFind       <SID>:find <Plug><cfile><CR>
   nmap <buffer><silent> <Plug>RailsSplitFind  <SID>:sfind <Plug><cfile><CR>
@@ -4589,11 +4611,13 @@ endfunction
 function! s:combine_projections(dest, src, ...) abort
   let extra = a:0 ? a:1 : {}
   if type(a:src) == type({})
-    for [pattern, original] in items(a:src)
-      let projection = extend(copy(original), extra)
-      if !has_key(projection, 'prefix') && !has_key(projection, 'format')
-        let a:dest[pattern] = s:extend_projection(get(a:dest, pattern, {}), projection)
-      endif
+    for [pattern, value] in items(a:src)
+      for original in type(value) == type([]) ? value : [value]
+        let projection = extend(copy(original), extra)
+        if !has_key(projection, 'prefix') && !has_key(projection, 'format')
+          let a:dest[pattern] = s:extend_projection(get(a:dest, pattern, {}), projection)
+        endif
+      endfor
     endfor
   endif
   return a:dest
@@ -5072,23 +5096,26 @@ function! rails#buffer_setup() abort
     return ''
   endif
   let self = rails#buffer()
+  let ft = self.getvar('&filetype')
   let b:rails_cached_file_type = self.calculate_file_type()
-  call s:BufMappings()
-  call s:BufCommands()
-  if !empty(findfile('macros/rails.vim', escape(&runtimepath, ' ')))
-    runtime! macros/rails.vim
-  endif
-  silent doautocmd User Rails
-  call s:BufProjectionCommands()
-  call s:BufAbbreviations()
+
   call s:SetBasePath()
+  call self.setvar('&suffixesadd', s:sub(self.getvar('&suffixesadd'),'^$','.rb'))
+  let inex = self.getvar('&includeexpr')
+  if inex =~? 'rails\|ruby\|\.rb' || inex !~# '[A-Z#]'
+    call self.setvar('&includeexpr', 'rails#includeexpr(v:fname)')
+  endif
+
   let rp = s:gsub(self.app().path(),'[ ,]','\\&')
   if stridx(&tags,rp.'/tags') == -1
     let &l:tags = rp . '/tags,' . rp . '/tmp/tags,' . &tags
   endif
-  call self.setvar('&includeexpr','rails#includeexpr(v:fname)')
-  call self.setvar('&suffixesadd', s:sub(self.getvar('&suffixesadd'),'^$','.rb'))
-  let ft = self.getvar('&filetype')
+
+  call s:BufMappings()
+  call s:BufCommands()
+  call s:BufProjectionCommands()
+  call s:BufAbbreviations()
+
   if ft =~# '^ruby\>'
     call self.setvar('&define',self.define_pattern())
     " This really belongs in after/ftplugin/ruby.vim but we'll be nice
@@ -5141,7 +5168,9 @@ function! rails#buffer_setup() abort
   endif
 
   compiler rails
-  let b:current_compiler = 'rake'
+  if get(g:, 'rails_make', '') !=# 'rails'
+    let b:current_compiler = 'rake'
+  endif
   let &l:makeprg = self.app().rake_command('static')
   let &l:errorformat .= ',chdir '.escape(self.app().path(), ',')
 
@@ -5153,7 +5182,7 @@ function! rails#buffer_setup() abort
   endif
 
   let dispatch = self.projected('dispatch')
-  if !empty(dispatch) && exists(dir)
+  if !empty(dispatch) && exists('dir')
     call self.setvar('dispatch', dir . dispatch[0])
   elseif self.name() =~# '^public'
     call self.setvar('dispatch', ':Preview')
@@ -5168,7 +5197,7 @@ function! rails#buffer_setup() abort
       call self.setvar('dispatch',
             \ dir .
             \ self.app().ruby_script_command('bin/rails') .
-            \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
+            \ ' `=rails#buffer(' . self['#'] . ').default_rails_task(v:lnum)`')
     else
       call self.setvar('dispatch',
             \ dir . '-compiler=rails ' .
@@ -5176,6 +5205,11 @@ function! rails#buffer_setup() abort
             \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
     endif
   endif
+
+  if !empty(findfile('macros/rails.vim', escape(&runtimepath, ' ')))
+    runtime! macros/rails.vim
+  endif
+  silent doautocmd User Rails
 endfunction
 
 " }}}1

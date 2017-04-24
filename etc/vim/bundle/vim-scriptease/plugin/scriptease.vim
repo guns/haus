@@ -419,7 +419,9 @@ function! s:runtime(bang, ...) abort
       let do[-1] .= ' '.escape(request, " \t|!")
     endif
   endfor
-  call extend(do, ['filetype detect'])
+  if empty(a:bang)
+    call extend(do, ['filetype detect'])
+  endif
   let run = s:unlet_for(unlets)
   if run !=# ''
     let run .= '|'
@@ -704,7 +706,7 @@ augroup scriptease_help
   autocmd FileType vim nnoremap <silent><buffer> K :exe 'help '.<SID>helptopic()<CR>
 augroup END
 
-function! s:helptopic()
+function! s:helptopic() abort
   let col = col('.') - 1
   while col && getline('.')[col] =~# '\k'
     let col -= 1
@@ -734,17 +736,39 @@ function! s:helptopic()
   endif
 endfunction
 
+" }}}1
+" Settings {{{1
+
 function! s:build_path() abort
   let old_path = substitute(&g:path, '\v^\.,/%(usr|emx)/include,,,?', '', '')
   let new_path = escape(&runtimepath, ' ')
   return !empty(old_path) ? old_path.','.new_path : new_path
 endfunction
 
-" }}}1
-" Settings {{{1
+function! scriptease#includeexpr(file) abort
+  if a:file =~# '^\.\=[A-Za-z_]\w*\%(#\w\+\)\+$'
+    let f = substitute(a:file, '^\.', '', '')
+    return 'autoload/'.tr(matchstr(f, '[^.]\+\ze#') . '.vim', '#', '/')
+  endif
+  return substitute(a:file, '<sfile>', '%', 'g')
+endfunction
+
+function! s:cfile() abort
+  let original = expand('<cfile>')
+  let cfile = original
+  if cfile =~# '^\.\=[A-Za-z_]\w*\%(#\w\+\)\+$'
+    return '+djump\ ' . matchstr(cfile, '[^.]*') . ' ' . scriptease#includeexpr(cfile)
+  else
+    return scriptease#includeexpr(cfile)
+  endif
+endfunction
 
 function! s:setup() abort
   setlocal suffixesadd=.vim keywordprg=:help
+  setlocal includeexpr=scriptease#includeexpr(v:fname)
+  setlocal include=^\\s*\\%(so\\%[urce]\\\|ru\\%[untime]\\)[!\ ]\ *
+  setlocal define=^\\s*fu\\%[nction][!\ ]\\s*
+  cnoremap <expr><buffer> <Plug><cfile> <SID>cfile()
   let b:dispatch = ':Runtime'
   command! -bar -bang -buffer Console Runtime|PP
 endfunction
