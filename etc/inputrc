@@ -427,6 +427,7 @@ $if psql
     "\C-xp":        "\C-]\\pset "
     "\C-x\C-t":     "\C-] \\t \n"
     "\C-x\C-x":     "\C-] \\x \n"
+    "\033\007x":    "\C-] \\x \n"
 
     # Connection
     "\C-xc":        "\C-]\\connect "
