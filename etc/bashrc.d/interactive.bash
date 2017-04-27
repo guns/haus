@@ -952,6 +952,7 @@ HAVE go && {
     golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
     godocserver()     { run godoc -http="127.0.0.1:$((0xD0C))"; }
+    gopprof()         { run env PPROF_BINARY_PATH="$PATH" PPROF_TMPDIR='.' rlwrap go tool pprof "$@"; }
 
     HAVE gb && {
         alias gbb='run gb build'
