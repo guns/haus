@@ -502,8 +502,8 @@ snippet de "defer" w
 defer $0
 endsnippet
 
-snippet def "defer func() { _ = … }" w
-defer func() { _ = $0 }()
+snippet def "defer func() {}" w
+defer func() { ${1:errjoin.Join(${2:"; "}, ${3:err}, $0)} }()
 endsnippet
 
 snippet defe "defer func() { …; err = }" w
@@ -592,18 +592,16 @@ if $2 = $1.Close(); $2 != nil {
 }
 endsnippet
 
-snippet W "file, err := os.Create(…)" w
+snippet osc "file, err := os.Create(…)" w
 ${1:file}, ${2:err} ${3::}= os.Create($4)
 if $2 != nil {
-	return ${5:$2}
+	return $2
 }
+defer func() { ${5:err} = errjoin.Join("; ", $2, $1.Close()) }()
 $0
-if $2 = $1.Close(); $2 != nil {
-	return $5
-}
 endsnippet
 
-snippet OF "open file" w
+snippet of "open file" w
 os.OpenFile(${1:path}, os.O_CREATE$0, ${2:0644})
 endsnippet
 
