@@ -151,7 +151,7 @@ class Dlnode
     :connect_timeout => nil,
     :no_download => false,
     :send_referer => false,
-    :user_agent => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36',
+    :user_agent => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36',
     :retry => nil,
     :verbose => false
   }

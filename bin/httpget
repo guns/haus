@@ -14,7 +14,7 @@ end
 
 req = WEBrick::HTTPRequest.new WEBrick::Config::HTTP
 req.parse $stdin
-cmd = %W[curl --progress-bar --location --user-agent #{req.header["user-agent"].first || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"}]
+cmd = %W[curl --progress-bar --location --user-agent #{req.header["user-agent"].first || "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.133 Safari/537.36"}]
 cmd << "-o" << ARGV.first unless ARGV.empty?
 cmd << req.request_uri.to_s
 warn cmd.inspect
