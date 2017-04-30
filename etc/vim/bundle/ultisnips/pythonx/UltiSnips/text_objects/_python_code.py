@@ -249,8 +249,9 @@ class SnippetUtil(object):
     def comments(self):
         """ Returns comments list [left, right] if using NERDCommenter """
         if vim.eval("exists('b:NERDCommenterDelims')"):
-            left, right = [vim.eval("b:NERDCommenterDelims[%s]" % repr(pos)) for pos in 'left', 'right']
+            left = vim.eval("b:NERDCommenterDelims['left']")
             if left: left += ' '
+            right = vim.eval("b:NERDCommenterDelims['right']")
             if right: right = ' ' + right
             return [left, right]
         else:

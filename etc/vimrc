@@ -188,7 +188,7 @@ let g:ScreenImpl = 'Tmux'
 
 " Plugin: UltiSnips
 let g:UltiSnipsNoPythonWarning = 1
-let g:UltiSnipsUsePythonVersion = 2
+let g:UltiSnipsUsePythonVersion = 3
 let g:UltiSnipsEditSplit = 'vertical'
 let g:UltiSnipsSnippetsDir = '~/.vim/UltiSnips'
 let g:UltiSnipsListSnippets = '<4-`>'

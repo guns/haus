@@ -1,6 +1,6 @@
 if exists("b:did_autoload_ultisnips") || !exists("g:_uspy")
     finish
-elseif !(has('python') || has('python3'))
+elseif !(has('python3') || has('python'))
     let did_UltiSnips_autoload=1
     finish
 endif

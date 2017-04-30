@@ -1,6 +1,6 @@
 if exists('did_plugin_ultisnips') || &cp
     finish
-elseif !(has('python') || has('python3'))
+elseif !(has('python3') || has('python'))
     let did_UltiSnips_plugin=1
     finish
 endif
@@ -37,7 +37,6 @@ else
    endif
    if !exists('g:_uspy')
        echohl WarningMsg
-       echom  "UltiSnips: the Python version from g:UltiSnipsUsePythonVersion (".g:UltiSnipsUsePythonVersion.") is not available."
        echohl None
        finish
    endif
