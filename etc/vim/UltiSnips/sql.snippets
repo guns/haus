@@ -14,12 +14,12 @@ INSERT INTO ${1} VALUES ($0);
 endsnippet
 
 snippet ts "timestamptz" w
-timestamp with time zone
+timestamptz
 endsnippet
 
 snippet cu "created/updated" b
-created_at timestamp with time zone DEFAULT now() NOT NULL,
-updated_at timestamp with time zone DEFAULT now() NOT NULL
+created_at timestamptz NOT NULL DEFAULT now(),
+updated_at timestamptz NOT NULL DEFAULT now()
 endsnippet
 
 snippet pk "primary key" w
