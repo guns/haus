@@ -1057,7 +1057,6 @@ function! s:Clogfile(bang, arg) abort
     exe chdir s:fnameescape(cwd)
   endtry
   copen
-  setf railslog
   $
   return 'silent! clast'
 endfunction
@@ -1156,7 +1155,14 @@ function! s:Refresh(bang)
     endif
   endif
   let _ = rails#app().cache.clear()
-  silent doautocmd User BufLeaveRails
+  if exists('#User#BufLeaveRails')
+    try
+      let [modelines, &modelines] = [&modelines, 0]
+      doautocmd User BufLeaveRails
+    finally
+      let &modelines = modelines
+    endtry
+  endif
   if a:bang
     for key in keys(s:apps)
       if type(s:apps[key]) == type({})
@@ -1174,7 +1180,14 @@ function! s:Refresh(bang)
     endif
     let i += 1
   endwhile
-  silent doautocmd User BufEnterRails
+  if exists('#User#BufEnterRails')
+    try
+      let [modelines, &modelines] = [&modelines, 0]
+      doautocmd User BufEnterRails
+    finally
+      let &modelines = modelines
+    endtry
+  endif
 endfunction
 
 function! s:RefreshBuffer()
@@ -2451,7 +2464,7 @@ function! s:RailsIncludefind(str,...) abort
   let fpat = '\(\s*\%("\f*"\|:\f*\|'."'\\f*'".'\)\s*,\s*\)*'
   if a:str =~# '\u' && &filetype !~# 'javascript\|coffee'
     " Classes should always be in .rb files
-    let str .= '.rb'
+    let str = s:sub(str, '([#:]|$)', '.rb\1')
   elseif line =~# ':partial\s*=>\s*' || (line =~# ':layout\s*=>\s*' && !rails#buffer().type_name('controller', 'mailer'))
     let str = s:sub(str,'[^/]+$','_&')
     let str = s:findview(str)
@@ -2511,12 +2524,6 @@ function! s:RailsIncludefind(str,...) abort
     " If we made it this far, we'll risk making it singular.
     let str = rails#singularize(str)
     let str = s:sub(str,'_id$','')
-  endif
-  if str =~ '^/' && !filereadable(str)
-    let str = s:sub(str,'^/','')
-  endif
-  if str =~# '^lib/' && !filereadable(str)
-    let str = s:sub(str,'^lib/','')
   endif
   return str
 endfunction
@@ -4027,22 +4034,28 @@ function! rails#log_syntax()
   syn match   railslogQfLineNr    "[^|]*" contained contains=railslogQfError
   syn match   railslogQfError     "error" contained
   syn match   railslogRender      '\%(\%(^\||\)\s*\%(\e\[[0-9;]*m\)\=\)\@<=\%(Started\|Processing\|Rendering\|Rendered\|Redirected\|Completed\)\>'
-  syn match   railslogComment     '\%(^\||\)\@<=\s*# .*'
-  syn match   railslogModel       '\%(\%(^\||\)\s*\%(\e\[[0-9;]*m\)*\)\@<=\u\%(\w\|:\)* \%(Load\%( Including Associations\| IDs For Limited Eager Loading\)\=\|Columns\|Exists\|Count\|Create\|Update\|Destroy\|Delete all\)\>' skipwhite nextgroup=railslogModelNum,railslogEscapeMN
-  syn match   railslogModel       '\%(\%(^\||\)\s*\%(\e\[[0-9;]*m\)*\)\@<=\%(SQL\|CACHE\)\>' skipwhite nextgroup=railslogModelNum,railslogEscapeMN
+  syn match   railslogComment     '\%(^\|[]|]\)\@<=\s*# .*'
+  syn match   railslogModel       '\%(\%(^\|[]|]\)\s*\%(\e\[[0-9;]*m\)*\)\@<=\u\%(\w\|:\)* \%(Load\%( Including Associations\| IDs For Limited Eager Loading\)\=\|Columns\|Exists\|Count\|Create\|Update\|Destroy\|Delete all\)\>' skipwhite nextgroup=railslogModelNum,railslogEscapeMN
+  syn match   railslogModel       '\%(\%(^\|[]|]\)\s*\%(\e\[[0-9;]*m\)*\)\@<=\%(SQL\|CACHE\)\>' skipwhite nextgroup=railslogModelNum,railslogEscapeMN
   syn region  railslogModelNum    start='(' end=')' contains=railslogNumber contained skipwhite
-  syn match   railslogNumber      '\<\d\+\>%'
+  syn match   railslogActiveJob   '\[ActiveJob\]'hs=s+1,he=e-1 nextgroup=railslogJobScope skipwhite
+  syn match   railslogJobScope    '\[\u\%(\w\|:\)*\]' contains=railslogJobName contained
+  syn match   railslogJob         '\%(\%(^\|[\]|]\)\s*\%(\e\[[0-9;]*m\)*\)\@<=\%(Enqueued\|Performing\|Performed\)\>' skipwhite nextgroup=railslogJobName
+  syn match   railslogJobName     '\<\u\%(\w\|:\)*\>' contained
+  syn match   railslogNumber      '\<\d\+%'
   syn match   railslogNumber      '[ (]\@<=\<\d\+\.\d\+\>\.\@!'
-  syn match   railslogNumber      '[ (]\@<=\<\d\+\.\d\+ms\>'
+  syn match   railslogNumber      '[ (]\@<=\<\d\+\%(\.\d\+\)\=ms\>'
   syn region  railslogString      start='"' skip='\\"' end='"' oneline contained
   syn region  railslogHash        start='{' end='}' oneline contains=railslogHash,railslogString
   syn match   railslogIP          '\<\d\{1,3\}\%(\.\d\{1,3}\)\{3\}\>'
-  syn match   railslogTimestamp   '\<\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\>'
+  syn match   railslogIP          '\<\%(\x\{1,4}:\)\+\%(:\x\{1,4}\)\+\>\|\S\@<!:\%(:\x\{1,4}\)\+\>\|\<\%(\x\{1,4}:\)\+\%(:\S\@!\|\x\{1,4}\>\)'
+  syn match   railslogTimestamp   '\<\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\%( [+-]\d\d\d\d\| UTC\)\=\>'
   syn match   railslogSessionID   '\<\x\{32\}\>'
+  syn match   railslogUUID        '\<\x\{8\}-\x\{4\}-\x\{4\}-\x\{4\}-\x\{12\}\>'
   syn match   railslogIdentifier  '\%(^\||\)\@<=\s*\%(Session ID\|Parameters\|Unpermitted parameters\)\ze:'
-  syn match   railslogSuccess     '\<2\d\d \u[A-Za-z0-9 ]*\>'
-  syn match   railslogRedirect    '\<3\d\d \u[A-Za-z0-9 ]*\>'
-  syn match   railslogError       '\<[45]\d\d \u[A-Za-z0-9 ]*\>'
+  syn match   railslogSuccess     '\<2\d\d\%( \u\w*\)\+\>'
+  syn match   railslogRedirect    '\<3\d\d\%( \u\w*\)\+\>'
+  syn match   railslogError       '\<[45]\d\d\%( \u\w*\)\+\>'
   syn match   railslogDeprecation '\<DEPRECATION WARNING\>'
   syn keyword railslogHTTP        OPTIONS GET HEAD POST PUT PATCH DELETE TRACE CONNECT
   hi def link railslogQfFileName  Directory
@@ -4053,9 +4066,12 @@ function! rails#log_syntax()
   hi def link railslogComment     Comment
   hi def link railslogRender      Keyword
   hi def link railslogModel       Type
-  hi def link railslogNumber      Number
+  hi def link railslogJob         Repeat
+  hi def link railslogJobName     Structure
+  hi def link railslogNumber      Float
   hi def link railslogString      String
   hi def link railslogSessionID   Constant
+  hi def link railslogUUID        Constant
   hi def link railslogIdentifier  Identifier
   hi def link railslogRedirect    railslogSuccess
   hi def link railslogSuccess     Special
@@ -5209,7 +5225,14 @@ function! rails#buffer_setup() abort
   if !empty(findfile('macros/rails.vim', escape(&runtimepath, ' ')))
     runtime! macros/rails.vim
   endif
-  silent doautocmd User Rails
+  if exists('#User#Rails')
+    try
+      let [modelines, &modelines] = [&modelines, 0]
+      doautocmd User Rails
+    finally
+      let &modelines = modelines
+    endtry
+  endif
 endfunction
 
 " }}}1
