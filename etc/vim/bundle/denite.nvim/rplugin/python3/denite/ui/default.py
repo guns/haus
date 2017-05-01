@@ -58,6 +58,15 @@ class Default(object):
         self._previous_status = ''
 
     def start(self, sources, context):
+        self._result = []
+        try:
+            self._start(sources, context)
+        finally:
+            self.cleanup()
+
+        return self._result
+
+    def _start(self, sources, context):
         if re.search('\[Command Line\]$', self._vim.current.buffer.name):
             # Ignore command line window.
             return
@@ -77,7 +86,7 @@ class Default(object):
                 self.move_to_prev_line()
 
             if self.check_empty():
-                return self._result
+                return
 
             if context['refresh']:
                 self.redraw()
@@ -103,7 +112,7 @@ class Default(object):
             self.update_candidates()
 
             if self.check_empty():
-                return self._result
+                return
 
             self.init_buffer()
             self.init_cursor()
@@ -122,9 +131,10 @@ class Default(object):
             # interrupted.
             # In this case, denite cancel any operation and close its window.
             self.quit()
-        return self._result
+        return
 
     def init_buffer(self):
+        self._previous_status = ''
         self._displayed_texts = []
 
         self._winheight = int(self._context['winheight'])
@@ -159,7 +169,6 @@ class Default(object):
         self._options = self._vim.current.buffer.options
         self._options['buftype'] = 'nofile'
         self._options['swapfile'] = False
-        self._options['modifiable'] = True
         self._options['buflisted'] = False
         self._options['filetype'] = 'denite'
 
@@ -445,13 +454,13 @@ class Default(object):
         self.update_buffer()
 
     def cleanup(self):
-        self._options['modifiable'] = False
         self._vim.command('pclose!')
         # Redraw to clear prompt
         self._vim.command('redraw | echo ""')
         self._vim.command('highlight! link CursorLine CursorLine')
         if self._vim.call('exists', '#ColorScheme'):
             self._vim.command('silent doautocmd ColorScheme')
+        self._vim.command('set guicursor&')
         self._vim.options['guicursor'] = self._guicursor
 
     def quit_buffer(self):
@@ -482,8 +491,10 @@ class Default(object):
                     ] if self.get_cursor_candidate() else []
         return [self._candidates[x] for x in self._selected_candidates]
 
-    def redraw(self):
-        self.gather_candidates()
+    def redraw(self, is_force=True):
+        self._context['is_redraw'] = is_force
+        if is_force:
+            self.gather_candidates()
         if self.update_candidates():
             self.update_buffer()
         else:
@@ -533,7 +544,7 @@ class Default(object):
         if is_quit and not self._context['quit']:
             # Re-open denite buffer
             self.init_buffer()
-            self.update_buffer()
+            self.redraw(False)
             # Disable quit flag
             is_quit = False
 
@@ -727,5 +738,4 @@ class Default(object):
         self.change_mode(self._current_mode)
 
     def suspend(self):
-        self.cleanup()
         return STATUS_ACCEPT
