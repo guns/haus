@@ -50,7 +50,7 @@ endfunction
 " }}}1
 " Completion {{{1
 
-function! s:Complete(A,L,P)
+function! s:Complete(A,L,P) abort
   let sep = !exists("+shellslash") || &shellslash ? '/' : '\'
   let cheats = {
         \ 'a': 'autoload',
@@ -136,14 +136,14 @@ function! scriptease#dump(object, ...) abort
       let dump = s:sub("{".join(lines, "\n " . space), ',$', '}')
     endif
   elseif type(a:object) ==# type(function('tr'))
-    let dump = s:sub(string(a:object), '^function\(''(\d+)''\)$', 'function(''{\1}'')')
+    let dump = s:sub(s:sub(string(a:object), '^function\(''(\d+)''', 'function(''{\1}'''), ',.*\)$', ')')
   else
     let dump = string(a:object)
   endif
   return dump
 endfunction
 
-function! s:backslashdump(value, indent)
+function! s:backslashdump(value, indent) abort
     let out = scriptease#dump(a:value, {'level': 0, 'width': &textwidth - &shiftwidth * 3 - a:indent})
     return s:gsub(out, '\n', "\n".repeat(' ', a:indent + &shiftwidth * 3).'\\')
 endfunction
@@ -261,9 +261,13 @@ endfunction
 
 nnoremap <silent> <Plug>ScripteaseFilter :<C-U>set opfunc=<SID>filterop<CR>g@
 xnoremap <silent> <Plug>ScripteaseFilter :<C-U>call <SID>filterop(visualmode())<CR>
-nmap g! <Plug>ScripteaseFilter
-nmap g!! <Plug>ScripteaseFilter_
-xmap g! <Plug>ScripteaseFilter
+if empty(mapcheck('g!', 'n'))
+  nmap g! <Plug>ScripteaseFilter
+  nmap g!! <Plug>ScripteaseFilter_
+endif
+if empty(mapcheck('g!', 'x'))
+  xmap g! <Plug>ScripteaseFilter
+endif
 
 " }}}1
 " :Verbose {{{1
@@ -271,7 +275,7 @@ xmap g! <Plug>ScripteaseFilter
 command! -range=999998 -nargs=1 -complete=command Verbose
       \ :exe s:Verbose(<count> == 999998 ? '' : <count>, <q-args>)
 
-function! s:Verbose(level, excmd)
+function! s:Verbose(level, excmd) abort
   let temp = tempname()
   let verbosefile = &verbosefile
   call writefile([':'.a:level.'Verbose '.a:excmd], temp, 'b')
@@ -330,6 +334,90 @@ endfunction
 command! -bar Scriptnames call setqflist(s:names())|copen
 
 " }}}1
+" :Messages {{{1
+
+command! -bar -bang Messages :execute s:Messages(<bang>0)
+
+function! s:Messages(bang) abort
+  let qf = []
+  for line in split(scriptease#capture('messages'), '\n\+')
+    let lnum = matchstr(line, '\C^line\s\+\zs\d\+\ze:$')
+    if lnum && len(qf) && qf[-1].text =~# ':$'
+      let qf[-1].text = substitute(qf[-1].text, ':$', '[' . lnum . ']:', '')
+    else
+      call add(qf, {'text': line})
+    endif
+    let functions = matchstr(qf[-1].text, '\s\+\zs\S\+\]\ze:$')
+    if empty(functions)
+      continue
+    endif
+    let qf[-1].text = substitute(qf[-1].text, '\s\+\S\+:$', '', '')
+    for funcline in split(functions, '\.\.')
+      call add(qf, {'text': funcline})
+      let lnum = matchstr(funcline, '\[\zs\d\+\ze\]$')
+      let function = substitute(funcline, '\[\d\+\]$', '', '')
+      if function =~# '[\\/.]' && filereadable(function)
+        let qf[-1].filename = function
+        let qf[-1].lnum = lnum
+        let qf[-1].text = ''
+        continue
+      elseif function =~# '^\d\+$'
+        let function = '{' . function . '}'
+      endif
+      let list = &list
+      try
+        set nolist
+        let output = split(scriptease#capture('verbose function '.function), "\n")
+      finally
+        let &list = list
+      endtry
+      let filename = expand(matchstr(get(output, 1, ''), 'from \zs.*'))
+      if !filereadable(filename)
+        continue
+      endif
+      let implementation = map(output[2:-2], 'v:val[len(matchstr(output[-1],"^ *")) : -1]')
+      call map(implementation, 'v:val ==# " " ? "" : v:val')
+      let body = []
+      let offset = 0
+      for line in readfile(filename)
+        if line =~# '^\s*\\' && !empty(body)
+          let body[-1][0] .= s:sub(line, '^\s*\\', '')
+          let offset += 1
+        else
+          call extend(body, [[s:gsub(line, "\t", repeat(" ", &tabstop)), offset]])
+        endif
+      endfor
+      for j in range(len(body)-len(implementation)-2)
+        if function =~# '^{'
+          let pattern = '.*\.'
+        elseif function =~# '^<SNR>'
+          let pattern = '\%(s:\|<SID>\)' . matchstr(function, '_\zs.*') . '\>'
+        else
+          let pattern = function . '\>'
+        endif
+        if body[j][0] =~# '\C^\s*fu\%[nction]!\=\s*'.pattern
+              \ && (body[j + len(implementation) + 1][0] =~# '\C^\s*endf'
+              \ && map(body[j+1 : j+len(implementation)], 'v:val[0]') ==# implementation
+              \ || pattern !~# '\*')
+          let qf[-1].filename = filename
+          let qf[-1].lnum = j + body[j][1] + lnum + 1
+          let found = 1
+          break
+        endif
+      endfor
+    endfor
+  endfor
+  call setqflist(qf)
+  if exists(':chistory')
+    call setqflist([], 'r', {'title': ':Messages'})
+  endif
+  copen
+  $
+  call search('^[^|]', 'bWc')
+  return ''
+endfunction
+
+" }}}1
 " :Runtime {{{1
 
 function! s:unlet_for(files) abort
@@ -359,11 +447,11 @@ function! s:unlet_for(files) abort
   endif
 endfunction
 
-function! s:lencompare(a, b)
+function! s:lencompare(a, b) abort
   return len(a:a) - len(a:b)
 endfunction
 
-function! s:findinrtp(path)
+function! s:findinrtp(path) abort
   let path = fnamemodify(a:path, ':p')
   let candidates = []
   for glob in split(&runtimepath, ',')
@@ -437,7 +525,7 @@ command! -bang -bar -nargs=* -complete=customlist,s:Complete Runtime
 " }}}1
 " :Disarm {{{1
 
-function! scriptease#disarm(file)
+function! scriptease#disarm(file) abort
   let augroups = filter(readfile(a:file), 'v:val =~# "^\\s*aug\\%[roup]\\s"')
   call filter(augroups, 'v:val !~# "^\\s*aug\\%[roup]\\s\\+END"')
   for augroup in augroups
@@ -457,7 +545,7 @@ function! scriptease#disarm(file)
   return s:unlet_for([a:file])
 endfunction
 
-function! s:disable_maps_and_commands(file, buf)
+function! s:disable_maps_and_commands(file, buf) abort
   let last_set = "\tLast set from " . fnamemodify(a:file, ':~')
   for line in split(scriptease#capture('verbose command'), "\n")
     if line ==# last_set
@@ -552,7 +640,7 @@ function! s:break(type, arg) abort
   return 'break'.a:type.' '.s:breaksnr(a:arg)
 endfunction
 
-function! s:Complete_breakadd(A, L, P)
+function! s:Complete_breakadd(A, L, P) abort
   let functions = join(sort(map(split(scriptease#capture('function'), "\n"), 'matchstr(v:val, " \\zs[^(]*")')), "\n")
   if a:L =~# '^\w\+\s\+\w*$'
     return "here\nfile\nfunc"
@@ -568,7 +656,7 @@ function! s:Complete_breakadd(A, L, P)
   endif
 endfunction
 
-function! s:Complete_breakdel(A, L, P)
+function! s:Complete_breakdel(A, L, P) abort
   let args = matchstr(a:L, '\s\zs\S.*')
   let list = split(scriptease#capture('breaklist'), "\n")
   call map(list, 's:sub(v:val, ''^\s*\d+\s*(\w+) (.*)  line (\d+)$'', ''\1 \3 \2'')')
@@ -586,7 +674,7 @@ endfunction
 " }}}1
 " :Vopen, :Vedit, ... {{{1
 
-function! s:previewwindow()
+function! s:previewwindow() abort
   for i in range(1, winnr('$'))
     if getwinvar(i, '&previewwindow') == 1
       return i
@@ -595,11 +683,11 @@ function! s:previewwindow()
   return -1
 endfunction
 
-function! s:runtime_globpath(file)
+function! s:runtime_globpath(file) abort
   return split(globpath(escape(&runtimepath, ' '), a:file), "\n")
 endfunction
 
-function! s:find(count,cmd,file,lcd)
+function! s:find(count,cmd,file,lcd) abort
   let found = s:runtime_globpath(a:file)
   let file = get(found, a:count - 1, '')
   if file ==# ''
@@ -652,7 +740,7 @@ command! -bar -bang -range=1 -nargs=1 -complete=customlist,s:Complete Vread
 
 command! -count=1 -nargs=? -complete=command Time :exe s:time(<q-args>, <count>)
 
-function! s:time(cmd, count)
+function! s:time(cmd, count) abort
   let time = reltime()
   try
     if a:count > 1
@@ -683,7 +771,7 @@ function! scriptease#synnames(...) abort
   return reverse(map(synstack(line, col), 'synIDattr(v:val,"name")'))
 endfunction
 
-function! s:zS(count)
+function! s:zS(count) abort
   if a:count
     let name = get(scriptease#synnames(), a:count-1, '')
     if name !=# ''
@@ -696,14 +784,20 @@ function! s:zS(count)
 endfunction
 
 nnoremap <silent> <Plug>ScripteaseSynnames :<C-U>exe <SID>zS(v:count)<CR>
-nmap zS <Plug>ScripteaseSynnames
+if empty(mapcheck('zS', 'n'))
+  nmap zS <Plug>ScripteaseSynnames
+endif
 
 " }}}1
 " K {{{1
 
+nnoremap <silent> <Plug>ScripteaseHelp :<C-U>exe 'help '.<SID>helptopic()<CR>
 augroup scriptease_help
   autocmd!
-  autocmd FileType vim nnoremap <silent><buffer> K :exe 'help '.<SID>helptopic()<CR>
+  autocmd FileType vim
+        \  if empty(mapcheck('K', 'n'))
+        \| nmap <silent><buffer> K <Plug>ScripteaseHelp
+        \| endif
 augroup END
 
 function! s:helptopic() abort
