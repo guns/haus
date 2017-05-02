@@ -18,7 +18,7 @@ border_color_pressed = #000000 0
 # Background 2: Default task, Iconified task
 rounded = 0
 border_width = 0
-background_color = #000000 100
+background_color = #070707 100
 border_color = #000000 0
 background_color_hover = #000000 100
 border_color_hover = #000000 0
