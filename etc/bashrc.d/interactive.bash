@@ -330,7 +330,7 @@ HAVE objdump && {
     ox() { objdump --all-headers "$@" | pager; }; TCOMP objdump ox
     disas() { objdump -D -M intel-mnemonic "$@" | pager; }
 }
-HAVE readelf && { dl() { readelf --dynamic "$@" | pager; }; TCOMP readelf dl; }
+HAVE readelf && { dylibs() { readelf --dynamic "$@" | pager; }; TCOMP readelf dylibs; }
 HAVE strings && strings() { command strings --all --radix=x "$@" | pager; }
 
 # find
