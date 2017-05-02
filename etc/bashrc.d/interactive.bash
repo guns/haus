@@ -973,6 +973,7 @@ ALIAS di='diff --unified=3' \
       dir='di --recursive' \
       diq='di --brief' \
       dirq='dir --brief'
+HAVE dwdiff && dwd() { ruby -e 'exec *($stdin.tty? ? %w[dwdiff --color] : %w[dwdiff --diff-input --color])'; }
 ALIAS patch='patch --version-control never'
 
 # git
