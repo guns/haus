@@ -632,8 +632,8 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
 	nmap     <buffer> <LocalLeader>g :<C-u>execute 'GoGuruScope ' . (exists('g:go_guru_scope') ? '""' : '...')<CR>
-	nmap     <buffer> <LocalLeader>i <Plug>(go-implements)
-	nmap     <buffer> <LocalLeader>I <Plug>(go-install)
+	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
+	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
 	noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
 	noremap  <buffer> <LocalLeader>o :<C-u>GoOptimizations<CR>
