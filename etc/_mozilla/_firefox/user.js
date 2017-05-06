@@ -230,6 +230,7 @@ user_pref("experiments.manifest.uri", "");
 user_pref("extensions.blocklist.detailsURL", "");
 user_pref("extensions.blocklist.itemURL", "");
 user_pref("extensions.blocklist.url", "");
+user_pref("extensions.geckoProfiler.symbols.url", "");
 user_pref("extensions.getAddons.get.url", "");
 user_pref("extensions.getAddons.getWithPerformance.url", "");
 user_pref("extensions.getAddons.link.url", "");
