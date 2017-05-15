@@ -1598,6 +1598,48 @@ augroup fireplace_go_to_file
   autocmd FileType clojure call s:set_up_go_to_file()
 augroup END
 
+" Section: Formatting
+
+function! fireplace#format(lnum, count, char) abort
+  let reg_save = @@
+  let sel_save = &selection
+  let cb_save = &clipboard
+  try
+    set selection=inclusive clipboard-=unnamed clipboard-=unnamedplus
+    " ignore leading empty lines
+    let lnum = a:lnum
+    let l:count = a:count
+    while l:count >= 0
+      if getline(lnum) =~# '^\s*$'
+        let lnum += 1
+        let l:count -= 1
+      else
+        break
+      endif
+    endwhile
+    if l:count
+      silent exe "normal! " . string(lnum) . "ggV" . string(l:count-1) . "jy"
+      let response = fireplace#message({'op': 'format-code', 'code': @@})[0]
+      if !empty(get(response, 'formatted-code'))
+        let @@ = substitute(get(response, 'formatted-code'), '^\n\+', '', 'g')
+        if @@ !~# '^\n*$'
+          normal! gvp
+        endif
+      endif
+    endif
+  finally
+    let @@ = reg_save
+    let &selection = sel_save
+    let &clipboard = cb_save
+  endtry
+endfunction
+
+augroup fireplace_formatting
+  autocmd!
+  autocmd FileType clojure
+        \ setlocal formatexpr=fireplace#format(v:lnum,v:count,v:char)
+augroup END
+
 " Section: Documentation
 
 function! s:Lookup(ns, macro, arg) abort
@@ -1640,7 +1682,7 @@ function! s:Doc(symbol) abort
     echo info['forms-str']
   endif
 
-  if get(info, 'arglists-str', 'nil') !=# 'nil'
+  if get(info, 'arglists-str', '') !=# ''
     echo info['arglists-str']
   endif
 
@@ -1655,7 +1697,7 @@ function! s:Doc(symbol) abort
       endif
     endif
 
-  elseif get(info, 'macro', 'nil') !=# 'nil'
+  elseif get(info, 'macro', '') !=# ''
     echo "Macro"
   endif
 
