@@ -547,12 +547,10 @@ if has('ruby')
 ruby << EORUBY
 		require 'time'
 		line = VIM::Buffer.current.line
-		if not line.include? '=>'
-			begin
-				from, to = line.scan(/\d+:\d+:\d+/).take(2).map { |s| Time.parse s }
-				VIM::Buffer.current.line = '%s => %sm' % [line, ((to - from)/60.0).round]
-			rescue
-			end
+		begin
+			from, to = line.scan(/\d+:\d+:\d+/).take(2).map { |s| Time.parse s }
+			VIM::Buffer.current.line = '%s => %sm' % [line.sub(/ => \d+m$/, ''), ((to - from)/60.0).round]
+		rescue
 		end
 EORUBY
 	endfunction
@@ -561,11 +559,9 @@ EORUBY
 		execute "normal v\<Plug>OrgAInnerTreeVisual" . '"my'
 ruby << EORUBY
 		line = VIM::Buffer.current.line
-		if not line.include? '=>'
-			buf = VIM.evaluate '@m'
-			total = buf.scan(/ => (\d+)m/).flatten.map(&:to_i).reduce :+
-			VIM::Buffer.current.line = '%s => TOTAL: %sm' % [line, total]
-		end
+		buf = VIM.evaluate '@m'
+		total = buf.scan(/ => (\d+)m/).flatten.map(&:to_i).reduce :+
+		VIM::Buffer.current.line = '%s => TOTAL: %sm' % [line.sub(/ => TOTAL: \d+m$/, ''), total]
 EORUBY
 	endfunction
 
