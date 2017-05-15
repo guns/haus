@@ -1088,6 +1088,7 @@ directory_rec	Gather directories recursive and nominates all directory names
 						*denite-source-file*
 file
 		Gather files from the user input.
+		Note: If the args 0 is "new", it will create the file.
 
 						*denite-source-file_old*
 file_old
@@ -1216,6 +1217,9 @@ outline		Gather outline and jump to the target.
 				(default: ['ctags'])
 		options 	the default options for command
 				(default: [])
+		file_opt 	the default option for writing to
+				specified file
+				(default: '-o')
 		ignore_types 	the list of ignore types
 				(default: [])
 		encoding 	the text encoding
@@ -1223,6 +1227,9 @@ outline		Gather outline and jump to the target.
 
 						*denite-source-tag*
 tag		Gather results of |tagfiles()|.
+		Note: If the args 0 is "include", it will gather the results
+		of |neoinclude| plugin.
+		https://github.com/Shougo/neoinclude.vim
 
 
 ==============================================================================
