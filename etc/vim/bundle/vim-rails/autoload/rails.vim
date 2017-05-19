@@ -384,10 +384,10 @@ function! s:readable_controller_name(...) dict abort
     return s:sub(f,'.*<spec/views/(.{-})/\w+_view_spec\.rb$','\1')
   elseif f =~ '\<app/models/.*\.rb$' && self.type_name('mailer')
     return s:sub(f,'.*<app/models/(.{-})\.rb$','\1')
-  elseif f =~ '\<\%(public\|app/assets\)/stylesheets/.*\.css\%(\.\w\+\)\=$'
-    return s:sub(f,'.*<%(public|app/assets)/stylesheets/(.{-})\.css%(\.\w+)=$','\1')
-  elseif f =~ '\<\%(public\|app/assets\)/javascripts/.*\.js\%(\.\w\+\)\=$'
-    return s:sub(f,'.*<%(public|app/assets)/javascripts/(.{-})\.js%(\.\w+)=$','\1')
+  elseif f =~ '\<\%(public\|app/assets\)/stylesheets/[^.]\+\.'
+    return s:sub(f,'.*<%(public|app/assets)/stylesheets/(.{-})\..*$','\1')
+  elseif f =~ '\<\%(public\|app/assets\)/javascripts/.[^.]\+\.'
+    return s:sub(f,'.*<%(public|app/assets)/javascripts/(.{-})\..*$','\1')
   elseif a:0 && a:1
     return rails#pluralize(self.model_name())
   endif
@@ -2152,7 +2152,7 @@ function! rails#includeexpr(fname) abort
   endif
 endfunction
 
-function! s:linepeak()
+function! s:linepeek() abort
   let line = getline(line("."))
   let line = s:sub(line,'^(.{'.col(".").'}).*','\1')
   let line = s:sub(line,'([:"'."'".']|\%[qQ]=[[({<])=\f*$','')
@@ -2314,10 +2314,15 @@ function! s:cfile(...) abort
   let res = s:findamethod('require','\1')
   if res != ""|return res.(res !~ '\.[^\/.]\+$' ? '.rb' : '')|endif
 
+  if !empty(s:findamethod('\w\+', '\1'))
+    let class = s:findit('^[^;#]*,\s*\%(:class_name\s*=>\|class_name:\)\s*["'':]\=\([[:alnum:]_:]\+\)','\1')
+    if class != ""|return rails#underscore(class).".rb"|endif
+  endif
+
   let res = s:findamethod('belongs_to\|has_one\|embedded_in\|embeds_one\|composed_of\|validates_associated\|scaffold','\1.rb')
   if res != ""|return res|endif
 
-  let res = rails#singularize(s:findamethod('has_many\|has_and_belongs_to_many\|embeds_many','\1'))
+  let res = rails#singularize(s:findamethod('has_many\|has_and_belongs_to_many\|embeds_many\|accepts_nested_attributes_for\|expose','\1'))
   if res != ""|return res.".rb"|endif
 
   let res = rails#singularize(s:findamethod('create_table\|change_table\|drop_table\|rename_table\|\%(add\|remove\)_\%(column\|index\|timestamps\|reference\|belongs_to\)\|rename_column\|remove_columns\|rename_index','\1'))
@@ -2483,11 +2488,13 @@ function! s:RailsIncludefind(str,...) abort
   let str = a:str
   if a:0 == 1
     " Get the text before the filename under the cursor.
-    " We'll cheat and peak at this in a bit
-    let line = s:linepeak()
+    " We'll cheat and peek at this in a bit
+    let line = s:linepeek()
     let line = s:sub(line,'([:"'."'".']|\%[qQ]=[[({<])=\f*$','')
+    let synid = synID(line('.'), col('.'), 1)
   else
     let line = ""
+    let synid = -1
   endif
   let str = s:sub(str,'^\s*','')
   let str = s:sub(str,'\s*$','')
@@ -2560,8 +2567,9 @@ function! s:RailsIncludefind(str,...) abort
       let str = file
     endif
   elseif str !~ '/'
-    " If we made it this far, we'll risk making it singular.
-    let str = rails#singularize(str)
+    if synid >= 0 && synid != hlID('rubyString')
+      let str = rails#singularize(str)
+    endif
     let str = s:sub(str,'_id$','')
   endif
   return str
@@ -2698,24 +2706,6 @@ function! s:layoutList(A,L,P)
   return s:completion_filter(rails#app().relglob("app/views/layouts/","*"),a:A)
 endfunction
 
-function! s:stylesheetList(A,L,P)
-  let list = rails#app().relglob('app/assets/stylesheets/','**/*.*','')
-  call map(list,'s:sub(v:val,"\\..*$","")')
-  let list += rails#app().relglob('public/stylesheets/','**/*','.css')
-  if rails#app().has('sass')
-    call extend(list,rails#app().relglob('public/stylesheets/sass/','**/*','.s?ss'))
-    call s:uniq(list)
-  endif
-  return s:completion_filter(list,a:A)
-endfunction
-
-function! s:javascriptList(A,L,P)
-  let list = rails#app().relglob('app/assets/javascripts/','**/*.*','')
-  call map(list,'s:sub(v:val,"\\.js\\..*|\\.\\w+$","")')
-  let list += rails#app().relglob("public/javascripts/","**/*",".js")
-  return s:completion_filter(list,a:A)
-endfunction
-
 function! s:fixturesList(A,L,P)
   return s:completion_filter(
         \ rails#app().relglob('test/fixtures/', '**/*') +
@@ -2814,15 +2804,6 @@ function! s:CommandEdit(cmd, name, projections, ...)
   else
     return rails#buffer().open_command(a:cmd, a:0 ? a:1 : '', a:name, a:projections)
   endif
-endfunction
-
-function! s:LegacyCommandEdit(cmd, target, prefix, suffix)
-  let cmd = s:findcmdfor(a:cmd)
-  if a:target == ""
-    return s:error("E471: Argument required")
-  endif
-  let f = a:prefix . s:sub(a:target, '\ze[#!:]|$', a:suffix)
-  return s:open(a:cmd, f)
 endfunction
 
 function! s:app_migration(file) dict
@@ -3072,38 +3053,58 @@ function! s:layoutEdit(cmd,...) abort
   return s:edit(a:cmd, file)
 endfunction
 
-function! s:stylesheetEdit(cmd,...)
-  let name = a:0 ? a:1 : s:controller(1)
-  if rails#app().has('sass') && rails#app().has_file('public/stylesheets/sass/'.name.'.sass')
-    return s:LegacyCommandEdit(a:cmd,name,"public/stylesheets/sass/",".sass")
-  elseif rails#app().has('sass') && rails#app().has_file('public/stylesheets/sass/'.name.'.scss')
-    return s:LegacyCommandEdit(a:cmd,name,"public/stylesheets/sass/",".scss")
-  else
-    let types = rails#app().relglob('app/assets/stylesheets/'.name,'.*','')
-    if !empty(types)
-      return s:LegacyCommandEdit(a:cmd,name,'app/assets/stylesheets/',types[0])
-    elseif !isdirectory(rails#app().path('app/assets/stylesheets')) ||
-        \ rails#app().has_file('public/stylesheets/'.name.'.css')
-      return s:LegacyCommandEdit(a:cmd,name,'public/stylesheets/','.css')
-    else
-      return s:LegacyCommandEdit(a:cmd,name,'app/assets/stylesheets/',rails#app().stylesheet_suffix())
-    endif
+function! s:AssetEdit(cmd, name, dir, suffix, fallbacks) abort
+  let name = matchstr(a:name, '^[^!#:]*')
+  if empty(name)
+    let name = s:controller(1)
   endif
+  let suffixes = s:suffixes(a:dir)
+  for file in map([''] + suffixes, '"app/assets/".a:dir."/".name.v:val') +
+        \ map(copy(a:fallbacks), 'printf(v:val, name)') +
+        \ [   'public/'.a:dir.'/'.name.suffixes[0],
+        \ 'app/assets/'.a:dir.'/'.name.(name =~# '\.' ? '' : a:suffix)]
+    if rails#app().has_file(file)
+      break
+    endif
+  endfor
+  return s:open(a:cmd, file . matchstr(a:name, '[!#:]*'))
 endfunction
 
-function! s:javascriptEdit(cmd,...)
-  let name = a:0 ? a:1 : s:controller(1)
-  let types = rails#app().relglob('app/assets/javascripts/'.name,'.*','')
-  if !empty(types)
-    return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/',types[0])
-  elseif !isdirectory(rails#app().path('app/assets/javascripts')) ||
-        \ rails#app().has_file('public/javascripts/'.name.'.js')
-    return s:LegacyCommandEdit(a:cmd,name,'public/javascripts/','.js')
-  elseif rails#app().has_gem('coffee-rails')
-    return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.coffee')
-  else
-    return s:LegacyCommandEdit(a:cmd,name,'app/assets/javascripts/','.js')
+function! s:javascriptEdit(cmd,...) abort
+  return s:AssetEdit(a:cmd, a:0 ? a:1 : '', 'javascripts',
+        \ rails#app().has_gem('coffee-rails') ? '.coffee' : '.js', [])
+endfunction
+
+function! s:stylesheetEdit(cmd,...) abort
+  let fallbacks = []
+  if rails#app().has('sass')
+    let fallbacks = ['public/stylesheets/sass/%s.sass', 'public/stylesheets/sass/%s.scss']
   endif
+  return s:AssetEdit(a:cmd, a:0 ? a:1 : '', 'stylesheets',
+        \ rails#app().stylesheet_suffix(), fallbacks)
+endfunction
+
+function! s:javascriptList(A, L, P, ...) abort
+  let dir = a:0 ? a:1 : 'javascripts'
+  let list = rails#app().relglob('app/assets/'.dir.'/','**/*.*','')
+  let suffixes = s:suffixes(dir)
+  let strip = '\%('.escape(join(suffixes, '\|'), '.*[]~').'\)$'
+  let g:strip = strip
+  call map(list,'substitute(v:val,strip,"","")')
+  call extend(list, rails#app().relglob("public/".dir."/","**/*",suffixes[0]))
+  if !empty(a:0 ? a:2 : [])
+    call extend(list, a:2)
+    call s:uniq(list)
+  endif
+  return s:completion_filter(list,a:A)
+endfunction
+
+function! s:stylesheetList(A, L, P) abort
+  let extra = []
+  if rails#app().has('sass')
+    let extra = rails#app().relglob('public/stylesheets/sass/','**/*','.s?ss')
+  endif
+  return s:javascriptList(a:A, a:L, a:P, 'stylesheets', extra)
 endfunction
 
 function! s:specEdit(cmd,...) abort
@@ -4041,9 +4042,23 @@ function! rails#buffer_syntax()
       syn match yamlRailsMethod '\.\@<!\<\(h\|html_escape\|u\|url_encode\)\>' contained containedin=@yamlRailsRegions
       let b:current_syntax = "yaml"
 
-    elseif &syntax == "scss" || &syntax == "sass"
+    endif
+
+    let directive = '\%(require\|require_directory\|require_tree\|require_self$\|link\|link_directory\|link_tree\|depend_on\|depend_on_asset\|stub\)\>" contained skipwhite'
+    if &syntax ==# "scss" || &syntax ==# "sass"
       syn match sassFunction "\<\%(\%(asset\|image\|font\|video\|audio\|javascript\|stylesheet\)-\%(url\|path\)\)\>(\@=" contained
       syn match sassFunction "\<\asset-data-url\>(\@=" contained
+      exe 'syn match sassRailsAssetInclude "[/*]=\s*\zs'.directive 'containedin=sassComment,sassCssComment nextgroup=sassRailsAsset'
+      syn match sassRailsAsset "\f\+" contained
+    elseif &syntax ==# 'css'
+      exe 'syn match cssRailsAssetInclude "\*=\s*\zs'.directive 'containedin=cssComment nextgroup=cssRailsAsset'
+      syn match cssRailsAsset "\f\+" contained
+    elseif &syntax ==# 'javascript'
+      exe 'syn match javascriptRailsAssetInclude "[/*]=\s*\zs'.directive 'containedin=javascriptComment,jsComment nextgroup=javascriptRailsAsset'
+      syn match javascriptRailsAsset "\f\+" contained
+    elseif &syntax ==# 'coffee'
+      exe 'syn match coffeeRailsAssetInclude "#=\s*\zs'.directive 'containedin=coffeeComment nextgroup=coffeeRailsAsset'
+      syn match coffeeRailsAsset "\f\+" contained
     endif
   endif
   call s:HiDefaults()
@@ -4089,7 +4104,14 @@ function! s:HiDefaults()
   hi def link yamlRailsComment                Comment
   hi def link yamlRailsUserClass              railsUserClass
   hi def link yamlRailsUserMethod             railsUserMethod
-  hi def link javascriptRailsFunction         railsMethod
+  hi def link cssRailsAssetInclude            Include
+  hi def link sassRailsAssetInclude           Include
+  hi def link javascriptRailsAssetInclude     Include
+  hi def link coffeeRailsAssetInclude         Include
+  hi def link cssRailsAsset                   String
+  hi def link sassRailsAsset                  String
+  hi def link javascriptRailsAsset            String
+  hi def link coffeeRailsAsset                String
   hi def link railsUserClass                  railsClass
   hi def link railsMethod                     Function
   hi def link railsClass                      Type
