@@ -28,7 +28,7 @@
 [diff]
 	algorithm = histogram
 	renames = copies
-	compactionHeuristic = true
+	indentHeuristic = true
 
 [grep]
 	patternType = perl
