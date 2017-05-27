@@ -1404,18 +1404,6 @@ HAVE dnf && {
     alias dnfclean='run dnf clean all'
 }
 
-# npm
-HAVE npm && {
-    alias npmi='run npm install'
-    alias npmr='run npm uninstall'
-    alias npms='run npm search'
-    alias npmg='run npm ls | g'
-    alias npmq='run npm view'
-    # alias npmsync
-    # alias npmupgrade
-    alias npmoutdated='run npmoutdated'
-}
-
 ### Media
 
 # Imagemagick
