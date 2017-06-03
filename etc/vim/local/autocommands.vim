@@ -85,32 +85,32 @@ augroup GUNS
 
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl
+		\ SetWhitespace 2 |
 		\ setlocal iskeyword+=- |
 		\ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
 		\ execute 'noremap! <buffer> <M-CR> <br>'
 	autocmd FileType gohtmltmpl
 		\ runtime ftplugin/html/sparkup.vim
 
-	" HAML/SASS/YAML
+	" HAML/YAML
 	autocmd BufRead,BufNewFile *.rul
 		\ setlocal filetype=yaml
 	autocmd FileType yaml
 		\ SetWhitespace 2
-	autocmd FileType haml,sass
-		\ setlocal iskeyword+=-
 	autocmd FileType haml
+		\ setlocal iskeyword+=- |
 		\ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
 		\ execute 'noremap! <buffer> <M-CR> %br' |
 		\ execute 'noremap! <buffer> <C-l>  <Space>=><Space>'
 
 	" CSS
-	autocmd FileType css
+	autocmd FileType sass,css,scss,less
+		\ SetWhitespace 2 |
 		\ setlocal iskeyword+=-
-	autocmd BufRead,BufNewFile *.less
-		\ setlocal filetype=scss
 
 	" JavaScript
 	autocmd FileType javascript
+		\ SetWhitespace 2 |
 		\ setlocal tags+=./.jstags,.jstags
 
 	" C
