@@ -104,8 +104,11 @@ augroup GUNS
 		\ execute 'noremap! <buffer> <C-l>  <Space>=><Space>'
 
 	" CSS
-	autocmd FileType sass,css,scss,less
+	autocmd FileType sass
 		\ SetWhitespace 2 |
+		\ setlocal iskeyword+=-
+	autocmd FileType css,scss,less
+		\ SetWhitespace 4 |
 		\ setlocal iskeyword+=-
 
 	" JavaScript
