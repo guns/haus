@@ -607,7 +607,7 @@ CTRL-t
 
     Changes the build tags for various commands. If you have any file that
     uses a custom build tag, such as `//+build integration` , this command can
-    be used to pass it to all tools that accepts tags, such as guru, gorenate,
+    be used to pass it to all tools that accepts tags, such as guru, gorename,
     etc..
 
     The build tags is cleared (unset) if `""` is given. If no arguments is
@@ -1107,10 +1107,23 @@ used >
 <
                                                           *'g:go_fmt_options'*
 
-Use this option to add additional options to the |'g:go_fmt_command'|. Default
-is empty. >
-
+Use this option to add additional options to the |'g:go_fmt_command'|. It's
+value type can be either a string or a dictionary. This is due backwards
+compatibility. The string version will be removed in the future so please use
+the dictionary version. Default is empty. 
+>
   let g:go_fmt_options = ''
+
+  or 
+
+  let g:go_fmt_options = {}
+<
+The dictionary version allows you to define options for multiple binaries:
+>
+  let g:go_fmt_options = {
+    \ 'gofmt': '-s',
+    \ 'goimports': '-local mycompany.com',
+    \ }
 <
                                                     *'g:go_fmt_fail_silently'*
 
@@ -1382,9 +1395,10 @@ explicitly overrides this behavior. For standard Vim behavior, set it to 10.
 <
                                                             *'g:go_list_type'*
 
-Specifies the type of list to use. The default value (empty) will use the
-appropriate kind of list for the command that was called. Supported values are
-"", "quickfix", and "locationlist". >
+Specifies the type of list to use for command outputs (such as errors from
+builds, results from static analysis commands, etc...). The default value
+(empty) will use the appropriate kind of list for the command that was called.
+Supported values are "", "quickfix", and "locationlist". >
 
   let g:go_list_type = ""
 <
@@ -1471,9 +1485,9 @@ Specifies whether `gocode` should use a different socket type. By default
                                                   *'g:go_template_autocreate'*
 
 When a new Go file is created, vim-go automatically fills the buffer content
-with a Go code template. By default the template under
-`templates/hello_world.go` is used. This can be changed with the
-|'g:go_template_file'| setting.
+with a Go code template. By default, the templates under the `templates`
+folder are used.  This can be changed with the |'g:go_template_file'| and
+|'g:go_template_test_file'| settings.
 
 If the new file is created in an already prepopulated package (with other Go
 files), in this case a Go code template with only the Go package declaration
@@ -1493,6 +1507,14 @@ is created. Checkout |'g:go_template_autocreate'| for more info. By default
 the `hello_world.go` file is used.
 >
   let g:go_template_file = "hello_world.go"
+<
+                                                        *'g:go_template_test_file'*
+
+Specifies the file under the `templates` folder that is used if a new Go test
+file is created. Checkout |'g:go_template_autocreate'| for more info. By
+default the `hello_world_test.go` file is used.
+>
+  let g:go_template_test_file = "hello_world_test.go"
 <
                                                      *'g:go_template_use_pkg'*
 
@@ -1635,7 +1657,13 @@ How do I use vim-go with syntastic?~
 Sometimes when using both `vim-go` and `syntastic` Vim will start lagging
 while saving and opening files. The following fixes this:
 >
- let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+ let g:syntastic_go_checkers = ['golint', 'govet']
+ let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
+<
+If you want to add errcheck you can use gometalinter as a wrapper
+>
+ let g:syntastic_go_checkers = ['golint', 'govet', 'gometalinter']
+ let g:syntastic_go_gometalinter_args = ['--disable-all', '--enable=errcheck']
  let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
 <
 Another issue with `vim-go` and `syntastic` is that the location list window
