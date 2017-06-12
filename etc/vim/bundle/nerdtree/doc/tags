@@ -11,6 +11,7 @@
 'NERDTreeHighlightCursorline'	NERD_tree.txt	/*'NERDTreeHighlightCursorline'*
 'NERDTreeHijackNetrw'	NERD_tree.txt	/*'NERDTreeHijackNetrw'*
 'NERDTreeIgnore'	NERD_tree.txt	/*'NERDTreeIgnore'*
+'NERDTreeMarkBookmarks'	NERD_tree.txt	/*'NERDTreeMarkBookmarks'*
 'NERDTreeMinimalUI'	NERD_tree.txt	/*'NERDTreeMinimalUI'*
 'NERDTreeMouseMode'	NERD_tree.txt	/*'NERDTreeMouseMode'*
 'NERDTreeQuitOnOpen'	NERD_tree.txt	/*'NERDTreeQuitOnOpen'*
