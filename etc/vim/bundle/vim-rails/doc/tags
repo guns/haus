@@ -5,18 +5,6 @@ g:rails_gem_projections	rails.txt	/*g:rails_gem_projections*
 g:rails_projections	rails.txt	/*g:rails_projections*
 macros/rails.vim	rails.txt	/*macros\/rails.vim*
 rails	rails.txt	/*rails*
-rails-'et'	rails.txt	/*rails-'et'*
-rails-'expandtab'	rails.txt	/*rails-'expandtab'*
-rails-'filetype'	rails.txt	/*rails-'filetype'*
-rails-'ft'	rails.txt	/*rails-'ft'*
-rails-'includeexpr'	rails.txt	/*rails-'includeexpr'*
-rails-'inex'	rails.txt	/*rails-'inex'*
-rails-'pa'	rails.txt	/*rails-'pa'*
-rails-'path'	rails.txt	/*rails-'path'*
-rails-'shiftwidth'	rails.txt	/*rails-'shiftwidth'*
-rails-'softtabstop'	rails.txt	/*rails-'softtabstop'*
-rails-'sts'	rails.txt	/*rails-'sts'*
-rails-'sw'	rails.txt	/*rails-'sw'*
 rails-:A	rails.txt	/*rails-:A*
 rails-:AD	rails.txt	/*rails-:AD*
 rails-:AE	rails.txt	/*rails-:AE*
@@ -24,7 +12,7 @@ rails-:AS	rails.txt	/*rails-:AS*
 rails-:AT	rails.txt	/*rails-:AT*
 rails-:AV	rails.txt	/*rails-:AV*
 rails-:Cd	rails.txt	/*rails-:Cd*
-rails-:Clogfile	rails.txt	/*rails-:Clogfile*
+rails-:Clog	rails.txt	/*rails-:Clog*
 rails-:Console	rails.txt	/*rails-:Console*
 rails-:Ctags	rails.txt	/*rails-:Ctags*
 rails-:Destroy	rails.txt	/*rails-:Destroy*
@@ -63,7 +51,6 @@ rails-:Rabbrev	rails.txt	/*rails-:Rabbrev*
 rails-:Rabbrev!	rails.txt	/*rails-:Rabbrev!*
 rails-:Rails	rails.txt	/*rails-:Rails*
 rails-:Rake	rails.txt	/*rails-:Rake*
-rails-:Rake!	rails.txt	/*rails-:Rake!*
 rails-:Rcd	rails.txt	/*rails-:Rcd*
 rails-:Rcontroller	rails.txt	/*rails-:Rcontroller*
 rails-:Rdbext	rails.txt	/*rails-:Rdbext*
@@ -128,7 +115,6 @@ rails-license	rails.txt	/*rails-license*
 rails-migrations	rails.txt	/*rails-migrations*
 rails-misc	rails.txt	/*rails-misc*
 rails-navigation	rails.txt	/*rails-navigation*
-rails-options	rails.txt	/*rails-options*
 rails-partials	rails.txt	/*rails-partials*
 rails-plugin-author	rails.txt	/*rails-plugin-author*
 rails-projection-abbreviations	rails.txt	/*rails-projection-abbreviations*
@@ -150,7 +136,6 @@ rails-surround	rails.txt	/*rails-surround*
 rails-syntax	rails.txt	/*rails-syntax*
 rails-syntax-assertions	rails.txt	/*rails-syntax-assertions*
 rails-syntax-keywords	rails.txt	/*rails-syntax-keywords*
-rails-syntax-yaml	rails.txt	/*rails-syntax-yaml*
 rails-type-navigation	rails.txt	/*rails-type-navigation*
 rails-vim-integration	rails.txt	/*rails-vim-integration*
 rails.txt	rails.txt	/*rails.txt*
