@@ -25,22 +25,20 @@ function! pathogen#infect(...) abort
   if a:0
     let paths = filter(reverse(copy(a:000)), 'type(v:val) == type("")')
   else
-    let paths = ['bundle/{}']
-    if !has('packages')
-      call add(paths, 'pack/{}/start/{}')
-    endif
+    let paths = ['bundle/{}', 'pack/{}/start/{}']
   endif
-  for path in paths
-    if path =~# '^\%({\=[$~\\/]\|{\=\w:[\\/]\).*[{}*]'
+  if has('packages')
+    call filter(paths, 'v:val !~# "^pack/[^/]*/start/[^/]*$"')
+  endif
+  let static = '^\%([$~\\/]\|\w:[\\/]\)[^{}*]*$'
+  for path in filter(copy(paths), 'v:val =~# static')
+    call pathogen#surround(path)
+  endfor
+  for path in filter(copy(paths), 'v:val !~# static')
+    if path =~# '^\%([$~\\/]\|\w:[\\/]\)'
       call pathogen#surround(path)
-    elseif path =~# '^\%([$~\\/]\|\w:[\\/]\)'
-      call s:warn('Change pathogen#infect('.string(path).') to pathogen#infect('.string(path.'/{}').')')
-      call pathogen#surround(path . '/{}')
-    elseif path =~# '[{}*]'
-      call pathogen#interpose(path)
     else
-      call s:warn('Change pathogen#infect('.string(path).') to pathogen#infect('.string(path.'/{}').')')
-      call pathogen#interpose(path . '/{}')
+      call pathogen#interpose(path)
     endif
   endfor
   call pathogen#cycle_filetype()
@@ -185,19 +183,20 @@ endfunction
 " and globbed.  Actual globs are preserved.
 function! pathogen#expand(pattern, ...) abort
   let after = a:0 ? a:1 : ''
-  if a:pattern =~# '{[^{}]\+}'
-    let [pre, pat, post] = split(substitute(a:pattern, '\(.\{-\}\){\([^{}]\+\)}\(.*\)', "\\1\001\\2\001\\3", ''), "\001", 1)
+  let pattern = substitute(a:pattern, '^[~$][^\/]*', '\=expand(submatch(0))', '')
+  if pattern =~# '{[^{}]\+}'
+    let [pre, pat, post] = split(substitute(pattern, '\(.\{-\}\){\([^{}]\+\)}\(.*\)', "\\1\001\\2\001\\3", ''), "\001", 1)
     let found = map(split(pat, ',', 1), 'pre.v:val.post')
     let results = []
     for pattern in found
       call extend(results, pathogen#expand(pattern))
     endfor
-  elseif a:pattern =~# '{}'
-    let pat = matchstr(a:pattern, '^.*{}[^*]*\%($\|[\\/]\)')
-    let post = a:pattern[strlen(pat) : -1]
+  elseif pattern =~# '{}'
+    let pat = matchstr(pattern, '^.*{}[^*]*\%($\|[\\/]\)')
+    let post = pattern[strlen(pat) : -1]
     let results = map(split(glob(substitute(pat, '{}', '*', 'g')), "\n"), 'v:val.post')
   else
-    let results = [a:pattern]
+    let results = [pattern]
   endif
   let vf = pathogen#slash() . 'vimfiles'
   call map(results, 'v:val =~# "\\*" ? v:val.after : isdirectory(v:val.vf.after) ? v:val.vf.after : isdirectory(v:val.after) ? v:val.after : ""')
@@ -262,37 +261,6 @@ function! pathogen#runtime_findfile(file,count) abort
   else
     return fnamemodify(file,':p')
   endif
-endfunction
-
-" Section: Deprecated
-
-function! s:warn(msg) abort
-  echohl WarningMsg
-  echomsg a:msg
-  echohl NONE
-endfunction
-
-" Prepend all subdirectories of path to the rtp, and append all 'after'
-" directories in those subdirectories.  Deprecated.
-function! pathogen#runtime_prepend_subdirectories(path) abort
-  call s:warn('Change pathogen#runtime_prepend_subdirectories('.string(a:path).') to pathogen#infect('.string(a:path.'/{}').')')
-  return pathogen#surround(a:path . pathogen#slash() . '{}')
-endfunction
-
-function! pathogen#incubate(...) abort
-  let name = a:0 ? a:1 : 'bundle/{}'
-  call s:warn('Change pathogen#incubate('.(a:0 ? string(a:1) : '').') to pathogen#infect('.string(name).')')
-  return pathogen#interpose(name)
-endfunction
-
-" Deprecated alias for pathogen#interpose().
-function! pathogen#runtime_append_all_bundles(...) abort
-  if a:0
-    call s:warn('Change pathogen#runtime_append_all_bundles('.string(a:1).') to pathogen#infect('.string(a:1.'/{}').')')
-  else
-    call s:warn('Change pathogen#runtime_append_all_bundles() to pathogen#infect()')
-  endif
-  return pathogen#interpose(a:0 ? a:1 . '/{}' : 'bundle/{}')
 endfunction
 
 " vim:set et sw=2 foldmethod=expr foldexpr=getline(v\:lnum)=~'^\"\ Section\:'?'>1'\:getline(v\:lnum)=~#'^fu'?'a1'\:getline(v\:lnum)=~#'^endf'?'s1'\:'=':
