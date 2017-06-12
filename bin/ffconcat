@@ -8,10 +8,21 @@
 require 'fileutils'
 require 'securerandom'
 require 'shellwords'
+require 'optparse'
 
-abort "USAGE: #{File.basename __FILE__} out-file input-files …" if ARGV.size < 2
+@ffmpeg_opts = []
 
-outfile, *inputs = ARGV
+options = OptionParser.new do |opt|
+  opt.on '-o', '--opts FFMPEG_OPTS' do |arg|
+    @ffmpeg_opts = arg.shellsplit
+  end
+end
+
+args = options.parse ARGV
+
+abort "USAGE: #{File.basename __FILE__} out-file input-files …" if args.size < 2
+
+outfile, *inputs = args
 
 begin
   list = ".ffconcat-#{SecureRandom.hex}"
@@ -19,7 +30,7 @@ begin
   File.open list, 'w' do |f|
     f.puts inputs.map { |i| "file #{i.shellescape}" }
   end
-  system 'ffmpeg', '-f', 'concat', '-i', list, '-c', 'copy', outfile
+  system 'ffmpeg', '-f', 'concat', '-safe', '0', *@ffmpeg_opts, '-i', list, '-c', 'copy', outfile
 ensure
   FileUtils.rm_f list
 end

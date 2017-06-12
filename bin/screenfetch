@@ -228,7 +228,7 @@ detectColors () {
 	my_hcolor=$(colorNumberToCode "${my_hcolor}")
 }
 
-supported_distros="Alpine Linux, Antergos, Arch Linux (Old and Current Logos), blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, Fux, Gentoo, gNewSense, GuixSD, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, LinuxDeepin, Linux Mint, LMDE, Logos, Mageia, Mandriva/Mandrake, Manjaro, Mer, Netrunner, NixOS, openSUSE, Oracle Linux, Parabola GNU/Linux-libre, Pardus, Parrot Security, PCLinuxOS, PeppermintOS, Qubes OS, Raspbian, Red Hat Enterprise Linux, ROSA, Sabayon, SailfishOS, Scientific Linux, Slackware, Solus, SparkyLinux, SteamOS, SUSE Linux Enterprise, SwagArch, TinyCore, Trisquel, Ubuntu, Viperr and Void."
+supported_distros="Alpine Linux, Antergos, Arch Linux (Old and Current Logos), blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, Fux, Gentoo, gNewSense, GuixSD, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, LinuxDeepin, Linux Mint, LMDE, Logos, Mageia, Mandriva/Mandrake, Manjaro, Mer, Netrunner, NixOS, OBRevenge, openSUSE, Oracle Linux, Parabola GNU/Linux-libre, Pardus, Parrot Security, PCLinuxOS, PeppermintOS, Qubes OS, Raspbian, Red Hat Enterprise Linux, ROSA, Sabayon, SailfishOS, Scientific Linux, Slackware, Solus, SparkyLinux, SteamOS, SUSE Linux Enterprise, SwagArch, TinyCore, Trisquel, Ubuntu, Viperr, Void and Zorin OS."
 supported_other="Dragonfly/Free/Open/Net BSD, Haiku, Mac OS X, Windows+Cygwin and Windows+MSYS2."
 supported_dms="KDE, GNOME, Unity, Xfce, LXDE, Cinnamon, MATE, Deepin, CDE, RazorQt and Trinity."
 supported_wms="2bwm, 9wm, Awesome, Beryl, Blackbox, Cinnamon, chromeos-wm, Compiz, deepin-wm, dminiwm, dwm, dtwm, E16, E17, echinus, Emerald, FluxBox, FLWM, FVWM, herbstluftwm, howm, IceWM, KWin, Metacity, monsterwm, Musca, Gala, Mutter, Muffin, Notion, OpenBox, PekWM, Ratpoison, Sawfish, ScrotWM, SpectrWM, StumpWM, subtle, sway, TWin, WindowMaker, WMFS, wmii, Xfwm4, XMonad and i3."
@@ -407,6 +407,10 @@ detectdistro () {
 					fi
 					if grep -q -i 'swagarch' /etc/os-release; then
 						distro="SwagArch"
+						distro_release="n/a"
+					fi
+					if grep -q -i 'obrevenge' /etc/os-release; then
+						distro="OBRevenge"
 						distro_release="n/a"
 					fi
 					;;
@@ -598,6 +602,10 @@ detectdistro () {
 					distro_codename=""
 					distro_release=""
 					;;
+				"Zorin")
+					distro="Zorin OS"
+					distro_codename=""
+					;;
 				*)
 					if [ "x$(printf "${distro_detect}" | od -t x1 | sed -e 's/^\w*\ *//' | tr '\n' ' ' | grep 'eb b6 89 ec 9d 80 eb b3 84 ')" != "x" ]; then
 						distro="Red Star OS"
@@ -725,13 +733,49 @@ detectdistro () {
 				fi
 			fi
 
+			if [[ "${distro}" == "Unknown" ]] && [[ "${OSTYPE}" == "linux-gnu" || "${OSTYPE}" == "linux" || "${OSTYPE}" == "gnu" ]]; then
+					for di in arch chakra crunchbang-lsb evolveos exherbo fedora \
+						      frugalware fux gentoo kogaion mageia obarun oracle \
+						      pardus pclinuxos redhat redstar rosa SuSe; do
+						if [ -f /etc/$di-release ]; then distro=$di && break; fi
+					done
+					if [[ "${distro}" == "crunchbang-lsb" ]]; then
+						distro == "Crunchbang"
+					elif [[ "${distro}" == "gentoo" ]]; then
+						grep -q "Funtoo" /etc/gentoo-release && distro="Funtoo"
+					elif [[ "${distro}" == "mandrake" ]] || [[ "${distro}" == "mandriva" ]]; then
+						grep -q "PCLinuxOS" /etc/${distro}-release && distro="PCLinuxOS"
+					elif [[ "${distro}" == "fedora" ]]; then
+						grep -q "Korora" /etc/fedora-release && distro="Korora"
+						grep -q "BLAG" /etc/fedora-release && distro="BLAG" && distro_more="$(head -n1 /etc/fedora-release)"
+					elif [[ "${distro}" == "oracle" ]]; then
+						distro_more="$(sed 's/Oracle Linux //' /etc/oracle-release)"
+					elif [[ "${distro}" == "SuSe" ]]; then
+						distro="openSUSE"
+						if [ -f /etc/os-release ]; then
+							if [[ "$(cat /etc/os-release)" =~ "SUSE Linux Enterprise" ]]; then
+								distro="SUSE Linux Enterprise"
+								distro_more=$(awk -F'=' '/^VERSION_ID=/ {print $2}' /etc/os-release | tr -d '"')
+							fi
+						fi
+						if [[ "${distro_more}" =~ "Tumbleweed" ]]; then
+							distro_more="Tumbleweed"
+						fi
+					elif [[ "${distro}" == "redstar" ]]; then
+						distro_more=$(grep -o '[0-9.]' /etc/redstar-release | tr -d '\n')
+					elif [[ "${distro}" == "redhat" ]]; then
+						grep -q "CentOS" /etc/redhat-release && distro="CentOS"
+						grep -q "PCLinuxOS" /etc/redhat-release && distro="PCLinuxOS"
+						if [ "x$(od -t x1 /etc/redhat-release | sed -e 's/^\w*\ *//' | tr '\n' ' ' | grep 'eb b6 89 ec 9d 80 eb b3 84 ')" != "x" ]; then
+							distro="Red Star OS"
+							distro_more=$(grep -o '[0-9.]' /etc/redhat-release | tr -d '\n')
+						fi
+					fi
+			fi
+
 			if [[ "${distro}" == "Unknown" ]]; then
 				if [[ "${OSTYPE}" == "linux-gnu" || "${OSTYPE}" == "linux" || "${OSTYPE}" == "gnu" ]]; then
-					if [ -f /etc/arch-release ]; then distro="Arch Linux"
-					elif [ -f /etc/blackPanther-release ]; then distro="blackPanther OS"
-					elif [ -f /etc/chakra-release ]; then distro="Chakra"
-					elif [ -f /etc/crunchbang-lsb-release ]; then distro="CrunchBang"
-					elif [ -f /etc/debian_version ]; then
+					if [ -f /etc/debian_version ]; then
 						if [ -f /etc/issue ]; then
 							if grep -q "gNewSense" /etc/issue ; then
 								distro="gNewSense"
@@ -745,76 +789,16 @@ detectdistro () {
 						if grep -q "Kali" /etc/debian_version ; then
 							distro="Kali Linux"
 						fi
-					elif [ -f /etc/dragora-version ]; then distro="Dragora" && distro_more="$(cut -d, -f1 /etc/dragora-version)"
-					elif [ -f /etc/evolveos-release ]; then distro="Evolve OS"
-					elif [ -f /etc/exherbo-release ]; then distro="Exherbo"
-					elif [ -f /etc/fedora-release ]; then
-						if grep -q "Korora" /etc/fedora-release; then
-							distro="Korora"
-						elif grep -q "BLAG" /etc/fedora-release; then
-							distro="BLAG"
-							distro_more="$(head -n1 /etc/fedora-release)"
-						else
-							distro="Fedora"
-						fi
-					elif [ -f /etc/frugalware-release ]; then distro="Frugalware"
-					elif [ -f /etc/fux-release ]; then distro="Fux"
-					elif [ -f /etc/gentoo-release ]; then
-						if grep -q "Funtoo" /etc/gentoo-release ; then
-							distro="Funtoo"
-						else
-							distro="Gentoo"
-						fi
-					elif [ -f /etc/kogaion-release ]; then distro="Kogaion"
-					elif [ -f /etc/mageia-release ]; then distro="Mageia"
-					elif [ -f /etc/mandrake-release ]; then
-						if grep -q "PCLinuxOS" /etc/mandrake-release ; then
-							distro="PCLinuxOS"
-						else
-							distro="Mandrake"
-						fi
-					elif [ -f /etc/mandriva-release ]; then
-						if grep -q "PCLinuxOS" /etc/mandriva-release ; then
-							distro="PCLinuxOS"
-						else
-							distro="Mandriva"
-						fi
 					elif [ -f /etc/NIXOS ]; then distro="NixOS"
-					elif [ -f /etc/obarun-release ]; then distro="Obarun"
-					elif [ -f /etc/oracle-release ]; then
-						distro="Oracle Linux"
-						distro_more="$(sed 's/Oracle Linux //' /etc/oracle-release)"
-					elif [ -f /etc/SuSE-release ]; then
-						distro="openSUSE"
-						if [ -f /etc/os-release ]; then
-							if [[ "$(cat /etc/os-release)" =~ "SUSE Linux Enterprise" ]]; then
-								distro="SUSE Linux Enterprise"
-								distro_more=$(awk -F'=' '/^VERSION_ID=/ {print $2}' /etc/os-release | tr -d '"')
-							fi
-						fi
-						if [[ "${distro_more}" =~ "Tumbleweed" ]]; then distro_more="Tumbleweed"; fi
-					elif [ -f /etc/pardus-release ]; then distro="Pardus"
-					elif [ -f /etc/pclinuxos-release ]; then distro="PCLinuxOS"
-					elif [ -f /etc/redstar-release ]; then
-						distro="Red Star OS"
-						distro_more=$(grep -o '[0-9.]' /etc/redstar-release | tr -d '\n')
-					elif [ -f /etc/redhat-release ]; then
-						if grep -q "CentOS" /etc/redhat-release; then
-							distro="CentOS"
-						elif grep -q "PCLinuxOS" /etc/redhat-release; then
-							distro="PCLinuxOS"
-						elif [ "x$(od -t x1 /etc/redhat-release | sed -e 's/^\w*\ *//' | tr '\n' ' ' | grep 'eb b6 89 ec 9d 80 eb b3 84 ')" != "x" ]; then
-							distro="Red Star OS"
-							distro_more=$(grep -o '[0-9.]' /etc/redhat-release | tr -d '\n')
-						else
-							distro="Red Hat Enterprise Linux"
-						fi
-					elif [ -f /etc/rosa-release ]; then distro="ROSA"
+					elif [ -f /etc/dragora-version ]; then
+						distro="Dragora"
+						distro_more="$(cut -d, -f1 /etc/dragora-version)"
 					elif [ -f /etc/slackware-version ]; then distro="Slackware"
 					elif [ -f /usr/share/doc/tc/release.txt ]; then
 						distro="TinyCore"
 						distro_more="$(cat /usr/share/doc/tc/release.txt)"
-					elif [ -f /etc/sabayon-edition ]; then distro="Sabayon"; fi
+					elif [ -f /etc/sabayon-edition ]; then distro="Sabayon"
+					fi
 				else
 					if [[ -x /usr/bin/sw_vers ]] && /usr/bin/sw_vers | grep -i "Mac OS X" >/dev/null; then
 						distro="Mac OS X"
@@ -963,6 +947,7 @@ detectdistro () {
 		netrunner) distro="Netrunner" ;;
 		nix|nix*os) distro="NixOS" ;;
 		obarun) distro="Obarun" ;;
+		obrevenge) distro="OBRevenge" ;;
 		ol|oracle*linux) distro="Oracle Linux" ;;
 		openbsd) distro="OpenBSD" ;;
 		opensuse) distro="openSUSE" ;;
@@ -997,6 +982,7 @@ detectdistro () {
 			;;
 		viperr) distro="Viperr" ;;
 		void*linux) distro="Void Linux" ;;
+		zorin*) distro="Zorin OS" ;;
 	esac
 	verboseOut "Finding distro...found as '${distro} ${distro_release}'"
 }
@@ -1076,7 +1062,7 @@ detectpkgs () {
 	pkgs="Unknown"
 	case "${distro}" in
 		'Alpine Linux') pkgs=$(apk info | wc -l) ;;
-		'Arch Linux'|'Parabola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'|'Netrunner'|'KaOS'|'Obarun'|'SwagArch') pkgs=$(pacman -Qq | wc -l) ;;
+		'Arch Linux'|'Parabola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'|'Netrunner'|'KaOS'|'Obarun'|'SwagArch'|'OBRevenge') pkgs=$(pacman -Qq | wc -l) ;;
 		'Chrome OS')
 			if [ -d "/usr/local/lib/crew/packages" ]; then
 				pkgs=$(ls -l /usr/local/etc/crew/meta/*.filelist | wc -l)
@@ -1086,7 +1072,7 @@ detectpkgs () {
 		;;
 		'Dragora') pkgs=$(ls -1 /var/db/pkg | wc -l) ;;
 		'Frugalware') pkgs=$(pacman-g2 -Q | wc -l) ;;
-		'Debian'|'Ubuntu'|'Mint'|'Fuduntu'|'KDE neon'|'Devuan'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS'|'gNewSense'|'BunsenLabs'|'SteamOS'|'Parrot Security'|'GrombyangOS'| 'DesaOS') pkgs=$(dpkg -l | grep -c ^i) ;;
+		'Debian'|'Ubuntu'|'Mint'|'Fuduntu'|'KDE neon'|'Devuan'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS'|'gNewSense'|'BunsenLabs'|'SteamOS'|'Parrot Security'|'GrombyangOS'|'DesaOS'|'Zorin OS') pkgs=$(dpkg -l | grep -c ^i) ;;
 		'Slackware') pkgs=$(ls -1 /var/log/packages | wc -l) ;;
 		'Gentoo'|'Sabayon'|'Funtoo'|'Kogaion') pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
 		'NixOS') pkgs=$(ls -d -1 /nix/store/*/ | wc -l) ;;
@@ -1243,7 +1229,7 @@ detectcpu () {
 						*) model="IBM S/390 machine type $machine" ;;
 					esac
 				else
-					model="Unkown"
+					model="Unknown"
 				fi
 			fi
 			cpu="${model}${cpu}"
@@ -3948,6 +3934,32 @@ asciiText () {
 "${c3}        \`woapfjsod\`${c4}             \`woapfjsod\`      %s")
 		;;
 
+		"Zorin OS")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'light blue') # Light Blue
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
+			startline="0"
+			fulloutput=(
+"${c1}           ...................          %s"
+"${c1}          :ooooooooooooooooooo/         %s"
+"${c1}         /ooooooooooooooooooooo+        %s"
+"${c1}        ''''''''''''''''''''''''        %s"
+"${c1}                                        %s"
+"${c1}    .++++++++++++++++++/.       :++-    %s"
+"${c1}   -oooooooooooooooo/-       :+ooooo:   %s"
+"${c1}  :oooooooooooooo/-       :+ooooooooo:  %s"
+"${c1} .oooooooooooo+-       :+ooooooooooooo- %s"
+"${c1}  -oooooooo/-       -+ooooooooooooooo:  %s"
+"${c1}   .oooo+-       -+ooooooooooooooooo-   %s"
+"${c1}    .--        .-------------------.    %s"
+"${c1}                                        %s"
+"${c1}        .//////////////////////-        %s"
+"${c1}         :oooooooooooooooooooo/         %s"
+"${c1}          :oooooooooooooooooo:          %s"
+"${c1}           ''''''''''''''''''           %s")
+		;;
+
 		"Mac OS X")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'green') # Green
@@ -4929,6 +4941,35 @@ asciiText () {
 "${c2}                                               %s")
 		;;
 
+		"OBRevenge")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'red') # White
+				c2=$(getColor 'light blue') # Light Blue
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
+			startline="0"
+			logowidth="48"
+			fulloutput=(
+"${c1}       _@@@@   @@@g_      	%s"
+"${c1}     _@@@@@@   @@@@@@     	%s"
+"${c1}    _@@@@@@M   W@@@@@@_   	%s"
+"${c1}   j@@@@P        ^W@@@@   	%s"
+"${c1}   @@@@L____  _____Q@@@@  	%s"
+"${c1}  Q@@@@@@@@@@j@@@@@@@@@@  	%s"
+"${c1}  @@@@@    T@j@    T@@@@@	%s"
+"${c1}  @@@@@ ___Q@J@    _@@@@@ 	%s"
+"${c1}  @@@@@fMMM@@j@jggg@@@@@@ 	%s"
+"${c1}  @@@@@    j@j@^MW@P @@@@ 	%s"
+"${c1}  Q@@@@@ggg@@f@   @@@@@@L 	%s"
+"${c1}  ^@@@@WWMMP  @    Q@@@@  	%s"
+"${c1}   @@@@@_         _@@@@l  	%s"
+"${c1}    W@@@@@g_____g@@@@@P   	%s"
+"${c1}     @@@@@@@@@@@@@@@@l    	%s"
+"${c1}      ^W@@@@@@@@@@@P      	%s"
+"${c1}         ^TMMMMTll   		%s"
+"${c1}                                  %s")
+		;;
+
 		"Parrot Security")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'light blue') # Light Blue
@@ -5185,10 +5226,10 @@ infoDisplay () {
 	myascii="${distro}"
 	[[ "${asc_distro}" ]] && myascii="${asc_distro}"
 	case ${myascii} in
-		"Alpine Linux"|"Arch Linux - Old"|"blackPanther OS"|"Fedora"|"Korora"|"Chapeau"|"Mandriva"|"Mandrake"|"Chakra"|"ChromeOS"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux"|"Antergos"|"KaOS"|"Logos"|"gNewSense"|"Netrunner"|"NixOS"|"SailfishOS"|"Qubes OS"|"Kogaion"|"PCLinuxOS"|"Obarun"|"Solus"|"SwagArch"|"Parrot Security") labelcolor=$(getColor 'light blue');;
+		"Alpine Linux"|"Arch Linux - Old"|"blackPanther OS"|"Fedora"|"Korora"|"Chapeau"|"Mandriva"|"Mandrake"|"Chakra"|"ChromeOS"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux"|"Antergos"|"KaOS"|"Logos"|"gNewSense"|"Netrunner"|"NixOS"|"SailfishOS"|"Qubes OS"|"Kogaion"|"PCLinuxOS"|"Obarun"|"Solus"|"SwagArch"|"Parrot Security"|"Zorin OS") labelcolor=$(getColor 'light blue');;
 		"Arch Linux"|"Frugalware"|"Mageia"|"Deepin"|"CRUX") labelcolor=$(getColor 'light cyan');;
 		"Mint"|"LMDE"|"KDE neon"|"openSUSE"|"SUSE Linux Enterprise"|"LinuxDeepin"|"DragonflyBSD"|"Manjaro"|"Manjaro-tree"|"Android"|"Void Linux"|"DesaOS") labelcolor=$(getColor 'light green');;
-		"Ubuntu"|"FreeBSD"|"FreeBSD - Old"|"Debian"|"Raspbian"|"BSD"|"Red Hat Enterprise Linux"|"Oracle Linux"|"Peppermint"|"Cygwin"|"Msys"|"Fuduntu"|"Scientific Linux"|"DragonFlyBSD"|"BackTrack Linux"|"Red Star OS"|"SparkyLinux") labelcolor=$(getColor 'light red');;
+		"Ubuntu"|"FreeBSD"|"FreeBSD - Old"|"Debian"|"Raspbian"|"BSD"|"Red Hat Enterprise Linux"|"Oracle Linux"|"Peppermint"|"Cygwin"|"Msys"|"Fuduntu"|"Scientific Linux"|"DragonFlyBSD"|"BackTrack Linux"|"Red Star OS"|"SparkyLinux"|"OBRevenge") labelcolor=$(getColor 'light red');;
 		"ROSA") labelcolor=$(getColor 'white');;
 		"CrunchBang"|"Viperr"|"elementary"*) labelcolor=$(getColor 'dark grey');;
 		"Gentoo"|"Parabola GNU/Linux-libre"|"Funtoo"|"Funtoo-text"|"BLAG"|"SteamOS"|"Devuan") labelcolor=$(getColor 'light purple');;
