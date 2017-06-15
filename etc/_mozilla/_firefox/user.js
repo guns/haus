@@ -172,6 +172,7 @@ user_pref("media.peerconnection.video.h264_enabled", false);
 
 // Remove all external URLs
 user_pref("app.feedback.baseURL", "");
+user_pref("app.releaseNotesURL", "");
 user_pref("app.support.baseURL", "");
 user_pref("app.support.e10sAccessibilityUrl", "");
 user_pref("app.update.url", "");
@@ -212,6 +213,7 @@ user_pref("browser.usedOnWindows10.introURL", "");
 user_pref("captivedetect.canonicalURL", "");
 user_pref("datareporting.healthreport.about.reportUrl", "");
 user_pref("datareporting.healthreport.infoURL", "");
+user_pref("datareporting.policy.firstRunURL", "");
 user_pref("devtools.devedition.promo.url", "");
 user_pref("devtools.devices.url", "");
 user_pref("devtools.gcli.imgurUploadURL", "");
