@@ -88,8 +88,7 @@ class Screencast
   end
 
   def get_selection
-    m = Hash[*%x(slop).split("\n").flat_map { |l| l.split '=' }]
-    m.values_at 'W', 'H', 'X', 'Y'
+    %x(slop --format "%w %h %x %y").split(' ').map &:to_i
   end
 
   def current_display
