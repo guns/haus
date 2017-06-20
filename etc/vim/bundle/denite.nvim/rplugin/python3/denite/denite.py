@@ -49,6 +49,7 @@ class Denite(object):
             ctx['is_redraw'] = context['is_redraw']
             ctx['messages'] = context['messages']
             ctx['mode'] = context['mode']
+            ctx['input'] = context['input']
             ctx['prev_input'] = context['input']
             ctx['event'] = 'gather'
             ctx['async_timeout'] = 0.01
@@ -235,7 +236,7 @@ class Denite(object):
         context['targets'] = targets
         return action['func'](context)
 
-    def get_kind(self, context, targets):
+    def _get_kind(self, context, targets):
         if not targets:
             return {}
 
@@ -262,13 +263,31 @@ class Denite(object):
 
         return kind
 
+    def _get_source(self, context, targets):
+        if not targets:
+            return {}
+
+        sources = set()
+        for target in targets:
+            sources.add(self._sources[target['source']])
+        if len(sources) != 1:
+            self.error('Multiple sources are detected')
+            return {}
+        return sources.pop()
+
     def get_action(self, context, action_name, targets):
-        kind = self.get_kind(context, targets)
+        kind = self._get_kind(context, targets)
         if not kind:
+            return {}
+
+        source = self._get_source(context, targets)
+        if not source:
             return {}
 
         if action_name == 'default':
             action_name = context['default_action']
+            if action_name == 'default':
+                action_name = source.default_action
             if action_name == 'default':
                 action_name = kind.default_action
         action_attr = 'action_' + action_name
@@ -283,7 +302,7 @@ class Denite(object):
         }
 
     def get_actions(self, context, targets):
-        kind = self.get_kind(context, targets)
+        kind = self._get_kind(context, targets)
         if not kind:
             return []
         return ['default'] + [x.replace('action_', '') for x in dir(kind)

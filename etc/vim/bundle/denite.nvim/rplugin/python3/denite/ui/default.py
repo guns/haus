@@ -121,6 +121,7 @@ class Default(object):
         self.change_mode(self._current_mode)
 
         if self._context['cursor_pos'].isnumeric():
+            self.init_cursor()
             self.move_to_pos(int(self._context['cursor_pos']))
 
         # Make sure that the caret position is ok
@@ -467,6 +468,7 @@ class Default(object):
 
     def cleanup(self):
         self._vim.command('pclose!')
+        self._vim.call('clearmatches')
         # Redraw to clear prompt
         self._vim.command('redraw | echo ""')
         self._vim.command('highlight! link CursorLine CursorLine')
@@ -560,6 +562,7 @@ class Default(object):
             is_quit = False
 
         if not is_quit and action['is_redraw']:
+            self.init_cursor()
             self.redraw()
             if self._context['input'] != prev_input:
                 self._prompt.caret.locus = self._prompt.caret.tail

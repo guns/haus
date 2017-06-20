@@ -679,6 +679,7 @@ p		<denite:do_action:preview>
 d		<denite:do_action:delete>
 n		<denite:do_action:new>
 t		<denite:do_action:tabopen>
+y		<denite:do_action:yank>
 q		<denite:quit>
 <C-L>		<denite:redraw>
 <C-R>		<denite:restart>
@@ -946,19 +947,24 @@ OPTIONS							*denite-options*
 					*denite-options-highlight-matched-char*
 -highlight-matched-char
 		Matched characters highlight.
-		Default: 'Search'
+		Default: "Search"
 
 					*denite-options-highlight-matched-range*
 -highlight-matched-range
 		Matched range highlight.
-		Default: 'Underlined'
+		Default: "Underlined"
 
 					*denite-options-highlight-mode-{mode}*
 -highlight-mode-{mode}
 		Change |hl-CursorLine| in {mode}.
 		Default:
-		'CursorLine' in "insert" mode
-		'WildMenu' in "normal" mode
+		"CursorLine" in "insert" mode
+		"WildMenu" in "normal" mode
+
+					*denite-options-highlight-preview-line*
+-highlight-preview-line
+		Previewed line highlight.
+		Default: "Search"
 
 						*denite-options-immediately*
 -immediately
@@ -1118,6 +1124,9 @@ file
 						*denite-source-file_old*
 file_old
 		Gather files from |v:oldfiles|.
+
+		Note: This source cannot be update the candidates until Vim
+		restart in Vim8.
 
 		Source actions:
 		delete		Remove the files from |v:oldfiles|
@@ -1301,15 +1310,15 @@ directory	An interface to change directory.
 				directory.
 
 					*denite-kind-directory-actions*
-			cd (default)
+			narrow (default)
+				Narrow by the directory.
+
+			cd
 				Change the Vim current directory to the
 				directory.
 
 			open
 				Open the directory.
-
-			narrow
-				Narrow by the directory.
 
 						*denite-kind-file*
 file		An interface to jump to the file position.
@@ -1334,10 +1343,11 @@ file		An interface to jump to the file position.
 				Open the file.
 
 			preview
-				Preview the file.
+				Preview and highlight the file.
 
 			highlight
-				Preview and highlight the file.
+				Highlight the location of the candidate if the
+				buffer is visible.
 
 			quickfix
 				Set the quickfix list and open the quickfix
@@ -1796,21 +1806,33 @@ Q: Does hw (highway) work in denite.nvim?
 
 A: No. It is not supported.
 
+Q: Can I make denite window always use 40% of the current window?
+
+A: >
+	Denite file -winheight=`60*winheight(0)/100`
+
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*
 
+2017.06.17
+* "directory" kind default action is changed to "narrow".
+
+* "preview" action highlights the position.
+
+* "highlight" action does not open the preview window.
+
 2016.12.17
-	"highlight_syntax" is splitted to "highlight" and "define_syntax".
-	The sources don't have to define source syntax name.
+* "highlight_syntax" is splitted to "highlight" and "define_syntax".
+  The sources don't have to define source syntax name.
 
 2016.12.02
-	neovim-prompt implementation has been merged.
-	Users need to follow the migration-note below.
-	https://github.com/Shougo/denite.nvim/wiki/From-v0.1.0-to-v0.5.0-dev
+* neovim-prompt implementation has been merged.
+  Users need to follow the migration-note below.
+  https://github.com/Shougo/denite.nvim/wiki/From-v0.1.0-to-v0.5.0-dev
 
 2016.12.08
-	-select option is deprecated option.  Please use -cursor-pos option
-	instead.
+* -select option is deprecated option.  Please use -cursor-pos option
+  instead.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:noet:fen:
