@@ -482,7 +482,7 @@ function! s:InitTypes() abort
             \ 'f' : 'namespace'
         \ }
         let type_javascript.scope2kind = {
-            \ 'namespace' : 'v'
+            \ 'namespace' : 'f'
         \ }
         let type_javascript.ctagsbin   = jsctags
         let type_javascript.ctagsargs  = '-f -'
@@ -1559,7 +1559,7 @@ function! s:NormalTag.getPrototype(short) abort dict
         if self.fields.line == 0 || !bufloaded(bufnr)
             " No linenumber available or buffer not loaded (probably due to
             " 'nohidden'), try the pattern instead
-            return substitute(self.pattern, '^\\V\\^\\C\s*\(.*\)\\$$', '\1', '')
+            return substitute(self.pattern, '^\\M\\^\\C\s*\(.*\)\\$$', '\1', '')
         endif
 
         let line = getbufline(bufnr, self.fields.line)[0]
@@ -2474,7 +2474,7 @@ function! s:ParseTagline(part1, part2, typeinfo, fileinfo) abort
         let dollar = ''
     endif
     let pattern         = strpart(pattern, start, end - start)
-    let taginfo.pattern = '\V\^\C' . pattern . dollar
+    let taginfo.pattern = '\M\^\C' . pattern . dollar
 
     " When splitting fields make sure not to create empty keys or values in
     " case a value illegally contains tabs
@@ -2668,6 +2668,14 @@ function! s:add_tag_recursive(parent, taginfo, pathlist) abort
         " Start at line 0 so that pseudotags get included
         let minline = 0
         for candidate in parents
+            " If the line number of the current tag is 0 then we have no way
+            " of determining the best candidate by comparing line numbers.
+            " Just use the first one we have.
+            if a:taginfo.fields.line == 0
+                let parent = candidate
+                break
+            endif
+
             if candidate.fields.line <= a:taginfo.fields.line &&
              \ candidate.fields.line >= minline
                 let parent = candidate
@@ -2721,7 +2729,7 @@ function! s:create_pseudotag(name, parent, kind, typeinfo, fileinfo) abort
     let pseudotag             = s:PseudoTag.New(a:name)
     let pseudotag.fields.kind = a:kind
 
-    let parentscope = substitute(curpath, a:name . '$', '', '')
+    let parentscope = substitute(curpath, '\V' . a:name . '$', '', '')
     let parentscope = substitute(parentscope,
                                \ '\V\^' . a:typeinfo.sro . '\$', '', '')
 
