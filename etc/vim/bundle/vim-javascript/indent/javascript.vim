@@ -2,7 +2,7 @@
 " Language: Javascript
 " Maintainer: Chris Paul ( https://github.com/bounceme )
 " URL: https://github.com/pangloss/vim-javascript
-" Last Change: May 30, 2017
+" Last Change: June 15, 2017
 
 " Only load this indent file when no other was loaded.
 if exists('b:did_indent')
@@ -62,20 +62,19 @@ let s:skip_expr = "s:SynAt(line('.'),col('.')) =~? b:syng_strcom"
 " searchpair() wrapper
 if has('reltime')
   function s:GetPair(start,end,flags,skip,time,...)
-    return searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 2000,0] + a:000),a:time)
+    return max([searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 2000,0] + a:000),a:time),0])
   endfunction
 else
   function s:GetPair(start,end,flags,skip,...)
-    return searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 1000,get(a:000,1)]))
+    return max([searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 1000,get(a:000,1)])),0])
   endfunction
 endif
 
 function s:SynAt(l,c)
-  let pos = join([a:l,a:c],',')
-  if has_key(s:synid_cache,pos)
-    return s:synid_cache[pos]
+  let pos = a:l.','.a:c
+  if !has_key(s:synid_cache,pos)
+    let s:synid_cache[pos] = synIDattr(synID(a:l,a:c,0),'name')
   endif
-  let s:synid_cache[pos] = synIDattr(synID(a:l,a:c,0),'name')
   return s:synid_cache[pos]
 endfunction
 
@@ -133,7 +132,7 @@ function s:AlternatePair()
       continue
     elseif tok == ';'
       if !l:for
-        if s:GetPair('{','}','bW','s:SkipFunc()',2000) > 0
+        if s:GetPair('{','}','bW','s:SkipFunc()',2000)
           return
         endif
       else
@@ -141,7 +140,7 @@ function s:AlternatePair()
         continue
       endif
     elseif tok =~ '[])}]'
-      if s:GetPair(escape(tr(tok,'])}','[({'),'['), tok,'bW','s:SkipFunc()',2000) > 0
+      if s:GetPair(escape(tr(tok,'])}','[({'),'['), tok,'bW','s:SkipFunc()',2000)
         continue
       endif
     else
@@ -153,7 +152,7 @@ function s:AlternatePair()
 endfunction
 
 function s:Nat(int)
-  return max([a:int,0])
+  return a:int * (a:int > 0)
 endfunction
 
 function s:LookingAt()
@@ -205,7 +204,7 @@ function s:ExprCol()
       let bal += 1
     elseif tok == '{' && !s:IsBlock()
       let bal = 1
-    elseif tok != '}' || s:GetPair('{','}','bW',s:skip_expr,200) < 1
+    elseif tok != '}' || !s:GetPair('{','}','bW',s:skip_expr,200)
       break
     endif
   endwhile
@@ -256,11 +255,11 @@ function s:PrevCodeLine(lnum)
       endif
       let l:n = prevnonblank(l:n-1)
     elseif stridx(getline(l:n), '*/') != -1 && s:SynAt(l:n,1) =~? s:syng_com
-      for l:n in range(l:n-1, s:Nat(l:n-(&cino =~ '\*' ? s:ParseCino('*') : 70)-1), -1)
-        if stridx(getline(l:n),'/*') != -1
-          break
-        endif
-      endfor
+      let l:pos = getpos('.')
+      call cursor(l:n,1)
+      keepjumps norm! [*
+      let l:n = line('.') % l:n
+      call setpos('.',l:pos)
     else
       break
     endif
@@ -291,7 +290,7 @@ function s:OneScope(lnum)
   let pline = s:Trim(a:lnum)
   call cursor(a:lnum,strlen(pline))
   let kw = 'else do'
-  if pline[-1:] == ')' && s:GetPair('(', ')', 'bW', s:skip_expr, 100) > 0
+  if pline[-1:] == ')' && s:GetPair('(', ')', 'bW', s:skip_expr, 100)
     if s:PreviousToken() =~# '^\%(await\|each\)$'
       call s:PreviousToken()
       let kw = 'for'
@@ -308,7 +307,7 @@ function s:DoWhile()
     let l:pos = searchpos('\m\<','cbW')
     while search('\m\C[{}]\|\<\%(do\|while\)\>','bW')
       if !eval(s:skip_expr)
-        if (s:LookingAt() == '}' && s:GetPair('{','}','bW',s:skip_expr,200) > 0 ?
+        if (s:LookingAt() == '}' && s:GetPair('{','}','bW',s:skip_expr,200) ?
               \ s:PreviousToken() : s:Token()) ==# 'do' && s:IsBlock()
           return 1
         endif
@@ -328,7 +327,7 @@ function s:IsContOne(i,num,cont)
   let ind = indent(l:i) + (a:cont ? 0 : s:sw())
   while l:i >= l:num && (ind > pind || l:i == l:num)
     if indent(l:i) < ind && s:OneScope(l:i)
-      let b_l += s:sw()
+      let b_l += 1
       let l:i = line('.')
     elseif !a:cont || b_l || ind < indent(a:i)
       break
@@ -341,10 +340,10 @@ endfunction
 
 function s:IsSwitch()
   if s:PreviousToken() !~ '[.*]'
-    if s:GetPair('{','}','cbW',s:skip_expr,100) > 0
+    if s:GetPair('{','}','cbW',s:skip_expr,100)
       if s:IsBlock()
         let tok = s:Token()
-        if tok == '}' && s:GetPair('{','}','bW',s:skip_expr,100) > 0 || tok =~ '\K\k*'
+        if tok == '}' && s:GetPair('{','}','bW',s:skip_expr,100) || tok =~ '\K\k*'
           return s:IsBlock() && (tok == '}' || s:Token() !=# 'class' || s:PreviousToken() == '.')
         endif
       else
@@ -363,7 +362,12 @@ function s:IsBlock()
     return tok != '{'
   elseif tok =~ '\k'
     if tok ==# 'type'
-      return s:__PreviousToken() !~# '^\%(im\|ex\)port$'
+      let l:pos = getpos('.')
+      try
+        return s:PreviousToken() !~# '^\%(im\|ex\)port$' || s:PreviousToken() == '.'
+      finally
+        call setpos('.',l:pos)
+      endtry
     endif
     return index(split('return const let import export extends yield default delete var await void typeof throw case new of in instanceof')
           \ ,tok) < (line('.') != l:n) || s:__PreviousToken() == '.'
@@ -446,7 +450,7 @@ function GetJavascriptIndent()
   let [num_ind, is_op, b_l, l:switch_offset] = [s:Nat(indent(num)),0,0,0]
   if !b:js_cache[2] || s:LookingAt() == '{' && s:IsBlock()
     let [ilnum, pline] = [line('.'), s:Trim(l:lnum)]
-    if b:js_cache[2] && s:LookingAt() == ')' && s:GetPair('(',')','bW',s:skip_expr,100) > 0
+    if b:js_cache[2] && s:LookingAt() == ')' && s:GetPair('(',')','bW',s:skip_expr,100)
       if ilnum == num
         let [num, num_ind] = [line('.'), indent('.')]
       endif
@@ -467,8 +471,7 @@ function GetJavascriptIndent()
         endif
       endif
       let is_op = (l:line =~# s:opfirst || s:Continues(l:lnum,pline)) * s:sw()
-      let b_l = s:IsContOne(l:lnum,b:js_cache[1],is_op)
-      let b_l -= (b_l && l:line[0] == '{') * s:sw()
+      let b_l = s:Nat(s:IsContOne(l:lnum,b:js_cache[1],is_op) - (l:line =~ '^{')) * s:sw()
     endif
   elseif idx == -1 && getline(b:js_cache[1])[b:js_cache[2]-1] == '(' && &cino =~ '('
     let pval = s:ParseCino('(')

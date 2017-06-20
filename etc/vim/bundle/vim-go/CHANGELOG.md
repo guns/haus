@@ -6,6 +6,7 @@ IMPROVEMENTS
 * Improve performance for highly used operations by caching `go env` calls [gh-1320]
 * `:GoCoverage` can accept arguments now. i.e: `:GoCoverage -run TestFoo` [gh-1326]
 * `:GoDecls` and `:GoDeclsDir` shows a warning if [ctrlp.vim](https://github.com/ctrlpvim/ctrlp.vim) is not installed
+* `:GoBuild` now compiles the package with the `-i` flag added. This means that subsequent calls are much more faster due caching of packages [gh-1330]
 
 BUG FIXES:
 
@@ -76,6 +77,9 @@ BACKWARDS INCOMPATIBILITIES:
 * `go_imports_bin` is removed to avoid confusion as it would lead to race
   conditions when set to `gofmt` along with the usage of `go_fmt_command`
   [gh-1212] [gh-1308]
+* commands such as `:GoTest` has been refactored for easy maintainability. If
+  you use any custom script that was using the function `go#cmd#Test`, it
+  should be renamed to `go#test#Test`
 
 ## 1.12 - (March 29, 2017)
 
