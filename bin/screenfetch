@@ -1079,7 +1079,8 @@ detectpkgs () {
 		'GuixSD') pkgs=$(ls -d -1 /guix/store/*/ | wc -l) ;;
 		'Fedora'|'Fux'|'Korora'|'BLAG'|'Chapeau'|'openSUSE'|'SUSE Linux Enterprise'|'Red Hat Enterprise Linux'|'ROSA'|'Oracle Linux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Mer'|'SailfishOS'|'PCLinuxOS'|'Viperr'|'Qubes OS'|'Red Star OS'|'blackPanther OS') pkgs=$(rpm -qa | wc -l) ;;
 		'Void Linux') pkgs=$(xbps-query -l | wc -l) ;;
-		'Evolve OS'|'Solus') pkgs=$(pisi list-installed | wc -l) ;;
+		'Evolve OS') pkgs=$(pisi list-installed | wc -l) ;;
+		'Solus') pkgs=$(eopkg list-installed | wc -l) ;;
 		'CRUX') pkgs=$(pkginfo -i | wc -l) ;;
 		'Lunar Linux') pkgs=$(lvu installed | wc -l) ;;
 		'TinyCore') pkgs=$(tce-status -i | wc -l) ;;
@@ -1498,7 +1499,7 @@ detectshell () {
 	if [[ ! "${shell_type}" ]]; then
 		if [[ "${distro}" == "Cygwin" || "${distro}" == "Msys" || "${distro}" == "Haiku" || "${distro}" == "Alpine Linux" || "${OSTYPE}" == "gnu" || "${distro}" == "TinyCore" || "${distro}" == "Raspbian" ]]; then
 			shell_type=$(echo "$SHELL" | awk -F'/' '{print $NF}')
-		elif readlink -f "$SHELL" | grep -q "busybox"; then
+		elif readlink -f "$SHELL" 2>&1 | grep -q "busybox"; then
 			shell_type="BusyBox"
 		else
 			if [[ "${OSTYPE}" == "linux-gnu" || "${OSTYPE}" == "linux" || "${OSTYPE}" == "linux-musl" ]]; then
@@ -2023,7 +2024,7 @@ detectwmtheme () {
 	case $WM in
 		'2bwm') Win_theme="Not Applicable";;
 		'9wm') Win_theme="Not Applicable";;
-		'Awesome') if [ -f ${XDG_CONFIG_HOME:-${HOME}/.config}/awesome/rc.lua ]; then Win_theme="$(grep -e '^[^-].*\(theme\|beautiful\).*lua' ${XDG_CONFIG_HOME:-${HOME}/.config}/awesome/rc.lua | grep '[a-zA-Z0-9]\+/[a-zA-Z0-9]\+.lua' -o | cut -d'/' -f1 | head -n1)"; fi;;
+		'Awesome') if [ -f ${XDG_CONFIG_HOME:-${HOME}/.config}/awesome/rc.lua ]; then Win_theme="$(grep -e '^[^-].*\(theme\|beautiful\).*lua' ${XDG_CONFIG_HOME:-${HOME}/.config}/awesome/rc.lua | grep '[^/]\+/[^/]\+.lua' -o | cut -d'/' -f1 | head -n1)"; fi;;
 		'BlackBox') if [ -f $HOME/.blackboxrc ]; then Win_theme="$(awk -F"/" '/styleFile/ {print $NF}' $HOME/.blackboxrc)"; fi;;
 		'Beryl') Win_theme="Not Applicable";;
 		'bspwm') Win_theme="Not Applicable";;
@@ -3573,7 +3574,7 @@ asciiText () {
 "${c1}         ROSA               SARO         %s"
 "${c1}            ROSAROSAROSAROSAR            %s")
 		;;
-    
+
 		"Red Hat Enterprise Linux")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'white') # White
@@ -3708,7 +3709,7 @@ asciiText () {
 			startline="0"
 			logowidth="36"
 			fulloutput=(
-"${c3}             ......               %s"
+"${c3}               ......               %s"
 "${c3}         .'${c1}D${c3}lddddddddddd'.          %s"
 "${c3}      .'ddd${c1}XM${c3}xdddddddddddddd.       %s"
 "${c3}    .dddddx${c1}MMM0${c3};dddddddddddddd.     %s"
@@ -4153,9 +4154,9 @@ asciiText () {
 				c1=$(getColor 'light green') # Green
 			fi
 			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
-			startline="0"
+			startline="1"
 			logowidth="33"
-			fulloutput=(
+			fulloutput=(""
 "${c1} ██████████████████  ████████    %s"
 "${c1} ██████████████████  ████████    %s"
 "${c1} ██████████████████  ████████    %s"
