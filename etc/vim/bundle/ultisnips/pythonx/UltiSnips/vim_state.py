@@ -117,7 +117,7 @@ class VisualContentPreserver(object):
         self._placeholder = None
 
     def conserve(self):
-        """Save the last visual selection ond the mode it was made in."""
+        """Save the last visual selection and the mode it was made in."""
         sl, sbyte = map(int,
                         (_vim.eval("""line("'<")"""), _vim.eval("""col("'<")""")))
         el, ebyte = map(int,
