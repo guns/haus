@@ -285,8 +285,7 @@ endfunction
 
 nnoremap <silent> <Plug>unimpairedPaste :call <SID>setup_paste()<CR>
 
-call s:map('n', 'yo', ':call <SID>setup_paste()<CR>o', '<silent>')
-call s:map('n', 'yO', ':call <SID>setup_paste()<CR>O', '<silent>')
+call s:map('n', 'yp', ':call <SID>setup_paste()<CR>i', '<silent>')
 
 " }}}1
 " Put {{{1
