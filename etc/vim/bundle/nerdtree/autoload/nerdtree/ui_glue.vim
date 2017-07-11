@@ -7,7 +7,7 @@ let g:loaded_nerdtree_ui_glue_autoload = 1
 function! nerdtree#ui_glue#createDefaultBindings()
     let s = '<SNR>' . s:SID() . '_'
 
-    call NERDTreeAddKeyMap({ 'key': '<MiddleRelease>', 'scope': "all", 'callback': s."handleMiddleMouse" })
+    call NERDTreeAddKeyMap({ 'key': '<MiddleMouse>', 'scope': 'all', 'callback': s . 'handleMiddleMouse' })
     call NERDTreeAddKeyMap({ 'key': '<LeftRelease>', 'scope': "all", 'callback': s."handleLeftClick" })
     call NERDTreeAddKeyMap({ 'key': '<2-LeftMouse>', 'scope': "DirNode", 'callback': s."activateDirNode" })
     call NERDTreeAddKeyMap({ 'key': '<2-LeftMouse>', 'scope': "FileNode", 'callback': s."activateFileNode" })
@@ -336,16 +336,22 @@ endfunction
 
 " FUNCTION: s:handleMiddleMouse() {{{1
 function! s:handleMiddleMouse()
-    let curNode = g:NERDTreeFileNode.GetSelected()
-    if curNode ==# {}
-        call nerdtree#echo("Put the cursor on a node first" )
+
+    " A middle mouse click does not automatically position the cursor as one
+    " would expect. Forcing the execution of a regular left mouse click here
+    " fixes this problem.
+    execute "normal! \<LeftMouse>"
+
+    let l:currentNode = g:NERDTreeFileNode.GetSelected()
+    if empty(l:currentNode)
+        call nerdtree#echoError('use the pointer to select a node')
         return
     endif
 
-    if curNode.path.isDirectory
-        call nerdtree#openExplorer(curNode)
+    if l:currentNode.path.isDirectory
+        call l:currentNode.openExplorer()
     else
-        call curNode.open({'where': 'h'})
+        call l:currentNode.open({'where': 'h'})
     endif
 endfunction
 
@@ -398,13 +404,27 @@ function! s:jumpToLastChild(node)
 endfunction
 
 " FUNCTION: s:jumpToParent(node) {{{1
-" moves the cursor to the parent of the current node
+" Move the cursor to the parent of the specified node. For a cascade, move to
+" the parent of the cascade's highest node. At the root, do nothing.
 function! s:jumpToParent(node)
-    if !empty(a:node.parent)
-        call a:node.parent.putCursorHere(1, 0)
+    let l:parent = a:node.parent
+
+    " If "a:node" represents a directory, back out of its cascade.
+    if a:node.path.isDirectory
+        while !empty(l:parent) && !l:parent.isRoot()
+            if index(l:parent.getCascade(), a:node) >= 0
+                let l:parent = l:parent.parent
+            else
+                break
+            endif
+        endwhile
+    endif
+
+    if !empty(l:parent)
+        call l:parent.putCursorHere(1, 0)
         call b:NERDTree.ui.centerView()
     else
-        call nerdtree#echo("cannot jump to parent")
+        call nerdtree#echo('could not jump to parent node')
     endif
 endfunction
 
