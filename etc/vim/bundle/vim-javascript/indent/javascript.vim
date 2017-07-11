@@ -2,7 +2,7 @@
 " Language: Javascript
 " Maintainer: Chris Paul ( https://github.com/bounceme )
 " URL: https://github.com/pangloss/vim-javascript
-" Last Change: June 15, 2017
+" Last Change: July 2, 2017
 
 " Only load this indent file when no other was loaded.
 if exists('b:did_indent')
@@ -62,11 +62,13 @@ let s:skip_expr = "s:SynAt(line('.'),col('.')) =~? b:syng_strcom"
 " searchpair() wrapper
 if has('reltime')
   function s:GetPair(start,end,flags,skip,time,...)
-    return max([searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 2000,0] + a:000),a:time),0])
+    return s:Nat(searchpair('\m'.(a:start == '[' ? '\[' : a:start),'','\m'.a:end,
+          \ a:flags,a:skip,max([prevnonblank(v:lnum) - 2000,0] + a:000),a:time))
   endfunction
 else
   function s:GetPair(start,end,flags,skip,...)
-    return max([searchpair('\m'.a:start,'','\m'.a:end,a:flags,a:skip,max([prevnonblank(v:lnum) - 1000,get(a:000,1)])),0])
+    return s:Nat(searchpair('\m'.(a:start == '[' ? '\[' : a:start),'','\m'.a:end,
+          \ a:flags,a:skip,max([prevnonblank(v:lnum) - 1000,get(a:000,1)])))
   endfunction
 endif
 
@@ -140,7 +142,7 @@ function s:AlternatePair()
         continue
       endif
     elseif tok =~ '[])}]'
-      if s:GetPair(escape(tr(tok,'])}','[({'),'['), tok,'bW','s:SkipFunc()',2000)
+      if s:GetPair(tr(tok,'])}','[({'), tok,'bW','s:SkipFunc()',2000)
         continue
       endif
     else
@@ -190,7 +192,7 @@ endfunction
 
 function s:ExprCol()
   let [bal, l:pos] = [0, getpos('.')]
-  while bal < 1 && search('\m[{}?:;]','bW',s:script_tag)
+  while bal < 1 && search('\m[{}?:]','bW',s:script_tag)
     let tok = eval(s:skip_expr) ? '' : s:LookingAt()
     if tok is ''
       continue
@@ -202,9 +204,10 @@ function s:ExprCol()
       endif
     elseif tok == '?'
       let bal += 1
-    elseif tok == '{' && !s:IsBlock()
-      let bal = 1
-    elseif tok != '}' || !s:GetPair('{','}','bW',s:skip_expr,200)
+    elseif tok == '{'
+      let bal = !s:IsBlock()
+      break
+    elseif !s:GetPair('{','}','bW',s:skip_expr,200)
       break
     endif
   endwhile
@@ -214,7 +217,7 @@ endfunction
 
 " configurable regexes that define continuation lines, not including (, {, or [.
 let s:opfirst = '^' . get(g:,'javascript_opfirst',
-      \ '\C\%([<>=,?^%|*/&]\|\([-.:+]\)\1\@!\|!=\|in\%(stanceof\)\=\>\)')
+      \ '\C\%([<>=,.?^%|*/&]\|\([-:+]\)\1\@!\|!=\|in\%(stanceof\)\=\>\)')
 let s:continuation = get(g:,'javascript_continuation',
       \ '\C\%([<=,.~!?/*^%|&:]\|+\@<!+\|-\@<!-\|=\@<!>\|\<\%(typeof\|new\|delete\|void\|in\|instanceof\|await\)\)') . '$'
 
@@ -249,16 +252,28 @@ function s:PrevCodeLine(lnum)
   let l:n = prevnonblank(a:lnum)
   while l:n
     if getline(l:n) =~ '^\s*\/[/*]'
-      if (stridx(getline(l:n),'`') != -1 || getline(l:n-1)[-1:] == '\') &&
+      if (getline(l:n) =~ '`' || getline(l:n-1)[-1:] == '\') &&
             \ s:SynAt(l:n,1) =~? b:syng_str
         break
       endif
       let l:n = prevnonblank(l:n-1)
-    elseif stridx(getline(l:n), '*/') != -1 && s:SynAt(l:n,1) =~? s:syng_com
+    elseif getline(l:n) =~ '\*\/' && s:SynAt(l:n,1) =~? s:syng_com
       let l:pos = getpos('.')
       call cursor(l:n,1)
-      keepjumps norm! [*
-      let l:n = line('.') % l:n
+      let l:n = search('\m\/\*','bW')
+      while search('\m\/\*\|\(\*\/\)','bWp') == 1
+        let br = 0
+        for l:i in range(l:n,line('.'),-1)
+          if s:SynAt(l:i,l:i == line('.') ? col('.') : 1) !~? s:syng_com
+            let br = 1
+            break
+          endif
+        endfor
+        if br
+          break
+        endif
+        let l:n = line('.')
+      endwhile
       call setpos('.',l:pos)
     else
       break
@@ -269,9 +284,8 @@ endfunction
 
 " Check if line 'lnum' has a balanced amount of parentheses.
 function s:Balanced(lnum)
-  let l:open = 0
-  let l:line = getline(a:lnum)
-  let pos = match(l:line, '[][(){}]', 0)
+  let [l:open, l:line] = [0, getline(a:lnum)]
+  let pos = match(l:line, '[][(){}]')
   while pos != -1
     if s:SynAt(a:lnum,pos + 1) !~? b:syng_strcom
       let l:open += match(' ' . l:line[pos],'[[({]')
@@ -279,17 +293,16 @@ function s:Balanced(lnum)
         return
       endif
     endif
-    let pos = match(l:line, (l:open ?
-          \ '['.matchstr(['][','()','{}'],l:line[pos]).']' :
-          \ '[][(){}]'), pos + 1)
+    let pos = match(l:line, l:open ?
+          \ matchstr(['[][]','[()]','[{}]'],l:line[pos]) :
+          \ '[][(){}]', pos + 1)
   endwhile
   return !l:open
 endfunction
 
 function s:OneScope(lnum)
-  let pline = s:Trim(a:lnum)
+  let [pline, kw] = [s:Trim(a:lnum), 'else do']
   call cursor(a:lnum,strlen(pline))
-  let kw = 'else do'
   if pline[-1:] == ')' && s:GetPair('(', ')', 'bW', s:skip_expr, 100)
     if s:PreviousToken() =~# '^\%(await\|each\)$'
       call s:PreviousToken()
@@ -304,7 +317,7 @@ endfunction
 
 function s:DoWhile()
   if expand('<cword>') ==# 'while'
-    let l:pos = searchpos('\m\<','cbW')
+    let cpos = searchpos('\m\<','cbW')
     while search('\m\C[{}]\|\<\%(do\|while\)\>','bW')
       if !eval(s:skip_expr)
         if (s:LookingAt() == '}' && s:GetPair('{','}','bW',s:skip_expr,200) ?
@@ -314,7 +327,7 @@ function s:DoWhile()
         break
       endif
     endwhile
-    call setpos('.',l:pos)
+    call call('cursor',cpos)
   endif
 endfunction
 
@@ -323,8 +336,8 @@ endfunction
 " a continued expression, which could have started in a braceless context
 function s:IsContOne(i,num,cont)
   let [l:i, l:num, b_l] = [a:i, a:num + !a:num, 0]
-  let pind = a:num ? indent(l:num) + s:sw() : 0
-  let ind = indent(l:i) + (a:cont ? 0 : s:sw())
+  let pind = a:num ? indent(a:num) + s:sw() : 0
+  let ind = indent(a:i) + (a:cont ? 0 : s:sw())
   while l:i >= l:num && (ind > pind || l:i == l:num)
     if indent(l:i) < ind && s:OneScope(l:i)
       let b_l += 1
@@ -341,14 +354,8 @@ endfunction
 function s:IsSwitch()
   if s:PreviousToken() !~ '[.*]'
     if s:GetPair('{','}','cbW',s:skip_expr,100)
-      if s:IsBlock()
-        let tok = s:Token()
-        if tok == '}' && s:GetPair('{','}','bW',s:skip_expr,100) || tok =~ '\K\k*'
-          return s:IsBlock() && (tok == '}' || s:Token() !=# 'class' || s:PreviousToken() == '.')
-        endif
-      else
-        return
-      endif
+      return s:IsBlock() && (s:Token() !~ '^\K\k*$' || expand('<cword>') !=# 'class'
+            \ && s:PreviousToken() !~# '^class$\|^extends$' || s:PreviousToken() == '.')
     endif
     return 1
   endif
@@ -385,12 +392,13 @@ function s:IsBlock()
 endfunction
 
 function GetJavascriptIndent()
-  let b:js_cache = get(b:,'js_cache',[0,0,0])
-  let s:synid_cache = {}
-  " Get the current line.
-  let l:line = getline(v:lnum)
+  let [b:js_cache, s:synid_cache, l:line, s:stack] = [
+        \ get(b:,'js_cache',[0,0,0]),
+        \ {},
+        \ getline(v:lnum),
+        \ map(synstack(v:lnum,1),"synIDattr(v:val,'name')"),
+        \ ]
   " use synstack as it validates syn state and works in an empty line
-  let s:stack = map(synstack(v:lnum,1),"synIDattr(v:val,'name')")
   let syns = get(s:stack,-1,'')
 
   " start with strings,comments,etc.
@@ -429,19 +437,13 @@ function GetJavascriptIndent()
   else
     call cursor(v:lnum,1)
     let [s:looksyn, s:check_in, s:top_col] = [v:lnum - 1, 0, 0]
-    try
-      if idx != -1
-        call s:GetPair(['\[','(','{'][idx],'])}'[idx],'bW','s:SkipFunc()',2000)
-      elseif getline(v:lnum) !~ '^\S' && syns =~? 'block'
-        call s:GetPair('{','}','bW','s:SkipFunc()',2000)
-      else
-        call s:AlternatePair()
-      endif
-    catch /E728/
-      " DEBUG: set debug=throw ; sentinel exception
-      call cursor(v:lnum,1)
-      echom v:throwpoint
-    endtry
+    if idx != -1
+      call s:GetPair('[({'[idx],'])}'[idx],'bW','s:SkipFunc()',2000)
+    elseif getline(v:lnum) !~ '^\S' && syns =~? 'block'
+      call s:GetPair('{','}','bW','s:SkipFunc()',2000)
+    else
+      call s:AlternatePair()
+    endif
   endif
 
   let b:js_cache = [v:lnum] + (line('.') == v:lnum ? [s:script_tag,0] : getpos('.')[1:2])
@@ -464,7 +466,7 @@ function GetJavascriptIndent()
       endif
     endif
     if idx == -1 && pline[-1:] !~ '[{;]'
-      if l:line =~# '^\%(in\%(stanceof\)\=\>\|\*\)' && pline[-1:] == '}'
+      if l:line =~# '^\%(in\%(stanceof\)\=\>\|\*\*\@!\)' && pline[-1:] == '}'
         call cursor(l:lnum,strlen(pline))
         if s:GetPair('{','}','bW',s:skip_expr,200) && s:IsBlock()
           return num_ind + s:sw()
@@ -473,11 +475,17 @@ function GetJavascriptIndent()
       let is_op = (l:line =~# s:opfirst || s:Continues(l:lnum,pline)) * s:sw()
       let b_l = s:Nat(s:IsContOne(l:lnum,b:js_cache[1],is_op) - (l:line =~ '^{')) * s:sw()
     endif
-  elseif idx == -1 && getline(b:js_cache[1])[b:js_cache[2]-1] == '(' && &cino =~ '('
+  elseif idx == -1 && getline(b:js_cache[1])[b:js_cache[2]-1] == '(' && &cino =~ '(' &&
+        \ (search('\m\S','nbW',num) || s:ParseCino('U'))
     let pval = s:ParseCino('(')
-    return !pval || !search('\m\S','nbW',num) && !s:ParseCino('U') ?
-          \ (s:ParseCino('w') ? 0 : -!!search('\m\S','W'.s:z,num)) + virtcol('.') :
-          \ s:Nat(num_ind + pval + s:GetPair('(',')','nbrmW',s:skip_expr,100,num) * s:sw())
+    if !pval
+      let [Wval, vcol] = [s:ParseCino('W'), virtcol('.')]
+      if search('\m\S','W',num)
+        return s:ParseCino('w') ? vcol : virtcol('.')-1
+      endif
+      return Wval ? s:Nat(num_ind + Wval) : vcol
+    endif
+    return s:Nat(num_ind + pval + s:GetPair('(',')','nbrmW',s:skip_expr,100,num) * s:sw())
   endif
 
   " main return

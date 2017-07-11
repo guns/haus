@@ -142,8 +142,8 @@ function! s:GodocView(newposition, position, content) abort
 
 if a:newposition[0] != 'v' && a:position[0] != 'v'
   if a:position == "split"
-    " cap buffer height to 20, but resize it for smaller contents
-    let max_height = 20
+    " cap window height to 20, but resize it for smaller contents
+    let max_height = get(g:, "go_doc_max_height", 20)
     let content_height = len(split(a:content, "\n"))
     if content_height > max_height
       exe 'resize ' . max_height
