@@ -89,7 +89,7 @@ def load_external_module(file, module):
 
 
 def split_input(text):
-    return [x for x in re.split(r'\s+', text) if x != '']
+    return [x for x in re.split(r'\s+', text) if x != ''] if text else ['']
 
 
 def path2dir(path):
@@ -207,3 +207,10 @@ def parse_tagline(line, tagpath):
     info['ref'] = ' '.join(elem[1:])
 
     return info
+
+
+def clearmatch(vim):
+    if vim.call('exists', 'w:denite_match_id'):
+        vim.call('matchdelete',
+                 vim.current.window.vars['denite_match_id'])
+        vim.command('unlet w:denite_match_id')

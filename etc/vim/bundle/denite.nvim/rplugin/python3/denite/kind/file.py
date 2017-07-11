@@ -9,6 +9,7 @@ import os
 from itertools import filterfalse
 
 from .openable import Kind as Openable
+from denite.util import clearmatch
 
 
 class Kind(Openable):
@@ -61,14 +62,14 @@ class Kind(Openable):
 
     def action_highlight(self, context):
         target = context['targets'][0]
-        winnr = self.vim.call('bufwinnr', self.vim.call(
-            'bufnr', target['action__path']))
+        bufnr = self.vim.call('bufnr', target['action__path'])
 
-        if winnr < 1:
+        if not (self.vim.call('win_id2win', context['prev_winid']) and
+                context['prev_winid'] in self.vim.call('win_findbuf', bufnr)):
             return
 
         prev_id = self.vim.call('win_getid')
-        self.vim.command(str(winnr) + 'wincmd w')
+        self.vim.call('win_gotoid', context['prev_winid'])
         self.__jump(context, target)
         self.__highlight(context, int(target.get('action__line', 0)))
         self.vim.call('win_gotoid', prev_id)
@@ -84,9 +85,9 @@ class Kind(Openable):
         self.vim.command('copen')
 
     def __highlight(self, context, line):
-        self.vim.call('clearmatches')
-        self.vim.call('matchaddpos',
-                      context['highlight_preview_line'], [line])
+        clearmatch(self.vim)
+        self.vim.current.window.vars['denite_match_id'] = self.vim.call(
+            'matchaddpos', context['highlight_preview_line'], [line])
 
     def __get_preview_window(self):
         return next(filterfalse(lambda x:

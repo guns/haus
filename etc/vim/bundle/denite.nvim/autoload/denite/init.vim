@@ -61,6 +61,7 @@ function! denite#init#_context() abort
         \ 'encoding': &encoding,
         \ 'is_windows': has('win32') || has('win64'),
         \ 'selected_icon': '*',
+        \ 'prev_winid': win_getid(),
         \ 'messages': [],
         \}
 endfunction
@@ -72,6 +73,7 @@ function! denite#init#_user_options() abort
         \ 'buffer_name': 'default',
         \ 'cursor_pos': '',
         \ 'cursor_wrap': v:true,
+        \ 'cursor_shape': (has('gui_running') ? v:true : v:false),
         \ 'cursorline': v:true,
         \ 'default_action': 'default',
         \ 'direction': 'botright',
@@ -97,6 +99,7 @@ function! denite#init#_user_options() abort
         \ 'reversed': v:false,
         \ 'scroll': 0,
         \ 'short_source_names': v:false,
+        \ 'sorters': '',
         \ 'statusline': v:true,
         \ 'updatetime': 50,
         \ 'use_default_mappings': v:true,

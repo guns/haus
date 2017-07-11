@@ -71,6 +71,17 @@ USAGE							*denite-usage*
 >
 	:Denite -input=foo file_rec
 <
+	Multiple keywords can be used to narrow down the candidates.  They are
+	separated by either a space " ", and act like a logical AND.
+>
+	foo bar
+<
+	Specify negative conditions with a bang "!".
+>
+	foo !bar
+<
+	It matches candidates that contain "foo" but not "bar".
+
 ==============================================================================
 INSTALL							*denite-install*
 
@@ -219,8 +230,11 @@ EXAMPLES						*denite-examples*
 	call denite#custom#filter('matcher_ignore_globs', 'ignore_globs',
 	      \ [ '.git/', '.ropeproject/', '__pycache__/',
 	      \   'venv/', 'images/', '*.min.*', 'img/', 'fonts/'])
-<
 
+	" Custom action
+	call denite#custom#action('file', 'test',
+	      \ {context -> execute('let g:foo = 1')})
+<
 ==============================================================================
 INTERFACE						*denite-interface*
 
@@ -700,6 +714,11 @@ P		<denite:change_path>
 ------------------------------------------------------------------------------
 FUNCTIONS						*denite-functions*
 
+						*denite#custom#action()*
+denite#custom#action({kind}, {name}, {func})
+		Define {name} action for {kind}.
+		{func} must be a |Funcref| or the name of a function.
+
 							*denite#custom#alias()*
 denite#custom#alias({type}, {alias-name}, {base-name})
 		Define {alias-name} alias based on {base-name}.
@@ -919,6 +938,11 @@ OPTIONS							*denite-options*
 		Note: 0 is the first candidate.
 		Default: ''
 
+						*denite-options-cursor-shape*
+-cursor-shape
+		Enable 'guicursor' support.
+		Default: v:true if has("gui_running")
+
 						*denite-options-cursor-wrap*
 -cursor-wrap
 		If you move when the cursor reaches the top or bottom edge,
@@ -1020,6 +1044,11 @@ OPTIONS							*denite-options*
 -short-source-names
 		Use short source names if multiple sources.
 		Default: false
+
+						*denite-options-sorters*
+-sorters
+		Specify a list of sorter names.  They are source independent.
+		Default: ""
 
 						*denite-options-statusline*
 -statusline
@@ -1218,8 +1247,16 @@ jump		Gather results of |:jumps|.
 
 
 						*denite-source-line*
-line
+line		Gather current buffer lines as candidates.
 
+		Source arguments:
+
+		1. the search direction:
+		"all":       Search from buffer top
+		"backward":   Search from the current to the buffer top
+		"forward":  Search from the current to the buffer bottom
+		Note: If the direction is "all" or omitted, it searches from
+		buffer top.
 
 						*denite-source-menu*
 menu		Gather custom menus.
@@ -1447,6 +1484,10 @@ sorter_rank
 sorter_sublime
 		Uses the scoring algorithm from this article and its implementation:
 		https://bit.ly/reverse-engineering-sublime-text-s-fuzzy-match
+
+						*denite-filter-sorter_reverse*
+sorter_reverse
+		Simple filter to reverse the order of candidates.
 
 				*denite-filter-converter_relative_word*
 converter_relative_word
@@ -1811,8 +1852,36 @@ Q: Can I make denite window always use 40% of the current window?
 A: >
 	Denite file -winheight=`60*winheight(0)/100`
 
+Q: Alt keymappings does not work.
+>
+	call denite#custom#map(
+	\ 'insert',
+	\ '<A-v>',
+	\ '<denite:scroll_window_upwards>',
+	\ 'noremap'
+	\)
+
+A:
+>
+	function! s:getchar() abort
+	  redraw | echo 'Press any key: '
+	  let c = getchar()
+	  while c ==# "\<CursorHold>"
+	    redraw | echo 'Press any key: '
+	    let c = getchar()
+	  endwhile
+	  redraw | echomsg printf('Raw: "%s" | Char: "%s"', c, nr2char(c))
+	endfunction
+	command! GetChar call s:getchar()
+<
+Please execute :GetChar and press <A-g>.
+If it is the same of g, your environment does not support <A-g>.
+
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*
+
+2017.06.24
+* "line" source default direction is "all" instead of "forward".
 
 2017.06.17
 * "directory" kind default action is changed to "narrow".
