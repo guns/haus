@@ -280,6 +280,9 @@ F10
 shift + F10
 	pkill --exact -0 firefox && exec firefox
 
+shift + alt + F10
+	pkill --exact -0 firefox && exec firefox --private-window
+
 super + F10
 	wmctrl -xa 'Chromium'
 
