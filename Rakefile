@@ -212,6 +212,7 @@ task :env do
       { :base => "#{@vim}/vim-rake",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-redl",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",              :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-rhubarb",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-scriptease",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-surround",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-unimpaired",          :branch => %w[master guns], :files => :pathogen },
