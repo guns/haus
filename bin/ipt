@@ -443,7 +443,11 @@ class Ipt
     args = parser.order arguments
 
     if @wait and not REVERSIBLE_COMMANDS.include? args.first
-      abort "#{args.first} is not a reversible command!"
+      if args.empty?
+        abort "No reversible commands given"
+      else
+        abort "#{args.first.inspect} is not a reversible command!"
+      end
     end
 
     exec! *args
