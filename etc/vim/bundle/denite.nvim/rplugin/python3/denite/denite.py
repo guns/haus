@@ -12,6 +12,9 @@ import denite.kind    # noqa
 
 import importlib.machinery
 import copy
+import re
+from collections import ChainMap
+from itertools import filterfalse
 
 
 class Denite(object):
@@ -63,7 +66,7 @@ class Denite(object):
             context['messages'] = ctx['messages']
 
     def _gather_source_candidates(self, context, source):
-        max_len = context['max_candidate_width'] * 2
+        max_len = int(context['max_candidate_width']) * 2
         candidates = source.gather_candidates(context)
         for candidate in [x for x in candidates if len(x['word']) > max_len]:
             candidate['word'] = candidate['word'][: max_len]
@@ -73,6 +76,8 @@ class Denite(object):
         for source in self._current_sources:
             ctx = source.context
             ctx['input'] = context['input']
+            if context['smartcase']:
+                ctx['ignorecase'] = re.search(r'[A-Z]', ctx['input']) is None
             ctx['mode'] = context['mode']
             ctx['async_timeout'] = 0.03 if ctx['mode'] != 'insert' else 0.02
             if ctx['prev_input'] != ctx['input'] and ctx['is_interactive']:
@@ -87,7 +92,7 @@ class Denite(object):
             if not entire or (ctx['is_async'] and
                               len(entire) > source.max_candidates and
                               ctx['input']):
-                yield source.name, entire, []
+                yield source.name, entire, [], []
                 continue
             partial = []
             ctx['candidates'] = entire
@@ -108,7 +113,12 @@ class Denite(object):
             for c in partial:
                 c['source'] = source.name
             ctx['candidates'] = []
-            yield source.name, entire, partial
+
+            patterns = filterfalse(lambda x: x == '', (
+                self._filters[x].convert_pattern(context['input'])
+                for x in source.matchers if self._filters[x]))
+
+            yield source.name, entire, partial, patterns
 
     def match_candidates(self, context, matchers):
         for pattern in split_input(context['input']):
@@ -137,7 +147,7 @@ class Denite(object):
                 raise NameError('Source "' + name + '" is not found.')
 
             source = copy.copy(self._sources[name])
-            source.context = copy.deepcopy(context)
+            source.context = copy.copy(context)
             source.context['args'] = args
             source.context['is_async'] = False
             source.context['is_interactive'] = False
@@ -180,12 +190,6 @@ class Denite(object):
     def error(self, msg):
         self._vim.call('denite#util#print_error', msg)
 
-    def get_sources(self):
-        return self._sources
-
-    def get_source(self, name):
-        return self._sources.get(name, {})
-
     def get_current_sources(self):
         return self._current_sources
 
@@ -209,9 +213,6 @@ class Denite(object):
                     self._sources[alias].name = alias
                     self._sources[alias].path = path
                     self._sources[alias].syntax_name = syntax_name
-
-    def get_filter(self, filter_name):
-        return self._filters.get(filter_name, None)
 
     def load_filters(self, context):
         # Load filters from runtimepath
@@ -314,13 +315,14 @@ class Denite(object):
         # Custom action
         custom_actions = self.get_custom_actions(kind.name)
         if action_name in custom_actions:
-            return {
+            _, user_attrs = custom_actions[action_name]
+            return ChainMap(user_attrs, {
                 'name': action_name,
                 'kind': kind.name,
                 'func': None,
                 'is_quit': True,
                 'is_redraw': False,
-            }
+            })
 
         action_attr = 'action_' + action_name
         if not hasattr(kind, action_attr):
@@ -342,13 +344,11 @@ class Denite(object):
             actions.update(self._custom['action'][kind_name])
         return actions
 
-    def get_actions(self, context, targets):
+    def get_action_names(self, context, targets):
         kind = self._get_kind(context, targets)
         if not kind:
             return []
-        actions = ['default']
-        actions += [x.replace('action_', '') for x in dir(kind)
-                    if x.find('action_') == 0]
+        actions = kind.get_action_names()
         actions += self.get_custom_actions(kind.name).keys()
         return actions
 

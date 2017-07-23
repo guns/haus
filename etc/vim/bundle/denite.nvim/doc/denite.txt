@@ -234,6 +234,9 @@ EXAMPLES						*denite-examples*
 	" Custom action
 	call denite#custom#action('file', 'test',
 	      \ {context -> execute('let g:foo = 1')})
+	call denite#custom#action('file', 'test2',
+	      \ {context -> denite#do_action(
+	      \  context, 'open', context['targets'])})
 <
 ==============================================================================
 INTERFACE						*denite-interface*
@@ -337,6 +340,10 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:change_line>
 		Change line, like |cc| in normal mode in vim buffer.
 
+				*denite-map-change_char*
+<denite:change_char>
+		Change character like |s| in normal mode in vim buffer.
+
 				*denite-map-change_path*
 <denite:change_path>
 		Change and restart Denite buffer.
@@ -434,6 +441,20 @@ are on the neovim-prompt's builtin actions/mappings.
 >
 		call denite#custom#map('insert', '<F4>', 'hello!', 'noremap')
 <
+				*denite-map-jump_to_next_by*
+<denite:jump_to_next_by:{word}>
+		Jump to the next candidate with a different value of {word}.
+		For example,
+>
+		<denite:jump_to_next_by:path>
+<
+		will jump to the next result in a different file in grep.
+
+				*denite-map-jump_to_previous_by*
+<denite:jump_to_previous_by:{word}>
+		Jump to the previous candidate with a different value of
+		{word}.
+
 				*denite-map-jump_to_next_source*
 <denite:jump_to_next_source>
 		Jump to the first candidate of the next source.
@@ -517,6 +538,18 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:move_to_previous_line>
 		Move to previous line.
 
+				*denite-map-move_to_top*
+<denite:move_to_top>
+		Move to the top visible candidate like |H|.
+
+				*denite-map-move_to_middle*
+<denite:move_to_middle>
+		Move to the middle visible candidate like |M|.
+
+				*denite-map-move_to_bottom*
+<denite:move_to_bottom>
+		Move to the bottom visible candidate like |L|.
+
 				*denite-map-paste_from_register*
 <denite:paste_from_register>
 		Paste the text from a specified register.
@@ -555,9 +588,17 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:scroll_window_downwards>
 		Scroll the window downwards.
 
+				*denite-map-scroll_window_down_one_line*
+<denite:scroll_window_down_one_line>
+		Scroll the window one line down like |CTRL-E|.
+
 				*denite-map-scroll_window_upwards*
 <denite:scroll_window_upwards>
 		Scroll the window upwards.
+
+				*denite-map-scroll_window_up_one_line*
+<denite:scroll_window_up_one_line>
+		Scroll the window one line up like |CTRL-Y|.
 
 				*denite-map-scroll_page_forwards*
 <denite:scroll_page_forwards>
@@ -574,6 +615,18 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-scroll_up*
 <denite:scroll_up>
 		Scroll up.
+
+				*denite-map-scroll_cursor_to_top*
+<denite:scroll_cursor_to_top>
+		Scroll the cursor to the top of the window like |zt|.
+
+				*denite-map-scroll_cursor_to_middle*
+<denite:scroll_cursor_to_middle>
+		Scroll the cursor to the middle of the window like |zz|.
+
+				*denite-map-scroll_cursor_to_bottom*
+<denite:scroll_cursor_to_bottom>
+		Scroll the cursor to the bottom of the window like |zb|.
 
 				*denite-map-toggle_insert_mode*
 <denite:toggle_insert_mode>
@@ -681,14 +734,24 @@ e		<denite:move_caret_to_end_of_word>
 $		<denite:move_caret_to_tail>
 c		<denite:change_word>
 cc		<denite:change_line>
+S		<denite:change_line>
+s		<denite:change_char>
+x		<denite:delete_char_under_caret>
 cw		<denite:change_word>
 dd		<denite:delete_entire_text>
 gg		<denite:move_to_first_line>
 G		<denite:move_to_last_line>
+H		<denite:move_to_top>
+L		<denite:move_to_bottom
 <C-U>		<denite:scroll_window_upwards>
+<C-E>		<denite:scroll_window_up_one_line>
 <C-D>		<denite:scroll_window_downwards>
+<C-Y>		<denite:scroll_window_down_one_line>
 <C-F>		<denite:scroll_page_forwards>
 <C-B>		<denite:scroll_page_backwards>
+zt		<denite:scroll_cursor_to_top>
+zz		<denite:scroll_cursor_to_middle>
+zb		<denite:scroll_cursor_to_bottom>
 p		<denite:do_action:preview>
 d		<denite:do_action:delete>
 n		<denite:do_action:new>
@@ -715,9 +778,12 @@ P		<denite:change_path>
 FUNCTIONS						*denite-functions*
 
 						*denite#custom#action()*
-denite#custom#action({kind}, {name}, {func})
+denite#custom#action({kind}, {name}, {func}[, {options}])
 		Define {name} action for {kind}.
 		{func} must be a |Funcref| or the name of a function.
+		{options} is an optional dictionary which overrides the
+		action behaviors "is_quit" and/or "is_redraw".
+		Note: {kind} is comma separated.
 
 							*denite#custom#alias()*
 denite#custom#alias({type}, {alias-name}, {base-name})
@@ -860,6 +926,11 @@ denite#custom#var({source-name}, {var-name}, {value})
 		to {value}.  You may specify multiple sources with the
 		separator "," in {source-name}.
 
+							*denite#do_action()*
+denite#do_action({context}, {action-name}, {targets})
+		Runs an action {action-name} against {targets}.  This will
+		mainly be used in |denite#custom#action()|.
+
 denite#get_status_mode()			 *denite#get_status_mode()*
 		Returns the mode part of the status string.  It is useful to
 		customize the statusline.
@@ -903,6 +974,11 @@ OPTIONS							*denite-options*
 		Note: If you use both {option-name} and -no-{option-name} in
 		the same denite buffer, it is undefined.
 
+						*denite-options-auto-accel*
+-auto-accel
+		Accelerate the cursor moving automatically.
+		Default: false
+
 						*denite-options-auto-highlight*
 -auto-highlight
 		When you select a candidate, it runs the "highlight" action
@@ -920,6 +996,11 @@ OPTIONS							*denite-options*
 		Auto resize the Denite window height automatically.
 		Default: false
 
+						*denite-options-auto-resume*
+-auto-resume
+		Auto resume when enter the Denite window.
+		Default: false
+
 						*denite-options-buffer-name*
 -buffer-name={buffer-name}
 		Specify the name of denite buffer.
@@ -933,10 +1014,12 @@ OPTIONS							*denite-options*
 						*denite-options-cursor-pos*
 -cursor-pos={number}
 		Select {number} candidate.
-		If {number} is "+1" or "-1" when resume, selects the next or
-		previous candidate.
-		Note: 0 is the first candidate.
-		Default: ''
+		If {number} is "+{N}" or "-{N}" when resume, selects the next
+		{N} or previous {N} candidate.
+		previous {N} candidate.
+		Note: "0" is the first candidate.
+		Note: "$" is the last candidate.
+		Default: ""
 
 						*denite-options-cursor-shape*
 -cursor-shape
@@ -990,6 +1073,11 @@ OPTIONS							*denite-options*
 		Previewed line highlight.
 		Default: "Search"
 
+						*denite-options-ignorecase*
+-ignorecase
+		If it is true, denite ignores the case.
+		Default: true
+
 						*denite-options-immediately*
 -immediately
 		If candidates exist, it runs the default action
@@ -1022,6 +1110,12 @@ OPTIONS							*denite-options*
 		Quit the denite buffer after the action is executed.
 		Default: true
 
+						*denite-options-force-quit*
+-force-quit
+		Quit the denite buffer after the action is executed even if
+		the action causes quit.
+		Default: false
+
 						*denite-options-refresh*
 -refresh
 		Refresh the candidates when |denite-options-resume| is true.
@@ -1045,15 +1139,37 @@ OPTIONS							*denite-options*
 		Use short source names if multiple sources.
 		Default: false
 
+						*denite-options-smartcase*
+-smartcase
+		If it is true, denite ignores the case when the input contains
+		the uppercase characters.
+		Default: false
+
 						*denite-options-sorters*
 -sorters
 		Specify a list of sorter names.  They are source independent.
 		Default: ""
 
+						*denite-options-split*
+-split={direction}
+		Specify the split direction.
+
+		"vertical": Split buffer vertically
+		"horizontal": Split buffer horizontally
+		"no": No split
+		"no": Create the new tab for denite buffer
+
+		Default: "horizontal"
+
 						*denite-options-statusline*
 -statusline
 		Enable statusline.
 		Default: true
+
+						*denite-options-unique*
+-unique
+		Unique the candidates by word attribute.
+		Default: false
 
 						*denite-options-updatetime*
 -updatetime={time}
@@ -1079,17 +1195,26 @@ OPTIONS							*denite-options*
 
 						*denite-options-winheight*
 -winheight={window-height}
-		Set the height of the Denite window. If auto-resize is set,
-		|denite-options-winheight| is the maximum size of the window.
+		Set the width of the Denite window if |denite-options-split|
+		is "horizontal".
+		If auto-resize is set, |denite-options-winheight| is the
+		maximum size of the window.
 
 		Default: 20
+
+						*denite-options-winwidth*
+-winwidth={window-width}
+		Set the width of the Denite window if |denite-options-split|
+		is "vertical".
+
+		Default: 90
 
 						*denite-options-winminheight*
 -winminheight={window-height}
 		Set the minimum height of an auto-resize window.
 		Note: a value of -1 for |denite-options-winminheight| leaves
 		the minimum height unset.
-		
+
 		Default: -1
 
 ==============================================================================
@@ -1188,17 +1313,18 @@ file_rec	Gather files recursive and nominates all file names under the
 				that does't expects the directory parameter as
 				it's last parameter one can use the positional
 				"directory" argument:
-
+>
 				call denite#custom#var("file_rec", "command",
 					\ [ "find", "-L", ":directory",
 					\ "-path", "*/.svn/*", "-prune", "-o",
 					\ '-type', 'l', '-print', '-o',
 					\ '-type', 'f', '-print'])
-					
+
+<
 				In windows if no command is specified file_rec
 				uses a python script scantree.py to get the list
 				of files using scandir or os.walk.
-<
+
 		min_cache_files	the minimum number of files that
 				it saves the caches.
 				(default is 10000)
@@ -1295,6 +1421,20 @@ outline		Gather outline and jump to the target.
 				(default: [])
 		encoding 	the text encoding
 				(default: 'utf-8')
+
+						*denite-source-output*
+output		Gather executed command output as candidates.
+
+		Source arguments:
+		1. Vim command or '!' prefixed shell command.
+		2. Command args.
+>
+		" It outputs "foo bar".
+		:Denite output:echo:"foo:bar"
+		:Denite output:echo\ "foo\ bar"
+
+		" Gather the output of ls
+		:Denite output:!ls
 
 						*denite-source-tag*
 tag		Gather results of |tagfiles()|.
@@ -1451,6 +1591,7 @@ matcher_fuzzy
 					*denite-filter-matcher_ignore_globs*
 matcher_ignore_globs
 		A matcher which ignores the globs matched files.
+		Note: This filtering is slow.
 
 		Source custom variables:
 		ignore_globs	the ignore globs pattern.
@@ -1695,7 +1836,7 @@ redraw_actions (List) 				(Optional)
 action_{name} (Function) 			(Optional)
 		Custom action logic with {name} as action name. The function
 		is passed with {self} and {context}.
-		
+
 		To get the seleted candidate list, you could use "targets"
 		attribute in {context}: >
 
@@ -1796,8 +1937,8 @@ Q: ":UniteNext"/":UnitePrevious" like commands are available?
 
 A: >
 
-	:Denite -resume -select=+1 -immediately
-	:Denite -resume -select=-1 -immediately
+	:Denite -resume -cursor-pos=+1 -immediately
+	:Denite -resume -cursor-pos=-1 -immediately
 
 Q: I want to close denite buffer if grep results are empty.
 

@@ -67,9 +67,11 @@ function! denite#init#_context() abort
 endfunction
 function! denite#init#_user_options() abort
   return {
+        \ 'auto_accel': v:false,
         \ 'auto_highlight': v:false,
         \ 'auto_preview': v:false,
         \ 'auto_resize': v:false,
+        \ 'auto_resume': v:false,
         \ 'buffer_name': 'default',
         \ 'cursor_pos': '',
         \ 'cursor_wrap': v:true,
@@ -94,17 +96,22 @@ function! denite#init#_user_options() abort
         \ 'prompt': '#',
         \ 'prompt_highlight': 'Statement',
         \ 'quit': v:true,
+        \ 'force_quit': v:false,
         \ 'refresh': v:false,
         \ 'resume': v:false,
         \ 'reversed': v:false,
         \ 'scroll': 0,
         \ 'short_source_names': v:false,
+        \ 'smartcase': v:false,
         \ 'sorters': '',
+        \ 'split': 'horizontal',
         \ 'statusline': v:true,
         \ 'updatetime': 50,
+        \ 'unique': v:false,
         \ 'use_default_mappings': v:true,
         \ 'vertical_preview': v:false,
         \ 'winheight': 20,
+        \ 'winwidth': 90,
         \ 'winminheight': -1,
         \}
 endfunction
