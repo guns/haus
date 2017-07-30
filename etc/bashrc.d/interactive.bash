@@ -692,6 +692,7 @@ HAVE tcpdump && {
 ALIAS ssh='ssh -2' \
       ssh-password='ssh -o "PreferredAuthentications password"' && {
     alias ssh-remove-host='ssh-keygen -R' && complete -F _known_hosts ssh-remove-host
+    alias ssh-pubkey='ssh-keygen -y -f'
     ssh-keygen-wrapper() {
         (($# == 1)) || { echo "USAGE: $FUNCNAME basename" >&2; return 1; }
         ssh-keygen -b 4096 -N "$(passnew "ssh/${1}_rsa")" -C "${1}_rsa" -f ~/.ssh/"${1}_rsa"
