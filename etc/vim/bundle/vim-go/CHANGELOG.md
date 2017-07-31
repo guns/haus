@@ -1,5 +1,17 @@
 ## unplanned
 
+FEATURES:
+
+* We now have folding support based on Go syntax. To enable it you have to set the following vim setting: `set foldmethod=syntax`. Currently it folds at block (`{ }`), var and const level. These can be individually disabled/enabled if wished. For more info please read the documentation for the `g:go_fold_enable` setting. [gh-1339] 
+* `:GoFiles` accepts now an argument to change the type of files it can show. By default it shows`.go source files` but now it can be changed to show various kind of files. The full list can be seen via `go list --help` under the `// Source Files` section [gh-1372] i.e:
+
+```
+:GoFiles CgoFiles        // shows .go sources files that import "C"
+:GoFiles TestGoFiles     // shows _test.go files in package
+:GoFiles IgnoredGoFiles  // shows .go sources ignored due to build constraints
+etc..
+```
+
 IMPROVEMENTS
 
 * Files created with `_test.go` extension have a new template with a ready to go test function. The template can be changed with the  `g:go_template_test_file` setting. [gh-1318]
@@ -10,6 +22,9 @@ IMPROVEMENTS
 * `:GoCoverage` echos now the progress if `g:go_echo_command_info` is enabled [gh-1333]
 * Add `g:go_doc_max_height` setting to control the maximum height of the window created by `:GoDoc` and `K` mapping [gh-1335]
 * The `af` text object is able to include the assignment variable for anonymous functions. Can be disabled with `g:go_textobj_include_variable = 0` [gh-1345]
+* Add `g:go_list_autoclose` setting to prevent closting the quickfix/location list after zero items [gh-1361]
+* Cursor is now adjusted and locked to the correct line when `goimports` is used for autosave [gh-1367]
+
 
 BUG FIXES:
 
@@ -17,7 +32,20 @@ BUG FIXES:
 * Fix documentation for vim-go & syntastic integration for errcheck using [gh-1323]
 * Fix showing an output if a test has finished when `:GoTest` is called [gh-1327]
 * Fix warning when goimports doesn't support srcdir [gh-1344]
-* Fix brokwn code folding with go_highlight_types [gh-1338]
+* Fix broken code folding with go_highlight_types [gh-1338]
+* Fix blocking the ui when swapfile is enabled and `:GoFmt` is called (either manually or via autosave) [gh-1362]
+* Fix getting bin paths for binaries if GOPATH was not set and Go version =>1.7 was used [gh-1363]
+* Fix picking up the correct list type for showing `:GoFmt` errors [gh-1365]
+* Fix auto detecting of GOPATH for import paths with string 'src' (i.e: `GOPATH/src/github.com/foo/src/bar`) [gh-1366]
+* Fix showing an empty window if `gogetdoc` was not found [gh-1379]
+* Fix commands not being executed if paths would include spaces (binary name, GOPATH, file itself, etc..)  [gh-1374]
+* Fix showing correct message when editing a new file [gh-1371]
+
+BACKWARDS INCOMPATIBILITIES:
+
+* `:GoFmt` now uses `quickfix` to show formatting errors instead of `locationlist`. To change back to `locationlist` you can change it with the setting `let g:go_list_type = "locationlist"` [gh-1365]
+
+
 
 ## 1.13 - (June 6, 2017)
 

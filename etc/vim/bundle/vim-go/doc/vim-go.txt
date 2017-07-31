@@ -436,18 +436,22 @@ CTRL-t
     Check for unchecked errors in you current package. Errors are populated in
     the quickfix window.
 
-    You may optionally pass any valid errcheck flags/options. For a full list
-    please see `errcheck -h`.
+    You may optionally pass any valid errcheck flags/options. See
+    `errcheck -h` for a full list.
 
                                                                     *:GoFiles*
-:GoFiles
+:GoFiles [source_files]
 
-    Show source files that depends for the current package
+    Show source files for the current package. The [source_files] specifies
+    which file types to list. See the "// Source files" section of
+    `go list -h` for possible values; multiple values are accepted.
+    Command-line completion also works for this command.
+    The default is to use `GoFiles` if no arguments are given.
 
                                                                      *:GoDeps*
 :GoDeps
 
-    Show dependencies for the current package
+    Show dependencies for the current package.
 
                                                           *:GoInstallBinaries*
 :GoInstallBinaries
@@ -1129,7 +1133,7 @@ The dictionary version allows you to define options for multiple binaries:
 <
                                                     *'g:go_fmt_fail_silently'*
 
-Use this option to disable showing a location list when |'g:go_fmt_command'|
+Use this option to disable showing a quickfix list when |'g:go_fmt_command'|
 fails. By default the location list is shown. >
 
   let g:go_fmt_fail_silently = 0
@@ -1419,6 +1423,16 @@ Supported values are "", "quickfix", and "locationlist". >
 
   let g:go_list_type = ""
 <
+
+                                                       *'g:go_list_autoclose'*
+
+Specifies whether the quickfix/location list should be closed automatically
+in the absence of errors.  The default value is 1.
+If you prefer to keep a long running error window open, you can disable 
+this by setting the value to 0.
+>
+  let g:go_list_autoclose = 1
+<
                                                       *'g:go_asmfmt_autosave'*
 
 Use this option to auto |:AsmFmt| on save. By default it's disabled. >
@@ -1574,7 +1588,6 @@ default it's 60 seconds. Must be in milliseconds.
 >
       let g:go_statusline_duration = 60000
 <
-
                                                    *'g:go_addtags_transform'*
 
 Sets the `transform` option for `gomodifytags` when using |:GoAddTags| or if
@@ -1597,6 +1610,28 @@ By default "snakecase" is used. Current values are: ["snakecase",
 "camelcase"].
 >
       let g:go_addtags_transform = 'snakecase'
+<
+                                                        *'g:go_fold_enable'*
+
+Control syntax-based folding which takes effect when 'foldmethod' is set to
+`syntax`.
+You can enable specific fold regions by setting an array. Possible values are:
+
+- "block"       `{` .. `}` blocks.
+- "import"      `import` block.
+- "varconst"    `var` and `const` blocks.
+
+By default they're all enabled:
+>
+  let g:go_fold_enable = ['block', 'import', 'varconst']
+<
+Enable folding of only imports:
+>
+  let g:go_fold_enable = ['import']
+<
+Disable everything (same as not setting 'foldmethod' to `syntax`):
+>
+  let g:go_fold_enable = []
 <
 
 ==============================================================================
