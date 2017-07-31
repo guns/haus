@@ -78,7 +78,7 @@ linters = \
  "goimports"   => "goimports -l:^(?P<path>.*?\\.go)$",
  "golint"      => "golint -min_confidence {min_confidence}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  # "gosimple"    => "gosimple:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "gotype"      => "gotype -e {tests=-a}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
+ "gotype"      => "gotype -e {tests=-t}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "ineffassign" => "ineffassign -n:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "interfacer"  => "interfacer:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
  "lll"         => "lll -g -l {maxlinelength}:^(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
