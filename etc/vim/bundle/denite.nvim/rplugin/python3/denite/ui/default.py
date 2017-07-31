@@ -81,7 +81,8 @@ class Default(object):
             if context['mode']:
                 self._current_mode = context['mode']
 
-            update = 'immediately', 'cursor_wrap', 'cursor_pos', 'force_quit'
+            update = ('immediately', 'immediately_1',
+                      'cursor_wrap', 'cursor_pos', 'force_quit')
             for key in update:
                 self._context[key] = context[key]
 
@@ -331,12 +332,12 @@ class Default(object):
                     unique_words.add(candidate['word'])
                     unique_candidates.append(candidate)
             self._candidates = unique_candidates
+        if self._context['reversed']:
+            self._candidates.reverse()
 
         prev_matched_pattern = self._matched_pattern
         self._matched_pattern = pattern
         self._candidates_len = len(self._candidates)
-        if self._context['reversed']:
-            self._candidates.reverse()
 
         if self._denite.is_async():
             sources = '[async] ' + sources
@@ -345,8 +346,12 @@ class Default(object):
         prev_displayed_texts = self._displayed_texts
         self.update_displayed_texts()
 
-        return (self._displayed_texts != prev_displayed_texts or
-                self._matched_pattern != prev_matched_pattern)
+        updated = (self._displayed_texts != prev_displayed_texts or
+                   self._matched_pattern != prev_matched_pattern)
+        if updated and self._context['reversed']:
+            self.move_to_last_line()
+
+        return updated
 
     def update_displayed_texts(self):
         self._displayed_texts = [
@@ -385,8 +390,6 @@ class Default(object):
         self.resize_buffer()
 
         self.move_cursor()
-        if self._context['reversed']:
-            self.move_to_last_line()
 
     def update_status(self):
         max_len = len(str(self._candidates_len))
@@ -463,12 +466,22 @@ class Default(object):
         elif self._context['cursor_pos'] == '$':
             self.move_to_last_line()
 
-        if self._candidates and self._context['immediately']:
+        if (self._candidates and self._context['immediately'] or
+                len(self._candidates) == 1 and self._context['immediately_1']):
+            goto = self._winid > 0 and self._vim.call(
+                'win_gotoid', self._winid)
+            if goto:
+                # Jump to denite window
+                self.init_buffer()
+                self.update_cursor()
             self.do_action('default')
             candidate = self.get_cursor_candidate()
             echo(self._vim, 'Normal', '[{0}/{1}] {2}]'.format(
                 self._cursor + self._win_cursor, self._candidates_len,
                 candidate.get('abbr', candidate['word'])))
+            if goto:
+                # Move to the previous window
+                self._vim.command('wincmd p')
             return True
         return not (self._context['empty'] or
                     self._denite.is_async() or self._candidates)
@@ -529,8 +542,9 @@ class Default(object):
     def cleanup(self):
         self._vim.command('pclose!')
         clearmatch(self._vim)
-        # Redraw to clear prompt
-        self._vim.command('redraw | echo ""')
+        if not self._context['immediately']:
+            # Redraw to clear prompt
+            self._vim.command('redraw | echo ""')
         self._vim.command('highlight! link CursorLine CursorLine')
         if self._vim.call('exists', '#ColorScheme'):
             self._vim.command('silent doautocmd ColorScheme')
@@ -635,10 +649,7 @@ class Default(object):
         if is_quit and not self._context['quit']:
             # Re-open denite buffer
 
-            # Disable the previous window info
-            self._is_suspend = True
             self.init_buffer()
-            self._is_suspend = False
             self.change_mode(self._current_mode)
 
             self.redraw(False)

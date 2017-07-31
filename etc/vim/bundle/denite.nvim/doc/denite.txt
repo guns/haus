@@ -650,6 +650,16 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:toggle_select_up>
 		Toggle cursor candidate select and move to previous line.
 
+				*denite-map-toggle_matchers*
+<denite:toggle_matchers{arg}>
+		Change |denite-options-matchers| to {arg}.
+		If |denite-options-matchers| is {arg}, it will be disabled.
+
+				*denite-map-toggle_sorters*
+<denite:toggle_sorters:{arg}>
+		Change |denite-options-sorters| to {arg}.
+		If |denite-options-sorters| is {arg}, it will be disabled.
+
 				*denite-map-yank_to_register*
 <denite:yank_to_register>
 		Yank a text into a specified register.
@@ -1084,9 +1094,21 @@ OPTIONS							*denite-options*
 		immediately.
 		Default: false
 
+						*denite-options-immediately-1*
+-immediately-1
+		If the number of candidates is exactly one, it runs the default action
+		immediately.
+		Default: false
+
 							*denite-options-input*
 -input={input-text}
 		Specify an initial narrowing text.
+		Default: ""
+
+						*denite-options-matchers*
+-matchers
+		Specify a list of matcher names.  They overwrite the source
+		matchers.
 		Default: ""
 
 					*denite-options-max-candidate-width*
@@ -1157,7 +1179,7 @@ OPTIONS							*denite-options*
 		"vertical": Split buffer vertically
 		"horizontal": Split buffer horizontally
 		"no": No split
-		"no": Create the new tab for denite buffer
+		"tab": Create the new tab for denite buffer
 
 		Default: "horizontal"
 
@@ -1195,7 +1217,7 @@ OPTIONS							*denite-options*
 
 						*denite-options-winheight*
 -winheight={window-height}
-		Set the width of the Denite window if |denite-options-split|
+		Set the height of the Denite window if |denite-options-split|
 		is "horizontal".
 		If auto-resize is set, |denite-options-winheight| is the
 		maximum size of the window.
@@ -1587,6 +1609,11 @@ matcher_cpsm
 matcher_fuzzy
 		A matcher which filters the candidates with user given fuzzy
 		string.
+
+				*denite-filter-matcher_hide_hidden_files*
+matcher_hide_hidden_files
+		A matcher which hides the hidden files.  If your input
+		contains ".", the hidden files will be appeared.
 
 					*denite-filter-matcher_ignore_globs*
 matcher_ignore_globs
