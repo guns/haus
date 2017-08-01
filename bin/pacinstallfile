@@ -19,6 +19,8 @@ end.parse ARGV
 
 abort parser.help if pkgs.empty?
 
+pkgs.map! { |p| p.chomp '.sig.' }
+
 cache = pkgs.flat_map { |p| Dir["/var/cache/pacman/pkg/#{File.basename p}{,.sig}"] }
 
 if cache.any?
