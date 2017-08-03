@@ -246,34 +246,22 @@ endfunction
 
 " Find line above 'lnum' that isn't empty or in a comment
 function s:PrevCodeLine(lnum)
-  let l:n = prevnonblank(a:lnum)
+  let [l:multi, l:n, l:pos] = [0, prevnonblank(a:lnum), getpos('.')]
   while l:n
-    if getline(l:n) =~ '^\s*\/[/*]'
-      if (getline(l:n) =~ '`' || getline(l:n-1)[-1:] == '\') &&
-            \ s:SynAt(l:n,1) =~? b:syng_str
-        break
-      endif
+    if getline(l:n) =~ '^\s*\/[/*]' && (getline(l:n) !~ '`' &&
+          \ getline(l:n-1)[-1:] != '\' || s:SynAt(l:n,1) !~? b:syng_str)
       let l:n = prevnonblank(l:n-1)
-    elseif getline(l:n) =~ '\*\/' && s:SynAt(l:n,1) =~? s:syng_com
-      let l:pos = getpos('.')
+      continue
+    elseif l:multi || getline(l:n) =~ '\*\/'
       call cursor(l:n,1)
-      let l:n = search('\m\/\*','bW')
-      try
-        while search('\m\/\*\|\(\*\/\)','bWp') == 1
-          for l:i in range(l:n,line('.'),-1)
-            if s:SynAt(l:i,l:i == line('.') ? col('.') : 1) !~? s:syng_com
-              throw 'to main loop'
-            endif
-          endfor
-          let l:n = line('.')
-        endwhile
-      catch
-      endtry
-      call setpos('.',l:pos)
-    else
-      break
+      if search('\m\/\*\|\(\*\/\)','bWp') == 1 && s:SynAt(l:n,1) =~? s:syng_com
+        let [l:multi, l:n] = [1, line('.')]
+        continue
+      endif
     endif
+    break
   endwhile
+  call setpos('.',l:pos)
   return l:n
 endfunction
 
