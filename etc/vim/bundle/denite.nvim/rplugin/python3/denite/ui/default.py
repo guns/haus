@@ -72,6 +72,8 @@ class Default(object):
         return self._result
 
     def _start(self, sources, context):
+        self._vim.command('silent! autocmd! denite')
+
         if re.search('\[Command Line\]$', self._vim.current.buffer.name):
             # Ignore command line window.
             return
@@ -211,8 +213,6 @@ class Default(object):
         self._bufvars['denite_statusline_path'] = ''
         self._bufvars['denite_statusline_linenr'] = ''
 
-        self._vim.command('autocmd! denite')
-
         self._vim.command('silent doautocmd WinEnter')
         self._vim.command('silent doautocmd BufWinEnter')
         self._vim.command('silent doautocmd FileType denite')
@@ -252,7 +252,8 @@ class Default(object):
         ]
 
     def _switch_prev_buffer(self):
-        if self._vim.buffers[self._prev_bufnr].name == '':
+        if (self._prev_bufnr == self._bufnr or
+                self._vim.buffers[self._prev_bufnr].name == ''):
             self._vim.command('enew')
         else:
             self._vim.command('buffer ' + str(self._prev_bufnr))
@@ -354,6 +355,16 @@ class Default(object):
         return updated
 
     def update_displayed_texts(self):
+        if self._context['auto_resize']:
+            winminheight = int(self._context['winminheight'])
+            if (winminheight is not -1 and
+                    self._candidates_len < winminheight):
+                self._winheight = winminheight
+            elif self._candidates_len > int(self._context['winheight']):
+                self._winheight = int(self._context['winheight'])
+            elif self._candidates_len != self._winheight:
+                self._winheight = self._candidates_len
+
         self._displayed_texts = [
             self.get_candidate_display_text(i)
             for i in range(self._cursor,
@@ -440,14 +451,6 @@ class Default(object):
         winwidth = self._winwidth
         is_vertical = split == 'vertical'
 
-        if not is_vertical and self._context['auto_resize']:
-            if (self._context['winminheight'] is not -1 and
-                    self._candidates_len <
-                    int(self._context['winminheight'])):
-                winheight = self._context['winminheight']
-            elif self._candidates_len < self._winheight:
-                winheight = self._candidates_len
-
         if not is_vertical and self._vim.current.window.height != winheight:
             self._vim.command('resize ' + str(winheight))
         elif is_vertical and self._vim.current.window.width != winwidth:
@@ -481,6 +484,7 @@ class Default(object):
                 candidate.get('abbr', candidate['word'])))
             if goto:
                 # Move to the previous window
+                self.suspend()
                 self._vim.command('wincmd p')
             return True
         return not (self._context['empty'] or
@@ -562,7 +566,8 @@ class Default(object):
         # Restore the window
         if self._context['split'] == 'no':
             self._switch_prev_buffer()
-            self._vim.current.window.options.update(self._save_window_options)
+            for k, v in self._save_window_options.items():
+                self._vim.current.window.options[k] = v
         else:
             if self._context['split'] == 'tab':
                 self._vim.command('tabclose!')
@@ -901,12 +906,13 @@ class Default(object):
         self.change_mode(self._current_mode)
 
     def suspend(self):
-        if self._context['auto_resume']:
-            self._vim.command('autocmd denite WinEnter <buffer> ' +
-                              'Denite -resume -buffer_name=' +
-                              self._context['buffer_name'])
-        self._vim.command('nnoremap <silent><buffer> <CR> ' +
-                          ':<C-u>Denite -resume -buffer_name=' +
-                          self._context['buffer_name'] + '<CR>')
+        if self._bufnr == self._vim.current.buffer.number:
+            if self._context['auto_resume']:
+                self._vim.command('autocmd denite WinEnter <buffer> ' +
+                                  'Denite -resume -buffer_name=' +
+                                  self._context['buffer_name'])
+            self._vim.command('nnoremap <silent><buffer> <CR> ' +
+                              ':<C-u>Denite -resume -buffer_name=' +
+                              self._context['buffer_name'] + '<CR>')
         self._is_suspend = True
         return STATUS_ACCEPT

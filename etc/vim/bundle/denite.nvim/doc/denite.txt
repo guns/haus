@@ -262,12 +262,14 @@ COMMANDS 						*denite-commands*
 
 		Denite can accept a list of strings, separated with ":", after
 		the name of sources.  You must escape ":" and "\" with "\"
-		in parameters themselves.
+		in parameters themselves, or surround the parameter with quotes.
 
 		Examples:
 		"file_rec:foo:bar": the parameters of source file are
 		                    ["foo", "bar"].
 		"file_rec:foo\:bar": the parameter of source file is
+		                     ["foo:bar"].
+		"file_rec:'foo:bar'": the parameter of source file is
 		                     ["foo:bar"].
 		"file_rec:foo::bar": the parameters of source file are
 		                     ["foo", "", "bar"].
@@ -1400,11 +1402,13 @@ line		Gather current buffer lines as candidates.
 		Source arguments:
 
 		1. the search direction:
-		"all":       Search from buffer top
-		"backward":   Search from the current to the buffer top
-		"forward":  Search from the current to the buffer bottom
+		"all":       Search from the buffer top
+		"backward":  Search from the current to the buffer top
+		"forward":   Search from the current to the buffer bottom
+		"buffers":   Search from the all buffers
+		"args":      Search from the argument buffers
 		Note: If the direction is "all" or omitted, it searches from
-		buffer top.
+		the buffer top.
 
 						*denite-source-menu*
 menu		Gather custom menus.
@@ -1542,7 +1546,8 @@ file		An interface to jump to the file position.
 				Open the file.
 
 			preview
-				Preview and highlight the file.
+				Preview and highlight the file.  Close the
+				preview window if it is already exists.
 
 			highlight
 				Highlight the location of the candidate if the
