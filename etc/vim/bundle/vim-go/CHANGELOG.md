@@ -1,8 +1,14 @@
 ## unplanned
 
+BUG FIXES:
+
+* Include comments in import block when folding is enabled [gh-1387]
+
+## 1.14 - (August 6, 2017)
+
 FEATURES:
 
-* We now have folding support based on Go syntax. To enable it you have to set the following vim setting: `set foldmethod=syntax`. Currently it folds at block (`{ }`), var and const level. These can be individually disabled/enabled if wished. For more info please read the documentation for the `g:go_fold_enable` setting. [gh-1339] 
+* We now have folding support based on Go syntax. Check out the [demo](https://twitter.com/fatih/status/893843722093330433) to see it in action. To enable it you have to set the following vim setting: `set foldmethod=syntax`. Currently it folds at block (`{ }`), var and const level. These can be individually disabled/enabled if wished. For more info please read the documentation for the `g:go_fold_enable` setting. [gh-1339] 
 * `:GoFiles` accepts now an argument to change the type of files it can show. By default it shows`.go source files` but now it can be changed to show various kind of files. The full list can be seen via `go list --help` under the `// Source Files` section [gh-1372] i.e:
 
 ```
@@ -24,6 +30,8 @@ IMPROVEMENTS
 * The `af` text object is able to include the assignment variable for anonymous functions. Can be disabled with `g:go_textobj_include_variable = 0` [gh-1345]
 * Add `g:go_list_autoclose` setting to prevent closting the quickfix/location list after zero items [gh-1361]
 * Cursor is now adjusted and locked to the correct line when `goimports` is used for autosave [gh-1367]
+* Complement the path of command for different situations of Cygwin environment [gh-1394]
+* Show message when using :GoDef and opening a new buffer [gh-1385]
 
 
 BUG FIXES:
@@ -40,10 +48,13 @@ BUG FIXES:
 * Fix showing an empty window if `gogetdoc` was not found [gh-1379]
 * Fix commands not being executed if paths would include spaces (binary name, GOPATH, file itself, etc..)  [gh-1374]
 * Fix showing correct message when editing a new file [gh-1371]
+* Fix filepaths in the quickfix list for :GoVet [gh-1381]
+* Run :GoLint against the package of the open file [gh-1382]
 
 BACKWARDS INCOMPATIBILITIES:
 
 * `:GoFmt` now uses `quickfix` to show formatting errors instead of `locationlist`. To change back to `locationlist` you can change it with the setting `let g:go_list_type = "locationlist"` [gh-1365]
+* `:GoLint` now runs against the package of the open file instead of the current working directory. This is so all commands behave the same relative to the current open buffer. For more info check the [comment here](https://github.com/fatih/vim-go/issues/1375#issuecomment-317535953) [gh-1382]
 
 
 
