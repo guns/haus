@@ -1471,10 +1471,6 @@ if HAVE systemctl; then
     alias scrunning='systemctl list-units --state=running'
     alias scdaemonreload='systemctl --system daemon-reload'
     alias scedit='systemctl edit --full'; complete -F __systemd_units__ scedit
-
-    alias cups-start='run systemctl start org.cups.cupsd.service'
-    alias cups-stop='run systemctl stop org.cups.cupsd.service'
-    alias cups-restart='run systemctl restart org.cups.cupsd.service'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
