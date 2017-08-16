@@ -4,7 +4,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-if [[ $(xfconf-query -c thunar -p /misc-thumbnail-mode) == THUNAR_THUMBNAIL_MODE_ONLY_LOCAL ]]; then
+if [[ "$(xfconf-query -c thunar -p /misc-thumbnail-mode)" == "THUNAR_THUMBNAIL_MODE_ONLY_LOCAL" ]]; then
     pkill --exact tumblerd && notify --warning --icon process-stop 'Terminated tumblerd'
     MODE=THUNAR_THUMBNAIL_MODE_NEVER
 else

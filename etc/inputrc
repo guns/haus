@@ -105,11 +105,11 @@ $if bash
     "\ef":          shell-forward-word
 
     # Meta
-    "\C-x\C-x":     "\C-] [[ $(jobs) ]] || exec ${BASH:-/bin/bash} \n"
+    "\C-x\C-x":     "\C-] [[ \"$(jobs)\" ]] || exec ${BASH:-/bin/bash} \n"
     "\033\007r":    "\C-] tmuxeval \n"
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-x\\":       "\C-] nohist \n"
-    "\C-x|":        "\C-] [[ $TMUX ]] && tmux set-environment NOHIST $((NOHIST^1)) \n nohist \n"
+    "\C-x|":        "\C-] [[ \"$TMUX\" ]] && tmux set-environment NOHIST $((NOHIST^1)) \n nohist \n"
     "\C-x$":        "\C-a "$(\C-e)"\C-a"
     "\C-x<":        "\C-a <(\C-e)\C-a"
     "\C-x\"":       "\C-a \"\C-e\"\C-a"

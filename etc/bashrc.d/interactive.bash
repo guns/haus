@@ -916,7 +916,7 @@ ALIAS tm='tmux' && {
 }
 
 envtmux() {
-    run env $([[ $TERM == tmux* ]] && echo TERM=screen-256color) "$@"
+    run env $([[ "$TERM" == tmux* ]] && echo TERM=screen-256color) "$@"
 }; TCOMP exec envtmux
 
 # GNU screen
@@ -1187,7 +1187,10 @@ HAVE lsblk && {
 }
 
 HAVE hdparm && {
-    hdpowerstatus() { hdparm -C $(lsdisk); }
+    hdpowerstatus() {
+        local disks=($(lsdisk))
+        hdparm -C "${disks[@]}"
+    }
     alias hdstandby='hdparm -y'; complete -F __lsdisk__ hdstandby
     alias hdsleep='hdparm -Y'; complete -F __lsdisk__ hdsleep
 }
