@@ -631,6 +631,7 @@ ALIAS pst='pstree'
 
 # htop: Satisfy ncurses hard-coded TERM names
 HAVE htop && alias htop='envtmux htop'
+HAVE nmon && alias nmon='NMON=vld- nmon'
 
 ### Documentation
 
