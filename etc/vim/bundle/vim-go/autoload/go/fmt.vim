@@ -127,10 +127,20 @@ function! go#fmt#update_file(source, target)
   let &fileformat = old_fileformat
   let &syntax = &syntax
 
+
+  " the title information was introduced with 7.4-2200
+  " https://github.com/vim/vim/commit/d823fa910cca43fec3c31c030ee908a14c272640
+  if !has('patch-7.4-2200')
+    return
+  endif
+
   " clean up previous location list
-  let l:listtype = go#list#Type("quickfix")
-  call go#list#Clean(l:listtype)
-  call go#list#Window(l:listtype)
+  let l:list_title = getqflist({'title': 1})
+  if has_key(l:list_title, "title") && l:list_title['title'] == "Format"
+    let l:listtype = go#list#Type("quickfix")
+    call go#list#Clean(l:listtype)
+    call go#list#Window(l:listtype)
+  endif
 endfunction
 
 " run runs the gofmt/goimport command for the given source file and returns
