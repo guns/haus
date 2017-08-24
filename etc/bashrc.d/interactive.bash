@@ -263,10 +263,6 @@ HAVE notify && {
 HAVE run   && TCOMP exec run
 HAVE bgrun && TCOMP exec bgrun
 
-### Text Processing
-
-ALIAS tab='column --table --output-separator " │ "'
-
 ### Files, Disks, and Memory
 
 # grep
