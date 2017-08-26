@@ -12,6 +12,6 @@ PACKAGES=(
     github.com/oschwald/geoip2-golang
 )
 
-run vim -c 'setfiletype go | exe "GoUpdateBinaries" | quit'
+run vim -c 'setfiletype go | execute "GoInstallBinaries" | execute "GoUpdateBinaries" | quit'
 run gometalinter --install --update
 run go get -u -v "${PACKAGES[@]}"
