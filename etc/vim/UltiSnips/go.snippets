@@ -510,19 +510,14 @@ snippet de "defer" w
 defer $0
 endsnippet
 
-snippet def "defer func() {}" w
-defer func() { ${3:err} = ${1:errjoin.Join(${2:" • "}, $3, $0)} }()
+snippet def "defer func() {}()" w
+defer func() {
+	$0
+}()
 endsnippet
 
-snippet defe "defer func() { …; err = }" w
-defer func() {
-	${1:e} := $0
-	if ${2:err} == nil {
-		$2 = $1
-	} else {
-		$2 = errors.New($2.Error() + ", " + $1.Error())
-	}
-}()
+snippet defe "defer func() { err = errjoin.Join(…) }" w
+defer func() { ${3:err} = ${1:errjoin.Join(${2:" • "}, $3, $0)} }()
 endsnippet
 
 snippet ej "errjoin.Join" w
