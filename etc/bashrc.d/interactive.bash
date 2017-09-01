@@ -1471,6 +1471,7 @@ if HAVE systemctl; then
     alias scrunning='systemctl list-units --state=running'
     alias scdaemonreload='systemctl --system daemon-reload'
     alias scedit='systemctl edit --full'; complete -F __systemd_units__ scedit
+    alias scdelta='systemd-delta'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
