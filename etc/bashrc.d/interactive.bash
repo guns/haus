@@ -1425,7 +1425,7 @@ HAVE cmus && alias cmus='envtmux cmus'
 # pulseaudio
 HAVE pulseaudio && {
     alias pastart='run pulseaudio --start'
-    alias pakill='run pulseaudio --kill'
+    alias pastop='run pulseaudio --kill'
     alias parestart='run pulseaudio --kill; run pulseaudio --start'
 }
 
