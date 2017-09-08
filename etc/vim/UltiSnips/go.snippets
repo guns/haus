@@ -298,7 +298,7 @@ endsnippet
 
 # statements
 snippet for "For loop" !b
-for ${1:condition}${1/(.+)/ /}{
+for ${1}${1/(.+)/ /}{
 	${0:${VISUAL}}
 }
 endsnippet
@@ -446,7 +446,7 @@ range $0
 endsnippet
 
 snippet if "If statement" !b
-if ${1:condition}${1/(.+)/ /}{
+if ${1} {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -461,7 +461,7 @@ snippet : "key: value" w
 $1: $0,
 endsnippet
 
-snippet ifer "if err != nil { return err }" w
+snippet ife "if err != nil { return err }" w
 if ${1:err} != nil {
 	return $1$0
 }
@@ -492,7 +492,7 @@ else if $1 {
 endsnippet
 
 snippet sw "Switch statement" !b
-switch ${1:expression}${1/(.+)/ /}{
+switch ${1}${1/(.+)/ /}{
 case ${0}:
 default:
 }
@@ -553,7 +553,7 @@ func main() {
 endsnippet
 
 snippet /^m/ "Method" r
-func (${1:receiver} *${2:type}) ${3:name}(${4:params})${5/(.+)/ /}(${5}) {
+func (${1} *${2:T}) ${3:name}(${4:params})${5/(.+)/ /}(${5}) {
 	${0:${VISUAL}}
 }
 endsnippet
@@ -932,6 +932,14 @@ ${3:type $2 []${4:type}}
 func (${1:s} ${2:slice}) Len() int           { return len($1)$0 }
 func ($1 $2) Swap(i, j int)      { $1[i], $1[j] = $1[j], $1[i] }
 func ($1 $2) Less(i, j int) bool { return $1[i]${5} < $1[j]$5 }
+endsnippet
+
+snippet exc "exec.Command()" w
+exec.Command($0)
+endsnippet
+
+snippet osf "*os.File" w
+*os.File
 endsnippet
 
 # vim:ft=snippets:
