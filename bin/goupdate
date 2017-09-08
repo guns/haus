@@ -3,6 +3,7 @@
 set -e
 
 PACKAGES=(
+    github.com/guns/...
     github.com/kr/pretty
     golang.org/x/tools/cmd/benchcmp
     github.com/motemen/gore
