@@ -972,6 +972,13 @@ set date_format="%a %e %b %Y at %I:%M:%S%p %Z"
 # This option allows you to edit the header of your outgoing messages
 # along with the body of your message.
 #
+# Although the compose menu may have localized header labels, the
+# labels passed to your editor will be standard RFC 2822 headers,
+# (e.g. To:, Cc:, Subject:).  Headers added in your editor must
+# also be RFC 2822 headers, or one of the pseudo headers listed in
+# ``edit-header''.  Mutt will not understand localized header
+# labels, just as it would not when parsing an actual email.
+#
 # Note that changes made to the References: and Date: headers are
 # ignored for interoperability reasons.
 #
@@ -1186,6 +1193,32 @@ set folder_format="%2C %t %N %f%> %D"
 # Also see the $record variable.
 #
 
+# set forward_attribution_intro="----- Forwarded message from %f -----"
+#
+# Name: forward_attribution_intro
+# Type: string
+# Default: "----- Forwarded message from %f -----"
+#
+#
+# This is the string that will precede a message which has been forwarded
+# in the main body of a message (when $mime_forward is unset).
+# For a full listing of defined printf(3)-like sequences see
+# the section on $index_format.  See also $attribution_locale.
+#
+
+# set forward_attribution_trailer="----- End forwarded message -----"
+#
+# Name: forward_attribution_trailer
+# Type: string
+# Default: "----- End forwarded message -----"
+#
+#
+# This is the string that will follow a message which has been forwarded
+# in the main body of a message (when $mime_forward is unset).
+# For a full listing of defined printf(3)-like sequences see
+# the section on $index_format.  See also $attribution_locale.
+#
+
 # set forward_decode=yes
 #
 # Name: forward_decode
@@ -1337,6 +1370,22 @@ set header_cache="~/.mutt/cache/"
 # or less optimal for most use cases.
 #
 
+# set header_color_partial=no
+#
+# Name: header_color_partial
+# Type: boolean
+# Default: no
+#
+#
+# When set, color header regexps behave like color body regexps:
+# color is applied to the exact text matched by the regexp.  When
+# unset, color is applied to the entire header.
+#
+# One use of this option might be to apply color to just the header labels.
+#
+# See ``color'' for more details.
+#
+
 set help=no
 #
 # Name: help
@@ -1446,6 +1495,20 @@ set history_file="~/.mutt/history"
 #
 # The file in which Mutt will save its history.
 #
+# Also see $save_history.
+#
+
+set history_remove_dups=yes
+#
+# Name: history_remove_dups
+# Type: boolean
+# Default: no
+#
+#
+# When set, all of the string history will be scanned for duplicates
+# when a new entry is added.  Duplicate entries in the $history_file will
+# also be removed when it is periodically compacted.
+#
 
 # set honor_disposition=no
 #
@@ -1474,7 +1537,7 @@ set history_file="~/.mutt/history"
 # honored when group-replying to a message.
 #
 
-set hostname="GUNS"
+set hostname="SHANGRILA"
 #
 # Name: hostname
 # Type: string
@@ -1598,7 +1661,7 @@ set include=yes
 # message to which you are replying.  You are strongly encouraged not to
 # change this value, as it tends to agitate the more fanatical netizens.
 #
-# The value of this option is ignored if $text_flowed is set, too because
+# The value of this option is ignored if $text_flowed is set, because
 # the quoting mechanism is strictly defined for format=flowed.
 #
 # This option is a format string, please see the description of
@@ -1617,6 +1680,7 @@ set include=yes
 #
 # ``Format strings'' are similar to the strings used in the C
 # function printf(3) to format output (see the man page for more details).
+# For an explanation of the %? construct, see the $status_format description.
 # The following sequences are defined in Mutt:
 # %a      address of the author
 # %A      reply-to address (if present; otherwise: address of author)
@@ -1650,7 +1714,7 @@ set include=yes
 # %r      comma separated list of ``To:'' recipients
 # %R      comma separated list of ``Cc:'' recipients
 # %s      subject of the message
-# %S      status of the message (``N''/``D''/``d''/``!''/``r''/*)
+# %S      single character status of the message (``N''/``O''/``D''/``d''/``!''/``r''/``*'')
 # %t      ``To:'' field (recipients)
 # %T      the appropriate character from the $to_chars string
 # %u      user (login) name of the author
@@ -1661,6 +1725,10 @@ set include=yes
 # %Y      ``X-Label:'' field, if present, and (1) not at part of a thread tree,
 #         (2) at the top of a thread, or (3) ``X-Label:'' is different from
 #         preceding message's ``X-Label:''.
+# %Z      a three character set of message status flags.
+#         the first character is new/read/replied flags (``n''/``o''/``r''/``O''/``N'').
+#         the second is deleted or encryption flags (``D''/``d''/``S''/``P''/``s''/``K'').
+#         the third is either tagged/flagged (``*''/``!''), or one of the characters
 # %Z      message status flags
 # %{fmt}  the date and time of the message is converted to sender's
 #         time zone, and ``fmt'' is expanded by the library function
@@ -2068,6 +2136,42 @@ set mime_forward=ask-no
 # When forwarding multiple attachments of a MIME message from the attachment
 # menu, attachments which cannot be decoded in a reasonable manner will
 # be attached to the newly composed message if this option is set.
+#
+
+# set mime_type_query_command=""
+#
+# Name: mime_type_query_command
+# Type: string
+# Default: ""
+#
+#
+# This specifies a command to run, to determine the mime type of a
+# new attachment when composing a message.  Unless
+# $mime_type_query_first is set, this will only be run if the
+# attachment's extension is not found in the mime.types file.
+#
+# The string may contain a ``%s'', which will be substituted with the
+# attachment filename.  Mutt will add quotes around the string substituted
+# for ``%s'' automatically according to shell quoting rules, so you should
+# avoid adding your own.  If no ``%s'' is found in the string, Mutt will
+# append the attachment filename to the end of the string.
+#
+# The command should output a single line containing the
+# attachment's mime type.
+#
+# Suggested values are ``xdg-mime query filetype'' or
+# ``file -bi''.
+#
+
+# set mime_type_query_first=no
+#
+# Name: mime_type_query_first
+# Type: boolean
+# Default: no
+#
+#
+# When set, the $mime_type_query_command will be run before the
+# mime.types lookup.
 #
 
 # set move=no
@@ -2556,6 +2660,31 @@ set pager_stop=yes
 # (PGP only)
 #
 
+set pgp_self_encrypt=yes
+#
+# Name: pgp_self_encrypt
+# Type: boolean
+# Default: no
+#
+#
+# When set, PGP encrypted messages will also be encrypted
+# using the key in $pgp_self_encrypt_as.
+# (PGP only)
+#
+
+set pgp_self_encrypt_as="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
+#
+# Name: pgp_self_encrypt_as
+# Type: string
+# Default: ""
+#
+#
+# This is an additional key used to encrypt messages when $pgp_self_encrypt
+# is set.  It is also used to specify the key for $postpone_encrypt.
+# It should be in keyid or fingerprint form (e.g. 0x00112233).
+# (PGP only)
+#
+
 # set pgp_show_unusable=yes
 #
 # Name: pgp_show_unusable
@@ -2770,20 +2899,21 @@ set postpone_encrypt=yes
 #
 #
 # When set, postponed messages that are marked for encryption will be
+# self-encrypted.  Mutt will first try to encrypt using the value specified
+# in $pgp_self_encrypt_as or $smime_self_encrypt_as.  If those are not
 # encrypted using the key in $postpone_encrypt_as before saving.
 # (Crypto only)
 #
 
-set postpone_encrypt_as="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
+# set postpone_encrypt_as=""
 #
 # Name: postpone_encrypt_as
 # Type: string
 # Default: ""
 #
 #
-# This is the key used to encrypt postponed messages.  It should be in
-# keyid or fingerprint form (e.g. 0x00112233 for PGP or the
-# hash-value that OpenSSL generates for S/MIME).
+# This is a deprecated fall-back variable for $postpone_encrypt.
+# Please use $pgp_self_encrypt_as or $smime_self_encrypt_as.
 # (Crypto only)
 #
 
@@ -3749,6 +3879,32 @@ set signature="~/.mutt/signature"
 # (S/MIME only)
 #
 
+# set smime_self_encrypt=no
+#
+# Name: smime_self_encrypt
+# Type: boolean
+# Default: no
+#
+#
+# When set, S/MIME encrypted messages will also be encrypted
+# using the certificate in $smime_self_encrypt_as.
+# (S/MIME only)
+#
+
+# set smime_self_encrypt_as=""
+#
+# Name: smime_self_encrypt_as
+# Type: string
+# Default: ""
+#
+#
+# This is an additional certificate used to encrypt messages when
+# $smime_self_encrypt is set.  It is also used to specify the
+# certificate for $postpone_encrypt.  It should be the hash-value that
+# OpenSSL generates.
+# (S/MIME only)
+#
+
 # set smime_sign_command=""
 #
 # Name: smime_sign_command
@@ -4142,6 +4298,25 @@ set ssl_usesystemcerts=no
 # certificate whose host name does not match the host used in your folder
 # URL. You should only unset this for particular known hosts, using
 # the <account-hook> function.
+#
+
+set ssl_verify_partial_chains=yes
+#
+# Name: ssl_verify_partial_chains
+# Type: boolean
+# Default: no
+#
+#
+# This option should not be changed from the default unless you understand
+# what you are doing.
+#
+# Setting this variable to yes will permit verifying partial
+# certification chains, i. e. a certificate chain where not the root,
+# but an intermediate certificate CA, or the host certificate, are
+# marked trusted (in $certificate_file), without marking the root
+# signing CA as trusted.
+#
+# (OpenSSL 1.0.2b and newer only).
 #
 
 set ssl_ciphers="HIGH:!aNULL:!MD5:!DSS;"
