@@ -611,16 +611,15 @@ function! s:GoBufferSetup()
 	noremap! <buffer> <C-l>          <Space>:=<Space>
 	nmap     <buffer> <C-]>          <Plug>(go-def)
 	nmap     <buffer> <C-w><C-]>     <Plug>(go-def-vertical)
-	nmap     <buffer> [C             <Plug>(go-callers)
-	nmap     <buffer> ]C             <Plug>(go-callees)
+	nmap     <buffer> [C             <Plug>(go-callees)
+	nmap     <buffer> ]C             <Plug>(go-callers)
 	nmap     <buffer> [d             <Plug>(go-info)
 	nmap     <buffer> ]d             <Plug>(go-describe)
 	nmap     <buffer> <LocalLeader>a <Plug>(go-alternate-edit)
 	nmap     <buffer> <LocalLeader>A <Plug>(go-alternate-vertical)
 	nmap     <buffer> <LocalLeader>b <Plug>(go-build)
-	nmap     <buffer> <LocalLeader>c <Plug>(go-channelpeers)
-	nmap     <buffer> <LocalLeader>C <Plug>(go-coverage)
-	nmap     <buffer> <LocalLeader><M-c> <Plug>(go-coverage-clear)
+	nmap     <buffer> <LocalLeader>c <Plug>(go-coverage-toggle)
+	nmap     <buffer> <LocalLeader>C <Plug>(go-channelpeers)
 	noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
 	noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
 	noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath<CR>
@@ -630,9 +629,11 @@ function! s:GoBufferSetup()
 	noremap  <buffer> <LocalLeader>g :<C-u>execute 'GoGuruScope ' . (exists('g:go_guru_scope') ? '""' : '...')<CR>
 	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
 	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
+	noremap  <buffer> <LocalLeader><M-i> :<C-u>GoImpl<Space>
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
 	noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
 	noremap  <buffer> <LocalLeader>o :<C-u>GoOptimizations<CR>
+	noremap  <buffer> <LocalLeader>p :<C-u>GoPath<CR>
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
@@ -641,6 +642,7 @@ function! s:GoBufferSetup()
 	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
 	noremap  <buffer> <LocalLeader><M-t> :<C-u>GoTest -tags test -race<CR>
 	nmap     <buffer> <LocalLeader>v <Plug>(go-vet)
+	noremap  <buffer> <LocalLeader>w :<C-u>GoWhicherrs<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)
