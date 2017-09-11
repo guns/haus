@@ -1,15 +1,11 @@
-" Copyright 2011 The Go Authors. All rights reserved.
+nmap" Copyright 2011 The Go Authors. All rights reserved.
 " Use of this source code is governed by a BSD-style
 " license that can be found in the LICENSE file.
 
 let s:buf_nr = -1
 
 if !exists("g:go_doc_command")
-  let g:go_doc_command = "godoc"
-endif
-
-if !exists("g:go_doc_options")
-  let g:go_doc_options = ""
+  let g:go_doc_command = ["godoc"]
 endif
 
 function! go#doc#OpenBrowser(...) abort
@@ -108,13 +104,11 @@ function! go#doc#Open(newmode, mode, ...) abort
       return
     endif
 
-    " check if we have 'godoc' and use it automatically
-    let bin_path = go#path#CheckBinPath('godoc')
-    if empty(bin_path)
+    if empty(go#path#CheckBinPath(g:go_doc_command[0]))
       return
     endif
 
-    let command = printf("%s %s", go#util#Shellescape(bin_path), join(a:000, ' '))
+    let command = printf("%s %s", go#util#Shelljoin(g:go_doc_command), join(a:000, ' '))
     let out = go#util#System(command)
   " Without argument: run gogetdoc on cursor position.
   else
