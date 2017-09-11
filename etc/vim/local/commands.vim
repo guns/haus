@@ -626,7 +626,7 @@ function! s:GoBufferSetup()
 	noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank<CR>
 	noremap  <buffer> <LocalLeader>f vaB:GoFreevars<CR>
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
-	noremap  <buffer> <LocalLeader>g :<C-u>execute 'GoGuruScope ' . (exists('g:go_guru_scope') ? '""' : '...')<CR>
+	noremap  <buffer> <LocalLeader>g :<C-u>GoGuruScope<Space>
 	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
 	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
 	noremap  <buffer> <LocalLeader><M-i> :<C-u>GoImpl<Space>
@@ -674,10 +674,12 @@ endfunction
 command! -bar GoAssemble call <SID>GoAssemble()
 function! s:GoAssemble()
 	let cmd = stridx(expand('%'), '_test') > -1 ? 'test -run=✖' : 'build'
+	let pkg = go#package#ImportPath()
 	Sscratch
 	setfiletype plain
 	normal! gg"_dG
-	execute 'r!go ' . cmd . ' -gcflags=-S 2>&1 | ruby -e "puts \$stdin.read.gsub(/\\(\#{Regexp.escape Dir.pwd}\\//, \%q{(})"'
+	execute '.!go ' . cmd . ' -gcflags=-S ' . pkg . ' 2>&1 | ruby -e "puts \$stdin.read.gsub(/\\(\#{Regexp.escape Dir.pwd}\\//, \%q{(})"'
+	normal! gg
 endfunction
 
 command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
@@ -873,4 +875,9 @@ function! s:CombineSelection(line1, line2, cp)
 	execute 'let char = "\u'.a:cp.'"'
 	execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
 	normal! ``
+endfunction
+
+command! -bar ByteOffset echo <SID>ByteOffset()
+function! s:ByteOffset()
+	return line2byte(line('.')) + col('.') - 1
 endfunction
