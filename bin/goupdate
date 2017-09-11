@@ -1,18 +1,32 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
 
-set -e
+require 'fileutils'
+require 'json'
 
-PACKAGES=(
-    github.com/guns/...
-    github.com/kr/pretty
-    golang.org/x/tools/cmd/benchcmp
-    github.com/motemen/gore
-    github.com/derekparker/delve/cmd/dlv
-    github.com/constabulary/gb/...
-    github.com/jteeuwen/go-bindata/...
-    github.com/oschwald/geoip2-golang
-)
+ENV['GOPATH'] ||= "#{ENV['HOME']}/src/go"
+ENV['GOPATH'] = ENV['GOPATH'].split(':').first
 
-run vim -c 'setfiletype go | execute "GoInstallBinaries" | execute "GoUpdateBinaries" | quit'
-run gometalinter --install --update
-run go get -u -v "${PACKAGES[@]}"
+# Non-library utilities
+UTILITIES = %w[
+  github.com/constabulary/gb/...
+  github.com/derekparker/delve/cmd/dlv
+  github.com/jteeuwen/go-bindata/...
+  github.com/kr/pretty
+  github.com/motemen/gore
+]
+
+File.open(File.join(ENV['GOPATH'], '.updated'), 'w') do |f|
+  f.puts "Updated #{Time.now} by #{__FILE__}"
+end
+
+system 'vim', '-c', 'setfiletype go | execute "GoInstallBinaries" | execute "GoUpdateBinaries" | quit'
+system File.join(ENV['GOPATH'], 'gometalinter'), '--install'
+system 'go', 'get', '-u', '-v', *UTILITIES
+
+# Library dependencies
+REPOS = %x(go list github.com/guns/...).chomp.split "\n"
+DEPS = REPOS.flat_map { |p| JSON.parse(%x(go list -json #{p}))['Imports'] }.select { |p| p.index('github.com/guns/').nil? and p.index '/' }.uniq
+
+system 'go', 'get', '-u', '-v', *DEPS
+system 'go', 'install', '-v', *REPOS
