@@ -115,4 +115,4 @@ exec 'gometalinter',
      '--disable-all',
      *(ENV['DEBUG'] ? ['--debug'] : []),
      *linters,
-     '.'
+     './...'
