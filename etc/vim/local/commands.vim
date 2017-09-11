@@ -625,9 +625,9 @@ function! s:GoBufferSetup()
 	noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
 	noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath<CR>
 	noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank<CR>
-	nmap     <buffer> <LocalLeader>f vaB:GoFreevars<CR>
+	noremap  <buffer> <LocalLeader>f vaB:GoFreevars<CR>
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
-	nmap     <buffer> <LocalLeader>g :<C-u>execute 'GoGuruScope ' . (exists('g:go_guru_scope') ? '""' : '...')<CR>
+	noremap  <buffer> <LocalLeader>g :<C-u>execute 'GoGuruScope ' . (exists('g:go_guru_scope') ? '""' : '...')<CR>
 	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
 	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
@@ -636,7 +636,7 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
-	nmap     <buffer> <LocalLeader>S :<C-u>GoAssemble<CR>
+	noremap  <buffer> <LocalLeader>S :<C-u>GoAssemble<CR>
 	noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
 	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
 	noremap  <buffer> <LocalLeader><M-t> :<C-u>GoTest -tags test -race<CR>
