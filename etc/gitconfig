@@ -146,6 +146,7 @@
 	cot      = checkout --track
 	coours   = checkout --ours
 	cotheirs = checkout --theirs
+	newroot  = checkout --orphan
 	sb       = show-branch --color
 
 	# Tags
