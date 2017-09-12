@@ -293,7 +293,7 @@ end
 
 desc 'Update subprojects (extra arguments are regexp filters)'
 task :update => :env do
-  opts = { :threads => (File.read('/proc/cpuinfo').scan(/^processor/i).size * 2 rescue nil) }
+  opts = { :threads => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1) }
   opts[:threads] = ENV['JOBS'].to_i if ENV['JOBS']
   opts[:fetch  ] = ENV['FETCH'] == '1' if ENV['FETCH']
   opts[:filter ] = ARGV.drop_while { |a| a != 'update' }.drop 1

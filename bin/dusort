@@ -8,7 +8,7 @@
 require 'shellwords'
 require 'optparse'
 
-opts = { :jobs => (File.read('/proc/cpuinfo').scan(/^processor/i).size * 2 rescue nil) || 1 }
+opts = { :jobs => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1) }
 
 args = OptionParser.new do |opt|
   opt.banner = "USAGE: dusort [options] [files]\n\nOptions:\n"
