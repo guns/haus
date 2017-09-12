@@ -1,4 +1,4 @@
-nmap" Copyright 2011 The Go Authors. All rights reserved.
+" Copyright 2011 The Go Authors. All rights reserved.
 " Use of this source code is governed by a BSD-style
 " license that can be found in the LICENSE file.
 
@@ -53,57 +53,9 @@ function! go#doc#OpenBrowser(...) abort
   call go#tool#OpenBrowser(godoc_url)
 endfunction
 
-function! s:tryOldGodoc(newmode, mode, ...)
-  let pkgs = s:godocWord(a:000)
-  if empty(pkgs)
-    return
-  endif
-
-  let pkg = pkgs[0]
-  let exported_name = pkgs[1]
-
-  let command = g:go_doc_command . ' ' . g:go_doc_options . ' ' . pkg
-
-  silent! let content = system(command)
-  if v:shell_error || s:godocNotFound(content)
-    return 0
-  endif
-
-  call s:GodocView('vnew', 'vsplit', content)
-
-  if exported_name == ''
-    silent! normal! gg
-    return 1
-  endif
-
-  " jump to the specified name
-  if search('^func ' . exported_name . '(')
-    silent! normal! zt
-    return 1
-  endif
-
-  if search('^type ' . exported_name)
-    silent! normal! zt
-    return 1
-  endif
-
-  if search('^\%(const\|var\|type\|\s\+\) ' . pkg . '\s\+=\s')
-    silent! normal! zt
-    return 1
-  endif
-
-  " nothing found, jump to top
-  silent! normal! gg
-  return 1
-endfunction
-
 function! go#doc#Open(newmode, mode, ...) abort
   " With argument: run "godoc [arg]".
   if len(a:000)
-    if call('s:tryOldGodoc', [a:newmode, a:mode] + a:000)
-      return
-    endif
-
     if empty(go#path#CheckBinPath(g:go_doc_command[0]))
       return
     endif
@@ -139,7 +91,6 @@ function! s:GodocView(newposition, position, content) abort
     execute bufwinnr(s:buf_nr) . 'wincmd w'
   endif
 
-if a:newposition[0] != 'v' && a:position[0] != 'v'
   if a:position == "split"
     " cap window height to 20, but resize it for smaller contents
     let max_height = get(g:, "go_doc_max_height", 20)
@@ -155,7 +106,6 @@ if a:newposition[0] != 'v' && a:position[0] != 'v'
     " numbers on
     exe 'vertical resize 84'
   endif
-endif
 
   setlocal filetype=godoc
   setlocal bufhidden=delete
@@ -172,10 +122,7 @@ endif
   call append(0, split(a:content, "\n"))
   sil $delete _
   setlocal nomodifiable
-
-if a:newposition[0] != 'v' && a:position[0] != 'v'
   sil normal! gg
-endif
 
   " close easily with x or enter
   noremap <buffer> <silent> <CR> :<C-U>close<CR>
