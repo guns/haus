@@ -6,7 +6,7 @@
 
 type grepnotify || exit 1
 
-dmesg --follow --notime --facility kern --level warn | grepnotify --delay 1000 \
+dmesg --follow --notime --facility kern --level warn | grepnotify -delay 1s \
     '\A\[(?P<chain>ACCEPTINPUT)\].*?IN=(?P<in>\S*).*?OUT=(?P<out>\S*).*?SRC=(?P<src>\S*).*?DST=(?P<dst>\S*).*?PROTO=(?P<proto>\S*).*?DPT=(?P<dpt>\S*)' '$chain' 'from: ${src}\nto: ${dpt}/${proto}\ndev: ${in}' \
     '\A\[(?P<chain>DROPOUTPUT)\].*?IN=(?P<in>\S*).*?OUT=(?P<out>\S*).*?SRC=(?P<src>\S*).*?DST=(?P<dst>\S*).*?PROTO=(?P<proto>\S*).*?DPT=(?P<dpt>\S*)'  '$chain' 'to: ${dst} ${dpt}/${proto}\ndev: ${out}' \
     '\A\[(?P<chain>DROPFORWARD)\].*?IN=(?P<in>\S*).*?OUT=(?P<out>\S*).*?SRC=(?P<src>\S*).*?DST=(?P<dst>\S*).*?PROTO=(?P<proto>\S*).*?DPT=(?P<dpt>\S*)' '$chain' 'from: ${src}\nto: ${dst} ${dpt}/${proto}\ndev: ${in} -> ${out}'
