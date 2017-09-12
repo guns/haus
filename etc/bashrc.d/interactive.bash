@@ -956,6 +956,7 @@ HAVE go && {
         alias gbb='run gb build'
         alias gbv='run gb vendor'
         alias gbvf='run gb vendor fetch'
+        alias gbvu='run gb vendor update -all'
     }
 }
 

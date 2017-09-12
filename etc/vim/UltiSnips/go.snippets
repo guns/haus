@@ -7,26 +7,7 @@ snippet APP "CLI application template" b
 
 package main
 
-import (
-	"fmt"
-	"os"
-	"path"
-
-	flags "github.com/jessevdk/go-flags"
-)
-
-const usage = \`[options]\`
-
-type options struct {
-	Help bool \`short:"h" long:"help"\`
-}
-
-func validate(opts *options, args []string) error {
-	switch {
-	default:
-		return nil
-	}
-}
+const usage = \``!v expand('%:p:h:t')`\`
 
 func abort(err error) {
 	if err != nil {
@@ -35,35 +16,8 @@ func abort(err error) {
 	os.Exit(1)
 }
 
-func getopts(arguments []string) (opts *options, args []string) {
-	opts = new(options)
-	var err error
-
-	parser := flags.NewNamedParser(path.Base(arguments[0]), flags.PassDoubleDash)
-	parser.Usage = usage
-
-	if _, err = parser.AddGroup("Options", "", opts); err != nil {
-		abort(err)
-	}
-
-	if args, err = parser.ParseArgs(arguments[1:]); err != nil {
-		abort(err)
-	}
-
-	if opts.Help {
-		parser.WriteHelp(os.Stderr)
-		os.Exit(0)
-	}
-
-	if err = validate(opts, args); err != nil {
-		abort(err)
-	}
-
-	return opts, args
-}
-
 func main() {
-	$0// opts, args := getopts(os.Args)
+	$0
 }
 endsnippet
 
