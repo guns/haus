@@ -653,7 +653,7 @@ endfunction
 
 command! -bar GoOptimizations call <SID>GoOptimizations()
 function! s:GoOptimizations()
-	setlocal makeprg=go\ build\ -gcflags=-m\\\ -d=ssa/check_bce,ssa/prove
+	execute 'setlocal makeprg=go\ build\ -gcflags=-m\\\ -d=ssa/check_bce\ ' . go#package#ImportPath()
 	silent! make
 
 	let visited = {}
