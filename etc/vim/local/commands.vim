@@ -881,3 +881,9 @@ command! -bar ByteOffset echo <SID>ByteOffset()
 function! s:ByteOffset()
 	return line2byte(line('.')) + col('.') - 1
 endfunction
+
+command! -range=% -nargs=1 -bar F  call <SID>FilterLines(<line1>, <line2>, '-Pi', <q-args>)
+command! -range=% -nargs=1 -bar FV call <SID>FilterLines(<line1>, <line2>, '-Piv', <q-args>)
+function! s:FilterLines(line1, line2, grepopts, pattern)
+	execute a:line1 . ',' . a:line2 . '!grep ' . shellescape(a:grepopts) . ' -- ' . shellescape(a:pattern)
+endfunction
