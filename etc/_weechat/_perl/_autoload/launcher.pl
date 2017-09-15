@@ -22,6 +22,10 @@
 #
 # History:
 #
+# 2017-09-07, Alex Xu (Hello71) <alex_y_xu@yahoo.ca>:
+#     version 0.7: properly fix escaping of "signal_data"
+# 2017-08-29, Alex Xu (Hello71) <alex_y_xu@yahoo.ca>:
+#     version 0.6: fix escaping of "signal_data"
 # 2011-02-13, Sebastien Helleu <flashcode@flashtux.org>:
 #     version 0.5: use new help format for command arguments
 # 2010-05-29, Sebastien Helleu <flashcode@flashtux.org>:
@@ -36,7 +40,7 @@
 
 use strict;
 
-my $version = "0.5";
+my $version = "0.7";
 my $command_suffix = " &";
 
 weechat::register("launcher", "FlashCode <flashcode\@flashtux.org>", $version, "GPL3",
@@ -109,9 +113,8 @@ sub signal
     my $command = weechat::config_get_plugin("signal.$_[1]");
     if ($command ne "")
     {
-        $signal_data =~ s/([\$`"])/\\$1/g;
-        $signal_data =~ s/\n/ /g;
-        $command =~ s/\$signal_data/"$signal_data"/g;
+        $signal_data =~ s/'/'\\''/g;
+        $command =~ s/\$signal_data/'$signal_data'/g;
         system($command.$command_suffix);
     }
     return weechat::WEECHAT_RC_OK;
