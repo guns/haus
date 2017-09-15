@@ -30,7 +30,7 @@ class Archivesrc
   end
 
   def archive_path dir
-    src = File.expand_path ENV['cdsrc'] || '~/src'
+    src = File.expand_path ENV['cdsrc']
     name = File.basename File.expand_path(dir)
     "#{src}/ARCHIVE/#{name}.tar.xz"
   end

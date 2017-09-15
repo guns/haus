@@ -4,7 +4,7 @@
 require 'fileutils'
 require 'json'
 
-ENV['GOPATH'] ||= "#{ENV['HOME']}/src/go"
+ENV['GOPATH'] ||= '/opt/src/go'
 ENV['GOPATH'] = ENV['GOPATH'].split(':').first
 
 # Non-library utilities

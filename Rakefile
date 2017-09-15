@@ -44,8 +44,8 @@ task :env do
   # Legacy non-interactive `merge` behavior
   ENV['GIT_MERGE_AUTOEDIT'] = 'no'
 
-  @src = File.expand_path '~guns/src'
-  @vim = File.expand_path '~guns/src/vimfiles'
+  @src = File.expand_path '/opt/src'
+  @vim = File.expand_path '/opt/src/vimfiles'
 
   @subprojects = Hash[{
     'programs' => [

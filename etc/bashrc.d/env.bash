@@ -55,7 +55,7 @@ export RUBYLIB="$HOME/.local/lib/ruby"
 export BUNDLE_PATH="$HOME/.bundle"
 
 # Go
-export GOPATH="$HOME/src/go"
+export GOPATH='/opt/src/go'
 
 # For xdg-open
 # https://wiki.archlinux.org/index.php/Environment_Variables#Examples

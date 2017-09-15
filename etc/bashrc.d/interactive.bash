@@ -171,9 +171,9 @@ CD_FUNC -x cdgunsrepl   "$cdhaus/etc/_local/_lib/clojure/guns"
 CD_FUNC cdconfig        ~/.config
 CD_FUNC cdlocal         ~/.local /usr/local
 CD_FUNC cdLOCAL         /usr/local
-CD_FUNC cdgo            "${GOPATH%%:*}" ~guns/src/go
+CD_FUNC cdgo            "${GOPATH%%:*}" /opt/src/go
 CD_FUNC cdpass          ~/.password-store
-CD_FUNC -x cdsrc        ~/src ~guns/src /usr/local/src
+CD_FUNC -x cdsrc        /opt/src ~/src /usr/local/src
 CD_FUNC cdSRC           "$cdsrc/READONLY"
 CD_FUNC cdarchlinux     "$cdsrc/archlinux"
 CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
