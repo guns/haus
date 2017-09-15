@@ -228,7 +228,7 @@ detectColors () {
 	my_hcolor=$(colorNumberToCode "${my_hcolor}")
 }
 
-supported_distros="Alpine Linux, Amazon Linux, Antergos, Arch Linux (Old and Current Logos), Artix Linux, blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, Fux, Gentoo, gNewSense, GuixSD, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, LinuxDeepin, Linux Mint, LMDE, Logos, Mageia, Mandriva/Mandrake, Manjaro, Mer, Netrunner, NixOS, OBRevenge, openSUSE, Oracle Linux, Parabola GNU/Linux-libre, Pardus, Parrot Security, PCLinuxOS, PeppermintOS, Qubes OS, Raspbian, Red Hat Enterprise Linux, ROSA, Sabayon, SailfishOS, Scientific Linux, Siduction, Slackware, Solus, Source Mage GNU/Linux, SparkyLinux, SteamOS, SUSE Linux Enterprise, SwagArch, TinyCore, Trisquel, Ubuntu, Viperr, Void and Zorin OS."
+supported_distros="Alpine Linux, Amazon Linux, Antergos, Arch Linux (Old and Current Logos), Artix Linux, blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, Fux, Gentoo, gNewSense, GuixSD, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, LinuxDeepin, Linux Mint, LMDE, Logos, Mageia, Mandriva/Mandrake, Manjaro, Mer, Netrunner, NixOS, OBRevenge, openSUSE, Oracle Linux, Parabola GNU/Linux-libre, Pardus, Parrot Security, PCLinuxOS, PeppermintOS, Proxmox VE, Qubes OS, Raspbian, Red Hat Enterprise Linux, ROSA, Sabayon, SailfishOS, Scientific Linux, Siduction, Slackware, Solus, Source Mage GNU/Linux, SparkyLinux, SteamOS, SUSE Linux Enterprise, SwagArch, TinyCore, Trisquel, Ubuntu, Viperr, Void and Zorin OS."
 supported_other="Dragonfly/Free/Open/Net BSD, Haiku, Mac OS X, Windows+Cygwin and Windows+MSYS2."
 supported_dms="KDE, GNOME, Unity, Xfce, LXDE, Cinnamon, MATE, Deepin, CDE, RazorQt and Trinity."
 supported_wms="2bwm, 9wm, Awesome, Beryl, Blackbox, Cinnamon, chromeos-wm, Compiz, deepin-wm, dminiwm, dwm, dtwm, E16, E17, echinus, Emerald, FluxBox, FLWM, FVWM, herbstluftwm, howm, IceWM, KWin, Metacity, monsterwm, Musca, Gala, Mutter, Muffin, Notion, OpenBox, PekWM, Ratpoison, Sawfish, ScrotWM, SpectrWM, StumpWM, subtle, sway, TWin, WindowMaker, WMFS, wmii, Xfwm4, XMonad and i3."
@@ -444,6 +444,9 @@ detectdistro () {
 						distro="Siduction"
 						distro_release="(Debian Sid)"
 						distro_codename=""
+					elif [[ -f /usr/bin/pveversion ]]; then
+						distro="Proxmox VE"
+						distro_more="$(/usr/bin/pveversion | grep -oP 'pve-manager\/\K\d+\.\d+')"
 					elif [[ -f /etc/os-release ]]; then
 						if [[ "$(cat /etc/os-release)" =~ "Raspbian" ]]; then
 							distro="Raspbian"
@@ -713,6 +716,10 @@ detectdistro () {
 					if [[ "${distro}" == "SUSE Linux Enterprise" ]] && [ -f /etc/os-release ]; then
 						distro_more="$(awk -F'=' '/^VERSION_ID=/ {print $2}' /etc/os-release | tr -d '"')"
 					fi
+					if [[ "${distro}" == "Debian" ]] && [ -f /usr/bin/pveversion ]; then
+						distro="Proxmox VE"
+						distro_more="$(/usr/bin/pveversion | grep -oP 'pve-manager\/\K\d+\.\d+')"
+					fi
 				fi
 			fi
 
@@ -968,6 +975,7 @@ detectdistro () {
 		parrot|parrot*security) distro="Parrot Security" ;;
 		pclinuxos|pclos) distro="PCLinuxOS" ;;
 		peppermint) distro="Peppermint" ;;
+		proxmox|proxmox*ve) distro="Proxmox VE" ;;
 		qubes) distro="Qubes OS" ;;
 		raspbian) distro="Raspbian" ;;
 		red*hat*|rhel) distro="Red Hat Enterprise Linux" ;;
@@ -1086,7 +1094,7 @@ detectpkgs () {
 		;;
 		'Dragora') pkgs=$(ls -1 /var/db/pkg | wc -l) ;;
 		'Frugalware') pkgs=$(pacman-g2 -Q | wc -l) ;;
-		'Debian'|'Ubuntu'|'Mint'|'Fuduntu'|'KDE neon'|'Devuan'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS'|'gNewSense'|'BunsenLabs'|'SteamOS'|'Parrot Security'|'GrombyangOS'|'DesaOS'|'Zorin OS') pkgs=$(dpkg -l | grep -c ^i) ;;
+		'Debian'|'Ubuntu'|'Mint'|'Fuduntu'|'KDE neon'|'Devuan'|'Raspbian'|'LMDE'|'CrunchBang'|'Peppermint'|'LinuxDeepin'|'Deepin'|'Kali Linux'|'Trisquel'|'elementary OS'|'gNewSense'|'BunsenLabs'|'SteamOS'|'Parrot Security'|'GrombyangOS'|'DesaOS'|'Zorin OS'|'Proxmox VE') pkgs=$(dpkg -l | grep -c ^i) ;;
 		'Slackware') pkgs=$(ls -1 /var/log/packages | wc -l) ;;
 		'Gentoo'|'Sabayon'|'Funtoo'|'Kogaion') pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
 		'NixOS') pkgs=$(ls -d -1 /nix/store/*/ | wc -l) ;;
@@ -2712,35 +2720,36 @@ asciiText () {
 		;;
 
 		"Artix Linux")
-			if [[ "$no_color" != "1" ]]; then
-				c1=$(getColor 'light cyan') # Light
-				c2=$(getColor 'cyan') # Dark
+			if [[ "$no_color" != "1" ]]; then				
+				c1=$(getColor 'cyan')
+				c2=$(getColor 'blue')
+				c3=$(getColor 'green')
+				c4=$(getColor 'dark gray')
 			fi
-			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; fi
-			startline="2"
-			logowidth="45"
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; c3="${my_lcolor}"; c4="${my_color}"; fi
+			startline="1"
+			logowidth="38"
 			fulloutput=(""
-"${c1}           Ndyo+${c2}////////${c1}osydN      "
-"${c1}         ds+${c2}//////////////////${c1}+sd            %s"
-"${c1}      Ny+${c2}////////${c1}sy${c2}////${c1}ys${c2}////////${c1}+yN         %s"
-"${c1}     h/${c2}///////${c1}ohN o${c2}////${c1}o Nho${c2}////////${c1}h        %s"
-"${c1}   No${c2}////${c1}+sydN   N+${c2}////${c1}+N   Ndys+${c2}////${c1}oN      %s"
-"${c1}  N+${c2}////${c1}+oyhm    N${c2}/////${c1}+N    mhyo+${c2}////${c1}+N     %s"
-"${c1} N+${c2}///////////${c1}sd  o${c2}////${c1}o  ds${c2}///////////${c1}+N    %s"
-"${c1} y${c2}////${c1}ys${c2}////////${c1}+yy${c2}////${c1}yy+${c2}////////${c1}sy${c2}////${c1}y    %s"
-"${c1} +${c2}////${c1}s Nho${c2}////////////////////${c1}ohN s${c2}////${c1}+    %s"
-"${c1} ${c2}//////     ${c1}mhso+${c2}////////${c1}+oshm     ${c2}//////    %s"
-"${c1} ${c2}//////    ${c1}Nmhso+${c2}////////${c1}+oshm     ${c2}//////    %s"
-"${c1} +${c2}////${c1}s Nho${c2}////////////////////${c1}ohN s${c2}////${c1}+    %s"
-"${c1} y${c2}////${c1}ys${c2}////////${c1}+yy${c2}////${c1}yy+${c2}////////${c1}sy${c2}////${c1}y    %s"
-"${c1} N+${c2}///////////${c1}sd  o${c2}////${c1}o  ds///////////${c1}+N    %s"
-"${c1}  N+${c2}////${c1}+oydm    N${c2}/////${c1}+N    mdyo+${c2}////${c1}+N     %s"
-"${c1}   No${c2}////${c1}+sydN   N+${c2}////${c1}+N   Ndyo+${c2}////${c1}oN      %s"
-"${c1}    N+${c2}////////${c1}ohN o${c2}////${c1}o Nho${c2}////////${c1}h        %s"
-"${c1}     mNy+${c2}////////${c1}ss${c2}////${c1}ys${c2}////////${c1}+yN         %s"
-"${c1}         ds+${c2}//////////////////${c1}+sd            %s"
-"${c1}            Ndyo+${c2}////////${c1}+oydN               %s"
-"                                              ")
+"${c1}                        d${c2}c.           %s"
+"${c1}                       x${c2}dc.           %s"
+"${c1}                  '.${c4}.${c1} d${c2}dlc.           %s"
+"${c1}                 c${c2}0d:${c1}o${c2}xllc;           %s"
+"${c1}                :${c2}0ddlolc,lc,          %s"
+"${c1}           :${c1}ko${c4}.${c1}:${c2}0ddollc..dlc.         %s"
+"${c1}          ;${c1}K${c2}kxoOddollc'  cllc.        %s"
+"${c1}         ,${c1}K${c2}kkkxdddllc,   ${c4}.${c2}lll:        %s"
+"${c1}        ,${c1}X${c2}kkkddddlll;${c3}...';${c1}d${c2}llll${c3}dxk:   %s"
+"${c1}       ,${c1}X${c2}kkkddddllll${c3}oxxxddo${c2}lll${c3}oooo,   %s"
+"${c3}    xxk${c1}0${c2}kkkdddd${c1}o${c2}lll${c1}o${c3}ooooooolooooc;${c1}.   %s"
+"${c3}    ddd${c2}kkk${c1}d${c2}ddd${c1}ol${c2}lc:${c3}:;,'.${c3}... .${c2}lll;     %s"
+"${c1}   .${c3}xd${c1}x${c2}kk${c1}xd${c2}dl${c1}'cl:${c4}.           ${c2}.llc,    %s"
+"${c1}   .${c1}0${c2}kkkxddl${c4}. ${c2};'${c4}.             ${c2};llc.   %s"
+"${c1}  .${c1}K${c2}Okdcddl${c4}.                   ${c2}cllc${c4}.  %s"
+"${c1}  0${c2}Okd''dc.                    .cll;  %s"
+"${c1} k${c2}Okd'                          .llc, %s"
+"${c1} d${c2}Od,                            'lc. %s"
+"${c1} :,${c4}.                              ${c2}... %s"
+"                                                   %s")
 		;;
 
 		"blackPanther OS")
@@ -2919,6 +2928,37 @@ asciiText () {
 "${c1}            \`\"Y\$b._             %s"
 "${c1}                \`\"\"\"\"           %s"
 "${c1}                                %s")
+		;;
+
+		"Proxmox VE")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'white')
+				c2=$(getColor 'orange')
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; fi
+			startline="0"
+			logowidth="48"
+			fulloutput=(
+"${c1}           .://:\`              \`://:.           %s"
+"${c1}         \`hMMMMMMd/          /dMMMMMMh\`         %s"
+"${c1}          \`sMMMMMMMd:      :mMMMMMMMs\`          %s"
+"${c2}  \`-/+oo+/:${c1}\`.yMMMMMMMh-  -hMMMMMMMy.\`${c2}:/+oo+/-\`  %s"
+"${c2}  \`:oooooooo/${c1}\`-hMMMMMMMyyMMMMMMMh-\`${c2}/oooooooo:\`  %s"
+"${c2}    \`/oooooooo:${c1}\`:mMMMMMMMMMMMMm:\`${c2}:oooooooo/\`    %s"
+"${c2}      ./ooooooo+-${c1} +NMMMMMMMMN+ ${c2}-+ooooooo/.      %s"
+"${c2}        .+ooooooo+-${c1}\`oNMMMMNo\`${c2}-+ooooooo+.        %s"
+"${c2}          -+ooooooo/.${c1}\`sMMs\`${c2}./ooooooo+-          %s"
+"${c2}            :oooooooo/${c1}\`..\`${c2}/oooooooo:            %s"
+"${c2}            :oooooooo/\`${c1}..${c2}\`/oooooooo:            %s"
+"${c2}          -+ooooooo/.${c1}\`sMMs${c2}\`./ooooooo+-          %s"
+"${c2}        .+ooooooo+-\`${c1}oNMMMMNo${c2}\`-+ooooooo+.        %s"
+"${c2}      ./ooooooo+-${c1} +NMMMMMMMMN+ ${c2}-+ooooooo/.      %s"
+"${c2}    \`/oooooooo:\`${c1}:mMMMMMMMMMMMMm:${c2}\`:oooooooo/\`    %s"
+"${c2}  \`:oooooooo/\`${c1}-hMMMMMMMyyMMMMMMMh-${c2}\`/oooooooo:\`  %s"
+"${c2}  \`-/+oo+/:\`${c1}.yMMMMMMMh-  -hMMMMMMMy.${c2}\`:/+oo+/-\`  %s"
+"${c1}          \`sMMMMMMMm:      :dMMMMMMMs          %s"
+"${c1}         \`hMMMMMMd/          /dMMMMMMh         %s"
+"${c1}           \`://:\`              \`://:\`           %s")
 		;;
 
 		"Siduction")
@@ -5369,7 +5409,7 @@ infoDisplay () {
 		"CrunchBang"|"Viperr"|"elementary"*) labelcolor=$(getColor 'dark grey');;
 		"Gentoo"|"Parabola GNU/Linux-libre"|"Funtoo"|"Funtoo-text"|"BLAG"|"SteamOS"|"Devuan") labelcolor=$(getColor 'light purple');;
 		"Haiku") labelcolor=$(getColor 'green');;
-		"NetBSD"|"Amazon Linux") labelcolor=$(getColor 'orange');;
+		"NetBSD"|"Amazon Linux"|"Proxmox VE") labelcolor=$(getColor 'orange');;
 		"CentOS"|*) labelcolor=$(getColor 'yellow');;
 	esac
 	[[ "$my_lcolor" ]] && labelcolor="${my_lcolor}"
