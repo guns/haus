@@ -176,13 +176,9 @@ function! s:LoadUserTypeDefs(...) abort
     if a:0 > 0
         let type = a:1
 
-        call tagbar#debug#log("Initializing user type '" . type . "'")
-
         let defdict = {}
         let defdict[type] = g:tagbar_type_{type}
     else
-        call tagbar#debug#log('Initializing user types')
-
         let defdict = tagbar#getusertypes()
     endif
 
@@ -193,6 +189,7 @@ function! s:LoadUserTypeDefs(...) abort
     endfor
 
     for [key, value] in items(transformed)
+        call tagbar#debug#log("Initializing user type '" . key . "'")
         if !has_key(s:known_types, key) || get(value, 'replace', 0)
             let s:known_types[key] = tagbar#prototypes#typeinfo#new(value)
         else
@@ -1166,15 +1163,19 @@ function! s:ParseTagline(part1, part2, typeinfo, fileinfo) abort
     " the pattern can contain tabs and thus may have been split up, so join
     " the rest of the items together again
     let pattern = join(basic_info[2:], "\t")
-    let start   = 2 " skip the slash and the ^
-    let end     = strlen(pattern) - 1
-    if pattern[end - 1] ==# '$'
-        let end -= 1
-        let dollar = '\$'
+    if pattern[0] == '/'
+        let start   = 2 " skip the slash and the ^
+        let end     = strlen(pattern) - 1
+        if pattern[end - 1] ==# '$'
+            let end -= 1
+            let dollar = '\$'
+        else
+            let dollar = ''
+        endif
+        let pattern = '\V\^\C' . strpart(pattern, start, end - start) . dollar
     else
-        let dollar = ''
+        let pattern = ''
     endif
-    let pattern = '\M\^\C' . strpart(pattern, start, end - start) . dollar
 
     " When splitting fields make sure not to create empty keys or values in
     " case a value illegally contains tabs
@@ -1958,23 +1959,27 @@ function! s:JumpToTag(stay_in_tagbar) abort
     " Jump to the line where the tag is defined. Don't use the search pattern
     " since it doesn't take the scope into account and thus can fail if tags
     " with the same name are defined in different scopes (e.g. classes)
+    call tagbar#debug#log('Jumping to line ' . taginfo.fields.line)
     execute taginfo.fields.line
 
     " If the file has been changed but not saved, the tag may not be on the
     " saved line anymore, so search for it in the vicinity of the saved line
-    if match(getline('.'), taginfo.pattern) == -1
-        let interval = 1
-        let forward  = 1
-        while search(taginfo.pattern, 'W' . forward ? '' : 'b') == 0
-            if !forward
-                if interval > line('$')
-                    break
-                else
-                    let interval = interval * 2
+    if taginfo.pattern != ''
+        call tagbar#debug#log('Searching for pattern "' . taginfo.pattern . '"')
+        if match(getline('.'), taginfo.pattern) == -1
+            let interval = 1
+            let forward  = 1
+            while search(taginfo.pattern, 'W' . forward ? '' : 'b') == 0
+                if !forward
+                    if interval > line('$')
+                        break
+                    else
+                        let interval = interval * 2
+                    endif
                 endif
-            endif
-            let forward = !forward
-        endwhile
+                let forward = !forward
+            endwhile
+        endif
     endif
 
     " If the tag is on a different line after unsaved changes update the tag
@@ -2064,9 +2069,13 @@ function! s:ShowInPreviewWin() abort
     " find the correct tag in case of tags with the same name and to speed up
     " the searching. Unfortunately the /\%l pattern doesn't seem to work with
     " psearch.
+    let pattern = taginfo.pattern
+    if pattern == ''
+        let pattern = '\V\^' . escape(getline(taginfo.fields.line), '\') . '\$'
+    endif
     let include_save = &include
     set include=
-    silent! execute taginfo.fields.line . ',$psearch! /' . taginfo.pattern . '/'
+    silent! execute taginfo.fields.line . ',$psearch! /' . pattern . '/'
     let &include = include_save
 
     call s:goto_win('P', 1)
@@ -2962,6 +2971,7 @@ function! s:HandleOnlyWindow() abort
     let s:vim_quitting = 0
 
     if vim_quitting && !s:HasOpenFileWindows()
+        call tagbar#debug#log('Closing Tagbar window due to QuitPre event')
         if winnr('$') >= 1
             call s:goto_win(tagbarwinnr, 1)
         endif
