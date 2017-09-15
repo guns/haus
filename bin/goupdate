@@ -26,7 +26,15 @@ system 'go', 'get', '-u', '-v', *UTILITIES
 
 # Library dependencies
 REPOS = %x(go list github.com/guns/...).chomp.split "\n"
-DEPS = REPOS.flat_map { |p| JSON.parse(%x(go list -json #{p}))['Imports'] }.select { |p| p.index('github.com/guns/').nil? and p.index '/' }.uniq
+DEPS = REPOS.flat_map { |p|
+  JSON.parse(%x(go list -json #{p}))['Imports']
+}.select { |p|
+  p and p.index('github.com/guns/').nil? and p.index '/'
+}.uniq
 
 system 'go', 'get', '-u', '-v', *DEPS
 system 'go', 'install', '-v', *REPOS
+
+Dir.chdir ENV['GOPATH'] do
+  system 'find', '.', '(', '-name', '.git', '-type', 'd', ')', '-prune', '-o', '-type', 'f', '-newer', '.updated', '-print'
+end
