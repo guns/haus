@@ -941,7 +941,7 @@ HAVE go && {
     goget()           { run go get -u -v "$@"; }
     gobuild()         { run go build -i -v "$@"; }
     goassemble()      { go build -v -gcflags=-S "$@" 2>&1 | ruby -e 'puts $stdin.read.gsub(%r{\(#{Regexp.escape Dir.pwd}/}, %q{(})'; }
-    gooptimizations() { run go build -v -gcflags='-m -d=ssa/check_bce,ssa/prove' "$@"; }
+    gooptimizations() { run go build -v -gcflags='-m -d=ssa/check_bce' "$@"; }
     goinstall()       { run go install -v "$@"; }
     gotest()          { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace()          { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
