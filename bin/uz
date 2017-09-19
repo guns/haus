@@ -13,7 +13,7 @@ class Uz
   DEFAULTS = {
     :delete => false,
     :ignore_errors => false,
-    :noop => false,
+    :nowrap => false,
     :outdir => '.',
     :password => nil,
     :overwrite => false
@@ -41,8 +41,8 @@ class Uz
         @ignore_errors = true
       end
 
-      opt.on '-n', '--noop' do
-        @noop = true
+      opt.on '-n', '--nowrap' do
+        @nowrap = true
       end
 
       opt.on '-o', '--outdir PATH' do |arg|
@@ -61,7 +61,7 @@ class Uz
 
   def sh *args
     warn "\e[32;1m:: #{args.shelljoin}\e[0m"
-    system *args unless @noop
+    system *args
   end
 
   def cmdargs tempdir, file
@@ -79,16 +79,18 @@ class Uz
       end
 
       out = Dir.entries(dir).reject { |f| f =~ /\A\.{1,2}\z/ }
-      if out.size == 1
-        FileUtils.mv dir, dir + '__uztmp__', :verbose => true, :noop => @noop
+      if @nowrap or out.size == 1
+        FileUtils.mv dir, dir + '__uztmp__', :verbose => true
         dir << '__uztmp__'
-        outf = File.join @outdir, out[0]
-        raise "#{outf} already exists! Leaving #{out[0]}" if File.exists? outf and not @overwrite
-        FileUtils.mv File.join(dir, out[0]), outf, :verbose => true, :noop => @noop
-        FileUtils.rmdir dir, :verbose => true, :noop => @noop
+        out.each do |f|
+          outf = File.join @outdir, f
+          raise "#{outf} already exists! Leaving #{f}" if File.exists? outf and not @overwrite
+          FileUtils.mv File.join(dir, f), outf, :verbose => true
+        end
+        FileUtils.rmdir dir, :verbose => true
       end
 
-      FileUtils.rm_f file, :verbose => true, :noop => @noop if @delete
+      FileUtils.rm_f file, :verbose => true if @delete
     end
   end
 
