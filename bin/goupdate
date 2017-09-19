@@ -16,7 +16,7 @@ UTILITIES = %w[
   github.com/motemen/gore
 ]
 
-File.open(File.join(ENV['GOPATH'], '.updated'), 'w') do |f|
+File.open File.join(ENV['GOPATH'], '.updated'), 'w' do |f|
   f.puts "Updated #{Time.now} by #{__FILE__}"
 end
 
@@ -34,6 +34,10 @@ DEPS = REPOS.flat_map { |p|
 
 system 'go', 'get', '-u', '-v', *DEPS
 system 'go', 'install', '-v', *REPOS
+
+puts '┌───────┐'
+puts '│UPDATED│'
+puts '└───────┘'
 
 Dir.chdir ENV['GOPATH'] do
   system 'find', '.', '(', '-name', '.git', '-type', 'd', ')', '-prune', '-o', '-type', 'f', '-newer', '.updated', '-print'
