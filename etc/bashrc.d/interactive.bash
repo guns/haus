@@ -313,7 +313,10 @@ alias lsgv='ls | gv'
 alias lsmapper='ls /dev/mapper'
 alias lsid='ls /dev/disk/by-id'
 alias lslabel='ls /dev/disk/by-label'
+alias lspartlabel='ls /dev/disk/by-partlabel'
 alias lsuuid='ls /dev/disk/by-uuid'
+alias lspartuuid='ls /dev/disk/by-partuuid'
+alias lspath='ls /dev/disk/by-path'
 alias lsdbus='find /usr/share/dbus-1 -name "*.service" | sort'
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
