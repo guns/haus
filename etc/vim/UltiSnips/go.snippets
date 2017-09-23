@@ -469,17 +469,27 @@ defer $0
 endsnippet
 
 snippet def "defer func() {}()" w
+defer func() { $0 }()
+endsnippet
+
+snippet defj "defer errutil.Join(…)" w
 defer func() {
-	$0
+	${1:err} = errutil.Join(${2:" • "}, $1, $0)
 }()
 endsnippet
 
-snippet defe "defer func() { err = errjoin.Join(…) }" w
-defer func() { ${3:err} = ${1:errjoin.Join(${2:" • "}, $3, $0)} }()
+snippet defe "defer errutil.First(…)" w
+defer func() {
+	${1:err} = errutil.First($1, $0)}
+}()
 endsnippet
 
-snippet ej "errjoin.Join" w
-errjoin.Join("${1:; }", $0)
+snippet euj "errutil.Join" w
+errutil.Join("${1:; }", $0)
+endsnippet
+
+snippet euf "errutil.First" w
+errutil.First($0)
 endsnippet
 
 snippet mk "make()" w
@@ -558,7 +568,7 @@ ${1:file}, ${2:err} ${3::}= os.Create($4)
 if $2 != nil {
 	return $2
 }
-defer func() { ${5:err} = errjoin.Join("; ", $2, $1.Close()) }()
+defer func() { ${5:err} = errutil.First($2, $1.Close()) }()
 $0
 endsnippet
 
