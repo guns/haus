@@ -87,7 +87,7 @@ module NERV::CLI::ReplHelpers
   end
 
   def spit path, buf
-    File.open(path, 'w') { |f| f.write buf }
+    File.open(path, 'w') { |f| f.puts buf }
   end
 
   # Nokogiri shortcuts
