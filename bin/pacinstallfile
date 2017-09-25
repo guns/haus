@@ -10,11 +10,12 @@ require 'fileutils'
 require 'shellwords'
 
 opts = []
+force = false
 
 pkgs = OptionParser.new do |opt|
   opt.banner = 'USAGE: pacinstallfile [options] pkg …'
   opt.on('-d', '--asdeps') { opts << '--asdeps' }
-  opt.on('-f', '--force') { opts << '--force' }
+  opt.on('-f', '--force') { opts << '--force'; force = true }
 end.parse ARGV
 
 abort parser.help if pkgs.empty?
@@ -26,7 +27,7 @@ cache = pkgs.flat_map { |p| Dir["/var/cache/pacman/pkg/#{File.basename p}{,.sig}
 if cache.any?
   puts cache
   print 'Move conflicting cached packages? [Y/n] '
-  if $stdin.gets !~ /\An\Z/i
+  if force or $stdin.gets !~ /\An\Z/i
     FileUtils.mv cache, '/tmp', :verbose => true
   end
 end
