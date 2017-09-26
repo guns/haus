@@ -29,8 +29,6 @@ user_pref("extensions.sdk.console.logLevel", "all");
 // Set blank homepage
 user_pref("browser.startup.page", 0);
 user_pref("browser.startup.homepage", "about:blank");
-// Ctrl+Tab cycles through tabs in recently used order
-user_pref("browser.ctrlTab.previews", true);
 // Disable multiple tab open/close warnings
 user_pref("browser.tabs.warnOnClose", false);
 user_pref("browser.tabs.warnOnOpen", false);
@@ -39,6 +37,12 @@ user_pref("browser.sessionstore.restore_on_demand", false);
 
 // Disable search suggestions
 user_pref("browser.search.suggest.enabled", false);
+
+// Set Dark Theme
+user_pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
+user_pref("devtools.theme", "dark");
+// Set UI density to compact
+user_pref("browser.uidensity", 1);
 
 // Font settings
 user_pref("font.default.x-western", "sans-serif");
@@ -74,15 +78,20 @@ user_pref("extensions.update.autoUpdateDefault", false);
 // Disable OCSP
 user_pref("security.OCSP.enabled", 0);
 
+// Disable autofill
+user_pref("extensions.formautofill.addresses.enabled", false);
+user_pref("extensions.formautofill.creditCards.enabled", false);
+
 // Disable top sites
+user_pref("browser.newtabpage.activity-stream.feeds.section.highlights", false);
+user_pref("browser.newtabpage.activity-stream.feeds.section.topstories", false);
+user_pref("browser.newtabpage.activity-stream.feeds.snippets", false);
+user_pref("browser.newtabpage.activity-stream.migrationExpired", true);
+user_pref("browser.newtabpage.activity-stream.prerender", false);
+user_pref("browser.newtabpage.activity-stream.showSearch", false);
+user_pref("browser.newtabpage.activity-stream.showTopSites", false);
 user_pref("browser.newtabpage.enabled", false);
 user_pref("browser.newtabpage.enhanced", false);
-
-/*
- * Extensions
- */
-
-user_pref("extensions.VimFx.config_file_directory", "~/.config/vimfx");
 
 /*
  * Hidden Preferences
