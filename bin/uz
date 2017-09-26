@@ -91,9 +91,13 @@ class Uz
       end
 
       if @delete
-        list = file
-        if File.extname(file) == '.001'
+        case file
+        when /\.7z\.001\z/
           list = Dir['%s.[0-9][0-9][0-9]' % file.chomp('.001')]
+        when /\.part1\.rar\z/
+          list = Dir['%s.part[0-9].rar' % file.chomp('.part1.rar')]
+        else
+          list = file
         end
         FileUtils.rm_f list, :verbose => true if @delete
       end
