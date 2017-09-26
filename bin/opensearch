@@ -51,7 +51,8 @@ class Opensearch
 
   def document name, url, method = 'GET'
     Nokogiri::XML::Builder.new do |x|
-      x.OpenSearchDescription :xmlns => 'http://a9.com/-/spec/opensearch/1.1/' do
+      x.OpenSearchDescription 'xmlns' => 'http://a9.com/-/spec/opensearch/1.1/',
+                              'xmlns:moz' => 'http://www.mozilla.org/2006/browser/search/' do
         x.ShortName name
         x.InputEncoding 'UTF-8'
         x.Url :type => 'text/html', :method => method, :template => format(url)
@@ -73,14 +74,14 @@ class Opensearch
 
     server.mount_proc '/install' do |req, res|
       res.body = <<-HTML
-      <html>
-      <head>
-        <link rel="search"
-              type="application/opensearchdescription+xml"
-              title="#{File.basename file, File.extname(file)}"
-              href="#{File.basename file}">
-      </head>
-      </html>
+<html>
+<head>
+  <link rel="search"
+        type="application/opensearchdescription+xml"
+        title="#{File.basename file, File.extname(file)}"
+        href="#{File.basename file}">
+</head>
+</html>
       HTML
     end
 
