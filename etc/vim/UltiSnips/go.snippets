@@ -720,23 +720,27 @@ snippet sc "strconv" w
 strconv.
 endsnippet
 
-snippet ita "strconv.Itoa" w
-strconv.Itoa($0)
+# snippet ita "strconv.Itoa" w
+# strconv.Itoa($0)
+# endsnippet
+
+# snippet ati "strconv.Atoi" w
+# strconv.Atoi($0)
+# endsnippet
+
+snippet spi "strconv.ParseInt" w
+strconv.ParseInt($0)
 endsnippet
 
-snippet ati "strconv.Atoi" w
-strconv.Atoi($0)
-endsnippet
-
-snippet fi "strconv.FormatInt" w
+snippet sfi "strconv.FormatInt" w
 strconv.FormatInt($0, ${1:10})
 endsnippet
 
-snippet fu "strconv.FormatUint" w
+snippet sfu "strconv.FormatUint" w
 strconv.FormatUint($0, ${1:10})
 endsnippet
 
-snippet ff "strconv.FormatFloat" w
+snippet sff "strconv.FormatFloat" w
 strconv.FormatFloat($0, '${1:beEfgG}', ${2:prec}, ${3:32|64})
 endsnippet
 
