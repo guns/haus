@@ -171,6 +171,7 @@ user_pref("media.peerconnection.video.enabled", false);
 user_pref("media.peerconnection.video.h264_enabled", false);
 
 // Remove all external URLs
+user_pref("accessibility.support.url", "");
 user_pref("app.feedback.baseURL", "");
 user_pref("app.productInfo.baseURL", "");
 user_pref("app.releaseNotesURL", "");
@@ -191,6 +192,8 @@ user_pref("browser.newtabpage.activity-stream.feeds.section.topstories.options",
 user_pref("browser.newtabpage.activity-stream.telemetry.ping.endpoint", "");
 user_pref("browser.newtabpage.directory.ping", "");
 user_pref("browser.newtabpage.directory.source", "");
+user_pref("browser.ping-centre.production.endpoint", "");
+user_pref("browser.ping-centre.staging.endpoint", "");
 user_pref("browser.safebrowsing.downloads.remote.url", "");
 user_pref("browser.safebrowsing.provider.google.advisoryURL", "");
 user_pref("browser.safebrowsing.provider.google.gethashURL", "");
@@ -247,6 +250,7 @@ user_pref("extensions.getAddons.search.browseURL", "");
 user_pref("extensions.getAddons.search.url", "");
 user_pref("extensions.getAddons.themes.browseURL", "");
 user_pref("extensions.shield-recipe-client.api_url", "");
+user_pref("extensions.shield-recipe-client.shieldLearnMoreUrl", "");
 user_pref("extensions.systemAddon.update.url", "");
 user_pref("extensions.update.background.url", "");
 user_pref("extensions.update.url", "");
