@@ -198,6 +198,8 @@ shadowenv() {
     done
 }
 
+hausrelink() { haus unlink -b "$@" && haus link "$@"; }; TCOMP haus hausrelink
+
 alias bashnilla='env --ignore-environment bash --norc --noprofile'
 ALIAS cv='command -v'
 alias h='history'
