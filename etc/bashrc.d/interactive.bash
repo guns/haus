@@ -1235,7 +1235,7 @@ if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
             gpg --detach-sign "$f"
         done
     }
-    alias gpgkilldaemons='run gpgconf --kill gpg-agent; run gpgconf --kill dirmngr'
+    alias gpgkilldaemons='run gpgconf --kill $(gpgconf --list-components gpgconf | cut -d: -f1)'
 fi
 
 # pass
