@@ -14,7 +14,7 @@ class FileManagerSearch
   DEFAULTS = {
     :linkdir => File.expand_path('~/.local/share/file-manager-search'),
     :flatten => ':',
-    :zenity => false,
+    :xdialog => false,
     :recursive => true
   }
 
@@ -42,16 +42,16 @@ class FileManagerSearch
         @recursive = false
       end
 
-      opt.on '-z', '--zenity', 'Use zenity to obtain missing queries' do
-        @zenity = true
+      opt.on '-X', '--xdialog', 'Use Xdialog to obtain missing queries' do
+        @xdialog = true
       end
     end
   end
 
   def get_query
     prompt = "#{@recursive ? 'Recursive' : 'Flat'} search query: "
-    if @zenity
-      %x(zenity --entry --text="#{prompt}")
+    if @xdialog
+      %x(Xdialog --stdout --inputbox "#{prompt}" 10 80)
     else
       print prompt
       $stdin.gets

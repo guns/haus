@@ -28,12 +28,12 @@ actions = dirs.flat_map.with_index do |d, i|
   if rename
     ["--action#{i+1}",
      %Q(ext="$(ruby -e "puts File.extname(ARGV[0])" -- %F)";
-        name="$(zenity --entry --text="%f -> #{d}/_${ext}")";
+        name="$(Xdialog --stdout --inputbox "%f -> #{d}/_${ext}" 10 80)";
         dst=#{d.shellescape}/"${name}${ext}";
         if test -z "$name"; then
           #{op} -n -- %F #{d.shellescape};
         elif test -e "$dst"; then
-          zenity --info --text "$dst already exists!";
+          Xdialog --msgbox "$dst already exists!" 0 0;
         else
           #{op} -n -- %F "$dst";
         fi).gsub(/\n\s+/, ' ')]

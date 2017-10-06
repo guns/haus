@@ -69,7 +69,7 @@
 	<icon>spacefm-find</icon>
 	<name>Recursive Search</name>
 	<unique-id>1420150337081155-4</unique-id>
-	<command>d=&quot;$(file-manager-search --zenity %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
+	<command>d=&quot;$(file-manager-search --xdialog %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
 	<description>Search for files recursively in selected directory</description>
 	<patterns>*</patterns>
 	<directories/>
@@ -78,7 +78,7 @@
 	<icon>spacefm-find</icon>
 	<name>Flat search</name>
 	<unique-id>1420150346880911-5</unique-id>
-	<command>d=&quot;$(file-manager-search --zenity --no-recursive %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
+	<command>d=&quot;$(file-manager-search --xdialog --no-recursive %f)&quot;; if test $? -eq 0; then open &quot;$d&quot;; else notify &quot;No matches&quot;; fi</command>
 	<description>Search for files in selected directory</description>
 	<patterns>*</patterns>
 	<directories/>

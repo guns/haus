@@ -10,7 +10,7 @@ require 'optparse'
 class Addbookmark
   DEFAULTS = {
     :dir => File.expand_path('~/Documents/Bookmarks'),
-    :zenity => false
+    :xdialog => false
   }
 
   def initialize opts = {}
@@ -29,8 +29,8 @@ class Addbookmark
         @dir = File.expand_path arg
       end
 
-      opt.on '-z', '--zenity', "Read URL and bookmark name with zenity" do |arg|
-        @zenity = true
+      opt.on '-X', '--xdialog', "Read URL and bookmark name with Xdialog" do |arg|
+        @xdialog = true
       end
     end
   end
@@ -41,13 +41,15 @@ class Addbookmark
     File.open File.join(@dir, name + ".url"), 'w' do |f|
       f.puts url
     end
+
+    true
   end
 
   def query prompt
-    if @zenity
-      %x(zenity --entry --text="#{prompt}")
+    if @xdialog
+      %x(Xdialog --stdout --inputbox "#{prompt}" 10 80)
     else
-      print "#{prompt} "
+      print "#{prompt}: "
       $stdin.gets "\n"
     end.chomp
   end
@@ -63,9 +65,9 @@ class Addbookmark
   def run arguments = []
     args = parser.parse arguments
     case args.size
-    when 2 then write_bookmark *args
-    when 1 then write_bookmark args[0], query_name
-    when 0 then write_bookmark query_url, query_name
+    when 2 then write_bookmark *args or abort
+    when 1 then write_bookmark args[0], query_name or abort
+    when 0 then write_bookmark query_url, query_name or abort
     else abort parser.help
     end
   end
