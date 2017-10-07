@@ -41,6 +41,8 @@ bind-key [ prev-unread
 bind-key o open-in-browser-and-mark-read
 bind-key O open-in-browser
 
+bind-key o open-in-browser article
+
 bind-key t select-tag
 bind-key ' select-tag
 bind-key T clear-tag
@@ -79,7 +81,7 @@ bind-key m toggle-article-read
 #
 
 always-display-description true
-browser "open %u; sleep 0.2; wmctrl -a '♻ newsboat ♻'"
+browser "open %u"
 feed-sort-order firsttag
 goto-next-feed no
 reload-only-visible-feeds yes
