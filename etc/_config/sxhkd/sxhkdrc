@@ -294,7 +294,7 @@ super + shift + F10
 	pkill --exact -0 chromium && exec chromium
 
 alt + F10
-	wmctrl -a 'Liferea'
+	wmctrl -a '♻ newsboat ♻'
 
 F12
 	T='✉ Mutt ✉'; \

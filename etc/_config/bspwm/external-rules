@@ -5,17 +5,16 @@
 # instance="$3"
 
 case "$(xtitle "$1")" in
-'✉ Mutt ✉'           ) echo 'state=floating';;
+'Event Tester'       ) echo 'state=floating';;
+'cmus'               ) echo 'state=floating';;
+'xzoom x2'           ) echo 'state=floating';;
 '☎ urxvt ☎'          ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
 '♫ pianobar ♫'       ) echo 'state=floating';;
+'♻ newsboat ♻'       ) echo 'split_dir=west split_ratio=0.3 private=true';;
 '⚙ htop ⚙'           ) echo 'state=floating';;
 '⚙ nmon ⚙'           ) echo 'state=floating';;
+'✉ Mutt ✉'           ) echo 'state=floating';;
 '❴ pass ❵'           ) echo 'state=floating';;
-'cmus'               ) echo 'state=floating';;
-'Page Info - '*      ) echo 'state=floating';;
-'Event Tester'       ) echo 'state=floating';;
-'DownThemAll!'*      ) echo 'state=floating';;
-'xzoom x2'           ) echo 'state=floating';;
 *' - VIM'            ) echo 'state=floating';;
 esac

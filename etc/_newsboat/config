@@ -67,7 +67,7 @@ bind-key ^B pageup
 bind-key ^F pagedown
 
 bind-key g home
-bind-key G home
+bind-key G end
 
 bind-key d delete-article
 bind-key S purge-deleted
