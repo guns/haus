@@ -82,6 +82,12 @@ task :env do
       },
 
       {
+        :base => "#{@src}/READONLY/screenFetch",
+        :branch => %w[master],
+        :files => { 'screenfetch-dev' => 'bin/screenfetch' }
+      },
+
+      {
         :base => "#{@src}/READONLY/git-imerge",
         :branch => %w[master],
         :files => { 'git-imerge' => 'bin/git-imerge' }
