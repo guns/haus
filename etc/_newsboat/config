@@ -81,7 +81,7 @@ bind-key m toggle-article-read
 #
 
 always-display-description true
-browser "open %u"
+browser "open %u; sleep 0.2; wmctrl -a '♻ newsboat ♻'"
 feed-sort-order firsttag
 goto-next-feed no
 reload-only-visible-feeds yes
