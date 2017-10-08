@@ -50,8 +50,8 @@ bind-key T clear-tag
 bind-key ; cmdline
 bind-key / open-search
 
-bind-key ^N next-dialog
-bind-key ^P prev-dialog
+bind-key ^N next-feed
+bind-key ^P prev-feed
 
 bind-key } sort
 bind-key { rev-sort
