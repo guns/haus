@@ -211,6 +211,7 @@ user_pref("browser.safebrowsing.provider.google.reportPhishMistakeURL", "");
 user_pref("browser.safebrowsing.provider.google.reportURL", "");
 user_pref("browser.safebrowsing.provider.google.updateURL", "");
 user_pref("browser.safebrowsing.provider.google4.advisoryURL", "");
+user_pref("browser.safebrowsing.provider.google4.dataSharingURL", "");
 user_pref("browser.safebrowsing.provider.google4.gethashURL", "");
 user_pref("browser.safebrowsing.provider.google4.reportMalwareMistakeURL", "");
 user_pref("browser.safebrowsing.provider.google4.reportPhishMistakeURL", "");
