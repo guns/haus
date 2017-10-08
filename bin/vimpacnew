@@ -8,11 +8,11 @@
 require 'shellwords'
 
 def vimcmd f
-  "edit #{f.shellescape} | diffthis | vsplit #{f.chomp(".pacnew").shellescape} | diffthis | tabnew"
+  "edit #{f.shellescape} | diffthis | vsplit #{f.sub(/\.pacnew\z|\.\w+-dist\z/, '').shellescape} | diffthis | tabnew"
 end
 
 Dir.chdir ARGV.first || '.' do
-  files = Dir['**/*.pacnew']
+  files = Dir['**/*{.pacnew,-dist}']
 
   if files.any?
     exec "vim", *files.reduce([]) { |args, f| args << "-c" << vimcmd(f) }, "-c", "tabclose | tabfirst"
