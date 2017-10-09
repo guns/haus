@@ -201,7 +201,6 @@ $if bash
     "\C-xeT":       "\C-] vimtmux \n"
     "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
-    "\C-xeV":       "\C-] vimfx \n"
     "\C-xew":       "\C-] vimwm \n"
     "\C-xeW":       "\C-] vimwmkeybindings \n"
     "\C-xex":       "\C-] vimxinitrc \n"
