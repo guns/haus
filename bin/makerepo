@@ -100,6 +100,7 @@ class Makerepo
     args = parser.parse arguments
     abort parser.help if args.any?
     delete_db if @delete
+    return if packages.empty?
     sign_packages
     write_db
   end
