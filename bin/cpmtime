@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+abort "#{File.basename __FILE__} src files …" if ARGV.size < 2
+
+require 'fileutils'
+
+FileUtils.touch ARGV.drop(1).select { |f| File.exists? f },
+                :mtime => File.mtime(ARGV[0])
