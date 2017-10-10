@@ -1,9 +1,24 @@
+snippet html "html" b
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>$0</title>
+</head>
+<body>
+</body>
+</html>
+endsnippet
+
 snippet t "tag" w
 <${1}>$0</${1/(\S+).*/$1/}>
 endsnippet
 
 snippet T "self closing tag" w
-<${1} $0/>
+<${1} $0>
 endsnippet
 
 snippet lt "<" w
@@ -38,8 +53,16 @@ snippet h6 "<h6>" w
 <h6>${1}</h6>
 endsnippet
 
+snippet p "p" w
+<p>$0</p>
+endsnippet
+
 snippet link "XHTML <link>" w
-<link rel="${1:stylesheet}" href="$2" type="text/css" >
+<link rel="${1:stylesheet}" href="$2" type="text/css">
+endsnippet
+
+snippet ssrc "script src" w
+<script src="$1"></script>
 endsnippet
 
 snippet bq "blockquote" w
