@@ -1226,9 +1226,8 @@ ALIAS ssl='openssl' && {
 # HACK: This allows us to define a default encrypt-to in gpg.conf for
 #       applications like mutt
 if ALIAS gpg='gpg2 --no-encrypt-to' || ALIAS gpg='gpg --no-encrypt-to'; then
-    ALIAS gpgverify='gpg --verify-files' \
-          gpgsign='gpg --detach-sign'
-    gpgsignfiles() {
+    ALIAS gpgverify='gpg --verify-files'
+    gpgsign() {
         local f
         for f in "$@"; do
             gpg --detach-sign "$f"
