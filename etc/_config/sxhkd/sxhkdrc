@@ -36,14 +36,14 @@ super + alt + {l,h}
 	bspc desktop --focus "$DIR" && \
 	bspc node --focus "$NODE"
 
-super + alt + {1-9}
-	bspc desktop --focus ^{1-9}
+super + alt + {0-9}
+	bspc desktop --focus ^{0-9}
 
-super + alt + shift + {1-9}
-	bspc node --to-desktop ^{1-9}
+super + alt + shift + {0-9}
+	bspc node --to-desktop ^{0-9}
 
-super + alt + control + {1-9}
-	bspc desktop --swap ^{1-9}
+super + alt + control + {0-9}
+	bspc desktop --swap ^{0-9}
 
 super + alt + {f,v}
 	bspc node @/ --flip {vertical,horizontal}

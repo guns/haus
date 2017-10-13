@@ -74,11 +74,11 @@ bspc rule --add Toplevel               state=floating
 case "$(bspc query --monitors | grep --count .)" in
 2)
     xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
-    bspc monitor VGA1 --reset-desktops 1 2 3 4
-    bspc monitor HDMI2 --reset-desktops 5 6 7 8
+    bspc monitor VGA1 --reset-desktops 1 2 3 4 5
+    bspc monitor HDMI2 --reset-desktops 6 7 8 9 0
     ;;
 *)
-    bspc monitor --reset-desktops 1 2 3 4
+    bspc monitor --reset-desktops 1 2 3 4 5
     ;;
 esac
 
