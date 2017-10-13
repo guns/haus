@@ -1002,12 +1002,16 @@ githubget() {
     curl --progress-bar --location "https://github.com/$user/$repo/tarball/$branch"
 }
 
-### Benchmarking
+### Time
 
 type -P time &>/dev/null && {
     T() { command time -f "\nCPU: %e (%S/%U/%P)\nMEM: %t kB avg, %M max kB\nIO:  %I fsin, %O fsout, %r sockin, %s sockout, %k signals, %x exit" "$@"; }
     TCOMP exec T
 }
+
+DATE()     { date '+%Y-%m-%d'; }
+TIME()     { date '+%H·%M·%S'; }
+DATETIME() { date '+%Y-%m-%d.%H·%M·%S'; }
 
 ### Ruby
 
