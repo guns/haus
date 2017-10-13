@@ -23,7 +23,6 @@ pushd .
 cd ~/Downloads
 
 /usr/bin/sxhkd &
-/usr/bin/pulseaudio --start &
 /usr/bin/kupfer --no-splash &
 iptablesnotify &
 WALLPAPER="/run/user/$EUID/wallpaper.lock"
