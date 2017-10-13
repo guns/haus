@@ -4,11 +4,6 @@
 ### Requires ~/.bashrc.d/functions.bash
 ###
 
-### Command flags
-
-command ls --color ~ &>/dev/null && GNU_COLOR_OPT='--color'
-GC_VARS GNU_COLOR_OPT
-
 ### Utility Functions
 
 # Toggle PS1 transformations
@@ -268,7 +263,7 @@ HAVE bgrun && TCOMP exec bgrun
 ### Files, Disks, and Memory
 
 # grep
-ALIAS g="grep --ignore-case $GNU_COLOR_OPT $(grep --perl-regexp . <<< . &>/dev/null && printf %s --perl-regexp)" \
+ALIAS g="grep --ignore-case --color $(grep --perl-regexp . <<< . &>/dev/null && printf %s --perl-regexp)" \
       gw='g --word-regexp' \
       gv='g --invert-match' \
       gc='grep --count .'
@@ -302,8 +297,8 @@ elif [[ -e /var/log/messages ]]; then
 fi
 
 # ls
-alias ls="ls -l --almost-all --human-readable --quoting-style=literal --show-control-chars $GNU_COLOR_OPT"
-alias lc="command ls -C $GNU_COLOR_OPT"
+alias ls="ls -l --almost-all --human-readable --quoting-style=literal --show-control-chars --color"
+alias lc="command ls -C --color"
 alias lsd='ls --directory'
 lsr() { ls --recursive "${@:-.}" | pager; }
 lst() { ls -t "${@:-.}" | pager; }
@@ -1138,21 +1133,7 @@ HAVE lein && {
 
 ALIAS perlpe='perl -pe' \
       perlne='perl -ne' \
-      perlpie='perl -i -pe' && {
-    # http://www.toad.net/~jkaplan2/perlRepl.htm
-    perlrepl() {
-        perl -e '
-            while (true)
-            {
-                print ">>> ";
-                $line  = <>;
-                $value = eval ($line);
-                $error = $@;
-                if ($error ne "") { print $error; } else { print "$value\n"; }
-            }
-        ' -- "$@"
-    }
-}
+      perlpie='perl -i -pe'
 
 ### Databases
 
