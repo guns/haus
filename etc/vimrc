@@ -280,7 +280,7 @@ let g:ack_apply_lmappings = 0
 call denite#custom#map('insert', '<C-n>', '<denite:move_to_next_line>', 'noremap')
 call denite#custom#map('insert', '<C-p>', '<denite:move_to_previous_line>', 'noremap')
 call denite#custom#alias('source', 'git', 'file_rec')
-call denite#custom#var('git', 'command', ['sh', '-c', 'git ls-files --cached --others --exclude-standard | grep -v ^vendor/'])
+call denite#custom#var('git', 'command', ['sh', '-c', 'git ls-files --cached --others --exclude-standard | grep -vP "^(vendor|node_modules)/"'])
 
 " Plugin: neomru
 let g:neomru#do_validate = 0
