@@ -8,19 +8,19 @@ _nmap()
     case $prev in
         -iL|-oN|-oX|-oS|-oG|---excludefile|--resume|--stylesheet)
             _filedir
-            return 0
+            return
             ;;
         -oA|--datadir)
             _filedir -d
-            return 0
+            return
             ;;
         -e)
             _available_interfaces -a
-            return 0
+            return
             ;;
         -b|--dns-servers)
-            _known_hosts_real "$cur"
-            return 0
+            _known_hosts_real -- "$cur"
+            return
             ;;
     esac
 
@@ -42,9 +42,9 @@ _nmap()
             -A --datadir --send-eth --send-ip --privilege--unprivileged -V
             -h' -- "$cur" ) )
     else
-        _known_hosts_real "$cur"
+        _known_hosts_real -- "$cur"
     fi
 } &&
 complete -F _nmap nmap
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

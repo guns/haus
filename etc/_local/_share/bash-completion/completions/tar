@@ -33,9 +33,9 @@
 # FIXME: at least 'tar -<tab>' should show some helping text (apart from just
 #        pure option advices)
 # FIXME: short option completion should be more intuitive
-#        - verbose mode option should be adviced multiple times
-#        - mode option should be adviced only once
-#        - format option should be adviced only once
+#        - verbose mode option should be advised multiple times
+#        - mode option should be advised only once
+#        - format option should be advised only once
 #        ...
 
 __gtar_parse_help_opt()
@@ -90,7 +90,7 @@ __gtar_parse_help_line()
 
             # end once there is single non-option word
             *)
-                break;
+                break
         esac
     done
 }
@@ -105,7 +105,7 @@ __gnu_tar_parse_help()
         # or more options separated by ', ' separator string.  We are matching
         # like this then:  ^<spaces>(<separator>?<option>)+<whatever>$
         if [[ "$line" =~ \
-            ^[[:blank:]]{1,10}(((,[[:blank:]])?(--?([\]\[a-zA-Z0-9?-=]+))(,[[:space:]])?)+).*$ ]]; then
+            ^[[:blank:]]{1,10}(((,[[:blank:]])?(--?([\]\[a-zA-Z0-9?=-]+))(,[[:space:]])?)+).*$ ]]; then
 
             line=${BASH_REMATCH[1]}
             str="${line//,/ }"
@@ -378,7 +378,7 @@ __tar_adjust_PREV_from_old_option()
     # $ tar cfTC # expects this sequence of arguments:
     # $ tar cfTC ARCHIVE_FILE PATTERNS_FILE CHANGE_DIR
     if [[ "$old_opt_used" -eq 1 && "$cword" -gt 1 \
-         && "$cword" -lt $(( ${#old_opt_parsed[@]} + 2 )) ]];
+        && "$cword" -lt $(( ${#old_opt_parsed[@]} + 2 )) ]];
     then
         # make e.g. 'C' option from 'cffCT'
         prev="-${old_opt_parsed[ $cword - 2 ]}"
@@ -403,7 +403,7 @@ __tar_try_list_archive()
     __tar_extract_like_mode || return 1
 
     # This all is just to approach directory completion from "virtual"
-    # directory structure in tarbal (for which the _filedir is unusable)
+    # directory structure in tarball (for which the _filedir is unusable)
 
     set -- "${words[@]}"
     tarbin=$1
@@ -411,7 +411,7 @@ __tar_try_list_archive()
     shift
 
     read tarball <<<"$(printf -- '%s\n' "$@" \
-        | sed -n "/^.\{1,\}$regex\$/p" | tee /tmp/jetel)"
+        | command sed -n "/^.\{1,\}$regex\$/p")"
     if [[ -n "$tarball" ]]; then
         local IFS=$'\n'
         COMPREPLY=($(compgen -o filenames -W "$(
@@ -433,9 +433,9 @@ __tar_cleanup_prev()
 
 __tar_detect_ext()
 {
-    local tars='@(@(tar|gem|spkg)?(.@(Z|[bgx]z|bz2|lz?(ma)))|t@([abglx]z|b?(z)2))'
+    local tars='@(@(tar|gem|spkg)?(.@(Z|[bgx]z|bz2|lz?(ma|o)))|t@([abglx]z|b?(z)2))'
     ext="$tars"
-    regex='\(\(tar\|gem\|spkg\)\(\.\(Z\|[bgx]z\|bz2\|lz\(ma\)\?\)\)\?\|t\([abglx]z\|bz\?2\)\)'
+    regex='\(\(tar\|gem\|spkg\)\(\.\(Z\|[bgx]z\|bz2\|lz\(ma\|o\)\?\)\)\?\|t\([abglx]z\|bz\?2\)\)'
 
     case "$tar_mode_arg" in
         --*)
@@ -453,7 +453,7 @@ __tar_detect_ext()
             ;;
         +([^ZzJjy])f)
             ext="$tars"
-            regex='\(\(tar\|gem\|spkg\)\(\.\(Z\|[bgx]z\|bz2\|lz\(ma\)\?\)\)\?\|t\([abglx]z\|bz\?2\)\)'
+            regex='\(\(tar\|gem\|spkg\)\(\.\(Z\|[bgx]z\|bz2\|lz\(ma\|o\)\?\)\)\?\|t\([abglx]z\|bz\?2\)\)'
             ;;
         *[Zz]*f)
             ext='@(@(t?(ar.)|gem.|spkg.)@(gz|Z)|taz)'
@@ -568,7 +568,7 @@ _gtar()
                 [[ " $long_arg_req " =~ \ $prev=\  ]] && break
 
                 # parameter with optional argument passed with =, something like
-                # --ocurrence=*<TAB> which is not handled above
+                # --occurrence=*<TAB> which is not handled above
                 [[ " $long_arg_opt " =~ \ $prev\  ]] && break
 
                 # if there is some unknown option with '=', for example
@@ -576,7 +576,7 @@ _gtar()
                 # continue also
                 $split && break
 
-                # Most probably, when code goes here, the PREV varibale contains
+                # Most probably, when code goes here, the PREV variable contains
                 # some string from "$long_arg_none" and we want continue.
                 ;;
             -[a-zA-Z0-9?])
@@ -628,8 +628,6 @@ _gtar()
         set +x
         unset PS4
     fi
-
-    return 0
 }
 
 
@@ -683,7 +681,7 @@ _posix_tar()
 
     __tar_adjust_PREV_from_old_option
 
-    __tar_posix_prev_handle && return 0
+    __tar_posix_prev_handle && return
 
     __tar_try_mode && return
 
@@ -696,16 +694,25 @@ _posix_tar()
 
 _tar()
 {
-    local cmd=${COMP_WORDS[0]} output line
-    read line <<<"$($cmd --version)"
+    local cmd=${COMP_WORDS[0]} func line
+    read line <<<"$($cmd --version 2>/dev/null)"
     case "$line" in
     *GNU*)
-        _gtar "$@"
+        func=_gtar
         ;;
     *)
-        _posix_tar "$@"
+        func=_posix_tar
         ;;
     esac
+    $func "$@"
+
+    # Install real completion for subsequent completions
+    if [ -n "${COMP_TAR_INTERNAL_PATHS:-}" ]; then
+        complete -F $func -o dirnames tar
+    else
+        complete -F $func tar
+    fi
+    unset -f _tar
 }
 
 
@@ -721,4 +728,4 @@ else
     complete -F _posix_tar  star
 fi
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

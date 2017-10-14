@@ -24,8 +24,8 @@ _arping()
         return
     fi
 
-    _known_hosts_real "$cur"
+    _known_hosts_real -- "$cur"
 } &&
 complete -F _arping arping
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

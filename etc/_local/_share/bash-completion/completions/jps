@@ -17,9 +17,9 @@ _jps()
         COMPREPLY=( $( compgen -W "-q -m -l -v -V -J -help" -- "$cur" ) )
         [[ $COMPREPLY == -J* ]] && compopt -o nospace
     else
-        _known_hosts_real "$cur"
+        _known_hosts_real -- "$cur"
     fi
 } &&
 complete -F _jps jps
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

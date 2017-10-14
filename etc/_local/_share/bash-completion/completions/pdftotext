@@ -11,7 +11,7 @@ _pdftotext()
             ;;
         -enc)
             COMPREPLY=( $( compgen -W '$( "$1" -listenc 2>/dev/null |
-                sed -e 1d )' -- "$cur" ) )
+                command sed -e 1d )' -- "$cur" ) )
             return
             ;;
         -eol)
@@ -33,4 +33,4 @@ _pdftotext()
 } &&
 complete -F _pdftotext pdftotext
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

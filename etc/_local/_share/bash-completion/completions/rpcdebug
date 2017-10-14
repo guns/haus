@@ -13,7 +13,7 @@ _rpcdebug_flags()
 
     if [[ -n $module ]]; then
         COMPREPLY=( $( compgen -W "$( rpcdebug -vh 2>&1 | \
-            sed -ne 's/^'$module'[[:space:]]\{1,\}//p' )" -- "$cur" ) )
+            command sed -ne 's/^'$module'[[:space:]]\{1,\}//p' )" -- "$cur" ) )
     fi
 }
 
@@ -25,15 +25,15 @@ _rpcdebug()
     case $prev in
         -s)
             _rpcdebug_flags
-            return 0
+            return
             ;;
         -c)
             _rpcdebug_flags
-            return 0
+            return
             ;;
         -m)
             COMPREPLY=( $( compgen -W 'rpc nfs nfsd nlm' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -44,4 +44,4 @@ _rpcdebug()
 } &&
 complete -F _rpcdebug rpcdebug
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

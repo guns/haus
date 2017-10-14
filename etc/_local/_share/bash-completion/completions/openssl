@@ -20,10 +20,16 @@ _openssl_sections()
         done
     fi
 
-    [[ ! -f $config ]] && return 0
+    [[ ! -f $config ]] && return
 
     COMPREPLY=( $( compgen -W "$( awk '/\[.*\]/ {print $2}' $config )" \
         -- "$cur" ) )
+}
+
+_openssl_digests()
+{
+    "$1" dgst -h 2>&1 | \
+        awk '/^-.*[ \t]to use the .* message digest algorithm/ { print $1 }'
 }
 
 _openssl()
@@ -43,7 +49,8 @@ _openssl()
         camellia-256-ecb cast cast-cbc cast5-cbc cast5-cfb cast5-ecb cast5-ofb
         des des-cbc des-cfb des-ecb des-ede des-ede-cbc des-ede-cfb des-ede-ofb
         des-ede3 des-ede3-cbc des-ede3-cfb des-ede3-ofb des-ofb des3 desx rc2
-        rc2-40-cbc rc2-64-cbc rc2-cbc rc2-cfb rc2-ecb rc2-ofb rc4 rc4-40'
+        rc2-40-cbc rc2-64-cbc rc2-cbc rc2-cfb rc2-ecb rc2-ofb rc4 rc4-40
+        sha224 sha256 sha384 sha512'
 
     if [[ $cword -eq 1 ]]; then
         COMPREPLY=( $( compgen -W "$commands" -- "$cur" ) )
@@ -56,15 +63,15 @@ _openssl()
             -spkac|-sign|-signkey|-signer|-signature|-ss_cert|-untrusted| \
             -verify)
                 _filedir
-                return 0
+                return
                 ;;
             -outdir|-CApath)
                 _filedir -d
-                return 0
+                return
                 ;;
             -name|-crlexts|-extensions)
                 _openssl_sections
-                return 0
+                return
                 ;;
             -inform|-outform|-keyform|-certform|-CAform|-CAkeyform|-dkeyform|\
             -dcertform)
@@ -78,20 +85,20 @@ _openssl()
                         ;;
                 esac
                 COMPREPLY=( $( compgen -W "$formats" -- "$cur" ) )
-                return 0
+                return
                 ;;
             -connect)
-                _known_hosts_real "$cur"
-                return 0
+                _known_hosts_real -- "$cur"
+                return
                 ;;
             -starttls)
                 COMPREPLY=( $( compgen -W 'smtp pop3 imap ftp' -- "$cur" ) )
-                return 0
+                return
                 ;;
             -cipher)
                 COMPREPLY=( $( IFS=: compgen -W "$( $1 ciphers )" \
                     -- "$cur" ) )
-                return 0
+                return
                 ;;
         esac
 
@@ -122,9 +129,8 @@ _openssl()
                     options='-inform -outform -in -out -print_certs'
                     ;;
                 dgst)
-                    options='-md5 -md4 -md2 -sha1 -sha -mdc2 -ripemd160 -dss1
-                        -c -d -hex -binary -out -sign -verify -prverify
-                        -signature'
+                    options="-c -d -hex -binary -out -sign -verify -prverify
+                        -signature $( _openssl_digests $1 )"
                     ;;
                 dsa)
                     options='-inform -outform -in -passin -out -passout -des
@@ -156,11 +162,11 @@ _openssl()
                     options='-out -rand -base64'
                     ;;
                 req)
-                    options='-inform -outform -in -passin -out -passout -text
+                    options="-inform -outform -in -passin -out -passout -text
                         -noout -verify -modulus -new -rand -newkey -newkey
-                        -nodes -key -keyform -keyout -md5 -sha1 -md2 -mdc2
+                        -nodes -key -keyform -keyout $( _openssl_digests $1 )
                         -config -x509 -days -asn1-kludge -newhdr -extensions
-                        -reqexts section'
+                        -reqexts section"
                     ;;
                 rsa)
                     options='-inform -outform -in -passin -out -passout
@@ -210,16 +216,16 @@ _openssl()
                         -issuer_checks -verbose -certificates'
                     ;;
                 x509)
-                    options='-inform -outform -keyform -CAform -CAkeyform -in
+                    options="-inform -outform -keyform -CAform -CAkeyform -in
                         -out -serial -hash -subject_hash -issuer_hash -subject
                         -issuer -nameopt -email -startdate -enddate -purpose
                         -dates -modulus -fingerprint -alias -noout -trustout
                         -clrtrust -clrreject -addtrust -addreject -setalias
                         -days -set_serial -signkey -x509toreq -req -CA -CAkey
-                        -CAcreateserial -CAserial -text -C -md2 -md5 -sha1
-                        -mdc2 -clrext -extfile -extensions -engine'
+                        -CAcreateserial -CAserial -text -C -clrext
+                        -extfile -extensions -engine $( _openssl_digests $1 )"
                     ;;
-                md5|md4|md2|sha1|sha|mdc2|ripemd160)
+                md*|sha*|ripemd160)
                     options='-c -d'
                     ;;
             esac
@@ -238,4 +244,4 @@ _openssl()
 } &&
 complete -F _openssl -o default openssl
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

@@ -19,7 +19,7 @@ _update_rc_d()
     if [[ $cword -eq 1 || "$prev" == -* ]]; then
     valid_options=( $( \
         tr " " "\n" <<<"${words[@]} ${options[@]}" \
-        | sed -ne "/$( sed "s/ /\\|/g" <<<"${options[@]}" )/p" \
+        | command sed -ne "/$( command sed "s/ /\\|/g" <<<"${options[@]}" )/p" \
         | sort | uniq -u \
         ) )
     COMPREPLY=( $( compgen -W '${options[@]} ${services[@]}' \
@@ -57,9 +57,7 @@ _update_rc_d()
     else
         COMPREPLY=()
     fi
-
-    return 0
 } &&
 complete -F _update_rc_d update-rc.d
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

@@ -7,7 +7,7 @@ _rpm_installed_packages()
     if [[ -r /var/log/rpmpkgs && \
         /var/log/rpmpkgs -nt /var/lib/rpm/Packages ]]; then
         # using RHL 7.2 or later - this is quicker than querying the DB
-        COMPREPLY=( $( compgen -W "$( sed -ne \
+        COMPREPLY=( $( compgen -W "$( command sed -ne \
             's|^\([^[:space:]]\{1,\}\)-[^[:space:]-]\{1,\}-[^[:space:]-]\{1,\}\.rpm$|\1|p' \
             /var/log/rpmpkgs )" -- "$cur" ) )
     elif type rpmqpack &>/dev/null ; then
@@ -29,14 +29,14 @@ _rpm_groups()
 _rpm_macros()
 {
     # get a list of macros
-    COMPREPLY=( $( compgen -W "$( ${1:-rpm} --showrc | sed -ne \
+    COMPREPLY=( $( compgen -W "$( ${1:-rpm} --showrc | command sed -ne \
         's/^-\{0,1\}[0-9]\{1,\}[:=][[:space:]]\{1,\}\([^[:space:](]\{3,\}\).*/%\1/p' )" \
         -- "$cur" ) )
 }
 
 _rpm_buildarchs()
 {
-    COMPREPLY=( $( compgen -W "$( ${1:-rpm} --showrc | sed -ne \
+    COMPREPLY=( $( compgen -W "$( ${1:-rpm} --showrc | command sed -ne \
         's/^\s*compatible\s\s*build\s\s*archs\s*:\s*\(.*\)/\1/ p' )" \
         -- "$cur" ) )
 }
@@ -63,33 +63,33 @@ _rpm()
                     -- "$cur" ) )
                 ;;
         esac
-        return 0
+        return
     fi
 
     case $prev in
         --dbpath|--excludepath|--prefix|--relocate|--root|-r)
             _filedir -d
-            return 0
+            return
             ;;
         --eval|-E)
             _rpm_macros $1
-            return 0
+            return
             ;;
         --pipe)
             compopt -o filenames
             COMPREPLY=( $( compgen -c -- "$cur" ) )
-            return 0
+            return
             ;;
         --rcfile)
             _filedir
-            return 0
+            return
             ;;
         --specfile)
             # complete on .spec files
             _filedir spec
-            return 0
+            return
             ;;
-        --whatenchances|--whatprovides|--whatrecommends|--whatrequires|\
+        --whatenhances|--whatprovides|--whatrecommends|--whatrequires|\
         --whatsuggests|--whatsupplements)
             if [[ "$cur" == */* ]]; then
                 _filedir
@@ -108,15 +108,15 @@ _rpm()
                     --queryformat=\"%{$fmt}\\n\" 2>/dev/null |
                     command grep -vF '(none)' )" -- "$cur" ) )
             fi
-            return 0
+            return
             ;;
         --define|-D|--fileid|--hdrid|--pkgid)
             # argument required but no completions available
-            return 0
+            return
             ;;
     esac
 
-    $split && return 0
+    $split && return
 
     # options common to all modes
     local opts="--define= --eval= --macros= --nodigest --nosignature --rcfile=
@@ -151,7 +151,7 @@ _rpm()
                 --fileprovide --filerequire --filesbypkg --info --list
                 --obsoletes --pipe --provides --queryformat= --requires
                 --scripts --suggests --triggers --xml --recommends
-                --supplements"
+                --supplements --filetriggers"
 
             if [[ ${words[@]} == *\ -@(*([^ -])f|-file )* ]]; then
                 # -qf completion
@@ -230,8 +230,6 @@ _rpm()
             ;;
     esac
     [[ $COMPREPLY == *= ]] && compopt -o nospace
-
-    return 0
 } &&
 complete -F _rpm rpm
 
@@ -246,38 +244,38 @@ _rpmbuild()
     case $prev in
         --buildroot|--root|-r|--dbpath)
             _filedir -d
-            return 0
+            return
             ;;
         --target)
             _rpm_buildarchs
-            return 0
+            return
             ;;
         --eval|-E)
             _rpm_macros $rpm
-            return 0
+            return
             ;;
         --macros|--rcfile)
             _filedir
-            return 0
+            return
             ;;
         --buildpolicy)
             local cfgdir=$( $rpm --eval '%{_rpmconfigdir}' 2>/dev/null )
             if [[ $cfgdir ]]; then
                 COMPREPLY=( $( compgen -W "$( command ls $cfgdir 2>/dev/null \
-                    | sed -ne 's/^brp-//p' )" -- "$cur" ) )
+                    | command sed -ne 's/^brp-//p' )" -- "$cur" ) )
             fi
             ;;
         --define|-D|--with|--without)
-            return 0
+            return
             ;;
     esac
 
-    $split && return 0
+    $split && return
 
     if [[ $cur == -* ]]; then
         COMPREPLY=( $( compgen -W "$( _parse_help "$1" )" -- "$cur" ) )
         [[ $COMPREPLY == *= ]] && compopt -o nospace
-        return 0
+        return
     fi
 
     # Figure out file extensions to complete
@@ -302,4 +300,4 @@ _rpmbuild()
 } &&
 complete -F _rpmbuild rpmbuild rpmbuild-md5
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

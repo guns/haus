@@ -16,8 +16,8 @@ _tracepath()
         return
     fi
 
-    _known_hosts_real "$cur"
+    _known_hosts_real -- "$cur"
 } &&
 complete -F _tracepath tracepath tracepath6
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

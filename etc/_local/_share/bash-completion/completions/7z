@@ -21,9 +21,9 @@ _7z()
         -?(a)[ix]*)
             local opt
             if [[ $cur == -a[ix]* ]]; then
-               opt=${cur:0:3} cur=${cur:3}
+                opt=${cur:0:3} cur=${cur:3}
             else
-               opt=${cur:0:2} cur=${cur:2}
+                opt=${cur:0:2} cur=${cur:2}
             fi
             if [[ $cur != *[@\!]* ]]; then
                 COMPREPLY=( $( compgen -P$opt -W '@ ! r@ r-@ r0@ r! r-! r0!' \
@@ -106,7 +106,7 @@ _7z()
         if [[ ${words[1]} == d ]]; then
             local IFS=$'\n'
             COMPREPLY=( $( compgen -W "$( printf '%s\n' $( $1 l ${words[2]} \
-                -slt 2>/dev/null | sed -n '/^Path =/s/^Path = \(.*\)$/\1/p' \
+                -slt 2>/dev/null | command sed -n '/^Path =/s/^Path = \(.*\)$/\1/p' \
                 2>/dev/null | tail -n+2 ) )" -- "$cur" ) )
             compopt -o filenames
         else
@@ -116,4 +116,4 @@ _7z()
 } &&
 complete -F _7z 7z 7za
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

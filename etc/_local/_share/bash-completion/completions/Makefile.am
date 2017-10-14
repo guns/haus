@@ -27,6 +27,7 @@ bashcomp_DATA = 2to3 \
 		autoscan \
 		avctrl \
 		badblocks \
+		bind \
 		bk \
 		brctl \
 		btdownloadheadless.py \
@@ -69,6 +70,7 @@ bashcomp_DATA = 2to3 \
 		cvs \
 		cvsps \
 		dd \
+		deja-dup \
 		desktop-file-validate \
 		dhclient \
 		dict \
@@ -83,6 +85,7 @@ bashcomp_DATA = 2to3 \
 		dumpe2fs \
 		e2freefrag \
 		e2label \
+		ebtables \
 		_eject \
 		eog \
 		ether-wake \
@@ -113,6 +116,7 @@ bashcomp_DATA = 2to3 \
 		genisoimage \
 		getent \
 		gkrellm \
+		gm \
 		gnatmake \
 		gnokii \
 		gnome-mplayer \
@@ -195,6 +199,7 @@ bashcomp_DATA = 2to3 \
 		lpr \
 		lrzip \
 		lsof \
+		lsusb \
 		lua \
 		luac \
 		luseradd \
@@ -228,6 +233,7 @@ bashcomp_DATA = 2to3 \
 		mount \
 		mount.linux \
 		mplayer \
+		mr \
 		msynctool \
 		mtx \
 		munindoc \
@@ -249,6 +255,7 @@ bashcomp_DATA = 2to3 \
 		_nmcli \
 		nslookup \
 		ntpdate \
+		oggdec \
 		openssl \
 		opera \
 		optipng \
@@ -291,10 +298,12 @@ bashcomp_DATA = 2to3 \
 		pwd \
 		pwdx \
 		pwgen \
+		py.test \
 		pydoc \
 		pyflakes \
 		pylint \
 		python \
+		pyvenv \
 		qdbus \
 		qemu \
 		qrunner \
@@ -309,7 +318,7 @@ bashcomp_DATA = 2to3 \
 		reportbug \
 		_reptyr \
 		resolvconf \
-		rfkill \
+		_rfkill \
 		ri \
 		rmlist \
 		rmmod \
@@ -360,6 +369,8 @@ bashcomp_DATA = 2to3 \
 		tcpkill \
 		tcpnice \
 		timeout \
+		tipc \
+		tox \
 		tracepath \
 		tshark \
 		tune2fs \
@@ -410,7 +421,8 @@ bashcomp_DATA = 2to3 \
 		ypmatch \
 		_yum \
 		yum-arch \
-		zopfli
+		zopfli \
+		zopflipng
 
 EXTRA_DIST = $(bashcomp_DATA)
 
@@ -420,10 +432,13 @@ CLEANFILES = \
 	aclocal-1.11 \
 	aclocal-1.12 \
 	aclocal-1.13 \
+	aclocal-1.14 \
+	aclocal-1.15 \
 	alpine \
 	alternatives \
 	animate \
 	apropos \
+	aptitude-curses \
 	arm-koji \
 	asciidoc.py \
 	autoheader \
@@ -431,6 +446,8 @@ CLEANFILES = \
 	automake-1.11 \
 	automake-1.12 \
 	automake-1.13 \
+	automake-1.14 \
+	automake-1.15 \
 	autossh \
 	autoupdate \
 	bsdtar \
@@ -519,6 +536,7 @@ CLEANFILES = \
 	mailsnarf \
 	mdecrypt \
 	mencoder \
+	micropython \
 	mkisofs \
 	mogrify \
 	montage \
@@ -557,10 +575,17 @@ CLEANFILES = \
 	pvs \
 	pvscan \
 	pxz \
+	py.test-2 \
+	py.test-3 \
 	pydoc3 \
+	pylint-2 \
+	pylint-3 \
 	pypy \
+	pypy3 \
 	python2 \
 	python3 \
+	pyvenv-3.4 \
+	pyvenv-3.5 \
 	qemu-kvm \
 	qemu-system-i386 \
 	qemu-system-x86_64 \
@@ -583,6 +608,7 @@ CLEANFILES = \
 	sdptool \
 	setquota \
 	sftp \
+	sidedoor \
 	slogin \
 	smbcacls \
 	smbcquotas \
@@ -618,6 +644,8 @@ CLEANFILES = \
 	vgsplit \
 	vigr \
 	whatis \
+	xdg-mime \
+	xdg-settings \
 	xpovray \
 	xvnc4viewer \
 	ypcat
@@ -627,7 +655,8 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) 7z $(targetdir)/$$file ; \
 	done
-	for file in aclocal-1.10 aclocal-1.11 aclocal-1.12 aclocal-1.13 ; do \
+	for file in aclocal-1.10 aclocal-1.11 aclocal-1.12 aclocal-1.13 \
+		aclocal-1.14 aclocal-1.15 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) aclocal $(targetdir)/$$file ; \
 	done
@@ -635,12 +664,16 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) ant $(targetdir)/$$file ; \
 	done
+	for file in aptitude-curses ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) aptitude $(targetdir)/$$file ; \
+	done
 	for file in asciidoc.py ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) asciidoc $(targetdir)/$$file ; \
 	done
 	for file in automake-1.10 automake-1.11 automake-1.12 automake-1.13 \
-		; do \
+		automake-1.14 automake-1.15 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) automake $(targetdir)/$$file ; \
 	done
@@ -796,7 +829,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) mcrypt $(targetdir)/$$file ; \
 	done
-	for file in mplayer2 mencoder gmplayer kplayer mpv ; do \
+	for file in mplayer2 mencoder gmplayer kplayer ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) mplayer $(targetdir)/$$file ; \
 	done
@@ -853,13 +886,25 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) puppet $(targetdir)/$$file ; \
 	done
+	for file in py.test-2 py.test-3 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) py.test $(targetdir)/$$file ; \
+	done
 	for file in pydoc3 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) pydoc $(targetdir)/$$file ; \
 	done
-	for file in pypy python2 python3 ; do \
+	for file in pylint-2 pylint-3 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) pylint $(targetdir)/$$file ; \
+	done
+	for file in pypy pypy3 python2 python3 micropython ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) python $(targetdir)/$$file ; \
+	done
+	for file in pyvenv-3.4 pyvenv-3.5 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) pyvenv $(targetdir)/$$file ; \
 	done
 	for file in dcop ; do \
 		rm -f $(targetdir)/$$file && \
@@ -893,7 +938,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) sbcl $(targetdir)/$$file ; \
 	done
-	for file in slogin autossh sftp scp ; do \
+	for file in slogin autossh sftp scp sidedoor ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) ssh $(targetdir)/$$file ; \
 	done
@@ -936,3 +981,11 @@ all-local: symlinks
 
 install-data-local: targetdir = $(DESTDIR)$(bashcompdir)
 install-data-local: symlinks
+
+check-local:
+	ret=0
+	for file in $(bashcomp_DATA) ; do \
+		$${bashcomp_bash:-$${BASH:-bash}} \
+			-O extglob -n $$file || ret=$$? ; \
+	done ; \
+	exit $$ret

@@ -20,7 +20,7 @@ _fbi()
             return
             ;;
         -m|--mode)
-            COMPREPLY=( $( compgen -W '$( sed \
+            COMPREPLY=( $( compgen -W '$( command sed \
                 -n "/^mode/{s/^mode \{1,\}\"\([^\"]\{1,\}\)\"/\1/g;p}" \
                 /etc/fb.modes 2> /dev/null )' -- "$cur" ) )
             return
@@ -48,6 +48,7 @@ _fbi()
     # FIXME: It is hard to determine correct supported extensions.
     # fbi can handle any format that imagemagick can plus some others
     _filedir 'bmp|gif|jp?(e)g|pcd|png|p[pgb]m|tif?(f)|webp|xpm|xwd|?(e)ps|pdf|dvi|txt|svg?(z)|cdr|[ot]tf'
-} && complete -F _fbi fbi
+} &&
+complete -F _fbi fbi
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

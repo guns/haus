@@ -1,13 +1,14 @@
 7za
-aclocal-1.1[0123]
+aclocal-1.1[012345]
 alpine
 alternatives
 animate
 apropos
+aptitude-curses
 arm-koji
 asciidoc.py
 autoheader
-automake-1.1[0123]
+automake-1.1[012345]
 autossh
 autoupdate
 bsdtar
@@ -96,6 +97,7 @@ lz4c
 mailsnarf
 mdecrypt
 mencoder
+micropython
 mkisofs
 mogrify
 montage
@@ -134,10 +136,14 @@ pvremove
 pvs
 pvscan
 pxz
+py.test-[23]
 pydoc3
+pylint-[23]
 python2
 python3
 pypy
+pypy3
+pyvenv-3.[45]
 qemu-kvm
 qemu-system-i386
 qemu-system-x86_64
@@ -160,6 +166,7 @@ scp
 sdptool
 setquota
 sftp
+sidedoor
 slogin
 smbcacls
 smbcquotas

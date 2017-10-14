@@ -1,21 +1,33 @@
 # bash completion for lvm                                  -*- shell-script -*-
 
+_lvm_filedir()
+{
+    cur=${cur:-/dev/}
+    _filedir
+}
+
 _lvm_volumegroups()
 {
     COMPREPLY=( $(compgen -W "$( vgscan 2>/dev/null | \
-        sed -n -e 's|.*Found.*"\(.*\)".*$|\1|p' )" -- "$cur" ) )
+        command sed -n -e 's|.*Found.*"\(.*\)".*$|\1|p' )" -- "$cur" ) )
+}
+
+_lvm_physicalvolumes_all()
+{
+    COMPREPLY=( $(compgen -W "$( pvscan 2>/dev/null | \
+        command sed -n -e 's|^.*PV \([^ ]*\) .*|\1|p' )" -- "$cur" ) )
 }
 
 _lvm_physicalvolumes()
 {
     COMPREPLY=( $(compgen -W "$( pvscan 2>/dev/null | \
-        sed -n -e 's|^.*PV \(.*\) VG.*$|\1|p' )" -- "$cur" ) )
+        command sed -n -e 's|^.*PV \(.*\) VG.*$|\1|p' )" -- "$cur" ) )
 }
 
 _lvm_logicalvolumes()
 {
     COMPREPLY=( $(compgen -W "$( lvscan 2>/dev/null | \
-        sed -n -e "s|^.*'\(.*\)'.*$|\1|p" )" -- "$cur" ) )
+        command sed -n -e "s|^.*'\(.*\)'.*$|\1|p" )" -- "$cur" ) )
     if [[ $cur == /dev/mapper/* ]]; then
         _filedir
         local i
@@ -85,18 +97,18 @@ _pvs()
         -o|-O|--options|--sort)
             COMPREPLY=( $( compgen -W 'pv_fmt pv_uuid pv_size pv_free pv_used
                 pv_name pv_attr pv_pe_count pv_pe_alloc_count' -- "$cur" ) )
-            return 0
+            return
             ;;
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" --help )' -- "$cur" ) )
     else
-        _lvm_physicalvolumes
+        _lvm_physicalvolumes_all
     fi
 } &&
 complete -F _pvs pvs
@@ -109,14 +121,14 @@ _pvdisplay()
     case $prev in
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" --help )' -- "$cur" ) )
     else
-        _lvm_physicalvolumes
+        _lvm_physicalvolumes_all
     fi
 } &&
 complete -F _pvdisplay pvdisplay
@@ -129,14 +141,14 @@ _pvchange()
     case $prev in
         -A|-x|--autobackup|--allocatable)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" --help )' -- "$cur" ) )
     else
-        _lvm_physicalvolumes
+        _lvm_physicalvolumes_all
     fi
 } &&
 complete -F _pvchange pvchange
@@ -149,26 +161,26 @@ _pvcreate()
     case $prev in
         --restorefile)
             _filedir
-            return 0
+            return
             ;;
         -M|--metadatatype)
             COMPREPLY=( $( compgen -W '1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         --metadatacopies)
             COMPREPLY=( $( compgen -W '0 1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         --metadatasize|--setphysicalvolumesize)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" --help )' -- "$cur" ) )
     else
-        _lvm_physicalvolumes
+        _lvm_filedir
     fi
 } &&
 complete -F _pvcreate pvcreate
@@ -181,11 +193,11 @@ _pvmove()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -n|--name)
             _lvm_logicalvolumes
-            return 0
+            return
     esac
 
     if [[ "$cur" == -* ]]; then
@@ -206,7 +218,7 @@ _pvremove()
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" --help )' -- "$cur" ) )
     else
-        _lvm_physicalvolumes
+        _lvm_physicalvolumes_all
     fi
 } &&
 complete -F _pvremove pvremove
@@ -233,11 +245,11 @@ _vgs()
                 vg_free vg_sysid vg_extent_size vg_extent_count vg_free_count
                 max_lv max_pv pv_count lv_count snap_count vg_seqno' \
                     -- "$cur" ) )
-            return 0
+            return
             ;;
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
@@ -257,7 +269,7 @@ _vgdisplay()
     case $prev in
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
@@ -277,7 +289,7 @@ _vgchange()
     case $prev in
         -a|-A|-x|--available|--autobackup|--resizeable)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -300,15 +312,15 @@ _vgcreate()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -M|--metadatatype)
             COMPREPLY=( $( compgen -W '1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         -s|--physicalextentsize)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -322,7 +334,7 @@ _vgcreate()
         if [[ $args -eq 0 ]]; then
             _lvm_volumegroups
         else
-            _lvm_physicalvolumes
+            _lvm_physicalvolumes_all
         fi
     fi
 } &&
@@ -349,7 +361,7 @@ _vgrename()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -369,7 +381,7 @@ _vgreduce()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -396,11 +408,11 @@ _vgextend()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -L|--size)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -412,7 +424,7 @@ _vgextend()
         if [[ $args -eq 0 ]]; then
             _lvm_volumegroups
         else
-            _lvm_physicalvolumes
+            _lvm_physicalvolumes_all
         fi
     fi
 } &&
@@ -452,15 +464,15 @@ _vgconvert()
     case $prev in
         -M|--metadatatype)
             COMPREPLY=( $( compgen -W '1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         --metadatacopies)
             COMPREPLY=( $( compgen -W '0 1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         --metadatasize)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -480,7 +492,7 @@ _vgcfgbackup()
     case $prev in
         -f|--file)
             _filedir
-            return 0
+            return
             ;;
     esac
 
@@ -500,15 +512,15 @@ _vgcfgrestore()
     case $prev in
         -f|--file)
             _filedir
-            return 0
+            return
             ;;
         -M|--metadatatype)
             COMPREPLY=( $( compgen -W '1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
         -n|--name)
             _lvm_volumegroups
-            return 0
+            return
             ;;
     esac
 
@@ -528,7 +540,7 @@ _vgmerge()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -548,11 +560,11 @@ _vgsplit()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -M|--metadatatype)
             COMPREPLY=( $( compgen -W '1 2' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -605,11 +617,11 @@ _lvs()
             COMPREPLY=( $( compgen -W 'lv_uuid lv_name lv_attr lv_minor lv_size
                 seg_count origin snap_percent segtype stripes stripesize
                 chunksize seg_start seg_size' -- "$cur" ) )
-            return 0
+            return
             ;;
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
@@ -629,7 +641,7 @@ _lvdisplay()
     case $prev in
         --units)
             _lvm_units
-            return 0
+            return
             ;;
     esac
 
@@ -649,11 +661,11 @@ _lvchange()
     case $prev in
         -a|-A|-C|-M|--available|--autobackup|--contiguous|--persistent)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -p|--permission)
             COMPREPLY=( $( compgen -W 'r rw' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -673,19 +685,19 @@ _lvcreate()
     case $prev in
         -A|-C|-M|-Z|--autobackup|--contiguous|--persistent|--zero)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -L|--size)
             _lvm_sizes
-            return 0
+            return
             ;;
         -p|--permission)
             COMPREPLY=( $( compgen -W 'r rw' -- "$cur" ) )
-            return 0
+            return
             ;;
         -n|--name)
             _lvm_logicalvolumes
-            return 0
+            return
             ;;
     esac
 
@@ -711,7 +723,7 @@ _lvremove()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -731,7 +743,7 @@ _lvrename()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
     esac
 
@@ -751,11 +763,11 @@ _lvreduce()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -L|--size)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -775,11 +787,11 @@ _lvresize()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -L|--size)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -805,11 +817,11 @@ _lvextend()
     case $prev in
         -A|--autobackup)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -L|--size)
             _lvm_sizes
-            return 0
+            return
             ;;
     esac
 
@@ -854,4 +866,4 @@ _lvm()
 } &&
 complete -F _lvm lvm
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

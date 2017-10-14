@@ -71,9 +71,9 @@ _java_classes()
 
         elif [[ -d $i ]]; then
             COMPREPLY+=(
-                $( compgen -d -- "$i/$cur" | sed -e "s|^$i/\(.*\)|\1.|" )
+                $( compgen -d -- "$i/$cur" | command sed -e "s|^$i/\(.*\)|\1.|" )
                 $( compgen -f -X '!*.class' -- "$i/$cur" | \
-                    sed -e '/\$/d' -e "s|^$i/||" )
+                    command sed -e '/\$/d' -e "s|^$i/||" )
             )
             [[ $COMPREPLY == *.class ]] || compopt -o nospace
 
@@ -103,7 +103,7 @@ _java_packages()
     for i in ${sourcepath//:/ }; do
         if [[ -d $i ]]; then
             COMPREPLY+=( $( command ls -F -d $i/$cur* 2>/dev/null | \
-                sed -e 's|^'$i'/||' ) )
+                command sed -e 's|^'$i'/||' ) )
         fi
     done
     # keep only packages
@@ -134,7 +134,7 @@ _java()
             *)
                 # once we've seen a class, just do filename completion
                 _filedir
-                return 0
+                return
                 ;;
         esac
     done
@@ -143,70 +143,70 @@ _java()
         # standard option completions
         -verbose:*)
             COMPREPLY=( $( compgen -W 'class gc jni' -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -javaagent:*)
             cur=${cur#*:}
             _filedir '@(jar|zip)'
-            return 0
+            return
             ;;
         -agentpath:*)
             cur=${cur#*:}
             _filedir so
-            return 0
+            return
             ;;
         # various non-standard option completions
         -splash:*)
             cur=${cur#*:}
             _filedir '@(gif|jp?(e)g|png)'
-            return 0
+            return
             ;;
         -Xbootclasspath*:*)
             _java_path
-            return 0
+            return
             ;;
         -Xcheck:*)
             COMPREPLY=( $( compgen -W 'jni' -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -Xgc:*)
             COMPREPLY=( $( compgen -W 'singlecon gencon singlepar genpar' \
                 -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -Xgcprio:*)
             COMPREPLY=( $( compgen -W 'throughput pausetime deterministic' \
                 -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -Xloggc:*|-Xverboselog:*)
             cur=${cur#*:}
             _filedir
-            return 0
+            return
             ;;
         -Xshare:*)
             COMPREPLY=( $( compgen -W 'auto off on' -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -Xverbose:*)
             COMPREPLY=( $( compgen -W 'memory load jni cpuinfo codegen opt
                 gcpause gcreport' -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         -Xverify:*)
             COMPREPLY=( $( compgen -W 'all none remote' -- "${cur#*:}" ) )
-            return 0
+            return
             ;;
         # the rest that we have no completions for
         -D*|-*:*)
-            return 0
+            return
             ;;
     esac
 
     case $prev in
         -cp|-classpath)
             _java_path
-            return 0
+            return
             ;;
     esac
 
@@ -238,19 +238,29 @@ _javadoc()
     case $prev in
         -overview|-helpfile)
             _filedir '?(x)htm?(l)'
-            return 0
+            return
+            ;;
+        -doclet|-exclude|-subpackages|-source|-locale|-encoding|-windowtitle|\
+        -doctitle|-header|-footer|-top|-bottom|-group|-noqualifier|-tag|\
+        -charset|-sourcetab|-docencoding)
+            return
             ;;
         -stylesheetfile)
             _filedir css
-            return 0
+            return
             ;;
         -d|-link|-linkoffline)
             _filedir -d
-            return 0
+            return
             ;;
-        -classpath|-bootclasspath|-docletpath|-sourcepath|-extdirs)
+        -classpath|-cp|-bootclasspath|-docletpath|-sourcepath|-extdirs|\
+        -excludedocfilessubdir)
             _java_path
-            return 0
+            return
+            ;;
+        -helpfile)
+            _filedir
+            return
             ;;
     esac
 
@@ -279,11 +289,11 @@ _javac()
     case $prev in
         -d)
             _filedir -d
-            return 0
+            return
             ;;
-        -classpath|-bootclasspath|-sourcepath|-extdirs)
+        -cp|-classpath|-bootclasspath|-sourcepath|-extdirs)
             _java_path
-            return 0
+            return
             ;;
     esac
 
@@ -294,7 +304,7 @@ _javac()
         # For some reason there may be -g:none AND -g:{lines,source,vars};
         # convert the none case to the curly brace format so it parses like
         # the others.
-        local opts=$( "$1" $helpopt 2>&1 | sed -e 's/-g:none/-g:{none}/' -ne \
+        local opts=$( "$1" $helpopt 2>&1 | command sed -e 's/-g:none/-g:{none}/' -ne \
             "s/^[[:space:]]*${cur%%:*}:{\([^}]\{1,\}\)}.*/\1/p" )
         COMPREPLY=( $( compgen -W "${opts//,/ }" -- "${cur#*:}" ) )
         return
@@ -315,4 +325,4 @@ _javac()
 } &&
 complete -F _javac javac
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

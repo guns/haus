@@ -8,28 +8,28 @@ _gpg2()
     case $prev in
         --homedir)
             _filedir -d
-            return 0
+            return
             ;;
         -s|--sign|--clearsign|--options|--decrypt)
             _filedir
-            return 0
+            return
             ;;
         --export|--sign-key|--lsign-key|--nrsign-key|--nrlsign-key|--edit-key)
             # return list of public keys
-            COMPREPLY=( $( compgen -W "$( $1 --list-keys 2>/dev/null | \
-                sed -ne 's@^pub.*/\([^ ]*\).*$@\1@p' \
-                    -ne 's@^.*\(<\([^>]*\)>\).*$@\2@p' )" -- "$cur" ) )
-            return 0
+            COMPREPLY=( $( compgen -W "$( $1 --list-keys 2>/dev/null | command sed -ne \
+                's@^pub.*/\([^ ]*\).*$@\1@p' -ne \
+                's@^.*\(<\([^>]*\)>\).*$@\2@p' )" -- "$cur" ) )
+            return
             ;;
         -r|--recipient)
             COMPREPLY=( $( compgen -W "$( $1 --list-keys 2>/dev/null | \
-                sed -ne 's@^.*<\([^>]*\)>.*$@\1@p')" -- "$cur" ) )
+                command sed -ne 's@^.*<\([^>]*\)>.*$@\1@p')" -- "$cur" ) )
             if [[ -e ~/.gnupg/gpg.conf ]]; then
-                COMPREPLY+=( $( compgen -W "$( sed -ne \
+                COMPREPLY+=( $( compgen -W "$( command sed -ne \
                     's@^[ \t]*group[ \t][ \t]*\([^=]*\).*$@\1@p' \
                     ~/.gnupg/gpg.conf)" -- "$cur" ) )
             fi
-        return 0
+        return
         ;;
     esac
 
@@ -39,4 +39,4 @@ _gpg2()
 } &&
 complete -F _gpg2 -o default gpg2
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

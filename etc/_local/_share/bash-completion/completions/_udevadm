@@ -61,7 +61,7 @@ _udevadm()
                 ;;
             *)
                 COMPREPLY=( $( compgen -W "$( "$1" --help 2>/dev/null |
-                    awk '/^[[:space:]]+/ { print $1 }' )" -- "$cur" ) )
+                    awk '/^[ \t]/ { print $1 }' )" -- "$cur" ) )
                 ;;
         esac
         return
@@ -76,4 +76,4 @@ _udevadm()
 } &&
 complete -F _udevadm udevadm
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

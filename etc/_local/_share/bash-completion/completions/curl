@@ -68,7 +68,7 @@ _curl()
             return
             ;;
         -x|--proxy|--socks4|--socks4a|--socks5|--socks5-hostname)
-            _known_hosts_real
+            _known_hosts_real -- "$cur"
             return
             ;;
         --pubkey)
@@ -92,4 +92,4 @@ _curl()
 } &&
 complete -F _curl curl
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

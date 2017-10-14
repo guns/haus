@@ -8,22 +8,22 @@ _lftp()
     case $prev in
         -f)
             _filedir
-            return 0
+            return
             ;;
         -c|-h|--help|-v|--version|-e|-u|-p)
-            return 0
+            return
             ;;
     esac
 
     if [[ "$cur" == -* ]] ; then
         COMPREPLY=( $( compgen -W '$( _parse_help "$1" )' -- "$cur" ) )
-        return 0
+        return
     fi
 
     COMPREPLY=( $( compgen -W \
-        '$( cut -f 1 -s ~/.lftp/bookmarks 2>/dev/null )' -- "$cur" ) )
-    _known_hosts_real "$cur"
+        '$( cut -f 1 -s ~/.lftp/bookmarks ${XDG_DATA_HOME:-$HOME/.local/share}/lftp/bookmarks 2>/dev/null )' -- "$cur" ) )
+    _known_hosts_real -- "$cur"
 } &&
 complete -F _lftp lftp
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh

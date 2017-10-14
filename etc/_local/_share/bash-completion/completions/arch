@@ -11,19 +11,18 @@ _arch()
     case $prev in
         -w|-g|-d|--welcome-msg|--goodbye-msg|--digest)
             COMPREPLY=( $( compgen -W 'y n' -- "$cur" ) )
-            return 0
+            return
             ;;
         -d|--file)
             _filedir
-            return 0
+            return
             ;;
     esac
 
-    $split && return 0
+    $split && return
 
     if [[ "$cur" == -* ]]; then
-        COMPREPLY=( $( compgen -W '--wipe --start --end --quiet --help' \
-            -- "$cur" ) )
+        COMPREPLY=( $( compgen -W '$( _parse_help "$1" )' -- "$cur" ) )
     else
         local args=$cword
         for (( i=1; i < cword; i++ )); do
@@ -44,4 +43,4 @@ _arch()
 } &&
 complete -F _arch arch
 
-# ex: ts=4 sw=4 et filetype=sh
+# ex: filetype=sh
