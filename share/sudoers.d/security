@@ -1,5 +1,4 @@
 # Disable timeouts and force passwords every time
 Defaults timestamp_timeout = 0
-Defaults editor=/usr/bin/vim
+Defaults editor = /usr/bin/vim
 Defaults !env_editor
-Defaults insults
