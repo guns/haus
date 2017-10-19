@@ -24,7 +24,7 @@
 
 set -e
 
-printf 'Loading iptables rules... '
+echo 'Loading iptables rules...'
 
 #
 # Functions
@@ -33,7 +33,10 @@ printf 'Loading iptables rules... '
 test -n "$IPTABLES" || IPTABLES="$(command -v iptables)"
 test -x "$IPTABLES" || { echo "Could not execute $IPTABLES" >&2; exit 1; }
 
-iptables() { "$IPTABLES" "$@"; }
+iptables() {
+    printf "%s %s\n" "$IPTABLES" "$*"
+    "$IPTABLES" "$@"
+}
 
 reset_rules() {
     test $# -eq 2 || return 1
@@ -56,11 +59,11 @@ new_chain() {
     local name="$1" target="$2" tcp="$3"
 
     iptables --new-chain "$name"
-    iptables --append    "$name" --jump LOG --log-prefix "[$name] "
+    iptables --append "$name" --jump LOG --log-prefix "[$name] "
     if [[ "$tcp" == "tcp-reset" ]]; then
-        iptables --append "$name"  --protocol tcp --jump REJECT --reject-with tcp-reset
+        iptables --append "$name" --protocol tcp --jump REJECT --reject-with tcp-reset
     fi
-    iptables --append    "$name" --jump "$target"
+    iptables --append "$name" --jump "$target"
 }
 
 minimal_passthrough() {
@@ -78,12 +81,34 @@ minimal_passthrough() {
     iptables --append "$chain" --protocol icmp                         --jump ACCEPT  # Allow ICMP
 }
 
-accept_input()  { iptables --append INPUT   "$@" --match conntrack --ctstate NEW --jump ACCEPTINPUT; }
-accept_inputq() { iptables --append INPUT   "$@" --match conntrack --ctstate NEW --jump ACCEPT;      }
-allow_output()  { iptables --append OUTPUT  "$@" --match conntrack --ctstate NEW --jump ACCEPT;      }
-drop_input()    { iptables --append INPUT   "$@" --jump DROPINPUT;   }
-drop_output()   { iptables --append OUTPUT  "$@" --jump DROPOUTPUT;  }
-drop_forward()  { iptables --append FORWARD "$@" --jump DROPFORWARD; }
+minimal_host_forwarding() {
+    iptables --append FORWARD --destination "$1" --match conntrack --ctstate ESTABLISHED --jump ACCEPT  # Allow established traffic
+    iptables --append FORWARD --destination "$1" --match conntrack --ctstate INVALID     --jump INVALID # Log and drop invalid packets
+    iptables --append FORWARD --source      "$1" --protocol icmp                         --jump ACCEPT  # Allow outbound ICMP
+    iptables --append FORWARD --destination "$1" --protocol icmp                         --jump ACCEPT  # Allow inbound ICMP
+
+    if [[ "$2" ]]; then
+        iptables --table nat --append POSTROUTING --source "$1" --jump SNAT --to-source "$2"
+    else
+        iptables --table nat --append POSTROUTING --source "$1" --jump MASQUERADE
+    fi
+}
+
+filter() {
+    local chain="$1" target state
+    local args=("${@:3}")
+
+    IFS=: read target state <<< "$2"
+    if [[ "$state" ]]; then
+        args+=(--match conntrack --ctstate "$state")
+    fi
+
+    iptables --append "$chain" "${args[@]}" --jump "$target"
+}
+
+input()   { filter INPUT   "$@"; }
+output()  { filter OUTPUT  "$@"; }
+forward() { filter FORWARD "$@"; }
 
 #
 # Initialization
@@ -94,7 +119,7 @@ reset_rules "$IPTABLES" DROP
 # IPv6
 test -n "$IP6TABLES" || IP6TABLES="$(command -v ip6tables)"
 test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
-    printf 'Initializing IPv6... '
+    echo 'Initializing IPv6...'
     reset_rules "$IP6TABLES" DROP
 }
 
@@ -102,11 +127,11 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 # Chains
 #
 
-new_chain INVALID     DROP
-new_chain DROPINPUT   DROP tcp-reset
-new_chain DROPOUTPUT  DROP tcp-reset
-new_chain DROPFORWARD DROP tcp-reset
-new_chain ACCEPTINPUT ACCEPT
+new_chain INVALID           DROP
+new_chain DROP_INPUT        DROP tcp-reset
+new_chain DROP_OUTPUT       DROP tcp-reset
+new_chain DROP_FORWARD      DROP tcp-reset
+new_chain ACCEPT_INPUT      ACCEPT
 
 #
 # INPUT
@@ -115,46 +140,40 @@ new_chain ACCEPTINPUT ACCEPT
 minimal_passthrough INPUT
 
 # SSH
-# accept_input --protocol tcp --dport 22
-
-# HTTP
-# accept_input --protocol tcp --dport 80
-# accept_input --protocol tcp --dport 443
-# accept_input --protocol tcp --match multiport --dports 80,443
+# input ACCEPT_INPUT:NEW --protocol tcp --dport 22
 
 # DNS
-# accept_input --protocol udp --in-interface eth0 --dport 53
+# input ACCEPT_INPUT:NEW --protocol udp --in-interface eth0 --dport 53
 
 # NFS
-# accept_input --protocol udp --dport 111
-# accept_input --protocol tcp --match multiport --dports 111,2049,32767
-
-# Samba
-# accept_input --protocol udp --dport 137:138
-# accept_input --protocol tcp --match multiport --dports 139,445
+# input ACCEPT_INPUT:NEW --protocol udp --dport 111
+# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 111,2049,32767
 
 # DHCP
-# accept_input --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
+# input ACCEPT_INPUT:NEW --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
 
-# LAN
-# accept_input --source 192.168.1.0/24
+# VM
+# input ACCEPT:NEW --in-interface vboxnet0
 
-drop_input
+# HTTP
+# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 80,443
+
+# Samba
+# input ACCEPT:NEW --protocol udp --dport 137:138
+# input ACCEPT:NEW --protocol tcp --match multiport --dports 139,445
+
+input DROP_INPUT
 
 #
 # FORWARD
 #
 
-# Blacklisted domains
-# drop_forward --match set --match-set BLACKLIST dst
+# HOST
+# minimal_host_forwarding "$HOST" "$LAN_IP"
+# forward ACCEPT --source "$HOST" --protocol tcp --match multiport --dports 80,443
+# forward ACCEPT --source "$HOST" --protocol udp --match multiport --dports 80,443
 
-# Forward host
-# iptables --append FORWARD --destination "$HOST" --match conntrack --ctstate ESTABLISHED --jump ACCEPT
-# iptables --append FORWARD --destination "$HOST" --match conntrack --ctstate INVALID     --jump INVALID
-# iptables --append FORWARD --source      "$HOST"                                         --jump ACCEPT
-# iptables --append FORWARD --destination "$HOST" --protocol icmp                         --jump ACCEPT
-
-drop_forward
+forward DROP_FORWARD
 
 #
 # OUTPUT
@@ -162,26 +181,17 @@ drop_forward
 
 minimal_passthrough OUTPUT
 
-# Blacklisted domains
-# drop_output --match set --match-set EXFILTRATION dst
-
-# HTTP
-# allow_output --protocol tcp --match multiport --dports 80,443
-
 # Whitelisted domains
-# allow_output --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
-# allow_output --match set --match-set SSH dst --protocol tcp --dport 22
-# allow_output --match set --match-set NTP dst --protocol udp --dport 123
+output ACCEPT:NEW --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
+output ACCEPT:NEW --match set --match-set SSH dst --protocol tcp --dport 22
+output ACCEPT:NEW --match set --match-set NTP dst --protocol udp --dport 123
+
+# VM
+output ACCEPT --out-interface vboxnet0
 
 # LAN
-# allow_output --destination 192.168.1.0/24
+output ACCEPT --destination "$LAN"
 
-drop_output
-
-#
-# NAT
-#
-
-# iptables --table nat --append POSTROUTING --source "$HOST" --jump MASQUERADE
+output DROP_OUTPUT
 
 echo 'OK'
