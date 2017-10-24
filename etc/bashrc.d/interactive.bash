@@ -705,7 +705,7 @@ ALIAS ssh='ssh -2' \
         fi
         for f in "${fs[@]}"; do
             printf "%s\t%s\n" "$f" "$(ssh-keygen -l -f "$f")"
-        done | column --table --separator $'\t' --output-separator ' │ '
+        done | table
     }
 }
 ALIAS scp='scp -2' \
