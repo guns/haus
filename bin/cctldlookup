@@ -8,7 +8,7 @@
 # PP.pp Hash[nokoslurp('https://en.wikipedia.org/wiki/List_of_Internet_top-level_domains').css('table').find{|t| t.to_s.index '.ac'}.css('tr').drop(1).map{|r| k,*v = r.text.delete("\u00A0").split("\n").values_at(1,2,3,4).map(&:strip); [k, v]}], $stdout, 1024
 
 CCTLD = \
-{".ac"=>["Ascension Island", "", "Commonly used for academic websites, such as universities. However, .ac is not to beconfused with the official British academic domain .ac.uk or the official Indian academic domain .ac.in. Also used in the accounting, consulting, and air-conditioning industries."],
+{".ac"=>["Ascension Island", "", "Commonly used for academic websites, such as universities. However, .ac is not to be confused with the official academic domains used by several countries such as the United Kingdom (.ac.uk), India (.ac.in) or Indonesia (.ac.id). Also used in the accounting, consulting, and air-conditioning industries."],
  ".ad"=>["Andorra", "", "Local trademark, trade name or citizenship required[6][7]"],
  ".ae"=>["United Arab Emirates", "", ""],
  ".af"=>["Afghanistan", "", ""],
@@ -18,13 +18,13 @@ CCTLD = \
  ".am"=>["Armenia", "", "Also unofficially used by AM radio stations, podcasts or related business"],
  ".an"=>["Netherlands Antilles", "", "Local presence required; Netherlands Antilles were dissolved on 10 October 2010."],
  ".ao"=>["Angola", "", ""],
- ".aq"=>["Antarctica", "Antarctique", "Defined by the Antarctic Treaty as everything south of latitude 60°S. AQ domainnames are available to government organizations who are signatories to the Antarctic Treaty and to other registrants who have a physical presence in Antarctica."],
+ ".aq"=>["Antarctica", "Antarctique", "Defined by the Antarctic Treaty as everything south of latitude 60°S. AQ domain names are available to government organizations who are signatories to the Antarctic Treaty and to other registrants who have a physical presence in Antarctica."],
  ".ar"=>["Argentina", "", ""],
  ".as"=>["American Samoa", "", "Also unofficially used by the Principality of Asturias, Spain"],
  ".at"=>["Austria", "", ""],
  ".au"=>["Australia", "", "Restrictions apply. In general, registrants must be Australian, and must have a minimum 2 year registration period.[8] Includes Ashmore and Cartier Islands and Coral Sea Islands."],
  ".aw"=>["Aruba", "Aruba, West Indies", "Restricted to registered Aruban companies, organisations and citizens"],
- ".ax"=>["Åland", "", "Restricted to registered Åland companies, organisations and citizens"],
+ ".ax"=>["Åland", "Albania already uses .al", "Restricted to registered Åland companies, organisations and citizens"],
  ".az"=>["Azerbaijan", "", ""],
  ".ba"=>["Bosnia and Herzegovina", "", ""],
  ".bb"=>["Barbados", "", ""],
@@ -45,8 +45,8 @@ CCTLD = \
  ".bt"=>["Bhutan", "", ""],
  ".bv"=>["Bouvet Island", "", "Not in use (Norwegian dependency; see .no)."],
  ".bw"=>["Botswana", "", ""],
- ".by"=>["Belarus", "", "also unofficially used to denote Bayern (Bavaria), Germany"],
- ".bz"=>["Belize", "", ""],
+ ".by"=>["Belarus", "", "Also unofficially used to denote Bayern (Bavaria), Germany"],
+ ".bz"=>["Belize", "", "Also unofficially used in the province of Bozen (or South Tyrol, see .st)"],
  ".ca"=>["Canada", "", "Subject to Canadian Presence Requirements.[13]"],
  ".cc"=>["Cocos (Keeling) Islands", "", "Australian territory: not to be confused with Cocos islands in Guam. Currently marketed as global domain, registration allowed worldwide, local presence not required; the domain is currently operated by eNIC, a VeriSign company."],
  ".cd"=>["Democratic Republic of the Congo", "", ""],
@@ -71,7 +71,7 @@ CCTLD = \
  ".dk"=>["Denmark", "", ""],
  ".dm"=>["Dominica", "", ""],
  ".do"=>["Dominican Republic", "", ""],
- ".dz"=>["Algeria", "Dzayer (from Al-Jazair)", ""],
+ ".dz"=>["Algeria", "Berber language name: Dzayer", ""],
  ".ec"=>["Ecuador", "", ""],
  ".ee"=>["Estonia", "Eesti", ""],
  ".eg"=>["Egypt", "", ""],
@@ -83,15 +83,15 @@ CCTLD = \
  ".fi"=>["Finland", "", "Registration allowed worldwide, local presence not required."],
  ".fj"=>["Fiji", "", ""],
  ".fk"=>["Falkland Islands", "", ""],
- ".fm"=>["Federated States of Micronesia", "", "Also unofficially used by FM radio stations, podcasts or related business"],
+ ".fm"=>["Federated States of Micronesia", "", ""],
  ".fo"=>["Faroe Islands", "Føroyar", ""],
- ".fr"=>["France", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 11]"],
+ ".fr"=>["France", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 12]"],
  ".ga"=>["Gabon", "", "Also used as a free domain service to the public."],
  ".gb"=>["United Kingdom", "Great Britain", "Deprecated.[16] The primary ccTLD used for the United Kingdom is .uk."],
  ".gd"=>["Grenada", "", ""],
  ".ge"=>["Georgia", "", "Available for registration for residents of Georgia (unlimited) or for foreign companies via representation of any local legal person (one domain name per registrant)[17]"],
  ".gf"=>["French Guiana", "Guyane française", ""],
- ".gg"=>["Guernsey", "", "Commonly used in reference to the gamer slang for good game."],
+ ".gg"=>["Guernsey", "", "Commonly used in reference to the gamer slang for \"good game\"."],
  ".gh"=>["Ghana", "", ""],
  ".gi"=>["Gibraltar", "", ""],
  ".gl"=>["Greenland", "", "Previously also unofficially used in Galicia, Spain, but now .gal has been approved for such use and was implemented in mid-2014"],
@@ -121,7 +121,7 @@ CCTLD = \
  ".ir"=>["Iran", "", ""],
  ".is"=>["Iceland", "Ísland", ""],
  ".it"=>["Italy", "", "Restricted to companies and individuals in the European Union."],
- ".je"=>["Jersey", "", "-je is used in Dutch to form a diminutive: boek = a book, boekje = a little book"],
+ ".je"=>["Jersey", "", "-je is used in Dutch to form a diminutive: boek = a book, boekje = a little book it, je also means you in Dutch."],
  ".jm"=>["Jamaica", "", ""],
  ".jo"=>["Jordan", "", ""],
  ".jp"=>["Japan", "", "Restricted to individuals or companies with a physical address in Japan."],
@@ -131,15 +131,15 @@ CCTLD = \
  ".ki"=>["Kiribati", "", ""],
  ".km"=>["Comoros", "Komori", ""],
  ".kn"=>["Saint Kitts and Nevis", "", ""],
- ".kp"=>["Democratic People's Republic of Korea", "", ""],
- ".kr"=>["Republic of Korea", "", ""],
+ ".kp"=>["North Korea", "Korea Democratic People's Republic", ""],
+ ".kr"=>["South Korea", "Korea Republic", ""],
  ".kw"=>["Kuwait", "", ""],
- ".ky"=>["Cayman Islands", "", "Restricted to qualified Cayman entities[22]"],
+ ".ky"=>["Cayman Islands", "", ""],
  ".kz"=>["Kazakhstan", "", ""],
  ".la"=>["Laos", "", "Currently being marketed as the unofficial domain for Los Angeles[23]"],
  ".lb"=>["Lebanon", "", "Restricted to registration with a company in Lebanon"],
  ".lc"=>["Saint Lucia", "", ""],
- ".li"=>["Liechtenstein", "", "Also used by Long Island"],
+ ".li"=>["Liechtenstein", "", "Also unofficially used by entities in Long Island, New York"],
  ".lk"=>["Sri Lanka", "Lanka", ""],
  ".lr"=>["Liberia", "", ""],
  ".ls"=>["Lesotho", "", ""],
@@ -147,10 +147,10 @@ CCTLD = \
  ".lu"=>["Luxembourg", "", ""],
  ".lv"=>["Latvia", "", ""],
  ".ly"=>["Libya", "", ""],
- ".ma"=>["Morocco", "Maroc", "Also used as a free domain service to the public as cu.ma"],
+ ".ma"=>["Morocco", "Berber name: Murakuc, French name: Maroc", "Also used as a free domain service to the public as cu.ma"],
  ".mc"=>["Monaco", "", "Only for companies with a trademark registered in Monaco"],
  ".md"=>["Moldova", "", "Restricted to individuals or companies with a physical address in Moldova."],
- ".me"=>["Montenegro", "", ""],
+ ".me"=>["Montenegro", "", "Also unofficially used and marketed as a domain hack (for example love.me, meet.me, etc.)"],
  ".mf"=>["Collectivity of Saint Martin", "", "Not in use"],
  ".mg"=>["Madagascar", "", ""],
  ".mh"=>["Marshall Islands", "", ""],
@@ -171,13 +171,13 @@ CCTLD = \
  ".my"=>["Malaysia", "", "Restricted to registration by an individual or company in Malaysia"],
  ".mz"=>["Mozambique", "", ""],
  ".na"=>["Namibia", "", ""],
- ".nc"=>["New Caledonia", "", "Restricted to companies that have a New Caledonian Business Registration Certificate orindividuals living in New Caledonia for at least 6 months."],
+ ".nc"=>["New Caledonia", "", "Restricted to companies that have a New Caledonian Business Registration Certificate or individuals living in New Caledonia for at least 6 months."],
  ".ne"=>["Niger", "", ""],
  ".nf"=>["Norfolk Island", "", ""],
  ".ng"=>["Nigeria", "", ""],
  ".ni"=>["Nicaragua", "", ""],
  ".nl"=>["Netherlands", "", "First official country code TLD.[25]"],
- ".no"=>["Norway", "", "Businesses and professionals must be registered as an approved type of organization in the Brønnøysund Register Centre. Individual applicants must be of age (18 years) and be registered in the Folkeregisteret. Allapplicants must have a Norwegian postal address."],
+ ".no"=>["Norway", "", "Businesses and professionals must be registered as an approved type of organization in the Brønnøysund Register Centre. Individual applicants must be of age (18 years) and be registered in the Folkeregisteret. All applicants must have a Norwegian postal address."],
  ".np"=>["Nepal", "", "All .np domains are free to register for individuals and registered businesses."],
  ".nr"=>["Nauru", "", "Also used as a free domain service to the public as co.nr."],
  ".nu"=>["Niue", "", "Commonly used by Danish, Dutch and Swedish websites, because in those languages \"nu\" means \"now\"."],
@@ -190,7 +190,7 @@ CCTLD = \
  ".ph"=>["Philippines", "", ""],
  ".pk"=>["Pakistan", "", "Operated by PKNIC since 1992"],
  ".pl"=>["Poland", "", ""],
- ".pm"=>["Saint-Pierre and Miquelon", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 11]"],
+ ".pm"=>["Saint-Pierre and Miquelon", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 12]"],
  ".pn"=>["Pitcairn Islands", "", ""],
  ".pr"=>["Puerto Rico", "", ""],
  ".ps"=>["Palestine[27]", "", "West Bank and Gaza Strip."],
@@ -198,16 +198,16 @@ CCTLD = \
  ".pw"=>["Palau", "Pelew", ""],
  ".py"=>["Paraguay", "", ""],
  ".qa"=>["Qatar", "", ""],
- ".re"=>["Réunion", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 11]"],
+ ".re"=>["Réunion", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 12]"],
  ".ro"=>["Romania", "", ""],
  ".rs"=>["Serbia", "Republika Srbija", ""],
  ".ru"=>["Russia", "", "See also .su, still in use, and .рф, for IDN."],
  ".rw"=>["Rwanda", "", ""],
- ".sa"=>["Saudi Arabia", "", "Registrant must have a registered trademark in Saudi Arabia matching the domain name to register or provide company incorporation documents of a company in Saudi Arabia or for personal registrations a copy of valid ID. A letter on the official letterhead of your organization addressed to SaudiNIC requesting the domain name registration is also required. Local administrative contact required. 2LD registrations rolled out in 2011.[32]"],
+ ".sa"=>["Saudi Arabia", "", "Registrant must have a registered trademark in Saudi Arabia matching the domain name to register or provide company incorporation documents of a company in Saudi Arabia or for personal registrations a copy of valid ID. A letter on the official letterhead of your organization addressed to SaudiNIC requesting the domain name registration is also required. Local administrative contact required. 2LD registrations rolled out in 2011.[33]"],
  ".sb"=>["Solomon Islands", "Solomon Islands, British", ""],
  ".sc"=>["Seychelles", "", ""],
  ".sd"=>["Sudan", "", ""],
- ".se"=>["Sweden", "", ""],
+ ".se"=>["Sweden", "S/E are the only letters occurring in both Sverige and Sweden", ""],
  ".sg"=>["Singapore", "", ""],
  ".sh"=>["Saint Helena", "", ""],
  ".si"=>["Slovenia", "", ""],
@@ -219,7 +219,7 @@ CCTLD = \
  ".so"=>["Somalia", "", "Relaunched on 1 November 2010"],
  ".sr"=>["Suriname", "", ""],
  ".ss"=>["South Sudan", "", "Removed from the root DNS zone in April 2013"],
- ".st"=>["São Tomé and Príncipe", "", ""],
+ ".st"=>["São Tomé and Príncipe", "", "Also unofficially used in South Tyrol (or province of Bozen, see .bz)"],
  ".su"=>["Soviet Union", "", "Still in use."],
  ".sv"=>["El Salvador", "", ""],
  ".sx"=>["Sint Maarten", "", ""],
@@ -227,7 +227,7 @@ CCTLD = \
  ".sz"=>["Swaziland", "", "Registration is restricted to Swaziland organizations with Swaziland Trading Licenses."],
  ".tc"=>["Turks and Caicos Islands", "", ".TC domains are also marketed in Turkey. The official abbreviation of 'Türkiye Cumhuriyeti' (Republic of Turkey) is TC."],
  ".td"=>["Chad", "Tchad", "Chadian (.td) domains are available for registration to entities connected with Chad only."],
- ".tf"=>["French Southern and Antarctic Lands", "Terres australes et antarctiques françaises", "Seldom used. Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein. It has also been adopted by the community of the game Team Fortress 2.[cctld 11]"],
+ ".tf"=>["French Southern and Antarctic Lands", "Terres australes et antarctiques françaises", "Seldom used. Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein. It has also been adopted by the community of the game Team Fortress 2.[cctld 12]"],
  ".tg"=>["Togo", "", ""],
  ".th"=>["Thailand", "", ""],
  ".tj"=>["Tajikistan", "", ""],
@@ -240,26 +240,26 @@ CCTLD = \
  ".tr"=>["Turkey", "", ".nc.tr used by Northern Cyprus"],
  ".tt"=>["Trinidad and Tobago", "", ""],
  ".tv"=>["Tuvalu", "", "Used as an abbreviation of television, the domain is currently operated by dotTV, a VeriSign company; the Tuvalu government owns twenty percent of the company."],
- ".tw"=>["Taiwan", "", "Registration allowed worldwide, local presence not required. In line with ISO 3166-1, IANA's official position is that “TW” is \"designated for use to represent \"Taiwan.\"[35]"],
+ ".tw"=>["Taiwan", "", "Registration allowed worldwide, local presence not required. In line with ISO 3166-1, IANA's official position is that “TW” is \"designated for use to represent \"Taiwan.\"[38]"],
  ".tz"=>["Tanzania", "", "Must have a presence in Tanzania"],
  ".ua"=>["Ukraine", "Ukraina", "Ukrainian trademark required"],
  ".ug"=>["Uganda", "", ""],
  ".uk"=>["United Kingdom", "", "The ISO 3166-1 code for the United Kingdom is GB. UK is a specially reserved ISO 3166-1 code. However, the creation of the .uk TLD predates the ISO 3166-1 list of ccTLD and is the primary TLD for the United Kingdom.[16]"],
  ".um"=>["United States Minor Outlying Islands", "", "Not in use"],
  ".us"=>["United States of America", "", "Registrants must be United States citizens, residents, or organizations, or a foreign entity with a presence in the United States. Formerly commonly used by U.S. State and local governments, see also .gov TLD"],
- ".uy"=>["Uruguay", "", "2LD rollout began on 10 July 2012.[36]"],
+ ".uy"=>["Uruguay", "", "2LD rollout began on 10 July 2012.[39]"],
  ".uz"=>["Uzbekistan", "", ""],
  ".va"=>["Vatican City", "Vaticano", "Limited to the official sites of the Holy See (including those of the Vatican City State)"],
  ".vc"=>["Saint Vincent and the Grenadines", "", ""],
  ".ve"=>["Venezuela", "", ""],
  ".vg"=>["British Virgin Islands", "", ""],
  ".vi"=>["United States Virgin Islands", "", ""],
- ".vn"=>["Vietnam", "", "Việt nam"],
+ ".vn"=>["Vietnam", "Việt nam", ""],
  ".vu"=>["Vanuatu", "", ""],
- ".wf"=>["Wallis and Futuna", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 11]"],
+ ".wf"=>["Wallis and Futuna", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland and Liechtenstein.[cctld 12]"],
  ".ws"=>["Samoa", "Western Samoa", "Marketed for use in general WebSites"],
  ".ye"=>["Yemen", "", ""],
- ".yt"=>["Mayotte", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland, Great Britain and Liechtenstein.[cctld 11]"],
+ ".yt"=>["Mayotte", "", "Restricted to individuals and companies in European Union, Switzerland, Norway, Iceland, Great Britain and Liechtenstein.[cctld 12]"],
  ".za"=>["South Africa", "Zuid-Afrika", ""],
  ".zm"=>["Zambia", "", ""],
  ".zw"=>["Zimbabwe", "", ""]}
@@ -276,26 +276,24 @@ end
 def lookup k
   if v = CCTLD[k]
     puts fmt(k, v)
-    return true
   end
-  false
 end
 
 def reverse_lookup pat
   CCTLD.each do |(k, v)|
     if v.join(' ') =~ pat
       puts fmt(k, v)
-      return true
     end
   end
-  false
 end
 
 ARGV.each do |a|
-  catch :done do
-    [a, a.downcase, '.' << a.downcase].each do |k|
-      lookup k and throw :done
-    end
+  case a
+  when /\A\.\w{2}\z/
+    lookup a.downcase
+  when /\A\w{2}\z/
+    lookup '.' << a.downcase
+  else
     reverse_lookup Regexp.compile(a, 'i')
   end
 end
