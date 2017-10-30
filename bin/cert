@@ -102,7 +102,7 @@ class Cert
   end
 
   def parse_server_arg server
-    h, p = server.split ':', 1
+    h, p = server.split ':', 2
     p = p.to_i if p
     [h, p]
   end
