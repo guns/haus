@@ -277,6 +277,9 @@ $if bash
 
     # Make
     "\033\007!":    "\C-] if [[ -e Makefile ]]; then make; elif [[ -e Rakefile ]]; then rake; fi \n"
+
+    # notify
+    "\033\007\r":   "\C-e; n\n"
 $endif
 
 ### gdb
