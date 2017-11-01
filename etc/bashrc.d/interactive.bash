@@ -375,6 +375,7 @@ alias cp='command cp --verbose --interactive'
 alias cpf='command cp --verbose --force'
 alias cpr='command cp --verbose --recursive --interactive'
 alias cprf='command cp --verbose --recursive --force'
+alias cpparents='command cp --verbose --parents'
 
 # mv
 alias mv='command mv --verbose --interactive'
@@ -501,7 +502,7 @@ ALIAS chimmutable='chattr -V +i' \
 
 # inotifywait
 HAVE inotifywait && fwatch() {
-    while inotifywait -q -e attrib -e close_write -r "$1"; do clear; eval "${@:2}"; sleep 0.5; done
+    while inotifywait -q -e attrib -e close_write -r "$1"; do eval "${@:2}"; sleep 0.5; done
 }
 
 # Check shell init files and system paths for loose permissions
