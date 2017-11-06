@@ -331,4 +331,7 @@ super + control + shift + m
 	P='♫ pianobar ♫'; C='cmus'; \
 	wmctrl -a "$C" || wmctrl -a "$P" || urxvt-client -cd ~/Media/Music -title "$C" -icon ~/.icons/haus/music.svg -e cmus
 
+super + control + q
+	wmctrl -a 'Qalculate!' || exec qalculate-gtk
+
 # vim:noet:foldmethod=marker:
