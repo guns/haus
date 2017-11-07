@@ -68,6 +68,7 @@ user_pref("layout.spellcheckDefault", 0);
 user_pref("datareporting.healthreport.uploadEnabled", false);
 // Disable Telemetry
 user_pref("toolkit.telemetry.enabled", false);
+user_pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 // Disable Aurora updates
 user_pref("app.update.auto", false);
 user_pref("app.update.enabled", false);
