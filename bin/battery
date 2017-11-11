@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2017 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Battery
+  DEFAULTS = {}
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+    end
+  end
+
+  def report buf
+    b = {}
+    buf.split("\n").each do |l|
+      k, v = l.split '=', 2
+      b[k] = v
+    end
+
+    '%s: %s %s%%' % [
+      b['POWER_SUPPLY_NAME'],
+      b['POWER_SUPPLY_STATUS'],
+      b['POWER_SUPPLY_CAPACITY']
+    ]
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    puts Dir['/sys/class/power_supply/BAT*/uevent'].map { |f| report File.read(f) }
+  end
+end
+
+$0 = File.basename(__FILE__) and Battery.new.run ARGV if $0 == __FILE__
