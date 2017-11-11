@@ -293,6 +293,9 @@ super + F10
 super + shift + F10
 	pkill --exact -0 chromium && exec chromium
 
+super + shift + alt + F10
+	pkill --exact -0 chromium && exec chromium --incognito
+
 alt + F10
 	wmctrl -a '♻ newsboat ♻'
 
