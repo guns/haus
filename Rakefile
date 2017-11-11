@@ -391,7 +391,8 @@ task :hwdb do
   dst = '/etc/udev/hwdb.d'
   if Dir.exists? dst
     cp_r Dir['share/udev/hwdb.d/*.hwdb'], dst
-    sh 'udevadm', 'hwdb', '--update'
+    sh 'systemd-hwdb', 'update'
+    sh 'udevadm', 'trigger'
   else
     raise '%s is not a directory, or does not exist!' % dst
   end
