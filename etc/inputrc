@@ -314,8 +314,8 @@ $if ruby
     "\C-xe":        "\C-]edit "
 
     # Pry
-    "\C-xd":        "\C-]show-doc "
-    "\C-xs":        "\C-]show-source "
+    "\C-xd":        "\C-ashow-doc "
+    "\C-xs":        "\C-ashow-source "
 
     # toggle_verbose_numbers
     "\033\007t":    "\C-] toggle_verbose_numbers \n"
