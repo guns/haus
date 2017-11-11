@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+def s *args
+  warn ":: #{args.shelljoin}"
+  system *args
+end
+
+def rsplit str, sep
+  n = str.rindex sep
+  [str[0...n], str[n+1..-1]]
+end
+
+Dir["#{Gem.user_dir}/gems/*"].map { |g| File.basename g }.group_by { |g| rsplit(g, '-')[0] }.each_value do |vs|
+  vs.sort[0...-1].each do |spec|
+    g, v = rsplit spec, '-'
+    s 'gem', 'uninstall', g, '--version', v, '--force'
+  end
+end
