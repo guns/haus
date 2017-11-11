@@ -1142,12 +1142,6 @@ ALIAS perlpe='perl -pe' \
 
 ### Databases
 
-HAVE mysql && {
-    mysql() { command mysql --user=root --password="$(pass "$HOSTNAME/mysql/root")" "${@:-mysql}"; }
-    ALIAS mysqldump="mysqldump --user=root --password=\"\\\$(pass "$HOSTNAME/mysql/root")\""
-    ALIAS mysqladmin="mysqladmin --user=root --password\"\\\$(pass "$HOSTNAME/mysql/root")\""
-}
-
 HAVE psql && {
     ALIAS aspostgres='sudo --set-home --login --user postgres'
 }
