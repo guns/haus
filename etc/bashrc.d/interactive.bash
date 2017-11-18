@@ -1312,6 +1312,7 @@ ALIAS pac='pacman' && {
             }
         '
     }
+    alias pacorphans='run pacman --query --deps --unrequired'
     alias paclog='pager /var/log/pacman.log'
     alias pacowner='run pacman --query --owns'
 
