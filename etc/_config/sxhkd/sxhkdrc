@@ -323,9 +323,6 @@ super + control + t
 super + alt + control + t
 	remind --query
 
-super + control + w
-	wmctrl -a 'nitrogen' || exec nitrogen --sort=rtime
-
 super + control + m
 	P='♫ pianobar ♫'; C='cmus'; \
 	wmctrl -a "$P" || wmctrl -a "$C" || urxvt-client -title "$P" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/g2813859@mvrht.com
