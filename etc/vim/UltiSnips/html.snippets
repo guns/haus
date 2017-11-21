@@ -1,3 +1,7 @@
+snippet doc "dt" b
+<!DOCTYPE html>
+endsnippet
+
 snippet html "html" b
 <!DOCTYPE html>
 <html lang="en">
@@ -11,6 +15,22 @@ snippet html "html" b
 <body>
 </body>
 </html>
+endsnippet
+
+snippet cc "<!-- -->" w
+<!-- $0 -->
+endsnippet
+
+snippet ss "<!--# -->" w
+<!--#$0 -->
+endsnippet
+
+snippet ssi "<!--#include -->" w
+<!--#include virtual="$0" -->
+endsnippet
+
+snippet sss "<!--#set … -->" w
+<!--#set var="$1" value="$0" -->
 endsnippet
 
 snippet t "tag" w
@@ -57,11 +77,11 @@ snippet p "p" w
 <p>$0</p>
 endsnippet
 
-snippet link "XHTML <link>" w
-<link rel="${1:stylesheet}" href="$2" type="text/css">
+snippet link "link" w
+<link rel="${1:stylesheet}" href="$2">
 endsnippet
 
-snippet ssrc "script src" w
+snippet script "script src" w
 <script src="$1"></script>
 endsnippet
 
