@@ -86,8 +86,8 @@ class Getbadhosts
       n = l.index '#'
       ws = (n ? l[0...n] : l).split
       case ws.size
-      when 2 then ds << URI.parse('http://' + ws[1]).hostname
-      when 1 then ds << URI.parse('http://' + ws[0]).hostname
+      when 2 then ds << URI.parse('http://' + URI.encode(ws[1])).hostname
+      when 1 then ds << URI.parse('http://' + URI.encode(ws[0])).hostname
       end
     end
     ds
