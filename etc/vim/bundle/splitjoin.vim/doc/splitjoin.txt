@@ -453,8 +453,16 @@ just like explained above.
       die;
     }
 <
-Lists ~
+Hashes ~
+>
+    my $info = {name => $name, age => $age};
 
+    my $info = {
+      name => $name,
+      age => $age,
+    };
+<
+Lists ~
 >
     my @var = ['one', 'two', 'three'];
 
@@ -473,7 +481,6 @@ Lists ~
     );
 <
 Word lists ~
-
 >
     my @var = qw(one two three);
 
@@ -677,6 +684,15 @@ Match clauses ~
             some_expression(three)
         },
     }
+<
+Question mark operator ~
+>
+    let file = File::open("foo.txt")?;
+
+    let file = match File::open("foo.txt") {
+        Ok(value) => value,
+        Err(e) => return Err(e.into()),
+    };
 <
 
 ==============================================================================
