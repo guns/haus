@@ -81,10 +81,7 @@ yield
 endsnippet
 
 snippet deb "debugger" b
-begin ### DEBUG
-	require 'pry'
-	binding.send $stdin.tty? ? :pry : :remote_pry
-end
+begin; require 'pry'; binding.send $stdin.tty? ? :pry : :remote_pry; end ###DEBUG
 endsnippet
 
 snippet bm "benchmark" b

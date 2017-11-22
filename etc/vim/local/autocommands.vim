@@ -114,7 +114,10 @@ augroup GUNS
 	" JavaScript
 	autocmd FileType javascript
 		\ SetWhitespace 2 |
-		\ setlocal tags+=./.jstags,.jstags
+		\ setlocal expandtab tags+=./.jstags,.jstags |
+		\ if executable('standard') |
+		\	setlocal autoread makeprg=standard\ --fix\ % |
+		\ endif
 
 	" C
 	autocmd FileType c,cpp
