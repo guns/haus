@@ -111,8 +111,7 @@ __git ()
 #   GNU General Public License for more details.
 #
 #   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software Foundation,
-#   Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+#   along with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 #   The latest version of this software can be obtained here:
 #
@@ -1250,7 +1249,8 @@ _git_checkout ()
 	--*)
 		__gitcomp "
 			--quiet --ours --theirs --track --no-track --merge
-			--conflict= --orphan --patch
+			--conflict= --orphan --patch --detach --ignore-skip-worktree-bits
+			--recurse-submodules --no-recurse-submodules
 			"
 		;;
 	*)
@@ -1385,7 +1385,7 @@ _git_describe ()
 		__gitcomp "
 			--all --tags --contains --abbrev= --candidates=
 			--exact-match --debug --long --match --always --first-parent
-			--exclude
+			--exclude --dirty --broken
 			"
 		return
 	esac
@@ -2350,6 +2350,7 @@ _git_config ()
 		advice.rmHints
 		advice.statusHints
 		advice.statusUoption
+		advice.ignoredHook
 		alias.
 		am.keepcr
 		am.threeWay

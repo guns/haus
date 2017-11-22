@@ -114,6 +114,7 @@ bashcomp_DATA = 2to3 \
 		genaliases \
 		gendiff \
 		genisoimage \
+		getconf \
 		getent \
 		gkrellm \
 		gm \
@@ -253,6 +254,7 @@ bashcomp_DATA = 2to3 \
 		ngrep \
 		nmap \
 		_nmcli \
+		nproc \
 		nslookup \
 		ntpdate \
 		oggdec \
@@ -294,6 +296,7 @@ bashcomp_DATA = 2to3 \
 		protoc \
 		psql \
 		puppet \
+		pv \
 		pwck \
 		pwd \
 		pwdx \
