@@ -529,28 +529,40 @@ function! s:same_ids_highlight(exit_val, output) abort
   if get(g:, "go_auto_sameids", 0)
     " re-apply SameIds at the current cursor position at the time the buffer
     " is redisplayed: e.g. :edit, :GoRename, etc.
-    autocmd BufWinEnter <buffer> nested call go#guru#SameIds()
+    augroup vim-go-sameids
+      autocmd!
+      autocmd BufWinEnter <buffer> nested call go#guru#SameIds()
+    augroup end
   endif
 endfunction
 
+" ClearSameIds returns 0 when it removes goSameId groups and non-zero if no
+" goSameId groups are found.
 function! go#guru#ClearSameIds() abort
+  let l:cleared = 0
+
   let m = getmatches()
   for item in m
     if item['group'] == 'goSameId'
       call matchdelete(item['id'])
+      let l:cleared = 1
     endif
   endfor
 
-  " remove the autocmds we defined
-  if exists("#BufWinEnter#<buffer>")
-    autocmd! BufWinEnter <buffer>
+  if !l:cleared
+    return 1
   endif
+
+  " remove the autocmds we defined
+  augroup vim-go-sameids
+    autocmd!
+  augroup end
+
+  return 0
 endfunction
 
 function! go#guru#ToggleSameIds() abort
-  if len(getmatches()) != 0
-    call go#guru#ClearSameIds()
-  else
+  if go#guru#ClearSameIds() != 0
     call go#guru#SameIds()
   endif
 endfunction

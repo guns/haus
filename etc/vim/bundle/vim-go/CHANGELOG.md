@@ -1,5 +1,42 @@
 ## unplanned
 
+BACKWARDS INCOMPATIBILITIES:
+
+* Display a warning for Vim versions older than 7.4.1689. Older versions may
+  still work, but are not supported. You can use `let g:go_version_warning = 0`
+  to disable the warning.
+  [[GH-1524]](https://github.com/fatih/vim-go/pull/1524).
+
+BUG FIXES:
+
+* Fix compatibility with Vim version before 7.4.1546
+  [[GH-1498]](https://github.com/fatih/vim-go/pull/1498).
+* Don't resize godoc window if it's already visible
+  [[GH-1488]](https://github.com/fatih/vim-go/pull/1488).
+* `:GoTestCompile` produces a test binary again. The test binary will be
+  written to a temporary directory to avoid polluting the user's working
+  directory. [[GH-1519]](https://github.com/fatih/vim-go/pull/1519)
+* Fix incorrect `:GoSameIdsToggle` behavior when there were match groups
+  present, but none were goSameId.
+  [[GH-1538]](https://github.com/fatih/vim-go/pull/1538)
+* Fix `gpl` snippet for UltiSnips.
+  [[GH-1535]](https://github.com/fatih/vim-go/pull/1535)
+
+IMPROVEMENTS:
+
+* `:GoRename` is a bit smarter when automatically pre-filling values, and what
+  gets pre-filled can be configured with `g:go_gorename_prefill` option.
+  In addition `:GoRename <Tab>` now lists some common options.
+  [[GH-1465]](https://github.com/fatih/vim-go/pull/1465).
+* Disable `g:go_autodetect_gopath` by default. [[GH-1461]](https://github.com/fatih/vim-go/pull/1461).
+* Add support for 'g:go_build_tags' to the `:GoTest` family of functions.
+  [[GH-1562]](https://github.com/fatih/vim-go/pull/1562).
+* Pass `--tests` to gometalinter when autosaving and when a custom gometalinter
+  command has not been set.
+  [[GH-1563]](https://github.com/fatih/vim-go/pull/1563).
+* Do not spam messages when command is run in a directory that does not exist.
+  [[GH-1527]](https://github.com/fatih/vim-go/pull/1527)
+
 ## 1.15 - (October 3, 2017)
 
 FEATURES:
@@ -206,7 +243,7 @@ BUG FIXES:
 * `:GoTest` is able to parse error messages that include a colon `:` [[GH-1316]](https://github.com/fatih/vim-go/pull/1316)
 * `:GoTestCompile` under the hood doesn't produces a test binary anymore. Sometimes a race condition would happen which would not delete the test binary. [[GH-1317]](https://github.com/fatih/vim-go/pull/1317)
 * `:GoDef` jumps now to definition for build tags defined with `:GoBuildTags` (only guru) [[GH-1319]](https://github.com/fatih/vim-go/pull/1319)
- 
+
 BACKWARDS INCOMPATIBILITIES:
 
 * `:GoLint` works on the whole directory instead of the current file. To use it for the current file give it as an argument, i.e `:GoLint foo.go` [[GH-1295]](https://github.com/fatih/vim-go/pull/1295)
@@ -231,7 +268,7 @@ FEATURES:
 
 ```
 if err != nil {
-	log.Fatal(err)
+  log.Fatal(err)
 }
 ```
 * New `:GoBuildTags` command to change build tags for tools such as `guru`,
@@ -356,15 +393,15 @@ FEATURES:
 
 * All `guru` commands run asynchronously if Vim 8.0 is being used. Current
   Commands:
-	* GoImplements
-	* GoWhicherrs
-	* GoCallees
-	* GoDescribe
-	* GoCallers
-	* GoCallstack
-	* GoFreevars
-	* GoChannelPeers
-	* GoReferrers
+  * GoImplements
+  * GoWhicherrs
+  * GoCallees
+  * GoDescribe
+  * GoCallers
+  * GoCallstack
+  * GoFreevars
+  * GoChannelPeers
+  * GoReferrers
 
 * `:GoSameIds` also runs asynchronously. This makes it useful especially for
   auto sameids mode. In this mode it constantly evaluates the identifier under the
@@ -666,7 +703,7 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
-* Fix oracle scope not working if trailing slash exists in scope [[GH-751]](https://github.com/fatih/vim-go/pull/751) 
+* Fix oracle scope not working if trailing slash exists in scope [[GH-751]](https://github.com/fatih/vim-go/pull/751)
 * Fix `:GoErrCheck` checking abspath [[GH-671]](https://github.com/fatih/vim-go/pull/671)
 * Fix `:GoInstall` correctly parsing errors [[GH-692]](https://github.com/fatih/vim-go/pull/692)
 * Fix `:GoInstall` correctly parsing errors [[GH-692]](https://github.com/fatih/vim-go/pull/692)
@@ -686,34 +723,34 @@ FEATURES:
   vim-go is being used within Neovim. Checkout the full list of changes
   [[GH-607]](https://github.com/fatih/vim-go/pull/607):
   * An async launcher and base foundation was implemented for the `go` command.
-	This will be used in the future for all upcoming subcommands of the `go`
-	tool.
-  * `:GoBuild` is now called asynchronously (it doesn't block the UI anymore). 
+  This will be used in the future for all upcoming subcommands of the `go`
+  tool.
+  * `:GoBuild` is now called asynchronously (it doesn't block the UI anymore).
   * A new `go#jobcontrol#Statusline()` can be used to plug into the statusline.
-	This will show the status of the job running asynchronously. The statusline
-	is improved to show the status per package instead of file. Assume you have
-	three files open, all belonging to the same package, if the package build
-	(`:GoBuild`) is successful, all statusline's will be empty (means SUCCESS),
-	if it fails all files statusline's will show `FAILED`. 
+  This will show the status of the job running asynchronously. The statusline
+  is improved to show the status per package instead of file. Assume you have
+  three files open, all belonging to the same package, if the package build
+  (`:GoBuild`) is successful, all statusline's will be empty (means SUCCESS),
+  if it fails all files statusline's will show `FAILED`.
   * `:GoRun` opens a new vertical terminal emulator inside Neovim and runs the
-	command there. The terminal mode can be changed with `g:go_term_mode`,
-	which is by default `vsplit`. Current options are `vsplit, split or tab`.
-	We also have three new mappings to open `:GoRun` command in different
-	terminal split modes: `<Plug>(go-run-vertical)`,  `<Plug>(go-run-split)`
-	and  `<Plug>(go-run-tab)`
+  command there. The terminal mode can be changed with `g:go_term_mode`,
+  which is by default `vsplit`. Current options are `vsplit, split or tab`.
+  We also have three new mappings to open `:GoRun` command in different
+  terminal split modes: `<Plug>(go-run-vertical)`,  `<Plug>(go-run-split)`
+  and  `<Plug>(go-run-tab)`
   * `:GoTest`, `:GoTestFunc` and `:GoTestCompile` opens and runs in a new
-	terminal. The view mode (split,vertical, tab) is defined with
-	`g:go_term_mode`.  The `g:go_term_enabled` setting can be use to change the
-	behavior of `:GoTestXXX` commands .If set to `1`, it opens the test
-	commands inside a terminal, if not it runs them in background just like
-	`:GoBuild` and displays the result in the statusline.
+  terminal. The view mode (split,vertical, tab) is defined with
+  `g:go_term_mode`.  The `g:go_term_enabled` setting can be use to change the
+  behavior of `:GoTestXXX` commands .If set to `1`, it opens the test
+  commands inside a terminal, if not it runs them in background just like
+  `:GoBuild` and displays the result in the statusline.
   * We have two settings for terminal sizes: `g:go_term_height` and
-	`g:go_term_width`. By default a vertical or horizontal view is equally
-	splitted by vim automatically. However with these settings we can for
-	example have a terminal with a smaller height when we split it
-	horizontally.
+  `g:go_term_width`. By default a vertical or horizontal view is equally
+  splitted by vim automatically. However with these settings we can for
+  example have a terminal with a smaller height when we split it
+  horizontally.
   * If a command inside the term fails (such as `go run`, `go test` ...) we
-	parse now the errors and list them inside a location list.
+  parse now the errors and list them inside a location list.
 * Instead of quickfix window, vim-go now uses the `location list` feature of
   Vim. These are associated with each window independently of each other. This
   enables us to have multiple, independent location lists per window (example
@@ -842,7 +879,7 @@ IMPROVEMENTS:
   github.com/fatih/color`. Useful if `:GoImport` fails and you want to download
   it.
 * Automatic GOPATH detections can now detect `gb` vendored folders. Some commands should now work without any problem when invoked on a `gb` project.
-* All command arguments are now properly escaped for shell invocation. 
+* All command arguments are now properly escaped for shell invocation.
 * Added the `-f` flag to :GoInstallBinaries command to support `git url.<base>.insteadOf` configuration
 * Improve width and precision highlighting, such as `%s %5s %-5s %5.5f %.5f`
 * Show an error if a region is not selected when `:GoFreeVars` is called
@@ -938,7 +975,7 @@ IMPROVEMENTS:
 * `referrer` mode is improved to show referring lines in the quickfix window
 * A new `errt` snippet is added, which expands to `if err != nil { t.Fatal(err) }`
 * A new `errh` snippet is added, useful to be used in a `http.Handler`
-* UltiSnips snippets are improved to take advance of Vim's `Visual` mode. For example selecting a block and typing `if` will create an if scope around the block. 
+* UltiSnips snippets are improved to take advance of Vim's `Visual` mode. For example selecting a block and typing `if` will create an if scope around the block.
 * Cleanup README.md
 
 BUG FIXES:
@@ -1000,3 +1037,7 @@ the community contributions).
 ## 0.0 (Mar 24, 2014)
 
 Initial commit: https://github.com/fatih/vim-go/commit/78c5caa82c111c50e9c219f222d65b07694f8f5a
+
+<!--
+ vim: et ts=2 sw=2
+-->
