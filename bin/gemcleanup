@@ -13,9 +13,17 @@ def rsplit str, sep
   [str[0...n], str[n+1..-1]]
 end
 
-Dir["#{Gem.user_dir}/gems/*"].map { |g| File.basename g }.group_by { |g| rsplit(g, '-')[0] }.each_value do |vs|
-  vs.sort[0...-1].each do |spec|
-    g, v = rsplit spec, '-'
-    s 'gem', 'uninstall', g, '--version', v, '--force'
+class Pkg
+  attr_accessor :name, :version
+
+  def initialize spec
+    @name, v = rsplit spec, '-'
+    @version = Gem::Version.new v
+  end
+end
+
+Dir["#{Gem.user_dir}/gems/*"].map { |g| Pkg.new File.basename g }.group_by { |p| p.name }.each_value do |ps|
+  ps.sort_by { |p| p.version }[0...-1].each do |p|
+    s 'gem', 'uninstall', p.name, '--version', p.version, '--force'
   end
 end
