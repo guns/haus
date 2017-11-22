@@ -1307,12 +1307,21 @@ detectcpu () {
 	else
 		cpu="$cpu @ ${cpun}${cpufreq}"
 	fi
-	thermal="/sys/class/hwmon/hwmon0/temp1_input"
-	if [ -e $thermal ]; then
-		temp=$(bc <<< "scale=1; $(cat $thermal)/1000")
+	if [ -d '/sys/class/hwmon/' ]; then
+	    for dir in `echo $(ls /sys/class/hwmon/)`
+	    do
+	        if cat /sys/class/hwmon/$dir/name | grep coretemp > /dev/null
+	        then
+	            thermal="/sys/class/hwmon/$dir/temp1_input"
+	            break
+	        fi
+	    done
+	    if [ -e $thermal ] && [ "${thermal:+isSetToNonNull}" = 'isSetToNonNull' ]; then
+	        temperature=$(bc <<< "scale=1; $(cat $thermal)/1000")
+	    fi
 	fi
-	if [ -n "$temp" ]; then
-		cpu="$cpu [${temp}°C]"
+	if [ -n "$temperature" ]; then
+		cpu="$cpu [${temperature}°C]"
 	fi
 	cpu=$(sed $REGEXP 's/\([tT][mM]\)|\([Rr]\)|[pP]rocessor|CPU//g' <<< "${cpu}" | xargs)
 	verboseOut "Finding current CPU...found as '$cpu'"
@@ -1472,7 +1481,7 @@ detectmem () {
 		usedmem=$(($used_mem / 1024^2 ))
 	elif [ "$distro" == "OpenBSD" ]; then
 		totalmem=$(($(sysctl -n hw.physmem) / 1024 / 1024))
-		usedmem=$(($(vmstat | awk '!/[a-z]/{print $4}') / 1024))
+		usedmem=$(vmstat | awk '!/[a-z]/{gsub("M",""); print $3}')
 	elif [ "$distro" == "NetBSD" ]; then
 		phys_mem=$(awk '/MemTotal/ { print $2 }' /proc/meminfo)
 		totalmem=$((${phys_mem} / 1024))
@@ -4895,30 +4904,25 @@ asciiText () {
 
 		"SailfishOS")
 			if [[ "$no_color" != "1" ]]; then
-				c1=$(getColor 'blue') # Blue
+				c1=$(getColor 'dark grey') # Grey
 			fi
 			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
 			startline="0"
 			logowidth="32"
-			fulloutput=(
-"${c1}              .+eWWW            %s"
-"${c1}          .+ee+++eee      e.    %s"
-"${c1}       .ee++eeeeeeee    +e.     %s"
-"${c1}     .e++ee++eeeeeee+eee+e+     %s"
-"${c1}    ee.e+.ee+eee++eeeeee+       %s"
-"${c1}   W.+e.e+.e++ee+eee            %s"
-"${c1}  W.+e.W.ee.W++ee'              %s"
-"${c1} +e.W W.e+.W.W+                 %s"
-"${c1} W.e.+e.W W W.                  %s"
-"${c1} e e e +e.W.W                   %s"
-"${c1}       .W W W.                  %s"
-"${c1}        W.+e.W.                 %s"
-"${c1}         W++e.ee+.              %s"
-"${c1}          ++ +ee++eeeee++.      %s"
-"${c1}          '     '+++e   'ee.    %s"
-"${c1}                           ee   %s"
-"${c1}                            ee  %s"
-"${c1}                             e  %s")
+			fulloutput=(                          
+"${c1}                 _a@b            %s"
+"${c1}              _#b (b             %s"
+"${c1}            _@@   @_         _,  %s"
+"${c1}          _#^@ _#*^^*gg,aa@^^    %s"
+"${c1}          #- @@^  _a@^^          %s"
+"${c1}          @_  *g#b               %s"
+"${c1}          ^@_   ^@_              %s"
+"${c1}            ^@_   @              %s"
+"${c1}             @(b (b              %s"
+"${c1}            #b(b#^               %s"
+"${c1}          _@_#@^                 %s"
+"${c1}       _a@a*^                    %s"
+"${c1}   ,a@*^                         %s")                 
 		;;
 
 		"Qubes OS")
