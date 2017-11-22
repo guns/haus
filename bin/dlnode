@@ -151,7 +151,7 @@ class Dlnode
     :connect_timeout => nil,
     :no_download => false,
     :send_referer => false,
-    :user_agent => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0',
+    :user_agent => 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
     :retry => nil,
     :verbose => false
   }
