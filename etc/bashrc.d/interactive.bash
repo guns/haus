@@ -501,7 +501,7 @@ ALIAS chimmutable='chattr -V +i' \
       chmutable='chattr -V -i'
 
 # inotifywait
-HAVE inotifywait && fwatch() {
+ALIAS ino='inotifywait' && fwatch() {
     while inotifywait -q -e attrib -e close_write -r "$1"; do eval "${@:2}"; sleep 0.5; done
 }
 
