@@ -34,8 +34,8 @@ for n in range(0x20, 0x7e)
 
 	" Escaped Meta (i.e. not 8-bit mode)
 	"  * Esc-[ is the CSI prefix (Control Sequence Introducer)
-	"  * Esc-O is the SS3 prefix (Single Shift Select of G3 Character Set)
-	if char !=# '[' && char !=# 'O'
+	"  * Esc-] introduces another control mode
+	if char !=# '[' && char !=# ']'
 		call s:Setmap('<M-' . char . '>', "\<Esc>" . key)
 	endif
 
