@@ -150,6 +150,7 @@ class Dlnode
     :max_time => nil,
     :connect_timeout => nil,
     :no_download => false,
+    :poll => -1,
     :send_referer => false,
     :user_agent => 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0',
     :retry => nil,
@@ -210,6 +211,10 @@ class Dlnode
         @no_download = true
       end
 
+      opt.on '-p', '--poll N', 'Repeat download every N seconds' do |arg|
+        @poll = seconds arg
+      end
+
       opt.on '-r', '--retry N', Integer, "DEFAULT: #{DEFAULTS[:retry]}" do |arg|
         @retry = arg
       end
@@ -243,6 +248,18 @@ class Dlnode
     args.concat ['--max-time', opts[:max_time].to_s] if opts[:max_time]
     args.concat ['--connect-timeout', opts[:connect_timeout].to_s] if opts[:connect_timeout]
     args
+  end
+
+  def seconds str
+    str.scan(/(\d+(?:\.\d+)?)(\D*)/).inject 0.0 do |sum, (num, unit)|
+      sum + case unit
+      when 'D','d'    then num.to_f * 24 * 60 * 60
+      when 'H','h'    then num.to_f * 60 * 60
+      when 'M','m'    then num.to_f * 60
+      when 'S','s','' then num.to_f # default unit
+      else raise ArgumentError, 'Invalid time format'
+      end
+    end.round
   end
 
   def url_basename url
@@ -351,9 +368,15 @@ class Dlnode
       @dir = [u.host, u.path].map { |x| x.tr('/', '-').gsub(/[^\p{Print}]/, '_') }.join
     end
 
-    case download! url, *rest
-    when :no_resources then exit 2
-    when :fail then exit 1
+    loop do
+      case download! url, *rest
+      when :no_resources then exit 2
+      when :fail then exit 1
+      end
+
+      break if @poll < 0
+
+      sleep @poll
     end
   end
 end
