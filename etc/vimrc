@@ -116,6 +116,7 @@ SetWhitespace! 8 " sw = sts = ts = 8
 set nojoinspaces               " Never join lines with two spaces
 set backspace=indent,eol,start " Familiar backspace behavior
 set nrformats-=octal           " Use base10 inc/dec on 0[0-7] strings
+set nofixendofline             " Respect the lack of a newline in existing files
 
 """ GLOBAL VARIABLES
 
