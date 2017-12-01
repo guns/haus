@@ -298,7 +298,7 @@ noremap <Leader>; :<C-u>help<Space>
 noremap <Leader>t :<C-u>tag<Space>
 noremap <Leader>T :<C-u>Ctags<CR>
 noremap <Leader>U :<C-u>UndoRemove<CR>
-noremap <4-!>     :<C-u>silent! make!<CR>
+noremap <4-m>     :<C-u>silent! make!<CR>
 noremap <4-p>     :<C-u>SynStack<CR>
 
 " Clear last match
