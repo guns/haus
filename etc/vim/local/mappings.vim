@@ -512,6 +512,7 @@ vnoremap + :AddNumbersInSelection<CR>
 for [g:lhs, g:rhs] in [['d', 'qdictionary'],
                      \ ['e', 'qetymology'],
                      \ ['g', 'qgoogle'],
+                     \ ['m', 'qmdn'],
                      \ ['s', 'qsymbolhound'],
                      \ ['t', 'qthesaurus'],
                      \ ['w', 'qwikipedia']]
