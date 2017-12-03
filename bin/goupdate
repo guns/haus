@@ -40,5 +40,5 @@ puts '│UPDATED│'
 puts '└───────┘'
 
 Dir.chdir ENV['GOPATH'] do
-  system 'find', '.', '(', '-name', '.git', '-type', 'd', ')', '-prune', '-o', '-type', 'f', '-newer', '.updated', '-print'
+  system *%w[find . ( -name .git -type d ) -prune -o -type f -newer .updated -print]
 end
