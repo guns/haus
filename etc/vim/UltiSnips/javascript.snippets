@@ -34,8 +34,16 @@ snippet d "document" w
 document
 endsnippet
 
-snippet cre "createElement" w
+snippet cel "createElement" w
 document.createElement($0)
+endsnippet
+
+snippet ctn "createTextNode" w
+document.createTextNode($0)
+endsnippet
+
+snippet apc "appendChild" w
+appendChild($0)
 endsnippet
 
 snippet id "getElementById" w
@@ -103,4 +111,8 @@ case $0:
 default:
 	break
 }
+endsnippet
+
+snippet doc "jsdoc comment" w
+/** $0 */
 endsnippet
