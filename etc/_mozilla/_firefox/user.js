@@ -115,7 +115,7 @@ user_pref("general.warnOnAboutConfig", false);
 user_pref("network.warnOnAboutNetworking", false);
 
 // Resist fingerprinting
-user_pref("privacy.resistFingerprinting", true);
+// user_pref("privacy.resistFingerprinting", true);
 
 // Disable Geolocation
 user_pref("geo.enabled", false);
