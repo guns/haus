@@ -2,7 +2,7 @@
 " Language: Javascript
 " Maintainer: Chris Paul ( https://github.com/bounceme )
 " URL: https://github.com/pangloss/vim-javascript
-" Last Change: September 18, 2017
+" Last Change: December 4, 2017
 
 " Only load this indent file when no other was loaded.
 if exists('b:did_indent')
@@ -119,11 +119,14 @@ function s:SkipFunc()
     if eval(s:skip_expr)
       return 1
     endif
-  elseif search('\m`\|\${\|\*\/','nW'.s:z,s:looksyn) && eval(s:skip_expr)
-    let s:check_in = 1
-    return 1
+  elseif search('\m`\|\${\|\*\/','nW'.s:z,s:looksyn)
+    if eval(s:skip_expr)
+      let s:check_in = 1
+      return 1
+    endif
+  else
+    let s:synid_cache[:] += [[line2byte('.') + col('.') - 1], ['']]
   endif
-  let s:synid_cache[:] += [[line2byte('.') + col('.') - 1], ['']]
   let [s:looksyn, s:top_col] = getpos('.')[1:2]
 endfunction
 
@@ -240,18 +243,18 @@ function s:Continues()
 endfunction
 
 " Check if line 'lnum' has a balanced amount of parentheses.
-function s:Balanced(lnum)
-  let [l:open, l:line] = [0, getline(a:lnum)]
-  let pos = match(l:line, '[][(){}]')
+function s:Balanced(lnum,line)
+  let l:open = 0
+  let pos = match(a:line, '[][(){}]')
   while pos != -1
     if s:SynAt(a:lnum,pos + 1) !~? b:syng_strcom
-      let l:open += match(' ' . l:line[pos],'[[({]')
+      let l:open += match(' ' . a:line[pos],'[[({]')
       if l:open < 0
         return
       endif
     endif
-    let pos = match(l:line, !l:open ? '[][(){}]' : '()' =~ l:line[pos] ?
-          \ '[()]' : '{}' =~ l:line[pos] ? '[{}]' : '[][]', pos + 1)
+    let pos = match(a:line, !l:open ? '[][(){}]' : '()' =~ a:line[pos] ?
+          \ '[()]' : '{}' =~ a:line[pos] ? '[{}]' : '[][]', pos + 1)
   endwhile
   return !l:open
 endfunction
@@ -264,8 +267,13 @@ function s:OneScope()
           \ s:Pure('s:PreviousToken') != '.' && !(tok == 'while' && s:DoWhile())
   elseif s:Token() =~# '^else$\|^do$'
     return s:Pure('s:PreviousToken') != '.'
+  elseif strpart(getline('.'),col('.')-2,2) == '=>'
+    call cursor(0,col('.')-1)
+    if s:PreviousToken() == ')'
+      return s:GetPair('(', ')', 'bW', s:skip_expr)
+    endif
+    return 1
   endif
-  return strpart(getline('.'),col('.')-2,2) == '=>'
 endfunction
 
 function s:DoWhile()
@@ -350,13 +358,11 @@ function GetJavascriptIndent()
 
   " start with strings,comments,etc.
   if s:stack[-1] =~? 'comment\|doc'
-    if l:line =~ '^\s*\*'
-      return cindent(v:lnum)
-    elseif l:line !~ '^\s*\/[/*]'
-      return -1
+    if l:line !~ '^\s*\/[/*]'
+      return l:line =~ '^\s*\*' ? cindent(v:lnum) : -1
     endif
   elseif s:stack[-1] =~? b:syng_str
-    if b:js_cache[0] == v:lnum - 1 && s:Balanced(v:lnum-1)
+    if b:js_cache[0] == v:lnum - 1 && s:Balanced(v:lnum-1,getline(v:lnum-1))
       let b:js_cache[0] = v:lnum
     endif
     return -1
@@ -383,7 +389,7 @@ function GetJavascriptIndent()
   call cursor(v:lnum,1)
   let idx = index([']',')','}'],l:line[0])
   if b:js_cache[0] > l:lnum && b:js_cache[0] < v:lnum ||
-        \ b:js_cache[0] == l:lnum && s:Balanced(l:lnum)
+        \ b:js_cache[0] == l:lnum && s:Balanced(l:lnum,pline)
     call call('cursor',b:js_cache[1:])
   else
     let [s:looksyn, s:top_col, s:check_in, s:l1] = [v:lnum - 1,0,0,
