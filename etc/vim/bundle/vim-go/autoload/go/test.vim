@@ -207,10 +207,6 @@ function s:test_job(args) abort
         \ 'exit_cb': funcref("s:exit_cb"),
         \ }
 
-  " modify GOPATH if needed
-  let old_gopath = $GOPATH
-  let $GOPATH = go#path#Detect()
-
   " pre start
   let dir = getcwd()
   let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
@@ -221,7 +217,6 @@ function s:test_job(args) abort
 
   " post start
   execute cd . fnameescape(dir)
-  let $GOPATH = old_gopath
 endfunction
 
 " show_errors parses the given list of lines of a 'go test' output and returns
@@ -258,6 +253,7 @@ endfunction
 function! s:parse_errors(lines) abort
   let errors = []
   let paniced = 0 " signals whether all remaining lines should be included in errors.
+  let test = ''
 
   " NOTE(arslan): once we get JSON output everything will be easier :)
   " https://github.com/golang/go/issues/2981
@@ -269,10 +265,23 @@ function! s:parse_errors(lines) abort
       continue
     endif
 
+    if !paniced
+      " Matches failure lines. These lines always have zero or more leading spaces followed by '-- FAIL: ', following by the test name followed by a space the duration of the test in parentheses
+      " e.g.:
+      "   '--- FAIL: TestSomething (0.00s)'
+      let failure = matchlist(line, '^ *--- FAIL: \(.*\) (.*)$')
+      if get(g:, 'go_test_prepend_name', 0)
+        if !empty(failure)
+          let test = failure[1] . ': '
+          continue
+        endif
+      endif
+    endif
+
     let tokens = []
     if paniced
       " Matches lines in stacktraces produced by panic. The lines always have
-      " one ore more leading tabs, followed by the path to the file. The file
+      " one or more leading tabs, followed by the path to the file. The file
       " path is followed by a colon and then the line number within the file
       " where the panic occurred. After that there's a space and hexadecimal
       " number.
@@ -281,20 +290,27 @@ function! s:parse_errors(lines) abort
       "   '\t/usr/local/go/src/time.go:1313 +0x5d'
       let tokens = matchlist(line, '^\t\+\(.\{-}\.go\):\(\d\+\) \(+0x.*\)')
     else
-      " matches lines produced by `go test`. All lines produced by `go test`
-      " that we're interested in start with zero or more spaces (increasing
-      " depth of subtests is represented by a similar increase in the number
-      " of spaces at the start of output lines. Top level tests start with
-      " zero leading spaces). Lines that indicate test status (e.g. RUN, FAIL,
-      " PASS) start after the spaces. Lines that indicate test failure
-      " location or test log message location (e.g.  "testing.T".Log) begin
-      " with the appropriate number of spaces for the current test level,
-      " followed by a tab, a filename , a colon, the line number, another
-      " colon, a space, and the failure or log message.
+      " Matches lines produced by `go test`. When the test binary cannot be
+      " compiled, the errors will be a filename, followed by a colon, followed
+      " by the line number, followed by another colon, a space, and then the
+      " compiler error.
+      " e.g.:
+      "   'quux.go:123: undefined: foo'
+      "
+      " When the test binary can be successfully compiled, but tests fail, all
+      " lines produced by `go test` that we're interested in start with zero
+      " or more spaces (increasing depth of subtests is represented by a
+      " similar increase in the number of spaces at the start of output lines.
+      " Top level tests start with zero leading spaces). Lines that indicate
+      " test status (e.g. RUN, FAIL, PASS) start after the spaces. Lines that
+      " indicate test failure location or test log message location (e.g.
+      " "testing.T".Log) begin with the appropriate number of spaces for the
+      " current test level, followed by a tab, a filename , a colon, the line
+      " number, another colon, a space, and the failure or log message.
       "
       " e.g.:
       "   '\ttime_test.go:30: Likely problem: the time zone files have not been installed.'
-      let tokens = matchlist(line, '^ *\t\+\(.\{-}\.go\):\(\d\+\):\s*\(.*\)')
+      let tokens = matchlist(line, '^\%( *\t\+\)\?\(.\{-}\.go\):\(\d\+\):\s*\(.*\)')
     endif
 
     if !empty(tokens) " Check whether the line may refer to a file.
@@ -308,14 +324,14 @@ function! s:parse_errors(lines) abort
       " source of this condition. For instance, github.com/golang/mock/gomock
       " will sometimes produce lines that satisfy this condition.
       if !filereadable(file)
-        call add(errors, {"text": line})
+        call add(errors, {"text": test . line})
         continue
       endif
 
       call add(errors, {
             \ "filename" : file,
             \ "lnum"     : tokens[2],
-            \ "text"     : out,
+            \ "text"     : test . out,
             \ })
     elseif paniced
       call add(errors, {"text": line})

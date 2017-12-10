@@ -300,6 +300,7 @@ let g:easy_align_delimiters = {
 let g:sparkupMapsNormal = 1
 
 " Plugin: vim-go
+let g:go_test_prepend_name = 1
 " let g:go_test_timeout= '10s'
 let g:go_play_browser_command = 'open'
 " let g:go_play_open_browser = 1
