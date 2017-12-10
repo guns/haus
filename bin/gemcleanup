@@ -24,6 +24,6 @@ end
 
 Dir["#{Gem.user_dir}/gems/*"].map { |g| Pkg.new File.basename g }.group_by { |p| p.name }.each_value do |ps|
   ps.sort_by { |p| p.version }[0...-1].each do |p|
-    s 'gem', 'uninstall', p.name, '--version', p.version, '--force'
+    s 'gem', 'uninstall', p.name, '--version', p.version.to_s, '--force'
   end
 end
