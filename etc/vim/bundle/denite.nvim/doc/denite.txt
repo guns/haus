@@ -123,7 +123,7 @@ EXAMPLES						*denite-examples*
 	" For ripgrep
 	" Note: It is slower than ag
 	call denite#custom#var('file_rec', 'command',
-	\ ['rg', '--files', '--glob', '!.git', ''])
+	\ ['rg', '--files', '--glob', '!.git'])
 	" For Pt(the platinum searcher)
 	" NOTE: It also supports windows.
 	call denite#custom#var('file_rec', 'command',
@@ -1654,7 +1654,7 @@ openable	An interface to open the object.
 
 			switch
 				Switch to the window that is opening the
-				object.
+				object. If it isn't opened, fallback open.
 
 			tabswitch
 				Switch to the window that is opening the
@@ -1739,6 +1739,10 @@ sorter_reverse
 sorter_sublime
 		Uses the scoring algorithm from this article and its implementation:
 		https://bit.ly/reverse-engineering-sublime-text-s-fuzzy-match
+
+				*denite-filter-converter_abbr_word*
+converter_abbr_word
+		Convert candidate abbr to word.
 
 				*denite-filter-converter_relative_abbr*
 converter_relative_abbr
@@ -1918,6 +1922,14 @@ After create new Kind class, alias it to your source by >
     self.kind = Kind(vim)
 <
 in the "__init__" method of your source class.
+
+Note: If you want to change the source in the action, you can change
+"context['sources_queue']" like this: >
+
+    def action_refine(self, context):
+        context['sources_queue'].append([
+            {'name': 'myplugin', 'args': []},
+        ])
 
 ------------------------------------------------------------------------------
 KIND ATTRIBUTES					*denite-kind-attributes*
@@ -2138,6 +2150,11 @@ A:
 <
 Please execute :GetChar and press <A-g>.
 If it is the same of g, your environment does not support <A-g>.
+
+Q: I want to narrow by path in grep source.
+
+A: >
+	call denite#custom#source('grep', 'filters', ['converter_abbr_word'])
 
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*

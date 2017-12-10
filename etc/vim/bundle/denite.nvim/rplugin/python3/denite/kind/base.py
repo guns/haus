@@ -13,7 +13,7 @@ class Base(object):
         self.vim = vim
         self.name = 'base'
         self.default_action = 'echo'
-        self.persist_actions = ['echo']
+        self.persist_actions = ['echo', 'preview']
         self.redraw_actions = []
 
     def debug(self, expr):
@@ -44,6 +44,9 @@ class Base(object):
     def get_action_names(self):
         return ['default'] + [x.replace('action_', '') for x in dir(self)
                               if x.find('action_') == 0]
+
+    def action_preview(self, context):
+        pass
 
 
 class Kind(Base):
