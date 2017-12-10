@@ -19,7 +19,7 @@ def get_includes txt
   txt.scan(/include:(\S+)/).flatten
 end
 
-puts Resolv::DNS.open { |dns|
+Resolv::DNS.open do |dns|
   txt = get_txt dns, '_spf.google.com'
   netblocks = get_cidr txt
   includes = get_includes txt
@@ -30,5 +30,5 @@ puts Resolv::DNS.open { |dns|
     includes += get_includes txt
   end
 
-  netblocks.uniq
-}
+  puts netblocks.uniq
+end
