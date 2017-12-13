@@ -65,8 +65,8 @@ if exists('&wildignorecase')
 endif
 
 " Folding
-set foldlevelstart=99             " Don't fold anything on load
-set foldtext=getline(v:foldstart) " Just show the line itself when folded
+set foldlevelstart=99              " Don't fold anything on load
+set foldtext=FoldText(v:foldstart) " Just show the line itself when folded
 
 " Gutter / Status line
 set ruler   " Show current position at bottom

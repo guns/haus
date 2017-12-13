@@ -188,6 +188,10 @@ function! s:Ctags()
 	execute 'Sh (' . cmd . '; notify -? $?) >/dev/null 2>&1 &' | echo cmd
 endfunction
 
+function! FoldText(lnum)
+	return repeat(' ', indent(a:lnum)) . substitute(getline(a:lnum), '\v^\s*', '', '')
+endfunction
+
 function! MarkdownFoldExpr(lnum)
 	if getline(a:lnum) =~# '\v^#' || getline(a:lnum + 1) =~# '\v^[=-]+$'
 		return '>1'
