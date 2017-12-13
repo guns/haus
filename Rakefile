@@ -238,7 +238,7 @@ task :env do
 
       {
         :base   => "#{@vim}/sparkup",
-        :branch => %w[master guns],
+        :branch => %w[master nerv],
         :files  => lambda { |proj|
           src = "#{proj.base}/vim"
           dst = "#{proj.haus}/etc/vim/bundle/sparkup"

@@ -31,11 +31,11 @@
 "     set.
 
 if !exists('g:sparkupExecuteMapping')
-  let g:sparkupExecuteMapping = '<Leader>j'
+  let g:sparkupExecuteMapping = '<c-e>'
 endif
 
 if !exists('g:sparkupNextMapping')
-  let g:sparkupNextMapping = '<Leader>n'
+  let g:sparkupNextMapping = '<c-n>'
 endif
 
 if !exists('g:sparkupMaps')
@@ -43,7 +43,7 @@ if !exists('g:sparkupMaps')
 endif
 
 if !exists('g:sparkupMapsNormal')
-  let g:sparkupMapsNormal = 1
+  let g:sparkupMapsNormal = 0
 endif
 
 inoremap <buffer> <Plug>SparkupExecute <c-g>u<Esc>:call <SID>Sparkup()<cr>

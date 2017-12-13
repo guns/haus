@@ -381,7 +381,7 @@ class Parser:
         """
 
         # Get the initial render of the root node
-        output = self.root.render()
+        output = self.root.render().rstrip()
 
         # Indent by whatever the input is indented with
         indent = re.findall("^[\r\n]*(\s*)", self.str)[0]

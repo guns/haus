@@ -297,6 +297,8 @@ let g:easy_align_delimiters = {
 	\ }
 
 " Plugin: sparkup
+let g:sparkupExecuteMapping = '<Leader>j'
+let g:sparkupNextMapping = '<Leader>n'
 let g:sparkupMapsNormal = 1
 
 " Plugin: vim-go
