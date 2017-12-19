@@ -263,7 +263,8 @@ class Dlnode
   end
 
   def url_basename url
-    File.basename URI.parse(url).path
+    path = URI.parse(url).path
+    path.nil? ? url : File.basename(URI.parse(url).path)
   end
 
   def format_filename fmt, idx, file
