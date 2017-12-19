@@ -728,11 +728,6 @@ HAVE lsof && {
     alias lsifconnect='lsif | grep -- "->"'
     alias lsifconnectr='lsifr | grep -- "->"'
     alias lsuf='lsof -U'
-    needs-restarting() {
-        ruby -e 'puts %x(lsof +c0).lines.select { |l|
-            "%-32s%s" % [$1, $2] if l =~ %r[^(\S+).*\s(/usr/.*) \(deleted\)$]
-        }.sort'
-    }
     unset LSOF_FLAG_OPT
 }
 
