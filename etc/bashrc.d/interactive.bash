@@ -1389,7 +1389,7 @@ HAVE dnf && {
 ### Media
 
 # Imagemagick
-ALIAS geometry='identify -format "%wx%h"'
+ALIAS geom='identify -format "%f	%wx%h\n"'
 
 # feh
 HAVE feh && {

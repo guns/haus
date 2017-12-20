@@ -5,6 +5,7 @@
 # Bash history
 export HISTSIZE='65535'
 export HISTIGNORE='&:cd:.+(.):ls: *'    # Ignore dups, common commands, and lines with leading spaces
+#export HISTTIMEFORMAT='%Y-%m-%d %T │ ' # History timestamps
 
 # Editor
 export EDITOR='vim'
