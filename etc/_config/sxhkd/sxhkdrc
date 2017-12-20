@@ -98,21 +98,21 @@ F11
 		bspc node --state fullscreen; \
 	fi
 
-super + control + shift + p
+super + control + p
 	if bspc query --nodes --node focused.pseudo_tiled; then \
 		bspc node --state tiled; \
 	else \
 		bspc node --state pseudo_tiled; \
 	fi
 
+super + control + shift + p
+	bspc node --flag private
+
 super + control + x
 	bspc node --flag locked
 
 super + control + s
 	bspc node --flag sticky
-
-super + control + p
-	bspc node --flag private
 
 super + alt + control + {h,j,k,l}
 	bspc node @{west --ratio -10,south --ratio +10,north --ratio -10,east --ratio +10}
