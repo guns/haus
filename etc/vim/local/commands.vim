@@ -700,8 +700,8 @@ function! s:Open(word)
 	endif
 endfunction
 
-command! -nargs=? -complete=command -bar Qfdo call <SID>Listdo(getqflist(), <q-args>) "{{{1
-command! -nargs=? -complete=command -bar Locdo call <SID>Listdo(getloclist(0), <q-args>) "{{{1
+command! -nargs=? -complete=command Qfdo call <SID>Listdo(getqflist(), <q-args>) "{{{1
+command! -nargs=? -complete=command Locdo call <SID>Listdo(getloclist(0), <q-args>) "{{{1
 function! s:Listdo(list, expr)
 	for item in a:list
 		execute item['bufnr'] . 'buffer!'
