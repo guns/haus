@@ -6,6 +6,7 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
+load File.expand_path('../ouilookup', __FILE__)
 
 class Randmac
   DEFAULTS = { :prefix => nil, :colons => true }
@@ -28,11 +29,11 @@ class Randmac
     end
   end
 
-  def randmac
+  def randmac prefix = nil
     n = rand 0x1000000000000
-    if @prefix
+    if prefix
       n >>= 24
-      n |= @prefix << 24
+      n |= prefix << 24
     end
     s = '%012X' % n
     @colons ? s.scan(/\h\h/).join(':') : s
@@ -41,8 +42,15 @@ class Randmac
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.size > 1
-    @prefix = args.first.delete(':')[/\h{0,6}/].to_i(16) & 0xffffff if args.any?
-    puts randmac
+
+    prefix = case args.first
+    when nil                    then nil
+    when /\A(\h\h:?\h\h:?\h\h)/ then $1.delete(':').to_i(16)
+    else
+      Ouilookup.new.grep(args.first).shuffle[0].split("\t", 2)[0].to_i(16)
+    end
+
+    puts randmac(prefix)
   end
 end
 
