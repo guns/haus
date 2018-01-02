@@ -86,3 +86,6 @@ esac
 # Set wallpapers after xrandr call
 nitrogen --restore
 rm -f "/run/user/$EUID/wallpaper.lock"
+
+# Fix tint2 stacking order
+xdo above -t "$(xdo id -N Bspwm -n root)" "$(xdo id -n tint2)"
