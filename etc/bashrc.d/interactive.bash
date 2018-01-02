@@ -1223,8 +1223,6 @@ HAVE pass && {
 ALIAS cs='cryptsetup' && {
     TCOMP umount csumount
     alias csdump='cryptsetup luksDump'; complete -F __partitions__ csdump
-    alias cssuspend='cryptsetup luksSuspend'; complete -F __cryptnames__ cssuspend
-    alias csresume='cryptsetup luksResume'; complete -F __cryptnames__ csresume
 }
 
 HAVE cert && {
