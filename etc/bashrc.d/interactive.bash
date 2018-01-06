@@ -1012,102 +1012,18 @@ DATETIME() { date '+%Y-%m-%d.%H·%M·%S'; }
 ### Ruby
 
 type ruby &>/dev/null && {
-    # Ruby versions
-    # Param: $1 Alias suffix
-    # Param: $2 Ruby bin directory
-    RUBY_VERSION_SETUP() {
-        local suf="$1" bin="$2"
-        ALIAS "ruby${suf}=${bin}/ruby" && {
-            alias "rb${suf}=${bin}/ruby"
-            eval "rb${suf}e() { ${bin}/ruby -e 'eval ARGV.join(%q( ))' -- \"\$@\"; }"
+    CD_FUNC -e cdruby "ruby -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
+    CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
-            CD_FUNC -e "cdruby${suf}" "ruby${suf} -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
-            CD_FUNC -e "cdgems${suf}" "ruby${suf} -rubygems -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
+    # Rake
+    ALIAS rk='rake' \
+          rkt='rake --tasks'
 
-            # Rubygems package manager
-            ALIAS "gem${suf}=${bin}/gem" && {
-                # alias geme
-                alias "gem${suf}i=${bin}/gem install"
-                alias "gem${suf}r=${bin}/gem uninstall"
-                alias "gem${suf}s=${bin}/gem search --remote"
-                alias "gem${suf}g=${bin}/gem list | g"
-                alias "gem${suf}q=${bin}/gem specification --remote"
-                # alias gemsync
-                alias "gem${suf}upgrade=${bin}/gem update"
-                alias "gem${suf}outdated=${bin}/gem outdated"
-            }
 
-            # IRB
-            if [[ "$suf" == 18* ]]; then
-                ALIAS "irb${suf}=${bin}/irb -Ku"
-                ALIAS "irb${suf}m=${bin}/irb -Ku -m"
-            else
-                ALIAS "irb${suf}=${bin}/irb"
-                ALIAS "irb${suf}m=${bin}/irb -m"
-            fi
-
-            # Rake
-            ALIAS "rake${suf}=${bin}/rake" \
-                  "rk${suf}=rake${suf}" \
-                  "rk${suf}t=rake${suf} --tasks"
-
-            # Useful gem executables
-            ALIAS "b${suf}=${bin}/bundle" \
-                  "bx${suf}=${bin}/bundle exec" \
-                  "brk${suf}=${bin}/bundle exec rake" \
-                  "brk${suf}t=${bin}/bundle exec rake --tasks" \
-                  "binstall${suf}=${bin}/bundle install"
-        }
-    }; GC_FUNC RUBY_VERSION_SETUP
-
-    # Set top Ruby to be the first extant dir in RUBYPATH
-    if [[ -d "${RUBYPATH%%:*}" ]]; then
-        RUBY_VERSION_SETUP '' "${RUBYPATH%%:*}"
-    else
-        RUBY_VERSION_SETUP '' "$(dirname "$(type -P ruby)")"
-    fi
-    RUBY_VERSION_SETUP 20  /opt/ruby/2.0/bin
-    RUBY_VERSION_SETUP 19  /opt/ruby/1.9/bin
-    RUBY_VERSION_SETUP 18  /opt/ruby/1.8/bin
-    RUBY_VERSION_SETUP 186 /opt/ruby/1.8.6/bin
-
-    # RUBYOPT
+    # Environment variables
     rbopt() { run env RUBYOPT="$1" "${@:2}"; }
-
-    # PATH variables
     rubylib() { __prepend_path__ RUBYLIB "$@"; }
     gempath() { path "${@:-.}/bin"; rubylib "${@:-.}/lib"; }
-
-    # Rails
-    rails() {
-        if [[ -x script/rails ]]; then
-            run script/rails "$@"
-        else
-            run rails "$@"
-        fi
-    }
-
-    # R(ACK|AILS)_ENV
-    rackenv() {
-        (($#)) && export RAILS_ENV="$1" RACK_ENV="$1"
-        echo "RAILS_ENV=${RAILS_ENV} RACK_ENV=${RACK_ENV}"
-    }; complete -F __rackenv__ rackenv
-
-    rklink() {
-        case $# in
-        0) local fname="${PWD##*/}";;
-        1) local fname="$1";;
-        *) echo "USAGE: $FUNCNAME [srcname]"; return 1;;
-        esac
-
-        local src="$cdhaus/share/rake/$fname"
-        if [[ -e "$src" ]]; then
-            ln --symbolic "$src" Rakefile
-        else
-            echo "$src does not exist!"
-            return 1
-        fi
-    }
 }
 
 ### Python
@@ -1252,6 +1168,18 @@ HAVE keytool && java-import-keystore() {
 }
 
 ### Package Managers
+
+# Rubygems
+HAVE gem && {
+    alias gemi='run gem install'
+    alias gemr='run gem uninstall'
+    alias gems='run gem search --remote'
+    alias gemg='gem list | g'
+    alias gemq='run gem specification --remote'
+    # alias gemsync=
+    alias gemupgrade='run gem update'
+    alias gemoutdated='run gem outdated'
+}
 
 # Aptitude
 HAVE apt && {
