@@ -112,7 +112,7 @@ class Mountusb
       sh 'umount', '-v', mtpt
       FileUtils.rmdir mtpt
     end
-    FileUtils.rmdir @dir
+    FileUtils.rmdir @dir rescue nil
   end
 
   def run arguments = []
