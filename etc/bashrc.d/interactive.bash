@@ -1011,7 +1011,7 @@ DATETIME() { date '+%Y-%m-%d.%H·%M·%S'; }
 
 ### Ruby
 
-type ruby &>/dev/null && {
+HAVE ruby && {
     CD_FUNC -e cdruby "ruby -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
     CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
