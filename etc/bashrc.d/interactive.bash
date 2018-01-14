@@ -1054,7 +1054,9 @@ ALIAS perlpe='perl -pe' \
 ### Databases
 
 HAVE psql && {
-    ALIAS aspostgres='sudo --set-home --login --user postgres'
+    ALIAS aspostgres='sudo --set-home --login --user postgres' && {
+        alias initpostgres="aspostgres initdb --locale $LANG -E UTF-8 -D \"$cdpostgres/data\""
+    }
 }
 
 ### Hardware control
