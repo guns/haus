@@ -405,6 +405,7 @@ ALIAS chownr='chown --recursive'
 # mkdir
 alias md='mkdir --verbose --parents'; complete -o dirnames md
 alias rd='rmdir --verbose --parents'; complete -o dirnames rd
+mdf() { mkdir --verbose --parents "$@"; cd "$1"; }; complete -o dirnames mdf
 
 # df du
 alias df='df --human-readable'
