@@ -92,7 +92,7 @@ class FindWrapper
 
     if cmd.delete '-print0'
       cmd.push '-print0'
-    else
+    elsif not (cmd.include? '-exec' or cmd.include? '-execdir')
       cmd.push '-print'
     end
 
