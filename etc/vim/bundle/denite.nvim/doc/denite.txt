@@ -325,26 +325,26 @@ are on the neovim-prompt's builtin actions/mappings.
 		Recall next command-line from history that matches pattern in
 		front of the cursor.
 		Like |c_<Down>| in a native Vim's command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-assign_next_text*
 <denite:assign_next_text>
 		Recall next command-line from history.
 		Like |c_<S-Down>| in a native Vim's command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-assign_previous_matched_text*
 <denite:assign_previous_matched_text>
 		Recall previous command-line from history that matches
 		pattern in front of the cursor.
 		Like |c_<Up>| in a native Vim's command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-assign_previous_text*
 <denite:assign_previous_text>
 		Recall previous command-line from history.
 		Like |c_<S-Up>| in a native Vim's command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-change_line*
 <denite:change_line>
@@ -358,6 +358,11 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:change_path>
 		Change and restart Denite buffer.
 
+				*denite-map-change_sorters*
+<denite:change_sorters:{arg}>
+		Change |denite-options-sorters| to {arg}.
+		If |denite-options-sorters| is {arg}, it will be disabled.
+
 				*denite-map-change_word*
 <denite:change_word>
 		Change word, like |cw| in normal mode in vim buffer.
@@ -369,47 +374,47 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-delete_char_after_caret*
 <denite:delete_char_after_caret>
 		Delete a character after the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_char_before_caret*
 <denite:delete_char_before_caret>
 		Delete a character before the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_char_under_caret*
 <denite:delete_char_under_caret>
 		Delete a character under the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_word_after_caret*
 <denite:delete_word_after_caret>
 		Delete a word after the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_word_before_caret*
 <denite:delete_word_before_caret>
 		Delete a word before the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_word_under_caret*
 <denite:delete_word_under_caret>
 		Delete a word under the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_text_after_caret*
 <denite:delete_text_after_caret>
 		Delete a text after the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_text_before_caret*
 <denite:delete_text_before_caret>
 		Delete a text before the caret.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-delete_entire_text*
 <denite:delete_entire_text>
 		Delete an entire text.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-do_action*
 <denite:do_action:{action}>
@@ -430,7 +435,7 @@ are on the neovim-prompt's builtin actions/mappings.
 		Insert or overstrike a |digraph| at the caret.
 		Like |c_<C-K>| in a Vim's native command-line.
 		See also |denite-map-toggle_insert_mode|.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-insert_to_head*
 <denite:insert_to_head>
@@ -441,7 +446,7 @@ are on the neovim-prompt's builtin actions/mappings.
 		Insert or overstrike a special character at the caret.
 		Like |c_<C-V>| in a Vim's native command-line.
 		See also |denite-map-toggle_insert_mode|.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-insert_word*
 <denite:insert_word:{word}>
@@ -490,47 +495,47 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-move_caret_to_left*
 <denite:move_caret_to_left>
 		Move the caret to a one character left.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_one_word_left*
 <denite:move_caret_to_one_word_left>
 		Move the caret to a one word left.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_left_anchor*
 <denite:move_caret_to_left_anchor>
 		Move the caret like |F| in Vim's normal mode.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_right*
 <denite:move_caret_to_right>
 		Move the caret to a one character right.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_one_word_right*
 <denite:move_caret_to_one_word_right>
 		Move the caret to a one word right.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_right_anchor*
 <denite:move_caret_to_right_anchor>
 		Move the caret like |f| in Vim's normal mode.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_head*
 <denite:move_caret_to_head>
 		Move the caret to the head (a start of the text.)
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_lead*
 <denite:move_caret_to_lead>
 		Move the caret to the lead (a first printable character).
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_caret_to_tail*
 <denite:move_caret_to_tail>
 		Move the caret to the tail (a end of the text).
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-move_to_first_line*
 <denite:move_to_first_line>
@@ -560,16 +565,24 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:move_to_bottom>
 		Move to the bottom visible candidate like |L|.
 
+				*denite-map-move_up_path*
+<denite:move_up_path>
+		Move to the upper path and restart Denite buffer.
+
+				*denite-map-nop*
+<denite:nop>
+		No operation.
+
 				*denite-map-paste_from_register*
 <denite:paste_from_register>
 		Paste the text from a specified register.
 		Like |c_<C-R>| in a Vim's native command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-paste_from_default_register*
 <denite:paste_from_default_register>
 		Paste the text from a default register (|v:register|).
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-print_messages*
 <denite:print_messages>
@@ -646,7 +659,7 @@ are on the neovim-prompt's builtin actions/mappings.
 <denite:toggle_insert_mode>
 		Toggle insert mode (insert or overstrike).
 		Like |c_<Insert>| in a Vim's native command-line.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-toggle_select*
 <denite:toggle_select>
@@ -669,30 +682,25 @@ are on the neovim-prompt's builtin actions/mappings.
 		Change |denite-options-matchers| to {arg}.
 		If |denite-options-matchers| is {arg}, it will be disabled.
 
-				*denite-map-toggle_sorters*
-<denite:toggle_sorters:{arg}>
-		Change |denite-options-sorters| to {arg}.
-		If |denite-options-sorters| is {arg}, it will be disabled.
-
 				*denite-map-yank_to_register*
 <denite:yank_to_register>
 		Yank a text into a specified register.
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-yank_to_default_register*
 <denite:yank_to_default_register>
 		Yank a text into a default register (|v:register|).
-		Note this is a neovim-prompt's builtin action.
+		Note: this is a neovim-prompt's builtin action.
 
 				*denite-map-wincmd*
 <denite:wincmd:{arg}>
 		Suspend and execute 'wincmd %arg%'
-		Note 'arg' supports only h,j,k,l,w,W,t,b,p.
+		Note: 'arg' supports only h,j,k,l,w,W,t,b,p.
 
 						*denite_default_key_mappings*
 Following keymappings are the default keymappings.
 
-Note when user hit <C-c>, denite stop any operations and close its window.
+Note: when user hit <C-c>, denite stop any operations and close its window.
 
 All mode mappings (override by mode mappings).
 {key}		{mapping}
@@ -754,6 +762,7 @@ $		<denite:move_caret_to_tail>
 <C-R>		<denite:restart>
 <C-U>		<denite:scroll_window_upwards>
 <C-Y>		<denite:scroll_window_down_one_line>
+<C-w>P		<denite:wincmd:P>
 <C-w>W		<denite:wincmd:W>
 <C-w>b		<denite:wincmd:b>
 <C-w>h		<denite:wincmd:h>
@@ -771,17 +780,15 @@ I		<denite:insert_to_head>
 L		<denite:move_to_bottom>
 M		<denite:print_messages>
 P		<denite:change_path>
+U		<denite:move_up_path>
 S		<denite:change_line>
 X		<denite:quick_move>
 a		<denite:append>
 b		<denite:move_caret_to_one_word_left>
-c		<denite:change_word>
 cc		<denite:change_line>
 cw		<denite:change_word>
 d		<denite:do_action:delete>
-dd		<denite:delete_entire_text>
 e		<denite:do_action:edit>
-e		<denite:move_caret_to_end_of_word>
 gg		<denite:move_to_first_line>
 h		<denite:move_caret_to_left>
 i		<denite:enter_mode:insert>
@@ -911,12 +918,37 @@ denite#custom#map({mode}, {lhs}, {rhs}[, {params}])
 		      \ 'Success',
 		      \ 'noremap'
 		      \)
+		call denite#custom#map(
+		      \ 'insert',
+		      \ '<C-r>%',
+		      \ 'bufname(b:denite_context["bufnr"])',
+		      \ 'noremap expr'
+		      \)
+
+		function! ToggleSorter(sorter) abort
+		    let sorters = split(b:denite_context.sorters, ',')
+		    let idx = index(sorters, a:sorter)
+		    if idx < 0
+		        call add(sorters, a:sorter)
+		    else
+		        call remove(sorters, idx)
+		    endif
+		    let b:denite_new_context = {}
+		    let b:denite_new_context.sorters = join(sorters, ',')
+		    return '<denite:nop>'
+		endfunction
+		call denite#custom#map('insert', '<C-f>',
+		    \ 'ToggleSorter("sorter_reverse")', 'noremap expr nowait')
 <
-		Note the posterior mappings have higher priority.
-		Note <Nop> cannot be used while <Nop> is equal to <C-J> in
+		Note: the posterior mappings have higher priority.
+		Note: <Nop> cannot be used while <Nop> is equal to <C-J> in
 		neovim-prompt internally.
-		Note <C-c> cannot be used in custom mapping.
+		Note: <C-c> cannot be used in custom mapping.
 		See |denite-key-mappings|.
+		Note: the mapping can get the context by "b:denite_context"
+		variable.
+		Note: the mapping can change the context by
+		"b:denite_new_context" variable.
 
 						*denite#custom#source()*
 denite#custom#source({source-name}, {option-name}, {value})
@@ -957,21 +989,31 @@ denite#do_action({context}, {action-name}, {targets})
 		Runs an action {action-name} against {targets}.  This will
 		mainly be used in |denite#custom#action()|.
 
-denite#get_status_mode()			 *denite#get_status_mode()*
-		Returns the mode part of the status string.  It is useful to
+denite#get_status({name})				*denite#get_status()*
+		Returns the {name} part of the status string.  It is useful to
 		customize the statusline.
+
+		The available status names:
+		"mode": Current mode
+		"sources": Current sources and candidates number
+		"path": Specified |denite-options-path|
+		"linenr": Equivalent to "line_cursor/line_total"
+		"raw_mode": Current mode, without any processing
+		"buffer_name": Current |denite-options-buffer-name|
+		"line_cursor": Cursor position. Part of "linenr".
+		"line_total": Total candidates. Part of "linenr".
+
+denite#get_status_mode()			 *denite#get_status_mode()*
+		Please use |denite#get_status()| instead.
 
 denite#get_status_sources()			 *denite#get_status_sources()*
-		Returns the sources part of the status string.  It is useful to
-		customize the statusline.
+		Please use |denite#get_status()| instead.
 
 denite#get_status_path()			 *denite#get_status_path()*
-		Returns the path part of the status string.  It is useful to
-		customize the statusline.
+		Please use |denite#get_status()| instead.
 
 denite#get_status_linenr()			 *denite#get_status_linenr()*
-		Returns the line number part of the status string.  It is
-		useful to customize the statusline.
+		Please use |denite#get_status()| instead.
 
 							*denite#initialize()*
 denite#initialize()
@@ -1128,7 +1170,7 @@ OPTIONS							*denite-options*
 		Default: ""
 
 					*denite-options-max-candidate-width*
--max-candidate-width={mode}
+-max-candidate-width={width}
 		Specify the max candidate width.
 		Note: Denite skip the match after the width.
 		Default: 200
@@ -1232,6 +1274,12 @@ OPTIONS							*denite-options*
 		Enable statusline.
 		Default: true
 
+						*denite-options-skiptime*
+-skiptime={time}
+		Specify the filtering skiptime when narrowing in huge
+		candidates(over 20000).
+		Default: 500
+
 						*denite-options-unique*
 -unique
 		Unique the candidates by word attribute.
@@ -1246,7 +1294,7 @@ OPTIONS							*denite-options*
 -use-default-mappings
 		Enable default key mappings.
 
-		Note that fundamental mappings including <Esc> or <Enter> are
+		Note: that fundamental mappings including <Esc> or <Enter> are
 		also provided by the default key mappings. So disabling this
 		option without proper custom mappings would make denite
 		useless. Use <C-c> to quit the denite if you accidentally
@@ -1423,10 +1471,6 @@ file_rec	Gather files recursive and nominates all file names under the
 				Note: The patterns are based on fnmatch python
 				module.
 
-		min_cache_files	the minimum number of files that
-				it saves the caches.
-				(default is 10000)
-
 						*denite-source-filetype*
 filetype	Gather filetypes and change the filetype of the current
 		buffer.
@@ -1483,7 +1527,14 @@ line		Gather current buffer lines as candidates.
 		"args":      Search from the argument buffers
 		Note: If the direction is "all" or omitted, it searches from
 		the buffer top.
+		Note: If you use "buffers", 'hidden' option must be set to
+		gather the all buffers.  If 'hidden' is not set, not shown
+		buffers lines will be empty.
 
+		2. the line emptiness:
+		"empty":     Include empty lines
+		"noempty":   Do not include empty lines
+		Note: By default, empty lines are included.
 						*denite-source-menu*
 menu		Gather custom menus.
 
@@ -1740,6 +1791,10 @@ sorter_sublime
 		Uses the scoring algorithm from this article and its implementation:
 		https://bit.ly/reverse-engineering-sublime-text-s-fuzzy-match
 
+						*denite-filter-sorter_word*
+sorter_word
+		Simple filter to sort candidates by ascii order of word
+
 				*denite-filter-converter_abbr_word*
 converter_abbr_word
 		Convert candidate abbr to word.
@@ -1789,9 +1844,9 @@ syntax_name		(String)		(Optional)
 				*denite-source-attribute-max_candidates*
 max_candidates		(Number)		(Optional)
 		If the candidates are more than it, denite will ignore the
-		filtering in asynchronous mode.
+		filtering.
 
-		If you omit it, 10000 is used.
+		If you omit it, 1000 is used.
 
 					*denite-source-attribute-matchers*
 matchers	(List)				(Optional)
@@ -1838,6 +1893,11 @@ highlight
 		(Function)			(Optional)
 		Apply the source specific syntax highlight.
 
+				*denite-source-attribute-is_public_context*
+is_public_context
+		(Bool)			(Optional)
+		If it is True, the source context can be accessed by action.
+
 					*denite-source-attribute-on_init*
 on_init		(Function)			(Optional)
 		It is called after the source is initialized.
@@ -1847,6 +1907,13 @@ on_init		(Function)			(Optional)
 on_close	(Function)			(Optional)
 		It is called before quit.
 		It takes {self} and {context} as its parameter.
+
+					*denite-source-attribute-get_status*
+get_status	(Function)			(Optional)
+		It is called to get the status for the |statusline|.
+		It takes {self} and {context} as its parameter.
+
+		If you omit it, |denite-source-attribute-name| is used.
 
 						*denite-source-attribute-__*
 __{name}	(Unknown)			(Optional)
@@ -1880,6 +1947,11 @@ __{name}	(Unknown)			(Optional)
 		is_interactive		(Bool)
 			If the gather is updated interactively, the source
 			must set it "True".
+
+		__			(Unknown)
+			Additional source information.
+		Note: Recommend sources save variables instead of
+		global variables.
 
 ------------------------------------------------------------------------------
 CANDIDATE ATTRIBUTES			*denite-candidate-attributes*
@@ -1968,14 +2040,16 @@ action_{name} (Function) 			(Optional)
 
                     targets = context['targets']
 <
-
 		To get the source context, you could use "source" attribute in
-		{context}: >
+		"target": >
 
-		    source_context = context['source']
+		    for target in context['targets']:
+		      source_context = target['source']
 <
-		Note: If the candidates source is not single, the "source"
-		attribute is empty.
+		Note: The source must be
+		|denite-source-attribute-is_public_context|.
+		Note: The source context is "__" prefixed keys (source
+		specific keys) only.
 
 ==============================================================================
 CREATE FILTER						*denite-create-filter*
@@ -2154,10 +2228,19 @@ If it is the same of g, your environment does not support <A-g>.
 Q: I want to narrow by path in grep source.
 
 A: >
-	call denite#custom#source('grep', 'filters', ['converter_abbr_word'])
+	call denite#custom#source('grep',
+	\ 'converters', ['converter_abbr_word'])
 
 ==============================================================================
 COMPATIBILITY						*denite-compatibility*
+
+2018.02.06
+* <denite:toggle_sorters> is deprecated.  Please use <denite:change_sorters>
+ instead.
+
+2018.01.14
+* context['source'] is deprecated.  Please use target['source_context']
+  instead.
 
 2017.09.24
 * "short-source-names" option is deprecated.  Added "source-names" option.
