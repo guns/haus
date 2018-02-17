@@ -35,7 +35,7 @@ class NERV::Project::Update
   def call
     idx, pool, lock, exceptions = -1, [], Mutex.new, []
 
-    color = (17..231).map { |n| "x#{n}".to_sym }.shuffle.take threads
+    color = (17..231).to_a.shuffle.take(threads).map { |n| "x#{n}".to_sym }
     size  = subprojects.size
     label = "Thread %d [%#{size.to_s.length}d/#{size}]: "
 
