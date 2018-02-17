@@ -172,4 +172,51 @@ describe "python" do
           one, two, three = Some.expression("that returns an array")
     EOF
   end
+
+  specify "dictionary within tuple" do
+    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
+
+    set_file_contents <<-EOF
+      out = ("one", {"two": "three"}, "four")
+    EOF
+
+    vim.search('one')
+    split
+
+    assert_file_contents <<-EOF
+      out = ("one",
+              {"two": "three"},
+              "four")
+    EOF
+
+    vim.search('one')
+    join
+
+    assert_file_contents <<-EOF
+      out = ("one", {"two": "three"}, "four")
+    EOF
+  end
+
+  specify "tuple within dictionary" do
+    set_file_contents <<-EOF
+      out = {"one": "two", "key": ("three", "four")}
+    EOF
+
+    vim.search('one')
+    split
+
+    assert_file_contents <<-EOF
+      out = {
+              "one": "two",
+              "key": ("three", "four")
+              }
+    EOF
+
+    vim.search('out')
+    join
+
+    assert_file_contents <<-EOF
+      out = {"one": "two", "key": ("three", "four")}
+    EOF
+  end
 end
