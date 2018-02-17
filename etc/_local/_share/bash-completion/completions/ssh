@@ -167,9 +167,15 @@ _ssh()
 
     _ssh_suboption_check "$1" && return
 
+    local ipvx
+
     case $prev in
         -F|-i|-S)
             _filedir
+            return
+            ;;
+        -I)
+            _filedir so
             return
             ;;
         -c)
@@ -208,8 +214,11 @@ _ssh()
             _ip_addresses
             return
             ;;
-        -D|-e|-I|-L|-p|-R|-W)
+        -D|-e|-L|-p|-R|-W)
             return
+            ;;
+        -4|-6)
+            ipvx=$prev
             ;;
     esac
 
@@ -222,7 +231,7 @@ _ssh()
     elif [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
     else
-        _known_hosts_real -a -F "$configfile" -- "$cur"
+        _known_hosts_real $ipvx -a -F "$configfile" -- "$cur"
 
         local args
         _count_args
@@ -246,6 +255,8 @@ _sftp()
 
     _ssh_suboption_check && return
 
+    local ipvx
+
     case $prev in
         -b|-F|-i)
             _filedir
@@ -266,6 +277,9 @@ _sftp()
         -B|-D|-l|-P|-R|-s)
             return
             ;;
+        -4|-6)
+            ipvx=$prev
+            ;;
     esac
 
     if [[ "$cur" == -F* ]]; then
@@ -277,7 +291,7 @@ _sftp()
     elif [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W '$( _parse_usage "$1" )' -- "$cur" ) )
     else
-        _known_hosts_real -a -F "$configfile" -- "$cur"
+        _known_hosts_real $ipvx -a -F "$configfile" -- "$cur"
     fi
 } &&
 shopt -u hostcomplete && complete -F _sftp sftp
@@ -361,6 +375,8 @@ _scp()
         return
     }
 
+    local ipvx
+
     case $prev in
         -l|-P)
             return
@@ -383,6 +399,9 @@ _scp()
             _command
             compopt +o nospace
             return
+            ;;
+        -4|-6)
+            ipvx=$prev
             ;;
     esac
 
@@ -410,7 +429,7 @@ _scp()
                 # not a known host, pass through
                 ;;
             *)
-                _known_hosts_real -c -a -F "$configfile" -- "$cur"
+                _known_hosts_real $ipvx -c -a -F "$configfile" -- "$cur"
                 ;;
         esac
     fi

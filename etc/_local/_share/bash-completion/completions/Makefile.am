@@ -114,6 +114,7 @@ bashcomp_DATA = 2to3 \
 		genaliases \
 		gendiff \
 		genisoimage \
+		geoiplookup \
 		getconf \
 		getent \
 		gkrellm \
@@ -200,6 +201,7 @@ bashcomp_DATA = 2to3 \
 		lpr \
 		lrzip \
 		lsof \
+		lsscsi \
 		lsusb \
 		lua \
 		luac \
@@ -267,6 +269,7 @@ bashcomp_DATA = 2to3 \
 		patch \
 		pdftotext \
 		perl \
+		perltidy \
 		pgrep \
 		pidof \
 		pine \
@@ -302,6 +305,7 @@ bashcomp_DATA = 2to3 \
 		pwdx \
 		pwgen \
 		py.test \
+		pycodestyle \
 		pydoc \
 		pyflakes \
 		pylint \
@@ -312,6 +316,7 @@ bashcomp_DATA = 2to3 \
 		qrunner \
 		querybts \
 		quota \
+		radvdump \
 		rcs \
 		rdesktop \
 		remove_members \
@@ -407,6 +412,8 @@ bashcomp_DATA = 2to3 \
 		wsimport \
 		wtf \
 		wvdial \
+		xdg-mime \
+		xdg-settings \
 		xfreerdp \
 		xgamma \
 		xhost \
@@ -493,6 +500,7 @@ CLEANFILES = \
 	g77 \
 	g95 \
 	gcj \
+	geoiplookup6 \
 	gfortran \
 	gkrellm2 \
 	gmake \
@@ -647,8 +655,6 @@ CLEANFILES = \
 	vgsplit \
 	vigr \
 	whatis \
-	xdg-mime \
-	xdg-settings \
 	xpovray \
 	xvnc4viewer \
 	ypcat
@@ -748,6 +754,10 @@ symlinks: $(targetdir) $(DATA)
 	for file in mkisofs ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) genisoimage $(targetdir)/$$file ; \
+	done
+	for file in geoiplookup6 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) geoiplookup $(targetdir)/$$file ; \
 	done
 	for file in gkrellm2 ; do \
 		rm -f $(targetdir)/$$file && \

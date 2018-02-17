@@ -1,6 +1,6 @@
-# flake8 completion                                        -*- shell-script -*-
+# pycodestyle completion                                   -*- shell-script -*-
 
-_flake8()
+_pycodestyle()
 {
     local cur prev words cword split
     _init_completion -s || return
@@ -13,16 +13,8 @@ _flake8()
             COMPREPLY=( $( compgen -W 'default pylint' -- "$cur" ) )
             return
             ;;
-        -j|--jobs)
-            COMPREPLY=( $( compgen -W "auto {1..$(_ncpus)}" -- "$cur" ) )
-            return
-            ;;
-        --output-file|--append-config|--config)
+        --config)
             _filedir
-            return
-            ;;
-        --include-in-doctest|--exclude-from-doctest)
-            _filedir py
             return
             ;;
     esac
@@ -37,6 +29,6 @@ _flake8()
 
     _filedir py
 } &&
-complete -F _flake8 flake8
+complete -F _pycodestyle pycodestyle
 
 # ex: filetype=sh
