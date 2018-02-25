@@ -9,6 +9,7 @@ require 'optparse'
 require 'fileutils'
 require 'uri'
 require 'shellwords'
+require 'zlib'
 require 'nokogiri'
 require 'haus/utils'
 
@@ -112,11 +113,24 @@ class Dlnode::Resource
 
     if $?.exitstatus.zero?
       $stderr.print "\e[32m.\e[0m"
-      buf
+      try_gunzip buf
     else
       $stderr.print "\e[31m.\e[0m\nFAILED to %s %s\n" % [form_data ? 'POST' : 'GET', url]
       nil
     end
+  end
+
+  def try_gunzip buf
+    if buf[0] == "\x1f" and buf[1] == "\x8b"
+      begin
+        z = Zlib::Inflate.new Zlib::MAX_WBITS|16
+        buf = z.inflate buf
+      ensure
+        z.finish
+        z.close
+      end
+    end
+    buf
   end
 
   def fetch_leaves patterns = [], opts = {}
