@@ -217,24 +217,24 @@ class Dlnode
         @start = @index if @start.nil? or @start < @index
       end
 
-      opt.on '-m', '--max-time SECONDS', Integer, 'Same as `curl --max-time`' do |arg|
-        @max_time = arg
+      opt.on '-m', '--max-time DURATION', 'Same as `curl --max-time`' do |arg|
+        @max_time = seconds arg
       end
 
       opt.on '-n', '--no-download', 'Do not download resources, but print the commands that would be executed' do |arg|
         @no_download = true
       end
 
-      opt.on '-p', '--poll N', 'Repeat download every N seconds' do |arg|
+      opt.on '-p', '--poll DURATION', 'Repeat downloads' do |arg|
         @poll = seconds arg
       end
 
-      opt.on '-r', '--retry N', Integer, "DEFAULT: #{DEFAULTS[:retry]}" do |arg|
+      opt.on '-r', '--retry N', Integer, 'Same as `curl --retry`' do |arg|
         @retry = arg
       end
 
-      opt.on '-t', '--connect-timeout SECONDS', Integer, 'Same as `curl --connect-timeout`' do |arg|
-        @connect_timeout = arg
+      opt.on '-t', '--connect-timeout DURATION', 'Same as `curl --connect-timeout`' do |arg|
+        @connect_timeout = seconds arg
       end
 
       opt.on '-v', '--verbose' do
