@@ -503,7 +503,16 @@ ALIAS chimmutable='chattr -V +i' \
 
 # inotifywait
 ALIAS ino='inotifywait' && fwatch() {
-    while inotifywait -q -e attrib -e close_write "$1"; do eval "${@:2}"; sleep 0.5; done
+    local args=("$@") files=() cmd=()
+    for ((i = 0; i < $#; ++i)); do
+        if [[ "${args[i]}" == '--' ]]; then
+            cmd+=(${args[@]:i+1})
+            break
+        else
+            files+=(${args[i]})
+        fi
+    done
+    while inotifywait -q -e attrib -e close_write "${files[@]}"; do eval "${cmd[@]}"; sleep 0.5; done
 }
 
 # Check shell init files and system paths for loose permissions
