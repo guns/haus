@@ -1,3 +1,3 @@
 #!/bin/sh
 
-curl --user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0" --continue-at - --progress-bar --location "$@"
+curl --user-agent "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0" --continue-at - --progress-bar --location "$@"

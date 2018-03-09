@@ -80,7 +80,7 @@ module NERV::CLI::ReplHelpers
 
   def slurp path
     if path =~ %r{\A\w+://}
-      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:57.0) Gecko/20100101 Firefox/57.0', '--progress-bar', '--location', path]) { |io| io.read }
+      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0', '--progress-bar', '--location', path]) { |io| io.read }
     else
       File.read path
     end
