@@ -355,7 +355,7 @@ fft() {
     done
     shift $((OPTIND-1))
     find-wrapper --predicate '( -type f -o -type l ) -print0' -- "$@" | ruby -e '
-        xs = $stdin.read.split("\0").sort_by { |f| File.mtime f }.reverse
+        xs = $stdin.read.split("\0").sort_by { |f| -File.mtime(f).to_i }
         puts ARGV[0] == "0" ? xs : xs.join("\0")
     ' "$print0"
 }; TCOMP find fft
