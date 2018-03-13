@@ -37,6 +37,8 @@ user_pref("browser.sessionstore.restore_on_demand", false);
 
 // Disable search suggestions
 user_pref("browser.search.suggest.enabled", false);
+// Don't suggest open tabs in omnibar
+user_pref("browser.urlbar.suggest.openpage", false);
 
 // Set Dark Theme
 user_pref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
@@ -121,6 +123,7 @@ user_pref("network.warnOnAboutNetworking", false);
 user_pref("geo.enabled", false);
 
 // Disable more telemetry
+user_pref("browser.chrome.errorReporter.enabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 
 // Disable session restore
