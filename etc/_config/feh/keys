@@ -58,8 +58,8 @@ scroll_down_page  C-e         C-n
 render            R
 zoom_in           J           equal
 zoom_out          K           minus
-zoom_default      w
-zoom_fit          W
+zoom_default      W
+zoom_fit          w
 menu_close        Escape
 menu_up           Up
 menu_down         Down

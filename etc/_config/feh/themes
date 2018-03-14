@@ -5,4 +5,4 @@
 #  |__| |_____|__|__|  guns <self@sungpae.com>
 #
 
-feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --zoom max --scale-down --auto-rotate --action9 ";open %F" --action ";echo %F"
+feh --fullscreen --geometry 800x800 --borderless --draw-filename --image-bg black --scale-down --auto-rotate --action9 ";open %F" --action ";echo %F"
