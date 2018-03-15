@@ -516,8 +516,7 @@ command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! s:OrgBufferSetup()
 	SetWhitespace 2 8
 
-	nnoremap <silent> <buffer> <4-m> :<C-u>call <SID>AppendMinutesDelta()<CR>$:call search('\v\d+:\d+:\d+', 'W')<CR>
-	map  <silent> <buffer> <4-M> :<C-u>call <SID>CalculateTotalMinutes()<CR>
+	map  <silent> <buffer> <4-m> :<C-u>call <SID>UpdateWorklog()<CR>
 
 	map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
 	imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
@@ -544,65 +543,49 @@ function! s:OrgBufferSetup()
 	silent! iunmap <buffer> <C-t>
 endfunction
 
-if has('ruby')
-	function! s:AppendMinutesDelta()
+function! s:UpdateWorklog()
+	if has('ruby')
 ruby << EORUBY
+		# -*- encoding: utf-8 -*-
+
 		require 'time'
-		line = VIM::Buffer.current.line
-		begin
-			from, to = line.scan(/\d+:\d+:\d+/).take(2).map { |s| Time.parse s }
-			VIM::Buffer.current.line = '%s => %sm' % [line.sub(/ => \d+m$/, ''), ((to - from)/60.0).round]
-		rescue
-		end
-EORUBY
-	endfunction
 
-	function! s:CalculateDailyMinutes()
-		execute "normal v\<Plug>OrgAInnerTreeVisual" . '"my'
-ruby << EORUBY
-		line = VIM::Buffer.current.line
-		buf = VIM.evaluate '@m'
-		total = buf.scan(/ => (\d+)m/).flatten.map(&:to_i).reduce :+
-		VIM::Buffer.current.line = '%s => TOTAL: %sm' % [line.sub(/ => TOTAL: \d+m$/, ''), total]
-EORUBY
-	endfunction
+		entries = []
+		minutes = 0
 
-	function! s:CalculateTotalInvoiceMinutes()
-ruby << EORUBY
-		buf = VIM::Buffer.current
-		dates, minutes = [], []
-		(1..buf.count).each do |i|
-			if buf[i] =~ /\*\s*(.+) => TOTAL: (\d+)m/
-				dates << $1
-				minutes << $2
+		$curbuf.count.downto(1).each do |n|
+			if $curbuf[n] =~ /\A([* ]*)(\d\d:\d\d:\d\d)\s*-\s*(\d\d:\d\d:\d\d)(?: (?:=>|→) \d+m\s*\z)?/
+				min = ((Time.parse($3) - Time.parse($2))/60.0).round
+				$curbuf[n] = "#{$1}#{$2} - #{$3} → #{min}m"
+				minutes += min
+			end
+
+			if $curbuf[n] =~ /\A\*\s*(\d+ \w+ \d+)(?: (?:=>|→) TOTAL: \d+m\s*\z)?/
+				$curbuf[n] = "* #{$1} → TOTAL: #{minutes}m"
+				entries << [$1, minutes]
+				minutes = 0
 			end
 		end
+
 		lines = []
-		dw = dates.map(&:size).max
-		sum = minutes.map(&:to_i).reduce(&:+)
-		mw = sum.to_s.size
-		lines << ("─" * (dw+1) << "┬" << "─" * (mw+2))
-		fmt = "%-#{dw}s │ %#{mw}dm"
-		dates.zip(minutes).each do |dm|
-			lines << fmt % dm
-		end
-		lines << ("─" * (dw+1) << "┼" << "─" * (mw+2))
-		lines << (" " * (dw-5) << "TOTAL │ #{sum}m")
-		lines.each_with_index do |l, i|
-			buf.append i, l
+		date_w = entries.map { |e| e[0].length }.max
+		sum = entries.reduce(0) { |s, e| s + e[1] }
+		min_w = sum.to_s.size
+		fmt = "%-#{date_w}s │ %#{min_w}dm"
+
+		lines << ("─" * (date_w+1) << "┬" << "─" * (min_w+2))
+		entries.reverse.each { |e| lines << fmt % e }
+		lines << ("─" * (date_w+1) << "┼" << "─" * (min_w+2))
+		lines << (" " * (date_w-5) << "TOTAL │ #{sum}m")
+
+		if $curwin.cursor == [1, 0]
+			lines.each_with_index { |l, i| $curbuf.append i, l }
+		else
+			puts lines
 		end
 EORUBY
-	endfunction
-
-	function! s:CalculateTotalMinutes()
-		if getpos('.')[1] == 1 && len(getline(1)) == 0
-			call s:CalculateTotalInvoiceMinutes()
-		else
-			call s:CalculateDailyMinutes()
-			execute "normal \<Plug>OrgJumpToNextSkipChildrenNormal"
-		endif
-	endfunction
-endif
+	endif
+endfunction
 
 command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
