@@ -64,6 +64,7 @@ bspc rule --add Sxiv                   state=fullscreen
 bspc rule --add Thunar                 state=floating
 bspc rule --add Transmission-gtk       state=floating
 bspc rule --add Vlc                    state=floating
+bspc rule --add vlc                    state=floating
 bspc rule --add Xdialog                state=floating
 bspc rule --add Xsensors               state=floating sticky=true
 
