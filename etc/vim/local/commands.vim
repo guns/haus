@@ -578,11 +578,19 @@ ruby << EORUBY
 		lines << ("─" * (date_w+1) << "┼" << "─" * (min_w+2))
 		lines << (" " * (date_w-5) << "TOTAL │ #{sum}m")
 
-		if $curwin.cursor == [1, 0]
-			lines.each_with_index { |l, i| $curbuf.append i, l }
-		else
-			puts lines
+		c_row, c_col = $curwin.cursor
+		n = 0
+
+		if $curbuf[1] =~ /\A─+┬─+/
+			while $curbuf[1] =~ /[─│]/
+				$curbuf.delete 1
+				n += 1
+			end
 		end
+
+		lines.each_with_index { |l, i| $curbuf.append i, l }
+
+		$curwin.cursor = [c_row - n + lines.count, c_col]
 EORUBY
 	endif
 endfunction
