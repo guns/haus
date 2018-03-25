@@ -130,7 +130,7 @@ augroup GUNS
 	" Ini conf gitconfig
 	autocmd BufRead,BufNewFile *gitconfig
 		\ setlocal filetype=gitconfig
-	autocmd BufRead,BufNewFile *.INI,*.toml
+	autocmd BufRead,BufNewFile *.INI
 		\ setlocal filetype=dosini
 	autocmd BufRead,BufNewFile */etc/*hosts,ipset.conf,Caddyfile
 		\ setlocal filetype=conf
