@@ -3,7 +3,7 @@
 #   bash_completion - programmable completion functions for bash 4.1+
 #
 #   Copyright © 2006-2008, Ian Macdonald <ian@caliban.org>
-#             © 2009-2017, Bash Completion Maintainers
+#             © 2009-2018, Bash Completion Maintainers
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
 #
 #   https://github.com/scop/bash-completion
 
-BASH_COMPLETION_VERSINFO=(2 7)
+BASH_COMPLETION_VERSINFO=(2 8)
 
 if [[ $- == *v* ]]; then
     BASH_COMPLETION_ORIGINAL_V_VALUE="-v"
@@ -941,18 +941,19 @@ _kernel_versions()
 #
 _available_interfaces()
 {
-    local cmd PATH=$PATH:/sbin
+    local PATH=$PATH:/sbin
 
-    if [[ ${1:-} == -w ]]; then
-        cmd="iwconfig"
-    elif [[ ${1:-} == -a ]]; then
-        cmd="{ ifconfig || ip link show up; }"
-    else
-        cmd="{ ifconfig -a || ip link show; }"
-    fi
-
-    COMPREPLY=( $( eval $cmd 2>/dev/null | awk \
+    COMPREPLY=( $( {
+        if [[ ${1:-} == -w ]]; then
+            iwconfig
+        elif [[ ${1:-} == -a ]]; then
+            ifconfig || ip link show up
+        else
+            ifconfig -a || ip link show
+        fi
+    } 2>/dev/null | awk \
         '/^[^ \t]/ { if ($1 ~ /^[0-9]+:/) { print $2 } else { print $1 } }' ) )
+
     COMPREPLY=( $( compgen -W '${COMPREPLY[@]/%[[:punct:]]/}' -- "$cur" ) )
 }
 
@@ -1007,21 +1008,8 @@ _tilde()
 # @param $1  Name of variable (not the value of the variable) to expand
 __expand_tilde_by_ref()
 {
-    # Does $1 start with tilde (~)?
     if [[ ${!1} == \~* ]]; then
-        # Does $1 contain slash (/)?
-        if [[ ${!1} == */* ]]; then
-            # Yes, $1 contains slash;
-            # 1: Remove * including and after first slash (/), i.e. "~a/b"
-            #    becomes "~a".  Double quotes allow eval.
-            # 2: Remove * before the first slash (/), i.e. "~a/b"
-            #    becomes "b".  Single quotes prevent eval.
-            #       +-----1----+ +---2----+
-            eval $1="${!1/%\/*}"/'${!1#*/}'
-        else
-            # No, $1 doesn't contain slash
-            eval $1="${!1}"
-        fi
+        eval $1=$(printf ~%q "${!1#\~}")
     fi
 } # __expand_tilde_by_ref()
 
@@ -1030,19 +1018,14 @@ __expand_tilde_by_ref()
 #
 _expand()
 {
-    # FIXME: Why was this here?
-    #[ "$cur" != "${cur%\\}" ] && cur+="\\"
-
     # Expand ~username type directory specifications.  We want to expand
     # ~foo/... to /home/foo/... to avoid problems when $cur starting with
     # a tilde is fed to commands and ending up quoted instead of expanded.
 
     if [[ "$cur" == \~*/* ]]; then
-        eval cur=$cur 2>/dev/null
+        __expand_tilde_by_ref cur
     elif [[ "$cur" == \~* ]]; then
-        cur=${cur#\~}
-        COMPREPLY=( $( compgen -P '~' -u -- "$cur" ) )
-        [[ ${#COMPREPLY[@]} -eq 1 ]] && eval COMPREPLY[0]=${COMPREPLY[0]}
+        _tilde "$cur" || eval COMPREPLY[0]=$(printf ~%q "${COMPREPLY[0]#\~}")
         return ${#COMPREPLY[@]}
     fi
 }
@@ -1502,9 +1485,9 @@ _included_ssh_config_files()
 # Return: Completions, starting with CWORD, are added to COMPREPLY[]
 _known_hosts_real()
 {
-    local configfile flag prefix
-    local cur curd awkcur user suffix aliases i host ipv4 ipv6
-    local -a kh khd config
+    local configfile flag prefix OIFS=$IFS
+    local cur user suffix aliases i host ipv4 ipv6
+    local -a kh tmpkh khd config
 
     # TODO remove trailing %foo from entries
 
@@ -1543,8 +1526,7 @@ _known_hosts_real()
 
     # Known hosts files from configs
     if [[ ${#config[@]} -gt 0 ]]; then
-        local OIFS=$IFS IFS=$'\n' j
-        local -a tmpkh
+        local IFS=$'\n' j
         # expand paths (if present) to global and user known hosts files
         # TODO(?): try to make known hosts files with more than one consecutive
         #          spaces in their name work (watch out for ~ expansion
@@ -1581,35 +1563,31 @@ _known_hosts_real()
 
     # If we have known_hosts files to use
     if [[ ${#kh[@]} -gt 0 || ${#khd[@]} -gt 0 ]]; then
-        # Escape slashes and dots in paths for awk
-        awkcur=${cur//\//\\\/}
-        awkcur=${awkcur//\./\\\.}
-        curd=$awkcur
-
-        if [[ "$awkcur" == [0-9]*[.:]* ]]; then
-            # Digits followed by a dot or a colon - just search for that
-            awkcur="^$awkcur[.:]*"
-        elif [[ "$awkcur" == [0-9]* ]]; then
-            # Digits followed by no dot or colon - search for digits followed
-            # by a dot or a colon
-            awkcur="^$awkcur.*[.:]"
-        elif [[ -z $awkcur ]]; then
-            # A blank - search for a dot, a colon, or an alpha character
-            awkcur="[a-z.:]"
-        else
-            awkcur="^$awkcur"
-        fi
-
         if [[ ${#kh[@]} -gt 0 ]]; then
-            # FS needs to look for a comma separated list
-            COMPREPLY+=( $( awk 'BEGIN {FS=","}
-            /^\s*[^|\#]/ {
-            sub("^@[^ ]+ +", ""); \
-            sub(" .*$", ""); \
-            for (i=1; i<=NF; ++i) { \
-            sub("^\\[", "", $i); sub("\\](:[0-9]+)?$", "", $i); \
-            if ($i !~ /[*?]/ && $i ~ /'"$awkcur"'/) {print $i} \
-            }}' "${kh[@]}" 2>/dev/null ) )
+            # https://man.openbsd.org/sshd.8#SSH_KNOWN_HOSTS_FILE_FORMAT
+            for i in "${kh[@]}"; do
+                while read -ra tmpkh; do
+                    set -- "${tmpkh[@]}"
+                    # Skip entries starting with | (hashed) and # (comment)
+                    [[ $1 == [\|\#]* ]] && continue
+                    # Ignore leading @foo (markers)
+                    [[ $1 == @* ]] && shift
+                    # Split entry on commas
+                    local IFS=,
+                    for host in $1; do
+                        # Skip hosts containing wildcards
+                        [[ $host == *[*?]* ]] && continue
+                        # Remove leading [
+                        host="${host#[}"
+                        # Remove trailing ] + optional :port
+                        host="${host%]?(:+([0-9]))}"
+                        # Add host to candidates
+                        COMPREPLY+=( $host )
+                    done
+                    IFS=$OIFS
+                done < "$i"
+            done
+            COMPREPLY=( $( compgen -W '${COMPREPLY[@]}' -- "$cur" ) )
         fi
         if [[ ${#khd[@]} -gt 0 ]]; then
             # Needs to look for files called
@@ -1617,7 +1595,7 @@ _known_hosts_real()
             # dont fork any processes, because in a cluster environment,
             # there can be hundreds of hostkeys
             for i in "${khd[@]}" ; do
-                if [[ "$i" == *key_22_$curd*.pub && -r "$i" ]]; then
+                if [[ "$i" == *key_22_$cur*.pub && -r "$i" ]]; then
                     host=${i/#*key_22_/}
                     host=${host/%.pub/}
                     COMPREPLY+=( $host )
@@ -1895,9 +1873,10 @@ _longopt()
             command sed -ne 's/.*\(--[-A-Za-z0-9]\{1,\}=\{0,1\}\).*/\1/p' | sort -u )" \
             -- "$cur" ) )
         [[ $COMPREPLY == *= ]] && compopt -o nospace
-    elif [[ "$1" == @(@(mk|rm)dir|chroot) ]]; then
+    elif [[ "$1" == @(rmdir|chroot) ]]; then
         _filedir -d
     else
+        [[ "$1" == mkdir ]] && compopt -o nospace
         _filedir
     fi
 }
@@ -1959,7 +1938,6 @@ _install_xspec()
     for cmd in $@; do
         _xspecs[$cmd]=$xspec
     done
-    complete -F _filedir_xspec $@
 }
 # bzcmp, bzdiff, bz*grep, bzless, bzmore intentionally not here, see Debian: #455510
 _install_xspec '!*.?(t)bz?(2)' bunzip2 bzcat pbunzip2 pbzcat lbunzip2 lbzcat
@@ -1988,12 +1966,12 @@ _install_xspec '!*.@(?(e)ps|pdf)' ps2pdf ps2pdf12 ps2pdf13 ps2pdf14 ps2pdfwr
 _install_xspec '!*.texi*' makeinfo texi2html
 _install_xspec '!*.@(?(la)tex|texi|dtx|ins|ltx|dbj|dvi)' tex latex slitex jadetex pdfjadetex pdftex pdflatex texi2dvi xetex xelatex luatex lualatex
 _install_xspec '!*.mp3' mpg123 mpg321 madplay
-_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[gmv]|OG[GMV]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.part)' xine aaxine fbxine
-_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[gmv]|OG[GMV]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.part)' kaffeine dragon
+_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmv]|OG[AGMV]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM)|+([0-9]).@(vdr|VDR))?(.part)' xine aaxine fbxine
+_install_xspec '!*@(.@(mp?(e)g|MP?(E)G|wm[av]|WM[AV]|avi|AVI|asf|vob|VOB|bin|dat|divx|DIVX|vcd|ps|pes|fli|flv|FLV|fxm|FXM|viv|rm|ram|yuv|mov|MOV|qt|QT|web[am]|WEB[AM]|mp[234]|MP[234]|m?(p)4[av]|M?(P)4[AV]|mkv|MKV|og[agmv]|OG[AGMV]|t[ps]|T[PS]|m2t?(s)|M2T?(S)|mts|MTS|wav|WAV|flac|FLAC|asx|ASX|mng|MNG|srt|m[eo]d|M[EO]D|s[3t]m|S[3T]M|it|IT|xm|XM|iso|ISO)|+([0-9]).@(vdr|VDR))?(.part)' kaffeine dragon
 _install_xspec '!*.@(avi|asf|wmv)' aviplay
 _install_xspec '!*.@(rm?(j)|ra?(m)|smi?(l))' realplay
 _install_xspec '!*.@(mpg|mpeg|avi|mov|qt)' xanim
-_install_xspec '!*.@(ogg|m3u|flac|spx)' ogg123
+_install_xspec '!*.@(og[ag]|m3u|flac|spx)' ogg123
 _install_xspec '!*.@(mp3|ogg|pls|m3u)' gqmpeg freeamp
 _install_xspec '!*.fig' xfig
 _install_xspec '!*.@(mid?(i)|cmf)' playmidi
@@ -2035,15 +2013,18 @@ complete -F _minimal ''
 
 __load_completion()
 {
-    local cmd="$1" dir compfile
+    local cmd="${1##*/}" dir compfile
 
     for dir in "${BASH_COMPLETION_DIRS[@]}"; do
-        for compfile in "${cmd##*/}" "${cmd##*/}".bash _"${cmd##*/}"; do
+        for compfile in "$cmd" "$cmd.bash" "_$cmd"; do
             compfile="$dir/$compfile"
             # Avoid trying to source dirs; https://bugzilla.redhat.com/903540
             [[ -f "$compfile" ]] && . "$compfile" &>/dev/null && return 0
         done
     done
+
+    # Look up simple "xspec" completions
+    [[ "${_xspecs[$cmd]}" ]] && complete -F _filedir_xspec "$cmd" && return 0
 
     return 1
 }

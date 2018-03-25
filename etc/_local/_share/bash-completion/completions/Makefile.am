@@ -37,6 +37,7 @@ bashcomp_DATA = 2to3 \
 		cancel \
 		cardctl \
 		ccache \
+		ccze \
 		cfagent \
 		cfrun \
 		chage \
@@ -233,8 +234,8 @@ bashcomp_DATA = 2to3 \
 		modprobe \
 		_modules \
 		monodevelop \
-		mount \
-		mount.linux \
+		_mount \
+		_mount.linux \
 		mplayer \
 		mr \
 		msynctool \
@@ -383,8 +384,8 @@ bashcomp_DATA = 2to3 \
 		tshark \
 		tune2fs \
 		_udevadm \
-		umount \
-		umount.linux \
+		_umount \
+		_umount.linux \
 		unace \
 		unpack200 \
 		unrar \
@@ -999,6 +1000,6 @@ check-local:
 	ret=0
 	for file in $(bashcomp_DATA) ; do \
 		$${bashcomp_bash:-$${BASH:-bash}} \
-			-O extglob -n $$file || ret=$$? ; \
+			-O extglob -n $(srcdir)/$$file || ret=$$? ; \
 	done ; \
 	exit $$ret
