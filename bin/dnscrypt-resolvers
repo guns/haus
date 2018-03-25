@@ -8,35 +8,18 @@
 require 'csv'
 require 'fileutils'
 
-URL = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv'
-SIG = 'https://raw.githubusercontent.com/jedisct1/dnscrypt-proxy/master/dnscrypt-resolvers.csv.sig'
+URL = 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md'
+SIG = 'https://download.dnscrypt.info/resolvers-list/v2/public-resolvers.md.minisig'
+
+def verify file
+  system 'minisign', '-Vm', file, '-P', 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+end
 
 Dir.chdir '/tmp' do
   begin
     [URL, SIG].each { |u| system 'curl', '--silent', '-O', u }
-
-    abort unless system 'gpg', '--verify-files', File.basename(SIG)
-
-    csv = CSV.parse File.read(File.basename URL)
-
-    csv.shift if csv[0][0] == 'Name'
-
-    puts csv.map { |row|
-      title, fullname, desc, loc, coord, url, version, dnssec, nologs, namecoin, addr, name, pubkey, pubkey_txt = row
-      host, port = addr.split ':', 2
-
-      <<-EOF
-# #{fullname}
-# #{desc}
-# #{loc}#{" (#{coord})" if coord}
-# #{url} (#{title})
-# NOLOGS: #{nologs}, DNSSEC: #{dnssec}, Namecoin: #{namecoin}
-# Version: #{version}
-ProviderName    #{name}
-ProviderKey     #{pubkey}
-ResolverAddress #{host}#{port ? ":#{port}" : ""}
-EOF
-    }.join("\n")
+    abort unless verify File.basename(URL)
+    puts File.read(File.basename URL)
   ensure
     FileUtils.rm_f [URL, SIG].map { |f| File.basename f }
   end
