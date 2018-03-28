@@ -68,11 +68,6 @@ bspc rule --add vlc                    state=floating
 bspc rule --add Xdialog                state=floating
 bspc rule --add Xsensors               state=floating sticky=true
 
-# Firefox modal windows
-bspc rule --add Cookies                state=floating
-bspc rule --add Places                 state=floating
-bspc rule --add Toplevel               state=floating
-
 case "$(bspc query --monitors | grep --count .)" in
 2)
     xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
