@@ -68,7 +68,11 @@ class FindWrapper
 
     args = arguments.dup
 
-    cmd.push File.directory?(args.first) ? args.shift.chomp('/') : '.'
+    cmd.push case
+    when args.first == '/'           then args.shift
+    when File.directory?(args.first) then args.shift.chomp('/')
+    else '.'
+    end
 
     GLOBAL_OPTIONS.each do |(k, v)|
       if i = args.index(k)
