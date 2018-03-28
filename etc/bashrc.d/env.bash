@@ -63,7 +63,7 @@ export GOPATH='/opt/src/go'
 export DE='xfce'
 
 # Qt
-export QT_STYLE_OVERRIDE='gtk'
+export QT_QPA_PLATFORMTHEME='qt5ct'
 
 # Java
 export _JAVA_AWT_WM_NONREPARENTING='1'
