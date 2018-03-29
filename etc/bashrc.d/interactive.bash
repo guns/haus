@@ -1234,7 +1234,7 @@ ALIAS pac='pacman' && {
     }
     alias pacsync='run pacman --sync --refresh'
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
-    alias pacoutdated='run pacman --query --upgrades; run pacckalts; type pacaur &>/dev/null && run pacaur --check $(pacforeign)'
+    alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacaur --check $(pacforeign)'
     alias pacclean='run pacman --sync --clean --noconfirm'
     pacforeign() {
         ruby -e '
