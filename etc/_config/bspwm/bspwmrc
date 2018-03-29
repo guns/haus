@@ -58,6 +58,7 @@ bspc rule --add Orage                  state=floating
 bspc rule --add 'Orage Preferences'    state=floating
 bspc rule --add Pavucontrol            state=floating
 bspc rule --add Pinentry               state=floating
+bspc rule --add Prompt                 state=floating
 bspc rule --add Qalculate-gtk          state=floating
 bspc rule --add qjackctl               state=floating
 bspc rule --add Sxiv                   state=fullscreen
@@ -67,10 +68,6 @@ bspc rule --add Vlc                    state=floating
 bspc rule --add vlc                    state=floating
 bspc rule --add Xdialog                state=floating
 bspc rule --add Xsensors               state=floating sticky=true
-
-# Firefox
-bspc rule --add Navigator              state=tiled
-bspc rule --add Prompt                 state=floating
 
 case "$(bspc query --monitors | grep --count .)" in
 2)
