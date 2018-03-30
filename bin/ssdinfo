@@ -8,7 +8,7 @@
 abort 'Usage: ssdinfo block-device' if ARGV.size > 1
 
 blockdev = ARGV[0] || '/dev/sda'
-buf = IO.popen ['smartctl', '-a', blockdev] { |rd| rd.read }
+buf = IO.popen(['smartctl', '-a', blockdev]) { |rd| rd.read }
 int = ->(pattern) { buf[pattern].split.last.to_i }
 
 info = [
