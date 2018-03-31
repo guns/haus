@@ -1,0 +1,3 @@
+#!/bin/sh
+
+run env --ignore-environment bash --norc --noprofile
