@@ -6,7 +6,7 @@
 
 type grepnotify || exit 1
 
-CHAINS='DROP_OUTPUT|DROP_FORWARD|DROP_EXFILTRATION|DROP_IDENTITY|DROP_GOOGLE|ACCEPT_INPUT'
+CHAINS='DROP_OUTPUT|DROP_FORWARD|DROP_BLACKLIST|DROP_PROXY|ACCEPT_INPUT'
 
 dmesg --follow --notime --facility kern --level warn | grepnotify -delay 1s \
     '\A\[(?P<chain>'"$CHAINS"')\].*?IN=(?P<in>\S*).*?OUT=(?P<out>\S*).*?SRC=(?P<src>\S*).*?DST=(?P<dst>\S*).*?PROTO=(?P<proto>\S*).*?DPT=(?P<dpt>\S*)' \

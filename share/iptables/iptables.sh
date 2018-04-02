@@ -139,24 +139,24 @@ new_chain ACCEPT_INPUT      ACCEPT
 
 minimal_passthrough INPUT
 
+# VM
+# input ACCEPT:NEW --in-interface vboxnet0
+
 # SSH
 # input ACCEPT_INPUT:NEW --protocol tcp --dport 22
+
+# HTTP
+# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 80,443
 
 # DNS
 # input ACCEPT_INPUT:NEW --protocol udp --in-interface eth0 --dport 53
 
-# NFS
-# input ACCEPT_INPUT:NEW --protocol udp --dport 111
-# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 111,2049,32767
-
 # DHCP
 # input ACCEPT_INPUT:NEW --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
 
-# VM
-# input ACCEPT:NEW --in-interface vboxnet0
-
-# HTTP
-# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 80,443
+# NFS
+# input ACCEPT_INPUT:NEW --protocol udp --dport 111
+# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 111,2049,32767
 
 # Samba
 # input ACCEPT:NEW --protocol udp --dport 137:138
