@@ -10,7 +10,6 @@ case "$(xtitle "$1")" in
 'xzoom x2'           ) echo 'state=floating';;
 '☎ urxvt ☎'          ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
-'♫ pianobar ♫'       ) echo 'state=floating';;
 '♻ newsboat ♻'       ) echo 'split_dir=west split_ratio=0.3 private=true';;
 '⚙ htop ⚙'           ) echo 'state=floating';;
 '⚙ nmon ⚙'           ) echo 'state=floating';;

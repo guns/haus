@@ -22,13 +22,6 @@ class Mediactl
     system 'pkill', '--exact', '-0', name
   end
 
-  def pianobar cmd
-    fifo = File.expand_path '~/.config/pianobar/ctl'
-    if alive? 'pianobar' and File.pipe? fifo
-      File.open(fifo, 'w') { |f| f.puts cmd }
-    end
-  end
-
   def cmus cmd
     system 'cmus-remote', cmd if alive? 'cmus'
   end
@@ -39,10 +32,8 @@ class Mediactl
     case action
     when 'toggle'
       ts << Thread.new { cmus '--pause' }
-      ts << Thread.new { pianobar 'p' }
     when 'next'
       ts << Thread.new { cmus '--next' }
-      ts << Thread.new { pianobar 'n' }
     when 'prev'
       ts << Thread.new { cmus '--prev' }
     else

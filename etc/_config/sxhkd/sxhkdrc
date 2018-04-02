@@ -324,12 +324,9 @@ super + alt + control + t
 	remind --query
 
 super + control + m
-	P='♫ pianobar ♫'; C='cmus'; \
-	wmctrl -a "$P" || wmctrl -a "$C" || urxvt-client -title "$P" -icon ~/.icons/haus/pandora.svg -e pianobarlaunch pandora.com/g2813859@mvrht.com
-
-super + control + shift + m
-	P='♫ pianobar ♫'; C='cmus'; \
-	wmctrl -a "$C" || wmctrl -a "$P" || urxvt-client -cd ~/Media/Music -title "$C" -icon ~/.icons/haus/music.svg -e cmus
+	T='cmus'; \
+	wmctrl -a "$T" || \
+	urxvt-client -g 120x30 -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
 
 super + control + q
 	wmctrl -a 'Qalculate!' || exec qalculate-gtk
