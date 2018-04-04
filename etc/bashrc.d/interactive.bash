@@ -1217,6 +1217,7 @@ HAVE apt && {
 # Pacman
 ALIAS pac='pacman' && {
     alias paci='run pacman --sync --needed'
+    alias pacidep='run pacman --sync --needed --asdeps'
     alias pacr='run pacman --remove --recursive'
     alias pacs='run pacman --sync --search'
     alias pacg='run pacman --query --search'
