@@ -2,8 +2,10 @@
 # -*- encoding: utf-8 -*-
 
 ARGV.each do |f|
-  url = File.read(f).chomp
-  if url =~ %r{\A\w+://}
+  case url = File.read(f).chomp
+  when %r{\A\w+://}
     system 'open', url
+  when 'about:preferences', 'about:config'
+    system 'firefox', url
   end
 end
