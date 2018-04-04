@@ -72,7 +72,7 @@ class Opensearch
     server = WEBrick::HTTPServer.new :Port => 8080,
                                      :DocumentRoot => File.dirname(File.expand_path(file))
 
-    server.mount_proc '/install' do |req, res|
+    server.mount_proc '/' do |req, res|
       res.body = <<-HTML
 <html>
 <head>
