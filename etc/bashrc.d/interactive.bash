@@ -82,10 +82,6 @@ __compreply__() {
     COMPREPLY=($(compgen -W "$*" -- "$cur"));
 }
 
-__cryptnames__() {
-    __compreply__ "$(cat /sys/block/*/dm/name)"
-}
-
 __lsdisk__() {
     __compreply__ "$(lsdisk)"
 }
@@ -126,10 +122,6 @@ __cx__() {
     else
         _command_offset 2
     fi
-}
-
-__rackenv__() {
-    __compreply__ production development testing
 }
 
 __systemd_units__() {
@@ -1365,9 +1357,6 @@ HAVE gtk-update-icon-cache && gtk-update-icon-cache-all() {
         [[ -d "$dir" ]] && run gtk-update-icon-cache --force --ignore-theme-index "$dir"
     done
 }
-
-# slop
-ALIAS xgeom='slop'
 
 ### TTY
 
