@@ -29,6 +29,8 @@
 	algorithm = histogram
 	renames = copies
 	indentHeuristic = true
+	wsErrorHighlight = all
+	colorMoved = true
 
 [grep]
 	patternType = perl
@@ -103,29 +105,29 @@
 	lfst  = log --decorate --show-signature --graph --stat --first-parent --no-merges
 	lfstr = log --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
 
-	lp    = log --decorate --show-signature --patch --stat --ws-error-highlight=all
-	lpr   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --date=relative
-	lfp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges
-	lfpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --first-parent --no-merges --date=relative
-	lpw   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space
-	lpwr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --ignore-all-space --date=relative
-	wlp   = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=.
-	wlpr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --date=relative
-	wlpwr = log --decorate --show-signature --patch --stat --ws-error-highlight=all --color-words=. --ignore-all-space --date=relative
+	lp    = log --decorate --show-signature --patch --stat
+	lpr   = log --decorate --show-signature --patch --stat --date=relative
+	lfp   = log --decorate --show-signature --patch --stat --first-parent --no-merges
+	lfpr  = log --decorate --show-signature --patch --stat --first-parent --no-merges --date=relative
+	lpw   = log --decorate --show-signature --patch --stat --ignore-all-space
+	lpwr  = log --decorate --show-signature --patch --stat --ignore-all-space --date=relative
+	wlp   = log --decorate --show-signature --patch --stat --color-words=.
+	wlpr  = log --decorate --show-signature --patch --stat --color-words=. --date=relative
+	wlpwr = log --decorate --show-signature --patch --stat --color-words=. --ignore-all-space --date=relative
 
-	l1    = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1
-	l1r   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --date=relative
-	l1w   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space
-	l1wr  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --ignore-all-space --date=relative
-	wl1   = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=.
-	wl1r  = log --decorate --show-signature --patch --stat --ws-error-highlight=all -1 --color-words=. --date=relative
+	l1    = log --decorate --show-signature --patch --stat -1
+	l1r   = log --decorate --show-signature --patch --stat -1 --date=relative
+	l1w   = log --decorate --show-signature --patch --stat -1 --ignore-all-space
+	l1wr  = log --decorate --show-signature --patch --stat -1 --ignore-all-space --date=relative
+	wl1   = log --decorate --show-signature --patch --stat -1 --color-words=.
+	wl1r  = log --decorate --show-signature --patch --stat -1 --color-words=. --date=relative
 
 	f     = log --graph --date=short --pretty=singleline
-	fr    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --date=relative
-	fa    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --all
-	far   = log --graph --date=short --pretty=singleline --ws-error-highlight=all --all --date=relative
-	ff    = log --graph --date=short --pretty=singleline --ws-error-highlight=all --first-parent --no-merges
-	ffr   = log --graph --date=short --pretty=singleline --ws-error-highlight=all --first-parent --no-merges --date=relative
+	fr    = log --graph --date=short --pretty=singleline --date=relative
+	fa    = log --graph --date=short --pretty=singleline --all
+	far   = log --graph --date=short --pretty=singleline --all --date=relative
+	ff    = log --graph --date=short --pretty=singleline --first-parent --no-merges
+	ffr   = log --graph --date=short --pretty=singleline --first-parent --no-merges --date=relative
 
 	lg    = log --patch --grep
 	lgr   = log --patch --date=relative --grep
@@ -133,7 +135,7 @@
 	lgir  = log --patch --regexp-ignore-case --date=relative --grep
 
 	sl    = stash list --decorate --show-signature --stat
-	slp   = stash list --decorate --show-signature --patch --stat --ws-error-highlight=all
+	slp   = stash list --decorate --show-signature --stat --patch
 
 	# Branches
 	br       = branch -vv
@@ -155,16 +157,16 @@
 	ts  = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\"; }; f"
 
 	# Diff and patch
-	di   = diff --ws-error-highlight=all
-	diw  = diff --ws-error-highlight=all --ignore-all-space
-	wdi  = diff --ws-error-highlight=all --color-words=.
+	di   = diff
+	diw  = diff --ignore-all-space
+	wdi  = diff --color-words=.
 
-	dih  = diff HEAD --ws-error-highlight=all
-	dihw = diff HEAD --ws-error-highlight=all --ignore-all-space
-	wdih = diff HEAD --ws-error-highlight=all --color-words=.
+	dih  = diff HEAD
+	dihw = diff HEAD--ignore-all-space
+	wdih = diff HEAD--color-words=.
 
-	dic  = diff --ws-error-highlight=all --cached
-	dis  = diff --ws-error-highlight=all --summary --stat
+	dic  = diff --cached
+	dis  = diff --summary --stat
 
 	fp   = format-patch
 	fpo  = format-patch --stdout
