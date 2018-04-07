@@ -27,6 +27,7 @@ begin
     bs = Dir['.adfjoin-b-*.pdf'].sort.reverse
     abort "ERROR: #{as.size} fronts != #{bs.size} backs" if as.size != bs.size
     sh 'pdfunite', *as.zip(bs).flatten, outfile
+    sh 'pdfversion', '--upgrade-to=1.5', '--in-place', outfile
   end
 ensure
   FileUtils.remove_entry dir, :verbose => true

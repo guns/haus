@@ -1,0 +1,95 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2018 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Pdfversion
+  DEFAULTS = {
+    :version => nil,
+    :upgrade => false,
+    :downgrade => false,
+    :in_place => false
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 28 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Print or convert PDFs to a given compatibility level.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-c', '--convert-to VERSION' do |arg|
+        @version = arg
+        @upgrade = true
+        @downgrade = true
+      end
+
+      opt.on '-u', '--upgrade-to VERSION' do |arg|
+        @version = arg
+        @upgrade = true
+        @downgrade = false
+      end
+
+      opt.on '-d', '--downgrade-to VERSION' do |arg|
+        @version = arg
+        @upgrade = false
+        @downgrade = true
+      end
+
+      opt.on '-i', '--in-place', 'Convert files in-place' do
+        @in_place = true
+      end
+    end
+  end
+
+  def get_version file
+    File.read(file)[0...1024].force_encoding('ASCII-8BIT')[/%PDF-(\d\.\d)/, 1]
+  end
+
+  def version_compare a, b
+    Gem::Version.new(a) <=> Gem::Version.new(b)
+  end
+
+  def convert version, src, opts = {}
+    src_ext = File.extname src
+    dst = opts[:in_place] ? src : "#{File.basename src, src_ext}-pdfversion#{version}#{src_ext}"
+    buf = File.read src
+
+    IO.popen ['gs', '-sDEVICE=pdfwrite', "-dCompatibilityLevel=#{version}", '-o', dst, '-'], 'w' do |io|
+      io.write buf
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+
+    abort parser.help if args.empty?
+
+    if @version
+      args.each do |f|
+        case version_compare(get_version(f), @version)
+        when -1 then next unless @upgrade
+        when 0  then next
+        when 1  then next unless @downgrade
+        end
+
+        convert @version, f, :in_place => @in_place
+      end
+    else
+      args.each { |f| puts get_version(f) }
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Pdfversion.new.run ARGV if $0 == __FILE__
