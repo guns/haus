@@ -93,7 +93,9 @@ class Haus
       u = (user.respond_to? :dot and user.respond_to? :hier) ? user : Haus::User.new(user)
 
       # Construct, iterate, and return the file table
-      table = dotfiles.map { |f| [f, u.dot(f)] } + hierfiles.map { |f| [f, u.hier(f, etc)] }
+      # NOTE: File.realpath appears in 1.9; we are breaking 1.8.6 compat here
+      table = dotfiles.map { |f| [File.realpath(f), u.dot(f)] }
+      table += hierfiles.map { |f| [File.realpath(f), u.hier(f, etc)] }
       table.each { |src, dst| yield src, dst } if block_given?
       table
     end
