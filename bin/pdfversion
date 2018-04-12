@@ -24,7 +24,7 @@ class Pdfversion
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Print or convert PDFs to a given compatibility level.
 
-        Usage: #{File.basename __FILE__} [options]
+        Usage: #{File.basename __FILE__} [options] file …
 
         Options:
       BANNER
