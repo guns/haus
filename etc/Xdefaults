@@ -46,10 +46,11 @@ URxvt.font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslig
 URxvt.perl-ext-common: eval,keysym-list,readline,selection,selection-to-clipboard,keyboard-select,url-select
 
 ! urxvt-perls
-URxvt.keysym.Mod4-Meta-i:  perl:keyboard-select:activate
-URxvt.keysym.Mod4-Meta-u:  perl:url-select:select_next
-URxvt.url-select.launcher: open
-URxvt.url-select.button:   3
+URxvt.keysym.Mod4-Meta-i:        perl:keyboard-select:activate
+URxvt.keysym.Mod4-Meta-u:        perl:url-select:select_next
+URxvt.keyboard-select.clipboard: true
+URxvt.url-select.launcher:       open
+URxvt.url-select.button:         3
 
 ! Super + Character <ESC-BEL-char>
 URxvt.keysym.Mod4-Return:    \033\007\015
