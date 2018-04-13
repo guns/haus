@@ -282,19 +282,19 @@ F10
 	wmctrl -xa 'Nightly' || wmctrl -xa 'Firefox'
 
 shift + F10
-	pkill --exact -0 firefox && exec firefox
+	(ps axo comm | grep ^firefox$) && exec firefox
 
 shift + alt + F10
-	pkill --exact -0 firefox && exec firefox --private-window
+	(ps axo comm | grep ^firefox$) && exec firefox --private-window
 
 super + F10
 	wmctrl -xa 'Chromium'
 
 super + shift + F10
-	pkill --exact -0 chromium && exec chromium
+	(ps axo comm | grep ^chromium$) && exec chromium
 
 super + shift + alt + F10
-	pkill --exact -0 chromium && exec chromium --incognito
+	(ps axo comm | grep ^chromium$) && exec chromium --incognito
 
 alt + F10
 	wmctrl -a '♻ newsboat ♻'
