@@ -378,6 +378,7 @@ let s:delimiterMap = {
     \ 'scons': { 'left': '#' },
     \ 'scsh': { 'left': ';' },
     \ 'scss': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
+    \ 'sdc': { 'left': '#' },
     \ 'sed': { 'left': '#' },
     \ 'sgmldecl': { 'left': '--', 'right': '--' },
     \ 'sgmllnx': { 'left': '<!--', 'right': '-->' },

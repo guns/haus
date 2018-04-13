@@ -56,7 +56,7 @@ command! -bar -count=0 Scriptnames
 
 command! -bar -bang Messages :execute scriptease#messages_command(<bang>0)
 
-command! -bang -bar -nargs=* -complete=customlist,scriptease#complete Runtime
+command! -bang -bar -range=-1 -nargs=* -complete=customlist,scriptease#complete Runtime
       \ :exe scriptease#runtime_command('<bang>', <f-args>)
 
 command! -bang -bar -nargs=* -complete=customlist,scriptease#complete Disarm
@@ -83,8 +83,8 @@ command! -bar -bang -range=1 -nargs=1 -complete=customlist,scriptease#complete V
 
 " Section: Maps
 
-nnoremap <silent> <Plug>ScripteaseFilter :<C-U>set opfunc=scriptease#filterop<CR>g@
-xnoremap <silent> <Plug>ScripteaseFilter :<C-U>call scriptease#filterop(visualmode())<CR>
+nmap <expr> <Plug>ScripteaseFilter scriptease#filterop()
+xmap <expr> <Plug>ScripteaseFilter scriptease#filterop()
 if empty(mapcheck('g!', 'n'))
   nmap g! <Plug>ScripteaseFilter
   nmap g!! <Plug>ScripteaseFilter_
