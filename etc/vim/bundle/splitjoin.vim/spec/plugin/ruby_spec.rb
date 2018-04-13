@@ -13,6 +13,7 @@ describe "ruby" do
     vim.command('silent! unlet g:splitjoin_ruby_heredoc_type')
     vim.command('silent! unlet g:splitjoin_ruby_hanging_args')
     vim.command('silent! unlet g:splitjoin_ruby_do_block_split')
+    vim.command('silent! unlet g:splitjoin_trailing_comma')
   end
 
   specify "if-clauses" do
@@ -525,6 +526,29 @@ describe "ruby" do
     EOF
   end
 
+  specify "hashes with symbol syntax" do
+    set_file_contents <<-EOF
+      foo = { bar: 1, one: 2 }
+    EOF
+
+    vim.search 'bar:'
+    split
+
+    assert_file_contents <<-EOF
+      foo = {
+        bar: 1,
+        one: 2
+      }
+    EOF
+
+    vim.search 'foo'
+    join
+
+    assert_file_contents <<-EOF
+      foo = { bar: 1, one: 2 }
+    EOF
+  end
+
   specify "hashes without a trailing comma" do
     vim.command('let g:splitjoin_ruby_trailing_comma = 0')
 
@@ -995,6 +1019,25 @@ describe "ruby" do
         )
       EOF
     end
+
+    specify "with a trailing comma" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 0')
+      vim.command('let g:splitjoin_trailing_comma = 1')
+
+      set_file_contents(<<-EOF)
+        foo = bar("one", "two")
+      EOF
+
+      vim.search('one')
+      split
+
+      assert_file_contents(<<-EOF)
+        foo = bar(
+          "one",
+          "two",
+        )
+      EOF
+    end
   end
 
   describe "method options" do
@@ -1146,6 +1189,28 @@ describe "ruby" do
 
       assert_file_contents <<-EOF
         foo "\#{one}", { :two => 3 }
+      EOF
+    end
+
+    specify "doesn't get confused by namespaces (::)" do
+      vim.command('let g:splitjoin_ruby_curly_braces = 1')
+
+      set_file_contents <<-EOF
+        foo Bar::Baz, bla
+      EOF
+
+      vim.search 'Bar'
+      split
+
+      assert_file_contents <<-EOF
+        foo(Bar::Baz,
+            bla)
+      EOF
+
+      join
+
+      assert_file_contents <<-EOF
+        foo(Bar::Baz, bla)
       EOF
     end
   end

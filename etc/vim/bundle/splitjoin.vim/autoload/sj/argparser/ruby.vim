@@ -47,7 +47,7 @@ function! sj#argparser#ruby#Process() dict
       elseif self.hash_type == 'new'
         let self.hash_type = 'mixed'
       endif
-    elseif self.body =~ '^\(\k\|[?!]\):'
+    elseif self.body =~ '^\(\k\|[?!]\):[^:]'
       let self.current_arg_type = 'option'
       if sj#BlankString(self.hash_type)
         let self.hash_type = 'new'
@@ -127,7 +127,7 @@ function! sj#argparser#ruby#LocateFunction()
   "   - something that's not a comma and doesn't look like an operator
   "     (to avoid a few edge cases)
   "
-  let pattern = '\v(^|\s|\.|::)\k+[?!]?\(\s*[^,=<>+-/*^%]'
+  let pattern = '\v(^|\s|\.|::)\k+[?!]?\(\s*[^,=<>+-/*^%})\]]'
   let found = search(pattern, 'bcWe', line('.'))
   if found <= 0
     " try searching forward
@@ -152,7 +152,7 @@ function! sj#argparser#ruby#LocateFunction()
   "   - something that's not a comma and doesn't look like an operator
   "     (to avoid a few edge cases)
   "
-  let pattern = '\v(^|\s|\.|::)\k+[?!]?\s+[^,=<>+-/*^%]'
+  let pattern = '\v(^|\s|\.|::)\k+[?!]?\s+[^,=<>+-/*^%})\]]'
   let found = search(pattern, 'bcWe', line('.'))
   if found <= 0
     " try searching forward
