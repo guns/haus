@@ -4,7 +4,7 @@
 # License: MIT license
 # ============================================================================
 
-from .base import Base
+from ..base import Base
 import glob
 import os
 from denite.util import abspath, expand
@@ -17,7 +17,7 @@ class Source(Base):
 
         self.name = 'file'
         self.kind = 'file'
-        self.matchers = ['matcher_fuzzy', 'matcher_hide_hidden_files']
+        self.matchers = ['matcher/fuzzy', 'matcher/hide_hidden_files']
 
     def gather_candidates(self, context):
         context['is_interactive'] = True

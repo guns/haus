@@ -17,8 +17,8 @@ class Base(object):
         self.kind = 'base'
         self.default_action = 'default'
         self.max_candidates = 1000
-        self.matchers = ['matcher_fuzzy']
-        self.sorters = ['sorter_rank']
+        self.matchers = ['matcher/fuzzy']
+        self.sorters = ['sorter/rank']
         self.converters = []
         self.context = {}
         self.vars = {}
@@ -52,4 +52,5 @@ class Base(object):
         denite.util.debug(self.vim, expr)
 
     def get_status(self, context):
-        return ':'.join([self.name] + context['args'])
+        return ':'.join([self.name] +
+                        ([str(context['args'])] if context['args'] else []))

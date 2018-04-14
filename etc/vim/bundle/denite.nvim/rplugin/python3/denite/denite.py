@@ -5,16 +5,17 @@
 # ============================================================================
 
 from denite.util import (get_custom_source,
-                         find_rplugins, split_input, abspath)
+                         import_rplugins,
+                         split_input, abspath)
 
 import denite.source  # noqa
 import denite.filter  # noqa
 import denite.kind    # noqa
 
-import importlib.machinery
 import copy
 import re
 import time
+from os.path import normpath, normcase
 from collections import ChainMap
 from itertools import filterfalse
 
@@ -217,17 +218,19 @@ class Denite(object):
 
     def error(self, msg):
         self._vim.call('denite#util#print_error', msg)
+        self._vim.call('getchar')
 
     def get_current_sources(self):
         return self._current_sources
 
     def load_sources(self, context):
         # Load sources from runtimepath
-        loaded_paths = [x.path for x in self._sources.values()]
-        for path, name in find_rplugins(context, 'source', loaded_paths):
-            module = importlib.machinery.SourceFileLoader(
-                'denite.source.' + name, path).load_module()
-            source = module.Source(self._vim)
+        rplugins = import_rplugins('Source', context, 'source', [
+            normcase(normpath(x.path))
+            for x in self._sources.values()
+        ])
+        for Source, path, _ in rplugins:
+            source = Source(self._vim)
             self._sources[source.name] = source
             source.path = path
             syntax_name = 'deniteSource_' + source.name.replace('/', '_')
@@ -237,37 +240,63 @@ class Denite(object):
             if source.name in self._custom['alias_source']:
                 # Load alias
                 for alias in self._custom['alias_source'][source.name]:
-                    self._sources[alias] = module.Source(self._vim)
+                    self._sources[alias] = Source(self._vim)
                     self._sources[alias].name = alias
                     self._sources[alias].path = path
                     self._sources[alias].syntax_name = syntax_name
+        # Update source_names for completion
+        self._vim.call(
+            'denite#helper#_set_available_sources',
+            list(self._sources.keys()),
+        )
 
     def load_filters(self, context):
         # Load filters from runtimepath
-        loaded_paths = [x.path for x in self._filters.values()]
-        for path, name in find_rplugins(context, 'filter', loaded_paths):
-            module = importlib.machinery.SourceFileLoader(
-                'denite.filter.' + name, path).load_module()
-            f = module.Filter(self._vim)
+        rplugins = import_rplugins('Filter', context, 'filter', [
+            normcase(normpath(x.path))
+            for x in self._filters.values()
+        ])
+        for Filter, path, module_path in rplugins:
+            f = Filter(self._vim)
+            # NOTE:
+            # Previously, kind and filter but source uses
+            # module_path as name so modules which does not
+            # have proper 'name' may worked.
+            # So add 'name' attribute to the class if that
+            # attribute does not exist for the backward
+            # compatibility
+            if not hasattr(f, 'name') or not f.name:
+                # Prefer foo/bar instead of foo.bar in name
+                setattr(f, 'name', module_path.replace('.', '/'))
             f.path = path
-            self._filters[name] = f
-
-            if name in self._custom['alias_filter']:
+            self._filters[f.name] = f
+            if f.name in self._custom['alias_filter']:
                 # Load alias
-                for alias in self._custom['alias_filter'][name]:
-                    self._filters[alias] = module.Filter(self._vim)
+                for alias in self._custom['alias_filter'][f.name]:
+                    self._filters[alias] = Filter(self._vim)
                     self._filters[alias].name = alias
                     self._filters[alias].path = path
 
     def load_kinds(self, context):
         # Load kinds from runtimepath
-        loaded_paths = [x.path for x in self._kinds.values()]
-        for path, name in find_rplugins(context, 'kind', loaded_paths):
-            module = importlib.machinery.SourceFileLoader(
-                'denite.kind.' + name, path).load_module()
-            kind = module.Kind(self._vim)
+        rplugins = import_rplugins('Kind', context, 'kind', [
+            normcase(normpath(x.path))
+            for x in self._kinds.values()
+        ])
+        for Kind, path, module_path in rplugins:
+            kind = Kind(self._vim)
+            # NOTE:
+            # Previously, kind and filter but source uses
+            # module_path as name so modules which does not
+            # have proper 'name' may worked.
+            # So add 'name' attribute to the class if that
+            # attribute does not exist for the backward
+            # compatibility
+            if not hasattr(kind, 'name') or not kind.name:
+                # Prefer foo/bar instead of foo.bar in name
+                setattr(kind, 'name', module_path.replace('.', '/'))
             kind.path = path
-            self._kinds[name] = kind
+            self._kinds[kind.name] = kind
 
     def do_action(self, context, action_name, targets):
         action = self.get_action(context, action_name, targets)
@@ -275,7 +304,7 @@ class Denite(object):
             return True
 
         for target in targets:
-            source = self._current_sources[target['source_index']]
+            source = self._current_sources[int(target['source_index'])]
             target['source_context'] = {
                 k: v for k, v in
                 source.context.items()
@@ -284,12 +313,12 @@ class Denite(object):
 
         context['targets'] = targets
         return action['func'](context) if action['func'] else self._vim.call(
-            'denite#custom#call_action',
+            'denite#custom#_call_action',
             action['kind'], action['name'], context)
 
     def _get_kind(self, context, target):
         k = target['kind'] if 'kind' in target else (
-                self._current_sources[target['source_index']].kind)
+                self._current_sources[int(target['source_index'])].kind)
 
         if isinstance(k, str):
             # k is kind name
@@ -308,7 +337,7 @@ class Denite(object):
         if not kind:
             return {}
 
-        source = self._current_sources[target['source_index']]
+        source = self._current_sources[int(target['source_index'])]
 
         if action_name == 'default':
             action_name = context['default_action']
@@ -346,7 +375,8 @@ class Denite(object):
         action = None
         for target in targets:
             action = self._get_action(context, action_name, target)
-            actions.add(action['name'])
+            if action:
+                actions.add(action['name'])
         if len(actions) > 1:
             self.error('Multiple actions are detected: ' + action_name)
             return {}

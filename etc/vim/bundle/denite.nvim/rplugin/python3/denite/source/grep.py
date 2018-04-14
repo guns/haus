@@ -61,10 +61,10 @@ class Source(Base):
             'recursive_opts': ['-r'],
             'pattern_opt': ['-e'],
             'separator': ['--'],
-            'final_opts': ['.'],
+            'final_opts': [],
             'min_interactive_pattern': 3,
         }
-        self.matchers = ['matcher_ignore_globs', 'matcher_regexp']
+        self.matchers = ['matcher/ignore_globs', 'matcher/regexp']
 
     def on_init(self, context):
         context['__proc'] = None
@@ -84,7 +84,7 @@ class Source(Base):
                 arg = [arg]
             elif not isinstance(arg, list):
                 raise AttributeError('`args[0]` needs to be a `str` or `list`')
-        else:
+        elif context['path']:
             arg = [context['path']]
         context['__paths'] = [util.abspath(self.vim, x) for x in arg]
 
@@ -92,6 +92,8 @@ class Source(Base):
         arg = args.get(1, [])
         if arg:
             if isinstance(arg, str):
+                if arg == '!':
+                    arg = util.input(self.vim, context, 'Argument: ')
                 arg = shlex.split(arg)
             elif not isinstance(arg, list):
                 raise AttributeError('`args[1]` needs to be a `str` or `list`')
@@ -174,8 +176,7 @@ class Source(Base):
             args += context['__patterns']
         if context['__paths']:
             args += context['__paths']
-        else:
-            args += self.vars['final_opts']
+        args += self.vars['final_opts']
 
         self.print_message(context, args)
 

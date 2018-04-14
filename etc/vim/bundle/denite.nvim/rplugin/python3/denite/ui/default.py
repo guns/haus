@@ -89,7 +89,7 @@ class Default(object):
                 self._current_mode = context['mode']
 
             update = ('immediately', 'immediately_1',
-                      'cursor_wrap', 'cursor_pos', 'force_quit')
+                      'cursor_wrap', 'cursor_pos')
             for key in update:
                 self._context[key] = context[key]
 
@@ -188,7 +188,9 @@ class Default(object):
         self._options['buftype'] = 'nofile'
         self._options['swapfile'] = False
         self._options['buflisted'] = False
+        self._options['modeline'] = False
         self._options['filetype'] = 'denite'
+        self._options['modifiable'] = True
 
         self._window_options = self._vim.current.window.options
         window_options = {
@@ -258,9 +260,9 @@ class Default(object):
     def init_syntax(self):
         self._vim.command('syntax case ignore')
         self._vim.command('highlight default link deniteMode ModeMsg')
-        self._vim.command('highlight default link deniteMatchedRange ' +
+        self._vim.command('highlight link deniteMatchedRange ' +
                           self._context['highlight_matched_range'])
-        self._vim.command('highlight default link deniteMatchedChar ' +
+        self._vim.command('highlight link deniteMatchedChar ' +
                           self._context['highlight_matched_char'])
         self._vim.command('highlight default link ' +
                           'deniteStatusLinePath Comment')
@@ -386,7 +388,7 @@ class Default(object):
             self._vim.command('silent! syntax clear deniteMatchedChar')
         if self._matched_pattern != '':
             self._vim.command(
-                'silent! syntax match deniteMatchedRange /%s/ contained' % (
+                'silent! syntax match deniteMatchedRange /\c%s/ contained' % (
                     regex_convert_py_vim(self._matched_pattern),
                 )
             )
@@ -448,7 +450,8 @@ class Default(object):
         if not self._is_multi or source_names == 'hide':
             source_name = ''
         else:
-            short_name = re.sub(r'([a-zA-Z])[a-zA-Z]+', r'\1', name)
+            short_name = (re.sub(r'([a-zA-Z])[a-zA-Z]+', r'\1', name)
+                          if re.search(r'[^a-zA-Z]', name) else name[:2])
             source_name = short_name if source_names == 'short' else name
         return source_name
 
@@ -571,7 +574,7 @@ class Default(object):
         self.update_status()
 
     def cleanup(self):
-        if not self._is_suspend:
+        if not self._is_suspend and not self._context['has_preview_window']:
             self._vim.command('pclose!')
         clearmatch(self._vim)
         if not self._context['immediately']:
@@ -593,6 +596,7 @@ class Default(object):
 
         # Restore the window
         if self._context['split'] == 'no':
+            self._window_options['cursorline'] = False
             self._switch_prev_buffer()
             for k, v in self._save_window_options.items():
                 self._vim.current.window.options[k] = v
@@ -627,14 +631,12 @@ class Default(object):
 
     def redraw(self, is_force=True):
         self._context['is_redraw'] = is_force
-        prev_curpos = self._vim.call('getcurpos')
         if is_force:
             self.gather_candidates()
         if self.update_candidates():
             self.update_buffer()
         else:
             self.update_status()
-        self._vim.call('setpos', '.', prev_curpos)
         self._context['is_redraw'] = False
 
     def quit(self):
@@ -681,14 +683,16 @@ class Default(object):
             action = self._denite.get_action(
                 self._context, action_name, candidates)
 
-        is_quit = action['is_quit'] or self._context['force_quit']
+        post_action = self._context['post_action']
+
+        is_quit = action['is_quit'] or post_action == 'quit'
         if is_quit:
             self.quit()
 
-        prev_input = self._context['input']
         self._denite.do_action(self._context, action_name, candidates)
+        self._result = candidates
 
-        if is_quit and not self._context['quit']:
+        if is_quit and (post_action == 'open' or post_action == 'suspend'):
             # Re-open denite buffer
 
             self.init_buffer()
@@ -698,13 +702,15 @@ class Default(object):
             # Disable quit flag
             is_quit = False
 
-        if not is_quit and action['is_redraw']:
-            self.init_cursor()
-            self.redraw()
-            if self._context['input'] != prev_input:
-                self._prompt.caret.locus = self._prompt.caret.tail
+        if not is_quit:
+            self._selected_candidates = []
+            self.redraw(action['is_redraw'])
 
-        self._result = candidates
+        if post_action == 'suspend':
+            self.suspend()
+            self._vim.command('wincmd p')
+            return STATUS_ACCEPT
+
         return STATUS_ACCEPT if is_quit else None
 
     def choose_action(self):
@@ -951,4 +957,5 @@ class Default(object):
                               ':<C-u>Denite -resume -buffer_name=' +
                               self._context['buffer_name'] + '<CR>')
         self._is_suspend = True
+        self._options['modifiable'] = False
         return STATUS_ACCEPT
