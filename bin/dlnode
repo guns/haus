@@ -75,13 +75,13 @@ class Dlnode::Resource
 
     html_str.gsub! *pattern.gsub if pattern.gsub
 
-    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, el|
-      if not pattern.attribute and el.name == 'form'
-        form_data = el.css('input').map { |i| [i['name'], i['value']] }
-        path = el.attr 'action'
+    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, elem|
+      if not pattern.attribute and elem.name == 'form'
+        form_data = elem.css('input').map { |i| [i['name'], i['value']] }
+        path = elem.attr 'action'
       else
-        attr = pattern.attribute || pattern.default_attribute(el.name)
-        path = attr ? el.attr(attr) : el.text
+        attr = pattern.attribute || pattern.default_attribute(elem.name)
+        path = attr ? elem.attr(attr) : elem.text
       end
 
       if path and u = urijoin(base_uri || url, path)
