@@ -289,6 +289,10 @@ class Dlnode
     end
   end
 
+  def sanitize_filename f
+    f.tr('/', '-').gsub /[^\p{Print}]/, '_'
+  end
+
   # Returns array of arguments for exec: […, path, url]
   def command resource, idx, opts = options
     f = url_basename resource.url
@@ -380,7 +384,7 @@ class Dlnode
 
     if @dir_from_url and @dir == DEFAULTS[:dir]
       u = URI.parse url
-      @dir = [u.host, u.path].map { |x| x.tr('/', '-').gsub(/[^\p{Print}]/, '_') }.join
+      @dir = [u.host, u.path].map { |x| sanitize_filename x }.join
     end
 
     sleeper = nil
