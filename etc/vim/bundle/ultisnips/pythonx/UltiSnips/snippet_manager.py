@@ -277,12 +277,9 @@ class SnippetManager(object):
         """Called whenever the cursor moved."""
         self._should_update_textobjects = False
 
-        if not self._csnippets and self._inner_state_up:
-            self._teardown_inner_state()
         self._vstate.remember_position()
         if _vim.eval('mode()') not in 'in':
             return
-
 
         if self._ignore_movements:
             self._ignore_movements = False
@@ -572,7 +569,7 @@ class SnippetManager(object):
         clear_priority = None
         cleared = {}
         for _, source in self._snippet_sources:
-            source.ensure(filetypes, cached=autotrigger_only)
+            source.ensure(filetypes)
 
         # Collect cleared information from sources.
         for _, source in self._snippet_sources:
@@ -862,6 +859,10 @@ class SnippetManager(object):
 
         self._should_reset_visual = True
 
+    @err_to_scratch_buffer.wrap
+    def _refresh_snippets(self):
+        for _, source in self._snippet_sources:
+            source.refresh()
 
 UltiSnips_Manager = SnippetManager(  # pylint:disable=invalid-name
     vim.eval('g:UltiSnipsExpandTrigger'),

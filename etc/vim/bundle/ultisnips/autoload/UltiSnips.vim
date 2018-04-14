@@ -38,6 +38,8 @@ function! UltiSnips#Edit(bang, ...)
             let mode = 'vs'
         elseif g:UltiSnipsEditSplit == 'horizontal'
             let mode = 'sp'
+        elseif g:UltiSnipsEditSplit == 'tabdo'
+            let mode = 'tabedit'
         elseif g:UltiSnipsEditSplit == 'context'
             let mode = 'vs'
             if winwidth(0) <= 2 * (&tw ? &tw : 80)
@@ -132,7 +134,6 @@ function! UltiSnips#Anon(value, ...)
     return ""
 endfunction
 
-
 function! UltiSnips#CursorMoved()
     exec g:_uspy "UltiSnips_Manager._cursor_moved()"
 endf
@@ -147,5 +148,9 @@ endfunction
 
 function! UltiSnips#TrackChange()
     exec g:_uspy "UltiSnips_Manager._track_change()"
+endfunction
+
+function! UltiSnips#RefreshSnippets()
+    exec g:_uspy "UltiSnips_Manager._refresh_snippets()"
 endfunction
 " }}}

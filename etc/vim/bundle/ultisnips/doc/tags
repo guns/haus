@@ -4,6 +4,7 @@ UltiSnips	UltiSnips.txt	/*UltiSnips*
 UltiSnips#AddSnippetWithPriority	UltiSnips.txt	/*UltiSnips#AddSnippetWithPriority*
 UltiSnips#Anon	UltiSnips.txt	/*UltiSnips#Anon*
 UltiSnips#SnippetsInCurrentScope	UltiSnips.txt	/*UltiSnips#SnippetsInCurrentScope*
+UltiSnips-FAQ	UltiSnips.txt	/*UltiSnips-FAQ*
 UltiSnips-acknowledgments	UltiSnips.txt	/*UltiSnips-acknowledgments*
 UltiSnips-adding-snippets	UltiSnips.txt	/*UltiSnips-adding-snippets*
 UltiSnips-autotrigger	UltiSnips.txt	/*UltiSnips-autotrigger*
