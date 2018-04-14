@@ -1,15 +1,3 @@
-if !exists("g:go_textobj_enabled")
-  let g:go_textobj_enabled = 1
-endif
-
-if !exists("g:go_textobj_include_function_doc")
-  let g:go_textobj_include_function_doc = 1
-endif
-
-if !exists("g:go_textobj_include_variable")
-  let g:go_textobj_include_variable = 1
-endif
-
 " ( ) motions
 " { } motions
 " s for sentence
@@ -17,31 +5,28 @@ endif
 " < >
 " t for tag
 
+" Select a function in visual mode.
 function! go#textobj#Function(mode) abort
-  let offset = go#util#OffsetCursor()
-
-  let fname = shellescape(expand("%:p"))
+  let l:fname = expand("%:p")
   if &modified
-    " Write current unsaved buffer to a temp file and use the modified content
     let l:tmpname = tempname()
     call writefile(go#util#GetLines(), l:tmpname)
-    let fname = l:tmpname
+    let l:fname = l:tmpname
   endif
 
-  let bin_path = go#path#CheckBinPath('motion')
-  if empty(bin_path)
-    return
+  let l:cmd = ['motion',
+        \ '-format', 'vim',
+        \ '-file', l:fname,
+        \ '-offset', go#util#OffsetCursor(),
+        \ '-mode', 'enclosing',
+        \ ]
+
+  if go#config#TextobjIncludeFunctionDoc()
+    let l:cmd += ['-parse-comments']
   endif
 
-  let command = printf("%s -format vim -file %s -offset %s", bin_path, fname, offset)
-  let command .= " -mode enclosing"
-
-  if g:go_textobj_include_function_doc
-    let command .= " -parse-comments"
-  endif
-
-  let out = go#util#System(command)
-  if go#util#ShellError() != 0
+  let [l:out, l:err] = go#util#Exec(l:cmd)
+  if l:err
     call go#util#EchoError(out)
     return
   endif
@@ -62,9 +47,9 @@ function! go#textobj#Function(mode) abort
   if a:mode == 'a'
     " anonymous functions doesn't have associated doc. Also check if the user
     " want's to include doc comments for function declarations
-    if has_key(info, 'doc') && g:go_textobj_include_function_doc
+    if has_key(info, 'doc') && go#config#TextobjIncludeFunctionDoc()
       call cursor(info.doc.line, info.doc.col)
-    elseif info['sig']['name'] == '' && g:go_textobj_include_variable
+    elseif info['sig']['name'] == '' && go#config#TextobjIncludeVariable()
       " one liner anonymous functions
       if info.lbrace.line == info.rbrace.line
         " jump to first nonblack char, to get the correct column
@@ -98,6 +83,47 @@ function! go#textobj#Function(mode) abort
   call cursor(info.rbrace.line-1, 1)
 endfunction
 
+" Get the location of the previous or next function.
+function! go#textobj#FunctionLocation(direction, cnt) abort
+  let l:fname = expand("%:p")
+  if &modified
+    " Write current unsaved buffer to a temp file and use the modified content
+    let l:tmpname = tempname()
+    call writefile(go#util#GetLines(), l:tmpname)
+    let l:fname = l:tmpname
+  endif
+
+  let l:cmd = ['motion',
+        \ '-format', 'vim',
+        \ '-file', l:fname,
+        \ '-offset', go#util#OffsetCursor(),
+        \ '-shift', a:cnt,
+        \ '-mode', a:direction,
+        \ ]
+
+  if go#config#TextobjIncludeFunctionDoc()
+    let l:cmd += ['-parse-comments']
+  endif
+
+  let [l:out, l:err] = go#util#Exec(l:cmd)
+  if l:err
+    call go#util#EchoError(out)
+    return
+  endif
+
+  " if exists, delete it as we don't need it anymore
+  if exists("l:tmpname")
+    call delete(l:tmpname)
+  endif
+
+  let l:result = json_decode(out)
+  if type(l:result) != 4 || !has_key(l:result, 'fn')
+    return 0
+  endif
+
+  return l:result
+endfunction
+
 function! go#textobj#FunctionJump(mode, direction) abort
   " get count of the motion. This should be done before all the normal
   " expressions below as those reset this value(because they have zero
@@ -115,48 +141,8 @@ function! go#textobj#FunctionJump(mode, direction) abort
     normal! gv
   endif
 
-  let offset = go#util#OffsetCursor()
-
-  let fname = shellescape(expand("%:p"))
-  if &modified
-    " Write current unsaved buffer to a temp file and use the modified content
-    let l:tmpname = tempname()
-    call writefile(go#util#GetLines(), l:tmpname)
-    let fname = l:tmpname
-  endif
-
-  let bin_path = go#path#CheckBinPath('motion')
-  if empty(bin_path)
-    return
-  endif
-
-  let command = printf("%s -format vim -file %s -offset %s", bin_path, fname, offset)
-  let command .= ' -shift ' . l:cnt
-
-  if a:direction == 'next'
-    let command .= ' -mode next'
-  else " 'prev'
-    let command .= ' -mode prev'
-  endif
-
-  if g:go_textobj_include_function_doc
-    let command .= " -parse-comments"
-  endif
-
-  let out = go#util#System(command)
-  if go#util#ShellError() != 0
-    call go#util#EchoError(out)
-    return
-  endif
-
-  " if exists, delete it as we don't need it anymore
-  if exists("l:tmpname")
-    call delete(l:tmpname)
-  endif
-
-  " convert our string dict representation into native Vim dictionary type
-  let result = eval(out)
-  if type(result) != 4 || !has_key(result, 'fn')
+  let l:result = go#textobj#FunctionLocation(a:direction, l:cnt)
+  if l:result is 0
     return
   endif
 
@@ -180,7 +166,7 @@ function! go#textobj#FunctionJump(mode, direction) abort
   endif
 
   if a:mode == 'v' && a:direction == 'prev'
-    if has_key(info, 'doc') && g:go_textobj_include_function_doc
+    if has_key(info, 'doc') && go#config#TextobjIncludeFunctionDoc()
       keepjumps call cursor(info.doc.line, 1)
     else
       keepjumps call cursor(info.func.line, 1)

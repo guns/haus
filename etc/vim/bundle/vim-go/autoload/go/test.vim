@@ -2,17 +2,12 @@
 " compile the tests instead of running them (useful to catch errors in the
 " test files). Any other argument is appended to the final `go test` command.
 function! go#test#Test(bang, compile, ...) abort
-  let args = ["test"]
+  let args = ["test", '-tags', go#config#BuildTags()]
 
   " don't run the test, only compile it. Useful to capture and fix errors.
   if a:compile
     let testfile = tempname() . ".vim-go.test"
     call extend(args, ["-c", "-o", testfile])
-  endif
-
-  if exists('g:go_build_tags')
-    let tags = get(g:, 'go_build_tags')
-    call extend(args, ["-tags", tags])
   endif
 
   if a:0
@@ -24,18 +19,14 @@ function! go#test#Test(bang, compile, ...) abort
       let goargs = map(copy(a:000), "expand(v:val)")
     endif
 
-    if !(has('nvim') || go#util#has_job())
-      let goargs = go#util#Shelllist(goargs, 1)
-    endif
-
     call extend(args, goargs, 1)
   else
     " only add this if no custom flags are passed
-    let timeout  = get(g:, 'go_test_timeout', '10s')
+    let timeout = go#config#TestTimeout()
     call add(args, printf("-timeout=%s", timeout))
   endif
 
-  if get(g:, 'go_echo_command_info', 1)
+  if go#config#EchoCommandInfo()
     if a:compile
       call go#util#EchoProgress("compiling tests ...")
     else
@@ -48,7 +39,7 @@ function! go#test#Test(bang, compile, ...) abort
     let job_args = {
           \ 'cmd': ['go'] + args,
           \ 'bang': a:bang,
-          \ 'winnr': winnr(),
+          \ 'winid': win_getid(winnr()),
           \ 'dir': getcwd(),
           \ 'compile_test': a:compile,
           \ 'jobdir': fnameescape(expand("%:p:h")),
@@ -58,7 +49,7 @@ function! go#test#Test(bang, compile, ...) abort
     return
   elseif has('nvim')
     " use nvims's job functionality
-    if get(g:, 'go_term_enabled', 0)
+    if go#config#TermEnabled()
       let id = go#term#new(a:bang, ["go"] + args)
     else
       let id = go#jobcontrol#Spawn(a:bang, "test", "GoTest", args)
@@ -70,8 +61,9 @@ function! go#test#Test(bang, compile, ...) abort
   call go#cmd#autowrite()
   redraw
 
-  let command = "go " . join(args, ' ')
-  let out = go#tool#ExecuteInDir(command)
+  let l:cmd = ['go'] + l:args
+
+  let [l:out, l:err] = go#tool#ExecuteInDir(l:cmd)
   " TODO(bc): When the output is JSON, the JSON should be run through a
   " filter to produce lines that are more easily described by errorformat.
 
@@ -81,8 +73,8 @@ function! go#test#Test(bang, compile, ...) abort
   let dir = getcwd()
   execute cd fnameescape(expand("%:p:h"))
 
-  if go#util#ShellError() != 0
-    call go#list#ParseFormat(l:listtype, s:errorformat(), split(out, '\n'), command)
+  if l:err != 0
+    call go#list#ParseFormat(l:listtype, s:errorformat(), split(out, '\n'), l:cmd)
     let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
     if !empty(errors) && !a:bang
@@ -94,7 +86,6 @@ function! go#test#Test(bang, compile, ...) abort
     call go#util#EchoError("[test] FAIL")
   else
     call go#list#Clean(l:listtype)
-    call go#list#Window(l:listtype)
 
     if a:compile
       call go#util#EchoSuccess("[test] SUCCESS")
@@ -131,7 +122,7 @@ function! go#test#Func(bang, ...) abort
     call extend(args, a:000)
   else
     " only add this if no custom flags are passed
-    let timeout  = get(g:, 'go_test_timeout', '10s')
+    let timeout = go#config#TestTimeout()
     call add(args, printf("-timeout=%s", timeout))
   endif
 
@@ -139,9 +130,6 @@ function! go#test#Func(bang, ...) abort
 endfunction
 
 function! s:test_job(args) abort
-  let status_dir = expand('%:p:h')
-  let started_at = reltime()
-
   let status = {
         \ 'desc': 'current status',
         \ 'type': "test",
@@ -152,23 +140,29 @@ function! s:test_job(args) abort
     let status.state = "compiling"
   endif
 
-  call go#statusline#Update(status_dir, status)
-
   " autowrite is not enabled for jobs
   call go#cmd#autowrite()
 
-  let l:exited = 0
-  let l:closed = 0
-  let l:exitval = 0
-  let messages = []
+  let state = {
+        \ 'exited': 0,
+        \ 'closed': 0,
+        \ 'exitval': 0,
+        \ 'messages': [],
+        \ 'args': a:args,
+        \ 'compile_test': a:args.compile_test,
+        \ 'status_dir': expand('%:p:h'),
+        \ 'started_at': reltime()
+      \ }
 
-  function! s:callback(chan, msg) closure
-    call add(messages, a:msg)
+  call go#statusline#Update(state.status_dir, status)
+
+  function! s:callback(chan, msg) dict
+    call add(self.messages, a:msg)
   endfunction
 
-  function! s:exit_cb(job, exitval) closure
-    let exited = 1
-    let exitval = a:exitval
+  function! s:exit_cb(job, exitval) dict
+    let self.exited = 1
+    let self.exitval = a:exitval
 
     let status = {
           \ 'desc': 'last status',
@@ -176,7 +170,7 @@ function! s:test_job(args) abort
           \ 'state': "pass",
           \ }
 
-    if a:args.compile_test
+    if self.compile_test
       let status.state = "success"
     endif
 
@@ -184,9 +178,9 @@ function! s:test_job(args) abort
       let status.state = "failed"
     endif
 
-    if get(g:, 'go_echo_command_info', 1)
+    if go#config#EchoCommandInfo()
       if a:exitval == 0
-        if a:args.compile_test
+        if self.compile_test
           call go#util#EchoSuccess("[test] SUCCESS")
         else
           call go#util#EchoSuccess("[test] PASS")
@@ -196,31 +190,33 @@ function! s:test_job(args) abort
       endif
     endif
 
-    let elapsed_time = reltimestr(reltime(started_at))
+    let elapsed_time = reltimestr(reltime(self.started_at))
     " strip whitespace
     let elapsed_time = substitute(elapsed_time, '^\s*\(.\{-}\)\s*$', '\1', '')
     let status.state .= printf(" (%ss)", elapsed_time)
 
-    call go#statusline#Update(status_dir, status)
+    call go#statusline#Update(self.status_dir, status)
 
-    if closed
-      call s:show_errors(a:args, l:exitval, messages)
+    if self.closed
+      call s:show_errors(self.args, self.exitval, self.messages)
     endif
   endfunction
 
-  function! s:close_cb(ch) closure
-    let closed = 1
+  function! s:close_cb(ch) dict
+    let self.closed = 1
 
-    if exited
-      call s:show_errors(a:args, l:exitval, messages)
+    if self.exited
+      call s:show_errors(self.args, self.exitval, self.messages)
     endif
   endfunction
 
+  " explicitly bind the callbacks to state so that self within them always
+  " refers to state. See :help Partial for more information.
   let start_options = {
-        \ 'callback': funcref("s:callback"),
-        \ 'exit_cb': funcref("s:exit_cb"),
-        \ 'close_cb': funcref("s:close_cb"),
-        \ }
+        \ 'callback': funcref("s:callback", [], state),
+        \ 'exit_cb': funcref("s:exit_cb", [], state),
+        \ 'close_cb': funcref("s:close_cb", [], state)
+      \ }
 
   " pre start
   let dir = getcwd()
@@ -238,12 +234,16 @@ endfunction
 " a quickfix compatible list of errors. It's intended to be used only for go
 " test output.
 function! s:show_errors(args, exit_val, messages) abort
-    let l:listtype = go#list#Type("GoTest")
-    if a:exit_val == 0
-      call go#list#Clean(l:listtype)
-      call go#list#Window(l:listtype)
-      return
-    endif
+  let l:winid = win_getid(winnr())
+
+  call win_gotoid(a:args.winid)
+
+  let l:listtype = go#list#Type("GoTest")
+  if a:exit_val == 0
+    call go#list#Clean(l:listtype)
+    call win_gotoid(l:winid)
+    return
+  endif
 
   " TODO(bc): When messages is JSON, the JSON should be run through a
   " filter to produce lines that are more easily described by errorformat.
@@ -263,20 +263,24 @@ function! s:show_errors(args, exit_val, messages) abort
     " failed to parse errors, output the original content
     call go#util#EchoError(a:messages)
     call go#util#EchoError(a:args.dir)
+    call win_gotoid(l:winid)
     return
   endif
 
-  if a:args.winnr == winnr()
-    call go#list#Window(l:listtype, len(errors))
-    if !empty(errors) && !a:args.bang
-      call go#list#JumpToFirst(l:listtype)
-    endif
+  if a:args.winid != l:winid
+    call win_gotoid(l:winid)
+    return
+  endif
+
+  call go#list#Window(l:listtype, len(errors))
+  if !empty(errors) && !a:args.bang
+    call go#list#JumpToFirst(l:listtype)
   endif
 endfunction
 
 
-let s:efm= ""
-let s:go_test_show_name=0
+let s:efm = ""
+let s:go_test_show_name = 0
 
 function! s:errorformat() abort
   " NOTE(arslan): once we get JSON output everything will be easier :).
@@ -285,7 +289,7 @@ function! s:errorformat() abort
   "   https://github.com/golang/go/issues/2981.
   let goroot = go#util#goroot()
 
-  let show_name=get(g:, 'go_test_show_name', 0)
+  let show_name = go#config#TestShowName()
   if s:efm != "" && s:go_test_show_name == show_name
     return s:efm
   endif

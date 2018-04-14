@@ -9,16 +9,16 @@
 This plugin adds Go language support for Vim, with the following main features:
 
 * Compile your package with `:GoBuild`, install it with `:GoInstall` or test it
-  with `:GoTest`. Run a single tests with `:GoTestFunc`).
+  with `:GoTest`. Run a single test with `:GoTestFunc`).
 * Quickly execute your current file(s) with `:GoRun`.
 * Improved syntax highlighting and folding.
+* Debug programs with integrated `delve` support with `:GoDebugStart`.
 * Completion support via `gocode`.
 * `gofmt` or `goimports` on save keeps the cursor position and undo history.
 * Go to symbol/declaration with `:GoDef`.
 * Look up documentation with `:GoDoc` or `:GoDocBrowser`.
 * Easily import packages via `:GoImport`, remove them via `:GoDrop`.
-* Automatic `GOPATH` detection which works with `gb` and `godep`. Change or
-  display `GOPATH` with `:GoPath`.
+* Precise type-safe renaming of identifiers with `:GoRename`.
 * See which code is covered by tests with `:GoCoverage`.
 * Add or remove tags on struct fields with `:GoAddTags` and `:GoRemoveTags`.
 * Call `gometalinter` with `:GoMetaLinter` to invoke all possible linters
@@ -28,7 +28,6 @@ This plugin adds Go language support for Vim, with the following main features:
   errors, or make sure errors are checked with `:GoErrCheck`.
 * Advanced source analysis tools utilizing `guru`, such as `:GoImplements`,
   `:GoCallees`, and `:GoReferrers`.
-* Precise type-safe renaming of identifiers with `:GoRename`.
 * ... and many more! Please see [doc/vim-go.txt](doc/vim-go.txt) for more
   information.
 
@@ -46,7 +45,7 @@ for popular package managers:
 * [Pathogen](https://github.com/tpope/vim-pathogen)
   * `git clone https://github.com/fatih/vim-go.git ~/.vim/bundle/vim-go`
 * [vim-plug](https://github.com/junegunn/vim-plug)
-  * `Plug 'fatih/vim-go'`
+  * `Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }`
 
 You will also need to install all the necessary binaries. vim-go makes it easy
 to install all of them by providing a command, `:GoInstallBinaries`, which will
