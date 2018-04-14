@@ -283,6 +283,7 @@ task :console => :env do
     require 'pry'
     Pry
   rescue LoadError
+    require 'irb'
     IRB
   end.start
 end
