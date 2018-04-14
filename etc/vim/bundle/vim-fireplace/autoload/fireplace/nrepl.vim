@@ -98,6 +98,8 @@ function! fireplace#nrepl#combine(responses)
         let combined[key] = response[key]
       elseif key ==# 'value'
         let combined.value = extend(get(combined, 'value', []), [response.value])
+      elseif key ==# 'pprint-out'
+        let combined['pprint-out'] = extend(get(combined, 'pprint-out', []), [response['pprint-out']])
       elseif key ==# 'status'
         for entry in response[key]
           if index(combined[key], entry) < 0
@@ -130,19 +132,19 @@ function! s:nrepl_eval(expr, ...) dict abort
   let msg = {"op": "eval"}
   let msg.code = a:expr
   let options = a:0 ? a:1 : {}
-  if has_key(options, 'ns')
-    let msg.ns = options.ns
-  elseif has_key(self, 'ns')
+
+  for [k, v] in items(options)
+    let msg[tr(k, '_', '-')] = v
+  endfor
+
+  if !has_key(msg, 'ns') && has_key(self, 'ns')
     let msg.ns = self.ns
   endif
-  if has_key(options, 'session')
-    let msg.session = options.session
-  endif
-  if has_key(options, 'id')
-    let msg.id = options.id
-  else
+
+  if !has_key(msg, 'id')
     let msg.id = fireplace#nrepl#next_id()
   endif
+
   if has_key(options, 'file_path')
     let msg.op = 'load-file'
     let msg['file-path'] = options.file_path
@@ -177,6 +179,13 @@ function! s:nrepl_eval(expr, ...) dict abort
   if has_key(response, 'value')
     let response.value = response.value[-1]
   endif
+  " If pretty print was requested, value won't be set, so replace it with
+  " this. Assume all downstream who ask for pprinted values can handle
+  " pprinted values.
+  if has_key(response, 'pprint-out')
+    let response.value = join(response['pprint-out'], '')
+  endif
+
   return response
 endfunction
 
