@@ -389,9 +389,12 @@ class Dlnode
       when :fail then exit 1
       end
 
-      break if @poll < 0
+      break if @poll <= 0
 
-      sleep @poll
+      ts = []
+      ts << Thread.new { sleep @poll     ; ts.each &:kill }
+      ts << Thread.new { $stdin.gets nil ; ts.each &:kill }
+      ts.each &:join
     end
   end
 end
