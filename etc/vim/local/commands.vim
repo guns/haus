@@ -731,7 +731,7 @@ function! s:ToggleMinorWindows()
 	endif
 endfunction
 
-command! -bar DeniteOpen call fugitive#detect('.') | execute 'Denite ' . (exists('b:git_dir') ? 'git' : 'file_rec')
+command! -bar DeniteOpen call fugitive#detect('.') | execute 'Denite ' . (exists('b:git_dir') ? 'git' : 'file/rec')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(path)

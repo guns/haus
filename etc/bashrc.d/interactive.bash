@@ -781,7 +781,7 @@ ALIAS e='vim' && {
         if (( ${#files[@]} )); then
             vim "${files[@]}"
         else
-            vim -c 'Denite file_rec'
+            vim -c 'Denite file/rec'
         fi
     }; TCOMP find vimfind
 
