@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+require 'find'
+require 'set'
+
+VIDEO_EXTENSIONS = Set.new %w[
+  .3gp
+  .avi
+  .divx
+  .flv
+  .m4a
+  .m4v
+  .mkv
+  .mov
+  .mp4
+  .mpeg
+  .mpg
+  .part
+  .ts
+  .vob
+  .webm
+  .wmv
+]
+
+paths = []
+print0 = false
+sort = nil
+pattern = nil
+
+args = OptionParser.new nil do |opt|
+  opt.banner = <<-EOF.gsub /^ */, ''
+    Usage: #{File.basename __FILE__} [options] [dir, …]
+
+    Options:
+  EOF
+
+  opt.on '-0', '--print0' do
+    print0 = true
+  end
+
+  opt.on '-t', '--sort-mtime' do
+    sort = :mtime
+  end
+
+  opt.on '-g', '--grep PATTERN', Regexp do |p|
+    if pattern = p
+      pattern = Regexp.new p.source, p.options | Regexp::IGNORECASE unless p.source =~ /\p{Lu}/
+    end
+  end
+end.parse ARGV
+
+args = ['.'] if args.empty?
+
+Find.find *args do |path|
+  if File.file? path and VIDEO_EXTENSIONS.include? File.extname(path).downcase
+    next if pattern and path !~ pattern
+    paths << path
+  end
+end
+
+abort if paths.empty?
+
+case sort
+when :mtime
+  paths.sort_by! { |f| -File.mtime(f).to_i }
+end
+
+puts print0 ? paths.join("\0") : paths
