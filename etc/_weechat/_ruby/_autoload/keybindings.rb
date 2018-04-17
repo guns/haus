@@ -16,7 +16,7 @@ include Script::Skeleton
   :version     => '1.0',
   :license     => 'GPL3',
   :gem_version => '0.0.5',
-  :description => "Guns' personal keybindings"
+  :description => 'Personal keybindings'
 }
 
 CHANNELS = YAML.load_file File.expand_path('~/.weechat/channels.yml')
