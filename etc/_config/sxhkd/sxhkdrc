@@ -36,6 +36,9 @@ super + alt + {l,h}
 	bspc desktop --focus "$DIR" && \
 	bspc node --focus "$NODE"
 
+button10
+	bspc desktop --focus last
+
 super + alt + {0-9}
 	bspc desktop --focus ^{0-9}
 
@@ -67,6 +70,9 @@ super + q
 
 super + {Tab,shift + Tab}
 	bspc node --focus {next,prev}.local
+
+super + grave
+	bspc node --focus last
 
 alt + Tab
 	if pkill --exact skippy-xd; then \
