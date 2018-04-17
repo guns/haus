@@ -371,6 +371,9 @@ let g:go_template_autocreate = 0
 " let g:go_echo_go_info = 1
 " let g:go_statusline_duration = 60000
 
+" Plugin: pgsql.vim
+let g:sql_type_default = 'pgsql'
+
 """ MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions
