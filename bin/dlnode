@@ -23,7 +23,7 @@ class Dlnode::Pattern
   end
 
   def blank? x
-    x.nil? or x.empty?
+    x.nil? or x =~ /\A *\z/
   end
 
   def default_attribute elem
@@ -45,6 +45,33 @@ class Dlnode::Pattern
   def parse_gsub gsub_str
     pat, rep = gsub_str.split /(?<!\\),/, 2
     [Haus::Utils.regexp_parse(pat), rep || '']
+  end
+end
+
+class Dlnode::FilenamePattern
+  attr_accessor :parent_selector, :child_selector, :attribute
+
+  def initialize pattern_str
+    @parent_selector, @child_selector, @attribute = parse pattern_str
+  end
+
+  def blank? x
+    x.nil? or x =~ /\A *\z/
+  end
+
+  def parse pattern_str
+    a, b = pattern_str.split /(?<!\\):/, 2
+
+    if a and a.index('<')
+      p, c = a.split '<', 2
+      [blank?(p) ?  "" : p ,
+       blank?(c) ? nil : c,
+       blank?(b) ? nil : b]
+    else
+      [nil,
+       blank?(a) ? nil : a,
+       blank?(b) ? nil : b]
+    end
   end
 end
 
@@ -164,8 +191,8 @@ class Dlnode
     :dir => '.',
     :dir_from_url => false,
     :format => nil,
-    :filename_from_attr_behavior => 0,
-    :filename_from_attr => ['title', '@'],
+    :filename_behavior => 0,
+    :filename_patterns => [':title', ':'].map { |p| Dlnode::FilenamePattern.new p },
     :index => 1,
     :start => 1,
     :max_time => nil,
@@ -219,11 +246,11 @@ class Dlnode
         end
       end
 
-      opt.on '-F', '--filename-from-attr ARG', "See FILENAME_FROM_ATTR" do |arg|
-        n, attrs = arg.split ':', 2
+      opt.on '-F', '--filename-from N,[selector][:attr],…', "See FILENAME_FROM_SELECTORS" do |arg|
+        n, patterns = arg.split ',', 2
         raise ArgumentError if n !~ /\A[012]\z/
-        @filename_from_attr_behavior = n.to_i
-        @filename_from_attr = attrs.split ',' if attrs
+        @filename_behavior = n.to_i
+        @filename_patterns = patterns.split(',').map { |p| Dlnode::FilenamePattern.new p } if patterns
       end
 
       opt.on '-i', '--index N[:START]', 'Begin index at N, and skip until START' % @index do |arg|
@@ -269,22 +296,41 @@ class Dlnode
 
       opt.separator <<-EOS.gsub /^ {6}/, ''
 
-      FILENAME_FROM_ATTR:
+      FILENAME_FROM_SELECTORS:
 
-          -F N:attr1,…
+          -F N,[selector][:attr],…
 
           N:
-            0: Do not use attributes as filename
-            1: Use first non-empty attribute as filename
-            2: Join url path basename and first non-empty attribute as filename
+            0: Do not use value from first matching selector as filename.
+            1: Use value from first matching selector as filename.
+            2: Join url path basename and and value from first matching
+               selector as filename.
 
             0 is the default behavior.
 
-          attr1,…
-            List of attributes to check. The special value `@` specifies the
-            element's text value.
+          [selector][:attr],…
+            List of selectors relative to a matched resource from which the
+            filename for that resource will be derived.
 
-            title,@ is the default list of attributes.
+            Selectors can be provided in the following way:
+
+              [[parent-selector] <] [child-selector]
+
+            The child-selector is rooted at the parent node returned by
+            parent-selector. If parent-selector is missing, but `<` is
+            present, the direct parent of the resource node becomes the root
+            of the child-selector.
+
+            If no selector is given, the current resource is selected.
+
+            The attr argument specifies the attribute that holds the filename.
+            If no attr is given, the text value of the node is used.
+
+            The default list of selectors is `:title,:`.
+
+          EXAMPLES:
+
+            -F "2,form < label.filename,< .filename:title"
       EOS
     end
   end
@@ -327,22 +373,37 @@ class Dlnode
     f.tr('/', '-').gsub /[^\p{Print}]/, '_'
   end
 
-  def find_attr elem, attrs
-    attrs.each do |a|
-      t = a == '@' ? elem.text : elem.attr(a)
+  def find_relative elem, patterns
+    patterns.each do |p|
+      case p.parent_selector
+      when nil
+        root = elem
+      when ""
+        root = elem.parent
+      else
+        root = elem.ancestors(p.parent_selector.strip).first
+      end
+
+      if p.child_selector
+        node = root.css(p.child_selector).first
+      else
+        node = root
+      end
+
+      t = p.attribute ? node.attr(p.attribute) : node.text
       return t if t and t.size > 0
     end
     nil
   end
 
-  def get_filename_from_attr fname, elem
-    title = find_attr elem, @filename_from_attr
+  def get_filename_from_patterns fname, elem
+    title = find_relative elem, @filename_patterns
     return fname if title.nil?
 
     f_ext = File.extname fname
     t_ext = File.extname title
 
-    case @filename_from_attr_behavior
+    case @filename_behavior
     when 1
       fname = File.basename title, t_ext
 
@@ -376,8 +437,8 @@ class Dlnode
   def command resource, idx, opts = options
     f = url_basename resource.url
 
-    if @filename_from_attr_behavior > 0 and (elem = resource.elem)
-      f = get_filename_from_attr f, elem
+    if @filename_behavior > 0 and (elem = resource.elem)
+      f = get_filename_from_patterns f, elem
     end
 
     path = File.join opts[:dir], (opts[:format] ? format_filename(opts[:format], idx, f) : f)
