@@ -16,7 +16,6 @@ class FindWrapper
   }
 
   GLOBAL_OPTIONS = {
-    '-d'                     => 0,
     '-depth'                 => 0,
     '-help'                  => 0,
     '--help'                 => 0,
