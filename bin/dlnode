@@ -422,7 +422,7 @@ class Dlnode
       end
     when 2
       fname = File.basename fname, f_ext
-      fname << "-[#{sanitize_filename File.basename(title, t_ext)}"
+      fname << "-[#{File.basename title, t_ext}"
       fname << t_ext if f_ext != t_ext
       fname << "]"
       fname << f_ext
@@ -440,6 +440,8 @@ class Dlnode
     if @filename_behavior > 0 and (elem = resource.elem)
       f = get_filename_from_patterns f, elem
     end
+
+    f = sanitize_filename f
 
     path = File.join opts[:dir], (opts[:format] ? format_filename(opts[:format], idx, f) : f)
     ref = ['--referer', resource.referer] if resource.referer
