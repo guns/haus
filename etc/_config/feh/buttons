@@ -5,13 +5,12 @@
 #  |__| |_____|__|__|  guns <self@sungpae.com>
 #
 
-reload
-pan      1
-zoom     2
+pan             1
 menu
-prev     3
-next
-blur     C-1
-rotate   C-2
-zoom_in  4
-zoom_out 5
+prev            3
+zoom_in         4
+zoom_out        5
+scroll_left     C-4
+scroll_right    C-5
+scroll_up       S-4
+scroll_down     S-5
