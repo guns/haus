@@ -10,7 +10,7 @@ menu
 prev            3
 zoom_in         4
 zoom_out        5
-scroll_left     C-4
-scroll_right    C-5
-scroll_up       S-4
-scroll_down     S-5
+scroll_left     S-4
+scroll_right    S-5
+scroll_up       C-4
+scroll_down     C-5
