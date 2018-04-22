@@ -195,9 +195,6 @@ alt + shift + {XF86AudioMute,KP_Enter}
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(hwctl toggle-pulseaudio-source); \
 	fi
 
-super + alt + control + {space,Left,Right}
-	mediactl {toggle,prev,next}
-
 #
 # Miscellaneous {{{
 #
@@ -330,9 +327,7 @@ super + alt + control + t
 	remind --query
 
 super + control + m
-	T='cmus'; \
-	wmctrl -a "$T" || \
-	urxvt-client -g 120x30 -cd ~/Media/Music -title "$T" -icon ~/.icons/haus/music.svg -e cmus
+	wmctrl -a 'Clementine' || exec clementine
 
 super + control + q
 	wmctrl -a 'Qalculate!' || exec qalculate-gtk
