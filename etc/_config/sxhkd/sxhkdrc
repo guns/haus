@@ -326,9 +326,6 @@ super + control + t
 super + alt + control + t
 	remind --query
 
-super + control + m
-	wmctrl -a 'Clementine' || exec clementine
-
 super + control + q
 	wmctrl -a 'Qalculate!' || exec qalculate-gtk
 
