@@ -239,4 +239,8 @@ augroup GUNS
 		\ execute 'inoremap <buffer> <C-h>  <Space>←<Space>' |
 		\ execute 'inoremap <buffer> <C-l>  <Space>→<Space>'
 
+	" Elixir
+	autocmd FileType elixir
+		\ execute 'inoremap <buffer> <C-l> <Space>\|><Space>'
+
 augroup END

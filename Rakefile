@@ -196,6 +196,7 @@ task :env do
       { :base => "#{@vim}/vim-coffee-script",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-commentary",          :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-easy-align",          :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-elixir",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-eunuch",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-fireplace",           :branch => %w[master guns], :files => :pathogen },
