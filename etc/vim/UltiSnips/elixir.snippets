@@ -1,0 +1,133 @@
+snippet #! "#!" b
+#!/usr/bin/env elixir
+endsnippet
+
+snippet defm "defmodule" w
+defmodule $1 do
+	$0
+end
+endsnippet
+
+snippet def "def" w
+def $1($2) do
+	$0
+end
+endsnippet
+
+snippet defp "defp" w
+defp $1($2) do
+	$0
+end
+endsnippet
+
+snippet isb "is_binary" w
+is_binary($0)
+endsnippet
+
+snippet bs "byte_size" w
+byte_size($0)
+endsnippet
+
+snippet sl "String.length" w
+String.length($0)
+endsnippet
+
+snippet p "IO.puts" w
+IO.puts($0)
+endsnippet
+
+snippet warn "IO.puts :stderr" w
+IO.puts(:stderr, $0)
+endsnippet
+
+snippet w "IO.write" w
+IO.write($0)
+endsnippet
+
+snippet f "fn ->" w
+fn $1${1/(.+)/ /}-> $0 end
+endsnippet
+
+snippet . "f.()" w
+$1.($0)
+endsnippet
+
+snippet el "elem" w
+elem($0)
+endsnippet
+
+snippet ts "tuple_size" w
+tuple_size($0)
+endsnippet
+
+snippet pel "put_elem" w
+put_elem($0)
+endsnippet
+
+snippet fr "File.read" w
+File.read($0)
+endsnippet
+
+snippet case "case" w
+case $1 do
+	$2 -> $0
+end
+endsnippet
+
+snippet cond "cond" w
+cond do
+	$1 -> $0
+end
+endsnippet
+
+snippet if "if" w
+if $1 do
+	$0
+end
+endsnippet
+
+snippet unl "unless" w
+unless $1 do
+	$0
+end
+endsnippet
+
+snippet lf "List.first" w
+List.first($0)
+endsnippet
+
+snippet tos "to_string" w
+to_string($0)
+endsnippet
+
+snippet toc "to_charlist" w
+to_charlist($0)
+endsnippet
+
+snippet m "%{}" w
+%{$0}
+endsnippet
+
+snippet mg "Map.get" w
+Map.get($0)
+endsnippet
+
+snippet mp "Map.put" w
+Map.put($0)
+endsnippet
+
+snippet pi "put_in" w
+put_in($0)
+endsnippet
+
+snippet ui "update_in" w
+update_in($0)
+endsnippet
+
+snippet red "Enum.reduce" w
+Enum.reduce($0)
+endsnippet
+
+snippet map "Enum.map" w
+Enum.map($0)
+endsnippet

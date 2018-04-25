@@ -241,6 +241,7 @@ augroup GUNS
 
 	" Elixir
 	autocmd FileType elixir
-		\ execute 'inoremap <buffer> <C-l> <Space>\|><Space>'
+		\ execute 'inoremap <buffer> <Esc>l <Space>=><Space>' |
+		\ execute 'inoremap <buffer> <Esc>L <Space>\|><Space>'
 
 augroup END
