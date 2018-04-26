@@ -67,4 +67,4 @@ when :mtime
   paths.sort_by! { |f| -File.mtime(f).to_i }
 end
 
-puts print0 ? paths.join("\0") : paths
+print print0 ? paths.join("\0") : paths.join("\n") << "\n"
