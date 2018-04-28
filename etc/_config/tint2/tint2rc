@@ -8,7 +8,7 @@
 # Background 1: Panel
 rounded = 0
 border_width = 0
-background_color = #000000 30
+background_color = #000000 50
 border_color = #000000 0
 background_color_hover = #000000 30
 border_color_hover = #000000 0
