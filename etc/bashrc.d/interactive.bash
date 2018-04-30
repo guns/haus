@@ -143,6 +143,7 @@ CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC -x cdetc        /etc
 CD_FUNC cdinit          /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
+CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
 CD_FUNC cdmnt           /mnt
 CD_FUNC -x cdnginx      /etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
