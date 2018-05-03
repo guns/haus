@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec youtube-dl --no-playlist --output "%(title)s.%(ext)s" --user-agent "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0" --extract-audio "$@"
+exec youtube-dl --no-playlist --output "%(title)s.%(ext)s" --user-agent "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0" --extract-audio "$@"

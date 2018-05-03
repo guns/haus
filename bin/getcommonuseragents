@@ -9,7 +9,7 @@ require 'optparse'
 require 'nokogiri'
 
 URL = 'https://techblog.willshouse.com/2012/01/03/most-common-user-agents/'
-AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:58.0) Gecko/20100101 Firefox/58.0'
+AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0'
 html = IO.popen(['curl', '--user-agent', AGENT, '--silent', '--location', URL]) { |io| io.read }
 
 puts Nokogiri::HTML.parse(html).css('textarea.get-the-list').text
