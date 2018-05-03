@@ -326,6 +326,9 @@ super + control + t
 super + alt + control + t
 	remind --query
 
+super + alt + control + w
+	nitrogen --set-zoom-fill --random --save
+
 super + control + q
 	wmctrl -a 'Qalculate!' || exec qalculate-gtk
 
