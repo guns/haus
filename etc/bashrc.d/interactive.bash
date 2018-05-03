@@ -752,6 +752,9 @@ HAVE cdapi && {
 # mitmproxy
 alias localmitmproxy='envtmux localmitmproxy'
 
+# dnscrypt-proxy
+ALIAS dnscrypt='dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml'
+
 ### Firewalls
 
 # iptables
