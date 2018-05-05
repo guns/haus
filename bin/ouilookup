@@ -88,7 +88,7 @@ class Ouilookup
 
   def grep pattern
     case pattern
-    when /\A(\h\h):?(\h\h):?(\h\h)/
+    when /\A(\h\h)[:-]?(\h\h)[:-]?(\h\h)/
       mac = ($1.to_i(16) << 16) + ($2.to_i(16) << 8) + $3.to_i(16)
       if o = ouidb[mac]
         return FMT % [mac, *o.split("\t")]
