@@ -16,7 +16,8 @@ class Uz
     :nowrap => false,
     :outdir => '.',
     :password => nil,
-    :overwrite => false
+    :overwrite => false,
+    :wait_close => false
   }
 
   def initialize opts = {}
@@ -55,6 +56,10 @@ class Uz
 
       opt.on '-O', '--overwrite' do
         @overwrite = true
+      end
+
+      opt.on '-w', '--wait-close' do
+        @wait_close = true
       end
     end
   end
@@ -104,10 +109,31 @@ class Uz
     end
   end
 
+  def wait_and_extract! *files
+    threads = []
+    lock = Mutex.new
+
+    files.each do |f|
+      threads << Thread.new do
+        warn "Waiting for: #{f}"
+        system 'inotifywait', '-e', 'close_write', f, [:out, :err] => '/dev/null'
+        sleep 0.5
+        lock.synchronize { extract! f }
+      end
+    end
+
+    threads.each &:join
+  end
+
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.empty?
-    extract! *args
+
+    if @wait_close
+      wait_and_extract! *args
+    else
+      extract! *args
+    end
   end
 end
 
