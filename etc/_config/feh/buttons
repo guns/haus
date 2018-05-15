@@ -5,12 +5,12 @@
 #  |__| |_____|__|__|  guns <self@sungpae.com>
 #
 
-pan             1
+pan               1
 menu
-prev            3
-zoom_in         4
-zoom_out        5
-scroll_left     S-4
-scroll_right    S-5
-scroll_up       C-4
-scroll_down     C-5
+prev              3
+zoom_in           4
+zoom_out          5
+scroll_left_page  S-4
+scroll_right_page S-5
+scroll_up_page    C-4
+scroll_down_page  C-5
