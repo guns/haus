@@ -26,6 +26,7 @@ VIDEO_EXTENSIONS = Set.new %w[
 
 paths = []
 print0 = false
+recurse = true
 sort = nil
 pattern = nil
 
@@ -38,6 +39,10 @@ args = OptionParser.new nil do |opt|
 
   opt.on '-0', '--print0' do
     print0 = true
+  end
+
+  opt.on '-1', '--no-recurse' do
+    recurse = false
   end
 
   opt.on '-t', '--sort-mtime' do
@@ -53,10 +58,20 @@ end.parse ARGV
 
 args = ['.'] if args.empty?
 
-Find.find *args do |path|
+def append_video ps, path, pattern
   if File.file? path and VIDEO_EXTENSIONS.include? File.extname(path).downcase
-    next if pattern and path !~ pattern
-    paths << path
+    return if pattern and path !~ pattern
+    ps << path
+  end
+end
+
+if recurse
+  Find.find *args do |path|
+    append_video paths, path, pattern
+  end
+else
+  Dir['*'].each do |path|
+    append_video paths, path, pattern
   end
 end
 
