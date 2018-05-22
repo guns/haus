@@ -112,6 +112,9 @@ class Dlnode::Resource
         path = attr ? elem.attr(attr) : elem.text
       end
 
+      path.strip!
+      path = nil if path.length == 0
+
       if path and u = urijoin(base_uri || url, path)
         r = self.class.new u,
                            :form_data => form_data,
