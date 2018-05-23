@@ -10,6 +10,7 @@ require 'fileutils'
 require 'uri'
 require 'shellwords'
 require 'zlib'
+require 'set'
 require 'nokogiri'
 require 'haus/utils'
 
@@ -76,7 +77,7 @@ class Dlnode::FilenamePattern
 end
 
 class Dlnode::Resource
-  attr_accessor :url, :referer, :form_data, :base_uri, :elem
+  attr_accessor :url, :referer, :form_data, :base_uri, :elem, :parent, :html
 
   def initialize url = nil, opts = {}
     @url = url
@@ -84,6 +85,7 @@ class Dlnode::Resource
     @referer = opts[:referer]
     @base_uri = opts[:base_uri]
     @elem = opts[:elem]
+    @parent = opts[:parent]
   end
 
   def urijoin base, path
@@ -98,12 +100,14 @@ class Dlnode::Resource
 
   def extract_resources pattern, opts
     html_str = fetch opts
+    resources = []
 
-    return [] if html_str.nil?
+    return resources if html_str.nil?
 
-    html_str.gsub! *pattern.gsub if pattern.gsub
+    @html = html_str
+    html_str = html_str.gsub *pattern.gsub if pattern.gsub
 
-    Nokogiri::HTML.parse(html_str).css(pattern.selector).reduce [] do |v, elem|
+    Nokogiri::HTML.parse(html_str).css(pattern.selector).each do |elem|
       if not pattern.attribute and elem.name == 'form'
         form_data = elem.css('input').map { |i| [i['name'], i['value']] }
         path = elem.attr 'action'
@@ -112,20 +116,28 @@ class Dlnode::Resource
         path = attr ? elem.attr(attr) : elem.text
       end
 
-      path.strip!
-      path = nil if path.length == 0
-
-      if path and u = urijoin(base_uri || url, path)
-        r = self.class.new u,
-                           :form_data => form_data,
-                           :base_uri => base_uri,
-                           :referer => (url if opts[:send_referer] and url !~ %r{\Afile://}),
-                           :elem => elem
-        r = nil if pattern.regexp and u !~ pattern.regexp
+      if path
+        path.strip!
+        path = nil if path.length == 0
       end
 
-      r ? v << r : v
+      next unless path
+
+      u = urijoin base_uri || url, path
+
+      next if pattern.regexp and u !~ pattern.regexp
+
+      resources << self.class.new(
+        u,
+        :form_data => form_data,
+        :base_uri => base_uri,
+        :referer => (url if opts[:send_referer] and url !~ %r{\Afile://}),
+        :elem => elem,
+        :parent => self
+      )
     end
+
+    resources
   end
 
   def command opts = {}
@@ -193,6 +205,7 @@ class Dlnode
     :cookie_jar => nil,
     :dir => '.',
     :dir_from_url => false,
+    :download_html => false,
     :format => nil,
     :filename_behavior => 0,
     :filename_patterns => [':title', ':'].map { |p| Dlnode::FilenamePattern.new p },
@@ -287,6 +300,10 @@ class Dlnode
 
       opt.on '-A', '--user-agent STRING', "DEFAULT: #{DEFAULTS[:user_agent]}" do |arg|
         @user_agent = arg
+      end
+
+      opt.on '-H', '--download-html', 'Save nodes as html' do
+        @download_html = true
       end
 
       opt.on '-O', '--curl-opts OPTS', 'Extra options to pass directly to cURL' do |arg|
@@ -478,7 +495,8 @@ class Dlnode
       :retry => @retry,
       :max_time => @max_time,
       :connect_timeout => @connect_timeout,
-      :verbose => @verbose
+      :verbose => @verbose,
+      :download_html => @download_html
     }
   end
 
@@ -513,6 +531,25 @@ class Dlnode
           warn cmd.shelljoin if @verbose
           system *cmd
           failed << cmd if not $?.exitstatus.zero?
+        end
+      end
+
+      if @download_html
+        s = Set.new
+
+        resources.each do |r|
+          p = r.parent
+          next unless p and p.html
+
+          u = URI.parse p.url
+          path = File.join @dir, [u.host, u.path].map { |x| sanitize_filename x }.join
+          path << '.html' unless File.extname(path) == '.html'
+
+          next if s.include? path
+          s << path
+
+          warn "> #{path}"
+          File.open(path, 'w') { |f| f.puts p.html }
         end
       end
 
