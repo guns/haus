@@ -572,6 +572,16 @@ ckperm() {
     checkpermissions "$@" -- "${specs[@]}"
 }
 
+# perl-rename
+HAVE perl-rename && renumber-files() {
+    (($# >= 3)) || { echo "USAGE: $FUNCNAME pattern %d-width files" >&2; return 1; }
+    local pattern="$1"
+    if [[ "$pattern" != *\(*\)* ]]; then
+        pattern="($pattern)"
+    fi
+    run perl-rename -v "s/$pattern/sprintf('%0${2}d', \$1)/e" "${@:3}"
+}
+
 ### Processes
 
 # kill
@@ -1055,15 +1065,6 @@ HAVE lein && {
 ALIAS perlpe='perl -pe' \
       perlne='perl -ne' \
       perlpie='perl -i -pe'
-
-HAVE perl-rename && renumber-files() {
-    (($# >= 3)) || { echo "USAGE: $FUNCNAME pattern %d-width files" >&2; return 1; }
-    local pattern="$1"
-    if [[ "$pattern" != *\(*\)* ]]; then
-        pattern="($pattern)"
-    fi
-    run perl-rename -v "s/$pattern/sprintf('%0${2}d', \$1)/e" "${@:3}"
-}
 
 ### Databases
 

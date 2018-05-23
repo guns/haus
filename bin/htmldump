@@ -1,0 +1,3 @@
+#!/bin/sh
+
+w3m -dump -cols 78 -o display_link_number=1 -I utf-8 -T text/html "$@"
