@@ -75,6 +75,35 @@ attachments   -I message/external-body
 ##
 
 
+# set abort_noattach=no
+#
+# Name: abort_noattach
+# Type: quadoption
+# Default: no
+#
+#
+# When the body of the message matches $abort_noattach_regexp and
+# there are no attachments, this quadoption controls whether to
+# abort sending the message.
+#
+
+# set abort_noattach_regexp="attach"
+#
+# Name: abort_noattach_regexp
+# Type: regular expression
+# Default: "attach"
+#
+#
+# Specifies a regular expression to match against the body of the
+# message, to determine if an attachment was mentioned but
+# mistakenly forgotten.  If it matches, $abort_noattach will be
+# consulted to determine if message sending will be aborted.
+#
+# Like other regular expressions in Mutt, the search is case
+# sensitive if the pattern contains at least one upper case letter,
+# and case insensitive otherwise.
+#
+
 set abort_nosubject=no
 #
 # Name: abort_nosubject
@@ -437,6 +466,24 @@ set beep=no
 # visual terminals don't permit making the cursor invisible.
 #
 
+# set browser_abbreviate_mailboxes=yes
+#
+# Name: browser_abbreviate_mailboxes
+# Type: boolean
+# Default: yes
+#
+#
+# When this variable is set, mutt will abbreviate mailbox
+# names in the browser mailbox list, using '~' and '='
+# shortcuts.
+#
+# The default "alpha" setting of $sort_browser uses
+# locale-based sorting (using strcoll(3)), which ignores some
+# punctuation.  This can lead to some situations where the order
+# doesn't make intuitive sense.  In those cases, it may be
+# desirable to unset this variable.
+#
+
 set certificate_file="~/.certificates/mutt.crt"
 #
 # Name: certificate_file
@@ -456,6 +503,18 @@ set certificate_file="~/.certificates/mutt.crt"
 #
 # Example:
 # set certificate_file=~/.mutt/certificates
+#
+
+# set change_folder_next=no
+#
+# Name: change_folder_next
+# Type: boolean
+# Default: no
+#
+#
+# When this variable is set, the <change-folder> function
+# mailbox suggestion will start at the next folder in your ``mailboxes''
+# list, instead of starting at the first folder in the list.
 #
 
 # set charset=""
@@ -1038,6 +1097,19 @@ set entropy_file="/dev/random"
 #
 # Manually sets the envelope sender for outgoing messages.
 # This value is ignored if $use_envelope_from is unset.
+#
+
+# set error_history=30
+#
+# Name: error_history
+# Type: number
+# Default: 30
+#
+#
+# This variable controls the size (in number of strings remembered)
+# of the error messages displayed by mutt.  These can be shown with
+# the <error-history> function.  The history is cleared each
+# time this variable is set.
 #
 
 # set escape="~"
@@ -1729,7 +1801,7 @@ set include=yes
 #         the first character is new/read/replied flags (``n''/``o''/``r''/``O''/``N'').
 #         the second is deleted or encryption flags (``D''/``d''/``S''/``P''/``s''/``K'').
 #         the third is either tagged/flagged (``*''/``!''), or one of the characters
-# %Z      message status flags
+#         listed in $to_chars.
 # %{fmt}  the date and time of the message is converted to sender's
 #         time zone, and ``fmt'' is expanded by the library function
 #         strftime(3); a leading bang disables locales
@@ -2211,6 +2283,18 @@ set mime_forward=ask-no
 # See also $read_inc, $write_inc and $net_inc.
 #
 
+# set new_mail_command=""
+#
+# Name: new_mail_command
+# Type: path
+# Default: ""
+#
+#
+# If set, Mutt will call this command after a new message is received.
+# See the $status_format documentation for the values that can be formatted
+# into this command.
+#
+
 # set pager="builtin"
 #
 # Name: pager
@@ -2376,7 +2460,8 @@ set pager_stop=yes
 # %f      Expands to the name of a file containing a message.
 # %s      Expands to the name of a file containing the signature part
 #                    of a multipart/signed attachment when verifying it.
-# %a      The value of $pgp_sign_as.
+# %a      The value of $pgp_sign_as if set, otherwise the value
+#         of $pgp_default_key.
 # %r      One or more key IDs (or fingerprints if available).
 #
 #
@@ -2414,6 +2499,23 @@ set pager_stop=yes
 # protect against a spoofed encrypted message, with multipart/encrypted
 # headers but containing a block that is not actually encrypted.
 # (e.g. simply signed and ascii armored text).
+# (PGP only)
+#
+
+set pgp_default_key="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
+#
+# Name: pgp_default_key
+# Type: string
+# Default: ""
+#
+#
+# This is the default key-pair to use for PGP operations.  It will be
+# used for encryption (see $postpone_encrypt and $pgp_self_encrypt).
+#
+# It will also be used for signing unless $pgp_sign_as is set.
+#
+# The (now deprecated) pgp_self_encrypt_as is an alias for this
+# variable, and should no longer be used.
 # (PGP only)
 #
 
@@ -2664,24 +2766,11 @@ set pgp_self_encrypt=yes
 #
 # Name: pgp_self_encrypt
 # Type: boolean
-# Default: no
+# Default: yes
 #
 #
 # When set, PGP encrypted messages will also be encrypted
-# using the key in $pgp_self_encrypt_as.
-# (PGP only)
-#
-
-set pgp_self_encrypt_as="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
-#
-# Name: pgp_self_encrypt_as
-# Type: string
-# Default: ""
-#
-#
-# This is an additional key used to encrypt messages when $pgp_self_encrypt
-# is set.  It is also used to specify the key for $postpone_encrypt.
-# It should be in keyid or fingerprint form (e.g. 0x00112233).
+# using the key in $pgp_default_key.
 # (PGP only)
 #
 
@@ -2705,9 +2794,10 @@ set pgp_self_encrypt_as="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
 # Default: ""
 #
 #
-# If you have more than one key pair, this option allows you to specify
-# which of your private keys to use.  It is recommended that you use the
-# keyid form to specify your key (e.g. 0x00112233).
+# If you have a different key pair to use for signing, you should
+# set this to the signing key.  Most people will only need to set
+# $pgp_default_key.  It is recommended that you use the keyid form
+# to specify your key (e.g. 0x00112233).
 # (PGP only)
 #
 
@@ -2900,8 +2990,8 @@ set postpone_encrypt=yes
 #
 # When set, postponed messages that are marked for encryption will be
 # self-encrypted.  Mutt will first try to encrypt using the value specified
-# in $pgp_self_encrypt_as or $smime_self_encrypt_as.  If those are not
-# encrypted using the key in $postpone_encrypt_as before saving.
+# in $pgp_default_key or $smime_default_key.  If those are not
+# set, it will try the deprecated $postpone_encrypt_as.
 # (Crypto only)
 #
 
@@ -2913,7 +3003,7 @@ set postpone_encrypt=yes
 #
 #
 # This is a deprecated fall-back variable for $postpone_encrypt.
-# Please use $pgp_self_encrypt_as or $smime_self_encrypt_as.
+# Please use $pgp_default_key or $smime_default_key.
 # (Crypto only)
 #
 
@@ -3742,8 +3832,19 @@ set signature="~/.mutt/signature"
 # Default: ""
 #
 #
-# This is the default key-pair to use for signing. This must be set to the
-# keyid (the hash-value that OpenSSL generates) to work properly
+# This is the default key-pair to use for S/MIME operations, and must be
+# set to the keyid (the hash-value that OpenSSL generates) to work properly.
+#
+# It will be used for encryption (see $postpone_encrypt and
+# $smime_self_encrypt).
+#
+# It will be used for decryption unless $smime_decrypt_use_default_key
+# is unset.
+#
+# It will also be used for signing unless $smime_sign_as is set.
+#
+# The (now deprecated) smime_self_encrypt_as is an alias for this
+# variable, and should no longer be used.
 # (S/MIME only)
 #
 
@@ -3879,29 +3980,27 @@ set signature="~/.mutt/signature"
 # (S/MIME only)
 #
 
-# set smime_self_encrypt=no
+# set smime_self_encrypt=yes
 #
 # Name: smime_self_encrypt
 # Type: boolean
-# Default: no
+# Default: yes
 #
 #
 # When set, S/MIME encrypted messages will also be encrypted
-# using the certificate in $smime_self_encrypt_as.
+# using the certificate in $smime_default_key.
 # (S/MIME only)
 #
 
-# set smime_self_encrypt_as=""
+# set smime_sign_as=""
 #
-# Name: smime_self_encrypt_as
+# Name: smime_sign_as
 # Type: string
 # Default: ""
 #
 #
-# This is an additional certificate used to encrypt messages when
-# $smime_self_encrypt is set.  It is also used to specify the
-# certificate for $postpone_encrypt.  It should be the hash-value that
-# OpenSSL generates.
+# If you have a separate key to use for signing, you should set this
+# to the signing key. Most people will only need to set $smime_default_key.
 # (S/MIME only)
 #
 
@@ -3916,7 +4015,8 @@ set signature="~/.mutt/signature"
 # multipart/signed, which can be read by all mail clients.
 #
 # This is a format string, see the $smime_decrypt_command command for
-# possible printf(3)-like sequences.
+# possible printf(3)-like sequences.  NOTE: %c and %k will default
+# to $smime_sign_as if set, otherwise $smime_default_key.
 # (S/MIME only)
 #
 
@@ -4115,8 +4215,10 @@ set sort_browser=reverse-date
 # Specifies how to sort entries in the file browser.  By default, the
 # entries are sorted alphabetically.  Valid values:
 # - alpha (alphabetically)
+# - count
 # - date
 # - size
+# - unread
 # - unsorted
 #
 #
@@ -4215,6 +4317,7 @@ set ssl_use_sslv2=no
 # This variable specifies whether to attempt to use SSLv2 in the
 # SSL authentication process. Note that SSLv2 and SSLv3 are now
 # considered fundamentally insecure and are no longer recommended.
+# (OpenSSL only)
 #
 
 set ssl_use_sslv3=no
@@ -4300,7 +4403,7 @@ set ssl_usesystemcerts=no
 # the <account-hook> function.
 #
 
-set ssl_verify_partial_chains=yes
+# set ssl_verify_partial_chains=no
 #
 # Name: ssl_verify_partial_chains
 # Type: boolean
@@ -4380,6 +4483,7 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # %P      percentage of the way through the index
 # %r      modified/read-only/won't-write/attach-message indicator,
 #         according to $status_chars
+# %R      number of read messages *
 # %s      current sorting mode ($sort)
 # %S      current aux sorting method ($sort_aux)
 # %t      number of tagged messages *
