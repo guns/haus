@@ -423,6 +423,11 @@ class Dlnode
     f_ext = File.extname fname
     t_ext = File.extname title
 
+    if fname.length + title.length > 255
+      t_basename = File.basename title, t_ext
+      title = '%s…%s' % [title[0...255 - 3 - t_ext.length - fname.length], t_ext]
+    end
+
     case @filename_behavior
     when 1
       fname = File.basename title, t_ext
