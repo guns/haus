@@ -428,7 +428,7 @@ class Dlnode
     if fname.length + title.length > NAME_MAX
       t_basename = File.basename title, t_ext
       title = '%s…%s' % [
-        title[0...NAME_MAX - '…'.bytes.length - t_ext.length - fname.length],
+        title[0...NAME_MAX - '…'.bytesize - t_ext.length - fname.length],
         t_ext
       ]
     end
