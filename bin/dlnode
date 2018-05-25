@@ -416,6 +416,8 @@ class Dlnode
     nil
   end
 
+  NAME_MAX = 255
+
   def get_filename_from_patterns fname, elem
     title = find_relative elem, @filename_patterns
     return fname if title.nil?
@@ -423,9 +425,12 @@ class Dlnode
     f_ext = File.extname fname
     t_ext = File.extname title
 
-    if fname.length + title.length > 255
+    if fname.length + title.length > NAME_MAX
       t_basename = File.basename title, t_ext
-      title = '%s…%s' % [title[0...255 - 3 - t_ext.length - fname.length], t_ext]
+      title = '%s…%s' % [
+        title[0...NAME_MAX - '…'.bytes.length - t_ext.length - fname.length],
+        t_ext
+      ]
     end
 
     case @filename_behavior
