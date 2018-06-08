@@ -276,6 +276,7 @@ user_pref("extensions.systemAddon.update.url", "");
 user_pref("extensions.update.background.url", "");
 user_pref("extensions.update.url", "");
 user_pref("extensions.webcompat-reporter.newIssueEndpoint", "");
+user_pref("extensions.webextensions.identity.redirectDomain", "");
 user_pref("extensions.webservice.discoverURL", "");
 user_pref("gecko.handlerService.schemes.irc.0.uriTemplate", "");
 user_pref("gecko.handlerService.schemes.ircs.0.uriTemplate", "");
