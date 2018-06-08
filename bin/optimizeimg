@@ -11,8 +11,9 @@ require 'fileutils'
 
 class OptimizeIMG
   DEFAULTS = {
-    :tmpname => '__optimize__',
+    :jobs => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1),
     :quality => 80,
+    :tmpname => '%s__optimize__'
   }
 
   def initialize opts = {}
@@ -20,12 +21,16 @@ class OptimizeIMG
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
+    @parser ||= OptionParser.new nil, 24 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Usage: #{File.basename __FILE__} [options] image …
 
         Options:
       BANNER
+
+      opt.on '-j', '--jobs N', Integer, "DEFAULT: #{@jobs}" do |arg|
+        @jobs = arg
+      end
 
       opt.on '-q', '--quality PCT', Integer, "DEFAULT: #{@quality}" do |arg|
         @quality = arg
@@ -37,27 +42,43 @@ class OptimizeIMG
     end
   end
 
-  def sh *args
-    warn args.shelljoin
-    system *args
-  end
-
   def optimize path, tmpname, quality
-    tmp = tmpname + File.extname(path)
+    ext = File.extname path
+    tmp = tmpname % File.basename(path, ext)
+    tmp << ext
     raise "#{path} already exists!" if File.exists? tmp
-    if sh 'convert', '-quality', quality.to_s, path, tmp
-      FileUtils.mv tmp, path, :verbose => true
+    if system 'convert', '-quality', quality.to_s, path, tmp
+      FileUtils.mv tmp, path
     end
   end
 
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.empty?
-    args.each do |path|
-      if not optimize path, @tmpname, @quality
-        abort
+
+    ilock, wlock = Mutex.new, Mutex.new
+    pool, err = [], false
+    i, n = 0, args.size
+
+    @jobs.times do
+      pool << Thread.new do
+        loop do
+          ilock.synchronize { i += 1 }
+          break if i >= n
+          path = args[i]
+          wlock.synchronize { warn ":: optimize #{path}" }
+          if not optimize path, @tmpname, @quality
+            wlock.synchronize do
+              warn "\e[31mOptimizing #{path} failed!\e[0m"
+              err = true
+            end
+          end
+        end
       end
     end
+
+    pool.each &:join
+    err ? abort : exit
   end
 end
 
