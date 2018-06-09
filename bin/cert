@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2018 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -9,14 +9,17 @@ require 'optparse'
 require 'openssl'
 require 'shellwords'
 require 'fileutils'
-require 'net/http'
+require 'open3'
 require 'digest/md5'
 require 'digest/sha1'
 require 'digest/sha2'
-require 'open3'
 require 'base64'
 
 class Cert
+  X509_CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
+  TRUSTED_CERTIFICATE_PATTERN = /-+BEGIN TRUSTED CERTIFICATE-+\n.*?\n-+END TRUSTED CERTIFICATE-+/m
+  ANY_CERTIFICATE_PATTERN = /-+BEGIN(?: X509| TRUSTED)? CERTIFICATE-+\n.*?\n-+END(?: X509| TRUSTED)? CERTIFICATE-+/m
+
   DEFAULTS = {
     :one => false,
     :certfile => nil,
@@ -25,10 +28,6 @@ class Cert
     :self_signed => false,
     :text_only => false
   }
-
-  X509_CERTIFICATE_PATTERN = /-+BEGIN(?: X509)? CERTIFICATE-+\n.*?\n-+END(?: X509)? CERTIFICATE-+/m
-  TRUSTED_CERTIFICATE_PATTERN = /-+BEGIN TRUSTED CERTIFICATE-+\n.*?\n-+END TRUSTED CERTIFICATE-+/m
-  ANY_CERTIFICATE_PATTERN = /-+BEGIN(?: X509| TRUSTED)? CERTIFICATE-+\n.*?\n-+END(?: X509| TRUSTED)? CERTIFICATE-+/m
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -77,28 +76,124 @@ class Cert
     end
   end
 
-  def x509_text certbuf
-    Open3.popen2('openssl', 'x509', '-text') { |i, o| i.puts certbuf; i.close; o.read }
+  class Chain
+    def self.x509_text certbuf
+      Open3.popen2('openssl', 'x509', '-text') { |i, o| i.puts certbuf; i.close; o.read }
+    end
+
+    attr_reader :certs
+
+    def initialize certs = []
+      @certs = certs.dup.compact
+      sort!
+    end
+
+    def [] i
+      @certs[i]
+    end
+
+    def first
+      Chain.new [@certs.first]
+    end
+
+    def self_signed? cert
+      cert.subject.cmp(cert.issuer).zero?
+    end
+
+    def sort!
+      @certs.sort_by! { |c| c.not_before }
+      @certs.uniq { |c| c.to_der }
+      self
+    end
+
+    def concat chain
+      @certs.concat chain.certs
+      sort!
+      self
+    end
+
+    def - chain
+      s = chain.certs.map &:to_der
+      v = []
+      @certs.each { |c| v << c unless s.include? c.to_der }
+      @certs = v
+      self
+    end
+
+    def select_self_signed!
+      @certs.select! { |c| self_signed? c }
+      self
+    end
+
+    def header cert
+      der = cert.to_der
+      [
+        'Subject: %s' % cert.subject,
+        'Issuer:  %s' % cert.issuer,
+        'base64:  sha256//%s' % Base64.encode64(Digest::SHA256.digest(cert.public_key.to_der)).chomp,
+        'SHA256:  %s' % Digest::SHA256.hexdigest(der),
+        'SHA1:    %s' % Digest::SHA1.hexdigest(der),
+        'MD5:     %s' % Digest::MD5.hexdigest(der),
+      ]
+    end
+
+    def format text_only = false
+      if text_only
+        @certs.map do |cert|
+          buf = Chain.x509_text cert
+          cert = OpenSSL::X509::Certificate.new buf.force_encoding('ASCII-8BIT')
+          [buf[/(.*)^-+BEGIN/m, 1], *header(cert), cert.to_s].join "\n"
+        end.join "\n"
+      else
+        @certs.map { |c| (header(c) << c.to_s).join "\n" }.join "\n"
+      end
+    end
+
+    def write_keystore keystore_path, keystore_pass
+      # We generate keystores with random passwords, hence we won't know the
+      # current store's password either.
+      FileUtils.rm_f keystore_path
+
+      @certs.each_with_index do |cert, i|
+        cmd = [{ 'STOREPASS' => keystore_pass },
+               'keytool', '-importcert', '-trustcacerts', '-noprompt',
+               '-keystore', keystore_path,
+               '-storepass:env', 'STOREPASS',
+               '-alias', '%s-%d' % [File.basename(keystore_path, '.ks'), i]]
+        IO.popen cmd, 'w' do |wr|
+          wr.puts cert.to_s
+        end
+      end
+    end
+
+    def write_certfile certfile, keystore = nil, keystore_pass = nil, opts = {}
+      File.open certfile, 'w' do |f|
+        f.puts format(opts[:text_only])
+      end
+
+      write_keystore keystore, keystore_pass if @keystore
+    end
   end
 
-  def parse_certs string
-    if @text_only
-      return string.force_encoding('ASCII-8BIT').scan(ANY_CERTIFICATE_PATTERN)
-    end
-
-    certs = string.force_encoding('ASCII-8BIT').scan(X509_CERTIFICATE_PATTERN)
+  def parse_certs_string string
+    certs = string.force_encoding('ASCII-8BIT').scan @text_only ? ANY_CERTIFICATE_PATTERN : X509_CERTIFICATE_PATTERN
 
     if certs.any?
-      certs.map { |pem| OpenSSL::X509::Certificate.new pem }
+      Chain.new certs.map { |pem| OpenSSL::X509::Certificate.new pem }
     elsif (certs = string.force_encoding('ASCII-8BIT').scan(TRUSTED_CERTIFICATE_PATTERN)).any?
       warn '!! Reading OpenSSL TRUSTED CERTIFICATE without trust bits!'
-      parse_certs certs.map { |pem| x509_text pem }.join("\n")
+      parse_certs_string certs.map { |pem| Chain.x509_text pem }.join("\n")
     else
       # Maybe DER format?
-      [OpenSSL::X509::Certificate.new(string)]
+      Chain.new [OpenSSL::X509::Certificate.new(string)]
     end
   rescue OpenSSL::X509::CertificateError
-    []
+    Chain.new
+  end
+
+  def ssl_get host, port = nil
+    server = "#{host}:#{port || 443}".shellescape
+    %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
   end
 
   def parse_server_arg server
@@ -107,122 +202,60 @@ class Cert
     [h, p]
   end
 
-  def self_signed? cert
-    cert.subject.cmp(cert.issuer) == 0
-  end
-
-  def equal? cert1, cert2
-    cert1.to_der == cert2.to_der
-  end
-
-  def ssl_get host, port = nil
-    server = "#{host}:#{port || 443}".shellescape
-    %x(openssl s_client -showcerts -connect #{server} < /dev/null 2>/dev/null)
-  end
-
-  def header cert
-    der = cert.to_der
-    [
-      'Subject: %s' % cert.subject,
-      'Issuer:  %s' % cert.issuer,
-      'base64:  sha256//%s' % Base64.encode64(Digest::SHA256.digest(cert.public_key.to_der)).chomp,
-      'SHA256:  %s' % Digest::SHA256.hexdigest(der),
-      'SHA1:    %s' % Digest::SHA1.hexdigest(der),
-      'MD5:     %s' % Digest::MD5.hexdigest(der),
-    ]
-  end
-
-  def format certs
-    if @text_only
-      certs.map do |pem|
-        buf = x509_text pem
-        cert = OpenSSL::X509::Certificate.new buf.force_encoding('ASCII-8BIT')
-        [buf[/(.*)^-+BEGIN/m, 1], *header(cert), cert.to_s].join "\n"
-      end.join "\n"
-    else
-      certs.map { |c| (header(c) << c.to_s).join "\n" }.join "\n"
-    end
-  end
-
   def certfile
     raise "'certfile' is unset" if @certfile.nil?
     FileUtils.touch @certfile unless File.exists? @certfile
     @certfile
   end
 
+  def makechain args, self_signed = @self_signed
+    if args.is_a? String
+      chain = parse_certs_string(File.read(args))
+    else
+      chain = args.reduce Chain.new do |ch, arg|
+        if arg == '-'
+          ch.concat parse_certs_string($stdin.read)
+        elsif File.readable? arg
+          ch.concat parse_certs_string(File.read(arg))
+        else
+          ch.concat parse_certs_string(ssl_get(*parse_server_arg(arg)))
+        end
+      end
+    end
+
+    self_signed ? chain.select_self_signed! : chain
+  end
+
+  def take chain
+    @one ? chain.first : chain
+  end
+
   def keystore_pass
     @keystore_pass ||= @keystore_pass || (require 'nerv/util/password'; NERV::Util::Password.password)
   end
 
-  def certificates
-    parse_certs File.read(certfile)
-  end
-
-  def write_keystore keystore_path, certs
-    # We generate keystores with random passwords, hence we won't know the
-    # current store's password either.
-    FileUtils.rm_f keystore_path
-
-    certs.each_with_index do |cert, i|
-      IO.popen [{ 'STOREPASS' => keystore_pass },
-                'keytool', '-importcert', '-trustcacerts', '-noprompt',
-                '-keystore', keystore_path,
-                '-storepass:env', 'STOREPASS',
-                '-alias', '%s-%d' % [File.basename(keystore_path, '.ks'), i]], 'w' do |wr|
-        wr.puts cert.to_s
-      end
-    end
-  end
-
-  def write_certfile certs
-    File.open certfile, 'w' do |f|
-      f.puts format(certs)
-    end
-
-    write_keystore @keystore, certs if @keystore
-  end
-
-  def mapcerts args = [], self_signed = @self_signed
-    certs = args.flat_map do |arg|
-      if arg == '-'
-        parse_certs $stdin.read
-      elsif File.readable? arg
-        parse_certs File.read(arg)
-      else
-        parse_certs ssl_get(*parse_server_arg(arg))
-      end
-    end.compact
-
-    self_signed ? certs.select { |c| self_signed? c } : certs
-  end
-
-  def take certs
-    @one ? certs.take(1) : certs
+  def save! chain
+    chain.write_certfile certfile, @keystore, (keystore_pass if @keystore), :text_only => @text_only
   end
 
   def dump *args
-    puts format(take(args.empty? ? certificates : mapcerts(args)))
+    puts take(makechain(args)).format(@text_only)
   end
 
   def publickey *args
-    puts (take(args.empty? ? certificates : mapcerts(args))).map { |c| c.public_key.export }
+    puts take(makechain(args)).certs.map { |c| c.public_key.export }
   end
 
   def info *args
-    puts (take(args.empty? ? certificates : mapcerts(args))).map { |c| c.to_text + c.to_s }
+    puts take(makechain(args)).certs.map { |c| c.to_text + c.to_s }.join("\n")
   end
 
   def add *args
-    write_certfile take(mapcerts args).reduce(certificates) { |certs, root|
-      certs << root unless certs.find { |c| equal? c, root }
-      certs
-    }
+    save! makechain(certfile).concat(take(makechain(args)))
   end
 
   def rm *args
-    write_certfile take(mapcerts args).reduce(certificates) { |certs, root|
-      certs.reject { |c| equal? c, root }
-    }
+    save! makechain(certfile) - take(makechain(args))
   end
 
   # Duplicated in interactive.bash/cx()
@@ -242,7 +275,7 @@ class Cert
 
   def console *args
     require 'pry'
-    cs = mapcerts args
+    c = makechain args
     binding.pry
   end
 
@@ -251,15 +284,15 @@ class Cert
     rest = args.drop 1
 
     case args.first
-    when 'd', 'dump' then dump *rest
-    when 'D', 'DUMP' then @text_only = true; dump *rest
+    when 'd', 'dump'      then dump *rest
+    when 'D', 'DUMP'      then @text_only = true; dump *rest
     when 'p', 'publickey' then publickey *rest
-    when 'i', 'info' then info *rest
-    when 'a', 'add' then add *rest
-    when 'r', 'rm' then rm *rest
+    when 'i', 'info'      then info *rest
+    when 'a', 'add'       then add *rest
+    when 'r', 'rm'        then rm *rest
     when 'x', 'e', 'exec' then exec *rest
-    when 'c', 'console' then console *rest
-    when nil then @certfile ? dump : abort(parser.help)
+    when 'c', 'console'   then console *rest
+    when nil              then @certfile ? dump : abort(parser.help)
     else abort parser.help
     end
   end
