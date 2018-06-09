@@ -49,7 +49,7 @@ args = OptionParser.new nil do |opt|
     sort = :mtime
   end
 
-  opt.on '-g', '--grep PATTERN', Regexp do |p|
+  opt.on '-p', '--pattern PATTERN', Regexp do |p|
     if pattern = p
       pattern = Regexp.new p.source, p.options | Regexp::IGNORECASE unless p.source =~ /\p{Lu}/
     end
