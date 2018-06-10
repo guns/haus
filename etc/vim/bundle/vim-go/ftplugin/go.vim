@@ -25,7 +25,7 @@ setlocal omnifunc=go#complete#Complete
 
 if get(g:, "go_doc_keywordprg_enabled", 1)
   " keywordprg doesn't allow to use vim commands, override it
-  nnoremap <buffer> <silent> K :GoDoc<cr>
+  nmap <buffer> <silent> K <Plug>(go-doc)
 endif
 
 if get(g:, "go_def_mapping_enabled", 1)

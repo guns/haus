@@ -10,10 +10,12 @@ ENV['GOPATH'] = ENV['GOPATH'].split(':').first
 # Non-library utilities
 UTILITIES = %w[
   github.com/constabulary/gb/...
+  github.com/cosmos72/gomacro
   github.com/derekparker/delve/cmd/dlv
   github.com/jteeuwen/go-bindata/...
   github.com/kr/pretty
   github.com/motemen/gore
+  golang.org/x/vgo
 ]
 
 File.open File.join(ENV['GOPATH'], '.updated'), 'w' do |f|
@@ -21,7 +23,7 @@ File.open File.join(ENV['GOPATH'], '.updated'), 'w' do |f|
 end
 
 system 'vim', '-c', 'setfiletype go | execute "GoInstallBinaries" | execute "GoUpdateBinaries" | quit'
-system File.join(ENV['GOPATH'], 'gometalinter'), '--install'
+system File.join(ENV['GOPATH'], 'bin', 'gometalinter'), '--install'
 system 'go', 'get', '-u', '-v', *UTILITIES
 
 # Library dependencies
@@ -29,7 +31,7 @@ REPOS = %x(go list github.com/guns/...).chomp.split "\n"
 DEPS = REPOS.flat_map { |p|
   JSON.parse(%x(go list -json #{p}))['Imports']
 }.select { |p|
-  p and p.index('github.com/guns/').nil? and p.index '/'
+  p&.index('github.com/guns/').nil? and p.index '/'
 }.uniq
 
 system 'go', 'get', '-u', '-v', *DEPS

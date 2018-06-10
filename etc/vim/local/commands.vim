@@ -614,28 +614,41 @@ function! s:GoBufferSetup()
 	nmap     <buffer> <LocalLeader>c <Plug>(go-coverage-toggle)
 	nmap     <buffer> <LocalLeader>C <Plug>(go-channelpeers)
 	noremap  <buffer> <LocalLeader>d :<C-u>GoDoc<Space>
-	noremap  <buffer> <LocalLeader>D :<C-u>GoDocBrowser<Space>
 	noremap  <buffer> <LocalLeader>e :<C-u>GoErrCheck -abspath<CR>
 	noremap  <buffer> <LocalLeader>E :<C-u>GoErrCheck -ignore=fmt:^$ -abspath -asserts -blank<CR>
 	noremap  <buffer> <LocalLeader>f vaB:GoFreevars<CR>
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
+	noremap  <buffer> <LocalLeader>F :<C-u>GoFillStruct<CR>
 	noremap  <buffer> <LocalLeader>g :<C-u>GoGuruScope<Space>
 	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
 	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
 	noremap  <buffer> <LocalLeader><M-i> :<C-u>GoImpl<Space>
+	noremap  <buffer> <LocalLeader>k :<C-u>GoKeyify<CR>
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
 	noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
 	noremap  <buffer> <LocalLeader>o :<C-u>GoOptimizations<CR>
-	noremap  <buffer> <LocalLeader>p :<C-u>GoPath<CR>
+	nmap     <buffer> <LocalLeader>p <Plug>(go-pointsto)
+	noremap  <buffer> <LocalLeader>P :<C-u>GoPath<CR>
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
 	noremap  <buffer> <LocalLeader>S :<C-u>GoAssemble<CR>
-	noremap  <buffer> <LocalLeader>t :<C-u>GoTest -tags test<CR>
-	noremap  <buffer> <LocalLeader>T :<C-u>GoTestFunc -tags test<CR>
-	noremap  <buffer> <LocalLeader><M-t> :<C-u>GoTest -tags test -race<CR>
+	nmap     <buffer> <LocalLeader>t <Plug>(go-test)
+	nmap     <buffer> <LocalLeader>T <Plug>(go-test-func)
+	noremap  <buffer> <LocalLeader><M-t> :<C-u>GoTest -race<CR>
 	nmap     <buffer> <LocalLeader>v <Plug>(go-vet)
 	noremap  <buffer> <LocalLeader>w :<C-u>GoWhicherrs<CR>
+	noremap  <buffer> _d             :<C-u>GoDebugStart .<Space>
+	noremap  <buffer> _t             :<C-u>GoDebugTest<Space>
+	noremap  <buffer> _r             :<C-u>GoDebugRestart<CR>
+	noremap  <buffer> _b             :<C-u>GoDebugBreakpoint<CR>
+	noremap  <buffer> _c             :<C-u>GoDebugContinue<CR>
+	noremap  <buffer> _n             :<C-u>GoDebugNext<CR>
+	noremap  <buffer> _s             :<C-u>GoDebugStep<CR>
+	noremap  <buffer> _S             :<C-u>GoDebugStepOut<CR>
+	noremap  <buffer> _=             :<C-u>GoDebugSet<Space>
+	noremap  <buffer> _p             :<C-u>GoDebugPrint<Space>
+	noremap  <buffer> _x             :<C-u>GoDebugStop<CR>
 endfunction
 
 function! s:CompareQuickfix(p, q)

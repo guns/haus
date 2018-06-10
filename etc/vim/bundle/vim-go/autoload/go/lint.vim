@@ -229,7 +229,7 @@ function! s:lint_job(args, autosave)
 
     let status = {
           \ 'desc': 'last status',
-          \ 'type': "gometaliner",
+          \ 'type': "gometalinter",
           \ 'state': "finished",
           \ }
 

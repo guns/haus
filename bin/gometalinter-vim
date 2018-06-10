@@ -4,115 +4,322 @@
 # Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
-#
+
 # usage: gometalinter [<flags>] [<path> ...]
 #
 # Aggregate and normalise the output of a whole bunch of Go linters.
 #
+# PlaceHolder linters:
+#
+#     deadcode: (github.com/tsenart/deadcode)
+#   	command: deadcode
+#   	regex: ^deadcode: (?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     dupl: (github.com/mibk/dupl)
+#   	command: dupl -plumbing -threshold {duplthreshold}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+)-\d+:\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: false
+#
+#     errcheck: (github.com/kisielk/errcheck)
+#   	command: errcheck -abspath {not_tests=-ignoretests}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     gas: (github.com/GoASTScanner/gas)
+#   	command: gas -fmt=csv
+#   	regex: ^(?P<path>.*?\.go),(?P<line>\d+),(?P<message>[^,]+,[^,]+,[^,]+)
+#   	fast: true
+#   	default enabled: true
+#
+#     goconst: (github.com/jgautheron/goconst/cmd/goconst)
+#   	command: goconst -min-occurrences {min_occurrences} -min-length {min_const_length}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     gocyclo: (github.com/alecthomas/gocyclo)
+#   	command: gocyclo -over {mincyclo}
+#   	regex: ^(?P<cyclo>\d+)\s+\S+\s(?P<function>\S+)\s+(?P<path>.*?\.go):(?P<line>\d+):(\d+)$
+#   	fast: true
+#   	default enabled: true
+#
+#     gofmt:
+#   	command: gofmt -l -s
+#   	regex: ^(?P<path>.*?\.go)$
+#   	fast: true
+#   	default enabled: false
+#
+#     goimports: (golang.org/x/tools/cmd/goimports)
+#   	command: goimports -l
+#   	regex: ^(?P<path>.*?\.go)$
+#   	fast: true
+#   	default enabled: false
+#
+#     golint: (github.com/golang/lint/golint)
+#   	command: golint -min_confidence {min_confidence}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     gosimple: (honnef.co/go/tools/cmd/gosimple)
+#   	command: gosimple
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     gotype: (golang.org/x/tools/cmd/gotype)
+#   	command: gotype -e {tests=-t}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     gotypex: (golang.org/x/tools/cmd/gotype)
+#   	command: gotype -e -x
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     ineffassign: (github.com/gordonklaus/ineffassign)
+#   	command: ineffassign -n
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     interfacer: (mvdan.cc/interfacer)
+#   	command: interfacer
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     lll: (github.com/walle/lll/cmd/lll)
+#   	command: lll -g -l {maxlinelength}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: false
+#
+#     maligned: (github.com/mdempsky/maligned)
+#   	command: maligned
+#   	regex: ^(?:[^:]+: )?(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
+#   	fast: false
+#   	default enabled: true
+#
+#     megacheck: (honnef.co/go/tools/cmd/megacheck)
+#   	command: megacheck
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     misspell: (github.com/client9/misspell/cmd/misspell)
+#   	command: misspell -j 1 --locale "{misspelllocale}"
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: false
+#
+#     nakedret: (github.com/alexkohler/nakedret)
+#   	command: nakedret
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+)\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     safesql: (github.com/stripe/safesql)
+#   	command: safesql
+#   	regex: ^- (?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+)$
+#   	fast: false
+#   	default enabled: false
+#
+#     staticcheck: (honnef.co/go/tools/cmd/staticcheck)
+#   	command: staticcheck
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     structcheck: (github.com/opennota/check/cmd/structcheck)
+#   	command: structcheck {tests=-t}
+#   	regex: ^(?:[^:]+: )?(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.+)$
+#   	fast: false
+#   	default enabled: true
+#
+#     test:
+#   	command: go test
+#   	regex: ^--- FAIL: .*$\s+(?P<path>.*?\.go):(?P<line>\d+): (?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     testify:
+#   	command: go test
+#   	regex: Location:\s+(?P<path>.*?\.go):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)
+#   	fast: false
+#   	default enabled: false
+#
+#     unconvert: (github.com/mdempsky/unconvert)
+#   	command: unconvert
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     unparam: (mvdan.cc/unparam)
+#   	command: unparam {not_tests=-tests=false}
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     unused: (honnef.co/go/tools/cmd/unused)
+#   	command: unused
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: false
+#
+#     varcheck: (github.com/opennota/check/cmd/varcheck)
+#   	command: varcheck
+#   	regex: ^(?:[^:]+: )?(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: false
+#   	default enabled: true
+#
+#     vet:
+#   	command: go vet
+#   	regex: ^(?:vet:.*?\.go:\s+(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*))|((?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*))|(?:(?P<path>.*?\.go):(?P<line>\d+):\s*(?P<message>.*))$
+#   	fast: true
+#   	default enabled: true
+#
+#     vetshadow:
+#   	command: go vet --shadow
+#   	regex: ^(?:vet:.*?\.go:\s+(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*))|((?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*))|(?:(?P<path>.*?\.go):(?P<line>\d+):\s*(?P<message>.*))$
+#   	fast: true
+#   	default enabled: true
+#
+# Severity override map (default is "warning"):
+#
+#   gotype -> error
+#   gotypex -> error
+#   test -> error
+#   testify -> error
+#   vet -> error
+#
+#
 # Flags:
-#   -h, --help                Show context-sensitive help.
-#       --config=CONFIG       Load JSON configuration from file.
-#   -D, --disable=LINTER ...  Disable previously enabled linters.
-#   -E, --enable=LINTER ...   Enable previously disabled linters.
+#   -h, --help                   Show context-sensitive help.
+#       --version                Show application version.
+#       --config=CONFIG          Load JSON configuration from file.
+#       --no-config              Disable automatic loading of config file.
+#   -D, --disable=LINTER ...     Disable previously enabled linters.
+#   -E, --enable=LINTER ...      Enable previously disabled linters.
 #       --linter=NAME:COMMAND:PATTERN ...
-#                             Define a linter.
+#                                Define a linter.
 #       --message-overrides=LINTER:MESSAGE ...
-#                             Override message from linter. {message} will be
-#                             expanded to the original message.
+#                                Override message from linter. {message} will be
+#                                expanded to the original message.
 #       --severity=LINTER:SEVERITY ...
-#                             Map of linter severities.
-#       --disable-all         Disable all linters.
-#       --enable-all          Enable all linters.
+#                                Map of linter severities.
+#       --disable-all            Disable all linters.
+#       --enable-all             Enable all linters.
 #       --format={{.Path}}:{{.Line}}:{{if .Col}}{{.Col}}{{end}}:{{.Severity}}: {{.Message}} ({{.Linter}})
-#                             Output format.
-#       --vendored-linters    Use vendored linters (recommended).
-#       --fast                Only run fast linters.
-#   -i, --install             Attempt to install all known linters.
-#   -u, --update              Pass -u to go tool when installing.
-#   -f, --force               Pass -f to go tool when installing.
-#       --download-only       Pass -d to go tool when installing.
-#   -d, --debug               Display messages for failed linters, etc.
-#   -j, --concurrency=4       Number of concurrent linters to run.
-#   -e, --exclude=REGEXP ...  Exclude messages matching these regular expressions.
-#   -I, --include=REGEXP ...  Include messages matching these regular expressions.
-#   -s, --skip=DIR... ...     Skip directories with this name when expanding
-#                             '...'.
-#       --vendor              Enable vendoring support (skips 'vendor' directories
-#                             and sets GO15VENDOREXPERIMENT=1).
-#       --cyclo-over=10       Report functions with cyclomatic complexity over N
-#                             (using gocyclo).
-#       --line-length=80      Report lines longer than N (using lll).
-#       --min-confidence=.80  Minimum confidence interval to pass to golint.
-#       --min-occurrences=3   Minimum occurrences to pass to goconst.
-#       --min-const-length=3  Minimumum constant length.
-#       --dupl-threshold=50   Minimum token sequence as a clone for dupl.
-#       --sort=none ...       Sort output by any of none, path, line, column,
-#                             severity, message, linter.
-#   -t, --tests               Include test files for linters that support this
-#                             option
-#       --deadline=30s        Cancel linters if they have not completed within
-#                             this duration.
-#       --errors              Only show errors.
-#       --json                Generate structured JSON rather than standard
-#                             line-based output.
-#       --checkstyle          Generate checkstyle XML rather than standard
-#                             line-based output.
-#       --enable-gc           Enable GC for linters (useful on large
-#                             repositories).
-#       --aggregate           Aggregate issues reported by several linters.
+#                                Output format.
+#       --vendored-linters       Use vendored linters (recommended) (DEPRECATED -
+#                                use binary packages).
+#       --fast                   Only run fast linters.
+#   -i, --install                Attempt to install all known linters (DEPRECATED
+#                                - use binary packages).
+#   -u, --update                 Pass -u to go tool when installing (DEPRECATED -
+#                                use binary packages).
+#   -f, --force                  Pass -f to go tool when installing (DEPRECATED -
+#                                use binary packages).
+#       --download-only          Pass -d to go tool when installing (DEPRECATED -
+#                                use binary packages).
+#   -d, --debug                  Display messages for failed linters, etc.
+#   -j, --concurrency=4          Number of concurrent linters to run.
+#   -e, --exclude=REGEXP ...     Exclude messages matching these regular
+#                                expressions.
+#   -I, --include=REGEXP ...     Include messages matching these regular
+#                                expressions.
+#   -s, --skip=DIR... ...        Skip directories with this name when expanding
+#                                '...'.
+#       --vendor                 Enable vendoring support (skips 'vendor'
+#                                directories and sets GO15VENDOREXPERIMENT=1).
+#       --cyclo-over=10          Report functions with cyclomatic complexity over
+#                                N (using gocyclo).
+#       --line-length=80         Report lines longer than N (using lll).
+#       --misspell-locale=MISSPELL-LOCALE
+#                                Specify locale to use (using misspell).
+#       --min-confidence=.80     Minimum confidence interval to pass to golint.
+#       --min-occurrences=3      Minimum occurrences to pass to goconst.
+#       --min-const-length=3     Minimum constant length.
+#       --dupl-threshold=50      Minimum token sequence as a clone for dupl.
+#       --sort=none ...          Sort output by any of none, path, line, column,
+#                                severity, message, linter.
+#   -t, --tests                  Include test files for linters that support this
+#                                option.
+#       --deadline=30s           Cancel linters if they have not completed within
+#                                this duration.
+#       --errors                 Only show errors.
+#       --json                   Generate structured JSON rather than standard
+#                                line-based output.
+#       --checkstyle             Generate checkstyle XML rather than standard
+#                                line-based output.
+#       --enable-gc              Enable GC for linters (useful on large
+#                                repositories).
+#       --aggregate              Aggregate issues reported by several linters.
+#       --warn-unmatched-nolint  Warn if a nolint directive is not matched with an
+#                                issue.
 #
 # Args:
 #   [<path>]  Directories to lint. Defaults to ".". <path>/... will recurse.
 
 # gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
 
-linters = \
-{"aligncheck"  => "aligncheck:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
- "deadcode"    => "deadcode:^deadcode: (?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "dupl"        => "dupl -plumbing -threshold {duplthreshold}:^(?P<path>.*?\\.go):(?P<line>\\d+)-\\d+:\\s*(?P<message>.*)$",
- "errcheck"    => "errcheck -abspath:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "gas"         => "gas -exclude=G104 -fmt=csv:^(?P<path>.*?\\.go),(?P<line>\\d+),(?P<message>[^,]+,[^,]+,[^,]+)",
- "goconst"     => "goconst -min-occurrences {min_occurrences} -min-length {min_const_length}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "gocyclo"     => "gocyclo -over {mincyclo}:^(?P<cyclo>\\d+)\\s+\\S+\\s(?P<function>\\S+)\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(\\d+)$",
- "gofmt"       => "gofmt -l -s:^(?P<path>.*?\\.go)$",
- "goimports"   => "goimports -l:^(?P<path>.*?\\.go)$",
- "golint"      => "golint -min_confidence {min_confidence}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- # "gosimple"    => "gosimple:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "gotype"      => "gotype -e {tests=-t}:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "ineffassign" => "ineffassign -n:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "interfacer"  => "interfacer:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "lll"         => "lll -g -l {maxlinelength}:^(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*)$",
- "megacheck"   => "megacheck:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "misspell"    => "misspell -j 1:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "safesql"     => "safesql:^- (?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+)$",
- # "staticcheck" => "staticcheck:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "structcheck" => "structcheck {tests=-t}:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.+)$",
- # "test"        => "go test:^--- FAIL: .*$\\s+(?P<path>.*?\\.go):(?P<line>\\d+): (?P<message>.*)$",
- # "testify"     => "go test:Location:\\s+(?P<path>.*?\\.go):(?P<line>\\d+)$\\s+Error:\\s+(?P<message>[^\\n]+)",
- "unconvert"   => "unconvert:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "unparam"     => "unparam:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- # "unused"      => "unused:^(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "varcheck"    => "varcheck:^(?:[^:]+: )?(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*)$",
- "vet"         => "go tool vet:^(?:vet:.*?\\.go:\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*))|(?:(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*))$",
- "vetshadow"   => "go tool vet --shadow:^(?:vet:.*?\\.go:\\s+(?P<path>.*?\\.go):(?P<line>\\d+):(?P<col>\\d+):\\s*(?P<message>.*))|(?:(?P<path>.*?\\.go):(?P<line>\\d+):\\s*(?P<message>.*))$"}
-.reduce([]) { |v, entry|
-  v << '--linter=%s:%s' % entry
-  v << '--enable=%s' % entry[0]
-}
+require 'json'
 
-exec 'gometalinter',
-     '--vendored-linters',
-     "--concurrency=#{File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1}",
-     '--vendor',
-     '--cyclo-over=20',
-     '--line-length=200',
-     '--min-confidence=0.21',
-     '--min-occurrences=2',
-     '--dupl-threshold=50',
-     '--sort=path',
-     '--tests',
-     '--deadline=30s',
-     '--disable-all',
-     *(ENV['DEBUG'] ? ['--debug'] : []),
-     *linters,
-     './...'
+config = {
+  'Enable' => [
+    'deadcode',
+    'dupl',
+    'errcheck',
+    'gas',
+    'goconst',
+    'gocyclo',
+    'gofmt',
+    # 'goimports',
+    'golint',
+    # 'gosimple',
+    'gotype',
+    # 'gotypex',
+    'ineffassign',
+    'interfacer',
+    'lll',
+    'maligned',
+    'megacheck',
+    'misspell',
+    'nakedret',
+    'safesql',
+    # 'staticcheck',
+    'structcheck',
+    'test',
+    # 'testify',
+    'unconvert',
+    'unparam',
+    # 'unused',
+    'varcheck',
+    # 'vet',
+    'vetshadow',
+  ],
+  'Concurrency' => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1),
+  'Vendor' => true,
+  'Cyclo' => 20,
+  'LineLength' => 120,
+  'MinConfidence' => 0.21,
+  'MinOccurrences' => 2,
+  'MinConstLength' => 2,
+  'Sort' => ['path'],
+  'Test' => true,
+  'Debug' => ENV['DEBUG'] == 1,
+  'EnableGC' => true,
+  'Aggregate' => true,
+  'WarnUnmatchedDirective' => true,
+}.to_json
+
+IO.popen ['gometalinter', '--config=/dev/stdin', './...'], 'w' do |io|
+  io.puts config
+end
