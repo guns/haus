@@ -223,14 +223,14 @@ super + Print
 		notify --error 'Screenshot failed'; \
 	fi
 
-{Scroll_Lock,super + F6}
+Scroll_Lock
 	if [[ "$(toggle-mouse)" == true ]]; then \
 		notify --alert --icon input-mouse --title Mouse "enabled"; \
 	else \
 		notify --warning --icon dialog-warning --title Mouse "DISABLED"; \
 	fi
 
-shift + {Scroll_Lock,F6}
+shift + Scroll_Lock
 	xdotool mousemove 10000 10000
 
 #
@@ -242,6 +242,9 @@ F2
 
 super + F2
 	exec thunar ~/Downloads
+
+F6
+	wmctrl -a 'Time Tracker' || exec hamster
 
 F7
 	T='⚙ htop ⚙'; \
