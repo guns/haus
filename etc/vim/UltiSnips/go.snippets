@@ -145,9 +145,16 @@ func Benchmark$1(b *testing.B) {
 }
 endsnippet
 
-snippet t "Test" b
+snippet /^t/ "Test" r
 func Test$1(t *testing.T) {
 	$0
+}
+endsnippet
+
+snippet /^tmain/ "TestMain" r
+func TestMain(m *testing.M) {
+	$0
+	os.Exit(m.Run())
 }
 endsnippet
 
