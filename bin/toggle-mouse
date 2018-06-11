@@ -5,7 +5,7 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-ids = %x(xinput list).scan(/\b(?:mouse|touchpad|stick)\b.*id=(\d+)/i).flatten
+ids = %x(xinput list).scan(/\b(?:mouse|touchpad|stick|Logitech Performance MX)\b.*id=(\d+)/i).flatten
 exit 2 if ids.empty?
 
 state = (%x(xinput list-props #{ids[0]}) =~ /Device Enabled.*:\s*1$/i) ? '0' : '1'
