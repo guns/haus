@@ -69,8 +69,8 @@ nnoremap <silent> <Plug>(go-metalinter) :<C-u>call go#lint#Gometa(0)<CR>
 nnoremap <silent> <Plug>(go-lint) :<C-u>call go#lint#Golint()<CR>
 nnoremap <silent> <Plug>(go-vet) :<C-u>call go#lint#Vet(!g:go_jump_to_error)<CR>
 
-nnoremap <silent> <Plug>(go-alternate-edit) :<C-u>call go#alternate#Switch(0, "edit")<CR>
-nnoremap <silent> <Plug>(go-alternate-vertical) :<C-u>call go#alternate#Switch(0, "vsplit")<CR>
-nnoremap <silent> <Plug>(go-alternate-split) :<C-u>call go#alternate#Switch(0, "split")<CR>
+nnoremap <silent> <Plug>(go-alternate-edit) :<C-u>call go#alternate#Switch(1, "edit")<CR>
+nnoremap <silent> <Plug>(go-alternate-vertical) :<C-u>call go#alternate#Switch(1, "vsplit")<CR>
+nnoremap <silent> <Plug>(go-alternate-split) :<C-u>call go#alternate#Switch(1, "split")<CR>
 
 " vim: sw=2 ts=2 et
