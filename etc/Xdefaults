@@ -33,6 +33,7 @@ URxvt.pointerColor:      rgb:DD/DD/DD
 URxvt.loginShell:        on
 URxvt.pointerBlank:      on
 URxvt.pointerBlankDelay: 65535
+URxvt.print-pipe:        ""
 URxvt.saveLines:         65535
 URxvt.scrollBar:         off
 URxvt.scrollTtyKeypress: on
