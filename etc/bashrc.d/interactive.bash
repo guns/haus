@@ -957,11 +957,12 @@ HAVE go && {
     gotest()          { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace()          { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
     gobench()         { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
+    gobenchprof()     { run go test -bench="${1:-.}" -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof "${@:2}"; }
     gogenerate()      { run go generate "$@"; }
     golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
     godocserver()     { run godoc -http="127.0.0.1:$((0xD0C))"; }
-    gopprof()         { run env PPROF_BINARY_PATH="$PATH" PPROF_TMPDIR='.' rlwrap go tool pprof "$@"; }
+    gopprof()         { run rlwrap go tool pprof -http="127.0.0.1:$((0xD0C))" "$@"; }
 
     HAVE gb && {
         alias gbb='run gb build'
