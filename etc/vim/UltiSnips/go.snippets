@@ -31,10 +31,18 @@ import (
 endsnippet
 
 snippet /^p/ "package lib" r
+/*
+ * Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+ */
+
 package `!v expand('%:p:h:t')`
 endsnippet
 
 snippet /^P/ "package main" r
+/*
+ * Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+ */
+
 package main
 endsnippet
 
@@ -172,31 +180,31 @@ endsnippet
 
 snippet as "assert" w
 if !(${1}) {
-	t.Errorf("expected: $1${2:, actual: %#v}$0")
+	t.Errorf("expected: $1${2:, actual: %v}$0")
 }
 endsnippet
 
 snippet asf "assert false" w
 if ${1} {
-	t.Errorf("expected: !($1)${2:, actual: %#v}$0")
+	t.Errorf("expected: !($1)${2:, actual: %v}$0")
 }
 endsnippet
 
 snippet ase "assert equal" w
 if ${1:actual} != ${2:expected} {
-	t.Errorf("%#v != %#v", $1, $2$0)
+	t.Errorf("%v != %v", $1, $2$0)
 }
 endsnippet
 
 snippet asde "assert deep equal" w
 if !reflect.DeepEqual(${1:actual}, ${2:expected}) {
-	t.Errorf("%#v != %#v", $1, $2$0)
+	t.Errorf("%v != %v", $1, $2$0)
 }
 endsnippet
 
 snippet asn "assert nil" w
 if ${1:err} != nil {
-	t.Errorf("unexpected${2: error}: %#v", $1$0)
+	t.Errorf("unexpected${2: error}: %v", $1$0)
 }
 endsnippet
 
@@ -209,7 +217,7 @@ endsnippet
 snippet asm "assert match" w
 ${1:r} := regexp.MustCompile(${2})
 if !$1.MatchString(${3}) {
-	t.Errorf("%#v !~ %#v", $3, $2)$0
+	t.Errorf("%v !~ %v", $3, $2)$0
 }
 endsnippet
 
@@ -217,6 +225,14 @@ snippet ast "assert type" w
 if reflect.TypeOf($1) != reflect.TypeOf($2) {
 	t.Errorf("expected type %v, but got type %v", reflect.TypeOf($2), reflect.TypeOf($1)$0)
 }
+endsnippet
+
+snippet asl "assert log" w
+t.Logf("${1}", $0)
+endsnippet
+
+snippet asf "assert fail" w
+t.Fail()
 endsnippet
 
 snippet L "len()" w
@@ -239,13 +255,7 @@ snippet T "type" b
 type $0
 endsnippet
 
-snippet TS "type ()" w
-type (
-	$0
-)
-endsnippet
-
-snippet ST "type struct" w
+snippet TS "type struct" w
 type ${1} struct {
 	$0
 }
@@ -271,7 +281,7 @@ for ${1:i} := 0; $1 < ${2:n}; $1++ {
 endsnippet
 
 snippet forir "for i reverse" w
-for ${1:i} := ${2:n - 1}; $1 >= 0; $1-- {
+for ${1:i} := ${2:${3:n} - 1}; $1 >= 0; $1-- {
 	$0
 }
 endsnippet
@@ -284,7 +294,7 @@ for {
 }
 endsnippet
 
-snippet fora "For range loop" !b
+snippet forl "For range loop" !b
 for ${1:i} := range ${2} {
 	${0:${VISUAL}}
 }
@@ -526,6 +536,12 @@ endsnippet
 snippet /^m/ "Method" r
 func (${1} *${2:T}) ${3:name}(${4:params})${5/(.+)/ /}(${5}) {
 	${0:${VISUAL}}
+}
+endsnippet
+
+snippet /^n/ "NewType" r
+func New${1}(${2}) (${3:*}$1${4:, err}) {
+	$0
 }
 endsnippet
 
