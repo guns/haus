@@ -302,7 +302,7 @@ config = {
     'unparam',
     # 'unused',
     'varcheck',
-    # 'vet',
+    'vet',
     'vetshadow',
   ],
   'Concurrency' => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1),
