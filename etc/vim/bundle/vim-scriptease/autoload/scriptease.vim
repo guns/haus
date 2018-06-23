@@ -719,16 +719,20 @@ function! scriptease#includeexpr(file) abort
     let f = substitute(a:file, '^\.', '', '')
     return 'autoload/'.tr(matchstr(f, '[^.]\+\ze#') . '.vim', '#', '/')
   endif
-  return substitute(a:file, '<sfile>', '%', 'g')
+  return substitute(a:file, '\m\C<sfile>\(\%(:\w\)*\)', '\=expand("%:p".submatch(1))', 'g')
 endfunction
 
 function! scriptease#cfile() abort
-  let original = expand('<cfile>')
+  if matchend(getline('.'), &include) >= col('.')
+    let original = matchstr(getline('.'), &include)
+  else
+    let original = expand('<cfile>')
+  endif
   let cfile = original
   if cfile =~# '^\.\=[A-Za-z_]\w*\%(#\w\+\)\+$'
-    return '+djump\ ' . matchstr(cfile, '[^.]*') . ' ' . scriptease#includeexpr(cfile)
+    return '+djump\ ' . matchstr(cfile, '[^.]*') . ' ' . s:fnameescape(scriptease#includeexpr(cfile))
   else
-    return scriptease#includeexpr(cfile)
+    return s:fnameescape(scriptease#includeexpr(cfile))
   endif
 endfunction
 
@@ -736,7 +740,7 @@ function! scriptease#setup_vim() abort
   let &l:path = s:build_path()
   setlocal suffixesadd=.vim keywordprg=:help
   setlocal includeexpr=scriptease#includeexpr(v:fname)
-  setlocal include=^\\s*\\%(so\\%[urce]\\\|ru\\%[untime]\\)[!\ ]\ *
+  setlocal include=^\\s*\\%(so\\%[urce]\\\|ru\\%[untime]\\)[!\ ]\ *\\zs[^\\|]*
   setlocal define=^\\s*fu\\%[nction][!\ ]\\s*
   cnoremap <expr><buffer> <Plug><cfile> scriptease#cfile()
   let b:dispatch = ':Runtime'
@@ -747,8 +751,11 @@ function! scriptease#setup_vim() abort
         \ :exe s:break('del',<q-args>)
 
   nnoremap <silent><buffer> <Plug>ScripteaseHelp :<C-U>exe 'help '.scriptease#helptopic()<CR>
+  let b:undo_ftplugin = get(b:, 'undo_ftplugin', 'exe') .
+        \ '|setlocal path= suffixesadd= includeexpr= include= define= keywordprg=|sil! delcommand Breakadd|sil! delcommand Breakdel'
   if empty(mapcheck('K', 'n'))
     nmap <silent><buffer> K <Plug>ScripteaseHelp
+    let b:undo_ftplugin .= 'sil! exe "nunmap <buffer> K"'
   endif
 endfunction
 

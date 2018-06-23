@@ -22,9 +22,8 @@ I make so many Vim plugins I had to make a Vim plugin for making Vim plugins.
   Extracted from [pathogen.vim](https://github.com/tpope/vim-pathogen).
 * `K`: Look up the `:help` for the VimL construct under the cursor.
 * `zS`: Show the active syntax highlighting groups under the cursor.
-* `g!`: Eval a motion or selection as VimL and replace it with the result.
-  This is handy for doing math, even outside of VimL.  It's so handy, in fact,
-  that it probably deserves its own plugin.
+* `g=`: Eval a motion or selection as VimL and replace it with the result.
+  This is handy for doing math, even outside of VimL.
 * Projections for
   [projectionist.vim](https://github.com/tpope/vim-projectionist).
 
@@ -32,12 +31,13 @@ See the `:help` for details.
 
 ## Installation
 
-If you don't have a preferred installation method, I recommend
-installing [pathogen.vim](https://github.com/tpope/vim-pathogen), and
-then simply copy and paste:
+Install using your favorite package manager, or use Vim's built-in package
+support:
 
-    cd ~/.vim/bundle
-    git clone git://github.com/tpope/vim-scriptease.git
+    mkdir -p ~/.vim/pack/tpope/start
+    cd ~/.vim/pack/tpope/start
+    git clone https://tpope.io/vim/scriptease.git
+    vim -u NONE -c "helptags scriptease/doc" -c q
 
 Once help tags have been generated, you can view the manual with
 `:help scriptease`.
