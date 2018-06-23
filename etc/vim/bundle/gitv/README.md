@@ -45,7 +45,7 @@ gitv was developed against Vim 7.3 and later 8.0 but earlier versions of Vim
 should work. Vim 7.2+ is recommended as it ships with syntax highlighting for
 many Git file types. Vim 7.3+ is recommended for UTF-8 support.
 
-gitv is known not to interract well with neovim yet.
+gitv now has basic neovim support.
 
 ## Purpose
 
@@ -109,6 +109,6 @@ You can download stable release versions (and vote for gitv!) at
 [9]: https://github.com/gmarik/vundle
 [10]: https://riot.im/app/#/room/#gitv:matrix.org
 [11]: http://matrix.org/
-[12]: https://github.com/gregsexton/gitv/blob/master/roadmap.md
+[12]: https://github.com/gregsexton/gitv/blob/master/ROADMAP.md
 [13]: https://github.com/gregsexton/gitv/milestones
 [15]: http://www.vim.org/scripts/script.php?script_id=3574

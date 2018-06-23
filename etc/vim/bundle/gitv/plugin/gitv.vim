@@ -1,8 +1,9 @@
-"AUTHOR:   Greg Sexton <gregsexton@gmail.com>
-"WEBSITE:  http://www.gregsexton.org/portfolio/gitv/
-"LICENSE:  Same terms as Vim itself (see :help license).
-"NOTES:    Much of the credit for gitv goes to Tim Pope and the fugitive plugin
-"          where this plugin either uses functionality directly or was inspired heavily.
+"AUTHOR:     Greg Sexton <gregsexton@gmail.com>
+"MAINTAINER: Roger Bongers <r.l.bongers@gmail.com>
+"WEBSITE:    http://www.gregsexton.org/portfolio/gitv/
+"LICENSE:    Same terms as Vim itself (see :help license).
+"NOTES:      Much of the credit for gitv goes to Tim Pope and the fugitive plugin
+"            where this plugin either uses functionality directly or was inspired heavily.
 
 if exists("g:loaded_gitv") || v:version < 700
   finish
@@ -151,6 +152,87 @@ fu! Gitv_OpenGitCommand(command, windowCmd, ...) "{{{
         silent setlocal readonly
         1
         return 1
+    endif
+endf "}}}
+fu! Gitv_GetDebugInfo() "{{{
+    if has('clipboard')
+        redir @+
+    endif
+
+    echo '## Gitv debug output'
+    echo ''
+
+    echo '### Basic information'
+    echo ''
+    echo '```'
+    echo 'Version: 1.3.1.22'
+    echo ''
+    echo strftime('%c')
+    echo '```'
+    echo ''
+
+    echo '### Settings'
+    echo ''
+    echo '```'
+    set
+    echo '```'
+    echo ''
+
+    echo '### Vim version'
+    echo ''
+    echo '```'
+    version
+    echo '```'
+    echo ''
+
+    echo '### Git output'
+    echo ''
+    echo '```'
+
+    try
+        echo '$ git --version'
+        echo s:RunCommandRelativeToGitRepo('git --version')[0]
+        echo '$ git status'
+        echo s:RunCommandRelativeToGitRepo('git status')[0]
+        echo '$ git remote --verbose'
+        echo s:RunCommandRelativeToGitRepo('git remote --verbose')[0]
+    catch
+        echo 'Gitv_GetDebugInfo exception:'
+        echo v:exception
+    endtry
+
+    echo '```'
+    echo ''
+
+    echo '### Fugitive version'
+    echo ''
+    echo '```'
+
+    try
+        let filename = s:GetFugitiveInfo()[1]
+        " Make sure redirection is still set up
+        if has('clipboard')
+            redir @+
+        endif
+        for line in readfile(filename)
+            if line =~ 'Version:' || line =~ 'GetLatestVimScripts:'
+                echo line
+            endif
+        endfor
+    catch
+        echo 'Gitv_GetDebugInfo exception:'
+        echo v:exception
+    endtry
+
+    echo '```'
+    echo ''
+
+    redir END
+
+    if has('clipboard')
+        echo 'Debug information has been copied to your clipboard. Please attach this information to your submitted issue.'
+    else
+        echo 'Please copy the contents above and add them to your submitted issue.'
     endif
 endf "}}} }}}
 "General Git Functions: "{{{
@@ -1009,8 +1091,12 @@ fu! s:SetDefaultMappings() "{{{
     endif
 endf "}}}
 fu! s:NormalCmd(mapId, mappings) "{{{
+    " Normal commands can sometimes be invoked after git commands with output
+    " This means we may have to move out of the terminal to execute them
+    let terminalStatus = s:MoveOutOfNvimTerminal()
     let bindings = s:GetBindings(a:mapId, a:mappings)
     exec 'normal '.bindings[0].keys
+    call s:MoveIntoNvimTerminal(terminalStatus)
 endfu "}}}
 fu! s:TransformBindings(bindings) "{{{
     " a:bindings can be a string or list of (in)complete binding descriptors
@@ -1145,6 +1231,18 @@ fu! s:ResizeWindow(fileMode) "{{{
     endif
 endf "}}} }}}
 "Utilities:"{{{
+" nvim sometimes opens a new window to execute commands.
+" These utilities allow for temporarily exiting and re-entering the terminal.
+" The terminal should ultimately be re-focused immediately after executing some command in gitv.
+" This will show the output to the user.
+fu! s:MoveOutOfNvimTerminal() "{{{
+    let terminalIsOpen = has('nvim') && &buftype == 'terminal'
+    if terminalIsOpen | tabn | endif
+    return terminalIsOpen
+endf "}}}
+fu! s:MoveIntoNvimTerminal(terminalIsOpen) "{{{
+    if a:terminalIsOpen | tabp | endif
+endf "}}}
 fu! s:GetParentSha(sha, parentNum) "{{{
     if a:parentNum < 1
         return
@@ -1330,11 +1428,16 @@ fu! s:MoveIntoPreviewAndExecute(cmd, tryToOpenNewWin) "{{{
     endif
 
     silent exec a:cmd
+    let terminalStatus = s:MoveOutOfNvimTerminal()
+
+    " Move back into the branch viewer
     if horiz || filem
         wincmd k
     else
         wincmd h
     endif
+
+    call s:MoveIntoNvimTerminal(terminalStatus)
 endfu "}}}
 fu! s:AttemptToCreateAPreviewWindow(shouldAttempt, cmd, shouldWarn) "{{{
     if a:shouldAttempt
@@ -2090,8 +2193,8 @@ fu! s:BisectGoodBad(goodbad) range "{{{
 endf "}}}
 fu! s:BisectSkip(mode) range "{{{
     if s:BisectIsEnabled() && s:BisectHasStarted()
-        if a:mode == 'n' && v:count
-            let loops = abs(v:count)
+        if a:mode == 'n'
+            let loops = abs(v:count || 1)
             let loop = 0
             let errors = 0
             while loop < loops
@@ -2543,16 +2646,25 @@ fu! s:MaxLengths(colls) "{{{
     return lengths
 endfu "}}} }}}
 "Fugitive Functions: "{{{
-fu! s:GetFugitiveSid() "{{{
+" Returns an array with script number and path
+fu! s:GetFugitiveInfo() "{{{
     redir => scriptnames
     silent! scriptnames
     redir END
     for script in split(l:scriptnames, "\n")
         if l:script =~ 'fugitive'
-            return str2nr(split(l:script, ":")[0])
+            let info = split(l:script, ":")
+            " Parse the script number
+            let info[0] = str2nr(info[0])
+            " Parse the script path
+            let info[1] = expand(info[1][1:])
+            return info
         endif
     endfor
     throw 'Unable to find fugitive'
+endfu "}}}
+fu! s:GetFugitiveSid() "{{{
+    return s:GetFugitiveInfo()[0]
 endfu "}}} }}}
 
 let &cpo = s:savecpo
