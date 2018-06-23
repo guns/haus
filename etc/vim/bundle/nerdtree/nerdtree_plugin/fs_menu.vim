@@ -158,6 +158,7 @@ function! NERDTreeMoveNode()
         let bufnum = bufnr("^".curNode.path.str()."$")
 
         call curNode.rename(newNodePath)
+        call b:NERDTree.root.refresh()
         call NERDTreeRender()
 
         "if the node is open in a buffer, ask the user if they want to
@@ -224,10 +225,11 @@ endfunction
 function! NERDTreeListNode()
     let treenode = g:NERDTreeFileNode.GetSelected()
     if !empty(treenode)
-        if has("osx")
+        let s:uname = system("uname")
+        let stat_cmd = 'stat -c "%s" ' 
+        
+        if s:uname =~? "Darwin"                
             let stat_cmd = 'stat -f "%z" '
-        else
-            let stat_cmd = 'stat -c "%s" '
         endif
 
         let cmd = 'size=$(' . stat_cmd . shellescape(treenode.path.str()) . ') && ' .
