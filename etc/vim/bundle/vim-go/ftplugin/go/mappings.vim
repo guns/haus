@@ -73,4 +73,6 @@ nnoremap <silent> <Plug>(go-alternate-edit) :<C-u>call go#alternate#Switch(1, "e
 nnoremap <silent> <Plug>(go-alternate-vertical) :<C-u>call go#alternate#Switch(1, "vsplit")<CR>
 nnoremap <silent> <Plug>(go-alternate-split) :<C-u>call go#alternate#Switch(1, "split")<CR>
 
+nnoremap <silent> <Plug>(go-iferr) :<C-u>call go#iferr#Generate()<CR>
+
 " vim: sw=2 ts=2 et

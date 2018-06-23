@@ -2,6 +2,27 @@
 
 FEATURES:
 
+* Add **:GoIfErr** command together with the `<Plug>(go-iferr)` plug key to
+  create a custom mapping. This command generates an `if err != nil { return ...  }` 
+  automatically which infer the type of return values and the numbers.
+  For example:
+
+```
+func doSomething() (string, error) {
+    f, err := os.Open("file")
+}
+```
+Becomes:
+
+```
+func doSomething() (string, error) {
+    f, err := os.Open("file")
+    if err != nil {
+        return "", err
+    }
+}
+```
+
 * Two new text objects has been added: 
   * `ic` (inner comment) selects the content of the comment, excluding the start/end markers (i.e: `//`, `/*`)
   * `ac` (a comment) selects the content of the whole commment block, including markers
@@ -31,6 +52,10 @@ IMPROVEMENTS:
 * Allow `GoDebugBreakpoint` and `GoDebugCurrent` highlight groups to be
   overridden by user configuration.
   [[GH-1850]](https://github.com/vim-go/pull/1850)
+* Strip trailing carriage returns from quickfix errors that are parsed
+  manually. [[GH-1861]](https://github.com/fatih/vim-go/pull/1861).
+* Cleanup title of terminal window.
+  [[GH-1861]](https://github.com/fatih/vim-go/pull/1861).
 
 BUG FIXES:
 
