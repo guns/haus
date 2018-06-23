@@ -1,5 +1,5 @@
 7za
-aclocal-1.1[012345]
+aclocal-1.1[0123456]
 alpine
 alternatives
 animate
@@ -8,7 +8,7 @@ aptitude-curses
 arm-koji
 asciidoc.py
 autoheader
-automake-1.1[012345]
+automake-1.1[0123456]
 autossh
 autoupdate
 bsdtar
@@ -59,6 +59,7 @@ gmake
 gmplayer
 gnumake
 gpc
+gpgv2
 hciattach
 hciconfig
 hd
@@ -67,6 +68,7 @@ hping
 hping3
 identify
 ifdown
+ifquery
 ifstatus
 import
 insmod.static
@@ -82,6 +84,7 @@ ldapmodify
 ldapmodrdn
 ldappasswd
 ldapwhoami
+links2
 lintian-info
 lusermod
 lvchange
@@ -138,14 +141,16 @@ pvremove
 pvs
 pvscan
 pxz
+py.test
 py.test-[23]
 pydoc3
 pylint-[23]
+pytest-[23]
 python2
 python3
 pypy
 pypy3
-pyvenv-3.[45]
+pyvenv-3.[45678]
 qemu-kvm
 qemu-system-i386
 qemu-system-x86_64

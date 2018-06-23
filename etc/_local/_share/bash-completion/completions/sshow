@@ -6,8 +6,12 @@ _sshow()
     _init_completion || return
 
     case $prev in
-        -i)
+        -*i)
             _available_interfaces -a
+            return
+            ;;
+        -*p)
+            _filedir pcap
             return
             ;;
     esac

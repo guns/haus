@@ -556,12 +556,11 @@ _filedir()
     _tilde "$cur" || return
 
     local -a toks
-    local x tmp
+    local x reset
 
-    x=$( compgen -d -- "$cur" ) &&
-    while read -r tmp; do
-        toks+=( "$tmp" )
-    done <<< "$x"
+    reset=$(shopt -po noglob); set -o noglob
+    toks=( $( compgen -d -- "$cur" ) )
+    IFS=' '; $reset; IFS=$'\n'
 
     if [[ "$1" != -d ]]; then
         local quoted
@@ -570,17 +569,16 @@ _filedir()
         # Munge xspec to contain uppercase version too
         # http://thread.gmane.org/gmane.comp.shells.bash.bugs/15294/focus=15306
         local xspec=${1:+"!*.@($1|${1^^})"}
-        x=$( compgen -f -X "$xspec" -- $quoted ) &&
-        while read -r tmp; do
-            toks+=( "$tmp" )
-        done <<< "$x"
+        reset=$(shopt -po noglob); set -o noglob
+        toks+=( $( compgen -f -X "$xspec" -- $quoted ) )
+        IFS=' '; $reset; IFS=$'\n'
 
         # Try without filter if it failed to produce anything and configured to
-        [[ -n ${COMP_FILEDIR_FALLBACK:-} && -n "$1" && ${#toks[@]} -lt 1 ]] && \
-            x=$( compgen -f -- $quoted ) &&
-            while read -r tmp; do
-                toks+=( "$tmp" )
-            done <<< "$x"
+        [[ -n ${COMP_FILEDIR_FALLBACK:-} && -n "$1" && ${#toks[@]} -lt 1 ]] && {
+            reset=$(shopt -po noglob); set -o noglob
+            toks+=( $( compgen -f -- $quoted ) )
+            IFS=' '; $reset; IFS=$'\n'
+        }
     fi
 
     if [[ ${#toks[@]} -ne 0 ]]; then
@@ -917,15 +915,23 @@ _configured_interfaces()
 }
 
 # Local IP addresses.
+# -4: IPv4 addresses only (default)
+# -6: IPv6 addresses only
+# -a: All addresses
 #
 _ip_addresses()
 {
+    local n
+    case $1 in
+        -a) n='6\?' ;;
+        -6) n='6' ;;
+    esac
     local PATH=$PATH:/sbin
-    COMPREPLY+=( $( compgen -W \
-        "$( { LC_ALL=C ifconfig -a || ip addr show; } 2>/dev/null | command sed -ne \
+    local addrs=$( { LC_ALL=C ifconfig -a || ip addr show; } 2>/dev/null |
+        command sed -ne \
             's/.*addr:\([^[:space:]]*\).*/\1/p' -ne \
-            's|.*inet[[:space:]]\{1,\}\([^[:space:]/]*\).*|\1|p' )" \
-        -- "$cur" ) )
+            "s|.*inet$n[[:space:]]\{1,\}\([^[:space:]/]*\).*|\1|p" )
+    COMPREPLY+=( $( compgen -W "$addrs" -- "$cur" ) )
 }
 
 # This function completes on available kernels
@@ -1142,7 +1148,8 @@ _services()
         $( printf '%s\n' ${sysvdirs[0]}/!($_backup_glob|functions|README) ) )
     $reset
 
-    COMPREPLY+=( $( systemctl list-units --full --all 2>/dev/null | \
+    COMPREPLY+=( $( { systemctl list-units --full --all || \
+                      systemctl list-unit-files; } 2>/dev/null | \
         awk '$1 ~ /\.service$/ { sub("\\.service$", "", $1); print $1 }' ) )
 
     if [[ -x /sbin/upstart-udev-bridge ]]; then
@@ -1351,14 +1358,17 @@ _get_first_arg()
 # This function counts the number of args, excluding options
 # @param $1 chars  Characters out of $COMP_WORDBREAKS which should
 #     NOT be considered word breaks. See __reassemble_comp_words_by_ref.
+# @param $2 glob   Options whose following argument should not be counted
 _count_args()
 {
     local i cword words
     __reassemble_comp_words_by_ref "$1" words cword
 
     args=1
-    for i in "${words[@]:1:cword-1}"; do
-        [[ "$i" != -* ]] && args=$(($args+1))
+    for (( i=1; i < cword; i++ )); do
+        if [[ ${words[i]} != -* && ${words[i-1]} != $2 ]]; then
+           args=$(($args+1))
+        fi
     done
 }
 
@@ -1656,7 +1666,7 @@ _known_hosts_real()
     __ltrim_colon_completions "$prefix$user$cur"
 
 } # _known_hosts_real()
-complete -F _known_hosts traceroute traceroute6 tracepath tracepath6 \
+complete -F _known_hosts traceroute traceroute6 \
     fping fping6 telnet rsh rlogin ftp dig mtr ssh-installkeys showmount
 
 # This meta-cd function observes the CDPATH variable, so that cd additionally
@@ -1888,7 +1898,13 @@ complete -F _longopt a2ps awk base64 bash bc bison cat chroot colordiff cp \
     sed seq sha{,1,224,256,384,512}sum shar sort split strip sum tac tail tee \
     texindex touch tr uname unexpand uniq units vdir wc who
 
-declare -Ag _xspecs
+# declare only knows -g in bash >= 4.2.
+if [[ ${BASH_VERSINFO[0]} -gt 4 ||
+      ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -ge 2 ]]; then
+    declare -Ag _xspecs
+else
+    declare -A _xspecs
+fi
 _filedir_xspec()
 {
     local cur prev words cword

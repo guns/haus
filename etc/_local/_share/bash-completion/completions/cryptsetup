@@ -18,8 +18,16 @@ _cryptsetup()
     _init_completion -s || return
 
     case $prev in
+        --help|--version|--cipher|--hash|--*-size|--key-slot|--size|--offset|\
+        --skip|--iter-time|--timeout|--tries|-!(-*)[chslSbopitT])
+            return
+            ;;
         --key-file|--master-key-file|--header-backup-file|-!(-*)d)
             _filedir
+            return
+            ;;
+        --type|-!(-*)M)
+            COMPREPLY=( $( compgen -W "luks plain loopaes tcrypt" -- "$cur" ) )
             return
             ;;
     esac
@@ -39,8 +47,7 @@ _cryptsetup()
                 luksResume luksHeaderBackup luksHeaderRestore' -- "$cur" ) )
         fi
     else
-        local args
-        _count_args
+        local args; _count_args "" "-!(-*)[chslSbopitTdM]"
         case $arg in
             open|create|luksOpen|loopaesOpen|tcryptOpen)
                 case $args in

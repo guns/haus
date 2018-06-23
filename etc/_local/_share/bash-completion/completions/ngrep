@@ -10,11 +10,12 @@ _ngrep()
             return
             ;;
         -I|-O)
-            _filedir pcap
+            _filedir 'pcap?(ng)'
             return
             ;;
         -d)
             _available_interfaces -a
+            COMPREPLY+=( $( compgen -W 'any' -- "$cur" ) )
             return
             ;;
         -W)

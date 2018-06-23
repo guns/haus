@@ -26,7 +26,7 @@ _strace()
     else
 
         case $prev in
-            -e)
+            -*e)
                 if [[ "$cur" == *=* ]]; then
                     prev=${cur/=*/}
                     cur=${cur/*=/}
@@ -69,28 +69,27 @@ _strace()
                 fi
                 return
                 ;;
-            -o)
+            -*o)
                 _filedir
                 return
                 ;;
-            -p)
+            -*p)
                 _pids
                 return
                 ;;
-            -S)
+            -*S)
                 COMPREPLY=( $( compgen -W 'time calls name nothing' \
                     -- "$cur" ) )
                 return
                 ;;
-            -u)
+            -*u)
                 _allowed_users
                 return
                 ;;
         esac
 
         if [[ "$cur" == -* ]]; then
-            COMPREPLY=( $( compgen -W '-c -d -f -ff -F --help -i -q -r -t -tt
-                -ttt -T -v -V -x -xx -a -e -o -O -p -s -S -u -E' -- "$cur" ) )
+            COMPREPLY=( $( compgen -W '$( _parse_help "$1" -h )' -- "$cur" ) )
         else
             COMPREPLY=( $( compgen -c -- "$cur" ) )
         fi

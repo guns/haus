@@ -48,6 +48,7 @@ bashcomp_DATA = 2to3 \
 		_chfn \
 		chgrp \
 		chkconfig \
+		chmod \
 		chown \
 		chpasswd \
 		chronyc \
@@ -104,6 +105,7 @@ bashcomp_DATA = 2to3 \
 		filesnarf \
 		find \
 		find_member \
+		fio \
 		flake8 \
 		freebsd-update \
 		freeciv-gtk2 \
@@ -127,6 +129,7 @@ bashcomp_DATA = 2to3 \
 		gpasswd \
 		gpg \
 		gpg2 \
+		gpgv \
 		gphoto2 \
 		gprof \
 		groupadd \
@@ -173,9 +176,11 @@ bashcomp_DATA = 2to3 \
 		jarsigner \
 		java \
 		javaws \
+		jq \
 		jpegoptim \
 		jps \
 		jshint \
+		json_xs \
 		k3b \
 		kcov \
 		kill \
@@ -306,11 +311,11 @@ bashcomp_DATA = 2to3 \
 		pwd \
 		pwdx \
 		pwgen \
-		py.test \
 		pycodestyle \
 		pydoc \
 		pyflakes \
 		pylint \
+		pytest \
 		python \
 		pyvenv \
 		qdbus \
@@ -447,6 +452,7 @@ CLEANFILES = \
 	aclocal-1.13 \
 	aclocal-1.14 \
 	aclocal-1.15 \
+	aclocal-1.16 \
 	alpine \
 	alternatives \
 	animate \
@@ -461,6 +467,7 @@ CLEANFILES = \
 	automake-1.13 \
 	automake-1.14 \
 	automake-1.15 \
+	automake-1.16 \
 	autossh \
 	autoupdate \
 	bsdtar \
@@ -511,6 +518,7 @@ CLEANFILES = \
 	gmplayer \
 	gnumake \
 	gpc \
+	gpgv2 \
 	hciattach \
 	hciconfig \
 	hd \
@@ -519,6 +527,7 @@ CLEANFILES = \
 	hping3 \
 	identify \
 	ifdown \
+	ifquery \
 	ifstatus \
 	import \
 	insmod.static \
@@ -534,6 +543,7 @@ CLEANFILES = \
 	ldapmodrdn \
 	ldappasswd \
 	ldapwhoami \
+	links2 \
 	lintian-info \
 	lusermod \
 	lvchange \
@@ -590,6 +600,7 @@ CLEANFILES = \
 	pvs \
 	pvscan \
 	pxz \
+	py.test \
 	py.test-2 \
 	py.test-3 \
 	pydoc3 \
@@ -597,10 +608,15 @@ CLEANFILES = \
 	pylint-3 \
 	pypy \
 	pypy3 \
+	pytest-2 \
+	pytest-3 \
 	python2 \
 	python3 \
 	pyvenv-3.4 \
 	pyvenv-3.5 \
+	pyvenv-3.6 \
+	pyvenv-3.7 \
+	pyvenv-3.8 \
 	qemu-kvm \
 	qemu-system-i386 \
 	qemu-system-x86_64 \
@@ -669,7 +685,7 @@ symlinks: $(targetdir) $(DATA)
 			$(LN_S) 7z $(targetdir)/$$file ; \
 	done
 	for file in aclocal-1.10 aclocal-1.11 aclocal-1.12 aclocal-1.13 \
-		aclocal-1.14 aclocal-1.15 ; do \
+		aclocal-1.14 aclocal-1.15 aclocal-1.16 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) aclocal $(targetdir)/$$file ; \
 	done
@@ -686,7 +702,7 @@ symlinks: $(targetdir) $(DATA)
 			$(LN_S) asciidoc $(targetdir)/$$file ; \
 	done
 	for file in automake-1.10 automake-1.11 automake-1.12 automake-1.13 \
-		automake-1.14 automake-1.15 ; do \
+		automake-1.14 automake-1.15 automake-1.16 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) automake $(targetdir)/$$file ; \
 	done
@@ -771,6 +787,10 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) gkrellm $(targetdir)/$$file ; \
 	done
+	for file in gpgv2 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) gpgv $(targetdir)/$$file ; \
+	done
 	for file in pigz ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) gzip $(targetdir)/$$file ; \
@@ -788,7 +808,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) hping2 $(targetdir)/$$file ; \
 	done
-	for file in ifdown ifstatus ; do \
+	for file in ifdown ifquery ifstatus ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) ifup $(targetdir)/$$file ; \
 	done
@@ -812,6 +832,10 @@ symlinks: $(targetdir) $(DATA)
 		ldapwhoami ldappasswd ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) ldapsearch $(targetdir)/$$file ; \
+	done
+	for file in links2 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) links $(targetdir)/$$file ; \
 	done
 	for file in lintian-info ; do \
 		rm -f $(targetdir)/$$file && \
@@ -907,9 +931,9 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) puppet $(targetdir)/$$file ; \
 	done
-	for file in py.test-2 py.test-3 ; do \
+	for file in pytest-2 pytest-3 py.test py.test-2 py.test-3 ; do \
 		rm -f $(targetdir)/$$file && \
-			$(LN_S) py.test $(targetdir)/$$file ; \
+			$(LN_S) pytest $(targetdir)/$$file ; \
 	done
 	for file in pydoc3 ; do \
 		rm -f $(targetdir)/$$file && \
@@ -923,7 +947,8 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) python $(targetdir)/$$file ; \
 	done
-	for file in pyvenv-3.4 pyvenv-3.5 ; do \
+	for file in pyvenv-3.4 pyvenv-3.5 pyvenv-3.6 pyvenv-3.7 \
+		pyvenv-3.8 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) pyvenv $(targetdir)/$$file ; \
 	done
@@ -1000,8 +1025,8 @@ symlinks: $(targetdir) $(DATA)
 all-local: targetdir = .
 all-local: symlinks
 
-install-data-local: targetdir = $(DESTDIR)$(bashcompdir)
-install-data-local: symlinks
+install-data-hook: targetdir = $(DESTDIR)$(bashcompdir)
+install-data-hook: symlinks
 
 check-local:
 	ret=0
