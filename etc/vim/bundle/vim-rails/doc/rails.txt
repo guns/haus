@@ -385,7 +385,6 @@ File                            Task when given range ~
 test/*_test.rb                  test TEST=test/*_test.rb TESTOPTS=-n<method>
 spec/*_spec.rb                  spec SPEC=spec/*_spec.rb:<line>
 features/*.feature              cucumber FEATURE=features/*.feature:<line>
-app/controllers/*_controller.rb routes -c *
 test/fixtures/*.yml             db:fixtures:identify LABEL=<label>
 db/migrate/*_*.rb               db:migrate:down VERSION=*
 lib/tasks/*.rake                <try to guess currently edited task>
@@ -719,12 +718,14 @@ The full list of available options is as follows:
 						*rails-projection-alternate*
 "alternate" ~
 	Determines the destination of the |rails-:A| command.  If this is a
-	list, the first readable file will be used.
+	list, the first readable file will be used.  For a related file, as
+	with :.A and :R, {lnum} and {define} expand to the current line number
+	or 'define' match.
 						*rails-projection-related*
 "related" ~
-	Determines the destination of the |rails-:R| and :.A commands.  In
-	addition to the standard placeholders, {define} can be used for the
-	current 'define' match (typically a method).
+	Deprecated in favor of "alternate" with either a {lnum} or {define}.
+	Use {lnum|nothing} to force a file not to match a plain :A without
+	interpolating anything.
 						*rails-projection-test*
 "test" ~
 	Determines the default test file to run with |:Rails| and
@@ -768,6 +769,11 @@ The full list of available options is as follows:
 	If you provide a ! after the argument to the navigation command (that
 	is, :Euploader foo!, NOT :Euploader! foo), and a new file is created,
 	this will be used as an array of lines to populate the body.
+						*rails-projection-params*
+"railsParams" ~
+	Provides a dictionary of defaults for URL parameters for
+	|rails-:Preview|, for example {"user_id": "2"}.  The fallback for
+	unspecified parameters is "1".
 
 CONFIGURATION					*rails-configuration*
 
@@ -843,7 +849,9 @@ bundled (requires bundler.vim).
 	      \   "spec/fabricators/*_fabricator.rb": {
 	      \     "command": "fabricator",
 	      \     "affinity": "model",
-	      \     "alternate": "app/models/{}.rb",
+	      \     "alternate": [
+	      \       "db/schema.rb#{plural}{lnum|nothing}",
+	      \       "app/models/{}.rb"],
 	      \     "related": "db/schema.rb#{plural}",
 	      \     "test": "spec/models/{}_spec.rb",
 	      \     "template": "Fabricator :{} do\nend"}}}

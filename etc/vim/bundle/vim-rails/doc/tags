@@ -124,6 +124,7 @@ rails-projection-alternate	rails.txt	/*rails-projection-alternate*
 rails-projection-command	rails.txt	/*rails-projection-command*
 rails-projection-compiler	rails.txt	/*rails-projection-compiler*
 rails-projection-keywords	rails.txt	/*rails-projection-keywords*
+rails-projection-params	rails.txt	/*rails-projection-params*
 rails-projection-related	rails.txt	/*rails-projection-related*
 rails-projection-task	rails.txt	/*rails-projection-task*
 rails-projection-template	rails.txt	/*rails-projection-template*

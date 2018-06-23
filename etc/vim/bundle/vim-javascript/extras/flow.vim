@@ -13,7 +13,7 @@ syntax region  jsFlowArrowArguments contained matchgroup=jsFlowNoise start=/(/  
 syntax match   jsFlowArrow          contained /=>/ skipwhite skipempty nextgroup=jsFlowType,jsFlowTypeCustom,jsFlowParens
 syntax match   jsFlowObjectKey      contained /[0-9a-zA-Z_$?]*\(\s*:\)\@=/ contains=jsFunctionKey,jsFlowMaybe skipwhite skipempty nextgroup=jsObjectValue containedin=jsObject
 syntax match   jsFlowOrOperator     contained /|/ skipwhite skipempty nextgroup=@jsFlowCluster
-syntax keyword jsFlowImportType     contained type skipwhite skipempty nextgroup=jsModuleAsterisk,jsModuleKeyword,jsModuleGroup
+syntax keyword jsFlowImportType     contained type typeof skipwhite skipempty nextgroup=jsModuleAsterisk,jsModuleKeyword,jsModuleGroup
 syntax match   jsFlowWildcard       contained /*/
 
 syntax match   jsFlowReturn         contained /:\s*/ contains=jsFlowNoise skipwhite skipempty nextgroup=@jsFlowReturnCluster,jsFlowArrow,jsFlowReturnParens
@@ -27,10 +27,11 @@ syntax region  jsFlowReturnGroup    contained matchgroup=jsFlowNoise start=/</ e
 syntax match   jsFlowReturnOrOp     contained /\s*|\s*/ skipwhite skipempty nextgroup=@jsFlowReturnCluster
 syntax match   jsFlowWildcardReturn contained /*/ skipwhite skipempty nextgroup=jsFuncBlock
 
-syntax region  jsFlowFunctionGroup  contained matchgroup=jsFlowNoise start=/</ end=/>/ contains=@jsFlowCluster skipwhite skipempty nextgroup=jsFuncArgs
-syntax region  jsFlowClassGroup     contained matchgroup=jsFlowNoise start=/</ end=/>/ contains=@jsFlowCluster skipwhite skipempty nextgroup=jsClassBlock
+syntax region  jsFlowFunctionGroup      contained matchgroup=jsFlowNoise start=/</ end=/>/ contains=@jsFlowCluster skipwhite skipempty nextgroup=jsFuncArgs
+syntax region  jsFlowClassGroup         contained matchgroup=jsFlowNoise start=/</ end=/>/ contains=@jsFlowCluster skipwhite skipempty nextgroup=jsClassBlock
+syntax region  jsFlowClassFunctionGroup contained matchgroup=jsFlowNoise start=/</ end=/>/ contains=@jsFlowCluster skipwhite skipempty nextgroup=jsFuncArgs
 
-syntax region  jsFlowTypeStatement                                   start=/type\%(\s\+\k\)\@=/    end=/=\@=/ contains=jsFlowTypeOperator oneline skipwhite skipempty nextgroup=jsFlowTypeValue keepend
+syntax region  jsFlowTypeStatement                                   start=/\(opaque\s\+\)\?type\%(\s\+\k\)\@=/    end=/=\@=/ contains=jsFlowTypeOperator oneline skipwhite skipempty nextgroup=jsFlowTypeValue keepend
 syntax region  jsFlowTypeValue      contained     matchgroup=jsFlowNoise start=/=/       end=/[\n;]/ contains=@jsFlowCluster,jsFlowGroup,jsFlowMaybe
 syntax match   jsFlowTypeOperator   contained /=/ containedin=jsFlowTypeValue
 syntax match   jsFlowTypeOperator   contained /=/
@@ -81,6 +82,7 @@ if version >= 508 || !exists("did_javascript_syn_inits")
   HiLink jsFlowReturnGroup        jsFlowGroup
   HiLink jsFlowFunctionGroup      PreProc
   HiLink jsFlowClassGroup         PreProc
+  HiLink jsFlowClassFunctionGroup PreProc
   HiLink jsFlowArrowArguments     PreProc
   HiLink jsFlowArrow              PreProc
   HiLink jsFlowReturnArrow        PreProc
