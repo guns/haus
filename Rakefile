@@ -252,7 +252,7 @@ task :env do
       },
 
       {
-        :base => "#{@src}/nginx",
+        :base => "#{@src}/READONLY/nginx",
         :branch => %w[master],
         :files => lambda { |proj|
           src = "#{proj.base}/contrib/vim"
