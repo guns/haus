@@ -1,3 +1,5 @@
+FugitiveHead(...)	fugitive.txt	/*FugitiveHead(...)*
+FugitiveStatusline()	fugitive.txt	/*FugitiveStatusline()*
 fugitive	fugitive.txt	/*fugitive*
 fugitive#head(...)	fugitive.txt	/*fugitive#head(...)*
 fugitive#statusline()	fugitive.txt	/*fugitive#statusline()*
@@ -27,7 +29,9 @@ fugitive-:Gpull	fugitive.txt	/*fugitive-:Gpull*
 fugitive-:Gpush	fugitive.txt	/*fugitive-:Gpush*
 fugitive-:Gread	fugitive.txt	/*fugitive-:Gread*
 fugitive-:Gread!	fugitive.txt	/*fugitive-:Gread!*
+fugitive-:Grebase	fugitive.txt	/*fugitive-:Grebase*
 fugitive-:Gremove	fugitive.txt	/*fugitive-:Gremove*
+fugitive-:Grename	fugitive.txt	/*fugitive-:Grename*
 fugitive-:Gsdiff	fugitive.txt	/*fugitive-:Gsdiff*
 fugitive-:Gsplit	fugitive.txt	/*fugitive-:Gsplit*
 fugitive-:Gsplit!	fugitive.txt	/*fugitive-:Gsplit!*
