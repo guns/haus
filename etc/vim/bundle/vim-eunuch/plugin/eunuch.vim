@@ -31,12 +31,10 @@ command! -bar -bang Unlink
       \ endif
 
 command! -bar -bang Remove
-      \ let s:file = fnamemodify(bufname(<q-args>),':p') |
-      \ execute 'bdelete<bang>' |
-      \ if !bufloaded(s:file) && delete(s:file) |
-      \   echoerr 'Failed to delete "'.s:file.'"' |
-      \ endif |
-      \ unlet s:file
+      \ silent Unlink<bang> |
+      \ echohl WarningMsg |
+      \ echo "File deleted. Use :Delete instead of :Remove to delete the buffer too." |
+      \ echohl NONE
 
 command! -bar -bang Delete
       \ let s:file = fnamemodify(bufname(<q-args>),':p') |
@@ -93,9 +91,13 @@ command! -bar -bang -nargs=? -complete=dir Mkdir
       \  silent keepalt execute 'file' s:fnameescape(expand('%')) |
       \ endif
 
-command! -bar -bang -complete=file -nargs=+ Find   exe s:Grep(<q-bang>, <q-args>, 'find')
-command! -bar -bang -complete=file -nargs=+ Locate exe s:Grep(<q-bang>, <q-args>, 'locate')
-function! s:Grep(bang,args,prg) abort
+command! -bar -bang -complete=file -nargs=+ Find    exe s:Grep(<q-bang>, <q-args>, 'find', '')
+command! -bar -bang -complete=file -nargs=+ Locate  exe s:Grep(<q-bang>, <q-args>, 'locate', '')
+command! -bar -bang -complete=file -nargs=+ Cfind   exe s:Grep(<q-bang>, <q-args>, 'find', '')
+command! -bar -bang -complete=file -nargs=+ Clocate exe s:Grep(<q-bang>, <q-args>, 'locate', '')
+command! -bar -bang -complete=file -nargs=+ Lfind   exe s:Grep(<q-bang>, <q-args>, 'find', 'l')
+command! -bar -bang -complete=file -nargs=+ Llocate exe s:Grep(<q-bang>, <q-args>, 'locate', 'l')
+function! s:Grep(bang, args, prg, type) abort
   let grepprg = &l:grepprg
   let grepformat = &l:grepformat
   let shellpipe = &shellpipe
@@ -105,7 +107,7 @@ function! s:Grep(bang,args,prg) abort
     if &shellpipe ==# '2>&1| tee' || &shellpipe ==# '|& tee'
       let &shellpipe = "| tee"
     endif
-    execute 'grep! '.a:args
+    execute a:type.'grep! '.a:args
     if empty(a:bang) && !empty(getqflist())
       return 'cfirst'
     else
@@ -129,6 +131,7 @@ function! s:SilentSudoCmd(editor) abort
     return ['silent', cmd . ' -A']
   else
     return [local_nvim ? 'silent' : '', cmd]
+  endif
 endfunction
 
 function! s:SudoSetup(file) abort
@@ -243,7 +246,7 @@ augroup eunuch
   autocmd BufWritePost * unlet! b:brand_new_file
   autocmd BufWritePre *
         \ if exists('b:brand_new_file') |
-        \   if getline(1) =~ '^#!' |
+        \   if getline(1) =~ '^#!/' |
         \     let b:chmod_post = '+x' |
         \   endif |
         \ endif
