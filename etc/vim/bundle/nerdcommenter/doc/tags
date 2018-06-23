@@ -13,6 +13,7 @@
 'NERDRemoveAltComs'	NERD_commenter.txt	/*'NERDRemoveAltComs'*
 'NERDRemoveExtraSpaces'	NERD_commenter.txt	/*'NERDRemoveExtraSpaces'*
 'NERDSpaceDelims'	NERD_commenter.txt	/*'NERDSpaceDelims'*
+'NERDToggleCheckAllLines'	NERD_commenter.txt	/*'NERDToggleCheckAllLines'*
 'NERDTrimTrailingWhitespace'	NERD_commenter.txt	/*'NERDTrimTrailingWhitespace'*
 'NERDUsePlaceHolders'	NERD_commenter.txt	/*'NERDUsePlaceHolders'*
 'loaded_nerd_comments'	NERD_commenter.txt	/*'loaded_nerd_comments'*

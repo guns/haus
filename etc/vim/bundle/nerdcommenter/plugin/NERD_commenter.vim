@@ -65,6 +65,7 @@ call s:InitVariable("g:NERDRPlace", "<]")
 call s:InitVariable("g:NERDSpaceDelims", 0)
 call s:InitVariable("g:NERDDefaultAlign", "none")
 call s:InitVariable("g:NERDTrimTrailingWhitespace", 0)
+call s:InitVariable("g:NERDToggleCheckAllLines", 0)
 
 let s:NERDFileNameEscape="[]#*$%'\" ?`!&();<>\\"
 
@@ -270,7 +271,7 @@ let s:delimiterMap = {
     \ 'man': { 'left': '."' },
     \ 'map': { 'left': '%' },
     \ 'maple': { 'left': '#' },
-    \ 'markdown': { 'left': '>', 'leftAlt': '<!--', 'rightAlt': '-->' },
+    \ 'markdown': { 'left': '<!--', 'right': '-->' },
     \ 'masm': { 'left': ';' },
     \ 'mason': { 'left': '<% #', 'right': '%>' },
     \ 'master': { 'left': '$' },
@@ -370,7 +371,7 @@ let s:delimiterMap = {
     \ 'rust': { 'left': '//', 'leftAlt': '/*', 'rightAlt': '*/' },
     \ 'sa': { 'left': '--' },
     \ 'samba': { 'left': ';', 'leftAlt': '#' },
-    \ 'sass': { 'leftAlt': '/*', 'left': '//' },
+    \ 'sass': { 'left': '//', 'leftAlt': '/*' },
     \ 'sather': { 'left': '--' },
     \ 'scala': { 'left': '//', 'nested': 1, 'leftAlt': '/*', 'rightAlt': '*/', 'nestedAlt': 1 },
     \ 'scheme': { 'left': ';', 'nested': 1, 'leftAlt': '#|', 'rightAlt': '|#', 'nestedAlt': 1 },
@@ -1261,17 +1262,30 @@ function! NERDComment(mode, type) range
             call s:NerdEcho("Sexy comment aborted. Nested sexy cannot be nested", 0)
         endtry
 
-    elseif a:type ==? 'Toggle' || a:type ==? 'ToggleAlign'
-        let theLine = getline(firstLine)
-
-        if s:IsInSexyComment(firstLine) || s:IsCommentedFromStartOfLine(s:Left(), theLine) || s:IsCommentedFromStartOfLine(s:Left({'alt': 1}), theLine)
-            call s:UncommentLines(firstLine, lastLine)
+    elseif a:type ==? 'Toggle'
+        if g:NERDToggleCheckAllLines ==# 0
+          let theLine = getline(firstLine)
+          if s:IsInSexyComment(firstLine) || s:IsCommentedFromStartOfLine(s:Left(), theLine) || s:IsCommentedFromStartOfLine(s:Left({'alt': 1}), theLine)
+              call s:UncommentLines(firstLine, lastLine)
+          else
+              call s:CommentLinesToggle(forceNested, firstLine, lastLine)
+          endif
         else
-            if a:type == 'ToggleAlign'
-                call s:CommentLines(forceNested, 'both', firstLine, lastLine)
+          let l:commentAllLines = 0
+          for i in range(firstLine, lastLine)
+            let theLine = getline(i)
+            " if have one line no comment, then comment all lines
+            if !s:IsInSexyComment(firstLine) && !s:IsCommentedFromStartOfLine(s:Left(), theLine) && !s:IsCommentedFromStartOfLine(s:Left({'alt': 1}), theLine)
+              let l:commentAllLines = 1
+              break
             else
-                call s:CommentLinesToggle(forceNested, firstLine, lastLine)
-            endif
+          endif
+          endfor
+          if l:commentAllLines ==# 1
+            call s:CommentLinesToggle(forceNested, firstLine, lastLine)
+          else
+            call s:UncommentLines(firstLine, lastLine)
+          endif
         endif
 
     elseif a:type ==? 'Minimal'
@@ -3020,8 +3034,8 @@ function! s:CreateMaps(modes, target, desc, combo)
     let menu_command .= ' ' . (strlen(a:combo) ? plug : a:target)
     " Execute the commands built above for each requested mode.
     for mode in (a:modes == '') ? [''] : split(a:modes, '\zs')
-        execute mode . plug_start . mode . plug_end
         if strlen(a:combo)
+            execute mode . plug_start . mode . plug_end
             if g:NERDCreateDefaultMappings && !hasmapto(plug, mode)
                 execute mode . 'map <leader>' . a:combo . ' ' . plug
             endif
@@ -3033,8 +3047,7 @@ function! s:CreateMaps(modes, target, desc, combo)
     endfor
 endfunction
 call s:CreateMaps('nx', 'Comment',    'Comment', 'cc')
-call s:CreateMaps('nx', 'Toggle',     'Toggle', '')
-call s:CreateMaps('nx', 'ToggleAlign', 'ToggleAlign', '')
+call s:CreateMaps('nx', 'Toggle',     'Toggle', 'ct')
 call s:CreateMaps('nx', 'Minimal',    'Minimal', 'cm')
 call s:CreateMaps('nx', 'Nested',     'Nested', 'cn')
 call s:CreateMaps('n',  'ToEOL',      'To EOL', 'c$')
