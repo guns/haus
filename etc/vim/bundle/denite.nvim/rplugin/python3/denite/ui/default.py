@@ -117,9 +117,9 @@ class Default(object):
                 return
 
             self.init_denite()
-            self.init_cursor()
             self.gather_candidates()
             self.update_candidates()
+            self.init_cursor()
 
             if self.check_empty():
                 return
@@ -161,8 +161,9 @@ class Default(object):
 
         if (self._context['split'] != 'no' and self._winid > 0 and
                 self._vim.call('win_gotoid', self._winid)):
-            # Move the window to bottom
-            self._vim.command('wincmd J')
+            if self._context['split'] != 'vertical':
+                # Move the window to bottom
+                self._vim.command('wincmd J')
             self._winrestcmd = ''
         else:
             # Create new buffer
@@ -221,7 +222,7 @@ class Default(object):
 
         self._vim.command('silent doautocmd WinEnter')
         self._vim.command('silent doautocmd BufWinEnter')
-        self._vim.command('silent doautocmd FileType denite')
+        self._vim.command('doautocmd FileType denite')
 
         self.init_syntax()
 
@@ -291,7 +292,8 @@ class Default(object):
             syntax_line = ('syntax match %s /^ %s/ nextgroup=%s keepend' +
                            ' contains=deniteConcealedMark') % (
                 'deniteSourceLine_' + name,
-                regex_convert_str_vim(source_name),
+                regex_convert_str_vim(source_name) +
+                               (' ' if source_name else ''),
                 source.syntax_name,
             )
             self._vim.command(syntax_line)
@@ -353,7 +355,7 @@ class Default(object):
 
         updated = (self._displayed_texts != prev_displayed_texts or
                    self._matched_pattern != prev_matched_pattern)
-        if updated and self._context['reversed']:
+        if updated and self._denite.is_async() and self._context['reversed']:
             self.init_cursor()
 
         return updated
@@ -468,7 +470,7 @@ class Default(object):
         terms.append(abbr[:int(self._context['max_candidate_width'])])
         return (self._context['selected_icon']
                 if index in self._selected_candidates
-                else ' ') + ' '.join(terms)
+                else ' ') + ' '.join(terms).replace('\n', '')
 
     def resize_buffer(self):
         split = self._context['split']
@@ -509,7 +511,7 @@ class Default(object):
                 self.update_cursor()
             self.do_action('default')
             candidate = self.get_cursor_candidate()
-            echo(self._vim, 'Normal', '[{0}/{1}] {2}]'.format(
+            echo(self._vim, 'Normal', '[{0}/{1}] {2}'.format(
                 self._cursor + self._win_cursor, self._candidates_len,
                 candidate.get('abbr', candidate['word'])))
             if goto:
