@@ -627,8 +627,8 @@ function! s:GoBufferSetup()
 	noremap  <buffer> <LocalLeader>l :<C-u>GoMetaLinter<CR>
 	noremap  <buffer> <LocalLeader>L :<C-u>GoLint -min_confidence=0<CR>
 	noremap  <buffer> <LocalLeader>o :<C-u>GoOptimizations<CR>
-	nmap     <buffer> <LocalLeader>p <Plug>(go-pointsto)
-	noremap  <buffer> <LocalLeader>P :<C-u>GoPath<CR>
+	noremap  <buffer> <LocalLeader>p :<C-u>GoPath<Space>
+	nmap     <buffer> <LocalLeader>P <Plug>(go-pointsto)
 	nmap     <buffer> <LocalLeader>r <Plug>(go-referrers)
 	nmap     <buffer> <LocalLeader>R <Plug>(go-rename)
 	nmap     <buffer> <LocalLeader>s <Plug>(go-callstack)
