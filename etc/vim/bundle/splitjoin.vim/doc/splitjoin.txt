@@ -760,6 +760,23 @@ PHP markers ~
     echo "OK";
     ?>
 <
+Method calls~
+
+Affects all the arrows after the cursor when
+|splitjoin_php_method_chain_full| is set to 1.
+Otherwise, it affects only a single arrow.
+>
+    $var = $one->two->three()->four();
+
+    $var = $one
+        ->two->three()->four();
+
+    # OR
+
+    $var = $one
+        ->two
+        ->three()
+        ->four();
 
 ==============================================================================
 VIMSCRIPT                                                *splitjoin-vimscript*
@@ -1432,6 +1449,57 @@ When set to 0, as is the default, it will look like this:
       text
     </div>
 <
+                                             *splitjoin_html_attributes_hanging*
+>
+    g:splitjoin_html_attributes_hanging
+<
+
+Default value: 0
+
+If set to 1, then splitting HTML attributes will keep the first attribute on
+the same line, and split the rest. Combined with indentation support, it
+should look like this:
+>
+    <button class="button control"
+            @click="save"
+            v-if="admin">
+      Save
+    </button>
+<
+When set to 0, as is the default, it will look like this:
+>
+    <button
+      class="button control"
+      @click="save"
+      v-if="admin">
+      Save
+    </button>
+<
+
+                                               *splitjoin_php_method_chain_full*
+>
+    g:splitjoin_php_method_chain_full
+<
+
+Default value: 0
+
+If set to 1, then splitting a method chain will split all the arrows after the
+cursor.
+>
+    $var = $foo->one()->two()->three();
+
+Splitting on "->two" if set to 0:
+>
+    $var = $foo->one()
+        ->two()->three();
+
+If set to 1:
+>
+    $var = $foo->one()
+        ->two()
+        ->three();
+
+Joining a chain will also join all the methods calls.
 
 
 ==============================================================================
