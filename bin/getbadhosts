@@ -72,7 +72,7 @@ class Getbadhosts
     @errlock.synchronize { warn ":: Reading #{path}" }
 
     if path =~ %r{\A\w+://}
-      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:59.0) Gecko/20100101 Firefox/59.0', path] do |io|
+      IO.popen ['curl', '--silent', '--location', '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101 Firefox/60.0', path] do |io|
         io.read
       end
     else
