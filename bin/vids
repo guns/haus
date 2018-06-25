@@ -27,8 +27,10 @@ VIDEO_EXTENSIONS = Set.new %w[
 paths = []
 print0 = false
 recurse = true
-sort = nil
+open = false
 pattern = nil
+reverse = false
+sort = nil
 
 args = OptionParser.new nil do |opt|
   opt.banner = <<-EOF.gsub /^ */, ''
@@ -45,14 +47,22 @@ args = OptionParser.new nil do |opt|
     recurse = false
   end
 
-  opt.on '-t', '--sort-mtime' do
-    sort = :mtime
+  opt.on '-o', '--open' do
+    open = true
   end
 
   opt.on '-p', '--pattern PATTERN', Regexp do |p|
     if pattern = p
       pattern = Regexp.new p.source, p.options | Regexp::IGNORECASE unless p.source =~ /\p{Lu}/
     end
+  end
+
+  opt.on '-r', '--reverse' do
+    reverse = true
+  end
+
+  opt.on '-t', '--sort-mtime' do
+    sort = :mtime
   end
 end.parse ARGV
 
@@ -82,4 +92,11 @@ when :mtime
   paths.sort_by! { |f| -File.mtime(f).to_i }
 end
 
-print print0 ? paths.join("\0") : paths.join("\n") << "\n"
+paths.reverse! if reverse
+
+if open
+  exec 'vlc', *paths
+else
+  print print0 ? paths.join("\0") : paths.join("\n") << "\n"
+end
+
