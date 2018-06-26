@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'shellwords'
+
+def sh *args
+  warn "#{args.shelljoin}"
+  system *args
+end
+
+disabled = "['disabled']"
+
+bindings = [
+  ['org.gnome.desktop.input-sources', 'xkb-options', "['ctrl:nocaps,altwin:swap_alt_win']"],
+  ['org.gnome.desktop.wm.keybindings', 'minimize', disabled],
+  ['org.gnome.desktop.wm.keybindings', 'show-desktop', disabled],
+  ['org.gnome.mutter', 'overlay-key', ''],
+  ['org.gnome.settings-daemon.plugins.media-keys', 'screensaver', ''],
+  ['org.gnome.shell.keybindings', 'focus-active-notification', disabled],
+  ['org.gnome.shell.keybindings', 'toggle-application-view', disabled],
+  ['org.gnome.shell.keybindings', 'toggle-message-tray', disabled],
+  ['org.gnome.shell.keybindings', 'toggle-overview', disabled],
+]
+
+bindings.each do |args|
+  sh 'gsettings', 'set', *args
+end
+
+#
+# Tighten rxvt-unicode kerning
+#
+
+xdefaults = File.expand_path '~/.Xdefaults'
+
+if File.exists? xdefaults and not File.read(xdefaults) =~ /^URxvt\.letterSpace:\s*-1/i
+  warn 'printf "URxvt.letterSpace: -1\n" >> ~/.Xdefaults'
+  File.open File.expand_path(xdefaults), 'a' do |f|
+    f.puts 'URxvt.letterSpace: -1'
+  end
+end
