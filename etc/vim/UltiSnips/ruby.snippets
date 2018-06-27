@@ -585,6 +585,17 @@ namespace :$1 do
 end
 endsnippet
 
+snippet ttas "TestTask" w
+require 'rake/testtask'
+Rake::TestTask.new do |t|
+	t.test_files = FileList['$0**/*_test.rb']
+end
+endsnippet
+
+snippet iwait "inotifywait" w
+system 'inotifywait', '-q', '-e', 'attrib', '-e', 'close_write', $0'.'
+endsnippet
+
 
 ### MINITEST
 
@@ -758,7 +769,7 @@ snippet asem "assert_empty" w
 assert_empty $0
 endsnippet
 
-snippet aseq "assert_equal" w
+snippet ase "assert_equal" w
 assert_equal $0
 endsnippet
 
@@ -834,7 +845,7 @@ snippet reem "refute_empty" w
 refute_empty $0
 endsnippet
 
-snippet reeq "refute_equal" w
+snippet ree "refute_equal" w
 refute_equal $0
 endsnippet
 
