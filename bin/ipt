@@ -19,6 +19,7 @@ class Ipt
     :drop_input_target  => 'DROPINPUT',
     :drop_output_target => 'DROPOUTPUT',
     :wait               => false,
+    :command            => nil,
   }
 
   TABLES = %w[filter nat mangle raw security]
@@ -70,6 +71,11 @@ class Ipt
 
       opt.on '-6', '--ipv6', 'IPv6 only' do
         @ipv4, @ipv6 = false, true
+      end
+
+      opt.on '-c', '--command COMMAND', 'Modify firewall, execute COMMAND, then revert changes' do |arg|
+        @wait = true
+        @command = arg
       end
 
       opt.on '-w', '--wait', 'Modify firewall, wait for EOF on stdin, then revert changes' do
@@ -454,7 +460,11 @@ class Ipt
 
     if @wait
       begin
-        $stdin.gets nil
+        if @command
+          sh @command
+        else
+          $stdin.gets nil
+        end
       ensure
         delete! *args
       end
