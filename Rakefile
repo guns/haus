@@ -215,6 +215,7 @@ task :env do
       { :base => "#{@vim}/vim-redl",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-repeat",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-rhubarb",             :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-ruby-refactoring",    :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-scriptease",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-surround",            :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-toml",                :branch => %w[master],      :files => :pathogen },
