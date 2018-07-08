@@ -495,6 +495,15 @@ ALIAS chimmutable='chattr -V +i' \
 
 # inotifywait
 ALIAS ino='inotifywait' && fwatch() {
+    local OPTIND OPTARG opt recurse
+    while getopts :hr opt; do
+        case "$opt" in
+        h) echo "USAGE: $FUNCNAME [-r] file … -- cmd …" >&2; return;;
+        r) recurse='-r';;
+        esac
+    done
+    shift $((OPTIND-1))
+
     local args=("$@") files=() cmd=()
     for ((i = 0; i < $#; ++i)); do
         if [[ "${args[i]}" == '--' ]]; then
@@ -504,7 +513,16 @@ ALIAS ino='inotifywait' && fwatch() {
             files+=(${args[i]})
         fi
     done
-    while inotifywait -q -e attrib -e close_write "${files[@]}"; do eval "${cmd[@]}"; sleep 0.5; done
+
+    while :; do
+        if ! eval inotifywait -q -e attrib -e close_write "$recurse" "${files[@]}"; then
+            until stat "${files[@]}" &>/dev/null; do
+                sleep 1
+            done
+        fi
+        eval "${cmd[@]}"
+        sleep 0.5
+    done
 }
 
 # Check shell init files and system paths for loose permissions
