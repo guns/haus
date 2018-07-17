@@ -7,6 +7,7 @@ require 'set'
 
 VIDEO_EXTENSIONS = Set.new %w[
   .3gp
+  .asf
   .avi
   .divx
   .flv
