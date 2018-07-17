@@ -9,6 +9,7 @@ ENV['GOPATH'] = ENV['GOPATH'].split(':').first
 
 # Non-library utilities
 UTILITIES = %w[
+  github.com/cheekybits/genny
   github.com/constabulary/gb/...
   github.com/cosmos72/gomacro
   github.com/derekparker/delve/cmd/dlv
