@@ -154,7 +154,7 @@
 	# Tags
 	t   = tag
 	td  = tag --delete
-	ts  = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\"; }; f"
+	ts  = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\n${@:2}\"; }; f"
 
 	# Diff and patch
 	di   = diff
