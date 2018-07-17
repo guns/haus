@@ -89,7 +89,7 @@ snippet C "char" w
 char $0
 endsnippet
 
-snippet CC "char const" w
+snippet cc "char const" w
 char const $0
 endsnippet
 
@@ -153,11 +153,11 @@ endsnippet
 ### LOOPS
 
 snippet for "for loop" w
-for (${1:i} = 0; $1 < ${2:count}; ${3:++$1})
+for (${1:int }${2:i} = 0; $2 < ${3:count}; ${4:$2++})
 endsnippet
 
 snippet for- "reverse for loop" w
-for (${1:i} = ${2:count}; $1 >= 0; ${3:--$1})
+for (${1:int }${2:i} = ${3:count}; $2 >= 0; ${4:$2--})
 endsnippet
 
 snippet wh "while loop" w
@@ -189,7 +189,7 @@ fprintf(${1:stderr}, "${2:%s}\n"${2/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$3${2/([^%]|%
 endsnippet
 
 snippet deb "call debugger" w
-__asm__("int \$3");
+asm ("int \$3");
 endsnippet
 
 snippet fdeb "printf debug to file" w
@@ -210,4 +210,18 @@ endsnippet
 
 snippet fr "free" w
 free($0);
+endsnippet
+
+snippet asm "asm" w
+${1:#define NL "\n\t"
+}asm ${2:volatile }(
+	$0
+	: // Output
+	: // Input
+	: // Clobbers
+);
+endsnippet
+
+snippet _a "__attribute__(())" w
+__attribute__(($0))
 endsnippet

@@ -1,5 +1,21 @@
 extends c
 
+priority 1
+
+snippet a "auto" w
+auto
+endsnippet
+
+snippet inc "#include <>" w
+#include <${1:iostream}>
+endsnippet
+
+snippet Inc "#include" w
+#include "${2:${1:`!p snip.rv = snip.basename`}.hpp}"
+endsnippet
+
+priority 0
+
 ###########################################################################
 #                            TextMate Snippets                            #
 ###########################################################################
@@ -10,12 +26,11 @@ endsnippet
 snippet cl "class .. (class)"
 class ${1:`!p snip.rv = snip.basename or "name"`}
 {
-public:
-	${1/(\w+).*/$1/} (${2:arguments});
-	virtual ~${1/(\w+).*/$1/} ();
+	$0
 
-private:
-	${0:/* data */}
+public:
+	${1/(\w+).*/$1/}(${2:arguments});
+	virtual ~${1/(\w+).*/$1/}();
 };
 endsnippet
 

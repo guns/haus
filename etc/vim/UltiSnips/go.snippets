@@ -31,18 +31,10 @@ import (
 endsnippet
 
 snippet /^p/ "package lib" r
-/*
- * Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
- */
-
 package `!v expand('%:p:h:t')`
 endsnippet
 
 snippet /^P/ "package main" r
-/*
- * Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
- */
-
 package main
 endsnippet
 
@@ -80,11 +72,11 @@ println($0)
 endsnippet
 
 snippet pf "fmt.Printf()" w
-fmt.Printf($0)
+fmt.Printf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet fpf "fmt.Fprintf()" w
-fmt.Fprintf($0)
+fmt.Fprintf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet fpl "fmt.Fprintln()" w
@@ -100,11 +92,11 @@ fmt.Println($0)
 endsnippet
 
 snippet sf "fmt.Sprintf()" w
-fmt.Sprintf($0)
+fmt.Sprintf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet lf "log.Printf" w
-log.Printf($0)
+log.Printf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet lp "log.Print" w
@@ -231,8 +223,12 @@ snippet asl "assert log" w
 t.Logf("${1}", $0)
 endsnippet
 
-snippet asf "assert fail" w
+snippet asF "assert fail" w
 t.Fail()
+endsnippet
+
+snippet asE "assert errorf" w
+t.Errorf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
 endsnippet
 
 snippet L "len()" w
@@ -531,23 +527,37 @@ new($0)
 endsnippet
 
 # functions
+priority 1
 snippet /^main/ "Main function" r
 func main() {
 	${0:${VISUAL}}
 }
 endsnippet
 
-snippet /^m/ "Method" r
-func (${1} *${2:T}) ${3:name}(${4:params})${5/(.+)/ /}(${5}) {
+snippet /^m/ "Method Pointer Receiver" r
+func (${1} *${2:T}) ${3:name}(${4:params})${5/(.+)/(?1: :)/}(${5}) {
+	${0:${VISUAL}}
+}
+endsnippet
+
+snippet /^M/ "Method Value Receiver" r
+func (${1} ${2:T}) ${3:name}(${4:params})${5/(.+)/(?1: :)/}(${5}) {
 	${0:${VISUAL}}
 }
 endsnippet
 
 snippet /^n/ "NewType" r
-func New${1}(${2}) (${3:*}$1${4:, err}) {
+func New${1}(${2}) (*$1${3:, err}) {
 	$0
 }
 endsnippet
+
+snippet /^N/ "MakeType" r
+func Make${1}(${2}) ($1${3:, err}) {
+	$0
+}
+endsnippet
+priority 0
 
 snippet /^f/ "Function" !r
 func ${1}(${2})${3/(.+)/ /}(${3}) {
@@ -756,7 +766,7 @@ endsnippet
 # endsnippet
 
 snippet spi "strconv.ParseInt" w
-strconv.ParseInt($0)
+strconv.ParseInt(${1:string}, ${2:base}, ${3:bitsize})
 endsnippet
 
 snippet sfi "strconv.FormatInt" w

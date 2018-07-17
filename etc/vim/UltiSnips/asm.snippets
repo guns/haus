@@ -1,44 +1,67 @@
+snippet APP "APP" w
+GLOBAL _start
+
+%use "smartalign"
+ALIGNMODE p6
+
+SECTION .text
+
+ALIGN 16
+_start:
+	0
+endsnippet
+
 snippet f "function" b
-${1:ALIGN(16)
-};; ${2:type} ${3:func}($0)
-$3:
-	; push rbp
+${1:ALIGN 16
+};; ${2:func}(${3:rdi: ${4}${5:, rsi: ${6}${7:, rdx: ${8}${9:, rcx: ${10}${11:, r8: ${12}${13:, r9: ${14}}}}}}})${16:
+;;	[s-${18}]: ${19}}${20:
+;;	=> rax: ${21}}
+$2:
+	push rbp
+	mov rbp, rsp
 	; push rbx
 	; push r12
 	; push r13
 	; push r14
 	; push r15
-
-ret:
+	;;$0
 	; pop r15
 	; pop r14
 	; pop r13
 	; pop r12
 	; pop rbx
-	; pop rbp
+	pop rbp
 	ret
 endsnippet
 
 snippet c "call with push/pop" b
-	; push rax
-	; push rcx
-	; push rdx
-	; push rdi
-	; push rsi
-	; push r8
-	; push r9
-	; push r10
-	; push r11
-	call $0
-	; pop r11
-	; pop r10
-	; pop r9
-	; pop r8
-	; pop rsi
-	; pop rdi
-	; pop rdx
-	; pop rcx
-	; pop rax
+;; ${1:func}(${2:rdi: ${3}${4:, rsi: ${5}${6:, rdx: ${7}${8:, rcx: ${9}${10:, r8: ${11}${12:, r9: ${13}}}}}}})${14: => ${15:rax: ${16}}}
+; push rax
+; push rcx
+; push rdx
+; push rdi
+; push rsi
+; push r8
+; push r9
+; push r10
+; push r11
+call $1$0
+; pop r11
+; pop r10
+; pop r9
+; pop r8
+; pop rsi
+; pop rdi
+; pop rdx
+; pop rcx
+; pop rax
+endsnippet
+
+snippet sys "syscall" w
+;; SYS_${1:call}(${2:rdi: ${3}${4:, rsi: ${5}${6:, rdx: ${7}${8:, r10: ${9}${10:, r8: ${11}${12:, r9: ${13}}}}}}})
+mov rax, SYS_$1
+$0
+syscall
 endsnippet
 
 snippet def "%define" b
@@ -70,31 +93,35 @@ snippet use "use" b
 %use "$0"
 endsnippet
 
-snippet sec "section ." b
-section .
+snippet g "GLOBAL" w
+GLOBAL ${0:_start}
+endsnippet
+
+snippet sec "SECTION ." b
+SECTION .
 endsnippet
 
 snippet t ".text" b
-section .text
+SECTION .text
 	$0
 endsnippet
 
 snippet d ".data" b
-section .data
+SECTION .data
 	$0
 endsnippet
 
 snippet b ".bss" b
-section .bss
+SECTION .bss
 	$0
 endsnippet
 
 snippet seg "segment ." b
-segment .
+SEGMENT .
 endsnippet
 
 snippet eq "equ" b
-$1 equ $0
+$1 EQU $0
 endsnippet
 
 snippet m "%macro" b
@@ -104,7 +131,11 @@ snippet m "%macro" b
 endsnippet
 
 snippet al "align 16" w
-ALIGN(16)
+ALIGN 16
+endsnippet
+
+snippet alm "alignmode" w
+ALIGNMODE p6
 endsnippet
 
 snippet deb "int3" w
