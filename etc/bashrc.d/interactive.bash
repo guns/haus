@@ -976,7 +976,7 @@ HAVE go && {
     gorace()          { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
     gobench()         { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
     gobenchprof()     { run go test -bench="${1:-.}" -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof "${@:2}"; }
-    gogenerate()      { run go generate "$@"; }
+    gogen()           { run go generate -v "$@"; }
     golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
     godocserver()     { run godoc -http="127.0.0.1:$((0xD0C))"; }
