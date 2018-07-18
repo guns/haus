@@ -507,12 +507,17 @@ CLEANFILES = \
 	freeciv-sdl \
 	freeciv-xaw \
 	g++ \
+	g++-7 \
 	g4 \
 	g77 \
 	g95 \
+	gcc-7 \
+	gccgo \
+	gccgo-7 \
 	gcj \
 	geoiplookup6 \
 	gfortran \
+	gfortran-7 \
 	gkrellm2 \
 	gmake \
 	gmplayer \
@@ -531,6 +536,7 @@ CLEANFILES = \
 	ifstatus \
 	import \
 	insmod.static \
+	iperf3 \
 	javac \
 	javadoc \
 	kplayer \
@@ -771,7 +777,8 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) function $(targetdir)/$$file ; \
 	done
-	for file in cc c++ g++ gfortran f77 g77 f95 g95 gcj gpc ; do \
+	for file in cc c++ g++ g++-7 gfortran gfortran-7 f77 g77 f95 g95 gcj \
+		gpc gccgo gccgo-7 gcc-7 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) gcc $(targetdir)/$$file ; \
 	done
@@ -819,6 +826,10 @@ symlinks: $(targetdir) $(DATA)
 	for file in insmod.static ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) insmod $(targetdir)/$$file ; \
+	done
+	for file in iperf3 ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) iperf $(targetdir)/$$file ; \
 	done
 	for file in javac javadoc ; do \
 		rm -f $(targetdir)/$$file && \
