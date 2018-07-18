@@ -122,8 +122,11 @@ ZEROS = '0' * 40
 
 ALLOWED_GOALS = [
     'full',
-    'rebase-with-history',
     'rebase',
+    'rebase-with-history',
+    'border',
+    'border-with-history',
+    'border-with-history2',
     'merge',
     'drop',
     'revert',
@@ -2864,6 +2867,86 @@ class MergeState(Block):
 
         self._set_refname(refname, commit, force=force)
 
+    def simplify_to_border(
+            self, refname,
+            with_history1=False, with_history2=False, force=False,
+            ):
+        i1 = self.len1 - 1
+        for i2 in range(1, self.len2):
+            if not (i1, i2) in self:
+                raise Failure(
+                    'Cannot simplify to border because '
+                    'merge %d-%d is not yet done'
+                    % (i1, i2)
+                    )
+
+        i2 = self.len2 - 1
+        for i1 in range(1, self.len1):
+            if not (i1, i2) in self:
+                raise Failure(
+                    'Cannot simplify to border because '
+                    'merge %d-%d is not yet done'
+                    % (i1, i2)
+                    )
+
+        i1 = self.len1 - 1
+        commit = self[i1, 0].sha1
+        for i2 in range(1, self.len2 - 1):
+            orig = self[0, i2].sha1
+            tree = self.git.get_tree(self[i1, i2].sha1)
+
+            # Create a commit, copying the old log message:
+            if with_history2:
+                parents = [commit, orig]
+                msg = (
+                    self.git.get_log_message(orig).rstrip('\n')
+                    + '\n\n(rebased-with-history from commit %s)\n' % (orig,)
+                    )
+            else:
+                parents = [commit]
+                msg = (
+                    self.git.get_log_message(orig).rstrip('\n')
+                    + '\n\n(rebased from commit %s)\n' % (orig,)
+                    )
+
+            commit = self.git.commit_tree(tree, parents, msg=msg)
+        commit1 = commit
+
+        i2 = self.len2 - 1
+        commit = self[0, i2].sha1
+        for i1 in range(1, self.len1 - 1):
+            orig = self[i1, 0].sha1
+            tree = self.git.get_tree(self[i1, i2].sha1)
+
+            # Create a commit, copying the old log message:
+            if with_history1:
+                parents = [orig, commit]
+                msg = (
+                    self.git.get_log_message(orig).rstrip('\n')
+                    + '\n\n(rebased-with-history from commit %s)\n' % (orig,)
+                    )
+            else:
+                parents = [commit]
+                msg = (
+                    self.git.get_log_message(orig).rstrip('\n')
+                    + '\n\n(rebased from commit %s)\n' % (orig,)
+                    )
+
+            commit = self.git.commit_tree(tree, parents, msg=msg)
+        commit2 = commit
+
+        # Construct the apex commit:
+        tree = self.git.get_tree(self[-1, -1].sha1)
+        msg = (
+            'Merge %s into %s (using imerge border)'
+            % (self.tip2, self.tip1)
+            )
+
+        commit = self.git.commit_tree(tree, [commit1, commit2], msg=msg)
+
+        # Update the reference:
+        self._set_refname(refname, commit, force=force)
+
     def _simplify_to_path(self, refname, base, path, force=False):
         """Simplify based on path and set refname to the result.
 
@@ -2976,10 +3059,18 @@ class MergeState(Block):
 
         if self.goal == 'full':
             self.simplify_to_full(refname, force=force)
-        elif self.goal == 'rebase-with-history':
-            self.simplify_to_rebase_with_history(refname, force=force)
         elif self.goal == 'rebase':
             self.simplify_to_rebase(refname, force=force)
+        elif self.goal == 'rebase-with-history':
+            self.simplify_to_rebase_with_history(refname, force=force)
+        elif self.goal == 'border':
+            self.simplify_to_border(refname, force=force)
+        elif self.goal == 'border-with-history':
+            self.simplify_to_border(refname, with_history2=True, force=force)
+        elif self.goal == 'border-with-history2':
+            self.simplify_to_border(
+                refname, with_history1=True, with_history2=True, force=force,
+                )
         elif self.goal == 'drop':
             self.simplify_to_drop(refname, force=force)
         elif self.goal == 'revert':
@@ -3628,19 +3719,63 @@ def cmd_diagram(parser, options):
         )
 
 
+def reparent_recursively(git, start_commit, parents, end_commit):
+    """Change the parents of start_commit and its descendants.
+
+    Change start_commit to have the specified parents, and reparent
+    all commits on the ancestry path between start_commit and
+    end_commit accordingly. Return the replacement end_commit.
+    start_commit, parents, and end_commit must all be resolved OIDs.
+
+    """
+
+    # A map {old_oid : new_oid} keeping track of which replacements
+    # have to be made:
+    replacements = {}
+
+    # Reparent start_commit:
+    replacements[start_commit] = git.reparent(start_commit, parents)
+
+    for (commit, parents) in git.rev_list_with_parents(
+            '--ancestry-path', '--topo-order', '--reverse',
+            '%s..%s' % (start_commit, end_commit)
+            ):
+        parents = [replacements.get(p, p) for p in parents]
+        replacements[commit] = git.reparent(commit, parents)
+
+    try:
+        return replacements[end_commit]
+    except KeyError:
+        raise ValueError(
+            "%s is not an ancestor of %s" % (start_commit, end_commit),
+        )
+
+
 def cmd_reparent(parser, options):
     git = GitRepository()
     try:
-        commit_sha1 = git.get_commit_sha1('HEAD')
+        commit = git.get_commit_sha1(options.commit)
+    except ValueError:
+        sys.exit('%s is not a valid commit', options.commit)
+
+    try:
+        head = git.get_commit_sha1('HEAD')
     except ValueError:
         sys.exit('HEAD is not a valid commit')
 
     try:
-        parent_sha1s = [git.get_commit_sha1(p) for p in options.parents]
+        parents = [git.get_commit_sha1(p) for p in options.parents]
     except ValueError as e:
         sys.exit(e.message)
 
-    sys.stdout.write('%s\n' % (git.reparent(commit_sha1, parent_sha1s),))
+    sys.stderr.write('Reparenting %s..HEAD\n' % (options.commit,))
+
+    try:
+        new_head = reparent_recursively(git, commit, parents, head)
+    except ValueError as e:
+        sys.exit(e.message)
+
+    sys.stdout.write('%s\n' % (new_head,))
 
 
 def main(args):
@@ -3927,10 +4062,24 @@ def main(args):
 
     subparser = subparsers.add_parser(
         'reparent',
-        help='change the parents of the HEAD commit',
+        help=(
+            'change the parents of the specified commit and propagate the '
+            'change to HEAD'
+            ),
         )
     subparser.add_argument(
-        'parents', nargs='*', help='[PARENT...]',
+        '--commit', metavar='COMMIT', default='HEAD',
+        help=(
+            'target commit to reparent. Create a new commit identical to '
+            'this one, but having the specified parents. Then create '
+            'new versions of all descendants of this commit all the way to '
+            'HEAD, incorporating the modified commit. Output the SHA-1 of '
+            'the replacement HEAD commit.'
+        ),
+    )
+    subparser.add_argument(
+        'parents', nargs='*', metavar='PARENT',
+        help='a list of commits',
         )
 
     options = parser.parse_args(args)
