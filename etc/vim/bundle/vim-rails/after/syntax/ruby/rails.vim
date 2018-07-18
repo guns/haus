@@ -15,7 +15,7 @@ endif
 if rails#buffer().type_name('model-observer')
   syn keyword rubyMacro observe
 
-elseif rails#buffer().type_name() ==# 'model' || rails#buffer().type_name('model-record', 'model-concern')
+elseif rails#buffer().type_name('model')
   syn keyword rubyMacro accepts_nested_attributes_for attr_readonly attribute enum serialize store store_accessor
   syn keyword rubyMacro default_scope scope
   syn keyword rubyEntity belongs_to has_one composed_of
@@ -47,7 +47,7 @@ if rails#buffer().type_name('helper','view')
         \ favicon_link_tag field_set_tag fields fields_for file_field file_field_tag flash font_path font_url form_for form_tag form_with
         \ grouped_collection_select grouped_options_for_select
         \ headers hidden_field hidden_field_tag highlight
-        \ image_alt image_path image_submit_tag image_tag image_url
+        \ image_alt image_pack_tag image_path image_submit_tag image_tag image_url
         \ j javascript_cdata_section javascript_include_tag javascript_pack_tag javascript_path javascript_tag javascript_url
         \ l label label_tag link_to link_to_if link_to_unless link_to_unless_current localize
         \ mail_to month_field month_field_tag
@@ -202,16 +202,16 @@ if rails#buffer().type_name('test-system', 'spec-feature', 'cucumber')
   syn keyword rubyTestAction attach_file check choose click_button click_link click_link_or_button click_on fill_in select uncheck unselect
 endif
 
-let keywords = split(join(filter(rails#buffer().projected('keywords'),
+let s:keywords = split(join(filter(rails#buffer().projected('keywords'),
       \ 'type(v:val) == type("")'), ' '))
-let special = filter(copy(keywords), 'v:val =~# ''^\h\k*[?!]$''')
-let regular = filter(copy(keywords), 'v:val =~# ''^\h\k*$''')
-let group = rails#buffer().type_name('helper', 'view') ? 'rubyHelper' : 'rubyMacro'
-if !empty(special)
-  exe 'syn match' group '"\<\%('.join(special, '\|').'\)"'
+let s:special = filter(copy(s:keywords), 'v:val =~# ''^\h\k*[?!]$''')
+let s:regular = filter(copy(s:keywords), 'v:val =~# ''^\h\k*$''')
+let s:group = rails#buffer().type_name('helper', 'view') ? 'rubyHelper' : 'rubyMacro'
+if !empty(s:special)
+  exe 'syn match' s:group '"\<\%('.join(s:special, '\|').'\)"'
 endif
-if !empty(regular)
-  exe 'syn keyword' group join(regular, ' ')
+if !empty(s:regular)
+  exe 'syn keyword' s:group join(s:regular, ' ')
 endif
 
 hi def link rubyEntity                      rubyMacro

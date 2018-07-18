@@ -1,5 +1,3 @@
-config/rails.vim	rails.txt	/*config\/rails.vim*
-g:rails_abbreviations	rails.txt	/*g:rails_abbreviations*
 g:rails_ctags_arguments	rails.txt	/*g:rails_ctags_arguments*
 g:rails_gem_projections	rails.txt	/*g:rails_gem_projections*
 g:rails_projections	rails.txt	/*g:rails_projections*
@@ -47,8 +45,6 @@ rails-:RE	rails.txt	/*rails-:RE*
 rails-:RS	rails.txt	/*rails-:RS*
 rails-:RT	rails.txt	/*rails-:RT*
 rails-:RV	rails.txt	/*rails-:RV*
-rails-:Rabbrev	rails.txt	/*rails-:Rabbrev*
-rails-:Rabbrev!	rails.txt	/*rails-:Rabbrev!*
 rails-:Rails	rails.txt	/*rails-:Rails*
 rails-:Rake	rails.txt	/*rails-:Rake*
 rails-:Rcd	rails.txt	/*rails-:Rcd*
@@ -73,7 +69,6 @@ rails-:Rlog	rails.txt	/*rails-:Rlog*
 rails-:Rmailer	rails.txt	/*rails-:Rmailer*
 rails-:Rmigration	rails.txt	/*rails-:Rmigration*
 rails-:Rmodel	rails.txt	/*rails-:Rmodel*
-rails-:Rnavcommand	rails.txt	/*rails-:Rnavcommand*
 rails-:Rp	rails.txt	/*rails-:Rp*
 rails-:Rpp	rails.txt	/*rails-:Rpp*
 rails-:Rpreview	rails.txt	/*rails-:Rpreview*
@@ -85,7 +80,6 @@ rails-:Rschema	rails.txt	/*rails-:Rschema*
 rails-:Rscript	rails.txt	/*rails-:Rscript*
 rails-:Rserver	rails.txt	/*rails-:Rserver*
 rails-:Rserver!	rails.txt	/*rails-:Rserver!*
-rails-:Rset	rails.txt	/*rails-:Rset*
 rails-:Rspec	rails.txt	/*rails-:Rspec*
 rails-:Rstylesheet	rails.txt	/*rails-:Rstylesheet*
 rails-:Rtags	rails.txt	/*rails-:Rtags*
@@ -118,7 +112,6 @@ rails-misc	rails.txt	/*rails-misc*
 rails-navigation	rails.txt	/*rails-navigation*
 rails-partials	rails.txt	/*rails-partials*
 rails-plugin-author	rails.txt	/*rails-plugin-author*
-rails-projection-abbreviations	rails.txt	/*rails-projection-abbreviations*
 rails-projection-affinity	rails.txt	/*rails-projection-affinity*
 rails-projection-alternate	rails.txt	/*rails-projection-alternate*
 rails-projection-command	rails.txt	/*rails-projection-command*
