@@ -14,7 +14,7 @@ function! s:throw(string) abort
 endfunction
 
 function! s:shellesc(arg) abort
-  if a:arg =~ '^[A-Za-z0-9_/.-]\+$'
+  if a:arg =~# '^[A-Za-z0-9_/.-]\+$'
     return a:arg
   elseif &shell =~# 'cmd' && a:arg !~# '"'
     return '"'.a:arg.'"'
@@ -227,17 +227,12 @@ function! rhubarb#fugitive_url(opts, ...) abort
   endif
   let path = substitute(a:opts.path, '^/', '', '')
   if path =~# '^\.git/refs/heads/'
-    let branch = a:opts.repo.git_chomp('config','branch.'.path[16:-1].'.merge')[11:-1]
-    if branch ==# ''
-      return root . '/commits/' . path[16:-1]
-    else
-      return root . '/commits/' . branch
-    endif
+    return root . '/commits/' . path[16:-1]
   elseif path =~# '^\.git/refs/tags/'
     return root . '/releases/tag/' . path[15:-1]
   elseif path =~# '^\.git/refs/remotes/[^/]\+/.'
     return root . '/commits/' . matchstr(path,'remotes/[^/]\+/\zs.*')
-  elseif path =~# '.git/\%(config$\|hooks\>\)'
+  elseif path =~# '^\.git/\%(config$\|hooks\>\)'
     return root . '/admin'
   elseif path =~# '^\.git\>'
     return root

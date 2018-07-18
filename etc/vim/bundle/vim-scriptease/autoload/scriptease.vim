@@ -45,6 +45,39 @@ function! s:shellslash(path) abort
   endif
 endfunction
 
+function! s:fcall(fn, path, ...) abort
+  let ns = matchstr(a:path, '^\a\a\+\ze:')
+  if len(ns) && exists('*' . ns . '#' . a:fn)
+    return call(ns . '#' . a:fn, [a:path] + a:000)
+  else
+    return call(a:fn, [a:path] + a:000)
+  endif
+endfunction
+
+function! s:glob(pattern) abort
+  if v:version >= 704
+    return s:fcall('glob', a:pattern, 0, 1)
+  else
+    return split(s:fcall('glob', a:pattern), "\n")
+  endif
+endfunction
+
+function! s:isdirectory(path) abort
+  return s:fcall('isdirectory', a:path)
+endfunction
+
+function! s:filereadable(path) abort
+  return s:fcall('filereadable', a:path)
+endfunction
+
+function! s:readfile(path, ...) abort
+  if a:0
+    return s:fcall('readfile', a:path, '', a:1)
+  else
+    return s:fcall('readfile', a:path)
+  endif
+endfunction
+
 " Section: Completion
 
 function! scriptease#complete(A,L,P) abort
@@ -64,9 +97,9 @@ function! scriptease#complete(A,L,P) abort
   let pattern = substitute(request,'/\|\'.sep,'*'.sep,'g').'*'
   let found = {}
   for glob in split(&runtimepath, ',')
-    for path in map(split(glob(glob), "\n"), 'fnamemodify(v:val, ":p")')
-      let matches = split(glob(path.sep.pattern),"\n")
-      call map(matches,'isdirectory(v:val) ? v:val.sep : v:val')
+    for path in map(s:glob(glob), 'fnamemodify(v:val, ":p")')
+      let matches = s:glob(path.sep.pattern)
+      call map(matches,'s:isdirectory(v:val) ? v:val.sep : v:val')
       call map(matches,'fnamemodify(v:val, ":p")[strlen(path)+1:-1]')
       for match in matches
         let found[match] = 1
@@ -149,7 +182,7 @@ function! s:backslashdump(value, indent) abort
 endfunction
 
 function! scriptease#pp_command(bang, lnum, value) abort
-  if v:errmsg !=# ''
+  if v:errmsg !=# '' && a:value is# 0
     return
   elseif a:lnum == -1
     echo scriptease#dump(a:value, {'width': a:bang ? 0 : &columns-1})
@@ -241,10 +274,12 @@ endfunction
 
 function! scriptease#scriptnames_qflist() abort
   let names = scriptease#capture('scriptnames')
+  let virtual = get(g:, 'virtual_scriptnames', {})
   let list = []
   for line in split(names, "\n")
     if line =~# ':'
-      call add(list, {'text': matchstr(line, '\d\+'), 'filename': expand(matchstr(line, ': \zs.*'))})
+      let filename = expand(matchstr(line, ': \zs.*'))
+      call add(list, {'text': matchstr(line, '\d\+'), 'filename': get(virtual, filename, filename)})
     endif
   endfor
   return list
@@ -272,6 +307,7 @@ endfunction
 
 function! scriptease#messages_command(bang) abort
   let qf = []
+  let virtual = get(g:, 'virtual_scriptnames', {})
   for line in split(scriptease#capture('messages'), '\n\+')
     let lnum = matchstr(line, '\C^line\s\+\zs\d\+\ze:$')
     if lnum && len(qf) && qf[-1].text =~# ':$'
@@ -288,8 +324,8 @@ function! scriptease#messages_command(bang) abort
       call add(qf, {'text': funcline})
       let lnum = matchstr(funcline, '\[\zs\d\+\ze\]$')
       let function = substitute(funcline, '\[\d\+\]$', '', '')
-      if function =~# '[\\/.]' && filereadable(function)
-        let qf[-1].filename = function
+      if function =~# '[\\/.]' && s:filereadable(get(virtual, function, function))
+        let qf[-1].filename = get(virtual, function, function)
         let qf[-1].lnum = lnum
         let qf[-1].text = ''
         continue
@@ -304,14 +340,15 @@ function! scriptease#messages_command(bang) abort
         let &list = list
       endtry
       let filename = expand(matchstr(get(output, 1, ''), 'from \zs.*'))
-      if !filereadable(filename)
+      let filename = get(virtual, filename, filename)
+      if !s:filereadable(filename)
         continue
       endif
       let implementation = map(output[2:-2], 'v:val[len(matchstr(output[-1],"^ *")) : -1]')
       call map(implementation, 'v:val ==# " " ? "" : v:val')
       let body = []
       let offset = 0
-      for line in readfile(filename)
+      for line in s:readfile(filename)
         if line =~# '^\s*\\' && !empty(body)
           let body[-1][0] .= s:sub(line, '^\s*\\', '')
           let offset += 1
@@ -354,8 +391,8 @@ endfunction
 function! s:unlet_for(files) abort
   let guards = []
   for file in a:files
-    if filereadable(file)
-      let lines = readfile(file, '', 500)
+    if s:filereadable(file)
+      let lines = s:readfile(file, 500)
       if len(lines)
         for i in range(len(lines)-1)
           let unlet = matchstr(lines[i], '^if .*\<exists *( *[''"]\%(\g:\)\=\zs[A-Za-z][0-9A-Za-z_#]*\ze[''"]')
@@ -386,7 +423,7 @@ function! scriptease#locate(path) abort
   let path = fnamemodify(a:path, ':p')
   let candidates = []
   for glob in split(&runtimepath, ',')
-    let candidates += filter(split(glob(glob), "\n"), 'path[0 : len(v:val)-1] ==# v:val && path[len(v:val)] =~# "[\\/]"')
+    let candidates += filter(s:glob(glob), 'path[0 : len(v:val)-1] ==# v:val && path[len(v:val)] =~# "[\\/]"')
   endfor
   if empty(candidates)
     return ['', '']
@@ -426,9 +463,9 @@ function! scriptease#runtime_command(bang, ...) abort
   endif
 
   for request in files
-    if request =~# '^\.\=[\\/]\|^\w:[\\/]\|^[%#~]\|^\d\+$'
+    if request =~# '^\.\=[\\/]\|^\a\+:\|^[%#~]\|^\d\+$'
       let request = scriptease#scriptname(request)
-      let unlets += split(glob(request), "\n")
+      let unlets += request =~# '[[*?{]' ? s:glob(request) : [expand(request)]
       let do += map(copy(unlets), '"source ".escape(v:val, " \t|!")')
     else
       if get(do, 0, [''])[0] !~# '^runtime!'
@@ -453,7 +490,7 @@ endfunction
 " Section: :Disarm
 
 function! scriptease#disarm(file) abort
-  let augroups = filter(readfile(a:file), 'v:val =~# "^\\s*aug\\%[roup]\\s"')
+  let augroups = filter(s:readfile(a:file), 'v:val =~# "^\\s*aug\\%[roup]\\s"')
   call filter(augroups, 'v:val !~# "^\\s*aug\\%[roup]\\s\\+END"')
   for augroup in augroups
     exe augroup
@@ -501,12 +538,12 @@ function! scriptease#disarm_command(bang, ...) abort
   let files = []
   let unlets = []
   for request in a:000
-    if request =~# '^\.\=[\\/]\|^\w:[\\/]\|^[%#~]\|^\d\+$'
+    if request =~# '^\.\=[\\/]\|^\a\+:\|^[%#~]\|^\d\+$'
       let request = expand(scriptease#scriptname(request))
-      if isdirectory(request)
+      if s:isdirectory(request)
         let request .= "/**/*.vim"
       endif
-      let files += split(glob(request), "\n")
+      let files += s:glob(request)
     else
       let files += split(globpath(&rtp, request, 1), "\n")
     endif
@@ -724,12 +761,13 @@ endfunction
 
 function! scriptease#cfile() abort
   if matchend(getline('.'), &include) >= col('.')
-    let original = matchstr(getline('.'), &include)
+    let cfile = matchstr(getline('.'), &include)
   else
-    let original = expand('<cfile>')
+    let cfile = expand('<cfile>')
   endif
-  let cfile = original
-  if cfile =~# '^\.\=[A-Za-z_]\w*\%(#\w\+\)\+$'
+  if empty(cfile)
+    return "\<C-R>\<C-F>"
+  elseif cfile =~# '^\.\=[A-Za-z_]\w*\%(#\w\+\)\+$'
     return '+djump\ ' . matchstr(cfile, '[^.]*') . ' ' . s:fnameescape(scriptease#includeexpr(cfile))
   else
     return s:fnameescape(scriptease#includeexpr(cfile))
@@ -740,8 +778,8 @@ function! scriptease#setup_vim() abort
   let &l:path = s:build_path()
   setlocal suffixesadd=.vim keywordprg=:help
   setlocal includeexpr=scriptease#includeexpr(v:fname)
-  setlocal include=^\\s*\\%(so\\%[urce]\\\|ru\\%[untime]\\)[!\ ]\ *\\zs[^\\|]*
-  setlocal define=^\\s*fu\\%[nction][!\ ]\\s*
+  setlocal include=^\\s*\\%(so\\%[urce]\\\|ru\\%[ntime]\\)[!\ ]\ *\\zs[^\\|]*
+  setlocal define=^\\s*fu\\%[nction][!\ ]\\s*\\%(s:\\)\\=
   cnoremap <expr><buffer> <Plug><cfile> scriptease#cfile()
   let b:dispatch = ':Runtime'
   command! -bar -bang -buffer Console Runtime|PP
