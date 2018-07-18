@@ -91,8 +91,6 @@ command! -bar -bang -nargs=? -complete=dir Mkdir
       \  silent keepalt execute 'file' s:fnameescape(expand('%')) |
       \ endif
 
-command! -bar -bang -complete=file -nargs=+ Find    exe s:Grep(<q-bang>, <q-args>, 'find', '')
-command! -bar -bang -complete=file -nargs=+ Locate  exe s:Grep(<q-bang>, <q-args>, 'locate', '')
 command! -bar -bang -complete=file -nargs=+ Cfind   exe s:Grep(<q-bang>, <q-args>, 'find', '')
 command! -bar -bang -complete=file -nargs=+ Clocate exe s:Grep(<q-bang>, <q-args>, 'locate', '')
 command! -bar -bang -complete=file -nargs=+ Lfind   exe s:Grep(<q-bang>, <q-args>, 'find', 'l')
@@ -246,7 +244,7 @@ augroup eunuch
   autocmd BufWritePost * unlet! b:brand_new_file
   autocmd BufWritePre *
         \ if exists('b:brand_new_file') |
-        \   if getline(1) =~ '^#!/' |
+        \   if getline(1) =~ '^#!\s*/' |
         \     let b:chmod_post = '+x' |
         \   endif |
         \ endif
