@@ -28,7 +28,8 @@ class Source(Base):
             return []
 
         max_len = len(histories[0][0])
-        return [self._convert(r, max_len) for r in histories if len(r) > 1]
+        return [self._convert(r, max_len) for r in histories
+                if len(r) > 1 and r[1]]
 
     def _get_histories(self):
         histories = [
@@ -65,7 +66,7 @@ class Source(Base):
 
     def _convert(self, history, size):
         return {
-            'word': '%*s %s' % (size, history[0], history[1]),
+            'word': ':' + history[1],
             'action__command': history[1],
             'action__is_pause': True,
         }

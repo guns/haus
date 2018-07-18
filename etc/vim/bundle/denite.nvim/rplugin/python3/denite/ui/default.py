@@ -187,6 +187,7 @@ class Default(object):
 
         self._options = self._vim.current.buffer.options
         self._options['buftype'] = 'nofile'
+        self._options['bufhidden'] = 'wipe'
         self._options['swapfile'] = False
         self._options['buflisted'] = False
         self._options['modeline'] = False
@@ -280,7 +281,7 @@ class Default(object):
                                self._context['selected_icon']))
 
         for source in [x for x in self._denite.get_current_sources()]:
-            name = source.name.replace('/', '_')
+            name = re.sub('[^a-zA-Z0-9_]', '_', source.name)
             source_name = self.get_display_source_name(source.name)
 
             self._vim.command(
@@ -398,7 +399,7 @@ class Default(object):
                 'silent! syntax match deniteMatchedChar /[%s]/ '
                 'containedin=deniteMatchedRange contained'
             ) % re.sub(
-                r'([[\]\\^-])',
+                r'([\[\]\\^-])',
                 r'\\\1',
                 self._context['input'].replace(' ', '')
             ))
@@ -585,7 +586,8 @@ class Default(object):
         self._vim.command('highlight! link CursorLine CursorLine')
         if self._vim.call('exists', '#ColorScheme'):
             self._vim.command('silent doautocmd ColorScheme')
-            self._vim.command('normal! zv')
+            if self._vim.call('mode') == 'n':
+                self._vim.command('normal! zv')
         if self._context['cursor_shape']:
             self._vim.command('set guicursor&')
             self._vim.options['guicursor'] = self._guicursor

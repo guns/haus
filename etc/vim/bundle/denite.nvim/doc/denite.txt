@@ -32,22 +32,22 @@ INTRODUCTION						*denite-introduction*
 displaying lists of information from within NeoVim/Vim. It can display and
 search through any arbitrary source, from files and directories to buffers.
 
-* Theoretically faster while the main process is executed by python
+* Theoretically faster while the main process is executed by python.
 
 * Theoretically more stable while no other processes can be performed when
 denite.nvim is executed.
 
 * The implementation is relatively simpler than unite.vim
 
-* Denite.nvim has great potential to implement a new feature
+* Denite.nvim has great potential to implement a new feature.
 
-* To send the pull request by Python3 is easier than Vim script
+* Sending pull requests using Python3 is easier than when using Vim script.
 
 * There are a lot of useful tools to keep code simple (linter, tester, etc...)
 in Python3.
 
 * The unite.vim is officially obsolete, minor bugs (or even major bugs) are
-not fixed anymore
+not fixed anymore.
 
 ==============================================================================
 USAGE							*denite-usage*
@@ -582,7 +582,7 @@ are on the neovim-prompt's builtin actions/mappings.
 		call denite#custom#map('normal', '<C-a>',
 		\ '<denite:multiple_mappings:denite:toggle_select_all'.
 		\ ',denite:do_action:vsplit>', 'noremap')
-
+<
 				*denite-map-nop*
 <denite:nop>
 		No operation.
@@ -668,6 +668,11 @@ are on the neovim-prompt's builtin actions/mappings.
 				*denite-map-scroll_cursor_to_bottom*
 <denite:scroll_cursor_to_bottom>
 		Scroll the cursor to the bottom of the window like |zb|.
+
+				*denite-map-smart_delete_char_before_caret*
+<denite:smart_delete_char_before_caret>
+		If no character being typed, |denite-map-quit|.
+		Otherwise, |denite-map-delete_char_before_caret|.
 
 				*denite-map-toggle_insert_mode*
 <denite:toggle_insert_mode>
