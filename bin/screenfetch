@@ -1602,7 +1602,7 @@ detectgpu () {
 # Run it only on Intel Processors if GPU is unknown
 DetectIntelGPU() {
 	if [ -r /proc/fb ]; then
-		gpu=$(awk '{print $2}' /proc/fb)
+		gpu=$(lspci | grep -i vga | awk -F ": " '{print $2}')
 	fi
 
 	case $gpu in
@@ -1706,8 +1706,8 @@ detectmem () {
 			usedmem=$((used_mem / 1024))
 		fi
 	elif [ "$distro" == "Haiku" ]; then
-		totalmem=$(( $(sysinfo -mem | head -n1 | cut -d'/' -f3 | tr -d ' ' | tr -d ')') / 1024^2 ))
-		usedmem=$(( $(sysinfo -mem | head -n1 | cut -d'/' -f2 | sed 's/max//; s/ //g') / 1024^2 ))
+		totalmem=$(( $(sysinfo -mem | head -n1 | cut -d'/' -f3 | tr -d ' ' | tr -d ')') / 1024**2 ))
+		usedmem=$(( $(sysinfo -mem | head -n1 | cut -d'/' -f2 | sed 's/max//; s/ //g') / 1024**2 ))
 	else
 		# MemUsed = Memtotal + Shmem - MemFree - Buffers - Cached - SReclaimable
 		# Source: https://github.com/dylanaraps/neofetch/pull/391/files#diff-e863270127ca6116fd30e708cdc582fc
@@ -2711,7 +2711,7 @@ detectgtk () {
 						gtkIcons=$(grep '^gtk-icon-theme-name' "$minegtkrc" | awk -F '"' '{print $2}')
 					fi
 				fi
-				# /etc/gtk-2.0/gtkrc compatability
+				# /etc/gtk-2.0/gtkrc compatibility
 				if [[ -f /etc/gtk-2.0/gtkrc && ! -f "$HOME/.gtkrc-2.0" && ! -f "$HOME/.gtkrc.mine" && ! -f "$HOME/.gtkrc-2.0.mine" ]]; then
 					if grep -q 'gtk-theme-name' /etc/gtk-2.0/gtkrc; then
 						gtk2Theme=$(awk -F'"' '/^gtk-theme-name/ {print $2}' /etc/gtk-2.0/gtkrc)
