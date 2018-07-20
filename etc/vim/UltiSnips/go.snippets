@@ -947,4 +947,14 @@ snippet osf "*os.File" w
 *os.File
 endsnippet
 
+snippet memprof "debug.StartMemProfile" w
+stopMemProfile := debug.StartMemProfile("${1:mem.prof}")
+stopMemProfile()
+endsnippet
+
+snippet cpuprof "debug.StartCPUProfile"
+stopCPUProfile := debug.StartCPUProfile("${1:cpu.prof}")
+stopCPUProfile()
+endsnippet
+
 # vim:ft=snippets:
