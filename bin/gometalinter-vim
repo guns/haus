@@ -35,6 +35,18 @@
 #   	fast: true
 #   	default enabled: true
 #
+#     gochecknoglobals: (4d63.com/gochecknoglobals)
+#   	command: gochecknoglobals
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+) (?P<message>.*)
+#   	fast: true
+#   	default enabled: false
+#
+#     gochecknoinits: (4d63.com/gochecknoinits)
+#   	command: gochecknoinits
+#   	regex: ^(?P<path>.*?\.go):(?P<line>\d+) (?P<message>.*)
+#   	fast: true
+#   	default enabled: false
+#
 #     goconst: (github.com/jgautheron/goconst/cmd/goconst)
 #   	command: goconst -min-occurrences {min_occurrences} -min-length {min_const_length}
 #   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
@@ -145,13 +157,13 @@
 #
 #     test:
 #   	command: go test
-#   	regex: ^--- FAIL: .*$\s+(?P<path>.*?\.go):(?P<line>\d+): (?P<message>.*)$
+#   	regex: (?m:^\t(?P<path>.*?\.go):(?P<line>\d+): (?P<message>.+)$)
 #   	fast: false
 #   	default enabled: false
 #
 #     testify:
 #   	command: go test
-#   	regex: Location:\s+(?P<path>.*?\.go):(?P<line>\d+)$\s+Error:\s+(?P<message>[^\n]+)
+#   	regex: (?m:^\s+Error Trace:\s+(?P<path>.+?.go):(?P<line>\d+)\n\s+Error:\s+(?P<message>.+?)[:\s]*$)
 #   	fast: false
 #   	default enabled: false
 #
@@ -268,7 +280,6 @@
 # Args:
 #   [<path>]  Directories to lint. Defaults to ".". <path>/... will recurse.
 
-# gometalinter --help 2>&1 | ruby -r pp -e 'PP.pp Hash[$stdin.read[/linters:\n\n(.*?)\n\n/m, 1].lines.each_slice(3).reduce({}) { |m, s| m[s[0].split[0]] = s[1].strip + ":" + s[2].strip; m }.sort], $stdout, 1000'
 
 require 'json'
 
@@ -278,6 +289,8 @@ config = {
     'dupl',
     'errcheck',
     'gas',
+    'gochecknoglobals',
+    'gochecknoinits',
     'goconst',
     'gocyclo',
     'gofmt',
@@ -305,6 +318,7 @@ config = {
     'vet',
     'vetshadow',
   ],
+  'Debug' => ENV['DEBUG'] == 1,
   'Concurrency' => (File.read('/proc/cpuinfo').scan(/^processor/i).size rescue 1),
   'Vendor' => true,
   'Cyclo' => 20,
@@ -312,9 +326,9 @@ config = {
   'MinConfidence' => 0.21,
   'MinOccurrences' => 2,
   'MinConstLength' => 2,
+  'DuplThreshold' => 50,
   'Sort' => ['path'],
   'Test' => true,
-  'Debug' => ENV['DEBUG'] == 1,
   'EnableGC' => true,
   'Aggregate' => true,
   'WarnUnmatchedDirective' => true,
