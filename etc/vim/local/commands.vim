@@ -661,7 +661,7 @@ endfunction
 command! -bar GoOptimizations call <SID>GoOptimizations()
 function! s:GoOptimizations()
 	execute 'setlocal makeprg=go\ build\ -gcflags=-m\\\ -d=ssa/check_bce\ ' . go#package#ImportPath()
-	silent! make
+	silent! make!
 
 	let visited = {}
 	let qflist = getqflist()
