@@ -36,7 +36,7 @@ DEPS = REPOS.flat_map { |p|
 }.uniq
 
 system 'go', 'get', '-u', '-v', *DEPS
-system 'go', 'install', '-v', *REPOS
+system 'go', 'install', '-i', '-v', *REPOS
 
 puts '┌───────┐'
 puts '│UPDATED│'
