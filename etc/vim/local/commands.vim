@@ -621,6 +621,7 @@ function! s:GoBufferSetup()
 	vnoremap <buffer> <LocalLeader>f :GoFreevars<CR>
 	noremap  <buffer> <LocalLeader>F :<C-u>GoFillStruct<CR>
 	noremap  <buffer> <LocalLeader>g :<C-u>GoGuruScope<Space>
+	nmap     <buffer> <LocalLeader>G <Plug>(go-generate)
 	nmap     <buffer> <LocalLeader>i <Plug>(go-install)
 	nmap     <buffer> <LocalLeader>I <Plug>(go-implements)
 	noremap  <buffer> <LocalLeader><M-i> :<C-u>GoImpl<Space>

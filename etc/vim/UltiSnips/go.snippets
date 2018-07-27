@@ -67,7 +67,7 @@ var (
 )
 endsnippet
 
-snippet pr "println" w
+snippet PL "println" w
 println($0)
 endsnippet
 
@@ -85,6 +85,26 @@ endsnippet
 
 snippet warn "warn" w
 fmt.Fprint${1:ln}(os.Stderr, $0)
+endsnippet
+
+snippet stdin "os.Stdin" w
+os.Stdin
+endsnippet
+
+snippet stdout "os.Stdout" w
+os.Stdout
+endsnippet
+
+snippet stderr "os.Stderr" w
+os.Stderr
+endsnippet
+
+snippet getenv "getenv" w
+os.Getenv($0)
+endsnippet
+
+snippet pr "fmt.Print" w
+fmt.Print($0)
 endsnippet
 
 snippet pl "fmt.Println()" w
@@ -220,6 +240,10 @@ if reflect.TypeOf($1) != reflect.TypeOf($2) {
 endsnippet
 
 snippet asl "assert log" w
+t.Log($0)
+endsnippet
+
+snippet aslf "assert logf" w
 t.Logf("${1}", $0)
 endsnippet
 
@@ -251,7 +275,7 @@ snippet T "type" b
 type $0
 endsnippet
 
-snippet TS "type struct" w
+snippet ST "type struct" w
 type ${1} struct {
 	$0
 }
@@ -397,7 +421,11 @@ strings.TrimSpace($0)
 endsnippet
 
 snippet spl "strings.Split" w
-strings.Split($0)
+strings.Split(${1:s}, ${0:sep})
+endsnippet
+
+snippet sfs "strings.Fields" w
+strings.Fields($0)
 endsnippet
 
 snippet fj "filepath.Join()" w
@@ -409,7 +437,7 @@ path.Join($0)
 endsnippet
 
 snippet ap "append" w
-${1} = append($1, $0)
+${1} = append($1, $0 )
 endsnippet
 
 snippet ra "range" w
@@ -424,6 +452,12 @@ endsnippet
 
 snippet ifl "if let" w
 if ${1} := ${2} {
+	$0
+}
+endsnippet
+
+snippet ifm "if _, ok := m[k]; ok" w
+if ${1:_}, ${2:ok} ${3::}= ${4:m}[${5:k}]; ${6:$2} {
 	$0
 }
 endsnippet
@@ -757,13 +791,13 @@ snippet sc "strconv" w
 strconv.
 endsnippet
 
-# snippet ita "strconv.Itoa" w
-# strconv.Itoa($0)
-# endsnippet
+snippet ita "strconv.Itoa" w
+strconv.Itoa($0)
+endsnippet
 
-# snippet ati "strconv.Atoi" w
-# strconv.Atoi($0)
-# endsnippet
+snippet ati "strconv.Atoi" w
+strconv.Atoi($0)
+endsnippet
 
 snippet spi "strconv.ParseInt" w
 strconv.ParseInt(${1:string}, ${2:base}, ${3:bitsize})
