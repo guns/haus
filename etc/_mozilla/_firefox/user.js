@@ -74,6 +74,7 @@ user_pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 // Disable Aurora updates
 user_pref("app.update.auto", false);
 user_pref("app.update.enabled", false);
+user_pref("app.update.interval", 315576000);
 // Disable searchplugin updates
 user_pref("browser.search.update", false);
 // Disable addon updates
