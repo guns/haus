@@ -17,6 +17,7 @@ class Lninstall
     :libs => false,
     :share => false,
     :uninstall => false,
+    :broken => false,
     :src => nil,
     :dst => nil,
     :pattern => nil
@@ -72,6 +73,10 @@ class Lninstall
 
       opt.on '-u', '--uninstall', 'Unlink files in `dst` that link to corresponding files in `src`' do
         @uninstall = true
+      end
+
+      opt.on '-b', '--broken', "Only uninstall broken links" do
+        @broken = true
       end
     end
   end
@@ -140,8 +145,11 @@ class Lninstall
   # Returns a list of all files in dst that link to files in src;
   # the files returned may have different basenames than their sources
   def dst_files
-    @dst_files ||= source_files(dst).select do |f|
-      File.symlink? f and src_files.include? Haus::Utils.readlink(f)
+    @dst_files ||= begin
+      src_dirs = Set.new src_files.map { |f| File.dirname f }
+      source_files(dst).select do |f|
+        File.symlink? f and src_dirs.include? File.dirname(Haus::Utils.readlink(f))
+      end
     end
   end
 
@@ -157,6 +165,7 @@ class Lninstall
   def uninstall
     dst_files.each do |f|
       next if @pattern and f !~ @pattern
+      next if @broken and File.exists? Haus::Utils.readlink(f)
       @queue.add_deletion f
     end
 
