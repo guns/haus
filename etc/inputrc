@@ -256,27 +256,14 @@ $if bash
     "\033\007d":    "\C-] ncdu \n"
     "\033\007D":    "\C-] ncdu -x \n"
 
-    # lein REPL
-    "\033\007l":    "\C-]rlwrap lein REPL \n"
-    "\033\007L":    "\C-]rm target/trampolines/*; rlwrap lein REPL \n"
-
     # X
     "\C-xX":        "\C-] ((EUID)) && [[ ! $WINDOWID ]] && exec startx \n"
-
-    # J
-    "\033\007J":    "\C-] J \n"
-
-    # units
-    "\033\007u":    "\C-] units \n"
 
     # password-store
     "\C-xp":        "\C-]passclip "
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"
-
-    # Make
-    "\033\007!":    "\C-] if [[ -e Makefile ]]; then make; elif [[ -e Rakefile ]]; then rake; fi \n"
 
     # notify
     "\033\007\r":   "\C-e; n\n"
