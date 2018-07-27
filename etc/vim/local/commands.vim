@@ -500,13 +500,14 @@ endfunction
 command! -nargs=? -complete=shellcmd -bar Screen call <SID>Screen(<q-args>) "{{{1
 function! s:Screen(command)
 	let map = {
-		\ 'ruby'       : 'irb',
-		\ 'clojure'    : 'lein REPL',
-		\ 'python'     : 'python',
-		\ 'scheme'     : 'scheme',
-		\ 'haskell'    : 'ghci',
-		\ 'javascript' : 'node',
-		\ 'j'          : 'J'
+		\ 'clojure':    'lein repl',
+		\ 'go':         'gomacro',
+		\ 'haskell':    'ghci',
+		\ 'j':          'J',
+		\ 'javascript': 'node',
+		\ 'python':     'python',
+		\ 'ruby':       'irb',
+		\ 'scheme':     'scheme',
 		\ }
 	let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
 	execute 'ScreenShell ' . cmd
