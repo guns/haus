@@ -1,5 +1,17 @@
 ## unplanned
 
+IMPROVEMENTS:
+* Unify async job handling for Vim8 and Neovim.
+  [[GH-1864]](https://github.com/fatih/vim-go/pull/1864)
+* Document Vim and Neovim requirements in README.md and help file.
+  [[GH-1889]](https://github.com/fatih/vim-go/pull/1889)
+
+BUG FIXES:
+* Fix `:GoRun %` on Windows.
+  [[GH-1900]](github.com/fatih/vim-go/pull/1900)
+
+## 1.18 - (July 18, 2018)
+
 FEATURES:
 
 * Add **:GoIfErr** command together with the `<Plug>(go-iferr)` plug key to
@@ -57,6 +69,10 @@ IMPROVEMENTS:
   manually. [[GH-1861]](https://github.com/fatih/vim-go/pull/1861).
 * Cleanup title of terminal window.
   [[GH-1861]](https://github.com/fatih/vim-go/pull/1861).
+* Add `:GoImpl` is able to complete interfaces by their full import path in
+  addition to the current package name (i.e: `:GoImpl t *T github.com/BurntSushi/toml.Unmarshaller` 
+  is now possible)
+  [[GH-1884]](https://github.com/fatih/vim-go/pull/1884)
 
 BUG FIXES:
 
@@ -81,24 +97,10 @@ BUG FIXES:
   [[GH-1866]](https://github.com/fatih/vim-go/pull/1866)
 * Open files correctly with ctrlp.
   [[GH-1878]](https://github.com/fatih/vim-go/pull/1878)
-
-BACKWARDS INCOMPATIBILITIES:
-
-* We switched to a [maintained fork of * gocode](https://github.com/mdempsky/gocode). 
-  The new fork doesn't support the following settings anymore and therefore are 
-  invalid. Please remove them from your vimrc until those are again supported 
-  by `gocode`.
-
-  ```
-  g:go_gocode_autobuild
-  g:go_gocode_propose_builtins
-  g:go_gocode_unimported_packages
-  ```
-
-  Checkout the issue for more details [[GH-1851]](https://github.com/fatih/vim-go/pull/1851)
-
- 
-
+* Fix checking guru binary path 
+  [[GH-1886]](https://github.com/fatih/vim-go/pull/1886)
+* Add build tags to `:GoDef` if only it's present 
+  [[GH-1882]](https://github.com/fatih/vim-go/pull/1882)
 
 ## 1.17 - (March 27, 2018)
 
