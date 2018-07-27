@@ -29,12 +29,6 @@
 #   	fast: false
 #   	default enabled: true
 #
-#     gas: (github.com/GoASTScanner/gas)
-#   	command: gas -fmt=csv
-#   	regex: ^(?P<path>.*?\.go),(?P<line>\d+),(?P<message>[^,]+,[^,]+,[^,]+)
-#   	fast: true
-#   	default enabled: true
-#
 #     gochecknoglobals: (4d63.com/gochecknoglobals)
 #   	command: gochecknoglobals
 #   	regex: ^(?P<path>.*?\.go):(?P<line>\d+) (?P<message>.*)
@@ -74,6 +68,12 @@
 #     golint: (github.com/golang/lint/golint)
 #   	command: golint -min_confidence {min_confidence}
 #   	regex: ^(?P<path>.*?\.go):(?P<line>\d+):(?P<col>\d+):\s*(?P<message>.*)$
+#   	fast: true
+#   	default enabled: true
+#
+#     gosec: (github.com/securego/gosec/cmd/gosec)
+#   	command: gosec -fmt=csv
+#   	regex: ^(?P<path>.*?\.go),(?P<line>\d+),(?P<message>[^,]+,[^,]+,[^,]+)
 #   	fast: true
 #   	default enabled: true
 #
@@ -205,11 +205,11 @@
 #
 # Severity override map (default is "warning"):
 #
-#   gotype -> error
-#   gotypex -> error
 #   test -> error
 #   testify -> error
 #   vet -> error
+#   gotype -> error
+#   gotypex -> error
 #
 #
 # Flags:
@@ -279,7 +279,6 @@
 #
 # Args:
 #   [<path>]  Directories to lint. Defaults to ".". <path>/... will recurse.
-
 
 require 'json'
 
