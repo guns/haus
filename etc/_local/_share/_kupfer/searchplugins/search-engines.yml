@@ -30,6 +30,7 @@ qifixit:             https://www.ifixit.com/search?x=0&y=0&query=***
 qimages:             https://www.google.com/search?tbm=isch&pws=0&tbs:li=1&q=***
 qintel:              https://ark.intel.com/search?q=***
 qjquery:             https://jquery.com/?s=***
+qkeyserver:          https://sks-keyservers.net/pks/lookup?op=get&search=***
 qliveleak:           https://www.liveleak.com/browse?q=***
 qlocalhost:          http://localhost/devnull/?q=***
 qmaps:               https://maps.google.com/maps?q=***
