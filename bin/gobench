@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+ISTTY = $stdin.tty?
+
+def log line
+  if ISTTY
+    puts line
+  else
+    print "//\t"
+    puts line.tr("\t", ' ')
+  end
+end
+
+log ":: #{%x(go version)}"
+
+IO.popen ['go', 'test', '-run=NONE', "-bench=#{ARGV[0] || '.'}", '-benchmem', *ARGV.drop(1)], 'r' do |io|
+  while line = io.gets("\n")
+    log line
+  end
+end

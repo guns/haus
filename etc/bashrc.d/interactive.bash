@@ -974,8 +974,7 @@ HAVE go && {
     goinstall()       { run go install -v "$@"; }
     gotest()          { run go test -tags test -run="${1:-.}" "${@:2}"; }
     gorace()          { run go test -tags test -race -run="${1:-.}" "${@:2}"; }
-    gobench()         { run go test -bench="${1:-.}" -benchmem "${@:2}"; }
-    gobenchprof()     { run go test -bench="${1:-.}" -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof "${@:2}"; }
+    gobenchprof()     { run go test -run=NONE -bench="${1:-.}" -benchmem -cpuprofile=cpu.prof -memprofile=mem.prof "${@:2}"; }
     gogen()           { run go generate -v "$@"; }
     golistfiles()     { run go list -f "{{.GoFiles}}" -tags "$1" "${@:2}"; }
     golistimports()   { run go list -f '{{.Imports}}' -tags "$1" "${@:2}"; }
