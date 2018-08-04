@@ -43,9 +43,9 @@ module NERV::CLI::ReplHelpers
           alias_method :__inspect__, :inspect
 
           def bin
-            buf = '%04b' % self
-            n = buf.size % 4
-            ('0' * (n.zero? ? 0 : 4 - n) << buf).scan(/\d{4}/).join ' '
+            buf = '%08b' % self
+            n = buf.size % 8
+            ('0' * (n.zero? ? 0 : 8 - n) << buf).scan(/\d{8}/).join ' '
           end
 
           def inspect
