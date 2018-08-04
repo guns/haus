@@ -31,11 +31,19 @@ import (
 endsnippet
 
 snippet /^p/ "package lib" r
-package `!v expand('%:p:h:t')`
+${1:// Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+// Distributed under the MIT license.
+// http://www.opensource.org/licenses/mit-license.php
+
+}package `!v expand('%:p:h:t')`
 endsnippet
 
 snippet /^P/ "package main" r
-package main
+${1:// Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+// Distributed under the MIT license.
+// http://www.opensource.org/licenses/mit-license.php
+
+}package main
 endsnippet
 
 # Mostly converted from: https://github.com/AlanQuatermain/go-tmbundle
@@ -252,7 +260,7 @@ t.Fail()
 endsnippet
 
 snippet asE "assert errorf" w
-t.Errorf("${1}\n"${1/([^%]|%%)*(%.)?.*/(?2:, :\);)/}$2${1/([^%]|%%)*(%.)?.*/(?2:\);)/}
+t.Errorf("${1}"${1/([^%]|%%)*(%.)?.*/(?2:, :\))/}$2${1/([^%]|%%)*(%.)?.*/(?2:\))/}
 endsnippet
 
 snippet L "len()" w
