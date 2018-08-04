@@ -287,7 +287,6 @@ config = {
     'deadcode',
     'dupl',
     'errcheck',
-    'gas',
     'gochecknoglobals',
     'gochecknoinits',
     'goconst',
@@ -296,6 +295,7 @@ config = {
     # 'goimports',
     'golint',
     # 'gosimple',
+    'gosec',
     'gotype',
     # 'gotypex',
     'ineffassign',
@@ -333,6 +333,6 @@ config = {
   'WarnUnmatchedDirective' => true,
 }.to_json
 
-IO.popen ['gometalinter', '--config=/dev/stdin', './...'], 'w' do |io|
+IO.popen ['gometalinter', '--config=/dev/stdin', *ARGV], 'w' do |io|
   io.puts config
 end
