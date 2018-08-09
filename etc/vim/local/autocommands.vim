@@ -27,7 +27,8 @@ augroup GUNS
 		\ execute 'noremap <buffer> x :<C-u>ClearQuickfix<CR>' |
 		\ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| topleft lwindow \| call setqflist([]) \| cclose<CR>' |
 		\ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>' |
-		\ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>'
+		\ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>' |
+		\ execute 'noremap <buffer> S :<C-u>Qfdo s<C-v>\V<C-r>/<C-v><C-v>g<Left><Left>'
 
 	" Vimscript
 	autocmd FileType vim
@@ -119,9 +120,9 @@ augroup GUNS
 		\	setlocal autoread makeprg=standard\ --fix\ % |
 		\ endif
 
-	" C
+	" C, C++
 	autocmd FileType c,cpp
-		\ setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum) cinoptions=:0
+		\ CBufferSetup
 
 	" Nginx
 	autocmd FileType nginx

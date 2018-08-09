@@ -2,10 +2,10 @@
 
 snippet once "#pragma once" b
 #pragma once
-#ifndef $1
-#define ${1:_`!v toupper(substitute(expand("%:t:r"), '\v[^A-Za-z0-9_]', '_', 'g'))`_}
+#ifndef ${1:`!v toupper(substitute(expand("%:p")[strlen(system('git rev-parse --show-toplevel')):], '\v[^A-Za-z0-9_]', '_', 'g'))`_}
+#define $1
 $0
-#endif
+#endif // $1
 endsnippet
 
 snippet def "#define" b

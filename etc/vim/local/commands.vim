@@ -188,6 +188,31 @@ function! s:Ctags()
 	execute 'Sh (' . cmd . '; notify -? $?) >/dev/null 2>&1 &' | echo cmd
 endfunction
 
+command! -bar CBufferSetup call <SID>CBufferSetup()
+function! s:CBufferSetup()
+	setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum)
+	setlocal cinoptions=:0,N-s
+
+	noremap <buffer> <LocalLeader>a :<C-u>CAlternate edit<CR>
+	noremap <buffer> <LocalLeader>A :<C-u>CAlternate vsplit<CR>
+endfunction
+
+command! -nargs=1 -bar CAlternate call <SID>CAlternate(<f-args>)
+function! s:CAlternate(cmd)
+	if index(['c', 'cpp', 'cc'], expand('%:e')) > -1
+		execute a:cmd . ' ' . expand('%:r') . '.h'
+	else
+		let root = expand('%:r')
+		if filereadable(root . '.cc')
+			execute a:cmd . ' ' . root . '.cc'
+		elseif filereadable(root . '.cpp')
+			execute a:cmd . ' ' . root . '.cpp'
+		elseif filereadable(root . '.c')
+			execute a:cmd . ' ' . root . '.c'
+		endif
+	endif
+endfunction
+
 function! FoldText(lnum)
 	return repeat(' ', indent(a:lnum)) . substitute(getline(a:lnum), '\v^\s*', '', '')
 endfunction
