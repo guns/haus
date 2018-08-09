@@ -1,278 +1,263 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2012-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2012-2018 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 require 'fileutils'
-require 'yaml'
+require 'json'
 
 class Hwctl
-  DEFAULTS = {
-    :config => '/etc/hwctl.yml',
-    :state_file => '/var/run/hwctl-state.yml',
-    :sys => nil,
+  CPU = {
+    '/sys/devices/system/cpu/intel_pstate' => {
+      'min'      => '/sys/devices/system/cpu/intel_pstate/min_perf_pct',
+      'max'      => '/sys/devices/system/cpu/intel_pstate/max_perf_pct',
+      'no_turbo' => '/sys/devices/system/cpu/intel_pstate/no_turbo'
+    },
   }
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+  FAN = {
+    '/sys/devices/platform/it87.2608' => {
+      'pwm_enable' => [
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm1_enable',
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm2_enable',
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm3_enable',
+      ],
+      'pwm' => [
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm1',
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm2',
+        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm3',
+      ],
+    }
+  }
+
+  CPU_STATE_FILE = '/var/run/hwctl/cpu.json'
+  FAN_STATE_FILE = '/var/run/hwctl/fan.json'
 
   def parser
-    @parser ||= OptionParser.new nil, 28 do |opt|
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
-        Linux hardware control wrapper.
+        Usage: #{File.basename __FILE__} command [arg]
 
-        Usage: #{File.basename __FILE__} [options] command [args]
+        Commands:
+          [b]enchmode
+            Prepare for benchmarking:
+              · Disable CPU turbo
+              · Pin CPU percentage to 100%
+              · Set fans to 100%
+          [b]enchmode [w]ait
+            Same as benchmode, but wait for stdin to close.
+          [b]enchmode [r]estore
+            Restore CPU and fan state.
 
-          Commands:
-            [b]acklight [pct]
-              Query or set backlight as a percentage. Argument can be signed
-              for relative adjustment.
+          [c]pu
+            Dump CPU state to stdout.
+          [c]pu min/max
+            Set CPU min/max speed percentages.
+          [c]pu [n]oturbo
+            Disable CPU turbo.
+          [c]pu [r]estore
+            Restore CPU state.
 
-            bp mode user group
-            backlight-permissions mode user group
-              Set backlight control file permissions.
-
-            [f]an
-              Dump fan state to stdout.
-            [f]an pct
-              Set fan speeds as to given percentage. Writes current fan state
-              to #{@state_file}
-            [f]an [i]nteractive
-              Read fan speeds as a percentage on stdin. Fan control state is
-              restored on exit.
-            [f]an [r]estore
-              Restore fan state from #{@state_file}
-
-            fnmode [fn|media]
-            fnmode [2|1]
-              Query or set laptop function key mode.
-
-            toggle-pulseaudio-sink [index]
-            toggle-pulseaudio-source [index]
-              Set or toggle between available Pulseaudio output sinks and
-              input sources.
-
-          Options:
+          [f]an
+            Dump fan state to stdout.
+          [f]an pct
+            Set fan speed percentages.
+          [f]an [r]estore
+            Restore fan state.
+          [f]an [i]nteractive
+            Read fan speed percentages on stdin.
+            Fan state is restored on exit.
       BANNER
-
-      opt.on '-c', '--config PATH', "DEFAULT: #{@config}" do |arg|
-        @config = File.expand_path arg
-      end
-
-      opt.on '-f', '--state-file PATH', "DEFAULT: #{@state_file}" do |arg|
-        @state_file = File.expand_path arg
-      end
     end
   end
 
-  def sys
-    @sys ||= begin
-      cfg = YAML.load_file @config
-      %w[fan_manual fan_speed].each do |k|
-        cfg[k] = [cfg[k]] unless cfg[k].is_a? Array
-      end
-      cfg
+  def save_state file, state
+    warn ":: Saving state to #{file}"
+    FileUtils.mkdir_p File.dirname(file)
+    File.open file, 'w', 0600 do |f|
+      f.puts state.to_json
     end
   end
 
-  def state_saved?
-    File.readable? @state_file
+  def write file, value
+    warn "echo #{value} > #{file}"
+    File.open(file, 'w') { |f| f.puts value }
   end
 
-  def state
-    YAML.load_file @state_file if state_saved?
-  end
+  #
+  # BENCHMODE
+  #
 
-  def write_state map
-    warn ":: Writing fan state to #{@state_file}"
-    File.open @state_file, 'w', 0600 do |f|
-      f.puts map.to_yaml
+  def benchmode arg = nil
+    _, cpu = CPU.find { |k, _| Dir.exists? k }
+    _, fan = FAN.find { |k, _| Dir.exists? k }
+    abort 'Unsupported hardware' if cpu.nil? or fan.nil?
+
+    case arg
+    when 'r', 'restore'
+      restore_cpu_state cpu
+      restore_fan_state fan
+    when 'w', 'wait'
+      set_cpu_no_turbo cpu, '1'
+      set_cpu_speeds cpu, '100', '100'
+      set_fan_speeds fan, '100'
+
+      $stdin.gets nil
+
+      restore_cpu_state cpu
+      restore_fan_state fan
+    else
+      set_cpu_no_turbo cpu, '1'
+      set_cpu_speeds cpu, '100', '100'
+      set_fan_speeds fan, '100'
     end
   end
 
-  def brightness cur, max
-    '%d %.2f%%' % [cur, cur.to_f/max * 100]
+  #
+  # CPU
+  #
+
+  def current_cpu_state sys
+    { 'min'      => File.read(sys['min']).chomp,
+      'max'      => File.read(sys['max']).chomp,
+      'no_turbo' => File.read(sys['no_turbo']).chomp }
   end
 
-  def set_brightness value, max
-    v = value
-    v = max if value > max
-    v = 0 if value < 0
+  def restore_cpu_state sys
+    abort unless File.readable? CPU_STATE_FILE
 
-    File.open sys['backlight'], 'w' do |f|
-      f.puts v
+    warn ":: Restoring CPU state from #{CPU_STATE_FILE}"
+    state = JSON.load File.read(CPU_STATE_FILE)
+
+    ['min', 'max'].each do |k|
+      write sys[k], state[k]
     end
 
-    v
+    FileUtils.rm_f CPU_STATE_FILE, :verbose => true
   end
 
-  def pulseaudio_list type
-    raise ArgumentError unless ["sink", "source"].include? type
+  def set_cpu_speeds sys, min, max
+    state = current_cpu_state sys
+    save_state CPU_STATE_FILE, state unless File.readable? CPU_STATE_FILE
 
-    list = %x(pacmd list-#{type}s).scan(/(\*?) index: (\d+).*?device\.description = "(.*?)"/m).map do |star, idx, desc|
-      [star.length > 0, idx, desc]
-    end
+    write sys['min'], min if min
+    write sys['max'], max if max
 
-    until list[0][0]
-      list.rotate!
-    end
-
-    list.map { |a| a.drop 1 }
+    pp current_cpu_state(sys)
   end
 
-  def pulseaudio_move type, index
-    type = { "sink" => "sink-input", "source" => "source-output" }[type]
+  def set_cpu_no_turbo sys, val
+    state = current_cpu_state sys
+    save_state CPU_STATE_FILE, state unless File.readable? CPU_STATE_FILE
 
-    raise ArgumentError if type.nil?
+    write sys['no_turbo'], val rescue Errno::EPERM
 
-    %x(pacmd list-#{type}s).lines.grep(/index: (\d+)/) { $1 }.each do |s|
-      system 'pacmd', "move-#{type}", s.to_s, index.to_s, :out => '/dev/null'
-    end
+    pp current_cpu_state(sys)
   end
 
-  def get_temps
-    sys['temps'].map { |f| File.read(f).to_i }
-  end
+  def cpu arg = nil
+    driver, sys = CPU.find { |k, _| Dir.exists? k }
+    abort 'Unsupported hardware' if driver.nil?
 
-  def backlight setting = nil
-    max = File.read(sys['backlight_max']).to_i
-    cur = File.read(sys['backlight_actual']).to_i
-
-    case setting
-    when nil           then brightness cur, max
-    when /\A[+-]\d+\z/ then brightness set_brightness((cur + (max * (setting.to_f / 100))).round, max), max
-    when /\A\d+\z/     then brightness set_brightness((max * (setting.to_f / 100)).round, max), max
+    case arg
+    when nil                   then pp current_cpu_state(sys)
+    when 'n', 'noturbo'        then set_cpu_no_turbo sys, '1'
+    when 't', 'turbo'          then set_cpu_no_turbo sys, '0'
+    when 'r', 'restore'        then restore_cpu_state sys
+    when /\A(\d+)(?:\/(\d+))?/ then set_cpu_speeds sys, $1, $2
     else raise ArgumentError
     end
   end
 
-  def backlight_permissions mode, user, group
-    f = sys['backlight']
-    FileUtils.chmod (mode.kind_of?(Fixnum) ? mode : mode.to_i(8)), f
-    FileUtils.chown user, group, f
-    s = File.stat f
-    '%o %s %s %s' % [s.mode, s.uid, s.gid, f]
-  end
+  #
+  # FAN
+  #
 
-  def current_fan_state
-    s = { 'fan_manual' => {}, 'fan_speed' => {} }
-    sys['fan_manual'].each { |f| s['fan_manual'][f] = File.read(f).chomp }
-    sys['fan_speed'].each { |f| s['fan_speed'][f] = File.read(f).chomp }
+  def current_fan_state sys
+    s = { 'pwm_enable' => [], 'pwm' => [] }
+    sys['pwm_enable'].each { |f| s['pwm_enable'] << File.read(f).chomp }
+    sys['pwm'].each        { |f| s['pwm']        << File.read(f).chomp }
     s
   end
 
-  def set_fan_speeds arg
-    state = current_fan_state
-    write_state state unless state_saved?
+  def restore_fan_state sys
+    abort unless File.readable? FAN_STATE_FILE
 
-    sys['fan_manual'].each do |switch|
-      if state['fan_manual'][switch] != '1'
-        warn ":: #{switch} -> 1"
-        File.open(switch, 'w') { |f| f.puts '1' }
+    puts ":: Restoring fan state from #{FAN_STATE_FILE}"
+    state = JSON.load File.read(FAN_STATE_FILE)
+
+    ['pwm_enable', 'pwm'].each do |k|
+      sys[k].zip(state[k]).each do |f, v|
+        write f, v
       end
     end
 
-    max = 255.0
+    FileUtils.rm_f FAN_STATE_FILE, :verbose => true
+    puts "Restored fan state"
+  end
+
+  def set_fan_speeds sys, arg
+    state = current_fan_state sys
+    save_state FAN_STATE_FILE, state unless File.readable? FAN_STATE_FILE
+
+    sys['pwm_enable'].zip(state['pwm_enable']).each do |switch, val|
+      write switch, '1' if val != '1'
+    end
 
     pct = case arg
-    when /\A[+-]\d+\z/ then arg.to_f/100.0 + state['fan_speed'].to_a[0][1].to_i/max
+    when /\A[+-]\d+\z/ then arg.to_f/100.0 + state['pwm'][0].to_i/255.0
     when /\A\d+\z/     then arg.to_i/100.0
     else raise ArgumentError
     end
 
+    pct = 1 if pct > 1
     n = (0xff * pct).round.to_s
 
-    sys['fan_speed'].each do |dial|
-      warn ":: #{dial} -> #{n}"
-      File.open(dial, 'w') { |f| f.puts n }
+    sys['pwm'].each do |dial|
+      write dial, n
     end
 
-    '%d %.2f%%' % [n, pct * 100]
+    pp current_fan_state(sys)
   end
 
-  def set_fan_speeds_interactively
+  def set_fan_speeds_interactively sys
     loop do
       input = $stdin.gets "\n"
       break if input.nil?
-      set_fan_speeds input.chomp rescue ArgumentError
+      set_fan_speeds sys, input.strip rescue ArgumentError
     end
   ensure
-    restore_fan_state @state_file
-  end
-
-  def restore_fan_state file
-    return false unless state_saved?
-
-    warn ":: Restoring fan state from #{@state_file}"
-    s = YAML.load_file file
-    s.values_at('fan_speed', 'fan_manual').each do |h|
-      h.each do |(k, v)|
-        warn ":: #{k} -> #{v}"
-        File.open k, 'w' do |f|
-          f.puts v
-        end
-      end
-    end
-    FileUtils.rm_f file, :verbose => true
-    "Restored fan state"
+    restore_fan_state sys
   end
 
   def fan arg = nil
+    driver, sys = FAN.find { |k, _| Dir.exists? k }
+    abort 'Unsupported hardware' if driver.nil?
+
     case arg
-    when 'r', 'restore'     then restore_fan_state @state_file
-    when 'i', 'interactive' then set_fan_speeds_interactively
-    when /\A[+-]?\d+\z/     then set_fan_speeds arg
-    when nil                then current_fan_state.to_yaml
+    when nil                then pp current_fan_state(sys)
+    when 'r', 'restore'     then restore_fan_state sys
+    when 'i', 'interactive' then set_fan_speeds_interactively sys
+    when /\A[+-]?\d+\z/     then set_fan_speeds sys, arg
     else raise ArgumentError
     end
-  end
-
-  def fnmode type = nil
-    case type
-    when '2', 'fn'    then File.open(sys['fnmode'], 'w') { |f| f.puts '2' }
-    when '1', 'media' then File.open(sys['fnmode'], 'w') { |f| f.puts '1' }
-    when nil          then nil
-    else raise ArgumentError
-    end
-    File.read sys['fnmode']
-  end
-
-  def toggle_pulseaudio type, index = nil
-    list = pulseaudio_list type
-
-    if index
-      i, desc = list.find { |(i, n)| i == index }
-      raise "No #{type} at index #{index}" if i.nil?
-    else
-      i, desc = list.rotate.first
-    end
-
-    system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
-
-    pulseaudio_move type, i
-    desc
   end
 
   def run arguments = []
-    args = parser.order arguments
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
     rest = args.drop 1
 
-    out = case args.first
-    when 'b', 'backlight'              then backlight *rest
-    when 'bp', 'backlight-permissions' then backlight_permissions *rest
-    when 'f', 'fan'                    then fan *rest
-    when 'fnmode'                      then fnmode *rest
-    when 'toggle-pulseaudio-sink'      then toggle_pulseaudio 'sink', *rest
-    when 'toggle-pulseaudio-source'    then toggle_pulseaudio 'source', *rest
+    case args.first
+    when 'b', 'benchmode' then benchmode *rest
+    when 'c', 'cpu'       then cpu *rest
+    when 'f', 'fan'       then fan *rest
     else abort parser.help
     end
-
-    puts out if out
-    abort if out == false
   end
 end
 
