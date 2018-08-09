@@ -1,39 +1,66 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2018 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
 require 'optparse'
 
-cpu_list = '1'
+class Gobench
+  DEFAULTS = { :cpu_list => '0' }
 
-OptionParser.new do |opt|
-  opt.on '-c', '--cpu-list CPULIST' do |arg|
-    cpu_list = arg
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
-end.parse! ARGV
 
-def expand s
-  IO.popen ['expand'], 'r+' do |io|
-    io.write s
-    io.close_write
-    return io.read
-  end
-end
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: #{File.basename __FILE__} [options] bench-regexp [go-test-args …]
 
-if $stdin.tty?
-  puts %x(go version)
-else
-  puts "//\t#{%x(go version)}"
-end
+        Options:
+      BANNER
 
-IO.popen ['taskset', '--cpu-list', cpu_list,
-          'go', 'test', '-run=NONE', "-bench=#{ARGV[0] || '.'}", '-benchmem',
-          *ARGV.drop(1)], 'r' do |io|
-  if $stdin.tty?
-    while line = io.gets("\n")
-      puts line
+      opt.on '-c', '--cpu-list CPULIST', 'Same as `taskset --cpu-list`' do |arg|
+        @cpu_list = arg
+      end
     end
-  else
-    out = io.read
-    puts expand(out).gsub(/^/, "//\t")
+  end
+
+  def expand s
+    IO.popen ['/usr/bin/expand'], 'r+' do |io|
+      io.write s
+      io.close_write
+      return io.read
+    end
+  end
+
+  def bench *args
+    if $stdin.tty?
+      puts %x(go version)
+    else
+      puts "//\t#{%x(go version)}"
+    end
+
+    IO.popen ['taskset', '--cpu-list', @cpu_list,
+              'go', 'test', '-run=NONE', "-bench=#{args[0] || '.'}", '-benchmem',
+              *args.drop(1)], 'r' do |io|
+      if $stdin.tty?
+        while line = io.gets("\n")
+          puts line
+        end
+      else
+        out = io.read
+        puts expand(out).gsub(/^/, "//\t")
+      end
+    end
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    bench *args
   end
 end
+
+$0 = File.basename(__FILE__) and Gobench.new.run ARGV if $0 == __FILE__
