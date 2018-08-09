@@ -473,15 +473,20 @@ ALIAS iotop='iotop --only'
 
 # Linux /proc /sys
 [[ -w /proc/sys/vm/drop_caches ]] && drop_caches() {
-    local cmd='echo 3 > /proc/sys/vm/drop_caches'
-    echo "$cmd"
-    eval "$cmd"
+    echo 3 > /proc/sys/vm/drop_caches
 }
 [[ -e /proc/sys/kernel/sysrq ]] && sysrq() {
     if (($#)); then
         echo "$@" > /proc/sys/kernel/sysrq
     else
         cat /proc/sys/kernel/sysrq
+    fi
+}
+[[ -e /sys/devices/system/cpu/intel_pstate/min_perf_pct ]] && intel_min_perf_pct() {
+    if (($#)); then
+        echo "$@" > /sys/devices/system/cpu/intel_pstate/min_perf_pct
+    else
+        cat /sys/devices/system/cpu/intel_pstate/min_perf_pct
     fi
 }
 
