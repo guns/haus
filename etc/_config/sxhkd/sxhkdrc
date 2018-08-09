@@ -254,6 +254,9 @@ super + F7
 	T='⚙ nmon ⚙'; \
 	wmctrl -a "$T" || urxvt-client -g 80x50  -title "$T" -icon ~/.icons/haus/htop.svg -e env NMON=vld- nmon
 
+alt + F7
+	wmctrl -a xsensors || exec xsensors
+
 F8
 	T='❴ pass ❵'; \
 	wmctrl -a "$T" || \
