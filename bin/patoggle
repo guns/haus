@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2018 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Patoggle
+  DEFAULTS = {}
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Set or toggle between PulseAudio output sinks and input sources.
+
+        Usage: #{File.basename __FILE__} (sink|source) [index]
+      BANNER
+    end
+  end
+
+  def pulseaudio_list type
+    list = %x(pacmd list-#{type}s).scan(/(\*?) index: (\d+).*?device\.description = "(.*?)"/m).map do |star, idx, desc|
+      [star.length > 0, idx, desc]
+    end
+
+    until list[0][0]
+      list.rotate!
+    end
+
+    list.map { |a| a.drop 1 }
+  end
+
+  def pulseaudio_move type, index
+    type = case type
+    when 'sink'   then 'sink-input'
+    when 'source' then 'source-output'
+    end
+
+    %x(pacmd list-#{type}s).lines.grep(/index: (\d+)/) { $1 }.each do |s|
+      system 'pacmd', "move-#{type}", s, index.to_s, :out => '/dev/null'
+    end
+  end
+
+  def toggle_pulseaudio type, index = nil
+    list = pulseaudio_list type
+
+    if index
+      i, desc = list.find { |(i, n)| i == index }
+      raise "No #{type} at index #{index}" if i.nil?
+
+      system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
+    else
+      loop do
+        i, desc = list.rotate!.first
+        system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
+        break if pulseaudio_list(type)[0][0] == i
+      end
+    end
+
+    pulseaudio_move type, i
+    puts desc
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.empty?
+
+    case args[0]
+    when 'sink'   then toggle_pulseaudio 'sink', *args.drop(1)
+    when 'source' then toggle_pulseaudio 'source', *args.drop(1)
+    else abort parser.help
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Patoggle.new.run ARGV if $0 == __FILE__

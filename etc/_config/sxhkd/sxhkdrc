@@ -185,14 +185,12 @@ super + alt + control + {XF86AudioMute,KP_Enter}
 
 alt + {XF86AudioMute,KP_Enter}
 	if pkill --exact -0 pulseaudio; then \
-		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(hwctl toggle-pulseaudio-sink); \
-	else \
-		notify --no-audio --icon gnome-alsamixer-icon --title ALSA - < <(hwctl toggle-alsa-card); \
+		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle sink); \
 	fi
 
 alt + shift + {XF86AudioMute,KP_Enter}
 	if pkill --exact -0 pulseaudio; then \
-		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(hwctl toggle-pulseaudio-source); \
+		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle source); \
 	fi
 
 #
