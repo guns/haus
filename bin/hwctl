@@ -20,16 +20,8 @@ class Hwctl
 
   FAN = {
     '/sys/devices/platform/it87.2608' => {
-      'pwm_enable' => [
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm1_enable',
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm2_enable',
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm3_enable',
-      ],
-      'pwm' => [
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm1',
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm2',
-        '/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm3',
-      ],
+      'pwm_enable' => Dir['/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm[0-9]_enable'],
+      'pwm'        => Dir['/sys/devices/platform/it87.2608/hwmon/hwmon1/pwm[0-9]'],
     }
   }
 
@@ -186,7 +178,7 @@ class Hwctl
   def restore_fan_state sys
     abort unless File.readable? FAN_STATE_FILE
 
-    puts ":: Restoring fan state from #{FAN_STATE_FILE}"
+    warn ":: Restoring fan state from #{FAN_STATE_FILE}"
     state = JSON.load File.read(FAN_STATE_FILE)
 
     ['pwm_enable', 'pwm'].each do |k|
@@ -196,7 +188,7 @@ class Hwctl
     end
 
     FileUtils.rm_f FAN_STATE_FILE, :verbose => true
-    puts "Restored fan state"
+    warn "Restored fan state"
   end
 
   def set_fan_speeds sys, arg
