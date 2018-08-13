@@ -116,14 +116,9 @@ class Dlnode::Resource
         path = attr ? elem.attr(attr) : elem.text
       end
 
-      if path
-        path.strip!
-        path = nil if path.length == 0
-      end
-
       next unless path
 
-      u = urijoin base_uri || url, path
+      u = urijoin base_uri || url, path.strip
 
       next if pattern.regexp and u !~ pattern.regexp
 
@@ -269,7 +264,7 @@ class Dlnode
         @filename_patterns = patterns.split(',').map { |p| Dlnode::FilenamePattern.new p } if patterns
       end
 
-      opt.on '-i', '--index N[:START]', 'Begin index at N, and skip until START' % @index do |arg|
+      opt.on '-i', '--index N[:START]', 'Begin index at N, and skip until START' do |arg|
         @index, @start = arg.split(':', 2).map &:to_i
         @start = @index if @start.nil? or @start < @index
       end
@@ -410,9 +405,12 @@ class Dlnode
         node = root
       end
 
+      return nil if node.nil?
+
       t = p.attribute ? node.attr(p.attribute) : node.text
       return t if t and t.size > 0
     end
+
     nil
   end
 
