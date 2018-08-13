@@ -181,7 +181,7 @@ class Hwctl
     warn ":: Restoring fan state from #{FAN_STATE_FILE}"
     state = JSON.load File.read(FAN_STATE_FILE)
 
-    ['pwm_enable', 'pwm'].each do |k|
+    ['pwm', 'pwm_enable'].each do |k|
       sys[k].zip(state[k]).each do |f, v|
         write f, v
       end
