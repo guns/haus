@@ -8,10 +8,7 @@
 require 'optparse'
 
 class Gobench
-  DEFAULTS = {
-    :cpunodebind => '0',
-    :physcpubind => '+0',
-  }
+  DEFAULTS = { :cpu_list => '0' }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
@@ -25,12 +22,8 @@ class Gobench
         Options:
       BANNER
 
-      opt.on '-N', '--cpunodebind', 'Same as `numactl -N`' do |arg|
-        @cpunodebind = arg
-      end
-
-      opt.on '-C', '--physcpubind CPUS', 'Same as `numactl -C`' do |arg|
-        @physcpubind = arg
+      opt.on '-c', '--cpu-list CPULIST', 'Same as `taskset --cpu-list`' do |arg|
+        @cpu_list = arg
       end
     end
   end
@@ -50,7 +43,7 @@ class Gobench
       puts "//\t#{%x(go version)}"
     end
 
-    IO.popen ['numactl', '--cpunodebind', @cpunodebind, '--physcpubind', @physcpubind,
+    IO.popen ['taskset', '--cpu-list', @cpu_list,
               'go', 'test', '-run=NONE', "-bench=#{args[0] || '.'}", '-benchmem',
               *args.drop(1)], 'r' do |io|
       if $stdin.tty?
