@@ -1057,7 +1057,6 @@ HAVE ruby && {
     ALIAS rk='rake' \
           rkt='rake --tasks'
 
-
     # Environment variables
     rbopt() { run env RUBYOPT="$1" "${@:2}"; }
     rubylib() { __prepend_path__ RUBYLIB "$@"; }

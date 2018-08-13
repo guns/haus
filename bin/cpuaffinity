@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+(warn "USAGE: #{File.basename __FILE__} [cpu-list]"; abort) if ARGV.size > 1
+
+pids = Dir['/proc/[0-9]*'].map { |d| d[6..-1] }
+
+if ARGV.any?
+  pids.each { |pid| system 'taskset', '-acp', ARGV[0], pid, [:out, :err] => '/dev/null' }
+else
+  pids.each do |pid|
+    comm = File.read("/proc/#{pid}/comm").chomp
+    cpus = %x(taskset -acp #{pid})[/: (.*)$/, 1]
+    puts "[%5s] %-16s%s" % [pid, comm, cpus]
+  end
+end
