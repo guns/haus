@@ -195,6 +195,18 @@ function! s:CBufferSetup()
 
 	noremap <buffer> <LocalLeader>a :<C-u>CAlternate edit<CR>
 	noremap <buffer> <LocalLeader>A :<C-u>CAlternate vsplit<CR>
+
+	if &filetype == 'cpp'
+		noremap <buffer> <LocalLeader>l :<C-u>Cpplint<CR>
+	endif
+endfunction
+
+command! -bar Cpplint call <SID>Cpplint()
+function! s:Cpplint()
+	let makeprg_save = &makeprg
+	setlocal makeprg=cpplint.py\ %
+	silent! make!
+	execute 'setlocal makeprg=' . makeprg_save
 endfunction
 
 command! -nargs=1 -bar CAlternate call <SID>CAlternate(<f-args>)

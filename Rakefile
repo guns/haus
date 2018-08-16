@@ -109,7 +109,13 @@ task :env do
           'python/go.py'              => 'etc/_weechat/_python/_autoload/go.py',
           'python/toggle_nicklist.py' => 'etc/_weechat/_python/_autoload/toggle_nicklist.py'
         }
-      }
+      },
+
+      {
+        :base => "#{@src}/styleguide",
+        :branch => %w[gh-pages guns],
+        :files => { 'cpplint/cpplint.py' => 'bin/cpplint.py' }
+      },
     ],
 
     'completions' => [
