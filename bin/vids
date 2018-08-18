@@ -19,6 +19,7 @@ VIDEO_EXTENSIONS = Set.new %w[
   .mpeg
   .mpg
   .part
+  .rmvb
   .ts
   .vob
   .webm
