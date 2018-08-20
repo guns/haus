@@ -41,7 +41,8 @@ URxvt.visualBell:        on
 
 ! Explicit multiple fonts for code point search
 URxvt.font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
-            xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
+            xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+            xft:Unifont:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
 
 ! Perl extensions
 URxvt.perl-ext-common: eval,keysym-list,readline,selection,selection-to-clipboard,keyboard-select,url-select
