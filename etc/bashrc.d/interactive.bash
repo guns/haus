@@ -482,13 +482,6 @@ ALIAS iotop='iotop --only'
         cat /proc/sys/kernel/sysrq
     fi
 }
-[[ -e /sys/devices/system/cpu/intel_pstate/min_perf_pct ]] && intel_min_perf_pct() {
-    if (($#)); then
-        echo "$@" > /sys/devices/system/cpu/intel_pstate/min_perf_pct
-    else
-        cat /sys/devices/system/cpu/intel_pstate/min_perf_pct
-    fi
-}
 
 # Swap
 ALIAS swapin='swapoff --all --verbose; swapon --all --verbose'
