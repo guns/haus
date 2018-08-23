@@ -94,11 +94,31 @@ __pacdowngrade__() {
     __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"
 }
 
+__pacman_sync__() {
+    type _pacman_pkg &>/dev/null || __load_completion pacman
+
+    local common core cur database files prev query remove sync upgrade o
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    _pacman_pkg Slq
+}
+
+__pacman_pkgs__() {
+    type _pacman_pkg &>/dev/null || __load_completion pacman
+
+    local common core cur database files prev query remove sync upgrade o
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    _pacman_pkg Qq
+}
+
 __mtlabel__() {
     if ((COMP_CWORD == 1)); then
         __compreply__ "$(command ls -1 /dev/disk/by-label/)";
     else
-        HAVE _mount || __load_completion mount
+        type _mount &>/dev/null || __load_completion mount
         _mount
     fi
 }
@@ -107,7 +127,7 @@ __mtusb__() {
     local prev
     _get_comp_words_by_ref prev
     if [[ "$prev" == '-o' || "$prev" == '--options' ]]; then
-        HAVE _mount || __load_completion mount
+        type _mount &>/dev/null || __load_completion mount
         _mount
     fi
 }
@@ -362,7 +382,7 @@ alias dus='du --summarize'
 mt() {
     if (($#)); then
         run mount --verbose --options noatime "$@"
-    elif HAVE findmnt; then
+    elif type findmnt &>/dev/null; then
         findmnt
     else
         mount
@@ -921,7 +941,7 @@ gpgsign() {
         gpg --detach-sign "$f"
     done
 }
-alias gpgkilldaemons='run gpgconf --kill $(gpgconf --list-components gpgconf | cut -d: -f1)'
+alias gpgkilldaemons='run gpgconf --kill all'
 
 # pass
 TCOMP pass passclip
@@ -972,11 +992,11 @@ HAVE apt && {
 # Pacman
 HAVE pacman && {
     alias pac='pacman'; TCOMP pacman pac
-    alias paci='run pacman --sync --needed'
-    alias pacidep='run pacman --sync --needed --asdeps'
-    alias pacr='run pacman --remove --recursive'
-    alias pacs='run pacman --sync --search'
-    alias pacg='run pacman --query --search'
+    alias paci='run pacman --sync --needed'; complete -F __pacman_sync__ paci
+    alias pacidep='run pacman --sync --needed --asdeps'; complete -F __pacman_sync__ pacidep
+    alias pacr='run pacman --remove --recursive'; complete -F __pacman_pkgs__ pacr
+    alias pacs='run pacman --sync --search'; complete -F __pacman_sync__ pacs
+    alias pacg='run pacman --query --search'; complete -F __pacman_pkgs__ pacg
     pacq() {
         local pkg
         for pkg in "$@"; do
@@ -987,7 +1007,7 @@ HAVE pacman && {
                 pacman --sync --info "$pkg"
             fi
         done 2>/dev/null | pager
-    }
+    }; complete -F __pacman_pkgs__ pacq
     alias pacsync='run pacman --sync --refresh'
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
     alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacaur --check $(pacforeign)'
