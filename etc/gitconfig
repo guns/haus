@@ -190,6 +190,7 @@
 
 	# Misc
 	bs   = bisect
+	gca  = gc --aggressive --prune=all
 	ho   = hash-object
 	how  = hash-object -w
 	ls   = ls-files

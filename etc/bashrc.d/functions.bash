@@ -107,52 +107,6 @@ TCOMP() {
     }; complete -F \"__TCOMP_${alias}__\" \"$alias\""
 }; GC_FUNC TCOMP
 
-### Smarter aliasing function:
-#
-#   * Lazily transfer completions to an alias using TCOMP():
-#
-#       complete -p exec                        => complete -F _command exec
-#       ALIAS x exec && complete -p x           => complete -F __TCOMP_x__ x
-#       x <TAB>; complete -p x                  => complete -F _command x
-#
-#   * Skip alias and return false if command does not exist:
-#
-#       ALIAS x='/bin/no-such-command'          => (no alias)
-#       ALIAS y='no-such-command --option'      => (no alias)
-#       echo $!                                 => `1`
-#
-#   * Early termination:
-#
-#       ALIAS x='no-such-command' ls='ls -Ahl'  => `ls` remains unaliased
-#
-# NOTES:
-#
-#   Whitespace and other shell metacharacters in source commands must be
-#   backslash escaped. Quoting with ['"] will not work!
-#
-#   In order to attain acceptable performance, this function is not parameter
-#   compatible with the `alias` builtin.
-#
-# Param: $@ name=value ...
-ALIAS() {
-    local arg
-    for arg in "$@"; do
-        local cmd _
-        local lhs="${arg%%=*}"
-        read cmd _ <<< "${arg#*=}"
-
-        if HAVE "$cmd"; then
-            builtin alias "$arg"
-            # Transfer completions to the new alias
-            if [[ "$lhs" != "$cmd" ]]; then
-                TCOMP "$cmd" "$lhs"
-            fi
-        else
-            return 1
-        fi
-    done
-}; GC_FUNC ALIAS
-
 ### `cd` wrapper creation:
 #
 # CD_FUNC cdfoo /usr/local/foo ...

@@ -1,40 +1,72 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2018 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
+require 'optparse'
 require 'etc'
-require 'fileutils'
 require 'set'
-require 'haus/utils'
 
-auth = "authorized_keys"
+class SshInstallAuthorizedKeys
+  DEFAULTS = { :pattern => nil }
+  HAUS_SSH_DIR = File.expand_path('../etc/_ssh', __dir__)
 
-(ARGV.empty? ? [Etc.getlogin] : ARGV).each do |arg|
-  user = Etc.getpwnam arg
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
 
-  Dir.chdir File.join(user.dir, ".ssh") do
-    authpath = File.join user.dir, ".ssh", auth
+  def parser
+    @parser ||= OptionParser.new nil, 24 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Install ssh public keys from #{HAUS_SSH_DIR}
 
-    if File.symlink? auth and Haus::Utils.readlink(auth) == "/dev/null"
-      warn "%s is linked to /dev/null" % authpath
-      next
+        Usage: #{File.basename __FILE__} [options] [user …]
+
+        Options:
+      BANNER
+
+      opt.on '-p', '--pattern PATTERN', Regexp do |arg|
+        @pattern = arg
+      end
+    end
+  end
+
+  def readlink path
+    File.expand_path File.readlink(path), File.dirname(path)
+  end
+
+  def install_keys user, keys
+    passwd = Etc.getpwnam user
+    authpath = File.join passwd.dir, '.ssh/authorized_keys'
+
+    if File.symlink? authpath and readlink(authpath) == '/dev/null'
+      warn 'Skipping symlink %s -> /dev/null' % authpath
+      return
     end
 
-    pubkeys = Dir["*.pub"].reduce(Set.new) { |s, f| s.merge File.read(f).split("\n") }
-    authkeys = Set.new File.exists?(auth) ? File.read(auth).split("\n") : []
+    authkeys = Set.new File.exists?(authpath) ? File.read(authpath).split("\n") : []
+    ks = (keys - authkeys).to_a
 
-    next if pubkeys.subset? authkeys
-
-    FileUtils.cp auth, "authorized_keys.old" if File.exists? auth
-
-    ks = (pubkeys - authkeys).to_a
-    warn "Adding %s key%s to %s" % [ks.count, ks.count == 1 ? "" : "s", authpath]
-
-    File.open auth, "a" do |f|
+    warn 'Adding %d key%s to %s' % [ks.count, ks.count == 1 ? '' : 's', authpath]
+    File.open authpath, 'a' do |f|
       f.puts ks
     end
   end
+
+  def run arguments = []
+    args = parser.parse arguments
+    keys = Dir["#{HAUS_SSH_DIR}/*.pub"].grep(@pattern).reduce Set.new do |s, f|
+      s.merge File.read(f).split("\n")
+    end
+
+    abort 'No public keys' if keys.empty?
+
+    (args.any? ? args : [Etc.getlogin]).each do |user|
+      install_keys user, keys
+    end
+  end
 end
+
+$0 = File.basename(__FILE__) and SshInstallAuthorizedKeys.new.run ARGV if $0 == __FILE__

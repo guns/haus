@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if (($#)); then
+    openssl aes-256-cbc -d -in "$@"
+else
+    openssl aes-256-cbc -d
+fi

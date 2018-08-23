@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# DNS resolvers
+{
+    [[ -e /etc/dnscrypt-proxy/dnscrypt-proxy.toml ]] && {
+        printf "\e[32;1m/etc/dnscrypt-proxy/dnscrypt-proxy.toml\e[0m\n"
+        (cd /etc/dnscrypt-proxy/; dnscrypt-proxy -json -list | jq -cr '.[0].addrs | join(" ")')
+    }
+    [[ -e /etc/dnsmasq.resolv.conf ]] && {
+        printf "\n\e[32;1m/etc/dnsmasq.resolv.conf\e[0m\n"
+        cat /etc/dnsmasq.resolv.conf
+    }
+    [[ -e /etc/resolv.conf ]] && {
+        printf "\e[32;1m/etc/resolv.conf\e[0m\n"
+        cat /etc/resolv.conf
+    }
+} | grep --invert-match --perl-regexp '^#|^\s*$'

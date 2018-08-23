@@ -372,14 +372,11 @@ noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
 noremap <Leader>eH       :<C-u>TabOpen $cdetc/badhosts \| lcd $cdetc<CR>
 noremap <Leader>ei       :<C-u>TabOpen $cdetc/iptables.sh \| lcd $cdetc<CR>
 noremap <Leader>eI       :<C-u>TabOpen $cdetc/ipset.conf \| lcd $cdetc<CR>
-noremap <Leader>el       :<C-u>TabOpen $cdhaus/etc/_lein/profiles.clj \| lcd $cdhaus<CR>
-noremap <Leader>eL       :<C-u>TabOpen $cdsrc/leiningen/sample.project.clj \| lcd $cdsrc<CR>
 noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
 noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/_mutt/muttrc \| lcd $cdhaus<CR>
 noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf \| lcd $cdnginx<CR>
 noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
-noremap <Leader>er       :<C-u>TabOpen $cdgunsrepl/src/guns/repl.clj \| lcd $cdgunsrepl<CR>
 noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile \| lcd $cdhaus<CR>
 noremap <Leader>es       :<C-u>vsplit \| Scratch<CR>
 noremap <Leader>eS       :<C-u>TabOpen /etc/ssh/ssh_config \| lcd /etc<CR>

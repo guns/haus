@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+ssh-bits() {
+    local f fs=()
+    if (($#)); then
+        fs+=("$@")
+    else
+        fs+=(~/.ssh/*.pub)
+    fi
+    for f in "${fs[@]}"; do
+        printf "%s\t%s\n" "$f" "$(ssh-keygen -l -f "$f")"
+    done | table
+}
+
+ssh-bits

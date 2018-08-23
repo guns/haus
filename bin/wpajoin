@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+wpajoin() {
+    local OPTIND OPTARG opt iface='wlan0'
+    while getopts :i: opt; do
+        case $opt in
+        i) iface="$OPTARG";;
+        *) echo "USAGE: $FUNCNAME [-i iface] essid [password]"; return 1
+        esac
+    done
+    shift $((OPTIND-1))
+    local ssid="$1"; [[ $ssid ]] || ssid=$(printf "ssid: " >&2; read r; echo "$r")
+    local pass="$2"; [[ $pass ]] || pass=$(printf "pass: " >&2; read r; echo "$r")
+    run wpa_supplicant -i "$iface" -c <(wpa_passphrase "$ssid" "$pass")
+}
+
+wpajoin "$@"
