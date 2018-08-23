@@ -74,9 +74,9 @@ class Localmitmproxy
 
   def start! *mitmproxy_args
     with_redirected_ports @intercept_ports, @proxy_port do
-      sh *(%W[#{mitmprog} --transparent --host --port #{@proxy_port}] \
+      sh *(%W[#{mitmprog} --mode=transparent --showhost --listen-port #{@proxy_port}] \
            + (@bind_address ? ['--bind-address', @bind_address] : []) \
-           + (@stream ? ['--stream', @stream] : []) \
+           + (@stream ? ["--set=stream_large_bodies=#{@stream}"] : []) \
            + mitmproxy_args)
     end
   end

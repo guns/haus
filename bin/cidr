@@ -9,5 +9,5 @@ if ARGV.any?
   require 'ipaddr'
   puts ARGV.map { |a| r = IPAddr.new(a).to_range; "#{r.first} - #{r.last}" }
 else
-  puts %x(ip route list scope link).split[0]
+  puts %x(ip route list scope link).lines.map { |l| l.split[0] }
 end

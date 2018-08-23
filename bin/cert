@@ -265,10 +265,8 @@ class Cert
       'GIT_SSL_CAINFO' => certfile, # git
       'SSL_CERT_FILE'  => certfile  # ruby
     }
-    # Leiningen
     if @keystore
-      env['JVM_OPTS'     ] = "#{ENV['JVM_OPTS'     ]} -Djavax.net.ssl.trustStore=#{@keystore.shellescape}"
-      env['LEIN_JVM_OPTS'] = "#{ENV['LEIN_JVM_OPTS']} -Djavax.net.ssl.trustStore=#{@keystore.shellescape}"
+      env['JVM_OPTS'] = "#{ENV['JVM_OPTS']} -Djavax.net.ssl.trustStore=#{@keystore.shellescape}"
     end
     Kernel.exec env, *args
   end

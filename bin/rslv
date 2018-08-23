@@ -3,7 +3,6 @@
 
 require 'resolv'
 
-puts ARGV.flat_map { |arg|
-  as = Resolv.getaddresses arg
-  as.empty? ? [arg] : as
-}.uniq
+addrs = ARGV.flat_map { |arg| Resolv.getaddresses arg }
+abort if addrs.empty?
+puts addrs

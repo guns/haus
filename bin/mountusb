@@ -55,7 +55,7 @@ class Mountusb
         @gid = arg =~ /\A\d+\z/ ? arg.to_i : Etc.getgrnam(arg).gid
       end
 
-      opt.on '--unmount' do
+      opt.on '-U', '--unmount' do
         @unmount = true
       end
     end
