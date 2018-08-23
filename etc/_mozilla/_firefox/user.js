@@ -127,6 +127,9 @@ user_pref("geo.enabled", false);
 user_pref("browser.chrome.errorReporter.enabled", false);
 user_pref("datareporting.policy.dataSubmissionEnabled", false);
 
+// Disable checkerboard recording
+user_pref("apz.record_checkerboarding", false);
+
 // Disable session restore
 user_pref("browser.sessionstore.interval", 2147483647);
 user_pref("browser.sessionstore.max_resumed_crashes", 0);
