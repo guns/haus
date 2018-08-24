@@ -127,11 +127,10 @@ test -x "$IP6TABLES" && test -e /proc/net/if_inet6 && {
 # Chains
 #
 
-new_chain INVALID           DROP
-new_chain DROP_INPUT        DROP tcp-reset
-new_chain DROP_OUTPUT       DROP tcp-reset
-new_chain DROP_FORWARD      DROP tcp-reset
-new_chain ACCEPT_INPUT      ACCEPT
+new_chain INVALID      DROP
+new_chain DROP_INPUT   DROP tcp-reset
+new_chain DROP_OUTPUT  DROP tcp-reset
+new_chain DROP_FORWARD DROP tcp-reset
 
 #
 # INPUT
@@ -142,21 +141,21 @@ minimal_passthrough INPUT
 # VM
 # input ACCEPT:NEW --in-interface vboxnet0
 
-# SSH
-# input ACCEPT_INPUT:NEW --protocol tcp --dport 22
-
 # HTTP
-# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 80,443
+# input ACCEPT:NEW --protocol tcp --match multiport --dports 80,443
+
+# SSH
+# input ACCEPT:NEW --protocol tcp --dport 22
 
 # DNS
-# input ACCEPT_INPUT:NEW --protocol udp --in-interface eth0 --dport 53
+# input ACCEPT:NEW --protocol udp --in-interface eth0 --dport 53
 
 # DHCP
-# input ACCEPT_INPUT:NEW --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
+# input ACCEPT:NEW --protocol udp --in-interface vboxnet0 --sport 67:68 --dport 67:68
 
 # NFS
-# input ACCEPT_INPUT:NEW --protocol udp --dport 111
-# input ACCEPT_INPUT:NEW --protocol tcp --match multiport --dports 111,2049,32767
+# input ACCEPT:NEW --protocol udp --dport 111
+# input ACCEPT:NEW --protocol tcp --match multiport --dports 111,2049,32767
 
 # Samba
 # input ACCEPT:NEW --protocol udp --dport 137:138
@@ -181,16 +180,16 @@ forward DROP_FORWARD
 
 minimal_passthrough OUTPUT
 
-# Whitelisted domains
-output ACCEPT:NEW --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
-output ACCEPT:NEW --match set --match-set SSH dst --protocol tcp --dport 22
-output ACCEPT:NEW --match set --match-set NTP dst --protocol udp --dport 123
-
 # VM
-output ACCEPT --out-interface vboxnet0
+# output ACCEPT --out-interface vboxnet0
 
 # LAN
-output ACCEPT --destination "$LAN"
+# output ACCEPT --destination "$LAN"
+
+# Whitelisted domains
+# output ACCEPT:NEW --match set --match-set DNS dst --protocol udp --match multiport --dports 53,443
+# output ACCEPT:NEW --match set --match-set SSH dst --protocol tcp --dport 22
+# output ACCEPT:NEW --match set --match-set NTP dst --protocol udp --dport 123
 
 output DROP_OUTPUT
 
