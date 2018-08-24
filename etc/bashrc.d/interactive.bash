@@ -898,7 +898,7 @@ CD_FUNC -e cdruby "ruby -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
 CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
 # Rake
-alias rk='rake'; __longopt__ rake rk
+alias rk='rake'; TCOMP rake rk
 alias rkt='rake --tasks'
 
 ### Databases
