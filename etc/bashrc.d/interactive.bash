@@ -148,14 +148,10 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
-CD_FUNC -x cdetc        /etc
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
-CD_FUNC cdmnt           /mnt
 CD_FUNC -x cdnginx      /etc/nginx
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
-CD_FUNC cdTMP           /tmp
-CD_FUNC cdvar           /var
 CD_FUNC cdmachines      /var/lib/machines
 CD_FUNC cdpostgres      /var/lib/postgres
 CD_FUNC cdlog           /var/log
@@ -696,28 +692,28 @@ HAVE vim && {
     alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
-    alias vimdnsmasq='vim "$cdetc/dnsmasq.conf" -c "lcd \$cdetc"'
-    alias vimdnscrypt='vim "$cdetc/dnscrypt-proxy/dnscrypt-proxy.toml" -c "lcd \$cdetc"'
+    alias vimdnsmasq='vim "/etc/dnsmasq.conf" -c "lcd /etc/"'
+    alias vimdnscrypt='vim "/etc/dnscrypt-proxy/dnscrypt-proxy.toml" -c "lcd /etc/"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.bash_history'
-    alias vimbadhosts='vim "$cdetc/badhosts" -c "lcd \$cdetc"'
-    alias vimiptables='vim "$cdetc/iptables.sh" -c "lcd \$cdetc"'
-    alias vimipset='vim "$cdetc/ipset.conf" -c "lcd \$cdetc"'
+    alias vimbadhosts='vim "/etc/badhosts" -c "lcd /etc/"'
+    alias vimiptables='vim "/etc/iptables.sh" -c "lcd /etc/"'
+    alias vimipset='vim "/etc/ipset.conf" -c "lcd /etc/"'
     alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'
     alias vimmuttrc='vim "$cdhaus/etc/_mutt/muttrc" -c "lcd \$cdhaus"'
     alias vimnginx='vim "$cdnginx/nginx.conf" -c "lcd \$cdnginx"'
     alias vimorg='vim -c Org!'
-    alias vimpacman='vim "$cdetc/pacman.conf" -c "lcd \$cdetc"'
+    alias vimpacman='vim "/etc/pacman.conf" -c "lcd /etc/"'
     alias vimhausrakefile='vim "$cdhaus/Rakefile" -c "lcd \$cdhaus"'
     alias vimscratch='vim -c Scratch'
-    alias vimsshconfig='vim "$cdetc/ssh/ssh_config" -c "lcd \$cdetc"'
+    alias vimsshconfig='vim "/etc/ssh/ssh_config" -c "lcd /etc/"'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimtmux='vim "$cdhaus/etc/tmux.conf" -c "lcd \$cdhaus"'
     alias vimunicode='vim "$cdhaus/share/doc/unicode-table.txt" -c "lcd \$cdhaus"'
     alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'
     alias vimwm='vim -O "$cdhaus/etc/_config/sxhkd/sxhkdrc" "$cdhaus/etc/_config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
-    alias vimwireguard='vim "$cdetc/wireguard/wg0.conf" -c "lcd \$cdetc"'
+    alias vimwireguard='vim "/etc/wireguard/wg0.conf" -c "lcd /etc/"'
     alias vimxinitrc='vim "$cdhaus/etc/xinitrc" -c "lcd \$cdhaus"'
     alias vimxdefaults='vim "$cdhaus/etc/Xdefaults" -c "lcd \$cdhaus"'
 }
