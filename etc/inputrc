@@ -199,7 +199,7 @@ $if bash
     "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimwm \n"
-    "\C-xeW":       "\C-] vimwmkeybindings \n"
+    "\C-xeW":       "\C-] vimwireguard \n"
     "\C-xex":       "\C-] vimxinitrc \n"
     "\C-xeX":       "\C-] vimxdefaults \n"
 
