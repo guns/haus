@@ -128,13 +128,18 @@ augroup GUNS
 	autocmd FileType nginx
 		\ setlocal iskeyword-=. iskeyword-=/ iskeyword-=: iskeyword+=-
 
-	" Ini conf gitconfig
+	" Ini conf toml gitconfig
 	autocmd BufRead,BufNewFile *gitconfig
 		\ setlocal filetype=gitconfig
 	autocmd BufRead,BufNewFile *.INI
 		\ setlocal filetype=dosini
 	autocmd BufRead,BufNewFile */etc/*hosts,ipset.conf,Caddyfile
 		\ setlocal filetype=conf
+	autocmd BufRead,BufNewFile /etc/wireguard/*.conf
+		\ setlocal filetype=toml
+	autocmd FileType toml
+		\ highlight link tomlTable Special |
+		\ highlight link tomlKey Type
 
 	" XDefaults
 	autocmd BufRead,BufNewFile *Xdefaults*
