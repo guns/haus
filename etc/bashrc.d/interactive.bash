@@ -520,7 +520,7 @@ HAVE inotifywait && fwatch() {
 }
 
 # Check shell init files and system paths for loose permissions
-ckperm() { source "$cdhaus/bin/checkpermissions.bash" && ckperm; }
+ckperm() { source "$cdhaus/bin/checkpermissions.bash" && checkpermissions.bash; }
 
 ### Processes
 

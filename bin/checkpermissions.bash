@@ -1,5 +1,7 @@
+#!/usr/bin/env bash
+
 # Check shell init files and system paths for loose permissions
-ckperm() {
+checkpermissions.bash() {
     # path:user:group:octal-mask:opt1,opt2
     local specs=(
         /boot:::0077:no-recurse
@@ -12,6 +14,7 @@ ckperm() {
         /etc/ssh/*key:::0077:glob
         /etc/ssl/private:::0077
         /etc/sudoers*::root:0027:glob
+        /etc/wireguard:::0077
         /etc/**/.git:::0077:glob,no-recurse
 
         /var/lib/{machines,container}:::0077:no-recurse
