@@ -459,18 +459,6 @@ alias free='free --human'
 # iotop
 alias iotop='iotop --only'
 
-# Linux /proc /sys
-drop_caches() {
-    echo 3 > /proc/sys/vm/drop_caches
-}
-sysrq() {
-    if (($#)); then
-        echo "$@" > /proc/sys/kernel/sysrq
-    else
-        cat /proc/sys/kernel/sysrq
-    fi
-}
-
 # Swap
 alias swapin='swapoff --all --verbose; swapon --all --verbose'
 
@@ -520,7 +508,7 @@ HAVE inotifywait && fwatch() {
 }
 
 # Check shell init files and system paths for loose permissions
-ckperm() { source "$cdhaus/bin/checkpermissions.bash" && checkpermissions.bash; }
+ckperm() { source "$cdhaus/bin/checkpermissions.bash"; }
 
 ### Processes
 
@@ -556,9 +544,8 @@ alias pkabort='pk -ABRT'
 # ps (traditional BSD / SysV flags seem to be the most portable)
 alias psa='ps axo comm,pid,ppid,pgid,sid,nlwp,pcpu,pmem,rss,start_time,user,tt,ni,pri,stat,args'
 alias psg='pgrep -a'
-alias psgv='prep -av'
 if [[ "$MACHTYPE" == *-linux-* ]]; then
-    # GNU/Linux ps supports `k` and `--sort`
+    # GNU ps supports `k` and `--sort`
     psr() { psa k-pcpu "$@" | pager; }
     psm() { psa k-rss  "$@" | pager; }
 else
@@ -636,22 +623,12 @@ alias lsifconnect='lsif | grep -- "->"'
 alias lsifconnectr='lsifr | grep -- "->"'
 alias lsuf='lsof -U'
 
-# nmap
-nmapsweep() {
-    if (($#)); then
-        local subnets=("$@")
-    else
-        local subnets=($(cidr))
-    fi
-    run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "${subnets[@]}"
-}
-
 # ngrep
 alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
 
 # Weechat
 if ((EUID > 0)) && HAVE weechat; then
-    alias irc='(cd ~/.weechat && weechat)'
+    alias irc='(cd ~/.weechat && exec weechat)'
 fi
 
 # dnscrypt-proxy
@@ -666,14 +643,9 @@ alias ipt6='ipt --ipv6'
 
 ### Editors
 
-# Exuberant ctags
-alias ctagsr='ctags --recurse'
-
 # Vim
 HAVE vim && {
     alias v='vim -c "set nomodified" -'
-
-    vimopen() { vim -c 'DeniteOpen' "$@"; }
 
     # Param: [$@] Arguments to `ff()`
     vimfind() {
@@ -693,7 +665,6 @@ HAVE vim && {
 
     # Vim-ManPage
     alias mman='command man'; TCOMP man mman
-    # Param: $@ [[section] command] ...
     man() {
         local i sec page pages=0 args=()
 
@@ -717,54 +688,6 @@ HAVE vim && {
         done
 
         (( ${#args[@]} )) && run vim "${args[@]}"
-    }
-
-    vimsession() {
-        local session="$HOME/.cache/vim/session/$(pwd)/Session.vim"
-        if [[ -e "$session" ]]; then
-            vim -S "$(ruby -rshellwords -e "print ARGV[0].shellescape" "$session")" \
-                -c "silent! execute '! rm --force ' . fnameescape(v:this_session)" \
-                "$@"
-        else
-            vim "$@"
-        fi
-    }
-
-    # vim-fugitive
-    alias vimgit='vim -c "call fugitive#detect(\".\") | Gstatus"'
-    # Param: [$1] File to browse
-    gitv() {
-        if [[ -f "$1" ]]; then
-            vim -c 'call fugitive#detect(".") | Gitv!' "$1"
-        else
-            vim -c 'call fugitive#detect(".") | Gitv'
-        fi
-    }
-
-    # Open in REPL mode with the screen.vim plugin
-    # Param: [$1] Filename
-    # Param: [$2] Interpreter to run
-    vimrepl() {
-        local file cmd
-
-        case $# in
-        2) file="$1" cmd="$2";;
-        1) file="$1";;
-        0) file='vimrepl';;
-        *) return 1
-        esac
-
-        run vim -c "Screen $cmd" "$file"
-    }
-
-    # Param: [$@] Arguments to vim
-    vimstartuptime() {
-        vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
-        urxvt-client -e vim /tmp/.vimstartuptime
-    }
-
-    vimsysctl() {
-        (cd /etc/; vimdiff /etc/sysctl.d/99-sysctl.conf <(sysctl -a | sed "s/^/# /") -c "windo setf sysctl")
     }
 
     # VIMEDITBINDINGS
@@ -863,18 +786,6 @@ alias patch='patch --version-control never'
 
 # git
 HAVE git && {
-    # Github
-    # Param: $1   User name
-    # Param: $2   Repository name
-    # Param: [$3] Branch name
-    githubclone() {
-        (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
-        local user="${1%%/*}" repo="${1#*/}" branch
-        [[ $2 ]] && branch="--branch $2"
-        run git clone $branch "https://github.com/${user}/${repo}.git"
-    }
-
-    # PS1 git status
     REQUIRE ~/.bashrc.d/git-prompt.sh
     gitps1() {
         __ps1toggle__ '/\\w/\\w\$(__git_ps1 \" → \\[\\033[3m\\]%s\\[\\033[23m\\]\")'
@@ -1012,15 +923,6 @@ HAVE pacman && {
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
     alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacaur --check $(pacforeign)'
     alias pacclean='run pacman --sync --clean --noconfirm'
-    pacforeign() {
-        ruby -e '
-            puts %x(pacman --query --foreign --info).split("\n\n").reduce([]) { |pkgs, pkg|
-                (pkg[/Groups\s*:\s*(.*)/, 1].split & %w[nerv nerv-alt]).empty? \
-                    ? pkgs << pkg[/Name\s*:\s*(.*)/, 1] \
-                    : pkgs
-            }
-        '
-    }
     alias pacorphans='run pacman --query --deps --unrequired'
     alias paclog='pager /var/log/pacman.log'
     alias pacowner='run pacman --query --owns'
@@ -1031,39 +933,12 @@ HAVE pacman && {
     alias mkpf='makepkg --force'; __longopt__ mkpf
     alias mkpo='makepkg --nobuild'; __longopt__ mkpo
 
-    pacfindunknown() {
-        find "$@" -exec pacman --query --owns -- {} + 2>&1 >/dev/null
-    }; TCOMP find pacfindunknown
+    TCOMP find pacfindunknown
 
     _xspecs['pacinstallfile']='!*.pkg.tar.xz'
     complete -F _filedir_xspec pacinstallfile
 
-    pacdowngrade() {
-        local OPTIND OPTARG opt sign=0
-
-        while getopts :s opt; do
-            case $opt in
-            s) sign=1;;
-            esac
-        done
-        shift $((OPTIND-1))
-
-        if ((sign)); then
-            (cd /var/cache/pacman/pkg
-            for f in "$@"; do
-                [[ -e "$f.sig" ]] || run gpg --detach-sign "$f"
-            done)
-        fi
-        run pacman --upgrade "${@/#//var/cache/pacman/pkg/}";
-    }
     complete -F __pacdowngrade__ pacdowngrade
-
-    aurclone() {
-        local name
-        for name in "$@"; do
-            run git clone "https://aur.archlinux.org/${name}.git"
-        done
-    }
 }
 
 # dnf

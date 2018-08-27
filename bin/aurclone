@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for NAME in "$@"; do
+    run git clone "https://aur.archlinux.org/${NAME}.git"
+done

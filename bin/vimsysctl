@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+cd /etc/
+
+vimdiff /etc/sysctl.d/99-sysctl.conf <(sysctl -a | sed 's/^/# /') -c 'windo setf sysctl'

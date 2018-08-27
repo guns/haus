@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if (($#)); then
+    SUBNETS=("$@")
+else
+    SUBNETS=($(cidr))
+fi
+run nmap -sU -sS --top-ports 50 -O -PE -PP -PM "${SUBNETS[@]}"

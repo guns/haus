@@ -65,3 +65,5 @@ checkpermissions.bash() {
 
     checkpermissions "$@" -- "${specs[@]}"
 }
+
+checkpermissions.bash "$@"

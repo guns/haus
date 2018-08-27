@@ -1,0 +1,4 @@
+#!/bin/sh
+
+vim --startuptime /tmp/.vimstartuptime "$@" -c 'quitall!'
+urxvt-client -e vim /tmp/.vimstartuptime

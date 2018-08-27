@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+githubclone() {
+    (($# == 1 || $# == 2)) || { echo "Usage: $FUNCNAME user/repo [branch]"; return 1; }
+    local user="${1%%/*}" repo="${1#*/}" branch
+    [[ $2 ]] && branch="--branch $2"
+    run git clone $branch "https://github.com/${user}/${repo}.git"
+}
+
+githubclone "$@"

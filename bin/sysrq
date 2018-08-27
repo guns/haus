@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+if (($#)); then
+    echo "$@" > /proc/sys/kernel/sysrq
+else
+    cat /proc/sys/kernel/sysrq
+fi

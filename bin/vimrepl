@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+vimrepl() {
+    local file cmd
+
+    case $# in
+    2) file="$1" cmd="$2";;
+    1) file="$1";;
+    0) file='vimrepl';;
+    *) return 1
+    esac
+
+    exec vim -c "Screen $cmd" "$file"
+}
+
+vimrepl "$@"

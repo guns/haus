@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+SESSION="$HOME/.cache/vim/session/$(pwd)/Session.vim"
+if [[ -e "$SESSION" ]]; then
+    exec vim -S "$(ruby -rshellwords -e "print ARGV[0].shellescape" "$SESSION")" \
+             -c "silent! execute '! rm --force ' . fnameescape(v:this_session)" \
+             "$@"
+else
+    exec vim "$@"
+fi
