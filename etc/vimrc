@@ -351,9 +351,7 @@ let g:go_asmfmt_autosave = 1
 " let g:go_gorename_prefill = 'expand("<cword>") =~# "^[A-Z]"' .
 " 	\ '? go#util#pascalcase(expand("<cword>"))' .
 " 	\ ': go#util#camelcase(expand("<cword>"))'
-" let g:go_gocode_autobuild = 1
 " let g:go_gocode_propose_builtins = 1
-let g:go_gocode_unimported_packages = 1
 " let g:go_gocode_socket_type = 'unix'
 let g:go_template_autocreate = 0
 " let g:go_template_file = "hello_world.go"

@@ -9,6 +9,15 @@ function! s:gocodeCommand(cmd, args) abort
   let cmd = [bin_path]
   let cmd = extend(cmd, ['-sock', socket_type])
   let cmd = extend(cmd, ['-f', 'vim'])
+
+  if go#config#GocodeProposeBuiltins()
+    let cmd = extend(cmd, ['-builtin'])
+  endif
+
+  if go#config#GocodeProposeSource()
+    let cmd = extend(cmd, ['-source'])
+  endif
+
   let cmd = extend(cmd, [a:cmd])
   let cmd = extend(cmd, a:args)
 
@@ -43,31 +52,7 @@ function! s:sync_gocode(cmd, args, input) abort
   return l:result
 endfunction
 
-let s:optionsEnabled = 0
-function! s:gocodeEnableOptions() abort
-  if s:optionsEnabled
-    return
-  endif
-
-  let l:bin_path = go#path#CheckBinPath("gocode")
-  if empty(l:bin_path)
-    return
-  endif
-
-  let s:optionsEnabled = 1
-
-  call go#util#Exec(['gocode', 'set', 'propose-builtins', s:toBool(go#config#GocodeProposeBuiltins())])
-  call go#util#Exec(['gocode', 'set', 'autobuild', s:toBool(go#config#GocodeAutobuild())])
-  call go#util#Exec(['gocode', 'set', 'unimported-packages', s:toBool(go#config#GocodeUnimportedPackages())])
-endfunction
-
-function! s:toBool(val) abort
-  if a:val | return 'true' | else | return 'false' | endif
-endfunction
-
 function! s:gocodeAutocomplete() abort
-  call s:gocodeEnableOptions()
-
   " use the offset as is, because the cursor position is the position for
   " which autocomplete candidates are needed.
   return s:sync_gocode('autocomplete',
@@ -81,15 +66,15 @@ function! go#complete#GetInfo() abort
   return s:sync_info(0)
 endfunction
 
-function! go#complete#Info(auto) abort
+function! go#complete#Info() abort
   if go#util#has_job(1)
-    return s:async_info(a:auto)
+    return s:async_info(1)
   else
-    return s:sync_info(a:auto)
+    return s:sync_info(1)
   endif
 endfunction
 
-function! s:async_info(auto)
+function! s:async_info(echo)
   if exists("s:async_info_job")
     call job_stop(s:async_info_job)
     unlet s:async_info_job
@@ -100,7 +85,7 @@ function! s:async_info(auto)
         \ 'exit_status': 0,
         \ 'closed': 0,
         \ 'messages': [],
-        \ 'auto': a:auto
+        \ 'echo': a:echo
       \ }
 
   function! s:callback(chan, msg) dict
@@ -132,8 +117,8 @@ function! s:async_info(auto)
       return
     endif
 
-    let result = s:info_filter(self.auto, join(self.messages, "\n"))
-    call s:info_complete(self.auto, result)
+    let result = s:info_filter(self.echo, join(self.messages, "\n"))
+    call s:info_complete(self.echo, result)
   endfunction
 
   " add 1 to the offset, so that the position at the cursor will be included
@@ -171,9 +156,7 @@ function! s:gocodeFile()
   return file
 endfunction
 
-function! s:sync_info(auto)
-  " auto is true if we were called by g:go_auto_type_info's autocmd
-
+function! s:sync_info(echo)
   " add 1 to the offset, so that the position at the cursor will be included
   " in gocode's search
   let offset = go#util#OffsetCursor()+1
@@ -182,11 +165,11 @@ function! s:sync_info(auto)
         \ [expand('%:p'), offset],
         \ go#util#GetLines())
 
-  let result = s:info_filter(a:auto, result)
-  call s:info_complete(a:auto, result)
+  let result = s:info_filter(a:echo, result)
+  return s:info_complete(a:echo, result)
 endfunction
 
-function! s:info_filter(auto, result) abort
+function! s:info_filter(echo, result) abort
   if empty(a:result)
     return ""
   endif
@@ -200,7 +183,7 @@ function! s:info_filter(auto, result) abort
   if len(l:candidates) == 1
     " When gocode panics in vim mode, it returns
     "     [0, [{'word': 'PANIC', 'abbr': 'PANIC PANIC PANIC', 'info': 'PANIC PANIC PANIC'}]]
-    if a:auto && l:candidates[0].info ==# "PANIC PANIC PANIC"
+    if a:echo && l:candidates[0].info ==# "PANIC PANIC PANIC"
       return ""
     endif
 
@@ -220,10 +203,12 @@ function! s:info_filter(auto, result) abort
   return l:filtered[0].info
 endfunction
 
-function! s:info_complete(auto, result) abort
-  if !empty(a:result)
+function! s:info_complete(echo, result) abort
+  if a:echo && !empty(a:result)
     echo "vim-go: " | echohl Function | echon a:result | echohl None
   endif
+
+  return a:result
 endfunction
 
 function! s:trim_bracket(val) abort
