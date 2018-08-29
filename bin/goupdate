@@ -16,7 +16,6 @@ UTILITIES = %w[
   github.com/jteeuwen/go-bindata/...
   github.com/kr/pretty
   github.com/motemen/gore
-  golang.org/x/vgo
 ]
 
 File.open File.join(ENV['GOPATH'], '.updated'), 'w' do |f|
