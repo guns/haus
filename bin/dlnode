@@ -561,6 +561,8 @@ class Dlnode
         end
       end
 
+      warn ":: Finished at #{Time.now}"
+
       if failed.any?
         $stderr.puts "\e[31mFAILED:\e[0m "
         failed.each { |cmd| puts cmd.shelljoin }
