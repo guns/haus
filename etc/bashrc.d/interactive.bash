@@ -274,6 +274,7 @@ alias lf='less +F'
 # ls
 alias ls="ls -l --almost-all --human-readable --quoting-style=literal --show-control-chars --color"
 alias lc="command ls -C --color"
+alias lsg='ls | g'
 alias lsd='ls --directory'
 lsr() { ls --recursive "${@:-.}" | pager; }
 lst() { ls -t "${@:-.}" | pager; }
