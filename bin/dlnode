@@ -423,10 +423,9 @@ class Dlnode
     f_ext = File.extname fname
     t_ext = File.extname title
 
-    if fname.length + title.length > NAME_MAX
-      t_basename = File.basename title, t_ext
+    if fname.bytesize + title.bytesize > NAME_MAX
       title = '%s…%s' % [
-        title[0...NAME_MAX - '…'.bytesize - t_ext.length - fname.length],
+        utf8_truncate(title, NAME_MAX - '…'.bytesize - t_ext.bytesize - fname.bytesize),
         t_ext
       ]
     end
@@ -435,15 +434,15 @@ class Dlnode
     when 1
       fname = File.basename title, t_ext
 
-      if t_ext.length == 0
+      if t_ext.bytesize == 0
         fname << f_ext
-      elsif f_ext.length == 0
+      elsif f_ext.bytesize == 0
         fname << t_ext
-      elsif t_ext.size > 5 and f_ext.size < 5
+      elsif t_ext.bytesize > 5 and f_ext.bytesize < 5
         fname << f_ext
-      elsif f_ext.size > 5 and t_ext.size < 5
+      elsif f_ext.bytesize > 5 and t_ext.bytesize < 5
         fname << t_ext
-      elsif f_ext.size < 5 and t_ext.size < 5
+      elsif f_ext.bytesize < 5 and t_ext.bytesize < 5
         fname << t_ext
       else
         fname << f_ext
@@ -459,6 +458,12 @@ class Dlnode
     end
 
     fname
+  end
+
+  def utf8_truncate s, length
+    bs = s.bytes.take length
+    bs.pop while bs[-1] > 0x7f
+    bs.pack('C*').force_encoding 'utf-8'
   end
 
   # Returns array of arguments for exec: […, path, url]
