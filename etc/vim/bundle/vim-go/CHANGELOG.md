@@ -1,5 +1,18 @@
 ## unplanned
 
+FEATURES:
+
+* **go.mod file support!** This is the first feature for upcoming Go modules
+  support. The followings are added:
+  * Syntax highlighting for the `go.mod` file. 
+  * A new `gomod` filetype is set if a `go.mod` file has been opened and starts
+    with the line `module `
+  * New **:GoModFmt** command that formats the `go.mod` file
+  * Auto format on save feature for `:GoModFmt`, enabled automatically. Can be
+    toggled of with the setting `g:go_mod_fmt_autosave` or with the command:
+    `GoModFmtAutoSaveToggle`
+  [[GH-1931]](https://github.com/fatih/vim-go/pull/1931)
+
 IMPROVEMENTS:
 * Unify async job handling for Vim8 and Neovim.
   [[GH-1864]](https://github.com/fatih/vim-go/pull/1864)
@@ -15,6 +28,24 @@ IMPROVEMENTS:
   [[GH-1924]](https://github.com/fatih/vim-go/pull/1924)
 * Update the tested version of Neovim to v0.3.1.
   [[GH-1923]](https://github.com/fatih/vim-go/pull/1923)
+* Run autocompletion asynchronously in Vim8 and Neovim.
+  [[GH-1926]](https://github.com/fatih/vim-go/pull/1926)
+* Show statusline update when running `:GoInfo` with `g:go_info_mode='gocode'`.
+  [[GH-1937]](https://github.com/fatih/vim-go/pull/1937)
+* Do not update statusline when highlighting sameids or showing type info via
+  an autocmd.
+  [[GH-1937]](https://github.com/fatih/vim-go/pull/1937)
+* Do not indent within a raw string literal.
+  [[GH-1858]](https://github.com/fatih/vim-go/pull/1858)
+* Highlight Go's predeclared function identifiers (the functions in `builtins`)
+  using keyword groups and highlight them using the `Identifiers` group.
+  [[GH-1939]](https://github.com/fatih/vim-go/pull/1939)
+* Add a new FAQ entry to instruct users how to modify the vim-go highlight
+  groups.
+  [[GH-1939]](https://github.com/fatih/vim-go/pull/1939)
+* Improve use of statusline and progress messages.
+  [[GH-1948]](https://github.com/fatih/vim-go/pull/1948)
+
 
 BUG FIXES:
 * Fix `:GoRun %` on Windows.
@@ -27,6 +58,8 @@ BUG FIXES:
   [[GH-1915]](https://github.com/fatih/vim-go/pull/1915)
 * Fix highlighting of pointer type in var blocks.
   [[GH-1794]](https://github.com/fatih/vim-go/pull/1794)
+* Fix `:GoImport` when adding to an empty import block (i.e`import ()`)
+  [[GH-1938]](https://github.com/fatih/vim-go/pull/1938)
 
 BACKWARDS INCOMPATIBILITIES:
 * Bump minimum required version of Vim to 7.4.2009.
@@ -49,7 +82,7 @@ FEATURES:
       f, err := os.Open("file")
   }
   ```
-  
+ 
   Becomes:
 
   ```

@@ -33,7 +33,10 @@ endfunction
 "     function will be passed three arguments: the job, its exit code, and the
 "     list of messages received from the channel. The default is a no-op. A
 "     custom value can modify the messages before they are processed by the
-"     returned exit_cb and close_cb callbacks.
+"     returned exit_cb and close_cb callbacks. When the function is called,
+"     the current window will be the window that was hosting the buffer when
+"     the job was started. After it returns, the current window will be
+"     restored to what it was before the function was called.
 
 " The return value is a dictionary with these keys:
 "   'callback':
@@ -87,23 +90,32 @@ function! go#job#Options(args)
 
   " do nothing in state.complete by default.
   function state.complete(job, exit_status, data)
+    if has_key(self, 'custom_complete')
+      let l:winid = win_getid(winnr())
+      " Always set the active window to the window that was active when the job
+      " was started. Among other things, this makes sure that the correct
+      " window's location list will be populated when the list type is
+      " 'location' and the user has moved windows since starting the job.
+      call win_gotoid(self.winid)
+      call self.custom_complete(a:job, a:exit_status, a:data)
+      call win_gotoid(l:winid)
+    endif
+
+    call self.show_errors(a:job, a:exit_status, a:data)
   endfunction
 
   function state.show_status(job, exit_status) dict
+    if self.statustype == ''
+      return
+    endif
+
     if go#config#EchoCommandInfo()
-      let prefix = ""
-      if self.statustype != ''
-        let prefix = '[' . self.statustype . '] '
-      endif
+      let prefix = '[' . self.statustype . '] '
       if a:exit_status == 0
         call go#util#EchoSuccess(prefix . "SUCCESS")
       else
         call go#util#EchoError(prefix . "FAIL")
       endif
-    endif
-
-    if self.statustype == ''
-      return
     endif
 
     let status = {
@@ -127,10 +139,15 @@ function! go#job#Options(args)
   endfunction
 
   if has_key(a:args, 'complete')
-    let state.complete = a:args.complete
+    let state.custom_complete = a:args.complete
   endif
 
   function! s:start(args) dict
+    if go#config#EchoCommandInfo()
+      let prefix = '[' . self.statustype . '] '
+      call go#util#EchoSuccess(prefix . "dispatched")
+    endif
+
     if self.statustype != ''
       let status = {
             \ 'desc': 'current status',
@@ -164,7 +181,6 @@ function! go#job#Options(args)
 
     if self.closed || has('nvim')
       call self.complete(a:job, self.exit_status, self.messages)
-      call self.show_errors(a:job, self.exit_status, self.messages)
     endif
   endfunction
   " explicitly bind exit_cb to state so that within it, self will always refer
@@ -177,7 +193,6 @@ function! go#job#Options(args)
     if self.exited
       let job = ch_getjob(a:ch)
       call self.complete(job, self.exit_status, self.messages)
-      call self.show_errors(job, self.exit_status, self.messages)
     endif
   endfunction
   " explicitly bind close_cb to state so that within it, self will
@@ -225,7 +240,7 @@ function! go#job#Options(args)
 
     if empty(errors)
       " failed to parse errors, output the original content
-      call go#util#EchoError(self.messages + [self.dir])
+      call go#util#EchoError([self.dir] + self.messages)
       call win_gotoid(l:winid)
       return
     endif
@@ -254,10 +269,21 @@ function! go#job#Start(cmd, options)
     let l:options = s:neooptions(l:options)
   endif
 
+  " Verify that the working directory for the job actually exists. Return
+  " early if the directory does not exist. This helps avoid errors when
+  " working with plugins that use virtual files that don't actually exist on
+  " the file system.
+  let dir = expand("%:p:h")
+  if has_key(l:options, 'cwd') && !isdirectory(l:options.cwd)
+      return
+  elseif !isdirectory(dir)
+    return
+  endif
+
   if !has_key(l:options, 'cwd')
     " pre start
     let dir = getcwd()
-    execute l:cd fnameescape(expand("%:p:h"))
+    execute l:cd fnameescape(dir)
   endif
 
   if has_key(l:options, '_start')
