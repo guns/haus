@@ -11,7 +11,6 @@ ENV['GOPATH'] = ENV['GOPATH'].split(':').first
 UTILITIES = %w[
   github.com/cheekybits/genny
   github.com/constabulary/gb/...
-  github.com/cosmos72/gomacro
   github.com/derekparker/delve/cmd/dlv
   github.com/jteeuwen/go-bindata/...
   github.com/kr/pretty
