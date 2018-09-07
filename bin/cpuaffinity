@@ -11,6 +11,6 @@ else
   pids.each do |pid|
     comm = File.read("/proc/#{pid}/comm").chomp
     cpus = %x(taskset -acp #{pid})[/: (.*)$/, 1]
-    puts "[%5s] %-16s%s" % [pid, comm, cpus]
+    puts '%4s [%5s] %s' % [cpus, pid, comm]
   end
 end
