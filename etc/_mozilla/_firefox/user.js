@@ -70,6 +70,7 @@ user_pref("layout.spellcheckDefault", 0);
 user_pref("datareporting.healthreport.uploadEnabled", false);
 // Disable Telemetry
 user_pref("toolkit.telemetry.enabled", false);
+user_pref("toolkit.telemetry.cachedClientID", "");
 user_pref("browser.crashReports.unsubmittedCheck.autoSubmit", false);
 // Disable Aurora updates
 user_pref("app.update.auto", false);
@@ -189,6 +190,12 @@ user_pref("media.peerconnection.turn.disable", true);
 user_pref("media.peerconnection.use_document_iceservers", false);
 user_pref("media.peerconnection.video.enabled", false);
 user_pref("media.peerconnection.video.h264_enabled", false);
+
+// Disable clipboard access
+user_pref("dom.event.clipboardevents.enabled", false);
+
+// Show domains as punycode
+user_pref("network.IDN_show_punycode", true);
 
 // Remove all external URLs
 user_pref("accessibility.support.url", "");
