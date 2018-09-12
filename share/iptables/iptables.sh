@@ -94,6 +94,19 @@ minimal_host_forwarding() {
     fi
 }
 
+minimal_interface_forwarding() {
+    iptables --append FORWARD --out-interface "$1" --match conntrack --ctstate ESTABLISHED --jump ACCEPT  # Allow established traffic
+    iptables --append FORWARD --out-interface "$1" --match conntrack --ctstate INVALID     --jump INVALID # Log and drop invalid packets
+    iptables --append FORWARD --in-interface  "$1" --protocol icmp                         --jump ACCEPT  # Allow outbound ICMP
+    iptables --append FORWARD --out-interface "$1" --protocol icmp                         --jump ACCEPT  # Allow inbound ICMP
+
+    if [[ "$2" ]]; then
+        iptables --table nat --append POSTROUTING --source "$2" --jump SNAT --to-source "$3"
+    else
+        iptables --table nat --append POSTROUTING --source "$2" --jump MASQUERADE
+    fi
+}
+
 filter() {
     local chain="$1" target state
     local args=("${@:3}")
