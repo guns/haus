@@ -36,7 +36,7 @@ super + alt + {l,h}
 	bspc desktop --focus "$DIR" && \
 	bspc node --focus "$NODE"
 
-{alt + grave, button10}
+{super + grave, button10}
 	bspc desktop --focus last
 
 super + alt + {0-9}
@@ -71,7 +71,7 @@ super + q
 super + {Tab,shift + Tab}
 	bspc node --focus {next,prev}.local
 
-super + grave
+alt + grave
 	bspc node --focus last
 
 alt + Tab
