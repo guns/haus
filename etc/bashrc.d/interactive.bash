@@ -817,6 +817,12 @@ HAVE psql && {
     alias initpostgres="aspostgres initdb --locale $LANG -E UTF-8 -D \"$cdpostgres/data\""
 }
 
+### Containers
+
+HAVE docker && {
+    alias d='docker'; TCOMP docker d
+}
+
 ### Hardware control
 
 alias mp='modprobe --all'
