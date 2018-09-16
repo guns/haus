@@ -228,7 +228,7 @@ nohist() {
 if ((NOHIST == 1)); then nohist; fi
 
 # Repeat
-r() {
+rep() {
     for ((i = 0; i < "$1"; ++i)); do
         eval "${@:2}"
     done
@@ -809,6 +809,15 @@ CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.direc
 # Rake
 alias rk='rake'; TCOMP rake rk
 alias rkt='rake --tasks'
+
+# rails
+r() {
+    if [[ -x bin/rails ]]; then
+        run bin/rails "$@"
+    else
+        run rails "$@"
+    fi
+}
 
 ### Databases
 
