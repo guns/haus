@@ -173,18 +173,18 @@ augroup rust.vim
                                     \|xunmap <buffer> ]]
                                     \|ounmap <buffer> [[
                                     \|ounmap <buffer> ]]
-                                    \|set matchpairs-=<:>
+                                    \|setlocal matchpairs-=<:>
                                     \|unlet b:match_skip
                                     \"
 
     " }}}1
 
     " Code formatting on save
-    autocmd BufWritePre *.rs silent! call rustfmt#PreWrite()
+    autocmd BufWritePre <buffer> silent! call rustfmt#PreWrite()
 
 augroup END
 
-set matchpairs+=<:>
+setlocal matchpairs+=<:>
 " For matchit.vim (rustArrow stops `Fn() -> X` messing things up)
 let b:match_skip = 's:comment\|string\|rustArrow'
 
