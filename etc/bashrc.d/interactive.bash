@@ -636,7 +636,6 @@ alias dnscrypt='dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml'
 # iptables
 alias iptables.sh='/etc/iptables.sh'
 alias iptw='ipt --wait'
-alias iptc='ipt --command'
 alias ipt6='ipt --ipv6'
 
 ### Editors

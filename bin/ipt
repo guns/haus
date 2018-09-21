@@ -34,7 +34,7 @@ class Ipt
       opt.banner = <<-BANNER.gsub /^ {8}/, ''
         iptables and ip6tables wrapper.
 
-        Usage: #{prog} [options] [command]
+        Usage: #{prog} [options] [command [args …]] [:: shell-command]
 
         Commands:
             l│list      Print rules (DEFAULT)
@@ -186,7 +186,9 @@ class Ipt
 
   def save_rules!
     [[@ipv4, 'iptables-save', @save4], [@ipv6, 'ip6tables-save', @save6]].each do |(enabled, cmd, path)|
-      sh "#{cmd} > #{path.shellescape}" if enabled
+      next if not enabled
+      cmds = TABLES.map { |tab| "#{cmd} --table #{tab}" }
+      sh "(#{cmds.join ' ; '}) > #{path.shellescape}"
     end
   end
 
@@ -445,8 +447,19 @@ class Ipt
     end
   end
 
+  def parse args
+    args = parser.order args
+    args.reverse_each.with_index do |arg, i|
+      if arg == '--'
+        @command = args.drop(args.size - i).shelljoin
+        return args.take(args.size - i - 1)
+      end
+    end
+    args
+  end
+
   def run arguments = []
-    args = parser.order arguments
+    args = parse arguments
 
     if @wait and not REVERSIBLE_COMMANDS.include? args.first
       if args.empty?
@@ -458,7 +471,7 @@ class Ipt
 
     exec! *args
 
-    if @wait
+    if @wait || @command
       begin
         if @command
           sh @command
