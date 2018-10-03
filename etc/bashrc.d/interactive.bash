@@ -494,7 +494,7 @@ HAVE inotifywait && fwatch() {
     fi
 
     while :; do
-        if ! inotifywait -q -e attrib -e close_write "$recurse" "${files[@]}"; then
+        if ! inotifywait -qq -e attrib -e close_write "$recurse" "${files[@]}"; then
             until stat "${files[@]}" &>/dev/null; do
                 sleep 1
             done
@@ -833,7 +833,7 @@ HAVE docker && {
 
 ### Hardware control
 
-alias mp='modprobe --all'
+alias mp='modprobe --all'; TCOMP modprobe mp
 alias trim='fstrim --all --verbose'
 
 HAVE rfkill && {
