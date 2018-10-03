@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+
+FILE="/tmp/qrshow-$RANDOM.png"
+
+trap "rm -vf \"$FILE\"" EXIT
+
+if (($#)); then
+    qrencode -o "$FILE" "$@"
+else
+    qrencode -o "$FILE" < /dev/stdin
+fi
+
+sxiv -g 200x200 "$FILE"
