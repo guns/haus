@@ -5,7 +5,9 @@ ARGV.each do |f|
   case url = File.read(f).chomp
   when %r{\A\w+://}
     system 'open', url
-  when 'about:preferences', 'about:config'
+  when %r{\Aabout:}
     system 'firefox', url
+  when %r{\Achrome://}
+    system 'chromium', url
   end
 end
