@@ -220,10 +220,7 @@ augroup GUNS
 
 	" Rust
 	autocmd FileType rust
-		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>' |
-		\ let b:delimitMate_matchpairs = "(:),[:],{:}" |
-		\ SetTextwidth 78 |
-		\ SetWhitespace 4
+		\ RustBufferSetup
 
 	" Golang
 	autocmd FileType go

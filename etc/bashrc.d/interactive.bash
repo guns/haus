@@ -766,6 +766,14 @@ HAVE go && {
     gopprof()         { run rlwrap go tool pprof -http="127.0.0.1:$((0xD0C))" "$@"; }
 }
 
+# rust
+HAVE cargo && {
+    alias ca='cargo' && TCOMP cargo ca
+    alias cabuild='cargo build'
+    alias carelease='cargo build --release'
+    alias carun='cargo run'
+}
+
 ### Debuggers
 
 alias gdbrun='gdb -ex=run --args'

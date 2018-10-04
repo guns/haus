@@ -633,6 +633,14 @@ EORUBY
 	endif
 endfunction
 
+command! -bar RustBufferSetup call <SID>RustBufferSetup()
+function! s:RustBufferSetup()
+	noremap! <buffer> <C-l>      <Space>=><Space>
+	nmap     <buffer> <C-]>      <Plug>(rust-def)
+	nmap     <buffer> <C-w><C-]> <Plug>(rust-def-vertical)
+	nmap     <buffer> K          <Plug>(rust-doc)
+endfunction
+
 command! -bar GoBufferSetup call <SID>GoBufferSetup()
 function! s:GoBufferSetup()
 	set laststatus=2

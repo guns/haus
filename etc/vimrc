@@ -28,6 +28,7 @@ set tags^=./.tags,.tags " Read hidden .tags
 set directory=~/.cache/vim/swap
 call MkdirIfNotExists(&directory)
 set viminfo+=n~/.cache/vim/viminfo
+set viewdir=~/.cache/vim/view
 let g:netrw_home = expand('~/.cache/vim')
 
 " Undo
@@ -385,6 +386,12 @@ let g:go_highlight_generate_tags = 1
 
 " Plugin: pgsql.vim
 let g:sql_type_default = 'pgsql'
+
+" Plugin: rust.vim
+let g:rustfmt_autosave = 1
+
+" Plugin: vim-racer
+let g:racer_experimental_completer = 1
 
 """ MAPPINGS and AUTOCOMMANDS
 
