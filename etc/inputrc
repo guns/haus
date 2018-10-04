@@ -258,6 +258,7 @@ $if bash
 
     # password-store
     "\C-xp":        "\C-]passclip "
+    "\C-xP":        "\C-]passqrshow "
 
     # Window title
     "\033\007,":    "\C-] xecho title \"${PWD##*/}\" \n"

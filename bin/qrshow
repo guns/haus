@@ -7,7 +7,7 @@ FILE="/tmp/qrshow-$RANDOM.png"
 trap "rm -vf \"$FILE\"" EXIT
 
 if (($#)); then
-    qrencode -o "$FILE" "$@"
+    qrencode -o "$FILE" "$*"
 else
     qrencode -o "$FILE" < /dev/stdin
 fi

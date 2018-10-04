@@ -1,0 +1,3 @@
+#!/bin/sh
+
+pass "$@" | ruby -e 'line = $stdin.readline; warn $stdin.read; system "qrshow", line'
