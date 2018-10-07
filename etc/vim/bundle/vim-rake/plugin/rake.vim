@@ -58,6 +58,8 @@ function! s:real(file) abort
   let pre = substitute(matchstr(a:file, '^\a\a\+\ze:'), '^.', '\u&', '')
   if empty(pre)
     let path = a:file
+  elseif exists('*' . pre . 'Real')
+    let path = {pre}Real(a:file)
   elseif exists('*' . pre . 'Path')
     let path = {pre}Path(a:file)
   else
@@ -74,8 +76,8 @@ function! s:find_root(path) abort
   let root = s:shellslash(fnamemodify(a:path, ':p:s?[\/]$??'))
   let previous = ''
   while root !=# previous && root !~# '^\%(\a\+:\)\=/*$\|^\.$'
-    if s:has(root, 'Rakefile') || (s:has(root, 'lib') && s:has(root, 'Gemfile'))
-      if s:has(root, 'config/environment.rb')
+    if s:has(root, 'Rakefile') || (s:has(root, 'lib/') && s:has(root, 'Gemfile'))
+      if s:has(root, 'config/environment.rb') && s:has(root, 'app/')
         return ''
       else
         return root
@@ -157,12 +159,8 @@ function! s:ProjectionistDetect() abort
   call s:Detect(get(g:, 'projectionist_file', ''))
   if exists('b:rake_root')
     let projections = deepcopy(s:projections)
-    if s:has(b:rake_root, 'test/')
-      let test = 1
-    endif
-    if s:has(b:rake_root, 'spec/')
-      let spec = 1
-    endif
+    let test = s:has(b:rake_root, 'test/')
+    let spec = s:has(b:rake_root, 'spec/')
     let real_root = s:real(b:rake_root)
     if len(real_root)
       let projections['*'].make = s:project().makeprg()
@@ -174,10 +172,11 @@ function! s:ProjectionistDetect() abort
       else
         let projections['test/*.rb'] = {'dispatch': ruby . ' -Itest {file}'}
       endif
-      let projections['spec/*_spec.rb'].dispatch = s:binstub(real_root, 'rspec') . ' {file}`=v:lnum ? ":".v:lnum : ""`'
+      let projections['spec/*_spec.rb'].dispatch =
+            \ s:binstub(real_root, 'rspec') . ' {file}%:s/.*/\=exists("l#") ? ":".l# : " "/{vim|nothing}'
     endif
-    call filter(projections['lib/*.rb'].alternate, 'exists(v:val[0:3])')
-    call filter(projections, 'v:key[4] !=# "/" || exists(v:key[0:3])')
+    call filter(projections['lib/*.rb'].alternate, 'get(l:, v:val[0:3])')
+    call filter(projections, 'v:key[4] !=# "/" || get(l:, v:key[0:3])')
     let gemspec = fnamemodify(get(split(s:fcall('glob', b:rake_root.'/*.gemspec'), "\n"), 0, 'Gemfile'), ':t')
     let projections[gemspec] = {'type': 'lib'}
     if gemspec !=# 'Gemfile'
@@ -185,8 +184,10 @@ function! s:ProjectionistDetect() abort
     endif
     call projectionist#append(b:rake_root, projections)
     let secondary = {
-          \ 'test/*_test.rb': exists('test') ? {'type': 'spec'} : {},
-          \ 'spec/*_spec.rb': exists('spec') ? {'type': 'test'} : {}}
+          \ 'test/*_test.rb': test ? {'type': 'spec'} : {},
+          \ 'spec/*_spec.rb': extend(
+          \ len(real_root) ? {"dispatch": s:binstub(real_root, 'rspec') . ' {file}'} : {},
+          \ spec ? {'type': 'test'} : {})}
     call filter(secondary, '!empty(v:val)')
     if !empty(secondary)
       call projectionist#append(b:rake_root, secondary)
@@ -306,8 +307,8 @@ function! s:Rake(bang, arg) abort
 endfunction
 
 function! s:RakeComplete(A, L, P, ...) abort
-  let project = a:0 ? a:1 : s:project()
-  return projectionist#completion_filter(project.tasks(), a:A, ':')
+  let root = a:0 ? a:1 : b:rake_root
+  return projectionist#completion_filter(s:Tasks(root), a:A, ':')
 endfunction
 
 function! CompilerComplete_rake(A, L, P) abort
@@ -319,16 +320,17 @@ function! CompilerComplete_rake(A, L, P) abort
   if path ==# get(b:, 'rails_root', 'x') && exists('*rails#complete_rake')
     return rails#complete_rake(a:A, a:L, a:P)
   else
-    return s:RakeComplete(a:A, a:L, a:P, s:project(path))
+    return s:RakeComplete(a:A, a:L, a:P, path)
   endif
 endfunction
 
-function! s:project_tasks() dict abort
+function! s:Tasks(...) abort
+  let project = s:project(a:0 ? a:1 : b:rake_root)
   let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd' : 'cd'
   let cwd = getcwd()
   try
-    execute cd fnameescape(self.real())
-    let lines = split(system(self.makeprg() . ' -T'), "\n")
+    execute cd fnameescape(project.real())
+    let lines = split(system(project.makeprg() . ' -T'), "\n")
   finally
     execute cd fnameescape(cwd)
   endtry
@@ -339,8 +341,6 @@ function! s:project_tasks() dict abort
   call filter(lines,'v:val != ""')
   return lines
 endfunction
-
-call s:add_methods('project', ['tasks'])
 
 function! s:define_rake() abort
   command! -buffer -bar -bang -nargs=? -complete=customlist,s:RakeComplete Rake

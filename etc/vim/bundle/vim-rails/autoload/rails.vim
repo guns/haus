@@ -161,8 +161,8 @@ function! s:glob(path) abort
 endfunction
 
 function! s:mkdir_p(path) abort
-  if a:path !~# '^\a\a\+:' && !isdirectory(fnamemodify(a:path, ':h'))
-    call mkdir(fnamemodify(a:path, ':h'), 'p')
+  if a:path !~# '^\a\a\+:' && !isdirectory(a:path)
+    call mkdir(a:path, 'p')
   endif
 endfunction
 
@@ -211,8 +211,8 @@ function! s:app_real(...) dict abort
   let pre = substitute(matchstr(self._root, '^\a\a\+\ze:'), '^.', '\u&', '')
   if empty(pre)
     let real = self._root
-  elseif exists('*' . pre . 'Path')
-    let real = {pre}Path(self._root)
+  elseif exists('*' . pre . 'Real')
+    let real = {pre}Real(self._root)
   else
     return ''
   endif
@@ -763,12 +763,14 @@ function! s:buffer_number() dict abort
 endfunction
 
 function! s:buffer_path() dict abort
-  return s:gsub(fnamemodify(bufname(self.number()),':p'),'\\ @!','/')
+  let bufname = bufname(self.number())
+  return empty(bufname) ? '' : s:gsub(fnamemodify(bufname,':p'),'\\ @!','/')
 endfunction
 
 function! s:buffer_name() dict abort
   let app = self.app()
-  let f = fnamemodify(bufname(self.number()), ':p')
+  let bufname = bufname(self.number())
+  let f = len(bufname) ? fnamemodify(bufname, ':p') : ''
   if f !~# ':[\/][\/]'
     let f = resolve(f)
   endif
@@ -798,14 +800,8 @@ function! s:readable_calculate_file_type() dict abort
   endif
   let r = "-"
   let full_path = self.path()
-  let nr = bufnr('^'.full_path.'$')
-  if nr < 0 && exists('+shellslash') && ! &shellslash
-    let nr = bufnr('^'.s:gsub(full_path,'/','\\').'$')
-  endif
   if empty(f)
     let r = ""
-  elseif nr > 0 && !empty(getbufvar(nr, 'rails_file_type'))
-    return getbufvar(nr, 'rails_file_type')
   elseif f =~# '^app/controllers/concerns/.*\.rb$'
     let r = "controller-concern"
   elseif f =~# '_controller\.rb$' || f =~# '^app/controllers/.*\.rb$'
@@ -1355,7 +1351,7 @@ endfunction
 
 function! s:readable_test_file_candidates() dict abort
   let f = self.name()
-  let projected = self.projected('test')
+  let projected = self.projected('railsTest') + self.projected('test')
   if self.type_name('view')
     let tests = [
           \ fnamemodify(f,':s?\<app/?spec/?')."_spec.rb",
@@ -1414,6 +1410,19 @@ function! s:readable_test_file() dict abort
   return get(candidates, 0, '')
 endfunction
 
+function! s:readable_placeholders(lnum) dict abort
+  let placeholders = {}
+  if a:lnum
+    let placeholders.lnum = a:lnum
+    let placeholders.line = a:lnum
+    let last = self.last_method(a:lnum)
+    if !empty(last)
+      let placeholders.define = last
+    endif
+  endif
+  return placeholders
+endfunction
+
 function! s:readable_default_rake_task(...) dict abort
   let app = self.app()
   let lnum = a:0 ? (a:1 < 0 ? 0 : a:1) : 0
@@ -1431,20 +1440,18 @@ function! s:readable_default_rake_task(...) dict abort
     return matchstr(self.getline(1), taskpat)
   endif
 
-  let placeholders = {}
-  if lnum
-    let placeholders.l = lnum
-    let placeholders.lnum = lnum
-    let placeholders.line = lnum
-    let last = self.last_method(lnum)
-    if !empty(last)
-      let placeholders.d = last
-      let placeholders.define = last
-    endif
-  endif
-  let tasks = self.projected('task', placeholders)
-  if !empty(tasks)
+  let placeholders = self.placeholders(lnum)
+  let tasks = self.projected('rakeTask', placeholders) + self.projected('task', placeholders)
+  if len(tasks)
     return tasks[0]
+  endif
+  let tasks = self.projected('railsTask', placeholders)
+  if len(tasks)
+    let task = substitute(tasks[0], '^$', '--tasks', '')
+    if task =~# '^test\>'
+      let task = substitute(substitute(task, ' \zs[^-[:upper:][:space:]]', 'TEST=', ''), ' -n', ' TESTOPTS=-n', '')
+    endif
+    return task
   endif
 
   if self.type_name('config-routes')
@@ -1529,6 +1536,10 @@ function! s:rake2rails(task) abort
 endfunction
 
 function! s:readable_default_task(...) dict abort
+  let tasks = self.projected('railsTask', self.placeholders(a:0 ? a:1 : 0))
+  if len(tasks)
+    return tasks[0]
+  endif
   return s:rake2rails(call(self.default_rake_task, a:000, self))
 endfunction
 
@@ -1552,7 +1563,7 @@ function! rails#complete_rake(A,L,P) abort
   return s:completion_filter(rails#app().rake_tasks(), a:A, ':')
 endfunction
 
-call s:add_methods('readable', ['test_file_candidates', 'test_file', 'default_rake_task', 'default_task'])
+call s:add_methods('readable', ['test_file_candidates', 'test_file', 'placeholders', 'default_rake_task', 'default_task'])
 call s:add_methods('app', ['rake_command'])
 
 " }}}1
@@ -1897,14 +1908,14 @@ function! s:readable_runner_command(bang, count, arg) dict abort
       let compiler = 'ruby'
     endif
 
-    let compiler = get(file.projected('compiler'), 0, compiler)
+    let compiler = get(file.projected('railsRunner') + file.projected('compiler'), 0, compiler)
     if compiler ==# 'testrb' || compiler ==# 'minitest'
       let compiler = 'rubyunit'
     elseif empty(findfile('compiler/'.compiler.'.vim', escape(&rtp, ' ')))
       let compiler = 'ruby'
     endif
 
-    execute 'compiler '.compiler
+    execute 'compiler' compiler
 
     if compiler ==# 'ruby'
       let &l:makeprg = self.app().prepare_rails_command('runner')
@@ -2529,7 +2540,7 @@ function! s:ruby_cfile() abort
       let res = s:glob(viewpath . view . '.html.*')
       if len(res)|return res[0]|endif
       let res = s:glob(viewpath . view . '.*')
-      if len(res)|return res|endif
+      if len(res)|return res[0]|endif
       return substitute(viewpath, '.*[\/]app[\/]views[\/]', '', '') . view . '.html'
     endif
   else
@@ -3603,15 +3614,9 @@ endfunction
 
 function! s:readable_alternate_candidates(...) dict abort
   let f = self.name()
-  let placeholders = {}
+  let placeholders = self.placeholders(a:0 ? a:1 : 0)
   if a:0 && a:1
-    let placeholders.lnum = a:1
-    let placeholders.line = a:1
-    let lastmethod = self.last_method(a:1)
-    if !empty(lastmethod)
-      let placeholders.d = lastmethod
-      let placeholders.define = lastmethod
-    endif
+    let lastmethod = get(placeholders, 'define', '')
     let projected = self.projected('related', placeholders)
     if !empty(projected)
       return projected
@@ -4311,10 +4316,6 @@ function! s:combine_projections(dest, src, ...) abort
 endfunction
 
 let s:default_projections = {
-      \  "*.example.yml": {"alternate": "{}.yml"},
-      \  "*.yml": {"alternate": ["{}.example.yml", "{}.yml.example", "{}.yml.sample"]},
-      \  "*.yml.example": {"alternate": "{}.yml"},
-      \  "*.yml.sample": {"alternate": "{}.yml"},
       \  "Gemfile": {"alternate": "Gemfile.lock", "type": "lib"},
       \  "Gemfile.lock": {"alternate": "Gemfile"},
       \  "README": {"alternate": "config/database.yml"},
@@ -4364,6 +4365,16 @@ let s:default_projections = {
       \    "template": ["class {camelcase|capitalize|colons}Serializer < ActiveModel::Serializer", "end"],
       \    "type": "serializer"
       \  },
+      \  "config/*.yml": {
+      \    "alternate": [
+      \      "config/{}.example.yml",
+      \      "config/{}.yml.example",
+      \      "config/{}.yml.sample"
+      \    ]
+      \  },
+      \  "config/*.example.yml": {"alternate": "config/{}.yml"},
+      \  "config/*.yml.example": {"alternate": "config/{}.yml"},
+      \  "config/*.yml.sample": {"alternate": "config/{}.yml"},
       \  "config/application.rb": {"alternate": "config/routes.rb"},
       \  "config/environment.rb": {"alternate": "config/routes.rb"},
       \  "config/environments/*.rb": {
@@ -4375,8 +4386,8 @@ let s:default_projections = {
       \    "alternate": ["config/application.rb", "config/environment.rb"],
       \    "type": "initializer"
       \  },
-      \  "gems.rb": {"alternate": "gems.locked", "type": "lib"},
       \  "gems.locked": {"alternate": "gems.rb"},
+      \  "gems.rb": {"alternate": "gems.locked", "type": "lib"},
       \  "lib/*.rb": {"type": "lib"},
       \  "lib/tasks/*.rake": {"type": "task"}
       \}
