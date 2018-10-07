@@ -612,7 +612,7 @@ end
 endsnippet
 
 snippet it "it"
-it "$1" do
+it '$1' do
 	$0
 end
 endsnippet
@@ -893,3 +893,18 @@ snippet resa "refute_same" w
 refute_same $0
 endsnippet
 
+### RSpec
+
+snippet ex "expect to eq" w
+expect($1).to eq($0)
+endsnippet
+
+snippet exb "expect to be" w
+expect($1).to be $0
+endsnippet
+
+snippet con "context" w
+context '$1' do
+	$0
+end
+endsnippet
