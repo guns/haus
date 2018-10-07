@@ -1,6 +1,6 @@
 " unimpaired.vim - Pairs of handy bracket mappings
 " Maintainer:   Tim Pope <http://tpo.pe/>
-" Version:      1.2
+" Version:      2.0
 " GetLatestVimScripts: 1590 1 :AutoInstall: unimpaired.vim
 
 if exists("g:loaded_unimpaired") || &cp || v:version < 700
@@ -10,7 +10,7 @@ let g:loaded_unimpaired = 1
 
 let s:maps = []
 function! s:map(...) abort
-  call add(s:maps, a:000)
+  call add(s:maps, copy(a:000))
 endfunction
 
 function! s:maps() abort
