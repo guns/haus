@@ -51,6 +51,7 @@ bashcomp_DATA = 2to3 \
 		chmod \
 		chown \
 		chpasswd \
+		chromium-browser \
 		chronyc \
 		chrpath \
 		_chsh \
@@ -106,9 +107,10 @@ bashcomp_DATA = 2to3 \
 		find \
 		find_member \
 		fio \
+		firefox \
 		flake8 \
 		freebsd-update \
-		freeciv-gtk2 \
+		freeciv \
 		freeciv-server \
 		function \
 		fusermount \
@@ -126,6 +128,7 @@ bashcomp_DATA = 2to3 \
 		gnatmake \
 		gnokii \
 		gnome-mplayer \
+		gnome-screenshot \
 		gpasswd \
 		gpg \
 		gpg2 \
@@ -167,6 +170,7 @@ bashcomp_DATA = 2to3 \
 		iptables \
 		ipv6calc \
 		iscsiadm \
+		isort \
 		isql \
 		iwconfig \
 		iwlist \
@@ -504,6 +508,8 @@ CLEANFILES = \
 	f77 \
 	f95 \
 	filebucket \
+	freeciv-gtk2 \
+	freeciv-gtk3 \
 	freeciv-sdl \
 	freeciv-xaw \
 	g++ \
@@ -522,6 +528,8 @@ CLEANFILES = \
 	gmake \
 	gmplayer \
 	gnumake \
+	google-chrome \
+	google-chrome-stable \
 	gpc \
 	gpgv2 \
 	hciattach \
@@ -530,6 +538,7 @@ CLEANFILES = \
 	host \
 	hping \
 	hping3 \
+	iceweasel \
 	identify \
 	ifdown \
 	ifquery \
@@ -571,6 +580,7 @@ CLEANFILES = \
 	mkisofs \
 	mogrify \
 	montage \
+	mozilla-firefox \
 	mplayer2 \
 	msgsnarf \
 	muttng \
@@ -736,6 +746,10 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) cardctl $(targetdir)/$$file ; \
 	done
+	for file in google-chrome google-chrome-stable ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) chromium-browser $(targetdir)/$$file ; \
+	done
 	for file in compgen ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) complete $(targetdir)/$$file ; \
@@ -765,9 +779,14 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) filesnarf $(targetdir)/$$file ; \
 	done
-	for file in civclient freeciv-sdl freeciv-xaw ; do \
+	for file in iceweasel mozilla-firefox ; do \
 		rm -f $(targetdir)/$$file && \
-			$(LN_S) freeciv-gtk2 $(targetdir)/$$file ; \
+			$(LN_S) firefox $(targetdir)/$$file ; \
+	done
+	for file in civclient freeciv-gtk2 freeciv-gtk3 freeciv-sdl \
+		freeciv-xaw ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) freeciv $(targetdir)/$$file ; \
 	done
 	for file in civserver ; do \
 		rm -f $(targetdir)/$$file && \

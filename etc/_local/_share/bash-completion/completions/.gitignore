@@ -45,6 +45,8 @@ etherwake
 f77
 f95
 filebucket
+freeciv-gtk2
+freeciv-gtk3
 freeciv-sdl
 freeciv-xaw
 g++
@@ -63,6 +65,8 @@ gkrellm2
 gmake
 gmplayer
 gnumake
+google-chrome
+google-chrome-stable
 gpc
 gpgv2
 hciattach
@@ -71,6 +75,7 @@ hd
 host
 hping
 hping3
+iceweasel
 identify
 ifdown
 ifquery
@@ -112,6 +117,7 @@ micropython
 mkisofs
 mogrify
 montage
+mozilla-firefox
 mplayer2
 msgsnarf
 muttng
