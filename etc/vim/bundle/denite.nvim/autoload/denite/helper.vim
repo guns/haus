@@ -41,7 +41,7 @@ function! denite#helper#call_denite(command, args, line1, line2) abort
   if a:command ==# 'DeniteCursorWord'
     let context.input = expand('<cword>')
   elseif a:command ==# 'DeniteBufferDir'
-    let context.path = fnamemodify(bufname('%'), ':p:h')
+    let context.path = expand('%:p:h')
   elseif a:command ==# 'DeniteProjectDir'
     let context.path = denite#project#path2project_directory(
           \ get(context, 'path', getcwd()),
@@ -84,17 +84,7 @@ function! denite#helper#_parse_options_args(cmdline) abort
     let source_args = []
     if source_arg !=# ''
       for s in split(source_arg, s:re_unquoted_match('\\\@<!:'), 1)
-        let s = substitute(s, '\\\(.\)', "\\1", 'g')
-
-        " remove leading/ending quote pairs
-        if s[0] ==# '"' && s[len(s) - 1] ==# '"'
-          let s = s[1: len(s) - 2]
-        endif
-        if s[0] ==# "'" && s[len(s) - 1] ==# "'"
-          let s = s[1: len(s) - 2]
-        endif
-
-        call add(source_args, s)
+        call add(source_args, s:remove_quote_pairs(s))
       endfor
     endif
     call add(_, { 'name': source_name, 'args': source_args })
@@ -109,6 +99,18 @@ function! s:re_unquoted_match(match) abort
         \ . "'" . '([^' . "'" . '\\]*\\.)*[^' . "'" . '\\]*' . "'" . '))*[^"'
         \ . "'" . ']*$'
 endfunction
+function! s:remove_quote_pairs(s) abort
+  " remove leading/ending quote pairs
+  let s = a:s
+  if s[0] ==# '"' && s[len(s) - 1] ==# '"'
+    let s = s[1: len(s) - 2]
+  elseif s[0] ==# "'" && s[len(s) - 1] ==# "'"
+    let s = s[1: len(s) - 2]
+  else
+    let s = substitute(a:s, '\\\(.\)', "\\1", 'g')
+  endif
+  return s
+endfunction
 function! s:parse_options(cmdline) abort
   let args = []
   let options = {}
@@ -117,8 +119,8 @@ function! s:parse_options(cmdline) abort
   let cmdline = (a:cmdline =~# '\\\@<!`.*\\\@<!`') ?
         \ s:eval_cmdline(a:cmdline) : a:cmdline
 
-  for arg in split(cmdline, s:re_unquoted_match('\%(\\\@<!\s\)\+'))
-    let arg = substitute(arg, '\\\( \)', '\1', 'g')
+  for s in split(cmdline, s:re_unquoted_match('\%(\\\@<!\s\)\+'))
+    let arg = substitute(s, '\\\( \)', '\1', 'g')
     let arg_key = substitute(arg, '=\zs.*$', '', '')
 
     let name = substitute(tr(arg_key, '-', '_'), '=$', '', '')[1:]
@@ -126,7 +128,8 @@ function! s:parse_options(cmdline) abort
       let name = name[3:]
       let value = v:false
     else
-      let value = (arg_key =~# '=$') ? arg[len(arg_key) :] : v:true
+      let value = (arg_key =~# '=$') ?
+            \ s:remove_quote_pairs(arg[len(arg_key) :]) : v:true
     endif
 
     if index(keys(denite#init#_user_options())
@@ -208,4 +211,14 @@ function! s:_get_source_name(path) abort
     return fnamemodify(a:path, ':h:s?.*/rplugin/python3/denite/source/??:r')
   endif
   return fnamemodify(a:path, ':s?.*/rplugin/python3/denite/source/??:r')
+endfunction
+
+function! denite#helper#_get_wininfo() abort
+  let wininfo = getwininfo(win_getid())[0]
+  return {
+        \ 'bufnr': wininfo['bufnr'],
+        \ 'winnr': wininfo['winnr'],
+        \ 'winid': wininfo['winid'],
+        \ 'tabnr': wininfo['tabnr'],
+        \}
 endfunction

@@ -9,7 +9,7 @@ import os
 import sys
 
 from glob import glob
-from os.path import normpath, normcase, join, dirname
+from os.path import normpath, normcase, join, dirname, exists
 from importlib.machinery import SourceFileLoader
 
 
@@ -136,7 +136,16 @@ def relpath(vim, path):
 
 
 def convert2fuzzy_pattern(text):
-    return '|'.join([escape_fuzzy(x, True) for x in split_input(text)])
+    def esc(string):
+        # Escape string for convert2fuzzy_pattern.
+        p = re.sub(r'([a-zA-Z0-9_-])(?!$)', r'\1[^\1]{-}', string)
+        if re.search(r'[A-Z](?!$)', string):
+            p = re.sub(r'([a-z])(?!$)',
+                       (lambda pat:
+                        '['+pat.group(1)+pat.group(1).upper()+']'), p)
+        p = re.sub(r'/(?!$)', r'/[^/]*', p)
+        return p
+    return '|'.join([esc(x) for x in split_input(text)])
 
 
 def convert2regex_pattern(text):
@@ -248,9 +257,12 @@ def import_rplugins(name, context, source, loaded_paths):
 
 def parse_tagline(line, tagpath):
     elem = line.split("\t")
+    file_path = elem[1]
+    if not exists(file_path):
+        file_path = normpath(join(dirname(tagpath), elem[1]))
     info = {
         'name': elem[0],
-        'file': normpath(join(dirname(tagpath), elem[1])),
+        'file': file_path,
         'pattern': '',
         'line': '',
         'type': '',

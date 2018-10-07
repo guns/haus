@@ -58,7 +58,8 @@ class Source(Base):
             lines = [{
                 'word': x,
                 'abbr': (context['__fmt'] % (i + 1, x)),
-                'action__path': self.vim.call('bufname', bufnr),
+                'action__bufnr': bufnr,
+                'action__col': 0,
                 'action__line': (i + 1),
                 'action__text': x,
             } for [i, x] in enumerate(
