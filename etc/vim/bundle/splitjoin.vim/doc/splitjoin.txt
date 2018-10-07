@@ -1089,6 +1089,22 @@ create your own mapping the old-fashioned way using the |:SplitjoinSplit| and
 splitting/joining, nothing will happen.
 
 
+                                                             *splitjoin_quiet*
+>
+    g:splitjoin_quiet
+<
+Default value: 0
+
+The plugin will output a message, "Splitjoin: Working...", when splitting or
+joining, which will be cleared when it's done. Ideally, this will only show up
+for a fraction of a second, but with very large code blocks, there might be
+work to do. A regrettable example is splitting a large ruby hash -- the plugin
+itself doesn't do a lot of work, but indentation ends up rather slow in this
+particular scenario.
+
+In order to silence these messages, if you find them annoying, set this
+variable to 1.
+
 
                                               *splitjoin_normalize_whitespace*
 >
@@ -1291,6 +1307,45 @@ If it is set to 0, the result will be:
     }
 <
 
+                                         *splitjoin_ruby_options_as_arguments*
+>
+    g:splitjoin_ruby_options_as_arguments
+<
+Default value: 0
+
+If set to 1, this will split options along with arguments, except if the
+cursor is on one of the options.
+
+Ordinarily, splitting function arguments will always split options, if there
+are any, and only split positional arguments, if there are no options. Like in
+this example:
+>
+    User.new(:one, :two, first_name: "Andrew", last_name: "Radev")
+
+    User.new(:one, :two,
+             first_name: "Andrew",
+             last_name: "Radev")
+<
+With this option set to 1, the plugin will split BOTH arguments and options,
+if the cursor is on the arguments, and it will split ONLY options if the
+cursor is on the options.
+
+So, with the cursor on "two":
+>
+    User.new(:one,
+             :two,
+             first_name: "Andrew",
+             last_name: "Radev")
+<
+But with the cursor on "first_name", you'll still get:
+>
+    User.new(:one, :two,
+             first_name: "Andrew",
+             last_name: "Radev")
+<
+The output varies according to other settings as well, like curly brackets.
+
+
                                            *splitjoin_coffee_suffix_if_clause*
 >
     g:splitjoin_coffee_suffix_if_clause
@@ -1341,10 +1396,10 @@ If it's set to 0, the brace will get its own line:
     g:splitjoin_ruby_heredoc_type
 <
 
-Default value: "<<-"
+Default value: "<<~"
 
-This setting can be one of "<<-" and "<<" and controls how strings will be
-split into heredocs. If it's "<<-", the following form is used
+This setting can be one of "<<-", "<<~", and "<<" and controls how strings
+will be split into heredocs. If it's "<<-", the following form is used
 >
     do
       foo = <<-EOF
@@ -1358,6 +1413,14 @@ If it's set to "<<", the result is this:
       foo = <<EOF
     something
     EOF
+    end
+<
+With "<<~" (the default), you'll get:
+>
+    do
+      foo = <<~EOF
+        something
+      EOF
     end
 <
                                  *splitjoin_python_brackets_on_separate_lines*

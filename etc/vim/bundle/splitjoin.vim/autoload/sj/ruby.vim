@@ -181,7 +181,7 @@ function! sj#ruby#JoinCase()
   let line_no = line('.')
   let line = getline('.')
   if line =~ '.*case'
-    let end_line_pattern = '^'.repeat(' ', indent(line)).'end\s*$'
+    let end_line_pattern = '^'.repeat(' ', indent(line_no)).'end\s*$'
     let end_line_no = search(end_line_pattern, 'W')
     let lines = sj#GetLines(line_no + 1, end_line_no - 1)
     let counter = 1
@@ -198,7 +198,7 @@ function! sj#ruby#JoinCase()
     let new_end_line_no = search(end_line_pattern, 'W')
     let else_line_no = new_end_line_no - 2
     let else_line = getline(else_line_no)
-    if else_line =~ '^'.repeat(' ', indent(line)).'else\s*$'
+    if else_line =~ '^'.repeat(' ', indent(line_no)).'else\s*$'
       let lines = sj#GetLines(line_no + 1, else_line_no - 1)
       if s:AllLinesStartWithWhen(lines)
         let next_line = getline(else_line_no + 1)
@@ -241,7 +241,7 @@ function! sj#ruby#SplitCase()
   let line_no = line('.')
   let line = getline('.')
   if line =~ '.*case'
-    let end_line_pattern = '^'.repeat(' ', indent(line)).'end\s*$'
+    let end_line_pattern = '^'.repeat(' ', indent(line_no)).'end\s*$'
     let end_line_no = search(end_line_pattern, 'W')
     let lines = sj#GetLines(line_no + 1, end_line_no - 1)
     let counter = 1
@@ -258,7 +258,7 @@ function! sj#ruby#SplitCase()
     let new_end_line_no = search(end_line_pattern, 'W')
     let else_line_no = new_end_line_no - 1
     let else_line = getline(else_line_no)
-    if else_line =~ '^'.repeat(' ', indent(line)).'else.*'
+    if else_line =~ '^'.repeat(' ', indent(line_no)).'else.*'
       call cursor(else_line_no, 1)
       call sj#ReplaceMotion('V', substitute(else_line, '\v^(\s*else) (.*)', '\1\n\2', ''))
       call cursor(else_line_no, 1)
@@ -292,7 +292,7 @@ function! sj#ruby#JoinWhenThen()
     let line_no = line('.')
     let one_down = getline(line_no + 1)
     let two_down = getline(line_no + 2)
-    let pattern = '\v^\s*(when|else|end)'
+    let pattern = '\v^\s*(when|else|end)>'
 
     if one_down !~ pattern && two_down =~ pattern
       let one_down = sj#Trim(one_down)
@@ -504,21 +504,25 @@ function! sj#ruby#SplitOptions()
     return 0
   endif
 
-  if to >= 0 && !sj#CursorBetween(from - 1, to + 1)
-    return 0
-  endif
-
-  if to < 0 && !sj#CursorBetween(from - 1, col('$'))
-    return 0
-  endif
-
   let start_lineno = line('.')
-  let [from, to, args, opts, hash_type] =
+  let [from, to, args, opts, hash_type, cursor_arg] =
         \ sj#argparser#ruby#ParseArguments(from, to, getline('.'))
 
-  if len(opts) < 1 && len(args) > 0 && option_type == 'option'
-    " no options found, but there are arguments, split those
-    let replacement = join(args, ",\n")
+  let no_options = len(opts) < 1 && len(args) > 0 && option_type == 'option'
+  let both_args_and_opts = sj#settings#Read('ruby_options_as_arguments') && cursor_arg < len(args)
+
+  if no_options || both_args_and_opts
+    " which case is it?
+    if no_options
+      " no options found, but there are arguments, split those
+      let replacement = join(args, ",\n")
+    elseif both_args_and_opts
+      " the cursor is on an argument, split both args and opts
+      let all_args = []
+      call extend(all_args, args)
+      call extend(all_args, opts)
+      let replacement = join(all_args, ",\n")
+    endif
 
     if !sj#settings#Read('ruby_hanging_args')
       " add trailing comma
@@ -646,10 +650,11 @@ function! sj#ruby#SplitArray()
     return 0
   endif
 
-  let [from, to, items] = sj#argparser#ruby#ParseArray(from + 1, to - 1, getline('.'))
+  let [from, to, args, opts; _rest] = sj#argparser#ruby#ParseArguments(from + 1, to - 1, getline('.'))
   if from < 0
     return 0
   endif
+  let items = extend(args, opts)
 
   let replacement = join(items, ",\n")
 
@@ -703,7 +708,7 @@ function! sj#ruby#JoinContinuedMethodCall()
 endfunction
 
 function! sj#ruby#JoinHeredoc()
-  let heredoc_pattern = '<<-\?\([^ \t,]\+\)'
+  let heredoc_pattern = '<<[-~]\?\([^ \t,)]\+\)'
 
   if sj#SearchUnderCursor(heredoc_pattern) <= 0
     return 0
@@ -774,6 +779,13 @@ function! sj#ruby#SplitString()
     call sj#ReplaceCols(match_start, match_end - 1, '<<-EOF')
     let replacement = getline('.')."\n".string_body."EOF"
     call sj#ReplaceMotion('V', replacement)
+  elseif sj#settings#Read('ruby_heredoc_type') == '<<~'
+    call sj#ReplaceCols(match_start, match_end - 1, '<<~EOF')
+    let replacement = getline('.')."\n".string_body."EOF"
+    call sj#ReplaceMotion('V', replacement)
+    if string_body != ''
+      exe (line('.') + 1).'>'
+    endif
   elseif sj#settings#Read('ruby_heredoc_type') == '<<'
     call sj#ReplaceCols(match_start, match_end - 1, '<<EOF')
     let replacement = getline('.')."\n".string_body."EOF"

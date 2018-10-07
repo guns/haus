@@ -43,9 +43,11 @@ splitjoin_normalize_whitespace	splitjoin.txt	/*splitjoin_normalize_whitespace*
 splitjoin_perl_brace_on_same_line	splitjoin.txt	/*splitjoin_perl_brace_on_same_line*
 splitjoin_php_method_chain_full	splitjoin.txt	/*splitjoin_php_method_chain_full*
 splitjoin_python_brackets_on_separate_lines	splitjoin.txt	/*splitjoin_python_brackets_on_separate_lines*
+splitjoin_quiet	splitjoin.txt	/*splitjoin_quiet*
 splitjoin_ruby_curly_braces	splitjoin.txt	/*splitjoin_ruby_curly_braces*
 splitjoin_ruby_do_block_split	splitjoin.txt	/*splitjoin_ruby_do_block_split*
 splitjoin_ruby_hanging_args	splitjoin.txt	/*splitjoin_ruby_hanging_args*
 splitjoin_ruby_heredoc_type	splitjoin.txt	/*splitjoin_ruby_heredoc_type*
+splitjoin_ruby_options_as_arguments	splitjoin.txt	/*splitjoin_ruby_options_as_arguments*
 splitjoin_ruby_trailing_comma	splitjoin.txt	/*splitjoin_ruby_trailing_comma*
 splitjoin_trailing_comma	splitjoin.txt	/*splitjoin_trailing_comma*
