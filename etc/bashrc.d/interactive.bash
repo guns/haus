@@ -817,12 +817,21 @@ CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.direc
 alias rk='rake'; TCOMP rake rk
 alias rkt='rake --tasks'
 
-# rails
+# Rails
 r() {
     if [[ -x bin/rails ]]; then
         run bin/rails "$@"
     else
         run rails "$@"
+    fi
+}
+
+# Bundler
+b() {
+    if [[ -x bin/bundler ]]; then
+        run bin/bundler "$@"
+    else
+        run bundler "$@"
     fi
 }
 
@@ -851,10 +860,7 @@ HAVE rfkill && {
 }
 
 HAVE hdparm && {
-    hdpowerstatus() {
-        local disks=($(lsdisk))
-        hdparm -C "${disks[@]}"
-    }
+    hdpowerstatus() { hdparm -C $(lsdisk); }
     alias hdstandby='hdparm -y'; complete -F __lsdisk__ hdstandby
     alias hdsleep='hdparm -Y'; complete -F __lsdisk__ hdsleep
 }
