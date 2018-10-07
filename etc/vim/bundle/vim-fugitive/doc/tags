@@ -4,7 +4,6 @@ fugitive	fugitive.txt	/*fugitive*
 fugitive#head(...)	fugitive.txt	/*fugitive#head(...)*
 fugitive#statusline()	fugitive.txt	/*fugitive#statusline()*
 fugitive--	fugitive.txt	/*fugitive--*
-fugitive-.	fugitive.txt	/*fugitive-.*
 fugitive-:Gblame	fugitive.txt	/*fugitive-:Gblame*
 fugitive-:Gbrowse	fugitive.txt	/*fugitive-:Gbrowse*
 fugitive-:Gcd	fugitive.txt	/*fugitive-:Gcd*
@@ -55,6 +54,7 @@ fugitive-c_CTRL-R_CTRL-G	fugitive.txt	/*fugitive-c_CTRL-R_CTRL-G*
 fugitive-commands	fugitive.txt	/*fugitive-commands*
 fugitive-mappings	fugitive.txt	/*fugitive-mappings*
 fugitive-o	fugitive.txt	/*fugitive-o*
+fugitive-object	fugitive.txt	/*fugitive-object*
 fugitive-revision	fugitive.txt	/*fugitive-revision*
 fugitive-statusline	fugitive.txt	/*fugitive-statusline*
 fugitive-y_CTRL-G	fugitive.txt	/*fugitive-y_CTRL-G*
