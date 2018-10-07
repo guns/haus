@@ -45,6 +45,16 @@ IMPROVEMENTS:
   [[GH-1939]](https://github.com/fatih/vim-go/pull/1939)
 * Improve use of statusline and progress messages.
   [[GH-1948]](https://github.com/fatih/vim-go/pull/1948)
+* Add `tt` snippet to create a table test boilerplate (see
+  https://github.com/golang/go/wiki/TableDrivenTests for more information on
+  how to use a table driven test).
+  [[GH-1956]](https://github.com/fatih/vim-go/pull/1956)
+* Add `<Plug>(go-decls)` and `<Plug>(go-decls-dir)` mappings.
+  [[GH-1964]](https://github.com/fatih/vim-go/pull/1964)
+* Handle go1.11 test output.
+  [[GH-1978]](https://github.com/fatih/vim-go/pull/1978)
+* Internal: install tools by their custom names
+  [[GH-1984]](https://github.com/fatih/vim-go/pull/1984)
 
 
 BUG FIXES:
@@ -60,6 +70,8 @@ BUG FIXES:
   [[GH-1794]](https://github.com/fatih/vim-go/pull/1794)
 * Fix `:GoImport` when adding to an empty import block (i.e`import ()`)
   [[GH-1938]](https://github.com/fatih/vim-go/pull/1938)
+* Run shell commands with shellcmdflag set to `-c`.
+  [[GH-2006]](https://github.com/fatih/vim-go/pull/2006)
 
 BACKWARDS INCOMPATIBILITIES:
 * Bump minimum required version of Vim to 7.4.2009.
