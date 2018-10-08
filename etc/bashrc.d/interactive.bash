@@ -221,7 +221,7 @@ nohist() {
         HISTFILE_DISABLED="$HISTFILE"
         unset HISTFILE
     else
-        HISTFILE="${HISTFILE_DISABLED:-$HOME/.bash_history}"
+        HISTFILE="${HISTFILE_DISABLED:-$HOME/.cache/bash_history}"
         unset HISTFILE_DISABLED
     fi
     __ps1toggle__ '/\\H/[nohist] \\H'
@@ -698,7 +698,7 @@ HAVE vim && {
     alias vimdnscrypt='vim "/etc/dnscrypt-proxy/dnscrypt-proxy.toml" -c "lcd /etc/"'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
-    alias vimbashhistory='vim ~/.bash_history'
+    alias vimbashhistory='vim ~/.cache/bash_history'
     alias vimbadhosts='vim "/etc/badhosts" -c "lcd /etc/"'
     alias vimiptables='vim "/etc/iptables.sh" -c "lcd /etc/"'
     alias vimipset='vim "/etc/ipset.conf" -c "lcd /etc/"'

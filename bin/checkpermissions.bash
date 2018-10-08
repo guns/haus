@@ -29,6 +29,7 @@ checkpermissions.bash() {
         ~/.bashrc.d
         ~/.rlwrap:::0077
         ~/.*_history:::0077:glob
+        ~/.cache/*_history:::0077:glob
         ~/.bash_completion
         ~/.bash_completion.d
         ~/.bash_local

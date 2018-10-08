@@ -368,7 +368,7 @@ noremap <Leader>ed       :<C-u>TabOpen /etc/dnsmasq.conf \| lcd /etc/<CR>
 noremap <Leader>eD       :<C-u>TabOpen /etc/dnscrypt-proxy/dnscrypt-proxy.toml \| lcd /etc/<CR>
 noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
-noremap <Leader>eh       :<C-u>TabOpen ~/.bash_history<CR>
+noremap <Leader>eh       :<C-u>TabOpen ~/.cache/bash_history<CR>
 noremap <Leader>eH       :<C-u>TabOpen /etc/badhosts \| lcd /etc/<CR>
 noremap <Leader>ei       :<C-u>TabOpen /etc/iptables.sh \| lcd /etc/<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/ipset.conf \| lcd /etc/<CR>
