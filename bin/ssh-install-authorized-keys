@@ -10,7 +10,7 @@ require 'etc'
 require 'set'
 
 class SshInstallAuthorizedKeys
-  DEFAULTS = { :pattern => nil }
+  DEFAULTS = { :pattern => /./ }
   HAUS_SSH_DIR = File.expand_path('../etc/_ssh', __dir__)
 
   def initialize opts = {}
