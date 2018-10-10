@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if (($#)); then
-    openssl aes-256-cbc -in "$@"
+    openssl aes-256-cbc -iter 1000000 -in "$@"
 else
-    openssl aes-256-cbc
+    openssl aes-256-cbc -iter 1000000
 fi
