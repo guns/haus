@@ -2840,6 +2840,7 @@ function! s:Diff(vert,keepfocus,...) abort
         call feedkeys(winnr."\<C-W>w", 'n')
       endif
     endif
+    diffupdate
     return post
   catch /^fugitive:/
     return 'echoerr v:errmsg'
