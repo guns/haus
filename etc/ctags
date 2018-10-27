@@ -1,4 +1,5 @@
 -f .tags
+--languages=+Ruby
 --langmap=Lisp:+.clj,Lisp:+.cljs
 --langdef=Rust
 --langmap=Rust:.rs
