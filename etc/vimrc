@@ -393,6 +393,12 @@ let g:rustfmt_autosave = 1
 " Plugin: vim-racer
 let g:racer_experimental_completer = 1
 
+" Plugin: vim-rubocop
+let g:vimrubocop_keymap = 0
+
+" Plugin: vim-ruby-refactoring
+let g:ruby_refactoring_map_keys = 0
+
 """ MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions
