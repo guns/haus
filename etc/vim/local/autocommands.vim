@@ -79,10 +79,8 @@ augroup GUNS
 	" Ruby
 	autocmd BufRead,BufNewFile *Rakefile,*irbrc,*pryrc,config.ru,Gemfile
 		\ setlocal filetype=ruby
-	autocmd FileType ruby,eruby
-		\ setlocal expandtab makeprg=rake iskeyword+=? iskeyword+=! |
-		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>' |
-		\ SetWhitespace 2 8
+	autocmd FileType ruby
+		\ RubyBufferSetup
 
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl

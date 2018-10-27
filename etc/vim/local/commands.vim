@@ -71,9 +71,9 @@ function! s:SetAutowrap(bang, ...)
 	if status == -1
 		echo &formatoptions =~ 'a' ? 'Autowrap is on' : 'Autowrap is off'
 	elseif status
-		execute 'setlocal formatoptions+=t formatoptions+=a formatoptions+=w'
+		setlocal formatoptions+=t formatoptions+=a formatoptions+=w
 	else
-		execute 'setlocal formatoptions-=t formatoptions-=a formatoptions-=w'
+		setlocal formatoptions-=t formatoptions-=a formatoptions-=w
 	endif
 endfunction
 
@@ -272,10 +272,12 @@ function! AsmFoldExpr(lnum) "{{{1
 endfunction
 
 function! DiffFoldExpr(lnum) "{{{1
-	if getline(a:lnum) =~# '\v^diff>'
+	let line = getline(a:lnum)
+	if line =~# '\v^diff>'
+		return '>2'
+	elseif line =~# '\v^commit>'
 		return '>1'
-	elseif getline(a:lnum - 3) =~# '\v^-- ' ||
-	     \ getline(a:lnum) =~# '\v^Only in '
+	elseif getline(a:lnum - 3) =~# '\v^-- ' || line =~# '\v^Only in '
 		return '0'
 	else
 		return '='
@@ -548,6 +550,41 @@ function! s:Screen(command)
 		\ }
 	let cmd = empty(a:command) ? (has_key(map, &filetype) ? map[&filetype] : '') : a:command
 	execute 'ScreenShell ' . cmd
+endfunction
+
+command! -bar RubyBufferSetup call <SID>RubyBufferSetup()
+function! s:RubyBufferSetup()
+	SetWhitespace 2 8
+	setlocal expandtab makeprg=rake iskeyword+=?,!
+
+	noremap! <buffer> <C-l>           <Space>=><Space>
+	noremap  <buffer> <LocalLeader>a  :<C-u>A<CR>
+	noremap  <buffer> <LocalLeader>A  :<C-u>R<CR>
+	noremap  <buffer> <LocalLeader>ec :<C-u>Econtroller<CR>
+	noremap  <buffer> <LocalLeader>ee :<C-u>Eenvironment<CR>
+	noremap  <buffer> <LocalLeader>ef :<C-u>Efixtures<CR>
+	noremap  <buffer> <LocalLeader>eF :<C-u>Efunctionaltest<CR>
+	noremap  <buffer> <LocalLeader>eh :<C-u>Ehelper<CR>
+	noremap  <buffer> <LocalLeader>ei :<C-u>Einitializer<CR>
+	noremap  <buffer> <LocalLeader>eI :<C-u>Eintegrationtest<CR>
+	noremap  <buffer> <LocalLeader>ej :<C-u>Ejavascript<CR>
+	noremap  <buffer> <LocalLeader>el :<C-u>Elayout<CR>
+	noremap  <buffer> <LocalLeader>eL :<C-u>Elib<CR>
+	noremap  <buffer> <LocalLeader>em :<C-u>Emodel<CR>
+	noremap  <buffer> <LocalLeader>eM :<C-u>Emigration<CR>
+	noremap  <buffer> <LocalLeader>es :<C-u>Eschema<CR>
+	noremap  <buffer> <LocalLeader>eS :<C-u>Espec<CR>
+	noremap  <buffer> <LocalLeader>et :<C-u>Etask<CR>
+	noremap  <buffer> <LocalLeader>eu :<C-u>Eunittest<CR>
+	noremap  <buffer> <LocalLeader>ev :<C-u>Eview<CR>
+	noremap  <buffer> <LocalLeader>l  :<C-u>RuboCop<CR>
+	noremap  <buffer> <LocalLeader>L  :<C-u>Clog<CR>
+	noremap  <buffer> <LocalLeader>p  :<C-u>Preview<CR>
+	noremap  <buffer> <LocalLeader>t  :<C-u>Runner<CR>
+	nnoremap <buffer> <localleader>r  viw:RRenameLocalVariable<CR>
+	vnoremap <buffer> <localleader>r  :RRenameLocalVariable<CR>
+	nnoremap <buffer> <localleader>R  viw:RRenameInstanceVariable<CR>
+	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
 endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
