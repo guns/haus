@@ -58,8 +58,14 @@ endsnippet
 
 ### SYNTAX HELPERS
 
-snippet d "do |x| end" w
-do${1: |$2|}
+snippet d "do end" w
+do
+	$0
+end
+endsnippet
+
+snippet D "do || end" w
+do |$1|
 	$0
 end
 endsnippet
@@ -68,8 +74,8 @@ snippet {| "{ || }" !
 { |${1}|$0`!v " "`
 endsnippet
 
-snippet : ":key => value" w
-:$1 => $0
+snippet : "key: value" w
+$1: $0
 endsnippet
 
 snippet r "return" w
@@ -81,7 +87,7 @@ yield
 endsnippet
 
 snippet deb "debugger" b
-begin; require 'pry'; binding.send $stdin.tty? ? :pry : :remote_pry; end ###DEBUG
+begin; require 'pry'; binding.pry; end $0 ###XXX
 endsnippet
 
 snippet bm "benchmark" b
@@ -390,12 +396,12 @@ snippet .ext ".extname" w
 .extname
 endsnippet
 
-snippet exi "File.exists?"
-File.exists?
+snippet exi "File.exist?"
+File.exist?
 endsnippet
 
-snippet .exi ".exists?" w
-.exists?
+snippet .exi ".exist?" w
+.exist?
 endsnippet
 
 snippet mkd "FileUtils.mkdir_p"
@@ -576,7 +582,7 @@ end
 endsnippet
 
 snippet tasd "task :default" b
-task :default => :$1
+task default: :$1
 endsnippet
 
 snippet nam "namespace" b
