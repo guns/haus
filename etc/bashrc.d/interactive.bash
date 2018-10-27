@@ -825,7 +825,7 @@ r() {
     else
         run rails "$@"
     fi
-}
+}; TCOMP rails r
 
 # Bundler
 b() {

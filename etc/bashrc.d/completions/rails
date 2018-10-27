@@ -1,0 +1,12 @@
+_rails() {
+    local cur
+    _get_comp_words_by_ref cur
+
+    if [[ "$cur" == -* ]]; then
+        _longopt rails
+        return
+    fi
+
+    COMPREPLY=($(compgen -W "$(rails --tasks 2>/dev/null | cut -d' ' -f2)" -- "$cur"));
+}
+complete -F _rails rails
