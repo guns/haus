@@ -150,6 +150,8 @@ $if bash
     "\C-x\C-t":     "\C-] cdtmp \n"
     "\C-xt":        "\C-]cdtmp "
     "\C-xT":        "\C-]cd /tmp/"
+    "\C-xu":        "\C-]cdusb "
+    "\C-x\C-u":     "\C-] cdusb \n"
     "\C-x\C-v":     "\C-] cd /var/ \n"
     "\C-xv":        "\C-]cd /var/"
     "\C-xV":        "\C-]cdvimfiles "
