@@ -235,9 +235,6 @@ F2
 super + F2
 	exec thunar ~/Downloads
 
-F6
-	wmctrl -a 'Time Tracker' || exec hamster
-
 F7
 	T='⚙ htop ⚙'; \
 	wmctrl -a "$T" || urxvt-client -g 120x20 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
@@ -256,6 +253,15 @@ F8
 		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
 		sleep 0.1; \
 		xdotool type 'passclip '; \
+	\}
+
+super + F8
+	T='❴ pass ❵'; \
+	wmctrl -a "$T" || \
+	\{ \
+		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
+		sleep 0.1; \
+		xdotool type 'passqrshow '; \
 	\}
 
 F9
