@@ -255,15 +255,6 @@ F8
 		xdotool type 'passclip '; \
 	\}
 
-super + F8
-	T='❴ pass ❵'; \
-	wmctrl -a "$T" || \
-	\{ \
-		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
-		sleep 0.1; \
-		xdotool type 'passqrshow '; \
-	\}
-
 F9
 	wmctrl -a "$USER ❦ $HOSTNAME"
 
