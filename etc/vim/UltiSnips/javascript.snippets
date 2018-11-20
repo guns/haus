@@ -1,5 +1,21 @@
-snippet v "var" w
+snippet #! "#!" b
+#!/usr/bin/env node
+endsnippet
+
+snippet req "require" w
+const ${2:$1} = require('${1}')
+endsnippet
+
+snippet co "const" w
+const $1 = $0
+endsnippet
+
+snippet v "var" b
 var $0
+endsnippet
+
+snippet l "let" b
+let $1 = $0
 endsnippet
 
 snippet t "this" w
@@ -11,15 +27,25 @@ import $0 from '$1'
 endsnippet
 
 snippet fori "for i" w
-for (${1:var }${2:i} = 0; $2 < ${3:n}; $2++) {
+for (${1:let }${2:i} = 0; $2 < ${3:n}; $2++) {
 	$0
 }
 endsnippet
 
 snippet forir "for i reverse" w
-for (${1:var }${2:i} = ${3:n - 1}; $2 >= 0; $2--) {
+for (${1:let }${2:i} = ${3:n - 1}; $2 >= 0; $2--) {
 	$0
 }
+endsnippet
+
+snippet forl "for of" w
+for (${1:let }${2:x} of ${3:xs}) {
+	$0
+}
+endsnippet
+
+snippet keyvalue "key: value" w
+$1: $0
 endsnippet
 
 snippet N "new" w
@@ -90,12 +116,12 @@ else {
 }
 endsnippet
 
-snippet l "console.log" w
+snippet L "console.log" w
 console.log($0)
 endsnippet
 
-snippet L "length" w
-length
+snippet /\.l/ "length" r
+.length
 endsnippet
 
 snippet strict "use strict" b
@@ -117,10 +143,6 @@ case $0:
 default:
 	break
 }
-endsnippet
-
-snippet doc "jsdoc comment" w
-/** $0 */
 endsnippet
 
 snippet sett "setTimeout" w

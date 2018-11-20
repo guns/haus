@@ -54,6 +54,7 @@ set smartcase  " Unless there's a capital letter
 set nowrap                " Don't wrap lines
 set display=lastline,uhex " Show truncated lines with @@@
 set showbreak=…           " But if you do, show a nice visual indicator
+set linebreak             " break on words
 if exists('+breakindent')
 	set breakindent       " and preserve indentation on soft wraps
 endif

@@ -176,11 +176,9 @@ function! s:Todo(...)
 	endif
 endfunction
 
-command! -bar Ctags call <SID>Ctags() "{{{1
-function! s:Ctags()
-	if &filetype == 'javascript'
-		let cmd = 'jsctags.js -f .jstags' . shellescape(expand('%'))
-	elseif &filetype == 'go'
+command! -bar Tags call <SID>Tags() "{{{1
+function! s:Tags()
+	if &filetype == 'go'
 		let cmd = 'gotags -R -f .tags .'
 	else
 		let cmd = 'ctags -R'
@@ -585,6 +583,21 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>r  :RRenameLocalVariable<CR>
 	nnoremap <buffer> <localleader>R  viw:RRenameInstanceVariable<CR>
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
+endfunction
+
+command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
+function! s:JavaScriptBufferSetup()
+	SetWhitespace 2
+	setlocal expandtab
+	if executable('standard')
+		setlocal autoread makeprg=standard\ --fix\ %
+	endif
+
+	inoremap <buffer> <C-l>  <Space>=><Space>
+	noremap  <buffer> <4-CR> A,<Esc>
+	inoremap <buffer> <4-CR> <C-\><C-o>A,
+	inoremap <buffer> <M-CR> keyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
+	noremap  <buffer> <M-CR> akeyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
 endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1

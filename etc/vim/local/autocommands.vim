@@ -112,11 +112,7 @@ augroup GUNS
 
 	" JavaScript
 	autocmd FileType javascript
-		\ SetWhitespace 2 |
-		\ setlocal expandtab tags+=./.jstags,.jstags |
-		\ if executable('standard') |
-		\	setlocal autoread makeprg=standard\ --fix\ % |
-		\ endif
+		\ JavaScriptBufferSetup
 
 	" C, C++
 	autocmd FileType c,cpp
@@ -149,7 +145,7 @@ augroup GUNS
 
 	" Markdown
 	autocmd FileType markdown,rdoc
-		\ setlocal iskeyword+=- foldmethod=expr foldexpr=MarkdownFoldExpr(v:lnum)
+		\ setlocal iskeyword+=- foldmethod=expr foldexpr=MarkdownFoldExpr(v:lnum) linebreak breakindent
 
 	" Mail
 	autocmd BufRead,BufNewFile *.mail
