@@ -816,7 +816,13 @@ CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.direc
 
 # Rake
 alias rk='rake'; TCOMP rake rk
-alias rkt='rake --tasks'
+rkt() {
+    if [[ -e bin/rails ]]; then
+        bin/rails -T
+    else
+        rake -T
+    fi
+}
 
 # Rails
 r() {
