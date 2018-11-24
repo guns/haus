@@ -262,7 +262,7 @@ super + F9
 	wmctrl -a "root ❦ $HOSTNAME"
 
 alt + F9
-	wmctrl -a "❦ MAGI-"
+	wmctrl -a "❦ MAGI-01" || wmctrl -a "❦ MAGI-00"
 
 shift + F9
 	urxvt-client
