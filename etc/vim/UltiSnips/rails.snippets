@@ -17,7 +17,7 @@ t.boolean :${1:title}
 $0
 endsnippet
 
-snippet cla "Create controller class"
+snippet cont "Create controller class"
 class ${1:Model}Controller < ApplicationController$0
 end
 endsnippet
@@ -40,14 +40,6 @@ endsnippet
 snippet tcf "Create float column"
 t.float :${1:title}
 $0
-endsnippet
-
-snippet cla "Create functional test class"
-require 'test_helper'
-
-class ${1:Model}ControllerTest < ActionController::TestCase$0
-end
-
 endsnippet
 
 snippet tci "Create integer column"
@@ -200,8 +192,8 @@ snippet mcol "Migration Remove and Add Column (mrac)"
 remove_column :${1:table}, :${2:column}${3: [press tab twice to generate add_column]}
 endsnippet
 
-snippet log "::Rails.logger.debug (rdb)"
-::Rails.logger.debug $0
+snippet L "Rails.logger.debug"
+Rails.logger.debug $0
 endsnippet
 
 snippet tre "Table column(s) rename"

@@ -591,6 +591,7 @@ function! s:JavaScriptBufferSetup()
 	setlocal expandtab
 	if executable('standard')
 		setlocal autoread makeprg=standard\ --fix\ %
+		noremap <buffer> <LocalLeader>l :<C-u>setlocal makeprg=standard\ --fix\ % \| silent! make!<CR>
 	endif
 
 	inoremap <buffer> <C-l>  <Space>=><Space>

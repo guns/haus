@@ -1,3 +1,11 @@
+snippet APP "use strict" b
+'use strict'
+
+$0
+
+// https://standardjs.com/
+endsnippet
+
 snippet #! "#!" b
 #!/usr/bin/env node
 endsnippet
@@ -6,7 +14,7 @@ snippet req "require" w
 const ${2:$1} = require('${1}')
 endsnippet
 
-snippet co "const" w
+snippet c "const" w
 const $1 = $0
 endsnippet
 
@@ -116,16 +124,18 @@ else {
 }
 endsnippet
 
+snippet eli "else if" w
+else if ($1) {
+	$0
+}
+endsnippet
+
 snippet L "console.log" w
 console.log($0)
 endsnippet
 
 snippet /\.l/ "length" r
 .length
-endsnippet
-
-snippet strict "use strict" b
-'use strict'
 endsnippet
 
 snippet M "Math" w
@@ -147,4 +157,18 @@ endsnippet
 
 snippet sett "setTimeout" w
 window.setTimeout($0, $1)
+endsnippet
+
+snippet qsa "querySelectorAll" w
+querySelectorAll($0)
+endsnippet
+
+snippet wh "while" w
+while ($1) {
+	$0
+}
+endsnippet
+
+snippet hop "hasOwnProperty" w
+hasOwnProperty($0)
 endsnippet

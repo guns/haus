@@ -471,6 +471,12 @@ snippet eawi "each_with_index" w
 each_with_index { |${1:e}, ${2:i}| $0 }
 endsnippet
 
+snippet eawo "each_with_object" w
+each_with_object $1 do |${2:e}, ${3:o}|
+	$0
+end
+endsnippet
+
 snippet reverse_each "reverse_each" w
 reverse_each { |${1:e}| $0 }
 endsnippet
