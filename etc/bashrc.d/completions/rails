@@ -7,6 +7,12 @@ _rails() {
         return
     fi
 
-    COMPREPLY=($(compgen -W "$(rails --tasks 2>/dev/null | cut -d' ' -f2)" -- "$cur"));
+    local rails='rails'
+
+    if [[ -x 'bin/rails' ]]; then
+        rails='bin/rails'
+    fi
+
+    COMPREPLY=($(compgen -W "$("$rails" --tasks 2>/dev/null | cut -d' ' -f2)" -- "$cur"));
 }
 complete -F _rails rails

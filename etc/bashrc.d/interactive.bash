@@ -842,6 +842,11 @@ b() {
     fi
 }
 
+### JavaScript
+
+# Yarn
+alias y='yarn'
+
 ### Databases
 
 HAVE psql && {
