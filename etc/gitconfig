@@ -90,6 +90,7 @@
 	# Merging and rebasing
 	m   = merge --stat --log --strategy-option=ignore-space-at-eol --edit
 	mm  = merge --stat --log --strategy-option=ignore-space-at-eol --no-edit
+	mn  = merge --stat --log --strategy-option=ignore-space-at-eol --no-commit
 	mf  = merge --ff-only --no-edit
 	rb  = rebase
 	rbi = rebase --interactive
