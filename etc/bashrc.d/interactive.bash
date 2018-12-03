@@ -151,7 +151,7 @@ CD_FUNC -x cdhaus       ~/.haus /opt/haus
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
 CD_FUNC -x cdnginx      /etc/nginx
-CD_FUNC cdusb           /mnt/usb
+CD_FUNC -n cdusb        /mnt/usb
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
 CD_FUNC cdmachines      /var/lib/machines
 CD_FUNC cdpostgres      /var/lib/postgres
