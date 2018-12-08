@@ -6,7 +6,7 @@ vimrepl() {
     case $# in
     2) file="$1" cmd="$2";;
     1) file="$1";;
-    0) file='vimrepl';;
+    0) file='.vimrepl';;
     *) return 1
     esac
 
