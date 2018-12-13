@@ -31,7 +31,7 @@ this
 endsnippet
 
 snippet /^im/ "import" r
-import $0 from '$1'
+import ${0:$1} from '${1}'
 endsnippet
 
 snippet fori "for i" w
@@ -163,6 +163,10 @@ snippet qsa "querySelectorAll" w
 querySelectorAll($0)
 endsnippet
 
+snippet qs "querySelector" w
+querySelector($0)
+endsnippet
+
 snippet wh "while" w
 while ($1) {
 	$0
@@ -171,4 +175,8 @@ endsnippet
 
 snippet hop "hasOwnProperty" w
 hasOwnProperty($0)
+endsnippet
+
+snippet pd "preventDefault()" w
+preventDefault()
 endsnippet

@@ -83,7 +83,7 @@ augroup GUNS
 		\ RubyBufferSetup
 
 	" X?HTML/XML
-	autocmd FileType html,xhtml,xml,gohtmltmpl
+	autocmd FileType html,xhtml,xml,gohtmltmpl,eruby
 		\ SetWhitespace 2 |
 		\ setlocal iskeyword+=- |
 		\ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
