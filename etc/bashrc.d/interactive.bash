@@ -842,6 +842,8 @@ b() {
     fi
 }
 
+alias bx='b exec'
+
 ### JavaScript
 
 # Yarn
