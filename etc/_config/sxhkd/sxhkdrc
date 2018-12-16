@@ -283,10 +283,10 @@ F10
 	wmctrl -xa 'Nightly' || wmctrl -xa 'Firefox'
 
 shift + F10
-	(ps axo comm | grep ^firefox$) && exec firefox
+	(ps axo comm | grep -P '^firefox(?:-bin)?$') && exec firefox
 
 shift + alt + F10
-	(ps axo comm | grep ^firefox$) && exec firefox --private-window
+	(ps axo comm | grep -P '^firefox(?:-bin)?$') && exec firefox --private-window
 
 super + F10
 	wmctrl -xa 'Chromium'
