@@ -148,11 +148,16 @@ endsnippet
 
 snippet sw "switch" w
 switch ($1) {
-case $0:
-	break
-default:
-	break
+	case $0:
+		break
+	default:
+		break
 }
+endsnippet
+
+snippet case "case" w
+case $1:
+	break
 endsnippet
 
 snippet sett "setTimeout" w
@@ -179,4 +184,8 @@ endsnippet
 
 snippet pd "preventDefault()" w
 preventDefault()
+endsnippet
+
+snippet deb "debugger" w
+debugger
 endsnippet
