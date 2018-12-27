@@ -321,6 +321,8 @@ user_pref("identity.sync.tokenserver.uri", "");
 user_pref("lightweightThemes.getMoreURL", "");
 user_pref("lightweightThemes.recommendedThemes", "[]");
 user_pref("media.decoder-doctor.new-issue-endpoint", "");
+user_pref("network.connectivity-service.IPv4.url", "");
+user_pref("network.connectivity-service.IPv6.url", "");
 user_pref("network.trr.uri", "");
 user_pref("privacy.trackingprotection.introURL", "");
 user_pref("security.ssl.errorReporting.url", "");
