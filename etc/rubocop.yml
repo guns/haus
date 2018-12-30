@@ -6,6 +6,7 @@ Layout/EmptyLineBetweenDefs:
 
 Layout/FirstParameterIndentation:
   EnforcedStyle: consistent_relative_to_receiver
+
 Layout/SpaceAroundOperators:
   Enabled: false
 
