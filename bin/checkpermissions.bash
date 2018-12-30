@@ -9,6 +9,7 @@ checkpermissions.bash() {
 
         /etc
         /etc/crypttab:::0077
+        /etc/netctl:::0077
         /etc/pacman.d/gnupg/*.d/:::0077:glob
         /etc/pacman.d/gnupg/secring*:::0077:glob
         /etc/ssh/*key:::0077:glob
