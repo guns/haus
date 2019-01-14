@@ -1802,6 +1802,8 @@ set include=yes
 #         the second is deleted or encryption flags (``D''/``d''/``S''/``P''/``s''/``K'').
 #         the third is either tagged/flagged (``*''/``!''), or one of the characters
 #         listed in $to_chars.
+# %@name@ insert and evaluate format-string from the matching
+#         ``index-format-hook'' command
 # %{fmt}  the date and time of the message is converted to sender's
 #         time zone, and ``fmt'' is expanded by the library function
 #         strftime(3); a leading bang disables locales
@@ -1827,7 +1829,13 @@ set include=yes
 # rightward text.
 #
 # Note that these expandos are supported in
-# ``save-hook'', ``fcc-hook'' and ``fcc-save-hook'', too.
+# ``save-hook'', ``fcc-hook'', ``fcc-save-hook'', and
+# ``index-format-hook''.
+#
+# They are also supported in the configuration variables $attribution,
+# $forward_attribution_intro, $forward_attribution_trailer,
+# $forward_format, $indent_string, $message_format, $pager_format,
+# and $post_indent_string.
 #
 
 # set ispell="ispell"
@@ -1892,6 +1900,10 @@ set include=yes
 # this operation is more performance intensive, it defaults to
 # unset, and has a separate option, $mail_check_stats_interval, to
 # control how often to update these counts.
+#
+# Message statistics can also be explicitly calculated by invoking the
+# <check-stats>
+# function.
 #
 
 # set mail_check_stats_interval=60
@@ -2974,6 +2986,8 @@ set pgp_self_encrypt=yes
 #
 # Similar to the $attribution variable, Mutt will append this
 # string after the inclusion of a message which is being replied to.
+# For a full listing of defined printf(3)-like sequences see
+# the section on $index_format.
 #
 
 # set postpone=ask-yes
@@ -3268,7 +3282,7 @@ set record="$folder/INBOX"
 # command to create a ``Bcc:'' field with your email address in it.)
 #
 # The value of $record is overridden by the $force_name and
-# $save_name variables, and the ``fcc-hook'' command.
+# $save_name variables, and the ``fcc-hook'' command.  Also see $copy.
 #
 
 # set reflow_space_quotes=yes
@@ -4073,7 +4087,7 @@ set signature="~/.mutt/signature"
 # set smime_timeout=300
 #
 # Name: smime_timeout
-# Type: number
+# Type: number (long)
 # Default: 300
 #
 #
@@ -4128,6 +4142,19 @@ set signature="~/.mutt/signature"
 #
 # Example:
 # set smtp_authenticators="digest-md5:cram-md5"
+#
+
+# set smtp_oauth_refresh_command=""
+#
+# Name: smtp_oauth_refresh_command
+# Type: string
+# Default: ""
+#
+#
+# The command to run to generate an OAUTH refresh token for
+# authorizing your connection to your SMTP server.  This command will be
+# run on every connection attempt that uses the OAUTHBEARER authentication
+# mechanism.  See ``oauth'' for details.
 #
 
 # set smtp_pass=""
@@ -4208,6 +4235,9 @@ set sort_aux=last-date-received
 # Default: date
 #
 #
+# This provides a secondary sort for messages in the ``index'' menu, used
+# when the $sort value is equal for two messages.
+#
 # When sorting by threads, this variable controls how threads are sorted
 # in relation to other threads, and how the branches of the thread trees
 # are sorted.  This can be set to any value that $sort can, except
@@ -4222,8 +4252,8 @@ set sort_aux=last-date-received
 # thread, that thread becomes the last one displayed (or the first, if
 # you have ``set sort=reverse-threads''.)
 #
-# Note: For reversed $sort
-# order $sort_aux is reversed again (which is not the right thing to do,
+# Note: For reversed-threads $sort
+# order, $sort_aux is reversed again (which is not the right thing to do,
 # but kept to not break any existing configuration setting).
 #
 
