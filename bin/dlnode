@@ -488,10 +488,10 @@ class Dlnode
   end
 
   def map_commands resources, opts = options
-    Δ = opts[:start] - opts[:index]
+    n = opts[:start] - opts[:index]
 
-    resources.drop(Δ).map.with_index do |r, i|
-      command r, i + opts[:index] + Δ, opts
+    resources.drop(n).map.with_index do |r, i|
+      command r, i + opts[:index] + n, opts
     end
   end
 
