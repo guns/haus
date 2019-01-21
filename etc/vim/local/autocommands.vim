@@ -151,9 +151,7 @@ augroup GUNS
 	autocmd BufRead,BufNewFile *.mail
 		\ setlocal filetype=mail
 	autocmd FileType mail
-		\ setlocal iskeyword+=- |
-		\ SetTextwidth 72 |
-		\ SetAutowrap 1
+		\ MailBufferSetup
 
 	" Mutt
 	autocmd BufRead,BufNewFile ~/.mutt/*rc,/opt/haus/etc/_mutt/muttrc*

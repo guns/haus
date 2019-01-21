@@ -303,10 +303,10 @@ alt + F10
 F12
 	T='✉ Mutt ✉'; \
 	wmctrl -a "$T" || wmctrl -a "mutt-$HOSTNAME" || \
-	urxvt-client -cd ~/Downloads -g 120x40 -title "$T" -icon ~/.icons/haus/mail.svg -e muttlaunch
+	urxvt-client -cd ~/Downloads -g 80x40 -title "$T" -icon ~/.icons/haus/mail.svg -e muttlaunch
 
 super + F12
-	urxvt-client -cd ~/Downloads -g 120x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
+	urxvt-client -cd ~/Downloads -g 80x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
 alt + F12
 	orage

@@ -186,6 +186,26 @@ function! s:Tags()
 	execute 'Sh (' . cmd . '; notify -? $?) >/dev/null 2>&1 &' | echo cmd
 endfunction
 
+command! -bar MailBufferSetup call <SID>MailBufferSetup()
+function! s:MailBufferSetup()
+	if !exists('b:mail_buffer_type')
+		setlocal iskeyword+=-
+		let b:mail_buffer_type = 'normal'
+	endif
+
+	if b:mail_buffer_type ==# 'normal'
+		SetAutowrap 0
+		set columns=80
+		setlocal wrap
+		let b:mail_buffer_type = 'technical'
+	elseif b:mail_buffer_type ==# 'technical'
+		SetAutowrap 1
+		SetTextwidth 72
+		setlocal nowrap
+		let b:mail_buffer_type = 'normal'
+	endif
+endfunction
+
 command! -bar CBufferSetup call <SID>CBufferSetup()
 function! s:CBufferSetup()
 	setlocal foldmethod=expr foldexpr=CFoldExpr(v:lnum)
