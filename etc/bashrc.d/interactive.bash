@@ -835,10 +835,10 @@ r() {
 
 # Bundler
 b() {
-    if [[ -x bin/bundler ]]; then
-        run bin/bundler "$@"
+    if [[ -x bin/bundle ]]; then
+        run bin/bundle "$@"
     else
-        run bundler "$@"
+        run bundle "$@"
     fi
 }
 
