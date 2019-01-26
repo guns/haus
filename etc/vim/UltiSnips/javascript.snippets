@@ -31,7 +31,7 @@ this
 endsnippet
 
 snippet /^im/ "import" r
-import ${0:$1} from '${1}'
+import ${2:$1} from '${1}'
 endsnippet
 
 snippet fori "for i" w
@@ -86,6 +86,10 @@ endsnippet
 
 snippet ael "addEventListener" w
 addEventListener($0)
+endsnippet
+
+snippet rel "removeEventListener" w
+removeEventListener($0)
 endsnippet
 
 snippet pr "prototype" w
@@ -188,4 +192,12 @@ endsnippet
 
 snippet deb "debugger" w
 debugger
+endsnippet
+
+snippet cla "class" w
+class ${1} {
+	constructor (${2}) {
+		$0
+	}
+}
 endsnippet

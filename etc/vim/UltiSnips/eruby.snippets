@@ -6,6 +6,12 @@ snippet E "<%= %>" w
 <%= $0 %>
 endsnippet
 
+snippet if "if" w
+<%- if ${1} -%>
+	$0
+<% end %>
+endsnippet
+
 snippet else "else (ERB)"
 <% else %>
 endsnippet
