@@ -98,46 +98,46 @@
 	cpn = cherry-pick --no-commit
 
 	# Log
-	l     = log --decorate --show-signature --graph
-	lf    = log --decorate --show-signature --graph --first-parent --no-merges
-	lfr   = log --decorate --show-signature --graph --first-parent --no-merges --date=relative
-	lst   = log --decorate --show-signature --graph --stat
-	lstr  = log --decorate --show-signature --graph --stat --date=relative
-	lfst  = log --decorate --show-signature --graph --stat --first-parent --no-merges
-	lfstr = log --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
-	lm    = log --decorate --show-signature --graph --merges
-	lmst  = log --decorate --show-signature --graph --stat --merges
+	l     = log --topo-order --decorate --show-signature --graph
+	lf    = log --topo-order --decorate --show-signature --graph --first-parent --no-merges
+	lfr   = log --topo-order --decorate --show-signature --graph --first-parent --no-merges --date=relative
+	lst   = log --topo-order --decorate --show-signature --graph --stat
+	lstr  = log --topo-order --decorate --show-signature --graph --stat --date=relative
+	lfst  = log --topo-order --decorate --show-signature --graph --stat --first-parent --no-merges
+	lfstr = log --topo-order --decorate --show-signature --graph --stat --first-parent --no-merges --date=relative
+	lm    = log --topo-order --decorate --show-signature --graph --merges
+	lmst  = log --topo-order --decorate --show-signature --graph --stat --merges
 
-	lp    = log --decorate --show-signature --patch --stat
-	lpr   = log --decorate --show-signature --patch --stat --date=relative
-	lfp   = log --decorate --show-signature --patch --stat --first-parent --no-merges
-	lfpr  = log --decorate --show-signature --patch --stat --first-parent --no-merges --date=relative
-	lpw   = log --decorate --show-signature --patch --stat --ignore-all-space
-	lpwr  = log --decorate --show-signature --patch --stat --ignore-all-space --date=relative
-	wlp   = log --decorate --show-signature --patch --stat --color-words=.
-	wlpr  = log --decorate --show-signature --patch --stat --color-words=. --date=relative
-	wlpwr = log --decorate --show-signature --patch --stat --color-words=. --ignore-all-space --date=relative
-	lpm   = log --decorate --show-signature --patch --stat --merges
+	lp    = log --topo-order --decorate --show-signature --patch --stat
+	lpr   = log --topo-order --decorate --show-signature --patch --stat --date=relative
+	lfp   = log --topo-order --decorate --show-signature --patch --stat --first-parent --no-merges
+	lfpr  = log --topo-order --decorate --show-signature --patch --stat --first-parent --no-merges --date=relative
+	lpw   = log --topo-order --decorate --show-signature --patch --stat --ignore-all-space
+	lpwr  = log --topo-order --decorate --show-signature --patch --stat --ignore-all-space --date=relative
+	wlp   = log --topo-order --decorate --show-signature --patch --stat --color-words=.
+	wlpr  = log --topo-order --decorate --show-signature --patch --stat --color-words=. --date=relative
+	wlpwr = log --topo-order --decorate --show-signature --patch --stat --color-words=. --ignore-all-space --date=relative
+	lpm   = log --topo-order --decorate --show-signature --patch --stat --merges
 
-	l1    = log --decorate --show-signature --patch --stat -1
-	l1r   = log --decorate --show-signature --patch --stat -1 --date=relative
-	l1w   = log --decorate --show-signature --patch --stat -1 --ignore-all-space
-	l1wr  = log --decorate --show-signature --patch --stat -1 --ignore-all-space --date=relative
-	wl1   = log --decorate --show-signature --patch --stat -1 --color-words=.
-	wl1r  = log --decorate --show-signature --patch --stat -1 --color-words=. --date=relative
+	l1    = log --topo-order --decorate --show-signature --patch --stat -1
+	l1r   = log --topo-order --decorate --show-signature --patch --stat -1 --date=relative
+	l1w   = log --topo-order --decorate --show-signature --patch --stat -1 --ignore-all-space
+	l1wr  = log --topo-order --decorate --show-signature --patch --stat -1 --ignore-all-space --date=relative
+	wl1   = log --topo-order --decorate --show-signature --patch --stat -1 --color-words=.
+	wl1r  = log --topo-order --decorate --show-signature --patch --stat -1 --color-words=. --date=relative
 
-	f     = log --graph --date=short --pretty=singleline
-	fr    = log --graph --date=short --pretty=singleline --date=relative
-	fa    = log --graph --date=short --pretty=singleline --all
-	far   = log --graph --date=short --pretty=singleline --all --date=relative
-	ff    = log --graph --date=short --pretty=singleline --first-parent --no-merges
-	ffr   = log --graph --date=short --pretty=singleline --first-parent --no-merges --date=relative
-	fm    = log --graph --date=short --pretty=singleline --merges
+	f     = log --topo-order --graph --date=short --pretty=singleline
+	fr    = log --topo-order --graph --date=short --pretty=singleline --date=relative
+	fa    = log --topo-order --graph --date=short --pretty=singleline --all
+	far   = log --topo-order --graph --date=short --pretty=singleline --all --date=relative
+	ff    = log --topo-order --graph --date=short --pretty=singleline --first-parent --no-merges
+	ffr   = log --topo-order --graph --date=short --pretty=singleline --first-parent --no-merges --date=relative
+	fm    = log --topo-order --graph --date=short --pretty=singleline --merges
 
-	lg    = log --patch --grep
-	lgr   = log --patch --date=relative --grep
-	lgi   = log --patch --regexp-ignore-case --grep
-	lgir  = log --patch --regexp-ignore-case --date=relative --grep
+	lg    = log --topo-order --patch --grep
+	lgr   = log --topo-order --patch --date=relative --grep
+	lgi   = log --topo-order --patch --regexp-ignore-case --grep
+	lgir  = log --topo-order --patch --regexp-ignore-case --date=relative --grep
 
 	sl    = stash list --decorate --show-signature --stat
 	slp   = stash list --decorate --show-signature --stat --patch
@@ -167,8 +167,8 @@
 	wdi  = diff --color-words=.
 
 	dih  = diff HEAD
-	dihw = diff HEAD--ignore-all-space
-	wdih = diff HEAD--color-words=.
+	dihw = diff HEAD --ignore-all-space
+	wdih = diff HEAD --color-words=.
 
 	dic  = diff --cached
 	dis  = diff --summary --stat
