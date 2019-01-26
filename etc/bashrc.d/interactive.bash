@@ -471,7 +471,7 @@ HAVE inotifywait && fwatch() {
     while getopts :hr opt; do
         case "$opt" in
         h) echo "USAGE: $FUNCNAME [-r] file … -- cmd …" >&2; return;;
-        r) recurse='-r';;
+        r) recurse=1;;
         esac
     done
     shift $((OPTIND-1))
@@ -495,11 +495,23 @@ HAVE inotifywait && fwatch() {
     fi
 
     while :; do
-        if ! inotifywait -qq -e attrib -e close_write "$recurse" "${files[@]}"; then
+        ruby -r fileutils -e '
+            cmd = %w[inotifywait -qq -e attrib -e close_write]
+            cmd << "-r" if ARGV[0] == "1"
+            cmd.concat ARGV.drop(1)
+
+            pid = spawn *cmd
+            t = Thread.new { $stdin.read; Process.kill :TERM, pid }
+            Process.wait pid
+            exit $?.exitstatus
+        ' -- "$recurse" "${files[@]}"
+
+        if (($? != 0)); then
             until stat "${files[@]}" &>/dev/null; do
                 sleep 1
             done
         fi
+
         eval "${cmd[@]}"
         sleep 0.5
     done
