@@ -215,7 +215,7 @@ $if bash
     "\C-xgap":      "\C-] git ap \n"
     "\C-xgaw.":     "\C-] git aw . \n"
     "\C-xgawa":     "\C-] git aw \"$(git rev-parse --show-toplevel)\" \n"
-    "\C-xgb":       "\C-]vim -c 'Gblame -MCCCw' "
+    "\C-xgb":       "\C-]vim -c 'Gblame -M -C -C -C -w' "
     "\C-xgB":       "\C-]vim -c Gbrowse "
     "\C-xgc.":      "\C-] git cv . \n"
     "\C-xgca":      "\C-] git cav \n"

@@ -544,7 +544,7 @@ noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit --verbose<CR>
 noremap  <Leader>gap      :<C-u>Git ap<CR>
 noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
-noremap  <Leader>gb       :Gblame -MCCCw<CR>
+noremap  <Leader>gb       :Gblame -M -C -C -C -w<CR>
 noremap  <Leader>gB       :Gbrowse<CR>
 noremap  <Leader>gc.      :<C-u>Gcommit %<CR>
 noremap  <Leader>gca      :<C-u>Gcommit --all<CR>
