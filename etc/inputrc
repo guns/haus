@@ -12,7 +12,8 @@
 # set bind-tty-special-chars on # http://www.shallowsky.com/blog/linux/bash-word-erase.html
 set blink-matching-paren off
 # set byte-oriented off
-# set colored-stats off
+set colored-completion-prefix on
+set colored-stats on
 set completion-ignore-case on
 # set completion-map-case off
 # set convert-meta off
