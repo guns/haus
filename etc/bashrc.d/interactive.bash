@@ -495,22 +495,30 @@ HAVE inotifywait && fwatch() {
     fi
 
     while :; do
-        ruby -r fileutils -e '
-            cmd = %w[inotifywait -qq -e attrib -e close_write]
-            cmd << "-r" if ARGV[0] == "1"
+        until stat "${files[@]}" &>/dev/null; do
+            sleep 1
+        done
+
+        local f=$(ruby -r fileutils -r shellwords -e '
+            cmd = %w[inotifywait --monitor --event close_write --event attrib --quiet --format %w%f]
+            cmd << "--recursive" if ARGV[0] == "1"
             cmd.concat ARGV.drop(1)
 
-            pid = spawn *cmd
-            t = Thread.new { $stdin.read; Process.kill :TERM, pid }
-            Process.wait pid
-            exit $?.exitstatus
-        ' -- "$recurse" "${files[@]}"
+            warn cmd.shelljoin
 
-        if (($? != 0)); then
-            until stat "${files[@]}" &>/dev/null; do
-                sleep 1
-            done
-        fi
+            IO.popen cmd do |io|
+                Thread.new { $stdin.gets; Process.kill :TERM, io.pid }
+                io.each_line do |line|
+                    line.chomp!
+                    if File.file? line
+                        puts line
+                        Process.kill :TERM, io.pid
+                        Process.wait io.pid
+                        exit
+                    end
+                end
+            end
+        ' -- "$recurse" "${files[@]}")
 
         eval "${cmd[@]}"
         sleep 0.5
