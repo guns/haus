@@ -400,7 +400,7 @@ __gitcomp_builtin ()
 	if [ -z "$options" ]; then
 		# leading and trailing spaces are significant to make
 		# option removal work correctly.
-		options=" $(__git ${cmd/_/ } --git-completion-helper) $incl "
+		options=" $incl $(__git ${cmd/_/ } --git-completion-helper) "
 		for i in $excl; do
 			options="${options/ $i / }"
 		done
@@ -438,7 +438,7 @@ __gitcomp_nl ()
 # Callers must take care of providing only paths that match the current path
 # to be completed and adding any prefix path components, if necessary.
 # 1: List of newline-separated matching paths, complete with all prefix
-#    path componens.
+#    path components.
 __gitcomp_file_direct ()
 {
 	local IFS=$'\n'
@@ -855,7 +855,7 @@ __git_compute_merge_strategies ()
 
 __git_complete_revlist_file ()
 {
-	local pfx ls ref cur_="$cur"
+	local dequoted_word pfx ls ref cur_="$cur"
 	case "$cur_" in
 	*..?*:*)
 		return
@@ -863,14 +863,18 @@ __git_complete_revlist_file ()
 	?*:*)
 		ref="${cur_%%:*}"
 		cur_="${cur_#*:}"
-		case "$cur_" in
+
+		__git_dequote "$cur_"
+
+		case "$dequoted_word" in
 		?*/*)
-			pfx="${cur_%/*}"
-			cur_="${cur_##*/}"
+			pfx="${dequoted_word%/*}"
+			cur_="${dequoted_word##*/}"
 			ls="$ref:$pfx"
 			pfx="$pfx/"
 			;;
 		*)
+			cur_="$dequoted_word"
 			ls="$ref"
 			;;
 		esac
@@ -880,21 +884,10 @@ __git_complete_revlist_file ()
 		*)   pfx="$ref:$pfx" ;;
 		esac
 
-		__gitcomp_nl "$(__git ls-tree "$ls" \
-				| sed '/^100... blob /{
-				           s,^.*	,,
-				           s,$, ,
-				       }
-				       /^120000 blob /{
-				           s,^.*	,,
-				           s,$, ,
-				       }
-				       /^040000 tree /{
-				           s,^.*	,,
-				           s,$,/,
-				       }
-				       s/^.*	//')" \
-			"$pfx" "$cur_" ""
+		__gitcomp_file "$(__git ls-tree "$ls" \
+				| sed 's/^.*	//
+				       s/$//')" \
+			"$pfx" "$cur_"
 		;;
 	*...*)
 		pfx="${cur_%...*}..."
@@ -943,6 +936,7 @@ __git_complete_remote_or_refspec ()
 			*) ;;
 			esac
 			;;
+		--multiple) no_complete_refspec=1; break ;;
 		-*) ;;
 		*) remote="$i"; break ;;
 		esac
@@ -1340,17 +1334,6 @@ _git_checkout ()
 	esac
 }
 
-_git_cherry ()
-{
-	case "$cur" in
-	--*)
-		__gitcomp_builtin cherry
-		return
-	esac
-
-	__git_complete_refs
-}
-
 __git_cherry_pick_inprogress_options="--continue --quit --abort"
 
 _git_cherry_pick ()
@@ -1531,13 +1514,9 @@ _git_fetch ()
 	__git_complete_remote_or_refspec
 }
 
-__git_format_patch_options="
-	--stdout --attach --no-attach --thread --thread= --no-thread
-	--numbered --start-number --numbered-files --keep-subject --signoff
-	--signature --no-signature --in-reply-to= --cc= --full-index --binary
-	--not --all --cover-letter --no-prefix --src-prefix= --dst-prefix=
-	--inline --suffix= --ignore-if-in-upstream --subject-prefix=
-	--output-directory --reroll-count --to= --quiet --notes
+__git_format_patch_extra_options="
+	--full-index --not --all --no-prefix --src-prefix=
+	--dst-prefix= --notes
 "
 
 _git_format_patch ()
@@ -1550,7 +1529,7 @@ _git_format_patch ()
 		return
 		;;
 	--*)
-		__gitcomp "$__git_format_patch_options"
+		__gitcomp_builtin format-patch "$__git_format_patch_extra_options"
 		return
 		;;
 	esac
@@ -1832,7 +1811,7 @@ _git_mergetool ()
 		return
 		;;
 	--*)
-		__gitcomp "--tool= --prompt --no-prompt"
+		__gitcomp "--tool= --prompt --no-prompt --gui --no-gui"
 		return
 		;;
 	esac
@@ -2080,7 +2059,7 @@ _git_send_email ()
 		return
 		;;
 	--*)
-		__gitcomp "--annotate --bcc --cc --cc-cmd --chain-reply-to
+		__gitcomp_builtin send-email "--annotate --bcc --cc --cc-cmd --chain-reply-to
 			--compose --confirm= --dry-run --envelope-sender
 			--from --identity
 			--in-reply-to --no-chain-reply-to --no-signed-off-by-cc
@@ -2089,7 +2068,7 @@ _git_send_email ()
 			--smtp-server-port --smtp-encryption= --smtp-user
 			--subject --suppress-cc= --suppress-from --thread --to
 			--validate --no-validate
-			$__git_format_patch_options"
+			$__git_format_patch_extra_options"
 		return
 		;;
 	esac
@@ -2567,6 +2546,9 @@ _git_stash ()
 		drop,--*)
 			__gitcomp "--quiet"
 			;;
+		list,--*)
+			__gitcomp "--name-status --oneline --patch-with-stat"
+			;;
 		show,--*|branch,--*)
 			;;
 		branch,*)
@@ -3004,7 +2986,7 @@ if [[ -n ${ZSH_VERSION-} ]] &&
 
 		local IFS=$'\n'
 		compset -P '*[=:]'
-		compadd -Q -f -- ${=1} && _ret=0
+		compadd -f -- ${=1} && _ret=0
 	}
 
 	__gitcomp_file ()
@@ -3013,7 +2995,7 @@ if [[ -n ${ZSH_VERSION-} ]] &&
 
 		local IFS=$'\n'
 		compset -P '*[=:]'
-		compadd -Q -p "${2-}" -f -- ${=1} && _ret=0
+		compadd -p "${2-}" -f -- ${=1} && _ret=0
 	}
 
 	_git ()

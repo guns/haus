@@ -2,10 +2,37 @@
 
 _tshark()
 {
-    local cur prev words cword
+    local cur prev words cword prefix
     _init_completion -n : || return
 
-    case $prev in
+    case $cur in
+        -o*)
+            prefix=-o
+            ;;
+        -X*)
+            prefix=-X
+            ;;
+    esac
+
+    case ${prefix:-$prev} in
+        --*)
+            # Fallback to completion of long options below.
+            ;;
+        -o*)
+            if [[ $cur == *:* ]]; then
+                cur=${cur#*:}
+                _filedir
+            else
+                [ -n "$_tshark_prefs" ] ||
+                    _tshark_prefs="$( "$1" -G defaultprefs | command \
+                        sed -ne 's/^#\{0,1\}\([a-z0-9_.-]\{1,\}:\).*/\1/p' |
+                        tr '\n' ' ' )"
+                COMPREPLY=( $( compgen -P "$prefix" -W "$_tshark_prefs" \
+                    -- "${cur:${#prefix}}" ) )
+                [[ $COMPREPLY == *: ]] && compopt -o nospace
+            fi
+            return
+            ;;
         -*[fsBDLcRNdCeEzhvoK])
             return
             ;;
@@ -33,7 +60,7 @@ _tshark()
             return
             ;;
         -*r)
-            _filedir 'pcap?(ng)'
+            _filedir '@(pcap?(ng)|cap)?(.gz)'
             return
             ;;
         -*H)
@@ -58,13 +85,15 @@ _tshark()
             return
             ;;
         -*T)
-            # TODO: could be parsed from "-T ." output
-            COMPREPLY=( $( compgen -W 'ps text pdml psml fields' -- "$cur" ) )
+            # Parse from: tshark -T . 2>&1 | awk -F \" '/^\t*"/ { print $2 }'
+            COMPREPLY=( $( compgen -W \
+                'pdml ps psml json jsonraw ek tabs text fields' -- "$cur" ) )
             return
             ;;
         -*t)
-            # TODO: could be parsed from "-t ." output
-            COMPREPLY=( $( compgen -W 'ad a r d dd e' -- "$cur" ) )
+            # Parse from: tshark -t . 2>&1 | awk -F \" '/^\t*"/ { print $2 }'
+            COMPREPLY=( $( compgen -W \
+                'a ad adoy d dd e r u ud udoy' -- "$cur" ) )
             return
             ;;
         -*u)
@@ -77,17 +106,18 @@ _tshark()
             return
             ;;
         -*X)
-            if [[ $cur == lua_script:* ]]; then
+            if [[ ${cur:${#prefix}} == lua_script:* ]]; then
                 cur=${cur#*:}
                 _filedir lua
             else
-                COMPREPLY=( $( compgen -W 'lua_script:' -- "$cur" ) )
+                COMPREPLY=( $( compgen -P "$prefix" -W 'lua_script:' -- \
+                    "${cur:${#prefix}}" ) )
                 [[ $COMPREPLY == *: ]] && compopt -o nospace
             fi
             return
             ;;
         -*G)
-            COMPREPLY=( $( compgen -W "$( "$1" -G ? 2>/dev/null | \
+            COMPREPLY=( $( compgen -W "$( "$1" -G \? 2>/dev/null | \
                 awk '/^[ \t]*-G / \
                     { sub("^[[]","",$2); sub("[]]$","",$2); print $2 }' )" \
                 -- "$cur" ) )

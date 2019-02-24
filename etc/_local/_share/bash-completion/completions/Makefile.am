@@ -5,7 +5,7 @@ bashcomp_DATA = 2to3 \
 		abook \
 		aclocal \
 		acpi \
-		adb \
+		_adb \
 		add_members \
 		alias \
 		ant \
@@ -16,6 +16,7 @@ bashcomp_DATA = 2to3 \
 		apt-get \
 		aptitude \
 		arch \
+		arp \
 		arping \
 		arpspoof \
 		asciidoc \
@@ -150,14 +151,17 @@ bashcomp_DATA = 2to3 \
 		hping2 \
 		htop \
 		htpasswd \
+		hunspell \
 		_hwclock \
 		iconv \
 		id \
 		idn \
+		ifstat \
 		iftop \
 		ifup \
 		info \
 		inject \
+		inotifywait \
 		insmod \
 		installpkg \
 		interdiff \
@@ -185,6 +189,7 @@ bashcomp_DATA = 2to3 \
 		jps \
 		jshint \
 		json_xs \
+		jsonschema \
 		k3b \
 		kcov \
 		kill \
@@ -208,6 +213,7 @@ bashcomp_DATA = 2to3 \
 		list_members \
 		list_owners \
 		_look \
+		locale-gen \
 		lpq \
 		lpr \
 		lrzip \
@@ -256,6 +262,7 @@ bashcomp_DATA = 2to3 \
 		munin-update \
 		mussh \
 		mutt \
+		mypy \
 		mysql \
 		mysqladmin \
 		nc \
@@ -271,6 +278,7 @@ bashcomp_DATA = 2to3 \
 		nslookup \
 		ntpdate \
 		oggdec \
+		op \
 		openssl \
 		opera \
 		optipng \
@@ -280,6 +288,7 @@ bashcomp_DATA = 2to3 \
 		patch \
 		pdftotext \
 		perl \
+		perlcritic \
 		perltidy \
 		pgrep \
 		pidof \
@@ -317,6 +326,7 @@ bashcomp_DATA = 2to3 \
 		pwgen \
 		pycodestyle \
 		pydoc \
+		pydocstyle \
 		pyflakes \
 		pylint \
 		pytest \
@@ -480,6 +490,8 @@ CLEANFILES = \
 	c++ \
 	cc \
 	cdrecord \
+	chrome \
+	chromium \
 	ci \
 	ciptool \
 	civclient \
@@ -513,17 +525,29 @@ CLEANFILES = \
 	freeciv-sdl \
 	freeciv-xaw \
 	g++ \
+	g++-5 \
+	g++-6 \
 	g++-7 \
+	g++-8 \
 	g4 \
 	g77 \
 	g95 \
+	gcc-5 \
+	gcc-6 \
 	gcc-7 \
+	gcc-8 \
 	gccgo \
+	gccgo-5 \
+	gccgo-6 \
 	gccgo-7 \
+	gccgo-8 \
 	gcj \
 	geoiplookup6 \
 	gfortran \
+	gfortran-5 \
+	gfortran-6 \
 	gfortran-7 \
+	gfortran-8 \
 	gkrellm2 \
 	gmake \
 	gmplayer \
@@ -544,6 +568,7 @@ CLEANFILES = \
 	ifquery \
 	ifstatus \
 	import \
+	inotifywatch \
 	insmod.static \
 	iperf3 \
 	javac \
@@ -746,7 +771,7 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) cardctl $(targetdir)/$$file ; \
 	done
-	for file in google-chrome google-chrome-stable ; do \
+	for file in google-chrome google-chrome-stable chromium chrome; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) chromium-browser $(targetdir)/$$file ; \
 	done
@@ -796,8 +821,10 @@ symlinks: $(targetdir) $(DATA)
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) function $(targetdir)/$$file ; \
 	done
-	for file in cc c++ g++ g++-7 gfortran gfortran-7 f77 g77 f95 g95 gcj \
-		gpc gccgo gccgo-7 gcc-7 ; do \
+	for file in cc c++ g++ g++-5 g++-6 g++-7 g++-8 gfortran gfortran-5 \
+		gfortran-6 gfortran-7 gfortran-8 f77 g77 f95 g95 gcj gpc \
+		gccgo gccgo-5 gccgo-6 gccgo-7 gccgo-8 gcc-5 gcc-6 gcc-7 \
+		gcc-8 ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) gcc $(targetdir)/$$file ; \
 	done
@@ -841,6 +868,10 @@ symlinks: $(targetdir) $(DATA)
 	for file in pinfo ; do \
 		rm -f $(targetdir)/$$file && \
 			$(LN_S) info $(targetdir)/$$file ; \
+	done
+	for file in inotifywatch ; do \
+		rm -f $(targetdir)/$$file && \
+			$(LN_S) inotifywait $(targetdir)/$$file ; \
 	done
 	for file in insmod.static ; do \
 		rm -f $(targetdir)/$$file && \
