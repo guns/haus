@@ -12,7 +12,8 @@ CONTENTS                                                      *rust*
 INTRODUCTION                                                      *rust-intro*
 
 This plugin provides syntax and supporting functionality for the Rust
-filetype.
+filetype. It requires Vim 8 or higher for full functionality. Some commands
+will not work on earlier versions.
 
 ==============================================================================
 SETTINGS                                                       *rust-settings*
@@ -217,6 +218,14 @@ g:rust_cargo_check_all_targets~
 	package.
 	The default is 0.
 
+                                              *g:rust_cargo_check_all_features*
+                                              *b:rust_cargo_check_all_features*
+g:rust_cargo_check_all_features~
+	When set to 1, the `--all-features` option will be passed to cargo when
+	Syntastic executes it, allowing the linting of all features of the
+	package.
+	The default is 0.
+
                                                  *g:rust_cargo_check_examples*
                                                  *b:rust_cargo_check_examples*
 g:rust_cargo_check_examples~
@@ -299,6 +308,9 @@ This plug defines very simple shortcuts for invoking Cargo from with Vim.
 :Cinstall <args>                                                 *:Cinstall*
                 Shortcut for 'cargo install`.
 
+:Cruntarget <args>                                                 *:Cruntarget*
+                Shortcut for 'cargo run --bin' or 'cargo run --example',
+                depending on the currently open buffer.
 
 Formatting
 ----------
