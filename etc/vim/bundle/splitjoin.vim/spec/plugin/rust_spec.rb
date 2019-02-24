@@ -3,9 +3,11 @@ require 'spec_helper'
 describe "rust" do
   let(:filename) { 'test.rs' }
 
-  specify "match clauses" do
+  before :each do
     pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
+  end
 
+  specify "match clauses" do
     set_file_contents <<-EOF
       match one {
           Ok(two) => some_expression(three),
@@ -32,9 +34,7 @@ describe "rust" do
     EOF
   end
 
-  specify "question mark operator for Result" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
+  specify "question mark operator for io::Result" do
     set_file_contents <<-EOF
       fn test() -> io::Result {
           let file = File::open("foo.txt")?;
@@ -64,8 +64,6 @@ describe "rust" do
   end
 
   specify "question mark operator for Option" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
     set_file_contents <<-EOF
       fn test() -> Option<T> {
           let thing = Some(3)?;
@@ -94,9 +92,7 @@ describe "rust" do
     EOF
   end
 
-  specify "question mark operator for Option" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
+  specify "question mark operator for an unknown return type" do
     set_file_contents <<-EOF
       let file = File::open("foo.txt")?;
     EOF
@@ -115,41 +111,43 @@ describe "rust" do
     join
 
     assert_file_contents <<-EOF
-      let file = File::open("foo.txt")?;
+      let file = File::open("foo.txt").unwrap();
     EOF
   end
 
   specify "complicated question mark operator" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
     set_file_contents <<-EOF
-      let bar = foo + match write!("{}", floof) {
-          Ok(frob) => frob,
-          Err(err) => return Err(err),
-      } + 13;
+      fn complicated() -> Result {
+          let bar = foo + match write!("{}", floof) {
+              Ok(frob) => frob,
+              Err(err) => return Err(err),
+          } + 13;
+      }
     EOF
 
     vim.search('match')
     join
 
     assert_file_contents <<-EOF
-      let bar = foo + write!("{}", floof)? + 13;
+      fn complicated() -> Result {
+          let bar = foo + write!("{}", floof)? + 13;
+      }
     EOF
 
     vim.search('write')
     split
 
     assert_file_contents <<-EOF
-      let bar = foo + match write!("{}", floof) {
-          Ok(value) => value,
-          Err(e) => return Err(e.into()),
-      } + 13;
+      fn complicated() -> Result {
+          let bar = foo + match write!("{}", floof) {
+              Ok(value) => value,
+              Err(e) => return Err(e.into()),
+          } + 13;
+      }
     EOF
   end
 
   specify "closures" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
     set_file_contents <<-EOF
       let foo = something.map(|x| x * 2);
     EOF
@@ -170,9 +168,43 @@ describe "rust" do
     EOF
   end
 
-  specify "structs" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
+  specify "complicated closures" do
+    set_file_contents <<-EOF
+      let foo = something.map(|x| mul(x, 2), y);
+    EOF
 
+    vim.search('|x|')
+    split
+
+    assert_file_contents <<-EOF
+      let foo = something.map(|x| {
+          mul(x, 2)
+      }, y);
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      let foo = something.map(|x| mul(x, 2), y);
+    EOF
+  end
+
+  specify "splitting closures with comparison operators" do
+    set_file_contents <<-EOF
+      do_stuff.where(|x| x < 5 && x > 3);
+    EOF
+
+    vim.search('|x|')
+    split
+
+    assert_file_contents <<-EOF
+      do_stuff.where(|x| {
+          x < 5 && x > 3
+      });
+    EOF
+  end
+
+  specify "structs" do
     set_file_contents <<-EOF
       SomeStruct { foo: bar, bar: baz }
     EOF
@@ -195,8 +227,6 @@ describe "rust" do
   end
 
   specify "structs (trailing comma)" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
     set_file_contents <<-EOF
       SomeStruct { foo: bar, bar: baz }
     EOF
@@ -219,18 +249,31 @@ describe "rust" do
     EOF
   end
 
-  specify "fallback match split" do
-    pending "Broken on TravisCI due to old Vim version" if ENV['TRAVIS_CI']
-
+  specify "unwrap match split" do
     set_file_contents <<-EOF
-      let foo = Some::value(chain).of(things);
+      let foo = other::expr() + File::open('test.file').unwrap();
     EOF
 
-    vim.search('Some')
+    vim.search('unwrap')
     split
 
     assert_file_contents <<-EOF
-      let foo = match Some::value(chain).of(things) {
+      let foo = other::expr() + match File::open('test.file') {
+
+      };
+    EOF
+  end
+
+  specify "expect match split" do
+    set_file_contents <<-EOF
+      let foo = other::expr() + File::open('test.file').expect("Missing file!");
+    EOF
+
+    vim.search('expect')
+    split
+
+    assert_file_contents <<-EOF
+      let foo = other::expr() + match File::open('test.file') {
 
       };
     EOF
