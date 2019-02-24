@@ -31,10 +31,11 @@ class Battery
       b[k] = v
     end
 
-    '%s: %s %s%%' % [
+    '%s: %s %s%% (%s cycles)' % [
       b['POWER_SUPPLY_NAME'],
       b['POWER_SUPPLY_STATUS'],
-      b['POWER_SUPPLY_CAPACITY']
+      b['POWER_SUPPLY_CAPACITY'],
+      b['POWER_SUPPLY_CYCLE_COUNT'],
     ]
   end
 
