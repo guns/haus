@@ -1,5 +1,0 @@
-*.py[cod]
-doc/tags
-.cache
-.mypy_cache
-.pytest_cache
