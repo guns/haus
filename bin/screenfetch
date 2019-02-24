@@ -389,6 +389,9 @@ displayHelp () {
 	echo "${underline}Supported Window Managers${c0}:"
 	echo "${supported_wms}" | fold -s | sed 's/^/\t/g'
 	echo
+	echo "${underline}Supported Information Displays${c0}:"
+	echo "${valid_display[@]}" | fold -s | sed 's/^/\t/g'
+	echo
 	echo "${underline}Options${c0}:"
 	echo "   ${bold}-v${c0}                 Verbose output."
 	echo "   ${bold}-o 'OPTIONS'${c0}       Allows for setting script variables on the"
@@ -399,7 +402,7 @@ displayHelp () {
 	echo "                      can delete displays with -var,var. Setting without + or - will"
 	echo "                      set display to that explicit combination. Add and delete statements"
 	echo "                      may be used in conjunction by placing a ; between them as so:"
-	echo "                      +var,var,var;-var,var."
+	echo "                      +var,var,var;-var,var. See above to find supported display names."
 	echo "   ${bold}-n${c0}                 Do not display ASCII distribution logo."
 	echo "   ${bold}-L${c0}                 Display ASCII distribution logo only."
 	echo "   ${bold}-N${c0}                 Strip all color from output."
@@ -644,7 +647,14 @@ detectdistro () {
 					else
 						distro="Gentoo"
 					fi
-					. /etc/portage/make.conf #detecting release stable/testing/experimental
+
+					#detecting release stable/testing/experimental
+					if [[ -f /etc/portage/make.conf ]]; then
+						source /etc/portage/make.conf
+					elif [[ -d /etc/portage/make.conf ]]; then
+						source /etc/portage/make.conf/*
+					fi
+
 					case $ACCEPT_KEYWORDS in
 						[a-z]*) distro_release=stable       ;;
 						~*)     distro_release=testing      ;;
@@ -715,6 +725,9 @@ detectdistro () {
 						distro="LMDE"
 						distro_codename="n/a"
 						distro_release="n/a"
+					#adding support for LMDE 3	
+					elif [[ "$(lsb_release -sd)" =~ "LMDE" ]]; then
+						distro="LMDE"	
 					fi
 					;;
 				"openSUSE"|"openSUSE project"|"SUSE LINUX")
@@ -1595,7 +1608,7 @@ detectgpu () {
 # Run it only on Intel Processors if GPU is unknown
 DetectIntelGPU() {
 	if [ -r /proc/fb ]; then
-		gpu=$(awk '{print $2}' /proc/fb)
+		gpu=$(awk 'BEGIN {ORS = " &"} {$1="";print}' /proc/fb | sed  -r s/'^\s+|\s*&$'//g)
 	fi
 
 	case $gpu in
@@ -1606,7 +1619,7 @@ DetectIntelGPU() {
 			gpu="intel"
 			;;
 		*)
-			gpu="Unknown"
+			gpu="Not Found"
 			;;
 	esac
 
@@ -1782,14 +1795,14 @@ detectshell_ver () {
 detectshell () {
 	if [[ ! "${shell_type}" ]]; then
 		if [[ "${distro}" == "Cygwin" || "${distro}" == "Msys" || "${distro}" == "Haiku" || "${distro}" == "Alpine Linux" ||
-			"${distro}" == "TinyCore" || "${distro}" == "Raspbian" || "${OSTYPE}" == "gnu" ]]; then
+			"${distro}" == "Mac OS X" || "${distro}" == "TinyCore" || "${distro}" == "Raspbian" || "${OSTYPE}" == "gnu" ]]; then
 			shell_type=$(echo "$SHELL" | awk -F'/' '{print $NF}')
 		elif readlink -f "$SHELL" 2>&1 | grep -q -i 'busybox'; then
 			shell_type="BusyBox"
 		else
 			if [[ "${OSTYPE}" =~ "linux" ]]; then
 				shell_type=$(tr '\0' '\n' </proc/$PPID/cmdline | head -1)
-			elif [[ "${distro}" == "Mac OS X" || "${distro}" =~ "BSD" ]]; then
+			elif [[ "${distro}" =~ "BSD" ]]; then
 				shell_type=$(ps -p $PPID -o command | tail -1)
 			else
 				shell_type=$(ps -p "$(ps -p $PPID | awk '$1 !~ /PID/ {print $1}')" | awk 'FNR>1 {print $1}')
@@ -1847,7 +1860,7 @@ detectres () {
 	elif [[ "${distro}" == "Cygwin" || "${distro}" == "Msys" ]]; then
 		xResolution=$(wmic path Win32_VideoController get CurrentHorizontalResolution,CurrentVerticalResolution | awk 'NR==2 {print $1"x"$2}')
 	elif [[ "${distro}" == "Haiku" ]]; then
-		xResolution="$(screenmode | awk '{gsub(/,/,""); print $2"x"$3}')"
+		xResolution="$(screenmode | grep Resolution | awk '{gsub(/,/,""); print $2"x"$3}')"
 	elif [[ -n ${DISPLAY} ]]; then
 		if type -p xdpyinfo >/dev/null 2>&1; then
 			xResolution=$(xdpyinfo | awk '/^ +dimensions/ {print $2}')
@@ -2545,6 +2558,7 @@ detectgtk () {
 					if [[ $found_name == $termapp_theme_name ]]; then
 						gtkFont=$(str2=${termapp_theme_info[$i*2]};echo "${str2:288:${#str2}-288}")
 						gtkFont=$(echo "${gtkFont%%[dD]2*;}" | xxd -r -p)
+						gtkFont=$(echo "${gtkFont:21:288}")
 						break
 					fi
 				done
