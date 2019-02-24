@@ -947,7 +947,7 @@ function! s:Org(bang, ...)
 		endfor
 	else
 		if empty(a:bang) | tabnew | endif
-		execute 'lcd ' . g:org_home | Denite git
+		execute 'lcd ' . g:org_home | Denite file/rec
 	endif
 endfunction
 
