@@ -21,9 +21,11 @@ g:unite_source_file_mru_limit	neomru.txt	/*g:unite_source_file_mru_limit*
 g:unite_source_file_mru_time_format	neomru.txt	/*g:unite_source_file_mru_time_format*
 g:unite_source_mru_do_validate	neomru.txt	/*g:unite_source_mru_do_validate*
 g:unite_source_mru_update_interval	neomru.txt	/*g:unite_source_mru_update_interval*
+neomru#append()	neomru.txt	/*neomru#append()*
 neomru-commands	neomru.txt	/*neomru-commands*
 neomru-contents	neomru.txt	/*neomru-contents*
 neomru-faq	neomru.txt	/*neomru-faq*
+neomru-functions	neomru.txt	/*neomru-functions*
 neomru-install	neomru.txt	/*neomru-install*
 neomru-interface	neomru.txt	/*neomru-interface*
 neomru-sources	neomru.txt	/*neomru-sources*
