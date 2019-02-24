@@ -1,9 +1,13 @@
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 let s:templatepath = go#util#Join(expand('<sfile>:p:h:h:h'), '.github', 'ISSUE_TEMPLATE.md')
 
 function! go#issue#New() abort
   let body = substitute(s:issuebody(), '[^A-Za-z0-9_.~-]', '\="%".printf("%02X",char2nr(submatch(0)))', 'g')
   let url = "https://github.com/fatih/vim-go/issues/new?body=" . l:body
-  call go#tool#OpenBrowser(l:url)
+  call go#util#OpenBrowser(l:url)
 endfunction
 
 function! s:issuebody() abort
@@ -30,5 +34,9 @@ function! s:issuebody() abort
 
   return join(body, "\n")
 endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

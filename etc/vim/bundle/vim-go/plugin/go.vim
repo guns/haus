@@ -4,6 +4,10 @@ if exists("g:go_loaded_install")
 endif
 let g:go_loaded_install = 1
 
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 function! s:checkVersion() abort
   " Not using the has('patch-7.4.2009') syntax because that wasn't added until
   " 7.4.237, and we want to be sure this works for everyone (this is also why
@@ -47,10 +51,11 @@ let s:packages = {
       \ 'errcheck':      ['github.com/kisielk/errcheck'],
       \ 'fillstruct':    ['github.com/davidrjenni/reftools/cmd/fillstruct'],
       \ 'gocode':        ['github.com/mdempsky/gocode', {'windows': ['-ldflags', '-H=windowsgui']}],
+      \ 'gocode-gomod':  ['github.com/stamblerre/gocode'],
       \ 'godef':         ['github.com/rogpeppe/godef'],
       \ 'gogetdoc':      ['github.com/zmb3/gogetdoc'],
       \ 'goimports':     ['golang.org/x/tools/cmd/goimports'],
-      \ 'golint':        ['github.com/golang/lint/golint'],
+      \ 'golint':        ['golang.org/x/lint/golint'],
       \ 'gometalinter':  ['github.com/alecthomas/gometalinter'],
       \ 'gomodifytags':  ['github.com/fatih/gomodifytags'],
       \ 'gorename':      ['golang.org/x/tools/cmd/gorename'],
@@ -170,7 +175,7 @@ function! s:GoInstallBinaries(updateBinaries, ...)
 
       " and then build and install it
       let l:build_cmd = ['go', 'build', '-o', go_bin_path . go#util#PathSep() . bin, l:importPath]
-      let [l:out, l:err] = go#util#Exec(l:build_cmd + [l:importPath])
+      let [l:out, l:err] = go#util#Exec(l:build_cmd)
       if l:err
         echom "Error installing " . l:importPath . ": " . l:out
       endif
@@ -207,110 +212,41 @@ endfunction
 " Autocommands
 " ============================================================================
 "
-function! s:echo_go_info()
-  if !get(g:, "go_echo_go_info", 1)
-    return
-  endif
 
-  if !exists('v:completed_item') || empty(v:completed_item)
-    return
-  endif
-  let item = v:completed_item
+" We take care to preserve the user's fileencodings and fileformats,
+" because those settings are global (not buffer local), yet we want
+" to override them for loading Go files, which are defined to be UTF-8.
+let s:current_fileformats = ''
+let s:current_fileencodings = ''
 
-  if !has_key(item, "info")
-    return
-  endif
-
-  if empty(item.info)
-    return
-  endif
-
-  redraws! | echo "vim-go: " | echohl Function | echon item.info | echohl None
+" define fileencodings to open as utf-8 encoding even if it's ascii.
+function! s:gofiletype_pre()
+  let s:current_fileformats = &g:fileformats
+  let s:current_fileencodings = &g:fileencodings
+  set fileencodings=utf-8 fileformats=unix
 endfunction
 
-function! s:auto_type_info()
-  " GoInfo automatic update
-  if get(g:, "go_auto_type_info", 0)
-    call go#tool#Info(0)
-  endif
-endfunction
-
-function! s:auto_sameids()
-  " GoSameId automatic update
-  if get(g:, "go_auto_sameids", 0)
-    call go#guru#SameIds(0)
-  endif
-endfunction
-
-function! s:fmt_autosave()
-  " Go code formatting on save
-  if get(g:, "go_fmt_autosave", 1)
-    call go#fmt#Format(-1)
-  endif
-endfunction
-
-function! s:asmfmt_autosave()
-  " Go asm formatting on save
-  if get(g:, "go_asmfmt_autosave", 0)
-    call go#asmfmt#Format()
-  endif
-endfunction
-
-function! s:modfmt_autosave()
-  " go.mod code formatting on save
-  if get(g:, "go_mod_fmt_autosave", 1)
-    call go#mod#Format()
-  endif
-endfunction
-
-function! s:metalinter_autosave()
-  " run gometalinter on save
-  if get(g:, "go_metalinter_autosave", 0)
-    call go#lint#Gometa(1)
-  endif
-endfunction
-
-function! s:template_autocreate()
-  " create new template from scratch
-  if get(g:, "go_template_autocreate", 1)
-    call go#template#create()
-  endif
+" restore fileencodings as others
+function! s:gofiletype_post()
+  let &g:fileformats = s:current_fileformats
+  let &g:fileencodings = s:current_fileencodings
 endfunction
 
 augroup vim-go
   autocmd!
 
-  " autocmd CursorHold *.go call s:auto_type_info()
-  " autocmd CursorHold *.go call s:auto_sameids()
+  autocmd BufNewFile *.go if &modifiable | setlocal fileencoding=utf-8 fileformat=unix | endif
+  autocmd BufNewFile *.go call go#auto#template_autocreate()
+  autocmd BufRead *.go call s:gofiletype_pre()
+  autocmd BufReadPost *.go call s:gofiletype_post()
 
-  " Echo the identifier information when completion is done. Useful to see
-  " the signature of a function, etc...
-  if exists('##CompleteDone')
-    autocmd CompleteDone *.go call s:echo_go_info()
-  endif
-
-  autocmd BufWritePre *.go call s:fmt_autosave()
-  autocmd BufWritePre *.mod call s:modfmt_autosave()
-  autocmd BufWritePre *.s call s:asmfmt_autosave()
-  autocmd BufWritePost *.go call s:metalinter_autosave()
-  autocmd BufNewFile *.go call s:template_autocreate()
-  " clear SameIds when the buffer is unloaded so that loading another buffer
-  " in the same window doesn't highlight the most recently matched
-  " identifier's positions.
-  autocmd BufWinEnter *.go call go#guru#ClearSameIds()
-
-  autocmd BufEnter *.go
-        \  if go#config#AutodetectGopath() && !exists('b:old_gopath')
-        \|   let b:old_gopath = exists('$GOPATH') ? $GOPATH : -1
-        \|   let $GOPATH = go#path#Detect()
-        \| endif
-  autocmd BufLeave *.go
-        \  if exists('b:old_gopath')
-        \|   if b:old_gopath isnot -1
-        \|     let $GOPATH = b:old_gopath
-        \|   endif
-        \|   unlet b:old_gopath
-        \| endif
+  autocmd BufNewFile *.s if &modifiable | setlocal fileencoding=utf-8 fileformat=unix | endif
+  autocmd BufRead *.s call s:gofiletype_pre()
+  autocmd BufReadPost *.s call s:gofiletype_post()
 augroup end
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

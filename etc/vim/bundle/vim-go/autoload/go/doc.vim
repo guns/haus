@@ -2,6 +2,10 @@
 " Use of this source code is governed by a BSD-style
 " license that can be found in the LICENSE file.
 
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 let s:buf_nr = -1
 
 function! go#doc#OpenBrowser(...) abort
@@ -31,7 +35,7 @@ function! go#doc#OpenBrowser(...) abort
       let godoc_url .= "#" . name
     endif
 
-    call go#tool#OpenBrowser(godoc_url)
+    call go#util#OpenBrowser(godoc_url)
     return
   endif
 
@@ -45,19 +49,14 @@ function! go#doc#OpenBrowser(...) abort
 
   " example url: https://godoc.org/github.com/fatih/set#Set
   let godoc_url = go#config#DocUrl() . "/" . pkg . "#" . exported_name
-  call go#tool#OpenBrowser(godoc_url)
+  call go#util#OpenBrowser(godoc_url)
 endfunction
 
 function! go#doc#Open(newmode, mode, ...) abort
   " With argument: run "godoc [arg]".
   if len(a:000)
-    if empty(go#path#CheckBinPath(go#config#DocCommand()[0]))
-      return
-    endif
-
-    let [l:out, l:err] = go#util#Exec(go#config#DocCommand() + a:000)
-  " Without argument: run gogetdoc on cursor position.
-  else
+    let [l:out, l:err] = go#util#Exec(['go', 'doc'] + a:000)
+  else " Without argument: run gogetdoc on cursor position.
     let [l:out, l:err] = s:gogetdoc(0)
     if out == -1
       return
@@ -123,8 +122,8 @@ function! s:GodocView(newposition, position, content) abort
   sil normal! gg
 
   " close easily with x or enter
-  noremap <buffer> <silent> <CR> :<C-U>close<CR>
   noremap <buffer> <silent> x :<C-U>close<CR>
+  noremap <buffer> <silent> <CR> :<C-U>close<CR>
 endfunction
 
 function! s:gogetdoc(json) abort
@@ -185,5 +184,9 @@ function! s:godocWord(args) abort
 
   return [pkg, exported_name]
 endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et

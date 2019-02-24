@@ -1,5 +1,9 @@
 "  guru.vim -- Vim integration for the Go guru.
 
+" don't spam the user when Vim is started in Vi compatibility mode
+let s:cpo_save = &cpo
+set cpo&vim
+
 " guru_cmd returns a dict that contains the command to execute guru. args
 " is dict with following options:
 "  mode        : guru mode, such as 'implements'
@@ -14,6 +18,7 @@ function! s:guru_cmd(args) range abort
   let format = a:args.format
   let needs_scope = a:args.needs_scope
   let selected = a:args.selected
+  let postype = get(a:args, 'postype', 'cursor')
 
   let result = {}
 
@@ -57,12 +62,16 @@ function! s:guru_cmd(args) range abort
     call extend(cmd, ["-scope", l:scope])
   endif
 
-  let pos = printf("#%s", go#util#OffsetCursor())
-  if selected != -1
-    " means we have a range, get it
-    let pos1 = go#util#Offset(line("'<"), col("'<"))
-    let pos2 = go#util#Offset(line("'>"), col("'>"))
-    let pos = printf("#%s,#%s", pos1, pos2)
+  if postype == 'balloon'
+    let pos = printf("#%s", go#util#Offset(v:beval_lnum, v:beval_col))
+  else
+    let pos = printf("#%s", go#util#OffsetCursor())
+    if selected != -1
+      " means we have a range, get it
+      let pos1 = go#util#Offset(line("'<"), col("'<"))
+      let pos2 = go#util#Offset(line("'>"), col("'>"))
+      let pos = printf("#%s,#%s", pos1, pos2)
+    endif
   endif
 
   let l:filename = fnamemodify(expand("%"), ':p:gs?\\?/?') . ':' . pos
@@ -278,7 +287,7 @@ function! go#guru#DescribeInfo(showstatus) abort
         return
       endif
 
-      let info  = val["type"]
+      let info = val["type"]
     elseif detail == "type"
       if !has_key(result, 'type')
         call go#util#EchoError("type key is missing. Please open a bug report on vim-go repo.")
@@ -291,7 +300,7 @@ function! go#guru#DescribeInfo(showstatus) abort
         return
       endif
 
-      let info  = type["type"]
+      let info = type["type"]
     elseif detail == "package"
       if !has_key(result, 'package')
         call go#util#EchoError("package key is missing. Please open a bug report on vim-go repo.")
@@ -312,7 +321,7 @@ function! go#guru#DescribeInfo(showstatus) abort
       return
     endif
 
-    echo "vim-go: " | echohl Function | echon info | echohl None
+    call go#util#ShowInfo(info)
   endfunction
 
   let args = {
@@ -482,8 +491,8 @@ function! s:same_ids_highlight(exit_val, output, mode) abort
     " re-apply SameIds at the current cursor position at the time the buffer
     " is redisplayed: e.g. :edit, :GoRename, etc.
     augroup vim-go-sameids
-      autocmd!
-      autocmd BufWinEnter <buffer> nested call go#guru#SameIds()
+      autocmd! * <buffer>
+      autocmd BufWinEnter <buffer> nested call go#guru#SameIds(0)
     augroup end
   endif
 endfunction
@@ -507,7 +516,7 @@ function! go#guru#ClearSameIds() abort
 
   " remove the autocmds we defined
   augroup vim-go-sameids
-    autocmd!
+    autocmd! * <buffer>
   augroup end
 
   return 0
@@ -515,11 +524,11 @@ endfunction
 
 function! go#guru#ToggleSameIds() abort
   if go#guru#ClearSameIds() != 0
-    call go#guru#SameIds()
+    call go#guru#SameIds(1)
   endif
 endfunction
 
-function! go#guru#AutoToogleSameIds() abort
+function! go#guru#AutoToggleSameIds() abort
   if go#config#AutoSameids()
     call go#util#EchoProgress("sameids auto highlighting disabled")
     call go#guru#ClearSameIds()
@@ -585,5 +594,144 @@ function! go#guru#Scope(...) abort
     call go#util#EchoSuccess("current guru scope: ". join(scope, ","))
   endif
 endfunction
+
+function! go#guru#DescribeBalloon() abort
+  " don't even try if async isn't available.
+  if !go#util#has_job()
+    return
+  endif
+
+  " json_encode() and friends are introduced with this patch (7.4.1304)
+  " vim: https://groups.google.com/d/msg/vim_dev/vLupTNhQhZ8/cDGIk0JEDgAJ
+  " nvim: https://github.com/neovim/neovim/pull/4131
+  if !exists("*json_decode")
+    call go#util#EchoError("requires 'json_decode'. Update your Vim/Neovim version.")
+    return
+  endif
+
+  function! s:describe_balloon(exit_val, output, mode)
+    if a:exit_val != 0
+      return
+    endif
+
+    if a:output[0] !=# '{'
+      return
+    endif
+
+    if empty(a:output) || type(a:output) != type("")
+      return
+    endif
+
+    let l:result = json_decode(a:output)
+    if type(l:result) != type({})
+      call go#util#EchoError(printf('malformed output from guru: %s', a:output))
+      return
+    endif
+
+    let l:info = []
+    if has_key(l:result, 'desc')
+      if l:result['desc'] != 'identifier'
+        let l:info = add(l:info, l:result['desc'])
+      endif
+    endif
+
+    if has_key(l:result, 'detail')
+      let l:detail = l:result['detail']
+
+      " guru gives different information based on the detail mode. Let try to
+      " extract the most useful information
+
+      if l:detail == 'value'
+        if !has_key(l:result, 'value')
+          call go#util#EchoError('value key is missing. Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:val = l:result['value']
+        if !has_key(l:val, 'type')
+          call go#util#EchoError('type key is missing (value.type). Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:info = add(l:info, printf('type: %s', l:val['type']))
+        if has_key(l:val, 'value')
+          let l:info = add(l:info, printf('value: %s', l:val['value']))
+        endif
+      elseif l:detail == 'type'
+        if !has_key(l:result, 'type')
+          call go#util#EchoError('type key is missing. Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:type = l:result['type']
+        if !has_key(l:type, 'type')
+          call go#util#EchoError('type key is missing (type.type). Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:info = add(l:info, printf('type: %s', l:type['type']))
+
+        if has_key(l:type, 'methods')
+          let l:info = add(l:info, 'methods:')
+          for l:m in l:type.methods
+            let l:info = add(l:info, printf("\t%s", l:m['name']))
+          endfor
+        endif
+      elseif l:detail == 'package'
+        if !has_key(l:result, 'package')
+          call go#util#EchoError('package key is missing. Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:package = result['package']
+        if !has_key(l:package, 'path')
+          call go#util#EchoError('path key is missing (package.path). Please open a bug report on vim-go repo.')
+          return
+        endif
+
+        let l:info = add(l:info, printf('package: %s', l:package["path"]))
+      elseif l:detail == 'unknown'
+        " the description is already included in l:info, and there's no other
+        " information on unknowns.
+      else
+        call go#util#EchoError(printf('unknown detail mode (%s) found. Please open a bug report on vim-go repo', l:detail))
+        return
+      endif
+    endif
+
+    if has('balloon_eval')
+      call balloon_show(join(l:info, "\n"))
+      return
+    endif
+
+    call balloon_show(l:info)
+  endfunction
+
+
+  " change the active window to the window where the cursor is.
+  let l:winid = win_getid(winnr())
+  call win_gotoid(v:beval_winid)
+
+  let l:args = {
+        \ 'mode': 'describe',
+        \ 'format': 'json',
+        \ 'selected': -1,
+        \ 'needs_scope': 0,
+        \ 'custom_parse': function('s:describe_balloon'),
+        \ 'disable_progress': 1,
+        \ 'postype': 'balloon',
+        \ }
+
+  call s:async_guru(args)
+
+  " make the starting window active again
+  call win_gotoid(l:winid)
+
+  return ''
+endfunction
+
+" restore Vi compatibility settings
+let &cpo = s:cpo_save
+unlet s:cpo_save
 
 " vim: sw=2 ts=2 et
