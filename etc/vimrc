@@ -96,6 +96,9 @@ set fillchars=vert:│,fold:\ ,diff:╳
 " Sessions
 set sessionoptions=curdir,folds,tabpages,winsize
 
+" Diff
+set diffopt+=vertical,histogram,indent-heuristic
+
 " Initialize syntax plugin and choose a colorscheme
 source ~/.vim/local/syntax.vim
 
