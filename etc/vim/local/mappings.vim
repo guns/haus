@@ -569,7 +569,7 @@ noremap  <Leader>gv       :Gitv<CR>
 noremap  <Leader>gV       :Gitv!<CR>
 noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
-noremap  <4-g>            :<C-u>Gstatus<CR>
+noremap  <4-g>            :<C-u>Gstatus \| 12wincmd _<CR>
 noremap  <4-G>            :<C-u>Ggrep! -i<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
 vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! --fixed-strings -- ' . shellescape(@/, 1)<CR>
