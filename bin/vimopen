@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec vim -c DeniteOpen "$@"
+exec vim -c FuzzyOpen "$@"

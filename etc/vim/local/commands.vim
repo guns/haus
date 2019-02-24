@@ -176,8 +176,8 @@ function! s:Todo(...)
 	endif
 endfunction
 
-command! -bar Tags call <SID>Tags() "{{{1
-function! s:Tags()
+command! -bar Maketags call <SID>Maketags() "{{{1
+function! s:Maketags()
 	if &filetype == 'go'
 		let cmd = 'gotags -R -f .tags .'
 	else
@@ -863,7 +863,7 @@ function! s:ToggleMinorWindows()
 	endif
 endfunction
 
-command! -bar DeniteOpen call fugitive#detect('.') | execute 'Denite ' . (exists('b:git_dir') ? 'git' : 'file/rec')
+command! -bar FuzzyOpen call fugitive#detect('.') | execute (exists('b:git_dir') ? 'FzfGFiles!' : 'FZF!')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(path)
@@ -947,7 +947,7 @@ function! s:Org(bang, ...)
 		endfor
 	else
 		if empty(a:bang) | tabnew | endif
-		execute 'lcd ' . g:org_home | Denite file/rec
+		execute 'lcd ' . g:org_home | FZF!
 	endif
 endfunction
 

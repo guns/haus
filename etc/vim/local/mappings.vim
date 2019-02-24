@@ -296,7 +296,7 @@ noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| 
 " Simple command line aliases
 noremap <Leader>; :<C-u>help<Space>
 noremap <Leader>t :<C-u>tag<Space>
-noremap <Leader>T :<C-u>Tags<CR>
+noremap <Leader>T :<C-u>Maketags<CR>
 noremap <Leader>U :<C-u>UndoRemove<CR>
 noremap <4-m>     :<C-u>silent! make!<CR>
 noremap <4-p>     :<C-u>SynStack<CR>
@@ -585,15 +585,14 @@ vmap ga <Plug>(EasyAlign)
 nmap gA <Plug>(LiveEasyAlign)
 vmap gA <Plug>(LiveEasyAlign)
 
-" Plugin: Denite.vim
-noremap <Leader>d :<C-u>Denite<Space>
-Mapall <4-o> :<C-u>DeniteOpen<CR>
-Mapall <4-t> :<C-u>tabnew \\\| DeniteOpen<CR>
-Mapall <4-V> :<C-u>vsplit \\\| DeniteOpen<CR>
-Mapall <4-b> :<C-u>Denite file_mru<CR>
-Mapall <4-B> :<C-u>tabnew \\\| Denite file_mru<CR>
-Mapall <4-f> :<C-u>DeniteBufferDir file/rec<CR>
-Mapall <4-F> :<C-u>Denite file/rec<CR>
+" Plugin: fzf, fzf.vim
+Mapall <4-o> :<C-u>FuzzyOpen<CR>
+Mapall <4-t> :<C-u>tabnew \\\| FuzzyOpen<CR>
+Mapall <4-V> :<C-u>vsplit \\\| FuzzyOpen<CR>
+Mapall <4-b> :<C-u>FzfHistory!<CR>
+Mapall <4-B> :<C-u>tabnew \\\| FzfHistory!<CR>
+Mapall <4-f> :<C-u>execute 'FZF! ' . expand('%:h')<CR>
+Mapall <4-F> :<C-u>FZF!<CR>
 
 " Plugin: NERDTree
 Mapall <4-d> :<C-u>NERDTreeToggle<CR>

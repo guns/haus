@@ -677,7 +677,7 @@ HAVE vim && {
         if (( ${#files[@]} )); then
             vim "${files[@]}"
         else
-            vim -c 'Denite file/rec'
+            vim -c 'FZF!'
         fi
     }; TCOMP find vimfind
 
