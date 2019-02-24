@@ -18,6 +18,7 @@ function! nerdtree#ui_glue#createDefaultBindings()
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "DirNode", 'callback': s."activateDirNode" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "FileNode", 'callback': s."activateFileNode" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "Bookmark", 'callback': s."activateBookmark" })
+    call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapPreview, 'scope': "Bookmark", 'callback': s."previewBookmark" })
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapActivateNode, 'scope': "all", 'callback': s."activateAll" })
 
     call NERDTreeAddKeyMap({ 'key': g:NERDTreeMapOpenSplit, 'scope': "Node", 'callback': s."openHSplit" })
@@ -100,7 +101,7 @@ function! s:activateFileNode(node)
     call a:node.activate({'reuse': 'all', 'where': 'p'})
 endfunction
 
-"FUNCTION: s:activateBookmark() {{{1
+"FUNCTION: s:activateBookmark(bookmark) {{{1
 "handle the user activating a bookmark
 function! s:activateBookmark(bm)
     call a:bm.activate(b:NERDTree, !a:bm.path.isDirectory ? {'where': 'p'} : {})
@@ -255,6 +256,7 @@ function! s:findAndRevealPath(pathStr)
     endif
 
     try
+        let l:pathStr = g:NERDTreePath.Resolve(l:pathStr)
         let l:pathObj = g:NERDTreePath.New(l:pathStr)
     catch /^NERDTree.InvalidArgumentsError/
         call nerdtree#echoWarning('invalid path')
@@ -494,6 +496,15 @@ function! s:openNodeRecursively(node)
     call nerdtree#echo("Recursively opening node. Please wait... DONE")
 endfunction
 
+" FUNCTION: s:previewBookmark(bookmark) {{{1
+function! s:previewBookmark(bookmark)
+    if a:bookmark.path.isDirectory
+        execute 'NERDTreeFind '.a:bookmark.path.str()
+    else
+        call a:bookmark.activate(b:NERDTree, {'stay': 1, 'where': 'p', 'keepopen': 1})
+    endif
+endfunction
+
 "FUNCTION: s:previewNodeCurrent(node) {{{1
 function! s:previewNodeCurrent(node)
     call a:node.open({'stay': 1, 'where': 'p', 'keepopen': 1})
@@ -524,10 +535,17 @@ endfunction
 " Reloads the current root. All nodes below this will be lost and the root dir
 " will be reloaded.
 function! s:refreshRoot()
+    if !g:NERDTree.IsOpen()
+        return
+    endif
     call nerdtree#echo("Refreshing the root node. This could take a while...")
+
+    let l:curWin = winnr()
+    call nerdtree#exec(g:NERDTree.GetWinNum() . "wincmd w")
     call b:NERDTree.root.refresh()
     call b:NERDTree.render()
     redraw
+    call nerdtree#exec(l:curWin . "wincmd w")
     call nerdtree#echo("Refreshing the root node. This could take a while... DONE")
 endfunction
 
@@ -554,6 +572,7 @@ function! nerdtree#ui_glue#setupCommands()
     command! -n=1 -complete=customlist,nerdtree#completeBookmarks -bar NERDTreeFromBookmark call g:NERDTreeCreator.CreateTabTree('<args>')
     command! -n=0 -bar NERDTreeMirror call g:NERDTreeCreator.CreateMirror()
     command! -n=? -complete=file -bar NERDTreeFind call s:findAndRevealPath('<args>')
+    command! -n=0 -bar NERDTreeRefreshRoot call s:refreshRoot()
     command! -n=0 -bar NERDTreeFocus call NERDTreeFocus()
     command! -n=0 -bar NERDTreeCWD call NERDTreeCWD()
 endfunction
