@@ -174,6 +174,7 @@ task :env do
       { :base => "#{@vim}/delimitMate",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/denite.nvim",             :branch => %w[master nerv], :files => :pathogen },
       { :base => "#{@vim}/diff_movement",           :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/fzf.vim",                 :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/gitv",                    :branch => %w[master haus], :files => :pathogen },
       { :base => "#{@vim}/gundo.vim",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/help_movement",           :branch => %w[master],      :files => :pathogen },
@@ -229,6 +230,15 @@ task :env do
       { :base => "#{@vim}/vim-varnish",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-visual-star-search",  :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/visualctrlg.vim",         :branch => %w[master guns], :files => :pathogen },
+
+      {
+        :base   => "#{@src}/READONLY/fzf",
+        :branch => %w[master],
+        :files  => {
+          'doc' => 'etc/vim/bundle/fzf/doc',
+          'plugin' => 'etc/vim/bundle/fzf/plugin',
+        },
+      },
 
       {
         :base   => "#{@vim}/misc-vimscripts",
