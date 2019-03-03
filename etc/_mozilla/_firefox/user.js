@@ -310,6 +310,7 @@ user_pref("identity.fxaccounts.remote.connectdevice.uri", "");
 user_pref("identity.fxaccounts.remote.email.uri", "");
 user_pref("identity.fxaccounts.remote.force_auth.uri", "");
 user_pref("identity.fxaccounts.remote.oauth.uri", "");
+user_pref("identity.fxaccounts.remote.pairing.uri", "");
 user_pref("identity.fxaccounts.remote.profile.uri", "");
 user_pref("identity.fxaccounts.remote.root", "");
 user_pref("identity.fxaccounts.remote.signin.uri", "");
