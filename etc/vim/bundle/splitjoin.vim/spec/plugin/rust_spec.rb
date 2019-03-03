@@ -147,6 +147,34 @@ describe "rust" do
     EOF
   end
 
+  specify "chained question mark operator" do
+    set_file_contents <<-EOF
+      fn foo() -> Result {
+          let value = self.stack.pop().ok_or(Error::StackUnderflow)?;
+      }
+    EOF
+
+    vim.search('ok_or')
+    split
+
+    assert_file_contents <<-EOF
+      fn foo() -> Result {
+          let value = match self.stack.pop().ok_or(Error::StackUnderflow) {
+              Ok(value) => value,
+              Err(e) => return Err(e.into()),
+          };
+      }
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      fn foo() -> Result {
+          let value = self.stack.pop().ok_or(Error::StackUnderflow)?;
+      }
+    EOF
+  end
+
   specify "closures" do
     set_file_contents <<-EOF
       let foo = something.map(|x| x * 2);
@@ -246,6 +274,56 @@ describe "rust" do
 
     assert_file_contents <<-EOF
       SomeStruct { foo: bar, bar: baz }
+    EOF
+  end
+
+  specify "blocks" do
+    set_file_contents <<-EOF
+      if opt.verbose == 1 { foo(); do_thing(); bar() }
+    EOF
+
+    # this should not break the split:
+    vim.command('let b:splitjoin_trailing_comma = 1')
+
+    vim.search('foo')
+    split
+
+    assert_file_contents <<-EOF
+      if opt.verbose == 1 {
+          foo();
+          do_thing();
+          bar()
+      }
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      if opt.verbose == 1 { foo(); do_thing(); bar() }
+    EOF
+  end
+
+  specify "blocks (ending in semicolon)" do
+    set_file_contents <<-EOF
+      if opt.verbose == 1 { foo(); }
+    EOF
+
+    # this should not break the split:
+    vim.command('let b:splitjoin_trailing_comma = 1')
+
+    vim.search('foo')
+    split
+
+    assert_file_contents <<-EOF
+      if opt.verbose == 1 {
+          foo();
+      }
+    EOF
+
+    join
+
+    assert_file_contents <<-EOF
+      if opt.verbose == 1 { foo(); }
     EOF
   end
 

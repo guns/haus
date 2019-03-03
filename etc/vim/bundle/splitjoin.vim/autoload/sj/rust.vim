@@ -45,26 +45,46 @@ function! sj#rust#SplitQuestionMark()
   let question_mark_col = col('.') + 1
   let char = getline('.')[end_col - 1]
 
-  if char =~ '\k'
-    call search('\k\+?;', 'bWc', line('.'))
-    let start_col = col('.')
-  elseif char == '}'
-    " go to opening bracket
-    normal! %
-    let start_col = col('.')
-  elseif char == ')'
-    " go to opening bracket
-    normal! %
-    " find first method-call char
-    call search('\%(\k\|\.\|::\)\+!\?(', 'bWc')
+  let previous_start_col = -2
+  let start_col = -1
 
-    if line('.') != current_line
-      " multiline expression, let's just ignore it
-      return 0
+  while previous_start_col != start_col
+    let previous_start_col = start_col
+
+    if char =~ '\k'
+      call search('\k\+?;', 'bWc', line('.'))
+      let start_col = col('.')
+    elseif char == '}'
+      " go to opening bracket
+      normal! %
+      let start_col = col('.')
+    elseif char == ')'
+      " go to opening bracket
+      normal! %
+      " find first method-call char
+      call search('\%(\k\|\.\|::\)\+!\?(', 'bWc')
+
+      if line('.') != current_line
+        " multiline expression, let's just ignore it
+        return 0
+      endif
+
+      let start_col = col('.')
+    else
+      break
     endif
 
-    let start_col = col('.')
-  endif
+    if start_col <= 1
+      " first character, no previous one
+      break
+    endif
+
+    " move backwards one step from the start
+    let pos = getpos('.')
+    let pos[2] = start_col - 1
+    call setpos('.', pos)
+    let char = getline('.')[col('.') - 1]
+  endwhile
 
   " is it a Result, or an Option?
   let expr_type = s:FunctionReturnType()
@@ -189,6 +209,63 @@ function! sj#rust#JoinClosure()
 
   let closure_contents = sj#Trim(sj#GetMotion('vi{'))
   call sj#ReplaceMotion('va{', closure_contents)
+  return 1
+endfunction
+
+function! sj#rust#SplitCurlyBrackets()
+  let [from, to] = sj#LocateBracesAroundCursor('{', '}')
+
+  if from < 0 && to < 0
+    return 0
+  endif
+
+  if (to - from) < 2
+    " empty {} block
+    return 0
+  endif
+
+  let body = sj#Trim(sj#GetCols(from + 1, to - 1))
+
+  if body =~ '^\k\+:'
+    " then it's a StructName { key: value }
+    let pairs = sj#ParseJsonObjectBody(from + 1, to - 1)
+    let body = join(pairs, ",\n")
+    if sj#settings#Read('trailing_comma')
+      let body .= ','
+    endif
+    call sj#ReplaceCols(from, to, "{\n".body."\n}")
+    if sj#settings#Read('align')
+      let body_start = line('.') + 1
+      let body_end   = body_start + len(pairs) - 1
+      call sj#Align(body_start, body_end, 'json_object')
+    endif
+  else
+    " it's just a normal block
+    let body = substitute(body, ';\ze.', ";\n", 'g')
+    call sj#ReplaceCols(from, to, "{\n".body."\n}")
+  endif
+
+  return 1
+endfunction
+
+function! sj#rust#JoinCurlyBrackets()
+  let line = getline('.')
+
+  if line !~ '{\s*$'
+    return 0
+  endif
+
+  call search('{', 'c', line('.'))
+  let body = sj#GetMotion('Vi{')
+  let lines = split(body, "\n")
+  let lines = sj#TrimList(lines)
+
+  let body = join(lines, ' ')
+  " just in case we're joining a StructName { key: value, }:
+  let body = substitute(body, ',$', '', '')
+  let body = '{ '.body.' }'
+
+  call sj#ReplaceMotion('Va{', body)
   return 1
 endfunction
 
