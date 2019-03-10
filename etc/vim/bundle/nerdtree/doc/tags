@@ -65,6 +65,8 @@ NERDTreeCascadeSingleChildDir	NERDTree.txt	/*NERDTreeCascadeSingleChildDir*
 NERDTreeCaseSensitiveSort	NERDTree.txt	/*NERDTreeCaseSensitiveSort*
 NERDTreeChDirMode	NERDTree.txt	/*NERDTreeChDirMode*
 NERDTreeCreatePrefix	NERDTree.txt	/*NERDTreeCreatePrefix*
+NERDTreeDirArrowCollapsible	NERDTree.txt	/*NERDTreeDirArrowCollapsible*
+NERDTreeDirArrowExpandable	NERDTree.txt	/*NERDTreeDirArrowExpandable*
 NERDTreeFunctionality	NERDTree.txt	/*NERDTreeFunctionality*
 NERDTreeGlobalCommands	NERDTree.txt	/*NERDTreeGlobalCommands*
 NERDTreeHighlightCursorline	NERDTree.txt	/*NERDTreeHighlightCursorline*
