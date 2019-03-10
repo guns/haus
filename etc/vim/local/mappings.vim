@@ -565,8 +565,8 @@ noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>g<M-s>   :<C-u>Git stash show -p<CR>
 noremap  <Leader>gu       :<C-u>Git up<CR>
-noremap  <Leader>gv       :Gitv<CR>
-noremap  <Leader>gV       :Gitv!<CR>
+noremap  <Leader>gv       :Gitv<Space>
+noremap  <Leader>gV       :Gitv!<Space>
 noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus \| 12wincmd _<CR>

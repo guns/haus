@@ -1,7 +1,3 @@
 #!/usr/bin/env bash
 
-if [[ -f "$1" ]]; then
-    exec vim -c 'call fugitive#detect(".") | Gitv!' "$1"
-else
-    exec vim -c 'call fugitive#detect(".") | Gitv'
-fi
+exec vim -c 'call fugitive#detect(".") | call feedkeys(":Gitv ")' "$@"
