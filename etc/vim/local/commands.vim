@@ -605,20 +605,31 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
 endfunction
 
+command! -bar StandardJSFix call <SID>StandardJSFix()
+function! s:StandardJSFix()
+	if !executable('standard') | return | endif
+
+	let autoread_save = &autoread ? 'noautoread' : 'autoread'
+	let makeprg_save = &makeprg
+
+	setlocal autoread
+	setlocal makeprg=standard\ --fix\ %
+	silent! make!
+
+	execute 'setlocal ' . autoread_save . ' makeprg=' . makeprg_save
+endfunction
+
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
 function! s:JavaScriptBufferSetup()
 	SetWhitespace 2
 	setlocal expandtab
-	if executable('standard')
-		setlocal autoread makeprg=standard\ --fix\ %
-		noremap <buffer> <LocalLeader>l :<C-u>setlocal makeprg=standard\ --fix\ % \| silent! make!<CR>
-	endif
 
-	inoremap <buffer> <C-l>  <Space>=><Space>
-	noremap  <buffer> <4-CR> A,<Esc>
-	inoremap <buffer> <4-CR> <C-\><C-o>A,
-	inoremap <buffer> <M-CR> keyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
-	noremap  <buffer> <M-CR> akeyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
+	noremap  <buffer> <LocalLeader>l :<C-u>StandardJSFix<CR>
+	inoremap <buffer> <C-l>          <Space>=><Space>
+	noremap  <buffer> <4-CR>         A,<Esc>
+	inoremap <buffer> <4-CR>         <C-\><C-o>A,
+	inoremap <buffer> <M-CR>         keyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
+	noremap  <buffer> <M-CR>         akeyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
 endfunction
 
 command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
