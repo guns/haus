@@ -197,6 +197,9 @@ user_pref("dom.event.clipboardevents.enabled", false);
 // Show domains as punycode
 user_pref("network.IDN_show_punycode", true);
 
+// Disable screenshot uploading
+user_pref("extensions.screenshots.upload-disabled", false);
+
 // Remove all external URLs
 user_pref("accessibility.support.url", "");
 user_pref("app.feedback.baseURL", "");
