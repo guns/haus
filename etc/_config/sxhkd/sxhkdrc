@@ -265,7 +265,7 @@ alt + F9
 	wmctrl -a '❦ MAGI-00'
 
 super + alt + F9
-	wmctrl -a '❦ MAGI-01'
+	wmctrl -a '❦ spae'
 
 shift + F9
 	urxvt-client
