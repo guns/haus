@@ -1530,7 +1530,7 @@ function! s:readable_default_rake_task(...) dict abort
 endfunction
 
 function! s:rake2rails(task) abort
-  let task = s:gsub(a:task, '^--tasks$', '')
+  let task = s:gsub(a:task, '^--tasks$', '--help')
   let task = s:gsub(task, '<TEST\w*\=', '')
   return task
 endfunction
@@ -2755,26 +2755,31 @@ endfunction
 
 call s:add_methods('app', ['commands'])
 
-function! s:addfilecmds(type) abort
+function! s:addfilecmds(type, defer) abort
   let l = s:sub(a:type,'^.','\l&')
   let cplt = " -complete=customlist,".s:sid.l."List"
+  if a:defer && exists(':E' . l) == 2
+    return
+  endif
   for prefix in ['E', 'S', 'V', 'T', 'D']
     exe "command! -buffer -bar ".(prefix =~# 'D' ? '-range=0 ' : '')."-nargs=*".cplt." ".prefix.l." :execute s:".l.'Edit("<mods> '.(prefix =~# 'D' ? '<line1>' : '').s:sub(prefix, '^R', '').'<bang>",<f-args>)'
   endfor
 endfunction
 
 function! s:BufProjectionCommands() abort
-  call s:addfilecmds("view")
-  call s:addfilecmds("migration")
-  call s:addfilecmds("schema")
-  call s:addfilecmds("layout")
-  call s:addfilecmds("fixtures")
-  call s:addfilecmds("locale")
+  let deepest = get(sort(keys(get(b:, 'projectionist', {})), 'rails#lencmp'), -1, '')
+  let defer = len(deepest) > len(rails#app().path())
+  call s:addfilecmds("view", defer)
+  call s:addfilecmds("migration", defer)
+  call s:addfilecmds("schema", defer)
+  call s:addfilecmds("layout", defer)
+  call s:addfilecmds("fixtures", defer)
+  call s:addfilecmds("locale", defer)
   if rails#app().has('spec')
-    call s:addfilecmds("spec")
+    call s:addfilecmds("spec", defer)
   endif
-  call s:addfilecmds("stylesheet")
-  call s:addfilecmds("javascript")
+  call s:addfilecmds("stylesheet", defer)
+  call s:addfilecmds("javascript", defer)
   for [name, command] in items(rails#app().commands())
     call s:define_navcommand(name, command)
   endfor
@@ -2904,7 +2909,7 @@ function! s:specList(A,L,P)
   return s:completion_filter(rails#app().relglob("spec/","**/*","_spec.rb"),a:A)
 endfunction
 
-function! s:define_navcommand(name, projection, ...) abort
+function! s:define_navcommand(name, projection) abort
   if empty(a:projection)
     return
   endif
@@ -2918,8 +2923,7 @@ function! s:define_navcommand(name, projection, ...) abort
           \ '-complete=customlist,'.s:sid.'CommandList ' .
           \ prefix . name . ' :execute s:CommandEdit(' .
           \ string('<mods> '.(prefix =~# 'D' ? '<line1>' : '') . prefix . "<bang>") . ',' .
-          \ string(a:name) . ',' . string(a:projection) . ',<f-args>)' .
-          \ (a:0 ? '|' . a:1 : '')
+          \ string(a:name) . ',' . string(a:projection) . ',<f-args>)'
   endfor
 endfunction
 
@@ -4322,7 +4326,10 @@ let s:default_projections = {
       \  "README.*": {"alternate": "config/database.yml"},
       \  "Rakefile": {"type": "task"},
       \  "app/channels/*_channel.rb": {
-      \    "template": ["class {camelcase|capitalize|colons}Channel < ActionCable::Channel", "end"],
+      \    "template": [
+      \      "class {camelcase|capitalize|colons}Channel < ActionCable::Channel",
+      \      "end"
+      \    ],
       \    "type": "channel"
       \  },
       \  "app/controllers/*_controller.rb": {
@@ -4349,12 +4356,18 @@ let s:default_projections = {
       \  },
       \  "app/jobs/*_job.rb": {
       \    "affinity": "model",
-      \    "template": ["class {camelcase|capitalize|colons}Job < ActiveJob::Base", "end"],
+      \    "template": [
+      \      "class {camelcase|capitalize|colons}Job < ActiveJob::Base",
+      \      "end"
+      \    ],
       \    "type": "job"
       \  },
       \  "app/mailers/*.rb": {
       \    "affinity": "controller",
-      \    "template": ["class {camelcase|capitalize|colons} < ActionMailer::Base", "end"]
+      \    "template": [
+      \      "class {camelcase|capitalize|colons} < ActionMailer::Base",
+      \      "end"
+      \    ]
       \  },
       \  "app/models/*.rb": {
       \    "affinity": "model",
@@ -4362,7 +4375,10 @@ let s:default_projections = {
       \    "type": "model"
       \  },
       \  "app/serializers/*_serializer.rb": {
-      \    "template": ["class {camelcase|capitalize|colons}Serializer < ActiveModel::Serializer", "end"],
+      \    "template": [
+      \      "class {camelcase|capitalize|colons}Serializer < ActiveModel::Serializer",
+      \      "end"
+      \    ],
       \    "type": "serializer"
       \  },
       \  "config/*.yml": {
@@ -4869,29 +4885,37 @@ function! rails#webpacker_setup(type) abort
 endfunction
 
 function! rails#ruby_setup() abort
-  if !s:active()
-    return
-  endif
-  let path = rails#app().internal_load_path()
-  let path += [rails#app().path('app/views')]
-  if len(rails#buffer().controller_name())
-    let path += [rails#app().path('app/views/'.rails#buffer().controller_name()), rails#app().path('app/views/application')]
-  endif
-  let format = rails#buffer().format(0)
   let exts = ['raw', 'erb', 'html', 'builder', 'ruby', 'coffee', 'haml', 'jbuilder']
-  call extend(exts,
-        \ filter(map(keys(rails#app().projections()),
-        \ 'matchstr(v:val, "^\\Capp/views/\\*\\.\\zs(\\w\\+$")'), 'len(v:val)'))
+  if s:active()
+    let path = rails#app().internal_load_path()
+    let path += [rails#app().path('app/views')]
+    if len(rails#buffer().controller_name())
+      let path += [rails#app().path('app/views/'.rails#buffer().controller_name()), rails#app().path('app/views/application')]
+    endif
+    call add(path, rails#app().path())
+    if !rails#app().has_rails5()
+      let path += [rails#app().path('vendor/plugins/*/lib'), rails#app().path('vendor/rails/*/lib')]
+    endif
+    call extend(exts,
+          \ filter(map(keys(rails#app().projections()),
+          \ 'matchstr(v:val, "^\\Capp/views/\\*\\.\\zs(\\w\\+$")'), 'len(v:val)'))
+  else
+    let full = matchstr(expand('%:p'), '.*[\/]\%(app\|config\|lib\|test\|spec\)\ze[\/]')
+    let name = fnamemodify(full, ':t')
+    let dir = fnamemodify(full, ':h')
+    if len(dir) && (name ==# 'app' || s:isdirectory(dir . '/app')) && (name ==# 'lib' || s:isdirectory(dir . '/lib'))
+      let path = [dir . '/app/*', dir . '/lib']
+    else
+      return
+    endif
+  endif
+  let format = matchstr(expand('%:p'), '[\/]app[\/]views[\/].*\.\zs\w\+\ze\.\w\+$')
   for ext in exts
-    exe 'setlocal suffixesadd+=.' . ext
     if len(format)
       exe 'setlocal suffixesadd+=.' . format . '.' . ext
     endif
+    exe 'setlocal suffixesadd+=.' . ext
   endfor
-  if !rails#app().has_rails5()
-    let path += [rails#app().path('vendor/plugins/*/lib'), rails#app().path('vendor/rails/*/lib')]
-  endif
-  call add(path, rails#app().path())
 
   let engine_paths = s:gem_subdirs('app')
   call rails#update_path(path, engine_paths)
@@ -4968,9 +4992,9 @@ function! rails#buffer_setup() abort
   let &l:makeprg = self.app().rake_command('static')
   let &l:errorformat .= ',%\&chdir '.escape(self.app().real(), ',')
   if &l:makeprg =~# 'rails$'
-    let &l:errorformat .= ',%\&buffer=`=rails#buffer('.self['#'].').default_task(v:lnum)`'
+    let &l:errorformat .= ",%\\&buffer=%%:s/.*/\\=rails#buffer(submatch(0)).default_task(exists('l#') ? l# : 0)/"
   elseif &l:makeprg =~# 'rake$'
-    let &l:errorformat .= ',%\&buffer=`=rails#buffer('.self['#'].').default_rake_task(v:lnum)`'
+    let &l:errorformat .= ",%\\&buffer=%%:s/.*/\\=rails#buffer(submatch(0)).default_rake_task(exists('l#') ? l# : 0)/"
     let &l:errorformat = substitute(&l:errorformat, '%\\&completion=rails#complete_\zsrails', 'rake', 'g')
   endif
 
@@ -4986,12 +5010,12 @@ function! rails#buffer_setup() abort
       call self.setvar('dispatch',
             \ dir .
             \ self.app().ruby_script_command('bin/rails') .
-            \ ' `=rails#buffer(' . self['#'] . ').default_task(v:lnum)`')
+            \ " %:s/.*/\\=rails#buffer(submatch(0)).default_task(exists('l#') ? l# : 0)/")
     else
       call self.setvar('dispatch',
             \ dir . '-compiler=rails ' .
             \ self.app().rake_command('static') .
-            \ ' `=rails#buffer(' . self['#'] . ').default_rake_task(v:lnum)`')
+            \ " %:s/.*/\\=rails#buffer(submatch(0)).default_rake_task(exists('l#') ? l# : 0)/")
     endif
   endif
 
