@@ -295,11 +295,11 @@ function! s:legacy_option_map(letter) abort
   return y . 'o' . a:letter . ':echo "Use ' . y . 'o' . a:letter . ' instead"' . "\<CR>"
 endfunction
 
-if empty(maparg('co', 'n'))
+if empty(maparg('co', 'n')) && empty(maparg('c', 'n'))
   nmap <silent><expr> co <SID>legacy_option_map(nr2char(getchar()))
   nnoremap cop <Nop>
 endif
-if empty(maparg('=o', 'n'))
+if empty(maparg('=o', 'n')) && empty(maparg('=', 'n'))
   nmap <silent><expr> =o <SID>legacy_option_map(nr2char(getchar()))
   nnoremap =op <Nop>
 endif
@@ -339,8 +339,8 @@ function! s:putline(how, map) abort
     call setreg(v:register, body, 'l')
     exe 'normal! "'.v:register.a:how
     call setreg(v:register, body, type)
-    silent! call repeat#set("\<Plug>unimpairedPut".a:map)
   endif
+  silent! call repeat#set("\<Plug>unimpairedPut".a:map)
 endfunction
 
 nnoremap <silent> <Plug>unimpairedPutAbove :call <SID>putline('[p', 'Above')<CR>
