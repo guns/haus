@@ -3,7 +3,7 @@
 #   bash_completion - programmable completion functions for bash 4.1+
 #
 #   Copyright © 2006-2008, Ian Macdonald <ian@caliban.org>
-#             © 2009-2018, Bash Completion Maintainers
+#             © 2009-2019, Bash Completion Maintainers
 #
 #   This program is free software; you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -1853,11 +1853,11 @@ _longopt()
         --help|--usage|--version)
             return
             ;;
-        --*dir*)
+        --!(no-*)dir*)
             _filedir -d
             return
             ;;
-        --*file*|--*path*)
+        --!(no-*)@(file|path)*)
             _filedir
             return
             ;;
@@ -1881,8 +1881,10 @@ _longopt()
 
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $( compgen -W "$( LC_ALL=C eval "$1" --help 2>&1 | \
-            command sed -ne 's/.*\(--[-A-Za-z0-9]\{1,\}=\{0,1\}\).*/\1/p' | sort -u )" \
-            -- "$cur" ) )
+            while read -r line; do \
+                [[ $line =~ --[-A-Za-z0-9]+=? ]] && \
+                    printf '%s\n' ${BASH_REMATCH[0]}
+            done )" -- "$cur" ) )
         [[ $COMPREPLY == *= ]] && compopt -o nospace
     elif [[ "$1" == @(rmdir|chroot) ]]; then
         _filedir -d
