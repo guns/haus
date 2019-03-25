@@ -197,6 +197,7 @@ alias t='type --'; TCOMP type t
 alias ta='type -a --'; TCOMP type ta
 alias tp='type -P --'; TCOMP type tp
 alias x='exec'; TCOMP exec x
+alias xp='export'; TCOMP export xp
 alias wrld='while read l; do'; TCOMP exec wrld
 alias comp='complete -p'; TCOMP complete comp
 
