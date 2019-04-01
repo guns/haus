@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'json'
+require 'yaml'
+
+puts JSON.parse($stdin.read).to_yaml
