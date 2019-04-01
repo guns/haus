@@ -443,7 +443,7 @@ alias buntar='untar --bzip2'
 alias xuntar='untar --xz'
 
 # open
-alias op='open 2>/dev/null'
+alias op='open 2>/dev/null'; complete -F _minimal op
 
 # rsync
 alias rsync='rsync -hhh --sparse --partial'; TCOMP rsync rsync-backup
