@@ -993,7 +993,7 @@ function! s:AddNumbersInSelection()
 ruby << EORUBY
 	require 'bigdecimal'
 	print VIM.evaluate('s').scan(/(?:[+-])?\d+(?:\.\d+)?/).reduce(0) { |Σ, n|
-		Σ + BigDecimal.new(n)
+		Σ + BigDecimal(n)
 	}.to_s('F')
 EORUBY
 endfunction
