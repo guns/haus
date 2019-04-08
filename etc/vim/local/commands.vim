@@ -626,8 +626,8 @@ function! s:JavaScriptBufferSetup()
 
 	noremap  <buffer> <LocalLeader>l :<C-u>StandardJSFix<CR>
 	inoremap <buffer> <C-l>          <Space>=><Space>
-	noremap  <buffer> <4-CR>         A,<Esc>
-	inoremap <buffer> <4-CR>         <C-\><C-o>A,
+	noremap  <buffer> <4-CR>         A;<Esc>
+	inoremap <buffer> <4-CR>         <C-\><C-o>A;
 	inoremap <buffer> <M-CR>         keyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
 	noremap  <buffer> <M-CR>         akeyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
 endfunction
