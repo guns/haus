@@ -315,7 +315,7 @@ before_validation_on_update $0
 endsnippet
 
 snippet bt "belongs_to (bt)"
-belongs_to :${1:object}${2:, :class_name => "${3:${1/[[:alpha:]]+|(_)/(?1::\u$0)/g}}", :foreign_key => "${4:${1}_id}"}
+belongs_to :$0
 endsnippet
 
 snippet crw "cattr_accessor"
@@ -391,15 +391,15 @@ end
 endsnippet
 
 snippet habtm "has_and_belongs_to_many (habtm)"
-has_and_belongs_to_many :${1:object}${2:, :join_table => "${3:table_name}", :foreign_key => "${4:${1}_id}"}
+has_and_belongs_to_many :$0
 endsnippet
 
 snippet hm "has_many (hm)"
-has_many :${1:object}s${2:, :class_name => "${1}", :foreign_key => "${4:reference}_id"}
+has_many :$0
 endsnippet
 
 snippet hmt "has_many (through)"
-has_many :${1:objects}, :through => :${2:join_association}${3:, :source => :${4:${2}_table_foreign_key_to_${1}_table}}
+has_many :${1}, :through => :$0
 endsnippet
 
 snippet hmd "has_many :dependent => :destroy"
