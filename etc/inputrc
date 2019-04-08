@@ -111,6 +111,7 @@ $if bash
     "\033\007R":    "\C-] reset; stty -ixon \n"
     "\C-x\\":       "\C-] nohist \n"
     "\C-x|":        "\C-] [[ \"$TMUX\" ]] && tmux set-environment NOHIST $((NOHIST^1)) \n nohist \n"
+    "\C-x`":        "\C-a $(\C-e)\C-a"
     "\C-x$":        "\C-a "$(\C-e)"\C-a"
     "\C-x<":        "\C-a <(\C-e)\C-a"
     "\C-x\"":       "\C-a \"\C-e\"\C-a"
