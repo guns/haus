@@ -5,7 +5,7 @@ FEATURES:
   * use gopls for autocompletion by default in Vim8 and Neovim.
   * use gopls for `:GoDef` by setting `g:go_def_mode='gopls'`.
 * Add support for golangci-lint.
-  * set `g:go_metalinter_command='golanci-lint'` to use golangci-lint instead
+  * set `g:go_metalinter_command='golangci-lint'` to use golangci-lint instead
     of gometalinter.
 * New `:GoDefType` command to jump to a type definition from an instance of the
   type.
@@ -60,6 +60,14 @@ IMPROVEMENTS:
   [[GH-2172]](https://github.com/fatih/vim-go/pull/2172)
 * Add support for golangci-lint.
   [[GH-2182]](https://github.com/fatih/vim-go/pull/2182)
+* Show hover balloon using gopls instead of gocode.
+  [[GH-2202]](https://github.com/fatih/vim-go/pull/2202)
+* Add a new option, `g:go_debug_log_output`, to control logging with the
+  debugger.
+  [[GH-2203]](https://github.com/fatih/vim-go/pull/2203)
+* Do not jump to quickfix or location list window when bang is used for async
+  jobs or linting.
+  [[GH-2205]](https://github.com/fatih/vim-go/pull/2205)
 
 BUG FIXES:
 * Fix opening of non-existent file from `:GoDeclsDir` when the current
@@ -93,6 +101,8 @@ BUG FIXES:
   [[GH-2189]](https://github.com/fatih/vim-go/pull/2189)
 * Highlight pre-release and metadata in versions in go.mod.
   [[GH-2192]](https://github.com/fatih/vim-go/pull/2192)
+* Handle runtime panics from `:GoRun` when using Neovim's terminal.
+  [[GH-2209]](https://github.com/fatih/vim-go/pull/2209)
 
 ## 1.19 - (November 4, 2018)
 

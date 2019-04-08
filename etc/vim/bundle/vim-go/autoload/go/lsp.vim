@@ -368,6 +368,10 @@ function! go#lsp#DidOpen(fname)
     return
   endif
 
+  if !filereadable(a:fname)
+    return
+  endif
+
   let l:lsp = s:lspfactory.get()
   let l:msg = go#lsp#message#DidOpen(fnamemodify(a:fname, ':p'), join(go#util#GetLines(), "\n") . "\n")
   let l:state = s:newHandlerState('')
@@ -382,6 +386,10 @@ function! go#lsp#DidChange(fname)
     return go#lsp#DidOpen(a:fname)
   endif
 
+  if !filereadable(a:fname)
+    return
+  endif
+
   let l:lsp = s:lspfactory.get()
   let l:msg = go#lsp#message#DidChange(fnamemodify(a:fname, ':p'), join(go#util#GetLines(), "\n") . "\n")
   let l:state = s:newHandlerState('')
@@ -390,6 +398,10 @@ function! go#lsp#DidChange(fname)
 endfunction
 
 function! go#lsp#DidClose(fname)
+  if !filereadable(a:fname)
+    return
+  endif
+
   if !get(b:, 'go_lsp_did_open', 0)
     return
   endif
@@ -435,6 +447,23 @@ endfunction
 
 function! s:completionErrorHandler(next, error) abort dict
   call call(a:next, [[]])
+endfunction
+
+function! go#lsp#Hover(fname, line, col, handler)
+  call go#lsp#DidChange(a:fname)
+
+  let l:lsp = s:lspfactory.get()
+  let l:msg = go#lsp#message#Hover(a:fname, a:line, a:col)
+  let l:state = s:newHandlerState('hover')
+  let l:state.handleResult = funcref('s:hoverHandler', [function(a:handler, [], l:state)], l:state)
+  call l:lsp.sendMessage(l:msg, l:state)
+endfunction
+
+function! s:hoverHandler(next, msg) abort dict
+  " gopls returns a MarkupContent.
+  let l:content = substitute(a:msg.contents.value, '```go\n\(.*\)\n```', '\1', '')
+  let l:args = [l:content]
+  call call(a:next, l:args)
 endfunction
 
 " restore Vi compatibility settings

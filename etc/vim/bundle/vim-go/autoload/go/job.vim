@@ -214,7 +214,9 @@ function! go#job#Options(args)
     " the job was started.
     if self.winid == l:winid
       call go#list#Window(l:listtype, len(errors))
-      if !self.bang
+      if self.bang
+        call win_gotoid(l:winid)
+      else
         call go#list#JumpToFirst(l:listtype)
       endif
     endif
@@ -280,17 +282,24 @@ function! go#job#Start(cmd, options)
   " early if the directory does not exist. This helps avoid errors when
   " working with plugins that use virtual files that don't actually exist on
   " the file system.
-  let filedir = expand("%:p:h")
+  let l:filedir = expand("%:p:h")
   if has_key(l:options, 'cwd') && !isdirectory(l:options.cwd)
       return
-  elseif !isdirectory(filedir)
+  elseif !isdirectory(l:filedir)
     return
   endif
 
+  let l:manualcd = 0
   if !has_key(l:options, 'cwd')
     " pre start
+    let l:manualcd = 1
     let dir = getcwd()
     execute l:cd fnameescape(filedir)
+  elseif !(has("patch-8.0.0902") || has('nvim'))
+    let l:manualcd = 1
+    let l:dir = l:options.cwd
+    execute l:cd fnameescape(l:dir)
+    call remove(l:options, 'cwd')
   endif
 
   if has_key(l:options, '_start')
@@ -331,9 +340,9 @@ function! go#job#Start(cmd, options)
     let job = job_start(l:cmd, l:options)
   endif
 
-  if !has_key(l:options, 'cwd')
+  if l:manualcd
     " post start
-    execute l:cd fnameescape(dir)
+    execute l:cd fnameescape(l:dir)
   endif
 
   return job
@@ -482,7 +491,9 @@ function! s:neocb(mode, ch, buf, data, callback)
 
   let l:buf = ''
 
-  " a single empty string means EOF was reached.
+  " A single empty string means EOF was reached. The first item will never be
+  " an empty string except for when it's the only item and is signaling that
+  " EOF was reached.
   if len(a:data) == 1 && a:data[0] == ''
     " when there's nothing buffered, return early so that an
     " erroneous message will not be added.

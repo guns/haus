@@ -624,11 +624,14 @@ function! go#debug#Start(is_test, ...) abort
           \ '--output', tempname(),
           \ '--headless',
           \ '--api-version', '2',
-          \ '--log', '--log-output', 'debugger,rpc',
           \ '--listen', go#config#DebugAddress(),
     \]
+    let l:debugLogOutput = go#config#DebugLogOutput()
+    if l:debugLogOutput != ''
+      let cmd += ['--log', '--log-output', l:debugLogOutput]
+    endif
 
-    let buildtags = go#config#BuildTags()
+    let l:buildtags = go#config#BuildTags()
     if buildtags isnot ''
       let l:cmd += ['--build-flags', '--tags=' . buildtags]
     endif
