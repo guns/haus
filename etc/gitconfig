@@ -93,6 +93,8 @@
 	mn  = merge --stat --log --strategy-option=ignore-space-at-eol --no-commit
 	mf  = merge --ff-only --no-edit
 	rb  = rebase
+	rba = rebase --abort
+	rbc = rebase --continue
 	rbi = rebase --interactive
 	cp  = cherry-pick
 	cpn = cherry-pick --no-commit
