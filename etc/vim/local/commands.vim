@@ -219,13 +219,16 @@ function! s:CBufferSetup()
 	endif
 endfunction
 
-command! -bar Cpplint call <SID>Cpplint()
-function! s:Cpplint()
+command! -bar -nargs=1 -complete=file ExecMakeprg call <SID>ExecMakeprg(<q-args>)
+function! s:ExecMakeprg(makeprg)
 	let makeprg_save = &makeprg
-	setlocal makeprg=cpplint.py\ %
+	let &l:makeprg = a:makeprg
 	silent! make!
-	execute 'setlocal makeprg=' . makeprg_save
+	let &l:makeprg = makeprg_save
 endfunction
+
+command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %')
+command! -nargs=1 -complete=file -bar Yamllint call <SID>ExecMakeprg('yamllintwrapper --format parsable ' . <q-args>)
 
 command! -nargs=1 -bar CAlternate call <SID>CAlternate(<f-args>)
 function! s:CAlternate(cmd)
@@ -609,14 +612,13 @@ command! -bar StandardJSFix call <SID>StandardJSFix()
 function! s:StandardJSFix()
 	if !executable('standard') | return | endif
 
-	let autoread_save = &autoread ? 'noautoread' : 'autoread'
-	let makeprg_save = &makeprg
-
+	let autoread_save = &autoread
 	setlocal autoread
-	setlocal makeprg=standard\ --fix\ %
-	silent! make!
+	call <SID>ExecMakeprg('standard --fix %')
 
-	execute 'setlocal ' . autoread_save . ' makeprg=' . makeprg_save
+	if !autoread_save
+		setlocal noautoread
+	endif
 endfunction
 
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
@@ -789,8 +791,7 @@ endfunction
 
 command! -bar GoOptimizations call <SID>GoOptimizations()
 function! s:GoOptimizations()
-	execute 'setlocal makeprg=go\ build\ -gcflags=-m\\\ -d=ssa/check_bce\ ' . go#package#ImportPath()
-	silent! make!
+	call <SID>ExecMakeprg('go build -gcflags=-m\ -d=ssa/check_bce ' . go#package#ImportPath())
 
 	let visited = {}
 	let qflist = getqflist()
@@ -803,8 +804,6 @@ function! s:GoOptimizations()
 		endif
 	endfor
 	call setqflist(sort(newqflist, "s:CompareQuickfix"))
-
-	setlocal makeprg&
 endfunction
 
 command! -bar GoAssemble call <SID>GoAssemble()
