@@ -95,7 +95,8 @@ augroup GUNS
 	autocmd BufRead,BufNewFile *.rul
 		\ setlocal filetype=yaml
 	autocmd FileType yaml
-		\ SetWhitespace 2
+		\ SetWhitespace 2 |
+		\ runtime ftplugin/html/sparkup.vim
 	autocmd FileType haml
 		\ setlocal iskeyword+=- |
 		\ execute 'noremap  <buffer> <M-CR> i%br<C-\><C-o><C-\><C-n>' |
