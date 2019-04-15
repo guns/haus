@@ -79,6 +79,7 @@ bashcomp_DATA = 2to3 \
 		dhclient \
 		dict \
 		_dmesg \
+		dnssec-keygen \
 		dnsspoof \
 		dot \
 		dpkg \
@@ -366,6 +367,7 @@ bashcomp_DATA = 2to3 \
 		screen \
 		scrub \
 		sh \
+		shellcheck \
 		sitecopy \
 		slackpkg \
 		slapt-get \
@@ -406,6 +408,7 @@ bashcomp_DATA = 2to3 \
 		tshark \
 		tune2fs \
 		_udevadm \
+		ulimit \
 		_umount \
 		_umount.linux \
 		unace \
