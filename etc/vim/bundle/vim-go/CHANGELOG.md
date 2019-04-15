@@ -68,6 +68,11 @@ IMPROVEMENTS:
 * Do not jump to quickfix or location list window when bang is used for async
   jobs or linting.
   [[GH-2205]](https://github.com/fatih/vim-go/pull/2205)
+* Tab complete package names for commands from vendor directories and in
+  modules.
+  [[GH-2213]](https://github.com/fatih/vim-go/pull/2213)
+* Add support for `gopls` to `g:go_info_mode`.
+  [[GH-2224]](https://github.com/fatih/vim-go/pull/2224)
 
 BUG FIXES:
 * Fix opening of non-existent file from `:GoDeclsDir` when the current
@@ -103,6 +108,8 @@ BUG FIXES:
   [[GH-2192]](https://github.com/fatih/vim-go/pull/2192)
 * Handle runtime panics from `:GoRun` when using Neovim's terminal.
   [[GH-2209]](https://github.com/fatih/vim-go/pull/2209)
+* Fix adding tag option when a tag is added.
+  [[GH-2227]](https://github.com/fatih/vim-go/pull/2227)
 
 ## 1.19 - (November 4, 2018)
 

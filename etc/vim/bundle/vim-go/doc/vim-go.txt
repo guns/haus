@@ -149,9 +149,6 @@ The following plugins are supported for use with vim-go:
   https://github.com/SirVer/ultisnips or
   https://github.com/joereynolds/vim-minisnip
 
-* Integration with `delve` (Neovim only):
-  https://github.com/jodosha/vim-godebug
-
 * Interactive |:GoDecls| and |:GoDeclsDir|:
   https://github.com/ctrlpvim/ctrlp.vim or
   https://github.com/junegunn/fzf.vim or
@@ -1251,8 +1248,8 @@ updated. By default it's disabled. The delay can be configured with the
 
 Use this option to define the command to be used for |:GoInfo|. By default
 `gocode` is being used as it's the fastest option. But one might also use
-`guru` as it's covers more cases and is more accurate.  Current valid options
-are: `[gocode, guru]` >
+`gopls` or `guru` as they cover more cases and are more accurate.  Current
+valid options are: `[gocode, guru, gopls]` >
 
   let g:go_info_mode = 'gocode'
 <
