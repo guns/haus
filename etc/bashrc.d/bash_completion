@@ -164,6 +164,8 @@ dequote()
 # See: http://fvue.nl/wiki/Bash:_Passing_variables_by_reference
 _upvar()
 {
+    echo "bash_completion: $FUNCNAME: deprecated function," \
+        "use _upvars instead" >&2
     if unset -v "$1"; then           # Unset & validate varname
         if (( $# == 2 )); then
             eval $1=\"\$2\"          # Return single value
@@ -185,32 +187,33 @@ _upvar()
 _upvars()
 {
     if ! (( $# )); then
-        echo "${FUNCNAME[0]}: usage: ${FUNCNAME[0]} [-v varname"\
-            "value] | [-aN varname [value ...]] ..." 1>&2
+        echo "bash_completion: $FUNCNAME: usage: $FUNCNAME" \
+            "[-v varname value] | [-aN varname [value ...]] ..." >&2
         return 2
     fi
     while (( $# )); do
         case $1 in
             -a*)
                 # Error checking
-                [[ ${1#-a} ]] || { echo "bash: ${FUNCNAME[0]}: \`$1': missing"\
-                    "number specifier" 1>&2; return 1; }
-                printf %d "${1#-a}" &>/dev/null || { echo "bash:"\
-                    "${FUNCNAME[0]}: \`$1': invalid number specifier" 1>&2
+                [[ ${1#-a} ]] || { echo "bash_completion: $FUNCNAME:" \
+                    "\`$1': missing number specifier" >&2; return 1; }
+                printf %d "${1#-a}" &>/dev/null || { echo bash_completion: \
+                    "$FUNCNAME: \`$1': invalid number specifier" >&2
                     return 1; }
                 # Assign array of -aN elements
                 [[ "$2" ]] && unset -v "$2" && eval $2=\(\"\${@:3:${1#-a}}\"\) &&
-                shift $((${1#-a} + 2)) || { echo "bash: ${FUNCNAME[0]}:"\
-                    "\`$1${2+ }$2': missing argument(s)" 1>&2; return 1; }
+                shift $((${1#-a} + 2)) || { echo bash_completion: \
+                    "$FUNCNAME: \`$1${2+ }$2': missing argument(s)" \
+                    >&2; return 1; }
                 ;;
             -v)
                 # Assign single value
                 [[ "$2" ]] && unset -v "$2" && eval $2=\"\$3\" &&
-                shift 3 || { echo "bash: ${FUNCNAME[0]}: $1: missing"\
-                "argument(s)" 1>&2; return 1; }
+                shift 3 || { echo "bash_completion: $FUNCNAME: $1:" \
+                    "missing argument(s)" >&2; return 1; }
                 ;;
             *)
-                echo "bash: ${FUNCNAME[0]}: $1: invalid option" 1>&2
+                echo "bash_completion: $FUNCNAME: $1: invalid option" >&2
                 return 1 ;;
         esac
     done
@@ -278,7 +281,7 @@ __reassemble_comp_words_by_ref()
         [[ $i == $COMP_CWORD ]] && printf -v "$3" %s "$j"
     else
         # No, list of word completions separators hasn't changed;
-        for i in ${!COMP_WORDS[@]}; do
+        for i in "${!COMP_WORDS[@]}"; do
             printf -v "$2[i]" %s "${COMP_WORDS[i]}"
         done
     fi
@@ -321,7 +324,7 @@ __get_cword_at_cursor_by_ref()
                 local old_size=${#cur}
                 cur="${cur#"${words[i]}"}"
                 local new_size=${#cur}
-                index=$(( index - old_size + new_size ))
+                (( index -= old_size - new_size ))
             fi
         done
         # Clear $cur if just space(s)
@@ -383,10 +386,10 @@ _get_comp_words_by_ref()
             prev)  vprev=prev ;;
             cword) vcword=cword ;;
             words) vwords=words ;;
-            *) echo "bash: $FUNCNAME(): \`${!OPTIND}': unknown argument" \
-                1>&2; return 1
+            *) echo "bash_completion: $FUNCNAME: \`${!OPTIND}':" \
+                "unknown argument" >&2; return 1 ;;
         esac
-        let "OPTIND += 1"
+        (( OPTIND += 1 ))
     done
 
     __get_cword_at_cursor_by_ref "$exclude" words cword cur
@@ -451,7 +454,7 @@ _get_cword()
                 local old_size="${#cur}"
                 cur="${cur#${words[i]}}"
                 local new_size="${#cur}"
-                index=$(( index - old_size + new_size ))
+                (( index -= old_size - new_size ))
             fi
         done
 
@@ -653,7 +656,7 @@ _variables()
             TZ)
                 cur=/usr/share/zoneinfo/$cur
                 _filedir
-                for i in ${!COMPREPLY[@]}; do
+                for i in "${!COMPREPLY[@]}"; do
                     if [[ ${COMPREPLY[i]} == *.tab ]]; then
                         unset 'COMPREPLY[i]'
                         continue
@@ -687,7 +690,7 @@ _variables()
 #
 _init_completion()
 {
-    local exclude= flag outx errx inx OPTIND=1
+    local exclude="" flag outx errx inx OPTIND=1
 
     while getopts "n:e:o:i:s" flag "$@"; do
         case $flag in
@@ -740,9 +743,9 @@ _init_completion()
             # If "bare" redirect, remove also the next word (skip=2).
             [[ ${words[i]} == $redir ]] && skip=2 || skip=1
             words=( "${words[@]:0:i}" "${words[@]:i+skip}" )
-            [[ $i -le $cword ]] && cword=$(( cword - skip ))
+            [[ $i -le $cword ]] && (( cword -= skip ))
         else
-            i=$(( ++i ))
+            (( i++ ))
         fi
     done
 
@@ -761,8 +764,7 @@ __parse_options()
 
     # Take first found long option, or first one (short) if not found.
     option=
-    local -a array
-    read -a array <<<"$1"
+    local -a array=( $1 )
     for i in "${array[@]}"; do
         case "$i" in
             ---*) break ;;
@@ -804,7 +806,7 @@ _parse_help()
         [[ $line == *([[:blank:]])-* ]] || continue
         # transform "-f FOO, --foo=FOO" to "-f , --foo=FOO" etc
         while [[ $line =~ \
-            ((^|[^-])-[A-Za-z0-9?][[:space:]]+)\[?[A-Z0-9]+\]? ]]; do
+            ((^|[^-])-[A-Za-z0-9?][[:space:]]+)\[?[A-Z0-9]+([,_-]+[A-Z0-9]+)?(\.\.+)?\]? ]]; do
             line=${line/"${BASH_REMATCH[0]}"/"${BASH_REMATCH[1]}"}
         done
         __parse_options "${line// or /, }"
@@ -929,7 +931,7 @@ _ip_addresses()
     local PATH=$PATH:/sbin
     local addrs=$({ LC_ALL=C ifconfig -a || ip addr show; } 2>/dev/null |
         command sed -e 's/[[:space:]]addr:/ /' -ne \
-            "s|.*inet$n[[:space:]]\{1,\}\([^[:space:]/]*\).*|\1|p")
+            "s|.*inet${n}[[:space:]]\{1,\}\([^[:space:]/]*\).*|\1|p")
     COMPREPLY+=( $(compgen -W "$addrs" -- "$cur") )
 }
 
@@ -1182,7 +1184,7 @@ _service()
 } &&
 complete -F _service service
 _sysvdirs
-for svcdir in ${sysvdirs[@]}; do
+for svcdir in "${sysvdirs[@]}"; do
     for svc in $svcdir/!($_backup_glob); do
         [[ -x $svc ]] && complete -F _service $svc
     done
@@ -1367,7 +1369,7 @@ _count_args()
     for (( i=1; i < cword; i++ )); do
         if [[ ${words[i]} != -* && ${words[i-1]} != $2 ||
               ${words[i]} == $3 ]]; then
-            args=$(($args+1))
+            (( args++ ))
         fi
     done
 }
@@ -1447,15 +1449,16 @@ _known_hosts()
 } # _known_hosts()
 
 # Helper function to locate ssh included files in configs
-# This function look for the "Include" keyword in ssh config files and include
-# them recursively adding each result to the config variable
+# This function looks for the "Include" keyword in ssh config files and
+# includes them recursively, adding each result to the config variable.
 _included_ssh_config_files()
 {
-    [[ $# -lt 1 ]] && echo "error: $FUNCNAME: missing mandatory argument CONFIG"
+    [[ $# -lt 1 ]] && \
+        echo "bash_completion: $FUNCNAME: missing mandatory argument CONFIG" >&2
     local configfile i f
     configfile=$1
-    local included=$(command sed -ne 's/^[[:blank:]]*[Ii][Nn][Cc][Ll][Uu][Dd][Ee][[:blank:]]\{1,\}\([^#%]*\)\(#.*\)\{0,1\}$/\1/p' "${configfile}")
-    for i in ${included[@]}; do
+    local included=( $(command sed -ne 's/^[[:blank:]]*[Ii][Nn][Cc][Ll][Uu][Dd][Ee][[:blank:]]\{1,\}\([^#%]*\)\(#.*\)\{0,1\}$/\1/p' "${configfile}") )
+    for i in "${included[@]}"; do
         # Check the origin of $configfile to complete relative included paths on included
         # files according to ssh_config(5):
         #  "[...] Files without absolute paths are assumed to be in ~/.ssh if included in a user
@@ -1512,10 +1515,12 @@ _known_hosts_real()
             6) ipv6=1 ;;
         esac
     done
-    [[ $# -lt $OPTIND ]] && echo "error: $FUNCNAME: missing mandatory argument CWORD"
-    cur=${!OPTIND}; let "OPTIND += 1"
-    [[ $# -ge $OPTIND ]] && echo "error: $FUNCNAME("$@"): unprocessed arguments:"\
-    $(while [[ $# -ge $OPTIND ]]; do printf '%s\n' ${!OPTIND}; shift; done)
+    [[ $# -lt $OPTIND ]] && \
+        echo "bash_completion: $FUNCNAME: missing mandatory argument CWORD" >&2
+    cur=${!OPTIND}; (( OPTIND += 1 ))
+    [[ $# -ge $OPTIND ]] && \
+        echo "bash_completion: $FUNCNAME($*): unprocessed arguments:" \
+    $(while [[ $# -ge $OPTIND ]]; do printf '%s\n' ${!OPTIND}; shift; done) >&2
 
     [[ $cur == *@* ]] && user=${cur%@*}@ && cur=${cur#*@}
     kh=()
@@ -1658,7 +1663,7 @@ _known_hosts_real()
         COMPREPLY=( "${COMPREPLY[@]/+([0-9]).+([0-9]).+([0-9]).+([0-9])$suffix/}" )
     fi
     if [[ $ipv4 || $ipv6 ]]; then
-        for i in ${!COMPREPLY[@]}; do
+        for i in "${!COMPREPLY[@]}"; do
             [[ ${COMPREPLY[i]} ]] || unset -v COMPREPLY[i]
         done
     fi
@@ -1826,8 +1831,8 @@ _command_offset()
         fi
     fi
 }
-complete -F _command aoss command do else eval exec ltrace nice nohup padsp \
-    then time tsocks vsound xargs
+complete -F _command aoss command "do" else eval exec ltrace nice nohup padsp \
+    "then" time tsocks vsound xargs
 
 _root_command()
 {
@@ -1885,10 +1890,10 @@ _longopt()
                     printf '%s\n' ${BASH_REMATCH[0]}
             done)" -- "$cur") )
         [[ $COMPREPLY == *= ]] && compopt -o nospace
-    elif [[ "$1" == @(rmdir|chroot) ]]; then
+    elif [[ "$1" == *@(rmdir|chroot) ]]; then
         _filedir -d
     else
-        [[ "$1" == mkdir ]] && compopt -o nospace
+        [[ "$1" == *mkdir ]] && compopt -o nospace
         _filedir
     fi
 }
@@ -1959,7 +1964,7 @@ _install_xspec()
 {
     local xspec=$1 cmd
     shift
-    for cmd in $@; do
+    for cmd in "$@"; do
         _xspecs[$cmd]=$xspec
     done
 }
