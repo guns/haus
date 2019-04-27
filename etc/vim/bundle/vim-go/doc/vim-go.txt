@@ -138,8 +138,12 @@ The following plugins are supported for use with vim-go:
   https://github.com/Shougo/neocomplete.vim
 
 * Real-time completion (Neovim and Vim 8):
-  https://github.com/Shougo/deoplete.nvim and
-  https://github.com/zchee/deoplete-go
+  https://github.com/Shougo/deoplete.nvim
+
+  Add the following line to your vimrc. This instructs deoplete to use omni
+  completion for Go files.
+
+    call deoplete#custom#option('omni_patterns', { 'go': '[^. *\t]\.\w*' })
 
 * Display source code navigation in a sidebar:
   https://github.com/majutsushi/tagbar
@@ -2371,14 +2375,14 @@ You can install and test all Vim versions by running `make`.
 DONATION                                                         *go-donation*
 
 People have asked for this for a long time, now you can be a fully supporter
-by being a patreon at: https://www.patreon.com/fatih
+by being a patreon at: https://www.patreon.com/bhcleek
 
 By being a patron, you are enabling vim-go to grow and mature, helping me to
 invest in bug fixes, new documentation, and improving both current and future
 features. It's completely optional and is just a direct way to support
 vim-go's ongoing development. Thanks!
 
-Check it out: https://www.patreon.com/fatih
+Check it out: https://www.patreon.com/bhcleek
 
 
 ==============================================================================

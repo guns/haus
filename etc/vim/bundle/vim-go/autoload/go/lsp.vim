@@ -152,7 +152,7 @@ function! s:newlsp() abort
       " keep track of servers by rootUri).
       let l:msg = self.newMessage(go#lsp#message#Initialize(getcwd()))
 
-      let l:state = s:newHandlerState('gopls')
+      let l:state = s:newHandlerState('')
       let l:state.handleResult = funcref('self.handleInitializeResult', [], l:self)
       let self.handlers[l:msg.id] = l:state
 
@@ -460,15 +460,20 @@ function! go#lsp#Hover(fname, line, col, handler) abort
 
   let l:lsp = s:lspfactory.get()
   let l:msg = go#lsp#message#Hover(a:fname, a:line, a:col)
-  let l:state = s:newHandlerState('hover')
+  let l:state = s:newHandlerState('')
   let l:state.handleResult = funcref('s:hoverHandler', [function(a:handler, [], l:state)], l:state)
   let l:state.error = funcref('s:noop')
   call l:lsp.sendMessage(l:msg, l:state)
 endfunction
 
 function! s:hoverHandler(next, msg) abort dict
-  " gopls returns a MarkupContent.
-  let l:content = substitute(a:msg.contents.value, '```go\n\(.*\)\n```', '\1', '')
+  let l:content = split(a:msg.contents.value, '; ')
+  if len(l:content) > 1
+    let l:curly = stridx(l:content[0], '{')
+    let l:content = extend([l:content[0][0:l:curly]], map(extend([l:content[0][l:curly+1:]], l:content[1:]), '"\t" . v:val'))
+    let l:content[len(l:content)-1] = '}'
+  endif
+
   let l:args = [l:content]
   call call(a:next, l:args)
 endfunction
@@ -516,8 +521,11 @@ function! s:infoDefinitionHandler(next, showstatus, msg) abort dict
 endfunction
 
 function! s:info(content) abort dict
+  let l:content = a:content[0]
   " strip off the method set and fields of structs and interfaces.
-  let l:content = substitute(a:content, '{.*', '', '')
+  if l:content =~# '^type [^ ]\+ \(struct\|interface\)'
+    let l:content = substitute(l:content, '{.*', '', '')
+  endif
   call go#util#ShowInfo(l:content)
 endfunction
 
