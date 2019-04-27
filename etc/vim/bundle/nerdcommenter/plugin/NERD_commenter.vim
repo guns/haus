@@ -66,6 +66,7 @@ call s:InitVariable("g:NERDSpaceDelims", 0)
 call s:InitVariable("g:NERDDefaultAlign", "none")
 call s:InitVariable("g:NERDTrimTrailingWhitespace", 0)
 call s:InitVariable("g:NERDToggleCheckAllLines", 0)
+call s:InitVariable("g:NERDDisableTabsInBlockComm", 0)
 
 let s:NERDFileNameEscape="[]#*$%'\" ?`!&();<>\\"
 
@@ -1001,7 +1002,11 @@ function s:CommentLinesSexy(topline, bottomline)
         " the lines down when we added the left delimiter
         call cursor(a:bottomline+1, 1)
         execute 'normal! o'
-        let theLine = repeat(' ', leftAlignIndx) . repeat(' ', strlen(left)-strlen(sexyComMarker)) . right
+        if g:NERDDisableTabsInBlockComm
+          let theLine = repeat(' ', leftAlignIndx) . right
+        else
+          let theLine = repeat(' ', leftAlignIndx) . repeat(' ', strlen(left)-strlen(sexyComMarker)) . right
+        endif
 
         " Make sure tabs are respected
         if !&expandtab
@@ -1027,7 +1032,11 @@ function s:CommentLinesSexy(topline, bottomline)
         endif
 
         " add the sexyComMarker
-        let theLine = repeat(' ', leftAlignIndx) . repeat(' ', strlen(left)-strlen(sexyComMarker)) . sexyComMarkerSpaced . strpart(theLine, leftAlignIndx)
+        if g:NERDDisableTabsInBlockComm
+          let theLine = repeat(' ', leftAlignIndx) . sexyComMarkerSpaced . strpart(theLine, leftAlignIndx)
+        else
+          let theLine = repeat(' ', leftAlignIndx) . repeat(' ', strlen(left)-strlen(sexyComMarker)) . sexyComMarkerSpaced . strpart(theLine, leftAlignIndx)
+        endif
 
         if lineHasTabs
             let theLine = s:ConvertLeadingSpacesToTabs(theLine)
@@ -1275,8 +1284,8 @@ function! NERDComment(mode, type) range
           let l:commentAllLines = 0
           for i in range(firstLine, lastLine)
             let theLine = getline(i)
-            " if have one line no comment, then comment all lines
-            if !s:IsInSexyComment(firstLine) && !s:IsCommentedFromStartOfLine(s:Left(), theLine) && !s:IsCommentedFromStartOfLine(s:Left({'alt': 1}), theLine)
+            " if have one line no comment(not include blank/whitespace-only lines), then comment all lines
+            if theLine =~ '[^ \t]\+' && !s:IsInSexyComment(firstLine) && !s:IsCommentedFromStartOfLine(s:Left(), theLine) && !s:IsCommentedFromStartOfLine(s:Left({'alt': 1}), theLine)
               let l:commentAllLines = 1
               break
             else

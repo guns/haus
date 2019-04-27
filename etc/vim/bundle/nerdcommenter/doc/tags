@@ -7,6 +7,7 @@
 'NERDCustomDelimiters'	NERD_commenter.txt	/*'NERDCustomDelimiters'*
 'NERDDefaultAlign'	NERD_commenter.txt	/*'NERDDefaultAlign'*
 'NERDDefaultNesting'	NERD_commenter.txt	/*'NERDDefaultNesting'*
+'NERDDisableTabsInBlockComm'	NERD_commenter.txt	/*'NERDDisableTabsInBlockComm'*
 'NERDLPlace'	NERD_commenter.txt	/*'NERDLPlace'*
 'NERDMenuMode'	NERD_commenter.txt	/*'NERDMenuMode'*
 'NERDRPlace'	NERD_commenter.txt	/*'NERDRPlace'*
