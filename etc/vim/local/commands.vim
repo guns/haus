@@ -608,17 +608,17 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
 endfunction
 
-command! -bar StandardJSFix call <SID>StandardJSFix()
-function! s:StandardJSFix()
+command! -bar StandardJS call <SID>StandardJS()
+function! s:StandardJS()
 	if !executable('standard') | return | endif
 
-	let autoread_save = &autoread
-	setlocal autoread
-	call <SID>ExecMakeprg('standard --fix %')
-
-	if !autoread_save
-		setlocal noautoread
+	let args = '--parser babel-eslint'
+	if getline('$') =~# 'standardjs'
+		let args .= ' --fix'
 	endif
+
+	setlocal autoread
+	call <SID>ExecMakeprg('standard ' . args . ' %')
 endfunction
 
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
@@ -626,7 +626,7 @@ function! s:JavaScriptBufferSetup()
 	SetWhitespace 2
 	setlocal expandtab
 
-	noremap  <buffer> <LocalLeader>l :<C-u>StandardJSFix<CR>
+	noremap  <buffer> <LocalLeader>l :<C-u>StandardJS<CR>
 	inoremap <buffer> <C-l>          <Space>=><Space>
 	noremap  <buffer> <4-CR>         A;<Esc>
 	inoremap <buffer> <4-CR>         <C-\><C-o>A;
