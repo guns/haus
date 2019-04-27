@@ -146,6 +146,7 @@ $if bash
     "\C-xn":        "\C-]cdnginx "
     "\C-x\C-o":     "\C-] cddocuments \n"
     "\C-xo":        "\C-]cddocuments "
+    "\C-xr":        "\C-] cdroot \n"
     "\C-x\C-s":     "\C-] cdsrc \n"
     "\C-xs":        "\C-]cdsrc "
     "\C-xS":        "\C-]cdSRC "

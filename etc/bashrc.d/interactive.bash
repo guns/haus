@@ -333,6 +333,9 @@ cdf() { cd "$(if ! find-directory "$@"; then echo .; fi)"; }
 # cd physical path
 cdp() { cd "$(pwd -P)"; }
 
+# cd git root
+cdroot() { cd "$(git rev-parse --show-toplevel)"; }
+
 # xargs
 alias x0='xargs -0'
 

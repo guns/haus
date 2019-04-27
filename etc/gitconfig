@@ -150,6 +150,7 @@
 	brd      = branch --delete
 	brdd     = branch --delete --force
 	brm      = branch --move
+	brn      = rev-parse --abbrev-ref HEAD
 	co       = checkout
 	cob      = checkout -b
 	cot      = checkout --track
@@ -211,3 +212,4 @@
 	rl   = reflog
 	rp   = rev-parse
 	rtmu = read-tree -m -u
+	root = rev-parse --show-toplevel
