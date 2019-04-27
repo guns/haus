@@ -505,7 +505,8 @@ vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 vnoremap + :AddNumbersInSelection<CR>
 
 " Web queries
-for [g:lhs, g:rhs] in [['d', 'qdictionary'],
+for [g:lhs, g:rhs] in [['c', 'qcaniuse'],
+                     \ ['d', 'qdictionary'],
                      \ ['e', 'qetymology'],
                      \ ['g', 'qgoogle'],
                      \ ['m', 'qmdn'],
