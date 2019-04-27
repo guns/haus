@@ -40,13 +40,13 @@ super + alt + {l,h}
 	bspc desktop --focus last
 
 super + alt + {0-9}
-	bspc desktop --focus ^{0-9}
+	bspc desktop --focus {0-9}
 
 super + alt + shift + {0-9}
-	bspc node --to-desktop ^{0-9}
+	bspc node --to-desktop {0-9}
 
 super + alt + control + {0-9}
-	bspc desktop --swap ^{0-9}
+	bspc desktop --swap {0-9}
 
 super + alt + {f,v}
 	bspc node @/ --flip {vertical,horizontal}
