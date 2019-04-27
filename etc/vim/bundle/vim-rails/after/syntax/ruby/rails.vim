@@ -21,7 +21,7 @@ hi def link rubyHelper                      Function
 let s:has_app = exists('*RailsDetect') && RailsDetect()
 let s:path = tr(expand('%:p'), '\', '/')
 
-if s:path =~# '\v/app/%(channels|controllers|helpers|jobs|mailers|models)/.*\.rb$\|/app/views/'
+if s:path =~# '\v/app/%(channels|controllers|helpers|jobs|mailers|models)/.*\.rb$|/app/views/'
   syn keyword rubyHelper logger
 endif
 
@@ -139,14 +139,11 @@ if s:path =~# '/config/routes\>.*\.rb$'
 endif
 
 if s:path =~# '/test\%(/\|/.*/\)test_[^\/]*\.rb$\|/test/.*_test\.rb$\|/features/step_definitions/.*\.rb$'
-  " refute_* <=> assert_* <=> assert_not_*
   syn keyword rubyAssertion refute     refute_empty     refute_equal     refute_in_delta     refute_in_epsilon     refute_includes     refute_instance_of     refute_kind_of     refute_match    refute_nil     refute_operator     refute_predicate     refute_respond_to     refute_same
   syn keyword rubyAssertion assert     assert_empty     assert_equal     assert_in_delta     assert_in_epsilon     assert_includes     assert_instance_of     assert_kind_of     assert_match    assert_nil     assert_operator     assert_predicate     assert_respond_to     assert_same
   syn keyword rubyAssertion assert_not assert_not_empty assert_not_equal assert_not_in_delta assert_not_in_epsilon assert_not_includes assert_not_instance_of assert_not_kind_of assert_no_match assert_not_nil assert_not_operator assert_not_predicate assert_not_respond_to assert_not_same
-  " assert_* <=> assert_not_*
   syn keyword rubyAssertion assert_raises         assert_send     assert_throws
   syn keyword rubyAssertion assert_nothing_raised assert_not_send assert_nothing_thrown
-  " assert_*
   syn keyword rubyAssertion assert_raise assert_block assert_mock assert_output assert_raise_with_message assert_silent
   syn keyword rubyAssertion flunk
 endif
@@ -180,6 +177,7 @@ if rails#buffer().type_name('test')
   syn keyword rubyTestMacro test setup teardown
   syn keyword rubyAssertion assert_difference assert_no_difference
   syn keyword rubyAssertion assert_changes    assert_no_changes
+  syn keyword rubyAssertion assert_emails assert_enqueued_emails assert_no_emails assert_no_enqueued_emails
   syn keyword rubyTestAction travel travel_to travel_back
 endif
 if rails#buffer().type_name('test-controller', 'test-integration', 'test-system')
