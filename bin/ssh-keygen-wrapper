@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
+passnew() {
+    pass insert --force --multiline "$1" < <(genpw) &>/dev/null
+    pass "$1"
+}
+
 ssh-keygen-wrapper() {
     (($# == 1)) || { echo "USAGE: $FUNCNAME basename" >&2; return 1; }
-    run ssh-keygen -t ed25519 -N "$(pass insert --force "ssh/${1}_ed25519" < <(genpw))" -C "${1}_ed25519" -f ~/.ssh/"${1}_ed25519"
+    run ssh-keygen -t ed25519 -N "$(passnew "ssh/${1}_ed25519")" -C "${1}_ed25519" -f ~/.ssh/"${1}_ed25519"
     cat ~/.ssh/"${1}_ed25519.pub"
 }
 
