@@ -137,9 +137,31 @@ function! go#util#gomod() abort
   return substitute(s:exec(['go', 'env', 'GOMOD'])[0], '\n', '', 'g')
 endfunction
 
-
 function! go#util#osarch() abort
   return go#util#env("goos") . '_' . go#util#env("goarch")
+endfunction
+
+" go#util#ModuleRoot returns the root directory of the module of the current
+" buffer.
+function! go#util#ModuleRoot() abort
+  let [l:out, l:err] = go#util#ExecInDir(['go', 'env', 'GOMOD'])
+  if l:err != 0
+    return -1
+  endif
+
+  let l:module = split(l:out, '\n', 1)[0]
+
+  " When run with `GO111MODULE=on and not in a module directory, the module will be reported as /dev/null.
+  let l:fakeModule = '/dev/null'
+  if go#util#IsWin()
+    let l:fakeModule = 'NUL'
+  endif
+
+  if l:fakeModule == l:module
+    return expand('%:p:h')
+  endif
+
+  return fnamemodify(l:module, ':p:h')
 endfunction
 
 " Run a shell command.
@@ -517,6 +539,37 @@ function! go#util#ShowInfo(info)
   endif
 
   echo "vim-go: " | echohl Function | echon a:info | echohl None
+endfunction
+
+" go#util#SetEnv takes the name of an environment variable and what its value
+" should be and returns a function that will restore it to its original value.
+function! go#util#SetEnv(name, value) abort
+  let l:state = {}
+
+  if len(a:name) == 0
+    return function('s:noop', [], l:state)
+  endif
+
+  let l:remove = 0
+  if exists('$' . a:name)
+    let l:oldvalue = eval('$' . a:name)
+  else
+    let l:remove = 1
+  endif
+
+  call execute('let $' . a:name . ' = "' . a:value . '"')
+
+  if l:remove
+    function! s:remove(name) abort
+      call execute('unlet $' . a:name)
+    endfunction
+    return function('s:remove', [a:name], l:state)
+  endif
+
+  return function('go#util#SetEnv', [a:name, l:oldvalue], l:state)
+endfunction
+
+function! s:noop(...) abort dict
 endfunction
 
 " restore Vi compatibility settings

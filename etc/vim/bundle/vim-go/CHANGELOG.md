@@ -1,9 +1,27 @@
 ## unplanned
 
+IMPROVEMENTS:
+* Add a new option, `g:go_code_completion_enabled`, to control whether omnifunc
+  is set.
+  [[GH-2229]](https://github.com/fatih/vim-go/pull/2229)
+* Use build tags with golangci-lint.
+  [[GH-2261]](https://github.com/fatih/vim-go/pull/2261)
+
 BUG FIXES:
 * display info about function and function types whose parameters are
   `interface{}` without truncating the function signature.
   [[GH-2244]](https://github.com/fatih/vim-go/pull/2244)
+* install tools that require GOPATH mode when in module mode.
+  [[GH-2253]](https://github.com/fatih/vim-go/pull/2253)
+* Detect GOPATH when starting `gopls`
+  [[GH-2255]](https://github.com/fatih/vim-go/pull/2255)
+* Handle `gopls` responses in the same window from which the respective request
+  originated.
+  [[GH-2266]](https://github.com/fatih/vim-go/pull/2266)
+* Show completion matches from gocode.
+  [[GH-2267]](https://github.com/fatih/vim-go/pull/2267)
+* Show the completion preview window.
+  [[GH-2268]](https://github.com/fatih/vim-go/pull/2268)
 
 ## 1.20 - (April 22, 2019)
 

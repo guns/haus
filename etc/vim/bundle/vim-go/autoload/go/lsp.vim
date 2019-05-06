@@ -7,8 +7,7 @@ scriptencoding utf-8
 let s:lspfactory = {}
 
 function! s:lspfactory.get() dict abort
-  if !has_key(self, 'current')
-    " TODO(bc): check that the lsp is still running.
+  if !has_key(self, 'current') || empty(self.current)
     let self.current = s:newlsp()
   endif
 
@@ -115,6 +114,14 @@ function! s:newlsp() abort
           try
             let l:handler = self.handlers[l:response.id]
 
+            let l:winid = win_getid(winnr())
+            " Always set the active window to the window that was active when
+            " the request was sent. Among other things, this makes sure that
+            " the correct window's location list will be populated when the
+            " list type is 'location' and the user has moved windows since
+            " sending the reques.
+            call win_gotoid(l:handler.winid)
+
             if has_key(l:response, 'error')
               call l:handler.requestComplete(0)
               if has_key(l:handler, 'error')
@@ -122,10 +129,12 @@ function! s:newlsp() abort
               else
                 call go#util#EchoError(l:response.error.message)
               endif
+              call win_gotoid(l:winid)
               return
             endif
             call l:handler.requestComplete(1)
             call call(l:handler.handleResult, [l:response.result])
+            call win_gotoid(l:winid)
           finally
             call remove(self.handlers, l:response.id)
           endtry
@@ -150,7 +159,17 @@ function! s:newlsp() abort
     if !self.last_request_id
       " TODO(bc): run a server per module and one per GOPATH? (may need to
       " keep track of servers by rootUri).
-      let l:msg = self.newMessage(go#lsp#message#Initialize(getcwd()))
+      let l:wd = go#util#ModuleRoot()
+      if l:wd == -1
+        call go#util#EchoError('could not determine appropriate working directory for gopls')
+        return
+      endif
+
+      if l:wd == ''
+        let l:wd = getcwd()
+      endif
+
+      let l:msg = self.newMessage(go#lsp#message#Initialize(l:wd))
 
       let l:state = s:newHandlerState('')
       let l:state.handleResult = funcref('self.handleInitializeResult', [], l:self)
@@ -438,7 +457,7 @@ function! s:completionHandler(next, msg) abort dict
   for l:item in a:msg.items
     let l:match = {'abbr': l:item.label, 'word': l:item.textEdit.newText, 'info': '', 'kind': go#lsp#completionitemkind#Vim(l:item.kind)}
     if has_key(l:item, 'detail')
-        let l:item.info = l:item.detail
+        let l:match.info = l:item.detail
     endif
 
     if has_key(l:item, 'documentation')
