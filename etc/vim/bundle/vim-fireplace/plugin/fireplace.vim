@@ -3,10 +3,16 @@
 " Version:      1.1
 " GetLatestVimScripts: 4978 1 :AutoInstall: fireplace.vim
 
-if exists("g:loaded_fireplace") || v:version < 700 || &compatible
+if exists("g:loaded_fireplace") || &compatible
   finish
 endif
 let g:loaded_fireplace = 1
+if !exists('*json_decode')
+  if &verbose
+    echomsg 'Not loading Fireplace: Vim version too old.'
+  endif
+  finish
+endif
 
 " Section: File type
 
@@ -74,6 +80,8 @@ function! fireplace#jar_contents(path) abort
       let s:zipinfo = 'jar tf '
     elseif executable('python')
       let s:zipinfo = 'python -c '.shellescape('import zipfile, sys; print chr(10).join(zipfile.ZipFile(sys.argv[1]).namelist())').' '
+    elseif executable('python3')
+      let s:zipinfo = 'python3 -c '.shellescape('import zipfile, sys; print chr(10).join(zipfile.ZipFile(sys.argv[1]).namelist())').' '
     else
       let s:zipinfo = ''
     endif
@@ -82,6 +90,9 @@ function! fireplace#jar_contents(path) abort
   if !has_key(s:jar_contents, a:path) && has('python') && !$FIREPLACE_NO_IF_PYTHON
     python import vim, zipfile
     python vim.command("let s:jar_contents[a:path] = split('" + "\n".join(zipfile.ZipFile(vim.eval('a:path')).namelist()) + "', \"\n\")")
+  elseif !has_key(s:jar_contents, a:path) && has('python3') && !$FIREPLACE_NO_IF_PYTHON
+    python3 import vim, zipfile
+    python3 vim.command("let s:jar_contents[a:path] = split('" + "\n".join(zipfile.ZipFile(vim.eval('a:path')).namelist()) + "', \"\n\")")
   elseif !has_key(s:jar_contents, a:path) && !empty(s:zipinfo)
     let s:jar_contents[a:path] = split(system(s:zipinfo.shellescape(a:path)), "\n")
     if v:shell_error
@@ -373,17 +384,18 @@ function! s:unregister_connection(conn) abort
 endfunction
 
 function! fireplace#register_port_file(portfile, ...) abort
-  let old = get(s:repl_portfiles, a:portfile, {})
-  if has_key(old, 'time') && getftime(a:portfile) !=# old.time
+  let portfile = fnamemodify(a:portfile, ':p')
+  let old = get(s:repl_portfiles, portfile, {})
+  if has_key(old, 'time') && getftime(portfile) !=# old.time
     call s:unregister_connection(old.connection)
     let old = {}
   endif
-  if empty(old) && getfsize(a:portfile) > 0
-    let port = matchstr(readfile(a:portfile, 'b', 1)[0], '\d\+')
+  if empty(old) && getfsize(portfile) > 0
+    let port = matchstr(readfile(portfile, 'b', 1)[0], '\d\+')
     try
       let conn = fireplace#nrepl_connection#open(port)
-      let s:repl_portfiles[a:portfile] = {
-            \ 'time': getftime(a:portfile),
+      let s:repl_portfiles[portfile] = {
+            \ 'time': getftime(portfile),
             \ 'connection': conn}
       call s:register_connection(conn, a:0 ? a:1 : '')
       return conn
@@ -1060,9 +1072,12 @@ function! s:printop(type) abort
 endfunction
 
 function! s:add_pprint_opts(msg) abort
+  let pprint_fn = get(g:, 'fireplace_pprint_fn', 'cider.nrepl.middleware.pprint/fipp-pprint')
+  if empty(pprint_fn)
+    return a:msg
+  endif
   let a:msg.pprint = 1
-
-  let a:msg.pprint_fn = get(g:, 'fireplace_pprint_fn', 'cider.nrepl.middleware.pprint/fipp-pprint')
+  let a:msg.pprint_fn = pprint_fn
   let max_right_margin = get(g:, 'fireplace_print_right_margin', &columns)
   let a:msg.print_right_margin = min([l:max_right_margin, &columns])
   if exists("g:fireplace_print_length")

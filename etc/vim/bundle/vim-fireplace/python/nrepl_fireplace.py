@@ -2,6 +2,7 @@ import os
 import select
 import socket
 import sys
+import json
 
 try:
     from StringIO import StringIO
@@ -11,61 +12,53 @@ except ImportError:
 def noop():
     pass
 
-def vim_encode(data):
-    if isinstance(data, list):
-        return "[" + ",".join([vim_encode(x) for x in data]) + "]"
-    elif isinstance(data, dict):
-        return "{" + ",".join([vim_encode(x)+":"+vim_encode(y) for x,y in data.items()]) + "}"
-    elif isinstance(data, str):
-        str_list = []
-        for c in data:
-            if (0 <= ord(c) and ord(c) <= 31) or c == '"' or c == "\\":
-                str_list.append("\\%03o" % ord(c))
-            else:
-                str_list.append(c)
-        return '"' + ''.join(str_list) + '"'
-    elif isinstance(data, int):
-        return str(data)
-    else:
-        raise TypeError("can't encode a " + type(data).__name__)
+def binread(f, count=1):
+    return f.read(count)
 
 def bdecode(f, char=None):
     if char == None:
-        char = f.read(1)
-    if char == 'l':
+        char = binread(f)
+    if char == b'l':
         l = []
         while True:
-            char = f.read(1)
-            if char == 'e':
+            char = binread(f)
+            if char == b'e':
                 return l
             l.append(bdecode(f, char))
-    elif char == 'd':
+    elif char == b'd':
         d = {}
         while True:
-            char = f.read(1)
-            if char == 'e':
+            char = binread(f)
+            if char == b'e':
                 return d
             key = bdecode(f, char)
             d[key] = bdecode(f)
-    elif char == 'i':
-        i = ''
+    elif char == b'i':
+        i = b''
         while True:
-            char = f.read(1)
-            if char == 'e':
+            char = binread(f)
+            if char == b'e':
                 return int(i)
             i += char
     elif char.isdigit():
         i = int(char)
         while True:
-            char = f.read(1)
-            if char == ':':
-                return f.read(i)
+            char = binread(f)
+            if char == b':':
+                return binread(f, i).decode('UTF-8')
             i = 10 * i + int(char)
-    elif char == '':
+    elif char == b'':
         raise EOFError("unexpected end of bencode data")
     else:
-        raise TypeError("unexpected type "+char+"in bencode data")
+        raise TypeError("unexpected type "+char.decode('UTF-8')+" in bencode data")
 
+def decode_string(s):
+    if s[0] in ['{', '[', '"']:
+        return json.loads(s)
+    elif s[0] in ['d', 'l', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+        return bdecode(StringIO(s))
+    else:
+        raise TypeError("bad json/bencode argument " + s)
 
 class Connection:
     def __init__(self, host, port, custom_poll=noop, keepalive_file=None):
@@ -80,20 +73,21 @@ class Connection:
     def poll(self):
         self.custom_poll()
         if self.keepalive_file and not os.path.exists(self.keepalive_file):
-            exit(0)
+            sys.exit(0)
 
     def close(self):
         return self.socket.close()
 
     def send(self, payload):
-        if sys.version_info[0] >= 3:
-            self.socket.sendall(bytes(payload, 'UTF-8'))
-        else:
-            self.socket.sendall(payload)
+        f = self.socket.makefile('w')
+        try:
+            f.write(payload)
+        finally:
+            f.close()
         return ''
 
     def receive(self, char=None):
-        f = self.socket.makefile()
+        f = self.socket.makefile('rb', False)
         while len(select.select([f], [], [], 0.1)[0]) == 0:
             self.poll()
         try:
@@ -122,7 +116,9 @@ def dispatch(host, port, poll, keepalive, command, *args):
 
 def main(host, port, keepalive, command, *args):
     try:
-        sys.stdout.write(vim_encode(dispatch(host, port, noop, keepalive, command, *[bdecode(StringIO(arg)) for arg in args])))
+        result = dispatch(host, port, noop, keepalive, command, *[decode_string(arg) for arg in args])
+        if result is not None:
+            json.dump(result, sys.stdout)
     except Exception:
         print((sys.exc_info()[1]))
         exit(1)
