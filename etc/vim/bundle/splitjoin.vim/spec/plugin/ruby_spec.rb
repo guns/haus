@@ -599,6 +599,31 @@ describe "ruby" do
     EOF
   end
 
+  specify "hashes with a trailing comma" do
+    vim.command('let g:splitjoin_ruby_trailing_comma = 1')
+
+    set_file_contents <<-EOF
+      foo = { :bar => 'baz', :one => 'two' }
+    EOF
+
+    vim.search ':bar'
+    split
+
+    assert_file_contents <<-EOF
+      foo = {
+        :bar => 'baz',
+        :one => 'two',
+      }
+    EOF
+
+    vim.search 'foo'
+    join
+
+    assert_file_contents <<-EOF
+      foo = { :bar => 'baz', :one => 'two' }
+    EOF
+  end
+
   specify "hashes with spaces in them" do
     set_file_contents <<-EOF
       a_hash = { a_key: "a longer value" }
@@ -1115,6 +1140,23 @@ describe "ruby" do
           "one",
           "two",
         )
+      EOF
+    end
+
+    specify "don't split keywords" do
+      vim.command('let g:splitjoin_ruby_hanging_args = 0')
+
+      set_file_contents(<<-EOF)
+        foo = case value
+        end
+      EOF
+
+      vim.search('case')
+      split
+
+      assert_file_contents(<<-EOF)
+        foo = case value
+        end
       EOF
     end
   end
