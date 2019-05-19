@@ -918,6 +918,7 @@ gpgsign() {
     done
 }
 alias gpgkilldaemons='run gpgconf --kill all'
+alias gpgupdatestartuptty='run gpg-connect-agent updatestartuptty /bye'
 
 # pass
 passl() { pass "$@" | pager; }; TCOMP pass passl
