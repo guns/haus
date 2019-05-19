@@ -831,8 +831,8 @@ type -P time &>/dev/null && {
 }
 
 alias DATE="date '+%Y-%m-%d'"
-alias TIME="date '+%H·%M·%S'"
-alias DATETIME="date '+%Y-%m-%d.%H·%M·%S'"
+alias TIME="date '+%H:%M:%S'"
+alias DATETIME="date '+%Y-%m-%d %H:%M:%S'"
 
 ### Ruby
 

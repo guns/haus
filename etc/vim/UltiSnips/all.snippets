@@ -57,16 +57,16 @@ snippet dn "N>/dev/null"
 ${1:&}>/dev/null
 endsnippet
 
-snippet DATE "day month year"
-`date "+%d %B %Y"`
-endsnippet
-
-snippet Date "year-month-day" w
-`date "+%Y-%m-%d"`
+snippet DATE "year-month-day" w
+`date +%Y-%m-%d`
 endsnippet
 
 snippet TIME "time" w
-`date "+%H:%M:%S"`
+`date +%H:%M:%S`
+endsnippet
+
+snippet DATETIME "DATE TIME" w
+`date "+%Y-%m-%d %H:%M:%S"`
 endsnippet
 
 snippet vf "Vim fold marker" w
