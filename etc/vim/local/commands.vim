@@ -614,7 +614,7 @@ function! s:StandardJS()
 
 	let args = '--parser babel-eslint'
 	if getline('$') =~# 'standardjs'
-		let args .= ' --fix'
+		let args .= ' --verbose --fix'
 	endif
 
 	setlocal autoread
