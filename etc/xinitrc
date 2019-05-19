@@ -29,7 +29,7 @@ WALLPAPER="/run/user/$EUID/wallpaper.lock"
 > "$WALLPAPER"
 (inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
 
-# xautolock-launch 30 &
+xautolock-launch 15 &
 
 popd
 
