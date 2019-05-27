@@ -373,6 +373,19 @@ set assumed_charset="utf-8"
 # this except to override that default.
 #
 
+# set auto_subscribe=no
+#
+# Name: auto_subscribe
+# Type: boolean
+# Default: no
+#
+#
+# When set, Mutt assumes the presence of a List-Post header
+# means the recipient is subscribed to the list.  Unless the mailing list
+# is in the ``unsubscribe'' or ``unlist'' lists, it will be added
+# to the ``subscribe'' list.  Parsing and checking these things slows
+# header reading down, so this option is disabled by default.
+#
 set auto_tag=yes
 #
 # Name: auto_tag
@@ -773,6 +786,89 @@ set crypt_opportunistic_encrypt=yes
 # If $crypt_autoencrypt or $crypt_replyencrypt enable encryption for
 # a message, this option will be disabled for that message.  It can
 # be manually re-enabled in the pgp or smime menus.
+# (Crypto only)
+#
+
+# set crypt_protected_headers_read=yes
+#
+# Name: crypt_protected_headers_read
+# Type: boolean
+# Default: yes
+#
+#
+# When set, Mutt will display protected headers ("Memory Hole") in the pager,
+# and will update the index and header cache with revised headers.
+# Protected headers are stored inside the encrypted or signed part of an
+# an email, to prevent disclosure or tampering.
+# For more information see https://github.com/autocrypt/memoryhole.
+# Currently Mutt only supports the Subject header.
+#
+# Encrypted messages using protected headers often substitute the exposed
+# Subject header with a dummy value (see $crypt_protected_headers_subject).
+# Mutt will update its concept of the correct subject after the
+# message is opened, i.e. via the <display-message> function.
+# If you reply to a message before opening it, Mutt will end up using
+# the dummy Subject header, so be sure to open such a message first.
+# (Crypto only)
+#
+
+# set crypt_protected_headers_save=no
+#
+# Name: crypt_protected_headers_save
+# Type: boolean
+# Default: no
+#
+#
+# When $crypt_protected_headers_read is set, and a message with a
+# protected Subject is opened, Mutt will save the updated Subject
+# into the header cache by default.  This allows searching/limiting
+# based on the protected Subject header if the mailbox is
+# re-opened, without having to re-open the message each time.
+# However, for mbox/mh mailbox types, or if header caching is not
+# set up, you would need to re-open the message each time the
+# mailbox was reopened before you could see or search/limit on the
+# protected subject again.
+#
+# When this variable is set, Mutt additionally saves the protected
+# Subject back in the clear-text message headers.  This
+# provides better usability, but with the tradeoff of reduced
+# security.  The protected Subject header, which may have
+# previously been encrypted, is now stored in clear-text in the
+# message headers.  Copying the message elsewhere, via Mutt or
+# external tools, could expose this previously encrypted data.
+# Please make sure you understand the consequences of this before
+# you enable this variable.
+# (Crypto only)
+#
+
+# set crypt_protected_headers_subject="Encrypted subject"
+#
+# Name: crypt_protected_headers_subject
+# Type: string
+# Default: "Encrypted subject"
+#
+#
+# When $crypt_protected_headers_write is set, and the message is marked
+# for encryption, this will be substituted into the Subject field in the
+# message headers.
+# To prevent a subject from being substituted, unset this variable, or set it
+# to the empty string.
+# (Crypto only)
+#
+
+# set crypt_protected_headers_write=no
+#
+# Name: crypt_protected_headers_write
+# Type: boolean
+# Default: no
+#
+#
+# When set, Mutt will generate protected headers ("Memory Hole") for
+# signed and encrypted emails.
+# Protected headers are stored inside the encrypted or signed part of an
+# an email, to prevent disclosure or tampering.
+# For more information see https://github.com/autocrypt/memoryhole.
+# Currently Mutt only supports the Subject header.
 # (Crypto only)
 #
 
@@ -1265,6 +1361,20 @@ set folder_format="%2C %t %N %f%> %D"
 # Also see the $record variable.
 #
 
+# set forward_attachments=ask-yes
+#
+# Name: forward_attachments
+# Type: quadoption
+# Default: ask-yes
+#
+#
+# When forwarding inline (i.e. $mime_forward unset or
+# answered with ``no'' and $forward_decode set), attachments
+# which cannot be decoded in a reasonable manner will be attached
+# to the newly composed message if this quadoption is set or
+# answered with ``yes''.
+#
+
 # set forward_attribution_intro="----- Forwarded message from %f -----"
 #
 # Name: forward_attribution_intro
@@ -1711,6 +1821,22 @@ set include=yes
 # is included in your reply.
 #
 
+# set include_encrypted=no
+#
+# Name: include_encrypted
+# Type: boolean
+# Default: no
+#
+#
+# Controls whether or not Mutt includes separately encrypted attachment
+# contents when replying.
+#
+# This variable was added to prevent accidental exposure of encrypted
+# contents when replying to an attacker.  If a previously encrypted message
+# were attached by the attacker, they could trick an unwary recipient into
+# decrypting and including the message in their reply.
+#
+
 # set include_onlyfirst=no
 #
 # Name: include_onlyfirst
@@ -1925,7 +2051,8 @@ set mailcap_path="~/.mailcap"
 #
 #
 # This variable specifies which files to consult when attempting to
-# display MIME bodies not directly supported by Mutt.
+# display MIME bodies not directly supported by Mutt.  The default value
+# is generated during startup: see the ``mailcap'' section of the manual.
 #
 
 # set mailcap_sanitize=yes
@@ -2324,6 +2451,9 @@ set mime_forward=ask-no
 # directly from the pager, and screen resizes cause lines longer than
 # the screen width to be badly formatted in the help menu.
 #
+# When using an external pager, also see $prompt_after which defaults
+# set.
+#
 
 # set pager_context=0
 #
@@ -2697,6 +2827,8 @@ set pgp_default_key="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
 #
 # This is a format string, see the $pgp_decode_command command for
 # possible printf(3)-like sequences.
+# Note that in this case, %r expands to the search string, which is a list of
+# one or more quoted values such as email address, name, or keyid.
 # (PGP only)
 #
 
@@ -2711,7 +2843,7 @@ set pgp_default_key="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
 # output format must be analogous to the one used by:
 # gpg --list-keys --with-colons --with-fingerprint
 #
-# This format is also generated by the pgpring utility which comes
+# This format is also generated by the mutt_pgpring utility which comes
 # with mutt.
 #
 # Note: gpg's fixed-list-mode option should not be used.  It
@@ -2720,6 +2852,8 @@ set pgp_default_key="0x4BC72AA6B1AE2B5AC7F7ADCF9D1AA266D2BC9C2D"
 #
 # This is a format string, see the $pgp_decode_command command for
 # possible printf(3)-like sequences.
+# Note that in this case, %r expands to the search string, which is a list of
+# one or more quoted values such as email address, name, or keyid.
 # (PGP only)
 #
 
@@ -2887,7 +3021,7 @@ set pgp_self_encrypt=yes
 # set pgp_timeout=300
 #
 # Name: pgp_timeout
-# Type: number
+# Type: number (long)
 # Default: 300
 #
 #
@@ -2903,9 +3037,21 @@ set pgp_self_encrypt=yes
 # Default: no
 #
 #
-# If set, mutt will use a possibly-running gpg-agent(1) process.
-# Note that as of version 2.1, GnuPG no longer exports GPG_AGENT_INFO, so
-# mutt no longer verifies if the agent is running.
+# If set, mutt expects a gpg-agent(1) process will handle
+# private key passphrase prompts.  If unset, mutt will prompt
+# for the passphrase and pass it via stdin to the pgp command.
+#
+# Note that as of version 2.1, GnuPG automatically spawns an agent
+# and requires the agent be used for passphrase management.  Since
+# that version is increasingly prevalent, this variable now
+# defaults set.
+#
+# Mutt works with a GUI or curses pinentry program.  A TTY pinentry
+# should not be used.
+#
+# If you are using an older version of GnuPG without an agent running,
+# or another encryption program without an agent, you will need to
+# unset this variable.
 # (PGP only)
 #
 
@@ -4366,9 +4512,9 @@ set ssl_use_sslv2=no
 # Default: no
 #
 #
-# This variable specifies whether to attempt to use SSLv2 in the
-# SSL authentication process. Note that SSLv2 and SSLv3 are now
-# considered fundamentally insecure and are no longer recommended.
+# If set , Mutt will use SSLv2 when communicating with servers that
+# request it. N.B. As of 2011, SSLv2 is considered insecure, and using
+# is inadvisable. See https://tools.ietf.org/html/rfc6176 .
 # (OpenSSL only)
 #
 
@@ -4379,42 +4525,44 @@ set ssl_use_sslv3=no
 # Default: no
 #
 #
-# This variable specifies whether to attempt to use SSLv3 in the
-# SSL authentication process. Note that SSLv2 and SSLv3 are now
-# considered fundamentally insecure and are no longer recommended.
+# If set , Mutt will use SSLv3 when communicating with servers that
+# request it. N.B. As of 2015, SSLv3 is considered insecure, and using
+# it is inadvisable. See https://tools.ietf.org/html/rfc7525 .
 #
 
-set ssl_use_tlsv1=yes
+# set ssl_use_tlsv1=no
 #
 # Name: ssl_use_tlsv1
 # Type: boolean
-# Default: yes
+# Default: no
 #
 #
-# This variable specifies whether to attempt to use TLSv1.0 in the
-# SSL authentication process.
+# If set , Mutt will use TLSv1.0 when communicating with servers that
+# request it. N.B. As of 2015, TLSv1.0 is considered insecure, and using
+# it is inadvisable. See https://tools.ietf.org/html/rfc7525 .
 #
 
-set ssl_use_tlsv1_1=yes
+# set ssl_use_tlsv1_1=no
 #
 # Name: ssl_use_tlsv1_1
 # Type: boolean
-# Default: yes
+# Default: no
 #
 #
-# This variable specifies whether to attempt to use TLSv1.1 in the
-# SSL authentication process.
+# If set , Mutt will use TLSv1.1 when communicating with servers that
+# request it. N.B. As of 2015, TLSv1.1 is considered insecure, and using
+# it is inadvisable. See https://tools.ietf.org/html/rfc7525 .
 #
 
-set ssl_use_tlsv1_2=yes
+# set ssl_use_tlsv1_2=yes
 #
 # Name: ssl_use_tlsv1_2
 # Type: boolean
 # Default: yes
 #
 #
-# This variable specifies whether to attempt to use TLSv1.2 in the
-# SSL authentication process.
+# If set , Mutt will use TLSv1.2 when communicating with servers that
+# request it.
 #
 
 set ssl_usesystemcerts=no
