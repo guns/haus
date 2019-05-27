@@ -25,7 +25,7 @@ augroup GUNS
 		\ cwindow | if len(getqflist()) > 0 | wincmd p | endif
 	autocmd FileType qf
 		\ execute 'noremap <buffer> x :<C-u>ClearQuickfix<CR>' |
-		\ execute 'noremap <buffer> X :<C-u>call setloclist(0, getqflist()) \| topleft lwindow \| call setqflist([]) \| cclose<CR>' |
+		\ execute 'noremap <buffer> X :<C-u>call setloclist(winnr("#"), getqflist()) \| call setqflist([]) \| cclose \| topleft lwindow \| wincmd p<CR>' |
 		\ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>' |
 		\ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>' |
 		\ execute 'noremap <buffer> S :<C-u>Qfdo s<C-v>\V<C-r>/<C-v><C-v>g<Left><Left>'

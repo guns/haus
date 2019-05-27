@@ -862,12 +862,12 @@ endfunction
 command! -bar ToggleMinorWindows call <SID>ToggleMinorWindows() "{{{1
 function! s:ToggleMinorWindows()
 	if empty(filter(map(tabpagebuflist(), 'getbufvar(v:val, "&buftype")'), 'v:val == "quickfix"'))
-		try
+		if !empty(getloclist(0))
 			topleft lwindow | wincmd p
-			cwindow | wincmd p
-		catch /./
-			lclose | cclose | pclose
-		endtry
+		endif
+		if !empty(getqflist())
+			copen | wincmd p
+		endif
 	else
 		lclose | cclose | pclose
 	endif
