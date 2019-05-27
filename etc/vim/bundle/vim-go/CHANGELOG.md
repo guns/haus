@@ -12,7 +12,13 @@ IMPROVEMENTS:
   [[GH-2277]](https://github.com/fatih/vim-go/pull/2277)
 * Show function signature and return types in preview window when autocompleting functions and methods.
   [[GH-2289]](https://github.com/fatih/vim-go/pull/2289)
-
+* Improve the user experience when using null modules.
+  [[GH-2300]](https://github.com/fatih/vim-go/pull/2300)
+* Add option, `g:go_null_module_warning' to silence the warning when trying to
+  use gopls with a null module.
+  [[GH-2309]](https://github.com/fatih/vim-go/pull/2309)
+* Modify `:GoReportGitHubIssue` to include vim-go configuration values
+  [[GH-2312]](https://github.com/fatih/vim-go/pull/2312)
 
 BUG FIXES:
 * display info about function and function types whose parameters are
@@ -35,6 +41,9 @@ BUG FIXES:
   [[GH-2291]](https://github.com/fatih/vim-go/pull/2291)
 * Restore environment variables with backslashes correctly.
   [[GH-2292]](https://github.com/fatih/vim-go/pull/2292)
+* Modify handling of gopls output for `:GoInfo` to ensure the value will be
+  displayed.
+  [[GH-2311]](https://github.com/fatih/vim-go/pull/2311)
 
 ## 1.20 - (April 22, 2019)
 
