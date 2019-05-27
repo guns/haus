@@ -682,7 +682,7 @@ ruby << EORUBY
 				minutes += min
 			end
 
-			if $curbuf[n] =~ /\A\*\s*(\d+ \w+ \d+)(?: (?:=>|→) TOTAL: \d+m\s*\z)?/
+			if $curbuf[n] =~ /\A\*\s*(\d{4}-\d{2}-\d{2})(?: (?:=>|→) TOTAL: \d+m\s*\z)?/
 				$curbuf[n] = "* #{$1} → TOTAL: #{minutes}m"
 				entries << [$1, minutes]
 				minutes = 0
