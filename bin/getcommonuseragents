@@ -5,15 +5,11 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'nokogiri'
+warn 'https://techblog.willshouse.com/2012/01/03/most-common-user-agents/'
 
-URL = 'https://techblog.willshouse.com/2012/01/03/most-common-user-agents/'
-AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0'
-html = IO.popen(['curl', '--user-agent', AGENT, '--silent', '--location', URL]) { |io| io.read }
-
-Nokogiri::HTML.parse(html).css('textarea.get-the-list').first.text.each_line do |line|
+$stdin.read.each_line do |line|
   line.strip!
+  next if line.empty?
   desc = line[/\((.*?)\)/, 1].gsub(/[\W.]+/, '-')
   puts "#{desc} [Common]: #{line}"
 end
