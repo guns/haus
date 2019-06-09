@@ -1,18 +1,12 @@
 " fireplace.vim - Clojure REPL support
 " Maintainer:   Tim Pope <http://tpo.pe/>
-" Version:      1.1
+" Version:      1.2
 " GetLatestVimScripts: 4978 1 :AutoInstall: fireplace.vim
 
-if exists("g:loaded_fireplace") || &compatible
+if exists("g:loaded_fireplace") || v:version < 800 || &compatible
   finish
 endif
 let g:loaded_fireplace = 1
-if !exists('*json_decode')
-  if &verbose
-    echomsg 'Not loading Fireplace: Vim version too old.'
-  endif
-  finish
-endif
 
 " Section: File type
 
@@ -655,10 +649,10 @@ function! s:includes_file(file, path) abort
   endfor
 endfunction
 
-function! s:path_extract(path)
+function! s:path_extract(path, ...) abort
   let path = []
-  if a:path =~# '\.jar'
-    for elem in split(substitute(a:path, ',$', '', ''), ',')
+  if a:0 || a:path =~# '\.jar'
+    for elem in split(substitute(a:path, ',$', '', ''), a:0 ? '[=,]' : ',')
       if elem ==# ''
         let path += ['.']
       else
@@ -937,20 +931,20 @@ endfunction
 
 function! s:qfmassage(line, path) abort
   let entry = {'text': a:line}
-  let match = matchlist(a:line, '\(\S\+\)\s\=(\(\S\+\))')
+  let match = matchlist(a:line, '\(\S\+\)\s\=(\([^:()]*\)\%(:\(\d\+\)\)\=)')
   if !empty(match)
-    let [_, class, file; __] = match
-    if file =~# '^NO_SOURCE_FILE:' || file !~# ':'
+    let [_, class, file, lnum; __] = match
+    let entry.module = class
+    let entry.lnum = +lnum
+    if file ==# 'NO_SOURCE_FILE' || !lnum
       let entry.resource = ''
-      let entry.lnum = 0
     else
       let truncated = substitute(class, '\.[A-Za-z0-9_]\+\%([$/].*\)$', '', '')
-      let entry.resource = tr(truncated, '.', '/').'/'.split(file, ':')[0]
-      let entry.lnum = split(file, ':')[-1]
+      let entry.resource = tr(truncated, '.', '/') . '/' . file
     endif
     let entry.filename = fireplace#findresource(entry.resource, a:path)
-    if empty(entry.filename)
-      let entry.lnum = 0
+    if has('patch-8.0.1782')
+      let entry.text = ''
     else
       let entry.text = class
     endif
@@ -964,11 +958,11 @@ function! fireplace#quickfix_for(stacktrace) abort
 endfunction
 
 function! s:massage_quickfix() abort
-  let p = substitute(matchstr(','.&errorformat, '\C,\%(%\\&\)\=classpath\zs\%(\\.\|[^\,]\)*'), '\\\ze[\,%]', '', 'g')
+  let p = substitute(matchstr(','.&errorformat, '\C,\%(%\\&\)\=classpath=\=\zs\%(\\.\|[^\,]\)*'), '\\\ze[\,%]', '', 'g')
   if empty(p)
     return
   endif
-  let path = p[0] ==# ',' ? s:path_extract(p[1:-1]) : split(p[1:-1], p[0])
+  let path = p =~# '^[:;]' ? split(p[1:-1], p[0]) : p[0] ==# ',' ? s:path_extract(p[1:-1], 1) : s:path_extract(p, 1)
   let qflist = getqflist()
   for entry in qflist
     call extend(entry, s:qfmassage(get(entry, 'text', ''), path))
@@ -1072,6 +1066,7 @@ function! s:printop(type) abort
 endfunction
 
 function! s:add_pprint_opts(msg) abort
+  let a:msg['nrepl.middleware.print/stream?'] = 1
   if fireplace#op_available('info')
     let a:msg['nrepl.middleware.print/print'] = 'cider.nrepl.pprint/fipp-pprint'
     let a:msg['nrepl.middleware.print/options'] = {'width': &columns}

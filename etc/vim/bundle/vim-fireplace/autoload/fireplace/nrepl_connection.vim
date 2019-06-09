@@ -26,15 +26,6 @@ function! s:shellesc(arg) abort
   endif
 endfunction
 
-if !exists('s:id')
-  let s:vim_id = localtime()
-  let s:id = 0
-endif
-function! s:id() abort
-  let s:id += 1
-  return 'fireplace-'.hostname().'-'.s:vim_id.'-'.s:id
-endfunction
-
 function! fireplace#nrepl_connection#prompt() abort
   return fireplace#input_host_port()
 endfunction
@@ -45,7 +36,7 @@ function! fireplace#nrepl_connection#open(arg) abort
     let port = a:arg
   elseif a:arg =~# ':\d\+$'
     let host = matchstr(a:arg, '.*\ze:')
-    let port = matchstr(a:arg, ':\zs.*')
+    let port = matchstr(a:arg, '.*:\zs.*')
   else
     throw "nREPL: Couldn't find [host:]port in " . a:arg
   endif
@@ -59,39 +50,44 @@ function! s:nrepl_transport_close() dict abort
   return self
 endfunction
 
-let s:keepalive = tempname()
-call writefile([getpid()], s:keepalive)
+if !exists('s:keepalive')
+  let s:keepalive = tempname()
+  call writefile([getpid()], s:keepalive)
+endif
 
 if !exists('g:fireplace_python_executable')
   let g:fireplace_python_executable = executable('python3') ? 'python3' : 'python'
 endif
 
 function! s:nrepl_transport_command(cmd, args) dict abort
-  return g:fireplace_python_executable
-        \ . ' ' . s:shellesc(s:python_dir.'/nrepl_fireplace.py')
-        \ . ' ' . s:shellesc(self.host)
-        \ . ' ' . s:shellesc(self.port)
-        \ . ' ' . s:shellesc(s:keepalive)
-        \ . ' ' . s:shellesc(a:cmd)
-        \ . ' ' . join(map(copy(a:args), 's:shellesc(json_encode(v:val))'), ' ')
+  return [g:fireplace_python_executable,
+        \ s:python_dir.'/nrepl_fireplace.py',
+        \ self.host,
+        \ self.port,
+        \ s:keepalive,
+        \ a:cmd] + map(copy(a:args), 'json_encode(v:val)')
 endfunction
 
 function! s:nrepl_transport_dispatch(cmd, ...) dict abort
-  let in = self.command(a:cmd, a:000)
+  let in = join(map(self.command(a:cmd, a:000), 's:shellesc(v:val)'), ' ')
   let out = system(in)
   if !v:shell_error
-    let [true, false, null] = [v:true, v:false, v:null]
-    return eval(out)
+    return json_decode(out)
   endif
-  throw 'nREPL: '.out
+  let g:fireplace_last_python_exception = json_decode(out)
+  throw 'Fireplace Python exception: ' . g:fireplace_last_python_exception.title
 endfunction
 
-function! s:nrepl_transport_call(msg, terms, sels, ...) dict abort
-  let response = self.dispatch('call', a:msg, a:terms, a:sels)
+function! s:nrepl_transport_message(msg, ...) dict abort
   if !a:0
-    return response
-  elseif a:1 !=# 'ignore'
-    return map(response, 'fireplace#nrepl#callback(v:val, "synchronous", a:000)')
+    return self.dispatch('message', a:msg)
+  elseif empty(a:1)
+    call self.dispatch('message', a:msg)
+    return v:null
+  else
+    let response = self.dispatch('message', a:msg)
+    call map(response, 'fireplace#nrepl#callback(v:val, "synchronous", a:000)')
+    return v:null
   endif
 endfunction
 
@@ -99,9 +95,9 @@ let s:nrepl_transport = {
       \ 'close': s:function('s:nrepl_transport_close'),
       \ 'command': s:function('s:nrepl_transport_command'),
       \ 'dispatch': s:function('s:nrepl_transport_dispatch'),
-      \ 'call': s:function('s:nrepl_transport_call')}
+      \ 'message': s:function('s:nrepl_transport_message')}
 
-let s:python = has('pythonx') ? 'pyx' : has('python3') ? 'py3' : has('python') ? 'python' : ''
+let s:python = has('pythonx') ? 'pyx' : has('python3') ? 'py3' : has('python') ? 'py' : ''
 if empty(s:python) || $FIREPLACE_NO_IF_PYTHON
   finish
 endif
@@ -111,7 +107,7 @@ if !exists('s:python_loaded')
   let s:python_loaded = 1
   exe s:python 'import nrepl_fireplace'
 else
-  if s:python ==# 'py3'
+  if s:python ==# 'py3' || s:python ==# 'pyx' && &g:pyxversion ==# 3
     exe s:python 'from importlib import reload'
   endif
   exe s:python 'reload(nrepl_fireplace)'
@@ -122,17 +118,18 @@ exe s:python '<< EOF'
 python = EOF = 0
 python << EOF
 
-import vim
 import json
+import vim
+import sys
 
 def fireplace_check():
   vim.eval('getchar(1)')
 
 def fireplace_repl_dispatch(command, *args):
   try:
-    return [nrepl_fireplace.dispatch(vim.eval('self.host'), int(vim.eval('self.port')), fireplace_check, None, command, *args), '']
+    return [nrepl_fireplace.dispatch(vim.eval('self.host'), int(vim.eval('self.port')), fireplace_check, None, command, *args), {}]
   except Exception as e:
-    return ['', str(e)]
+    return ['', nrepl_fireplace.quickfix(*sys.exc_info())]
 EOF
 
 function! s:nrepl_transport_dispatch(command, ...) dict abort
@@ -140,5 +137,6 @@ function! s:nrepl_transport_dispatch(command, ...) dict abort
   if empty(err)
     return out
   endif
-  throw 'nREPL Connection Error: '.err
+  let g:fireplace_last_python_exception = err
+  throw 'Fireplace Python exception: ' . g:fireplace_last_python_exception.title
 endfunction

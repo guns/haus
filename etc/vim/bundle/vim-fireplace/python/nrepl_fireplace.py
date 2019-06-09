@@ -1,8 +1,10 @@
+import json
 import os
 import select
 import socket
 import sys
-import json
+import traceback
+import uuid
 
 try:
     from StringIO import StringIO
@@ -84,6 +86,22 @@ def decode_string(s):
     else:
         raise TypeError("bad json/bencode argument " + s)
 
+def quickfix(t, e, tb):
+    items = []
+    stack = traceback.extract_tb(tb)
+    for frame in stack:
+        (filename, lineno, name, line) = frame
+        module = ''
+        if filename and filename[0] == '<':
+            module = filename
+            filename = ''
+        items.append({
+            'filename': filename,
+            'lnum': lineno,
+            'module': module,
+            'text': line})
+    return {'title': str(e), 'items': items}
+
 class Connection:
     def __init__(self, host, port, custom_poll=noop, keepalive_file=None):
         self.custom_poll = custom_poll
@@ -122,7 +140,10 @@ class Connection:
         finally:
             f.close()
 
-    def call(self, payload, terminators, selectors):
+    def call(self, payload, terminators = ['done'], selectors = None):
+        if selectors is None:
+            payload.setdefault("id", str(uuid.uuid1()))
+            selectors = {'id': payload['id']}
         self.send(payload)
         responses = []
         while True:
@@ -134,6 +155,9 @@ class Connection:
             if 'status' in response and set(terminators) & set(response['status']):
                 return responses
 
+    def message(self, payload):
+        return self.call(payload)
+
 def dispatch(host, port, poll, keepalive, command, *args):
     conn = Connection(host, port, poll, keepalive)
     try:
@@ -141,13 +165,13 @@ def dispatch(host, port, poll, keepalive, command, *args):
     finally:
         conn.close()
 
-def main(host, port, keepalive, command, *args):
+def main(host = None, port = None, keepalive = None, command = None, *args):
     try:
         result = dispatch(host, port, noop, keepalive, command, *[decode_string(arg) for arg in args])
         if result is not None:
             json.dump(result, sys.stdout)
     except Exception:
-        print((sys.exc_info()[1]))
+        json.dump(quickfix(*sys.exc_info()), sys.stdout)
         exit(1)
 
 if __name__ == "__main__":
