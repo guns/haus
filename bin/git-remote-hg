@@ -72,7 +72,16 @@ def gitmode(flags):
     return 'l' in flags and '120000' or 'x' in flags and '100755' or '100644'
 
 def gittz(tz):
-    return '%+03d%02d' % (-tz / 3600, -tz % 3600 / 60)
+    sign = 1 if tz >= 0 else -1
+    hours, minutes = divmod(abs(tz), 60 * 60)
+    return '%+03d%02d' % (-sign * hours, minutes / 60)
+
+def hgtz(tz):
+    tz = int(tz)
+    sign = 1 if tz >= 0 else -1
+    hours, minutes = divmod(abs(tz), 100)
+    tz = hours * 60 * 60 + minutes * 60
+    return -sign * tz
 
 def hgmode(mode):
     m = { '100755': 'x', '120000': 'l' }
@@ -260,9 +269,7 @@ class Parser:
         if ex:
             user += ex
 
-        tz = int(tz)
-        tz = ((tz / 100) * 3600) + ((tz % 100) * 60)
-        return (user, int(date), -tz)
+        return (user, int(date), hgtz(tz))
 
 def fix_file_path(path):
     path = os.path.normpath(path)
@@ -370,26 +377,26 @@ def updatebookmarks(repo, peer):
     if not remotemarks:
         return
 
-    for k, v in remotemarks.iteritems():
-        localmarks[k] = hgbin(v)
+    changes = { k: hgbin(v) for k, v in remotemarks.iteritems() }
 
-    if check_version(3, 6):
-        lock = tr = None
-        try:
-            lock = repo.lock()
-            tr = repo.transaction('bookmark')
-            localmarks.recordchange(tr)
-            tr.close()
-        finally:
-            if tr is not None:
-                tr.release()
-            if lock is not None:
-                lock.release()
-    else:
-        if hasattr(localmarks, 'write'):
-            localmarks.write()
+    wlock = tr = None
+    try:
+        wlock = repo.wlock()
+        tr = repo.transaction('bookmark')
+        if check_version(4, 3):
+            localmarks.applychanges(repo, tr, changes.items())
         else:
-            bookmarks.write(repo)
+            localmarks.update(changes)
+            if check_version(3, 2):
+                localmarks.recordchange(tr)
+            elif check_version(2, 5):
+                localmarks.write()
+            else:
+                bookmarks.write(repo)
+        tr.close()
+    finally:
+        tr.release()
+        wlock.release()
 
 def get_repo(url, alias):
     global peer
@@ -465,9 +472,9 @@ def mark_to_rev(mark):
 # Get a range of revisions in the form of a..b (git committish)
 def gitrange(repo, a, b):
     positive = []
-    pending = set([int(b)])
-    negative = set([int(a)])
-    for cur in xrange(b, -1, -1):
+    pending = set([b.rev()])
+    negative = set([a.rev()])
+    for cur in xrange(b.rev(), -1, -1):
         if not pending:
             break
 
@@ -495,7 +502,7 @@ def export_ref(repo, name, kind, head):
     try:
         tip = marks.get_tip(ename)
         tip = repo[tip]
-    except:
+    except (KeyError,error.RepoLookupError):
         tip = repo[-1]
 
     revs = gitrange(repo, tip, head)
@@ -621,7 +628,8 @@ def export_ref(repo, name, kind, head):
     marks.set_tip(ename, head.hex())
 
 def export_tag(repo, tag):
-    export_ref(repo, tag, 'tags', repo[hgref(tag)])
+    node = repo.tags().get(hgref(tag))
+    export_ref(repo, tag, 'tags', repo[node])
 
 def export_bookmark(repo, bmark):
     head = bmarks[hgref(bmark)]
@@ -773,6 +781,14 @@ def c_style_unescape(string):
         return string.decode('string-escape')[1:-1]
     return string
 
+def make_memfilectx(repo, changectx, path, data, islink=False, isexec=False, copied=None):
+    if check_version(4, 5):
+        return context.memfilectx(repo, changectx, path, data, islink, isexec, copied)
+    elif check_version(3, 1):
+        return context.memfilectx(repo, path, data, islink, isexec, copied)
+    else:
+        return context.memfilectx(path, data, islink, isexec, copied)
+
 def parse_commit(parser):
     from_mark = merge_mark = None
 
@@ -828,27 +844,18 @@ def parse_commit(parser):
             else:
                 raise IOError
         if 'ctx' in of:
-            if mode == 'hg':
+            if mode == 'hg' and check_version(3, 2):
+                # force the creation of a new filelog
                 ctx = of['ctx']
                 is_exec = ctx.isexec()
                 is_link = ctx.islink()
-                if check_version(3, 1):
-                    return context.memfilectx(repo, f, ctx.data(),
-                            is_link, is_exec)
-                else:
-                    return context.memfilectx(f, ctx.data(),
-                            is_link, is_exec)
+                return make_memfilectx(repo, memctx, f, ctx.data(), is_link, is_exec)
             else:
                 return of['ctx']
         is_exec = of['mode'] == 'x'
         is_link = of['mode'] == 'l'
         rename = of.get('rename', None)
-        if check_version(3, 1):
-            return context.memfilectx(repo, f, of['data'],
-                    is_link, is_exec, rename)
-        else:
-            return context.memfilectx(f, of['data'],
-                    is_link, is_exec, rename)
+        return make_memfilectx(repo, memctx, f, of['data'], is_link, is_exec, rename)
 
     repo = parser.repo
 
@@ -937,6 +944,12 @@ def parse_tag(parser):
     data = parser.get_data()
     parser.next()
 
+    try:
+        rev = mark_to_rev(from_mark)
+    except KeyError:
+        rev = None
+    parsed_refs['refs/tags/' + name] = rev
+
     parsed_tags[name] = (tagger, data)
 
 def write_tag(repo, tag, node, msg, author):
@@ -948,13 +961,10 @@ def write_tag(repo, tag, node, msg, author):
         try:
             fctx = tip.filectx(f)
             data = fctx.data()
-        except error.ManifestLookupError:
+        except error.LookupError:
             data = ""
         content = data + "%s %s\n" % (node, tag)
-        if check_version(3, 1):
-            return context.memfilectx(repo, f, content, False, False, None)
-        else:
-            return context.memfilectx(f, content, False, False, None)
+        return make_memfilectx(repo, memctx, f, content)
 
     p1 = tip.hex()
     p2 = '0' * 40
@@ -998,7 +1008,12 @@ def checkheads_bmark(repo, ref, ctx):
         print "error %s unknown" % ref
         return False
 
-    if not repo.changelog.descendant(ctx_old.rev(), ctx_new.rev()):
+    if check_version(4, 7):
+        isancestorrev = repo.changelog.isancestorrev
+    else:
+        isancestorrev = repo.changelog.descendant
+
+    if not isancestorrev(ctx_old.rev(), ctx_new.rev()):
         if force_push:
             print "ok %s forced update" % ref
         else:
@@ -1070,7 +1085,14 @@ def push_unsafe(repo, remote, parsed_refs, p_revs):
     if not checkheads(repo, remote, p_revs):
         return None
 
-    if check_version(3, 2):
+    if check_version(4, 0):
+        from mercurial import exchange
+        outgoing = exchange._computeoutgoing(repo, list(p_revs), common)
+        if check_version(4, 4):
+            cg = changegroup.makechangegroup(repo, outgoing, '01', 'push')
+        else:
+            cg = changegroup.getchangegroup(repo, 'push', outgoing)
+    elif check_version(3, 2):
         cg = changegroup.getchangegroup(repo, 'push', heads=list(p_revs), common=common)
     elif check_version(3, 0):
         cg = changegroup.getbundle(repo, 'push', heads=list(p_revs), common=common)
@@ -1198,7 +1220,11 @@ def do_export(parser):
                 tagnode, branch = write_tag(parser.repo, tag, node, msg, author)
                 p_revs[tagnode] = 'refs/heads/branches/' + gitref(branch)
             else:
-                fp = parser.repo.opener('localtags', 'a')
+                if check_version(2, 4):
+                    vfs = parser.repo.vfs
+                else:
+                    vfs = parser.repo.opener
+                fp = vfs('localtags', 'a')
                 fp.write('%s %s\n' % (node, tag))
                 fp.close()
             p_revs[bnode] = ref
