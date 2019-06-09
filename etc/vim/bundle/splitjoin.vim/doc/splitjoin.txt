@@ -17,6 +17,7 @@ CONTENTS                                      *splitjoin* *splitjoin-contents*
     HTML...................................: |splitjoin-html|
     Handlebars.............................: |splitjoin-handlebars|
     CSS....................................: |splitjoin-css|
+    SCSS...................................: |splitjoin-scss|
     YAML...................................: |splitjoin-yaml|
     Eruby..................................: |splitjoin-eruby|
     Go.....................................: |splitjoin-go|
@@ -378,6 +379,19 @@ Same as above: requires the |matchit| plugin.
       end
     end
 <
+Method continuations ~
+
+For the moment, this only works in the direction of joining, since splitting
+is too ambiguous (how to decide whether to split the method dot or the
+function's arguments?).
+>
+    one.
+      two.three(foo, bar)
+    one
+      .two.three(foo, bar)
+
+    one.two.three(foo, bar)
+
 
 ==============================================================================
 PYTHON                                                      *splitjoin-python*
@@ -744,6 +758,20 @@ to get this effect, in this particular example.
 The plugin attempts to find the end of the expression, and make a match
 statement out of it. It also works with `expect` calls.
 
+Empty matches and if-let ~
+>
+    if let Some(value) = iterator.next() {
+        println!("do something with {}", value);
+    }
+
+    match iterator.next() {
+        Some(value) =>  {
+            println!("do something with {}", value);
+        },
+        _ => (),
+    }
+<
+
 ==============================================================================
 PHP                                                            *splitjoin-php*
 
@@ -784,9 +812,8 @@ PHP markers ~
 <
 Method calls~
 
-Affects all the arrows after the cursor when
-|splitjoin_php_method_chain_full| is set to 1.
-Otherwise, it affects only a single arrow.
+Affects all the arrows after the cursor when |splitjoin_php_method_chain_full|
+is set to 1. Otherwise, it affects only a single arrow.
 >
     $var = $one->two->three()->four();
 
@@ -907,6 +934,28 @@ Multiline selectors ~
     h1, h2, h3 {
       font-size: 18px;
       font-weight: bold;
+    }
+<
+
+==============================================================================
+SCSS                                                            *splitjoin-scss*
+                                                                *splitjoin-less*
+
+Extra functionality for the added nesting possibility. Work for LESS as well.
+
+Nested definitions ~
+
+When splitting, the cursor position determines which part gets extracted into
+a separate definition. Joining only works if there's only one child definition.
+>
+    ul li {
+      a {
+        padding: 10px;
+      }
+    }
+
+    ul li a {
+      padding: 10px;
     }
 <
 

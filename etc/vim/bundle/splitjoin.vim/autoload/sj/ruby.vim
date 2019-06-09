@@ -472,6 +472,7 @@ function! sj#ruby#JoinHash()
   elseif line =~ '(\s*$'
     return s:JoinHashWithRoundBraces()
   elseif line =~ ',\s*$'
+    " also ends up being called for `(foo, bar,` situations
     return s:JoinHashWithoutBraces()
   else
     return 0
@@ -700,7 +701,7 @@ function! sj#ruby#JoinArray()
 endfunction
 
 function! sj#ruby#JoinContinuedMethodCall()
-  if getline('.') !~ '\.$'
+  if getline('.') !~ '\.$' && getline(nextnonblank(line('.') + 1)) !~ '^\s*\.'
     return 0
   endif
 
@@ -708,7 +709,8 @@ function! sj#ruby#JoinContinuedMethodCall()
   silent! normal! zO
   normal! j
 
-  while line('.') < line('$') && getline('.') =~ '\.$'
+  while line('.') < line('$') &&
+        \ (getline('.') =~ '\.$' || getline(nextnonblank(line('.') + 1)) =~ '^\s*\.')
     normal! j
   endwhile
 
@@ -763,9 +765,9 @@ function! sj#ruby#SplitString()
   let string_pattern       = '\(\%(^\|[^\\]\)\zs\([''"]\)\).\{-}[^\\]\+\2'
   let empty_string_pattern = '\%(''''\|""\)'
 
-  let [match_start, match_end] = sj#SearchposUnderCursor(string_pattern)
+  let [match_start, match_end] = sj#SearchColsUnderCursor(string_pattern)
   if match_start <= 0
-    let [match_start, match_end] = sj#SearchposUnderCursor(empty_string_pattern)
+    let [match_start, match_end] = sj#SearchColsUnderCursor(empty_string_pattern)
     if match_start <= 0
       return 0
     endif
@@ -839,7 +841,7 @@ function! sj#ruby#SplitArrayLiteral()
   let closing_bracket = s:ArrayLiteralClosingBracket(opening_bracket)
 
   let array_pattern = '\%(\k\|\s\)*\ze\V'.closing_bracket
-  let [start_col, end_col] = sj#SearchposUnderCursor(array_pattern)
+  let [start_col, end_col] = sj#SearchColsUnderCursor(array_pattern)
   if start_col <= 0
     return 0
   endif
@@ -1111,7 +1113,8 @@ function! s:JoinHashWithoutBraces()
   let line         = getline(lineno)
   let indent       = repeat(' ', indent(lineno))
 
-  while lineno <= line('$') && ((line =~ '^'.indent && line =~ '=>') || line =~ '^\s*)')
+  while lineno <= line('$') &&
+        \ ((line =~ '^'.indent && (line =~ '=>' || line =~ '^\s*\k\+:')) || line =~ '^\s*)')
     let end_lineno = lineno
     let lineno     = nextnonblank(lineno + 1)
     let line       = getline(lineno)

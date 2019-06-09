@@ -20,12 +20,14 @@ splitjoin-installation	splitjoin.txt	/*splitjoin-installation*
 splitjoin-internals	splitjoin.txt	/*splitjoin-internals*
 splitjoin-issues	splitjoin.txt	/*splitjoin-issues*
 splitjoin-javascript	splitjoin.txt	/*splitjoin-javascript*
+splitjoin-less	splitjoin.txt	/*splitjoin-less*
 splitjoin-lua	splitjoin.txt	/*splitjoin-lua*
 splitjoin-perl	splitjoin.txt	/*splitjoin-perl*
 splitjoin-php	splitjoin.txt	/*splitjoin-php*
 splitjoin-python	splitjoin.txt	/*splitjoin-python*
 splitjoin-ruby	splitjoin.txt	/*splitjoin-ruby*
 splitjoin-rust	splitjoin.txt	/*splitjoin-rust*
+splitjoin-scss	splitjoin.txt	/*splitjoin-scss*
 splitjoin-settings	splitjoin.txt	/*splitjoin-settings*
 splitjoin-tex	splitjoin.txt	/*splitjoin-tex*
 splitjoin-usage	splitjoin.txt	/*splitjoin-usage*
