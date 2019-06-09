@@ -105,7 +105,7 @@ endfunction
 " the location list
 function! go#lint#Golint(bang, ...) abort
   if a:0 == 0
-    let [l:out, l:err] = go#util#Exec([go#config#GolintBin(), go#package#ImportPath()])
+    let [l:out, l:err] = go#util#Exec([go#config#GolintBin(), expand('%:p:h')])
   else
     let [l:out, l:err] = go#util#Exec([go#config#GolintBin()] + a:000)
   endif
@@ -141,7 +141,7 @@ function! go#lint#Vet(bang, ...) abort
   if a:0 == 0
     let [l:out, l:err] = go#util#Exec(['go', 'vet', go#package#ImportPath()])
   else
-    let [l:out, l:err] = go#util#Exec(['go', 'tool', 'vet'] + a:000)
+    let [l:out, l:err] = go#util#ExecInDir(['go', 'tool', 'vet'] + a:000)
   endif
 
   let l:listtype = go#list#Type("GoVet")

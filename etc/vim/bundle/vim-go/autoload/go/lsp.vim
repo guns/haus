@@ -22,11 +22,16 @@ endfunction
 
 function! s:newlsp() abort
   if !go#util#has_job()
+    let l:oldshortmess=&shortmess
+    if has('nvim')
+      set shortmess-=F
+    endif
     " TODO(bc): start the server in the background using a shell that waits for the right output before returning.
     call go#util#EchoWarning('Features that rely on gopls will not work without either Vim 8.0.0087 or newer with +job or Neovim')
     " Sleep one second to make sure people see the message. Otherwise it is
     " often immediately overwritten by an async message.
     sleep 1
+    let &shortmess=l:oldshortmess
     return {'sendMessage': funcref('s:noop')}
   endif
 
@@ -136,8 +141,17 @@ function! s:newlsp() abort
               return
             endif
             call l:handler.requestComplete(1)
+
+            let l:winidBeforeHandler = l:handler.winid
             call call(l:handler.handleResult, [l:response.result])
-            call win_gotoid(l:winid)
+
+            " change the window back to the window that was active when
+            " starting to handle the response _only_ if the handler didn't
+            " update the winid, so that handlers can set the winid if needed
+            " (e.g. :GoDef).
+            if l:handler.winid == l:winidBeforeHandler
+              call win_gotoid(l:winid)
+            endif
           finally
             call remove(self.handlers, l:response.id)
           endtry
@@ -172,15 +186,21 @@ function! s:newlsp() abort
         let l:wd = getcwd()
       endif
 
-      " do not attempt to send a message to gopls when using neither GOPATH
-      " mode nor module mode.
-      if go#package#FromPath(l:wd) == -2
+      " do not attempt to send a message to gopls when using a null module in
+      " module mode.
+      let l:importpath = go#package#FromPath(l:wd)
+      if l:importpath == -2 || (type(l:importpath) == type('') && l:importpath[0] == '.')
         if go#config#NullModuleWarning() && (!has_key(self, 'warned') || !self.warned)
-          call go#util#EchoWarning('Features that rely on gopls will not work correctly outside of GOPATH or a module.')
+          let l:oldshortmess=&shortmess
+          if has('nvim')
+            set shortmess-=F
+          endif
+          call go#util#EchoWarning('Features that rely on gopls will not work correctly in a null module.')
           let self.warned = 1
           " Sleep one second to make sure people see the message. Otherwise it is
           " often immediately overwritten by an async message.
           sleep 1
+          let &shortmess=l:oldshortmess
         endif
 
         return -1
@@ -542,13 +562,32 @@ function! go#lsp#Info(showstatus)
     let l:state = s:newHandlerState('')
   endif
 
-  let l:state.handleResult = funcref('s:infoDefinitionHandler', [a:showstatus], l:state)
+  let l:state.handleResult = funcref('s:infoDefinitionHandler', [function('s:info', [1], l:state), a:showstatus], l:state)
   let l:state.error = funcref('s:noop')
   let l:msg = go#lsp#message#Definition(l:fname, l:line, l:col)
   return l:lsp.sendMessage(l:msg, l:state)
 endfunction
 
-function! s:infoDefinitionHandler(showstatus, msg) abort dict
+function! go#lsp#GetInfo()
+  let l:fname = expand('%:p')
+  let [l:line, l:col] = getpos('.')[1:2]
+
+  call go#lsp#DidChange(l:fname)
+
+  let l:lsp = s:lspfactory.get()
+
+  let l:state = s:newHandlerState('')
+
+  let l:info = go#promise#New(function('s:info', [0], l:state), 10000, '')
+
+  let l:state.handleResult = funcref('s:infoDefinitionHandler', [l:info.wrapper, 0], l:state)
+  let l:state.error = funcref('s:noop')
+  let l:msg = go#lsp#message#Definition(l:fname, l:line, l:col)
+  call l:lsp.sendMessage(l:msg, l:state)
+  return l:info.await()
+endfunction
+
+function! s:infoDefinitionHandler(next, showstatus, msg) abort dict
   " gopls returns a []Location; just take the first one.
   let l:msg = a:msg[0]
 
@@ -565,12 +604,26 @@ function! s:infoDefinitionHandler(showstatus, msg) abort dict
     let l:state = s:newHandlerState('')
   endif
 
-  let l:state.handleResult = funcref('s:hoverHandler', [function('s:info', [], l:state)], l:state)
+  let l:state.handleResult = funcref('s:hoverHandler', [a:next], l:state)
   let l:state.error = funcref('s:noop')
   return l:lsp.sendMessage(l:msg, l:state)
 endfunction
 
-function! s:info(content) abort dict
+function! s:info(show, content) abort dict
+  let l:content = s:infoFromHoverContent(a:content)
+
+  if a:show
+    call go#util#ShowInfo(l:content)
+  endif
+
+  return l:content
+endfunction
+
+function! s:infoFromHoverContent(content) abort
+  if len(a:content) < 1
+    return ''
+  endif
+
   let l:content = a:content[0]
 
   " strip godoc summary
@@ -580,7 +633,8 @@ function! s:info(content) abort dict
   if l:content =~# '^type [^ ]\+ \(struct\|interface\)'
     let l:content = substitute(l:content, '{.*', '', '')
   endif
-  call go#util#ShowInfo(l:content)
+
+  return l:content
 endfunction
 
 " restore Vi compatibility settings
