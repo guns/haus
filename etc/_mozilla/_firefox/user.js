@@ -305,6 +305,8 @@ user_pref("extensions.getAddons.recommended.url", "");
 user_pref("extensions.getAddons.search.browseURL", "");
 user_pref("extensions.getAddons.search.url", "");
 user_pref("extensions.getAddons.themes.browseURL", "");
+user_pref("extensions.recommendations.privacyPolicyUrl", "");
+user_pref("extensions.recommendations.themeRecommendationUrl", "");
 user_pref("extensions.shield-recipe-client.api_url", "");
 user_pref("extensions.shield-recipe-client.shieldLearnMoreUrl", "");
 user_pref("extensions.systemAddon.update.url", "");
