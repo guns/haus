@@ -207,6 +207,9 @@ user_pref("network.IDN_show_punycode", true);
 // Disable screenshot uploading
 user_pref("extensions.screenshots.upload-disabled", false);
 
+// Disable builtin resolver
+user_pref("network.trr.mode", 5);
+
 // Remove all external URLs
 user_pref("accessibility.support.url", "");
 user_pref("app.feedback.baseURL", "");
