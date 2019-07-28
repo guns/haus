@@ -13,9 +13,6 @@ let g:NERDTreeCreator = s:Creator
 
 " FUNCTION: s:Creator._bindMappings() {{{1
 function! s:Creator._bindMappings()
-    "make <cr> do the same as the activate node mapping
-    nnoremap <silent> <buffer> <cr> :call nerdtree#ui_glue#invokeKeyMap(g:NERDTreeMapActivateNode)<cr>
-
     call g:NERDTreeKeyMap.BindAll()
 
     command! -buffer -nargs=? Bookmark :call nerdtree#ui_glue#bookmarkNode('<args>')
@@ -96,8 +93,7 @@ function! s:Creator.createWindowTree(dir)
 
     "we need a unique name for each window tree buffer to ensure they are
     "all independent
-    let t:NERDTreeBufName = self._nextBufferName()
-    exec g:NERDTreeCreatePrefix . " edit " . t:NERDTreeBufName
+    exec g:NERDTreeCreatePrefix . " edit " . self._nextBufferName()
 
     call self._createNERDTree(path, "window")
     let b:NERDTree._previousBuf = bufnr(previousBuf)
@@ -190,10 +186,13 @@ function! s:Creator._createTreeWin()
         let t:NERDTreeBufName = self._nextBufferName()
         silent! execute l:splitLocation . 'vertical ' . l:splitSize . ' new'
         silent! execute 'edit ' . t:NERDTreeBufName
+        silent! execute 'vertical resize '. l:splitSize
     else
         silent! execute l:splitLocation . 'vertical ' . l:splitSize . ' split'
         silent! execute 'buffer ' . t:NERDTreeBufName
     endif
+
+    setlocal winfixwidth
 
     call self._setCommonBufOptions()
 
@@ -201,7 +200,6 @@ function! s:Creator._createTreeWin()
         clearjumps
     endif
 
-    setlocal winfixwidth
 endfunction
 
 " FUNCTION: s:Creator._isBufHidden(nr) {{{1
