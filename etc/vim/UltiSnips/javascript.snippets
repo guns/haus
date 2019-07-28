@@ -31,7 +31,7 @@ this
 endsnippet
 
 snippet /^im/ "import" r
-import ${2:$1} from '${1}'
+import $0
 endsnippet
 
 snippet fori "for i" w
@@ -165,7 +165,7 @@ case $1:
 endsnippet
 
 snippet sett "setTimeout" w
-window.setTimeout($0, $1)
+window.setTimeout($0)
 endsnippet
 
 snippet qsa "querySelectorAll" w
@@ -190,6 +190,10 @@ snippet pd "preventDefault()" w
 preventDefault()
 endsnippet
 
+snippet sp "stopPropagation()" w
+stopPropagation()
+endsnippet
+
 snippet deb "debugger" w
 debugger
 endsnippet
@@ -202,6 +206,40 @@ class ${1} {
 }
 endsnippet
 
-snippet thr "throw new Error()" w
+snippet con "constructor" w
+constructor ($1) {
+	$0
+}
+endsnippet
+
+snippet tne "throw new Error()" w
 throw new Error($1)
+endsnippet
+
+snippet raf "window.requestAnimationFrame" w
+window.requestAnimationFrame($0)
+endsnippet
+
+snippet oe "Object.entries" w
+Object.entries($0)
+endsnippet
+
+snippet ok "Object.keys" w
+Object.keys($0)
+endsnippet
+
+snippet ov "Object.values" w
+Object.values($0)
+endsnippet
+
+snippet tc "textContent" w
+textContent
+endsnippet
+
+snippet del "delete" w
+delete $0
+endsnippet
+
+snippet ind "indexOf" w
+indexOf($0)
 endsnippet

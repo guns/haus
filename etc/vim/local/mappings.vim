@@ -349,6 +349,7 @@ noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
+noremap <Leader><C-r>    :<C-u>if &autoread \| set noautoread \| else \| set autoread \| endif \| set autoread?<CR>
 noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-t>    :<C-u>if v:profiling \| execute 'Sh (sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
