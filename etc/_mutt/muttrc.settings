@@ -386,6 +386,7 @@ set assumed_charset="utf-8"
 # to the ``subscribe'' list.  Parsing and checking these things slows
 # header reading down, so this option is disabled by default.
 #
+
 set auto_tag=yes
 #
 # Name: auto_tag
@@ -1242,6 +1243,25 @@ set fast_reply=yes
 #
 # This variable controls whether or not attachments on outgoing messages
 # are saved along with the main body of your message.
+#
+
+# set fcc_before_send=no
+#
+# Name: fcc_before_send
+# Type: boolean
+# Default: no
+#
+#
+# When this variable is set, FCCs will occur before sending
+# the message.  Before sending, the message cannot be manipulated,
+# so it will be stored the exact same as sent:
+# $fcc_attach and $fcc_clear will be ignored (using their default
+# values).
+#
+# When unset, the default, FCCs will occur after sending.
+# Variables $fcc_attach and $fcc_clear will be respected, allowing
+# it to be stored without attachments or encryption/signing if
+# desired.
 #
 
 # set fcc_clear=no
@@ -3614,9 +3634,16 @@ set reply_to=yes
 #
 #
 # This variable fine-tunes the behavior of the $reverse_name feature.
-# When it is set, mutt will use the address from incoming messages as-is,
-# possibly including eventual real names.  When it is unset, mutt will
-# override any such real names with the setting of the $realname variable.
+#
+# When it is unset, Mutt will remove the real name part of a
+# matching address.  This allows the use of the email address
+# without having to also use what the sender put in the real name
+# field.
+#
+# When it is set, Mutt will use the matching address as-is.
+#
+# In either case, a missing real name will be filled in afterwards
+# using the value of $realname.
 #
 
 # set rfc2047_parameters=no
