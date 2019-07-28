@@ -200,6 +200,7 @@ task :env do
       { :base => "#{@vim}/vim-bundler",             :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-coffee-script",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-commentary",          :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-dispatch",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-easy-align",          :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-elixir",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-emacsmodeline",       :branch => %w[master],      :files => :pathogen },
