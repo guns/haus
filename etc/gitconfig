@@ -85,7 +85,10 @@
 
 	# Stash
 	s    = stash
+	sk   = stash --keep-index
 	sp   = stash-push
+	sl   = stash list --decorate --show-signature --stat
+	slp  = stash list --decorate --show-signature --stat --patch
 
 	# Merging and rebasing
 	m   = merge --stat --log --strategy-option=ignore-space-at-eol --edit
@@ -96,6 +99,7 @@
 	rba = rebase --abort
 	rbc = rebase --continue
 	rbi = rebase --interactive
+	rbp = rebase --show-current-patch
 	cp  = cherry-pick
 	cpn = cherry-pick --no-commit
 
@@ -140,9 +144,6 @@
 	lgr   = log --topo-order --patch --date=relative --grep
 	lgi   = log --topo-order --patch --regexp-ignore-case --grep
 	lgir  = log --topo-order --patch --regexp-ignore-case --date=relative --grep
-
-	sl    = stash list --decorate --show-signature --stat
-	slp   = stash list --decorate --show-signature --stat --patch
 
 	# Branches
 	br       = branch -vv
