@@ -1613,7 +1613,7 @@ function! fugitive#BufReadStatus() abort
   let b:fugitive_type = 'index'
   unlet! b:fugitive_reltime
   try
-    silent doautocmd BufReadPre
+    silent doautocmd <nomodeline> BufReadPre
     let cmd = [fnamemodify(amatch, ':h')]
     setlocal noro ma nomodeline buftype=nowrite
     if s:cpath(fnamemodify($GIT_INDEX_FILE !=# '' ? $GIT_INDEX_FILE : fugitive#Find('.git/index'), ':p')) !=# s:cpath(amatch)
