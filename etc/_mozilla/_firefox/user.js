@@ -119,6 +119,9 @@ user_pref("xpinstall.signatures.required", false);
 // Keep window open when closing last tab
 user_pref("browser.tabs.closeWindowWithLastTab", false);
 
+// Disable site-specific zoom
+user_pref("browser.zoom.siteSpecific", false);
+
 // Disable warnings
 user_pref("browser.tabs.warnOnCloseOtherTabs", false);
 user_pref("browser.warnOnQuit", false);
