@@ -130,6 +130,9 @@ super + alt + control + shift + {h,j,k,l}
 # Power {{{1
 #
 
+{XF86MonBrightnessDown,XF86MonBrightnessUp}
+	xbacklight {-,+}5
+
 {XF86Eject,Pause}
 	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
 
