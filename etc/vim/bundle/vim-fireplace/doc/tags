@@ -1,4 +1,7 @@
+b:fireplace_cljs_repl	fireplace.txt	/*b:fireplace_cljs_repl*
 fireplace	fireplace.txt	/*fireplace*
+fireplace-:CljEval	fireplace.txt	/*fireplace-:CljEval*
+fireplace-:CljsEval	fireplace.txt	/*fireplace-:CljsEval*
 fireplace-:Connect	fireplace.txt	/*fireplace-:Connect*
 fireplace-:Djump	fireplace.txt	/*fireplace-:Djump*
 fireplace-:Doc	fireplace.txt	/*fireplace-:Doc*
@@ -13,6 +16,9 @@ fireplace-:Require	fireplace.txt	/*fireplace-:Require*
 fireplace-:Require!	fireplace.txt	/*fireplace-:Require!*
 fireplace-:RunTests	fireplace.txt	/*fireplace-:RunTests*
 fireplace-:Source	fireplace.txt	/*fireplace-:Source*
+fireplace-:SpecExample	fireplace.txt	/*fireplace-:SpecExample*
+fireplace-:SpecForm	fireplace.txt	/*fireplace-:SpecForm*
+fireplace-:Stacktrace	fireplace.txt	/*fireplace-:Stacktrace*
 fireplace-CTRL-W_CTRL-D	fireplace.txt	/*fireplace-CTRL-W_CTRL-D*
 fireplace-K	fireplace.txt	/*fireplace-K*
 fireplace-[_CTRL-D	fireplace.txt	/*fireplace-[_CTRL-D*
@@ -38,3 +44,4 @@ fireplace-i_CTRL-R_(	fireplace.txt	/*fireplace-i_CTRL-R_(*
 fireplace-navigating	fireplace.txt	/*fireplace-navigating*
 fireplace-piggieback	fireplace.txt	/*fireplace-piggieback*
 fireplace.txt	fireplace.txt	/*fireplace.txt*
+g:fireplace_cljs_repl	fireplace.txt	/*g:fireplace_cljs_repl*

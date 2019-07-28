@@ -6,8 +6,8 @@ Clojure.
 
 ## Installation
 
-First, set up [cider-nrepl][].  (If you skip this step, fireplace.vim will
-make do with eval, which mostly works.)
+First, set up [cider-nrepl][].  (If you skip this step, only a subset of
+functionality will be available.)
 
 Install Fireplace using your favorite package manager, or use Vim's built-in
 package support:
@@ -31,9 +31,6 @@ automatically using the `.nrepl-port` file created when you run `lein repl` or
 the host and port.  You can connect to multiple instances of nREPL for different
 projects, and it will use the right one automatically.  ClojureScript support is
 just as seamless with [Piggieback][].
-
-The only external dependency is that you have either a Vim with Python support
-compiled in, or `python` in your path.
 
 Oh, and if you don't have an nREPL connection, installing [salve.vim][]
 lets it fall back to using `java clojure.main` for some of the basics, using a
