@@ -1,3 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
-rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' --port 8080 --host '*' "$@"
+run() {
+    local bind='*'
+    local port='8080'
+
+    local OPTIND OPTARG opt
+    while getopts :b:p: opt; do
+        case "$opt" in
+        b) bind="$OPTARG";;
+        p) port="$OPTARG";;
+        esac
+    done
+    shift $((OPTIND-1))
+
+    exec run rackup --builder 'run Rack::Directory.new(ARGV.first || ".")' --port "$port" --host "$bind" "$@"
+}
+
+run "$@"
