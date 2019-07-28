@@ -19,15 +19,23 @@ fun! gotest#write_file(path, contents) abort
   call mkdir(fnamemodify(l:full_path, ':h'), 'p')
   call writefile(a:contents, l:full_path)
   exe 'cd ' . l:dir . '/src'
+
+  if go#util#has_job()
+    call go#lsp#AddWorkspace(fnamemodify(l:full_path, ':p:h'))
+  endif
+
   silent exe 'e! ' . a:path
 
   " Set cursor.
   let l:lnum = 1
   for l:line in a:contents
-    let l:m = match(l:line, "\x1f")
+    let l:m = stridx(l:line, "\x1f")
     if l:m > -1
-      call setpos('.', [0, l:lnum, l:m, 0])
+      let l:byte = line2byte(l:lnum) + l:m
+      exe 'goto '. l:byte
       call setline('.', substitute(getline('.'), "\x1f", '', ''))
+      silent noautocmd w!
+
       break
     endif
 
@@ -51,6 +59,9 @@ fun! gotest#load_fixture(path) abort
   silent exe 'noautocmd e ' . a:path
   silent exe printf('read %s/test-fixtures/%s', g:vim_go_root, a:path)
   silent noautocmd w!
+  if go#util#has_job()
+    call go#lsp#AddWorkspace(fnamemodify(l:full_path, ':p:h'))
+  endif
 
   return l:dir
 endfun
