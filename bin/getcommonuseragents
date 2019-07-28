@@ -10,6 +10,7 @@ warn 'https://techblog.willshouse.com/2012/01/03/most-common-user-agents/'
 $stdin.read.each_line do |line|
   line.strip!
   next if line.empty?
-  desc = line[/\((.*?)\)/, 1].gsub(/[\W.]+/, '-')
+  desc = line[/\((.*?)\)/, 1]&.gsub(/[\W.]+/, '-')
+  next if desc.nil?
   puts "#{desc} [Common]: #{line}"
 end
