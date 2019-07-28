@@ -291,6 +291,8 @@ getColor () {
 			'black_haiku') 				color_ret="$(colorize '7')";;
 			#ROSA color
 			'rosa_blue') 				color_ret='\033[01;38;05;25m';;
+			# ArcoLinux
+			'arco_blue') color_ret='\033[1;38;05;111m';;
 		esac
 		[[ -n "${color_ret}" ]] && echo "${color_ret}"
 	fi
@@ -355,7 +357,7 @@ detectColors () {
 	my_hcolor=$(colorNumberToCode "${my_hcolor}")
 }
 
-supported_distros="ALDOS, Alpine Linux, Amazon Linux, Antergos, Arch Linux (Old and Current Logos), Artix Linux, \
+supported_distros="ALDOS, Alpine Linux, Amazon Linux, Antergos, Arch Linux (Old and Current Logos), ArcoLinux, Artix Linux, \
 blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, \
 Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, EuroLinux, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, \
 Fux, Gentoo, gNewSense, GuixSD, Hyperbola GNU/Linux-libre, januslinux, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, \
@@ -573,6 +575,10 @@ detectdistro () {
 					;;
 				"ALDOS"|"Aldos")
 					distro="ALDOS"
+					;;
+				"ArcoLinux")
+					distro="ArcoLinux"
+					distro_release="n/a"
 					;;
 				"artixlinux"|"Artix Linux"|"artix"|"Artix"|"Artix release")
 					distro="Artix"
@@ -898,6 +904,7 @@ detectdistro () {
 					fi
 
 					# Hotfixes
+                    [[ "${distro}" == "Opensuse-tumbleweed" ]] && distro="openSUSE" && distro_more="Tumbleweed"
 					[[ "${distro}" == "Opensuse-leap" ]] && distro="openSUSE"
 					[[ "${distro}" == "void" ]] && distro="Void Linux"
 					[[ "${distro}" == "evolveos" ]] && distro="Evolve OS"
@@ -1133,6 +1140,7 @@ detectdistro () {
 		antergos) distro="Antergos" ;;
 		arch*linux*old) distro="Arch Linux - Old" ;;
 		arch|arch*linux) distro="Arch Linux" ;;
+		arcolinux|arcolinux*) distro="ArcoLinux" ;;
 		artix|artix*linux) distro="Artix Linux" ;;
 		blackpantheros|black*panther*) distro="blackPanther OS" ;;
 		blag) distro="BLAG" ;;
@@ -1314,7 +1322,7 @@ detectpkgs () {
 	local offset=0
 	case "${distro}" in
 		'Alpine Linux') pkgs=$(apk info | wc -l) ;;
-		'Arch Linux'|'Parabola GNU/Linux-libre'|'Hyperbola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'| \
+		'Arch Linux'|'ArcoLinux'|'Parabola GNU/Linux-libre'|'Hyperbola GNU/Linux-libre'|'Chakra'|'Manjaro'|'Antergos'| \
 		'Netrunner'|'KaOS'|'Obarun'|'SwagArch'|'OBRevenge'|'Artix Linux')
 			pkgs=$(pacman -Qq | wc -l) ;;
 		'Chrome OS')
@@ -1339,7 +1347,7 @@ detectpkgs () {
 		'NixOS')
 			pkgs=$(ls -d -1 /nix/store/*/ | wc -l) ;;
 		'GuixSD')
-			pkgs=$(ls -d -1 /guix/store/*/ | wc -l) ;;
+			pkgs=$(ls -d -1 /gnu/store/*/ | wc -l) ;;
 		'ALDOS'|'Fedora'|'Fux'|'Korora'|'BLAG'|'Chapeau'|'openSUSE'|'SUSE Linux Enterprise'|'Red Hat Enterprise Linux'| \
 		'ROSA'|'Oracle Linux'|'Scientific Linux'|'EuroLinux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Mer'|'SailfishOS'|'PCLinuxOS'|'Viperr'|'Qubes OS'| \
 		'Red Star OS'|'blackPanther OS'|'Amazon Linux')
@@ -1686,7 +1694,7 @@ detectdisk () {
 		elif [[ "${distro}" == "Mac OS X" ]]; then
 			totaldisk=$(df -H / 2>/dev/null | tail -1)
 		else
-			totaldisk=$(df -h -x aufs -x tmpfs --total 2>/dev/null | tail -1)
+			totaldisk=$(df -h -x aufs -x tmpfs -x overlay --total 2>/dev/null | tail -1)
 		fi
 		disktotal=$(awk '{print $2}' <<< "${totaldisk}")
 		diskused=$(awk '{print $3}' <<< "${totaldisk}")
@@ -3141,6 +3149,38 @@ asciiText () {
 "${c4}                                  %s")
 			;;
 
+		"ArcoLinux")
+			if [[ "$no_color" != "0" ]]; then
+				c1=$(getColor 'arco_blue') # dark
+				c2=$(getColor 'white') # light
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; c2="${my_lcolor}"; fi
+			startline="1"
+			logowidth="41"
+			fulloutput=(
+
+"${c1}                    /-                   "
+"${c1}                   ooo:                  %s"     
+"${c1}                  yoooo/                 %s"
+"${c1}                 yooooooo                %s"
+"${c1}                yooooooooo               %s" 
+"${c1}               yooooooooooo              %s"
+"${c1}             .yooooooooooooo             %s"
+"${c1}            .oooooooooooooooo            %s"
+"${c1}           .oooooooarcoooooooo           %s"
+"${c1}          .ooooooooo-oooooooooo          %s"   
+"${c1}         .ooooooooo-  oooooooooo         %s"
+"${c1}        :ooooooooo.    :ooooooooo        %s"
+"${c1}       :ooooooooo.      :ooooooooo       %s"
+"${c1}      :oooarcooo         .oooarcooo      %s"  
+"${c1}     :ooooooooy           .ooooooooo     %s" 
+"${c1}    :ooooooooo   ${c2}/ooooooooooooooooooo${c1}    %s"
+"${c1}   :ooooooooo      ${c2}.-ooooooooooooooooo.${c1}  %s"   
+"${c1}  ooooooooo-             ${c2}-ooooooooooooo.${c1} %s"    
+"${c1} ooooooooo-                 ${c2}.-oooooooooo.${c1}%s"   
+"${c1}ooooooooo.                     ${c2}-ooooooooo${c1}%s")
+		;;
+		
 		"Mint")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'white') # White
@@ -3983,20 +4023,20 @@ asciiText () {
 "${c2}             .;ldkO0000Okdl;.               %s"
 "${c2}         .;d00xl:^''''''^:ok00d;.           %s"
 "${c2}       .d00l'                'o00d.         %s"
-"${c2}     .d0Kd'${c1}  Okxol:;,.          ${c2}:O0d.       %s"
-"${c2}    .OK${c1}KKK0kOKKKKKKKKKKOxo:,      ${c2}lKO.      %s"
-"${c2}   ,0K${c1}KKKKKKKKKKKKKKK0P^${c2},,,${c1}^dx:${c2}    ;00,     %s"
-"${c2}  .OK${c1}KKKKKKKKKKKKKKKk'${c2}.oOPPb.${c1}'0k.${c2}   cKO.    %s"
-"${c2}  :KK${c1}KKKKKKKKKKKKKKK: ${c2}kKx..dd ${c1}lKd${c2}   'OK:    %s"
-"${c2}  dKK${c1}KKKKKKKKKOx0KKKd ${c2}^0KKKO' ${c1}kKKc${c2}   dKd    %s"
-"${c2}  dKK${c1}KKKKKKKKKK;.;oOKx,..${c2}^${c1}..;kKKK0.${c2}  dKd    %s"
-"${c2}  :KK${c1}KKKKKKKKKK0o;...^cdxxOK0O/^^'  ${c2}.0K:    %s"
-"${c2}   kKK${c1}KKKKKKKKKKKKK0x;,,......,;od  ${c2}lKk     %s"
-"${c2}   '0K${c1}KKKKKKKKKKKKKKKKKKKK00KKOo^  ${c2}c00'     %s"
-"${c2}    'kK${c1}KKOxddxkOO00000Okxoc;''   ${c2}.dKk'      %s"
+"${c2}     .d0K^'${c1}  Okxoc;:,.          ${c2}^O0d.       %s"
+"${c2}    .OVV${c1}AK0kOKKKKKKKKKKOxo:,      ${c2}lKO.      %s"
+"${c2}   ,0VV${c1}AKKKKKKKKKKKKK0P^${c2},,,${c1}^dx:${c2}    ;00,     %s"
+"${c2}  .OVV${c1}AKKKKKKKKKKKKKk'${c2}.oOPPb.${c1}'0k.${c2}   cKO.    %s"
+"${c2}  :KV${c1}AKKKKKKKKKKKKKK: ${c2}kKx..dd ${c1}lKd${c2}   'OK:    %s"
+"${c2}  lKl${c1}KKKKKKKKKOx0KKKd ${c2}^0KKKO' ${c1}kKKc${c2}   lKl    %s"
+"${c2}  lKl${c1}KKKKKKKKKK;.;oOKx,..${c2}^${c1}..;kKKK0.${c2}  lKl    %s"
+"${c2}  :KA${c1}lKKKKKKKKK0o;...^cdxxOK0O/^^'  ${c2}.0K:    %s"
+"${c2}   kKA${c1}VKKKKKKKKKKKK0x;,,......,;od  ${c2}lKP     %s"
+"${c2}   '0KA${c1}VKKKKKKKKKKKKKKKKKK00KKOo^  ${c2}c00'     %s"
+"${c2}    'kKA${c1}VOxddxkOO00000Okxoc;''   ${c2}.dKV'      %s"
 "${c2}      l0Ko.                    .c00l'       %s"
 "${c2}       'l0Kk:.              .;xK0l'         %s"
-"${c2}          'lkK0xl:;,,,,;:ldO0kl'            %s"
+"${c2}          'lkK0xc;:,,,,:;odO0kl'            %s"
 "${c2}              '^:ldxkkkkxdl:^'              %s")
 		;;
 
@@ -5150,7 +5190,7 @@ asciiText () {
 "${c1} ??                                  ?I %s"
 "${c1}  ??I?   I??N              ${c2}???    ${c1}????  %s"
 "${c1}   ?III7${c2}???????          ??????${c1}7III?Z   %s"
-"${c1}     OI77\$${c2}?????         ?????${c1}$77II      %s"
+"${c1}     OI77\$${c2}?????         ?????${c1}$77IIII      %s"
 "${c1}           ?????        ${c2}????            %s"
 "${c1}            ???ID      ${c2}????             %s"
 "${c1}             IIII     ${c2}+????             %s"
@@ -5909,7 +5949,7 @@ infoDisplay () {
 	myascii="${distro}"
 	[[ "${asc_distro}" ]] && myascii="${asc_distro}"
 	case ${myascii} in
-		"Alpine Linux"|"Arch Linux - Old"|"blackPanther OS"|"Fedora"|"Korora"|"Chapeau"|"Mandriva"|"Mandrake"| \
+		"Alpine Linux"|"Arch Linux - Old"|"ArcoLinux"|"blackPanther OS"|"Fedora"|"Korora"|"Chapeau"|"Mandriva"|"Mandrake"| \
 		"Chakra"|"ChromeOS"|"Sabayon"|"Slackware"|"Mac OS X"|"Trisquel"|"Kali Linux"|"Jiyuu Linux"|"Antergos"| \
 		"KaOS"|"Logos"|"gNewSense"|"Netrunner"|"NixOS"|"SailfishOS"|"Qubes OS"|"Kogaion"|"PCLinuxOS"| \
 		"Obarun"|"Siduction"|"Solus"|"SwagArch"|"Parrot Security"|"Zorin OS")
@@ -6273,17 +6313,6 @@ if [[ "$overrideDisplay" ]]; then
 	IFS=$OLDIFS
 fi
 
-# Check for android
-if [[ -f /system/build.prop  && "${distro}" != "SailfishOS" ]]; then
-	distro="Android"
-	detectmem
-	detectuptime
-	detectkernel
-	detectdroid
-	infoDisplay
-	exit 0
-fi
-
 for i in "${display[@]}"; do
 	if [[ -n "$i" ]]; then
 		if [[ $i =~ wm ]]; then
@@ -6300,6 +6329,17 @@ for i in "${display[@]}"; do
 		fi
 	fi
 done
+
+# Check for android
+if [[ -f /system/build.prop  && "${distro}" != "SailfishOS" ]]; then
+    distro="Android"
+    detectmem
+    detectuptime
+    detectkernel
+    detectdroid
+    infoDisplay
+    exit 0
+fi
 
 if [ "$gpu" = 'Not Found' ] ; then
 	DetectIntelGPU

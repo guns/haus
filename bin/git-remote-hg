@@ -401,7 +401,11 @@ def updatebookmarks(repo, peer):
 def get_repo(url, alias):
     global peer
 
-    myui = ui.ui()
+    if check_version(4, 1):
+        myui = ui.ui.load()
+    else:
+        myui = ui.ui()
+
     myui.setconfig('ui', 'interactive', 'off')
     myui.fout = sys.stderr
 
@@ -471,28 +475,35 @@ def mark_to_rev(mark):
 
 # Get a range of revisions in the form of a..b (git committish)
 def gitrange(repo, a, b):
+    if a == b:
+        return []
+
+    pfunc = repo.changelog.parentrevs
+    it = iter(xrange(b.rev(), -1, -1))
+
     positive = []
     pending = set([b.rev()])
     negative = set([a.rev()])
-    for cur in xrange(b.rev(), -1, -1):
-        if not pending:
-            break
 
-        parents = [p for p in repo.changelog.parentrevs(cur) if p >= 0]
+    def get_parents(rev):
+        for p in pfunc(rev):
+            if p == -1: continue
+            yield p
 
-        if cur in pending:
+    while pending:
+        cur = it.next()
+
+        if cur in negative:
+            negative.remove(cur)
+            for p in get_parents(cur):
+                negative.add(p)
+                pending.discard(p)
+        elif cur in pending:
             positive.append(cur)
             pending.remove(cur)
-            for p in parents:
+            for p in get_parents(cur):
                 if p not in negative:
                     pending.add(p)
-        elif cur in negative:
-            negative.remove(cur)
-            for p in parents:
-                if p not in pending:
-                    negative.add(p)
-                else:
-                    pending.discard(p)
 
     positive.reverse()
     return positive
@@ -1081,13 +1092,17 @@ def push_unsafe(repo, remote, parsed_refs, p_revs):
     fci = discovery.findcommonincoming
     commoninc = fci(repo, remote, force=force)
     common, _, remoteheads = commoninc
+    fco = discovery.findcommonoutgoing
+    outgoing = fco(repo, remote, onlyheads=list(p_revs), commoninc=commoninc, force=force)
 
     if not checkheads(repo, remote, p_revs):
-        return None
+        return False
+
+    if not outgoing.missing:
+        # Nothing to push
+        return True
 
     if check_version(4, 0):
-        from mercurial import exchange
-        outgoing = exchange._computeoutgoing(repo, list(p_revs), common)
         if check_version(4, 4):
             cg = changegroup.makechangegroup(repo, outgoing, '01', 'push')
         else:
@@ -1144,6 +1159,10 @@ def check_tip(ref, kind, name, heads):
     else:
         return tip in heads
 
+def bookmark_is_fake(bmark, real_bmarks):
+    return bmark == fake_bmark or \
+            (bmark == 'master' and bmark not in real_bmarks)
+
 def do_export(parser):
     p_bmarks = []
     p_revs = {}
@@ -1194,8 +1213,7 @@ def do_export(parser):
                 continue
 
             print "ok %s" % ref
-            if bmark != fake_bmark and \
-                    not (bmark == 'master' and bmark not in parser.repo._bookmarks):
+            if not bookmark_is_fake(bmark, parser.repo._bookmarks):
                 p_bmarks.append((ref, bmark, old, new))
 
             if peer:
@@ -1238,7 +1256,7 @@ def do_export(parser):
         return
 
     if dry_run:
-        if peer and not force_push:
+        if peer:
             checkheads(parser.repo, peer, p_revs)
         print
         return
