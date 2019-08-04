@@ -264,14 +264,14 @@ function! fireplace#omnicomplete(findstart, base, ...) abort
     let request = {
           \ 'op': 'complete',
           \ 'symbol': a:base,
-          \ 'ns': v:true,
+          \ 'ns': type(a:findstart) == v:t_dict ? v:null : v:true,
           \ 'extra-metadata': ['arglists', 'doc'],
           \ 'context': a:0 ? a:1 : s:get_complete_context()
           \ }
     if type(a:findstart) == v:t_func
       return fireplace#message(request, function('s:complete_delegate', [[], a:findstart]))
     elseif type(a:findstart) == v:t_dict
-      return s:complete_extract(a:findstart.message(request, v:t_dict))
+      return s:complete_extract(a:findstart.Message(request, v:t_dict))
     endif
     let id = fireplace#message(request, function('s:complete_add')).id
     while !fireplace#client().done(id)
@@ -291,7 +291,8 @@ function! s:NormalizeNs(client, payload) abort
     let a:payload.ns = a:client.UserNs()
   elseif type(get(a:payload, 'ns', '')) == v:t_number
     let a:payload.ns = a:client.BufferNs(a:payload.ns)
-  elseif empty(get(a:payload, 'ns', 1))
+  endif
+  if empty(get(a:payload, 'ns', 1))
     call remove(a:payload, 'ns')
   endif
   return a:payload
@@ -301,9 +302,10 @@ let s:clj = {}
 
 function! s:CljBufferNs(...) dict abort
   if call('s:bufext', a:0 ? a:000 : get(self, 'args', [])) =~# '^clj[cx]\=$'
-    return call('fireplace#ns', a:000)
+    let ns = call('fireplace#ns', a:000)
+    return ns =~# '^\%(cljs\.\)\=user$' ? '' : ns
   else
-    return self.UserNs()
+    return ''
   endif
 endfunction
 
@@ -327,9 +329,10 @@ let s:clj = {
 
 function! s:CljsBufferNs(...) dict abort
   if call('s:bufext', a:0 ? a:000 : get(self, 'args', [])) =~# '^clj[scx]$'
-    return call('fireplace#ns', a:000)
+    let ns = call('fireplace#ns', a:000)
+    return ns =~# '^\%(cljs\.\)\=user$' ? '' : ns
   else
-    return self.UserNs()
+    return ''
   endif
 endfunction
 
@@ -351,7 +354,39 @@ let s:cljs = {
       \ 'ReplNs': function('s:CljsReplNs'),
       \ 'UserNs': function('s:CljsUserNs')}
 
-let s:repl = extend({"requires": {}}, s:clj)
+function! s:EvalQuery(...) dict abort
+  let opts = {'session': v:false}
+  for l:Arg in a:000
+    if type(Arg) == v:t_string
+      let opts.code = Arg
+    elseif type(Arg) == v:t_dict && type(get(Arg, 'Session')) ==# v:t_func
+      let client = Arg
+    elseif type(Arg) == v:t_dict
+      call extend(opts, Arg)
+    elseif type(Arg) == v:t_func
+      let l:Callback = Arg
+    endif
+  endfor
+  let opts.code = printf(g:fireplace#reader, get(opts, 'code', 'null'))
+  if exists('Callback')
+    return self.Eval(opts, { m -> len(get(m, 'value', '')) ? Callback(eval(m.value)) : 0 })
+  endif
+  let response = self.Eval(opts)
+  call s:output_response(response)
+
+  if get(response, 'ex', '') !=# ''
+    let err = 'Clojure: '.response.ex
+  elseif has_key(response, 'value')
+    return empty(response.value) ? '' : eval(response.value[-1])
+  else
+    let err = 'fireplace.vim: No value in '.string(response)
+  endif
+  throw err
+endfunction
+
+let s:common = {'Query': function('s:EvalQuery')}
+
+let s:repl = extend(extend({"requires": {}}, s:clj), s:common)
 
 let s:repl.user_ns = s:repl.UserNs
 
@@ -360,6 +395,10 @@ if !exists('s:repls')
   let s:repl_paths = {}
   let s:repl_portfiles = {}
 endif
+
+function! s:repl.Client() dict abort
+  return self
+endfunction
 
 function! s:repl.Session() dict abort
   return self.session
@@ -393,18 +432,18 @@ function! s:repl.done(id) dict abort
 endfunction
 
 function! s:repl.preload(lib) dict abort
-  if !empty(a:lib) && a:lib !=# self.user_ns() && !get(self.requires, a:lib)
+  if !empty(a:lib) && a:lib !=# self.UserNs() && !get(self.requires, a:lib)
     let reload = has_key(self.requires, a:lib) ? ' :reload' : ''
     let self.requires[a:lib] = 0
-    if self.user_ns() ==# 'user'
+    if self.Ext() ==# 'clj'
       let qsym = s:qsym(a:lib)
       let expr = '(clojure.core/when-not (clojure.core/find-ns '.qsym.') (try'
             \ . ' (#''clojure.core/load-one '.qsym.' true true)'
             \ . ' (catch Exception e (clojure.core/when-not (clojure.core/find-ns '.qsym.') (throw e)))))'
     else
-      let expr = '(ns '.self.user_ns().' (:require '.a:lib.reload.'))'
+      let expr = '(ns '.self.UserNs().' (:require '.a:lib.reload.'))'
     endif
-    let result = self.message({'op': 'eval', 'code': expr, 'ns': self.user_ns(), 'session': ''}, v:t_dict)
+    let result = self.message({'op': 'eval', 'code': expr, 'ns': self.UserNs(), 'session': ''}, v:t_dict)
     let self.requires[a:lib] = !has_key(result, 'ex')
     if has_key(result, 'ex')
       return result
@@ -425,7 +464,7 @@ function! s:repl.Eval(...) dict abort
     endif
   endfor
   let options = s:NormalizeNs(self, options)
-  if has_key(options, 'ns') && options.ns !=# self.user_ns()
+  if has_key(options, 'ns') && options.ns !=# self.UserNs()
     let error = self.preload(options.ns)
     if !empty(error)
       return error
@@ -435,10 +474,14 @@ function! s:repl.Eval(...) dict abort
   if index(get(response, 'status', []), 'namespace-not-found') < 0
     return response
   endif
-  throw 'Fireplace: namespace not found: ' . get(options, 'ns', self.user_ns())
+  throw 'Fireplace: namespace not found: ' . get(options, 'ns', '?')
 endfunction
 
 let s:repl.eval = s:repl.Eval
+
+function! s:repl.HasOp(op) abort
+  return self.transport.has_op(a:op)
+endfunction
 
 let s:piggieback = extend(copy(s:repl), s:cljs)
 
@@ -718,6 +761,10 @@ let s:oneoff = copy(s:clj)
 
 let s:oneoff.user_ns = s:repl.UserNs
 
+function! s:oneoff.Client() dict abort
+  return self
+endfunction
+
 function! s:oneoff.Path() dict abort
   return self._path
 endfunction
@@ -741,7 +788,7 @@ function! s:oneoff.Eval(...) dict abort
   let id = has_key(options, 'id') ? options.id : fireplace#transport#id()
   let path = join(self.path(), has('win32') ? ';' : ':')
   let options = s:NormalizeNs(self, options)
-  let ns = get(options, 'ns', self.user_ns())
+  let ns = get(options, 'ns', self.UserNs())
   let queue = []
   if exists('l:Callback')
     return s:spawn_eval(id, path, options.code, ns, l:Callback)
@@ -757,17 +804,33 @@ function! s:oneoff.Session(...) abort
   throw s:no_repl
 endfunction
 
+function! s:oneoff.HasOp(op) abort
+  return 0
+endfunction
+
 let s:oneoff.message = s:oneoff.Session
 let s:oneoff.Message = s:oneoff.Session
 
 " Section: Client
 
-function! s:buffer_path(...) abort
-  let buffer = a:0 ? a:1 : s:buf()
-  if getbufvar(buffer, '&buftype') =~# '^no'
+function! s:buffer_absolute(...) abort
+  let buffer = call('s:buf', a:000)
+  let path = substitute(fnamemodify(bufname(buffer), ':p'), '\C^zipfile:\(.*\)::', '\1/', '')
+  let scheme = substitute(matchstr(path, '^\a\a\+\ze:'), '^.', '\u&', '')
+  if len(scheme) && exists('*' . scheme . 'Real')
+    let path = {scheme}Real(path)
+  elseif getbufvar(buffer, '&buftype') !~# '^$\|^acwrite$'
     return ''
   endif
-  let path = substitute(fnamemodify(bufname(buffer), ':p'), '\C^zipfile:\(.*\)::', '\1/', '')
+  if path !~# '^/\|^\a\+:\|^$' && isdirectory(matchstr(path, '^[^\/]\+[\/]'))
+    let path = getcwd() . matchstr(path, '[\/]') . path
+  endif
+  return path =~# '^\a:[\/]\|^/' ? simplify(path) : ''
+endfunction
+
+function! s:buffer_path(...) abort
+  let buffer = call('s:buf', a:000)
+  let path = s:buffer_absolute(buffer)
   for dir in fireplace#path(buffer)
     if dir !=# '' && path[0 : strlen(dir)-1] ==# dir && path[strlen(dir)] =~# '[\/]'
       return path[strlen(dir)+1:-1]
@@ -823,9 +886,13 @@ function! s:impl_ns(...) abort
     return 'clojure'
   elseif !empty(get(b:, 'fireplace_cljc_platform', ''))
     return b:fireplace_cljc_platform is# 'cljs' ? 'cljs' : 'clj'
-  elseif len(get(call('fireplace#native', a:000), 'cljs_sessions', []))
-    return 'cljs'
   else
+    try
+      if len(get(call('fireplace#native', a:000), 'cljs_sessions', []))
+        return 'cljs'
+      endif
+    catch /^Fireplace: no live REPL connection/
+    endtry
     return 'clojure'
   endif
 endfunction
@@ -843,10 +910,8 @@ function! s:slash() abort
 endfunction
 
 function! s:includes_file(file, path) abort
-  let file = substitute(a:file, '\C^zipfile:\(.*\)::', '\1/', '')
-  let file = substitute(file, '\C^fugitive:[\/][\/]\(.*\)\.git[\/][\/][^\/]\+[\/]', '\1', '')
   for path in a:path
-    if file[0 : len(path)-1] ==? path
+    if len(path) && strpart(a:file, 0, len(path)) ==? path
       return 1
     endif
   endfor
@@ -868,8 +933,9 @@ endfunction
 
 function! fireplace#path(...) abort
   let buf = a:0 ? a:1 : s:buf()
+  let absolute = s:buffer_absolute(buf)
   for repl in s:repls
-    if s:includes_file(fnamemodify(bufname(buf), ':p'), repl.path())
+    if s:includes_file(absolute, repl.path())
       return repl.path()
     endif
   endfor
@@ -893,7 +959,8 @@ function! fireplace#native(...) abort
   endif
 
   let buf = a:0 ? a:1 : s:buf()
-  let root = simplify(fnamemodify(bufname(buf), ':p:s?[\/]$??'))
+  let path = s:buffer_absolute(buf)
+  let root = substitute(path, '[\/]$', '', '')
   let previous = ""
   while root !=# previous
     if has_key(s:repl_paths, root)
@@ -903,7 +970,7 @@ function! fireplace#native(...) abort
     let root = fnamemodify(root, ':h')
   endwhile
   for repl in s:repls
-    if s:includes_file(fnamemodify(bufname(buf), ':p'), repl.path())
+    if s:includes_file(path, repl.path())
       return repl
     endif
   endfor
@@ -914,7 +981,7 @@ function! fireplace#native(...) abort
   throw s:no_repl
 endfunction
 
-function! s:SessionDelegate(func, ...) dict abort
+function! s:PlatformDelegate(func, ...) dict abort
   if self.Ext() ==# 'cljs'
     let fn = 's:Cljs'
   else
@@ -924,11 +991,19 @@ function! s:SessionDelegate(func, ...) dict abort
   return call(obj[a:func], a:000, obj)
 endfunction
 
+function! s:NativeDelegate(func, ...) dict abort
+  let obj = call('fireplace#native', get(self, 'args', []))
+  return call(obj[a:func], a:000, obj)
+endfunction
+
 let s:delegate = {
-      \ 'Session': function('s:SessionDelegate', ['Session']),
-      \ 'Message': function('s:SessionDelegate', ['Message']),
-      \ 'Path': function('s:SessionDelegate', ['Path']),
-      \ 'Eval': function('s:SessionDelegate', ['Eval']),
+      \ 'Client': function('s:PlatformDelegate', ['Client']),
+      \ 'Eval': function('s:PlatformDelegate', ['Eval']),
+      \ 'HasOp': function('s:NativeDelegate', ['HasOp']),
+      \ 'Query': function('s:PlatformDelegate', ['Query']),
+      \ 'Message': function('s:PlatformDelegate', ['Message']),
+      \ 'Path': function('s:NativeDelegate', ['Path']),
+      \ 'Session': function('s:PlatformDelegate', ['Session']),
       \ }
 
 let s:clj_delegate = extend(copy(s:clj), s:delegate)
@@ -980,10 +1055,7 @@ function! fireplace#message(payload, ...) abort
   if !has_key(payload, 'ns')
     let payload.ns = v:true
   endif
-  if a:0
-    return call(client.message, [payload] + a:000, client)
-  endif
-  throw 'Fireplace: change fireplace#message({...}) to fireplace#message({...}, v:t_list)'
+  return call(client.message, [payload] + a:000, client)
 endfunction
 
 function! fireplace#interrupt(msg_or_id) abort
@@ -1078,15 +1150,6 @@ function! s:output_response(response) abort
   endif
 endfunction
 
-function! s:eval(expr, ...) abort
-  let options = a:0 ? copy(a:1) : {}
-  let client = fireplace#client()
-  if !has_key(options, 'ns')
-    let options.ns = client.BufferNs()
-  endif
-  return client.eval(a:expr, options)
-endfunction
-
 function! s:temp_response(response, ext) abort
   let output = []
   call extend(output, map(split(get(a:response, 'err', ''), "\n"), '";!".v:val'))
@@ -1147,7 +1210,7 @@ function! fireplace#eval(...) abort
     if type(arg) == v:t_string
       let opts.code = arg
     elseif type(arg) == v:t_dict && type(get(arg, 'Session')) ==# v:t_func
-      let client = arg
+      let platform = arg
     elseif type(arg) == v:t_dict
       call extend(opts, arg)
     elseif type(arg) == v:t_number
@@ -1158,17 +1221,18 @@ function! fireplace#eval(...) abort
 
   let native = fireplace#native()
   let ext = matchstr(bufname(s:buf()), '\.\zs\w\+$')
-  if !exists('client') && !has_key(opts, 'session') && has_key(native, 'cljs_sessions') && ext =~# '^clj[csx]$' && code =~# '^\s*(\S\+/cljs-repl'
-    let client = native
-  elseif !exists('client')
-    let client = fireplace#client()
+  if !exists('platform') && !has_key(opts, 'session') && has_key(native, 'cljs_sessions') && ext =~# '^clj[csx]$' && code =~# '^\s*(\S\+/cljs-repl'
+    let platform = native
+  elseif !exists('platform')
+    let platform = fireplace#platform()
   endif
   if !has_key(opts, 'ns')
-    let opts.ns = client.BufferNs()
+    let opts.ns = v:true
   endif
-  let ext = client.Ext()
+  let ext = platform.Ext()
 
-  let response = client.eval(code, opts)
+  let client = platform.Client()
+  let response = client.Eval(code, opts)
 
   if !has_key(opts, 'session')
     if len(get(client, 'sessions', [])) && code =~# '^\s*:cljs/quit\s*$' && !has_key(response, 'ex')
@@ -1252,34 +1316,16 @@ let g:fireplace#reader =
       \    ' :else        (pr-str (str x)))) %s))'
 
 function! fireplace#query(...) abort
-  let client = fireplace#client()
-  let opts = {'session': v:false, 'ns': v:true}
+  let args = [{'ns': v:true}]
+  let client = fireplace#platform()
   for l:Arg in a:000
-    if type(Arg) == v:t_string
-      let opts.code = Arg
-    elseif type(Arg) == v:t_dict && type(get(Arg, 'Session')) ==# v:t_func
+    if type(Arg) == v:t_dict && type(get(Arg, 'Session')) ==# v:t_func
       let client = Arg
-    elseif type(Arg) == v:t_dict
-      call extend(opts, Arg)
-    elseif type(Arg) == v:t_func
-      let l:Callback = Arg
+    else
+      call add(args, Arg)
     endif
   endfor
-  let opts.code = printf(g:fireplace#reader, get(opts, 'code', 'null'))
-  if exists('Callback')
-    return client.Eval(opts, { m -> len(get(m, 'value', '')) ? Callback(eval(m.value)) : 0 })
-  endif
-  let response = client.Eval(opts)
-  call s:output_response(response)
-
-  if get(response, 'ex', '') !=# ''
-    let err = 'Clojure: '.response.ex
-  elseif has_key(response, 'value')
-    return empty(response.value) ? '' : eval(response.value[-1])
-  else
-    let err = 'fireplace.vim: No value in '.string(response)
-  endif
-  throw err
+  return call(client.Query, args, client)
 endfunction
 
 function! fireplace#evalparse(expr, ...) abort
@@ -1491,7 +1537,7 @@ function! s:Eval(type, line1, line2, range, bang, mods, args) abort
     endif
   endif
   try
-    let args = (a:type ==# 'client' ? [] : [fireplace#{a:type}()]) + [expr, options]
+    let args = (a:type ==# 'platform' || a:type ==# 'client' ? [{'ns': v:true}] : [fireplace#{a:type}(), {'ns': v:null}]) + [expr, options]
     if a:bang
       let result = split(join(map(call('fireplace#eval', [&textwidth] + args), 'substitute(v:val, "\n*$", "", "")'), "\n"), "\n")
       if a:args !=# ''
@@ -1652,7 +1698,7 @@ function! s:Last(bang, count) abort
 endfunction
 
 function! s:set_up_eval() abort
-  command! -buffer -bang -range -nargs=? -complete=customlist,fireplace#eval_complete Eval :exe s:Eval('client', <line1>, <count>, +'<range>', <bang>0, <q-mods>, <q-args>)
+  command! -buffer -bang -range -nargs=? -complete=customlist,fireplace#eval_complete Eval :exe s:Eval('platform', <line1>, <count>, +'<range>', <bang>0, <q-mods>, <q-args>)
   command! -buffer -bang -bar -count=1 Last exe s:Last(<bang>0, <count>)
   command! -buffer -bang -bar -nargs=* Stacktrace exe s:StacktraceCommand(<bang>0, [<f-args>])
 
@@ -2029,7 +2075,7 @@ function! s:SpecForm(kw) abort
     let symbol = fireplace#qualify_keyword(a:kw)
     let response = fireplace#message({'op': op, 'spec-name': symbol}, v:t_dict)
     if !empty(get(response, op))
-      echo s:pr(response.op)
+      echo s:pr(get(response, op))
     endif
   catch /^Fireplace:/
     return 'echoerr ' . string(v:exception)
@@ -2086,7 +2132,7 @@ endfunction
 
 function! s:Lookup(ns, macro, arg) abort
   try
-    let response = s:eval('('.a:ns.'/'.a:macro.' '.a:arg.')', {'session': ''})
+    let response = fireplace#client().Eval('('.a:ns.'/'.a:macro.' '.a:arg.')', {'session': '', 'ns': v:true})
     call s:output_response(response)
   catch /^Clojure:/
   catch /.*/
