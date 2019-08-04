@@ -79,6 +79,7 @@ bashcomp_DATA = 2to3 \
 		dhclient \
 		dict \
 		_dmesg \
+		dmypy \
 		dnssec-keygen \
 		dnsspoof \
 		dot \
@@ -909,6 +910,8 @@ symlinks: $(DATA)
 		vigr
 	$(ss) vncviewer \
 		tightvncviewer xvnc4viewer
+	$(ss) wine \
+		wine-development wine-stable
 	$(ss) wodim \
 		cdrecord
 	$(ss) xz \
