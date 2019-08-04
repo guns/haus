@@ -136,13 +136,13 @@ super + alt + control + shift + {h,j,k,l}
 {XF86Eject,Pause}
 	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
 
-{super + XF86Eject,super + Pause,XF86Sleep}
+{super + XF86Eject,super + Pause,XF86Sleep,super + Escape}
 	sudo -n /usr/bin/powerctl suspend
 
-super + alt + {XF86Eject,Pause,XF86Sleep}
+super + alt + {XF86Eject,Pause,XF86Sleep,Escape}
 	sudo -n /usr/bin/powerctl reboot
 
-super + alt + control + {XF86Eject,Pause,XF86Sleep}
+super + alt + control + {XF86Eject,Pause,XF86Sleep,Escape}
 	sudo -n /usr/bin/powerctl poweroff
 
 control + {XF86Eject,Pause}
