@@ -29,7 +29,7 @@ class Dlnode::Pattern
 
   def default_attribute elem
     case elem
-    when 'a' then 'href'
+    when 'a'   then 'href'
     when 'img' then 'src'
     end
   end
@@ -197,6 +197,7 @@ end
 class Dlnode
   DEFAULTS = {
     :base_uri => nil,
+    :continue => false,
     :cookie_jar => nil,
     :dir => '.',
     :dir_from_url => false,
@@ -297,6 +298,10 @@ class Dlnode
         @user_agent = arg
       end
 
+      opt.on '-C', '--continue', 'Same as `curl --continue-at=-`' do
+        @continue = true
+      end
+
       opt.on '-H', '--download-html', 'Save nodes as html' do
         @download_html = true
       end
@@ -356,6 +361,7 @@ class Dlnode
     args.concat ['--retry', opts[:retry].to_s] if opts[:retry]
     args.concat ['--max-time', opts[:max_time].to_s] if opts[:max_time]
     args.concat ['--connect-timeout', opts[:connect_timeout].to_s] if opts[:connect_timeout]
+    args.concat ['--continue-at', '-'] if opts[:continue]
     args
   end
 
@@ -499,6 +505,7 @@ class Dlnode
     {
       :index => @index,
       :start => @start,
+      :continue => @continue,
       :cookie_jar => @cookie_jar,
       :dir => @dir,
       :format => @format,
@@ -538,7 +545,7 @@ class Dlnode
 
         warn "[#{i+1}/#{n}] #{url} → #{path}"
 
-        if File.exists? path
+        if !@continue and File.exists? path
           warn 'File exists!'
         else
           warn cmd.shelljoin if @verbose
