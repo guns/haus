@@ -288,6 +288,7 @@ for d in /dev/disk/by-*; do
 done; unset d
 lsdbus() { find /usr/share/dbus-1 -name "*.service" | sort; }
 ls.() { __lstype__ "${1:-.}" 'f =~ /\A\./'; }
+lsf() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file"'; }
 lsl() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "link"'; }
 lsx() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "file" and File.executable? f'; }
 lsD() { __lstype__ "${1:-.}" 'File.lstat(f).ftype == "directory"'; }
