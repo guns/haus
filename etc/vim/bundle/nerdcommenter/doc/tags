@@ -38,6 +38,7 @@ NERDCommenterInsert	NERD_commenter.txt	/*NERDCommenterInsert*
 NERDCommenterInstallation	NERD_commenter.txt	/*NERDCommenterInstallation*
 NERDCommenterInvert	NERD_commenter.txt	/*NERDCommenterInvert*
 NERDCommenterIssues	NERD_commenter.txt	/*NERDCommenterIssues*
+NERDCommenterLeader	NERD_commenter.txt	/*NERDCommenterLeader*
 NERDCommenterLicense	NERD_commenter.txt	/*NERDCommenterLicense*
 NERDCommenterMappings	NERD_commenter.txt	/*NERDCommenterMappings*
 NERDCommenterMinimal	NERD_commenter.txt	/*NERDCommenterMinimal*
