@@ -83,7 +83,7 @@ create or replace function get_statements()
 returns table (stm text)
 language sql immutable as
 $$
-  values ('create'), ('select'), ('abort'), ('alter'), ('analyze'), ('begin'),
+  values ('add'), ('create'), ('select'), ('abort'), ('alter'), ('analyze'), ('begin'),
          ('checkpoint'), ('close'), ('cluster'), ('comment'), ('commit'), ('constraints'),
          ('copy'), ('deallocate'), ('declare'), ('delete'), ('discard'),
          ('do'), ('drop'), ('end'), ('execute'), ('explain'), ('fetch'), ('grant'),
@@ -130,6 +130,8 @@ $$
     left join pg_catalog.pg_namespace n
       on n.oid = o.oprnamespace
    where pg_catalog.pg_operator_is_visible(o.oid)
+   union
+   values ('=>') -- See https://www.postgresql.org/docs/current/functions-datetime.html (make_interval())
    order by keyword;
 $$;
 
@@ -157,8 +159,8 @@ $$
   values ('smallserial'), ('serial'), ('bigserial'), ('serial2'), ('serial4'), ('serial8'),
          ('array'), ('bigint'), ('bit'), ('boolean'), ('char'), ('character'), ('cube'), ('decimal'),
          ('double'), ('int'), ('integer'),
-         ('interval'), ('numeric'), ('precision'), ('real'), ('smallint'), ('text'), ('timestamp'),
-         ('varchar'), ('varying'), ('xml'), ('zone');
+         ('interval'), ('numeric'), ('precision'), ('real'), ('smallint'), ('timestamp'),
+         ('varchar'), ('varying'), ('xml'), ('at'), ('zone');
 $$;
 
 
@@ -169,6 +171,29 @@ language sql stable
 set search_path to "public", "pg_catalog" as
 $$
   select word from pg_get_keywords()
+  union -- https://www.postgresql.org/docs/current/functions-datetime.html
+  values ('century'), ('decade'), ('dow'), ('doy'), ('epoch'), ('isodow'), ('isoyear'),
+         ('microseconds'), ('millennium'), ('milliseconds'), ('quarter'),
+         ('timezone'), ('timezone_hour'), ('timezone_minute'), ('week')
+  union -- See CREATE AGGREGATE
+  values  ('basetype'), ('combinefunc'), ('deserialfunc'), ('finalfunc'),
+          ('finalfunc_extra'), ('finalfunc_modify'), ('hypothetical'), ('initcond'),
+          ('mfinalfunc'), ('mfinalfunc_extra'), ('mfinalfunc_modify'), ('minitcond'),
+          ('minvfunc'), ('msfunc'), ('msspace'), ('mstype'), ('readonly'),
+          ('read_write'), ('shareable'), ('serialfunc'), ('sfunc'), ('sortop'),
+          ('sspace'), ('stype')
+  union -- See CREATE COLLATION
+  values ('locale'), ('lc_collate'), ('lc_ctype'), ('provider')
+  union -- See CREATE FUNCTION's syntax (somehow, these are not returned by pg_get_keyword() as of v11.4)
+  values ('restricted'), ('safe'), ('unsafe')
+  union -- See CREATE POLICY
+  values ('permissive'), ('restrictive')
+  union -- See CREATE USER
+  values ('bypassrls'), ('createdb'), ('createrole'), ('login'), ('nobypassrls'),
+         ('nocreatedb'), ('nocreaterole'), ('noinherit'), ('nologin'),
+         ('noreplication'), ('nosuperuser'), ('replication'), ('superuser')
+  union -- See GRANT
+  values ('public'), ('usage')
   except
   (select stm from get_statements()
    union
