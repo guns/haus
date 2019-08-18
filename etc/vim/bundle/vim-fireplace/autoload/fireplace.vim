@@ -523,11 +523,11 @@ function! s:piggieback.Piggieback(arg, ...) abort
     endif
   endif
   let response = session.message({'op': 'eval', 'code': arg}, v:t_dict)
-  if empty(get(response, 'ex'))
+  if !has_key(response, 'ex') && get(response, 'ns', 'user') ==# 'cljs.user'
     call insert(self.sessions, session)
-    return {}
+  else
+    call session.close()
   endif
-  call session.close()
   return response
 endfunction
 
@@ -535,11 +535,12 @@ function! s:piggieback.Session() abort
   if len(self.sessions)
     return self.sessions[0]
   endif
-  let result = self.Piggieback('')
-  if has_key(result, 'ex')
-    throw 'Fireplace: ' . substitute(get(result, 'err', result.ex), "\n$", '', '')
+  let response = self.Piggieback('')
+  if len(self.sessions)
+    return self.sessions[0]
   endif
-  return self.sessions[0]
+  call s:output_response(response)
+  throw 'Fireplace: error starting ClojureScript REPL'
 endfunction
 
 function! s:register(session, ...) abort
@@ -950,16 +951,23 @@ function! fireplace#native(...) abort
     endif
   endfor
 
-  if !a:0
-    let portfile = findfile('.nrepl-port', '.;')
-    if !empty(portfile)
-      call fireplace#register_port_file(portfile, fnamemodify(portfile, ':p:h'))
-    endif
-    silent doautocmd User FireplacePreConnect
-  endif
-
   let buf = a:0 ? a:1 : s:buf()
   let path = s:buffer_absolute(buf)
+
+  let portfile = findfile('.nrepl-port', (a:0 ? fnamemodify(path, ':h') : '') . ';')
+  if !empty(portfile) && filereadable(portfile)
+    call fireplace#register_port_file(portfile, fnamemodify(portfile, ':p:h'))
+  else
+    let portfile = findfile('.shadow-cljs/nrepl.port', (a:0 ? fnamemodify(path, ':h') : '') . ';')
+    if !empty(portfile) && filereadable(portfile)
+      call fireplace#register_port_file(portfile, fnamemodify(portfile, ':p:h:h'))
+    endif
+  endif
+
+  if !a:0
+    silent doautocmd <nomodeline> User FireplacePreConnect
+  endif
+
   let root = substitute(path, '[\/]$', '', '')
   let previous = ""
   while root !=# previous
@@ -1282,9 +1290,17 @@ function! fireplace#session_eval(...) abort
   return get(call('fireplace#eval', a:000), -1, '')
 endfunction
 
+function! s:DisplayWidth() abort
+  if exists('g:fireplace_display_width') && g:fireplace_display_width < &columns
+    return g:fireplace_display_width
+  else
+    return &columns
+  endif
+endfunction
+
 function! fireplace#echo_session_eval(...) abort
   try
-    let values = call('fireplace#eval', [&columns] + a:000)
+    let values = call('fireplace#eval', [s:DisplayWidth()] + a:000)
     if empty(values)
       echohl WarningMsg
       echo "No return value"
@@ -1377,7 +1393,9 @@ function! fireplace#massage_list(...) abort
   let path = p =~# '^[:;]' ? split(p[1:-1], p[0]) : p[0] ==# ',' ? s:path_extract(p[1:-1], 1) : s:path_extract(p, 1)
   let qflist = l:GetList()
   for entry in qflist
-    call extend(entry, s:qfmassage(get(entry, 'text', ''), path))
+    if !entry.bufnr && !entry.lnum
+      call extend(entry, s:qfmassage(get(entry, 'text', ''), path))
+    endif
   endfor
   let attrs = l:GetList({'title': 1})
   call l:SetList(qflist, 'r')
