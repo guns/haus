@@ -74,16 +74,8 @@ bspc rule --add vlc                     state=floating
 bspc rule --add Xdialog                 state=floating
 bspc rule --add Xsensors                state=floating sticky=true
 
-case "$(bspc query --monitors | grep --count .)" in
-2)
-    xrandr --output VGA1 --auto --output HDMI2 --auto --right-of VGA1
-    bspc monitor VGA1 --reset-desktops 1 2 3 4 5
-    bspc monitor HDMI2 --reset-desktops 6 7 8 9 0
-    ;;
-*)
-    bspc monitor --reset-desktops 1 2 3 4 5
-    ;;
-esac
+# Setup monitors
+"$HOME/.config/bspwm/bspwm-monitor-setup"
 
 # Set wallpapers after xrandr call
 nitrogen --restore

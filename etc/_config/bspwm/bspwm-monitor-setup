@@ -1,0 +1,28 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'set'
+
+info = %x(xrandr --listmonitors).lines
+monitors = info[1..].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
+
+case
+when Set['DP1-1', 'HDMI2'].subset?(monitors)
+  system *%w[xrandr --output HDMI2 --output DP1-1 --left-of HDMI2]
+  system *%w[bspc monitor DP1-1 --reset-desktops 1 2 3 4 5]
+  system *%w[bspc monitor HDMI2 --reset-desktops 6 7 8 9 0]
+when Set['eDP1', 'HDMI2'].subset?(monitors)
+  system *%w[xrandr --output HDMI2 --primary --mode 1920x1080 --pos 0x0 --rotate normal
+                    --output eDP1 --mode 1680x1050 --pos 120x1080 --rotate normal
+                    --output DP1 --off
+                    --output DP2 --off
+                    --output HDMI1 --off
+                    --output VIRTUAL1 --off]
+  system *%w[bspc monitor HDMI2 --reset-desktops 1 2 3 4 5]
+  system *%w[bspc monitor eDP1  --reset-desktops 6 7 8 9 0]
+when Set['eDP1'].subset?(monitors)
+  system *%w[xrandr --output eDP1 --mode 1680x1050]
+  system *%w[bspc monitor --reset-desktops 1 2 3 4 5]
+when monitors.size == 1
+  system *%w[bspc monitor --reset-desktops 1 2 3 4 5]
+end
