@@ -35,13 +35,14 @@ qliveleak:           https://www.liveleak.com/browse?q=***
 qlocalhost:          http://localhost/devnull/?q=***
 qmaps:               https://maps.google.com/maps?q=***
 qmaven:              https://search.maven.org/#search%7Cga%7C1%7C***
-qmedical:            https://www.merriam-webster.com/dictionary/***#medicalDictionary
 qmdn:                https://developer.mozilla.org/en-US/search?q=***
+qmedical:            https://www.merriam-webster.com/dictionary/***#medicalDictionary
 qnewegg:             https://www.newegg.com/Product/ProductList.aspx?Submit=ENE&Description=***
 qnews:               https://news.google.com/news?q=***
 qnpm:                https://www.npmjs.com/search?q=***
 qnull:               http://0.0.0.0/null/***
 qoctopart:           https://octopart.com/parts/search?q=***
+qoeis:               https://oeis.org/search?q=***
 qowasp:              https://www.owasp.org/index.php?search=***
 qphysics:            https://physics.stackexchange.com/search?q=***
 qpostgresql:         https://www.postgresql.org/search/?q=***&a=1&submit=Search
