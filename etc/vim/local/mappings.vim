@@ -564,12 +564,12 @@ noremap  <Leader>gP       :<C-u>silent! Git push<CR>
 noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
 noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
-noremap  <Leader>g<M-s>   :<C-u>Git stash show -p<CR>
+noremap  <Leader>g<M-s>   :<C-u>!git stash show -p<CR>
 noremap  <Leader>gu       :<C-u>Git up<CR>
 noremap  <Leader>gv       :Gitv<Space>
 noremap  <Leader>gV       :Gitv!<Space>
-noremap  <Leader>gw       :<C-u>silent! Git wdi<CR>
-noremap  <Leader>gW       :<C-u>silent! Git wlp<CR>
+noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
+noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Gstatus \| 12wincmd _<CR>
 noremap  <4-G>            :<C-u>Ggrep! -i<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
