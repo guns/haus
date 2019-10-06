@@ -176,6 +176,7 @@ ubuntu_codenames=(
 		'LTS (Bionic Beaver)'	# 18.04
 		'(Cosmic Cuttlefish)'	# 18.10
 		'(Disco Dingo)'	# 19.04
+		'(Eoan Ermine)'	# 19.10
 )
 
 # Screenshot Settings
@@ -251,7 +252,7 @@ gtk_2line="no"
 
 # Static Color Definitions
 colorize () {
-	printf $'\033[38;5;%sm' "$1"
+	printf $'\033[0m\033[38;5;%sm' "$1"
 }
 getColor () {
 	local tmp_color=""
@@ -359,8 +360,8 @@ detectColors () {
 
 supported_distros="ALDOS, Alpine Linux, Amazon Linux, Antergos, Arch Linux (Old and Current Logos), ArcoLinux, Artix Linux, \
 blackPanther OS, BLAG, BunsenLabs, CentOS, Chakra, Chapeau, Chrome OS, Chromium OS, CrunchBang, CRUX, \
-Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, EuroLinux, Evolve OS, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, \
-Fux, Gentoo, gNewSense, GuixSD, Hyperbola GNU/Linux-libre, januslinux, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, \
+Debian, Deepin, DesaOS,Devuan, Dragora, elementary OS, EuroLinux, Evolve OS, Sulin, Exherbo, Fedora, Frugalware, Fuduntu, Funtoo, \
+Fux, Gentoo, gNewSense, Guix System, Hyperbola GNU/Linux-libre, januslinux, Jiyuu Linux, Kali Linux, KaOS, KDE neon, Kogaion, Korora, \
 LinuxDeepin, Linux Mint, LMDE, Logos, Mageia, Mandriva/Mandrake, Manjaro, Mer, Netrunner, NixOS, OBRevenge, openSUSE, \
 OS Elbrus, Oracle Linux, Parabola GNU/Linux-libre, Pardus, Parrot Security, PCLinuxOS, PeppermintOS, Proxmox VE, PureOS, Qubes OS, \
 Raspbian, Red Hat Enterprise Linux, ROSA, Sabayon, SailfishOS, Scientific Linux, Siduction, Slackware, Solus, Source Mage GNU/Linux, \
@@ -421,7 +422,10 @@ displayHelp () {
 	echo "                      as follows: [0-9][0-9],[0-9][0-9]. The first argument controls the"
 	echo "                      ASCII logo colors and the label colors. The second argument"
 	echo "                      controls the colors of the information found. One argument may be"
-	echo "                      used without the other."
+	echo "                      used without the other. For terminals supporting 256 colors argument"
+	echo "                      may also contain other terminal control codes for bold, underline etc."
+	echo "                      separated by semicolon. For example -c \"4;1,1;2\" will produce bold"
+	echo "                      blue and dim red."
 	echo "   ${bold}-a 'PATH'${c0}          You can specify a custom ASCII art by passing the path"
 	echo "                      to a Bash script, defining \`startline\` and \`fulloutput\`"
 	echo "                      variables, and optionally \`labelcolor\` and \`textcolor\`."
@@ -632,6 +636,11 @@ detectdistro () {
 					;;
 				"EvolveOS")
 					distro="Evolve OS"
+					;;
+				"Sulin")
+					distro="Sulin"
+					distro_release=$(awk -F'=' '/^ID_LIKE=/ {print $2}' /etc/os-release)
+					distro_codename="Roolling donkey" # this is not wrong :D
 					;;
 				"KaOS"|"kaos")
 					distro="KaOS"
@@ -865,7 +874,7 @@ detectdistro () {
 							distro="SMGL"
 						fi
 						if (type -p guix && type -p herd) >/dev/null 2>&1; then
-							distro="GuixSD"
+							distro="Guix System"
 						fi
 					;;
 				esac
@@ -908,6 +917,7 @@ detectdistro () {
 					[[ "${distro}" == "Opensuse-leap" ]] && distro="openSUSE"
 					[[ "${distro}" == "void" ]] && distro="Void Linux"
 					[[ "${distro}" == "evolveos" ]] && distro="Evolve OS"
+					[[ "${distro}" == "Sulin" ]] && distro="Sulin"
 					[[ "${distro}" == "antergos" ]] && distro="Antergos"
 					[[ "${distro}" == "logos" ]] && distro="Logos"
 					[[ "${distro}" == "Arch" || "${distro}" == "Archarm" || "${distro}" == "archarm" ]] && distro="Arch Linux"
@@ -1161,6 +1171,7 @@ detectdistro () {
 		elementary|'elementary os') distro="elementary OS";;
 		eurolinux) distro="EuroLinux" ;;
 		evolveos) distro="Evolve OS" ;;
+		sulin) distro="Sulin" ;;
 		exherbo|exherbo*linux) distro="Exherbo" ;;
 		fedora) distro="Fedora" ;;
 		freebsd) distro="FreeBSD" ;;
@@ -1171,7 +1182,7 @@ detectdistro () {
 		fux) distro="Fux" ;;
 		gentoo) distro="Gentoo" ;;
 		gnewsense) distro="gNewSense" ;;
-		guixsd) distro="GuixSD" ;;
+		guix*system) distro="Guix System" ;;
 		haiku) distro="Haiku" ;;
 		hyperbolagnu|hyperbolagnu/linux-libre|'hyperbola gnu/linux-libre'|hyperbola) distro="Hyperbola GNU/Linux-libre" ;;
 		januslinux) distro="januslinux" ;;
@@ -1346,8 +1357,8 @@ detectpkgs () {
 			pkgs=$(ls -d /var/db/pkg/*/* | wc -l) ;;
 		'NixOS')
 			pkgs=$(ls -d -1 /nix/store/*/ | wc -l) ;;
-		'GuixSD')
-			pkgs=$(ls -d -1 /gnu/store/*/ | wc -l) ;;
+		'Guix System')
+			pkgs=$(guix package --list-installed | wc -l) ;;
 		'ALDOS'|'Fedora'|'Fux'|'Korora'|'BLAG'|'Chapeau'|'openSUSE'|'SUSE Linux Enterprise'|'Red Hat Enterprise Linux'| \
 		'ROSA'|'Oracle Linux'|'Scientific Linux'|'EuroLinux'|'CentOS'|'Mandriva'|'Mandrake'|'Mageia'|'Mer'|'SailfishOS'|'PCLinuxOS'|'Viperr'|'Qubes OS'| \
 		'Red Star OS'|'blackPanther OS'|'Amazon Linux')
@@ -1356,6 +1367,8 @@ detectpkgs () {
 			pkgs=$(xbps-query -l | wc -l) ;;
 		'Evolve OS')
 			pkgs=$(pisi list-installed | wc -l) ;;
+		'Sulin')
+			pkgs=$(inary li | wc -l) ;;
 		'Solus')
 			pkgs=$(eopkg list-installed | wc -l) ;;
 		'Source Mage GNU/Linux')
@@ -1921,7 +1934,7 @@ detectde () {
 				{
 					if ($1 ~ /^_DT_SAVE_MODE/) {
 						de = $NF
-						gsub(/\"/,"",de)
+						gsub(/"/,"",de)
 						de = toupper(de)
 						exit
 					}
@@ -5177,7 +5190,7 @@ asciiText () {
 "${c1}         .::::      ::::      ${c2}'::::.         %s")
 		;;
 
-		"GuixSD")
+		"Guix System")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'orange')
 				c2=$(getColor 'light orange')
@@ -5443,7 +5456,7 @@ asciiText () {
 		"Pardus")
 			if [[ "$no_color" != "1" ]]; then
 				c1=$(getColor 'yellow') # Light Yellow
-				c2=$(getColor 'dark grey') # Light Gray
+				c2=$(getColor 'light gray') # Light Gray
 			fi
 			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
 			startline="1"
@@ -5469,6 +5482,37 @@ asciiText () {
 "${c1}          : -y.  -hNmddmNy.  .y- :          %s"
 "${c1}           -+       \`..\`       +-           %s"
 "%s")
+		;;
+
+		"Sulin")
+			if [[ "$no_color" != "1" ]]; then
+				c1=$(getColor 'light gray') # Light Yellow
+			fi
+			if [ -n "${my_lcolor}" ]; then c1="${my_lcolor}"; fi
+			startline="1"
+			logowidth="45"
+			fulloutput=(
+""
+"${c1}             ++                    +++      %s"
+"${c1}            ++::+                ++:+:      %s"
+"${c1}            +:~:~:              +:~:~:+     %s"
+"${c1}            +:~::~:+           +~:::::      %s"
+"${c1}            +:~:::~~+:~.  ..~::.::+:~+      %s"
+"${c1}             +~:::.             .::~:+      %s"
+"${c1}             +::.            .   .~:+       %s"
+"${c1}               :~:~+~..~ ~: ~++~++~+        %s"
+"${c1}               :++++++++:++:+++++++:        %s"
+"${c1}        ++++  +:+++.+++++++++++.+++:        %s"
+"${c1}        :.  ~  :+++.+++++++++++~+++:        %s"
+"${c1}        +~   .++++++++++   ++ ++++:+        %s"
+"${c1}          +:  ~ :~+   +~+  ~+   +~+         %s"
+"${c1}            ++:+++++           +++          %s"
+"${c1}              +::~:++++++++++++++           %s"
+"${c1}                 +++++++++++++++:           %s"
+"${c1}                 +:++++++++++++::           %s"
+"${c1}                 :.~+++:++:++++..+          %s"
+"${c1}                 +~::++::+~::+:.+           %s"
+"${c1}                  :~~~~~:+~:~~~:+           %s")
 		;;
 
 		"SwagArch")
