@@ -45,6 +45,8 @@ n="$(bspc rule --list | grep -c .)"
 for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
 
+# Find window class names with xprop(1)
+bspc rule --add Arandr                  state=floating
 bspc rule --add Asunder                 state=floating
 bspc rule --add Audacious               state=floating
 bspc rule --add Clementine              state=floating
@@ -59,7 +61,7 @@ bspc rule --add Lingot                  state=floating
 bspc rule --add melt                    state=floating
 bspc rule --add Nitrogen                state=floating
 bspc rule --add Orage                   state=floating
-bspc rule --add 'Orage Preferences'     state=floating
+bspc rule --add Orage\ Preferences      state=floating
 bspc rule --add Pavucontrol             state=floating
 bspc rule --add Pinentry                state=floating
 bspc rule --add Prompt                  state=floating
@@ -68,7 +70,6 @@ bspc rule --add qjackctl                state=floating
 bspc rule --add Sxiv                    state=floating
 bspc rule --add Thunar                  state=floating
 bspc rule --add Transmission-gtk        state=floating
-bspc rule --add Vlc                     state=floating
 bspc rule --add vlc                     state=floating
 bspc rule --add Xdialog                 state=floating
 bspc rule --add Xsensors                state=floating sticky=true
