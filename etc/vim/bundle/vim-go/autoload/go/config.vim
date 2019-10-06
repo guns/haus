@@ -205,9 +205,10 @@ endfunction
 
 function! go#config#DebugWindows() abort
   return get(g:, 'go_debug_windows', {
-            \ 'stack': 'leftabove 20vnew',
-            \ 'out':   'botright 10new',
             \ 'vars':  'leftabove 30vnew',
+            \ 'stack': 'leftabove 20new',
+            \ 'goroutines': 'botright 10new',
+            \ 'out':        'botright 5new',
             \ }
          \ )
 
@@ -224,7 +225,7 @@ function! go#config#DebugCommands() abort
 endfunction
 
 function! go#config#DebugLogOutput() abort
-  return get(g:, 'go_debug_log_output', 'debugger, rpc')
+  return get(g:, 'go_debug_log_output', 'debugger,rpc')
 endfunction
 
 function! go#config#LspLog() abort
@@ -258,7 +259,7 @@ function! go#config#SetTemplateAutocreate(value) abort
 endfunction
 
 function! go#config#MetalinterCommand() abort
-  return get(g:, "go_metalinter_command", "gometalinter")
+  return get(g:, "go_metalinter_command", "golangci-lint")
 endfunction
 
 function! go#config#MetalinterAutosaveEnabled() abort
