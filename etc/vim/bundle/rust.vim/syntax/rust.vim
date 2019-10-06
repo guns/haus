@@ -15,7 +15,13 @@ endif
 " Syntax definitions {{{1
 " Basic keywords {{{2
 syn keyword   rustConditional match if else
-syn keyword   rustRepeat for loop while
+syn keyword   rustRepeat loop while
+" `:syn match` must be used to prioritize highlighting `for` keyword.
+syn match     rustRepeat /\<for\>/
+" Highlight `for` keyword in `impl ... for ... {}` statement. This line must
+" be put after previous `syn match` line to overwrite it.
+syn match     rustKeyword /\%(\<impl\>.\+\)\@<=\<for\>/
+syn keyword   rustRepeat in
 syn keyword   rustTypedef type nextgroup=rustIdentifier skipwhite skipempty
 syn keyword   rustStructure struct enum nextgroup=rustIdentifier skipwhite skipempty
 syn keyword   rustUnion union nextgroup=rustIdentifier skipwhite skipempty contained
@@ -28,12 +34,12 @@ syn match     rustAssert      "\<assert\(\w\)*!" contained
 syn match     rustPanic       "\<panic\(\w\)*!" contained
 syn match     rustAsync       "\<async\%(\s\|\n\)\@="
 syn keyword   rustKeyword     break
-syn keyword   rustKeyword     box nextgroup=rustBoxPlacement skipwhite skipempty
+syn keyword   rustKeyword     box
 syn keyword   rustKeyword     continue
 syn keyword   rustKeyword     crate
 syn keyword   rustKeyword     extern nextgroup=rustExternCrate,rustObsoleteExternMod skipwhite skipempty
 syn keyword   rustKeyword     fn nextgroup=rustFuncName skipwhite skipempty
-syn keyword   rustKeyword     in impl let
+syn keyword   rustKeyword     impl let
 syn keyword   rustKeyword     macro
 syn keyword   rustKeyword     pub nextgroup=rustPubScope skipwhite skipempty
 syn keyword   rustKeyword     return
@@ -59,14 +65,6 @@ syn keyword   rustObsoleteExternMod mod contained nextgroup=rustIdentifier skipw
 
 syn match     rustIdentifier  contains=rustIdentifierPrime "\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*" display contained
 syn match     rustFuncName    "\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*" display contained
-
-syn region    rustBoxPlacement matchgroup=rustBoxPlacementParens start="(" end=")" contains=TOP contained
-" Ideally we'd have syntax rules set up to match arbitrary expressions. Since
-" we don't, we'll just define temporary contained rules to handle balancing
-" delimiters.
-syn region    rustBoxPlacementBalance start="(" end=")" containedin=rustBoxPlacement transparent
-syn region    rustBoxPlacementBalance start="\[" end="\]" containedin=rustBoxPlacement transparent
-" {} are handled by rustFoldBraces
 
 syn region rustMacroRepeat matchgroup=rustMacroRepeatDelimiters start="$(" end=")" contains=TOP nextgroup=rustMacroRepeatCount
 syn match rustMacroRepeatCount ".\?[*+]" contained
@@ -200,6 +198,7 @@ syn region rustGenericLifetimeCandidate display start=/\%(<\|,\s*\)\@<='/ end=/[
 "rustLifetime must appear before rustCharacter, or chars will get the lifetime highlighting
 syn match     rustLifetime    display "\'\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*"
 syn match     rustLabel       display "\'\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*:"
+syn match     rustLabel       display "\%(\<\%(break\|continue\)\s*\)\@<=\'\%([^[:cntrl:][:space:][:punct:][:digit:]]\|_\)\%([^[:cntrl:][:punct:][:space:]]\|_\)*"
 syn match   rustCharacterInvalid   display contained /b\?'\zs[\n\r\t']\ze'/
 " The groups negated here add up to 0-255 but nothing else (they do not seem to go beyond ASCII).
 syn match   rustCharacterInvalidUnicode   display contained /b'\zs[^[:cntrl:][:graph:][:alnum:][:space:]]\ze'/
@@ -343,7 +342,6 @@ hi def link rustLifetime      Special
 hi def link rustLabel         Label
 hi def link rustExternCrate   rustKeyword
 hi def link rustObsoleteExternMod Error
-hi def link rustBoxPlacementParens Delimiter
 hi def link rustQuestionMark  Special
 hi def link rustAsync         rustKeyword
 hi def link rustAwait         rustKeyword
