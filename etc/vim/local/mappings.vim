@@ -537,12 +537,12 @@ noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 " Plugin: Fugitive (git) + Gitv
 " VIMGITBINDINGS
 noremap  <Leader>g<Space> :<C-u>Git<Space>
-noremap  <Leader>g1       :<C-u>Git l1<CR>
-noremap  <Leader>g.       :<C-u>Git di %<CR>
+noremap  <Leader>g1       :<C-u>silent! !git l1<CR>
+noremap  <Leader>g.       :<C-u>silent! !git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit --verbose<CR>
-noremap  <Leader>gap      :<C-u>Git ap<CR>
+noremap  <Leader>gap      :<C-u>silent! !git ap<CR>
 noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
 noremap  <Leader>gb       :Gblame -w<CR>
@@ -552,7 +552,7 @@ noremap  <Leader>gca      :<C-u>Gcommit --all<CR>
 noremap  <Leader>gcA      :<C-u>Gcommit --amend<CR>
 noremap  <Leader>gcc      :<C-u>Gcommit<CR>
 noremap  <Leader>gcv      :<C-u>Gcommit<CR>
-noremap  <Leader>gd       :<C-u>Git di<CR>
+noremap  <Leader>gd       :<C-u>silent! !git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! !git f<CR>
 noremap  <Leader>gF       :<C-u>silent! !git ff<CR>
