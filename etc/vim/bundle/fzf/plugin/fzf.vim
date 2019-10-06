@@ -50,9 +50,9 @@ if s:is_win
   " Use utf-8 for fzf.vim commands
   " Return array of shell commands for cmd.exe
   function! s:wrap_cmds(cmds)
-    return map(['@echo off', 'for /f "tokens=4" %%a in (''chcp'') do set origchcp=%%a', 'chcp 65001 > nul'] +
+    return map(['@echo off', 'setlocal enabledelayedexpansion', 'for /f "delims=: tokens=2" %%a in (''chcp'') do set origchcp=%%a', 'set origchcp=!origchcp: =!', 'chcp 65001 > nul'] +
           \ (type(a:cmds) == type([]) ? a:cmds : [a:cmds]) +
-          \ ['chcp %origchcp% > nul'], 'v:val."\r"')
+          \ ['chcp !origchcp! > nul', 'setlocal disabledelayedexpansion'], 'v:val."\r"')
   endfunction
 else
   let s:term_marker = ";#FZF"
@@ -254,7 +254,7 @@ endfunction
 function! s:defaults()
   let rules = copy(get(g:, 'fzf_colors', {}))
   let colors = join(map(items(filter(map(rules, 'call("s:get_color", v:val)'), '!empty(v:val)')), 'join(v:val, ":")'), ',')
-  return empty(colors) ? '' : ('--color='.colors)
+  return empty(colors) ? '' : fzf#shellescape('--color='.colors)
 endfunction
 
 function! s:validate_layout(layout)
