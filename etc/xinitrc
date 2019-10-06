@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [[ "$CLAMSHELL" -eq '1' ]]; then
+    xrandr --output eDP1 --off
+fi
+
 for d in /etc/X11/xinit/xinitrc.d ~/.xinitrc.d; do
     for f in "$d"/*; do
         [[ -r "$f" ]] && . "$f"
