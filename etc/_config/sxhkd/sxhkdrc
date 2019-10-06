@@ -133,22 +133,22 @@ super + alt + control + shift + {h,j,k,l}
 {XF86MonBrightnessDown,XF86MonBrightnessUp}
 	xbacklight {-,+}5
 
-{XF86Eject,Pause}
+{shift + XF86Sleep,Pause,shift + Escape}
 	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
 
-{super + XF86Eject,super + Pause,XF86Sleep,super + Escape}
+{XF86Sleep,super + Pause,super + Escape}
 	sudo -n /usr/bin/powerctl suspend
 
-super + alt + {XF86Eject,Pause,XF86Sleep,Escape}
+super + alt + {XF86Sleep,Pause,Escape}
 	sudo -n /usr/bin/powerctl reboot
 
-super + alt + control + {XF86Eject,Pause,XF86Sleep,Escape}
+super + alt + control + {XF86Sleep,Pause,Escape}
 	sudo -n /usr/bin/powerctl poweroff
 
-control + {XF86Eject,Pause}
+control + {XF86Sleep,Pause,Escape}
 	pkill --exact -HUP gpg-agent && notify --alert --icon gnupg --title gpg-agent 'SIGHUP'
 
-alt + {XF86Eject,Pause}
+alt + {XF86Sleep,Pause,Escape}
 	if pgrep -x xautolock; then \
 		pkill --exact xautolock; \
 	else \
@@ -302,6 +302,9 @@ super + shift + alt + F10
 
 alt + F10
 	wmctrl -a '♻ newsboat ♻'
+
+control + F10
+	wmctrl -xa 'VirtualBox'
 
 F12
 	T='✉ Mutt ✉'; \
