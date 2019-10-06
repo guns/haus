@@ -1,4 +1,5 @@
 bold	orgguide.txt	/*bold*
+dein.vim	orgguide.txt	/*dein.vim*
 g:org_agenda_files	orgguide.txt	/*g:org_agenda_files*
 g:org_aggressive_conceal	orgguide.txt	/*g:org_aggressive_conceal*
 g:org_export_emacs	orgguide.txt	/*g:org_export_emacs*
@@ -87,3 +88,4 @@ orgmode-<LocalLeader>si	orgguide.txt	/*orgmode-<LocalLeader>si*
 orgmode-ctrl-a	orgguide.txt	/*orgmode-ctrl-a*
 orgmode-ctrl-x	orgguide.txt	/*orgmode-ctrl-x*
 vim-orgmode	orgguide.txt	/*vim-orgmode*
+vim-plug	orgguide.txt	/*vim-plug*
