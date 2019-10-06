@@ -50,7 +50,7 @@ endfunction
 function! s:cword() abort
   let isk = &l:iskeyword
   try
-    setlocal iskeyword+='
+    setlocal iskeyword+=',#,%,&
     return substitute(expand('<cword>'), "^''*", '', '')
   finally
     let &l:iskeyword = isk
@@ -758,7 +758,7 @@ endfunction
 
 let s:no_repl = 'Fireplace: no live REPL connection'
 
-let s:oneoff = copy(s:clj)
+let s:oneoff = extend(copy(s:clj), s:common)
 
 let s:oneoff.user_ns = s:repl.UserNs
 
@@ -954,7 +954,7 @@ function! fireplace#native(...) abort
   let buf = a:0 ? a:1 : s:buf()
   let path = s:buffer_absolute(buf)
 
-  let portfile = findfile('.nrepl-port', (a:0 ? fnamemodify(path, ':h') : '') . ';')
+  let portfile = findfile('.nrepl-port', (a:0 ? fnamemodify(path, ':h') : '.') . ';')
   if !empty(portfile) && filereadable(portfile)
     call fireplace#register_port_file(portfile, fnamemodify(portfile, ':p:h'))
   else
@@ -1844,10 +1844,17 @@ function! fireplace#source(symbol) abort
   let file = ''
   if !empty(get(info, 'resource'))
     let file = fireplace#findresource(info.resource)
-  elseif get(info, 'file', '') =~# '^file:'
-    let file = substitute(strpart(info.file, 5), '/', s:slash(), 'g')
-  else
-    let file = get(info, 'file', '')
+  endif
+
+  if empty(file)
+    if get(info, 'file', '') =~# '^file:'
+      let file = substitute(strpart(info.file, 5), '/', s:slash(), 'g')
+    elseif get(info, 'file', '') =~# '^jar:file:'
+      let zip = matchstr(info.file, '^jar:file:\zs.*\ze!')
+      let file = 'zipfile:' . zip . '::' . info.resource
+    else
+      let file = get(info, 'file', '')
+    endif
   endif
 
   if !empty(file) && !empty(get(info, 'line', ''))
