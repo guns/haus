@@ -725,7 +725,7 @@ HAVE vim && {
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.cache/bash_history'
-    alias vimbadhosts='vim "/etc/badhosts" -c "lcd /etc/"'
+    alias vimhosts='vim "/etc/hosts" -c "lcd /etc/"'
     alias vimiptables='vim "/etc/iptables.sh" -c "lcd /etc/"'
     alias vimipset='vim "/etc/ipset.conf" -c "lcd /etc/"'
     alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'

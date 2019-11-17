@@ -188,7 +188,7 @@ $if bash
     "\C-xege":      "\C-] vimgitexclude \n"
     "\C-xegs":      "\C-] vimgitsparsecheckout \n"
     "\C-xeh":       "\C-] vimbashhistory \n"
-    "\C-xeH":       "\C-] vimbadhosts \n"
+    "\C-xeH":       "\C-] vimhosts \n"
     "\C-xei":       "\C-] vimiptables \n"
     "\C-xeI":       "\C-] vimipset \n"
     "\C-xem":       "\C-] vimmappings \n"
