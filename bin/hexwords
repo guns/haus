@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2019 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+
+class Hexwords
+  DEFAULTS = {
+    min_length: 0,
+  }
+
+  SUBSTITUTIONS = {
+    'o'     => '0',
+    'l'     => '1',
+    'to'    => '2',
+    's'     => '5',
+    't'     => '7',
+    'g'     => '9',
+    'for'   => '4',
+    'four'  => '4',
+    'ate'   => '8',
+    'eight' => '8',
+  }
+
+  ALL_HEX = /\A\h+\z/
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Print a hexspeak substitution table from words on stdin.
+
+        Usage: #{File.basename __FILE__} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-l', '--min-length N', Integer, "Default: #{@min_length}" do |arg|
+        @min_length = arg
+      end
+    end
+  end
+
+  def build_substitutions words
+    substitutions = {}
+
+    words.each do |word|
+      sub = word.downcase.gsub /[^\p{L}-]/, ''
+      SUBSTITUTIONS.each { |pat, rep| sub.gsub! pat, rep }
+      substitutions[word] = sub.upcase if sub.length >= @min_length and sub.match? ALL_HEX
+    end
+
+    substitutions
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.any?
+
+    build_substitutions($stdin.read.split).sort.each do |word, sub|
+      puts "#{word}\t#{sub}"
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Hexwords.new.run ARGV if $0 == __FILE__
