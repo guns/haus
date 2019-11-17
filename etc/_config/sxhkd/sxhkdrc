@@ -314,9 +314,6 @@ F12
 super + F12
 	urxvt-client -cd ~/Downloads -g 80x40 -title '✉ Mutt ✉' -icon ~/.icons/haus/mail.svg -e muttlaunch --force
 
-alt + F12
-	orage
-
 super + control + e
 	T=' - VIM'; \
 	wmctrl -a "$T" || \

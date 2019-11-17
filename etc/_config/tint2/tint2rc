@@ -27,7 +27,7 @@ border_color_pressed = #000000 0
 
 #-------------------------------------
 # Panel
-panel_items = TSC
+panel_items = TSBC
 panel_size = 100% 20
 panel_margin = 0 0
 panel_padding = 0 0 0
@@ -118,7 +118,7 @@ clock_padding = 6 0
 clock_background_id = 0
 clock_tooltip = 
 clock_tooltip_timezone = 
-clock_lclick_command = orage
+clock_lclick_command = 
 clock_rclick_command = 
 clock_mclick_command = 
 clock_uwheel_command = 
