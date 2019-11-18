@@ -560,27 +560,36 @@ _filedir()
     _tilde "$cur" || return
 
     local -a toks
-    local x reset
+    local reset
 
-    reset=$(shopt -po noglob); set -o noglob
-    toks=( $(compgen -d -- "$cur") )
-    IFS=' '; $reset; IFS=$'\n'
-
-    if [[ "$1" != -d ]]; then
+    if [[ "$1" == -d ]]; then
+        reset=$(shopt -po noglob); set -o noglob
+        toks=( $(compgen -d -- "$cur") )
+        IFS=' '; $reset; IFS=$'\n'
+    else
         local quoted
         _quote_readline_by_ref "$cur" quoted
 
         # Munge xspec to contain uppercase version too
         # http://thread.gmane.org/gmane.comp.shells.bash.bugs/15294/focus=15306
-        local xspec=${1:+"!*.@($1|${1^^})"}
+        local xspec=${1:+"!*.@($1|${1^^})"} plusdirs=()
+
+        # Use plusdirs to get dir completions if we have a xspec; if we don't,
+        # there's no need, dirs come along with other completions. Don't use
+        # plusdirs quite yet if fallback is in use though, in order to not ruin
+        # the fallback condition with the "plus" dirs.
+        local opts=( -f -X "$xspec" )
+        [[ $xspec ]] && plusdirs=(-o plusdirs)
+        [[ ${COMP_FILEDIR_FALLBACK-} ]] || opts+=( "${plusdirs[@]}" )
+
         reset=$(shopt -po noglob); set -o noglob
-        toks+=( $(compgen -f -X "$xspec" -- $quoted) )
+        toks+=( $(compgen "${opts[@]}" -- $quoted) )
         IFS=' '; $reset; IFS=$'\n'
 
         # Try without filter if it failed to produce anything and configured to
         [[ -n ${COMP_FILEDIR_FALLBACK:-} && -n "$1" && ${#toks[@]} -lt 1 ]] && {
             reset=$(shopt -po noglob); set -o noglob
-            toks+=( $(compgen -f -- $quoted) )
+            toks+=( $(compgen -f "${plusdirs[@]}" -- $quoted) )
             IFS=' '; $reset; IFS=$'\n'
         }
     fi
@@ -667,6 +676,15 @@ _variables()
                     fi
                     COMPREPLY[i]=${COMPREPLY[i]#/usr/share/zoneinfo/}
                 done
+                return 0
+                ;;
+            TERM)
+                _terms
+                return 0
+                ;;
+            LANG|LC_*)
+                COMPREPLY=( $(compgen -W '$(locale -a 2>/dev/null)' \
+                    -- "$cur" ) )
                 return 0
                 ;;
         esac
@@ -1995,7 +2013,7 @@ _install_xspec()
 }
 # bzcmp, bzdiff, bz*grep, bzless, bzmore intentionally not here, see Debian: #455510
 _install_xspec '!*.?(t)bz?(2)' bunzip2 bzcat pbunzip2 pbzcat lbunzip2 lbzcat
-_install_xspec '!*.@(zip|[egjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl)' unzip zipinfo
+_install_xspec '!*.@(zip|[egjswx]ar|exe|pk3|wsz|zargo|xpi|s[tx][cdiw]|sx[gm]|o[dt][tspgfc]|od[bm]|oxt|epub|apk|aab|ipa|do[ct][xm]|p[op]t[mx]|xl[st][xm]|pyz|whl)' unzip zipinfo
 _install_xspec '*.Z' compress znew
 # zcmp, zdiff, z*grep, zless, zmore intentionally not here, see Debian: #455510
 _install_xspec '!*.@(Z|[gGd]z|t[ag]z)' gunzip zcat
