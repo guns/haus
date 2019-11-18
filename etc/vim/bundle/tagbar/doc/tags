@@ -16,6 +16,7 @@ g:tagbar_autoshowtag	tagbar.txt	/*g:tagbar_autoshowtag*
 g:tagbar_case_insensitive	tagbar.txt	/*g:tagbar_case_insensitive*
 g:tagbar_compact	tagbar.txt	/*g:tagbar_compact*
 g:tagbar_ctags_bin	tagbar.txt	/*g:tagbar_ctags_bin*
+g:tagbar_ctags_options	tagbar.txt	/*g:tagbar_ctags_options*
 g:tagbar_expand	tagbar.txt	/*g:tagbar_expand*
 g:tagbar_foldlevel	tagbar.txt	/*g:tagbar_foldlevel*
 g:tagbar_hide_nonpublic	tagbar.txt	/*g:tagbar_hide_nonpublic*
@@ -35,6 +36,7 @@ g:tagbar_vertical	tagbar.txt	/*g:tagbar_vertical*
 g:tagbar_width	tagbar.txt	/*g:tagbar_width*
 g:tagbar_zoomwidth	tagbar.txt	/*g:tagbar_zoomwidth*
 tagbar	tagbar.txt	/*tagbar*
+tagbar#StopAutoUpdate()	tagbar.txt	/*tagbar#StopAutoUpdate()*
 tagbar-autoopen	tagbar.txt	/*tagbar-autoopen*
 tagbar-commands	tagbar.txt	/*tagbar-commands*
 tagbar-configuration	tagbar.txt	/*tagbar-configuration*
@@ -42,6 +44,7 @@ tagbar-contents	tagbar.txt	/*tagbar-contents*
 tagbar-credits	tagbar.txt	/*tagbar-credits*
 tagbar-extend	tagbar.txt	/*tagbar-extend*
 tagbar-features	tagbar.txt	/*tagbar-features*
+tagbar-functions	tagbar.txt	/*tagbar-functions*
 tagbar-highlight	tagbar.txt	/*tagbar-highlight*
 tagbar-history	tagbar.txt	/*tagbar-history*
 tagbar-ignore	tagbar.txt	/*tagbar-ignore*
