@@ -612,7 +612,8 @@ command! -bar StandardJS call <SID>StandardJS()
 function! s:StandardJS()
 	if !executable('standard') | return | endif
 
-	let args = '--parser babel-eslint'
+	let args = ''
+
 	if getline('$') =~# 'standardjs'
 		let args .= ' --verbose --fix'
 	endif
