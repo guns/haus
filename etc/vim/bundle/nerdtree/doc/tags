@@ -136,6 +136,7 @@ NERDTreeShowHidden	NERDTree.txt	/*NERDTreeShowHidden*
 NERDTreeShowLineNumbers	NERDTree.txt	/*NERDTreeShowLineNumbers*
 NERDTreeSortOrder	NERDTree.txt	/*NERDTreeSortOrder*
 NERDTreeStatusline	NERDTree.txt	/*NERDTreeStatusline*
+NERDTreeUseTCD	NERDTree.txt	/*NERDTreeUseTCD*
 NERDTreeWinPos	NERDTree.txt	/*NERDTreeWinPos*
 NERDTreeWinSize	NERDTree.txt	/*NERDTreeWinSize*
 loaded_nerd_tree	NERDTree.txt	/*loaded_nerd_tree*
