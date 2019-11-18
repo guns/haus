@@ -196,6 +196,7 @@ let g:gundo_auto_preview = 0
 let g:ScreenImpl = 'Tmux'
 
 " Plugin: UltiSnips
+call has('python3') " Force preloading of python3 for UltiSnips
 let g:UltiSnipsNoPythonWarning = 1
 let g:UltiSnipsUsePythonVersion = 3
 let g:UltiSnipsEditSplit = 'vertical'
