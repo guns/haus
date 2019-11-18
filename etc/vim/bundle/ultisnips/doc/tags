@@ -44,6 +44,7 @@ UltiSnips-shellcode	UltiSnips.txt	/*UltiSnips-shellcode*
 UltiSnips-snipMate	UltiSnips.txt	/*UltiSnips-snipMate*
 UltiSnips-snippet-actions	UltiSnips.txt	/*UltiSnips-snippet-actions*
 UltiSnips-snippet-options	UltiSnips.txt	/*UltiSnips-snippet-options*
+UltiSnips-snippet-text-objects	UltiSnips.txt	/*UltiSnips-snippet-text-objects*
 UltiSnips-tabstops	UltiSnips.txt	/*UltiSnips-tabstops*
 UltiSnips-transformations	UltiSnips.txt	/*UltiSnips-transformations*
 UltiSnips-trigger-functions	UltiSnips.txt	/*UltiSnips-trigger-functions*
@@ -66,6 +67,5 @@ g:UltiSnipsJumpBackwardTrigger	UltiSnips.txt	/*g:UltiSnipsJumpBackwardTrigger*
 g:UltiSnipsJumpForwardTrigger	UltiSnips.txt	/*g:UltiSnipsJumpForwardTrigger*
 g:UltiSnipsListSnippets	UltiSnips.txt	/*g:UltiSnipsListSnippets*
 g:UltiSnipsSnippetDirectories	UltiSnips.txt	/*g:UltiSnipsSnippetDirectories*
-g:UltiSnipsSnippetsDir	UltiSnips.txt	/*g:UltiSnipsSnippetsDir*
 snippet	UltiSnips.txt	/*snippet*
 snippets	UltiSnips.txt	/*snippets*

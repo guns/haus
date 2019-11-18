@@ -6,15 +6,14 @@
 import os
 from collections import namedtuple
 
-from UltiSnips import _vim
-from UltiSnips.compatibility import as_unicode
+from UltiSnips import vim_helper
 from UltiSnips.indent_util import IndentUtil
-from UltiSnips.text_objects._base import NoneditableTextObject
+from UltiSnips.text_objects.base import NoneditableTextObject
 from UltiSnips.vim_state import _Placeholder
 import UltiSnips.snippet_manager
 
 
-class _Tabs(object):
+class _Tabs:
 
     """Allows access to tabstop content via t[] inside of python code."""
 
@@ -22,23 +21,20 @@ class _Tabs(object):
         self._to = to
 
     def __getitem__(self, no):
-        ts = self._to._get_tabstop(
-            self._to,
-            int(no))  # pylint:disable=protected-access
+        ts = self._to._get_tabstop(self._to, int(no))  # pylint:disable=protected-access
         if ts is None:
-            return ''
+            return ""
         return ts.current_text
 
     def __setitem__(self, no, value):
-        ts = self._to._get_tabstop(
-            self._to,
-            int(no))  # pylint:disable=protected-access
+        ts = self._to._get_tabstop(self._to, int(no))  # pylint:disable=protected-access
         if ts is None:
             return
         # TODO(sirver): The buffer should be passed into the object on construction.
-        ts.overwrite(_vim.buf, value)
+        ts.overwrite(vim_helper.buf, value)
 
-_VisualContent = namedtuple('_VisualContent', ['mode', 'text'])
+
+_VisualContent = namedtuple("_VisualContent", ["mode", "text"])
 
 
 class SnippetUtilForAction(dict):
@@ -47,13 +43,11 @@ class SnippetUtilForAction(dict):
         self.__dict__ = self
 
     def expand_anon(self, *args, **kwargs):
-        UltiSnips.snippet_manager.UltiSnips_Manager.expand_anon(
-            *args, **kwargs
-        )
+        UltiSnips.snippet_manager.UltiSnips_Manager.expand_anon(*args, **kwargs)
         self.cursor.preserve()
 
 
-class SnippetUtil(object):
+class SnippetUtil:
 
     """Provides easy access to indentation, etc.
 
@@ -65,7 +59,7 @@ class SnippetUtil(object):
         self._ind = IndentUtil()
         self._visual = _VisualContent(vmode, vtext)
         self._initial_indent = self._ind.indent_to_spaces(initial_indent)
-        self._reset('')
+        self._reset("")
         self._context = context
         self._start = parent.start
         self._end = parent.end
@@ -79,7 +73,7 @@ class SnippetUtil(object):
         """
         self._ind.reset()
         self._cur = cur
-        self._rv = ''
+        self._rv = ""
         self._changed = False
         self.reset_indent()
 
@@ -90,7 +84,7 @@ class SnippetUtil(object):
         :amount: the amount by which to shift.
 
         """
-        self.indent += ' ' * self._ind.shiftwidth * amount
+        self.indent += " " * self._ind.shiftwidth * amount
 
     def unshift(self, amount=1):
         """Unshift the indentation level. Note that this uses the shiftwidth
@@ -103,9 +97,9 @@ class SnippetUtil(object):
         try:
             self.indent = self.indent[:by]
         except IndexError:
-            self.indent = ''
+            self.indent = ""
 
-    def mkline(self, line='', indent=None):
+    def mkline(self, line="", indent=None):
         """Creates a properly set up line.
 
         :line: the text to add
@@ -117,11 +111,11 @@ class SnippetUtil(object):
             indent = self.indent
             # this deals with the fact that the first line is
             # already properly indented
-            if '\n' not in self._rv:
+            if "\n" not in self._rv:
                 try:
-                    indent = indent[len(self._initial_indent):]
+                    indent = indent[len(self._initial_indent) :]
                 except IndexError:
-                    indent = ''
+                    indent = ""
             indent = self._ind.spaces_to_indent(indent)
 
         return indent + line
@@ -134,17 +128,17 @@ class SnippetUtil(object):
     @property
     def fn(self):  # pylint:disable=no-self-use,invalid-name
         """The filename."""
-        return _vim.eval('expand("%:t")') or ''
+        return vim_helper.eval('expand("%:t")') or ""
 
     @property
     def basename(self):  # pylint:disable=no-self-use
         """The filename without extension."""
-        return _vim.eval('expand("%:t:r")') or ''
+        return vim_helper.eval('expand("%:t:r")') or ""
 
     @property
     def ft(self):  # pylint:disable=invalid-name
         """The filetype."""
-        return self.opt('&filetype', '')
+        return self.opt("&filetype", "")
 
     @property
     def rv(self):  # pylint:disable=invalid-name
@@ -180,8 +174,7 @@ class SnippetUtil(object):
     def p(self):
         if self._parent.current_placeholder:
             return self._parent.current_placeholder
-        else:
-            return _Placeholder('', 0, 0)
+        return _Placeholder("", 0, 0)
 
     @property
     def context(self):
@@ -189,16 +182,16 @@ class SnippetUtil(object):
 
     def opt(self, option, default=None):  # pylint:disable=no-self-use
         """Gets a Vim variable."""
-        if _vim.eval("exists('%s')" % option) == '1':
+        if vim_helper.eval("exists('%s')" % option) == "1":
             try:
-                return _vim.eval(option)
-            except _vim.error:
+                return vim_helper.eval(option)
+            except vim_helper.error:
                 pass
         return default
 
     def __add__(self, value):
         """Appends the given line to rv using mkline."""
-        self.rv += '\n'  # pylint:disable=invalid-name
+        self.rv += "\n"  # pylint:disable=invalid-name
         self.rv += self.mkline(value)
         return self
 
@@ -242,7 +235,7 @@ class SnippetUtil(object):
 
     @property
     def buffer(self):
-        return _vim.buf
+        return vim_helper.buf
 
 
 class PythonCode(NoneditableTextObject):
@@ -260,41 +253,42 @@ class PythonCode(NoneditableTextObject):
                 mode = snippet.visual_content.mode
                 context = snippet.context
                 break
-            except AttributeError as e:
+            except AttributeError:
                 snippet = snippet._parent  # pylint:disable=protected-access
         self._snip = SnippetUtil(token.indent, mode, text, context, snippet)
 
-        self._codes = ((
-            'import re, os, vim, string, random',
-            '\n'.join(snippet.globals.get('!p', [])).replace('\r\n', '\n'),
-            token.code.replace('\\`', '`')
-        ))
+        self._codes = (
+            "import re, os, vim, string, random",
+            "\n".join(snippet.globals.get("!p", [])).replace("\r\n", "\n"),
+            token.code.replace("\\`", "`"),
+        )
         NoneditableTextObject.__init__(self, parent, token)
 
     def _update(self, done, buf):
-        path = _vim.eval('expand("%")') or ''
+        path = vim_helper.eval('expand("%")') or ""
         ct = self.current_text
-        self._locals.update({
-            't': _Tabs(self._parent),
-            'fn': os.path.basename(path),
-            'path': path,
-            'cur': ct,
-            'res': ct,
-            'snip': self._snip,
-        })
+        self._locals.update(
+            {
+                "t": _Tabs(self._parent),
+                "fn": os.path.basename(path),
+                "path": path,
+                "cur": ct,
+                "res": ct,
+                "snip": self._snip,
+            }
+        )
         self._snip._reset(ct)  # pylint:disable=protected-access
 
         for code in self._codes:
             try:
                 exec(code, self._locals)  # pylint:disable=exec-used
-            except Exception as e:
-                e.snippet_code = code
+            except Exception as exception:
+                exception.snippet_code = code
                 raise
 
-        rv = as_unicode(
-            self._snip.rv if self._snip._rv_changed  # pylint:disable=protected-access
-            else as_unicode(self._locals['res'])
-        )
+        rv = str(
+            self._snip.rv if self._snip._rv_changed else self._locals["res"]
+        )  # pylint:disable=protected-access
 
         if ct != rv:
             self.overwrite(buf, rv)
