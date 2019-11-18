@@ -620,8 +620,7 @@ CTRL-t
 :GoReferrers
 
     The referrers query shows the set of identifiers that refer to the same
-    object as does the selected identifier, within any package in the analysis
-    scope.
+    object as does the selected identifier.
 
                                                                   *:GoSameIds*
 :GoSameIds
@@ -646,8 +645,8 @@ CTRL-t
     the cursor. This basically toggles the option |'g:go_auto_sameids'|
     on/off.
     If enabled it starts highlighting whenever your cursor is staying at the
-    same position for a configurable period of time (see 'updatetime'). If
-    disabled it clears and stops automatic highlighting.
+    same position for a configurable period of time (see |'g:go_updatetime'|).
+    If disabled it clears and stops automatic highlighting.
 
                                                                *:GoMetaLinter*
 :GoMetaLinter! [path]
@@ -666,8 +665,8 @@ CTRL-t
 
     Changes the build tags for various commands. If you have any file that
     uses a custom build tag, such as `// +build integration` , this command
-    can be used to pass it to all tools that accepts tags, such as guru,
-    gorename, etc.
+    can be used to pass it to all tools that accepts tags, such as gopls,
+    guru, gorename, etc.
 
     The build tags is cleared (unset) if `""` is given. If no arguments are
     given it prints the current build tags.
@@ -1196,13 +1195,12 @@ into the statusline.
 
                                                       *go#complete#Complete()*
 
-Uses `gopls` for autocompletion. By default, it is hooked up to |'omnifunc'|
-for Vim8 and Neovim.
+Uses `gopls` for autocompletion. By default, it is hooked up to |'omnifunc'|.
+
 
                                                 *go#complete#GocodeComplete()*
 
-Uses `gocode` for autocompletion. By default, it is hooked up to |'omnifunc'|
-for Vim 8+.
+Uses `gocode` for autocompletion.
 
                                                    *go#tool#DescribeBalloon()*
 
@@ -1267,7 +1265,7 @@ with |:GoPlay|. By default it's enabled. >
 Use this option to show the type info (|:GoInfo|) for the word under the
 cursor automatically. Whenever the cursor changes the type info will be
 updated. By default it's disabled. The delay can be configured with the
-'g:go_updatetime' setting.
+|'g:go_updatetime'| setting.
 >
   let g:go_auto_type_info = 0
 <
@@ -1284,15 +1282,16 @@ Valid options are `gocode`, `gopls`, and `guru`.
                                                          *'g:go_auto_sameids'*
 
 Use this option to highlight all uses of the identifier under the cursor
-(:GoSameIds) automatically. By default it's disabled. The delay can be
-configured with the 'g:go_updatetime' setting.
+(|:GoSameIds|) automatically. By default it's disabled. The delay can be
+configured with the |'g:go_updatetime'| setting.
 >
   let g:go_auto_sameids = 0
 <
                                                            *'g:go_updatetime'*
 
-Use this option to configure the a custom 'updatetime' for Go source files. If
-set to 0, no custom time will be configured. By default it's set to 800ms.
+Use this option to configure the delay until it starts some jobs (see
+|'g:go_auto_type_info'|, |'g:go_auto_sameids'|). If set to 0, it uses the
+value from 'updatetime'. By default it's set to 800ms.
 >
   let g:go_updatetime = 800
 <
@@ -1316,7 +1315,8 @@ Use this option to auto |:GoFmt| on save. By default it's enabled >
                                                           *'g:go_fmt_command'*
 
 Use this option to define which tool is used to gofmt. By default `gofmt` is
-used >
+used.
+>
 
   let g:go_fmt_command = "gofmt"
 <
@@ -1405,6 +1405,16 @@ and `guru`.
 >
   let g:go_def_mode = 'gopls'
 <
+                                                       *'g:go_referrers_mode'*
+
+Use this option to define the command to be used for |:GoReferrers|. By
+default `gopls` is used, because it is the fastest and works with Go modules.
+One might also use `guru` for its ability to show references from other
+packages.  This option will be removed after `gopls` can show references from
+other packages. Valid options are `gopls` and `guru`.
+>
+  let g:go_referrers_mode = 'gopls'
+<
                                                   *'g:go_def_mapping_enabled'*
 
 Use this option to enable/disable the default mapping of CTRL-],
@@ -1472,7 +1482,7 @@ pattern. An example input might be:
 
 Also see |go-guru-scope|.
 
-By default it's not set, so the relevant commands defaults are being used.
+By default it's not set, so the relevant commands' defaults are being used.
 >
   let g:go_guru_scope = []
 <
@@ -1660,6 +1670,14 @@ By default it is set to edit.
 >
   let g:go_alternate_mode = "edit"
 <
+                                                     *'g:go_gorename_command'*
+
+Use this option to define which tool is used to rename. By default `gorename`
+is used. Valid options are `gorename` and `gopls`. Warning: as of `gopls`
+v0.2.0, it will only rename identifiers in the current package.
+>
+  let g:go_gorename_command = 'gorename'
+<
                                                      *'g:go_gorename_prefill'*
 
 Expression to prefill the new identifier when using |:GoRename| without any
@@ -1702,6 +1720,39 @@ Specifies whether `gocode` should use a different socket type. By default
 >
   let g:go_gocode_socket_type = 'unix'
 <
+
+                                            *'g:go_gopls_complete_unimported'*
+
+Specifies whether `gopls` should include suggestions from unimported packages.
+By default it is disabled.
+>
+  let g:go_gopls_complete_unimported = 0
+<
+
+                                                *'g:go_gopls_deep_completion'*
+
+Specifies whether `gopls` should use deep completion. By default it is
+enabled.
+>
+  let g:go_gopls_deep_completion = 1
+<
+
+                                                 *'g:go_gopls_fuzzy_matching'*
+
+Specifies whether `gopls` should use fuzzy matching for completions.
+By default it is enabled.
+>
+  let g:go_gopls_fuzzy_matching = 1
+<
+
+                                               *'g:go_gopls_use_placeholders'*
+
+Specifies whether `gopls` can provide placeholders for function parameters and
+struct fields. By default it is disabled.
+>
+  let g:go_gopls_use_placeholders = 0
+<
+
                                                   *'g:go_template_autocreate'*
 
 When a new Go file is created, vim-go automatically fills the buffer content
@@ -1797,8 +1848,8 @@ default it's 60 seconds. Must be in milliseconds.
 
 Sets the `transform` option for `gomodifytags` when using |:GoAddTags| or if
 it's being used for snippet expansion of single fields.  Possible options are:
-`snakecase`, `camelcase`. For the following case, if `snakecase` is used the
-field will be transformed to:
+`snakecase`, `camelcase`, `lispcase`, `pascalcase`, `keep`. For the following
+case, if `snakecase` is used the field will be transformed to:
 >
   type T struct {
     FooBarQuz string `json:"foo_bar_quz"
@@ -1812,7 +1863,7 @@ If "camelcase" is used:
   }
 <
 By default "snakecase" is used. Current values are: ["snakecase",
-"camelcase"].
+"camelcase", "lispcase", "pascalcase", "keep"].
 >
       let g:go_addtags_transform = 'snakecase'
 <
@@ -1972,6 +2023,18 @@ Highlight variable names in variable declarations (`x` in ` x :=`).
 Highlight variable names in variable assignments (`x` in `x =`).
 >
   let g:go_highlight_variable_assignments = 0
+<
+                                          *'g:go_highlight_diagnostic_errors'*
+
+Highlight diagnostic errors.
+>
+  let g:go_highlight_diagnostic_errors = 1
+<
+                                        *'g:go_highlight_diagnostic_warnings'*
+
+Highlight diagnostic warnings.
+>
+  let g:go_highlight_diagnostic_warnings = 1
 <
 
 ==============================================================================
@@ -2211,7 +2274,7 @@ Specifies log output options for `dlv`. Value should be a single string of
 comma-separated options suitable for passing to `dlv`.  An empty string (`''`)
 will suppress logging entirely.  Default: `'debugger,rpc'`:
 >
-  let g:go_debug_log = 'debugger,rpc'
+  let g:go_debug_log_output = 'debugger,rpc'
 <
 
                                                      *'g:go_highlight_debug'*

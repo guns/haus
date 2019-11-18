@@ -1,7 +1,7 @@
 ## unplanned
 
-BACKWARDS INCOMPATABILITIES:
-* Drop support for Vim 7.4. The minimu required version of Vim is now 8.0.1453.
+BACKWARDS INCOMPATIBILITIES:
+* Drop support for Vim 7.4. The minimum required version of Vim is now 8.0.1453.
   [[GH-2495]](https://github.com/fatih/vim-go/pull/2495)
   [[GH-2497]](https://github.com/fatih/vim-go/pull/2497)
 * Drop support for `gometalinter`
@@ -27,6 +27,32 @@ IMPROVEMENTS:
   [[GH-2522]](https://github.com/fatih/vim-go/pull/2522)
 * Use gopls instead of guru for `:GoSameIds`.
   [[GH-2519]](https://github.com/fatih/vim-go/pull/2519)
+* Use gopls instead of guru for `:GoReferrers`.
+  [[GH-2535]](https://github.com/fatih/vim-go/pull/2535)
+* Update documentation for `g:go_addtags_transform`.
+  [[GH-2541]](https://github.com/fatih/vim-go/pull/2541)
+* Install most helper tools in module aware mode.
+  [[GH-2545]](https://github.com/fatih/vim-go/pull/2545)
+* Add a new option, `g:go_referrers_mode` to allow the user to choose whether
+  to use gopls or guru for finding references.
+  [[GH-2566]](https://github.com/fatih/vim-go/pull/2566)
+* Add options to control how gopls responds to completion requests.
+  [[GH-2567]](https://github.com/fatih/vim-go/pull/2567)
+  [[GH-2568]](https://github.com/fatih/vim-go/pull/2568)
+* Add syntax highlighting for binary literals.
+  [[GH-2557]](https://github.com/fatih/vim-go/pull/2557)
+* Improve highlighting of invalid numeric literals.
+  [[GH-2571]](https://github.com/fatih/vim-go/pull/2571)
+  [[GH-2587]](https://github.com/fatih/vim-go/pull/2587)
+  [[GH-2589]](https://github.com/fatih/vim-go/pull/2589)
+* Add highlighting of sections reported by gopls diagnostics' errors
+  and warnings.
+  [[GH-2569]](https://github.com/fatih/vim-go/pull/2569)
+* Make the highlighting of fzf decls configurable.
+  [[GH-2572]](https://github.com/fatih/vim-go/pull/2572)
+  [[GH-2579]](https://github.com/fatih/vim-go/pull/2579)
+* Support renaming with gopls.
+  [[GH-2577]](https://github.com/fatih/vim-go/pull/2577)
 
 BUG FIXES:
 * Fix removal of missing directories from gopls workspaces.
@@ -42,11 +68,22 @@ BUG FIXES:
   [[GH-2523]](https://github.com/fatih/vim-go/pull/2523)
 * Handle empty results from delve.
   [[GH-2526]](https://github.com/fatih/vim-go/pull/2526)
-
+* Do not overwrite `updatetime` when `g:go_auto_sameids` or
+  `g:go_auto_type_info` is set.
+  [[GH-2529]](https://github.com/fatih/vim-go/pull/2529)
+* Fix example for g:go_debug_log_output in docs.
+  [[GH-2547]](https://github.com/fatih/vim-go/pull/2547)
+* Use FileChangedShellPost instead of FileChangedShell so that reload messages
+  are not hidden.
+  [[GH-2549]](https://github.com/fatih/vim-go/pull/2549)
+* Restore cwd after `:GoTest` when `g:go_term_enabled` is set.
+  [[GH-2556]](https://github.com/fatih/vim-go/pull/2556)
+* Expand struct variable correctly in the variables debug window.
+  [[GH-2574]](https://github.com/fatih/vim-go/pull/2574)
 
 ## v1.21 - (September 11, 2019)
 
-BACKWARDS INCOMPATABILITIES:
+BACKWARDS INCOMPATIBILITIES:
 * `g:go_metalinter_disabled` has been removed.
   [[GH-2375]](https://github.com/fatih/vim-go/pull/2375)
 
@@ -190,7 +227,7 @@ FEATURES:
 * New `:GoDefType` command to jump to a type definition from an instance of the
   type.
 
-BACKWARDS INCOMPATABILITIES:
+BACKWARDS INCOMPATIBILITIES:
 * `g:go_highlight_function_arguments` is renamed to `g:go_highlight_function_parameters`
   [[GH-2117]](https://github.com/fatih/vim-go/pull/2117)
 

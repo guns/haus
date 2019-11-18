@@ -98,6 +98,136 @@ function! Test_gomodVersion_incompatible_highlight() abort
   endtry
 endfunc
 
+function! Test_numeric_literal_highlight() abort
+  syntax on
+
+  let tests = {
+        \ 'lone zero': {'group': 'goDecimalInt', 'value': '0'},
+        \ 'integer': {'group': 'goDecimalInt', 'value': '1234567890'},
+        \ 'hexadecimal': {'group': 'goHexadecimalInt', 'value': '0x0123456789abdef'},
+        \ 'hexadecimalErrorLeading': {'group': 'goHexadecimalError', 'value': '0xg0123456789abdef'},
+        \ 'hexadecimalErrorTrailing': {'group': 'goHexadecimalError', 'value': '0x0123456789abdefg'},
+        \ 'heXadecimal': {'group': 'goHexadecimalInt', 'value': '0X0123456789abdef'},
+        \ 'heXadecimalErrorLeading': {'group': 'goHexadecimalError', 'value': '0Xg0123456789abdef'},
+        \ 'heXadecimalErrorTrailing': {'group': 'goHexadecimalError', 'value': '0X0123456789abdefg'},
+        \ 'octal': {'group': 'goOctalInt', 'value': '01234567'},
+        \ 'octalErrorLeading': {'group': 'goOctalError', 'value': '081234567'},
+        \ 'octalErrorTrailing': {'group': 'goOctalError', 'value': '012345678'},
+        \ 'binaryInt': {'group': 'goBinaryInt', 'value': '0b0101'},
+        \ 'binaryErrorLeading': {'group': 'goBinaryError', 'value': '0b20101'},
+        \ 'binaryErrorTrailing': {'group': 'goBinaryError', 'value': '0b01012'},
+        \ 'BinaryInt': {'group': 'goBinaryInt', 'value': '0B0101'},
+        \ 'BinaryErrorLeading': {'group': 'goBinaryError', 'value': '0B20101'},
+        \ 'BinaryErrorTrailing': {'group': 'goBinaryError', 'value': '0B01012'},
+        \ }
+
+  for kv in items(tests)
+    let l:actual = s:numericHighlightGroupInAssignment(kv[0], kv[1].value)
+    call assert_equal(kv[1].group, l:actual, kv[0])
+  endfor
+endfunction
+
+function! TestZeroAsIndexElement() abort
+  syntax on
+
+  let l:actual = s:numericHighlightGroupInSliceElement('zero-element', '0')
+  call assert_equal('goDecimalInt', l:actual)
+  let l:actual = s:numericHighlightGroupInMultidimensionalSliceElement('zero-element', '0')
+  call assert_equal('goDecimalInt', l:actual, 'multi-dimensional')
+endfunction
+
+function! TestZeroAsSliceIndex() abort
+  syntax on
+
+  let l:actual = s:numericHighlightGroupInSliceIndex('zero-index', '0')
+  call assert_equal('goDecimalInt', l:actual)
+  let l:actual = s:numericHighlightGroupInMultidimensionalSliceIndex('zero-index', '0', '0')
+
+  call assert_equal('goDecimalInt', l:actual, 'multi-dimensional')
+endfunction
+
+function! s:numericHighlightGroupInAssignment(testname, value)
+  let l:dir = gotest#write_file(printf('numeric/%s.go', a:testname), [
+        \ 'package numeric',
+        \ '',
+        \ printf("var v = %s\x1f", a:value),
+        \ ])
+
+  try
+    let l:pos = getcurpos()
+    let l:actual = synIDattr(synID(l:pos[1], l:pos[2], 1), 'name')
+    return l:actual
+  finally
+    call delete(l:dir, 'rf')
+  endtry
+endfunction
+
+function! s:numericHighlightGroupInSliceElement(testname, value)
+  let l:dir = gotest#write_file(printf('numeric/slice-element/%s.go', a:testname), [
+        \ 'package numeric',
+        \ '',
+        \ printf("v := []int{%s\x1f}", a:value),
+        \ ])
+
+  try
+    let l:pos = getcurpos()
+    let l:actual = synIDattr(synID(l:pos[1], l:pos[2], 1), 'name')
+    return l:actual
+  finally
+    call delete(l:dir, 'rf')
+  endtry
+endfunction
+
+function! s:numericHighlightGroupInMultidimensionalSliceElement(testname, value)
+  let l:dir = gotest#write_file(printf('numeric/slice-multidimensional-element/%s.go', a:testname), [
+        \ 'package numeric',
+        \ '',
+        \ printf("v := [][]int{{%s\x1f},{%s}}", a:value, a:value),
+        \ ])
+
+  try
+    let l:pos = getcurpos()
+    let l:actual = synIDattr(synID(l:pos[1], l:pos[2], 1), 'name')
+    return l:actual
+  finally
+    call delete(l:dir, 'rf')
+  endtry
+endfunction
+
+function! s:numericHighlightGroupInSliceIndex(testname, value)
+  let l:dir = gotest#write_file(printf('numeric/slice-index/%s.go', a:testname), [
+        \ 'package numeric',
+        \ '',
+        \ 'var sl []int',
+        \ printf("println(sl[%s\x1f])", a:value),
+        \ ])
+
+  try
+    let l:pos = getcurpos()
+    let l:actual = synIDattr(synID(l:pos[1], l:pos[2], 1), 'name')
+    return l:actual
+  finally
+    call delete(l:dir, 'rf')
+  endtry
+endfunction
+
+function! s:numericHighlightGroupInMultidimensionalSliceIndex(testname, value)
+  let l:dir = gotest#write_file(printf('numeric/slice-multidimensional-index/%s.go', a:testname), [
+        \ 'package numeric',
+        \ '',
+        \ 'var sl [][]int',
+        \ printf("println(sl[%s\x1f][%s])", a:value, a:value),
+        \ ])
+
+  try
+    let l:pos = getcurpos()
+    let l:actual = synIDattr(synID(l:pos[1], l:pos[2], 1), 'name')
+    return l:actual
+  finally
+    call delete(l:dir, 'rf')
+  endtry
+endfunction
+
 " restore Vi compatibility settings
 let &cpo = s:cpo_save
 unlet s:cpo_save
