@@ -55,7 +55,7 @@ class Genpw
 
   def run arguments = []
     args = parser.parse arguments
-    args = [60] if args.empty?
+    args = [64] if args.empty?
     raise 'Character set is empty!' if @chars and @chars.empty?
     args.each do |len|
       puts NERV::Util::Password.password(len.to_i, :chars => @chars, :source => @source)
