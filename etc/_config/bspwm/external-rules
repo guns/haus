@@ -16,4 +16,5 @@ case "$(xtitle "$1")" in
 '✉ Mutt ✉'           ) echo 'state=floating';;
 '❴ pass ❵'           ) echo 'state=floating';;
 *' - VIM'            ) echo 'state=floating';;
+'cal -y'             ) echo 'state=floating';;
 esac

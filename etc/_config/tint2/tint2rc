@@ -118,7 +118,7 @@ clock_padding = 6 0
 clock_background_id = 0
 clock_tooltip = 
 clock_tooltip_timezone = 
-clock_lclick_command = 
+clock_lclick_command = urxvtc -title 'cal -y' -g 66x35 -e sh -c 'cal -y --color=always | less'
 clock_rclick_command = 
 clock_mclick_command = 
 clock_uwheel_command = 
