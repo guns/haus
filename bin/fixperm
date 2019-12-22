@@ -25,7 +25,7 @@ class Fixperm
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 16 do |opt|
+    @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<-BANNER.gsub /^ +/, ''
         Change mode of files to match the current umask (typically 0022).
         Skips symbolic links.
@@ -37,7 +37,7 @@ class Fixperm
         Options:
       BANNER
 
-      opt.on '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
+      opt.on '-m', '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
         @umask = arg.to_i 8
       end
 
