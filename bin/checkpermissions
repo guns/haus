@@ -130,14 +130,14 @@ class Checkpermissions
       if owner_uid and stat.uid != owner_uid and stat.uid != 0
         errors << "\e[31m%s: Expected owner %s, but is owned by %s\e[0m" % [
           path,
-          Etc.getpwuid(owner_uid).name.inspect,
-          Etc.getpwuid(stat.uid).name.inspect
+          (Etc.getpwuid(owner_uid).name.inspect rescue owner_uid),
+          (Etc.getpwuid(stat.uid).name.inspect rescue stat.uid)
         ]
       elsif owner_gid and stat.gid != owner_gid and stat.gid != 0
         errors << "\e[31m%s: Expected group owner %s, but is group owned by %s\e[0m" % [
           path,
-          Etc.getgrgid(owner_gid).name.inspect,
-          Etc.getgrgid(stat.gid).name.inspect
+          (Etc.getgrgid(owner_gid).name.inspect rescue owner_gid),
+          (Etc.getgrgid(stat.gid).name.inspect rescue stat.uid)
         ]
       elsif not (stat.mode & mask).zero?
         errors << "\e[31m%s: Mode %04o violates mask %04o\e[0m" % [
