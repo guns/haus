@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+OPTIND= OPTARG= opt= port=1234
+while getopts :p:h opt; do
+    case "$opt" in
+        p) port="$OPTARG";;
+        h) echo "USAGE: $0 [-p port] [args]" >&2; exit;;
+    esac
+done
+shift $((OPTIND-1))
+
+run ncat --listen "$(getlip)" "$port" "$@"
