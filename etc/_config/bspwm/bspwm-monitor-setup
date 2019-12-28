@@ -7,9 +7,9 @@ info = %x(xrandr --listmonitors).lines
 monitors = info[1..].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
 
 case
-when Set['DP-3', 'HDMI-0'].subset?(monitors)
-  system *%w[xrandr --output HDMI-0 --primary --output DP-3 --left-of HDMI-0]
-  system *%w[bspc monitor DP-3 --reset-desktops 1 2 3 4 5]
+when Set['DP-1', 'HDMI-0'].subset?(monitors)
+  system *%w[xrandr --output HDMI-0 --primary --output DP-1 --left-of HDMI-0]
+  system *%w[bspc monitor DP-1 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor HDMI-0 --reset-desktops 6 7 8 9 0]
 when Set['DP1-1', 'HDMI2'].subset?(monitors)
   system *%w[xrandr --output HDMI2 --primary --output DP1-1 --left-of HDMI2]
