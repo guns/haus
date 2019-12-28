@@ -82,4 +82,4 @@ nitrogen --restore
 rm -f "/run/user/$EUID/wallpaper.lock"
 
 # Fix tint2 stacking order
-xdo above -t "$(xdo id -N Bspwm -n root)" "$(xdo id -n tint2)"
+xdo above -t "$(xdo id -N Bspwm -n root | head -1)" "$(xdo id -n tint2 | head -1)"
