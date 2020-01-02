@@ -40,9 +40,7 @@ checkpermissions.bash() {
         ~/.rnd:::0177
         ~/.ssh:::0077:no-recurse
         ~/.ssh/*_{dsa,ecdsa,ed25519,rsa}:::0077:glob
-        ~/.*/.git:::0077:glob,no-recurse
-        ~/.config/**/.git:::0077:glob,no-recurse
-        ~/.mozilla/**/.git:::0077:glob,no-recurse
+        ~/.[^.]*/**/.git:::0077:glob,no-recurse
 
         "$BASH_ENV"
         "$ENV"
