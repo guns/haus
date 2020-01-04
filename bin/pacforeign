@@ -1,8 +1,25 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 
-puts %x(pacman --query --foreign --info).split("\n\n").reduce([]) { |pkgs, pkg|
-  (pkg[/Groups\s*:\s*(.*)/, 1].split & %w[nerv nerv-alt]).empty? \
-    ? pkgs << pkg[/Name\s*:\s*(.*)/, 1] \
-    : pkgs
-}
+require 'optparse'
+
+excluded = %w[nerv nerv-alt]
+
+OptionParser.new do |opt|
+  opt.banner = <<~BANNER
+    Usage: #{File.basename __FILE__} [options]
+
+    Options:
+  BANNER
+
+  opt.on '-a', '--all' do
+    excluded.clear
+  end
+end.parse!
+
+abort if ARGV.any?
+
+%x(pacman --query --foreign --info).split("\n\n").each do |pkg|
+  next if (pkg[/Groups\s*:\s*(.*)/, 1].split & excluded).any?
+  puts pkg[/Name\s*:\s*(.*)/, 1]
+end
