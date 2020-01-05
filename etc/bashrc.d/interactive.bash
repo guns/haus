@@ -91,7 +91,7 @@ __partitions__() {
 }
 
 __pacdowngrade__() {
-    __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep '\.tar.xz$')"
+    __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep -E 'pkg\.tar\.[a-z]+$')"
 }
 
 __pacman_sync__() {
@@ -442,10 +442,12 @@ alias star='tar --strip-components=1'
 alias gtar='tar --gzip --create --verbose'
 alias btar='tar --bzip2 --create --verbose'
 alias xtar='tar --xz --create --verbose'
+alias ztar='tar --zstd --create --verbose'
 alias suntar='untar --strip-components=1'
 alias guntar='untar --gunzip'
 alias buntar='untar --bzip2'
 alias xuntar='untar --xz'
+alias zuntar='untar --zstd'
 
 # open
 alias op='open 2>/dev/null'; complete -F _minimal op
@@ -1003,7 +1005,7 @@ HAVE pacman && {
 
     TCOMP find pacfindunknown
 
-    _xspecs['pacinstallfile']='!*.pkg.tar.xz'
+    _xspecs['pacinstallfile']='!*.pkg.tar.+([a-z])'
     complete -F _filedir_xspec pacinstallfile
 
     complete -F __pacdowngrade__ pacdowngrade

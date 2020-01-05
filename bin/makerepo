@@ -64,21 +64,15 @@ class Makerepo
   end
 
   def cached_packages
-    @cached_packages ||= Set.new Dir[File.join @cache_dir, '*.pkg.tar.xz'].select { |f|
-      File.stat(f).ctime > dbmtime
+    @cached_packages ||= Set.new Dir[File.join @cache_dir, '*.pkg.tar.*'].select { |f|
+      not f.end_with? '.sig' and File.stat(f).ctime > dbmtime
     }
   end
 
   def packages
     @packages ||= Dir[File.join @lib_dir, '*'].reduce [] do |v, f|
       base = File.join @cache_dir, File.basename(f)
-      if cached_packages.include? (pkg = "#{base}-any.pkg.tar.xz")
-        v << pkg
-      elsif cached_packages.include? (pkg = "#{base}-#{arch}.pkg.tar.xz")
-        v << pkg
-      else
-        v
-      end
+      v.concat cached_packages.grep(/\A#{Regexp.escape base}-(?:any|#{Regexp.escape arch})\.pkg\.tar\.[a-z]+\z/)
     end
   end
 

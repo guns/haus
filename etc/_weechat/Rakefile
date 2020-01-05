@@ -74,5 +74,5 @@ end
 
 desc 'Archive old logs'
 task :archive do
-  sh 'cd logs; tar Jcv *.weechatlog > "$(date --iso-8601=seconds).tar.xz" && rm *.weechatlog'
+  sh 'cd logs; tar zcv *.weechatlog > "$(date --iso-8601=seconds).tar.gz" && rm *.weechatlog'
 end
