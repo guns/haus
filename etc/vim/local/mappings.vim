@@ -370,7 +370,7 @@ noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git re
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
 noremap <Leader>eh       :<C-u>TabOpen ~/.cache/bash_history<CR>
 noremap <Leader>eH       :<C-u>TabOpen /etc/badhosts \| lcd /etc/<CR>
-noremap <Leader>ei       :<C-u>TabOpen /etc/iptables.sh \| lcd /etc/<CR>
+noremap <Leader>ei       :<C-u>TabOpen /etc/iptables.script \| lcd /etc/<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/ipset.conf \| lcd /etc/<CR>
 noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
 noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/_mutt/muttrc \| lcd $cdhaus<CR>

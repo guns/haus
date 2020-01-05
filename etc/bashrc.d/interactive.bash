@@ -600,6 +600,8 @@ alias xsu='exec su'; TCOMP su xsu
 
 # ip
 alias a='ip addr'
+alias 4='ip -4'
+alias 6='ip -6'
 
 # ifconfig
 alias ic='ifconfig'
@@ -663,9 +665,12 @@ alias dnscrypt='dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml'
 ### Firewalls
 
 # iptables
-alias iptables.sh='/etc/iptables.sh'
+alias iptables.script='/etc/iptables.script'
 alias iptw='ipt --wait'
+alias ipt4='ipt --ipv4'
 alias ipt6='ipt --ipv6'
+alias ipt4w='ipt --ipv4 --wait'
+alias ipt6w='ipt --ipv6 --wait'
 
 ### Editors
 
@@ -728,7 +733,7 @@ HAVE vim && {
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.cache/bash_history'
     alias vimhosts='vim "/etc/hosts" -c "lcd /etc/"'
-    alias vimiptables='vim "/etc/iptables.sh" -c "lcd /etc/"'
+    alias vimiptables='vim "/etc/iptables.script" -c "lcd /etc/"'
     alias vimipset='vim "/etc/ipset.conf" -c "lcd /etc/"'
     alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'
     alias vimmuttrc='vim "$cdhaus/etc/_mutt/muttrc" -c "lcd \$cdhaus"'

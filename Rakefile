@@ -436,10 +436,10 @@ task :vimgitbindings do
   exec 'vim', '-O', *fs, '-c', 'windo execute "normal! /VIMGITBINDINGS$\<CR>zt:set scrollbind\<CR>"'
 end
 
-desc 'Vimdiff iptables.sh and ipset.conf'
+desc 'Vimdiff iptables.script and ipset.conf'
 task :vimdiffiptables do
-  fs = ['/etc/iptables.sh', 'share/iptables/iptables.sh',
-        '/etc/ipset.conf',  'share/ipset/ipset.conf']
+  fs = ['/etc/iptables.script', 'share/iptables/iptables.script',
+        '/etc/ipset.conf', 'share/ipset/ipset.conf']
   exec 'vim', *fs.each_slice(2).reduce([]) { |v, p| v << '-c' << vimdiffcmd(*p) }, '-c', 'tabclose | tabfirst'
 end
 

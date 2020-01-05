@@ -1,0 +1,165 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+#     .                     s                    ..         ..             .x+=:.
+#    @88>                  :8              . uW8"     x .d88"             z`    ^%
+#    %8P   .d``           .88              `t888       5888R                 .   <k
+#     .    @8Ne.   .u    :888ooo      u     8888   .   '888R       .u      .@8Ned8"
+#   .@88u  %8888:u@88N -*8888888   us888u.  9888.z88N   888R    ud8888.  .@^%8888"
+#  ''888E`  `888I  888.  8888   .@88 "8888" 9888  888E  888R  :888'8888.x88:  `)8b.
+#    888E    888I  888I  8888   9888  9888  9888  888E  888R  d888 '88%"8888N=*8888
+#    888E    888I  888I  8888   9888  9888  9888  888E  888R  8888.+"    %8"    R88
+#    888E  uW888L  888' .8888Lu=9888  9888  9888  888E  888R  8888L       @8Wou 9%
+#    888& '*88888Nu88P  ^%888*  9888  9888 .8888  888" .888B .'8888c. .+.888888P`
+#    R888"~ '88888F`      'Y"   "888*""888" `%888*%"   ^*888%  "88888%  `   ^"F
+#     ""     888 ^               ^Y"   ^Y'     "`        "%      "YP'
+#            *8E
+#            '8>                                        guns <self@sungpae.com>
+#             "
+#
+#  cf. http://inai.de/documents/Perfect_Ruleset.pdf
+#      http://inai.de/images/nf-packet-flow.png
+#
+#  Note that this file should not be used directly as an init script. Set the
+#  firewall state once with this script, then dump with iptables-save.
+
+require 'shellwords'
+
+def iptables *args
+  args = [$command, '--wait', *args]
+  warn args.shelljoin
+  system *args or abort
+end
+
+def ipv4
+  command = $command
+  $command = 'iptables'
+  yield
+ensure
+  $command = command
+end
+
+def ipv6
+  command = $command
+  $command = 'ip6tables'
+  yield
+ensure
+  $command = command
+end
+
+def both
+  ipv4 { yield }
+  ipv6 { yield }
+end
+
+def icmp
+  $command == 'ip6tables' ? 'ipv6-icmp' : 'icmp'
+end
+
+# Flush rules and delete non-default chains
+def reset_tables
+  %w[filter nat mangle raw security].each do |table|
+    iptables *%W[-t #{table} --flush]
+    iptables *%W[-t #{table} --delete-chain]
+  end
+end
+
+def set_filter_policy policy
+  iptables *%W[--policy INPUT   #{policy}]
+  iptables *%W[--policy FORWARD #{policy}]
+  iptables *%W[--policy OUTPUT  #{policy}]
+end
+
+def create_chain name, target
+  iptables *%W[--new-chain #{name}]
+  iptables *%W[-A #{name} -j LOG --log-prefix #{"[#{name}] "}]
+  iptables *%W[-A #{name} -p tcp -j REJECT --reject-with tcp-reset] if target == 'REJECT'
+  iptables *%W[-A #{name} -j #{target}]
+end
+
+def append_default_rules chain
+  iptables *%W[-A #{chain} -m conntrack --ctstate ESTABLISHED   -j ACCEPT]
+  iptables *%W[-A #{chain} -m conntrack --ctstate INVALID       -j INVALID]
+  iptables *%W[-A #{chain} #{chain == 'INPUT' ? '-i' : '-o'} lo -j ACCEPT]
+  iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT]
+end
+
+def forward src, as: nil
+  iptables *%W[-A FORWARD -d #{src} -m conntrack --ctstate ESTABLISHED -j ACCEPT]
+  iptables *%W[-A FORWARD -d #{src} -m conntrack --ctstate INVALID     -j INVALID]
+  iptables *%W[-A FORWARD -s #{src} -p #{icmp}                         -j ACCEPT]
+  iptables *%W[-A FORWARD -d #{src} -p #{icmp}                         -j ACCEPT]
+
+  if as
+    iptables *%W[-t nat -A POSTROUTING -s #{src} -j SNAT --to-source #{as}]
+  else
+    iptables *%W[-t nat -A POSTROUTING -s #{src} -j MASQUERADE]
+  end
+end
+
+def forward_interface iface
+  iptables *%W[-A FORWARD -o #{iface} -m conntrack --ctstate ESTABLISHED -j ACCEPT]
+  iptables *%W[-A FORWARD -o #{iface} -m conntrack --ctstate INVALID     -j INVALID]
+  iptables *%W[-A FORWARD -i #{iface} -p #{icmp}                         -j ACCEPT]
+  iptables *%W[-A FORWARD -o #{iface} -p #{icmp}                         -j ACCEPT]
+
+  iptables *%W[-t nat -A POSTROUTING -o #{iface} -j MASQUERADE]
+end
+
+#
+# Initialization
+#
+
+both do
+  reset_tables
+  set_filter_policy 'DROP'
+  create_chain 'INVALID', 'DROP'
+  create_chain 'REJECT_INPUT', 'REJECT'
+  create_chain 'REJECT_OUTPUT', 'REJECT'
+  create_chain 'REJECT_FORWARD', 'REJECT'
+  create_chain 'ACCEPT_INPUT', 'ACCEPT'
+end
+
+#
+# INPUT
+#
+
+both do
+  append_default_rules 'INPUT'
+end
+
+ipv6 do
+  iptables *%W[-A INPUT -s fc00::/6 -d fc00::/6 -p udp --dport 546 --sport 547 -j ACCEPT -m comment --comment DHCPv6-client]
+end
+
+both do
+  iptables *%W[-A INPUT -j REJECT_INPUT]
+end
+
+#
+# FORWARD
+#
+
+both do
+  iptables *%W[-A FORWARD -j REJECT_FORWARD]
+end
+
+#
+# OUTPUT
+#
+
+both do
+  append_default_rules 'OUTPUT'
+end
+
+ipv4 do
+  iptables *%W[-A OUTPUT -m conntrack --ctstate NEW -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT -m comment --comment NTP]
+end
+
+ipv6 do
+  iptables *%W[-A OUTPUT -s fc00::/6 -d fc00::/6 -p udp --sport 546 --dport 547 -j ACCEPT -m comment --comment DHCPv6-client]
+end
+
+both do
+  iptables *%W[-A OUTPUT -j REJECT_OUTPUT]
+end
