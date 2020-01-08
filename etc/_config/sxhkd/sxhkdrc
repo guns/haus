@@ -164,34 +164,34 @@ alt + {XF86Sleep,Pause,Escape}
 # Audio {{{1
 #
 
-{XF86AudioMute,super + KP_Enter}
+{XF86AudioMute,super + End}
 	ponymix toggle
 
-{XF86AudioLowerVolume,super + KP_Subtract}
+{XF86AudioLowerVolume,super + Next}
 	ponymix decrease 5
 
-{XF86AudioRaiseVolume,super + KP_Add}
+{XF86AudioRaiseVolume,super + Prior}
 	ponymix increase 5
 
-super + alt + control + {XF86AudioMute,KP_Enter}
+super + alt + control + {XF86AudioMute,End}
 	notify --no-audio --title 'Volume' --icon gnome-alsamixer-icon 'Muting for 30 seconds'; \
 	remind 30s -c 'ponymix unmute'; \
 	ponymix mute
 
-{super + XF86AudioMute,super + shift + KP_Enter}
+{super + XF86AudioMute,super + shift + End}
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
-{super + shift + XF86AudioMute,super + alt + KP_Enter}
+{super + shift + XF86AudioMute,super + alt + End}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
 
-alt + {XF86AudioMute,KP_Enter}
+alt + {XF86AudioMute,End}
 	if pkill --exact -0 pulseaudio; then \
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle sink); \
 	fi
 
-alt + shift + {XF86AudioMute,KP_Enter}
+alt + shift + {XF86AudioMute,End}
 	if pkill --exact -0 pulseaudio; then \
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle source); \
 	fi
