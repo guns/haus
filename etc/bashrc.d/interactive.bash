@@ -868,10 +868,12 @@ r() {
 
 # Bundler
 b() {
+    local jobs=$(grep --count ^processor /proc/cpuinfo)
+
     if [[ -x bin/bundle ]]; then
-        run bin/bundle "$@"
+        BUNDLE_JOBS="$jobs" run bin/bundle "$@"
     else
-        run bundle "$@"
+        BUNDLE_JOBS="$jobs" run bundle "$@"
     fi
 }
 
