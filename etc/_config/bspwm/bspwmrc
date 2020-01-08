@@ -51,6 +51,7 @@ bspc rule --add Asunder                 state=floating
 bspc rule --add Audacious               state=floating
 bspc rule --add Clementine              state=floating
 bspc rule --add FLTK                    state=floating
+bspc rule --add Gcolor3                 state=floating
 bspc rule --add Gifview                 state=floating
 bspc rule --add Hamster                 state=floating
 bspc rule --add Hamster-windows-service state=floating
