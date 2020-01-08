@@ -36,7 +36,7 @@ super + alt + {l,h}
 	bspc desktop --focus "$DIR" && \
 	bspc node --focus "$NODE"
 
-{super + grave, button10}
+{alt + grave, button10}
 	bspc desktop --focus last
 
 super + alt + {0-9}
@@ -70,9 +70,6 @@ super + q
 
 super + {Tab,shift + Tab}
 	bspc node --focus {next,prev}.local
-
-alt + grave
-	bspc node --focus last
 
 alt + Tab
 	if pkill --exact skippy-xd; then \
@@ -199,6 +196,9 @@ alt + shift + {XF86AudioMute,End}
 #
 # Miscellaneous {{{
 #
+
+super + grave
+	killall --exact -USR1 deadd-notification-center
 
 super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}

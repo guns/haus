@@ -26,14 +26,15 @@ unset f
 pushd .
 cd ~/Downloads
 
-/usr/bin/sxhkd &
-/usr/bin/kupfer --no-splash &
-iptablesnotify &
-WALLPAPER="/run/user/$EUID/wallpaper.lock"
-> "$WALLPAPER"
-(inotifywait "$WALLPAPER"; exec /usr/bin/tint2) &
+MONITOR_LOCK="/run/user/$EUID/monitor.lock"
+WALLPAPER_LOCK="/run/user/$EUID/wallpaper.lock"
+touch "$MONITOR_LOCK" "$WALLPAPER_LOCK"
 
+/usr/bin/sxhkd &
 xautolock-launch 15 &
+(inotifywait "$MONITOR_LOCK"; exec kupfer --no-splash) &
+(inotifywait "$MONITOR_LOCK"; deadd-notification-center & exec iptablesnotify) &
+(inotifywait "$WALLPAPER_LOCK"; exec /usr/bin/tint2) &
 
 popd
 

@@ -77,6 +77,7 @@ bspc rule --add Xsensors                state=floating sticky=true
 
 # Setup monitors
 "$HOME/.config/bspwm/bspwm-monitor-setup"
+rm -f "/run/user/$EUID/monitor.lock"
 
 # Set wallpapers after xrandr call
 nitrogen --restore
