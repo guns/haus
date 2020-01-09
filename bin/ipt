@@ -16,8 +16,8 @@ class Ipt
     :ipv6               => true,
     :save4              => '/etc/iptables/iptables.rules',
     :save6              => '/etc/iptables/ip6tables.rules',
-    :drop_input_target  => 'DROPINPUT',
-    :drop_output_target => 'DROPOUTPUT',
+    :drop_input_target  => 'REJECT_INPUT',
+    :drop_output_target => 'REJECT_OUTPUT',
     :wait               => false,
     :command            => nil,
   }
