@@ -72,7 +72,7 @@ end
 
 def create_chain name, target
   iptables *%W[--new-chain #{name}]
-  iptables *%W[-A #{name} -j LOG --log-prefix #{"[#{name}] "}]
+  iptables *%W[-A #{name} -j LOG --log-uid --log-prefix #{"[#{name}] "}]
   iptables *%W[-A #{name} -p tcp -j REJECT --reject-with tcp-reset] if target == 'REJECT'
   iptables *%W[-A #{name} -j #{target}]
 end
