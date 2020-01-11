@@ -1,4 +1,0 @@
-#!/bin/sh
-
-/usr/bin/xhost si:localuser:root
-/usr/bin/xhost si:localuser:guns

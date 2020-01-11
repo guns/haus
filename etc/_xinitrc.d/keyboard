@@ -1,4 +1,0 @@
-#!/bin/sh
-
-setxkbmap -option compose:menu
-numlockx on
