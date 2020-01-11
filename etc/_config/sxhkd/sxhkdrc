@@ -218,15 +218,12 @@ super + Print
 		notify --error 'Screenshot failed'; \
 	fi
 
-Scroll_Lock
+shift + Scroll_Lock
 	if [[ "$(toggle-mouse)" == true ]]; then \
 		notify --alert --icon input-mouse --title Mouse "enabled"; \
 	else \
 		notify --warning --icon dialog-warning --title Mouse "DISABLED"; \
 	fi
-
-shift + Scroll_Lock
-	xdotool mousemove 10000 10000
 
 #
 # Applications {{{1
