@@ -19,6 +19,15 @@
 # Note that the `keyboard:` prefix was recognized up to systemd 219, while the
 # `evdev:input:` prefix is recognized from systemd 220+
 
+# Dell Latitude
+evdev:input:b0011v0001p0001eAB41-*
+ KEYBOARD_KEY_3A=leftctrl       # capslock -> leftctrl
+ KEYBOARD_KEY_38=leftmeta       # leftalt -> leftmeta
+ KEYBOARD_KEY_DB=leftalt        # leftmeta -> leftalt
+ KEYBOARD_KEY_B8=rightmeta      # rightalt -> rightmeta
+ KEYBOARD_KEY_9D=rightalt       # rightctrl -> rightalt
+
+# Default USB PC keyboard
 keyboard:usb:*
 evdev:input:*
  KEYBOARD_KEY_70039=leftctrl    # capslock -> leftctrl
@@ -26,14 +35,5 @@ evdev:input:*
  KEYBOARD_KEY_700E3=leftalt     # leftmeta -> leftalt
  KEYBOARD_KEY_700E6=rightmeta   # rightalt -> rightmeta
  KEYBOARD_KEY_700E7=rightalt    # rightmeta -> rightalt
+ KEYBOARD_KEY_700E4=rightmeta   # rightctrl -> rightmeta
 
-#
-# Dell Latitude
-#
-
-evdev:input:b0011v0001p0001eAB41-*
- KEYBOARD_KEY_3A=leftctrl       # capslock -> leftctrl
- KEYBOARD_KEY_38=leftmeta       # leftalt -> leftmeta
- KEYBOARD_KEY_DB=leftalt        # leftmeta -> leftalt
- KEYBOARD_KEY_B8=rightmeta      # rightalt -> rightmeta
- KEYBOARD_KEY_9D=rightalt       # rightctrl -> rightalt
