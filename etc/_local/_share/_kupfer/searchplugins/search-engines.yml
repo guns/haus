@@ -1,5 +1,5 @@
 qaddons:             https://addons.mozilla.org/en-US/firefox/search/?q=***&platform=linux
-qamazon:             https://www.amazon.com/s/field-keywords=***
+qamazon:             https://www.amazon.com/s?k=***
 qanagram:            https://wordsmith.org/anagram/anagram.cgi?anagram=***
 qarchive:            https://wayback.archive.org/web/*/https://***
 qarchpackage:        https://www.archlinux.org/packages/?q=***
