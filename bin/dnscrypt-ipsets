@@ -1,0 +1,76 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+#
+# Copyright (c) 2020 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'json'
+require 'ipaddr'
+
+class DnscryptIpsets
+  DEFAULTS = {
+    ipset_ipv4: 'DNS',
+    ipset_ipv6: 'DNS6',
+  }
+
+  def initialize opts = {}
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<-BANNER.gsub /^ +/, ''
+        Usage: dnscrypt-proxy -list -json | #{File.basename __FILE__} >> /etc/ipset.conf
+      BANNER
+    end
+  end
+
+  def build_ipset_conf dnscrypt_resolvers
+    ipv4 = []
+    ipv6 = []
+
+    dnscrypt_resolvers.each do |resolver|
+      addrs = resolver['addrs'].select { |a| IPAddr.new a rescue nil }
+      desc = "#{resolver['name']}: #{resolver['description']}"
+      proto = resolver['proto'] == 'DoH' ? 'tcp' : 'udp'
+      ports = resolver['ports']
+
+      addrs.each do |addr|
+        ports.each do |port|
+          (resolver['ipv6'] ? ipv6 : ipv4) << [desc, addr, proto, port]
+        end
+      end
+    end
+
+    buf = []
+
+    if ipv4.any?
+      buf << "create -exist #{@ipset_ipv4} hash:ip,port comment"
+
+      ipv4.sort.each do |desc, addr, proto, port|
+        buf << "add -exist #{@ipset_ipv4} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
+      end
+    end
+
+    if ipv6.any?
+      buf << '' if buf.any?
+      buf << "create -exist #{@ipset_ipv6} hash:ip,port family inet6 comment"
+
+      ipv6.sort.each do |desc, addr, proto, port|
+        buf << "add -exist #{@ipset_ipv6} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
+      end
+    end
+
+    buf
+  end
+
+  def run arguments = []
+    args = parser.parse arguments
+    abort parser.help if args.any?
+    puts build_ipset_conf(JSON.parse($stdin.read))
+  end
+end
+
+$0 = File.basename(__FILE__) and DnscryptIpsets.new.run ARGV if $0 == __FILE__
