@@ -28,7 +28,6 @@ evdev:input:b0011v0001p0001eAB41-*
  KEYBOARD_KEY_9D=rightalt       # rightctrl -> rightalt
 
 # Default USB PC keyboard
-keyboard:usb:*
 evdev:input:*
  KEYBOARD_KEY_70039=leftctrl    # capslock -> leftctrl
  KEYBOARD_KEY_700E2=leftmeta    # leftalt -> leftmeta
@@ -36,4 +35,3 @@ evdev:input:*
  KEYBOARD_KEY_700E6=rightmeta   # rightalt -> rightmeta
  KEYBOARD_KEY_700E7=rightalt    # rightmeta -> rightalt
  KEYBOARD_KEY_700E4=rightmeta   # rightctrl -> rightmeta
-
