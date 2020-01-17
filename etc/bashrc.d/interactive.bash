@@ -721,6 +721,9 @@ HAVE vim && {
         (( ${#args[@]} )) && run vim "${args[@]}"
     }
 
+    # XtermColorTable
+    alias xtermcolortable='vim -c OXtermColorTable'
+
     # VIMEDITBINDINGS
     alias vimautocommands='vim "$cdhaus/etc/vim/local/autocommands.vim" -c "lcd \$cdhaus"'
     alias vimabook='vim ~/.abook/addressbook -c "lcd ~/.abook"'
