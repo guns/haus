@@ -84,28 +84,6 @@ def append_default_rules chain
   iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT]
 end
 
-def forward src, as: nil
-  iptables *%W[-A FORWARD -d #{src} -m conntrack --ctstate ESTABLISHED -j ACCEPT]
-  iptables *%W[-A FORWARD -d #{src} -m conntrack --ctstate INVALID     -j INVALID]
-  iptables *%W[-A FORWARD -s #{src} -p #{icmp}                         -j ACCEPT]
-  iptables *%W[-A FORWARD -d #{src} -p #{icmp}                         -j ACCEPT]
-
-  if as
-    iptables *%W[-t nat -A POSTROUTING -s #{src} -j SNAT --to-source #{as}]
-  else
-    iptables *%W[-t nat -A POSTROUTING -s #{src} -j MASQUERADE]
-  end
-end
-
-def forward_interface iface
-  iptables *%W[-A FORWARD -o #{iface} -m conntrack --ctstate ESTABLISHED -j ACCEPT]
-  iptables *%W[-A FORWARD -o #{iface} -m conntrack --ctstate INVALID     -j INVALID]
-  iptables *%W[-A FORWARD -i #{iface} -p #{icmp}                         -j ACCEPT]
-  iptables *%W[-A FORWARD -o #{iface} -p #{icmp}                         -j ACCEPT]
-
-  iptables *%W[-t nat -A POSTROUTING -o #{iface} -j MASQUERADE]
-end
-
 #
 # Initialization
 #
@@ -139,6 +117,23 @@ end
 #
 # FORWARD
 #
+
+# ipv4 do
+#   iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
+#   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
+#
+#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT]
+#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p udp -m multiport --dports 80,443 -j ACCEPT]
+#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p #{icmp}                          -j ACCEPT]
+#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -p #{icmp}                          -j ACCEPT]
+#
+#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -j SNAT --to-source #{GATEWAY}]
+#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -j MASQUERADE]
+# end
+
+both do
+  iptables *%W[-A FORWARD -j REJECT_FORWARD]
+end
 
 both do
   iptables *%W[-A FORWARD -j REJECT_FORWARD]
