@@ -28,6 +28,6 @@ unset __PS_DELIM__ __PS_COLOR__
 # Show exit status of last command if non-zero
 __EXITSTATUS__() {
     local s=$?
-    ((s)) && printf "\033[3;31m($s)\033[0m "
+    ((s)) && printf "\001\033[3;31m($s)\033[0m\002 "
 }
 PROMPT_COMMAND='__EXITSTATUS__'
