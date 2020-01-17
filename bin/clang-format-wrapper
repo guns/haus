@@ -1,0 +1,22 @@
+#!/usr/bin/env ruby
+# -*- encoding: utf-8 -*-
+
+require 'optparse'
+require 'yaml'
+require 'json'
+
+config_file = File.expand_path '~/.config/clang-format.yml'
+
+parser = OptionParser.new do |opt|
+  opt.banner = "Usage: #{File.basename __FILE__} [options] -- clang-format-args ...\n\nOptions:\n"
+  opt.on('-f', '--config-file PATH') { |arg| config_file = File.expand_path arg }
+end
+
+args = parser.parse ARGV
+
+if args.any? { |arg| arg.match? /\A-?-style\b/ }
+  exec '/usr/bin/clang-format', *args
+else
+  style = '--style=' << YAML.load_file(config_file).to_json
+  exec '/usr/bin/clang-format', style, *args
+end

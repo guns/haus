@@ -213,6 +213,8 @@ function! s:CBufferSetup()
 
 	noremap <buffer> <LocalLeader>a :<C-u>CAlternate edit<CR>
 	noremap <buffer> <LocalLeader>A :<C-u>CAlternate vsplit<CR>
+	noremap <buffer> <LocalLeader>l :<C-u>ClangFormat<CR>
+	noremap <buffer> <LocalLeader>L :!deheader -r %<CR>
 
 	if &filetype == 'cpp'
 		noremap <buffer> <LocalLeader>l :<C-u>Cpplint<CR>
@@ -229,6 +231,16 @@ endfunction
 
 command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %')
 command! -nargs=1 -complete=file -bar Yamllint call <SID>ExecMakeprg('yamllintwrapper --format parsable ' . <q-args>)
+
+command! -bar ClangFormat call <SID>ClangFormat(expand('%:p'), 1)
+function! s:ClangFormat(path, inplace)
+	let cmd = 'clang-format-wrapper -- ' . shellescape(a:path)
+	if a:inplace
+		let cmd .= ' -i'
+	endif
+	call system(cmd)
+	edit
+endfunction
 
 command! -nargs=1 -bar CAlternate call <SID>CAlternate(<f-args>)
 function! s:CAlternate(cmd)
