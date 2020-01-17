@@ -199,18 +199,19 @@
 	sf = svn fetch
 
 	# Misc
-	bs   = bisect
-	gca  = gc --aggressive --prune=all
-	ho   = hash-object
-	how  = hash-object -w
-	ls   = ls-files
-	lso  = ls-files --others
-	lsu  = ls-files --others --exclude-standard
-	st   = status --short
-	sm   = submodule
-	fd   = clean --force -d
-	fdx  = clean --force -d -x
-	rl   = reflog
-	rp   = rev-parse
-	rtmu = read-tree -m -u
-	root = rev-parse --show-toplevel
+	bs    = bisect
+	gca   = gc --aggressive --prune=all
+	ho    = hash-object
+	how   = hash-object -w
+	ls    = ls-files
+	lso   = ls-files --others
+	lsu   = ls-files --others --exclude-standard
+	st    = status --short
+	sm    = submodule
+	fd    = clean --force -d
+	fdx   = clean --force -d -x
+	rl    = reflog
+	rp    = rev-parse
+	rtmu  = read-tree -m -u
+	root  = rev-parse --show-toplevel
+	serve = daemon --base-path=. --verbose --reuseaddr
