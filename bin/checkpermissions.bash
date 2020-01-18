@@ -4,7 +4,6 @@
 checkpermissions.bash() {
     # path:user:group:octal-mask:opt1,opt2
     local specs=(
-        /boot:::0077:no-recurse
         /boot
 
         /etc
