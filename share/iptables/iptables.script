@@ -135,10 +135,6 @@ both do
   iptables *%W[-A FORWARD -j REJECT_FORWARD]
 end
 
-both do
-  iptables *%W[-A FORWARD -j REJECT_FORWARD]
-end
-
 #
 # OUTPUT
 #
