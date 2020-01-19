@@ -80,8 +80,8 @@ end
 def append_default_rules chain
   iptables *%W[-A #{chain} -m conntrack --ctstate ESTABLISHED   -j ACCEPT]
   iptables *%W[-A #{chain} -m conntrack --ctstate INVALID       -j INVALID]
-  iptables *%W[-A #{chain} #{chain == 'INPUT' ? '-i' : '-o'} lo -j ACCEPT]
-  iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT]
+  iptables *%W[-A #{chain} #{chain == 'INPUT' ? '-i' : '-o'} lo -j ACCEPT -m comment --comment Loopback]
+  iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT -m comment --comment ICMP]
 end
 
 #
@@ -122,13 +122,12 @@ end
 #   iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
 #   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
 #
-#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT]
-#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p udp -m multiport --dports 80,443 -j ACCEPT]
-#   iptables *%W[-A FORWARD -s #{HOST} -o eth0 -p #{icmp}                          -j ACCEPT]
-#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -p #{icmp}                          -j ACCEPT]
+#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment HOST-HTTP]
+#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP]
+#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP]
 #
-#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -j SNAT --to-source #{GATEWAY}]
-#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -j MASQUERADE]
+#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j SNAT --to-source #{GATEWAY}]
+#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j MASQUERADE]
 # end
 
 both do
@@ -144,7 +143,7 @@ both do
 end
 
 ipv4 do
-  iptables *%W[-A OUTPUT -m conntrack --ctstate NEW -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT -m comment --comment NTP]
+  iptables *%W[-A OUTPUT -m conntrack --ctstate NEW -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT]
 end
 
 ipv6 do
