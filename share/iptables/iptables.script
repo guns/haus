@@ -123,8 +123,8 @@ end
 #   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
 #
 #   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment HOST-HTTP]
-#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP]
-#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP]
+#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP-OUTBOUND]
+#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP-INBOUNT]
 #
 #   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j SNAT --to-source #{GATEWAY}]
 #   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j MASQUERADE]
