@@ -6,7 +6,7 @@
 
 type grepnotify || exit 1
 
-CHAINS='(?:ACCEPT|REJECT)_(?:INPUT|OUTPUT|FORWARD)'
+CHAINS='REJECT_(?:OUTPUT|FORWARD)|ACCEPT_(?:INPUT|OUTPUT|FORWARD)'
 
 dmesg --follow --notime --facility kern --level warn | grepnotify -delay 1s \
     '\A\[(?P<chain>'"$CHAINS"')\].*?IN=(?P<in>\S*).*?OUT=(?P<out>\S*).*?SRC=(?P<src>\S*).*?DST=(?P<dst>\S*).*?PROTO=(?P<proto>\S*).*?DPT=(?P<dpt>\S*)(?:.*?UID=(?P<uid>\S*).*?GID=(?P<gid>\S*))?' \
