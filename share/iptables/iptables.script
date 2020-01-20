@@ -96,6 +96,8 @@ both do
   create_chain 'REJECT_OUTPUT', 'REJECT'
   create_chain 'REJECT_FORWARD', 'REJECT'
   create_chain 'ACCEPT_INPUT', 'ACCEPT'
+  create_chain 'ACCEPT_OUTPUT', 'ACCEPT'
+  create_chain 'ACCEPT_FORWARD', 'ACCEPT'
 end
 
 #
