@@ -41,13 +41,11 @@ class Ipt
             s│save      Save rules to persistent path
             r│restore   Restore rules from persistent paths
             i│in        Accept INPUT from [src]:[dport,…] …
-            I│IN        Accept INPUT with match on ctstate NEW + extra args
+            I│IN        Prepend INPUT with args
            di│dropin    Drop INPUT from [src]:[dport,…] …
-           DI│DROPIN    Drop INPUT with match on ctstate NEW + extra args
             o│out       Allow OUTPUT to [src]:[dport,…] …
-            O│OUT       Allow OUTPUT with match on ctstate NEW + extra args
+            O│OUT       Prepend OUTPUT with args
            do│dropout   Drop OUTPUT to [src]:[dport,…] …
-           DO│DROPOUT   Drop OUTPUT with match on ctstate NEW + extra args
             f│forward   Forward traffic from [src]:[iface] to [dst]:[iface]
             F│FLUSH     Reset iptables
             p│policy    Set policy of tables to (A)ccept|(D)rop
@@ -373,24 +371,20 @@ class Ipt
     'i',  'in',
     'I',  'IN',
     'di', 'dropin',
-    'DI', 'DROPIN',
     'o',  'out',
     'O',  'OUT',
     'do', 'dropout',
-    'DO', 'DROPOUT',
     'f',  'forward',
   ]
 
   def delete! *args
     case args.first
     when 'i',  'in'      then delete_accept! *args.drop(1)
-    when 'I',  'IN'      then check_and_delete! *accept_input_rule(*args.drop(1))
+    when 'I',  'IN'      then check_and_delete! 'INPUT', *args.drop(1)
     when 'di', 'dropin'  then delete_dropin! *args.drop(1)
-    when 'DI', 'DROPIN'  then check_and_delete! *drop_input_rule(*args.drop(1))
     when 'o',  'out'     then delete_allow! *args.drop(1)
-    when 'O',  'OUT'     then check_and_delete! *allow_output_rule(*args.drop(1))
+    when 'O',  'OUT'     then check_and_delete! 'OUTPUT', *args.drop(1)
     when 'do', 'dropout' then delete_dropout! *args.drop(1)
-    when 'DO', 'DROPOUT' then check_and_delete! *drop_output_rule(*args.drop(1))
     when 'f',  'forward' then delete_forward! *args.drop(1)
     else
       iptables_exec '--delete', *args
@@ -434,13 +428,11 @@ class Ipt
     when 's',  'save'      then save_rules!
     when 'r',  'restore'   then restore_rules!
     when 'i',  'in'        then accept! *args.drop(1)
-    when 'I',  'IN'        then check_and_insert! *accept_input_rule(*args.drop(1))
+    when 'I',  'IN'        then check_and_insert! 'INPUT', *args.drop(1)
     when 'di', 'dropin'    then dropin! *args.drop(1)
-    when 'DI', 'DROPIN'    then check_and_insert! *drop_input_rule(*args.drop(1))
     when 'o',  'out'       then allow! *args.drop(1)
-    when 'O',  'OUT'       then check_and_insert! *allow_output_rule(*args.drop(1))
+    when 'O',  'OUT'       then check_and_insert! 'OUTPUT', *args.drop(1)
     when 'do', 'dropout'   then dropout! *args.drop(1)
-    when 'DO', 'DROPOUT'   then check_and_insert! *drop_output_rule(*args.drop(1))
     when 'f',  'forward'   then forward! *args.drop(1)
     when 'F',  'FLUSH'     then flush_tables!
     when 'p',  'policy'    then set_policy! *args.drop(1)
