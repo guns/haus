@@ -121,10 +121,9 @@ end
 # ipv4 do
 #   iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
 #   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
+#   iptables *%W[-A FORWARD -p #{icmp}                         -j ACCEPT -m comment --comment ICMP]
 #
 #   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment HOST-HTTP]
-#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP-OUTBOUND]
-#   iptables *%W[-A FORWARD -d #{HOST} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment HOST-ICMP-INBOUNT]
 #
 #   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j SNAT --to-source #{GATEWAY}]
 #   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j MASQUERADE]
@@ -143,7 +142,7 @@ both do
 end
 
 ipv4 do
-  iptables *%W[-A OUTPUT -m conntrack --ctstate NEW -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT]
+  iptables *%W[-A OUTPUT -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT]
 end
 
 ipv6 do
