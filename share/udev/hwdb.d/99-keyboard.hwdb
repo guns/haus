@@ -34,4 +34,5 @@ evdev:input:*
  KEYBOARD_KEY_700E3=leftalt     # leftmeta -> leftalt
  KEYBOARD_KEY_700E6=rightmeta   # rightalt -> rightmeta
  KEYBOARD_KEY_700E7=rightalt    # rightmeta -> rightalt
+ KEYBOARD_KEY_70065=rightctrl   # compose -> rightctrl
  KEYBOARD_KEY_700E4=rightmeta   # rightctrl -> rightmeta
