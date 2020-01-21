@@ -123,12 +123,13 @@ end
 # ipv4 do
 #   iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
 #   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
-#   iptables *%W[-A FORWARD -p #{icmp}                         -j ACCEPT -m comment --comment ICMP]
 #
-#   iptables *%W[-A FORWARD -s #{HOST} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment HOST-HTTP]
+#   iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment CLIENT-HTTP]
+#   iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-OUTBOUND]
+#   iptables *%W[-A FORWARD -d #{CLIENT} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-INBOUND]
 #
-#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j SNAT --to-source #{GATEWAY}]
-#   iptables *%W[-t nat -A POSTROUTING -s #{HOST} -o eth0 -j MASQUERADE]
+#   iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j SNAT --to-source #{HOST_MACHINE}]
+#   iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j MASQUERADE]
 # end
 
 both do
