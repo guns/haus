@@ -4,7 +4,7 @@
 require 'set'
 
 info = %x(xrandr --listmonitors).lines
-monitors = info[1..].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
+monitors = info[1..-1].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
 
 case
 when Set['DP-1', 'HDMI-0'].subset?(monitors)
