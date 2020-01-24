@@ -4,17 +4,17 @@
 
 if [[ "$SSH_TTY" ]]; then
     __PS_DELIM__="${PS_DELIM:-■}" # SSH tunnel
-    if ((EUID > 0)); then
-        __PS_COLOR__="${PS_COLOR:-36}"
-    else
+    if ((EUID == 0)); then
         __PS_COLOR__="${PS_COLOR:-31}"
+    else
+        __PS_COLOR__="${PS_COLOR:-36}"
     fi
 else
     __PS_DELIM__="${PS_DELIM:-§}" # Section
-    if ((EUID > 0)); then
-        __PS_COLOR__="${PS_COLOR:-37}"
-    else
+    if ((EUID == 0)); then
         __PS_COLOR__="${PS_COLOR:-35}"
+    else
+        __PS_COLOR__="${PS_COLOR:-37}"
     fi
 fi
 
