@@ -136,13 +136,13 @@ class OrganizeMusic
       end
     end
 
-    FileUtils.mkdir_p File.dirname(dst), fopts
+    FileUtils.mkdir_p File.dirname(dst), **fopts
 
     if @copy
-      FileUtils.cp src, dst, fopts
+      FileUtils.cp src, dst, **fopts
     else
-      FileUtils.mv src, dst, fopts
-      FileUtils.rmdir File.expand_path(File.dirname(src)), fopts.merge(:parents => true)
+      FileUtils.mv src, dst, **fopts
+      FileUtils.rmdir File.expand_path(File.dirname(src)), **fopts.merge(:parents => true)
     end
   end
 

@@ -396,7 +396,7 @@ class Haus
       parent = File.dirname file
       if not extant? parent
         create_path_to parent, fopts # Recurse!
-        FileUtils.mkdir parent, fopts
+        FileUtils.mkdir parent, **fopts
         adopt parent, fopts
       end
     end
@@ -412,7 +412,7 @@ class Haus
 
       case File.lstat(file).ftype
       when 'directory'
-        FileUtils.chown_R user, group, file, fopts
+        FileUtils.chown_R user, group, file, **fopts
       else
         # FileUtils logs to $stderr when verbose
         $stderr.puts 'chown -h %s:%s %s' % [user, group, file] if fopts[:verbose]
@@ -423,7 +423,7 @@ class Haus
     def execute_deletions fopts
       deletions.each do |dst|
         log ['-- DELETING ', :red, :italic], [dst, Haus::LSColors[dst]]
-        FileUtils.rm_r dst, fopts.merge(:secure => true)
+        FileUtils.rm_r dst, **fopts.merge(:secure => true)
       end
     end
 
@@ -437,10 +437,10 @@ class Haus
         dstfmt = [dst, Haus::LSColors[:link]]
         log prefix, srcfmt, ' → ', dstfmt
 
-        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
+        FileUtils.rm_r dst, **fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
 
-        FileUtils.ln_s srcpath, dst, fopts
+        FileUtils.ln_s srcpath, dst, **fopts
         adopt dst, fopts
       end
     end
@@ -453,7 +453,7 @@ class Haus
         dstfmt   = [dst, srcstyle]
         log prefix, srcfmt, ' → ', dstfmt
 
-        FileUtils.rm_r dst, fopts.merge(:secure => true) if extant? dst
+        FileUtils.rm_r dst, **fopts.merge(:secure => true) if extant? dst
         create_path_to dst, fopts
 
         # Ruby 1.9's copy implementation breaks on broken symlinks
@@ -463,10 +463,10 @@ class Haus
           srcpath = lsrc[0] == '/' \
                     ? lsrc \
                     : Haus::Utils.relpath(File.expand_path(lsrc, File.join(src, '..')), dst)
-          FileUtils.ln_s srcpath, dst, fopts
+          FileUtils.ln_s srcpath, dst, **fopts
         else
           # NOTE: Explicit :dereference_root option required for 1.8.6
-          FileUtils.cp_r src, dst, fopts.merge(:dereference_root => false)
+          FileUtils.cp_r src, dst, **fopts.merge(:dereference_root => false)
         end
 
         adopt dst, fopts
