@@ -69,10 +69,6 @@ export QT_QPA_PLATFORMTHEME='qt5ct'
 # Java
 export _JAVA_AWT_WM_NONREPARENTING='1'
 
-# WINE
-export WINEARCH='win32'
-export WINEDLLOVERRIDES='winemenubuilder.exe=d'
-
 # GnuPG
 if [[ "${gnupg_SSH_AUTH_SOCK_by:-0}" -ne "$$" ]]; then
     export SSH_AUTH_SOCK="/run/user/${SUDO_UID:-$EUID}/gnupg/S.gpg-agent.ssh"
