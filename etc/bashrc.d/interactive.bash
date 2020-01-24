@@ -851,12 +851,19 @@ CD_FUNC -e cdruby "ruby -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
 CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
 # Rake
-alias rk='rake'; TCOMP rake rk
-rkt() {
-    if [[ -e bin/rails ]]; then
-        bin/rails -T
+rk() {
+    if [[ -x bin/rake ]]; then
+        run bin/rake "$@"
     else
-        rake -T
+        rake "$@"
+    fi
+}; TCOMP rake rk
+
+rkt() {
+    if [[ -x bin/rails ]]; then
+        run bin/rails -T
+    else
+        rk -T
     fi
 }
 
@@ -865,22 +872,33 @@ r() {
     if [[ -x bin/rails ]]; then
         run bin/rails "$@"
     else
-        run rails "$@"
+        rails "$@"
     fi
 }; TCOMP rails r
 
 # Bundler
 b() {
-    local jobs=$(grep --count ^processor /proc/cpuinfo)
+    if [[ -z "$BUNDLE_JOBS" ]]; then
+        BUNDLE_JOBS=$(grep --count ^processor /proc/cpuinfo)
+    fi
 
     if [[ -x bin/bundle ]]; then
-        BUNDLE_JOBS="$jobs" run bin/bundle "$@"
+        BUNDLE_JOBS="$BUNDLE_JOBS" run bin/bundle "$@"
     else
-        BUNDLE_JOBS="$jobs" run bundle "$@"
+        BUNDLE_JOBS="$BUNDLE_JOBS" bundle "$@"
     fi
 }
 
 alias bx='b exec'
+
+# rspec ugh
+rspec() {
+    if [[ -x bin/rspec ]]; then
+        run bin/rspec "$@"
+    else
+        rspec "$@"
+    fi
+}
 
 ### JavaScript
 
