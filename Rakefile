@@ -105,7 +105,6 @@ task :env do
         :files => {
           'perl/buffers.pl'           => 'etc/_weechat/_perl/_autoload/buffers.pl',
           'perl/launcher.pl'          => 'etc/_weechat/_perl/_autoload/launcher.pl',
-          'python/country.py'         => 'etc/_weechat/_python/_autoload/country.py',
           'python/go.py'              => 'etc/_weechat/_python/_autoload/go.py',
           'python/toggle_nicklist.py' => 'etc/_weechat/_python/_autoload/toggle_nicklist.py'
         }
