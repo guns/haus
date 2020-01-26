@@ -33,7 +33,7 @@ class Mountusb
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} [options] [label-pattern]
 
         Options:

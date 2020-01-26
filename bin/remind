@@ -139,7 +139,7 @@ class Remind
     @parser ||= OptionParser.new nil, 24 do |opt|
       program = File.basename __FILE__
 
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Usage: #{program} [options] time [msg]
 
         Time can be specified as the time FROM now:

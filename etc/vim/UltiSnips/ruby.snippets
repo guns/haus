@@ -34,7 +34,7 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 
 	def parser
 		@parser ||= OptionParser.new nil, 20 do |opt|
-			opt.banner = <<-BANNER.gsub /^ +/, ''
+			opt.banner = <<~BANNER
 				Usage: #{File.basename __FILE__} [options]
 
 				Options:

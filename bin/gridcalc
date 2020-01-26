@@ -17,7 +17,7 @@ class Gridcalc
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/,''
+      opt.banner = <<~BANNER
         Calculate all possible horizontal grid measurements for a given
         pixel width.
 

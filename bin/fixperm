@@ -26,7 +26,7 @@ class Fixperm
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Change mode of files to match the current umask (typically 0022).
         Skips symbolic links.
 

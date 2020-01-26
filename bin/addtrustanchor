@@ -14,7 +14,7 @@ TRUST_ANCHORS_DIR = '/etc/ca-certificates/trust-source/anchors'
 dir = TRUST_ANCHORS_DIR
 
 OptionParser.new nil, 20 do |opt|
-  opt.banner = <<-BANNER.gsub /^ +/, ''
+  opt.banner = <<~BANNER
     Usage: #{File.basename __FILE__} [options]
 
     Options:

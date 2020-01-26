@@ -35,7 +35,7 @@ class FindWrapper
 
   def parser
     @parser ||= OptionParser.new nil, 28 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} [options] [find-args]
 
         Options:

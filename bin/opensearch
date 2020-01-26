@@ -13,7 +13,7 @@ require 'nokogiri'
 class Opensearch
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Create, use, and serve opensearch xml files.
 
         Usage: #{File.basename __FILE__} generate name search-url [GET|POST]

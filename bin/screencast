@@ -22,7 +22,7 @@ class Screencast
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Capture X11 screen data and audio input to file. If argument is a
         directory, a timestamped file is created in that directory instead.
         If no arguments are given, the current directory is used as the

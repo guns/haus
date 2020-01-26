@@ -25,7 +25,7 @@ class OrganizeMusic
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Organize music files using metadata. Requires taglib-ruby.
 
         Usage: #{File.basename __FILE__} [options] path …

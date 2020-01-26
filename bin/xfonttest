@@ -17,7 +17,7 @@ class Xfonttest
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Find the largest xft pixelsize that fits within the bounds of the
         current top font.
 

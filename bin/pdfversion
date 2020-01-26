@@ -21,7 +21,7 @@ class Pdfversion
 
   def parser
     @parser ||= OptionParser.new nil, 28 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Print or convert PDFs to a given compatibility level.
 
         Usage: #{File.basename __FILE__} [options] file …

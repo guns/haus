@@ -223,7 +223,7 @@ class Dlnode
 
   def parser
     @parser ||= OptionParser.new nil, 32 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Download nested HTML resources. Uses cURL.
 
         Usage: #{File.basename __FILE__} [options] url-or-path [selector=a]:[attribute=href]:[regexp]:[gsub] …

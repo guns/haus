@@ -17,7 +17,7 @@ class RubyHierarchy
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Print Ruby Class hierarchy, optionally rooted to given class.
 
         Adapted from: http://blog.nicksieger.com/articles/2006/09/06/rubys-exception-hierarchy

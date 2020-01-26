@@ -32,7 +32,7 @@ class FF2gif
 
   def parser
     @parser ||= OptionParser.new nil, 28 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Convert videos to GIFs with ffmpeg.
 
         Usage: #{File.basename __FILE__} [options] video …

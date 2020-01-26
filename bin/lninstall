@@ -30,7 +30,7 @@ class Lninstall
 
   def parser
     @parser ||= OptionParser.new nil, 16 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Link the program executables, man pages, and init scripts of one
         directory tree to another. Also works in reverse.
 

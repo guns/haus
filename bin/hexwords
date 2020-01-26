@@ -33,7 +33,7 @@ class Hexwords
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Print a hexspeak substitution table from words on stdin.
 
         Usage: #{File.basename __FILE__} [options]

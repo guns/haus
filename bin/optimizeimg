@@ -22,7 +22,7 @@ class OptimizeIMG
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} [options] image …
 
         Options:

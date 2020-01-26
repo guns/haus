@@ -16,7 +16,7 @@ class Patoggle
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Set or toggle between PulseAudio output sinks and input sources.
 
         Usage: #{File.basename __FILE__} (sink|source) [index]

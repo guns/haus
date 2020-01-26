@@ -24,7 +24,7 @@ class Figpreview
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Preview all figlet fonts on the system.
 
         Usage: #{File.basename __FILE__} [options] [message]

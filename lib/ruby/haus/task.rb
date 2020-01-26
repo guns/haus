@@ -166,7 +166,7 @@ class Haus
         opt.users = [Process.euid] # Default value for users array
         opt.summary_width = 18
 
-        opt.banner = <<-BANNER.gsub /^ +/, ''
+        opt.banner = <<~BANNER
           #{meta[:help] + "\n\n" unless meta.nil? or meta[:help].empty?}\
           Usage: haus #{self.class.command} [options] #{meta[:usage_tail]}
 

@@ -22,7 +22,7 @@ class DnscryptIpsets
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Usage: dnscrypt-proxy -list -json | #{File.basename __FILE__} >> /etc/ipset.conf
       BANNER
     end

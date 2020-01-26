@@ -18,7 +18,7 @@ class FindDirectory
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Find and output the first matching directory found in a breadth-first search.
 
         Usage: #{File.basename __FILE__} [options] regexp

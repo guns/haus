@@ -30,7 +30,7 @@ class Hwctl
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} command [arg]
 
         Commands:

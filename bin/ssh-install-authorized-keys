@@ -19,7 +19,7 @@ class SshInstallAuthorizedKeys
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Install ssh public keys from #{HAUS_SSH_DIR}
 
         Usage: #{File.basename __FILE__} [options] [user …]

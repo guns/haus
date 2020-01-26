@@ -30,7 +30,7 @@ class Xecho
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Wrappers around common Xterm / X escape sequences.
         GNU Screen and Tmux v1.5+ are supported.
 

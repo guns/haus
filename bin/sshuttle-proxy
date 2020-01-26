@@ -31,7 +31,7 @@ class SshuttleProxy
 
   def parser
     @parser ||= NERV::CLI::SuperParser.new nil, 28 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Tunnel ALL traffic through sshuttle and prevent any other outgoing
         connections.
 

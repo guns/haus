@@ -23,7 +23,7 @@ class GenX509
 
   def parser
     @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} [options] basename subject
 
         Quickly generate self-signed certificates for local development.

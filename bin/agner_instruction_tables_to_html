@@ -25,7 +25,7 @@ class AgnerInstructionTablesToHtml
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Split Agner Fog's spreadsheet of CPU instruction tables into usable
         HTML files.
 

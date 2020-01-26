@@ -77,7 +77,7 @@ class Mem
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Show RAM and swap usage.
 
         Usage: #{File.basename __FILE__} [options]

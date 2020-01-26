@@ -10,7 +10,7 @@ require 'optparse'
 class Mediactl
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ +/, ''
+      opt.banner = <<~BANNER
         Control various media playing programs through one interface.
 
         Usage: #{File.basename __FILE__} toggle|next|prev

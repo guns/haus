@@ -36,7 +36,7 @@ class Getbadhosts
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Fetch and print malware domains in hosts file format.
 
         The following lists are queried by default:

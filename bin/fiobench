@@ -26,7 +26,7 @@ class Fiobench
 
   def parser
     @parser ||= OptionParser.new nil, 28 do |opt|
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         Usage: #{File.basename __FILE__} [options] COMMAND [args]
 
         Commands:
