@@ -11,27 +11,40 @@ require 'set'
 
 class Ipt
   DEFAULTS = {
-    :protocol           => 'tcp',
-    :ipv4               => true,
-    :ipv6               => true,
-    :save4              => '/etc/iptables/iptables.rules',
-    :save6              => '/etc/iptables/ip6tables.rules',
-    :drop_input_target  => 'REJECT_INPUT',
-    :drop_output_target => 'REJECT_OUTPUT',
-    :wait               => false,
-    :command            => nil,
+    :protocol              => 'tcp',
+    :ipv4                  => true,
+    :ipv6                  => true,
+    :save4                 => '/etc/iptables/iptables.rules',
+    :save6                 => '/etc/iptables/ip6tables.rules',
+    :wait                  => false,
+    :command               => nil,
+    :accept_input_target   => 'ACCEPT_INPUT',
+    :accept_forward_target => 'ACCEPT_FORWARD',
+    :accept_output_target  => 'ACCEPT_OUTPUT',
+    :reject_input_target   => 'REJECT_INPUT',
+    :reject_forward_target => 'REJECT_FORWARD',
+    :reject_output_target  => 'REJECT_OUTPUT',
   }
 
   TABLES = %w[filter nat mangle raw security]
+
+  TARGETS = %w[
+   accept_input_target
+   accept_forward_target
+   accept_output_target
+   reject_input_target
+   reject_forward_target
+   reject_output_target
+  ]
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
   end
 
   def parser
-    @parser ||= OptionParser.new nil, 32 do |opt|
+    @parser ||= OptionParser.new nil, 36 do |opt|
       prog = File.basename __FILE__
-      opt.banner = <<-BANNER.gsub /^ {8}/, ''
+      opt.banner = <<~BANNER
         iptables and ip6tables wrapper.
 
         Usage: #{prog} [options] [command [args …]] [:: shell-command]
@@ -88,20 +101,20 @@ class Ipt
         @protocol = 'udp'
       end
 
-      opt.on '--drop-input-target TARGET', "Preferred --jump target when dropping INPUT packets; DEFAULT=#{@drop_input_target}" do |arg|
-        @drop_input_target = arg
-      end
-
-      opt.on '--drop-output-target TARGET', "Preferred --jump target when dropping OUTPUT packets; DEFAULT=#{@drop_output_target}" do |arg|
-        @drop_output_target = arg
-      end
-
       opt.on '--save4 PATH', "Persistent iptables rules path; DEFAULT=#{@save4}" do |arg|
         @save4 = File.expand_path arg
       end
 
       opt.on '--save6 PATH', "Persistent ip6tables rules path; DEFAULT=#{@save6}" do |arg|
         @save6 = File.expand_path arg
+      end
+
+      TARGETS.each do |target|
+        action, type, _ = target.split '_'
+
+        opt.on "--#{target.tr '_', '-'} TARGET", "Preferred --jump target when #{action}ing #{type} packets; DEFAULT=#{instance_variable_get "@#{target}"}" do |arg|
+          instance_variable_set "@#{target}", arg
+        end
       end
     end
   end
@@ -228,19 +241,19 @@ class Ipt
   end
 
   def accept_input_rule *args
-    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', 'ACCEPT']
+    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_input_target]
   end
 
   def drop_input_rule *args
-    ['INPUT', *args, '--jump', drop_input_target]
+    ['INPUT', *args, '--jump', reject_input_target]
   end
 
   def allow_output_rule *args
-    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', 'ACCEPT']
+    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_output_target]
   end
 
   def drop_output_rule *args
-    ['OUTPUT', *args, '--jump', drop_output_target]
+    ['OUTPUT', *args, '--jump', reject_output_target]
   end
 
   def check_and_insert! *rule
@@ -303,24 +316,18 @@ class Ipt
     end
   end
 
-  def drop_input_target
-    @__drop_input_target ||= begin
-      if system 'iptables', '--list-rules', @drop_input_target, [:out, :err] => '/dev/null'
-        @drop_input_target
-      else
-        'DROP'
+  TARGETS.each do |target|
+    class_eval <<-EVAL
+      def #{target}
+        @_#{target} ||= begin
+          if system 'iptables', '--list-rules', @#{target}, [:out, :err] => '/dev/null'
+            @#{target}
+          else
+            #{target.start_with?('accept') ? 'ACCEPT' : 'REJECT'}
+          end
+        end
       end
-    end
-  end
-
-  def drop_output_target
-    @__drop_output_target ||= begin
-      if system 'iptables', '--list-rules', @drop_output_target, [:out, :err] => '/dev/null'
-        @drop_output_target
-      else
-        'DROP'
-      end
-    end
+    EVAL
   end
 
   def forwarding_rules src, dst
@@ -344,11 +351,11 @@ class Ipt
 
     [
       # Outbound
-      ['FORWARD', '1', *outbound, '--jump', 'ACCEPT'],
+      ['FORWARD', '1', *outbound, '--jump', accept_forward_target],
       # Inbound
-      ['FORWARD', '2', *inbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', 'ACCEPT'],
+      ['FORWARD', '2', *inbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', accept_forward_target],
       ['FORWARD', '3', *inbound, '--match', 'conntrack', '--ctstate', 'INVALID',     '--jump', 'DROP'],
-      ['FORWARD', '4', *inbound, '--protocol', 'icmp',                               '--jump', 'ACCEPT'],
+      ['FORWARD', '4', *inbound, '--protocol', 'icmp',                               '--jump', accept_forward_target],
       # Enable NAT
       ['POSTROUTING', '--table', 'nat', *from_src_addr, *to_dst_iface, *to_dst_addr, '--jump', 'MASQUERADE']
     ]
