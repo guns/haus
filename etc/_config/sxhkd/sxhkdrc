@@ -256,10 +256,10 @@ F8
 	\}
 
 F9
-	wmctrl -a "$USER ❦ $HOSTNAME"
+	wmctrl -a "$USER ❦"
 
 super + F9
-	wmctrl -a "root ❦ $HOSTNAME"
+	wmctrl -a "root ❦"
 
 shift + F9
 	urxvt-client
