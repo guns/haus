@@ -2,7 +2,7 @@
 ### BASH PROMPTS
 ###
 
-if [[ "$SSH_TTY" ]]; then
+if [[ "$SSH_CONNECTION" ]]; then
     __PS_DELIM__="${PS_DELIM:-■}" # SSH tunnel
     if ((EUID == 0)); then
         __PS_COLOR__="${PS_COLOR:-31}"
