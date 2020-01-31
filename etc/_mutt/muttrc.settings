@@ -305,7 +305,7 @@ set assumed_charset="utf-8"
 # %M      MIME subtype
 # %n      attachment number
 # %Q      ``Q'', if MIME part qualifies for attachment counting
-# %s      size
+# %s      size (see formatstrings-size)
 # %t      tagged flag
 # %T      graphic tree characters
 # %u      unlink (=to delete) flag
@@ -498,6 +498,20 @@ set beep=no
 # desirable to unset this variable.
 #
 
+# set browser_sticky_cursor=yes
+#
+# Name: browser_sticky_cursor
+# Type: boolean
+# Default: yes
+#
+#
+# When this variable is set, the browser will attempt to keep
+# the cursor on the same mailbox when performing various functions.
+# These include moving up a directory, toggling between mailboxes
+# and directory listing, creating/renaming a mailbox, toggling
+# subscribed mailboxes, and entering a new mask.
+#
+
 set certificate_file="~/.certificates/mutt.crt"
 #
 # Name: certificate_file
@@ -609,7 +623,7 @@ set compose_format="Compose ★ %a attached, %l"
 # set of printf(3)-like sequences:
 # %a      total number of attachments
 # %h      local hostname
-# %l      approximate size (in bytes) of the current message
+# %l      approximate size (in bytes) of the current message (see formatstrings-size)
 # %v      Mutt version string
 #
 #
@@ -690,6 +704,24 @@ set confirmappend=no
 # This variable controls whether or not copies of your outgoing messages
 # will be saved for later references.  Also see $record,
 # $save_name, $force_name and ``fcc-hook''.
+#
+
+set count_alternatives=yes
+#
+# Name: count_alternatives
+# Type: boolean
+# Default: no
+#
+#
+# When set, Mutt will recurse inside multipart/alternatives while
+# performing attachment searching and counting (see attachments).
+#
+# Traditionally, multipart/alternative parts have simply represented
+# different encodings of the main content of the email.  Unfortunately,
+# some mail clients have started to place email attachments inside
+# one of alternatives.  Setting this will allow Mutt to find
+# and count matching attachments hidden there, and include them
+# in the index via %X or through ~X pattern matching.
 #
 
 # set crypt_autoencrypt=no
@@ -1324,7 +1356,7 @@ set folder_format="%2C %t %N %f%> %D"
 # %m      number of messages in the mailbox *
 # %n      number of unread messages in the mailbox *
 # %N      N if mailbox has new mail, blank otherwise
-# %s      size in bytes
+# %s      size in bytes (see formatstrings-size)
 # %t      ``*'' if the file is tagged, blank otherwise
 # %u      owner name (or numeric uid, if missing)
 # %>X     right justify the rest of the string and pad with character ``X''
@@ -1559,11 +1591,11 @@ set header_cache="~/.mutt/cache/"
 # MH or Maildir folders, see ``caching'' for details.
 #
 
-# set header_cache_pagesize="16384"
+# set header_cache_pagesize=16384
 #
 # Name: header_cache_pagesize
-# Type: string
-# Default: "16384"
+# Type: number (long)
+# Default: 16384
 #
 #
 # When mutt is compiled with either gdbm or bdb4 as the header cache backend,
@@ -1904,7 +1936,7 @@ set include=yes
 # %A      reply-to address (if present; otherwise: address of author)
 # %b      filename of the original message folder (think mailbox)
 # %B      the list to which the letter was sent, or else the folder name (%b).
-# %c      number of characters (bytes) in the message
+# %c      number of characters (bytes) in the message (see formatstrings-size)
 # %C      current message number
 # %d      date and time of the message in the format specified by
 # $date_format         converted to sender's time zone
@@ -1916,8 +1948,8 @@ set include=yes
 # %F      author name, or recipient name if the message is from you
 # %H      spam attribute(s) of this message
 # %i      message-id of the current message
-# %l      number of lines in the message (does not work with maildir,
-#         mh, and possibly IMAP folders)
+# %l      number of lines in the unprocessed message (may not work with
+#         maildir, mh, and IMAP folders)
 # %L      If an address in the ``To:'' or ``Cc:'' header field matches an address
 #         defined by the users ``subscribe'' command, this displays
 #         "To <list-name>", otherwise the same as %F.
@@ -1965,6 +1997,12 @@ set include=yes
 # %|X     pad to the end of the line with character ``X''
 # %*X     soft-fill with character ``X'' as pad
 #
+#
+# Note that for mbox/mmdf, ``%l'' applies to the unprocessed message, and
+# for maildir/mh, the value comes from the ``Lines:'' header field when
+# present (the meaning is normally the same). Thus the value depends on
+# the encodings used in the different parts of the message and has little
+# meaning in practice.
 #
 # ``Soft-fill'' deserves some explanation: Normal right-justification
 # will print everything to the left of the ``%>'', displaying padding and
@@ -3050,11 +3088,11 @@ set pgp_self_encrypt=yes
 # (PGP only)
 #
 
-# set pgp_use_gpg_agent=no
+# set pgp_use_gpg_agent=yes
 #
 # Name: pgp_use_gpg_agent
 # Type: boolean
-# Default: no
+# Default: yes
 #
 #
 # If set, mutt expects a gpg-agent(1) process will handle
@@ -3448,7 +3486,8 @@ set record="$folder/INBOX"
 # command to create a ``Bcc:'' field with your email address in it.)
 #
 # The value of $record is overridden by the $force_name and
-# $save_name variables, and the ``fcc-hook'' command.  Also see $copy.
+# $save_name variables, and the ``fcc-hook'' command.  Also see $copy
+# and $write_bcc.
 #
 
 # set reflow_space_quotes=yes
@@ -3623,7 +3662,7 @@ set reply_to=yes
 # used doesn't match your ``alternates'', the From: line will use
 # your address on the current machine.
 #
-# Also see the ``alternates'' command.
+# Also see the ``alternates'' command and $reverse_realname.
 #
 
 # set reverse_realname=yes
@@ -3805,6 +3844,37 @@ set send_charset="us-ascii:utf-8"
 # mutt uses $charset as a fallback.
 #
 
+# set send_multipart_alternative=no
+#
+# Name: send_multipart_alternative
+# Type: quadoption
+# Default: no
+#
+#
+# If set, Mutt will generate a multipart/alternative
+# container and an alternative part using the filter script specified in
+# $send_multipart_alternative_filter.
+# See the section ``MIME Multipart/Alternative'' (alternative-order).
+#
+# Note that enabling multipart/alternative is not compatible with inline
+# PGP encryption.  Mutt will prompt to use PGP/MIME in that case.
+#
+
+# set send_multipart_alternative_filter=""
+#
+# Name: send_multipart_alternative_filter
+# Type: path
+# Default: ""
+#
+#
+# This specifies a filter script, which will convert the main
+# (composed) message of the email to an alternative format.  The
+# message will be piped to the filter's stdin.  The expected output
+# of the filter is the generated mime type, e.g. text/html,
+# followed by a blank line, and then the converted content.
+# See the section ``MIME Multipart/Alternative'' (alternative-order).
+#
+
 # set sendmail="/usr/sbin/sendmail -oem -oi"
 #
 # Name: sendmail
@@ -3818,6 +3888,8 @@ set send_charset="us-ascii:utf-8"
 # adding a -- delimiter (if not already present).  Additional
 # flags, such as for $use_8bitmime, $use_envelope_from,
 # $dsn_notify, or $dsn_return will be added before the delimiter.
+#
+# See also: $write_bcc.
 #
 
 # set sendmail_wait=0
@@ -3908,6 +3980,51 @@ set signature="~/.mutt/signature"
 # will automatically expand it to the value specified by this variable by
 # replacing ``%s'' with the supplied string.
 # For the default value, ``joe'' would be expanded to: ``~f joe | ~s joe''.
+#
+
+# set size_show_bytes=no
+#
+# Name: size_show_bytes
+# Type: boolean
+# Default: no
+#
+#
+# If set, message sizes will display bytes for values less than
+# 1 kilobyte.  See formatstrings-size.
+#
+
+# set size_show_fractions=yes
+#
+# Name: size_show_fractions
+# Type: boolean
+# Default: yes
+#
+#
+# If set, message sizes will be displayed with a single decimal value
+# for sizes from 0 to 10 kilobytes and 1 to 10 megabytes.
+# See formatstrings-size.
+#
+
+# set size_show_mb=yes
+#
+# Name: size_show_mb
+# Type: boolean
+# Default: yes
+#
+#
+# If set, message sizes will display megabytes for values greater than
+# or equal to 1 megabyte.  See formatstrings-size.
+#
+
+# set size_units_on_left=no
+#
+# Name: size_units_on_left
+# Type: boolean
+# Default: no
+#
+#
+# If set, message sizes units will be displayed to the left of the number.
+# See formatstrings-size.
 #
 
 # set sleep_time=1
@@ -4361,6 +4478,8 @@ set signature="~/.mutt/signature"
 # Setting this variable overrides the value of the $sendmail
 # variable.
 #
+# Also see $write_bcc.
+#
 
 set sort=threads
 #
@@ -4510,7 +4629,7 @@ set ssl_force_tls=yes
 #
 # Name: ssl_force_tls
 # Type: boolean
-# Default: no
+# Default: yes
 #
 #
 # If this variable is set, Mutt will require that all connections
@@ -4581,7 +4700,7 @@ set ssl_use_sslv3=no
 # it is inadvisable. See https://tools.ietf.org/html/rfc7525 .
 #
 
-# set ssl_use_tlsv1_2=yes
+set ssl_use_tlsv1_2=no
 #
 # Name: ssl_use_tlsv1_2
 # Type: boolean
@@ -4589,6 +4708,17 @@ set ssl_use_sslv3=no
 #
 #
 # If set , Mutt will use TLSv1.2 when communicating with servers that
+# request it.
+#
+
+# set ssl_use_tlsv1_3=yes
+#
+# Name: ssl_use_tlsv1_3
+# Type: boolean
+# Default: yes
+#
+#
+# If set , Mutt will use TLSv1.3 when communicating with servers that
 # request it.
 #
 
@@ -4601,7 +4731,7 @@ set ssl_usesystemcerts=no
 #
 # If set to yes, mutt will use CA certificates in the
 # system-wide certificate store when checking if a server certificate
-# is signed by a trusted CA.
+# is signed by a trusted CA. (OpenSSL only)
 #
 
 # set ssl_verify_dates=yes
@@ -4699,9 +4829,9 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # %f      the full pathname of the current mailbox
 # %F      number of flagged messages *
 # %h      local hostname
-# %l      size (in bytes) of the current mailbox *
+# %l      size (in bytes) of the current mailbox (see formatstrings-size) *
 # %L      size (in bytes) of the messages shown
-#         (i.e., which match the current limit) *
+#         (i.e., which match the current limit) (see formatstrings-size) *
 # %m      the number of messages in the mailbox *
 # %M      the number of messages shown (i.e., which match the current limit) *
 # %n      number of new messages in the mailbox *
@@ -4815,6 +4945,10 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # This format is easier to handle for some mailing software, and generally
 # just looks like ordinary text.  To actually make use of this format's
 # features, you'll need support in your editor.
+#
+# The option only controls newly composed messages.  Postponed messages,
+# resent messages, and draft messages (via -H on the command line) will
+# use the content-type of the source message.
 #
 # Note that $indent_string is ignored when this option is set.
 #
@@ -5096,7 +5230,7 @@ set user_agent=no
 #
 # Name: user_agent
 # Type: boolean
-# Default: yes
+# Default: no
 #
 #
 # When set, mutt will add a ``User-Agent:'' header to outgoing
@@ -5200,18 +5334,26 @@ set wait_key=no
 # (DEPRECATED) Equivalent to setting $wrap with a negative value.
 #
 
-# set write_bcc=yes
+# set write_bcc=no
 #
 # Name: write_bcc
 # Type: boolean
-# Default: yes
+# Default: no
 #
 #
-# Controls whether mutt writes out the ``Bcc:'' header when preparing
-# messages to be sent.  Exim users may wish to unset this. If mutt
-# is set to deliver directly via SMTP (see $smtp_url), this
-# option does nothing: mutt will never write out the ``Bcc:'' header
-# in this case.
+# Controls whether mutt writes out the ``Bcc:'' header when
+# preparing messages to be sent.  Some MTAs, such as Exim and
+# Courier, do not strip the ``Bcc:'' header; so it is advisable to
+# leave this unset unless you have a particular need for the header
+# to be in the sent message.
+#
+# If mutt is set to deliver directly via SMTP (see $smtp_url),
+# this option does nothing: mutt will never write out the ``Bcc:''
+# header in this case.
+#
+# Note this option only affects the sending of messages.  Fcc'ed
+# copies of a message will always contain the ``Bcc:'' header if
+# one exists.
 #
 
 # set write_inc=10
