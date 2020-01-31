@@ -52,7 +52,7 @@ class DnscryptIpsets
     if ipv4.any?
       buf << "create -exist #{@ipset_ipv4} hash:ip,port comment"
 
-      ipv4.sort_by(&:last).each do |(addr, proto, port), desc|
+      ipv4.sort_by { |k, v| [v, *k] }.each do |(addr, proto, port), desc|
         buf << "add -exist #{@ipset_ipv4} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
       end
     end
@@ -61,7 +61,7 @@ class DnscryptIpsets
       buf << '' if buf.any?
       buf << "create -exist #{@ipset_ipv6} hash:ip,port family inet6 comment"
 
-      ipv6.sort_by(&:last).each do |(addr, proto, port), desc|
+      ipv6.sort_by { |k, v| [v, *k] }.each do |(addr, proto, port), desc|
         buf << "add -exist #{@ipset_ipv6} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
       end
     end
