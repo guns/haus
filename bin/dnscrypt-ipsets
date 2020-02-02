@@ -9,6 +9,7 @@ require 'optparse'
 require 'json'
 require 'resolv'
 require 'ipaddr'
+require 'set'
 
 class DnscryptIpsets
   DEFAULTS = {
@@ -28,51 +29,56 @@ class DnscryptIpsets
     end
   end
 
-  def build_ipset_conf dnscrypt_resolvers
+  def print_ipset_conf dnscrypt_resolvers
     ipv4 = {}
     ipv6 = {}
 
     dnscrypt_resolvers.each do |resolver|
-      addrs = resolver['addrs'].flat_map do |a|
-        Resolv.getaddresses(a[/\A\[?(.*)\]?\z/m]).map { |addr| IPAddr.new addr }
-      end
+      name = resolver['name']
+      desc = resolver['description']
+      addrs = resolver['addrs'].map { |a| IPAddr.new a }
       proto = resolver['proto'] == 'DoH' ? 'tcp' : 'udp'
       ports = resolver['ports']
-      desc = "#{resolver['name']}: #{resolver['description']}"
 
       addrs.each do |addr|
         ports.each do |port|
-          (addr.ipv6? ? ipv6 : ipv4)[[addr, proto, port]] ||= desc
+          (addr.ipv6? ? ipv6 : ipv4)[[addr, proto, port]] ||= [name, desc]
         end
       end
+    rescue IPAddr::InvalidAddressError
     end
 
-    buf = []
+    server_names = Set.new
 
     if ipv4.any?
-      buf << "create -exist #{@ipset_ipv4} hash:ip,port comment"
+      puts "create -exist #{@ipset_ipv4} hash:ip,port comment"
 
-      ipv4.sort_by { |k, v| [v, *k] }.each do |(addr, proto, port), desc|
-        buf << "add -exist #{@ipset_ipv4} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
+      ipv4.sort_by(&:last).each do |(addr, proto, port), (name, desc)|
+        server_names << name
+        puts "add -exist #{@ipset_ipv4} %s,%s:%s comment %s" % [addr, proto, port, "#{name}: #{desc}".inspect]
       end
     end
 
     if ipv6.any?
-      buf << '' if buf.any?
-      buf << "create -exist #{@ipset_ipv6} hash:ip,port family inet6 comment"
+      puts if server_names.size > 0
+      puts "create -exist #{@ipset_ipv6} hash:ip,port family inet6 comment"
 
-      ipv6.sort_by { |k, v| [v, *k] }.each do |(addr, proto, port), desc|
-        buf << "add -exist #{@ipset_ipv6} %s,%s:%s comment %s" % [addr, proto, port, desc.inspect]
+      ipv6.sort_by(&:last).each do |(addr, proto, port), (name, desc)|
+        server_names << name
+        puts "add -exist #{@ipset_ipv6} %s,%s:%s comment %s" % [addr, proto, port, "#{name}: #{desc}".inspect]
       end
     end
 
-    buf
+    if server_names.size > 0
+      puts
+      puts "# server_names = #{server_names.sort.inspect}"
+    end
   end
 
   def run arguments = []
     args = parser.parse arguments
     abort parser.help if args.any?
-    puts build_ipset_conf(JSON.parse($stdin.read))
+    print_ipset_conf(JSON.parse($stdin.read))
   end
 end
 
