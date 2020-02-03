@@ -73,16 +73,21 @@ class Opensearch
                                      :DocumentRoot => File.dirname(File.expand_path(file))
 
     server.mount_proc '/' do |req, res|
-      res.body = <<-HTML
-<html>
-<head>
-  <link rel="search"
-        type="application/opensearchdescription+xml"
-        title="#{File.basename file, File.extname(file)}"
-        href="#{File.basename file}">
-</head>
-</html>
+      res.body = <<~HTML
+        <html>
+        <head>
+          <link rel="search"
+                type="application/opensearchdescription+xml"
+                title="#{File.basename file, File.extname(file)}"
+                href="#{File.basename file}">
+        </head>
+        </html>
       HTML
+    end
+
+    server.mount_proc "/#{File.basename file}" do |req, res|
+      res.body = File.read file
+      res.content_type = 'application/opensearchdescription+xml'
     end
 
     server.start
