@@ -277,19 +277,13 @@ F10
 	wmctrl -xa 'Nightly' || wmctrl -xa 'Firefox'
 
 shift + F10
-	(ps axo comm | grep -P '^firefox(?:-bin)?$') && exec firefox
+	exec ffox-remote -P default-nightly
 
 shift + alt + F10
-	(ps axo comm | grep -P '^firefox(?:-bin)?$') && exec firefox --private-window
+	exec ffox-remote -P default-nightly -- --private-window
 
 super + F10
 	wmctrl -xa 'Chromium'
-
-super + shift + F10
-	(ps axo comm | grep ^chromium$) && exec chromium
-
-super + shift + alt + F10
-	(ps axo comm | grep ^chromium$) && exec chromium --incognito
 
 alt + F10
 	wmctrl -a '♻ newsboat ♻'
