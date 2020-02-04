@@ -215,10 +215,6 @@ function! s:CBufferSetup()
 	noremap <buffer> <LocalLeader>A :<C-u>CAlternate vsplit<CR>
 	noremap <buffer> <LocalLeader>l :<C-u>ClangFormat<CR>
 	noremap <buffer> <LocalLeader>L :!deheader -r %<CR>
-
-	if &filetype == 'cpp'
-		noremap <buffer> <LocalLeader>l :<C-u>Cpplint<CR>
-	endif
 endfunction
 
 command! -bar -nargs=1 -complete=file ExecMakeprg call <SID>ExecMakeprg(<q-args>)
@@ -610,7 +606,7 @@ function! s:RubyBufferSetup()
 	noremap  <buffer> <LocalLeader>et :<C-u>Etask<CR>
 	noremap  <buffer> <LocalLeader>eu :<C-u>Eunittest<CR>
 	noremap  <buffer> <LocalLeader>ev :<C-u>Eview<CR>
-	noremap  <buffer> <LocalLeader>l  :<C-u>RuboCop<CR>
+	noremap  <buffer> <LocalLeader>l  :<C-u>RuboCop --fail-level=warning --display-only-fail-level-offenses<CR>
 	noremap  <buffer> <LocalLeader>L  :<C-u>Clog<CR>
 	noremap  <buffer> <LocalLeader>p  :<C-u>Preview<CR>
 	noremap  <buffer> <LocalLeader>t  :<C-u>Runner<CR>
