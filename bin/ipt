@@ -29,12 +29,12 @@ class Ipt
   TABLES = %w[filter nat mangle raw security]
 
   TARGETS = %w[
-   accept_input_target
-   accept_forward_target
-   accept_output_target
-   reject_input_target
-   reject_forward_target
-   reject_output_target
+    accept_input_target
+    accept_forward_target
+    accept_output_target
+    reject_input_target
+    reject_forward_target
+    reject_output_target
   ]
 
   def initialize opts = {}
