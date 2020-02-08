@@ -40,6 +40,7 @@
 	diffFilter = diff-highlight
 
 [merge]
+	conflictstyle = diff3
 	ff = false
 	renormalize = true
 	tool = vimdiff
@@ -182,9 +183,9 @@
 	fpo  = format-patch --stdout
 
 	# Remotes
-	r            = remote --verbose
-	up           = remote update --prune
-	shallowclone = clone --depth=1
+	r     = remote --verbose
+	up    = remote update --prune
+	pushf = push --force-with-lease
 
 	# Grep
 	g    = grep
