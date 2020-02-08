@@ -114,9 +114,9 @@
 # http://tiswww.case.edu/php/chet/bash/CHANGES
 # http://wiki.bash-hackers.org/scripting/bashchanges
 #
-if (( ((${BASH_VERSINFO[0]} << 8) | ${BASH_VERSINFO[1]}) < 0x0401 )); then
+if (( ((BASH_VERSINFO[0] << 8) | BASH_VERSINFO[1]) < 0x0401 )); then
     PS_COLOR="${PS_COLOR:-32}" . ~/.bashrc.d/prompts.bash
-    printf "\nGNU Bash $BASH_VERSION\n\nPlease upgrade to version 4.1+\n\n"
+    printf "\nGNU Bash %s\n\nPlease upgrade to version 4.1+\n\n" "$BASH_VERSION"
     return
 fi
 
