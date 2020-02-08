@@ -214,6 +214,7 @@ task :env do
       { :base => "#{@vim}/vim-monit",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-operator-user",       :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-orgmode",             :branch => %w[master guns], :files => :pathogen },
+      { :base => "#{@vim}/vim-puppet",              :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-rails",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-rake",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-redl",                :branch => %w[master guns], :files => :pathogen },
