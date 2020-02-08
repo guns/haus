@@ -46,18 +46,19 @@ __prepend_path__() {
         return
     fi
 
-    local dir newpath
-    for dir in "${@:2}"; do
-        if newpath="$(ruby -e '
-            paths = (ENV[ARGV[0]] || "").split ":"
-            dir = File.expand_path ARGV[1]
-            abort unless File.directory? dir
-            puts paths.reject { |d| d == dir }.unshift(dir).join(":")
-        ' -- "$var" "$dir")"; then
-            export "$var=$newpath"
-            echo "$var=$newpath"
-        fi
-    done
+    local newpath=$(ruby -e '
+        paths = (ENV[ARGV[0]] || "").split ":"
+        ARGV.drop(1).reverse_each do |dir|
+            dir = File.expand_path dir
+            next unless File.directory? dir
+            paths.reject! { |d| d == dir }
+            paths.unshift dir
+        end
+        puts paths.join(":")
+    ' "$var" "${@:2}")
+
+    export "$var=$newpath"
+    echo "$var=$newpath"
 }
 
 # Param: $1 Directory to list
