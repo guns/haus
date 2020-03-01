@@ -1073,7 +1073,7 @@ HAVE feh && {
 HAVE pulseaudio && {
     alias pastart='run pulseaudio --start'
     alias pastop='run pulseaudio --kill'
-    alias parestart='run pulseaudio --kill; run pulseaudio --start'
+    alias parestart='run pulseaudio --kill; while pkill --exact -0 pulseaudio; do sleep 0.1; done; run pulseaudio --start'
 }
 
 # youtube-dl
