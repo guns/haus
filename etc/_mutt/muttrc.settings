@@ -4629,7 +4629,7 @@ set ssl_force_tls=yes
 #
 # Name: ssl_force_tls
 # Type: boolean
-# Default: yes
+# Default: no
 #
 #
 # If this variable is set, Mutt will require that all connections
