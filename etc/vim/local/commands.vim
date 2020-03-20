@@ -616,13 +616,13 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
 endfunction
 
-command! -bar StandardJS call <SID>StandardJS()
-function! s:StandardJS()
+command! -bar -bang StandardJS call <SID>StandardJS('<bang>')
+function! s:StandardJS(bang)
 	if !executable('standard') | return | endif
 
 	let args = ''
 
-	if getline('$') =~# 'standardjs'
+	if !empty(a:bang) || getline('$') =~# 'standardjs'
 		let args .= ' --verbose --fix'
 	endif
 
@@ -635,7 +635,7 @@ function! s:JavaScriptBufferSetup()
 	SetWhitespace 2
 	setlocal expandtab
 
-	noremap  <buffer> <LocalLeader>l :<C-u>StandardJS<CR>
+	noremap  <buffer> <LocalLeader>l :<C-u>StandardJS!<CR>
 	inoremap <buffer> <C-l>          <Space>=><Space>
 	noremap  <buffer> <4-CR>         A;<Esc>
 	inoremap <buffer> <4-CR>         <C-\><C-o>A;
