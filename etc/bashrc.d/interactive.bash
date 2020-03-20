@@ -172,6 +172,7 @@ CD_FUNC cdvimfiles      "$cdsrc/vimfiles"
 CD_FUNC cddesktop       ~/Desktop ~guns/Desktop
 CD_FUNC cddocuments     ~/Documents ~guns/Documents
 CD_FUNC cddownloads     ~/Downloads ~guns/Downloads
+CD_FUNC cddbeaver       ~/.local/share/DBeaverData/workspace6/General/Scripts
 
 ### Bash builtins and Haus commands
 

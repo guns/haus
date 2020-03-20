@@ -286,7 +286,7 @@ super + F10
 	wmctrl -xa 'Chromium'
 
 alt + F10
-	wmctrl -a '♻ newsboat ♻'
+	wmctrl -xa 'DBeaver'
 
 control + F10
 	wmctrl -xa 'VirtualBox'
