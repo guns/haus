@@ -235,7 +235,7 @@ if ((NOHIST == 1)); then nohist; fi
 # Repeat
 rep() {
     for ((i = 0; i < "$1"; ++i)); do
-        eval "${@:2}"
+        { eval "${@:2}"; } || break
     done
 }
 
