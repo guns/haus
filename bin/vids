@@ -29,6 +29,7 @@ VIDEO_EXTENSIONS = Set.new %w[
 paths = []
 print0 = false
 recurse = true
+limit = nil
 open = false
 pattern = nil
 reverse = false
@@ -47,6 +48,10 @@ args = OptionParser.new nil do |opt|
 
   opt.on '-1', '--no-recurse' do
     recurse = false
+  end
+
+  opt.on '-l', '--limit N', Integer do |arg|
+    limit = arg
   end
 
   opt.on '-o', '--open' do
@@ -95,10 +100,10 @@ when :mtime
 end
 
 paths.reverse! if reverse
+paths = paths.take(limit) if limit
 
 if open
   exec 'vlc', *paths
 else
   print print0 ? paths.join("\0") : paths.join("\n") << "\n"
 end
-
