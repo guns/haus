@@ -323,7 +323,7 @@ class Ipt
           if system 'iptables', '--list-rules', @#{target}, [:out, :err] => '/dev/null'
             @#{target}
           else
-            #{target.start_with?('accept') ? 'ACCEPT' : 'REJECT'}
+            "#{target.start_with?('accept') ? 'ACCEPT' : 'REJECT'}"
           end
         end
       end
