@@ -54,7 +54,6 @@ unset LESSOPTS
 
 # Ruby
 export RUBYLIB="$HOME/.local/lib/ruby"
-export BUNDLE_PATH="$HOME/.bundle"
 
 # Go
 export GOPATH='/opt/src/go'
