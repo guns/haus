@@ -368,7 +368,7 @@ $if psql
     "\C-xq":        "\C-]\\qecho "
 
     # Informational
-    "\033\007d":    "\C-] \\d+ \n"
+    "\033\007d":    "\C-] \\dt+ \n"
     "\C-xd ":       "\C-]\\d+ "
     "\C-xda":       "\C-] \\da+ \n"
     "\C-xdA":       "\C-] \\dA+ \n"
