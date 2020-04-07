@@ -24,7 +24,7 @@ unset f
 
 # Autostart
 pushd .
-cd ~/Downloads
+cd
 
 MONITOR_LOCK="/run/user/$EUID/monitor.lock"
 WALLPAPER_LOCK="/run/user/$EUID/wallpaper.lock"
