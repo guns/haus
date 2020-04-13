@@ -1117,7 +1117,7 @@ fi
 
 HAVE kupfer && {
     alias kf='kupfer'
-    alias kfrestart='pkill --exact kupfer; (cddownloads && bgrun kupfer --no-splash)'
+    alias kfrestart='pkill --exact kupfer; (cd && bgrun kupfer --no-splash)'
 }
 
 : # Return true
