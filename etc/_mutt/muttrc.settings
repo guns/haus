@@ -420,6 +420,59 @@ set auto_tag=yes
 # Also see $fast_reply.
 #
 
+# set background_edit=no
+#
+# Name: background_edit
+# Type: boolean
+# Default: no
+#
+#
+# When set, Mutt will run $editor in the background during
+# message composition.  A landing page will display, waiting for
+# the $editor to exit.  The landing page may be exited, allowing
+# perusal of the mailbox, or even for other messages to be
+# composed.  Backgrounded sessions may be returned to via the
+# <background-compose-menu> function.
+#
+# For background editing to work properly, $editor must be set to
+# an editor that does not try to use the Mutt terminal: for example
+# a graphical editor, or a script launching (and waiting for) the
+# editor in another Gnu Screen window.
+#
+# For more details, see ``bgedit'' ("Background Editing" in the manual).
+#
+
+# set background_confirm_quit=yes
+#
+# Name: background_confirm_quit
+# Type: boolean
+# Default: yes
+#
+#
+# When set, if there are any background edit sessions, you
+# will be prompted to confirm exiting Mutt, in addition to the
+# $quit prompt.
+#
+
+# set background_format="%10S %7p %s"
+#
+# Name: background_format
+# Type: string
+# Default: "%10S %7p %s"
+#
+#
+# This variable describes the format of the ``background compose''
+# menu.  The following printf(3)-style sequences are
+# understood:
+# %i      parent message id (for replies and forwarded messages)
+# %n      the running number on the menu
+# %p      pid of the $editor process
+# %r      comma separated list of ``To:'' recipients
+# %R      comma separated list of ``Cc:'' recipients
+# %s      subject of the message
+# %S      status of the $editor process: running/finished
+#
+
 set beep=no
 #
 # Name: beep
@@ -820,6 +873,25 @@ set crypt_opportunistic_encrypt=yes
 # a message, this option will be disabled for that message.  It can
 # be manually re-enabled in the pgp or smime menus.
 # (Crypto only)
+#
+
+# set crypt_opportunistic_encrypt_strong_keys=no
+#
+# Name: crypt_opportunistic_encrypt_strong_keys
+# Type: boolean
+# Default: no
+#
+#
+# When set, this modifies the behavior of $crypt_opportunistic_encrypt
+# to only search for "strong keys", that is, keys with full validity
+# according to the web-of-trust algorithm.  A key with marginal or no
+# validity will not enable opportunistic encryption.
+#
+# For S/MIME, the behavior depends on the backend.  Classic S/MIME will
+# filter for certificates with the 't' (trusted) flag in the .index file.
+# The GPGME backend will use the same filters as with OpenPGP, and depends
+# on GPGME's logic for assigning the GPGME_VALIDITY_FULL and
+# GPGME_VALIDITY_ULTIMATE validity flag.
 #
 
 # set crypt_protected_headers_read=yes
@@ -1309,7 +1381,21 @@ set fast_reply=yes
 # (PGP only)
 #
 
-set flag_safe=yes
+# set fcc_delimiter=""
+#
+# Name: fcc_delimiter
+# Type: string
+# Default: ""
+#
+#
+# When specified, this allows the ability to Fcc to more than one
+# mailbox.  The fcc value will be split by this delimiter and Mutt
+# will evaluate each part as a mailbox separately.
+#
+# See $record, ``fcc-hook'', and ``fcc-save-hook''.
+#
+
+# set flag_safe=no
 #
 # Name: flag_safe
 # Type: boolean
@@ -3489,6 +3575,9 @@ set record="$folder/INBOX"
 # $save_name variables, and the ``fcc-hook'' command.  Also see $copy
 # and $write_bcc.
 #
+# Multiple mailboxes may be specified if $fcc_delimiter is
+# set to a string delimiter.
+#
 
 # set reflow_space_quotes=yes
 #
@@ -4825,6 +4914,7 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # menu.  This string is similar to $index_format, but has its own
 # set of printf(3)-like sequences:
 # %b      number of mailboxes with new mail *
+# %B      number of backgrounded editing sessions *
 # %d      number of deleted messages *
 # %f      the full pathname of the current mailbox
 # %F      number of flagged messages *
