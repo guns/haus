@@ -59,9 +59,8 @@ args = OptionParser.new nil do |opt|
   end
 
   opt.on '-p', '--pattern PATTERN', Regexp do |p|
-    if pattern = p
-      pattern = Regexp.new p.source, p.options | Regexp::IGNORECASE unless p.source =~ /\p{Lu}/
-    end
+    pattern = p
+    pattern = Regexp.new(p.source, p.options | Regexp::IGNORECASE) if p.source.match?(/\A\p{Lu}*\z/)
   end
 
   opt.on '-r', '--reverse' do
@@ -78,7 +77,7 @@ args = ['.'] if args.empty?
 def append_video ps, path, pattern
   if File.file? path and VIDEO_EXTENSIONS.include? File.extname(path).downcase
     return if pattern and path !~ pattern
-    ps << path
+    ps << File.expand_path(path)
   end
 end
 
