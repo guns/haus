@@ -130,22 +130,22 @@ super + alt + control + shift + {h,j,k,l}
 {XF86MonBrightnessDown,XF86MonBrightnessUp}
 	xbacklight {-,+}5
 
-{shift + XF86Sleep,Pause,shift + Escape}
-	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
-
-{XF86Sleep,super + Pause,super + Escape}
+{super + Pause,XF86Sleep,XF86LaunchB}
 	sudo -n /usr/bin/powerctl suspend
 
-super + alt + {XF86Sleep,Pause,Escape}
+{Pause,shift + XF86Sleep,shift + XF86LaunchB}
+	pkill --exact -HUP gpg-agent; sudo -n /usr/bin/powerctl slock
+
+super + alt + {Pause,XF86Sleep,XF86LaunchB}
 	sudo -n /usr/bin/powerctl reboot
 
-super + alt + control + {XF86Sleep,Pause,Escape}
+super + alt + control + {Pause,XF86Sleep,XF86LaunchB}
 	sudo -n /usr/bin/powerctl poweroff
 
-control + {XF86Sleep,Pause,Escape}
+control + {Pause,XF86Sleep,XF86LaunchB}
 	pkill --exact -HUP gpg-agent && notify --alert --icon gnupg --title gpg-agent 'SIGHUP'
 
-alt + {XF86Sleep,Pause,Escape}
+alt + {Pause,XF86Sleep,XF86LaunchB}
 	if pgrep -x xautolock; then \
 		pkill --exact xautolock; \
 	else \
