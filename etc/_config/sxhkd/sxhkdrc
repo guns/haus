@@ -274,13 +274,13 @@ super + alt + shift + F9
 	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo --set-home --login bash -c 'chown 0 "$(tty)"; exec "'$(command -v tmuxlaunch)'" -d'
 
 F10
-	wmctrl -xa 'Nightly' || wmctrl -xa 'Firefox'
+	wmctrl -xa 'Firefox'
 
 shift + F10
-	exec ffox-remote -P default-nightly
+	exec ffox-remote
 
 shift + alt + F10
-	exec ffox-remote -P default-nightly -- --private-window
+	exec ffox-remote -- --private-window
 
 super + F10
 	wmctrl -xa 'Chromium'
