@@ -7,6 +7,7 @@
 
 require 'optparse'
 require 'find'
+require 'etc'
 require 'haus/logger'
 require 'haus/ls_colors'
 
@@ -15,20 +16,23 @@ class Fixperm
 
   DEFAULTS = {
     :umask => nil,
+    :ownership => false,
     :recurse => false,
     :noop => false
   }
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-    @umask ||= File.umask
+    @umask = nil
+    @stats = {}
+    @uids = {}
+    @gids = {}
   end
 
   def parser
     @parser ||= OptionParser.new nil, 20 do |opt|
       opt.banner = <<~BANNER
-        Change mode of files to match the current umask (typically 0022).
-        Skips symbolic links.
+        Normalize file modes and owners. Skips symbolic links.
 
         *Be careful*
 
@@ -37,8 +41,12 @@ class Fixperm
         Options:
       BANNER
 
-      opt.on '-m', '-u', '--umask N', 'Explicitly set umask (octal)' do |arg|
+      opt.on '-u', '--umask N', 'Enable changing file mode by umask (octal)' do |arg|
         @umask = arg.to_i 8
+      end
+
+      opt.on '-o', '--ownership', 'Enable changing file ownership to match parent directories' do
+        @ownership = true
       end
 
       opt.on '-r', '--recurse', 'Recurse into directories' do
@@ -51,26 +59,54 @@ class Fixperm
     end
   end
 
-  def normalize files
-    (@recurse ? files.flat_map { |f| Find.find(f).to_a } : files).each do |f|
-      stat = File.lstat f
-      mode = if stat.ftype == 'directory' or File.basename(File.dirname File.expand_path(f)) =~ /\As?bin\z/
-        (0777 & ~@umask)
+  def normalize path
+    path = File.expand_path path
+    stat = File.lstat path
+    parent_path = File.expand_path '..', path
+
+    if @umask
+      if stat.ftype == 'directory' or File.basename(parent_path) =~ /\As?bin\z/
+        mode = (0777 & ~@umask)
       else
-        (0666 & ~@umask)
+        mode = (0666 & ~@umask)
       end
 
-      next if stat.ftype == 'link' or (stat.mode & 0777) == mode
-
-      log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [f, Haus::LSColors[f]]
-      File.chmod mode, f unless @noop
+      if stat.ftype != 'link' and (stat.mode & 0777) != mode
+        log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [path, Haus::LSColors[path]]
+        File.chmod mode, path unless @noop
+      end
     end
+
+    if @ownership
+      parent_stat = File.lstat parent_path
+
+      if stat.uid != parent_stat.uid or stat.gid != parent_stat.gid
+        log 'chown %s:%s -> %s:%s on ' % [
+          u(stat.uid),
+          g(stat.gid),
+          u(parent_stat.uid),
+          g(parent_stat.gid)
+        ], [path, Haus::LSColors[path]]
+
+        File.chown parent_stat.uid, parent_stat.gid, path unless @noop
+      end
+    end
+  end
+
+  def u id
+    @uids[id] ||= Etc.getpwuid(id).name
+  end
+
+  def g id
+    @gids[id] ||= Etc.getgrgid(id).name
   end
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help if args.empty?
-    normalize args
+    abort parser.help if args.empty? or (!@umask and !@ownership)
+
+    args = args.flat_map { |f| Find.find(f).to_a } if @recurse
+    args.each { |f| normalize f }
   end
 end
 
