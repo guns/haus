@@ -277,10 +277,10 @@ F10
 	wmctrl -xa 'Firefox'
 
 shift + F10
-	exec ffox-remote
+	exec firefox
 
 shift + alt + F10
-	exec ffox-remote -- --private-window
+	exec firefox --private-window
 
 super + F10
 	wmctrl -xa 'Chromium'
