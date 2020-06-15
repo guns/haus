@@ -51,7 +51,7 @@
 	diff = diff-highlight | less
 
 [pull]
-	ff = true
+	ff = only
 
 [push]
 	followTags = true
