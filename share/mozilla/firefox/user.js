@@ -176,3 +176,6 @@ user_pref("network.connectivity-service.DNSv6.domain", "");
 user_pref("network.connectivity-service.IPv4.url", "");
 user_pref("network.connectivity-service.IPv6.url", "");
 user_pref("network.connectivity-service.enabled", false);
+
+// Disable weird Ctrl+Tab behavior
+user_pref("browser.ctrlTab.recentlyUsedOrder", false);
