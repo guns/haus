@@ -219,14 +219,14 @@ super + Print
 	fi
 
 shift + Scroll_Lock
+	xdotool mousemove 10000 10000
+
+super + shift + Scroll_Lock
 	if [[ "$(toggle-mouse)" == true ]]; then \
 		notify --alert --icon input-mouse --title Mouse "enabled"; \
 	else \
 		notify --warning --icon dialog-warning --title Mouse "DISABLED"; \
 	fi
-
-super + shift + Scroll_Lock
-	xdotool mousemove 10000 10000
 
 #
 # Applications {{{1
