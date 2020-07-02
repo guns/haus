@@ -407,6 +407,7 @@ noremap <Leader>fo       :<C-u>setlocal filetype=org<CR>
 noremap <Leader>fp       :<C-u>setlocal filetype=plain<CR>
 noremap <Leader>fr       :<C-u>setlocal filetype=ruby<CR>
 noremap <Leader>fs       :<C-u>setlocal filetype=sh<CR>
+noremap <Leader>fS       :<C-u>setlocal filetype=sql<CR>
 noremap <Leader>fv       :<C-u>setlocal filetype=vim<CR>
 noremap <Leader>fy       :<C-u>setlocal filetype=yaml<CR>
 

@@ -1,75 +1,15 @@
-snippet ct "create table" b
-CREATE TABLE ${1} (
-	id serial PRIMARY KEY,
-	$0
-);
+snippet s "SELECT" w
+SELECT $0
 endsnippet
 
-snippet dt "drop table" w
-DROP TABLE${1: IF EXISTS} $0;
+snippet f "FROM" w
+FROM $0
 endsnippet
 
-snippet ii "insert into" w
-INSERT INTO ${1} VALUES ($0);
+snippet ex "EXPLAIN" w
+EXPLAIN VERBOSE
 endsnippet
 
-snippet ts "timestamptz" w
-timestamptz
-endsnippet
-
-snippet cu "created/updated" b
-created_at timestamptz NOT NULL DEFAULT now(),
-updated_at timestamptz NOT NULL DEFAULT now()
-endsnippet
-
-snippet pk "primary key" w
-PRIMARY KEY
-endsnippet
-
-snippet r "references" w
-REFERENCES ${1}${2: (${3:id})}
-endsnippet
-
-snippet u "unique" w
-UNIQUE
-endsnippet
-
-snippet co "constraint" w
-CONSTRAINT
-endsnippet
-
-snippet ch "check" w
-CHECK ($0)
-endsnippet
-
-snippet d "default" w
-DEFAULT
-endsnippet
-
-snippet nn "not null" w
-NOT NULL
-endsnippet
-
-snippet odr "on delete restrict" w
-ON DELETE RESTRICT
-endsnippet
-
-snippet odc "on delete cascade" w
-ON DELETE CASCADE
-endsnippet
-
-snippet our "on update restrict" w
-ON UPDATE RESTRICT
-endsnippet
-
-snippet ouc "on update cascade" w
-ON UPDATE CASCADE
-endsnippet
-
-snippet ci "create index" w
-CREATE${1: UNIQUE} INDEX${2: CONCURRENTLY} ${3:name} ON ${4:table} ($0);
-endsnippet
-
-snippet di "di" w
-DROP INDEX${1: CONCURRENTLY}${2: IF EXISTS} ${0:name…}${4: CASCADE};
+snippet ea "EXPLAIN ANALYZE" w
+EXPLAIN ANALYZE VERBOSE
 endsnippet
