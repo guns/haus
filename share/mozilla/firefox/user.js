@@ -179,3 +179,6 @@ user_pref("network.connectivity-service.enabled", false);
 
 // Disable weird Ctrl+Tab behavior
 user_pref("browser.ctrlTab.recentlyUsedOrder", false);
+
+// Disable password breach monitoring
+user_pref("signon.management.page.breach-alerts.enabled", false);
