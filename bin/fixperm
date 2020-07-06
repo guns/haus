@@ -94,11 +94,11 @@ class Fixperm
   end
 
   def u id
-    @uids[id] ||= Etc.getpwuid(id).name
+    @uids[id] ||= (Etc.getpwuid(id).name rescue id)
   end
 
   def g id
-    @gids[id] ||= Etc.getgrgid(id).name
+    @gids[id] ||= (Etc.getgrgid(id).name rescue id)
   end
 
   def run arguments = []
