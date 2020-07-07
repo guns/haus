@@ -154,7 +154,7 @@ CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
 CD_FUNC -x cdnginx      /etc/nginx
 CD_FUNC -n cdusb        /mnt/usb
 CD_FUNC cdtmp           ~/tmp "$TMPDIR" /tmp
-CD_FUNC cdmachines      /var/lib/machines
+CD_FUNC cdm             /var/lib/machines
 CD_FUNC cdpostgres      /var/lib/postgres
 CD_FUNC cdlog           /var/log
 CD_FUNC cdpacmancache   /var/cache/pacman/pkg

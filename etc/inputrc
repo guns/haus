@@ -141,7 +141,7 @@ $if bash
     "\C-x\C-l":     "\C-] cdlocal \n"
     "\C-xl":        "\C-]cdlocal "
     "\C-xL":        "\C-]cdLOCAL "
-    "\C-xM":        "\C-]cdmachines "
+    "\C-xM":        "\C-]cdm "
     "\C-x\C-n":     "\C-] cdnginx \n"
     "\C-xn":        "\C-]cdnginx "
     "\C-x\C-o":     "\C-] cddocuments \n"
