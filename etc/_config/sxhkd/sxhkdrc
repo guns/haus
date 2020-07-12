@@ -170,17 +170,15 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 {XF86AudioRaiseVolume,super + Prior}
 	ponymix increase 5
 
-super + alt + control + {XF86AudioMute,End}
-	notify --no-audio --title 'Volume' --icon gnome-alsamixer-icon 'Muting for 30 seconds'; \
-	remind 30s -c 'ponymix unmute'; \
-	ponymix mute
-
 {super + XF86AudioMute,super + shift + End}
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
 {super + shift + XF86AudioMute,super + alt + End}
+	wmctrl -xa 'Pulseaudio-equalizer-gtk' || pulseaudio-equalizer-gtk
+
+super + alt + control + {XF86AudioMute,End}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
 
 alt + {XF86AudioMute,End}
