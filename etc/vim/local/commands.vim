@@ -302,9 +302,7 @@ endfunction
 
 function! DiffFoldExpr(lnum) "{{{1
 	let line = getline(a:lnum)
-	if line =~# '\v^diff>'
-		return '>2'
-	elseif line =~# '\v^commit>'
+	if line =~# '\v^(commit|diff)>'
 		return '>1'
 	elseif getline(a:lnum - 3) =~# '\v^-- ' || line =~# '\v^Only in '
 		return '0'
