@@ -105,7 +105,7 @@ systray_background_id = 0
 systray_sort = right2left
 systray_icon_size = 16
 systray_icon_asb = 100 0 0
-systray_monitor = 1
+systray_monitor = primary
 
 #-------------------------------------
 # Clock
