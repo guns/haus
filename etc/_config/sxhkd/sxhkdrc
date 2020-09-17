@@ -69,7 +69,7 @@ super + q
 	bspc node --close
 
 super + {Tab,shift + Tab}
-	bspc node --focus {next,prev}.local
+	bspc node --focus {next,prev}.local.leaf
 
 alt + Tab
 	if pkill --exact skippy-xd; then \
@@ -284,7 +284,7 @@ shift + alt + F10
 	exec firefox --private-window
 
 super + F10
-	wmctrl -xa 'Chromium'
+	wmctrl -xa 'Chromium' || wmctrl -xa 'Chrome'
 
 alt + F10
 	wmctrl -xa 'DBeaver'
