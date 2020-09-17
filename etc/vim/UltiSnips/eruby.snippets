@@ -1,7 +1,7 @@
 extends html
 
 snippet e "<% %>" w
-<%- $0 -%>
+<% $0 %>
 endsnippet
 
 snippet E "<%= %>" w
@@ -9,7 +9,7 @@ snippet E "<%= %>" w
 endsnippet
 
 snippet if "if" w
-<%- if ${1} -%>
+<% if ${1} %>
 	$0
 <% end %>
 endsnippet
@@ -20,4 +20,24 @@ endsnippet
 
 snippet end "end (ERB)"
 <% end %>
+endsnippet
+
+snippet r "render" w
+<%= render $0 %>
+endsnippet
+
+snippet rp "render partial" w
+<%= render partial: $0 %>
+endsnippet
+
+snippet y "yield" w
+<%= yield$0 %>
+endsnippet
+
+snippet cf "content_for" w
+<%= content_for :$0 %>
+endsnippet
+
+snippet ct "content_tag" w
+<%= content_tag $0 %>
 endsnippet

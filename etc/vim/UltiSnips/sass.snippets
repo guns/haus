@@ -1,458 +1,509 @@
 ### SASS ###
 
 snippet imp "@import" b
-@import $0
+@import $0;
 endsnippet
 
 snippet inc "@include" b
-@include $0
+@include $0;
 endsnippet
 
 snippet ext "@extend" b
-@extend $0
+@extend $0;
 endsnippet
 
 snippet mix "@mixin" b
-@mixin $0
+@mixin $1 {
+	$0
+}
 endsnippet
 
 snippet med "@media" b
 @media (min-width: $0)
 endsnippet
 
-snippet fun "@function" b
+snippet fn "@function" b
 @function $0
+endsnippet
+
+snippet dar "darken" w
+darken($0)
+endsnippet
+
+snippet lig "lighten" w
+lighten($0)
+endsnippet
+
+snippet atr "@at-root" w
+@at-root $0
 endsnippet
 
 
 ### BACKGROUND (bg) ###
 
 snippet bg "background"
-background: ${1:color} url($2) ${0:repeat/no-repeat/repeat-x/repeat-y/inherit}
+background: ${1:color} url($2) ${0:repeat/no-repeat/repeat-x/repeat-y/inherit};
 endsnippet
 
 snippet bgc "background-color"
-background-color: $0
+background-color: $0;
 endsnippet
 
 snippet bgi "background-image"
-background-image: url($1)
+background-image: url($1);
 endsnippet
 
 snippet bga "background-attachment"
-background-attachment: ${0:fixed/scroll/inherit}
+background-attachment: ${0:fixed/scroll/inherit};
 endsnippet
 
 snippet bgp "background-position"
-background-position: ${0:left/center/right/top/bottom/x y}
+background-position: ${0:left/center/right/top/bottom/x y};
 endsnippet
 
 snippet bgr "background-repeat"
-background-repeat: ${0:repeat/no-repeat/repeat-x/repeat-y/inherit}
+background-repeat: ${0:repeat/no-repeat/repeat-x/repeat-y/inherit};
 endsnippet
 
 snippet bgs "background-size"
-background-size: $0
+background-size: $0;
 endsnippet
 
 
 ### BORDER (bo) ###
 
 snippet bo "border"
-border: ${1:size} ${2:solid} ${0:color}
+border: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 snippet boc "border-color"
-border-color: $0
+border-color: $0;
 endsnippet
 
 snippet boco "border-collapse"
-border-collapse: ${0:collapse/separate}
+border-collapse: ${0:collapse/separate};
 endsnippet
 
 snippet bos "border-style"
-border-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset}
+border-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset};
 endsnippet
 
 snippet bosp "border-spacing"
-border-spacing: $0
+border-spacing: $0;
 endsnippet
 
 snippet bow "border-width"
-border-width: $0
+border-width: $0;
 endsnippet
 
 snippet bot "border-top"
-border-top: ${1:size} ${2:solid} ${0:color}
+border-top: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 snippet botc "border-top-color"
-border-top-color: ${0:color}
+border-top-color: ${0:color};
 endsnippet
 
 snippet bots "border-top-style"
-border-top-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset}
+border-top-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset};
 endsnippet
 
 snippet botw "border-top-width"
-border-top-width: ${0:width}
+border-top-width: ${0:width};
 endsnippet
 
 snippet bor "border-right"
-border-right: ${1:size} ${2:solid} ${0:color}
+border-right: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 snippet borc "border-right-color"
-border-right-color: ${0:color}
+border-right-color: ${0:color};
 endsnippet
 
 snippet bors "border-right-style"
-border-right-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset}
+border-right-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset};
 endsnippet
 
 snippet borw "border-right-width"
-border-right-width: ${0:width}
+border-right-width: ${0:width};
 endsnippet
 
 snippet bob "border-bottom"
-border-bottom: ${1:size} ${2:solid} ${0:color}
+border-bottom: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 snippet bobc "border-bottom-color"
-border-bottom-color: ${0:color}
+border-bottom-color: ${0:color};
 endsnippet
 
 snippet bobs "border-bottom-style"
-border-bottom-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset}
+border-bottom-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset};
 endsnippet
 
 snippet bobw "border-bottom-width"
-border-bottom-width: ${0:width}
+border-bottom-width: ${0:width};
 endsnippet
 
 snippet bol "border-left"
-border-left: ${1:size} ${2:solid} ${0:color}
+border-left: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 snippet bolc "border-left-color"
-border-left-color: ${0:color}
+border-left-color: ${0:color};
 endsnippet
 
 snippet bols "border-left-style"
-border-left-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset}
+border-left-style: ${0:none/hidden/dotted/dashed/solid/double/groove/ridge/inset/outset};
 endsnippet
 
 snippet bolw "border-left-width"
-border-left-width: ${0:width}
+border-left-width: ${0:width};
 endsnippet
 
 snippet out "outline"
-outline: ${1:size} ${2:solid} ${0:color}
+outline: ${1:size} ${2:solid} ${0:color};
 endsnippet
 
 
 ### MARGIN / PADDING ###
 
 snippet m "margin"
-margin: $0
+margin: $0;
 endsnippet
 
 snippet mt "margin-top"
-margin-top: $0
+margin-top: $0;
 endsnippet
 
 snippet mr "margin-right"
-margin-right: $0
+margin-right: $0;
 endsnippet
 
 snippet mb "margin-bottom"
-margin-bottom: $0
+margin-bottom: $0;
 endsnippet
 
 snippet ml "margin-left"
-margin-left: $0
+margin-left: $0;
 endsnippet
 
 snippet p "padding"
-padding: $0
+padding: $0;
 endsnippet
 
 snippet pt "padding-top"
-padding-top: $0
+padding-top: $0;
 endsnippet
 
 snippet pr "padding-right"
-padding-right: $0
+padding-right: $0;
 endsnippet
 
 snippet pb "padding-bottom"
-padding-bottom: $0
+padding-bottom: $0;
 endsnippet
 
 snippet pl "padding-left"
-padding-left: $0
+padding-left: $0;
 endsnippet
 
 snippet lh "line-height"
-line-height: $0
+line-height: $0;
 endsnippet
 
 
 ### DIMENSIONS ###
 
 snippet w "width"
-width: $0
+width: $0;
 endsnippet
 
 snippet h "height"
-height: $0
+height: $0;
 endsnippet
 
 snippet t "top"
-top: $0
+top: $0;
 endsnippet
 
 snippet r "right"
-right: $0
+right: $0;
 endsnippet
 
 snippet b "bottom"
-bottom: $0
+bottom: $0;
 endsnippet
 
 snippet l "left"
-left: $0
+left: $0;
 endsnippet
 
 snippet minh "min-height"
-min-height: $0
+min-height: $0;
 endsnippet
 
 snippet minw "min-width"
-min-width: $0
+min-width: $0;
 endsnippet
 
 snippet maxh "max-height"
-max-height: $0
+max-height: $0;
 endsnippet
 
 snippet maxw "max-width"
-max-width: $0
+max-width: $0;
 endsnippet
 
 
 ### POSITIONING ###
 
 snippet o "overflow"
-overflow: ${0:auto/hidden/scroll/visible}
+overflow: ${0:auto/hidden/scroll/visible};
 endsnippet
 
 snippet po "position"
-position: ${0:relative/absolute/fixed/static}
+position: ${0:relative/absolute/fixed/static};
 endsnippet
 
 snippet ta "text-align"
-text-align: ${0:left/right/center/justify}
+text-align: ${0:left/right/center/justify};
 endsnippet
 
 snippet va "vertical-align"
-vertical-align: ${0:baseline/sub/super/top/text-top/middle/bottom/text-bottom}
+vertical-align: ${0:baseline/sub/super/top/text-top/middle/bottom/text-bottom};
 endsnippet
 
 snippet z "z-index"
-z-index: $0
+z-index: $0;
 endsnippet
 
 
 ### DISPLAY (d) ###
 
 snippet d "display"
-display: $0
+display: $0;
 endsnippet
 
 snippet db "display: block"
-display: block
+display: block;
+endsnippet
+
+snippet df "display: flex" w
+display: flex;
+endsnippet
+
+snippet dg "display: grid" w
+display: grid
 endsnippet
 
 snippet di "display: inline"
-display: inline
+display: inline;
 endsnippet
 
 snippet dn "display: none"
-display: none
+display: none;
 endsnippet
 
 snippet dib "display: inline-block"
-display: inline-block
+display: inline-block;
 endsnippet
 
 snippet dc "display: compact"
-display: none
+display: none;
 endsnippet
 
 snippet dli "display: list-item"
-display: list-item
+display: list-item;
 endsnippet
 
 snippet dm "display: marker"
-display: marker
+display: marker;
 endsnippet
 
 snippet dr "display: run-in"
-display: run-in
+display: run-in;
 endsnippet
 
 snippet dt "display: table"
-display: table
+display: table;
 endsnippet
 
 snippet dtc "display: table-cell"
-display: table-cell
+display: table-cell;
 endsnippet
 
 snippet ec "empty-cells"
-empty-cells: ${0:hide/show}
+empty-cells: ${0:hide/show};
 endsnippet
 
 snippet v "visibility"
-visibility: ${0:visible/hidden}
+visibility: ${0:visible/hidden};
 endsnippet
 
 
 ### FONTS ###
 
 snippet f "font"
-font: ${1:size}/${2:line-height} ff
+font: ${1:size}/${2:line-height} ff;
 endsnippet
 
 snippet fs "font-size"
-font-size: $0
+font-size: $0;
 endsnippet
 
 snippet fst "font-style"
-font-style: ${0:normal/italic/oblique}
+font-style: ${0:normal/italic/oblique};
 endsnippet
 
 snippet fv "font-variant"
-font-variant: ${0:small-caps/normal}
+font-variant: ${0:small-caps/normal};
 endsnippet
 
 snippet fw "font-weight"
-font-weight: ${0:normal/bold}
+font-weight: ${0:normal/bold};
 endsnippet
 
 snippet lsp "letter-spacing"
-letter-spacing: ${0:1px}
+letter-spacing: ${0:1px};
 endsnippet
 
 snippet wsp "word-spacing"
-word-spacing: ${0:size/normal}
+word-spacing: ${0:size/normal};
 endsnippet
 
+### Flexbox ###
+
+snippet ai "align-items" w
+align-items: $0;
+endsnippet
+
+snippet as "align-self" w
+align-self: $0;
+endsnippet
+
+snippet jc "justify-content" w
+justify-content: $0;
+endsnippet
+
+snippet fg "flex-grow" w
+flex-grow: $0;
+endsnippet
+
+snippet fsh "flex-shrink" w
+flex-shrink: $0;
+endsnippet
+
+snippet fd "flex-direction" w
+flex-direction: $0;
+endsnippet
+
+snippet fwr "flex-wrap" w
+flex-wrap: $0;
+endsnippet
 
 ### FONT-FAMILIES ###
 # http://articles.sitepoint.com/article/eight-definitive-font-stacks
 
 snippet ff "Segoe UI"
-font-family: 'Segoe UI', 'Trebuchet MS', Geneva, Tahoma, sans-serif
+font-family: 'Segoe UI', 'Trebuchet MS', Geneva, Tahoma, sans-serif;
 endsnippet
 
 snippet ff "Trebuchet"
-font-family: 'Segoe UI', Candara, 'Bitstream Vera Sans', 'DejaVu Sans', 'Bitstream Vera Sans', 'Trebuchet MS', Verdana, 'Verdana Ref', sans-serif
+font-family: 'Segoe UI', Candara, 'Bitstream Vera Sans', 'DejaVu Sans', 'Bitstream Vera Sans', 'Trebuchet MS', Verdana, 'Verdana Ref', sans-serif;
 endsnippet
 
 snippet ff "Helvetica"
-font-family: Frutiger, 'Frutiger Linotype', Univers, Calibri, 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', Myriad, 'DejaVu Sans Condensed', 'Liberation Sans', 'Nimbus Sans L', Tahoma, Geneva, 'Helvetica Neue', Helvetica, Arial, sans-serif
+font-family: Frutiger, 'Frutiger Linotype', Univers, Calibri, 'Gill Sans', 'Gill Sans MT', 'Myriad Pro', Myriad, 'DejaVu Sans Condensed', 'Liberation Sans', 'Nimbus Sans L', Tahoma, Geneva, 'Helvetica Neue', Helvetica, Arial, sans-serif;
 endsnippet
 
 snippet ff "Georgia"
-font-family: Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif,' 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif
+font-family: Constantia, 'Lucida Bright', Lucidabright, 'Lucida Serif', Lucida, 'DejaVu Serif,' 'Bitstream Vera Serif', 'Liberation Serif', Georgia, serif;
 endsnippet
 
 snippet ff "Verdana"
-font-family: Corbel, 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', 'Bitstream Vera Sans', 'Liberation Sans', Verdana, 'Verdana Ref', sans-serif
+font-family: Corbel, 'Lucida Grande', 'Lucida Sans Unicode', 'Lucida Sans', 'DejaVu Sans', 'Bitstream Vera Sans', 'Liberation Sans', Verdana, 'Verdana Ref', sans-serif;
 endsnippet
 
 snippet ff "Times new roman"
-font-family: Cambria, 'Hoefler Text', Utopia, 'Liberation Serif', 'Nimbus Roman No9 L Regular', Times, 'Times New Roman', serif
+font-family: Cambria, 'Hoefler Text', Utopia, 'Liberation Serif', 'Nimbus Roman No9 L Regular', Times, 'Times New Roman', serif;
 endsnippet
 
 snippet ff "Garamond"
-font-family: 'Palatino Linotype', Palatino, Palladio, 'URW Palladio L', 'Book Antiqua', Baskerville, 'Bookman Old Style', 'Bitstream Charter', 'Nimbus Roman No9 L', Garamond, 'Apple Garamond', 'ITC Garamond Narrow', 'New Century Schoolbook', 'Century Schoolbook', 'Century Schoolbook L', Georgia, serif
+font-family: 'Palatino Linotype', Palatino, Palladio, 'URW Palladio L', 'Book Antiqua', Baskerville, 'Bookman Old Style', 'Bitstream Charter', 'Nimbus Roman No9 L', Garamond, 'Apple Garamond', 'ITC Garamond Narrow', 'New Century Schoolbook', 'Century Schoolbook', 'Century Schoolbook L', Georgia, serif;
 endsnippet
 
 snippet ff "Impact"
-font-family: Impact, Haettenschweiler, 'Franklin Gothic Bold', Charcoal, 'Helvetica Inserat', 'Bitstream Vera Sans Bold', 'Arial Black', sans-serif
+font-family: Impact, Haettenschweiler, 'Franklin Gothic Bold', Charcoal, 'Helvetica Inserat', 'Bitstream Vera Sans Bold', 'Arial Black', sans-serif;
 endsnippet
 
 snippet ff "Monospace"
-font-family: Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace
+font-family: Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L', Monaco, 'Courier New', Courier, monospace;
 endsnippet
 
 
 ### LIST ITEMS (li) ###
 
 snippet lis "list-style"
-list-style: ${1:none/disc/circle/square/decimal/zero/decimal-leading-zero} ${2:inside/outside} url($3)
+list-style: ${1:none/disc/circle/square/decimal/zero/decimal-leading-zero} ${2:inside/outside} url($3);
 endsnippet
 
 snippet lisi "list-style-image"
-list-style-image: url($1)
+list-style-image: url($1);
 endsnippet
 
 snippet lisp "list-style-position"
-list-style-position: ${0:inside/outside}
+list-style-position: ${0:inside/outside};
 endsnippet
 
 snippet list "list-style-type"
-list-style-type: ${0:none/disc/circle/square/decimal/zero/decimal-leading-zero}
+list-style-type: ${0:none/disc/circle/square/decimal/zero/decimal-leading-zero};
 endsnippet
 
 
 ### MISC ###
 
 snippet c "color"
-color: $0
+color: $0;
 endsnippet
 
 snippet cur "cursor"
-cursor: ${0:url()/auto/crosshair/default/help/move/pointer/progress/text/wait/(n|ne|e|se|s|sw|w|nw)-resize}
+cursor: ${0:url()/auto/crosshair/default/help/move/pointer/progress/text/wait/(n|ne|e|se|s|sw|w|nw)-resize};
 endsnippet
 
 snippet rtl "direction"
-direction: rtl
+direction: rtl;
 endsnippet
 
 snippet fl "float"
-float: ${0:left}
+float: ${0:left};
 endsnippet
 
 snippet mo "marker-offset"
-marker-offset: ${0:auto/length}
+marker-offset: ${0:auto/length};
 endsnippet
 
 snippet td "text-decoration"
-text-decoration: ${0:underline/overline/line-through/blink}
+text-decoration: ${0:underline/overline/line-through/blink};
 endsnippet
 
 snippet ti "text-indent"
-text-indent: $0
+text-indent: $0;
 endsnippet
 
 snippet ts "text-shadow: color x y blur"
-text-shadow: ${1:color} ${2:x px} ${3:y px} ${0:blur px}
+text-shadow: ${1:color} ${2:x px} ${3:y px} ${0:blur px};
 endsnippet
 
 snippet tsn "text-shadow: none"
-text-shadow: none
+text-shadow: none;
 endsnippet
 
 snippet tt "text-transform"
-text-transform: ${0:capitalize/uppercase/lowercase}
+text-transform: ${0:capitalize/uppercase/lowercase};
 endsnippet
 
 snippet ws "white-space"
-white-space: ${0:normal/nowrap/pre/pre-line/pre-wrap}
+white-space: ${0:normal/nowrap/pre/pre-line/pre-wrap};
 endsnippet
 
 snippet !
@@ -460,49 +511,24 @@ snippet !
 endsnippet
 
 snippet cs "caption-side"
-caption-side: ${0:top/right/bottom/left}
+caption-side: ${0:top/right/bottom/left};
 endsnippet
 
 snippet cl "clear"
-clear: ${0:both/none/right}
+clear: ${0:both/none/right};
 endsnippet
 
 snippet scrollbar "scrollbar"
-scrollbar-base-color:       ${1:#CCCCCC}
-scrollbar-arrow-color:      ${2:#000000}
-scrollbar-track-color:      ${3:#999999}
-scrollbar-3dlight-color:    ${4:#EEEEEE}
-scrollbar-highlight-color:  ${5:#FFFFFF}
-scrollbar-face-color:       ${6:#CCCCCC}
-scrollbar-shadow-color:     ${7:#999999}
-scrollbar-darkshadow-color: ${8:#666666}
+scrollbar-base-color:       ${1:#CCCCCC};
+scrollbar-arrow-color:      ${2:#000000};
+scrollbar-track-color:      ${3:#999999};
+scrollbar-3dlight-color:    ${4:#EEEEEE};
+scrollbar-highlight-color:  ${5:#FFFFFF};
+scrollbar-face-color:       ${6:#CCCCCC};
+scrollbar-shadow-color:     ${7:#999999};
+scrollbar-darkshadow-color: ${8:#666666};
 endsnippet
 
-
-### VENDOR EXTENSIONS (v) ###
-
-snippet vbox "box-shadow"
--webkit-box-shadow: ${1:0} ${2:0} ${3:5px} ${4:#000}
--moz-box-shadow:    $1 $2 $3 $4
--box-shadow:        $1 $2 $3 $4
-endsnippet
-
-snippet vbor "border-radius"
--webkit-border-radius: ${1:.5em}
--moz-border-radius:    $1
-border-radius:         $1
-endsnippet
-
-snippet vbort "border-radius-top"
--webkit-border-top-right-radius: ${1:.5em}
--moz-border-radius-topright:     $1
--webkit-border-top-left-radius:  $1
--moz-border-radius-topleft:      $1
-endsnippet
-
-snippet vborb "border-radius-bottom"
--webkit-border-bottom-right-radius: ${1:.5em}
--moz-border-radius-bottomright:     $1
--webkit-border-bottom-left-radius:  $1
--moz-border-radius-bottomleft:      $1
+snippet op "opacity" w
+opacity: $0;
 endsnippet

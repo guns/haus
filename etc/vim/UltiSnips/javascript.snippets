@@ -15,7 +15,7 @@ const ${2:$1} = require('${1}')
 endsnippet
 
 snippet c "const" w
-const $1 = $0
+const $0
 endsnippet
 
 snippet v "var" b
@@ -23,7 +23,7 @@ var $0
 endsnippet
 
 snippet l "let" b
-let $1 = $0
+let $0
 endsnippet
 
 snippet t "this" w
@@ -246,4 +246,20 @@ endsnippet
 
 snippet ind "indexOf" w
 indexOf($0)
+endsnippet
+
+snippet bm "benchmark" w
+const _START = window.performance.now()
+console.log(window.performance.now() - _START)
+endsnippet
+
+snippet gcs "getComputedStyle" w
+window.getComputedStyle($0)
+endsnippet
+
+snippet try "try" w
+try {
+	$0
+} finally {
+}
 endsnippet
