@@ -123,7 +123,6 @@ SetWhitespace! 8 " sw = sts = ts = 8
 set nojoinspaces               " Never join lines with two spaces
 set backspace=indent,eol,start " Familiar backspace behavior
 set nrformats-=octal           " Use base10 inc/dec on 0[0-7] strings
-set nofixendofline             " Respect the lack of a newline in existing files
 
 """ GLOBAL VARIABLES
 
@@ -139,6 +138,7 @@ let g:readline_has_bash = 1
 
 " Ruby
 let g:ruby_operators = 1
+let g:ruby_indent_assignment_style = 'variable'
 
 " Vim
 let g:vim_indent_cont = 4
@@ -156,7 +156,7 @@ let g:markdown_fenced_languages = ['vim', 'clojure']
 
 " HTML
 let g:html_indent_inctags = "p"
-let g:html_indent_autotags = "html"
+let g:html_indent_autotags = ""
 
 " Plugin: vim-clojure-static
 let g:clojure_align_multiline_strings = 1
