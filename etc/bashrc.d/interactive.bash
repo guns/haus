@@ -1101,6 +1101,7 @@ if HAVE systemctl; then
     alias jcb='journalctl --boot'; TCOMP journalctl jcb
     alias jce='journalctl --pager-end'; TCOMP journalctl jce
     alias jcf='journalctl --follow'; TCOMP journalctl jcf
+    alias jcs='journalctl --since'
     alias jcverify='journalctl --verify'; TCOMP journalctl jcverify
     alias mc='machinectl'; TCOMP machinectl mc
     alias sctimers='systemctl list-timers'
