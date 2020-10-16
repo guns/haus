@@ -13,7 +13,7 @@ def sh *argv
   system *argv
 end
 
-options = { :mountoptions => ['noatime'], :mount => true }
+options = { :mountoptions => ['noatime', 'X-mount.mkdir=0700'], :mount => true }
 
 parser = OptionParser.new do |opt|
   opt.banner = "USAGE: csmount [options] device mountpoint\n\nOptions:\n"
