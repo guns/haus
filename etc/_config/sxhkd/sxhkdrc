@@ -176,10 +176,10 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
 
 {super + shift + XF86AudioMute,super + alt + End}
-	wmctrl -xa 'Pulseaudio-equalizer-gtk' || pulseaudio-equalizer-gtk
+	wmctrl -xa 'Pavucontrol' || pavucontrol
 
 super + alt + control + {XF86AudioMute,End}
-	wmctrl -xa 'Pavucontrol' || pavucontrol
+	wmctrl -xa 'Pulseaudio-equalizer-gtk' || pulseaudio-equalizer-gtk
 
 alt + {XF86AudioMute,End}
 	if pkill --exact -0 pulseaudio; then \
