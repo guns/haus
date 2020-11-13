@@ -1116,9 +1116,6 @@ fi
 
 ### GUI programs
 
-HAVE kupfer && {
-    alias kf='kupfer'
-    alias kfrestart='pkill --exact kupfer; (cd && bgrun kupfer --no-splash)'
-}
+alias kf='kupfer'
 
 : # Return true
