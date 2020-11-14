@@ -586,7 +586,7 @@ function! s:RubyBufferSetup()
 
 	noremap! <buffer> <C-l>           <Space>=><Space>
 	noremap  <buffer> <LocalLeader>a  :<C-u>A<CR>
-	noremap  <buffer> <LocalLeader>A  :<C-u>AV<CR>
+	noremap  <buffer> <LocalLeader>A  :<C-u>R<CR>
 	noremap  <buffer> <LocalLeader>ec :<C-u>Econtroller<CR>
 	noremap  <buffer> <LocalLeader>ee :<C-u>Eenvironment<CR>
 	noremap  <buffer> <LocalLeader>ef :<C-u>Efixtures<CR>
