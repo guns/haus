@@ -915,6 +915,8 @@ HAVE psql && {
 
 HAVE docker && {
     alias d='docker'; TCOMP docker d
+    alias dc='docker-compose'; TCOMP docker-compose dc
+    alias dcx='docker-compose exec'
 }
 
 ### Hardware control
