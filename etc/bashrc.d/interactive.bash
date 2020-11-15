@@ -908,7 +908,7 @@ alias y='yarn'
 
 HAVE psql && {
     alias aspostgres='sudo --set-home --login --user postgres'; TCOMP sudo aspostgres
-    alias initpostgres="aspostgres initdb --locale $LANG -E UTF-8 -D \"$cdpostgres/data\""
+    alias initpostgres="aspostgres initdb --locale \"$LANG\" -E UTF-8 -D \"$cdpostgres/data\""
 }
 
 ### Containers
