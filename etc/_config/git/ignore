@@ -15,7 +15,7 @@ Thumbs.db
 Session.vim
 
 # Emacs
-\#*\#
+\#*#
 *.elc
 
 # Ruby
@@ -38,3 +38,6 @@ Session.vim
 .lein-plugins
 .lein-repl-history
 .nrepl-port
+
+# Libreoffice
+.~*#
