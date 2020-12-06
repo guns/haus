@@ -428,10 +428,6 @@ alias lsbfs='lsb --fs'
 alias lsbmode='lsb --perms'
 alias lsbscsi='lsb --scsi'
 
-# fusermount
-alias fusemt='fusermount -o noatime'
-alias fuseumt='fusermount -u'
-
 # tar
 alias lstar='tar --list --verbose --file'
 untar() {
