@@ -114,6 +114,9 @@ augroup GUNS
 	" JavaScript
 	autocmd FileType javascript
 		\ JavaScriptBufferSetup
+	autocmd FileType json
+		\ SetWhitespace 2 |
+		\ setlocal expandtab
 
 	" C, C++
 	autocmd FileType c,cpp
