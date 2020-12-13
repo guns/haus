@@ -727,6 +727,7 @@ HAVE vim && {
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
     alias vimdnsmasq='vim "/etc/dnsmasq.conf" -c "lcd /etc/"'
     alias vimdnscrypt='vim "/etc/dnscrypt-proxy/dnscrypt-proxy.toml" -c "lcd /etc/"'
+    alias vimfstab='vim /etc/fstab'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.cache/bash_history'
