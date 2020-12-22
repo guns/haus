@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
 vimrepl() {
-    local file cmd
+    local files=() OPTIND OPTARG opt
+    while getopts :f: opt; do
+        case "$opt" in
+        f) files+="$OPTARG";;
+        *) echo "USAGE: $FUNCNAME [-f filename] [cmd]"
+        esac
+    done
+    shift $((OPTIND-1))
 
-    case $# in
-    0) file='.vimrepl';;
-    1) file='.vimrepl' cmd="$1";;
-    *) file="$1" cmd="${*:2}";;
-    esac
-
-    exec vim -c "Screen $cmd" "$file"
+    exec env _VIMREPL="$*" vim -c 'execute "Screen " . $_VIMREPL' "${files[@]}"
 }
 
 vimrepl "$@"
