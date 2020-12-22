@@ -19,6 +19,7 @@ set completion-ignore-case on
 # set convert-meta off
 # set disable-completion off
 # set echo-control-characters on
+# set enable-bracketed-paste on
 # set enable-keypad off
 # set enable-meta-key on
 # set expand-tilde off
@@ -47,9 +48,12 @@ set visible-stats on
 # set completion-prefix-display-length 0
 set completion-query-items 256
 # set editing-mode emacs
+# set emacs-mode-string @
 # set history-size 0
 # set keymap emacs
 set keyseq-timeout 0
+# set vi-cmd-mode-string (cmd)
+# set vi-ins-mode-string (ins)
 
 ### Global Macros
 # diff -U3 <(INPUTRC=/dev/null bash -c "bind -p; bind -s") <(bash -c "bind -p; bind -s")
