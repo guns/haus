@@ -4,6 +4,4 @@
 require 'csv'
 require 'json'
 
-ARGV.each do |f|
-  puts CSV.read(f, headers: true).map(&:to_hash).to_json
-end
+puts CSV.parse($stdin.read, headers: true).map(&:to_hash).to_json
