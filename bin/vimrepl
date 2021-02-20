@@ -5,7 +5,7 @@ vimrepl() {
     while getopts :f: opt; do
         case "$opt" in
         f) files+="$OPTARG";;
-        *) echo "USAGE: $FUNCNAME [-f filename] [cmd]"
+        *) echo "USAGE: $FUNCNAME [-f filename] [cmd]"; exit;;
         esac
     done
     shift $((OPTIND-1))
