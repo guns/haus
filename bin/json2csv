@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+require 'csv'
+require 'json'
+
+json = JSON.parse($stdin.read)
+
+puts CSV.generate(headers: json[0].keys) { |csv|
+  json.each { |r| csv << r.values }
+}
