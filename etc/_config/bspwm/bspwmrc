@@ -89,4 +89,9 @@ rm -f "/run/user/$EUID/wallpaper.lock"
 pkill --full --exact /usr/bin/deadd-notification-center
 
 # Fix tint2 stacking order
-xdo above -t "$(xdo id -N Bspwm -n root | head -1)" "$(xdo id -n tint2 | head -1)"
+(
+    root=$(xdo id -N Bspwm -n root | head -1)
+    for win in $(xdo id -n tint2); do
+        xdo above -t "$root" "$win"
+    done
+)
