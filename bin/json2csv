@@ -2,9 +2,32 @@
 
 require 'csv'
 require 'json'
+require 'optparse'
 
-json = JSON.parse($stdin.read)
+delim = ','
 
-puts CSV.generate(headers: json[0].keys) { |csv|
+parser = OptionParser.new do |opt|
+  opt.banner = <<~BANNER
+    Usage: #{File.basename __FILE__} [options] [path]
+
+    Options:
+  BANNER
+
+  opt.on '-d', '--delimiter STRING' do |arg|
+    delim = arg
+  end
+end
+
+args = parser.parse ARGV
+
+case args.size
+when 0 then buf = $stdin.read
+when 1 then buf = File.read(args[0])
+else abort parser.help
+end
+
+json = JSON.parse(buf)
+
+puts CSV.generate(headers: json[0].keys, write_headers: true, col_sep: delim) { |csv|
   json.each { |r| csv << r.values }
 }

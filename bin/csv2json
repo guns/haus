@@ -3,11 +3,28 @@
 
 require 'csv'
 require 'json'
+require 'optparse'
 
-case ARGV.size
-when 0 then buf = $stdin.read
-when 1 then buf = File.read(ARGV[0])
-else abort 'USAGE: csv2json [file]'
+delim = ','
+
+parser = OptionParser.new do |opt|
+  opt.banner = <<~BANNER
+    Usage: #{File.basename __FILE__} [options] [path]
+
+    Options:
+  BANNER
+
+  opt.on '-d', '--delimiter STRING' do |arg|
+    delim = arg
+  end
 end
 
-puts CSV.parse(buf, headers: true).map(&:to_hash).to_json
+args = parser.parse ARGV
+
+case args.size
+when 0 then buf = $stdin.read
+when 1 then buf = File.read(args[0])
+else abort parser.help
+end
+
+puts CSV.parse(buf, headers: true, col_sep: delim).map(&:to_hash).to_json
