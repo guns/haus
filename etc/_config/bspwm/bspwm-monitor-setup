@@ -26,7 +26,7 @@ when Set['eDP1', 'HDMI2'].subset?(monitors)
   system *%w[bspc monitor eDP1  --reset-desktops 6 7 8 9 0]
 when Set['eDP1'].subset?(monitors)
   system *%w[xrandr --output eDP1 --mode 1680x1050]
-  system *%w[bspc monitor --reset-desktops 1 2 3 4 5]
+  system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
 when monitors.size == 1
-  system *%w[bspc monitor --reset-desktops 1 2 3 4 5]
+  system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
 end
