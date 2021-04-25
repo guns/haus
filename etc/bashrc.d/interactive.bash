@@ -591,7 +591,6 @@ alias info='info --vi-keys'
 ### Switch User
 
 alias s='sudo --set-home'; TCOMP sudo s
-alias asguns='sudo --set-home --user guns --'
 alias xsu='exec su'; TCOMP su xsu
 
 ### Network
@@ -618,10 +617,6 @@ HAVE netctl && {
 # cURL/wget
 TCOMP curl get
 TCOMP wget dl
-
-# drill
-alias dom='drill'; complete -F _known_hosts dom
-alias domx='drill -x'
 
 # netcat
 HAVE ncat && {
