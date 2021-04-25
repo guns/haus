@@ -8,25 +8,25 @@ monitors = info[1..-1].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
 
 case
 when Set['DP-1', 'HDMI-0'].subset?(monitors)
-  system *%w[xrandr --output HDMI-0 --primary --output DP-1 --left-of HDMI-0]
+  system *%w[xrandr --output HDMI-0 --primary
+                    --output DP-1 --left-of HDMI-0
+                    --output eDP1 --off]
   system *%w[bspc monitor DP-1 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor HDMI-0 --reset-desktops 6 7 8 9 0]
 when Set['DP1-1', 'HDMI2'].subset?(monitors)
-  system *%w[xrandr --output HDMI2 --primary --output DP1-1 --left-of HDMI2]
+  system *%w[xrandr --output HDMI2 --primary
+                    --output DP1-1 --left-of HDMI2
+                    --output eDP1 --off]
   system *%w[bspc monitor DP1-1 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor HDMI2 --reset-desktops 6 7 8 9 0]
 when Set['eDP1', 'HDMI2'].subset?(monitors)
   system *%w[xrandr --output HDMI2 --primary --pos 0x0 --rotate normal
-                    --output eDP1 --mode 1680x1050 --pos 120x1080 --rotate normal
-                    --output DP1 --off
-                    --output DP2 --off
-                    --output HDMI1 --off
-                    --output VIRTUAL1 --off]
+                    --output eDP1 --mode 1680x1050 --pos 120x1080 --rotate normal]
   system *%w[bspc monitor HDMI2 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor eDP1  --reset-desktops 6 7 8 9 0]
 when Set['eDP1'].subset?(monitors)
   system *%w[xrandr --output eDP1 --mode 1680x1050]
   system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
-when monitors.size == 1
+else
   system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
 end
