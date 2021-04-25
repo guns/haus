@@ -96,6 +96,7 @@ augroup GUNS
 		\ setlocal filetype=yaml
 	autocmd FileType yaml
 		\ SetWhitespace 2 |
+		\ setlocal iskeyword+=- |
 		\ runtime ftplugin/html/sparkup.vim
 	autocmd FileType haml
 		\ setlocal iskeyword+=- |
@@ -241,5 +242,9 @@ augroup GUNS
 	autocmd FileType elixir
 		\ execute 'inoremap <buffer> <Esc>l <Space>=><Space>' |
 		\ execute 'inoremap <buffer> <Esc>L <Space>\|><Space>'
+
+	" Docker
+	autocmd BufRead,BufNewFile Dockerfile.*
+		\ setlocal filetype=dockerfile
 
 augroup END
