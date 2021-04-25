@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if (($# != 2)); then
+    echo "USAGE: $0 remote_host:remote_port local_port" >&2
+    exit 1
+fi
+
+run socat -v "TCP-LISTEN:$2,bind=127.0.0.1,reuseaddr,fork" "TCP:$1";
