@@ -634,11 +634,6 @@ alias ssh-remove-host='ssh-keygen -R'; complete -F _known_hosts ssh-remove-host
 alias ssh-pubkey='ssh-keygen -y -f'
 alias scpr='scp -r'; TCOMP scp scpr
 
-# sshuttle
-TCOMP ssh sshuttle
-TCOMP ssh sshuttle-domains
-TCOMP ssh sshuttle-proxy
-
 # lsof
 alias lsof='lsof +c0 -Pwn +fg'
 alias lsif='lsof -i'
@@ -848,53 +843,12 @@ CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.direc
 
 # Rake
 rk() {
-    if [[ -x bin/rake ]]; then
-        run bin/rake "$@"
+    if [[ -x bin/bundle ]]; then
+        run bin/bundle exec rake "$@"
     else
-        rake "$@"
+        run rake "$@"
     fi
 }; TCOMP rake rk
-
-rkt() {
-    if [[ -x bin/rails ]]; then
-        run bin/rails -T
-    else
-        rk -T
-    fi
-}
-
-# Rails
-r() {
-    if [[ -x bin/rails ]]; then
-        run bin/rails "$@"
-    else
-        rails "$@"
-    fi
-}; TCOMP rails r
-
-# Bundler
-b() {
-    if [[ -z "$BUNDLE_JOBS" ]]; then
-        BUNDLE_JOBS=$(grep --count ^processor /proc/cpuinfo)
-    fi
-
-    if [[ -x bin/bundle ]]; then
-        BUNDLE_JOBS="$BUNDLE_JOBS" run bin/bundle "$@"
-    else
-        BUNDLE_JOBS="$BUNDLE_JOBS" bundle "$@"
-    fi
-}
-
-alias bx='b exec'
-
-# rspec ugh
-rspec() {
-    if [[ -x bin/rspec ]]; then
-        run bin/rspec "$@"
-    else
-        rspec "$@"
-    fi
-}
 
 ### JavaScript
 
