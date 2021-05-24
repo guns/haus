@@ -47,18 +47,10 @@ unset i n
 
 # Find window class names with xprop(1)
 bspc rule --add Arandr                   state=floating
-bspc rule --add Asunder                  state=floating
-bspc rule --add Audacious                state=floating
-bspc rule --add Clementine               state=floating
-bspc rule --add FLTK                     state=floating
 bspc rule --add Gcolor3                  state=floating
 bspc rule --add Gifview                  state=floating
-bspc rule --add Hamster                  state=floating
-bspc rule --add Hamster-windows-service  state=floating
 bspc rule --add sun-awt-X11-XFramePeer   state=tiled
-bspc rule --add Jitsi                    state=floating
-bspc rule --add Kupfer.py                state=floating focus=true
-bspc rule --add Lingot                   state=floating
+bspc rule --add Kupfer.py                state=floating focus=true sticky=true
 bspc rule --add melt                     state=floating
 bspc rule --add Nitrogen                 state=floating
 bspc rule --add Orage                    state=floating
@@ -75,7 +67,7 @@ bspc rule --add Tint2                    layer=below
 bspc rule --add Transmission-gtk         state=floating
 bspc rule --add vlc                      state=floating
 bspc rule --add Xdialog                  state=floating
-bspc rule --add Xsensors                 state=floating sticky=true
+bspc rule --add Xsensors                 state=floating
 
 # Setup monitors
 "$HOME/.config/bspwm/bspwm-monitor-setup"
