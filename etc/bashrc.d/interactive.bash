@@ -861,6 +861,7 @@ HAVE psql && {
 
 HAVE docker && {
     alias d='docker'; TCOMP docker d
+    dps() { docker ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
     alias dc='docker-compose'; TCOMP docker-compose dc
     alias dcx='docker-compose exec'
 }
