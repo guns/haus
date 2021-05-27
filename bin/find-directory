@@ -33,34 +33,35 @@ class FindDirectory
     end
   end
 
-  def child_dirs dir
-    Dir.entries(dir).sort.reduce [] do |v, d|
-      next v if d == '.' or d == '..'
+  def enqueue_child_dirs queue, visited, dir
+    Dir.entries(dir).sort.each do |d|
+      next if d == '.' or d == '..' or visited.include? d
+
       path = File.join dir, d
-      if File.directory? path
-        v << path
-      else
-        v
-      end
+      queue << path if File.directory? path
+      visited << d
     end
   rescue Errno::EACCES
-    []
   end
 
   def bfs dir, pattern
-    queue = child_dirs dir
+    queue = Queue.new
     visited = Set.new
-    while queue.any?
-      d = queue.shift
+
+    enqueue_child_dirs queue, visited, dir
+
+    while (d = queue.pop true) # Raises ThreadError in non-blocking mode
       if @full_path
         return d if File.expand_path(d) =~ pattern
       else
         return d if File.basename(d) =~ pattern
       end
-      visited << d
-      queue.concat child_dirs(d).reject { |x| visited.include? x }
+
+      enqueue_child_dirs queue, visited, d
     end
+
     nil
+  rescue ThreadError
   end
 
   def run arguments = []
