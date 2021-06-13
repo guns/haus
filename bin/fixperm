@@ -23,10 +23,6 @@ class Fixperm
 
   def initialize opts = {}
     DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-    @umask = nil
-    @stats = {}
-    @uids = {}
-    @gids = {}
   end
 
   def parser
@@ -94,11 +90,11 @@ class Fixperm
   end
 
   def u id
-    @uids[id] ||= (Etc.getpwuid(id).name rescue id)
+    (@_uids ||= {})[id] ||= (Etc.getpwuid(id).name rescue id)
   end
 
   def g id
-    @gids[id] ||= (Etc.getgrgid(id).name rescue id)
+    (@_gids ||= {})[id] ||= (Etc.getgrgid(id).name rescue id)
   end
 
   def run arguments = []
