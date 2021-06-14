@@ -152,7 +152,7 @@ class Ipt
   end
 
   def page s
-    if $stdin.tty?
+    if $stdout.tty?
       IO.popen ENV['PAGER'] || 'less', 'w' do |io|
         io.puts s
       end

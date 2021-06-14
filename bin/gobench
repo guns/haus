@@ -37,7 +37,7 @@ class Gobench
   end
 
   def bench *args
-    if $stdin.tty?
+    if $stdout.tty?
       puts %x(go version)
     else
       puts "//\t#{%x(go version)}"
@@ -46,7 +46,7 @@ class Gobench
     IO.popen ['taskset', '--cpu-list', @cpu_list,
               'go', 'test', '-run=NONE', "-bench=#{args[0] || '.'}", '-benchmem',
               *args.drop(1)], 'r' do |io|
-      if $stdin.tty?
+      if $stdout.tty?
         while line = io.gets("\n")
           puts line
         end
