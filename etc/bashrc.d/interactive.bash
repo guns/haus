@@ -967,7 +967,7 @@ HAVE pacman && {
     }; complete -F __pacman_pkgs__ pacq
     alias pacsync='run pacman --sync --refresh'
     alias pacupgrade='run pacman --sync --refresh --sysupgrade'
-    alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacaur --check $(pacforeign)'
+    alias pacoutdated='run pacman --query --upgrades; run pacckalts; run pacforeign --upgrades'
     alias pacclean='run pacman --sync --clean --noconfirm'
     alias pacorphans='run pacman --query --deps --unrequired'
     alias paclog='pager /var/log/pacman.log'

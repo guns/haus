@@ -3,9 +3,19 @@
 
 require 'optparse'
 
-excluded = %w[nerv nerv-alt]
+def vercmp v1, v2
+  IO.popen(['vercmp', v1, v2]) { |io| io.read.to_i }
+end
 
-OptionParser.new do |opt|
+def log msg, sgr
+  puts $stdout.tty? ? "\e[#{sgr}m#{msg}\e[0m" : msg
+end
+
+excluded = %w[nerv nerv-alt]
+show_upgrades = false
+verbose = false
+
+OptionParser.new nil, 20 do |opt|
   opt.banner = <<~BANNER
     Usage: #{File.basename __FILE__} [options]
 
@@ -15,11 +25,50 @@ OptionParser.new do |opt|
   opt.on '-a', '--all' do
     excluded.clear
   end
+
+  opt.on '-u', '--upgrades', 'List outdated packages' do |arg|
+    require 'json'
+    require 'net/https'
+    require 'uri'
+    show_upgrades = true
+  end
+
+  opt.on '-v', '--verbose' do
+    verbose = true
+  end
 end.parse!
 
 abort if ARGV.any?
 
-%x(pacman --query --foreign --info).split("\n\n").each do |pkg|
-  next if (pkg[/Groups\s*:\s*(.*)/, 1].split & excluded).any?
-  puts pkg[/Name\s*:\s*(.*)/, 1]
+packages = %x(pacman --query --foreign --info).split("\n\n").each_with_object({}) do |info, m|
+  next if (info[/Groups\s*:\s*(.*)/, 1].split & excluded).any?
+  m[info[/Name\s*:\s*(.*)/, 1]] = info[/Version\s*:\s*(.*)/, 1]
+end
+
+if show_upgrades
+  url = URI::HTTPS.build(host: 'aur.archlinux.org', path: '/rpc.php', query: URI.encode_www_form([
+    ['type', 'info'], ['v', '5'], *packages.keys.map { |pkg| ['arg[]', pkg] },
+  ]))
+
+  warn url if verbose
+
+  JSON.parse(Net::HTTP.get(url))['results'].each do |remote|
+    pkg, remote_version = remote.values_at('Name', 'Version')
+    local_version = packages[pkg]
+
+    if local_version
+      cmp = vercmp(local_version, remote_version)
+      next unless cmp != 0 or verbose
+
+      case cmp
+      when -1 then rel, sgr = '<', '31'
+      when 0  then rel, sgr = '=', '32'
+      when 1  then rel, sgr = '>', '33'
+      end
+
+      log "#{pkg}: #{local_version} #{rel} #{remote_version}", sgr
+    end
+  end
+else
+  puts packages.keys
 end
