@@ -43,12 +43,14 @@ def check_line line
   end
 
   v1 = %x(pacman --query --info #{pkg.shellescape})[/Version\s*:\s*\S*?(\d.*)/, 1]
-  cmp = %x(vercmp #{v1.shellescape} #{v2.shellescape}).to_i
 
-  if cmp < 0
+  case %x(vercmp #{v1.shellescape} #{v2.shellescape}).to_i
+  when -1
     log "✖ #{pkg}: #{v1} < #{v2}"
-  else
-    warn "✔ #{pkg}"
+  when 0
+    warn "✔ #{pkg}: #{v1} = #{v2}"
+  when 1
+    warn "  #{pkg}: #{v1} > #{v2}"
   end
 end
 

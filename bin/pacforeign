@@ -61,12 +61,12 @@ if show_upgrades
       next unless cmp != 0 or verbose
 
       case cmp
-      when -1 then rel, sgr = '<', '31'
-      when 0  then rel, sgr = '=', '32'
-      when 1  then rel, sgr = '>', '33'
+      when -1 then icon, rel, sgr = '✖', '<', '33'
+      when 0  then icon, rel, sgr = '✔', '=', '32'
+      when 1  then icon, rel, sgr = ' ', '>', '36'
       end
 
-      log "#{pkg}: #{local_version} #{rel} #{remote_version}", sgr
+      log "#{icon} #{pkg}: #{local_version} #{rel} #{remote_version}", sgr
     end
   end
 else
