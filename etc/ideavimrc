@@ -1,0 +1,461 @@
+" List of Supported Set Commands
+" ==============================
+"
+" The following `:set` commands can appear in `~/.ideavimrc` or be set manually in the command mode:
+"
+"     'clipboard'      'cb'       clipboard options
+"                                 Standard clipboard options plus
+"
+"                                 `ideaput`  (default on)   - IdeaVim ONLY
+"                                 enable native idea paste action for put operations
+"
+"     'digraph'        'dg'       enable the entering of digraphs in Insert mode
+"     'gdefault'       'gd'       the ":substitute" flag 'g' is by default
+"     'history'        'hi'       number of command-lines that are remembered
+"     'hlsearch'       'hls'      highlight matches with the last search pattern
+"     'ignorecase'     'ic'       ignore case in search patterns
+"     'iskeyword'      'isk'      defines keywords for commands like 'w', '*', etc.
+"     'incsearch'      'is'       show where search pattern typed so far matches
+"
+"     `keymodel`       `km`       String (default "continueselect,stopselect")
+"
+"                  List of comma separated words, which enable special things that keys
+"                  can do. These values can be used:
+"                    startsel           Using a shifted special[1] key starts selection (either
+"                                       Select mode or Visual mode, depending on "key" being
+"                                       present in 'selectmode').
+"                    stopsel            Using a NOT-shifted special[1] key stops selection.
+"                                       Automatically enables `stopselect` and `stopvisual`
+"                    stopselect         Using a NOT-shifted special[1] key stops     - IdeaVim ONLY
+"                                       select mode and removes selection.
+"                    stopvisual         Using a NOT-shifted special[1] key stops     - IdeaVim ONLY
+"                                       visual mode and removes selection.
+"                    continueselect     Using a shifted arrow key doesn't       - IdeaVim ONLY
+"                                       start selection, but in select mode
+"                                       acts like startsel is enabled
+"                    continuevisual     Using a shifted arrow key doesn't       - IdeaVim ONLY
+"                                       start selection, but in visual mode
+"                                       acts like startsel is enabled
+"
+"     'matchpairs'     'mps'   pairs of characters that "%" can match
+"     'maxmapdepth'    'mmd'   Maximum depth of mappings
+"     'more'           'more'  When on, listings pause when the whole screen is filled.
+"     'nrformats'      'nf'    number formats recognized for CTRL-A command
+"     'number'         'nu'    print the line number in front of each line
+"     'relativenumber' 'rnu'   show the line number relative to the line with
+"                              the cursor
+"     'scroll'         'scr'   lines to scroll with CTRL-U and CTRL-D
+"     'scrolljump'     'sj'    minimum number of lines to scroll
+"     'scrolloff'      'so'    minimum number of lines above and below the cursor
+"     'selection'      'sel'   what type of selection to use
+"
+"     `selectmode`     `slm`   String (default "")
+"
+"                  This is a comma-separated list of words, which specify when to start
+"                  Select mode instead of Visual mode, when a selection is started.
+"                  Possible values:
+"                    mouse           when using the mouse
+"                    key             when using shifted special[1] keys
+"                    cmd             when using "v", "V", or <C-V>
+"                    ideaselection   when IDE sets a selection      - IdeaVim ONLY
+"                                    (examples: extend selection, wrap with while, etc.)
+"
+"     `startofline`    `sol`       When "on" some commands move the cursor to the first non-blank of the line.
+"                                     When off the cursor is kept in the same column (if possible).
+"
+"     'showmode'       'smd'       message on the status line to show current mode
+"     'showcmd'        'sc'        show (partial) command in the status bar
+"     'sidescroll'     'ss'        minimum number of columns to scroll horizontally
+"     'sidescrolloff'  'siso'      min. number of columns to left and right of cursor
+"     'smartcase'      'scs'       no ignore case when pattern is uppercase
+"     'timeout'        'to'        use timeout for mapped key sequences
+"     'timeoutlen'     'tm'        timeout duration for a mapped key sequence
+"     'undolevels'     'ul'        maximum number of changes that can be undone
+"     'viminfo'        'vi'        information to remember after restart
+"     'visualbell'     'vb'        use visual bell instead of beeping
+"     'wrapscan'       'ws'        searches wrap around the end of file
+"
+"
+"
+"     IdeaVim only commands:
+"
+"     `ideamarks`      `ideamarks` Boolean (default true)
+"
+"                      If true, creation of global mark will trigger creation of IDE's bookmark
+"                      and vice versa.
+"
+"     `idearefactormode` `idearefactormode` String(default "select")
+"
+"                  Define the mode that would be enabled during
+"                  the refactoring (renaming, live template, introduce variable, etc)
+"
+"                  Use one of the following values:
+"                  - keep  - keep the mode that was enabled before starting a refactoring
+"                  - select - start refactoring in select mode
+"                  - visual - start refactoring in visual mode
+"
+"                  This option has effect if you are in normal, insert or replace mode before refactoring start.
+"                  Visual or select mode are not changed.
+"
+"
+"     `ideajoin`      `ideajoin` Boolean (default false)
+"
+"                   If true, join command will be performed via IDE
+"                   See wiki/`ideajoin` examples
+"
+"     `ideastatusicon`  `ideastatusicon` String(default "enabled")
+"
+"                  Define the behavior of IdeaVim icon in the status bar.
+"
+"                  Use one of the following values:
+"                  - enabled - icon is shown in the status bar
+"                  - gray - use the gray version of the icon
+"                  - disabled - hide the icon
+"
+"     `ideawrite`     `ideawrite` String (default "all")
+"                   "file" or "all". Defines the behaviour of ":w" command.
+"                   Value "all" enables execution of ":wa" (save all) command on ":w" (save).
+"                   This feature exists because some IJ options like "Prettier on save" or "ESlint on save"
+"                        work only with "save all" action. If this option is set to "all", these actions work
+"                        also with ":w" command.
+"
+"     `lookupkeys`    `lookupkeys`   List of strings
+"
+"                   List of keys that should be processed by the IDE during the active lookup (autocompletion).
+"                   For example, <Tab> and <Enter> are used by the IDE to finish the lookup,
+"                         but <C-W> should be passed to IdeaVim.
+"                   Default value:
+"                         "<Tab>", "<Down>", "<Up>", "<Enter>", "<Left>", "<Right>",
+"                         "<C-Down>", "<C-Up>", "<PageUp>", "<PageDown>",
+"                         "<C-J>", "<C-Q>"
+"
+"     `ideavimsupport`  `ideavimsupport`  List of strings (default "dialog")
+"
+"                   Define the list of additional buffers where IdeaVim is enabled.
+"
+"                   - dialog - enable IdeaVim in dialogs
+"                   - singleline - enable IdeaVim in single line editors (not suggested)
+"
+"     ----------
+"     [1] - cursor keys, <End>, <Home>, <PageUp> and <PageDown>
+
+set clipboard^=unnamed
+set hlsearch
+set ignorecase
+set incsearch
+set keymodel=
+set nonumber
+set nostartofline
+set noshowmode
+set smartcase
+set notimeout
+
+set ideajoin
+
+mapclear
+imapclear
+cmapclear
+
+""" Mapleader {{{1
+
+" Transfer decrement-number to (nvoic)<A-x> to free (nvo)<C-x>
+" Bind:   M-x =>   Ctrl-X
+" Bind: v_M-x => v_Ctrl-X
+" Bind: o_M-x => o_Ctrl-X
+noremap <C-x> <NOP>
+noremap <A-x> <C-x>
+
+" Transfer shift-line-right to (ic)<4-]> to free (ic)<C-t>
+" Transfer insert-mode-completions to (ic)<C-t> to free (ic)<C-x>
+" Bind: i_4-]    => i_Ctrl-T
+" Bind: c_4-]    => c_Ctrl-T
+" Bind: i_Ctrl-T => i_Ctrl-X
+" Bind: c_Ctrl-T => c_Ctrl-X
+inoremap <C-t> <NOP>
+cnoremap <C-t> <NOP>
+inoremap <C-x> <NOP>
+cnoremap <C-x> <NOP>
+inoremap <C-t> <C-x>
+cnoremap <C-t> <C-x>
+
+" Mapleader is available in all modes, and always returns to normal-mode
+" Bind:   Ctrl-X =>   <C-x>
+" Bind: v_Ctrl-X => v_<C-x>
+" Bind: o_Ctrl-X => o_<C-x>
+" Bind: i_Ctrl-X => i_Ctrl-\_Ctrl-N_<C-x>
+" Bind: c_Ctrl-X => c_Ctrl-\_Ctrl-N_<C-x>
+imap <C-x> <Esc><C-x>
+cmap <C-x> <Esc><C-x>
+
+" REPLACE move-up-and-start-of-line (nvo)- with <LocalLeader>
+" Bind:   - =>   <LocalLeader>
+" Bind: v_- => v_<LocalLeader>
+" Bind: o_- => o_<LocalLeader>
+noremap - <NOP>
+
+""" Escape {{{1
+
+" Allow Ctrl-C, which is easily accessible from the home row, to be a complete
+" replacement for the Escape key:
+"
+"   * Complete (don't cancel) visual block insertions
+"   * Alway break out of Select mode
+"
+" Bind: i_Ctrl-C => <Esc>
+" Bind: v_Ctrl-C => <Esc>
+inoremap <C-c> <Esc>
+xnoremap <C-c> <Esc>
+snoremap <C-c> <Esc>
+
+""" Emacs: Ctrl-A (start-of-line) {{{1
+
+" Transfer increment-number to (nvo)<A-a> to free (nvo)<C-a>
+" Bind:   M-a =>   Ctrl-A
+" Bind: v_M-a => v_Ctrl-A
+" Bind: o_M-a => o_Ctrl-A
+noremap <C-a> <NOP>
+noremap <A-a> <C-a>
+
+" Transfer insert-prev-text / insert-all-completions to (ic)<4-a> to free
+" (ic)<C-a>
+" Bind: i_4-a => i_Ctrl-A
+" Bind: c_4-a => c_Ctrl-A
+inoremap <C-a> <NOP>
+cnoremap <C-a> <NOP>
+
+" Bind <C-a> to start-of-line in all modes
+" Bind:   Ctrl-A => ^
+" Bind: v_Ctrl-A => v_^
+" Bind: o_Ctrl-A => o_^
+" Bind: i_Ctrl-A => i_Ctrl-\_Ctrl-O_^
+" Bind: c_Ctrl-A => c_Home
+noremap  <C-a> ^
+inoremap <C-a> <C-o>^
+cnoremap <C-a> <Home>
+
+""" Emacs: Ctrl-E (end-of-line) {{{1
+
+" Transfer scroll-window-down to (nvo)<4-e> to free (nvo)<C-e>
+" Bind:   4-e =>   Ctrl-E
+" Bind: v_4-e => v_Ctrl-E
+" Bind: o_4-e => o_Ctrl-E
+noremap  <C-e> <NOP>
+
+" Transfer insert-character-below / revert-completion to (i)<4-e> to free
+" (i)<C-e>. c_Ctrl-E is already bound to end-of-command-line.
+" Bind: i_4-e => i_Ctrl-E / complete_Ctrl-E
+inoremap <C-e> <NOP>
+
+" Bind <C-e> to end-of-line
+" Bind:   Ctrl-E => $
+" Bind: v_Ctrl-E => v_$
+" Bind: o_Ctrl-E => o_$
+" Bind: i_Ctrl-E => i_End
+noremap  <C-e> $
+inoremap <C-e> <End>
+
+""" Emacs: Ctrl-Y (paste-unnamed-register) {{{1
+
+" Transfer scroll-window-up, insert-character-above, accept-completion, and
+" copy-modeless-selection to (nvoic)<4-y> to free (nvoic)<C-y>, mostly to
+" mirror <4-e> above.
+" Bind:   4-y =>   Ctrl-Y
+" Bind: v_4-y => v_Ctrl-Y
+" Bind: o_4-y => o_Ctrl-Y
+" Bind: i_4-y => i_Ctrl-Y / complete_Ctrl-Y
+" Bind: c_4-y => c_Ctrl-Y
+noremap  <C-y> <NOP>
+inoremap <C-y> <NOP>
+cnoremap <C-y> <NOP>
+
+" Set (nvoic)<C-y> to paste-unnamed-register
+" Bind:   Ctrl-Y =>   ""p
+" Bind: v_Ctrl-Y => v_""p
+" Bind: o_Ctrl-Y => o_""p
+" Bind: i_Ctrl-Y => i_Ctrl-R_""p
+" Bind: c_Ctrl-Y => c_Ctrl-R_""p
+noremap  <C-y> ""p
+inoremap <C-y> <C-r>"
+cnoremap <C-y> <C-r>"
+
+""" Emacs: Ctrl-F Ctrl-B (page-{down,up}, char-{right,left}) {{{1
+
+" Rebind scroll-page-{up,down} to also jump to the middle of the page
+" Bind:   Ctrl-F =>   <PageDown>_M
+" Bind: v_Ctrl-F => v_<PageDown>_M
+" Bind: o_Ctrl-F => o_<PageDown>_M
+" Bind:   Ctrl-B =>   <PageUp>_M
+" Bind: v_Ctrl-B => v_<PageUp>_M
+" Bind: o_Ctrl-B => o_<PageUp>_M
+noremap <C-f> <PageDown>M
+noremap <C-b> <PageUp>M
+
+" REPLACE deprecated-Ctrl-B and start-of-command-line with char-left
+" Bind: i_Ctrl-B => i_<Left>
+" Bind: c_Ctrl-B => c_<Left>
+inoremap <C-b> <Left>
+cnoremap <C-b> <Left>
+
+" Transfer c-reindent-line and open-command-line-window to (ic)<4-;> to free
+" (ic)<C-f> for char-right.
+" Bind: i_4-; => i_Ctrl-F
+" Bind: c_4-; => c_Ctrl-F
+inoremap <C-f> <NOP>
+cnoremap <C-f> <NOP>
+
+" Bind (ic)<C-f> to char-right
+" Bind: i_Ctrl-F => i_<Right>
+" Bind: c_Ctrl-F => c_<Right>
+inoremap <C-f> <Right>
+cnoremap <C-f> <Right>
+
+""" Emacs: Ctrl-D (forward-delete) {{{1
+
+" REPLACE scroll-half-page-down (nvo)<C-d> with forward-delete.
+" Bind:   Ctrl-D =>   x
+" Bind: v_Ctrl-D => v_x
+" Bind: o_Ctrl-D => o_x
+noremap <C-d> x
+
+" Transfer shift-line-left to (i)<4-[> to free (i)<C-d>
+" Bind: i_4-[ => i_Ctrl-D
+inoremap <C-d> <NOP>
+
+" Transfer list-pattern-matches to (c)<4-[> to free (c)<C-d>
+" Bind: c_4-[ => c_Ctrl-D
+cnoremap <C-d> <NOP>
+
+" Set (ic)<C-d> as forward-delete
+" Bind: i_Ctrl-D => i_Del
+" Bind: c_Ctrl-D => c_Del
+inoremap <C-d> <Del>
+cnoremap <C-d> <Del>
+
+""" Emacs: Ctrl-K Ctrl-U (kill-to-{end,start}-of-line) {{{1
+
+" Transfer enter-digraph to (nvoic)<A-\> to free (nvoic)<C-k>
+" Bind:   <A-\> =>   Ctrl-K
+" Bind: v_<A-\> => v_Ctrl-K
+" Bind: o_<A-\> => o_Ctrl-K
+" Bind: i_<A-\> => i_Ctrl-K
+" Bind: c_<A-\> => c_Ctrl-K
+noremap  <C-k> <NOP>
+noremap  <A-\> <C-k>
+inoremap <C-k> <NOP>
+cnoremap <C-k> <NOP>
+inoremap <A-\> <C-k>
+cnoremap <A-\> <C-k>
+snoremap <C-k> <NOP>
+snoremap <A-\> <C-k>
+
+" Set (nvoic)<C-k> to kill-to-end-of-line
+" Bind:   Ctrl-K => D
+" Bind: v_Ctrl-K => v_D
+" Bind: o_Ctrl-K => o_D
+" Bind: i_Ctrl-K => i_Ctrl-\_Ctrl-O_D
+" Bind: c_Ctrl-K => c_Ctrl-F_D_Ctrl-C_<Right>
+noremap  <C-k> D
+inoremap <C-k> <C-o>D
+cnoremap <C-k> <C-f>D<C-c><Right>
+
+" REPLACE scroll-half-page-up and delete-all-inserted-chars with a simple
+" kill-to-start-of-line. c_Ctrl-U already does this on the command line.
+" Bind:   Ctrl-U => d^
+" Bind: v_Ctrl-U => v_d^
+" Bind: o_Ctrl-U => o_d^
+" Bind: i_Ctrl-U => i_Ctrl-\_Ctrl-O_d^
+noremap  <C-u> d^
+inoremap <C-u> <C-o>d^
+
+""" Emacs: Meta-f Meta-b Meta-d (word-{right,left} forward-delete-word) {{{1
+
+" Word-right
+noremap  <A-f> w
+inoremap <A-f> <C-o>w
+cnoremap <A-f> <S-Right>
+
+" Word-left
+noremap  <A-b> b
+inoremap <A-b> <C-o>b
+cnoremap <A-b> <S-Left>
+
+" Forward-delete-word
+noremap  <A-d> de
+inoremap <A-d> <C-o>de
+cnoremap <A-d> <C-f>de<C-c>
+
+""" Command line and Search {{{1
+
+" Transfer repeat-last-char-search to (nvo), to free (nvo);
+" Transfer backwards-repeat-last-char-search to (nvo)M-, to free (nvo),
+" Bind:   , =>   ;
+" Bind: v_, => v_;
+" Bind: o_, => o_;
+noremap ;     <NOP>
+noremap <A-,> ,
+noremap ,     ;
+
+" Since C-; opens the command line window, map <4-;> to do the same in (nvo)
+" Also bind some more ; -> : aliases.
+noremap @;    @:
+
+" Alias (nvo); to (nvo): for quick access to the command line
+" Bind:   ; =>   :
+" Bind: v_; => v_:
+" Bind: o_; => o_:
+noremap ; :
+
+" SWAP c_Ctrl-n and c_<Down>, c_Ctrl-p and c_<Up>
+cnoremap <C-n>  <Down>
+cnoremap <Down> <C-n>
+cnoremap <C-p>  <Up>
+cnoremap <Up>   <C-p>
+
+" Simple command line aliases
+noremap <C-x>; :<C-u>actionlist<Space>
+
+" Clear last match
+noremap <C-x><Bslash> /\v<CR><C-o>
+
+""" Buffer commands {{{1
+
+" REPLACE linewise-downward with NOTHING to alias toggle-fold
+nnoremap <C-j> za
+
+" REPLACE ex-mode with NOTHING to alias (n)Q as :quit
+nnoremap Q :quit<CR>
+
+" Save / Quit Buffer
+noremap  <C-s>  :<C-u>w<CR>
+inoremap <C-s> <Esc>:<C-u>w<CR>
+
+" """ Text editing {{{1
+
+" Backward-delete-word
+noremap  <A-BS> db
+inoremap <A-BS> <C-w>
+cnoremap <A-BS> <C-w>
+
+" REPLACE switch-keyboard-language with NOTHING to alias (nvoi)<C-_>
+" as undo-and-return-to-normal-mode
+noremap  <C-_> :<C-u>undo<CR>
+inoremap <C-_> <Esc>:<C-u>undo<CR>
+
+" http://vim.wikia.com/wiki/Moving_lines_up_or_down
+nnoremap <A-j> :move+<CR>==
+nnoremap <A-k> :move-2<CR>==
+inoremap <A-j> <Esc>:move+<CR>==gi
+inoremap <A-k> <Esc>:move-2<CR>==gi
+vnoremap <A-j> :move'>+<CR>gv=gv
+vnoremap <A-k> :move-2<CR>gv=gv
+
+" http://vim.wikia.com/wiki/Drag_words_with_Ctrl-left/right
+vnoremap <A-h> <Esc>`<<Left>i_<Esc>mz"_xgvx`zPgv<Left>o<Left>o
+vnoremap <A-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
+
+""" IdeaVim
+
+map <C-x>r :source ~/.ideavimrc<CR>
+map -a     :action Console.Jdbc.ExplainAnalyse<CR>
+map -A     :action Console.Jdbc.ExplainAnalyse.Raw<CR>
+map -l     :action ReformatCode<CR>
