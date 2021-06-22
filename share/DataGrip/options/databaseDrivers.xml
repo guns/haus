@@ -1,0 +1,17 @@
+<application>
+  <component name="LocalDatabaseDriverManager" version="201">
+    <driver id="mariadb">
+      <artifact id="MariaDB Connector J" name="MariaDB Connector J" use="true" version="2.6.0" />
+    </driver>
+    <driver id="sqlserver.ms">
+      <artifact id="SQL Server" name="SQL Server" use="true" version="9.2.0" />
+    </driver>
+    <driver id="mysql.8">
+      <artifact />
+      <artifact id="MySQL ConnectorJ" name="MySQL ConnectorJ" use="true" version="8.0.21" />
+    </driver>
+    <driver id="postgresql">
+      <artifact id="PostgreSQL" name="PostgreSQL" use="true" version="42.2.5" />
+    </driver>
+  </component>
+</application>

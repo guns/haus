@@ -1,0 +1,8 @@
+<code_scheme name="Default" version="173">
+  <SqlCodeStyleSettings version="5">
+    <option name="KEYWORD_CASE" value="2" />
+    <option name="BUILT_IN_CASE" value="4" />
+    <option name="FROM_INDENT_JOIN" value="false" />
+    <option name="FROM_ONLY_JOIN_INDENT" value="2" />
+  </SqlCodeStyleSettings>
+</code_scheme>

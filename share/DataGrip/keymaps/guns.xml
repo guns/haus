@@ -1,0 +1,6 @@
+<keymap version="1" name="guns" parent="Sublime Text">
+  <action id="Console.Jdbc.Execute.2">
+    <keyboard-shortcut first-keystroke="shift ctrl enter" />
+  </action>
+  <action id="EditorStartNewLineBefore" />
+</keymap>

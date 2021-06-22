@@ -1,0 +1,13 @@
+<application>
+  <component name="ProjectManager">
+    <defaultProject>
+      <component name="ProjectViewState">
+        <option name="hideEmptyMiddlePackages" value="true" />
+        <option name="showLibraryContents" value="true" />
+      </component>
+      <component name="PropertiesComponent">
+        <property name="settings.editor.selected.configurable" value="application.passwordSafe" />
+      </component>
+    </defaultProject>
+  </component>
+</application>
