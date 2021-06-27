@@ -54,7 +54,7 @@ bspc rule --add Kupfer.py                state=floating focus=true sticky=true
 bspc rule --add melt                     state=floating
 bspc rule --add Nitrogen                 state=floating
 bspc rule --add Orage                    state=floating
-bspc rule --add Orage\ Preferences       state=floating
+bspc rule --add 'Orage Preferences'      state=floating
 bspc rule --add Pulseaudio-equalizer-gtk state=floating
 bspc rule --add Pavucontrol              state=floating
 bspc rule --add Pinentry                 state=floating
