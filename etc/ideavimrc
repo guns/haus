@@ -455,7 +455,12 @@ vnoremap <A-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 
 """ IdeaVim
 
-map <C-x>r :source ~/.ideavimrc<CR>
-map -a     :action Console.Jdbc.ExplainAnalyse<CR>
-map -A     :action Console.Jdbc.ExplainAnalyse.Raw<CR>
-map -l     :action ReformatCode<CR>
+map  <C-x>r     :source ~/.ideavimrc<CR>
+map  -a         :action Console.Jdbc.ExplainAnalyse<CR>
+map  -A         :action Console.Jdbc.ExplainAnalyse.Raw<CR>
+map  -l         :action ReformatCode<CR>
+map  <C-CR>     :action Console.Jdbc.Execute<CR>
+imap <C-CR>     <Esc><C-CR>
+map  <C-x><C-x> <C-CR>
+map  <C-S-CR>   :action Console.Jdbc.Execute.2<CR>
+imap <C-S-CR>   <Esc><C-S-CR>
