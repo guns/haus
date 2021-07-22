@@ -843,6 +843,21 @@ rk() {
     fi
 }; TCOMP rake rk
 
+# Bundler
+b() {
+    if [[ -z "$BUNDLE_JOBS" ]]; then
+        BUNDLE_JOBS=$(grep --count ^processor /proc/cpuinfo)
+    fi
+
+    if [[ -x bin/bundle ]]; then
+        BUNDLE_JOBS="$BUNDLE_JOBS" run bin/bundle "$@"
+    else
+        BUNDLE_JOBS="$BUNDLE_JOBS" run bundle "$@"
+    fi
+}
+
+alias bx='b exec'
+
 ### JavaScript
 
 # Yarn
