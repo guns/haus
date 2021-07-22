@@ -9,6 +9,7 @@ qarchwiki:           https://wiki.archlinux.org/index.php?search=***
 qcaniuse:            https://caniuse.com/#search=***
 qclojars:            https://clojars.org/search?q=***
 qcodepoints:         https://codepoints.net/search?q=***
+qcppreference:       https://www.google.com/search?pws=0&tbs=li:1&q=site%3Acppreference.com+***
 qdebian:             https://packages.debian.org/search?keywords=***&searchon=all&suite=all&section=all
 qdefine:             https://www.google.com/search?pws=0&tbs=li:1&q=define:***
 qdictionary:         https://en.wiktionary.org/wiki/?search=***

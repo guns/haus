@@ -122,6 +122,9 @@ augroup GUNS
 	" C, C++
 	autocmd FileType c,cpp
 		\ CBufferSetup
+	autocmd FileType cpp
+		\ setlocal expandtab |
+		\ SetWhitespace 2
 
 	" Nginx
 	autocmd FileType nginx

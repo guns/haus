@@ -2,22 +2,22 @@
 
 snippet once "#pragma once" b
 #pragma once
-#ifndef ${1:`!v toupper(substitute(expand("%:p")[strlen(system('git rev-parse --show-toplevel')):], '\v[^A-Za-z0-9_]', '_', 'g'))`_}
-#define $1
+${1:#ifndef ${2:`!v toupper(substitute(expand("%:p")[strlen(system('git rev-parse --show-toplevel')):], '\v[^A-Za-z0-9_]', '_', 'g'))`_}
+#define $2
 $0
-#endif // $1
+#endif // $2}
 endsnippet
 
 snippet def "#define" b
 #define $0
 endsnippet
 
-snippet ifdef "#ifdef" b
+snippet ifd "#ifdef" b
 #ifdef ${1:SYMBOL}
 #endif
 endsnippet
 
-snippet ifndef "#ifndef … #define … #endif" b
+snippet ifnd "#ifndef … #define … #endif" b
 #ifndef ${1/([A-Za-z0-9_]+).*/$1/}
 #define ${1:SYMBOL}
 $0
@@ -25,7 +25,7 @@ $0
 endsnippet
 
 snippet inc "#include <>" b
-#include <${2:${1:stdio}.h}>
+#include <${2:${1:stdio.h}}>
 endsnippet
 
 snippet Inc "#include" b
@@ -73,8 +73,16 @@ snippet ST "static" w
 static $0
 endsnippet
 
-snippet N "null" w
-NULL
+snippet N "new" w
+new $0
+endsnippet
+
+snippet a "auto" w
+auto $0
+endsnippet
+
+snippet ca "const auto" w
+const auto $0
 endsnippet
 
 snippet E "enum" w
@@ -93,28 +101,16 @@ snippet cc "char const" w
 char const $0
 endsnippet
 
-snippet I "int" w
-int $0
-endsnippet
-
-snippet L "long" w
-long $0
-endsnippet
-
-snippet V "void" w
-void $0
-endsnippet
-
-snippet U "unsigned" w
+snippet u "unsigned" w
 unsigned $0
 endsnippet
 
-snippet co "const" w
+snippet c "const" w
 const $0
 endsnippet
 
-snippet D "double" w
-double $0
+snippet ci "const int" w
+const int $0
 endsnippet
 
 snippet st "size_t" w
@@ -153,11 +149,27 @@ endsnippet
 ### LOOPS
 
 snippet for "for loop" w
-for (${1:int }${2:i} = 0; $2 < ${3:count}; ${4:$2++})
+for (${1:int }${2:i} = 0; $2 < ${3:count}; ${4:$2++}) {
+	$0
+}
 endsnippet
 
 snippet for- "reverse for loop" w
-for (${1:int }${2:i} = ${3:count}; $2 >= 0; ${4:$2--})
+for (${1:int }${2:i} = ${3:count}; $2 >= 0; ${4:$2--}) {
+	$0
+}
+endsnippet
+
+snippet forit "for iterator loop" w
+for (${1:auto }${2:it} = ${3:v}${4:.begin()}; $2 < $3.end(); ++$2) {
+	$0
+}
+endsnippet
+
+snippet forr "for range loop" w
+for (${1:auto }${2:x} : ${3:xs}) {
+	$0
+}
 endsnippet
 
 snippet wh "while loop" w
@@ -224,4 +236,40 @@ endsnippet
 
 snippet _a "__attribute__(())" w
 __attribute__(($0))
+endsnippet
+
+snippet ns "namespace" w
+namespace $0
+endsnippet
+
+snippet s "std::" w
+std::
+endsnippet
+
+snippet sv "std::vector" w
+std::vector<${1}>
+endsnippet
+
+snippet sum "std::unordered_map" w
+std::unordered_map<${1}>
+endsnippet
+
+snippet templ "template" w
+template <${1:typename} ${2:T}>
+endsnippet
+
+snippet b "begin()" w
+begin()
+endsnippet
+
+snippet e "end()" w
+end()
+endsnippet
+
+snippet eb "emplace_back" w
+emplace_back(${1})
+endsnippet
+
+snippet pb "push_back" w
+push_back(${1})
 endsnippet
