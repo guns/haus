@@ -35,6 +35,9 @@
 [grep]
 	patternType = perl
 
+[init]
+	defaultBranch = master
+
 [interactive]
 	singleKey  = true
 	diffFilter = diff-highlight
@@ -50,14 +53,14 @@
 	show = diff-highlight | less
 	diff = diff-highlight | less
 
+[pretty]
+	singleline = format:%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s
+
 [pull]
 	ff = only
 
 [push]
 	followTags = true
-
-[pretty]
-	singleline = format:%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s
 
 [alias]
 	# Index operations
