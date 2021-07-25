@@ -13,7 +13,6 @@ VIDEO_EXTENSIONS = Set.new %w[
   .flv
   .vob
   .ogv
-  .ogg
   .drc
   .gifv
   .mng
