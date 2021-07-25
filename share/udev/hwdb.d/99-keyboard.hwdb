@@ -1,34 +1,34 @@
+# AT Translated Set 2 keyboard
+#
+# KEYBOARD_KEY_1D=leftctrl
+# KEYBOARD_KEY_DB=leftmeta
+# KEYBOARD_KEY_38=leftalt
+# KEYBOARD_KEY_B8=rightalt
+# KEYBOARD_KEY_B7=sysrq
+# KEYBOARD_KEY_9D=rightctrl
+#
 # Standard USB Windows PC Keyboard:
 #
-# scan code: 0x70029   key code: esc
-# scan code: 0x70039   key code: capslock
-# scan code: 0x70058   key code: kpenter
-# scan code: 0x70065   key code: compose
-# scan code: 0x700E0   key code: leftctrl
-# scan code: 0x700E1   key code: leftshift
-# scan code: 0x700E2   key code: leftalt
-# scan code: 0x700E3   key code: leftmeta
-# scan code: 0x700E4   key code: rightctrl
-# scan code: 0x700E6   key code: rightalt
-# scan code: 0x700E7   key code: rightmeta
+# KEYBOARD_KEY_70029=esc
+# KEYBOARD_KEY_70039=capslock
+# KEYBOARD_KEY_70058=kpenter
+# KEYBOARD_KEY_70065=compose
+# KEYBOARD_KEY_700E0=leftctrl
+# KEYBOARD_KEY_700E1=leftshift
+# KEYBOARD_KEY_700E2=leftalt
+# KEYBOARD_KEY_700E3=leftmeta
+# KEYBOARD_KEY_700E4=rightctrl
+# KEYBOARD_KEY_700E6=rightalt
+# KEYBOARD_KEY_700E7=rightmeta
 #
-# Find scancodes and keycodes with:
-#
-#	evtest /dev/input/eventN
-#
-# Note that the `keyboard:` prefix was recognized up to systemd 219, while the
-# `evdev:input:` prefix is recognized from systemd 220+
+# Find scancodes and keycodes with evtest.
 
-# Dell Latitude
-evdev:input:b0011v0001p0001eAB41-*
+evdev:input:*
  KEYBOARD_KEY_3A=leftctrl       # capslock -> leftctrl
  KEYBOARD_KEY_38=leftmeta       # leftalt -> leftmeta
  KEYBOARD_KEY_DB=leftalt        # leftmeta -> leftalt
  KEYBOARD_KEY_B8=rightmeta      # rightalt -> rightmeta
- KEYBOARD_KEY_9D=rightalt       # rightctrl -> rightalt
-
-# Default USB PC keyboard
-evdev:input:*
+ KEYBOARD_KEY_B7=rightalt       # sysrq -> rightalt
  KEYBOARD_KEY_70039=leftctrl    # capslock -> leftctrl
  KEYBOARD_KEY_700E2=leftmeta    # leftalt -> leftmeta
  KEYBOARD_KEY_700E3=leftalt     # leftmeta -> leftalt
