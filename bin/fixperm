@@ -101,8 +101,13 @@ class Fixperm
     args = parser.parse arguments
     abort parser.help if args.empty? or (!@umask and !@ownership)
 
-    args = args.flat_map { |f| Find.find(f).to_a } if @recurse
-    args.each { |f| normalize f }
+    if @recurse
+      args.each do |path|
+        Find.find(path) { |f| normalize f }
+      end
+    else
+      args.each { |path| normalize path }
+    end
   end
 end
 
