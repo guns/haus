@@ -127,7 +127,7 @@ class Uz
 
   def run arguments = []
     args = parser.parse arguments
-    abort parser.help if args.empty?
+    abort parser.help if args.empty? or args.any? { |a| File.directory? a }
 
     if @wait_close
       wait_and_extract! *args
