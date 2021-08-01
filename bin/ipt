@@ -240,20 +240,24 @@ class Ipt
     src + ports
   end
 
+  def comment msg
+    ['-m', 'comment', '--comment', msg]
+  end
+
   def accept_input_rule *args
-    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_input_target]
+    ['INPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_input_target, *comment(args.join(' '))]
   end
 
   def drop_input_rule *args
-    ['INPUT', *args, '--jump', reject_input_target]
+    ['INPUT', *args, '--jump', reject_input_target, *comment(args.join(' '))]
   end
 
   def allow_output_rule *args
-    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_output_target]
+    ['OUTPUT', *args, '--match', 'conntrack', '--ctstate', 'NEW', '--jump', accept_output_target, *comment(args.join(' '))]
   end
 
   def drop_output_rule *args
-    ['OUTPUT', *args, '--jump', reject_output_target]
+    ['OUTPUT', *args, '--jump', reject_output_target, *comment(args.join(' '))]
   end
 
   def check_and_insert! *rule
