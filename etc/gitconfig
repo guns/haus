@@ -190,6 +190,7 @@
 	r     = remote --verbose
 	up    = remote update --prune
 	pushf = push --force-with-lease
+	pushu = push --set-upstream
 
 	# Grep
 	g    = grep
