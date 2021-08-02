@@ -121,6 +121,8 @@ augroup GUNS
 
 	" C, C++
 	autocmd FileType c,cpp
+		\ setlocal expandtab |
+		\ SetWhitespace 2 |
 		\ CBufferSetup
 	autocmd FileType cpp
 		\ setlocal expandtab |

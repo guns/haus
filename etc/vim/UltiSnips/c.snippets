@@ -35,16 +35,14 @@ endsnippet
 ### DECLARATIONS
 
 snippet main "int main(int argc, char *argv[])" b
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	$0
 	return 0;
 }
 endsnippet
 
 snippet mainv "int main(void)" b
-int main(void)
-{
+int main(void) {
 	$0
 	return 0;
 }
@@ -109,6 +107,10 @@ snippet c "const" w
 const $0
 endsnippet
 
+snippet ce "constexpr" w
+constexpr $0
+endsnippet
+
 snippet ci "const int" w
 const int $0
 endsnippet
@@ -160,14 +162,14 @@ for (${1:int }${2:i} = ${3:count}; $2 >= 0; ${4:$2--}) {
 }
 endsnippet
 
-snippet forit "for iterator loop" w
-for (${1:auto }${2:it} = ${3:v}${4:.begin()}; $2 < $3.end(); ++$2) {
+snippet fori "for iterator loop" w
+for (${1:auto }${2:it} = ${3:v}.${4:begin()}; $2 < $3.${5:end()}; ++$2) {
 	$0
 }
 endsnippet
 
 snippet forr "for range loop" w
-for (${1:auto }${2:x} : ${3:xs}) {
+for (${1:auto &}${2:x} : ${3:xs}) {
 	$0
 }
 endsnippet
@@ -272,4 +274,23 @@ endsnippet
 
 snippet pb "push_back" w
 push_back(${1})
+endsnippet
+
+snippet u6 "uint64_t" w
+uint64_t
+endsnippet
+
+snippet up "unique_ptr" w
+unique_ptr<${1:auto}> $0
+endsnippet
+
+snippet ex "explicit" w
+explicit $0
+endsnippet
+
+snippet cl "class" w
+class ${1}${2: final} {
+public:
+	$0
+}
 endsnippet
