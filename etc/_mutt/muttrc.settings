@@ -1388,6 +1388,8 @@ set fast_reply=yes
 # This variable controls whether or not attachments on outgoing messages
 # are saved along with the main body of your message.
 #
+# Note: $fcc_before_send forces the default (set) behavior of this option.
+#
 
 # set fcc_before_send=no
 #
@@ -1418,7 +1420,11 @@ set fast_reply=yes
 # When this variable is set, FCCs will be stored unencrypted and
 # unsigned, even when the actual message is encrypted and/or
 # signed.
+#
+# Note: $fcc_before_send forces the default (unset) behavior of this option.
 # (PGP only)
+#
+# See also $pgp_self_encrypt, $smime_self_encrypt.
 #
 
 # set fcc_delimiter=""
@@ -1595,15 +1601,18 @@ set folder_format="%2C %t %N %f%> %D"
 # set forward_decrypt=yes
 #
 # Name: forward_decrypt
-# Type: boolean
+# Type: quadoption
 # Default: yes
 #
 #
-# Controls the handling of encrypted messages when forwarding a message.
-# When set, the outer layer of encryption is stripped off.  This
-# variable is only used if $mime_forward is set and
-# $mime_forward_decode is unset.
-# (PGP only)
+# This quadoption controls the handling of encrypted messages when
+# forwarding or attaching a message.  When set to or answered
+# ``yes'', the outer layer of encryption is stripped off.
+#
+# This variable is used if $mime_forward is set and
+# $mime_forward_decode is unset.  It is also used when
+# attaching a message via <attach-message> in the compose
+# menu.  (PGP only)
 #
 
 # set forward_edit=yes
@@ -2176,6 +2185,17 @@ set include=yes
 # a ``mbox-hook'' command.
 #
 
+# set local_date_header=yes
+#
+# Name: local_date_header
+# Type: boolean
+# Default: yes
+#
+#
+# If set, convert the date in the Date header of sent emails into local
+# (sender's) timezone.
+#
+
 # set mail_check=5
 #
 # Name: mail_check
@@ -2423,6 +2443,45 @@ set menu_scroll=yes
 # This is the string displayed in the ``attachment'' menu for
 # attachments of type message/rfc822.  For a full listing of defined
 # printf(3)-like sequences see the section on $index_format.
+#
+
+# set message_id_format="<%z@%f>"
+#
+# Name: message_id_format
+# Type: string
+# Default: "<%z@%f>"
+#
+#
+# This variable describes the format of the Message-ID generated
+# when sending messages.  Mutt 2.0 introduced a more compact
+# format, but this variable allows the ability to choose your own
+# format.  The value may end in ``|'' to invoke an external filter.
+# See formatstrings-filters.
+#
+# Please note that the Message-ID value follows a strict syntax,
+# and you are responsible for ensuring correctness if you change
+# this from the default.  In particular, the value must follow the
+# syntax in RFC 5322: ``"<" id-left "@" id-right ">"''.  No
+# spaces are allowed, and id-left should follow the
+# dot-atom-text syntax in the RFC.  The id-right should
+# generally be left at %f.
+#
+# The old Message-ID format can be used by setting this to:
+# ``<%Y%02m%02d%02H%02M%02S.G%c%p@%f>''
+#
+# The following printf(3)-style sequences are understood:
+# %c      step counter looping from ``A'' to ``Z''
+# %d      current day of the month (GMT)
+# %f      $hostname
+# %H      current hour using a 24-hour clock (GMT)
+# %m      current month number (GMT)
+# %M      current minute of the hour (GMT)
+# %p      pid of the running mutt process
+# %r      3 bytes of pseudorandom data encoded in Base64
+# %S      current second of the minute (GMT)
+# %x      1 byte of pseudorandom data hex encoded (example: '1b')
+# %Y      current year using 4 digits (GMT)
+# %z      4 byte timestamp + 8 bytes of pseudorandom data encoded in Base64
 #
 
 # set meta_key=no
@@ -4760,6 +4819,28 @@ set sort_browser=reverse-date
 # order (example: ``set sort_browser=reverse-date'').
 #
 
+# set sort_browser_mailboxes=unsorted
+#
+# Name: sort_browser_mailboxes
+# Type: sort order
+# Default: unsorted
+#
+#
+# Specifies how to sort entries in the mailbox browser.  By default, the
+# entries are unsorted, displayed in the same order as listed
+# in the ``mailboxes'' command.  Valid values:
+# - alpha (alphabetically)
+# - count
+# - date
+# - size
+# - unread
+# - unsorted
+#
+#
+# You may optionally use the ``reverse-'' prefix to specify reverse sorting
+# order (example: ``set sort_browser_mailboxes=reverse-alpha'').
+#
+
 # set sort_re=yes
 #
 # Name: sort_re
@@ -4955,6 +5036,19 @@ set ssl_usesystemcerts=no
 # the <account-hook> function.
 #
 
+# set ssl_verify_host_override=""
+#
+# Name: ssl_verify_host_override
+# Type: string
+# Default: ""
+#
+#
+# Defines an alternate host name to verify the server certificate against.
+# This should not be set unless you are sure what you are doing, but it
+# might be useful for connection to a .onion host without a properly
+# configured host name in the certificate.  See $ssl_verify_host.
+#
+
 # set ssl_verify_partial_chains=no
 #
 # Name: ssl_verify_partial_chains
@@ -4974,7 +5068,7 @@ set ssl_usesystemcerts=no
 # (OpenSSL 1.0.2b and newer only).
 #
 
-set ssl_ciphers="HIGH:!aNULL:!MD5:!DSS;"
+# set ssl_ciphers=""
 #
 # Name: ssl_ciphers
 # Type: string
@@ -5156,7 +5250,7 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # Default: yes
 #
 #
-# Affects the ~b and ~h search operations described in
+# Affects the ~b, ~B, and ~h search operations described in
 # section ``patterns''.  If set, the headers and body/attachments of
 # messages to be searched are decoded before searching. If unset,
 # messages are searched as they appear in the folder.
