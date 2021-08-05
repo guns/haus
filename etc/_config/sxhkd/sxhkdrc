@@ -251,9 +251,18 @@ F8
 	T='❴ pass ❵'; \
 	wmctrl -a "$T" || \
 	\{ \
-		urxvt-client -g 80x10 -title "$T" -icon ~/.icons/haus/password-store.svg; \
-		sleep 0.1; \
+		urxvt-client -g 64x20 -fn 'xft:Consolas:pixelsize=18' -title "$T" -icon ~/.icons/haus/password-store.svg; \
+		sleep 0.2; \
 		xdotool type 'passclip '; \
+	\}
+
+super + F8
+	T='❴ pass ❵'; \
+	wmctrl -a "$T" || \
+	\{ \
+		urxvt-client -g 64x20 -fn 'xft:Consolas:pixelsize=18' -title "$T" -icon ~/.icons/haus/password-store.svg; \
+		sleep 0.2; \
+		xdotool type 'passqrshow '; \
 	\}
 
 F9
