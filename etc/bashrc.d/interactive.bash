@@ -1034,13 +1034,6 @@ HAVE feh && {
     alias fcopy='fehmove --copy'
 }
 
-# pulseaudio
-HAVE pulseaudio && {
-    alias pastart='run pulseaudio --start'
-    alias pastop='run pulseaudio --kill'
-    alias parestart='run pulseaudio --kill; while pkill --exact -0 pulseaudio; do sleep 0.1; done; run pulseaudio --start'
-}
-
 # youtube-dl
 TCOMP youtube-dl yt
 TCOMP youtube-dl yt1080

@@ -46,28 +46,27 @@ for ((i = 0; i < n; ++i)); do bspc rule --remove head; done
 unset i n
 
 # Find window class names with xprop(1)
-bspc rule --add Arandr                   state=floating
-bspc rule --add Gcolor3                  state=floating
-bspc rule --add Gifview                  state=floating
-bspc rule --add sun-awt-X11-XFramePeer   state=tiled
-bspc rule --add Kupfer.py                state=floating focus=true sticky=true
-bspc rule --add melt                     state=floating
-bspc rule --add Nitrogen                 state=floating
-bspc rule --add Orage                    state=floating
-bspc rule --add 'Orage Preferences'      state=floating
-bspc rule --add Pulseaudio-equalizer-gtk state=floating
-bspc rule --add Pavucontrol              state=floating
-bspc rule --add Pinentry                 state=floating
-bspc rule --add Prompt                   state=floating
-bspc rule --add Qalculate-gtk            state=floating
-bspc rule --add qjackctl                 state=floating
-bspc rule --add Sxiv                     state=floating
-bspc rule --add Thunar                   state=floating
-bspc rule --add Tint2                    layer=below
-bspc rule --add Transmission-gtk         state=floating
-bspc rule --add vlc                      state=floating
-bspc rule --add Xdialog                  state=floating
-bspc rule --add Xsensors                 state=floating
+bspc rule --add Arandr                 state=floating
+bspc rule --add Gcolor3                state=floating
+bspc rule --add Gifview                state=floating
+bspc rule --add sun-awt-X11-XFramePeer state=tiled
+bspc rule --add Kupfer.py              state=floating focus=true sticky=true
+bspc rule --add melt                   state=floating
+bspc rule --add Nitrogen               state=floating
+bspc rule --add Orage                  state=floating
+bspc rule --add 'Orage Preferences'    state=floating
+bspc rule --add Pavucontrol            state=floating
+bspc rule --add Pinentry               state=floating
+bspc rule --add Prompt                 state=floating
+bspc rule --add Qalculate-gtk          state=floating
+bspc rule --add qjackctl               state=floating
+bspc rule --add Sxiv                   state=floating
+bspc rule --add Thunar                 state=floating
+bspc rule --add Tint2                  layer=below
+bspc rule --add Transmission-gtk       state=floating
+bspc rule --add vlc                    state=floating
+bspc rule --add Xdialog                state=floating
+bspc rule --add Xsensors               state=floating
 
 # Setup monitors
 "$HOME/.config/bspwm/bspwm-monitor-setup"

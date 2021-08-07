@@ -178,9 +178,6 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 {super + shift + XF86AudioMute,super + alt + End}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
 
-super + alt + control + {XF86AudioMute,End}
-	wmctrl -xa 'Pulseaudio-equalizer-gtk' || pulseaudio-equalizer-gtk
-
 alt + {XF86AudioMute,End}
 	if pkill --exact -0 pulseaudio; then \
 		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle sink); \
