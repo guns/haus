@@ -5,16 +5,22 @@
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'fileutils'
-require 'uri'
-require 'shellwords'
-require 'zlib'
-require 'set'
-require 'nokogiri'
 require 'haus/utils'
 
-class Dlnode; end
+require 'cgi'
+require 'fileutils'
+require 'nokogiri'
+require 'optparse'
+require 'set'
+require 'shellwords'
+require 'uri'
+require 'zlib'
+
+class Dlnode
+  def self.uri_escape_path str
+    str.split('/').map { |s| CGI.escape s }.join('/')
+  end
+end
 
 class Dlnode::Pattern
   attr_accessor :selector, :attribute, :regexp, :gsub
@@ -93,7 +99,7 @@ class Dlnode::Resource
   rescue URI::InvalidURIError
     # Maybe the path isn't properly escaped
     begin
-      URI.join(base, URI.escape(path)).to_s
+      URI.join(base, Dlnode.uri_escape_path(path)).to_s
     rescue URI::InvalidURIError
     end
   end
@@ -589,7 +595,7 @@ class Dlnode
     args = parser.parse arguments
     abort parser.help unless args.size > 1
     url, *rest = args
-    url = "file://#{URI.escape File.expand_path(url)}" if url !~ %r{\w+://}
+    url = "file://#{Dlnode.uri_escape_path File.expand_path(url)}" if url !~ %r{\w+://}
 
     if @dir_from_url and @dir == DEFAULTS[:dir]
       u = URI.parse url
