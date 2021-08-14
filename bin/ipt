@@ -353,15 +353,13 @@ class Ipt
     outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
     inbound  = from_dst_iface + from_dst_addr + to_src_iface + to_src_addr
 
+    label = comment "FORWARD #{src} TO #{dst}"
+
     [
-      # Outbound
-      ['FORWARD', '1', *outbound, '--jump', accept_forward_target],
-      # Inbound
-      ['FORWARD', '2', *inbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', accept_forward_target],
-      ['FORWARD', '3', *inbound, '--match', 'conntrack', '--ctstate', 'INVALID',     '--jump', 'DROP'],
-      ['FORWARD', '4', *inbound, '--protocol', 'icmp',                               '--jump', accept_forward_target],
-      # Enable NAT
-      ['POSTROUTING', '--table', 'nat', *from_src_addr, *to_dst_iface, *to_dst_addr, '--jump', 'MASQUERADE']
+      ['FORWARD', '1', *outbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', 'ACCEPT',              *label],
+      ['FORWARD', '2', *outbound, '--match', 'conntrack', '--ctstate', 'NEW',         '--jump', accept_forward_target, *label],
+      ['FORWARD', '3', *inbound,  '--match', 'conntrack', '--ctstate', 'ESTABLISHED', '--jump', accept_forward_target, *label],
+      ['POSTROUTING', '--table', 'nat', *from_src_addr, *to_dst_iface, *to_dst_addr,  '--jump', 'MASQUERADE',          *label],
     ]
   end
 
