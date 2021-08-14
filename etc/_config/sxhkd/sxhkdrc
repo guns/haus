@@ -272,7 +272,7 @@ shift + F9
 	urxvt-client
 
 alt + shift + F9
-	urxvt-client -icon ~/.icons/haus/root-terminal.svg -e sudo --set-home --login bash -c 'chown 0 "$(tty)"; exec "$SHELL"'
+	urxvt-client -e tmuxlaunch -d
 
 super + shift + F9
 	urxvt-client -e tmuxlaunch -nd
