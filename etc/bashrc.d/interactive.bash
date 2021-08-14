@@ -877,6 +877,7 @@ HAVE docker && {
     dps() { docker ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Networks}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
     alias drun='docker run --rm --interactive --tty'
     dstop() { local cs=(); IFS=$'\n' cs=($(docker container ps --format '{{.Names}}' | grep "$1")); run docker stop "${cs[@]}"; }
+    dnetworkaddresses() { docker network inspect $(docker network ls --format '{{.ID}}') | jq 'map({(.Name): (.Containers | map({(.Name): .IPv4Address}) | add)}) | add'; }
     alias dc='docker-compose'; TCOMP docker-compose dc
     alias dcx='docker-compose exec'
 }
