@@ -23,11 +23,16 @@
 #  Note that this file should not be used directly as an init script. Set the
 #  firewall state once with this script, then dump with iptables-save.
 
-require 'shellwords'
+require 'etc'
+
+# https://www.iana.org/assignments/ipv6-address-space/ipv6-address-space.xhtml
+IPV6_PRIVATE = 'fc00::/7'
+IPV6_LINK_LOCAL = 'fe80::/10'
+IPV6_MULTICAST = 'ff00::/8'
 
 def iptables *args
   args = [$command, '--wait', *args]
-  warn args.shelljoin
+  warn args.join(' ')
   system *args or abort
 end
 
@@ -84,6 +89,10 @@ def append_default_rules chain
   iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT -m comment --comment ICMP]
 end
 
+def uid username
+  Etc.getpwnam(username).uid
+end
+
 #
 # Initialization
 #
@@ -109,7 +118,7 @@ both do
 end
 
 ipv6 do
-  iptables *%W[-A INPUT -s fc00::/6 -d fc00::/6 -p udp --dport 546 --sport 547 -j ACCEPT -m comment --comment DHCPv6-client]
+  # iptables *%W[-A INPUT -s #{IPV6_LINK_LOCAL} -d #{IPV6_LINK_LOCAL} -p udp --dport 546 --sport 547 -j ACCEPT_INPUT -m comment --comment DHCPv6-client]
 end
 
 both do
@@ -120,17 +129,17 @@ end
 # FORWARD
 #
 
-# ipv4 do
-#   iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
-#   iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
-#
-#   iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment CLIENT-HTTP]
-#   iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-OUTBOUND]
-#   iptables *%W[-A FORWARD -d #{CLIENT} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-INBOUND]
-#
-#   iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j SNAT --to-source #{HOST_MACHINE}]
-#   iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j MASQUERADE]
-# end
+ipv4 do
+  # iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
+  # iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
+
+  # iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment CLIENT-HTTP]
+  # iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-OUTBOUND]
+  # iptables *%W[-A FORWARD -d #{CLIENT} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-INBOUND]
+
+  # iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j SNAT --to-source #{HOST_MACHINE}]
+  # iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j MASQUERADE]
+end
 
 both do
   iptables *%W[-A FORWARD -j REJECT_FORWARD]
@@ -145,11 +154,11 @@ both do
 end
 
 ipv4 do
-  iptables *%W[-A OUTPUT -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT]
+  # iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-timesync'} -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT -m comment --comment systemd-timesyncd]
 end
 
 ipv6 do
-  iptables *%W[-A OUTPUT -s fc00::/6 -d fc00::/6 -p udp --sport 546 --dport 547 -j ACCEPT -m comment --comment DHCPv6-client]
+  # iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-network'} -s #{IPV6_LINK_LOCAL} -d #{IPV6_MULTICAST} -p udp --sport 546 --dport 547 -j ACCEPT_OUTPUT -m comment --comment DHCPv6-client]
 end
 
 both do
