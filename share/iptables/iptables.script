@@ -82,13 +82,6 @@ def create_chain name, target
   iptables *%W[-A #{name} -j #{target}]
 end
 
-def append_default_rules chain
-  iptables *%W[-A #{chain} -m conntrack --ctstate ESTABLISHED   -j ACCEPT]
-  iptables *%W[-A #{chain} -m conntrack --ctstate INVALID       -j INVALID]
-  iptables *%W[-A #{chain} #{chain == 'INPUT' ? '-i' : '-o'} lo -j ACCEPT -m comment --comment Loopback]
-  iptables *%W[-A #{chain} -p #{icmp}                           -j ACCEPT -m comment --comment ICMP]
-end
-
 def uid username
   Etc.getpwnam(username).uid
 end
@@ -100,7 +93,6 @@ end
 both do
   reset_tables
   set_filter_policy 'DROP'
-  create_chain 'INVALID', 'DROP'
   create_chain 'REJECT_INPUT', 'REJECT'
   create_chain 'REJECT_OUTPUT', 'REJECT'
   create_chain 'REJECT_FORWARD', 'REJECT'
@@ -114,11 +106,14 @@ end
 #
 
 both do
-  append_default_rules 'INPUT'
+  iptables *%W[-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
+  iptables *%W[-A INPUT -m conntrack --ctstate INVALID             -j DROP]
+  iptables *%W[-A INPUT -i lo                                      -j ACCEPT -m comment --comment loopback]
+  iptables *%W[-A INPUT -p #{icmp}                                 -j ACCEPT -m comment --comment icmp]
 end
 
 ipv6 do
-  # iptables *%W[-A INPUT -s #{IPV6_LINK_LOCAL} -d #{IPV6_LINK_LOCAL} -p udp --dport 546 --sport 547 -j ACCEPT_INPUT -m comment --comment DHCPv6-client]
+  # iptables *%W[-A INPUT -s #{IPV6_LINK_LOCAL} -d #{IPV6_LINK_LOCAL} -p udp --sport 547 --dport 546 -j ACCEPT_INPUT -m comment --comment DHCPv6-client]
 end
 
 both do
@@ -130,13 +125,10 @@ end
 #
 
 ipv4 do
-  # iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED -j ACCEPT]
-  # iptables *%W[-A FORWARD -m conntrack --ctstate INVALID     -j INVALID]
+  # iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
+  # iptables *%W[-A FORWARD -m conntrack --ctstate INVALID             -j DROP]
 
-  # iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p tcp -m multiport --dports 80,443 -j ACCEPT -m comment --comment CLIENT-HTTP]
-  # iptables *%W[-A FORWARD -s #{CLIENT} -i client0 -o eth0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-OUTBOUND]
-  # iptables *%W[-A FORWARD -d #{CLIENT} -i eth0 -o client0 -p #{icmp}                          -j ACCEPT -m comment --comment CLIENT-ICMP-INBOUND]
-
+  # iptables *%W[-A FORWARD -m conntrack --ctstate NEW -s #{CLIENT} -i client0 -o eth0 -j ACCEPT -m comment --comment CLIENT-OUTBOUND]
   # iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j SNAT --to-source #{HOST_MACHINE}]
   # iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j MASQUERADE]
 end
@@ -150,7 +142,9 @@ end
 #
 
 both do
-  append_default_rules 'OUTPUT'
+  iptables *%W[-A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
+  iptables *%W[-A OUTPUT -m conntrack --ctstate INVALID             -j DROP]
+  iptables *%W[-A OUTPUT -o lo                                      -j ACCEPT -m comment --comment loopback]
 end
 
 ipv4 do
