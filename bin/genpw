@@ -11,6 +11,7 @@ require 'nerv/util/password'
 class Genpw
   DEFAULTS = {
     :chars => nil,
+    :qrshow => false,
     :source => nil
   }
 
@@ -40,6 +41,10 @@ class Genpw
         @source = arg == '-' ? $stdin : File.expand_path(arg)
       end
 
+      opt.on '-q', '--qrshow', 'Display password with qrshow' do
+        @qrshow = true
+      end
+
       opt.on '-r', '--random', 'Read characters from /dev/random' do
         @source = '/dev/random'
       end
@@ -58,7 +63,9 @@ class Genpw
     args = [64] if args.empty?
     raise 'Character set is empty!' if @chars and @chars.empty?
     args.each do |len|
-      puts NERV::Util::Password.password(len.to_i, :chars => @chars, :source => @source)
+      pw = NERV::Util::Password.password(len.to_i, :chars => @chars, :source => @source)
+      puts pw
+      IO.popen('qrshow', 'w') { |io| io.write(pw) } if @qrshow
     end
   end
 end

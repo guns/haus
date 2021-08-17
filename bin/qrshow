@@ -4,7 +4,7 @@ set -e
 
 FILE="/tmp/qrshow-$RANDOM.png"
 
-trap "rm -vf \"$FILE\"" EXIT
+trap "rm -f \"$FILE\"" EXIT
 
 if (($#)); then
     qrencode -o "$FILE" "$@"
