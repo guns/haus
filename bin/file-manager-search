@@ -87,7 +87,7 @@ class FileManagerSearch
 
     sources.each do |src|
       dst = File.join dstdir, File.expand_path(src).split('/').join(@flatten)
-      FileUtils.ln_s File.expand_path(src), dst, :verbose => true
+      FileUtils.ln_s File.expand_path(src), dst
     end
 
     dstdir
