@@ -1,5 +1,5 @@
 [Desktop Entry]
 Type=Application
 Name=sxiv-animate
-Exec=sxiv -abf %F
+Exec=sxiv -ab %F
 Icon=sxiv.png

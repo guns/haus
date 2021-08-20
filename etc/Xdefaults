@@ -12,6 +12,9 @@ Xft.antialias: on
 Xft.hinting:   on
 Xft.hintstyle: hintslight
 
+!!! Applications
+Sxiv.background: #000000
+
 !!! XTERM
 
 XTerm*termName:        xterm-256color
