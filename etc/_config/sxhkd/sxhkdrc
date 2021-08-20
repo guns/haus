@@ -179,14 +179,10 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
 
 alt + {XF86AudioMute,End}
-	if pkill --exact -0 pulseaudio; then \
-		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle sink); \
-	fi
+	notify --no-audio --icon gnome-alsamixer-icon --title 'Audio sink' - < <(patoggle sink)
 
 alt + shift + {XF86AudioMute,End}
-	if pkill --exact -0 pulseaudio; then \
-		notify --no-audio --icon gnome-alsamixer-icon --title pulseaudio - < <(patoggle source); \
-	fi
+	notify --no-audio --icon gnome-alsamixer-icon --title 'Audio source' - < <(patoggle source)
 
 #
 # Miscellaneous {{{
