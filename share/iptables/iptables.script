@@ -27,7 +27,7 @@ require 'etc'
 
 # https://www.iana.org/assignments/ipv6-address-space/ipv6-address-space.xhtml
 IPV6_PRIVATE = 'fc00::/7'
-IPV6_LINK_LOCAL = 'fe80::/10'
+IPV6_LINKLOCAL = 'fe80::/10'
 IPV6_MULTICAST = 'ff00::/8'
 
 def iptables *args
@@ -52,13 +52,16 @@ ensure
   $command = command
 end
 
+def ipv4?; $command == 'iptables'; end
+def ipv6?; $command == 'ip6tables'; end
+
 def both
   ipv4 { yield }
   ipv6 { yield }
 end
 
 def icmp
-  $command == 'ip6tables' ? 'ipv6-icmp' : 'icmp'
+  ipv4? ? 'icmp' : 'icmpv6'
 end
 
 # Flush rules and delete non-default chains
@@ -75,7 +78,7 @@ def set_filter_policy policy
   iptables *%W[--policy OUTPUT  #{policy}]
 end
 
-def create_chain name, target
+def create_logging_chain name, target
   iptables *%W[--new-chain #{name}]
   iptables *%W[-A #{name} -j LOG --log-uid --log-prefix #{"[#{name}] "}]
   iptables *%W[-A #{name} -p tcp -j REJECT --reject-with tcp-reset] if target == 'REJECT'
@@ -93,12 +96,12 @@ end
 both do
   reset_tables
   set_filter_policy 'DROP'
-  create_chain 'REJECT_INPUT', 'REJECT'
-  create_chain 'REJECT_OUTPUT', 'REJECT'
-  create_chain 'REJECT_FORWARD', 'REJECT'
-  create_chain 'ACCEPT_INPUT', 'ACCEPT'
-  create_chain 'ACCEPT_OUTPUT', 'ACCEPT'
-  create_chain 'ACCEPT_FORWARD', 'ACCEPT'
+  create_logging_chain 'REJECT_INPUT', 'REJECT'
+  create_logging_chain 'REJECT_OUTPUT', 'REJECT'
+  create_logging_chain 'REJECT_FORWARD', 'REJECT'
+  create_logging_chain 'ACCEPT_INPUT', 'ACCEPT'
+  create_logging_chain 'ACCEPT_OUTPUT', 'ACCEPT'
+  create_logging_chain 'ACCEPT_FORWARD', 'ACCEPT'
 end
 
 #
@@ -109,11 +112,11 @@ both do
   iptables *%W[-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
   iptables *%W[-A INPUT -m conntrack --ctstate INVALID             -j DROP]
   iptables *%W[-A INPUT -i lo                                      -j ACCEPT -m comment --comment loopback]
-  iptables *%W[-A INPUT -p #{icmp}                                 -j ACCEPT -m comment --comment icmp]
+  iptables *%W[-A INPUT -p #{icmp}                                 -j ACCEPT -m comment --comment #{icmp}]
 end
 
 ipv6 do
-  # iptables *%W[-A INPUT -s #{IPV6_LINK_LOCAL} -d #{IPV6_LINK_LOCAL} -p udp --sport 547 --dport 546 -j ACCEPT_INPUT -m comment --comment DHCPv6-client]
+  iptables *%W[-A INPUT -s #{IPV6_LINKLOCAL} -d #{IPV6_LINKLOCAL} -p udp --sport 547 --dport 546 -j ACCEPT -m comment --comment DHCPv6-client]
 end
 
 both do
@@ -125,8 +128,8 @@ end
 #
 
 ipv4 do
-  # iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
-  # iptables *%W[-A FORWARD -m conntrack --ctstate INVALID             -j DROP]
+  iptables *%W[-A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
+  iptables *%W[-A FORWARD -m conntrack --ctstate INVALID             -j DROP]
 
   # iptables *%W[-A FORWARD -m conntrack --ctstate NEW -s #{CLIENT} -i client0 -o eth0 -j ACCEPT -m comment --comment CLIENT-OUTBOUND]
   # iptables *%W[-t nat -A POSTROUTING -s #{CLIENT} -o eth0 -j SNAT --to-source #{HOST_MACHINE}]
@@ -145,14 +148,20 @@ both do
   iptables *%W[-A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT]
   iptables *%W[-A OUTPUT -m conntrack --ctstate INVALID             -j DROP]
   iptables *%W[-A OUTPUT -o lo                                      -j ACCEPT -m comment --comment loopback]
+
+  iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-network'} -p #{icmp}                                            -j ACCEPT        -m comment --comment #{"systemd-network #{icmp}"}]
 end
 
 ipv4 do
-  # iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-timesync'} -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT -m comment --comment systemd-timesyncd]
+  iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-timesync'} -m set --match-set NTP dst -p udp --dport 123 -j ACCEPT -m comment --comment systemd-timesyncd]
 end
 
 ipv6 do
-  # iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-network'} -s #{IPV6_LINK_LOCAL} -d #{IPV6_MULTICAST} -p udp --sport 546 --dport 547 -j ACCEPT_OUTPUT -m comment --comment DHCPv6-client]
+  iptables *%W[-A OUTPUT -m owner --uid-owner #{uid 'systemd-network'} -s #{IPV6_LINKLOCAL} -d #{IPV6_MULTICAST} -p udp --sport 546 --dport 547 -j ACCEPT -m comment --comment DHCPv6-client]
+  iptables *%W[-A OUTPUT                                                                    -d #{IPV6_MULTICAST} -p icmpv6 --icmpv6-type 135    -j ACCEPT -m comment --comment IPv6-Neighbor-Solicitation]
+  iptables *%W[-A OUTPUT                                               -s #{IPV6_LINKLOCAL} -d #{IPV6_LINKLOCAL} -p icmpv6 --icmpv6-type 135    -j ACCEPT -m comment --comment IPv6-Neighbor-Solicitation]
+  iptables *%W[-A OUTPUT                                               -s #{IPV6_LINKLOCAL} -d #{IPV6_LINKLOCAL} -p icmpv6 --icmpv6-type 136    -j ACCEPT -m comment --comment IPv6-Neighbor-Advertisement]
+  iptables *%W[-A OUTPUT                                                                    -d #{IPV6_MULTICAST} -p icmpv6 --icmpv6-type 143    -j ACCEPT -m comment --comment IPv6-Multicast-Listener-Report-v2]
 end
 
 both do
