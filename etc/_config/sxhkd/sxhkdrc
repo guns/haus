@@ -267,10 +267,10 @@ super + F9
 shift + F9
 	urxvt-client
 
-alt + shift + F9
+super + shift + F9
 	urxvt-client -e tmuxlaunch -d
 
-super + shift + F9
+alt + shift + F9
 	urxvt-client -e tmuxlaunch -nd
 
 super + alt + shift + F9
