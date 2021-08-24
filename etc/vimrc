@@ -400,6 +400,11 @@ let g:ruby_refactoring_map_keys = 0
 let $FZF_DEFAULT_OPTS = '--layout=reverse'
 let g:fzf_command_prefix = 'Fzf'
 
+" Plugin: vim-table-mode
+let g:table_mode_map_prefix = '<LocalLeader>t'
+let g:table_mode_tableize_d_map = '<LocalLeader>T'
+let g:table_mode_corner = '|'
+
 """ MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions
