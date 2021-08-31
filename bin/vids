@@ -4,6 +4,7 @@
 require 'optparse'
 require 'find'
 require 'set'
+require 'shellwords'
 
 # puts nokoslurp('https://en.wikipedia.org/wiki/Video_file_format').css('table').find { |t| t.to_s.index 'File extension' }.css('tr').drop(1).flat_map { |tr| tr.css('td:nth-child(2)').flat_map { |td| td.text.downcase.scan(/\.\w+/) } }.sort.uniq
 VIDEO_EXTENSIONS = Set.new %w[
@@ -18,7 +19,6 @@ VIDEO_EXTENSIONS = Set.new %w[
   .f4p
   .f4v
   .flv
-  .gif
   .gifv
   .hevc
   .m2ts
@@ -51,12 +51,13 @@ VIDEO_EXTENSIONS = Set.new %w[
   .yuv
 ]
 
-paths = []
-print0 = false
-recurse = true
+command = 'vlc'
 limit = nil
 open = false
+paths = []
 pattern = nil
+print0 = false
+recurse = true
 reverse = false
 sort = nil
 
@@ -73,6 +74,10 @@ args = OptionParser.new nil do |opt|
 
   opt.on '-1', '--no-recurse' do
     recurse = false
+  end
+
+  opt.on '-c', '--command COMMAND', "Default: #{command}" do |arg|
+    command = arg.shellsplit
   end
 
   opt.on '-l', '--limit N', Integer do |arg|
@@ -127,7 +132,7 @@ paths.reverse! if reverse
 paths = paths.take(limit) if limit
 
 if open
-  exec 'vlc', *paths
+  exec *command, *paths
 else
   print print0 ? paths.join("\0") : paths.join("\n") << "\n"
 end
