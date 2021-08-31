@@ -1,0 +1,82 @@
+#!/usr/bin/env ruby
+#
+# Copyright (c) 2021 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'base64'
+require 'fileutils'
+require 'json'
+require 'optparse'
+
+class Unhar
+  DEFAULTS = {
+    outdir: '.'
+  }
+
+  def initialize arguments, opts = {}
+    @arguments = arguments
+    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
+  end
+
+  def run
+    args = parser.parse @arguments
+    abort parser.help if args.empty?
+
+    args.each do |har_path|
+      extract_resources! JSON.parse(har_path == '-' ? $stdin.read : File.read(har_path))
+    end
+  end
+
+  private
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.banner = <<~BANNER
+        Extract resources from HAR files. Pass `-` to read from stdin.
+
+        Usage: #{File.basename __FILE__} [options] filename.har ...
+
+        Options:
+      BANNER
+
+      opt.on '-o', '--outdir PATH', "Default: #{@outdir}" do |arg|
+        @outdir = File.expand_path arg
+      end
+    end
+  end
+
+  def extract_resources! har
+    page_titles = har.dig('log', 'pages').each_with_object({}) do |page, h|
+      h[page['id']] = sanitize_filename page['title']
+    end
+
+    har.dig('log', 'entries').each do |entry|
+      dir = File.join @outdir, page_titles[entry['pageref']]
+      filename = sanitize_filename File.basename(entry.dig('request', 'url'))
+
+      FileUtils.mkdir_p dir
+
+      save_to_path File.join(dir, filename), entry.dig('response', 'content')
+    end
+  end
+
+  def sanitize_filename f
+    f.tr('/', '-').gsub /[^\p{Print}]/, '_'
+  end
+
+  def save_to_path path, content_entry
+    case content_entry['encoding']
+    when 'base64'
+      contents = Base64.decode64 content_entry['text']
+    when nil
+      return
+    else
+      raise "Unhandled encoding method: #{content_entry['encoding'].inspect}"
+    end
+
+    File.open(path, 'w') { |f| f.write contents }
+  end
+end
+
+$0 = File.basename(__FILE__) and Unhar.new(ARGV).run if $0 == __FILE__
