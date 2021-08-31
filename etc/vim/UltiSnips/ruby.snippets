@@ -21,9 +21,17 @@ require 'optparse'
 class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(/[^a-zA-Z0-9]+/).map(&:capitalize).join"')`}
 	DEFAULTS = {}
 
-	def initialize opts = {}
+	def initialize arguments, opts = {}
+		@arguments = arguments
 		DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
 	end
+
+	def run
+		args = parser.parse @arguments
+		$0
+	end
+
+	private
 
 	def parser
 		@parser ||= OptionParser.new nil, 20 do |opt|
@@ -34,14 +42,9 @@ class ${1:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 			BANNER
 		end
 	end
-
-	def run arguments = []
-		args = parser.parse arguments
-		$0
-	end
 end
 
-\$0 = File.basename(__FILE__) and $1.new.run ARGV if \$0 == __FILE__
+\$0 = File.basename(__FILE__) and $1.new(ARGV).run if \$0 == __FILE__
 endsnippet
 
 snippet JOBS "/proc/cpuinfo scan" w
