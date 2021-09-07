@@ -15,6 +15,7 @@ module NERV::Util::Password
   PASSWORD_LENGTH = 60
   ASCII = (0x21..0x7e).map &:chr # Printable non-whitespace characters
   ALPHA = ASCII.grep /[a-zA-Z0-9]/
+  DIGIT = ASCII.grep /[0-9]/
 
   # Stream an IO object to a block, `bitlen` bits at a time.
   #

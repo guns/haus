@@ -33,6 +33,10 @@ class Genpw
         @chars = NERV::Util::Password::ALPHA
       end
 
+      opt.on '-d', '--digits', 'Numeric digits only' do
+        @chars = NERV::Util::Password::DIGIT
+      end
+
       opt.on '-u', '--utf8 REGEXP', Regexp, 'UTF-8 encoded Unicode characters matching REGEXP' do |arg|
         @chars = utf8_chars.grep arg
       end
