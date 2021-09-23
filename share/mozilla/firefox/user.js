@@ -185,3 +185,6 @@ user_pref("signon.management.page.breach-alerts.enabled", false);
 
 // Enable addition of custom search engines
 user_pref("browser.urlbar.update2.engineAliasRefresh", true);
+
+// Don't truncate responses in network inspector
+user_pref("devtools.netmonitor.responseBodyLimit", 0);
