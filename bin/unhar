@@ -11,7 +11,8 @@ require 'optparse'
 
 class Unhar
   DEFAULTS = {
-    outdir: '.'
+    delete: false,
+    outdir: '.',
   }
 
   def initialize arguments, opts = {}
@@ -24,7 +25,12 @@ class Unhar
     abort parser.help if args.empty?
 
     args.each do |har_path|
-      extract_resources! JSON.parse(har_path == '-' ? $stdin.read : File.read(har_path))
+      if har_path == '-'
+        extract_resources! JSON.parse($stdin.read)
+      else
+        extract_resources! JSON.parse(File.read(har_path))
+        FileUtils.rm_f har_path if @delete
+      end
     end
   end
 
@@ -39,6 +45,10 @@ class Unhar
 
         Options:
       BANNER
+
+      opt.on '-d', '--delete' do
+        @delete = true
+      end
 
       opt.on '-o', '--outdir PATH', "Default: #{@outdir}" do |arg|
         @outdir = File.expand_path arg
