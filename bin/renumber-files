@@ -1,12 +1,95 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
+#
+# Copyright (c) 2021 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-renumber-files() {
-    (($# >= 3)) || { echo "USAGE: $FUNCNAME pattern %d-width files" >&2; return 1; }
-    local pattern="$1"
-    if [[ "$pattern" != *\(*\)* ]]; then
-        pattern="($pattern)"
-    fi
-    run perl-rename -v "s/$pattern/sprintf('%0${2}d', \$1)/e" "${@:3}"
-}
+require 'digest/sha2'
+require 'fileutils'
+require 'optparse'
 
-renumber-files "$@"
+class RenumberFiles
+  DEFAULTS = {
+    noop: false,
+    outdir: nil,
+    verbose: true,
+  }
+
+  def initialize args
+    DEFAULTS.each { |k, v| instance_variable_set "@#{k}", v }
+    @args = parser.parse args
+  end
+
+  def run
+    abort parser.help unless @args.size >= 4
+
+    pattern, digits, replacement, *paths = @args
+    pattern = Regexp.compile(pattern)
+    renames = {}
+
+    paths.each do |path|
+      next if File.directory?(path)
+
+      fname = File.basename(path)
+      next unless fname.match?(pattern)
+
+      path = File.expand_path(path)
+      n = fname.sub(pattern, digits).to_i
+      fmt = fname.sub(pattern, replacement)
+      new_path = File.join(@outdir || File.dirname(path), fmt % n)
+
+      next if new_path == path
+
+      if renames.include?(new_path)
+        raise "Duplicate paths:\n  #{renames[new_path].inspect} -> #{new_path.inspect}\n  #{path.inspect} -> #{new_path.inspect}"
+      elsif File.exists?(new_path) and not same_content?(path, new_path)
+        raise "File conflict: #{path.inspect} != #{new_path.inspect}"
+      else
+        renames[new_path] = path
+      end
+    end
+
+    fopts = { verbose: @verbose, noop: @noop }
+
+    renames.each do |dst, src|
+      dir = File.dirname(dst)
+      FileUtils.mkdir_p dir, **fopts unless File.exist? dir
+      FileUtils.mv src, dst, **fopts
+    end
+  end
+
+  private
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.program_name = File.basename __FILE__
+
+      opt.banner = <<~BANNER
+        Usage: #{opt.program_name} [options] pattern digits replacement file …
+
+        Example:
+            #{opt.program_name} '(.*)_(\\d+).(\\w+)' '\\2' '\\1-%02d.\\3' foo_*.png
+
+        Options:
+      BANNER
+
+      opt.on '-n', '--dry-run' do
+        @noop = true
+      end
+
+      opt.on '-o', '--outdir DIR', 'Move files to DIR instead of renaming in the same directory' do |arg|
+        @outdir = File.expand_path(arg)
+      end
+
+      opt.on '-q', '--quiet' do
+        @verbose = false
+      end
+    end
+  end
+
+  def same_content? a, b
+    Digest::SHA512.digest(File.read(a)) == Digest::SHA512.digest(File.read(a))
+  end
+end
+
+$0 = File.basename(__FILE__) and RenumberFiles.new(ARGV).run if $0 == __FILE__
