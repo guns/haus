@@ -1,9 +1,9 @@
 #!/bin/sh
 
 if type xsel &>/dev/null; then
-    exec xsel --input --clipboard "$@"
+    exec xsel --output --clipboard "$@"
 elif type xclip &>/dev/null; then
-    exec xclip -in -selection clipboard "$@"
+    exec xclip -out -selection clipboard "$@"
 else
     printf "No known clipboard programs available!\n" >&2
     exit 1
