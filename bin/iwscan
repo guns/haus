@@ -1,41 +1,105 @@
 #!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2021 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-abort 'iwlist not in PATH' unless system '/bin/sh -c "command -v iwlist >/dev/null"'
+require 'open3'
+require 'optparse'
 
-buf = %x(iwlist scan 2>/dev/null)
-buf.slice! /.*?Cell \d+ - /m
+class Iwscan
+  DEFAULTS = {
+    loop: nil
+  }
 
-aps = buf.split(/\s+Cell \d+ -/).map do |cell|
-  t = { :ie => [], :rates => [] }
-  cell.each_line do |line|
-    case line
-    when /Address:\s*(\S+)/                      then t[:mac] = $1
-    when /ESSID:"(.*)"/                          then t[:essid] = $1
-    when /Frequency:(.*)/                        then t[:freq] = $1
-    when /Quality=(\S+)\s*Signal level=(.* dBm)/ then t[:quality], t[:signal] = $1, $2
-    when /Encryption key:(on|off)/               then t[:encryption] = $1 == 'on'
-    when /\s*IE: (?!Unknown:)(.*)/               then t[:ie] << $1
-    when /(\d+) Mb\/s/                           then t[:rates].concat line.scan(/(\d+) Mb\/s/).flatten.map(&:to_i)
+  def initialize args
+    DEFAULTS.each { |k, v| instance_variable_set("@#{k}", v) }
+    @args = parser.parse(args)
+  end
+
+  def run
+    abort parser.help if @args.size > 1
+
+    pattern = Regexp.new(@args.first) if @args.size == 1
+
+    loop do
+      start = Time.now
+      aps = iwlist_scan
+      aps.select! { |t| pattern.match? t[:essid] } if pattern
+      buf = format_aps(aps)
+
+      if @loop
+        system('clear')
+        puts "%s\n\n%s" % [start, buf]
+        sleep_until(start + @loop)
+      else
+        puts buf unless buf.empty?
+        break
+      end
     end
   end
-  t
+
+  private
+
+  def sleep_until time
+    while time - Time.now > 0
+      sleep(0.5)
+    end
+  end
+
+  def iwlist_scan
+    out, err, status = Open3.capture3('iwlist', 'scan')
+    abort err if out.empty?
+
+    out.slice!(/.*?Cell \d+ - /m)
+    out.split(/\s+Cell \d+ -/).map do |cell|
+      cell.each_line.each_with_object({ :ie => [], :rates => [] }) do |line, t|
+        case line
+        when /Address:\s*(\S+)/                      then t[:mac] = $1
+        when /ESSID:"(.*)"/                          then t[:essid] = $1
+        when /Frequency:(.*)/                        then t[:freq] = $1
+        when /Quality=(\S+)\s*Signal level=(.* dBm)/ then t[:quality], t[:signal] = $1, $2
+        when /Encryption key:(on|off)/               then t[:encryption] = $1 == 'on'
+        when /\s*IE: (?!Unknown:)(.*)/               then t[:ie] << $1
+        when /(\d+) Mb\/s/                           then t[:rates].concat line.scan(/(\d+) Mb\/s/).flatten.map(&:to_i)
+        end
+      end
+    end
+  end
+
+  def format_aps aps
+    aps.sort_by { |t| [-t[:signal].to_i, t[:essid]] }.map { |t|
+      "ESSID: %s\nAddress: %s\nQuality: %s\nSignal: %s\nFrequency: %s\nRates: %s Mb/s\nEncryption: %s%s%s" % [
+        t[:essid].inspect,
+        t[:mac],
+        t[:quality],
+        t[:signal],
+        t[:freq],
+        (t[:rates] || []).sort.join(" "),
+        t[:encryption] ? "on" : "OFF",
+        ("\n" if t[:ie].any?),
+        (t[:ie] || []).map { |l| "  #{l}" }.join("\n")
+      ]
+    }.join("\n\n")
+  end
+
+  def parser
+    @parser ||= OptionParser.new(nil, 24) do |opt|
+      opt.program_name = File.basename(__FILE__)
+
+      opt.banner = <<~BANNER
+        iwlist scan wrapper.
+
+        Usage: #{opt.program_name} [options] [ssid-regexp]
+
+        Options:
+      BANNER
+
+      opt.on '-l', '--loop [MIN_SECONDS]', "Loop mode; optional argument specifies minimum delay between scans" do |arg|
+        @loop = arg.to_i
+      end
+    end
+  end
 end
 
-puts aps.sort_by { |t| [-t[:signal].to_i, t[:essid]] }.map { |t|
-  "ESSID: %s\nAddress: %s\nQuality: %s\nSignal: %s\nFrequency: %s\nRates: %s Mb/s\nEncryption: %s%s%s" % [
-    t[:essid].inspect,
-    t[:mac],
-    t[:quality],
-    t[:signal],
-    t[:freq],
-    (t[:rates] || []).sort.join(" "),
-    t[:encryption] ? "on" : "OFF",
-    ("\n" if t[:ie].any?),
-    (t[:ie] || []).map { |l| "  #{l}" }.join("\n")
-  ]
-}.join("\n\n")
+$0 = File.basename(__FILE__) and Iwscan.new(ARGV).run if $0 == __FILE__
