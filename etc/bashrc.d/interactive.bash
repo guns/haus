@@ -597,8 +597,8 @@ alias xsu='exec su'; TCOMP su xsu
 
 # ip
 alias a='ip addr'
-alias 4='ip -4'
-alias 6='ip -6'
+alias ip4='ip -4'
+alias ip6='ip -6'
 
 # ifconfig
 alias ic='ifconfig'
@@ -649,8 +649,9 @@ alias dnscrypt='dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml'
 
 # iptables
 alias iptables.script='/etc/iptables.script'
-alias iptw='ipt --wait'; complete -F _longopt iptw
 complete -F _longopt ipt
+alias ipt6='ipt --ipv6'; complete -F _longopt ipt6
+alias iptw='ipt --wait'; complete -F _longopt iptw
 
 ### Editors
 
@@ -1014,6 +1015,25 @@ HAVE dnf && {
     alias dnfupgrade='run dnf upgrade'
     alias dnfoutdated='run dnf check-update'
     alias dnfclean='run dnf clean all'
+}
+
+# opkg
+HAVE opkg && {
+    alias opkgi='run opkg install'
+    alias opkgr='run opkg remove'
+    alias opkgs='opkg list | g'
+    alias opkgg='opkg list-installed | g'
+    opkgq() {
+        local pkg
+        for pkg in "$@"; do
+            opkg info "$pkg"
+            opkg depends "$pkg"
+            opkg whatdepends "$pkg"
+        done | pager
+    }
+    alias opkgsync='run opkg update'
+    alias opkgoutdated='run opkg list-upgradable'
+    alias opkgowner='run opkg search'
 }
 
 ### Media
