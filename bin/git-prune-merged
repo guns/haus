@@ -1,0 +1,111 @@
+#!/usr/bin/env ruby
+#
+# Copyright (c) 2021 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'open3'
+require 'optparse'
+require 'set'
+require 'shellwords'
+
+class GitPruneMerged
+  DEFAULTS = {
+    branch: nil,
+    force: false,
+    ignore: Set['HEAD', 'master', 'main', 'development'],
+    remote: nil,
+  }
+
+  def initialize args
+    DEFAULTS.each { |k, v| instance_variable_set("@#{k}", v) }
+    @args = parser.parse(args)
+  end
+
+  def run
+    abort(parser.help) if @args.size > 0
+
+    merged = all_merged_branches(@branch || current_branch)
+
+    delete_local_branches(merged[:local])
+    delete_remote_branches(@remote, merged[:remote]) if @remote
+  end
+
+  private
+
+  def delete_remote_branches remote, branches
+    return if branches.empty?
+
+    $stderr.puts(branches.map { |b| "#{remote}/#{b}" })
+    $stderr.print('Delete %d branch%s from %s? [y/n] ' % [branches.size, branches.size == 1 ? '' : 'es', remote.inspect])
+    input = $stdin.gets("\n").strip
+
+    if input.match?(/\Ay\z/i)
+      system('git', 'push', '--delete', remote, *branches)
+    end
+  end
+
+  def delete_local_branches branches
+    return if branches.empty?
+
+    system('git', 'branch', '-vv', '--delete', *branches)
+    abort unless $?.success?
+  end
+
+  def current_branch
+    execv!('git', 'rev-parse', '--abbrev-ref', 'HEAD')
+  end
+
+  def all_merged_branches rev
+    ignored = @ignore + [rev.delete_prefix("#{@remote}/")]
+    lines = execv!('git', 'for-each-ref', '--shell', '--merged', rev).split("\n")
+    lines.each_with_object({ local: [], remote: [] }) do |line, h|
+      _, _, ref = line.shellsplit
+
+      case ref
+      when %r{\Arefs/heads/(.*)}
+        h[:local] << $1 unless @ignore.include? $1
+      when %r{\Arefs/remotes/#{Regexp.escape(@remote || '')}/(.*)}
+        h[:remote] << $1 unless @ignore.include? $1
+      end
+    end
+  end
+
+  def execv! *args
+    out, status = Open3.capture2(*args)
+    raise unless status.success?
+    out.chomp
+  end
+
+  def parser
+    @parser ||= OptionParser.new nil, 20 do |opt|
+      opt.program_name = File.basename __FILE__
+
+      opt.banner = <<~BANNER
+        Delete branches that have been merged into the current branch.
+
+        Usage: #{opt.program_name} [options]
+
+        Options:
+      BANNER
+
+      opt.on '-b', '--branch BRANCH', 'Reference branch; defaults to current branch' do |arg|
+        @branch = arg
+      end
+
+      opt.on '-f', '--force', 'Skip interactive confirmation' do
+        @force = true
+      end
+
+      opt.on '-i', '--ignore A,B,C', Array, "Set of branch names to ignore; DEFAULT: #{@ignore}" do |arg|
+        @ignore = Set.new(arg)
+      end
+
+      opt.on '-r', '--remote [NAME]', 'Prune remote branches in addition to local branches' do |arg|
+        @remote = arg || 'origin'
+      end
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and GitPruneMerged.new(ARGV).run if $0 == __FILE__
