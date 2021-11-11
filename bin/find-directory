@@ -35,11 +35,13 @@ class FindDirectory
 
   def enqueue_child_dirs queue, visited, dir
     Dir.entries(dir).sort.each do |d|
-      next if d == '.' or d == '..' or visited.include? d
+      next if d == '.' or d == '..'
 
       path = File.join dir, d
+      next if visited.include? path
+
       queue << path if File.directory? path
-      visited << d
+      visited << path
     end
   rescue Errno::EACCES
   end
@@ -50,7 +52,9 @@ class FindDirectory
 
     enqueue_child_dirs queue, visited, dir
 
-    while (d = queue.pop true) # Raises ThreadError in non-blocking mode
+    while queue.length > 0
+      d = queue.pop
+
       if @full_path
         return d if File.expand_path(d) =~ pattern
       else
@@ -61,7 +65,6 @@ class FindDirectory
     end
 
     nil
-  rescue ThreadError
   end
 
   def run arguments = []
