@@ -13,7 +13,7 @@ class Ipt
   DEFAULTS = {
     :protocol              => 'tcp',
     :ipv4                  => true,
-    :ipv6                  => true,
+    :ipv6                  => false,
     :save4                 => '/etc/iptables/iptables.rules',
     :save6                 => '/etc/iptables/ip6tables.rules',
     :wait                  => false,
@@ -72,11 +72,11 @@ class Ipt
         Options:
       BANNER
 
-      opt.on '-a', '--all', 'IPv4 + IPv6 (default)' do
+      opt.on '-a', '--all', 'IPv4 + IPv6' do
         @ipv4, @ipv6 = true, true
       end
 
-      opt.on '-4', '--ipv4', 'IPv4 only' do
+      opt.on '-4', '--ipv4', 'IPv4 only (default)' do
         @ipv4, @ipv6 = true, false
       end
 
