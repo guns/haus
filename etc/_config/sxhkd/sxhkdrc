@@ -194,6 +194,9 @@ super + grave
 super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 
+Print
+	wmctrl -xa 'qrshow' || paste | qrshow
+
 shift + Print
 	if maim --hidecursor ~/Downloads/"$(date "+screenshot-%Y%m%dT%H%M%S.png")"; then \
 		notify --success 'Screenshot saved to ~/Downloads'; \
@@ -231,11 +234,11 @@ super + F2
 
 F7
 	T='⚙ htop ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 120x20 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
+	wmctrl -a "$T" || urxvt-client -g 120x40 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
 
 super + F7
-	T='⚙ nmon ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 80x50  -title "$T" -icon ~/.icons/haus/htop.svg -e env NMON=dln- nmon
+	T='⚙ btop ⚙'; \
+	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e btop
 
 alt + F7
 	wmctrl -a xsensors || exec xsensors
