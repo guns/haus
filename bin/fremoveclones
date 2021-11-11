@@ -1,0 +1,68 @@
+#!/usr/bin/env ruby
+#
+# Copyright (c) 2021 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'optparse'
+require 'ostruct'
+
+module Fremoveclones
+  DEFAULTS = OpenStruct.new({
+    dry_run: false,
+  }).freeze
+
+  class << self
+    def run! arguments
+      options = DEFAULTS.dup
+      parser = build_parser(options)
+      args = parser.order(arguments)
+
+      if (i = args.index('--'))
+        group_args = args[0...i]
+        remove_args = args[i+1..-1]
+      else
+        group_args = args.dup
+        remove_args = []
+      end
+
+      remove_args << '--dry-run' if options.dry_run
+      buf = nil
+
+      IO.popen(['fclones', 'group', *group_args]) do |group|
+        buf = group.read
+      end
+
+      warn buf
+      abort unless $?.success?
+
+      IO.popen(['fclones', 'remove', *remove_args], 'w') do |remove|
+        remove.write(buf)
+      end
+
+      abort unless $?.success?
+    end
+
+    private
+
+    def build_parser options
+      OptionParser.new nil, 16 do |opt|
+        opt.program_name = File.basename __FILE__
+
+        opt.banner = <<~BANNER
+          fclones wrapper.
+
+          Usage: #{opt.program_name} [options] group-args -- remove-args
+
+          Options:
+        BANNER
+
+        opt.on '-n', '--dry-run', 'Same as "fclones remove --dry-run"' do
+          options.dry_run = true
+        end
+      end
+    end
+  end
+end
+
+$0 = File.basename(__FILE__) and Fremoveclones.run!(ARGV) if $0 == __FILE__
