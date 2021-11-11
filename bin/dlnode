@@ -204,6 +204,7 @@ class Dlnode
   DEFAULTS = {
     :base_uri => nil,
     :continue => false,
+    :cookie => nil,
     :cookie_jar => nil,
     :dir => '.',
     :dir_from_url => false,
@@ -244,7 +245,11 @@ class Dlnode
         @base_uri = arg
       end
 
-      opt.on '-c', '--cookie-jar PATH', 'Same as `curl --cookie-jar`' do |arg|
+      opt.on '-c', '--cookie', 'Same as `curl --cookie`' do |arg|
+        @cookie = File.expand_path arg
+      end
+
+      opt.on '-C', '--cookie-jar PATH', 'Same as `curl --cookie-jar`' do |arg|
         @cookie_jar = File.expand_path arg
       end
 
@@ -363,6 +368,7 @@ class Dlnode
 
   def self.common_curl_args opts = {}
     args = ['--fail', '--location', '--user-agent', opts[:user_agent] || DEFAULTS[:user_agent]]
+    args.concat ['--cookie', opts[:cookie]] if opts[:cookie]
     args.concat ['--cookie-jar', opts[:cookie_jar]] if opts[:cookie_jar]
     args.concat ['--retry', opts[:retry].to_s] if opts[:retry]
     args.concat ['--max-time', opts[:max_time].to_s] if opts[:max_time]
@@ -512,6 +518,7 @@ class Dlnode
       :index => @index,
       :start => @start,
       :continue => @continue,
+      :cookie => @cookie,
       :cookie_jar => @cookie_jar,
       :dir => @dir,
       :format => @format,
