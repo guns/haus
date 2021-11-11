@@ -11,7 +11,7 @@ module NERV::CLI::ReplHelpers
   unless $0 == 'pry'
     def pry
       require 'pry'
-      binding.send $stdin.tty? ? :pry : :remote_pry
+      binding.pry
     end
 
     # Invoke interactive_editor or Pry edit
@@ -24,12 +24,9 @@ module NERV::CLI::ReplHelpers
   end
 
   # We often drop into a ruby console to act as a command shell
-  def listfiles pat = '*', opts = {}
+  def glob pat = '*', opts = {}
     Dir.glob(pat, ::File::FNM_DOTMATCH).reject { |f| f =~ /\A\.{1,2}\z/ }
   end
-  alias :ls :listfiles unless defined? Pry
-  alias :fs :listfiles
-  alias :sh :system
 
   # View integers as dec, oct, hex, and bin
   def toggle_verbose_numbers
