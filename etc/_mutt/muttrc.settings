@@ -319,7 +319,7 @@ set assumed_charset="utf-8"
 # For an explanation of ``soft-fill'', see the $index_format documentation.
 #
 
-# set attach_save_dir="~/Downloads"
+set attach_save_dir="~/Downloads"
 #
 # Name: attach_save_dir
 # Type: path
@@ -4998,7 +4998,7 @@ set ssl_use_tlsv1_2=no
 # request it.
 #
 
-set ssl_usesystemcerts=no
+# set ssl_usesystemcerts=yes
 #
 # Name: ssl_usesystemcerts
 # Type: boolean
