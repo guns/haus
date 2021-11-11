@@ -89,7 +89,7 @@ class Checkpermissions
       path = File.expand_path path
       next if not File.exists? path
 
-      owner_uid = user ? Etc.getpwnam(user).uid : (path =~ USER_FILE_PATTERN ? Process.euid : 0)
+      owner_uid = user == '-' ? nil : (user ? Etc.getpwnam(user).uid : (path =~ USER_FILE_PATTERN ? Process.euid : 0))
       owner_gid = Etc.getgrnam(group).gid if group
       mask = mask ? mask.to_i(8) : @default_mask
 
@@ -133,13 +133,17 @@ class Checkpermissions
           (Etc.getpwuid(owner_uid).name.inspect rescue owner_uid),
           (Etc.getpwuid(stat.uid).name.inspect rescue stat.uid)
         ]
-      elsif owner_gid and stat.gid != owner_gid and stat.gid != 0
+      end
+
+      if owner_gid and stat.gid != owner_gid and stat.gid != 0
         errors << "\e[31m%s: Expected group owner %s, but is group owned by %s\e[0m" % [
           path,
           (Etc.getgrgid(owner_gid).name.inspect rescue owner_gid),
           (Etc.getgrgid(stat.gid).name.inspect rescue stat.uid)
         ]
-      elsif not (stat.mode & mask).zero?
+      end
+
+      if (stat.mode & mask) != 0
         errors << "\e[31m%s: Mode %04o violates mask %04o\e[0m" % [
           path,
           stat.mode,
