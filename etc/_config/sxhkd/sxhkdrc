@@ -289,7 +289,7 @@ super + F10
 	wmctrl -xa 'Chromium' || wmctrl -xa 'Chrome'
 
 alt + F10
-	wmctrl -xa 'DBeaver'
+	wmctrl -xa 'jetbrains-datagrip'
 
 control + F10
 	wmctrl -xa 'VirtualBox'
