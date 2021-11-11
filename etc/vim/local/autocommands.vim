@@ -121,12 +121,9 @@ augroup GUNS
 
 	" C, C++
 	autocmd FileType c,cpp
-		\ setlocal expandtab |
-		\ SetWhitespace 2 |
+		\ setlocal noexpandtab |
+		\ SetWhitespace 8 |
 		\ CBufferSetup
-	autocmd FileType cpp
-		\ setlocal expandtab |
-		\ SetWhitespace 2
 
 	" Nginx
 	autocmd FileType nginx
@@ -251,5 +248,9 @@ augroup GUNS
 	" Docker
 	autocmd BufRead,BufNewFile Dockerfile.*
 		\ setlocal filetype=dockerfile
+
+	autocmd FileType groovy
+		\ setlocal expandtab |
+		\ SetWhitespace 2
 
 augroup END
