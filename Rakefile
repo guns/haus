@@ -100,17 +100,6 @@ task :env do
       },
 
       {
-        :base => "#{@src}/READONLY/weechat-scripts",
-        :branch => %w[master],
-        :files => {
-          'perl/buffers.pl'           => 'etc/_weechat/_perl/_autoload/buffers.pl',
-          'perl/launcher.pl'          => 'etc/_weechat/_perl/_autoload/launcher.pl',
-          'python/go.py'              => 'etc/_weechat/_python/_autoload/go.py',
-          'python/toggle_nicklist.py' => 'etc/_weechat/_python/_autoload/toggle_nicklist.py'
-        }
-      },
-
-      {
         :base => "#{@src}/styleguide",
         :branch => %w[gh-pages guns],
         :files => { 'cpplint/cpplint.py' => 'bin/cpplint.py' }
@@ -403,7 +392,6 @@ task :chown do
     chown_R u, nil, 'etc/_config/_kupfer'
     chown_R u, nil, 'etc/_config/Thunar'
     chown_R u, nil, 'etc/_local/_lib/clojure/guns'
-    chown_R u, nil, 'etc/_weechat'
     chown_R u, nil, 'etc/vim/UltiSnips'
   end
 end

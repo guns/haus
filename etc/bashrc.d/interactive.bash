@@ -642,11 +642,6 @@ alias lsuf='lsof -U'
 # ngrep
 alias ngg='ngrep -c 0 -d any -l -q -P "" -W byline'
 
-# Weechat
-if ((EUID > 0)) && HAVE weechat; then
-    alias irc='(cd ~/.weechat && exec weechat)'
-fi
-
 # dnscrypt-proxy
 alias dnscrypt='dnscrypt-proxy -config /etc/dnscrypt-proxy/dnscrypt-proxy.toml'
 
