@@ -64,19 +64,20 @@
 
 [alias]
 	# Index operations
-	a        = add --all
-	aa       = add --all .
-	ai       = add --all --interactive
-	af       = add --all --force
-	ap       = add --all --patch
-	aw       = !"f() { git diff --ignore-all-space \"$@\" | git apply --cached --ignore-whitespace; }; f"
-	ac       = !git add --all . && git commit --all
-	acv      = !git add --all . && git commit --all --verbose
-	acva     = !git add --all . && git commit --all --verbose --amend
-	acm      = !git add --all . && git commit --all --message
-	rs       = reset
-	rshard   = reset --hard
-	rsorigin = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)"
+	a            = add --all
+	aa           = add --all .
+	ai           = add --all --interactive
+	af           = add --all --force
+	ap           = add --all --patch
+	aw           = !"f() { git diff --ignore-all-space \"$@\" | git apply --cached --ignore-whitespace; }; f"
+	ac           = !git add --all . && git commit --all
+	acv          = !git add --all . && git commit --all --verbose
+	acva         = !git add --all . && git commit --all --verbose --amend
+	acm          = !git add --all . && git commit --all --message
+	rs           = reset
+	rshard       = reset --hard
+	rsorigin     = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)"
+	rsoriginhard = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)" --hard
 
 	# Commit
 	c    = commit
