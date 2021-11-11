@@ -745,7 +745,7 @@ HAVE vim && {
 # Tmux
 alias xtmuxlaunch='exec tmuxlaunch'
 tmuxeval() {
-    local vars=$(sed "s:^:export :g" <(tmux show-environment | grep --extended-regexp "^[A-Z_]+=[a-zA-Z0-9/.-]+$"))
+    local vars="$(ruby -r shellwords -e 'puts %x(tmux show-environment).split("\n").grep(/^[A-Z]/).map { |l| "export #{l.shellescape}" }')"
     echo "$vars"
     eval "$vars"
 }
