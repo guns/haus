@@ -1,15 +1,24 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
 
-set -e
-
-FILE="/tmp/qrshow-$RANDOM.png"
-
-trap "rm -f \"$FILE\"" EXIT
-
-if (($#)); then
-    qrencode -o "$FILE" "$@"
+case ARGV.size
+when 0
+  input = $stdin.read
+when 1
+  input = File.read ARGV[0]
 else
-    qrencode -o "$FILE" < /dev/stdin
-fi
+  abort "USAGE: #{File.basename __FILE__} [path]"
+end
 
-sxiv -g 200x200 "$FILE"
+progname = File.basename __FILE__
+
+require 'tempfile'
+
+Tempfile.open progname do |tmp|
+  tmp.close
+
+  IO.popen ['qrencode', '-o', tmp.path], 'w' do |io|
+    io.write input
+  end
+
+  system 'sxiv', '-g', '200x200', '-N', progname, tmp.path
+end
