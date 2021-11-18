@@ -1050,11 +1050,11 @@ HAVE feh && {
     alias fcopy='fehmove --copy'
 }
 
-# youtube-dl
-TCOMP youtube-dl yt
-TCOMP youtube-dl yt1080
-TCOMP youtube-dl ytv
-TCOMP youtube-dl ytx
+# yt-dlp
+TCOMP yt-dlp yt
+TCOMP yt-dlp yt1080
+TCOMP yt-dlp ytv
+TCOMP yt-dlp ytx
 
 ### X
 
