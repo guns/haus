@@ -26,7 +26,6 @@ class GitPruneMerged
     abort(parser.help) if @args.size > 0
 
     merged = all_merged_branches(@branch || current_branch)
-
     delete_local_branches(merged[:local])
     delete_remote_branches(@remote, merged[:remote]) if @remote
   end
@@ -37,12 +36,14 @@ class GitPruneMerged
     return if branches.empty?
 
     $stderr.puts(branches.map { |b| "#{remote}/#{b}" })
-    $stderr.print('Delete %d branch%s from %s? [y/n] ' % [branches.size, branches.size == 1 ? '' : 'es', remote.inspect])
-    input = $stdin.gets("\n").strip
 
-    if input.match?(/\Ay\z/i)
-      system('git', 'push', '--delete', remote, *branches)
+    unless @force
+      $stderr.print('Delete %d branch%s from %s? [y/n] ' % [branches.size, branches.size == 1 ? '' : 'es', remote.inspect])
+      input = $stdin.gets("\n").strip
+      return unless input.match?(/\Ay\z/i)
     end
+
+    system('git', 'push', '--delete', remote, *branches)
   end
 
   def delete_local_branches branches
