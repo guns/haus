@@ -1,0 +1,58 @@
+#!/usr/bin/env ruby
+
+SECTION_HEADER = /\A\s*\[/
+
+def each_paragraph arr, startidx, endidx
+  pidx = nil
+  paragraph = []
+
+  (startidx...endidx).each do |i|
+    line = arr[i]
+
+    if line.match?(/\A\s*\z/)
+      if paragraph.size > 0
+        yield(paragraph, pidx)
+        paragraph = []
+      end
+    else
+      pidx = i if paragraph.empty?
+      paragraph << line
+    end
+  end
+
+  yield(paragraph, pidx) if paragraph.size > 0
+  nil
+end
+
+def sort_ini_paragraphs lines
+  lines = lines.dup
+  i = 0
+
+  while i < lines.size
+    if lines[i].match?(SECTION_HEADER)
+      j = lines[i+1..].find_index { |l| l.match?(SECTION_HEADER) }
+      j = j ? j+i+1 : lines.size
+
+      each_paragraph(lines, i+1, j) do |p, pidx|
+        lines[pidx, p.size] = p.sort
+      end
+
+      i = j
+    else
+      i += 1
+    end
+  end
+
+  lines
+end
+
+ARGV.each do |path|
+  File.open(path, 'r+') do |f|
+    lines = f.readlines
+    f.truncate(0)
+    f.rewind
+    f.puts(sort_ini_paragraphs(lines))
+  end
+end
+
+puts sort_ini_paragraphs($stdin.readlines) if ARGV.empty?
