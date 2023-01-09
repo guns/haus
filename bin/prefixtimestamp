@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require 'date'
+
+while (line = $stdin.gets)
+  puts "#{DateTime.now.iso8601} │ #{line}"
+end
