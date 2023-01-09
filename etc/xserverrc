@@ -2,7 +2,7 @@
 
 # https://bugzilla.redhat.com/show_bug.cgi?id=601853#c20
 if [ -z "$XDG_VTNR" ]; then
-    exec /usr/bin/X -nolisten tcp -ardelay 200 -arinterval 8 "$@"
+    exec /usr/bin/X -nolisten tcp -ardelay 200 -arinterval 8 +iglx "$@"
 else
-    exec /usr/bin/X -nolisten tcp -ardelay 200 -arinterval 8 "$@" vt$XDG_VTNR
+    exec /usr/bin/X -nolisten tcp -ardelay 200 -arinterval 8 +iglx "$@" vt$XDG_VTNR
 fi
