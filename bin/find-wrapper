@@ -69,7 +69,7 @@ class FindWrapper
 
     cmd.push case
     when args.first == '/'           then args.shift
-    when File.directory?(args.first) then args.shift.chomp('/')
+    when File.directory?(args.first) then args.shift
     else '.'
     end
 
