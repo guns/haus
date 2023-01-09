@@ -216,6 +216,7 @@ $if bash
     # VIMGITBINDINGS
     "\C-xg ":       "\C-]git "
     "\C-xg1":       "\C-] git l1 \n"
+    "\C-xg2":       "\C-] git rbp \n"
     "\C-xg.":       "\C-] git di . \n"
     "\C-xga.":      "\C-] git a . \n"
     "\C-xgaa":      "\C-] git aa \n"

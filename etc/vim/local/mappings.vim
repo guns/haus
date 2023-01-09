@@ -540,6 +540,7 @@ noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 " VIMGITBINDINGS
 noremap  <Leader>g<Space> :<C-u>Git<Space>
 noremap  <Leader>g1       :<C-u>silent! !git l1<CR>
+noremap  <Leader>g2       :<C-u>Gvsplit REBASE_HEAD<CR>
 noremap  <Leader>g.       :<C-u>silent! !git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
