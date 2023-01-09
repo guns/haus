@@ -58,7 +58,7 @@ class Unhar
 
   def extract_resources! har
     page_titles = har.dig('log', 'pages').each_with_object({}) do |page, h|
-      h[page['id']] = sanitize_filename page['title']
+      h[page['id']] = sanitize_filename page['title'][0, 128]
     end
 
     har.dig('log', 'entries').each do |entry|
