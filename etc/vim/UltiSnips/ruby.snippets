@@ -165,8 +165,10 @@ class ${0:`!v system('ruby -e "print File.basename(%q{'.expand("%:r").'}).split(
 end
 endsnippet
 
-snippet clae "class MyException < Exception" w
-class $1 < ${2:StandardError}; end
+snippet clae "class with inheritance" w
+class $1 < $2
+	$0
+end
 endsnippet
 
 snippet clas "class << self" w
