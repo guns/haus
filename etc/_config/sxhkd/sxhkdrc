@@ -138,6 +138,9 @@ super + alt + control + shift + {h,j,k,l}
 {XF86MonBrightnessDown,XF86MonBrightnessUp}
 	xbacklight {-,+}5
 
+{super + XF86MonBrightnessDown,super + XF86MonBrightnessUp}
+	xbacklight {-,+}100
+
 {super + Pause,XF86Sleep,XF86LaunchB}
 	sudo -n /usr/bin/powerctl suspend
 
