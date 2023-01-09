@@ -27,12 +27,12 @@ bspc config pointer_action3           resize_corner
 bspc config click_to_focus            true
 bspc config focus_follows_pointer     true
 # bspc config pointer_follows_focus
-# bspc config pointer_follows_monitor
+bspc config pointer_follows_monitor   true
 bspc config ignore_ewmh_focus         false
 # bspc config center_pseudo_tiled
 # bspc config honor_size_hints
-bspc config remove_disabled_monitor   true
-bspc config remove_unplugged_monitors true
+bspc config remove_disabled_monitor   false
+bspc config remove_unplugged_monitors false
 # bspc config merge_overlapping_monitors
 bspc config top_padding               0
 bspc config right_padding             0
@@ -50,7 +50,7 @@ bspc rule --add Arandr                 state=floating
 bspc rule --add Gcolor3                state=floating
 bspc rule --add Gifview                state=floating
 bspc rule --add sun-awt-X11-XFramePeer state=tiled
-bspc rule --add Kupfer.py              state=floating focus=true sticky=true
+bspc rule --add Kupfer.py              state=floating focus=true sticky=true center=true
 bspc rule --add melt                   state=floating
 bspc rule --add Nitrogen               state=floating
 bspc rule --add Orage                  state=floating
