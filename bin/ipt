@@ -334,22 +334,29 @@ class Ipt
     EVAL
   end
 
+  def match_src_dst src_iface, src_addr, dst_iface, dst_addr
+    {
+      from_iface: maybe_pair(%W[--in-interface  #{src_iface}]),
+      from_addr: match_addr(:src, src_addr),
+      to_iface: maybe_pair(%W[--out-interface #{dst_iface}]),
+      to_addr: match_addr(:dst, dst_addr),
+    }
+  end
+
   def forwarding_rules src, dst
     src_addr, src_iface = colon_split src
     dst_addr, dst_iface = colon_split dst
 
-    from_src_iface = maybe_pair %W[--in-interface  #{src_iface}]
-    to_dst_iface   = maybe_pair %W[--out-interface #{dst_iface}]
-    from_src_addr  = match_addr :src, src_addr
-    to_dst_addr    = match_addr :dst, dst_addr
-
-    outbound = from_src_iface + from_src_addr + to_dst_iface + to_dst_addr
-    label = comment "FORWARD #{src} TO #{dst}"
+    outbound = match_src_dst(src_iface, src_addr, dst_iface, dst_addr)
+    outbound_label = comment "FORWARD #{src} TO #{dst}"
+    inbound = match_src_dst(dst_iface, dst_addr, src_iface, src_addr)
+    inbound_label = comment "FORWARD #{dst} TO #{src} (ESTABLISHED,RELATED)"
 
     [
-      ['FORWARD', '1', *outbound, '--match', 'conntrack', '--ctstate', 'ESTABLISHED,RELATED', '--jump', 'ACCEPT',              *label],
-      ['FORWARD', '2', *outbound, '--match', 'conntrack', '--ctstate', 'NEW',                 '--jump', accept_forward_target, *label],
-      ['POSTROUTING', '--table', 'nat', *from_src_addr, *to_dst_iface, *to_dst_addr,          '--jump', 'MASQUERADE',          *label],
+      ['FORWARD', '1', *inbound.values.flatten,  '--match', 'conntrack', '--ctstate', 'ESTABLISHED,RELATED', '--jump', 'ACCEPT',              *inbound_label],
+      ['FORWARD', '2', *outbound.values.flatten, '--match', 'conntrack', '--ctstate', 'ESTABLISHED,RELATED', '--jump', 'ACCEPT',              *outbound_label],
+      ['FORWARD', '3', *outbound.values.flatten, '--match', 'conntrack', '--ctstate', 'NEW',                 '--jump', accept_forward_target, *outbound_label],
+      ['POSTROUTING', '--table', 'nat', *outbound.values_at(:from_addr, :to_iface, :to_addr).flatten,        '--jump', 'MASQUERADE',          *outbound_label],
     ]
   end
 
