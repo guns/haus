@@ -14,6 +14,7 @@ class GitPruneMerged
     branch: nil,
     force: false,
     ignore: Set['HEAD', 'master', 'main', 'development'],
+    ignore_pattern: nil,
     remote: nil,
   }
 
@@ -65,9 +66,9 @@ class GitPruneMerged
 
       case ref
       when %r{\Arefs/heads/(.*)}
-        h[:local] << $1 unless @ignore.include? $1
+        h[:local] << $1 unless ignored.include?($1) or @ignore_pattern&.match?($1)
       when %r{\Arefs/remotes/#{Regexp.escape(@remote || '')}/(.*)}
-        h[:remote] << $1 unless @ignore.include? $1
+        h[:remote] << $1 unless ignored.include?($1) or @ignore_pattern&.match?($1)
       end
     end
   end
@@ -100,6 +101,10 @@ class GitPruneMerged
 
       opt.on '-i', '--ignore A,B,C', Array, "Set of branch names to ignore; DEFAULT: #{@ignore}" do |arg|
         @ignore = Set.new(arg)
+      end
+
+      opt.on '-p', '--ignore-pattern REGEXP', "" do |arg|
+        @ignore_pattern = Regexp.new(arg)
       end
 
       opt.on '-r', '--remote [NAME]', 'Prune remote branches in addition to local branches' do |arg|
