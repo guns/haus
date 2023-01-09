@@ -36,8 +36,8 @@ super + alt + {l,h}
 	bspc desktop --focus "$DIR" && \
 	bspc node --focus "$NODE"
 
-{alt + grave, button10}
-	bspc desktop --focus last
+{super + grave, button10}
+	bspc monitor --focus last
 
 super + alt + {0-9}
 	bspc desktop --focus {0-9}
@@ -110,6 +110,14 @@ super + control + p
 
 super + control + shift + p
 	bspc node --flag private
+
+super + control + m
+	bspc node --flag hidden
+
+super + control + shift + m
+	for NODE in $(bspc query --nodes --node .hidden --desktop); do \
+		bspc node "$NODE" --flag hidden=off; \
+	done
 
 super + control + x
 	bspc node --flag locked
@@ -188,7 +196,7 @@ alt + shift + {XF86AudioMute,End}
 # Miscellaneous {{{
 #
 
-super + grave
+alt + grave
 	killall --exact -USR1 deadd-notification-center
 
 super + alt + control + shift + {Left,Right,Up,Down}
