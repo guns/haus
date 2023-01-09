@@ -319,6 +319,19 @@ set assumed_charset="utf-8"
 # For an explanation of ``soft-fill'', see the $index_format documentation.
 #
 
+# set attach_save_charset_convert=ask-yes
+#
+# Name: attach_save_charset_convert
+# Type: quadoption
+# Default: ask-yes
+#
+#
+# When saving received text-type attachments, this quadoption
+# prompts to convert the character set if the encoding of the
+# attachment (or $assumed_charset if none is specified) differs
+# from charset.
+#
+
 set attach_save_dir="~/Downloads"
 #
 # Name: attach_save_dir
@@ -600,6 +613,8 @@ set certificate_file="~/.certificates/mutt.crt"
 # Example:
 # set certificate_file=~/.mutt/certificates
 #
+# (OpenSSL and GnuTLS only)
+#
 
 # set change_folder_next=no
 #
@@ -677,6 +692,23 @@ set certificate_file="~/.certificates/mutt.crt"
 #
 # When unset, Mutt will not collapse a thread if it contains any
 # unread messages.
+#
+
+# set compose_confirm_detach_first=yes
+#
+# Name: compose_confirm_detach_first
+# Type: boolean
+# Default: yes
+#
+#
+# When set, Mutt will prompt for confirmation when trying to
+# use <detach-file> on the first entry in the compose menu.
+# This is to help prevent irreversible loss of the typed message by
+# accidentally hitting 'D' in the menu.
+#
+# Note: Mutt only prompts for the first entry.  It doesn't keep
+# track of which message is the typed message if the entries are
+# reordered, or if the first entry was already deleted.
 #
 
 set compose_format="Compose ★ %a attached, %l"
@@ -1168,6 +1200,9 @@ set date_format="%a %e %b %Y at %I:%M:%S%p %Z"
 # deleting will automatically be purged without prompting.  If set to
 # no, messages marked for deletion will be kept in the mailbox.
 #
+# This option is ignored for maildir-style mailboxes when $maildir_trash
+# is set.
+#
 
 # set delete_untag=yes
 #
@@ -1326,7 +1361,7 @@ set entropy_file="/dev/random"
 #
 #
 # The file which includes random data that is used to initialize SSL
-# library functions.
+# library functions. (OpenSSL only)
 #
 
 # set envelope_from_address=""
@@ -1720,7 +1755,8 @@ set header_cache="~/.mutt/cache/"
 # If pointing to a directory Mutt will contain a header cache
 # database file per folder, if pointing to a file that file will
 # be a single global header cache. By default it is unset so no header
-# caching will be used.
+# caching will be used.  If pointing to a directory, it must be
+# created in advance.
 #
 # Header caching can greatly improve speed when opening POP, IMAP
 # MH or Maildir folders, see ``caching'' for details.
@@ -2192,8 +2228,9 @@ set include=yes
 # Default: yes
 #
 #
-# If set, convert the date in the Date header of sent emails into local
-# (sender's) timezone.
+# If set, the date in the Date header of emails that you send will be in
+# your local timezone. If unset a UTC date will be used instead to avoid
+# leaking information about your current location.
 #
 
 # set mail_check=5
@@ -2232,10 +2269,13 @@ set include=yes
 #
 # When set, mutt will periodically calculate message
 # statistics of a mailbox while polling for new mail.  It will
-# check for unread, flagged, and total message counts.  Because
-# this operation is more performance intensive, it defaults to
-# unset, and has a separate option, $mail_check_stats_interval, to
-# control how often to update these counts.
+# check for unread, flagged, and total message counts.
+# (Note: IMAP mailboxes only support unread and total counts).
+#
+# Because this operation is more performance intensive, it defaults
+# to unset, and has a separate option,
+# $mail_check_stats_interval, to control how often to update these
+# counts.
 #
 # Message statistics can also be explicitly calculated by invoking the
 # <check-stats>
@@ -2360,11 +2400,11 @@ set markers=no
 # Also see the $smart_wrap variable.
 #
 
-# set mask="!^\\.[^.]"
+# set mask="!^\\\\.[^.]"
 #
 # Name: mask
 # Type: regular expression
-# Default: "!^\\.[^.]"
+# Default: "!^\\\\.[^.]"
 #
 #
 # A regular expression used in the file browser, optionally preceded by
@@ -2763,6 +2803,20 @@ set pager_format="%C/%m %Z ★ %-24.24n ★ %s%> %P"
 # no index being shown.  If the number of messages in the current folder
 # is less than $pager_index_lines, then the index will only use as
 # many lines as it needs.
+#
+
+# set pager_skip_quoted_context=0
+#
+# Name: pager_skip_quoted_context
+# Type: number
+# Default: 0
+#
+#
+# Determines the number of lines of context to show before the
+# unquoted text when using <skip-quoted>. When set to a
+# positive number at most that many lines of the previous quote are
+# displayed. If the previous quote is shorter the whole quote is
+# displayed.
 #
 
 set pager_stop=yes
@@ -3785,16 +3839,44 @@ set reflow_wrap=100
 # Also see $wrap.
 #
 
-# set reply_regexp="^(re([\\[0-9\\]+])*|aw):[ \t]*"
+# set reply_regexp="^(re)(\\\\[[0-9]+\\\\])*:[ \t]*"
 #
 # Name: reply_regexp
-# Type: regular expression
-# Default: "^(re([\\[0-9\\]+])*|aw):[ \t]*"
+# Type: regular expression (localized)
+# Default: "^(re)(\\\\[[0-9]+\\\\])*:[ \t]*"
 #
 #
-# A regular expression used to recognize reply messages when threading
-# and replying. The default value corresponds to the English "Re:" and
-# the German "Aw:".
+# A regular expression used to recognize reply messages when
+# threading and replying. The default value corresponds to the
+# standard Latin "Re:" prefix.
+#
+# This value may have been localized by the translator for your
+# locale, adding other prefixes that are common in the locale. You
+# can add your own prefixes by appending inside "^(re)".  For
+# example: "^(re|se)" or "^(re|aw|se)".
+#
+# The second parenthesized expression matches zero or more
+# bracketed numbers following the prefix, such as "Re[1]: ".
+# The initial "\\[" means a literal left-bracket character.
+# Note the backslash must be doubled when used inside a double
+# quoted string in the muttrc.  "[0-9]+" means one or more
+# numbers.  "\\]" means a literal right-bracket.  Finally the
+# whole parenthesized expression has a "*" suffix, meaning it
+# can occur zero or more times.
+#
+# The last part matches a colon followed by an optional space or
+# tab.  Note "\t" is converted to a literal tab inside a
+# double quoted string.  If you use a single quoted string, you
+# would have to type an actual tab character, and would need to
+# convert the double-backslashes to single backslashes.
+#
+# Note: the result of this regexp match against the subject is
+# stored in the header cache.  Mutt isn't smart enough to
+# invalidate a header cache entry based on changing $reply_regexp,
+# so if you aren't seeing correct values in the index, try
+# temporarily turning off the header cache.  If that fixes the
+# problem, then once the variable is set to your liking, remove
+# your stale header cache files and turn the header cache back on.
 #
 
 # set reply_self=no
@@ -3933,11 +4015,11 @@ set reply_to=yes
 # using the value of $realname.
 #
 
-# set rfc2047_parameters=no
+# set rfc2047_parameters=yes
 #
 # Name: rfc2047_parameters
 # Type: boolean
-# Default: no
+# Default: yes
 #
 #
 # When this variable is set, Mutt will decode RFC2047-encoded MIME
@@ -4754,6 +4836,15 @@ set sort=threads
 # You may optionally use the ``reverse-'' prefix to specify reverse sorting
 # order (example: ``set sort=reverse-date-sent'').
 #
+# For values except ``threads'', this provides the primary sort
+# method.  When two message sort values are equal, $sort_aux will
+# be used for a secondary sort.
+#
+# When set to ``threads'', Mutt threads messages in the index. It
+# uses the variable $sort_thread_groups to sort between threads
+# (at the top/root level), and $sort_aux to sort sub-threads and
+# children.
+#
 
 # set sort_alias=alias
 #
@@ -4776,22 +4867,22 @@ set sort_aux=last-date-received
 # Default: date
 #
 #
-# This provides a secondary sort for messages in the ``index'' menu, used
-# when the $sort value is equal for two messages.
+# For non-threaded mode, this provides a secondary sort for
+# messages in the ``index'' menu, used when the $sort value is
+# equal for two messages.
 #
-# When sorting by threads, this variable controls how threads are sorted
-# in relation to other threads, and how the branches of the thread trees
-# are sorted.  This can be set to any value that $sort can, except
-# ``threads'' (in that case, mutt will just use ``date-sent'').  You can also
-# specify the ``last-'' prefix in addition to the ``reverse-'' prefix, but ``last-''
-# must come after ``reverse-''.  The ``last-'' prefix causes messages to be
-# sorted against its siblings by which has the last descendant, using
-# the rest of $sort_aux as an ordering.  For instance,
+# When sorting by threads, this variable controls how the branches
+# of the thread trees are sorted.  This can be set to any value
+# that $sort can, except ``threads'' (in that case, mutt will just
+# use ``date-sent'').  You can also specify the ``last-'' prefix in
+# addition to the ``reverse-'' prefix, but ``last-'' must come
+# after ``reverse-''.  The ``last-'' prefix causes messages to be
+# sorted against its siblings by which has the last descendant,
+# using the rest of $sort_aux as an ordering.  For instance,
 # set sort_aux=last-date-received
 #
-# would mean that if a new message is received in a
-# thread, that thread becomes the last one displayed (or the first, if
-# you have ``set sort=reverse-threads''.)
+# would mean that if a new message is received in a sub-thread,
+# that sub-thread becomes the last one displayed.
 #
 # Note: For reversed-threads $sort
 # order, $sort_aux is reversed again (which is not the right thing to do,
@@ -4856,6 +4947,32 @@ set sort_browser=reverse-date
 # setting of $reply_regexp.  With $sort_re unset, mutt will attach
 # the message whether or not this is the case, as long as the
 # non-$reply_regexp parts of both messages are identical.
+#
+
+# set sort_thread_groups=aux
+#
+# Name: sort_thread_groups
+# Type: sort order
+# Default: aux
+#
+#
+# When sorting by threads, this variable controls how threads are
+# sorted in relation to other threads (at the top/root level).
+# This can be set to any value that $sort can, except ``threads''.
+# You can also specify the ``last-'' prefix in addition to the
+# ``reverse-'' prefix, but ``last-'' must come after ``reverse-''.
+# The ``last-'' prefix causes messages to be sorted against its
+# siblings by which has the last descendant, using the rest of
+# $sort_thread_groups as an ordering.
+#
+# For backward compatibility, the default value is ``aux'', which
+# means to use $sort_aux for top-level thread sorting too.  The
+# value ``aux'' does not respect ``last-'' or ``reverse-''
+# prefixes, it simply delegates sorting directly to $sort_aux.
+#
+# Note: For reversed-threads $sort order, $sort_thread_groups is
+# reversed again (which is not the right thing to do, but kept to
+# not break any existing configuration setting).
 #
 
 # set spam_separator=","
@@ -5107,7 +5224,7 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 #
 # Name: status_format
 # Type: string (localized)
-# Default: "-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?B? Back:%B?%?l? %l?]---(%s/%S)-%>-(%P)---"
+# Default: "-%r-Mutt: %f [Msgs:%?M?%M/?%m%?n? New:%n?%?o? Old:%o?%?d? Del:%d?%?F? Flag:%F?%?t? Tag:%t?%?p? Post:%p?%?b? Inc:%b?%?B? Back:%B?%?l? %l?]---(%s/%?T?%T/?%S)-%>-(%P)---"
 #
 #
 # Controls the format of the status line displayed in the ``index''
@@ -5134,6 +5251,7 @@ set status_format="%f ★ [%r %?n?%n New · ?%?o?%o Old · ?%?d?%d Del · ?%?F?%
 # %s      current sorting mode ($sort)
 # %S      current aux sorting method ($sort_aux)
 # %t      number of tagged messages *
+# %T      current thread group sorting method ($sort_thread_groups) *
 # %u      number of unread messages *
 # %v      Mutt version string
 # %V      currently active limit pattern, if any *
