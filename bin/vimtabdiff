@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+#
+# Copyright (c) 2022 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+require 'shellwords'
+
+def vimdiffcmd a, b
+  "edit #{b.shellescape} | diffthis | vsplit #{a.shellescape} | diffthis | tabnew"
+end
+
+if ARGV.empty? or ARGV.size.odd?
+  abort("USAGE: #{File.basename __FILE__} path-a₁ path-a₂ [path-b₁ path-b₂ ...]")
+end
+
+exec('vim', *ARGV.each_slice(2).reduce([]) { |args, (a, b)|
+  args << '-c' << vimdiffcmd(a, b)
+}, '-c', 'tabclose | tabfirst')
