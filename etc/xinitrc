@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-if [[ "$CLAMSHELL" -eq '1' ]]; then
-    xrandr --output eDP1 --off
-fi
-
 for d in /etc/X11/xinit/xinitrc.d ~/.xinitrc.d; do
     for f in "$d"/*; do
         [[ -r "$f" ]] && . "$f"
@@ -13,8 +9,6 @@ unset d f
 
 # Execute login scripts to set environment variables
 for f in /etc/profile \
-         ~/.profile \
-         ~/.bash_profile \
          ~/.bashrc.d/env.bash \
          ~/.bashrc.d/path.bash
 do
