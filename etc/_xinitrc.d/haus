@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+/usr/bin/xsetroot -cursor_name left_ptr
+
+# https://bbs.archlinux.org/viewtopic.php?pid=1968822#p1968822
+/usr/bin/xset s off
