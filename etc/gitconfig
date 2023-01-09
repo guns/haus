@@ -64,6 +64,7 @@
 
 [push]
 	followTags = true
+	autoSetupRemote = true
 
 [alias]
 	# Index operations
@@ -220,7 +221,7 @@
 	sm    = submodule
 	fd    = clean --force -d
 	fdx   = clean --force -d -x
-	rl    = reflog
+	rl    = reflog --date=relative
 	rp    = rev-parse
 	rtmu  = read-tree -m -u
 	root  = rev-parse --show-toplevel
