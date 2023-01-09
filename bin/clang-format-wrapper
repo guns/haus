@@ -5,6 +5,11 @@ require 'optparse'
 require 'yaml'
 require 'json'
 
+def execute *args
+  warn(args.join(' '))
+  exec(*args)
+end
+
 config_file = File.expand_path '~/.config/clang-format.yml'
 
 parser = OptionParser.new do |opt|
@@ -15,8 +20,8 @@ end
 args = parser.parse ARGV
 
 if args.any? { |arg| arg.match? /\A-?-style\b/ }
-  exec '/usr/bin/clang-format', *args
+  execute '/usr/bin/clang-format', *args
 else
   style = '--style=' << YAML.load_file(config_file).to_json
-  exec '/usr/bin/clang-format', style, *args
+  execute '/usr/bin/clang-format', style, *args
 end
