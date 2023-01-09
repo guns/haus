@@ -4,7 +4,7 @@
 {
     [[ -e /etc/dnscrypt-proxy/dnscrypt-proxy.toml ]] && {
         printf "\e[32;1m/etc/dnscrypt-proxy/dnscrypt-proxy.toml\e[0m\n"
-        (cd /etc/dnscrypt-proxy/; dnscrypt-proxy -json -list | jq -cr '.[].addrs | join(" ")')
+        (cd /etc/dnscrypt-proxy/; dnscrypt-proxy -json -list | jq -cr '[.[].addrs] | add')
     }
     [[ -e /etc/dnsmasq.resolv.conf ]] && {
         printf "\n\e[32;1m/etc/dnsmasq.resolv.conf\e[0m\n"
