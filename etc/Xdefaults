@@ -32,7 +32,9 @@ URxvt.termName:          rxvt-unicode-256color
 URxvt.background:        rgb:00/00/00
 URxvt.foreground:        rgb:FF/EE/C0
 URxvt.pointerColor:      rgb:DD/DD/DD
-! URxvt.letterSpace:       -1
+URxvt.color4:            #005FFF
+URxvt.color12:           #005FFF
+URxvt.letterSpace:       -1
 URxvt.loginShell:        on
 URxvt.pointerBlank:      on
 URxvt.pointerBlankDelay: 65535
@@ -43,9 +45,10 @@ URxvt.scrollTtyKeypress: on
 URxvt.visualBell:        off
 
 ! Explicit multiple fonts for code point search
-URxvt.font: xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
-            xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
-            xft:Noto Mono:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight
+URxvt.font: \
+  xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+  xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+  xft:Unifont:pixelsize=16:antialias=on:hinting=on:hintstyle=hintslight
 
 ! Perl extensions
 URxvt.perl-ext-common: eval,keysym-list,readline,selection,selection-to-clipboard,keyboard-select,url-select
