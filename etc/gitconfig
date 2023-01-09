@@ -32,6 +32,9 @@
 	wsErrorHighlight = all
 	colorMoved = true
 
+[diff "utf-16le"]
+	textconv = "iconv -f utf-16le -t utf-8"
+
 [grep]
 	patternType = perl
 
@@ -173,16 +176,16 @@
 	ts = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\n${@:2}\"; }; f"
 
 	# Diff and patch
-	di   = diff
-	diw  = diff --ignore-all-space
-	wdi  = diff --color-words=.
+	di   = diff --no-prefix
+	diw  = diff --no-prefix --ignore-all-space
+	wdi  = diff --no-prefix --color-words=.
 
-	dih  = diff HEAD
-	dihw = diff HEAD --ignore-all-space
-	wdih = diff HEAD --color-words=.
+	dih  = diff --no-prefix HEAD
+	dihw = diff --no-prefix HEAD --ignore-all-space
+	wdih = diff --no-prefix HEAD --color-words=.
 
-	dic  = diff --cached
-	dis  = diff --summary --stat
+	dic  = diff --no-prefix --cached
+	dis  = diff --no-prefix --summary --stat
 
 	fp   = format-patch
 	fpo  = format-patch --stdout
