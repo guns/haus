@@ -544,17 +544,17 @@ noremap  <Leader>g2       :<C-u>Gvsplit REBASE_HEAD<CR>
 noremap  <Leader>g.       :<C-u>silent! !git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
-noremap  <Leader>gac      :<C-u>silent! Git aa \| Gcommit --verbose<CR>
+noremap  <Leader>gac      :<C-u>silent! Git aa \| Git commit --verbose<CR>
 noremap  <Leader>gap      :<C-u>silent! !git ap<CR>
 noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
-noremap  <Leader>gb       :Gblame -w<CR>
-noremap  <Leader>gB       :Gblame -w -M -C -C -C<CR>
-noremap  <Leader>gc.      :<C-u>Gcommit %<CR>
-noremap  <Leader>gca      :<C-u>Gcommit --all<CR>
-noremap  <Leader>gcA      :<C-u>Gcommit --amend<CR>
-noremap  <Leader>gcc      :<C-u>Gcommit<CR>
-noremap  <Leader>gcv      :<C-u>Gcommit<CR>
+noremap  <Leader>gb       :Git blame -w<CR>
+noremap  <Leader>gB       :Git blame -w -M -C -C -C<CR>
+noremap  <Leader>gc.      :<C-u>Git commit %<CR>
+noremap  <Leader>gca      :<C-u>Git commit --all<CR>
+noremap  <Leader>gcA      :<C-u>Git commit --amend<CR>
+noremap  <Leader>gcc      :<C-u>Git commit<CR>
+noremap  <Leader>gcv      :<C-u>Git commit<CR>
 noremap  <Leader>gd       :<C-u>silent! !git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! !git f<CR>
@@ -573,7 +573,7 @@ noremap  <Leader>gv       :Gitv<Space>
 noremap  <Leader>gV       :Gitv!<Space>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
-noremap  <4-g>            :<C-u>Gstatus \| 12wincmd _<CR>
+noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
 noremap  <4-G>            :<C-u>Ggrep! -i<Space>
 nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
 vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>

@@ -880,7 +880,7 @@ function! s:ToggleMinorWindows()
 	endif
 endfunction
 
-command! -bar FuzzyOpen call fugitive#detect('.') | execute (exists('b:git_dir') ? 'FzfGFiles! --cached --others --exclude-standard' : 'FZF!')
+command! -bar FuzzyOpen call FugitiveDetect() | execute (exists('b:git_dir') ? 'FzfGFiles! --cached --others --exclude-standard' : 'FZF!')
 
 command! -nargs=+ -complete=file -bar TabOpen call <SID>TabOpen(<f-args>) "{{{1
 function! s:TabOpen(path)
