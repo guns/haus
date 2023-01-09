@@ -17,6 +17,8 @@ checkpermissions.bash() {
         /etc/wireguard:::0077
         /etc/**/.git:::0077:glob,no-recurse
 
+        /home/*:-::0077:glob,no-recurse
+
         /var/lib/{machines,container}:::0077:no-recurse
         /var/lib/systemd/random-seed:::0077
 
