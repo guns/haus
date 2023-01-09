@@ -15,7 +15,7 @@ force = false
 pkgs = OptionParser.new do |opt|
   opt.banner = 'USAGE: pacinstallfile [options] pkg …'
   opt.on('-d', '--asdeps') { opts << '--asdeps' }
-  opt.on('-f', '--force') { opts << '--force'; force = true }
+  opt.on('-f', '--force') { opts << '--noconfirm'; force = true }
 end.parse ARGV
 
 abort parser.help if pkgs.empty?
