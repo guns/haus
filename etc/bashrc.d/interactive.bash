@@ -770,12 +770,13 @@ alias gccas='gcc -S -masm=intel'
 
 # make
 alias mk='make'
-alias mkinstall='make install'
 alias mkj='make --jobs=$(grep --count ^processor /proc/cpuinfo)'
 alias mke='make --environment-overrides'
-alias mkej='mkj --environment-overrides'
+alias mkje='mkj --environment-overrides'
 alias mkb='make --always-make'
-alias mkbj='mkj --always-make'
+alias mkjb='mkj --always-make'
+alias mki='make install'
+alias mkji='mkj install'
 
 # golang
 HAVE go && {
@@ -883,7 +884,7 @@ HAVE docker && {
     alias d='docker'; TCOMP docker d
     dps() { docker ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Networks}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
     alias drun='docker run --rm --interactive --tty'
-    dstop() { local cs=(); IFS=$'\n' cs=($(docker container ps --format '{{.Names}}' | grep "$1")); run docker stop "${cs[@]}"; }
+    dstop() { local cs=(); IFS=$'\n' cs=($(docker container ps --format '{{.Names}}' | grep "$1")); ((${#cs[@]})) && run docker stop "${cs[@]}"; }
     dnetworkaddresses() { docker network inspect $(docker network ls --format '{{.ID}}') | jq 'map({(.Name): (.Containers | map({(.Name): .IPv4Address}) | add)}) | add'; }
     alias dc='docker-compose'; TCOMP docker-compose dc
     alias dcx='docker-compose exec'
@@ -1084,6 +1085,12 @@ alias rl='rlwrap'; TCOMP exec rl
 if HAVE systemctl; then
     alias sc='systemctl'; TCOMP systemctl sc
     alias scu='systemctl --user'; TCOMP systemctl scu
+    alias sctimers='systemctl list-timers'
+    alias scunitfiles='systemctl list-unit-files'
+    alias scrunning='systemctl list-units --state=running'
+    alias scfailed='systemctl --failed'
+    alias scdaemonreload='systemctl --system daemon-reload'
+    alias scdelta='systemd-delta'
     alias jc='journalctl'; TCOMP journalctl jc
     alias jcu='journalctl --user'; TCOMP journalctl jcu
     alias jcb='journalctl --boot'; TCOMP journalctl jcb
@@ -1098,6 +1105,8 @@ if HAVE systemctl; then
     alias scfailed='systemctl --failed'
     alias screload='run systemctl --system daemon-reload'
     alias scdelta='systemd-delta'
+    alias rc='resolvectl'; TCOMP resolvectl rc
+    alias rcq='resolvectl query'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
