@@ -34,8 +34,8 @@ checkpermissions.bash() {
         ~/.bash_completion.d
         ~/.bash_local
         ~/.inputrc
-        ~/.mitmproxy:::0077
-        ~/.password-store:::0077
+        ~/.mitmproxy:::0077:no-recurse
+        ~/.password-store:::0077:no-recurse
         ~/.rnd:::0177
         ~/.ssh:::0077:no-recurse
         ~/.ssh/*_{dsa,ecdsa,ed25519,rsa}:::0077:glob
