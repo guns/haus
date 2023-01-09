@@ -114,6 +114,7 @@ augroup GUNS
 
 	" JavaScript
 	autocmd FileType javascript
+		\ runtime ftplugin/html/sparkup.vim |
 		\ JavaScriptBufferSetup
 	autocmd FileType json
 		\ SetWhitespace 2 |
