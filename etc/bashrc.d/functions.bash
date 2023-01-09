@@ -44,7 +44,7 @@ ABORT() {
 # Param: $1 Filename
 REQUIRE() {
     [[ -r "$1" ]] || ABORT "Unable to source \"$1\""
-    source "$1"   || ABORT "\`source $1\` returned false!"
+    source "$1"   || ABORT "'source $1' returned false!"
 }; GC_FUNC REQUIRE
 
 ### Simple wrapper around `type`

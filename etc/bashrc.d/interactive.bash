@@ -91,6 +91,10 @@ __partitions__() {
     __compreply__ "$(awk 'NR > 2 {print "/dev/"$NF}' /proc/partitions)"
 }
 
+__device_mapper__() {
+    __compreply__ "$(command ls -1 /dev/mapper/ | grep -v '^control$')"
+}
+
 __pacdowngrade__() {
     __compreply__ "$(command ls -1 /var/cache/pacman/pkg/ | grep -E 'pkg\.tar\.[a-z]+$')"
 }
@@ -321,12 +325,12 @@ f.() {
 }; TCOMP find f.
 fft() {
     find-wrapper --predicate '( -type f -o -type l ) -print0' -- "$@" | ruby -e '
-        puts $stdin.read.split("\0").sort_by { |f| -File.mtime(f).to_i }
+        puts $stdin.read.split("\0").sort_by { |f| -File.lstat(f).mtime.to_i }
     '
 }; TCOMP find fft
 fft0() {
     find-wrapper --predicate '( -type f -o -type l ) -print0' -- "$@" | ruby -e '
-        puts $stdin.read.split("\0").sort_by { |f| -File.mtime(f).to_i }.join("\0")
+        puts $stdin.read.split("\0").sort_by { |f| -File.lstat(f).mtime.to_i }.join("\0")
     '
 }; TCOMP find fft0
 
@@ -473,10 +477,11 @@ alias chmutable='chattr -V -i'
 
 # inotifywait
 HAVE inotifywait && fwatch() {
-    local OPTIND OPTARG opt recurse
-    while getopts :hr opt; do
+    local OPTIND OPTARG opt pattern recurse
+    while getopts :hp:r opt; do
         case "$opt" in
-        h) echo "USAGE: $FUNCNAME [-r] file … -- cmd …" >&2; return;;
+        h) echo "USAGE: $FUNCNAME [-p pattern] [-r] file … -- cmd …" >&2; return;;
+        p) pattern="$OPTARG";;
         r) recurse=1;;
         esac
     done
@@ -506,9 +511,11 @@ HAVE inotifywait && fwatch() {
         done
 
         local f=$(ruby -r fileutils -r shellwords -e '
+            pattern, recurse, *files = ARGV
             cmd = %w[inotifywait --monitor --event close_write --event attrib --quiet --format %w%f]
-            cmd << "--recursive" if ARGV[0] == "1"
-            cmd.concat ARGV.drop(1)
+            cmd << "--include=#{pattern}" unless pattern.empty?
+            cmd << "--recursive" if recurse == "1"
+            cmd.concat files
 
             warn cmd.shelljoin
 
@@ -524,7 +531,7 @@ HAVE inotifywait && fwatch() {
                     end
                 end
             end
-        ' -- "$recurse" "${files[@]}")
+        ' -- "$pattern" "$recurse" "${files[@]}")
 
         eval "${cmd[@]}"
         sleep 0.5
@@ -612,6 +619,10 @@ HAVE netctl && {
             netctl list
         fi
     }; TCOMP netctl net
+}
+
+HAVE bluetoothctl && {
+    alias bt='bluetoothctl'
 }
 
 # cURL/wget
@@ -921,6 +932,7 @@ TCOMP pass passqrshow
 # cryptsetup
 TCOMP umount csumount
 alias csdump='cryptsetup luksDump'; complete -F __partitions__ csdump
+alias csclose='cryptsetup close'; complete -F __device_mapper__ csclose
 
 ### Package Managers
 
@@ -998,6 +1010,9 @@ HAVE pacman && {
 
     complete -F __pacdowngrade__ pacdowngrade
 }
+
+# yay
+HAVE yay && alias yay="yay --pacman yay-pacman-wrapper --cleanafter --batchinstall"
 
 # dnf
 HAVE dnf && {
@@ -1081,7 +1096,7 @@ if HAVE systemctl; then
     alias scunitfiles='systemctl list-unit-files'
     alias scrunning='systemctl list-units --state=running'
     alias scfailed='systemctl --failed'
-    alias scdaemonreload='systemctl --system daemon-reload'
+    alias screload='run systemctl --system daemon-reload'
     alias scdelta='systemd-delta'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
