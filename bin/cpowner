@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+
+abort "USAGE: #{File.basename(__FILE__)} [cp-args] source... destination" if ARGV.size < 2
+
+*sources, dest = ARGV
+
+if system('cp', *sources, dest)
+  new_paths = File.file?(dest) ? [dest] : sources.map { |path| File.join(dest, File.basename(path)) }
+  system('fixperm', '-or', *new_paths)
+else
+  abort("cp exited with status #{$!.exitstatus}; skipping fixperm")
+end
