@@ -1,105 +1,135 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2010-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'ostruct'
-require 'nerv/cli/meter'
+"""
+Print RAM and swap usage.
+"""
 
-class Mem; end
+import os
+import re
+import shutil
+import sys
+from argparse import ArgumentParser
+from pathlib import Path
 
-class Mem::Graph
-  attr_accessor :width, :mem, :swap
+import haus
 
-  def initialize width = nil
-    @width = width
-  end
 
-  def to_s
-    len = ([mem.total, swap.total].max.to_s.length * 2) + 1
-    memm = NERV::CLI::Meter.new("Mem [%s] %#{len}s MiB", mem.values, mem.total, :width => width).to_s
-    return memm.to_s if swap.total.zero?
-    swpm = NERV::CLI::Meter.new("Swp [%s] %#{len}s MiB", swap.values, swap.total, :width => width).to_s
-    [memm, swpm].join "\n"
-  end
-end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-w", "--width", type=int, help="Set output width")
+    return parser.parse_args(args)
 
-class Mem::LinuxGraph < Mem::Graph
-  def initialize *args
-    super
 
-    meminfo = {}
+def mib(nbytes):
+    return round(nbytes / 2**20)
 
-    File.read('/proc/meminfo').each_line do |line|
-      key, _, kb = line.partition ':'
-      meminfo[key] = kb.to_i * (1 << 10)
-    end
 
-    @mem = OpenStruct.new
-    mem.mem_total = meminfo['MemTotal']
-    mem.free = meminfo['MemFree']
-    mem.buffers = meminfo['Buffers']
-    mem.cached = meminfo['Cached']
-    mem.slab_reclaimable = meminfo['SReclaimable']
-    mem.slab_unreclaimable = meminfo['SUnreclaim']
-    mem.active = mem.mem_total - mem.free - mem.buffers - mem.cached - mem.slab_reclaimable - mem.slab_unreclaimable
-    mem.values = [
-      [mib(mem.active), :green, :bold],
-      [mib(mem.slab_unreclaimable), :green],
-      [mib(mem.slab_reclaimable), :cyan],
-      [mib(mem.cached), :yellow],
-      [mib(mem.buffers), :magenta]
-    ]
-    mem.total = mib mem.mem_total
+def build_meter(fmt, values, max_value, width=None):
+    if max_value <= 0:
+        raise ValueError(f"max_value ({max_value}) must be a positive number")
 
-    @swap = OpenStruct.new
-    swap.swap_total = meminfo['SwapTotal']
-    swap.used = swap.swap_total - meminfo['SwapFree']
-    swap.values = [[mib(swap.used), :red]]
-    swap.total = mib swap.swap_total
-  end
+    if width is None:
+        width, _ = shutil.get_terminal_size()
 
-  def mib bytes
-    (bytes.to_f / 2**20).round
-  end
-end
+    # Graph length is space left over when sum == max_value
+    graphlen = width - len(fmt % ("", max_value, max_value))
+    chars, charstyles = [], []
+    total = 0
 
-class Mem
-  def initialize opts = {}
-    @graph = case RUBY_PLATFORM
-    when /linux/i  then LinuxGraph.new @width
-    else raise 'Only Linux supported at the moment'
-    end
-  end
+    for ch, val, *styles in values:
+        if val < 0:
+            raise ValueError(f"value ({val}) must be a non-negative number")
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Show RAM and swap usage.
+        total += val
+        pct = val / max_value
+        count = round(graphlen * pct)
+        overflow = len(chars) + count - graphlen
 
-        Usage: #{File.basename __FILE__} [options]
+        if overflow > 0:
+            count -= overflow
 
-        Options:
-      BANNER
+        chars.extend([ch] * count)
+        charstyles.append([count, *styles])
 
-      opt.on '-w', '--width COLUMNS', Integer, 'Set output to given width' do |arg|
-        self.width = arg
-      end
-    end
-  end
+    blanks = graphlen - len(chars)
+    chars.extend([" "] * blanks)
+    charstyles.append([blanks])
 
-  def width= n
-    @graph.width = n
-  end
+    # Embed percentage
+    if graphlen >= len("100%"):
+        percentage = str(round(100 * total / max_value)) + "%"
+        chars[-len(percentage) :] = list(percentage)
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help unless args.empty?
-    puts @graph.to_s
-  end
-end
+    # Chunk, join, and colorize chars
+    pos = 0
+    graph = []
+    for count, *styles in charstyles:
+        graph.append(haus.format("".join(chars[pos : pos + count]), styles))
+        pos += count
 
-$0 = File.basename(__FILE__) and Mem.new.run ARGV if $0 == __FILE__
+    return fmt % ("".join(graph), total, max_value)
+
+
+def get_memory_stats():
+    info = {}
+    pat = re.compile(r"\d+")
+
+    for line in Path("/proc/meminfo").read_text().splitlines():
+        key, kb = line.split(":", maxsplit=1)
+        info[key] = int(pat.search(kb)[0]) * (2**10)
+
+    active = (
+        info["MemTotal"]
+        - info["MemFree"]
+        - info["Buffers"]
+        - info["Cached"]
+        - info["SReclaimable"]
+        - info["SUnreclaim"]
+    )
+
+    chars = {True: "|||||", False: "█▓▒░│"}[os.isatty(sys.stdout.fileno())]
+
+    return {
+        "mem_total": mib(info["MemTotal"]),
+        "swap_total": mib(info["SwapTotal"]),
+        "mem_values": [
+            [chars[0], mib(active), "green", "bold"],
+            [chars[1], mib(info["SUnreclaim"]), "green"],
+            [chars[2], mib(info["SReclaimable"]), "cyan"],
+            [chars[3], mib(info["Cached"]), "yellow"],
+            [chars[4], mib(info["Buffers"]), "magenta"],
+        ],
+        "swap_values": [
+            [chars[0], mib(info["SwapTotal"] - info["SwapFree"]), "red"],
+        ],
+    }
+
+
+def execute(args):
+    opts = parse_args(args)
+    m = get_memory_stats()
+    mlen = len(str(m["mem_total"]))
+    print(
+        build_meter(
+            f"Mem [%s] %{mlen}d/%d MiB", m["mem_values"], m["mem_total"], opts.width
+        )
+    )
+
+    if m["swap_total"] > 0:
+        slen = len(str(m["swap_total"]))
+        print(
+            build_meter(
+                f"Swp [%s] %{slen}d/%d MiB",
+                m["swap_values"],
+                m["swap_total"],
+                opts.width,
+            )
+        )
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

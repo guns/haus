@@ -1,114 +1,222 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2010-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'find'
-require 'etc'
-require 'haus/logger'
-require 'haus/ls_colors'
+"""
+Normalize file modes and owners.
 
-class Fixperm
-  include Haus::Loggable
+Be careful!
+"""
 
-  DEFAULTS = {
-    :umask => nil,
-    :ownership => false,
-    :recurse => false,
-    :noop => false
-  }
+import collections
+import grp
+import os
+import pwd
+import re
+import stat
+import sys
+from argparse import ArgumentParser
+from typing import NamedTuple
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+import haus
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Normalize file modes and owners. Skips symbolic links.
 
-        *Be careful*
+class Mask(NamedTuple):
+    fmask: int
+    umask: int
 
-        Usage: #{File.basename __FILE__} [options] path ...
 
-        Options:
-      BANNER
+class Entry(NamedTuple):
+    path: str
+    isdir: bool
+    uid: int
+    gid: int
 
-      opt.on '-u', '--umask N', 'Enable changing file mode by umask (octal)' do |arg|
-        @umask = arg.to_i 8
-      end
 
-      opt.on '-o', '--ownership', 'Enable changing file ownership to match parent directories' do
-        @ownership = true
-      end
+class Info(NamedTuple):
+    users: dict
+    groups: dict
+    lsc: haus.LSColors
 
-      opt.on '-r', '--recurse', 'Recurse into directories' do
-        @recurse = true
-      end
+    def user(self, uid):
+        if name := self.users.get(uid):
+            return name
+        name = pwd.getpwuid(uid).pw_name
+        self.users[uid] = name
+        return name
 
-      opt.on '-n', '--noop', 'Only show what would happen' do
-        @noop = true
-      end
-    end
-  end
+    def group(self, gid):
+        if name := self.groups.get(gid):
+            return name
+        name = grp.getgrgid(gid).gr_name
+        self.groups[gid] = name
+        return name
 
-  def normalize path
-    path = File.expand_path path
-    stat = File.lstat path
-    parent_path = File.expand_path '..', path
 
-    if @umask
-      if stat.ftype == 'directory' or File.basename(parent_path) =~ /\As?bin\z/
-        mode = (0777 & ~@umask)
-      else
-        mode = (0666 & ~@umask)
-      end
+def parse_umask(arg: str):
+    if arg.startswith("="):
+        fmask, umask = 0o7777, int(arg[1:], 8)
+    else:
+        fmask, umask = 0o0777, int(arg, 8)
 
-      if stat.ftype != 'link' and (stat.mode & 0777) != mode
-        log 'chmod %04o → %04o on ' % [stat.mode & 0777, mode], [path, Haus::LSColors[path]]
-        File.chmod mode, path unless @noop
-      end
-    end
+    if umask & fmask != umask:
+        raise ValueError(f"umask {oct(umask)} must not be larger than {oct(fmask)}")
 
-    if @ownership
-      parent_stat = File.lstat parent_path
+    return Mask(fmask=fmask, umask=umask)
 
-      if stat.uid != parent_stat.uid or stat.gid != parent_stat.gid
-        log 'chown %s:%s -> %s:%s on ' % [
-          u(stat.uid),
-          g(stat.gid),
-          u(parent_stat.uid),
-          g(parent_stat.gid)
-        ], [path, Haus::LSColors[path]]
 
-        File.chown parent_stat.uid, parent_stat.gid, path unless @noop
-      end
-    end
-  end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-u",
+        "--umask",
+        dest="mask",
+        type=parse_umask,
+        metavar="[=]OCTAL",
+        help="""Change file mode to match new files created with umask. Specify in
+        octal. Leading '=' sets all 12 mode bits (setuid + setgid + sticky + perms)""",
+    )
+    parser.add_argument(
+        "-o",
+        "--ownership",
+        dest="chown",
+        action="store_true",
+        help="Change file ownership to match parent directories",
+    )
+    parser.add_argument(
+        "-r", "--recurse", action="store_true", help="Recurse into subdirectories"
+    )
+    parser.add_argument(
+        "-n", "--noop", action="store_true", help="Only show what would happen"
+    )
+    parser.add_argument("paths", nargs="+", type=os.path.abspath, metavar="path")
+    return parser.parse_args(args)
 
-  def u id
-    (@_uids ||= {})[id] ||= (Etc.getpwuid(id).name rescue id)
-  end
 
-  def g id
-    (@_gids ||= {})[id] ||= (Etc.getgrgid(id).name rescue id)
-  end
+RE_BINDIR = re.compile(r"\As?bin\Z")
+HAVE_LCHMOD = "lchmod" in dir(os)
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.empty? or (!@umask and !@ownership)
+if HAVE_LCHMOD:
 
-    if @recurse
-      args.each do |path|
-        Find.find(path) { |f| normalize f }
-      end
-    else
-      args.each { |path| normalize path }
-    end
-  end
-end
+    def _chmod(path, s: os.stat_result, newmode, noop, lsc: haus.LSColors):
+        print(
+            "%slchmod %04o → %04o on %s"
+            % (
+                "(noop) " if noop else "",
+                s.st_mode & 0o7777,
+                newmode,
+                lsc.format(path, s),
+            ),
+        )
+        if not noop:
+            os.lchmod(path, newmode)  # type: ignore[attr-defined]
 
-$0 = File.basename(__FILE__) and Fixperm.new.run ARGV if __FILE__ == $0
+else:
+
+    def _chmod(path, s: os.stat_result, newmode, noop, lsc: haus.LSColors):
+        print(
+            "%schmod %04o → %04o on %s"
+            % (
+                "(noop) " if noop else "",
+                s.st_mode & 0o7777,
+                newmode,
+                lsc.format(path, s),
+            ),
+        )
+        if not noop:
+            os.chmod(path, newmode)
+
+
+def is_bindir(path):
+    return bool(RE_BINDIR.search(os.path.basename(path)))
+
+
+def normalize(path, parent: Entry, mask, chown, noop, info: Info) -> Entry:
+    s = os.lstat(path)
+    uid = s.st_uid
+    gid = s.st_gid
+    isdir = stat.S_ISDIR(s.st_mode)
+
+    if mask and not (stat.S_ISLNK(s.st_mode) and not HAVE_LCHMOD):
+        mode = s.st_mode & 0o7777
+
+        if isdir or is_bindir(parent.path):
+            newmode = (mode & ~mask.fmask) | (mask.fmask & ~mask.umask)
+        else:
+            newmode = (mode & ~mask.fmask) | (mask.fmask & ~mask.umask & 0o7666)
+
+        if mode != newmode:
+            _chmod(path, s, newmode, noop, info.lsc)
+
+    if chown:
+        if uid != parent.uid or gid != parent.gid:
+            print(
+                "%slchown %s:%s → %s:%s on %s"
+                % (
+                    "(noop) " if noop else "",
+                    info.user(uid),
+                    info.group(gid),
+                    info.user(parent.uid),
+                    info.group(parent.gid),
+                    info.lsc.format(path, s),
+                )
+            )
+
+            if not noop:
+                os.lchown(path, uid=parent.uid, gid=parent.gid)
+
+            uid = parent.uid
+            gid = parent.gid
+
+    return Entry(path=path, isdir=isdir, uid=uid, gid=gid)
+
+
+def execute(args):
+    opts = parse_args(args)
+
+    if opts.mask is None and not opts.chown:
+        print("Must specify --umask and/or --ownership", file=sys.stderr)
+        return 1
+
+    users = None
+    groups = None
+
+    if opts.chown:
+        users = {s.pw_uid: s.pw_name for s in pwd.getpwall()}
+        groups = {s.gr_gid: s.gr_name for s in grp.getgrall()}
+
+    if env := os.getenv("LS_COLORS"):
+        lsc = haus.parse_ls_colors(env)
+    else:
+        lsc = haus.LSColors()
+
+    info = Info(users=users, groups=groups, lsc=lsc)
+    queue = collections.deque()
+    entries = {}
+
+    for path in opts.paths:
+        parent_path = os.path.abspath(os.path.join(path, ".."))
+        parent = entries.get(parent_path)
+
+        if parent is None:
+            s = os.lstat(parent_path)
+            parent = Entry(path=parent_path, isdir=True, uid=s.st_uid, gid=s.st_gid)
+            entries[parent_path] = parent
+
+        queue.appendleft((path, parent))
+
+    while len(queue) > 0:
+        path, parent = queue.pop()
+        entry = normalize(
+            path, parent, mask=opts.mask, chown=opts.chown, noop=opts.noop, info=info
+        )
+
+        if entry.isdir and opts.recurse:
+            for fname in os.listdir(entry.path):
+                queue.appendleft((os.path.join(path, fname), entry))
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

@@ -1,66 +1,52 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2016-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2016-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'shellwords'
-require 'fileutils'
+"""
+Archive old projects.
+"""
 
-class Archivesrc
-  DEFAULTS = {}
+import os
+import shutil
+import sys
+from argparse import ArgumentParser
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+import haus
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Usage: #{File.basename __FILE__} project-dir …
-      BANNER
-    end
-  end
 
-  def sh *args
-    warn args.shelljoin
-    system *args
-  end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "directories", nargs="+", metavar="directory", type=os.path.normpath
+    )
+    return parser.parse_args(args)
 
-  def archive_path dir
-    src = File.expand_path ENV['cdsrc']
-    name = File.basename File.expand_path(dir)
-    "#{src}/ARCHIVE/#{name}.tar.gz"
-  end
 
-  def archive dir
-    Dir.chdir dir do
-      sh 'git', 'clean', '--force', '-d', '-x'
-      sh 'git', 'gc', '--aggressive', '--prune=all'
-    end
+def get_archive_path(directory):
+    src = os.getenv("cdsrc") or "/opt/src"
+    name = os.path.basename(directory)
+    return f"{src}/ARCHIVE/{name}.tar.gz"
 
-    Dir.chdir File.join(dir, '..') do
-      path = archive_path dir
-      abort "#{path} already exists!" if File.exists? path
 
-      if sh 'tar', 'acf', archive_path(dir), dir
-        FileUtils.rm_rf File.expand_path(dir), :verbose => true
-      else
-        abort
-      end
-    end
-  end
+def archive(src):
+    dst = get_archive_path(src)
+    if os.path.exists(dst):
+        raise RuntimeError(f"{dst} already exists")
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.empty?
+    haus.run(["git", "-C", src, "clean", "--force", "-d", "-x"], check=True)
+    haus.run(["git", "-C", src, "gc", "--aggressive", "--prune=all"], check=True)
+    haus.run(["tar", "-C", os.path.join(src, ".."), "-acf", dst, "--", src], check=True)
+    haus.print(f"Removing {src}", ["yellow", "bold"], file=sys.stderr)
+    shutil.rmtree(src)
 
-    args.each do |dir|
-      archive dir.chomp('/')
-    end
-  end
-end
 
-$0 = File.basename(__FILE__) and Archivesrc.new.run ARGV if $0 == __FILE__
+def execute(args):
+    opts = parse_args(args)
+    for path in opts.directories:
+        archive(path)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

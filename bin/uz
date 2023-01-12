@@ -1,144 +1,131 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2016-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2016-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'shellwords'
-require 'fileutils'
+"""
+Convenient 7z extract/list wrapper.
+"""
 
-class Uz
-  DEFAULTS = {
-    :delete => false,
-    :ignore_errors => false,
-    :wrapmode => :auto,
-    :outdir => '.',
-    :password => nil,
-    :overwrite => false,
-    :wait_close => false
-  }
+import enum
+import glob
+import os
+import re
+import subprocess
+import sys
+import threading
+import time
+from argparse import ArgumentParser
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+import haus
 
-  def parser
-    @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<~BANNER
-        Convenient wrapper around `7z x`
+Wrap = enum.Enum("Wrap", ("auto", "never", "always"))
 
-        Usage: #{File.basename __FILE__} [options] archive …
 
-        Options:
-      BANNER
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.set_defaults(wrap=Wrap.auto)
+    parser.add_argument("-d", "--delete", action="store_true")
+    parser.add_argument("-i", "--ignore-errors", action="store_true")
+    parser.add_argument(
+        "-n", "--no-wrap", dest="wrap", action="store_const", const=Wrap.never
+    )
+    parser.add_argument(
+        "-W", "--force-wrap", dest="wrap", action="store_const", const=Wrap.always
+    )
+    parser.add_argument("-o", "--outdir", default="")
+    parser.add_argument("-p", "--password")
+    parser.add_argument("-O", "--overwrite", action="store_true")
+    parser.add_argument("-w", "--wait-close", action="store_true")
+    parser.add_argument("archives", nargs="+", metavar="archive", type=os.path.normpath)
+    return parser.parse_args(args)
 
-      opt.on '-d', '--delete' do
-        @delete = true
-      end
 
-      opt.on '-i', '--ignore-errors' do
-        @ignore_errors = true
-      end
+def build_extraction_command(path, outdir, overwrite, password):
+    cmd = ["7z", "x", f"-o{outdir or '.'}", f"-ao{'a' if overwrite else 's'}"]
+    if password:
+        cmd.append(f"-p{password}")
+    cmd.append("--")
+    cmd.append(path)
+    return cmd
 
-      opt.on '-n', '--nowrap' do
-        @wrapmode = :nowrap
-      end
 
-      opt.on '-W', '--force-wrap' do
-        @wrapmode = :force
-      end
+RE_ZIP_PART = re.compile(r"\A(.*\.(?:7z|zip))\.001\Z")
+RE_RAR_PART = re.compile(r"\A(.*)\.part1\.rar\Z")
 
-      opt.on '-o', '--outdir PATH' do |arg|
-        @outdir = File.expand_path arg
-      end
 
-      opt.on '-p', '--password STRING' do |arg|
-        @password = arg
-      end
+def extract(paths, opts):
+    for path in paths:
+        xdir, _ = os.path.splitext(os.path.join(opts.outdir, os.path.basename(path)))
+        haus.run(
+            build_extraction_command(path, xdir, opts.overwrite, opts.password),
+            check=True,
+        )
+        entries = os.listdir(xdir)
 
-      opt.on '-O', '--overwrite' do
-        @overwrite = true
-      end
+        if opts.wrap == Wrap.never or (opts.wrap == Wrap.auto and len(entries) <= 1):
+            tmpdir = xdir + "__uztmp"
+            os.rename(xdir, tmpdir)
 
-      opt.on '-w', '--wait-close' do
-        @wait_close = true
-      end
-    end
-  end
+            for filename in entries:
+                oldpath = os.path.join(tmpdir, filename)
+                newpath = os.path.join(opts.outdir, filename)
+                if os.path.exists(newpath):
+                    if opts.overwrite:
+                        os.remove(newpath)
+                    else:
+                        raise RuntimeError(
+                            f"{newpath} already exists! Leaving {oldpath}"
+                        )
+                os.rename(oldpath, newpath)
 
-  def sh *args
-    warn "\e[32;1m:: #{args.shelljoin}\e[0m"
-    system *args
-  end
+            os.rmdir(tmpdir)
 
-  def cmdargs tempdir, file
-    cmd = ['7z', 'x', "-o#{tempdir}", "-ao#{@overwrite ? 'a' : 's'}"]
-    cmd << "-p#{@password}" if @password
-    cmd << file
-  end
+        if opts.delete:
+            if m := RE_ZIP_PART.match(path):
+                removals = glob.glob(f"{m.group(1)}.[0-9][0-9][0-9]")
+            elif m := RE_RAR_PART.match(path):
+                removals = glob.glob(f"{m.group(1)}.part[0-9]*.rar")
+            else:
+                removals = [path]
 
-  def extract! *files
-    files.each do |file|
-      dir = File.join @outdir, File.basename(file, File.extname(file))
-      sh *cmdargs(dir, file)
-      unless @ignore_errors
-        exit $?.exitstatus if $? and $?.exitstatus != 0
-      end
+            for p in removals:
+                haus.print(f"Removing {p}", ["yellow"], file=sys.stderr)
+                os.remove(p)
 
-      out = Dir.entries(dir).reject { |f| f =~ /\A\.{1,2}\z/ }
-      if (@wrapmode == :auto && out.size == 1) or @wrapmode == :nowrap
-        FileUtils.mv dir, dir + '__uztmp__', :verbose => true
-        dir << '__uztmp__'
-        out.each do |f|
-          outf = File.join @outdir, f
-          raise "#{outf} already exists! Leaving #{f}" if File.exists? outf and not @overwrite
-          FileUtils.mv File.join(dir, f), outf, :verbose => true
-        end
-        FileUtils.rmdir dir, :verbose => true
-      end
 
-      if @delete
-        case file
-        when /\.(?:7z|zip)\.001\z/
-          list = Dir['%s.[0-9][0-9][0-9]' % file.chomp('.001')]
-        when /\.part1\.rar\z/
-          list = Dir['%s.part[0-9].rar' % file.chomp('.part1.rar')]
-        else
-          list = file
-        end
-        FileUtils.rm_f list, :verbose => true if @delete
-      end
-    end
-  end
+def wait_and_extract(lock, path, opts):
+    haus.run(
+        ["inotifywait", "-e", "close_write", "--", path],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    time.sleep(0.5)
+    with lock:
+        extract([path], opts)
 
-  def wait_and_extract! *files
+
+def wait_and_extract_all(paths, opts):
+    lock = threading.Lock()
     threads = []
-    lock = Mutex.new
+    for path in paths:
+        th = threading.Thread(target=wait_and_extract, args=(lock, path, opts))
+        th.start()
+        threads.append(th)
 
-    files.each do |f|
-      threads << Thread.new do
-        warn "Waiting for: #{f}"
-        system 'inotifywait', '-e', 'close_write', f, [:out, :err] => '/dev/null'
-        sleep 0.5
-        lock.synchronize { extract! f }
-      end
-    end
+    for th in threads:
+        th.join()
 
-    threads.each &:join
-  end
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.empty? or args.any? { |a| File.directory? a }
+def execute(args):
+    opts = parse_args(args)
 
-    if @wait_close
-      wait_and_extract! *args
-    else
-      extract! *args
-    end
-  end
-end
+    if opts.wait_close:
+        wait_and_extract_all(opts.archives, opts)
+    else:
+        extract(opts.archives, opts)
 
-$0 = File.basename(__FILE__) and Uz.new.run ARGV if $0 == __FILE__
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

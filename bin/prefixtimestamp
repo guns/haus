@@ -1,7 +1,7 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env python
 
-require 'date'
+import sys
+from datetime import datetime
 
-while (line = $stdin.gets)
-  puts "#{DateTime.now.iso8601} │ #{line}"
-end
+while line := sys.stdin.readline():
+    print(f"{datetime.now().isoformat()} │ {line}", end="")

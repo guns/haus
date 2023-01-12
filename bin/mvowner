@@ -1,12 +1,42 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env python
+#
+# Copyright (c) 2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-abort "USAGE: #{File.basename(__FILE__)} [mv-args] source... destination" if ARGV.size < 2
+"""
+Move files and then change uid/gid to match the parent directory.
+"""
 
-*sources, dest = ARGV
+import os
+import sys
+from argparse import ArgumentParser
 
-if system('mv', *sources, dest)
-  new_paths = File.file?(dest) ? [dest] : sources.map { |path| File.join(dest, File.basename(path)) }
-  system('fixperm', '-or', *new_paths)
-else
-  abort("mv exited with status #{$!.exitstatus}; skipping fixperm")
-end
+import haus
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.usage = f"{parser.prog} [-h] [mv-opts] source [source ...] destination"
+    parser.add_argument("sources", metavar="source", nargs="+")
+    parser.add_argument("destination")
+    return parser.parse_known_args(args)
+
+
+def execute(args):
+    opts, mv_args = parse_args(args)
+    haus.run(["mv", *mv_args, "--", *opts.sources, opts.destination], check=True)
+
+    if os.path.isfile(opts.destination):
+        new_paths = [opts.destination]
+    else:
+        new_paths = [
+            os.path.join(opts.destination, os.path.basename(src))
+            for src in opts.sources
+        ]
+
+    return haus.run(["fixperm", "-or", "--", *new_paths]).returncode
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

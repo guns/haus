@@ -1,24 +1,41 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'fileutils'
-require 'optparse'
-require 'haus/utils'
+"""
+Create a symbolic link to a relative path.
+"""
 
-include FileUtils::Verbose
+import os
+import sys
+from argparse import ArgumentParser
 
-force = false
-parser = OptionParser.new { |opt| opt.on('-f', '--force') { force = true } }
-args = parser.parse ARGV
 
-abort 'USAGE: lnrelative src [dst]' unless (1..2) === args.size
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-f", "--force", action="store_true")
+    parser.add_argument("src", type=os.path.normpath)
+    parser.add_argument("dst", nargs="?", type=os.path.normpath, default=".")
+    return parser.parse_args(args)
 
-src, lnk = args
-lnk ||= '.'
-dst = Haus::Utils.relpath src, lnk
-rm_f lnk if force
-ln_s dst, lnk
+
+def execute(args):
+    opts = parse_args(args)
+    src = opts.src
+    dst = opts.dst
+
+    if os.path.isdir(dst) and not os.path.islink(dst):
+        dst = os.path.join(dst, os.path.basename(src))
+
+    if opts.force and (os.path.isfile(dst) or os.path.islink(dst)):
+        os.remove(dst)
+
+    relsrc = os.path.relpath(src, os.path.dirname(dst))
+    os.symlink(relsrc, dst)
+    print(f"Created symlink {dst} -> {relsrc}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

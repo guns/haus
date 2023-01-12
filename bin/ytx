@@ -1,3 +1,20 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-exec yt-dlp --output "%(title)s-%(id)s.%(ext)s" --trim-filenames 120 --user-agent "Mozilla/5.0 (X11; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0" --audio-format m4a --audio-quality 0 --extract-audio "$@"
+import sys
+
+import haus
+
+haus.execvp(
+    [
+        "yt-dlp",
+        "--output",
+        "%(title)s-%(id)s.%(ext)s",
+        "--trim-filenames=120",
+        "--user-agent",
+        haus.get_random_user_agent("Linux"),
+        "--audio-format=m4a",
+        "--audio-quality=0",
+        "--extract-audio",
+        *sys.argv[1:],
+    ]
+)

@@ -1,129 +1,165 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'yaml'
-require 'haus/utils'
+"""
+Query the Organizationally Unique Identifier database.
+"""
 
-class Ouilookup
-  DEFAULTS = {
-    :ouidb_path => File.expand_path('../../share/ouilookup/oui.yml', __FILE__)
-  }
+import os
+import re
+import sqlite3
+import sys
+from argparse import ArgumentParser
 
-  UPDATE_URL = 'http://standards-oui.ieee.org/oui.txt'
-  YAML_OPTS = { :line_width => -1 }
-  FMT = "%06X\t%-60s\t%s"
+import haus
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+OUI_URL = "https://standards-oui.ieee.org/"
 
-  def parser
-    @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<~BANNER
-        Usage: #{File.basename __FILE__} [options] pattern …
 
-        Options:
-      BANNER
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.set_defaults(db_path=os.path.expanduser("~/.cache/oui.db"))
+    parser.add_argument(
+        "-a", "--all-fields", action="store_true", help="Search all fields"
+    )
+    parser.add_argument(
+        "-d",
+        "--db-path",
+        type=os.path.normpath,
+        help=f"Default: {parser.get_default('db_path')}",
+    )
+    parser.add_argument(
+        "-u",
+        "--update",
+        action="store_true",
+        help=f"Update database from {OUI_URL}",
+    )
+    parser.add_argument(
+        "patterns",
+        nargs="*",
+        metavar="pattern",
+        help="MAC Address or regular expression",
+    )
+    return parser.parse_args(args)
 
-      opt.on '-d', '--ouidb-path PATH', "DEFAULT: #{@ouidb_path} (`-` for stdin/stdout)" do |arg|
-        @ouidb_path = arg == '-' ? nil : File.expand_path(arg)
-      end
 
-      opt.on '-u', '--update=[FILE]', "Update #{@ouidb_path} from a file or #{UPDATE_URL}" do |arg|
-        @update = arg ? File.expand_path(arg) : UPDATE_URL
-      end
-    end
-  end
+RE_ORG_ENTRY = re.compile(r"\A(?P<id>[0-9A-F]{6})\s+\(base 16\)\s+(?P<org>\S.*)")
+RE_MAC_PREFIX = re.compile(r"(?i)\A([0-9A-F]{2})[:-]?([0-9A-F]{2})[:-]?([0-9A-F]{2})")
+RE_WS_PLUS = re.compile(r"\s+")
 
-  def slurp path
-    if path =~ %r{\A\w+://}
-      IO.popen(['curl', '--user-agent', 'Mozilla/5.0 (X11; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0', '--progress-bar', '--location', path]) { |io| io.read }
-    else
-      File.read path
-    end
-  end
 
-  def update_db! dbpath, update_path_or_url
-    rows, db = [], {}
-    ps = slurp(update_path_or_url).split("\r\n\r\n").drop 1
+def parse_oui_text(text) -> list:
+    # Beginning of OUI text DB:
+    #
+    #   OUI/MA-L                                                    Organization
+    #   company_id                                                  Organization
+    #                                                               Address
+    #
+    #   00-22-72   (hex)                American Micro-Fuel Device Corp.
+    #   002272     (base 16)            American Micro-Fuel Device Corp.
+    #                                   2181 Buchanan Loop
+    #                                   Ferndale  WA  98248
+    #                                   US
+    #
+    #   00-D0-EF   (hex)                IGT
+    #   00D0EF     (base 16)            IGT
+    #                                   9295 PROTOTYPE DRIVE
+    #                                   RENO  NV  89511
+    #                                   US
 
-    ps.each do |p|
-      ls = p.lines
-      a, b, c = ls[0].split[0].split('-').map { |x| x.to_i 16 }
-      name = ls[0].split("\t", 2)[1].strip
-      country = ls.last.split("\t", 2)[1].strip
-      rows.push [(a << 16) + (b << 8) + c, "#{name}\t#{country}"]
-    end
+    rows = []
+    lineiter = iter(text.splitlines())
 
-    rows.sort!.each { |(k, v)| db[k] = v }
+    while (line := next(lineiter, None)) is not None:
+        if m := RE_ORG_ENTRY.match(line):
+            addr = []
+            while line := next(lineiter, "").strip():
+                addr.append(RE_WS_PLUS.sub(" ", line))
+            rows.append((m["id"], m["org"], "; ".join(addr)))
 
-    if dbpath.nil?
-      puts db.to_yaml(YAML_OPTS)
-    else
-      File.open(dbpath, 'w') { |f| f.puts db.to_yaml(YAML_OPTS) }
-    end
-  end
+    return rows
 
-  def ouidb
-    @ouidb ||= begin
-      if @ouidb_path.nil?
-        YAML.load $stdin.read
-      elsif File.exists? @ouidb_path
-        YAML.load_file @ouidb_path
-      elsif File.exists? @ouidb_path + '.gz'
-        IO.popen ['gzip', '-cd', @ouidb_path + '.gz'] do |io|
-          YAML.load io.read
-        end
-      else
-        raise "Could not find oui db at #{@ouidb_path}{.gz,}"
-      end
-    end
-  end
 
-  def grep pattern
-    case pattern
-    when /\A(\h\h)[:-]?(\h\h)[:-]?(\h\h)/
-      mac = ($1.to_i(16) << 16) + ($2.to_i(16) << 8) + $3.to_i(16)
-      if o = ouidb[mac]
-        return FMT % [mac, *o.split("\t")]
-      else
-        return nil
-      end
-    when %r{\A[^/]}
-      pat = Regexp.new pattern, Regexp::IGNORECASE
-    else
-      pat = Haus::Utils.regexp_parse pattern
-    end
+def update_oui_db(db_path, url):
+    text = haus.urlopen(url).read().decode("utf-8")
+    rows = parse_oui_text(text)
+    open(db_path, "w").close()
+    conn = sqlite3.connect(db_path)
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            CREATE TABLE oui (
+                company_id varchar(6),
+                organization text,
+                address text
+            );
+            """
+        )
+        cur.executemany(
+            "INSERT INTO oui (company_id, organization, address) VALUES (?, ?, ?)",
+            rows,
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
-    lines = []
 
-    ouidb.each do |(k, v)|
-      vs = v.split "\t"
-      if vs.size < 2
-        vs << '' until vs.size >= 2
-      end
-      lines << FMT % [k, *vs] if v =~ pat
-    end
+def sqlite3_regexp(pattern, string):
+    return haus.regex.search(pattern, string) is not None
 
-    lines if lines.any?
-  end
 
-  def run arguments = []
-    args = parser.parse arguments
-    if @update
-      abort parser.help if args.any?
-      update_db! @ouidb_path, @update
-    elsif args.empty?
-      abort parser.help
-    else
-      args.each { |pattern| puts grep(pattern) }
-    end
-  end
-end
+def execute(args):
+    opts = parse_args(args)
 
-$0 = File.basename(__FILE__) and Ouilookup.new.run ARGV if $0 == __FILE__
+    if opts.update:
+        update_oui_db(opts.db_path, OUI_URL)
+
+    conn = sqlite3.connect(opts.db_path)
+    try:
+        cur = conn.cursor()
+
+        if opts.patterns:
+            conn.create_function("REGEXP", 2, sqlite3_regexp)
+
+            for pat in opts.patterns:
+                if m := (RE_MAC_PREFIX.match(pat)):
+                    rows = cur.execute(
+                        """
+                        SELECT *
+                        FROM oui
+                        WHERE company_id = upper(?)
+                        ORDER BY upper(organization), company_id
+                        """,
+                        ["".join(m.groups())],
+                    ).fetchall()
+                else:
+                    if not haus.regex.search(r"\p{Lu}", pat):
+                        pat = "(?i)" + pat
+
+                    sql = "SELECT * FROM oui WHERE organization REGEXP ?"
+                    params = [pat]
+                    if opts.all_fields:
+                        sql += " OR address REGEXP ?"
+                        params.append(pat)
+                    sql += " ORDER BY upper(organization), company_id"
+
+                    rows = cur.execute(sql, params).fetchall()
+
+        else:
+            rows = cur.execute(
+                "SELECT * FROM oui ORDER BY upper(organization), company_id"
+            ).fetchall()
+
+        for id, org, addr in rows:
+            print(f"{id}\t{org}\t{addr}")
+
+    finally:
+        conn.close()
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

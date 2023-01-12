@@ -1,42 +1,57 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'shellwords'
+"""
+cryptsetup luksOpen + mount
+"""
 
-def sh *argv
-  warn argv.shelljoin
-  system *argv
-end
+import os
+import shlex
+import sys
+from argparse import ArgumentParser
 
-options = { :mountoptions => ['noatime', 'X-mount.mkdir=0700'], :mount => true }
+import haus
 
-parser = OptionParser.new do |opt|
-  opt.banner = "USAGE: csmount [options] device mountpoint\n\nOptions:\n"
-  opt.on('-h', '--header PATH') { |arg| options[:header] = File.expand_path arg }
-  opt.on('-k', '--key-file PATH') { |arg| options[:keyfile] = File.expand_path arg }
-  opt.on('-n', '--no-mount') { options[:mount] = false }
-  opt.on('-o', '--mount-options OPTS') { |arg| options[:mountoptions].concat arg.shellsplit }
-  opt.on('-O', '--cryptsetup-options OPTS') { |arg| options[:cryptsetupoptions] = arg.shellsplit }
-end
 
-args = parser.parse ARGV
-abort parser.help if args.size != 2
-device, mountpoint = args
-dm_name = File.basename File.expand_path(mountpoint)
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__, add_help=False)
+    parser.add_argument("-h", "--header")
+    parser.add_argument("-k", "--key-file")
+    parser.add_argument("-n", "--no-mount", action="store_true")
+    parser.add_argument("-o", "--mount-options", metavar="OPTS", default="")
+    parser.add_argument("-O", "--cryptsetup-options", metavar="OPTS", default="")
+    parser.add_argument("--help", action="help")
+    parser.add_argument("device", type=os.path.normpath)
+    parser.add_argument("mountpoint", type=os.path.normpath)
+    return parser.parse_args(args)
 
-cscmd = ['cryptsetup']
-cscmd.concat ['--header', options[:header]]    if options[:header]
-cscmd.concat ['--key-file', options[:keyfile]] if options[:keyfile]
-cscmd.concat options[:cryptsetupoptions]       if options[:cryptsetupoptions]
-cscmd.concat ['luksOpen', device, dm_name]
 
-if sh *cscmd and options[:mount]
-  sh 'mount', '-o', options[:mountoptions].join(','), "/dev/mapper/#{dm_name}", mountpoint
-end
+def execute(args):
+    opts = parse_args(args)
+    dm_name = os.path.basename(os.path.abspath(opts.mountpoint))
+    cmd = ["cryptsetup"]
+    if opts.header:
+        cmd.extend(["--header", opts.header])
+    if opts.key_file:
+        cmd.extend(["--key-file", opts.key_file])
+    if opts.cryptsetup_options:
+        cmd.extend(shlex.split(opts.cryptsetup_options))
+    cmd.extend(["luksOpen", "--", opts.device, dm_name])
 
-exit $?.exitstatus
+    if haus.run(cmd).returncode != 0:
+        return 1
+
+    if opts.no_mount:
+        return 0
+
+    mountopts = ",".join(shlex.split(opts.mount_options))
+    return haus.run(
+        ["mount", "-o", mountopts, "--", f"/dev/mapper/{dm_name}", opts.mountpoint]
+    )
+
+
+if __name__ == "__main__":
+    execute(sys.argv[1:])

@@ -1,14 +1,52 @@
+snippet APP "Command line application template" b
+#!/usr/bin/env python
+#
+# Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+$0
+"""
+
+from argparse import ArgumentParser
+import sys
+
+
+def parse_args(args):
+	parser = ArgumentParser(description=__doc__)
+	return parser.parse_args(args)
+
+
+def execute(args):
+	opts = parse_args(args)
+
+
+if __name__ == "__main__":
+	sys.exit(execute(sys.argv[1:]))
+endsnippet
+
 snippet #! "#!" w
 #!/usr/bin/env python
 endsnippet
 
 snippet def "def" w
-def $1(${2:self}):
+def $1($2):
+	$0
+endsnippet
+
+snippet defs "def (self)" w
+def $1(self${2}):
 	$0
 endsnippet
 
 snippet for "for" w
 for $1 in $2:
+	$0
+endsnippet
+
+snippet wh "while" w
+while $1:
 	$0
 endsnippet
 
@@ -24,6 +62,10 @@ snippet pr "print" w
 print($0)
 endsnippet
 
+snippet warn "print(..., file=sys.stderr)" w
+print($0, file=sys.stderr)
+endsnippet
+
 snippet en "enumerate" w
 enumerate($0)
 endsnippet
@@ -33,22 +75,261 @@ if $1:
 	$0
 endsnippet
 
-snippet N "None" w
+snippet el "else" w
+else:
+	$0
+endsnippet
+
+snippet eli "elif" w
+elif $1:
+	$0
+endsnippet
+
+snippet n "None" w
 None
 endsnippet
 
-snippet T "True" w
+snippet t "True" w
 True
 endsnippet
 
-snippet F "False" w
-F
+snippet f "False" w
+False
 endsnippet
 
 snippet r "return" w
-return
+return $0
 endsnippet
 
-snippet im "import" w
+snippet im "import" b
 import $0
+endsnippet
+
+snippet fr "fr" b
+from $1 import $0
+endsnippet
+
+snippet _d "__doc__" w
+__doc__
+endsnippet
+
+snippet _n "__name__" w
+__name__
+endsnippet
+
+snippet _m "__main__" w
+__main__
+endsnippet
+
+snippet _f "__file__" w
+__file__
+endsnippet
+
+snippet arg "parser.add_argument" w
+parser.add_argument($0)
+endsnippet
+
+snippet argt "parser.add_argument(action='store_true')" w
+parser.add_argument($1, action="store_true"$0)
+endsnippet
+
+snippet setd "parser.set_defaults" w
+parser.set_defaults($0)
+endsnippet
+
+snippet doc "triple quoted string" w
+"""
+$0
+"""
+endsnippet
+
+snippet w "with" w
+with $1 as $2:$0
+endsnippet
+
+snippet try "try:" w
+try:
+	$0
+endsnippet
+
+snippet exc "except:" w
+except$1:
+	$0
+endsnippet
+
+snippet fin "finally:" w
+finally:
+	$0
+endsnippet
+
+snippet osp "osp" w
+os.path.
+endsnippet
+
+snippet bas "os.path.basename" w
+os.path.basename($0)
+endsnippet
+
+snippet dir "os.path.dirname" w
+os.path.dirname($0)
+endsnippet
+
+snippet abs "os.path.abspath" w
+os.path.abspath($0)
+endsnippet
+
+snippet nor "os.path.normpath" w
+os.path.normpath($0)
+endsnippet
+
+snippet rp "os.path.realpath" w
+os.path.realpath($0)
+endsnippet
+
+snippet pj "os.path.join" w
+os.path.join($0)
+endsnippet
+
+snippet M "match" w
+match $1:
+	$0
+	case _:
+endsnippet
+
+snippet case "case" w
+case $1:
+	$0
+endsnippet
+
+snippet deb "pdb" w
+breakpoint()
+endsnippet
+
+snippet sub "subprocess" w
+subprocess.
+endsnippet
+
+snippet run "subprocess.run()" w
+subprocess.run($0)
+endsnippet
+
+snippet rai "raise" w
+raise ${1:RuntimeError($2)}
+endsnippet
+
+snippet rec "re.compile" w
+re.compile($0)
+endsnippet
+
+snippet rem "re.match" w
+re.match($0)
+endsnippet
+
+snippet res "re.search" w
+re.search($0)
+endsnippet
+
+snippet refm "re.fullmatch" w
+re.fullmatch($0)
+endsnippet
+
+snippet l "lambda" w
+lambda $1: $0
+endsnippet
+
+snippet li "list" w
+list($0)
+endsnippet
+
+snippet m "math" w
+math.
+endsnippet
+
+snippet cl "class" w
+class $1:
+	$0
+endsnippet
+
+snippet datacl "dataclass" w
+@dataclasses.dataclass
+class $1:
+	$0
+endsnippet
+
+snippet nt "namedtuple" b
+class $1(NamedTuple):
+	$0
+endsnippet
+
+snippet enum "enum" w
+${1} = enum.Enum("$1", ($0))
+endsnippet
+
+snippet ini "__init__" w
+def __init__($1):
+	$0
+endsnippet
+
+snippet testcl "class ... unittest.TestCase" w
+class $1(unittest.TestCase):
+	$0
+endsnippet
+
+snippet test "test" w
+def test_$1(self):
+	tests = [
+		$0
+	]
+endsnippet
+
+snippet ase "assertEqual" w
+self.assertEqual($0)
+endsnippet
+
+snippet asr "assertRegex" w
+self.assertRegex($0)
+endsnippet
+
+snippet asra "assertRaises" w
+self.assertRaises($0)
+endsnippet
+
+snippet join "join" w
+"$1".join($0)
+endsnippet
+
+snippet ap "append" w
+append($0)
+endsnippet
+
+snippet apl "appendleft" w
+appendleft($0)
+endsnippet
+
+snippet ex "extend" w
+extend($0)
+endsnippet
+
+snippet gl "glob" w
+glob.glob($0)
+endsnippet
+
+snippet thr "threading.Thread" w
+threading.Thread($0)
+endsnippet
+
+snippet thrl "threading.Lock" w
+threading.Lock()
+endsnippet
+
+snippet urlop "urllib.request.urlopen" w
+request.urlopen($0)
+endsnippet
+
+snippet O "Optional[]" w
+Optional[$0]
+endsnippet
+
+snippet S "Sequence[]" w
+Sequence[$0]
 endsnippet

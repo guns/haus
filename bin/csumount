@@ -1,27 +1,53 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'shellwords'
+"""
+umount + cryptsetup luksClose
+"""
 
-abort 'USAGE: csumount mountpoint' if ARGV.empty?
+import os
+import subprocess
+import sys
+from argparse import ArgumentParser
 
-def sh *argv
-  warn argv.shelljoin
-  system *argv
-end
+import haus
 
-ARGV.each do |mtpt|
-  dm_name = File.basename File.expand_path(mtpt)
 
-  if sh 'umount', mtpt
-    sh 'cryptsetup', 'luksClose', dm_name
-  end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "mountpoints", nargs="+", metavar="mountpoint", type=os.path.normpath
+    )
+    return parser.parse_args(args)
 
-  break if $?.exitstatus != 0
-end
 
-exit $?.exitstatus
+def build_mounts_dict():
+    mounts = {}
+    out = subprocess.run(
+        ["findmnt", "--raw", "--noheadings"], capture_output=True, text=True
+    ).stdout
+
+    for line in out.splitlines():
+        target, source, _ = line.split(maxsplit=2)
+        mounts[target] = source
+
+    return mounts
+
+
+def execute(args):
+    opts = parse_args(args)
+    mounts = build_mounts_dict()
+
+    for mtpt in opts.mountpoints:
+        mtpt = os.path.abspath(mtpt)
+        haus.run(["umount", "--", mtpt])
+        device = mounts.get(mtpt) or os.path.basename(mtpt)
+        if haus.run(["cryptsetup", "luksClose", "--", device]).returncode != 0:
+            return 1
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

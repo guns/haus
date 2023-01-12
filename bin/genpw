@@ -1,77 +1,199 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2010-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2010-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'nerv/util/password'
+"""
+Generate random passwords.
+"""
 
-class Genpw
-  DEFAULTS = {
-    :chars => nil,
-    :qrshow => false,
-    :source => nil
-  }
+import inspect
+import io
+import subprocess
+import sys
+import unittest
+from argparse import ArgumentParser
+from fnmatch import fnmatch
+from itertools import islice
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+import haus
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Generate a random string of given length(s).
+ASCII = [chr(x) for x in range(0x21, 0x7F)]  # Printable non-whitespace characters
+ALPHA = [x for x in ASCII if fnmatch(x, "[0-9A-Za-z]")]
+DIGIT = [chr(x) for x in range(ord("0"), ord("9") + 1)]
+PASSWORD_LENGTH = 60
 
-        Usage: #{File.basename __FILE__} [options] length ...
 
-        Options:
-      BANNER
+def open_file_arg(arg):
+    match arg:
+        case None:
+            return open("/dev/urandom", "rb")
+        case "-":
+            return sys.stdin.buffer
+        case _:
+            return open(arg, "rb")
 
-      opt.on '-a', '--alpha', 'Alphanumeric characters only' do
-        @chars = NERV::Util::Password::ALPHA
-      end
 
-      opt.on '-d', '--digits', 'Numeric digits only' do
-        @chars = NERV::Util::Password::DIGIT
-      end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.set_defaults(chars=ASCII)
+    parser.add_argument(
+        "-a",
+        "--alpha",
+        dest="chars",
+        action="store_const",
+        const=ALPHA,
+        help="[a-zA-Z0-9]",
+    )
+    parser.add_argument(
+        "-d", "--digit", dest="chars", action="store_const", const=DIGIT, help="[0-9]"
+    )
+    parser.add_argument(
+        "-u",
+        "--utf8",
+        dest="chars",
+        metavar="REGEX",
+        type=get_utf8_chars,
+        help="UTF-8 characters matching REGEX",
+    )
+    parser.add_argument("-n", "--num", help="Generate NUM passwords", default=1)
+    parser.add_argument(
+        "-f",
+        "--file",
+        help="Entropy source file (pass '-' for stdin); Default: /dev/urandom",
+    )
+    parser.add_argument(
+        "-q", "--qrshow", action="store_true", help="Display passwords with qrshow"
+    )
+    parser.add_argument("--test", help="Run unit tests and exit", action="store_true")
+    parser.add_argument(
+        "lengths",
+        nargs="*",
+        metavar="length",
+        default=[PASSWORD_LENGTH],
+        type=int,
+        help=f"Default: {PASSWORD_LENGTH}",
+    )
+    return parser.parse_args(args)
 
-      opt.on '-u', '--utf8 REGEXP', Regexp, 'UTF-8 encoded Unicode characters matching REGEXP' do |arg|
-        @chars = utf8_chars.grep arg
-      end
 
-      opt.on '-f', '--file PATH', 'Entropy source file; - for stdin [DEFAULT: /dev/urandom]' do |arg|
-        @source = arg == '-' ? $stdin : File.expand_path(arg)
-      end
+def get_utf8_chars(pattern=None):
+    if pattern:
+        pattern = haus.regex.compile(pattern)
 
-      opt.on '-q', '--qrshow', 'Display password with qrshow' do
-        @qrshow = true
-      end
+    chars = []
 
-      opt.on '-r', '--random', 'Read characters from /dev/random' do
-        @source = '/dev/random'
-      end
-    end
-  end
+    for n in range(0x30000):
+        try:
+            ch = chr(n)
+            if ch.encode("utf-8"):
+                if pattern and not pattern.search(ch):
+                    continue
 
-  def utf8_chars
-    @utf8_chars ||= (0x0..0x2ffff).reduce([]) { |v, n|
-      c = [n].pack('U')
-      c.valid_encoding? ? v << c : v
-    }
-  end
+                chars.append(ch)
+        except UnicodeEncodeError:
+            pass
 
-  def run arguments = []
-    args = parser.parse arguments
-    args = [64] if args.empty?
-    raise 'Character set is empty!' if @chars and @chars.empty?
-    args.each do |len|
-      pw = NERV::Util::Password.password(len.to_i, :chars => @chars, :source => @source)
-      puts pw
-      IO.popen('qrshow', 'w') { |io| io.write(pw) } if @qrshow
-    end
-  end
-end
+    return chars
 
-$0 = File.basename(__FILE__) and Genpw.new.run ARGV if __FILE__ == $0
+
+def iterbits(byte_reader, bitlen=8):
+    buf = 0
+    size = 0
+
+    while True:
+        while size < bitlen:
+            byte = byte_reader.read(1)
+            match len(byte):
+                case 0:
+                    return
+                case 1:
+                    pass
+                case _:
+                    raise ValueError(f"Expected byte, received {type(byte)}: {byte}")
+            buf = (buf << 8) | int.from_bytes(byte, sys.byteorder)
+            size += 8
+
+        size -= bitlen
+        yield buf >> size
+        buf &= ~(~0 << size)
+
+
+def generate_password(length, chars, byte_reader):
+    charslen = len(chars)
+    buf = []
+    index = iterbits(byte_reader, charslen.bit_length())
+
+    while len(buf) < length:
+        i = next(index)
+        if i >= charslen:
+            continue
+        buf.append(chars[i])
+
+    return "".join(buf)
+
+
+def execute(args):
+    opts = parse_args(args)
+
+    if opts.test:
+        unittest.main(argv=[__file__])
+        return
+
+    if not opts.chars:
+        print("Character set is empty!", file=sys.stderr)
+        return 1
+
+    with open_file_arg(opts.file) as byte_reader:
+        for length in opts.lengths:
+            password = generate_password(length, opts.chars, byte_reader)
+            print(password)
+            if opts.qrshow:
+                subprocess.run(["qrshow"], input=password.encode())
+
+
+class _TestCase(unittest.TestCase):
+    def test_iterbits(self):
+        tests = [
+            (([1, 2, 3], 8), 0, []),
+            (([1, 2, 3], 8), 3, [1, 2, 3]),
+            (([1, 2, 3], 8), 2, [1, 2]),
+            (([1, 2, 3], 8), 4, [1, 2, 3]),
+            (([0xF0, 0x70], 4), 4, [0xF, 0, 0x7, 0]),
+            (([0b11001000, 0b00101110], 3), 10, [0b110, 0b010, 0b000, 0b010, 0b111]),
+            (
+                ([0b11001000, 0b00101110, 0b11111001], 10),
+                10,
+                [0b1100100000, 0b1011101111],
+            ),
+        ]
+
+        for (barray, bitlen), n, expected in tests:
+            byte_reader = io.BytesIO(bytes(barray))
+            self.assertEqual(list(islice(iterbits(byte_reader, bitlen), n)), expected)
+
+    def test_generate_password(self):
+        tests = [
+            ((6, ["a", "b", "c"], [0b00011011, 0b11100100]), "abccba"),
+            ((7, ["a", "b", "c"], [0b00011011, 0b11100100]), StopIteration),
+            (
+                # ceil(log2(len(ASCII))) == 7
+                (3, ASCII, [0b11000110, 0b01001101, 0b10010100, 0b01100101]),
+                "4Sg",
+            ),
+        ]
+
+        for ((length, chars, barray), expected) in tests:
+            bytesrc = io.BytesIO(bytes(barray))
+
+            if inspect.isclass(expected):
+                self.assertRaises(
+                    expected, lambda: generate_password(length, chars, bytesrc)
+                )
+            else:
+                self.assertEqual(generate_password(length, chars, bytesrc), expected)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

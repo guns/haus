@@ -1,45 +1,64 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2016-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2016-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'uri'
-require 'fileutils'
-require 'optparse'
+"""
+Add a trust anchor to the system certificate store from a domain or URL.
+"""
 
-TRUST_ANCHORS_DIR = '/etc/ca-certificates/trust-source/anchors'
+import os
+import sys
+from argparse import ArgumentParser
+from pathlib import Path
+from urllib.parse import urlparse
 
-dir = TRUST_ANCHORS_DIR
+import haus
 
-OptionParser.new nil, 20 do |opt|
-  opt.banner = <<~BANNER
-    Usage: #{File.basename __FILE__} [options]
+TRUST_ANCHORS_DIR = "/etc/ca-certificates/trust-source/anchors"
 
-    Options:
-  BANNER
 
-  opt.on '-d', '--dir DIR', "Default: #{TRUST_ANCHORS_DIR}" do |arg|
-    dir = File.expand_path arg
-  end
-end.parse!
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-d",
+        "--dir",
+        action="store",
+        default=TRUST_ANCHORS_DIR,
+        type=os.path.normpath,
+        help=f"default: {TRUST_ANCHORS_DIR}",
+    )
+    parser.add_argument("domain_or_url")
+    return parser.parse_args(args)
 
-abort if ARGV.size != 1
 
-domain = URI.parse(ARGV[0]).host || ARGV[0]
-cert = File.join dir, "#{domain}.crt"
+def is_certfile(path):
+    return (
+        os.path.exists(path) and Path(path).read_text().find("BEGIN CERTIFICATE") >= 0
+    )
 
-system 'cert', 'add', '--certfile', cert, domain
-system 'vim', '-O', cert, "#{ENV['cdhaus']}/share/ca-certificates/mozilla.crt"
 
-if File.read(cert).index 'BEGIN CERTIFICATE'
-  if dir == TRUST_ANCHORS_DIR
-    system 'update-ca-trust'
-    puts 'Updated CA trust'
-  end
-else
-  FileUtils.rm_f cert
-  puts "Removed #{cert}"
-  abort
-end
+def execute(args):
+    opts = parse_args(args)
+    domain = urlparse(opts.domain_or_url).hostname or opts.domain_or_url
+    cert = os.path.join(opts.dir, f"{domain}.crt")
+    haus_certs = f"{os.environ.get('cdhaus')}/share/ca-certificates/mozilla.crt"
+
+    haus.run(["cert", "add", "--certfile", cert, "--", domain], check=True)
+    haus.run(["vim", "-O", "--", cert, haus_certs], check=True)
+
+    if is_certfile(cert):
+        if os.path.abspath(opts.dir) == TRUST_ANCHORS_DIR:
+            haus.run("update-ca-trust", check=True)
+            print("Updated CA trust\n", file=sys.stderr)
+
+        return
+
+    os.remove(cert)
+    print(f"Removed {cert}", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

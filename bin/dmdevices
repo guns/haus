@@ -1,13 +1,32 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-Dir['/sys/block/*/dm'].each do |dm|
-  puts '%s: %s' % [
-    File.read("#{dm}/name").chomp,
-    File.read("#{dm}/suspended").chomp == '1' ? 'suspended' : 'active'
-  ]
-end
+"""
+Print device-mapper device statuses.
+"""
+
+import glob
+import os
+import sys
+from argparse import ArgumentParser
+from pathlib import Path
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    return parser.parse_args(args)
+
+
+def execute(args):
+    _ = parse_args(args)
+    for dm in glob.glob("/sys/block/*/dm"):
+        name = Path(os.path.join(dm, "name")).read_text().rstrip()
+        susp = Path(os.path.join(dm, "suspended")).read_text().rstrip()
+        print(f"{name}: {'suspended' if susp == '1' else 'active'}")
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

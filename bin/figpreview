@@ -1,130 +1,145 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2011-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'digest/md5'
-require 'shellwords'
+"""
+Preview text with all available figlet fonts.
+"""
 
-class Figpreview
-  DEFAULTS = {
-    :width => 1000,
-    :kerning => 0,
-    :message => nil,
-    :figlet => true,
-    :toilet => true,
-  }
+import hashlib
+import os
+import random
+import re
+import subprocess
+import sys
+from argparse import ArgumentParser
+from glob import glob
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+KERNING = {-1: "-o", 0: "-S", 1: "-s", 2: "-k", 3: "-W"}
 
-  def parser
-    @parser ||= OptionParser.new nil, 24 do |opt|
-      opt.banner = <<~BANNER
-        Preview all figlet fonts on the system.
 
-        Usage: #{File.basename __FILE__} [options] [message]
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.set_defaults(kerning=0, width=1000, ext=".[ft]lf")
+    parser.add_argument(
+        "-k",
+        "--kerning",
+        help=f"Set letter spacing. Default: {parser.get_default('kerning')}",
+        type=int,
+        choices=KERNING.keys(),
+    )
+    parser.add_argument(
+        "-w",
+        "--width",
+        help=f"Wrapping width. Default: {parser.get_default('width')}",
+        type=int,
+    )
+    parser.add_argument("-p", "--pattern", type=re.compile)
+    parser.add_argument("-l", "--list", action="store_true")
+    parser.add_argument("-r", "--random", action="store_true")
+    parser.add_argument(
+        "-F", "--figlet-only", dest="ext", const=".flf", action="store_const"
+    )
+    parser.add_argument(
+        "-T", "--toilet-only", dest="ext", const=".tlf", action="store_const"
+    )
+    parser.add_argument("strings", metavar="string", nargs="*")
+    return parser.parse_args(args)
 
-        Options:
-      BANNER
 
-      opt.on '-k', '--kerning NUMBER', Integer, 'Set letter spacing; value from 0..3; 0 by default' do |arg|
-        @kerning = arg
-      end
+def hashfont(path):
+    h = hashlib.sha1()
+    with open(path, "rb") as f:
+        match os.path.splitext(path):
+            case _, ".flf":
+                f.readline()
+            case _, ".tlf":
+                pass
+            case _:
+                raise ValueError(f"Unknown font extension {path}")
+        h.update(f.read())
+    return h.digest()
 
-      opt.on '-w', '--width NUMBER', Integer, "Wrapping width; #{@width} by default" do |arg|
-        @width = arg
-      end
 
-      opt.on '-l', '--list', 'List all unique figlet fonts' do
-        puts fonts
-        exit
-      end
+def find_figlet_fonts(ext, pattern=None):
+    basedirs = ["/usr/share", "/usr/local/share", os.path.expanduser("~/.local/share")]
+    fonts = {}
 
-      opt.on '-r', '--random', 'Pick a single random font' do
-        @random = true
-      end
+    for base in basedirs:
+        for font in glob(f"{base}/figlet/**/*{ext}"):
+            if pattern:
+                if not pattern.search(font):
+                    continue
+            fonts[hashfont(font)] = font
 
-      opt.on '-F', '--figlet-only', 'Only preview .flf fonts' do
-        @figlet = true
-        @toilet = false
-      end
+    paths = list(fonts.values())
+    paths.sort()
+    return paths
 
-      opt.on '-T', '--toilet-only', 'Only preview .tlf fonts' do
-        @figlet = false
-        @toilet = true
-      end
-    end
-  end
 
-  def kerning
-    case @kerning
-    when -1 then '-o'
-    when 0  then '-S'
-    when 1  then '-s'
-    when 2  then '-k'
-    when 3  then '-W'
-    else raise ArgumentError, 'kerning must be within -1..3'
-    end
-  end
+def format(font, msg, kerning, width):
+    basename = os.path.basename(font)
+    fontname, ext = os.path.splitext(basename)
 
-  def fontdirs
-    %w[/usr/share /usr/local/share ~/.local/share].map { |d| File.expand_path d }
-  end
+    if not msg:
+        msg = fontname
 
-  def fonts
-    @fonts ||= begin
-      table = {}
+    match ext:
+        case ".flf":
+            cmd = [
+                "figlet",
+                KERNING[kerning],
+                "-l",
+                "-w",
+                str(width),
+                "-f",
+                font,
+                "--",
+                msg,
+            ]
+        case ".tlf":
+            cmd = [
+                "toilet",
+                KERNING[kerning],
+                "-w",
+                str(width),
+                "-d",
+                os.path.dirname(font),
+                "-f",
+                basename,
+                "--",
+                msg,
+            ]
+        case _:
+            raise ValueError(f"Unknown font type: {basename}")
 
-      ext = case
-      when @figlet && @toilet then '[ft]lf'
-      when @figlet            then 'flf'
-      when @toilet            then 'tlf'
-      end
+    try:
+        buf = subprocess.run(cmd, capture_output=True, text=True).stdout
+    except UnicodeDecodeError as err:
+        print(f"UnicodeDecodeError: {err}", file=sys.stderr)
+        return ""
 
-      fontdirs.each do |base|
-        Dir["#{base}/figlet/{,fonts/}*.#{ext}"].each do |font|
-          case File.extname(font)
-          when '.flf'
-            table.store Digest::MD5.hexdigest(File.read(font).lines.drop(1).join), font
-          when '.tlf'
-            table.store Digest::MD5.hexdigest(File.read(font)), font
-          end
-        end
-      end
+    return f"\n{basename}\n\n{buf}\n"
 
-      table.values.sort_by { |f| File.basename f }
-    end
-  end
 
-  def generate font
-    msg = @message || File.basename(font, File.extname(font))
-    case File.extname(font)
-    when '.flf'
-      cmd = ['figlet', kerning, '-l', '-w', @width.to_s, '-f', font, msg]
-    when '.tlf'
-      cmd = ['toilet', kerning, '-w', @width.to_s, '-d', File.dirname(font), '-f', File.basename(font), msg]
-    end
-    "\n%s\n\n" % %x(#{cmd.shelljoin})
-  end
+def execute(args):
+    opts = parse_args(args)
+    fonts = find_figlet_fonts(opts.ext, opts.pattern)
+    msg = " ".join(opts.strings)
 
-  def to_s
-    fonts.map { |font| "#{File.basename font}:\n#{generate font}" }.join "\n"
-  end
+    if opts.random:
+        fonts = random.sample(fonts, 1)
 
-  def inspect
-    "figlet #{kerning} -l -w #{@width}"
-  end
+    if opts.list:
+        for font in fonts:
+            print(font)
+        return
 
-  def run arguments = []
-    args = parser.parse arguments
-    @message = args.join ' ' unless args.empty?
-    puts @random ? generate(fonts.shuffle.last) : to_s
-  end
-end
+    for font in fonts:
+        print(format(font, msg, opts.kerning, opts.width))
 
-$0 = File.basename(__FILE__) and Figpreview.new.run ARGV if $0 == __FILE__
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

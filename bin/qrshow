@@ -1,24 +1,42 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env python
+#
+# Copyright (c) 2018-2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-case ARGV.size
-when 0
-  input = $stdin.read
-when 1
-  input = File.read ARGV[0]
-else
-  abort "USAGE: #{File.basename __FILE__} [path]"
-end
+"""
+Display bytes in a QR code.
+"""
 
-progname = File.basename __FILE__
+import os
+import sys
+from argparse import ArgumentParser
+from tempfile import NamedTemporaryFile
 
-require 'tempfile'
+import haus
 
-Tempfile.open progname do |tmp|
-  tmp.close
 
-  IO.popen ['qrencode', '-o', tmp.path], 'w' do |io|
-    io.write input
-  end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("path", nargs="?", type=os.path.normpath)
+    return parser.parse_args(args)
 
-  system 'sxiv', '-g', '200x200', '-N', progname, tmp.path
-end
+
+def execute(args):
+    opts = parse_args(args)
+    inputfile = sys.stdin
+
+    try:
+        if opts.path:
+            inputfile = open(opts.path)
+
+        with NamedTemporaryFile() as tmp:
+            haus.run(["qrencode", "-o", tmp.name], stdin=inputfile, check=True)
+            sxiv = ["sxiv", "-g", "200x200", "-N", os.path.basename(__file__)]
+            haus.run([*sxiv, "--", tmp.name], check=True)
+    finally:
+        inputfile.close()
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

@@ -1,58 +1,97 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env python
+#
+# Copyright (c) 2022-2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-SECTION_HEADER = /\A\s*\[/
+"""
+Sort sections within INI files. Paragraphs within sections are independently
+sorted and all newlines are preserved.
+"""
 
-def each_paragraph arr, startidx, endidx
-  pidx = nil
-  paragraph = []
+import os
+import re
+import sys
+from argparse import ArgumentParser
 
-  (startidx...endidx).each do |i|
-    line = arr[i]
+SECTION_HEADER = re.compile(rb"\A\s*\[")
+BLANK_LINE = re.compile(rb"\A\s*\Z")
 
-    if line.match?(/\A\s*\z/)
-      if paragraph.size > 0
-        yield(paragraph, pidx)
-        paragraph = []
-      end
-    else
-      pidx = i if paragraph.empty?
-      paragraph << line
-    end
-  end
 
-  yield(paragraph, pidx) if paragraph.size > 0
-  nil
-end
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-i", "--in-place", action="store_true")
+    parser.add_argument("paths", nargs="*", type=os.path.normpath, metavar="ini_file")
+    return parser.parse_args(args)
 
-def sort_ini_paragraphs lines
-  lines = lines.dup
-  i = 0
 
-  while i < lines.size
-    if lines[i].match?(SECTION_HEADER)
-      j = lines[i+1..].find_index { |l| l.match?(SECTION_HEADER) }
-      j = j ? j+i+1 : lines.size
+def iter_paragraphs(lines, start, stop):
+    pidx = None
+    paragraph = []
 
-      each_paragraph(lines, i+1, j) do |p, pidx|
-        lines[pidx, p.size] = p.sort
-      end
+    for i in range(start, stop):
+        line = lines[i]
 
-      i = j
-    else
-      i += 1
-    end
-  end
+        if BLANK_LINE.search(line):
+            if len(paragraph) > 0:
+                yield paragraph, pidx
+                paragraph = []
+        else:
+            if len(paragraph) == 0:
+                pidx = i
+            paragraph.append(line)
 
-  lines
-end
+    if len(paragraph) > 0:
+        yield paragraph, pidx
 
-ARGV.each do |path|
-  File.open(path, 'r+') do |f|
-    lines = f.readlines
-    f.truncate(0)
-    f.rewind
-    f.puts(sort_ini_paragraphs(lines))
-  end
-end
 
-puts sort_ini_paragraphs($stdin.readlines) if ARGV.empty?
+def find_next_section(lines, start):
+    for i in range(start, len(lines)):
+        if SECTION_HEADER.search(lines[i]):
+            return i
+
+
+def sort_ini_sections(lines):
+    header_idx = 0
+
+    while header_idx < len(lines):
+        if SECTION_HEADER.search(lines[header_idx]):
+            next_header_idx = find_next_section(lines, header_idx + 1)
+            if next_header_idx is None:
+                next_header_idx = len(lines)
+
+            for para, pidx in iter_paragraphs(lines, header_idx + 1, next_header_idx):
+                para.sort()
+                lines[pidx : pidx + len(para)] = para
+
+            header_idx = next_header_idx
+        else:
+            header_idx += 1
+
+
+def sort_ini_file(file, in_place=False):
+    lines = file.readlines()
+    sort_ini_sections(lines)
+
+    if in_place:
+        file.seek(0)
+        file.truncate()
+        file.write(b"".join(lines))
+    else:
+        sys.stdout.buffer.write(b"".join(lines))
+
+
+def execute(args):
+    opts = parse_args(args)
+    mode = "rb+" if opts.in_place else "rb"
+
+    if opts.paths:
+        for path in opts.paths:
+            with open(path, mode) as f:
+                sort_ini_file(f, opts.in_place)
+    else:
+        sort_ini_file(sys.stdin.buffer)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

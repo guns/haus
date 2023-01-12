@@ -1,13 +1,45 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-if ARGV.any?
-  require 'ipaddr'
-  puts ARGV.map { |a| r = IPAddr.new(a).to_range; "#{r.first} - #{r.last}" }
-else
-  puts %x(ip route list scope link).lines.map { |l| l.split[0] }
-end
+"""
+Dump networks in CIDR notation
+"""
+
+import ipaddress
+import sys
+from argparse import ArgumentParser
+
+import haus
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("ip_addresses", nargs="*", metavar="ip_address")
+    return parser.parse_args(args)
+
+
+def print_address(addr):
+    net = ipaddress.ip_network(addr, strict=False)
+    print(f"{net}: {net[0]} - {net[-1]}")
+
+
+def execute(args):
+    opts = parse_args(args)
+    addrs = opts.ip_addresses
+
+    if not addrs:
+        lines = haus.run(
+            ["ip", "route", "list", "scope", "link"], capture_output=True, text=True
+        ).stdout.splitlines()
+        for line in lines:
+            addrs.append(line.split(maxsplit=1)[0])
+
+    for addr in addrs:
+        print_address(addr)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
