@@ -200,6 +200,7 @@ task :env do
       { :base => "#{@vim}/vim-git",                 :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-haml",                :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-javascript",          :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/vim-lsp",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/vim-markdown",            :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-monit",               :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/vim-operator-user",       :branch => %w[master],      :files => :pathogen },

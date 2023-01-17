@@ -409,6 +409,75 @@ let g:table_mode_map_prefix = '<LocalLeader>t'
 let g:table_mode_tableize_d_map = '<LocalLeader>T'
 let g:table_mode_corner = '|'
 
+" Plugin: vim-lsp
+let g:lsp_auto_enable = 1
+let g:lsp_use_native_client = 1
+let g:lsp_preview_keep_focus = 1
+let g:lsp_preview_float = 1
+let g:lsp_preview_autoclose = 1
+let g:lsp_preview_doubletap = [function('lsp#ui#vim#output#closepreview')]
+let g:lsp_insert_text_enabled = 0
+let g:lsp_text_edit_enabled = 0
+let g:lsp_completion_documentation_enabled = 1
+let g:lsp_completion_documentation_delay = 0
+let g:lsp_diagnostics_enabled = 0
+let g:lsp_diagnostics_echo_cursor = 0
+" let g:lsp_diagnostics_echo_delay = 500
+let g:lsp_diagnostics_float_cursor = 0
+" let g:lsp_diagnostics_float_delay = 500
+let g:lsp_diagnostics_float_insert_mode_enabled = 0
+let g:lsp_format_sync_timeout = -1
+let g:lsp_diagnostics_highlights_enabled = 0
+let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
+" let g:lsp_diagnostics_highlights_delay = 500
+let g:lsp_diagnostics_signs_enabled = 0
+let g:lsp_diagnostics_signs_insert_mode_enabled = 0
+" let g:lsp_diagnostics_signs_delay = 500
+let g:lsp_diagnostics_signs_priority = 10
+" let g:lsp_diagnostics_signs_priority_map = {}
+let g:lsp_diagnostics_virtual_text_enabled = 0
+let g:lsp_diagnostics_virtual_text_insert_mode_enabled = 0
+let g:lsp_diagnostics_virtual_text_delay = 0
+let g:lsp_diagnostics_virtual_text_prefix = ''
+let g:lsp_diagnostics_virtual_text_align = 'below'
+let g:lsp_diagnostics_virtual_text_padding_left = 1
+let g:lsp_diagnostics_virtual_text_wrap = 'truncate'
+let g:lsp_document_code_action_signs_enabled = 0
+let g:lsp_document_code_action_signs_delay = 0
+let g:lsp_inlay_hints_enabled = 0
+" let g:lsp_inlay_hints_delay = 350
+" let g:lsp_inlay_hints_mode = {}
+let g:lsp_tree_incoming_prefix = '← '
+let g:lsp_use_event_queue = 1
+let g:lsp_max_buffer_size = 1<<20
+let g:lsp_document_highlight_enabled = 0
+" let g:lsp_document_highlight_delay = 350
+" let g:lsp_get_supported_capabilities
+let g:lsp_peek_alignment = 'center'
+let g:lsp_preview_max_width = -1
+let g:lsp_preview_max_height = -1
+let g:lsp_preview_fixup_conceal = 0
+let g:lsp_float_max_width = 120
+let g:lsp_signature_help_enabled = 0
+" let g:lsp_signature_help_delay = 200
+let g:lsp_show_workspace_edits = 0
+let g:lsp_fold_enabled = 1
+let g:lsp_hover_conceal = 0
+let g:lsp_hover_ui = ''
+let g:lsp_ignorecase = 0
+let g:lsp_log_file = ''
+let g:lsp_log_verbose = 1
+let g:lsp_semantic_enabled = 0
+" let g:lsp_semantic_delay = 500
+" let g:lsp_text_document_did_save_delay = -1
+" let g:lsp_snippet_expand = []
+" let g:lsp_completion_resolve_timeout = 200
+" let g:lsp_tagfunc_source_methods = ['definition', 'declaration', 'implementation', 'typeDefinition']
+let g:lsp_show_message_request_enabled = 1
+let g:lsp_work_done_progress_enabled = 0
+" let g:lsp_show_message_log_level = 'warning'
+let g:lsp_untitled_buffer_enabled = 1
+
 """ MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions

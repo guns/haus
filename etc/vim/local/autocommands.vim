@@ -254,8 +254,31 @@ augroup GUNS
 	autocmd BufRead,BufNewFile Dockerfile.*
 		\ setlocal filetype=dockerfile
 
+	" Groovy
 	autocmd FileType groovy
 		\ setlocal expandtab |
 		\ SetWhitespace 2
 
 augroup END
+
+" vim-lsp
+if executable('pylsp')
+	autocmd User lsp_setup call lsp#register_server({
+		\ 'name': 'pylsp',
+		\ 'cmd': {server_info->['pylsp']},
+		\ 'allowlist': ['python'],
+		\ })
+endif
+
+autocmd User lsp_buffer_enabled
+	\ LSPBufferSetup
+
+autocmd User lsp_float_opened
+	\ execute 'noremap <buffer> <silent> <C-c> <Plug>(lsp-preview-close)' |
+	\ execute 'noremap <buffer> <silent> <expr><C-f> lsp#scroll(+8)' |
+	\ execute 'noremap <buffer> <silent> <expr><C-b> lsp#scroll(-8)'
+
+autocmd User lsp_float_closed
+	\ execute 'unmap <buffer> <C-c>' |
+	\ execute 'unmap <buffer> <expr><C-f>' |
+	\ execute 'unmap <buffer> <expr><C-b>'

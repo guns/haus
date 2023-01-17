@@ -619,6 +619,23 @@ function! s:PythonBufferSetup()
 	noremap <buffer> <LocalLeader>l :<C-u>PythonLint<CR>
 endfunction
 
+command! -bar LSPBufferSetup call <SID>LSPBufferSetup()
+function! s:LSPBufferSetup()
+	setlocal omnifunc=lsp#complete
+	if exists('+tagfunc')
+		setlocal tagfunc=lsp#tagfunc
+	endif
+
+	noremap <buffer> gd <Plug>(lsp-definition)
+	noremap <buffer> gs <Plug>(lsp-document-symbol-search)
+	noremap <buffer> gS <Plug>(lsp-workspace-symbol-search)
+	noremap <buffer> <LocalLeader>r <Plug>(lsp-references)
+	noremap <buffer> <LocalLeader>i <Plug>(lsp-implementation)
+	noremap <buffer> <LocalLeader>t <Plug>(lsp-type-definition)
+	noremap <buffer> <LocalLeader>R <Plug>(lsp-rename)
+	noremap <buffer> K <Plug>(lsp-hover)
+endfunction
+
 command! -bar PythonLint call <SID>PythonLint()
 function! s:PythonLint()
 	setlocal autoread
