@@ -316,7 +316,7 @@ fl() { find-wrapper --predicate '-type l'                -- "$@"; }; TCOMP find 
 fL() { find-wrapper --predicate '-xtype l'               -- "$@"; }; TCOMP find fL
 fd() { find-wrapper --predicate '-type d'                -- "$@"; }; TCOMP find fd
 f.() {
-    local f
+    local d
     for d in .*; do
         [[ -d "$d" ]] || continue
         [[ "$d" == . || "$d" == .. ]] && continue
