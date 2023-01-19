@@ -82,6 +82,10 @@ augroup GUNS
 	autocmd FileType ruby
 		\ RubyBufferSetup
 
+	" Python
+	autocmd FileType python
+		\ PythonBufferSetup
+
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl,eruby
 		\ SetWhitespace 2 |

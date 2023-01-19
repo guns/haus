@@ -1,4 +1,3 @@
-bold	orgguide.txt	/*bold*
 dein.vim	orgguide.txt	/*dein.vim*
 g:org_agenda_files	orgguide.txt	/*g:org_agenda_files*
 g:org_aggressive_conceal	orgguide.txt	/*g:org_aggressive_conceal*

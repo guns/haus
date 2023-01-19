@@ -172,6 +172,7 @@ task :env do
       { :base => "#{@vim}/nerdtree",                :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/NrrwRgn",                 :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/pgsql.vim",               :branch => %w[master],      :files => :pathogen },
+      { :base => "#{@vim}/python-syntax",           :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/rainbow_parentheses.vim", :branch => %w[master],      :files => :pathogen },
       { :base => "#{@vim}/refheap.vim",             :branch => %w[master guns], :files => :pathogen },
       { :base => "#{@vim}/regbuf.vim",              :branch => %w[master guns], :files => :pathogen },

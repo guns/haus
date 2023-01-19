@@ -406,6 +406,7 @@ noremap <Leader>fm       :<C-u>setlocal filetype=mail<CR>
 noremap <Leader>fM       :<C-u>setlocal filetype=markdown<CR>
 noremap <Leader>fo       :<C-u>setlocal filetype=org<CR>
 noremap <Leader>fp       :<C-u>setlocal filetype=plain<CR>
+noremap <Leader>fP       :<C-u>setlocal filetype=python<CR>
 noremap <Leader>fr       :<C-u>setlocal filetype=ruby<CR>
 noremap <Leader>fs       :<C-u>setlocal filetype=sh<CR>
 noremap <Leader>fS       :<C-u>setlocal filetype=sql<CR>

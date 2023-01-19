@@ -260,6 +260,9 @@ $if bash
     "\033\007i":    "\C-] irb \n"
     "\033\007I":    "\C-] pry \n"
 
+    # Python
+    "\033\007y":    "\C-] python \n"
+
     # ncdu
     "\033\007d":    "\C-] ncdu \n"
     "\033\007D":    "\C-] ncdu -x \n"

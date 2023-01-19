@@ -55,6 +55,9 @@ unset LESSOPTS
 # Ruby
 export RUBYLIB="$HOME/.local/lib/ruby"
 
+# Python
+export PYTHONPATH="$HOME/.local/lib/python"
+
 # Go
 export GOPATH='/opt/src/go'
 

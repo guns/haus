@@ -225,7 +225,7 @@ function! s:ExecMakeprg(makeprg)
 	let &l:makeprg = makeprg_save
 endfunction
 
-command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %')
+command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %:S')
 command! -nargs=1 -complete=file -bar Yamllint call <SID>ExecMakeprg('yamllintwrapper --format parsable ' . <q-args>)
 
 command! -bar ClangFormat call <SID>ClangFormat(expand('%:p'), 1)
@@ -614,6 +614,19 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
 endfunction
 
+command! -bar PythonBufferSetup call <SID>PythonBufferSetup()
+function! s:PythonBufferSetup()
+	noremap <buffer> <LocalLeader>l :<C-u>PythonLint<CR>
+endfunction
+
+command! -bar PythonLint call <SID>PythonLint()
+function! s:PythonLint()
+	setlocal autoread
+	silent! call <SID>ExecMakeprg('python-lint-wrapper %:S')
+	edit!
+	setlocal autoread<
+endfunction
+
 command! -bar -bang StandardJS call <SID>StandardJS('<bang>')
 function! s:StandardJS(bang)
 	if !executable('standard') | return | endif
@@ -625,7 +638,7 @@ function! s:StandardJS(bang)
 	endif
 
 	setlocal autoread
-	call <SID>ExecMakeprg('standard ' . args . ' %')
+	call <SID>ExecMakeprg('standard ' . args . ' %:S')
 endfunction
 
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()

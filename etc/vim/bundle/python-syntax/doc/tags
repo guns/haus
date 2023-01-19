@@ -1,0 +1,5 @@
+ft-python-syntax	python-syntax.txt	/*ft-python-syntax*
+python-syntax	python-syntax.txt	/*python-syntax*
+python-syntax-configuration	python-syntax.txt	/*python-syntax-configuration*
+python-syntax.txt	python-syntax.txt	/*python-syntax.txt*
+python.vim	python-syntax.txt	/*python.vim*

@@ -141,6 +141,9 @@ let g:readline_has_bash = 1
 let g:ruby_operators = 1
 let g:ruby_indent_assignment_style = 'variable'
 
+" Python
+let g:python_highlight_all = 1
+
 " Vim
 let g:vim_indent_cont = 4
 

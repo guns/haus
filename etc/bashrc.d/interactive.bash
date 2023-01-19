@@ -213,6 +213,7 @@ alias path='__prepend_path__ PATH'
 alias ldpath='__prepend_path__ LD_LIBRARY_PATH'
 alias gopath='__prepend_path__ GOPATH'
 alias rubylib='__prepend_path__ RUBYLIB'
+alias pythonpath='__prepend_path__ PYTHONPATH'
 
 # Toggle xtrace, verbose mode
 setx() {

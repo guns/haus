@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+have() { type "$1" &>/dev/null; }
+
+for path; do
+    [[ -r "$path" ]] || continue
+    have autoimport && autoimport "$path"
+    have autoflake && autoflake --in-place --remove-all-unused-imports "$path"
+    have isort && isort --quiet "$path"
+    have black && black -q "$path"
+    have mypy && mypy --no-error-summary --cache-dir ~/.cache/mypy_cache/ "$path"
+    have flake8 && flake8 --max-line-length=88 --extend-ignore=E203 "$path"
+done
