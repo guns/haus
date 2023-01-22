@@ -1,0 +1,25 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Print netblocks from a domain's TXT records
+"""
+
+from argparse import ArgumentParser
+import sys
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    return parser.parse_args(args)
+
+
+def execute(args):
+    opts = parse_args(args)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
