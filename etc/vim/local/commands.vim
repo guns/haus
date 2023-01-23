@@ -617,6 +617,7 @@ endfunction
 command! -bar PythonBufferSetup call <SID>PythonBufferSetup()
 function! s:PythonBufferSetup()
 	noremap <buffer> <LocalLeader>l :<C-u>PythonLint<CR>
+	noremap <buffer> <LocalLeader>L :<C-u>PythonLint!<CR>
 endfunction
 
 command! -bar LSPBufferSetup call <SID>LSPBufferSetup()
@@ -636,10 +637,14 @@ function! s:LSPBufferSetup()
 	noremap <buffer> K <Plug>(lsp-hover)
 endfunction
 
-command! -bar PythonLint call <SID>PythonLint()
-function! s:PythonLint()
+command! -bar -bang PythonLint call <SID>PythonLint('<bang>')
+function! s:PythonLint(bang)
 	setlocal autoread
-	silent! call <SID>ExecMakeprg('python-lint-wrapper %:S')
+	if empty(a:bang)
+		silent! call <SID>ExecMakeprg('python-lint-wrapper %:S')
+	else
+		silent! call <SID>ExecMakeprg('python-lint-wrapper --strict %:S')
+	endif
 	edit!
 	setlocal autoread<
 endfunction

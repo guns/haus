@@ -1,13 +1,61 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
+#
+# Copyright (c) 2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-have() { type "$1" &>/dev/null; }
+"""
+Format and lint python source files.
+"""
 
-for path; do
-    [[ -r "$path" ]] || continue
-    have autoimport && autoimport "$path"
-    have autoflake && autoflake --in-place --remove-all-unused-imports "$path"
-    have isort && isort --quiet "$path"
-    have black && black -q "$path"
-    have mypy && mypy --no-error-summary --cache-dir ~/.cache/mypy_cache/ "$path"
-    have flake8 && flake8 --max-line-length=88 --extend-ignore=E203 "$path"
-done
+import os
+import subprocess
+import sys
+from argparse import ArgumentParser
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("--strict", action="store_true")
+    parser.add_argument("paths", metavar="path", nargs="+")
+    return parser.parse_args(args)
+
+
+def run(*cmd: str):
+    subprocess.run(cmd, check=True)
+
+
+def lint(path, strict=False):
+    run("autoimport", path)
+    run("autoflake", "--in-place", "--remove-all-unused-imports", path)
+    run("isort", "--quiet", path)
+    run("black", "-q", path)
+    mypy = [
+        "mypy",
+        "--no-error-summary",
+        "--cache-dir",
+        os.path.expanduser("~/.cache/mypy_cache/"),
+    ]
+    if strict:
+        mypy.extend(
+            [
+                "--disallow-untyped-calls",
+                "--disallow-untyped-defs",
+                "--check-untyped-defs",
+                "--disallow-untyped-decorators",
+            ]
+        )
+    run(*mypy, path)
+    run("flake8", "--max-line-length=88", "--extend-ignore=E203", path)
+
+
+def execute(args):
+    opts = parse_args(args)
+
+    for path in opts.paths:
+        if os.path.exists(path):
+            lint(path, opts.strict)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
