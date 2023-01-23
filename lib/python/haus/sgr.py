@@ -72,7 +72,7 @@ def _init() -> None:
             CODES[f"X{n}"] = f"48;5;{n}"
 
 
-def format(msg: str, styles: Sequence[str] = [], file: IO = sys.stdout) -> str:
+def format(msg: str, styles: Sequence[str] = [], file: IO[Any] = sys.stdout) -> str:
     """
     Wrap msg in SGR escape sequences if file is a TTY.
 
@@ -86,7 +86,7 @@ def format(msg: str, styles: Sequence[str] = [], file: IO = sys.stdout) -> str:
 
 
 def print(
-    msg: str, styles: Sequence[str] = [], file: IO = sys.stdout, **kwargs: Any
+    msg: str, styles: Sequence[str] = [], file: IO[Any] = sys.stdout, **kwargs: Any
 ) -> None:
     """
     Print msg to file with SGR escape sequences if file is a TTY.

@@ -9,7 +9,7 @@ import re
 import stat
 import sys
 from enum import Enum
-from typing import IO, Dict, NamedTuple
+from typing import IO, Any, Dict, NamedTuple, Optional
 
 from haus import sgr
 
@@ -44,7 +44,7 @@ class LSColors(NamedTuple):
     exec: str = "01;32"  # This is for files with execute permission
     extensions: Dict[str, str] = {}
 
-    def format(self, path: str, st: os.stat_result, file: IO = sys.stdout) -> str:
+    def format(self, path: str, st: os.stat_result, file: IO[Any] = sys.stdout) -> str:
         ftype = get_ftype(path, st)
         code = getattr(self, ftype.name)
 
@@ -130,7 +130,7 @@ def _parse_bsd_ls_colors(string: str) -> LSColors:
     raise NotImplementedError
 
 
-def get_ftype(path: str, st: os.stat_result) -> FTYPE:
+def get_ftype(path: str, st: Optional[os.stat_result]) -> FTYPE:
     if st is None:
         return FTYPE.missing
 

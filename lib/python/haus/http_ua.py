@@ -20,7 +20,7 @@ SECS_PER_WEEK = 7 * 24 * 60 * 60
 
 class UserAgentsList(NamedTuple):
     time: float
-    data: list
+    data: list[str]
 
     def find(self, pattern: str) -> Optional[str]:
         """
@@ -81,8 +81,12 @@ def get_user_agents_list() -> UserAgentsList:
     return ualist
 
 
-def get_random_user_agent(pattern: Optional[str] = None) -> Optional[str]:
+def get_random_user_agent(pattern: Optional[str] = None) -> str:
     """
     Return a random user agent matching pattern.
+    Raises an exception if no matching user agent is found.
     """
-    return get_user_agents_list().random(pattern)
+    ua = get_user_agents_list().random(pattern)
+    if ua is None:
+        raise RuntimeError(f"Failed to find a User-Agent matching {repr(pattern)}")
+    return ua

@@ -4,7 +4,6 @@
 Scripting helper functions.
 """
 
-import http
 import importlib
 import os
 import shlex
@@ -31,12 +30,12 @@ def run(
     cmd: Sequence[str],
     sgr: Sequence[str] = ["x48", "bold"],
     /,
-    file: IO = sys.stderr,
+    file: IO[Any] = sys.stderr,
     sep: Optional[str] = " ",
     end: Optional[str] = "\n",
     flush: bool = False,
     **kwargs: Any,
-) -> subprocess.CompletedProcess:
+) -> subprocess.CompletedProcess[Any]:
     """
     Print cmd to stderr with sgr codes, then execute subprocess.run(cmd, **kwargs).
     """
@@ -48,7 +47,7 @@ def execvp(
     cmd: Sequence[str],
     sgr: Sequence[str] = ["x48", "bold"],
     /,
-    file: IO = sys.stderr,
+    file: IO[Any] = sys.stderr,
     **kwargs: Any,
 ) -> NoReturn:
     """
@@ -61,7 +60,7 @@ def execvp(
 
 def urlopen(
     url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any
-) -> http.client.HTTPResponse:
+) -> request._UrlopenRet:
     """
     Execute an HTTP request to url with a recent User-Agent header.
     """

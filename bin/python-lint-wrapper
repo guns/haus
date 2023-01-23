@@ -33,16 +33,22 @@ def lint(path, strict=False):
     mypy = [
         "mypy",
         "--no-error-summary",
-        "--cache-dir",
-        os.path.expanduser("~/.cache/mypy_cache/"),
+        "--warn-redundant-casts",
+        "--warn-unused-ignores",
+        "--warn-unreachable",
+        "--cache-dir=" + os.path.expanduser("~/.cache/mypy_cache/"),
     ]
     if strict:
         mypy.extend(
             [
+                "--warn-return-any",
                 "--disallow-untyped-calls",
                 "--disallow-untyped-defs",
                 "--check-untyped-defs",
                 "--disallow-untyped-decorators",
+                "--strict-equality",
+                "--strict-concatenate",
+                "--strict",
             ]
         )
     run(*mypy, path)

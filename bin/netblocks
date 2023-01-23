@@ -8,8 +8,8 @@
 Print netblocks from a domain's TXT records
 """
 
-from argparse import ArgumentParser
 import sys
+from argparse import ArgumentParser
 
 
 def parse_args(args):
@@ -18,8 +18,9 @@ def parse_args(args):
 
 
 def execute(args):
-    opts = parse_args(args)
+    _ = parse_args(args)
 
 
 if __name__ == "__main__":
+    raise NotImplementedError
     sys.exit(execute(sys.argv[1:]))

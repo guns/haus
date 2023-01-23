@@ -8,8 +8,7 @@ haus.execvp(
     [
         "wget",
         "--no-clobber",
-        "--user-agent",
-        haus.get_random_user_agent("Linux"),
+        "--user-agent=" + haus.get_random_user_agent("Linux"),
         *sys.argv[1:],
     ]
 )
