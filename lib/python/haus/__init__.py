@@ -58,9 +58,7 @@ def execvp(
     os.execvp(prg, args)
 
 
-def urlopen(
-    url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any
-) -> request._UrlopenRet:
+def urlopen(url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any) -> Any:
     """
     Execute an HTTP request to url with a recent User-Agent header.
     """
