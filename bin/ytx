@@ -7,8 +7,6 @@ import haus
 haus.execvp(
     [
         "yt-dlp",
-        "--output",
-        "%(title)s-%(id)s.%(ext)s",
         "--trim-filenames=120",
         "--user-agent=" + haus.get_random_user_agent("Linux"),
         "--audio-format=m4a",
