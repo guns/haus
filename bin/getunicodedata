@@ -1,118 +1,104 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2011-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'net/http'
+"""
+Parse and print the Unicode database.
+"""
 
-class Getunicodedata; end
+import sys
+from argparse import ArgumentParser
+from typing import NamedTuple
 
-# http://www.unicode.org/Public/5.1.0/ucd/UCD.html#UnicodeData.txt
-class Getunicodedata::UnicodeTable
-  def initialize buf
-    @data = parse buf
-  end
+import haus
 
-  def parse buf
-    buf.lines.map do |line|
-      row = line.chomp.split ';'
-      {
-        :Code_Point                 => row[ 0].to_i(16),
-        :Name                       => row[ 1],
-        :General_Category           => row[ 2],
-        :Canonical_Combining_Class  => row[ 3],
-        :Bidi_Class                 => row[ 4],
-        :Decomposition              => row[ 5],
-        :Numeric_Type_Decimal_Digit => row[ 6],
-        :Numeric_Type_Digit         => row[ 7],
-        :Numeric_Type_Numeric       => row[ 8],
-        :Bidi_Mirrored              => row[ 9],
-        :Unicode_1_Name             => row[10],
-        :ISO_Comment                => row[11],
-        :Simple_Uppercase_Mapping   => row[12],
-        :Simple_Lowercase_Mapping   => row[13],
-        :Simple_Titlecase_Mapping   => row[14]
-      }
-    end
-  end
+UNICODE_DATA_URL = "https://www.unicode.org/Public/UNIDATA/UnicodeData.txt"
 
-  def glyph code_point, category
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-r", "--raw", action="store_true", help="Print raw source data"
+    )
+    parser.add_argument(
+        "source",
+        nargs="?",
+        help="Path to source data; pass - for stdin."
+        + f" Defaults to reading from {UNICODE_DATA_URL}",
+    )
+    return parser.parse_args(args)
+
+
+class UnicodeEntry(NamedTuple):
+    Code_Point: str
+    Name: str
+    General_Category: str
+    Canonical_Combining_Class: str
+    Bidi_Class: str
+    Decomposition: str
+    Numeric_Type_Decimal_Digit: str
+    Numeric_Type_Digit: str
+    Numeric_Type_Numeric: str
+    Bidi_Mirrored: str
+    Unicode_1_Name: str
+    ISO_Comment: str
+    Simple_Uppercase_Mapping: str
+    Simple_Lowercase_Mapping: str
+    Simple_Titlecase_Mapping: str
+
+
+def glyph(code_point, category):
     # cf. http://en.wikipedia.org/wiki/C0_and_C1_control_codes
-    if category == 'Cc'
-      case code_point
-      when 0x00..0x1f then '^%s' % (code_point + 0x40).chr
-      when 0x7f then '^?'
-      when 0x80..0x9f then '^[%s' % (code_point - 0x40).chr
-      else [code_point].pack('U').inspect.delete '"'
-      end
-    else
-      [code_point].pack 'U'
-    end
-  end
+    if category == "Cc":
+        if code_point in range(0x00, 0x20):
+            return "^" + chr(code_point + 0x40)
+        elif code_point == 0x7F:
+            return "^?"
+        elif code_point in range(0x80, 0xA0):
+            return "^[" + chr(code_point - 0x40)
+    if category == "Cs":
+        return ""
+    return chr(code_point)
 
-  def to_s
-    @data.map do |row|
-      buf  = glyph row[:Code_Point], row[:General_Category]
-      buf << "\tU+%04X" % row[:Code_Point]
-      buf << "\t%s" % row[:Name]
-      buf << "\t(%s)" % row[:Unicode_1_Name] if row[:Unicode_1_Name] and not row[:Unicode_1_Name].empty?
-      buf
-    end.join "\n"
-  end
-end
 
-class Getunicodedata
-  UnicodeDataURL = 'http://www.unicode.org/Public/UNIDATA/UnicodeData.txt'
+def print_unicode_data(data):
+    rows = []
+    max_namelen = 0
 
-  DEFAULTS = { :raw => false }
+    for line in data.splitlines():
+        entry = UnicodeEntry(*line.split(";"))
+        if len(entry.Name) > max_namelen:
+            max_namelen = len(entry.Name)
+        code_point = int(entry.Code_Point, 16)
+        char = glyph(code_point, entry.General_Category)
+        altname = " " + entry.Unicode_1_Name if entry.Unicode_1_Name else ""
+        rows.append((char, code_point, entry.General_Category, entry.Name, altname))
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+    fmt = f"%-3s │ U+%04X │ %s │ %-{max_namelen}s │%s"
 
-  def parser
-    @parser ||= OptionParser.new nil, 12 do |opt|
-      opt.banner = <<~BANNER
-        Parse and print Unicode data.
+    for row in rows:
+        print(fmt % row)
 
-        If a file is given, data is read from file. If no file is given, and
-        there is data available on stdin, data is read from stdin.
 
-        Otherwise, downloads from #{UnicodeDataURL}
+def execute(args):
+    opts = parse_args(args)
 
-        Usage: #{File.basename __FILE__} [options] [file]
+    match opts.source:
+        case None:
+            data = haus.urlopen(UNICODE_DATA_URL).read().decode()
+        case "-":
+            data = sys.stdin.read()
+        case _ as path:
+            with open(path, "r") as f:
+                data = f.read()
 
-        Options:
-      BANNER
+    if opts.raw:
+        print(data)
+    else:
+        print_unicode_data(data)
 
-      opt.on '-r', '--raw', 'Print raw unparsed data' do
-        @raw = true
-      end
-    end
-  end
 
-  def raw_data file = nil
-    if file
-      File.read file
-    elsif select [$stdin], nil, nil, 0
-      $stdin.read
-    else
-      Net::HTTP.get URI.parse(UnicodeDataURL)
-    end
-  end
-
-  def table file = nil
-    @table ||= UnicodeTable.new raw_data(file)
-  end
-
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.size > 1
-    puts send(@raw ? :raw_data : :table, args.first)
-  end
-end
-
-$0 = File.basename(__FILE__) and Getunicodedata.new.run ARGV if $0 == __FILE__
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))

@@ -740,7 +740,7 @@ HAVE vim && {
     alias vimsshconfig='vim "/etc/ssh/ssh_config" -c "lcd /etc/"'
     alias vimtodo='vim -c "Org! TODO"'
     alias vimtmux='vim "$cdhaus/etc/tmux.conf" -c "lcd \$cdhaus"'
-    alias vimunicode='vim "$cdhaus/share/doc/unicode-table.txt" -c "lcd \$cdhaus"'
+    alias vimunicode='vim ~/.cache/unicode-table.txt'
     alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'
     alias vimwm='vim -O "$cdhaus/etc/_config/sxhkd/sxhkdrc" "$cdhaus/etc/_config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
     alias vimwireguard='vim "/etc/wireguard/wg0.conf" -c "lcd /etc/"'

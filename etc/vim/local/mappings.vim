@@ -383,7 +383,7 @@ noremap <Leader>es       :<C-u>vsplit \| Scratch<CR>
 noremap <Leader>eS       :<C-u>TabOpen /etc/ssh/ssh_config \| lcd /etc<CR>
 noremap <Leader>et       :<C-u>Org TODO<CR>
 noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
-noremap <Leader>eu       :<C-u>TabOpen $cdhaus/share/doc/unicode-table.txt \| lcd $cdhaus<CR>
+noremap <Leader>eu       :<C-u>TabOpen ~/.cache/unicode-table.txt<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>
 noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/_config/bspwm/bspwmrc \| vsplit $cdhaus/etc/_config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
 noremap <Leader>eW       :<C-u>TabOpen /etc/wireguard/wg0.conf \| lcd /etc/<CR>
