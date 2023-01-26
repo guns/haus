@@ -62,11 +62,14 @@ def urlopen(url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any) -
     """
     Execute an HTTP request to url with a recent User-Agent header.
     """
+    ua = get_random_user_agent("Linux")
+    if ua is None:
+        raise RuntimeError("User-Agent search failed")
+
     if headers is None:
-        ua = get_random_user_agent("Linux")
-        if ua is None:
-            raise RuntimeError("User-Agent search failed")
         headers = {"User-Agent": ua}
+    elif "User-Agent" not in headers:
+        headers["User-Agent"] = ua
 
     req = request.Request(url, headers=headers, **kwargs)
     return request.urlopen(req)
