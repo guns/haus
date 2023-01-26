@@ -1,68 +1,47 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env python
 #
-# Copyright (c) 2021 Sung Pae <self@sungpae.com>
+# Copyright (c) 2021-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'ostruct'
+"""
+fclones wrapper.
+"""
 
-module Fremoveclones
-  DEFAULTS = OpenStruct.new({
-    dry_run: false,
-  }).freeze
+import shlex
+import sys
+from argparse import ArgumentParser
 
-  class << self
-    def run! arguments
-      options = DEFAULTS.dup
-      parser = build_parser(options)
-      args = parser.order(arguments)
+import haus
 
-      if (i = args.index('--'))
-        group_args = args[0...i]
-        remove_args = args[i+1..-1]
-      else
-        group_args = args.dup
-        remove_args = []
-      end
 
-      remove_args << '--dry-run' if options.dry_run
-      buf = nil
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-G", "--group-args", type=shlex.split, default=[])
+    parser.add_argument("-R", "--remove-args", type=shlex.split, default=[])
+    parser.add_argument("-n", "--dry-run", action="store_true")
+    parser.add_argument("paths", nargs="*", default=["."], metavar="path")
+    return parser.parse_args(args)
 
-      IO.popen(['fclones', 'group', *group_args]) do |group|
-        buf = group.read
-      end
 
-      warn buf
-      abort unless $?.success?
+def execute(args):
+    opts = parse_args(args)
 
-      IO.popen(['fclones', 'remove', *remove_args], 'w') do |remove|
-        remove.write(buf)
-      end
+    if opts.dry_run:
+        opts.remove_args.append("--dry-run")
 
-      abort unless $?.success?
-    end
+    proc = haus.run(
+        ["fclones", "group", *opts.group_args, *opts.paths], capture_output=True
+    )
+    print(proc.stdout.decode(), file=sys.stderr)
 
-    private
+    if proc.returncode != 0:
+        print(proc.stderr.decode(), file=sys.stderr)
+        return proc.returncode
 
-    def build_parser options
-      OptionParser.new nil, 16 do |opt|
-        opt.program_name = File.basename __FILE__
+    proc = haus.run(["fclones", "remove", *opts.remove_args], input=proc.stdout)
+    return proc.returncode
 
-        opt.banner = <<~BANNER
-          fclones wrapper.
 
-          Usage: #{opt.program_name} [options] group-args -- remove-args
-
-          Options:
-        BANNER
-
-        opt.on '-n', '--dry-run', 'Same as "fclones remove --dry-run"' do
-          options.dry_run = true
-        end
-      end
-    end
-  end
-end
-
-$0 = File.basename(__FILE__) and Fremoveclones.run!(ARGV) if $0 == __FILE__
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
