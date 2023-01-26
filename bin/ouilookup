@@ -129,7 +129,7 @@ def execute(args):
                 if m := (RE_MAC_PREFIX.match(pat)):
                     rows = cur.execute(
                         """
-                        SELECT *
+                        SELECT company_id, organization, address
                         FROM oui
                         WHERE company_id = upper(?)
                         ORDER BY upper(organization), company_id
@@ -140,7 +140,11 @@ def execute(args):
                     if not haus.regex.search(r"\p{Lu}", pat):
                         pat = "(?i)" + pat
 
-                    sql = "SELECT * FROM oui WHERE organization REGEXP ?"
+                    sql = """
+                        SELECT company_id, organization, address
+                        FROM oui
+                        WHERE organization REGEXP ?
+                        """
                     params = [pat]
                     if opts.all_fields:
                         sql += " OR address REGEXP ?"
@@ -154,8 +158,12 @@ def execute(args):
                 "SELECT * FROM oui ORDER BY upper(organization), company_id"
             ).fetchall()
 
-        for id, org, addr in rows:
-            print(f"{id}\t{org}\t{addr}")
+        if not rows:
+            return 1
+
+        fmt = f"%s │ %-{max([len(row[1]) for row in rows])}s │ %s"
+        for row in rows:
+            print(fmt % row)
 
     finally:
         conn.close()
