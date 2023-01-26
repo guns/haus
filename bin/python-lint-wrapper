@@ -9,6 +9,7 @@ Format and lint python source files.
 """
 
 import os
+import shlex
 import subprocess
 import sys
 from argparse import ArgumentParser
@@ -22,7 +23,9 @@ def parse_args(args):
 
 
 def run(*cmd: str):
-    subprocess.run(cmd, check=True)
+    if subprocess.run(cmd).returncode != 0:
+        print("Command failed: " + shlex.join(cmd), file=sys.stderr)
+        sys.exit(1)
 
 
 def lint(path, strict=False):
