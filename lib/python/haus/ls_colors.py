@@ -5,15 +5,12 @@ LS_COLORS module.
 """
 
 import os
-import re
 import stat
 import sys
 from enum import Enum
-from typing import IO, Any, Dict, NamedTuple, Optional
+from typing import IO, Any, List, Mapping, NamedTuple, Optional
 
 from haus import sgr
-
-RE_ALL_ZEROS = re.compile(r"\A0+\Z")
 
 
 class LSColors(NamedTuple):
@@ -22,37 +19,37 @@ class LSColors(NamedTuple):
     Names, defaults, and comments are from dircolors(1).
     """
 
-    normal: str = ""  # no color code at all
-    file: str = ""  # regular file: use no color at all
-    reset: str = ""  # reset to "normal" color
-    dir: str = "01;34"  # directory
-    link: str = "01;36"  # symbolic link
-    multihardlink: str = ""  # regular file with more than one link
-    fifo: str = "40;33"  # pipe
-    sock: str = "01;35"  # socket
-    door: str = "01;35"  # door
-    blk: str = "40;33;01"  # block device driver
-    chr: str = "40;33;01"  # character device driver
-    orphan: str = "40;31;01"  # symlink to nonexistent file, or non-stat'able file ...
-    missing: str = ""  # ... and the files they point to
-    setuid: str = "37;41"  # file that is setuid (u+s)
-    setgid: str = "30;43"  # file that is setgid (g+s)
-    capability: str = ""  # file with capability (very expensive to lookup)
-    sticky_other_writable: str = "30;42"  # dir that is sticky and other-writable
-    other_writable: str = "34;42"  # dir that is other-writable (o+w) and not sticky
-    sticky: str = "37;44"  # dir with the sticky bit set (+t) and not other-writable
-    exec: str = "01;32"  # This is for files with execute permission
-    extensions: Dict[str, str] = {}
+    normal: List[str] = []
+    file: List[str] = []
+    reset: List[str] = []
+    dir: List[str] = ["01;34"]  # directory
+    link: List[str] = ["01;36"]  # symbolic link
+    multihardlink: List[str] = []  # regular file with more than one link
+    fifo: List[str] = ["40;33"]  # pipe
+    sock: List[str] = ["01;35"]  # socket
+    door: List[str] = ["01;35"]  # door
+    blk: List[str] = ["40;33;01"]  # block device driver
+    chr: List[str] = ["40;33;01"]  # character device driver
+    orphan: List[str] = ["40;31;01"]  # broken symlink or non-stat'able file
+    missing: List[str] = []  # ... and the files they point to
+    setuid: List[str] = ["37;41"]  # file that is setuid (u+s)
+    setgid: List[str] = ["30;43"]  # file that is setgid (g+s)
+    capability: List[str] = []  # file with capability (very expensive to lookup)
+    sticky_other_writable: List[str] = ["30;42"]  # dir: sticky and other-writable
+    other_writable: List[str] = ["34;42"]  # dir: !sticky and other-writable
+    sticky: List[str] = ["37;44"]  # dir: sticky and not other-writable
+    exec: List[str] = ["01;32"]  # This is for files with execute permission
+    extensions: Mapping[str, List[str]] = {}
 
     def format(self, path: str, st: os.stat_result, file: IO[Any] = sys.stdout) -> str:
         ftype = get_ftype(path, st)
-        code = getattr(self, ftype.name)
+        styles = getattr(self, ftype.name)
 
-        if self.extensions and RE_ALL_ZEROS.search(code):
+        if not styles and self.extensions:
             _, ext = os.path.splitext(path)
-            code = self.extensions.get(ext, "")
+            styles = self.extensions.get(ext, "")
 
-        return sgr.format(path, code, file=file)
+        return sgr.format(path, styles, file=file)
 
 
 FTYPE = Enum(
@@ -117,11 +114,11 @@ def _parse_gnu_ls_colors(string: str) -> LSColors:
     ext = {}
 
     for entry in [e for e in string.split(":") if len(e) == 2]:
-        key, code = entry.split("=", 1)
+        key, style = entry.split("=", 1)
         if prop := DIR_COLORS_ABBREVS.get(key):
-            d[prop.name] = code
+            d[prop.name] = [style]
         elif key.startswith("."):
-            ext[key] = code
+            ext[key] = [style]
 
     return LSColors(extensions=ext, **d)
 

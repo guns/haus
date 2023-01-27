@@ -10,7 +10,7 @@ http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
 import builtins
 import os
 import sys
-from typing import IO, Any, Sequence
+from typing import IO, Any, List
 
 CODES = {
     "reset": "0",
@@ -72,12 +72,12 @@ def _init() -> None:
             CODES[f"X{n}"] = f"48;5;{n}"
 
 
-def format(msg: str, styles: Sequence[str] = [], file: IO[Any] = sys.stdout) -> str:
+def format(msg: str, styles: List[str] = [], file: IO[Any] = sys.stdout) -> str:
     """
     Wrap msg in SGR escape sequences if file is a TTY.
 
-        sgr.format("hello world.", "green", "bold", file=sys.stderr)
-        sgr.format("hello world.", "x46", "X248") # 256 color table
+        sgr.format("hello world.", ["green", "bold"], file=sys.stderr)
+        sgr.format("hello world.", ["x46", "X248"]) # 256 color table
     """
     if os.isatty(file.fileno()):
         return f"\033[{';'.join([CODES.get(s, s) for s in styles])}m{msg}\033[m"
@@ -86,13 +86,13 @@ def format(msg: str, styles: Sequence[str] = [], file: IO[Any] = sys.stdout) -> 
 
 
 def print(
-    msg: str, styles: Sequence[str] = [], file: IO[Any] = sys.stdout, **kwargs: Any
+    msg: str, styles: List[str] = [], file: IO[Any] = sys.stdout, **kwargs: Any
 ) -> None:
     """
     Print msg to file with SGR escape sequences if file is a TTY.
 
-        sgr.print("hello world.", "green", "bold", file=sys.stderr)
-        sgr.print("hello world.", "x46", "X248") # 256 color table
+        sgr.print("hello world.", ["green", "bold"], file=sys.stderr)
+        sgr.print("hello world.", ["x46", "X248"]) # 256 color table
     """
     builtins.print(format(msg, styles, file=file), file=file, **kwargs)
 

@@ -9,7 +9,7 @@ import os
 import shlex
 import subprocess
 import sys
-from typing import IO, Any, Dict, NoReturn, Optional, Sequence
+from typing import IO, Any, Dict, List, NoReturn, Optional
 from urllib import request
 
 from haus import http_ua, ls_colors, sgr
@@ -27,8 +27,8 @@ except ModuleNotFoundError:
 
 
 def run(
-    cmd: Sequence[str],
-    sgr: Sequence[str] = ["x48", "bold"],
+    cmd: List[str],
+    sgr: List[str] = ["x48", "bold"],
     /,
     file: IO[Any] = sys.stderr,
     sep: Optional[str] = " ",
@@ -44,8 +44,8 @@ def run(
 
 
 def execvp(
-    cmd: Sequence[str],
-    sgr: Sequence[str] = ["x48", "bold"],
+    cmd: List[str],
+    sgr: List[str] = ["x48", "bold"],
     /,
     file: IO[Any] = sys.stderr,
     **kwargs: Any,
