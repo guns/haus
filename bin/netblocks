@@ -28,10 +28,10 @@ def append_data(domain, netblocks, includes):
         text = answer.to_text()
         includes.extend(re.findall(r"include:([\S]+)", text))
         for addr in re.findall(r"ip4:([\d./]+)", text):
-            if '/' in addr:
+            if "/" in addr:
                 netblocks.add(ipaddress.ip_network(addr, strict=False))
             else:
-                netblocks.add(ipaddress.ip_network(addr + '/32'))
+                netblocks.add(ipaddress.ip_network(addr + "/32"))
 
 
 def execute(args):

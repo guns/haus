@@ -17,7 +17,7 @@ from argparse import ArgumentParser
 
 def parse_args(args):
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("--strict", action="store_true")
+    parser.add_argument("-s", "--strict", action="store_true")
     parser.add_argument("paths", metavar="path", nargs="+")
     return parser.parse_args(args)
 
@@ -39,6 +39,7 @@ def lint(path, strict=False):
         "--warn-redundant-casts",
         "--warn-unused-ignores",
         "--warn-unreachable",
+        "--check-untyped-defs",
         "--cache-dir=" + os.path.expanduser("~/.cache/mypy_cache/"),
     ]
     if strict:
@@ -47,7 +48,6 @@ def lint(path, strict=False):
                 "--warn-return-any",
                 "--disallow-untyped-calls",
                 "--disallow-untyped-defs",
-                "--check-untyped-defs",
                 "--disallow-untyped-decorators",
                 "--strict-equality",
                 "--strict-concatenate",
