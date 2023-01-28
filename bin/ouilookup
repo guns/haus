@@ -13,22 +13,23 @@ import re
 import sqlite3
 import sys
 from argparse import ArgumentParser
+from typing import Sequence
 
 import haus
 
 OUI_URL = "https://standards-oui.ieee.org/"
+OUI_DB_PATH = os.path.expanduser("~/.cache/oui.db")
 
 
 def parse_args(args):
     parser = ArgumentParser(description=__doc__)
-    parser.set_defaults(db_path=os.path.expanduser("~/.cache/oui.db"))
     parser.add_argument(
         "-a", "--all-fields", action="store_true", help="Search all fields"
     )
     parser.add_argument(
         "-d",
         "--db-path",
-        type=os.path.normpath,
+        default=OUI_DB_PATH,
         help=f"Default: {parser.get_default('db_path')}",
     )
     parser.add_argument(
@@ -112,21 +113,17 @@ def sqlite3_regexp(pattern, string):
     return haus.regex.search(pattern, string) is not None
 
 
-def execute(args):
-    opts = parse_args(args)
-
-    if opts.update:
-        update_oui_db(opts.db_path, OUI_URL)
-
-    conn = sqlite3.connect(opts.db_path)
-    try:
+def search(
+    *patterns: str, db_path: str = OUI_DB_PATH, all_fields: bool = False
+) -> Sequence[Sequence[str]]:
+    with sqlite3.connect(db_path) as conn:
         cur = conn.cursor()
 
-        if opts.patterns:
+        if patterns:
             conn.create_function("REGEXP", 2, sqlite3_regexp)
 
-            for pat in opts.patterns:
-                if m := (RE_MAC_PREFIX.match(pat)):
+            for pat in patterns:
+                if m := RE_MAC_PREFIX.match(pat):
                     rows = cur.execute(
                         """
                         SELECT company_id, organization, address
@@ -146,7 +143,7 @@ def execute(args):
                         WHERE organization REGEXP ?
                         """
                     params = [pat]
-                    if opts.all_fields:
+                    if all_fields:
                         sql += " OR address REGEXP ?"
                         params.append(pat)
                     sql += " ORDER BY upper(organization), company_id"
@@ -158,15 +155,22 @@ def execute(args):
                 "SELECT * FROM oui ORDER BY upper(organization), company_id"
             ).fetchall()
 
-        if not rows:
-            return 1
+        return rows
 
-        fmt = f"%s │ %-{max([len(row[1]) for row in rows])}s │ %s"
-        for row in rows:
-            print(fmt % row)
 
-    finally:
-        conn.close()
+def execute(args):
+    opts = parse_args(args)
+
+    if opts.update:
+        update_oui_db(opts.db_path, OUI_URL)
+
+    rows = search(*opts.patterns, db_path=opts.db_path, all_fields=opts.all_fields)
+    if not rows:
+        return 1
+
+    fmt = f"%s │ %-{max([len(row[1]) for row in rows])}s │ %s"
+    for row in rows:
+        print(fmt % row)
 
 
 if __name__ == "__main__":

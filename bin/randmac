@@ -1,57 +1,52 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-load File.expand_path('../ouilookup', __FILE__)
+"""
+Print a random MAC address optionally matching an entry from the OUI database.
+"""
 
-class Randmac
-  DEFAULTS = { :prefix => nil, :colons => true }
+import os
+import random
+import re
+import sys
+from argparse import ArgumentParser
+from typing import Optional
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
+import haus
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Usage: #{File.basename __FILE__} [options] [prefix]
 
-        Options:
-      BANNER
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-n", "--no-colons", dest="colons", action="store_false")
+    parser.add_argument("macprefix_or_pattern", nargs="?")
+    return parser.parse_args(args)
 
-      opt.on '-n', '--no-colons' do
-        @colons = false
-      end
-    end
-  end
 
-  def randmac prefix = nil
-    n = rand 0x1000000000000
-    if prefix
-      n >>= 24
-      n |= prefix << 24
-    end
-    s = '%012X' % n
-    @colons ? s.scan(/\h\h/).join(':') : s
-  end
+def random_mac_address(prefix: Optional[int] = None, colons=True):
+    (n,) = random.sample(range(1 << 48), 1)
+    if prefix:
+        n = ((prefix & 0xFFFFFF) << 24) | (n >> 24)
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.size > 1
+    s = "%012X" % n
+    if colons:
+        s = ":".join(re.findall(r"..", s))
 
-    prefix = case args.first
-    when nil                    then nil
-    when /\A(\h\h:?\h\h:?\h\h)/ then $1.delete(':').to_i(16)
-    else
-      Ouilookup.new.grep(args.first).shuffle[0].split("\t", 2)[0].to_i(16)
-    end
+    return s
 
-    puts randmac(prefix)
-  end
-end
 
-$0 = File.basename(__FILE__) and Randmac.new.run ARGV if $0 == __FILE__
+def execute(args):
+    opts = parse_args(args)
+    oui = haus.import_path(os.path.join(os.path.dirname(__file__), "ouilookup"))
+    results = oui.search(opts.macprefix_or_pattern)
+    prefix = None
+    if results:
+        ((prefix, *_),) = random.sample(results, 1)
+        prefix = int(prefix, 16)
+    print(random_mac_address(prefix, opts.colons))
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
