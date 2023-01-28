@@ -5,10 +5,13 @@ Scripting helper functions.
 """
 
 import importlib
+import importlib.machinery
+import importlib.util
 import os
 import shlex
 import subprocess
 import sys
+from types import ModuleType
 from typing import IO, Any, Dict, List, NoReturn, Optional
 from urllib import request
 
@@ -73,3 +76,20 @@ def urlopen(url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any) -
 
     req = request.Request(url, headers=headers, **kwargs)
     return request.urlopen(req)
+
+
+def import_path(path: str) -> ModuleType:
+    """
+    Import a python module from a path. Useful for loading python modules from
+    files that lack a ".py" extension.
+    """
+    fname, _ = os.path.splitext(os.path.basename(path))
+    loader = importlib.machinery.SourceFileLoader(fname, path)
+    modspec = importlib.util.spec_from_loader(fname, loader)
+
+    if modspec is None:
+        raise ModuleNotFoundError(f"Failed to load module from {path}")
+
+    mod = importlib.util.module_from_spec(modspec)
+    loader.exec_module(mod)
+    return mod
