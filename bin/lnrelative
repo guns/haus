@@ -15,9 +15,17 @@ from argparse import ArgumentParser
 
 def parse_args(args):
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("-f", "--force", action="store_true")
-    parser.add_argument("src", type=os.path.normpath)
-    parser.add_argument("dst", nargs="?", type=os.path.normpath, default=".")
+    parser.add_argument(
+        "-r",
+        "--realpath",
+        action="store_true",
+        help="Resolve src to a real filesystem path",
+    )
+    parser.add_argument(
+        "-f", "--force", action="store_true", help="Remove dst if present"
+    )
+    parser.add_argument("src")
+    parser.add_argument("dst", nargs="?", default=".")
     return parser.parse_args(args)
 
 
@@ -26,8 +34,11 @@ def execute(args):
     src = opts.src
     dst = opts.dst
 
+    if opts.realpath:
+        src = os.path.realpath(opts.src)
+
     if os.path.isdir(dst) and not os.path.islink(dst):
-        dst = os.path.join(dst, os.path.basename(src))
+        dst = os.path.join(dst, os.path.basename(os.path.abspath(src)))
 
     if opts.force and (os.path.isfile(dst) or os.path.islink(dst)):
         os.remove(dst)
