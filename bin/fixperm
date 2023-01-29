@@ -18,7 +18,7 @@ import re
 import stat
 import sys
 from argparse import ArgumentParser
-from typing import NamedTuple
+from typing import Deque, Dict, NamedTuple, Tuple
 
 import haus
 
@@ -43,14 +43,24 @@ class Info(NamedTuple):
     def user(self, uid):
         if name := self.users.get(uid):
             return name
-        name = pwd.getpwuid(uid).pw_name
+
+        try:
+            name = pwd.getpwuid(uid).pw_name
+        except KeyError:
+            name = str(uid)
+
         self.users[uid] = name
         return name
 
     def group(self, gid):
         if name := self.groups.get(gid):
             return name
-        name = grp.getgrgid(gid).gr_name
+
+        try:
+            name = grp.getgrgid(gid).gr_name
+        except KeyError:
+            name = str(gid)
+
         self.groups[gid] = name
         return name
 
@@ -91,7 +101,12 @@ def parse_args(args):
     parser.add_argument(
         "-n", "--noop", action="store_true", help="Only show what would happen"
     )
-    parser.add_argument("paths", nargs="+", type=os.path.abspath, metavar="path")
+    parser.add_argument(
+        "paths",
+        nargs="+",
+        type=os.path.abspath,  # type: ignore[arg-type]
+        metavar="path",
+    )
     return parser.parse_args(args)
 
 
@@ -180,21 +195,14 @@ def execute(args):
         print("Must specify --umask and/or --ownership", file=sys.stderr)
         return 1
 
-    users = None
-    groups = None
-
-    if opts.chown:
-        users = {s.pw_uid: s.pw_name for s in pwd.getpwall()}
-        groups = {s.gr_gid: s.gr_name for s in grp.getgrall()}
-
     if env := os.getenv("LS_COLORS"):
         lsc = haus.parse_ls_colors(env)
     else:
         lsc = haus.LSColors()
 
-    info = Info(users=users, groups=groups, lsc=lsc)
-    queue = collections.deque()
-    entries = {}
+    info = Info(users={}, groups={}, lsc=lsc)
+    queue: Deque[Tuple[str, Entry]] = collections.deque()
+    entries: Dict[str, Entry] = {}
 
     for path in opts.paths:
         parent_path = os.path.abspath(os.path.join(path, ".."))
