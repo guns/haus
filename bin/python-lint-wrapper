@@ -40,6 +40,7 @@ def lint(path, strict=False):
         "--warn-unused-ignores",
         "--warn-unreachable",
         "--check-untyped-defs",
+        "--no-implicit-reexport",
         "--cache-dir=" + os.path.expanduser("~/.cache/mypy_cache/"),
     ]
     if strict:
