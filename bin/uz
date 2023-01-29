@@ -29,6 +29,9 @@ def parse_args(args):
     parser.add_argument("-d", "--delete", action="store_true")
     parser.add_argument("-i", "--ignore-errors", action="store_true")
     parser.add_argument(
+        "-l", "--list", action="store_true", help="List archive contents"
+    )
+    parser.add_argument(
         "-n", "--no-wrap", dest="wrap", action="store_const", const=Wrap.never
     )
     parser.add_argument(
@@ -38,7 +41,7 @@ def parse_args(args):
     parser.add_argument("-p", "--password")
     parser.add_argument("-O", "--overwrite", action="store_true")
     parser.add_argument("-w", "--wait-close", action="store_true")
-    parser.add_argument("archives", nargs="+", metavar="archive", type=os.path.normpath)
+    parser.add_argument("archives", nargs="+", metavar="archive")
     return parser.parse_args(args)
 
 
@@ -121,7 +124,10 @@ def wait_and_extract_all(paths, opts):
 def execute(args):
     opts = parse_args(args)
 
-    if opts.wait_close:
+    if opts.list:
+        for path in opts.archives:
+            haus.run(["7z", "l", "--", path])
+    elif opts.wait_close:
         wait_and_extract_all(opts.archives, opts)
     else:
         extract(opts.archives, opts)
