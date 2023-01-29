@@ -195,11 +195,7 @@ def execute(args):
         print("Must specify --umask and/or --ownership", file=sys.stderr)
         return 1
 
-    if env := os.getenv("LS_COLORS"):
-        lsc = haus.parse_ls_colors(env)
-    else:
-        lsc = haus.LSColors()
-
+    lsc = haus.parse_ls_colors(os.getenv("LS_COLORS"))
     info = Info(users={}, groups={}, lsc=lsc)
     queue: Deque[Tuple[str, Entry]] = collections.deque()
     entries: Dict[str, Entry] = {}

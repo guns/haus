@@ -102,11 +102,18 @@ DIR_COLORS_ABBREVS = {
 }
 
 
-def parse_ls_colors(string: str) -> LSColors:
-    if string.find("=") > -1:
-        return _parse_gnu_ls_colors(string)
-    else:
-        return _parse_bsd_ls_colors(string)
+def parse_ls_colors(string: Optional[str]) -> LSColors:
+    """
+    Parse an LS_COLORS environment string. Returns an object with default
+    values if string is None or empty.
+    """
+    if string:
+        if string.find("=") > -1:
+            return _parse_gnu_ls_colors(string)
+        else:
+            return _parse_bsd_ls_colors(string)
+
+    return LSColors()
 
 
 def _parse_gnu_ls_colors(string: str) -> LSColors:
