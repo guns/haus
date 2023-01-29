@@ -19,7 +19,7 @@ export LC_COLLATE='C'                   # Traditional ASCII sorting
 # BSD and GNU colors
 export CLICOLOR='1'
 export LSCOLORS='ExFxCxDxbxegedabagacad'
-export LS_COLORS='di=01;38;5;27:ln=01;35:so=01;32:pi=01;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
+export LS_COLORS='di=1;38;5;27:ln=1;35:or=1;31:mh=1;3:so=1;32:pi=1;33:ex=31:bd=34;46:cd=34;43:su=30;41:sg=30;46:ow=30;42:tw=30;43'
 
 # Readline
 export RLWRAP_HOME="$HOME/.rlwrap"
