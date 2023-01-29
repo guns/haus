@@ -113,7 +113,7 @@ def _parse_gnu_ls_colors(string: str) -> LSColors:
     d = {}
     ext = {}
 
-    for entry in [e for e in string.split(":") if len(e) == 2]:
+    for entry in [e for e in string.split(":") if "=" in e]:
         key, style = entry.split("=", 1)
         if prop := DIR_COLORS_ABBREVS.get(key):
             d[prop.name] = [style]
