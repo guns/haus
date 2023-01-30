@@ -1,21 +1,53 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'fileutils'
-require 'digest/sha1'
+"""
+Swap two files.
+"""
 
-include FileUtils::Verbose
+import os
+import secrets
+import sys
+from argparse import ArgumentParser
 
-abort 'Usage: swap-files f₁ f₂' unless ARGV.size == 2
-ARGV.each { |f| raise %Q(No permissions to write #{f.inspect}) unless File.lstat(f).writable? }
+import haus
 
-f₁, f₂ = ARGV.map { |f| f.chomp '/' }
-tmp = f₁ + '.' + Digest::SHA1.hexdigest(f₁)
-abort '%s exists!' % tmp if File.exists? tmp
-mv f₁, tmp
-mv f₂, f₁
-mv tmp, f₂
+
+def assert_writable(path):
+    if not os.access(path, os.W_OK, follow_symlinks=False):
+        raise ValueError(f"{path} is not writable!")
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("file1")
+    parser.add_argument("file2")
+    return parser.parse_args(args)
+
+
+def move(src, dst, lsc):
+    if not os.path.exists(src):
+        raise RuntimeError(f"{src} does not exist")
+    elif os.path.exists(dst):
+        raise RuntimeError(f"{dst} exists")
+    st = os.lstat(src)
+    haus.print(f"mv {lsc.format(src, st)} -> {lsc.format(dst, st)}", file=sys.stderr)
+    os.rename(src, dst)
+
+
+def execute(args):
+    opts = parse_args(args)
+    assert_writable(opts.file1)
+    assert_writable(opts.file2)
+    lsc = haus.parse_ls_colors(os.getenv("LS_COLORS"))
+    tmp = opts.file1 + "." + secrets.token_hex(8)
+    move(opts.file1, tmp, lsc)
+    move(opts.file2, opts.file1, lsc)
+    move(tmp, opts.file2, lsc)
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
