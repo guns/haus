@@ -30,7 +30,6 @@ def run(*cmd: str):
 
 def lint(path, strict=False):
     run("autoimport", path)
-    run("autoflake", "--in-place", "--remove-all-unused-imports", path)
     run("isort", "--quiet", path)
     run("black", "-q", path)
     mypy = [
