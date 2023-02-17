@@ -31,6 +31,7 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
+# http://www.unicode.org/Public/5.1.0/ucd/UCD.html#UnicodeData.txt
 class UnicodeEntry(NamedTuple):
     Code_Point: str
     Name: str
