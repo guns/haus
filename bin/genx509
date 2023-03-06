@@ -117,7 +117,7 @@ class GenX509
   def write_extfile path, altnames
     File.open path, 'w' do |f|
       f.puts <<-EOF.gsub /^\s*/, ''
-        basicConstraints = CA:FALSE
+        basicConstraints = critical, CA:TRUE, pathlen:0
         subjectAltName = #{subject_alt_names altnames}
         extendedKeyUsage = serverAuth
       EOF
