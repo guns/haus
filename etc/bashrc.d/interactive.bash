@@ -1060,9 +1060,9 @@ alias geom='identify -format "%wx%h	%f\n"'
 
 # feh
 HAVE feh && {
-    alias fshow='feh --sort=dirname --recursive'; TCOMP feh fshow
-    alias frand='feh --sort=dirname --recursive --randomize'; TCOMP feh frand
-    alias ftime='feh --sort mtime'; TCOMP feh ftime
+    alias fshow='feh --sort=dirname --recursive'
+    alias frand='feh --sort=dirname --recursive --randomize'
+    alias ftime='feh --sort mtime'
     alias fmove='fehmove'
     alias fcopy='fehmove --copy'
 }
