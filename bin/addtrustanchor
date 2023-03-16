@@ -26,7 +26,6 @@ def parse_args(args):
         "--dir",
         action="store",
         default=TRUST_ANCHORS_DIR,
-        type=os.path.normpath,
         help=f"default: {TRUST_ANCHORS_DIR}",
     )
     parser.add_argument("domain_or_url")
@@ -50,7 +49,7 @@ def execute(args):
 
     if is_certfile(cert):
         if os.path.abspath(opts.dir) == TRUST_ANCHORS_DIR:
-            haus.run("update-ca-trust", check=True)
+            haus.run(["update-ca-trust"], check=True)
             print("Updated CA trust\n", file=sys.stderr)
 
         return
