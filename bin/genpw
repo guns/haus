@@ -16,6 +16,7 @@ import unittest
 from argparse import ArgumentParser
 from fnmatch import fnmatch
 from itertools import islice
+from typing import List
 
 import haus
 
@@ -122,7 +123,7 @@ def iterbits(byte_reader, bitlen=8):
 
 def generate_password(length, chars, byte_reader):
     charslen = len(chars)
-    buf = []
+    buf: List[str] = []
     index = iterbits(byte_reader, charslen.bit_length())
 
     while len(buf) < length:
