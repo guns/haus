@@ -1,3 +1,42 @@
-#!/bin/sh
+#!/usr/bin/env python
+#
+# Copyright (c) 2023 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
 
-pass "$@" | ruby -e 'print $stdin.readline.chomp; warn $stdin.read' | clip
+"""
+password-store + clipboard helper
+"""
+
+import os
+import subprocess
+import sys
+from argparse import ArgumentParser
+
+import haus
+
+
+def parse_args(args):
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("pass_name")
+    return parser.parse_args(args)
+
+
+def execute(args):
+    opts = parse_args(args)
+    fname = os.path.basename(opts.pass_name)
+    subprocess.run(["clip"], input=bytes(fname, "utf-8"))
+    print(f"Copied {fname} to clipboard.", file=sys.stderr)
+    input("Press any key to copy password to clipboard...")
+    output = haus.run(["pass", opts.pass_name], capture_output=True).stdout
+    first, _, rest = output.partition(b"\n")
+    if len(first) > 0:
+        subprocess.run(["clip"], input=first)
+        sys.stdout.buffer.write(rest)
+        print(f"Copied password for {opts.pass_name} to clipboard.", file=sys.stderr)
+        input("Press any key to copy empty string to clipboard...")
+    subprocess.run(["clip"], input=b"")
+
+
+if __name__ == "__main__":
+    sys.exit(execute(sys.argv[1:]))
