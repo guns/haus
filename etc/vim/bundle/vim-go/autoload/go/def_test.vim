@@ -6,6 +6,7 @@ scriptencoding utf-8
 
 func! Test_jump_to_declaration_guru() abort
   try
+    let g:go_gopls_enabled = 0
     let l:filename = 'def/jump.go'
     let l:lnum = 5
     let l:col = 6
@@ -24,6 +25,7 @@ endfunc
 
 func! Test_jump_to_declaration_godef() abort
   try
+    let g:go_gopls_enabled = 0
     let l:filename = 'def/jump.go'
     let l:lnum = 5
     let l:col = 6
@@ -47,7 +49,7 @@ func! Test_Jump_leaves_lists() abort
 
     let l:expected = [{'lnum': 10, 'bufnr': bufnr('%'), 'col': 1, 'valid': 1, 'vcol': 0, 'nr': -1, 'type': '', 'pattern': '', 'text': 'quux'}]
 
-    call setloclist(winnr(), copy(l:expected), 'r' )
+    call setloclist(0, copy(l:expected), 'r' )
     call setqflist(copy(l:expected), 'r' )
 
     let l:bufnr = bufnr('%')
@@ -59,7 +61,6 @@ func! Test_Jump_leaves_lists() abort
     call go#def#Jump('', 0)
 
     if !go#util#has_job()
-      unlet g:go_def_mode
     endif
 
     let l:start = reltime()
@@ -67,7 +68,7 @@ func! Test_Jump_leaves_lists() abort
       sleep 100m
     endwhile
 
-    let l:actual = getloclist(winnr())
+    let l:actual = getloclist(0)
     call gotest#assert_quickfix(l:actual, l:expected)
 
     let l:actual = getqflist()
@@ -108,7 +109,6 @@ func! Test_DefJump_gopls_simple_first() abort
     call assert_equal(l:expected, getpos('.'))
   finally
     call delete(l:tmp, 'rf')
-    unlet g:go_def_mode
   endtry
 endfunc
 
@@ -143,7 +143,6 @@ func! Test_DefJump_gopls_simple_last() abort
     call assert_equal(l:expected, getpos('.'))
   finally
     call delete(l:tmp, 'rf')
-    unlet g:go_def_mode
   endtry
 endfunc
 
@@ -177,7 +176,6 @@ func! Test_DefJump_gopls_MultipleCodeUnit_first() abort
     call assert_equal(l:expected, getpos('.'))
   finally
     call delete(l:tmp, 'rf')
-    unlet g:go_def_mode
   endtry
 endfunc
 
@@ -212,7 +210,6 @@ func! Test_DefJump_gopls_MultipleCodeUnit_last() abort
     call assert_equal(l:expected, getpos('.'))
   finally
     call delete(l:tmp, 'rf')
-    unlet g:go_def_mode
   endtry
 endfunc
 

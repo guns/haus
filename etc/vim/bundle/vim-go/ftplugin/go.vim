@@ -13,8 +13,8 @@ let b:did_ftplugin = 1
 let s:cpo_save = &cpo
 set cpo&vim
 
-let b:undo_ftplugin = "setl fo< com< cms<
-      \ | exe 'au! vim-go-buffer * <buffer>'"
+let b:undo_ftplugin = "setl fo< com< cms<"
+      \ . "| exe 'au! vim-go-buffer * <buffer>'"
 
 setlocal formatoptions-=t
 
@@ -28,9 +28,6 @@ compiler go
 if go#config#CodeCompletionEnabled()
   " Set autocompletion
   setlocal omnifunc=go#complete#Complete
-  if !go#util#has_job()
-    setlocal omnifunc=go#complete#GocodeComplete
-  endif
 endif
 
 if get(g:, "go_doc_keywordprg_enabled", 1)
@@ -42,12 +39,15 @@ if get(g:, "go_def_mapping_enabled", 1)
   " these are default Vim mappings, we're overriding them to make them
   " useful again for Go source code
   nnoremap <buffer> <silent> gd :GoDef<cr>
+  nnoremap <buffer> <silent> gD :GoDefType<cr>
   nnoremap <buffer> <silent> <C-]> :GoDef<cr>
   nnoremap <buffer> <silent> <C-LeftMouse> <LeftMouse>:GoDef<cr>
   nnoremap <buffer> <silent> g<LeftMouse> <LeftMouse>:GoDef<cr>
   nnoremap <buffer> <silent> <C-w><C-]> :<C-u>call go#def#Jump("split", 0)<CR>
   nnoremap <buffer> <silent> <C-w>] :<C-u>call go#def#Jump("split", 0)<CR>
-  nnoremap <buffer> <silent> <C-t> :<C-U>call go#def#StackPop(v:count1)<cr>
+  if exists('*settagstack') is 0 || has('patch-8.2.0077') is 0
+    nnoremap <buffer> <silent> <C-t> :<C-U>call go#def#StackPop(v:count1)<cr>
+  endif
 endif
 
 if get(g:, "go_textobj_enabled", 1)
@@ -82,43 +82,53 @@ augroup vim-go-buffer
 
   " The file is registered (textDocument/DidOpen) with gopls in plugin/go.vim
   " on the FileType event.
-  " TODO(bc): handle all the other events that may be of interest to gopls,
-  " too (e.g.  BufFilePost , CursorHold , CursorHoldI, FileReadPost,
-  " StdinReadPre, BufWritePost, TextChange, TextChangedI)
+
   if go#util#has_job()
-    autocmd BufWritePost <buffer> call go#lsp#DidChange(expand('<afile>:p'))
-    autocmd FileChangedShellPost <buffer> call go#lsp#DidChange(expand('<afile>:p'))
-    autocmd BufDelete <buffer> call go#lsp#DidClose(expand('<afile>:p'))
+    autocmd BufWritePost,FileChangedShellPost <buffer> call go#lsp#DidChange(resolve(expand('<afile>:p')))
+    autocmd BufDelete <buffer> call go#lsp#DidClose(resolve(expand('<afile>:p')))
   endif
+
+  " send the textDocument/didChange notification when idle. go#lsp#DidChange
+  " will not send an event if the buffer hasn't changed since the last
+  " notification.
+  " autocmd CursorHold,CursorHoldI <buffer> call go#lsp#DidChange(resolve(expand('<afile>:p')))
 
   " autocmd BufEnter,CursorHold <buffer> call go#auto#update_autocmd()
 
   " Echo the identifier information when completion is done. Useful to see
   " the signature of a function, etc...
   if exists('##CompleteDone')
-    autocmd CompleteDone <buffer> call go#auto#echo_go_info()
+    autocmd CompleteDone <buffer> call go#auto#complete_done()
   endif
 
   autocmd BufWritePre <buffer> call go#auto#fmt_autosave()
   autocmd BufWritePost <buffer> call go#auto#metalinter_autosave()
 
-  " clear SameIds when the buffer is unloaded so that loading another buffer
-  " in the same window doesn't highlight the most recently matched
-  " identifier's positions.
-  autocmd BufWinEnter <buffer> call go#guru#ClearSameIds()
+  " TODO(bc): autocmd BufWinLeave call go#lsp#DidChange(expand('<afile>:p'))
 
-  autocmd BufEnter <buffer>
-        \  if go#config#AutodetectGopath() && !exists('b:old_gopath')
-        \|   let b:old_gopath = exists('$GOPATH') ? $GOPATH : -1
-        \|   let $GOPATH = go#path#Detect()
-        \| endif
-  autocmd BufLeave <buffer>
-        \  if exists('b:old_gopath')
-        \|   if b:old_gopath isnot -1
-        \|     let $GOPATH = b:old_gopath
-        \|   endif
-        \|   unlet b:old_gopath
-        \| endif
+  if !has('textprop')
+    "TODO(bc): how to clear sameids and diagnostics when a non-go buffer is
+    " loaded into a window and the previously loaded buffer is still loaded in
+    " another window?
+
+    " TODO(bc): only clear when the new buffer isn't the old buffer
+
+    " clear SameIds when the buffer is unloaded from its last window so that
+    " loading another buffer (especially of a different filetype) in the same
+    " window doesn't highlight the most recently matched identifier's positions.
+    autocmd BufWinLeave <buffer> call go#sameids#ClearSameIds()
+    " clear SameIds when a new buffer is loaded in the window so that the
+    " previous buffer's highlighting isn't used.
+    autocmd BufWinEnter <buffer> call go#sameids#ClearSameIds()
+
+    " clear diagnostics when the buffer is unloaded from its last window so that
+    " loading another buffer (especially of a different filetype) in the same
+    " window doesn't highlight the previously loaded buffer's diagnostics.
+    autocmd BufWinLeave <buffer> call go#lsp#ClearDiagnosticHighlights()
+    " clear diagnostics when a new buffer is loaded in the window so that the
+    " previous buffer's diagnostics aren't used.
+    "autocmd BufWinEnter <buffer> call go#lsp#ClearDiagnosticHighlights()
+  endif
 augroup end
 
 " restore Vi compatibility settings

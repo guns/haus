@@ -6,7 +6,10 @@ set cpo&vim
 " compile the tests instead of running them (useful to catch errors in the
 " test files). Any other argument is appended to the final `go test` command.
 function! go#test#Test(bang, compile, ...) abort
-  let args = ["test", '-tags', go#config#BuildTags()]
+  let args = ["test"]
+  if len(go#config#BuildTags()) > 0
+    call extend(args, ["-tags", go#config#BuildTags()])
+  endif
 
   " don't run the test, only compile it. Useful to capture and fix errors.
   if a:compile
@@ -71,13 +74,11 @@ function! go#test#Test(bang, compile, ...) abort
 
   let l:listtype = go#list#Type("GoTest")
 
-  let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-  let dir = getcwd()
-  execute cd fnameescape(expand("%:p:h"))
+  let l:dir = go#util#Chdir(expand("%:p:h"))
 
   if l:err != 0
     let l:winid = win_getid(winnr())
-    call go#list#ParseFormat(l:listtype, s:errorformat(), split(out, '\n'), l:cmd)
+    call go#list#ParseFormat(l:listtype, s:errorformat(), split(out, '\n'), l:cmd, 0)
     let errors = go#list#Get(l:listtype)
     call go#list#Window(l:listtype, len(errors))
     if empty(errors)
@@ -97,30 +98,40 @@ function! go#test#Test(bang, compile, ...) abort
       call go#util#EchoSuccess("[test] PASS")
     endif
   endif
-  execute cd . fnameescape(dir)
+  call go#util#Chdir(l:dir)
 endfunction
 
-" Testfunc runs a single test that surrounds the current cursor position.
+" go#test#Func runs a single test that surrounds the current cursor position.
 " Arguments are passed to the `go test` command.
 function! go#test#Func(bang, ...) abort
-  " search flags legend (used only)
-  " 'b' search backward instead of forward
-  " 'c' accept a match at the cursor position
-  " 'n' do Not move the cursor
-  " 'W' don't wrap around the end of the file
-  "
-  " for the full list
-  " :help search
-  let test = search('func \(Test\|Example\)', "bcnW")
-
-  if test == 0
-    echo "vim-go: [test] no test found immediate to cursor"
+  let l:test = go#util#TestName()
+  if l:test is ''
+    call go#util#EchoWarning("[test] no test found immediate to cursor")
     return
-  end
+  endif
+  let args = [a:bang, 0, "-run", printf('^%s$', l:test)]
 
-  let line = getline(test)
-  let name = split(split(line, " ")[1], "(")[0]
-  let args = [a:bang, 0, "-run", name . "$"]
+  if a:0
+    call extend(args, a:000)
+  else
+    " only add this if no custom flags are passed
+    let timeout = go#config#TestTimeout()
+    call add(args, printf("-timeout=%s", timeout))
+  endif
+
+  call call('go#test#Test', args)
+endfunction
+
+" go#test#File runs all the tests in the current file.
+" Arguments are passed to the `go test` command.
+function! go#test#File(bang, ...) abort
+  let l:tests = go#util#TestNamesInFile()
+  if len(l:tests) is 0
+    call go#util#EchoWarning("[test] no tests found")
+    return
+  endif
+
+  let args = [a:bang, 0, "-run", printf('^Test(%s)$', join(map(l:tests, 'substitute(v:val, "^Test", "", "")'), '|'))]
 
   if a:0
     call extend(args, a:000)
@@ -216,6 +227,14 @@ function! s:errorformat() abort
   let format .= ",%G" . indent . "%#%\\t%\\{2}%m"
   " }}}1
 
+  " Go 1.14 test verbose output {{{1
+  " Match test output lines similarly to Go 1.11 test output lines, but they
+  " have the test name followed by a colon before the filename when run with
+  " the -v flag.
+  let format .= ",%A" . indent . "%\\+%[%^:]%\\+: %f:%l: %m"
+  let format .= ",%A" . indent . "%\\+%[%^:]%\\+: %f:%l: "
+  " }}}1
+
   " Go 1.11 test output {{{1
   " Match test output lines similarly to Go 1.10 test output lines, but they
   " use an indent level where the Go 1.10 test output uses tabs, so they'll
@@ -229,6 +248,8 @@ function! s:errorformat() abort
 
   " handle panics from test timeouts
   let format .= ",%+Gpanic: test timed out after %.%\\+"
+  " Go 1.20 started adding a list of the running tests when a timeout occurs
+  let format .= ",%+Grunning tests:"
 
   " handle non-timeout panics
   " In addition to 'panic', check for 'fatal error' to support older versions

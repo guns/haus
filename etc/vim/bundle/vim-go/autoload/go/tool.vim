@@ -82,14 +82,16 @@ endfunction
 
 function! go#tool#Info(showstatus) abort
   let l:mode = go#config#InfoMode()
-  if l:mode == 'gocode'
-    call go#complete#Info(a:showstatus)
-  elseif l:mode == 'guru'
+  if l:mode == 'guru'
     call go#guru#DescribeInfo(a:showstatus)
   elseif l:mode == 'gopls'
+    if !go#config#GoplsEnabled()
+      call go#util#EchoError("go_info_mode is 'gopls', but gopls is disabled")
+      return
+    endif
     call go#lsp#Info(a:showstatus)
   else
-    call go#util#EchoError('go_info_mode value: '. l:mode .' is not valid. Valid values are: [gocode, guru, gopls]')
+    call go#util#EchoError('go_info_mode value: '. l:mode .' is not valid. Valid values are: [guru, gopls]')
   endif
 endfunction
 
@@ -113,6 +115,15 @@ function! go#tool#Exists(importpath) abort
     return 0
 endfunction
 
+function! go#tool#List(package_path) abort
+  let [l:out, l:err] = go#util#ExecInDir(['go', 'list', '-tags', go#config#BuildTags(), '-f', '{{.ImportPath}}', a:package_path])
+  if l:err != 0
+      return -1
+  endif
+
+  return split(out, '\n')
+endfunction
+
 function! go#tool#DescribeBalloon()
   let l:fname = fnamemodify(bufname(v:beval_bufnr), ':p')
 
@@ -132,8 +143,6 @@ function! s:balloon(msg)
   if has('balloon_eval')
     if has('balloon_multiline')
       let l:msg = join(a:msg, "\n")
-    else
-      let l:msg = substitute(join(map(deepcopy(a:msg), 'substitute(v:val, "\t", "", "")'), '; '), '{;', '{', '')
     endif
   endif
 

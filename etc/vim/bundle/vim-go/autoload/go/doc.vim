@@ -6,40 +6,26 @@
 let s:cpo_save = &cpo
 set cpo&vim
 
+scriptencoding utf-8
+
 let s:buf_nr = -1
 
 function! go#doc#OpenBrowser(...) abort
-  " check if we have gogetdoc as it gives us more and accurate information.
-  " Only supported if we have json_decode as it's not worth to parse the plain
-  " non-json output of gogetdoc
-  let bin_path = go#path#CheckBinPath('gogetdoc')
-  if !empty(bin_path) && exists('*json_decode')
-    let [l:json_out, l:err] = s:gogetdoc(1)
+  if len(a:000) == 0
+    let [l:out, l:err] = go#lsp#DocLink()
     if l:err
-      call go#util#EchoError(json_out)
+      call go#util#EchoError(l:out)
       return
     endif
 
-    let out = json_decode(json_out)
-    if type(out) != type({})
-      call go#util#EchoError("gogetdoc output is malformed")
+    if len(l:out) == 0
+      call go#util#EchoWarning("could not find path for doc URL")
+      return
     endif
 
-    let import = out["import"]
-    let name = out["name"]
-    let decl = out["decl"]
+    let l:godoc_url = printf('%s/%s', go#config#DocUrl(), l:out)
 
-    let godoc_url = go#config#DocUrl()
-    let godoc_url .= "/" . import
-    if decl !~ '^package'
-      let anchor = name
-      if decl =~ '^func ('
-        let anchor = substitute(decl, '^func ([^ ]\+ \*\?\([^)]\+\)) ' . name . '(.*', '\1', '') . "." . name
-      endif
-      let godoc_url .= "#" . anchor
-    endif
-
-    call go#util#OpenBrowser(godoc_url)
+    call go#util#OpenBrowser(l:godoc_url)
     return
   endif
 
@@ -52,19 +38,30 @@ function! go#doc#OpenBrowser(...) abort
   let exported_name = pkgs[1]
 
   " example url: https://godoc.org/github.com/fatih/set#Set
-  let godoc_url = go#config#DocUrl() . "/" . pkg . "#" . exported_name
+  let godoc_url = printf('%s/%s#%s', go#config#DocUrl(), pkg, exported_name)
   call go#util#OpenBrowser(godoc_url)
 endfunction
 
 function! go#doc#Open(newmode, mode, ...) abort
-  " With argument: run "godoc [arg]".
-  if len(a:000)
-    let [l:out, l:err] = go#util#Exec(['go', 'doc'] + a:000)
-  else " Without argument: run gogetdoc on cursor position.
-    let [l:out, l:err] = s:gogetdoc(0)
-    if out == -1
-      return
-    endif
+  let l:words = a:000
+  let l:package = ''
+  if a:0 is 0
+    let l:words = s:godocWord()
+    let l:package = l:words[0]
+  endif
+
+  if a:0 is 0 && &filetype == 'go'
+    " use gopls to get documentation for go files
+    let [l:out, l:err] = go#lsp#Doc()
+  else
+    " copy l:words before filtering so that filter() works when l:words is a:000
+    let l:words = filter(copy(l:words), 'v:val != ""')
+    let l:wd = go#util#Chdir(get(b:, 'go_godoc_wd', getcwd()))
+    try
+      let [l:out, l:err] = go#util#Exec(['go', 'doc'] + l:words)
+    finally
+      call go#util#Chdir(l:wd)
+    endtry
   endif
 
   if l:err
@@ -72,19 +69,23 @@ function! go#doc#Open(newmode, mode, ...) abort
     return
   endif
 
-  call s:GodocView(a:newmode, a:mode, out)
+  call s:GodocView(a:newmode, a:mode, l:out, l:package)
 endfunction
 
-function! s:GodocView(newposition, position, content) abort
+function! s:GodocView(newposition, position, content, package) abort
   " popup window
   if go#config#DocPopupWindow()
     if exists('*popup_atcursor') && exists('*popup_clear')
       call popup_clear()
 
+      let borderchars = ['-', '|', '-', '|', '+', '+', '+', '+']
+      if &encoding == "utf-8"
+        let borderchars = ['─', '│', '─', '│', '┌', '┐', '┘', '└']
+      endif
       call popup_atcursor(split(a:content, '\n'), {
             \ 'padding': [1, 1, 1, 1],
-            \ 'borderchars': ['-','|','-','|','+','+','+','+'],
-            \ "border": [1, 1, 1, 1],
+            \ 'borderchars': borderchars,
+            \ 'border': [1, 1, 1, 1],
             \ })
     elseif has('nvim') && exists('*nvim_open_win')
       let lines = split(a:content, '\n')
@@ -115,6 +116,7 @@ function! s:GodocView(newposition, position, content) abort
             \ }
       call nvim_open_win(buf, v:true, opts)
       setlocal nomodified nomodifiable filetype=godoc
+      let b:go_package_name = a:package
 
       " close easily with CR, Esc and q
       noremap <buffer> <silent> <CR> :<C-U>close<CR>
@@ -124,17 +126,29 @@ function! s:GodocView(newposition, position, content) abort
     return
   endif
 
+  let l:wd = getcwd()
+  " set the working directory to the directory of the current file when the
+  " filetype is go so that getting doc in the doc window will work regardless
+  " of what the the starting window's working directory is.
+  if &filetype == 'go' && expand('%:p') isnot ''
+    let l:wd = expand('%:p:h')
+  endif
+
   " reuse existing buffer window if it exists otherwise create a new one
   let is_visible = bufexists(s:buf_nr) && bufwinnr(s:buf_nr) != -1
   if !bufexists(s:buf_nr)
-    execute a:newposition
+    call execute(a:newposition)
     sil file `="[Godoc]"`
     let s:buf_nr = bufnr('%')
   elseif bufwinnr(s:buf_nr) == -1
-    execute a:position
-    execute s:buf_nr . 'buffer'
-  elseif bufwinnr(s:buf_nr) != bufwinnr('%')
-    execute bufwinnr(s:buf_nr) . 'wincmd w'
+    call execute(a:position)
+    call execute(printf('%dbuffer', s:buf_nr))
+  elseif bufwinid(s:buf_nr) != bufwinid('%')
+    call win_gotoid(bufwinid(s:buf_nr))
+  endif
+
+  if &filetype == 'godoc'
+    let l:wd = get(b:, 'go_godoc_wd', l:wd)
   endif
 
   " if window was not visible then resize it
@@ -157,6 +171,8 @@ function! s:GodocView(newposition, position, content) abort
   endif
 
   setlocal filetype=godoc
+  let b:go_package_name = a:package
+  let b:go_godoc_wd = l:wd
   setlocal bufhidden=delete
   setlocal buftype=nofile
   setlocal noswapfile
@@ -165,8 +181,8 @@ function! s:GodocView(newposition, position, content) abort
   setlocal nocursorcolumn
   setlocal iskeyword+=:
   setlocal iskeyword-=-
-
   setlocal modifiable
+
   %delete _
   call append(0, split(a:content, "\n"))
   sil $delete _
@@ -178,43 +194,19 @@ function! s:GodocView(newposition, position, content) abort
   noremap <buffer> <silent> <CR> :<C-U>close<CR>
 endfunction
 
-function! s:gogetdoc(json) abort
-  let l:cmd = [
-        \ 'gogetdoc',
-        \ '-tags', go#config#BuildTags(),
-        \ '-pos', expand("%:p:gs!\\!/!") . ':#' . go#util#OffsetCursor()]
-  if a:json
-    let l:cmd += ['-json']
-  endif
-
-  if &modified
-    let l:cmd += ['-modified']
-    return go#util#Exec(l:cmd, go#util#archive())
-  endif
-
-  return go#util#Exec(l:cmd)
-endfunction
-
 " returns the package and exported name. exported name might be empty.
 " ie: fmt and Println
 " ie: github.com/fatih/set and New
-function! s:godocWord(args) abort
-  if !executable('godoc')
-    let msg = "godoc command not found."
-    let msg .= "  install with: go get golang.org/x/tools/cmd/godoc"
-    call go#util#EchoWarning(msg)
-    return []
-  endif
-
-  if !len(a:args)
+function! s:godocWord(...) abort
+  let words = a:000
+  if a:0 is 0
     let oldiskeyword = &iskeyword
+    " TODO(bc): include / in iskeyword when filetype is godoc?
     setlocal iskeyword+=.
     let word = expand('<cword>')
     let &iskeyword = oldiskeyword
     let word = substitute(word, '[^a-zA-Z0-9\\/._~-]', '', 'g')
     let words = split(word, '\.\ze[^./]\+$')
-  else
-    let words = a:args
   endif
 
   if !len(words)
@@ -223,16 +215,24 @@ function! s:godocWord(args) abort
 
   let pkg = words[0]
   if len(words) == 1
-    let exported_name = ""
+    let exported_name = ''
+    if &filetype is 'godoc'
+      if pkg =~ '^[A-Z]'
+        let exported_name = pkg
+        let pkg = b:go_package_name
+      endif
+    endif
   else
     let exported_name = words[1]
   endif
 
-  let packages = go#tool#Imports()
-
-  if has_key(packages, pkg)
-    let pkg = packages[pkg]
+  if &filetype isnot 'godoc'
+    let packages = go#tool#Imports()
+    if has_key(packages, pkg)
+      let pkg = packages[pkg]
+    endif
   endif
+
 
   return [pkg, exported_name]
 endfunction

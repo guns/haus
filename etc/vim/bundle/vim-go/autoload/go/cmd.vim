@@ -56,10 +56,8 @@ function! go#cmd#Build(bang, ...) abort
     let l:listtype = go#list#Type("GoBuild")
     " execute make inside the source folder so we can parse the errors
     " correctly
-    let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-    let dir = getcwd()
     try
-      execute cd . fnameescape(expand("%:p:h"))
+      let l:dir = go#util#Chdir(expand("%:p:h"))
       if l:listtype == "locationlist"
         silent! exe 'lmake!'
       else
@@ -67,7 +65,7 @@ function! go#cmd#Build(bang, ...) abort
       endif
       redraw!
     finally
-      execute cd . fnameescape(dir)
+      call go#util#Chdir(l:dir)
       let &makeprg = default_makeprg
     endtry
 
@@ -117,16 +115,15 @@ endfunction
 
 " Run runs the current file (and their dependencies if any) in a new terminal.
 function! go#cmd#RunTerm(bang, mode, files) abort
-  let cmd = "go run "
-  let tags = go#config#BuildTags()
-  if len(tags) > 0
-    let cmd .= "-tags " . go#util#Shellescape(tags) . " "
+  let cmd = ["go", "run"]
+  if len(go#config#BuildTags()) > 0
+    call extend(cmd, ["-tags", go#config#BuildTags()])
   endif
 
   if empty(a:files)
-    let cmd .= go#util#Shelljoin(go#tool#Files())
+    call extend(cmd, go#tool#Files())
   else
-    let cmd .= go#util#Shelljoin(map(copy(a:files), "expand(v:val)"), 1)
+    call extend(cmd, map(copy(a:files), funcref('s:expandRunArgs')))
   endif
   call go#term#newmode(a:bang, cmd, s:runerrorformat(), a:mode)
 endfunction
@@ -136,7 +133,7 @@ endfunction
 " suitable for long running apps, because vim is blocking by default and
 " calling long running apps will block the whole UI.
 function! go#cmd#Run(bang, ...) abort
-  if has('nvim')
+  if go#config#TermEnabled()
     call go#cmd#RunTerm(a:bang, '', a:000)
     return
   endif
@@ -155,18 +152,30 @@ function! go#cmd#Run(bang, ...) abort
 
   call go#statusline#Update(expand('%:p:h'), l:status)
 
-  let cmd = "go run "
-  let tags = go#config#BuildTags()
-  if len(tags) > 0
-    let cmd .= "-tags " . go#util#Shellescape(tags) . " "
+  let l:cmd = ['go', 'run']
+  let l:tags = go#config#BuildTags()
+  if len(l:tags) > 0
+    let l:cmd = l:cmd + ['-tags', l:tags]
   endif
 
+  if a:0 == 0
+    let l:files = go#tool#Files()
+  else
+    let l:files = map(copy(a:000), funcref('s:expandRunArgs'))
+  endif
+
+  let l:cmd = l:cmd + l:files
+
   if go#util#IsWin()
-    if a:0 == 0
-      exec '!' . cmd . go#util#Shelljoin(go#tool#Files(), 1)
-    else
-      exec '!' . cmd . go#util#Shelljoin(map(copy(a:000), "expand(v:val)"), 1)
+    if go#util#HasDebug('shell-commands')
+      call go#util#EchoInfo(printf('shell command: %s', string(l:cmd)))
     endif
+    try
+      let l:dir = go#util#Chdir(expand("%:p:h"))
+      exec printf('!%s', go#util#Shelljoin(l:cmd, 1))
+    finally
+      call go#util#Chdir(l:dir)
+    endtry
 
     let l:status.state = 'success'
     if v:shell_error
@@ -187,29 +196,32 @@ function! go#cmd#Run(bang, ...) abort
   endif
 
   " :make expands '%' and '#' wildcards, so they must also be escaped
-  let default_makeprg = &makeprg
-  if a:0 == 0
-    let &makeprg = cmd . go#util#Shelljoin(go#tool#Files(), 1)
-  else
-    let &makeprg = cmd . go#util#Shelljoin(map(copy(a:000), "expand(v:val)"), 1)
-  endif
+  let l:default_makeprg = &makeprg
+  let &makeprg = go#util#Shelljoin(l:cmd, 1)
 
   let l:listtype = go#list#Type("GoRun")
 
   let l:status.state = 'success'
+
+  let l:dir = go#util#Chdir(expand("%:p:h"))
   try
     " backup user's errorformat, will be restored once we are finished
     let l:old_errorformat = &errorformat
     let &errorformat = s:runerrorformat()
+
+    if go#util#HasDebug('shell-commands')
+      call go#util#EchoInfo(printf('shell command: %s', string(l:cmd)))
+    endif
+
     if l:listtype == "locationlist"
       exe 'lmake!'
     else
       exe 'make!'
     endif
   finally
-    "restore errorformat
+    call go#util#Chdir(l:dir)
     let &errorformat = l:old_errorformat
-    let &makeprg = default_makeprg
+    let &makeprg = l:default_makeprg
   endtry
 
   let l:errors = go#list#Get(l:listtype)
@@ -251,10 +263,8 @@ function! go#cmd#Install(bang, ...) abort
   let l:listtype = go#list#Type("GoInstall")
   " execute make inside the source folder so we can parse the errors
   " correctly
-  let cd = exists('*haslocaldir') && haslocaldir() ? 'lcd ' : 'cd '
-  let dir = getcwd()
   try
-    execute cd . fnameescape(expand("%:p:h"))
+    let l:dir = go#util#Chdir(expand("%:p:h"))
     if l:listtype == "locationlist"
       silent! exe 'lmake!'
     else
@@ -262,7 +272,7 @@ function! go#cmd#Install(bang, ...) abort
     endif
     redraw!
   finally
-    execute cd . fnameescape(dir)
+    call go#util#Chdir(l:dir)
     let &makeprg = default_makeprg
   endtry
 
@@ -335,6 +345,18 @@ function! s:runerrorformat()
   return l:errorformat
 endfunction
 
+" s:expandRunArgs expands arguments for go#cmd#Run according to the
+" documentation of :GoRun. When val is a readable file, it is expanded to the
+" full path so that go run can be executed in the current buffer's directory.
+" val is return unaltered otherwise to support non-file arguments to go run.
+function! s:expandRunArgs(idx, val) abort
+  let l:val = expand(a:val)
+  if !filereadable(l:val)
+    return l:val
+  endif
+
+  return fnamemodify(l:val, ':p')")
+endfunction
 " ---------------------
 " | Vim job callbacks |
 " ---------------------

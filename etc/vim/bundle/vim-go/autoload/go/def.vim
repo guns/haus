@@ -5,6 +5,8 @@ set cpo&vim
 let s:go_stack = []
 let s:go_stack_level = 0
 
+" go#def#Jump jumps to a definition. Valid modes are 'tab', 'split', 'vsplit',
+" and the empty string, ''.
 function! go#def#Jump(mode, type) abort
   let l:fname = fnamemodify(expand("%"), ':p:gs?\\?/?')
 
@@ -66,6 +68,14 @@ function! go#def#Jump(mode, type) abort
       let [l:out, l:err] = go#util#ExecInDir(l:cmd)
     endif
   elseif bin_name == 'gopls'
+    if !go#config#GoplsEnabled()
+      call go#util#EchoError("go_def_mode is 'gopls', but gopls is disabled")
+      return
+    endif
+
+    " reset l:fname when using gopls so that the filename will be converted to
+    " a URI correctly on windows.
+    let l:fname = expand('%')
     let [l:line, l:col] = go#lsp#lsp#Position()
     " delegate to gopls, with an empty job object and an exit status of 0
     " (they're irrelevant for gopls).
@@ -139,32 +149,25 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
     let ident = parts[3]
   endif
 
-  " Remove anything newer than the current position, just like basic
-  " vim tag support
-  if s:go_stack_level == 0
-    let s:go_stack = []
+  if exists('*settagstack') && has('patch-8.2.0077')
+    let l:tag = expand('<cword>')
+    let l:pos = [bufnr('')] + getcurpos()[1:]
+    let l:stack_entry = {'bufnr': l:pos[0], 'from': l:pos, 'tagname': l:tag}
   else
-    let s:go_stack = s:go_stack[0:s:go_stack_level-1]
+    let l:stack_entry = {'line': line("."), 'col': col("."), 'file': expand('%:p'), 'ident': ident}
   endif
-
-  " increment the stack counter
-  let s:go_stack_level += 1
-
-  " push it on to the jumpstack
-  let stack_entry = {'line': line("."), 'col': col("."), 'file': expand('%:p'), 'ident': ident}
-  call add(s:go_stack, stack_entry)
 
   " needed for restoring back user setting this is because there are two
   " modes of switchbuf which we need based on the split mode
   let old_switchbuf = &switchbuf
 
   normal! m'
-  if filename != fnamemodify(expand("%"), ':p:gs?\\?/?')
+  if a:mode != '' || filename != fnamemodify(expand("%"), ':p:gs?\\?/?')
     " jump to existing buffer if, 1. we have enabled it, 2. the buffer is loaded
     " and 3. there is buffer window number we switch to
     if go#config#DefReuseBuffer() && bufwinnr(filename) != -1
       " jump to existing buffer if it exists
-      call win_gotoid(bufwinnr(filename))
+      call win_gotoid(bufwinid(filename))
     else
       if &modified
         let cmd = 'hide edit'
@@ -196,9 +199,30 @@ function! go#def#jump_to_declaration(out, mode, bin_name) abort
     endif
   endif
   call cursor(line, col)
-
   " also align the line to middle of the view
   normal! zz
+
+  if exists('*settagstack') && has('patch-8.2.0077')
+    " Jump was successful, write previous location to tag stack.
+    let l:winid = win_getid()
+    let l:stack = gettagstack(l:winid)
+    let l:stack['items'] = [l:stack_entry]
+    call settagstack(l:winid, l:stack, 't')
+  else
+    " Remove anything newer than the current position, just like basic
+    " vim tag support
+    if s:go_stack_level == 0
+      let s:go_stack = []
+    else
+      let s:go_stack = s:go_stack[0:s:go_stack_level-1]
+    endif
+
+    " increment the stack counter
+    let s:go_stack_level += 1
+
+    " push it on to the jumpstack
+    call add(s:go_stack, l:stack_entry)
+  endif
 
   let &switchbuf = old_switchbuf
 endfunction

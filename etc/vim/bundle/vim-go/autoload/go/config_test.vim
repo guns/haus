@@ -49,7 +49,6 @@ func! Test_SetBuildTags() abort
       sleep 50m
       let l:lsplog = getbufline('__GOLSP_LOG__', 1, '$')
     endwhile
-    unlet g:go_debug
     " close the __GOLSP_LOG__ window
     only
 
@@ -75,7 +74,27 @@ func! Test_SetBuildTags() abort
 
   finally
     call go#config#SetBuildTags('')
-    unlet g:go_def_mode
+  endtry
+endfunc
+
+func! Test_GoplsEnabled_Clear() abort
+  if !go#util#has_job()
+    return
+  endif
+
+  try
+    let g:go_gopls_enabled = 0
+
+    let l:tmp = gotest#write_file('gopls_disabled.go', [
+          \ 'package example',
+          \ '',
+          \ 'func Example() {',
+          \ "\tprintln(" . '"hello, world!")',
+          \ '}',
+          \ ] )
+
+  finally
+    call delete(l:tmp, 'rf')
   endtry
 endfunc
 

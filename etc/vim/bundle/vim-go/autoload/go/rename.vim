@@ -20,7 +20,7 @@ function! go#rename#Rename(bang, ...) abort
     let to_identifier = a:1
   endif
 
-  let l:bin = go#config#GorenameCommand()
+  let l:bin = go#config#RenameCommand()
 
   " return with a warning if the bin doesn't exist
   let bin_path = go#path#CheckBinPath(l:bin)
@@ -32,17 +32,19 @@ function! go#rename#Rename(bang, ...) abort
   let pos = go#util#OffsetCursor()
   let offset = printf('%s:#%d', fname, pos)
 
+  if l:bin == 'gopls'
+    call go#lsp#Rename(to_identifier)
+    return
+  endif
+
   let args = []
   if l:bin == 'gorename'
     let l:args = extend(l:args, ['-tags', go#config#BuildTags(), '-offset', offset, '-to', to_identifier])
-  elseif l:bin == 'gopls'
-    " TODO(bc): use -tags when gopls supports it
-    let l:args = extend(l:args, ['rename', '-w', l:offset, to_identifier])
   else
     call go#util#EchoWarning('unexpected rename command')
   endif
 
-  let l:cmd = extend([l:bin], l:args)
+  let l:cmd = extend([l:bin_path], l:args)
 
   if go#util#has_job()
     call s:rename_job({
@@ -52,7 +54,12 @@ function! go#rename#Rename(bang, ...) abort
     return
   endif
 
-  let [l:out, l:err] = go#util#ExecInDir(l:cmd)
+  let l:wd = go#util#ModuleRoot()
+  if l:wd == -1
+    let l:wd = expand("%:p:h")
+  endif
+
+  let [l:out, l:err] = go#util#ExecInWorkDir(l:cmd, l:wd)
   call s:parse_errors(l:err, a:bang, split(l:out, '\n'))
 endfunction
 
@@ -66,6 +73,11 @@ function s:rename_job(args)
   " autowrite is not enabled for jobs
   call go#cmd#autowrite()
   let l:cbs = go#job#Options(l:job_opts)
+
+  let l:wd = go#util#ModuleRoot()
+  if l:wd != -1
+    let l:cbs.cwd = l:wd
+  endif
 
   " wrap l:cbs.exit_cb in s:exit_cb.
   let l:cbs.exit_cb = funcref('s:exit_cb', [l:cbs.exit_cb])
