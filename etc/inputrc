@@ -246,8 +246,8 @@ $if bash
     "\C-xg\es":     "\C-] git stash list --patch \n"
     "\C-xgu":       "\C-] git fetch origin --tags --prune \n"
     "\C-xgU":       "\C-] git up \n"
-    "\C-xgv":       "\C-] gitv \n"
-    "\C-xgV":       "\C-]gitv "
+    "\C-xgv":       "\C-] vim -c 'Gclog '\C-b"
+    "\C-xgV":       "\C-] vim -c 'Gclog' \n"
     "\C-xgw":       "\C-] git wdi \n"
     "\C-xgW":       "\C-] git wlp \n"
     "\033\007g":    "\C-] vimgit \n"
@@ -344,109 +344,45 @@ $endif
 ### PostgreSQL
 
 $if psql
-    "\C-x\C-l":     clear-screen
-    "\033\007\r":   "\C-e ; \n"
-
-    # General
-    "\033\007E":    "\C-] \\errverbose \n"
-    "\033\007g":    "\C-e \\g \n"
-    "\C-xg":        "\C-e\\g "
+    "\033\007C":    "\C-] \\conninfo \n"
+    "\C-xc":	    "\C-]\\connect "
+    "\033\007l":    "\C-] \\l \n"
+    "\033\007\r":   "\C-e;\n"
     "\033\007\\":   "\C-] \\q \n"
     "\033\007|":    "\C-] \\q \n"
-    "\C-xC":        "\C-e\\crosstabview "
-    "\C-xW":        "\C-e\\watch "
-
-    # Help
-    "\033\007/":    "\C-] \\? \n"
-    "\033\007?":    "\C-] \\? variables \n"
-    "\C-xh":        "\C-]\\h "
-
-    # Query Buffer
-    "\033\007e":    "\C-e \\e \n"
-    "\C-x\C-e":     "\C-e \\e \n"
-    "\C-xe":        "\C-e\\e "
     "\033\007p":    "\C-] \\p \n"
     "\033\007r":    "\C-] \\r \n"
-    "\033\007s":    "\C-] \\s \n"
-    "\C-xw":        "\C-e \\w "
+    "\033\007e":    "\C-e \\e \n"
+    "\033\007E":    "\C-] \\errverbose \n"
+    "\033\007/":    "\C-] \\? \n"
+    "\033\007?":    "\C-] \\? \n"
+    "\033\007h":    "\C-] \\? \n"
 
-    # Input/Output
-    "\C-xe":        "\C-]\\echo "
-    "\C-xir":       "\C-]\\i "
-    "\C-xo":        "\C-]\\o "
-    "\C-xq":        "\C-]\\qecho "
-
-    # Informational
     "\033\007d":    "\C-] \\dt+ \n"
-    "\C-xd ":       "\C-]\\d+ "
-    "\C-xda":       "\C-] \\da+ \n"
-    "\C-xdA":       "\C-] \\dA+ \n"
-    "\C-xdb":       "\C-] \\db+ \n"
-    "\C-xdc":       "\C-] \\dc+ \n"
-    "\C-xdC":       "\C-] \\dC+ \n"
-    "\C-xddd":      "\C-] \\dd+ \n"
-    "\C-xddp":      "\C-] \\ddp+ \n"
-    "\C-xdD":       "\C-] \\dD+ \n"
-    "\C-xdet":      "\C-] \\det+ \n"
-    "\C-xdes":      "\C-] \\des+ \n"
-    "\C-xdeu":      "\C-] \\deu+ \n"
-    "\C-xdew":      "\C-] \\dew+ \n"
-    "\C-xdf":       "\C-] \\df+ \n"
-    "\C-xdFF":      "\C-] \\dF+ \n"
-    "\C-xdFd":      "\C-] \\dFd+ \n"
-    "\C-xdFp":      "\C-] \\dFp+ \n"
-    "\C-xdFt":      "\C-] \\dFt+ \n"
+    "\C-xdf":       "\C-] \\df \n"
     "\C-xdg":       "\C-] \\dg+ \n"
     "\C-xdi":       "\C-] \\di+ \n"
-    "\C-xdl":       "\C-] \\dl+ \n"
-    "\C-xdL":       "\C-] \\dL+ \n"
-    "\C-xdn":       "\C-] \\dn+ \n"
-    "\C-xdo":       "\C-] \\do+ \n"
-    "\C-xdO":       "\C-] \\dO+ \n"
-    "\C-xdp":       "\C-] \\dp+ \n"
-    "\C-xdr":       "\C-] \\drds+ \n"
+    "\C-xdn":       "\C-] \\dnS+ \n"
+    "\C-xdp":       "\C-] \\dp \n"
+    "\C-xdr":       "\C-] \\drds \n"
     "\C-xds":       "\C-] \\ds+ \n"
+    "\C-xd ":       "\C-]\\d+ "
     "\C-xdt":       "\C-] \\dt+ \n"
-    "\C-xdT":       "\C-] \\dT+ \n"
     "\C-xdu":       "\C-] \\du+ \n"
     "\C-xdv":       "\C-] \\dv+ \n"
-    "\C-xdE":       "\C-] \\dE+ \n"
     "\C-xdx":       "\C-] \\dx+ \n"
-    "\C-xdy":       "\C-] \\dy+ \n"
-    "\033\007l":    "\C-] \\l+ \n"
-    "\C-xsf":       "\C-]\\sf+ "
-    "\C-xsv":       "\C-]\\sv+ "
-    "\033\007z":    "\C-] \\z \n"
 
-    # Formatting
-    "\C-x\C-a":     "\C-] \\a \n"
-    "\C-xf":        "\C-]\\f "
-    "\C-x\C-h":     "\C-] \\H \n"
-    "\C-xp":        "\C-]\\pset "
-    "\C-x\C-t":     "\C-] \\t \n"
-    "\C-x\C-x":     "\C-] \\x \n"
+    "\C-xsf":       "\C-]\\sf "
+    "\C-xsv":       "\C-]\\sv "
+
+    "\C-xs ":       "\C-]\\set "
+    "\033\007a":    "\C-] \\a \n"
+    "\033\007h":    "\C-] \\H \n"
     "\033\007x":    "\C-] \\x \n"
-
-    # Connection
-    "\C-xc":        "\C-]\\connect "
-    "\C-xE":        "\C-]\\encoding "
-    "\C-xP":        "\C-]\\password "
-    "\033\007C":    "\C-] \\conninfo \n"
-
-    # Operating System
-    "\C-xse":       "\C-]\\setenv "
     "\033\007t":    "\C-] \\timing \n"
-    "\C-x!":        "\C-]\\! "
 
-    # Variables
-    "\C-xS":        "\C-]\\set "
-    "\C-xU":        "\C-]\\unset "
-
-    # Large Objects
-    "\C-xle":       "\C-]\\lo_export "
-    "\C-xli":       "\C-]\\lo_import "
-    "\C-xll":       "\C-] \\lo_list \n"
-    "\C-xlu":       "\C-]\\lo_unlink "
+    "\C-xro":       "\C-]SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;\n"
+    "\C-xrw":       "\C-]SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE;\n"
 $endif
 
 ### Mysql
