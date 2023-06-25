@@ -38,7 +38,7 @@ class GitSummary
   end
 
   def authors
-    %x(git shortlog --numbered --summary)
+    %x(git shortlog --numbered --summary --email)
   end
 
   def to_s

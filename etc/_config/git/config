@@ -95,11 +95,12 @@
 	cam  = commit --all --message
 
 	# Stash
-	s    = stash
-	sk   = stash --keep-index
-	sp   = stash-push
-	sl   = stash list --decorate --show-signature --stat
-	slp  = stash list --decorate --show-signature --stat --patch
+	s     = stash
+	sk    = stash --keep-index
+	sp    = stash push --include-untracked --
+	spush = stash-push
+	sl    = stash list --decorate --show-signature --stat
+	slp   = stash list --decorate --show-signature --stat --patch
 
 	# Merging and rebasing
 	m   = merge --stat --log --strategy-option=ignore-space-at-eol --edit
@@ -111,6 +112,7 @@
 	rbc = rebase --continue
 	rbi = rebase --interactive
 	rbp = rebase --show-current-patch
+	rbs = rebase --skip
 	cp  = cherry-pick
 	cpn = cherry-pick --no-commit
 
