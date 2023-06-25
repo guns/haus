@@ -393,6 +393,7 @@ task :chown do
     u = ENV['SUDO_USER']
     chown_R u, nil, 'etc/_config/_kupfer'
     chown_R u, nil, 'etc/_config/Thunar'
+    chown_R u, 'docker', 'etc/_docker/'
     chown_R u, nil, 'etc/_local/_lib/clojure/guns'
     chown_R u, nil, 'etc/vim/UltiSnips'
   end
