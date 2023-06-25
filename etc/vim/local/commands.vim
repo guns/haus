@@ -217,12 +217,15 @@ function! s:CBufferSetup()
 	noremap <buffer> <LocalLeader>L :!deheader -r %<CR>
 endfunction
 
-command! -bar -nargs=1 -complete=file ExecMakeprg call <SID>ExecMakeprg(<q-args>)
 function! s:ExecMakeprg(makeprg)
+	let autoread_save = &autoread
 	let makeprg_save = &makeprg
 	let &l:makeprg = a:makeprg
+	setlocal autoread
 	silent! make!
+	edit!
 	let &l:makeprg = makeprg_save
+	let &l:autoread = autoread_save
 endfunction
 
 command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %:S')
@@ -604,7 +607,7 @@ function! s:RubyBufferSetup()
 	noremap  <buffer> <LocalLeader>et :<C-u>Etask<CR>
 	noremap  <buffer> <LocalLeader>eu :<C-u>Eunittest<CR>
 	noremap  <buffer> <LocalLeader>ev :<C-u>Eview<CR>
-	noremap  <buffer> <LocalLeader>l  :<C-u>RuboCop --fail-level=warning --display-only-fail-level-offenses<CR>
+	noremap  <buffer> <LocalLeader>l  :<C-u>call <SID>ExecMakeprg('standardrb --fix %:S')<CR>
 	noremap  <buffer> <LocalLeader>L  :<C-u>Clog<CR>
 	noremap  <buffer> <LocalLeader>p  :<C-u>Preview<CR>
 	noremap  <buffer> <LocalLeader>t  :<C-u>Runner<CR>
@@ -639,14 +642,11 @@ endfunction
 
 command! -bar -bang PythonLint call <SID>PythonLint('<bang>')
 function! s:PythonLint(bang)
-	setlocal autoread
 	if empty(a:bang)
 		silent! call <SID>ExecMakeprg('python-lint-wrapper %:S')
 	else
 		silent! call <SID>ExecMakeprg('python-lint-wrapper --strict %:S')
 	endif
-	edit!
-	setlocal autoread<
 endfunction
 
 command! -bar -bang StandardJS call <SID>StandardJS('<bang>')
@@ -659,14 +659,14 @@ function! s:StandardJS(bang)
 		let args .= ' --verbose --fix'
 	endif
 
-	setlocal autoread
-	call <SID>ExecMakeprg('standard ' . args . ' %:S')
+	silent! call <SID>ExecMakeprg('standard ' . args . ' %:S')
 endfunction
 
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
 function! s:JavaScriptBufferSetup()
 	SetWhitespace 2
 	setlocal expandtab
+	setlocal iskeyword+=#
 
 	noremap  <buffer> <LocalLeader>l :<C-u>StandardJS!<CR>
 	inoremap <buffer> <C-l>          <Space>=><Space>

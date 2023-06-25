@@ -156,7 +156,7 @@ let g:java_vb = 1
 let g:omni_sql_no_default_maps = 1
 
 " Markdown
-let g:markdown_fenced_languages = ['vim', 'sql', 'ruby']
+let g:markdown_fenced_languages = ['vim', 'sql', 'ruby', 'yaml', 'dockerfile']
 
 " HTML
 let g:html_indent_inctags = "p"

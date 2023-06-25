@@ -537,7 +537,7 @@ vmap ' <Plug>VSurround'
 " Plugin: Shebang
 noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 
-" Plugin: Fugitive (git) + Gitv
+" Plugin: Fugitive (git)
 " VIMGITBINDINGS
 noremap  <Leader>g<Space> :<C-u>Git<Space>
 noremap  <Leader>g1       :<C-u>silent! !git l1<CR>
@@ -570,8 +570,8 @@ noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>g<M-s>   :<C-u>!git stash show -p<CR>
 noremap  <Leader>gu       :<C-u>Git up<CR>
-noremap  <Leader>gv       :Gitv<Space>
-noremap  <Leader>gV       :Gitv!<Space>
+noremap  <Leader>gv       :Gclog<Space>
+noremap  <Leader>gV       :Gclog<CR>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
