@@ -182,12 +182,12 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 	ponymix increase 5
 
 {super + XF86AudioMute,super + shift + End}
+	wmctrl -xa 'Pavucontrol' || pavucontrol
+
+{super + shift + XF86AudioMute,super + alt + End}
 	T='♫ alsamixer ♫'; \
 	wmctrl -a "$T" || \
 	urxvt-client -title "$T" -icon ~/.icons/haus/alsamixergui.svg -g 130x30 -e alsamixer -Vall
-
-{super + shift + XF86AudioMute,super + alt + End}
-	wmctrl -xa 'Pavucontrol' || pavucontrol
 
 alt + {XF86AudioMute,End}
 	notify --no-audio --icon gnome-alsamixer-icon --title 'Audio sink' - < <(patoggle sink)
