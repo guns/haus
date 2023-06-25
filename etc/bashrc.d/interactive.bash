@@ -885,7 +885,13 @@ HAVE docker && {
     alias d='docker'; TCOMP docker d
     dps() { docker ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Networks}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
     alias drun='docker run --rm --interactive --tty'
-    dstop() { local cs=(); IFS=$'\n' cs=($(docker container ps --format '{{.Names}}' | grep "$1")); ((${#cs[@]})) && run docker stop "${cs[@]}"; }
+    dstop() {
+        ruby -e '
+            containers = %x(docker container ps --format "{{.Names}}").split("\n")
+            cs = ARGV.empty? ? containers : ARGV.reduce([]) { |v, arg| v.concat(containers.grep(Regexp.new(arg, (Regexp::IGNORECASE unless arg.match?(/\p{Lu}/))))) }
+            exec("run", "docker", "stop", *cs) unless cs.empty?
+        ' "$@"
+    }
     dnetworkaddresses() { docker network inspect $(docker network ls --format '{{.ID}}') | jq 'map({(.Name): (.Containers | map({(.Name): .IPv4Address}) | add)}) | add'; }
     alias dc='docker-compose'; TCOMP docker-compose dc
     alias dcx='docker-compose exec'
@@ -1108,6 +1114,7 @@ if HAVE systemctl; then
     alias scdelta='systemd-delta'
     alias rc='resolvectl'; TCOMP resolvectl rc
     alias rcq='resolvectl query'
+    alias rcm='resolvectl monitor'
 else
     RC_FUNC rcd /etc/{rc,init}.d /usr/local/etc/{rc,init}.d
 fi
