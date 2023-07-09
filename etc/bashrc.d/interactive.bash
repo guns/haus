@@ -816,7 +816,6 @@ alias diw='di --ignore-all-space'
 alias dir='di --recursive'
 alias diq='di --brief'
 alias dirq='dir --brief'
-alias dwd="ruby -e 'exec *(\$stdout.tty? ? %w[dwdiff --color] : %w[dwdiff --diff-input --color]) + ARGV'"
 alias patch='patch --version-control never'
 
 # git
