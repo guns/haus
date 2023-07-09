@@ -182,11 +182,11 @@
 	# Diff and patch
 	di   = diff --no-prefix
 	diw  = diff --no-prefix --ignore-all-space
-	wdi  = diff --no-prefix --color-words=.
+	wdi  = diff --no-prefix --color-words
 
 	dih  = diff --no-prefix HEAD
 	dihw = diff --no-prefix HEAD --ignore-all-space
-	wdih = diff --no-prefix HEAD --color-words=.
+	wdih = diff --no-prefix HEAD --color-words
 
 	dic  = diff --no-prefix --cached
 	dis  = diff --no-prefix --summary --stat
