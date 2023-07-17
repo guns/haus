@@ -69,7 +69,7 @@ super + q
 	bspc node --close
 
 super + {Tab,shift + Tab}
-	bspc node --focus {next,prev}.local.leaf
+	bspc node --focus {next,prev}.local.leaf.!hidden
 
 alt + Tab
 	if pkill --exact skippy-xd; then \
