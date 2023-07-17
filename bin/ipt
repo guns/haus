@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- encoding: utf-8 -*-
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2023 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -134,11 +134,18 @@ class Ipt
   end
 
   def colon_split arg
+    prefix = ''
+
+    if arg.start_with?('set:')
+      arg = arg[4..-1]
+      prefix = 'set:'
+    end
+
     i = arg.rindex ':'
     if i == nil
-      [arg, '']
+      [prefix + arg, '']
     else
-      [arg[0...i], arg[i+1..-1]]
+      [prefix + arg[0...i], arg[i+1..-1]]
     end
   end
 
@@ -336,7 +343,7 @@ class Ipt
 
   def match_src_dst src_iface, src_addr, dst_iface, dst_addr
     {
-      from_iface: maybe_pair(%W[--in-interface  #{src_iface}]),
+      from_iface: maybe_pair(%W[--in-interface #{src_iface}]),
       from_addr: match_addr(:src, src_addr),
       to_iface: maybe_pair(%W[--out-interface #{dst_iface}]),
       to_addr: match_addr(:dst, dst_addr),
