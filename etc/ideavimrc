@@ -151,6 +151,7 @@ set smartcase
 set notimeout
 
 set ideajoin
+set idearefactormode=keep
 
 mapclear
 imapclear
@@ -429,7 +430,7 @@ nnoremap Q :quit<CR>
 noremap  <C-s>  :<C-u>w<CR>
 inoremap <C-s> <Esc>:<C-u>w<CR>
 
-" """ Text editing {{{1
+""" Text editing {{{1
 
 " Backward-delete-word
 noremap  <A-BS> db
@@ -459,6 +460,7 @@ map  <C-x>r     :source ~/.ideavimrc<CR>
 map  -a         :action Console.Jdbc.ExplainAnalyse<CR>
 map  -A         :action Console.Jdbc.ExplainAnalyse.Raw<CR>
 map  -l         :action ReformatCode<CR>
+map  -r         :action RenameElement<CR>
 map  <C-CR>     :action Console.Jdbc.Execute<CR>
 imap <C-CR>     <Esc><C-CR>
 map  <C-x><C-x> <C-CR>
