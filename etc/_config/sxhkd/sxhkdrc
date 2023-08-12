@@ -116,7 +116,7 @@ super + control + m
 
 super + control + shift + m
 	for NODE in $(bspc query --nodes --node .hidden --desktop); do \
-		bspc node "$NODE" --flag hidden=off; \
+		bspc node "$NODE" --flag hidden=off --focus; \
 	done
 
 super + control + x
@@ -180,6 +180,9 @@ alt + {Pause,XF86Sleep,XF86LaunchB}
 
 {XF86AudioRaiseVolume,super + Prior}
 	ponymix increase 5
+
+super + Home; {1,2,3,4,5,6,7,8,9,0}
+	ponymix set-volume {10,20,30,40,50,60,70,80,90,100}
 
 {super + XF86AudioMute,super + shift + End}
 	wmctrl -xa 'Pavucontrol' || pavucontrol
