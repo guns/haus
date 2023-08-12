@@ -7652,8 +7652,8 @@ function! fugitive#MapJumps(...) abort
       call s:Map('n', 'p',    ':<C-U>exe <SID>GF("pedit")<CR>', '<silent>')
 
       if !exists('g:fugitive_no_maps')
-        call s:Map('n', '<C-P>', ':exe <SID>PreviousItem(v:count1)<Bar>echohl WarningMsg<Bar>echo "CTRL-P is deprecated in favor of ("<Bar>echohl NONE<CR>', '<unique>')
-        call s:Map('n', '<C-N>', ':exe <SID>NextItem(v:count1)<Bar>echohl WarningMsg<Bar>echo "CTRL-N is deprecated in favor of )"<Bar>echohl NONE<CR>', '<unique>')
+        call s:Map('n', '<C-P>', ':exe <SID>PreviousItem(v:count1)<CR>', '<silent><unique>')
+        call s:Map('n', '<C-N>', ':exe <SID>NextItem(v:count1)<CR>', '<silent><unique>')
       endif
       call s:MapMotion('(', 'exe <SID>PreviousItem(v:count1)')
       call s:MapMotion(')', 'exe <SID>NextItem(v:count1)')
