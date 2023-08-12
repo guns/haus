@@ -90,14 +90,30 @@ function! s:SetIskeyword(bang)
 	endif
 endfunction
 
-command! -bang -bar SetDiff call <SID>SetDiff('<bang>') "{{{1
-function! s:SetDiff(bang)
-	if empty(a:bang)
-		setlocal diff?
+command! -bar ToggleDiff call <SID>ToggleDiff() "{{{1
+function! s:ToggleDiff()
+	if winnr('$') != 2
+		if &diff
+			diffoff
+		else
+			diffthis
+		endif
 	elseif &diff
 		windo if expand('%:t') !=# 'index' && &buftype !~# '\vquickfix|help' | diffoff | endif
 	else
 		windo if expand('%:t') !=# 'index' && &buftype !~# '\vquickfix|help' | diffthis | endif
+	endif
+	setlocal diff?
+endfunction
+
+command! -bar ToggleDiffWhitespace call <SID>ToggleDiffWhitespace()
+function! s:ToggleDiffWhitespace()
+	if match(&diffopt, '\v<iwhiteall>') >= 0
+		set diffopt-=iwhiteall
+		echo "Diff ignore whitespace is off"
+	else
+		set diffopt^=iwhiteall
+		echo "Diff ignore whitespace is ON"
 	endif
 endfunction
 
@@ -217,6 +233,7 @@ function! s:CBufferSetup()
 	noremap <buffer> <LocalLeader>L :!deheader -r %<CR>
 endfunction
 
+command! -bar -nargs=1 -complete=file_in_path ExecMakeprg call <SID>ExecMakeprg(<q-args>)
 function! s:ExecMakeprg(makeprg)
 	let autoread_save = &autoread
 	let makeprg_save = &makeprg

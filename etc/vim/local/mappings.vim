@@ -344,7 +344,7 @@ noremap <Leader>sw       :<C-u>SetWhitespace!<Space>
 noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
-noremap <Leader><C-d>    :<C-u>SetDiff! \| SetDiff<CR>
+noremap <Leader><C-d>    :<C-u>ToggleDiff<CR>
 noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
@@ -555,7 +555,7 @@ noremap  <Leader>gc.      :<C-u>Git commit %<CR>
 noremap  <Leader>gca      :<C-u>Git commit --all<CR>
 noremap  <Leader>gcA      :<C-u>Git commit --amend<CR>
 noremap  <Leader>gcc      :<C-u>Git commit<CR>
-noremap  <Leader>gcv      :<C-u>Git commit<CR>
+noremap  <Leader>gcv      :<C-u>Git commit -v<CR>
 noremap  <Leader>gd       :<C-u>silent! !git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! !git f<CR>
