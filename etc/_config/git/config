@@ -180,19 +180,20 @@
 	ts = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\n${@:2}\"; }; f"
 
 	# Diff and patch
-	di   = diff --no-prefix
-	diw  = diff --no-prefix --ignore-all-space
-	wdi  = diff --no-prefix --color-words
+	di       = diff --no-prefix
+	diw      = diff --no-prefix --ignore-all-space
+	wdi      = diff --no-prefix --color-words
 
-	dih  = diff --no-prefix HEAD
-	dihw = diff --no-prefix HEAD --ignore-all-space
-	wdih = diff --no-prefix HEAD --color-words
+	dih      = diff --no-prefix HEAD
+	dihw     = diff --no-prefix HEAD --ignore-all-space
+	wdih     = diff --no-prefix HEAD --color-words
 
-	dic  = diff --no-prefix --cached
-	dis  = diff --no-prefix --summary --stat
+	dic      = diff --no-prefix --cached
+	dis      = diff --no-prefix --summary --stat
+	diorigin = !git diff "origin/$(git rev-parse --abbrev-ref HEAD)"
 
-	fp   = format-patch
-	fpo  = format-patch --stdout
+	fp       = format-patch
+	fpo      = format-patch --stdout
 
 	# Remotes
 	r     = remote --verbose
