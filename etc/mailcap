@@ -7,10 +7,10 @@
 #                                /_/
 #    guns <self@sungpae.com>
 
-application/pdf ; zathura %s     ; nametemplate=%s.pdf
-application/pdf ; pdftotext %s - ; nametemplate=%s.pdf  ; copiousoutput
-application/*   ; less %s
-application/*   ; less %s        ; copiousoutput
-image/*         ; feh %s
-text/html       ; open %s        ; nametemplate=%s.html
-text/html       ; htmldump %s    ; nametemplate=%s.html ; copiousoutput
+application/pdf ; zathura %s ; nametemplate=%s.pdf
+application/pdf ; pdftotext -layout %s - ; nametemplate=%s.pdf ; copiousoutput
+application/* ; pager %s
+application/* ; pager %s ; copiousoutput
+image/* ; feh %s
+text/html ; open %s ; nametemplate=%s.html
+text/html ; htmldump %s ; nametemplate=%s.html ; copiousoutput

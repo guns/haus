@@ -26,8 +26,8 @@ macro browser     gs <exit>gs
 # Mailing lists
 lists .*@googlegroups.com vim.*@vim.org
 
-# Prefer text/plain
-alternative_order text/plain text/html
+# Prefer text/html because w3m does a better job of converting to plain text
+alternative_order text/html text/plain
 
 # Major modes
 #   index:    List the eMails of an openend folder, it's the main mode.
@@ -135,7 +135,7 @@ macro pager \e\0074 "<enter-command>set wrap=78<enter><enter-command>macro pager
 macro pager w       \e\0074
 
 # notmuchfs macros
-macro index,pager,browser \e\007r "<shell-escape>notmuch new<enter>"
+macro index,pager,browser \e\007R "<shell-escape>notmuch new<enter>"
 macro index,pager,browser \e\007n "<shell-escape>mutt-notmuchfs mount  ~/Mail/.search ~/Mail/.notmuchfs ~/Mail >/dev/null 2>&1 &<enter>"
 macro index,pager,browser \e\007N "<shell-escape>mutt-notmuchfs umount ~/Mail/.search                          >/dev/null 2>&1 &<enter>"
 macro index,pager         \e\007/ "\e\007n<enter-command>unmailboxes *; mailboxes \`list-files ~/Mail/SEARCH\`<enter><change-folder>?<toggle-mailboxes>"

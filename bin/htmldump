@@ -1,3 +1,20 @@
-#!/bin/sh
+#!/usr/bin/env python
 
-w3m -dump -cols 78 -o display_link_number=1 -I utf-8 -T text/html "$@"
+import os
+import shutil
+import sys
+
+os.execlp(
+    "w3m",
+    "-dump",
+    "-cols",
+    str(shutil.get_terminal_size().columns),
+    "-o",
+    "display_link_number=1",
+    "-I",
+    "utf-8",
+    "-T",
+    "text/html",
+    "-dump",  # Repeated option here necessary for unknown reason
+    *sys.argv[1:],
+)
