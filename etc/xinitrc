@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+xrdb ~/.Xresources
+
 for d in /etc/X11/xinit/xinitrc.d ~/.xinitrc.d; do
     for f in "$d"/*; do
         [[ -r "$f" ]] && . "$f"
