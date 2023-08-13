@@ -43,6 +43,7 @@ URxvt.saveLines:         65535
 URxvt.scrollBar:         off
 URxvt.scrollTtyKeypress: on
 URxvt.visualBell:        off
+URxvt.iso14755_52:       off
 
 ! Explicit multiple fonts for code point search
 URxvt.font: \
