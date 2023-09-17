@@ -106,14 +106,14 @@ function! s:ToggleDiff()
 	setlocal diff?
 endfunction
 
-command! -bar ToggleDiffWhitespace call <SID>ToggleDiffWhitespace()
-function! s:ToggleDiffWhitespace()
-	if match(&diffopt, '\v<iwhiteall>') >= 0
-		set diffopt-=iwhiteall
-		echo "Diff ignore whitespace is off"
+command! -bar -nargs=1 ToggleDiffopt call <SID>ToggleDiffopt(<args>)
+function! s:ToggleDiffopt(option)
+	if match(&diffopt, '\v<' . a:option . '>') >= 0
+		execute 'set diffopt-=' . a:option
+		echo "Diff option " . a:option . " is off"
 	else
-		set diffopt^=iwhiteall
-		echo "Diff ignore whitespace is ON"
+		execute 'set diffopt+=' . a:option
+		echo "Diff option " . a:option . " is ON"
 	endif
 endfunction
 
