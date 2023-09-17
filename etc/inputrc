@@ -263,9 +263,9 @@ $if bash
     # Python
     "\033\007y":    "\C-] python \n"
 
-    # ncdu
-    "\033\007d":    "\C-] ncdu \n"
-    "\033\007D":    "\C-] ncdu -x \n"
+    # dua
+    "\033\007d":    "\C-] dua interactive \n"
+    "\033\007D":    "\C-] dua interactive -x \n"
 
     # X
     "\C-xX":        "\C-] ((EUID)) && [[ ! $WINDOWID ]] && exec startx \n"
@@ -381,6 +381,7 @@ $if psql
     "\033\007x":    "\C-] \\x \n"
     "\033\007t":    "\C-] \\timing \n"
 
+    "\C-xsp":       "\C-]SET search_path TO "";\C-b\C-b"
     "\C-xro":       "\C-]SET SESSION CHARACTERISTICS AS TRANSACTION READ ONLY;\n"
     "\C-xrw":       "\C-]SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE;\n"
 $endif
