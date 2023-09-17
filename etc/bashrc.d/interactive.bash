@@ -385,7 +385,11 @@ alias rd='rmdir --verbose --parents'; complete -o dirnames rd
 mdf() { mkdir --verbose --parents "$@"; cd "$1"; }; complete -o dirnames mdf
 
 # df du
-alias df='df --human-readable'
+if HAVE duf; then
+    alias df='duf'
+else
+    alias df='df --human-readable'
+fi
 alias du='du --human-readable'
 alias dus='du --summarize'
 
@@ -622,9 +626,12 @@ HAVE netctl && {
     }; TCOMP netctl net
 }
 
-HAVE bluetoothctl && {
+# Bluetooth
+if HAVE bluetuith; then
+    alias bt='bluetuith'
+elif HAVE bluetoothctl; then
     alias bt='bluetoothctl'
-}
+fi
 
 # cURL/wget
 TCOMP curl get

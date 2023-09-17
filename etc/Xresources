@@ -45,6 +45,9 @@ URxvt.scrollTtyKeypress: on
 URxvt.visualBell:        off
 URxvt.iso14755_52:       off
 
+URxvt.iso14755: false
+URxvt.iso14755_52: false
+
 ! Explicit multiple fonts for code point search
 URxvt.font: \
   xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
