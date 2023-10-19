@@ -83,7 +83,7 @@ yield
 endsnippet
 
 snippet pry "pry" b
-(require 'pry'; binding.pry)$0
+(require 'pry'; ENV.delete('DISABLE_PRY'); binding.pry)$0
 endsnippet
 
 snippet deb "debugger" w

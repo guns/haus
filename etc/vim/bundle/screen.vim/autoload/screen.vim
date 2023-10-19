@@ -489,12 +489,10 @@ function! s:ScreenSend(...) " {{{
     let lines += split(g:ScreenShellSendSuffix, '\n')
   endif
 
-  for line in lines
-    let result = s:screen{g:ScreenImpl}.send(line)
-    if v:shell_error
-      echoerr result
-    endif
-  endfor
+  let result = s:screen{g:ScreenImpl}.send(lines)
+  if v:shell_error
+    echoerr result
+  endif
 endfunction " }}}
 
 function! s:ScreenFocus() " {{{
