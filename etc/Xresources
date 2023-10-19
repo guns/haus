@@ -43,10 +43,8 @@ URxvt.saveLines:         65535
 URxvt.scrollBar:         off
 URxvt.scrollTtyKeypress: on
 URxvt.visualBell:        off
-URxvt.iso14755_52:       off
-
-URxvt.iso14755: false
-URxvt.iso14755_52: false
+URxvt.iso14755:          on  # Unicode codepoint entry
+URxvt.iso14755_52:       off # Keycap Picture Insert mode
 
 ! Explicit multiple fonts for code point search
 URxvt.font: \
