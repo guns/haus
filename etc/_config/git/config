@@ -188,6 +188,7 @@
 	dihw     = diff --no-prefix HEAD --ignore-all-space
 	wdih     = diff --no-prefix HEAD --color-words
 
+	dia      = diff --text
 	dic      = diff --no-prefix --cached
 	dis      = diff --no-prefix --summary --stat
 	diorigin = !git diff "origin/$(git rev-parse --abbrev-ref HEAD)"
