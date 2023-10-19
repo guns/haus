@@ -90,7 +90,7 @@ args = OptionParser.new nil do |opt|
 
   opt.on '-p', '--pattern PATTERN', Regexp do |p|
     pattern = p
-    pattern = Regexp.new(p.source, p.options | Regexp::IGNORECASE) if p.source.match?(/\A\p{Lu}*\z/)
+    pattern = Regexp.new(p.source, p.options | Regexp::IGNORECASE) unless p.source.match?(/\p{Lu}/)
   end
 
   opt.on '-r', '--reverse' do
