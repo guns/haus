@@ -26,6 +26,7 @@ IRB.conf[:PROMPT][:SIMPLE_COLOR] = {
   :RETURN   => "%s\n"
 }
 
-IRB.conf[:PROMPT_MODE ] = :SIMPLE_COLOR
+IRB.conf[:PROMPT_MODE] = :SIMPLE_COLOR
 IRB.conf[:SAVE_HISTORY] = 2**16
 IRB.conf[:USE_READLINE] = true
+IRB.conf[:AUTO_INDENT] = false
