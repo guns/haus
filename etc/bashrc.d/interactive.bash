@@ -406,7 +406,7 @@ mt() {
 alias mtb='mt --bind'; TCOMP mount mtb
 alias mtro='mt --read-only'; TCOMP mount mtro
 alias mtbro='mt --bind --read-only'; TCOMP mount mtbro
-alias umt='umount --verbose'; TCOMP mount umt
+alias umt='umount --verbose'; TCOMP umount umt
 alias mtusb='mountusb'; complete -F __mtusb__ mtusb
 alias umtusb='umountusb'
 remt() {
