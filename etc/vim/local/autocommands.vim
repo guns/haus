@@ -262,13 +262,17 @@ augroup GUNS
 augroup END
 
 " vim-lsp
-if executable('pylsp')
-	autocmd User lsp_setup call lsp#register_server({
-		\ 'name': 'pylsp',
-		\ 'cmd': {server_info->['pylsp']},
-		\ 'allowlist': ['python'],
-		\ })
-endif
+for [cmdline, ftlist] in [[['pylsp'], ['python']], [['terraform-lsp'], ['terraform']]]
+	if executable(cmdline[0])
+		execute 'autocmd User lsp_setup call lsp#register_server({'
+			\ . "'name': " . string(cmdline[0]) . ','
+			\ . "'cmd': {server_info->" . string(cmdline) . "},"
+			\ . "'allowlist': " . string(ftlist)
+			\ . '})'
+	endif
+endfor
+unlet cmdline
+unlet ftlist
 
 autocmd User lsp_buffer_enabled
 	\ LSPBufferSetup

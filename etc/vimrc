@@ -478,6 +478,9 @@ let g:lsp_work_done_progress_enabled = 0
 " let g:lsp_show_message_log_level = 'warning'
 let g:lsp_untitled_buffer_enabled = 1
 
+" Plugin: vim-terraform
+let g:terraform_fmt_on_save = 1
+
 """ MAPPINGS and AUTOCOMMANDS
 
 " Set modifiers and load modifier mapping functions
