@@ -67,6 +67,7 @@ user_pref("browser.urlbar.suggest.openpage", false);
 
 // Disable annoying three-dot menu in location bar results
 user_pref("browser.urlbar.resultmenu", false);
+user_pref("browser.urlbar.resultMenu.keyboardAccessible", false);
 
 // Disable "Recommend extensions as you browse"
 user_pref("browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons", false);
