@@ -10,9 +10,9 @@ qbrave:              https://search.brave.com/search?q=***&spellcheck=0
 qcaniuse:            https://caniuse.com/#search=***
 qclojars:            https://clojars.org/search?q=***
 qcodepoints:         https://codepoints.net/search?q=***
-qcppreference:       https://www.google.com/search?pws=0&tbs=li:1&q=site%3Acppreference.com+***
+qcppreference:       https://www.google.com/search?q=site%3Acppreference.com+***
 qdebian:             https://packages.debian.org/search?keywords=***&searchon=all&suite=all&section=all
-qdefine:             https://www.google.com/search?pws=0&tbs=li:1&q=define:***
+qdefine:             https://www.google.com/search?q=define:***
 qdictionary:         https://en.wiktionary.org/wiki/?search=***
 qdockerhub:          https://hub.docker.com/search/?q=***&page=1&isAutomated=0&isOfficial=0&starCount=0&pullCount=0
 qdribbble:           https://dribbble.com/search?q=***
@@ -26,13 +26,13 @@ qfontawesome:        https://fontawesome.com/icons?d=gallery&m=free&q=***
 qgithub:             https://github.com/search?q=***
 qgodoc:              https://godoc.org/?q=***
 qgolang:             https://golang.org/search?q=***
-qgoogle:             https://www.google.com/search?pws=0&tbs=li:1&q=***
+qgoogle:             https://www.google.com/search?q=***
 qgroups:             https://groups.google.com/groups/search?q=***
 qgutenberg:          https://www.gutenberg.org/ebooks/search/?query=***
 qhnsearch:           https://hn.algolia.com/?query=***&sort=byPopularity&prefix&page=0&dateRange=all&type=all
 qiconfinder:         https://www.iconfinder.com/search/?q=***
 qifixit:             https://www.ifixit.com/search?x=0&y=0&query=***
-qimages:             https://www.google.com/search?tbm=isch&pws=0&tbs:li=1&q=***
+qimages:             https://www.google.com/search?tbm=isch&q=***
 qintel:              https://ark.intel.com/search?q=***
 qjquery:             https://jquery.com/?s=***
 qkeyserver:          https://sks-keyservers.net/pks/lookup?op=get&search=***
@@ -69,7 +69,7 @@ qtwitter:            https://twitter.com/search?q=***
 qultimateguitartabs: https://www.ultimate-guitar.com/search.php?value=***&search_type=title
 qurbandictionary:    https://www.urbandictionary.com/define.php?term=***
 quserexperience:     https://ux.stackexchange.com/search?q=***
-qvideo:              https://www.google.com/search?tbm=vid&pws=0&tbs:li=1&q=***
+qvideo:              https://www.google.com/search?tbm=vid&q=***
 qvimeo:              https://vimeo.com/search?q=***
 qwikipedia:          https://en.wikipedia.org/wiki/?search=***
 qwolfram:            https://www.wolframalpha.com/input/?i=***
