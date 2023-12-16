@@ -88,5 +88,5 @@ def get_random_user_agent(pattern: Optional[str] = None) -> str:
     """
     ua = get_user_agents_list().random(pattern)
     if ua is None:
-        raise RuntimeError(f"Failed to find a User-Agent matching {repr(pattern)}")
+        raise RuntimeError("Failed to find a User-Agent matching %r" % pattern)
     return ua
