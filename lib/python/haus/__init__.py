@@ -15,7 +15,7 @@ from types import ModuleType
 from typing import IO, Any, Dict, List, NoReturn, Optional
 from urllib import request
 
-from haus import http_ua, ls_colors, sgr
+from . import http_ua, ls_colors, sgr
 
 get_random_user_agent = http_ua.get_random_user_agent
 LSColors = ls_colors.LSColors

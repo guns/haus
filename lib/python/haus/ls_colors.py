@@ -10,7 +10,7 @@ import sys
 from enum import Enum
 from typing import IO, Any, List, Mapping, NamedTuple, Optional
 
-from haus import sgr
+from . import sgr
 
 
 class LSColors(NamedTuple):
