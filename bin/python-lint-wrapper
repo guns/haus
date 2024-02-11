@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2023 Sung Pae <self@sungpae.com>
+# Copyright (c) 2023-2024 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -23,15 +23,15 @@ def parse_args(args):
 
 
 def run(*cmd: str):
-    if subprocess.run(cmd).returncode != 0:
+    if subprocess.run(cmd, check=False).returncode != 0:
         print("Command failed: " + shlex.join(cmd), file=sys.stderr)
         sys.exit(1)
 
 
-def lint(path, strict=False):
+def lint(path, *, strict=False):
     run("autoimport", path)
-    run("isort", "--quiet", path)
-    run("black", "-q", path)
+    run("ruff", "check", "--quiet", "--fix", path)
+    run("ruff", "format", "--quiet", path)
     mypy = [
         "mypy",
         "--no-error-summary",
@@ -40,7 +40,6 @@ def lint(path, strict=False):
         "--warn-unreachable",
         "--check-untyped-defs",
         "--no-implicit-reexport",
-        "--cache-dir=" + os.path.expanduser("~/.cache/mypy_cache/"),
     ]
     if strict:
         mypy.extend(
@@ -52,10 +51,9 @@ def lint(path, strict=False):
                 "--strict-equality",
                 "--strict-concatenate",
                 "--strict",
-            ]
+            ],
         )
     run(*mypy, path)
-    run("flake8", "--max-line-length=88", "--extend-ignore=E203", path)
 
 
 def execute(args):
@@ -63,7 +61,7 @@ def execute(args):
 
     for path in opts.paths:
         if os.path.exists(path):
-            lint(path, opts.strict)
+            lint(path, strict=opts.strict)
 
 
 if __name__ == "__main__":
