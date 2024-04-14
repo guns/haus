@@ -760,10 +760,22 @@ HAVE vim && {
 # Tmux
 alias xtmuxlaunch='exec tmuxlaunch'
 tmuxeval() {
-    local vars="$(ruby -r shellwords -e 'puts %x(tmux show-environment).split("\n").grep(/^[A-Z]/).map { |l| "export #{l.shellescape}" }')"
+    local vars="$(ruby -r shellwords -e 'puts %x(tmux show-environment).split("\n").grep(/^[^-]/).map { |l| k, v = l.split("=", 2); "export #{k}=#{v.shellescape}" }')"
     echo "$vars"
     eval "$vars"
 }
+tmuxsetenv() {
+    for kv; do
+        export "$kv"
+        run tmux set-environment "${kv%%=*}" "${kv##*=}"
+    done
+}; TCOMP export tmuxsetenv
+tmuxunsetenv() {
+    for k; do
+        export -n "${k%%=*}"
+        run tmux set-environment -u "${k%%=*}"
+    done
+}; TCOMP export tmuxunsetenv
 
 # GNU screen
 HAVE screen && {
