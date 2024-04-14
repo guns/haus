@@ -68,6 +68,7 @@ bspc rule --add Transmission-gtk       state=floating
 bspc rule --add vlc                    state=floating
 bspc rule --add Xdialog                state=floating
 bspc rule --add Xsensors               state=floating
+bspc rule --add zenity                 state=floating
 
 # Setup monitors
 "$HOME/.config/bspwm/bspwm-monitor-setup"
