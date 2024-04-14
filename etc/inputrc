@@ -155,8 +155,7 @@ $if bash
     "\C-xs":        "\C-]cdsrc "
     "\C-xS":        "\C-]cdSRC "
     "\C-x\C-t":     "\C-] cdtmp \n"
-    "\C-xt":        "\C-]cdtmp "
-    "\C-xT":        "\C-]cd /tmp/"
+    "\C-xT":        "\C-] cd /tmp/ \n"
     "\C-xu":        "\C-]cdusb "
     "\C-x\C-u":     "\C-] cdusb \n"
     "\C-x\C-v":     "\C-] cd /var/ \n"
@@ -279,6 +278,26 @@ $if bash
 
     # notify
     "\033\007\r":   "\C-e; n\n"
+
+    # Terraform
+    "\C-xt ":       "\C-]terraform "
+    "\C-xta":       "\C-]terraform apply\n"
+    "\C-xtc":       "\C-]terraform console\n"
+    "\C-xtd":       "\C-]terraform destroy\n"
+    "\C-xti":       "\C-]terraform init\n"
+    "\C-xtp":       "\C-]terraform plan\n"
+    "\C-xtr":       "\C-]terraform refresh\n"
+    "\C-xts ":      "\C-]terraform state "
+    "\C-xtsl":      "\C-]terraform state list\n"
+    "\C-xtsm":      "\C-]terraform state mv "
+    "\C-xtsr":      "\C-]terraform state rm ''\C-b"
+    "\C-xtss":      "\C-]terraform state show ''\C-b"
+    "\C-xtS":       "\C-]terraform show | vim -c 'set nomodified' -\n"
+    "\C-xtv":       "\C-]terraform validate\n"
+    "\C-xtw ":      "\C-]terraform workspace "
+    "\C-xtwl":      "\C-]terraform workspace list\n"
+    "\C-xtws":      "\C-]terraform workspace select "
+    "\C-xtW":       "\C-]terraform workspace show\n"
 $endif
 
 ### gdb
