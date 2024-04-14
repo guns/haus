@@ -24,7 +24,13 @@ super + alt + control + q
 #
 
 super + alt + space
-	bspc desktop --layout next
+	bsp-layout next --layouts monocle,tall,rtall,wide,rwide,grid,rgrid,even || bspc desktop --layout next
+
+super + alt + shift + space
+	bsp-layout previous --layouts monocle,tall,rtall,wide,rwide,grid,rgrid,even || bspc desktop --layout prev
+
+super + alt + control + space
+	bsp-layout remove
 
 super + alt + {j,k,button1,button3}
 	bspc desktop --focus {next,prev,next,prev}
@@ -82,7 +88,7 @@ super + control + {h,j,k,l}
 	bspc node --presel-dir ~{west,south,north,east}
 
 super + control + shift + {h,j,k,l}
-	bspc node --swap {west,south,north,east}
+	bspc node --swap {west,south,north,east}.local
 
 super + control + {1-9}
 	bspc node --presel-ratio 0.{1-9}
