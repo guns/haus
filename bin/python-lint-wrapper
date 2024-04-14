@@ -22,16 +22,18 @@ def parse_args(args):
     return parser.parse_args(args)
 
 
-def run(*cmd: str):
-    if subprocess.run(cmd, check=False).returncode != 0:
-        print("Command failed: " + shlex.join(cmd), file=sys.stderr)
-        sys.exit(1)
+def run(*commands) -> bool:
+    success = True
+
+    for cmd in commands:
+        if subprocess.call(cmd, check=False) != 0:
+            print("Command failed: " + shlex.join(cmd), file=sys.stderr)
+            success = False
+
+    return success
 
 
 def lint(path, *, strict=False):
-    run("autoimport", path)
-    run("ruff", "check", "--quiet", "--fix", path)
-    run("ruff", "format", "--quiet", path)
     mypy = [
         "mypy",
         "--no-error-summary",
@@ -53,7 +55,16 @@ def lint(path, *, strict=False):
                 "--strict",
             ],
         )
-    run(*mypy, path)
+
+    success = run(
+        ["autoimport", path],
+        ["ruff", "format", "--quiet", path],
+        ["ruff", "check", "--quiet", "--fix", path],
+        [*mypy, path],
+    )
+
+    if not success:
+        sys.exit(1)
 
 
 def execute(args):
