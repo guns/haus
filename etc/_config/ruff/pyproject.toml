@@ -10,7 +10,7 @@ select = [
 	"I",     # isort
 	"N",     # pep8-naming
 	# "D",     # pydocstyle
-	"UP",    # pyupgrade
+	# "UP",    # pyupgrade
 	"YTT",   # flake8-2020
 	# "ANN",   # flake8-annotations
 	"ASYNC", # flake8-async
@@ -64,5 +64,6 @@ select = [
 	# "RUF",   # Ruff-specific  rules
 ]
 ignore = [
+	"E741", # Checks for the use of the characters 'l', 'O', or 'I' as variable names.
 	"SIM112", # Check for environment variables that are not capitalized.
 ]
