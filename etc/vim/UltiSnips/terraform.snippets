@@ -1,0 +1,207 @@
+snippet t "true" w
+true
+endsnippet
+
+snippet f "false" w
+false
+endsnippet
+
+snippet ter "terraform" b
+terraform {
+	$0
+}
+endsnippet
+
+snippet rv "required_version" b
+required_version = "$0"
+endsnippet
+
+snippet rp "required_providers" b
+required_providers {
+	$0
+}
+endsnippet
+
+snippet pro "provider" b
+provider "$1" {
+	$0
+}
+endsnippet
+
+snippet pros "providers" b
+providers = {
+	$0
+}
+endsnippet
+
+snippet res "resource" b
+resource "$1" "$2" {
+	$0
+}
+endsnippet
+
+snippet dat "data" b
+data "$1" "$2" {
+	$0
+}
+endsnippet
+
+snippet out "output" b
+output "$1" {value = $0}
+endsnippet
+
+snippet loc "locals" b
+locals {
+	$0
+}
+endsnippet
+
+snippet var "variable" b
+variable "$1" {
+	type = $0
+}
+endsnippet
+
+snippet l "local." w
+local.
+endsnippet
+
+snippet v "var." w
+var.
+endsnippet
+
+snippet mod "module" b
+module "$1" {
+	source = "$0"
+}
+endsnippet
+
+snippet fore "for_each" w
+for_each = $0
+endsnippet
+
+snippet foe "for_each" w
+for_each = $0
+endsnippet
+
+snippet ea "each" w
+each.
+endsnippet
+
+snippet eak "each.key" w
+each.key
+endsnippet
+
+snippet eav "each.value" w
+each.value
+endsnippet
+
+snippet for "for" w
+for $1 in $2 : $0
+endsnippet
+
+snippet ta "tags" w
+tags = {$0}
+endsnippet
+
+snippet tn "tags Name" b
+tags = {Name = $0}
+endsnippet
+
+snippet des "description" w
+description = $0
+endsnippet
+
+snippet ob "object({})" w
+object({$0})
+endsnippet
+
+snippet mov "moved" b
+moved {
+	from = $1
+	to   = $0
+}
+endsnippet
+
+snippet imp "import" w
+import {
+	id = $0
+	to = $1
+}
+endsnippet
+
+snippet dep "depends_on" b
+depends_on = [
+	$1, # $0
+]
+endsnippet
+
+snippet dyn "dynamic" b
+dynamic "$1" {
+	$0
+	content {
+	}
+}
+endsnippet
+
+snippet lif "lifecycle" b
+lifecycle {
+	$0
+}
+endsnippet
+
+snippet des "desciption" w
+description = $0
+endsnippet
+
+snippet def "default" w
+default = $0
+endsnippet
+
+snippet n "number" w
+number
+endsnippet
+
+snippet s "string" w
+string
+endsnippet
+
+snippet ign "ignore_changes" w
+ignore_changes = [$0]
+endsnippet
+
+snippet m "map" w
+map($0)
+endsnippet
+
+snippet o "optional" w
+optional($0)
+endsnippet
+
+snippet 00 "0.0.0.0/0" w
+0.0.0.0/0
+endsnippet
+
+snippet coa "coalesce" w
+coalesce($0)
+endsnippet
+
+snippet li "list" w
+list($0)
+endsnippet
+
+snippet re "replace" w
+replace($0)
+endsnippet
+
+snippet sw "startswith" w
+startswith($0)
+endsnippet
+
+snippet tp "trimprefix" w
+trimprefix($0)
+endsnippet
+
+snippet ew "endswith" w
+endswith($0)
+endsnippet

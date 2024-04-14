@@ -10,33 +10,41 @@ $0
 """
 
 from argparse import ArgumentParser
+from typing import Sequence
 import sys
 
 
-def parse_args(args):
+def parser() -> ArgumentParser:
 	parser = ArgumentParser(description=__doc__)
-	return parser.parse_args(args)
+	return parser
 
 
-def execute(args):
-	opts = parse_args(args)
+def main(args: Sequence[str]) -> int:
+	opts = parser().parse_args(args)
+	return 0
 
 
 if __name__ == "__main__":
-	sys.exit(execute(sys.argv[1:]))
+	sys.exit(main(sys.argv[1:]))
 endsnippet
 
 snippet #! "#!" w
 #!/usr/bin/env python
 endsnippet
 
-snippet def "def" w
-def $1($2):
+snippet def "def" b
+def ${1}(${2}) -> ${3}:
 	$0
 endsnippet
 
-snippet defs "def (self)" w
-def $1(self${2}):
+snippet defs "def (self)" b
+def ${1}(self${2}) -> $3:
+	$0
+endsnippet
+
+snippet defc "def (cls)" w
+@classmethod
+def ${1}(cls${2}) -> ${3}:
 	$0
 endsnippet
 
@@ -54,7 +62,7 @@ snippet ra "range()" w
 range($0)
 endsnippet
 
-snippet L "len" w
+snippet l "len" w
 len($0)
 endsnippet
 
@@ -105,8 +113,17 @@ snippet im "import" b
 import $0
 endsnippet
 
+snippet ift "if TYPE_CHECKING:" w
+if TYPE_CHECKING:
+	$0
+endsnippet
+
 snippet fr "fr" b
 from $1 import $0
+endsnippet
+
+snippet frf "from __future__ import" b
+from __future__ import $0
 endsnippet
 
 snippet _d "__doc__" w
@@ -150,6 +167,7 @@ endsnippet
 snippet try "try:" w
 try:
 	$0
+finally:
 endsnippet
 
 snippet exc "except:" w
@@ -160,6 +178,14 @@ endsnippet
 snippet fin "finally:" w
 finally:
 	$0
+endsnippet
+
+snippet P "Path" w
+Path($0)
+endsnippet
+
+snippet rt "Path().read_text()" w
+Path($0).read_text()
 endsnippet
 
 snippet osp "osp" w
@@ -190,6 +216,14 @@ snippet pj "os.path.join" w
 os.path.join($0)
 endsnippet
 
+snippet isd "os.path.isdir" w
+os.path.isdir($0)
+endsnippet
+
+snippet isf "os.path.isfile" w
+os.path.isfile($0)
+endsnippet
+
 snippet M "match" w
 match $1:
 	$0
@@ -203,6 +237,10 @@ endsnippet
 
 snippet deb "pdb" w
 breakpoint()
+endsnippet
+
+snippet dump "json.dump" w
+import json; from pathlib import Path; Path($1).write_text(json.dumps($0, default=str))
 endsnippet
 
 snippet sub "subprocess" w
@@ -233,26 +271,54 @@ snippet refm "re.fullmatch" w
 re.fullmatch($0)
 endsnippet
 
-snippet l "lambda" w
+snippet fn "lambda" w
 lambda $1: $0
 endsnippet
 
-snippet li "list" w
-list($0)
+snippet ft "functools" w
+functools.$0
+endsnippet
+
+snippet it "itertools" w
+itertools.$0
+endsnippet
+
+snippet op "operator" w
+operator.
+endsnippet
+
+snippet dd "collections.defaultdict" w
+collections.defaultdict($0)
+endsnippet
+
+snippet deq "deque" w
+collections.deque
+endsnippet
+
+snippet red "functools.reduce" w
+functools.reduce($0)
+endsnippet
+
+snippet li "list[]" w
+list[$0]
+endsnippet
+
+snippet di "dict[]" w
+dict[$0]
 endsnippet
 
 snippet m "math" w
 math.
 endsnippet
 
-snippet cl "class" w
+snippet cl "class" b
 class $1:
 	$0
 endsnippet
 
-snippet datacl "dataclass" w
-@dataclasses.dataclass
-class $1:
+snippet dcl "dataclass" b
+@dataclasses.dataclass${1:(frozen=True$2)}
+class $3:
 	$0
 endsnippet
 
@@ -265,17 +331,42 @@ snippet enum "enum" w
 ${1} = enum.Enum("$1", ($0))
 endsnippet
 
-snippet ini "__init__" w
-def __init__($1):
+snippet ini "__init__" b
+def __init__(self, $1):
 	$0
 endsnippet
 
-snippet testcl "class ... unittest.TestCase" w
+snippet iter "__iter__" b
+def __iter__(self) -> Iterable[$1]:
+	$0
+endsnippet
+
+snippet ent "__enter__" b
+def __enter__(self) -> $1:
+	$0
+endsnippet
+
+snippet EXI "__exit__ full" b
+def __exit__(
+	self,
+	exc_type: Optional[type[BaseException]],
+	exc_value: Optional[BaseException],
+	traceback: Optional[types.TracebackType],
+) -> None:
+	$0
+endsnippet
+
+snippet exi "__exit__ light" b
+def __exit__(self, *args: object) -> None:
+	$0
+endsnippet
+
+snippet testcl "class ... unittest.TestCase" b
 class $1(unittest.TestCase):
 	$0
 endsnippet
 
-snippet test "test" w
+snippet test "test" b
 def test_$1(self):
 	tests = [
 		$0
@@ -330,6 +421,61 @@ snippet O "Optional[]" w
 Optional[$0]
 endsnippet
 
-snippet S "Sequence[]" w
+snippet map "map" w
+Mapping[$0]
+endsnippet
+
+snippet pp "pprint" w
+pprint.pprint($0)
+endsnippet
+
+snippet supp "contextlib.suppress" w
+with contextlib.suppress($1):
+	$0
+endsnippet
+
+snippet seq "Sequence[]" w
 Sequence[$0]
+endsnippet
+
+snippet col "Collection[]" w
+Collection[$0]
+endsnippet
+
+snippet cal "Callable[]" w
+Callable[$0]
+endsnippet
+
+snippet mpt "types.MappingProxyType" w
+types.MappingProxyType($0)
+endsnippet
+
+snippet defp "@property def" b
+@property
+def $1(self$2) -> $3:
+	$0
+endsnippet
+
+snippet _a "__all__" w
+__all__ = [$0]
+endsnippet
+
+snippet asi "asyncio" w
+asyncio.
+endsnippet
+
+snippet dt "datetime" w
+datetime
+endsnippet
+
+snippet now "now" w
+datetime.now(timezone.utc)
+endsnippet
+
+snippet td "timedelta" w
+timedelta
+endsnippet
+
+snippet tb "traceback" w
+traceback
 endsnippet

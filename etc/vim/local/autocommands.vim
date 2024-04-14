@@ -259,6 +259,10 @@ augroup GUNS
 		\ setlocal expandtab |
 		\ SetWhitespace 2
 
+	" Terraform
+	autocmd FileType terraform
+		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>'
+
 augroup END
 
 " vim-lsp
@@ -278,7 +282,7 @@ autocmd User lsp_buffer_enabled
 	\ LSPBufferSetup
 
 autocmd User lsp_float_opened
-	\ execute 'noremap <buffer> <silent> <C-c> <Plug>(lsp-preview-close)' |
+	\ execute 'nmap <buffer> <silent> <C-c> <Plug>(lsp-preview-close)' |
 	\ execute 'noremap <buffer> <silent> <expr><C-f> lsp#scroll(+8)' |
 	\ execute 'noremap <buffer> <silent> <expr><C-b> lsp#scroll(-8)'
 
