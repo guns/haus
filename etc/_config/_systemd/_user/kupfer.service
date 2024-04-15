@@ -1,0 +1,7 @@
+[Service]
+Type = simple
+ExecStart = /usr/bin/kupfer --no-splash
+Restart = on-failure
+
+[Install]
+WantedBy = default.target
