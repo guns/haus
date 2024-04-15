@@ -65,7 +65,7 @@ def urlopen(url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any) -
     """
     Execute an HTTP request to url with a recent User-Agent header.
     """
-    ua = get_random_user_agent("Linux")
+    ua = get_random_user_agent("Firefox")
     if ua is None:
         raise RuntimeError("User-Agent search failed")
 

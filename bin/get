@@ -9,7 +9,8 @@ haus.execvp(
         "curl",
         "--progress-bar",
         "--location",
-        "--user-agent=" + haus.get_random_user_agent("Linux"),
+        "--user-agent",
+        haus.get_random_user_agent("Firefox"),
         *sys.argv[1:],
     ]
 )

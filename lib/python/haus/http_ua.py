@@ -4,21 +4,26 @@
 Module for obtaining a recent HTTP User-Agent.
 """
 
+import contextlib
+import dataclasses
 import json
 import os
 import random
 import re
 import time
 from pathlib import Path
-from typing import NamedTuple, Optional
-from urllib import request
+from typing import Optional
 
-UA_SOURCE_URL = "https://www.useragents.me/api"
+from pyquery import PyQuery  # type: ignore
+
+UA_SOURCE_URL = "https://www.useragents.me/"
 UA_CACHE_PATH = os.path.expanduser("~/.cache/http_ua.json")
 SECS_PER_WEEK = 7 * 24 * 60 * 60
+REFRESH_DELTA = 4 * SECS_PER_WEEK
 
 
-class UserAgentsList(NamedTuple):
+@dataclasses.dataclass(frozen=True)
+class UserAgentsList:
     time: float
     data: list[str]
 
@@ -52,8 +57,8 @@ def fetch_user_agents_list() -> UserAgentsList:
     """
     Fetch user agents list from UA_SOURCE_URL.
     """
-    resp = json.loads(request.urlopen(UA_SOURCE_URL).read())
-    return UserAgentsList(time=time.time(), data=[x["ua"] for x in resp["data"]])
+    pq = PyQuery(url=UA_SOURCE_URL)
+    return UserAgentsList(time=time.time(), data=[ta.text for ta in pq(".ua-textarea")])
 
 
 def get_user_agents_list() -> UserAgentsList:
@@ -67,16 +72,14 @@ def get_user_agents_list() -> UserAgentsList:
     ualist = None
 
     if os.path.exists(UA_CACHE_PATH):
-        try:
+        with contextlib.suppress(json.decoder.JSONDecodeError):
             ualist = UserAgentsList(**json.loads(Path(UA_CACHE_PATH).read_text()))
-        except json.decoder.JSONDecodeError:
-            pass
 
-    if ualist is None or time.time() - ualist.time > 4 * SECS_PER_WEEK:
+    if ualist is None or time.time() - ualist.time > REFRESH_DELTA:
         ualist = fetch_user_agents_list()
         os.makedirs(os.path.dirname(UA_CACHE_PATH), mode=0o700, exist_ok=True)
         with open(UA_CACHE_PATH, "w") as f:
-            f.write(json.dumps(ualist._asdict()))
+            f.write(json.dumps(vars(ualist)))
 
     return ualist
 

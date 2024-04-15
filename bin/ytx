@@ -8,7 +8,7 @@ haus.execvp(
     [
         "yt-dlp",
         "--trim-filenames=120",
-        "--user-agent=" + haus.get_random_user_agent("Linux"),
+        "--user-agent=" + haus.get_random_user_agent("Firefox"),
         "--audio-format=m4a",
         "--audio-quality=0",
         "--extract-audio",
