@@ -54,7 +54,7 @@ if show_upgrades
 
   JSON.parse(Net::HTTP.get(url))['results'].each do |remote|
     pkg, remote_version = remote.values_at('Name', 'Version')
-    local_version = packages[pkg]
+    local_version = packages.delete(pkg)
 
     if local_version
       cmp = vercmp(local_version, remote_version)
@@ -68,6 +68,10 @@ if show_upgrades
 
       log "#{icon} #{pkg}: #{local_version} #{rel} #{remote_version}", sgr
     end
+  end
+
+  packages.each do |pkg, local_version|
+    log "⊘ #{pkg}: #{local_version} (orphan)", '31'
   end
 else
   puts packages.keys
