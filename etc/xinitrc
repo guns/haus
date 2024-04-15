@@ -28,7 +28,6 @@ touch "$MONITOR_LOCK" "$WALLPAPER_LOCK"
 
 /usr/bin/sxhkd &
 xautolock-launch 15 &
-/usr/bin/volumeicon &
 /usr/bin/picom &
 (inotifywait "$MONITOR_LOCK"; exec kupfer --no-splash) &
 (inotifywait "$MONITOR_LOCK"; exec iptablesnotify) &
