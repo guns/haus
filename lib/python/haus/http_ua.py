@@ -14,7 +14,9 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from pyquery import PyQuery  # type: ignore
+with contextlib.suppress(ImportError):
+    from pyquery import PyQuery  # type: ignore # noqa: autoimport
+
 
 UA_SOURCE_URL = "https://www.useragents.me/"
 UA_CACHE_PATH = os.path.expanduser("~/.cache/http_ua.json")
