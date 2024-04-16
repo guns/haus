@@ -26,7 +26,7 @@ def run(*commands) -> bool:
     success = True
 
     for cmd in commands:
-        if subprocess.call(cmd) != 0:
+        if subprocess.run(cmd, check=False).returncode != 0:
             print("Command failed: " + shlex.join(cmd), file=sys.stderr)
             success = False
 
