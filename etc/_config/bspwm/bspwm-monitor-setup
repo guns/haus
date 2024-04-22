@@ -4,7 +4,7 @@
 require 'set'
 
 if ENV['CLAMSHELL'] == '1'
-  system *%w[xrandr --output eDP1 --off]
+  system *%w[xrandr --output eDP-1 --off]
 end
 
 info = %x(xrandr --listmonitors).lines
@@ -14,26 +14,23 @@ case
 when Set['DP-1', 'HDMI-0'].subset?(monitors)
   system *%w[xrandr --output HDMI-0 --primary
                     --output DP-1 --left-of HDMI-0
-                    --output eDP1 --off]
+                    --output eDP-1 --off]
   system *%w[bspc monitor DP-1 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor HDMI-0 --reset-desktops 6 7 8 9 0]
   system *%w[bspc desktop --focus 6]
 when Set['DP1-1', 'HDMI2'].subset?(monitors)
   system *%w[xrandr --output HDMI2 --primary
                     --output DP1-1 --left-of HDMI2
-                    --output eDP1 --off]
+                    --output eDP-1 --off]
   system *%w[bspc monitor DP1-1 --reset-desktops 1 2 3 4 5]
   system *%w[bspc monitor HDMI2 --reset-desktops 6 7 8 9 0]
   system *%w[bspc desktop --focus 6]
-when Set['eDP1', 'HDMI2'].subset?(monitors)
-  system *%w[xrandr --output HDMI2 --primary --pos 0x0 --rotate normal
-                    --output eDP1 --mode 1680x1050 --pos 120x1080 --rotate normal]
-  system *%w[bspc monitor HDMI2 --reset-desktops 1 2 3 4 5]
-  system *%w[bspc monitor eDP1  --reset-desktops 6 7 8 9 0]
-  system *%w[bspc desktop --focus 6]
-when Set['eDP1'].subset?(monitors)
-  system *%w[xrandr --output eDP1 --mode 1680x1050]
-  system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
+when Set['eDP-1', 'HDMI-1'].subset?(monitors)
+  system *%w[xrandr --output HDMI-1 --primary
+                    --output eDP-1 --below HDMI2]
+  system *%w[bspc monitor eDP-1 --reset-desktops 1 2 3 4 5]
+  system *%w[bspc monitor HDMI-1 --reset-desktops 6 7 8 9 0]
+  system *%w[bspc desktop --focus 1]
 else
   system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
 end
