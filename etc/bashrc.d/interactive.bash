@@ -921,7 +921,6 @@ alias mp='modprobe --all'; TCOMP modprobe mp
 alias trim='fstrim --all --verbose'
 
 HAVE rfkill && {
-    alias rfk='rfkill'; TCOMP rfkill rfk
     alias rfdisable='run rfkill block all'
     alias rfenable='run rfkill unblock all'
 }
