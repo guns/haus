@@ -95,18 +95,9 @@ def parse_args(args):
         action="store_true",
         help="Change file ownership to match parent directories",
     )
-    parser.add_argument(
-        "-r", "--recurse", action="store_true", help="Recurse into subdirectories"
-    )
-    parser.add_argument(
-        "-n", "--noop", action="store_true", help="Only show what would happen"
-    )
-    parser.add_argument(
-        "paths",
-        nargs="+",
-        type=os.path.abspath,  # type: ignore[arg-type]
-        metavar="path",
-    )
+    parser.add_argument("-r", "--recursive", action="store_true", help="Recurse into subdirectories")
+    parser.add_argument("-n", "--noop", action="store_true", help="Only show what would happen")
+    parser.add_argument("paths", nargs="+", type=os.path.abspath, metavar="path")
     return parser.parse_args(args)
 
 
@@ -165,25 +156,24 @@ def normalize(path, parent: Entry, mask, chown, noop, info: Info) -> Entry:
         if mode != newmode:
             _chmod(path, s, newmode, noop, info.lsc)
 
-    if chown:
-        if uid != parent.uid or gid != parent.gid:
-            print(
-                "%slchown %s:%s → %s:%s on %s"
-                % (
-                    "(noop) " if noop else "",
-                    info.user(uid),
-                    info.group(gid),
-                    info.user(parent.uid),
-                    info.group(parent.gid),
-                    info.lsc.format(path, s),
-                )
-            )
+    if chown and (uid != parent.uid or gid != parent.gid):
+        print(
+            "%slchown %s:%s → %s:%s on %s"
+            % (
+                "(noop) " if noop else "",
+                info.user(uid),
+                info.group(gid),
+                info.user(parent.uid),
+                info.group(parent.gid),
+                info.lsc.format(path, s),
+            ),
+        )
 
-            if not noop:
-                os.lchown(path, uid=parent.uid, gid=parent.gid)
+        if not noop:
+            os.lchown(path, uid=parent.uid, gid=parent.gid)
 
-            uid = parent.uid
-            gid = parent.gid
+        uid = parent.uid
+        gid = parent.gid
 
     return Entry(path=path, isdir=isdir, uid=uid, gid=gid)
 
@@ -213,13 +203,13 @@ def execute(args):
 
     while len(queue) > 0:
         path, parent = queue.pop()
-        entry = normalize(
-            path, parent, mask=opts.mask, chown=opts.chown, noop=opts.noop, info=info
-        )
+        entry = normalize(path, parent, mask=opts.mask, chown=opts.chown, noop=opts.noop, info=info)
 
-        if entry.isdir and opts.recurse:
+        if entry.isdir and opts.recursive:
             for fname in os.listdir(entry.path):
                 queue.appendleft((os.path.join(path, fname), entry))
+
+    return 0
 
 
 if __name__ == "__main__":
