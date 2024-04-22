@@ -400,6 +400,11 @@ task :chown do
   end
 end
 
+desc 'Change file mode of user files'
+task :chmod do
+  sh 'bin/fixperm', '--recursive', '--umask=022', 'etc/_config/htop'
+end
+
 desc 'Install udev hwdb rules to /etc/udev/hwdb.d/'
 task :hwdb do
   dst = '/etc/udev/hwdb.d'
