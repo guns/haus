@@ -6,6 +6,7 @@ qarchive:            https://wayback.archive.org/web/*/https://***
 qarchpackage:        https://www.archlinux.org/packages/?q=***
 qarchuserrepository: https://aur.archlinux.org/packages/?K=***
 qarchwiki:           https://wiki.archlinux.org/index.php?search=***
+qboto3:              https://boto3.amazonaws.com/v1/documentation/api/latest/search.html?q=***
 qbrave:              https://search.brave.com/search?q=***&spellcheck=0
 qcaniuse:            https://caniuse.com/#search=***
 qclojars:            https://clojars.org/search?q=***
@@ -63,6 +64,7 @@ qspanish:            https://www.spanishdict.com/translate/***
 qstackoverflow:      https://stackoverflow.com/search?q=***
 qsuperuser:          https://superuser.com/search?q=***
 qsymbolhound:        https://symbolhound.com/?q=***
+qterraform:          https://registry.terraform.io/search/providers?q=***
 qthesaurus:          https://thesaurus.com/browse/***?s=t
 qtimeis:             https://time.is/?q=***
 qtrends:             https://trends.google.com/trends/explore?q=***
