@@ -13,16 +13,16 @@ import shlex
 import subprocess
 import sys
 from argparse import ArgumentParser
+from typing import Sequence
 
 
-def parse_args(args):
+def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("-s", "--strict", action="store_true")
     parser.add_argument("paths", metavar="path", nargs="+")
-    return parser.parse_args(args)
+    return parser
 
 
-def run(*commands) -> bool:
+def run(*commands: list[str]) -> bool:
     success = True
 
     for cmd in commands:
@@ -33,47 +33,25 @@ def run(*commands) -> bool:
     return success
 
 
-def lint(path, *, strict=False):
-    mypy = [
-        "mypy",
-        "--no-error-summary",
-        "--warn-redundant-casts",
-        "--warn-unused-ignores",
-        "--warn-unreachable",
-        "--check-untyped-defs",
-        "--no-implicit-reexport",
-    ]
-    if strict:
-        mypy.extend(
-            [
-                "--warn-return-any",
-                "--disallow-untyped-calls",
-                "--disallow-untyped-defs",
-                "--disallow-untyped-decorators",
-                "--strict-equality",
-                "--strict-concatenate",
-                "--strict",
-            ],
-        )
-
-    success = run(
-        ["autoimport", path],
-        ["ruff", "format", "--quiet", path],
-        ["ruff", "check", "--quiet", "--fix", path],
-        [*mypy, path],
+def lint(path: str) -> bool:
+    return run(
+        ["autoimport", "--", path],
+        ["ruff", "format", "--quiet", "--", path],
+        ["ruff", "check", "--quiet", "--fix", "--", path],
+        ["mypy", "--no-error-summary", "--", path],
     )
 
-    if not success:
-        sys.exit(1)
 
-
-def execute(args):
-    opts = parse_args(args)
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    retval = 0
 
     for path in opts.paths:
         if os.path.exists(path):
-            lint(path, strict=opts.strict)
+            retval |= int(not lint(path))
+
+    return retval
 
 
 if __name__ == "__main__":
-    sys.exit(execute(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))
