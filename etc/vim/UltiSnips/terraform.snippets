@@ -59,6 +59,7 @@ endsnippet
 snippet var "variable" b
 variable "$1" {
 	type = $0
+	default = $1
 }
 endsnippet
 
@@ -172,6 +173,10 @@ ignore_changes = [
 ]
 endsnippet
 
+snippet cbd "create_before_destroy" w
+create_before_destroy = true
+endsnippet
+
 snippet m "map" w
 map($0)
 endsnippet
@@ -206,4 +211,8 @@ endsnippet
 
 snippet ew "endswith" w
 endswith($0)
+endsnippet
+
+snippet tos "toset" w
+toset($0)
 endsnippet
