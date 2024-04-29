@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 
 """Parsing of snippet files."""
@@ -6,30 +6,33 @@
 from collections import defaultdict
 import glob
 import os
+from typing import Set, List
 
 from UltiSnips import vim_helper
+from UltiSnips.error import PebkacError
 from UltiSnips.snippet.definition import UltiSnipsSnippetDefinition
 from UltiSnips.snippet.source.file.base import SnippetFileSource
 from UltiSnips.snippet.source.file.common import (
-    handle_extends,
     handle_action,
     handle_context,
+    handle_extends,
+    normalize_file_path,
 )
 from UltiSnips.text import LineIterator, head_tail
 
 
-def find_snippet_files(ft, directory):
+def find_snippet_files(ft, directory: str) -> Set[str]:
     """Returns all matching snippet files for 'ft' in 'directory'."""
     patterns = ["%s.snippets", "%s_*.snippets", os.path.join("%s", "*")]
     ret = set()
     directory = os.path.expanduser(directory)
     for pattern in patterns:
         for fn in glob.glob(os.path.join(directory, pattern % ft)):
-            ret.add(os.path.realpath(fn))
+            ret.add(normalize_file_path(fn))
     return ret
 
 
-def find_all_snippet_directories():
+def find_all_snippet_directories() -> List[str]:
     """Returns a list of the absolute path of all potential snippet
     directories, no matter if they exist or not."""
 
@@ -50,17 +53,20 @@ def find_all_snippet_directories():
     for rtp in check_dirs:
         for snippet_dir in snippet_dirs:
             if snippet_dir == "snippets":
-                raise RuntimeError(
+                raise PebkacError(
                     "You have 'snippets' in UltiSnipsSnippetDirectories. This "
                     "directory is reserved for snipMate snippets. Use another "
                     "directory for UltiSnips snippets."
                 )
-            pth = os.path.realpath(os.path.expanduser(os.path.join(rtp, snippet_dir)))
-            all_dirs.append(pth)
+            pth = normalize_file_path(
+                os.path.expanduser(os.path.join(rtp, snippet_dir))
+            )
+            # Runtimepath entries may contain wildcards.
+            all_dirs.extend(glob.glob(pth))
     return all_dirs
 
 
-def find_all_snippet_files(ft):
+def find_all_snippet_files(ft) -> Set[str]:
     """Returns all snippet files matching 'ft' in the given runtime path
     directory."""
     patterns = ["%s.snippets", "%s_*.snippets", os.path.join("%s", "*")]
@@ -183,7 +189,10 @@ def _parse_snippets_file(data, filename):
         elif head == "clearsnippets":
             yield "clearsnippets", (current_priority, tail.split())
         elif head == "context":
-            head, context, = handle_context(tail, lines.line_index)
+            (
+                head,
+                context,
+            ) = handle_context(tail, lines.line_index)
             if head == "error":
                 yield (head, tail)
         elif head == "priority":
@@ -196,7 +205,7 @@ def _parse_snippets_file(data, filename):
             if head == "error":
                 yield (head, tail)
             else:
-                actions[head], = tail
+                (actions[head],) = tail
         elif head and not head.startswith("#"):
             yield "error", ("Invalid line %r" % line.rstrip(), lines.line_index)
 
