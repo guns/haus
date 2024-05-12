@@ -328,7 +328,8 @@ class $1(NamedTuple):
 endsnippet
 
 snippet enum "enum" w
-${1} = enum.Enum("$1", ($0))
+class ${1}(Enum):
+	$0
 endsnippet
 
 snippet ini "__init__" b
