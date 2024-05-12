@@ -201,6 +201,7 @@
 	up    = remote update --prune
 	pushf = push --force-with-lease
 	pushu = push --set-upstream
+	pusht = push --tags
 
 	# Grep
 	g    = grep
