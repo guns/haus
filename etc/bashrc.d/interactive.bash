@@ -766,8 +766,14 @@ tmuxeval() {
 }
 tmuxsetenv() {
     for kv; do
-        export "$kv"
-        run tmux set-environment "${kv%%=*}" "${kv##*=}"
+        local key="${kv%%=*}"
+        if [[ "$kv" == *=* ]]; then
+            local value="${kv##*=}"
+        else
+            declare -n value="$key"
+        fi
+        declare -g "$key=$value"
+        run tmux set-environment "$key" "$value"
     done
 }; TCOMP export tmuxsetenv
 tmuxunsetenv() {
