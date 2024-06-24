@@ -261,6 +261,7 @@ augroup GUNS
 
 	" Terraform
 	autocmd FileType terraform
+		\ setlocal iskeyword+=- |
 		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>'
 
 augroup END
