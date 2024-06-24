@@ -1,43 +1,40 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 
-require 'set'
+import subprocess
+import sys
 
-if ENV['CLAMSHELL'] == '1'
-  system *%w[xrandr --output eDP-1 --off]
-end
+monitors = set(subprocess.run(["bspc", "query", "--monitors", "--names"], capture_output=True).stdout.decode().split())
+xrandr_script = ""
+monitor_desktops: dict[str, list[str]]
+focused_desktop = ""
 
-info = %x(xrandr --listmonitors).lines
-monitors = info[1..-1].reduce(Set.new) { |s, l| s << l[/.*\s(\S+)/, 1] }
+if monitors == {"DP-0", "HDMI-0"}:
+    xrandr_script = "xrandr --output HDMI-0 --output DP-0 --right-of HDMI-0 --primary"
+    monitor_desktops = {"HDMI-0": ["1", "2", "3", "4", "5"], "DP-0": ["6", "7", "8", "9", "0"]}
+    focused_desktop = "6"
+elif monitors == {"eDP-1", "DP-2-1", "DP-2-2"}:
+    xrandr_script = "xrandr --output DP-2-2 --output DP-2-1 --right-of DP-2-2 --primary"
+    monitor_desktops = {"DP-2-2": ["1", "2", "3", "4", "5"], "DP-2-1": ["6", "7", "8", "9", "0"]}
+    focused_desktop = "6"
+elif monitors == {"eDP-1", "DP-3-1", "DP-3-2"}:
+    xrandr_script = "xrandr --output DP-3-2 --output DP-3-1 --right-of DP-3-2 --primary"
+    monitor_desktops = {"DP-3-2": ["1", "2", "3", "4", "5"], "DP-3-1": ["6", "7", "8", "9", "0"]}
+    focused_desktop = "6"
+elif len(monitors) == 1:
+    monitor_desktops = {next(iter(monitors)): ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]}
+    focused_desktop = "0"
+else:
+    sys.exit(0)
 
-case
-when Set['DP-0', 'HDMI-0'].subset?(monitors)
-  system *%w[xrandr --output DP-0 --primary
-                    --output HDMI-0 --left-of DP-0
-                    --output eDP-1 --off]
-  system *%w[bspc monitor HDMI-0 --reset-desktops 1 2 3 4 5]
-  system *%w[bspc monitor DP-0 --reset-desktops 6 7 8 9 0]
-  system *%w[bspc desktop --focus 6]
-when Set['DP-1', 'HDMI-0'].subset?(monitors)
-  system *%w[xrandr --output HDMI-0 --primary
-                    --output DP-1 --left-of HDMI-0
-                    --output eDP-1 --off]
-  system *%w[bspc monitor DP-1 --reset-desktops 1 2 3 4 5]
-  system *%w[bspc monitor HDMI-0 --reset-desktops 6 7 8 9 0]
-  system *%w[bspc desktop --focus 6]
-when Set['DP1-1', 'HDMI2'].subset?(monitors)
-  system *%w[xrandr --output HDMI2 --primary
-                    --output DP1-1 --left-of HDMI2
-                    --output eDP-1 --off]
-  system *%w[bspc monitor DP1-1 --reset-desktops 1 2 3 4 5]
-  system *%w[bspc monitor HDMI2 --reset-desktops 6 7 8 9 0]
-  system *%w[bspc desktop --focus 6]
-when Set['eDP-1', 'HDMI-1'].subset?(monitors)
-  system *%w[xrandr --output HDMI-1 --primary
-                    --output eDP-1 --below HDMI2]
-  system *%w[bspc monitor eDP-1 --reset-desktops 1 2 3 4 5]
-  system *%w[bspc monitor HDMI-1 --reset-desktops 6 7 8 9 0]
-  system *%w[bspc desktop --focus 1]
-else
-  system *%w[bspc monitor --reset-desktops 1 2 3 4 5 6 7 8 9 0]
-end
+if xrandr_script:
+    subprocess.run(["sh", "-c", xrandr_script])
+
+for mon in monitors:
+    if desktops := monitor_desktops.get(mon):
+        subprocess.run(["bspc", "monitor", mon, "--reset-desktops", *desktops])
+    else:
+        subprocess.run(["bspc", "monitor", mon, "--remove"])
+        subprocess.run(["xrandr", "--output", mon, "--off"])
+
+if focused_desktop:
+    subprocess.run(["bspc", "desktop", focused_desktop, "--focus"])
