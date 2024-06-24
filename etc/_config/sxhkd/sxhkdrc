@@ -353,4 +353,7 @@ super + alt + control + w
 super + control + q
 	wmctrl -a 'Qalculate!' || exec qalculate-gtk
 
+super + shift + space
+	kupfer
+
 # vim:noet:foldmethod=marker:
