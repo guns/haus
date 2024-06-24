@@ -4,18 +4,14 @@
 
 if [[ "$SSH_CONNECTION" ]]; then
     __PS_DELIM__="${PS_DELIM:-■}" # SSH tunnel
-    if ((EUID == 0)); then
-        __PS_COLOR__="${PS_COLOR:-31}"
-    else
-        __PS_COLOR__="${PS_COLOR:-36}"
-    fi
 else
     __PS_DELIM__="${PS_DELIM:-§}" # Section
-    if ((EUID == 0)); then
-        __PS_COLOR__="${PS_COLOR:-35}"
-    else
-        __PS_COLOR__="${PS_COLOR:-37}"
-    fi
+fi
+
+if ((EUID == 0)); then
+    __PS_COLOR__="${PS_COLOR:-35}"
+else
+    __PS_COLOR__="${PS_COLOR:-37}"
 fi
 
 # Interactive prompts need to surround escapes with RL_PROMPT_*_IGNORE,
