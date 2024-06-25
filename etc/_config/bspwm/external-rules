@@ -15,4 +15,5 @@ case "$(xtitle "$1")" in
 '❴ pass ❵'           ) echo 'state=floating';;
 *' - VIM'            ) echo 'state=floating';;
 'cal -y'             ) echo 'state=floating';;
+'Guvcview'*          ) echo 'state=floating';;
 esac
