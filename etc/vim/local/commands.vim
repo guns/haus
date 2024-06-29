@@ -245,7 +245,6 @@ function! s:ExecMakeprg(makeprg)
 	let &l:autoread = autoread_save
 endfunction
 
-command! -bar Cpplint call <SID>ExecMakeprg('cpplint.py %:S')
 command! -nargs=1 -complete=file -bar Yamllint call <SID>ExecMakeprg('yamllintwrapper --format parsable ' . <q-args>)
 
 command! -bar ClangFormat call <SID>ClangFormat(expand('%:p'), 1)

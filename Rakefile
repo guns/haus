@@ -98,12 +98,6 @@ task :env do
         :branch => %w[master guns],
         :files => { 'git-remote-hg' => 'bin/git-remote-hg' }
       },
-
-      {
-        :base => "#{@src}/styleguide",
-        :branch => %w[gh-pages guns],
-        :files => { 'cpplint/cpplint.py' => 'bin/cpplint.py' }
-      },
     ],
 
     'completions' => [
