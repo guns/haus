@@ -293,12 +293,11 @@ noremap <Leader>- /<C-u>\v[^\x09\x20-\x7e]<CR>
 " Search for lines that exceed textwidth
 noremap <Leader>+ :<C-u>execute 'let @/ = "\\v^.{' . &textwidth . '}\\zs.+"' \| setlocal hlsearch \| normal! n<CR>
 
-" Simple command line aliases
+" Help
 noremap <Leader>; :<C-u>help<Space>
+
+" Tags
 noremap <Leader>T :<C-u>Maketags<CR>
-noremap <Leader>U :<C-u>UndoRemove<CR>
-noremap <4-m>     :<C-u>silent! make!<CR>
-noremap <4-p>     :<C-u>SynStack<CR>
 
 " Clear last match
 noremap <Leader><Bslash> :<C-u>let @/ = ''<CR>
@@ -326,6 +325,13 @@ Mapall <4-s>   :<C-u>update<CR>
 Mapall <4-S>   :<C-u>write !sudo tee % >/dev/null<CR>
 Mapall <4-\>   :<C-u>quit<CR>
 Mapall <4-Bar> :<C-u>quit!<CR>
+
+" Undo
+noremap <Leader>U :<C-u>UndoRemove<CR>
+
+" Make
+noremap <LocalLeader>l :<C-u>if exists('b:__lintprg') \| execute 'ExecMakeprg ' . b:__lintprg \| endif<CR>
+noremap <4-m>          :<C-u>silent! make!<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
@@ -509,6 +515,9 @@ vnoremap <M-l> <Esc>`><Right>gvxpgv<Right>o<Right>o
 
 " Add numbers in a selection
 vnoremap + :AddNumbersInSelection<CR>
+
+" Show syntax groups
+noremap <4-p> :<C-u>SynStack<CR>
 
 " Web queries
 for [g:lhs, g:rhs] in [['c', 'qcaniuse'],

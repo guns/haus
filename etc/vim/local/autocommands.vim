@@ -57,6 +57,7 @@ augroup GUNS
 		\ SetWhitespace 8
 	autocmd FileType sh
 		\ setlocal expandtab iskeyword+=- foldmethod=expr foldexpr=ShellFoldExpr(v:lnum) |
+		\ let b:__lintprg = 'shellcheck --format=gcc -- %:S' |
 		\ SetWhitespace 4 8
 
 	" Readline
@@ -84,7 +85,7 @@ augroup GUNS
 
 	" Python
 	autocmd FileType python
-		\ PythonBufferSetup
+		\ let b:__lintprg = 'python-lint-wrapper -- %:S'
 
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl,eruby

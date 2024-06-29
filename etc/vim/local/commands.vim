@@ -240,7 +240,7 @@ function! s:ExecMakeprg(makeprg)
 	let &l:makeprg = a:makeprg
 	setlocal autoread
 	silent! make!
-	edit!
+	silent! edit!
 	let &l:makeprg = makeprg_save
 	let &l:autoread = autoread_save
 endfunction
@@ -603,6 +603,7 @@ command! -bar RubyBufferSetup call <SID>RubyBufferSetup()
 function! s:RubyBufferSetup()
 	SetWhitespace 2 8
 	setlocal expandtab makeprg=rake iskeyword+=?,!
+	let b:__lintprg = 'standardrb --fix -- %:S'
 
 	noremap! <buffer> <C-l>           <Space>=><Space>
 	noremap  <buffer> <LocalLeader>a  :<C-u>A<CR>
@@ -624,7 +625,6 @@ function! s:RubyBufferSetup()
 	noremap  <buffer> <LocalLeader>et :<C-u>Etask<CR>
 	noremap  <buffer> <LocalLeader>eu :<C-u>Eunittest<CR>
 	noremap  <buffer> <LocalLeader>ev :<C-u>Eview<CR>
-	noremap  <buffer> <LocalLeader>l  :<C-u>call <SID>ExecMakeprg('standardrb --fix %:S')<CR>
 	noremap  <buffer> <LocalLeader>L  :<C-u>Clog<CR>
 	noremap  <buffer> <LocalLeader>p  :<C-u>Preview<CR>
 	noremap  <buffer> <LocalLeader>t  :<C-u>Runner<CR>
@@ -632,11 +632,6 @@ function! s:RubyBufferSetup()
 	vnoremap <buffer> <localleader>r  :RRenameLocalVariable<CR>
 	nnoremap <buffer> <localleader>R  viw:RRenameInstanceVariable<CR>
 	vnoremap <buffer> <localleader>R  :RRenameInstanceVariable<CR>
-endfunction
-
-command! -bar PythonBufferSetup call <SID>PythonBufferSetup()
-function! s:PythonBufferSetup()
-	noremap <buffer> <LocalLeader>l :<C-u>PythonLint<CR>
 endfunction
 
 command! -bar LSPBufferSetup call <SID>LSPBufferSetup()
@@ -656,31 +651,12 @@ function! s:LSPBufferSetup()
 	noremap <buffer> K <Plug>(lsp-hover)
 endfunction
 
-command! -bar PythonLint call <SID>PythonLint()
-function! s:PythonLint()
-	silent! call <SID>ExecMakeprg('python-lint-wrapper %:S')
-endfunction
-
-command! -bar -bang StandardJS call <SID>StandardJS('<bang>')
-function! s:StandardJS(bang)
-	if !executable('standard') | return | endif
-
-	let args = ''
-
-	if !empty(a:bang) || getline('$') =~# 'standardjs'
-		let args .= ' --verbose --fix'
-	endif
-
-	silent! call <SID>ExecMakeprg('standard ' . args . ' %:S')
-endfunction
-
 command! -bar JavaScriptBufferSetup call <SID>JavaScriptBufferSetup()
 function! s:JavaScriptBufferSetup()
 	SetWhitespace 2
-	setlocal expandtab
-	setlocal iskeyword+=#
+	setlocal expandtab iskeyword+=#
+	let b:__lintprg = 'standard --verbose --fix -- %:S'
 
-	noremap  <buffer> <LocalLeader>l :<C-u>StandardJS!<CR>
 	inoremap <buffer> <C-l>          <Space>=><Space>
 	noremap  <buffer> <4-CR>         A;<Esc>
 	inoremap <buffer> <4-CR>         <C-\><C-o>A;
