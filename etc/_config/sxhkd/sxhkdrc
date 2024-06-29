@@ -77,13 +77,6 @@ super + q
 super + {Tab,shift + Tab}
 	bspc node --focus {next,prev}.local.leaf.!hidden
 
-alt + Tab
-	if pkill --exact skippy-xd; then \
-		bspc node --focus focused; \
-	else \
-		skippy-xd; \
-	fi
-
 super + control + {h,j,k,l}
 	bspc node --presel-dir ~{west,south,north,east}
 
