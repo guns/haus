@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -e
+
+usage_abort() {
+    echo "USAGE: $0 [monitor ...]" >&2
+    exit 1
+}
+
+main() {
+    if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+        usage_abort
+    fi
+
+    local mon monitors+=("$@")
+
+    if ((${#monitors[@]} == 0)); then
+        monitors+=(-1)
+    fi
+
+    for mon in "${monitors[@]}"; do
+        nitrogen --set-zoom-fill --save --random --head="$mon" &>/dev/null &
+    done
+}
+
+main "$@"
