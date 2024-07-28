@@ -209,11 +209,11 @@ alias wrld='while read l; do'; TCOMP exec wrld
 alias comp='complete -p'; TCOMP complete comp
 
 # PATH manipulation
-alias path='__prepend_path__ PATH'
-alias ldpath='__prepend_path__ LD_LIBRARY_PATH'
-alias gopath='__prepend_path__ GOPATH'
-alias rubylib='__prepend_path__ RUBYLIB'
-alias pythonpath='__prepend_path__ PYTHONPATH'
+alias path='__prepend_path__ PATH'; tmpath() { tmuxsetenv PATH=$(path "$@"); }
+alias ldpath='__prepend_path__ LD_LIBRARY_PATH'; tmldpath() { tmuxsetenv LDPATH=$(ldpath "$@"); }
+alias gopath='__prepend_path__ GOPATH'; tmgopath() { tmuxsetenv GOPATH=$(gopath "$@"); }
+alias rubylib='__prepend_path__ RUBYLIB'; tmrubylib() { tmuxsetenv RUBYLIB=$(rubylib "$@"); }
+alias pythonpath='__prepend_path__ PYTHONPATH'; tmpythonpath() { tmuxsetenv PYTHONPATH=$(pythonpath "$@"); }
 
 # Toggle xtrace, verbose mode
 setx() {
