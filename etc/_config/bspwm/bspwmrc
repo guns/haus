@@ -53,6 +53,7 @@ bspc rule --add Gifview                state=floating
 bspc rule --add sun-awt-X11-XFramePeer state=tiled
 bspc rule --add Kupfer.py              state=floating focus=true sticky=true center=true
 bspc rule --add melt                   state=floating
+bspc rule --add mpv                    state=floating
 bspc rule --add Nitrogen               state=floating
 bspc rule --add Orage                  state=floating
 bspc rule --add 'Orage Preferences'    state=floating

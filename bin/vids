@@ -51,7 +51,7 @@ VIDEO_EXTENSIONS = Set.new %w[
   .yuv
 ]
 
-command = 'vlc'
+command = ['mpv']
 limit = nil
 open = false
 paths = []
@@ -76,7 +76,7 @@ args = OptionParser.new nil do |opt|
     recurse = false
   end
 
-  opt.on '-c', '--command COMMAND', "Default: #{command}" do |arg|
+  opt.on '-c', '--command COMMAND', "Default: #{command.shelljoin}" do |arg|
     command = arg.shellsplit
   end
 
@@ -132,7 +132,7 @@ paths.reverse! if reverse
 paths = paths.take(limit) if limit
 
 if open
-  exec *command, *paths
+  exec *command, '--', *paths
 else
   print print0 ? paths.join("\0") : paths.join("\n") << "\n"
 end
