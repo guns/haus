@@ -267,6 +267,14 @@ task :env do
         }
       },
 
+      {
+        :base => "#{@src}/READONLY/mpv-image-viewer",
+        :branch => %w[master],
+        :files => {
+          'scripts/image-positioning.lua' => 'etc/_config/mpv/scripts/image-positioning.lua',
+        }
+      },
+
       dr_chip_plugin('AnsiEsc'),
       dr_chip_plugin('DrawIt'),
       dr_chip_plugin('ManPageView')
