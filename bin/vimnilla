@@ -15,7 +15,7 @@ done
 shift $((OPTIND-1))
 
 VIMRC="$(ruby -r shellwords -e '
-    puts %q{set rtp^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
+    puts %q{set runtimepath^=%s | filetype plugin indent on | syntax on} % ARGV.map(&:shellescape).join(",")
 ' -- "${DIRS[@]}")"
 
 exec vim -N -u <(echo "$VIMRC") -U <(echo "$VIMRC") "$@"
