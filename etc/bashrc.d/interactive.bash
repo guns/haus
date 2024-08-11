@@ -628,7 +628,7 @@ HAVE netctl && {
 
 # Bluetooth
 if HAVE bluetuith; then
-    alias bt='bluetuith'
+    alias bt='bluetuith --no-warning'
 elif HAVE bluetoothctl; then
     alias bt='bluetoothctl'
 fi
@@ -772,7 +772,7 @@ tmuxsetenv() {
         else
             declare -n value="$key"
         fi
-        declare -g "$key=$value"
+        export "$key=$value"
         run tmux set-environment "$key" "$value"
     done
 }; TCOMP export tmuxsetenv
@@ -909,6 +909,7 @@ HAVE docker && {
     alias d='docker'; TCOMP docker d
     dps() { docker ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Networks}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
     alias drun='docker run --rm --interactive --tty'
+    alias dbuild='docker build --network=host'
     dstop() {
         ruby -e '
             containers = %x(docker container ps --format "{{.Names}}").split("\n")
@@ -917,8 +918,8 @@ HAVE docker && {
         ' "$@"
     }
     dnetworkaddresses() { docker network inspect $(docker network ls --format '{{.ID}}') | jq 'map({(.Name): (.Containers | map({(.Name): .IPv4Address}) | add)}) | add'; }
-    alias dc='docker-compose'; TCOMP docker-compose dc
-    alias dcx='docker-compose exec'
+    alias dc='docker compose'; TCOMP docker-compose dc
+    alias dcx='docker compose exec'
 }
 
 ### Hardware control
