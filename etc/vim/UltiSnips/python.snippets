@@ -48,6 +48,11 @@ def ${1}(cls${2}) -> ${3}:
 	$0
 endsnippet
 
+snippet adef "async def" w
+async def ${1}(${2}) -> ${3}:
+	$0
+endsnippet
+
 snippet for "for" w
 for $1 in $2:
 	$0
@@ -431,7 +436,7 @@ Mapping[$0]
 endsnippet
 
 snippet pp "pprint" w
-pprint.pprint($0)
+import pprint; pprint.pprint($0)
 endsnippet
 
 snippet supp "contextlib.suppress" w

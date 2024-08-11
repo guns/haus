@@ -263,6 +263,7 @@ augroup GUNS
 	" Terraform
 	autocmd FileType terraform
 		\ setlocal iskeyword+=- |
+		\ let b:__lintprg = 'tflint -- %:S' |
 		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>'
 
 augroup END
@@ -282,13 +283,3 @@ unlet ftlist
 
 autocmd User lsp_buffer_enabled
 	\ LSPBufferSetup
-
-autocmd User lsp_float_opened
-	\ execute 'nmap <buffer> <silent> <C-c> <Plug>(lsp-preview-close)' |
-	\ execute 'noremap <buffer> <silent> <expr><C-f> lsp#scroll(+8)' |
-	\ execute 'noremap <buffer> <silent> <expr><C-b> lsp#scroll(-8)'
-
-autocmd User lsp_float_closed
-	\ execute 'unmap <buffer> <C-c>' |
-	\ execute 'unmap <buffer> <expr><C-f>' |
-	\ execute 'unmap <buffer> <expr><C-b>'
