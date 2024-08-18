@@ -32,7 +32,7 @@ end
 
 xdefaults = File.expand_path '~/.Xdefaults'
 
-if File.exists? xdefaults and not File.read(xdefaults) =~ /^URxvt\.letterSpace:\s*-1/i
+if File.exist? xdefaults and not File.read(xdefaults) =~ /^URxvt\.letterSpace:\s*-1/i
   warn 'printf "URxvt.letterSpace: -1\n" >> ~/.Xdefaults'
   File.open File.expand_path(xdefaults), 'a' do |f|
     f.puts 'URxvt.letterSpace: -1'

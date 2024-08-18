@@ -54,7 +54,7 @@ class Genapi
   end
 
   def check_output_directory path
-    if File.exists? path
+    if File.exist? path
       @force ? FileUtils.rm_rf(path) : raise("#{path.inspect} already exists!")
     end
   end

@@ -42,7 +42,7 @@ class RenumberFiles
 
       if renames.include?(new_path)
         raise "Duplicate paths:\n  #{renames[new_path].inspect} -> #{new_path.inspect}\n  #{path.inspect} -> #{new_path.inspect}"
-      elsif File.exists?(new_path) and not same_content?(path, new_path)
+      elsif File.exist?(new_path) and not same_content?(path, new_path)
         raise "File conflict: #{path.inspect} != #{new_path.inspect}"
       else
         renames[new_path] = path

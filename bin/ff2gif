@@ -67,7 +67,7 @@ class FF2gif
     filters << "fps=#{@fps}" if @fps
     filters << "scale=#{@scale.join ':'}:flags=lanczos" if @scale
 
-    raise "File already exists: #{palette}" if File.exists? palette
+    raise "File already exists: #{palette}" if File.exist? palette
 
     begin
       sh 'ffmpeg', '-i', file, '-vf', (filters + ['palettegen']).join(','), palette

@@ -42,7 +42,7 @@ class ChangeAspectRatio
       inplace = true
       loop do
         dst = SecureRandom.uuid + File.extname(src)
-        break unless File.exists? dst
+        break unless File.exist? dst
       end
     end
 

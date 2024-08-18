@@ -204,7 +204,7 @@ class Cert
 
   def certfile
     raise "'certfile' is unset" if @certfile.nil?
-    FileUtils.touch @certfile unless File.exists? @certfile
+    FileUtils.touch @certfile unless File.exist? @certfile
     @certfile
   end
 

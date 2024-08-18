@@ -19,7 +19,7 @@ class Haus
     def enqueue pattern = nil
       users.each do |user|
         hausfiles user do |src, dst|
-          next if options.no_overwrite and File.exists? dst
+          next if options.no_overwrite and File.exist? dst
           next if pattern and src !~ pattern
           if reason = user.distrusts(src)
             queue.annotate dst, ["WARNING: Source #{reason}", :red]

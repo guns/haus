@@ -60,7 +60,7 @@ class Makerepo
   end
 
   def dbmtime
-    @dbmtime ||= File.exists?(dbpath) ? File.stat(dbpath).mtime : Time.at(0)
+    @dbmtime ||= File.exist?(dbpath) ? File.stat(dbpath).mtime : Time.at(0)
   end
 
   def cached_packages
@@ -82,7 +82,7 @@ class Makerepo
 
   def sign_packages
     packages.each do |pkg|
-      system 'gpg', '--detach-sign', pkg unless File.exists? "#{pkg}.sig"
+      system 'gpg', '--detach-sign', pkg unless File.exist? "#{pkg}.sig"
     end
   end
 

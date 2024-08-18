@@ -84,8 +84,8 @@ class Hwctl
   #
 
   def benchmode arg = nil
-    _, cpu = CPU.find { |k, _| Dir.exists? k }
-    _, fan = FAN.find { |k, _| Dir.exists? k }
+    _, cpu = CPU.find { |k, _| Dir.exist? k }
+    _, fan = FAN.find { |k, _| Dir.exist? k }
     abort 'Unsupported hardware' if cpu.nil? or fan.nil?
 
     case arg
@@ -151,7 +151,7 @@ class Hwctl
   end
 
   def cpu arg = nil
-    driver, sys = CPU.find { |k, _| Dir.exists? k }
+    driver, sys = CPU.find { |k, _| Dir.exist? k }
     abort 'Unsupported hardware' if driver.nil?
 
     case arg
@@ -226,7 +226,7 @@ class Hwctl
   end
 
   def fan arg = nil
-    driver, sys = FAN.find { |k, _| Dir.exists? k }
+    driver, sys = FAN.find { |k, _| Dir.exist? k }
     abort 'Unsupported hardware' if driver.nil?
 
     case arg

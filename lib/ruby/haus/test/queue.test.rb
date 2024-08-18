@@ -468,13 +468,13 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must create an archive before execution' do
       @q.execute!
-      File.exists?(@q.archive_path).must_equal true
+      File.exist?(@q.archive_path).must_equal true
     end
 
     it 'must not create an archive if options.noop is specified' do
       @q.options = { :noop => true, :quiet => true }
       @q.execute!
-      File.exists?(@q.archive_path).must_equal false
+      File.exist?(@q.archive_path).must_equal false
     end
 
     it 'must not modify the filesystem if options.noop is specified' do
@@ -704,7 +704,7 @@ class Haus::QueueSpec < MiniTest::Spec
 
     it 'must create an archive of all extant targets' do
       @q.archive
-      File.exists?(@q.archive_path).must_equal true
+      File.exist?(@q.archive_path).must_equal true
       list = %x(tar tf #{@q.archive_path} 2>/dev/null).split "\n"
       list.sort.must_equal @targets.map { |f| f.sub /\A\//, '' }.sort
     end
@@ -998,7 +998,7 @@ class Haus::QueueSpec < MiniTest::Spec
         src = @user.hausfile.first
         FileUtils.ln_sf src, "#{@user.haus}/lies"
         FileUtils.rm_f src
-        File.exists?("#{@user.haus}/lies").must_equal false
+        File.exist?("#{@user.haus}/lies").must_equal false
         @q.send(:extant?, "#{@user.haus}/lies").must_equal true
       end
     end

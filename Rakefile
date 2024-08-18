@@ -410,7 +410,7 @@ end
 desc 'Install udev hwdb rules to /etc/udev/hwdb.d/'
 task :hwdb do
   dst = '/etc/udev/hwdb.d'
-  if Dir.exists? dst
+  if Dir.exist? dst
     cp_r Dir['share/udev/hwdb.d/*.hwdb'], dst
     sh 'systemd-hwdb', 'update'
     sh 'udevadm', 'trigger'

@@ -18,7 +18,7 @@ abort if s.nil? or s == "\n"
 
 s.chomp!
 
-abort if Dir.exists? s
+abort if Dir.exist? s
 
 search_dir = File.join dirs, s.gsub(%r{[\x00/]}, '.')
 link       = File.join links, File.basename(search_dir)

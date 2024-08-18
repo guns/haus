@@ -41,7 +41,7 @@ class Plookup
     fs = (@file ? [@file] : [
       '/etc/services',
       File.expand_path('../../share/nmap/nmap-services', %x(/bin/sh -c 'command -v nmap').chomp)
-    ]).select { |f| File.exists? f }
+    ]).select { |f| File.exist? f }
 
     raise 'No services files found!' if fs.empty?
 

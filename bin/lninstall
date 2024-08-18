@@ -165,7 +165,7 @@ class Lninstall
   def uninstall
     dst_files.each do |f|
       next if @pattern and f !~ @pattern
-      next if @broken and File.exists? Haus::Utils.readlink(f)
+      next if @broken and File.exist? Haus::Utils.readlink(f)
       @queue.add_deletion f
     end
 

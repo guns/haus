@@ -103,7 +103,7 @@ class NERV::Project::Subproject
   end
 
   def update
-    raise "#{base} does not exist" unless Dir.exists? base
+    raise "#{base} does not exist" unless Dir.exist? base
     raise "No privileges to write #{haus}" unless File.writable? haus
 
     log "Updating subproject #{base}"

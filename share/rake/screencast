@@ -23,7 +23,7 @@ task :screencast do
 
   mkdir_p scratch unless File.directory? scratch
 
-  if File.exists? pidfile
+  if File.exist? pidfile
     pid = File.read(pidfile).to_i
     if alive? pid
       puts 'Sending SIGTERM to %d' % pid

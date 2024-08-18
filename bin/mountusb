@@ -90,7 +90,7 @@ class Mountusb
       next if label_pattern and label !~ label_pattern
 
       mtpt = File.join @dir, label || File.basename(usbdevs[dev])
-      if Dir.exists? mtpt and not File.writable? mtpt
+      if Dir.exist? mtpt and not File.writable? mtpt
         raise "#{mtpt} exists, but is not writable"
       end
       FileUtils.mkdir_p mtpt

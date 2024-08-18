@@ -123,7 +123,7 @@ class Haus
       when :all       then (links + copies + modifications).map { |s,d| d } + deletions
       when :delete    then deletions
       # Links, copies, and modifications may create files
-      when :create    then (targets - targets(:delete)).reject { |f| File.exists? f }
+      when :create    then (targets - targets(:delete)).reject { |f| File.exist? f }
       # Modifications to files that already exist
       when :modify    then modifications.map { |s,d| d } - targets(:create)
       # Extant files that will be wholly replaced by links and copies

@@ -46,7 +46,7 @@ class SshInstallAuthorizedKeys
       return
     end
 
-    authkeys = Set.new File.exists?(authpath) ? File.read(authpath).split("\n") : []
+    authkeys = Set.new File.exist?(authpath) ? File.read(authpath).split("\n") : []
     ks = (keys - authkeys).to_a
 
     warn 'Adding %d key%s to %s' % [ks.count, ks.count == 1 ? '' : 's', authpath]

@@ -16,7 +16,7 @@ rename = false
 options = OptionParser.new do |opt|
   opt.banner = "USAGE: fehmove [options] [feh-args]\n\nOptions:\n"
   opt.on('-c', '--copy') { op = 'cp' }
-  opt.on('-d', '--dir DIR') { |d| dirs << d.chomp('/') if Dir.exists? d and File.writable? d }
+  opt.on('-d', '--dir DIR') { |d| dirs << d.chomp('/') if Dir.exist? d and File.writable? d }
   opt.on('-r', '--recursive') { feh_opts << '--recursive' }
   opt.on('-R', '--rename') { rename = true }
   opt.on('-O', '--feh-opts OPTS') { |o| feh_opts.concat o.shellsplit }

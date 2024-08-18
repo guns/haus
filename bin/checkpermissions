@@ -87,7 +87,7 @@ class Checkpermissions
       end
 
       path = File.expand_path path
-      next if not File.exists? path
+      next if not File.exist? path
 
       owner_uid = user == '-' ? nil : (user ? Etc.getpwnam(user).uid : (path =~ USER_FILE_PATTERN ? Process.euid : 0))
       owner_gid = Etc.getgrnam(group).gid if group

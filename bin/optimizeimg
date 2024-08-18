@@ -46,7 +46,7 @@ class OptimizeIMG
     ext = File.extname path
     tmp = File.join File.dirname(path), tmpname % File.basename(path, ext)
     tmp << ext
-    raise "#{path} already exists!" if File.exists? tmp
+    raise "#{path} already exists!" if File.exist? tmp
     if system 'convert', '-quality', quality.to_s, path, tmp
       FileUtils.mv tmp, path
     end

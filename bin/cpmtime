@@ -5,5 +5,5 @@ abort "#{File.basename __FILE__} src files …" if ARGV.size < 2
 
 require 'fileutils'
 
-FileUtils.touch ARGV.drop(1).select { |f| File.exists? f },
+FileUtils.touch ARGV.drop(1).select { |f| File.exist? f },
                 :mtime => File.mtime(ARGV[0])

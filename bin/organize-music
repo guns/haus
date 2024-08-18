@@ -38,7 +38,7 @@ class OrganizeMusic
       end
 
       opt.on '-d', '--outdir DIR' do |arg|
-        if File.exists? arg and not File.directory? arg
+        if File.exist? arg and not File.directory? arg
           abort "outdir #{arg.inspect} exists and is not a directory"
         end
         @outdir = arg
@@ -125,7 +125,7 @@ class OrganizeMusic
     if File.expand_path(src) == File.expand_path(dst)
       log "IGNORING move of #{src.inspect} to itself", '33' if @verbose
       return
-    elsif File.exists? dst
+    elsif File.exist? dst
       # NB. This is an expensive safeguard, but if it's redundant the two
       #     files will hopefully be in the kernel disk cache
       if hexdigest(src) != hexdigest(dst)
@@ -150,7 +150,7 @@ class OrganizeMusic
     open src do |tag|
       dst = newpath src, tag
 
-      if File.exists? dst
+      if File.exist? dst
         src_hash = hexdigest src
         dst_hash = hexdigest dst
 
