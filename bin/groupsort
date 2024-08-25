@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2024 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Group and print strings by similarity.
+"""
+
+import difflib
+import itertools
+import re
+import sys
+from argparse import ArgumentParser
+from typing import Callable, Collection, Optional, Sequence
+
+
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-c", "--cutoff", type=float, default=0.6, help="similarity cutoff")
+    parser.add_argument("-i", "--ignore-case", action="store_true")
+    parser.add_argument("-p", "--char-pattern", help="character pattern whitelist")
+    parser.add_argument("-0", "--null", action="store_true", help="split input on null bytes")
+    parser.add_argument(
+        "--print0",
+        action="store_true",
+        help="terminate output strings with null bytes instead of newlines",
+    )
+    parser.add_argument("strings", nargs="*", help="strings to groupsort; lines are read from stdin if not supplied")
+    return parser
+
+
+def filter_chars(pattern: re.Pattern[str], s: str) -> str:
+    return "".join(c for c in s if re.match(pattern, c))
+
+
+def transform_key_fn(*, ignore_case: bool, char_pattern: Optional[re.Pattern[str]]) -> Callable[[str], str]:
+    if ignore_case and char_pattern:
+        return lambda s: filter_chars(char_pattern, s).lower()
+    if ignore_case:
+        return lambda s: s.lower()
+    if char_pattern:
+        return lambda s: filter_chars(char_pattern, s)
+    return lambda s: s
+
+
+def match_similar(
+    x: str,
+    xs: Collection[str],
+    *,
+    ignore_case: bool,
+    char_pattern: Optional[re.Pattern[str]],
+    cutoff: float,
+) -> list[str]:
+    if not ignore_case and not char_pattern:
+        return difflib.get_close_matches(x, xs, n=len(xs), cutoff=cutoff)
+    keyfn = transform_key_fn(ignore_case=ignore_case, char_pattern=char_pattern)
+    d = {k: list(v) for k, v in itertools.groupby(xs, keyfn)}
+    matches = difflib.get_close_matches(keyfn(x), list(d.keys()), n=len(d), cutoff=cutoff)
+    return sorted([s for m in matches for s in d[m]])
+
+
+def group_strings(
+    strings: Sequence[str],
+    *,
+    ignore_case: bool,
+    char_pattern: Optional[re.Pattern[str]],
+    cutoff: float,
+) -> list[list[str]]:
+    groups = []
+    strings = sorted(strings)
+    while strings:
+        group = match_similar(strings[0], strings, ignore_case=ignore_case, char_pattern=char_pattern, cutoff=cutoff)
+        groups.append(group)
+        g = set(group)
+        strings = [s for s in strings if s not in g]
+    return groups
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    end = "\0" if opts.print0 else None
+    strings = opts.strings if opts.strings else sys.stdin.read().split("\0" if opts.null else "\n")
+    strings.sort()
+    for groups in group_strings(
+        strings,
+        ignore_case=opts.ignore_case,
+        char_pattern=re.compile(opts.char_pattern, re.IGNORECASE if opts.ignore_case else 0),
+        cutoff=opts.cutoff,
+    ):
+        for s in groups:
+            print(s, end=end)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
