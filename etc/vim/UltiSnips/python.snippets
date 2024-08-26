@@ -9,13 +9,14 @@ snippet APP "Command line application template" b
 $0
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from typing import Sequence
 import sys
 
 
 def parser() -> ArgumentParser:
 	parser = ArgumentParser(description=__doc__)
+	parser.formatter_class = RawDescriptionHelpFormatter
 	return parser
 
 
@@ -244,6 +245,10 @@ snippet deb "pdb" w
 breakpoint()
 endsnippet
 
+snippet bp "pdb" w
+breakpoint()
+endsnippet
+
 snippet dump "json.dump" w
 import json; from pathlib import Path; Path($1).write_text(json.dumps($0, default=str))
 endsnippet
@@ -288,6 +293,10 @@ snippet it "itertools" w
 itertools.$0
 endsnippet
 
+snippet grp "groupby" w
+itertools.groupby($0)
+endsnippet
+
 snippet op "operator" w
 operator.
 endsnippet
@@ -321,10 +330,14 @@ class $1:
 	$0
 endsnippet
 
-snippet dcl "dataclass" b
-@dataclasses.dataclass${1:(frozen=True$2)}
+snippet dcl "dataclasses.dataclass" b
+@dataclasses.dataclass(${1:frozen=True}${2:, kw_only=True})
 class $3:
 	$0
+endsnippet
+
+snippet dclr "dataclasses.replace" w
+dataclasses.replace($0)
 endsnippet
 
 snippet nt "namedtuple" b

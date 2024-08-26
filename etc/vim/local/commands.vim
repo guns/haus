@@ -243,6 +243,9 @@ function! s:ExecMakeprg(makeprg)
 	silent! edit!
 	let &l:makeprg = makeprg_save
 	let &l:autoread = autoread_save
+	if !empty(getqflist())
+		copen
+	endif
 endfunction
 
 command! -nargs=1 -complete=file -bar Yamllint call <SID>ExecMakeprg('yamllintwrapper --format parsable ' . <q-args>)
