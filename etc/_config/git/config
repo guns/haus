@@ -21,6 +21,9 @@
 	func = 244
 	whitespace = 89 reverse
 
+[commit]
+	template = ~/.config/git/message
+
 [core]
 	whitespace = trailing-space,space-before-tab
 	ignoreCase = false
