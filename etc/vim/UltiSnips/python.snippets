@@ -148,6 +148,11 @@ snippet _f "__file__" w
 __file__
 endsnippet
 
+snippet ifn "if __name__ == __main__" b
+if __name__ == "__main__":
+	$0
+endsnippet
+
 snippet arg "parser.add_argument" w
 ${1:parser}.add_argument($0)
 endsnippet

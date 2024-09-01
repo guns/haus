@@ -116,7 +116,7 @@ source ~/.vim/local/syntax.vim
 set formatoptions=crqln1j
 
 " Global textwidth and tabstops
-SetTextwidth! 78 " Standard documentation width
+SetTextwidth! 80 " Standard documentation width
 SetWhitespace! 8 " sw = sts = ts = 8
 
 " Misc
