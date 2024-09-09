@@ -265,6 +265,10 @@ super + F7
 	T='⚙ btop ⚙'; \
 	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e btop
 
+shift + F7
+	T='⚙ nvtop ⚙'; \
+	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e nvtop
+
 alt + F7
 	wmctrl -a xsensors || exec xsensors
 

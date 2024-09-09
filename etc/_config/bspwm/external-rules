@@ -9,8 +9,7 @@ case "$(xtitle "$1")" in
 'xzoom x2'           ) echo 'state=floating';;
 '☎ urxvt ☎'          ) echo 'state=floating';;
 '♫ alsamixer ♫'      ) echo 'state=floating';;
-'⚙ htop ⚙'           ) echo 'state=floating';;
-'⚙ btop ⚙'           ) echo 'state=floating';;
+'⚙ '*'top ⚙'         ) echo 'state=floating';;
 '✉ Mutt ✉'           ) echo 'state=floating';;
 '❴ pass ❵'           ) echo 'state=floating';;
 *' - VIM'            ) echo 'state=floating';;
