@@ -264,7 +264,6 @@ $if bash
 
     # dua
     "\033\007d":    "\C-] dua interactive \n"
-    "\033\007D":    "\C-] dua interactive -x \n"
 
     # X
     "\C-xX":        "\C-] ((EUID)) && [[ ! $WINDOWID ]] && exec startx \n"
