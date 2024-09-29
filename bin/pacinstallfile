@@ -1,37 +1,63 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2014-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2014-2024 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'fileutils'
-require 'shellwords'
+"""
+Install pacman package files using file:// urls so they are properly cached.
+"""
 
-opts = []
-force = false
+import glob
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
+from typing import Collection, Sequence
 
-pkgs = OptionParser.new do |opt|
-  opt.banner = 'USAGE: pacinstallfile [options] pkg …'
-  opt.on('-d', '--asdeps') { opts << '--asdeps' }
-  opt.on('-f', '--force') { opts << '--noconfirm'; force = true }
-end.parse ARGV
 
-abort parser.help if pkgs.empty?
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.formatter_class = RawDescriptionHelpFormatter
+    parser.add_argument("-d", "--asdeps", action="store_true")
+    parser.add_argument("-f", "--force", action="store_true")
+    parser.add_argument("paths", metavar="pkg-path", nargs="+")
+    return parser
 
-pkgs.map! { |p| p.chomp '.sig.' }
 
-cache = pkgs.flat_map { |p| Dir["/var/cache/pacman/pkg/#{File.basename p}{,.sig}"] }
+def move_cached_packages(package_names: Collection[str], *, force: bool = False) -> None:
+    cache = []
+    for name in package_names:
+        cache.extend(glob.glob(f"/var/cache/pacman/pkg/{name}*"))
+    if cache:
+        cache.sort()
+        print("\n".join(cache))
+        if force or re.match(input("Move conflicting cached packages? [Y/n] "), "^$|y|Y"):
+            for path in cache:
+                shutil.move(path, "/tmp/")
 
-if cache.any?
-  puts cache
-  print 'Move conflicting cached packages? [Y/n] '
-  if force or $stdin.gets !~ /\An\Z/i
-    FileUtils.mv cache, '/tmp', :verbose => true
-  end
-end
 
-cmd = ['pacman', '-U', *opts, *pkgs.map { |p| "file://#{File.expand_path p}" }]
-puts cmd.shelljoin
-exec *cmd
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    pacman_opts = []
+    if opts.asdeps:
+        pacman_opts.append("asdeps")
+    if opts.force:
+        pacman_opts.append("--noconfirm")
+    move_cached_packages([os.path.basename(p) for p in opts.paths], force=opts.force)
+    pacman_conf = Path("/etc/pacman.conf").read_text()
+    pacman_conf = re.sub(r"^(\s*DownloadUser)", r"#\1", pacman_conf, flags=re.MULTILINE | re.IGNORECASE)
+    pkg_urls = ["file://" + os.path.abspath(p) for p in opts.paths]
+    with tempfile.NamedTemporaryFile(delete_on_close=False) as f:
+        f.write(bytes(pacman_conf, "utf-8"))
+        f.close()
+        subprocess.run(["pacman", "-U", *pacman_opts, "--config", f.name, *pkg_urls])
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
