@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2018-2023 Sung Pae <self@sungpae.com>
+# Copyright (c) 2018-2024 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -9,34 +9,35 @@ Display bytes in a QR code.
 """
 
 import os
+import subprocess
 import sys
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from tempfile import NamedTemporaryFile
+from typing import Sequence, TextIO
 
-import haus
 
-
-def parse_args(args):
+def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument("path", nargs="?", type=os.path.normpath)
-    return parser.parse_args(args)
+    parser.formatter_class = RawDescriptionHelpFormatter
+    parser.add_argument("path", nargs="?", help="Read from path; defaults to reading from stdin")
+    return parser
 
 
-def execute(args):
-    opts = parse_args(args)
-    inputfile = sys.stdin
+def show_qrcode(io: TextIO) -> None:
+    with NamedTemporaryFile() as tmp:
+        subprocess.run(["qrencode", "-o", tmp.name], stdin=io, check=True)
+        subprocess.run(["mpv", "--", tmp.name], check=True)
 
-    try:
-        if opts.path:
-            inputfile = open(opts.path)
 
-        with NamedTemporaryFile() as tmp:
-            haus.run(["qrencode", "-o", tmp.name], stdin=inputfile, check=True)
-            sxiv = ["sxiv", "-g", "200x200", "-N", os.path.basename(__file__)]
-            haus.run([*sxiv, "--", tmp.name], check=True)
-    finally:
-        inputfile.close()
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    if opts.path:
+        with open(opts.path) as f:
+            show_qrcode(f)
+    else:
+        show_qrcode(sys.stdin)
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(execute(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))
