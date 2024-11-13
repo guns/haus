@@ -53,13 +53,13 @@ export SYSTEMD_LESS="${LESSOPTS[@]}"
 unset LESSOPTS
 
 # Ruby
-export RUBYLIB="$HOME/.local/lib/ruby"
+[[ -n "$RUBYLIB" ]] || export RUBYLIB="$HOME/.local/lib/ruby"
 
 # Python
-export PYTHONPATH="$HOME/.local/lib/python"
+[[ -n "$PYTHONPATH" ]] || export PYTHONPATH="$HOME/.local/lib/python"
 
 # Go
-export GOPATH='/opt/src/go'
+[[ -n "$GOPATH" ]] || export GOPATH='/opt/src/go'
 
 # For xdg-open
 # https://wiki.archlinux.org/index.php/Environment_Variables#Examples

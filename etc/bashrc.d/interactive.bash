@@ -385,11 +385,7 @@ alias rd='rmdir --verbose --parents'; complete -o dirnames rd
 mdf() { mkdir --verbose --parents "$@"; cd "$1"; }; complete -o dirnames mdf
 
 # df du
-if HAVE duf; then
-    alias df='duf'
-else
-    alias df='df --human-readable'
-fi
+alias df='df --human-readable'
 alias du='du --human-readable'
 alias dus='du --summarize'
 
