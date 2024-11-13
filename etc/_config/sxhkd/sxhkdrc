@@ -78,7 +78,7 @@ super + {Tab,shift + Tab}
 	bspc node --focus {next,prev}.local.leaf.!hidden
 
 alt + {Tab,shift + Tab}
-	bspc node @/ --circulate {forward,backward}
+	bspc node --focus biggest.local; bspc node @/ --circulate {forward,backward}
 
 super + control + {h,j,k,l}
 	bspc node --presel-dir ~{west,south,north,east}
