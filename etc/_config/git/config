@@ -28,6 +28,7 @@
 	whitespace = trailing-space,space-before-tab
 	ignoreCase = false
 	quotePath = false
+	pager = delta
 
 [diff]
 	algorithm = histogram
@@ -47,18 +48,13 @@
 
 [interactive]
 	singleKey  = true
-	diffFilter = diff-highlight
+	diffFilter = delta --color-only
 
 [merge]
-	conflictstyle = diff3
+	conflictstyle = zdiff3
 	ff = false
 	renormalize = true
 	tool = vimdiff
-
-[pager]
-	log  = diff-highlight | less
-	show = diff-highlight | less
-	diff = diff-highlight | less
 
 [pretty]
 	singleline = format:%C(yellow)%h %C(cyan)%aN %C(67)%ad%C(magenta)%d %C(reset)%s
@@ -69,6 +65,19 @@
 [push]
 	followTags = true
 	autoSetupRemote = true
+
+[delta]
+	blame-code-style = syntax
+	file-decoration-style = box white
+	file-style = white
+	hunk-header-decoration-style = ol "#444444"
+	hunk-header-style = "#444444"
+	hunk-label = ·
+	line-numbers = true
+	plus-emph-style = syntax "#005f00"
+	plus-style = syntax "#262626"
+	syntax-theme = Dracula
+	wrap-max-lines = 0
 
 [alias]
 	# Index operations
