@@ -9,11 +9,10 @@ Group and print strings by similarity.
 """
 
 import difflib
-import itertools
 import re
 import sys
 from argparse import ArgumentParser
-from typing import Callable, Collection, Optional, Sequence
+from typing import Any, Callable, Collection, Optional, Sequence
 
 
 def parser() -> ArgumentParser:
@@ -54,6 +53,17 @@ def transform_key_fn(
     return keyfn
 
 
+def groupby(coll: Collection[Any], key: Callable[[Any], Any]) -> dict[Any, list[Any]]:
+    d: dict[Any, list[Any]] = {}
+    for item in coll:
+        k = key(item)
+        if k in d:
+            d[k].append(item)
+        else:
+            d[k] = [item]
+    return d
+
+
 def match_similar(
     x: str,
     xs: Collection[str],
@@ -66,7 +76,7 @@ def match_similar(
     if not ignore_case and not subfn and not char_pattern:
         return difflib.get_close_matches(x, xs, n=len(xs), cutoff=cutoff)
     keyfn = transform_key_fn(ignore_case=ignore_case, subfn=subfn, char_pattern=char_pattern)
-    d = {k: list(v) for k, v in itertools.groupby(xs, keyfn)}
+    d = {k: list(v) for k, v in groupby(xs, keyfn).items()}
     matches = difflib.get_close_matches(keyfn(x), list(d.keys()), n=len(d), cutoff=cutoff)
     return sorted([s for m in matches for s in d[m]])
 
