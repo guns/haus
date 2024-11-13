@@ -370,6 +370,15 @@ function! LispFoldExpr(lnum) "{{{1
 	endif
 endfunction
 
+function! TerraformPlanFoldExpr(lnum)
+	let line = getline(a:lnum)
+	if line =~# '\v^%x1b[1m  #'
+		return '>1'
+	else
+		return '='
+	endif
+endfunction
+
 command! -bar RainbowParens call <SID>RainbowParens()
 function! s:RainbowParens()
 	" Rainbow parens
@@ -403,6 +412,8 @@ function! s:TimLBufferSetup()
 	nmap     <silent><buffer> <Leader>x        cp<Plug>(sexp_inner_element)``
 	imap     <silent><buffer> <Leader>x        <C-\><C-o><C-\><C-n><Leader>x
 endfunction
+
+command! -bar Sparkup runtime ftplugin/html/sparkup.vim
 
 command! -bar ClojureBufferSetup call <SID>ClojureBufferSetup() "{{{1
 function! s:ClojureBufferSetup()
@@ -670,8 +681,6 @@ command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
 function! s:OrgBufferSetup()
 	SetWhitespace 2 8
 
-	map  <silent> <buffer> <4-m> :<C-u>call <SID>UpdateWorklog()<CR>
-
 	map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
 	imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
 	map  <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
@@ -697,56 +706,10 @@ function! s:OrgBufferSetup()
 	silent! iunmap <buffer> <C-t>
 endfunction
 
-function! s:UpdateWorklog()
-	if has('ruby')
-ruby << EORUBY
-		# -*- encoding: utf-8 -*-
-
-		require 'time'
-
-		entries = []
-		minutes = 0
-
-		$curbuf.count.downto(1).each do |n|
-			if $curbuf[n] =~ /\A([* ]*)(\d\d:\d\d:\d\d)\s*-\s*(\d\d:\d\d:\d\d)(?: (?:=>|→) \d+m\s*\z)?/
-				min = ((Time.parse($3) - Time.parse($2))/60.0).round
-				$curbuf[n] = "#{$1}#{$2} - #{$3} → #{min}m"
-				minutes += min
-			end
-
-			if $curbuf[n] =~ /\A\*\s*(\d{4}-\d{2}-\d{2})(?: (?:=>|→) TOTAL: \d+m\s*\z)?/
-				$curbuf[n] = "* #{$1} → TOTAL: #{minutes}m"
-				entries << [$1, minutes]
-				minutes = 0
-			end
-		end
-
-		lines = []
-		date_w = entries.map { |e| e[0].length }.max
-		sum = entries.reduce(0) { |s, e| s + e[1] }
-		min_w = sum.to_s.size
-		fmt = "%-#{date_w}s │ %#{min_w}dm"
-
-		lines << ("─" * (date_w+1) << "┬" << "─" * (min_w+2))
-		entries.reverse.each { |e| lines << fmt % e }
-		lines << ("─" * (date_w+1) << "┼" << "─" * (min_w+2))
-		lines << (" " * (date_w-5) << "TOTAL │ #{sum}m")
-
-		c_row, c_col = $curwin.cursor
-		n = 0
-
-		if $curbuf[1] =~ /\A─+┬─+/
-			while $curbuf[1] =~ /[─│]/
-				$curbuf.delete 1
-				n += 1
-			end
-		end
-
-		lines.each_with_index { |l, i| $curbuf.append i, l }
-
-		$curwin.cursor = [c_row - n + lines.count, c_col]
-EORUBY
-	endif
+command! -bar TerraformPlanBufferSetup call <SID>TerraformPlanBufferSetup()
+function! s:TerraformPlanBufferSetup()
+	setlocal foldmethod=expr foldexpr=TerraformPlanFoldExpr(v:lnum)
+	AnsiEsc
 endfunction
 
 command! -bar RustBufferSetup call <SID>RustBufferSetup()

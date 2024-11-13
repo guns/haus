@@ -175,6 +175,11 @@ snippet w "with" w
 with $1 as $2:$0
 endsnippet
 
+snippet wo "with open" w
+with open(${1}) as ${2:f}:
+	$0
+endsnippet
+
 snippet try "try:" w
 try:
 	$0
@@ -255,7 +260,11 @@ breakpoint()
 endsnippet
 
 snippet dump "json.dump" w
-import json; from pathlib import Path; Path($1).write_text(json.dumps($0, default=str))
+with open("${1:_debug.json}", "a") as _f: json.dump($0, _f, sort_keys=2, indent=2, default=str)
+endsnippet
+
+snippet dumps "json.dump stderr" w
+json.dump($0, fp=sys.stderr, indent=2, sort_keys=True, default=str)
 endsnippet
 
 snippet sub "subprocess" w
@@ -298,8 +307,16 @@ snippet it "itertools" w
 itertools.$0
 endsnippet
 
-snippet grp "groupby" w
-itertools.groupby($0)
+snippet defgrp "def groupby" w
+def groupby(coll: Collection[Any], key: Callable[[Any], Any]) -> dict[Any, list[Any]]:
+	d: dict[Any, list[Any]] = {}
+	for item in coll:
+		k = key(item)
+		if k in d:
+			d[k].append(item)
+		else:
+			d[k] = [item]
+	return d
 endsnippet
 
 snippet op "operator" w
@@ -391,14 +408,24 @@ endsnippet
 
 snippet testcl "class ... unittest.TestCase" b
 class $1(unittest.TestCase):
+	def setUp(self) -> None:
+		self.maxDiff = None
+
 	$0
 endsnippet
 
-snippet test "test" b
-def test_$1(self):
-	tests = [
+snippet deft "def test" b
+def test_${2: }$1(self) -> None:
+	tests = {
 		$0
-	]
+	}
+
+	for test in tests:
+		pass
+endsnippet
+
+snippet kv "key: value" w
+"$1": $0
 endsnippet
 
 snippet ase "assertEqual" w
@@ -454,7 +481,7 @@ Mapping[$0]
 endsnippet
 
 snippet pp "pprint" w
-import pprint; pprint.pprint($0)
+import pprint; pprint.pprint($0, stream=sys.stderr)
 endsnippet
 
 snippet supp "contextlib.suppress" w
@@ -506,4 +533,8 @@ endsnippet
 
 snippet tb "traceback" w
 traceback
+endsnippet
+
+snippet 00 "0.0.0.0/0" w
+0.0.0.0/0
 endsnippet

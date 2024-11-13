@@ -87,7 +87,7 @@ snippet pry "pry" w
 endsnippet
 
 snippet deb "debugger" w
-(require 'debug'; debugger)$0
+(require 'pry'; ENV.delete('DISABLE_PRY'); binding.pry)$0
 endsnippet
 
 snippet bm "benchmark" b

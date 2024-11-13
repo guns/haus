@@ -553,7 +553,7 @@ noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 noremap  <Leader>g<Space> :<C-u>Git<Space>
 noremap  <Leader>g1       :<C-u>silent! !git l1<CR>
 noremap  <Leader>g2       :<C-u>Gvsplit REBASE_HEAD<CR>
-noremap  <Leader>g.       :<C-u>silent! !git di %<CR>
+noremap  <Leader>g.       :<C-u>silent! !git di % \| delta \| less<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Git commit --verbose<CR>
@@ -567,7 +567,7 @@ noremap  <Leader>gca      :<C-u>Git commit --all<CR>
 noremap  <Leader>gcA      :<C-u>Git commit --amend<CR>
 noremap  <Leader>gcc      :<C-u>Git commit<CR>
 noremap  <Leader>gcv      :<C-u>Git commit -v<CR>
-noremap  <Leader>gd       :<C-u>silent! !git di<CR>
+noremap  <Leader>gd       :<C-u>silent! !git di \| delta \| less<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! !git f<CR>
 noremap  <Leader>gF       :<C-u>silent! !git ff<CR>
@@ -586,9 +586,9 @@ noremap  <Leader>gV       :Gclog<CR>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
-noremap  <4-G>            :<C-u>Ggrep! -i<Space>
-nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep! ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
-vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep! ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
+noremap  <4-G>            :<C-u>execute 'normal mG' \| Ggrep -i<Space>
+nnoremap <4-8>            :<C-u>execute 'normal mG' \| let @/ = CwordOrSel(0) \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
+vnoremap <4-8>            :<C-u>execute 'normal mG' \| let @/ = CwordOrSel(1) \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
 
 " Plugin: Manpageview
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>

@@ -113,7 +113,7 @@ snippet des "description" w
 description = $0
 endsnippet
 
-snippet ob "object({})" w
+snippet obj "object({})" w
 object({$0})
 endsnippet
 
@@ -159,7 +159,11 @@ snippet def "default" w
 default = $0
 endsnippet
 
-snippet n "number" w
+snippet n "null" w
+null
+endsnippet
+
+snippet N "number" w
 number
 endsnippet
 
@@ -186,7 +190,7 @@ merge($0)
 endsnippet
 
 snippet o "optional" w
-optional($0)
+optional($1, $0)
 endsnippet
 
 snippet 00 "0.0.0.0/0" w

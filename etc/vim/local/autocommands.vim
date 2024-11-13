@@ -85,6 +85,7 @@ augroup GUNS
 
 	" Python
 	autocmd FileType python
+		\ SetTextwidth 90 |
 		\ let b:__lintprg = 'python-lint-wrapper -- %:S'
 
 	" X?HTML/XML
