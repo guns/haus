@@ -74,6 +74,7 @@
 	hunk-header-style = "#444444"
 	hunk-label = ·
 	line-numbers = true
+	pager = less -+c --quit-if-one-screen
 	plus-emph-style = syntax "#005f00"
 	plus-style = syntax "#262626"
 	syntax-theme = Dracula
