@@ -812,7 +812,7 @@ function! s:GoAssemble()
 	normal! gg
 endfunction
 
-command! -bar Open call <SID>Open(expand('<cWORD>')) "{{{1
+command! -bar UserOpen call <SID>Open(expand('<cWORD>')) "{{{1
 function! s:Open(word)
 	" Parameter is a whitespace delimited WORD, thus URLs may not contain spaces.
 	" Worth the simple implementation IMO.

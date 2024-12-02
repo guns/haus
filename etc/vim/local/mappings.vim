@@ -452,7 +452,7 @@ Mapall  <4-x> :<C-u>ToggleMinorWindows<CR>
 Mapall  <4-X> :<C-u>call setloclist(0, getqflist()) \\\| call setqflist([]) \\\| cclose \\\| topleft lwindow \\\| wincmd p<CR>
 
 " Open URLs
-Mapall <4-U> :<C-u>Open<CR>
+Mapall <4-U> :<C-u>UserOpen<CR>
 
 " Save session
 Mapall <4-w> :<C-u>Makesession<CR>
