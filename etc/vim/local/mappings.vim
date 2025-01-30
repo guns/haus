@@ -408,6 +408,7 @@ noremap <Leader>fd       :<C-u>setlocal filetype=diff<CR>
 noremap <Leader>fg       :<C-u>setlocal filetype=go<CR>
 noremap <Leader>fh       :<C-u>setlocal filetype=html<CR>
 noremap <Leader>fH       :<C-u>setlocal filetype=haskell<CR>
+noremap <Leader>fi       :<C-u>setlocal filetype=dosini<CR>
 noremap <Leader>fj       :<C-u>setlocal filetype=javascript<CR>
 noremap <Leader>fJ       :<C-u>setlocal filetype=json<CR>
 noremap <Leader>fm       :<C-u>setlocal filetype=mail<CR>
@@ -581,8 +582,8 @@ noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>g<M-s>   :<C-u>!git stash show -p<CR>
 noremap  <Leader>gu       :<C-u>Git up<CR>
-noremap  <Leader>gv       :Gclog<Space>
-noremap  <Leader>gV       :Gclog<CR>
+noremap  <Leader>gv       :Gllog!<Space>
+noremap  <Leader>gV       :Gllog!<CR>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
@@ -616,7 +617,7 @@ Mapall <4-d> :<C-u>NERDTreeToggle<CR>
 Mapall <4-D> :<C-u>NERDTreeFind<CR>
 
 " Plugin: Ack.vim
-Mapall <4-A> :<C-u>Ack!<Space>
+Mapall <4-A> :<C-u>Ack! -i<Space>
 
 " Plugin: Gundo
 Mapall <4-u> :GundoToggle<CR>

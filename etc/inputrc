@@ -245,15 +245,15 @@ $if bash
     "\C-xg\es":     "\C-] git stash list --patch \n"
     "\C-xgu":       "\C-] git fetch origin --tags --prune \n"
     "\C-xgU":       "\C-] git up \n"
-    "\C-xgv":       "\C-] vim -c 'Gclog '\C-b"
-    "\C-xgV":       "\C-] vim -c 'Gclog' \n"
+    "\C-xgv":       "\C-] vim -c 'Gllog! '\C-b"
+    "\C-xgV":       "\C-] vim -c 'Gllog!' \n"
     "\C-xgw":       "\C-] git wdi \n"
     "\C-xgW":       "\C-] git wlp \n"
     "\033\007g":    "\C-] vimgit \n"
     "\033\007G":    "\C-]vim .gitignore -c \"Ggrep -i \"\C-b"
 
     # Ack
-    "\033\007A":    "\C-]vim -c \"Ack \"\C-b"
+    "\033\007A":    "\C-]vim -c \"Ack -i \"\C-b"
 
     # IRB
     "\033\007i":    "\C-] irb \n"
