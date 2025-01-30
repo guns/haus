@@ -863,30 +863,6 @@ alias DATETIME="date '+%Y-%m-%dT%H:%M:%S'"
 CD_FUNC -e cdruby "ruby -r mkmf -e \"puts RbConfig::CONFIG['rubylibdir']\""
 CD_FUNC -e cdgems "ruby -e \"puts ([Gem.user_dir, Gem.dir].find { |d| File.directory? d } + '/gems')\""
 
-# Rake
-rk() {
-    if [[ -x bin/bundle ]]; then
-        run bin/bundle exec rake "$@"
-    else
-        run rake "$@"
-    fi
-}; TCOMP rake rk
-
-# Bundler
-b() {
-    if [[ -z "$BUNDLE_JOBS" ]]; then
-        BUNDLE_JOBS=$(grep --count ^processor /proc/cpuinfo)
-    fi
-
-    if [[ -x bin/bundle ]]; then
-        BUNDLE_JOBS="$BUNDLE_JOBS" run bin/bundle "$@"
-    else
-        BUNDLE_JOBS="$BUNDLE_JOBS" run bundle "$@"
-    fi
-}
-
-alias bx='b exec'
-
 ### JavaScript
 
 # Yarn
