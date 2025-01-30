@@ -32,22 +32,22 @@ while getopts :dnt: OPT; do
 done
 shift $((OPTIND-1))
 
-exec_tmux() {
-    exec tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
+_tmux() {
+    tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
 }
 
 if ((NEW)); then
-    exec_tmux new-session "$@"
+    _tmux new-session "$@"
 elif [[ $SESSION ]]; then
     if tmux has-session -t "$SESSION" >/dev/null 2>&1; then
-        exec_tmux attach-session -t "$SESSION" $DETACH "$@"
+        _tmux attach-session -t "$SESSION" $DETACH "$@"
     else
-        exec_tmux new-session -s "$SESSION" "$@"
+        _tmux new-session -s "$SESSION" "$@"
     fi
 else
     if tmux has-session >/dev/null 2>&1; then
-        exec_tmux attach-session $DETACH "$@"
+        _tmux attach-session $DETACH "$@"
     else
-        exec_tmux new-session "$@"
+        _tmux new-session "$@"
     fi
 fi
