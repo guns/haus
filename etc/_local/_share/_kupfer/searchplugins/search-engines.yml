@@ -68,7 +68,6 @@ qterraform:          https://registry.terraform.io/search/providers?q=***
 qthesaurus:          https://thesaurus.com/browse/***?s=t
 qtimeis:             https://time.is/?q=***
 qtrends:             https://trends.google.com/trends/explore?q=***
-qtwitter:            https://twitter.com/search?q=***
 qultimateguitartabs: https://www.ultimate-guitar.com/search.php?value=***&search_type=title
 qurbandictionary:    https://www.urbandictionary.com/define.php?term=***
 quserexperience:     https://ux.stackexchange.com/search?q=***
@@ -76,4 +75,5 @@ qvideo:              https://www.google.com/search?tbm=vid&q=***
 qvimeo:              https://vimeo.com/search?q=***
 qwikipedia:          https://en.wikipedia.org/wiki/?search=***
 qwolfram:            https://www.wolframalpha.com/input/?i=***
+qx:                  https://x.com/search?q=***&src=typed_query
 qyoutube:            https://www.youtube.com/results?search_query=***
