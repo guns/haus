@@ -554,7 +554,7 @@ noremap <Leader>fx :<C-u>call SetExecutable()<CR>
 noremap  <Leader>g<Space> :<C-u>Git<Space>
 noremap  <Leader>g1       :<C-u>silent! !git l1<CR>
 noremap  <Leader>g2       :<C-u>Gvsplit REBASE_HEAD<CR>
-noremap  <Leader>g.       :<C-u>silent! !git di % \| delta \| less<CR>
+noremap  <Leader>g.       :<C-u>silent! !git di %<CR>
 noremap  <Leader>ga.      :<C-u>silent! Git a %<CR>
 noremap  <Leader>gaa      :<C-u>silent! Git aa<CR>
 noremap  <Leader>gac      :<C-u>silent! Git aa \| Git commit --verbose<CR>
@@ -568,7 +568,7 @@ noremap  <Leader>gca      :<C-u>Git commit --all<CR>
 noremap  <Leader>gcA      :<C-u>Git commit --amend<CR>
 noremap  <Leader>gcc      :<C-u>Git commit<CR>
 noremap  <Leader>gcv      :<C-u>Git commit -v<CR>
-noremap  <Leader>gd       :<C-u>silent! !git di \| delta \| less<CR>
+noremap  <Leader>gd       :<C-u>silent! !git di<CR>
 noremap  <Leader>gD       :<C-u>Gdiff<Space>
 noremap  <Leader>gf       :<C-u>silent! !git f<CR>
 noremap  <Leader>gF       :<C-u>silent! !git ff<CR>
