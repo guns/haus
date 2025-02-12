@@ -35,6 +35,8 @@
 	indentHeuristic = true
 	wsErrorHighlight = all
 	colorMoved = true
+	srcPrefix = ""
+	dstPrefix = ""
 
 [diff "utf-16le"]
 	textconv = "iconv -f utf-16le -t utf-8"
@@ -183,17 +185,17 @@
 	ts = !"f() { git tag --sign \"$1\" --message \"$(date)\n$1\n${@:2}\"; }; f"
 
 	# Diff and patch
-	di       = diff --no-prefix
-	diw      = diff --no-prefix --ignore-all-space
-	wdi      = diff --no-prefix --color-words
+	di       = diff
+	diw      = diff --ignore-all-space
+	wdi      = diff --color-words
 
-	dih      = diff --no-prefix HEAD
-	dihw     = diff --no-prefix HEAD --ignore-all-space
-	wdih     = diff --no-prefix HEAD --color-words
+	dih      = diff HEAD
+	dihw     = diff HEAD --ignore-all-space
+	wdih     = diff HEAD --color-words
 
 	dia      = diff --text
-	dic      = diff --no-prefix --cached
-	dis      = diff --no-prefix --summary --stat
+	dic      = diff --cached
+	dis      = diff --summary --stat
 	diorigin = !git diff "origin/$(git rev-parse --abbrev-ref HEAD)"
 
 	fp       = format-patch
