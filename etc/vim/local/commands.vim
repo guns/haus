@@ -29,6 +29,8 @@ function! Prompt(...)
 		let buf = input(a:1, '', 'file')
 	endif
 	if !empty(buf) | execute a:1 . buf | endif
+	" Clear command line with Escape
+	execute "normal! \<Esc>"
 endfunction
 
 command! -nargs=+ -complete=command -bar Mapall      call <SID>Mapall('nore', '',         <f-args>) " {{{1

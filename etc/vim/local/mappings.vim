@@ -335,29 +335,23 @@ noremap <4-m>          :<C-u>silent! make!<CR>
 
 " Settings and Toggles
 noremap <Leader>s<Space> :<C-u>setlocal<Space>
-noremap <Leader>sa       :<C-u>let cbuf = expand('%:p') \| execute 'args `git ls-files`' \| execute 'edit ' . cbuf \| unlet cbuf<CR>
-noremap <Leader>?sa      :<C-u>Capture args<CR>
 noremap <Leader>sc       :<C-u>call Prompt('colorscheme ', '', 'color')<CR>
-noremap <Leader>?sc      :<C-u>colorscheme<CR>
 noremap <Leader>sf       :<C-u>call Prompt('setlocal foldmethod=', 'syntax')<CR>
-noremap <Leader>?sf      :<C-u>setlocal foldmethod?<CR>
 noremap <Leader>sm       :<C-u>call Prompt('setlocal synmaxcol=', '0') \| syntax sync fromstart<CR>
-noremap <Leader>?sm      :<C-u>setlocal synmaxcol?<CR>
-noremap <Leader>ss       :<C-u>syntax sync fromstart<CR>
-noremap <Leader>st       :<C-u>SetTextwidth<Space>
-noremap <Leader>?st      :<C-u>SetTextwidth<CR>
-noremap <Leader>sw       :<C-u>SetWhitespace!<Space>
-noremap <Leader>?sw      :<C-u>SetWhitespace<CR>
+noremap <Leader>ss       :<C-u>setlocal wrapscan! \| setlocal wrapscan?<CR>
+noremap <Leader>st       :<C-u>call Prompt('SetTextwidth! ') \| SetTextwidth<CR>
+noremap <Leader>sw       :<C-u>call Prompt('SetWhitespace! ') \| SetWhitespace<CR>
+noremap <Leader>sy       :<C-u>syntax sync fromstart<CR>
 noremap <Leader><C-a>    :<C-u>SetAutowrap! \| SetAutowrap<CR>
 noremap <Leader><C-b>    :<C-u>setlocal scrollbind! \| setlocal scrollbind?<CR>
 noremap <Leader><C-d>    :<C-u>ToggleDiff<CR>
-noremap <LocalLeader>dw  :<C-u>ToggleDiffopt 'iwhiteall'<CR>
-noremap <LocalLeader>di  :<C-u>ToggleDiffopt 'icase'<CR>
+noremap <Leader>sdi      :<C-u>ToggleDiffopt 'icase'<CR>
+noremap <Leader>sdw      :<C-u>ToggleDiffopt 'iwhiteall'<CR>
 noremap <Leader><C-e>    :<C-u>setlocal expandtab! \| setlocal expandtab?<CR>
 noremap <Leader><C-h>    :<C-u>setlocal hlsearch! \| setlocal hlsearch?<CR>
 noremap <Leader><C-n>    :<C-u>setlocal number!<CR>
 noremap <Leader><C-o>    :<C-u>setlocal cursorline! \| setlocal cursorcolumn!<CR>
-noremap <Leader><C-r>    :<C-u>if &autoread \| set noautoread \| else \| set autoread \| endif \| set autoread?<CR>
+noremap <Leader><C-r>    :<C-u>setlocal autoread! \| setlocal autoread?<CR>
 noremap <Leader><C-s>    :<C-u>setlocal spell! \| setlocal spell?<CR>
 noremap <Leader><C-t>    :<C-u>if v:profiling \| execute 'Sh (sleep 1; urxvt-client -e vim /tmp/profile.vim) &' \| quitall! \| else \| call Prompt('Profile ', '', 'function') \| endif<CR>
 noremap <Leader><C-w>    :<C-u>setlocal wrap! \| setlocal wrap?<CR>
