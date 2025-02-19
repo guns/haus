@@ -13,6 +13,7 @@ autocmd!
 
 " Load and activate plugins
 call pathogen#infect()
+packadd! editorconfig
 filetype plugin indent on
 
 " Load commands and functions
