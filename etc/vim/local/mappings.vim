@@ -575,7 +575,8 @@ noremap  <Leader>gr       :<C-u>silent! Git rs<CR>
 noremap  <Leader>gs       :<C-u>Git stash -u<CR>
 noremap  <Leader>gS       :<C-u>Git stash pop<CR>
 noremap  <Leader>g<M-s>   :<C-u>!git stash show -p<CR>
-noremap  <Leader>gu       :<C-u>Git up<CR>
+noremap  <Leader>gu       :<C-u>Git fetch origin --tags --prune<CR>
+noremap  <Leader>gU       :<C-u>Git up<CR>
 noremap  <Leader>gv       :Gclog!<Space>
 noremap  <Leader>gV       :Gclog!<CR>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
