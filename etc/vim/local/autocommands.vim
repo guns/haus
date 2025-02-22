@@ -270,7 +270,7 @@ augroup GUNS
 augroup END
 
 " vim-lsp
-for [cmdline, ftlist] in [[['pylsp'], ['python']], [['terraform-lsp'], ['terraform']]]
+for [cmdline, ftlist] in [[['pylsp'], ['python']], [['terraform-ls', 'serve'], ['terraform']]]
 	if executable(cmdline[0])
 		execute 'autocmd User lsp_setup call lsp#register_server({'
 			\ . "'name': " . string(cmdline[0]) . ','
