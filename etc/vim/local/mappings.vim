@@ -557,7 +557,7 @@ noremap  <Leader>gaw.     :<C-u>silent! Git aw %<CR>
 noremap  <Leader>gawa     :<C-u>silent! Git aw .<CR>
 noremap  <Leader>gb       :Git blame -w<CR>
 noremap  <Leader>gB       :Git blame -w -M -C -C -C<CR>
-noremap  <Leader>gc.      :<C-u>Git commit %<CR>
+noremap  <Leader>gc.      :<C-u>Git commit -v %<CR>
 noremap  <Leader>gca      :<C-u>Git commit --all<CR>
 noremap  <Leader>gcA      :<C-u>Git commit --amend<CR>
 noremap  <Leader>gcc      :<C-u>Git commit<CR>
@@ -578,7 +578,7 @@ noremap  <Leader>g<M-s>   :<C-u>!git stash show -p<CR>
 noremap  <Leader>gu       :<C-u>Git fetch origin --tags --prune<CR>
 noremap  <Leader>gU       :<C-u>Git up<CR>
 noremap  <Leader>gv       :Gclog!<Space>
-noremap  <Leader>gV       :Gclog!<CR>
+noremap  <Leader>gV       :Gclog! %<CR>
 noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
