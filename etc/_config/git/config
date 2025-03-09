@@ -90,14 +90,15 @@
 	rsoriginhard = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)" --hard
 
 	# Commit
-	c    = commit
-	cv   = commit --verbose
-	cva  = commit --verbose --amend
-	cm   = commit --message
-	ca   = commit --all
-	cav  = commit --all --verbose
-	cava = commit --all --verbose --amend
-	cam  = commit --all --message
+	c      = commit
+	cv     = commit --verbose
+	cva    = commit --verbose --amend
+	cm     = commit --message
+	ca     = commit --all
+	cav    = commit --all --verbose
+	cava   = commit --all --verbose --amend
+	cam    = commit --all --message
+	camend = commit --amend
 
 	# Stash
 	s     = stash
