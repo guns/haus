@@ -34,12 +34,14 @@ def input_one_char(prompt):
         return sys.stdin.read(1)
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
-        print("", file=sys.stderr)
+        print(file=sys.stderr)
 
 
 def execute(args):
     opts = parse_args(args)
     fname = os.path.basename(opts.pass_name)
+
+    assert os.path.exists(os.path.join(os.path.expanduser("~/.password-store"), opts.pass_name + ".gpg"))
 
     subprocess.run(["clip"], input=bytes(fname, "utf-8"))
     print(f"Copied {fname} to clipboard.", file=sys.stderr)
