@@ -37,6 +37,7 @@ qimages:             https://www.google.com/search?tbm=isch&q=***
 qintel:              https://ark.intel.com/search?q=***
 qjquery:             https://jquery.com/?s=***
 qkeyserver:          https://sks-keyservers.net/pks/lookup?op=get&search=***
+qleta:               https://leta.mullvad.net/search?q=***&engine=brave
 qliveleak:           https://www.liveleak.com/browse?q=***
 qlocalhost:          http://localhost/devnull/?q=***
 qmaps:               https://maps.google.com/maps?q=***
