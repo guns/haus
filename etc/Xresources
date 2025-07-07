@@ -21,7 +21,7 @@ XTerm*termName:        xterm-256color
 XTerm*background:      rgb:00/00/00
 XTerm*foreground:      rgb:FF/EE/C0
 XTerm*pointerColor:    rgb:DD/DD/DD
-XTerm*faceName:        Consolas:pixelsize=14
+XTerm*faceName:        Consolas:pixelsize=15
 XTerm*utf8:            always
 XTerm*utf8Fonts:       always
 XTerm*metaSendsEscape: on
@@ -48,7 +48,7 @@ URxvt.iso14755_52:       off # Keycap Picture Insert mode
 
 ! Explicit multiple fonts for code point search
 URxvt.font: \
-  xft:Consolas:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
+  xft:Consolas:pixelsize=15:antialias=on:hinting=on:hintstyle=hintslight, \
   xft:Menlo:pixelsize=14:antialias=on:hinting=on:hintstyle=hintslight, \
   xft:Unifont:pixelsize=16:antialias=on:hinting=on:hintstyle=hintslight
 
