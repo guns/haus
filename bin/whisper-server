@@ -1,0 +1,112 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2025 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Speech-to-text transcription server using Whisper.
+"""
+
+import contextlib
+import queue
+import socket
+import subprocess
+import sys
+import tempfile
+import threading
+from argparse import ArgumentParser
+from typing import Sequence
+
+
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
+    parser.add_argument("host", nargs="?", help="IPv4 address to bind", default="0.0.0.0")
+    parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
+    return parser
+
+
+def client_loop(host: str, port: int) -> None:
+    while True:
+        input("> Press Enter to start recording:")
+
+        with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
+            proc = subprocess.Popen(["pw-record", "--", f.name])
+            input("> Press Enter to stop recording...")
+            proc.terminate()
+            proc.wait()
+            try:
+                print(f"> Sending audio to {host}:{port}", file=sys.stderr)
+                sock = socket.create_connection((host, port))
+                sock.sendall(f.read())
+                sock.shutdown(socket.SHUT_WR)
+                print("> Waiting for transcription...", file=sys.stderr)
+                parts = []
+                while buf := sock.recv(8 << 10):
+                    parts.append(buf)
+            finally:
+                sock.close()
+            text = b"".join(parts).decode().strip()
+            print("> Copying the following text to the clipboard:", file=sys.stderr)
+            print(text, flush=True)
+            print("--", file=sys.stderr)
+            subprocess.run(["clip"], input=text, text=True)
+
+
+def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> None:  # type: ignore[name-defined] # noqa: F821
+    try:
+        with tempfile.NamedTemporaryFile(prefix="whisper-server-", suffix=".wav") as f:
+            while buf := sock.recv(1 << 20):
+                f.write(buf)
+            results = model.transcribe(f.name)
+            sock.sendall(results["text"].encode())
+    finally:
+        sock.close()
+
+
+def thread_reaper(threads: queue.Queue[threading.Thread]) -> None:
+    try:
+        while True:
+            threads.get().join()
+    except queue.ShutDown:
+        pass
+
+
+def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  # type: ignore[name-defined] # noqa: F821
+    threads: queue.Queue[threading.Thread] = queue.Queue()
+    threading.Thread(target=thread_reaper, args=[threads]).start()
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen()
+    print(f"> Listening on {host}:{port}", file=sys.stderr)
+
+    try:
+        while True:
+            client_sock, client_addr = server.accept()
+            print(f"> Connection from {client_addr[0]}:{client_addr[1]}", file=sys.stderr)
+            thread = threading.Thread(target=handle_connection, args=[client_sock, model])
+            thread.start()
+            threads.put(thread)
+    except KeyboardInterrupt:
+        print("> SIGINT!", file=sys.stderr)
+        threads.shutdown()
+        if n := threads.qsize():
+            print(f"> Waiting for {n} thread(s) to complete...", file=sys.stderr)
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    with contextlib.suppress(KeyboardInterrupt):
+        if opts.client:
+            client_loop(opts.host, opts.port)
+        else:
+            import whisper  # type: ignore[import-untyped] # noqa: autoimport
+
+            server_loop(whisper.load_model("medium.en"), opts.host, opts.port)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
