@@ -12,16 +12,20 @@ import shlex
 import subprocess
 import sys
 from types import ModuleType
-from typing import IO, Any, Dict, List, NoReturn, Optional
+from typing import IO, Any, NoReturn, Optional, Sequence
 from urllib import request
 
 from . import http_ua, ls_colors, sgr
 
+DEFAULT_SGR = ("x48", "bold")
+
 get_random_user_agent = http_ua.get_random_user_agent
+
 LSColors = ls_colors.LSColors
 parse_ls_colors = ls_colors.parse_ls_colors
-format = sgr.format
-print = sgr.print
+
+format = sgr.format  # noqa: A001
+print = sgr.print  # noqa: A001
 
 try:
     regex = importlib.import_module("regex")
@@ -30,38 +34,37 @@ except ModuleNotFoundError:
 
 
 def run(
-    cmd: List[str],
-    sgr: List[str] = ["x48", "bold"],
-    /,
+    cmd: Sequence[str],
+    styles: Sequence[str] = DEFAULT_SGR,
     file: IO[Any] = sys.stderr,
     sep: Optional[str] = " ",
     end: Optional[str] = "\n",
+    *,
     flush: bool = False,
     **kwargs: Any,
 ) -> subprocess.CompletedProcess[Any]:
     """
     Print cmd to stderr with sgr codes, then execute subprocess.run(cmd, **kwargs).
     """
-    print("> " + shlex.join(cmd), sgr, file=file, sep=sep, end=end, flush=flush)
+    print("> " + shlex.join(cmd), styles, file=file, sep=sep, end=end, flush=flush)
     return subprocess.run(cmd, **kwargs)
 
 
 def execvp(
-    cmd: List[str],
-    sgr: List[str] = ["x48", "bold"],
-    /,
+    cmd: Sequence[str],
+    styles: Sequence[str] = DEFAULT_SGR,
     file: IO[Any] = sys.stderr,
     **kwargs: Any,
 ) -> NoReturn:
     """
     Print cmd to stderr with sgr codes, then execute os.execvp().
     """
-    print("> " + shlex.join(cmd), sgr, **kwargs)
+    print("> " + shlex.join(cmd), styles, file=file, **kwargs)
     prg, *args = cmd
     os.execvp(prg, args)
 
 
-def urlopen(url: str, headers: Optional[Dict[str, str]] = None, **kwargs: Any) -> Any:
+def urlopen(url: str, headers: Optional[dict[str, str]] = None, **kwargs: Any) -> Any:
     """
     Execute an HTTP request to url with a recent User-Agent header.
     """
