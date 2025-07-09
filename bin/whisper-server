@@ -8,7 +8,6 @@
 Speech-to-text transcription server using Whisper.
 """
 
-import contextlib
 import queue
 import socket
 import subprocess
@@ -18,24 +17,37 @@ import threading
 from argparse import ArgumentParser
 from typing import Sequence
 
+import haus
+import haus.keyboard
+
 
 def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
-    parser.add_argument("host", nargs="?", help="IPv4 address to bind", default="0.0.0.0")
+    parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return parser
 
 
+def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAULT_SGR) -> bool:
+    haus.print(msg, end="", styles=styles, file=sys.stderr, flush=True)
+    with haus.keyboard.NonCanonicalModeTerminalInput(sys.stdin) as f:
+        print(file=sys.stderr)
+        return f.read(1) not in quit_chars
+
+
 def client_loop(host: str, port: int) -> None:
     while True:
-        input("> Press Enter to start recording:")
+        if not prompt("> Press any key to start recording (q to quit): ", {"q"}):
+            return
 
         with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
             proc = subprocess.Popen(["pw-record", "--", f.name])
-            input("> Press Enter to stop recording...")
+            ok = prompt("> Press any key to stop recording (q to quit): ", {"q"}, styles=["red", "bold"])
             proc.terminate()
             proc.wait()
+            if not ok:
+                return
             sock = None
             parts = []
             try:
@@ -79,13 +91,13 @@ def thread_reaper(threads: queue.Queue[threading.Thread]) -> None:
 
 
 def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  # type: ignore[name-defined] # noqa: F821
-    threads: queue.Queue[threading.Thread] = queue.Queue()
-    threading.Thread(target=thread_reaper, args=[threads]).start()
-
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen()
     print(f"> Listening on {host}:{port}", file=sys.stderr)
+
+    threads: queue.Queue[threading.Thread] = queue.Queue()
+    threading.Thread(target=thread_reaper, args=[threads]).start()
 
     try:
         while True:
@@ -103,13 +115,14 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
 
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
-    with contextlib.suppress(KeyboardInterrupt):
-        if opts.client:
-            client_loop(opts.host, opts.port)
-        else:
-            import whisper  # type: ignore[import-untyped] # noqa: autoimport
 
-            server_loop(whisper.load_model("medium.en"), opts.host, opts.port)
+    if opts.client:
+        client_loop(opts.host, opts.port)
+    else:
+        import whisper  # type: ignore[import-untyped] # noqa: autoimport
+
+        server_loop(whisper.load_model("medium.en"), opts.host, opts.port)
+
     return 0
 
 
