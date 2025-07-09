@@ -36,17 +36,22 @@ def client_loop(host: str, port: int) -> None:
             input("> Press Enter to stop recording...")
             proc.terminate()
             proc.wait()
+            sock = None
+            parts = []
             try:
                 print(f"> Sending audio to {host}:{port}", file=sys.stderr)
                 sock = socket.create_connection((host, port))
                 sock.sendall(f.read())
                 sock.shutdown(socket.SHUT_WR)
                 print("> Waiting for transcription...", file=sys.stderr)
-                parts = []
                 while buf := sock.recv(8 << 10):
                     parts.append(buf)
+            except ConnectionRefusedError as err:
+                print(err, file=sys.stderr)
+                continue
             finally:
-                sock.close()
+                if sock:
+                    sock.close()
             text = b"".join(parts).decode().strip()
             print("> Copying the following text to the clipboard:", file=sys.stderr)
             print(text, flush=True)
