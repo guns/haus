@@ -1,10 +1,11 @@
 #!/bin/sh
 
-# wid="$1"
-# class="$2"
-# instance="$3"
+wid=$1
+class=$2
+instance=$3
+title=$(xtitle "$wid")
 
-case "$(xtitle "$1")" in
+case "$title" in
 'Event Tester'       ) echo 'state=floating';;
 'xzoom x2'           ) echo 'state=floating';;
 '☎ urxvt ☎'          ) echo 'state=floating';;
@@ -15,4 +16,10 @@ case "$(xtitle "$1")" in
 *' - VIM'            ) echo 'state=floating';;
 'cal -y'             ) echo 'state=floating';;
 'Guvcview'*          ) echo 'state=floating';;
+'⚙ whisper-client ⚙')
+    echo 'state=floating sticky=true'
+    dpyx=$(xdpyinfo | grep -Po 'dimensions:\s*\K(\d+)')
+    winx=$(xdotool getwindowgeometry "$wid" | grep -Po 'Geometry:\s*\K(\d+)')
+    xdotool windowmove "$wid" $((dpyx-winx-4)) 0
+    ;;
 esac
