@@ -8,6 +8,7 @@
 Speech-to-text transcription server using Whisper.
 """
 
+import contextlib
 import queue
 import socket
 import subprocess
@@ -83,11 +84,9 @@ def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> No
 
 
 def thread_reaper(threads: queue.Queue[threading.Thread]) -> None:
-    try:
+    with contextlib.suppress(queue.ShutDown):
         while True:
             threads.get().join()
-    except queue.ShutDown:
-        pass
 
 
 def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  # type: ignore[name-defined] # noqa: F821
