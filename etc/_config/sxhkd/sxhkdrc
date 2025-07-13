@@ -251,10 +251,6 @@ super + shift + Scroll_Lock
 # Applications {{{1
 #
 
-F1
-	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x8 -title "$T" -e whisper-server --client nerv-03
-
 F2
 	wmctrl -xa 'Thunar' || exec thunar ~/Downloads
 
