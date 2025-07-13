@@ -16,4 +16,11 @@ case "$title" in
 *' - VIM') echo 'state=floating';;
 'cal -y') echo 'state=floating';;
 'Guvcview'*) echo 'state=floating';;
+'⚙ whisper-server ⚙') echo 'state=floating';;
+'⚙ whisper-client ⚙')
+    echo 'state=floating sticky=true'
+    dpyx=$(xdpyinfo | grep -Po 'dimensions:\s*\K(\d+)')
+    winx=$(xdotool getwindowgeometry "$wid" | grep -Po 'Geometry:\s*\K(\d+)')
+    xdotool windowmove "$wid" $((dpyx-winx-4)) 0
+    ;;
 esac
