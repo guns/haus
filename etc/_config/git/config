@@ -120,6 +120,7 @@
 	rbp = rebase --show-current-patch
 	rbs = rebase --skip
 	cp  = cherry-pick
+	cpa = cherry-pick --abort
 	cpn = cherry-pick --no-commit
 
 	# Log
