@@ -1,3 +1,15 @@
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
+/* https://github.com/piroor/treestyletab/wiki/Code-snippets-for-custom-style-rules#for-userchromecss */
 
-#TabsToolbar, #sidebar-header { visibility: collapse !important; } /* TreeStyleTab */
+#TabsToolbar {
+    display: none;
+}
+
+#sidebar-header {
+    display: none;
+}
+
+#main-window[inFullscreen] #sidebar-box,
+#main-window[inFullscreen] #sidebar-splitter {
+  display: none !important;
+  width: 0px !important;
+}

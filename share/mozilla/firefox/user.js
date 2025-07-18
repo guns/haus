@@ -60,6 +60,8 @@ user_pref("browser.newtabpage.activity-stream.section.highlights.includePocket",
 user_pref("browser.newtabpage.activity-stream.section.highlights.includeVisited", false);
 user_pref("browser.newtabpage.activity-stream.showSearch", false);
 user_pref("browser.newtabpage.activity-stream.showSponsored", false);
+user_pref("browser.newtabpage.activity-stream.showSponsoredTopSites", false);
+user_pref("browser.newtabpage.activity-stream.showWeather", false);
 
 // Disable search suggestions
 user_pref("browser.search.suggest.enabled", false);
@@ -192,3 +194,6 @@ user_pref("browser.urlbar.update2.engineAliasRefresh", true);
 
 // Don't truncate responses in network inspector
 user_pref("devtools.netmonitor.responseBodyLimit", 0);
+
+// Disable new sidebar for sidebar
+user_pref("sidebar.revamp", false);
