@@ -23,7 +23,7 @@
 #
 # Find scancodes and keycodes with evtest.
 
-evdev:input:b0003v*p*
+evdev:input:b0003v*p*e*-*,*,*,*,*,k*,*,*,*,*,*,*,*,*,*,*
  KEYBOARD_KEY_3A=leftctrl       # capslock -> leftctrl
  KEYBOARD_KEY_38=leftmeta       # leftalt -> leftmeta
  KEYBOARD_KEY_DB=leftalt        # leftmeta -> leftalt
