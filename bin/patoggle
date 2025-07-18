@@ -1,82 +1,48 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2018 Sung Pae <self@sungpae.com>
+# Copyright (c) 2018-2025 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
+"""
+Set or toggle PulseAudio output sinks and input sources.
+"""
 
-class Patoggle
-  DEFAULTS = {}
+import io
+import subprocess
+import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from typing import Optional, Sequence
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Set or toggle between PulseAudio output sinks and input sources.
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.formatter_class = RawDescriptionHelpFormatter
+    parser.add_argument("type", choices={"sink", "source"})
+    parser.add_argument("index", nargs="?", type=int)
+    return parser
 
-        Usage: #{File.basename __FILE__} (sink|source) [index]
-      BANNER
-    end
-  end
 
-  def pulseaudio_list type
-    list = %x(pacmd list-#{type}s).scan(/(\*?) index: (\d+).*?device\.description = "(.*?)"/m).map do |star, idx, desc|
-      [star.length > 0, idx, desc]
-    end
+def get_nodes(typ: str) -> tuple[int, list[str]]:
+    out = subprocess.run(["pactl", "list", "short", f"{typ}s"], capture_output=True, check=True).stdout
+    nodes = [line.split("\t")[1] for line in io.StringIO(out.decode())]
+    out = subprocess.run(["pactl", f"get-default-{typ}"], capture_output=True, check=True).stdout
+    return (nodes.index(out.decode().strip()), nodes)
 
-    until list[0][0]
-      list.rotate!
-    end
 
-    list.map { |a| a.drop 1 }
-  end
+def set_node(typ: str, index: Optional[int]) -> str:
+    current, nodes = get_nodes(typ)
+    if index is None:
+        index = (current + 1) % len(nodes)
+    subprocess.run(["pactl", f"set-default-{typ}", nodes[index]], check=True)
+    return nodes[index]
 
-  def pulseaudio_move type, index
-    type = case type
-    when 'sink'   then 'sink-input'
-    when 'source' then 'source-output'
-    end
 
-    %x(pacmd list-#{type}s).lines.grep(/index: (\d+)/) { $1 }.each do |s|
-      system 'pacmd', "move-#{type}", s, index.to_s, :out => '/dev/null'
-    end
-  end
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    print(set_node(opts.type, opts.index))
+    return 0
 
-  def toggle_pulseaudio type, index = nil
-    list = pulseaudio_list type
 
-    if index
-      i, desc = list.find { |(i, n)| i == index }
-      raise "No #{type} at index #{index}" if i.nil?
-
-      system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
-    else
-      loop do
-        i, desc = list.rotate!.first
-        system 'pacmd', "set-default-#{type}", i, :out => '/dev/null'
-        break if pulseaudio_list(type)[0][0] == i
-      end
-    end
-
-    pulseaudio_move type, i
-    puts desc
-  end
-
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.empty?
-
-    case args[0]
-    when 'sink'   then toggle_pulseaudio 'sink', *args.drop(1)
-    when 'source' then toggle_pulseaudio 'source', *args.drop(1)
-    else abort parser.help
-    end
-  end
-end
-
-$0 = File.basename(__FILE__) and Patoggle.new.run ARGV if $0 == __FILE__
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
