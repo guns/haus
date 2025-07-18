@@ -115,6 +115,10 @@ snippet r "return" w
 return $0
 endsnippet
 
+snippet s "self." w
+self.
+endsnippet
+
 snippet im "import" b
 import $0
 endsnippet
@@ -202,6 +206,10 @@ endsnippet
 
 snippet rt "Path().read_text()" w
 Path($0).read_text()
+endsnippet
+
+snippet RT "reveal_type" w
+reveal_type($0)
 endsnippet
 
 snippet osp "osp" w
@@ -353,13 +361,17 @@ class $1:
 endsnippet
 
 snippet dcl "dataclasses.dataclass" b
-@dataclasses.dataclass(${1:frozen=True}${2:, kw_only=True})
+@dataclasses.dataclass(${1:frozen=True, }${2:kw_only=True})
 class $3:
 	$0
 endsnippet
 
 snippet dclr "dataclasses.replace" w
 dataclasses.replace($0)
+endsnippet
+
+snippet dclf "dataclasses.field" w
+dataclasses.field(${1:default_factory=}$0)
 endsnippet
 
 snippet nt "namedtuple" b
@@ -381,7 +393,7 @@ def __init__(self, $1):
 	$0
 endsnippet
 
-snippet iter "__iter__" b
+snippet _iter "__iter__" b
 def __iter__(self) -> Iterable[$1]:
 	$0
 endsnippet
@@ -499,6 +511,10 @@ endsnippet
 
 snippet col "Collection[]" w
 Collection[$0]
+endsnippet
+
+snippet iter "Iterable[]" w
+Iterable[$0]
 endsnippet
 
 snippet cal "Callable[]" w

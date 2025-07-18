@@ -583,10 +583,10 @@ noremap  <Leader>gw       :<C-u>silent! !git wdi<CR>
 noremap  <Leader>gW       :<C-u>silent! !git wlp<CR>
 noremap  <4-g>            :<C-u>Git \| 12wincmd _<CR>
 noremap  <4-G>            :<C-u>Ggrep -i<Space>
-nnoremap <4-8>            :<C-u>let @/ = CwordOrSel(0) \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
-vnoremap <4-8>            :<C-u>let @/ = CwordOrSel(1) \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
-nnoremap <4-*>            :<C-u>let @/ = CwordOrSel(0) \| tabnew \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
-vnoremap <4-*>            :<C-u>let @/ = CwordOrSel(1) \| tabnew \| execute 'silent! Ggrep ' . (@/ =~# '\u' ? '' : '--ignore-case ') . ' --fixed-strings -- ' . shellescape(@/, 1)<CR>
+nnoremap <4-8>            :<C-u>call GitGrepCwordOrSel(0, 0)<CR>
+vnoremap <4-8>            :<C-u>call GitGrepCwordOrSel(1, 0)<CR>
+nnoremap <4-*>            :<C-u>call GitGrepCwordOrSel(0, 1)<CR>
+vnoremap <4-*>            :<C-u>call GitGrepCwordOrSel(1, 1)<CR>
 
 " Plugin: Manpageview
 noremap <Leader>m :<C-u>call Prompt('VEMan ', '', 'shellcmd')<CR>

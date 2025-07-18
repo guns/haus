@@ -283,8 +283,18 @@ function! FoldText(lnum)
 endfunction
 
 function! MarkdownFoldExpr(lnum)
-	if getline(a:lnum) =~# '\v^#' || getline(a:lnum + 1) =~# '\v^[=-]+$'
+	if getline(a:lnum) =~# '\v^# ' || getline(a:lnum + 1) =~# '\v^=+$'
 		return '>1'
+	elseif getline(a:lnum) =~# '\v^## ' || getline(a:lnum + 1) =~# '\v^-+$'
+		return '>2'
+	elseif getline(a:lnum) =~# '\v^### '
+		return '>3'
+	elseif getline(a:lnum) =~# '\v^#### '
+		return '>4'
+	elseif getline(a:lnum) =~# '\v^##### '
+		return '>5'
+	elseif getline(a:lnum) =~# '\v^###### '
+		return '>6'
 	else
 		return '='
 	endif
@@ -374,7 +384,7 @@ endfunction
 
 function! TerraformPlanFoldExpr(lnum)
 	let line = getline(a:lnum)
-	if line =~# '\v^%x1b[1m  #'
+	if line =~# '\v^  #'
 		return '>1'
 	else
 		return '='
@@ -711,7 +721,6 @@ endfunction
 command! -bar TerraformPlanBufferSetup call <SID>TerraformPlanBufferSetup()
 function! s:TerraformPlanBufferSetup()
 	setlocal foldmethod=expr foldexpr=TerraformPlanFoldExpr(v:lnum)
-	AnsiEsc
 endfunction
 
 command! -bar RustBufferSetup call <SID>RustBufferSetup()
@@ -981,6 +990,18 @@ function! CwordOrSel(...) " {{{1
 	finally
 		let @v = reg_save
 	endtry
+endfunction
+
+function! GitGrepCwordOrSel(sel, newtab)
+	let @+ = CwordOrSel(a:sel)
+	if a:newtab | tabnew | endif
+	let arg = '\Q' . shellescape(@+, 1) . '\E'
+	if !a:sel
+		let dash = &iskeyword =~# '-'
+		let arg = (dash ? '(?<\!-)' : '') . '\b\Q' . shellescape(@+, 1) . '\E\b' . (dash ? '(?\!-)' : '')
+	endif
+	execute 'silent! Ggrep --perl-regexp ' . (@+ =~# '\u' ? '' : '--ignore-case ') . ' -- ' . arg
+	let @/ = a:sel ? @+ : '\<' . @+ . '\>'
 endfunction
 
 command! -bar -range AddNumbersInSelection call <SID>AddNumbersInSelection()

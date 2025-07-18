@@ -217,6 +217,10 @@ snippet li "list" w
 list($0)
 endsnippet
 
+snippet tu "tuple" w
+tuple($0)
+endsnippet
+
 snippet re "replace" w
 replace($0)
 endsnippet
@@ -235,4 +239,11 @@ endsnippet
 
 snippet tos "toset" w
 toset($0)
+endsnippet
+
+snippet val "validation" w
+validation {
+	condition     = $0
+	error_message = ""
+}
 endsnippet

@@ -115,8 +115,8 @@ augroup GUNS
 		\ SetWhitespace 2 |
 		\ setlocal iskeyword+=-
 	autocmd FileType css,scss,less
-		\ SetWhitespace 4 |
-		\ setlocal iskeyword+=-
+		\ SetWhitespace 2 |
+		\ setlocal expandtab iskeyword+=-
 
 	" JavaScript
 	autocmd FileType javascript
@@ -264,7 +264,7 @@ augroup GUNS
 	" Terraform
 	autocmd FileType terraform
 		\ setlocal iskeyword+=- |
-		\ let b:__lintprg = 'tflint -- %:S' |
+		\ let b:__lintprg = 'tflint --chdir=%:h --filter=%:S' |
 		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>'
 
 augroup END
