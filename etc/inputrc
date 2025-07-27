@@ -307,6 +307,9 @@ $if bash
     "\C-xtwl":      "\C-]terraform workspace list\n"
     "\C-xtwn":      "\C-]terraform workspace new "
     "\C-xtws":      "\C-]terraform workspace select "
+
+    # AI
+    "\C-xq":	    "\C-]AI\n"
 $endif
 
 ### gdb
