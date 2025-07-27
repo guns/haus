@@ -16,15 +16,18 @@ import sys
 import tempfile
 import threading
 from argparse import ArgumentParser
-from typing import Sequence
+from typing import IO, Sequence
 
 import haus
 import haus.keyboard
+
+BUFSIZE = 1 << 20
 
 
 def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
+    parser.add_argument("-f", "--file", help="transcribe WAV file")
     parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return parser
@@ -35,6 +38,23 @@ def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAU
     with haus.keyboard.NonCanonicalModeTerminalInput(sys.stdin) as f:
         print(file=sys.stderr)
         return f.read(1) not in quit_chars
+
+
+def transcribe_file(host: str, port: int, file: IO[bytes]) -> str:
+    print(f"> Sending audio to {host}:{port}", file=sys.stderr)
+    parts = []
+    try:
+        with socket.create_connection((host, port)) as sock:
+            while buf := file.read(BUFSIZE):
+                sock.sendall(buf)
+            sock.shutdown(socket.SHUT_WR)
+            print("> Waiting for transcription...", file=sys.stderr)
+            while buf := sock.recv(BUFSIZE):
+                parts.append(buf)
+    except ConnectionRefusedError as err:
+        print(err, file=sys.stderr)
+        return ""
+    return b"".join(parts).decode().strip()
 
 
 def client_loop(host: str, port: int) -> None:
@@ -49,23 +69,7 @@ def client_loop(host: str, port: int) -> None:
             proc.wait()
             if not ok:
                 return
-            sock = None
-            parts = []
-            try:
-                print(f"> Sending audio to {host}:{port}", file=sys.stderr)
-                sock = socket.create_connection((host, port))
-                sock.sendall(f.read())
-                sock.shutdown(socket.SHUT_WR)
-                print("> Waiting for transcription...", file=sys.stderr)
-                while buf := sock.recv(8 << 10):
-                    parts.append(buf)
-            except ConnectionRefusedError as err:
-                print(err, file=sys.stderr)
-                continue
-            finally:
-                if sock:
-                    sock.close()
-            text = b"".join(parts).decode().strip()
+            text = transcribe_file(host, port, f.file)
             print("> Copying the following text to the clipboard:", file=sys.stderr)
             print(text, flush=True)
             print("--", file=sys.stderr)
@@ -75,7 +79,7 @@ def client_loop(host: str, port: int) -> None:
 def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> None:  # type: ignore[name-defined] # noqa: F821
     try:
         with tempfile.NamedTemporaryFile(prefix="whisper-server-", suffix=".wav") as f:
-            while buf := sock.recv(1 << 20):
+            while buf := sock.recv(BUFSIZE):
                 f.write(buf)
             results = model.transcribe(f.name)
             sock.sendall(results["text"].encode())
@@ -115,7 +119,12 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
 
-    if opts.client:
+    if opts.file == "-":
+        print(transcribe_file(opts.host, opts.port, sys.stdin.buffer))
+    elif opts.file:
+        with open(opts.file, "rb") as f:
+            print(transcribe_file(opts.host, opts.port, f))
+    elif opts.client:
         client_loop(opts.host, opts.port)
     else:
         import whisper  # type: ignore[import-untyped] # noqa: autoimport
