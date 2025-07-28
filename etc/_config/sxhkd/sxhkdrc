@@ -253,7 +253,7 @@ super + shift + Scroll_Lock
 
 F1
 	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x8 -title "$T" -e whisper-service --client
+	wmctrl -a "$T" || urxvt-client -g 48x7 -title "$T" -e whisper-service --client
 
 super + F1
 	T='⚙ AI ⚙'; \
@@ -261,7 +261,7 @@ super + F1
 
 alt + F1
 	T='⚙ whisper-server ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x8 -title "$T" -e whisper-service
+	wmctrl -a "$T" || urxvt-client -g 48x7 -title "$T" -e whisper-service
 
 F2
 	wmctrl -xa 'Thunar' || exec thunar ~/Downloads
