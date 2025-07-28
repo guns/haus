@@ -9,6 +9,7 @@ Speech-to-text transcription server using Whisper.
 """
 
 import contextlib
+import io
 import queue
 import socket
 import subprocess
@@ -16,18 +17,32 @@ import sys
 import tempfile
 import threading
 from argparse import ArgumentParser
-from typing import IO, Sequence
+from typing import Optional, Sequence, cast
 
 import haus
 import haus.keyboard
 
 BUFSIZE = 1 << 20
+MODELS = {
+    "tiny",
+    "tiny.en",
+    "base",
+    "base.en",
+    "small",
+    "small.en",
+    "medium",
+    "medium.en",
+    "large",
+    "turbo",
+}
 
 
 def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
     parser.add_argument("-f", "--file", help="transcribe WAV file")
+    parser.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
+    parser.add_argument("-m", "--model", help="(default: turbo)", choices=MODELS, default="turbo")
     parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return parser
@@ -40,24 +55,29 @@ def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAU
         return f.read(1) not in quit_chars
 
 
-def transcribe_file(host: str, port: int, file: IO[bytes]) -> str:
-    print(f"> Sending audio to {host}:{port}", file=sys.stderr)
+def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Optional[str] = None) -> str:
+    if language is not None and len(language) != 2:
+        print(f"Ignoring language {language}; see IS0 639-1 for two-letter language codes", file=sys.stderr)
+        language = None
+    print(f"> Sending{' ' + language if language else ''} audio to {host}:{port}", file=sys.stderr)
     parts = []
     try:
         with socket.create_connection((host, port)) as sock:
-            while buf := file.read(BUFSIZE):
-                sock.sendall(buf)
+            sock.sendall(language.encode() if language else b"\x00\x00")
+            buf = bytearray(BUFSIZE)
+            while n := file.readinto(buf):
+                sock.sendall(buf[:n])
             sock.shutdown(socket.SHUT_WR)
             print("> Waiting for transcription...", file=sys.stderr)
-            while buf := sock.recv(BUFSIZE):
-                parts.append(buf)
+            while n := sock.recv_into(buf):
+                parts.append(buf[:n])
     except ConnectionRefusedError as err:
         print(err, file=sys.stderr)
         return ""
     return b"".join(parts).decode().strip()
 
 
-def client_loop(host: str, port: int) -> None:
+def client_loop(host: str, port: int, language: Optional[str] = None) -> None:
     while True:
         if not prompt("> Press any key to start recording (q to quit): ", {"q"}):
             return
@@ -69,7 +89,7 @@ def client_loop(host: str, port: int) -> None:
             proc.wait()
             if not ok:
                 return
-            text = transcribe_file(host, port, f.file)
+            text = transcribe_file(host, port, cast("io.BufferedReader", f.file), language)
             print("> Copying the following text to the clipboard:", file=sys.stderr)
             print(text, flush=True)
             print("--", file=sys.stderr)
@@ -78,10 +98,17 @@ def client_loop(host: str, port: int) -> None:
 
 def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> None:  # type: ignore[name-defined] # noqa: F821
     try:
+        buf = bytearray(BUFSIZE)
+        n = sock.recv_into(buf)
+        lang = buf[:2]
+        language = None if lang == b"\x00\x00" else lang.decode()
+
         with tempfile.NamedTemporaryFile(prefix="whisper-server-", suffix=".wav") as f:
-            while buf := sock.recv(BUFSIZE):
-                f.write(buf)
-            results = model.transcribe(f.name)
+            f.write(buf[2:n])
+            while n := sock.recv_into(buf):
+                f.write(buf[:n])
+            f.flush()
+            results = model.transcribe(f.name, language=language, task=("translate" if language else None))
             sock.sendall(results["text"].encode())
     finally:
         sock.close()
@@ -120,16 +147,16 @@ def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
 
     if opts.file == "-":
-        print(transcribe_file(opts.host, opts.port, sys.stdin.buffer))
+        print(transcribe_file(opts.host, opts.port, cast("io.BufferedReader", sys.stdin.buffer), opts.language))
     elif opts.file:
         with open(opts.file, "rb") as f:
-            print(transcribe_file(opts.host, opts.port, f))
+            print(transcribe_file(opts.host, opts.port, f, opts.language))
     elif opts.client:
-        client_loop(opts.host, opts.port)
+        client_loop(opts.host, opts.port, opts.language)
     else:
         import whisper  # type: ignore[import-untyped] # noqa: autoimport
 
-        server_loop(whisper.load_model("medium.en"), opts.host, opts.port)
+        server_loop(whisper.load_model(opts.model), opts.host, opts.port)
 
     return 0
 
