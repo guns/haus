@@ -48,18 +48,24 @@ def parser() -> ArgumentParser:
     return parser
 
 
+def stderr(message: str) -> None:
+    print(message, file=sys.stderr)
+
+
 def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAULT_SGR) -> bool:
     haus.print(msg, end="", styles=styles, file=sys.stderr, flush=True)
-    with haus.keyboard.NonCanonicalModeTerminalInput(sys.stdin) as f:
+    try:
+        with haus.keyboard.NonCanonicalModeTerminalInput(sys.stdin) as f:
+            return f.read(1) not in quit_chars
+    finally:
         print(file=sys.stderr)
-        return f.read(1) not in quit_chars
 
 
 def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Optional[str] = None) -> str:
     if language is not None and len(language) != 2:
-        print(f"Ignoring language {language}; see IS0 639-1 for two-letter language codes", file=sys.stderr)
+        stderr(f"> Ignoring language {language}; see IS0 639-1 for two-letter language codes")
         language = None
-    print(f"> Sending{' ' + language if language else ''} audio to {host}:{port}", file=sys.stderr)
+    stderr(f"> Sending{' ' + language if language else ''} audio to {host}:{port}")
     parts = []
     try:
         with socket.create_connection((host, port)) as sock:
@@ -68,29 +74,29 @@ def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Opt
             while n := file.readinto(buf):
                 sock.sendall(buf[:n])
             sock.shutdown(socket.SHUT_WR)
-            print("> Waiting for transcription...", file=sys.stderr)
+            stderr("> Waiting for transcription...")
             while n := sock.recv_into(buf):
                 parts.append(buf[:n])
     except ConnectionRefusedError as err:
-        print(err, file=sys.stderr)
+        stderr(str(err))
         return ""
     return b"".join(parts).decode().strip()
 
 
 def client_loop(host: str, port: int, language: Optional[str] = None) -> None:
     while True:
-        if not prompt("> Press any key to start recording (q to quit): ", {"q"}):
+        if not prompt("> Press any key to start recording (q to quit):", {"q"}):
             return
 
         with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
             proc = subprocess.Popen(["pw-record", "--", f.name])
-            ok = prompt("> Press any key to stop recording (q to quit): ", {"q"}, styles=["red", "bold"])
+            ok = prompt("> Press any key to stop recording (q to quit):", {"q"}, styles=["red", "bold"])
             proc.terminate()
             proc.wait()
             if not ok:
                 return
             text = transcribe_file(host, port, cast("io.BufferedReader", f.file), language)
-            print("> Copying the following text to the clipboard:", file=sys.stderr)
+            stderr("> Copying the following text to the clipboard:")
             print(text, flush=True)
             print("--", file=sys.stderr)
             subprocess.run(["clip"], input=text, text=True)
@@ -124,7 +130,7 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen()
-    print(f"> Listening on {host}:{port}", file=sys.stderr)
+    stderr(f"> Listening on {host}:{port}")
 
     threads: queue.Queue[threading.Thread] = queue.Queue()
     threading.Thread(target=thread_reaper, args=[threads]).start()
@@ -132,15 +138,15 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
     try:
         while True:
             client_sock, client_addr = server.accept()
-            print(f"> Connection from {client_addr[0]}:{client_addr[1]}", file=sys.stderr)
+            stderr(f"> Connection from {client_addr[0]}:{client_addr[1]}")
             thread = threading.Thread(target=handle_connection, args=[client_sock, model])
             thread.start()
             threads.put(thread)
     except KeyboardInterrupt:
-        print("> SIGINT!", file=sys.stderr)
+        stderr("SIGINT")
         threads.shutdown()
         if n := threads.qsize():
-            print(f"> Waiting for {n} thread(s) to complete...", file=sys.stderr)
+            stderr(f"> Waiting for {n} thread(s) to complete...")
 
 
 def main(args: Sequence[str]) -> int:
