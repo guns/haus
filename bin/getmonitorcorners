@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+# Created by Claude (claude-opus-4-20250514)
+
+import json
+from ctypes import (
+    CDLL,
+    POINTER,
+    Structure,
+    byref,
+    c_char_p,
+    c_int,
+    c_short,
+    c_uint,
+    c_ulong,
+    c_void_p,
+)
+from ctypes.util import find_library
+
+# Load X11 libraries
+x11_lib = find_library("X11")
+xinerama_lib = find_library("Xinerama")
+
+if not x11_lib:
+    raise ImportError("X11 library not found")
+if not xinerama_lib:
+    raise ImportError("Xinerama library not found")
+
+X11 = CDLL(x11_lib)
+Xinerama = CDLL(xinerama_lib)
+
+
+# X11 structures
+class XineramaScreenInfo(Structure):
+    _fields_ = [
+        ("screen_number", c_int),
+        ("x_org", c_short),
+        ("y_org", c_short),
+        ("width", c_short),
+        ("height", c_short),
+    ]
+
+
+# X11 function signatures
+X11.XOpenDisplay.argtypes = [c_char_p]
+X11.XOpenDisplay.restype = c_void_p
+
+X11.XDefaultRootWindow.argtypes = [c_void_p]
+X11.XDefaultRootWindow.restype = c_ulong
+
+X11.XQueryPointer.argtypes = [
+    c_void_p,
+    c_ulong,
+    POINTER(c_ulong),
+    POINTER(c_ulong),
+    POINTER(c_int),
+    POINTER(c_int),
+    POINTER(c_int),
+    POINTER(c_int),
+    POINTER(c_uint),
+]
+X11.XQueryPointer.restype = c_int
+
+X11.XCloseDisplay.argtypes = [c_void_p]
+
+Xinerama.XineramaQueryScreens.argtypes = [c_void_p, POINTER(c_int)]
+Xinerama.XineramaQueryScreens.restype = POINTER(XineramaScreenInfo)
+
+Xinerama.XineramaIsActive.argtypes = [c_void_p]
+Xinerama.XineramaIsActive.restype = c_int
+
+
+def get_current_monitor_corners() -> dict[str, dict[str, int]]:
+    # Open display
+    display = X11.XOpenDisplay(None)
+    if not display:
+        raise RuntimeError("Cannot open X display")
+
+    try:
+        # Check if Xinerama is active
+        if not Xinerama.XineramaIsActive(display):
+            raise RuntimeError("Xinerama is not active")
+
+        # Get mouse position to determine current monitor
+        root = X11.XDefaultRootWindow(display)
+        root_return = c_ulong()
+        child_return = c_ulong()
+        root_x = c_int()
+        root_y = c_int()
+        win_x = c_int()
+        win_y = c_int()
+        mask_return = c_uint()
+
+        X11.XQueryPointer(
+            display,
+            root,
+            byref(root_return),
+            byref(child_return),
+            byref(root_x),
+            byref(root_y),
+            byref(win_x),
+            byref(win_y),
+            byref(mask_return),
+        )
+
+        mouse_x = root_x.value
+        mouse_y = root_y.value
+
+        # Get all monitors
+        num_screens = c_int()
+        screens = Xinerama.XineramaQueryScreens(display, byref(num_screens))
+
+        if not screens:
+            raise RuntimeError("Cannot query Xinerama screens")
+
+        # Find which monitor the mouse is on
+        current_monitor = None
+        for i in range(num_screens.value):
+            screen = screens[i]
+            if (
+                screen.x_org <= mouse_x < screen.x_org + screen.width
+                and screen.y_org <= mouse_y < screen.y_org + screen.height
+            ):
+                current_monitor = screen
+                break
+
+        if current_monitor:
+            x_org = int(current_monitor.x_org)
+            y_org = int(current_monitor.y_org)
+            width = int(current_monitor.width)
+            height = int(current_monitor.height)
+
+            return {
+                "topleft": {"x": x_org, "y": y_org},
+                "topright": {"x": x_org + width, "y": y_org},
+                "bottomleft": {"x": x_org, "y": y_org + height},
+                "bottomright": {"x": x_org + width, "y": y_org + height},
+            }
+        raise RuntimeError("Could not determine current monitor")
+
+    finally:
+        X11.XCloseDisplay(display)
+
+
+if __name__ == "__main__":
+    try:
+        corners = get_current_monitor_corners()
+        print(json.dumps(corners))
+    except (ImportError, OSError) as e:
+        print(f"Error: {e}")

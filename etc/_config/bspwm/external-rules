@@ -16,12 +16,12 @@ case "$title" in
 *' - VIM') echo 'state=floating';;
 'cal -y') echo 'state=floating';;
 'Guvcview'*) echo 'state=floating';;
-'⚙ AI ⚙') echo 'state=floating';;
-'⚙ whisper-server ⚙') echo 'state=floating';;
-'⚙ whisper-client ⚙')
+'⚙ whisper-'*' ⚙'|'⚙ AI ⚙')
     echo 'state=floating'
-    dpyx=$(xdpyinfo | grep -Po 'dimensions:\s*\K(\d+)')
+    corners=$(getmonitorcorners)
+    monx=$(jq .topright.x <<< "$corners")
+    mony=$(jq .topright.y <<< "$corners")
     winx=$(xdotool getwindowgeometry "$wid" | grep -Po 'Geometry:\s*\K(\d+)')
-    xdotool windowmove "$wid" $((dpyx-winx-4)) 0
+    xdotool windowmove "$wid" $((monx-winx-4)) "$mony"
     ;;
 esac
