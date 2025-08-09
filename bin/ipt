@@ -136,9 +136,9 @@ class Ipt
   def colon_split arg
     prefix = ''
 
-    if arg.start_with?('set:')
-      arg = arg[4..-1]
-      prefix = 'set:'
+    if arg.start_with?('ipset-')
+      arg = arg[6..-1]
+      prefix = 'ipset-'
     end
 
     i = arg.rindex ':'
@@ -221,8 +221,8 @@ class Ipt
   end
 
   def match_addr src_or_dst, addr
-    if addr[0..3] == 'set:'
-      addr = addr[4..-1]
+    if addr[0...6] == 'ipset-'
+      addr = addr[6..-1]
       isipset = true
     end
 
