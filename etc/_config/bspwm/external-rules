@@ -16,7 +16,15 @@ case "$title" in
 *' - VIM') echo 'state=floating';;
 'cal -y') echo 'state=floating';;
 'Guvcview'*) echo 'state=floating';;
-'⚙ whisper-'*' ⚙'|'⚙ AI ⚙')
+'⚙ AI ⚙')
+    echo 'state=floating'
+    corners=$(getmonitorcorners)
+    monx=$(jq .topright.x <<< "$corners")
+    mony=$(jq .topright.y <<< "$corners")
+    winx=$(xdotool getwindowgeometry "$wid" | grep -Po 'Geometry:\s*\K(\d+)')
+    xdotool windowmove "$wid" $((monx-winx-4)) "$((mony + 114 + 2))"
+    ;;
+'⚙ whisper-'*' ⚙')
     echo 'state=floating'
     corners=$(getmonitorcorners)
     monx=$(jq .topright.x <<< "$corners")

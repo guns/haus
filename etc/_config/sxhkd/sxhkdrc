@@ -257,7 +257,7 @@ F1
 
 super + F1
 	T='⚙ AI ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 80x40 -title "$T" -e AI
+	wmctrl -a "$T" || urxvt-client -g 120x60 -title "$T" -e AI
 
 alt + F1
 	T='⚙ whisper-server ⚙'; \
