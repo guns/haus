@@ -15,8 +15,7 @@ import sys
 
 
 def parser() -> ArgumentParser:
-	parser = ArgumentParser(description=__doc__)
-	parser.formatter_class = RawDescriptionHelpFormatter
+	parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
 	return parser
 
 
@@ -161,8 +160,12 @@ snippet arg "parser.add_argument" w
 ${1:parser}.add_argument($0)
 endsnippet
 
-snippet argt "parser.add_argument(action='store_true')" w
-parser.add_argument($1, action="store_true"$0)
+snippet na "nargs" w
+nargs="$1"
+endsnippet
+
+snippet ast "(action='store_true')" w
+action="store_true"
 endsnippet
 
 snippet setd "parser.set_defaults" w
@@ -187,7 +190,7 @@ endsnippet
 snippet try "try:" w
 try:
 	$0
-finally:
+except $1:
 endsnippet
 
 snippet exc "except:" w
@@ -214,6 +217,10 @@ endsnippet
 
 snippet osp "osp" w
 os.path.
+endsnippet
+
+snippet ospe "os.path.exists" w
+os.path.exists($0)
 endsnippet
 
 snippet bas "os.path.basename" w
