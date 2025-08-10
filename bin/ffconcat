@@ -1,36 +1,68 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2025 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'fileutils'
-require 'securerandom'
-require 'shellwords'
-require 'optparse'
+"""
+Concatenate files with ffmpeg.
+"""
 
-@ffmpeg_opts = []
+import shlex
+import subprocess
+import sys
+import tempfile
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from typing import Collection, Sequence
 
-options = OptionParser.new do |opt|
-  opt.on '-o', '--opts FFMPEG_OPTS' do |arg|
-    @ffmpeg_opts = arg.shellsplit
-  end
-end
 
-args = options.parse ARGV
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-o", "--outfile")
+    parser.add_argument(
+        "-s",
+        "--skip-bytes",
+        metavar="N",
+        help="skip N bytes from each input file",
+        type=int,
+        default=0,
+    )
+    parser.add_argument("-O", "--ffmpeg-opts", type=shlex.split, default=())
+    parser.add_argument("files", nargs="+")
+    return parser
 
-abort "USAGE: #{File.basename __FILE__} out-file input-files …" if args.size < 2
 
-outfile, *inputs = args
+def escape_ffmpeg_file_arg(arg: str) -> str:
+    return "'" + arg.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
-begin
-  list = ".ffconcat-#{SecureRandom.hex}"
-  raise if File.exist? list
-  File.open list, 'w' do |f|
-    f.puts inputs.map { |i| "file #{i.shellescape}" }
-  end
-  system 'ffmpeg', '-f', 'concat', '-safe', '0', *@ffmpeg_opts, '-i', list, '-c', 'copy', outfile
-ensure
-  FileUtils.rm_f list
-end
+
+def ffconcat(dst: str, paths: Collection[str], *, skip_bytes: int = 0, ffmpeg_opts: Collection[str] = ()) -> None:
+    with tempfile.TemporaryDirectory() as d:
+        if skip_bytes > 0:
+            input_paths = []
+            for path in paths:
+                with open(path, "rb") as f:
+                    f.seek(skip_bytes)
+                    with tempfile.NamedTemporaryFile(dir=d, delete=False, mode="wb") as tmp:
+                        tmp.write(f.read())
+                        input_paths.append(tmp.name)
+        else:
+            input_paths = list(paths)
+
+        with tempfile.NamedTemporaryFile(dir=d, mode="w") as flist:
+            flist.write("".join(f"file {escape_ffmpeg_file_arg(p)}\n" for p in input_paths))
+            flist.close()
+            subprocess.run(
+                ["ffmpeg", "-f", "concat", "-safe", "0", *ffmpeg_opts, "-i", flist.name, "-c", "copy", dst],
+                check=True,
+            )
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    ffconcat(opts.outfile, opts.files, skip_bytes=opts.skip_bytes, ffmpeg_opts=opts.ffmpeg_opts)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
