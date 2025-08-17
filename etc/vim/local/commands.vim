@@ -689,35 +689,6 @@ function! s:JavaScriptBufferSetup()
 	noremap  <buffer> <M-CR>         akeyvalue<C-r>=UltiSnips#ExpandSnippet()<CR>
 endfunction
 
-command! -bar OrgBufferSetup call <SID>OrgBufferSetup() "{{{1
-function! s:OrgBufferSetup()
-	SetWhitespace 2 8
-
-	map  <silent> <buffer> <4-[> <Plug>OrgPromoteHeadingNormal
-	imap <silent> <buffer> <4-[> <C-\><C-o><Plug>OrgPromoteHeadingNormal
-	map  <silent> <buffer> <4-]> <Plug>OrgDemoteHeadingNormal
-	imap <silent> <buffer> <4-]> <C-\><C-o><Plug>OrgDemoteHeadingNormal
-
-	map  <silent> <buffer> <M-j> <Plug>OrgMoveSubtreeDownward
-	imap <silent> <buffer> <M-j> <C-\><C-o><Plug>OrgMoveSubtreeDownward
-	map  <silent> <buffer> <M-k> <Plug>OrgMoveSubtreeUpward
-	imap <silent> <buffer> <M-k> <C-\><C-o><Plug>OrgMoveSubtreeUpward
-
-	map  <silent> <buffer> <M-h> <Plug>OrgPromoteSubtreeNormal
-	imap <silent> <buffer> <M-h> <C-\><C-o><Plug>OrgPromoteSubtreeNormal
-	map  <silent> <buffer> <M-l> <Plug>OrgDemoteSubtreeNormal
-	imap <silent> <buffer> <M-l> <C-\><C-o><Plug>OrgDemoteSubtreeNormal
-
-	map  <silent> <buffer> <4-CR> <Plug>OrgNewHeadingBelowNormal
-	imap <silent> <buffer> <4-CR> <C-\><C-o><Plug>OrgNewHeadingBelowNormal
-	map  <silent> <buffer> <M-CR> <Plug>OrgNewHeadingBelowNormal<C-\><C-o><Plug>OrgDemoteHeadingNormal<End>
-	imap <silent> <buffer> <M-CR> <C-\><C-n><M-CR>
-
-	" Please don't remap core keybindings!
-	silent! iunmap <buffer> <C-d>
-	silent! iunmap <buffer> <C-t>
-endfunction
-
 command! -bar TerraformPlanBufferSetup call <SID>TerraformPlanBufferSetup()
 function! s:TerraformPlanBufferSetup()
 	setlocal foldmethod=expr foldexpr=TerraformPlanFoldExpr(v:lnum)
@@ -946,25 +917,6 @@ function! s:Capture(cmd)
 		execute "normal! d/\\v^\\s*\\S\<CR>"
 		let @r = reg_save
 	endtry
-endfunction
-
-command! -nargs=* -complete=file -bang -bar Org call <SID>Org('<bang>', <f-args>) "{{{1
-function! s:Org(bang, ...)
-	let tab = empty(a:bang) ? 'tab' : ''
-
-	if a:0
-		for f in a:000
-			if filereadable(f . '.org')
-				execute tab . 'edit ' . f . '.org'
-			else
-				execute tab . 'edit ' . join([g:org_home, f . '.org'], '/')
-				execute 'lcd ' . g:org_home
-			endif
-		endfor
-	else
-		if empty(a:bang) | tabnew | endif
-		execute 'lcd ' . g:org_home | FZF!
-	endif
 endfunction
 
 command! -nargs=1 -bar Speak call system('speak ' . shellescape(<q-args>))

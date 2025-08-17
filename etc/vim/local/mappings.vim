@@ -378,12 +378,11 @@ noremap <Leader>eI       :<C-u>TabOpen /etc/ipset.conf \| lcd /etc/<CR>
 noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
 noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/_mutt/muttrc \| lcd $cdhaus<CR>
 noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf \| lcd $cdnginx<CR>
-noremap <Leader>eo       :<C-u>Org<CR>
 noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
 noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile \| lcd $cdhaus<CR>
 noremap <Leader>es       :<C-u>vsplit \| Scratch<CR>
 noremap <Leader>eS       :<C-u>TabOpen /etc/ssh/ssh_config \| lcd /etc<CR>
-noremap <Leader>et       :<C-u>Org TODO<CR>
+noremap <Leader>et       :<C-u>TabOpen ~/Documents/TODO.txt<CR>
 noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
 noremap <Leader>eu       :<C-u>TabOpen ~/.cache/unicode-table.txt<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>

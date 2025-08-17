@@ -741,7 +741,7 @@ HAVE vim && {
     alias vimhausrakefile='vim "$cdhaus/Rakefile" -c "lcd \$cdhaus"'
     alias vimscratch='vim -c Scratch'
     alias vimsshconfig='vim "/etc/ssh/ssh_config" -c "lcd /etc/"'
-    alias vimtodo='vim -c "Org! TODO"'
+    alias vimtodo='vim ~/Documents/TODO.txt'
     alias vimtmux='vim "$cdhaus/etc/tmux.conf" -c "lcd \$cdhaus"'
     alias vimunicode='vim ~/.cache/unicode-table.txt'
     alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'

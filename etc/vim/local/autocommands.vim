@@ -212,10 +212,6 @@ augroup GUNS
 	autocmd BufRead,BufNewFile *.terminfo
 		\ setlocal filetype=terminfo
 
-	" vim-orgmode
-	autocmd FileType org
-		\ OrgBufferSetup
-
 	" systemd
 	autocmd BufNewFile,BufRead */systemd/**/*.{automount,mount,path,service,socket,swap,target,timer}*
 		\ setlocal filetype=systemd
