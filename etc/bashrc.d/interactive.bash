@@ -720,13 +720,11 @@ HAVE vim && {
 
     # VIMEDITBINDINGS
     alias vimautocommands='vim "$cdhaus/etc/vim/local/autocommands.vim" -c "lcd \$cdhaus"'
-    alias vimabook='vim ~/.abook/addressbook -c "lcd ~/.abook"'
     alias vimbashinteractive='vim "$cdhaus/etc/bashrc.d/interactive.bash" -c "lcd \$cdhaus"'
     alias vimbashrc='vim "$cdhaus/etc/bashrc" -c "lcd \$cdhaus"'
     alias vimcommands='vim "$cdhaus/etc/vim/local/commands.vim" -c "lcd \$cdhaus"'
     alias vimdnsmasq='vim "/etc/dnsmasq.conf" -c "lcd /etc/"'
     alias vimdnscrypt='vim "/etc/dnscrypt-proxy/dnscrypt-proxy.toml" -c "lcd /etc/"'
-    alias vimfstab='vim /etc/fstab'
     alias vimgitexclude='vim "$(git rev-parse --show-toplevel)/.git/info/exclude"'
     alias vimgitsparsecheckout='vim "$(git rev-parse --show-toplevel)/.git/info/sparse-checkout"'
     alias vimbashhistory='vim ~/.cache/bash_history'
@@ -734,9 +732,6 @@ HAVE vim && {
     alias vimiptables='vim "/etc/iptables.script" -c "lcd /etc/"'
     alias vimipset='vim "/etc/ipset.conf" -c "lcd /etc/"'
     alias vimmappings='vim "$cdhaus/etc/vim/local/mappings.vim" -c "lcd \$cdhaus"'
-    alias vimmuttrc='vim "$cdhaus/etc/_mutt/muttrc" -c "lcd \$cdhaus"'
-    alias vimnginx='vim "$cdnginx/nginx.conf" -c "lcd \$cdnginx"'
-    alias vimorg='vim -c Org!'
     alias vimpacman='vim "/etc/pacman.conf" -c "lcd /etc/"'
     alias vimhausrakefile='vim "$cdhaus/Rakefile" -c "lcd \$cdhaus"'
     alias vimscratch='vim -c Scratch'
@@ -746,9 +741,6 @@ HAVE vim && {
     alias vimunicode='vim ~/.cache/unicode-table.txt'
     alias vimrc='vim "$cdhaus/etc/vimrc" -c "lcd \$cdhaus"'
     alias vimwm='vim -O "$cdhaus/etc/_config/sxhkd/sxhkdrc" "$cdhaus/etc/_config/bspwm/bspwmrc" -c "lcd \$cdhaus"'
-    alias vimwireguard='vim "/etc/wireguard/wg0.conf" -c "lcd /etc/"'
-    alias vimxinitrc='vim "$cdhaus/etc/xinitrc" -c "lcd \$cdhaus"'
-    alias vimxdefaults='vim "$cdhaus/etc/Xdefaults" -c "lcd \$cdhaus"'
 }
 
 ### Terminal Multiplexers

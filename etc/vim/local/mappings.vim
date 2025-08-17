@@ -362,13 +362,11 @@ noremap <Leader>ee       :<C-u>edit<CR>
 noremap <Leader>E        :<C-u>call Prompt('tabedit ', expand('%:p:h') . '/', 'file')<CR>
 " VIMEDITBINDINGS
 noremap <Leader>ea       :<C-u>TabOpen $cdhaus/etc/vim/local/autocommands.vim \| lcd $cdhaus<CR>
-noremap <Leader>eA       :<C-u>TabOpen ~/.abook/addressbook \| lcd ~/.abook<CR>
 noremap <Leader>eb       :<C-u>TabOpen $cdhaus/etc/bashrc.d/interactive.bash \| lcd $cdhaus<CR>
 noremap <Leader>eB       :<C-u>TabOpen $cdhaus/etc/bashrc \| lcd $cdhaus<CR>
 noremap <Leader>ec       :<C-u>TabOpen $cdhaus/etc/vim/local/commands.vim \| lcd $cdhaus<CR>
 noremap <Leader>ed       :<C-u>TabOpen /etc/dnsmasq.conf \| lcd /etc/<CR>
 noremap <Leader>eD       :<C-u>TabOpen /etc/dnscrypt-proxy/dnscrypt-proxy.toml \| lcd /etc/<CR>
-noremap <Leader>ef       :<C-u>TabOpen /etc/fstab \| lcd /etc/<CR>
 noremap <Leader>ege      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/exclude\"")<CR>
 noremap <Leader>egs      :<C-u>execute 'TabOpen ' . system("printf %s \"$(git rev-parse --show-toplevel)/.git/info/sparse-checkout\"")<CR>
 noremap <Leader>eh       :<C-u>TabOpen ~/.cache/bash_history<CR>
@@ -376,8 +374,6 @@ noremap <Leader>eH       :<C-u>TabOpen /etc/hosts \| lcd /etc/<CR>
 noremap <Leader>ei       :<C-u>TabOpen /etc/iptables.script \| lcd /etc/<CR>
 noremap <Leader>eI       :<C-u>TabOpen /etc/ipset.conf \| lcd /etc/<CR>
 noremap <Leader>em       :<C-u>TabOpen $cdhaus/etc/vim/local/mappings.vim \| lcd $cdhaus<CR>
-noremap <Leader>eM       :<C-u>TabOpen $cdhaus/etc/_mutt/muttrc \| lcd $cdhaus<CR>
-noremap <Leader>en       :<C-u>TabOpen $cdnginx/nginx.conf \| lcd $cdnginx<CR>
 noremap <Leader>ep       :<C-u>TabOpen /etc/pacman.conf \| lcd /etc<CR>
 noremap <Leader>eR       :<C-u>TabOpen $cdhaus/Rakefile \| lcd $cdhaus<CR>
 noremap <Leader>es       :<C-u>vsplit \| Scratch<CR>
@@ -387,9 +383,6 @@ noremap <Leader>eT       :<C-u>TabOpen $cdhaus/etc/tmux.conf \| lcd $cdhaus<CR>
 noremap <Leader>eu       :<C-u>TabOpen ~/.cache/unicode-table.txt<CR>
 noremap <Leader>ev       :<C-u>TabOpen $MYVIMRC \| lcd $cdhaus<CR>
 noremap <Leader>ew       :<C-u>TabOpen $cdhaus/etc/_config/bspwm/bspwmrc \| vsplit $cdhaus/etc/_config/sxhkd/sxhkdrc \| lcd $cdhaus<CR>
-noremap <Leader>eW       :<C-u>TabOpen /etc/wireguard/wg0.conf \| lcd /etc/<CR>
-noremap <Leader>ex       :<C-u>TabOpen $cdhaus/etc/xinitrc \| lcd $cdhaus<CR>
-noremap <Leader>eX       :<C-u>TabOpen $cdhaus/etc/Xdefaults \| lcd $cdhaus<CR>
 
 " Set filetype
 noremap <Leader>f<Space> :<C-u>call Prompt('setlocal filetype=', '', 'filetype')<CR>

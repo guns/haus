@@ -182,13 +182,11 @@ $if bash
     "\C-xm":        "\C-]man "
     # VIMEDITBINDINGS
     "\C-xea":       "\C-] vimautocommands \n"
-    "\C-xeA":       "\C-] vimabook \n"
     "\C-xeb":       "\C-] vimbashinteractive \n"
     "\C-xeB":       "\C-] vimbashrc \n"
     "\C-xec":       "\C-] vimcommands \n"
     "\C-xed":       "\C-] vimdnsmasq \n"
     "\C-xeD":       "\C-] vimdnscrypt \n"
-    "\C-xef":       "\C-] vimfstab \n"
     "\C-xege":      "\C-] vimgitexclude \n"
     "\C-xegs":      "\C-] vimgitsparsecheckout \n"
     "\C-xeh":       "\C-] vimbashhistory \n"
@@ -196,8 +194,6 @@ $if bash
     "\C-xei":       "\C-] vimiptables \n"
     "\C-xeI":       "\C-] vimipset \n"
     "\C-xem":       "\C-] vimmappings \n"
-    "\C-xeM":       "\C-] vimmuttrc \n"
-    "\C-xen":       "\C-] vimnginx \n"
     "\C-xep":       "\C-] vimpacman \n"
     "\C-xeR":       "\C-] vimhausrakefile \n"
     "\C-xes":       "\C-] vimscratch \n"
@@ -207,9 +203,6 @@ $if bash
     "\C-xeu":       "\C-] vimunicode \n"
     "\C-xev":       "\C-] vimrc \n"
     "\C-xew":       "\C-] vimwm \n"
-    "\C-xeW":       "\C-] vimwireguard \n"
-    "\C-xex":       "\C-] vimxinitrc \n"
-    "\C-xeX":       "\C-] vimxdefaults \n"
 
     # VIMGITBINDINGS
     "\C-xg ":       "\C-]git "
