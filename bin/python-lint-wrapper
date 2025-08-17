@@ -37,7 +37,7 @@ def lint(path: str) -> bool:
     return run(
         ["autoimport", "--", path],
         ["ruff", "format", "--quiet", "--", path],
-        ["ruff", "check", "--quiet", "--fix", "--", path],
+        ["ruff", "check", "--quiet", "--fix", "--output-format=pylint", "--", path],
         ["mypy", "--no-error-summary", "--", path],
     )
 
