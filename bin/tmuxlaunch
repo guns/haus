@@ -1,53 +1,73 @@
-#!/bin/bash
+#!/usr/bin/env python
 #
-# Copyright (c) 2011-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2011-2025 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
-#
-# tmux wrapper
 
-if [[ $TMUX ]]; then
-    echo '$TMUX is already set!' >&2
-    exit 1
-fi
+"""
+tmux wrapper
+"""
 
-DETACH=''
-NEW=0
-SESSION=''
-CONF="set-option -g default-terminal %s\nsource-file ~/.tmux.conf\n"
+import os
+import subprocess
+import sys
+import textwrap
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from typing import Collection, NoReturn, Optional, Sequence
 
-if [[ $TERM == *256color* ]]; then
-    TMUX_TERM='tmux-256color'
-else
-    TMUX_TERM='tmux'
-fi
 
-while getopts :dnt: OPT; do
-    case $OPT in
-    d) DETACH='-d';;
-    n) NEW=1;;
-    t) SESSION="$OPTARG";;
-    *) echo "Usage: ${0##*/} [-dn] [-t session] [args …]" >&2; exit 1
-    esac
-done
-shift $((OPTIND-1))
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-c", "--command", help="command to run in new sessions")
+    parser.add_argument("-d", "--detach", action="store_true")
+    parser.add_argument("-n", "--new-session", action="store_true")
+    parser.add_argument("-t", "--target-session")
+    parser.add_argument("-T", "--title", help="override set-titles-string")
+    return parser
 
-_tmux() {
-    tmux -f <(printf "$CONF" "$TMUX_TERM") "$@"
-}
 
-if ((NEW)); then
-    _tmux new-session "$@"
-elif [[ $SESSION ]]; then
-    if tmux has-session -t "$SESSION" >/dev/null 2>&1; then
-        _tmux attach-session -t "$SESSION" $DETACH "$@"
-    else
-        _tmux new-session -s "$SESSION" "$@"
-    fi
-else
-    if tmux has-session >/dev/null 2>&1; then
-        _tmux attach-session $DETACH "$@"
-    else
-        _tmux new-session "$@"
-    fi
-fi
+def quote_tmux_string(s: str) -> str:
+    return '"%s"' % s.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def get_tmux_conf(*, title: Optional[str] = None) -> str:
+    conf = "source-file ~/.tmux.conf\n"
+    if title:
+        conf += textwrap.dedent(
+            f"""
+            set-option -g set-titles on
+            set-option -g set-titles-string {quote_tmux_string(title)}
+            """,
+        )
+    term = "tmux-256color" if "256color" in os.getenv("TERM", "") else "tmux"
+    conf += f"set-option -g default-terminal {term}\n"
+    return conf
+
+
+def exec_tmux(args: Collection[str], title: Optional[str] = None) -> NoReturn:
+    r, w = os.pipe()
+    os.set_inheritable(r, True)  # noqa:FBT003
+    os.write(w, get_tmux_conf(title=title).encode())
+    os.close(w)
+    os.execlp("tmux", "tmux", "-f", f"/dev/fd/{r}", *args)
+
+
+def main(args: Sequence[str]) -> NoReturn:
+    opts = parser().parse_args(args)
+    cmd = [opts.command] if opts.command else []
+    if opts.new_session:
+        exec_tmux(["new-session", *cmd], title=opts.title)
+    elif opts.target_session:
+        if subprocess.run(["tmux", "has-session", "-t", opts.target_session]).returncode == 0:
+            exec_tmux(["attach-session", "-t", opts.target_session, *(["-d"] if opts.detach else [])], title=opts.title)
+        else:
+            exec_tmux(["new-session", "-s", opts.target_session, *cmd], title=opts.title)
+    else:
+        if subprocess.run(["tmux", "has-session"]).returncode == 0:
+            exec_tmux(["attach-session", *(["-d"] if opts.detach else [])], title=opts.title)
+        else:
+            exec_tmux(["new-session", *cmd], title=opts.title)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
