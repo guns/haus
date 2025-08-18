@@ -11,6 +11,7 @@ case "$title" in
 '☎ urxvt ☎') echo 'state=floating';;
 '♫ alsamixer ♫') echo 'state=floating';;
 '⚙ '*'top ⚙') echo 'state=floating';;
+'⚙ bwm-ng ⚙') echo 'state=floating';;
 '✉ Mutt ✉') echo 'state=floating';;
 '❴ pass ❵') echo 'state=floating';;
 *' - VIM') echo 'state=floating';;

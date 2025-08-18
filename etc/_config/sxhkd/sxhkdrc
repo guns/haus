@@ -271,7 +271,7 @@ super + F2
 
 F7
 	T='⚙ htop ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 120x40 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
+	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
 
 super + F7
 	T='⚙ btop ⚙'; \
@@ -280,6 +280,10 @@ super + F7
 shift + F7
 	T='⚙ nvtop ⚙'; \
 	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e nvtop
+
+super + shift + F7
+	T='⚙ bwm-ng ⚙'; \
+	wmctrl -a "$T" || urxvt-client -g 82x42 -title "$T" -icon ~/.icons/haus/htop.svg -e bwm-ng
 
 alt + F7
 	wmctrl -a xsensors || exec xsensors
