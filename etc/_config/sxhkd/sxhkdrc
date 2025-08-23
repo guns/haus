@@ -269,6 +269,11 @@ F2
 super + F2
 	exec thunar ~/Downloads
 
+F3
+	T='- VIM'; \
+	wmctrl -a "$T" || \
+	urxvt-client -g 160x40 -title "TODO.txt $T" -icon ~/.icons/haus/vim.svg -e vim -c 'redraw!' ~/Documents/TODO.txt
+
 F7
 	T='⚙ htop ⚙'; \
 	wmctrl -a "$T" || urxvt-client -g 146x42 -title "$T" -icon ~/.icons/haus/htop.svg -e htop
