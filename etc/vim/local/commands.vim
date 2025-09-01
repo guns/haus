@@ -993,3 +993,9 @@ function! s:FilterLines(line1, line2, grepopts, pattern)
 	let ignorecase = a:pattern =~# '[[:upper:]]' ? '' : ' -i '
 	execute a:line1 . ',' . a:line2 . '!grep --text ' . ignorecase . shellescape(a:grepopts) . ' -- ' . shellescape(a:pattern)
 endfunction
+
+command! -bar TodoBufferSetup call <SID>TodoBufferSetup()
+function! s:TodoBufferSetup()
+	nmap    <silent><buffer> <4-CR> o-<Tab>
+	noremap <silent><buffer> <CR>   :<C-u>call setline('.', substitute(getline('.'), '\v^- \[\zs.\ze\]', '\=submatch(0) == " " ? "X" : " "', ''))<CR>
+endfunction

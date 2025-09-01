@@ -263,6 +263,12 @@ augroup GUNS
 		\ let b:__lintprg = 'tflint --chdir=%:h --filter=%:S' |
 		\ execute 'noremap! <buffer> <C-l> <Space>=><Space>'
 
+	" TODO.txt
+	autocmd BufRead,BufNewFile TODO.txt
+		\ setlocal filetype=todo
+	autocmd FileType todo
+		\ TodoBufferSetup
+
 augroup END
 
 " vim-lsp
