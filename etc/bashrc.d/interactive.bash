@@ -153,6 +153,7 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
+CD_FUNC cdai            /opt/src/AI ~/.local/share/AI
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
 CD_FUNC -x cdnginx      /etc/nginx

@@ -133,7 +133,7 @@ $if bash
     "\C-x-":        "\C-]cd ~/"
     "\C-x\C-a":     "\C-] cdarchlinux \n"
     "\C-xa":        "\C-]cdarchlinux "
-    "\C-xA":        "\C-] cdanchors \n"
+    "\C-xA":        "\C-] cdai \n"
     "\C-xc":        "\C-]cdconfig "
     "\C-x\C-d":     "\C-] cddownloads \n"
     "\C-xd":        "\C-]cddownloads "
