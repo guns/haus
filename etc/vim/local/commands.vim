@@ -997,5 +997,5 @@ endfunction
 command! -bar TodoBufferSetup call <SID>TodoBufferSetup()
 function! s:TodoBufferSetup()
 	nmap    <silent><buffer> <4-CR> o-<Tab>
-	noremap <silent><buffer> <CR>   :<C-u>call setline('.', substitute(getline('.'), '\v^- \[\zs.\ze\]', '\=submatch(0) == " " ? "·" : (submatch(0) == "·" ? "X" : " ")', ''))<CR>
+	noremap <silent><buffer> <CR>   :<C-u>call setline('.', substitute(getline('.'), '\v^\s*- \[\zs.\ze\]', '\=submatch(0) == " " ? "~" : (submatch(0) == "~" ? "X" : " ")', ''))<CR>
 endfunction
