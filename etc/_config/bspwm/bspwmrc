@@ -48,6 +48,7 @@ unset i n
 # Find window class names with xprop(1)
 bspc rule --add antimicrox             state=floating
 bspc rule --add Arandr                 state=floating
+bspc rule --add easyeffects            state=floating
 bspc rule --add feh                    state=floating
 bspc rule --add Gcolor3                state=floating
 bspc rule --add Gifview                state=floating
