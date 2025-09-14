@@ -121,6 +121,7 @@
 	rbs = rebase --skip
 	cp  = cherry-pick
 	cpa = cherry-pick --abort
+	cpc = cherry-pick --continue
 	cpn = cherry-pick --no-commit
 
 	# Log
