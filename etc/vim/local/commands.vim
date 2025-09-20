@@ -996,6 +996,9 @@ endfunction
 
 command! -bar TodoBufferSetup call <SID>TodoBufferSetup()
 function! s:TodoBufferSetup()
+	setlocal expandtab
+	SetWhitespace 2 8
 	nmap    <silent><buffer> <4-CR> o-<Tab>
+	map!    <silent><buffer> <4-CR> <C-\><C-n><4-CR>
 	noremap <silent><buffer> <CR>   :<C-u>call setline('.', substitute(getline('.'), '\v^\s*- \[\zs.\ze\]', '\=submatch(0) == " " ? "~" : (submatch(0) == "~" ? "X" : " ")', ''))<CR>
 endfunction
