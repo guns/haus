@@ -131,8 +131,6 @@ $if bash
     "\C-x/":        "\C-]cd /"
     "\C-x\C-_":     "\C-] cd - \n"
     "\C-x-":        "\C-]cd ~/"
-    "\C-x\C-a":     "\C-] cdarchlinux \n"
-    "\C-xa":        "\C-]cdarchlinux "
     "\C-xA":        "\C-] cdai \n"
     "\C-xc":        "\C-]cdconfig "
     "\C-x\C-d":     "\C-] cddownloads \n"
@@ -301,7 +299,8 @@ $if bash
     "\C-xtws":      "\C-]terraform workspace select "
 
     # AI
-    "\C-xq":	    "\C-]AI\n"
+    "\C-x\C-a"      "\C-] AI\n"
+    "\C-xa":	    "\C-]AI "
 $endif
 
 ### gdb
