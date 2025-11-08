@@ -887,6 +887,21 @@ HAVE docker && {
     alias dcx='docker compose exec'
 }
 
+HAVE podman && {
+    alias p='podman'; TCOMP podman p
+    pps() { podman ps --format "{{.ID}}\t{{.Names}}\t{{.State}}\t{{.Ports}}\t{{.Networks}}\t{{.Image}}\t{{.Labels}}" "$@" | table -s $'\t' | pager; }
+    alias prun='podman run --rm --interactive --tty'
+    alias pbuild='podman build'
+    pstop() {
+        ruby -e '
+            containers = %x(podman container ps --format "{{.Names}}").split("\n")
+            cs = ARGV.empty? ? containers : ARGV.reduce([]) { |v, arg| v.concat(containers.grep(Regexp.new(arg, (Regexp::IGNORECASE unless arg.match?(/\p{Lu}/))))) }
+            exec("run", "podman", "stop", *cs) unless cs.empty?
+        ' "$@"
+    }
+    alias pc='podman-compose'; TCOMP podman-compose pc
+}
+
 ### Hardware control
 
 alias mp='modprobe --all'; TCOMP modprobe mp
