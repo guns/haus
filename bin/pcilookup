@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2025 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Translate PCI device IDs to names.
+"""
+
+import ctypes
+import os
+import sys
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from ctypes import POINTER, Structure, c_char_p, c_int, c_uint16
+from pathlib import Path
+from typing import Sequence
+
+
+class PciAccess(Structure):
+    pass
+
+
+libpci = ctypes.CDLL("libpci.so.3")
+libpci.pci_alloc.restype = POINTER(PciAccess)
+libpci.pci_init.argtypes = [POINTER(PciAccess)]
+libpci.pci_cleanup.argtypes = [POINTER(PciAccess)]
+libpci.pci_lookup_name.argtypes = [POINTER(PciAccess), c_char_p, c_int, c_int, c_uint16, c_uint16]
+libpci.pci_lookup_name.restype = c_char_p
+
+PCI_LOOKUP_VENDOR = 1
+PCI_LOOKUP_DEVICE = 2
+SYSFS_PCI_DIR = "/sys/bus/pci/devices/"
+
+
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    parser.add_argument("-n", "--no-id", action="store_true", help="suppress device ids in output")
+    parser.add_argument(
+        "pci_device_ids",
+        metavar="pci_device_id",
+        nargs="*",
+        help="e.g. 0000:00:00.0; defaults to all known pci device ids",
+    )
+    return parser
+
+
+def pci_id_to_name(pci_device_id: str) -> str:
+    vendor = int((Path(SYSFS_PCI_DIR) / pci_device_id / "vendor").read_text(), base=16)
+    device = int((Path(SYSFS_PCI_DIR) / pci_device_id / "device").read_text(), base=16)
+    pci_access = libpci.pci_alloc()
+    libpci.pci_init(pci_access)
+    buf = ctypes.create_string_buffer(256)
+    result = libpci.pci_lookup_name(pci_access, buf, 256, PCI_LOOKUP_VENDOR | PCI_LOOKUP_DEVICE, vendor, device)
+    libpci.pci_cleanup(pci_access)
+    return result.decode("utf-8") if result else f"{vendor:04x}:{device:04x}"
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    for pci in opts.pci_device_ids or sorted(os.listdir(SYSFS_PCI_DIR)):
+        name = pci_id_to_name(pci)
+        print(name) if opts.no_id else print(f"{pci}: {name}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
