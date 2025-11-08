@@ -31,6 +31,6 @@ case "$title" in
     monx=$(jq .topright.x <<< "$corners")
     mony=$(jq .topright.y <<< "$corners")
     winx=$(xdotool getwindowgeometry "$wid" | grep -Po 'Geometry:\s*\K(\d+)')
-    xdotool windowmove "$wid" $((monx-winx-4)) "$mony"
+    xdotool windowmove "$wid" $((monx-winx-2)) "$((mony+2))"
     ;;
 esac
