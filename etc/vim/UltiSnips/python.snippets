@@ -512,7 +512,7 @@ Mapping[$0]
 endsnippet
 
 snippet pp "pprint" w
-import pprint; pprint.pprint($0, stream=sys.stderr)
+import pprint, sys; pprint.pprint($0, stream=sys.stderr)
 endsnippet
 
 snippet supp "contextlib.suppress" w
