@@ -28,7 +28,8 @@ augroup GUNS
 		\ execute 'noremap <buffer> X :<C-u>call setloclist(winnr("#"), getqflist()) \| call setqflist([]) \| cclose \| topleft lwindow \| wincmd p<CR>' |
 		\ execute 'noremap <buffer> f :<C-u>call Prompt("Grepqflist ", "\\v")<CR>' |
 		\ execute 'noremap <buffer> F :<C-u>call Prompt("Removeqflist ", "\\v")<CR>' |
-		\ execute 'noremap <buffer> S :<C-u>Qfdo s<C-v>\V<C-r>/<C-v><C-v>g<Left><Left>'
+		\ execute 'noremap <buffer> S :<C-u>Qfdo s<C-v>\V<C-r>/<C-v><C-v>g<Left><Left>' |
+		\ execute 'noremap <buffer> s :<C-u>let _swb=&switchbuf \| set switchbuf=vsplit<CR><CR>:let &switchbuf=_swb \| unlet _swb<CR>'
 
 	" Vimscript
 	autocmd FileType vim
@@ -91,7 +92,7 @@ augroup GUNS
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl,eruby
 		\ SetWhitespace 2 |
-		\ setlocal iskeyword+=- |
+		\ setlocal iskeyword+=- expandtab |
 		\ execute 'noremap  <buffer> <M-CR> i<br><C-\><C-o><C-\><C-n>' |
 		\ execute 'noremap! <buffer> <M-CR> <br>'
 	autocmd FileType gohtmltmpl
@@ -102,7 +103,7 @@ augroup GUNS
 		\ setlocal filetype=yaml
 	autocmd FileType yaml
 		\ SetWhitespace 2 |
-		\ setlocal iskeyword+=- |
+		\ setlocal iskeyword+=- expandtab |
 		\ runtime ftplugin/html/sparkup.vim
 	autocmd FileType haml
 		\ setlocal iskeyword+=- |
@@ -159,7 +160,8 @@ augroup GUNS
 
 	" Markdown
 	autocmd FileType markdown,rdoc
-		\ setlocal iskeyword+=- foldmethod=expr foldexpr=MarkdownFoldExpr(v:lnum) linebreak breakindent
+		\ SetWhitespace 2 |
+		\ setlocal iskeyword+=- linebreak breakindent expandtab
 
 	" Mail
 	autocmd BufRead,BufNewFile *.mail
@@ -251,6 +253,8 @@ augroup GUNS
 	" Docker
 	autocmd BufRead,BufNewFile Dockerfile.*
 		\ setlocal filetype=dockerfile
+	autocmd filetype dockerfile
+		\ let b:__lintprg = 'hadolint --format=gnu -- %:S \\| sed s/^hadolint://'
 
 	" Groovy
 	autocmd FileType groovy
