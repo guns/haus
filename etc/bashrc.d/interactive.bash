@@ -931,6 +931,7 @@ gpgsign() {
         gpg --detach-sign "$f"
     done
 }
+gpgunlock() { gpg --detach-sign &>/dev/null <<< ""; }
 alias gpgkilldaemons='run gpgconf --kill all'
 alias gpgupdatestartuptty='run gpg-connect-agent updatestartuptty /bye'
 
