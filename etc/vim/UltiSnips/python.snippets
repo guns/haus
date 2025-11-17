@@ -9,13 +9,14 @@ snippet APP "Command line application template" b
 $0
 """
 
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from argparse import ArgumentParser, RawTextHelpFormatter
 from typing import Sequence
 import sys
 
 
 def parser() -> ArgumentParser:
-	parser = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+	parser = ArgumentParser(description=__doc__)
+	parser.formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=24)
 	return parser
 
 
