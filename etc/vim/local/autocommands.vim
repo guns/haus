@@ -269,7 +269,7 @@ augroup GUNS
 
 	" TODO.txt
 	autocmd BufRead,BufNewFile TODO.txt
-		\ setlocal filetype=todo
+		\ setlocal filetype=todo iskeyword+=-
 	autocmd FileType todo
 		\ TodoBufferSetup
 
