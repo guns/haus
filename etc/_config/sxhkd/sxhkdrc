@@ -213,9 +213,6 @@ alt + shift + {XF86AudioMute,End}
 # Miscellaneous {{{
 #
 
-alt + grave
-	killall --exact -USR1 deadd-notification-center
-
 super + alt + control + shift + {Left,Right,Up,Down}
 	xrandr -o {left,right,inverted,normal}
 

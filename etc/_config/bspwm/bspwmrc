@@ -80,9 +80,6 @@ rm -f "/run/user/$EUID/monitor.lock"
 nitrogen --restore
 rm -f "/run/user/$EUID/wallpaper.lock"
 
-# Kill notification center in case primary monitor moved
-pkill --full --exact /usr/bin/deadd-notification-center
-
 # Fix tint2 stacking order
 (
     root=$(xdo id -N Bspwm -n root | head -1)
