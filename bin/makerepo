@@ -1,103 +1,81 @@
-#!/usr/bin/env ruby
-# -*- encoding: utf-8 -*-
+#!/usr/bin/env python
 #
-# Copyright (c) 2015-2017 Sung Pae <self@sungpae.com>
+# Copyright (c) 2015-2025 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
-require 'optparse'
-require 'set'
-require 'fileutils'
+import collections
+import os
+import re
+import socket
+import subprocess
+import sys
+from argparse import ArgumentParser, RawTextHelpFormatter
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import Collection, Optional, Sequence
 
-class Makerepo
-  DEFAULTS = {
-    :delete => false,
-    :name => nil,
-    :cache_dir => '/var/cache/pacman/pkg',
-    :lib_dir => '/var/lib/pacman/local',
-  }
+CACHE_DIR = Path("/var/cache/pacman/pkg")
+LIB_DIR = Path("/var/lib/pacman/local")
 
-  def initialize opts = {}
-    DEFAULTS.each_key { |k| instance_variable_set "@#{k}", opts.has_key?(k) ? opts[k] : DEFAULTS[k] }
-  end
 
-  def parser
-    @parser ||= OptionParser.new nil, 20 do |opt|
-      opt.banner = <<~BANNER
-        Usage: #{File.basename __FILE__} [options]
+def parser() -> ArgumentParser:
+    parser = ArgumentParser()
+    parser.formatter_class = lambda prog: RawTextHelpFormatter(prog, max_help_position=30)
+    parser.add_argument("-d", "--delete", action="store_true", help="delete before creating a new pkg db")
+    parser.add_argument("-n", "--name", dest="dbname", help="basename of pkg db (defaults to hostname)")
+    parser.add_argument("-C", "--cache-dir", type=Path, help=f"default: {CACHE_DIR}", default=CACHE_DIR)
+    parser.add_argument("-L", "--lib-dir", type=Path, help=f"default: {LIB_DIR}", default=LIB_DIR)
+    return parser
 
-        Options:
-      BANNER
 
-      opt.on '-d', '--delete', 'Delete before creating a new pkg db' do
-        @delete = true
-      end
+def get_dbpath(cache_dir: Path, dbname: Optional[str]) -> Path:
+    return cache_dir / (dbname or str(socket.gethostname()) + ".db.tar.gz")
 
-      opt.on '-n', '--name NAME', 'Basename of pkg db [DEFAULT %s]' % hostname do |arg|
-        @name = arg
-      end
 
-      opt.on '-C', '--cache-dir PATH', "DEFAULT: #{@cache_dir}" do |arg|
-        @cache_dir = File.expand_path arg
-      end
+def get_cached_packages(cache_dir: Path, *, newer_than: float) -> dict[str, list[Path]]:
+    paths = collections.defaultdict(list)
+    for p in cache_dir.glob("*.pkg.tar.*"):
+        if (m := re.match(r"^(.*)-\w+.pkg.tar.[a-z]+$", p.name)) and p.stat().st_ctime > newer_than:
+            paths[m.group(1)].append(p)
+    return paths
 
-      opt.on '-L', '--lib-dir PATH', "DEFAULT: #{@lib_dir}" do |arg|
-        @lib_dir = File.expand_path arg
-      end
-    end
-  end
 
-  def arch
-    @arch ||= %x(uname -m).chomp
-  end
+def get_packages(cache_dir: Path, lib_dir: Path, *, newer_than: float) -> list[Path]:
+    cached_packages = get_cached_packages(cache_dir, newer_than=newer_than)
+    return [p for l in lib_dir.glob("*") for p in cached_packages[l.name] if l.is_dir()]
 
-  def hostname
-    @hostname ||= ENV['HOSTNAME'] || %x(hostname).chomp
-  end
 
-  def dbpath
-    @dbpath ||= "#{@cache_dir}/#{@name || hostname}.db.tar.gz"
-  end
+def sign_packages(packages: Collection[Path]) -> None:
+    if not packages:
+        return
+    # Unlock gpg-agent
+    print(f"Signing {len(packages)} package(s)", file=sys.stderr)
+    subprocess.run(["gpg", "--detach-sign"], check=True, input="", stdout=subprocess.DEVNULL)
+    ThreadPoolExecutor().map(lambda p: subprocess.run(["gpg", "--detach-sign", str(p)], check=True), packages)
 
-  def dbmtime
-    @dbmtime ||= File.exist?(dbpath) ? File.stat(dbpath).mtime : Time.at(0)
-  end
 
-  def cached_packages
-    @cached_packages ||= Set.new Dir[File.join @cache_dir, '*.pkg.tar.*'].select { |f|
-      not f.end_with? '.sig' and File.stat(f).ctime > dbmtime
-    }
-  end
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    dbpath = get_dbpath(opts.cache_dir, opts.dbname)
+    dbmtime = 0.0
+    if dbpath.exists():
+        if opts.delete:
+            print(f"> Deleting {dbpath}", file=sys.stderr)
+            os.remove(dbpath)
+        else:
+            dbmtime = dbpath.stat().st_mtime
 
-  def packages
-    @packages ||= Dir[File.join @lib_dir, '*'].reduce [] do |v, f|
-      base = File.join @cache_dir, File.basename(f)
-      v.concat cached_packages.grep(/\A#{Regexp.escape base}-(?:any|#{Regexp.escape arch})\.pkg\.tar\.[a-z]+\z/)
-    end
-  end
+    packages = get_packages(opts.cache_dir, opts.lib_dir, newer_than=dbmtime)
+    if not packages:
+        print("No new packages", file=sys.stderr)
+        return 0
 
-  def delete_db
-    FileUtils.rm_f dbpath, :verbose => true
-  end
+    sign_packages([p for p in packages if not Path(f"{p}.sig").exists()])
+    subprocess.run(["repo-add", "--new", "--sign", str(dbpath), *packages])
 
-  def sign_packages
-    packages.each do |pkg|
-      system 'gpg', '--detach-sign', pkg unless File.exist? "#{pkg}.sig"
-    end
-  end
+    return 0
 
-  def write_db
-    system 'repo-add', '--new', '--sign', dbpath, *packages
-  end
 
-  def run arguments = []
-    args = parser.parse arguments
-    abort parser.help if args.any?
-    delete_db if @delete
-    return if packages.empty?
-    sign_packages
-    write_db
-  end
-end
-
-$0 = File.basename(__FILE__) and Makerepo.new.run ARGV if $0 == __FILE__
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
