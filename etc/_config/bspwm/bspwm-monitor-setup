@@ -9,16 +9,12 @@ monitor_desktops: dict[str, list[str]]
 focused_desktop = ""
 
 if monitors == {"DP-0", "HDMI-0"}:
-    xrandr_script = "xrandr --output HDMI-0 --output DP-0 --right-of HDMI-0 --primary"
-    monitor_desktops = {"HDMI-0": ["1", "2", "3", "4", "5"], "DP-0": ["6", "7", "8", "9", "0"]}
-    focused_desktop = "6"
-elif monitors == {"eDP-1", "DP-2-1", "DP-2-2"}:
-    xrandr_script = "xrandr --output DP-2-2 --output DP-2-1 --right-of DP-2-2 --primary"
-    monitor_desktops = {"DP-2-2": ["1", "2", "3", "4", "5"], "DP-2-1": ["6", "7", "8", "9", "0"]}
+    xrandr_script = "xrandr --output DP-0 --output HDMI-0 --right-of DP-0 --primary"
+    monitor_desktops = {"DP-0": ["1", "2", "3", "4", "5"], "HDMI-0": ["6", "7", "8", "9", "0"]}
     focused_desktop = "6"
 elif monitors == {"eDP-1", "DP-3-1", "DP-3-2"}:
-    xrandr_script = "xrandr --output DP-3-2 --output DP-3-1 --right-of DP-3-2 --primary"
-    monitor_desktops = {"DP-3-2": ["1", "2", "3", "4", "5"], "DP-3-1": ["6", "7", "8", "9", "0"]}
+    xrandr_script = "xrandr --output DP-3-1 --output DP-3-2 --right-of DP-3-1 --primary"
+    monitor_desktops = {"DP-3-1": ["1", "2", "3", "4", "5"], "DP-3-2": ["6", "7", "8", "9", "0"]}
     focused_desktop = "6"
 elif len(monitors) == 1:
     monitor_desktops = {next(iter(monitors)): ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]}
