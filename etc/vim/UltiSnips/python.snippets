@@ -33,6 +33,13 @@ snippet #! "#!" w
 #!/usr/bin/env python
 endsnippet
 
+snippet set0 "set0" w
+with contextlib.suppress(ImportError):
+	import setproctitle  # fmt: skip
+
+	setproctitle.setproctitle(os.path.basename(sys.argv[0]))
+endsnippet
+
 snippet def "def" b
 def ${1}(${2}) -> ${3}:
 	$0
@@ -405,7 +412,7 @@ auto()
 endsnippet
 
 snippet ini "__init__" b
-def __init__(self, $1):
+def __init__(self, $1) -> None:
 	$0
 endsnippet
 
