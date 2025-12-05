@@ -28,6 +28,7 @@ touch "$MONITOR_LOCK" "$WALLPAPER_LOCK"
 
 /usr/bin/sxhkd &
 xautolock-launch 15 &
+filewatch -r /run/signals/ -c "notify --alert --file /home/guns/.local/share/sounds/new-message.ogg --icon task-complete --title READY {}" &
 (inotifywait "$MONITOR_LOCK"; exec kupfer --no-splash) &
 (inotifywait "$MONITOR_LOCK"; exec iptablesnotify) &
 (inotifywait "$WALLPAPER_LOCK"; exec /usr/bin/tint2) &

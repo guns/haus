@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2025 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Execute commands on file updates.
+"""
+
+import contextlib
+import os
+import re
+import shlex
+import subprocess
+import sys
+from argparse import ArgumentParser, RawTextHelpFormatter
+from pathlib import Path
+from typing import Any, Optional, Sequence
+
+import pyinotify  # type: ignore[import-untyped]
+
+
+def parser() -> ArgumentParser:
+    parser = ArgumentParser(description=__doc__)
+    parser.formatter_class = lambda prog: RawTextHelpFormatter(prog, max_help_position=25)
+    parser.add_argument("-c", "--command", type=shlex.split, required=True, help="{} is replaced by file path")
+    parser.add_argument("-p", "--pattern", type=re.compile, help="regex matched against whole path")
+    parser.add_argument("-r", "--recurse", action="store_true")
+    parser.add_argument("paths", metavar="path", type=Path, nargs="+")
+    return parser
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    wm = pyinotify.WatchManager()
+
+    def handler(event: Any) -> Optional[bool]:
+        if opts.pattern and not opts.pattern.search(event.pathname):
+            return None
+        cmd = [event.pathname if w == "{}" else w for w in opts.command]
+        subprocess.run(cmd)
+        return None
+
+    for path in opts.paths:
+        wm.add_watch(str(path), pyinotify.IN_CLOSE_WRITE, rec=opts.recurse)
+
+    notifier = pyinotify.Notifier(wm, default_proc_fun=handler)
+    notifier.loop()
+    return 0
+
+
+if __name__ == "__main__":
+    with contextlib.suppress(ImportError):
+        import setproctitle  # fmt: skip
+
+        setproctitle.setproctitle(os.path.basename(sys.argv[0]))
+    sys.exit(main(sys.argv[1:]))
