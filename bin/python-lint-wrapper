@@ -38,6 +38,7 @@ def lint(path: str) -> bool:
         ["autoimport", "--", path],
         ["ruff", "format", "--quiet", "--", path],
         ["ruff", "check", "--quiet", "--fix", "--output-format=pylint", "--", path],
+        ["ruff", "format", "--quiet", "--", path], # Format again after ruff check --fix
         ["mypy", "--no-error-summary", "--", path],
     )
 
