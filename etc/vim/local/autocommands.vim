@@ -161,7 +161,7 @@ augroup GUNS
 	" Markdown
 	autocmd FileType markdown,rdoc
 		\ SetWhitespace 2 |
-		\ setlocal iskeyword+=- linebreak breakindent expandtab
+		\ setlocal iskeyword+=- linebreak breakindent expandtab foldmethod=expr foldexpr=MarkdownFoldExpr(v:lnum)
 
 	" Mail
 	autocmd BufRead,BufNewFile *.mail

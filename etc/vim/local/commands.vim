@@ -285,16 +285,6 @@ endfunction
 function! MarkdownFoldExpr(lnum)
 	if getline(a:lnum) =~# '\v^# ' || getline(a:lnum + 1) =~# '\v^=+$'
 		return '>1'
-	elseif getline(a:lnum) =~# '\v^## ' || getline(a:lnum + 1) =~# '\v^-+$'
-		return '>2'
-	elseif getline(a:lnum) =~# '\v^### '
-		return '>3'
-	elseif getline(a:lnum) =~# '\v^#### '
-		return '>4'
-	elseif getline(a:lnum) =~# '\v^##### '
-		return '>5'
-	elseif getline(a:lnum) =~# '\v^###### '
-		return '>6'
 	else
 		return '='
 	endif
