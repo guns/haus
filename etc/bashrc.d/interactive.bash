@@ -1025,7 +1025,7 @@ HAVE pacman && {
 }
 
 # yay
-HAVE yay && alias yay="yay --pacman \"$(command -v yay-pacman-wrapper)\" --cleanafter --batchinstall"
+HAVE yay && alias yay="yay --cleanafter --batchinstall"
 
 # dnf
 HAVE dnf && {
