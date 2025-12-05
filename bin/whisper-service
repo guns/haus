@@ -25,6 +25,10 @@ import haus.keyboard
 BUFSIZE = 1 << 20
 
 
+class UserAbortError(RuntimeError):
+    pass
+
+
 def parser() -> ArgumentParser:
     parser = ArgumentParser(description=__doc__)
     parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
@@ -55,19 +59,23 @@ def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Opt
         language = None
     stderr(f"> Sending{' ' + language if language else ''} audio to {host}:{port}")
     parts = []
-    try:
-        with socket.create_connection((host, port)) as sock:
-            sock.sendall(language.encode() if language else b"\x00\x00")
-            buf = bytearray(BUFSIZE)
-            while n := file.readinto(buf):
-                sock.sendall(buf[:n])
-            sock.shutdown(socket.SHUT_WR)
-            stderr("> Waiting for transcription...")
-            while n := sock.recv_into(buf):
-                parts.append(buf[:n])
-    except ConnectionRefusedError as err:
-        stderr(str(err))
-        return ""
+    while True:
+        try:
+            with socket.create_connection((host, port)) as sock:
+                sock.sendall(language.encode() if language else b"\x00\x00")
+                buf = bytearray(BUFSIZE)
+                file.seek(0)
+                while n := file.readinto(buf):
+                    sock.sendall(buf[:n])
+                sock.shutdown(socket.SHUT_WR)
+                stderr("> Waiting for transcription...")
+                while n := sock.recv_into(buf):
+                    parts.append(buf[:n])
+                break
+        except ConnectionRefusedError as err:
+            stderr(str(err))
+            if not prompt("> Press any key to resend (q to quit):", {"q"}):
+                raise UserAbortError from err
     return b"".join(parts).decode().strip()
 
 
@@ -146,9 +154,12 @@ def main(args: Sequence[str]) -> int:
         with open(opts.file, "rb") as f:
             print(transcribe_file(opts.host, opts.port, f, opts.language))
     elif opts.client:
-        client_loop(opts.host, opts.port, opts.language)
+        try:
+            client_loop(opts.host, opts.port, opts.language)
+        except UserAbortError:
+            return 0
     else:
-        import whisper  # type: ignore[import-untyped] # noqa: autoimport
+        import whisper  # type: ignore[import-untyped,import-not-found,unused-ignore] # noqa: autoimport
 
         server_loop(whisper.load_model(opts.model), opts.host, opts.port)
 
