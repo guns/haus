@@ -317,6 +317,7 @@ fF() { find-wrapper --predicate '-type f'                -- "$@"; }; TCOMP find 
 fx() { find-wrapper --predicate '-type f -executable'    -- "$@"; }; TCOMP find fx
 fl() { find-wrapper --predicate '-type l'                -- "$@"; }; TCOMP find fl
 fL() { find-wrapper --predicate '-xtype l'               -- "$@"; }; TCOMP find fL
+fh() { find-wrapper --predicate '-type f -links +1'      -- "$@"; }; TCOMP find fh
 fd() { find-wrapper --predicate '-type d'                -- "$@"; }; TCOMP find fd
 f.() {
     local d
