@@ -34,7 +34,7 @@ def parser() -> ArgumentParser:
     parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
     parser.add_argument("-f", "--file", help="transcribe WAV file")
     parser.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
-    parser.add_argument("-m", "--model", help="(default: large)", default="large")
+    parser.add_argument("-m", "--model", help="(default: medium.en)", default="medium.en")
     parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return parser
