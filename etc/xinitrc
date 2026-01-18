@@ -35,4 +35,4 @@ filewatch -r /run/signals/ -c "notify --alert --file /home/guns/.local/share/sou
 
 popd
 
-exec ~/.local/bin/bspwm
+exec /usr/bin/bspwm
