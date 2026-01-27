@@ -82,8 +82,7 @@ rm -f "/run/user/$EUID/wallpaper.lock"
 
 # Fix tint2 stacking order
 (
-    root=$(xdo id -N Bspwm -n root | head -1)
     for win in $(xdo id -n tint2); do
-        xdo above -t "$root" "$win"
+        xdo lower "$win"
     done
 )
