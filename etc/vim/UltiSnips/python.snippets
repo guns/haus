@@ -1,5 +1,5 @@
 snippet APP "Command line application template" b
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Copyright (c) `date +%Y` Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
@@ -20,13 +20,15 @@ def parser() -> ArgumentParser:
 	return parser
 
 
-def main(args: Sequence[str]) -> int:
-	opts = parser().parse_args(args)
+def main(argv: Sequence[str] | None = None) -> int:
+	if argv is None:
+		argv = sys.argv[1:]
+	opts = parser().parse_args(argv)
 	return 0
 
 
 if __name__ == "__main__":
-	sys.exit(main(sys.argv[1:]))
+	sys.exit(main())
 endsnippet
 
 snippet #! "#!" w
@@ -186,9 +188,9 @@ $0
 """
 endsnippet
 
-snippet docd "textwrap.dedent" w
-textwrap.dedent(
-	"""
+snippet cdoc "inspect.cleandoc" w
+inspect.cleandoc(
+	f"""
 	$0
 	"""
 )
