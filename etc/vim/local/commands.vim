@@ -935,15 +935,15 @@ function! CwordOrSel(...) " {{{1
 endfunction
 
 function! GitGrepCwordOrSel(sel, newtab)
-	let @+ = CwordOrSel(a:sel)
+	let @" = CwordOrSel(a:sel)
 	if a:newtab | tabnew | endif
-	let arg = '\Q' . shellescape(@+, 1) . '\E'
+	let arg = '\Q' . shellescape(@", 1) . '\E'
 	if !a:sel
 		let dash = &iskeyword =~# '-'
-		let arg = (dash ? '(?<\!-)' : '') . '\b\Q' . shellescape(@+, 1) . '\E\b' . (dash ? '(?\!-)' : '')
+		let arg = (dash ? '(?<\!-)' : '') . '\b\Q' . shellescape(@", 1) . '\E\b' . (dash ? '(?\!-)' : '')
 	endif
-	execute 'silent! Ggrep --perl-regexp ' . (@+ =~# '\u' ? '' : '--ignore-case ') . ' -- ' . arg
-	let @/ = a:sel ? @+ : '\<' . @+ . '\>'
+	execute 'silent! Ggrep --perl-regexp ' . (@" =~# '\u' ? '' : '--ignore-case ') . ' -- ' . arg
+	let @/ = a:sel ? @" : '\<' . @" . '\>'
 endfunction
 
 command! -bar -range AddNumbersInSelection call <SID>AddNumbersInSelection()
