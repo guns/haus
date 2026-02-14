@@ -965,10 +965,16 @@ command! -range -nargs=0 Underline       call s:CombineSelection(<line1>, <line2
 command! -range -nargs=0 DoubleUnderline call s:CombineSelection(<line1>, <line2>, '0333')
 command! -range -nargs=0 Strikethrough   call s:CombineSelection(<line1>, <line2>, '0336')
 command! -range -nargs=0 Slashthrough    call s:CombineSelection(<line1>, <line2>, '0338')
+command! -range -nargs=0 Uncombine       call s:UncombineSelection(<line1>, <line2>)
 
 function! s:CombineSelection(line1, line2, cp)
 	execute 'let char = "\u'.a:cp.'"'
 	execute a:line1.','.a:line2.'s/\%V[^[:cntrl:]]/&'.char.'/ge'
+	normal! ``
+endfunction
+
+function! s:UncombineSelection(line1, line2)
+	execute a:line1.','.a:line2.'s/\%V./\=strcharpart(submatch(0), 0, 1, 0)/ge'
 	normal! ``
 endfunction
 
