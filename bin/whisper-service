@@ -11,12 +11,15 @@ Speech-to-text transcription server using Whisper.
 import contextlib
 import io
 import queue
+import shlex
 import socket
 import subprocess
 import sys
 import tempfile
 import threading
 from argparse import ArgumentParser
+from subprocess import DEVNULL
+from threading import Thread
 from typing import Optional, Sequence, cast
 
 import haus
@@ -35,6 +38,7 @@ def parser() -> ArgumentParser:
     parser.add_argument("-f", "--file", help="transcribe WAV file")
     parser.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
     parser.add_argument("-m", "--model", help="(default: medium.en)", default="medium.en")
+    parser.add_argument("-n", "--notification-command", help="optional command to run after transcription is complete")
     parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return parser
@@ -42,6 +46,11 @@ def parser() -> ArgumentParser:
 
 def stderr(message: str) -> None:
     print(message, file=sys.stderr)
+
+
+def spawn(cmd: Sequence[str]) -> None:
+    proc = subprocess.Popen(cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+    Thread(target=proc.wait).start()
 
 
 def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAULT_SGR) -> bool:
@@ -79,7 +88,12 @@ def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Opt
     return b"".join(parts).decode().strip()
 
 
-def client_loop(host: str, port: int, language: Optional[str] = None) -> None:
+def client_loop(
+    host: str,
+    port: int,
+    language: Optional[str] = None,
+    notification_command: Sequence[str] | None = None,
+) -> None:
     while True:
         if not prompt("> Press any key to start recording (q to quit):", {"q"}):
             return
@@ -96,6 +110,9 @@ def client_loop(host: str, port: int, language: Optional[str] = None) -> None:
             print(text, flush=True)
             print("--", file=sys.stderr)
             subprocess.run(["clip"], input=text, text=True)
+
+        if notification_command:
+            spawn(notification_command)
 
 
 def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> None:  # type: ignore[name-defined] # noqa: F821
@@ -147,15 +164,20 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
 
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
+    notification_command = shlex.split(opts.notification_command) if opts.notification_command else None
 
     if opts.file == "-":
         print(transcribe_file(opts.host, opts.port, cast("io.BufferedReader", sys.stdin.buffer), opts.language))
+        if notification_command:
+            spawn(notification_command)
     elif opts.file:
         with open(opts.file, "rb") as f:
             print(transcribe_file(opts.host, opts.port, f, opts.language))
+        if notification_command:
+            spawn(notification_command)
     elif opts.client:
         try:
-            client_loop(opts.host, opts.port, opts.language)
+            client_loop(opts.host, opts.port, opts.language, notification_command)
         except UserAbortError:
             return 0
     else:
