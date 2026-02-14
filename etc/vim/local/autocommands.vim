@@ -85,6 +85,7 @@ augroup GUNS
 		\ RubyBufferSetup
 
 	" Python
+	autocmd BufRead * if expand('%:e') == '' && getline(1) =~# '^#!.*uv run.*--script' | setfiletype python | endif
 	autocmd FileType python
 		\ SetTextwidth 90 |
 		\ let b:__lintprg = 'python-lint-wrapper -- %:S'
