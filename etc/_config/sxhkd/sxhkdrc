@@ -250,7 +250,7 @@ super + shift + Scroll_Lock
 
 F1
 	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-service --client
+	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-service --client --notification-command "play ~/.local/share/sounds/ready.ogg"
 
 super + F1
 	T='⚙ AI ⚙'; \
@@ -270,6 +270,12 @@ F3
 	T='- VIM'; \
 	wmctrl -a "$T" || \
 	urxvt-client -g 160x40 -title "TODO.txt $T" -icon ~/.icons/haus/vim.svg -e vim -c 'redraw!' ~/Documents/TODO.txt
+
+F6
+	headset disconnect
+
+super + F6
+	headset connect
 
 F7
 	T='⚙ htop ⚙'; \
