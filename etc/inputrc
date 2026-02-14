@@ -301,8 +301,8 @@ $if bash
     "\C-xtws":      "\C-]terraform workspace select "
 
     # AI
-    "\C-x\C-a"      "\C-] AI\n"
-    "\C-xa":	    "\C-]AI "
+    "\C-x\C-a"      "\C-] cdai\n"
+    "\C-xa":	    "\C-]cdai "
 $endif
 
 ### gdb
