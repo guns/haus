@@ -28,14 +28,14 @@ class NERV::Util::Notification
     'success' => {
       :title   => 'Success',
       :message => nil,
-      :audio   => File.expand_path('~/.local/share/sounds/success.ogg'),
+      :audio   => File.expand_path('~/.local/share/sounds/success2.ogg'),
       :icon    => 'dialog-ok',
       :sticky  => false,
     },
     'error' => {
       :title   => 'Error',
       :message => nil,
-      :audio   => File.expand_path('~/.local/share/sounds/error.ogg'),
+      :audio   => File.expand_path('~/.local/share/sounds/error2.ogg'),
       :icon    => 'dialog-error',
       :sticky  => false,
     },
