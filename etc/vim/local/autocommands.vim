@@ -255,6 +255,8 @@ augroup GUNS
 	autocmd BufRead,BufNewFile Dockerfile.*
 		\ setlocal filetype=dockerfile
 	autocmd filetype dockerfile
+		\ setlocal expandtab |
+		\ SetWhitespace 4 |
 		\ let b:__lintprg = 'hadolint --format=gnu -- %:S \\| sed s/^hadolint://'
 
 	" Groovy
