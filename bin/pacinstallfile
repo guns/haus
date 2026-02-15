@@ -16,7 +16,6 @@ import subprocess
 import sys
 import tempfile
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-from pathlib import Path
 from typing import Collection, Sequence
 
 
@@ -49,8 +48,14 @@ def main(args: Sequence[str]) -> int:
     if opts.force:
         pacman_opts.append("--noconfirm")
     move_cached_packages([os.path.basename(p) for p in opts.paths], force=opts.force)
-    pacman_conf = Path("/etc/pacman.conf").read_text()
-    pacman_conf = re.sub(r"^(\s*DownloadUser)", r"#\1", pacman_conf, flags=re.MULTILINE | re.IGNORECASE)
+    user = os.environ.get("SUDO_USER") or os.getlogin()
+    pacman_conf = subprocess.run(["pacman-conf", "--verbose"], capture_output=True, text=True).stdout
+    pacman_conf = re.sub(
+        r"^\s*DownloadUser\b.*",
+        f"DownloadUser = {user}",
+        pacman_conf,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
     pkg_urls = ["file://" + os.path.abspath(p) for p in opts.paths]
     with tempfile.NamedTemporaryFile(delete_on_close=False) as f:
         f.write(bytes(pacman_conf, "utf-8"))
