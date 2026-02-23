@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (c) 2025 Sung Pae <self@sungpae.com>
+# Copyright (c) 2025-2026 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
 # http://www.opensource.org/licenses/mit-license.php
 
@@ -8,114 +8,37 @@
 Speech-to-text transcription server using Whisper.
 """
 
+from __future__ import annotations
+
 import contextlib
-import io
 import queue
-import shlex
 import socket
-import subprocess
 import sys
 import tempfile
 import threading
-from argparse import ArgumentParser
-from subprocess import DEVNULL
-from threading import Thread
-from typing import Optional, Sequence, cast
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from typing import TYPE_CHECKING
 
-import haus
-import haus.keyboard
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
 
 BUFSIZE = 1 << 20
 
 
-class UserAbortError(RuntimeError):
-    pass
-
-
 def parser() -> ArgumentParser:
-    parser = ArgumentParser(description=__doc__)
-    parser.add_argument("-c", "--client", help="run in client mode", action="store_true")
-    parser.add_argument("-f", "--file", help="transcribe WAV file")
-    parser.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
-    parser.add_argument("-m", "--model", help="(default: medium.en)", default="medium.en")
-    parser.add_argument("-n", "--notification-command", help="optional command to run after transcription is complete")
-    parser.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
-    parser.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
-    return parser
+    p = ArgumentParser(description=__doc__, formatter_class=RawDescriptionHelpFormatter)
+    p.add_argument("-m", "--model", help="(default: medium.en)", default="medium.en")
+    p.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
+    p.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
+    return p
 
 
 def stderr(message: str) -> None:
     print(message, file=sys.stderr)
 
 
-def spawn(cmd: Sequence[str]) -> None:
-    proc = subprocess.Popen(cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
-    Thread(target=proc.wait).start()
-
-
-def prompt(msg: str, quit_chars: set[str], *, styles: Sequence[str] = haus.DEFAULT_SGR) -> bool:
-    haus.print(msg, end="", styles=styles, file=sys.stderr, flush=True)
-    try:
-        with haus.keyboard.NonCanonicalModeTerminalInput(sys.stdin) as f:
-            return f.read(1) not in quit_chars
-    finally:
-        print(file=sys.stderr)
-
-
-def transcribe_file(host: str, port: int, file: io.BufferedReader, language: Optional[str] = None) -> str:
-    if language is not None and len(language) != 2:
-        stderr(f"> Ignoring language {language}; see IS0 639-1 for two-letter language codes")
-        language = None
-    stderr(f"> Sending{' ' + language if language else ''} audio to {host}:{port}")
-    parts = []
-    while True:
-        try:
-            with socket.create_connection((host, port)) as sock:
-                sock.sendall(language.encode() if language else b"\x00\x00")
-                buf = bytearray(BUFSIZE)
-                file.seek(0)
-                while n := file.readinto(buf):
-                    sock.sendall(buf[:n])
-                sock.shutdown(socket.SHUT_WR)
-                stderr("> Waiting for transcription...")
-                while n := sock.recv_into(buf):
-                    parts.append(buf[:n])
-                break
-        except ConnectionRefusedError as err:
-            stderr(str(err))
-            if not prompt("> Press any key to resend (q to quit):", {"q"}):
-                raise UserAbortError from err
-    return b"".join(parts).decode().strip()
-
-
-def client_loop(
-    host: str,
-    port: int,
-    language: Optional[str] = None,
-    notification_command: Sequence[str] | None = None,
-) -> None:
-    while True:
-        if not prompt("> Press any key to start recording (q to quit):", {"q"}):
-            return
-
-        with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
-            proc = subprocess.Popen(["pw-record", "--", f.name])
-            ok = prompt("> Press any key to stop recording (q to quit):", {"q"}, styles=["red", "bold"])
-            proc.terminate()
-            proc.wait()
-            if not ok:
-                return
-            text = transcribe_file(host, port, cast("io.BufferedReader", f.file), language)
-            stderr("> Copying the following text to the clipboard:")
-            print(text, flush=True)
-            print("--", file=sys.stderr)
-            subprocess.run(["clip"], input=text, text=True)
-
-        if notification_command:
-            spawn(notification_command)
-
-
-def handle_connection(sock: socket.socket, model: "whisper.model.Whisper") -> None:  # type: ignore[name-defined] # noqa: F821
+def handle_connection(sock: socket.socket, model: whisper.model.Whisper) -> None:  # type: ignore[name-defined] # noqa: F821
     try:
         buf = bytearray(BUFSIZE)
         n = sock.recv_into(buf)
@@ -139,7 +62,7 @@ def thread_reaper(threads: queue.Queue[threading.Thread]) -> None:
             threads.get().join()
 
 
-def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  # type: ignore[name-defined] # noqa: F821
+def server_loop(model: whisper.model.Whisper, host: str, port: int) -> None:  # type: ignore[name-defined] # noqa: F821
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((host, port))
     server.listen()
@@ -164,26 +87,10 @@ def server_loop(model: "whisper.model.Whisper", host: str, port: int) -> None:  
 
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
-    notification_command = shlex.split(opts.notification_command) if opts.notification_command else None
 
-    if opts.file == "-":
-        print(transcribe_file(opts.host, opts.port, cast("io.BufferedReader", sys.stdin.buffer), opts.language))
-        if notification_command:
-            spawn(notification_command)
-    elif opts.file:
-        with open(opts.file, "rb") as f:
-            print(transcribe_file(opts.host, opts.port, f, opts.language))
-        if notification_command:
-            spawn(notification_command)
-    elif opts.client:
-        try:
-            client_loop(opts.host, opts.port, opts.language, notification_command)
-        except UserAbortError:
-            return 0
-    else:
-        import whisper  # type: ignore[import-untyped,import-not-found,unused-ignore] # noqa: autoimport
+    import whisper  # type: ignore[import-untyped,import-not-found,unused-ignore] # noqa: autoimport
 
-        server_loop(whisper.load_model(opts.model), opts.host, opts.port)
+    server_loop(whisper.load_model(opts.model), opts.host, opts.port)
 
     return 0
 

@@ -248,13 +248,9 @@ super + shift + Scroll_Lock
 # Applications {{{1
 #
 
-F1
-	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-service --client --notification-command "play ~/.local/share/sounds/ready.ogg"
-
 super + F1
-	T='⚙ AI ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 120x60 -title "$T" -e AI
+	T='⚙ whisper-client ⚙'; \
+	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-client --notification-command "play ~/.local/share/sounds/ready.ogg" --x11-toggle-key F1 --auto-paste
 
 alt + F1
 	T='⚙ whisper-server ⚙'; \

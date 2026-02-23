@@ -1,0 +1,423 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2025-2026 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Speech-to-text transcription client for whisper-service.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import inspect
+import os
+import select
+import shlex
+import signal
+import socket
+import subprocess
+import sys
+import tempfile
+import termios
+import time
+import tty
+import typing
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
+from pathlib import Path
+from subprocess import DEVNULL
+from threading import Thread
+from typing import Any, IO, TYPE_CHECKING, TextIO
+
+if TYPE_CHECKING:
+    import io
+    from collections.abc import Sequence
+
+
+BUFSIZE = 1 << 20
+
+SGR_DEFAULT = "38;5;48;1"
+SGR_RED_BOLD = "31;1"
+SGR_MAGENTA_BOLD = "35;1"
+
+
+class NonCanonicalModeTerminalInput:
+    def __init__(self, file: TextIO) -> None:
+        if not file.isatty():
+            raise ValueError(f"file is not a tty: {file!r}")
+
+        self._file = file
+
+    def __enter__(self) -> TextIO:
+        fd = self._file.fileno()
+        self._old_attrs = termios.tcgetattr(fd)
+        tty.setcbreak(fd, termios.TCSAFLUSH)
+        return self._file
+
+    def __exit__(self, *_args: object) -> None:
+        termios.tcsetattr(self._file.fileno(), termios.TCSAFLUSH, self._old_attrs)
+        self._old_attrs.clear()
+
+
+class _SignalState:
+    """
+    Mutable state set by the SIGUSR1 handler and read by client_loop.
+
+    A single instance is stored in the module-level SIGNAL_STATE constant.
+    The handler sets paste_next = True so that client_loop knows a SIGUSR1
+    arrived. client_loop clears paste_next after the start-recording prompt
+    so that only a SIGUSR1 arriving during the stop-recording prompt triggers
+    auto-paste. The flag is cleared again at the end of each iteration.
+    """
+
+    def __init__(self) -> None:
+        self.paste_next = False
+
+
+SIGNAL_STATE = _SignalState()
+
+
+class UserAbortError(RuntimeError):
+    pass
+
+
+def sgr_wrap(msg: str, style: str, file: IO[Any] | None = None) -> str:
+    """
+    Wrap msg in SGR escape sequence if file is a TTY.
+
+    Returns the plain msg if file is not a TTY or if msg/style is empty.
+    """
+    if file is None:
+        file = sys.stdout
+    if not msg or not style or not file.isatty():
+        return msg
+    return f"\x1b[{style}m{msg}\x1b[m"
+
+
+def parser() -> ArgumentParser:
+    p = ArgumentParser(
+        description=__doc__,
+        epilog=inspect.cleandoc(
+            """
+            external program dependencies:
+              interactive mode: pw-record, xsel
+              --x11-toggle-key: xbindkeys
+              --auto-paste: xdotool
+            """
+        ),
+        formatter_class=RawDescriptionHelpFormatter,
+    )
+    p.add_argument("-f", "--file", help="transcribe WAV file (use - for stdin)")
+    p.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
+    p.add_argument("-n", "--notification-command", help="optional command to run after transcription is complete")
+    p.add_argument(
+        "--x11-toggle-key",
+        metavar="KEY",
+        help="register a global X11 hotkey via xbindkeys to toggle recording (e.g. 'Mod4+space')",
+    )
+    p.add_argument(
+        "--auto-paste",
+        action="store_true",
+        help="paste transcription into foreground window via xdotool after"
+        " copying to PRIMARY selection; requires --x11-toggle-key",
+    )
+    p.add_argument("host", nargs="?", help="server address to connect to", default="127.0.0.1")
+    p.add_argument("port", nargs="?", help="server port to connect to", default=41100, type=int)
+    return p
+
+
+def stderr(message: str) -> None:
+    print(message, file=sys.stderr)
+
+
+def spawn(cmd: Sequence[str]) -> None:
+    proc = subprocess.Popen(cmd, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL)
+    Thread(target=proc.wait).start()
+
+
+def prompt(msg: str, quit_chars: set[str], *, style: str = SGR_DEFAULT, pipe_fd: int | None = None) -> bool:
+    """
+    Prompt the user for a single keypress and return whether to continue.
+
+    Prints msg to stderr, then waits for input in cbreak mode. Returns True if
+    the key pressed is not in quit_chars, False otherwise.
+
+    When pipe_fd is provided (the read end of a self-pipe used for SIGUSR1
+    delivery), select(2) multiplexes between stdin and the pipe. A readable
+    pipe_fd is treated as a synthetic keypress: the byte is consumed and True is
+    returned. This allows an external signal (via xbindkeys → kill -USR1) to
+    advance the prompt without terminal focus.
+
+    When pipe_fd is None, the function blocks on a single-character read from
+    stdin, preserving the original behavior.
+
+    On entry, any bytes already in the pipe are drained before prompting. This
+    discards SIGUSR1 signals that arrived outside the interactive window (e.g.,
+    during transcription, xsel, or xdotool) so each prompt waits for a fresh
+    user action rather than auto-advancing on stale signals.
+    """
+    if pipe_fd is not None:
+        while select.select([pipe_fd], [], [], 0)[0]:
+            if not os.read(pipe_fd, 1):
+                break
+    print(sgr_wrap(msg, style, file=sys.stderr), end="", file=sys.stderr, flush=True)
+    try:
+        with NonCanonicalModeTerminalInput(sys.stdin) as f:
+            if pipe_fd is None:
+                return f.read(1) not in quit_chars
+            stdin_fd = f.fileno()
+            readable, _, _ = select.select([stdin_fd, pipe_fd], [], [])
+            if pipe_fd in readable:
+                os.read(pipe_fd, 1)
+                # If stdin is also readable (user pressed a key at the exact
+                # moment SIGUSR1 arrived), drain the byte so it doesn't leak
+                # into the next prompt() call as a phantom keypress.
+                if stdin_fd in readable:
+                    f.read(1)
+                return True
+            return f.read(1) not in quit_chars
+    finally:
+        print(file=sys.stderr)
+
+
+def setup_sigusr1_pipe() -> tuple[int, int]:
+    """
+    Create a self-pipe for converting SIGUSR1 into a select(2)-readable event.
+
+    Returns (read_fd, write_fd). A SIGUSR1 handler is registered that writes a
+    single space byte to write_fd. The write end is set to non-blocking so the
+    signal handler never blocks if the pipe buffer is full (the signal is
+    silently dropped in that case, which is acceptable since it just means a
+    duplicate toggle arrived before the previous one was consumed).
+
+    The read end is used by prompt() in its select() call. The caller is
+    responsible for closing both fds when done.
+    """
+    read_fd, write_fd = os.pipe()
+    os.set_blocking(write_fd, False)
+
+    def handler(_signum: int, _frame: object) -> None:
+        # Write a single space byte as a wakeup token. BlockingIOError is
+        # suppressed because a full pipe means a prior signal is already
+        # pending — dropping this one is harmless.
+        with contextlib.suppress(BlockingIOError):
+            os.write(write_fd, b" ")
+        # Mark that this cycle was signal-initiated so client_loop can
+        # conditionally fire auto-paste only for hotkey-triggered cycles.
+        SIGNAL_STATE.paste_next = True
+
+    signal.signal(signal.SIGUSR1, handler)
+    return read_fd, write_fd
+
+
+def launch_xbindkeys(key: str, pid: int) -> subprocess.Popen[bytes] | None:
+    """
+    Launch xbindkeys in foreground mode with a config that binds key to SIGUSR1.
+
+    The generated xbindkeys config binds the given key specification to
+    ``kill -USR1 <pid>``, allowing a global X11 hotkey to toggle recording in
+    the client loop without terminal focus.
+
+    The config is passed via /dev/stdin to avoid creating a temp file. The
+    xbindkeys process runs with -n (no daemon) so it stays as a child process
+    that can be terminated on exit. stderr is inherited so that xbindkeys error
+    messages (bad key spec, missing X display) reach the user.
+
+    After writing the config and closing stdin, waits 100ms and checks whether
+    xbindkeys exited immediately. This catches config parse errors and missing
+    X display without blocking startup for long.
+
+    Returns the Popen object on success, or None if xbindkeys fails to start
+    (e.g., not installed) or exits immediately (e.g., invalid key spec). On
+    failure, a warning is printed and the client continues in terminal-only
+    mode.
+    """
+    config = f'"kill -USR1 {pid}"\n{key}\n"'
+
+    try:
+        proc = subprocess.Popen(
+            ["xbindkeys", "-n", "-f", "/dev/stdin"],
+            stdin=subprocess.PIPE,
+            stdout=DEVNULL,
+        )
+        # guaranteed by stdin=PIPE
+        assert proc.stdin is not None
+        proc.stdin.write(config.encode())
+        proc.stdin.close()
+        # Give xbindkeys a moment to parse the config and potentially exit.
+        # Catches immediate failures: invalid key spec, no X display, bad config.
+        time.sleep(0.1)
+        if proc.poll() is not None:
+            stderr(
+                sgr_wrap(
+                    f"> Warning: xbindkeys exited immediately (code {proc.returncode}); continuing in terminal-only mode",
+                    SGR_MAGENTA_BOLD,
+                    file=sys.stderr,
+                )
+            )
+            return None
+        return proc
+    except OSError:
+        stderr(
+            sgr_wrap(
+                "> Warning: failed to start xbindkeys; continuing in terminal-only mode",
+                SGR_MAGENTA_BOLD,
+                file=sys.stderr,
+            )
+        )
+        return None
+
+
+def transcribe_file(
+    host: str, port: int, file: io.BufferedReader, language: str | None = None, pipe_fd: int | None = None,
+) -> str:
+    if language is not None and len(language) != 2:
+        stderr(f"> Ignoring language {language}; see ISO 639-1 for two-letter language codes")
+        language = None
+    stderr(f"> Sending{' ' + language if language else ''} audio to {host}:{port}")
+    parts = []
+    while True:
+        try:
+            with socket.create_connection((host, port)) as sock:
+                sock.sendall(language.encode() if language else b"\x00\x00")
+                buf = bytearray(BUFSIZE)
+                file.seek(0)
+                while n := file.readinto(buf):
+                    sock.sendall(buf[:n])
+                sock.shutdown(socket.SHUT_WR)
+                stderr("> Waiting for transcription...")
+                while n := sock.recv_into(buf):
+                    parts.append(buf[:n])
+                break
+        except ConnectionRefusedError as err:
+            stderr(str(err))
+            if not prompt("> Press any key to resend (q to quit):", {"q"}, pipe_fd=pipe_fd):
+                raise UserAbortError from err
+    return b"".join(parts).decode().strip()
+
+
+def client_loop(
+    host: str,
+    port: int,
+    *,
+    language: str | None = None,
+    notification_command: Sequence[str] | None = None,
+    x11_toggle_key: str | None = None,
+    auto_paste: bool = False,
+) -> None:
+    """
+    Run the interactive record-transcribe-copy loop.
+
+    When x11_toggle_key is set, a SIGUSR1 self-pipe and xbindkeys subprocess
+    are created so that a global X11 hotkey can toggle recording without
+    terminal focus. The xbindkeys process and pipe fds are cleaned up in a
+    finally block regardless of how the loop exits.
+
+    When auto_paste is True, after copying text to PRIMARY via xsel, the
+    function waits 500ms then simulates shift+Insert via xdotool to paste into
+    the foreground window — but only if recording was stopped via SIGUSR1 (the
+    X11 hotkey). Terminal-initiated stops skip the paste because the user is
+    already focused on the terminal. paste_next is cleared after the
+    start-recording prompt so that only a SIGUSR1 arriving during the
+    stop-recording prompt sets it. The flag is cleared again at the end of
+    each iteration. The 500ms delay gives the xsel daemon time to claim
+    selection ownership after the parent process exits (xsel double-forks and
+    the parent returns before the grandchild calls XSetSelectionOwner).
+    """
+    pipe_fd: int | None = None
+    write_fd: int | None = None
+    xbindkeys_proc: subprocess.Popen[bytes] | None = None
+
+    try:
+        if x11_toggle_key is not None:
+            pipe_fd, write_fd = setup_sigusr1_pipe()
+            xbindkeys_proc = launch_xbindkeys(x11_toggle_key, os.getpid())
+
+        while True:
+            if not prompt("> Press any key to start recording (q to quit):", {"q"}, pipe_fd=pipe_fd):
+                return
+
+            # Clear paste_next so that only a SIGUSR1 during the
+            # stop-recording prompt (below) triggers auto-paste. A SIGUSR1
+            # that started recording is irrelevant for paste decisions.
+            SIGNAL_STATE.paste_next = False
+
+            with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
+                proc = subprocess.Popen(["pw-record", "--", f.name])
+                ok = prompt(
+                    "> Press any key to stop recording (q to quit):", {"q"}, style=SGR_RED_BOLD, pipe_fd=pipe_fd,
+                )
+                proc.terminate()
+                proc.wait()
+                if not ok:
+                    return
+                text = transcribe_file(host, port, typing.cast("io.BufferedReader", f.file), language, pipe_fd=pipe_fd)
+                stderr("> Copying the following text to PRIMARY:")
+                print(text, flush=True)
+                print("--", file=sys.stderr)
+                xsel_result = subprocess.run(["xsel", "--input"], input=text, text=True)
+                if xsel_result.returncode != 0:
+                    stderr(
+                        f"> Warning: xsel exited with code {xsel_result.returncode};"
+                        " PRIMARY selection copy may have failed"
+                    )
+                elif auto_paste and SIGNAL_STATE.paste_next:
+                    time.sleep(0.1)
+                    paste_result = subprocess.run(["xdotool", "key", "shift+Insert"])
+                    if paste_result.returncode != 0:
+                        stderr(f"> Warning: xdotool exited with code {paste_result.returncode}; paste may have failed")
+
+            if notification_command:
+                spawn(notification_command)
+
+            SIGNAL_STATE.paste_next = False
+    finally:
+        if xbindkeys_proc is not None:
+            xbindkeys_proc.terminate()
+            xbindkeys_proc.wait()
+        if write_fd is not None:
+            # Reset the SIGUSR1 handler before closing the fd it references.
+            # The handler's closure captures write_fd; if a signal arrives
+            # after close but before process exit, os.write would raise EBADF.
+            signal.signal(signal.SIGUSR1, signal.SIG_DFL)
+            os.close(write_fd)
+        if pipe_fd is not None:
+            os.close(pipe_fd)
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+    notification_command = (shlex.split(opts.notification_command) if opts.notification_command else None)
+
+    if opts.auto_paste and not opts.x11_toggle_key:
+        stderr("error: --auto-paste requires --x11-toggle-key")
+        return 1
+
+    if opts.file == "-":
+        print(transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), opts.language))
+        if notification_command:
+            spawn(notification_command)
+    elif opts.file:
+        with Path(opts.file).open("rb") as f:
+            print(transcribe_file(opts.host, opts.port, f, opts.language))
+        if notification_command:
+            spawn(notification_command)
+    else:
+        try:
+            client_loop(
+                opts.host,
+                opts.port,
+                language=opts.language,
+                notification_command=notification_command,
+                x11_toggle_key=opts.x11_toggle_key,
+                auto_paste=opts.auto_paste,
+            )
+        except UserAbortError:
+            return 0
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
