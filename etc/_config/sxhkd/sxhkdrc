@@ -250,7 +250,7 @@ super + shift + Scroll_Lock
 
 super + F1
 	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-client --notification-command "play ~/.local/share/sounds/ready.ogg" --x11-toggle-key F1 --auto-paste
+	wmctrl -a "$T" || urxvt-client -g 48x6 -title "$T" -e whisper-client --on-record "play ~/.local/share/sounds/message-new-instant.oga" --on-transcribe "play ~/.local/share/sounds/ready.ogg" --x11-toggle-key F1 --auto-paste
 
 alt + F1
 	T='⚙ whisper-server ⚙'; \

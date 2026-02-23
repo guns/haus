@@ -110,7 +110,10 @@ def parser() -> ArgumentParser:
     )
     p.add_argument("-f", "--file", help="transcribe WAV file (use - for stdin)")
     p.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
-    p.add_argument("-n", "--notification-command", help="optional command to run after transcription is complete")
+    p.add_argument("-r", "--on-record", metavar="COMMAND", help="optional command to run when recording starts")
+    p.add_argument(
+        "-t", "--on-transcribe", metavar="COMMAND", help="optional command to run after transcription is complete"
+    )
     p.add_argument(
         "--x11-toggle-key",
         metavar="KEY",
@@ -302,7 +305,8 @@ def client_loop(
     port: int,
     *,
     language: str | None = None,
-    notification_command: Sequence[str] | None = None,
+    on_record: Sequence[str] | None = None,
+    on_transcribe: Sequence[str] | None = None,
     x11_toggle_key: str | None = None,
     auto_paste: bool = False,
 ) -> None:
@@ -345,6 +349,8 @@ def client_loop(
 
             with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
                 proc = subprocess.Popen(["pw-record", "--", f.name])
+                if on_record:
+                    spawn(on_record)
                 ok = prompt(
                     "> Press any key to stop recording (q to quit):", {"q"}, style=SGR_RED_BOLD, pipe_fd=pipe_fd,
                 )
@@ -368,8 +374,8 @@ def client_loop(
                     if paste_result.returncode != 0:
                         stderr(f"> Warning: xdotool exited with code {paste_result.returncode}; paste may have failed")
 
-            if notification_command:
-                spawn(notification_command)
+            if on_transcribe:
+                spawn(on_transcribe)
 
             SIGNAL_STATE.paste_next = False
     finally:
@@ -388,7 +394,8 @@ def client_loop(
 
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
-    notification_command = (shlex.split(opts.notification_command) if opts.notification_command else None)
+    on_record = shlex.split(opts.on_record) if opts.on_record else None
+    on_transcribe = shlex.split(opts.on_transcribe) if opts.on_transcribe else None
 
     if opts.auto_paste and not opts.x11_toggle_key:
         stderr("error: --auto-paste requires --x11-toggle-key")
@@ -396,20 +403,21 @@ def main(args: Sequence[str]) -> int:
 
     if opts.file == "-":
         print(transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), opts.language))
-        if notification_command:
-            spawn(notification_command)
+        if on_transcribe:
+            spawn(on_transcribe)
     elif opts.file:
         with Path(opts.file).open("rb") as f:
             print(transcribe_file(opts.host, opts.port, f, opts.language))
-        if notification_command:
-            spawn(notification_command)
+        if on_transcribe:
+            spawn(on_transcribe)
     else:
         try:
             client_loop(
                 opts.host,
                 opts.port,
                 language=opts.language,
-                notification_command=notification_command,
+                on_record=on_record,
+                on_transcribe=on_transcribe,
                 x11_toggle_key=opts.x11_toggle_key,
                 auto_paste=opts.auto_paste,
             )
