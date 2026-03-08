@@ -86,8 +86,8 @@
 	acm          = !git add --all . && git commit --all --message
 	rs           = reset
 	rshard       = reset --hard
-	rsorigin     = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)"
-	rsoriginhard = !git reset "origin/$(git rev-parse --abbrev-ref HEAD)" --hard
+	rsorigin     = !git reset "$(git rev-parse --abbrev-ref @{upstream})"
+	rsoriginhard = !git reset "$(git rev-parse --abbrev-ref @{upstream})" --hard
 
 	# Commit
 	c      = commit
@@ -199,7 +199,7 @@
 	dia      = diff --text
 	dic      = diff --cached
 	dis      = diff --summary --stat
-	diorigin = !git diff "origin/$(git rev-parse --abbrev-ref HEAD)"
+	diorigin = !git diff "$(git rev-parse --abbrev-ref @{upstream})"
 
 	fp       = format-patch
 	fpo      = format-patch --stdout
