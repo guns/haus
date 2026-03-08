@@ -121,7 +121,7 @@ augroup GUNS
 		\ setlocal expandtab iskeyword+=-
 
 	" JavaScript
-	autocmd FileType javascript
+	autocmd FileType javascript,typescript
 		\ runtime ftplugin/html/sparkup.vim |
 		\ JavaScriptBufferSetup
 	autocmd FileType json
