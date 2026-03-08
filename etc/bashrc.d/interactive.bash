@@ -143,6 +143,12 @@ __systemd_units__() {
     done)"
 }
 
+__aws_profile() {
+    __compreply__ "$(ruby -ne '/\[profile\s+(.*)\]/ =~ $_ and puts $1' ~/.aws/config)"
+}
+
+complete -F __aws_profile sso
+
 ### DIRECTORYBINDINGS
 
 CD_FUNC -n ..           ..
@@ -153,7 +159,7 @@ CD_FUNC -n ......       ../../../../..
 CD_FUNC -n .......      ../../../../../..
 CD_FUNC -n ........     ../../../../../../..
 CD_FUNC -x cdhaus       ~/.haus /opt/haus
-CD_FUNC cdai            /opt/src/AI ~/.local/share/AI
+CD_FUNC cdai            /opt/src/agent-config/
 CD_FUNC cdanchors       /etc/ca-certificates/trust-source/anchors
 CD_FUNC cddnscrypt      /etc/dnscrypt-proxy
 CD_FUNC -x cdnginx      /etc/nginx
