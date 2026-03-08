@@ -88,7 +88,7 @@ augroup GUNS
 	autocmd BufRead * if expand('%:e') == '' && getline(1) =~# '^#!.*uv run.*--script' | setfiletype python | endif
 	autocmd FileType python
 		\ SetTextwidth 90 |
-		\ let b:__lintprg = 'python-lint-wrapper -- %:S'
+		\ let b:__lintprg = 'python-haus-lint -- %:S'
 
 	" X?HTML/XML
 	autocmd FileType html,xhtml,xml,gohtmltmpl,eruby

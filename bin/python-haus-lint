@@ -1,0 +1,972 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.14"
+# dependencies = ["pylint", "astroid", "autoimport", "ruff", "mypy", "tomli-w"]
+# ///
+
+"""
+Format, lint, and type-check Python files.
+"""
+
+from __future__ import annotations
+
+import ast
+import configparser
+import contextlib
+import ctypes
+import functools
+import hashlib
+import io
+import os
+import re
+import subprocess
+import sys
+import tempfile
+from argparse import ArgumentParser, RawTextHelpFormatter
+from pathlib import Path
+from typing import TYPE_CHECKING, TextIO
+
+import astroid  # type: ignore[import-untyped]  # astroid has no py.typed marker
+import autoimport
+import tomli_w
+import tomllib
+from astroid import nodes
+from pylint.checkers import BaseChecker
+from pylint.lint import PyLinter
+from pylint.reporters.text import TextReporter
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable, Iterator, Sequence
+
+
+# ---------------------------------------------------------------------------
+# Custom lint rules: pylint checkers
+# ---------------------------------------------------------------------------
+
+
+def is_uppercase_name(name: str) -> bool:
+    if not name:
+        return False
+    return name.lstrip("_")[:1].isupper()
+
+
+class UppercaseImportChecker(BaseChecker):
+    """Lowercase symbols must not be imported directly; import the module instead."""
+
+    name = "uppercase-import-checker"
+    # pylint checker API requires mutable class-level dict
+    msgs = {  # noqa: RUF012
+        "C2000": (
+            'Lowercase symbol "%s" should not be imported directly. Import the module instead and use module.%s()',
+            "lowercase-import-not-allowed",
+            "Only uppercase symbols (classes, constants) and modules may be imported directly.",
+        )
+    }
+    allowed_symbols = frozenset(["annotations", "datetime", "timezone"])
+
+    def visit_importfrom(self, node: nodes.ImportFrom) -> None:
+        try:
+            imported = node.do_import_module()
+        except astroid.AstroidImportError:
+            return
+        for name, _ in node.names:
+            if name == "*" or is_uppercase_name(name):
+                continue
+            if name in self.allowed_symbols:
+                continue
+            # Allow module/submodule imports
+            try:
+                imported.import_module(name, relative_only=True)
+                continue
+            except astroid.AstroidImportError:
+                pass
+            self.add_message("lowercase-import-not-allowed", node=node, args=(name, name))
+
+
+class PartitionChecker(BaseChecker):
+    """Flag split/rsplit with maxsplit=1 and explicit separator; suggest partition/rpartition."""
+
+    name = "partition-checker"
+    # pylint checker API requires mutable class-level dict
+    msgs = {  # noqa: RUF012
+        "C2001": (
+            "Use %s() instead of %s(..., maxsplit=1)",
+            "use-partition",
+            "partition/rpartition is more reliable than split/rsplit with maxsplit=1.",
+        )
+    }
+
+    def visit_call(self, node: nodes.Call) -> None:
+        if not isinstance(node.func, nodes.Attribute):
+            return
+        method = node.func.attrname
+        if method not in ("split", "rsplit"):
+            return
+        # Check for explicit separator (first positional arg or 'sep' keyword)
+        # None means whitespace splitting, same as no separator
+        sep_arg = node.args[0] if node.args else None
+        sep_kw = next((kw.value for kw in node.keywords if kw.arg == "sep"), None)
+        if sep_arg is None and sep_kw is None:
+            return
+        if isinstance(sep_arg, nodes.Const) and sep_arg.value is None:
+            return
+        if isinstance(sep_kw, nodes.Const) and sep_kw.value is None:
+            return
+        # Check maxsplit=1: positional (index 1) or keyword
+        maxsplit_val = None
+        if len(node.args) >= 2:
+            arg = node.args[1]
+            if isinstance(arg, nodes.Const) and arg.value == 1:
+                maxsplit_val = 1
+        for kw in node.keywords:
+            if kw.arg == "maxsplit" and isinstance(kw.value, nodes.Const) and kw.value.value == 1:
+                maxsplit_val = 1
+        if maxsplit_val != 1:
+            return
+        replacement = "partition" if method == "split" else "rpartition"
+        self.add_message("use-partition", node=node, args=(replacement, method))
+
+
+def register(linter: PyLinter) -> None:
+    linter.register_checker(UppercaseImportChecker(linter))
+    linter.register_checker(PartitionChecker(linter))
+
+
+# ---------------------------------------------------------------------------
+# Custom lint rules: AST-based triple-quoted string checker
+# ---------------------------------------------------------------------------
+
+MSG_QUOTES_NOT_ALONE = "opening triple quotes must be alone on their line"
+MSG_CONTENT_ON_OPENING = "content must not start on same line as opening triple quotes"
+MSG_INDENT = "content must maintain indentation of opening triple quotes"
+MSG_HINT = "; use inspect.cleandoc() for indented multiline strings"
+
+
+def check_tripleq_strings(paths: Iterable[Path]) -> bool:
+    ok = True
+    for path in paths:
+        for lineno, msg in _check_tripleq_file(path):
+            print(f"{path}:{lineno}: {msg}")
+            ok = False
+    return ok
+
+
+def _check_tripleq_file(path: Path) -> list[tuple[int, str]]:
+    errors: list[tuple[int, str]] = []
+    try:
+        source = path.read_text()
+        tree = ast.parse(source, filename=str(path))
+    except (SyntaxError, OSError):
+        return errors
+
+    lines = source.splitlines()
+
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.JoinedStr, ast.Constant)):
+            continue
+        if isinstance(node, ast.Constant) and not isinstance(node.value, (str, bytes)):
+            continue
+        if node.lineno == node.end_lineno or node.end_lineno is None:
+            continue
+
+        line = lines[node.lineno - 1] if node.lineno <= len(lines) else ""
+        col = node.col_offset
+        snippet = line[col:]
+
+        # Only check actual triple-quoted strings, not implicit concatenation
+        # Strip string prefixes (f, r, b, u and combinations)
+        stripped = snippet.lstrip("fFrRbBuU")
+        if not stripped.startswith(('"""', "'''")):
+            continue
+
+        before = line[:col]
+        after_quotes = stripped[3:]
+        is_simple = _is_simple_assign(tree, node)
+        line_indent = _indent_level(line)
+        is_backslash_continuation = after_quotes.strip() == "\\" and before.strip().endswith("=")
+
+        # Allow backslash continuation for simple assignment at module level (indent 0)
+        if is_simple and line_indent == 0 and is_backslash_continuation:
+            continue
+
+        # Check opening quotes alone on line (except simple assignment)
+        if not is_simple and before.strip():
+            errors.append((node.lineno, MSG_QUOTES_NOT_ALONE + MSG_HINT))
+
+        # Check content after opening quotes (backslash only allowed at indent 0)
+        if after_quotes.strip() and (after_quotes.strip() != "\\" or line_indent > 0):
+            errors.append((node.lineno, MSG_CONTENT_ON_OPENING + MSG_HINT))
+
+        # Check indentation of content lines (relative to line indent, not quote column)
+        for i in range(node.lineno, node.end_lineno):
+            content_line = lines[i] if i < len(lines) else ""
+            if content_line.strip() and _indent_level(content_line) < line_indent:
+                errors.append((i + 1, MSG_INDENT + MSG_HINT))
+
+    return errors
+
+
+def _indent_level(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _is_simple_assign(tree: ast.AST, string_node: ast.Constant | ast.JoinedStr) -> bool:
+    return any(isinstance(node, (ast.Assign, ast.AnnAssign)) and node.value is string_node for node in ast.walk(tree))
+
+
+# ---------------------------------------------------------------------------
+# Pylint runner helpers
+# ---------------------------------------------------------------------------
+
+
+def _run_pylint_check(paths: Iterable[Path], message: str, output: TextIO | None = None) -> bool:
+    linter = PyLinter()
+    linter.load_plugin_modules([__name__])
+    linter.disable("all")
+    linter.enable(message)
+    linter.set_reporter(TextReporter(output))
+    linter.check([str(p) for p in paths])
+    return not linter.stats.by_msg
+
+
+def check_imports(paths: Iterable[Path]) -> bool:
+    return _run_pylint_check(paths, "lowercase-import-not-allowed")
+
+
+def check_partition(paths: Iterable[Path]) -> bool:
+    return _run_pylint_check(paths, "use-partition")
+
+
+# ---------------------------------------------------------------------------
+# Embedded self-tests
+# ---------------------------------------------------------------------------
+
+TRIPLEQ_TESTS: dict[str, tuple[str, list[int]]] = {
+    "single-line triple-quoted string": ('x = """single line"""', []),
+    "simple assignment, content at line indent": ('x = """\ncontent\n"""', []),
+    "backslash continuation at level 0": ('MSG = """\\\ncontent\n"""', []),
+    "f-string backslash continuation at level 0": ('MSG = f"""\\\nHello {name}\n"""', []),
+    "docstring": ('def f():\n    """\n    Docstring.\n    """\n    pass', []),
+    "nested assignment": ('def f():\n    x = """\n    content\n    """', []),
+    "in list with proper indent": ('items = [\n    """\n    content\n    """\n]', []),
+    "implicit string concatenation (not triple-quoted)": ('x = (\n    f"first "\n    f"second"\n)', []),
+    "content on opening line": ('x = """content\nmore\n"""', [1]),
+    "quotes not alone (in function call)": ('func("""\nbad\n""")', [1]),
+    "content not indented enough": ('def f():\n    x = """\nnot indented\n"""', [3, 4]),
+    "backslash continuation indented (not allowed)": ('def f():\n    x = """\\\n    content\n    """', [2]),
+    "f-string backslash continuation indented (not allowed)": (
+        'def f():\n    x = f"""\\\n    Hello {name}\n    """',
+        [2],
+    ),
+    "f-string with content on opening line": ('x = f"""content\nmore\n"""', [1]),
+    "f-string quotes not alone (in function call)": ('func(f"""\nbad\n""")', [1]),
+    "r-string with content on opening line": ('x = r"""content\nmore\n"""', [1]),
+    "b-string with content on opening line": ('x = b"""content\nmore\n"""', [1]),
+    "fr-string with content on opening line": ('x = fr"""content\nmore\n"""', [1]),
+    "rf-string with content on opening line": ('x = rf"""content\nmore\n"""', [1]),
+    "br-string with content on opening line": ('x = br"""content\nmore\n"""', [1]),
+}
+
+IMPORT_TESTS: dict[str, tuple[str, bool]] = {
+    "uppercase symbol (class)": ("from pathlib import Path", True),
+    "uppercase symbol (exception class)": ("from collections import OrderedDict", True),
+    "module import": ("import os", True),
+    "submodule import": ("from os import path", True),
+    "allowed exception - annotations": ("from __future__ import annotations", True),
+    "allowed exception - datetime": ("from datetime import datetime", True),
+    "allowed exception - timezone": ("from datetime import timezone", True),
+    "lowercase class (no introspection, lowercase = invalid)": ("from functools import partial", False),
+    "lowercase class": ("from itertools import chain", False),
+    "lowercase function (join)": ("from os.path import join", False),
+    "lowercase function (exists)": ("from os.path import exists", False),
+    "lowercase constant": ("from string import ascii_letters", False),
+}
+
+PARTITION_TESTS: dict[str, tuple[str, bool]] = {
+    "split with maxsplit=1 positional": ('x.split(":", 1)', False),
+    "split with maxsplit=1 keyword": ('x.split(":", maxsplit=1)', False),
+    "split with sep keyword and maxsplit=1": ('x.split(sep=":", maxsplit=1)', False),
+    "rsplit with maxsplit=1 positional": ('x.rsplit(":", 1)', False),
+    "rsplit with maxsplit=1 keyword": ('x.rsplit(":", maxsplit=1)', False),
+    "split without maxsplit": ('x.split(":")', True),
+    "split with maxsplit=2": ('x.split(":", 2)', True),
+    "split with no separator (whitespace)": ("x.split(maxsplit=1)", True),
+    "rsplit with no separator (whitespace)": ("x.rsplit(maxsplit=1)", True),
+    "split with None separator positional": ("x.split(None, 1)", True),
+    "rsplit with None separator positional": ("x.rsplit(None, 1)", True),
+    "split with None separator keyword": ("x.split(sep=None, maxsplit=1)", True),
+    "rsplit with None separator keyword": ("x.rsplit(sep=None, maxsplit=1)", True),
+    "partition (already correct)": ('x.partition(":")', True),
+    "rpartition (already correct)": ('x.rpartition(":")', True),
+}
+
+
+def _run_pylint_tests(tests: dict[str, tuple[str, bool]], message: str, label: str) -> int:
+    failed = 0
+    for name, (source, should_pass) in tests.items():
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(source + "\n")
+            f.flush()
+            path = Path(f.name)
+
+        try:
+            passed = _run_pylint_check([path], message, io.StringIO())
+        finally:
+            path.unlink()
+
+        if passed != should_pass:
+            status = "pass" if should_pass else "fail"
+            print(f"FAIL {label} [{name}]: expected {status}, got {'pass' if passed else 'fail'}")
+            print(f"  source: {source!r}")
+            failed += 1
+    return failed
+
+
+def run_tests() -> int:
+    failed = 0
+
+    # Triple-quoted string tests
+    for name, (source, expected_lines) in TRIPLEQ_TESTS.items():
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False) as f:
+            f.write(source.strip() + "\n")
+            f.flush()
+            path = Path(f.name)
+
+        try:
+            errors = _check_tripleq_file(path)
+            actual_lines = sorted({e[0] for e in errors})
+        finally:
+            path.unlink()
+
+        if actual_lines != sorted(expected_lines):
+            print(f"FAIL tripleq [{name}]: expected {expected_lines}, got {actual_lines}")
+            print(f"  source: {source.strip()!r}")
+            failed += 1
+
+    # Import tests
+    failed += _run_pylint_tests(IMPORT_TESTS, "lowercase-import-not-allowed", "import")
+
+    # Partition tests
+    failed += _run_pylint_tests(PARTITION_TESTS, "use-partition", "partition")
+
+    total = len(TRIPLEQ_TESTS) + len(IMPORT_TESTS) + len(PARTITION_TESTS)
+    if failed:
+        print(f"{failed}/{total} test(s) failed")
+        return 1
+    print(f"{total} tests passed")
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# File discovery
+# ---------------------------------------------------------------------------
+
+
+def is_python_script(path: Path) -> bool:
+    """Check if a non-.py file is a Python script by inspecting its first line."""
+    try:
+        with path.open("rb") as f:
+            first_line = f.readline(256)
+    except OSError:
+        return False
+    return b"python" in first_line or b"uv run" in first_line
+
+
+def is_python_file(path: Path) -> bool:
+    return (path.suffix == ".py" and path.is_file()) or (path.is_file() and is_python_script(path))
+
+
+def discover_files(paths: Sequence[Path]) -> tuple[list[Path], bool]:
+    """
+    Resolve positional arguments to a list of Python files.
+
+    Returns (files, ok) where ok is False if any path did not exist.
+    """
+    result: list[Path] = []
+    ok = True
+    for p in paths:
+        resolved = p.resolve()
+        if not resolved.exists():
+            print(f"Path does not exist: {p}", file=sys.stderr)
+            ok = False
+            continue
+        if resolved.is_file():
+            result.append(resolved)
+        elif resolved.is_dir():
+            result.extend(_files_in_directory(resolved))
+    # Deduplicate while preserving order
+    return list(dict.fromkeys(result)), ok
+
+
+def _files_in_directory(directory: Path) -> list[Path]:
+    """Enumerate Python files in a directory, using git ls-files if available."""
+    git_result = subprocess.run(["git", "ls-files", "-z"], capture_output=True, text=True, check=False, cwd=directory)
+    if git_result.returncode == 0:
+        files = []
+        for entry in git_result.stdout.split("\0"):
+            if not entry:
+                continue
+            path = directory / entry
+            if is_python_file(path):
+                files.append(path)
+        return files
+    # Not a git repo — recursive walk
+    return [p for p in directory.rglob("*") if is_python_file(p)]
+
+
+# ---------------------------------------------------------------------------
+# Orchestration helpers
+# ---------------------------------------------------------------------------
+
+
+def file_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def file_desc(paths: Sequence[Path]) -> str:
+    if len(paths) == 1:
+        return str(paths[0])
+    return f"{len(paths)} files"
+
+
+def run_cmd(
+    name: str,
+    cmd: Sequence[str],
+    *,
+    env: dict[str, str] | None = None,
+    pass_fds: tuple[int, ...] = (),
+    cwd: Path | None = None,
+) -> bool:
+    print(f"> {name}", file=sys.stderr)
+    if subprocess.run(cmd, env=env, pass_fds=pass_fds, cwd=cwd, check=False).returncode != 0:
+        print(f"Command failed: {name}", file=sys.stderr)
+        return False
+    return True
+
+
+def has_inline_script_metadata(path: Path) -> bool:
+    """Check if a file contains PEP 723 inline script metadata."""
+    try:
+        return re.search(r"^\s*# /// script\s*$", path.read_text(), re.MULTILINE) is not None
+    except OSError:
+        return False
+
+
+# ---------------------------------------------------------------------------
+# Default tool configuration
+# ---------------------------------------------------------------------------
+
+# Verbatim from srehab-agent pyproject.toml — only [tool.mypy] and [tool.ruff]
+# sections.  Comments are for the human reading this script; tomllib discards
+# them at parse time.
+_DEFAULT_CONFIG = """\
+[tool.mypy]
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+check_untyped_defs = true
+no_implicit_reexport = true
+warn_return_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_untyped_decorators = true
+strict_equality = true
+strict_concatenate = true
+strict = true
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = [
+    "F",        # Pyflakes
+    "E",        # pycodestyle
+    # "C90",    # mccabe
+    "I",        # isort
+    "N",        # pep8-naming
+    # "D",      # pydocstyle
+    "UP",       # pyupgrade
+    "YTT",      # flake8-2020
+    # "ANN",    # flake8-annotations
+    "ASYNC",    # flake8-async
+    # "TRIO",   # flake8-trio
+    # "S",      # flake8-bandit
+    "BLE",      # flake8-blind-except
+    "FBT",      # flake8-boolean-trap
+    "B",        # flake8-bugbear
+    "A",        # flake8-builtins
+    "COM",      # flake8-commas
+    # "CPY",    # flake8-copyright
+    "C4",       # flake8-comprehensions
+    "DTZ",      # flake8-datetimez
+    "T10",      # flake8-debugger
+    # "DJ",     # flake8-django
+    # "EM",     # flake8-errmsg
+    "EXE",      # flake8-executable
+    "FA",       # flake8-future-annotations
+    "ISC",      # flake8-implicit-str-concat
+    # "ICN",    # flake8-import-conventions
+    "G",        # flake8-logging-format
+    "INP",      # flake8-no-pep420
+    "PIE",      # flake8-pie
+    "T20",      # flake8-print
+    "PYI",      # flake8-pyi
+    "PT",       # flake8-pytest-style
+    "Q",        # flake8-quotes
+    "RSE",      # flake8-raise
+    "RET",      # flake8-return
+    "SLF",      # flake8-self
+    "SLOT",     # flake8-slots
+    "SIM",      # flake8-simplify
+    "TID",      # flake8-tidy-imports
+    "TCH",      # flake8-type-checking
+    "INT",      # flake8-gettext
+    "ARG",      # flake8-unused-arguments
+    "PTH",      # flake8-use-pathlib
+    # "TD",     # flake8-todos
+    # "FIX",    # flake8-fixme
+    # "ERA",    # eradicate
+    "PD",       # pandas-vet
+    # "PGH",    # pygrep-hooks
+    "PLE",      # Pylint errors
+    # "TRY",    # tryceratops
+    # "FLY",    # flynt
+    "NPY",      # NumPy-specific rules
+    # "AIR",    # Airflow
+    "PERF",     # Perflint
+    "FURB",     # refurb
+    "LOG",      # flake8-logging
+    "RUF",      # Ruff-specific rules
+]
+ignore = [
+    "COM812",   # Trailing commas - handled by formatter
+    "E741",     # Checks for the use of the characters 'l', 'O', or 'I' as variable names.
+    "SIM112",   # Check for environment variables that are not capitalized.
+]
+
+[tool.ruff.lint.per-file-ignores]
+"bin/*" = ["T201"]
+"""
+
+
+_libc = ctypes.CDLL(None, use_errno=True)
+_libc.memfd_create.argtypes = [ctypes.c_char_p, ctypes.c_uint]
+_libc.memfd_create.restype = ctypes.c_int
+
+
+def _memfd_create(name: bytes, data: bytes) -> int:
+    """Create a memfd containing data, seeked to the beginning. Returns the fd."""
+    fd: int = _libc.memfd_create(name, 0)
+    if fd < 0:
+        errno = ctypes.get_errno()
+        raise OSError(errno, os.strerror(errno))
+    try:
+        os.write(fd, data)
+        os.lseek(fd, 0, 0)
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
+def _walk_up_find(start: Path, predicate: Callable[[Path], bool]) -> Path | None:
+    """Walk up from start to filesystem root, returning the first directory matching predicate."""
+    current = start if start.is_dir() else start.parent
+    while True:
+        if predicate(current):
+            return current
+        parent = current.parent
+        if parent == current:
+            return None
+        current = parent
+
+
+def _has_ruff_config(start: Path) -> bool:
+    """Walk up from start looking for ruff configuration files."""
+
+    def _check(directory: Path) -> bool:
+        if (directory / "ruff.toml").is_file() or (directory / ".ruff.toml").is_file():
+            return True
+        pyproject = directory / "pyproject.toml"
+        if pyproject.is_file():
+            try:
+                data = tomllib.loads(pyproject.read_text())
+                if "ruff" in data.get("tool", {}):
+                    return True
+            except (OSError, ValueError, tomllib.TOMLDecodeError):
+                pass
+        return False
+
+    return _walk_up_find(start, _check) is not None
+
+
+def _has_mypy_config(start: Path) -> bool:
+    """Walk up from start looking for mypy configuration files."""
+
+    def _check(directory: Path) -> bool:
+        for name in ("mypy.ini", ".mypy.ini"):
+            if (directory / name).is_file():
+                return True
+        setup_cfg = directory / "setup.cfg"
+        if setup_cfg.is_file():
+            try:
+                cfg = configparser.ConfigParser()
+                cfg.read(setup_cfg)
+                if cfg.has_section("mypy"):
+                    return True
+            except (configparser.Error, ValueError):
+                pass
+        pyproject = directory / "pyproject.toml"
+        if pyproject.is_file():
+            try:
+                data = tomllib.loads(pyproject.read_text())
+                if "mypy" in data.get("tool", {}):
+                    return True
+            except (OSError, ValueError, tomllib.TOMLDecodeError):
+                pass
+        return False
+
+    return _walk_up_find(start, _check) is not None
+
+
+def _find_uv_project_root(start: Path) -> Path | None:
+    """Walk up from start looking for a uv-managed project (pyproject.toml with sibling uv.lock)."""
+
+    def _check(directory: Path) -> bool:
+        return (directory / "pyproject.toml").is_file() and (directory / "uv.lock").is_file()
+
+    return _walk_up_find(start, _check)
+
+
+@functools.cache
+def _parsed_default_config() -> dict[str, dict[str, object]]:
+    """Parse _DEFAULT_CONFIG once and cache the result."""
+    data: dict[str, dict[str, object]] = tomllib.loads(_DEFAULT_CONFIG)["tool"]
+    return data
+
+
+def _default_ruff_config() -> bytes:
+    """Extract [tool.ruff] from the embedded config and serialize as standalone TOML."""
+    return tomli_w.dumps(_parsed_default_config()["ruff"]).encode()
+
+
+def _default_mypy_config() -> bytes:
+    """
+    Extract [tool.mypy] from the embedded config and serialize as INI.
+
+    mypy determines config format by file extension.  /proc/self/fd/N has no
+    extension, so mypy falls back to INI parsing.  INI booleans use True/False.
+    """
+    lines = ["[mypy]"]
+    for key, value in _parsed_default_config()["mypy"].items():
+        lines.append(f"{key} = {value}")
+    lines.append("")
+    return "\n".join(lines).encode()
+
+
+@contextlib.contextmanager
+def _ruff_config_args(paths: Sequence[Path]) -> Iterator[tuple[list[str], tuple[int, ...]]]:
+    """Yield (extra_args, pass_fds) for ruff, providing default config via memfd if needed."""
+    if _has_ruff_config(paths[0]):
+        yield [], ()
+        return
+    fd = _memfd_create(b"ruff.toml", _default_ruff_config())
+    try:
+        yield ["--config", f"/proc/self/fd/{fd}"], (fd,)
+    finally:
+        os.close(fd)
+
+
+@contextlib.contextmanager
+def _mypy_config_args(paths: Sequence[Path]) -> Iterator[tuple[list[str], tuple[int, ...]]]:
+    """Yield (extra_args, pass_fds) for mypy, providing default config via memfd if needed."""
+    if _has_mypy_config(paths[0]):
+        yield [], ()
+        return
+    fd = _memfd_create(b"mypy.ini", _default_mypy_config())
+    try:
+        yield ["--config-file", f"/proc/self/fd/{fd}"], (fd,)
+    finally:
+        os.close(fd)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline stages
+# ---------------------------------------------------------------------------
+
+
+def ensure_trailing_newline(path: Path, *, check: bool) -> bool:
+    """Ensure file ends with a trailing newline. Returns True if ok."""
+    with path.open("rb") as f:
+        f.seek(0, 2)
+        if f.tell() == 0:
+            return True
+        f.seek(-1, 2)
+        if f.read(1) == b"\n":
+            return True
+    if check:
+        print(f"File does not end with a trailing newline: {path}", file=sys.stderr)
+        return False
+    with path.open("ab") as out:
+        out.write(b"\n")
+    return True
+
+
+def run_autoimport(paths: Sequence[Path], *, check: bool) -> bool:
+    """Run autoimport via the Python API. Returns True if ok."""
+    desc = file_desc(paths)
+    print(f"> autoimport {desc}", file=sys.stderr)
+    ok = True
+    for path in paths:
+        try:
+            original = path.read_text()
+        except OSError as e:
+            print(f"Cannot read {path}: {e}", file=sys.stderr)
+            ok = False
+            continue
+        fixed = autoimport.fix_code(original)
+        if fixed != original:
+            if check:
+                print(f"autoimport would modify: {path}", file=sys.stderr)
+                ok = False
+            else:
+                path.write_text(fixed)
+    return ok
+
+
+def run_ruff_check(paths: Sequence[Path], *, check: bool) -> bool:
+    desc = file_desc(paths)
+    path_strs = [str(p) for p in paths]
+    cmd = ["ruff", "check", "--quiet", "--output-format=pylint"]
+    if not check:
+        cmd.append("--fix")
+
+    with _ruff_config_args(paths) as (extra_args, pass_fds):
+        cmd.extend(extra_args)
+        cmd.extend(["--", *path_strs])
+        return run_cmd(f"ruff check {desc}", cmd, pass_fds=pass_fds)
+
+
+def run_ruff_format(paths: Sequence[Path], *, check: bool) -> bool:
+    desc = file_desc(paths)
+    path_strs = [str(p) for p in paths]
+    cmd = ["ruff", "format", "--quiet"]
+    if check:
+        cmd.append("--check")
+
+    with _ruff_config_args(paths) as (extra_args, pass_fds):
+        cmd.extend(extra_args)
+        cmd.extend(["--", *path_strs])
+        return run_cmd(f"ruff format {desc}", cmd, pass_fds=pass_fds)
+
+
+def run_mypy(paths: Sequence[Path]) -> bool:
+    """Run mypy, partitioning PEP 723 scripts for individual invocation and grouping plain files by uv project."""
+    # Strip VIRTUAL_ENV to avoid venv mismatch warnings
+    mypy_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+
+    scripts: list[Path] = []
+    plain: list[Path] = []
+    for p in paths:
+        if has_inline_script_metadata(p):
+            scripts.append(p)
+        else:
+            plain.append(p)
+
+    results: list[bool] = []
+
+    # PEP 723 scripts: run mypy individually via uv export --script
+    for path in scripts:
+        with _mypy_config_args([path]) as (config_args, config_fds):
+            results.append(_run_mypy_for_script(path, mypy_env, config_args, config_fds))
+
+    # Group plain files by uv project root
+    # Called per-file; benchmarked at ~30 µs/call (48 files in 1.4 ms) — negligible vs mypy runtime.
+    project_groups: dict[Path | None, list[Path]] = {}
+    for p in plain:
+        root = _find_uv_project_root(p)
+        project_groups.setdefault(root, []).append(p)
+
+    # uv project groups: run mypy via uv run with cwd set to project root
+    for root, group in project_groups.items():
+        if root is not None:
+            path_strs = [str(p) for p in group]
+            desc = file_desc(group)
+            results.append(
+                run_cmd(
+                    f"mypy {desc}",
+                    [
+                        "uv",
+                        "run",
+                        "--all-extras",
+                        "mypy",
+                        "--scripts-are-modules",
+                        "--no-error-summary",
+                        "--",
+                        *path_strs,
+                    ],
+                    env=mypy_env,
+                    cwd=root,
+                )
+            )
+
+    # No-project group: bare mypy with embedded default config fallback
+    no_project = project_groups.get(None, [])
+    if no_project:
+        with _mypy_config_args(no_project) as (config_args, config_fds):
+            path_strs = [str(p) for p in no_project]
+            desc = file_desc(no_project)
+            results.append(
+                run_cmd(
+                    f"mypy {desc}",
+                    ["mypy", "--scripts-are-modules", "--no-error-summary", *config_args, "--", *path_strs],
+                    env=mypy_env,
+                    pass_fds=config_fds,
+                )
+            )
+
+    return all(results)
+
+
+def _run_mypy_for_script(
+    path: Path, env: dict[str, str], config_args: Sequence[str], config_fds: tuple[int, ...]
+) -> bool:
+    """Run mypy on a PEP 723 script using its inline dependencies."""
+    export_result = subprocess.run(
+        [
+            "uv",
+            "export",
+            "--script",
+            str(path),
+            "--format",
+            "requirements.txt",
+            "--no-hashes",
+            "--no-header",
+            "--no-annotate",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if export_result.returncode != 0:
+        print(f"uv export --script failed for {path}: {export_result.stderr}", file=sys.stderr)
+        return False
+    r, w = os.pipe()
+    try:
+        os.write(w, export_result.stdout.encode())
+        os.close(w)
+        w = -1
+        return run_cmd(
+            f"mypy {path}",
+            [
+                "uv",
+                "run",
+                "--no-project",
+                "--with",
+                "mypy",
+                "--with-requirements",
+                f"/dev/fd/{r}",
+                "--",
+                "mypy",
+                "--scripts-are-modules",
+                "--no-error-summary",
+                *config_args,
+                "--",
+                str(path),
+            ],
+            env=env,
+            pass_fds=(r, *config_fds),
+        )
+    finally:
+        if w >= 0:
+            os.close(w)
+        os.close(r)
+
+
+def run_custom_lint(paths: Sequence[Path]) -> bool:
+    """Run all custom lint rules."""
+    print(f"> Running custom checks on {file_desc(paths)}", file=sys.stderr)
+    results = [check_imports(paths), check_partition(paths), check_tripleq_strings(paths)]
+    return all(results)
+
+
+# ---------------------------------------------------------------------------
+# Main pipeline
+# ---------------------------------------------------------------------------
+
+
+def lint(paths: Sequence[Path], *, check: bool) -> bool:
+    """Run the full linting pipeline. Returns True if everything is clean."""
+    if not paths:
+        return True
+
+    # Ensure trailing newlines
+    newline_ok = True
+    for path in paths:
+        if not ensure_trailing_newline(path, check=check):
+            newline_ok = False
+
+    # Hash files before linting
+    hashes_before = {p: file_hash(p) for p in paths}
+
+    # Run tools
+    results = [
+        newline_ok,
+        run_autoimport(paths, check=check),
+        run_ruff_check(paths, check=check),
+        run_ruff_format(paths, check=check),
+        run_mypy(paths),
+        run_custom_lint(paths),
+    ]
+
+    success = all(results)
+
+    # In fix mode, check if any files were modified
+    if not check:
+        for path in paths:
+            if file_hash(path) != hashes_before[path]:
+                print(f"File was modified by linting (run formatters before committing): {path}", file=sys.stderr)
+                success = False
+
+    return success
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def parser() -> ArgumentParser:
+    p = ArgumentParser(
+        description=__doc__, formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=15)
+    )
+    p.add_argument("paths", metavar="path", nargs="*", type=Path, help="files or directories to lint")
+    p.add_argument("-c", "--check", action="store_true", help="check mode: report issues without modifying files")
+    p.add_argument("--test", action="store_true", help="run embedded self-tests for custom lint rules")
+    return p
+
+
+def main() -> int:
+    opts = parser().parse_args(sys.argv[1:])
+
+    if opts.test:
+        return run_tests()
+
+    if not opts.paths:
+        print("error: at least one path is required (or use --test)", file=sys.stderr)
+        return 1
+
+    files, paths_ok = discover_files(opts.paths)
+    if not files:
+        print("No Python files found.", file=sys.stderr)
+        return 0 if paths_ok else 1
+
+    ok = lint(files, check=opts.check)
+    return 0 if (ok and paths_ok) else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
