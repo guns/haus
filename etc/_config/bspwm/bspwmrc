@@ -52,7 +52,7 @@ bspc rule --add easyeffects            state=floating
 bspc rule --add feh                    state=floating
 bspc rule --add Gcolor3                state=floating
 bspc rule --add Gifview                state=floating
-bspc rule --add Kupfer.py              state=floating focus=true sticky=true center=true
+bspc rule --add Kupfer                 state=floating focus=true sticky=true center=true
 bspc rule --add melt                   state=floating
 bspc rule --add mpv                    state=floating
 bspc rule --add Nitrogen               state=floating
