@@ -443,7 +443,7 @@ def client_loop(
             SIGNAL_STATE.paste_next = False
 
             with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
-                proc = subprocess.Popen(["pw-record", "--", f.name], stdout=DEVNULL)
+                proc = subprocess.Popen(["pw-record", "--", f.name], stdout=DEVNULL, stderr=DEVNULL)
                 if on_record_start:
                     reaper_q.put(spawn(on_record_start))
                 result = prompt(
