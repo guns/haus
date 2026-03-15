@@ -17,6 +17,7 @@ import ctypes
 import functools
 import hashlib
 import io
+import logging
 import os
 import re
 import subprocess
@@ -37,6 +38,9 @@ from pylint.reporters.text import TextReporter
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Iterator, Sequence
+
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -387,7 +391,7 @@ def discover_files(paths: Sequence[Path]) -> tuple[list[Path], bool]:
     for p in paths:
         resolved = p.resolve()
         if not resolved.exists():
-            print(f"Path does not exist: {p}", file=sys.stderr)
+            print(f"Path does not exist: {p}")
             ok = False
             continue
         if resolved.is_file():
@@ -437,9 +441,9 @@ def run_cmd(
     pass_fds: tuple[int, ...] = (),
     cwd: Path | None = None,
 ) -> bool:
-    print(f"> {name}", file=sys.stderr)
+    logger.warning("> %s", name)
     if subprocess.run(cmd, env=env, pass_fds=pass_fds, cwd=cwd, check=False).returncode != 0:
-        print(f"Command failed: {name}", file=sys.stderr)
+        print(f"Command failed: {name}")
         return False
     return True
 
@@ -708,7 +712,7 @@ def ensure_trailing_newline(path: Path, *, check: bool) -> bool:
         if f.read(1) == b"\n":
             return True
     if check:
-        print(f"File does not end with a trailing newline: {path}", file=sys.stderr)
+        print(f"File does not end with a trailing newline: {path}")
         return False
     with path.open("ab") as out:
         out.write(b"\n")
@@ -718,19 +722,19 @@ def ensure_trailing_newline(path: Path, *, check: bool) -> bool:
 def run_autoimport(paths: Sequence[Path], *, check: bool) -> bool:
     """Run autoimport via the Python API. Returns True if ok."""
     desc = file_desc(paths)
-    print(f"> autoimport {desc}", file=sys.stderr)
+    logger.warning("> autoimport %s", desc)
     ok = True
     for path in paths:
         try:
             original = path.read_text()
         except OSError as e:
-            print(f"Cannot read {path}: {e}", file=sys.stderr)
+            print(f"Cannot read {path}: {e}")
             ok = False
             continue
         fixed = autoimport.fix_code(original)
         if fixed != original:
             if check:
-                print(f"autoimport would modify: {path}", file=sys.stderr)
+                print(f"autoimport would modify: {path}")
                 ok = False
             else:
                 path.write_text(fixed)
@@ -852,7 +856,7 @@ def _run_mypy_for_script(
         check=False,
     )
     if export_result.returncode != 0:
-        print(f"uv export --script failed for {path}: {export_result.stderr}", file=sys.stderr)
+        print(f"uv export --script failed for {path}: {export_result.stderr}")
         return False
     r, w = os.pipe()
     try:
@@ -888,7 +892,7 @@ def _run_mypy_for_script(
 
 def run_custom_lint(paths: Sequence[Path]) -> bool:
     """Run all custom lint rules."""
-    print(f"> Running custom checks on {file_desc(paths)}", file=sys.stderr)
+    logger.warning("> Running custom checks on %s", file_desc(paths))
     results = [check_imports(paths), check_partition(paths), check_tripleq_strings(paths)]
     return all(results)
 
@@ -928,7 +932,7 @@ def lint(paths: Sequence[Path], *, check: bool) -> bool:
     if not check:
         for path in paths:
             if file_hash(path) != hashes_before[path]:
-                print(f"File was modified by linting (run formatters before committing): {path}", file=sys.stderr)
+                print(f"File was modified by linting (run formatters before committing): {path}")
                 success = False
 
     return success
@@ -945,6 +949,7 @@ def parser() -> ArgumentParser:
     )
     p.add_argument("paths", metavar="path", nargs="*", type=Path, help="files or directories to lint")
     p.add_argument("-c", "--check", action="store_true", help="check mode: report issues without modifying files")
+    p.add_argument("-v", "--verbose", action="store_true", help="show progress messages even when stderr is not a TTY")
     p.add_argument("--test", action="store_true", help="run embedded self-tests for custom lint rules")
     return p
 
@@ -955,13 +960,20 @@ def main() -> int:
     if opts.test:
         return run_tests()
 
+    log_level = logging.WARNING if opts.verbose or sys.stderr.isatty() else logging.ERROR
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(handler)
+    logger.setLevel(log_level)
+    logger.propagate = False
+
     if not opts.paths:
-        print("error: at least one path is required (or use --test)", file=sys.stderr)
+        print("error: at least one path is required (or use --test)")
         return 1
 
     files, paths_ok = discover_files(opts.paths)
     if not files:
-        print("No Python files found.", file=sys.stderr)
+        print("No Python files found.")
         return 0 if paths_ok else 1
 
     ok = lint(files, check=opts.check)
