@@ -617,18 +617,15 @@ alias a='ip addr'
 alias ip4='ip -4'
 alias ip6='ip -6'
 
-# ifconfig
-alias ic='ifconfig'
-
-# netctl
-HAVE netctl && {
-    net() {
-        if (($#)); then
-            netctl "$@"
-        else
-            netctl list
-        fi
-    }; TCOMP netctl net
+# iwctl
+HAVE iwctl && {
+    wificonnect() {
+        iwctl station wlan0 scan || return 1
+        while ! iwctl station wlan0 connect "$@"; do
+            sleep 0.5
+        done
+    }
+    alias wifidisconnect='iwctl station wlan0 disconnect'
 }
 
 # Bluetooth
