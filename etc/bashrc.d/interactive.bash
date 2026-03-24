@@ -1097,6 +1097,18 @@ HAVE startx && alias xstartx='exec startx &>/dev/null'
 
 alias rl='rlwrap'; TCOMP exec rl
 
+### Cloud
+
+HAVE aws && {
+    profile() {
+        if (($#)); then
+            export AWS_PROFILE="$1"
+        fi
+        echo "AWS_PROFILE=$AWS_PROFILE"
+    }; complete -F __aws_profile profile
+    tmprofile() { tmuxsetenv AWS_PROFILE="$*"; }; complete -F __aws_profile tmprofile
+}
+
 ### Init
 
 if HAVE systemctl; then
