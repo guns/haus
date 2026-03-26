@@ -1,4 +1,4 @@
 #!/bin/sh
 
-run udevadm hwdb --update
+run systemd-hwdb update
 run udevadm trigger
