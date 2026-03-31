@@ -197,3 +197,11 @@ user_pref("devtools.netmonitor.responseBodyLimit", 0);
 
 // Disable new sidebar for sidebar
 user_pref("sidebar.revamp", false);
+
+// Disable AI features
+user_pref("browser.ai.control.default", "blocked");
+user_pref("browser.ai.control.linkPreviewKeyPoints", "blocked");
+user_pref("browser.ai.control.pdfjsAltText", "blocked");
+user_pref("browser.ai.control.sidebarChatbot", "blocked");
+user_pref("browser.ai.control.smartTabGroups", "blocked");
+user_pref("browser.ai.control.translations", "blocked");
