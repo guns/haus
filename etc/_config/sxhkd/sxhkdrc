@@ -306,7 +306,7 @@ F8
 	\{ \
 		NOHIST=1 urxvt-client -g 64x20 -fn 'xft:Consolas:pixelsize=19' -title "$T" -icon ~/.icons/haus/password-store.svg; \
 		sleep 0.2; \
-		xdotool type 'passclip '; \
+		xte 'str passclip '; \
 	\}
 
 super + F8
@@ -315,7 +315,7 @@ super + F8
 	\{ \
 		urxvt-client -g 64x20 -fn 'xft:Consolas:pixelsize=19' -title "$T" -icon ~/.icons/haus/password-store.svg; \
 		sleep 0.2; \
-		xdotool type 'passqrshow '; \
+		xte 'str passqrshow '; \
 	\}
 
 F9
