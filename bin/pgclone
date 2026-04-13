@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if ((${#@} < 2)); then
+    echo "USAGE: pgclone source-db-name target-db-name [psql-args]" >&2
+    exit 1
+fi
+
+exec psql -v source="$1" -v target="$2" "${@:3}" <<SQL
+DROP DATABASE IF EXISTS :"target" WITH (FORCE);
+SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = :'source' AND pid <> pg_backend_pid();
+CREATE DATABASE :"target" TEMPLATE :"source";
+SQL
