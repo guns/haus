@@ -279,17 +279,31 @@ augroup GUNS
 augroup END
 
 " vim-lsp
-for [cmdline, ftlist] in [[['pylsp'], ['python']], [['terraform-ls', 'serve'], ['terraform']]]
-	if executable(cmdline[0])
-		execute 'autocmd User lsp_setup call lsp#register_server({'
-			\ . "'name': " . string(cmdline[0]) . ','
-			\ . "'cmd': {server_info->" . string(cmdline) . "},"
-			\ . "'allowlist': " . string(ftlist)
-			\ . '})'
-	endif
-endfor
-unlet cmdline
-unlet ftlist
+if executable('pylsp')
+	autocmd User lsp_setup call lsp#register_server({
+		\ 'name': 'python lsp',
+		\ 'cmd': {server_info->['pylsp']},
+		\ 'allowlist': ['python'],
+		\ })
+endif
+if executable('terraform-ls')
+	autocmd User lsp_setup call lsp#register_server({
+		\ 'name': 'terraform lsp',
+		\ 'cmd': {server_info->['terraform-ls', 'serve']},
+		\ 'allowlist': ['terraform'],
+		\ })
+endif
+if executable('rust-analyzer')
+	autocmd User lsp_setup call lsp#register_server({
+		\ 'name': 'rust lsp',
+		\ 'cmd': {server_info->['rust-analyzer']},
+		\ 'allowlist': ['rust'],
+		\ 'initialization_options': {
+		\   'cargo': { 'buildScripts': { 'enable': v:true } },
+		\   'procMacro': { 'enable': v:true },
+		\ }
+		\ })
+endif
 
 autocmd User lsp_buffer_enabled
 	\ LSPBufferSetup
