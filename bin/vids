@@ -132,7 +132,12 @@ paths.reverse! if reverse
 paths = paths.take(limit) if limit
 
 if open
-  exec *command, '--', *paths
+  rd, wr = IO.pipe
+  pid = spawn *command, "--playlist=/dev/fd/#{rd.fileno}", {rd.fileno => rd.fileno}
+  wr.write(paths.join("\n") + "\n")
+  wr.close
+  rd.close
+  Process.wait(pid)
 else
   print print0 ? paths.join("\0") : paths.join("\n") << "\n"
 end
