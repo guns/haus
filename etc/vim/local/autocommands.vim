@@ -296,7 +296,7 @@ endif
 if executable('rust-analyzer')
 	autocmd User lsp_setup call lsp#register_server({
 		\ 'name': 'rust lsp',
-		\ 'cmd': {server_info->['rust-analyzer']},
+		\ 'cmd': {server_info->['env', 'CARGO_NET_OFFLINE=true', 'rust-analyzer']},
 		\ 'allowlist': ['rust'],
 		\ 'initialization_options': {
 		\   'cargo': { 'buildScripts': { 'enable': v:true } },
