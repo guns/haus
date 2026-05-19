@@ -17,7 +17,7 @@ case "$title" in
 *' - VIM') echo 'state=floating';;
 'cal -y') echo 'state=floating';;
 'Guvcview'*) echo 'state=floating';;
-'⚙ whisper-'*' ⚙')
+'⚙ stt-'*' ⚙')
     echo 'state=floating'
     corners=$(getmonitorcorners)
     monx=$(jq .topright.x <<< "$corners")

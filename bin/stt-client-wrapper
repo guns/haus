@@ -1,0 +1,10 @@
+#!/bin/sh
+
+exec stt-client \
+    --on-record-live "play ~/.local/share/sounds/message-new-instant.oga" \
+    --on-record-end "play ~/.local/share/sounds/message.oga" \
+    --on-transcribe "play ~/.local/share/sounds/ready.ogg" \
+    --on-cancel "play ~/.local/share/sounds/error2.ogg" \
+    --x11-toggle-key F1 \
+    --x11-cancel-key shift+F1 \
+    --auto-paste

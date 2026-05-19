@@ -249,20 +249,12 @@ super + shift + Scroll_Lock
 #
 
 super + F1
-	T='⚙ whisper-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 60x6 -title "$T" -e \
-		whisper-client \
-		--on-record-start "play ~/.local/share/sounds/message-new-instant.oga" \
-		--on-record-end "play ~/.local/share/sounds/message.oga" \
-		--on-transcribe "play ~/.local/share/sounds/ready.ogg" \
-		--on-cancel "play ~/.local/share/sounds/error2.ogg" \
-		--x11-toggle-key F1 \
-		--x11-cancel-key shift+F1 \
-		--auto-paste
+	T='⚙ stt-client ⚙'; \
+	wmctrl -a "$T" || urxvt-client -g 60x6 -title "$T" -e stt-client-wrapper
 
 alt + F1
-	T='⚙ whisper-server ⚙'; \
-	wmctrl -a "$T" || env urxvt-client -g 48x6 -title "$T" -e whisper-service
+	T='⚙ stt-server ⚙'; \
+	wmctrl -a "$T" || env urxvt-client -g 52x6 -title "$T" -e stt-server
 
 F2
 	wmctrl -xa 'Thunar' || exec thunar ~/Downloads

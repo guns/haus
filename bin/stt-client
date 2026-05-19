@@ -5,7 +5,7 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 """
-Speech-to-text transcription client for whisper-service.
+Speech-to-text transcription client for stt-server.
 """
 
 from __future__ import annotations
@@ -13,35 +13,37 @@ from __future__ import annotations
 import contextlib
 import enum
 import inspect
+import io
 import os
 import queue
 import select
 import shlex
 import signal
-import socket
 import subprocess
 import sys
-import tempfile
 import termios
 import time
 import tty
 import typing
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import urllib.error
+import urllib.parse
+import urllib.request
+import wave
+from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from subprocess import DEVNULL
 from threading import Thread
 from typing import IO, TYPE_CHECKING, Any, TextIO
 
 if TYPE_CHECKING:
-    import io
     from collections.abc import Sequence
 
-
-BUFSIZE = 1 << 20
 
 SGR_DEFAULT = "38;5;48;1"
 SGR_RED_BOLD = "31;1"
 SGR_MAGENTA_BOLD = "35;1"
+
+SAMPLE_RATE = 16000
 
 QUIT_CHARS = {"q"}
 CANCEL_CHARS = {"c", "\x1b"}
@@ -117,11 +119,14 @@ def parser() -> ArgumentParser:
               --auto-paste: xdotool
             """
         ),
-        formatter_class=RawDescriptionHelpFormatter,
+        formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36),
     )
     p.add_argument("-f", "--file", help="transcribe WAV file (use - for stdin)")
-    p.add_argument("-l", "--language", metavar="LANG", help="translate from LANG to english")
+    p.add_argument("-p", "--prompt", help="text prompt that biases transcription (interpretation is model-dependent)")
     p.add_argument("-s", "--on-record-start", metavar="COMMAND", help="optional command to run when recording starts")
+    p.add_argument(
+        "-l", "--on-record-live", metavar="COMMAND", help="optional command to run when mic hardware is confirmed live"
+    )
     p.add_argument(
         "-e",
         "--on-record-end",
@@ -148,6 +153,7 @@ def parser() -> ArgumentParser:
         help="paste transcription into foreground window via xdotool after"
         " copying to PRIMARY selection; requires --x11-toggle-key",
     )
+    p.add_argument("--punctuate", action="store_true", help="request punctuation post-processing from the server")
     p.add_argument("host", nargs="?", help="server address to connect to", default="127.0.0.1")
     p.add_argument("port", nargs="?", help="server port to connect to", default=41100, type=int)
     return p
@@ -162,6 +168,14 @@ def spawn(cmd: Sequence[str]) -> Thread:
     t = Thread(target=proc.wait)
     t.start()
     return t
+
+
+def dispatch(cmd: Sequence[str], reaper_q: queue.Queue[Thread | None] | None) -> None:
+    t = spawn(cmd)
+    if reaper_q is not None:
+        reaper_q.put(t)
+    else:
+        t.join()
 
 
 def prompt(
@@ -319,37 +333,61 @@ def launch_xbindkeys(toggle_key: str | None, cancel_key: str | None, pid: int) -
         return None
 
 
+def _try_send(url: str, audio_bytes: bytes) -> str | Exception:
+    """Attempt to POST audio_bytes to url. Returns transcription text or the exception on failure."""
+    try:
+        request = urllib.request.Request(url, data=audio_bytes, method="POST")
+        with urllib.request.urlopen(request) as response:
+            text: str = response.read().decode().strip()
+            return text
+    except (ConnectionRefusedError, urllib.error.URLError, OSError) as err:
+        return err
+
+
 def transcribe_file(
-    host: str, port: int, file: io.BufferedReader, language: str | None = None, pipe_fd: int | None = None
+    host: str,
+    port: int,
+    file: io.BufferedReader,
+    prompt_text: str | None = None,
+    pipe_fd: int | None = None,
+    on_record_end: Sequence[str] | None = None,
+    on_cancel: Sequence[str] | None = None,
+    reaper_q: queue.Queue[Thread | None] | None = None,
+    *,
+    punctuate: bool = False,
 ) -> str | None:
-    if language is not None and len(language) != 2:
-        stderr(f"> Ignoring language {language}; see ISO 639-1 for two-letter language codes")
-        language = None
-    stderr(f"> Sending{' ' + language if language else ''} audio to {host}:{port}")
-    parts = []
-    while True:
-        try:
-            with socket.create_connection((host, port)) as sock:
-                sock.sendall(language.encode() if language else b"\x00\x00")
-                buf = bytearray(BUFSIZE)
-                file.seek(0)
-                while n := file.readinto(buf):
-                    sock.sendall(buf[:n])
-                sock.shutdown(socket.SHUT_WR)
-                stderr("> Waiting for transcription...")
-                while n := sock.recv_into(buf):
-                    parts.append(buf[:n])
-                break
-        except ConnectionRefusedError as err:
-            stderr(str(err))
-            result = prompt(
-                "> Press any key to resend (q to quit, c to cancel):", QUIT_CHARS, CANCEL_CHARS, pipe_fd=pipe_fd
-            )
-            if result is PromptResult.QUIT:
-                raise UserAbortError from err
-            if result is PromptResult.CANCEL:
-                return None
-    return b"".join(parts).decode().strip()
+    query_params: dict[str, str] = {}
+    if prompt_text:
+        query_params["prompt"] = prompt_text
+    if punctuate:
+        query_params["punctuate"] = "1"
+    query_string = urllib.parse.urlencode(query_params)
+    base_url = f"http://{host}:{port}/transcribe"
+    if query_string:
+        base_url += "?" + query_string
+
+    stderr(f"> Sending audio to {host}:{port}")
+    file.seek(0)
+    audio_bytes = file.read()
+
+    stderr("> Waiting for transcription...")
+    result = _try_send(base_url, audio_bytes)
+    while isinstance(result, Exception):
+        stderr(str(result))
+        if on_cancel:
+            dispatch(on_cancel, reaper_q)
+        prompt_result = prompt(
+            "> Press any key to resend (q to quit, c to cancel):", QUIT_CHARS, CANCEL_CHARS, pipe_fd=pipe_fd
+        )
+        if prompt_result is PromptResult.QUIT:
+            raise UserAbortError from result
+        if prompt_result is PromptResult.CANCEL:
+            return None
+        if on_record_end:
+            dispatch(on_record_end, reaper_q)
+        result = _try_send(base_url, audio_bytes)
+
+    return result
 
 
 def copy_and_paste(text: str, *, auto_paste: bool) -> None:
@@ -373,18 +411,80 @@ def copy_and_paste(text: str, *, auto_paste: bool) -> None:
             stderr(f"> Warning: xdotool exited with code {paste_result.returncode}; paste may have failed")
 
 
+def _read_exact(stdout: IO[bytes], n: int) -> bytes:
+    """Read exactly n bytes from a pipe, looping over short reads. Returns fewer bytes only at EOF."""
+    buf = bytearray()
+    while len(buf) < n:
+        chunk = stdout.read(n - len(buf))
+        if not chunk:
+            break
+        buf.extend(chunk)
+    return bytes(buf)
+
+
+def _read_pcm_stream(
+    stdout: IO[bytes],
+    pcm_chunks: list[bytes],
+    on_record_live: Sequence[str] | None,
+    reaper_q: queue.Queue[Thread | None],
+) -> None:
+    """
+    Read raw PCM from pw-record stdout, detect hardware initialization, and accumulate audio.
+
+    Implements the cold/warm start detection state machine:
+    - Chunk 0 is always discarded (transitional garbage on cold start, 4ms on warm start)
+    - Chunk 1 determines cold vs warm: all-0x01 bytes means cold start (mic initializing)
+    - On cold start, discards all-0x01 chunks until first real audio arrives
+    - Fires on_record_live when real audio is first detected
+    - Switches to large reads (64K) once live for efficiency
+    """
+    # Chunk 0: discard unconditionally (transitional garbage on cold start,
+    # 4ms of audio on warm start — acceptable loss)
+    chunk0 = _read_exact(stdout, 64)
+    if not chunk0:
+        return
+    # Chunk 1: determines cold vs warm start
+    chunk1 = _read_exact(stdout, 64)
+    if not chunk1:
+        return
+    if len(chunk1) == 64 and all(b == 0x01 for b in chunk1):
+        # Cold start: discard all-0x01 chunks until first real audio
+        while True:
+            chunk = _read_exact(stdout, 64)
+            if not chunk:
+                return
+            if not all(b == 0x01 for b in chunk):
+                pcm_chunks.append(chunk)
+                if on_record_live:
+                    reaper_q.put(spawn(on_record_live))
+                break
+    else:
+        # Warm start: chunk 1 is real audio
+        pcm_chunks.append(chunk1)
+        if on_record_live:
+            reaper_q.put(spawn(on_record_live))
+    # Switch to large reads for efficiency
+    while True:
+        data = stdout.read(65536)
+        if not data:
+            return
+        pcm_chunks.append(data)
+
+
 def client_loop(
     host: str,
     port: int,
     *,
-    language: str | None = None,
+    prompt_text: str | None = None,
     on_record_start: Sequence[str] | None = None,
+    on_record_live: Sequence[str] | None = None,
     on_record_end: Sequence[str] | None = None,
     on_transcribe: Sequence[str] | None = None,
     on_cancel: Sequence[str] | None = None,
     x11_toggle_key: str | None = None,
     x11_cancel_key: str | None = None,
     auto_paste: bool = False,
+    punctuate: bool = False,
 ) -> None:
     """
     Run the interactive record-transcribe-copy loop.
@@ -442,36 +542,86 @@ def client_loop(
             # that started recording is irrelevant for paste decisions.
             SIGNAL_STATE.paste_next = False
 
-            with tempfile.NamedTemporaryFile(prefix="whisper-client-", suffix=".wav") as f:
-                proc = subprocess.Popen(["pw-record", "--", f.name], stdout=DEVNULL, stderr=DEVNULL)
-                if on_record_start:
-                    reaper_q.put(spawn(on_record_start))
-                result = prompt(
-                    "> Press any key to stop recording (q to quit, c to cancel):",
-                    QUIT_CHARS,
-                    CANCEL_CHARS,
-                    style=SGR_RED_BOLD,
-                    pipe_fd=pipe_fd,
-                )
-                proc.terminate()
-                proc.wait()
-                if result is PromptResult.QUIT:
-                    return
-                if result is PromptResult.CANCEL:
-                    if on_cancel:
-                        reaper_q.put(spawn(on_cancel))
-                    continue
-                if on_record_end:
-                    reaper_q.put(spawn(on_record_end))
-                text = transcribe_file(host, port, typing.cast("io.BufferedReader", f.file), language, pipe_fd=pipe_fd)
-                if text is None:
-                    if on_cancel:
-                        reaper_q.put(spawn(on_cancel))
-                    continue
-                stderr("> Copying the following text to PRIMARY:")
-                print(text, flush=True)
-                print("--", file=sys.stderr)
-                copy_and_paste(text, auto_paste=auto_paste)
+            proc = subprocess.Popen(
+                [
+                    "stdbuf",
+                    "-o0",
+                    "pw-record",
+                    "--raw",
+                    "--format",
+                    "s16",
+                    "--rate",
+                    str(SAMPLE_RATE),
+                    "--channels",
+                    "1",
+                    "--",
+                    "-",
+                ],
+                stdout=subprocess.PIPE,
+                stderr=DEVNULL,
+            )
+            if on_record_start:
+                reaper_q.put(spawn(on_record_start))
+
+            pcm_chunks: list[bytes] = []
+
+            assert proc.stdout is not None
+            reader_thread = Thread(
+                target=_read_pcm_stream, args=(proc.stdout, pcm_chunks, on_record_live, reaper_q), daemon=True
+            )
+            reader_thread.start()
+
+            result = prompt(
+                "> Press any key to stop recording (q to quit, c to cancel):",
+                QUIT_CHARS,
+                CANCEL_CHARS,
+                style=SGR_RED_BOLD,
+                pipe_fd=pipe_fd,
+            )
+            proc.terminate()
+            proc.wait()
+            reader_thread.join()
+
+            if result is PromptResult.QUIT:
+                return
+            if result is PromptResult.CANCEL:
+                if on_cancel:
+                    reaper_q.put(spawn(on_cancel))
+                continue
+            if not pcm_chunks:
+                continue
+            if on_record_end:
+                reaper_q.put(spawn(on_record_end))
+
+            # Build WAV from accumulated PCM
+            pcm_data = b"".join(pcm_chunks)
+            wav_buf = io.BytesIO()
+            with wave.open(wav_buf, "wb") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(SAMPLE_RATE)
+                wf.writeframes(pcm_data)
+            wav_buf.seek(0)
+
+            text = transcribe_file(
+                host,
+                port,
+                typing.cast("io.BufferedReader", wav_buf),
+                prompt_text,
+                pipe_fd=pipe_fd,
+                on_record_end=on_record_end,
+                on_cancel=on_cancel,
+                reaper_q=reaper_q,
+                punctuate=punctuate,
+            )
+            if text is None:
+                # on_cancel already dispatched inside transcribe_file
+                # on the error that preceded the user's cancel action.
+                continue
+            stderr("> Copying the following text to PRIMARY:")
+            print(text, flush=True)
+            print("--", file=sys.stderr)
+            copy_and_paste(text, auto_paste=auto_paste)
 
             if on_transcribe:
                 reaper_q.put(spawn(on_transcribe))
@@ -498,7 +648,12 @@ def client_loop(
 
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
+
+    for sig in (signal.SIGHUP, signal.SIGTERM, signal.SIGQUIT):
+        signal.signal(sig, lambda *_: sys.exit(0))
+
     on_record_start = shlex.split(opts.on_record_start) if opts.on_record_start else None
+    on_record_live = shlex.split(opts.on_record_live) if opts.on_record_live else None
     on_record_end = shlex.split(opts.on_record_end) if opts.on_record_end else None
     on_transcribe = shlex.split(opts.on_transcribe) if opts.on_transcribe else None
     on_cancel = shlex.split(opts.on_cancel) if opts.on_cancel else None
@@ -508,7 +663,13 @@ def main(args: Sequence[str]) -> int:
         return 1
 
     if opts.file == "-":
-        text = transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), opts.language)
+        text = transcribe_file(
+            opts.host,
+            opts.port,
+            typing.cast("io.BufferedReader", sys.stdin.buffer),
+            opts.prompt,
+            punctuate=opts.punctuate,
+        )
         if text is not None:
             print(text)
             if on_transcribe:
@@ -517,7 +678,7 @@ def main(args: Sequence[str]) -> int:
             spawn(on_cancel).join()
     elif opts.file:
         with Path(opts.file).open("rb") as f:
-            text = transcribe_file(opts.host, opts.port, f, opts.language)
+            text = transcribe_file(opts.host, opts.port, f, opts.prompt, punctuate=opts.punctuate)
         if text is not None:
             print(text)
             if on_transcribe:
@@ -529,14 +690,16 @@ def main(args: Sequence[str]) -> int:
             client_loop(
                 opts.host,
                 opts.port,
-                language=opts.language,
+                prompt_text=opts.prompt,
                 on_record_start=on_record_start,
+                on_record_live=on_record_live,
                 on_record_end=on_record_end,
                 on_transcribe=on_transcribe,
                 on_cancel=on_cancel,
                 x11_toggle_key=opts.x11_toggle_key,
                 x11_cancel_key=opts.x11_cancel_key,
                 auto_paste=opts.auto_paste,
+                punctuate=opts.punctuate,
             )
         except UserAbortError:
             return 0

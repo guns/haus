@@ -1,0 +1,416 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# dependencies = [
+#     "transformers>=4.52.1",
+#     "torch",
+#     "torchaudio",
+#     "numpy",
+#     "soundfile",
+#     "accelerate",
+#     "sentencepiece",
+#     "protobuf",
+# ]
+# ///
+#
+# Copyright (c) 2025-2026 Sung Pae <self@sungpae.com>
+# Distributed under the MIT license.
+# http://www.opensource.org/licenses/mit-license.php
+
+"""
+Speech-to-text transcription server using HuggingFace transformers.
+
+Supported models:
+
+  openai/whisper-tiny
+  openai/whisper-tiny.en
+  openai/whisper-base
+  openai/whisper-base.en
+  openai/whisper-small
+  openai/whisper-small.en
+  openai/whisper-medium
+  openai/whisper-medium.en
+  openai/whisper-large
+  openai/whisper-large-v2
+  openai/whisper-large-v3
+  openai/whisper-large-v3-turbo
+  distil-whisper/distil-small.en
+  distil-whisper/distil-medium.en
+  distil-whisper/distil-large-v2
+  distil-whisper/distil-large-v3
+* distil-whisper/distil-large-v3.5 (default)
+  ibm-granite/granite-speech-3.2-8b
+  ibm-granite/granite-speech-3.3-2b
+  ibm-granite/granite-speech-3.3-8b
+  ibm-granite/granite-4.0-1b-speech
+  ibm-granite/granite-speech-4.1-2b
+  ibm-granite/granite-speech-4.1-2b-plus
+"""
+
+from __future__ import annotations
+
+import http.server
+import inspect
+import io
+import subprocess
+import sys
+import threading
+import traceback
+import typing
+import urllib.parse
+from argparse import ArgumentParser, RawTextHelpFormatter
+from typing import TYPE_CHECKING, Any, Protocol
+
+import soundfile  # type: ignore[import-untyped]  # no py.typed marker or stubs package available
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Sequence
+
+    import numpy
+    import torch
+    import transformers
+    from transformers._typing import GenerativePreTrainedModel
+
+
+SAMPLE_RATE = 16000
+
+LABEL_TO_PUNCT = {"0": "", ".": ".", ",": ",", "?": "?", "-": "-", ":": ":"}
+
+
+class TranscribeFn(Protocol):
+    def __call__(
+        self,
+        audio: numpy.ndarray,
+        prompt: str | None,
+        processor: Any,
+        tokenizer: Any,
+        model: GenerativePreTrainedModel,
+        device: torch.device,
+    ) -> str: ...
+
+
+def parser() -> ArgumentParser:
+    p = ArgumentParser(
+        description=__doc__, formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36)
+    )
+    p.add_argument("-m", "--model", help="HuggingFace model identifier", default="distil-whisper/distil-large-v3.5")
+    p.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
+    p.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
+    return p
+
+
+def stderr(message: str) -> None:
+    print(message, file=sys.stderr)
+
+
+def one(coll: Collection[Any]) -> Any:
+    if len(coll) != 1:
+        raise ValueError(f"Expected coll to have one member, but it has a length of {len(coll)}: {coll!r}")
+    return next(iter(coll))
+
+
+def load_audio(audio_bytes: bytes) -> numpy.ndarray:
+    data, sample_rate = soundfile.read(io.BytesIO(audio_bytes))
+
+    if sample_rate != SAMPLE_RATE or (data.ndim > 1 and data.shape[1] > 1):
+        stderr(f"> Warning: resampling audio to mono {SAMPLE_RATE}Hz via ffmpeg")
+        proc = subprocess.run(
+            ["ffmpeg", "-i", "pipe:0", "-f", "wav", "-ar", str(SAMPLE_RATE), "-ac", "1", "pipe:1"],
+            input=audio_bytes,
+            capture_output=True,
+        )
+        proc.check_returncode()
+        data, sample_rate = soundfile.read(io.BytesIO(proc.stdout))
+
+    return typing.cast("numpy.ndarray", data)
+
+
+def add_punctuation(text: str, punct_pipe: transformers.Pipeline) -> str:
+    """
+    Add punctuation to unpunctuated text using the fullstop model.
+
+    The model predicts a punctuation label for each subword token. XLM-RoBERTa's
+    sentencepiece tokenizer prefixes word-initial subwords with \u2581 (U+2581). We collect
+    the label of the last subword of each word by emitting the accumulated label every
+    time we see a new word-start token. The original words are preserved verbatim.
+    """
+    words = text.split()
+    if not words:
+        return text
+
+    results = punct_pipe(text)
+
+    word_labels: list[str] = []
+    current_label = "0"
+
+    for i, r in enumerate(results):
+        if r["word"].startswith("\u2581") and i > 0:
+            word_labels.append(current_label)
+        current_label = r["entity"]
+
+    # Last token's label applies to the last word
+    word_labels.append(current_label)
+
+    if len(word_labels) != len(words):
+        stderr(
+            f"> Warning: punctuation label count ({len(word_labels)}) does not match"
+            f" word count ({len(words)}); trailing words will receive no punctuation"
+        )
+
+    # Build output preserving original words verbatim
+    parts = []
+    for i, word in enumerate(words):
+        label = word_labels[i] if i < len(word_labels) else "0"
+        punct = LABEL_TO_PUNCT.get(label, "")
+        parts.append(word + punct)
+
+    return " ".join(parts).strip()
+
+
+def transcribe_granite(
+    audio: numpy.ndarray,
+    prompt: str | None,
+    processor: Any,
+    tokenizer: Any,
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+) -> str:
+    """
+    Transcribe audio using IBM Granite Speech 4.1 2B.
+
+    Granite is a multimodal LLM (Conformer encoder + Granite 4.0 1B decoder) that requires a chat
+    template with an <|audio|> placeholder token. The processor expands <|audio|> to match the
+    encoder's output embedding count, aligning audio features with the text token sequence.
+
+    The prompt controls transcription behavior:
+    - Default: "transcribe the speech with proper punctuation and capitalization."
+    - Keyword biasing: "transcribe the speech to text. Keywords: kw1, kw2, ..."
+
+    The output includes the prompt tokens in the generated sequence, so we strip them by slicing
+    at num_input_tokens.
+
+    See: https://huggingface.co/ibm-granite/granite-speech-4.1-2b
+    """
+    import torch  # noqa: autoimport
+
+    instruction = prompt or "transcribe the speech with proper punctuation and capitalization."
+    user_prompt = f"<|audio|>{instruction}"
+    chat: list[dict[str, str]] = [{"role": "user", "content": user_prompt}]
+    text_prompt = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
+    wav = torch.from_numpy(audio).float()
+    model_inputs = processor(text_prompt, wav, device=device, return_tensors="pt").to(device)
+    with torch.no_grad():
+        model_outputs = model.generate(**model_inputs, max_new_tokens=200, do_sample=False, num_beams=1)
+    num_input_tokens = model_inputs["input_ids"].shape[-1]
+    new_tokens = model_outputs[0, num_input_tokens:].unsqueeze(0)
+    return typing.cast(
+        "str", one(tokenizer.batch_decode(new_tokens, add_special_tokens=False, skip_special_tokens=True)).strip()
+    )
+
+
+def transcribe_whisper(
+    audio: numpy.ndarray,
+    prompt: str | None,
+    processor: Any,
+    tokenizer: Any,
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+) -> str:
+    """
+    Transcribe audio using OpenAI Whisper models via HuggingFace transformers.
+
+    Uses Whisper's sequential long-form transcription algorithm, which processes the mel
+    spectrogram in 30-second windows with timestamp-based seeking. The seek position advances
+    based on the last timestamp token generated by the model, with fallback decoding strategies
+    (temperature escalation, compression ratio filtering, logprob thresholding). This handles
+    audio of any length without truncation. For audio under 30 seconds, the algorithm degrades
+    gracefully to a single segment.
+
+    When a prompt is provided, it is tokenized to prompt_ids and passed to generate(). The
+    sequential algorithm applies prompt conditioning to the first segment via the default
+    prompt_condition_type="first-segment" and does not include prompt tokens in the output.
+
+    See: https://huggingface.co/distil-whisper/distil-large-v3.5
+    """
+    import torch  # noqa: autoimport
+
+    inputs = processor(
+        audio,
+        sampling_rate=SAMPLE_RATE,
+        return_tensors="pt",
+        truncation=False,
+        padding="longest",
+        return_attention_mask=True,
+    ).to(device)
+    generate_kwargs: dict[str, Any] = {
+        "max_new_tokens": 200,
+        "max_length": None,
+        "num_beams": 1,
+        "condition_on_prev_tokens": False,
+        "compression_ratio_threshold": 1.35,
+        "temperature": (0.0, 0.2, 0.4, 0.6, 0.8, 1.0),
+        "logprob_threshold": -1.0,
+        "no_speech_threshold": 0.6,
+        "return_timestamps": True,
+    }
+    if getattr(model.config, "is_multilingual", False):
+        generate_kwargs["language"] = "en"
+        generate_kwargs["task"] = "transcribe"
+    if prompt:
+        prompt_ids = tokenizer(prompt, add_special_tokens=False, return_tensors="pt")["input_ids"].to(device)
+        generate_kwargs["prompt_ids"] = prompt_ids.squeeze(0)
+    with torch.no_grad():
+        output_ids = model.generate(**inputs, **generate_kwargs)
+    return typing.cast("str", one(tokenizer.batch_decode(output_ids, skip_special_tokens=True)).strip())
+
+
+SUPPORTED_MODEL_TYPES: dict[str, TranscribeFn] = {
+    "whisper": transcribe_whisper,
+    "granite_speech": transcribe_granite,
+    "granite_speech_plus": transcribe_granite,
+}
+
+
+def make_handler(
+    transcribe_fn: TranscribeFn,
+    processor: Any,
+    tokenizer: Any,
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+    punct_pipe: transformers.Pipeline,
+) -> type[http.server.BaseHTTPRequestHandler]:
+    lock = threading.Lock()
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            parsed = urllib.parse.urlparse(self.path)
+            if parsed.path != "/transcribe":
+                self.send_error(404, "Not Found")
+                return
+
+            stderr(f"> Request from {self.client_address[0]}:{self.client_address[1]}")
+
+            query = urllib.parse.parse_qs(parsed.query)
+            prompt_values = query.get("prompt")
+            prompt = prompt_values[0] if prompt_values else None
+            punctuate_values = query.get("punctuate")
+            punctuate = bool(punctuate_values and punctuate_values[0] not in ("0", "false", ""))
+
+            content_length = int(self.headers.get("Content-Length", 0))
+            audio_bytes = self.rfile.read(content_length)
+
+            try:
+                audio = load_audio(audio_bytes)
+                with lock:
+                    text = transcribe_fn(audio, prompt, processor, tokenizer, model, device)
+                    if punctuate:
+                        text = add_punctuation(text, punct_pipe)
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                encoded = text.encode()
+                self.send_header("Content-Length", str(len(encoded)))
+                self.end_headers()
+                self.wfile.write(encoded)
+            except (
+                RuntimeError,
+                ValueError,
+                TypeError,
+                OSError,
+                AttributeError,
+                LookupError,
+                subprocess.SubprocessError,
+            ):
+                tb = traceback.format_exc()
+                stderr(f"> Error during transcription:\n{tb}")
+                error_bytes = tb.encode()
+                self.send_response(500)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Content-Length", str(len(error_bytes)))
+                self.end_headers()
+                self.wfile.write(error_bytes)
+
+        def log_message(self, fmt: str, *args: object) -> None:
+            pass
+
+    return Handler
+
+
+def main(args: Sequence[str]) -> int:
+    opts = parser().parse_args(args)
+
+    import torch  # noqa: autoimport
+    import transformers  # noqa: autoimport
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    stderr(f"> Loading model: {opts.model}")
+
+    try:
+        config = transformers.AutoConfig.from_pretrained(opts.model, local_files_only=True)
+        local_only = True
+    except OSError:
+        stderr("> Model not cached, downloading...")
+        config = transformers.AutoConfig.from_pretrained(opts.model, local_files_only=False)
+        local_only = False
+
+    if config.model_type not in SUPPORTED_MODEL_TYPES:
+        stderr(f"> Error: model type {config.model_type!r} is not supported.")
+        stderr(f"> Supported types: {', '.join(sorted(SUPPORTED_MODEL_TYPES))}")
+        return 1
+
+    transcribe_fn = SUPPORTED_MODEL_TYPES[config.model_type]
+
+    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
+    processor = transformers.AutoProcessor.from_pretrained(opts.model, local_files_only=local_only)  # type: ignore[no-untyped-call]
+    model_dtype = torch.bfloat16 if config.model_type != "whisper" else None
+    model_obj = transformers.AutoModelForSpeechSeq2Seq.from_pretrained(
+        opts.model, device_map=device, dtype=model_dtype, local_files_only=local_only
+    )
+    if config.model_type == "whisper":
+        model_obj.generation_config.forced_decoder_ids = None
+        model_obj.generation_config.suppress_tokens = None
+        model_obj.generation_config.begin_suppress_tokens = None
+        model_obj.generation_config.max_length = None
+        model_obj.config.forced_decoder_ids = None
+        model_obj.config.suppress_tokens = None
+        model_obj.config.begin_suppress_tokens = None
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        opts.model, local_files_only=local_only, clean_up_tokenization_spaces=False
+    )
+
+    punct_model_name = "oliverguhr/fullstop-punctuation-multilang-large"
+    stderr(f"> Loading punctuation model: {punct_model_name}")
+    punct_model = transformers.AutoModelForTokenClassification.from_pretrained(
+        punct_model_name, local_files_only=local_only
+    )
+    punct_tokenizer = transformers.AutoTokenizer.from_pretrained(punct_model_name, local_files_only=local_only)
+    punct_pipe = transformers.pipeline(
+        "token-classification", model=punct_model, tokenizer=punct_tokenizer, device=device, aggregation_strategy="none"
+    )
+    stderr("> Punctuation model loaded")
+
+    device_label = f"{device.type} ({torch.cuda.get_device_name(device)})" if device.type == "cuda" else device.type
+    stderr(
+        inspect.cleandoc(
+            f"""
+            > Model: {opts.model}
+            > Device: {device_label}
+            > Listening on {opts.host}:{opts.port}
+            """
+        )
+    )
+
+    handler_class = make_handler(transcribe_fn, processor, tokenizer, model_obj, device, punct_pipe)
+    server = http.server.ThreadingHTTPServer((opts.host, opts.port), handler_class)
+
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        stderr("> SIGINT")
+        server.shutdown()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
