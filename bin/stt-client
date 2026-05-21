@@ -153,7 +153,6 @@ def parser() -> ArgumentParser:
         help="paste transcription into foreground window via xdotool after"
         " copying to PRIMARY selection; requires --x11-toggle-key",
     )
-    p.add_argument("--punctuate", action="store_true", help="request punctuation post-processing from the server")
     p.add_argument("host", nargs="?", help="server address to connect to", default="127.0.0.1")
     p.add_argument("port", nargs="?", help="server port to connect to", default=41100, type=int)
     return p
@@ -353,14 +352,10 @@ def transcribe_file(
     on_record_end: Sequence[str] | None = None,
     on_cancel: Sequence[str] | None = None,
     reaper_q: queue.Queue[Thread | None] | None = None,
-    *,
-    punctuate: bool = False,
 ) -> str | None:
     query_params: dict[str, str] = {}
     if prompt_text:
         query_params["prompt"] = prompt_text
-    if punctuate:
-        query_params["punctuate"] = "1"
     query_string = urllib.parse.urlencode(query_params)
     base_url = f"http://{host}:{port}/transcribe"
     if query_string:
@@ -484,7 +479,6 @@ def client_loop(
     x11_toggle_key: str | None = None,
     x11_cancel_key: str | None = None,
     auto_paste: bool = False,
-    punctuate: bool = False,
 ) -> None:
     """
     Run the interactive record-transcribe-copy loop.
@@ -612,7 +606,6 @@ def client_loop(
                 on_record_end=on_record_end,
                 on_cancel=on_cancel,
                 reaper_q=reaper_q,
-                punctuate=punctuate,
             )
             if text is None:
                 # on_cancel already dispatched inside transcribe_file
@@ -663,13 +656,7 @@ def main(args: Sequence[str]) -> int:
         return 1
 
     if opts.file == "-":
-        text = transcribe_file(
-            opts.host,
-            opts.port,
-            typing.cast("io.BufferedReader", sys.stdin.buffer),
-            opts.prompt,
-            punctuate=opts.punctuate,
-        )
+        text = transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), opts.prompt)
         if text is not None:
             print(text)
             if on_transcribe:
@@ -678,7 +665,7 @@ def main(args: Sequence[str]) -> int:
             spawn(on_cancel).join()
     elif opts.file:
         with Path(opts.file).open("rb") as f:
-            text = transcribe_file(opts.host, opts.port, f, opts.prompt, punctuate=opts.punctuate)
+            text = transcribe_file(opts.host, opts.port, f, opts.prompt)
         if text is not None:
             print(text)
             if on_transcribe:
@@ -699,7 +686,6 @@ def main(args: Sequence[str]) -> int:
                 x11_toggle_key=opts.x11_toggle_key,
                 x11_cancel_key=opts.x11_cancel_key,
                 auto_paste=opts.auto_paste,
-                punctuate=opts.punctuate,
             )
         except UserAbortError:
             return 0
