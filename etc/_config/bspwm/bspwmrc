@@ -80,9 +80,11 @@ rm -f "/run/user/$EUID/monitor.lock"
 nitrogen --restore
 rm -f "/run/user/$EUID/wallpaper.lock"
 
-# Fix tint2 stacking order
+# Fix tint2 stacking order: place above bspwm monitor root windows
 (
-    for win in $(xdo id -n tint2); do
-        xdo lower "$win"
+    for tint2_win in $(xdo id -n tint2); do
+        for bspwm_root in $(xdo id -N Bspwm -n root); do
+            xdo above -t "$bspwm_root" "$tint2_win"
+        done
     done
 )
