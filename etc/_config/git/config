@@ -223,7 +223,7 @@
 	# Worktrees
 	wt  = worktree
 	wta = worktree add
-	wtl = worktree list
+	wtl = worktree list --verbose
 	wtp = worktree prune
 	wtr = worktree remove
 	wtu = worktree unlock
