@@ -220,6 +220,14 @@
 	gif  = grep --fixed-strings --ignore-case
 	gifw = grep --fixed-strings --ignore-case --word-regexp
 
+	# Worktrees
+	wt  = worktree
+	wta = worktree add
+	wtl = worktree list
+	wtp = worktree prune
+	wtr = worktree remove
+	wtu = worktree unlock
+
 	# SVN
 	sf = svn fetch
 
