@@ -2,11 +2,17 @@
 #
 # /// script
 # dependencies = [
-#     "transformers>=4.52.1",
+#     "transformers>=5.14.0",
 #     "torch",
 #     "torchaudio",
 #     "numpy",
 #     "soundfile",
+#     "librosa",
+#     # librosa's transitive numba: on Python 3.14, unpinned resolution backslides to source-only
+#     # numba 0.53.1 / llvmlite 0.36.0 (fails to build); this floor forces the cp314 wheels
+#     # (numba 0.66.0 / llvmlite 0.48.0). Inert on 3.12/3.13 (same versions). llvmlite is pulled
+#     # transitively by numba, so no separate pin is needed.
+#     "numba>=0.66",
 #     "accelerate",
 #     "sentencepiece",
 #     "protobuf",
@@ -38,11 +44,13 @@ Supported models:
   distil-whisper/distil-medium.en
   distil-whisper/distil-large-v2
   distil-whisper/distil-large-v3
-* distil-whisper/distil-large-v3.5 (default)
+  distil-whisper/distil-large-v3.5
+* nvidia/parakeet-tdt-0.6b-v3 (default)
 """
 
 from __future__ import annotations
 
+import dataclasses
 import http.server
 import inspect
 import io
@@ -53,6 +61,7 @@ import time
 import traceback
 import typing
 import urllib.parse
+import warnings
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
@@ -82,13 +91,31 @@ class TranscribeFn(Protocol):
     ) -> str: ...
 
 
+@dataclasses.dataclass(frozen=True)
+class LoadedModel:
+    processor: Any  # Whisper: WhisperProcessor; Parakeet: ParakeetProcessor
+    tokenizer: Any  # Whisper: the AutoTokenizer; Parakeet: None (decode goes through processor)
+    model: GenerativePreTrainedModel
+
+
+class LoadFn(Protocol):
+    # local_only is keyword-only: a boolean positional argument is opaque at the call site (FBT001).
+    def __call__(self, model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel: ...
+
+
+@dataclasses.dataclass(frozen=True)
+class Backend:
+    load: LoadFn
+    transcribe: TranscribeFn
+
+
 def parser() -> ArgumentParser:
     p = ArgumentParser(
         description=__doc__, formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36)
     )
-    p.add_argument("-m", "--model", help="HuggingFace model identifier", default="distil-whisper/distil-large-v3.5")
+    p.add_argument("-m", "--model", help="HuggingFace model identifier", default="nvidia/parakeet-tdt-0.6b-v3")
     p.add_argument("-f", "--file", help="transcribe an audio file and exit (benchmark mode)")
-    p.add_argument("-p", "--prompt", help="text prompt that biases transcription (file mode only)")
+    p.add_argument("-p", "--prompt", help="text prompt that biases transcription (Whisper models only; file mode only)")
     p.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     p.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return p
@@ -179,7 +206,109 @@ def transcribe_whisper(
     return typing.cast("str", one(tokenizer.batch_decode(output_ids, skip_special_tokens=True)).strip())
 
 
-SUPPORTED_MODEL_TYPES: dict[str, TranscribeFn] = {"whisper": transcribe_whisper}
+def load_whisper(model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel:
+    """
+    Load an OpenAI Whisper / Distil-Whisper checkpoint for sequence-to-sequence transcription.
+
+    Whisper is a seq2seq model, so it loads via AutoModelForSpeechSeq2Seq. The generation and
+    model configs ship with forced_decoder_ids, suppress_tokens, begin_suppress_tokens, and a
+    max_length that conflict with the explicit generate() kwargs used by transcribe_whisper (which
+    sets language/task and its own decoding strategy). Clearing them here avoids the "you have
+    passed both forced_decoder_ids and language/task" conflicts and the max_length cap that would
+    truncate long-form transcription. This cleanup is Whisper-specific and never runs for other
+    backends.
+    """
+    import transformers  # noqa: autoimport  # deliberate lazy load; see main() — no module-top transformers import
+
+    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
+    processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=local_only)  # type: ignore[no-untyped-call]
+    model = transformers.AutoModelForSpeechSeq2Seq.from_pretrained(
+        model_id, device_map=device, dtype=None, local_files_only=local_only
+    )
+    model.generation_config.forced_decoder_ids = None
+    model.generation_config.suppress_tokens = None
+    model.generation_config.begin_suppress_tokens = None
+    model.generation_config.max_length = None
+    model.config.forced_decoder_ids = None
+    model.config.suppress_tokens = None
+    model.config.begin_suppress_tokens = None
+    tokenizer = transformers.AutoTokenizer.from_pretrained(
+        model_id, local_files_only=local_only, clean_up_tokenization_spaces=False
+    )
+    return LoadedModel(processor=processor, tokenizer=tokenizer, model=model)
+
+
+def load_parakeet_tdt(model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel:
+    """
+    Load an NVIDIA Parakeet TDT (Token-and-Duration Transducer) checkpoint.
+
+    Parakeet is a transducer model, not seq2seq, so it loads via AutoModelForTDT (which resolves
+    config.model_type "parakeet_tdt" to ParakeetForTDT). The target nvidia/parakeet-tdt-0.6b-v3 is
+    a complete transformers-native checkpoint (config, tokenizer, safetensors, processor), so this
+    is a direct load with no .nemo conversion. Any parakeet_tdt checkpoint loads through these same
+    two calls, so the loader is id-agnostic. The model loads in float32: the ParakeetFeatureExtractor
+    always produces float32 input_features, so a reduced-precision model (e.g. bfloat16) would raise
+    a dtype mismatch in the encoder subsampling conv unless the features were cast to model.dtype.
+    float32 is the configuration validated end-to-end (correct transcript, empty output over
+    non-speech) and ~2.4 GB for this 0.6B model is a non-issue on the target GPU. No
+    generation-config cleanup is needed — Parakeet has no forced_decoder_ids / suppress_tokens.
+    """
+    import torch  # noqa: autoimport  # deliberate lazy load; needed only for torch.float32
+    import transformers  # noqa: autoimport  # deliberate lazy load; see main() — no module-top transformers import
+
+    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
+    processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=local_only)  # type: ignore[no-untyped-call]
+    model = transformers.AutoModelForTDT.from_pretrained(
+        model_id, device_map=device, dtype=torch.float32, local_files_only=local_only
+    )
+    return LoadedModel(processor=processor, tokenizer=None, model=model)
+
+
+def transcribe_parakeet(
+    audio: numpy.ndarray,
+    prompt: str | None,  # noqa: ARG001  # required by TranscribeFn; Parakeet TDT has no prompt biasing (ignored)
+    processor: Any,
+    tokenizer: Any,  # noqa: ARG001  # required by TranscribeFn; unused — ParakeetProcessor handles decoding
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+) -> str:
+    """
+    Transcribe audio using an NVIDIA Parakeet TDT model via HuggingFace transformers.
+
+    ParakeetForTDT.generate() runs a duration-aware transducer decode: at each step the model
+    emits either a token or a blank and advances the encoder frame pointer by a predicted
+    duration. Unlike Whisper's autoregressive decoder, the transducer emits blanks over non-speech
+    (applause, crowd noise, silence) rather than inventing text, which is the hallucination
+    resistance this backend was added for. generate() returns a ParakeetRNNTGenerateOutput whose
+    .sequences field is decoded by the ParakeetProcessor (the tokenizer parameter is unused —
+    decoding goes through the processor).
+
+    The Parakeet TDT generate path has no prompt / context-biasing input (decoder_input_ids are
+    training-only teacher forcing), so the prompt parameter is accepted for TranscribeFn Protocol
+    conformance and deliberately ignored. v3 selects its output language automatically, so no
+    language kwarg is passed (unlike Whisper's language="en").
+
+    See: https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
+    """
+    import torch  # noqa: autoimport
+
+    inputs = processor(audio, sampling_rate=SAMPLE_RATE, return_tensors="pt").to(device)
+    # ParakeetForTDT._prepare_generated_length already derives a safe, input-scaled max_length
+    # (max_symbols_per_step * encoder_frames) and the transducer stops when encoder frames are
+    # exhausted, so generation never truncates. The warning fires only because neither max_length
+    # nor max_new_tokens is passed by the caller; setting max_new_tokens would replace the model's
+    # correct sizing with a fixed cap that could truncate long audio. Suppress just this one
+    # cosmetic warning rather than altering generation.
+    with torch.no_grad(), warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Using the model-agnostic default `max_length`", category=UserWarning)
+        output = model.generate(**inputs)
+    return typing.cast("str", one(processor.batch_decode(output.sequences, skip_special_tokens=True)).strip())
+
+
+SUPPORTED_MODEL_TYPES: dict[str, Backend] = {
+    "whisper": Backend(load=load_whisper, transcribe=transcribe_whisper),
+    "parakeet_tdt": Backend(load=load_parakeet_tdt, transcribe=transcribe_parakeet),
+}
 
 
 def make_handler(
@@ -260,32 +389,15 @@ def main(args: Sequence[str]) -> int:
         stderr(f"> Supported types: {', '.join(sorted(SUPPORTED_MODEL_TYPES))}")
         return 1
 
-    transcribe_fn = SUPPORTED_MODEL_TYPES[config.model_type]
-
-    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
-    processor = transformers.AutoProcessor.from_pretrained(opts.model, local_files_only=local_only)  # type: ignore[no-untyped-call]
-    model_dtype = torch.bfloat16 if config.model_type != "whisper" else None
-    model_obj = transformers.AutoModelForSpeechSeq2Seq.from_pretrained(
-        opts.model, device_map=device, dtype=model_dtype, local_files_only=local_only
-    )
-    if config.model_type == "whisper":
-        model_obj.generation_config.forced_decoder_ids = None
-        model_obj.generation_config.suppress_tokens = None
-        model_obj.generation_config.begin_suppress_tokens = None
-        model_obj.generation_config.max_length = None
-        model_obj.config.forced_decoder_ids = None
-        model_obj.config.suppress_tokens = None
-        model_obj.config.begin_suppress_tokens = None
-    tokenizer = transformers.AutoTokenizer.from_pretrained(
-        opts.model, local_files_only=local_only, clean_up_tokenization_spaces=False
-    )
+    backend = SUPPORTED_MODEL_TYPES[config.model_type]
+    loaded = backend.load(opts.model, device, local_only=local_only)
 
     if opts.file:
         with Path(opts.file).open("rb") as f:
             audio = load_audio(f.read())
         duration = len(audio) / SAMPLE_RATE
         t0 = time.perf_counter()
-        text = transcribe_fn(audio, opts.prompt, processor, tokenizer, model_obj, device)
+        text = backend.transcribe(audio, opts.prompt, loaded.processor, loaded.tokenizer, loaded.model, device)
         elapsed = time.perf_counter() - t0
         ratio = elapsed / duration if duration > 0 else 0.0
         print(text)
@@ -303,7 +415,7 @@ def main(args: Sequence[str]) -> int:
         )
     )
 
-    handler_class = make_handler(transcribe_fn, processor, tokenizer, model_obj, device)
+    handler_class = make_handler(backend.transcribe, loaded.processor, loaded.tokenizer, loaded.model, device)
     server = http.server.ThreadingHTTPServer((opts.host, opts.port), handler_class)
 
     try:
