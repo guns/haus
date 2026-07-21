@@ -7,4 +7,5 @@ exec stt-client \
     --on-cancel "play ~/.local/share/sounds/error2.ogg" \
     --x11-toggle-key F1 \
     --x11-cancel-key shift+F1 \
+    --x11-quit-key Mod4+shift+F1 \
     --auto-paste

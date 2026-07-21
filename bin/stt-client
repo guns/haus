@@ -115,7 +115,7 @@ def parser() -> ArgumentParser:
             """
             external program dependencies:
               interactive mode: pw-record, xsel
-              --x11-toggle-key, --x11-cancel-key: xbindkeys
+              --x11-toggle-key, --x11-cancel-key, --x11-quit-key: xbindkeys
               --auto-paste: xdotool
             """
         ),
@@ -146,6 +146,11 @@ def parser() -> ArgumentParser:
         "--x11-cancel-key",
         metavar="KEY",
         help="register a global X11 hotkey via xbindkeys to cancel recording (e.g. 'Escape')",
+    )
+    p.add_argument(
+        "--x11-quit-key",
+        metavar="KEY",
+        help="register a global X11 hotkey via xbindkeys to quit the client (e.g. 'Mod4+q')",
     )
     p.add_argument(
         "--auto-paste",
@@ -226,7 +231,7 @@ def prompt(
         print(file=sys.stderr)
 
 
-def setup_signal_pipe(*, register_usr1: bool, register_usr2: bool) -> tuple[int, int]:
+def setup_signal_pipe(*, register_usr1: bool, register_usr2: bool, register_hup: bool) -> tuple[int, int]:
     """
     Create a self-pipe for converting signals into select(2)-readable events.
 
@@ -234,10 +239,12 @@ def setup_signal_pipe(*, register_usr1: bool, register_usr2: bool) -> tuple[int,
     is registered that writes a single space byte to write_fd and sets
     SIGNAL_STATE.paste_next. When register_usr2 is True, a SIGUSR2 handler is
     registered that writes an escape byte (0x1b) to write_fd without setting
-    paste_next. The write end is set to non-blocking so signal handlers never
-    block if the pipe buffer is full (the signal is silently dropped in that
-    case, which is acceptable since it just means a duplicate arrived before
-    the previous one was consumed).
+    paste_next. When register_hup is True, a SIGHUP handler is registered that
+    writes a quit byte (``q``) to write_fd without setting paste_next. The
+    write end is set to non-blocking so signal handlers never block if the pipe
+    buffer is full (the signal is silently dropped in that case, which is
+    acceptable since it just means a duplicate arrived before the previous one
+    was consumed).
 
     The read end is used by prompt() in its select() call. The caller is
     responsible for closing both fds when done.
@@ -269,16 +276,29 @@ def setup_signal_pipe(*, register_usr1: bool, register_usr2: bool) -> tuple[int,
 
         signal.signal(signal.SIGUSR2, usr2_handler)
 
+    if register_hup:
+
+        def hup_handler(_signum: int, _frame: object) -> None:
+            # Write a quit byte so prompt() sees it as a quit character.
+            # Does not set paste_next — quit is not a paste trigger.
+            with contextlib.suppress(BlockingIOError):
+                os.write(write_fd, b"q")
+
+        signal.signal(signal.SIGHUP, hup_handler)
+
     return read_fd, write_fd
 
 
-def launch_xbindkeys(toggle_key: str | None, cancel_key: str | None, pid: int) -> subprocess.Popen[bytes] | None:
+def launch_xbindkeys(
+    toggle_key: str | None, cancel_key: str | None, quit_key: str | None, pid: int
+) -> subprocess.Popen[bytes] | None:
     """
     Launch xbindkeys in foreground mode with a config binding keys to signals.
 
     When toggle_key is provided, binds it to ``kill -USR1 <pid>``. When
-    cancel_key is provided, binds it to ``kill -USR2 <pid>``. Both can be
-    provided to generate a single config with two bindings.
+    cancel_key is provided, binds it to ``kill -USR2 <pid>``. When quit_key is
+    provided, binds it to ``kill -HUP <pid>``. All can be provided to generate
+    a single config with multiple bindings.
 
     The config is passed via /dev/stdin to avoid creating a temp file. The
     xbindkeys process runs with -n (no daemon) so it stays as a child process
@@ -299,6 +319,8 @@ def launch_xbindkeys(toggle_key: str | None, cancel_key: str | None, pid: int) -
         parts.append(f'"kill -USR1 {pid}"\n{toggle_key}\n')
     if cancel_key is not None:
         parts.append(f'"kill -USR2 {pid}"\n{cancel_key}\n')
+    if quit_key is not None:
+        parts.append(f'"kill -HUP {pid}"\n{quit_key}\n')
     config = "".join(parts)
 
     try:
@@ -478,6 +500,7 @@ def client_loop(
     on_cancel: Sequence[str] | None = None,
     x11_toggle_key: str | None = None,
     x11_cancel_key: str | None = None,
+    x11_quit_key: str | None = None,
     auto_paste: bool = False,
 ) -> None:
     """
@@ -487,11 +510,12 @@ def client_loop(
     reaper queue. A single reaper thread joins them. The reaper is shut down
     via a None sentinel in the finally block.
 
-    When x11_toggle_key or x11_cancel_key is set, a signal self-pipe and
-    xbindkeys subprocess are created so that global X11 hotkeys can toggle or
-    cancel recording without terminal focus. SIGUSR1 is used for toggle,
-    SIGUSR2 for cancel. The xbindkeys process and pipe fds are cleaned up in a
-    finally block regardless of how the loop exits.
+    When x11_toggle_key, x11_cancel_key, or x11_quit_key is set, a signal
+    self-pipe and xbindkeys subprocess are created so that global X11 hotkeys
+    can toggle, cancel, or quit without terminal focus. SIGUSR1 is used for
+    toggle, SIGUSR2 for cancel, SIGHUP for quit. The xbindkeys process and
+    pipe fds are cleaned up in a finally block regardless of how the loop
+    exits.
 
     When auto_paste is True, ``copy_and_paste`` handles copying text to the
     clipboard and optionally pasting it — but only if recording was stopped
@@ -506,6 +530,7 @@ def client_loop(
     xbindkeys_proc: subprocess.Popen[bytes] | None = None
     has_usr1 = x11_toggle_key is not None
     has_usr2 = x11_cancel_key is not None
+    has_hup = x11_quit_key is not None
     reaper_q: queue.Queue[Thread | None] = queue.Queue()
 
     def _reaper() -> None:
@@ -516,9 +541,9 @@ def client_loop(
     reaper_thread.start()
 
     try:
-        if has_usr1 or has_usr2:
-            pipe_fd, write_fd = setup_signal_pipe(register_usr1=has_usr1, register_usr2=has_usr2)
-            xbindkeys_proc = launch_xbindkeys(x11_toggle_key, x11_cancel_key, os.getpid())
+        if has_usr1 or has_usr2 or has_hup:
+            pipe_fd, write_fd = setup_signal_pipe(register_usr1=has_usr1, register_usr2=has_usr2, register_hup=has_hup)
+            xbindkeys_proc = launch_xbindkeys(x11_toggle_key, x11_cancel_key, x11_quit_key, os.getpid())
 
         while True:
             result = prompt(
@@ -632,6 +657,8 @@ def client_loop(
                 signal.signal(signal.SIGUSR1, signal.SIG_DFL)
             if has_usr2:
                 signal.signal(signal.SIGUSR2, signal.SIG_DFL)
+            if has_hup:
+                signal.signal(signal.SIGHUP, signal.SIG_DFL)
             os.close(write_fd)
         if pipe_fd is not None:
             os.close(pipe_fd)
@@ -642,7 +669,10 @@ def client_loop(
 def main(args: Sequence[str]) -> int:
     opts = parser().parse_args(args)
 
-    for sig in (signal.SIGHUP, signal.SIGTERM, signal.SIGQUIT):
+    exit_signals: list[signal.Signals] = [signal.SIGTERM, signal.SIGQUIT]
+    if not opts.x11_quit_key:
+        exit_signals.append(signal.SIGHUP)
+    for sig in exit_signals:
         signal.signal(sig, lambda *_: sys.exit(0))
 
     on_record_start = shlex.split(opts.on_record_start) if opts.on_record_start else None
@@ -685,6 +715,7 @@ def main(args: Sequence[str]) -> int:
                 on_cancel=on_cancel,
                 x11_toggle_key=opts.x11_toggle_key,
                 x11_cancel_key=opts.x11_cancel_key,
+                x11_quit_key=opts.x11_quit_key,
                 auto_paste=opts.auto_paste,
             )
         except UserAbortError:
