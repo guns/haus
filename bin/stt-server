@@ -54,6 +54,7 @@ import dataclasses
 import http.server
 import inspect
 import io
+import re
 import subprocess
 import sys
 import threading
@@ -264,31 +265,91 @@ def load_parakeet_tdt(model_id: str, device: torch.device, *, local_only: bool) 
     return LoadedModel(processor=processor, tokenizer=None, model=model)
 
 
-def transcribe_parakeet(
-    audio: numpy.ndarray,
-    prompt: str | None,  # noqa: ARG001  # required by TranscribeFn; Parakeet TDT has no prompt biasing (ignored)
-    processor: Any,
-    tokenizer: Any,  # noqa: ARG001  # required by TranscribeFn; unused — ParakeetProcessor handles decoding
-    model: GenerativePreTrainedModel,
-    device: torch.device,
+def _normalize_word(word: str) -> str:
+    """Lowercase and strip leading/trailing non-alphanumeric for overlap comparison."""
+    stripped = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "", word.lower())
+    return stripped or word.lower()
+
+
+def _merge_overlapping_transcripts(transcripts: list[str], overlap_duration: float) -> str:
+    """
+    Merge transcripts from overlapping audio segments.
+
+    For each pair of adjacent transcripts, finds the longest common word
+    sequence between the tail of the first and the head of the second
+    (case-insensitive, punctuation-normalized). Splices at the match boundary
+    to eliminate duplication. Falls back to simple concatenation when no
+    multi-word match is found.
+
+    The algorithm uses longest-common-substring search rather than strict
+    suffix-prefix matching because the model produces slightly different word
+    boundaries depending on where audio appears within a segment.
+    """
+    non_empty = [t for t in transcripts if t.split()]
+    if len(non_empty) == 0:
+        return ""
+    if len(non_empty) == 1:
+        return non_empty[0]
+    if overlap_duration == 0:
+        return " ".join(non_empty)
+
+    max_overlap_words = max(int(overlap_duration * 4), 15)
+    min_match_words = 3
+
+    result_words = non_empty[0].split()
+
+    for transcript in non_empty[1:]:
+        next_words = transcript.split()
+        if not next_words:
+            continue
+
+        tail_size = min(max_overlap_words, len(result_words))
+        head_size = min(max_overlap_words, len(next_words))
+        tail = result_words[-tail_size:]
+        head = next_words[:head_size]
+
+        norm_tail = [_normalize_word(w) for w in tail]
+        norm_head = [_normalize_word(w) for w in head]
+
+        # Longest common substring search over word sequences
+        best_i = 0
+        best_j = 0
+        best_len = 0
+        for i in range(len(norm_tail)):
+            for j in range(len(norm_head)):
+                length = 0
+                while (
+                    i + length < len(norm_tail)
+                    and j + length < len(norm_head)
+                    and norm_tail[i + length] == norm_head[j + length]
+                ):
+                    length += 1
+                if length > best_len:
+                    best_i = i
+                    best_j = j
+                    best_len = length
+
+        if best_len >= min_match_words:
+            match_end_in_result = len(result_words) - tail_size + best_i + best_len
+            result_words = result_words[:match_end_in_result]
+            result_words.extend(next_words[best_j + best_len :])
+        else:
+            result_words.extend(next_words)
+
+    return " ".join(result_words)
+
+
+def _transcribe_parakeet_segment(
+    audio: numpy.ndarray, processor: Any, model: GenerativePreTrainedModel, device: torch.device
 ) -> str:
     """
-    Transcribe audio using an NVIDIA Parakeet TDT model via HuggingFace transformers.
+    Transcribe a single audio segment using Parakeet TDT.
 
-    ParakeetForTDT.generate() runs a duration-aware transducer decode: at each step the model
-    emits either a token or a blank and advances the encoder frame pointer by a predicted
-    duration. Unlike Whisper's autoregressive decoder, the transducer emits blanks over non-speech
-    (applause, crowd noise, silence) rather than inventing text, which is the hallucination
-    resistance this backend was added for. generate() returns a ParakeetRNNTGenerateOutput whose
-    .sequences field is decoded by the ParakeetProcessor (the tokenizer parameter is unused —
-    decoding goes through the processor).
-
-    The Parakeet TDT generate path has no prompt / context-biasing input (decoder_input_ids are
-    training-only teacher forcing), so the prompt parameter is accepted for TranscribeFn Protocol
-    conformance and deliberately ignored. v3 selects its output language automatically, so no
-    language kwarg is passed (unlike Whisper's language="en").
-
-    See: https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
+    Passes eos_token_id=None to suppress HuggingFace's EosTokenCriteria, which
+    would otherwise halt generation prematurely when the model emits
+    <|endoftext|> (token 3). The correct stopping condition for TDT transducers
+    is encoder exhaustion only (EncoderExhaustedCriteria), which the model's
+    generation mixin adds independently.
     """
     import torch  # noqa: autoimport
 
@@ -301,8 +362,107 @@ def transcribe_parakeet(
     # cosmetic warning rather than altering generation.
     with torch.no_grad(), warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Using the model-agnostic default `max_length`", category=UserWarning)
-        output = model.generate(**inputs)
-    return typing.cast("str", one(processor.batch_decode(output.sequences, skip_special_tokens=True)).strip())
+        output = model.generate(**inputs, eos_token_id=None)
+    text: str = one(processor.batch_decode(output.sequences, skip_special_tokens=True)).strip()
+    return text
+
+
+def chunk_and_transcribe_parakeet(
+    audio: numpy.ndarray,
+    processor: Any,
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+    *,
+    max_duration: float = 360.0,
+    overlap_duration: float = 10.0,
+) -> str:
+    """
+    Transcribe audio of any length using Parakeet TDT with chunked decoding.
+
+    Splits audio exceeding max_duration into overlapping segments, transcribes
+    each independently, and merges the results by de-duplicating the overlap
+    regions. For audio within max_duration, transcribes directly (no chunking
+    overhead).
+
+    Args:
+        audio: 1-D float32 array, 16kHz mono.
+        processor: ParakeetProcessor instance.
+        model: ParakeetForTDT model.
+        device: torch device (cpu or cuda).
+        max_duration: Maximum segment duration in seconds. Default 360.0
+            (90% of the model's ~400s positional embedding limit).
+        overlap_duration: Overlap between adjacent segments in seconds.
+            Default 10.0 (captures ~25 words at typical speech rate for
+            reliable de-duplication).
+
+    Returns:
+        Transcription text.
+    """
+    if max_duration <= 0:
+        raise ValueError(f"max_duration must be positive, got {max_duration}")
+    if overlap_duration < 0:
+        raise ValueError(f"overlap_duration must be non-negative, got {overlap_duration}")
+    if overlap_duration >= max_duration:
+        raise ValueError(
+            f"overlap_duration ({overlap_duration}) must be less than"
+            f" max_duration ({max_duration}); otherwise stride is non-positive"
+        )
+
+    max_samples = int(max_duration * SAMPLE_RATE)
+    overlap_samples = int(overlap_duration * SAMPLE_RATE)
+    stride = max_samples - overlap_samples
+    audio_length = len(audio)
+
+    if audio_length == 0:
+        return ""
+
+    if audio_length <= max_samples:
+        return _transcribe_parakeet_segment(audio, processor, model, device)
+
+    # Split into overlapping segments and transcribe sequentially
+    transcripts: list[str] = []
+    start = 0
+    while start < audio_length:
+        end = min(start + max_samples, audio_length)
+        segment = audio[start:end]
+        text = _transcribe_parakeet_segment(segment, processor, model, device)
+        transcripts.append(text)
+        if end == audio_length:
+            break
+        start += stride
+
+    return _merge_overlapping_transcripts(transcripts, overlap_duration=overlap_duration)
+
+
+def transcribe_parakeet(
+    audio: numpy.ndarray,
+    prompt: str | None,  # noqa: ARG001  # required by TranscribeFn; Parakeet TDT has no prompt biasing (ignored)
+    processor: Any,
+    tokenizer: Any,  # noqa: ARG001  # required by TranscribeFn; unused — ParakeetProcessor handles decoding
+    model: GenerativePreTrainedModel,
+    device: torch.device,
+) -> str:
+    """
+    Transcribe audio using an NVIDIA Parakeet TDT model via HuggingFace transformers.
+
+    Delegates to chunk_and_transcribe_parakeet, which handles both the EOS truncation fix
+    (eos_token_id=None) and chunked decoding for audio exceeding the model's ~400s positional
+    embedding limit. For audio under 360s (the default max_duration), a single-segment fast path
+    avoids any chunking overhead.
+
+    ParakeetForTDT.generate() runs a duration-aware transducer decode: at each step the model
+    emits either a token or a blank and advances the encoder frame pointer by a predicted
+    duration. Unlike Whisper's autoregressive decoder, the transducer emits blanks over non-speech
+    (applause, crowd noise, silence) rather than inventing text, which is the hallucination
+    resistance this backend was added for.
+
+    The Parakeet TDT generate path has no prompt / context-biasing input (decoder_input_ids are
+    training-only teacher forcing), so the prompt parameter is accepted for TranscribeFn Protocol
+    conformance and deliberately ignored.
+
+    See: https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
+    """
+    return chunk_and_transcribe_parakeet(audio, processor, model, device)
 
 
 SUPPORTED_MODEL_TYPES: dict[str, Backend] = {
