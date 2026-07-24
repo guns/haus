@@ -1,4 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# dependencies = [
+#     "pystray",
+#     "Pillow",
+# ]
+# ///
 #
 # Copyright (c) 2025-2026 Sung Pae <self@sungpae.com>
 # Distributed under the MIT license.
@@ -12,6 +19,7 @@ from __future__ import annotations
 
 import contextlib
 import enum
+import importlib
 import inspect
 import io
 import os
@@ -89,6 +97,62 @@ class PromptResult(enum.Enum):
     CONTINUE = "continue"
     QUIT = "quit"
     CANCEL = "cancel"
+
+
+class TrayState(enum.Enum):
+    IDLE = "idle"
+    WARMUP = "warmup"
+    RECORDING = "recording"
+    PROCESSING = "processing"
+
+
+class _TrayIcon:
+    """
+    System tray icon displaying the current stt-client state.
+
+    Gracefully degrades to a no-op when pystray/PIL are unavailable or the
+    X display is inaccessible. All public methods are safe to call regardless
+    of whether the icon is active.
+    """
+
+    def __init__(self) -> None:
+        self._icon: Any = None
+        self._images: dict[TrayState, Any] = {}
+        # pystray's Xorg backend opens an X display connection at import time;
+        # when no X server is available this raises DisplayNameError (not
+        # ImportError). The broad except catches all failure modes uniformly.
+        try:
+            _pystray = importlib.import_module("pystray")
+            _pil_image = importlib.import_module("PIL.Image")
+        except Exception:  # noqa: BLE001
+            return
+        icon_dir = Path.home() / ".icons" / "haus"
+        try:
+            for state in TrayState:
+                img_path = icon_dir / f"stt-{state.value}-16.png"
+                img = _pil_image.open(img_path)
+                img.load()
+                self._images[state] = img
+        except OSError:
+            return
+        try:
+            self._icon = _pystray.Icon("stt-client", self._images[TrayState.IDLE], "stt-client: idle")
+        except Exception:  # noqa: BLE001  # pystray can raise Xlib or DBus errors at runtime
+            self._icon = None
+            return
+        Thread(target=self._icon.run, daemon=True).start()
+
+    def set_state(self, state: TrayState) -> None:
+        if self._icon is None:
+            return
+        self._icon.icon = self._images[state]
+        self._icon.title = f"stt-client: {state.value}"
+
+    def stop(self) -> None:
+        if self._icon is None:
+            return
+        self._icon.stop()
+        self._icon = None
 
 
 class UserAbortError(RuntimeError):
@@ -444,6 +508,7 @@ def _read_pcm_stream(
     pcm_chunks: list[bytes],
     on_record_live: Sequence[str] | None,
     reaper_q: queue.Queue[Thread | None],
+    tray: _TrayIcon,
 ) -> None:
     """
     Read raw PCM from pw-record stdout, detect hardware initialization, and accumulate audio.
@@ -474,12 +539,14 @@ def _read_pcm_stream(
                 pcm_chunks.append(chunk)
                 if on_record_live:
                     reaper_q.put(spawn(on_record_live))
+                tray.set_state(TrayState.RECORDING)
                 break
     else:
         # Warm start: chunk 1 is real audio
         pcm_chunks.append(chunk1)
         if on_record_live:
             reaper_q.put(spawn(on_record_live))
+        tray.set_state(TrayState.RECORDING)
     # Switch to large reads for efficiency
     while True:
         data = stdout.read(65536)
@@ -539,6 +606,7 @@ def client_loop(
 
     reaper_thread = Thread(target=_reaper)
     reaper_thread.start()
+    tray = _TrayIcon()
 
     try:
         if has_usr1 or has_usr2 or has_hup:
@@ -581,12 +649,13 @@ def client_loop(
             )
             if on_record_start:
                 reaper_q.put(spawn(on_record_start))
+            tray.set_state(TrayState.WARMUP)
 
             pcm_chunks: list[bytes] = []
 
             assert proc.stdout is not None
             reader_thread = Thread(
-                target=_read_pcm_stream, args=(proc.stdout, pcm_chunks, on_record_live, reaper_q), daemon=True
+                target=_read_pcm_stream, args=(proc.stdout, pcm_chunks, on_record_live, reaper_q, tray), daemon=True
             )
             reader_thread.start()
 
@@ -604,11 +673,14 @@ def client_loop(
             if result is PromptResult.QUIT:
                 return
             if result is PromptResult.CANCEL:
+                tray.set_state(TrayState.IDLE)
                 if on_cancel:
                     reaper_q.put(spawn(on_cancel))
                 continue
             if not pcm_chunks:
+                tray.set_state(TrayState.IDLE)
                 continue
+            tray.set_state(TrayState.PROCESSING)
             if on_record_end:
                 reaper_q.put(spawn(on_record_end))
 
@@ -635,6 +707,7 @@ def client_loop(
             if text is None:
                 # on_cancel already dispatched inside transcribe_file
                 # on the error that preceded the user's cancel action.
+                tray.set_state(TrayState.IDLE)
                 continue
             stderr("> Copying the following text to PRIMARY:")
             print(text, flush=True)
@@ -644,8 +717,10 @@ def client_loop(
             if on_transcribe:
                 reaper_q.put(spawn(on_transcribe))
 
+            tray.set_state(TrayState.IDLE)
             SIGNAL_STATE.paste_next = False
     finally:
+        tray.stop()
         if xbindkeys_proc is not None:
             xbindkeys_proc.terminate()
             xbindkeys_proc.wait()
