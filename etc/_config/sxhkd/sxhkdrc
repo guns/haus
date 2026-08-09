@@ -250,11 +250,11 @@ super + shift + Scroll_Lock
 
 super + F1
 	T='⚙ stt-client ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 60x6 -title "$T" -e stt-client-wrapper
+	wmctrl -a "$T" || UV_OFFLINE=1 urxvt-client -g 60x6 -title "$T" -e stt-client-wrapper
 
 alt + F1
 	T='⚙ stt-server ⚙'; \
-	wmctrl -a "$T" || urxvt-client -g 52x6 -title "$T" -e stt-server
+	wmctrl -a "$T" || UV_OFFLINE=1 HF_HUB_OFFLINE=1 urxvt-client -g 52x6 -title "$T" -e stt-server
 
 F2
 	wmctrl -xa 'Thunar' || exec thunar ~/Downloads
