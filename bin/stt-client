@@ -481,7 +481,11 @@ def copy_and_paste(text: str, *, auto_paste: bool) -> None:
     waits 100ms then simulates shift+Insert via xdotool to paste into the
     foreground window. The 100ms delay gives the xsel daemon time to claim
     selection ownership after the parent process exits.
+
+    Does not attempt a paste if text.strip() is empty.
     """
+    if len(text.strip()) == 0:
+        return
     xsel_result = subprocess.run(["xsel", "--input"], input=text, text=True)
     if xsel_result.returncode != 0:
         stderr(f"> Warning: xsel exited with code {xsel_result.returncode}; PRIMARY selection copy may have failed")
