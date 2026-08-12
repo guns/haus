@@ -54,7 +54,7 @@ import dataclasses
 import http.server
 import inspect
 import io
-import re
+import math
 import subprocess
 import sys
 import threading
@@ -78,6 +78,11 @@ if TYPE_CHECKING:
 
 
 SAMPLE_RATE = 16000
+
+# A 10% overrun lets the default 720-second chunk reach 792 seconds, whose projected 18.1
+# GiB peak — roughly 15.7 GiB of activations plus the ~2.4 GiB of float32 weights —
+# remains below the target's 31.4 GiB usable memory and ~17.7-minute ceiling.
+FINAL_SEGMENT_OVERRUN_PERCENT = 10
 
 
 class TranscribeFn(Protocol):
@@ -123,7 +128,7 @@ def parser() -> ArgumentParser:
 
 
 def stderr(message: str) -> None:
-    print(message, file=sys.stderr)
+    sys.stderr.write(f"{message}\n")
 
 
 def one(coll: Collection[Any]) -> Any:
@@ -265,80 +270,6 @@ def load_parakeet_tdt(model_id: str, device: torch.device, *, local_only: bool) 
     return LoadedModel(processor=processor, tokenizer=None, model=model)
 
 
-def _normalize_word(word: str) -> str:
-    """Lowercase and strip leading/trailing non-alphanumeric for overlap comparison."""
-    stripped = re.sub(r"^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$", "", word.lower())
-    return stripped or word.lower()
-
-
-def _merge_overlapping_transcripts(transcripts: list[str], overlap_duration: float) -> str:
-    """
-    Merge transcripts from overlapping audio segments.
-
-    For each pair of adjacent transcripts, finds the longest common word
-    sequence between the tail of the first and the head of the second
-    (case-insensitive, punctuation-normalized). Splices at the match boundary
-    to eliminate duplication. Falls back to simple concatenation when no
-    multi-word match is found.
-
-    The algorithm uses longest-common-substring search rather than strict
-    suffix-prefix matching because the model produces slightly different word
-    boundaries depending on where audio appears within a segment.
-    """
-    non_empty = [t for t in transcripts if t.split()]
-    if len(non_empty) == 0:
-        return ""
-    if len(non_empty) == 1:
-        return non_empty[0]
-    if overlap_duration == 0:
-        return " ".join(non_empty)
-
-    max_overlap_words = max(int(overlap_duration * 4), 15)
-    min_match_words = 3
-
-    result_words = non_empty[0].split()
-
-    for transcript in non_empty[1:]:
-        next_words = transcript.split()
-        if not next_words:
-            continue
-
-        tail_size = min(max_overlap_words, len(result_words))
-        head_size = min(max_overlap_words, len(next_words))
-        tail = result_words[-tail_size:]
-        head = next_words[:head_size]
-
-        norm_tail = [_normalize_word(w) for w in tail]
-        norm_head = [_normalize_word(w) for w in head]
-
-        # Longest common substring search over word sequences
-        best_i = 0
-        best_j = 0
-        best_len = 0
-        for i in range(len(norm_tail)):
-            for j in range(len(norm_head)):
-                length = 0
-                while (
-                    i + length < len(norm_tail)
-                    and j + length < len(norm_head)
-                    and norm_tail[i + length] == norm_head[j + length]
-                ):
-                    length += 1
-                if length > best_len:
-                    best_i = i
-                    best_j = j
-                    best_len = length
-
-        if best_len >= min_match_words:
-            match_end_in_result = len(result_words) - tail_size + best_i + best_len
-            result_words = result_words[:match_end_in_result]
-            result_words.extend(next_words[best_j + best_len :])
-        else:
-            result_words.extend(next_words)
-
-    return " ".join(result_words)
-
-
 def _transcribe_parakeet_segment(
     audio: numpy.ndarray, processor: Any, model: GenerativePreTrainedModel, device: torch.device
 ) -> str:
@@ -373,65 +304,78 @@ def chunk_and_transcribe_parakeet(
     model: GenerativePreTrainedModel,
     device: torch.device,
     *,
-    max_duration: float = 360.0,
-    overlap_duration: float = 10.0,
+    max_duration: float = 720.0,
 ) -> str:
     """
     Transcribe audio of any length using Parakeet TDT with chunked decoding.
 
-    Splits audio exceeding max_duration into overlapping segments, transcribes
-    each independently, and merges the results by de-duplicating the overlap
-    regions. For audio within max_duration, transcribes directly (no chunking
-    overhead).
+    Splits audio exceeding the final-segment limit into contiguous segments,
+    transcribes each independently, and joins the resulting transcripts. A
+    final segment may overrun max_duration by 10%; audio within that band
+    transcribes directly without chunking overhead.
+
+    Parakeet has no positional-embedding duration limit: its encoder computes
+    positions from the input length. The actual limit is GPU memory for O(n²)
+    encoder attention. On the target (31.4 GiB usable), 1014.5 seconds
+    peaked at 28.07 GiB and 20 minutes failed while allocating 13.38 GiB. After
+    subtracting ~2.4 GiB of float32 weights, the ~25.7 GiB activations scale
+    quadratically, projecting a ~17.7-minute ceiling, ~15.3 GiB at 720 seconds,
+    and ~18.1 GiB at the allowed 792-second final-segment maximum. Word error
+    rate on a fixed opening window was flat from 2 to 17 minutes of surrounding
+    audio, so this range provides ample memory headroom without an observed
+    accuracy penalty.
 
     Args:
         audio: 1-D float32 array, 16kHz mono.
         processor: ParakeetProcessor instance.
         model: ParakeetForTDT model.
         device: torch device (cpu or cuda).
-        max_duration: Maximum segment duration in seconds. Default 360.0
-            (90% of the model's ~400s positional embedding limit).
-        overlap_duration: Overlap between adjacent segments in seconds.
-            Default 10.0 (captures ~25 words at typical speech rate for
-            reliable de-duplication).
+        max_duration: Target segment duration in seconds. A final segment may
+            exceed this by FINAL_SEGMENT_OVERRUN_PERCENT. Default 720.0, chosen
+            from the measured O(n²) attention-memory budget above.
 
     Returns:
         Transcription text.
     """
-    if max_duration <= 0:
-        raise ValueError(f"max_duration must be positive, got {max_duration}")
-    if overlap_duration < 0:
-        raise ValueError(f"overlap_duration must be non-negative, got {overlap_duration}")
-    if overlap_duration >= max_duration:
-        raise ValueError(
-            f"overlap_duration ({overlap_duration}) must be less than"
-            f" max_duration ({max_duration}); otherwise stride is non-positive"
-        )
+    if not math.isfinite(max_duration) or max_duration <= 0:
+        raise ValueError(f"max_duration must be finite and positive, got {max_duration}")
 
-    max_samples = int(max_duration * SAMPLE_RATE)
-    overlap_samples = int(overlap_duration * SAMPLE_RATE)
-    stride = max_samples - overlap_samples
+    max_samples_float = max_duration * SAMPLE_RATE
+    if not math.isfinite(max_samples_float):
+        raise ValueError(f"max_duration must produce a finite sample count at {SAMPLE_RATE}Hz, got {max_duration}")
+
+    max_samples = int(max_samples_float)
+    if max_samples < 1:
+        raise ValueError(f"max_duration must produce at least one sample at {SAMPLE_RATE}Hz, got {max_duration}")
+
     audio_length = len(audio)
 
     if audio_length == 0:
         return ""
 
-    if audio_length <= max_samples:
+    final_segment_max_samples = max_samples + max_samples * FINAL_SEGMENT_OVERRUN_PERCENT // 100
+    if audio_length <= final_segment_max_samples:
         return _transcribe_parakeet_segment(audio, processor, model, device)
 
-    # Split into overlapping segments and transcribe sequentially
+    # Fixed contiguous boundaries can sever one word, which the model renders as a plausible but
+    # garbled guess. At 720 seconds, a one-hour recording has four such boundaries, so this costs
+    # at most one garbled word per boundary. The removed overlap-and-text-merge approach could
+    # silently delete real text: any coincidental three-word match in its 40-word search window
+    # truncated the accumulated transcript and discarded the next segment's head — roughly 74 words
+    # at one boundary — with neither an error nor log output. A garbled word is preferable to silent
+    # deletion. A future implementation should select the least energetic position in a window near
+    # each target boundary; it avoids severing words without a threshold or speech/silence classifier,
+    # cannot discard audio, and costs about one millisecond for a recording of this length. It is
+    # omitted here to keep this change small.
     transcripts: list[str] = []
     start = 0
     while start < audio_length:
-        end = min(start + max_samples, audio_length)
-        segment = audio[start:end]
-        text = _transcribe_parakeet_segment(segment, processor, model, device)
-        transcripts.append(text)
-        if end == audio_length:
-            break
-        start += stride
+        remaining_samples = audio_length - start
+        end = audio_length if remaining_samples <= final_segment_max_samples else start + max_samples
+        transcripts.append(_transcribe_parakeet_segment(audio[start:end], processor, model, device))
+        start = end
 
-    return _merge_overlapping_transcripts(transcripts, overlap_duration=overlap_duration)
+    return " ".join(transcripts)
 
 
 def transcribe_parakeet(
@@ -446,9 +390,15 @@ def transcribe_parakeet(
     Transcribe audio using an NVIDIA Parakeet TDT model via HuggingFace transformers.
 
     Delegates to chunk_and_transcribe_parakeet, which handles both the EOS truncation fix
-    (eos_token_id=None) and chunked decoding for audio exceeding the model's ~400s positional
-    embedding limit. For audio under 360s (the default max_duration), a single-segment fast path
-    avoids any chunking overhead.
+    (eos_token_id=None) and memory-bounded chunked decoding. Parakeet has no positional-embedding
+    duration limit; its encoder computes positions from the actual input length. The practical
+    constraint is GPU memory for O(n²) encoder attention. The 720-second default projects to
+    roughly 15.3 GiB and its allowed 792-second final segment to roughly 18.1 GiB on the
+    target, leaving headroom below its 31.4 GiB usable memory and ~17.7-minute ceiling. A
+    1014.5-second run peaked at 28.07 GiB, while 20 minutes exhausted memory. Word error rate on
+    a fixed opening window was unchanged from 2 through 17 minutes of surrounding audio. Audio
+    within 10% of the 720-second target uses the single-segment fast path and avoids chunking
+    overhead.
 
     ParakeetForTDT.generate() runs a duration-aware transducer decode: at each step the model
     emits either a token or a blank and advances the encoder frame pointer by a predicted
@@ -560,7 +510,7 @@ def main(args: Sequence[str]) -> int:
         text = backend.transcribe(audio, opts.prompt, loaded.processor, loaded.tokenizer, loaded.model, device)
         elapsed = time.perf_counter() - t0
         ratio = elapsed / duration if duration > 0 else 0.0
-        print(text)
+        sys.stdout.write(f"{text}\n")
         stderr(f"> Transcription time: {elapsed:.3f}s (audio: {duration:.1f}s, ratio: {ratio:.3f}x)")
         return 0
 
