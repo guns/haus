@@ -471,7 +471,7 @@ def transcribe_file(
     return result
 
 
-def copy_and_paste(text: str, *, auto_paste: bool) -> None:
+def copy_and_paste(text: str, *, auto_paste: bool) -> bool:
     """
     Copy text to PRIMARY selection via xsel and optionally paste via xdotool.
 
@@ -485,15 +485,18 @@ def copy_and_paste(text: str, *, auto_paste: bool) -> None:
     Does not attempt a paste if text.strip() is empty.
     """
     if len(text.strip()) == 0:
-        return
+        return False
     xsel_result = subprocess.run(["xsel", "--input"], input=text, text=True)
     if xsel_result.returncode != 0:
         stderr(f"> Warning: xsel exited with code {xsel_result.returncode}; PRIMARY selection copy may have failed")
-    elif auto_paste and SIGNAL_STATE.paste_next:
+        return False
+    if auto_paste and SIGNAL_STATE.paste_next:
         time.sleep(0.1)
         paste_result = subprocess.run(["xdotool", "key", "shift+Insert"])
         if paste_result.returncode != 0:
             stderr(f"> Warning: xdotool exited with code {paste_result.returncode}; paste may have failed")
+            return False
+    return True
 
 
 def _read_exact(stdout: IO[bytes], n: int) -> bytes:
@@ -716,9 +719,8 @@ def client_loop(
             stderr("> Copying the following text to PRIMARY:")
             print(text, flush=True)
             print("--", file=sys.stderr)
-            copy_and_paste(text, auto_paste=auto_paste)
 
-            if on_transcribe:
+            if copy_and_paste(text, auto_paste=auto_paste) and on_transcribe:
                 reaper_q.put(spawn(on_transcribe))
 
             tray.set_state(TrayState.IDLE)
