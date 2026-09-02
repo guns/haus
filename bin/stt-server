@@ -3,8 +3,25 @@
 # /// script
 # dependencies = [
 #     "transformers>=5.14.0",
-#     "torch",
-#     "torchaudio",
+#     # nemo_toolkit[asr] powers the Parakeet backend: it provides the GPU-PB phrase-boosting
+#     # decoder that transformers' transducer generate() path does not expose. Whisper stays on
+#     # transformers. If NeMo's resolver caps transformers below the 5.14.0 floor above, lower the
+#     # floor to the intersection NeMo allows — Whisper needs only the stable generation API.
+#     #
+#     # Pinned to an exact git SHA rather than the 3.0.0 release: per-phrase phrase-boosting weights
+#     # (PhraseItem.alpha) and case-insensitive boosting (bpe_mode="case_insensitive") landed on main
+#     # AFTER the 3.0.0 tag (commits 66f1211a81 and 58f3dd9250 respectively) and both are ancestors
+#     # of this SHA. The exact SHA is pinned, not the main branch, so the script's behavior cannot
+#     # shift under a moving branch. This is also the exact ref the boosting design was verified
+#     # against.
+#     "nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git@ea1ebf55b25fceff372f885b4e7b5803f3d33dea",
+#     # torch and torchaudio are deliberately NOT listed here. NeMo pins torch through its own
+#     # [tool.uv.sources] to platform-specific PyTorch indexes (a CUDA build on Linux, a CPU build
+#     # elsewhere); declaring a bare "torch" here would add a second, pypi-indexed requirement and
+#     # uv rejects the two conflicting indexes ("conflicting indexes for package torch"). NeMo
+#     # requires torch>=2.7.0 unconditionally, so it is always installed and `import torch` resolves;
+#     # letting NeMo drive torch also keeps it matched to NeMo's CUDA expectations. torchaudio was
+#     # unused by this script and is dropped. transformers (Whisper) also uses the torch NeMo pulls.
 #     "numpy",
 #     "soundfile",
 #     "librosa",
@@ -24,7 +41,11 @@
 # http://www.opensource.org/licenses/mit-license.php
 
 """
-Speech-to-text transcription server using HuggingFace transformers.
+Speech-to-text transcription server.
+
+Whisper models run on HuggingFace transformers; the Parakeet TDT model runs on NVIDIA NeMo,
+which provides GPU-accelerated phrase boosting (GPU-PB) that the transformers transducer path
+cannot express.
 
 Supported models:
 
@@ -46,6 +67,14 @@ Supported models:
   distil-whisper/distil-large-v3
   distil-whisper/distil-large-v3.5
 * nvidia/parakeet-tdt-0.6b-v3 (default)
+
+The --prompt lever means something different per backend:
+
+  Whisper  : plain text prepended to every 30-second window to bias decoding.
+  Parakeet : a JSON phrase-boosting spec, e.g.
+               {"phrases": ["nvlink", {"phrase": "omniverse cloud", "alpha": 1.5}], "alpha": 1.0}
+             biasing the transducer toward the given spellings, optionally with a per-phrase weight.
+             See --help for the full schema.
 """
 
 from __future__ import annotations
@@ -54,6 +83,7 @@ import dataclasses
 import http.server
 import inspect
 import io
+import json
 import math
 import subprocess
 import sys
@@ -62,7 +92,6 @@ import time
 import traceback
 import typing
 import urllib.parse
-import warnings
 from argparse import ArgumentParser, RawTextHelpFormatter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
@@ -79,10 +108,129 @@ if TYPE_CHECKING:
 
 SAMPLE_RATE = 16000
 
-# A 10% overrun lets the default 720-second chunk reach 792 seconds, whose projected 18.1
-# GiB peak — roughly 15.7 GiB of activations plus the ~2.4 GiB of float32 weights —
-# remains below the target's 31.4 GiB usable memory and ~17.7-minute ceiling.
+# Global attention makes the Parakeet encoder O(n²) in audio length; bf16 inference halves the
+# activation memory relative to float32 but the quadratic growth still imposes a duration ceiling
+# past which a single forward pass exhausts GPU memory. --max-segment-duration bounds that length
+# by splitting long audio into contiguous segments (see chunk_and_transcribe_parakeet); it defaults
+# to no splitting because the dominant use is sub-minute audio. A final segment may overrun the
+# requested duration by this percentage, so audio that fits within the band transcribes in one pass.
 FINAL_SEGMENT_OVERRUN_PERCENT = 10
+
+# Global boosting_tree_alpha applied when a Parakeet --prompt supplies phrases but omits a top-level
+# "alpha". NeMo's own default is 0.0, which silently disables boosting; an operator who lists phrases
+# clearly wants them boosted, so the common case defaults to boosting on.
+DEFAULT_BOOSTING_TREE_ALPHA = 1.0
+
+# Sentinel distinguishing "decoding strategy never configured" from "configured for no boosting"
+# (None). The first Parakeet request always configures greedy_batch exactly once regardless of the
+# model's shipped default. See _apply_boosting.
+_UNSET = object()
+
+# Parakeet-only segment ceiling in seconds, set from --max-segment-duration in main() before any
+# transcription runs. None means no splitting (the default). It is a module global rather than a
+# TranscribeFn parameter because that Protocol is shared with Whisper, which self-splits at fixed
+# 30-second windows and takes no such knob; mirrors SAMPLE_RATE as process-wide configuration.
+MAX_SEGMENT_DURATION: float | None = None
+
+
+@dataclasses.dataclass(frozen=True)
+class PhrasePrompt:
+    # One boosting phrase and its optional per-phrase weight. alpha is a multiplier baked into the
+    # boosting graph at build time (effective boost = boosting_tree_alpha * alpha); None means the
+    # global behavior (x1.0). Frozen so PhrasePrompt — and the BoostingSpec tuple that holds it — is
+    # hashable and usable directly as the decoding-strategy cache key.
+    phrase: str  # non-empty, non-whitespace (stored stripped)
+    alpha: float | None = None  # per-phrase multiplier; finite and >= 0.0 when present
+
+
+@dataclasses.dataclass(frozen=True)
+class BoostingSpec:
+    # phrase_items is ordered as given and non-empty (an empty phrase list is the no-boosting case,
+    # represented by None, so "boosting requested" and "no boosting" are distinct and not
+    # representable as each other). A tuple of frozen PhrasePrompt items makes BoostingSpec hashable,
+    # so it doubles as the cache key that guards decoding-strategy rebuilds — no separate key
+    # derivation. Order and both alpha levels participate in equality/hash, so any change to the
+    # phrase list, a per-phrase alpha, or the global alpha triggers a rebuild.
+    phrase_items: tuple[PhrasePrompt, ...]  # non-empty
+    alpha: float  # global boosting_tree_alpha; finite and >= 0.0
+
+
+def parse_parakeet_prompt(prompt: str | None) -> BoostingSpec | None:
+    """
+    Parse the Parakeet --prompt JSON boosting spec.
+
+    None or blank -> None (no boosting). Otherwise the prompt must be a JSON object with a non-empty
+    "phrases" array. Each phrase item is either a bare string or an object {"phrase": str, "alpha"?:
+    number}: the bare-string form takes the global boosting weight, and the object form carries an
+    optional per-phrase multiplier ("alpha") applied on top of it (effective boost =
+    boosting_tree_alpha * per-phrase alpha). A multi-word phrase is a single string, e.g. "omniverse
+    cloud". An optional top-level "alpha" (default DEFAULT_BOOSTING_TREE_ALPHA) sets the global
+    boosting strength (NeMo's boosting_tree_alpha).
+
+    Every alpha — top-level and per-phrase — must be a finite, non-negative number. NaN/Infinity are
+    rejected: json.loads accepts the non-standard NaN/Infinity tokens, a non-finite boosting weight
+    would silently corrupt the transducer scoring, and a NaN alpha would additionally defeat the
+    decoding-strategy cache (NaN != NaN, so the spec would never compare equal to itself and every
+    request would rebuild the boosting tree). Phrase strings are stored stripped so the value that
+    was validated as non-blank is the exact value handed to the tokenizer.
+
+    Any malformed input raises ValueError so a wrapper typo surfaces loudly (HTTP 500 traceback in
+    server mode, non-zero exit in file mode) rather than silently degrading to no boosting.
+    """
+    if not prompt or not prompt.strip():
+        return None
+
+    try:
+        obj = json.loads(prompt)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"--prompt for Parakeet must be valid JSON: {e}") from e
+
+    if not isinstance(obj, dict):
+        raise ValueError(f"Parakeet prompt JSON must be an object, got {type(obj).__name__}")
+
+    raw_phrases = obj.get("phrases")
+    if not isinstance(raw_phrases, list) or not raw_phrases:
+        raise ValueError("Parakeet prompt JSON must contain a non-empty 'phrases' array")
+
+    phrase_items: list[PhrasePrompt] = []
+    for i, item in enumerate(raw_phrases):
+        if isinstance(item, str):
+            if not item.strip():
+                raise ValueError(f"phrases[{i}] is an empty string")
+            phrase_items.append(PhrasePrompt(phrase=item.strip()))
+        elif isinstance(item, dict):
+            phrase = item.get("phrase")
+            if not isinstance(phrase, str) or not phrase.strip():
+                raise ValueError(f"phrases[{i}].phrase must be a non-empty string")
+            per_alpha = _parse_alpha(item.get("alpha"), f"phrases[{i}].alpha", allow_none=True)
+            phrase_items.append(PhrasePrompt(phrase=phrase.strip(), alpha=per_alpha))
+        else:
+            raise ValueError(f"phrases[{i}] must be a string or an object, got {type(item).__name__}")
+
+    alpha = _parse_alpha(obj.get("alpha", DEFAULT_BOOSTING_TREE_ALPHA), "top-level 'alpha'", allow_none=False)
+    assert alpha is not None  # allow_none=False guarantees a value; narrows the type for the return
+    return BoostingSpec(phrase_items=tuple(phrase_items), alpha=alpha)
+
+
+def _parse_alpha(value: Any, label: str, *, allow_none: bool) -> float | None:
+    """
+    Validate a boosting alpha and return it as a float (or None when allow_none and value is absent).
+
+    Rejects, with a ValueError naming the field via label: booleans (a bool is an int subclass, so
+    it would otherwise slip through the numeric check as 1/0), non-numbers, non-finite values
+    (NaN/Infinity — see parse_parakeet_prompt for why these are dangerous), and negatives. When
+    allow_none is True a None value passes through unchanged (the per-phrase "global behavior" case);
+    when False a None is a missing required number and is rejected as a non-number.
+    """
+    if allow_none and value is None:
+        return None
+    # bool is a subclass of int; reject it before the numeric check accepts True/False as 1/0.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be a number")
+    alpha = float(value)
+    if not math.isfinite(alpha) or alpha < 0:
+        raise ValueError(f"{label} must be a finite non-negative number")
+    return alpha
 
 
 class TranscribeFn(Protocol):
@@ -92,21 +240,22 @@ class TranscribeFn(Protocol):
         prompt: str | None,
         processor: Any,
         tokenizer: Any,
-        model: GenerativePreTrainedModel,
+        model: Any,  # a NeMo ASRModel or a transformers model; NeMo ships no py.typed
         device: torch.device,
     ) -> str: ...
 
 
 @dataclasses.dataclass(frozen=True)
 class LoadedModel:
-    processor: Any  # Whisper: WhisperProcessor; Parakeet: ParakeetProcessor
-    tokenizer: Any  # Whisper: the AutoTokenizer; Parakeet: None (decode goes through processor)
-    model: GenerativePreTrainedModel
+    processor: Any  # Whisper: WhisperProcessor; Parakeet: None (NeMo model owns preprocessing)
+    tokenizer: Any  # Whisper: the AutoTokenizer; Parakeet: None
+    model: Any  # Whisper: a transformers GenerativePreTrainedModel; Parakeet: a NeMo ASRModel
 
 
 class LoadFn(Protocol):
-    # local_only is keyword-only: a boolean positional argument is opaque at the call site (FBT001).
-    def __call__(self, model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel: ...
+    # Caching is a per-runtime concern owned by each loader (transformers via local_files_only, NeMo
+    # via its built-in cache-first from_pretrained), so it is deliberately absent from this contract.
+    def __call__(self, model_id: str, device: torch.device) -> LoadedModel: ...
 
 
 @dataclasses.dataclass(frozen=True)
@@ -115,13 +264,61 @@ class Backend:
     transcribe: TranscribeFn
 
 
+PARAKEET_PROMPT_EPILOG = inspect.cleandoc(
+    """
+    Parakeet phrase boosting (--prompt):
+
+      For nvidia/parakeet-tdt-0.6b-v3, --prompt is a JSON object that biases the transducer toward
+      specific spellings via NeMo's GPU-accelerated phrase boosting (GPU-PB):
+
+        {"phrases": ["nvlink", {"phrase": "omniverse cloud", "alpha": 1.5}, "GTC"], "alpha": 1.0}
+
+      phrases  (required, non-empty)  An array of phrase items. Each item is either a bare string or
+                                      an object {"phrase": <string>, "alpha": <number>}. A multi-word
+                                      phrase is a single string, e.g. "omniverse cloud". Casing is
+                                      matched case-insensitively (bpe_mode=case_insensitive), so
+                                      phrases need not be pre-capitalized to match this capitalizing
+                                      model's output.
+      alpha    (optional)             Global boosting strength (boosting_tree_alpha), default 1.0.
+                                      0.0 disables boosting while keeping the phrase list. Must be a
+                                      finite, non-negative number.
+
+      Per-phrase alpha (the object form) is a multiplier applied on top of the global alpha, so the
+      effective boost for a phrase is global_alpha * per_phrase_alpha. Omitting it means the global
+      behavior (x1.0). Per-phrase alpha must also be a finite, non-negative number.
+
+      Fixed in source at NVIDIA's TDT recommendations and not exposed through the JSON:
+      context_score=1.0, depth_scaling=2.0, bpe_mode=case_insensitive, decoding
+      strategy="greedy_batch".
+
+      Malformed JSON, a missing/empty phrases list, an empty phrase string, or a non-finite/negative
+      alpha (top-level or per-phrase) is rejected with an error.
+
+    Whisper models take --prompt as plain text, not JSON.
+    """
+)
+
+
 def parser() -> ArgumentParser:
     p = ArgumentParser(
-        description=__doc__, formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36)
+        description=__doc__,
+        epilog=PARAKEET_PROMPT_EPILOG,
+        formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36),
     )
     p.add_argument("-m", "--model", help="HuggingFace model identifier", default="nvidia/parakeet-tdt-0.6b-v3")
     p.add_argument("-f", "--file", help="transcribe an audio file and exit (benchmark mode)")
-    p.add_argument("-p", "--prompt", help="text prompt that biases transcription (Whisper models only; file mode only)")
+    p.add_argument(
+        "-p",
+        "--prompt",
+        help="bias transcription: plain text for Whisper, a JSON boosting spec for Parakeet (see below)",
+    )
+    p.add_argument(
+        "--max-segment-duration",
+        type=float,
+        default=None,
+        help="Parakeet only: split audio into contiguous segments of at most this many seconds to\n"
+        "bound O(n²) encoder-attention memory on long audio (default: no splitting)",
+    )
     p.add_argument("host", nargs="?", help="IP address to bind", default="0.0.0.0")
     p.add_argument("port", nargs="?", help="TCP port to bind", default=41100, type=int)
     return p
@@ -138,7 +335,13 @@ def one(coll: Collection[Any]) -> Any:
 
 
 def load_audio(audio_bytes: bytes) -> numpy.ndarray:
-    data, sample_rate = soundfile.read(io.BytesIO(audio_bytes))
+    # dtype="float32": soundfile defaults to float64, which NeMo's AudioPreprocessor rejects and
+    # casts to float32 on every request (with a warning). Reading float32 up front makes the
+    # preprocessor receive exactly what it wants — no per-request warning or cast. This is lossless
+    # for this pipeline: capture is s16 PCM, and every 16-bit integer sample is exactly representable
+    # in float32. (This concerns the audio waveform's dtype, independent of the model's bf16 compute
+    # dtype, which the preprocessor pins to float32 regardless.)
+    data, sample_rate = soundfile.read(io.BytesIO(audio_bytes), dtype="float32")
 
     if sample_rate != SAMPLE_RATE or (data.ndim > 1 and data.shape[1] > 1):
         stderr(f"> Warning: resampling audio to mono {SAMPLE_RATE}Hz via ffmpeg")
@@ -148,7 +351,8 @@ def load_audio(audio_bytes: bytes) -> numpy.ndarray:
             capture_output=True,
         )
         proc.check_returncode()
-        data, sample_rate = soundfile.read(io.BytesIO(proc.stdout))
+        # float32 here too, so the resampling path does not silently revert to float64.
+        data, sample_rate = soundfile.read(io.BytesIO(proc.stdout), dtype="float32")
 
     return typing.cast("numpy.ndarray", data)
 
@@ -212,7 +416,7 @@ def transcribe_whisper(
     return typing.cast("str", one(tokenizer.batch_decode(output_ids, skip_special_tokens=True)).strip())
 
 
-def load_whisper(model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel:
+def load_whisper(model_id: str, device: torch.device) -> LoadedModel:
     """
     Load an OpenAI Whisper / Distil-Whisper checkpoint for sequence-to-sequence transcription.
 
@@ -223,11 +427,23 @@ def load_whisper(model_id: str, device: torch.device, *, local_only: bool) -> Lo
     passed both forced_decoder_ids and language/task" conflicts and the max_length cap that would
     truncate long-form transcription. This cleanup is Whisper-specific and never runs for other
     backends.
+
+    Caching is owned here rather than by main(): the first from_pretrained probes the transformers
+    cache with local_files_only=True to avoid a network revalidation when the checkpoint is already
+    present, and only on a cache miss (OSError) does it print the download notice and fetch. This is
+    the transformers-specific half of the split that removed local_only from the LoadFn contract.
     """
     import transformers  # noqa: autoimport  # deliberate lazy load; see main() — no module-top transformers import
 
-    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
-    processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=local_only)  # type: ignore[no-untyped-call]
+    try:
+        # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
+        processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=True)  # type: ignore[no-untyped-call]
+        local_only = True
+    except OSError:
+        stderr("> Model not cached, downloading...")
+        processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=False)  # type: ignore[no-untyped-call]
+        local_only = False
+
     model = transformers.AutoModelForSpeechSeq2Seq.from_pretrained(
         model_id, device_map=device, dtype=None, local_files_only=local_only
     )
@@ -244,135 +460,173 @@ def load_whisper(model_id: str, device: torch.device, *, local_only: bool) -> Lo
     return LoadedModel(processor=processor, tokenizer=tokenizer, model=model)
 
 
-def load_parakeet_tdt(model_id: str, device: torch.device, *, local_only: bool) -> LoadedModel:
+def load_parakeet_nemo(model_id: str, device: torch.device) -> LoadedModel:
     """
-    Load an NVIDIA Parakeet TDT (Token-and-Duration Transducer) checkpoint.
+    Load an NVIDIA Parakeet TDT checkpoint on the NeMo runtime.
 
-    Parakeet is a transducer model, not seq2seq, so it loads via AutoModelForTDT (which resolves
-    config.model_type "parakeet_tdt" to ParakeetForTDT). The target nvidia/parakeet-tdt-0.6b-v3 is
-    a complete transformers-native checkpoint (config, tokenizer, safetensors, processor), so this
-    is a direct load with no .nemo conversion. Any parakeet_tdt checkpoint loads through these same
-    two calls, so the loader is id-agnostic. The model loads in float32: the ParakeetFeatureExtractor
-    always produces float32 input_features, so a reduced-precision model (e.g. bfloat16) would raise
-    a dtype mismatch in the encoder subsampling conv unless the features were cast to model.dtype.
-    float32 is the configuration validated end-to-end (correct transcript, empty output over
-    non-speech) and ~2.4 GB for this 0.6B model is a non-issue on the target GPU. No
-    generation-config cleanup is needed — Parakeet has no forced_decoder_ids / suppress_tokens.
+    NeMo's ASRModel.from_pretrained resolves an HF identifier (a model_name containing "/") to the
+    repo's .nemo artifact and is cache-first: when the artifact is already cached it loads offline
+    with no network calls, otherwise it downloads and logs its own progress. This is why the loader
+    takes no local_only flag — caching is NeMo's concern, not the shared LoadFn contract's.
+
+    Compute dtype is bf16, NeMo's own inference default (examples/asr/transcribe_speech.py): same
+    exponent range as float32, tensor-core matmuls, and roughly half the memory (~1.2 GB weights and
+    halved activations). The transformers path's float32 requirement was a ParakeetFeatureExtractor
+    dtype quirk that does not exist on the NeMo runtime, so no feature-cast workaround is needed.
+    map_location places the model on the target device; a pytorch_lightning.Trainer is not required
+    because transcribe() derives its device and dtype from the model's own parameters. The processor
+    and tokenizer slots are None: the NeMo model owns preprocessing and decoding internally.
     """
-    import torch  # noqa: autoimport  # deliberate lazy load; needed only for torch.float32
-    import transformers  # noqa: autoimport  # deliberate lazy load; see main() — no module-top transformers import
+    import torch  # noqa: autoimport  # deliberate lazy load; needed only for torch.bfloat16
 
-    # AutoProcessor.from_pretrained overrides base class without type annotations; no stubs available
-    processor = transformers.AutoProcessor.from_pretrained(model_id, local_files_only=local_only)  # type: ignore[no-untyped-call]
-    model = transformers.AutoModelForTDT.from_pretrained(
-        model_id, device_map=device, dtype=torch.float32, local_files_only=local_only
+    # NeMo ships no py.typed marker, so mypy cannot analyze it; the import is lazy to keep --help fast.
+    from nemo.collections.asr.models import ASRModel  # type: ignore[import-untyped]  # noqa: autoimport
+
+    model = ASRModel.from_pretrained(model_name=model_id, map_location=device)
+    model.to(torch.bfloat16)
+    model.eval()
+    return LoadedModel(processor=None, tokenizer=None, model=model)
+
+
+def _apply_boosting(model: Any, spec: BoostingSpec | None) -> None:
+    """
+    Configure the NeMo model's greedy_batch decoding strategy for the requested boosting spec.
+
+    The decoding-strategy configuration is cached on the model instance as model._stt_boosting_key.
+    A request whose desired spec equals the cached key is a no-op (the boosting tree, which
+    change_decoding_strategy rebuilds from scratch, is expensive); otherwise the strategy is
+    reconfigured and the key advanced. Because the key starts at the _UNSET sentinel, the first
+    request always configures greedy_batch exactly once — pinning a deterministic decode regardless
+    of the model's shipped default — even when no boosting is requested (spec is None).
+
+    The key is advanced only after change_decoding_strategy returns, so a failed rebuild leaves the
+    cache unset and a later request retries rather than falsely assuming success. This runs inside
+    the caller's transcription lock, so the read-compare-write is atomic with respect to other
+    requests (there is one model per process and no other writer of the decoding strategy).
+
+    GPU-PB is wired through the greedy decoding config: greedy.boosting_tree holds a
+    BoostingTreeModelConfig built from the phrase list and greedy.boosting_tree_alpha is the global
+    strength (rnnt_decoding reads both from the greedy sub-config). An empty tree or a 0.0 alpha
+    disables boosting. context_score=1.0 and depth_scaling=2.0 are fixed at NVIDIA's TDT
+    recommendations, and bpe_mode="case_insensitive" removes the need to pre-capitalize phrases for
+    this capitalizing model. Phrases go in as key_phrase_items_list of PhraseItem objects so each
+    phrase can carry its own alpha multiplier (effective boost = boosting_tree_alpha * per-phrase
+    alpha; a None per-phrase alpha means the global behavior).
+    """
+    if getattr(model, "_stt_boosting_key", _UNSET) == spec:
+        return
+
+    # NeMo ships no py.typed marker; import lazily to keep --help fast.
+    from nemo.collections.asr.parts.context_biasing.boosting_graph_batched import (  # type: ignore[import-untyped]  # noqa: autoimport
+        BoostingTreeModelConfig,
+        PhraseItem,
     )
-    return LoadedModel(processor=processor, tokenizer=None, model=model)
+    from omegaconf import OmegaConf, open_dict  # noqa: autoimport  # lazy: pulled in by NeMo, not needed for --help
+
+    decoding_cfg = model.cfg.decoding
+    with open_dict(decoding_cfg):
+        decoding_cfg.strategy = "greedy_batch"
+        if "greedy" not in decoding_cfg or decoding_cfg.greedy is None:
+            decoding_cfg.greedy = OmegaConf.create({})
+        if spec is None:
+            # An empty config is is_empty() -> boosting disabled; assign a structured node rather
+            # than None so a strictly-typed greedy sub-config does not reject it.
+            decoding_cfg.greedy.boosting_tree = OmegaConf.structured(BoostingTreeModelConfig())
+            decoding_cfg.greedy.boosting_tree_alpha = 0.0
+        else:
+            items = [PhraseItem(phrase=p.phrase, alpha=p.alpha) for p in spec.phrase_items]
+            decoding_cfg.greedy.boosting_tree = OmegaConf.structured(
+                BoostingTreeModelConfig(
+                    key_phrase_items_list=items, context_score=1.0, depth_scaling=2.0, bpe_mode="case_insensitive"
+                )
+            )
+            decoding_cfg.greedy.boosting_tree_alpha = spec.alpha
+
+    # verbose=False: change_decoding_strategy otherwise dumps the entire decoding config to stderr on
+    # every rebuild, drowning the server's own terse status lines. With the phrase-key cache this
+    # runs once per distinct prompt, but the dump is noise either way.
+    model.change_decoding_strategy(decoding_cfg, verbose=False)
+    # _stt_boosting_key is our own cache sentinel on the single per-process model instance (see
+    # docstring), not a member of a foreign class; advance it only after a successful rebuild.
+    model._stt_boosting_key = spec  # noqa: SLF001
 
 
-def _transcribe_parakeet_segment(
-    audio: numpy.ndarray, processor: Any, model: GenerativePreTrainedModel, device: torch.device
-) -> str:
+def _transcribe_parakeet_segment(audio: numpy.ndarray, model: Any) -> str:
     """
-    Transcribe a single audio segment using Parakeet TDT.
+    Transcribe a single audio segment using the NeMo Parakeet TDT model.
 
-    Passes eos_token_id=None to suppress HuggingFace's EosTokenCriteria, which
-    would otherwise halt generation prematurely when the model emits
-    <|endoftext|> (token 3). The correct stopping condition for TDT transducers
-    is encoder exhaustion only (EncoderExhaustedCriteria), which the model's
-    generation mixin adds independently.
+    NeMo's transcribe() accepts a single np.ndarray (wrapped to a one-element list internally) and,
+    for RNNT/TDT, always returns a list of Hypothesis objects — the transcript text is the .text
+    attribute of the single Hypothesis, not the list element itself. one() asserts the single-segment
+    result. The array must already be at the model's sample rate (SAMPLE_RATE); load_audio guarantees
+    16 kHz mono, and NeMo does not resample tensor input. No device argument is threaded here:
+    transcribe() derives its device and dtype from the model's own parameters.
     """
-    import torch  # noqa: autoimport
-
-    inputs = processor(audio, sampling_rate=SAMPLE_RATE, return_tensors="pt").to(device)
-    # ParakeetForTDT._prepare_generated_length already derives a safe, input-scaled max_length
-    # (max_symbols_per_step * encoder_frames) and the transducer stops when encoder frames are
-    # exhausted, so generation never truncates. The warning fires only because neither max_length
-    # nor max_new_tokens is passed by the caller; setting max_new_tokens would replace the model's
-    # correct sizing with a fixed cap that could truncate long audio. Suppress just this one
-    # cosmetic warning rather than altering generation.
-    with torch.no_grad(), warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="Using the model-agnostic default `max_length`", category=UserWarning)
-        output = model.generate(**inputs, eos_token_id=None)
-    text: str = one(processor.batch_decode(output.sequences, skip_special_tokens=True)).strip()
-    return text
+    hyp = one(model.transcribe([audio], batch_size=1, verbose=False))
+    return typing.cast("str", hyp.text.strip())
 
 
-def chunk_and_transcribe_parakeet(
-    audio: numpy.ndarray,
-    processor: Any,
-    model: GenerativePreTrainedModel,
-    device: torch.device,
-    *,
-    max_duration: float = 720.0,
-) -> str:
+def chunk_and_transcribe_parakeet(audio: numpy.ndarray, model: Any, *, max_duration: float | None) -> str:
     """
-    Transcribe audio of any length using Parakeet TDT with chunked decoding.
+    Transcribe audio with the NeMo Parakeet TDT model, optionally splitting long audio.
 
-    Splits audio exceeding the final-segment limit into contiguous segments,
-    transcribes each independently, and joins the resulting transcripts. A
-    final segment may overrun max_duration by 10%; audio within that band
-    transcribes directly without chunking overhead.
+    With max_duration None (the default) the whole array is transcribed in a single pass — no
+    splitting. Otherwise audio exceeding the final-segment limit is cut into contiguous, gapless
+    segments of at most max_duration seconds (a final segment may overrun by
+    FINAL_SEGMENT_OVERRUN_PERCENT), each transcribed independently and the transcripts joined with a
+    space. Splitting bounds the O(n²) encoder-attention memory that global attention imposes on long
+    audio; it defaults off because the dominant use is sub-minute audio.
 
-    Parakeet has no positional-embedding duration limit: its encoder computes
-    positions from the input length. The actual limit is GPU memory for O(n²)
-    encoder attention. On the target (31.4 GiB usable), 1014.5 seconds
-    peaked at 28.07 GiB and 20 minutes failed while allocating 13.38 GiB. After
-    subtracting ~2.4 GiB of float32 weights, the ~25.7 GiB activations scale
-    quadratically, projecting a ~17.7-minute ceiling, ~15.3 GiB at 720 seconds,
-    and ~18.1 GiB at the allowed 792-second final-segment maximum. Word error
-    rate on a fixed opening window was flat from 2 to 17 minutes of surrounding
-    audio, so this range provides ample memory headroom without an observed
-    accuracy penalty.
+    Splits are arbitrary/contiguous rather than content-aware. A boundary can sever one word, which
+    the model renders as a plausible but garbled guess — at most one garbled word per boundary. The
+    rejected overlap-and-text-merge alternative could instead silently delete real text: a
+    coincidental n-gram match in its search window truncated the accumulated transcript and discarded
+    the next segment's head with neither an error nor a log line. A garbled word is preferable to
+    silent deletion, so contiguous splitting is used.
+
+    A per-segment transcribe() call is made rather than one batched call over all segments: NeMo may
+    presort inputs by duration for throughput, so relying on input-order preservation to reassemble a
+    multi-segment transcript would be a latent ordering bug. Per-segment calls make ordering trivially
+    correct; splitting is the rare long-audio case, so the extra dataloader setup per segment is
+    acceptable.
 
     Args:
-        audio: 1-D float32 array, 16kHz mono.
-        processor: ParakeetProcessor instance.
-        model: ParakeetForTDT model.
-        device: torch device (cpu or cuda).
-        max_duration: Target segment duration in seconds. A final segment may
-            exceed this by FINAL_SEGMENT_OVERRUN_PERCENT. Default 720.0, chosen
-            from the measured O(n²) attention-memory budget above.
+        audio: 1-D array, 16 kHz mono.
+        model: the loaded NeMo ASRModel.
+        max_duration: target segment duration in seconds, or None for no splitting. A final segment
+            may exceed this by FINAL_SEGMENT_OVERRUN_PERCENT.
 
     Returns:
-        Transcription text.
+        Transcription text ("" for empty audio).
     """
-    if not math.isfinite(max_duration) or max_duration <= 0:
-        raise ValueError(f"max_duration must be finite and positive, got {max_duration}")
-
-    max_samples_float = max_duration * SAMPLE_RATE
-    if not math.isfinite(max_samples_float):
-        raise ValueError(f"max_duration must produce a finite sample count at {SAMPLE_RATE}Hz, got {max_duration}")
-
-    max_samples = int(max_samples_float)
-    if max_samples < 1:
-        raise ValueError(f"max_duration must produce at least one sample at {SAMPLE_RATE}Hz, got {max_duration}")
-
     audio_length = len(audio)
-
+    # Empty audio has nothing to split, so it returns before max_duration is validated: an invalid
+    # knob is not surfaced for a zero-length request. This is intentional and matches the split
+    # prototype's spec; the CLI's type=float already rejects non-numeric --max-segment-duration, and
+    # a non-empty request exercises the finite/positive checks below.
     if audio_length == 0:
         return ""
 
+    if max_duration is None:
+        return _transcribe_parakeet_segment(audio, model)
+
+    if not math.isfinite(max_duration) or max_duration <= 0:
+        raise ValueError(f"max_duration must be finite and positive, got {max_duration}")
+
+    max_samples = int(max_duration * SAMPLE_RATE)
+    if max_samples < 1:
+        raise ValueError(f"max_duration too small to yield one sample at {SAMPLE_RATE}Hz: {max_duration}")
+
     final_segment_max_samples = max_samples + max_samples * FINAL_SEGMENT_OVERRUN_PERCENT // 100
     if audio_length <= final_segment_max_samples:
-        return _transcribe_parakeet_segment(audio, processor, model, device)
+        return _transcribe_parakeet_segment(audio, model)
 
-    # Fixed contiguous boundaries can sever one word, which the model renders as a plausible but
-    # garbled guess. At 720 seconds, a one-hour recording has four such boundaries, so this costs
-    # at most one garbled word per boundary. The removed overlap-and-text-merge approach could
-    # silently delete real text: any coincidental three-word match in its 40-word search window
-    # truncated the accumulated transcript and discarded the next segment's head — roughly 74 words
-    # at one boundary — with neither an error nor log output. A garbled word is preferable to silent
-    # deletion. A future implementation should select the least energetic position in a window near
-    # each target boundary; it avoids severing words without a threshold or speech/silence classifier,
-    # cannot discard audio, and costs about one millisecond for a recording of this length. It is
-    # omitted here to keep this change small.
     transcripts: list[str] = []
     start = 0
     while start < audio_length:
         remaining_samples = audio_length - start
         end = audio_length if remaining_samples <= final_segment_max_samples else start + max_samples
-        transcripts.append(_transcribe_parakeet_segment(audio[start:end], processor, model, device))
+        transcripts.append(_transcribe_parakeet_segment(audio[start:end], model))
         start = end
 
     return " ".join(transcripts)
@@ -380,49 +634,42 @@ def chunk_and_transcribe_parakeet(
 
 def transcribe_parakeet(
     audio: numpy.ndarray,
-    prompt: str | None,  # noqa: ARG001  # required by TranscribeFn; Parakeet TDT has no prompt biasing (ignored)
-    processor: Any,
-    tokenizer: Any,  # noqa: ARG001  # required by TranscribeFn; unused — ParakeetProcessor handles decoding
-    model: GenerativePreTrainedModel,
-    device: torch.device,
+    prompt: str | None,
+    processor: Any,  # noqa: ARG001  # required by TranscribeFn; the NeMo model owns preprocessing
+    tokenizer: Any,  # noqa: ARG001  # required by TranscribeFn; the NeMo model owns decoding
+    model: Any,
+    device: torch.device,  # noqa: ARG001  # required by TranscribeFn; transcribe() derives its device from the model
 ) -> str:
     """
-    Transcribe audio using an NVIDIA Parakeet TDT model via HuggingFace transformers.
+    Transcribe audio using an NVIDIA Parakeet TDT model on the NeMo runtime, with phrase boosting.
 
-    Delegates to chunk_and_transcribe_parakeet, which handles both the EOS truncation fix
-    (eos_token_id=None) and memory-bounded chunked decoding. Parakeet has no positional-embedding
-    duration limit; its encoder computes positions from the actual input length. The practical
-    constraint is GPU memory for O(n²) encoder attention. The 720-second default projects to
-    roughly 15.3 GiB and its allowed 792-second final segment to roughly 18.1 GiB on the
-    target, leaving headroom below its 31.4 GiB usable memory and ~17.7-minute ceiling. A
-    1014.5-second run peaked at 28.07 GiB, while 20 minutes exhausted memory. Word error rate on
-    a fixed opening window was unchanged from 2 through 17 minutes of surrounding audio. Audio
-    within 10% of the 720-second target uses the single-segment fast path and avoids chunking
-    overhead.
+    The prompt is parsed as a JSON phrase-boosting spec (parse_parakeet_prompt): None/blank means no
+    boosting, and malformed input raises ValueError. _apply_boosting reconfigures the model's
+    greedy_batch decoding strategy for that spec, rebuilding the boosting tree only when the spec
+    changes (cached by phrase list on the model instance) — with the driver's constant --prompt the
+    tree is built once on the first request and every later request is a cache hit.
 
-    ParakeetForTDT.generate() runs a duration-aware transducer decode: at each step the model
-    emits either a token or a blank and advances the encoder frame pointer by a predicted
-    duration. Unlike Whisper's autoregressive decoder, the transducer emits blanks over non-speech
+    Unlike Whisper's autoregressive decoder, the TDT transducer emits blanks over non-speech
     (applause, crowd noise, silence) rather than inventing text, which is the hallucination
-    resistance this backend was added for.
-
-    The Parakeet TDT generate path has no prompt / context-biasing input (decoder_input_ids are
-    training-only teacher forcing), so the prompt parameter is accepted for TranscribeFn Protocol
-    conformance and deliberately ignored.
+    resistance this backend was chosen for. GPU-PB biases that decode toward the supplied spellings.
+    Long audio is bounded by MAX_SEGMENT_DURATION (see --max-segment-duration), which defaults to no
+    splitting.
 
     See: https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3
     """
-    return chunk_and_transcribe_parakeet(audio, processor, model, device)
+    spec = parse_parakeet_prompt(prompt)
+    _apply_boosting(model, spec)
+    return chunk_and_transcribe_parakeet(audio, model, max_duration=MAX_SEGMENT_DURATION)
 
 
 SUPPORTED_MODEL_TYPES: dict[str, Backend] = {
     "whisper": Backend(load=load_whisper, transcribe=transcribe_whisper),
-    "parakeet_tdt": Backend(load=load_parakeet_tdt, transcribe=transcribe_parakeet),
+    "parakeet_tdt": Backend(load=load_parakeet_nemo, transcribe=transcribe_parakeet),
 }
 
 
 def make_handler(
-    transcribe_fn: TranscribeFn, processor: Any, tokenizer: Any, model: GenerativePreTrainedModel, device: torch.device
+    transcribe_fn: TranscribeFn, processor: Any, tokenizer: Any, model: Any, device: torch.device
 ) -> type[http.server.BaseHTTPRequestHandler]:
     lock = threading.Lock()
 
@@ -484,15 +731,22 @@ def main(args: Sequence[str]) -> int:
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+    # Set the Parakeet segment ceiling before any transcription runs — including the -f branch below,
+    # which returns before the serving code, so a later assignment would leave file/benchmark mode
+    # stuck on the no-split default even when --max-segment-duration is passed.
+    global MAX_SEGMENT_DURATION  # process-wide config set once from argv; see the constant's definition
+    MAX_SEGMENT_DURATION = opts.max_segment_duration
+
     stderr(f"> Loading model: {opts.model}")
 
+    # config.json is present in both the Whisper and NeMo repos, so this probe reads model_type for
+    # backend dispatch only. Download feedback and the local-vs-remote caching decision now live in
+    # each loader (load_whisper's local_files_only probe; NeMo's cache-first from_pretrained), so the
+    # probe is silent about model download and threads no local_only flag into backend.load.
     try:
         config = transformers.AutoConfig.from_pretrained(opts.model, local_files_only=True)
-        local_only = True
     except OSError:
-        stderr("> Model not cached, downloading...")
         config = transformers.AutoConfig.from_pretrained(opts.model, local_files_only=False)
-        local_only = False
 
     if config.model_type not in SUPPORTED_MODEL_TYPES:
         stderr(f"> Error: model type {config.model_type!r} is not supported.")
@@ -500,7 +754,7 @@ def main(args: Sequence[str]) -> int:
         return 1
 
     backend = SUPPORTED_MODEL_TYPES[config.model_type]
-    loaded = backend.load(opts.model, device, local_only=local_only)
+    loaded = backend.load(opts.model, device)
 
     if opts.file:
         with Path(opts.file).open("rb") as f:
