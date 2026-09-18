@@ -1,6 +1,7 @@
 #!/bin/sh
 
 exec stt-client \
+    --prompt-file ~/.local/share/stt-client/nvidia-parakeet-prompt.json \
     --on-record-live "play ~/.local/share/sounds/message-new-instant.oga" \
     --on-record-end "play ~/.local/share/sounds/message.oga" \
     --on-transcribe "play ~/.local/share/sounds/ready.ogg" \

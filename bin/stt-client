@@ -185,8 +185,9 @@ def parser() -> ArgumentParser:
         ),
         formatter_class=lambda prog: RawTextHelpFormatter(prog, max_help_position=36),
     )
-    p.add_argument("-f", "--file", help="transcribe WAV file (use - for stdin)")
+    p.add_argument("-f", "--file", type=Path, help="transcribe WAV file (use - for stdin)")
     p.add_argument("-p", "--prompt", help="text prompt that biases transcription (interpretation is model-dependent)")
+    p.add_argument("-P", "--prompt-file", type=Path, help="Read --prompt from a file")
     p.add_argument("-s", "--on-record-start", metavar="COMMAND", help="optional command to run when recording starts")
     p.add_argument(
         "-l", "--on-record-live", metavar="COMMAND", help="optional command to run when mic hardware is confirmed live"
@@ -766,8 +767,10 @@ def main(args: Sequence[str]) -> int:
         stderr("error: --auto-paste requires --x11-toggle-key")
         return 1
 
-    if opts.file == "-":
-        text = transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), opts.prompt)
+    model_prompt = opts.prompt_file.read_text() if opts.prompt_file else opts.prompt
+
+    if str(opts.file) == "-":
+        text = transcribe_file(opts.host, opts.port, typing.cast("io.BufferedReader", sys.stdin.buffer), model_prompt)
         if text is not None:
             print(text)
             if on_transcribe:
@@ -775,8 +778,8 @@ def main(args: Sequence[str]) -> int:
         elif on_cancel:
             spawn(on_cancel).join()
     elif opts.file:
-        with Path(opts.file).open("rb") as f:
-            text = transcribe_file(opts.host, opts.port, f, opts.prompt)
+        with opts.file.open("rb") as f:
+            text = transcribe_file(opts.host, opts.port, f, model_prompt)
         if text is not None:
             print(text)
             if on_transcribe:
@@ -788,7 +791,7 @@ def main(args: Sequence[str]) -> int:
             client_loop(
                 opts.host,
                 opts.port,
-                prompt_text=opts.prompt,
+                prompt_text=model_prompt,
                 on_record_start=on_record_start,
                 on_record_live=on_record_live,
                 on_record_end=on_record_end,
