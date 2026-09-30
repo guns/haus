@@ -64,7 +64,6 @@ bspc rule --add qjackctl               state=floating
 bspc rule --add sun-awt-X11-XFramePeer state=tiled
 bspc rule --add Sxiv                   state=floating
 bspc rule --add Thunar                 state=floating
-bspc rule --add Tint2                  layer=below
 bspc rule --add Transmission-gtk       state=floating
 bspc rule --add "VirtualBox Manager"   state=floating
 bspc rule --add vlc                    state=floating
